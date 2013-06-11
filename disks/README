@@ -1,0 +1,22 @@
+Sample Disk Images
+------ ---- ------
+
+These disk images are merely distributed with the emulator and are not 
+actually part of it. (ie: not subject to GPL, and not written by us.)
+
+Many more disk images (including ones we'd never include here due to 
+copyright considerations) may be found on ftp.apple.asimov.net.
+
+blank.dsk.gz -
+blank.nib.gz -
+    Blank DOS3.3-formatted disk images.
+
+etc.dsk.gz - 
+    A disk with miscellaneous programs, and apparently an assembler.
+
+mystery.dsk.gz -
+    Sierra's old Mystery House game, now freely distributable.
+
+speedtest.dsk.gz -
+    William Night's emulator benchmarks.
+

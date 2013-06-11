@@ -1,0 +1,115 @@
+Known issues with the emulator:
+
+Emulation Fidelity:
+
+- Disk emulation.  The emulator is not very realistic. It handles almost
+all non-copyprotected disk access okay, but copyprotected or diagnostic 
+programs may be confused by our drive, which magically spins at precisely 
+the optimal speed.  (see Specific Programs, below).
+
+- Medium Resolution graphics.  This is a rarely used //e mode that is to 
+Low-Res what 80 Column text is to 40 column text.  We don't support it as 
+yet, although it should be relatively simple.
+
+- Joystick.  The apple joystick hardware is read by measuring the time it 
+takes for a specific softswitch to clear.  The emulator cannot as yet 
+compensate for the speed of the loop used to measure the joystick -- 
+applications using ROM routines will be fine, but custom joystick code 
+may become mistuned.  The Range configuration feature can be used to 
+compensate for this.
+
+- We don't emulate the //e's vertical blanking interval detection feature.
+
+Graphics:
+
+- Composite graphics artifacts are not emulated.  This is not a big
+interest to me (Michael), but the previous programmers have suggested it. 
+
+- B/W color setting does not apply to lores or double hires.  This 
+generally is not an issue in practice though, as it's really only needed 
+to avoid color fringing in b/w hires images.
+
+- Double Hires mode is always 140x192 color.  Some applications use it as 
+a 560x192 b/w display however.  Note that most applications indicate 
+which mode they want using the high bit of the dhires data bytes, so it 
+wouldn't need to be a preferences setting.
+
+- If an 80-column mode is selected in the low-res emulator, nothing will
+be written to the display -- the image from the last video mode will
+remain on the screen.  If a menu is brought up it will `stick'.  This may
+make people think the emulator crashed, although it will recover if the 
+application returns to 40-column mode.
+
+- There is no 80-column mode for svgalib apple2. It would be possible on 
+standard VGA, although there are not enough colors to do flashing letters 
+by palette tricks as we do now.
+
+- In X, the emulator window takes over the palette, causing all the other
+windows to be miscolored.  We only need 20 or so colors, so it would be
+better if we could share the common palette. 
+
+Keyboard:
+	
+- Key Handling is a little messy, especially with the way the X support 
+is bolted on top of core code originally designed for SVGA scancodes.
+
+- Presently, the Backspace key is interpreted as Left-Arrow (Code 0x88). 
+It could be argued that it should be interpreted as Delete (Code 0xff)
+instead.  Real Apples had no seperate Backspace key, but the //e's Delete
+key was in an analogous position to the PC's Backspace). The PC
+keyboard's Delete is assigned to 0xff (in //e mode). 
+
+- If you're using Apple ][+ mode, the keyboard may appear broken.  That's
+a feature -- the program is imitating the historical ][+ keyboard layout. 
+Press F5 to see a map.  Maybe we should add a means to turn it off. 
+
+- On my X system, without explict xmodmap or xkbcomp intervention, 
+Break (reset) won't work with XKB enabled, and PrintScreen (reboot) won't 
+work with it disabled.  
+
+  This is X's fault, and I've sent them a bug-report, but maybe we should
+consider moving the keys (again...)
+
+Miscellany:
+
+- Older versions of this file note problems with scandir() in the
+presence of orphan symlinks in some versions of the C library.  Hasn't
+been a problem for my glibc 2.1.2 system. 
+
+- Presently the programs are not automatically set SUID on install.
+
+- The emulator requires ROMs for both ][+ and //e even if only used to 
+emulate one of them.
+
+- In theory, typing "Ctrl-Left Alt-Pause" should be equivalent to 
+"Ctrl-Open Apple-Reset" and make the //e reboot.  This doesn't work 
+properly in practice.  Somehow CXROMINT is not cleared at disk-interface 
+detection time, so the disk won't boot.
+
+  (Ctrl-Right Alt-Pause activates diagnostic mode, as expected.)
+
+Specific Programs:
+
+- Some programs (Computist's Nibbler, Sword of Kadash Master copy for
+example) lock up.  It appears (in debugger) that they are reading the disk
+with the motor off.  Perhaps they pulsed the real Apple's drive motor to make
+it turn slower? 
+
+- ProDOS will refuse to format disks, claiming that the disk is too slow. 
+
+- ``Alternate Reality: The City'' seems to get jammed, rapidly changing
+the video mode.  I'm not sure if this is a real failure, or just a special
+effect that takes longer than I'm willing to wait to finish (mode switches
+would be much faster on a real Apple.) I can get into the program
+with some nontrivial debugger manipulation to `short out' the offending loops.
+
+- ``Moon Patrol'' will crash in ][+ mode at the end of the first level
+(ie: Point E).  This is caused by a "02" opcode at address 1E15, an
+undocumented HANG instruction.  //e mode works, since the 65C02 treats
+this instruction as a no-op.
+
+  Moon Patrol may actually be //e-only.  Yet this seems a gratutious
+incompatibility, since the fact you can play the first level (and further
+ones using the debugger) under ][+ mode indicates it doesn't need any //e
+features.  Perhaps the bug was introduced by the people who cracked it's
+copy protection. 

@@ -1,0 +1,3 @@
+SUBDIRS = disks src
+
+EXTRA_DIST = README.debugger TODO LSM ASM PROBLEMS .apple2

@@ -1,0 +1,5 @@
+#! /bin/sh
+echo '/* Automatically Generated -- do not edit */'
+echo '#include "gluepro.h"'
+grep -E -h '^(GLUE_)|(#if)|(#endif)|(#else)|(#elif)' $*
+exit 0

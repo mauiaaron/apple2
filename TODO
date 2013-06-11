@@ -1,0 +1,12 @@
+Obviously this emulator could use extension.  We could do with support
+for more disk-image formats, additional interface cards, memory-image
+save/restore, and other things. 
+
+However, most of these things would require hooking into parts of the code
+that are likely going to change radically in later versions of the
+emulator, due to badly needed cleanups.  Thus, I do not recommend trying
+to extend this version alone. 
+
+If you want to work on the emulator, contact us first.  We can give you alpha
+versions of the emulator to work on, and coordinate your efforts with
+other contributors.

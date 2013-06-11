@@ -1,0 +1,301 @@
+.\" Apple ][ emulator manpage
+.\" by Aaron Culliney - chernabog@baldmountain.bbn.com - (C) 1997-1998
+.\"
+.\" apple2.6 - manpage which mostly echos README
+.\"
+.\"     $Id: apple2.6,v 1.8 1998/08/25 03:00:00 chernabog Exp $
+.\"
+.\" MODIFICATION HISTORY
+.\"  v0.5 by Aaron Culliney <chernabog@baldmountain.bbn.com>, Feb 1998.
+.\"  v0.6 by Aaron Culliney <chernabog@baldmountain.bbn.com>, Aug 1998.
+.\"    This code has nothing to do with my employer, GTE Internetworking,
+.\"    BBN Technologies.  It was written completely on my own time and on
+.\"    my own machine.
+.\"
+.TH APPLE2 6 "31 August 1998"
+.UC 7
+.SH NAME
+apple2, xapple2 \- Apple ][+ and //e emulator
+.SH SYNOPSIS
+.ft B
+apple2
+.PP
+.ft B
+xapple2 [ -noshm ]
+.ft R
+.SH DESCRIPTION
+.I apple2
+(svgalib) and
+.I xapple2
+(X11) both emulate a 64k Apple ][+ and 128k Apple //e computer (the latter
+only if //e support
+compiled in).  To use the emulator you need to acquire the original
+][+ and //e ROM files which are not distributed due to copyright
+reasons.  The emulator reads standard 143360-byte and 232960-byte disk
+image files with
+.I .dsk
+and 
+.I .nib
+suffixes respectively.
+You can also change any images with the extension
+.I .do
+to
+.I .dsk
+and they will work too.
+.PP
+There are only a few command line options:
+.TP
+.I -noshm
+This forces the X11 version to not use the MITSHM extension.  This may degrade
+the speed of the emulator but allow you to run it remote.
+.PP
+.ft R
+.SH THE .apple2 FILE
+The emulator reads user preferences from a
+.I .apple2
+file located in your home directory.  Copy the
+.I .apple2
+file that comes distributed with the emulator to your home directory.
+You can edit the settings using your favorite editor, but most of the
+settings can be tweaked from within the emulator (see menus section below).
+.TP
+.I speed
+Speed of emulation, 1 - XXX.  (Actually this is an inverse delay-loop counter).  1 is
+slow, and XXX is as fast as can be.
+A delay loop is needed to bring the emulation rate down to near what would be
+considered a normal Apple ][ speed.
+The max speed value should be determined by
+.I YOU
+when you compile the emulator.
+For <= 100Mhz Pentium systems, I personally
+like a max value of 100 with a normal apple ][ speed somewhere in the 70s.
+For faster machines, try larger ranges.
+.TP
+.I mode
+Starting emulation mode.  One of "][+", "][+ undocumented", "//e".  You can
+also dynamically change the emulation mode from within the emulator.
+.TP
+.I disk path
+Toplevel path of disk images directory.  Personally I like
+/usr/local/games/apple2/disks.
+.TP
+.I color
+Black/white, lazy color, color, lazy interpolated, interpolated.
+.TP
+.I sound
+Off, pc speaker.
+.TP
+.I joystick
+Off, linear, pc joystick.
+.TP
+.I joystick range
+2 - 256.  Range of the joystick values.  Good settings are 256 and
+sometimes 128, with centers at 128 and 64 respectively.  This often depends on
+the game.
+.TP
+.I origin_x
+X coordinate origin.  128 is good for many games with a range of 256.  Others
+like 64 with a range of 128.
+.TP
+.I origin_y
+Y coordinate origin.  128 is good for many games with a range of 256.  Others
+like 64 with a range of 128.
+.TP
+.I pc joystick parms
+You can configure this from within the emulator.  Select the 'Calibrate'
+option from the F10 menu.  If the emulator complains that
+it cannot open the joystick device, make sure the module is loaded.
+.I This option is only valid if you've compiled the emulator with -DPC_JOYSTICK.
+.TP
+.I sensitivity
+1% - 100%.  This value is used for the emulated joystick using the
+numeric keypad.
+.TP
+.I system path
+The directory holding the rom files.  The emulator won't run if this
+is not set properly.  You can only change this by editing the
+.I .apple2
+file.
+.PP
+So here is an example .apple2 file:
+.nf
+	speed = 72
+	mode = ][+
+	disk path = /usr/local/games/apple2/disks
+	color = interpolated
+	sound = pc speaker
+	joystick = pc joystick
+	joystick range = 256
+	origin_x = 128
+	origin_y = 128
+	pc joystick parms = 767 693 1344 28 1454 28 13
+	sensitivity = 13%
+	system path = /usr/local/games/apple2/rom
+.fi
+.PP
+.ft R
+.SH ROM FILES
+The emulator requires several ROM files to run.
+.TP
+.I apple_II.rom
+You need this file for basic ][+ emulation.  It contains the 12K ROM
+of your Apple ][+. It is not distributed due to copyright issues, so
+you have to get this file on your own. If you have been running
+another apple2 emulator, you can most likely use its ROM files
+directly.  This file is a memory dump of the consecutive addresses
+from D000 to FFFF of the Apple ][+.  This file may also be named
+.I apple.rom
+or
+.I apple2.rom,
+but is referenced internally as
+.I apple_II.rom.
+.TP
+.I slot6.rom
+You need this file for basic disk drive emulation.  It is 256 byte
+memory dump of the consecutive addresses from C600 to C6FF. This file
+is not distributed again due to copyright issues.  This file may also
+be named
+.I controller.rom,
+but is referenced internally as
+.I slot6.rom.
+.TP
+.I apple_IIe.rom
+If //e support was not compiled into the emulator, then you do not need this
+file.
+It is the 32K ROM of your 128k Apple //e, a dump of main memory (bank 0)
+addresses C000-FFFF concatenated with auxiliary memory (bank 1)
+addresses C000-FFFF.  Because the
+.I apple_IIe.rom
+contains the C600 slot, you can construct the
+.I slot6.rom
+file from this one. The
+.I apple_IIe.rom
+file may also be named
+.I apple2e.rom
+but is referenced internally as
+.I apple_IIe.rom.
+.TP
+.I character.rom
+A 2048 byte ][+ character rom file.  This file is distributed with the
+emulator.
+.PP
+.ft R
+.SH DISK IMAGES
+The emulator reads standard DOS3.3-order 143360 byte '.dsk' images and
+raw-nibble 232960 byte '.nib' images.  The emulator can handle images
+which are gzip'ed as long as the suffixes are '.dsk.gz' and '.nib.gz'
+respectively.  The emulator simply assumes that /bin/gzip is available
+to compress/decompress these images in place as needed and that you have
+permission to do so.
+.PP
+The images are raw binary dumps, containing the tracks from 0 to 34
+from the original 5.25 disk.  For the standard 143360 byte '.dsk'
+format each track is partitioned into sectors of 256 bytes, numbered
+from 0 to 15.
+.PP
+The raw nibblized 232960-byte images are usually made of
+programs that have non-standard formatting as a means of copy
+protection.  The nibblized format attempts to preserve the
+non-standard format, and so defeats the copy protection without
+"cracking" the program.
+.PP
+To transfer Apple ][ diskettes into one of these formats requires that
+you own an original Apple ][. Since the drives provided by the IBM
+PC's are not compatible with the original Apple ][ drives there are no
+conversion programs directly available. If you have used other Apple
+][ emulators it is most likely that the files will work with this
+emulator too. For more information on Apple ][ disk formats and such,
+see
+.I Beneath Apple DOS
+by Don Worth and Pieter Lechner, published long ago by Quality Software.
+.PP
+.ft R
+.SH EMULATOR KEYS/MENUS
+.TP
+.I F1
+Interface to switch disk in Drive A, Slot 6.  Arrow keys navigate the
+selection.  If the disk highlighted is already in the drive, it will
+have a <rw1> or <r1> tag after the name indicating read/write or
+read-only access.  Select this disk to eject it.  To select a disk,
+you can press 'w' or RETURN to insert it into the drive.  Pressing 'w'
+will attempt to open the disk as read/write (if you have permission to
+do so).
+Pressing RETURN defaults to opening the disk read-only.  Press
+ESC to accept current settings and exit the menu.
+.TP
+.I F2
+Interface to switch disk in Drive B, Slot 6.  Same controls as for
+.I F1.
+.TP
+.I F4
+Pause the emulation.  The Pause/Break key will also work.  Hit a key
+to resume.
+.TP
+.I F5
+Display the Apple ][+ or //e keyboard layout.
+.TP
+.I F7
+Enter the Debugger console (if this support was compiled into the
+program).  See the file DEBUGGER that came with the emulator for
+command information.
+.TP
+.I F9
+Toggles between maximum speed and configured speed.  This is useful to 'fastboot'
+programs, and then slip back to normal Apple ][ speed.
+.TP
+.I F10
+General parameter settings menu, including the all-important QUIT option.
+You can edit most of the parameters in your
+.I .apple2
+file from this menu.
+Two options worth mentioning are
+the 'Calibrate' and 'JS Sample' options.  'Calibrate' lets you
+calibrate the PC Joystick device.  'JS Sample' lets you set the sample
+rate of the PC Joystick device.  'Save' lets you save the settings to
+your
+.I .apple2
+file.
+.TP
+.I Special Keys
+The key combination Ctrl-'PrintScrn/SysReq' will reboot the machine.
+The Ctrl-'Pause/Break' combination will reset the machine.  Remember
+that 'Pause/Break' alone will pause emulation.  AltLeft and AltRight
+keys correspond to the OpenApple and ClosedApple keys (joystick
+buttons 0 & 1).  NOTE: In //e mode try Ctrl-AltRight-'Pause/Break'
+sequence for a system self-test.  The numeric keypad is used for
+emulated joystick movement.
+.ft R
+.SH BUGS AND STUFF
+See the PROBLEMS file that came with the code.
+.PP
+Using the joystick for some disk images is problematic.
+Apparently there is a bug in Apple ]['s where reading values from the
+joystick ports too quickly results in a smaller value than normal.
+Unfortunately the emulator doesn't emulate this bug in the machine,
+but you can mostly get the same
+effect by changing the range of the joystick.  For instance, games like Space
+Rogue and Airheart like a range of 0x80 with the center around 0x40.  Most
+other games will like a range of 0x100 with the center around 0x80.
+.PP
+Under X, you may notice that some keys are not working as advertised
+(Pause/Break as reboot for instance).  Make sure that these keys are mapped.
+(Run xmodmap -pke for the current mapping).
+.ft R
+.SH MORE INFO
+More information is available in the online newsgroups
+.I comp.emulators.apple2,
+and
+.I comp.sys.apple2.
+.PP
+See also:
+.TP
+.I Apple //e Technical Reference Manual
+.TP
+.I Beneath Apple DOS
+.TP
+.I Beneath Apple ProDOS
+.ft R
+.SH AUTHORS
+Apple //e support and revisions v006, v005, v004, v003 by Aaron Culliney
+(aculline@bbn.com).  Revision v002 by Stephen Lee.  Original version(s)
+by Alexander Jean-Claude Bottema.

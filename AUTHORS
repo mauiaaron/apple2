@@ -1,0 +1,11 @@
+Alexander Jean-Claude Bottema <alexb@csd.uu.se> made the original 
+version of the emulator in 1994. 
+
+Stephen Lee <sl14@cornell.edu> and particularly Aaron Culliney 
+<asc@mhpcc.edu> have done much work on the emulator since.
+
+Michael Deutschmann <michael@talamasca.ocis.net> cleaned up the 
+build sequence to use standard GNU tools, and is the present coordinator.
+
+Tom Lear <tom@trap.mtview.ca.us> maintains the Debian package of  
+this program, and has contributed some fixes.

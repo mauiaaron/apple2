@@ -1,0 +1,11 @@
+speed = 100
+mode = ][+ undocumented
+disk path = /usr/local/games/apple2/disks
+color = interpolated
+sound = pc speaker
+joystick = pc joystick
+joystick range = 256
+origin_x = 128
+origin_y = 128
+sensitivity = 3%
+system path = /usr/local/games/apple2/rom

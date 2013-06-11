@@ -1,0 +1,154 @@
+*************************************************************************
+*									*
+* Apple II debugger routines for the Linux-x86 Apple II emulator.	*
+* by Aaron Culliney - chernabog@baldmountain.bbn.com - (C) 1998		*
+*									*
+* My code changes have nothing to do with my employer, GTE		*
+* Internetworking, BBN Technologies.  They were written completely on my*
+* own time and on my own machine.					*
+*									*
+*************************************************************************
+
+The debugger console is a mid-size hack onto the main emulator code.
+I did it b/c I wanted to fool around with some of my old games while
+they were running and to debug the emulator itself.
+The code is kinda ugly in some areas, but seems robust enough; (I've
+used flex to handle most of the dangerous UI stuff).  It runs a bit
+slower than when you're in unrestricted emulation mode because it's
+doing a lot of switching between C code and asm, copying state, and
+checking breakpoints/watchpoints.
+
+
+KNOWN PROBLEMS:
+--------------
+
+When you hit a watchpoint or breakpoint, you have to step over it
+before you can use the g{o}, f{inish}, or u{ntil} commands again.
+
+----------------------------------------------------------------------------
+
+Usage:
+-----
+
+F7 - enters the debugger.  (actually we wait until we've finished with
+the current 6502 instruction before we enter the debugger so we're all
+synched up if/when we start stepping the machine).
+
+ESC - exits the debugger console.
+
+General Command format:
+
+	command {optional part} <mandatory part> (this | that)
+
+----------------------------------------------------------------------------
+Disassembling Apple II main memory and language card memory:
+
+	d{is} {language card bank} {/bank/}{addrs} {+}{len}
+
+	Examples:
+	"d"			- disassemble from current location
+	"dis +5"		- disassemble from current location +5
+	"dis /01/2000"		- (128k (//e) specific)
+	"dis lc1 d000 5"	- disassemble memory +5 at lang card 1 0xd000
+
+Note: {addrs} can be (d000 <-> ffff) or (0 <-> 2fff) for the language
+card.
+
+----------------------------------------------------------------------------
+Dumping memory:
+
+	m{em} {lc1|lc2} {addrs} {+}{len}
+	a{scii} {lc1|lc2} {addrs} {+}{len}
+
+	Examples:
+
+	"mem"			- dump memory at current location
+	"m dead"		- dump memory at 0xDEAD
+	"m lc2 2fff 1"		- dump memory at lang card 2 0x2FFF +1
+	"ascii /01/400"		- (128k (//e) specific)
+
+Note: {addrs} can be (d000 <-> ffff) or (0 <-> 2fff) for the language
+card.  Also you need to specify the {addrs} if you're examining lc
+memory.
+
+----------------------------------------------------------------------------
+Setting memory:
+	<addrs> {lc1|lc2} : <byteseq>
+
+	"4000:deadc0de"		- set memory at 0x4000 to 0xDEADC0DE
+	"50lc2:def"		- set memory at lang bank 2 0x50 to 0xDE0F
+
+Note: {addrs} can be (d000 <-> ffff) or (0 <-> 2fff) for the language
+card.
+
+----------------------------------------------------------------------------
+Displaying machine state (registers, language card, drive, softswitches):
+
+	r{egs}			- registers
+	l{ang}			- language card settings
+	dr{ive}			- disk drive settings
+	vm			- other virtual machine settings
+
+----------------------------------------------------------------------------
+Stepping the machine:
+
+	(s{tep} | n{ext}) {len}
+	f{inish}
+	u{ntil}
+	g{o} {addr}
+
+-*step* or *next* 0-255 instructions.
+
+-*finish* current stack-frame (stop at RTS).
+
+-step *until* PC == next instruction (good for finishing loops).
+
+-*go* or jump to {addr} and continue executing until user hits a key.
+
+----------------------------------------------------------------------------
+Searching and setting/unsetting memory breakpoints and watchpoints:
+
+	sea{rch} {lc1|lc2} <byteseq>
+
+	"se deadc0de"		- search for 0xDEADC0DE
+	"search lc2 def"	- search lang bank2 (and lang card) for 0xDEF
+
+	(b{reak} | w{atch}) {addr}
+	br{eak} op <byte>
+	(c{lear} | i{gnore}) {num}
+	c{lear} op <byte>
+	sta{tus}		- show status of memory watch/breakpoints
+	op{codes}		- show opcodes that we're stopping at
+
+	"w c0e9"		- watch memory at C0E9
+	"br"			- break at current PC
+	"br op 20"		- break on opcode 20
+	"clear 1"		- clear breakpoint 1
+	"ig"			- ignore all watchpoints
+	"cl op 20"		- clear break on opcode 20
+
+-break or watch addrs.  (use in conjunction with g{o})
+
+-clear breakpoints, ignore watchpoints.
+
+-show break and watchpoint status.
+
+Note: breakpoints and watchpoints persist even when you exit the
+debugger console.  They are only reset if you clear/ignore them or
+virtually reboot.
+
+
+----------------------------------------------------------------------------
+Loading and saving state:
+
+	bload <file> <addrs>
+	bsave <file> /<bank>/<addrs> <len>
+
+	bload binary 8000	- load file into memory
+	bsave pic /0/2000 2000	- save memory to file
+
+
+----------------------------------------------------------------------------
+Miscellaneous:
+
+	fr{esh}			- clear screen of graphics

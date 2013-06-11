@@ -1,0 +1,408 @@
+**************************************************************************
+*               Apple II+ Emulator version 0.7 for Linux                 *
+*									 *
+*      Original Author: Alexander Jean-Claude Bottema                    *
+*      Email : d91a1bo@meryl.csd.uu.se                                   *
+*									 *
+*   This program is free software; you can redistribute it and/or modify *
+*   it under the terms of the GNU General Public License as published by *
+*   the Free Software Foundation; either version 2 of the License, or	 *
+*   (at your option) any later version.					 *
+*									 *
+*   This program is distributed in the hope that it will be useful,	 *
+*   but WITHOUT ANY WARRANTY; without even the implied warranty of	 *
+*   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the	 *
+*   GNU General Public License for more details.			 *
+*									 *
+*   You should have received a copy of the GNU General Public License	 *
+*   along with this program; if not, write to the Free Software		 *
+*   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.		 *
+*									 *
+*  Modified: Dec 8 1995 by Stephen Lee <sl14@cornell.edu>                *
+*  Modified: Jan 97 by Aaron Culliney <aculline@bbn.com>		 *
+*				      <chernabog@baldmountain.bbn.com>	 *
+*  Modified: Jun 97 by Aaron Culliney <aculline@bbn.com>		 *
+*				      <chernabog@baldmountain.bbn.com>	 *
+*  Modified: Feb 98 by Aaron Culliney <aculline@bbn.com>		 *
+*				      <chernabog@baldmountain.bbn.com>	 *
+*  Modified: Aug 98 by Aaron Culliney <aculline@bbn.com>		 *
+*				      <chernabog@baldmountain.bbn.com>	 *
+*									 *
+*  Modified: Sep 98, Dec 98, Jan 98, Jun 99 				 *
+*  by Michael Deutschmann		 				 *	
+*				      <michael@talamasca.wkpowerlink.com>*
+*									 *
+**************************************************************************
+
+NOTE:
+	This is basically the original README.  See the CHANGES file
+first for information on this specific version of the emulator.  Then
+read section 0 (installation) in this file for cookbook compilation /
+installation instructions.  Other information in this file may be
+outdated, so read the manpage for up-to-date runtime instructions.
+
+Contents
+========
+
+0. Installation issues (briefly)
+1. Why did I make an Apple II+ Emulator when there are so many available?
+2. System Files
+3. Keyboard & keys
+4. Diskette database
+5. Future plans
+6. Status of the current emulator
+7. Can you port this to DOS?
+8. Availability
+9. Known problems
+10. Changes since the last
+11. Final words
+
+
+0. Installation issues (briefly)
+================================
+
+Requirements: SVGA lib version 1.2.9 (or later, see 9.)  Tested under 1.2.13.
+              Kernel 2.0.X. Tested under 2.0.36pre12.
+	      libc 4.4.4 (or later).  Tested under glibc-2.0.6   
+	      joystick 0.8.0 kernel module for PC Joystick support.
+	      flex 2.5.2 (for compiling lex files)
+
+
+1) Unpack this distribution in a temporary directory. 
+
+2) Run "configure" for a normal build, or "configure --enable-debugger" 
+to add debugger support. (Other GNU autoconf options, such as --prefix, 
+may of course be used.) You may provide optimizations in the enviroment 
+variable CFLAGS.
+
+3) Type "make" to make the program.  As root, type "make install" to
+install the programs in $(BINDIR) and the man page in  $(MANDIR), (both
+configurable at the configure line).  The sysadmin should enable the
+setuser bit on "apple2" in order for it to use the VGA. Enabling setuser 
+on "xapple2" will allow use of the PC speaker, but is not essential.
+
+4) Copy the .apple2 configuration file to your home directory, and
+read the manpage that was installed for further information on how to
+configure this file.  You can configure most of the settings from
+within the emulator, (F10 for the menu screen), but you need the
+system path correctly set to point to the rom files before you start
+the emulator.  The emulator won't run without the correct rom files
+(see the manpage).
+
+5) After you're done configuring, type "xapple2" to run the
+emulator under X or "apple2" to run using svgalib.  There are two X11
+versions for different resolutions.  Once running, F1 selects disk
+drive #1, F2 selects disk drive #2, F10 gives you the main menu of
+runtime parameters, and F5 shows you the keyboard lay out.
+
+
+1. Why did I make an Apple II+ Emulator when there are so many available?
+=========================================================================
+
+For three reasons. The first is that there are no Apple II emulators
+especially written for Linux; hence they do not take advantages that
+are commonly provided in Linux systems, e.g. the SVGA library
+distribution.  However, there is an Apple II emulator for X-Windows
+that easily can be compiled on most UN*X architectures, but the major
+disadvantage is slow emulation. You cannot obtain a fast emulator by
+writing it in C, despite the elegant optimizations provided by GNU-C,
+but of course it becomes more portable if you do that.
+
+By contrast, this Apple II emulator is partly written in 386 (AT&T)
+assembler; partly in C. Only those issues that were not time critical
+were written in C. Especially the CPU emulation was written in
+optimized assembler to achieve optimum performance. The emulator
+approximately runs twice as fast as an ordinary Apple II+ computer if
+it is running on a 486 DX-50.
+
+The second reason is that there is no Apple II emulator which is 100%
+usable. Either it is too slow or it is simply too fast (= there is no
+option to trim the speed of the emulator). Furthermore, many
+implementors happily avoid implementing mixed text/graphics in high
+resolution mode; mostly because it complicates the programming. I have
+never seen an Apple II+ emulator that is entirely complete. I think
+most emulators fail on implementing the undocumented 6502 instructions
+(those that are listed as ???), hence some games (or applications) may
+not work despite they should.
+
+The third reason is that no emulator support an easy way to switch
+diskettes given a database of diskettes. With this emulator you can
+easily switch diskettes through an intuitive interface. You can also
+add additional information for each diskette (in your database), e.g.
+which keys to use for a particular game program. The information is
+kept in a plain text file that can be edited with an ordinary text
+editor, preferbly GNU-Emacs.
+(Aaron removed the above feature)
+
+
+2. System files
+===============
+
+Before you can run the emulator, three vital system files must be
+available. These are:
+
+apple_II.rom (12k)	This file contains the ROM of your Apple II+.
+                        It is not distributed due to copyright issues.
+			You have to get this file on your own. If you
+			have been running another emulator, you can
+			probably use its ROM files directly. Technically
+			speaking, this file is a memory dump of the
+			consecutive addresses from D000 to FFFF.  This
+			file may also be called by other names such as
+			apple.rom or apple2.rom, but is referenced
+			internally as apple_II.rom.
+
+appple_IIe.rom		Likewise for IIe emulation.
+
+slot6.rom (256 bytes)	Memory dump of the consecutive addresses from
+			C600 to C6FF. This file is not distributed
+                        either due to the same reasons as above.  This
+			file may also be called by other names such as
+			controller.rom, but is referenced internally
+			as slot6.rom.
+
+Other important files
+---------------------
+
+.apple2			This file is distributed. The file contains default
+			parameter settings. The most important parameter is
+			the setting of the system path, i.e. the directory
+			where the three vital system (ROM) files are
+			stored. Most of the other parameters can be
+			changed during run time via the interface
+			(activated by pressing F10).
+
+                        Parameters (that can be set in .apple2):
+
+			speed = <percentage>%	  Speed of the emulator
+			path = <directory>        Diskette database directory
+			color = off		  Monochrome mode
+				on		  Plain color mode
+				interpolated	  Interpolated color mode
+			sound = off		  Silent mode
+			        pc speaker	  Sound through PC speaker
+			joystick = off		  Joystick disabled
+				   linear	  Linear joystick mode
+				   pc joystick	  PC Joystick (see CHANGES)
+				   digital	  (Atari) digital joystick mode
+						          not yet supported
+			joystick range		  1-256 range of joystick
+			origin_x = 0-255	  Origin of the joystick (X)
+			origin_y = 0-255	  Origin of the joystick (Y)
+			sensitivity <percentage>% Joystick sensitivity
+			system_path = <directory> Directory where the system
+						  ROM files are stored.
+			pc joystick parms	  You don't want to fool
+						  around with these, you
+						  generate these parms from
+						  F10 screen "Calibrate" menu
+						  item.
+
+dsk.info		An example is distributed. This file contains
+			information for various diskettes kept in the database.
+
+			Syntax:
+			{<Name of diskette>}      i.e. the name is written
+						  within curly braces.
+			<Any information...>
+			
+			{<Name of another diskette>}  ... etc.
+
+3. Keyboard & keys
+==================
+
+F1			To switch diskettes in Drive A, Slot 6
+F2			To switch diskettes in Drive B, Slot 6
+F4, also Pause key	Pause
+F5			Keyboard layout
+F8			Words from the author (removed)
+F9			Toggle between maximum speed and configured speed.
+F10			General parameter settings
+Break (ctrl-Pause)	Apple II Reset key
+Ctrl Printscreen	Reboot Apple II emulator
+
+The numeric keypad is used for joystick emulation.
+
+Left Alt		Joystick button 0
+Right Alt		Joystick button 1
+Insert			Joystick button 2
+
+F7			Debugger - (if it's compiled into the source).
+			Edit the Makefile if you don't want the
+			debugger.  The emulator will run slightly
+			faster without the debugger.
+
+
+4. Diskette database
+====================
+
+The diskettes are provided as plain binary files. These are actually
+raw dumps, containing the tracks from 0 to 34.  For the standard
+143360 byte .dsk format each track is partitioned into sectors
+numbered from 0 to 15.  Each sector is 256 bytes.  Hence, the data is
+organized as the following:
+
+File offset (in bytes)          Sector    	Track
+----------------------          ------          -----
+0				0		0
+256				1		0
+512				2		0
+.				.		.
+.				.		.
+.				.		.
+3840                            15		0
+4096				0		1
+4352				1		1
+.				.		.
+.				.		.
+.				.		.
+143104				15		34
+
+To transfer Apple II diskettes into this format requires that you own
+an original Apple II. Since the drives provided by the IBM PC's are
+not compatible with the original Apple II drives there are no
+conversion programs directly available. If you have used other Apple
+II emulators it is most likely that the files will work with this
+emulator too. It seems to be a common standard to structure the
+diskettes in the above described way, e.g. the ApplePC and Apl2em
+emulators for DOS uses the same structure.
+
+Emulated diskettes MUST have the .dsk or .nib extension (143360 bytes
+or 232960 bytes respectively), otherwise the emulator will not
+recognize the file as a valid diskette.  However, it is valid to
+compress them by using gnu-zip (then the extension becomes .dsk.gz or
+.nib.gz). The emulator will automatically decompress/compress them
+whenever required (note that it assumes /bin/gzip exists).
+
+Note that you can add information/documentation for the dsk-diskettes
+by using an ordinary text editor and edit the file "dsk.info". The
+name of the diskette is written in curly braces (without the .dsk
+extension) followed by any information.
+
+
+5. Future plans
+===============
+
+I intend to improve the emulator. Actually, for the next major release
+(i.e. version 1.00) the emulator will be entirely rewritten. For minor
+changes, see file CHANGES.
+
+[Note from Stephen Lee: since this hasn't happened yet, I took to
+ improving the existing emulator until Alexander release a new one.]
+
+[Note from Aaron Culliney: since this still hasn't happened, I also
+took the liberty to fix a few things and add some functionality.]
+
+[v004 note: decided to add in some more features, and fix problems as
+they've arisen.]
+
+6. Status of the current emulator
+=================================
+
+Works in standard VGA 			 	Y
+Works in SVGA (then using SVGA facilities)	Y
+Disk drive emulation (slot 6) (.dsk & .nib)	Y
+Disk drive emulation (slot 5)			N (release 1.00)
+High resolution emulation			Y
+Low resolution emulation			Y
+Mixed mode (in all resolution modes)		Y
+Correct color emulation	(both Low and Hi-res)	Y
+Interpolated color emulation			Y
+Configurable speed				Y
+Diskette switching				Y
+Diskette database				Y
+Interface for parameter settings, etc.		Y
+Sound emulation (PC speaker)			Y
+Flashing text					Y
+Joystick emulation through numeric keypad	Y
+Virtual console switching			Y (only when emu. is paused)
+Raw keyboard mode (reading scancodes)		Y
+Undocumented 6502 instructions			Y
+Language card (i.e. additonal 16k RAM)		Y
+Serial card					N (maybe release 1.00)
+Works on DOS					N (AND NEVER WILL)
+Apple II Debugger				Y
+PC Joystick kernel module support		Y
+
+7. Can you port this to DOS?
+============================
+
+No, for two reasons. The first, and probably the most important, is
+that the current emulator use kernel specific issues that are not, and
+never will be, available in DOS. Future emulators will be based on the
+same principles, so the emulator will never run in DOS. The second
+reason is that DOS is a bad operating system. It is a pain in the neck
+to write and debug programs in DOS and there is no usable memory
+management provided by the kernel (if the DOS "interrupts" can be
+called a "kernel" at all).
+
+With this free software I hope that more users will switch to Linux
+(which is a great operating system) and I have a dream that one day,
+DOS will become a minority.
+
+8. Availability
+===============
+
+This distribution is available at ftp.apple.asimov.net, and
+tsx-11.mit.edu, and sites mirroring these.
+
+9. Known problems
+=================
+
+Problem: SVGAlib version 1.2.8 and below has a bug in
+	 keyboard-handling that makes the '-' key (in the emulator)
+	 unusable.
+
+Solution: Please use SVGAlib version 1.2.9 or above.
+
+Problem: The REPT (repeat) key repeats too fast.
+
+Answer: The current implementation is a kludge by me [Stephen].  I
+	might fix it later, but again, I might not.
+
+Problem: I can't switch virtual consoles while running the program
+	 under gdb [Aaron].
+
+Answer: Actually you do, it's just that the graphic mode stays valid.
+	If you have the svgalib utility "textmode", try a "shell
+	textmode" reset.  I haven't played around enough to figure out
+	how/if you can get back to graphic mode after this.
+
+Problem: Compiling with optimization causes the debugger to choke
+	 [Aaron].
+
+Answer: I'm playing fast and loose with the debugger's assembly hooks.
+	I think it's something to do with -fomit-frame-pointer.  And
+	since I don't see much speed gain, I'm ignoring the problem
+	for now.
+
+10. Changes
+===========
+
+see file CHANGES
+
+
+11. Final words
+===============
+
+Note that albeit you can switch between digital and linear joystick
+emulation, only linear mode is presently supported. I still haven't
+figured out how the atari (digital) joystick emulation works, so I'll
+save it to the next release (as I said in the previous release :-) )
+
+[PC Joystick mode is just another linear mode.  In general linear mode
+seems to work fine for most games.  If a game seems to be having
+trouble with it, change the range from $100 (256) to $80 (128) with
+center points at $80 and $40 respectively.  Switching around ranges
+often seems to do the trick for most games, but I bet I'm not handling
+the joystick softswich values correctly. documentation on this is
+scant. -Aaron]
+
+I hope you will enjoy this emulator. I do. Many games (that I have
+ported) works perfectly, even those that use undocumented 6502
+instructions. Suggestions to improvements are welcome. My email
+address will be valid at least one more year, i.e. as long as I am a
+computer science student at the University of Uppsala in Sweden.
+
+    / Alexander Jean-Claude Bottema (Email: d91a1bo@meryl.csd.uu.se)
+      Oct. 9 1994  15:44:21

@@ -1,0 +1,260 @@
+Changed in 0.7.4:
+
+Many bugs have been fixed, including a calling-convention mistake that
+could cause unpredictable behavior on reboot.  Potential buffer overflows
+have also been corrected.  
+
+Some key assignments have changed.  Joystick buttons are now Left-Alt, 
+Right-Alt & Insert.  Delete, formerly a joystick button, now produces the 
+DEL ascii code.  Reboot is now Break (Ctrl-Pause), and Reset is now 
+Ctrl-Printscreen.  (This is reversed from 0.7.3)
+
+Some significant optimizations were also made in the assembly code. The 
+large memory-access indirection table is now compressed using virtual 
+memory tricks, to slightly reduce cache load and swap requirements.
+
+Also many cleanups have been made in the internal code.  This is
+user-invisible, and far from complete. When done, it will become easier to
+add new interface cards, video drivers, and other stuff, as well as port
+to other unixes. 
+
+Changed in 0.7.3:
+
+More makefile/configuration bugs were fixed.
+
+The `Mystery House' sample disk, which was accidently omitted from my 
+distributions, has been reinstated. Also, I've added a new sample 
+disk image - William Night's emulator performance tests.
+
+Changed in 0.7.2:
+
+The configure script will now react to absence of X Windows or SVGAlib by 
+only building an emulator for the remaining graphics system.
+
+A makefile bug that caused xapple-80col not to depend on 
+all it's source files was fixed. Also, the alternate character set is now 
+correctly restored on exit from the <F10> menu.
+
+Some major cleanups were done to the assembly-language files. This is
+invisible to the user, but should make further enhancement a little saner. 
+
+The banners on the source code have been synchronized.
+
+Changed in 0.7.1:
+
+1. Fixed a makefile bug that caused xapple-80col to be miscompiled.
+
+2. Put sample .apple2 (config file) back in. It was accidentally excluded 
+from 0.7.
+
+3. The SVGA emulator is again named `apple2', not `sapple2'. 
+
+Changed in 0.7: (Sep 98)
+
+Version 0.7 - Michael Deutschmann <michael@talamasca.wkpowerlink.com>
+
+1. Replaced "character.rom" and Aaron's MouseText table in misc.c with 
+a single file, font.txt, which is converted into a packed c table by a 
+generator utility.
+
+2. Overhauled Makefile system. We now use GNU autoconf/automake.
+
+Note: This hasn't been tested extensively. Also, there are a few automake 
+tricks I haven't bothered with - I added them to TODO.
+
+Changed is 0.06: (Aug 98)
+-------------------------
+
+Version 0.06 - Aaron Culliney <chernabog@baldmountain.bbn.com,
+			       aculline@bbn.com>
+My code changes have nothing to do with my employer, GTE
+Internetworking, BBN Technologies.  They were written completely on my
+own time and on my own machine.
+
+	1) Separated SVGAlib specific stuff into svideo.c.  Added X Windows
+	frontend support in xvideo.c.  The X frontend works by doing an
+	X(Shm)PutImage() of the emulator's framebuffer around 30 times a
+	second.  This saves us from changing the internal video routines (they
+	assume direct access to an 8bit framebuffer), and it's a heck of a lot
+	faster than trying to do an XPutPixels() on each change.  The X
+	frontend only currently works for 8bit displays.  Make sure you run it
+	using a mode (specified in XF86Config) that has a bit depth of 8 (not
+	16 or greater).
+
+	2) We now build three versions of the emulator: svideo_320x200,
+	xvideo_320x200, xvideo_640x400.  The last one really isn't 640x400 for
+	optimization reasons (568x384) although it probably should be...
+	Sorry, but there's no support for switching resolutions on the fly, we
+	ifdef it in with a new define "_640x400".
+
+	3) Provided 80column support for the 640x400 X version.  Now you
+	can PR#3 (running as //e) and get 80 columns.  This change required
+	a resolution of at least 560 horizontal pixels (Apple //e specs).
+
+	4) Both SVGA and X versions need to be suid root (for PC speaker port
+	access and SVGA stuff).  But both versions now give up root access
+	during video initialization.  This means that disk access is now done
+	as *you* (not root) even when g(un)zipping images for loading.
+	Before images would be g(un)zipped as root.  There was something about
+	this that made me uneasy...  Now it's up to you to give the
+	appropriate user/group permissions to your disk image repository.
+	I make no claim about the security fitness of this emulator.  See the
+	other READMEs and files for more information/disclaimers.
+
+	5) Did a 180 on the disk image selection menu.  <RET> now tries
+	to open disk images as read-only, 'W' for both read-write.
+	Of course this will only work if you have the correct
+	file permissions set (see 5 above).  I find this more convenient b/c
+	I play alot of the arcade games where you don't ever save game state.
+
+	6) Removed the disk "Information" submenu.  I never use it.  Do you?
+
+
+
+Changes in 0.05: (Feb 98)
+-------------------------
+
+Version 0.05 - Aaron Culliney <chernabog@baldmountain.bbn.com,
+			       aculline@bbn.com>
+My code changes have nothing to do with my employer, GTE
+Internetworking, BBN Technologies.  They were written completely on my
+own time and on my own machine.
+
+	1) Added support for 65c02 instructions.  The programs that
+I've tested which use them work just fine.
+
+	2) Added support for 128k //e EXCEPT 80 column mode, B/W
+DHIRES mode, and MouseText character set.  The two unimplemented video
+modes require major changes to current video routines, thus a next
+version...  New supported images are copy ii+ 9.0, diagnostics //e,
+marble madness, airheart, legend of blacksilver, pirates!...
+
+	3) Fixed some old problems with HIRES colors being off around
+byte edges in interpolated/color modes.  but we still give you the
+option to use these "lazy" modes since emulation is faster with them
+enabled...
+
+	4) You now have several new options in your .apple2 file.  I
+suggest either copying the distributed one over your existing one, or
+merging the changes in.
+
+	5) Fixed some potential security bugs where a user could
+traverse into sensitive directories by using the disk selection
+interface.  The current emulator version is not guaranteed to be
+foolproof since it has to be installed suid root for normal users to
+use it.  Sysadmins should take extra precautions as they see fit.
+
+	6) Added and deprecated some options in the debugger interface
+to support the new 128k //e.  see the DEBUGGER file for more info.
+DEBUGGER support is not default compiled in.
+
+	7) added some extra options to the .config file that you build
+into the emulator.  One big one: a way to set the max delay count in
+the emulator to bring Apple ][ emulation rates down to normal on high
+end pentiums!...  100 is the default delay rate (which works just fine
+for low end 386-Pentium100's).
+
+
+
+Changes in 0.04: (June 97)
+-----------------------------
+
+Version 0.04 - Aaron Culliney <chernabog@baldmountain.bbn.com,
+			       aculline@bbn.com>
+My code changes have nothing to do with my employer, BBN.  They were
+written completely on my own time and on my own machine.
+
+	1) Added PC Joystick Support.  You must have the joystick
+kernel loadable module 0.8.0 correctly configured and installed to use
+this feature.
+
+	2) Changed the way the emulator handles the language card
+memory space.  We no longer patch rom/ram on lc_c08x functions.  I did
+this because under certain conditions the previous versions of the
+emulator would run a lot slower.  Now you may notice the emulator
+running a tad slower in general (because of the range checking), but
+Ultima 4 and Arctic Fox (formerly unplayable) should now be just fine.
+
+	3) Changed the way the .apple2 preferences file is handled. I
+Did this mainly to support saving of PC Joystick parameters, and I'd
+rather let flex do the dirty work of regexp matching.
+
+	4) Changed the disk interface and main interface menu.  In the
+disk interface, you can now see which disk is in the drive, and with
+what permission <rw1> for read/write drive 1.  You can eject this disk
+or force it to be write-protected.  In the main menu screen, you have
+more parameters to play around with (associated with the pc joystick
+add-on).
+
+	5) Disk image files are now opened with user privileges, not
+root privileges, even though the program is suid root.  gzip'ed disks
+are still handled as root, but we no longer call the unsecure system()
+to do the dirty work.  Instead we fork and directly exec "/bin/gzip".
+
+	5) General bug fixes and enhancements.
+
+
+Changes in 0.03: (Jan-Feb 97)
+-----------------------------
+
+Version 0.03 - Aaron Culliney <chernabog@baldmountain.bbn.com>
+My code changes have nothing to do with my employer, BBN.  They were
+written completely on my own time and on my own machine.
+
+	1) Fixed language card initialization bug.
+
+	2) Improved colors.  Seems that Greens and purples we're
+switched around.  The colors are still slightly off, and color
+interpolation seems screwy (TODO).
+
+	3) Added apple II debugger interface.  This requires flex
+version 2.5.2.  (You can compile this into the program or leave it
+out.)  Type F7 to get into the debugger and type a '?' to see a
+command summary.  Check out the file DEBUGGER for more info.
+
+	4) Added support for standard 232960 .nib disks.
+
+	5) Added a more intuitive interface to selecting disks.  You
+can now traverse forward and backward in a directory hierarchy with
+the base directory set by your .apple2 config file.
+
+	6) changed keymap: shift-p = @ and shift-N = ^, just like my
+old II+ keyboard.
+
+Changes in 0.02: (8 Dec 1995)
+-----------------------------
+
+  * Ctrl-C will not kill the emulator with newer SVGAlib.  Please
+    use SVGAlib > 1.2.9 for best results.
+  
+  * Rudimentory REPT key handling.  It's too fast though.
+  
+  * The assembler files now compiles under ELF.
+  
+  * Not every SVGA card can do page-flipping.  The emulator now
+    checks for this and fall back to VGA if it can't.
+
+  * Keymap has changed a bit.  Backspace and ']' is now <-, '[' is
+    REPT.
+
+  * Disk extension changed to the more common .dsk (and a2d.info to
+    dsk.info).
+
+
+Changes in 0.01: (9 Oct 1994)
+-----------------------------
+
+  * Standard VGA support with some performance degradation.
+    (When page flipping occurs, 64K memory banks are swapped;
+     hence the performance degradation.)
+
+  * -vga flag switch added, e.g. "apple2 -vga"; forces standard
+    VGA detection.
+
+  * (Trident) TVGA8900 page flipping bug fixed.
+
+  * File names may now contain any character codes. (The previous
+    version had some problems with compressing/uncompressing file
+    names with extraordinary characters.)
+
+  * Diskette selection retains last cursor position.

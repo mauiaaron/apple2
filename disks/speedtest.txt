@@ -1,0 +1,74 @@
+From: wnight@cafe.net (William Night)
+Newsgroups: comp.emulators.apple2
+Subject: Speed Test Results
+Date: 22 Apr 1995 11:19:31 GMT
+Organization: Cafe.Net Internet Access System
+Lines: 63
+Message-ID: <3naoo3$9q1@scipio.cyberstore.ca>
+NNTP-Posting-Host: espresso.cafe.net
+X-Newsreader: TIN [version 1.2 PL2]
+
+These are the latest results from SpeedTest 2.2.2
+
+                AplWin2         Sim2e           Apl2em-2        Applemu
+Test
+CPU-Index       6.472           3.155           8.532           11.47
+TEXT-Index      2.629           0.1957          4.470            6.274
+VIDEO-Index     1.388           0.1957          3.990            5.271
+DISK-Index      3.297           0.4715          5.690            0.9626
+
+I will post the results from all the tests as soon as I get around to
+typing it in. These highlight the actual strengths and weaknesses of
+each emulator and are usefull in figuring out how fast an emulator will
+run a certain class of programs.
+
+The tests used will remain the same for each minor version level. All
+patch-level changes 2.2.x etc will just be to the main program and the
+results will be the same as all other patch levels with the same major
+and minor versions. For example the results for 2.2.2 and 2.2.8 will be
+the same, while the results between 2.2.2 and 2.3.2 are not gauranteed
+to be.
+
+These results were obtained on a 486dx4/100 with 4-Dos and QEMM loaded,
+the AplWin tests were performed in Windows 3.1 with the appropriate
+Win32 extensions added. I have a cirrus logic 5426 1MB VLB card
+installed.
+
+My system tests out at 195.7 in Sysinfo from Norton. I don't have any
+Video benchmarks that are common enough that the results would mean
+anything (see #1 below)
+
+A few comments about the results.
+
+1) Until I get a benchmark program for the machine the emulator is
+running on that all people involved can agree on, test results do not mean
+anything between platforms or even between two of the same type of machines
+running at different speeds. The only way the results should be used is to
+compare the relative speeds of two emulators on the same machine.
+
+2) The relative speeds compared to a //e do not mean that the emulator
+will perform that quickly or slowly on a video game or other
+application, for example, Sim2e appears to be very slow, but plays games
+quite well on my machine. The tests are very intensive in a specific
+area, where most programs are more general in their use of system
+resources.
+
+3) These tests aren't completely fair. The CPU tests are for the most
+part, but differences in the way an emulator is implemented make certain
+things automatically faster or slower. For instance, both Apl2em-2 and
+Applemu use IBM text for the apple text screen, therefore all text
+operations are handled by the IBM graphics card, both Sim2e and AplWin2
+do their own translation of text to graphics (and achieve a much more
+realistic looking screen). With the video tests, Applemu will only do
+black-and-white high-res graphics. This gives it an unfair advantage
+over the others.
+
+
+Any suggestions for the next version of speed-test or comments or
+questions are welcome.
+
+The new version of SpeedTest will be posted in the next message, and will
+probably make it's way onto an FTP site soon.
+
+
+

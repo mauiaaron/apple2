@@ -1,0 +1,15 @@
+Begin3
+Title:          Apple // emulator for Linux
+Author:		alexb@csd.uu.se (Alexander Jean-Claude Bottema)
+		sl14@cornell.edu (Stephen Lee)
+		asc@mhpcc.edu (Aaron Culliney)
+		michael@talamasca.ocis.net (Michael Deutschmann)
+Version:	0.7.4
+Entered-date:	2000-03-24
+Description:	Apple II+, //e emulator. Uses svgalib or X.
+Keywords:	emulator, linux
+Uploader:	michael@talamasca.ocis.net (Michael Deutschmann)
+Primary-site:	ftp.ocis.net /pub/users/ldeutsch/release/
+		257k apple2-emul-0.7.4.tar.gz
+Platform:	Linux i386
+End
