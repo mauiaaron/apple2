@@ -28,9 +28,7 @@
 #include "disk.h"
 #include "interface.h"
 #include "keys.h"
-#ifdef DEBUGGER
 #include "debug.h"
-#endif
 #include "cpu.h"
 #include "glue.h"
 #include "prefs.h"
@@ -47,12 +45,10 @@ static unsigned char	apple_ii_rom[12288];
 static unsigned char	apple_iie_rom[32768];		/* //e */
 #endif
 
-#ifdef DEBUGGER
 /* in debugger.c */
 extern int breakpoints[];
 extern int watchpoints[];
 extern int op_breakpoints[256];
-#endif
 
 GLUE_FIXED_READ(read_ram_default,apple_ii_64k)
 GLUE_FIXED_WRITE(write_ram_default,apple_ii_64k)
@@ -658,7 +654,6 @@ static void reinitialize(void)
 {
     int i;
 
-#ifdef DEBUGGER
 	/* reset the watchpoints and breakpoints */
 	for (i=0; i<MAX_BRKPTS; i++) {
 	    breakpoints[i] = -1;
@@ -667,7 +662,6 @@ static void reinitialize(void)
 	for (i=0; i<0x100; i++) {
 	    op_breakpoints[(unsigned char)i] = 0;
 	}
-#endif
 
 	c_initialize_vm();
 

@@ -75,7 +75,6 @@
 				(,EffectiveAddr_E,8);		\
 			
 /* h means hooked */
-#ifdef DEBUGGER
 #define GetFromEA_Bh	orb	$1, SN(cpu65_debug)+3;	\
 			GetFromEA_B
 
@@ -86,12 +85,6 @@
 /* reset operation code before each instruction. This assumes %al 
  * is zero, and is inserted into Continue */
 #define	ZeroOp		mov	%al, SN(cpu65_debug)+3;
-
-#else /* !DEBUGGER */
-#define GetFromEA_Bh	GetFromEA_B
-#define PutToEA_Bh	PutToEA_B
-#define	ZeroOp
-#endif /* !DEBUGGER */
 
 			/* The OR actually functions as a move, but we
 			 * want to set the flags and we know %ah is zero */
@@ -2470,8 +2463,6 @@ op_XMA_imm:
 
 /* Exception handler */
 
-#ifdef DEBUGGER
-								   
 exception:		cmpb	$RebootSig, %ah
 			jz	ex_reboot
 			cmpb	$ResetSig, %ah
@@ -2507,24 +2498,6 @@ ex_reset:		movb	$0, SN(cpu65__signal)
 			GetFromPC_B
 			jmp	*cpu65__opcodes(,%eax,4)
 
-#else /* !DEBUGGER */
-
-exception:		cmpb	$RebootSig, %ah
-			jz	ex_reboot
-ex_reset:		movb	$0, SN(cpu65__signal)
-			movw	$0xfffc, EffectiveAddr
-			GetFromEA_W
-			movw    %ax, PC_Reg
-			xorb	%ah, %ah
-			GetFromPC_B
-			jmp	*cpu65__opcodes(,%eax,4)
-
-ex_reboot:		popal
-			movb	$0, SN(cpu65__signal)
-			ret;
-
-#endif /* !DEBUGGER */
-
 	/* -----------------------------------------------------------------
 	 * Begin emulation.
 	 * ----------------------------------------------------------------- */
@@ -2541,8 +2514,6 @@ E(cpu65_run)
 		xorl	%edi, %edi
 		movl	$0x1FF, %edx		# Stack pointer
 		jmp	ex_reset
-
-#ifdef DEBUGGER
 
 E (cpu65_direct_write)
 		/* NB: dependent on register choices */
@@ -2562,7 +2533,6 @@ E(cpu65_step)
 		ReplaceState
 		GetFromPC_B
 		jmp	*cpu65__opcodes(,%eax,4)
-#endif
 
 
 /* Tables */

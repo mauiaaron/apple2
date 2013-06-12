@@ -30,11 +30,8 @@
 /* from misc.c */
 extern uid_t user, privileged;
 
-#ifdef DEBUGGER
 /* from debugger.c */
 extern void c_do_debugging();
-#endif
-
 
 /* parameters for generic and keyboard-simulated joysticks */
 short		joy_x = 127;
@@ -254,11 +251,9 @@ void c_periodic_update(int dummysig) {
 	case kF5:
 	    c_interface_keyboard_layout();
 	    break;
-#ifdef DEBUGGER
 	case kF7:
 	    cpu65_interrupt(EnterDebugSig);
 	    break;
-#endif
 #if 0
 	case kF8:
 	    c_interface_words();
@@ -350,7 +345,6 @@ void c_periodic_update(int dummysig) {
         joy_x = joy_y = 256;
 }
 
-#ifdef DEBUGGER
 /* Called from cpu code.  Perhaps should be moved to misc.c, but was 
  * abstracted from function above...
  */
@@ -360,7 +354,6 @@ void enter_debugger(void)
      c_do_debugging();
      setitimer(ITIMER_VIRTUAL,&timer_on,0);
 }
-#endif /* DEBUGGER */
 
 /* -------------------------------------------------------------------------
     void c_read_raw_key() : handle a scancode

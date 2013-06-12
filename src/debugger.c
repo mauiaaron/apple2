@@ -14,7 +14,6 @@
  *
  */
 
-#ifdef DEBUGGER
 #include "debug.h"
 #include "misc.h"
 #include "keys.h"
@@ -1132,4 +1131,3 @@ void c_do_debugging() {
     }
 }
 
-#endif /* DEBUGGER */
