@@ -17,27 +17,21 @@
 /*  ASSUMPTIONS:
  *	flex version 2.5.2 or later
  *
- *	this file is processed in several steps.  the Makefile first
- *	runs it through cpp so that we can eliminate whole rules which
- *	are unnecessary.  the generated file is then run through flex
- *	to generate the actual c code which is then compiled.
- *
  */
 
 %{
 
 /* process includes only the second time we parse this file. */
-#define INC(HASH,STR) HASH ## include STR
-INC(#,"misc.h")
-INC(#,"interface.h")
-INC(#,"debug.h")
-INC(#,"disk.h")
-INC(#,"video.h")
-INC(#,"keys.h")
-INC(#,<unistd.h>)
-INC(#,<strings.h>)
-INC(#,<ctype.h>)
-INC(#,"cpu.h")
+#include "misc.h"
+#include "interface.h"
+#include "debug.h"
+#include "disk.h"
+#include "video.h"
+#include "keys.h"
+#include <unistd.h>
+#include <strings.h>
+#include <ctype.h>
+#include "cpu.h"
 
 
 YY_BUFFER_STATE buffer = 0;
@@ -100,7 +94,6 @@ ADDRS	[0-9a-fA-F]+
     return MEM;
 }
 
-#ifdef APPLE_IIE
 {BOS}(me?m?|as?c?i?i?){WS}+{BANK}{ADDRS}{WS}+\+?{HEX}+{EOS} {
     /* mem /<bank>/<addrs> <len> */
     int do_ascii = 0;
@@ -117,7 +110,6 @@ ADDRS	[0-9a-fA-F]+
     dump_mem(arg1, arg2, 0, do_ascii, arg3);
     return MEM;
 }
-#endif
 
 {BOS}(me?m?|as?c?i?i?){WS}+{ADDRS}{EOS} {
     /* mem <addrs> */
@@ -132,7 +124,6 @@ ADDRS	[0-9a-fA-F]+
     return MEM;
 }
 
-#ifdef APPLE_IIE
 {BOS}(me?m?|as?c?i?i?){WS}+{BANK}{ADDRS}{EOS} {
     /* mem /<bank>/<addrs> */
     int do_ascii = 0;
@@ -148,7 +139,6 @@ ADDRS	[0-9a-fA-F]+
     dump_mem(arg1, 256, 0, do_ascii, arg3);
     return MEM;
 }
-#endif
 
 {BOS}(me?m?|as?c?i?i?){WS}+\+{HEX}+{EOS} {
     /* mem +<len> */
@@ -192,7 +182,6 @@ ADDRS	[0-9a-fA-F]+
     return MEM;
 }
 
-#ifdef APPLE_IIE
 {BOS}(me?m?|as?c?i?i?){WS}*(lc?1|lc?2){WS}+{BANK}{ADDRS}{WS}+\+?{HEX}+{EOS} {
     /* dump mem from lc<bank> /<bank>/<addrs> <len> */
     int do_ascii = 0;
@@ -214,7 +203,6 @@ ADDRS	[0-9a-fA-F]+
     dump_mem(arg1, arg2, lc, do_ascii, arg3);
     return MEM;
 }
-#endif
 
 {BOS}(me?m?|as?c?i?i?){WS}*(lc?1|lc?2){WS}+{ADDRS}{EOS} {
     /* dump mem from lc<bank> <addrs> */
@@ -233,7 +221,6 @@ ADDRS	[0-9a-fA-F]+
     return MEM;
 }
 
-#ifdef APPLE_IIE
 {BOS}(me?m?|as?c?i?i?){WS}*(lc?1|lc?2){WS}+{BANK}{ADDRS}{EOS} {
     /* dump mem from lc<bank> /<bank>/<addrs> */
     int do_ascii = 0;
@@ -254,7 +241,6 @@ ADDRS	[0-9a-fA-F]+
     dump_mem(arg1, 256, lc, do_ascii, arg3);
     return MEM;
 }
-#endif
 
 {BOS}di?s?{WS}+{ADDRS}{WS}+\+?{HEX}+{EOS} {
     /* disassemble at <addrs> <len> */
@@ -267,7 +253,6 @@ ADDRS	[0-9a-fA-F]+
     return DIS;
 }
 
-#ifdef APPLE_IIE
 {BOS}di?s?{WS}+{BANK}{ADDRS}{WS}+\+?{HEX}+{EOS} {
     /* disassemble at /<bank>/<addrs> <len> */
     while (*debugtext != '/') ++debugtext;
@@ -281,7 +266,6 @@ ADDRS	[0-9a-fA-F]+
     disasm(arg1, arg2, 0, arg3);
     return DIS;
 }
-#endif
 
 {BOS}di?s?{WS}+{ADDRS}{EOS} {
     /* disassemble at <addrs> */
@@ -295,7 +279,6 @@ ADDRS	[0-9a-fA-F]+
     return DIS;
 }
 
-#ifdef APPLE_IIE
 {BOS}di?s?{WS}+{BANK}{ADDRS}{EOS} {
     /* disassemble at /<bank>/<addrs> */
     while (*debugtext != '/') ++debugtext;
@@ -310,7 +293,6 @@ ADDRS	[0-9a-fA-F]+
     disasm(arg1, arg2, 0, arg3);
     return DIS;
 }
-#endif
 
 {BOS}di?s?{WS}+\+{HEX}+{EOS} {
     /* disassemble current location +<len> */
@@ -343,7 +325,6 @@ ADDRS	[0-9a-fA-F]+
     return DIS;
 }
 
-#ifdef APPLE_IIE
 {BOS}di?s?{WS}*(lc?1|lc?2){WS}+{BANK}{ADDRS}{WS}+\+?{HEX}+{EOS} {
     /* disassemble language<bank> /<bank>/<addr> <len> */
     int lc;
@@ -363,7 +344,6 @@ ADDRS	[0-9a-fA-F]+
     disasm(arg1, arg2, lc, arg3);
     return DIS;
 }
-#endif
 
 {BOS}di?s?{WS}*(lc?1|lc?2){WS}+{ADDRS}{EOS} {
     /* disassemble language<bank> <addr> */
@@ -379,7 +359,6 @@ ADDRS	[0-9a-fA-F]+
     return DIS;
 }
 
-#ifdef APPLE_IIE
 {BOS}di?s?{WS}*(lc?1|lc?2){WS}+{BANK}{ADDRS}{EOS} {
     /* disassemble language<bank> /<bank>/<addr> */
     int lc;
@@ -398,7 +377,6 @@ ADDRS	[0-9a-fA-F]+
     disasm(arg1, 256, lc, arg3);
     return DIS;
 }
-#endif
 
 {BOS}re?g?s?{EOS} {
     /* show cpu state */
@@ -620,13 +598,11 @@ ADDRS	[0-9a-fA-F]+
     return BREAK;
 }
 
-#ifdef APPLE_IIE
 {BOS}br65c02{EOS} {
     /* set opcode breakpoints on 65c02 instructions */
     set_halt_65c02();
     return BREAK;
 }
-#endif
 
 {BOS}ig?n?o?r?e?{EOS} {
     /* ignore everything */
@@ -694,13 +670,11 @@ ADDRS	[0-9a-fA-F]+
     return CLEAR;
 }
 
-#ifdef APPLE_IIE
 {BOS}cl65c02{EOS} {
     /* clear 65c02 ... */
     clear_halt_65c02();
     return CLEAR;
 }
-#endif
 
 {BOS}stat?u?s?{EOS} {
     /* show breakpoints and watchpoints */
@@ -724,7 +698,6 @@ ADDRS	[0-9a-fA-F]+
     return SEARCH;
 }
 
-#ifdef APPLE_IIE
 {BOS}sea?r?c?h?{WS}+{BANK}{WS}+{HEX}+{EOS} {
     /* search memory<bank> for <bytes> */
     while (*debugtext != '/') ++debugtext;
@@ -737,7 +710,6 @@ ADDRS	[0-9a-fA-F]+
 
     return SEARCH;
 }
-#endif
 
 {BOS}sea?r?c?h?{WS}*(lc?1|lc?2){WS}+{HEX}+{EOS} {
     /* search LC<bank> for <bytes> */
@@ -755,7 +727,6 @@ ADDRS	[0-9a-fA-F]+
     return SEARCH;
 }
 
-#ifdef APPLE_IIE
 {BOS}sea?r?c?h?{WS}*(lc?1|lc?2){WS}+{BANK}{WS}+{HEX}+{EOS} {
     /* search LC<bank> memory<bank> for <bytes> */
     int lc;
@@ -774,7 +745,6 @@ ADDRS	[0-9a-fA-F]+
 
     return SEARCH;
 }
-#endif
 
 {BOS}key{WS}+{HEX}+{EOS} {
     /* send key code to emulator */
