@@ -309,7 +309,9 @@ void c_periodic_update(int dummysig) {
     }
 #ifdef PC_JOYSTICK
     else if ((joy_mode == JOY_PCJOY) && !(js_fd < 0)) {
-	read(js_fd, &js, JS_RETURN);
+	if (read(js_fd, &js, JS_RETURN) == -1) {
+            // error
+        }
 
 	x_val = (js.x < js_center_x)
 	    ? (js.x - js_offset_x) * js_adjustlow_x

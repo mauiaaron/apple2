@@ -26,6 +26,7 @@
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/keysym.h>
+#include <X11/XKBlib.h>
 #include <X11/extensions/XShm.h>/* MITSHM! */
 
 
@@ -209,7 +210,7 @@ static void getshm(int size) {
     /* attach to the shared memory segment */
     image->data = xshminfo.shmaddr = shmat(id, 0, 0);
 
-    if (image->data == -1) {
+    if ((int)(image->data) == -1) {
 	perror("shmat");
 	printf("Could not attach to shared memory\n");
 	exit(1);
@@ -353,7 +354,7 @@ static void c_initialize_colors() {
 static int keysym_to_scancode(void) {
     static int rc = 0xFF;
 
-    switch(rc = XKeycodeToKeysym(display, xevent.xkey.keycode, 0))
+    switch(rc = XkbKeycodeToKeysym(display, xevent.xkey.keycode, 0, 0))
     {
 	case XK_F1:
 	    rc = 59; break;
@@ -588,7 +589,7 @@ void video_init() {
 	unsigned long	attribmask;
 	int x, y; 	/* window position */
 	int drawingok;
-	unsigned int display_width, display_height;
+	//unsigned int display_width, display_height;
 	XGCValues xgcvalues;
 	int valuemask;
 	char *window_name = "Apple ][";
@@ -597,7 +598,7 @@ void video_init() {
 	XWMHints *wm_hints;
 	XClassHint *class_hints;
 	XTextProperty windowName, iconName;
-	GC gc;
+	//GC gc;
 	char *progname;/* name this program was invoked by */
 	char *displayname = NULL;
 
@@ -640,8 +641,8 @@ void video_init() {
 	    exit(1);
 	}
 	visual = visualinfo.visual;
-	display_width = DisplayWidth(display, screen_num);
-	display_height = DisplayHeight(display, screen_num);
+	//display_width  = DisplayWidth(display, screen_num);
+	//display_height = DisplayHeight(display, screen_num);
 
 	/* Note that in a real application, x and y would default to 0
 	 * but would be settable from the command line or resource database.  
@@ -747,7 +748,7 @@ void video_init() {
 	/* create the GC */
 	valuemask = GCGraphicsExposures;
 	xgcvalues.graphics_exposures = False;
-	gc = XCreateGC(
+	/*gc = */XCreateGC(
 		display,
 		win,
 		valuemask,
@@ -822,7 +823,7 @@ void video_init() {
 	
         }
 
-	svga_GM = video__fb1 = image->data;
+	svga_GM = video__fb1 = (unsigned char*)image->data;
 	video__fb2 = vga_mem_page_1;
 
 	memset(video__fb1,0,SCANWIDTH*SCANHEIGHT);

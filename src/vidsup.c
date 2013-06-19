@@ -438,7 +438,7 @@ static void c_initialize_row_col_tables(void)
 
     /* hires page offsets. initialize to invalid values. */
     for (i = 0; i < 8192; i++) {
-	(long)(video__screen_addresses[i]) = -1;
+	video__screen_addresses[i] = -1;
     }
 
     for (y = 0; y < 24; y++) {

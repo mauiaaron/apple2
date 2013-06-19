@@ -62,7 +62,7 @@ int		argc;
 
 /* misc arrays */
 #define	TEMPSIZE	4096
-unsigned char	temp[ TEMPSIZE ];/* should be >=4096 (stuff depends on this) */
+char	temp[ TEMPSIZE ];/* should be >=4096 (stuff depends on this) */
 
 #ifdef APPLE_IIE
 /* memory offsets from softswitches */

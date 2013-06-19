@@ -17,12 +17,12 @@
 #ifndef A2_INTERFACE_H
 #define A2_INTERFACE_H
 
-void		c_interface_print( int x, int y, int cs, unsigned char *s ); 
+void		c_interface_print( int x, int y, int cs, char *s ); 
 void		c_interface_redo_bottom();/* bit of a HACK? */
 void		c_load_interface_font();
 void		c_interface_keyboard_layout();
 void		c_interface_parameters();
 void		c_interface_exit();
-void		c_interface_translate_screen(unsigned char screen[24][41]);
+void		c_interface_translate_screen(char screen[24][41]);
 void		c_interface_select_diskette(int);
 #endif

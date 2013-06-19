@@ -16,6 +16,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -137,6 +138,7 @@ int c_new_diskette_6(int drive, char *file_name, int cmpr, int nib, int force) {
     struct stat	buf;
 
     strcpy(disk6.disk[drive].file_name, file_name);
+    disk6.disk[drive].file_name[1023]='\0';
     disk6.disk[drive].compressed = cmpr;
     disk6.disk[drive].nibblized = nib;
     if (disk6.disk[drive].fp) {
@@ -193,7 +195,8 @@ unsigned char c_read_nibblized_6_6()
 	fseek(disk6.disk[disk6.drive].fp, PHASE_BYTES * disk6.disk[disk6.drive].phase, SEEK_SET);
 	disk6.disk[disk6.drive].phase_change = 0;
     }
-    ch = (unsigned char) disk6.disk_byte = fgetc(disk6.disk[disk6.drive].fp);
+    disk6.disk_byte = fgetc(disk6.disk[disk6.drive].fp);
+    ch = disk6.disk_byte;
     /* track revolves... */
     if (ftell(disk6.disk[disk6.drive].fp) == (PHASE_BYTES * (disk6.disk[disk6.drive].phase + 2)))
 	fseek(disk6.disk[disk6.drive].fp, -2 * PHASE_BYTES, SEEK_CUR);
@@ -309,7 +312,9 @@ unsigned char c_read_normal_6()
 	    fseek( disk6.disk[disk6.drive].fp, disk6.disk[disk6.drive].file_pos, SEEK_SET );
 	    
 	    /* Read sector */
-	    fread( disk6.disk_data, 1, 256, disk6.disk[disk6.drive].fp );
+	    if (fread( disk6.disk_data, 1, 256, disk6.disk[disk6.drive].fp ) != 256) {
+                // error
+            }
 	    disk6.disk_data[ 256 ] = disk6.disk_data[ 257 ] = 0;
 	    value = 0xAD;
 	    break;
@@ -629,7 +634,9 @@ void disk_install(int slot)
 	     printf("Cannot find file '%s'.\n",temp);
 	     exit( 0 );
 	 }
-	 fread(slot6_rom, 0x100, 1, f);
+	 if (fread(slot6_rom, 0x100, 1, f) != 0x100) {
+             // error
+         }
 	 fclose(f);
 	 slot6_rom_loaded = 1;
     }

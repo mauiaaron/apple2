@@ -19,7 +19,7 @@
 
 struct diskette
 {
-    unsigned char file_name[1024];
+    char file_name[1024];
     int compressed;
     int nibblized;
     int protected;
@@ -50,6 +50,7 @@ extern struct drive disk6;
 void		c_init_6();
 int		c_new_diskette_6(int, char*, int, int, int);
 void		c_eject_6(int);
+void            disk_install(int slot);
 
 void		disk_read_nop(),
 		disk_read_phase(),

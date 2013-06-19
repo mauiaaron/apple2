@@ -103,7 +103,9 @@ void pre_compact(void)
     };
 
     unlink(filename);
-    ftruncate(compaction_file,TSIZE);  /* might not be 100% portable */ 
+    if (ftruncate(compaction_file,TSIZE) == -1) {  /* might not be 100% portable */ 
+        // ERROR ...
+    }
    
     /* If the ftruncate doesn't work (Single Unix does not require it 
      * to work for the extending case), try this instead:
@@ -159,6 +161,9 @@ void compact(void)
              MAP_FIXED|MAP_FILE|MAP_SHARED,
              compaction_file,
              j*PSIZE);
+        if (x == MAP_FAILED) {
+            // ERROR
+        }
 
         if (work == MAP_FAILED)
         {

@@ -42,7 +42,7 @@ int main(void)
     char *line = 0; 
     size_t line_size = 0;
 
-    int i,mx;
+    int i,mx=0;
 
     printf("/* Apple II text font data\n"
            " * \n"
@@ -80,7 +80,9 @@ int main(void)
             {
                 int k;
 
-                getline(&line,&line_size,stdin); 
+                if (getline(&line,&line_size,stdin) == -1) {
+                    // ERROR ...
+                }
                 k = 8;
                 byte = 0;
                 while (k--)

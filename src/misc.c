@@ -18,10 +18,10 @@
 #include <string.h>
 #include <ctype.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <signal.h>
 #include <sys/ioctl.h>
 #include <sys/time.h>
+#include <sys/io.h>
 
 #include "misc.h"
 #include "video.h"
@@ -497,7 +497,7 @@ void c_initialize_tables() {
 #endif
 
     video_set(0); /* must be done here, between pre_compact & compact */
-    
+
     disk_install(6); /* Put a Disk ][ Controller in slot 6 */
 
     compact(); /* Compress memory so that identical pages share storage */
@@ -534,7 +534,9 @@ void c_initialize_apple_ii_memory()
              printf("Cannot find file '%s'.\n",temp);
 	     exit(0);
          }
-         fread(apple_ii_rom, 0x3000, 1, f);
+         if (fread(apple_ii_rom, 0x3000, 1, f) != 0x3000) {
+             // ERROR ...
+         }
          fclose(f);
 	 ii_rom_loaded = 1;
      }
@@ -546,7 +548,9 @@ void c_initialize_apple_ii_memory()
 	     printf("Cannot find file '%s'.\n",temp);
 	     exit(0);
 	 }
-	 fread(apple_iie_rom, 32768, 1, f);
+	 if (fread(apple_iie_rom, 32768, 1, f) != 32768) {
+             // ERROR ...
+         }
 	 fclose(f);
 	 iie_rom_loaded = 1;
      }

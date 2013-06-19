@@ -94,7 +94,7 @@ void c_load_interface_font()
 /* -------------------------------------------------------------------------
     c_interface_print()
    ------------------------------------------------------------------------- */
-void c_interface_print( int x, int y, int cs, unsigned char *s )
+void c_interface_print( int x, int y, int cs, char *s )
 {
     int		i;
 
@@ -137,7 +137,7 @@ void c_interface_redo_diskette_bottom() {
 #define IsGraphic(c) ((c) == '|' || ((c) >= 0x80 && (c) <= 0x8A))
 #define IsInside(x,y) ((x) >= 0 && (x) <= 39 && (y) >= 0 && (y) <= 23)
 
-void c_interface_translate_screen( unsigned char screen[24][41] )
+void c_interface_translate_screen( char screen[24][41] )
 {
     static char	map[11][3][4] ={ { "...",
 				   ".||",
@@ -286,8 +286,8 @@ int c_interface_disk_select(const struct dirent *e)
     const char *p;
 
     strncpy( cmp, disk_path, DISKSIZE );
-    strncat( cmp, "/", DISKSIZE );
-    strncat( cmp, e -> d_name, DISKSIZE );
+    strncat( cmp, "/", DISKSIZE-1 );
+    strncat( cmp, e -> d_name, DISKSIZE-1 );
 
     /* don't show disk in alternate drive */
     if (!strcmp(cmp, disk6.disk[altdrive].file_name))
@@ -332,7 +332,7 @@ void c_interface_exit()
 
 void c_interface_select_diskette( int drive )
 {
-    static unsigned char screen[24][41] =
+    static char screen[24][41] =
       { "||||||||||||||||||||||||||||||||||||||||",
 	"| Insert diskette into Drive _, Slot 6 |",
 	"||||||||||||||||||||||||||||||||||||||||",
@@ -416,13 +416,13 @@ void c_interface_select_diskette( int drive )
 		    snprintf(temp, TEMPSIZE, " %s",
 		             namelist[ ent_no ] -> d_name );
 	        if (c_interface_cut_name(temp)) {
-		    strncat(temp, " <gz>", TEMPSIZE);
+		    strncat(temp, " <gz>", TEMPSIZE-1);
 		}
 		/* write protected disk in drive? */
 		else if ((in_drive) && (disk6.disk[drive].protected))
-		    strncat(temp, (drive == 0) ? " <r1>" : " <r2>", TEMPSIZE);
+		    strncat(temp, (drive == 0) ? " <r1>" : " <r2>", TEMPSIZE-1);
 		else if (in_drive)
-		    strncat(temp, (drive == 0) ? " <rw1>" : " <rw2>", TEMPSIZE);
+		    strncat(temp, (drive == 0) ? " <rw1>" : " <rw2>", TEMPSIZE-1);
 	    }
 
 	    slen = strlen( temp );
@@ -659,7 +659,7 @@ void c_interface_select_diskette( int drive )
 
 void c_interface_parameters()
 {
-    static unsigned char screen[24][41] =
+    static char screen[24][41] =
       { "||||||||||||||||||||||||||||||||||||||||",
 	"|     Apple II Emulator for Linux      |",
 	"|            Originally by             |",
@@ -1107,7 +1107,7 @@ void c_interface_parameters()
 
 void c_interface_words()
 {
-    static unsigned char screen[24][41] =
+    static char screen[24][41] =
       { "||||||||||||||||||||||||||||||||||||||||",
 	"|    Apple II+ Emulator Version 0.01   |",
 	"||||||||||||||||||||||||||||||||||||||||",
@@ -1153,7 +1153,7 @@ void c_interface_words()
 
 void c_interface_keyboard_layout()
 {
-    static unsigned char screen1[24][41] =
+    static char screen1[24][41] =
       { "||||||||||||||||||||||||||||||||||||||||",
 	"|     Apple II+ US Keyboard Layout     |",
 	"||||||||||||||||||||||||||||||||||||||||",
@@ -1180,7 +1180,7 @@ void c_interface_keyboard_layout()
 	"||||||||||||||||||||||||||||||||||||||||" };
 
 #ifdef APPLE_IIE
-    static unsigned char screen2[24][41] =
+    static char screen2[24][41] =
       { "||||||||||||||||||||||||||||||||||||||||",
 	"|     Apple //e US Keyboard Layout     |",
 	"||||||||||||||||||||||||||||||||||||||||",

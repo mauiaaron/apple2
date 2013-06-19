@@ -486,7 +486,7 @@ ADDRS	[0-9a-fA-F]+
     /* step until PC == next instruction.  good for finishing backward
        loops */
     unsigned char op;
-    int delta;
+    int delta=0;
     op = get_current_opcode();
 	
     switch (opcodes[op].mode)

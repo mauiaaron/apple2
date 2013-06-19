@@ -38,7 +38,7 @@ int breakpoints[MAX_BRKPTS];		/* memory breakpoints */
 int watchpoints[MAX_BRKPTS];		/* memory watchpoints */
 
 /* debugger globals */
-static unsigned char screen[SCREEN_Y][SCREEN_X] =
+static char screen[SCREEN_Y][SCREEN_X] =
     { "||||||||||||||||||||||||||||||||||||||||",
       "|                                      |",
       "|                                      |",
@@ -361,7 +361,7 @@ void bload(FILE *f, char *name, int addrs) {
     }
 
     while ((len = fread(temp, 1, TEMPSIZE, f))) {
-	hexstr = temp;
+	hexstr = (unsigned char*)temp;
 	for (; len > 0; len--) {
 	    data = *hexstr;
 	    
@@ -1029,7 +1029,7 @@ void do_debug_command() {
 	for (i = 0, j = 0; i < PROMPT_Y - num_buffer_lines; i++, j = 0) {
 	    memcpy(command_buf[i], command_buf[num_buffer_lines+1+i], BUF_X);
 	    while ((j < BUF_X) && (command_buf[i][j] != '\0')) j++;
-	    memset (command_buf[i] + j, ' ', BUF_X - j);
+	    memset (command_buf[i] + j, ' ', BUF_X - j - 1);
 	    command_buf[i][BUF_X - 1] = '\0';
 	}
     }
@@ -1040,7 +1040,7 @@ void do_debug_command() {
 	j = 0;
 	memcpy(command_buf[i], second_buf[k++], BUF_X);
 	while ((j < BUF_X) && (command_buf[i][j] != '\0')) ++j;
-	memset(command_buf[i] + j, ' ', BUF_X - j);
+	memset(command_buf[i] + j, ' ', BUF_X - j - 1);
 	command_buf[i++][BUF_X - 1] = '\0';
     }
 
