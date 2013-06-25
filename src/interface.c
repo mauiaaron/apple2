@@ -26,6 +26,7 @@
 #include <dirent.h>
 #include <termios.h>
 #include <errno.h>
+#include <time.h>
 
 #include "interface.h"
 #include "keys.h"
@@ -326,6 +327,14 @@ void c_interface_exit()
 }
 
 
+static void c_usleep() {
+    // 1.5 secs
+    struct timespec delay;
+    delay.tv_sec=1;
+    delay.tv_nsec=500000000;
+    nanosleep(&delay, NULL);
+}
+
 /* -------------------------------------------------------------------------
     c_interface_select_diskette()
    ------------------------------------------------------------------------- */
@@ -388,7 +397,7 @@ void c_interface_select_diskette( int drive )
            legitimate directories... */
 	c_interface_print( 6, 11, 0, "Problem reading directory!" );
 	sprintf(disk_path, "/");
-	usleep(1500000);
+	c_usleep();
 	c_interface_exit();
 	return;
     }
@@ -493,7 +502,7 @@ void c_interface_select_diskette( int drive )
 				   "  Disk is read and write protected.   " );
 			c_interface_print( 1, 22, 0,
 				   "                                      " );
-			usleep(1500000);
+			c_usleep();
 			c_mygetch(1);
 			c_interface_redo_diskette_bottom();
 			continue;
@@ -547,7 +556,7 @@ void c_interface_select_diskette( int drive )
  			"          Problem gunzip'ing          " );
 			c_interface_print( 1, 22, 0,
 			"                                      " );
-			usleep(1500000);
+			c_usleep();
 			c_mygetch(1);
 			c_interface_redo_diskette_bottom();
 			continue;
@@ -562,7 +571,7 @@ void c_interface_select_diskette( int drive )
 			c_interface_print( 1, 21, 0,
 			       "    Problem exec'ing /bin/gzip -d     " );
 			c_interface_print( 1, 22, 0, temp);
-			usleep(1500000);
+			c_usleep();
 			exit(-1);
 		    }
 		} else {
@@ -570,7 +579,7 @@ void c_interface_select_diskette( int drive )
 		    c_interface_print( 1, 21, 0,
 			       "            Cannot fork!              " );
 		    c_interface_print( 1, 22, 0, temp);
-		    usleep(1500000);
+		    c_usleep();
 		    c_mygetch(1);
 		    c_interface_redo_diskette_bottom();
 		    continue;
@@ -595,7 +604,7 @@ void c_interface_select_diskette( int drive )
 			"           Problem gzip'ing           " );
 			c_interface_print( 1, 22, 0,
 			"                                      " );
-			usleep(1500000);
+			c_usleep();
 			c_mygetch(1);
 			c_interface_redo_diskette_bottom();
 			continue;
@@ -608,7 +617,7 @@ void c_interface_select_diskette( int drive )
 			c_interface_print( 1, 21, 0,
 			       "      Problem exec'ing /bin/gzip      " );
 			c_interface_print( 1, 22, 0, temp);
-			usleep(1500000);
+			c_usleep();
 			exit(-1);
 		    }
 		} else {
@@ -616,7 +625,7 @@ void c_interface_select_diskette( int drive )
 		    c_interface_print( 1, 21, 0,
 			       "            Cannot fork!              " );
 		    c_interface_print( 1, 22, 0, temp);
-		    usleep(1500000);
+		    c_usleep();
 		    c_mygetch(1);
 		    c_interface_redo_diskette_bottom();
 		    continue;
@@ -632,7 +641,7 @@ void c_interface_select_diskette( int drive )
 			"  Disk is read and write protected.   " );
 	        c_interface_print( 1, 22, 0,
 			"                                      " );
-		usleep(1500000);
+		c_usleep();
 		c_mygetch(1);
 		c_interface_redo_diskette_bottom();
 		continue;
