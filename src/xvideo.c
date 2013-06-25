@@ -16,6 +16,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <unistd.h>
 #include <string.h>
 #include <sys/types.h>
@@ -34,8 +35,6 @@
 #include "misc.h"
 #include "keys.h"
 
-/* copied from svideo.c (didn't bother to rename!) */
-static unsigned char	*svga_GM;
 static unsigned char	vga_mem_page_0[SCANWIDTH*SCANHEIGHT];		/* page0 framebuffer */
 static unsigned char	vga_mem_page_1[SCANWIDTH*SCANHEIGHT];		/* page1 framebuffer */
 
@@ -45,12 +44,16 @@ static GC gc;
 static unsigned int width, height;	/* window size */
 
 static int screen_num;
-static Visual* visual;
 static XVisualInfo visualinfo;
 static XColor colors[256];
 XImage *image;
 static Colormap cmap;
 XEvent xevent;
+
+static uint32_t red_shift;
+static uint32_t green_shift;
+static uint32_t blue_shift;
+static uint32_t alpha_shift;
 
 int		doShm = 1;/* assume true */
 XShmSegmentInfo	xshminfo;
@@ -62,24 +65,7 @@ int		xshmeventtype;
    ------------------------------------------------------------------------- */
 void video_setpage(int p)
 {
-    if (p == video__current_page) return;
-
-    if (p)
-    {
-	memcpy(vga_mem_page_0,svga_GM,SCANWIDTH*SCANHEIGHT);
-	memcpy(svga_GM,vga_mem_page_1,SCANWIDTH*SCANHEIGHT);
-	video__current_page = 1;
-	video__fb1 = vga_mem_page_0;
-	video__fb2 = svga_GM;
-    }
-    else
-    {
-	memcpy(vga_mem_page_1,svga_GM,SCANWIDTH*SCANHEIGHT);
-	memcpy(svga_GM,vga_mem_page_0,SCANWIDTH*SCANHEIGHT);
-	video__current_page = 0;
-	video__fb1 = svga_GM;
-	video__fb2 = vga_mem_page_1;
-    }
+    video__current_page = p;
 }
 
 /*
@@ -100,39 +86,35 @@ static void getshm(int size) {
     do
     {
 	id = shmget((key_t) key, 0, 0777);
-	if (id != -1)
-	{
+	if (id == -1) {
+	    /* no stale ID's */
+	    id = shmget((key_t)key, size, IPC_CREAT|0777);
+	    if (id == -1) {
+		perror("shmget");
+		printf("Could not get shared memory\n");
+		++key;
+	    }
+	    break;
+        } else {
 	    /* we got someone else's ID. check if it's stale. */
-	    printf("Found shared memory key=`%c%c%c%c', id=%d\n",
-		    (key & 0xff000000)>>24,
-		    (key & 0xff0000)>>16,
-		    (key & 0xff00)>>8,
-		    (key & 0xff),
-		    id
-		    );
+	    printf("Found shared memory key=`%c%c%c%c', id=%d\n", (key & 0xff000000)>>24, (key & 0xff0000)>>16, (key & 0xff00)>>8, (key & 0xff), id);
 	    rc=shmctl(id, IPC_STAT, &shminfo); /* get stats */
-	    if (!rc) {
-		/* someone's using the emulator */
+	    if (rc) {
+		/* error.  what to do now? */
+		perror("shmctl");
+		printf("Could not get stats on key=`%c%c%c%c', id=%d\n", (key & 0xff000000)>>24, (key & 0xff0000)>>16, (key & 0xff00)>>8, (key & 0xff), id);
+		++key;
+            } else {
 		if (shminfo.shm_nattch) {
-		    printf( "User uid=%d, key=`%c%c%c%c' appears to be running "
-			    "the emulator.\n",
-			    shminfo.shm_perm.cuid,
-			    (key & 0xff000000)>>24,
-			    (key & 0xff0000)>>16,
-			    (key & 0xff00)>>8,
-			    (key & 0xff)
-			    );
+		    printf( "User uid=%d, key=`%c%c%c%c' appears to be running the emulator.\n", shminfo.shm_perm.cuid, (key & 0xff000000)>>24, (key & 0xff0000)>>16, (key & 0xff00)>>8, (key & 0xff));
 		    ++key; /* increase the key count */
-		}
-
-		/* found a stale ID. */
-		else {
-		    /* it's my stale ID */
+		} else {
 		    if (getuid() == shminfo.shm_perm.cuid) {
+                        /* it's my stale ID */
 			rc = shmctl(id, IPC_RMID, 0);
-			if (!rc)
+			if (!rc) {
 			    printf("Was able to kill my old shared memory\n");
-			else {
+                        } else {
 			    perror("shmctl");
 			    printf("Was NOT able to kill my old shared memory\n");
 			}
@@ -149,60 +131,26 @@ static void getshm(int size) {
 			}
 
 			break;
-
 		    }
-		    /* not my ID, but maybe we can use it */
+
 		    if (size == shminfo.shm_segsz) {
-			printf( "Will use stale shared memory of uid=%d\n",
-				shminfo.shm_perm.cuid);
+                        /* not my ID, but maybe we can use it */
+			printf("Will use stale shared memory of uid=%d\n", shminfo.shm_perm.cuid);
 			break;
 		    }
+
 		    /* not my ID, and we can't use it */
 		    else {
-			printf( "Can't use stale shared memory belonging to uid=%d, "
-				"key=`%c%c%c%c', id=%d\n",
-				shminfo.shm_perm.cuid,
-				(key & 0xff000000)>>24,
-				(key & 0xff0000)>>16,
-				(key & 0xff00)>>8,
-				(key & 0xff),
-				id
-				);
+			printf("Can't use stale shared memory belonging to uid=%d, key=`%c%c%c%c', id=%d\n", shminfo.shm_perm.cuid, (key & 0xff000000)>>24, (key & 0xff0000)>>16, (key & 0xff00)>>8, (key & 0xff), id);
 			++key;
 		    }
 		}
 	    }
-	    else
-	    {
-		/* oops.  what to do now? */
-		perror("shmctl");
-		printf( "Could not get stats on key=`%c%c%c%c', id=%d\n",
-			(key & 0xff000000)>>24,
-			(key & 0xff0000)>>16,
-			(key & 0xff00)>>8,
-			(key & 0xff),
-			id
-			);
-		++key;
-	    }
-	}
-	else
-	{
-	    /* no stale ID's */
-	    id = shmget((key_t)key, size, IPC_CREAT|0777);
-	    if (id == -1) {
-		perror("shmget");
-		printf("Could not get shared memory\n");
-		++key;
-	    }
-	    break;
 	}
     } while (--counter);
 
-    if (!counter)
-    {
-	printf( "System has too many stale/used "
-		"shared memory segments!\n");
+    if (!counter) {
+	printf( "System has too many stale/used shared memory segments!\n");
     }	
 
     xshminfo.shmid = id;
@@ -216,13 +164,7 @@ static void getshm(int size) {
 	exit(1);
     }
 
-    printf( "Using shared memory key=`%c%c%c%c', id=%d, addr=0x%x\n",
-	    (key & 0xff000000)>>24,
-	    (key & 0xff0000)>>16,
-	    (key & 0xff00)>>8,
-	    (key & 0xff),
-	    id,
-	    (int) (image->data));
+    printf("Using shared memory key=`%c%c%c%c', id=%d, addr=%p\n", (key & 0xff000000)>>24, (key & 0xff0000)>>16, (key & 0xff00)>>8, (key & 0xff), id, image->data);
 }
 
 
@@ -231,119 +173,117 @@ static void c_initialize_colors() {
     static int		firstcall = 1;
     int			c,i,j;
 
-    if (visualinfo.class == PseudoColor && visualinfo.depth == 8)
-    {
-	/* initialize the colormap */
-	if (firstcall) {
-	    firstcall = 0;
-	    for (i=0; i<256; i++) {
-		colors[i].pixel = i;
-		colors[i].flags = DoRed|DoGreen|DoBlue;
-	    }
-	}
-
-	/* align the palette for hires graphics */
-	for (i = 0; i < 8; i++) {
-	    for (j = 0; j < 3; j++) {
-		c = (i & 1) ? col2[ j ] : 0;
-		colors[ j+i*3+32].red = (c<<8) + c;
-		c = (i & 2) ? col2[ j ] : 0;
-		colors[ j+i*3+32].green = (c<<8) + c;
-		c = (i & 4) ? col2[ j ] : 0;
-		colors[ j+i*3+32].blue = (c<<8) + c;
-	    }
-	}
-	colors[ COLOR_FLASHING_BLACK].red = 0;
-	colors[ COLOR_FLASHING_BLACK].green = 0;
-	colors[ COLOR_FLASHING_BLACK].blue = 0;
-
-	colors[ COLOR_LIGHT_WHITE].red = (255<<8)|255;
-	colors[ COLOR_LIGHT_WHITE].green = (255<<8)|255;
-	colors[ COLOR_LIGHT_WHITE].blue = (255<<8)|255;
-
-	colors[ COLOR_FLASHING_WHITE].red = (255<<8)|255;
-	colors[ COLOR_FLASHING_WHITE].green = (255<<8)|255;
-	colors[ COLOR_FLASHING_WHITE].blue = (255<<8)|255;
-
-	colors[0x00].red = 0; colors[0x00].green = 0; 
-        colors[0x00].blue = 0;   /* Black */
-	colors[0x10].red = 195; colors[0x10].green = 0;
-        colors[0x10].blue = 48;  /* Magenta */
-	colors[0x20].red = 0; colors[0x20].green = 0;
-        colors[0x20].blue = 130; /* Dark Blue */
-	colors[0x30].red = 166; colors[0x30].green = 52;
-	colors[0x30].blue = 170; /* Purple */
-	colors[0x40].red = 0; colors[0x40].green = 146;
-        colors[0x40].blue = 0;   /* Dark Green */
-	colors[0x50].red = 105; colors[0x50].green = 105;
-        colors[0x50].blue = 105; /* Dark Grey*/
-	colors[0x60].red = 113; colors[0x60].green = 24;
-        colors[0x60].blue = 255; /* Medium Blue */
-	colors[0x70].red = 12; colors[0x70].green = 190;
-	colors[0x70].blue = 235; /* Light Blue */
-	colors[0x80].red = 150; colors[0x80].green = 85;
-        colors[0x80].blue = 40; /* Brown */
-	colors[0x90].red = 255; colors[0xa0].green = 24;
-        colors[0x90].blue = 44; /* Orange */
-	colors[0xa0].red = 150; colors[0xa0].green = 170;
-        colors[0xa0].blue = 170; /* Light Gray */
-	colors[0xb0].red = 255; colors[0xb0].green = 158;
-	colors[0xb0].blue = 150; /* Pink */
-	colors[0xc0].red = 0; colors[0xc0].green = 255;
-        colors[0xc0].blue = 0; /* Green */
-	colors[0xd0].red = 255; colors[0xd0].green = 255;
-	colors[0xd0].blue = 0; /* Yellow */
-	colors[0xe0].red = 130; colors[0xe0].green = 255;
-        colors[0xe0].blue = 130; /* Aqua */
-	colors[0xf0].red = 255; colors[0xf0].green = 255;
-	colors[0xf0].blue = 255; /* White */
-
-	/* mirror of lores colors optimized for dhires code */
-	colors[0x00].red = 0; colors[0x00].green = 0; 
-        colors[0x00].blue = 0;   /* Black */
-	colors[0x08].red = 195; colors[0x08].green = 0;
-        colors[0x08].blue = 48;  /* Magenta */
-	colors[0x01].red = 0; colors[0x01].green = 0;
-        colors[0x01].blue = 130; /* Dark Blue */
-	colors[0x09].red = 166; colors[0x09].green = 52;
-	colors[0x09].blue = 170; /* Purple */
-	colors[0x02].red = 0; colors[0x02].green = 146;
-        colors[0x02].blue = 0;   /* Dark Green */
-	colors[0x0a].red = 105; colors[0x0A].green = 105;
-        colors[0x0a].blue = 105; /* Dark Grey*/
-	colors[0x03].red = 113; colors[0x03].green = 24;
-        colors[0x03].blue = 255; /* Medium Blue */
-	colors[0x0b].red = 12; colors[0x0b].green = 190;
-	colors[0x0b].blue = 235; /* Light Blue */
-	colors[0x04].red = 150; colors[0x04].green = 85;
-        colors[0x04].blue = 40; /* Brown */
-	colors[0x0c].red = 255; colors[0x0c].green = 24;
-        colors[0x0c].blue = 44; /* Orange */
-	colors[0x05].red = 150; colors[0x05].green = 170;
-        colors[0x05].blue = 170; /* Light Gray */
-	colors[0x0d].red = 255; colors[0x0d].green = 158;
-	colors[0x0d].blue = 150; /* Pink */
-	colors[0x06].red = 0; colors[0x06].green = 255;
-        colors[0x06].blue = 0; /* Green */
-	colors[0x0e].red = 255; colors[0x0e].green = 255;
-	colors[0x0e].blue = 0; /* Yellow */
-	colors[0x07].red = 130; colors[0x07].green = 255;
-        colors[0x07].blue = 130; /* Aqua */
-	colors[0x0f].red = 255; colors[0x0f].green = 255;
-	colors[0x0f].blue = 255; /* White */
-
-	for (i=0; i<16; i++) {
-	    colors[i].red = (colors[i].red<<8) | colors[i].red;
-	    colors[i].green = (colors[i].green<<8) | colors[i].green;
-	    colors[i].blue = (colors[i].blue<<8) | colors[i].blue;
-
-	    colors[i<<4].red = (colors[i<<4].red<<8) | colors[i<<4].red;
-	    colors[i<<4].green = (colors[i<<4].green<<8) | colors[i<<4].green;
-	    colors[i<<4].blue = (colors[i<<4].blue<<8) | colors[i<<4].blue;
-	}
-	// store the colors to the current colormap
-	XStoreColors(display, cmap, colors, 256);
+    /* initialize the colormap */
+    if (firstcall) {
+        firstcall = 0;
+        for (i=0; i<256; i++) {
+            colors[i].pixel = i;
+            colors[i].flags = DoRed|DoGreen|DoBlue;
+        }
     }
+
+    /* align the palette for hires graphics */
+    for (i = 0; i < 8; i++) {
+        for (j = 0; j < 3; j++) {
+            c = (i & 1) ? col2[ j ] : 0;
+            colors[ j+i*3+32].red = c;
+            c = (i & 2) ? col2[ j ] : 0;
+            colors[ j+i*3+32].green = c;
+            c = (i & 4) ? col2[ j ] : 0;
+            colors[ j+i*3+32].blue = c;
+        }
+    }
+    colors[ COLOR_FLASHING_BLACK].red = 0;
+    colors[ COLOR_FLASHING_BLACK].green = 0;
+    colors[ COLOR_FLASHING_BLACK].blue = 0;
+
+    colors[ COLOR_LIGHT_WHITE].red   = (255<<8)|255;
+    colors[ COLOR_LIGHT_WHITE].green = (255<<8)|255;
+    colors[ COLOR_LIGHT_WHITE].blue  = (255<<8)|255;
+
+    colors[ COLOR_FLASHING_WHITE].red   = (255<<8)|255;
+    colors[ COLOR_FLASHING_WHITE].green = (255<<8)|255;
+    colors[ COLOR_FLASHING_WHITE].blue  = (255<<8)|255;
+
+    colors[0x00].red = 0; colors[0x00].green = 0;
+    colors[0x00].blue = 0;   /* Black */
+    colors[0x10].red = 195; colors[0x10].green = 0;
+    colors[0x10].blue = 48;  /* Magenta */
+    colors[0x20].red = 0; colors[0x20].green = 0;
+    colors[0x20].blue = 130; /* Dark Blue */
+    colors[0x30].red = 166; colors[0x30].green = 52;
+    colors[0x30].blue = 170; /* Purple */
+    colors[0x40].red = 0; colors[0x40].green = 146;
+    colors[0x40].blue = 0;   /* Dark Green */
+    colors[0x50].red = 105; colors[0x50].green = 105;
+    colors[0x50].blue = 105; /* Dark Grey*/
+    colors[0x60].red = 113; colors[0x60].green = 24;
+    colors[0x60].blue = 255; /* Medium Blue */
+    colors[0x70].red = 12; colors[0x70].green = 190;
+    colors[0x70].blue = 235; /* Light Blue */
+    colors[0x80].red = 150; colors[0x80].green = 85;
+    colors[0x80].blue = 40; /* Brown */
+    colors[0x90].red = 255; colors[0xa0].green = 24;
+    colors[0x90].blue = 44; /* Orange */
+    colors[0xa0].red = 150; colors[0xa0].green = 170;
+    colors[0xa0].blue = 170; /* Light Gray */
+    colors[0xb0].red = 255; colors[0xb0].green = 158;
+    colors[0xb0].blue = 150; /* Pink */
+    colors[0xc0].red = 0; colors[0xc0].green = 255;
+    colors[0xc0].blue = 0; /* Green */
+    colors[0xd0].red = 255; colors[0xd0].green = 255;
+    colors[0xd0].blue = 0; /* Yellow */
+    colors[0xe0].red = 130; colors[0xe0].green = 255;
+    colors[0xe0].blue = 130; /* Aqua */
+    colors[0xf0].red = 255; colors[0xf0].green = 255;
+    colors[0xf0].blue = 255; /* White */
+
+    /* mirror of lores colors optimized for dhires code */
+    colors[0x00].red = 0; colors[0x00].green = 0;
+    colors[0x00].blue = 0;   /* Black */
+    colors[0x08].red = 195; colors[0x08].green = 0;
+    colors[0x08].blue = 48;  /* Magenta */
+    colors[0x01].red = 0; colors[0x01].green = 0;
+    colors[0x01].blue = 130; /* Dark Blue */
+    colors[0x09].red = 166; colors[0x09].green = 52;
+    colors[0x09].blue = 170; /* Purple */
+    colors[0x02].red = 0; colors[0x02].green = 146;
+    colors[0x02].blue = 0;   /* Dark Green */
+    colors[0x0a].red = 105; colors[0x0A].green = 105;
+    colors[0x0a].blue = 105; /* Dark Grey*/
+    colors[0x03].red = 113; colors[0x03].green = 24;
+    colors[0x03].blue = 255; /* Medium Blue */
+    colors[0x0b].red = 12; colors[0x0b].green = 190;
+    colors[0x0b].blue = 235; /* Light Blue */
+    colors[0x04].red = 150; colors[0x04].green = 85;
+    colors[0x04].blue = 40; /* Brown */
+    colors[0x0c].red = 255; colors[0x0c].green = 24;
+    colors[0x0c].blue = 44; /* Orange */
+    colors[0x05].red = 150; colors[0x05].green = 170;
+    colors[0x05].blue = 170; /* Light Gray */
+    colors[0x0d].red = 255; colors[0x0d].green = 158;
+    colors[0x0d].blue = 150; /* Pink */
+    colors[0x06].red = 0; colors[0x06].green = 255;
+    colors[0x06].blue = 0; /* Green */
+    colors[0x0e].red = 255; colors[0x0e].green = 255;
+    colors[0x0e].blue = 0; /* Yellow */
+    colors[0x07].red = 130; colors[0x07].green = 255;
+    colors[0x07].blue = 130; /* Aqua */
+    colors[0x0f].red = 255; colors[0x0f].green = 255;
+    colors[0x0f].blue = 255; /* White */
+
+    for (i=0; i<16; i++) {
+        colors[i].red = (colors[i].red<<8) | colors[i].red;
+        colors[i].green = (colors[i].green<<8) | colors[i].green;
+        colors[i].blue = (colors[i].blue<<8) | colors[i].blue;
+
+        colors[i<<4].red = (colors[i<<4].red<<8) | colors[i<<4].red;
+        colors[i<<4].green = (colors[i<<4].green<<8) | colors[i<<4].green;
+        colors[i<<4].blue = (colors[i<<4].blue<<8) | colors[i<<4].blue;
+    }
+
+    // store the colors to the current colormap
+    //XStoreColors(display, cmap, colors, 256);
 }
 
 
@@ -459,6 +399,22 @@ static int keysym_to_scancode(void) {
 }
 
 static void post_image() {
+    // copy Apple //e video memory into XImage uint32_t buffer
+    uint8_t *fb = !video__current_page ? video__fb1 : video__fb2;
+    uint8_t index;
+
+    unsigned int count = SCANWIDTH * SCANHEIGHT;
+    for (unsigned int i=0, j=0; i<count; i++, j+=4) {
+        index = *(fb + i);
+        *( (uint32_t*)(image->data + j) ) = (uint32_t)(
+                ((uint32_t)(colors[index].red)   << red_shift)   |
+                ((uint32_t)(colors[index].green) << green_shift) |
+                ((uint32_t)(colors[index].blue)  << blue_shift)  |
+                ((uint32_t)0xff /* alpha */      << alpha_shift)
+            );
+    }
+
+    // post image...
     if (doShm) {
 	if (!XShmPutImage(
 		display,
@@ -488,25 +444,25 @@ static void c_flash_cursor(int on) {
     // flash only if it's text or mixed modes.
     if (softswitches & (SS_TEXT|SS_MIXED)) {
 	if (!on) {
-	    colors[ COLOR_FLASHING_BLACK].red = 0;
+	    colors[ COLOR_FLASHING_BLACK].red   = 0;
 	    colors[ COLOR_FLASHING_BLACK].green = 0;
-	    colors[ COLOR_FLASHING_BLACK].blue = 0;
+	    colors[ COLOR_FLASHING_BLACK].blue  = 0;
 
-	    colors[ COLOR_FLASHING_WHITE].red = 0xffff;
+	    colors[ COLOR_FLASHING_WHITE].red   = 0xffff;
 	    colors[ COLOR_FLASHING_WHITE].green = 0xffff;
-	    colors[ COLOR_FLASHING_WHITE].blue = 0xffff;
+	    colors[ COLOR_FLASHING_WHITE].blue  = 0xffff;
 	} else {
-	    colors[ COLOR_FLASHING_WHITE].red = 0;
+	    colors[ COLOR_FLASHING_WHITE].red   = 0;
 	    colors[ COLOR_FLASHING_WHITE].green = 0;
-	    colors[ COLOR_FLASHING_WHITE].blue = 0;
+	    colors[ COLOR_FLASHING_WHITE].blue  = 0;
 
-	    colors[ COLOR_FLASHING_BLACK].red = 0xffff;
+	    colors[ COLOR_FLASHING_BLACK].red   = 0xffff;
 	    colors[ COLOR_FLASHING_BLACK].green = 0xffff;
-	    colors[ COLOR_FLASHING_BLACK].blue = 0xffff;
+	    colors[ COLOR_FLASHING_BLACK].blue  = 0xffff;
 	}
 
 	// store the colors to the current colormap
-	XStoreColors(display, cmap, colors, 256);
+	//XStoreColors(display, cmap, colors, 256);
     }
 }
 
@@ -556,25 +512,27 @@ POLL_FINISHED:
     }
 }
 
+#if 0
 static Cursor hidecursor() {
     Pixmap cursormask;
     XGCValues xgc;
     XColor dummycolour;
     Cursor cursor;
+    GC cursor_gc;
 
     cursormask = XCreatePixmap(display, win, 1, 1, 1/*depth*/);
     xgc.function = GXclear;
-    gc =  XCreateGC(display, cursormask, GCFunction, &xgc);
+    cursor_gc =  XCreateGC(display, cursormask, GCFunction, &xgc);
     XFillRectangle(display, cursormask, gc, 0, 0, 1, 1);
     dummycolour.pixel = 0;
     dummycolour.red = 0;
     dummycolour.flags = 04;
-    cursor = XCreatePixmapCursor(display, cursormask, cursormask,
-	    &dummycolour,&dummycolour, 0,0);
+    cursor = XCreatePixmapCursor(display, cursormask, cursormask, &dummycolour,&dummycolour, 0,0);
     XFreePixmap(display,cursormask);
-    XFreeGC(display,gc);
+    XFreeGC(display,cursor_gc);
     return cursor;
 }
+#endif
 
 static void parseArgs() {
     int i;
@@ -605,8 +563,8 @@ void video_init() {
 	progname = argv[0];
 
 	/* give up root privileges. equivalent of vga_init() */
-	setegid(getgid());
-	seteuid(getuid());
+	//setegid(getgid());
+	//seteuid(getuid());
 
 	parseArgs();
 
@@ -631,20 +589,56 @@ void video_init() {
 		exit(1);
 	}
 
-	/* get screen size from display structure macro */
 	screen_num = DefaultScreen(display);
-	if (!XMatchVisualInfo(display, screen_num, 8, PseudoColor, &visualinfo)) {
-	    fprintf(stderr,
-		    "Sorry bud, xapple2 only supports "
-		    "8bit PseudoColor displays.\n"
-		    "Maybe you can fix this!\n");
-	    exit(1);
-	}
-	visual = visualinfo.visual;
-	//display_width  = DisplayWidth(display, screen_num);
-	//display_height = DisplayHeight(display, screen_num);
+	// Note that in a real Xlib application, we would support more than the default visual :-P
+        //visual = DefaultVisual(display, screen_num);
+        //XVisualInfo *visuals_list=NULL;
+        //visualinfo.screen=screen_num;
+/*
+        int numvisuals=0;
+        if (!(visuals_list = XGetVisualInfo(display, VisualScreenMask, &visualinfo, &numvisuals))) {
+            fprintf(stderr, "XGetVisualInfo() failed...");
+            exit(1);
+        }
+        visualinfo = visuals_list[0];
+        if ( (visualinfo.class == PseudoColor) || (visualinfo.depth == 8) ) {
+            fprintf(stderr, "PseudoColor or 8bit color is unimplemented, FIXME!");
+            exit(1);
+        }
+        XFree(visuals_list);
+*/
+        if (!XMatchVisualInfo(display, XDefaultScreen(display), 32, TrueColor, &visualinfo))
+        {
+            fprintf(stderr, "no such visual\n");
+            exit(1);
+        }
 
-	/* Note that in a real application, x and y would default to 0
+        // determine mask bits ...
+        //   red_mask: 00ff0000
+        //   green_mask: 0000ff00
+        //   blue_mask: 000000ff
+        //   bits_per_rgb: 8
+        unsigned int shift = 0;
+        for (unsigned int i=0; i<4; i++) {
+            if        ((((uint32_t)visualinfo.red_mask  >>shift) & 0xff) == (uint32_t)0xff) {
+                red_shift   = shift;
+            } else if ((((uint32_t)visualinfo.green_mask>>shift) & 0xff) == (uint32_t)0xff) {
+                green_shift = shift;
+            } else if ((((uint32_t)visualinfo.blue_mask >>shift) & 0xff) == (uint32_t)0xff) {
+                blue_shift  = shift;
+            } else {
+                alpha_shift = shift;
+            }
+            shift += 8;
+        }
+        if ((!red_shift) && (!green_shift) && (!blue_shift)) {
+            fprintf(stderr, "Could not calculate red/green/blue color masks...\n");
+            exit(1);
+        }
+        fprintf(stderr, "red mask:%08x green mask:%08x blue mask:%08x\n", (uint32_t)visualinfo.red_mask, (uint32_t)visualinfo.blue_mask, (uint32_t)visualinfo.green_mask);
+        fprintf(stderr, "redshift:%08d greenshift:%08d blueshift:%08d alphashift:%08d\n", red_shift, blue_shift, green_shift, alpha_shift);
+
+	/* Note that in a real Xlib application, x and y would default to 0
 	 * but would be settable from the command line or resource database.  
 	 */
 	x = y = 0;
@@ -654,62 +648,43 @@ void video_init() {
 	if (doShm) {
 	    /* make sure we have it */
 	    doShm = XShmQueryExtension(display);
+        }
 
-	    /* and it's a local connection */
-	    if (!displayname)
-		displayname = getenv("DISPLAY");
-	    if (displayname)
-	    {
-		if ((*displayname != ':') || !doShm) {
-		    printf("Cannot run MITSHM version of emulator "
-			   "with display \"%s\"\n"
-			   "Try something like \":0.0\".  "
-			   "Reverting to regular X with no sound.\n",
+        displayname = getenv("DISPLAY");
+        if (displayname) {
+            if (*displayname != ':') {
+                printf("NOTE: Sound not allowed for remote display \"%s\".\n", displayname);
+                if (doShm) {
+		    printf("NOTE: Cannot run MITSHM version of emulator with display \"%s\"\n"
+                            "Try setting DISPLAY to something like \":0.0\"...Reverting to regular X.\n",
 			   displayname);
-		    doShm = 0;
-		    soundAllowed=0;
-		    c_initialize_sound();
-		}
-	    }
-	} else {
-	    /* and it's a local connection */
-	    if (!displayname)
-		displayname = getenv("DISPLAY");
-	    if (displayname)
-	    {
-		if (*displayname != ':') {
-		    printf("Sound not allowed for remote display \"%s\".\n",
-			   displayname);
-		    soundAllowed=0;
-		    c_initialize_sound();
-		}
-	    }
-	}
+                }
+                doShm=0;
+                soundAllowed=0;
+            }
+        }
 
 	/* initialize colors */
-	cmap = XCreateColormap(display, RootWindow(display, screen_num),
-		visual, AllocAll);
 	c_initialize_colors();
+
+	cmap = XCreateColormap(display, XDefaultRootWindow(display), visualinfo.visual, AllocNone);
+        //XStoreColors(display, cmap, colors, 256);
 	attribs.colormap = cmap;
 	attribs.border_pixel = 0;
 
 	/* select event types wanted */
 	attribmask = CWEventMask | CWColormap | CWBorderPixel;/* HACK CWBorderPixel? */
-	attribs.event_mask =
-	    KeyPressMask
-	    | KeyReleaseMask
-	    | ExposureMask;
+	attribs.event_mask = KeyPressMask | KeyReleaseMask | ExposureMask;
 
 	/* create opaque window */
-	win = XCreateWindow(display, RootWindow(display,screen_num), 
+	win = XCreateWindow(display, RootWindow(display, screen_num), 
 			x, y, width, height,
 			0,/* border_width */
-			8,/* depth */
+			visualinfo.depth,/* depth */
 			InputOutput,
-			visual,
+			visualinfo.visual,
 			attribmask,
 			&attribs);
-
 
 	/* set size hints for window manager.  We don't want the user to
 	 * dynamically allocate window size since we won't do the right
@@ -732,6 +707,7 @@ void video_init() {
 	    exit(1);
 	}
 
+        // set up window manager hints...
 	wm_hints->initial_state = NormalState;
 	wm_hints->input = True;
 	wm_hints->flags = StateHint | IconPixmapHint/* | InputHint*/;
@@ -743,16 +719,13 @@ void video_init() {
 			argv, argc, size_hints, wm_hints, 
 			class_hints);
 
-	XDefineCursor(display, win, hidecursor(display, win));
+        // FIXME!!!!! hidecursor segfaults
+	//XDefineCursor(display, win, hidecursor(display, win));
 
 	/* create the GC */
 	valuemask = GCGraphicsExposures;
 	xgcvalues.graphics_exposures = False;
-	/*gc = */XCreateGC(
-		display,
-		win,
-		valuemask,
-		&xgcvalues);
+	gc = XCreateGC(display, win, valuemask, &xgcvalues);
 
 	/* display window */
 	XMapWindow(display, win);
@@ -768,29 +741,25 @@ void video_init() {
 	    }
 	}
 
+        // pad pixels to uint32_t boundaries
+        int bitmap_pad = sizeof(uint32_t);
+        int pixel_buffer_size = SCANWIDTH*SCANHEIGHT*bitmap_pad;
+
 	xshmeventtype = XShmGetEventBase(display) + ShmCompletion;
 
 	/* create the image */
 	if (doShm) {
-	    image = XShmCreateImage(
-		    display,
-		    visual,
-		    8,
-		    ZPixmap,
-		    0,
-		    &xshminfo,
-		    SCANWIDTH,
-		    SCANHEIGHT);
+	    image = XShmCreateImage(display, visualinfo.visual, visualinfo.depth, ZPixmap, NULL, &xshminfo, SCANWIDTH, SCANHEIGHT);
 
 	    if (!image) {
 		fprintf(stderr, "XShmCreateImage failed\n");
 		exit(1);
 	    }
 	
-	    printf("Allocating shared memory %dx%d region\n",
-		    image->bytes_per_line, image->height);
+	    printf("Allocating shared memory: bytes_per_line:%ds height:x%d (depth:%d) bitmap_pad:%d\n",
+		    image->bytes_per_line, image->height, visualinfo.depth, bitmap_pad);
 
-	    getshm(image->bytes_per_line * image->height);
+	    getshm(pixel_buffer_size);
 
 	    /* get the X server to attach to it */
 	    if (!XShmAttach(display, &xshminfo)) {
@@ -798,37 +767,26 @@ void video_init() {
 		exit(1);
 	    }
 	} else {
-	    char *data = malloc(SCANWIDTH*SCANHEIGHT*sizeof(unsigned char));
+            void *data = malloc(pixel_buffer_size); // pad to uint32_t
 	    if (!data) {
 		fprintf(stderr, "no memory for image data!\n");
 		exit(1);
 	    }
 	    printf("Creating regular XImage\n");
-	    image = XCreateImage(
-		    display,
-		    visual,
-		    8,
-		    ZPixmap,
-		    0,
-		    data,
-		    SCANWIDTH,
-		    SCANHEIGHT,
-		    8/*bitmap_pad*/,
-		    SCANWIDTH/*bytes_per_line*/);
+	    image = XCreateImage(display, visualinfo.visual, visualinfo.depth, ZPixmap, 0/*offset*/, data, SCANWIDTH, SCANHEIGHT, 8, SCANWIDTH*bitmap_pad/*bytes_per_line*/);
 	
 	    if (!image) {
 		fprintf(stderr, "XCreateImage failed\n");
 		exit(1);
 	    }
-	
         }
 
-	svga_GM = video__fb1 = (unsigned char*)image->data;
+        video__fb1 = vga_mem_page_0;
 	video__fb2 = vga_mem_page_1;
 
+        // reset Apple2 softframebuffers
 	memset(video__fb1,0,SCANWIDTH*SCANHEIGHT);
 	memset(video__fb2,0,SCANWIDTH*SCANHEIGHT);
-
 }
 
 void video_shutdown(void)
