@@ -1,3 +1,4 @@
+# Generated automatically from Makefile.in by configure.
 # Makefile.in generated automatically by automake 1.4 from Makefile.am
 
 # Copyright (C) 1994, 1995-8, 1999 Free Software Foundation, Inc.
@@ -11,45 +12,44 @@
 # PARTICULAR PURPOSE.
 
 
-SHELL = @SHELL@
+SHELL = /bin/sh
 
-srcdir = @srcdir@
-top_srcdir = @top_srcdir@
-VPATH = @srcdir@
-prefix = @prefix@
-exec_prefix = @exec_prefix@
+srcdir = .
+top_srcdir = ..
+prefix = /tmp
+exec_prefix = ${prefix}
 
-bindir = @bindir@
-sbindir = @sbindir@
-libexecdir = @libexecdir@
-datadir = @datadir@
-sysconfdir = @sysconfdir@
-sharedstatedir = @sharedstatedir@
-localstatedir = @localstatedir@
-libdir = @libdir@
-infodir = @infodir@
-mandir = @mandir@
-includedir = @includedir@
+bindir = ${exec_prefix}/bin
+sbindir = ${exec_prefix}/sbin
+libexecdir = ${exec_prefix}/libexec
+datadir = ${prefix}/share
+sysconfdir = ${prefix}/etc
+sharedstatedir = ${prefix}/com
+localstatedir = ${prefix}/var
+libdir = ${exec_prefix}/lib
+infodir = ${prefix}/info
+mandir = ${prefix}/man
+includedir = ${prefix}/include
 oldincludedir = /usr/include
 
 DESTDIR =
 
-pkgdatadir = $(datadir)/@PACKAGE@
-pkglibdir = $(libdir)/@PACKAGE@
-pkgincludedir = $(includedir)/@PACKAGE@
+pkgdatadir = $(datadir)/apple2-emul
+pkglibdir = $(libdir)/apple2-emul
+pkgincludedir = $(includedir)/apple2-emul
 
 top_builddir = ..
 
-ACLOCAL = @ACLOCAL@
-AUTOCONF = @AUTOCONF@
-AUTOMAKE = @AUTOMAKE@
-AUTOHEADER = @AUTOHEADER@
+ACLOCAL = aclocal
+AUTOCONF = autoconf
+AUTOMAKE = automake
+AUTOHEADER = autoheader
 
-INSTALL = @INSTALL@
-INSTALL_PROGRAM = @INSTALL_PROGRAM@ $(AM_INSTALL_PROGRAM_FLAGS)
-INSTALL_DATA = @INSTALL_DATA@
-INSTALL_SCRIPT = @INSTALL_SCRIPT@
-transform = @program_transform_name@
+INSTALL = /usr/bin/install -c
+INSTALL_PROGRAM = ${INSTALL} $(AM_INSTALL_PROGRAM_FLAGS)
+INSTALL_DATA = ${INSTALL} -m 644
+INSTALL_SCRIPT = ${INSTALL_PROGRAM}
+transform = s,x,x,
 
 NORMAL_INSTALL = :
 PRE_INSTALL = :
@@ -57,54 +57,53 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-CC = @CC@
-DEBUGGER_O = @DEBUGGER_O@
-JOYSTICK_O = @JOYSTICK_O@
-MAKEINFO = @MAKEINFO@
-PACKAGE = @PACKAGE@
-PROGS = @PROGS@
-VERSION = @VERSION@
+CC = gcc
+DEBUGGER_O = 
+JOYSTICK_O = joystick.o
+PACKAGE = apple2-emul
+PROGS = xapple2 xapple2-80col
+VERSION = 0.7.4
 
 noinst_HEADERS = apple2.h debug.h disk.h interface.h keys.h misc.h                  video.h cpu.h glue.h gluepro.h prefs.h
 
 
-SUFFIXES = .l-cpp -80.o
+SUFFIXES = .l -80.o
 
 man_MANS = apple2.6
 
 EXTRA_PROGRAMS = apple2 xapple2 xapple2-80col
-bin_PROGRAMS = @PROGS@
+bin_PROGRAMS = xapple2 xapple2-80col
 
 EXTRA_apple2_SOURCES = debugger.c opcodes.c debug.c joystick.c
 apple2_SOURCES = cpu.S memory.S display.S glue.S keys.c prefs.c disk.c                  interface.c misc.c font.c svideo.c compact.c cpu-supp.c 		 vidsup.c
 
 
-apple2_LDADD = @DEBUGGER_O@ @JOYSTICK_O@ -lvga
-apple2_DEPENDENCIES = @DEBUGGER_O@ @JOYSTICK_O@
+apple2_LDADD =  joystick.o -lvga
+apple2_DEPENDENCIES =  joystick.o
 
 EXTRA_xapple2_SOURCES = debugger.c opcodes.c debug.c joystick.c
 
 xapple2_SOURCES = cpu.S memory.S display.S glue.S keys.c prefs.c                   disk.c interface.c misc.c font.c xvideo.c compact.c                   cpu-supp.c vidsup.c
 
 
-xapple2_LDADD = @DEBUGGER_O@ @JOYSTICK_O@ @X_LIBS@ -lX11 -lXext
-xapple2_DEPENDENCIES = @DEBUGGER_O@ @JOYSTICK_O@
+xapple2_LDADD =  joystick.o  -L/usr/lib/i386-linux-gnu -lX11 -lXext
+xapple2_DEPENDENCIES =  joystick.o
 
 EXTRA_xapple2_80col_SOURCES = debugger.c opcodes.c debug.c joystick.c
 
 xapple2_80col_SOURCES = cpu.S memory.S glue.S keys.c prefs.c disk.c                     font.c compact.c cpu-supp.c misc.c interface.c
 
 
-xapple2_80col_LDADD = @DEBUGGER_O@ @JOYSTICK_O@                       vidsup-80.o xvideo-80.o display-80.o                       @X_LIBS@ -lX11 -lXext
+xapple2_80col_LDADD =  joystick.o                       vidsup-80.o xvideo-80.o display-80.o                        -L/usr/lib/i386-linux-gnu -lX11 -lXext
 
-xapple2_80col_DEPENDENCIES = @DEBUGGER_O@ @JOYSTICK_O@                       vidsup-80.o xvideo-80.o display-80.o
+xapple2_80col_DEPENDENCIES =  joystick.o                       vidsup-80.o xvideo-80.o display-80.o
 
 
 noinst_PROGRAMS = genfont
 
 BUILT_SOURCES = font.c debug.c glue.S
 
-EXTRA_DIST = font.txt apple2.6 debug.l-cpp genglue
+EXTRA_DIST = font.txt apple2.6 debug.l genglue
 
 CLEANFILES = font.c debug.c glue.S
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
@@ -112,29 +111,26 @@ CONFIG_CLEAN_FILES =
 PROGRAMS =  $(bin_PROGRAMS) $(noinst_PROGRAMS)
 
 
-DEFS = @DEFS@ -I. -I$(srcdir) 
-CPPFLAGS = @CPPFLAGS@
-LDFLAGS = @LDFLAGS@
-LIBS = @LIBS@
-X_CFLAGS = @X_CFLAGS@
-X_LIBS = @X_LIBS@
-X_EXTRA_LIBS = @X_EXTRA_LIBS@
-X_PRE_LIBS = @X_PRE_LIBS@
-apple2_OBJECTS =  cpu.o memory.o display.o glue.o keys.o prefs.o disk.o \
-interface.o misc.o font.o svideo.o compact.o cpu-supp.o vidsup.o
+DEFS =  -DPACKAGE=\"apple2-emul\" -DVERSION=\"0.7.4\" -DPC_JOYSTICK=1 -DHAVE_UNISTD_H=1 -DHAVE_GETPAGESIZE=1 -DHAVE_MMAP=1 -DNO_UNDERSCORES=1 -DDEBUGGER=1 -DAPPLE_IIE=1 -DMAX_APPLE_DELAY=1000  -I. -I$(srcdir) 
+CPPFLAGS = 
+LDFLAGS = 
+LIBS = 
+X_CFLAGS = 
+X_LIBS = 
+X_EXTRA_LIBS = 
+X_PRE_LIBS =  -lSM -lICE
+apple2_OBJECTS =  cpu.o memory.o display.o glue.o keys.o prefs.o disk.o     debugger.o opcodes.o debug.o      interface.o misc.o font.o svideo.o compact.o cpu-supp.o vidsup.o
 apple2_LDFLAGS = 
-xapple2_OBJECTS =  cpu.o memory.o display.o glue.o keys.o prefs.o disk.o \
-interface.o misc.o font.o xvideo.o compact.o cpu-supp.o vidsup.o
+xapple2_OBJECTS =  cpu.o memory.o display.o glue.o keys.o prefs.o disk.o     debugger.o opcodes.o debug.o       interface.o misc.o font.o xvideo.o compact.o cpu-supp.o vidsup.o
 xapple2_LDFLAGS = 
-xapple2_80col_OBJECTS =  cpu.o memory.o glue.o keys.o prefs.o disk.o \
-font.o compact.o cpu-supp.o misc.o interface.o
+xapple2_80col_OBJECTS =  cpu.o memory.o glue.o keys.o prefs.o disk.o      debugger.o opcodes.o debug.o       font.o compact.o cpu-supp.o misc.o interface.o
 xapple2_80col_LDFLAGS = 
 genfont_SOURCES = genfont.c
 genfont_OBJECTS =  genfont.o
 genfont_LDADD = $(LDADD)
 genfont_DEPENDENCIES = 
 genfont_LDFLAGS = 
-CFLAGS = @CFLAGS@
+CFLAGS = -std=gnu11 -Wall -Werror -g -O0 -m32 -Xassembler --32
 COMPILE = $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
 LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(LDFLAGS) -o $@
@@ -144,7 +140,7 @@ MANS = $(man_MANS)
 NROFF = nroff
 HEADERS =  $(noinst_HEADERS)
 
-DIST_COMMON =  Makefile.am Makefile.in
+DIST_COMMON = 
 
 
 DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
@@ -156,13 +152,8 @@ OBJECTS = $(apple2_OBJECTS) $(xapple2_OBJECTS) $(xapple2_80col_OBJECTS) genfont.
 
 all: all-redirect
 .SUFFIXES:
-.SUFFIXES: -80.o .S .c .l-cpp .o .s
-$(srcdir)/Makefile.in: Makefile.am $(top_srcdir)/configure.in $(ACLOCAL_M4) 
-	cd $(top_srcdir) && $(AUTOMAKE) --gnu --include-deps src/Makefile
+.SUFFIXES: -80.o .S .c .l .o .s
 
-Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status
-	cd $(top_builddir) \
-	  && CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= $(SHELL) ./config.status
 
 
 mostlyclean-binPROGRAMS:
@@ -409,7 +400,7 @@ glue.S : disk.c misc.c
 	$(CC) $(CFLAGS) $(CPPFLAGS) $(DEFS) -D_640x400 -c -o $@ $<
 
 display-80.o: display.S
-	$(CC) $(CPPFLAGS) $(DEFS) -D_640x400 -c -o $@ $<
+	$(CC) $(CFLAGS) $(CPPFLAGS) $(DEFS) -D_640x400 -c -o $@ $<
 
 # I couldn't get Automake's internal Lex support to work with this, as
 # Automake assumes the program was built to cope with no -P option. These
@@ -418,15 +409,17 @@ display-80.o: display.S
 # Of course this is really our fault for being nonportable to standard Lex...  
 # (which I presume has no -P)
 
-%.c: %.l-cpp
-	$(CC) -x c -E -P $(CPPFLAGS) $(DEFS) $< | flex -i -P$* -o$@ 
+#%.c: %.l-cpp
+#	$(CC) -x c -E -P $(CPPFLAGS) $(DEFS) $< | flex -i -P$* -o$@ 
+%.c: %.l
+	flex -i -P$* -o$@ $<
 
 # Another hack. I can't see any other way to get across to automake that some
 # built sources should not be distributed. (since they vary with 
 # configuration)
 
 dist-hook:
-	rm -f $(distdir)/font.c $(distdir)/debug.c $(distdir)/glue.S
+	rm -f $(distdir)/font.c $(distdir)/glue.S
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
