@@ -105,7 +105,7 @@ BUILT_SOURCES = font.c debug.c glue.S
 
 EXTRA_DIST = font.txt apple2.6 debug.l genglue
 
-CLEANFILES = font.c debug.c glue.S
+CLEANFILES = font.c glue.S
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_CLEAN_FILES = 
 PROGRAMS =  $(bin_PROGRAMS) $(noinst_PROGRAMS)
