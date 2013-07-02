@@ -39,8 +39,6 @@
 #define SW_IOUDIS 0xC07E
 #endif
 
-extern const struct itimerval timer_on,timer_off;
-
 /* Text characters */
 extern const unsigned char ucase_glyphs[0x200];
 extern const unsigned char lcase_glyphs[0x100];

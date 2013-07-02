@@ -73,8 +73,6 @@
 #define kPGDN	164
 #define kEND 	165
 
-#define	 TIMER_DELAY		30000L
-
 
 #ifdef PC_JOYSTICK
 extern int js_fd;

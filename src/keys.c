@@ -352,9 +352,7 @@ void c_periodic_update(int dummysig) {
  */
 void enter_debugger(void)
 {
-     setitimer(ITIMER_VIRTUAL,&timer_off,0);
      c_do_debugging();
-     setitimer(ITIMER_VIRTUAL,&timer_on,0);
 }
 
 /* -------------------------------------------------------------------------

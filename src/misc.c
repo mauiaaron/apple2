@@ -19,6 +19,8 @@
 #include <ctype.h>
 #include <stdlib.h>
 #include <signal.h>
+#include <time.h>
+#include <pthread.h>
 #include <sys/ioctl.h>
 #include <sys/time.h>
 #include <sys/io.h>
@@ -32,9 +34,7 @@
 #include "cpu.h"
 #include "glue.h"
 #include "prefs.h"
-
-const struct itimerval timer_off = {{0,0},{0,0}};
-const struct itimerval timer_on = {{0,TIMER_DELAY},{0,TIMER_DELAY}};
+#include "timing.h"
 
 /* ----------------------------------
     internal apple2 variables
@@ -44,6 +44,9 @@ static unsigned char	apple_ii_rom[12288];
 #ifdef APPLE_IIE
 static unsigned char	apple_iie_rom[32768];		/* //e */
 #endif
+
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
 
 /* in debugger.c */
 extern int breakpoints[];
@@ -704,10 +707,6 @@ static void c_initialize_firsttime()
     /* initialize the video system */
     video_init();
 
-    /* Enable periodic updates */
-    signal(SIGVTALRM,c_periodic_update);
-    setitimer(ITIMER_VIRTUAL,&timer_on,0); 
-
     reinitialize();     
 }
 
@@ -715,29 +714,38 @@ void c_read_random() {
     random_value = (unsigned char)(rand() >> 8);
 }
 
+static void cpu_thread (void *dummyptr) {
+
+    do {
+        cpu65_run();
+	reinitialize();
+    } while (1);
+}
+
+static void main_thread (void *dummyptr) {
+    do {
+        // sleep waiting for the cpu thread to ping us that it's sleeping...
+        pthread_mutex_lock(&mutex);
+        pthread_cond_wait(&cond, &mutex);
+        pthread_mutex_unlock(&mutex);
+
+        c_periodic_update(0);
+    } while (1);
+}
+
 int main(int sargc, char *sargv[])
 {
-    int		i;
-
     argc = sargc;
     argv = sargv;
 
-    for (i = 1; i < argc; i++)
-    {
-/*
-	if (strcmp(argv[i], "-vga") == 0)
-	    force_vga_mode = 1;
-*/
-    }
-
     load_settings();			/* user prefs */
     c_initialize_firsttime();		/* init svga graphics and vm */
+    timing_initialize();
 
-    for (;;) {
-	/* execute the emulator */
-        cpu65_run();
+    // spin off cpu thread
+    pthread_t thread1;
+    pthread_create(&thread1, NULL, (void *) &cpu_thread, (void *)NULL);
 
-	reinitialize();
-    }
-    /* never reached */
+    // enter main render thread
+    main_thread(NULL);
 }

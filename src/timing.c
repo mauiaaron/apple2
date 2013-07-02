@@ -15,8 +15,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
+#include <pthread.h>
 
-#define DEFAULT_SLEEP 60
+#define DEFAULT_SLEEP 120
 
 static unsigned int sleep_hz             = DEFAULT_SLEEP;               // sleep intervals per sec
 static unsigned long cpu_target_hz       = APPLE2_HZ;                   // target clock speed
@@ -27,6 +28,9 @@ static struct timespec deltat, t0, ti, tj;
 static unsigned long cycle=0;
 static long sleep_adjust=0;
 static long sleep_adjust_inc=0;
+
+extern pthread_mutex_t mutex;
+extern pthread_cond_t cond;
 
 // -----------------------------------------------------------------------------
 
@@ -66,16 +70,30 @@ void timing_set_sleep_hz (unsigned int hz) {
 /*
  * Throttles the 65c02 CPU down to a target frequency of X.
  * Currently set to target the Apple //e @ 1.02MHz
+ *
+ * This is called from cpu65_run() on the cpu-thread
  */
 void timing_throttle () {
     ++cycle;
 
+    static time_t severe_lag=0;
+
     if ((cycle%cycles_interval) == 0) {
+
+        // wake render thread as we go to sleep
+        pthread_mutex_lock(&mutex);
+        pthread_cond_signal(&cond);
+        pthread_mutex_unlock(&mutex);
+
         clock_gettime(CLOCK_MONOTONIC, &tj);
         deltat = timespec_diff(ti, tj);
         ti=tj;
         if (deltat.tv_sec != 0) {
-            // severely lagging ...
+            // severely lagging, don't bother sleeping ...
+            if (severe_lag < time(NULL)) {
+                severe_lag = time(NULL)+2;
+                fprintf(stderr, "Severe lag detected...\n");
+            }
         } else {
             deltat.tv_nsec = processing_interval - deltat.tv_nsec + sleep_adjust_inc;
             nanosleep(&deltat, NULL); // NOTE: spec says will return right away if deltat.tv_nsec value < 0 ...
