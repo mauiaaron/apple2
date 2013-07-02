@@ -86,16 +86,12 @@
  * is zero, and is inserted into Continue */
 #define	ZeroOp		mov	%al, SN(cpu65_debug)+3;
 
-			/* The OR actually functions as a move, but we
-			 * want to set the flags and we know %ah is zero */
-#define Continue	movl	SN(cpu65_delay), %eax;		\
-		   0:	decl	%eax;					\
-			jnz	0b;					\
-			orb     SN(cpu65__signal), %ah;			\
+                        // NOTE: the orb functions as a move, but we want to
+                        // set the flags and we know %ah is zero
+#define Continue	xorl    %eax, %eax;                             \
+                        orb     SN(cpu65__signal), %ah;			\
 			jnz     exception;				\
-			ZeroOp						\
-			GetFromPC_B					\
-			jmp	*cpu65__opcodes(,%eax,4);
+                        jmp     continue;
 
 #define SaveState	movw	EffectiveAddr, SN(cpu65_debug);	\
 			movw	PC_Reg, SN(cpu65_current);	\
@@ -2460,6 +2456,16 @@ op_XMA_imm:
 		DoXMA
 		Continue
 
+/* cpu throttling and continue */
+continue:               SaveState
+			pushal
+			call	SN(timing_throttle)
+			popal
+			ReplaceState
+			xorb	%ah, %ah
+			ZeroOp
+			GetFromPC_B
+			jmp	*cpu65__opcodes(,%eax,4)
 
 /* Exception handler */
 
