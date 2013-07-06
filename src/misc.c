@@ -125,8 +125,6 @@ void c_initialize_tables() {
 
     int i;
 
-    pre_compact(); /* Prepare for VM compression */
-
     /* reset everything */
     for (i = 0; i < 0x10000; i++)
     {
@@ -547,12 +545,9 @@ void c_initialize_tables() {
             iie_disable_slot_expansion;
 #endif
 
-    video_set(0); /* must be done here, between pre_compact & compact */
+    video_set(0);
 
     disk_install(6); /* Put a Disk ][ Controller in slot 6 */
-
-    compact(); /* Compress memory so that identical pages share storage */
-
 }
 
 /* -------------------------------------------------------------------------

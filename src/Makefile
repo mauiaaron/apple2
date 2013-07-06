@@ -75,7 +75,7 @@ EXTRA_PROGRAMS = apple2 xapple2 xapple2-80col
 bin_PROGRAMS = xapple2 xapple2-80col
 
 EXTRA_apple2_SOURCES = debugger.c opcodes.c debug.c joystick.c
-apple2_SOURCES = cpu.S memory.S display.S glue.S keys.c prefs.c disk.c                  interface.c misc.c font.c svideo.c compact.c cpu-supp.c 		 vidsup.c timing.c
+apple2_SOURCES = cpu.S memory.S display.S glue.S keys.c prefs.c disk.c                  interface.c misc.c font.c svideo.c cpu-supp.c 		 vidsup.c timing.c
 
 
 apple2_LDADD =  joystick.o -lvga
@@ -83,7 +83,7 @@ apple2_DEPENDENCIES =  joystick.o
 
 EXTRA_xapple2_SOURCES = debugger.c opcodes.c debug.c joystick.c
 
-xapple2_SOURCES = cpu.S memory.S display.S glue.S keys.c prefs.c                   disk.c interface.c misc.c font.c xvideo.c compact.c                   cpu-supp.c vidsup.c timing.c
+xapple2_SOURCES = cpu.S memory.S display.S glue.S keys.c prefs.c                   disk.c interface.c misc.c font.c xvideo.c                   cpu-supp.c vidsup.c timing.c
 
 
 xapple2_LDADD =  joystick.o  -L/usr/lib/i386-linux-gnu -lX11 -lXext -lrt
@@ -91,7 +91,7 @@ xapple2_DEPENDENCIES =  joystick.o
 
 EXTRA_xapple2_80col_SOURCES = debugger.c opcodes.c debug.c joystick.c
 
-xapple2_80col_SOURCES = cpu.S memory.S glue.S keys.c prefs.c disk.c                     font.c compact.c cpu-supp.c misc.c interface.c timing.c
+xapple2_80col_SOURCES = cpu.S memory.S glue.S keys.c prefs.c disk.c                     font.c cpu-supp.c misc.c interface.c timing.c
 
 
 xapple2_80col_LDADD =  joystick.o                       vidsup-80.o xvideo-80.o display-80.o                        -L/usr/lib/i386-linux-gnu -lX11 -lXext -lrt
@@ -119,11 +119,11 @@ X_CFLAGS =
 X_LIBS = 
 X_EXTRA_LIBS = 
 X_PRE_LIBS =  -lSM -lICE
-apple2_OBJECTS =  cpu.o memory.o display.o glue.o keys.o prefs.o disk.o     debugger.o opcodes.o debug.o      interface.o misc.o font.o svideo.o compact.o cpu-supp.o vidsup.o timing.o
+apple2_OBJECTS =  cpu.o memory.o display.o glue.o keys.o prefs.o disk.o     debugger.o opcodes.o debug.o      interface.o misc.o font.o svideo.o cpu-supp.o vidsup.o timing.o
 apple2_LDFLAGS = 
-xapple2_OBJECTS =  cpu.o memory.o display.o glue.o keys.o prefs.o disk.o     debugger.o opcodes.o debug.o       interface.o misc.o font.o xvideo.o compact.o cpu-supp.o vidsup.o timing.o
+xapple2_OBJECTS =  cpu.o memory.o display.o glue.o keys.o prefs.o disk.o     debugger.o opcodes.o debug.o       interface.o misc.o font.o xvideo.o cpu-supp.o vidsup.o timing.o
 xapple2_LDFLAGS = 
-xapple2_80col_OBJECTS =  cpu.o memory.o glue.o keys.o prefs.o disk.o      debugger.o opcodes.o debug.o       font.o compact.o cpu-supp.o misc.o interface.o timing.o
+xapple2_80col_OBJECTS =  cpu.o memory.o glue.o keys.o prefs.o disk.o      debugger.o opcodes.o debug.o       font.o cpu-supp.o misc.o interface.o timing.o
 xapple2_80col_LDFLAGS = 
 genfont_SOURCES = genfont.c
 genfont_OBJECTS =  genfont.o
