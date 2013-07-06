@@ -81,7 +81,6 @@ extern void init_lex(char *buf, int size);
                 1 = bank 1
    ------------------------------------------------------------------------- */
 int c_get_current_rambank(int addrs) {
-#ifdef APPLE_IIE
     if ((addrs >= 0x200) && (addrs < 0xD000))
     {
 
@@ -133,10 +132,6 @@ int c_get_current_rambank(int addrs) {
 
     /* executing in ALTZP space. */
     return !!(softswitches & SS_ALTZP);
-
-#else
-    return 0;
-#endif
 }
 
 /* -------------------------------------------------------------------------
@@ -758,10 +753,8 @@ static int will_branch() {
         return (int) !(cpu65_current.f & V_Flag);
     case 0x70:                          /* BVS */
         return (int) (cpu65_current.f & V_Flag);
-#ifdef APPLE_IIE
     case 0x80:                          /* BRA */
         return 1;
-#endif
     case 0x90:                          /* BCC */
         return (int) !(cpu65_current.f & C_Flag);
     case 0xb0:                          /* BCS */
@@ -831,7 +824,6 @@ void clear_halt_opcode(unsigned char opcode) {
     op_breakpoints[opcode] = 0;
 }
 
-#ifdef APPLE_IIE
 /* -------------------------------------------------------------------------
     set_halt_65c02 () = set a breakpoint on all 65c02 instructions.
     assumes that you are in //e mode...
@@ -872,7 +864,6 @@ void clear_halt_65c02() {
     clear_halt_opcode((uchar)0xD2); clear_halt_opcode((uchar)0xDA);
     clear_halt_opcode((uchar)0xF2); clear_halt_opcode((uchar)0xFA);
 }
-#endif
 
 /* -------------------------------------------------------------------------
     at_haltpt () - tests if at haltpt
@@ -1022,7 +1013,6 @@ void show_misc_info() {
     sprintf(second_buf[i++], "HIRES (%04X): %s",
             SW_HIRES + !!(softswitches & SS_HIRES),
             (softswitches & SS_HIRES) ? "on" : "off");
-#ifdef APPLE_IIE
     sprintf(second_buf[i++], "80STORE (%04X): %s",
             SW_80STORE + !!(softswitches & SS_80STORE),
             (softswitches & SS_80STORE) ? "on" : "off");
@@ -1056,7 +1046,6 @@ void show_misc_info() {
 /*     sprintf(second_buf[i++], "RDVBLBAR: %s", (SLOTCXROM & 0x80) */
 /*          ? "on" : "off"); */
 
-#endif
     num_buffer_lines = i;
 }
 

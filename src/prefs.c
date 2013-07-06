@@ -101,12 +101,8 @@ static const struct match_table modes_table[] =
 {
     { "][+", II_MODE },
     { "][+ undocumented", IIU_MODE },
-#ifdef APPLE_IIE
     { "//e", IIE_MODE },
     { 0, IIE_MODE }
-#else /* !APPLE_IIE */
-    { 0, IIU_MODE }
-#endif /* !APPLE_IIE */
 };
 
 static const struct match_table color_table[] =

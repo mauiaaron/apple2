@@ -229,7 +229,6 @@ _read_switch_secondary:
 		popal
 		ret
 
-#ifdef APPLE_IIE
 /* PAGE2 off. if 80STORE on then we use main text page1, and if HIRES
 	on we also use main hires page1, regardless of RAMRD and
 	RAMWRT. */
@@ -286,7 +285,6 @@ _iie_page2_on_80store_off:				# no 80STORE
 		popal
 /* 		call	SN(video_redraw)# redraw */
 		ret
-#endif
 
 E(read_switch_graphics)
 		testl	$SS_TEXT, SN(softswitches)
@@ -330,7 +328,6 @@ E(read_switch_hires)
 		call	SN(video_redraw)
 		ret
 
-#ifdef APPLE_IIE
 /* HIRES off. use RAMRD/RAMWRT offsets for hires page 1. */
 E(iie_hires_off)
 		testl	$SS_HIRES, SN(softswitches)	# already off?
@@ -371,7 +368,6 @@ iie_hires_on_80store_aux:
 iie_hires_on_80store_off:
 		call	SN(video_redraw)	# update screen
 		ret
-#endif
 
 /*****************************************************************************/
 
@@ -571,7 +567,6 @@ lc_c08b_exit:
  * misc //e functions
  * ------------------------------------------------------------------------- */
 
-#ifdef APPLE_IIE
 
 /* 80STORE off. use RAMRD/RAMWRT for text/hires display page 1 */
 E(iie_80store_off)
@@ -974,4 +969,3 @@ E(iie_read_slot_expansion)
 E(iie_disable_slot_expansion)
 		ret
 
-#endif /* APPLE_IIE */

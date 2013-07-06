@@ -1731,7 +1731,6 @@ op_TYA:
 
 
 
-#ifdef APPLE_IIE
 
 /* ----------------------------------------------------------------------
        65c02 routines and instructions
@@ -1989,7 +1988,6 @@ op_TSB_zpage:                   # 04
 op_UNK_65c02:
                 Continue
 
-#endif /* APPLE_IIE */
 
 /* ----------------------------------------------------------------------
        Undocumented 6502 (Illegal instructions)
@@ -2821,7 +2819,6 @@ E(cpu65__nmosbrk)
                 .long   op_INC_abs_x
                 .long   op_UNK
 
-#ifdef APPLE_IIE
 
 E(cpu65__cmos)
                 .long   op_BRK
@@ -3080,8 +3077,6 @@ E(cpu65__cmos)
                 .long   op_SBC_abs_x
                 .long   op_INC_abs_x
                 .long   op_UNK_65c02
-
-#endif /* HAVE_IIE */
 
 E(cpu65__nmos)
                 .long   op_BRK

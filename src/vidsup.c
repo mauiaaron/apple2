@@ -126,7 +126,6 @@ unsigned char video__dhires2[256] = {
     0x7,0x7,0x7,0x7,0x7,0x7,0x7,0x7,0xf,0xf,0xb,0xb,0xf,0xf,0xf,0xf,
 };
 
-#ifdef APPLE_IIE
 
 /* -------------------------------------------------------------------------
     c_initialize_dhires_values()
@@ -158,7 +157,6 @@ static void c_initialize_dhires_values(void) {
         video__dhires2[i+0x80] = video__dhires2[i];
     }
 }
-#endif
 
 /* -------------------------------------------------------------------------
     c_initialize_hires_values()
@@ -563,7 +561,6 @@ static void c_initialize_tables_video(void) {
     {
         for (x = 0; x < 40; x++)        /* 40 cols */
         {
-#ifdef APPLE_IIE
             if (apple_mode == IIE_MODE)
             {
                 /* //e mode: text/lores page 0 */
@@ -572,7 +569,6 @@ static void c_initialize_tables_video(void) {
                     video__write_2e_text0_mixed;
             }
             else
-#endif
             {
                 /* ][+ modes: text/lores page 0 */
                 cpu65_vmem[ video__line_offset[ y ] + x + 0x400].w =
@@ -580,7 +576,6 @@ static void c_initialize_tables_video(void) {
                     video__write_text0_mixed;
             }
 
-#ifdef APPLE_IIE
             if (apple_mode == IIE_MODE)
             {
                 cpu65_vmem[ video__line_offset[ y ] + x + 0x800].w =
@@ -588,7 +583,6 @@ static void c_initialize_tables_video(void) {
                     video__write_2e_text1_mixed;
             }
             else
-#endif
             {
                 /* ][+ modes: text/lores page 1 in main memory */
                 cpu65_vmem[ video__line_offset[ y ] + x + 0x800].w =
@@ -599,7 +593,6 @@ static void c_initialize_tables_video(void) {
             for (i = 0; i < 8; i++)
             {
                 /* //e mode: hires/double hires page 0 */
-#ifdef APPLE_IIE
                 if (apple_mode == IIE_MODE)
                 {
                     cpu65_vmem[ 0x2000 + video__line_offset[ y ]
@@ -611,7 +604,6 @@ static void c_initialize_tables_video(void) {
                 }
                 /* ][+ modes: hires page 0 */
                 else
-#endif
                 {
                     cpu65_vmem[ 0x2000 + video__line_offset[ y ]
                                 + 0x400 * i + x ].w =
@@ -621,7 +613,6 @@ static void c_initialize_tables_video(void) {
                            video__write_even0_mixed);
                 }
 
-#ifdef APPLE_IIE
                 if (apple_mode == IIE_MODE)
                 {
                     cpu65_vmem[ 0x4000 + video__line_offset[ y ]
@@ -633,7 +624,6 @@ static void c_initialize_tables_video(void) {
                 }
                 /* ][+ modes: hires page 1 */
                 else
-#endif
                 {
                     cpu65_vmem[ 0x4000 + video__line_offset[ y ]
                                 + 0x400 * i + x ].w =
@@ -668,9 +658,7 @@ void video_set(int flags)
     c_initialize_row_col_tables();      /* precalculate hires offsets */
     c_initialize_tables_video();        /* memory jump tables for video */
 
-#ifdef APPLE_IIE
     c_initialize_dhires_values();       /* set up dhires colors */
-#endif
 }
 
 void video_loadfont_int(int first, int quantity, const unsigned char *data)

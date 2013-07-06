@@ -295,8 +295,6 @@ const struct opcode_struct opcodes_6502[256] =
     { "???", addr_implied },
 };
 
-#ifdef APPLE_IIE
-
 const struct opcode_struct opcodes_65c02[256] =
 {
     { "BRK", addr_implied },
@@ -556,8 +554,6 @@ const struct opcode_struct opcodes_65c02[256] =
     { "INC", addr_absolute_x },
     { "???", addr_implied },
 };
-
-#endif /* APPLE_IIE */
 
 const struct opcode_struct opcodes_undoc[256] =
 {

@@ -41,9 +41,7 @@
    ---------------------------------- */
 
 static unsigned char apple_ii_rom[12288];
-#ifdef APPLE_IIE
 static unsigned char apple_iie_rom[32768];              /* //e */
-#endif
 
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
@@ -60,7 +58,6 @@ GLUE_BANK_MAYBEWRITE(write_ram_bank,base_d000_wrt)
 GLUE_BANK_READ(read_ram_lc,base_e000_rd)
 GLUE_BANK_MAYBEWRITE(write_ram_lc,base_e000_wrt)
 
-#ifdef APPLE_IIE
 
 GLUE_BANK_READ(iie_read_ram_default,base_ramrd)
 GLUE_BANK_WRITE(iie_write_ram_default,base_ramwrt)
@@ -98,8 +95,6 @@ void c_set_primary_char()
     video_redraw();
 }
 
-#endif /* APPLE_IIE */
-
 
 /* -------------------------------------------------------------------------
     c_initialize_font():     Initialize ROM character table to primary char set
@@ -128,14 +123,12 @@ void c_initialize_tables() {
     /* reset everything */
     for (i = 0; i < 0x10000; i++)
     {
-#ifdef APPLE_IIE
         if (apple_mode == IIE_MODE)
         {
             cpu65_vmem[i].r = iie_read_ram_default;
             cpu65_vmem[i].w = iie_write_ram_default;
         }
         else
-#endif
         {
             cpu65_vmem[i].r = read_ram_default;
             cpu65_vmem[i].w = write_ram_default;
@@ -165,7 +158,6 @@ void c_initialize_tables() {
 
     /* done common initialization */
 
-#ifdef APPLE_IIE
     /* initialize zero-page, //e specific */
     if (apple_mode == IIE_MODE)
     {
@@ -178,9 +170,6 @@ void c_initialize_tables() {
         }
     }
 
-#endif
-
-#ifdef APPLE_IIE
     /* initialize first text & hires page, which are specially bank switched
      *
      * video_set() substitutes it's own hooks for all visible write locations
@@ -203,8 +192,6 @@ void c_initialize_tables() {
             iie_write_screen_hole_hires_page0;
     }
 
-#endif
-
     /* softswich rom */
     for (i = 0xC000; i < 0xC100; i++)
     {
@@ -218,11 +205,7 @@ void c_initialize_tables() {
     for (i = 0xC100; i < 0xD000; i++)
     {
         cpu65_vmem[i].r =
-#ifdef APPLE_IIE
             iie_read_ram_default;
-#else
-            read_ram_default;
-#endif
         cpu65_vmem[i].w =
             ram_nop;
     }
@@ -241,7 +224,6 @@ void c_initialize_tables() {
                 read_keyboard_strobe;
     }
 
-#ifdef APPLE_IIE
     if (apple_mode == IIE_MODE)
     {
 
@@ -298,8 +280,6 @@ void c_initialize_tables() {
             iie_check_vbl;
     }
 
-#endif
-
     /* random number generator */
     for (i = 0xC020; i < 0xC030; i++)
     {
@@ -316,14 +296,11 @@ void c_initialize_tables() {
         cpu65_vmem[0xC051].w =
             read_switch_text;
 
-#ifdef APPLE_IIE
     if (apple_mode == IIE_MODE)
     {
         cpu65_vmem[0xC01A].r =
             iie_check_text;
     }
-
-#endif
 
     /* MIXED switch */
     cpu65_vmem[0xC052].r =
@@ -333,7 +310,6 @@ void c_initialize_tables() {
         cpu65_vmem[0xC053].w =
             read_switch_mixed;
 
-#ifdef APPLE_IIE
     if (apple_mode == IIE_MODE)
     {
         cpu65_vmem[0xC01B].r =
@@ -348,14 +324,12 @@ void c_initialize_tables() {
                 iie_page2_off;
     }
     else
-#endif
     {
         cpu65_vmem[0xC054].r =
             cpu65_vmem[0xC054].w =
                 read_switch_primary_page;
     }
 
-#ifdef APPLE_IIE
     if (apple_mode == IIE_MODE)
     {
         cpu65_vmem[0xC01C].r =
@@ -370,7 +344,6 @@ void c_initialize_tables() {
                 iie_page2_on;
     }
     else
-#endif
     {
         cpu65_vmem[0xC055].r =
             cpu65_vmem[0xC055].w =
@@ -378,7 +351,6 @@ void c_initialize_tables() {
     }
 
     /* HIRES switch */
-#ifdef APPLE_IIE
     if (apple_mode == IIE_MODE)
     {
         cpu65_vmem[0xC01D].r =
@@ -391,7 +363,6 @@ void c_initialize_tables() {
                 iie_hires_on;
     }
     else
-#endif
     {
         cpu65_vmem[0xC056].r =
             cpu65_vmem[0xC056].w =
@@ -417,7 +388,6 @@ void c_initialize_tables() {
     cpu65_vmem[0xC065].r =
         cpu65_vmem[0xC06D].r =
             read_gc1;
-#ifdef APPLE_IIE
     if (apple_mode == IIE_MODE)
     {
         cpu65_vmem[0xC066].r =
@@ -426,7 +396,6 @@ void c_initialize_tables() {
             iie_read_gc3;
     }
 
-#endif
     for (i = 0xC070; i < 0xC080; i++)
     {
         cpu65_vmem[i].r =
@@ -434,7 +403,6 @@ void c_initialize_tables() {
                 read_gc_strobe;
     }
 
-#ifdef APPLE_IIE
     if (apple_mode == IIE_MODE)
     {
         /* IOUDIS switch & read_gc_strobe */
@@ -456,9 +424,6 @@ void c_initialize_tables() {
                 iie_dhires_off;
     }
 
-#endif
-
-#ifdef APPLE_IIE
     /* language card softswitches */
     cpu65_vmem[0xC080].r = cpu65_vmem[0xC080].w =
                                cpu65_vmem[0xC084].r = cpu65_vmem[0xC084].w =
@@ -485,36 +450,7 @@ void c_initialize_tables() {
     cpu65_vmem[0xC08B].r = cpu65_vmem[0xC08B].w =
                                cpu65_vmem[0xC08F].r = cpu65_vmem[0xC08F].w =
                                                           (apple_mode == IIE_MODE) ? iie_c08b : lc_c08b;
-#else /* !APPLE_IIE */
-      /* language card softswitches */
-    cpu65_vmem[0xC080].r = cpu65_vmem[0xC080].w =
-                               cpu65_vmem[0xC084].r = cpu65_vmem[0xC084].w =
-                                                          lc_c080;
-    cpu65_vmem[0xC081].r = cpu65_vmem[0xC081].w =
-                               cpu65_vmem[0xC085].r = cpu65_vmem[0xC085].w =
-                                                          lc_c081;
-    cpu65_vmem[0xC082].r = cpu65_vmem[0xC082].w =
-                               cpu65_vmem[0xC086].r = cpu65_vmem[0xC086].w =
-                                                          lc_c082;
-    cpu65_vmem[0xC083].r = cpu65_vmem[0xC083].w =
-                               cpu65_vmem[0xC087].r = cpu65_vmem[0xC087].w =
-                                                          lc_c083;
 
-    cpu65_vmem[0xC088].r = cpu65_vmem[0xC088].w =
-                               cpu65_vmem[0xC08C].r = cpu65_vmem[0xC08C].w =
-                                                          lc_c088;
-    cpu65_vmem[0xC089].r = cpu65_vmem[0xC089].w =
-                               cpu65_vmem[0xC08D].r = cpu65_vmem[0xC08D].w =
-                                                          lc_c089;
-    cpu65_vmem[0xC08A].r = cpu65_vmem[0xC08A].w =
-                               cpu65_vmem[0xC08E].r = cpu65_vmem[0xC08E].w =
-                                                          lc_c08a;
-    cpu65_vmem[0xC08B].r = cpu65_vmem[0xC08B].w =
-                               cpu65_vmem[0xC08F].r = cpu65_vmem[0xC08F].w =
-                                                          lc_c08b;
-#endif /* !APPLE_IIE */
-
-#ifdef APPLE_IIE
     /* slot i/o area */
     for (i = 0xC100; i < 0xC300; i++)
     {
@@ -543,7 +479,6 @@ void c_initialize_tables() {
     cpu65_vmem[0xCFFF].r =
         cpu65_vmem[0xCFFF].w =
             iie_disable_slot_expansion;
-#endif
 
     video_set(0);
 
@@ -559,9 +494,7 @@ void c_initialize_apple_ii_memory()
     FILE       *f;
     int i;
     static int ii_rom_loaded = 0;
-#ifdef APPLE_IIE
     static int iie_rom_loaded = 0;
-#endif
 
     for (i = 0; i < 0x10000; i++)
     {
@@ -598,7 +531,6 @@ void c_initialize_apple_ii_memory()
         ii_rom_loaded = 1;
     }
 
-#ifdef APPLE_IIE
     if (!iie_rom_loaded)
     {
         snprintf(temp, TEMPSIZE, "%s/apple_IIe.rom", system_path);
@@ -617,8 +549,6 @@ void c_initialize_apple_ii_memory()
         iie_rom_loaded = 1;
     }
 
-#endif
-
     for (i = 0xD000; i < 0x10000; i++)
     {
         apple_ii_64k[0][i] = apple_ii_rom[i - 0xD000];
@@ -634,7 +564,6 @@ void c_initialize_apple_ii_memory()
         language_card[0][i] = apple_ii_rom[i + 0x1000];
     }
 
-#ifdef APPLE_IIE
     if (apple_mode == IIE_MODE)
     {
         /* load the rom from 0xC000, slot rom main, internal rom aux */
@@ -657,7 +586,6 @@ void c_initialize_apple_ii_memory()
         }
     }
     else
-#endif
     /* softswitch memory HACK - why this? */
     {
         for (i = 0xC100; i < 0xD000; i++)
@@ -686,7 +614,6 @@ void c_initialize_sound()
     }
 }
 
-#ifdef APPLE_IIE
 /* -------------------------------------------------------------------------
     c_initialize_iie_switches
    ------------------------------------------------------------------------- */
@@ -709,7 +636,6 @@ void c_initialize_iie_switches() {
     c8rom_offset = 0x10000;                     /* c8rom internal */
     base_cxrom = apple_ii_64k[0];               /* cxrom peripheral */
 }
-#endif
 
 /* -------------------------------------------------------------------------
     void c_initialize_vm()
@@ -721,9 +647,7 @@ void c_initialize_vm() {
     c_initialize_sound();               /* sound system */
     c_init_6();                         /* drive ][, slot 6 */
 
-#ifdef APPLE_IIE
     c_initialize_iie_switches();        /* set the //e softswitches */
-#endif
 
 #ifdef MOUSE_EMULATION
     c_initialize_mouse();
@@ -758,13 +682,11 @@ static void reinitialize(void)
 
     video_redraw();
 
-#ifdef APPLE_IIE
     if (apple_mode == IIE_MODE)
     {
         cpu65_set(CPU65_C02);
     }
     else
-#endif
     if (apple_mode == IIU_MODE)
     {
         cpu65_set(CPU65_NMOS);

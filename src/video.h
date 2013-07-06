@@ -212,7 +212,6 @@ video__write_odd1(),
 video__write_even1_mixed(),
 video__write_odd1_mixed();
 
-#ifdef APPLE_IIE
 void            video__write_2e_text0(),
 video__write_2e_text0_mixed(),
 video__write_2e_text1(),
@@ -225,7 +224,6 @@ video__write_2e_odd1(),
 video__write_2e_even1(),
 video__write_2e_odd1_mixed(),
 video__write_2e_even1_mixed();
-#endif /* APPLE_IIE */
 
 #endif /* !__ASSEMBLER__ */
 

@@ -26,7 +26,6 @@
 #define SW_MIXED 0xC052
 #define SW_PAGE2 0xC054
 #define SW_HIRES 0xC056
-#ifdef APPLE_IIE
 #define SW_80STORE 0xC000
 #define SW_RAMRD 0xC002
 #define SW_RAMWRT 0xC004
@@ -37,7 +36,6 @@
 #define SW_SLOTCXROM 0xC006
 #define SW_DHIRES 0xC05E
 #define SW_IOUDIS 0xC07E
-#endif
 
 /* Text characters */
 extern const unsigned char ucase_glyphs[0x200];
@@ -62,7 +60,6 @@ int argc;
 #define TEMPSIZE        4096
 char temp[ TEMPSIZE ];   /* should be >=4096 (stuff depends on this) */
 
-#ifdef APPLE_IIE
 /* memory offsets from softswitches */
 int c8rom_offset;
 
@@ -81,8 +78,6 @@ extern unsigned char *base_e000_wrt;
 
 extern unsigned char *base_c3rom;
 extern unsigned char *base_cxrom;
-
-#endif /* APPLE_IIE */
 
 /* softswitches */
 
@@ -180,7 +175,6 @@ read_ram_bank(),
 write_ram_lc(),
 read_ram_lc();
 
-#ifdef APPLE_IIE
 void            iie_write_ram_default(),
 iie_read_ram_default(),
 
@@ -253,7 +247,6 @@ iie_check_page2(),
 iie_check_ioudis(),
 iie_check_dhires(),
 iie_check_vbl();
-#endif /* APPLE_IIE */
 #endif /* !__ASSEMBLER__ */
 
 #endif

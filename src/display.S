@@ -686,35 +686,19 @@ E(video_redraw)
 
 		/* 24 rows text/lores page 0 */
 		movl	$23, %ebx
-#ifdef APPLE_IIE
 		UpdateRows(iie_soft_write_,0,$0x427)
-#else
-		UpdateRows(video__write_,0,$0x427)
-#endif
 
 		/* 24 rows text/lores page 1 */
 		movl	$23, %ebx
-#ifdef APPLE_IIE
 		UpdateRows(iie_soft_write_,1,$0x827)
-#else
-		UpdateRows(video__write_,1,$0x827)
-#endif
 
 		/* 192 rows hires page 0 */
 		movl	$191, %ebx
-#ifdef APPLE_IIE
 		UpdateHiresRows(iie_soft_write_,0,$0x2027)
-#else
-		UpdateHiresRows(video__write_,0,$0x2027)
-#endif
 
 		/* 192 rows hires page 1 */
 		movl	$191, %ebx
-#ifdef APPLE_IIE
 		UpdateHiresRows(iie_soft_write_,1,$0x4027)
-#else
-		UpdateHiresRows(video__write_,1,$0x4027)
-#endif
 
 		popl	SN(softswitches)
 		popal
@@ -756,7 +740,6 @@ E(video__write_text1_mixed)
 		jz	plot_block1
 		ret
 
-#ifdef APPLE_IIE
 /* video__write_2e_text0 - handle text page //e specific */
 E(video__write_2e_text0)
 		addl	SN(base_textwrt), EffectiveAddr_E
@@ -824,7 +807,6 @@ iie_soft_write_text1_mixed:
 		jnz	ram_nop				# NOP (in auxram)
 		jmp	plot_character1			# 40 col text
 
-#endif /* APPLE_IIE */
 
 E(video__write_even0)
 		movb	%al, SN(apple_ii_64k)(,EffectiveAddr_E,1)
@@ -858,7 +840,6 @@ E(video__write_odd0_mixed)
 		jnz	plot_odd_byte0
 		ret
 
-#ifdef APPLE_IIE
 /* video__write_2e_even0 - handle hires page //e specific */
 E(video__write_2e_even0)
 		addl	SN(base_hgrwrt), EffectiveAddr_E
@@ -931,7 +912,6 @@ iie_soft_write_odd0_mixed:
 1:		testl	$SS_HGRWRT, SN(softswitches)
 		jnz	ram_nop				# in auxram
 		jmp	plot_odd_byte0			# plot hires
-#endif
 
 E(video__write_even1)
 		movb	%al, SN(apple_ii_64k)(,EffectiveAddr_E,1)
@@ -965,7 +945,6 @@ E(video__write_odd1_mixed)
 		jnz	plot_odd_byte1
 		ret
 
-#ifdef APPLE_IIE
 /* video__write_2e_even1 - write hires page1 //e specific */
 E(video__write_2e_even1)
 		addl	SN(base_ramwrt), EffectiveAddr_E
@@ -1099,8 +1078,6 @@ plot_80character1:
 		andl	$0xFFFF, EffectiveAddr_E/* for safety */
 		ret
 #endif /* _640x400 */
-
-#endif /* APPLE_IIE */
 
 
 /* plot character on first text page */

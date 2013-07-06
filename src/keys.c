@@ -106,7 +106,6 @@ static int apple_ii_keymap_shifted[128] =
   -1, -1, -1, -1, -1, -1, -1, kF4 /* pause */,              /* 112-119 */
   -1, -1, -1, -1, -1, -1, -1, -1 };             /* 120-127 */
 
-#ifdef APPLE_IIE
 /* ----------------------------------------------------
     //e Keymap. Mapping scancodes to Apple //e US Keyboard
    ---------------------------------------------------- */
@@ -199,7 +198,6 @@ static int apple_iie_keymap_shift_ctrl[128] =
   kPGUP, 8, 21, kEND, 10, kPGDN, JB2, 127,            /* 104-111 */
   -1, -1, -1, -1, -1, -1, -1, kF4 /* pause */,              /* 112-119 */
   -1, -1, -1, -1, -1, -1, -1, -1 };             /* 120-127 */
-#endif
 
 static unsigned short max_speed = 0;
 static char key_pressed[ 256 ];
@@ -411,7 +409,6 @@ void c_read_raw_key(int scancode, int pressed) {
     int *keymap = NULL;
 
     /* determine which key mapping to use */
-#ifdef APPLE_IIE
     if (apple_mode == IIE_MODE || in_mygetch)
     {
         /* set/reset caps lock */
@@ -450,7 +447,6 @@ void c_read_raw_key(int scancode, int pressed) {
         }
     }
     else
-#endif
     {
         if (key_pressed[ SCODE_L_CTRL ] ||
             key_pressed[ SCODE_R_CTRL ])
@@ -472,7 +468,6 @@ void c_read_raw_key(int scancode, int pressed) {
     /* key is pressed */
     if (pressed)
     {
-
         key_pressed[ scancode ] = 1;
 
         switch (keymap[ scancode ])

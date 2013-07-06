@@ -43,12 +43,6 @@ static int altdrive;
 /*#else*/
 /*#define undoc_supported 0*/
 
-#ifdef APPLE_IIE
-#define iie_supported 1
-#else
-#define iie_supported 0
-#endif
-
 static void pad_string(char *s, char c, int len) {
     char *p;
 
@@ -852,11 +846,6 @@ void c_interface_parameters()
     static int cur_y = 0, cur_off = 0, cur_x = 0, cur_pos = 0;
     int current_mode = apple_mode;
 
-    if (!iie_supported && (current_mode == 2))
-    {
-        current_mode = apple_mode = 0;
-    }
-
     /* reset the x position, so we don't lose our cursor if path changes */
     cur_x = 0;
     video_setpage( 0 );
@@ -891,14 +880,9 @@ void c_interface_parameters()
                 temp[24] = '\0';
                 break;
             case 2:
-#ifdef APPLE_IIE
                 sprintf(temp, "%s", (apple_mode == 0) ? "][+             " :
                         (apple_mode == 1) ? "][+ undocumented" :
                         "//e             ");
-#else
-                sprintf(temp, "%s", (apple_mode == 0) ? "][+             " :
-                        "][+ undocumented");
-#endif
                 break;
             case 3:
                 sprintf(temp, "%s", (color_mode == 0) ? "Black/White " :
@@ -1070,11 +1054,6 @@ void c_interface_parameters()
                     apple_mode = 2;
                 }
 
-                if ((apple_mode == 2) && !iie_supported)
-                {
-                    apple_mode = 1;
-                }
-
                 break;
             case 3:                     /* color mode */
                 if (color_mode == 0)
@@ -1193,11 +1172,6 @@ void c_interface_parameters()
             case 2:                     /* apple mode */
                 apple_mode++;
                 if (apple_mode > 2)
-                {
-                    apple_mode = 0;
-                }
-
-                if ((apple_mode == 2) && !iie_supported)
                 {
                     apple_mode = 0;
                 }
@@ -1487,7 +1461,6 @@ void c_interface_keyboard_layout()
       "|       (Press any key to exit)        |",
       "||||||||||||||||||||||||||||||||||||||||" };
 
-#ifdef APPLE_IIE
     static char screen2[24][41] =
     { "||||||||||||||||||||||||||||||||||||||||",
       "|     Apple //e US Keyboard Layout     |",
@@ -1513,13 +1486,11 @@ void c_interface_keyboard_layout()
       "||||||||||||||||||||||||||||||||||||||||",
       "|       (Press any key to exit)        |",
       "||||||||||||||||||||||||||||||||||||||||" };
-#endif
 
     int i;
 
     video_setpage( 0 );
 
-#ifdef APPLE_IIE
     if (apple_mode == 2)
     {
         c_interface_translate_screen(screen2);
@@ -1529,7 +1500,6 @@ void c_interface_keyboard_layout()
         }
     }
     else
-#endif
     {
         c_interface_translate_screen(screen1);
         for (i = 0; i < 24; i++)
