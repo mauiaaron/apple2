@@ -1,4 +1,4 @@
-/* 
+/*
  * Apple // emulator for Linux: Joystick calibration routines
  *
  * Copyright 1994 Alexander Jean-Claude Bottema
@@ -7,10 +7,10 @@
  * Copyright 1998, 1999, 2000 Michael Deutschmann
  *
  * This software package is subject to the GNU General Public License
- * version 2 or later (your choice) as published by the Free Software 
+ * version 2 or later (your choice) as published by the Free Software
  * Foundation.
  *
- * THERE ARE NO WARRANTIES WHATSOEVER. 
+ * THERE ARE NO WARRANTIES WHATSOEVER.
  *
  */
 
@@ -28,8 +28,8 @@
 #include "misc.h"
 #include "prefs.h"
 
-int js_fd = -1;			/* joystick file descriptor */
-struct JS_DATA_TYPE js;		/* joystick data struct */
+int js_fd = -1;                 /* joystick file descriptor */
+struct JS_DATA_TYPE js;         /* joystick data struct */
 
 int js_lowerrange_x,
     js_upperrange_x,
@@ -49,18 +49,26 @@ float
     c_open_joystick() - opens joystick device and sets timelimit value
    ------------------------------------------------------------------------- */
 int c_open_joystick() {
-    if (js_fd < 0) {
-	if ((js_fd = open("/dev/js0", O_RDONLY)) < 0) {
+    if (js_fd < 0)
+    {
+        if ((js_fd = open("/dev/js0", O_RDONLY)) < 0)
+        {
 
-	    /* try again with another name */
-	    if ((js_fd = open("/dev/joystick", O_RDONLY)) < 0)
-		return 1;/* problem */
-	}
-	/* set timelimit value */
-	if (ioctl(js_fd, JS_SET_TIMELIMIT, &js_timelimit) == -1)
-	    return 1;/* problem */
+            /* try again with another name */
+            if ((js_fd = open("/dev/joystick", O_RDONLY)) < 0)
+            {
+                return 1; /* problem */
+            }
+        }
+
+        /* set timelimit value */
+        if (ioctl(js_fd, JS_SET_TIMELIMIT, &js_timelimit) == -1)
+        {
+            return 1; /* problem */
+        }
     }
-    return 0;/* no problem */
+
+    return 0; /* no problem */
 }
 
 /* -------------------------------------------------------------------------
@@ -68,7 +76,10 @@ int c_open_joystick() {
    ------------------------------------------------------------------------- */
 void c_close_joystick() {
     if (js_fd < 0)
-	return;
+    {
+        return;
+    }
+
     close(js_fd);
     js_fd = -1;
 }
@@ -99,7 +110,7 @@ void c_calculate_joystick_parms() {
     and center coordinates.  assumes that it can write to the interface
     screen.
    ------------------------------------------------------------------------- */
-void c_calibrate_joystick () {
+void c_calibrate_joystick() {
     int almost_done, done;
     unsigned char x_val, y_val;
 
@@ -110,50 +121,67 @@ void c_calibrate_joystick () {
     js_min_y = MAXINT;
 
     /* open joystick device if not open */
-    if (js_fd < 0) {
-	if (c_open_joystick()) {	/* problem opening device */
-	    c_interface_print(
-		    1, 21, 0, "                                      " );
-	    c_interface_print(
-		    1, 22, 0, "     cannot open joystick device.     " );
-	    video_sync(0);
-	    usleep(1500000);
-	    c_interface_redo_bottom();
-	    return;/* problem */
-	}
+    if (js_fd < 0)
+    {
+        if (c_open_joystick())          /* problem opening device */
+        {
+            c_interface_print(
+                1, 21, 0, "                                      " );
+            c_interface_print(
+                1, 22, 0, "     cannot open joystick device.     " );
+            video_sync(0);
+            usleep(1500000);
+            c_interface_redo_bottom();
+            return; /* problem */
+        }
     }
 
     c_interface_print(
-	1, 21, 0, "  Move joystick to all extremes then  " );
+        1, 21, 0, "  Move joystick to all extremes then  " );
     c_interface_print(
-	1, 22, 0, "    center it and press a button.     " );
+        1, 22, 0, "    center it and press a button.     " );
     video_sync(0);
     usleep(1500000);
     c_interface_print(
-	1, 21, 0, "                                      " );
+        1, 21, 0, "                                      " );
     c_interface_print(
-	1, 22, 0, "                                      " );
+        1, 22, 0, "                                      " );
 
-    almost_done = done = 0;		/* not done calibrating */
+    almost_done = done = 0;             /* not done calibrating */
     while ((read(js_fd, &js, JS_RETURN) > 0) && (!done))
     {
-	sprintf (temp, "  x = %04x, y = %04x", js.x, js.y);
-	c_interface_print(1, 22, 0, temp);
-	video_sync(0);
-	if (js_max_x < js.x)
-	    js_max_x = js.x;
-	if (js_max_y < js.y)
-	    js_max_y = js.y;
+        sprintf(temp, "  x = %04x, y = %04x", js.x, js.y);
+        c_interface_print(1, 22, 0, temp);
+        video_sync(0);
+        if (js_max_x < js.x)
+        {
+            js_max_x = js.x;
+        }
 
-	if (js_min_x > js.x)
-	    js_min_x = js.x;
-	if (js_min_y > js.y)
-	    js_min_y = js.y;
+        if (js_max_y < js.y)
+        {
+            js_max_y = js.y;
+        }
 
-	if (js.buttons != 0x00)				/* press */
-	    almost_done = 1;
-	if (almost_done && (js.buttons == 0x00))	/* release */
-	    done = 1;
+        if (js_min_x > js.x)
+        {
+            js_min_x = js.x;
+        }
+
+        if (js_min_y > js.y)
+        {
+            js_min_y = js.y;
+        }
+
+        if (js.buttons != 0x00)                         /* press */
+        {
+            almost_done = 1;
+        }
+
+        if (almost_done && (js.buttons == 0x00))        /* release */
+        {
+            done = 1;
+        }
     }
 
     js_center_x = js.x;
@@ -167,7 +195,7 @@ void c_calibrate_joystick () {
     printf("js_center_y = %d\n", js_center_y);
     printf("\n");
 
-    c_calculate_joystick_parms();	/* determine the parms */
+    c_calculate_joystick_parms();       /* determine the parms */
 
     printf("js_lowerrange_x = %d\n", js_lowerrange_x);
     printf("js_lowerrange_y = %d\n", js_lowerrange_y);
@@ -184,24 +212,26 @@ void c_calibrate_joystick () {
     printf("\n");
 
     c_interface_print(
-	1, 21, 0, "     Press a button to continue.      " );
+        1, 21, 0, "     Press a button to continue.      " );
     video_sync(0);
 
     /* show the normalized values until user presses button */
-    while ((read(js_fd, &js, JS_RETURN) > 0) && js.buttons == 0x00) {
-	x_val = (js.x < js_center_x)
-	    ? (js.x - js_offset_x) * js_adjustlow_x
-	    : (js.x - (js_center_x/*+js_offset_x*/)) * js_adjusthigh_x +
-	    	half_joy_range;
+    while ((read(js_fd, &js, JS_RETURN) > 0) && js.buttons == 0x00)
+    {
+        x_val = (js.x < js_center_x)
+                ? (js.x - js_offset_x) * js_adjustlow_x
+                : (js.x - (js_center_x /*+js_offset_x*/)) * js_adjusthigh_x +
+                half_joy_range;
 
-	y_val = (js.y < js_center_y)
-	    ? (js.y - js_offset_y) * js_adjustlow_y
-	    : (js.y - (js_center_y/*+js_offset_y*/)) * js_adjusthigh_y +
-	    	half_joy_range;
-	sprintf(temp, "    x = %02x,   y = %02x", x_val, y_val);
-	c_interface_print(1, 22, 0, temp);
-	video_sync(0);
+        y_val = (js.y < js_center_y)
+                ? (js.y - js_offset_y) * js_adjustlow_y
+                : (js.y - (js_center_y /*+js_offset_y*/)) * js_adjusthigh_y +
+                half_joy_range;
+        sprintf(temp, "    x = %02x,   y = %02x", x_val, y_val);
+        c_interface_print(1, 22, 0, temp);
+        video_sync(0);
     }
+
     c_interface_redo_bottom();
     video_sync(0);
 }

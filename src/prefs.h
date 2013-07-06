@@ -1,4 +1,4 @@
-/* 
+/*
  * Apple // emulator for Linux: Configuration defines
  *
  * Copyright 1994 Alexander Jean-Claude Bottema
@@ -7,10 +7,10 @@
  * Copyright 1998, 1999, 2000 Michael Deutschmann
  *
  * This software package is subject to the GNU General Public License
- * version 2 or later (your choice) as published by the Free Software 
+ * version 2 or later (your choice) as published by the Free Software
  * Foundation.
  *
- * THERE ARE NO WARRANTIES WHATSOEVER. 
+ * THERE ARE NO WARRANTIES WHATSOEVER.
  *
  */
 
@@ -19,9 +19,9 @@
 
 #ifndef __ASSEMBLER__
 
-#define	SYSSIZE		4096
+#define SYSSIZE         4096
 extern char system_path[SYSSIZE];
-#define	DISKSIZE	4096
+#define DISKSIZE        4096
 extern char disk_path[DISKSIZE];
 
 extern int apple_mode; /* undocumented instructions or //e mode */

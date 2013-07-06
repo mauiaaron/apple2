@@ -1,4 +1,4 @@
-/* 
+/*
  * Apple // emulator for Linux
  *
  * CPU Timing Support.
@@ -7,7 +7,7 @@
  * match a 1.02MHz Apple //e.
  *
  * Added 2013 by Aaron Culliney
- * 
+ *
  */
 
 #include "timing.h"
@@ -35,14 +35,17 @@ extern pthread_cond_t cond;
 // -----------------------------------------------------------------------------
 
 // assuming end > start, returns end - start
-static inline struct timespec timespec_diff (struct timespec start, struct timespec end) {
+static inline struct timespec timespec_diff(struct timespec start, struct timespec end) {
     struct timespec t;
 
     // assuming time_t is signed ...
-    if (end.tv_nsec < start.tv_nsec) {
+    if (end.tv_nsec < start.tv_nsec)
+    {
         t.tv_sec  = end.tv_sec - start.tv_sec - 1;
         t.tv_nsec = NANOSECONDS + end.tv_nsec - start.tv_nsec;
-    } else {
+    }
+    else
+    {
         t.tv_sec  = end.tv_sec  - start.tv_sec;
         t.tv_nsec = end.tv_nsec - start.tv_nsec;
     }
@@ -50,20 +53,20 @@ static inline struct timespec timespec_diff (struct timespec start, struct times
     return t;
 }
 
-static inline long timespec_nsecs (struct timespec t) {
+static inline long timespec_nsecs(struct timespec t) {
     return t.tv_sec*NANOSECONDS + t.tv_nsec;
 }
 
-void timing_initialize () {
+void timing_initialize() {
     clock_gettime(CLOCK_MONOTONIC, &t0);
     ti=t0;
 }
 
-void timing_set_cpu_target_hz (unsigned long hz) {
+void timing_set_cpu_target_hz(unsigned long hz) {
     cpu_target_hz = hz;
 }
 
-void timing_set_sleep_hz (unsigned int hz) {
+void timing_set_sleep_hz(unsigned int hz) {
     sleep_hz = hz;
 }
 
@@ -73,12 +76,13 @@ void timing_set_sleep_hz (unsigned int hz) {
  *
  * This is called from cpu65_run() on the cpu-thread
  */
-void timing_throttle () {
+void timing_throttle() {
     ++cycle;
 
     static time_t severe_lag=0;
 
-    if ((cycle%cycles_interval) == 0) {
+    if ((cycle%cycles_interval) == 0)
+    {
 
         // wake render thread as we go to sleep
         pthread_mutex_lock(&mutex);
@@ -88,27 +92,32 @@ void timing_throttle () {
         clock_gettime(CLOCK_MONOTONIC, &tj);
         deltat = timespec_diff(ti, tj);
         ti=tj;
-        if (deltat.tv_sec != 0) {
+        if (deltat.tv_sec != 0)
+        {
             // severely lagging, don't bother sleeping ...
-            if (severe_lag < time(NULL)) {
+            if (severe_lag < time(NULL))
+            {
                 severe_lag = time(NULL)+2;
                 fprintf(stderr, "Severe lag detected...\n");
             }
-        } else {
+        }
+        else
+        {
             deltat.tv_nsec = processing_interval - deltat.tv_nsec + sleep_adjust_inc;
             nanosleep(&deltat, NULL); // NOTE: spec says will return right away if deltat.tv_nsec value < 0 ...
             ti.tv_nsec += deltat.tv_nsec;
         }
 
-        if ((cycle%cpu_target_hz) == 0) {
+        if ((cycle%cpu_target_hz) == 0)
+        {
             clock_gettime(CLOCK_MONOTONIC, &tj);
 
             deltat = timespec_diff(t0, tj);
-            struct timespec t = (struct timespec){.tv_sec=1, .tv_nsec=0};
+            struct timespec t = (struct timespec) {.tv_sec=1, .tv_nsec=0 };
 
             long adj = (deltat.tv_sec == 0)
-                ?      timespec_nsecs(timespec_diff(deltat, t))
-                : -1 * timespec_nsecs(timespec_diff(t, deltat));
+                       ?      timespec_nsecs(timespec_diff(deltat, t))
+                       : -1 * timespec_nsecs(timespec_diff(t, deltat));
 
             sleep_adjust += adj;
             sleep_adjust_inc = sleep_adjust/sleep_hz;
