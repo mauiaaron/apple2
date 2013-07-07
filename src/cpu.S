@@ -483,12 +483,11 @@
                 FlagNVZC
 
 /* AXS = (A AND X) -> S, A AND X AND 17 -> M */
-/* HACK!!!!!!!!!!!!!!! */
 #define DoAXS   movb    A_Reg, SP_Reg_L;                                       \
                 andb    X_Reg, SP_Reg_L;                                       \
                 movb    SP_Reg_L, %al;                                         \
                 andb    $17, %al;                                              \
-                FlagNZ  /* \ wasn't here */                                    \
+                FlagNZ                                                         \
                 PutToEA_Bh
 
 /* DCP = DEC M, CMP M */
@@ -624,8 +623,7 @@
                 PutToEA_Bh
 
 /* XMA = (X AND M) AND (A OR 238) -> A */
-/* HACK!!!!!!!!!!!!!!! */
-#define DoXMA   /* the \ wasn't here before */                                 \
+#define DoXMA                                                                  \
                 GetFromEA_Bh                                                   \
                 andb    X_Reg, %al;                                            \
                 orb     $238, A_Reg;                                           \
