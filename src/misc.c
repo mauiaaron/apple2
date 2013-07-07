@@ -723,11 +723,14 @@ static void c_initialize_firsttime()
 }
 
 void c_read_random() {
-    random_value = (unsigned char)(rand() >> 8);
+    static unsigned int seed=0;
+    if (!seed) {
+        seed = time(NULL);
+    }
+    random_value = (unsigned char)rand_r(&seed);
 }
 
 static void cpu_thread(void *dummyptr) {
-
     do
     {
         cpu65_run();
