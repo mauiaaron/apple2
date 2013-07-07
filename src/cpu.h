@@ -16,6 +16,7 @@
 
 #ifndef __ASSEMBLER__
 #include <sys/types.h>
+#include <stdint.h>
 
 /* types */
 
@@ -30,18 +31,20 @@ struct memory_vector
 
 struct cpu65_state
 {
-    u_int16_t pc;       /* Program counter */
-    u_int8_t a;         /* Accumulator */
-    u_int8_t f;         /* Flags (order not same as in real 6502) */
-    u_int8_t x,y;       /* Index register */
-    u_int8_t sp;        /* Stack Pointer */
+    uint16_t pc;        /* Program counter */
+    uint8_t a;          /* Accumulator */
+    uint8_t f;          /* Flags (order not same as in real 6502) */
+    uint8_t x;          /* X Index register */
+    uint8_t y;          /* Y Index register */
+    uint8_t sp;         /* Stack Pointer */
 };
 
-struct cpu65_extra      /* for debugging */
+struct cpu65_extra
 {
-    u_int16_t ea;       /* Last effective address */
-    u_int8_t d;         /* Last data byte written */
-    u_int8_t op;        /* 1 = read occured, 2 = write, 3 = both */
+    uint16_t ea;        /* Last effective address */
+    uint8_t d;          /* Last data byte written */
+    uint8_t op;         /* 1 = read occured, 2 = write, 3 = both */
+    uint8_t xcycles;    /* Last opcode extra cycles */
 };
 
 /* 6502 CPU models */
@@ -49,7 +52,6 @@ struct cpu65_extra      /* for debugging */
 #define         CPU65_C02       0x1
 
 #define         CPU65_FAULT     0x100   /* Undoc. opcodes are BRK */
-#define         CPU65_SYNCHRO   0x200   /* Synchronize speed, not imp. */
 
 /* Set up the processor for a new run. Sets up opcode table.
  */
@@ -106,18 +108,18 @@ extern unsigned int cpu65_delay;
 #define Z_Flag_Bit      14              /* 6502 Zero               */
 #define N_Flag_Bit      15              /* 6502 Neg                */
 
-#define X_Reg           %bl                     /* 6502 X register in %bl  */
-#define Y_Reg           %bh                     /* 6502 Y register in %bh  */
-#define A_Reg           %cl                     /* 6502 A register in %cl  */
-#define F_Reg           %ch                     /* 6502 flags in %ch       */
-#define FF_Reg          %ecx                    /* 6502 flags for bt       */
-#define SP_Reg          %edx                    /* 6502 Stack pointer      */
-#define SP_Reg_L        %dl                     /* 6502 Stack pointer low  */
-#define SP_Reg_H        %dh                     /* 6502 Stack pointer high */
-#define PC_Reg          %si                     /* 6502 Program Counter    */
-#define PC_Reg_E        %esi                    /* 6502 Program Counter    */
-#define EffectiveAddr   %di                     /* Effective address       */
-#define EffectiveAddr_E %edi                    /* Effective address       */
+#define X_Reg           %bl             /* 6502 X register in %bl  */
+#define Y_Reg           %bh             /* 6502 Y register in %bh  */
+#define A_Reg           %cl             /* 6502 A register in %cl  */
+#define F_Reg           %ch             /* 6502 flags in %ch       */
+#define FF_Reg          %ecx            /* 6502 flags for bt       */
+#define SP_Reg          %edx            /* 6502 Stack pointer      */
+#define SP_Reg_L        %dl             /* 6502 Stack pointer low  */
+#define SP_Reg_H        %dh             /* 6502 Stack pointer high */
+#define PC_Reg          %si             /* 6502 Program Counter    */
+#define PC_Reg_E        %esi            /* 6502 Program Counter    */
+#define EffectiveAddr   %di             /* Effective address       */
+#define EffectiveAddr_E %edi            /* Effective address       */
 
 #ifndef __ASSEMBLER__
 /* Private data. */

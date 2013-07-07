@@ -686,8 +686,7 @@ static void reinitialize(void)
     {
         cpu65_set(CPU65_C02);
     }
-    else
-    if (apple_mode == IIU_MODE)
+    else if (apple_mode == IIU_MODE)
     {
         cpu65_set(CPU65_NMOS);
     }
