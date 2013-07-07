@@ -191,9 +191,7 @@ E(read_keyboard_strobe)
 		ret
 
 E(read_random)
-		pushal
 		call	SN(c_read_random)
-		popal
 		movb	SN(random_value), %al
 		ret
 
@@ -819,18 +817,14 @@ E(iie_altchar_off)
 		testl	$SS_ALTCHAR, SN(softswitches)
     		jz	ram_nop
 		andl	$~SS_ALTCHAR, SN(softswitches)
-		pushal
 		call	SN(c_set_primary_char)
-		popal
 		ret
 
 E(iie_altchar_on)
 		testl	$SS_ALTCHAR, SN(softswitches)
     		jnz	ram_nop
 		orl	$SS_ALTCHAR, SN(softswitches)
-		pushal
 		call	SN(c_set_altchar)
-		popal
 		ret
 
 E(iie_check_altchar)
