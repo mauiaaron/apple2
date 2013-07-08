@@ -128,6 +128,8 @@ extern void *const cpu65__nmos[256];
 extern void *const cpu65__nmosbrk[256];
 extern void *const cpu65__cmos[256];
 
+extern char cpu65__opcycles[256];// cycle counter
+
 extern unsigned char cpu65__signal;
 #endif /* !__ASSEMBLER__ */
 

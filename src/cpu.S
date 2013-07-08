@@ -18,14 +18,22 @@
 #include "cpu.h"
 #include "misc.h"
 
+// HACK FIXME TODO : this appears to be fragile because struct size is hardcoded
+// here (in addition to implied size in cpu.h and elsewhere).  Please
+// investigate if this is necessary...
                 .comm   SN(cpu65_vmem),524288,4096
                 .comm   SN(cpu65_flags_encode),256
                 .comm   SN(cpu65_flags_decode),256
                 .comm   SN(cpu65_delay),4
                 .comm   SN(cpu65__opcodes),1024
                 .comm   SN(cpu65__signal),1
-                .comm   SN(cpu65_debug),4
+                .comm   SN(cpu65_debug),5
                 .comm   SN(cpu65_current),7
+
+#define DebugCurrEA     SN(cpu65_debug)
+#define DebugCurrByte   SN(cpu65_debug)+2
+#define DebugCurrOp     SN(cpu65_debug)+3
+#define XCyclesCount    SN(cpu65_debug)+4
 
 /* -------------------------------------------------------------------------
     CPU (6502) Helper Routines
@@ -49,6 +57,7 @@
                         (,EffectiveAddr_E,8);                                  \
 
 #define GetFromEA_B                                                            \
+                orb     $1, DebugCurrOp;                                       \
                 call    *SN(cpu65_vmem)                                        \
                         (,EffectiveAddr_E,8);
 
@@ -62,6 +71,8 @@
                 (,EffectiveAddr_E,8);
 
 #define PutToEA_B                                                              \
+                orb     $2, DebugCurrOp;                                       \
+                orb     %al, DebugCurrByte;                                    \
                 call    *SN(cpu65_vmem)+4                                      \
                         (,EffectiveAddr_E,8);
 #define GetFromMem_B(x)                                                        \
@@ -79,19 +90,9 @@
                 call    *SN(cpu65_vmem)                                        \
                         (,EffectiveAddr_E,8);                                  \
 
-/* h means hooked */
-#define GetFromEA_Bh                                                           \
-                orb     $1, SN(cpu65_debug)+3;                                 \
-                GetFromEA_B
-
-#define PutToEA_Bh                                                             \
-                orb     $2, SN(cpu65_debug)+3;                                 \
-                orb     %al, SN(cpu65_debug)+2;                                \
-                PutToEA_B
-
-/* reset operation code before each instruction. This assumes %al
- * is zero, and is inserted into Continue */
-#define ZeroOp  mov     %al, SN(cpu65_debug)+3;
+// reset operation code before each instruction
+#define ZeroOp  movb    $0, DebugCurrOp;                                       \
+                movb    $0, XCyclesCount;
 
 // NOTE: the orb functions as a move, but we want to
 // set the flags and we know %ah is zero
@@ -102,7 +103,7 @@
                 jmp     continue;
 
 #define SaveState                                                              \
-                movw    EffectiveAddr, SN(cpu65_debug);                        \
+                movw    EffectiveAddr, DebugCurrEA;                            \
                 movw    PC_Reg, SN(cpu65_current);                             \
                 movb    A_Reg, SN(cpu65_current)+2;                            \
                 movb    F_Reg, SN(cpu65_current)+3;                            \
@@ -125,7 +126,7 @@
                 movl    $0x0100, %edx;                                         \
                 xorl    %esi, %esi;                                            \
                 xorl    %edi, %edi;                                            \
-                movw    SN(cpu65_debug), EffectiveAddr;                        \
+                movw    DebugCurrEA, EffectiveAddr;                            \
                 movw    SN(cpu65_current), PC_Reg;                             \
                 movb    SN(cpu65_current)+2, A_Reg;                            \
                 movb    SN(cpu65_current)+3, F_Reg;                            \
@@ -136,6 +137,16 @@
                 jz      9f;                                                    \
                 orl     $0x10000, %edx;                                        \
 9:
+
+#define BranchXCycles                                                          \
+                incb    XCyclesCount; /* +1 cycle branch taken */              \
+                pushl   %ebx;                                                  \
+                movw    PC_Reg, %bx;                                           \
+                addb    %al, %bl;                                              \
+                jnc     9f;                                                    \
+                incb    XCyclesCount; /* +1 cycle branch across pg boundary */ \
+9:              addw    %ax, PC_Reg;                                           \
+                popl    %ebx;
 
 #define FlagC   lahf;                                                          \
                 andb    $C_Flag, %ah;                                          \
@@ -209,6 +220,7 @@
                 addb    X_Reg, %al;                                            \
                 movl    %eax, EffectiveAddr_E;
 
+// HACK IS THIS EVER USED?
 #define GetZPage_Y                                                             \
                 GetFromPC_B;                                                   \
                 addb    Y_Reg, %al;                                            \
@@ -220,14 +232,18 @@
 #define GetAbs_X                                                               \
                 GetFromPC_W;                                                   \
                 addb    X_Reg, %al;                                            \
+                jnc     9f;                                                    \
                 adcb    $0, %ah;                                               \
-                movl    %eax, EffectiveAddr_E;
+                incb    XCyclesCount; /* +1 cycle on page boundary */          \
+9:              movl    %eax, EffectiveAddr_E;
 
 #define GetAbs_Y                                                               \
                 GetFromPC_W;                                                   \
                 addb    Y_Reg, %al;                                            \
+                jnc     9f;                                                    \
                 adcb    $0, %ah;                                               \
-                movl    %eax, EffectiveAddr_E;
+                incb    XCyclesCount; /* +1 cycle on page boundary */          \
+9:              movl    %eax, EffectiveAddr_E;
 
 /* Absolute Indirect Addressing - The second and third bytes of the
    instruction are the low and high bytes of an address, respectively.
@@ -291,33 +307,35 @@
                 andl    $0xFF, EffectiveAddr_E;                                \
                 GetFromEA_B;                                                   \
                 addb    Y_Reg, %al;                                            \
+                jnc 9f;                                                        \
                 adcb    $0, %ah;                                               \
-                movl    %eax, EffectiveAddr_E;
+                incb    XCyclesCount; /* +1 cycle on page boundary */          \
+9:              movl    %eax, EffectiveAddr_E;
 
-#define DoADC_b GetFromEA_Bh                                                   \
+#define DoADC_b GetFromEA_B                                                    \
                 bt      $C_Flag_Bit, FF_Reg;                                   \
                 adcb    %al, A_Reg;                                            \
                 FlagNVZC
 
-#define DoADC_d GetFromEA_Bh                                                   \
+#define DoADC_d GetFromEA_B                                                    \
                 bt      $C_Flag_Bit, FF_Reg;                                   \
                 adcb    A_Reg, %al;                                            \
                 daa;                                                           \
                 movb    %al, A_Reg;                                            \
                 FlagNVZC
 
-#define DoAND   GetFromEA_Bh                                                   \
+#define DoAND   GetFromEA_B                                                    \
                 andb    %al, A_Reg;                                            \
                 FlagNZ
 
-#define DoASL   GetFromEA_Bh                                                   \
+#define DoASL   GetFromEA_B                                                    \
                 addb    %al, %al;                                              \
                 FlagNZC                                                        \
-                PutToEA_Bh                                                     \
+                PutToEA_B                                                      \
 
 /* SAR (and the following AND) effectively moves
-* bit 6 to Bit 3 while leaving Bit 7 unchanged */
-#define DoBIT   GetFromEA_Bh                                                   \
+ * bit 6 to Bit 3 while leaving Bit 7 unchanged */
+#define DoBIT   GetFromEA_B                                                    \
                 testb   %al, A_Reg;                                            \
                 lahf;                                                          \
                 sarb    $3, %al;                                               \
@@ -326,88 +344,80 @@
                 orb     %al, F_Reg;                                            \
                 orb     %ah, F_Reg;
 
-#define DoCMP   GetFromEA_Bh                                                   \
+#define DoCMP   GetFromEA_B                                                    \
                 cmpb    %al, A_Reg;                                            \
                 cmc;                                                           \
                 FlagNZC
 
-#define DoCPX   GetFromEA_Bh                                                   \
+#define DoCPX   GetFromEA_B                                                    \
                 cmpb    %al, X_Reg;                                            \
                 cmc;                                                           \
                 FlagNZC
 
-#define DoCPY   GetFromEA_Bh                                                   \
+#define DoCPY   GetFromEA_B                                                    \
                 cmpb    %al, Y_Reg;                                            \
                 cmc;                                                           \
                 FlagNZC
 
-#define DoDEC   GetFromEA_Bh                                                   \
+#define DoDEC   GetFromEA_B                                                    \
                 decb    %al;                                                   \
                 FlagNZ                                                         \
-                PutToEA_Bh
+                PutToEA_B
 
-#define DoEOR   GetFromEA_Bh                                                   \
+#define DoEOR   GetFromEA_B                                                    \
                 xorb    %al, A_Reg;                                            \
                 FlagNZ
 
-#define DoINC   GetFromEA_Bh                                                   \
+#define DoINC   GetFromEA_B                                                    \
                 incb    %al;                                                   \
                 FlagNZ                                                         \
-                PutToEA_Bh
+                PutToEA_B
 
-#define DoJMP   movw    EffectiveAddr, PC_Reg;
-
-#define DoJSR   movw    PC_Reg, %ax;                                           \
-                decw    %ax;                                                   \
-                Push(%ah)                                                      \
-                Push(%al)                                                      \
-                movw    EffectiveAddr, PC_Reg;
-
-#define DoLDA   GetFromEA_Bh                                                   \
+#define DoLDA   GetFromEA_B                                                    \
                 movb    %al, A_Reg;                                            \
                 orb     %al, %al;                                              \
                 FlagNZ
 
-#define DoLDX   GetFromEA_Bh                                                   \
+#define DoLDX   GetFromEA_B                                                    \
                 movb    %al, X_Reg;                                            \
                 orb     %al, %al;                                              \
                 FlagNZ
 
-#define DoLDY   GetFromEA_Bh                                                   \
+#define DoLDY   GetFromEA_B                                                    \
                 movb    %al, Y_Reg;                                            \
                 orb     %al, %al;                                              \
                 FlagNZ
 
-#define DoLSR   GetFromEA_Bh                                                   \
+#define DoLSR   GetFromEA_B                                                    \
                 shrb    $1, %al;                                               \
                 FlagNZC                                                        \
-                PutToEA_Bh
+                PutToEA_B
 
-#define DoORA   GetFromEA_Bh                                                   \
+#define DoORA   GetFromEA_B                                                    \
                 orb     %al, A_Reg;                                            \
                 FlagNZ
 
-#define DoROL   GetFromEA_Bh                                                   \
+#define DoROL   GetFromEA_B                                                    \
                 bt      $C_Flag_Bit, FF_Reg;                                   \
                 adcb    %al,%al;                                               \
                 FlagNZC                                                        \
-                PutToEA_Bh
+                PutToEA_B
 
-#define DoROR   GetFromEA_Bh                                                   \
+#define DoROR   GetFromEA_B                                                    \
                 movb    F_Reg, %ah;                                            \
                 rorl    $1, %eax;                                              \
                 orb     %al, %al;                                              \
                 btr     $31, %eax;                                             \
                 FlagNZC                                                        \
-                PutToEA_Bh
+                PutToEA_B
 
-#define DoSBC_b GetFromEA_Bh                                                   \
+#define DoSBC_b GetFromEA_B                                                    \
                 notb    %al;                                                   \
                 bt      $C_Flag_Bit, FF_Reg;                                   \
                 adcb    %al, A_Reg;                                            \
                 FlagNVZC
 
-#define DoSBC_d GetFromEA_Bh                                                   \
+#define DoSBC_d GetFromEA_B                                                    \
                 bt      $C_Flag_Bit, FF_Reg;                                   \
                 cmc;                                                           \
                 xchgb   A_Reg, %al;                                            \
@@ -418,218 +428,30 @@
                 FlagNVZC
 
 #define DoSTA   movb    A_Reg, %al;                                            \
-                PutToEA_Bh
+                PutToEA_B
 
 #define DoSTX   movb    X_Reg, %al;                                            \
-                PutToEA_Bh
+                PutToEA_B
 
 #define DoSTY   movb    Y_Reg, %al;                                            \
-                PutToEA_Bh
-
-/* -------------------------------------------------------------------------
-    65c02 instructions
-   ------------------------------------------------------------------------- */
+                PutToEA_B
 
 #define DoSTZ   movb    $0x0, %al;                                             \
-                PutToEA_Bh
+                PutToEA_B
 
-#define DoTRB   GetFromEA_Bh                                                   \
+#define DoTRB   GetFromEA_B                                                    \
                 testb   A_Reg, %al;                                            \
                 FlagZ                                                          \
                 notb    A_Reg;                                                 \
                 andb    A_Reg, %al;                                            \
                 notb    A_Reg;                                                 \
-                PutToEA_Bh
+                PutToEA_B
 
-#define DoTSB   GetFromEA_Bh                                                   \
+#define DoTSB   GetFromEA_B                                                    \
                 testb   A_Reg, %al;                                            \
                 FlagZ                                                          \
                 orb     A_Reg, %al;                                            \
-                PutToEA_Bh
-
-/* -------------------------------------------------------------------------
-    Undocumented 6502 (Illegal instructions)
-   ------------------------------------------------------------------------- */
-
-/* AAX = A AND X -> M */
-#define DoAAX   movb    A_Reg, %al;                                            \
-                andb    X_Reg, %al;                                            \
-                FlagNZ                                                         \
-                PutToEA_Bh
-
-/* AMA = ORA 238, AND M, TAX */
-#define DoAMA   orb     $238, A_Reg;                                           \
-                GetFromEA_Bh                                                   \
-                andb    %al, A_Reg;                                            \
-                movb    A_Reg, X_Reg;                                          \
-                FlagNZ
-
-/* ANA = AND M, Carry = BIT 7 */
-/* NB: assumes A_Reg = %cl */
-#define DoANA   GetFromEA_Bh                                                   \
-                andb    %al, A_Reg;                                            \
-                bt      $7, %ecx;                                              \
-                FlagNZC
-
-/* ANB = same as ANA */
-#define DoANB   DoANA
-
-/* AXM = (A AND X) - M -> X */
-#define DoAXM   GetFromEA_Bh                                                   \
-                andb    A_Reg, X_Reg;                                          \
-                notb    %al;                                                   \
-                bt      $C_Flag_Bit, FF_Reg;                                   \
-                adcb    %al, X_Reg;                                            \
-                FlagNVZC
-
-/* AXS = (A AND X) -> S, A AND X AND 17 -> M */
-#define DoAXS   movb    A_Reg, SP_Reg_L;                                       \
-                andb    X_Reg, SP_Reg_L;                                       \
-                movb    SP_Reg_L, %al;                                         \
-                andb    $17, %al;                                              \
-                FlagNZ                                                         \
-                PutToEA_Bh
-
-/* DCP = DEC M, CMP M */
-#define DoDCP   GetFromEA_Bh                                                   \
-                decb    %al;                                                   \
-                PutToEA_Bh                                                     \
-                negb    %al;                                                   \
-                addb    A_Reg, %al;                                            \
-                FlagNZC
-
-/* ISB = INC M, SBC M */
-#define DoISB_b GetFromEA_Bh                                                   \
-                incb    %al;                                                   \
-                PutToEA_Bh                                                     \
-                notb    %al;                                                   \
-                bt      $C_Flag_Bit, FF_Reg;                                   \
-                adcb    %al, A_Reg;                                            \
-                FlagNVZC
-
-#define DoISB_d GetFromEA_Bh                                                   \
-                incb    %al;                                                   \
-                PutToEA_Bh                                                     \
-                bt      $C_Flag_Bit, FF_Reg;                                   \
-                cmc;                                                           \
-                xchgb   A_Reg, %al;                                            \
-                sbbb    A_Reg, %al;                                            \
-                das;                                                           \
-                movb    %al, A_Reg;                                            \
-                cmc;                                                           \
-                FlagNVZC
-
-/* LAN = ROL M, AND M */
-#define DoLAN   GetFromEA_Bh                                                   \
-                bt      $C_Flag_Bit, FF_Reg;                                   \
-                adcl    %eax, %eax;                                            \
-                andb    %al, A_Reg;                                            \
-                bt      $8, %eax;                                              \
-                FlagNZC                                                        \
-                PutToEA_Bh
-
-/* LAS = LDA M, TAX, TXS */
-#define DoLAS   GetFromEA_Bh                                                   \
-                movb    %al, A_Reg;                                            \
-                movb    %al, X_Reg;                                            \
-                movb    %al, SP_Reg_L;                                         \
-                orb     %al, %al;                                              \
-                FlagNZ
-
-/* LAX = LDA M, TAX */
-#define DoLAX   GetFromEA_Bh                                                   \
-                movb    %al, A_Reg;                                            \
-                movb    %al, X_Reg;                                            \
-                orb     %al, %al;                                              \
-                FlagNZ
-
-
-/* LOR = ASL M, ORA M */
-#define DoLOR   GetFromEA_Bh                                                   \
-                addb    %al, %al;                                              \
-                FlagC                                                          \
-                PutToEA_Bh                                                     \
-                orb     %al, A_Reg;                                            \
-                FlagNZ
-
-/* RAD = ROR M, ADC M */
-#define DoRAD_b GetFromEA_Bh                                                   \
-                bt      $C_Flag_Bit, FF_Reg;                                   \
-                rcrb    $1, %al;                                               \
-                adcb    %al, A_Reg;                                            \
-                pushl   %eax;                                                  \
-                FlagNVZC                                                       \
-                popl    %eax;                                                  \
-                PutToEA_Bh
-
-#define DoRAD_d GetFromEA_Bh                                                   \
-                bt      $C_Flag_Bit, FF_Reg;                                   \
-                rcrb    $1, %al;                                               \
-                pushfl;                                                        \
-                PutToEA_Bh                                                     \
-                popfl;                                                         \
-                adcb    A_Reg, %al;                                            \
-                daa;                                                           \
-                movb    %al, A_Reg;                                            \
-                FlagNVZC
-
-/* RAM = AND M, LSR A */
-#define DoRAM   GetFromEA_Bh                                                   \
-                andb    %al, A_Reg;                                            \
-                shrb    $1, A_Reg;                                             \
-                FlagNZC
-
-/* RBM = same as RAM */
-#define DoRBM   DoRAM
-
-/* REO = LSR M, EOR M */
-#define DoREO   GetFromEA_Bh                                                   \
-                shrb    $1, %al;                                               \
-                xorb    %al, A_Reg;                                            \
-                FlagNZC                                                        \
-                PutToEA_Bh                                                     \
-
-/* DoZBC = same as SBC */
-#define DoZBC_b DoSBC_b
-#define DoZBC_d DoSBC_d
-
-/* TEA = (A AND X AND (OP+2)+1) -> M */
-#define DoTEA   pushl   EffectiveAddr_E;                                       \
-                movw    PC_Reg, EffectiveAddr;                                 \
-                decw    EffectiveAddr;                                         \
-                GetFromEA_Bh                                                   \
-                popl    EffectiveAddr_E;                                       \
-                incb    %al;                                                   \
-                andb    A_Reg, %al;                                            \
-                andb    X_Reg, %al;                                            \
-                FlagNZ                                                         \
-                PutToEA_Bh
-
-/* TEX = (X AND (OP+2)+1) -> M */
-#define DoTEX   pushl   EffectiveAddr_E;                                       \
-                movw    PC_Reg, EffectiveAddr;                                 \
-                decw    EffectiveAddr;                                         \
-                GetFromEA_Bh                                                   \
-                popl    EffectiveAddr_E;                                       \
-                incb    %al;                                                   \
-                andb    X_Reg, %al;                                            \
-                FlagNZ                                                         \
-                PutToEA_Bh
-
-/* TEY = (Y AND 1) -> M */
-#define DoTEY   movb    Y_Reg, %al;                                            \
-                andb    $1, %al;                                               \
-                FlagNZ                                                         \
-                PutToEA_Bh
-
-/* XMA = (X AND M) AND (A OR 238) -> A */
-#define DoXMA                                                                  \
-                GetFromEA_Bh                                                   \
-                andb    X_Reg, %al;                                            \
-                orb     $238, A_Reg;                                           \
-                andb    %al, A_Reg;                                            \
-                FlagNZ
-
+                PutToEA_B
 
 /* ----------------------------------------------------------------------
        6502 routines and instructions
@@ -637,69 +459,86 @@
 
 /* ----------------------------------
        ADC instructions
+       ADd memory to accumulator with Carry
    ---------------------------------- */
 
-op_ADC_dec:     DoADC_d
+// Decimal mode
+op_ADC_dec:
+                incb    XCyclesCount            // +1 cycle
+                DoADC_d
                 Continue
 
 op_ADC_imm:
                 GetImm
-                testb   $D_Flag, F_Reg          # Decimal mode?
-                jnz     op_ADC_dec              # Yes, jump to decimal version
+                testb   $D_Flag, F_Reg          // Decimal mode?
+                jnz     op_ADC_dec              // Yes, jump to decimal version
                 DoADC_b
                 Continue
 
 op_ADC_zpage:
                 GetZPage
-                testb   $D_Flag, F_Reg          # Decimal mode?
-                jnz     op_ADC_dec              # Yes, jump to decimal version
+                testb   $D_Flag, F_Reg          // Decimal mode?
+                jnz     op_ADC_dec              // Yes, jump to decimal version
                 DoADC_b
                 Continue
 
 op_ADC_zpage_x:
                 GetZPage_X
-                testb   $D_Flag, F_Reg          # Decimal mode?
-                jnz     op_ADC_dec              # Yes, jump to decimal version
+                testb   $D_Flag, F_Reg          // Decimal mode?
+                jnz     op_ADC_dec              // Yes, jump to decimal version
                 DoADC_b
                 Continue
 
+// UNIMPLEMENTED : W65C02S datasheet
+op_ADC_zpage_y:
+                hlt
+
 op_ADC_abs:
                 GetAbs
-                testb   $D_Flag, F_Reg          # Decimal mode?
-                jnz     op_ADC_dec              # Yes, jump to decimal version
+                testb   $D_Flag, F_Reg          // Decimal mode?
+                jnz     op_ADC_dec              // Yes, jump to decimal version
                 DoADC_b
                 Continue
 
 op_ADC_abs_x:
                 GetAbs_X
-                testb   $D_Flag, F_Reg          # Decimal mode?
-                jnz     op_ADC_dec              # Yes, jump to decimal version
+                testb   $D_Flag, F_Reg          // Decimal mode?
+                jnz     op_ADC_dec              // Yes, jump to decimal version
                 DoADC_b
                 Continue
 
 op_ADC_abs_y:
                 GetAbs_Y
-                testb   $D_Flag, F_Reg          # Decimal mode?
-                jnz     op_ADC_dec              # Yes, jump to decimal version
+                testb   $D_Flag, F_Reg          // Decimal mode?
+                jnz     op_ADC_dec              // Yes, jump to decimal version
                 DoADC_b
                 Continue
 
 op_ADC_ind_x:
                 GetIndZPage_X
-                testb   $D_Flag, F_Reg          # Decimal mode?
-                jnz     op_ADC_dec              # Yes, jump to decimal version
+                testb   $D_Flag, F_Reg          // Decimal mode?
+                jnz     op_ADC_dec              // Yes, jump to decimal version
                 DoADC_b
                 Continue
 
 op_ADC_ind_y:
                 GetIndZPage_Y
-                testb   $D_Flag, F_Reg          # Decimal mode?
-                jnz     op_ADC_dec              # Yes, jump to decimal version
+                testb   $D_Flag, F_Reg          // Decimal mode?
+                jnz     op_ADC_dec              // Yes, jump to decimal version
+                DoADC_b
+                Continue
+
+// 65c02 : 0x72
+op_ADC_ind_zpage:
+                GetIndZPage
+                testb   $D_Flag, F_Reg          // Decimal mode?
+                jnz     op_ADC_dec              // Yes, jump to decimal version
                 DoADC_b
                 Continue
 
 /* ----------------------------------
        AND instructions
+       logical AND memory with accumulator
    ---------------------------------- */
 
 op_AND_imm:
@@ -716,6 +555,10 @@ op_AND_zpage_x:
                 GetZPage_X
                 DoAND
                 Continue
+
+// UNIMPLEMENTED : W65C02S datasheet
+op_AND_zpage_y:
+                hlt
 
 op_AND_abs:
                 GetAbs
@@ -742,8 +585,15 @@ op_AND_ind_y:
                 DoAND
                 Continue
 
+// 65c02 : 0x32
+op_AND_ind_zpage:
+                GetIndZPage
+                DoAND
+                Continue
+
 /* ----------------------------------
        ASL instructions
+       Arithmetic Shift one bit Left, memory or accumulator
    ---------------------------------- */
 
 op_ASL_acc:
@@ -772,46 +622,108 @@ op_ASL_abs_x:
                 Continue
 
 /* ----------------------------------
+       BBRx instructions
+       UNIMPLEMENTED : These are documented in the W65C02S datasheet ...
+   ---------------------------------- */
+
+op_BBR0_65c02:
+                Continue
+
+op_BBR1_65c02:
+                Continue
+
+op_BBR2_65c02:
+                Continue
+
+op_BBR3_65c02:
+                Continue
+
+op_BBR4_65c02:
+                Continue
+
+op_BBR5_65c02:
+                Continue
+
+op_BBR6_65c02:
+                Continue
+
+op_BBR7_65c02:
+                Continue
+
+/* ----------------------------------
+       BBSx instructions
+       UNIMPLEMENTED : These are documented in the W65C02S datasheet ...
+   ---------------------------------- */
+
+op_BBS0_65c02:
+                Continue
+
+op_BBS1_65c02:
+                Continue
+
+op_BBS2_65c02:
+                Continue
+
+op_BBS3_65c02:
+                Continue
+
+op_BBS4_65c02:
+                Continue
+
+op_BBS5_65c02:
+                Continue
+
+op_BBS6_65c02:
+                Continue
+
+op_BBS7_65c02:
+                Continue
+
+/* ----------------------------------
        BCC instruction
+       Branch on Carry Clear
    ---------------------------------- */
 
 op_BCC:
                 GetFromPC_B
                 testb   $C_Flag, F_Reg
-                jnz     op_BCC_not
+                jnz     op_BCC_not              // branch not taken
                 cbw
-                addw    %ax, PC_Reg
+                BranchXCycles
 op_BCC_not:
                 Continue
 
 /* ----------------------------------
        BCS instruction
+       Branch on Carry Set
    ---------------------------------- */
 
 op_BCS:
                 GetFromPC_B
                 testb   $C_Flag, F_Reg
-                jz      op_BCS_not
+                jz      op_BCS_not              // branch not taken
                 cbw
-                addw    %ax, PC_Reg
+                BranchXCycles
 op_BCS_not:
                 Continue
 
 /* ----------------------------------
        BEQ instruction
+       Branch if EQual
    ---------------------------------- */
 
 op_BEQ:
                 GetFromPC_B
                 testb   $Z_Flag, F_Reg
-                jz      op_BEQ_not
+                jz      op_BEQ_not              // branch not taken
                 cbw
-                addw    %ax, PC_Reg
+                BranchXCycles
 op_BEQ_not:
                 Continue
 
 /* ----------------------------------
        BIT instructions
+       BIt Test
    ---------------------------------- */
 
 op_BIT_zpage:
@@ -824,8 +736,32 @@ op_BIT_abs:
                 DoBIT
                 Continue
 
+// 65c02 : 0x34
+op_BIT_zpage_x:
+                GetIndZPage
+                DoBIT
+                Continue
+
+// 65c02 : 0x3C
+op_BIT_abs_x:
+                GetAbs_X
+                DoBIT
+                Continue
+
+                /* BIT immediate is anomalous in that it does not affect the
+                 * N and V flags, unlike in other addressing modes.
+                 */
+// 65c02 : 0x89
+op_BIT_imm:
+                GetImm
+                GetFromEA_B
+                testb   %al, A_Reg
+                FlagZ
+                Continue
+
 /* ----------------------------------
        BMI instruction
+       Branch on result MInus
    ---------------------------------- */
 
 op_BMI:
@@ -834,12 +770,13 @@ op_BMI:
                                          * which happens to be sign bit */
                 jns     op_BMI_not
                 cbw
-                addw    %ax, PC_Reg
+                BranchXCycles
 op_BMI_not:
                 Continue
 
 /* ----------------------------------
        BNE instruction
+       Branch on result Not Equal
    ---------------------------------- */
 
 op_BNE:
@@ -847,12 +784,13 @@ op_BNE:
                 testb   $Z_Flag, F_Reg
                 jnz     op_BNE_not
                 cbw
-                addw    %ax, PC_Reg
+                BranchXCycles
 op_BNE_not:
                 Continue
 
 /* ----------------------------------
        BPL instruction
+       Branch on result PLus
    ---------------------------------- */
 
 op_BPL:
@@ -861,15 +799,27 @@ op_BPL:
                                          * which happens to be sign bit */
                 js      op_BPL_not
                 cbw
-                addw    %ax, PC_Reg
+                BranchXCycles
 op_BPL_not:
+                Continue
+
+/* ----------------------------------
+       BRA instruction
+       BRanch Always
+   ---------------------------------- */
+
+// 65c02 : 0x80
+op_BRA:
+                GetFromPC_B
+                cbw
+                BranchXCycles
                 Continue
 
 /* ----------------------------------
        BRK instruction
    ---------------------------------- */
 
-op_UNK: /* make undefined opcodes fault */
+op_UNK: /* make undefined nmos opcodes fault */
 op_BRK:
                 incw    PC_Reg
                 movw    PC_Reg, %ax
@@ -887,6 +837,7 @@ op_BRK:
 
 /* ----------------------------------
        BVC instruction
+       Branch on oVerflow Clear
    ---------------------------------- */
 
 op_BVC:
@@ -894,12 +845,13 @@ op_BVC:
                 testb   $V_Flag, F_Reg
                 jnz     op_BVC_not
                 cbw
-                addw    %ax, PC_Reg
+                BranchXCycles
 op_BVC_not:
                 Continue
 
 /* ----------------------------------
        BVS instruction
+       Branch on oVerflow Set
    ---------------------------------- */
 
 op_BVS:
@@ -907,7 +859,7 @@ op_BVS:
                 testb   $V_Flag, F_Reg
                 jz      op_BVS_not
                 cbw
-                addw    %ax, PC_Reg
+                BranchXCycles
 op_BVS_not:
                 Continue
 
@@ -945,6 +897,7 @@ op_CLV:
 
 /* ----------------------------------
        CMP instructions
+       CoMPare memory and accumulator
    ---------------------------------- */
 
 op_CMP_imm:
@@ -961,6 +914,10 @@ op_CMP_zpage_x:
                 GetZPage_X
                 DoCMP
                 Continue
+
+// UNIMPLEMENTED : W65C02S datasheet
+op_CMP_zpage_y:
+                hlt
 
 op_CMP_abs:
                 GetAbs
@@ -987,8 +944,15 @@ op_CMP_ind_y:
                 DoCMP
                 Continue
 
+// 65c02 : 0xD2
+op_CMP_ind_zpage:
+                GetIndZPage
+                DoCMP
+                Continue
+
 /* ----------------------------------
        CPX instructions
+       ComPare memory and X register
    ---------------------------------- */
 
 op_CPX_imm:
@@ -1008,6 +972,7 @@ op_CPX_abs:
 
 /* ----------------------------------
        CPY instructions
+       ComPare memory and Y register
    ---------------------------------- */
 
 op_CPY_imm:
@@ -1026,7 +991,18 @@ op_CPY_abs:
                 Continue
 
 /* ----------------------------------
+       DEA : DEcrement Accumulator
+   ---------------------------------- */
+
+op_DEC_acc:
+op_DEA:                         # 3A
+                decb    A_Reg
+                FlagNZ
+                Continue
+
+/* ----------------------------------
        DEC instructions
+       DECrement memory or accumulator by one
    ---------------------------------- */
 
 op_DEC_zpage:
@@ -1069,6 +1045,7 @@ op_DEY:
 
 /* ----------------------------------
        EOR instructions
+       Exclusive OR memory with accumulator
    ---------------------------------- */
 
 op_EOR_imm:
@@ -1085,6 +1062,10 @@ op_EOR_zpage_x:
                 GetZPage_X
                 DoEOR
                 Continue
+
+// UNIMPLEMENTED : W65C02S datasheet
+op_EOR_zpage_y:
+                hlt
 
 op_EOR_abs:
                 GetAbs
@@ -1111,8 +1092,25 @@ op_EOR_ind_y:
                 DoEOR
                 Continue
 
+// 65c02 : 0x52
+op_EOR_ind_zpage:
+                GetIndZPage
+                DoEOR
+                Continue
+
+/* ----------------------------------
+       INA : INcrement Accumulator
+   ---------------------------------- */
+
+op_INC_acc:
+op_INA:                         # 1A
+                incb    A_Reg
+                FlagNZ
+                Continue
+
 /* ----------------------------------
        INC instructions
+       INCrement memory
    ---------------------------------- */
 
 op_INC_zpage:
@@ -1155,11 +1153,12 @@ op_INY:
 
 /* ----------------------------------
        JMP instructions
+       JuMP to new location
    ---------------------------------- */
 
 op_JMP_abs:
                 GetAbs
-                DoJMP
+                movw    EffectiveAddr, PC_Reg;
                 Continue
 
 op_JMP_ind:
@@ -1183,17 +1182,44 @@ special_case: /*?*/
                 movw    %ax, PC_Reg
                 Continue
 
+// 65c02 : 0x6C
+op_JMP_ind_65c02:
+                xorl    %eax, %eax
+                GetFromMem_B(PC_Reg_E)
+                xchgb   %al, %ah
+                incw    PC_Reg
+                GetFromMem_B(PC_Reg_E)
+                xchgb   %al, %ah
+                GetFromMem_W(%eax)
+                movw    %ax, PC_Reg
+                Continue
+
+// 65c02 : 0x7C
+op_JMP_abs_ind_x:
+                GetFromPC_W
+                movw    %ax, EffectiveAddr
+                movzbl  X_Reg, %eax
+                addw    %ax, EffectiveAddr
+                GetFromMem_W(EffectiveAddr_E)
+                movw    %ax, PC_Reg
+                Continue
+
 /* ----------------------------------
        JSR instruction
    ---------------------------------- */
 
 op_JSR:
                 GetAbs
-                DoJSR
+                movw    PC_Reg, %ax
+                decw    %ax
+                Push(%ah)
+                Push(%al)
+                movw    EffectiveAddr, PC_Reg
                 Continue
 
 /* ----------------------------------
        LDA instructions
+       LoaD Accumulator with memory
    ---------------------------------- */
 
 op_LDA_imm:
@@ -1210,6 +1236,10 @@ op_LDA_zpage_x:
                 GetZPage_X
                 DoLDA
                 Continue
+
+// UNIMPLEMENTED : W65C02S datasheet
+op_LDA_zpage_y:
+                hlt
 
 op_LDA_abs:
                 GetAbs
@@ -1236,6 +1266,12 @@ op_LDA_ind_y:
                 DoLDA
                 Continue
 
+// 65c02 : 0xB2
+op_LDA_ind_zpage:               # B2
+                GetIndZPage
+                DoLDA
+                Continue
+
 /* ----------------------------------
        LDX instructions
    ---------------------------------- */
@@ -1250,6 +1286,7 @@ op_LDX_zpage:
                 DoLDX
                 Continue
 
+// HACK : is this used? need to study coverage ...
 op_LDX_zpage_y:
                 GetZPage_Y
                 DoLDX
@@ -1349,6 +1386,10 @@ op_ORA_zpage_x:
                 DoORA
                 Continue
 
+// UNIMPLEMENTED : W65C02S datasheet
+op_ORA_zpage_y:
+                hlt
+
 op_ORA_abs:
                 GetAbs
                 DoORA
@@ -1374,6 +1415,12 @@ op_ORA_ind_y:
                 DoORA
                 Continue
 
+// 65c02 : 0x12
+op_ORA_ind_zpage:               # 12
+                GetIndZPage
+                DoORA
+                Continue
+
 /* ----------------------------------
        PHA instruction
    ---------------------------------- */
@@ -1390,6 +1437,24 @@ op_PHP:
                 movb    F_Reg, %al
                 movb    SN(cpu65_flags_encode)(,%eax,1), %al
                 Push(%al)
+                Continue
+
+/* ----------------------------------
+       PHX instruction
+       65c02 : 0xDA
+   ---------------------------------- */
+
+op_PHX:
+                Push(X_Reg)
+                Continue
+
+/* ----------------------------------
+       PHY instruction
+       65c02 : 0x5A
+   ---------------------------------- */
+
+op_PHY:
+                Push(Y_Reg)
                 Continue
 
 /* ----------------------------------
@@ -1411,6 +1476,28 @@ op_PLP:
                 Pop(%al)
                 movb    SN(cpu65_flags_decode)(,%eax,1), F_Reg
                 orb     $(B_Flag|X_Flag), F_Reg
+                Continue
+
+/* ----------------------------------
+       PLX instruction
+       65c02 : 0xFA
+   ---------------------------------- */
+
+op_PLX:
+                Pop(X_Reg)
+                orb X_Reg, X_Reg
+                FlagNZ
+                Continue
+
+/* ----------------------------------
+       PLY instruction
+       65c02 : 0x7A
+   ---------------------------------- */
+
+op_PLY:
+                Pop(Y_Reg)
+                orb Y_Reg, Y_Reg
+                FlagNZ
                 Continue
 
 /* ----------------------------------
@@ -1503,62 +1590,75 @@ op_RTS:
    ---------------------------------- */
 
 op_SBC_dec:
+                incb    XCyclesCount            // +1 cycle
                 DoSBC_d
                 Continue
 
 op_SBC_imm:
                 GetImm
-                testb   $D_Flag, F_Reg          # Decimal mode?
-                jnz     op_SBC_dec              # Yes, jump to decimal version
+                testb   $D_Flag, F_Reg          // Decimal mode?
+                jnz     op_SBC_dec              // Yes, jump to decimal version
                 DoSBC_b
                 Continue
 
 op_SBC_zpage:
                 GetZPage
-                testb   $D_Flag, F_Reg          # Decimal mode?
-                jnz     op_SBC_dec              # Yes, jump to decimal version
+                testb   $D_Flag, F_Reg          // Decimal mode?
+                jnz     op_SBC_dec              // Yes, jump to decimal version
                 DoSBC_b
                 Continue
 
 op_SBC_zpage_x:
                 GetZPage_X
-                testb   $D_Flag, F_Reg          # Decimal mode?
-                jnz     op_SBC_dec              # Yes, jump to decimal version
+                testb   $D_Flag, F_Reg          // Decimal mode?
+                jnz     op_SBC_dec              // Yes, jump to decimal version
                 DoSBC_b
                 Continue
 
+// UNIMPLEMENTED : W65C02S datasheet
+op_SBC_zpage_y:
+                hlt
+
 op_SBC_abs:
                 GetAbs
-                testb   $D_Flag, F_Reg          # Decimal mode?
-                jnz     op_SBC_dec              # Yes, jump to decimal version
+                testb   $D_Flag, F_Reg          // Decimal mode?
+                jnz     op_SBC_dec              // Yes, jump to decimal version
                 DoSBC_b
                 Continue
 
 op_SBC_abs_x:
                 GetAbs_X
-                testb   $D_Flag, F_Reg          # Decimal mode?
-                jnz     op_SBC_dec              # Yes, jump to decimal version
+                testb   $D_Flag, F_Reg          // Decimal mode?
+                jnz     op_SBC_dec              // Yes, jump to decimal version
                 DoSBC_b
                 Continue
 
 op_SBC_abs_y:
                 GetAbs_Y
-                testb   $D_Flag, F_Reg          # Decimal mode?
-                jnz     op_SBC_dec              # Yes, jump to decimal version
+                testb   $D_Flag, F_Reg          // Decimal mode?
+                jnz     op_SBC_dec              // Yes, jump to decimal version
                 DoSBC_b
                 Continue
 
 op_SBC_ind_x:
                 GetIndZPage_X
-                testb   $D_Flag, F_Reg          # Decimal mode?
-                jnz     op_SBC_dec              # Yes, jump to decimal version
+                testb   $D_Flag, F_Reg          // Decimal mode?
+                jnz     op_SBC_dec              // Yes, jump to decimal version
                 DoSBC_b
                 Continue
 
 op_SBC_ind_y:
                 GetIndZPage_Y
-                testb   $D_Flag, F_Reg          # Decimal mode?
-                jnz     op_SBC_dec              # Yes, jump to decimal version
+                testb   $D_Flag, F_Reg          // Decimal mode?
+                jnz     op_SBC_dec              // Yes, jump to decimal version
+                DoSBC_b
+                Continue
+
+// 65c02 : 0xF2
+op_SBC_ind_zpage:
+                GetIndZPage
+                testb   $D_Flag, F_Reg          // Decimal mode?
+                jnz     op_SBC_dec              // Yes, jump to decimal version
                 DoSBC_b
                 Continue
 
@@ -1587,6 +1687,35 @@ op_SEI:
                 Continue
 
 /* ----------------------------------
+       SMBx instructions
+       UNIMPLEMENTED : These are documented in the W65C02S datasheet ...
+   ---------------------------------- */
+
+op_SMB0_65c02:
+                Continue
+
+op_SMB1_65c02:
+                Continue
+
+op_SMB2_65c02:
+                Continue
+
+op_SMB3_65c02:
+                Continue
+
+op_SMB4_65c02:
+                Continue
+
+op_SMB5_65c02:
+                Continue
+
+op_SMB6_65c02:
+                Continue
+
+op_SMB7_65c02:
+                Continue
+
+/* ----------------------------------
        STA instructions
    ---------------------------------- */
 
@@ -1598,12 +1727,17 @@ op_STA_imm:
 op_STA_zpage:
                 GetZPage
                 DoSTA
+                incb    XCyclesCount            // +1 cycle on write
                 Continue
 
 op_STA_zpage_x:
                 GetZPage_X
                 DoSTA
                 Continue
+
+// UNIMPLEMENTED : W65C02S datasheet
+op_STA_zpage_y:
+                hlt
 
 op_STA_abs:
                 GetAbs
@@ -1613,11 +1747,13 @@ op_STA_abs:
 op_STA_abs_x:
                 GetAbs_X
                 DoSTA
+                incb    XCyclesCount            // +1 cycle on write
                 Continue
 
 op_STA_abs_y:
                 GetAbs_Y
                 DoSTA
+                incb    XCyclesCount            // +1 cycle on write
                 Continue
 
 op_STA_ind_x:
@@ -1628,6 +1764,50 @@ op_STA_ind_x:
 op_STA_ind_y:
                 GetIndZPage_Y
                 DoSTA
+                incb    XCyclesCount            // +1 cycle on write
+                Continue
+
+// 65c02 : 0x92
+op_STA_ind_zpage:
+                GetIndZPage
+                DoSTA
+                Continue
+
+/* ----------------------------------
+       STP instruction
+       UNIMPLEMENTED : This is documented in the W65C02S datasheet ...
+   ---------------------------------- */
+
+op_STP_65c02:
+                Continue
+
+/* ----------------------------------
+       RMBx instructions
+       UNIMPLEMENTED : These are documented in the W65C02S datasheet ...
+   ---------------------------------- */
+
+op_RMB0_65c02:
+                Continue
+
+op_RMB1_65c02:
+                Continue
+
+op_RMB2_65c02:
+                Continue
+
+op_RMB3_65c02:
+                Continue
+
+op_RMB4_65c02:
+                Continue
+
+op_RMB5_65c02:
+                Continue
+
+op_RMB6_65c02:
+                Continue
+
+op_RMB7_65c02:
                 Continue
 
 /* ----------------------------------
@@ -1637,8 +1817,10 @@ op_STA_ind_y:
 op_STX_zpage:
                 GetZPage
                 DoSTX
+                incb    XCyclesCount            // +1 cycle on write
                 Continue
 
+// HACK : is this used? need to study coverage ...
 op_STX_zpage_y:
                 GetZPage_Y
                 DoSTX
@@ -1656,6 +1838,7 @@ op_STX_abs:
 op_STY_zpage:
                 GetZPage
                 DoSTY
+                incb    XCyclesCount            // +1 cycle on write
                 Continue
 
 op_STY_zpage_x:
@@ -1666,6 +1849,36 @@ op_STY_zpage_x:
 op_STY_abs:
                 GetAbs
                 DoSTY
+                Continue
+
+/* ----------------------------------
+       STZ instructions
+       65c02 only
+   ---------------------------------- */
+
+// 65c02 : 0x64
+op_STZ_zpage:
+                GetZPage
+                DoSTZ
+                incb    XCyclesCount            // +1 cycle on write
+                Continue
+
+// 65c02 : 0x74
+op_STZ_zpage_x:
+                GetZPage_X
+                Continue
+
+// 65c02 : 0x9C
+op_STZ_abs:
+                GetAbs
+                DoSTZ
+                Continue
+
+// 65c02 : 0x9E
+op_STZ_abs_x:
+                GetAbs_X
+                DoSTZ
+                incb    XCyclesCount            // +1 cycle on write
                 Continue
 
 /* ----------------------------------
@@ -1686,6 +1899,38 @@ op_TAY:
                 movb    A_Reg, Y_Reg
                 orb     Y_Reg, Y_Reg
                 FlagNZ
+                Continue
+
+/* ----------------------------------
+       TRB instructions
+       65c02 only
+   ---------------------------------- */
+
+// 65c02 : 0x1C
+op_TRB_abs:
+                GetAbs
+                DoTRB
+                Continue
+
+// 65c02 : 0x14
+op_TRB_zpage:
+                GetZPage
+                DoTRB
+                Continue
+
+/* ----------------------------------
+       TSB instructions
+       65c02 only
+   ---------------------------------- */
+
+op_TSB_abs: // 65c02 : 0x0C
+                GetAbs
+                DoTSB
+                Continue
+
+op_TSB_zpage: // 65c02 : 0x04
+                GetZPage
+                DoTSB
                 Continue
 
 /* ----------------------------------
@@ -1726,756 +1971,697 @@ op_TYA:
                 FlagNZ
                 Continue
 
-
-
-
-
-/* ----------------------------------------------------------------------
-       65c02 routines and instructions
-   ---------------------------------------------------------------------- */
-
-/* ----------------------------------
-       ADC instruction
-   ---------------------------------- */
-
-op_ADC_ind_zpage:               # 72
-                GetIndZPage
-                testb   $D_Flag, F_Reg          # Decimal mode?
-                jnz     op_ADC_dec              # Yes, jump to decimal version
-                DoADC_b
-                Continue
-op_ADC_ind_zpage_dec:
-                DoADC_d
-                Continue
-
-/* ----------------------------------
-       AND instruction
-   ---------------------------------- */
-
-op_AND_ind_zpage:               # 32
-                GetIndZPage
-                DoAND
-                Continue
-
-/* ----------------------------------
-       BIT instructions
-   ---------------------------------- */
-
-op_BIT_zpage_x:                 # 34
-                GetIndZPage
-                DoBIT
-                Continue
-
-op_BIT_abs_x:                   # 3C
-                GetAbs_X
-                DoBIT
-                Continue
-
-                /* BIT immediate is anomalous in that it does not affect the
-                 * N and V flags, unlike in other addressing modes.
-                 */
-op_BIT_imm:                     # 89
-                GetImm
-                GetFromEA_Bh
-                testb   %al, A_Reg
-                FlagZ
-                Continue
-
-/* ----------------------------------
-       BRA instruction
-   ---------------------------------- */
-
-op_BRA:                         # 80
-                GetFromPC_B
-                cbw
-                addw    %ax, PC_Reg
-                Continue
-
-/* ----------------------------------
-       CMP instruction
-   ---------------------------------- */
-
-op_CMP_ind_zpage:               # D2
-                GetIndZPage
-                DoCMP
-                Continue
-
-/* ----------------------------------
-       DEA instruction
-   ---------------------------------- */
-
-op_DEA:                         # 3A
-                decb    A_Reg
-                FlagNZ
-                Continue
-
-/* ----------------------------------
-       EOR instruction
-   ---------------------------------- */
-
-op_EOR_ind_zpage:               # 52
-                GetIndZPage
-                DoEOR
-                Continue
-
-/* ----------------------------------
-       INA instruction
-   ---------------------------------- */
-
-op_INA:                         # 1A
-                incb    A_Reg
-                FlagNZ
-                Continue
-
-/* ----------------------------------
-       JMP instructions
-   ---------------------------------- */
-
-op_JMP_ind_65c02:               # 6C - different from 6502
-                xorl    %eax, %eax
-                GetFromMem_B(PC_Reg_E)
-                xchgb   %al, %ah
-                incw    PC_Reg
-                GetFromMem_B(PC_Reg_E)
-                xchgb   %al, %ah
-                GetFromMem_W(%eax)
-                movw    %ax, PC_Reg
-                Continue
-
-op_JMP_abs_ind_x:               # 7C
-                GetFromPC_W
-                movw    %ax, EffectiveAddr
-                movzbl  X_Reg, %eax
-                addw    %ax, EffectiveAddr
-                GetFromMem_W(EffectiveAddr_E)
-                movw    %ax, PC_Reg
-                Continue
-
-/* ----------------------------------
-       LDA instruction
-   ---------------------------------- */
-
-op_LDA_ind_zpage:               # B2
-                GetIndZPage
-                DoLDA
-                Continue
-
-/* ----------------------------------
-       ORA instruction
-   ---------------------------------- */
-
-op_ORA_ind_zpage:               # 12
-                GetIndZPage
-                DoORA
-                Continue
-
-/* ----------------------------------
-       PHX instruction
-   ---------------------------------- */
-
-op_PHX:                         # DA
-                Push(X_Reg)
-                Continue
-
-/* ----------------------------------
-       PHY instruction
-   ---------------------------------- */
-
-op_PHY:                         # 5A
-                Push(Y_Reg)
-                Continue
-
-/* ----------------------------------
-       PLX instruction
-   ---------------------------------- */
-
-op_PLX:                         # FA
-                Pop(X_Reg)
-                orb X_Reg, X_Reg
-                FlagNZ
-                Continue
-
-/* ----------------------------------
-       PLY instruction
-   ---------------------------------- */
-
-op_PLY:                         # 7A
-                Pop(Y_Reg)
-                orb Y_Reg, Y_Reg
-                FlagNZ
-                Continue
-
-/* ----------------------------------
-       STA instruction
-   ---------------------------------- */
-
-op_STA_ind_zpage:               # 92
-                GetIndZPage
-                DoSTA
-                Continue
-
-/* ----------------------------------
-       SBC instruction
-   ---------------------------------- */
-
-op_SBC_ind_zpage:               # F2
-                GetIndZPage
-                testb   $D_Flag, F_Reg          # Decimal mode?
-                jnz     op_SBC_dec              # Yes, jump to decimal version
-                DoSBC_b
-                Continue
-op_SBC_ind_zpage_dec:
-                DoSBC_d
-                Continue
-
-/* ----------------------------------
-       STZ instructions
-   ---------------------------------- */
-
-op_STZ_zpage:                   # 64
-                GetZPage
-                DoSTZ
-                Continue
-
-op_STZ_zpage_x:                 # 74
-                GetZPage_X
-                Continue
-
-op_STZ_abs:                     # 9C
-                GetAbs
-                DoSTZ
-                Continue
-
-op_STZ_abs_x:                   # 9E
-                GetAbs_X
-                DoSTZ
-                Continue
-
-/* ----------------------------------
-       TRB instructions
-   ---------------------------------- */
-
-op_TRB_abs:                     # 1C
-                GetAbs
-                DoTRB
-                Continue
-
-op_TRB_zpage:                   # 14
-                GetZPage
-                DoTRB
-                Continue
-
-/* ----------------------------------
-       TSB instructions
-   ---------------------------------- */
-
-op_TSB_abs:                     # 0C
-                GetAbs
-                DoTSB
-                Continue
-
-op_TSB_zpage:                   # 04
-                GetZPage
-                DoTSB
-                Continue
-
-
 /* ----------------------------------
        ??? instruction - 65c02
+       Defined as NOPs by spec
    ---------------------------------- */
 op_UNK_65c02:
                 Continue
 
+/* ----------------------------------
+       WAI instruction - 65c02
+       UNIMPLEMENTED : This is documented in the W65C02S datasheet ...
+   ---------------------------------- */
+op_WAI_65c02:
+                Continue
+
+#pragma mark -
+#pragma mark undocumented
 
 /* ----------------------------------------------------------------------
-       Undocumented 6502 (Illegal instructions)
+       Undocumented NMOS 6502 (Illegal instructions)
+       Specification : Some terminate only by reset. Results are undefined.
    ---------------------------------------------------------------------- */
 
+/* AAX = A AND X -> M */
+#define DoAAX   movb    A_Reg, %al;                                            \
+                andb    X_Reg, %al;                                            \
+                FlagNZ                                                         \
+                PutToEA_B
+
+/* AMA = ORA 238, AND M, TAX */
+#define DoAMA   orb     $238, A_Reg;                                           \
+                GetFromEA_B                                                    \
+                andb    %al, A_Reg;                                            \
+                movb    A_Reg, X_Reg;                                          \
+                FlagNZ
+
+/* ANA = AND M, Carry = BIT 7 */
+/* NB: assumes A_Reg = %cl */
+#define DoANA   GetFromEA_B                                                    \
+                andb    %al, A_Reg;                                            \
+                bt      $7, %ecx;                                              \
+                FlagNZC
+
+/* ANB = same as ANA */
+#define DoANB   DoANA
+
+/* AXM = (A AND X) - M -> X */
+#define DoAXM   GetFromEA_B                                                    \
+                andb    A_Reg, X_Reg;                                          \
+                notb    %al;                                                   \
+                bt      $C_Flag_Bit, FF_Reg;                                   \
+                adcb    %al, X_Reg;                                            \
+                FlagNVZC
+
+/* AXS = (A AND X) -> S, A AND X AND 17 -> M */
+#define DoAXS   movb    A_Reg, SP_Reg_L;                                       \
+                andb    X_Reg, SP_Reg_L;                                       \
+                movb    SP_Reg_L, %al;                                         \
+                andb    $17, %al;                                              \
+                FlagNZ                                                         \
+                PutToEA_B
+
+/* DCP = DEC M, CMP M */
+#define DoDCP   GetFromEA_B                                                    \
+                decb    %al;                                                   \
+                PutToEA_B                                                      \
+                negb    %al;                                                   \
+                addb    A_Reg, %al;                                            \
+                FlagNZC
+
+/* ISB = INC M, SBC M */
+#define DoISB_b GetFromEA_B                                                    \
+                incb    %al;                                                   \
+                PutToEA_B                                                      \
+                notb    %al;                                                   \
+                bt      $C_Flag_Bit, FF_Reg;                                   \
+                adcb    %al, A_Reg;                                            \
+                FlagNVZC
+
+#define DoISB_d GetFromEA_B                                                    \
+                incb    %al;                                                   \
+                PutToEA_B                                                      \
+                bt      $C_Flag_Bit, FF_Reg;                                   \
+                cmc;                                                           \
+                xchgb   A_Reg, %al;                                            \
+                sbbb    A_Reg, %al;                                            \
+                das;                                                           \
+                movb    %al, A_Reg;                                            \
+                cmc;                                                           \
+                FlagNVZC
+
+/* LAN = ROL M, AND M */
+#define DoLAN   GetFromEA_B                                                    \
+                bt      $C_Flag_Bit, FF_Reg;                                   \
+                adcl    %eax, %eax;                                            \
+                andb    %al, A_Reg;                                            \
+                bt      $8, %eax;                                              \
+                FlagNZC                                                        \
+                PutToEA_B
+
+/* LAS = LDA M, TAX, TXS */
+#define DoLAS   GetFromEA_B                                                    \
+                movb    %al, A_Reg;                                            \
+                movb    %al, X_Reg;                                            \
+                movb    %al, SP_Reg_L;                                         \
+                orb     %al, %al;                                              \
+                FlagNZ
+
+/* LAX = LDA M, TAX */
+#define DoLAX   GetFromEA_B                                                    \
+                movb    %al, A_Reg;                                            \
+                movb    %al, X_Reg;                                            \
+                orb     %al, %al;                                              \
+                FlagNZ
+
+
+/* LOR = ASL M, ORA M */
+#define DoLOR   GetFromEA_B                                                    \
+                addb    %al, %al;                                              \
+                FlagC                                                          \
+                PutToEA_B                                                      \
+                orb     %al, A_Reg;                                            \
+                FlagNZ
+
+/* RAD = ROR M, ADC M */
+#define DoRAD_b GetFromEA_B                                                    \
+                bt      $C_Flag_Bit, FF_Reg;                                   \
+                rcrb    $1, %al;                                               \
+                adcb    %al, A_Reg;                                            \
+                pushl   %eax;                                                  \
+                FlagNVZC                                                       \
+                popl    %eax;                                                  \
+                PutToEA_B
+
+#define DoRAD_d GetFromEA_B                                                    \
+                bt      $C_Flag_Bit, FF_Reg;                                   \
+                rcrb    $1, %al;                                               \
+                pushfl;                                                        \
+                PutToEA_B                                                      \
+                popfl;                                                         \
+                adcb    A_Reg, %al;                                            \
+                daa;                                                           \
+                movb    %al, A_Reg;                                            \
+                FlagNVZC
+
+/* RAM = AND M, LSR A */
+#define DoRAM   GetFromEA_B                                                    \
+                andb    %al, A_Reg;                                            \
+                shrb    $1, A_Reg;                                             \
+                FlagNZC
+
+/* RBM = same as RAM */
+#define DoRBM   DoRAM
+
+/* REO = LSR M, EOR M */
+#define DoREO   GetFromEA_B                                                    \
+                shrb    $1, %al;                                               \
+                xorb    %al, A_Reg;                                            \
+                FlagNZC                                                        \
+                PutToEA_B                                                      \
+
+/* DoZBC = same as SBC */
+#define DoZBC_b DoSBC_b
+#define DoZBC_d DoSBC_d
+
+/* TEA = (A AND X AND (OP+2)+1) -> M */
+#define DoTEA   pushl   EffectiveAddr_E;                                       \
+                movw    PC_Reg, EffectiveAddr;                                 \
+                decw    EffectiveAddr;                                         \
+                GetFromEA_B                                                    \
+                popl    EffectiveAddr_E;                                       \
+                incb    %al;                                                   \
+                andb    A_Reg, %al;                                            \
+                andb    X_Reg, %al;                                            \
+                FlagNZ                                                         \
+                PutToEA_B
+
+/* TEX = (X AND (OP+2)+1) -> M */
+#define DoTEX   pushl   EffectiveAddr_E;                                       \
+                movw    PC_Reg, EffectiveAddr;                                 \
+                decw    EffectiveAddr;                                         \
+                GetFromEA_B                                                    \
+                popl    EffectiveAddr_E;                                       \
+                incb    %al;                                                   \
+                andb    X_Reg, %al;                                            \
+                FlagNZ                                                         \
+                PutToEA_B
+
+/* TEY = (Y AND 1) -> M */
+#define DoTEY   movb    Y_Reg, %al;                                            \
+                andb    $1, %al;                                               \
+                FlagNZ                                                         \
+                PutToEA_B
+
+/* XMA = (X AND M) AND (A OR 238) -> A */
+#define DoXMA                                                                  \
+                GetFromEA_B                                                    \
+                andb    X_Reg, %al;                                            \
+                orb     $238, A_Reg;                                           \
+                andb    %al, A_Reg;                                            \
+                FlagNZ
+
+
 /* ----------------------------------
-       HANG instruction
+       UNK HANG instruction
    ---------------------------------- */
 
-op_HANG:
+op_UNK_HANG:
                 decw    PC_Reg
                 Continue
 
 /* ----------------------------------
-       NOP_2 instruction
+       UNK NOP_2 instruction
    ---------------------------------- */
 
-op_NOP_2:
+op_UNK_NOP_2:
                 incw    PC_Reg
                 Continue
 
 /* ----------------------------------
-       NOP_3 instruction
+       UNK NOP_3 instruction
    ---------------------------------- */
 
-op_NOP_3:
+op_UNK_NOP_3:
                 addw    $2, PC_Reg
                 Continue
 
 /* ----------------------------------
-       AAX instructions
+       UNK AAX instructions
    ---------------------------------- */
 
-op_AAX_abs:
+op_UNK_AAX_abs:
                 GetAbs
                 DoAAX
                 Continue
 
-op_AAX_zpage:
+op_UNK_AAX_zpage:
                 GetZPage
                 DoAAX
                 Continue
 
-op_AAX_zpage_y:
+op_UNK_AAX_zpage_y:
                 GetZPage_Y
                 DoAAX
                 Continue
 
-op_AAX_ind_x:
+op_UNK_AAX_ind_x:
                 GetIndZPage_X
                 DoAAX
                 Continue
 
-op_AAX_ind_y:
+op_UNK_AAX_ind_y:
                 GetIndZPage_Y
                 DoAAX
                 Continue
 
 /* ----------------------------------
-       AMA instruction
+       UNK AMA instruction
    ---------------------------------- */
 
-op_AMA_imm:
+op_UNK_AMA_imm:
                 GetImm
                 DoAMA
                 Continue
 
 /* ----------------------------------
-       ANA instruction
+       UNK ANA instruction
    ---------------------------------- */
 
-op_ANA_imm:
+op_UNK_ANA_imm:
                 GetImm
                 DoANA
                 Continue
 
 /* ----------------------------------
-       ANB instruction
+       UNK ANB instruction
    ---------------------------------- */
 
-op_ANB_imm:
+op_UNK_ANB_imm:
                 GetImm
                 DoANB
                 Continue
 
 /* ----------------------------------
-       AXM instruction
+       UNK AXM instruction
    ---------------------------------- */
 
-op_AXM_imm:
+op_UNK_AXM_imm:
                 GetImm
                 DoAXM
                 Continue
 
 /* ----------------------------------
-       AXS instruction
+       UNK AXS instruction
    ---------------------------------- */
 
-op_AXS_abs_y:
+op_UNK_AXS_abs_y:
                 GetAbs_Y
                 DoAXS
                 Continue
 
 /* ----------------------------------
-       DCP instructions
+       UNK DCP instructions
    ---------------------------------- */
 
-op_DCP_zpage:
+op_UNK_DCP_zpage:
                 GetZPage
                 DoDCP
                 Continue
 
-op_DCP_zpage_x:
+op_UNK_DCP_zpage_x:
                 GetZPage_X
                 DoDCP
                 Continue
 
-op_DCP_abs:
+op_UNK_DCP_abs:
                 GetAbs
                 DoDCP
                 Continue
 
-op_DCP_abs_x:
+op_UNK_DCP_abs_x:
                 GetAbs_X
                 DoDCP
                 Continue
 
-op_DCP_abs_y:
+op_UNK_DCP_abs_y:
                 GetAbs_Y
                 DoDCP
                 Continue
 
-op_DCP_ind_x:
+op_UNK_DCP_ind_x:
                 GetIndZPage_X
                 DoDCP
                 Continue
 
-op_DCP_ind_y:
+op_UNK_DCP_ind_y:
                 GetIndZPage_Y
                 DoDCP
                 Continue
 
 /* ----------------------------------
-       ISB instructions
+       UNK ISB instructions
    ---------------------------------- */
 
-op_ISB_dec:
+op_UNK_ISB_dec:
                 DoISB_d
                 Continue
 
-op_ISB_zpage:
+op_UNK_ISB_zpage:
                 GetZPage
                 testb   $D_Flag, F_Reg          # Decimal mode?
-                jnz     op_ISB_dec              # Yes, jump to decimal version
+                jnz     op_UNK_ISB_dec              # Yes, jump to decimal version
                 DoISB_b
                 Continue
 
-op_ISB_zpage_x:
+op_UNK_ISB_zpage_x:
                 GetZPage_X
                 testb   $D_Flag, F_Reg          # Decimal mode?
-                jnz     op_ISB_dec              # Yes, jump to decimal version
+                jnz     op_UNK_ISB_dec              # Yes, jump to decimal version
                 DoISB_b
                 Continue
 
 
-op_ISB_abs:
+op_UNK_ISB_abs:
                 GetAbs
                 testb   $D_Flag, F_Reg          # Decimal mode?
-                jnz     op_ISB_dec              # Yes, jump to decimal version
+                jnz     op_UNK_ISB_dec              # Yes, jump to decimal version
                 DoISB_b
                 Continue
 
-op_ISB_abs_x:
+op_UNK_ISB_abs_x:
                 GetAbs_X
                 testb   $D_Flag, F_Reg          # Decimal mode?
-                jnz     op_ISB_dec              # Yes, jump to decimal version
+                jnz     op_UNK_ISB_dec              # Yes, jump to decimal version
                 DoISB_b
                 Continue
 
-op_ISB_abs_y:
+op_UNK_ISB_abs_y:
                 GetAbs_Y
                 testb   $D_Flag, F_Reg          # Decimal mode?
-                jnz     op_ISB_dec              # Yes, jump to decimal version
+                jnz     op_UNK_ISB_dec              # Yes, jump to decimal version
                 DoISB_b
                 Continue
 
-op_ISB_ind_x:
+op_UNK_ISB_ind_x:
                 GetIndZPage_X
                 testb   $D_Flag, F_Reg          # Decimal mode?
-                jnz     op_ISB_dec              # Yes, jump to decimal version
+                jnz     op_UNK_ISB_dec              # Yes, jump to decimal version
                 DoISB_b
                 Continue
 
-op_ISB_ind_y:
+op_UNK_ISB_ind_y:
                 GetIndZPage_Y
                 testb   $D_Flag, F_Reg          # Decimal mode?
-                jnz     op_ISB_dec              # Yes, jump to decimal version
+                jnz     op_UNK_ISB_dec              # Yes, jump to decimal version
                 DoISB_b
                 Continue
 
 /* ----------------------------------
-       LAN instructions
+       UNK LAN instructions
    ---------------------------------- */
 
-op_LAN_zpage:
+op_UNK_LAN_zpage:
                 GetZPage
                 DoLAN
                 Continue
 
-op_LAN_zpage_x:
+op_UNK_LAN_zpage_x:
                 GetZPage_X
                 DoLAN
                 Continue
 
-op_LAN_abs:
+op_UNK_LAN_abs:
                 GetAbs
                 DoLAN
                 Continue
 
-op_LAN_abs_x:
+op_UNK_LAN_abs_x:
                 GetAbs_X
                 DoLAN
                 Continue
 
-op_LAN_abs_y:
+op_UNK_LAN_abs_y:
                 GetAbs_Y
                 DoLAN
                 Continue
 
-op_LAN_ind_x:
+op_UNK_LAN_ind_x:
                 GetIndZPage_X
                 DoLAN
                 Continue
 
-op_LAN_ind_y:
+op_UNK_LAN_ind_y:
                 GetIndZPage_Y
                 DoLAN
                 Continue
 
 /* ----------------------------------
-       LAS instruction
+       UNK LAS instruction
    ---------------------------------- */
 
-op_LAS_abs_y:
+op_UNK_LAS_abs_y:
                 GetAbs_Y
                 DoLAS
                 Continue
 
 /* ----------------------------------
-       LAX instructions
+       UNK LAX instructions
    ---------------------------------- */
 
-op_LAX_zpage:
+op_UNK_LAX_zpage:
                 GetZPage
                 DoLAX
                 Continue
 
-op_LAX_zpage_y:
+op_UNK_LAX_zpage_y:
                 GetZPage_Y
                 DoLAX
                 Continue
 
-op_LAX_abs:
+op_UNK_LAX_abs:
                 GetAbs
                 DoLAX
                 Continue
 
-op_LAX_abs_y:
+op_UNK_LAX_abs_y:
                 GetAbs_Y
                 DoLAX
                 Continue
 
-op_LAX_ind_x:
+op_UNK_LAX_ind_x:
                 GetIndZPage_X
                 DoLAX
                 Continue
 
-op_LAX_ind_y:
+op_UNK_LAX_ind_y:
                 GetIndZPage_Y
                 DoLAX
                 Continue
 
 /* ----------------------------------
-       LOR instructions
+       UNK LOR instructions
    ---------------------------------- */
 
-op_LOR_zpage:
+op_UNK_LOR_zpage:
                 GetZPage
                 DoLOR
                 Continue
 
-op_LOR_zpage_x:
+op_UNK_LOR_zpage_x:
                 GetZPage_X
                 DoLOR
                 Continue
 
-op_LOR_abs:
+op_UNK_LOR_abs:
                 GetAbs
                 DoLOR
                 Continue
 
-op_LOR_abs_x:
+op_UNK_LOR_abs_x:
                 GetAbs_X
                 DoLOR
                 Continue
 
-op_LOR_abs_y:
+op_UNK_LOR_abs_y:
                 GetAbs_Y
                 DoLOR
                 Continue
 
-op_LOR_ind_x:
+op_UNK_LOR_ind_x:
                 GetIndZPage_X
                 DoLOR
                 Continue
 
-op_LOR_ind_y:
+op_UNK_LOR_ind_y:
                 GetIndZPage_Y
                 DoLOR
                 Continue
 
 /* ----------------------------------
-       RAD instructions
+       UNK RAD instructions
    ---------------------------------- */
 
-op_RAD_dec:
+op_UNK_RAD_dec:
                 DoRAD_d
                 Continue
 
-op_RAD_zpage:
+op_UNK_RAD_zpage:
                 GetZPage
                 testb   $D_Flag, F_Reg          # Decimal mode?
-                jnz     op_RAD_dec              # Yes, jump to decimal version
+                jnz     op_UNK_RAD_dec              # Yes, jump to decimal version
                 DoRAD_b
                 Continue
 
-op_RAD_zpage_x:
+op_UNK_RAD_zpage_x:
                 GetZPage_X
                 testb   $D_Flag, F_Reg          # Decimal mode?
-                jnz     op_RAD_dec              # Yes, jump to decimal version
+                jnz     op_UNK_RAD_dec          # Yes, jump to decimal version
                 DoRAD_b
                 Continue
 
-op_RAD_abs:
+op_UNK_RAD_abs:
                 GetAbs
                 testb   $D_Flag, F_Reg          # Decimal mode?
-                jnz     op_RAD_dec              # Yes, jump to decimal version
+                jnz     op_UNK_RAD_dec          # Yes, jump to decimal version
                 DoRAD_b
                 Continue
 
-op_RAD_abs_x:
+op_UNK_RAD_abs_x:
                 GetAbs_X
                 testb   $D_Flag, F_Reg          # Decimal mode?
-                jnz     op_RAD_dec              # Yes, jump to decimal version
+                jnz     op_UNK_RAD_dec          # Yes, jump to decimal version
                 DoRAD_b
                 Continue
 
-op_RAD_abs_y:
+op_UNK_RAD_abs_y:
                 GetAbs_Y
                 testb   $D_Flag, F_Reg          # Decimal mode?
-                jnz     op_RAD_dec              # Yes, jump to decimal version
+                jnz     op_UNK_RAD_dec          # Yes, jump to decimal version
                 DoRAD_b
                 Continue
 
-op_RAD_ind_x:
+op_UNK_RAD_ind_x:
                 GetIndZPage_X
                 testb   $D_Flag, F_Reg          # Decimal mode?
-                jnz     op_RAD_dec              # Yes, jump to decimal version
+                jnz     op_UNK_RAD_dec          # Yes, jump to decimal version
                 DoRAD_b
                 Continue
 
-op_RAD_ind_y:
+op_UNK_RAD_ind_y:
                 GetIndZPage_Y
                 testb   $D_Flag, F_Reg          # Decimal mode?
-                jnz     op_RAD_dec              # Yes, jump to decimal version
+                jnz     op_UNK_RAD_dec          # Yes, jump to decimal version
                 DoRAD_b
                 Continue
 
 /* ----------------------------------
-       RAM instruction
+       UNK RAM instruction
    ---------------------------------- */
 
-op_RAM_imm:
+op_UNK_RAM_imm:
                 GetImm
                 DoRAM
                 Continue
 
 /* ----------------------------------
-       RBM instruction
+       UNK RBM instruction
    ---------------------------------- */
 
-op_RBM_imm:
+op_UNK_RBM_imm:
                 GetImm
                 DoRBM
                 Continue
 
 /* ----------------------------------
-       REO instructions
+       UNK REO instructions
    ---------------------------------- */
 
-op_REO_zpage:
+op_UNK_REO_zpage:
                 GetZPage
                 DoREO
                 Continue
 
-op_REO_zpage_x:
+op_UNK_REO_zpage_x:
                 GetZPage_X
                 DoREO
                 Continue
 
-op_REO_abs:
+op_UNK_REO_abs:
                 GetAbs
                 DoREO
                 Continue
 
-op_REO_abs_x:
+op_UNK_REO_abs_x:
                 GetAbs_X
                 DoREO
                 Continue
 
-op_REO_abs_y:
+op_UNK_REO_abs_y:
                 GetAbs_Y
                 DoREO
                 Continue
 
-op_REO_ind_x:
+op_UNK_REO_ind_x:
                 GetIndZPage_X
                 DoREO
                 Continue
 
-op_REO_ind_y:
+op_UNK_REO_ind_y:
                 GetIndZPage_Y
                 DoREO
                 Continue
 
 /* ----------------------------------
-       ZBC instruction
+       UNK ZBC instruction
    ---------------------------------- */
 
-op_ZBC_imm:
+op_UNK_ZBC_imm:
                 GetImm
-                testb   $D_Flag, F_Reg          # Decimal mode?
-                jnz     op_ZBC_dec              # Yes, jump to decimal version
+                testb   $D_Flag, F_Reg          // Decimal mode?
+                jnz     op_UNK_ZBC_dec          // Yes, jump to decimal version
                 DoZBC_b
                 Continue
-op_ZBC_dec:
+op_UNK_ZBC_dec:
                 DoZBC_d
                 Continue
 
 /* ----------------------------------
-       TEA instruction
+       UNK TEA instruction
    ---------------------------------- */
 
-op_TEA_abs_y:
+op_UNK_TEA_abs_y:
                 GetAbs_Y
                 DoTEA
                 Continue
 
 /* ----------------------------------
-       TEX instruction
+       UNK TEX instruction
    ---------------------------------- */
 
-op_TEX_abs_y:
+op_UNK_TEX_abs_y:
                 GetAbs_Y
                 DoTEX
                 Continue
 
 /* ----------------------------------
-       TEY instruction
+       UNK TEY instruction
    ---------------------------------- */
 
-op_TEY_abs_x:
+op_UNK_TEY_abs_x:
                 GetAbs_X
                 DoTEY
                 Continue
 
 /* ----------------------------------
-       XMA instruction
+       UNK XMA instruction
    ---------------------------------- */
 
-op_XMA_imm:
+op_UNK_XMA_imm:
                 GetImm
                 DoXMA
                 Continue
 
-/* cpu throttling and continue */
+#pragma mark -
+#pragma mark cpu main entry
+
+/* -------------------------------------------------------------------------
+        CPU throttling and continue
+   ------------------------------------------------------------------------- */
+
 continue:       SaveState
-                pushal
                 call    SN(timing_throttle)
-                popal
                 ReplaceState
                 xorb    %ah, %ah
                 ZeroOp
@@ -2483,7 +2669,6 @@ continue:       SaveState
                 jmp     *cpu65__opcodes(,%eax,4)
 
 /* Exception handler */
-
 exception:      cmpb    $RebootSig, %ah
                 jz      ex_reboot
                 cmpb    $ResetSig, %ah
@@ -2494,12 +2679,12 @@ exception:      cmpb    $RebootSig, %ah
 
 ex_step:        SaveState
                 movb    $0, SN(cpu65__signal)
-                popal
+                popal                                       // EXIT CPUSTEP
                 ret
 
 ex_enter:       SaveState
                 movb    $0, SN(cpu65__signal)
-                pushal
+                pushal                                      // ENTER CPUSTEP
                 call    SN(enter_debugger)
                 popal
                 ReplaceState
@@ -2507,7 +2692,7 @@ ex_enter:       SaveState
                 GetFromPC_B
                 jmp     *cpu65__opcodes(,%eax,4)
 
-ex_reboot:      popal
+ex_reboot:      popal                                       // EXIT CPURUN
                 movb    $0, SN(cpu65__signal)
                 ret
 
@@ -2519,11 +2704,11 @@ ex_reset:       movb    $0, SN(cpu65__signal)
                 GetFromPC_B
                 jmp     *cpu65__opcodes(,%eax,4)
 
-/* -----------------------------------------------------------------
- * Begin emulation.
- * ----------------------------------------------------------------- */
+/* -------------------------------------------------------------------------
+        CPU thread run "loop"
+   ------------------------------------------------------------------------- */
 E(cpu65_run)
-                pushal
+                pushal                                      // ENTER CPURUN
                 /* Zero all registers, as well as the unused 32-bit parts
                  * of variables. (which may need to be kept 0)
                  *
@@ -2545,9 +2730,7 @@ E (cpu65_direct_write)
                 popl    %edi
                 ret
 
-/* -------------------------------------------------------------------------
-        steps the simulation while remaining in the debugger's control
-   ------------------------------------------------------------------------- */
+// steps the simulation while remaining in the debugger's control
 E(cpu65_step)
                 pushal
                 movb    $DebugStepSig,SN(cpu65__signal)
@@ -2555,8 +2738,277 @@ E(cpu65_step)
                 GetFromPC_B
                 jmp     *cpu65__opcodes(,%eax,4)
 
+#pragma mark -
+#pragma mark tables
 
-/* Tables */
+/* -------------------------------------------------------------------------
+        Opcode base cycle counts table
+        Derived from data from WDC 65C02S document dated Feb 2004.  Some of the
+        timings may be off due to bugs in this, bugs in the documentation, and
+        of course since we're not running a Real Time emulator...
+   ------------------------------------------------------------------------- */
+                .align  1 // 65c02              nmosbrk         nmos undoc
+E(cpu65__opcycles)        // ---------------------------------------------------
+                .byte   7 // op_BRK             op_BRK          op_BRK        00
+/*6*/           .byte   5 // op_ORA_ind_x       op_ORA_ind_x    op_ORA_ind_x
+                .byte   0 // op_UNK_65c02       op_UNK          op_UNK_HANG
+                .byte   0 // op_UNK_65c02       op_UNK          op_UNK_LOR_ind_x
+                .byte   5 // op_TSB_zpage       op_UNK          op_UNK_NOP_2
+                .byte   3 // op_ORA_zpage       op_ORA_zpage    op_ORA_zpage
+                .byte   5 // op_ASL_zpage       op_ASL_zpage    op_ASL_zpage
+                .byte   0 // op_RMB0_65c02      op_UNK          op_UNK_LOR_zpage
+                .byte   3 // op_PHP             op_PHP          op_PHP        08
+                .byte   2 // op_ORA_imm         op_ORA_imm      op_ORA_imm
+                .byte   2 // op_ASL_acc         op_ASL_acc      op_ASL_acc
+                .byte   0 // op_UNK_65c02       op_UNK          op_UNK_ANA_imm
+                .byte   6 // op_TSB_abs         op_UNK          op_UNK_NOP_3
+                .byte   4 // op_ORA_abs         op_ORA_abs      op_ORA_abs
+                .byte   6 // op_ASL_abs         op_ASL_abs      op_ASL_abs
+                .byte   0 // op_BBR0_65c02      op_UNK          op_UNK_LOR_abs
+                .byte   2 // op_BPL             op_BPL          op_BPL        10
+                .byte   4 // op_ORA_ind_y       op_ORA_ind_y    op_ORA_ind_y
+                .byte   4 // op_ORA_ind_zpage   op_UNK          op_UNK_HANG
+                .byte   0 // op_UNK_65c02       op_UNK          op_UNK_LOR_ind_y
+                .byte   5 // op_TRB_zpage       op_UNK          op_UNK_NOP_2
+                .byte   4 // op_ORA_zpage_x     op_ORA_zpage_x  op_ORA_zpage_x
+                .byte   6 // op_ASL_zpage_x     op_ASL_zpage_x  op_ASL_zpage_x
+                .byte   0 // op_RMB1_65c02      op_UNK          op_UNK_LOR_zpage_x
+                .byte   2 // op_CLC             op_CLC          op_CLC        18
+                .byte   4 // op_ORA_abs_y       op_ORA_abs_y    op_ORA_abs_y
+                .byte   2 // op_INA             op_UNK          op_NOP
+                .byte   0 // op_UNK_65c02       op_UNK          op_UNK_LOR_abs_y
+                .byte   6 // op_TRB_abs         op_UNK          op_UNK_NOP_3
+                .byte   4 // op_ORA_abs_x       op_ORA_abs_x    op_ORA_abs_x
+                .byte   7 // op_ASL_abs_x       op_ASL_abs_x    op_ASL_abs_x
+                .byte   0 // op_BBR1_65c02      op_UNK          op_UNK_LOR_abs_x
+                .byte   3 // op_JSR             op_JSR          op_JSR        20
+                .byte   5 // op_AND_ind_x       op_AND_ind_x    op_AND_ind_x
+                .byte   0 // op_UNK_65c02       op_UNK          op_UNK_HANG
+                .byte   0 // op_UNK_65c02       op_UNK          op_UNK_LAN_ind_x
+                .byte   3 // op_BIT_zpage       op_BIT_zpage    op_BIT_zpage
+                .byte   3 // op_AND_zpage       op_AND_zpage    op_AND_zpage
+                .byte   5 // op_ROL_zpage       op_ROL_zpage    op_ROL_zpage
+                .byte   0 // op_RMB2_65c02      op_UNK          op_UNK_LAN_zpage
+                .byte   4 // op_PLP             op_PLP          op_PLP        28
+                .byte   2 // op_AND_imm         op_AND_imm      op_AND_imm
+                .byte   2 // op_ROL_acc         op_ROL_acc      op_ROL_acc
+                .byte   0 // op_UNK_65c02       op_UNK          op_UNK_ANB_imm
+                .byte   4 // op_BIT_abs         op_BIT_abs      op_BIT_abs
+                .byte   4 // op_AND_abs         op_AND_abs      op_AND_abs
+                .byte   6 // op_ROL_abs         op_ROL_abs      op_ROL_abs
+                .byte   0 // op_BBR2_65c02      op_UNK          op_UNK_LAN_abs
+                .byte   2 // op_BMI             op_BMI          op_BMI        30
+                .byte   4 // op_AND_ind_y       op_AND_ind_y    op_AND_ind_y
+                .byte   4 // op_AND_ind_zpage   op_UNK          op_UNK_HANG
+                .byte   0 // op_UNK_65c02       op_UNK          op_UNK_LAN_ind_y
+                .byte   4 // op_BIT_zpage_x     op_UNK          op_UNK_NOP_2
+                .byte   4 // op_AND_zpage_x     op_AND_zpage_x  op_AND_zpage_x
+                .byte   6 // op_ROL_zpage_x     op_ROL_zpage_x  op_ROL_zpage_x
+                .byte   0 // op_RMB3_65c02      op_UNK          op_UNK_LAN_zpage_x
+                .byte   2 // op_SEC             op_SEC          op_SEC        38
+                .byte   4 // op_AND_abs_y       op_AND_abs_y    op_AND_abs_y
+                .byte   2 // op_DEA             op_UNK          op_NOP
+                .byte   0 // op_UNK_65c02       op_UNK          op_UNK_LAN_abs_y
+                .byte   4 // op_BIT_abs_x       op_UNK          op_UNK_NOP_3
+                .byte   4 // op_AND_abs_x       op_AND_abs_x    op_AND_abs_x
+                .byte   7 // op_ROL_abs_x       op_ROL_abs_x    op_ROL_abs_x
+                .byte   0 // op_BBR3_65c02      op_UNK          op_UNK_LAN_abs_x
+                .byte   6 // op_RTI             op_RTI          op_RTI        40
+                .byte   5 // op_EOR_ind_x       op_EOR_ind_x    op_EOR_ind_x
+                .byte   0 // op_UNK_65c02       op_UNK          op_UNK_HANG
+                .byte   0 // op_UNK_65c02       op_UNK          op_UNK_REO_ind_x
+                .byte   0 // op_UNK_65c02       op_UNK          op_UNK_NOP_2
+                .byte   3 // op_EOR_zpage       op_EOR_zpage    op_EOR_zpage
+                .byte   5 // op_LSR_zpage       op_LSR_zpage    op_LSR_zpage
+                .byte   0 // op_RMB4_65c02      op_UNK          op_UNK_REO_zpage
+                .byte   3 // op_PHA             op_PHA          op_PHA        48
+                .byte   2 // op_EOR_imm         op_EOR_imm      op_EOR_imm
+                .byte   2 // op_LSR_acc         op_LSR_acc      op_LSR_acc
+                .byte   0 // op_UNK_65c02       op_UNK          op_UNK_RAM_imm
+                .byte   3 // op_JMP_abs         op_JMP_abs      op_JMP_abs
+                .byte   4 // op_EOR_abs         op_EOR_abs      op_EOR_abs
+                .byte   6 // op_LSR_abs         op_LSR_abs      op_LSR_abs
+                .byte   0 // op_BBR4_65c02      op_UNK          op_UNK_REO_abs
+                .byte   2 // op_BVC             op_BVC          op_BVC        50
+                .byte   4 // op_EOR_ind_y       op_EOR_ind_y    op_EOR_ind_y
+                .byte   4 // op_EOR_ind_zpage   op_UNK          op_UNK_HANG
+                .byte   0 // op_UNK_65c02       op_UNK          op_UNK_REO_ind_y
+                .byte   0 // op_UNK_65c02       op_UNK          op_UNK_NOP_2
+                .byte   4 // op_EOR_zpage_x     op_EOR_zpage_x  op_EOR_zpage_x
+                .byte   6 // op_LSR_zpage_x     op_LSR_zpage_x  op_LSR_zpage_x
+                .byte   0 // op_RMB5_65c02      op_UNK          op_UNK_REO_zpage_x
+                .byte   2 // op_CLI             op_CLI          op_CLI        58
+                .byte   4 // op_EOR_abs_y       op_EOR_abs_y    op_EOR_abs_y
+                .byte   3 // op_PHY             op_UNK          op_NOP
+                .byte   0 // op_UNK_65c02       op_UNK          op_UNK_REO_abs_y
+                .byte   0 // op_UNK_65c02       op_UNK          op_UNK_NOP_3
+                .byte   4 // op_EOR_abs_x       op_EOR_abs_x    op_EOR_abs_x
+                .byte   7 // op_LSR_abs_x       op_LSR_abs_x    op_LSR_abs_x
+                .byte   0 // op_BBR5_65c02      op_UNK          op_UNK_REO_abs_x
+                .byte   6 // op_RTS             op_RTS          op_RTS        60
+                .byte   5 // op_ADC_ind_x       op_ADC_ind_x    op_ADC_ind_x
+                .byte   0 // op_UNK_65c02       op_UNK          op_UNK_HANG
+                .byte   0 // op_UNK_65c02       op_UNK          op_UNK_RAD_ind_x
+                .byte   3 // op_STZ_zpage       op_UNK          op_UNK_NOP_2
+                .byte   3 // op_ADC_zpage       op_ADC_zpage    op_ADC_zpage
+                .byte   5 // op_ROR_zpage       op_ROR_zpage    op_ROR_zpage
+                .byte   0 // op_RMB6_65c02      op_UNK          op_UNK_RAD_zpage
+                .byte   4 // op_PLA             op_PLA          op_PLA        68
+                .byte   2 // op_ADC_imm         op_ADC_imm      op_ADC_imm
+                .byte   2 // op_ROR_acc         op_ROR_acc      op_ROR_acc
+                .byte   0 // op_UNK_65c02       op_UNK          op_UNK_RBM_imm
+                .byte   6 // op_JMP_ind_65c02   op_JMP_ind      op_JMP_ind
+                .byte   4 // op_ADC_abs         op_ADC_abs      op_ADC_abs
+                .byte   6 // op_ROR_abs         op_ROR_abs      op_ROR_abs
+                .byte   0 // op_BBR6_65c02      op_UNK          op_UNK_RAD_abs
+                .byte   2 // op_BVS             op_BVS          op_BVS        70
+                .byte   4 // op_ADC_ind_y       op_ADC_ind_y    op_ADC_ind_y
+                .byte   4 // op_ADC_ind_zpage   op_UNK          op_UNK_HANG
+                .byte   0 // op_UNK_65c02       op_UNK          op_UNK_RAD_ind_y
+                .byte   4 // op_STZ_zpage_x     op_UNK          op_UNK_NOP_2
+                .byte   4 // op_ADC_zpage_x     op_ADC_zpage_x  op_ADC_zpage_x
+                .byte   6 // op_ROR_zpage_x     op_ROR_zpage_x  op_ROR_zpage_x
+                .byte   0 // op_RMB7_65c02      op_UNK          op_UNK_RAD_zpage_x
+                .byte   2 // op_SEI             op_SEI          op_SEI        78
+                .byte   4 // op_ADC_abs_y       op_ADC_abs_y    op_ADC_abs_y
+                .byte   4 // op_PLY             op_UNK          op_NOP
+                .byte   0 // op_UNK_65c02       op_UNK          op_UNK_RAD_abs_y
+                .byte   6 // op_JMP_abs_ind_x   op_UNK          op_UNK_NOP_3
+                .byte   4 // op_ADC_abs_x       op_ADC_abs_x    op_ADC_abs_x
+                .byte   7 // op_ROR_abs_x       op_ROR_abs_x    op_ROR_abs_x
+                .byte   0 // op_BBR7_65c02      op_UNK          op_UNK_RAD_abs_x
+                .byte   2 // op_BRA             op_UNK          op_UNK_NOP_2  80
+                .byte   5 // op_STA_ind_x       op_STA_ind_x    op_STA_ind_x
+                .byte   0 // op_UNK_65c02       op_UNK          op_UNK_NOP_2
+                .byte   0 // op_UNK_65c02       op_UNK          op_UNK_AAX_ind_x
+                .byte   3 // op_STY_zpage       op_STY_zpage    op_STY_zpage
+                .byte   3 // op_STA_zpage       op_STA_zpage    op_STA_zpage
+                .byte   3 // op_STX_zpage       op_STX_zpage    op_STX_zpage
+                .byte   0 // op_SMB0_65c02      op_UNK          op_UNK_AAX_zpage
+                .byte   2 // op_DEY             op_DEY          op_DEY        88
+                .byte   2 // op_BIT_imm         op_UNK          op_UNK_NOP_2
+                .byte   2 // op_TXA             op_TXA          op_TXA
+                .byte   0 // op_UNK_65c02       op_UNK          op_UNK_XMA_imm
+                .byte   4 // op_STY_abs         op_STY_abs      op_STY_abs
+                .byte   4 // op_STA_abs         op_STA_abs      op_STA_abs
+                .byte   4 // op_STX_abs         op_STX_abs      op_STX_abs
+                .byte   0 // op_BBS0_65c02      op_UNK          op_UNK_AAX_abs
+                .byte   2 // op_BCC             op_BCC          op_BCC        90
+                .byte   4 // op_STA_ind_y       op_STA_ind_y    op_STA_ind_y
+                .byte   4 // op_STA_ind_zpage   op_UNK          op_UNK_HANG
+                .byte   0 // op_UNK_65c02       op_UNK          op_UNK_AAX_ind_y
+                .byte   4 // op_STY_zpage_x     op_STY_zpage_x  op_STY_zpage_x
+                .byte   4 // op_STA_zpage_x     op_STA_zpage_x  op_STA_zpage_x
+                .byte   4 // op_STX_zpage_y     op_STX_zpage_y  op_STX_zpage_y
+                .byte   0 // op_SMB1_65c02      op_UNK          op_UNK_AAX_zpage_y
+                .byte   2 // op_TYA             op_TYA          op_TYA        98
+                .byte   4 // op_STA_abs_y       op_STA_abs_y    op_STA_abs_y
+                .byte   2 // op_TXS             op_TXS          op_TXS
+                .byte   0 // op_UNK_65c02       op_UNK          op_UNK_AXS_abs_y
+                .byte   4 // op_STZ_abs         op_UNK          op_UNK_TEY_abs_x
+                .byte   4 // op_STA_abs_x       op_STA_abs_x    op_STA_abs_x
+                .byte   4 // op_STZ_abs_x       op_UNK          op_UNK_TEX_abs_y
+                .byte   0 // op_BBS1_65c02      op_UNK          op_UNK_TEA_abs_y
+                .byte   2 // op_LDY_imm         op_LDY_imm      op_LDY_imm    A0
+                .byte   5 // op_LDA_ind_x       op_LDA_ind_x    op_LDA_ind_x
+                .byte   2 // op_LDX_imm         op_LDX_imm      op_LDX_imm
+                .byte   0 // op_UNK_65c02       op_UNK          op_UNK_LAX_ind_x
+                .byte   3 // op_LDY_zpage       op_LDY_zpage    op_LDY_zpage
+                .byte   3 // op_LDA_zpage       op_LDA_zpage    op_LDA_zpage
+                .byte   3 // op_LDX_zpage       op_LDX_zpage    op_LDX_zpage
+                .byte   0 // op_SMB2_65c02      op_UNK          op_UNK_LAX_zpage
+                .byte   2 // op_TAY             op_TAY          op_TAY        A8
+                .byte   2 // op_LDA_imm         op_LDA_imm      op_LDA_imm
+                .byte   2 // op_TAX             op_TAX          op_TAX
+                .byte   0 // op_UNK_65c02       op_UNK          op_UNK_AMA_imm
+                .byte   4 // op_LDY_abs         op_LDY_abs      op_LDY_abs
+                .byte   4 // op_LDA_abs         op_LDA_abs      op_LDA_abs
+                .byte   4 // op_LDX_abs         op_LDX_abs      op_LDX_abs
+                .byte   0 // op_BBS2_65c02      op_UNK          op_UNK_LAX_abs
+                .byte   2 // op_BCS             op_BCS          op_BCS        B0
+                .byte   4 // op_LDA_ind_y       op_LDA_ind_y    op_LDA_ind_y
+                .byte   4 // op_LDA_ind_zpage   op_UNK          op_UNK_HANG
+                .byte   0 // op_UNK_65c02       op_UNK          op_UNK_LAX_ind_y
+                .byte   4 // op_LDY_zpage_x     op_LDY_zpage_x  op_LDY_zpage_x
+                .byte   4 // op_LDA_zpage_x     op_LDA_zpage_x  op_LDA_zpage_x
+                .byte   4 // op_LDX_zpage_y     op_LDX_zpage_y  op_LDX_zpage_y
+                .byte   0 // op_SMB3_65c02      op_UNK          op_UNK_LAX_zpage_y
+                .byte   2 // op_CLV             op_CLV          op_CLV        B8
+                .byte   4 // op_LDA_abs_y       op_LDA_abs_y    op_LDA_abs_y
+                .byte   2 // op_TSX             op_TSX          op_TSX
+                .byte   0 // op_UNK_65c02       op_UNK          op_UNK_LAS_abs_y
+                .byte   4 // op_LDY_abs_x       op_LDY_abs_x    op_LDY_abs_x
+                .byte   4 // op_LDA_abs_x       op_LDA_abs_x    op_LDA_abs_x
+                .byte   4 // op_LDX_abs_y       op_LDX_abs_y    op_LDX_abs_y
+                .byte   0 // op_BBS3_65c02      op_UNK          op_UNK_LAX_abs_y
+                .byte   2 // op_CPY_imm         op_CPY_imm      op_CPY_imm    C0
+                .byte   5 // op_CMP_ind_x       op_CMP_ind_x    op_CMP_ind_x
+                .byte   0 // op_UNK_65c02       op_UNK          op_UNK_NOP_2
+                .byte   0 // op_UNK_65c02       op_UNK          op_UNK_DCP_ind_x
+                .byte   3 // op_CPY_zpage       op_CPY_zpage    op_CPY_zpage
+                .byte   3 // op_CMP_zpage       op_CMP_zpage    op_CMP_zpage
+                .byte   5 // op_DEC_zpage       op_DEC_zpage    op_DEC_zpage
+                .byte   0 // op_SMB4_65c02      op_UNK          op_UNK_DCP_zpage
+                .byte   2 // op_INY             op_INY          op_INY        C8
+                .byte   2 // op_CMP_imm         op_CMP_imm      op_CMP_imm
+                .byte   2 // op_DEX             op_DEX          op_DEX
+                .byte   0 // op_WAI_65c02       op_UNK          op_UNK_AXM_imm
+                .byte   4 // op_CPY_abs         op_CPY_abs      op_CPY_abs
+                .byte   4 // op_CMP_abs         op_CMP_abs      op_CMP_abs
+                .byte   6 // op_DEC_abs         op_DEC_abs      op_DEC_abs
+                .byte   0 // op_BBS4_65c02      op_UNK          op_UNK_DCP_abs
+                .byte   2 // op_BNE             op_BNE          op_BNE        D0
+                .byte   4 // op_CMP_ind_y       op_CMP_ind_y    op_CMP_ind_y
+                .byte   4 // op_CMP_ind_zpage   op_UNK          op_UNK_HANG
+                .byte   0 // op_UNK_65c02       op_UNK          op_UNK_DCP_ind_y
+                .byte   0 // op_UNK_65c02       op_UNK          op_UNK_NOP_2
+                .byte   4 // op_CMP_zpage_x     op_CMP_zpage_x  op_CMP_zpage_x
+                .byte   6 // op_DEC_zpage_x     op_DEC_zpage_x  op_DEC_zpage_x
+                .byte   0 // op_SMB5_65c02      op_UNK          op_UNK_DCP_zpage_x
+                .byte   2 // op_CLD             op_CLD          op_CLD        D8
+                .byte   4 // op_CMP_abs_y       op_CMP_abs_y    op_CMP_abs_y
+                .byte   3 // op_PHX             op_UNK          op_NOP
+                .byte   0 // op_STP_65c02       op_UNK          op_UNK_DCP_abs_y
+                .byte   0 // op_UNK_65c02       op_UNK          op_UNK_NOP_3
+                .byte   4 // op_CMP_abs_x       op_CMP_abs_x    op_CMP_abs_x
+                .byte   7 // op_DEC_abs_x       op_DEC_abs_x    op_DEC_abs_x
+                .byte   0 // op_BBS5_65c02      op_UNK          op_UNK_DCP_abs_x
+                .byte   2 // op_CPX_imm         op_CPX_imm      op_CPX_imm    E0
+                .byte   5 // op_SBC_ind_x       op_SBC_ind_x    op_SBC_ind_x
+                .byte   0 // op_UNK_65c02       op_UNK          op_UNK_NOP_2
+                .byte   0 // op_UNK_65c02       op_UNK          op_UNK_ISB_ind_x
+                .byte   3 // op_CPX_zpage       op_CPX_zpage    op_CPX_zpage
+                .byte   3 // op_SBC_zpage       op_SBC_zpage    op_SBC_zpage
+                .byte   5 // op_INC_zpage       op_INC_zpage    op_INC_zpage
+                .byte   0 // op_SMB6_65c02      op_UNK          op_UNK_ISB_zpage
+                .byte   2 // op_INX             op_INX          op_INX        E8
+                .byte   2 // op_SBC_imm         op_SBC_imm      op_SBC_imm
+                .byte   2 // op_NOP             op_NOP          op_NOP
+                .byte   0 // op_UNK_65c02       op_UNK          op_UNK_ZBC_imm
+                .byte   4 // op_CPX_abs         op_CPX_abs      op_CPX_abs
+                .byte   4 // op_SBC_abs         op_SBC_abs      op_SBC_abs
+                .byte   6 // op_INC_abs         op_INC_abs      op_INC_abs
+                .byte   0 // op_BBS6_65c02      op_UNK          op_UNK_ISB_abs
+                .byte   2 // op_BEQ             op_BEQ          op_BEQ        F0
+                .byte   4 // op_SBC_ind_y       op_SBC_ind_y    op_SBC_ind_y
+                .byte   4 // op_SBC_ind_zpage   op_UNK          op_UNK_HANG
+                .byte   0 // op_UNK_65c02       op_UNK          op_UNK_ISB_ind_y
+                .byte   0 // op_UNK_65c02       op_UNK          op_UNK_NOP_2
+                .byte   4 // op_SBC_zpage_x     op_SBC_zpage_x  op_SBC_zpage_x
+                .byte   6 // op_INC_zpage_x     op_INC_zpage_x  op_INC_zpage_x
+                .byte   0 // op_SMB7_65c02      op_UNK          op_UNK_ISB_zpage_x
+                .byte   2 // op_SED             op_SED          op_SED        F8
+                .byte   4 // op_SBC_abs_y       op_SBC_abs_y    op_SBC_abs_y
+                .byte   4 // op_PLX             op_UNK          op_NOP
+                .byte   0 // op_UNK_65c02       op_UNK          op_UNK_ISB_abs_y
+                .byte   0 // op_UNK_65c02       op_UNK          op_UNK_NOP_3
+                .byte   4 // op_SBC_abs_x       op_SBC_abs_x    op_SBC_abs_x
+                .byte   7 // op_INC_abs_x       op_INC_abs_x    op_INC_abs_x
+                .byte   0 // op_BBS7_65c02      op_UNK          op_UNK_ISB_abs_x
+
+/* -------------------------------------------------------------------------
+        Opcode Routine Jump Tables
+   ------------------------------------------------------------------------- */
 
                 .align  4
 E(cpu65__nmosbrk)
@@ -2817,7 +3269,6 @@ E(cpu65__nmosbrk)
                 .long   op_INC_abs_x
                 .long   op_UNK
 
-
 E(cpu65__cmos)
                 .long   op_BRK
                 .long   op_ORA_ind_x
@@ -2826,7 +3277,7 @@ E(cpu65__cmos)
                 .long   op_TSB_zpage
                 .long   op_ORA_zpage
                 .long   op_ASL_zpage
-                .long   op_UNK_65c02
+                .long   op_RMB0_65c02
                 .long   op_PHP
                 .long   op_ORA_imm
                 .long   op_ASL_acc
@@ -2834,7 +3285,7 @@ E(cpu65__cmos)
                 .long   op_TSB_abs
                 .long   op_ORA_abs
                 .long   op_ASL_abs
-                .long   op_UNK_65c02
+                .long   op_BBR0_65c02
                 .long   op_BPL
                 .long   op_ORA_ind_y
                 .long   op_ORA_ind_zpage
@@ -2842,7 +3293,7 @@ E(cpu65__cmos)
                 .long   op_TRB_zpage
                 .long   op_ORA_zpage_x
                 .long   op_ASL_zpage_x
-                .long   op_UNK_65c02
+                .long   op_RMB1_65c02
                 .long   op_CLC
                 .long   op_ORA_abs_y
                 .long   op_INA
@@ -2850,7 +3301,7 @@ E(cpu65__cmos)
                 .long   op_TRB_abs
                 .long   op_ORA_abs_x
                 .long   op_ASL_abs_x
-                .long   op_UNK_65c02
+                .long   op_BBR1_65c02
                 .long   op_JSR
                 .long   op_AND_ind_x
                 .long   op_UNK_65c02
@@ -2858,7 +3309,7 @@ E(cpu65__cmos)
                 .long   op_BIT_zpage
                 .long   op_AND_zpage
                 .long   op_ROL_zpage
-                .long   op_UNK_65c02
+                .long   op_RMB2_65c02
                 .long   op_PLP
                 .long   op_AND_imm
                 .long   op_ROL_acc
@@ -2866,7 +3317,7 @@ E(cpu65__cmos)
                 .long   op_BIT_abs
                 .long   op_AND_abs
                 .long   op_ROL_abs
-                .long   op_UNK_65c02
+                .long   op_BBR2_65c02
                 .long   op_BMI
                 .long   op_AND_ind_y
                 .long   op_AND_ind_zpage
@@ -2874,7 +3325,7 @@ E(cpu65__cmos)
                 .long   op_BIT_zpage_x
                 .long   op_AND_zpage_x
                 .long   op_ROL_zpage_x
-                .long   op_UNK_65c02
+                .long   op_RMB3_65c02
                 .long   op_SEC
                 .long   op_AND_abs_y
                 .long   op_DEA
@@ -2882,7 +3333,7 @@ E(cpu65__cmos)
                 .long   op_BIT_abs_x
                 .long   op_AND_abs_x
                 .long   op_ROL_abs_x
-                .long   op_UNK_65c02
+                .long   op_BBR3_65c02
                 .long   op_RTI
                 .long   op_EOR_ind_x
                 .long   op_UNK_65c02
@@ -2890,7 +3341,7 @@ E(cpu65__cmos)
                 .long   op_UNK_65c02
                 .long   op_EOR_zpage
                 .long   op_LSR_zpage
-                .long   op_UNK_65c02
+                .long   op_RMB4_65c02
                 .long   op_PHA
                 .long   op_EOR_imm
                 .long   op_LSR_acc
@@ -2898,7 +3349,7 @@ E(cpu65__cmos)
                 .long   op_JMP_abs
                 .long   op_EOR_abs
                 .long   op_LSR_abs
-                .long   op_UNK_65c02
+                .long   op_BBR4_65c02
                 .long   op_BVC
                 .long   op_EOR_ind_y
                 .long   op_EOR_ind_zpage
@@ -2906,7 +3357,7 @@ E(cpu65__cmos)
                 .long   op_UNK_65c02
                 .long   op_EOR_zpage_x
                 .long   op_LSR_zpage_x
-                .long   op_UNK_65c02
+                .long   op_RMB5_65c02
                 .long   op_CLI
                 .long   op_EOR_abs_y
                 .long   op_PHY
@@ -2914,7 +3365,7 @@ E(cpu65__cmos)
                 .long   op_UNK_65c02
                 .long   op_EOR_abs_x
                 .long   op_LSR_abs_x
-                .long   op_UNK_65c02
+                .long   op_BBR5_65c02
                 .long   op_RTS
                 .long   op_ADC_ind_x
                 .long   op_UNK_65c02
@@ -2922,7 +3373,7 @@ E(cpu65__cmos)
                 .long   op_STZ_zpage
                 .long   op_ADC_zpage
                 .long   op_ROR_zpage
-                .long   op_UNK_65c02
+                .long   op_RMB6_65c02
                 .long   op_PLA
                 .long   op_ADC_imm
                 .long   op_ROR_acc
@@ -2930,7 +3381,7 @@ E(cpu65__cmos)
                 .long   op_JMP_ind_65c02
                 .long   op_ADC_abs
                 .long   op_ROR_abs
-                .long   op_UNK_65c02
+                .long   op_BBR6_65c02
                 .long   op_BVS
                 .long   op_ADC_ind_y
                 .long   op_ADC_ind_zpage
@@ -2938,7 +3389,7 @@ E(cpu65__cmos)
                 .long   op_STZ_zpage_x
                 .long   op_ADC_zpage_x
                 .long   op_ROR_zpage_x
-                .long   op_UNK_65c02
+                .long   op_RMB7_65c02
                 .long   op_SEI
                 .long   op_ADC_abs_y
                 .long   op_PLY
@@ -2946,7 +3397,7 @@ E(cpu65__cmos)
                 .long   op_JMP_abs_ind_x
                 .long   op_ADC_abs_x
                 .long   op_ROR_abs_x
-                .long   op_UNK_65c02
+                .long   op_BBR7_65c02
                 .long   op_BRA
                 .long   op_STA_ind_x
                 .long   op_UNK_65c02
@@ -2954,7 +3405,7 @@ E(cpu65__cmos)
                 .long   op_STY_zpage
                 .long   op_STA_zpage
                 .long   op_STX_zpage
-                .long   op_UNK_65c02
+                .long   op_SMB0_65c02
                 .long   op_DEY
                 .long   op_BIT_imm
                 .long   op_TXA
@@ -2962,7 +3413,7 @@ E(cpu65__cmos)
                 .long   op_STY_abs
                 .long   op_STA_abs
                 .long   op_STX_abs
-                .long   op_UNK_65c02
+                .long   op_BBS0_65c02
                 .long   op_BCC
                 .long   op_STA_ind_y
                 .long   op_STA_ind_zpage
@@ -2970,7 +3421,7 @@ E(cpu65__cmos)
                 .long   op_STY_zpage_x
                 .long   op_STA_zpage_x
                 .long   op_STX_zpage_y
-                .long   op_UNK_65c02
+                .long   op_SMB1_65c02
                 .long   op_TYA
                 .long   op_STA_abs_y
                 .long   op_TXS
@@ -2978,7 +3429,7 @@ E(cpu65__cmos)
                 .long   op_STZ_abs
                 .long   op_STA_abs_x
                 .long   op_STZ_abs_x
-                .long   op_UNK_65c02
+                .long   op_BBS1_65c02
                 .long   op_LDY_imm
                 .long   op_LDA_ind_x
                 .long   op_LDX_imm
@@ -2986,7 +3437,7 @@ E(cpu65__cmos)
                 .long   op_LDY_zpage
                 .long   op_LDA_zpage
                 .long   op_LDX_zpage
-                .long   op_UNK_65c02
+                .long   op_SMB2_65c02
                 .long   op_TAY
                 .long   op_LDA_imm
                 .long   op_TAX
@@ -2994,7 +3445,7 @@ E(cpu65__cmos)
                 .long   op_LDY_abs
                 .long   op_LDA_abs
                 .long   op_LDX_abs
-                .long   op_UNK_65c02
+                .long   op_BBS2_65c02
                 .long   op_BCS
                 .long   op_LDA_ind_y
                 .long   op_LDA_ind_zpage
@@ -3002,7 +3453,7 @@ E(cpu65__cmos)
                 .long   op_LDY_zpage_x
                 .long   op_LDA_zpage_x
                 .long   op_LDX_zpage_y
-                .long   op_UNK_65c02
+                .long   op_SMB3_65c02
                 .long   op_CLV
                 .long   op_LDA_abs_y
                 .long   op_TSX
@@ -3010,7 +3461,7 @@ E(cpu65__cmos)
                 .long   op_LDY_abs_x
                 .long   op_LDA_abs_x
                 .long   op_LDX_abs_y
-                .long   op_UNK_65c02
+                .long   op_BBS3_65c02
                 .long   op_CPY_imm
                 .long   op_CMP_ind_x
                 .long   op_UNK_65c02
@@ -3018,15 +3469,15 @@ E(cpu65__cmos)
                 .long   op_CPY_zpage
                 .long   op_CMP_zpage
                 .long   op_DEC_zpage
-                .long   op_UNK_65c02
+                .long   op_SMB4_65c02
                 .long   op_INY
                 .long   op_CMP_imm
                 .long   op_DEX
-                .long   op_UNK_65c02
+                .long   op_WAI_65c02
                 .long   op_CPY_abs
                 .long   op_CMP_abs
                 .long   op_DEC_abs
-                .long   op_UNK_65c02
+                .long   op_BBS4_65c02
                 .long   op_BNE
                 .long   op_CMP_ind_y
                 .long   op_CMP_ind_zpage
@@ -3034,15 +3485,15 @@ E(cpu65__cmos)
                 .long   op_UNK_65c02
                 .long   op_CMP_zpage_x
                 .long   op_DEC_zpage_x
-                .long   op_UNK_65c02
+                .long   op_SMB5_65c02
                 .long   op_CLD
                 .long   op_CMP_abs_y
                 .long   op_PHX
-                .long   op_UNK_65c02
+                .long   op_STP_65c02
                 .long   op_UNK_65c02
                 .long   op_CMP_abs_x
                 .long   op_DEC_abs_x
-                .long   op_UNK_65c02
+                .long   op_BBS5_65c02
                 .long   op_CPX_imm
                 .long   op_SBC_ind_x
                 .long   op_UNK_65c02
@@ -3050,7 +3501,7 @@ E(cpu65__cmos)
                 .long   op_CPX_zpage
                 .long   op_SBC_zpage
                 .long   op_INC_zpage
-                .long   op_UNK_65c02
+                .long   op_SMB6_65c02
                 .long   op_INX
                 .long   op_SBC_imm
                 .long   op_NOP
@@ -3058,7 +3509,7 @@ E(cpu65__cmos)
                 .long   op_CPX_abs
                 .long   op_SBC_abs
                 .long   op_INC_abs
-                .long   op_UNK_65c02
+                .long   op_BBS6_65c02
                 .long   op_BEQ
                 .long   op_SBC_ind_y
                 .long   op_SBC_ind_zpage
@@ -3066,7 +3517,7 @@ E(cpu65__cmos)
                 .long   op_UNK_65c02
                 .long   op_SBC_zpage_x
                 .long   op_INC_zpage_x
-                .long   op_UNK_65c02
+                .long   op_SMB7_65c02
                 .long   op_SED
                 .long   op_SBC_abs_y
                 .long   op_PLX
@@ -3074,263 +3525,263 @@ E(cpu65__cmos)
                 .long   op_UNK_65c02
                 .long   op_SBC_abs_x
                 .long   op_INC_abs_x
-                .long   op_UNK_65c02
+                .long   op_BBS7_65c02
 
 E(cpu65__nmos)
                 .long   op_BRK
                 .long   op_ORA_ind_x
-                .long   op_HANG
-                .long   op_LOR_ind_x
-                .long   op_NOP_2
+                .long   op_UNK_HANG
+                .long   op_UNK_LOR_ind_x
+                .long   op_UNK_NOP_2
                 .long   op_ORA_zpage
                 .long   op_ASL_zpage
-                .long   op_LOR_zpage
+                .long   op_UNK_LOR_zpage
                 .long   op_PHP
                 .long   op_ORA_imm
                 .long   op_ASL_acc
-                .long   op_ANA_imm
-                .long   op_NOP_3
+                .long   op_UNK_ANA_imm
+                .long   op_UNK_NOP_3
                 .long   op_ORA_abs
                 .long   op_ASL_abs
-                .long   op_LOR_abs
+                .long   op_UNK_LOR_abs
                 .long   op_BPL
                 .long   op_ORA_ind_y
-                .long   op_HANG
-                .long   op_LOR_ind_y
-                .long   op_NOP_2
+                .long   op_UNK_HANG
+                .long   op_UNK_LOR_ind_y
+                .long   op_UNK_NOP_2
                 .long   op_ORA_zpage_x
                 .long   op_ASL_zpage_x
-                .long   op_LOR_zpage_x
+                .long   op_UNK_LOR_zpage_x
                 .long   op_CLC
                 .long   op_ORA_abs_y
                 .long   op_NOP
-                .long   op_LOR_abs_y
-                .long   op_NOP_3
+                .long   op_UNK_LOR_abs_y
+                .long   op_UNK_NOP_3
                 .long   op_ORA_abs_x
                 .long   op_ASL_abs_x
-                .long   op_LOR_abs_x
+                .long   op_UNK_LOR_abs_x
                 .long   op_JSR
                 .long   op_AND_ind_x
-                .long   op_HANG
-                .long   op_LAN_ind_x
+                .long   op_UNK_HANG
+                .long   op_UNK_LAN_ind_x
                 .long   op_BIT_zpage
                 .long   op_AND_zpage
                 .long   op_ROL_zpage
-                .long   op_LAN_zpage
+                .long   op_UNK_LAN_zpage
                 .long   op_PLP
                 .long   op_AND_imm
                 .long   op_ROL_acc
-                .long   op_ANB_imm
+                .long   op_UNK_ANB_imm
                 .long   op_BIT_abs
                 .long   op_AND_abs
                 .long   op_ROL_abs
-                .long   op_LAN_abs
+                .long   op_UNK_LAN_abs
                 .long   op_BMI
                 .long   op_AND_ind_y
-                .long   op_HANG
-                .long   op_LAN_ind_y
-                .long   op_NOP_2
+                .long   op_UNK_HANG
+                .long   op_UNK_LAN_ind_y
+                .long   op_UNK_NOP_2
                 .long   op_AND_zpage_x
                 .long   op_ROL_zpage_x
-                .long   op_LAN_zpage_x
+                .long   op_UNK_LAN_zpage_x
                 .long   op_SEC
                 .long   op_AND_abs_y
                 .long   op_NOP
-                .long   op_LAN_abs_y
-                .long   op_NOP_3
+                .long   op_UNK_LAN_abs_y
+                .long   op_UNK_NOP_3
                 .long   op_AND_abs_x
                 .long   op_ROL_abs_x
-                .long   op_LAN_abs_x
+                .long   op_UNK_LAN_abs_x
                 .long   op_RTI
                 .long   op_EOR_ind_x
-                .long   op_HANG
-                .long   op_REO_ind_x
-                .long   op_NOP_2
+                .long   op_UNK_HANG
+                .long   op_UNK_REO_ind_x
+                .long   op_UNK_NOP_2
                 .long   op_EOR_zpage
                 .long   op_LSR_zpage
-                .long   op_REO_zpage
+                .long   op_UNK_REO_zpage
                 .long   op_PHA
                 .long   op_EOR_imm
                 .long   op_LSR_acc
-                .long   op_RAM_imm
+                .long   op_UNK_RAM_imm
                 .long   op_JMP_abs
                 .long   op_EOR_abs
                 .long   op_LSR_abs
-                .long   op_REO_abs
+                .long   op_UNK_REO_abs
                 .long   op_BVC
                 .long   op_EOR_ind_y
-                .long   op_HANG
-                .long   op_REO_ind_y
-                .long   op_NOP_2
+                .long   op_UNK_HANG
+                .long   op_UNK_REO_ind_y
+                .long   op_UNK_NOP_2
                 .long   op_EOR_zpage_x
                 .long   op_LSR_zpage_x
-                .long   op_REO_zpage_x
+                .long   op_UNK_REO_zpage_x
                 .long   op_CLI
                 .long   op_EOR_abs_y
                 .long   op_NOP
-                .long   op_REO_abs_y
-                .long   op_NOP_3
+                .long   op_UNK_REO_abs_y
+                .long   op_UNK_NOP_3
                 .long   op_EOR_abs_x
                 .long   op_LSR_abs_x
-                .long   op_REO_abs_x
+                .long   op_UNK_REO_abs_x
                 .long   op_RTS
                 .long   op_ADC_ind_x
-                .long   op_HANG
-                .long   op_RAD_ind_x
-                .long   op_NOP_2
+                .long   op_UNK_HANG
+                .long   op_UNK_RAD_ind_x
+                .long   op_UNK_NOP_2
                 .long   op_ADC_zpage
                 .long   op_ROR_zpage
-                .long   op_RAD_zpage
+                .long   op_UNK_RAD_zpage
                 .long   op_PLA
                 .long   op_ADC_imm
                 .long   op_ROR_acc
-                .long   op_RBM_imm
+                .long   op_UNK_RBM_imm
                 .long   op_JMP_ind
                 .long   op_ADC_abs
                 .long   op_ROR_abs
-                .long   op_RAD_abs
+                .long   op_UNK_RAD_abs
                 .long   op_BVS
                 .long   op_ADC_ind_y
-                .long   op_HANG
-                .long   op_RAD_ind_y
-                .long   op_NOP_2
+                .long   op_UNK_HANG
+                .long   op_UNK_RAD_ind_y
+                .long   op_UNK_NOP_2
                 .long   op_ADC_zpage_x
                 .long   op_ROR_zpage_x
-                .long   op_RAD_zpage_x
+                .long   op_UNK_RAD_zpage_x
                 .long   op_SEI
                 .long   op_ADC_abs_y
                 .long   op_NOP
-                .long   op_RAD_abs_y
-                .long   op_NOP_3
+                .long   op_UNK_RAD_abs_y
+                .long   op_UNK_NOP_3
                 .long   op_ADC_abs_x
                 .long   op_ROR_abs_x
-                .long   op_RAD_abs_x
-                .long   op_NOP_2
+                .long   op_UNK_RAD_abs_x
+                .long   op_UNK_NOP_2
                 .long   op_STA_ind_x
-                .long   op_NOP_2
-                .long   op_AAX_ind_x
+                .long   op_UNK_NOP_2
+                .long   op_UNK_AAX_ind_x
                 .long   op_STY_zpage
                 .long   op_STA_zpage
                 .long   op_STX_zpage
-                .long   op_AAX_zpage
+                .long   op_UNK_AAX_zpage
                 .long   op_DEY
-                .long   op_NOP_2
+                .long   op_UNK_NOP_2
                 .long   op_TXA
-                .long   op_XMA_imm
+                .long   op_UNK_XMA_imm
                 .long   op_STY_abs
                 .long   op_STA_abs
                 .long   op_STX_abs
-                .long   op_AAX_abs
+                .long   op_UNK_AAX_abs
                 .long   op_BCC
                 .long   op_STA_ind_y
-                .long   op_HANG
-                .long   op_AAX_ind_y
+                .long   op_UNK_HANG
+                .long   op_UNK_AAX_ind_y
                 .long   op_STY_zpage_x
                 .long   op_STA_zpage_x
                 .long   op_STX_zpage_y
-                .long   op_AAX_zpage_y
+                .long   op_UNK_AAX_zpage_y
                 .long   op_TYA
                 .long   op_STA_abs_y
                 .long   op_TXS
-                .long   op_AXS_abs_y
-                .long   op_TEY_abs_x
+                .long   op_UNK_AXS_abs_y
+                .long   op_UNK_TEY_abs_x
                 .long   op_STA_abs_x
-                .long   op_TEX_abs_y
-                .long   op_TEA_abs_y
+                .long   op_UNK_TEX_abs_y
+                .long   op_UNK_TEA_abs_y
                 .long   op_LDY_imm
                 .long   op_LDA_ind_x
                 .long   op_LDX_imm
-                .long   op_LAX_ind_x
+                .long   op_UNK_LAX_ind_x
                 .long   op_LDY_zpage
                 .long   op_LDA_zpage
                 .long   op_LDX_zpage
-                .long   op_LAX_zpage
+                .long   op_UNK_LAX_zpage
                 .long   op_TAY
                 .long   op_LDA_imm
                 .long   op_TAX
-                .long   op_AMA_imm
+                .long   op_UNK_AMA_imm
                 .long   op_LDY_abs
                 .long   op_LDA_abs
                 .long   op_LDX_abs
-                .long   op_LAX_abs
+                .long   op_UNK_LAX_abs
                 .long   op_BCS
                 .long   op_LDA_ind_y
-                .long   op_HANG
-                .long   op_LAX_ind_y
+                .long   op_UNK_HANG
+                .long   op_UNK_LAX_ind_y
                 .long   op_LDY_zpage_x
                 .long   op_LDA_zpage_x
                 .long   op_LDX_zpage_y
-                .long   op_LAX_zpage_y
+                .long   op_UNK_LAX_zpage_y
                 .long   op_CLV
                 .long   op_LDA_abs_y
                 .long   op_TSX
-                .long   op_LAS_abs_y
+                .long   op_UNK_LAS_abs_y
                 .long   op_LDY_abs_x
                 .long   op_LDA_abs_x
                 .long   op_LDX_abs_y
-                .long   op_LAX_abs_y
+                .long   op_UNK_LAX_abs_y
                 .long   op_CPY_imm
                 .long   op_CMP_ind_x
-                .long   op_NOP_2
-                .long   op_DCP_ind_x
+                .long   op_UNK_NOP_2
+                .long   op_UNK_DCP_ind_x
                 .long   op_CPY_zpage
                 .long   op_CMP_zpage
                 .long   op_DEC_zpage
-                .long   op_DCP_zpage
+                .long   op_UNK_DCP_zpage
                 .long   op_INY
                 .long   op_CMP_imm
                 .long   op_DEX
-                .long   op_AXM_imm
+                .long   op_UNK_AXM_imm
                 .long   op_CPY_abs
                 .long   op_CMP_abs
                 .long   op_DEC_abs
-                .long   op_DCP_abs
+                .long   op_UNK_DCP_abs
                 .long   op_BNE
                 .long   op_CMP_ind_y
-                .long   op_HANG
-                .long   op_DCP_ind_y
-                .long   op_NOP_2
+                .long   op_UNK_HANG
+                .long   op_UNK_DCP_ind_y
+                .long   op_UNK_NOP_2
                 .long   op_CMP_zpage_x
                 .long   op_DEC_zpage_x
-                .long   op_DCP_zpage_x
+                .long   op_UNK_DCP_zpage_x
                 .long   op_CLD
                 .long   op_CMP_abs_y
                 .long   op_NOP
-                .long   op_DCP_abs_y
-                .long   op_NOP_3
+                .long   op_UNK_DCP_abs_y
+                .long   op_UNK_NOP_3
                 .long   op_CMP_abs_x
                 .long   op_DEC_abs_x
-                .long   op_DCP_abs_x
+                .long   op_UNK_DCP_abs_x
                 .long   op_CPX_imm
                 .long   op_SBC_ind_x
-                .long   op_NOP_2
-                .long   op_ISB_ind_x
+                .long   op_UNK_NOP_2
+                .long   op_UNK_ISB_ind_x
                 .long   op_CPX_zpage
                 .long   op_SBC_zpage
                 .long   op_INC_zpage
-                .long   op_ISB_zpage
+                .long   op_UNK_ISB_zpage
                 .long   op_INX
                 .long   op_SBC_imm
                 .long   op_NOP
-                .long   op_ZBC_imm
+                .long   op_UNK_ZBC_imm
                 .long   op_CPX_abs
                 .long   op_SBC_abs
                 .long   op_INC_abs
-                .long   op_ISB_abs
+                .long   op_UNK_ISB_abs
                 .long   op_BEQ
                 .long   op_SBC_ind_y
-                .long   op_HANG
-                .long   op_ISB_ind_y
-                .long   op_NOP_2
+                .long   op_UNK_HANG
+                .long   op_UNK_ISB_ind_y
+                .long   op_UNK_NOP_2
                 .long   op_SBC_zpage_x
                 .long   op_INC_zpage_x
-                .long   op_ISB_zpage_x
+                .long   op_UNK_ISB_zpage_x
                 .long   op_SED
                 .long   op_SBC_abs_y
                 .long   op_NOP
-                .long   op_ISB_abs_y
-                .long   op_NOP_3
+                .long   op_UNK_ISB_abs_y
+                .long   op_UNK_NOP_3
                 .long   op_SBC_abs_x
                 .long   op_INC_abs_x
-                .long   op_ISB_abs_x
+                .long   op_UNK_ISB_abs_x
 

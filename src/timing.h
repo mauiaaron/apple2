@@ -13,7 +13,7 @@
 #ifndef _TIMING_H_
 #define _TIMING_H_
 
-#define APPLE2_HZ      1020000
+#define APPLE2_HZ      2040000
 #define NANOSECONDS 1000000000
 
 void timing_set_cpu_target_hz(unsigned long hz);

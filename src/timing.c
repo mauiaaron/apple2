@@ -11,6 +11,7 @@
  */
 
 #include "timing.h"
+#include "misc.h"
 
 #include <stdlib.h>
 #include <stdio.h>

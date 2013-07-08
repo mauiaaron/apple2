@@ -19,6 +19,7 @@
 
 #ifndef __ASSEMBLER__
 
+#include "common.h"
 #include <unistd.h>
 #include <sys/types.h>
 
