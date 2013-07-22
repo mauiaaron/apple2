@@ -43,8 +43,9 @@ struct cpu65_extra
 {
     uint16_t ea;        /* Last effective address */
     uint8_t d;          /* Last data byte written */
-    uint8_t op;         /* 1 = read occured, 2 = write, 3 = both */
-    uint8_t xcycles;    /* Last opcode extra cycles */
+    uint8_t rw;         /* 1 = read occured, 2 = write, 3 = both */
+    uint8_t opcode;     /* Last opcode */
+    uint8_t opcycles;   /* Last opcode extra cycles */
 };
 
 /* 6502 CPU models */

@@ -732,17 +732,19 @@ void c_read_random() {
 static void cpu_thread(void *dummyptr) {
     do
     {
+        LOG("cpu_thread : entering cpu65_run()...");
         cpu65_run();
         reinitialize();
     } while (1);
 }
 
 static void main_thread(void *dummyptr) {
+    struct timespec abstime = { .tv_sec=0, .tv_nsec=8333333 }; // 120Hz
     do
     {
-        // sleep waiting for the cpu thread to ping us that it's sleeping...
+        // sleep waiting for the cpu thread to ping us to render
         pthread_mutex_lock(&mutex);
-        pthread_cond_wait(&cond, &mutex);
+        pthread_cond_timedwait(&cond, &mutex, &abstime);
         pthread_mutex_unlock(&mutex);
 
         c_periodic_update(0);

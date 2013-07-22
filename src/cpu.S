@@ -32,8 +32,9 @@
 
 #define DebugCurrEA     SN(cpu65_debug)
 #define DebugCurrByte   SN(cpu65_debug)+2
-#define DebugCurrOp     SN(cpu65_debug)+3
-#define XCyclesCount    SN(cpu65_debug)+4
+#define DebugCurrRW     SN(cpu65_debug)+3
+#define DebugCycleCount SN(cpu65_debug)+4
+#define DebugCurrOpcode SN(cpu65_debug)+5
 
 /* -------------------------------------------------------------------------
     CPU (6502) Helper Routines
@@ -57,7 +58,7 @@
                         (,EffectiveAddr_E,8);                                  \
 
 #define GetFromEA_B                                                            \
-                orb     $1, DebugCurrOp;                                       \
+                orb     $1, DebugCurrRW;                                       \
                 call    *SN(cpu65_vmem)                                        \
                         (,EffectiveAddr_E,8);
 
@@ -71,7 +72,7 @@
                 (,EffectiveAddr_E,8);
 
 #define PutToEA_B                                                              \
-                orb     $2, DebugCurrOp;                                       \
+                orb     $2, DebugCurrRW;                                       \
                 orb     %al, DebugCurrByte;                                    \
                 call    *SN(cpu65_vmem)+4                                      \
                         (,EffectiveAddr_E,8);
@@ -89,10 +90,6 @@
                 movb    %al, %ah;                                              \
                 call    *SN(cpu65_vmem)                                        \
                         (,EffectiveAddr_E,8);                                  \
-
-// reset operation code before each instruction
-#define ZeroOp  movb    $0, DebugCurrOp;                                       \
-                movb    $0, XCyclesCount;
 
 // NOTE: the orb functions as a move, but we want to
 // set the flags and we know %ah is zero
@@ -139,12 +136,12 @@
 9:
 
 #define BranchXCycles                                                          \
-                incb    XCyclesCount; /* +1 cycle branch taken */              \
+                incb    DebugCycleCount; /* +1 branch taken */                 \
                 pushl   %ebx;                                                  \
                 movw    PC_Reg, %bx;                                           \
                 addb    %al, %bl;                                              \
                 jnc     9f;                                                    \
-                incb    XCyclesCount; /* +1 cycle branch across pg boundary */ \
+                incb    DebugCycleCount; /* +1 branch across pg boundary */    \
 9:              addw    %ax, PC_Reg;                                           \
                 popl    %ebx;
 
@@ -234,7 +231,7 @@
                 addb    X_Reg, %al;                                            \
                 jnc     9f;                                                    \
                 adcb    $0, %ah;                                               \
-                incb    XCyclesCount; /* +1 cycle on page boundary */          \
+                incb    DebugCycleCount; /* +1 cycle on page boundary */       \
 9:              movl    %eax, EffectiveAddr_E;
 
 #define GetAbs_Y                                                               \
@@ -242,7 +239,7 @@
                 addb    Y_Reg, %al;                                            \
                 jnc     9f;                                                    \
                 adcb    $0, %ah;                                               \
-                incb    XCyclesCount; /* +1 cycle on page boundary */          \
+                incb    DebugCycleCount; /* +1 cycle on page boundary */       \
 9:              movl    %eax, EffectiveAddr_E;
 
 /* Absolute Indirect Addressing - The second and third bytes of the
@@ -309,7 +306,7 @@
                 addb    Y_Reg, %al;                                            \
                 jnc 9f;                                                        \
                 adcb    $0, %ah;                                               \
-                incb    XCyclesCount; /* +1 cycle on page boundary */          \
+                incb    DebugCycleCount; /* +1 cycle on page boundary */       \
 9:              movl    %eax, EffectiveAddr_E;
 
 #define DoADC_b GetFromEA_B                                                    \
@@ -464,7 +461,7 @@
 
 // Decimal mode
 op_ADC_dec:
-                incb    XCyclesCount            // +1 cycle
+                incb    DebugCycleCount         // +1 cycle
                 DoADC_d
                 Continue
 
@@ -1590,7 +1587,7 @@ op_RTS:
    ---------------------------------- */
 
 op_SBC_dec:
-                incb    XCyclesCount            // +1 cycle
+                incb    DebugCycleCount         // +1 cycle
                 DoSBC_d
                 Continue
 
@@ -1727,7 +1724,7 @@ op_STA_imm:
 op_STA_zpage:
                 GetZPage
                 DoSTA
-                incb    XCyclesCount            // +1 cycle on write
+                incb    DebugCycleCount         // +1 cycle on write
                 Continue
 
 op_STA_zpage_x:
@@ -1747,13 +1744,13 @@ op_STA_abs:
 op_STA_abs_x:
                 GetAbs_X
                 DoSTA
-                incb    XCyclesCount            // +1 cycle on write
+                incb    DebugCycleCount         // +1 cycle on write
                 Continue
 
 op_STA_abs_y:
                 GetAbs_Y
                 DoSTA
-                incb    XCyclesCount            // +1 cycle on write
+                incb    DebugCycleCount         // +1 cycle on write
                 Continue
 
 op_STA_ind_x:
@@ -1764,7 +1761,7 @@ op_STA_ind_x:
 op_STA_ind_y:
                 GetIndZPage_Y
                 DoSTA
-                incb    XCyclesCount            // +1 cycle on write
+                incb    DebugCycleCount         // +1 cycle on write
                 Continue
 
 // 65c02 : 0x92
@@ -1817,7 +1814,7 @@ op_RMB7_65c02:
 op_STX_zpage:
                 GetZPage
                 DoSTX
-                incb    XCyclesCount            // +1 cycle on write
+                incb    DebugCycleCount         // +1 cycle on write
                 Continue
 
 // HACK : is this used? need to study coverage ...
@@ -1838,7 +1835,7 @@ op_STX_abs:
 op_STY_zpage:
                 GetZPage
                 DoSTY
-                incb    XCyclesCount            // +1 cycle on write
+                incb    DebugCycleCount         // +1 cycle on write
                 Continue
 
 op_STY_zpage_x:
@@ -1860,7 +1857,7 @@ op_STY_abs:
 op_STZ_zpage:
                 GetZPage
                 DoSTZ
-                incb    XCyclesCount            // +1 cycle on write
+                incb    DebugCycleCount         // +1 cycle on write
                 Continue
 
 // 65c02 : 0x74
@@ -1878,7 +1875,7 @@ op_STZ_abs:
 op_STZ_abs_x:
                 GetAbs_X
                 DoSTZ
-                incb    XCyclesCount            // +1 cycle on write
+                incb    DebugCycleCount         // +1 cycle on write
                 Continue
 
 /* ----------------------------------
@@ -2664,8 +2661,10 @@ continue:       SaveState
                 call    SN(timing_throttle)
                 ReplaceState
                 xorb    %ah, %ah
-                ZeroOp
+                movb    $0, DebugCurrRW
+                movb    $0, DebugCycleCount
                 GetFromPC_B
+                movb    $al, DebugCurrOpcode
                 jmp     *cpu65__opcodes(,%eax,4)
 
 /* Exception handler */
