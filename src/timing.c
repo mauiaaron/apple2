@@ -10,32 +10,26 @@
  *
  */
 
-#include "timing.h"
-#include "misc.h"
-
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdint.h>
 #include <time.h>
 #include <pthread.h>
 #include <limits.h>
 
-#define CALIBRATE_HZ 120
+#include "timing.h"
+#include "misc.h"
+#include "cpu.h"
 
-static unsigned long cpu_target_hz       = APPLE2_HZ;                   // target clock speed
-static unsigned long calibrate_interval  = NANOSECONDS / CALIBRATE_HZ;  // calibration interval for drifting
-static unsigned long cycle_nanoseconds   = NANOSECONDS / APPLE2_HZ;     // nanosecs per cycle
-static unsigned int  cycle_nanoseconds_count;
+#define CALIBRATE_HZ 100
 
-static struct timespec deltat, t0, ti, tj;
+static unsigned long CPU_TARGET_HZ = APPLE2_HZ;                         // target clock speed
+static unsigned long CALIBRATE_INTERVAL = NANOSECONDS / CALIBRATE_HZ;   // calibration interval for drifting
+static float CYCLE_NSECS = NANOSECONDS / (float)APPLE2_HZ;              // nanosecs per cycle
 
-static unsigned long cycle_count=0;                 // CPU cycle counter
-static int spinloop_count=0;               // spin loop counter
+static struct timespec ti;
 
-static long sleep_adjust=0;
-static long sleep_adjust_inc=0;
-
-extern pthread_mutex_t mutex;
-extern pthread_cond_t cond;
+static int spinloop_count=0;                                            // spin loop counter
 
 // -----------------------------------------------------------------------------
 
@@ -74,7 +68,7 @@ static inline void _spin_loop(unsigned long c)
 
 static void _determine_initial_spinloop_counter()
 {
-    struct timespec s0, s1;
+    struct timespec s0, s1, deltat;
 
     // time the spinloop to determine a good starting value for the spin counter
 
@@ -106,11 +100,9 @@ static void _determine_initial_spinloop_counter()
     avg_spin_nsecs = (avg_spin_nsecs / samples);
     printf("average  = %lu nsec\n", avg_spin_nsecs);
 
-    spinloop_count = cycle_nanoseconds * spinloop_count / avg_spin_nsecs;
+    spinloop_count = CYCLE_NSECS * spinloop_count / avg_spin_nsecs;
 
-    cycle_nanoseconds_count = cycle_nanoseconds / spinloop_count;
-
-    printf("counter for a single cycle = %d\n", spinloop_count);
+    printf("counter for a single %fns cycle = %d\n", CYCLE_NSECS, spinloop_count);
 }
 
 void timing_initialize() {
@@ -118,8 +110,7 @@ void timing_initialize() {
     // should do this only on startup
     _determine_initial_spinloop_counter();
 
-    clock_gettime(CLOCK_MONOTONIC, &t0);
-    ti=t0;
+    clock_gettime(CLOCK_MONOTONIC, &ti);
 }
 
 void timing_set_cpu_scale(unsigned int scale)
@@ -128,71 +119,64 @@ void timing_set_cpu_scale(unsigned int scale)
 }
 
 /*
- * Throttles 6502 CPU down to the target CPU frequency (default is speed of original Apple //e).
+ * Calibrate emulator clock to real clock ...
  *
- * This uses an adaptive spin loop to stay closer to the target CPU frequency.
- *
+ * NOTE: these calculations could overflow if emulator speed is severely dampened back...
  */
-void timing_throttle()
+static int _calibrate_clock (long drift_interval_nsecs)
 {
-    static unsigned int drift_interval_counter=0;           // in nsecs since last
-    static unsigned int instruction_interval_counter=0;     // instruction count since last
-    static unsigned int spin_adjust_interval=INT_MAX;
-    static int8_t spin_adjust_count=0;                      // +/- 1
+    return 0;
+    // HACK FIXME : this is broken, plz debug, kthxbye!
 
-    ++instruction_interval_counter;
-
-    unsigned int opcycles = cpu65__opcycles[cpu65_debug.opcode] + cpu65_debug.opcycles;
-    if (!opcycles)
-    {
-        opcycles = 2; // assume 2 cycles for UNK opcodes
-    }
-    cycle_count += opcycles;
-
-    int8_t c = instruction_interval_counter%spin_adjust_interval ? spin_adjust_count : 0;
-    _spin_loop(opcycles * (spinloop_count + c) );
-    drift_interval_counter += c*cycle_nanoseconds;
-
-    if (drift_interval_counter < calibrate_interval)
-    {
-        return;
-    }
-
-    // -------------------------------------------------------------------------
-    // calibrate emulator clock to real clock ...
-
+    struct timespec tj, deltat;
     clock_gettime(CLOCK_MONOTONIC, &tj);
     deltat = timespec_diff(ti, tj);
     ti=tj;
 
-    // NOTE: these calculations could overflow if emulator speed is severely dampened back...
-    unsigned long real_counter = NANOSECONDS * deltat.tv_sec;
-    real_counter += deltat.tv_nsec;
-    long diff_nsecs = real_counter - drift_interval_counter;    // whole +/- nsec diff
+    long real_nsecs = NANOSECONDS * deltat.tv_sec + deltat.tv_nsec;
+    int drift_nsecs = (int)(drift_interval_nsecs - real_nsecs);             // +/- nsec drift
+    int drift_count = (int)(drift_nsecs * (spinloop_count / CYCLE_NSECS) ); // +/- count drift
 
-    float nsecs_per_oneloop = cycle_nanoseconds/(float)spinloop_count;
-    unsigned int instruction_interval_nsecs = instruction_interval_counter * nsecs_per_oneloop;
+    // adjust spinloop_count ...
+    spinloop_count += drift_count / CALIBRATE_INTERVAL;
 
-    // reset
-    drift_interval_counter=0;
-    instruction_interval_counter=0;
+    // ideally we should return a sub-interval here ...
+    return 0;
+}
 
-    // calculate spin adjustment
-    if (diff_nsecs == 0)
+/*
+ * Throttles 6502 CPU down to the target CPU frequency (default is speed of original Apple //e).
+ *
+ * This uses an adaptive spin loop to stay closer to the target CPU frequency.
+ */
+void timing_throttle()
+{
+    static float drift_interval=0.0;
+    static int spinloop_adjust=0;
+
+    uint8_t opcycles = cpu65__opcycles[cpu65_debug.opcode] + cpu65_debug.opcycles;
+    uint8_t c=0;
+    if (spinloop_adjust < 0)
     {
-        // nothing to do
+        c=-1;
+        ++spinloop_adjust;
     }
-    else if (abs(diff_nsecs) > instruction_interval_nsecs)
+    else if (spinloop_adjust > 0)
     {
-        // spin for additional +/- X each instruction
-        spinloop_count += diff_nsecs / instruction_interval_nsecs;
-        spin_adjust_interval=INT_MAX;
+        c=1;
+        --spinloop_adjust;
     }
-    else
+
+    // spin for the desired/estimated number of nsecs
+    _spin_loop(opcycles * (spinloop_count+c));
+
+    drift_interval += opcycles*CYCLE_NSECS;
+
+    if (drift_interval > CALIBRATE_INTERVAL)
     {
-        // sub adjustment : spin for additional +/- 1 every interval
-        spin_adjust_count = diff_nsecs < 0 ? -1 : 1;
-        spin_adjust_interval = instruction_interval_nsecs / abs(diff_nsecs);
+        // perform calibration
+        spinloop_adjust = _calibrate_clock((long)drift_interval);
+        drift_interval = 0.0;
     }
 }
 
