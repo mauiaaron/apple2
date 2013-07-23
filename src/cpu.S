@@ -33,8 +33,8 @@
 #define DebugCurrEA     SN(cpu65_debug)
 #define DebugCurrByte   SN(cpu65_debug)+2
 #define DebugCurrRW     SN(cpu65_debug)+3
-#define DebugCycleCount SN(cpu65_debug)+4
-#define DebugCurrOpcode SN(cpu65_debug)+5
+#define DebugCurrOpcode SN(cpu65_debug)+4
+#define DebugCycleCount SN(cpu65_debug)+5
 
 /* -------------------------------------------------------------------------
     CPU (6502) Helper Routines
@@ -2664,7 +2664,7 @@ continue:       SaveState
                 movb    $0, DebugCurrRW
                 movb    $0, DebugCycleCount
                 GetFromPC_B
-                movb    $al, DebugCurrOpcode
+                movb    %al, DebugCurrOpcode
                 jmp     *cpu65__opcodes(,%eax,4)
 
 /* Exception handler */
