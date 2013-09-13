@@ -22,11 +22,11 @@
 #ifndef NDEBUG
 
 #if defined(__GNUC__)
-    #pragma GCC diagnostic push
-    #pragma GCC diagnostic ignored "-Wunused-variable"
+#   pragma GCC diagnostic push
+#   pragma GCC diagnostic ignored "-Wunused-variable"
 #elif defined(__clang__)
-    #pragma clang diagnostic push
-    #pragma clang diagnostic ignored "-Werror=unused-variable"
+#   pragma clang diagnostic push
+#   pragma clang diagnostic ignored "-Werror=unused-variable"
 #endif
 
 static FILE *error_log=0;
@@ -41,12 +41,18 @@ static FILE *error_log=0;
         fprintf(error_log ? error_log : stderr, "\n");                                  \
     }
 
+#define ERRQUIT(...) \
+    { \
+        ERRLOG(__VA_ARGS__); \
+        exit(0); \
+    }
+
 #else // NDEBUG
 
 #if defined(__GNUC__)
-    #pragma GCC diagnostic pop
+#   pragma GCC diagnostic pop
 #elif defined(__clang__)
-    #pragma clang diagnostic pop
+#   pragma clang diagnostic pop
 #endif
 
 #define ERRLOG(...)                                                                     \
