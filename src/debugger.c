@@ -893,13 +893,13 @@ int at_haltpt() {
         }
     }
 
-    if (cpu65_debug.op)   /* only check watchpoints if read/write occured */
+    if (cpu65_debug.rw)   /* only check watchpoints if read/write occured */
     {
         for (i = 0; i < MAX_BRKPTS; i++)
         {
             if (cpu65_debug.ea == watchpoints[i])
             {
-                if (cpu65_debug.op & 2)
+                if (cpu65_debug.rw & 2)
                 {
                     sprintf(second_buf[num_buffer_lines++],
                             "wrote: %04X: %02X",
@@ -911,7 +911,7 @@ int at_haltpt() {
                             "read: %04X", watchpoints[i]);
                 }
 
-                cpu65_debug.op = 0; /* only allow WP to trip once */
+                cpu65_debug.rw = 0; /* only allow WP to trip once */
             }
         }
     }
