@@ -191,7 +191,9 @@ E(read_keyboard_strobe)
 		ret
 
 E(read_random)
+                pushal
 		call	SN(c_read_random)
+                popal
 		movb	SN(random_value), %al
 		ret
 
