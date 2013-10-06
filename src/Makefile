@@ -75,7 +75,7 @@ EXTRA_PROGRAMS = apple2 xapple2 xapple2-80col
 bin_PROGRAMS = xapple2 xapple2-80col
 
 EXTRA_apple2_SOURCES = debugger.c opcodes.c debug.c joystick.c
-apple2_SOURCES = cpu.S memory.S display.S glue.S keys.c prefs.c disk.c                  interface.c misc.c font.c svideo.c cpu-supp.c 		 vidsup.c timing.c
+apple2_SOURCES = cpu.S memory.S display.S glue.S keys.c prefs.c disk.c                  interface.c misc.c soundcore.c soundcore-alsa.c speaker.c font.c svideo.c cpu-supp.c 		 vidsup.c timing.c
 
 
 apple2_LDADD =  joystick.o -lvga
@@ -83,18 +83,18 @@ apple2_DEPENDENCIES =  joystick.o
 
 EXTRA_xapple2_SOURCES = debugger.c opcodes.c debug.c joystick.c
 
-xapple2_SOURCES = cpu.S memory.S display.S glue.S keys.c prefs.c                   disk.c interface.c misc.c font.c xvideo.c                   cpu-supp.c vidsup.c timing.c
+xapple2_SOURCES = cpu.S memory.S display.S glue.S keys.c prefs.c                   disk.c interface.c misc.c soundcore.c soundcore-alsa.c speaker.c font.c xvideo.c                   cpu-supp.c vidsup.c timing.c
 
 
-xapple2_LDADD =  joystick.o  -L/usr/lib/i386-linux-gnu -lX11 -lXext -lrt
+xapple2_LDADD =  joystick.o  -L/usr/lib/i386-linux-gnu -lX11 -lXext -lrt -lasound
 xapple2_DEPENDENCIES =  joystick.o
 
 EXTRA_xapple2_80col_SOURCES = debugger.c opcodes.c debug.c joystick.c
 
-xapple2_80col_SOURCES = cpu.S memory.S glue.S keys.c prefs.c disk.c                     font.c cpu-supp.c misc.c interface.c timing.c
+xapple2_80col_SOURCES = cpu.S memory.S glue.S keys.c prefs.c disk.c                     font.c cpu-supp.c misc.c soundcore.c soundcore-alsa.c speaker.c interface.c timing.c
 
 
-xapple2_80col_LDADD =  joystick.o                       vidsup-80.o xvideo-80.o display-80.o                        -L/usr/lib/i386-linux-gnu -lX11 -lXext -lrt
+xapple2_80col_LDADD =  joystick.o                       vidsup-80.o xvideo-80.o display-80.o                        -L/usr/lib/i386-linux-gnu -lX11 -lXext -lrt -lasound
 
 xapple2_80col_DEPENDENCIES =  joystick.o                       vidsup-80.o xvideo-80.o display-80.o
 
@@ -111,7 +111,7 @@ CONFIG_CLEAN_FILES =
 PROGRAMS =  $(bin_PROGRAMS) $(noinst_PROGRAMS)
 
 
-DEFS =  -DPACKAGE=\"apple2-emul\" -DVERSION=\"0.7.4\" -DPC_JOYSTICK=1 -DHAVE_UNISTD_H=1 -DHAVE_GETPAGESIZE=1 -DHAVE_MMAP=1 -DNO_UNDERSCORES=1 -DDEBUGGER=1 -DAPPLE_IIE=1 -DMAX_APPLE_DELAY=1000  -I. -I$(srcdir) 
+DEFS =  -DPACKAGE=\"apple2-emul\" -DVERSION=\"0.7.4\" -DPC_JOYSTICK=1 -DHAVE_UNISTD_H=1 -DHAVE_GETPAGESIZE=1 -DHAVE_MMAP=1 -DNO_UNDERSCORES=1 -DDEBUGGER=1 -DAPPLE2IX=1 -DAPPLE_IIE=1  -I. -I$(srcdir) 
 CPPFLAGS = 
 LDFLAGS = 
 LIBS = 
@@ -119,11 +119,11 @@ X_CFLAGS =
 X_LIBS = 
 X_EXTRA_LIBS = 
 X_PRE_LIBS =  -lSM -lICE
-apple2_OBJECTS =  cpu.o memory.o display.o glue.o keys.o prefs.o disk.o     debugger.o opcodes.o debug.o      interface.o misc.o font.o svideo.o cpu-supp.o vidsup.o timing.o
+apple2_OBJECTS =  cpu.o memory.o display.o glue.o keys.o prefs.o disk.o     debugger.o opcodes.o debug.o      interface.o misc.o soundcore.o soundcore-alsa.o speaker.o font.o svideo.o cpu-supp.o vidsup.o timing.o
 apple2_LDFLAGS = 
-xapple2_OBJECTS =  cpu.o memory.o display.o glue.o keys.o prefs.o disk.o     debugger.o opcodes.o debug.o       interface.o misc.o font.o xvideo.o cpu-supp.o vidsup.o timing.o
+xapple2_OBJECTS =  cpu.o memory.o display.o glue.o keys.o prefs.o disk.o     debugger.o opcodes.o debug.o       interface.o misc.o soundcore.o soundcore-alsa.o speaker.o font.o xvideo.o cpu-supp.o vidsup.o timing.o
 xapple2_LDFLAGS = 
-xapple2_80col_OBJECTS =  cpu.o memory.o glue.o keys.o prefs.o disk.o      debugger.o opcodes.o debug.o       font.o cpu-supp.o misc.o interface.o timing.o
+xapple2_80col_OBJECTS =  cpu.o memory.o glue.o keys.o prefs.o disk.o      debugger.o opcodes.o debug.o       font.o cpu-supp.o misc.o soundcore.o soundcore-alsa.o speaker.o interface.o timing.o
 xapple2_80col_LDFLAGS = 
 genfont_SOURCES = genfont.c
 genfont_OBJECTS =  genfont.o
