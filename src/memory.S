@@ -198,9 +198,9 @@ E(read_random)
 		ret
 
 E(read_speaker_toggle_pc)
-		inb	$0x61, %al
-		xorb	$0x2, %al
-		outb	%al, $0x61
+                pushal
+		call	SN(SpkrToggle)
+                popal // FIXME, do we need to set %al to something here?
 		ret
 
 E(read_switch_primary_page)

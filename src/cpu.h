@@ -75,6 +75,9 @@ extern unsigned char cpu65_flags_encode[256];
 extern unsigned char cpu65_flags_decode[256];
 
 extern unsigned int cpu65_delay;
+extern int16_t cpu65_cycle_count;
+extern int16_t cpu65_cycles_to_execute;
+extern uint8_t cpu65_do_reboot;
 
 #endif /* !__ASSEMBLER__ */
 

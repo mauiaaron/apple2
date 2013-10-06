@@ -27,14 +27,17 @@
                 .comm   SN(cpu65_delay),4
                 .comm   SN(cpu65__opcodes),1024
                 .comm   SN(cpu65__signal),1
-                .comm   SN(cpu65_debug),5
+                .comm   SN(cpu65_do_reboot),1
+                .comm   SN(cpu65_cycle_count),2
+                .comm   SN(cpu65_cycles_to_execute),2
+                .comm   SN(cpu65_debug),7
                 .comm   SN(cpu65_current),7
 
 #define DebugCurrEA     SN(cpu65_debug)
 #define DebugCurrByte   SN(cpu65_debug)+2
 #define DebugCurrRW     SN(cpu65_debug)+3
 #define DebugCurrOpcode SN(cpu65_debug)+4
-#define DebugCycleCount SN(cpu65_debug)+5
+#define DebugCycleCount SN(cpu65_debug)+5               // TODO FIXME : need a better name here and possibly in the .h file too (reflecting the fact that this is an xtra cycles counter
 
 /* -------------------------------------------------------------------------
     CPU (6502) Helper Routines
@@ -55,7 +58,13 @@
                 decw    EffectiveAddr;                                         \
                 movb    %al, %ah;                                              \
                 call    *SN(cpu65_vmem)                                        \
-                        (,EffectiveAddr_E,8);                                  \
+                        (,EffectiveAddr_E,8);
+
+#define JumpNextInstruction                                                    \
+                GetFromPC_B                                                    \
+                movb    %al, DebugCurrOpcode;                                  \
+                movb    $0, DebugCycleCount;                                   \
+                jmp     *cpu65__opcodes(,%eax,4);
 
 #define GetFromEA_B                                                            \
                 orb     $1, DebugCurrRW;                                       \
@@ -91,8 +100,6 @@
                 call    *SN(cpu65_vmem)                                        \
                         (,EffectiveAddr_E,8);                                  \
 
-// NOTE: the orb functions as a move, but we want to
-// set the flags and we know %ah is zero
 #define Continue                                                               \
                 xorl    %eax, %eax;                                            \
                 orb     SN(cpu65__signal), %ah;                                \
@@ -2654,20 +2661,26 @@ op_UNK_XMA_imm:
 #pragma mark cpu main entry
 
 /* -------------------------------------------------------------------------
-        CPU throttling and continue
+        CPU continue
+        Keep executing until we've executed >= cpu65_cycles_to_execute
    ------------------------------------------------------------------------- */
 
-continue:       SaveState
-                call    SN(timing_throttle)
-                ReplaceState
-                xorb    %ah, %ah
-                movb    $0, DebugCurrRW
-                movb    $0, DebugCycleCount
-                GetFromPC_B
-                movb    %al, DebugCurrOpcode
-                jmp     *cpu65__opcodes(,%eax,4)
+continue:       xorl    %eax, %eax
+                movb    DebugCurrOpcode, %al
+                movb    SN(cpu65__opcycles)(,%eax,1), %al
+                addb    DebugCycleCount, %al
+                addw    %ax, SN(cpu65_cycle_count)              // TODO: cycle counting is slightly incorrect, it should be done earlier per instruction ...
+                subw    %ax, SN(cpu65_cycles_to_execute)
+                jle     1f
+                JumpNextInstruction
+1:              SaveState
+                popal
+                ret
 
-/* Exception handler */
+/* -------------------------------------------------------------------------
+        Exception handler
+   ------------------------------------------------------------------------- */
+
 exception:      cmpb    $RebootSig, %ah
                 jz      ex_reboot
                 cmpb    $ResetSig, %ah
@@ -2688,11 +2701,11 @@ ex_enter:       SaveState
                 popal
                 ReplaceState
                 xorb    %ah, %ah
-                GetFromPC_B
-                jmp     *cpu65__opcodes(,%eax,4)
+                JumpNextInstruction
 
-ex_reboot:      popal                                       // EXIT CPURUN
-                movb    $0, SN(cpu65__signal)
+ex_reboot:      movb    $0, SN(cpu65__signal)               // EXIT CPURUN
+                movb    $1, SN(cpu65_do_reboot)
+                popal
                 ret
 
 ex_reset:       movb    $0, SN(cpu65__signal)
@@ -2700,14 +2713,18 @@ ex_reset:       movb    $0, SN(cpu65__signal)
                 GetFromEA_W
                 movw    %ax, PC_Reg
                 xorb    %ah, %ah
-                GetFromPC_B
-                jmp     *cpu65__opcodes(,%eax,4)
+                JumpNextInstruction
 
 /* -------------------------------------------------------------------------
         CPU thread run "loop"
    ------------------------------------------------------------------------- */
 E(cpu65_run)
                 pushal                                      // ENTER CPURUN
+                cmpb    $0, SN(cpu65_do_reboot)
+                jnz     1f
+                ReplaceState
+                JumpNextInstruction
+1:              movb    $0, SN(cpu65_do_reboot)
                 /* Zero all registers, as well as the unused 32-bit parts
                  * of variables. (which may need to be kept 0)
                  *
@@ -2720,7 +2737,7 @@ E(cpu65_run)
                 movl    $0x1FF, %edx # Stack pointer
                 jmp     ex_reset
 
-E (cpu65_direct_write)
+E(cpu65_direct_write)
                 /* NB: dependent on register choices */
                 pushl   %edi
                 movl    8(%esp),%edi
@@ -2732,10 +2749,9 @@ E (cpu65_direct_write)
 // steps the simulation while remaining in the debugger's control
 E(cpu65_step)
                 pushal
-                movb    $DebugStepSig,SN(cpu65__signal)
+                movb    $DebugStepSig, SN(cpu65__signal)
                 ReplaceState
-                GetFromPC_B
-                jmp     *cpu65__opcodes(,%eax,4)
+                JumpNextInstruction
 
 #pragma mark -
 #pragma mark tables

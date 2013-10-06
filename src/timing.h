@@ -1,26 +1,61 @@
 /*
- * Apple // emulator for Linux
+ * Apple // emulator for *nix
  *
- * CPU Timing Support.
+ * This software package is subject to the GNU General Public License
+ * version 2 or later (your choice) as published by the Free Software
+ * Foundation.
  *
- * Mostly this adds support for specifically throttling the emulator speed to
- * match a 1.02MHz Apple //e.
+ * THERE ARE NO WARRANTIES WHATSOEVER.
  *
- * Added 2013 by Aaron Culliney
+ */
+
+/*
+ * 65c02 CPU Timing Support.
+ *
+ * Copyleft 2013 Aaron Culliney
  *
  */
 
 #ifndef _TIMING_H_
 #define _TIMING_H_
 
-#define APPLE2_HZ      1020000
+#include "common.h"
+
 #define NANOSECONDS 1000000000
 
-// 0 = run as fast as possible, 1 = approximate apple, X = 1/X rate
-void timing_set_cpu_scale(unsigned int scale);
+// timing values cribbed from AppleWin
+
+// 14318181.81...
+#define _M14 (157500000.0 / 11.0)
+
+// 65 cycles per 912 14M clocks = 1020484.45...
+#define CLK_6502 ((_M14 * 65.0) / 912.0)
+
+#define CPU_SCALE_SLOWEST 0.25
+#define CPU_SCALE_FASTEST 4.005
+#define CPU_SCALE_STEP_DIV 0.01
+#define CPU_SCALE_STEP 0.05
+
+#define SPKR_SAMPLE_RATE 44100
+
+extern double g_fCurrentCLK6502;
+extern bool g_bFullSpeed;
+extern uint64_t g_nCumulativeCycles;
+extern int g_nCpuCyclesFeedback;
+extern double cpu_scale_factor;
+
+struct timespec timespec_diff(struct timespec start, struct timespec end, bool *negative);
+
+bool timing_is_fullspeed();
+
+void timing_enable_fullspeed();
+
+void timing_enable_regular_speed();
 
 void timing_initialize();
 
-void timing_throttle();
+void cpu_thread();
+
+void CpuCalcCycles(const unsigned long nExecutedCycles);
 
 #endif // whole file

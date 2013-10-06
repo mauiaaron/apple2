@@ -1,46 +1,66 @@
 /*
- * Apple // emulator for Linux
+ * Apple // emulator for *nix 
  *
- * CPU Timing Support.
+ * This software package is subject to the GNU General Public License
+ * version 2 or later (your choice) as published by the Free Software
+ * Foundation.
  *
- * Mostly this adds support for specifically throttling the emulator speed to
- * match a 1.02MHz Apple //e.
- *
- * Added 2013 by Aaron Culliney
+ * THERE ARE NO WARRANTIES WHATSOEVER.
  *
  */
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdint.h>
-#include <time.h>
-#include <pthread.h>
-#include <limits.h>
+/*
+ * 65c02 CPU Timing Support. Some source derived from AppleWin.
+ *
+ * Copyleft 2013 Aaron Culliney
+ *
+ */
 
 #include "timing.h"
 #include "misc.h"
 #include "cpu.h"
+#include "speaker.h"
+#include "keys.h"
 
-#define CALIBRATE_HZ 100
+#define EXECUTION_PERIOD_NSECS 1000000  // AppleWin: nExecutionPeriodUsec
 
-static unsigned long CPU_TARGET_HZ = APPLE2_HZ;                             // target clock speed
-static unsigned long CALIBRATE_INTERVAL_NSECS = NANOSECONDS / CALIBRATE_HZ; // calibration interval for drifting
-static float CYCLE_NSECS = NANOSECONDS / (float)APPLE2_HZ;                  // nanosecs per cycle
+extern void cpu65_run();
 
-static struct timespec ti;
-static float spin_ratio=0.0;
+double g_fCurrentCLK6502 = CLK_6502;
+bool g_bFullSpeed = false; // HACK TODO FIXME : prolly shouldn't be global anymore -- don't think it's necessary for speaker/soundcore/etc anymore ...
+uint64_t g_nCumulativeCycles = 0;       // cumulative cycles since emulator (re)start
+int g_nCpuCyclesFeedback = 0;
+double cpu_scale_factor = 1.0;
+
+static unsigned int g_nCyclesExecuted; // # of cycles executed up to last IO access
 
 // -----------------------------------------------------------------------------
 
-// assuming end > start, returns end - start
-static inline struct timespec timespec_diff(struct timespec start, struct timespec end) {
+struct timespec timespec_diff(struct timespec start, struct timespec end, bool *negative) {
     struct timespec t;
+
+    if (*negative)
+    {
+        *negative = false;
+    }
+
+    // if start > end, swizzle...
+    if ( (start.tv_sec > end.tv_sec) || ((start.tv_sec == end.tv_sec) && (start.tv_nsec > end.tv_nsec)) )
+    {
+        t=start;
+        start=end;
+        end=t;
+        if (negative)
+        {
+            *negative = true;
+        }
+    }
 
     // assuming time_t is signed ...
     if (end.tv_nsec < start.tv_nsec)
     {
         t.tv_sec  = end.tv_sec - start.tv_sec - 1;
-        t.tv_nsec = NANOSECONDS + end.tv_nsec - start.tv_nsec;
+        t.tv_nsec = 1000000000 + end.tv_nsec - start.tv_nsec;
     }
     else
     {
@@ -51,114 +71,176 @@ static inline struct timespec timespec_diff(struct timespec start, struct timesp
     return t;
 }
 
-// spin loop to throttle to target CPU Hz
-static inline void _spin_loop(unsigned long c)
-{
-    static volatile unsigned int spinney=0; // volatile to prevent being optimized away
-    for (unsigned long i=0; i<c; i++)
+static inline struct timespec timespec_add(struct timespec start, unsigned long nsecs) {
+
+    start.tv_nsec += nsecs;
+    if (start.tv_nsec > NANOSECONDS)
     {
-        ++spinney;
+        start.tv_sec += (start.tv_nsec / NANOSECONDS);
+        start.tv_nsec %= NANOSECONDS;
+    }
+
+    return start;
+}
+
+bool timing_is_fullspeed()
+{
+    return g_bFullSpeed;
+}
+
+void timing_enable_fullspeed()
+{
+    if (!g_bFullSpeed)
+    {
+        g_bFullSpeed = true;
+        c_disable_sound_hooks();
+        timing_initialize();
     }
 }
 
-static void _determine_initial_spinloop_counter()
+void timing_enable_regular_speed()
 {
-    struct timespec s0, s1, deltat;
+    if (g_bFullSpeed)
+    {
+        g_bFullSpeed = false;
+        c_initialize_sound_hooks();
+        timing_initialize();
+    }
+}
 
-    // time the spinloop to determine a good starting value for the spin counter
+void timing_initialize()
+{
 
-    unsigned long avg_spin_nsecs = 0;
-    unsigned int const samples = 5;
-    unsigned int i=0;
-    unsigned int spinloop_count = 250000000;
+    if (g_bFullSpeed)
+    {
+        LOG("timing_initialize() emulation at fullspeed ...");
+        return;
+    }
+
+    g_fCurrentCLK6502 = CLK_6502 * cpu_scale_factor;
+    // this is extracted out of SetClksPerSpkrSample -- speaker.c
+    g_fClksPerSpkrSample = (double) (UINT) (g_fCurrentCLK6502 / (double)SPKR_SAMPLE_RATE);
+    SpkrReinitialize();
+
+    LOG("timing_initialize() ... ClockRate:%0.2lf  ClockCyclesPerSpeakerSample:%0.2lf", g_fCurrentCLK6502, g_fClksPerSpkrSample);
+}
+
+void cpu_thread(void *dummyptr) {
+    struct timespec deltat;
+    struct timespec t0;         // the target timer
+    struct timespec ti, tj;     // actual time samples
+    bool negative = false;
+    long drift_adj_nsecs = 0;         // generic drift adjustment between target and actual
+
+    unsigned long dbg_ticks = 0;
+
     do
     {
-        clock_gettime(CLOCK_MONOTONIC, &s0);
-        _spin_loop(spinloop_count);
-        clock_gettime(CLOCK_MONOTONIC, &s1);
-        deltat = timespec_diff(s0, s1);
+        g_nCumulativeCycles = 0;
+        static int16_t cycles_adjust = 0;
+        LOG("cpu_thread : entering cpu65_run()...");
 
-        if (deltat.tv_sec > 0)
-        {
-            LOG("oops long wait (>= %lu sec) adjusting loop count (%d -> %d)", deltat.tv_sec, spinloop_count, spinloop_count>>1);
-            spinloop_count >>= 1;
-            i = 0;
-            avg_spin_nsecs = 0;
-            continue;
-        }
+        clock_gettime(CLOCK_MONOTONIC, &t0);
+        do {
+            // -LOCK----------------------------------------------------------------------------------------- SAMPLE ti
+            pthread_mutex_lock(&interface_mutex);
+            clock_gettime(CLOCK_MONOTONIC, &ti);
 
-        LOG("spinloop = %lu nsec", deltat.tv_nsec);
-        avg_spin_nsecs += deltat.tv_nsec;
-        ++i;
-    } while (i<samples);
+            deltat = timespec_diff(t0, ti, &negative);
+            if (deltat.tv_sec)
+            {
+                // TODO FIXME : this is innocuous when coming out of interface menus, but are there any other edge cases?
+                LOG("NOTE : serious divergence from target time ...");
+                t0 = ti;
+                deltat = timespec_diff(t0, ti, &negative);
+            }
+            t0 = timespec_add(t0, EXECUTION_PERIOD_NSECS); // expected interval
+            drift_adj_nsecs = negative ? ~deltat.tv_nsec : deltat.tv_nsec;
 
-    avg_spin_nsecs = (avg_spin_nsecs / samples);
-    LOG("average  = %lu nsec , spinloop_count = %u , samples = %u", avg_spin_nsecs, spinloop_count, samples);
+            // set up increment & decrement counters
+            cpu65_cycles_to_execute = (g_fCurrentCLK6502 / 1000); // g_fCurrentCLK6502 * EXECUTION_PERIOD_NSECS / NANOSECONDS
+            cpu65_cycles_to_execute += g_nCpuCyclesFeedback;
+            cpu65_cycles_to_execute -= cycles_adjust;
+            if (cpu65_cycles_to_execute < 0)
+            {
+                cpu65_cycles_to_execute = 0;
+            }
 
-    // counter for 1 nsec
-    spin_ratio = avg_spin_nsecs / ((float)spinloop_count);
+            cpu65_cycle_count = 0;
+            g_nCyclesExecuted = 0;
+            //MB_StartOfCpuExecute();
 
-    LOG("%fns cycle spins for average %f", CYCLE_NSECS, spin_ratio);
+            cpu65_run(); // run emulation for cpu65_cycles_to_execute cycles ...
+            cycles_adjust = cpu65_cycles_to_execute; // counter is decremented in cpu65_run()
+            if (cycles_adjust < 0)
+            {
+                cycles_adjust = ~cycles_adjust +1; // cycles_adjust *= -1
+            }
+            unsigned int uExecutedCycles = cpu65_cycle_count;
+
+            //MB_UpdateCycles(uExecutedCycles);   // Update 6522s (NB. Do this before updating g_nCumulativeCycles below)
+
+            // N.B.: IO calls that depend on accurate timing will update g_nCyclesExecuted
+            const unsigned int nRemainingCycles = uExecutedCycles - g_nCyclesExecuted;
+            g_nCumulativeCycles += nRemainingCycles;
+
+            if (!g_bFullSpeed)
+            {
+                SpkrUpdate(uExecutedCycles); // play audio
+            }
+
+            clock_gettime(CLOCK_MONOTONIC, &tj);
+            pthread_mutex_unlock(&interface_mutex);
+            // -UNLOCK--------------------------------------------------------------------------------------- SAMPLE tj
+
+            deltat = timespec_diff(ti, tj, &negative);
+            assert(!negative);
+            long sleepfor = 0;
+            if (!deltat.tv_sec && !g_bFullSpeed)
+            {
+                sleepfor = EXECUTION_PERIOD_NSECS - drift_adj_nsecs - deltat.tv_nsec;
+            }
+
+            if (sleepfor <= 0)
+            {
+                // lagging ...
+                static time_t throttle_warning = 0;
+                if (t0.tv_sec - throttle_warning > 0)
+                {
+                    LOG("lagging... %ld . %ld", deltat.tv_sec, deltat.tv_nsec);
+                    throttle_warning = t0.tv_sec;
+                }
+            }
+            else
+            {
+                deltat.tv_sec = 0;
+                deltat.tv_nsec = sleepfor;
+                nanosleep(&deltat, NULL);
+            }
+
+#ifndef NDEBUG
+            dbg_ticks += EXECUTION_PERIOD_NSECS;
+            if ((dbg_ticks % NANOSECONDS) == 0)
+            {
+                dbg_ticks = 0;
+                LOG("tick (%ld . %ld) real: (%ld . %ld)", t0.tv_sec, t0.tv_nsec, ti.tv_sec, ti.tv_nsec);
+            }
+#endif
+        } while (!cpu65_do_reboot);
+
+        reinitialize();
+    } while (1);
 }
 
-void timing_initialize() {
-
-    // should do this only on startup
-    _determine_initial_spinloop_counter();
-
-    clock_gettime(CLOCK_MONOTONIC, &ti);
-}
-
-void timing_set_cpu_scale(unsigned int scale)
+// From AppleWin...
+//      Called when an IO-reg is accessed & accurate cycle info is needed
+void CpuCalcCycles(const unsigned long nExecutedCycles)
 {
-    // ...
-}
+    // Calc # of cycles executed since this func was last called
+    const long nCycles = nExecutedCycles - g_nCyclesExecuted;
+    assert(nCycles >= 0);
+    g_nCumulativeCycles += nCycles;
 
-/*
- * Throttles 6502 CPU down to the target CPU frequency (default is speed of original Apple //e).
- *
- * This uses an adaptive spin loop to stay closer to the target CPU frequency.
- */
-void timing_throttle()
-{
-    struct timespec tj, deltat;
-    clock_gettime(CLOCK_MONOTONIC, &tj);
-    deltat = timespec_diff(ti, tj);
-    ti=tj;
-
-    static time_t severe_lag=0;
-    if (deltat.tv_sec != 0)
-    {
-        // severely lagging...
-        if (severe_lag < time(NULL))
-        {
-            severe_lag = time(NULL)+2;
-            LOG("Severe lag detected...");
-        }
-        return;
-    }
-
-    uint8_t opcycles = cpu65__opcycles[cpu65_debug.opcode] + cpu65_debug.opcycles;
-    unsigned long opcycles_nsecs = opcycles * (CYCLE_NSECS/2);
-
-    if (deltat.tv_nsec >= opcycles_nsecs)
-    {
-        // lagging
-        return;
-    }
-
-    unsigned long diff_nsec = opcycles_nsecs - deltat.tv_nsec;
-
-    static time_t sample_time=0;
-    if (sample_time < time(NULL))
-    {
-        sample_time = time(NULL)+1;
-        //LOG("sample diff_nsec : %lu", diff_nsec);
-    }
-
-    unsigned long spin_count = spin_ratio * diff_nsec;
-
-    // spin for the rest of the interval ...
-    _spin_loop(spin_count);
+    g_nCyclesExecuted = nExecutedCycles;
 }
 
