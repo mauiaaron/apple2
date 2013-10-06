@@ -32,7 +32,7 @@
 #define CLK_6502 ((_M14 * 65.0) / 912.0)
 
 #define CPU_SCALE_SLOWEST 0.25
-#define CPU_SCALE_FASTEST 4.005
+#define CPU_SCALE_FASTEST 4.05
 #define CPU_SCALE_STEP_DIV 0.01
 #define CPU_SCALE_STEP 0.05
 
@@ -43,14 +43,11 @@ extern bool g_bFullSpeed;
 extern uint64_t g_nCumulativeCycles;
 extern int g_nCpuCyclesFeedback;
 extern double cpu_scale_factor;
+extern double cpu_altscale_factor;
 
 struct timespec timespec_diff(struct timespec start, struct timespec end, bool *negative);
 
-bool timing_is_fullspeed();
-
-void timing_enable_fullspeed();
-
-void timing_enable_regular_speed();
+void timing_toggle_cpu_speed();
 
 void timing_initialize();
 

@@ -73,6 +73,7 @@
 #define kPGDN   164
 #define kEND    165
 
+extern pthread_mutex_t interface_mutex;
 
 #ifdef PC_JOYSTICK
 extern int js_fd;

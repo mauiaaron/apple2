@@ -25,10 +25,12 @@
 #include "prefs.h"
 #include "keys.h"
 #include "interface.h"
+#include "timing.h"
 #include "cpu.h"
 
 #define         PRM_NONE                        0
 #define         PRM_SPEED                       1
+#define         PRM_ALTSPEED                    101
 #define         PRM_MODE                        2
 #define         PRM_DISK_PATH                   3
 #define         PRM_HIRES_COLOR                 4
@@ -76,6 +78,7 @@ struct match_table
 static const struct match_table prefs_table[] =
 {
     { "speed", PRM_SPEED },
+    { "altspeed", PRM_ALTSPEED },
     { "mode", PRM_MODE },
     { "path", PRM_DISK_PATH },
     { "disk path", PRM_DISK_PATH },
@@ -143,8 +146,7 @@ static const struct match_table joy_input_table[] =
 /* Find the number assigned to KEYWORD in a match table PARADIGM. If no match,
  * then the value associated with the terminating entry is used as a
  * default. */
-static int
-match(const struct match_table *paradigm, const char *keyword)
+static int match(const struct match_table *paradigm, const char *keyword)
 {
     while (paradigm->tag && strcasecmp(paradigm->tag, keyword))
     {
@@ -173,8 +175,7 @@ static const char *reverse_match(const struct match_table *paradigm, int key)
 /* Eat leading and trailing whitespace of string X.  The old string is
  * overwritten and a new pointer is returned.
  */
-static char *
-clean_string(char *x)
+static char * clean_string(char *x)
 {
     size_t y;
 
@@ -196,8 +197,7 @@ clean_string(char *x)
 }
 
 /* Load the configuration. Must be called *once* at start. */
-void
-load_settings(void)
+void load_settings(void)
 {
     /* set system defaults before user defaults. */
     strcpy(disk_path, "./disks");
@@ -246,30 +246,35 @@ load_settings(void)
             parameter = clean_string(parameter);
             argument = clean_string(argument);
 
-            switch (match(prefs_table, parameter))
+            int main_match = match(prefs_table, parameter);
+            switch (main_match)
             {
             case PRM_NONE:
                 fprintf(stderr, "Unrecognized config parameter `%s'", parameter);
                 break;
 
             case PRM_SPEED:
+            case PRM_ALTSPEED:
             {
-                int x;
-
-                x = strtol(argument, 0, 0);
-
-                if (x < 0)
+                double x = strtod(argument, NULL);
+                if (x > CPU_SCALE_FASTEST)
                 {
-                    x = 0;
+                    x = CPU_SCALE_FASTEST;
                 }
-
-                cpu65_delay = MAX_APPLE_DELAY - x + 1;
-                if (cpu65_delay < 1)
+                else if (x < CPU_SCALE_SLOWEST)
                 {
-                    cpu65_delay = 1;
+                    x = CPU_SCALE_SLOWEST;
                 }
+                if (main_match == PRM_SPEED)
+                {
+                    cpu_scale_factor = x;
+                }
+                else
+                {
+                    cpu_altscale_factor = x;
+                }
+                break;
             }
-            break;
 
             case PRM_MODE:
                 apple_mode = match(modes_table, argument);
@@ -437,7 +442,8 @@ save_settings(void)
     }
 
     fprintf(config_file,
-            "speed = %d\n"
+            "speed = %0.2lf\n"
+            "altspeed = %0.2lf\n"
             "mode = %s\n"
             "disk path = %s\n"
             "color = %s\n"
@@ -448,7 +454,8 @@ save_settings(void)
             "origin_y = %d\n"
             "sensitivity = %d%%\n"
             "system path = %s\n",
-            MAX_APPLE_DELAY + 1 - cpu65_delay,
+            cpu_scale_factor,
+            cpu_altscale_factor,
             reverse_match(modes_table, apple_mode),
             disk_path,
             reverse_match(color_table, color_mode),

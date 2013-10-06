@@ -17,7 +17,7 @@
 #ifndef A2_INTERFACE_H
 #define A2_INTERFACE_H
 
-void            c_interface_print( int x, int y, int cs, char *s );
+void            c_interface_print( int x, int y, int cs, const char *s );
 void            c_interface_redo_bottom(); /* bit of a HACK? */
 void            c_load_interface_font();
 void            c_interface_keyboard_layout();

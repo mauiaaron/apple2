@@ -24,7 +24,6 @@
                 .comm   SN(cpu65_vmem),524288,4096
                 .comm   SN(cpu65_flags_encode),256
                 .comm   SN(cpu65_flags_decode),256
-                .comm   SN(cpu65_delay),4
                 .comm   SN(cpu65__opcodes),1024
                 .comm   SN(cpu65__signal),1
                 .comm   SN(cpu65_do_reboot),1

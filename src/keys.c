@@ -20,12 +20,14 @@
 #include <unistd.h>
 #include <linux/keyboard.h>
 
+#include "common.h"
 #include "keys.h"
 #include "misc.h"
 #include "video.h"
 #include "interface.h"
 #include "cpu.h"
 #include "prefs.h"
+#include "timing.h"
 
 /* from misc.c */
 extern uid_t user, privileged;
@@ -39,6 +41,8 @@ short joy_y = 127;
 unsigned char joy_button0 = 0;
 unsigned char joy_button1 = 0;
 unsigned char joy_button2 = 0;
+
+pthread_mutex_t interface_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 #ifdef PC_JOYSTICK
 #include <linux/joystick.h>
@@ -199,7 +203,6 @@ static int apple_iie_keymap_shift_ctrl[128] =
   -1, -1, -1, -1, -1, -1, -1, kF4 /* pause */,              /* 112-119 */
   -1, -1, -1, -1, -1, -1, -1, -1 };             /* 120-127 */
 
-static unsigned short max_speed = 0;
 static char key_pressed[ 256 ];
 
 
@@ -243,19 +246,28 @@ void c_periodic_update(int dummysig) {
                 joy_y = joy_center_y;
                 break;
             case kF1:
+                pthread_mutex_lock(&interface_mutex);
                 c_interface_select_diskette( 0 );
+                pthread_mutex_unlock(&interface_mutex);
                 break;
             case kF2:
+                pthread_mutex_lock(&interface_mutex);
                 c_interface_select_diskette( 1 );
+                pthread_mutex_unlock(&interface_mutex);
                 break;
             case kF4:
+                pthread_mutex_lock(&interface_mutex);
                 while (c_mygetch(1) == -1)
                 {
+                    struct timespec ts = { .tv_sec=0, .tv_nsec=1 };
+                    nanosleep(&ts, NULL);
                 }                                   /*busy loop*/
-
+                pthread_mutex_unlock(&interface_mutex);
                 break;
             case kF5:
+                pthread_mutex_lock(&interface_mutex);
                 c_interface_keyboard_layout();
+                pthread_mutex_unlock(&interface_mutex);
                 break;
             case kF7:
                 cpu65_interrupt(EnterDebugSig);
@@ -266,23 +278,15 @@ void c_periodic_update(int dummysig) {
                 break;
 #endif
             case kF9:
-                if (max_speed != 0)
-                {
-                    cpu65_delay = max_speed, max_speed = 0;
-                }
-                else
-                {
-                    max_speed = cpu65_delay, cpu65_delay = 1;
-                }
-
+                pthread_mutex_lock(&interface_mutex);
+                timing_toggle_cpu_speed();
+                pthread_mutex_unlock(&interface_mutex);
                 break;
-            case kF10:
-                if (max_speed != 0)
-                {
-                    cpu65_delay = max_speed, max_speed = 0;
-                }
 
+            case kF10:
+                pthread_mutex_lock(&interface_mutex);
                 c_interface_parameters();
+                pthread_mutex_unlock(&interface_mutex);
                 break;
             }
         }
@@ -341,8 +345,7 @@ void c_periodic_update(int dummysig) {
     }
 
 #ifdef PC_JOYSTICK
-    else
-    if ((joy_mode == JOY_PCJOY) && !(js_fd < 0))
+    else if ((joy_mode == JOY_PCJOY) && !(js_fd < 0))
     {
         if (read(js_fd, &js, JS_RETURN) == -1)
         {
@@ -387,8 +390,7 @@ void c_periodic_update(int dummysig) {
         }
     }
 #endif
-    else
-    if (joy_mode == JOY_OFF)
+    else if (joy_mode == JOY_OFF)
     {
         joy_x = joy_y = 256;
     }
@@ -424,20 +426,17 @@ void c_read_raw_key(int scancode, int pressed) {
         {
             keymap = apple_iie_keymap_shift_ctrl;
         }
-        else
-        if (key_pressed[ SCODE_L_CTRL ] ||              /* ctrl */
+        else if (key_pressed[ SCODE_L_CTRL ] ||              /* ctrl */
             key_pressed[ SCODE_R_CTRL ])
         {
             keymap = apple_iie_keymap_ctrl;
         }
-        else
-        if (key_pressed[ SCODE_L_SHIFT ] ||             /* shift */
+        else if (key_pressed[ SCODE_L_SHIFT ] ||             /* shift */
             key_pressed[ SCODE_R_SHIFT ])
         {
             keymap = apple_iie_keymap_shifted;
         }
-        else
-        if (caps_lock)                                  /* caps lock */
+        else if (caps_lock)                                  /* caps lock */
         {
             keymap = apple_iie_keymap_caps;
         }
@@ -453,8 +452,7 @@ void c_read_raw_key(int scancode, int pressed) {
         {
             keymap = apple_ii_keymap_ctrl;
         }
-        else
-        if (key_pressed[ SCODE_L_SHIFT ] ||
+        else if (key_pressed[ SCODE_L_SHIFT ] ||
             key_pressed[ SCODE_R_SHIFT ])
         {
             keymap = apple_ii_keymap_shifted;
@@ -515,6 +513,8 @@ int c_mygetch(int block)
     {
         while (next_key == -1)
         {
+            static struct timespec ts = { .tv_sec=0, .tv_nsec=33333333 };
+            nanosleep(&ts, NULL); // 30Hz framerate
             video_sync(1);
         }
     }

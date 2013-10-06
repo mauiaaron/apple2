@@ -50,7 +50,6 @@ unsigned char apple_ii_64k[2][65536]; /* 128k memory */
 unsigned char language_card[2][8192], language_banks[2][8192];
 
 /* misc stuff */
-int soundAllowed;
 unsigned char random_value;
 
 /* global ref to commandline args */
@@ -124,10 +123,12 @@ extern int softswitches;
     misc.c functions
    ------------------------------------------------------------------------- */
 
-void c_initialize_sound();
+void c_initialize_sound_hooks();
+void c_disable_sound_hooks();
 void c_initialize_font();
 void c_initialize_vm();
 void c_read_random();
+void reinitialize();
 
 /* virtual memory compacter */
 

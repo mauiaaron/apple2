@@ -29,6 +29,7 @@
 #include <time.h>
 
 #include "interface.h"
+#include "timing.h"
 #include "keys.h"
 #include "disk.h"
 #include "misc.h"
@@ -94,7 +95,7 @@ void c_load_interface_font()
 /* -------------------------------------------------------------------------
     c_interface_print()
    ------------------------------------------------------------------------- */
-void c_interface_print( int x, int y, int cs, char *s )
+void c_interface_print( int x, int y, int cs, const char *s )
 {
     int i;
 
@@ -444,7 +445,7 @@ NEXTDIR:
         curpos = entries - 1;
     }
 
-    for (;; )
+    for (;;)
     {
         for (i = 0; i < 17; i++)
         {
@@ -478,13 +479,11 @@ NEXTDIR:
                     strncat(temp, " <gz>", TEMPSIZE-1);
                 }
                 /* write protected disk in drive? */
-                else
-                if ((in_drive) && (disk6.disk[drive].protected))
+                else if ((in_drive) && (disk6.disk[drive].protected))
                 {
                     strncat(temp, (drive == 0) ? " <r1>" : " <r2>", TEMPSIZE-1);
                 }
-                else
-                if (in_drive)
+                else if (in_drive)
                 {
                     strncat(temp, (drive == 0) ? " <rw1>" : " <rw2>", TEMPSIZE-1);
                 }
@@ -517,8 +516,7 @@ NEXTDIR:
             {
             }
         }
-        else
-        if (ch == kDOWN)          /* Arrow down */
+        else if (ch == kDOWN)          /* Arrow down */
         {
             if (curpos < entries - 1)
             {
@@ -528,8 +526,7 @@ NEXTDIR:
             {
             }
         }
-        else
-        if (ch == kPGDN)          /* Page down */
+        else if (ch == kPGDN)          /* Page down */
         {
             curpos += 16;
             if (curpos > entries - 1)
@@ -537,8 +534,7 @@ NEXTDIR:
                 curpos = entries - 1;
             }
         }
-        else
-        if (ch == kPGUP)            /* Page up */
+        else if (ch == kPGUP)            /* Page up */
         {
             curpos -= 16;
             if (curpos < 0)
@@ -546,18 +542,15 @@ NEXTDIR:
                 curpos = 0;
             }
         }
-        else
-        if (ch == kHOME)            /* Home */
+        else if (ch == kHOME)            /* Home */
         {
             curpos = 0;
         }
-        else
-        if (ch == kEND)          /* End */
+        else if (ch == kEND)          /* End */
         {
             curpos = entries - 1;
         }
-        else
-        if (ch == kESC)          /* ESC */
+        else if (ch == kESC)          /* ESC */
         {
             for (i = 0; i < entries; i++)
             {
@@ -568,8 +561,7 @@ NEXTDIR:
             c_interface_exit();
             return;
         }
-        else
-        if ((ch == 13) || (toupper(ch) == 'W'))            /* Return */
+        else if ((ch == 13) || (toupper(ch) == 'W'))            /* Return */
         {
             int len, cmpr = 0;
 
@@ -642,8 +634,7 @@ NEXTDIR:
                         disk_path[len] = '\0';
                     }
                 }
-                else
-                if (strcmp(".", namelist[curpos]->d_name))
+                else if (strcmp(".", namelist[curpos]->d_name))
                 {
                     snprintf(disk_path + len, DISKSIZE-len, "/%s",
                              namelist[curpos]->d_name);
@@ -679,8 +670,7 @@ NEXTDIR:
                         continue;
                     }
                 }
-                else
-                if (!pid)               /* child process */
+                else if (!pid)               /* child process */
                 {   /* privileged mode - gzip in place */
                     if (execl("/bin/gzip", "/bin/gzip",
                               "-d", temp, NULL) == -1)
@@ -733,8 +723,7 @@ NEXTDIR:
                         continue;
                     }
                 }
-                else
-                if (!pid)               /* child process */
+                else if (!pid)               /* child process */
                 {   /* privileged mode - gzip in place */
                     if (execl("/bin/gzip", "/bin/gzip",
                               disk6.disk[drive].file_name, NULL) == -1)
@@ -790,19 +779,52 @@ NEXTDIR:
     c_interface_parameters()
    ------------------------------------------------------------------------- */
 
-#define NUM_OPTIONS 14
-#define SAVE_SETTINGS 12
-#define QUIT_EMULATOR 13
-#define PATH_OPTION 1
-#define CALIBRATE_OPTION 6
+typedef enum interface_enum_t {
+    OPT_CPU = 0,
+    OPT_ALTCPU,
+    OPT_PATH,
+    OPT_MODE,
+    OPT_COLOR,
+    OPT_SOUND,
+    OPT_JOYSTICK,
+    OPT_CALIBRATE, // (NOP)
+    OPT_JS_RANGE,
+    OPT_ORIGIN_X,
+    OPT_ORIGIN_Y,
+    OPT_JS_SENSE,
+    OPT_JS_SAMPLE,
+    OPT_SAVE,
+    OPT_QUIT,
+
+    NUM_OPTIONS
+} interface_enum_t;
+
+static const char *options[] =
+{
+    " CPU%     : ",                   /* 0 */
+    " ALT CPU% : ",                   /* 0 */
+    " Path     : ",
+    " Mode     : ",
+    " Color    : ",
+    " Sound    : ",
+    " Joystick : ",                   /* 5 */
+    " Calibrate  ",
+    " JS Range : ",
+    " Origin X : ",
+    " Origin Y : ",
+    " JS Sens. : ",                   /* 10 */
+    " JS Sample: ",
+    " Save Prefs ",
+    " Quit       "
+};
 
 void c_interface_parameters()
 {
     static char screen[24][41] =
     { "||||||||||||||||||||||||||||||||||||||||",
-      "|     Apple II Emulator for Linux      |",
-      "|            Originally by             |",
-      "|    Alexander Jean-Claude Bottema     |",
+      "|                                      |",
+      "|      Apple // Emulator for *nix      |",
+      "|                                      |",
       "||||||||||||||||||||||||||||||||||||||||",
       "|                                      |",
       "|                                      |",
@@ -815,34 +837,19 @@ void c_interface_parameters()
       "|                                      |",
       "||||||||||||||||||||||||||||||||||||||||",
       "| F1 F2: Slot6 Drive A, Drive B        |",
-      "| F4   : Pause Emulation               |",
-      "| F5   : Keyboard Layout               |",
-      "| F9   : Toggle Max Speed              |",
+      "| F4   : Toggle Pause Emulation        |",
+      "| F5   : View Keyboard Layout          |",
+      "| F9   : Toggle Btwn CPU% / ALT CPU%   |",
       "| F10  : This Menu                     |",
       "||||||||||||||||||||||||||||||||||||||||",
       "| Use arrow keys (or Return) to modify |",
       "| parameters. (Press ESC to exit menu) |",
       "||||||||||||||||||||||||||||||||||||||||" };
 
-    static char         *options[NUM_OPTIONS] =
-    { " Speed    : ",                   /* 0 */
-      " Path     : ",
-      " Mode     : ",
-      " Color    : ",
-      " Sound    : ",
-      " Joystick : ",                   /* 5 */
-      " Calibrate  ",
-      " JS Range : ",
-      " Origin X : ",
-      " Origin Y : ",
-      " JS Sens. : ",                   /* 10 */
-      " JS Sample: ",
-      " Save       ",
-      " Quit       " };
 
     int i;
     int ch;
-    static int option = 0;
+    static interface_enum_t option = OPT_CPU;
     static int cur_y = 0, cur_off = 0, cur_x = 0, cur_pos = 0;
     int current_mode = apple_mode;
 
@@ -857,7 +864,7 @@ void c_interface_parameters()
         c_interface_print( 0, i, 2,screen[ i ] );
     }
 
-    for (;; )
+    for (;;)
     {
         for (i = 0; i < 9; i++)
         {
@@ -871,64 +878,95 @@ void c_interface_parameters()
 
             switch (i + cur_off)
             {
-            case 0:
-                snprintf(temp, TEMPSIZE, "%03d",
-                         MAX_APPLE_DELAY + 1 - cpu65_delay);
+            case OPT_CPU:
+                if (cpu_scale_factor >= CPU_SCALE_FASTEST)
+                {
+                    snprintf(temp, TEMPSIZE, "Fastest");
+                }
+                else
+                {
+                    snprintf(temp, TEMPSIZE, "%d%%", (int)(cpu_scale_factor * 100.0));
+                }
                 break;
-            case 1:
+
+            case OPT_ALTCPU:
+                if (cpu_altscale_factor >= CPU_SCALE_FASTEST)
+                {
+                    snprintf(temp, TEMPSIZE, "Fastest");
+                }
+                else
+                {
+                    snprintf(temp, TEMPSIZE, "%d%%", (int)(cpu_altscale_factor * 100.0));
+                }
+                break;
+
+            case OPT_PATH:
                 strncpy(temp, disk_path + cur_pos, 24);
                 temp[24] = '\0';
                 break;
-            case 2:
+
+            case OPT_MODE:
                 sprintf(temp, "%s", (apple_mode == 0) ? "][+             " :
                         (apple_mode == 1) ? "][+ undocumented" :
                         "//e             ");
                 break;
-            case 3:
+
+            case OPT_COLOR:
                 sprintf(temp, "%s", (color_mode == 0) ? "Black/White " :
                         (color_mode == 1) ? "Lazy Color  " :
                         (color_mode == 2) ? "Color       " :
                         (color_mode == 3) ? "Lazy Interp." :
                         "Interpolated");
                 break;
-            case 4:
+
+            case OPT_SOUND:
                 sprintf(temp, "%s", (sound_mode == 0) ? "Off       " :
                         "PC speaker");
                 break;
-            case 5:
+
+            case OPT_JOYSTICK:
                 sprintf(temp, "%s", (joy_mode == JOY_KYBD)    ? "Linear     " :
                         (joy_mode == JOY_DIGITAL) ? "Digital    " :
                         (joy_mode == JOY_PCJOY)   ? "PC Joystick" :
                         "Off        ");
                 break;
-            case 6:                     /* calibrate joystick */
+
+            case OPT_CALIBRATE:
                 strcpy( temp, "" );
                 break;
-            case 7:
+
+            case OPT_JS_RANGE:
                 sprintf(temp, "%02x", joy_range);
                 break;
-            case 8:
+
+            case OPT_ORIGIN_X:
                 sprintf(temp, "%02x", joy_center_x);
                 break;
-            case 9:
+
+            case OPT_ORIGIN_Y:
                 sprintf(temp, "%02x", joy_center_y);
                 break;
-            case 10:
+
+            case OPT_JS_SENSE:
                 sprintf(temp, "%03d%%", joy_step );
                 break;
-            case 11:
+
+            case OPT_JS_SAMPLE:
 #ifdef PC_JOYSTICK
                 sprintf(temp, "%ld", js_timelimit);
 #else
                 sprintf(temp, "%s", "");
 #endif
                 break;
-            case SAVE_SETTINGS:         /* save settings */
+
+            case OPT_SAVE:
                 strcpy( temp, "" );
                 break;
-            case QUIT_EMULATOR:         /* quit emulator */
+
+            case OPT_QUIT:
                 strcpy( temp, "" );
                 break;
+
             default:
                 break;
             }
@@ -961,13 +999,13 @@ void c_interface_parameters()
                     {
                         if (temp[ j ] == '\0')
                         {
-                            video_plotchar( 14 + j, 5+i, option==1,' ' );
+                            video_plotchar( 14 + j, 5+i, option==OPT_PATH,' ' );
                             j++;
                             break;
                         }
                         else
                         {
-                            video_plotchar( 14 + j, 5+i, option==1,
+                            video_plotchar( 14 + j, 5+i, option==OPT_PATH,
                                             temp[ j ]);
                         }
 
@@ -993,8 +1031,7 @@ void c_interface_parameters()
             {
                 option--;               /* only dec option */
             }
-            else
-            if (option > 0)
+            else if (option > 0)
             {
                 option--;               /* dec option */
                 cur_y--;                /* and dec y position */
@@ -1005,16 +1042,14 @@ void c_interface_parameters()
                 cur_y = 8;              /* wrap to last y position */
             }
         }
-        else
-        if (ch == kDOWN)                  /* Arrow down */
+        else if (ch == kDOWN)                  /* Arrow down */
         {
             if (cur_y < 8)
             {
                 option++;               /* inc option */
                 cur_y++;                /* and inc y position */
             }
-            else
-            if (option < NUM_OPTIONS-1)
+            else if (option < NUM_OPTIONS-1)
             {
                 option++;               /* only inc option */
             }
@@ -1023,39 +1058,46 @@ void c_interface_parameters()
                 cur_y = option = 0;     /* wrap both to first */
             }
         }
-        else
-        if (ch == kLEFT)                  /* Arrow left */
+        else if (ch == kLEFT)                  /* Arrow left */
         {
             switch (option)
             {
-            case 0:                     /* inc speed */
-                if (cpu65_delay < MAX_APPLE_DELAY)
+            case OPT_CPU:
+                cpu_scale_factor -= (cpu_scale_factor <= 1.0) ? CPU_SCALE_STEP_DIV : CPU_SCALE_STEP;
+                if (cpu_scale_factor < CPU_SCALE_SLOWEST)
                 {
-                    cpu65_delay++;
+                    cpu_scale_factor = CPU_SCALE_SLOWEST;
                 }
-
                 break;
-            case 1:                     /* path */
+
+            case OPT_ALTCPU:
+                cpu_altscale_factor -= (cpu_altscale_factor <= 1.0) ? CPU_SCALE_STEP_DIV : CPU_SCALE_STEP;
+                if (cpu_altscale_factor < CPU_SCALE_SLOWEST)
+                {
+                    cpu_altscale_factor = CPU_SCALE_SLOWEST;
+                }
+                break;
+
+            case OPT_PATH:
                 if (cur_x > 0)
                 {
                     cur_x--;
                 }
-                else
-                if (cur_pos > 0)
+                else if (cur_pos > 0)
                 {
                     cur_pos--;
                 }
-
                 break;
-            case 2:                     /* apple mode */
+
+            case OPT_MODE:
                 apple_mode--;
                 if (apple_mode < 0)
                 {
                     apple_mode = 2;
                 }
-
                 break;
-            case 3:                     /* color mode */
+
+            case OPT_COLOR:
                 if (color_mode == 0)
                 {
                     color_mode = 4;
@@ -1064,9 +1106,9 @@ void c_interface_parameters()
                 {
                     --color_mode;
                 }
-
                 break;
-            case 4:                     /* sound mode */
+
+            case OPT_SOUND:
                 if (sound_mode == 0)
                 {
                     sound_mode = 1;
@@ -1075,86 +1117,97 @@ void c_interface_parameters()
                 {
                     --sound_mode;
                 }
-
                 break;
-            case 5:                     /* joystick mode */
+
+            case OPT_JOYSTICK:
 #ifdef PC_JOYSTICK
                 if (joy_mode == 0)
                 {
                     joy_mode = 3;
                 }
-
 #else
                 if (joy_mode == 0)
                 {
                     joy_mode = 2;
                 }
-
 #endif
                 else
                 {
                     --joy_mode;
                 }
                 break;
-            case 6:                     /* calibrate */
+
+            case OPT_CALIBRATE:
                 break;
-            case 7:                     /* range */
+
+            case OPT_JS_RANGE:
                 if (joy_range > 10)
                 {
                     --joy_range;
                     joy_center_x = joy_range/2;
                     joy_center_y = joy_range/2;
                 }
-
                 break;
-            case 8:                     /* origin x */
+
+            case OPT_ORIGIN_X:
                 if (joy_center_x > 0)
                 {
                     joy_center_x--;
                 }
-
                 break;
-            case 9:                     /* origin y */
+
+            case OPT_ORIGIN_Y:
                 if (joy_center_y > 0)
                 {
                     joy_center_y--;
                 }
-
                 break;
-            case 10:                            /* sensitivity */
+
+            case OPT_JS_SENSE:
                 if (joy_step > 1)
                 {
                     joy_step--;
                 }
-
                 break;
-            case 11:
+
+            case OPT_JS_SAMPLE:
 #ifdef PC_JOYSTICK
-                if (js_timelimit > 2)           /* joystick sample rate */
+                if (js_timelimit > 2)
                 {
                     --js_timelimit;
                 }
-
 #endif
                 break;
-            case SAVE_SETTINGS:                 /* save settings */
-            case QUIT_EMULATOR:                 /* quit emulator */
+
+            case OPT_SAVE:
+            case OPT_QUIT:
+                break;
+
+            default:
                 break;
             }
         }
-        else
-        if (ch == kRIGHT)                         /* Arrow right */
+        else if (ch == kRIGHT)                         /* Arrow right */
         {
             switch (option)
             {
-            case 0:                     /* dec speed */
-                if (cpu65_delay > 1)
+            case OPT_CPU:
+                cpu_scale_factor += (cpu_scale_factor < 1.0) ? CPU_SCALE_STEP_DIV : CPU_SCALE_STEP;
+                if (cpu_scale_factor >= CPU_SCALE_FASTEST)
                 {
-                    cpu65_delay--;
+                    cpu_scale_factor = CPU_SCALE_FASTEST;
                 }
-
                 break;
-            case 1:                     /* path */
+
+            case OPT_ALTCPU:
+                cpu_altscale_factor += (cpu_altscale_factor < 1.0) ? CPU_SCALE_STEP_DIV : CPU_SCALE_STEP;
+                if (cpu_altscale_factor >= CPU_SCALE_FASTEST)
+                {
+                    cpu_altscale_factor = CPU_SCALE_FASTEST;
+                }
+                break;
+
+            case OPT_PATH:
                 if (cur_x < 23)
                 {
                     if (disk_path[cur_pos + cur_x] != '\0')
@@ -1162,102 +1215,104 @@ void c_interface_parameters()
                         cur_x++;
                     }
                 }
-                else
-                if (disk_path[cur_pos + cur_x] != '\0')
+                else if (disk_path[cur_pos + cur_x] != '\0')
                 {
                     cur_pos++;
                 }
-
                 break;
-            case 2:                     /* apple mode */
+
+            case OPT_MODE:
                 apple_mode++;
                 if (apple_mode > 2)
                 {
                     apple_mode = 0;
                 }
-
                 break;
-            case 3:                     /* color mode */
+
+            case OPT_COLOR:
                 color_mode++;
                 if (color_mode > 4)
                 {
                     color_mode = 0;
                 }
-
                 break;
-            case 4:                     /* sound mode */
+
+            case OPT_SOUND:
                 sound_mode++;
                 if (sound_mode > 1)
                 {
                     sound_mode = 0;
                 }
-
                 break;
-            case 5:                     /* joystick mode */
+
+            case OPT_JOYSTICK:
 #ifdef PC_JOYSTICK
                 if (joy_mode == 3)
                 {
                     joy_mode = 0;
                 }
-
 #else
                 if (joy_mode == 2)
                 {
                     joy_mode = 0;
                 }
-
 #endif
                 else
                 {
                     ++joy_mode;
                 }
                 break;
-            case 6:                     /* calibrate */
+
+            case OPT_CALIBRATE:
                 break;
-            case 7:                     /* range */
+
+            case OPT_JS_RANGE:
                 if (joy_range < 256)
                 {
                     ++joy_range;
                     joy_center_x = joy_range/2;
                     joy_center_y = joy_range/2;
                 }
-
                 break;
-            case 8:                     /* origin x */
+
+            case OPT_ORIGIN_X:
                 if (joy_center_x < joy_range-1)
                 {
                     joy_center_x++;
                 }
-
                 break;
-            case 9:                     /* origin y */
+
+            case OPT_ORIGIN_Y:
                 if (joy_center_y < joy_range-1)
                 {
                     joy_center_y++;
                 }
-
                 break;
-            case 10:                            /* sensitivity */
+
+            case OPT_JS_SENSE:
                 if (joy_step < 100)
                 {
                     joy_step++;
                 }
-
                 break;
-            case 11:                            /* joystick sample rate */
+
+            case OPT_JS_SAMPLE:
 #ifdef PC_JOYSTICK
                 js_timelimit++;
 #endif
                 break;
-            case SAVE_SETTINGS:                 /* save settings */
-            case QUIT_EMULATOR:                 /* quit emulator */
+
+            case OPT_SAVE:
+            case OPT_QUIT:
+                break;
+
+            default:
                 break;
             }
         }
-        else
-        if (ch == kESC)                           /* exit menu */
+        else if (ch == kESC)                           /* exit menu */
         {
-            c_initialize_sound();
+            timing_initialize();
             video_set(0);                       /* redo colors */
 #ifdef PC_JOYSTICK
             if (joy_mode == JOY_PCJOY)
@@ -1285,7 +1340,7 @@ void c_interface_parameters()
         else
         {
             /* got a normal character setting path */
-            if (ch >= ' ' && ch < 127 && option == PATH_OPTION)
+            if (ch >= ' ' && ch < 127 && option == OPT_PATH)
             {
                 int i;
 
@@ -1301,16 +1356,14 @@ void c_interface_parameters()
                 {
                     cur_x++;
                 }
-                else
-                if (disk_path[cur_pos + cur_x] != '\0')
+                else if (disk_path[cur_pos + cur_x] != '\0')
                 {
                     cur_pos++;
                 }
             }
 
             /* Backspace or delete setting path */
-            if ((ch == 127 || ch == 8) && (cur_pos + cur_x - 1 >= 0) &&
-                (option == 1))
+            if ((ch == 127 || ch == 8) && (cur_pos + cur_x - 1 >= 0) && (option == OPT_PATH))
             {
                 int i;
 
@@ -1323,8 +1376,7 @@ void c_interface_parameters()
                 {
                     cur_x--;
                 }
-                else
-                if (cur_pos > 0)
+                else if (cur_pos > 0)
                 {
                     cur_pos--;
                 }
@@ -1332,25 +1384,28 @@ void c_interface_parameters()
 
 #ifdef PC_JOYSTICK
             /* calibrate joystick */
-            if ((ch == 13) && (option == CALIBRATE_OPTION))
+            if ((ch == 13) && (option == OPT_CALIBRATE))
             {
                 c_calibrate_joystick();
             }
 
 #endif
             /* save settings */
-            if ((ch == 13) && (option == SAVE_SETTINGS))
+            if ((ch == 13) && (option == OPT_SAVE))
             {
                 save_settings();
+                c_interface_print( 1, 22, 0, "            --> Saved. <--            " );
+                video_sync(0);
+                c_usleep();
+                c_interface_print( 0, 22, 2, screen[ 22 ] );
             }
 
             /* quit apple II simulator */
-            if (ch == 13 && option == QUIT_EMULATOR)
+            if (ch == 13 && option == OPT_QUIT)
             {
                 int ch;
 
-                c_interface_print(
-                    1, 22, 0, "          Are you sure? (Y/N)         " );
+                c_interface_print( 1, 22, 0, "          Are you sure? (Y/N)         " );
                 while ((ch = c_mygetch(1)) == -1)
                 {
                 }
@@ -1363,14 +1418,12 @@ void c_interface_parameters()
 #ifdef PC_JOYSTICK
                     c_close_joystick();
 #endif
-                    printf("Linux! ...and there were much rejoicing! "
-                           "oyeeeeh...\n");
+                    LOG("Linux! ...and there were much rejoicing! oyeeeeh...\n");
                     video_shutdown();
                     exit( 0 );
                 }
 
                 c_interface_print( 0, 22, 2, screen[ 22 ] );
-
             }
         }
     }
@@ -1514,3 +1567,4 @@ void c_interface_keyboard_layout()
 
     c_interface_exit();
 }
+

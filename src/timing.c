@@ -30,7 +30,10 @@ double g_fCurrentCLK6502 = CLK_6502;
 bool g_bFullSpeed = false; // HACK TODO FIXME : prolly shouldn't be global anymore -- don't think it's necessary for speaker/soundcore/etc anymore ...
 uint64_t g_nCumulativeCycles = 0;       // cumulative cycles since emulator (re)start
 int g_nCpuCyclesFeedback = 0;
+
+static bool alt_speed_enabled = false;
 double cpu_scale_factor = 1.0;
+double cpu_altscale_factor = 1.0;
 
 static unsigned int g_nCyclesExecuted; // # of cycles executed up to last IO access
 
@@ -83,46 +86,72 @@ static inline struct timespec timespec_add(struct timespec start, unsigned long 
     return start;
 }
 
-bool timing_is_fullspeed()
+static void _timing_initialize(double scale)
 {
-    return g_bFullSpeed;
-}
-
-void timing_enable_fullspeed()
-{
-    if (!g_bFullSpeed)
-    {
-        g_bFullSpeed = true;
-        c_disable_sound_hooks();
-        timing_initialize();
-    }
-}
-
-void timing_enable_regular_speed()
-{
-    if (g_bFullSpeed)
-    {
-        g_bFullSpeed = false;
-        c_initialize_sound_hooks();
-        timing_initialize();
-    }
-}
-
-void timing_initialize()
-{
-
     if (g_bFullSpeed)
     {
         LOG("timing_initialize() emulation at fullspeed ...");
         return;
     }
 
-    g_fCurrentCLK6502 = CLK_6502 * cpu_scale_factor;
+    g_fCurrentCLK6502 = CLK_6502 * scale;
     // this is extracted out of SetClksPerSpkrSample -- speaker.c
     g_fClksPerSpkrSample = (double) (UINT) (g_fCurrentCLK6502 / (double)SPKR_SAMPLE_RATE);
     SpkrReinitialize();
 
     LOG("timing_initialize() ... ClockRate:%0.2lf  ClockCyclesPerSpeakerSample:%0.2lf", g_fCurrentCLK6502, g_fClksPerSpkrSample);
+}
+
+static void _switch_to_fullspeed(double scale)
+{
+    if (!g_bFullSpeed)
+    {
+        g_bFullSpeed = true;
+        c_disable_sound_hooks();
+    }
+}
+
+static void _switch_to_regular_speed(double scale)
+{
+    if (g_bFullSpeed)
+    {
+        g_bFullSpeed = false;
+        c_initialize_sound_hooks();
+    }
+    _timing_initialize(scale);
+}
+
+void timing_toggle_cpu_speed()
+{
+    alt_speed_enabled = !alt_speed_enabled;
+
+    if (alt_speed_enabled)
+    {
+        if (cpu_altscale_factor >= CPU_SCALE_FASTEST)
+        {
+            _switch_to_fullspeed(cpu_altscale_factor);
+        }
+        else
+        {
+            _switch_to_regular_speed(cpu_altscale_factor);
+        }
+    }
+    else
+    {
+        if (cpu_scale_factor >= CPU_SCALE_FASTEST)
+        {
+            _switch_to_fullspeed(cpu_scale_factor);
+        }
+        else
+        {
+            _switch_to_regular_speed(cpu_scale_factor);
+        }
+    }
+}
+
+void timing_initialize()
+{
+    _timing_initialize(cpu_scale_factor);
 }
 
 void cpu_thread(void *dummyptr) {

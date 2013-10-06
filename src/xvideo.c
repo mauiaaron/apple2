@@ -739,7 +739,7 @@ void video_init() {
             }
 
             doShm=0;
-            soundAllowed=0;
+            //soundAllowed=0; FIXME TODO enforce this ...
         }
     }
 

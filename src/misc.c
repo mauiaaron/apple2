@@ -20,7 +20,6 @@
 #include <stdlib.h>
 #include <signal.h>
 #include <time.h>
-#include <pthread.h>
 #include <sys/ioctl.h>
 #include <sys/time.h>
 #include <sys/io.h>
@@ -35,6 +34,8 @@
 #include "glue.h"
 #include "prefs.h"
 #include "timing.h"
+#include "speaker.h"
+#include "soundcore.h"
 
 /* ----------------------------------
     internal apple2 variables
@@ -42,9 +43,6 @@
 
 static unsigned char apple_ii_rom[12288];
 static unsigned char apple_iie_rom[32768];              /* //e */
-
-pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
-pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
 
 /* in debugger.c */
 extern int breakpoints[];
@@ -600,17 +598,22 @@ void c_initialize_apple_ii_memory()
 }
 
 /* -------------------------------------------------------------------------
-    void c_initialize_sound()
+    void c_initialize_sound_hooks()
    ------------------------------------------------------------------------- */
 
-void c_initialize_sound()
+void c_initialize_sound_hooks()
 {
-    int i;
-
-    for (i = 0xC030; i < 0xC040; i++)
+    for (int i = 0xC030; i < 0xC040; i++)
     {
-        cpu65_vmem[i].r = cpu65_vmem[i].w =
-                              (sound_mode && soundAllowed) ? read_speaker_toggle_pc : ram_nop;
+        cpu65_vmem[i].r = cpu65_vmem[i].w = (sound_mode) ? read_speaker_toggle_pc : ram_nop;
+    }
+}
+
+void c_disable_sound_hooks()
+{
+    for (int i = 0xC030; i < 0xC040; i++)
+    {
+        cpu65_vmem[i].r = ram_nop;
     }
 }
 
@@ -644,7 +647,7 @@ void c_initialize_vm() {
     c_initialize_font();                /* font already read in */
     c_initialize_apple_ii_memory();     /* read in rom memory */
     c_initialize_tables();              /* read/write memory jump tables */
-    c_initialize_sound();               /* sound system */
+    c_initialize_sound_hooks();         /* sound system */
     c_init_6();                         /* drive ][, slot 6 */
 
     c_initialize_iie_switches();        /* set the //e softswitches */
@@ -658,9 +661,11 @@ void c_initialize_vm() {
     void c_initialize_firsttime()
    ------------------------------------------------------------------------- */
 
-static void reinitialize(void)
+void reinitialize(void)
 {
     int i;
+
+    cpu65_do_reboot=1;
 
     /* reset the watchpoints and breakpoints */
     for (i=0; i<MAX_BRKPTS; i++)
@@ -695,28 +700,21 @@ static void reinitialize(void)
         cpu65_set(CPU65_NMOS|CPU65_FAULT);
     }
 
+    timing_initialize();
 }
 
 static void c_initialize_firsttime()
 {
-    /* get IO permission for speaker port. */
-    if (/*ioperm(0x42, 1, 1) ||*/ ioperm(0x61, 1, 1))
-    {
-        perror("ioperm");
-        printf("cannot get port access to PC speaker.\n");
-        printf("sound will not be used.\n");
-        soundAllowed=0;
-    }
-    else
-    {
-        soundAllowed=1;
-    }
-
     /* read in system files and calculate system defaults */
     c_load_interface_font();
 
     /* initialize the video system */
     video_init();
+
+    // TODO FIXME : sound system never released ...
+    DSInit();
+    SpkrInitialize();
+    //MB_Initialize();
 
     reinitialize();
 }
@@ -729,27 +727,16 @@ void c_read_random() {
     random_value = (unsigned char)rand_r(&seed);
 }
 
-static void cpu_thread(void *dummyptr) {
-    do
-    {
-        LOG("cpu_thread : entering cpu65_run()...");
-        cpu65_run();
-        reinitialize();
-    } while (1);
-}
-
 static void main_thread(void *dummyptr) {
-    struct timespec abstime = { .tv_sec=0, .tv_nsec=8333333 }; // 120Hz
+    struct timespec sleeptime = { .tv_sec=0, .tv_nsec=8333333 }; // 120Hz
     do
     {
-        // sleep waiting for the cpu thread to ping us to render
-        pthread_mutex_lock(&mutex);
-        pthread_cond_timedwait(&cond, &mutex, &abstime);
-        pthread_mutex_unlock(&mutex);
-
+        nanosleep(&sleeptime, NULL);
         c_periodic_update(0);
     } while (1);
 }
+
+extern void cpu_thread(void *dummyptr);
 
 int main(int sargc, char *sargv[])
 {
@@ -758,12 +745,11 @@ int main(int sargc, char *sargv[])
 
     load_settings();                    /* user prefs */
     c_initialize_firsttime();           /* init svga graphics and vm */
-    timing_initialize();
 
     // spin off cpu thread
     pthread_t thread1;
     pthread_create(&thread1, NULL, (void *) &cpu_thread, (void *)NULL);
 
-    // enter main render thread
+    // continue with main render thread
     main_thread(NULL);
 }
