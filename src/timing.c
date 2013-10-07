@@ -24,8 +24,6 @@
 
 #define EXECUTION_PERIOD_NSECS 1000000  // AppleWin: nExecutionPeriodUsec
 
-extern void cpu65_run();
-
 double g_fCurrentCLK6502 = CLK_6502;
 bool g_bFullSpeed = false; // HACK TODO FIXME : prolly shouldn't be global anymore -- don't think it's necessary for speaker/soundcore/etc anymore ...
 uint64_t g_nCumulativeCycles = 0;       // cumulative cycles since emulator (re)start
@@ -167,7 +165,7 @@ void cpu_thread(void *dummyptr) {
     {
         g_nCumulativeCycles = 0;
         static int16_t cycles_adjust = 0;
-        LOG("cpu_thread : entering cpu65_run()...");
+        LOG("cpu_thread : begin main loop ...");
 
         clock_gettime(CLOCK_MONOTONIC, &t0);
         do {

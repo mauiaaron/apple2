@@ -100,11 +100,11 @@
                         (,EffectiveAddr_E,8);                                  \
 
 #define Continue                                                               \
-                xorl    %eax, %eax;                                            \
-                orb     SN(cpu65__signal), %ah;                                \
-                jnz     exception;                                             \
                 jmp     continue;
 
+/*
+ * Save CPU state when returning from being called from C
+ */
 #define SaveState                                                              \
                 movw    EffectiveAddr, DebugCurrEA;                            \
                 movw    PC_Reg, SN(cpu65_current);                             \
@@ -114,7 +114,9 @@
                 movb    Y_Reg, SN(cpu65_current)+5;                            \
                 movb    SP_Reg_L, SN(cpu65_current)+6;
 
-/* The xorls clear the high parts of the registers
+/* Replace CPU state when being called from C.
+ *
+ * The xorls clear the high parts of the registers
  * Note: dependent on register assignment
  *
  * The extra bit at the end points the stack pointer at the alternate
@@ -2664,13 +2666,17 @@ op_UNK_XMA_imm:
         Keep executing until we've executed >= cpu65_cycles_to_execute
    ------------------------------------------------------------------------- */
 
-continue:       xorl    %eax, %eax
+continue:
+                xorl    %eax, %eax
                 movb    DebugCurrOpcode, %al
                 movb    SN(cpu65__opcycles)(,%eax,1), %al
                 addb    DebugCycleCount, %al
                 addw    %ax, SN(cpu65_cycle_count)              // TODO: cycle counting is slightly incorrect, it should be done earlier per instruction ...
-                subw    %ax, SN(cpu65_cycles_to_execute)
+                subw    %ax, SN(cpu65_cycles_to_execute)        //       but in practice this may not matter ...
                 jle     1f
+                xorl    %eax, %eax
+                orb     SN(cpu65__signal), %ah
+                jnz     exception
                 JumpNextInstruction
 1:              SaveState
                 popal
@@ -2684,22 +2690,13 @@ exception:      cmpb    $RebootSig, %ah
                 jz      ex_reboot
                 cmpb    $ResetSig, %ah
                 jz      ex_reset
-                cmpb    $DebugStepSig, %ah
-                jz      ex_step
-                jmp     ex_enter
+                jmp     ex_step
 
-ex_step:        SaveState
-                movb    $0, SN(cpu65__signal)
-                popal                                       // EXIT CPUSTEP
-                ret
-
-ex_enter:       SaveState
-                movb    $0, SN(cpu65__signal)
-                pushal                                      // ENTER CPUSTEP
-                call    SN(enter_debugger)
-                popal
+ex_step:        movb    $0, SN(cpu65__signal)
+                xorl    %eax, %eax
+                SaveState
+                call    SN(c_stepping_yield)
                 ReplaceState
-                xorb    %ah, %ah
                 JumpNextInstruction
 
 ex_reboot:      movb    $0, SN(cpu65__signal)               // EXIT CPURUN
@@ -2727,7 +2724,8 @@ E(cpu65_run)
                 /* Zero all registers, as well as the unused 32-bit parts
                  * of variables. (which may need to be kept 0)
                  *
-                 * Note: dependent on assignment of registers */
+                 * Note: dependent on assignment of registers
+                 */
                 xorl    %eax, %eax
                 xorl    %ebx, %ebx
                 xorl    %ecx, %ecx
@@ -2744,13 +2742,6 @@ E(cpu65_direct_write)
                 call    * SN(cpu65_vmem)+4(,EffectiveAddr_E,8)
                 popl    %edi
                 ret
-
-// steps the simulation while remaining in the debugger's control
-E(cpu65_step)
-                pushal
-                movb    $DebugStepSig, SN(cpu65__signal)
-                ReplaceState
-                JumpNextInstruction
 
 #pragma mark -
 #pragma mark tables

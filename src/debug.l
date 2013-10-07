@@ -447,7 +447,7 @@ ADDRS	[0-9a-fA-F]+
     /* step / step next instruction */
     if (*debugtext == 'n') step_next = 1;
 
-    c_do_step(1);
+    do_step_or_next(1);
     return STEP;
 }
 
@@ -460,7 +460,7 @@ ADDRS	[0-9a-fA-F]+
     arg1 = strtol(debugtext, (char**)NULL, 16);
     if ((arg1 < 1) || (arg1 > 255)) arg1 = 255;
 
-    c_do_step(arg1);
+    do_step_or_next(arg1);
     return STEP;
 }
 
@@ -476,9 +476,9 @@ ADDRS	[0-9a-fA-F]+
 	if (op == 0x60) --step_frame;	/* RTS */
 	
 	if (!step_frame) break;				/* finished */
-	cpu65_step();
+	begin_cpu_step();
     }
-    end_step();			/* print location */
+    end_cpu_step();			/* print location */
     return FINISH;
 }
 
@@ -517,8 +517,8 @@ ADDRS	[0-9a-fA-F]+
     arg1 = cpu65_current.pc + delta;
 
     while ((cpu65_current.pc != arg1) && !at_haltpt() && (c_mygetch(0) == -1))
-	cpu65_step();
-    end_step();			/* print location */
+	begin_cpu_step();
+    end_cpu_step();			/* print location */
     return UNTIL;
 }
 
@@ -529,16 +529,16 @@ ADDRS	[0-9a-fA-F]+
     /* DANGEROUS! */
     cpu65_current.pc = strtol(debugtext, (char**)NULL, 16);
     while (!at_haltpt() && (c_mygetch(0) == -1))
-	cpu65_step();
-    end_step();			/* print location */
+	begin_cpu_step();
+    end_cpu_step();			/* print location */
     return GO;
 }
 
 {BOS}go?{EOS} {
     /* run while remaining in debugger console */
     while (!at_haltpt() && (c_mygetch(0) == -1))
-	cpu65_step();
-    end_step();			/* print location */
+	begin_cpu_step();
+    end_cpu_step();			/* print location */
     return GO;
 }
 

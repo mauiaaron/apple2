@@ -54,8 +54,7 @@ struct cpu65_extra
 
 #define         CPU65_FAULT     0x100   /* Undoc. opcodes are BRK */
 
-/* Set up the processor for a new run. Sets up opcode table.
- */
+/* Set up the processor for a new run. Sets up opcode table. */
 extern void cpu65_set(int flags);
 
 /* Interrupt the processor */
@@ -63,7 +62,7 @@ extern void cpu65_interrupt(int reason);
 
 extern void cpu65_run(void);
 
-extern void cpu65_step(void);
+extern void cpu65_set_stepping(int flag);
 
 extern void cpu65_direct_write(int ea,int data);
 
@@ -83,7 +82,6 @@ extern uint8_t cpu65_do_reboot;
 #define RebootSig       0x01
 #define ResetSig        0x02
 #define DebugStepSig    0x04
-#define EnterDebugSig   0x08
 
 /* Note: These are *not* the bit positions used for the flags in the P
  * register of a real 6502. Rather, they have been distorted so that C,

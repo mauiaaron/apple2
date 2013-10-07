@@ -23,11 +23,6 @@
 #include "cpu.h"
 #include "prefs.h"
 
-#include <stdio.h>
-#include <string.h>
-#include <ctype.h>
-#include <stdlib.h>
-
 const struct opcode_struct *opcodes;
 
 int step_next;                          /* stepping over instructions */
@@ -241,9 +236,7 @@ void dump_mem(int addrs, int len, int lc, int do_ascii, int rambank) {
 
         if (lc)
         {
-            op = (addrs+j >= 0x1000) ? language_card[rambank][(addrs+j)-0x1000]
-                 : (lc == 1) ? language_banks[rambank][addrs+j]
-                 : language_banks[rambank][0x1000+addrs+j];
+            op = (addrs+j >= 0x1000) ? language_card[rambank][(addrs+j)-0x1000] : (lc == 1) ? language_banks[rambank][addrs+j] : language_banks[rambank][0x1000+addrs+j];
         }
         else
         {
@@ -267,8 +260,7 @@ void dump_mem(int addrs, int len, int lc, int do_ascii, int rambank) {
             sprintf(second_buf[i], "%04X:%02X", orig_addrs+j, op);
             if (do_ascii)
             {
-                sprintf(second_buf[i]+23, "%c",
-                        ((op&0x7f) > 31) ? (op&0x7f) : '.');
+                sprintf(second_buf[i]+23, "%c", ((op&0x7f) > 31) ? (op&0x7f) : '.');
             }
 
             continue;
@@ -277,8 +269,7 @@ void dump_mem(int addrs, int len, int lc, int do_ascii, int rambank) {
         sprintf(second_buf[i]+5+mod*2, "%02X", op);
         if (do_ascii)
         {
-            sprintf(second_buf[i]+23+mod, "%c",
-                    ((op&0x7f) > 31) ? (op&0x7f) : '.');
+            sprintf(second_buf[i]+23+mod, "%c", ((op&0x7f) > 31) ? (op&0x7f) : '.');
         }
     }
 
@@ -318,9 +309,7 @@ void search_mem(char *hexstr, int lc, int rambank) {
 
         if (lc)
         {
-            op = (i >= 0x1000) ? language_card[rambank][i-0x1000]
-                 : (lc == 1) ? language_banks[rambank][i]
-                 : language_banks[rambank][0x1000+i];
+            op = (i >= 0x1000) ? language_card[rambank][i-0x1000] : (lc == 1) ? language_banks[rambank][i] : language_banks[rambank][0x1000+i];
         }
         else
         {
@@ -332,8 +321,7 @@ void search_mem(char *hexstr, int lc, int rambank) {
             ++j;                                /* increment */
             if (!isxdigit(*(hexstr+j)))         /* end of bytes? */
             {   /* then we found a match */
-                sprintf(second_buf[num_buffer_lines], "%04X: %s",
-                        i-(j>>1), hexstr);
+                sprintf(second_buf[num_buffer_lines], "%04X: %s", i-(j>>1), hexstr);
                 num_buffer_lines = (num_buffer_lines + 1) % (BUF_Y-2);
                 j = 0; continue;
             }
@@ -341,8 +329,7 @@ void search_mem(char *hexstr, int lc, int rambank) {
             ++j;
             if (!isxdigit(*(hexstr+j)))         /* end of bytes? */
             {   /* then we found a match */
-                sprintf(second_buf[num_buffer_lines], "%04X: %s",
-                        i-(j>>1)+1, hexstr);
+                sprintf(second_buf[num_buffer_lines], "%04X: %s", i-(j>>1)+1, hexstr);
                 num_buffer_lines = (num_buffer_lines + 1) % (BUF_Y-2);
                 j = 0; continue;
             }
@@ -422,8 +409,7 @@ void set_lc_mem(int addrs, int lcbank, char *hexstr) {
         {
             language_card[0][addrs - 0x1000] = data;
         }
-        else
-        if (lcbank)
+        else if (lcbank)
         {
             language_banks[0][addrs] = data;
         }
@@ -536,15 +522,12 @@ void disasm(int addrs, int len, int lc, int rambank) {
 
     /* save hexdump in second_buf */
     end = (lc) ? 0x3000 : 0x10000;
-    for (i = num_buffer_lines, j = addrs, k=orig_addrs;
-         ((i<len) && (j<end)); i++, j++)
+    for (i = num_buffer_lines, j = addrs, k=orig_addrs; ((i<len) && (j<end)); i++, j++)
     {
 
         if (lc)
         {
-            op = (j >= 0x1000) ? language_card[rambank][j-0x1000]
-                 : (lc == 1) ? language_banks[rambank][j]
-                 : language_banks[rambank][0x1000+j];
+            op = (j >= 0x1000) ? language_card[rambank][j-0x1000] : (lc == 1) ? language_banks[rambank][j] : language_banks[rambank][0x1000+j];
         }
         else
         {
@@ -555,9 +538,7 @@ void disasm(int addrs, int len, int lc, int rambank) {
         {
         case addr_implied:
         case addr_accumulator:                  /* no arg */
-            sprintf(second_buf[i], "/%02X/%04X: %02X      %s %s",
-                    rambank, k++, op, opcodes[op].mnemonic,
-                    disasm_templates[opcodes[op].mode]);
+            sprintf(second_buf[i], "/%02X/%04X: %02X      %s %s", rambank, k++, op, opcodes[op].mnemonic, disasm_templates[opcodes[op].mode]);
             break;
 
         case addr_immediate:
@@ -575,19 +556,14 @@ void disasm(int addrs, int len, int lc, int rambank) {
 
             if (lc)
             {
-                arg1 = (j >= 0x1000) ? language_card[rambank][++j-0x1000]
-                       : (lc == 1) ? language_banks[rambank][++j]
-                       : language_banks[rambank][++j+0x1000];
+                arg1 = (j >= 0x1000) ? language_card[rambank][++j-0x1000] : (lc == 1) ? language_banks[rambank][++j] : language_banks[rambank][++j+0x1000];
             }
             else
             {
                 arg1 = apple_ii_64k[rambank][++j];
             }
 
-            sprintf(fmt, "/%02X/%04X: %02X%02X    %s %s",
-                    rambank, k, op, (unsigned char)arg1,
-                    opcodes[op].mnemonic,
-                    disasm_templates[opcodes[op].mode]);
+            sprintf(fmt, "/%02X/%04X: %02X%02X    %s %s", rambank, k, op, (unsigned char)arg1, opcodes[op].mnemonic, disasm_templates[opcodes[op].mode]);
 
             sprintf(second_buf[i], fmt, (unsigned char)arg1);
             k+=2;
@@ -606,12 +582,8 @@ void disasm(int addrs, int len, int lc, int rambank) {
 
             if (lc)
             {
-                arg1 = (j >= 0x1000) ? language_card[rambank][++j-0x1000]
-                       : (lc == 1) ? language_banks[rambank][++j]
-                       : language_banks[rambank][++j+0x1000];
-                arg2 = (j >= 0x1000) ? language_card[rambank][++j-0x1000]
-                       : (lc == 1) ? language_banks[rambank][++j]
-                       : language_banks[rambank][++j+0x1000];
+                arg1 = (j >= 0x1000) ? language_card[rambank][++j-0x1000] : (lc == 1) ? language_banks[rambank][++j] : language_banks[rambank][++j+0x1000];
+                arg2 = (j >= 0x1000) ? language_card[rambank][++j-0x1000] : (lc == 1) ? language_banks[rambank][++j] : language_banks[rambank][++j+0x1000];
             }
             else
             {
@@ -619,12 +591,8 @@ void disasm(int addrs, int len, int lc, int rambank) {
                 arg2 = apple_ii_64k[rambank][++j];
             }
 
-            sprintf(fmt, "/%02X/%04X: %02X%02X%02X  %s %s",
-                    rambank, k, op, (unsigned char)arg1, (unsigned char)arg2,
-                    opcodes[op].mnemonic,
-                    disasm_templates[opcodes[op].mode]);
-            sprintf(second_buf[i], fmt, (unsigned char)arg2,
-                    (unsigned char)arg1);
+            sprintf(fmt, "/%02X/%04X: %02X%02X%02X  %s %s", rambank, k, op, (unsigned char)arg1, (unsigned char)arg2, opcodes[op].mnemonic, disasm_templates[opcodes[op].mode]);
+            sprintf(second_buf[i], fmt, (unsigned char)arg2, (unsigned char)arg1);
             k+=3;
             break;
 
@@ -637,28 +605,21 @@ void disasm(int addrs, int len, int lc, int rambank) {
 
             if (lc)
             {
-                arg1 = (j >= 0x1000) ? language_card[rambank][++j-0x1000]
-                       : (lc == 1) ? language_banks[rambank][++j]
-                       : language_banks[rambank][++j+0x1000];
+                arg1 = (j >= 0x1000) ? language_card[rambank][++j-0x1000] : (lc == 1) ? language_banks[rambank][++j] : language_banks[rambank][++j+0x1000];
             }
             else
             {
                 arg1 = apple_ii_64k[rambank][++j];
             }
 
-            sprintf(fmt, "/%02X/%04X: %02X%02X    %s %s",
-                    rambank, k, op, (unsigned char)arg1,
-                    opcodes[op].mnemonic,
-                    disasm_templates[opcodes[op].mode]);
+            sprintf(fmt, "/%02X/%04X: %02X%02X    %s %s", rambank, k, op, (unsigned char)arg1, opcodes[op].mnemonic, disasm_templates[opcodes[op].mode]);
             if (arg1 < 0)
             {
-                sprintf(second_buf[i], fmt,
-                        k + arg1 + 2, '-', (unsigned char)(-arg1));
+                sprintf(second_buf[i], fmt, k + arg1 + 2, '-', (unsigned char)(-arg1));
             }
             else
             {
-                sprintf(second_buf[i], fmt,
-                        k + arg1 + 2, '+', (unsigned char)arg1);
+                sprintf(second_buf[i], fmt, k + arg1 + 2, '+', (unsigned char)arg1);
             }
 
             k+=2;
@@ -678,16 +639,8 @@ void disasm(int addrs, int len, int lc, int rambank) {
    ------------------------------------------------------------------------- */
 
 void show_regs() {
-    sprintf(second_buf[num_buffer_lines++], "PC = %04X EA = %04X SP = %04X",
-            cpu65_current.pc,
-            cpu65_debug.ea,
-            cpu65_current.sp + 0x0100);
-    sprintf(second_buf[num_buffer_lines++],
-            "X = %02X Y = %02X A = %02X F = %02X",
-            cpu65_current.x,
-            cpu65_current.y,
-            cpu65_current.a,
-            cpu65_current.f);
+    sprintf(second_buf[num_buffer_lines++], "PC = %04X EA = %04X SP = %04X", cpu65_current.pc, cpu65_debug.ea, cpu65_current.sp + 0x0100);
+    sprintf(second_buf[num_buffer_lines++], "X = %02X Y = %02X A = %02X F = %02X", cpu65_current.x, cpu65_current.y, cpu65_current.a, cpu65_current.f);
 
     memset(second_buf[num_buffer_lines], ' ', BUF_X);
     if (cpu65_current.f & C_Flag)
@@ -878,9 +831,7 @@ int at_haltpt() {
     unsigned char op = get_current_opcode();
     if (op_breakpoints[op])
     {
-        sprintf(second_buf[num_buffer_lines++],
-                "stopped at %04X bank %d instruction %02X",
-                cpu65_current.pc, c_get_current_rambank(cpu65_current.pc), op);
+        sprintf(second_buf[num_buffer_lines++], "stopped at %04X bank %d instruction %02X", cpu65_current.pc, c_get_current_rambank(cpu65_current.pc), op);
     }
 
     for (i = 0; i < MAX_BRKPTS; i++)
@@ -888,8 +839,7 @@ int at_haltpt() {
 
         if (cpu65_current.pc == breakpoints[i])
         {
-            sprintf(second_buf[num_buffer_lines++], "stopped at %04X bank %d",
-                    breakpoints[i], c_get_current_rambank(cpu65_current.pc));
+            sprintf(second_buf[num_buffer_lines++], "stopped at %04X bank %d", breakpoints[i], c_get_current_rambank(cpu65_current.pc));
         }
     }
 
@@ -901,14 +851,11 @@ int at_haltpt() {
             {
                 if (cpu65_debug.rw & 2)
                 {
-                    sprintf(second_buf[num_buffer_lines++],
-                            "wrote: %04X: %02X",
-                            watchpoints[i], cpu65_debug.d);
+                    sprintf(second_buf[num_buffer_lines++], "wrote: %04X: %02X", watchpoints[i], cpu65_debug.d);
                 }
                 else
                 {
-                    sprintf(second_buf[num_buffer_lines++],
-                            "read: %04X", watchpoints[i]);
+                    sprintf(second_buf[num_buffer_lines++], "read: %04X", watchpoints[i]);
                 }
 
                 cpu65_debug.rw = 0; /* only allow WP to trip once */
@@ -929,21 +876,16 @@ void show_breakpts() {
     {
         if ((breakpoints[k] >= 0) && (watchpoints[k] >= 0))
         {
-            sprintf(second_buf[i++], "break %02d at %04X  watch %02d at %04X",
-                    k+1, breakpoints[k], k+1, watchpoints[k]);
+            sprintf(second_buf[i++], "break %02d at %04X  watch %02d at %04X", k+1, breakpoints[k], k+1, watchpoints[k]);
         }
-        else
-        if (breakpoints[k] >= 0)
+        else if (breakpoints[k] >= 0)
         {
-            sprintf(second_buf[i++], "break %02d at %04X",
-                    k+1, breakpoints[k]);
+            sprintf(second_buf[i++], "break %02d at %04X", k+1, breakpoints[k]);
         }
-        else
-        if (watchpoints[k] >= 0)
+        else if (watchpoints[k] >= 0)
         {
             memset(second_buf[i], ' ', BUF_X);
-            sprintf(second_buf[i++]+16, "  watch %02d at %04X",
-                    k+1, watchpoints[k]);
+            sprintf(second_buf[i++]+16, "  watch %02d at %04X", k+1, watchpoints[k]);
         }
     }
 
@@ -991,58 +933,28 @@ void show_opcode_breakpts() {
 void show_lc_info() {
     int i = num_buffer_lines;
     sprintf(second_buf[i++], "lc bank = %d", 1 + !!(softswitches && SS_BANK2));
-    (softswitches & SS_LCWRT) ? sprintf(second_buf[i++], "write LC")
-    : sprintf(second_buf[i++], "LC write protected");
-    (softswitches & SS_LCRAM)  ? sprintf(second_buf[i++], "read LC")
-    : sprintf(second_buf[i++], "read ROM");
+    (softswitches & SS_LCWRT) ? sprintf(second_buf[i++], "write LC") : sprintf(second_buf[i++], "LC write protected");
+    (softswitches & SS_LCRAM) ? sprintf(second_buf[i++], "read LC")  : sprintf(second_buf[i++], "read ROM");
     sprintf(second_buf[i++], "second = %d", !!(softswitches && SS_LCSEC));
     num_buffer_lines = i;
 }
 
 void show_misc_info() {
     int i = num_buffer_lines;
-    sprintf(second_buf[i++], "TEXT (%04X): %s",
-            SW_TEXT + !!(softswitches & SS_TEXT),
-            (softswitches & SS_TEXT) ? "on" : "off");
-    sprintf(second_buf[i++], "MIXED (%04X): %s",
-            SW_MIXED + !!(softswitches & SS_MIXED),
-            (softswitches & SS_MIXED) ? "on" : "off");
-    sprintf(second_buf[i++], "PAGE2 (%04X): %s",
-            SW_PAGE2 + !!(softswitches & SS_PAGE2),
-            (softswitches & SS_PAGE2) ? "on" : "off");
-    sprintf(second_buf[i++], "HIRES (%04X): %s",
-            SW_HIRES + !!(softswitches & SS_HIRES),
-            (softswitches & SS_HIRES) ? "on" : "off");
-    sprintf(second_buf[i++], "80STORE (%04X): %s",
-            SW_80STORE + !!(softswitches & SS_80STORE),
-            (softswitches & SS_80STORE) ? "on" : "off");
-    sprintf(second_buf[i++], "RAMRD (%04X): %s",
-            SW_RAMRD + !!(softswitches & SS_RAMRD),
-            (softswitches & SS_RAMRD) ? "on" : "off");
-    sprintf(second_buf[i++], "RAMWRT (%04X): %s",
-            SW_RAMWRT + !!(softswitches & SS_RAMWRT),
-            (softswitches & SS_RAMWRT) ? "on" : "off");
-    sprintf(second_buf[i++], "ALTZP (%04X): %s",
-            SW_ALTZP + !!(softswitches & SS_ALTZP),
-            (softswitches & SS_ALTZP) ? "on" : "off");
-    sprintf(second_buf[i++], "80COL (%04X): %s",
-            SW_80COL + !!(softswitches & SS_80COL),
-            (softswitches & SS_80COL) ? "on" : "off");
-    sprintf(second_buf[i++], "ALTCHAR (%04X): %s",
-            SW_ALTCHAR + !!(softswitches & SS_ALTCHAR),
-            (softswitches & SS_ALTCHAR) ? "on" : "off");
-    sprintf(second_buf[i++], "SLOTC3ROM (%04X): %s",
-            SW_SLOTC3ROM -/*anomaly*/ !!(softswitches & SS_C3ROM),
-            (softswitches & SS_C3ROM) ? "on" : "off");
-    sprintf(second_buf[i++], "SLOTCXROM (%04X): %s",
-            SW_SLOTCXROM + !!(softswitches & SS_CXROM),
-            (softswitches & SS_CXROM) ? "on" : "off");
-    sprintf(second_buf[i++], "DHIRES (%04X): %s",
-            SW_DHIRES + !!(softswitches && SS_DHIRES),
-            (softswitches & SS_DHIRES) ? "on" : "off");
-    sprintf(second_buf[i++], "IOUDIS (%04X): %s",
-            SW_IOUDIS + !!(softswitches && SS_IOUDIS),
-            (softswitches && SS_IOUDIS) ? "on" : "off");
+    sprintf(second_buf[i++], "TEXT (%04X): %s", SW_TEXT + !!(softswitches & SS_TEXT), (softswitches & SS_TEXT) ? "on" : "off");
+    sprintf(second_buf[i++], "MIXED (%04X): %s", SW_MIXED + !!(softswitches & SS_MIXED), (softswitches & SS_MIXED) ? "on" : "off");
+    sprintf(second_buf[i++], "PAGE2 (%04X): %s", SW_PAGE2 + !!(softswitches & SS_PAGE2), (softswitches & SS_PAGE2) ? "on" : "off");
+    sprintf(second_buf[i++], "HIRES (%04X): %s", SW_HIRES + !!(softswitches & SS_HIRES), (softswitches & SS_HIRES) ? "on" : "off");
+    sprintf(second_buf[i++], "80STORE (%04X): %s", SW_80STORE + !!(softswitches & SS_80STORE), (softswitches & SS_80STORE) ? "on" : "off");
+    sprintf(second_buf[i++], "RAMRD (%04X): %s", SW_RAMRD + !!(softswitches & SS_RAMRD), (softswitches & SS_RAMRD) ? "on" : "off");
+    sprintf(second_buf[i++], "RAMWRT (%04X): %s", SW_RAMWRT + !!(softswitches & SS_RAMWRT), (softswitches & SS_RAMWRT) ? "on" : "off");
+    sprintf(second_buf[i++], "ALTZP (%04X): %s", SW_ALTZP + !!(softswitches & SS_ALTZP), (softswitches & SS_ALTZP) ? "on" : "off");
+    sprintf(second_buf[i++], "80COL (%04X): %s", SW_80COL + !!(softswitches & SS_80COL), (softswitches & SS_80COL) ? "on" : "off");
+    sprintf(second_buf[i++], "ALTCHAR (%04X): %s", SW_ALTCHAR + !!(softswitches & SS_ALTCHAR), (softswitches & SS_ALTCHAR) ? "on" : "off");
+    sprintf(second_buf[i++], "SLOTC3ROM (%04X): %s", SW_SLOTC3ROM -/*anomaly*/ !!(softswitches & SS_C3ROM), (softswitches & SS_C3ROM) ? "on" : "off");
+    sprintf(second_buf[i++], "SLOTCXROM (%04X): %s", SW_SLOTCXROM + !!(softswitches & SS_CXROM), (softswitches & SS_CXROM) ? "on" : "off");
+    sprintf(second_buf[i++], "DHIRES (%04X): %s", SW_DHIRES + !!(softswitches && SS_DHIRES), (softswitches & SS_DHIRES) ? "on" : "off");
+    sprintf(second_buf[i++], "IOUDIS (%04X): %s", SW_IOUDIS + !!(softswitches && SS_IOUDIS), (softswitches && SS_IOUDIS) ? "on" : "off");
 /*     sprintf(second_buf[i++], "RDVBLBAR: %s", (SLOTCXROM & 0x80) */
 /*          ? "on" : "off"); */
 
@@ -1092,35 +1004,21 @@ void show_disk_info() {
     }
 
     memset(second_buf[++i], ' ', BUF_X);
-    *(second_buf[i] + sprintf(second_buf[i],
-                              "%s %d bytes",
-                              (disk6.disk[0].nibblized) ? ".nib" : ".dsk",
-                              (int)disk6.disk[0].file_size)) = ' ';
-    sprintf(second_buf[i++]+off, "%s %d bytes",
-            (disk6.disk[1].nibblized) ? ".nib" : ".dsk",
-            (int)disk6.disk[1].file_size);
+    *(second_buf[i] + sprintf(second_buf[i], "%s %d bytes", (disk6.disk[0].nibblized) ? ".nib" : ".dsk", (int)disk6.disk[0].file_size)) = ' ';
+    sprintf(second_buf[i++]+off, "%s %d bytes", (disk6.disk[1].nibblized) ? ".nib" : ".dsk", (int)disk6.disk[1].file_size);
 
     memset(second_buf[i], ' ', BUF_X);
-    *(second_buf[i] + sprintf(second_buf[i], "write %s",
-                              (disk6.disk[0].protected) ? "protected" : "enabled")) = ' ';
-    sprintf(second_buf[i++]+off, "write %s",
-            (disk6.disk[1].protected) ? "protected" : "enabled");
+    *(second_buf[i] + sprintf(second_buf[i], "write %s", (disk6.disk[0].protected) ? "protected" : "enabled")) = ' ';
+    sprintf(second_buf[i++]+off, "write %s", (disk6.disk[1].protected) ? "protected" : "enabled");
 
     memset(second_buf[i], ' ', BUF_X);
-    *(second_buf[i] + sprintf(second_buf[i],
-                              "phase %d %s",
-                              disk6.disk[0].phase,
-                              (disk6.disk[0].phase_change) ? "(new)" : "")) = ' ';
-    sprintf(second_buf[i++]+off,
-            "phase %d %s",
-            disk6.disk[1].phase,
-            (disk6.disk[1].phase_change) ? "(new)" : "");
+    *(second_buf[i] + sprintf(second_buf[i], "phase %d %s", disk6.disk[0].phase, (disk6.disk[0].phase_change) ? "(new)" : "")) = ' ';
+    sprintf(second_buf[i++]+off, "phase %d %s", disk6.disk[1].phase, (disk6.disk[1].phase_change) ? "(new)" : "");
 
     memset(second_buf[i], ' ', BUF_X);
     if (!disk6.disk[0].nibblized)
     {
-        *(second_buf[i] + sprintf(second_buf[i], "sector %d",
-                                  disk6.disk[0].sector)) = ' ';
+        *(second_buf[i] + sprintf(second_buf[i], "sector %d", disk6.disk[0].sector)) = ' ';
         if (disk6.disk[1].nibblized)
         {
             ++i;
@@ -1129,8 +1027,7 @@ void show_disk_info() {
 
     if (!disk6.disk[1].nibblized)
     {
-        sprintf(second_buf[i++]+off, "sector %d",
-                disk6.disk[1].sector);
+        sprintf(second_buf[i++]+off, "sector %d", disk6.disk[1].sector);
     }
 
     num_buffer_lines = i;
@@ -1149,28 +1046,63 @@ void clear_debugger_screen() {
 }
 
 /* -------------------------------------------------------------------------
-    end_step () - finish a stepping command
+    end_cpu_step () - finish a stepping command
         display the next instruction, and tell whether it will branch
    ------------------------------------------------------------------------- */
-void end_step() {
-    int branch;
+void end_cpu_step() {
+
+    cpu65_set_stepping(0);
 
     clear_debugger_screen();
-    disasm(cpu65_current.pc, 1, 0, -1);         /* show next instruction */
-    branch = will_branch();             /* test if it will branch */
+    disasm(cpu65_current.pc, 1, 0, -1);
+    int branch = will_branch();
     if (branch == -1)
     {
-        return;                         /* n/a */
+        return;
     }
 
-    sprintf(second_buf[num_buffer_lines++], "%s",
-            (branch) ? "will branch" : "will not branch");
+    sprintf(second_buf[num_buffer_lines++], "%s", (branch) ? "will branch" : "will not branch");
+}
+/* -------------------------------------------------------------------------
+    begin_cpu_step() - step the CPU
+        set the CPU into stepping mode and yield to CPU thread
+   ------------------------------------------------------------------------- */
+void begin_cpu_step()
+{
+    cpu65_set_stepping(1);
+    c_stepping_yield();
 }
 
 /* -------------------------------------------------------------------------
-    c_do_step () - step into or step over commands
+    c_stepping_yield()
+        called to yield execution between cpu and main threads when stepping
    ------------------------------------------------------------------------- */
-void c_do_step(int step_count) {
+void c_stepping_yield()
+{
+    int err = 0;
+    if ((err = pthread_mutex_unlock(&interface_mutex)))
+    {
+        ERRLOG("pthread_mutex_unlock : %d", err);
+    }
+
+    // presumably other thread executes while we yield and sleep ...
+    if ((err = pthread_yield()))
+    {
+        ERRLOG("pthread_yield ; %d", err);
+    }
+    static struct timespec deltat = { .tv_sec=0, .tv_nsec=1 };
+    nanosleep(&deltat, NULL);
+
+    if ((err = pthread_mutex_lock(&interface_mutex)))
+    {
+        ERRLOG("pthread_mutex_lock : %d", err);
+    }
+}
+
+/* -------------------------------------------------------------------------
+    do_step_or_next () - step into or step over commands
+   ------------------------------------------------------------------------- */
+void do_step_or_next(int step_count) {
     char ch;
     unsigned char op;
     int step_frame = 0;
@@ -1195,16 +1127,16 @@ void c_do_step(int step_count) {
                     --step_frame;            /* RTS */
                 }
 
-                cpu65_step();
+                begin_cpu_step();
             } while (((ch = c_mygetch(0)) == -1) && !at_haltpt() && step_frame);
         }
         else
         {
-            cpu65_step();                             /* step one instruction */
+            begin_cpu_step();
         }
     } while (--step_count && !at_haltpt() && (c_mygetch(0) == -1));
 
-    end_step();                         /* print location */
+    end_cpu_step();
 }
 
 /* -------------------------------------------------------------------------
@@ -1212,7 +1144,7 @@ void c_do_step(int step_count) {
         show quick reference command usage
    ------------------------------------------------------------------------- */
 void display_help() {
-    /*                     "|||||||||||||||||||||||||||||||||||||" */
+    /*                      "|||||||||||||||||||||||||||||||||||||" */
     int i = num_buffer_lines;
     sprintf(second_buf[i++], "d{is} {lc1|lc2} {/bank/addr} {+}{len}");
     sprintf(second_buf[i++], "m{em} {lc1|lc2} {/bank/addr} {+}{len}");
@@ -1287,7 +1219,7 @@ void do_debug_command() {
             ++j;
         }
 
-        memset(command_buf[i] + j, ' ', BUF_X - j - 1);
+        memset(command_buf[i] + j, ' ', BUF_X - j/* - 1*/);
         command_buf[i++][BUF_X - 1] = '\0';
     }
 
@@ -1349,14 +1281,13 @@ void c_do_debugging() {
         c_interface_print(0, i, 2, screen[ i ] );
     }
 
-    for (;; )
+    for (;;)
     {
         /* print command line */
         c_interface_print(1, 1+PROMPT_Y, 0, command_line);
 
         /* highlight cursor */
-        video_plotchar(1+command_pos, 1+PROMPT_Y, 1,
-                       command_line[command_pos]);
+        video_plotchar(1+command_pos, 1+PROMPT_Y, 1, command_line[command_pos]);
 
         while ((ch = c_mygetch(1)) == -1)
         {
@@ -1370,23 +1301,19 @@ void c_do_debugging() {
         else
         {
             /* backspace */
-            if ((ch == 127 || ch == 8) &&
-                (command_pos > PROMPT_X))
+            if ((ch == 127 || ch == 8) && (command_pos > PROMPT_X))
             {
                 command_line[--command_pos] = ' ';
             }
             /* return */
-            else
-            if (ch == 13)
+            else if (ch == 13)
             {
                 command_line[command_pos] = '\0';
                 do_debug_command();
                 command_pos = PROMPT_X;
             }
             /* normal character */
-            else
-            if ((ch >= ' ') && (ch < 127) &&
-                (command_pos < PROMPT_END_X))
+            else if ((ch >= ' ') && (ch < 127) && (command_pos < PROMPT_END_X))
             {
                 command_line[command_pos++] = ch;
             }

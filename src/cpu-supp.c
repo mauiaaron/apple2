@@ -82,7 +82,6 @@ static void initialize_code_tables(void)
     }
 }
 
-
 void cpu65_set(int flags)
 {
     initialize_code_tables();
@@ -113,5 +112,17 @@ void cpu65_set(int flags)
 void cpu65_interrupt(int reason)
 {
     cpu65__signal = reason;
+}
+
+void cpu65_set_stepping(int flag)
+{
+    if (flag)
+    {
+        cpu65_interrupt(DebugStepSig);
+    }
+    else
+    {
+        cpu65_interrupt(0);
+    }
 }
 

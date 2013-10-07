@@ -42,6 +42,7 @@ unsigned char joy_button0 = 0;
 unsigned char joy_button1 = 0;
 unsigned char joy_button2 = 0;
 
+/* mutex used to synchronize between cpu and main threads */
 pthread_mutex_t interface_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 #ifdef PC_JOYSTICK
@@ -64,14 +65,14 @@ static int apple_ii_keymap_plain[128] =
   'D', 'F', 'G', 'H', 'J', 'K', 'L', ';',       /* 32-39   */
   8, -1, -1, 21, 'Z', 'X', 'C', 'V',            /* 40-47   */
   'B', 'N', 'M', ',', '.', '/', -1, -1,         /* 48-55   */
-  JB0, ' ', -1, kF1, kF2, kF3, kF4, kF5,              /* 56-63   */
-  kF6, kF7, kF8, kF9, kF10, -1, -1, JUL,             /* 64-71   */
+  JB0, ' ', -1, kF1, kF2, kF3, kF4, kF5,        /* 56-63   */
+  kF6, kF7, kF8, kF9, kF10, -1, -1, JUL,        /* 64-71   */
   J_U, JUR, S_D, J_L, J_C, J_R, S_I, JDL,       /* 72-79   */
-  J_D, JDR, -1, -1, -1, kF11, kF12, -1,           /* 80-87   */
+  J_D, JDR, -1, -1, -1, kF11, kF12, -1,         /* 80-87   */
   -1, -1, -1, -1, -1, -1, -1, -1,               /* 88-95   */
-  -1, -1, -1, -1, JB1, RST, kHOME, -1,              /* 96-103  */
-  kPGUP, 8, 21, kEND, -1, kPGDN, JB2, -1,              /* 104-111 */
-  -1, -1, -1, -1, -1, -1, -1, kF4 /* (pause) */,              /* 112-119 */
+  -1, -1, -1, -1, JB1, RST, kHOME, -1,          /* 96-103  */
+  kPGUP, 8, 21, kEND, -1, kPGDN, JB2, -1,       /* 104-111 */
+  -1, -1, -1, -1, -1, -1, -1, kF4 /* (pause) */,/* 112-119 */
   -1, -1, -1, -1, -1, -1, -1, -1 };             /* 120-127 */
 
 static int apple_ii_keymap_ctrl[128] =
@@ -82,14 +83,14 @@ static int apple_ii_keymap_ctrl[128] =
   4, 6, 7, 8, 10, 11, 12, ';',                  /* 32-39   */
   8, -1, -1, 21, 26, 24, 3, 22,                 /* 40-47   */
   2, 14, 13, ',', '.', '/', -1, -1,             /* 48-55   */
-  JB0, ' ', -1, kF1, kF2, kF3, kF4, kF5,              /* 56-63   */
-  kF6, kF7, kF8, kF9, kF10, -1, -1, JUL,             /* 64-71   */
+  JB0, ' ', -1, kF1, kF2, kF3, kF4, kF5,        /* 56-63   */
+  kF6, kF7, kF8, kF9, kF10, -1, -1, JUL,        /* 64-71   */
   J_U, JUR, S_D, J_L, J_C, J_R, S_I, JDL,       /* 72-79   */
-  J_D, JDR, -1, -1, -1, kF11, kF12, -1,           /* 80-87   */
+  J_D, JDR, -1, -1, -1, kF11, kF12, -1,         /* 80-87   */
   -1, -1, -1, -1, -1, -1, -1, -1,               /* 88-95   */
-  -1, -1, -1, BOT, JB1, RST, kHOME, -1,              /* 96-103  */
-  kPGUP, 8, 21, kEND, -1, kPGDN, JB2, -1,             /* 104-111 */
-  -1, -1, -1, -1, -1, -1, -1, kF4 /* pause */,              /* 112-119 */
+  -1, -1, -1, BOT, JB1, RST, kHOME, -1,         /* 96-103  */
+  kPGUP, 8, 21, kEND, -1, kPGDN, JB2, -1,       /* 104-111 */
+  -1, -1, -1, -1, -1, -1, -1, kF4 /* pause */,  /* 112-119 */
   -1, -1, -1, -1, -1, -1, -1, -1 };             /* 120-127 */
 
 static int apple_ii_keymap_shifted[128] =
@@ -100,14 +101,14 @@ static int apple_ii_keymap_shifted[128] =
   'D', 'F', 'G', 'H', 'J', 'K', 'L', '+',       /* 32-39   */
   8, -1, -1, 21, 'Z', 'X', 'C', 'V',            /* 40-47   */
   'B', '^', 'M', '<', '>', '?', -1, -1,         /* 48-55   */
-  JB0, ' ', -1, kF1, kF2, kF3, kF4, kF5,              /* 56-63   */
-  kF6, kF7, kF8, kF9, kF10, -1, -1, JUL,             /* 64-71   */
+  JB0, ' ', -1, kF1, kF2, kF3, kF4, kF5,        /* 56-63   */
+  kF6, kF7, kF8, kF9, kF10, -1, -1, JUL,        /* 64-71   */
   J_U, JUR, S_D, J_L, J_C, J_R, S_I, JDL,       /* 72-79   */
-  J_D, JDR, -1, -1, -1, kF11, kF12, -1,           /* 80-87   */
+  J_D, JDR, -1, -1, -1, kF11, kF12, -1,         /* 80-87   */
   -1, -1, -1, -1, -1, -1, -1, -1,               /* 88-95   */
-  -1, -1, -1, -1, JB1, RST, kHOME, -1,               /* 96-103  */
-  kPGUP, 8, 21, kEND, -1, kPGDN, JB2, -1,             /* 104-111 */
-  -1, -1, -1, -1, -1, -1, -1, kF4 /* pause */,              /* 112-119 */
+  -1, -1, -1, -1, JB1, RST, kHOME, -1,          /* 96-103  */
+  kPGUP, 8, 21, kEND, -1, kPGDN, JB2, -1,       /* 104-111 */
+  -1, -1, -1, -1, -1, -1, -1, kF4 /* pause */,  /* 112-119 */
   -1, -1, -1, -1, -1, -1, -1, -1 };             /* 120-127 */
 
 /* ----------------------------------------------------
@@ -121,14 +122,14 @@ static int apple_iie_keymap_plain[128] =
   'd', 'f', 'g', 'h', 'j', 'k', 'l', ';',       /* 32-39   */
   '\'', '`', -1,'\\', 'z', 'x', 'c', 'v',       /* 40-47   */
   'b', 'n', 'm', ',', '.', '/', -1, -1,         /* 48-55   */
-  JB0, ' ', -1, kF1, kF2, kF3, kF4, kF5,              /* 56-63   */
-  kF6, kF7, kF8, kF9, kF10, -1, -1, JUL,             /* 64-71   */
+  JB0, ' ', -1, kF1, kF2, kF3, kF4, kF5,        /* 56-63   */
+  kF6, kF7, kF8, kF9, kF10, -1, -1, JUL,        /* 64-71   */
   J_U, JUR, S_D, J_L, J_C, J_R, S_I, JDL,       /* 72-79   */
-  J_D, JDR, -1, -1, -1, kF11, kF12, -1,           /* 80-87   */
+  J_D, JDR, -1, -1, -1, kF11, kF12, -1,         /* 80-87   */
   -1, -1, -1, -1, -1, -1, -1, -1,               /* 88-95   */
-  -1, -1, -1, -1, JB1, RST, kHOME, 11,              /* 96-103  */
-  kPGUP, 8, 21, kEND, 10, kPGDN, JB2, 127,            /* 104-111 */
-  -1, -1, -1, -1, -1, -1, -1, kF4 /* pause */,              /* 112-119 */
+  -1, -1, -1, -1, JB1, RST, kHOME, 11,          /* 96-103  */
+  kPGUP, 8, 21, kEND, 10, kPGDN, JB2, 127,      /* 104-111 */
+  -1, -1, -1, -1, -1, -1, -1, kF4 /* pause */,  /* 112-119 */
   -1, -1, -1, -1, -1, -1, -1, -1 };             /* 120-127 */
 
 static int apple_iie_keymap_ctrl[128] =
@@ -139,14 +140,14 @@ static int apple_iie_keymap_ctrl[128] =
   4, 6, 7, 8, 10, 11, 12, ';',                  /* 32-39   */
   '\'', '`', -1,'\\', 26, 24, 3, 22,            /* 40-47   */
   2, 14, 13, ',', '.', '/', -1, -1,             /* 48-55   */
-  JB0, ' ', -1, kF1, kF2, kF3, kF4, kF5,              /* 56-63   */
-  kF6, kF7, kF8, kF9, kF10, -1, -1, JUL,             /* 64-71   */
+  JB0, ' ', -1, kF1, kF2, kF3, kF4, kF5,        /* 56-63   */
+  kF6, kF7, kF8, kF9, kF10, -1, -1, JUL,        /* 64-71   */
   J_U, JUR, S_D, J_L, J_C, J_R, S_I, JDL,       /* 72-79   */
-  J_D, JDR, -1, -1, -1, kF11, kF12, -1,           /* 80-87   */
+  J_D, JDR, -1, -1, -1, kF11, kF12, -1,         /* 80-87   */
   -1, -1, -1, -1, -1, -1, -1, -1,               /* 88-95   */
-  -1, -1, -1, BOT, JB1, RST, kHOME, 11,              /* 96-103  */
-  kPGUP, 8, 21, kEND, 10, kPGDN, JB2, 127,            /* 104-111 */
-  -1, -1, -1, -1, -1, -1, -1, kF4 /* pause */,              /* 112-119 */
+  -1, -1, -1, BOT, JB1, RST, kHOME, 11,         /* 96-103  */
+  kPGUP, 8, 21, kEND, 10, kPGDN, JB2, 127,      /* 104-111 */
+  -1, -1, -1, -1, -1, -1, -1, kF4 /* pause */,  /* 112-119 */
   -1, -1, -1, -1, -1, -1, -1, -1 };             /* 120-127 */
 
 static int apple_iie_keymap_shifted[128] =
@@ -157,14 +158,14 @@ static int apple_iie_keymap_shifted[128] =
   'D', 'F', 'G', 'H', 'J', 'K', 'L', ':',       /* 32-39   */
   '"', '~', -1, '|', 'Z', 'X', 'C', 'V',        /* 40-47   */
   'B', 'N', 'M', '<', '>', '?', -1, -1,         /* 48-55   */
-  JB0, ' ', -1, kF1, kF2, kF3, kF4, kF5,              /* 56-63   */
-  kF6, kF7, kF8, kF9, kF10, -1, -1, JUL,             /* 64-71   */
+  JB0, ' ', -1, kF1, kF2, kF3, kF4, kF5,        /* 56-63   */
+  kF6, kF7, kF8, kF9, kF10, -1, -1, JUL,        /* 64-71   */
   J_U, JUR, S_D, J_L, J_C, J_R, S_I, JDL,       /* 72-79   */
-  J_D, JDR, -1, -1, -1, kF11, kF12, -1,           /* 80-87   */
+  J_D, JDR, -1, -1, -1, kF11, kF12, -1,         /* 80-87   */
   -1, -1, -1, -1, -1, -1, -1, -1,               /* 88-95   */
-  -1, -1, -1, -1, JB1, RST, kHOME, 11,               /* 96-103  */
-  kPGUP, 8, 21, kEND, 10, kPGDN, JB2, 127,            /* 104-111 */
-  -1, -1, -1, -1, -1, -1, -1, kF4 /* pause */,              /* 112-119 */
+  -1, -1, -1, -1, JB1, RST, kHOME, 11,          /* 96-103  */
+  kPGUP, 8, 21, kEND, 10, kPGDN, JB2, 127,      /* 104-111 */
+  -1, -1, -1, -1, -1, -1, -1, kF4 /* pause */,  /* 112-119 */
   -1, -1, -1, -1, -1, -1, -1, -1 };             /* 120-127 */
 
 static int apple_iie_keymap_caps[128] =
@@ -175,14 +176,14 @@ static int apple_iie_keymap_caps[128] =
   'D', 'F', 'G', 'H', 'J', 'K', 'L', ';',       /* 32-39   */
   '\'', '`', -1,'\\', 'Z', 'X', 'C', 'V',       /* 40-47   */
   'B', 'N', 'M', ',', '.', '/', -1, -1,         /* 48-55   */
-  JB0, ' ', -1, kF1, kF2, kF3, kF4, kF5,              /* 56-63   */
-  kF6, kF7, kF8, kF9, kF10, -1, -1, JUL,             /* 64-71   */
+  JB0, ' ', -1, kF1, kF2, kF3, kF4, kF5,        /* 56-63   */
+  kF6, kF7, kF8, kF9, kF10, -1, -1, JUL,        /* 64-71   */
   J_U, JUR, S_D, J_L, J_C, J_R, S_I, JDL,       /* 72-79   */
-  J_D, JDR, -1, -1, -1, kF11, kF12, -1,           /* 80-87   */
+  J_D, JDR, -1, -1, -1, kF11, kF12, -1,         /* 80-87   */
   -1, -1, -1, -1, -1, -1, -1, -1,               /* 88-95   */
-  -1, -1, -1, -1, JB1, RST, kHOME, 11,              /* 96-103  */
-  kPGUP, 8, 21, kEND, 10, kPGDN, JB2, 127,            /* 104-111 */
-  -1, -1, -1, -1, -1, -1, -1, kF4 /* pause */,              /* 112-119 */
+  -1, -1, -1, -1, JB1, RST, kHOME, 11,          /* 96-103  */
+  kPGUP, 8, 21, kEND, 10, kPGDN, JB2, 127,      /* 104-111 */
+  -1, -1, -1, -1, -1, -1, -1, kF4 /* pause */,  /* 112-119 */
   -1, -1, -1, -1, -1, -1, -1, -1 };             /* 120-127 */
 
 static int apple_iie_keymap_shift_ctrl[128] =
@@ -193,22 +194,18 @@ static int apple_iie_keymap_shift_ctrl[128] =
   4, 6, 7, 8, 10, 11, 12, ';',                  /* 32-39   */
   '\'', '`', 28, -1, 26, 24, 3, 22,             /* 40-47   */
   2, 14, 13, ',', '.', '/', -1, -1,             /* 48-55   */
-  JB0, ' ', -1, kF1, kF2, kF3, kF4, kF5,              /* 56-63   */
-  kF6, kF7, kF8, kF9, kF10, -1, -1, JUL,             /* 64-71   */
+  JB0, ' ', -1, kF1, kF2, kF3, kF4, kF5,        /* 56-63   */
+  kF6, kF7, kF8, kF9, kF10, -1, -1, JUL,        /* 64-71   */
   J_U, JUR, S_D, J_L, J_C, J_R, S_I, JDL,       /* 72-79   */
-  J_D, JDR, -1, -1, -1, kF11, kF12, -1,           /* 80-87   */
+  J_D, JDR, -1, -1, -1, kF11, kF12, -1,         /* 80-87   */
   -1, -1, -1, -1, -1, -1, -1, -1,               /* 88-95   */
-  -1, -1, -1, BOT, JB1, RST, kHOME, 11,              /* 96-103  */
-  kPGUP, 8, 21, kEND, 10, kPGDN, JB2, 127,            /* 104-111 */
-  -1, -1, -1, -1, -1, -1, -1, kF4 /* pause */,              /* 112-119 */
+  -1, -1, -1, BOT, JB1, RST, kHOME, 11,         /* 96-103  */
+  kPGUP, 8, 21, kEND, 10, kPGDN, JB2, 127,      /* 104-111 */
+  -1, -1, -1, -1, -1, -1, -1, kF4 /* pause */,  /* 112-119 */
   -1, -1, -1, -1, -1, -1, -1, -1 };             /* 120-127 */
 
 static char key_pressed[ 256 ];
 
-
-/* ----------------------------------------------------
-    functions
-   ---------------------------------------------------- */
 
 /* -------------------------------------------------------------------------
  * This routine is called periodically to update the state of the emulator.
@@ -238,39 +235,48 @@ void c_periodic_update(int dummysig) {
             case RST:
                 cpu65_interrupt(ResetSig);
                 break;
+
             case BOT:
                 cpu65_interrupt(RebootSig);
                 break;
+
             case J_C:
                 joy_x = joy_center_x;
                 joy_y = joy_center_y;
                 break;
+
             case kF1:
                 pthread_mutex_lock(&interface_mutex);
                 c_interface_select_diskette( 0 );
                 pthread_mutex_unlock(&interface_mutex);
                 break;
+
             case kF2:
                 pthread_mutex_lock(&interface_mutex);
                 c_interface_select_diskette( 1 );
                 pthread_mutex_unlock(&interface_mutex);
                 break;
+
             case kF4:
                 pthread_mutex_lock(&interface_mutex);
                 while (c_mygetch(1) == -1)
                 {
                     struct timespec ts = { .tv_sec=0, .tv_nsec=1 };
                     nanosleep(&ts, NULL);
-                }                                   /*busy loop*/
+                }
                 pthread_mutex_unlock(&interface_mutex);
                 break;
+
             case kF5:
                 pthread_mutex_lock(&interface_mutex);
                 c_interface_keyboard_layout();
                 pthread_mutex_unlock(&interface_mutex);
                 break;
+
             case kF7:
-                cpu65_interrupt(EnterDebugSig);
+                pthread_mutex_lock(&interface_mutex);
+                c_do_debugging();
+                pthread_mutex_unlock(&interface_mutex);
                 break;
 #if 0
             case kF8:
@@ -396,14 +402,6 @@ void c_periodic_update(int dummysig) {
     }
 }
 
-/* Called from cpu code.  Perhaps should be moved to misc.c, but was
- * abstracted from function above...
- */
-void enter_debugger(void)
-{
-    c_do_debugging();
-}
-
 /* -------------------------------------------------------------------------
     void c_read_raw_key() : handle a scancode
    ------------------------------------------------------------------------- */
@@ -419,41 +417,35 @@ void c_read_raw_key(int scancode, int pressed) {
             caps_lock = !caps_lock;
         }
 
-        if ((key_pressed[ SCODE_L_SHIFT ] ||            /* shift-ctrl */
-             key_pressed[ SCODE_R_SHIFT ]) &&
-            (key_pressed[ SCODE_L_CTRL ] ||
-             key_pressed[ SCODE_R_CTRL ]))
+        if ((key_pressed[ SCODE_L_SHIFT ] || key_pressed[ SCODE_R_SHIFT ]) && /* shift-ctrl */
+            (key_pressed[ SCODE_L_CTRL ] || key_pressed[ SCODE_R_CTRL ]))
         {
             keymap = apple_iie_keymap_shift_ctrl;
         }
-        else if (key_pressed[ SCODE_L_CTRL ] ||              /* ctrl */
-            key_pressed[ SCODE_R_CTRL ])
+        else if (key_pressed[ SCODE_L_CTRL ] || key_pressed[ SCODE_R_CTRL ]) /* ctrl */
         {
             keymap = apple_iie_keymap_ctrl;
         }
-        else if (key_pressed[ SCODE_L_SHIFT ] ||             /* shift */
-            key_pressed[ SCODE_R_SHIFT ])
+        else if (key_pressed[ SCODE_L_SHIFT ] || key_pressed[ SCODE_R_SHIFT ]) /* shift */
         {
             keymap = apple_iie_keymap_shifted;
         }
-        else if (caps_lock)                                  /* caps lock */
+        else if (caps_lock)
         {
             keymap = apple_iie_keymap_caps;
         }
-        else                                            /* plain */
+        else /* plain */
         {
             keymap = apple_iie_keymap_plain;
         }
     }
     else
     {
-        if (key_pressed[ SCODE_L_CTRL ] ||
-            key_pressed[ SCODE_R_CTRL ])
+        if (key_pressed[ SCODE_L_CTRL ] || key_pressed[ SCODE_R_CTRL ])
         {
             keymap = apple_ii_keymap_ctrl;
         }
-        else if (key_pressed[ SCODE_L_SHIFT ] ||
-            key_pressed[ SCODE_R_SHIFT ])
+        else if (key_pressed[ SCODE_L_SHIFT ] || key_pressed[ SCODE_R_SHIFT ])
         {
             keymap = apple_ii_keymap_shifted;
         }

@@ -12,6 +12,10 @@
 #ifndef _COMMON_H_
 #define _COMMON_H_
 
+#if defined(__GNUC__)
+#   define _GNU_SOURCE
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
@@ -22,6 +26,7 @@
 #include <unistd.h>
 #include <assert.h>
 #include <pthread.h>
+#include <ctype.h>
 
 #ifndef NDEBUG
 #       if defined(__GNUC__)

@@ -18,7 +18,7 @@
 #ifndef A2_DEBUG_H
 #define A2_DEBUG_H
 
-#include <stdio.h>
+#include "common.h"
 
 /* debugger defines */
 #define BUF_X           39
@@ -87,18 +87,21 @@ void show_regs();
 void display_help();
 void show_lc_info();
 void show_disk_info();
-void c_do_step(int);
+void do_step_or_next(int);
+void begin_cpu_step();
+void end_cpu_step();
 int at_haltpt();
-void end_step();
 void set_halt_opcode(unsigned char opcode);
 void set_halt_65c02();
 void clear_halt_65c02();
 void clear_halt_opcode(unsigned char opcode);
 void show_opcode_breakpts();
 
+void c_stepping_yield();
+
 extern const struct opcode_struct opcodes_6502[256];
 extern const struct opcode_struct opcodes_65c02[256];
 extern const struct opcode_struct opcodes_undoc[256];
-extern const char * const disasm_templates[15];
+extern const char* const disasm_templates[15];
 
 #endif
