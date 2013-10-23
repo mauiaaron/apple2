@@ -31,6 +31,9 @@
 //#define RIFF_SPKR
 //#define RIFF_MB
 
+#ifdef APPLE2IX
+extern bool g_bDisableDirectSound;
+#endif
 
 typedef struct
 {
@@ -91,7 +94,6 @@ extern bool g_bDSAvailable;
 
 #ifdef APPLE2IX
 typedef struct IDirectSound SoundSystemStruct;
-int SoundSystemInitialize();
 long SoundSystemCreate(const char *sound_device, SoundSystemStruct **sound_struct);
 long SoundSystemDestroy(SoundSystemStruct **sound_struct);
 long SoundSystemEnumerate(char ***sound_devices, const int maxcount);

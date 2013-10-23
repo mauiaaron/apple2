@@ -18,30 +18,28 @@
 
 typedef struct IDirectSoundBuffer {
 
-    void *implementation_specific;
+    void *_this;
 
-    HRESULT (*SetVolume)(LONG lVolume);
+    HRESULT (*SetVolume)(void* _this, LONG lVolume);
 
-    HRESULT (*GetVolume)(LPLONG lplVolume);
+    HRESULT (*GetVolume)(void* _this, LPLONG lplVolume);
 
-    HRESULT (*GetCurrentPosition)(LPDWORD lpdwCurrentPlayCursor, LPDWORD lpdwCurrentWriteCursor);
+    HRESULT (*GetCurrentPosition)(void* _this, LPDWORD lpdwCurrentPlayCursor, LPDWORD lpdwCurrentWriteCursor);
 
-    HRESULT (*SetCurrentPosition)(DWORD dwNewPosition);
-
-    HRESULT (*Stop)();
+    HRESULT (*Stop)(void* _this);
 
     // This method restores the memory allocation for a lost sound buffer for the specified DirectSoundBuffer object.
-    HRESULT (*Restore)();
+    HRESULT (*Restore)(void *_this);
 
-    HRESULT (*Play)(DWORD dwReserved1, DWORD dwReserved2, DWORD dwFlags);
+    HRESULT (*Play)(void* _this, DWORD dwReserved1, DWORD dwReserved2, DWORD dwFlags);
 
     // This method obtains a valid write pointer to the sound buffer's audio data
-    HRESULT (*Lock)(DWORD dwWriteCursor, DWORD dwWriteBytes, LPVOID* lplpvAudioPtr1, LPDWORD lpdwAudioBytes1, LPVOID* lplpvAudioPtr2, LPDWORD lpdwAudioBytes2, DWORD dwFlags);
+    HRESULT (*Lock)(void* _this, DWORD dwWriteCursor, DWORD dwWriteBytes, LPVOID* lplpvAudioPtr1, LPDWORD lpdwAudioBytes1, LPVOID* lplpvAudioPtr2, LPDWORD lpdwAudioBytes2, DWORD dwFlags);
 
     // This method releases a locked sound buffer.
-    HRESULT (*Unlock)(LPVOID lpvAudioPtr1, DWORD dwAudioBytes1, LPVOID lpvAudioPtr2, DWORD dwAudioBytes2);
+    HRESULT (*Unlock)(void* _this, LPVOID lpvAudioPtr1, DWORD dwAudioBytes1, LPVOID lpvAudioPtr2, DWORD dwAudioBytes2);
 
-    HRESULT (*GetStatus)(LPDWORD lpdwStatus);
+    HRESULT (*GetStatus)(void* _this, LPDWORD lpdwStatus);
 
 } IDirectSoundBuffer, *LPDIRECTSOUNDBUFFER, **LPLPDIRECTSOUNDBUFFER;
 
@@ -124,6 +122,7 @@ typedef struct IDirectSoundBuffer {
 #define     DSBSTATUS_BUFFERLOST   0x00000002
 #define     DSBSTATUS_LOOPING   0x00000004
 #define     DSBSTATUS_PLAYING   0x00000001
+#define     _DSBSTATUS_NOTPLAYING 0x08000000
 #define DSBPLAY_LOOPING             0x00000001
 #define DSBVOLUME_MIN               -10000
 #define DSBVOLUME_MAX               0
@@ -136,7 +135,10 @@ static inline bool SUCCEEDED(HRESULT x) { return x == DS_OK; }
 #define WAVE_FORMAT_PCM 0x0001
 #define DSBCAPS_GETCURRENTPOSITION2 0x00010000
 #define DSBCAPS_STICKYFOCUS         0x00004000
+#define DSBCAPS_LOCSOFTWARE         0x00000008
 #define DSBCAPS_CTRLVOLUME          0x00000080
+#define DSBCAPS_CTRLPOSITIONNOTIFY  0x00000100
+
 
 typedef struct {
     WORD  wFormatTag;

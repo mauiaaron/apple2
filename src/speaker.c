@@ -72,7 +72,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #define  SOUND_WAVE    3
 
 #ifdef APPLE2IX
-extern bool g_bDisableDirectSound; // soundcore.h
 #define g_nSPKR_NumChannels 1
 #else
 static const unsigned short g_nSPKR_NumChannels = 1;
@@ -817,7 +816,11 @@ static ULONG Spkr_SubmitWaveBuffer_FullSpeed(short* pSpeakerBuffer, ULONG nNumSa
 	//bool bBufferError = false;
 
 	DWORD dwCurrentPlayCursor, dwCurrentWriteCursor;
+#ifdef APPLE2IX
+	HRESULT hr = SpeakerVoice.lpDSBvoice->GetCurrentPosition(SpeakerVoice.lpDSBvoice->_this, &dwCurrentPlayCursor, &dwCurrentWriteCursor);
+#else
 	HRESULT hr = SpeakerVoice.lpDSBvoice->GetCurrentPosition(&dwCurrentPlayCursor, &dwCurrentWriteCursor);
+#endif
 	if(FAILED(hr))
 		return nNumSamples;
 
@@ -967,7 +970,11 @@ static ULONG Spkr_SubmitWaveBuffer_FullSpeed(short* pSpeakerBuffer, ULONG nNumSa
 		}
 
 		// Commit sound buffer
+#ifdef APPLE2IX
+		hr = SpeakerVoice.lpDSBvoice->Unlock(SpeakerVoice.lpDSBvoice->_this, (void*)pDSLockedBuffer0, dwDSLockedBufferSize0,
+#else
 		hr = SpeakerVoice.lpDSBvoice->Unlock((void*)pDSLockedBuffer0, dwDSLockedBufferSize0,
+#endif
 											(void*)pDSLockedBuffer1, dwDSLockedBufferSize1);
 		if(FAILED(hr))
 			return nNumSamples;
@@ -1013,7 +1020,11 @@ static ULONG Spkr_SubmitWaveBuffer(short* pSpeakerBuffer, ULONG nNumSamples)
 	bool bBufferError = false;
 
 	DWORD dwCurrentPlayCursor, dwCurrentWriteCursor;
+#ifdef APPLE2IX
+	HRESULT hr = SpeakerVoice.lpDSBvoice->GetCurrentPosition(SpeakerVoice.lpDSBvoice->_this, &dwCurrentPlayCursor, &dwCurrentWriteCursor);
+#else
 	HRESULT hr = SpeakerVoice.lpDSBvoice->GetCurrentPosition(&dwCurrentPlayCursor, &dwCurrentWriteCursor);
+#endif
 	if(FAILED(hr))
 		return nNumSamples;
 
@@ -1147,7 +1158,11 @@ static ULONG Spkr_SubmitWaveBuffer(short* pSpeakerBuffer, ULONG nNumSamples)
 		}
 
 		// Commit sound buffer
+#ifdef APPLE2IX
+		hr = SpeakerVoice.lpDSBvoice->Unlock(SpeakerVoice.lpDSBvoice->_this, (void*)pDSLockedBuffer0, dwDSLockedBufferSize0,
+#else
 		hr = SpeakerVoice.lpDSBvoice->Unlock((void*)pDSLockedBuffer0, dwDSLockedBufferSize0,
+#endif
 											(void*)pDSLockedBuffer1, dwDSLockedBufferSize1);
 		if(FAILED(hr))
 			return nNumSamples;
@@ -1166,7 +1181,11 @@ void Spkr_Mute()
 {
 	if(SpeakerVoice.bActive && !SpeakerVoice.bMute)
 	{
+#ifdef APPLE2IX
+		SpeakerVoice.lpDSBvoice->SetVolume(SpeakerVoice.lpDSBvoice->_this, DSBVOLUME_MIN);
+#else
 		SpeakerVoice.lpDSBvoice->SetVolume(DSBVOLUME_MIN);
+#endif
 		SpeakerVoice.bMute = true;
 	}
 }
@@ -1175,7 +1194,11 @@ void Spkr_Demute()
 {
 	if(SpeakerVoice.bActive && SpeakerVoice.bMute)
 	{
+#ifdef APPLE2IX
+		SpeakerVoice.lpDSBvoice->SetVolume(SpeakerVoice.lpDSBvoice->_this, SpeakerVoice.nVolume);
+#else
 		SpeakerVoice.lpDSBvoice->SetVolume(SpeakerVoice.nVolume);
+#endif
 		SpeakerVoice.bMute = false;
 	}
 }
@@ -1222,7 +1245,11 @@ void SpkrSetVolume(DWORD dwVolume, DWORD dwVolumeMax)
 	SpeakerVoice.nVolume = NewVolume(dwVolume, dwVolumeMax);
 
 	if(SpeakerVoice.bActive)
+#ifdef APPLE2IX
+		SpeakerVoice.lpDSBvoice->SetVolume(SpeakerVoice.lpDSBvoice->_this, SpeakerVoice.nVolume);
+#else
 		SpeakerVoice.lpDSBvoice->SetVolume(SpeakerVoice.nVolume);
+#endif
 }
 
 //=============================================================================
@@ -1285,7 +1312,11 @@ void Spkr_DSUninit()
 {
 	if(SpeakerVoice.lpDSBvoice && SpeakerVoice.bActive)
 	{
+#ifdef APPLE2IX
+		SpeakerVoice.lpDSBvoice->Stop(SpeakerVoice.lpDSBvoice->_this);
+#else
 		SpeakerVoice.lpDSBvoice->Stop();
+#endif
 		SpeakerVoice.bActive = false;
 	}
 
