@@ -830,11 +830,12 @@ op_BRK:
                 movw    PC_Reg, %ax
                 Push(%ah)
                 Push(%al)
+                orb     $(B_Flag|X_Flag), F_Reg
                 xorl    %eax,%eax
                 movb    F_Reg, %al
-                orb     $I_Flag, F_Reg
                 movb    SN(cpu65_flags_encode)(,%eax,1), %al
                 Push(%al)
+                orb     $I_Flag, F_Reg
                 movw    $0xFFFE, EffectiveAddr
                 GetFromEA_W
                 movw    %ax, PC_Reg
