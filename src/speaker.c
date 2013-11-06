@@ -1272,15 +1272,12 @@ bool Spkr_DSInit()
 		return false;
 	}
 
-#ifdef APPLE2IX
-        // HACK FIXME TODO : need to revisit whether the below is necessary or not....
-	SpeakerVoice.bActive = true;
-#else
 	if(!DSZeroVoiceBuffer(&SpeakerVoice, "Spkr", g_dwDSSpkrBufferSize))
 		return false;
 
 	SpeakerVoice.bActive = true;
 
+#ifndef APPLE2IX
 	// Volume might've been setup from value in Registry
 	if(!SpeakerVoice.nVolume)
 		SpeakerVoice.nVolume = DSBVOLUME_MAX;
@@ -1298,12 +1295,9 @@ bool Spkr_DSInit()
 		Sleep(200);
 
 		hr = SpeakerVoice.lpDSBvoice->GetCurrentPosition(&dwCurrentPlayCursor, &dwCurrentWriteCursor);
-#ifndef APPLE2IX
 		char szDbg[100];
 		sprintf(szDbg, "[DSInit] PC=%08X, WC=%08X, Diff=%08X\n", dwCurrentPlayCursor, dwCurrentWriteCursor, dwCurrentWriteCursor-dwCurrentPlayCursor); OutputDebugString(szDbg);
-#endif
 	}
-
 #endif
 	return true;
 }

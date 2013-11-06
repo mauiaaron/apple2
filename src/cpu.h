@@ -14,6 +14,9 @@
  *
  */
 
+#ifndef __CPU_H_
+#define __CPU_H_
+
 #ifndef __ASSEMBLER__
 #include <sys/types.h>
 #include <stdint.h>
@@ -59,6 +62,7 @@ extern void cpu65_set(int flags);
 
 /* Interrupt the processor */
 extern void cpu65_interrupt(int reason);
+extern void cpu65_uninterrupt(int reason);
 
 extern void cpu65_run(void);
 
@@ -75,13 +79,17 @@ extern unsigned char cpu65_flags_decode[256];
 
 extern int16_t cpu65_cycle_count;
 extern int16_t cpu65_cycles_to_execute;
-extern uint8_t cpu65_do_reboot;
+extern uint8_t emul_reinitialize;
 
 #endif /* !__ASSEMBLER__ */
 
 #define RebootSig       0x01
 #define ResetSig        0x02
 #define DebugStepSig    0x04
+#define IRQ6522         0x08
+#define IRQSpeech       0x10
+#define IRQSSC          0x20
+#define IRQMouse        0x40
 
 /* Note: These are *not* the bit positions used for the flags in the P
  * register of a real 6502. Rather, they have been distorted so that C,
@@ -111,12 +119,13 @@ extern uint8_t cpu65_do_reboot;
 
 #define X_Reg           %bl             /* 6502 X register in %bl  */
 #define Y_Reg           %bh             /* 6502 Y register in %bh  */
+#define XY_Regs_32      %ebx            /* 6502 X&Y flags          */
 #define A_Reg           %cl             /* 6502 A register in %cl  */
 #define F_Reg           %ch             /* 6502 flags in %ch       */
-#define FF_Reg          %ecx            /* 6502 flags for bt       */
-#define SP_Reg          %edx            /* 6502 Stack pointer      */
+#define FF_Reg          %ecx            /* 6502 F&A flags          */
 #define SP_Reg_L        %dl             /* 6502 Stack pointer low  */
 #define SP_Reg_H        %dh             /* 6502 Stack pointer high */
+#define SP_Reg          %edx            /* 6502 Stack pointer      */
 #define PC_Reg          %si             /* 6502 Program Counter    */
 #define PC_Reg_E        %esi            /* 6502 Program Counter    */
 #define EffectiveAddr   %di             /* Effective address       */
@@ -129,8 +138,9 @@ extern void *const cpu65__nmos[256];
 extern void *const cpu65__nmosbrk[256];
 extern void *const cpu65__cmos[256];
 
-extern char cpu65__opcycles[256];// cycle counter
+extern uint8_t cpu65__opcycles[256];// cycle counter
 
-extern unsigned char cpu65__signal;
+extern uint8_t cpu65__signal;
 #endif /* !__ASSEMBLER__ */
 
+#endif // whole file

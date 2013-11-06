@@ -25,12 +25,6 @@
                 .comm   SN(cpu65_flags_encode),256
                 .comm   SN(cpu65_flags_decode),256
                 .comm   SN(cpu65__opcodes),1024
-                .comm   SN(cpu65__signal),1
-                .comm   SN(cpu65_do_reboot),1
-                .comm   SN(cpu65_cycle_count),2
-                .comm   SN(cpu65_cycles_to_execute),2
-                .comm   SN(cpu65_debug),7
-                .comm   SN(cpu65_current),7
 
 #define DebugCurrEA     SN(cpu65_debug)
 #define DebugCurrByte   SN(cpu65_debug)+2
@@ -114,7 +108,7 @@
                 movb    Y_Reg, SN(cpu65_current)+5;                            \
                 movb    SP_Reg_L, SN(cpu65_current)+6;
 
-/* Replace CPU state when being called from C.
+/* Restore CPU state when being called from C.
  *
  * The xorls clear the high parts of the registers
  * Note: dependent on register assignment
@@ -124,7 +118,7 @@
  * polluting this module with Apple-specific stuff.  But we need to do
  * it, else aux-stack using programs will crash when debugged.)
  */
-#define ReplaceState                                                           \
+#define RestoreState                                                           \
                 xorl    %eax, %eax;                                            \
                 xorl    %ebx, %ebx;                                            \
                 xorl    %ecx, %ecx;                                            \
@@ -830,12 +824,13 @@ op_BRK:
                 movw    PC_Reg, %ax
                 Push(%ah)
                 Push(%al)
+                orb     $(B_Flag|X_Flag), F_Reg
                 xorl    %eax,%eax
                 movb    F_Reg, %al
-                orb     $I_Flag, F_Reg
                 movb    SN(cpu65_flags_encode)(,%eax,1), %al
                 Push(%al)
-                movw    $0xFFFE, EffectiveAddr
+                orb     $I_Flag, F_Reg
+                movw    $0xFFFE, EffectiveAddr              // ROM interrupt vector
                 GetFromEA_W
                 movw    %ax, PC_Reg
                 Continue
@@ -2671,56 +2666,63 @@ continue:
                 movb    DebugCurrOpcode, %al
                 movb    SN(cpu65__opcycles)(,%eax,1), %al
                 addb    DebugCycleCount, %al
-                addw    %ax, SN(cpu65_cycle_count)              // TODO: cycle counting is slightly incorrect, it should be done earlier per instruction ...
-                subw    %ax, SN(cpu65_cycles_to_execute)        //       but in practice this may not matter ...
-                jle     1f
+                addw    %ax, SN(cpu65_cycle_count)          // TODO: cycle counting is slightly incorrect, it should be done earlier per instruction ...
+                subw    %ax, SN(cpu65_cycles_to_execute)    //       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ orly?
+                jle     exit_cpu65_run
                 xorl    %eax, %eax
-                orb     SN(cpu65__signal), %ah
+                orb     SN(cpu65__signal), %al
                 jnz     exception
-                JumpNextInstruction
-1:              SaveState
-                popal
-                ret
+1:              JumpNextInstruction
 
 /* -------------------------------------------------------------------------
-        Exception handler
+        Exception handlers
    ------------------------------------------------------------------------- */
 
-exception:      cmpb    $RebootSig, %ah
-                jz      ex_reboot
-                cmpb    $ResetSig, %ah
-                jz      ex_reset
-                jmp     ex_step
-
-ex_step:        movb    $0, SN(cpu65__signal)
-                xorl    %eax, %eax
-                SaveState
-                call    SN(c_stepping_yield)
-                ReplaceState
-                JumpNextInstruction
-
-ex_reboot:      movb    $0, SN(cpu65__signal)               // EXIT CPURUN
-                movb    $1, SN(cpu65_do_reboot)
-                popal
-                ret
+exception:      testb   $RebootSig, %al
+                jnz     emul_reinit
+                testb   $ResetSig, %al
+                jnz     ex_reset
+                testb   $DebugStepSig, %al
+                jnz     ex_step
+                jmp     ex_irq
 
 ex_reset:       movb    $0, SN(cpu65__signal)
-                movw    $0xfffc, EffectiveAddr
+                movw    $0xFFFC, EffectiveAddr              // ROM reset vector
+                GetFromEA_W
+                movw    %ax, PC_Reg
+                xorb    %ah, %ah
+                JumpNextInstruction
+
+ex_irq:         testb   $I_Flag, F_Reg                      // Already interrupted?
+                jz      1f
+                JumpNextInstruction                         // Yes (ignored) ...
+1:              movw    PC_Reg, %ax                         // No (handle IRQ) ...
+                Push(%ah)
+                Push(%al)
+                orb     $X_Flag, F_Reg
+                xorl    %eax,%eax
+                movb    F_Reg, %al
+                movb    SN(cpu65_flags_encode)(,%eax,1), %al
+                Push(%al)
+                orb     $(B_Flag | I_Flag), F_Reg
+                //andb    $~D_Flag, F_Reg // AppleWin clears Decimal bit?
+                andl    $0xFFFF, EffectiveAddr_E// HACK FIXME : there is a bug somewhere that is occasionally corrupting EffectiveAddr_E
+                movw    $0xFFFE, EffectiveAddr              // ROM interrupt vector
                 GetFromEA_W
                 movw    %ax, PC_Reg
                 xorb    %ah, %ah
                 JumpNextInstruction
 
 /* -------------------------------------------------------------------------
-        CPU thread run "loop"
+        CPU thread main entry and exit points
    ------------------------------------------------------------------------- */
 E(cpu65_run)
                 pushal                                      // ENTER CPURUN
-                cmpb    $0, SN(cpu65_do_reboot)
+                cmpb    $0, SN(emul_reinitialize)
                 jnz     1f
-                ReplaceState
+                RestoreState
                 JumpNextInstruction
-1:              movb    $0, SN(cpu65_do_reboot)
+1:              movb    $0, SN(emul_reinitialize)
                 /* Zero all registers, as well as the unused 32-bit parts
                  * of variables. (which may need to be kept 0)
                  *
@@ -2734,12 +2736,32 @@ E(cpu65_run)
                 movl    $0x1FF, %edx # Stack pointer
                 jmp     ex_reset
 
+exit_cpu65_run: SaveState                                   // Return to timing loop ...
+                popal
+                ret
+
+emul_reinit:    movb    $0, SN(cpu65__signal)               // EXIT CPURUN
+                movb    $1, SN(emul_reinitialize)
+                popal
+                ret
+
+/* -------------------------------------------------------------------------
+        Debugger hooks
+   ------------------------------------------------------------------------- */
+
+ex_step:        orb     $~DebugStepSig, SN(cpu65__signal)
+                xorl    %eax, %eax
+                SaveState
+                call    SN(c_stepping_yield)
+                RestoreState
+                JumpNextInstruction
+
 E(cpu65_direct_write)
                 /* NB: dependent on register choices */
                 pushl   %edi
                 movl    8(%esp),%edi
                 movl    12(%esp),%eax
-                call    * SN(cpu65_vmem)+4(,EffectiveAddr_E,8)
+                call    *SN(cpu65_vmem)+4(,EffectiveAddr_E,8)
                 popl    %edi
                 ret
 

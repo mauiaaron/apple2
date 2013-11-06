@@ -294,10 +294,6 @@ void DSReleaseSoundBuffer(VOICE* pVoice)
 
 bool DSZeroVoiceBuffer(PVOICE Voice, char* pszDevName, DWORD dwBufferSize)
 {
-#ifdef APPLE2IX
-    // HACK FIXME is this function necessary?
-    return true;
-#endif
 	DWORD dwDSLockedBufferSize = 0;    // Size of the locked DirectSound buffer
 	SHORT* pDSLockedBuffer;
 
@@ -336,7 +332,7 @@ bool DSZeroVoiceBuffer(PVOICE Voice, char* pszDevName, DWORD dwBufferSize)
 	}
 
 #ifdef APPLE2IX
-	hr = Voice->lpDSBvoice->Play(Voice->lpDSBvoice->_this, 0,0,DSBPLAY_LOOPING);
+	hr = Voice->lpDSBvoice->Play(Voice->lpDSBvoice->_this,0,0,0);
 #else
 	hr = Voice->lpDSBvoice->Play(0,0,DSBPLAY_LOOPING);
 #endif

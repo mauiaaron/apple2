@@ -41,6 +41,10 @@ typedef struct IDirectSoundBuffer {
 
     HRESULT (*GetStatus)(void* _this, LPDWORD lpdwStatus);
 
+    HRESULT (*UnlockStaticBuffer)(void* _this, DWORD dwAudioBytes);
+
+    HRESULT (*Replay)(void* _this);
+
 } IDirectSoundBuffer, *LPDIRECTSOUNDBUFFER, **LPLPDIRECTSOUNDBUFFER;
 
 #define DS_OK                           0
