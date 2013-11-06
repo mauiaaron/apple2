@@ -691,10 +691,10 @@ GLUE_C_READ(disk_read_prepare_out)
 
 GLUE_C_WRITE(disk_write_latch)
 {
-    disk6.disk_byte = d;
+    disk6.disk_byte = b;
 }
 
-void disk_install(int slot)
+void disk_io_initialize(unsigned int slot)
 {
     FILE *f;
     int i;
@@ -722,7 +722,8 @@ void disk_install(int slot)
 
     memcpy(apple_ii_64k[0] + 0xC600, slot6_rom, 0x100);
 
-    /* disk softswitches */
+    // disk softswitches
+    // 0xC0Xi : X = slot 0x6 + 0x8 == 0xE
     cpu65_vmem[0xC0E0].r = cpu65_vmem[0xC0E2].r =
                                cpu65_vmem[0xC0E4].r = cpu65_vmem[0xC0E6].r =
                                                           ram_nop;

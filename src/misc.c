@@ -480,7 +480,11 @@ void c_initialize_tables() {
 
     video_set(0);
 
-    disk_install(6); /* Put a Disk ][ Controller in slot 6 */
+    // Peripheral card slot initializations ...
+
+    // HACK TODO FIXME : this needs to be tied to the UI/configuration system (once we have more/conflicting options)
+
+    disk_io_initialize(6); /* Put a Disk ][ Controller in slot 6 */
 }
 
 /* -------------------------------------------------------------------------
