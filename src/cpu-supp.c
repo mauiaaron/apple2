@@ -14,26 +14,33 @@
  *
  */
 
-#include <string.h>
-#include <stdlib.h>
-
+#include "common.h"
 #include "cpu.h"
+#include "mockingboard.h"
 
-/* different than in defs.h! */
-#define C_Flag_6502     0x1
-#define X_Flag_6502     0x20
-#define I_Flag_6502     0x4
-#define V_Flag_6502     0x40
-#define B_Flag_6502     0x10
-#define D_Flag_6502     0x8
-#define Z_Flag_6502     0x2
-#define N_Flag_6502     0x80
+// These match the bit positions of the 6502 P-register, they are not the same as in cpu.h -- see note there
+#define C_Flag_6502     0x1         // [C]arry
+#define X_Flag_6502     0x20        // [X]tra (reserved)...
+#define I_Flag_6502     0x4         // [I]nterrupt
+#define V_Flag_6502     0x40        // o[V]erfly
+#define B_Flag_6502     0x10        // [B]reak
+#define D_Flag_6502     0x8         // [D]ecimal
+#define Z_Flag_6502     0x2         // [Z]ero
+#define N_Flag_6502     0x80        // [N]egative
 
-static void initialize_code_tables(void)
+struct cpu65_state cpu65_current;
+struct cpu65_extra cpu65_debug;
+
+int16_t cpu65_cycle_count;
+int16_t cpu65_cycles_to_execute;
+uint8_t cpu65__signal;
+
+static pthread_mutex_t irq_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+// NOTE: currently this is a conversion table between i386 flags <-> 6502 P register
+static void initialize_code_tables()
 {
-    int i;
-
-    for (i = 0; i < 256; i++)
+    for (unsigned i = 0; i < 256; i++)
     {
         unsigned char val = 0;
 
@@ -97,11 +104,12 @@ void cpu65_set(int flags)
         {
             memcpy(cpu65__opcodes,cpu65__nmos,1024);
         }
-
         break;
+
     case CPU65_C02:
         memcpy(cpu65__opcodes,cpu65__cmos,1024);
         break;
+
     default:
         abort();
     }
@@ -111,7 +119,16 @@ void cpu65_set(int flags)
 
 void cpu65_interrupt(int reason)
 {
-    cpu65__signal = reason;
+    pthread_mutex_lock(&irq_mutex);
+    cpu65__signal |= reason;
+    pthread_mutex_unlock(&irq_mutex);
+}
+
+void cpu65_uninterrupt(int reason)
+{
+    pthread_mutex_lock(&irq_mutex);
+    cpu65__signal &= ~reason;
+    pthread_mutex_unlock(&irq_mutex);
 }
 
 void cpu65_set_stepping(int flag)

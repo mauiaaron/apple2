@@ -27,10 +27,19 @@ typedef struct IDirectSoundBuffer ALSASoundBufferStruct;
 typedef struct DSBUFFERDESC ALSABufferParamsStruct;
 
 typedef struct {
+    snd_pcm_t *handle;
     snd_pcm_hw_params_t *hwparams;
     snd_pcm_sw_params_t *swparams;
-    snd_pcm_channel_area_t *area;
-} ALSASoundStructExtras;
+
+    snd_pcm_format_t format;
+    int format_bits;
+    int bytes_per_sample;
+    int shift_per_sample;
+
+    snd_pcm_uframes_t buffer_size;
+    snd_pcm_uframes_t period_size;
+
+} ALSAExtras;
 
 #endif /* whole file */
 

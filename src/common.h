@@ -12,7 +12,7 @@
 #ifndef _COMMON_H_
 #define _COMMON_H_
 
-#if defined(__GNUC__)
+#if defined(__GNUC__) && !defined(_GNU_SOURCE)
 #   define _GNU_SOURCE
 #endif
 

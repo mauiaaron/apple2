@@ -15,52 +15,43 @@
 // HACK : this is an ugly shoehorning into DirectSound assumptions...  Needta rework this once I have a better
 // understanding of the workings of the sound system :)
 
-static int resample = 1;                                /* enable alsa-lib resampling */
-static int period_event = 0;                            /* produce poll event after each period */
-static snd_pcm_format_t format = SND_PCM_FORMAT_S16;
-static int format_bits = 0;
-static int bytes_per_sample = 0;
-static int shift_per_sample = 0;
-
-static snd_pcm_uframes_t buffer_size;
-static snd_pcm_uframes_t period_size;
-
-static snd_pcm_hw_params_t *hwparams = NULL;
-static snd_pcm_sw_params_t *swparams = NULL;
-
-extern SoundSystemStruct *g_lpDS; // HACK
-snd_pcm_uframes_t play_offset;
-
 static long alsa_create_sound_buffer(ALSABufferParamsStruct *params_struct, ALSASoundBufferStruct **soundbuf_struct, void *extra_data);
 static long alsa_destroy_sound_buffer(ALSASoundBufferStruct **soundbuf_struct);
 
 long SoundSystemCreate(const char *sound_device, SoundSystemStruct **sound_struct)
 {
-    // ugly assumption : this sets the extern g_lpDS ...
-
     assert(*sound_struct == NULL);
 
     snd_pcm_t *handle = NULL;
     int err = -1;
 
-    if ((*sound_struct = malloc(sizeof(SoundSystemStruct))) == NULL)
-    {
-        ERRLOG("Not enough memory");
-        return -1;
-    }
+    do {
+        if ((*sound_struct = malloc(sizeof(SoundSystemStruct))) == NULL)
+        {
+            ERRLOG("Not enough memory");
+            break;
+        }
 
-    if ((err = snd_pcm_open(&handle, sound_device, SND_PCM_STREAM_PLAYBACK, 0)) < 0)
+        if ((err = snd_pcm_open(&handle, sound_device, SND_PCM_STREAM_PLAYBACK, 0)) < 0)
+        {
+            ERRLOG("Playback open error: %s", snd_strerror(err));
+            break;
+        }
+
+        (*sound_struct)->implementation_specific = handle;
+        (*sound_struct)->CreateSoundBuffer = alsa_create_sound_buffer;
+        (*sound_struct)->DestroySoundBuffer = alsa_destroy_sound_buffer;
+
+        return 0;
+    } while(0);
+
+    // ERRQUIT
+    if (*sound_struct)
     {
-        ERRLOG("Playback open error: %s", snd_strerror(err));
         Free(*sound_struct);
-        return -1;
     }
 
-    (*sound_struct)->implementation_specific = handle;
-    (*sound_struct)->CreateSoundBuffer = alsa_create_sound_buffer;
-    (*sound_struct)->DestroySoundBuffer = alsa_destroy_sound_buffer;
-
-    return 0;
+    return -1;
 }
 
 long SoundSystemDestroy(SoundSystemStruct **sound_struct)
@@ -81,7 +72,6 @@ long SoundSystemDestroy(SoundSystemStruct **sound_struct)
         ERRLOG("snd_pcm_drop: %s", snd_strerror(err));
     }
 
-    (*sound_struct)->implementation_specific = NULL;
     Free(*sound_struct);
 
     return 0;
@@ -204,7 +194,7 @@ static long _alsa_create_volume_refs(snd_mixer_t **handle, snd_mixer_selem_id_t 
     return err ?: -1;
 }
 
-static long alsa_get_volume(long *volume)
+static long alsa_get_volume(void *_this, long *volume)
 {
     assert(volume != NULL);
 
@@ -241,7 +231,7 @@ static long alsa_get_volume(long *volume)
     return err;
 }
 
-static long alsa_set_volume(long volume)
+static long alsa_set_volume(void *_this, long volume)
 {
     // UNIMPLEMENTED
     return 0;
@@ -291,34 +281,28 @@ static int xrun_recovery(snd_pcm_t *handle, int err)
     return err;
 }
 
-static long alsa_set_position(unsigned long write_cursor)
-{
-    // UNIMPLEMENTED
-    assert(false);
-    return 0;
-}
-
-static long alsa_stop()
+static long alsa_stop(void *_this)
 {
     // this is a no-op at the moment, just let the sound flow!
     return 0;
 }
 
-static long alsa_restore()
+static long alsa_restore(void *_this)
 {
     return 0;
 }
 
-static long alsa_play(unsigned long reserved1, unsigned long reserved2, unsigned long flags)
+static long alsa_play(void *_this, unsigned long reserved1, unsigned long reserved2, unsigned long flags)
 {
     // this is a no-op presumably because all the alsa setup give us a buffer ready to play
     return 0;
 }
 
 // returns buffer position in bytes
-static long alsa_get_position(unsigned long *play_cursor, unsigned long *unused_write_cursor)
+static long alsa_get_position(void *_this, unsigned long *play_cursor, unsigned long *unused_write_cursor)
 {
-    snd_pcm_t *handle = (snd_pcm_t*)g_lpDS->implementation_specific;
+    ALSAExtras *extras = (ALSAExtras*)_this;
+    snd_pcm_t *handle = extras->handle;
     snd_pcm_sframes_t avail = 0;
     long err = 0;
 
@@ -368,7 +352,7 @@ static long alsa_get_position(unsigned long *play_cursor, unsigned long *unused_
 
         if (avail < 1024) // HACK MAGICK CONSTANT
         {
-            ERRLOG("OOPS avail(%ld) < period_size(%lu) ... ", avail, period_size);
+            ERRLOG("OOPS avail(%ld) < 1024 ... ", avail);
             ERRLOG("performing snd_pcm_wait() ...");
             err = snd_pcm_wait(handle, -1);
             if (err < 0)
@@ -383,8 +367,8 @@ static long alsa_get_position(unsigned long *play_cursor, unsigned long *unused_
             break;
         }
 
-        avail = buffer_size - avail;
-        *play_cursor = avail<<shift_per_sample;
+        avail = extras->buffer_size - avail;
+        *play_cursor = avail<<(extras->shift_per_sample);
         return 0;
 
     } while (0);
@@ -394,19 +378,20 @@ static long alsa_get_position(unsigned long *play_cursor, unsigned long *unused_
 
 // HACK NOTE : audio_ptr2 is unused
 // DS->Lock()
-static long alsa_begin(unsigned long unused, unsigned long write_bytes, void **audio_ptr1, unsigned long *audio_bytes1, void **unused_audio_ptr2, unsigned long *audio_bytes2, unsigned long flags)
+static long alsa_begin(void *_this, unsigned long unused, unsigned long write_bytes, void **audio_ptr1, unsigned long *audio_bytes1, void **unused_audio_ptr2, unsigned long *audio_bytes2, unsigned long flags_unused)
 {
     int err = 0;
 
+    ALSAExtras *extras = (ALSAExtras*)_this;
     const snd_pcm_channel_area_t *areas;
     uint8_t *bytes = NULL;
 
     snd_pcm_uframes_t offset_frames = 0;
-    snd_pcm_uframes_t size_frames = write_bytes>>shift_per_sample; // HACK : assuming 16bit samples
+    snd_pcm_uframes_t size_frames = write_bytes>>(extras->shift_per_sample); // HACK : assuming 16bit samples
 
     if (write_bytes == 0)
     {
-        size_frames = buffer_size;
+        size_frames = extras->buffer_size;
     }
 
     *audio_ptr1 = NULL;
@@ -418,7 +403,7 @@ static long alsa_begin(unsigned long unused, unsigned long write_bytes, void **a
     *audio_bytes2 = 0;
 
     do {
-        snd_pcm_t *handle = (snd_pcm_t*)g_lpDS->implementation_specific;
+        snd_pcm_t *handle = extras->handle;
         while ((err = snd_pcm_mmap_begin(handle, &areas, &offset_frames, &size_frames)) < 0)
         {
             if ((err = xrun_recovery(handle, err)) < 0)
@@ -434,12 +419,12 @@ static long alsa_begin(unsigned long unused, unsigned long write_bytes, void **a
         assert((area.first % 8) == 0);
 
         bytes = (((uint8_t *)area.addr) + (area.first>>3));
-        assert(format_bits == area.step);
-        assert(bytes_per_sample == (area.step>>3));
-        bytes += offset_frames * bytes_per_sample;
+        assert(extras->format_bits == area.step);
+        assert(extras->bytes_per_sample == (area.step>>3));
+        bytes += offset_frames * extras->bytes_per_sample;
 
         *audio_ptr1 = (void*)bytes;
-        *audio_bytes1 = size_frames<<shift_per_sample;
+        *audio_bytes1 = size_frames<<(extras->shift_per_sample);
         *audio_bytes2 = offset_frames;
         return 0;
 
@@ -449,15 +434,16 @@ static long alsa_begin(unsigned long unused, unsigned long write_bytes, void **a
 }
 
 // DS->Unlock()
-static long alsa_commit(void *unused_audio_ptr1, unsigned long audio_bytes1, void *unused_audio_ptr2, unsigned long audio_bytes2)
+static long alsa_commit(void *_this, void *unused_audio_ptr1, unsigned long audio_bytes1, void *unused_audio_ptr2, unsigned long audio_bytes2)
 {
+    ALSAExtras *extras = (ALSAExtras*)_this;
     assert(unused_audio_ptr2 == NULL);
     int err = 0;
 
-    snd_pcm_uframes_t size_frames = audio_bytes1>>shift_per_sample;
+    snd_pcm_uframes_t size_frames = audio_bytes1>>(extras->shift_per_sample);
     snd_pcm_uframes_t offset_frames = audio_bytes2;
     do {
-        snd_pcm_t *handle = (snd_pcm_t*)g_lpDS->implementation_specific;
+        snd_pcm_t *handle = extras->handle;
         err = snd_pcm_mmap_commit(handle, offset_frames, size_frames);
         if (err < 0 || (snd_pcm_uframes_t)err != size_frames)
         {
@@ -484,17 +470,32 @@ static long alsa_commit(void *unused_audio_ptr1, unsigned long audio_bytes1, voi
     return err ?: -1;
 }
 
-static long alsa_get_status(unsigned long *status)
+static long alsa_get_status(void *_this, unsigned long *status)
 {
-    // this is actually tested in the alsa_get_position() call 
+    snd_pcm_t *handle = ((ALSAExtras*)_this)->handle;
+
+    if (snd_pcm_state(handle) == SND_PCM_STATE_RUNNING)
+    {
+        *status = DSBSTATUS_PLAYING;
+    }
+    else
+    {
+        *status = _DSBSTATUS_NOTPLAYING;
+    }
+
     return 0;
 }
 
 // ----------------------------------------------------------------------------
 
-static int set_hwparams(snd_pcm_t *handle, ALSABufferParamsStruct *params_struct)
+static int set_hwparams(ALSAExtras *extras, ALSABufferParamsStruct *params_struct)
 {
     int err = 0;
+
+    int resample = 1; // enable alsa-lib resampling
+
+    snd_pcm_t *handle = extras->handle;
+    snd_pcm_hw_params_t *hwparams = extras->hwparams;
 
     /* choose all parameters */
     if ((err = snd_pcm_hw_params_any(handle, hwparams)) < 0)
@@ -517,15 +518,16 @@ static int set_hwparams(snd_pcm_t *handle, ALSABufferParamsStruct *params_struct
         return err;
     }
 
+    extras->format = SND_PCM_FORMAT_S16;
     /* set the sample format as signed 16bit samples */
-    if ((err = snd_pcm_hw_params_set_format(handle, hwparams, format)) < 0)
+    if ((err = snd_pcm_hw_params_set_format(handle, hwparams, extras->format)) < 0)
     {
         ERRLOG("Sample format not available for playback: %s", snd_strerror(err));
         return err;
     }
-    format_bits = snd_pcm_format_physical_width(format);
-    bytes_per_sample = format_bits / 8;
-    shift_per_sample = (bytes_per_sample>>1); // HACK : ASSUMES 16bit samples ...
+    extras->format_bits = snd_pcm_format_physical_width(extras->format);
+    extras->bytes_per_sample = extras->format_bits / 8;
+    extras->shift_per_sample = (extras->bytes_per_sample>>1); // HACK : ASSUMES 16bit samples ...
 
     /* set the count of channels */
     if ((err = snd_pcm_hw_params_set_channels(handle, hwparams, params_struct->lpwfxFormat->nChannels)) < 0)
@@ -548,13 +550,13 @@ static int set_hwparams(snd_pcm_t *handle, ALSABufferParamsStruct *params_struct
         return -EINVAL;
     }
 
-    /* set the buffer time */
+    /* set the buffer size */
     int ignored;
-    buffer_size = params_struct->dwBufferBytes;
-    err = snd_pcm_hw_params_set_buffer_size_near(handle, hwparams, &buffer_size);
+    extras->buffer_size = params_struct->dwBufferBytes;
+    err = snd_pcm_hw_params_set_buffer_size_near(handle, hwparams, &(extras->buffer_size));
     if (err < 0)
     {
-        ERRLOG("Unable to set buffer size %d for playback: %s", (int)buffer_size, snd_strerror(err));
+        ERRLOG("Unable to set buffer size %d for playback: %s", (int)extras->buffer_size, snd_strerror(err));
     }
 
     snd_pcm_uframes_t size;
@@ -563,17 +565,17 @@ static int set_hwparams(snd_pcm_t *handle, ALSABufferParamsStruct *params_struct
         ERRLOG("Unable to get buffer size for playback: %s", snd_strerror(err));
         return err;
     }
-    if (size != buffer_size)
+    if (size != extras->buffer_size)
     {
-        ERRLOG("Note: buffer_size fetch mismatch using %d -- (%d requested)", (int)size, (int)buffer_size);
-        buffer_size = size;
+        ERRLOG("Note: buffer_size fetch mismatch using %d -- (%d requested)", (int)size, (int)extras->buffer_size);
+        extras->buffer_size = size;
     }
 
-    period_size = buffer_size / 4;
-    err = snd_pcm_hw_params_set_period_size_near(handle, hwparams, &period_size, &ignored);
+    extras->period_size = (extras->buffer_size)>>3;
+    err = snd_pcm_hw_params_set_period_size_near(handle, hwparams, &(extras->period_size), &ignored);
     if (err < 0)
     {
-        ERRLOG("Unable to set period size %d for playback: %s", (int)period_size, snd_strerror(err));
+        ERRLOG("Unable to set period size %d for playback: %s", (int)extras->period_size, snd_strerror(err));
     }
 
     if ((err = snd_pcm_hw_params_get_period_size(hwparams, &size, &ignored)) < 0)
@@ -581,10 +583,10 @@ static int set_hwparams(snd_pcm_t *handle, ALSABufferParamsStruct *params_struct
         ERRLOG("Unable to get period size for playback: %s", snd_strerror(err));
         return err;
     }
-    if (size != period_size)
+    if (size != extras->period_size)
     {
-        ERRLOG("Note: period_size fetch mismatch using %d -- (%d requested)", (int)size, (int)period_size);
-        period_size = size;
+        ERRLOG("Note: period_size fetch mismatch using %d -- (%d requested)", (int)size, (int)extras->period_size);
+        extras->period_size = size;
     }
 
     /* write the parameters to device */
@@ -597,9 +599,13 @@ static int set_hwparams(snd_pcm_t *handle, ALSABufferParamsStruct *params_struct
     return 0;
 }
 
-static int set_swparams(snd_pcm_t *handle, ALSABufferParamsStruct *params_struct)
+static int set_swparams(ALSAExtras *extras, ALSABufferParamsStruct *params_struct)
 {
     int err = -1;
+
+    int period_event = 0; // produce poll event after each period
+    snd_pcm_t *handle = extras->handle;
+    snd_pcm_sw_params_t *swparams = extras->swparams;
 
     /* get the current swparams */
     if ((err = snd_pcm_sw_params_current(handle, swparams)) < 0)
@@ -610,7 +616,7 @@ static int set_swparams(snd_pcm_t *handle, ALSABufferParamsStruct *params_struct
 
     /* start the transfer when the buffer is almost full: */
     /* (buffer_size / avail_min) * avail_min */
-    if ((err = snd_pcm_sw_params_set_start_threshold(handle, swparams, (buffer_size / period_size) * period_size)) < 0)
+    if ((err = snd_pcm_sw_params_set_start_threshold(handle, swparams, (extras->buffer_size / extras->period_size) * extras->period_size)) < 0)
     {
         ERRLOG("Unable to set start threshold mode for playback: %s", snd_strerror(err));
         return err;
@@ -618,7 +624,7 @@ static int set_swparams(snd_pcm_t *handle, ALSABufferParamsStruct *params_struct
 
     /* allow the transfer when at least period_size samples can be processed */
     /* or disable this mechanism when period event is enabled (aka interrupt like style processing) */
-    if ((err = snd_pcm_sw_params_set_avail_min(handle, swparams, period_event ? buffer_size : period_size)) < 0)
+    if ((err = snd_pcm_sw_params_set_avail_min(handle, swparams, period_event ? extras->buffer_size : extras->period_size)) < 0)
     {
         ERRLOG("Unable to set avail min for playback: %s", snd_strerror(err));
         return err;
@@ -652,45 +658,23 @@ static long alsa_create_sound_buffer(ALSABufferParamsStruct *params_struct, ALSA
     snd_pcm_t *handle = (snd_pcm_t*)(sound_struct->implementation_specific);
     assert(handle != NULL);
 
+    ALSAExtras *extras = NULL;
     int err = -1;
 #if 0
     ALSASoundStructExtras *extras = NULL;
 #endif
 
-    if (hwparams == NULL)
-    {
-        snd_pcm_hw_params_alloca(&hwparams);
-    }
-    if (swparams == NULL)
-    {
-        snd_pcm_sw_params_alloca(&swparams);
-    }
-
     do {
-#if 0
-        if ((extras = malloc(sizeof(ALSASoundStructExtras))) == NULL)
+
+        if ((extras = calloc(1, sizeof(ALSAExtras))) == NULL)
         {
             ERRLOG("Not enough memory");
             break;
         }
 
-        signed short *samples = NULL;
-        if ((samples = malloc((period_size * format_bits) / 8)) == NULL)
-        {
-            ERRLOG("Not enough memory");
-            break;
-        }
-
-        snd_pcm_channel_area_t *area;
-        if ((area = malloc(sizeof(snd_pcm_channel_area_t))) == NULL)
-        {
-            ERRLOG("Not enough memory");
-            break;
-        }
-        area->addr = samples;
-        area->first = 0;
-        area->step = format_bits;
-#endif
+        extras->handle = handle;
+        snd_pcm_hw_params_alloca(&(extras->hwparams));
+        snd_pcm_sw_params_alloca(&(extras->swparams));
 
         if ((*soundbuf_struct = malloc(sizeof(ALSASoundBufferStruct))) == NULL)
         {
@@ -698,17 +682,10 @@ static long alsa_create_sound_buffer(ALSABufferParamsStruct *params_struct, ALSA
             break;
         }
 
-#if 0
-        extras->hwparams = hwparams;
-        extras->swparams = swparams;
-        extras->area = area;
-
-        (*soundbuf_struct)->implementation_specific = extras;
-#endif
+        (*soundbuf_struct)->_this = extras;
         (*soundbuf_struct)->SetVolume              = alsa_set_volume;
         (*soundbuf_struct)->GetVolume              = alsa_get_volume;
         (*soundbuf_struct)->GetCurrentPosition     = alsa_get_position;
-        (*soundbuf_struct)->SetCurrentPosition     = alsa_set_position;
         (*soundbuf_struct)->Stop                   = alsa_stop;
         (*soundbuf_struct)->Restore                = alsa_restore;
         (*soundbuf_struct)->Play                   = alsa_play;
@@ -718,13 +695,13 @@ static long alsa_create_sound_buffer(ALSABufferParamsStruct *params_struct, ALSA
 
         // configuration ...
 
-        if ((err = set_hwparams(handle, params_struct)) < 0)
+        if ((err = set_hwparams(extras, params_struct)) < 0)
         {
             ERRLOG("Setting of hwparams failed: %s", snd_strerror(err));
             break;
         }
 
-        if ((err = set_swparams(handle, params_struct)) < 0)
+        if ((err = set_swparams(extras, params_struct)) < 0)
         {
             ERRLOG("Setting of swparams failed: %s", snd_strerror(err));
             break;
@@ -743,19 +720,13 @@ static long alsa_create_sound_buffer(ALSABufferParamsStruct *params_struct, ALSA
 
     } while(0);
 
+    if (extras)
+    {
+        Free(extras);
+    }
     if (*soundbuf_struct)
     {
         alsa_destroy_sound_buffer(soundbuf_struct);
-    }
-    else
-    {
-#if 0
-        if (hwparams) { Free(hwparams); }
-        if (swparams) { Free(swparams); }
-        if (area) { Free(area); }
-        if (samples) { Free(samples); }
-        if (extras) { Free(extras); }
-#endif
     }
 
     return err ?: -1;

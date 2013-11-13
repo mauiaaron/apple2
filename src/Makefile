@@ -61,40 +61,26 @@ CC = gcc
 DEBUGGER_O = 
 JOYSTICK_O = joystick.o
 PACKAGE = apple2-emul
-PROGS = xapple2 xapple2-80col
+PROGS = xapple2-80col
 VERSION = 0.7.4
 
-noinst_HEADERS = apple2.h debug.h disk.h interface.h keys.h misc.h                  video.h cpu.h glue.h gluepro.h prefs.h timing.h
+noinst_HEADERS = apple2.h debug.h disk.h interface.h keys.h misc.h                  video.h cpu.h glue.h glue-prologue.h prefs.h timing.h
 
 
 SUFFIXES = .l -80.o
 
 man_MANS = apple2.6
 
-EXTRA_PROGRAMS = apple2 xapple2 xapple2-80col
-bin_PROGRAMS = xapple2 xapple2-80col
-
-EXTRA_apple2_SOURCES = debugger.c opcodes.c debug.c joystick.c
-apple2_SOURCES = cpu.S memory.S display.S glue.S keys.c prefs.c disk.c                  interface.c misc.c soundcore.c soundcore-alsa.c speaker.c font.c svideo.c cpu-supp.c 		 vidsup.c timing.c
+EXTRA_PROGRAMS = xapple2-80col
+bin_PROGRAMS = xapple2-80col
 
 
-apple2_LDADD =  joystick.o -lvga
-apple2_DEPENDENCIES =  joystick.o
-
-EXTRA_xapple2_SOURCES = debugger.c opcodes.c debug.c joystick.c
-
-xapple2_SOURCES = cpu.S memory.S display.S glue.S keys.c prefs.c                   disk.c interface.c misc.c soundcore.c soundcore-alsa.c speaker.c font.c xvideo.c                   cpu-supp.c vidsup.c timing.c
-
-
-xapple2_LDADD =  joystick.o  -L/usr/lib/i386-linux-gnu -lX11 -lXext -lrt -lasound
-xapple2_DEPENDENCIES =  joystick.o
 
 EXTRA_xapple2_80col_SOURCES = debugger.c opcodes.c debug.c joystick.c
+xapple2_80col_SOURCES = cpu.S memory.S glue.S keys.c prefs.c disk.c                     font.c cpu-supp.c misc.c win-shim.c soundcore.c soundcore-openal.c alhelpers.c speaker.c AY8910.c mockingboard.c interface.c timing.c
 
-xapple2_80col_SOURCES = cpu.S memory.S glue.S keys.c prefs.c disk.c                     font.c cpu-supp.c misc.c soundcore.c soundcore-alsa.c speaker.c interface.c timing.c
 
-
-xapple2_80col_LDADD =  joystick.o                       vidsup-80.o xvideo-80.o display-80.o                        -L/usr/lib/i386-linux-gnu -lX11 -lXext -lrt -lasound
+xapple2_80col_LDADD =  joystick.o                       vidsup-80.o xvideo-80.o display-80.o                         -L/usr/lib/i386-linux-gnu -lX11 -lXext -lrt -lopenal -lpthread
 
 xapple2_80col_DEPENDENCIES =  joystick.o                       vidsup-80.o xvideo-80.o display-80.o
 
@@ -119,11 +105,7 @@ X_CFLAGS =
 X_LIBS = 
 X_EXTRA_LIBS = 
 X_PRE_LIBS =  -lSM -lICE
-apple2_OBJECTS =  cpu.o memory.o display.o glue.o keys.o prefs.o disk.o     debugger.o opcodes.o debug.o      interface.o misc.o soundcore.o soundcore-alsa.o speaker.o font.o svideo.o cpu-supp.o vidsup.o timing.o
-apple2_LDFLAGS = 
-xapple2_OBJECTS =  cpu.o memory.o display.o glue.o keys.o prefs.o disk.o     debugger.o opcodes.o debug.o       interface.o misc.o soundcore.o soundcore-alsa.o speaker.o font.o xvideo.o cpu-supp.o vidsup.o timing.o
-xapple2_LDFLAGS = 
-xapple2_80col_OBJECTS =  cpu.o memory.o glue.o keys.o prefs.o disk.o      debugger.o opcodes.o debug.o       font.o cpu-supp.o misc.o soundcore.o soundcore-alsa.o speaker.o interface.o timing.o
+xapple2_80col_OBJECTS =  cpu.o memory.o glue.o keys.o prefs.o disk.o      debugger.o opcodes.o debug.o       font.o cpu-supp.o misc.o AY8910.o mockingboard.o win-shim.o soundcore.o soundcore-openal.o alhelpers.o speaker.o interface.o timing.o
 xapple2_80col_LDFLAGS = 
 genfont_SOURCES = genfont.c
 genfont_OBJECTS =  genfont.o
@@ -393,7 +375,7 @@ mostlyclean distclean maintainer-clean
 font.c : font.txt genfont
 	./genfont < $< > $@
 
-glue.S : disk.c misc.c
+glue.S : disk.c misc.c mockingboard.c
 	$(srcdir)/genglue $^ > $@
 
 %-80.o: %.c

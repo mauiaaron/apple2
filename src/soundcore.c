@@ -162,8 +162,12 @@ bool DSGetLock(LPDIRECTSOUNDBUFFER pVoice, DWORD dwOffset, DWORD dwBytes,
 					  SHORT** ppDSLockedBuffer0, DWORD* pdwDSLockedBufferSize0,
 					  SHORT** ppDSLockedBuffer1, DWORD* pdwDSLockedBufferSize1)
 {
-	DWORD nStatus;
+	DWORD nStatus = 0;
+#ifdef APPLE2IX
+	HRESULT hr = pVoice->GetStatus(pVoice->_this, &nStatus);
+#else
 	HRESULT hr = pVoice->GetStatus(&nStatus);
+#endif
 	if(hr != DS_OK)
 		return false;
 
@@ -171,7 +175,11 @@ bool DSGetLock(LPDIRECTSOUNDBUFFER pVoice, DWORD dwOffset, DWORD dwBytes,
 	{
 		do
 		{
+#ifdef APPLE2IX
+			hr = pVoice->Restore(pVoice->_this);
+#else
 			hr = pVoice->Restore();
+#endif
 			if(hr == DSERR_BUFFERLOST)
 				Sleep(10);
 		}
@@ -181,7 +189,11 @@ bool DSGetLock(LPDIRECTSOUNDBUFFER pVoice, DWORD dwOffset, DWORD dwBytes,
 	// Get write only pointer(s) to sound buffer
 	if(dwBytes == 0)
 	{
+#ifdef APPLE2IX
+		if(FAILED(hr = pVoice->Lock(pVoice->_this, 0, 0,
+#else
 		if(FAILED(hr = pVoice->Lock(0, 0,
+#endif
 								(void**)ppDSLockedBuffer0, pdwDSLockedBufferSize0,
 								(void**)ppDSLockedBuffer1, pdwDSLockedBufferSize1,
 								DSBLOCK_ENTIREBUFFER)))
@@ -189,7 +201,11 @@ bool DSGetLock(LPDIRECTSOUNDBUFFER pVoice, DWORD dwOffset, DWORD dwBytes,
 	}
 	else
 	{
+#ifdef APPLE2IX
+		if(FAILED(hr = pVoice->Lock(pVoice->_this, dwOffset, dwBytes,
+#else
 		if(FAILED(hr = pVoice->Lock(dwOffset, dwBytes,
+#endif
 								(void**)ppDSLockedBuffer0, pdwDSLockedBufferSize0,
 								(void**)ppDSLockedBuffer1, pdwDSLockedBufferSize1,
 								0)))
@@ -227,6 +243,7 @@ HRESULT DSGetSoundBuffer(VOICE* pVoice, DWORD dwFlags, DWORD dwBufferSize, DWORD
         if (pVoice->lpDSBvoice)
         {
             g_lpDS->DestroySoundBuffer(&pVoice->lpDSBvoice);
+            //DSReleaseSoundBuffer(pVoice);
         }
 	HRESULT hr = g_lpDS->CreateSoundBuffer(&dsbdesc, &pVoice->lpDSBvoice, g_lpDS);
 #else
@@ -277,17 +294,13 @@ void DSReleaseSoundBuffer(VOICE* pVoice)
 
 bool DSZeroVoiceBuffer(PVOICE Voice, char* pszDevName, DWORD dwBufferSize)
 {
-#ifdef APPLE2IX
-    // HACK FIXME is this function necessary?
-    return true;
-#endif
 	DWORD dwDSLockedBufferSize = 0;    // Size of the locked DirectSound buffer
 	SHORT* pDSLockedBuffer;
 
 
 #ifdef APPLE2IX
         DWORD argX = 0;
-	HRESULT hr = Voice->lpDSBvoice->Stop();
+	HRESULT hr = Voice->lpDSBvoice->Stop(Voice->lpDSBvoice->_this);
 	if(FAILED(hr))
 	{
 		if(g_fh) fprintf(g_fh, "%s: DSStop failed (%08X)\n",pszDevName,hr);
@@ -308,7 +321,7 @@ bool DSZeroVoiceBuffer(PVOICE Voice, char* pszDevName, DWORD dwBufferSize)
 	memset(pDSLockedBuffer, 0x00, dwDSLockedBufferSize);
 
 #ifdef APPLE2IX
-	hr = Voice->lpDSBvoice->Unlock((void*)pDSLockedBuffer, dwDSLockedBufferSize, NULL, argX);
+	hr = Voice->lpDSBvoice->Unlock(Voice->lpDSBvoice->_this, (void*)pDSLockedBuffer, dwDSLockedBufferSize, NULL, argX);
 #else
 	hr = Voice->lpDSBvoice->Unlock((void*)pDSLockedBuffer, dwDSLockedBufferSize, NULL, 0);
 #endif
@@ -318,7 +331,11 @@ bool DSZeroVoiceBuffer(PVOICE Voice, char* pszDevName, DWORD dwBufferSize)
 		return false;
 	}
 
+#ifdef APPLE2IX
+	hr = Voice->lpDSBvoice->Play(Voice->lpDSBvoice->_this,0,0,0);
+#else
 	hr = Voice->lpDSBvoice->Play(0,0,DSBPLAY_LOOPING);
+#endif
 	if(FAILED(hr))
 	{
 		if(g_fh) fprintf(g_fh, "%s: DSPlay failed (%08X)\n",pszDevName,hr);
@@ -353,7 +370,11 @@ bool DSZeroVoiceWritableBuffer(PVOICE Voice, char* pszDevName, DWORD dwBufferSiz
 	if(pDSLockedBuffer1)
 		memset(pDSLockedBuffer1, 0x00, dwDSLockedBufferSize1);
 
+#ifdef APPLE2IX
+	hr = Voice->lpDSBvoice->Unlock(Voice->lpDSBvoice->_this, (void*)pDSLockedBuffer0, dwDSLockedBufferSize0,
+#else
 	hr = Voice->lpDSBvoice->Unlock((void*)pDSLockedBuffer0, dwDSLockedBufferSize0,
+#endif
 									(void*)pDSLockedBuffer1, dwDSLockedBufferSize1);
 	if(FAILED(hr))
 	{
@@ -542,6 +563,7 @@ void SoundCore_SetFade(eFADE FadeType)
 // If AppleWin started by double-clicking a .dsk, then our window won't have focus when volumes are set (so gets ignored).
 // Subsequent setting (to the same volume) will get ignored, as DirectSound thinks that volume is already set.
 
+#ifndef APPLE2IX
 void SoundCore_TweakVolumes()
 {
 	for (UINT i=0; i<g_uNumVoices; i++)
@@ -550,6 +572,7 @@ void SoundCore_TweakVolumes()
 		g_pVoices[i]->lpDSBvoice->SetVolume(g_pVoices[i]->nVolume);
 	}
 }
+#endif
 
 //-----------------------------------------------------------------------------
 

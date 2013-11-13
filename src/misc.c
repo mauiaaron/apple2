@@ -36,6 +36,7 @@
 #include "timing.h"
 #include "speaker.h"
 #include "soundcore.h"
+#include "mockingboard.h"
 
 /* ----------------------------------
     internal apple2 variables
@@ -484,6 +485,7 @@ void c_initialize_tables() {
 
     // HACK TODO FIXME : this needs to be tied to the UI/configuration system (once we have more/conflicting options)
 
+    mb_io_initialize(4, 5); /* Mockingboard(s) and/or Phasor in slots 4 & 5 */
     disk_io_initialize(6); /* Put a Disk ][ Controller in slot 6 */
 }
 
@@ -669,8 +671,6 @@ void reinitialize(void)
 {
     int i;
 
-    cpu65_do_reboot=1;
-
     /* reset the watchpoints and breakpoints */
     for (i=0; i<MAX_BRKPTS; i++)
     {
@@ -718,11 +718,12 @@ static void c_initialize_firsttime()
     // TODO FIXME : sound system never released ...
     DSInit();
     SpkrInitialize();
-    //MB_Initialize();
+    MB_Initialize();
 
     reinitialize();
 }
 
+// HACK FIXME TODO : candidate for GLUE_C_READ(...)
 void c_read_random() {
     static unsigned int seed=0;
     if (!seed) {

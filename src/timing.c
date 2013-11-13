@@ -21,6 +21,7 @@
 #include "cpu.h"
 #include "speaker.h"
 #include "keys.h"
+#include "mockingboard.h"
 
 #define EXECUTION_PERIOD_NSECS 1000000  // AppleWin: nExecutionPeriodUsec
 
@@ -32,6 +33,8 @@ int g_nCpuCyclesFeedback = 0;
 static bool alt_speed_enabled = false;
 double cpu_scale_factor = 1.0;
 double cpu_altscale_factor = 1.0;
+
+uint8_t emul_reinitialize;
 
 static unsigned int g_nCyclesExecuted; // # of cycles executed up to last IO access
 
@@ -168,6 +171,8 @@ void cpu_thread(void *dummyptr) {
         LOG("cpu_thread : begin main loop ...");
 
         clock_gettime(CLOCK_MONOTONIC, &t0);
+
+        emul_reinitialize = 1;
         do {
             // -LOCK----------------------------------------------------------------------------------------- SAMPLE ti
             pthread_mutex_lock(&interface_mutex);
@@ -195,9 +200,11 @@ void cpu_thread(void *dummyptr) {
 
             cpu65_cycle_count = 0;
             g_nCyclesExecuted = 0;
-            //MB_StartOfCpuExecute();
+
+            MB_StartOfCpuExecute();
 
             cpu65_run(); // run emulation for cpu65_cycles_to_execute cycles ...
+
             cycles_adjust = cpu65_cycles_to_execute; // counter is decremented in cpu65_run()
             if (cycles_adjust < 0)
             {
@@ -205,7 +212,7 @@ void cpu_thread(void *dummyptr) {
             }
             unsigned int uExecutedCycles = cpu65_cycle_count;
 
-            //MB_UpdateCycles(uExecutedCycles);   // Update 6522s (NB. Do this before updating g_nCumulativeCycles below)
+            MB_UpdateCycles(uExecutedCycles);   // Update 6522s (NB. Do this before updating g_nCumulativeCycles below)
 
             // N.B.: IO calls that depend on accurate timing will update g_nCyclesExecuted
             const unsigned int nRemainingCycles = uExecutedCycles - g_nCyclesExecuted;
@@ -215,6 +222,9 @@ void cpu_thread(void *dummyptr) {
             {
                 SpkrUpdate(uExecutedCycles); // play audio
             }
+
+            // N.B.: technically this is not the end of the video frame...
+            MB_EndOfVideoFrame();
 
             clock_gettime(CLOCK_MONOTONIC, &tj);
             pthread_mutex_unlock(&interface_mutex);
@@ -253,7 +263,7 @@ void cpu_thread(void *dummyptr) {
                 LOG("tick (%ld . %ld) real: (%ld . %ld)", t0.tv_sec, t0.tv_nsec, ti.tv_sec, ti.tv_nsec);
             }
 #endif
-        } while (!cpu65_do_reboot);
+        } while (!emul_reinitialize);
 
         reinitialize();
     } while (1);

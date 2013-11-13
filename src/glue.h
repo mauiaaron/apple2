@@ -21,8 +21,10 @@
 #define GLUE_BANK_MAYBEWRITE(func,pointer)
 
 #define GLUE_C_WRITE(func) \
- void unglued_##func(int ea, unsigned char d) /* you complete definition */
+    extern void func(); \
+    void c_##func(uint16_t ea, uint8_t b) /* you complete definition */
 
 #define GLUE_C_READ(func) \
- unsigned char unglued_##func(int ea) /* you complete definition */
+    extern void func(); \
+    uint8_t c_##func(uint16_t ea) /* you complete definition */
 

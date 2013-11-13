@@ -50,7 +50,7 @@ unsigned char apple_ii_64k[2][65536]; /* 128k memory */
 unsigned char language_card[2][8192], language_banks[2][8192];
 
 /* misc stuff */
-unsigned char random_value;
+uint8_t random_value;
 
 /* global ref to commandline args */
 char            **argv;
