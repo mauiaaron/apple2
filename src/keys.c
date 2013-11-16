@@ -28,6 +28,7 @@
 #include "cpu.h"
 #include "prefs.h"
 #include "timing.h"
+#include "soundcore.h"
 
 /* from misc.c */
 extern uid_t user, privileged;
@@ -247,35 +248,45 @@ void c_periodic_update(int dummysig) {
 
             case kF1:
                 pthread_mutex_lock(&interface_mutex);
+                SoundSystemPause();
                 c_interface_select_diskette( 0 );
+                SoundSystemUnpause();
                 pthread_mutex_unlock(&interface_mutex);
                 break;
 
             case kF2:
                 pthread_mutex_lock(&interface_mutex);
+                SoundSystemPause();
                 c_interface_select_diskette( 1 );
+                SoundSystemUnpause();
                 pthread_mutex_unlock(&interface_mutex);
                 break;
 
             case kF4:
                 pthread_mutex_lock(&interface_mutex);
+                SoundSystemPause();
                 while (c_mygetch(1) == -1)
                 {
                     struct timespec ts = { .tv_sec=0, .tv_nsec=1 };
                     nanosleep(&ts, NULL);
                 }
+                SoundSystemUnpause();
                 pthread_mutex_unlock(&interface_mutex);
                 break;
 
             case kF5:
                 pthread_mutex_lock(&interface_mutex);
+                SoundSystemPause();
                 c_interface_keyboard_layout();
+                SoundSystemUnpause();
                 pthread_mutex_unlock(&interface_mutex);
                 break;
 
             case kF7:
                 pthread_mutex_lock(&interface_mutex);
+                SoundSystemPause();
                 c_do_debugging();
+                SoundSystemUnpause();
                 pthread_mutex_unlock(&interface_mutex);
                 break;
 #if 0
@@ -291,7 +302,9 @@ void c_periodic_update(int dummysig) {
 
             case kF10:
                 pthread_mutex_lock(&interface_mutex);
+                SoundSystemPause();
                 c_interface_parameters();
+                SoundSystemUnpause();
                 pthread_mutex_unlock(&interface_mutex);
                 break;
             }
