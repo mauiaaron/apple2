@@ -96,6 +96,8 @@ extern bool g_bDSAvailable;
 typedef struct IDirectSound SoundSystemStruct;
 long SoundSystemCreate(const char *sound_device, SoundSystemStruct **sound_struct);
 long SoundSystemDestroy(SoundSystemStruct **sound_struct);
+long SoundSystemPause();
+long SoundSystemUnpause();
 long SoundSystemEnumerate(char ***sound_devices, const int maxcount);
 #endif
 

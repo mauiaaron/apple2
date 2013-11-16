@@ -23,8 +23,16 @@ LPALISBUFFERFORMATSUPPORTEDSOFT alIsBufferFormatSupportedSOFT = NULL;
 static long OpenALCreateSoundBuffer(ALBufferParamsStruct *params, ALSoundBufferStruct **soundbuf_struct, void *extra_data);
 static long OpenALDestroySoundBuffer(ALSoundBufferStruct **soundbuf_struct);
 
+typedef struct ALVoices {
+    const ALuint source;
+    ALVoice *voice;
+    UT_hash_handle hh;
+} ALVoices;
+
+static ALVoices *voices = NULL;
+
 // ----------------------------------------------------------------------------
-// uthash
+// uthash of OpenAL buffers
 
 static ALPlayBuf *PlaylistEnqueue(ALVoice *voice, ALuint bytes)
 {
@@ -104,6 +112,7 @@ static void PlaylistDequeue(ALVoice *voice, ALPlayBuf *node)
 long SoundSystemCreate(const char *sound_device, SoundSystemStruct **sound_struct)
 {
     assert(*sound_struct == NULL);
+    assert(voices == NULL);
 
     int err = -1;
     ALCcontext *ctx = NULL;
@@ -172,6 +181,43 @@ long SoundSystemEnumerate(char ***device_list, const int limit)
     unsigned int num_devices = 1;
     (*device_list)[num_devices] = NULL; // sentinel
     return num_devices;
+}
+
+// pause all audio
+long SoundSystemPause()
+{
+    ALVoices *vnode = NULL;
+    ALVoices *tmp = NULL;
+    int err = 0;
+
+    HASH_ITER(hh, voices, vnode, tmp) {
+        alSourcePause(vnode->source);
+        err = alGetError();
+        if (err != AL_NO_ERROR)
+        {
+            ERRLOG("OOPS, Failed to pause source : 0x%08x", err);
+        }
+    }
+
+    return 0;
+}
+
+long SoundSystemUnpause()
+{
+    ALVoices *vnode = NULL;
+    ALVoices *tmp = NULL;
+    int err = 0;
+
+    HASH_ITER(hh, voices, vnode, tmp) {
+        alSourcePlay(vnode->source);
+        err = alGetError();
+        if (err != AL_NO_ERROR)
+        {
+            ERRLOG("OOPS, Failed to pause source : 0x%08x", err);
+        }
+    }
+
+    return 0;
 }
 
 // ----------------------------------------------------------------------------
@@ -734,6 +780,17 @@ static long OpenALCreateSoundBuffer(ALBufferParamsStruct *params, ALSoundBufferS
             break;
         }
 
+        ALVoices immutableNode = { .source = voice->source };
+        ALVoices *vnode = calloc(1, sizeof(ALVoices));
+        if (!vnode)
+        {
+            ERRLOG("OOPS, Not enough memory");
+            break;
+        }
+        memcpy(vnode, &immutableNode, sizeof(ALVoices));
+        vnode->voice = voice;
+        HASH_ADD_INT(voices, source, vnode);
+
         if ((*soundbuf_struct = malloc(sizeof(ALSoundBufferStruct))) == NULL)
         {
             ERRLOG("OOPS, Not enough memory");
@@ -774,7 +831,15 @@ static long OpenALDestroySoundBuffer(ALSoundBufferStruct **soundbuf_struct)
 {
     LOG("OpenALDestroySoundBuffer ...");
     ALVoice *voice = (*soundbuf_struct)->_this;
+    ALint source = voice->source;
+
     DeleteVoice(voice);
+
+    ALVoices *vnode = NULL;
+    HASH_FIND_INT(voices, &source, vnode);
+    HASH_DEL(voices, vnode);
+    Free(vnode);
+
     Free(*soundbuf_struct);
     return 0;
 }
