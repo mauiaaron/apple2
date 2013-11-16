@@ -972,7 +972,7 @@ void c_interface_parameters()
             }
 
             pad_string(temp, ' ', 26);
-            if (i+cur_off != 1)
+            if (i+cur_off != 2)
             {
                 c_interface_print(14, 5 + i, 0, temp);
             }
@@ -1005,8 +1005,7 @@ void c_interface_parameters()
                         }
                         else
                         {
-                            video_plotchar( 14 + j, 5+i, option==OPT_PATH,
-                                            temp[ j ]);
+                            video_plotchar( 14 + j, 5+i, option==OPT_PATH, temp[ j ]);
                         }
 
                     }
