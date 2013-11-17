@@ -162,7 +162,11 @@ void cpu_thread(void *dummyptr) {
     bool negative = false;
     long drift_adj_nsecs = 0;         // generic drift adjustment between target and actual
 
+#ifndef NDEBUG
     unsigned long dbg_ticks = 0;
+    int speaker_neg_feedback = 0;
+    int speaker_pos_feedback = 0;
+#endif
 
     do
     {
@@ -256,11 +260,24 @@ void cpu_thread(void *dummyptr) {
             }
 
 #ifndef NDEBUG
+            // collect timing statistics
+
+            if (speaker_neg_feedback > g_nCpuCyclesFeedback)
+            {
+                speaker_neg_feedback = g_nCpuCyclesFeedback;
+            }
+            if (speaker_pos_feedback < g_nCpuCyclesFeedback)
+            {
+                speaker_pos_feedback = g_nCpuCyclesFeedback;
+            }
+
             dbg_ticks += EXECUTION_PERIOD_NSECS;
             if ((dbg_ticks % NANOSECONDS) == 0)
             {
+                LOG("tick:(%ld.%ld) real:(%ld.%ld) ... speaker cycles feedback: %d/%d", t0.tv_sec, t0.tv_nsec, ti.tv_sec, ti.tv_nsec, speaker_neg_feedback, speaker_pos_feedback);
                 dbg_ticks = 0;
-                LOG("tick (%ld . %ld) real: (%ld . %ld)", t0.tv_sec, t0.tv_nsec, ti.tv_sec, ti.tv_nsec);
+                speaker_neg_feedback = 0;
+                speaker_pos_feedback = 0;
             }
 #endif
         } while (!emul_reinitialize);
