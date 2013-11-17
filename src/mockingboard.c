@@ -185,7 +185,11 @@ static int g_nCurrentActivePhoneme = -1;
 static bool g_bStopPhoneme = false;
 static bool g_bVotraxPhoneme = false;
 
+#ifdef APPLE2IX
+static const DWORD SAMPLE_RATE = SPKR_SAMPLE_RATE;
+#else
 static const DWORD SAMPLE_RATE = 44100;	// Use a base freq so that DirectX (or sound h/w) doesn't have to up/down-sample
+#endif
 
 static short* ppAYVoiceBuffer[NUM_VOICES] = {0};
 
@@ -819,9 +823,17 @@ static void Votrax_Write(BYTE nDevice, BYTE nValue)
 static void MB_Update()
 {
 	char szDbg[200];
-
+#ifdef APPLE2IX
+        static int nNumSamplesError = 0;
+        if (!MockingboardVoice.bActive || !g_bMB_Active)
+        {
+            nNumSamplesError = 0;
+            return;
+        }
+#else
 	if (!MockingboardVoice.bActive)
 		return;
+#endif
 
 	if (g_bFullSpeed)
 	{
@@ -868,12 +880,9 @@ static void MB_Update()
 
 #ifndef APPLE2IX
 	static DWORD dwByteOffset = (DWORD)-1;
-#endif
 	static int nNumSamplesError = 0;
+#endif
 
-#ifdef APPLE2IX
-        // HACK : do this more like speaker.c below after getting buffer position ...
-#else
 	const double n6522TimerPeriod = MB_GetFramePeriod();
 
 	const double nIrqFreq = g_fCurrentCLK6502 / n6522TimerPeriod + 0.5;			// Round-up
@@ -887,7 +896,6 @@ static void MB_Update()
 	if(nNumSamples)
 		for(int nChip=0; nChip<NUM_AY8910; nChip++)
 			AY8910Update(nChip, &ppAYVoiceBuffer[nChip*NUM_VOICES_PER_AY8910], nNumSamples);
-#endif
 
 	//
 
@@ -964,44 +972,17 @@ static void MB_Update()
 		nNumSamplesError = 0;						// Acceptable amount of data in buffer
 
 #ifdef APPLE2IX
-        // HACK NOTE : moved some stuff from above and added similar throttling code from speaker.c
 	const int nErrorMax = SoundCore_GetErrorMax();				// Cap feedback to +/-nMaxError units
 	if(nNumSamplesError < -nErrorMax) nNumSamplesError = -nErrorMax;
 	if(nNumSamplesError >  nErrorMax) nNumSamplesError =  nErrorMax;
 
-	const double n6522TimerPeriod = MB_GetFramePeriod();
-
-	const double nIrqFreq = g_fCurrentCLK6502 / n6522TimerPeriod + 0.5;			// Round-up
-	const int nNumSamplesPerPeriod = (int) ((double)SAMPLE_RATE / nIrqFreq);	// Eg. For 60Hz this is 735
-	int nNumSamples = nNumSamplesPerPeriod + nNumSamplesError;					// Apply correction
-	if(nNumSamples <= 0)
+        static time_t dbg_print = 0;
+        time_t now = time(NULL);
+        if (dbg_print != now)
         {
-		nNumSamples = 0;
+            dbg_print = now;
+            LOG("mockingboard g_nCpuCyclesFeedback:%d nNumSamplesError:%d n6522TimerPeriod:%f nIrqFreq:%f nNumSamplesPerPeriod:%d nNumSamples:%d nBytesRemaining:%d ", g_nCpuCyclesFeedback, nNumSamplesError, n6522TimerPeriod, nIrqFreq, nNumSamplesPerPeriod, nNumSamples, nBytesRemaining);
         }
-	if(nNumSamples > 2*nNumSamplesPerPeriod)
-        {
-		nNumSamples = 2*nNumSamplesPerPeriod;
-        }
-
-	UINT nBytesFree = g_dwDSBufferSize - nBytesRemaining;	// Calc free buffer space
-	ULONG nNumSamplesToUse = nNumSamples;
-
-	if(nNumSamplesToUse * sizeof(short) > nBytesFree)
-		nNumSamplesToUse = nBytesFree / sizeof(short);
-
-        nNumSamples = nNumSamplesToUse;
-	if(nNumSamples)
-        {
-		for(int nChip=0; nChip<NUM_AY8910; nChip++)
-			AY8910Update(nChip, &ppAYVoiceBuffer[nChip*NUM_VOICES_PER_AY8910], nNumSamples);
-        }
-
-        // NOTE : we DO NOT return if nNumSamples is zero, just commit what we've got to OpenAL!
-#else 
-	if(nNumSamples == 0)
-		return;
-
-	//
 #endif
 
 	const double fAttenuation = g_bPhasorEnable ? 2.0/3.0 : 1.0;

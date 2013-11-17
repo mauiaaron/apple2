@@ -171,6 +171,9 @@ void sound_ay_init( CAY8910 *_this )
 	_this->ay_change_count = 0;
 }
 
+#ifdef APPLE2IX
+#define HZ_COMMON_DENOMINATOR 25
+#endif
 
 void sound_init( CAY8910 *_this, const char *device )
 {
@@ -223,7 +226,7 @@ void sound_init( CAY8910 *_this, const char *device )
 
 //  hz = ( float ) machine_current->timings.processor_speed /
 //    machine_current->timings.tstates_per_frame;
-  hz = 50;
+  hz = HZ_COMMON_DENOMINATOR;
 
 //  sound_generator_freq =
 //    settings_current.sound_hifi ? HIFI_FREQ : settings_current.sound_freq;
@@ -486,7 +489,11 @@ sound_write_buf_pstereo( libspectrum_signed_word * out, int c )
 #define AY_ENV_ALT	2
 #define AY_ENV_HOLD	1
 
+#ifdef APPLE2IX
+// defined above
+#else
 #define HZ_COMMON_DENOMINATOR 50
+#endif
 
 static void sound_ay_overlay(CAY8910 *_this)
 {

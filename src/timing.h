@@ -36,7 +36,7 @@
 #define CPU_SCALE_STEP_DIV 0.01
 #define CPU_SCALE_STEP 0.05
 
-#define SPKR_SAMPLE_RATE 44100
+#define SPKR_SAMPLE_RATE 22050
 
 extern double g_fCurrentCLK6502;
 extern bool g_bFullSpeed;
