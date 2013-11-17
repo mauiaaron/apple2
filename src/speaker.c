@@ -84,7 +84,7 @@ static short*	g_pSpeakerBuffer = NULL;
 
 // Globals (SOUND_WAVE)
 #ifdef APPLE2IX
-#define SPKR_DATA_INIT 0x8000;
+#define SPKR_DATA_INIT 0x4000;
 #else
 const short		SPKR_DATA_INIT = (short)0x8000;
 #endif
@@ -603,7 +603,11 @@ BYTE __stdcall SpkrToggle (WORD, WORD, BYTE, BYTE, ULONG nCyclesLeft)
 
 	  UpdateSpkr();
 
+#ifdef APPLE2IX
+	  g_nSpeakerData *= -1;
+#else
 	  g_nSpeakerData = ~g_nSpeakerData;
+#endif
   }
   else if (soundtype != SOUND_NONE)
   {
@@ -1238,6 +1242,13 @@ DWORD SpkrGetVolume()
 	return SpeakerVoice.dwUserVolume;
 }
 
+#ifdef APPLE2IX
+// volume is square wave min and max samples
+void SpkrSetVolume(short amplitude)
+{
+    g_nSpeakerData = amplitude;
+}
+#else
 void SpkrSetVolume(DWORD dwVolume, DWORD dwVolumeMax)
 {
 	SpeakerVoice.dwUserVolume = dwVolume;
@@ -1245,12 +1256,9 @@ void SpkrSetVolume(DWORD dwVolume, DWORD dwVolumeMax)
 	SpeakerVoice.nVolume = NewVolume(dwVolume, dwVolumeMax);
 
 	if(SpeakerVoice.bActive)
-#ifdef APPLE2IX
-		SpeakerVoice.lpDSBvoice->SetVolume(SpeakerVoice.lpDSBvoice->_this, SpeakerVoice.nVolume);
-#else
 		SpeakerVoice.lpDSBvoice->SetVolume(SpeakerVoice.nVolume);
-#endif
 }
+#endif
 
 //=============================================================================
 

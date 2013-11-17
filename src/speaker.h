@@ -29,7 +29,11 @@ void    SpkrUpdate_Timer();
 void    Spkr_SetErrorInc(const int nErrorInc);
 void    Spkr_SetErrorMax(const int nErrorMax);
 DWORD   SpkrGetVolume();
+#ifdef APPLE2IX
+void    SpkrSetVolume(short amplitude);
+#else
 void    SpkrSetVolume(DWORD dwVolume, DWORD dwVolumeMax);
+#endif
 void    Spkr_Mute();
 void    Spkr_Demute();
 bool    Spkr_IsActive();
