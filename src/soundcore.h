@@ -19,7 +19,7 @@
 
 #include "ds-shim.h"
 
-#define MAX_SAMPLES (16*1024)
+#define MAX_SAMPLES (8*1024)
 
 #if defined(APPLE2IX)
 #define SAFE_RELEASE(p)      Free(p)
