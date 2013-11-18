@@ -487,7 +487,7 @@ static long _ALProcessPlayBuffers(ALVoice *voice, ALuint *bytes_queued)
 
     if ((processed == 0) && (HASH_COUNT(voice->queued_buffers) >= OPENAL_NUM_BUFFERS))
     {
-        LOG("All audio buffers processing...");
+        //LOG("All audio buffers processing...");
     }
 
     while (processed > 0)
@@ -575,6 +575,25 @@ static long ALBegin(void *_this, unsigned long unused, unsigned long write_bytes
         write_bytes = voice->buffersize;
     }
 
+    ALuint bytes_queued = 0;
+    int err = _ALProcessPlayBuffers(voice, &bytes_queued);
+    if (err)
+    {
+        return err;
+    }
+
+    if ((bytes_queued == 0) && (voice->index == 0))
+    {
+        LOG("Buffer underrun ... queuing quiet samples ...");
+        int quiet_size = voice->buffersize>>2/* 1/4 buffer */;
+        memset(voice->data, 0x0, quiet_size);
+        voice->index += quiet_size;
+    }
+    else if (bytes_queued + voice->index < (voice->buffersize>>3)/* 1/8 buffer */)
+    {
+        LOG("Potential underrun ...");
+    }
+
     ALsizei remaining = voice->buffersize - voice->index;
     if (write_bytes > remaining)
     {
@@ -587,7 +606,7 @@ static long ALBegin(void *_this, unsigned long unused, unsigned long write_bytes
     return 0;
 }
 
-static long _ALSubmitBufferToOpenAL(ALVoice *voice, ALint state)
+static long _ALSubmitBufferToOpenAL(ALVoice *voice)
 {
     int err =0;
 
@@ -615,8 +634,16 @@ static long _ALSubmitBufferToOpenAL(ALVoice *voice, ALint state)
         return err;
     }
 
+    ALint state = 0;
+    alGetSourcei(voice->source, AL_SOURCE_STATE, &state);
+    if ((err = alGetError()) != AL_NO_ERROR)
+    {
+        ERRLOG("OOPS, Error checking source state : 0x%08x", err);
+        return err;
+    }
     if ((state != AL_PLAYING) && (state != AL_PAUSED))
     {
+        // 2013/11/17 NOTE : alSourcePlay() is expensive and causes audio artifacts, only invoke if needed
         LOG("Restarting playback (was 0x%08x) ...", state);
         alSourcePlay(voice->source);
         if ((err = alGetError()) != AL_NO_ERROR)
@@ -642,42 +669,13 @@ static long ALCommit(void *_this, void *unused_audio_ptr1, unsigned long audio_b
         return err;
     }
 
-    ALint state = 0;
-    alGetSourcei(voice->source, AL_SOURCE_STATE, &state);
-    if ((err = alGetError()) != AL_NO_ERROR)
-    {
-        ERRLOG("OOPS, Error checking source state : 0x%08x", err);
-        return err;
-    }
-
     voice->index += audio_bytes1;
 
-    if ((state != AL_PLAYING) && (state != AL_PAUSED))
+    while (voice->index > voice->buffersize)
     {
-        // OpenAL not playing -- potentially refill queue with quiet samples ...
-#if 0
-        // NOTE : seen this fail when gdb-ing
-        assert(HASH_COUNT(voice->queued_buffers) == 0);
-        assert(voice->_queued_total_bytes == 0);
-        assert(bytes_queued == 0);
-#endif
-
-        int quiet_size = (voice->buffersize>>2/*quarter buffersize*/) - voice->index;
-        if (quiet_size > 0)
-        {
-            LOG("quiet samples...");
-            memmove(voice->data + quiet_size, voice->data, voice->index);
-            memset(voice->data, 0x0, quiet_size);
-            voice->index += quiet_size;
-        }
-        // ... and OpenAL playback will be restarted below ...
-    }
-
-    if (voice->index > voice->buffersize)
-    {
-        voice->index = 0;
+        // hopefully this is DEADC0DE or we've overwritten voice->data buffer ...
         ERRLOG("OOPS, overflow in queued sound data");
-        return -1;
+        assert(false);
     }
 
     if (bytes_queued >= (voice->buffersize>>2)/*quarter buffersize*/)
@@ -685,16 +683,17 @@ static long ALCommit(void *_this, void *unused_audio_ptr1, unsigned long audio_b
         // keep accumulating data into working buffer
         return 0;
     }
+
     if (HASH_COUNT(voice->queued_buffers) >= (OPENAL_NUM_BUFFERS))
     {
-        LOG("no free audio buffers"); // keep accumulating ...
+        //LOG("no free audio buffers"); // keep accumulating ...
         return 0;
     }
 
     // ---------------------------
     // Submit working buffer to OpenAL
 
-    err = _ALSubmitBufferToOpenAL(voice, state);
+    err = _ALSubmitBufferToOpenAL(voice);
     if (err)
     {
         return err;
@@ -718,15 +717,8 @@ static long ALReplay(void *_this)
     voice->index = voice->replay_index;
 
     int err = 0;
-    ALint state = 0;
-    alGetSourcei(voice->source, AL_SOURCE_STATE, &state);
-    if ((err = alGetError()) != AL_NO_ERROR)
-    {
-        ERRLOG("OOPS, Error checking source state : 0x%08x", err);
-        return err;
-    }
 
-    err = _ALSubmitBufferToOpenAL(voice, state);
+    err = _ALSubmitBufferToOpenAL(voice);
     if (err)
     {
         return err;
@@ -748,7 +740,7 @@ static long ALGetStatus(void *_this, unsigned long *status)
         return err;
     }
 
-    if (state == AL_PLAYING)
+    if ((state == AL_PLAYING) || (state == AL_PAUSED))
     {
         *status = DSBSTATUS_PLAYING;
     }

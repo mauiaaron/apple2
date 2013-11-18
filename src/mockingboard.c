@@ -1314,10 +1314,12 @@ static bool MB_DSInit()
 		return false;
 	}
 
+#ifndef APPLE2IX
 	bool bRes = DSZeroVoiceBuffer(&MockingboardVoice, (char*)"MB", g_dwDSBufferSize);
 	LogFileOutput("MB_DSInit: DSZeroVoiceBuffer(), res=%d\n", bRes ? 1 : 0);
 	if (!bRes)
 		return false;
+#endif
 
 	MockingboardVoice.bActive = true;
 

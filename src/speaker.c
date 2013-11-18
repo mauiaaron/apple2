@@ -1012,7 +1012,9 @@ static ULONG Spkr_SubmitWaveBuffer(short* pSpeakerBuffer, ULONG nNumSamples)
 
 		// Don't call DSZeroVoiceBuffer() - get noise with "VIA AC'97 Enhanced Audio Controller"
 		// . I guess SpeakerVoice.Stop() isn't really working and the new zero buffer causes noise corruption when submitted.
+#ifndef APPLE2IX
 		DSZeroVoiceWritableBuffer(&SpeakerVoice, "Spkr", g_dwDSSpkrBufferSize);
+#endif
 
 		return 0;
 	}
@@ -1280,8 +1282,10 @@ bool Spkr_DSInit()
 		return false;
 	}
 
+#ifndef APPLE2IX
 	if(!DSZeroVoiceBuffer(&SpeakerVoice, "Spkr", g_dwDSSpkrBufferSize))
 		return false;
+#endif
 
 	SpeakerVoice.bActive = true;
 
