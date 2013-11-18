@@ -1348,6 +1348,8 @@ static bool MB_DSInit()
 	g_dwMaxPhonemeLen *= sizeof(SHORT);
 #endif
 
+        return true;
+
 #ifdef APPLE2IX
         int err = 0;
         if ((err = pthread_mutex_init(&mockingboard_mutex, NULL)))
