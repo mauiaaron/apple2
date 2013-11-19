@@ -1071,7 +1071,7 @@ static DWORD WINAPI SSI263Thread(LPVOID lpParameter)
 #ifdef APPLE2IX
             int err =0;
 
-            static struct timespec wait = { .tv_sec = 0, .tv_nsec=22676 }; // 44100Hz
+            static struct timespec wait = { .tv_sec = 0, .tv_nsec=45351 }; // 22050Hz
             pthread_mutex_lock(&mockingboard_mutex);
             err = pthread_cond_timedwait(&mockingboard_cond, &mockingboard_mutex, &wait);
             if (err && (err != ETIMEDOUT))
@@ -1426,11 +1426,19 @@ static bool MB_DSInit()
 		if(bPause)
 		{
 			// 'pause' length is length of 1st phoneme (arbitrary choice, since don't know real length)
+#ifdef APPLE2IX
+			memset(pDSLockedBuffer, 0x00, dwDSLockedBufferSize);
+#else
 			memset(pDSLockedBuffer, 0x00, nPhonemeByteLength);
+#endif
 		}
 		else
 		{
+#ifdef APPLE2IX
+			memcpy(pDSLockedBuffer, &g_nPhonemeData[g_nPhonemeInfo[nPhoneme].nOffset], dwDSLockedBufferSize);
+#else
 			memcpy(pDSLockedBuffer, &g_nPhonemeData[g_nPhonemeInfo[nPhoneme].nOffset], nPhonemeByteLength);
+#endif
 		}
 
 #ifdef APPLE2IX
