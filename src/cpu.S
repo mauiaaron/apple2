@@ -228,20 +228,34 @@
 /* Absolute Indexed Addressing - The effective address is formed by
    adding the contents of X or Y to the address contained in the
    second and third bytes of the instruction. */
-#define GetAbs_X                                                               \
+#define _GetAbs_X                                                              \
                 GetFromPC_W;                                                   \
                 addb    X_Reg, %al;                                            \
                 jnc     9f;                                                    \
-                adcb    $0, %ah;                                               \
+                adcb    $0, %ah;
+
+#define GetAbs_X                                                               \
+                _GetAbs_X                                                      \
                 incb    DebugCycleCount; /* +1 cycle on page boundary */       \
 9:              movl    %eax, EffectiveAddr_E;
 
-#define GetAbs_Y                                                               \
+#define GetAbs_X_STx                                                           \
+                _GetAbs_X                                                      \
+9:              movl    %eax, EffectiveAddr_E;
+
+#define _GetAbs_Y                                                              \
                 GetFromPC_W;                                                   \
                 addb    Y_Reg, %al;                                            \
                 jnc     9f;                                                    \
-                adcb    $0, %ah;                                               \
+                adcb    $0, %ah;
+
+#define GetAbs_Y                                                               \
+                _GetAbs_Y                                                      \
                 incb    DebugCycleCount; /* +1 cycle on page boundary */       \
+9:              movl    %eax, EffectiveAddr_E;
+
+#define GetAbs_Y_STA                                                           \
+                _GetAbs_Y                                                      \
 9:              movl    %eax, EffectiveAddr_E;
 
 /* Absolute Indirect Addressing - The second and third bytes of the
@@ -296,7 +310,7 @@
    carry from this addition is added to the contents of the next page
    zero memory location, the result being the high order byte of the
    effective address. */
-#define GetIndZPage_Y                                                          \
+#define _GetIndZPage_Y                                                         \
                 GetFromPC_B;                                                   \
                 incb    %al;                                                   \
                 movl    %eax, EffectiveAddr_E;                                 \
@@ -306,9 +320,17 @@
                 andl    $0xFF, EffectiveAddr_E;                                \
                 GetFromEA_B;                                                   \
                 addb    Y_Reg, %al;                                            \
-                jnc 9f;                                                        \
+                jnc 9f;
+
+#define GetIndZPage_Y                                                          \
+                _GetIndZPage_Y                                                 \
                 adcb    $0, %ah;                                               \
                 incb    DebugCycleCount; /* +1 cycle on page boundary */       \
+9:              movl    %eax, EffectiveAddr_E;
+
+#define GetIndZPage_Y_STA                                                      \
+                _GetIndZPage_Y                                                 \
+                adcb    $0, %ah;                                               \
 9:              movl    %eax, EffectiveAddr_E;
 
 #define DoADC_b GetFromEA_B                                                    \
@@ -623,6 +645,8 @@ op_ASL_abs_x:
 /* ----------------------------------
        BBRx instructions
        UNIMPLEMENTED : These are documented in the W65C02S datasheet ...
+       + 1 cycle  if branch within page
+       + 2 cycles if branch across page boundary
    ---------------------------------- */
 
 op_BBR0_65c02:
@@ -652,6 +676,8 @@ op_BBR7_65c02:
 /* ----------------------------------
        BBSx instructions
        UNIMPLEMENTED : These are documented in the W65C02S datasheet ...
+       + 1 cycle  if branch within page
+       + 2 cycles if branch across page boundary
    ---------------------------------- */
 
 op_BBS0_65c02:
@@ -1687,7 +1713,7 @@ op_SEI:
                 Continue
 
 /* ----------------------------------
-       SMBx instructions
+       SMBx instructions -- Available in Rockwell 65C02 but not NCR 65C02
        UNIMPLEMENTED : These are documented in the W65C02S datasheet ...
    ---------------------------------- */
 
@@ -1745,13 +1771,13 @@ op_STA_abs:
                 Continue
 
 op_STA_abs_x:
-                GetAbs_X
+                GetAbs_X_STx
                 DoSTA
                 incb    DebugCycleCount         // +1 cycle on write
                 Continue
 
 op_STA_abs_y:
-                GetAbs_Y
+                GetAbs_Y_STA
                 DoSTA
                 incb    DebugCycleCount         // +1 cycle on write
                 Continue
@@ -1762,7 +1788,7 @@ op_STA_ind_x:
                 Continue
 
 op_STA_ind_y:
-                GetIndZPage_Y
+                GetIndZPage_Y_STA
                 DoSTA
                 incb    DebugCycleCount         // +1 cycle on write
                 Continue
@@ -1782,7 +1808,7 @@ op_STP_65c02:
                 Continue
 
 /* ----------------------------------
-       RMBx instructions
+       RMBx instructions -- Available in Rockwell 65C02 but not NCR 65C02
        UNIMPLEMENTED : These are documented in the W65C02S datasheet ...
    ---------------------------------- */
 
@@ -1876,7 +1902,7 @@ op_STZ_abs:
 
 // 65c02 : 0x9E
 op_STZ_abs_x:
-                GetAbs_X
+                GetAbs_X_STx
                 DoSTZ
                 incb    DebugCycleCount         // +1 cycle on write
                 Continue
@@ -2777,261 +2803,261 @@ E(cpu65_direct_write)
                 .align  1 // 65c02              nmosbrk         nmos undoc
 E(cpu65__opcycles)        // ---------------------------------------------------
                 .byte   7 // op_BRK             op_BRK          op_BRK        00
-/*6*/           .byte   5 // op_ORA_ind_x       op_ORA_ind_x    op_ORA_ind_x
-                .byte   2 // op_UNK_65c02       op_UNK          op_UNK_HANG
-                .byte   2 // op_UNK_65c02       op_UNK          op_UNK_LOR_ind_x
+/*6*/           .byte   6 // op_ORA_ind_x       op_ORA_ind_x    op_ORA_ind_x
+                .byte   7 // op_UNK_65c02       op_UNK          op_UNK_HANG
+                .byte   7 // op_UNK_65c02       op_UNK          op_UNK_LOR_ind_x
                 .byte   5 // op_TSB_zpage       op_UNK          op_UNK_NOP_2
                 .byte   3 // op_ORA_zpage       op_ORA_zpage    op_ORA_zpage
                 .byte   5 // op_ASL_zpage       op_ASL_zpage    op_ASL_zpage
-                .byte   2 // op_RMB0_65c02      op_UNK          op_UNK_LOR_zpage
+                .byte   5 // op_RMB0_65c02      op_UNK          op_UNK_LOR_zpage
                 .byte   3 // op_PHP             op_PHP          op_PHP        08
                 .byte   2 // op_ORA_imm         op_ORA_imm      op_ORA_imm
                 .byte   2 // op_ASL_acc         op_ASL_acc      op_ASL_acc
-                .byte   2 // op_UNK_65c02       op_UNK          op_UNK_ANA_imm
+                .byte   7 // op_UNK_65c02       op_UNK          op_UNK_ANA_imm
                 .byte   6 // op_TSB_abs         op_UNK          op_UNK_NOP_3
                 .byte   4 // op_ORA_abs         op_ORA_abs      op_ORA_abs
                 .byte   6 // op_ASL_abs         op_ASL_abs      op_ASL_abs
-                .byte   2 // op_BBR0_65c02      op_UNK          op_UNK_LOR_abs
+                .byte   5 // op_BBR0_65c02      op_UNK          op_UNK_LOR_abs
                 .byte   2 // op_BPL             op_BPL          op_BPL        10
-                .byte   4 // op_ORA_ind_y       op_ORA_ind_y    op_ORA_ind_y
-                .byte   4 // op_ORA_ind_zpage   op_UNK          op_UNK_HANG
-                .byte   2 // op_UNK_65c02       op_UNK          op_UNK_LOR_ind_y
+                .byte   5 // op_ORA_ind_y       op_ORA_ind_y    op_ORA_ind_y
+                .byte   5 // op_ORA_ind_zpage   op_UNK          op_UNK_HANG
+                .byte   7 // op_UNK_65c02       op_UNK          op_UNK_LOR_ind_y
                 .byte   5 // op_TRB_zpage       op_UNK          op_UNK_NOP_2
                 .byte   4 // op_ORA_zpage_x     op_ORA_zpage_x  op_ORA_zpage_x
                 .byte   6 // op_ASL_zpage_x     op_ASL_zpage_x  op_ASL_zpage_x
-                .byte   2 // op_RMB1_65c02      op_UNK          op_UNK_LOR_zpage_x
+                .byte   5 // op_RMB1_65c02      op_UNK          op_UNK_LOR_zpage_x
                 .byte   2 // op_CLC             op_CLC          op_CLC        18
                 .byte   4 // op_ORA_abs_y       op_ORA_abs_y    op_ORA_abs_y
                 .byte   2 // op_INA             op_UNK          op_NOP
-                .byte   2 // op_UNK_65c02       op_UNK          op_UNK_LOR_abs_y
+                .byte   7 // op_UNK_65c02       op_UNK          op_UNK_LOR_abs_y
                 .byte   6 // op_TRB_abs         op_UNK          op_UNK_NOP_3
                 .byte   4 // op_ORA_abs_x       op_ORA_abs_x    op_ORA_abs_x
-                .byte   7 // op_ASL_abs_x       op_ASL_abs_x    op_ASL_abs_x
-                .byte   2 // op_BBR1_65c02      op_UNK          op_UNK_LOR_abs_x
-                .byte   3 // op_JSR             op_JSR          op_JSR        20
-                .byte   5 // op_AND_ind_x       op_AND_ind_x    op_AND_ind_x
-                .byte   2 // op_UNK_65c02       op_UNK          op_UNK_HANG
-                .byte   2 // op_UNK_65c02       op_UNK          op_UNK_LAN_ind_x
+                .byte   6 // op_ASL_abs_x       op_ASL_abs_x    op_ASL_abs_x
+                .byte   5 // op_BBR1_65c02      op_UNK          op_UNK_LOR_abs_x
+                .byte   6 // op_JSR             op_JSR          op_JSR        20
+                .byte   6 // op_AND_ind_x       op_AND_ind_x    op_AND_ind_x
+                .byte   7 // op_UNK_65c02       op_UNK          op_UNK_HANG
+                .byte   7 // op_UNK_65c02       op_UNK          op_UNK_LAN_ind_x
                 .byte   3 // op_BIT_zpage       op_BIT_zpage    op_BIT_zpage
                 .byte   3 // op_AND_zpage       op_AND_zpage    op_AND_zpage
                 .byte   5 // op_ROL_zpage       op_ROL_zpage    op_ROL_zpage
-                .byte   2 // op_RMB2_65c02      op_UNK          op_UNK_LAN_zpage
+                .byte   5 // op_RMB2_65c02      op_UNK          op_UNK_LAN_zpage
                 .byte   4 // op_PLP             op_PLP          op_PLP        28
                 .byte   2 // op_AND_imm         op_AND_imm      op_AND_imm
                 .byte   2 // op_ROL_acc         op_ROL_acc      op_ROL_acc
-                .byte   2 // op_UNK_65c02       op_UNK          op_UNK_ANB_imm
+                .byte   7 // op_UNK_65c02       op_UNK          op_UNK_ANB_imm
                 .byte   4 // op_BIT_abs         op_BIT_abs      op_BIT_abs
                 .byte   4 // op_AND_abs         op_AND_abs      op_AND_abs
                 .byte   6 // op_ROL_abs         op_ROL_abs      op_ROL_abs
-                .byte   2 // op_BBR2_65c02      op_UNK          op_UNK_LAN_abs
+                .byte   5 // op_BBR2_65c02      op_UNK          op_UNK_LAN_abs
                 .byte   2 // op_BMI             op_BMI          op_BMI        30
-                .byte   4 // op_AND_ind_y       op_AND_ind_y    op_AND_ind_y
-                .byte   4 // op_AND_ind_zpage   op_UNK          op_UNK_HANG
-                .byte   2 // op_UNK_65c02       op_UNK          op_UNK_LAN_ind_y
+                .byte   5 // op_AND_ind_y       op_AND_ind_y    op_AND_ind_y
+                .byte   5 // op_AND_ind_zpage   op_UNK          op_UNK_HANG
+                .byte   7 // op_UNK_65c02       op_UNK          op_UNK_LAN_ind_y
                 .byte   4 // op_BIT_zpage_x     op_UNK          op_UNK_NOP_2
                 .byte   4 // op_AND_zpage_x     op_AND_zpage_x  op_AND_zpage_x
                 .byte   6 // op_ROL_zpage_x     op_ROL_zpage_x  op_ROL_zpage_x
-                .byte   2 // op_RMB3_65c02      op_UNK          op_UNK_LAN_zpage_x
+                .byte   5 // op_RMB3_65c02      op_UNK          op_UNK_LAN_zpage_x
                 .byte   2 // op_SEC             op_SEC          op_SEC        38
                 .byte   4 // op_AND_abs_y       op_AND_abs_y    op_AND_abs_y
                 .byte   2 // op_DEA             op_UNK          op_NOP
-                .byte   2 // op_UNK_65c02       op_UNK          op_UNK_LAN_abs_y
+                .byte   7 // op_UNK_65c02       op_UNK          op_UNK_LAN_abs_y
                 .byte   4 // op_BIT_abs_x       op_UNK          op_UNK_NOP_3
                 .byte   4 // op_AND_abs_x       op_AND_abs_x    op_AND_abs_x
-                .byte   7 // op_ROL_abs_x       op_ROL_abs_x    op_ROL_abs_x
-                .byte   2 // op_BBR3_65c02      op_UNK          op_UNK_LAN_abs_x
+                .byte   6 // op_ROL_abs_x       op_ROL_abs_x    op_ROL_abs_x
+                .byte   5 // op_BBR3_65c02      op_UNK          op_UNK_LAN_abs_x
                 .byte   6 // op_RTI             op_RTI          op_RTI        40
-                .byte   5 // op_EOR_ind_x       op_EOR_ind_x    op_EOR_ind_x
-                .byte   2 // op_UNK_65c02       op_UNK          op_UNK_HANG
-                .byte   2 // op_UNK_65c02       op_UNK          op_UNK_REO_ind_x
-                .byte   2 // op_UNK_65c02       op_UNK          op_UNK_NOP_2
+                .byte   6 // op_EOR_ind_x       op_EOR_ind_x    op_EOR_ind_x
+                .byte   7 // op_UNK_65c02       op_UNK          op_UNK_HANG
+                .byte   7 // op_UNK_65c02       op_UNK          op_UNK_REO_ind_x
+                .byte   7 // op_UNK_65c02       op_UNK          op_UNK_NOP_2
                 .byte   3 // op_EOR_zpage       op_EOR_zpage    op_EOR_zpage
                 .byte   5 // op_LSR_zpage       op_LSR_zpage    op_LSR_zpage
-                .byte   2 // op_RMB4_65c02      op_UNK          op_UNK_REO_zpage
+                .byte   5 // op_RMB4_65c02      op_UNK          op_UNK_REO_zpage
                 .byte   3 // op_PHA             op_PHA          op_PHA        48
                 .byte   2 // op_EOR_imm         op_EOR_imm      op_EOR_imm
                 .byte   2 // op_LSR_acc         op_LSR_acc      op_LSR_acc
-                .byte   2 // op_UNK_65c02       op_UNK          op_UNK_RAM_imm
+                .byte   7 // op_UNK_65c02       op_UNK          op_UNK_RAM_imm
                 .byte   3 // op_JMP_abs         op_JMP_abs      op_JMP_abs
                 .byte   4 // op_EOR_abs         op_EOR_abs      op_EOR_abs
                 .byte   6 // op_LSR_abs         op_LSR_abs      op_LSR_abs
-                .byte   2 // op_BBR4_65c02      op_UNK          op_UNK_REO_abs
+                .byte   5 // op_BBR4_65c02      op_UNK          op_UNK_REO_abs
                 .byte   2 // op_BVC             op_BVC          op_BVC        50
-                .byte   4 // op_EOR_ind_y       op_EOR_ind_y    op_EOR_ind_y
-                .byte   4 // op_EOR_ind_zpage   op_UNK          op_UNK_HANG
-                .byte   2 // op_UNK_65c02       op_UNK          op_UNK_REO_ind_y
-                .byte   2 // op_UNK_65c02       op_UNK          op_UNK_NOP_2
+                .byte   5 // op_EOR_ind_y       op_EOR_ind_y    op_EOR_ind_y
+                .byte   5 // op_EOR_ind_zpage   op_UNK          op_UNK_HANG
+                .byte   7 // op_UNK_65c02       op_UNK          op_UNK_REO_ind_y
+                .byte   7 // op_UNK_65c02       op_UNK          op_UNK_NOP_2
                 .byte   4 // op_EOR_zpage_x     op_EOR_zpage_x  op_EOR_zpage_x
                 .byte   6 // op_LSR_zpage_x     op_LSR_zpage_x  op_LSR_zpage_x
-                .byte   2 // op_RMB5_65c02      op_UNK          op_UNK_REO_zpage_x
+                .byte   5 // op_RMB5_65c02      op_UNK          op_UNK_REO_zpage_x
                 .byte   2 // op_CLI             op_CLI          op_CLI        58
                 .byte   4 // op_EOR_abs_y       op_EOR_abs_y    op_EOR_abs_y
                 .byte   3 // op_PHY             op_UNK          op_NOP
-                .byte   2 // op_UNK_65c02       op_UNK          op_UNK_REO_abs_y
-                .byte   2 // op_UNK_65c02       op_UNK          op_UNK_NOP_3
+                .byte   7 // op_UNK_65c02       op_UNK          op_UNK_REO_abs_y
+                .byte   7 // op_UNK_65c02       op_UNK          op_UNK_NOP_3
                 .byte   4 // op_EOR_abs_x       op_EOR_abs_x    op_EOR_abs_x
-                .byte   7 // op_LSR_abs_x       op_LSR_abs_x    op_LSR_abs_x
-                .byte   2 // op_BBR5_65c02      op_UNK          op_UNK_REO_abs_x
+                .byte   6 // op_LSR_abs_x       op_LSR_abs_x    op_LSR_abs_x
+                .byte   5 // op_BBR5_65c02      op_UNK          op_UNK_REO_abs_x
                 .byte   6 // op_RTS             op_RTS          op_RTS        60
-                .byte   5 // op_ADC_ind_x       op_ADC_ind_x    op_ADC_ind_x
-                .byte   2 // op_UNK_65c02       op_UNK          op_UNK_HANG
-                .byte   2 // op_UNK_65c02       op_UNK          op_UNK_RAD_ind_x
+                .byte   6 // op_ADC_ind_x       op_ADC_ind_x    op_ADC_ind_x
+                .byte   7 // op_UNK_65c02       op_UNK          op_UNK_HANG
+                .byte   7 // op_UNK_65c02       op_UNK          op_UNK_RAD_ind_x
                 .byte   3 // op_STZ_zpage       op_UNK          op_UNK_NOP_2
                 .byte   3 // op_ADC_zpage       op_ADC_zpage    op_ADC_zpage
                 .byte   5 // op_ROR_zpage       op_ROR_zpage    op_ROR_zpage
-                .byte   2 // op_RMB6_65c02      op_UNK          op_UNK_RAD_zpage
+                .byte   5 // op_RMB6_65c02      op_UNK          op_UNK_RAD_zpage
                 .byte   4 // op_PLA             op_PLA          op_PLA        68
                 .byte   2 // op_ADC_imm         op_ADC_imm      op_ADC_imm
                 .byte   2 // op_ROR_acc         op_ROR_acc      op_ROR_acc
-                .byte   2 // op_UNK_65c02       op_UNK          op_UNK_RBM_imm
+                .byte   7 // op_UNK_65c02       op_UNK          op_UNK_RBM_imm
                 .byte   6 // op_JMP_ind_65c02   op_JMP_ind      op_JMP_ind
                 .byte   4 // op_ADC_abs         op_ADC_abs      op_ADC_abs
                 .byte   6 // op_ROR_abs         op_ROR_abs      op_ROR_abs
-                .byte   2 // op_BBR6_65c02      op_UNK          op_UNK_RAD_abs
+                .byte   5 // op_BBR6_65c02      op_UNK          op_UNK_RAD_abs
                 .byte   2 // op_BVS             op_BVS          op_BVS        70
-                .byte   4 // op_ADC_ind_y       op_ADC_ind_y    op_ADC_ind_y
-                .byte   4 // op_ADC_ind_zpage   op_UNK          op_UNK_HANG
-                .byte   2 // op_UNK_65c02       op_UNK          op_UNK_RAD_ind_y
+                .byte   5 // op_ADC_ind_y       op_ADC_ind_y    op_ADC_ind_y
+                .byte   5 // op_ADC_ind_zpage   op_UNK          op_UNK_HANG
+                .byte   7 // op_UNK_65c02       op_UNK          op_UNK_RAD_ind_y
                 .byte   4 // op_STZ_zpage_x     op_UNK          op_UNK_NOP_2
                 .byte   4 // op_ADC_zpage_x     op_ADC_zpage_x  op_ADC_zpage_x
                 .byte   6 // op_ROR_zpage_x     op_ROR_zpage_x  op_ROR_zpage_x
-                .byte   2 // op_RMB7_65c02      op_UNK          op_UNK_RAD_zpage_x
+                .byte   5 // op_RMB7_65c02      op_UNK          op_UNK_RAD_zpage_x
                 .byte   2 // op_SEI             op_SEI          op_SEI        78
                 .byte   4 // op_ADC_abs_y       op_ADC_abs_y    op_ADC_abs_y
                 .byte   4 // op_PLY             op_UNK          op_NOP
-                .byte   2 // op_UNK_65c02       op_UNK          op_UNK_RAD_abs_y
+                .byte   7 // op_UNK_65c02       op_UNK          op_UNK_RAD_abs_y
                 .byte   6 // op_JMP_abs_ind_x   op_UNK          op_UNK_NOP_3
                 .byte   4 // op_ADC_abs_x       op_ADC_abs_x    op_ADC_abs_x
-                .byte   7 // op_ROR_abs_x       op_ROR_abs_x    op_ROR_abs_x
-                .byte   2 // op_BBR7_65c02      op_UNK          op_UNK_RAD_abs_x
+                .byte   6 // op_ROR_abs_x       op_ROR_abs_x    op_ROR_abs_x
+                .byte   5 // op_BBR7_65c02      op_UNK          op_UNK_RAD_abs_x
                 .byte   2 // op_BRA             op_UNK          op_UNK_NOP_2  80
-                .byte   5 // op_STA_ind_x       op_STA_ind_x    op_STA_ind_x
-                .byte   2 // op_UNK_65c02       op_UNK          op_UNK_NOP_2
-                .byte   2 // op_UNK_65c02       op_UNK          op_UNK_AAX_ind_x
+                .byte   6 // op_STA_ind_x       op_STA_ind_x    op_STA_ind_x
+                .byte   7 // op_UNK_65c02       op_UNK          op_UNK_NOP_2
+                .byte   7 // op_UNK_65c02       op_UNK          op_UNK_AAX_ind_x
                 .byte   3 // op_STY_zpage       op_STY_zpage    op_STY_zpage
                 .byte   3 // op_STA_zpage       op_STA_zpage    op_STA_zpage
                 .byte   3 // op_STX_zpage       op_STX_zpage    op_STX_zpage
-                .byte   2 // op_SMB0_65c02      op_UNK          op_UNK_AAX_zpage
+                .byte   5 // op_SMB0_65c02      op_UNK          op_UNK_AAX_zpage
                 .byte   2 // op_DEY             op_DEY          op_DEY        88
                 .byte   2 // op_BIT_imm         op_UNK          op_UNK_NOP_2
                 .byte   2 // op_TXA             op_TXA          op_TXA
-                .byte   2 // op_UNK_65c02       op_UNK          op_UNK_XMA_imm
+                .byte   7 // op_UNK_65c02       op_UNK          op_UNK_XMA_imm
                 .byte   4 // op_STY_abs         op_STY_abs      op_STY_abs
                 .byte   4 // op_STA_abs         op_STA_abs      op_STA_abs
                 .byte   4 // op_STX_abs         op_STX_abs      op_STX_abs
-                .byte   2 // op_BBS0_65c02      op_UNK          op_UNK_AAX_abs
+                .byte   5 // op_BBS0_65c02      op_UNK          op_UNK_AAX_abs
                 .byte   2 // op_BCC             op_BCC          op_BCC        90
-                .byte   4 // op_STA_ind_y       op_STA_ind_y    op_STA_ind_y
-                .byte   4 // op_STA_ind_zpage   op_UNK          op_UNK_HANG
-                .byte   2 // op_UNK_65c02       op_UNK          op_UNK_AAX_ind_y
+                .byte   6 // op_STA_ind_y       op_STA_ind_y    op_STA_ind_y
+                .byte   5 // op_STA_ind_zpage   op_UNK          op_UNK_HANG
+                .byte   7 // op_UNK_65c02       op_UNK          op_UNK_AAX_ind_y
                 .byte   4 // op_STY_zpage_x     op_STY_zpage_x  op_STY_zpage_x
                 .byte   4 // op_STA_zpage_x     op_STA_zpage_x  op_STA_zpage_x
                 .byte   4 // op_STX_zpage_y     op_STX_zpage_y  op_STX_zpage_y
-                .byte   2 // op_SMB1_65c02      op_UNK          op_UNK_AAX_zpage_y
+                .byte   5 // op_SMB1_65c02      op_UNK          op_UNK_AAX_zpage_y
                 .byte   2 // op_TYA             op_TYA          op_TYA        98
-                .byte   4 // op_STA_abs_y       op_STA_abs_y    op_STA_abs_y
+                .byte   5 // op_STA_abs_y       op_STA_abs_y    op_STA_abs_y
                 .byte   2 // op_TXS             op_TXS          op_TXS
-                .byte   2 // op_UNK_65c02       op_UNK          op_UNK_AXS_abs_y
+                .byte   7 // op_UNK_65c02       op_UNK          op_UNK_AXS_abs_y
                 .byte   4 // op_STZ_abs         op_UNK          op_UNK_TEY_abs_x
-                .byte   4 // op_STA_abs_x       op_STA_abs_x    op_STA_abs_x
-                .byte   4 // op_STZ_abs_x       op_UNK          op_UNK_TEX_abs_y
-                .byte   2 // op_BBS1_65c02      op_UNK          op_UNK_TEA_abs_y
+                .byte   5 // op_STA_abs_x       op_STA_abs_x    op_STA_abs_x
+                .byte   5 // op_STZ_abs_x       op_UNK          op_UNK_TEX_abs_y
+                .byte   5 // op_BBS1_65c02      op_UNK          op_UNK_TEA_abs_y
                 .byte   2 // op_LDY_imm         op_LDY_imm      op_LDY_imm    A0
-                .byte   5 // op_LDA_ind_x       op_LDA_ind_x    op_LDA_ind_x
+                .byte   6 // op_LDA_ind_x       op_LDA_ind_x    op_LDA_ind_x
                 .byte   2 // op_LDX_imm         op_LDX_imm      op_LDX_imm
-                .byte   2 // op_UNK_65c02       op_UNK          op_UNK_LAX_ind_x
+                .byte   7 // op_UNK_65c02       op_UNK          op_UNK_LAX_ind_x
                 .byte   3 // op_LDY_zpage       op_LDY_zpage    op_LDY_zpage
                 .byte   3 // op_LDA_zpage       op_LDA_zpage    op_LDA_zpage
                 .byte   3 // op_LDX_zpage       op_LDX_zpage    op_LDX_zpage
-                .byte   2 // op_SMB2_65c02      op_UNK          op_UNK_LAX_zpage
+                .byte   5 // op_SMB2_65c02      op_UNK          op_UNK_LAX_zpage
                 .byte   2 // op_TAY             op_TAY          op_TAY        A8
                 .byte   2 // op_LDA_imm         op_LDA_imm      op_LDA_imm
                 .byte   2 // op_TAX             op_TAX          op_TAX
-                .byte   2 // op_UNK_65c02       op_UNK          op_UNK_AMA_imm
+                .byte   7 // op_UNK_65c02       op_UNK          op_UNK_AMA_imm
                 .byte   4 // op_LDY_abs         op_LDY_abs      op_LDY_abs
                 .byte   4 // op_LDA_abs         op_LDA_abs      op_LDA_abs
                 .byte   4 // op_LDX_abs         op_LDX_abs      op_LDX_abs
-                .byte   2 // op_BBS2_65c02      op_UNK          op_UNK_LAX_abs
+                .byte   5 // op_BBS2_65c02      op_UNK          op_UNK_LAX_abs
                 .byte   2 // op_BCS             op_BCS          op_BCS        B0
-                .byte   4 // op_LDA_ind_y       op_LDA_ind_y    op_LDA_ind_y
-                .byte   4 // op_LDA_ind_zpage   op_UNK          op_UNK_HANG
-                .byte   2 // op_UNK_65c02       op_UNK          op_UNK_LAX_ind_y
+                .byte   5 // op_LDA_ind_y       op_LDA_ind_y    op_LDA_ind_y
+                .byte   5 // op_LDA_ind_zpage   op_UNK          op_UNK_HANG
+                .byte   7 // op_UNK_65c02       op_UNK          op_UNK_LAX_ind_y
                 .byte   4 // op_LDY_zpage_x     op_LDY_zpage_x  op_LDY_zpage_x
                 .byte   4 // op_LDA_zpage_x     op_LDA_zpage_x  op_LDA_zpage_x
                 .byte   4 // op_LDX_zpage_y     op_LDX_zpage_y  op_LDX_zpage_y
-                .byte   2 // op_SMB3_65c02      op_UNK          op_UNK_LAX_zpage_y
+                .byte   5 // op_SMB3_65c02      op_UNK          op_UNK_LAX_zpage_y
                 .byte   2 // op_CLV             op_CLV          op_CLV        B8
                 .byte   4 // op_LDA_abs_y       op_LDA_abs_y    op_LDA_abs_y
                 .byte   2 // op_TSX             op_TSX          op_TSX
-                .byte   2 // op_UNK_65c02       op_UNK          op_UNK_LAS_abs_y
+                .byte   7 // op_UNK_65c02       op_UNK          op_UNK_LAS_abs_y
                 .byte   4 // op_LDY_abs_x       op_LDY_abs_x    op_LDY_abs_x
                 .byte   4 // op_LDA_abs_x       op_LDA_abs_x    op_LDA_abs_x
                 .byte   4 // op_LDX_abs_y       op_LDX_abs_y    op_LDX_abs_y
-                .byte   2 // op_BBS3_65c02      op_UNK          op_UNK_LAX_abs_y
+                .byte   5 // op_BBS3_65c02      op_UNK          op_UNK_LAX_abs_y
                 .byte   2 // op_CPY_imm         op_CPY_imm      op_CPY_imm    C0
-                .byte   5 // op_CMP_ind_x       op_CMP_ind_x    op_CMP_ind_x
-                .byte   2 // op_UNK_65c02       op_UNK          op_UNK_NOP_2
-                .byte   2 // op_UNK_65c02       op_UNK          op_UNK_DCP_ind_x
+                .byte   6 // op_CMP_ind_x       op_CMP_ind_x    op_CMP_ind_x
+                .byte   7 // op_UNK_65c02       op_UNK          op_UNK_NOP_2
+                .byte   7 // op_UNK_65c02       op_UNK          op_UNK_DCP_ind_x
                 .byte   3 // op_CPY_zpage       op_CPY_zpage    op_CPY_zpage
                 .byte   3 // op_CMP_zpage       op_CMP_zpage    op_CMP_zpage
                 .byte   5 // op_DEC_zpage       op_DEC_zpage    op_DEC_zpage
-                .byte   2 // op_SMB4_65c02      op_UNK          op_UNK_DCP_zpage
+                .byte   5 // op_SMB4_65c02      op_UNK          op_UNK_DCP_zpage
                 .byte   2 // op_INY             op_INY          op_INY        C8
                 .byte   2 // op_CMP_imm         op_CMP_imm      op_CMP_imm
                 .byte   2 // op_DEX             op_DEX          op_DEX
-                .byte   2 // op_WAI_65c02       op_UNK          op_UNK_AXM_imm
+                .byte   7 // op_WAI_65c02       op_UNK          op_UNK_AXM_imm
                 .byte   4 // op_CPY_abs         op_CPY_abs      op_CPY_abs
                 .byte   4 // op_CMP_abs         op_CMP_abs      op_CMP_abs
                 .byte   6 // op_DEC_abs         op_DEC_abs      op_DEC_abs
-                .byte   2 // op_BBS4_65c02      op_UNK          op_UNK_DCP_abs
+                .byte   5 // op_BBS4_65c02      op_UNK          op_UNK_DCP_abs
                 .byte   2 // op_BNE             op_BNE          op_BNE        D0
-                .byte   4 // op_CMP_ind_y       op_CMP_ind_y    op_CMP_ind_y
-                .byte   4 // op_CMP_ind_zpage   op_UNK          op_UNK_HANG
-                .byte   2 // op_UNK_65c02       op_UNK          op_UNK_DCP_ind_y
-                .byte   2 // op_UNK_65c02       op_UNK          op_UNK_NOP_2
+                .byte   5 // op_CMP_ind_y       op_CMP_ind_y    op_CMP_ind_y
+                .byte   5 // op_CMP_ind_zpage   op_UNK          op_UNK_HANG
+                .byte   7 // op_UNK_65c02       op_UNK          op_UNK_DCP_ind_y
+                .byte   7 // op_UNK_65c02       op_UNK          op_UNK_NOP_2
                 .byte   4 // op_CMP_zpage_x     op_CMP_zpage_x  op_CMP_zpage_x
                 .byte   6 // op_DEC_zpage_x     op_DEC_zpage_x  op_DEC_zpage_x
-                .byte   2 // op_SMB5_65c02      op_UNK          op_UNK_DCP_zpage_x
+                .byte   5 // op_SMB5_65c02      op_UNK          op_UNK_DCP_zpage_x
                 .byte   2 // op_CLD             op_CLD          op_CLD        D8
                 .byte   4 // op_CMP_abs_y       op_CMP_abs_y    op_CMP_abs_y
                 .byte   3 // op_PHX             op_UNK          op_NOP
-                .byte   2 // op_STP_65c02       op_UNK          op_UNK_DCP_abs_y
-                .byte   2 // op_UNK_65c02       op_UNK          op_UNK_NOP_3
+                .byte   7 // op_STP_65c02       op_UNK          op_UNK_DCP_abs_y
+                .byte   7 // op_UNK_65c02       op_UNK          op_UNK_NOP_3
                 .byte   4 // op_CMP_abs_x       op_CMP_abs_x    op_CMP_abs_x
-                .byte   7 // op_DEC_abs_x       op_DEC_abs_x    op_DEC_abs_x
-                .byte   2 // op_BBS5_65c02      op_UNK          op_UNK_DCP_abs_x
+                .byte   6 // op_DEC_abs_x       op_DEC_abs_x    op_DEC_abs_x
+                .byte   5 // op_BBS5_65c02      op_UNK          op_UNK_DCP_abs_x
                 .byte   2 // op_CPX_imm         op_CPX_imm      op_CPX_imm    E0
-                .byte   5 // op_SBC_ind_x       op_SBC_ind_x    op_SBC_ind_x
-                .byte   2 // op_UNK_65c02       op_UNK          op_UNK_NOP_2
-                .byte   2 // op_UNK_65c02       op_UNK          op_UNK_ISB_ind_x
+                .byte   6 // op_SBC_ind_x       op_SBC_ind_x    op_SBC_ind_x
+                .byte   7 // op_UNK_65c02       op_UNK          op_UNK_NOP_2
+                .byte   7 // op_UNK_65c02       op_UNK          op_UNK_ISB_ind_x
                 .byte   3 // op_CPX_zpage       op_CPX_zpage    op_CPX_zpage
                 .byte   3 // op_SBC_zpage       op_SBC_zpage    op_SBC_zpage
                 .byte   5 // op_INC_zpage       op_INC_zpage    op_INC_zpage
-                .byte   2 // op_SMB6_65c02      op_UNK          op_UNK_ISB_zpage
+                .byte   5 // op_SMB6_65c02      op_UNK          op_UNK_ISB_zpage
                 .byte   2 // op_INX             op_INX          op_INX        E8
                 .byte   2 // op_SBC_imm         op_SBC_imm      op_SBC_imm
                 .byte   2 // op_NOP             op_NOP          op_NOP
-                .byte   2 // op_UNK_65c02       op_UNK          op_UNK_ZBC_imm
+                .byte   7 // op_UNK_65c02       op_UNK          op_UNK_ZBC_imm
                 .byte   4 // op_CPX_abs         op_CPX_abs      op_CPX_abs
                 .byte   4 // op_SBC_abs         op_SBC_abs      op_SBC_abs
                 .byte   6 // op_INC_abs         op_INC_abs      op_INC_abs
-                .byte   2 // op_BBS6_65c02      op_UNK          op_UNK_ISB_abs
+                .byte   5 // op_BBS6_65c02      op_UNK          op_UNK_ISB_abs
                 .byte   2 // op_BEQ             op_BEQ          op_BEQ        F0
-                .byte   4 // op_SBC_ind_y       op_SBC_ind_y    op_SBC_ind_y
-                .byte   4 // op_SBC_ind_zpage   op_UNK          op_UNK_HANG
-                .byte   2 // op_UNK_65c02       op_UNK          op_UNK_ISB_ind_y
-                .byte   2 // op_UNK_65c02       op_UNK          op_UNK_NOP_2
+                .byte   5 // op_SBC_ind_y       op_SBC_ind_y    op_SBC_ind_y
+                .byte   5 // op_SBC_ind_zpage   op_UNK          op_UNK_HANG
+                .byte   7 // op_UNK_65c02       op_UNK          op_UNK_ISB_ind_y
+                .byte   7 // op_UNK_65c02       op_UNK          op_UNK_NOP_2
                 .byte   4 // op_SBC_zpage_x     op_SBC_zpage_x  op_SBC_zpage_x
                 .byte   6 // op_INC_zpage_x     op_INC_zpage_x  op_INC_zpage_x
-                .byte   2 // op_SMB7_65c02      op_UNK          op_UNK_ISB_zpage_x
+                .byte   5 // op_SMB7_65c02      op_UNK          op_UNK_ISB_zpage_x
                 .byte   2 // op_SED             op_SED          op_SED        F8
                 .byte   4 // op_SBC_abs_y       op_SBC_abs_y    op_SBC_abs_y
                 .byte   4 // op_PLX             op_UNK          op_NOP
-                .byte   2 // op_UNK_65c02       op_UNK          op_UNK_ISB_abs_y
-                .byte   2 // op_UNK_65c02       op_UNK          op_UNK_NOP_3
+                .byte   7 // op_UNK_65c02       op_UNK          op_UNK_ISB_abs_y
+                .byte   7 // op_UNK_65c02       op_UNK          op_UNK_NOP_3
                 .byte   4 // op_SBC_abs_x       op_SBC_abs_x    op_SBC_abs_x
-                .byte   7 // op_INC_abs_x       op_INC_abs_x    op_INC_abs_x
-                .byte   2 // op_BBS7_65c02      op_UNK          op_UNK_ISB_abs_x
+                .byte   6 // op_INC_abs_x       op_INC_abs_x    op_INC_abs_x
+                .byte   5 // op_BBS7_65c02      op_UNK          op_UNK_ISB_abs_x
 
 /* -------------------------------------------------------------------------
         Opcode Routine Jump Tables
