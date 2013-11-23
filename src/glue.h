@@ -17,6 +17,7 @@
 #define GLUE_FIXED_READ(func,address)
 #define GLUE_FIXED_WRITE(func,address)
 #define GLUE_BANK_READ(func,pointer)
+#define GLUE_BANK_MAYBEREAD(func,pointer)
 #define GLUE_BANK_WRITE(func,pointer)
 #define GLUE_BANK_MAYBEWRITE(func,pointer)
 

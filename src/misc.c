@@ -69,6 +69,8 @@ GLUE_BANK_READ(iie_read_ram_zpage_and_stack,base_stackzp)
 GLUE_BANK_WRITE(iie_write_ram_zpage_and_stack,base_stackzp)
 
 GLUE_BANK_READ(iie_read_slot3,base_c3rom)
+GLUE_BANK_MAYBEREAD(iie_read_slot4,base_c4rom)
+GLUE_BANK_MAYBEREAD(iie_read_slot5,base_c5rom)
 GLUE_BANK_READ(iie_read_slotx,base_cxrom)
 
 
@@ -220,7 +222,7 @@ void c_initialize_tables() {
             write_unmapped_softswitch;
     }
 
-    /* slot rom */
+    /* slot rom defaults */
     for (i = 0xC100; i < 0xD000; i++)
     {
         cpu65_vmem[i].r =
@@ -483,10 +485,22 @@ void c_initialize_tables() {
             iie_read_slot3;             /* slot 3 (80col) */
     }
 
-    for (i = 0xC400; i < 0xC800; i++)
+    for (i = 0xC400; i < 0xC500; i++)
     {
         cpu65_vmem[i].r =
-            iie_read_slotx;             /* slots 4 - 7 (x) */
+            iie_read_slot4;             /* slot 4 - MB or Phasor */
+    }
+
+    for (i = 0xC500; i < 0xC600; i++)
+    {
+        cpu65_vmem[i].r =
+            iie_read_slot5;             /* slot 5 - MB #2 */
+    }
+
+    for (i = 0xC600; i < 0xC800; i++)
+    {
+        cpu65_vmem[i].r =
+            iie_read_slotx;             /* slots 6 - 7 (x) */
     }
 
     for (i = 0xC800; i < 0xD000; i++)
@@ -662,6 +676,8 @@ void c_initialize_iie_switches() {
     base_hgrwrt= apple_ii_64k[0];
 
     base_c3rom = apple_ii_64k[1];               /* c3rom internal */
+    base_c4rom = apple_ii_64k[1];               /* c4rom internal */
+    base_c5rom = apple_ii_64k[1];               /* c5rom internal */
     c8rom_offset = 0x10000;                     /* c8rom internal */
     base_cxrom = apple_ii_64k[0];               /* cxrom peripheral */
 }

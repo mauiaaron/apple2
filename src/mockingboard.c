@@ -1945,7 +1945,7 @@ static void RegisterIoHandler(UINT uSlot, iofunction IOReadC0, iofunction IOWrit
     base_addr = 0xC000 + (uSlot<<8); // uSlot == 4 => 0xC400 , uSlot == 5 => 0xC500
     for (unsigned int i = 0; i < 0x100; i++)
     {
-        cpu65_vmem[base_addr+i].r = IOReadCx;
+        //cpu65_vmem[base_addr+i].r = IOReadCx; -- CANNOT DO THIS HERE -- DEPENDS ON cxrom softswitch
         cpu65_vmem[base_addr+i].w = IOWriteCx;
     }
 }

@@ -15,7 +15,8 @@
  */
 
 #define __ASSEMBLY__
-#include <apple2.h>
+#include "apple2.h"
+#include "misc.h"
 
 #define GLUE_FIXED_READ(func,address)			\
 E(func)			movb	SN(address)(%edi),%al;  \
@@ -24,6 +25,16 @@ E(func)			movb	SN(address)(%edi),%al;  \
 #define GLUE_FIXED_WRITE(func,address)                  \
 E(func)			movb	%al,SN(address)(%edi);  \
 			ret;
+
+#define GLUE_BANK_MAYBEREAD(func,pointer) \
+E(func)                 testl   $SS_CXROM, SN(softswitches); \
+                        jnz     1f; \
+                        call    *SN(pointer); \
+                        ret; \
+1:                      addl    SN(pointer),%edi; \
+                        movb    (%edi),%al; \
+                        subl    SN(pointer),%edi; \
+                        ret;
 
 #define GLUE_BANK_READ(func,pointer) \
 E(func)			addl	SN(pointer),%edi;	\

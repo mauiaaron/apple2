@@ -922,6 +922,8 @@ E(iie_check_c3rom)
 E(iie_cxrom_peripheral)
 		andl	$~SS_CXROM, SN(softswitches)
 		movl	$SN(apple_ii_64k), SN(base_cxrom)
+		movl	$SN(MB_Read), SN(base_c4rom)
+		movl	$SN(MB_Read), SN(base_c5rom) // HACK FIXME -- MB is hardcoded, what about Phasor?
 		testl	$SS_C3ROM, SN(softswitches)
 		jnz	1f
 		movl	$SN(apple_ii_64k), SN(base_c3rom)
@@ -931,6 +933,8 @@ E(iie_cxrom_internal)
 		orl	$SS_CXROM, SN(softswitches)
 		movl	$SN(apple_ii_64k)+BANK2, SN(base_cxrom)
 		movl	$SN(apple_ii_64k)+BANK2, SN(base_c3rom)
+		movl	$SN(apple_ii_64k)+BANK2, SN(base_c4rom)
+		movl	$SN(apple_ii_64k)+BANK2, SN(base_c5rom)
 		ret
 
 E(iie_check_cxrom)
