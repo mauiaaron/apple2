@@ -72,6 +72,26 @@ GLUE_BANK_READ(iie_read_slot3,base_c3rom)
 GLUE_BANK_READ(iie_read_slotx,base_cxrom)
 
 
+int32_t softswitches;
+
+uint8_t *base_ramrd;
+uint8_t *base_ramwrt;
+uint8_t *base_textrd;
+uint8_t *base_textwrt;
+uint8_t *base_hgrrd;
+uint8_t *base_hgrwrt;
+
+uint8_t *base_stackzp;
+uint8_t *base_d000_rd;
+uint8_t *base_e000_rd;
+uint8_t *base_d000_wrt;
+uint8_t *base_e000_wrt;
+
+uint8_t *base_c3rom;
+void *base_c4rom;
+void *base_c5rom;
+uint8_t *base_cxrom;
+
 
 /* -------------------------------------------------------------------------
     c_set_altchar() - set alternate character set

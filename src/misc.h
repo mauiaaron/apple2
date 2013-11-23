@@ -63,25 +63,27 @@ char temp[ TEMPSIZE ];   /* should be >=4096 (stuff depends on this) */
 /* memory offsets from softswitches */
 int c8rom_offset;
 
-extern unsigned char *base_ramrd;
-extern unsigned char *base_ramwrt;
-extern unsigned char *base_textrd;
-extern unsigned char *base_textwrt;
-extern unsigned char *base_hgrrd;
-extern unsigned char *base_hgrwrt;
+extern uint8_t *base_ramrd;
+extern uint8_t *base_ramwrt;
+extern uint8_t *base_textrd;
+extern uint8_t *base_textwrt;
+extern uint8_t *base_hgrrd;
+extern uint8_t *base_hgrwrt;
 
-extern unsigned char *base_stackzp;
-extern unsigned char *base_d000_rd;
-extern unsigned char *base_e000_rd;
-extern unsigned char *base_d000_wrt;
-extern unsigned char *base_e000_wrt;
+extern uint8_t *base_stackzp;
+extern uint8_t *base_d000_rd;
+extern uint8_t *base_e000_rd;
+extern uint8_t *base_d000_wrt;
+extern uint8_t *base_e000_wrt;
 
-extern unsigned char *base_c3rom;
-extern unsigned char *base_cxrom;
+extern uint8_t *base_c3rom;
+extern void *base_c4rom; // points to function or memory vector
+extern void *base_c5rom; // points to function or memory vector
+extern uint8_t *base_cxrom;
 
 /* softswitches */
 
-extern int softswitches;
+extern int32_t softswitches;
 
 #endif /* !__ASSEMBLER__ */
 

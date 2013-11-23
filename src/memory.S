@@ -149,25 +149,6 @@
 	  			enabled.
 	   ----------------------------------------------------------------- */
 
-
-		.comm	SN(softswitches),4
-		
-		.comm	SN(base_ramrd),4
-		.comm	SN(base_ramwrt),4
-		.comm	SN(base_textrd),4
-		.comm	SN(base_textwrt),4
-		.comm	SN(base_hgrrd),4
-		.comm	SN(base_hgrwrt),4
-
-		.comm	SN(base_stackzp),4
-		.comm	SN(base_d000_rd),4
-		.comm	SN(base_d000_wrt),4
-		.comm	SN(base_e000_rd),4
-		.comm	SN(base_e000_wrt),4
-
-		.comm	SN(base_cxrom),4
-		.comm	SN(base_c3rom),4
-
 /* ram_nop, read_ram_default, write_ram_default: default ram/rom
    read/write functions. */
 E(ram_nop)
