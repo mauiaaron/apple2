@@ -137,10 +137,10 @@ void c_interface_redo_diskette_bottom() {
     c_interface_translate_screen()
    ------------------------------------------------------------------------- */
 
-#define IsGraphic(c) ((c) == '|' || ((c) >= 0x80 && (c) <= 0x8A))
+#define IsGraphic(c) ((c) == '|' || (((unsigned char)c) >= 0x80 && ((unsigned char)c) <= 0x8A))
 #define IsInside(x,y) ((x) >= 0 && (x) <= 39 && (y) >= 0 && (y) <= 23)
 
-void c_interface_translate_screen( char screen[24][41] )
+static void _convert_screen_graphics( char screen[24][41], int x, int y )
 {
     static char map[11][3][4] ={ { "...",
                                    ".||",
@@ -158,13 +158,13 @@ void c_interface_translate_screen( char screen[24][41] )
                                    "||.",
                                    "..." },
 
-                                 { ".|.",
+                                 { "~|~",
                                    ".|.",
-                                   ".|." },
+                                   "~|~" },
 
-                                 { "...",
+                                 { "~.~",
                                    "|||",
-                                   "..." },
+                                   "~.~" },
 
                                  { ".|.",
                                    ".||",
@@ -186,48 +186,60 @@ void c_interface_translate_screen( char screen[24][41] )
                                    "|||",
                                    ".|." } };
 
-    int x, y, i, j, k;
-
-    for (y = 0; y < 24; y++)
+    bool found_glyph = false;
+    int k = 10;
+    for (; k >= 0; k--)
     {
-        for (x = 0; x < 40; x++)
+        found_glyph = true;
+
+        for (int yy = y - 1; found_glyph && yy <= y + 1; yy++)
+        {
+            for (int xx = x - 1; xx <= x + 1; xx++)
+            {
+                char map_ch = map[k][ yy - y + 1 ][ xx - x + 1 ];
+
+                if (IsInside(xx, yy))
+                {
+                    if (!IsGraphic( screen[ yy ][ xx ] ) && (map_ch == '|'))
+                    {
+                        found_glyph = false;
+                        break;
+                    }
+                    else if (IsGraphic( screen[ yy ][ xx ] ) && (map_ch == '.'))
+                    {
+                        found_glyph = false;
+                        break;
+                    }
+                }
+                else if (map_ch == '|')
+                {
+                    found_glyph = false;
+                    break;
+                }
+            }
+        }
+
+        if (found_glyph)
+        {
+            break;
+        }
+    }
+
+    if (found_glyph)
+    {
+        screen[ y ][ x ] = 0x80 + k;
+    }
+}
+
+void c_interface_translate_screen( char screen[24][41] )
+{
+    for (int y = 0; y < 24; y++)
+    {
+        for (int x = 0; x < 40; x++)
         {
             if (screen[ y ][ x ] == '|')
             {
-                int flag = 0;
-
-                for (k = 10; !flag && k >= 0; flag ? : k--)
-                {
-                    flag = 1;
-
-                    for (i = y - 1; flag && i <= y + 1; i++)
-                    {
-                        for (j = x - 1; flag && j <= x + 1; j++)
-                        {
-                            if (IsInside(j, i))
-                            {
-                                if (!(IsGraphic( screen[ i ][ j ])) &&
-                                    (map[k][ i - y + 1 ][ j - x + 1 ] == '|'))
-                                {
-                                    flag = 0;
-                                }
-                                else
-                                {
-                                }
-                            }
-                            else
-                            if (map[k][ i - y + 1 ][ j - x + 1 ] == '|')
-                            {
-                                flag = 0;
-                            }
-                        }
-                    }
-                }
-
-                if (flag)
-                {
-                    screen[ y ][ x ] = 0x80 + k;
-                }
+                _convert_screen_graphics(screen, x, y);
             }
         }
     }
@@ -374,7 +386,7 @@ static void c_usleep() {
 
 void c_interface_select_diskette( int drive )
 {
-    static char screen[24][41] =
+    char screen[24][41] =
     { "||||||||||||||||||||||||||||||||||||||||",
       "| Insert diskette into Drive _, Slot 6 |",
       "||||||||||||||||||||||||||||||||||||||||",
@@ -820,7 +832,7 @@ static const char *options[] =
 
 void c_interface_parameters()
 {
-    static char screen[24][41] =
+    char screen[24][41] =
     { "||||||||||||||||||||||||||||||||||||||||",
       "|                                      |",
       "|      Apple // Emulator for *nix      |",
@@ -1436,7 +1448,7 @@ void c_interface_parameters()
 
 void c_interface_words()
 {
-    static char screen[24][41] =
+    char screen[24][41] =
     { "||||||||||||||||||||||||||||||||||||||||",
       "|    Apple II+ Emulator Version 0.01   |",
       "||||||||||||||||||||||||||||||||||||||||",
@@ -1487,7 +1499,7 @@ void c_interface_words()
 
 void c_interface_keyboard_layout()
 {
-    static char screen1[24][41] =
+    char screen1[24][41] =
     { "||||||||||||||||||||||||||||||||||||||||",
       "|     Apple II+ US Keyboard Layout     |",
       "||||||||||||||||||||||||||||||||||||||||",
@@ -1513,7 +1525,7 @@ void c_interface_keyboard_layout()
       "|       (Press any key to exit)        |",
       "||||||||||||||||||||||||||||||||||||||||" };
 
-    static char screen2[24][41] =
+    char screen2[24][41] =
     { "||||||||||||||||||||||||||||||||||||||||",
       "|     Apple //e US Keyboard Layout     |",
       "||||||||||||||||||||||||||||||||||||||||",
