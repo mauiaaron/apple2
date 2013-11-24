@@ -1057,7 +1057,7 @@ void c_interface_parameters()
                 cur_y = option = 0;     /* wrap both to first */
             }
         }
-        else if (ch == kLEFT)                  /* Arrow left */
+        else if ((ch == kLEFT) && (!is_backspace()))           /* Arrow left */
         {
             switch (option)
             {

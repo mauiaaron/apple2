@@ -14,6 +14,8 @@
  *
  */
 
+#include "common.h"
+
 #ifndef A2_KEYS_H
 #define A2_KEYS_H
 
@@ -90,5 +92,6 @@ void c_read_raw_key(int scancode, int pressed);
 void c_periodic_update(int dummysig);
 void enter_debugger(void);
 int c_mygetch(int block);
+bool is_backspace(); // is the current key actually a backspace?
 
 #endif

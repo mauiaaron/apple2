@@ -28,6 +28,9 @@
 #include <pthread.h>
 #include <ctype.h>
 
+#include <sys/time.h>
+#include <sys/types.h>
+
 #ifndef NDEBUG
 #       if defined(__GNUC__)
 #               pragma GCC diagnostic push

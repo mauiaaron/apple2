@@ -14,11 +14,9 @@
  *
  */
 
-#include <stdio.h>
-#include <sys/time.h>
-#include <sys/types.h>
-#include <unistd.h>
+#ifdef __linux__
 #include <linux/keyboard.h>
+#endif
 
 #include "common.h"
 #include "keys.h"
@@ -51,7 +49,10 @@ pthread_mutex_t interface_mutex = PTHREAD_MUTEX_INITIALIZER;
 int x_val, y_val;
 #endif
 
+#define SCODE_BS 14
+
 static int next_key = -1;
+static int last_scancode = -1;
 static char caps_lock = 1;              /* is enabled */
 static int in_mygetch = 0;
 
@@ -421,6 +422,8 @@ void c_periodic_update(int dummysig) {
 void c_read_raw_key(int scancode, int pressed) {
     int *keymap = NULL;
 
+    last_scancode = scancode;
+
     /* determine which key mapping to use */
     if (apple_mode == IIE_MODE || in_mygetch)
     {
@@ -506,6 +509,11 @@ void c_read_raw_key(int scancode, int pressed) {
             break;
         }
     }
+}
+
+bool is_backspace()
+{
+    return (last_scancode == SCODE_BS);
 }
 
 int c_mygetch(int block)
