@@ -741,6 +741,8 @@ void reinitialize(void)
     }
 
     timing_initialize();
+
+    MB_Reset();
 }
 
 static void c_initialize_firsttime()
