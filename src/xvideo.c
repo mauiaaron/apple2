@@ -520,8 +520,7 @@ LOOP:
             display,
             &xevent);
     }
-    else
-    if (!XCheckMaskEvent(
+    else if (!XCheckMaskEvent(
             display,
             KeyPressMask|KeyReleaseMask,
             &xevent))
@@ -685,13 +684,11 @@ void video_init() {
         {
             red_shift   = shift;
         }
-        else
-        if ((((uint32_t)visualinfo.green_mask>>shift) & 0xff) == (uint32_t)0xff)
+        else if ((((uint32_t)visualinfo.green_mask>>shift) & 0xff) == (uint32_t)0xff)
         {
             green_shift = shift;
         }
-        else
-        if ((((uint32_t)visualinfo.blue_mask >>shift) & 0xff) == (uint32_t)0xff)
+        else if ((((uint32_t)visualinfo.blue_mask >>shift) & 0xff) == (uint32_t)0xff)
         {
             blue_shift  = shift;
         }
