@@ -42,6 +42,7 @@ static Display *display;
 static Window win;
 static GC gc;
 static unsigned int width, height;      /* window size */
+static A2_VIDSCALE scale = VIDEO_SCALE_1;
 
 static int screen_num;
 static XVisualInfo visualinfo;
@@ -437,11 +438,31 @@ static void post_image() {
     {
         index = *(fb + i);
         *( (uint32_t*)(image->data + j) ) = (uint32_t)(
-            ((uint32_t)(colors[index].red) << red_shift)   |
+            ((uint32_t)(colors[index].red)   << red_shift)   |
             ((uint32_t)(colors[index].green) << green_shift) |
-            ((uint32_t)(colors[index].blue) << blue_shift)  |
+            ((uint32_t)(colors[index].blue)  << blue_shift)  |
             ((uint32_t)0xff /* alpha */ << alpha_shift)
             );
+        if (scale == VIDEO_SCALE_2)
+        {
+            j+=4;
+
+            // duplicate pixel
+            *( (uint32_t*)(image->data + j) ) = (uint32_t)(
+                ((uint32_t)(colors[index].red)   << red_shift)   |
+                ((uint32_t)(colors[index].green) << green_shift) |
+                ((uint32_t)(colors[index].blue)  << blue_shift)  |
+                ((uint32_t)0xff /* alpha */ << alpha_shift)
+                );
+
+            if (((i+1) % SCANWIDTH) == 0)
+            {
+                // duplicate entire row
+                int stride8 = SCANWIDTH<<3;//*8
+                memcpy(/* dest */image->data + j + 4, /* src */image->data + j + 4 - stride8, stride8);
+                j += stride8;
+            }
+        }
     }
 
     // post image...
@@ -454,7 +475,7 @@ static void post_image() {
                 image,
                 0, 0,
                 0, 0,
-                SCANWIDTH, SCANHEIGHT,
+                width, height,
                 True))
         {
             fprintf(stderr, "XShmPutImage() failed\n");
@@ -469,7 +490,7 @@ static void post_image() {
                 image,
                 0, 0,
                 0, 0,
-                SCANWIDTH, SCANHEIGHT
+                width, height
                 ))
         {
             fprintf(stderr, "XPutImage() failed\n");
@@ -593,6 +614,10 @@ static void parseArgs() {
         {
             doShm=0;
         }
+        else if (strstr(argv[i], "-2"))
+        {
+            scale=VIDEO_SCALE_2;
+        }
     }
 }
 
@@ -713,7 +738,8 @@ void video_init() {
      * but would be settable from the command line or resource database.
      */
     x = y = 0;
-    width = SCANWIDTH, height = SCANHEIGHT;
+    width = SCANWIDTH*scale;
+    height = SCANHEIGHT*scale;
 
     /* init MITSHM if we're doing it */
     if (doShm)
@@ -821,14 +847,14 @@ void video_init() {
 
     // pad pixels to uint32_t boundaries
     int bitmap_pad = sizeof(uint32_t);
-    int pixel_buffer_size = SCANWIDTH*SCANHEIGHT*bitmap_pad;
+    int pixel_buffer_size = width*height*bitmap_pad;
 
     xshmeventtype = XShmGetEventBase(display) + ShmCompletion;
 
     /* create the image */
     if (doShm)
     {
-        image = XShmCreateImage(display, visualinfo.visual, visualinfo.depth, ZPixmap, NULL, &xshminfo, SCANWIDTH, SCANHEIGHT);
+        image = XShmCreateImage(display, visualinfo.visual, visualinfo.depth, ZPixmap, NULL, &xshminfo, width, height);
 
         if (!image)
         {
@@ -858,7 +884,7 @@ void video_init() {
         }
 
         printf("Creating regular XImage\n");
-        image = XCreateImage(display, visualinfo.visual, visualinfo.depth, ZPixmap, 0 /*offset*/, data, SCANWIDTH, SCANHEIGHT, 8, SCANWIDTH*bitmap_pad /*bytes_per_line*/);
+        image = XCreateImage(display, visualinfo.visual, visualinfo.depth, ZPixmap, 0 /*offset*/, data, width, height, 8, width*bitmap_pad /*bytes_per_line*/);
 
         if (!image)
         {
