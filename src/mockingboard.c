@@ -1182,6 +1182,7 @@ static DWORD WINAPI SSI263Thread(LPVOID lpParameter)
 
 static void SSI263_Play(unsigned int nPhoneme)
 {
+    return; // SSI263 voices are currently deadc0de
 #if 1
 	HRESULT hr;
 
