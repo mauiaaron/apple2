@@ -57,7 +57,10 @@ int c_open_joystick() {
             /* try again with another name */
             if ((js_fd = open("/dev/joystick", O_RDONLY)) < 0)
             {
-                return 1; /* problem */
+                if ((js_fd = open("/dev/input/js0", O_RDONLY)) < 0)
+                {
+                    return 1; /* problem */
+                }
             }
         }
 
