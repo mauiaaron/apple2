@@ -229,8 +229,7 @@ static void c_initialize_hires_values(void)
             }
         }
     }
-    else
-    if (color_mode == LAZY_INTERP)            /* Lazy Interpolated color */
+    else if (color_mode == LAZY_INTERP)            /* Lazy Interpolated color */
     {
         for (value = 0x00; value <= 0xFF; value++)
         {
@@ -268,8 +267,7 @@ static void c_initialize_hires_values(void)
                                 video__hires_even[e-1];
                         }
                     }
-                    else
-                    if (b == 0)
+                    else if (b == 0)
                     {
                         if (video__hires_even[e+1] != COLOR_BLACK &&
                             video__hires_even[e+1] != COLOR_LIGHT_WHITE)
@@ -302,8 +300,7 @@ static void c_initialize_hires_values(void)
                                 video__hires_odd[e-1];
                         }
                     }
-                    else
-                    if (b == 0)
+                    else if (b == 0)
                     {
                         if (video__hires_odd[e+1] != COLOR_BLACK &&
                             video__hires_odd[e+1] != COLOR_LIGHT_WHITE)
@@ -312,9 +309,7 @@ static void c_initialize_hires_values(void)
                                 video__hires_odd[e+1];
                         }
                     }
-                    else
-                    if
-                    (video__hires_odd[e-1] != COLOR_BLACK &&
+                    else if (video__hires_odd[e-1] != COLOR_BLACK &&
                      video__hires_odd[e-1] != COLOR_LIGHT_WHITE)
                     {
                         video__hires_odd[e] =
@@ -324,8 +319,7 @@ static void c_initialize_hires_values(void)
             }
         }
     }
-    else
-    if (color_mode == INTERP)             /* Color and strict interpolation */
+    else if (color_mode == INTERP)             /* Color and strict interpolation */
     {
         for (value = 0x00; value <= 0xFF; value++)
         {
@@ -341,8 +335,7 @@ static void c_initialize_hires_values(void)
                         video__hires_even[e] =
                             video__hires_even[e-1];
                     }
-                    else
-                    if (
+                    else if (
                         video__hires_even[e-1] != COLOR_BLACK &&
                         video__hires_even[e+1] != COLOR_BLACK &&
                         video__hires_even[e-1] != COLOR_LIGHT_WHITE &&
@@ -351,8 +344,7 @@ static void c_initialize_hires_values(void)
                         video__hires_even[e] =
                             video__hires_even[e-1];
                     }
-                    else
-                    if (
+                    else if (
                         video__hires_even[e-1] != COLOR_BLACK &&
                         video__hires_even[e+1] != COLOR_BLACK &&
                         video__hires_even[e-1] == COLOR_LIGHT_WHITE &&
@@ -361,8 +353,7 @@ static void c_initialize_hires_values(void)
                         video__hires_even[e] =
                             video__hires_even[e+1];
                     }
-                    else
-                    if (
+                    else if (
                         video__hires_even[e-1] == COLOR_LIGHT_WHITE &&
                         video__hires_even[e+1] == COLOR_LIGHT_WHITE)
                     {
@@ -382,8 +373,7 @@ static void c_initialize_hires_values(void)
                         video__hires_odd[e] =
                             video__hires_odd[e-1];
                     }
-                    else
-                    if (
+                    else if (
                         video__hires_odd[e-1] != COLOR_BLACK &&
                         video__hires_odd[e+1] != COLOR_BLACK &&
                         video__hires_odd[e-1] != COLOR_LIGHT_WHITE &&
@@ -392,8 +382,7 @@ static void c_initialize_hires_values(void)
                         video__hires_odd[e] =
                             video__hires_odd[e-1];
                     }
-                    else
-                    if (
+                    else if (
                         video__hires_odd[e-1] != COLOR_BLACK &&
                         video__hires_odd[e+1] != COLOR_BLACK &&
                         video__hires_odd[e-1] == COLOR_LIGHT_WHITE &&
@@ -402,8 +391,7 @@ static void c_initialize_hires_values(void)
                         video__hires_odd[e] =
                             video__hires_odd[e+1];
                     }
-                    else
-                    if (
+                    else if (
                         video__hires_odd[e-1] == COLOR_LIGHT_WHITE &&
                         video__hires_odd[e+1] == COLOR_LIGHT_WHITE)
                     {
@@ -427,8 +415,7 @@ static void c_initialize_hires_values(void)
                             video__hires_even[e] =
                                 video__hires_even[e-1];
                         }
-                        else
-                        if (
+                        else if (
                             video__hires_even[e-1] != COLOR_BLACK &&
                             video__hires_even[e+1] != COLOR_BLACK &&
                             video__hires_even[e-1] != COLOR_LIGHT_WHITE &&
@@ -437,8 +424,7 @@ static void c_initialize_hires_values(void)
                             video__hires_even[e] =
                                 video__hires_even[e-1];
                         }
-                        else
-                        if (
+                        else if (
                             video__hires_even[e-1] != COLOR_BLACK &&
                             video__hires_even[e+1] != COLOR_BLACK &&
                             video__hires_even[e-1] == COLOR_LIGHT_WHITE &&
@@ -447,8 +433,7 @@ static void c_initialize_hires_values(void)
                             video__hires_even[e] =
                                 video__hires_even[e+1];
                         }
-                        else
-                        if (
+                        else if (
                             video__hires_even[e-1] == COLOR_LIGHT_WHITE &&
                             video__hires_even[e+1] == COLOR_LIGHT_WHITE)
                         {
@@ -470,8 +455,7 @@ static void c_initialize_hires_values(void)
                             video__hires_odd[e] =
                                 video__hires_odd[e-1];
                         }
-                        else
-                        if (
+                        else if (
                             video__hires_odd[e-1] != COLOR_BLACK &&
                             video__hires_odd[e+1] != COLOR_BLACK &&
                             video__hires_odd[e-1] != COLOR_LIGHT_WHITE &&
@@ -480,8 +464,7 @@ static void c_initialize_hires_values(void)
                             video__hires_odd[e] =
                                 video__hires_odd[e-1];
                         }
-                        else
-                        if (
+                        else if (
                             video__hires_odd[e-1] != COLOR_BLACK &&
                             video__hires_odd[e+1] != COLOR_BLACK &&
                             video__hires_odd[e-1] == COLOR_LIGHT_WHITE &&
@@ -490,8 +473,7 @@ static void c_initialize_hires_values(void)
                             video__hires_odd[e] =
                                 video__hires_odd[e+1];
                         }
-                        else
-                        if (
+                        else if (
                             video__hires_odd[e-1] == COLOR_LIGHT_WHITE &&
                             video__hires_odd[e+1] == COLOR_LIGHT_WHITE)
                         {
@@ -643,8 +625,7 @@ void video_set(int flags)
     {
         video__strictcolors = 1;        /* strict colors */
     }
-    else
-    if (color_mode == INTERP)
+    else if (color_mode == INTERP)
     {
         video__strictcolors = 2;        /* strict interpolation */
     }
