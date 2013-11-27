@@ -41,17 +41,8 @@ unsigned char video__hires_odd[0x800];
 unsigned char video__dhires1[256];
 unsigned char video__dhires2[256];
 
-/* Interface font:
- *  (probably could be made static)
- *
- * Unlike the normal font, only one version is stored, since the interface
- * is always displayed in forty columns.
- */
-#ifdef _640x400
-unsigned char video__wider_int_font[3][0x8000];
-#else /* _640x400 */
-unsigned char video__int_font[3][0x4000];
-#endif /* _640x400 */
+// Interface font
+static unsigned char video__int_font[3][0x4000];
 
 int video__current_page;        /* Current visual page */
 
@@ -656,29 +647,6 @@ void video_loadfont_int(int first, int quantity, const unsigned char *data)
         x = data[i];
         while (j--)
         {
-
-#ifdef _640x400
-            y = (first << 7) + (i << 4) + (j << 1);
-            if (x & 128)
-            {
-                video__wider_int_font[0][y] =
-                    video__wider_int_font[0][y+1] =
-                        video__wider_int_font[1][y] =
-                            video__wider_int_font[1][y+1] = COLOR_LIGHT_GREEN;
-                video__wider_int_font[2][y] =
-                    video__wider_int_font[2][y+1] = COLOR_LIGHT_RED;
-            }
-            else
-            {
-                video__wider_int_font[0][y] =
-                    video__wider_int_font[0][y+1] =
-                        video__wider_int_font[2][y] =
-                            video__wider_int_font[2][y+1] = COLOR_BLACK;
-                video__wider_int_font[1][y] =
-                    video__wider_int_font[1][y+1] = COLOR_MEDIUM_BLUE;
-            }
-
-#else
             y = (first << 6) + (i << 3) + j;
             if (x & 128)
             {
@@ -692,43 +660,28 @@ void video_loadfont_int(int first, int quantity, const unsigned char *data)
                     video__int_font[2][y] = COLOR_BLACK;
                 video__int_font[1][y] = COLOR_MEDIUM_BLUE;
             }
-
-#endif /* _640x400 */
             x <<= 1;
         }
     }
 }
 
-/* Should probably move this to assembly... */
-
-static void c_interface_print_char40_line(
+static void c_interface_print_char80_line(
     unsigned char **d, unsigned char **s)
 {
 #ifdef _640x400
     *((unsigned int *)(*d)) = *((unsigned int *)(*s)); /*32bits*/
     *d += 4, *s += 4;
-    *((unsigned int *)(*d)) = *((unsigned int *)(*s)); /*32bits*/
-    *d += 4, *s += 4;
-    *((unsigned int *)(*d)) = *((unsigned int *)(*s)); /*32bits*/
-    *d += 4, *s += 4;
     *((unsigned short *)(*d)) = *((unsigned short *)(*s)); /*16bits*/
-    *d += SCANSTEP, *s -= 12;
-    *((unsigned int *)(*d)) = *((unsigned int *)(*s)); /*32bits*/
-    *d += 4, *s += 4;
-    *((unsigned int *)(*d)) = *((unsigned int *)(*s)); /*32bits*/
-    *d += 4, *s += 4;
-    *((unsigned int *)(*d)) = *((unsigned int *)(*s)); /*32bits*/
-    *d += 4, *s += 4;
-    *((unsigned short *)(*d)) = *((unsigned short *)(*s)); /*16bits*/
-    *d += SCANSTEP, *s += 4;
-#else
+    *d += 2, *s += 2;
+    *((unsigned char *)(*d)) = *((unsigned char *)(*s)); /*8bits*/
+    *d += SCANWIDTH-6, *s -= 6;
+#endif
     *((unsigned int *)(*d)) = *((unsigned int *)(*s)); /*32bits*/
     *d += 4, *s += 4;
     *((unsigned short *)(*d)) = *((unsigned short *)(*s)); /*16bits*/
     *d += 2, *s += 2;
     *((unsigned char *)(*d)) = *((unsigned char *)(*s)); /*8bits*/
-    *d += SCANSTEP, *s += 2;
-#endif
+    *d += SCANWIDTH-6, *s += 2;
 }
 
 void video_plotchar( int x, int y, int scheme, unsigned char c )
@@ -738,20 +691,20 @@ void video_plotchar( int x, int y, int scheme, unsigned char c )
     unsigned char *s;
 
 #ifdef _640x400
-    off = y * SCANWIDTH * 16 + x * 14 + 4;
-    s = video__wider_int_font[scheme] + c * 128;
+    off = y * SCANWIDTH * 16 + x * 7 + 4;
+    s = video__int_font[scheme] + c * 64;
 #else
-    off = y * 320 * 8 + x * 7 + 1300;
+    off = y * SCANWIDTH * 8 + x * 7 + /*WtF?*/1300;
     s = video__int_font[scheme] + c * 64;
 #endif
     d = video__fb1 + off;
 
-    c_interface_print_char40_line(&d,&s);
-    c_interface_print_char40_line(&d,&s);
-    c_interface_print_char40_line(&d,&s);
-    c_interface_print_char40_line(&d,&s);
-    c_interface_print_char40_line(&d,&s);
-    c_interface_print_char40_line(&d,&s);
-    c_interface_print_char40_line(&d,&s);
-    c_interface_print_char40_line(&d,&s);
+    c_interface_print_char80_line(&d,&s);
+    c_interface_print_char80_line(&d,&s);
+    c_interface_print_char80_line(&d,&s);
+    c_interface_print_char80_line(&d,&s);
+    c_interface_print_char80_line(&d,&s);
+    c_interface_print_char80_line(&d,&s);
+    c_interface_print_char80_line(&d,&s);
+    c_interface_print_char80_line(&d,&s);
 }

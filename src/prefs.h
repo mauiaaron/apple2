@@ -17,6 +17,8 @@
 #ifndef PREFS_H
 #define PREFS_H
 
+#include "common.h"
+
 #ifndef __ASSEMBLER__
 
 #define SYSSIZE         4096
@@ -49,7 +51,7 @@ extern int js_min_y;
 
 /* functions in prefs.c */
 extern void load_settings(void);
-extern void save_settings(void);
+extern bool save_settings(void);
 
 #endif /* !__ASSEMBLER__ */
 

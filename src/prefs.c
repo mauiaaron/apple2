@@ -427,21 +427,40 @@ void load_settings(void)
 
 
 /* Save the configuration */
-void
-save_settings(void)
+bool save_settings(void)
 {
     FILE *config_file;
+
+#define ERROR_SUBMENU_H 9
+#define ERROR_SUBMENU_W 40
+    int ch = -1;
+    char submenu[ERROR_SUBMENU_H][ERROR_SUBMENU_W+1] =
+    //1.  5.  10.  15.  20.  25.  30.  35.  40.
+    { "||||||||||||||||||||||||||||||||||||||||",
+      "|                                      |",
+      "|                                      |",
+      "| OOPS, could not open or write to the |",
+      "| .apple2/apple2.cfg file in your HOME |",
+      "| directory ...                        |",
+      "|                                      |",
+      "|                                      |",
+      "||||||||||||||||||||||||||||||||||||||||" };
 
     config_file = fopen(config_filename, "w");
     if (config_file == NULL)
     {
         printf(
-            "Cannot open the .apple2 system defaults file for writing.\n"
+            "Cannot open the .apple2/apple2.cfg system defaults file for writing.\n"
             "Make sure it has rw permission in your home directory.");
-        return;
+        c_interface_print_submenu_centered(submenu[0], ERROR_SUBMENU_W, ERROR_SUBMENU_H);
+        while ((ch = c_mygetch(1)) == -1)
+        {
+        }
+
+        return false;
     }
 
-    fprintf(config_file,
+    int err = fprintf(config_file,
             "speed = %0.2lf\n"
             "altspeed = %0.2lf\n"
             "mode = %s\n"
@@ -467,12 +486,33 @@ save_settings(void)
             joy_step,
             system_path);
 
+    if (err < 0)
+    {
+        c_interface_print_submenu_centered(submenu[0], ERROR_SUBMENU_W, ERROR_SUBMENU_H);
+        while ((ch = c_mygetch(1)) == -1)
+        {
+        }
+        return false;
+    }
+
 #ifdef PC_JOYSTICK
-    fprintf(config_file,
+    err = fprintf(config_file,
             "pc joystick parms = %d %d %d %d %d %d %ld\n",
             js_center_x, js_center_y, js_max_x, js_min_x,
             js_max_y, js_min_y, js_timelimit);
 #endif
 
+    if (err < 0)
+    {
+        c_interface_print_submenu_centered(submenu[0], ERROR_SUBMENU_W, ERROR_SUBMENU_H);
+        while ((ch = c_mygetch(1)) == -1)
+        {
+        }
+        return false;
+    }
+
     fclose(config_file);
+
+    return true;
 }
+

@@ -24,7 +24,7 @@
 #define BUF_X           39
 #define BUF_Y           22
 #define MAX_BRKPTS      16
-#define SCREEN_X        41
+#define SCREEN_X        81 // 80col + 1
 #define SCREEN_Y        24
 #define PROMPT_X        2
 #define PROMPT_Y        BUF_Y - 1

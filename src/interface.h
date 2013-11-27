@@ -17,12 +17,15 @@
 #ifndef A2_INTERFACE_H
 #define A2_INTERFACE_H
 
-void            c_interface_print( int x, int y, int cs, const char *s );
-void            c_interface_redo_bottom(); /* bit of a HACK? */
-void            c_load_interface_font();
-void            c_interface_keyboard_layout();
-void            c_interface_parameters();
-void            c_interface_exit();
-void c_interface_translate_screen(char screen[24][41]);
-void            c_interface_select_diskette(int);
+#define INTERFACE_SCREEN_X 80
+
+void c_interface_print(int x, int y, int cs, const char *s);
+void c_interface_print_submenu_centered(char *submenu, int xlen, int ylen);
+void c_interface_redo_bottom(); /* bit of a HACK? */
+void c_load_interface_font();
+void c_interface_keyboard_layout();
+void c_interface_parameters();
+void c_interface_exit();
+void c_interface_translate_screen(char screen[24][INTERFACE_SCREEN_X+1]);
+void c_interface_select_diskette(int);
 #endif

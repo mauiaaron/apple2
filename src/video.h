@@ -192,12 +192,6 @@ extern int video__current_page; /* Current visual page */
 
 extern int video__strictcolors;
 
-#ifdef _640x400
-extern unsigned char video__wider_int_font[3][0x8000];
-#else /* _640x400 */
-extern unsigned char video__int_font[3][0x4000];
-#endif /* _640x400 */
-
 /* --- Precalculated hi-res page offsets given addr --- */
 extern unsigned int video__screen_addresses[8192];
 extern unsigned char video__columns[8192];

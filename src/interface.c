@@ -97,13 +97,22 @@ void c_load_interface_font()
    ------------------------------------------------------------------------- */
 void c_interface_print( int x, int y, int cs, const char *s )
 {
-    int i;
-
-    for (i = x; *s; i++, s++)
+    for (; *s; x++, s++)
     {
-        video_plotchar( i, y, cs, *s );
+        video_plotchar( x, y, cs, *s );
     }
 
+}
+
+/* -------------------------------------------------------------------------
+    c_interface_print_screen()
+   ------------------------------------------------------------------------- */
+void c_interface_print_screen( char screen[24][INTERFACE_SCREEN_X+1] )
+{
+    for (int y = 0; y < 24; y++)
+    {
+        c_interface_print( 0, y, 2, screen[ y ] );
+    }
 }
 
 /* -------------------------------------------------------------------------
@@ -138,9 +147,9 @@ void c_interface_redo_diskette_bottom() {
    ------------------------------------------------------------------------- */
 
 #define IsGraphic(c) ((c) == '|' || (((unsigned char)c) >= 0x80 && ((unsigned char)c) <= 0x8A))
-#define IsInside(x,y) ((x) >= 0 && (x) <= 39 && (y) >= 0 && (y) <= 23)
+#define IsInside(x,y) ((x) >= 0 && (x) <= xlen-1 && (y) >= 0 && (y) <= ylen-1)
 
-static void _convert_screen_graphics( char screen[24][41], int x, int y )
+static void _convert_screen_graphics( char *screen, int x, int y, int xlen, int ylen )
 {
     static char map[11][3][4] ={ { "...",
                                    ".||",
@@ -194,18 +203,20 @@ static void _convert_screen_graphics( char screen[24][41], int x, int y )
 
         for (int yy = y - 1; found_glyph && yy <= y + 1; yy++)
         {
+            int idx = yy*(xlen+1);
             for (int xx = x - 1; xx <= x + 1; xx++)
             {
                 char map_ch = map[k][ yy - y + 1 ][ xx - x + 1 ];
 
                 if (IsInside(xx, yy))
                 {
-                    if (!IsGraphic( screen[ yy ][ xx ] ) && (map_ch == '|'))
+                    char c = *(screen + idx + xx);
+                    if (!IsGraphic( c ) && (map_ch == '|'))
                     {
                         found_glyph = false;
                         break;
                     }
-                    else if (IsGraphic( screen[ yy ][ xx ] ) && (map_ch == '.'))
+                    else if (IsGraphic( c ) && (map_ch == '.'))
                     {
                         found_glyph = false;
                         break;
@@ -217,6 +228,7 @@ static void _convert_screen_graphics( char screen[24][41], int x, int y )
                     break;
                 }
             }
+            idx += xlen+1;
         }
 
         if (found_glyph)
@@ -227,25 +239,62 @@ static void _convert_screen_graphics( char screen[24][41], int x, int y )
 
     if (found_glyph)
     {
-        screen[ y ][ x ] = 0x80 + k;
+        //screen[ y ][ x ] = 0x80 + k;
+        *(screen + y*(xlen+1) + x) = 0x80 + k;
     }
 }
 
-void c_interface_translate_screen( char screen[24][41] )
+void c_interface_translate_screen( char screen[24][INTERFACE_SCREEN_X+1] )
 {
     for (int y = 0; y < 24; y++)
     {
-        for (int x = 0; x < 40; x++)
+        for (int x = 0; x < INTERFACE_SCREEN_X; x++)
         {
             if (screen[ y ][ x ] == '|')
             {
-                _convert_screen_graphics(screen, x, y);
+                _convert_screen_graphics(screen[0], x, y, INTERFACE_SCREEN_X, 24);
             }
         }
     }
 }
 
-int c_interface_cut_name(char *name)
+/* -------------------------------------------------------------------------
+    c_interface_translate_menu()
+   ------------------------------------------------------------------------- */
+void c_interface_translate_menu( char *submenu, int xlen, int ylen )
+{
+    for (int idx=0, y=0; y < ylen; y++, idx+=xlen+1)
+    {
+        for (int x = 0; x < xlen; x++)
+        {
+            if (*(submenu + idx + x) == '|')
+            {
+                _convert_screen_graphics(submenu, x, y, xlen, ylen);
+            }
+        }
+    }
+}
+
+/* -------------------------------------------------------------------------
+    c_interface_print_submenu_centered()
+   ------------------------------------------------------------------------- */
+void c_interface_print_submenu_centered( char *submenu, int xlen, int ylen )
+{
+    c_interface_translate_menu(submenu, xlen, ylen);
+    int x = (INTERFACE_SCREEN_X - xlen) >> 1;
+    int y = (24 - ylen) >> 1;
+
+    int ymax = y+ylen;
+    for (int idx=0; y < ymax; y++, idx+=xlen+1)
+    {
+        c_interface_print( x, y, 2, &submenu[ idx ] );
+    }
+}
+
+/* ------------------------------------------------------------------------- */
+
+
+static int c_interface_cut_name(char *name)
 {
     char *p = name + strlen(name) - 1;
     int is_gz = 0;
@@ -267,7 +316,7 @@ int c_interface_cut_name(char *name)
     return is_gz;
 }
 
-void c_interface_cut_gz(char *name)
+static void c_interface_cut_gz(char *name)
 {
     char *p = name + strlen(name) - 1;
 
@@ -283,7 +332,7 @@ void c_interface_cut_gz(char *name)
 #define DISK_EXT_LEN 4
 
 /* does name end with ".gz" ? */
-int c_interface_is_gz(const char *name)
+static int c_interface_is_gz(const char *name)
 {
     size_t len = strlen( name );
 
@@ -297,7 +346,7 @@ int c_interface_is_gz(const char *name)
 
 
 /* does name end with ".nib{.gz}" */
-int c_interface_is_nibblized(const char *name)
+static int c_interface_is_nibblized(const char *name)
 {
     size_t len = strlen( name );
 
@@ -386,31 +435,40 @@ static void c_usleep() {
 
 void c_interface_select_diskette( int drive )
 {
-    char screen[24][41] =
-    { "||||||||||||||||||||||||||||||||||||||||",
-      "| Insert diskette into Drive _, Slot 6 |",
-      "||||||||||||||||||||||||||||||||||||||||",
-      "|                                      |",
-      "|                                      |",
-      "|                                      |",
-      "|                                      |",
-      "|                                      |",
-      "|                                      |",
-      "|                                      |",
-      "|                                      |",
-      "|                                      |",
-      "|                                      |",
-      "|                                      |",
-      "|                                      |",
-      "|                                      |",
-      "|                                      |",
-      "|                                      |",
-      "|                                      |",
-      "|                                      |",
-      "||||||||||||||||||||||||||||||||||||||||",
+#define DISK_PATH_MAX 77
+#define DRIVE_X 49
+    char screen[24][INTERFACE_SCREEN_X+1] =
+    //1.  5.  10.  15.  20.  25.  30.  35.  40.  45.  50.  55.  60.  65.  70.  75.  80.",
+    { "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||",
+      "|                     Insert diskette into Drive _, Slot 6                     |",
+      "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||",
+      "|                                                                              |",
+      "|                                                                              |",
+      "|                                                                              |",
+      "|                                                                              |",
+      "|                                                                              |",
+      "|                                                                              |",
+      "|                                                                              |",
+      "|                                                                              |",
+      "|                                                                              |",
+      "|                                                                              |",
+      "|                                                                              |",
+      "|                                                                              |",
+      "|                                                                              |",
+      "|                                                                              |",
+      "|                                                                              |",
+      "|                                                                              |",
+      "|                                                                              |",
+      "|                                                                              |",
+      "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||",
+      "|                         For interface help press '?'                         |",
+      "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||" };
+
+    /*
+     * TODO : HELP sub-menu showing these and ( '/' '?' to search for regex ...)
       "| Move: Arrows, PGUP, PGDN, HOME, END. |",
       "| Return and 'w' select, ESC cancels.  |",
-      "||||||||||||||||||||||||||||||||||||||||" };
+      */
 
     struct dirent       **namelist;
     int i, entries;
@@ -418,17 +476,14 @@ void c_interface_select_diskette( int drive )
     static int curpos=0;
     int ch;
 
-    screen[ 1 ][ 29 ] = (drive == 0) ? 'A' : 'B';
+    screen[ 1 ][ DRIVE_X ] = (drive == 0) ? 'A' : 'B';
 
     video_setpage( 0 );
 
     c_interface_translate_screen( screen );
 
 NEXTDIR:
-    for (i = 0; i < 24; i++)
-    {
-        c_interface_print( 0, i, 2, screen[ i ] );
-    }
+    c_interface_print_screen( screen );
 
     altdrive = (drive == 0) ? 1 : 0;
     if (!strcmp("", disk_path))
@@ -459,7 +514,7 @@ NEXTDIR:
 
     for (;;)
     {
-        for (i = 0; i < 17; i++)
+        for (i = 0; i < 18; i++)
         {
             int ent_no = curpos - 8 + i, slen;
             int in_drive = 0;
@@ -502,12 +557,12 @@ NEXTDIR:
             }
 
             slen = strlen( temp );
-            while (slen < 38)
+            while (slen < DISK_PATH_MAX)
             {
                 temp[ slen++ ] = ' ';
             }
 
-            temp[ 38 ] = '\0';
+            temp[ DISK_PATH_MAX ] = '\0';
 
             c_interface_print(1, i + 3, ent_no == curpos, temp);
         }
@@ -573,8 +628,49 @@ NEXTDIR:
             c_interface_exit();
             return;
         }
+        else if (ch == '?')
+        {
+#define DISKHELP_SUBMENU_H 17
+#define DISKHELP_SUBMENU_W 40
+            char submenu[DISKHELP_SUBMENU_H][DISKHELP_SUBMENU_W+1] =
+            //1.  5.  10.  15.  20.  25.  30.  35.  40.
+            { "||||||||||||||||||||||||||||||||||||||||",
+              "|                                      |",
+              "|      Disk : Up/Down arrows           |",
+              "| Selection : PageUp/PageDown          |",
+              "|             Home/End                 |",
+              "|                                      |",
+              "|    Insert : (RO) Press 'Return' to   |",
+              "|      Disk : insert disk read-only    |",
+              "|             (RW) Press 'W' key to    |",
+              "|             insert disk read/write   |",
+              "|                                      |",
+              "|     Eject : Choose selected disk and |",
+              "|      Disk : press 'Return'           |",
+              "|                                      |",
+              "|    Search : Press '/' key to search  |",
+              "|                                      |",
+              "||||||||||||||||||||||||||||||||||||||||" };
+            c_interface_print_submenu_centered(submenu[0], DISKHELP_SUBMENU_W, DISKHELP_SUBMENU_H);
+
+            while ((ch = c_mygetch(1)) == -1)
+            {
+            }
+
+            c_interface_print_screen( screen );
+        }
         else if ((ch == 13) || (toupper(ch) == 'W'))            /* Return */
         {
+#define PERM_SUBMENU_H 5
+#define PERM_SUBMENU_W 40
+            char protmenu[PERM_SUBMENU_H][PERM_SUBMENU_W+1] =
+                //1.  5.  10.  15.  20.  25.  30.  35.  40.
+            { "||||||||||||||||||||||||||||||||||||||||",
+              "|                                      |",
+              "|   Disk is read and write protected   |",
+              "|                                      |",
+              "||||||||||||||||||||||||||||||||||||||||" };
+
             int len, cmpr = 0;
 
             snprintf(temp, TEMPSIZE, "%s/%s",
@@ -593,13 +689,11 @@ NEXTDIR:
                             disk6.disk[drive].compressed,
                             disk6.disk[drive].nibblized, 0))
                     {
-                        c_interface_print( 1, 21, 0,
-                                           "  Disk is read and write protected.   " );
-                        c_interface_print( 1, 22, 0,
-                                           "                                      " );
-                        c_usleep();
-                        c_mygetch(1);
-                        c_interface_redo_diskette_bottom();
+                        c_interface_print_submenu_centered(protmenu[0], PERM_SUBMENU_W, PERM_SUBMENU_H);
+                        while ((ch = c_mygetch(1)) == -1)
+                        {
+                        }
+                        c_interface_print_screen( screen );
                         continue;
                     }
 
@@ -765,13 +859,11 @@ NEXTDIR:
                     drive, temp, cmpr, c_interface_is_nibblized(temp),
                     (toupper(ch) != 'W')))
             {
-                c_interface_print( 1, 21, 0,
-                                   "  Disk is read and write protected.   " );
-                c_interface_print( 1, 22, 0,
-                                   "                                      " );
-                c_usleep();
-                c_mygetch(1);
-                c_interface_redo_diskette_bottom();
+                c_interface_print_submenu_centered(protmenu[0], PERM_SUBMENU_W, PERM_SUBMENU_H);
+                while ((ch = c_mygetch(1)) == -1)
+                {
+                }
+                c_interface_print_screen( screen );
                 continue;
             }
 
@@ -830,33 +922,37 @@ static const char *options[] =
     " Quit       "
 };
 
+#define INTERFACE_PATH_MAX 65
+#define INTERFACE_PATH_MIN 14
+
 void c_interface_parameters()
 {
-    char screen[24][41] =
-    { "||||||||||||||||||||||||||||||||||||||||",
-      "|                                      |",
-      "|              Apple //ix              |",
-      "|                                      |",
-      "||||||||||||||||||||||||||||||||||||||||",
-      "|                                      |",
-      "|                                      |",
-      "|                                      |",
-      "|                                      |",
-      "|                                      |",
-      "|                                      |",
-      "|                                      |",
-      "|                                      |",
-      "|                                      |",
-      "||||||||||||||||||||||||||||||||||||||||",
-      "| F1 F2: Slot6 Drive A, Drive B        |",
-      "| F4   : Toggle Pause Emulation        |",
-      "| F5   : View Keyboard Layout          |",
-      "| F9   : Toggle Btwn CPU% / ALT CPU%   |",
-      "| F10  : This Menu                     |",
-      "||||||||||||||||||||||||||||||||||||||||",
-      "| Use arrow keys (or Return) to modify |",
-      "| parameters. (Press ESC to exit menu) |",
-      "||||||||||||||||||||||||||||||||||||||||" };
+    char screen[24][INTERFACE_SCREEN_X+1] =
+    //1.  5.  10.  15.  20.  25.  30.  35.  40.  45.  50.  55.  60.  65.  70.  75.  80.",
+    { "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||",
+      "|                                                                              |",
+      "|                                  Apple //ix                                  |",
+      "|                                                                              |",
+      "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||",
+      "|                                                                              |",
+      "|                                                                              |",
+      "|                                                                              |",
+      "|                                                                              |",
+      "|                                                                              |",
+      "|                                                                              |",
+      "|                                                                              |",
+      "|                                                                              |",
+      "|                                                                              |",
+      "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||",
+      "|                              Emulator Hotkeys                                |",
+      "|                                                                              |",
+      "| F1 F2: Slot6 Disk Drive A, Drive B                   F4 : Un/Pause Emulation |",
+      "| F5   : Show Keyboard Layout                          F7 :   6502 VM Debugger |",
+      "| F9   : Toggle Between CPU% / ALT CPU% Speeds                                 |",
+      "| F10  : Show This Menu                                         ESC exits menu |",
+      "|                                                                              |",
+      "|                         For interface help press '?'                         |",
+      "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||" };
 
 
     int i;
@@ -870,11 +966,7 @@ void c_interface_parameters()
     video_setpage( 0 );
 
     c_interface_translate_screen( screen );
-
-    for (i = 0; i < 24; i++)
-    {
-        c_interface_print( 0, i, 2,screen[ i ] );
-    }
+    c_interface_print_screen( screen );
 
     for (;;)
     {
@@ -913,8 +1005,8 @@ void c_interface_parameters()
                 break;
 
             case OPT_PATH:
-                strncpy(temp, disk_path + cur_pos, 24);
-                temp[24] = '\0';
+                strncpy(temp, disk_path + cur_pos, INTERFACE_PATH_MAX);
+                temp[INTERFACE_PATH_MAX] = '\0';
                 break;
 
             case OPT_MODE:
@@ -933,7 +1025,7 @@ void c_interface_parameters()
 
             case OPT_SOUND:
                 sprintf(temp, "%s", (sound_mode == 0) ? "Off       " :
-                        "PC speaker");
+                        "PC Speaker");
                 break;
 
             case OPT_JOYSTICK:
@@ -983,49 +1075,49 @@ void c_interface_parameters()
                 break;
             }
 
-            pad_string(temp, ' ', 26);
+            pad_string(temp, ' ', INTERFACE_PATH_MAX+1);
             if (i+cur_off != 2)
             {
-                c_interface_print(14, 5 + i, 0, temp);
+                c_interface_print(INTERFACE_PATH_MIN, 5 + i, 0, temp);
             }
             else
             {
                 int j;
 
-                for (j = 0; j < 24; j++)
+                for (j = 0; j < INTERFACE_PATH_MAX; j++)
                 {
                     if (cur_x != j)
                     {
                         if (temp[ j ] == '\0')
                         {
-                            video_plotchar( 14 + j, 5+i, 0, ' ' );
+                            video_plotchar( INTERFACE_PATH_MIN + j, 5+i, 0, ' ' );
                             j++;
                             break;
                         }
                         else
                         {
-                            video_plotchar( 14 + j, 5+i, 0, temp[ j ] );
+                            video_plotchar( INTERFACE_PATH_MIN + j, 5+i, 0, temp[ j ] );
                         }
                     }
                     else
                     {
                         if (temp[ j ] == '\0')
                         {
-                            video_plotchar( 14 + j, 5+i, option==OPT_PATH,' ' );
+                            video_plotchar( INTERFACE_PATH_MIN + j, 5+i, option==OPT_PATH,' ' );
                             j++;
                             break;
                         }
                         else
                         {
-                            video_plotchar( 14 + j, 5+i, option==OPT_PATH, temp[ j ]);
+                            video_plotchar( INTERFACE_PATH_MIN + j, 5+i, option==OPT_PATH, temp[ j ]);
                         }
 
                     }
                 }
 
-                for (; j < 24; j++)
+                for (; j < INTERFACE_PATH_MAX; j++)
                 {
-                    video_plotchar( 14 + j, 5+i, 0, ' ' );
+                    video_plotchar( INTERFACE_PATH_MIN + j, 5+i, 0, ' ' );
                 }
             }
         }
@@ -1219,7 +1311,7 @@ void c_interface_parameters()
                 break;
 
             case OPT_PATH:
-                if (cur_x < 23)
+                if (cur_x < INTERFACE_PATH_MAX-1)
                 {
                     if (disk_path[cur_pos + cur_x] != '\0')
                     {
@@ -1348,6 +1440,38 @@ void c_interface_parameters()
             c_interface_exit();
             return;
         }
+        else if ((ch == '?') && (option != OPT_PATH))
+        {
+#define MAINHELP_SUBMENU_H 20
+#define MAINHELP_SUBMENU_W 40
+            char submenu[MAINHELP_SUBMENU_H][MAINHELP_SUBMENU_W+1] =
+            //1.  5.  10.  15.  20.  25.  30.  35.  40.
+            { "||||||||||||||||||||||||||||||||||||||||",
+              "|                                      |",
+              "|  Movement : Up/Down arrows           |",
+              "|                                      |",
+              "|    Change : Left/Right arrows to     |",
+              "|    Values : toggle or press the      |",
+              "|             'Return' key to select   |",
+              "|                                      |",
+              "||||||||||||||||||||||||||||||||||||||||",
+              "|                                      |",
+              "| Hotkeys used while emulator running: |",
+              "|                                      |",
+              "| F1 F2: Slot6 Disk Drive A, Drive B   |",
+              "| F4   : Toggle Emulation Pause        |",
+              "| F5   : Show Keyboard Layout          |",
+              "| F7   : Virtual 6502 Debugger         |",
+              "| F9   : Toggle Emulator Speed         |",
+              "| F10  : Main Menu                     |",
+              "|                                      |",
+              "||||||||||||||||||||||||||||||||||||||||" };
+            c_interface_print_submenu_centered(submenu[0], MAINHELP_SUBMENU_W, MAINHELP_SUBMENU_H);
+            while ((ch = c_mygetch(1)) == -1)
+            {
+            }
+            c_interface_print_screen( screen );
+        }
         else
         {
             /* got a normal character setting path */
@@ -1363,7 +1487,7 @@ void c_interface_parameters()
 
                 temp[ cur_pos + cur_x ] = ch;
                 strncpy(disk_path, temp, DISKSIZE);
-                if (cur_x < 23)
+                if (cur_x < INTERFACE_PATH_MAX-1)
                 {
                     cur_x++;
                 }
@@ -1404,11 +1528,27 @@ void c_interface_parameters()
             /* save settings */
             if ((ch == 13) && (option == OPT_SAVE))
             {
-                save_settings();
-                c_interface_print( 1, 22, 0, "            --> Saved. <--            " );
-                video_sync(0);
-                c_usleep();
-                c_interface_print( 0, 22, 2, screen[ 22 ] );
+                if (save_settings())
+                {
+#define SAVED_SUBMENU_H 9
+#define SAVED_SUBMENU_W 40
+                    char submenu[SAVED_SUBMENU_H][SAVED_SUBMENU_W+1] =
+                    //1.  5.  10.  15.  20.  25.  30.  35.  40.
+                    { "||||||||||||||||||||||||||||||||||||||||",
+                      "|                                      |",
+                      "|                                      |",
+                      "|                                      |",
+                      "|            --> Saved <--             |",
+                      "|                                      |",
+                      "|                                      |",
+                      "|                                      |",
+                      "||||||||||||||||||||||||||||||||||||||||" };
+                    c_interface_print_submenu_centered(submenu[0], SAVED_SUBMENU_W, SAVED_SUBMENU_H);
+                    while ((ch = c_mygetch(1)) == -1)
+                    {
+                    }
+                    c_interface_print_screen( screen );
+                }
             }
 
             /* quit apple II simulator */
@@ -1416,7 +1556,22 @@ void c_interface_parameters()
             {
                 int ch;
 
-                c_interface_print( 1, 22, 0, "          Are you sure? (Y/N)         " );
+#define QUIT_SUBMENU_H 10
+#define QUIT_SUBMENU_W 40
+                char submenu[QUIT_SUBMENU_H][QUIT_SUBMENU_W+1] =
+                //1.  5.  10.  15.  20.  25.  30.  35.  40.
+                { "||||||||||||||||||||||||||||||||||||||||",
+                  "|                                      |",
+                  "|                                      |",
+                  "|                                      |",
+                  "|           Quit Emulator...           |",
+                  "|          Are you sure? (Y/N)         |",
+                  "|                                      |",
+                  "|                                      |",
+                  "|                                      |",
+                  "||||||||||||||||||||||||||||||||||||||||" };
+                c_interface_print_submenu_centered(submenu[0], QUIT_SUBMENU_W, QUIT_SUBMENU_H);
+
                 while ((ch = c_mygetch(1)) == -1)
                 {
                 }
@@ -1429,12 +1584,15 @@ void c_interface_parameters()
 #ifdef PC_JOYSTICK
                     c_close_joystick();
 #endif
-                    LOG("Linux! ...and there were much rejoicing! oyeeeeh...\n");
+#ifdef __linux__
+                    LOG("Back to Linux, w00t!\n");
+#endif
                     video_shutdown();
+                    //audio_shutdown();
                     exit( 0 );
                 }
 
-                c_interface_print( 0, 22, 2, screen[ 22 ] );
+                c_interface_print_screen( screen );
             }
         }
     }
@@ -1448,7 +1606,7 @@ void c_interface_parameters()
 
 void c_interface_words()
 {
-    char screen[24][41] =
+    char screen[24][INTERFACE_SCREEN_X+1] =
     { "||||||||||||||||||||||||||||||||||||||||",
       "|    Apple II+ Emulator Version 0.01   |",
       "||||||||||||||||||||||||||||||||||||||||",
@@ -1479,11 +1637,7 @@ void c_interface_words()
     video_setpage( 0 );
 
     c_interface_translate_screen( screen );
-
-    for (i = 0; i < 24; i++)
-    {
-        c_interface_print( 0, i, 2, screen[ i ] );
-    }
+    c_interface_print_screen( screen );
 
     while (c_mygetch(1) == -1)
     {
@@ -1499,7 +1653,8 @@ void c_interface_words()
 
 void c_interface_keyboard_layout()
 {
-    char screen1[24][41] =
+    /* FIXME !!!!!!!!!!!!1  - deprecating ][+ modes ...
+    char screen1[24][INTERFACE_SCREEN_X+1] =
     { "||||||||||||||||||||||||||||||||||||||||",
       "|     Apple II+ US Keyboard Layout     |",
       "||||||||||||||||||||||||||||||||||||||||",
@@ -1524,53 +1679,43 @@ void c_interface_keyboard_layout()
       "||||||||||||||||||||||||||||||||||||||||",
       "|       (Press any key to exit)        |",
       "||||||||||||||||||||||||||||||||||||||||" };
+      */
 
-    char screen2[24][41] =
-    { "||||||||||||||||||||||||||||||||||||||||",
-      "|     Apple //e US Keyboard Layout     |",
-      "||||||||||||||||||||||||||||||||||||||||",
-      "|                                      |",
-      "|1! 2@ 3# 4$ 5% 6^ 7& 8* 9( 0) -_ =+ dl|",
-      "| Q  W  E  R  T  Y  U  I  O P [{ ]} \\| |",
-      "|cp A  S  D  F  G  H  J  K  L ;: '\" CR |",
-      "|sh  Z  X  C  V  B  N  M ,< .> /?   sh |",
-      "|ctrl                                  |",
-      "|                                      |",
-      "| Where dl is DEL, cp is CAPS, CR is   |",
-      "| RETURN, sh is SHIFT, ctrl is CONTROL.|",
-      "| Arrow keys are as is.                |",
-      "| Joystick emulation is same as the    |",
-      "| ][+.                                 |",
-      "|                                      |",
-      "| Ctrl-PrintScrn/SysRq is REBOOT.      |",
-      "| Ctrl-Pause/Break is RESET.           |",
-      "| Pause/Break alone pauses emulation.  |",
-      "| Alt Left and Alt Right are Apple     |",
-      "| Keys (Joystick buttons 0 & 1).       |",
-      "||||||||||||||||||||||||||||||||||||||||",
-      "|       (Press any key to exit)        |",
-      "||||||||||||||||||||||||||||||||||||||||" };
+    char screen[24][INTERFACE_SCREEN_X+1] =
+    //1.  5.  10.  15.  20.  25.  30.  35.  40.  45.  50.  55.  60.  65.  70.  75.  80.",
+    { "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||",
+      "|                         Apple //e US Keyboard Layout                         |",
+      "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||",
+      "|                                      |                                       |",
+      "|1! 2@ 3# 4$ 5% 6^ 7& 8* 9( 0) -_ =+ dl|                                       |",
+      "| Q  W  E  R  T  Y  U  I  O P [{ ]} \\| |                                       |",
+      "|cp A  S  D  F  G  H  J  K  L ;: '\" CR |                                       |",
+      "|sh  Z  X  C  V  B  N  M ,< .> /?   sh |                                       |",
+      "|ctrl                                  |                                       |",
+      "|                                      |                                       |",
+      "| Where dl is DEL, cp is CAPS, CR is   |                                       |",
+      "| RETURN, sh is SHIFT, ctrl is CONTROL.|                                       |",
+      "| Arrow keys are as is.                |                                       |",
+      "|                                      |                                       |",
+      "|                                      |                                       |",
+      "|                                      |                                       |",
+      "| Ctrl-PrntScrn/SysRq reboots emulator |                                       |",
+      "| Ctrl-Pause/Break is Apple reset      |                                       |",
+      "| Pause/Break alone pauses emulation   |                                       |",
+      "| Alt Left and Alt Right are Apple     |                                       |",
+      "| Keys (Joystick buttons 0 & 1)        |                                       |",
+      "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||",
+      "|                           (Press any key to exit)                            |",
+      "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||" };
+
+    // TODO : joystick emulation? and F-keys
 
     int i;
 
     video_setpage( 0 );
 
-    if (apple_mode == 2)
-    {
-        c_interface_translate_screen(screen2);
-        for (i = 0; i < 24; i++)
-        {
-            c_interface_print( 0, i, 2, screen2[ i ] );
-        }
-    }
-    else
-    {
-        c_interface_translate_screen(screen1);
-        for (i = 0; i < 24; i++)
-        {
-            c_interface_print( 0, i, 2, screen1[ i ] );
-        }
-    }
+    c_interface_translate_screen(screen);
+    c_interface_print_screen( screen );
 
     while (c_mygetch(1) == -1)
     {
