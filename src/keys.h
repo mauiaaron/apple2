@@ -42,8 +42,6 @@
 #define kF10    137
 #define kF11    138
 #define kF12    139
-#define kPRNT   140
-#define RST     kPRNT
 
 #define J_U     141
 #define J_D     142
@@ -62,7 +60,6 @@
 #define S_I     153
 #define J_C     154
 #define kPAUSE  155
-#define BOT     kPAUSE
 
 #define kLEFT   8  /* 157 */
 #define kRIGHT  21 /* 158 */

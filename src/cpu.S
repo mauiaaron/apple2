@@ -2704,14 +2704,16 @@ continue:
         Exception handlers
    ------------------------------------------------------------------------- */
 
-exception:      testb   $RebootSig, %al
-                jnz     emul_reinit
-                testb   $ResetSig, %al
-                jnz     ex_reset
+exception:      testb   $ResetSig, %al
+                jnz     ex_reset0
                 testb   $DebugStepSig, %al
                 jnz     ex_step
                 jmp     ex_irq
 
+ex_reset0:      testb   $0xff, SN(joy_button0)              // OpenApple
+                jnz     emul_reinit
+                testb   $0xff, SN(joy_button1)              // ClosedApple
+                jnz     emul_reinit
 ex_reset:       movb    $0, SN(cpu65__signal)
                 movw    $0xFFFC, EffectiveAddr              // ROM reset vector
                 GetFromEA_W
@@ -2766,7 +2768,7 @@ exit_cpu65_run: SaveState                                   // Return to timing 
                 popal
                 ret
 
-emul_reinit:    movb    $0, SN(cpu65__signal)               // EXIT CPURUN
+emul_reinit:    movb    $0, SN(cpu65__signal)               // Return to timing loop ...
                 movb    $1, SN(emul_reinitialize)
                 popal
                 ret

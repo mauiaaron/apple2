@@ -72,9 +72,9 @@ static int apple_ii_keymap_plain[128] =
   J_U, JUR, S_D, J_L, J_C, J_R, S_I, JDL,       /* 72-79   */
   J_D, JDR, -1, -1, -1, kF11, kF12, -1,         /* 80-87   */
   -1, -1, -1, -1, -1, -1, -1, -1,               /* 88-95   */
-  -1, -1, -1, -1, JB1, RST, kHOME, -1,          /* 96-103  */
+  -1, -1, -1, -1, JB1, -1, kHOME, -1,           /* 96-103  */
   kPGUP, 8, 21, kEND, -1, kPGDN, JB2, -1,       /* 104-111 */
-  -1, -1, -1, -1, -1, -1, -1, kF4 /* (pause) */,/* 112-119 */
+  -1, -1, -1, -1, -1, -1, -1, kPAUSE,           /* 112-119 */
   -1, -1, -1, -1, -1, -1, -1, -1 };             /* 120-127 */
 
 static int apple_ii_keymap_ctrl[128] =
@@ -90,9 +90,9 @@ static int apple_ii_keymap_ctrl[128] =
   J_U, JUR, S_D, J_L, J_C, J_R, S_I, JDL,       /* 72-79   */
   J_D, JDR, -1, -1, -1, kF11, kF12, -1,         /* 80-87   */
   -1, -1, -1, -1, -1, -1, -1, -1,               /* 88-95   */
-  -1, -1, -1, BOT, JB1, RST, kHOME, -1,         /* 96-103  */
+  -1, -1, -1, -1, JB1, -1, kHOME, -1,           /* 96-103  */
   kPGUP, 8, 21, kEND, -1, kPGDN, JB2, -1,       /* 104-111 */
-  -1, -1, -1, -1, -1, -1, -1, RST,              /* 112-119 */
+  -1, -1, -1, -1, -1, -1, -1, kPAUSE,           /* 112-119 */
   -1, -1, -1, -1, -1, -1, -1, -1 };             /* 120-127 */
 
 static int apple_ii_keymap_shifted[128] =
@@ -108,9 +108,9 @@ static int apple_ii_keymap_shifted[128] =
   J_U, JUR, S_D, J_L, J_C, J_R, S_I, JDL,       /* 72-79   */
   J_D, JDR, -1, -1, -1, kF11, kF12, -1,         /* 80-87   */
   -1, -1, -1, -1, -1, -1, -1, -1,               /* 88-95   */
-  -1, -1, -1, -1, JB1, RST, kHOME, -1,          /* 96-103  */
+  -1, -1, -1, -1, JB1, -1, kHOME, -1,           /* 96-103  */
   kPGUP, 8, 21, kEND, -1, kPGDN, JB2, -1,       /* 104-111 */
-  -1, -1, -1, -1, -1, -1, -1, kF4 /* pause */,  /* 112-119 */
+  -1, -1, -1, -1, -1, -1, -1, kPAUSE,           /* 112-119 */
   -1, -1, -1, -1, -1, -1, -1, -1 };             /* 120-127 */
 
 /* ----------------------------------------------------
@@ -129,9 +129,9 @@ static int apple_iie_keymap_plain[128] =
   J_U, JUR, S_D, J_L, J_C, J_R, S_I, JDL,       /* 72-79   */
   J_D, JDR, -1, -1, -1, kF11, kF12, -1,         /* 80-87   */
   -1, -1, -1, -1, -1, -1, -1, -1,               /* 88-95   */
-  -1, -1, -1, -1, JB1, RST, kHOME, 11,          /* 96-103  */
+  -1, -1, -1, -1, JB1, -1, kHOME, 11,           /* 96-103  */
   kPGUP, 8, 21, kEND, 10, kPGDN, JB2, 127,      /* 104-111 */
-  -1, -1, -1, -1, -1, -1, -1, kF4 /* pause */,  /* 112-119 */
+  -1, -1, -1, -1, -1, -1, -1, kPAUSE,           /* 112-119 */
   -1, -1, -1, -1, -1, -1, -1, -1 };             /* 120-127 */
 
 static int apple_iie_keymap_ctrl[128] =
@@ -147,9 +147,9 @@ static int apple_iie_keymap_ctrl[128] =
   J_U, JUR, S_D, J_L, J_C, J_R, S_I, JDL,       /* 72-79   */
   J_D, JDR, -1, -1, -1, kF11, kF12, -1,         /* 80-87   */
   -1, -1, -1, -1, -1, -1, -1, -1,               /* 88-95   */
-  -1, -1, -1, BOT, JB1, RST, kHOME, 11,         /* 96-103  */
+  -1, -1, -1, -1, JB1, -1, kHOME, 11,           /* 96-103  */
   kPGUP, 8, 21, kEND, 10, kPGDN, JB2, 127,      /* 104-111 */
-  -1, -1, -1, -1, -1, -1, -1, RST,              /* 112-119 */
+  -1, -1, -1, -1, -1, -1, -1, kPAUSE,           /* 112-119 */
   -1, -1, -1, -1, -1, -1, -1, -1 };             /* 120-127 */
 
 static int apple_iie_keymap_shifted[128] =
@@ -165,9 +165,9 @@ static int apple_iie_keymap_shifted[128] =
   J_U, JUR, S_D, J_L, J_C, J_R, S_I, JDL,       /* 72-79   */
   J_D, JDR, -1, -1, -1, kF11, kF12, -1,         /* 80-87   */
   -1, -1, -1, -1, -1, -1, -1, -1,               /* 88-95   */
-  -1, -1, -1, -1, JB1, RST, kHOME, 11,          /* 96-103  */
+  -1, -1, -1, -1, JB1, -1, kHOME, 11,           /* 96-103  */
   kPGUP, 8, 21, kEND, 10, kPGDN, JB2, 127,      /* 104-111 */
-  -1, -1, -1, -1, -1, -1, -1, kF4 /* pause */,  /* 112-119 */
+  -1, -1, -1, -1, -1, -1, -1, kPAUSE,           /* 112-119 */
   -1, -1, -1, -1, -1, -1, -1, -1 };             /* 120-127 */
 
 static int apple_iie_keymap_caps[128] =
@@ -183,9 +183,9 @@ static int apple_iie_keymap_caps[128] =
   J_U, JUR, S_D, J_L, J_C, J_R, S_I, JDL,       /* 72-79   */
   J_D, JDR, -1, -1, -1, kF11, kF12, -1,         /* 80-87   */
   -1, -1, -1, -1, -1, -1, -1, -1,               /* 88-95   */
-  -1, -1, -1, -1, JB1, RST, kHOME, 11,          /* 96-103  */
+  -1, -1, -1, -1, JB1, -1, kHOME, 11,           /* 96-103  */
   kPGUP, 8, 21, kEND, 10, kPGDN, JB2, 127,      /* 104-111 */
-  -1, -1, -1, -1, -1, -1, -1, kF4 /* pause */,  /* 112-119 */
+  -1, -1, -1, -1, -1, -1, -1, kPAUSE,           /* 112-119 */
   -1, -1, -1, -1, -1, -1, -1, -1 };             /* 120-127 */
 
 static int apple_iie_keymap_shift_ctrl[128] =
@@ -201,9 +201,9 @@ static int apple_iie_keymap_shift_ctrl[128] =
   J_U, JUR, S_D, J_L, J_C, J_R, S_I, JDL,       /* 72-79   */
   J_D, JDR, -1, -1, -1, kF11, kF12, -1,         /* 80-87   */
   -1, -1, -1, -1, -1, -1, -1, -1,               /* 88-95   */
-  -1, -1, -1, BOT, JB1, RST, kHOME, 11,         /* 96-103  */
+  -1, -1, -1, -1, JB1, -1, kHOME, 11,           /* 96-103  */
   kPGUP, 8, 21, kEND, 10, kPGDN, JB2, 127,      /* 104-111 */
-  -1, -1, -1, -1, -1, -1, -1, RST,              /* 112-119 */
+  -1, -1, -1, -1, -1, -1, -1, kPAUSE,           /* 112-119 */
   -1, -1, -1, -1, -1, -1, -1, -1 };             /* 120-127 */
 
 static char key_pressed[ 256 ];
@@ -234,12 +234,11 @@ void c_periodic_update(int dummysig) {
         {
             switch (current_key)
             {
-            case RST:
-                cpu65_interrupt(ResetSig);
-                break;
-
-            case BOT:
-                cpu65_interrupt(RebootSig);
+            case kEND:
+                if (key_pressed[ SCODE_L_CTRL ] || key_pressed[ SCODE_R_CTRL ])
+                {
+                    cpu65_interrupt(ResetSig);
+                }
                 break;
 
             case J_C:
@@ -263,7 +262,7 @@ void c_periodic_update(int dummysig) {
                 pthread_mutex_unlock(&interface_mutex);
                 break;
 
-            case kF4:
+            case kPAUSE:
                 pthread_mutex_lock(&interface_mutex);
                 SoundSystemPause();
                 while (c_mygetch(1) == -1)

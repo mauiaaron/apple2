@@ -37,6 +37,8 @@
 #include "cpu.h"
 #include "prefs.h"
 
+#define MOUSETEXT_BEGIN 0x90
+
 static struct stat statbuf;
 static int altdrive;
 
@@ -78,10 +80,6 @@ extern long js_timelimit;
 
 void c_load_interface_font()
 {
-    /* Only codes 0x20 -- 0x8A are actually used. But I feel safer
-     * explicitly initializing all of them.
-     */
-
     video_loadfont_int(0x00,0x40,ucase_glyphs);
     video_loadfont_int(0x40,0x20,ucase_glyphs);
     video_loadfont_int(0x60,0x20,lcase_glyphs);
@@ -90,6 +88,7 @@ void c_load_interface_font()
     video_loadfont_int(0xE0,0x20,lcase_glyphs);
 
     video_loadfont_int(0x80,11,interface_glyphs);
+    video_loadfont_int(MOUSETEXT_BEGIN,0x20,mousetext_glyphs);
 }
 
 /* -------------------------------------------------------------------------
@@ -931,7 +930,7 @@ void c_interface_parameters()
     //1.  5.  10.  15.  20.  25.  30.  35.  40.  45.  50.  55.  60.  65.  70.  75.  80.",
     { "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||",
       "|                                                                              |",
-      "|                                  Apple //ix                                  |",
+      "|                                @ Apple //ix @                                |",
       "|                                                                              |",
       "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||",
       "|                                                                              |",
@@ -946,12 +945,12 @@ void c_interface_parameters()
       "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||",
       "|                              Emulator Hotkeys                                |",
       "|                                                                              |",
-      "| F1 F2: Slot6 Disk Drive A, Drive B                   F4 : Un/Pause Emulation |",
-      "| F5   : Show Keyboard Layout                          F7 :   6502 VM Debugger |",
+      "| F1 F2: Insert Diskette in Slot6 Disk Drive A or Drive B                      |",
+      "| F5   : Show Keyboard Layout                               F7 : 6502 Debugger |",
       "| F9   : Toggle Between CPU% / ALT CPU% Speeds                                 |",
-      "| F10  : Show This Menu                                         ESC exits menu |",
+      "| F10  : Show This Menu                                                        |",
       "|                                                                              |",
-      "|                         For interface help press '?'                         |",
+      "|               For interface help press '?' ... ESC exits menu                |",
       "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||" };
 
 
@@ -964,6 +963,9 @@ void c_interface_parameters()
     /* reset the x position, so we don't lose our cursor if path changes */
     cur_x = 0;
     video_setpage( 0 );
+
+    screen[ 2 ][ 33 ] = MOUSETEXT_BEGIN + 0x01; 
+    screen[ 2 ][ 46 ] = MOUSETEXT_BEGIN + 0x00; 
 
     c_interface_translate_screen( screen );
     c_interface_print_screen( screen );
@@ -1434,7 +1436,8 @@ void c_interface_parameters()
             /* reboot machine if different */
             if (current_mode != apple_mode)
             {
-                cpu65_interrupt(RebootSig);
+                // FIXME : broken ...
+                //cpu65_interrupt(RebootSig);
             }
 
             c_interface_exit();
@@ -1442,29 +1445,27 @@ void c_interface_parameters()
         }
         else if ((ch == '?') && (option != OPT_PATH))
         {
-#define MAINHELP_SUBMENU_H 20
+#define MAINHELP_SUBMENU_H 18
 #define MAINHELP_SUBMENU_W 40
             char submenu[MAINHELP_SUBMENU_H][MAINHELP_SUBMENU_W+1] =
             //1.  5.  10.  15.  20.  25.  30.  35.  40.
             { "||||||||||||||||||||||||||||||||||||||||",
-              "|                                      |",
               "|  Movement : Up/Down arrows           |",
               "|                                      |",
               "|    Change : Left/Right arrows to     |",
               "|    Values : toggle or press the      |",
               "|             'Return' key to select   |",
-              "|                                      |",
               "||||||||||||||||||||||||||||||||||||||||",
-              "|                                      |",
               "| Hotkeys used while emulator running: |",
               "|                                      |",
               "| F1 F2: Slot6 Disk Drive A, Drive B   |",
-              "| F4   : Toggle Emulation Pause        |",
               "| F5   : Show Keyboard Layout          |",
-              "| F7   : Virtual 6502 Debugger         |",
+              "| F7   : 6502 Debugger                 |",
               "| F9   : Toggle Emulator Speed         |",
               "| F10  : Main Menu                     |",
               "|                                      |",
+              "| Ctrl-LeftAlt-End Reboots //e         |",
+              "| Pause/Brk : Pause Emulator           |",
               "||||||||||||||||||||||||||||||||||||||||" };
             c_interface_print_submenu_centered(submenu[0], MAINHELP_SUBMENU_W, MAINHELP_SUBMENU_H);
             while ((ch = c_mygetch(1)) == -1)
@@ -1686,33 +1687,43 @@ void c_interface_keyboard_layout()
     { "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||",
       "|                         Apple //e US Keyboard Layout                         |",
       "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||",
-      "|                                      |                                       |",
-      "|1! 2@ 3# 4$ 5% 6^ 7& 8* 9( 0) -_ =+ dl|                                       |",
-      "| Q  W  E  R  T  Y  U  I  O P [{ ]} \\| |                                       |",
-      "|cp A  S  D  F  G  H  J  K  L ;: '\" CR |                                       |",
-      "|sh  Z  X  C  V  B  N  M ,< .> /?   sh |                                       |",
-      "|ctrl                                  |                                       |",
-      "|                                      |                                       |",
-      "| Where dl is DEL, cp is CAPS, CR is   |                                       |",
-      "| RETURN, sh is SHIFT, ctrl is CONTROL.|                                       |",
-      "| Arrow keys are as is.                |                                       |",
-      "|                                      |                                       |",
-      "|                                      |                                       |",
-      "|                                      |                                       |",
-      "| Ctrl-PrntScrn/SysRq reboots emulator |                                       |",
-      "| Ctrl-Pause/Break is Apple reset      |                                       |",
-      "| Pause/Break alone pauses emulation   |                                       |",
-      "| Alt Left and Alt Right are Apple     |                                       |",
-      "| Keys (Joystick buttons 0 & 1)        |                                       |",
+      "|                esc                                   del        RESET        |",
+      "|              `~ 1! 2@ 3# 4$ 5% 6^ 7& 8* 9( 0) -_ =+  backspace               |",
+      "|              tab  Q  W  E  R  T  Y  U  I  O  P [{ ]} \\|                      |",
+      "|              caps  A  S  D  F  G  H  J  K  L ;: '\"  return        @          |",
+      "|              shift  Z  X  C  V  B  N  M ,< .> /?  shift          @ @         |",
+      "|                ctrl    @        space        @    ctrl            @          |",
+      "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||",
+      "|                                                           |      Menus:      |",
+      "| Left Alt is @ (OpenApple) key (Joystick button 1)         | F1: Disk Drive A |",
+      "| Right Alt is @ (ClosedApple) key (Joystick button 2)      | F2: Disk Drive B |",
+      "| End is //e RESET key                                      | F5: This Menu    |",
+      "|                                                           | F7: 6502 Debugger|",
+      "| Ctrl-End triggers //e reset vector                        |F10: Options      |",
+      "| Ctrl-LeftAlt-End triggers //e reboot                      ||||||||||||||||||||",
+      "| Ctrl-RightAlt-End triggers //e system test                                   |",
+      "|                                                                              |",
+      "| Pause/Break key pauses emulation                                             |",
+      "|                                                                              |",
       "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||",
       "|                           (Press any key to exit)                            |",
       "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||" };
 
-    // TODO : joystick emulation? and F-keys
-
     int i;
 
     video_setpage( 0 );
+
+    // arrows
+    screen[ 6 ][ 68 ] = MOUSETEXT_BEGIN + 0x0b; 
+    screen[ 7 ][ 67 ] = MOUSETEXT_BEGIN + 0x08; 
+    screen[ 7 ][ 69 ] = MOUSETEXT_BEGIN + 0x15; 
+    screen[ 8 ][ 68 ] = MOUSETEXT_BEGIN + 0x0a; 
+
+    // apple keys
+    screen[ 8 ][ 25 ] = MOUSETEXT_BEGIN + 0x01; 
+    screen[ 8 ][ 47 ] = MOUSETEXT_BEGIN + 0x00; 
+    screen[ 11 ][ 14 ] = MOUSETEXT_BEGIN + 0x01; 
+    screen[ 12 ][ 15 ] = MOUSETEXT_BEGIN + 0x00; 
 
     c_interface_translate_screen(screen);
     c_interface_print_screen( screen );

@@ -83,7 +83,6 @@ extern uint8_t emul_reinitialize;
 
 #endif /* !__ASSEMBLER__ */
 
-#define RebootSig       0x01
 #define ResetSig        0x02
 #define DebugStepSig    0x04
 #define IRQ6522         0x08
