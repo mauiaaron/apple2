@@ -16,6 +16,9 @@
 
 
 #ifndef A2_DISK_H
+#define A2_DISK_H
+
+#include "common.h"
 
 struct diskette
 {
@@ -64,5 +67,4 @@ disk_write_latch(),
 disk_read_prepare_in(),
 disk_read_prepare_out();
 
-#define A2_DISK_H
 #endif

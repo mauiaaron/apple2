@@ -14,20 +14,17 @@
  *
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <assert.h>
-
 #include "disk.h"
 #include "misc.h"
 #include "cpu.h"
 #include "glue.h"
 #include "prefs.h"
+#include "keys.h"
+#include "interface.h"
+#include "common.h"
+#include "zlib-helpers.h"
+
+#include <zlib.h>
 
 #define PHASE_BYTES 3328
 
@@ -95,32 +92,37 @@ void c_init_6()
 }
 
 /* -------------------------------------------------------------------------
-    c_eject_6() - assumes privileged access to image file (to re-gzip)
+    c_eject_6() - ejects/gzips image file
    ------------------------------------------------------------------------- */
 
 void c_eject_6(int drive) {
-    pid_t pid;
+    int ch = -1;
+
+#define ZLIB_SUBMENU_H 7
+#define ZLIB_SUBMENU_W 40
+    char zlibmenu[ZLIB_SUBMENU_H][ZLIB_SUBMENU_W+1] =
+    //1.  5.  10.  15.  20.  25.  30.  35.  40.
+    { "||||||||||||||||||||||||||||||||||||||||",
+      "|                                      |",
+      "| An error occurred when attempting to |",
+      "| compress a disk image:               |",
+      "|                                      |",
+      "|                                      |",
+      "||||||||||||||||||||||||||||||||||||||||" };
 
     if (disk6.disk[drive].compressed)
     {
-        /* gzip the last disk if it was compressed_6 */
-        if ((pid = fork()))     /* parent process */
-        {   /* privileged mode - gzip in place */
-            waitpid(pid, NULL, 0);
-        }
-        else
-        if (!pid)               /* child process */
-        {   /* privileged mode - gzip in place */
-            if (execl("/bin/gzip", "/bin/gzip",
-                      disk6.disk[drive].file_name, NULL) == -1)
-            {
-                perror("Problem exec'ing /bin/gzip");
-                exit(-1);
-            }
+        // foo.dsk -> foo.dsk.gz
+        const char* const err = def(disk6.disk[drive].file_name, Z_DEFAULT_COMPRESSION);
+        if (err)
+        {
+            snprintf(&zlibmenu[4][2], 37, "%s", err);
+            c_interface_print_submenu_centered(zlibmenu[0], ZLIB_SUBMENU_W, ZLIB_SUBMENU_H);
+            while ((ch = c_mygetch(1)) == -1) { }
         }
         else
         {
-            perror("Problem calling fork" );
+            unlink(disk6.disk[drive].file_name);
         }
     }
 
@@ -153,8 +155,6 @@ int c_new_diskette_6(int drive, char *file_name, int cmpr, int nib, int force) {
         fclose(disk6.disk[drive].fp);
         disk6.disk[drive].fp = NULL;
     }
-
-    /* set to users privilege level for disk access */
 
     if (stat(disk6.disk[drive].file_name, &buf) < 0)
     {

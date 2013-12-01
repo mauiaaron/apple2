@@ -24,6 +24,9 @@
 #include "cpu.h"
 #include "prefs.h"
 #include "common.h"
+#include "zlib-helpers.h"
+
+#include <zlib.h>
 
 #define MOUSETEXT_BEGIN 0x90
 
@@ -556,27 +559,21 @@ void c_interface_select_diskette( int drive )
             }
             while (ch == -1);
 
-            if (ch == kUP)          /* Arrow up */
+            if (ch == kUP)
             {
                 if (curpos > 0)
                 {
                     curpos--;
                 }
-                else
-                {
-                }
             }
-            else if (ch == kDOWN)          /* Arrow down */
+            else if (ch == kDOWN)
             {
                 if (curpos < entries - 1)
                 {
                     curpos++;
                 }
-                else
-                {
-                }
             }
-            else if (ch == kPGDN)          /* Page down */
+            else if (ch == kPGDN)
             {
                 curpos += 16;
                 if (curpos > entries - 1)
@@ -584,7 +581,7 @@ void c_interface_select_diskette( int drive )
                     curpos = entries - 1;
                 }
             }
-            else if (ch == kPGUP)            /* Page up */
+            else if (ch == kPGUP)
             {
                 curpos -= 16;
                 if (curpos < 0)
@@ -592,15 +589,15 @@ void c_interface_select_diskette( int drive )
                     curpos = 0;
                 }
             }
-            else if (ch == kHOME)            /* Home */
+            else if (ch == kHOME)
             {
                 curpos = 0;
             }
-            else if (ch == kEND)          /* End */
+            else if (ch == kEND)
             {
                 curpos = entries - 1;
             }
-            else if (ch == kESC)          /* ESC */
+            else if (ch == kESC)
             {
                 break;
             }
@@ -635,7 +632,7 @@ void c_interface_select_diskette( int drive )
 
                 c_interface_print_screen( screen );
             }
-            else if ((ch == 13) || (toupper(ch) == 'W'))            /* Return */
+            else if ((ch == 13) || (toupper(ch) == 'W'))
             {
 #define PERM_SUBMENU_H 5
 #define PERM_SUBMENU_W 40
@@ -647,7 +644,7 @@ void c_interface_select_diskette( int drive )
                   "|                                      |",
                   "||||||||||||||||||||||||||||||||||||||||" };
 
-                int len, cmpr = 0;
+                int len;
 
                 snprintf(temp, TEMPSIZE, "%s/%s",
                          disk_path, namelist[ curpos ]->d_name );
@@ -678,6 +675,7 @@ void c_interface_select_diskette( int drive )
 
                     /* eject the disk and start over */
                     c_eject_6(drive);
+                    c_interface_print_screen( screen );
 
                     nextdir = true;
                     break;
@@ -689,7 +687,7 @@ void c_interface_select_diskette( int drive )
                 {
                     if (toupper(ch) == 'W')
                     {
-                        continue;                    /* can't protect this */
+                        continue;
                     }
 
                     if ((disk_path[len-1]) == '/')
@@ -714,108 +712,45 @@ void c_interface_select_diskette( int drive )
                     break;
                 }
 
+#define ZLIB_SUBMENU_H 7
+#define ZLIB_SUBMENU_W 40
+                char zlibmenu[ZLIB_SUBMENU_H][ZLIB_SUBMENU_W+1] =
+                //1.  5.  10.  15.  20.  25.  30.  35.  40.
+                { "||||||||||||||||||||||||||||||||||||||||",
+                  "|                                      |",
+                  "| An error occurred when attempting to |",
+                  "| uncompress a disk image:             |",
+                  "|                                      |",
+                  "|                                      |",
+                  "||||||||||||||||||||||||||||||||||||||||" };
+#define SHOW_ZLIB_ERROR() \
+                c_interface_print_submenu_centered(zlibmenu[0], ZLIB_SUBMENU_W, ZLIB_SUBMENU_H); \
+                while ((ch = c_mygetch(1)) == -1) { } \
+                c_interface_print_screen( screen );
+
                 /* uncompress the gziped disk */
                 if (c_interface_is_gz(temp))
                 {
-                    if ((pid = fork()))     /* parent process */
+                    const char* const err = inf(temp); // foo.dsk.gz -> foo.dsk
+                    if (err)
                     {
-                        c_interface_print( 1, 21, 0,
-                                           "            Uncompressing...          " );
-                        c_interface_print( 1, 22, 0,
-                                           "                                      " );
-                        if (waitpid(pid, NULL, 0) == -1)
-                        {
-                            c_interface_print( 1, 21, 0,
-                                               "          Problem gunzip'ing          " );
-                            c_interface_print( 1, 22, 0,
-                                               "                                      " );
-                            c_usleep();
-                            c_mygetch(1);
-                            c_interface_redo_diskette_bottom();
-                            continue;
-                        }
-                    }
-                    else if (!pid)               /* child process */
-                    {   /* privileged mode - gzip in place */
-                        if (execl("/bin/gzip", "/bin/gzip",
-                                  "-d", temp, NULL) == -1)
-                        {
-                            snprintf(temp, TEMPSIZE, "%s", sys_errlist[errno]);
-                            perror("\tproblem");
-                            c_interface_print( 1, 21, 0,
-                                               "    Problem exec'ing /bin/gzip -d     " );
-                            c_interface_print( 1, 22, 0, temp);
-                            c_usleep();
-                            exit(-1);
-                        }
-                    }
-                    else
-                    {
-                        snprintf(temp, TEMPSIZE, "%s", sys_errlist[errno]);
-                        c_interface_print( 1, 21, 0,
-                                           "            Cannot fork!              " );
-                        c_interface_print( 1, 22, 0, temp);
-                        c_usleep();
-                        c_mygetch(1);
-                        c_interface_redo_diskette_bottom();
+                        snprintf(&zlibmenu[4][2], 37, "%s", err);
+                        SHOW_ZLIB_ERROR();
                         continue;
                     }
-
-                    c_interface_cut_gz( temp );
-                    cmpr = 1;
-                }
-
-                /* gzip the last disk */
-                if (disk6.disk[drive].compressed)
-                {
-                    /* gzip the last disk if it was compressed_6 */
-
-                    if ((pid = fork()))     /* parent process */
-                    {   /* privileged mode - gzip in place */
-                        c_interface_print( 1, 21, 0,
-                                           "      Compressing old diskette...     " );
-                        c_interface_print( 1, 22, 0,
-                                           "                                      " );
-                        if (waitpid(pid, NULL, 0) == -1)
-                        {
-                            c_interface_print( 1, 21, 0,
-                                               "           Problem gzip'ing           " );
-                            c_interface_print( 1, 22, 0,
-                                               "                                      " );
-                            c_usleep();
-                            c_mygetch(1);
-                            c_interface_redo_diskette_bottom();
-                            continue;
-                        }
-                    }
-                    else if (!pid)               /* child process */
-                    {   /* privileged mode - gzip in place */
-                        if (execl("/bin/gzip", "/bin/gzip",
-                                  disk6.disk[drive].file_name, NULL) == -1)
-                        {
-                            c_interface_print( 1, 21, 0,
-                                               "      Problem exec'ing /bin/gzip      " );
-                            c_interface_print( 1, 22, 0, temp);
-                            c_usleep();
-                            exit(-1);
-                        }
-                    }
-                    else
+                    if (unlink(temp)) // temporarily remove .gz file
                     {
-                        snprintf(temp, TEMPSIZE, "%s", sys_errlist[errno]);
-                        c_interface_print( 1, 21, 0,
-                                           "            Cannot fork!              " );
-                        c_interface_print( 1, 22, 0, temp);
-                        c_usleep();
-                        c_mygetch(1);
-                        c_interface_redo_diskette_bottom();
-                        continue;
+                        ERRLOG("OOPS, cannot unlink %s", temp);
                     }
+
+                    c_interface_cut_gz(temp);
                 }
 
-                /* now try to change the disk */
+                c_eject_6(drive);
+                c_interface_print_screen( screen );
+
                 if (c_new_diskette_6(
-                        drive, temp, cmpr, c_interface_is_nibblized(temp),
+                        drive, temp, 1, c_interface_is_nibblized(temp),
                         (toupper(ch) != 'W')))
                 {
                     c_interface_print_submenu_centered(protmenu[0], PERM_SUBMENU_W, PERM_SUBMENU_H);
@@ -1546,7 +1481,9 @@ void c_interface_parameters()
                 if (ch == 'Y')
                 {
                     c_eject_6( 0 );
+                    c_interface_print_screen( screen );
                     c_eject_6( 1 );
+                    c_interface_print_screen( screen );
 #ifdef PC_JOYSTICK
                     c_close_joystick();
 #endif

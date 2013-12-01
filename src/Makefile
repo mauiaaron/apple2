@@ -77,10 +77,10 @@ bin_PROGRAMS = xapple2-80col
 
 
 EXTRA_xapple2_80col_SOURCES = debugger.c opcodes.c debug.c joystick.c
-xapple2_80col_SOURCES = cpu.S memory.S glue.S keys.c prefs.c disk.c                     font.c cpu-supp.c misc.c win-shim.c soundcore.c soundcore-openal.c alhelpers.c speaker.c AY8910.c mockingboard.c interface.c timing.c
+xapple2_80col_SOURCES = cpu.S memory.S glue.S keys.c prefs.c disk.c                     font.c cpu-supp.c misc.c win-shim.c soundcore.c soundcore-openal.c alhelpers.c speaker.c AY8910.c mockingboard.c interface.c timing.c zlib-helpers.c
 
 
-xapple2_80col_LDADD =  joystick.o                       vidsup-80.o xvideo-80.o display-80.o                         -L/usr/lib/i386-linux-gnu -lX11 -lXext -lrt -lopenal -lpthread
+xapple2_80col_LDADD =  joystick.o                       vidsup-80.o xvideo-80.o display-80.o                         -L/usr/lib/i386-linux-gnu -L/lib/i386-linux-gnu -lX11 -lXext -lrt -lopenal -lpthread -lz
 
 xapple2_80col_DEPENDENCIES =  joystick.o                       vidsup-80.o xvideo-80.o display-80.o
 
@@ -105,7 +105,7 @@ X_CFLAGS =
 X_LIBS = 
 X_EXTRA_LIBS = 
 X_PRE_LIBS =  -lSM -lICE
-xapple2_80col_OBJECTS =  cpu.o memory.o glue.o keys.o prefs.o disk.o      debugger.o opcodes.o debug.o       font.o cpu-supp.o misc.o AY8910.o mockingboard.o win-shim.o soundcore.o soundcore-openal.o alhelpers.o speaker.o interface.o timing.o
+xapple2_80col_OBJECTS =  cpu.o memory.o glue.o keys.o prefs.o disk.o      debugger.o opcodes.o debug.o       font.o cpu-supp.o misc.o AY8910.o mockingboard.o win-shim.o soundcore.o soundcore-openal.o alhelpers.o speaker.o interface.o timing.o zlib-helpers.o
 xapple2_80col_LDFLAGS = 
 genfont_SOURCES = genfont.c
 genfont_OBJECTS =  genfont.o
