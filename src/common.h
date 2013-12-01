@@ -27,9 +27,11 @@
 #include <assert.h>
 #include <pthread.h>
 #include <ctype.h>
+#include <dirent.h>
 
 #include <sys/time.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 
 #ifndef NDEBUG
 #       if defined(__GNUC__)

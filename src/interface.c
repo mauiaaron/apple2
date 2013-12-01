@@ -14,19 +14,6 @@
  *
  */
 
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <sys/ioctl.h>
-#include <unistd.h>
-#include <stdio.h>
-#include <string.h>
-#include <ctype.h>
-#include <stdlib.h>
-#include <dirent.h>
-#include <termios.h>
-#include <errno.h>
-#include <time.h>
 
 #include "interface.h"
 #include "timing.h"
@@ -36,6 +23,7 @@
 #include "video.h"
 #include "cpu.h"
 #include "prefs.h"
+#include "common.h"
 
 #define MOUSETEXT_BEGIN 0x90
 
@@ -362,8 +350,7 @@ static int c_interface_is_nibblized(const char *name)
     return 0;
 }
 
-
-int c_interface_disk_select(const struct dirent *e)
+static int c_interface_disk_select(const struct dirent *e)
 {
     static char cmp[ DISKSIZE ];
     size_t len;
@@ -419,7 +406,6 @@ void c_interface_exit()
     video_redraw();
 }
 
-
 static void c_usleep() {
     // 1.5 secs
     struct timespec delay;
@@ -469,7 +455,8 @@ void c_interface_select_diskette( int drive )
       "| Return and 'w' select, ESC cancels.  |",
       */
 
-    struct dirent       **namelist;
+    struct dirent **namelist;
+    bool nextdir = false;
     int i, entries;
     pid_t pid;
     static int curpos=0;
@@ -481,401 +468,379 @@ void c_interface_select_diskette( int drive )
 
     c_interface_translate_screen( screen );
 
-NEXTDIR:
-    c_interface_print_screen( screen );
+    do {
+        nextdir = false;
+        c_interface_print_screen( screen );
 
-    altdrive = (drive == 0) ? 1 : 0;
-    if (!strcmp("", disk_path))
-    {
-        sprintf(disk_path, "/");
-    }
-
-    /* set to users privilege level for directory access */
-    entries = scandir(disk_path, &namelist,
-                      c_interface_disk_select, alphasort);
-
-    if (entries <= 0)
-    {
-        /* 1/17/97 NOTE: scandir (libc5.3.12) seems to freak on broken
-           symlinks.  so you won't be able to read from some
-           legitimate directories... */
-        c_interface_print( 6, 11, 0, "Problem reading directory!" );
-        sprintf(disk_path, "/");
-        c_usleep();
-        c_interface_exit();
-        return;
-    }
-
-    if (curpos >= entries)
-    {
-        curpos = entries - 1;
-    }
-
-    for (;;)
-    {
-        for (i = 0; i < 18; i++)
+        altdrive = (drive == 0) ? 1 : 0;
+        if (!strcmp("", disk_path))
         {
-            int ent_no = curpos - 8 + i, slen;
-            int in_drive = 0;
-
-            strcpy( temp, " " );
-            if (ent_no >= 0 && ent_no < entries)
-            {
-                snprintf(temp, TEMPSIZE, "%s/%s",
-                         disk_path, namelist[ent_no]->d_name);
-                if (!strcmp(temp, disk6.disk[drive].file_name))
-                {
-                    in_drive = 1;
-                }
-
-                stat(temp, &statbuf);
-                if (S_ISDIR(statbuf.st_mode))
-                {
-                    snprintf(temp, TEMPSIZE, " %s/",
-                             namelist[ ent_no ]->d_name );
-                }
-                else
-                {
-                    snprintf(temp, TEMPSIZE, " %s",
-                             namelist[ ent_no ]->d_name );
-                }
-
-                if (c_interface_cut_name(temp))
-                {
-                    strncat(temp, " <gz>", TEMPSIZE-1);
-                }
-                /* write protected disk in drive? */
-                else if ((in_drive) && (disk6.disk[drive].protected))
-                {
-                    strncat(temp, (drive == 0) ? " <r1>" : " <r2>", TEMPSIZE-1);
-                }
-                else if (in_drive)
-                {
-                    strncat(temp, (drive == 0) ? " <rw1>" : " <rw2>", TEMPSIZE-1);
-                }
-            }
-
-            slen = strlen( temp );
-            while (slen < DISK_PATH_MAX)
-            {
-                temp[ slen++ ] = ' ';
-            }
-
-            temp[ DISK_PATH_MAX ] = '\0';
-
-            c_interface_print(1, i + 3, ent_no == curpos, temp);
+            sprintf(disk_path, "/");
         }
 
-        do
-        {
-            ch = c_mygetch(1);
-        }
-        while (ch == -1);
+        /* set to users privilege level for directory access */
+        entries = scandir(disk_path, &namelist, c_interface_disk_select, alphasort);
 
-        if (ch == kUP)          /* Arrow up */
+        if (entries <= 0)
         {
-            if (curpos > 0)
-            {
-                curpos--;
-            }
-            else
-            {
-            }
-        }
-        else if (ch == kDOWN)          /* Arrow down */
-        {
-            if (curpos < entries - 1)
-            {
-                curpos++;
-            }
-            else
-            {
-            }
-        }
-        else if (ch == kPGDN)          /* Page down */
-        {
-            curpos += 16;
-            if (curpos > entries - 1)
-            {
-                curpos = entries - 1;
-            }
-        }
-        else if (ch == kPGUP)            /* Page up */
-        {
-            curpos -= 16;
-            if (curpos < 0)
-            {
-                curpos = 0;
-            }
-        }
-        else if (ch == kHOME)            /* Home */
-        {
-            curpos = 0;
-        }
-        else if (ch == kEND)          /* End */
-        {
-            curpos = entries - 1;
-        }
-        else if (ch == kESC)          /* ESC */
-        {
-            for (i = 0; i < entries; i++)
-            {
-                free(namelist[ i ]);
-            }
-
-            free(namelist);
+            c_interface_print( 6, 11, 0, "Problem reading directory!" );
+            sprintf(disk_path, "/");
+            c_usleep();
             c_interface_exit();
             return;
         }
-        else if (ch == '?')
+
+        if (curpos >= entries)
         {
+            curpos = entries - 1;
+        }
+
+        for (;;)
+        {
+            for (i = 0; i < 18; i++)
+            {
+                int ent_no = curpos - 8 + i, slen;
+                int in_drive = 0;
+
+                strcpy( temp, " " );
+                if (ent_no >= 0 && ent_no < entries)
+                {
+                    snprintf(temp, TEMPSIZE, "%s/%s",
+                             disk_path, namelist[ent_no]->d_name);
+                    if (!strcmp(temp, disk6.disk[drive].file_name))
+                    {
+                        in_drive = 1;
+                    }
+
+                    stat(temp, &statbuf);
+                    if (S_ISDIR(statbuf.st_mode))
+                    {
+                        snprintf(temp, TEMPSIZE, " %s/",
+                                 namelist[ ent_no ]->d_name );
+                    }
+                    else
+                    {
+                        snprintf(temp, TEMPSIZE, " %s",
+                                 namelist[ ent_no ]->d_name );
+                    }
+
+                    if (c_interface_cut_name(temp))
+                    {
+                        strncat(temp, " <gz>", TEMPSIZE-1);
+                    }
+                    /* write protected disk in drive? */
+                    else if ((in_drive) && (disk6.disk[drive].protected))
+                    {
+                        strncat(temp, (drive == 0) ? " <r1>" : " <r2>", TEMPSIZE-1);
+                    }
+                    else if (in_drive)
+                    {
+                        strncat(temp, (drive == 0) ? " <rw1>" : " <rw2>", TEMPSIZE-1);
+                    }
+                }
+
+                slen = strlen( temp );
+                while (slen < DISK_PATH_MAX)
+                {
+                    temp[ slen++ ] = ' ';
+                }
+
+                temp[ DISK_PATH_MAX ] = '\0';
+
+                c_interface_print(1, i + 3, ent_no == curpos, temp);
+            }
+
+            do
+            {
+                ch = c_mygetch(1);
+            }
+            while (ch == -1);
+
+            if (ch == kUP)          /* Arrow up */
+            {
+                if (curpos > 0)
+                {
+                    curpos--;
+                }
+                else
+                {
+                }
+            }
+            else if (ch == kDOWN)          /* Arrow down */
+            {
+                if (curpos < entries - 1)
+                {
+                    curpos++;
+                }
+                else
+                {
+                }
+            }
+            else if (ch == kPGDN)          /* Page down */
+            {
+                curpos += 16;
+                if (curpos > entries - 1)
+                {
+                    curpos = entries - 1;
+                }
+            }
+            else if (ch == kPGUP)            /* Page up */
+            {
+                curpos -= 16;
+                if (curpos < 0)
+                {
+                    curpos = 0;
+                }
+            }
+            else if (ch == kHOME)            /* Home */
+            {
+                curpos = 0;
+            }
+            else if (ch == kEND)          /* End */
+            {
+                curpos = entries - 1;
+            }
+            else if (ch == kESC)          /* ESC */
+            {
+                break;
+            }
+            else if (ch == '?')
+            {
 #define DISKHELP_SUBMENU_H 17
 #define DISKHELP_SUBMENU_W 40
-            char submenu[DISKHELP_SUBMENU_H][DISKHELP_SUBMENU_W+1] =
-            //1.  5.  10.  15.  20.  25.  30.  35.  40.
-            { "||||||||||||||||||||||||||||||||||||||||",
-              "|                                      |",
-              "|      Disk : Up/Down arrows           |",
-              "| Selection : PageUp/PageDown          |",
-              "|             Home/End                 |",
-              "|                                      |",
-              "|    Insert : (RO) Press 'Return' to   |",
-              "|      Disk : insert disk read-only    |",
-              "|             (RW) Press 'W' key to    |",
-              "|             insert disk read/write   |",
-              "|                                      |",
-              "|     Eject : Choose selected disk and |",
-              "|      Disk : press 'Return'           |",
-              "|                                      |",
-              "|    Search : Press '/' key to search  |",
-              "|                                      |",
-              "||||||||||||||||||||||||||||||||||||||||" };
-            c_interface_print_submenu_centered(submenu[0], DISKHELP_SUBMENU_W, DISKHELP_SUBMENU_H);
-
-            while ((ch = c_mygetch(1)) == -1)
-            {
-            }
-
-            c_interface_print_screen( screen );
-        }
-        else if ((ch == 13) || (toupper(ch) == 'W'))            /* Return */
-        {
-#define PERM_SUBMENU_H 5
-#define PERM_SUBMENU_W 40
-            char protmenu[PERM_SUBMENU_H][PERM_SUBMENU_W+1] =
+                char submenu[DISKHELP_SUBMENU_H][DISKHELP_SUBMENU_W+1] =
                 //1.  5.  10.  15.  20.  25.  30.  35.  40.
-            { "||||||||||||||||||||||||||||||||||||||||",
-              "|                                      |",
-              "|   Disk is read and write protected   |",
-              "|                                      |",
-              "||||||||||||||||||||||||||||||||||||||||" };
+                { "||||||||||||||||||||||||||||||||||||||||",
+                  "|                                      |",
+                  "|      Disk : Up/Down arrows           |",
+                  "| Selection : PageUp/PageDown          |",
+                  "|             Home/End                 |",
+                  "|                                      |",
+                  "|    Insert : (RO) Press 'Return' to   |",
+                  "|      Disk : insert disk read-only    |",
+                  "|             (RW) Press 'W' key to    |",
+                  "|             insert disk read/write   |",
+                  "|                                      |",
+                  "|     Eject : Choose selected disk and |",
+                  "|      Disk : press 'Return'           |",
+                  "|                                      |",
+                  "|    Search : Press '/' key to search  |",
+                  "|                                      |",
+                  "||||||||||||||||||||||||||||||||||||||||" };
+                c_interface_print_submenu_centered(submenu[0], DISKHELP_SUBMENU_W, DISKHELP_SUBMENU_H);
 
-            int len, cmpr = 0;
-
-            snprintf(temp, TEMPSIZE, "%s/%s",
-                     disk_path, namelist[ curpos ]->d_name );
-            len = strlen(disk_path);
-
-            /* handle disk currently in the drive */
-            if (!strcmp(temp, disk6.disk[drive].file_name))
-            {
-                /* reopen disk, forcing write enabled */
-                if (toupper(ch) == 'W')
-                {
-                    if (c_new_diskette_6(
-                            drive,
-                            temp,
-                            disk6.disk[drive].compressed,
-                            disk6.disk[drive].nibblized, 0))
-                    {
-                        c_interface_print_submenu_centered(protmenu[0], PERM_SUBMENU_W, PERM_SUBMENU_H);
-                        while ((ch = c_mygetch(1)) == -1)
-                        {
-                        }
-                        c_interface_print_screen( screen );
-                        continue;
-                    }
-
-                    for (i = 0; i < entries; i++)
-                    {
-                        free(namelist[ i ]);    /* clean up */
-                    }
-
-                    free(namelist);
-                    c_interface_exit();         /* resume emulation */
-                    return;
-                }
-
-                /* eject the disk and start over */
-                c_eject_6(drive);
-                for (i = 0; i < entries; i++)
-                {
-                    free(namelist[ i ]);        /* clean up */
-                }
-
-                free(namelist);
-                goto NEXTDIR;                   /* I'm lazy */
-            }
-
-            /* read another directory */
-            stat(temp, &statbuf);
-            if (S_ISDIR(statbuf.st_mode))
-            {
-                if (toupper(ch) == 'W')
-                {
-                    continue;                    /* can't protect this */
-
-                }
-
-                if ((disk_path[len-1]) == '/')
-                {
-                    disk_path[--len] = '\0';
-                }
-
-                if (!strcmp("..", namelist[curpos]->d_name))
-                {
-                    while (--len && (disk_path[len] != '/'))
-                    {
-                        disk_path[len] = '\0';
-                    }
-                }
-                else if (strcmp(".", namelist[curpos]->d_name))
-                {
-                    snprintf(disk_path + len, DISKSIZE-len, "/%s",
-                             namelist[curpos]->d_name);
-                }
-
-                for (i = 0; i < entries; i++)
-                {
-                    free(namelist[ i ]);        /* clean up */
-                }
-
-                free(namelist);
-                goto NEXTDIR;                   /* I'm lazy */
-            }
-
-            /* uncompress the gziped disk */
-            if (c_interface_is_gz(temp))
-            {
-                if ((pid = fork()))     /* parent process */
-                {
-                    c_interface_print( 1, 21, 0,
-                                       "            Uncompressing...          " );
-                    c_interface_print( 1, 22, 0,
-                                       "                                      " );
-                    if (waitpid(pid, NULL, 0) == -1)
-                    {
-                        c_interface_print( 1, 21, 0,
-                                           "          Problem gunzip'ing          " );
-                        c_interface_print( 1, 22, 0,
-                                           "                                      " );
-                        c_usleep();
-                        c_mygetch(1);
-                        c_interface_redo_diskette_bottom();
-                        continue;
-                    }
-                }
-                else if (!pid)               /* child process */
-                {   /* privileged mode - gzip in place */
-                    if (execl("/bin/gzip", "/bin/gzip",
-                              "-d", temp, NULL) == -1)
-                    {
-                        snprintf(temp, TEMPSIZE, "%s", sys_errlist[errno]);
-                        perror("\tproblem");
-                        c_interface_print( 1, 21, 0,
-                                           "    Problem exec'ing /bin/gzip -d     " );
-                        c_interface_print( 1, 22, 0, temp);
-                        c_usleep();
-                        exit(-1);
-                    }
-                }
-                else
-                {
-                    snprintf(temp, TEMPSIZE, "%s", sys_errlist[errno]);
-                    c_interface_print( 1, 21, 0,
-                                       "            Cannot fork!              " );
-                    c_interface_print( 1, 22, 0, temp);
-                    c_usleep();
-                    c_mygetch(1);
-                    c_interface_redo_diskette_bottom();
-                    continue;
-                }
-
-                c_interface_cut_gz( temp );
-                cmpr = 1;
-            }
-
-            /* gzip the last disk */
-            if (disk6.disk[drive].compressed)
-            {
-                /* gzip the last disk if it was compressed_6 */
-
-                if ((pid = fork()))     /* parent process */
-                {   /* privileged mode - gzip in place */
-                    c_interface_print( 1, 21, 0,
-                                       "      Compressing old diskette...     " );
-                    c_interface_print( 1, 22, 0,
-                                       "                                      " );
-                    if (waitpid(pid, NULL, 0) == -1)
-                    {
-                        c_interface_print( 1, 21, 0,
-                                           "           Problem gzip'ing           " );
-                        c_interface_print( 1, 22, 0,
-                                           "                                      " );
-                        c_usleep();
-                        c_mygetch(1);
-                        c_interface_redo_diskette_bottom();
-                        continue;
-                    }
-                }
-                else if (!pid)               /* child process */
-                {   /* privileged mode - gzip in place */
-                    if (execl("/bin/gzip", "/bin/gzip",
-                              disk6.disk[drive].file_name, NULL) == -1)
-                    {
-                        c_interface_print( 1, 21, 0,
-                                           "      Problem exec'ing /bin/gzip      " );
-                        c_interface_print( 1, 22, 0, temp);
-                        c_usleep();
-                        exit(-1);
-                    }
-                }
-                else
-                {
-                    snprintf(temp, TEMPSIZE, "%s", sys_errlist[errno]);
-                    c_interface_print( 1, 21, 0,
-                                       "            Cannot fork!              " );
-                    c_interface_print( 1, 22, 0, temp);
-                    c_usleep();
-                    c_mygetch(1);
-                    c_interface_redo_diskette_bottom();
-                    continue;
-                }
-            }
-
-            /* now try to change the disk */
-            if (c_new_diskette_6(
-                    drive, temp, cmpr, c_interface_is_nibblized(temp),
-                    (toupper(ch) != 'W')))
-            {
-                c_interface_print_submenu_centered(protmenu[0], PERM_SUBMENU_W, PERM_SUBMENU_H);
                 while ((ch = c_mygetch(1)) == -1)
                 {
                 }
+
                 c_interface_print_screen( screen );
-                continue;
             }
-
-            for (i = 0; i < entries; i++)
+            else if ((ch == 13) || (toupper(ch) == 'W'))            /* Return */
             {
-                free(namelist[ i ]);    /* clean up */
-            }
+#define PERM_SUBMENU_H 5
+#define PERM_SUBMENU_W 40
+                char protmenu[PERM_SUBMENU_H][PERM_SUBMENU_W+1] =
+                    //1.  5.  10.  15.  20.  25.  30.  35.  40.
+                { "||||||||||||||||||||||||||||||||||||||||",
+                  "|                                      |",
+                  "|   Disk is read and write protected   |",
+                  "|                                      |",
+                  "||||||||||||||||||||||||||||||||||||||||" };
 
-            free(namelist);
-            c_interface_exit();         /* resume emulation */
-            return;
+                int len, cmpr = 0;
+
+                snprintf(temp, TEMPSIZE, "%s/%s",
+                         disk_path, namelist[ curpos ]->d_name );
+                len = strlen(disk_path);
+
+                /* handle disk currently in the drive */
+                if (!strcmp(temp, disk6.disk[drive].file_name))
+                {
+                    /* reopen disk, forcing write enabled */
+                    if (toupper(ch) == 'W')
+                    {
+                        if (c_new_diskette_6(
+                                drive,
+                                temp,
+                                disk6.disk[drive].compressed,
+                                disk6.disk[drive].nibblized, 0))
+                        {
+                            c_interface_print_submenu_centered(protmenu[0], PERM_SUBMENU_W, PERM_SUBMENU_H);
+                            while ((ch = c_mygetch(1)) == -1)
+                            {
+                            }
+                            c_interface_print_screen( screen );
+                            continue;
+                        }
+
+                        break;
+                    }
+
+                    /* eject the disk and start over */
+                    c_eject_6(drive);
+
+                    nextdir = true;
+                    break;
+                }
+
+                /* read another directory */
+                stat(temp, &statbuf);
+                if (S_ISDIR(statbuf.st_mode))
+                {
+                    if (toupper(ch) == 'W')
+                    {
+                        continue;                    /* can't protect this */
+                    }
+
+                    if ((disk_path[len-1]) == '/')
+                    {
+                        disk_path[--len] = '\0';
+                    }
+
+                    if (!strcmp("..", namelist[curpos]->d_name))
+                    {
+                        while (--len && (disk_path[len] != '/'))
+                        {
+                            disk_path[len] = '\0';
+                        }
+                    }
+                    else if (strcmp(".", namelist[curpos]->d_name))
+                    {
+                        snprintf(disk_path + len, DISKSIZE-len, "/%s",
+                                 namelist[curpos]->d_name);
+                    }
+
+                    nextdir = true;
+                    break;
+                }
+
+                /* uncompress the gziped disk */
+                if (c_interface_is_gz(temp))
+                {
+                    if ((pid = fork()))     /* parent process */
+                    {
+                        c_interface_print( 1, 21, 0,
+                                           "            Uncompressing...          " );
+                        c_interface_print( 1, 22, 0,
+                                           "                                      " );
+                        if (waitpid(pid, NULL, 0) == -1)
+                        {
+                            c_interface_print( 1, 21, 0,
+                                               "          Problem gunzip'ing          " );
+                            c_interface_print( 1, 22, 0,
+                                               "                                      " );
+                            c_usleep();
+                            c_mygetch(1);
+                            c_interface_redo_diskette_bottom();
+                            continue;
+                        }
+                    }
+                    else if (!pid)               /* child process */
+                    {   /* privileged mode - gzip in place */
+                        if (execl("/bin/gzip", "/bin/gzip",
+                                  "-d", temp, NULL) == -1)
+                        {
+                            snprintf(temp, TEMPSIZE, "%s", sys_errlist[errno]);
+                            perror("\tproblem");
+                            c_interface_print( 1, 21, 0,
+                                               "    Problem exec'ing /bin/gzip -d     " );
+                            c_interface_print( 1, 22, 0, temp);
+                            c_usleep();
+                            exit(-1);
+                        }
+                    }
+                    else
+                    {
+                        snprintf(temp, TEMPSIZE, "%s", sys_errlist[errno]);
+                        c_interface_print( 1, 21, 0,
+                                           "            Cannot fork!              " );
+                        c_interface_print( 1, 22, 0, temp);
+                        c_usleep();
+                        c_mygetch(1);
+                        c_interface_redo_diskette_bottom();
+                        continue;
+                    }
+
+                    c_interface_cut_gz( temp );
+                    cmpr = 1;
+                }
+
+                /* gzip the last disk */
+                if (disk6.disk[drive].compressed)
+                {
+                    /* gzip the last disk if it was compressed_6 */
+
+                    if ((pid = fork()))     /* parent process */
+                    {   /* privileged mode - gzip in place */
+                        c_interface_print( 1, 21, 0,
+                                           "      Compressing old diskette...     " );
+                        c_interface_print( 1, 22, 0,
+                                           "                                      " );
+                        if (waitpid(pid, NULL, 0) == -1)
+                        {
+                            c_interface_print( 1, 21, 0,
+                                               "           Problem gzip'ing           " );
+                            c_interface_print( 1, 22, 0,
+                                               "                                      " );
+                            c_usleep();
+                            c_mygetch(1);
+                            c_interface_redo_diskette_bottom();
+                            continue;
+                        }
+                    }
+                    else if (!pid)               /* child process */
+                    {   /* privileged mode - gzip in place */
+                        if (execl("/bin/gzip", "/bin/gzip",
+                                  disk6.disk[drive].file_name, NULL) == -1)
+                        {
+                            c_interface_print( 1, 21, 0,
+                                               "      Problem exec'ing /bin/gzip      " );
+                            c_interface_print( 1, 22, 0, temp);
+                            c_usleep();
+                            exit(-1);
+                        }
+                    }
+                    else
+                    {
+                        snprintf(temp, TEMPSIZE, "%s", sys_errlist[errno]);
+                        c_interface_print( 1, 21, 0,
+                                           "            Cannot fork!              " );
+                        c_interface_print( 1, 22, 0, temp);
+                        c_usleep();
+                        c_mygetch(1);
+                        c_interface_redo_diskette_bottom();
+                        continue;
+                    }
+                }
+
+                /* now try to change the disk */
+                if (c_new_diskette_6(
+                        drive, temp, cmpr, c_interface_is_nibblized(temp),
+                        (toupper(ch) != 'W')))
+                {
+                    c_interface_print_submenu_centered(protmenu[0], PERM_SUBMENU_W, PERM_SUBMENU_H);
+                    while ((ch = c_mygetch(1)) == -1)
+                    {
+                    }
+                    c_interface_print_screen( screen );
+                    continue;
+                }
+
+                break;
+            }
         }
-    }
+
+        // clean up
+
+        for (i = 0; i < entries; i++)
+        {
+            free(namelist[ i ]);
+        }
+        free(namelist);
+
+    } while (nextdir);
+
+    c_interface_exit();
 }
 
 /* -------------------------------------------------------------------------
