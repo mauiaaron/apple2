@@ -1009,8 +1009,8 @@ void show_disk_info() {
     sprintf(second_buf[i++]+off, "%s %d bytes", (disk6.disk[1].nibblized) ? ".nib" : ".dsk", (int)disk6.disk[1].file_size);
 
     memset(second_buf[i], ' ', BUF_X);
-    *(second_buf[i] + sprintf(second_buf[i], "write %s", (disk6.disk[0].protected) ? "protected" : "enabled")) = ' ';
-    sprintf(second_buf[i++]+off, "write %s", (disk6.disk[1].protected) ? "protected" : "enabled");
+    *(second_buf[i] + sprintf(second_buf[i], "write %s", (disk6.disk[0].is_protected) ? "protected" : "enabled")) = ' ';
+    sprintf(second_buf[i++]+off, "write %s", (disk6.disk[1].is_protected) ? "protected" : "enabled");
 
     memset(second_buf[i], ' ', BUF_X);
     *(second_buf[i] + sprintf(second_buf[i], "phase %d %s", disk6.disk[0].phase, (disk6.disk[0].phase_change) ? "(new)" : "")) = ' ';

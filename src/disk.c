@@ -170,14 +170,14 @@ int c_new_diskette_6(int drive, char *file_name, int cmpr, int nib, int force) {
         {
             /* Open read only */
             disk6.disk[drive].fp = fopen(disk6.disk[drive].file_name, "r+");
-            disk6.disk[drive].protected = 0;
+            disk6.disk[drive].is_protected = 0;
         }
 
         if ((disk6.disk[drive].fp == NULL) || (force))
         {
             /* Open for read AND write */
             disk6.disk[drive].fp = fopen(disk6.disk[drive].file_name, "r");
-            disk6.disk[drive].protected = 1;    /* disk is write protected! */
+            disk6.disk[drive].is_protected = 1;    /* disk is write protected! */
         }
 
         if (disk6.disk[drive].fp == NULL)
@@ -572,7 +572,7 @@ GLUE_C_READ(disk_read_byte)
             return 0;           /* Return if there is no disk in drive */
         }
 
-        if (disk6.disk[disk6.drive].protected)
+        if (disk6.disk[disk6.drive].is_protected)
         {
             return 0;           /* Do not write if diskette is write protected */
 
@@ -680,7 +680,7 @@ GLUE_C_READ(disk_read_latch)
 GLUE_C_READ(disk_read_prepare_in)
 {
     disk6.ddrw = 0;
-    return disk6.disk[disk6.drive].protected ? 0x80 : 0x00;
+    return disk6.disk[disk6.drive].is_protected ? 0x80 : 0x00;
 }
 
 GLUE_C_READ(disk_read_prepare_out)

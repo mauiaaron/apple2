@@ -529,7 +529,7 @@ void c_interface_select_diskette( int drive )
                         strncat(temp, " <gz>", TEMPSIZE-1);
                     }
                     /* write protected disk in drive? */
-                    else if ((in_drive) && (disk6.disk[drive].protected))
+                    else if ((in_drive) && (disk6.disk[drive].is_protected))
                     {
                         strncat(temp, (drive == 0) ? " <r1>" : " <r2>", TEMPSIZE-1);
                     }

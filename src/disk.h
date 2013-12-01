@@ -22,7 +22,7 @@ struct diskette
     char file_name[1024];
     int compressed;
     int nibblized;
-    int protected;
+    int is_protected;
     int phase_change;
     int sector;
     long file_size;
