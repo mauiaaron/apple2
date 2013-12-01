@@ -36,6 +36,23 @@ static int altdrive;
 /*#else*/
 /*#define undoc_supported 0*/
 
+static void copy_and_pad_string(char *dest, const char* src, char c, int len, char cap) {
+    const char* p;
+    char* d = dest;
+
+    for (p = src; ((*p != '\0') && (p-src < len-1)); p++)
+    {
+        *d++ = *p;
+    }
+
+    while (d-dest < len-1)
+    {
+        *d++ = c;
+    }
+
+    *d = cap;
+}
+
 static void pad_string(char *s, char c, int len) {
     char *p;
 
@@ -115,19 +132,6 @@ void c_interface_redo_bottom() {
                        );
     c_interface_print( 1, 22, 2,
                        " parameters. (Press ESC to exit menu) "
-                       );
-}
-
-/* -------------------------------------------------------------------------
-    c_interface_redo_diskette_bottom()
-   ------------------------------------------------------------------------- */
-
-void c_interface_redo_diskette_bottom() {
-    c_interface_print( 1, 21, 2,
-                       " Move: Arrows, PGUP, PGDN, HOME, END. "
-                       );
-    c_interface_print( 1, 22, 2,
-                       " Return and 'w' select, ESC cancels.  "
                        );
 }
 
@@ -415,14 +419,6 @@ void c_interface_exit()
     video_redraw();
 }
 
-static void c_usleep() {
-    // 1.5 secs
-    struct timespec delay;
-    delay.tv_sec=1;
-    delay.tv_nsec=500000000;
-    nanosleep(&delay, NULL);
-}
-
 /* -------------------------------------------------------------------------
     c_interface_select_diskette()
    ------------------------------------------------------------------------- */
@@ -458,12 +454,6 @@ void c_interface_select_diskette( int drive )
       "|                         For interface help press '?'                         |",
       "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||" };
 
-    /*
-     * TODO : HELP sub-menu showing these and ( '/' '?' to search for regex ...)
-      "| Move: Arrows, PGUP, PGDN, HOME, END. |",
-      "| Return and 'w' select, ESC cancels.  |",
-      */
-
     struct dirent **namelist;
     bool nextdir = false;
     int i, entries;
@@ -487,16 +477,31 @@ void c_interface_select_diskette( int drive )
             sprintf(disk_path, "/");
         }
 
+#define DISKERR_PAD 35
+#define DISKERR_SUBMENU_H 6
+#define DISKERR_SUBMENU_W 40
+        char errmenu[DISKERR_SUBMENU_H][DISKERR_SUBMENU_W+1] =
+        //1.  5.  10.  15.  20.  25.  30.  35.  40.
+        { "||||||||||||||||||||||||||||||||||||||||",
+          "|                                      |",
+          "| An error occurred:                   |",
+          "|                                      |",
+          "|                                      |",
+          "||||||||||||||||||||||||||||||||||||||||" };
+#define DISKERR_SHOWERR(ERR) \
+        copy_and_pad_string(&errmenu[3][2], "Problem reading directory!", ' ', DISKERR_PAD, ' '); \
+        c_interface_print_submenu_centered(errmenu[0], DISKERR_SUBMENU_W, DISKERR_SUBMENU_H); \
+        while ((ch = c_mygetch(1)) == -1) { }
+
         /* set to users privilege level for directory access */
         entries = scandir(disk_path, &namelist, c_interface_disk_select, alphasort);
 
         if (entries <= 0)
         {
-            c_interface_print( 6, 11, 0, "Problem reading directory!" );
-            sprintf(disk_path, "/");
-            c_usleep();
-            c_interface_exit();
-            return;
+            DISKERR_SHOWERR("Problem reading directory");
+            snprintf(disk_path, DISKSIZE, "%s", getenv("HOME"));
+            nextdir = true;
+            continue;
         }
 
         if (curpos >= entries)
@@ -615,7 +620,7 @@ void c_interface_select_diskette( int drive )
                 //1.  5.  10.  15.  20.  25.  30.  35.  40.
                 { "||||||||||||||||||||||||||||||||||||||||",
                   "|                                      |",
-                  "|      Disk : Up/Down arrows           |",
+                  "|      Disk : @ and @ arrows           |",
                   "| Selection : PageUp/PageDown          |",
                   "|             Home/End                 |",
                   "|                                      |",
@@ -627,29 +632,20 @@ void c_interface_select_diskette( int drive )
                   "|     Eject : Choose selected disk and |",
                   "|      Disk : press 'Return'           |",
                   "|                                      |",
-                  "|    Search : Press '/' key to search  |",
+                  "| Exit Menu : ESC returns to emulator  |",
                   "|                                      |",
                   "||||||||||||||||||||||||||||||||||||||||" };
-                c_interface_print_submenu_centered(submenu[0], DISKHELP_SUBMENU_W, DISKHELP_SUBMENU_H);
 
+                submenu[ 2 ][ 14 ] = MOUSETEXT_BEGIN + 0x0b;
+                submenu[ 2 ][ 20 ] = MOUSETEXT_BEGIN + 0x0a;
+                c_interface_print_submenu_centered(submenu[0], DISKHELP_SUBMENU_W, DISKHELP_SUBMENU_H);
                 while ((ch = c_mygetch(1)) == -1)
                 {
                 }
-
                 c_interface_print_screen( screen );
             }
             else if ((ch == 13) || (toupper(ch) == 'W'))
             {
-#define PERM_SUBMENU_H 5
-#define PERM_SUBMENU_W 40
-                char protmenu[PERM_SUBMENU_H][PERM_SUBMENU_W+1] =
-                    //1.  5.  10.  15.  20.  25.  30.  35.  40.
-                { "||||||||||||||||||||||||||||||||||||||||",
-                  "|                                      |",
-                  "|   Disk is read and write protected   |",
-                  "|                                      |",
-                  "||||||||||||||||||||||||||||||||||||||||" };
-
                 int len;
 
                 snprintf(temp, TEMPSIZE, "%s/%s",
@@ -668,10 +664,7 @@ void c_interface_select_diskette( int drive )
                                 disk6.disk[drive].compressed,
                                 disk6.disk[drive].nibblized, 0))
                         {
-                            c_interface_print_submenu_centered(protmenu[0], PERM_SUBMENU_W, PERM_SUBMENU_H);
-                            while ((ch = c_mygetch(1)) == -1)
-                            {
-                            }
+                            DISKERR_SHOWERR("Disk is read and write protected");
                             c_interface_print_screen( screen );
                             continue;
                         }
@@ -718,30 +711,14 @@ void c_interface_select_diskette( int drive )
                     break;
                 }
 
-#define ZLIB_SUBMENU_H 7
-#define ZLIB_SUBMENU_W 40
-                char zlibmenu[ZLIB_SUBMENU_H][ZLIB_SUBMENU_W+1] =
-                //1.  5.  10.  15.  20.  25.  30.  35.  40.
-                { "||||||||||||||||||||||||||||||||||||||||",
-                  "|                                      |",
-                  "| An error occurred when attempting to |",
-                  "| uncompress a disk image:             |",
-                  "|                                      |",
-                  "|                                      |",
-                  "||||||||||||||||||||||||||||||||||||||||" };
-#define SHOW_ZLIB_ERROR() \
-                c_interface_print_submenu_centered(zlibmenu[0], ZLIB_SUBMENU_W, ZLIB_SUBMENU_H); \
-                while ((ch = c_mygetch(1)) == -1) { } \
-                c_interface_print_screen( screen );
-
                 /* uncompress the gziped disk */
                 if (c_interface_is_gz(temp))
                 {
                     const char* const err = inf(temp); // foo.dsk.gz -> foo.dsk
                     if (err)
                     {
-                        snprintf(&zlibmenu[4][2], 37, "%s", err);
-                        SHOW_ZLIB_ERROR();
+                        DISKERR_SHOWERR(err);
+                        c_interface_print_screen( screen );
                         continue;
                     }
                     if (unlink(temp)) // temporarily remove .gz file
@@ -759,10 +736,7 @@ void c_interface_select_diskette( int drive )
                         drive, temp, 1, c_interface_is_nibblized(temp),
                         (toupper(ch) != 'W')))
                 {
-                    c_interface_print_submenu_centered(protmenu[0], PERM_SUBMENU_W, PERM_SUBMENU_H);
-                    while ((ch = c_mygetch(1)) == -1)
-                    {
-                    }
+                    DISKERR_SHOWERR("Disk is read and write protected");
                     c_interface_print_screen( screen );
                     continue;
                 }
@@ -870,8 +844,8 @@ void c_interface_parameters()
     cur_x = 0;
     video_setpage( 0 );
 
-    screen[ 2 ][ 33 ] = MOUSETEXT_BEGIN + 0x01; 
-    screen[ 2 ][ 46 ] = MOUSETEXT_BEGIN + 0x00; 
+    screen[ 2 ][ 33 ] = MOUSETEXT_BEGIN + 0x01;
+    screen[ 2 ][ 46 ] = MOUSETEXT_BEGIN + 0x00;
 
     c_interface_translate_screen( screen );
     c_interface_print_screen( screen );
@@ -1356,11 +1330,11 @@ void c_interface_parameters()
             char submenu[MAINHELP_SUBMENU_H][MAINHELP_SUBMENU_W+1] =
             //1.  5.  10.  15.  20.  25.  30.  35.  40.
             { "||||||||||||||||||||||||||||||||||||||||",
-              "|  Movement : Up/Down arrows           |",
+              "|  Movement : @ and @ arrows           |",
               "|                                      |",
-              "|    Change : Left/Right arrows to     |",
-              "|    Values : toggle or press the      |",
-              "|             'Return' key to select   |",
+              "|    Change : @ and @ arrows to toggle |",
+              "|    Values : or press the 'Return'    |",
+              "|             key to select            |",
               "||||||||||||||||||||||||||||||||||||||||",
               "| Hotkeys used while emulator running: |",
               "|                                      |",
@@ -1373,6 +1347,11 @@ void c_interface_parameters()
               "| Ctrl-LeftAlt-End Reboots //e         |",
               "| Pause/Brk : Pause Emulator           |",
               "||||||||||||||||||||||||||||||||||||||||" };
+            submenu[ 1 ][ 14 ] = MOUSETEXT_BEGIN + 0x0b;
+            submenu[ 1 ][ 20 ] = MOUSETEXT_BEGIN + 0x0a;
+            submenu[ 3 ][ 14 ] = MOUSETEXT_BEGIN + 0x08;
+            submenu[ 3 ][ 20 ] = MOUSETEXT_BEGIN + 0x15;
+
             c_interface_print_submenu_centered(submenu[0], MAINHELP_SUBMENU_W, MAINHELP_SUBMENU_H);
             while ((ch = c_mygetch(1)) == -1)
             {
@@ -1445,11 +1424,13 @@ void c_interface_parameters()
                       "|                                      |",
                       "|                                      |",
                       "|                                      |",
-                      "|            --> Saved <--             |",
+                      "|              @ Saved @               |",
                       "|                                      |",
                       "|                                      |",
                       "|                                      |",
                       "||||||||||||||||||||||||||||||||||||||||" };
+                    submenu[ 4 ][ 15 ] = MOUSETEXT_BEGIN + 0x01;
+                    submenu[ 4 ][ 23 ] = MOUSETEXT_BEGIN + 0x00;
                     c_interface_print_submenu_centered(submenu[0], SAVED_SUBMENU_W, SAVED_SUBMENU_H);
                     while ((ch = c_mygetch(1)) == -1)
                     {
@@ -1622,16 +1603,16 @@ void c_interface_keyboard_layout()
     video_setpage( 0 );
 
     // arrows
-    screen[ 6 ][ 68 ] = MOUSETEXT_BEGIN + 0x0b; 
-    screen[ 7 ][ 67 ] = MOUSETEXT_BEGIN + 0x08; 
-    screen[ 7 ][ 69 ] = MOUSETEXT_BEGIN + 0x15; 
-    screen[ 8 ][ 68 ] = MOUSETEXT_BEGIN + 0x0a; 
+    screen[ 6 ][ 68 ] = MOUSETEXT_BEGIN + 0x0b;
+    screen[ 7 ][ 67 ] = MOUSETEXT_BEGIN + 0x08;
+    screen[ 7 ][ 69 ] = MOUSETEXT_BEGIN + 0x15;
+    screen[ 8 ][ 68 ] = MOUSETEXT_BEGIN + 0x0a;
 
     // apple keys
-    screen[ 8 ][ 25 ] = MOUSETEXT_BEGIN + 0x01; 
-    screen[ 8 ][ 47 ] = MOUSETEXT_BEGIN + 0x00; 
-    screen[ 11 ][ 14 ] = MOUSETEXT_BEGIN + 0x01; 
-    screen[ 12 ][ 15 ] = MOUSETEXT_BEGIN + 0x00; 
+    screen[ 8 ][ 25 ] = MOUSETEXT_BEGIN + 0x01;
+    screen[ 8 ][ 47 ] = MOUSETEXT_BEGIN + 0x00;
+    screen[ 11 ][ 14 ] = MOUSETEXT_BEGIN + 0x01;
+    screen[ 12 ][ 15 ] = MOUSETEXT_BEGIN + 0x00;
 
     c_interface_translate_screen(screen);
     c_interface_print_screen( screen );
