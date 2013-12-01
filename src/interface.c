@@ -14,7 +14,6 @@
  *
  */
 
-
 #include "interface.h"
 #include "timing.h"
 #include "keys.h"
@@ -317,9 +316,12 @@ static void c_interface_cut_gz(char *name)
 
 #define GZ_EXT ".gz"
 #define GZ_EXT_LEN 3
-#define DISK_EXT ".dsk"
+#define DISK_EXT1 ".dsk"
 #define DISK_EXT2 ".nib"
-#define DISK_EXT_LEN 4
+#define DISK_EXT3 ".do"
+#define DISK_EXT_LEN1 4
+#define DISK_EXT_LEN2 4
+#define DISK_EXT_LEN3 3
 
 /* does name end with ".gz" ? */
 static int c_interface_is_gz(const char *name)
@@ -345,7 +347,7 @@ static int c_interface_is_nibblized(const char *name)
         len -= GZ_EXT_LEN;
     }
 
-    if (!strncmp(name + len - DISK_EXT_LEN, DISK_EXT2, DISK_EXT_LEN))
+    if (!strncmp(name + len - DISK_EXT_LEN2, DISK_EXT2, DISK_EXT_LEN2))
     {
         return 1;
     }
@@ -385,15 +387,19 @@ static int c_interface_disk_select(const struct dirent *e)
         len -= GZ_EXT_LEN;
     }
 
-    /* true if .dsk or .nib extension */
-    if (!strncmp(p + len - DISK_EXT_LEN, DISK_EXT, DISK_EXT_LEN))
+    if (!strncmp(p + len - DISK_EXT_LEN1, DISK_EXT1, DISK_EXT_LEN1))
     {
-        return 1;
+        return 1; // .dsk
     }
 
-    if (!strncmp(p + len - DISK_EXT_LEN, DISK_EXT2, DISK_EXT_LEN))
+    if (!strncmp(p + len - DISK_EXT_LEN2, DISK_EXT2, DISK_EXT_LEN2))
     {
-        return 1;
+        return 1; // .nib
+    }
+
+    if (!strncmp(p + len - DISK_EXT_LEN3, DISK_EXT3, DISK_EXT_LEN3))
+    {
+        return 1; // .do
     }
 
     return 0;
