@@ -21,6 +21,8 @@
    1.3   6 Apr 2005  Remove incorrect assertion in inf()
    1.4  11 Dec 2005  Add hack to avoid MSDOS end-of-line conversions
                      Avoid some compiler warnings for input and output buffers
+   ...
+   xxx   1 Dec 2013  Added to Apple2ix emulator, replaced assertions with error value returns
  */
 
 #include "misc.h"
@@ -44,6 +46,7 @@ static int _def(FILE *source, FILE *dest, const int level) {
     strm.opaque = Z_NULL;
     int ret = deflateInit(&strm, level);
     if (ret != Z_OK) {
+        ERRLOG("OOPS deflateInit : %d", ret);
         return ret;
     }
 
@@ -52,6 +55,7 @@ static int _def(FILE *source, FILE *dest, const int level) {
         strm.avail_in = fread(in, 1, CHUNK, source);
         if (ferror(source)) {
             (void)deflateEnd(&strm);
+            ERRLOG("OOPS fread ...");
             return Z_ERRNO;
         }
         flush = feof(source) ? Z_FINISH : Z_NO_FLUSH;
@@ -63,18 +67,28 @@ static int _def(FILE *source, FILE *dest, const int level) {
             strm.avail_out = CHUNK;
             strm.next_out = out;
             ret = deflate(&strm, flush);    /* no bad return value */
-            assert(ret != Z_STREAM_ERROR);  /* state not clobbered */
+            if (ret == Z_STREAM_ERROR) {
+                ERRLOG("OOPS deflate : %d", ret);
+                return ret;
+            }
             have = CHUNK - strm.avail_out;
             if (fwrite(out, 1, have, dest) != have || ferror(dest)) {
                 (void)deflateEnd(&strm);
+                ERRLOG("OOPS fwrite ...");
                 return Z_ERRNO;
             }
         } while (strm.avail_out == 0);
-        assert(strm.avail_in == 0);     /* all input will be used */
+        if (strm.avail_in != 0) {
+            ERRLOG("OOPS avail_in != 0 ...");
+            return UNKNOWN_ERR;
+        }
 
         /* done when last data in file processed */
     } while (flush != Z_FINISH);
-    assert(ret == Z_STREAM_END);        /* stream will be complete */
+    if (ret != Z_STREAM_END) {
+        ERRLOG("OOPS != Z_STREAM_END ...");
+        return UNKNOWN_ERR;
+    }
 
     (void)deflateEnd(&strm);
     return Z_OK;
@@ -102,10 +116,12 @@ static int const _inf(FILE *source, FILE *dest) {
         strm.avail_in = fread(in, 1, CHUNK, source);
         if (ferror(source)) {
             (void)inflateEnd(&strm);
+            ERRLOG("OOPS inflateEnd ...");
             return Z_ERRNO;
         }
         if (strm.avail_in == 0)
         {
+            ERRLOG("OOPS avail_in != 0 ...");
             return UNKNOWN_ERR;
         }
         strm.next_in = in;
@@ -115,18 +131,23 @@ static int const _inf(FILE *source, FILE *dest) {
             strm.avail_out = CHUNK;
             strm.next_out = out;
             ret = inflate(&strm, Z_NO_FLUSH);
-            assert(ret != Z_STREAM_ERROR);  /* state not clobbered */
+            if (ret == Z_STREAM_ERROR) {
+                ERRLOG("OOPS inflate : %d", ret);
+                return ret;
+            }
             switch (ret) {
             case Z_NEED_DICT:
                 ret = Z_DATA_ERROR;     /* and fall through */
             case Z_DATA_ERROR:
             case Z_MEM_ERROR:
                 (void)inflateEnd(&strm);
+                ERRLOG("OOPS : %d", ret);
                 return ret;
             }
             have = CHUNK - strm.avail_out;
             if (fwrite(out, 1, have, dest) != have || ferror(dest)) {
                 (void)inflateEnd(&strm);
+                ERRLOG("OOPS fwrite ...");
                 return Z_ERRNO;
             }
         } while (strm.avail_out == 0);
@@ -256,9 +277,11 @@ const char* const inf(const char* const src)
         int len = strlen(src);
         char dst[TEMPSIZE];
         snprintf(dst, TEMPSIZE-1, "%s", src);
-        assert(dst[len-3] == '.');
-        assert(dst[len-2] == 'g');
-        assert(dst[len-1] == 'z');
+        if (! ( (dst[len-3] == '.') && (dst[len-2] == 'g') && (dst[len-1] == 'z') ) ) {
+            ERRLOG("Expected filename ending in .gz");
+            ret = UNKNOWN_ERR;
+            break;
+        }
         dst[len-3] = '\0';
 
         FILE *dest = fopen(dst, "w+");
