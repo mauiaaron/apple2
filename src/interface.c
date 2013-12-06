@@ -489,7 +489,7 @@ void c_interface_select_diskette( int drive )
           "|                                      |",
           "||||||||||||||||||||||||||||||||||||||||" };
 #define DISKERR_SHOWERR(ERR) \
-        copy_and_pad_string(&errmenu[3][2], "Problem reading directory!", ' ', DISKERR_PAD, ' '); \
+        copy_and_pad_string(&errmenu[3][2], ERR, ' ', DISKERR_PAD, ' '); \
         c_interface_print_submenu_centered(errmenu[0], DISKERR_SUBMENU_W, DISKERR_SUBMENU_H); \
         while ((ch = c_mygetch(1)) == -1) { }
 
