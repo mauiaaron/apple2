@@ -83,9 +83,7 @@ static const DWORD g_dwDSSpkrBufferSize = MAX_SAMPLES * sizeof(short) * g_nSPKR_
 static short*	g_pSpeakerBuffer = NULL;
 
 // Globals (SOUND_WAVE)
-#ifdef APPLE2IX
-#define SPKR_DATA_INIT 0x4000;
-#else
+#ifndef APPLE2IX
 const short		SPKR_DATA_INIT = (short)0x8000;
 #endif
 
@@ -604,7 +602,7 @@ BYTE __stdcall SpkrToggle (WORD, WORD, BYTE, BYTE, ULONG nCyclesLeft)
 	  UpdateSpkr();
 
 #ifdef APPLE2IX
-	  g_nSpeakerData *= -1;
+	  g_nSpeakerData *= -1; // amplitude can less than max/min short
 #else
 	  g_nSpeakerData = ~g_nSpeakerData;
 #endif

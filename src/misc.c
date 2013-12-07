@@ -643,9 +643,10 @@ void c_initialize_apple_ii_memory()
 
 void c_initialize_sound_hooks()
 {
+    SpkrSetVolume(sound_volume * (SPKR_DATA_INIT/10));
     for (int i = 0xC030; i < 0xC040; i++)
     {
-        cpu65_vmem[i].r = cpu65_vmem[i].w = (sound_mode) ? read_speaker_toggle_pc : ram_nop;
+        cpu65_vmem[i].r = cpu65_vmem[i].w = (sound_volume > 0) ? read_speaker_toggle_pc : ram_nop;
     }
 }
 

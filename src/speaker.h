@@ -30,6 +30,7 @@ void    Spkr_SetErrorInc(const int nErrorInc);
 void    Spkr_SetErrorMax(const int nErrorMax);
 DWORD   SpkrGetVolume();
 #ifdef APPLE2IX
+#define SPKR_DATA_INIT 0x4000
 void    SpkrSetVolume(short amplitude);
 #else
 void    SpkrSetVolume(DWORD dwVolume, DWORD dwVolumeMax);

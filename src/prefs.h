@@ -21,17 +21,37 @@
 
 #ifndef __ASSEMBLER__
 
+typedef enum joystick_mode_t {
+    JOY_OFF = 0,
+#ifdef KEYPAD_JOYSTICK
+    JOY_KPAD,
+#endif
+#ifdef PC_JOYSTICK
+    JOY_PCJOY,
+#endif
+    NUM_JOYOPTS
+} joystick_mode_t;
+
+typedef enum color_mode_t {
+    COLOR_NONE = 0,
+    /*LAZY_COLOR, deprecated*/
+    COLOR,
+    /*LAZY_INTERP, deprecated*/
+    COLOR_INTERP,
+    NUM_COLOROPTS
+} color_mode_t;
+
 #define SYSSIZE         4096
 extern char system_path[SYSSIZE];
 #define DISKSIZE        4096
 extern char disk_path[DISKSIZE];
 
 extern int apple_mode; /* undocumented instructions or //e mode */
-extern int sound_mode; /* PC speaker or OFF */
-extern int color_mode;
+extern int sound_volume;
+extern color_mode_t color_mode;
 
 /* generic joystick settings */
-extern short joy_mode;
+extern joystick_mode_t joy_mode;
 extern short joy_step;
 extern short joy_center_x;
 extern short joy_center_y;
@@ -59,18 +79,5 @@ extern bool save_settings(void);
 #define IIE_MODE 2
 #define IIU_MODE 1
 #define II_MODE  0
-
-/* values for color_mode */
-#define NO_COLOR 0
-#define LAZY_COLOR 1
-#define COLOR 2
-#define LAZY_INTERP 3
-#define INTERP 4
-
-/* values for joy_mode */
-#define JOY_OFF     0
-#define JOY_KYBD    1
-#define JOY_DIGITAL 2
-#define JOY_PCJOY   3
 
 #endif /* PREFS_H */

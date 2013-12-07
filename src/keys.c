@@ -311,8 +311,8 @@ void c_periodic_update(int dummysig) {
         }
     }
 
-    /* simulated joystick */
-    if (joy_mode == JOY_KYBD)
+    /* simulated joystick from PC Keypad */
+    if (joy_mode == JOY_KPAD)
     {
         if (key_pressed[ SCODE_J_U ])
         {

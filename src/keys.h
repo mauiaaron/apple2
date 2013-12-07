@@ -79,10 +79,6 @@ extern int js_fd;
 extern struct JS_DATA_TYPE js;
 extern int js_offset_x, js_offset_y;
 extern float js_adjustlow_x, js_adjustlow_y, js_adjusthigh_x, js_adjusthigh_y;
-extern int c_open_joystick(void);
-extern void c_calculate_joystick_parms(void);
-extern void c_close_joystick(void);
-extern void c_calibrate_joystick(void);
 #endif
 
 void c_read_raw_key(int scancode, int pressed);

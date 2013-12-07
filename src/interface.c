@@ -22,6 +22,7 @@
 #include "video.h"
 #include "cpu.h"
 #include "prefs.h"
+#include "joystick.h"
 #include "common.h"
 #include "zlib-helpers.h"
 
@@ -71,12 +72,7 @@ static void pad_string(char *s, char c, int len) {
 /* in keys.c */
 //extern void c_mouse_close();
 
-/* from joystick.c */
 #ifdef PC_JOYSTICK
-extern int c_open_joystick();
-extern void c_calculate_joystick_parms();
-extern void c_close_joystick();
-extern void c_calibrate_joystick();
 extern long js_timelimit;
 #endif
 
@@ -766,11 +762,11 @@ typedef enum interface_enum_t {
     OPT_CPU = 0,
     OPT_ALTCPU,
     OPT_PATH,
-    OPT_MODE,
+    //OPT_MODE,
     OPT_COLOR,
-    OPT_SOUND,
+    OPT_VOLUME,
     OPT_JOYSTICK,
-    OPT_CALIBRATE, // (NOP)
+    OPT_CALIBRATE,
     OPT_JS_RANGE,
     OPT_ORIGIN_X,
     OPT_ORIGIN_Y,
@@ -784,18 +780,18 @@ typedef enum interface_enum_t {
 
 static const char *options[] =
 {
-    " CPU%     : ",                   /* 0 */
-    " ALT CPU% : ",                   /* 0 */
+    " CPU%     : ",
+    " ALT CPU% : ",
     " Path     : ",
-    " Mode     : ",
+    //" Mode     : ",
     " Color    : ",
-    " Sound    : ",
-    " Joystick : ",                   /* 5 */
+    " Volume   : ",
+    " Joystick : ",
     " Calibrate  ",
     " JS Range : ",
     " Origin X : ",
     " Origin Y : ",
-    " JS Sens. : ",                   /* 10 */
+    " JS Sens. : ",
     " JS Sample: ",
     " Save Prefs ",
     " Quit       "
@@ -891,34 +887,37 @@ void c_interface_parameters()
                 temp[INTERFACE_PATH_MAX] = '\0';
                 break;
 
+#if 0
             case OPT_MODE:
                 sprintf(temp, "%s", (apple_mode == 0) ? "][+             " :
                         (apple_mode == 1) ? "][+ undocumented" :
                         "//e             ");
                 break;
+#endif
 
             case OPT_COLOR:
-                sprintf(temp, "%s", (color_mode == 0) ? "Black/White " :
-                        (color_mode == 1) ? "Lazy Color  " :
-                        (color_mode == 2) ? "Color       " :
-                        (color_mode == 3) ? "Lazy Interp." :
-                        "Interpolated");
+                sprintf(temp, "%s", (color_mode == COLOR) ? "Color       " :
+                        (color_mode == COLOR_INTERP) ? "Interpolated" : "Black/White ");
                 break;
 
-            case OPT_SOUND:
-                sprintf(temp, "%s", (sound_mode == 0) ? "Off       " :
-                        "PC Speaker");
+            case OPT_VOLUME:
+                if (sound_volume == 0)
+                {
+                    snprintf(temp, TEMPSIZE, "%s", "Off       ");
+                }
+                else
+                {
+                    snprintf(temp, TEMPSIZE, "%d", sound_volume);
+                }
                 break;
 
             case OPT_JOYSTICK:
-                sprintf(temp, "%s", (joy_mode == JOY_KYBD)    ? "Linear     " :
-                        (joy_mode == JOY_DIGITAL) ? "Digital    " :
-                        (joy_mode == JOY_PCJOY)   ? "PC Joystick" :
-                        "Off        ");
+                snprintf(temp, TEMPSIZE, "%s", (joy_mode == JOY_KPAD) ? "Emulated on Keypad" :
+                        (joy_mode == JOY_PCJOY) ? "PC Joystick      " : "Off              ");
                 break;
 
             case OPT_CALIBRATE:
-                strcpy( temp, "" );
+                strncpy( temp, "", TEMPSIZE );
                 break;
 
             case OPT_JS_RANGE:
@@ -1074,6 +1073,7 @@ void c_interface_parameters()
                 }
                 break;
 
+#if 0
             case OPT_MODE:
                 apple_mode--;
                 if (apple_mode < 0)
@@ -1081,11 +1081,12 @@ void c_interface_parameters()
                     apple_mode = 2;
                 }
                 break;
+#endif
 
             case OPT_COLOR:
                 if (color_mode == 0)
                 {
-                    color_mode = 4;
+                    color_mode = NUM_COLOROPTS-1;
                 }
                 else
                 {
@@ -1093,32 +1094,31 @@ void c_interface_parameters()
                 }
                 break;
 
-            case OPT_SOUND:
-                if (sound_mode == 0)
+            case OPT_VOLUME:
+                if (sound_volume > 0)
                 {
-                    sound_mode = 1;
-                }
-                else
-                {
-                    --sound_mode;
+                    --sound_volume;
                 }
                 break;
 
             case OPT_JOYSTICK:
-#ifdef PC_JOYSTICK
+                if (joy_mode == JOY_PCJOY)
+                {
+                    c_close_joystick();
+                }
+
                 if (joy_mode == 0)
                 {
-                    joy_mode = 3;
+                    joy_mode = NUM_JOYOPTS-1;
                 }
-#else
-                if (joy_mode == 0)
-                {
-                    joy_mode = 2;
-                }
-#endif
                 else
                 {
                     --joy_mode;
+                }
+
+                if (joy_mode == JOY_PCJOY)
+                {
+                    c_open_joystick();
                 }
                 break;
 
@@ -1206,6 +1206,7 @@ void c_interface_parameters()
                 }
                 break;
 
+#if 0
             case OPT_MODE:
                 apple_mode++;
                 if (apple_mode > 2)
@@ -1213,38 +1214,45 @@ void c_interface_parameters()
                     apple_mode = 0;
                 }
                 break;
+#endif
 
             case OPT_COLOR:
-                color_mode++;
-                if (color_mode > 4)
+                if (color_mode == NUM_COLOROPTS-1)
                 {
                     color_mode = 0;
                 }
+                else
+                {
+                    ++color_mode;
+                }
                 break;
 
-            case OPT_SOUND:
-                sound_mode++;
-                if (sound_mode > 1)
+            case OPT_VOLUME:
+                sound_volume++;
+                if (sound_volume > 10)
                 {
-                    sound_mode = 0;
+                    sound_volume = 10;
                 }
                 break;
 
             case OPT_JOYSTICK:
-#ifdef PC_JOYSTICK
-                if (joy_mode == 3)
+                if (joy_mode == JOY_PCJOY)
+                {
+                    c_close_joystick();
+                }
+
+                if (joy_mode == NUM_JOYOPTS-1)
                 {
                     joy_mode = 0;
                 }
-#else
-                if (joy_mode == 2)
-                {
-                    joy_mode = 0;
-                }
-#endif
                 else
                 {
                     ++joy_mode;
+                }
+
+                if (joy_mode == JOY_PCJOY)
+                {
+                    c_open_joystick();
                 }
                 break;
 
@@ -1299,27 +1307,17 @@ void c_interface_parameters()
         {
             timing_initialize();
             video_set(0);                       /* redo colors */
-#ifdef PC_JOYSTICK
-            if (joy_mode == JOY_PCJOY)
-            {
-                c_close_joystick();             /* close the joystick */
-                c_open_joystick();              /* reopen the joystick */
-                half_joy_range = joy_range/2;
-                c_calculate_joystick_parms();
-            }
-            else
-            {
-                c_close_joystick();
-            }
 
-#endif
+#if 0
             /* reboot machine if different */
             if (current_mode != apple_mode)
             {
                 // FIXME : broken ...
-                //cpu65_interrupt(RebootSig);
+                cpu65_interrupt(RebootSig);
             }
+#endif
 
+            c_initialize_sound_hooks();
             c_interface_exit();
             return;
         }
@@ -1403,14 +1401,12 @@ void c_interface_parameters()
                 }
             }
 
-#ifdef PC_JOYSTICK
             /* calibrate joystick */
             if ((ch == 13) && (option == OPT_CALIBRATE))
             {
                 c_calibrate_joystick();
             }
 
-#endif
             /* save settings */
             if ((ch == 13) && (option == OPT_SAVE))
             {
@@ -1471,14 +1467,12 @@ void c_interface_parameters()
                     c_interface_print_screen( screen );
                     c_eject_6( 1 );
                     c_interface_print_screen( screen );
-#ifdef PC_JOYSTICK
                     c_close_joystick();
-#endif
 #ifdef __linux__
                     LOG("Back to Linux, w00t!\n");
 #endif
                     video_shutdown();
-                    //audio_shutdown();
+                    //audio_shutdown(); TODO : fixme ...
                     exit( 0 );
                 }
 

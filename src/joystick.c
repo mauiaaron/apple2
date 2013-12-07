@@ -14,7 +14,10 @@
  *
  */
 
+#ifdef PC_JOYSTICK
 #include <linux/joystick.h>
+#endif
+
 #include <stdio.h>
 #include <string.h>
 #include <fcntl.h>
@@ -22,12 +25,14 @@
 #include <sys/ioctl.h>
 #include <values.h>
 
+#include "joystick.h"
 #include "interface.h"
 #include "video.h"
 #include "keys.h"
 #include "misc.h"
 #include "prefs.h"
 
+#ifdef PC_JOYSTICK
 int js_fd = -1;                 /* joystick file descriptor */
 struct JS_DATA_TYPE js;         /* joystick data struct */
 
@@ -44,11 +49,12 @@ float
     js_adjusthigh_x,
     js_adjusthigh_y;
 
-
 /* -------------------------------------------------------------------------
-    c_open_joystick() - opens joystick device and sets timelimit value
+    c_open_pc_joystick() - opens joystick device and sets timelimit value
    ------------------------------------------------------------------------- */
-int c_open_joystick() {
+static void c_calculate_pc_joystick_parms();
+int c_open_pc_joystick()
+{
     if (js_fd < 0)
     {
         if ((js_fd = open("/dev/js0", O_RDONLY)) < 0)
@@ -71,13 +77,17 @@ int c_open_joystick() {
         }
     }
 
+    half_joy_range = joy_range/2;
+    c_calculate_pc_joystick_parms();
+
     return 0; /* no problem */
 }
 
 /* -------------------------------------------------------------------------
-    c_close_joystick() - closes joystick device
+    c_close_pc_joystick() - closes joystick device
    ------------------------------------------------------------------------- */
-void c_close_joystick() {
+void c_close_pc_joystick()
+{
     if (js_fd < 0)
     {
         return;
@@ -89,10 +99,11 @@ void c_close_joystick() {
 
 
 /* -------------------------------------------------------------------------
- * c_calculate_joystick_parms() - calculates parameters for joystick
+ * c_calculate_pc_joystick_parms() - calculates parameters for joystick
  * device.  assumes that device extremes have already been determined.
  * ------------------------------------------------------------------------- */
-void c_calculate_joystick_parms() {
+static void c_calculate_pc_joystick_parms()
+{
 
     js_lowerrange_x = js_center_x - js_min_x;
     js_upperrange_x = js_max_x - js_center_x;
@@ -109,11 +120,12 @@ void c_calculate_joystick_parms() {
 }
 
 /* -------------------------------------------------------------------------
-    c_calibrate_joystick() - calibrates joystick.  determines extreme
+    c_calibrate_pcjoystick() - calibrates joystick.  determines extreme
     and center coordinates.  assumes that it can write to the interface
     screen.
    ------------------------------------------------------------------------- */
-void c_calibrate_joystick() {
+static void c_calibrate_pc_joystick()
+{
     int almost_done, done;
     unsigned char x_val, y_val;
 
@@ -126,7 +138,7 @@ void c_calibrate_joystick() {
     /* open joystick device if not open */
     if (js_fd < 0)
     {
-        if (c_open_joystick())          /* problem opening device */
+        if (c_open_pc_joystick())          /* problem opening device */
         {
             c_interface_print(
                 1, 21, 0, "                                      " );
@@ -198,7 +210,7 @@ void c_calibrate_joystick() {
     printf("js_center_y = %d\n", js_center_y);
     printf("\n");
 
-    c_calculate_joystick_parms();       /* determine the parms */
+    c_calculate_pc_joystick_parms();       /* determine the parms */
 
     printf("js_lowerrange_x = %d\n", js_lowerrange_x);
     printf("js_lowerrange_y = %d\n", js_lowerrange_y);
@@ -238,3 +250,69 @@ void c_calibrate_joystick() {
     c_interface_redo_bottom();
     video_sync(0);
 }
+#endif // PC_JOYSTICK
+
+#ifdef KEYPAD_JOYSTICK
+static void c_calibrate_keypad_joystick()
+{
+    // TODO ....
+}
+#endif
+
+#ifdef TOUCH_JOYSTICK
+// TBD ...
+#endif
+
+/* ---------------------------------------------------------------------- */
+
+void c_open_joystick()
+{
+#ifdef PC_JOYSTICK
+    if (joy_mode == JOY_PCJOY)
+    {
+        c_open_pc_joystick();
+    }
+#endif
+
+#ifdef KEYPAD_JOYSTICK
+    if (joy_mode == JOY_KPAD)
+    {
+        // NOP
+    }
+#endif
+}
+
+void c_close_joystick()
+{
+#ifdef PC_JOYSTICK
+    if (joy_mode == JOY_PCJOY)
+    {
+        c_close_pc_joystick();
+    }
+#endif
+
+#ifdef KEYPAD_JOYSTICK
+    if (joy_mode == JOY_KPAD)
+    {
+        // NOP
+    }
+#endif
+}
+
+void c_calibrate_joystick()
+{
+#ifdef PC_JOYSTICK
+    if (joy_mode == JOY_PCJOY)
+    {
+        c_calibrate_pc_joystick();
+    }
+#endif
+
+#ifdef KEYPAD_JOYSTICK
+    if (joy_mode == JOY_KPAD)
+    {
+        c_calibrate_keypad_joystick();
+    }
+#endif
+}
+

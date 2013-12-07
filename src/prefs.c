@@ -27,6 +27,7 @@
 #include "interface.h"
 #include "timing.h"
 #include "cpu.h"
+#include "joystick.h"
 
 #define         PRM_NONE                        0
 #define         PRM_SPEED                       1
@@ -34,13 +35,13 @@
 #define         PRM_MODE                        2
 #define         PRM_DISK_PATH                   3
 #define         PRM_HIRES_COLOR                 4
-#define         PRM_SOUND                       5
+#define         PRM_VOLUME                      5
 #define         PRM_JOY_INPUT                   6
 #define         PRM_JOY_RANGE                   7
 #define         PRM_JOY_OX                      8
 #define         PRM_JOY_OY                      9
 #define         PRM_JOY_PC_CALIBRATE            10
-#define         PRM_JOY_KYBD_SENSITIVITY        11
+#define         PRM_JOY_KPAD_SENSITIVITY        11
 #define         PRM_ROM_PATH                    12
 
 
@@ -48,9 +49,9 @@ char system_path[SYSSIZE];
 char disk_path[DISKSIZE];
 
 int apple_mode;
-int sound_mode;
-int color_mode;
-short joy_mode;
+int sound_volume;
+color_mode_t color_mode;
+joystick_mode_t joy_mode;
 short joy_step;
 short joy_center_x;
 short joy_center_y;
@@ -85,7 +86,7 @@ static const struct match_table prefs_table[] =
     { "disk_path", PRM_DISK_PATH },
     { "path", PRM_DISK_PATH },
     { "color", PRM_HIRES_COLOR },
-    { "sound", PRM_SOUND },
+    { "volume", PRM_VOLUME },
     { "joystick", PRM_JOY_INPUT },
     { "joy range", PRM_JOY_RANGE },
     { "joystick range", PRM_JOY_RANGE },
@@ -94,7 +95,7 @@ static const struct match_table prefs_table[] =
     { "origin_y", PRM_JOY_OY },
     { "pc joystick parms", PRM_JOY_PC_CALIBRATE },
     { "pc_joystick_parms", PRM_JOY_PC_CALIBRATE },
-    { "sensitivity", PRM_JOY_KYBD_SENSITIVITY },
+    { "sensitivity", PRM_JOY_KPAD_SENSITIVITY },
     { "system path", PRM_ROM_PATH },
     { "system_path", PRM_ROM_PATH },
     { 0, PRM_NONE }
@@ -110,37 +111,44 @@ static const struct match_table modes_table[] =
 
 static const struct match_table color_table[] =
 {
-    { "black/white", NO_COLOR },
-    { "lazy color", LAZY_COLOR },
+    { "black/white", COLOR_NONE },
+    /*{ "lazy color", LAZY_COLOR }, deprecated*/
     { "color", COLOR },
-    { "lazy interpolated", LAZY_INTERP },
-    { "interpolated", INTERP },
+    /*{ "lazy interpolated", LAZY_INTERP }, deprecated*/
+    { "interpolated", COLOR_INTERP },
     { "off", 0 },
     { "on", COLOR },
     { 0, COLOR }
 };
 
-static const struct match_table sound_table[] =
+static const struct match_table volume_table[] =
 {
-    { "off", 0 },
-    { "pc_speaker", 1 },
-    { "on", 1 },
-    { 0, 1 },
+    { "0", 0 },
+    { "1", 1 },
+    { "2", 2 },
+    { "3", 3 },
+    { "4", 4 },
+    { "5", 5 },
+    { "6", 6 },
+    { "7", 7 },
+    { "8", 8 },
+    { "9", 9 },
+    { "10", 10 },
+    { 0, 10 },
 };
 
 static const struct match_table joy_input_table[] =
 {
     { "off", JOY_OFF },
-    { "keyboard", JOY_KYBD },
-    { "linear", JOY_KYBD },
+#ifdef KEYPAD_JOYSTICK
+    { "joy keypad", JOY_KPAD },
+    { "joy_keypad", JOY_KPAD },
+#endif
 #ifdef PC_JOYSTICK
     { "pc joystick", JOY_PCJOY },
     { "pc_joystick", JOY_PCJOY },
 #endif                          /* PC_JOYSTICK */
-#if 0
-    { "digital", JOY_DIGITAL },
-#endif                          /* 0 */
-    { 0, JOY_KYBD }
+    { 0, JOY_OFF }
 };
 
 /* Find the number assigned to KEYWORD in a match table PARADIGM. If no match,
@@ -288,8 +296,8 @@ void load_settings(void)
                 color_mode = match(color_table, argument);
                 break;
 
-            case PRM_SOUND:
-                sound_mode = match(sound_table, argument);
+            case PRM_VOLUME:
+                sound_volume = match(volume_table, argument);
                 break;
 
             case PRM_JOY_INPUT:
@@ -398,10 +406,9 @@ void load_settings(void)
                 }
 
                 c_open_joystick();
-                c_calculate_joystick_parms();   /* calculate the associated parms */
 #endif
 
-            case PRM_JOY_KYBD_SENSITIVITY:
+            case PRM_JOY_KPAD_SENSITIVITY:
                 joy_step = strtol(argument, 0, 0);
                 if (joy_step < 1)
                 {
@@ -466,7 +473,7 @@ bool save_settings(void)
             "mode = %s\n"
             "disk path = %s\n"
             "color = %s\n"
-            "sound = %s\n"
+            "volume = %s\n"
             "joystick = %s\n"
             "joystick range = %d\n"
             "origin_x = %d\n"
@@ -478,7 +485,7 @@ bool save_settings(void)
             reverse_match(modes_table, apple_mode),
             disk_path,
             reverse_match(color_table, color_mode),
-            reverse_match(sound_table, sound_mode),
+            reverse_match(volume_table, sound_volume),
             reverse_match(joy_input_table, joy_mode),
             joy_range,
             joy_center_x,

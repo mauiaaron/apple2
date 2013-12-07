@@ -46,7 +46,7 @@ static unsigned char video__int_font[3][0x4000];
 
 int video__current_page;        /* Current visual page */
 
-int video__strictcolors;
+int video__strictcolors = 1;// 0 is deprecated
 
 void video_loadfont(int first,
                     int quantity,
@@ -202,7 +202,7 @@ static void c_initialize_hires_values(void)
         }
     }
 
-    if (color_mode == 0)        /* Black and White */
+    if (color_mode == COLOR_NONE)        /* Black and White */
     {
         for (value = 0x00; value <= 0xFF; value++)
         {
@@ -220,6 +220,7 @@ static void c_initialize_hires_values(void)
             }
         }
     }
+#if 0
     else if (color_mode == LAZY_INTERP)            /* Lazy Interpolated color */
     {
         for (value = 0x00; value <= 0xFF; value++)
@@ -310,7 +311,8 @@ static void c_initialize_hires_values(void)
             }
         }
     }
-    else if (color_mode == INTERP)             /* Color and strict interpolation */
+#endif
+    else if (color_mode == COLOR_INTERP)             /* Color and strict interpolation */
     {
         for (value = 0x00; value <= 0xFF; value++)
         {
@@ -612,19 +614,7 @@ static void c_initialize_tables_video(void) {
 
 void video_set(int flags)
 {
-    if (color_mode == COLOR)
-    {
-        video__strictcolors = 1;        /* strict colors */
-    }
-    else if (color_mode == INTERP)
-    {
-        video__strictcolors = 2;        /* strict interpolation */
-    }
-    else
-    {
-        video__strictcolors = 0;        /* lazy coloration */
-
-    }
+    video__strictcolors = (color_mode == COLOR_INTERP) ? 2 : 1;
 
     c_initialize_hires_values();        /* precalculate hires values */
     c_initialize_row_col_tables();      /* precalculate hires offsets */
