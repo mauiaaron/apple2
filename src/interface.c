@@ -1129,8 +1129,9 @@ void c_interface_parameters()
                 if (joy_range > 10)
                 {
                     --joy_range;
-                    joy_center_x = joy_range/2;
-                    joy_center_y = joy_range/2;
+                    joy_center_x = joy_range>>1;
+                    joy_center_y = joy_range>>1;
+                    half_joy_range = joy_range>>1;
                 }
                 break;
 
@@ -1263,8 +1264,9 @@ void c_interface_parameters()
                 if (joy_range < 256)
                 {
                     ++joy_range;
-                    joy_center_x = joy_range/2;
-                    joy_center_y = joy_range/2;
+                    joy_center_x = joy_range>>1;
+                    joy_center_y = joy_range>>1;
+                    half_joy_range = joy_range>>1;
                 }
                 break;
 
@@ -1316,7 +1318,6 @@ void c_interface_parameters()
                 cpu65_interrupt(RebootSig);
             }
 #endif
-
             c_initialize_sound_hooks();
             c_interface_exit();
             return;
@@ -1404,6 +1405,8 @@ void c_interface_parameters()
             /* calibrate joystick */
             if ((ch == 13) && (option == OPT_CALIBRATE))
             {
+                c_close_joystick();
+                c_open_joystick();
                 c_calibrate_joystick();
             }
 

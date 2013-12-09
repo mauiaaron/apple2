@@ -120,7 +120,7 @@ static void c_calculate_pc_joystick_parms()
 }
 
 /* -------------------------------------------------------------------------
-    c_calibrate_pcjoystick() - calibrates joystick.  determines extreme
+    c_calibrate_pc_joystick() - calibrates joystick.  determines extreme
     and center coordinates.  assumes that it can write to the interface
     screen.
    ------------------------------------------------------------------------- */

@@ -354,8 +354,6 @@ iie_hires_on_80store_off:
 
 .comm		joy_trigger0, 2
 .comm		joy_trigger1, 2
-.comm		joy_trigger2, 2
-.comm		joy_trigger3, 2
 
 E(read_button0)
 		movb	SN(joy_button0), %al
@@ -371,44 +369,50 @@ E(read_button2)
 
 E(read_gc0)
 		cmpw	$0xFF, joy_trigger0
-		je	read_gc0_cont
-		incw	joy_trigger0
+		jle	read_gc0_cont
+read_gc0_lo:
+                movb    $0, %al
+                ret
 read_gc0_cont:
+                incw    joy_trigger0
 		movw	joy_trigger0, %ax
 		cmpw	%ax, SN(joy_x)
-		jge	read_gc0_ff	/* XXXX is this correct? */
-		movb	$0, %al
-		ret
-read_gc0_ff:
+		jl	read_gc0_reset
 		movb	$0xFF, %al
 		ret
+read_gc0_reset:
+                movw    $0xFF, joy_trigger0
+                jmp     read_gc0_lo
 
 E(read_gc1)
 		cmpw	$0xFF, joy_trigger1
-		je	read_gc1_cont
-		incw	joy_trigger1
-read_gc1_cont:
-		movw	joy_trigger1, %ax
-		cmpw	%ax, SN(joy_y)
-		jge	read_gc1_ff
+		jle	read_gc1_cont
+read_gc1_lo:
 		movb	$0, %al
 		ret
-read_gc1_ff:
+read_gc1_cont:
+                incw    joy_trigger1
+		movw	joy_trigger1, %ax
+		cmpw	%ax, SN(joy_y)
+		jl	read_gc1_reset
 		movb	$0xFF, %al
 		ret
+read_gc1_reset:
+                movw    $0xFF, joy_trigger0
+                jmp     read_gc1_lo
 
-/* HACK not doing anything... */
+/* NOTE : Game Controller axis 2 & 3 is not hooked up on a normal //e */
 E(iie_read_gc2)
+                movb    $0, %al
 		ret
 
 E(iie_read_gc3)
+                movb    $0, %al
 		ret
 
 E(read_gc_strobe)
-		movb	$0, joy_trigger0
-		movb	$0, joy_trigger1
-		movb	$0, joy_trigger2
-		movb	$0, joy_trigger3
+		movw	$0, joy_trigger0
+		movw	$0, joy_trigger1
 		ret
 
 E(iie_c080)
