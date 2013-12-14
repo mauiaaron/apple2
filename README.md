@@ -13,6 +13,8 @@ Project Goals
   to play with a wide swath of fundamental tech : virtual CPU, virtual machines, assembly language programming, video
   and audio programming to name a few...  So you might say that the process and practice is as important as the goals.
 
+![Apple //ix](https://raw.github.com/mauiaaron/apple2/master/docs/Apple2ix.png "Apple //ix")
+
 Status Update
 -------------
 
@@ -23,6 +25,8 @@ Status Update
   also a generic C target) in addition to maintaining existing x86 assembly routines
 * Before any significant platform/architecture porting is started, need to develop unit tests!!! :-)
 
+![Public Domain Mystery House Disk Image](https://raw.github.com/mauiaaron/apple2/master/docs/MysteryHouse.png "Public Domain Mystery House Disk Image")
+
 Semi-Ordered TODO
 -----------------
 
@@ -32,4 +36,6 @@ Semi-Ordered TODO
 * MacOS port
 * ARM tablets (iOS, Android, ...)
 * General refactoring for modularity, clarity, and portability as I go (and have tests to double-check stuff :-)
+
+![DOS 3.3](https://raw.github.com/mauiaaron/apple2/master/docs/DOS33.png "DOS 3.3 Applesoft BASIC and //e monitor")
 
