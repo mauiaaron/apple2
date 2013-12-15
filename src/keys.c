@@ -289,15 +289,17 @@ void c_periodic_update(int dummysig) {
                 SoundSystemUnpause();
                 pthread_mutex_unlock(&interface_mutex);
                 break;
-#if 0
+
             case kF8:
-                c_interface_words();
-                break;
-#endif
-            case kF9:
                 pthread_mutex_lock(&interface_mutex);
-                timing_toggle_cpu_speed();
+                SoundSystemPause();
+                c_interface_credits();
+                SoundSystemUnpause();
                 pthread_mutex_unlock(&interface_mutex);
+                break;
+
+            case kF9:
+                timing_toggle_cpu_speed();
                 break;
 
             case kF10:
@@ -542,3 +544,28 @@ int c_mygetch(int block)
 
     return retval;
 }
+
+void c_keys_set_key(int key)
+{
+    next_key = key;
+}
+
+bool c_keys_is_interface_key(int key)
+{
+    switch (key)
+    {
+        case kF1:
+        case kF2:
+        case kF5:
+#ifdef DEBUGGER
+        case kF7:
+#endif
+        case kF8:
+        case kF10:
+            return true;
+        default:
+            break;
+    }
+    return false;
+}
+

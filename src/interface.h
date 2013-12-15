@@ -25,7 +25,8 @@ void c_interface_redo_bottom(); /* bit of a HACK? */
 void c_load_interface_font();
 void c_interface_keyboard_layout();
 void c_interface_parameters();
-void c_interface_exit();
+void c_interface_credits();
+void c_interface_exit(int ch);
 void c_interface_translate_screen(char screen[24][INTERFACE_SCREEN_X+1]);
 void c_interface_select_diskette(int);
 #endif

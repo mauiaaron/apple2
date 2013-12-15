@@ -409,10 +409,17 @@ static int c_interface_disk_select(const struct dirent *e)
     c_interface_exit()
    ------------------------------------------------------------------------- */
 
-void c_interface_exit()
+void c_interface_exit(int ch)
 {
-    video_setpage(!!(softswitches & SS_SCREEN));
-    video_redraw();
+    if (c_keys_is_interface_key(ch))
+    {
+        c_keys_set_key(ch);
+    }
+    else
+    {
+        video_setpage(!!(softswitches & SS_SCREEN));
+        video_redraw();
+    }
 }
 
 /* -------------------------------------------------------------------------
@@ -455,7 +462,7 @@ void c_interface_select_diskette( int drive )
     int i, entries;
     pid_t pid;
     static int curpos=0;
-    int ch;
+    int ch = -1;
 
     screen[ 1 ][ DRIVE_X ] = (drive == 0) ? 'A' : 'B';
 
@@ -604,7 +611,7 @@ void c_interface_select_diskette( int drive )
             {
                 curpos = entries - 1;
             }
-            else if (ch == kESC)
+            else if ((ch == kESC) || c_keys_is_interface_key(ch))
             {
                 break;
             }
@@ -751,7 +758,7 @@ void c_interface_select_diskette( int drive )
 
     } while (nextdir);
 
-    c_interface_exit();
+    c_interface_exit(ch);
 }
 
 /* -------------------------------------------------------------------------
@@ -828,7 +835,6 @@ void c_interface_parameters()
       "|                                                                              |",
       "|               For interface help press '?' ... ESC exits menu                |",
       "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||" };
-
 
     int i;
     int ch;
@@ -1305,7 +1311,7 @@ void c_interface_parameters()
                 break;
             }
         }
-        else if (ch == kESC)                           /* exit menu */
+        else if ((ch == kESC) || c_keys_is_interface_key(ch))
         {
             timing_initialize();
             video_set(0);                       /* redo colors */
@@ -1319,7 +1325,7 @@ void c_interface_parameters()
             }
 #endif
             c_initialize_sound_hooks();
-            c_interface_exit();
+            c_interface_exit(ch);
             return;
         }
         else if ((ch == '?') && (option != OPT_PATH))
@@ -1485,54 +1491,148 @@ void c_interface_parameters()
     }
 }
 
-#if 0
 /* -------------------------------------------------------------------------
-    c_interface_words() - this is not valid anymore.
-    if anyone has his email, let the maintainer know!
+    c_interface_credits() - Credits and politics
    ------------------------------------------------------------------------- */
 
-void c_interface_words()
+void c_interface_credits()
 {
     char screen[24][INTERFACE_SCREEN_X+1] =
-    { "||||||||||||||||||||||||||||||||||||||||",
-      "|    Apple II+ Emulator Version 0.01   |",
-      "||||||||||||||||||||||||||||||||||||||||",
-      "| If you have problems with your       |",
-      "| keyboard concerning the mapping of   |",
-      "| various keys, please let me know.    |",
-      "| I use a Swedish keyboard for myself  |",
-      "| and the scancodes may differ from US |",
-      "| keyboards (or other countries as     |",
-      "| well). Currently, my email address   |",
-      "| is: d91a1bo@meryl.csd.uu.se. This    |",
-      "| address is valid at least one more   |",
-      "| year, i.e. as long as I am Computer  |",
-      "| Science student at the University    |",
-      "| of Uppsala. \"...and there were much  |",
-      "| rejoicing! oyeeeeeh\"                 |",
-      "|                                      |",
-      "|                                      |",
-      "|                                      |",
-      "|                                      |",
-      "|              / Alexander  Oct 9 1994 |",
-      "||||||||||||||||||||||||||||||||||||||||",
-      "|       (Press any key to exit)        |",
-      "||||||||||||||||||||||||||||||||||||||||" };
+    //1.  5.  10.  15.  20.  25.  30.  35.  40.  45.  50.  55.  60.  65.  70.  75.  80.",
+    { "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||",
+      "|                                                                              |",
+      "|                                @ Apple //ix @                                |",
+      "|                                                                              |",
+      "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||",
+      "|                                                                              |",
+      "|                                                                              |",
+      "|                                                                              |",
+      "|                                                                              |",
+      "|                                                                              |",
+      "|                                                                              |",
+      "|                                                                              |",
+      "|                                                                              |",
+      "|                                                                              |",
+      "|                                                                              |",
+      "|                                                                              |",
+      "|                                                                              |",
+      "|                                                                              |",
+      "|                                                                              |",
+      "|                                                                              |",
+      "|                                                                              |",
+      "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||",
+      "|                                ESC to begin!                                 |",
+      "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||" };
+#define SCROLL_AREA_X 2
+#define SCROLL_AREA_Y 5
+#define SCROLL_AREA_HEIGHT 16
 
-    int i;
+#define SCROLL_LENGTH 54
+    char credits[SCROLL_LENGTH][INTERFACE_SCREEN_X+1-(SCROLL_AREA_X*2)]=
+    //1.  5.  10.  15.  20.  25.  30.  35.  40.  45.  50.  55.  60.  65.  70.  75.  80.",
+      { "                                                                            ",
+        "                  An Apple //e Emulator for POSIX Systems!                  ",
+        "                                                                            ",
+        "WELCOME!                                                                    ",
+        "                                                                            ",
+        " > @ @ keys will scroll this page                                           ",
+        " > ESC key will exit this page and begin emulation                          ",
+        " > F10 will show the emulator preferences menu                              ",
+        " > F8 will reshow this page                                                 ",
+        " > F5 will show the keyboard layout menu                                    ",
+        " > F1 and F2 will open the diskette selection menus                         ",
+        "                                                                            ",
+        "AUTHORS/CREDITS                                                             ",
+        "                                                                            ",
+        "Copyright 1994 Alexander Jean-Claude Bottema                                ",
+        "Copyright 1995 Stephen Lee                                                  ",
+        "Copyright 1997, 1998 Aaron Culliney                                         ",
+        "Copyright 1998, 1999, 2000 Michael Deutschmann                              ",
+        "Copyright 2013+ Aaron Culliney                                              ",
+        "                                                                            ",
+        "ADDITIONAL CREDITS                                                          ",
+        "                                                                            ",
+        "This software uses various Open Source software libraries, including:       ",  
+        "                                                                            ",
+        " > Compression routines from the Zlib project -- http://zlib.net            ",
+        " > OpenAL audio library -- http://sourceforge.net/projects/openal-soft      ",
+        "                                                                            ",
+        "LICENSE                                                                     ",
+        "                                                                            ",
+        "This Apple //ix emulator source code is subject to the GNU General Public   ",
+        "License version 2 or later (your choice) as published by the Free Software  ",
+        "Foundation.  https://fsf.org                                                ",
+        "                                                                            ",
+        "Emulator source is freely available at https://github.com/mauiaaron/apple2  ",
+        "                                                                            ",
+        "FREEDOM                                                                     ",
+        "                                                                            ",
+        "In a world increasing constrained by digital walled gardens and draconian IP",
+        "laws, these organizations are fighting for your computing freedom.  Please  ",
+        "consider donating to them:                                                  ",
+        "                                                                            ",
+        " > Free Software Foundation       -- https://fsf.org                        ",
+        " > Electronic Frontier Foundation -- https://eff.org                        ",
+        "                                                                            ",
+        "3RD PARTY SOFTWARE                                                          ",
+        "                                                                            ",
+        " > By using this software you agree to comply with all Intellectual Pooperty",
+        "   laws in your jurisdiction                                                ",
+        "                                                                            ",
+        " > ROM images used by the emulator are copyright Apple Computer             ",
+        "                                                                            ",
+        " > Disk images are copyright by various third parties                       ",
+        "                                                                            " };
 
     video_setpage( 0 );
+
+    screen[ 2 ][ 33 ] = MOUSETEXT_BEGIN + 0x01;
+    screen[ 2 ][ 46 ] = MOUSETEXT_BEGIN + 0x00;
+
+    credits[ 5 ][ 3 ] = MOUSETEXT_BEGIN + 0x0b;
+    credits[ 5 ][ 5 ] = MOUSETEXT_BEGIN + 0x0a;
 
     c_interface_translate_screen( screen );
     c_interface_print_screen( screen );
 
-    while (c_mygetch(1) == -1)
+    int pos = 0;
+    int ch = -1;
+    for (;;)
     {
+        for (int i=0, p=pos; i<SCROLL_AREA_HEIGHT; i++)
+        {
+            c_interface_print(SCROLL_AREA_X, SCROLL_AREA_Y+i, 2, credits[p]);
+            p = (p+1) % SCROLL_LENGTH;
+        }
+
+        while ((ch = c_mygetch(1)) == -1)
+        {
+        }
+
+        if (ch == kUP)
+        {
+            --pos;
+            if (pos < 0)
+            {
+                pos = 0;
+            }
+        }
+        else if (ch == kDOWN)
+        {
+            ++pos;
+            if (pos >= SCROLL_LENGTH-SCROLL_AREA_HEIGHT)
+            {
+                pos = SCROLL_LENGTH-SCROLL_AREA_HEIGHT-1;
+            }
+        }
+        else if ((ch == kESC) || c_keys_is_interface_key(ch))
+        {
+            break;
+        }
     }
 
-    c_interface_exit();
+    c_interface_exit(ch);
 }
-#endif /* if 0 */
 
 /* -------------------------------------------------------------------------
     c_interface_keyboard_layout()
@@ -1599,13 +1699,11 @@ void c_interface_keyboard_layout()
 
     video_setpage( 0 );
 
-    // arrows
     screen[ 6 ][ 68 ] = MOUSETEXT_BEGIN + 0x0b;
     screen[ 7 ][ 67 ] = MOUSETEXT_BEGIN + 0x08;
     screen[ 7 ][ 69 ] = MOUSETEXT_BEGIN + 0x15;
     screen[ 8 ][ 68 ] = MOUSETEXT_BEGIN + 0x0a;
 
-    // apple keys
     screen[ 8 ][ 25 ] = MOUSETEXT_BEGIN + 0x01;
     screen[ 8 ][ 47 ] = MOUSETEXT_BEGIN + 0x00;
     screen[ 11 ][ 14 ] = MOUSETEXT_BEGIN + 0x01;
@@ -1614,10 +1712,11 @@ void c_interface_keyboard_layout()
     c_interface_translate_screen(screen);
     c_interface_print_screen( screen );
 
-    while (c_mygetch(1) == -1)
+    int ch = -1;
+    while ((ch = c_mygetch(1)) == -1)
     {
     }
 
-    c_interface_exit();
+    c_interface_exit(ch);
 }
 

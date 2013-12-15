@@ -1296,7 +1296,7 @@ void c_do_debugging() {
 
         if (ch == kESC)
         {
-            c_interface_exit();
+            c_interface_exit(-1);
             return;
         }
         else

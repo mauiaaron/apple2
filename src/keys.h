@@ -86,5 +86,7 @@ void c_periodic_update(int dummysig);
 void enter_debugger(void);
 int c_mygetch(int block);
 bool is_backspace(); // is the current key actually a backspace?
+void c_keys_set_key(int key);
+bool c_keys_is_interface_key(int key);
 
 #endif

@@ -773,10 +773,12 @@ void c_read_random() {
 
 static void main_thread(void *dummyptr) {
     struct timespec sleeptime = { .tv_sec=0, .tv_nsec=8333333 }; // 120Hz
+
+    c_keys_set_key(kF8); // show credits
     do
     {
-        nanosleep(&sleeptime, NULL);
         c_periodic_update(0);
+        nanosleep(&sleeptime, NULL);
     } while (1);
 }
 
