@@ -982,7 +982,7 @@ static void MB_Update()
         if (dbg_print != now)
         {
             dbg_print = now;
-            LOG("mockingboard g_nCpuCyclesFeedback:%d nNumSamplesError:%d n6522TimerPeriod:%f nIrqFreq:%f nNumSamplesPerPeriod:%d nNumSamples:%d nBytesRemaining:%d ", g_nCpuCyclesFeedback, nNumSamplesError, n6522TimerPeriod, nIrqFreq, nNumSamplesPerPeriod, nNumSamples, nBytesRemaining);
+            LOG("g_nCpuCyclesFeedback:%d nNumSamplesError:%d n6522TimerPeriod:%f nIrqFreq:%f nNumSamplesPerPeriod:%d nNumSamples:%d nBytesRemaining:%d ", g_nCpuCyclesFeedback, nNumSamplesError, n6522TimerPeriod, nIrqFreq, nNumSamplesPerPeriod, nNumSamples, nBytesRemaining);
         }
 #endif
 
@@ -1914,7 +1914,8 @@ static BYTE __stdcall PhasorIO(WORD PC, WORD nAddr, BYTE bWrite, BYTE nValue, UL
 //-----------------------------------------------------------------------------
 #ifdef APPLE2IX
 // HACK NOTE TODO FIXME : hardcoded for now (until we have dynamic emulation for other cards in these slots) ...
-//SS_CARDTYPE g_Slot4 = CT_Phasor
+//SS_CARDTYPE g_Slot4 = CT_Phasor;
+//SS_CARDTYPE g_Slot5 = CT_Empty;
 SS_CARDTYPE g_Slot4 = CT_MockingboardC;
 SS_CARDTYPE g_Slot5 = CT_MockingboardC;
 
