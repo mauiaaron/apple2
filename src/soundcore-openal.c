@@ -526,7 +526,7 @@ static long _ALProcessPlayBuffers(ALVoice *voice, ALuint *bytes_queued)
         ERRLOG("OOPS, alGetSourcei AL_BYTE_OFFSET : 0x%08x", err);
         return err;
     }
-    assert((play_offset >= 0) && (play_offset < voice->buffersize));
+    assert((play_offset >= 0)/* && (play_offset < voice->buffersize)*/);
 
     long q = voice->_queued_total_bytes/* + voice->index*/ - play_offset;
     assert(q >= 0);
