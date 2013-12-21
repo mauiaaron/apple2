@@ -45,6 +45,9 @@ extern int g_nCpuCyclesFeedback;
 extern double cpu_scale_factor;
 extern double cpu_altscale_factor;
 
+extern int gc_cycles_timer_0;
+extern int gc_cycles_timer_1;
+
 struct timespec timespec_diff(struct timespec start, struct timespec end, bool *negative);
 
 void timing_toggle_cpu_speed();

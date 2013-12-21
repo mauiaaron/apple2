@@ -2693,6 +2693,8 @@ continue:
                 movb    SN(cpu65__opcycles)(,%eax,1), %al
                 addb    DebugCycleCount, %al
                 addw    %ax, SN(cpu65_cycle_count)          // TODO: cycle counting is slightly incorrect, it should be done earlier per instruction ...
+                subl    %eax, SN(gc_cycles_timer_0)
+                subl    %eax, SN(gc_cycles_timer_1)
                 subw    %ax, SN(cpu65_cycles_to_execute)    //       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ orly?
                 jle     exit_cpu65_run
                 xorl    %eax, %eax

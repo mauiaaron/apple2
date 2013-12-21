@@ -352,9 +352,6 @@ iie_hires_on_80store_off:
 
 /*****************************************************************************/
 
-.comm		joy_trigger0, 2
-.comm		joy_trigger1, 2
-
 E(read_button0)
 		movb	SN(joy_button0), %al
 		ret
@@ -367,40 +364,6 @@ E(read_button2)
 		movb	SN(joy_button2), %al
 		ret
 
-E(read_gc0)
-		cmpw	$0xFF, joy_trigger0
-		jle	read_gc0_cont
-read_gc0_lo:
-                movb    $0, %al
-                ret
-read_gc0_cont:
-                incw    joy_trigger0
-		movw	joy_trigger0, %ax
-		cmpw	%ax, SN(joy_x)
-		jl	read_gc0_reset
-		movb	$0xFF, %al
-		ret
-read_gc0_reset:
-                movw    $0xFF, joy_trigger0
-                jmp     read_gc0_lo
-
-E(read_gc1)
-		cmpw	$0xFF, joy_trigger1
-		jle	read_gc1_cont
-read_gc1_lo:
-		movb	$0, %al
-		ret
-read_gc1_cont:
-                incw    joy_trigger1
-		movw	joy_trigger1, %ax
-		cmpw	%ax, SN(joy_y)
-		jl	read_gc1_reset
-		movb	$0xFF, %al
-		ret
-read_gc1_reset:
-                movw    $0xFF, joy_trigger0
-                jmp     read_gc1_lo
-
 /* NOTE : Game Controller axis 2 & 3 is not hooked up on a normal //e */
 E(iie_read_gc2)
                 movb    $0, %al
@@ -408,11 +371,6 @@ E(iie_read_gc2)
 
 E(iie_read_gc3)
                 movb    $0, %al
-		ret
-
-E(read_gc_strobe)
-		movw	$0, joy_trigger0
-		movw	$0, joy_trigger1
 		ret
 
 E(iie_c080)

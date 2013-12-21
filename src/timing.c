@@ -34,6 +34,9 @@ static bool alt_speed_enabled = false;
 double cpu_scale_factor = 1.0;
 double cpu_altscale_factor = 1.0;
 
+int gc_cycles_timer_0 = 0;
+int gc_cycles_timer_1 = 0;
+
 uint8_t emul_reinitialize;
 
 static unsigned int g_nCyclesExecuted; // # of cycles executed up to last IO access
