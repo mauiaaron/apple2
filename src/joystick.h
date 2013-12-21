@@ -19,6 +19,9 @@
 #ifndef _JOYSTICK_H_
 #define _JOYSTICK_H_
 
+#define JOY_RANGE 0x100
+#define HALF_JOY_RANGE 0x80
+
 void c_open_joystick();
 void c_close_joystick();
 void c_calibrate_joystick();

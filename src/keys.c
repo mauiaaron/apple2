@@ -27,6 +27,7 @@
 #include "prefs.h"
 #include "timing.h"
 #include "soundcore.h"
+#include "joystick.h"
 
 /* from misc.c */
 extern uid_t user, privileged;
@@ -242,8 +243,8 @@ void c_periodic_update(int dummysig) {
                 break;
 
             case J_C:
-                joy_x = joy_center_x;
-                joy_y = joy_center_y;
+                joy_x = HALF_JOY_RANGE;
+                joy_y = HALF_JOY_RANGE;
                 break;
 
             case kF1:
@@ -330,13 +331,13 @@ void c_periodic_update(int dummysig) {
 
         if (key_pressed[ SCODE_J_D ])
         {
-            if (joy_y < joy_range - joy_step)
+            if (joy_y < JOY_RANGE - joy_step)
             {
                 joy_y += joy_step;
             }
             else
             {
-                joy_y = joy_range-1;
+                joy_y = JOY_RANGE-1;
             }
         }
 
@@ -354,13 +355,13 @@ void c_periodic_update(int dummysig) {
 
         if (key_pressed[ SCODE_J_R ])
         {
-            if (joy_x < joy_range - joy_step)
+            if (joy_x < JOY_RANGE - joy_step)
             {
                 joy_x += joy_step;
             }
             else
             {
-                joy_x = joy_range-1;
+                joy_x = JOY_RANGE-1;
             }
         }
     }
@@ -375,11 +376,11 @@ void c_periodic_update(int dummysig) {
 
         x_val = (js.x < js_center_x)
                 ? (js.x - js_offset_x) * js_adjustlow_x
-                : (js.x - js_center_x) * js_adjusthigh_x + half_joy_range;
+                : (js.x - js_center_x) * js_adjusthigh_x + HALF_JOY_RANGE;
 
         y_val = (js.y < js_center_y)
                 ? (js.y - js_offset_y) * js_adjustlow_y
-                : (js.y - js_center_y) * js_adjusthigh_y + half_joy_range;
+                : (js.y - js_center_y) * js_adjusthigh_y + HALF_JOY_RANGE;
 
         joy_y = (y_val > 0xff) ? 0xff : (y_val < 0) ? 0 : y_val;
         joy_x = (x_val > 0xff) ? 0xff : (x_val < 0) ? 0 : x_val;

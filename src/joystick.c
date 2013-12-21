@@ -77,7 +77,6 @@ int c_open_pc_joystick()
         }
     }
 
-    half_joy_range = joy_range/2;
     c_calculate_pc_joystick_parms();
 
     return 0; /* no problem */
@@ -113,10 +112,10 @@ static void c_calculate_pc_joystick_parms()
     js_offset_x = js_min_x;
     js_offset_y = js_min_y;
 
-    js_adjustlow_x = (float)half_joy_range / (float)js_lowerrange_x;
-    js_adjustlow_y = (float)half_joy_range / (float)js_lowerrange_y;
-    js_adjusthigh_x = (float)half_joy_range / (float)js_upperrange_x;
-    js_adjusthigh_y = (float)half_joy_range / (float)js_upperrange_y;
+    js_adjustlow_x  = (float)HALF_JOY_RANGE / (float)js_lowerrange_x;
+    js_adjustlow_y  = (float)HALF_JOY_RANGE / (float)js_lowerrange_y;
+    js_adjusthigh_x = (float)HALF_JOY_RANGE / (float)js_upperrange_x;
+    js_adjusthigh_y = (float)HALF_JOY_RANGE / (float)js_upperrange_y;
 }
 
 /* -------------------------------------------------------------------------
@@ -236,12 +235,12 @@ static void c_calibrate_pc_joystick()
         x_val = (js.x < js_center_x)
                 ? (js.x - js_offset_x) * js_adjustlow_x
                 : (js.x - (js_center_x /*+js_offset_x*/)) * js_adjusthigh_x +
-                half_joy_range;
+                HALF_JOY_RANGE;
 
         y_val = (js.y < js_center_y)
                 ? (js.y - js_offset_y) * js_adjustlow_y
                 : (js.y - (js_center_y /*+js_offset_y*/)) * js_adjusthigh_y +
-                half_joy_range;
+                HALF_JOY_RANGE;
         sprintf(temp, "    x = %02x,   y = %02x", x_val, y_val);
         c_interface_print(1, 22, 0, temp);
         video_sync(0);

@@ -53,10 +53,6 @@ extern color_mode_t color_mode;
 /* generic joystick settings */
 extern joystick_mode_t joy_mode;
 extern short joy_step;
-extern short joy_center_x;
-extern short joy_center_y;
-extern short joy_range;
-extern short half_joy_range;
 
 #ifdef PC_JOYSTICK
 /* real joystick settings */

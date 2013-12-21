@@ -774,9 +774,6 @@ typedef enum interface_enum_t {
     OPT_VOLUME,
     OPT_JOYSTICK,
     OPT_CALIBRATE,
-    OPT_JS_RANGE,
-    OPT_ORIGIN_X,
-    OPT_ORIGIN_Y,
     OPT_JS_SENSE,
     OPT_JS_SAMPLE,
     OPT_SAVE,
@@ -795,9 +792,6 @@ static const char *options[] =
     " Volume   : ",
     " Joystick : ",
     " Calibrate  ",
-    " JS Range : ",
-    " Origin X : ",
-    " Origin Y : ",
     " JS Sens. : ",
     " JS Sample: ",
     " Save Prefs ",
@@ -924,18 +918,6 @@ void c_interface_parameters()
 
             case OPT_CALIBRATE:
                 strncpy( temp, "", TEMPSIZE );
-                break;
-
-            case OPT_JS_RANGE:
-                sprintf(temp, "%02x", joy_range);
-                break;
-
-            case OPT_ORIGIN_X:
-                sprintf(temp, "%02x", joy_center_x);
-                break;
-
-            case OPT_ORIGIN_Y:
-                sprintf(temp, "%02x", joy_center_y);
                 break;
 
             case OPT_JS_SENSE:
@@ -1131,30 +1113,6 @@ void c_interface_parameters()
             case OPT_CALIBRATE:
                 break;
 
-            case OPT_JS_RANGE:
-                if (joy_range > 10)
-                {
-                    --joy_range;
-                    joy_center_x = joy_range>>1;
-                    joy_center_y = joy_range>>1;
-                    half_joy_range = joy_range>>1;
-                }
-                break;
-
-            case OPT_ORIGIN_X:
-                if (joy_center_x > 0)
-                {
-                    joy_center_x--;
-                }
-                break;
-
-            case OPT_ORIGIN_Y:
-                if (joy_center_y > 0)
-                {
-                    joy_center_y--;
-                }
-                break;
-
             case OPT_JS_SENSE:
                 if (joy_step > 1)
                 {
@@ -1264,30 +1222,6 @@ void c_interface_parameters()
                 break;
 
             case OPT_CALIBRATE:
-                break;
-
-            case OPT_JS_RANGE:
-                if (joy_range < 256)
-                {
-                    ++joy_range;
-                    joy_center_x = joy_range>>1;
-                    joy_center_y = joy_range>>1;
-                    half_joy_range = joy_range>>1;
-                }
-                break;
-
-            case OPT_ORIGIN_X:
-                if (joy_center_x < joy_range-1)
-                {
-                    joy_center_x++;
-                }
-                break;
-
-            case OPT_ORIGIN_Y:
-                if (joy_center_y < joy_range-1)
-                {
-                    joy_center_y++;
-                }
                 break;
 
             case OPT_JS_SENSE:
