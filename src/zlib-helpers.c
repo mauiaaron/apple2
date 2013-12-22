@@ -23,6 +23,7 @@
                      Avoid some compiler warnings for input and output buffers
    ...
    xxx   1 Dec 2013  Added to Apple2ix emulator, replaced assertions with error value returns
+   xxx  22 Dec 2013  Switched to gz...() routines for simplicity and to be compatible with gzip
  */
 
 #include "misc.h"
@@ -33,207 +34,85 @@
 #define CHUNK 16384
 #define UNKNOWN_ERR 42
 
-static int _def(FILE *source, FILE *dest, const int level) {
-    int flush;
-    unsigned have;
-    z_stream strm;
-    unsigned char in[CHUNK];
-    unsigned char out[CHUNK];
-
-    /* allocate deflate state */
-    strm.zalloc = Z_NULL;
-    strm.zfree = Z_NULL;
-    strm.opaque = Z_NULL;
-    int ret = deflateInit(&strm, level);
-    if (ret != Z_OK) {
-        ERRLOG("OOPS deflateInit : %d", ret);
-        return ret;
-    }
-
-    /* compress until end of file */
-    do {
-        strm.avail_in = fread(in, 1, CHUNK, source);
-        if (ferror(source)) {
-            (void)deflateEnd(&strm);
-            ERRLOG("OOPS fread ...");
-            return Z_ERRNO;
-        }
-        flush = feof(source) ? Z_FINISH : Z_NO_FLUSH;
-        strm.next_in = in;
-
-        /* run deflate() on input until output buffer not full, finish
-           compression if all of source has been read in */
-        do {
-            strm.avail_out = CHUNK;
-            strm.next_out = out;
-            ret = deflate(&strm, flush);    /* no bad return value */
-            if (ret == Z_STREAM_ERROR) {
-                ERRLOG("OOPS deflate : %d", ret);
-                return ret;
-            }
-            have = CHUNK - strm.avail_out;
-            if (fwrite(out, 1, have, dest) != have || ferror(dest)) {
-                (void)deflateEnd(&strm);
-                ERRLOG("OOPS fwrite ...");
-                return Z_ERRNO;
-            }
-        } while (strm.avail_out == 0);
-        if (strm.avail_in != 0) {
-            ERRLOG("OOPS avail_in != 0 ...");
-            return UNKNOWN_ERR;
-        }
-
-        /* done when last data in file processed */
-    } while (flush != Z_FINISH);
-    if (ret != Z_STREAM_END) {
-        ERRLOG("OOPS != Z_STREAM_END ...");
-        return UNKNOWN_ERR;
-    }
-
-    (void)deflateEnd(&strm);
-    return Z_OK;
-}
-
-static int const _inf(FILE *source, FILE *dest) {
-    unsigned have;
-    z_stream strm;
-    unsigned char in[CHUNK];
-    unsigned char out[CHUNK];
-
-    /* allocate inflate state */
-    strm.zalloc = Z_NULL;
-    strm.zfree = Z_NULL;
-    strm.opaque = Z_NULL;
-    strm.avail_in = 0;
-    strm.next_in = Z_NULL;
-    int ret = inflateInit(&strm);
-    if (ret != Z_OK) {
-        return ret;
-    }
-
-    /* decompress until deflate stream ends or end of file */
-    do {
-        strm.avail_in = fread(in, 1, CHUNK, source);
-        if (ferror(source)) {
-            (void)inflateEnd(&strm);
-            ERRLOG("OOPS inflateEnd ...");
-            return Z_ERRNO;
-        }
-        if (strm.avail_in == 0)
-        {
-            ERRLOG("OOPS avail_in != 0 ...");
-            return UNKNOWN_ERR;
-        }
-        strm.next_in = in;
-
-        /* run inflate() on input until output buffer not full */
-        do {
-            strm.avail_out = CHUNK;
-            strm.next_out = out;
-            ret = inflate(&strm, Z_NO_FLUSH);
-            if (ret == Z_STREAM_ERROR) {
-                ERRLOG("OOPS inflate : %d", ret);
-                return ret;
-            }
-            switch (ret) {
-            case Z_NEED_DICT:
-                ret = Z_DATA_ERROR;     /* and fall through */
-            case Z_DATA_ERROR:
-            case Z_MEM_ERROR:
-                (void)inflateEnd(&strm);
-                ERRLOG("OOPS : %d", ret);
-                return ret;
-            }
-            have = CHUNK - strm.avail_out;
-            if (fwrite(out, 1, have, dest) != have || ferror(dest)) {
-                (void)inflateEnd(&strm);
-                ERRLOG("OOPS fwrite ...");
-                return Z_ERRNO;
-            }
-        } while (strm.avail_out == 0);
-
-        /* done when inflate() says it's done */
-    } while (ret != Z_STREAM_END);
-
-    /* clean up and return */
-    (void)inflateEnd(&strm);
-    return Z_STREAM_END ? Z_OK : Z_DATA_ERROR;
-}
-
 /* report a zlib or i/o error */
-static const char* const zerr(int ret, FILE *in, FILE *out)
+static const char* const _gzerr(gzFile gzf)
 {
-    switch (ret) {
-    case Z_ERRNO:
-        if (in && ferror(in))
-        {
-            return "error reading";
-        }
-        if (out && ferror(out))
-        {
-            return "error writing";
-        }
-        ERRLOG("Unknown zerr...");
-    case Z_OK:
-        return NULL;
-
-    case Z_STREAM_ERROR:
-        return "invalid compression level";
-
-    case Z_DATA_ERROR:
-        return "invalid/incomplete deflate data";
-
-    case Z_MEM_ERROR:
-        return "out of memory";
-
-    case Z_VERSION_ERROR:
-        return "zlib version mismatch!";
-
-    default:
-        return "general zlib error";
+    int err_num = 0;
+    const char *reason = gzerror(gzf, &err_num);
+    if (err_num == Z_ERRNO) {
+        return strerror(err_num);
+    } else {
+        return reason;
     }
 }
-
 
 /* Compress from file source to file dest until EOF on source.
-   def() returns Z_OK on success, Z_MEM_ERROR if memory could not be
-   allocated for processing, Z_STREAM_ERROR if an invalid compression
-   level is supplied, Z_VERSION_ERROR if the version of zlib.h and the
-   version of the library linked do not match, or Z_ERRNO if there is
-   an error reading or writing the files. */
-const char* const def(const char* const src, const int level)
+   def() returns Z_OK on success, Z_MEM_ERROR if memory could not be allocated
+   for processing, Z_VERSION_ERROR if the version of zlib.h and the version of
+   the library linked do not match, or Z_ERRNO if there is an error reading or
+   writing the files. */
+const char* const def(const char* const src)
 {
+    unsigned char buf[CHUNK];
     FILE *source = NULL;
-    FILE *dest = NULL;
-    int ret = 0;
+    gzFile gzdest = NULL;
 
     if (src == NULL) {
         return NULL;
     }
 
+    int ret = UNKNOWN_ERR;
     do {
-
         source = fopen(src, "r");
         if (source == NULL) {
             ERRLOG("Cannot open file '%s' for reading", src);
-            ret = UNKNOWN_ERR;
             break;
         }
 
         char dst[TEMPSIZE];
         snprintf(dst, TEMPSIZE-1, "%s%s", src, ".gz");
-        FILE *dest = fopen(dst, "w+");
 
-        if (dest == NULL) {
+        gzdest = gzopen(dst, "wb");
+        if (gzdest == NULL) {
             ERRLOG("Cannot open file '%s' for writing", dst);
-            ret = UNKNOWN_ERR;
             break;
         }
 
-        ret = _def(source, dest, level);
+        int err = gzbuffer(gzdest, CHUNK);
+        if (err != Z_OK) {
+            ERRLOG("Cannot set bufsize on gz output");
+            break;
+        }
+
+        // deflate ...
+        do {
+            size_t buflen = fread(buf, 1, CHUNK, source);
+
+            if (ferror(source)) {
+                ERRLOG("OOPS fread ...");
+                break;
+            }
+
+            if (buflen > 0) {
+                int written = gzwrite(gzdest, buf, buflen);
+                if (written < buflen) {
+                    ERRLOG("OOPS gzwrite ...");
+                    break;
+                }
+            }
+
+            if (feof(source)) {
+                ret = Z_OK;
+                break; // finished deflating
+            }
+        } while (1);
+
     } while (0);
 
-    const char* const err = zerr(ret, source, dest);
+    const char *err = NULL;
+    if (ret != Z_OK) {
+        err = _gzerr(gzdest);
+    }
 
     // clean up
 
@@ -241,10 +120,8 @@ const char* const def(const char* const src, const int level)
         fclose(source);
     }
 
-    fflush(dest);
-
-    if (dest) {
-        fclose(dest);
+    if (gzdest) {
+        gzclose(gzdest);
     }
 
     return err;
@@ -258,19 +135,19 @@ const char* const def(const char* const src, const int level)
    is an error reading or writing the files. */
 const char* const inf(const char* const src)
 {
-    FILE *source = NULL;
+    unsigned char buf[CHUNK];
+    gzFile gzsource = NULL;
     FILE *dest = NULL;
-    int ret = 0;
 
     if (src == NULL) {
         return NULL;
     }
 
+    int ret = UNKNOWN_ERR;
     do {
-        FILE *source = fopen(src, "r");
-        if (source == NULL) {
+        gzsource = gzopen(src, "rb");
+        if (gzsource == NULL) {
             ERRLOG("Cannot open file '%s' for reading", src);
-            ret = UNKNOWN_ERR;
             break;
         }
 
@@ -279,7 +156,6 @@ const char* const inf(const char* const src)
         snprintf(dst, TEMPSIZE-1, "%s", src);
         if (! ( (dst[len-3] == '.') && (dst[len-2] == 'g') && (dst[len-1] == 'z') ) ) {
             ERRLOG("Expected filename ending in .gz");
-            ret = UNKNOWN_ERR;
             break;
         }
         dst[len-3] = '\0';
@@ -287,25 +163,43 @@ const char* const inf(const char* const src)
         FILE *dest = fopen(dst, "w+");
         if (dest == NULL) {
             ERRLOG("Cannot open file '%s' for writing", dst);
-            ret = UNKNOWN_ERR;
             break;
         }
 
-        ret = _inf(source, dest);
+        // inflate ...
+        do {
+            int buflen = gzread(gzsource, buf, CHUNK);
+            if (buflen < 0) {
+                ERRLOG("OOPS, gzip read ...");
+                break;
+            }
+
+            if (buflen == 0) {
+                ret = Z_OK;
+                break; // finished inflating
+            }
+
+            if ( (fwrite(buf, 1, buflen, dest) != buflen) || ferror(dest) ) {
+                ERRLOG("OOPS fwrite ...");
+                break;
+            }
+        } while (1);
 
     } while (0);
 
-    const char* const err = zerr(ret, source, dest);
+    const char *err = NULL;
+    if (ret != Z_OK) {
+        err = _gzerr(gzsource);
+    }
 
     // clean up
 
-    if (source) {
-        fclose(source);
+    if (gzsource) {
+        gzclose(gzsource);
     }
 
-    fflush(dest);
-
     if (dest) {
+        fflush(dest);
         fclose(dest);
     }
 

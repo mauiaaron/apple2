@@ -113,7 +113,7 @@ void c_eject_6(int drive) {
     if (disk6.disk[drive].compressed)
     {
         // foo.dsk -> foo.dsk.gz
-        const char* const err = def(disk6.disk[drive].file_name, Z_DEFAULT_COMPRESSION);
+        const char* const err = def(disk6.disk[drive].file_name);
         if (err)
         {
             snprintf(&zlibmenu[4][2], 37, "%s", err);

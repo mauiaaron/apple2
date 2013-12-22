@@ -3,7 +3,7 @@
 
 #include "common.h"
 
-const char* const inf(const char* const source);                  // source : foo.dsk.gz --> foo.dsk
-const char* const def(const char* const source, const int level); // source : foo.dsk    --> foo.dsk.gz
+const char* const inf(const char* const source); // source : foo.dsk.gz --> foo.dsk
+const char* const def(const char* const source); // source : foo.dsk    --> foo.dsk.gz
 
 #endif
