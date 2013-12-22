@@ -123,10 +123,26 @@ static void c_calculate_pc_joystick_parms()
     and center coordinates.  assumes that it can write to the interface
     screen.
    ------------------------------------------------------------------------- */
+extern void copy_and_pad_string(char *dest, const char* src, const char c, const int len, const char cap);
 static void c_calibrate_pc_joystick()
 {
-    int almost_done, done;
-    unsigned char x_val, y_val;
+#define JOYERR_PAD 35
+#define JOYERR_SUBMENU_H 8
+#define JOYERR_SUBMENU_W 40
+    char errmenu[JOYERR_SUBMENU_H][JOYERR_SUBMENU_W+1] =
+    //1.  5.  10.  15.  20.  25.  30.  35.  40.
+    { "||||||||||||||||||||||||||||||||||||||||",
+      "|                                      |",
+      "| An error occurred:                   |",
+      "|                                      |",
+      "| Is a joystick device connected?      |",
+      "| Is the proper kernel module loaded?  |",
+      "|                                      |",
+      "||||||||||||||||||||||||||||||||||||||||" };
+#define JOYERR_SHOWERR(ERR) \
+    copy_and_pad_string(&errmenu[3][2], ERR, ' ', JOYERR_PAD, ' '); \
+    c_interface_print_submenu_centered(errmenu[0], JOYERR_SUBMENU_W, JOYERR_SUBMENU_H); \
+    while (c_mygetch(1) == -1) { }
 
     /* reset all the extremes */
     js_max_x = -1;
@@ -137,36 +153,53 @@ static void c_calibrate_pc_joystick()
     /* open joystick device if not open */
     if (js_fd < 0)
     {
-        if (c_open_pc_joystick())          /* problem opening device */
+        if (c_open_pc_joystick())
         {
-            c_interface_print(
-                1, 21, 0, "                                      " );
-            c_interface_print(
-                1, 22, 0, "     cannot open joystick device.     " );
-            video_sync(0);
-            usleep(1500000);
-            c_interface_redo_bottom();
-            return; /* problem */
+            JOYERR_SHOWERR(strerror(errno));
+            return;
         }
     }
 
-    c_interface_print(
-        1, 21, 0, "  Move joystick to all extremes then  " );
-    c_interface_print(
-        1, 22, 0, "    center it and press a button.     " );
-    video_sync(0);
-    usleep(1500000);
-    c_interface_print(
-        1, 21, 0, "                                      " );
-    c_interface_print(
-        1, 22, 0, "                                      " );
+#define CALIBRATE_SUBMENU_H 7
+#define CALIBRATE_SUBMENU_W 40
+    char submenu[CALIBRATE_SUBMENU_H][CALIBRATE_SUBMENU_W+1] =
+    //1.  5.  10.  15.  20.  25.  30.  35.  40.
+    { "||||||||||||||||||||||||||||||||||||||||",
+      "|                                      |",
+      "| Move joystick to all extremes then   |",
+      "| center it and long-press joy button  |",
+      "|                                      |",
+      "|  btn1:@ btn2:@      x:@@@@  y:@@@@   |",
+      "||||||||||||||||||||||||||||||||||||||||" };
 
-    almost_done = done = 0;             /* not done calibrating */
-    while ((read(js_fd, &js, JS_RETURN) > 0) && (!done))
+#define LONG_PRESS_THRESHOLD 120
+
+#define SHOW_JOYSTICK_AXES(MENU, WIDTH, HEIGHT, X, Y) \
+    sprintf(temp, "%04x", (short)(X)); \
+    copy_and_pad_string(&MENU[HEIGHT-2][24], temp, ' ', 5, ' '); \
+    sprintf(temp, "%04x", (short)(Y)); \
+    copy_and_pad_string(&MENU[HEIGHT-2][32], temp, ' ', 5, ' '); \
+    c_interface_print_submenu_centered(MENU[0], WIDTH, HEIGHT);
+
+#define SHOW_BUTTONS(MENU, HEIGHT) \
+    MENU[HEIGHT-2][8]  = (js.buttons & 0x01) ? 'X' : ' '; \
+    MENU[HEIGHT-2][15] = (js.buttons & 0x02) ? 'X' : ' '; \
+    if (js.buttons & 0x03) \
+    { \
+        ++long_press; \
+    } \
+    else \
+    { \
+        long_press = 0; \
+    }
+
+    unsigned int long_press = 0;
+    while ((read(js_fd, &js, JS_RETURN) > 0))
     {
-        sprintf(temp, "  x = %04x, y = %04x", js.x, js.y);
-        c_interface_print(1, 22, 0, temp);
+        SHOW_BUTTONS(submenu, CALIBRATE_SUBMENU_H);
+        SHOW_JOYSTICK_AXES(submenu, CALIBRATE_SUBMENU_W, CALIBRATE_SUBMENU_H, js.x, js.y);
         video_sync(0);
+
         if (js_max_x < js.x)
         {
             js_max_x = js.x;
@@ -187,50 +220,79 @@ static void c_calibrate_pc_joystick()
             js_min_y = js.y;
         }
 
-        if (js.buttons != 0x00)                         /* press */
+        if (long_press > LONG_PRESS_THRESHOLD)
         {
-            almost_done = 1;
-        }
-
-        if (almost_done && (js.buttons == 0x00))        /* release */
-        {
-            done = 1;
+            break;
         }
     }
 
+    long_press = 0;
     js_center_x = js.x;
     js_center_y = js.y;
 
-    printf("js_min_x = %d\n", js_min_x);
-    printf("js_min_y = %d\n", js_min_y);
-    printf("js_max_x = %d\n", js_max_x);
-    printf("js_max_y = %d\n", js_max_y);
-    printf("js_center_x = %d\n", js_center_x);
-    printf("js_center_y = %d\n", js_center_y);
-    printf("\n");
+#ifndef NDEBUG
+    LOG("js_min_x = %d", js_min_x);
+    LOG("js_min_y = %d", js_min_y);
+    LOG("js_max_x = %d", js_max_x);
+    LOG("js_max_y = %d", js_max_y);
+    LOG("js_center_x = %d", js_center_x);
+    LOG("js_center_y = %d", js_center_y);
+    LOG(" ");
+#endif
 
-    c_calculate_pc_joystick_parms();       /* determine the parms */
+    c_calculate_pc_joystick_parms();
 
-    printf("js_lowerrange_x = %d\n", js_lowerrange_x);
-    printf("js_lowerrange_y = %d\n", js_lowerrange_y);
-    printf("js_upperrange_x = %d\n", js_upperrange_x);
-    printf("js_upperrange_y = %d\n", js_upperrange_y);
-    printf("\n");
-    printf("js_offset_x = %d\n", js_offset_x);
-    printf("js_offset_y = %d\n", js_offset_y);
-    printf("\n");
-    printf("js_adjustlow_x = %f\n", js_adjustlow_x);
-    printf("js_adjustlow_y = %f\n", js_adjustlow_y);
-    printf("js_adjusthigh_x = %f\n", js_adjusthigh_x);
-    printf("js_adjusthigh_y = %f\n", js_adjusthigh_y);
-    printf("\n");
+#ifndef NDEBUG
+    LOG("js_lowerrange_x = %d", js_lowerrange_x);
+    LOG("js_lowerrange_y = %d", js_lowerrange_y);
+    LOG("js_upperrange_x = %d", js_upperrange_x);
+    LOG("js_upperrange_y = %d", js_upperrange_y);
+    LOG(" ");
+    LOG("js_offset_x = %d", js_offset_x);
+    LOG("js_offset_y = %d", js_offset_y);
+    LOG(" ");
+    LOG("js_adjustlow_x = %f", js_adjustlow_x);
+    LOG("js_adjustlow_y = %f", js_adjustlow_y);
+    LOG("js_adjusthigh_x = %f", js_adjusthigh_x);
+    LOG("js_adjusthigh_y = %f", js_adjusthigh_y);
+    LOG(" ");
+#endif
 
-    c_interface_print(
-        1, 21, 0, "     Press a button to continue.      " );
-    video_sync(0);
+#define CALIBRATE_JOYMENU_H 20
+#define CALIBRATE_JOYMENU_W 40
+#define CALIBRATE_TURTLE_X0 4
+#define CALIBRATE_TURTLE_Y0 5
+#define CALIBRATE_TURTLE_STEP_X (30.f / 255.f)
+#define CALIBRATE_TURTLE_STEP_Y (10.f / 255.f)
+    char joymenu[CALIBRATE_JOYMENU_H][CALIBRATE_JOYMENU_W+1] =
+    //1.  5.  10.  15.  20.  25.  30.  35.  40.
+    { "||||||||||||||||||||||||||||||||||||||||",
+      "|                                      |",
+      "| Long press joy button to quit        |",
+      "|                                      |",
+      "|  |||||||||||||||||||||||||||||||||   |",
+      "|  |                               |   |",
+      "|  |                               |   |",
+      "|  |                               |   |",
+      "|  |                               |   |",
+      "|  |                               |   |",
+      "|  |                               |   |",
+      "|  |                               |   |",
+      "|  |                               |   |",
+      "|  |                               |   |",
+      "|  |                               |   |",
+      "|  |                               |   |",
+      "|  |||||||||||||||||||||||||||||||||   |",
+      "|                                      |",
+      "|  btn1:@ btn2:@      x:@@@@  y:@@@@   |",
+      "||||||||||||||||||||||||||||||||||||||||" };
 
-    /* show the normalized values until user presses button */
-    while ((read(js_fd, &js, JS_RETURN) > 0) && js.buttons == 0x00)
+    uint8_t x_val=0, y_val=0;
+    uint8_t x_last=CALIBRATE_JOYMENU_W>>1, y_last=CALIBRATE_JOYMENU_H>>1;
+    const char* const spinney = "|/-\\";
+    uint8_t spinney_idx=0;
+    bool finished_press = false;
+    while (read(js_fd, &js, JS_RETURN) > 0)
     {
         x_val = (js.x < js_center_x)
                 ? (js.x - js_offset_x) * js_adjustlow_x
@@ -241,13 +303,31 @@ static void c_calibrate_pc_joystick()
                 ? (js.y - js_offset_y) * js_adjustlow_y
                 : (js.y - (js_center_y /*+js_offset_y*/)) * js_adjusthigh_y +
                 HALF_JOY_RANGE;
-        sprintf(temp, "    x = %02x,   y = %02x", x_val, y_val);
-        c_interface_print(1, 22, 0, temp);
-        video_sync(0);
-    }
 
-    c_interface_redo_bottom();
-    video_sync(0);
+        int x_plot = CALIBRATE_TURTLE_X0 + (int)(x_val * CALIBRATE_TURTLE_STEP_X);
+        int y_plot = CALIBRATE_TURTLE_Y0 + (int)(y_val * CALIBRATE_TURTLE_STEP_Y);
+
+        joymenu[y_last][x_last] = ' ';
+        joymenu[y_plot][x_plot] = spinney[spinney_idx];
+
+        x_last = x_plot;
+        y_last = y_plot;
+
+        SHOW_BUTTONS(joymenu, CALIBRATE_JOYMENU_H);
+        SHOW_JOYSTICK_AXES(joymenu, CALIBRATE_JOYMENU_W, CALIBRATE_JOYMENU_H, x_val, y_val);
+        video_sync(0);
+
+        spinney_idx = (spinney_idx+1) % 4;
+
+        if (!js.buttons)
+        {
+            finished_press = true;
+        }
+        if (finished_press && (long_press > LONG_PRESS_THRESHOLD))
+        {
+            break;
+        }
+    }
 }
 #endif // PC_JOYSTICK
 

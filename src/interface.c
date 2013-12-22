@@ -37,7 +37,8 @@ static int altdrive;
 /*#else*/
 /*#define undoc_supported 0*/
 
-static void copy_and_pad_string(char *dest, const char* src, char c, int len, char cap) {
+void copy_and_pad_string(char *dest, const char* src, const char c, const int len, const char cap)
+{
     const char* p;
     char* d = dest;
 
@@ -54,7 +55,7 @@ static void copy_and_pad_string(char *dest, const char* src, char c, int len, ch
     *d = cap;
 }
 
-static void pad_string(char *s, char c, int len) {
+static void pad_string(char *s, const char c, const int len) {
     char *p;
 
     for (p = s; ((*p != '\0') && (p-s < len-1)); p++)
@@ -103,7 +104,6 @@ void c_interface_print( int x, int y, int cs, const char *s )
     {
         video_plotchar( x, y, cs, *s );
     }
-
 }
 
 /* -------------------------------------------------------------------------
@@ -118,27 +118,13 @@ void c_interface_print_screen( char screen[24][INTERFACE_SCREEN_X+1] )
 }
 
 /* -------------------------------------------------------------------------
-    c_interface_redo_bottom()
-   ------------------------------------------------------------------------- */
-
-void c_interface_redo_bottom() {
-
-    c_interface_print( 1, 21, 2,
-                       " Use arrow keys (or Return) to modify "
-                       );
-    c_interface_print( 1, 22, 2,
-                       " parameters. (Press ESC to exit menu) "
-                       );
-}
-
-/* -------------------------------------------------------------------------
     c_interface_translate_screen()
    ------------------------------------------------------------------------- */
 
 #define IsGraphic(c) ((c) == '|' || (((unsigned char)c) >= 0x80 && ((unsigned char)c) <= 0x8A))
 #define IsInside(x,y) ((x) >= 0 && (x) <= xlen-1 && (y) >= 0 && (y) <= ylen-1)
 
-static void _convert_screen_graphics( char *screen, int x, int y, int xlen, int ylen )
+static void _convert_screen_graphics( char *screen, const int x, const int y, const int xlen, const int ylen )
 {
     static char map[11][3][4] ={ { "...",
                                    ".||",
@@ -228,48 +214,36 @@ static void _convert_screen_graphics( char *screen, int x, int y, int xlen, int 
 
     if (found_glyph)
     {
-        //screen[ y ][ x ] = 0x80 + k;
         *(screen + y*(xlen+1) + x) = 0x80 + k;
     }
 }
 
-void c_interface_translate_screen( char screen[24][INTERFACE_SCREEN_X+1] )
-{
-    for (int y = 0; y < 24; y++)
-    {
-        for (int x = 0; x < INTERFACE_SCREEN_X; x++)
-        {
-            if (screen[ y ][ x ] == '|')
-            {
-                _convert_screen_graphics(screen[0], x, y, INTERFACE_SCREEN_X, 24);
-            }
-        }
-    }
-}
-
-/* -------------------------------------------------------------------------
-    c_interface_translate_menu()
-   ------------------------------------------------------------------------- */
-void c_interface_translate_menu( char *submenu, int xlen, int ylen )
+static void c_interface_translate_screen_x_y(char *screen, const int xlen, const int ylen)
 {
     for (int idx=0, y=0; y < ylen; y++, idx+=xlen+1)
     {
         for (int x = 0; x < xlen; x++)
         {
-            if (*(submenu + idx + x) == '|')
+            if (*(screen + idx + x) == '|')
             {
-                _convert_screen_graphics(submenu, x, y, xlen, ylen);
+                _convert_screen_graphics(screen, x, y, xlen, ylen);
             }
         }
     }
 }
 
+void c_interface_translate_screen( char screen[24][INTERFACE_SCREEN_X+1] )
+{
+
+    c_interface_translate_screen_x_y(screen[0], INTERFACE_SCREEN_X, 24);
+}
+
 /* -------------------------------------------------------------------------
     c_interface_print_submenu_centered()
    ------------------------------------------------------------------------- */
-void c_interface_print_submenu_centered( char *submenu, int xlen, int ylen )
+void c_interface_print_submenu_centered( char *submenu, const int xlen, const int ylen )
 {
-    c_interface_translate_menu(submenu, xlen, ylen);
+    c_interface_translate_screen_x_y(submenu, xlen, ylen);
     int x = (INTERFACE_SCREEN_X - xlen) >> 1;
     int y = (24 - ylen) >> 1;
 
@@ -784,18 +758,18 @@ typedef enum interface_enum_t {
 
 static const char *options[] =
 {
-    " CPU%     : ",
-    " ALT CPU% : ",
-    " Path     : ",
+    " CPU%     :  ",
+    " ALT CPU% :  ",
+    " Path     :  ",
     //" Mode     : ",
-    " Color    : ",
-    " Volume   : ",
-    " Joystick : ",
-    " Calibrate  ",
-    " JS Sens. : ",
-    " JS Sample: ",
-    " Save Prefs ",
-    " Quit       "
+    " Color    :  ",
+    " Volume   :  ",
+    " Joystick :  ",
+    " Calibrate Joystick...",
+    " JS Sens. :  ",
+    " JS Sample:  ",
+    " Save Preferences...",
+    " Quit Emulator...",
 };
 
 #define INTERFACE_PATH_MAX 65
@@ -856,7 +830,12 @@ void c_interface_parameters()
                 cur_off = 0;
             }
 
-            c_interface_print( 1, 5 + i, cur_y == i, options[ i + cur_off ] );
+            c_interface_print( 1, 5 + i, cur_y == i, options[i + cur_off]);
+
+            int optlen = strlen(options[i + cur_off]);
+            snprintf(temp, TEMPSIZE, " ");
+            pad_string(temp, ' ', INTERFACE_PATH_MAX+1-optlen);
+            c_interface_print( 1+optlen, 5 + i, 0, temp );
 
             switch (i + cur_off)
             {
@@ -917,7 +896,6 @@ void c_interface_parameters()
                 break;
 
             case OPT_CALIBRATE:
-                strncpy( temp, "", TEMPSIZE );
                 break;
 
             case OPT_JS_SENSE:
@@ -933,11 +911,9 @@ void c_interface_parameters()
                 break;
 
             case OPT_SAVE:
-                strcpy( temp, "" );
                 break;
 
             case OPT_QUIT:
-                strcpy( temp, "" );
                 break;
 
             default:
@@ -945,11 +921,12 @@ void c_interface_parameters()
             }
 
             pad_string(temp, ' ', INTERFACE_PATH_MAX+1);
-            if (i+cur_off != 2)
+            int loc = i+cur_off;
+            if ((loc != OPT_PATH) && (loc != OPT_CALIBRATE) && (loc != OPT_SAVE) && (loc != OPT_QUIT))
             {
                 c_interface_print(INTERFACE_PATH_MIN, 5 + i, 0, temp);
             }
-            else
+            else if (loc == OPT_PATH)
             {
                 int j;
 
@@ -1348,6 +1325,7 @@ void c_interface_parameters()
                 c_close_joystick();
                 c_open_joystick();
                 c_calibrate_joystick();
+                c_interface_print_screen( screen );
             }
 
             /* save settings */
@@ -1455,26 +1433,33 @@ void c_interface_credits()
       "|                                                                              |",
       "|                                                                              |",
       "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||",
-      "|                                ESC to begin!                                 |",
+      "|                 @ @ to scroll notes - ESC to begin emulation                 |",
       "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||" };
 #define SCROLL_AREA_X 2
 #define SCROLL_AREA_Y 5
 #define SCROLL_AREA_HEIGHT 16
 
+    screen[ 2 ][ 33 ] = MOUSETEXT_BEGIN + 0x01;
+    screen[ 2 ][ 46 ] = MOUSETEXT_BEGIN + 0x00;
+
+    screen[ 22 ][ 18 ] = MOUSETEXT_BEGIN + 0x0b;
+    screen[ 22 ][ 20 ] = MOUSETEXT_BEGIN + 0x0a;
+
 #define SCROLL_LENGTH 54
-    char credits[SCROLL_LENGTH][INTERFACE_SCREEN_X+1-(SCROLL_AREA_X*2)]=
+#define SCROLL_WIDTH (INTERFACE_SCREEN_X+1-(SCROLL_AREA_X*2))
+    char credits[SCROLL_LENGTH][SCROLL_WIDTH]=
     //1.  5.  10.  15.  20.  25.  30.  35.  40.  45.  50.  55.  60.  65.  70.  75.  80.",
       { "                                                                            ",
         "                  An Apple //e Emulator for POSIX Systems!                  ",
         "                                                                            ",
-        "WELCOME!                                                                    ",
+        "                    @ Press F8 any time to return here @                    ",
         "                                                                            ",
-        " > @ @ keys will scroll this page                                           ",
-        " > ESC key will exit this page and begin emulation                          ",
-        " > F10 will show the emulator preferences menu                              ",
-        " > F8 will reshow this page                                                 ",
-        " > F5 will show the keyboard layout menu                                    ",
-        " > F1 and F2 will open the diskette selection menus                         ",
+        "QUICKSTART                                                                  ",
+        "                                                                            ",
+        "Press F8 at any time to return to this page                                 ",
+        "Press F10 to view preferences menu                                          ",
+        "Press F1 to load diskette in Slot 6, Drive A                                ",
+        "Press F2 to load diskette in Slot 6, Drive B                                ",
         "                                                                            ",
         "AUTHORS/CREDITS                                                             ",
         "                                                                            ",
@@ -1486,10 +1471,11 @@ void c_interface_credits()
         "                                                                            ",
         "ADDITIONAL CREDITS                                                          ",
         "                                                                            ",
-        "This software uses various Open Source software libraries, including:       ",  
+        "This software uses various Free & Open Source software, including           ",  
         "                                                                            ",
-        " > Compression routines from the Zlib project -- http://zlib.net            ",
+        " > Audio source code derived from AppleWin -- http://applewin.berlios.de    ",
         " > OpenAL audio library -- http://sourceforge.net/projects/openal-soft      ",
+        " > Compression routines from the Zlib project -- http://zlib.net            ",
         "                                                                            ",
         "LICENSE                                                                     ",
         "                                                                            ",
@@ -1520,27 +1506,31 @@ void c_interface_credits()
 
     video_setpage( 0 );
 
-    screen[ 2 ][ 33 ] = MOUSETEXT_BEGIN + 0x01;
-    screen[ 2 ][ 46 ] = MOUSETEXT_BEGIN + 0x00;
-
-    credits[ 5 ][ 3 ] = MOUSETEXT_BEGIN + 0x0b;
-    credits[ 5 ][ 5 ] = MOUSETEXT_BEGIN + 0x0a;
-
     c_interface_translate_screen( screen );
+    c_interface_translate_screen_x_y( credits[0], SCROLL_WIDTH, SCROLL_LENGTH);
     c_interface_print_screen( screen );
 
     int pos = 0;
     int ch = -1;
+    int count = -1;
+    unsigned int mt_idx = 0;
     for (;;)
     {
+        ch = c_mygetch(0);
+
+#define FLASH_APPLE_DELAY 3
+        count = (count+1) % FLASH_APPLE_DELAY;
+        if (!count)
+        {
+            mt_idx = (mt_idx+1) % 2;
+            credits[ 3 ][ 20 ] = MOUSETEXT_BEGIN + mt_idx;
+            credits[ 3 ][ 55 ] = MOUSETEXT_BEGIN + ((mt_idx+1) % 2);
+        }
+
         for (int i=0, p=pos; i<SCROLL_AREA_HEIGHT; i++)
         {
             c_interface_print(SCROLL_AREA_X, SCROLL_AREA_Y+i, 2, credits[p]);
             p = (p+1) % SCROLL_LENGTH;
-        }
-
-        while ((ch = c_mygetch(1)) == -1)
-        {
         }
 
         if (ch == kUP)
@@ -1563,6 +1553,10 @@ void c_interface_credits()
         {
             break;
         }
+
+        static struct timespec ts = { .tv_sec=0, .tv_nsec=33333333 };
+        nanosleep(&ts, NULL);
+        video_sync(1);
     }
 
     c_interface_exit(ch);

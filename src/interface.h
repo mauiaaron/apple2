@@ -19,9 +19,8 @@
 
 #define INTERFACE_SCREEN_X 80
 
-void c_interface_print(int x, int y, int cs, const char *s);
-void c_interface_print_submenu_centered(char *submenu, int xlen, int ylen);
-void c_interface_redo_bottom(); /* bit of a HACK? */
+void c_interface_print(int x, int y, const int cs, const char *s);
+void c_interface_print_submenu_centered(char *submenu, const int xlen, const int ylen);
 void c_load_interface_font();
 void c_interface_keyboard_layout();
 void c_interface_parameters();
