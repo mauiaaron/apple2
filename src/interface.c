@@ -746,8 +746,6 @@ typedef enum interface_enum_t {
     OPT_VOLUME,
     OPT_JOYSTICK,
     OPT_CALIBRATE,
-    OPT_JS_SENSE,
-    OPT_JS_SAMPLE,
     OPT_SAVE,
     OPT_QUIT,
 
@@ -764,8 +762,6 @@ static const char *options[] =
     " Volume   :  ",
     " Joystick :  ",
     " Calibrate Joystick...",
-    " JS Sens. :  ",
-    " JS Sample:  ",
     " Save Preferences...",
     " Quit Emulator...",
 };
@@ -894,18 +890,6 @@ void c_interface_parameters()
                 break;
 
             case OPT_CALIBRATE:
-                break;
-
-            case OPT_JS_SENSE:
-                sprintf(temp, "%03d%%", joy_step );
-                break;
-
-            case OPT_JS_SAMPLE:
-#ifdef PC_JOYSTICK
-                sprintf(temp, "%ld", js_timelimit);
-#else
-                sprintf(temp, "%s", "");
-#endif
                 break;
 
             case OPT_SAVE:
@@ -1088,22 +1072,6 @@ void c_interface_parameters()
             case OPT_CALIBRATE:
                 break;
 
-            case OPT_JS_SENSE:
-                if (joy_step > 1)
-                {
-                    joy_step--;
-                }
-                break;
-
-            case OPT_JS_SAMPLE:
-#ifdef PC_JOYSTICK
-                if (js_timelimit > 2)
-                {
-                    --js_timelimit;
-                }
-#endif
-                break;
-
             case OPT_SAVE:
             case OPT_QUIT:
                 break;
@@ -1197,19 +1165,6 @@ void c_interface_parameters()
                 break;
 
             case OPT_CALIBRATE:
-                break;
-
-            case OPT_JS_SENSE:
-                if (joy_step < 100)
-                {
-                    joy_step++;
-                }
-                break;
-
-            case OPT_JS_SAMPLE:
-#ifdef PC_JOYSTICK
-                js_timelimit++;
-#endif
                 break;
 
             case OPT_SAVE:

@@ -38,7 +38,7 @@
 #define         PRM_VOLUME                      5
 #define         PRM_JOY_INPUT                   6
 #define         PRM_JOY_PC_CALIBRATE            10
-#define         PRM_JOY_KPAD_SENSITIVITY        11
+#define         PRM_JOY_KPAD_CALIBRATE          11
 #define         PRM_ROM_PATH                    12
 
 
@@ -49,19 +49,8 @@ int apple_mode;
 int sound_volume;
 color_mode_t color_mode;
 joystick_mode_t joy_mode;
-short joy_step;
 
-#ifdef PC_JOYSTICK
-int js_center_x;
-int js_center_y;
-long js_timelimit;
-int js_max_x;
-int js_max_y;
-int js_min_x;
-int js_min_y;
-#endif /* PC_JOYSTICK */
-
-static char *config_filename;
+static char *config_filename = NULL;
 
 struct match_table
 {
@@ -83,7 +72,8 @@ static const struct match_table prefs_table[] =
     { "joystick", PRM_JOY_INPUT },
     { "pc joystick parms", PRM_JOY_PC_CALIBRATE },
     { "pc_joystick_parms", PRM_JOY_PC_CALIBRATE },
-    { "sensitivity", PRM_JOY_KPAD_SENSITIVITY },
+    { "keypad joystick parms", PRM_JOY_KPAD_CALIBRATE },
+    { "keypad_joystick_parms", PRM_JOY_KPAD_CALIBRATE },
     { "system path", PRM_ROM_PATH },
     { "system_path", PRM_ROM_PATH },
     { 0, PRM_NONE }
@@ -330,21 +320,23 @@ void load_settings(void)
                 }
 
                 c_open_joystick();
+                break;
 #endif
 
-            case PRM_JOY_KPAD_SENSITIVITY:
-                joy_step = strtol(argument, 0, 0);
+#ifdef KEYPAD_JOYSTICK
+            case PRM_JOY_KPAD_CALIBRATE:
+                joy_step = strtol(argument, &argument, 10);
                 if (joy_step < 1)
                 {
                     joy_step = 1;
                 }
                 else
-                if (joy_step > 100)
+                if (joy_step > 255)
                 {
-                    joy_step = 100;
+                    joy_step = 255;
                 }
-
                 break;
+#endif
 
             case PRM_ROM_PATH:
                 strncpy(system_path, argument, SYSSIZE);
@@ -391,6 +383,7 @@ bool save_settings(void)
         return false;
     }
 
+    bool anErr = false;
     int err = fprintf(config_file,
             "speed = %0.2lf\n"
             "altspeed = %0.2lf\n"
@@ -399,7 +392,6 @@ bool save_settings(void)
             "color = %s\n"
             "volume = %s\n"
             "joystick = %s\n"
-            "sensitivity = %d%%\n"
             "system path = %s\n",
             cpu_scale_factor,
             cpu_altscale_factor,
@@ -408,17 +400,8 @@ bool save_settings(void)
             reverse_match(color_table, color_mode),
             reverse_match(volume_table, sound_volume),
             reverse_match(joy_input_table, joy_mode),
-            joy_step,
             system_path);
-
-    if (err < 0)
-    {
-        c_interface_print_submenu_centered(submenu[0], ERROR_SUBMENU_W, ERROR_SUBMENU_H);
-        while ((ch = c_mygetch(1)) == -1)
-        {
-        }
-        return false;
-    }
+    anErr = anErr || (err < 0);
 
 #ifdef PC_JOYSTICK
     err = fprintf(config_file,
@@ -426,8 +409,15 @@ bool save_settings(void)
             js_center_x, js_center_y, js_max_x, js_min_x,
             js_max_y, js_min_y, js_timelimit);
 #endif
+    anErr = anErr || (err < 0);
 
-    if (err < 0)
+#ifdef KEYPAD_JOYSTICK
+    err = fprintf(config_file,
+            "keypad joystick parms = %d\n", joy_step);
+#endif
+    anErr = anErr || (err < 0);
+
+    if (anErr)
     {
         c_interface_print_submenu_centered(submenu[0], ERROR_SUBMENU_W, ERROR_SUBMENU_H);
         while ((ch = c_mygetch(1)) == -1)

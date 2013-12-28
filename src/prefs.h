@@ -52,7 +52,10 @@ extern color_mode_t color_mode;
 
 /* generic joystick settings */
 extern joystick_mode_t joy_mode;
+
+#ifdef KEYPAD_JOYSTICK
 extern short joy_step;
+#endif
 
 #ifdef PC_JOYSTICK
 /* real joystick settings */

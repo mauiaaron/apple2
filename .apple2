@@ -1,11 +1,10 @@
-speed = 100
-mode = ][+ undocumented
+speed = 1.00
+altspeed = 4.00
+mode = //e
 disk path = /usr/local/games/apple2/disks
 color = interpolated
-sound = pc speaker
+volume = 8
 joystick = pc joystick
-joystick range = 256
-origin_x = 128
-origin_y = 128
-sensitivity = 3%
 system path = /usr/local/games/apple2/rom
+pc joystick parms = 128 128 255 1 255 1 6
+keypad joystick parms = 16

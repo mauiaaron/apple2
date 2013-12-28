@@ -38,7 +38,19 @@ short joy_y = HALF_JOY_RANGE;
 unsigned char joy_button0 = 0;
 unsigned char joy_button1 = 0;
 
+#ifdef KEYPAD_JOYSTICK
+short joy_step;
+#endif
+
 #ifdef PC_JOYSTICK
+int js_center_x;
+int js_center_y;
+long js_timelimit;
+int js_max_x;
+int js_max_y;
+int js_min_x;
+int js_min_y;
+
 int js_fd = -1;                 /* joystick file descriptor */
 struct JS_DATA_TYPE js;         /* joystick data struct */
 
