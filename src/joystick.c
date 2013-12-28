@@ -459,10 +459,7 @@ void c_open_joystick()
 void c_close_joystick()
 {
 #ifdef PC_JOYSTICK
-    if (joy_mode == JOY_PCJOY)
-    {
-        c_close_pc_joystick();
-    }
+    c_close_pc_joystick();
 #endif
 
 #ifdef KEYPAD_JOYSTICK

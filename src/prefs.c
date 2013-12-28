@@ -352,7 +352,9 @@ void load_settings(void)
 /* Save the configuration */
 bool save_settings(void)
 {
-    FILE *config_file;
+    FILE *config_file = NULL;
+
+    LOG("Saving preferences...");
 
 #define ERROR_SUBMENU_H 9
 #define ERROR_SUBMENU_W 40

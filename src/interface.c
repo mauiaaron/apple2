@@ -746,7 +746,6 @@ typedef enum interface_enum_t {
     OPT_VOLUME,
     OPT_JOYSTICK,
     OPT_CALIBRATE,
-    OPT_SAVE,
     OPT_QUIT,
 
     NUM_OPTIONS
@@ -762,7 +761,6 @@ static const char *options[] =
     " Volume   :  ",
     " Joystick :  ",
     " Calibrate Joystick...",
-    " Save Preferences...",
     " Quit Emulator...",
 };
 
@@ -798,6 +796,7 @@ void c_interface_parameters()
       "|               For interface help press '?' ... ESC exits menu                |",
       "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||" };
 
+#define PARAMS_H 9
     int i;
     int ch;
     static interface_enum_t option = OPT_CPU;
@@ -816,9 +815,9 @@ void c_interface_parameters()
 
     for (;;)
     {
-        for (i = 0; i < 9; i++)
+        for (i = 0; (i < PARAMS_H) && (i < NUM_OPTIONS); i++)
         {
-            cur_off = option - 8;
+            cur_off = option - PARAMS_H-1;
             if (cur_off < 0)
             {
                 cur_off = 0;
@@ -892,9 +891,6 @@ void c_interface_parameters()
             case OPT_CALIBRATE:
                 break;
 
-            case OPT_SAVE:
-                break;
-
             case OPT_QUIT:
                 break;
 
@@ -904,7 +900,7 @@ void c_interface_parameters()
 
             pad_string(temp, ' ', INTERFACE_PATH_MAX+1);
             int loc = i+cur_off;
-            if ((loc != OPT_PATH) && (loc != OPT_CALIBRATE) && (loc != OPT_SAVE) && (loc != OPT_QUIT))
+            if ((loc != OPT_PATH) && (loc != OPT_CALIBRATE) && (loc != OPT_QUIT))
             {
                 c_interface_print(INTERFACE_PATH_MIN, 5 + i, 0, temp);
             }
@@ -958,7 +954,7 @@ void c_interface_parameters()
 
         if (ch == kUP)                  /* Arrow up */
         {
-            if (option > 8)
+            if (option > PARAMS_H-1)
             {
                 option--;               /* only dec option */
             }
@@ -970,21 +966,23 @@ void c_interface_parameters()
             else
             {
                 option = NUM_OPTIONS-1; /* wrap to last option */
-                cur_y = 8;              /* wrap to last y position */
+                cur_y = PARAMS_H-1;              /* wrap to last y position */
+                if (cur_y >= NUM_OPTIONS)
+                {
+                    cur_y = NUM_OPTIONS-1;
+                }
             }
         }
         else if (ch == kDOWN)                  /* Arrow down */
         {
-            if (cur_y < 8)
+            ++option;
+
+            if (cur_y < PARAMS_H-1)
             {
-                option++;               /* inc option */
                 cur_y++;                /* and inc y position */
             }
-            else if (option < NUM_OPTIONS-1)
-            {
-                option++;               /* only inc option */
-            }
-            else
+
+            if (option >= NUM_OPTIONS)
             {
                 cur_y = option = 0;     /* wrap both to first */
             }
@@ -1072,7 +1070,6 @@ void c_interface_parameters()
             case OPT_CALIBRATE:
                 break;
 
-            case OPT_SAVE:
             case OPT_QUIT:
                 break;
 
@@ -1167,7 +1164,6 @@ void c_interface_parameters()
             case OPT_CALIBRATE:
                 break;
 
-            case OPT_SAVE:
             case OPT_QUIT:
                 break;
 
@@ -1281,34 +1277,6 @@ void c_interface_parameters()
                 c_interface_print_screen( screen );
             }
 
-            /* save settings */
-            if ((ch == 13) && (option == OPT_SAVE))
-            {
-                if (save_settings())
-                {
-#define SAVED_SUBMENU_H 9
-#define SAVED_SUBMENU_W 40
-                    char submenu[SAVED_SUBMENU_H][SAVED_SUBMENU_W+1] =
-                    //1.  5.  10.  15.  20.  25.  30.  35.  40.
-                    { "||||||||||||||||||||||||||||||||||||||||",
-                      "|                                      |",
-                      "|                                      |",
-                      "|                                      |",
-                      "|              @ Saved @               |",
-                      "|                                      |",
-                      "|                                      |",
-                      "|                                      |",
-                      "||||||||||||||||||||||||||||||||||||||||" };
-                    submenu[ 4 ][ 15 ] = MOUSETEXT_BEGIN + 0x01;
-                    submenu[ 4 ][ 23 ] = MOUSETEXT_BEGIN + 0x00;
-                    c_interface_print_submenu_centered(submenu[0], SAVED_SUBMENU_W, SAVED_SUBMENU_H);
-                    while ((ch = c_mygetch(1)) == -1)
-                    {
-                    }
-                    c_interface_print_screen( screen );
-                }
-            }
-
             /* quit apple II simulator */
             if (ch == 13 && option == OPT_QUIT)
             {
@@ -1337,6 +1305,8 @@ void c_interface_parameters()
                 ch = toupper(ch);
                 if (ch == 'Y')
                 {
+                    save_settings();
+
                     c_eject_6( 0 );
                     c_interface_print_screen( screen );
                     c_eject_6( 1 );
