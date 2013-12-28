@@ -19,6 +19,7 @@
 #ifndef A2_KEYS_H
 #define A2_KEYS_H
 
+#define SCODE_BS 14
 #define SCODE_L_CTRL    29
 #define SCODE_R_CTRL    97
 #define SCODE_L_SHIFT   42
@@ -81,11 +82,9 @@ extern int js_offset_x, js_offset_y;
 extern float js_adjustlow_x, js_adjustlow_y, js_adjusthigh_x, js_adjusthigh_y;
 #endif
 
-void c_read_raw_key(int scancode, int pressed);
-void c_periodic_update(int dummysig);
 void enter_debugger(void);
 int c_mygetch(int block);
-bool is_backspace(); // is the current key actually a backspace?
+int c_rawkey();
 void c_keys_set_key(int key);
 bool c_keys_is_interface_key(int key);
 

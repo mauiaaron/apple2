@@ -821,7 +821,7 @@ static void main_thread(void *dummyptr) {
     c_keys_set_key(kF8); // show credits
     do
     {
-        c_periodic_update(0);
+        video_sync(0);
         nanosleep(&sleeptime, NULL);
     } while (1);
 }

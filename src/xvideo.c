@@ -528,47 +528,46 @@ static void c_flash_cursor(int on) {
     }
 }
 
+extern void c_handle_input(int scancode, int pressed);
+
 /* FIXME: blocking not implemented... */
 void video_sync(int block) {
     static int flash_count = 0;
     // post the image and loop waiting for it to finish and
     // also process other input events
     post_image();
-LOOP:
-    if (doShm)
-    {
-        XNextEvent(
-            display,
-            &xevent);
-    }
-    else if (!XCheckMaskEvent(
-            display,
-            KeyPressMask|KeyReleaseMask,
-            &xevent))
-    {
-        goto POLL_FINISHED;
-    }
 
-    switch (xevent.type)
-    {
-    case KeyPress:
-        c_read_raw_key(keysym_to_scancode(), 1);
-        break;
-    case KeyRelease:
-        c_read_raw_key(keysym_to_scancode(), 0);
-        break;
-    default:
-        if (xevent.type == xshmeventtype)
+    bool keyevent = true;
+    do {
+        if (doShm)
         {
-            goto POLL_FINISHED;
+            XNextEvent(display, &xevent);
+            keyevent = !(xevent.type == xshmeventtype);
+        }
+        else
+        {
+            keyevent = XCheckMaskEvent(display, KeyPressMask|KeyReleaseMask, &xevent);
         }
 
-        break;
-    }
+        int scancode = -1;
+        int pressed = 0;
+        switch (xevent.type)
+        {
+        case KeyPress:
+            scancode = keysym_to_scancode();
+            pressed = 1;
+            break;
+        case KeyRelease:
+            scancode = keysym_to_scancode();
+            pressed = 0;
+            break;
+        default:
+            break;
+        }
 
-    goto LOOP;
+        c_handle_input(scancode, pressed);
 
-POLL_FINISHED:
+    } while (keyevent);
 
     switch (++flash_count)
     {

@@ -36,26 +36,24 @@ extern uid_t user, privileged;
 extern void c_do_debugging();
 
 /* parameters for generic and keyboard-simulated joysticks */
-short joy_x = 127;
-short joy_y = 127;
-unsigned char joy_button0 = 0;
-unsigned char joy_button1 = 0;
-unsigned char joy_button2 = 0;
+extern short joy_x;
+extern short joy_y;
+extern unsigned char joy_button0;
+extern unsigned char joy_button1;
 
 /* mutex used to synchronize between cpu and main threads */
 pthread_mutex_t interface_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 #ifdef PC_JOYSTICK
 #include <linux/joystick.h>
-int x_val, y_val;
+extern int raw_js_x;
+extern int raw_js_y;
 #endif
-
-#define SCODE_BS 14
 
 static int next_key = -1;
 static int last_scancode = -1;
 static char caps_lock = 1;              /* is enabled */
-static int in_mygetch = 0;
+static bool in_interface = false;
 
 /* ----------------------------------------------------
     Keymap. Mapping scancodes to Apple II+ US Keyboard
@@ -207,115 +205,198 @@ static int apple_iie_keymap_shift_ctrl[128] =
   -1, -1, -1, -1, -1, -1, -1, kPAUSE,           /* 112-119 */
   -1, -1, -1, -1, -1, -1, -1, -1 };             /* 120-127 */
 
-static char key_pressed[ 256 ];
+static char key_pressed[ 256 ] = { 0 };
 
 
 /* -------------------------------------------------------------------------
- * This routine is called periodically to update the state of the emulator.
- *      -handles switching to menus
- *      -polls PC Joystick
- *      -update palette for flashing text
- * ------------------------------------------------------------------------- */
-void c_periodic_update(int dummysig) {
-    int current_key;
+    void c_handle_input() : Handle input : keys and joystick.
+   ------------------------------------------------------------------------- */
+void c_handle_input(int scancode, int pressed)
+{
+    int *keymap = NULL;
 
-    video_sync(0);
+    // raw key input mapping ...
 
-    if (next_key >= 0)
+    if (scancode >= 0)
     {
-        current_key = next_key;
-        next_key = -1;
+        last_scancode = scancode;
 
-        if (current_key < 128)
+        /* determine which key mapping to use */
+        if (apple_mode == IIE_MODE || in_interface)
         {
-            apple_ii_64k[0][0xC000] = current_key | 0x80;
-            apple_ii_64k[1][0xC000] = current_key | 0x80;
+            /* set/reset caps lock */
+            if (key_pressed[ SCODE_CAPS ])
+            {
+                caps_lock = !caps_lock;
+            }
+
+            if ((key_pressed[ SCODE_L_SHIFT ] || key_pressed[ SCODE_R_SHIFT ]) && /* shift-ctrl */
+                (key_pressed[ SCODE_L_CTRL ] || key_pressed[ SCODE_R_CTRL ]))
+            {
+                keymap = apple_iie_keymap_shift_ctrl;
+            }
+            else if (key_pressed[ SCODE_L_CTRL ] || key_pressed[ SCODE_R_CTRL ]) /* ctrl */
+            {
+                keymap = apple_iie_keymap_ctrl;
+            }
+            else if (key_pressed[ SCODE_L_SHIFT ] || key_pressed[ SCODE_R_SHIFT ]) /* shift */
+            {
+                keymap = apple_iie_keymap_shifted;
+            }
+            else if (caps_lock)
+            {
+                keymap = apple_iie_keymap_caps;
+            }
+            else /* plain */
+            {
+                keymap = apple_iie_keymap_plain;
+            }
         }
         else
         {
-            switch (current_key)
+            if (key_pressed[ SCODE_L_CTRL ] || key_pressed[ SCODE_R_CTRL ])
             {
-            case kEND:
-                if (key_pressed[ SCODE_L_CTRL ] || key_pressed[ SCODE_R_CTRL ])
-                {
-                    cpu65_interrupt(ResetSig);
-                }
-                break;
+                keymap = apple_ii_keymap_ctrl;
+            }
+            else if (key_pressed[ SCODE_L_SHIFT ] || key_pressed[ SCODE_R_SHIFT ])
+            {
+                keymap = apple_ii_keymap_shifted;
+            }
+            else
+            {
+                keymap = apple_ii_keymap_plain;
+            }
+        }
 
-            case J_C:
-                joy_x = HALF_JOY_RANGE;
-                joy_y = HALF_JOY_RANGE;
+        /* key is pressed */
+        if (pressed)
+        {
+            key_pressed[ scancode ] = 1;
+            switch (keymap[ scancode ])
+            {
+            case JB0:
+                joy_button0 = 0xff; /* open apple */
                 break;
-
-            case kF1:
-                pthread_mutex_lock(&interface_mutex);
-                SoundSystemPause();
-                c_interface_select_diskette( 0 );
-                SoundSystemUnpause();
-                pthread_mutex_unlock(&interface_mutex);
+            case JB1:
+                joy_button1 = 0xff; /* closed apple */
                 break;
-
-            case kF2:
-                pthread_mutex_lock(&interface_mutex);
-                SoundSystemPause();
-                c_interface_select_diskette( 1 );
-                SoundSystemUnpause();
-                pthread_mutex_unlock(&interface_mutex);
+            default:
+                next_key = keymap[scancode];
                 break;
-
-            case kPAUSE:
-                pthread_mutex_lock(&interface_mutex);
-                SoundSystemPause();
-                while (c_mygetch(1) == -1)
-                {
-                    struct timespec ts = { .tv_sec=0, .tv_nsec=1 };
-                    nanosleep(&ts, NULL);
-                }
-                SoundSystemUnpause();
-                pthread_mutex_unlock(&interface_mutex);
+            }
+        }
+        /* key is released */
+        else
+        {
+            key_pressed[ scancode ] = 0;
+            switch (keymap[ scancode ])
+            {
+            case JB0:
+                joy_button0 = 0x00;
                 break;
-
-            case kF5:
-                pthread_mutex_lock(&interface_mutex);
-                SoundSystemPause();
-                c_interface_keyboard_layout();
-                SoundSystemUnpause();
-                pthread_mutex_unlock(&interface_mutex);
+            case JB1:
+                joy_button1 = 0x00;
                 break;
-
-            case kF7:
-                pthread_mutex_lock(&interface_mutex);
-                SoundSystemPause();
-                c_do_debugging();
-                SoundSystemUnpause();
-                pthread_mutex_unlock(&interface_mutex);
-                break;
-
-            case kF8:
-                pthread_mutex_lock(&interface_mutex);
-                SoundSystemPause();
-                c_interface_credits();
-                SoundSystemUnpause();
-                pthread_mutex_unlock(&interface_mutex);
-                break;
-
-            case kF9:
-                timing_toggle_cpu_speed();
-                break;
-
-            case kF10:
-                pthread_mutex_lock(&interface_mutex);
-                SoundSystemPause();
-                c_interface_parameters();
-                SoundSystemUnpause();
-                pthread_mutex_unlock(&interface_mutex);
+            default:
                 break;
             }
         }
     }
 
-    /* simulated joystick from PC Keypad */
-    if (joy_mode == JOY_KPAD)
+    // key input consumption
+
+    if ((next_key >= 0) && !in_interface)
+    {
+        do {
+            int current_key = next_key;
+            next_key = -1;
+
+            if (current_key < 128)
+            {
+                apple_ii_64k[0][0xC000] = current_key | 0x80;
+                apple_ii_64k[1][0xC000] = current_key | 0x80;
+                break;
+            }
+
+            if (current_key == kF9)
+            {
+                timing_toggle_cpu_speed();
+                break;
+            }
+
+            if (current_key == kEND)
+            {
+                if (key_pressed[ SCODE_L_CTRL ] || key_pressed[ SCODE_R_CTRL ])
+                {
+                    cpu65_interrupt(ResetSig);
+                }
+                break;
+            }
+
+            if ( !(c_keys_is_interface_key(current_key) || (current_key == kPAUSE)) )
+            {
+                break;
+            }
+
+            pthread_mutex_lock(&interface_mutex);
+            SoundSystemPause();
+            in_interface = true;
+
+            switch (current_key)
+            {
+            case kF1:
+                c_interface_select_diskette( 0 );
+                break;
+
+            case kF2:
+                c_interface_select_diskette( 1 );
+                break;
+
+            case kPAUSE:
+                while (c_mygetch(1) == -1)
+                {
+                    struct timespec ts = { .tv_sec=0, .tv_nsec=1 };
+                    nanosleep(&ts, NULL);
+                }
+                break;
+
+            case kF5:
+                c_interface_keyboard_layout();
+                break;
+
+#ifdef DEBUGGER
+            case kF7:
+                c_do_debugging();
+                break;
+#endif
+
+            case kF8:
+                c_interface_credits();
+                break;
+
+            case kF10:
+                c_interface_parameters();
+                break;
+
+            default:
+                break;
+            }
+
+            SoundSystemUnpause();
+            pthread_mutex_unlock(&interface_mutex);
+            in_interface = false;
+
+        } while(0);
+    }
+
+    // joystick processing
+
+    if (joy_mode == JOY_OFF)
+    {
+        joy_x = joy_y = 0xFF;
+    }
+#if defined(KEYPAD_JOYSTICK)
+    else if (joy_mode == JOY_KPAD)
     {
         if (key_pressed[ SCODE_J_U ])
         {
@@ -364,9 +445,15 @@ void c_periodic_update(int dummysig) {
                 joy_x = JOY_RANGE-1;
             }
         }
-    }
 
-#ifdef PC_JOYSTICK
+        if (key_pressed[ SCODE_J_C ])
+        {
+            joy_x = HALF_JOY_RANGE;
+            joy_y = HALF_JOY_RANGE;
+        }
+    }
+#endif
+#if defined(PC_JOYSTICK)
     else if ((joy_mode == JOY_PCJOY) && !(js_fd < 0))
     {
         if (read(js_fd, &js, JS_RETURN) == -1)
@@ -374,11 +461,14 @@ void c_periodic_update(int dummysig) {
             // error
         }
 
-        x_val = (js.x < js_center_x)
+        raw_js_x = js.x;
+        raw_js_y = js.y;
+
+        int x_val = (js.x < js_center_x)
                 ? (js.x - js_offset_x) * js_adjustlow_x
                 : (js.x - js_center_x) * js_adjusthigh_x + HALF_JOY_RANGE;
 
-        y_val = (js.y < js_center_y)
+        int y_val = (js.y < js_center_y)
                 ? (js.y - js_offset_y) * js_adjustlow_y
                 : (js.y - js_center_y) * js_adjusthigh_y + HALF_JOY_RANGE;
 
@@ -405,124 +495,18 @@ void c_periodic_update(int dummysig) {
         {
             joy_button1 = (js.buttons & 0x02) ? 0x80 : 0x0;
         }
-
-        if (!(joy_button2 & 0x7f))
-        {
-            joy_button2 = (js.buttons & 0x03) ? 0x80 : 0x0;
-        }
     }
 #endif
-    else if (joy_mode == JOY_OFF)
-    {
-        joy_x = joy_y = 256;
-    }
 }
 
-/* -------------------------------------------------------------------------
-    void c_read_raw_key() : handle a scancode
-   ------------------------------------------------------------------------- */
-void c_read_raw_key(int scancode, int pressed) {
-    int *keymap = NULL;
-
-    last_scancode = scancode;
-
-    /* determine which key mapping to use */
-    if (apple_mode == IIE_MODE || in_mygetch)
-    {
-        /* set/reset caps lock */
-        if (key_pressed[ SCODE_CAPS ])
-        {
-            caps_lock = !caps_lock;
-        }
-
-        if ((key_pressed[ SCODE_L_SHIFT ] || key_pressed[ SCODE_R_SHIFT ]) && /* shift-ctrl */
-            (key_pressed[ SCODE_L_CTRL ] || key_pressed[ SCODE_R_CTRL ]))
-        {
-            keymap = apple_iie_keymap_shift_ctrl;
-        }
-        else if (key_pressed[ SCODE_L_CTRL ] || key_pressed[ SCODE_R_CTRL ]) /* ctrl */
-        {
-            keymap = apple_iie_keymap_ctrl;
-        }
-        else if (key_pressed[ SCODE_L_SHIFT ] || key_pressed[ SCODE_R_SHIFT ]) /* shift */
-        {
-            keymap = apple_iie_keymap_shifted;
-        }
-        else if (caps_lock)
-        {
-            keymap = apple_iie_keymap_caps;
-        }
-        else /* plain */
-        {
-            keymap = apple_iie_keymap_plain;
-        }
-    }
-    else
-    {
-        if (key_pressed[ SCODE_L_CTRL ] || key_pressed[ SCODE_R_CTRL ])
-        {
-            keymap = apple_ii_keymap_ctrl;
-        }
-        else if (key_pressed[ SCODE_L_SHIFT ] || key_pressed[ SCODE_R_SHIFT ])
-        {
-            keymap = apple_ii_keymap_shifted;
-        }
-        else
-        {
-            keymap = apple_ii_keymap_plain;
-        }
-    }
-
-    /* key is pressed */
-    if (pressed)
-    {
-        key_pressed[ scancode ] = 1;
-
-        switch (keymap[ scancode ])
-        {
-        case JB0:
-            joy_button0 = 0xff; /* open apple */
-            break;
-        case JB1:
-            joy_button1 = 0xff; /* closed apple */
-            break;
-        case JB2:
-            joy_button2 = 0xff; /* unused? */
-            break;
-        default:
-            next_key = keymap[scancode];
-            break;
-        }
-    }
-    /* key is released */
-    else
-    {
-        key_pressed[ scancode ] = 0;
-        switch (keymap[ scancode ])
-        {
-        case JB0:
-            joy_button0 = 0x00;
-            break;
-        case JB1:
-            joy_button1 = 0x00;
-            break;
-        case JB2:
-            joy_button2 = 0x00;
-            break;
-        }
-    }
-}
-
-bool is_backspace()
+int c_rawkey()
 {
-    return (last_scancode == SCODE_BS);
+    return last_scancode;
 }
 
 int c_mygetch(int block)
 {
     int retval;
-
-    in_mygetch = 1;
 
     if (block)
     {
@@ -537,8 +521,6 @@ int c_mygetch(int block)
     {
         video_sync(0);
     }
-
-    in_mygetch = 0;
 
     retval = next_key;
     next_key = -1;

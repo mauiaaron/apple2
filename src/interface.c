@@ -28,8 +28,6 @@
 
 #include <zlib.h>
 
-#define MOUSETEXT_BEGIN 0x90
-
 static struct stat statbuf;
 static int altdrive;
 
@@ -1007,7 +1005,7 @@ void c_interface_parameters()
                 cur_y = option = 0;     /* wrap both to first */
             }
         }
-        else if ((ch == kLEFT) && (!is_backspace()))           /* Arrow left */
+        else if ((ch == kLEFT) && (c_rawkey() != SCODE_BS))           /* Arrow left */
         {
             switch (option)
             {

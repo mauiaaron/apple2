@@ -32,9 +32,18 @@
 #include "misc.h"
 #include "prefs.h"
 
+/* parameters for generic and keyboard-simulated joysticks */
+short joy_x = HALF_JOY_RANGE;
+short joy_y = HALF_JOY_RANGE;
+unsigned char joy_button0 = 0;
+unsigned char joy_button1 = 0;
+
 #ifdef PC_JOYSTICK
 int js_fd = -1;                 /* joystick file descriptor */
 struct JS_DATA_TYPE js;         /* joystick data struct */
+
+int raw_js_x;
+int raw_js_y;
 
 int js_lowerrange_x,
     js_upperrange_x,
@@ -103,7 +112,6 @@ void c_close_pc_joystick()
  * ------------------------------------------------------------------------- */
 static void c_calculate_pc_joystick_parms()
 {
-
     js_lowerrange_x = js_center_x - js_min_x;
     js_upperrange_x = js_max_x - js_center_x;
     js_lowerrange_y = js_center_y - js_min_y;
@@ -127,13 +135,14 @@ extern void copy_and_pad_string(char *dest, const char* src, const char c, const
 static void c_calibrate_pc_joystick()
 {
 #define JOYERR_PAD 35
-#define JOYERR_SUBMENU_H 8
+#define JOYERR_SUBMENU_H 9
 #define JOYERR_SUBMENU_W 40
     char errmenu[JOYERR_SUBMENU_H][JOYERR_SUBMENU_W+1] =
     //1.  5.  10.  15.  20.  25.  30.  35.  40.
     { "||||||||||||||||||||||||||||||||||||||||",
       "|                                      |",
       "| An error occurred:                   |",
+      "|                                      |",
       "|                                      |",
       "| Is a joystick device connected?      |",
       "| Is the proper kernel module loaded?  |",
@@ -160,75 +169,69 @@ static void c_calibrate_pc_joystick()
         }
     }
 
-#define CALIBRATE_SUBMENU_H 7
+#define CALIBRATE_SUBMENU_H 9
 #define CALIBRATE_SUBMENU_W 40
     char submenu[CALIBRATE_SUBMENU_H][CALIBRATE_SUBMENU_W+1] =
     //1.  5.  10.  15.  20.  25.  30.  35.  40.
     { "||||||||||||||||||||||||||||||||||||||||",
       "|                                      |",
-      "| Move joystick to all extremes then   |",
-      "| center it and long-press joy button  |",
+      "| Move joystick to extremes of x and y |",
+      "| axes and then center it.             |",
       "|                                      |",
       "|  btn1:@ btn2:@      x:@@@@  y:@@@@   |",
+      "|                                      |",
+      "| ESC to continue...                   |",
       "||||||||||||||||||||||||||||||||||||||||" };
 
-#define LONG_PRESS_THRESHOLD 120
-
 #define SHOW_JOYSTICK_AXES(MENU, WIDTH, HEIGHT, X, Y) \
-    sprintf(temp, "%04x", (short)(X)); \
-    copy_and_pad_string(&MENU[HEIGHT-2][24], temp, ' ', 5, ' '); \
-    sprintf(temp, "%04x", (short)(Y)); \
-    copy_and_pad_string(&MENU[HEIGHT-2][32], temp, ' ', 5, ' '); \
+    snprintf(temp, TEMPSIZE, "%04x", (short)(X)); \
+    copy_and_pad_string(&MENU[HEIGHT-4][24], temp, ' ', 5, ' '); \
+    snprintf(temp, TEMPSIZE, "%04x", (short)(Y)); \
+    copy_and_pad_string(&MENU[HEIGHT-4][32], temp, ' ', 5, ' '); \
     c_interface_print_submenu_centered(MENU[0], WIDTH, HEIGHT);
 
 #define SHOW_BUTTONS(MENU, HEIGHT) \
-    MENU[HEIGHT-2][8]  = (js.buttons & 0x01) ? 'X' : ' '; \
-    MENU[HEIGHT-2][15] = (js.buttons & 0x02) ? 'X' : ' '; \
-    if (js.buttons & 0x03) \
-    { \
-        ++long_press; \
-    } \
-    else \
-    { \
-        long_press = 0; \
-    }
+    MENU[HEIGHT-4][8]  = joy_button0 ? 'X' : ' '; \
+    MENU[HEIGHT-4][15] = joy_button1 ? 'X' : ' ';
 
-    unsigned int long_press = 0;
-    while ((read(js_fd, &js, JS_RETURN) > 0))
+    for (;;)
     {
+        int ch = c_mygetch(0);
+
         SHOW_BUTTONS(submenu, CALIBRATE_SUBMENU_H);
-        SHOW_JOYSTICK_AXES(submenu, CALIBRATE_SUBMENU_W, CALIBRATE_SUBMENU_H, js.x, js.y);
-        video_sync(0);
+        SHOW_JOYSTICK_AXES(submenu, CALIBRATE_SUBMENU_W, CALIBRATE_SUBMENU_H, raw_js_x, raw_js_y);
 
-        if (js_max_x < js.x)
+        if (js_max_x < raw_js_x)
         {
-            js_max_x = js.x;
+            js_max_x = raw_js_x;
         }
 
-        if (js_max_y < js.y)
+        if (js_max_y < raw_js_y)
         {
-            js_max_y = js.y;
+            js_max_y = raw_js_y;
         }
 
-        if (js_min_x > js.x)
+        if (js_min_x > raw_js_x)
         {
-            js_min_x = js.x;
+            js_min_x = raw_js_x;
         }
 
-        if (js_min_y > js.y)
+        if (js_min_y > raw_js_y)
         {
-            js_min_y = js.y;
+            js_min_y = raw_js_y;
         }
 
-        if (long_press > LONG_PRESS_THRESHOLD)
+        if (ch == kESC)
         {
             break;
         }
+
+        static struct timespec ts = { .tv_sec=0, .tv_nsec=33333333 };
+        nanosleep(&ts, NULL);
     }
 
-    long_press = 0;
-    js_center_x = js.x;
-    js_center_y = js.y;
+    js_center_x = raw_js_x;
+    js_center_y = raw_js_y;
 
 #ifndef NDEBUG
     LOG("js_min_x = %d", js_min_x);
@@ -261,14 +264,12 @@ static void c_calibrate_pc_joystick()
 #define CALIBRATE_JOYMENU_H 20
 #define CALIBRATE_JOYMENU_W 40
 #define CALIBRATE_TURTLE_X0 4
-#define CALIBRATE_TURTLE_Y0 5
+#define CALIBRATE_TURTLE_Y0 3
 #define CALIBRATE_TURTLE_STEP_X (30.f / 255.f)
 #define CALIBRATE_TURTLE_STEP_Y (10.f / 255.f)
     char joymenu[CALIBRATE_JOYMENU_H][CALIBRATE_JOYMENU_W+1] =
     //1.  5.  10.  15.  20.  25.  30.  35.  40.
     { "||||||||||||||||||||||||||||||||||||||||",
-      "|                                      |",
-      "| Long press joy button to quit        |",
       "|                                      |",
       "|  |||||||||||||||||||||||||||||||||   |",
       "|  |                               |   |",
@@ -285,27 +286,20 @@ static void c_calibrate_pc_joystick()
       "|  |||||||||||||||||||||||||||||||||   |",
       "|                                      |",
       "|  btn1:@ btn2:@      x:@@@@  y:@@@@   |",
+      "|                                      |",
+      "| ESC quits calibration                |",
       "||||||||||||||||||||||||||||||||||||||||" };
 
     uint8_t x_val=0, y_val=0;
     uint8_t x_last=CALIBRATE_JOYMENU_W>>1, y_last=CALIBRATE_JOYMENU_H>>1;
     const char* const spinney = "|/-\\";
     uint8_t spinney_idx=0;
-    bool finished_press = false;
-    while (read(js_fd, &js, JS_RETURN) > 0)
+    for (;;)
     {
-        x_val = (js.x < js_center_x)
-                ? (js.x - js_offset_x) * js_adjustlow_x
-                : (js.x - (js_center_x /*+js_offset_x*/)) * js_adjusthigh_x +
-                HALF_JOY_RANGE;
+        int ch = c_mygetch(0);
 
-        y_val = (js.y < js_center_y)
-                ? (js.y - js_offset_y) * js_adjustlow_y
-                : (js.y - (js_center_y /*+js_offset_y*/)) * js_adjusthigh_y +
-                HALF_JOY_RANGE;
-
-        int x_plot = CALIBRATE_TURTLE_X0 + (int)(x_val * CALIBRATE_TURTLE_STEP_X);
-        int y_plot = CALIBRATE_TURTLE_Y0 + (int)(y_val * CALIBRATE_TURTLE_STEP_Y);
+        int x_plot = CALIBRATE_TURTLE_X0 + (int)(joy_x * CALIBRATE_TURTLE_STEP_X);
+        int y_plot = CALIBRATE_TURTLE_Y0 + (int)(joy_y * CALIBRATE_TURTLE_STEP_Y);
 
         joymenu[y_last][x_last] = ' ';
         joymenu[y_plot][x_plot] = spinney[spinney_idx];
@@ -314,19 +308,18 @@ static void c_calibrate_pc_joystick()
         y_last = y_plot;
 
         SHOW_BUTTONS(joymenu, CALIBRATE_JOYMENU_H);
-        SHOW_JOYSTICK_AXES(joymenu, CALIBRATE_JOYMENU_W, CALIBRATE_JOYMENU_H, x_val, y_val);
+        SHOW_JOYSTICK_AXES(joymenu, CALIBRATE_JOYMENU_W, CALIBRATE_JOYMENU_H, joy_x, joy_y);
         video_sync(0);
 
         spinney_idx = (spinney_idx+1) % 4;
 
-        if (!js.buttons)
-        {
-            finished_press = true;
-        }
-        if (finished_press && (long_press > LONG_PRESS_THRESHOLD))
+        if (ch == kESC)
         {
             break;
         }
+
+        static struct timespec ts = { .tv_sec=0, .tv_nsec=33333333 };
+        nanosleep(&ts, NULL);
     }
 }
 #endif // PC_JOYSTICK
@@ -334,7 +327,97 @@ static void c_calibrate_pc_joystick()
 #ifdef KEYPAD_JOYSTICK
 static void c_calibrate_keypad_joystick()
 {
-    // TODO ....
+
+#define KEYPAD_SUBMENU_H 20
+#define KEYPAD_SUBMENU_W 40
+#define CALIBRATE_TURTLE_KP_X0 4
+#define CALIBRATE_TURTLE_KP_Y0 5
+#define CALIBRATE_TURTLE_KP_STEP_X (14.f / 255.f)
+    char submenu[KEYPAD_SUBMENU_H][KEYPAD_SUBMENU_W+1] =
+    //1.  5.  10.  15.  20.  25.  30.  35.  40.
+    { "||||||||||||||||||||||||||||||||||||||||",
+      "|                                      |",
+      "| Use keypad to test & tune joystick   |",
+      "|                                      |",
+      "|  ||||||||||||||||| [You may need to  |",
+      "|  |               |  enable NumLock]  |",
+      "|  |               |                   |",
+      "|  |               |                   |",
+      "|  |               |       7 @ 9       |",
+      "|  |               |       @ 5 @       |",
+      "|  |       .       |       1 @ 3       |",
+      "|  |               | Alt-l       Alt-r |",
+      "|  |               |                   |",
+      "|  |               |                   |",
+      "|  |               |                   |",
+      "|  |               | < or > to change  |",
+      "|  |||||||||||||||||   sensitivity: @@ |",
+      "|                                      |",
+      "|  Alt btn1:@ Alt btn2:@     x:@@ y:@@ |",
+      "||||||||||||||||||||||||||||||||||||||||" };
+
+    submenu[8][29]  = MOUSETEXT_BEGIN + 0x0b;
+    submenu[9][27]  = MOUSETEXT_BEGIN + 0x08;
+    submenu[9][31]  = MOUSETEXT_BEGIN + 0x15;
+    submenu[10][29] = MOUSETEXT_BEGIN + 0x0a;
+
+    joy_x = HALF_JOY_RANGE;
+    joy_y = HALF_JOY_RANGE;
+
+    int ch = -1;
+    uint8_t x_last=CALIBRATE_JOYMENU_W>>1, y_last=CALIBRATE_JOYMENU_H>>1;
+    const char* const spinney = "|/-\\";
+    uint8_t spinney_idx=0;
+    for (;;)
+    {
+        submenu[KEYPAD_SUBMENU_H-2][12] = joy_button0 ? 'X' : ' ';
+        submenu[KEYPAD_SUBMENU_H-2][23] = joy_button1 ? 'X' : ' ';
+
+        snprintf(temp, TEMPSIZE, "%02x", (uint8_t)joy_x);
+        copy_and_pad_string(&submenu[KEYPAD_SUBMENU_H-2][31], temp, ' ', 3, ' ');
+        snprintf(temp, TEMPSIZE, "%02x", (uint8_t)joy_y);
+        copy_and_pad_string(&submenu[KEYPAD_SUBMENU_H-2][36], temp, ' ', 3, ' ');
+
+        snprintf(temp, TEMPSIZE, "%02x", (uint8_t)joy_step);
+        copy_and_pad_string(&submenu[KEYPAD_SUBMENU_H-4][36], temp, ' ', 3, ' ');
+
+        int x_plot = CALIBRATE_TURTLE_KP_X0 + (int)(joy_x * CALIBRATE_TURTLE_KP_STEP_X);
+        int y_plot = CALIBRATE_TURTLE_KP_Y0 + (int)(joy_y * CALIBRATE_TURTLE_STEP_Y);
+
+        submenu[y_last][x_last] = ' ';
+        submenu[y_plot][x_plot] = spinney[spinney_idx];
+
+        x_last = x_plot;
+        y_last = y_plot;
+
+        spinney_idx = (spinney_idx+1) % 4;
+
+        c_interface_print_submenu_centered(submenu[0], KEYPAD_SUBMENU_W, KEYPAD_SUBMENU_H);
+
+        ch = c_mygetch(0);
+
+        if (ch == kESC)
+        {
+            break;
+        }
+        else if (ch == '<')
+        {
+            if (joy_step > 1)
+            {
+                --joy_step;
+            }
+        }
+        else if (ch == '>')
+        {
+            if (joy_step < 0xFF)
+            {
+                ++joy_step;
+            }
+        }
+
+        static struct timespec ts = { .tv_sec=0, .tv_nsec=33333333 };
+        nanosleep(&ts, NULL);
+    }
 }
 #endif
 
