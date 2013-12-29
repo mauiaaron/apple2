@@ -23,7 +23,7 @@
 
 #define NANOSECONDS 1000000000
 
-// timing values cribbed from AppleWin
+// timing values cribbed from AppleWin ... should double-check _Understanding the Apple IIe_
 
 // 14318181.81...
 #define _M14 (157500000.0 / 11.0)

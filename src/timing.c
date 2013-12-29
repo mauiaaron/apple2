@@ -169,6 +169,7 @@ void cpu_thread(void *dummyptr) {
     unsigned long dbg_ticks = 0;
     int speaker_neg_feedback = 0;
     int speaker_pos_feedback = 0;
+    unsigned int dbg_cycles_executed = 0;
 #endif
 
     do
@@ -217,6 +218,9 @@ void cpu_thread(void *dummyptr) {
             {
                 cycles_adjust = ~cycles_adjust +1; // cycles_adjust *= -1
             }
+#ifndef NDEBUG
+            dbg_cycles_executed += cpu65_cycle_count;
+#endif
             unsigned int uExecutedCycles = cpu65_cycle_count;
 
             MB_UpdateCycles(uExecutedCycles);   // Update 6522s (NB. Do this before updating g_nCumulativeCycles below)
@@ -277,7 +281,8 @@ void cpu_thread(void *dummyptr) {
             dbg_ticks += EXECUTION_PERIOD_NSECS;
             if ((dbg_ticks % NANOSECONDS) == 0)
             {
-                LOG("tick:(%ld.%ld) real:(%ld.%ld) ... speaker cycles feedback: %d/%d", t0.tv_sec, t0.tv_nsec, ti.tv_sec, ti.tv_nsec, speaker_neg_feedback, speaker_pos_feedback);
+                LOG("tick:(%ld.%ld) real:(%ld.%ld) cycles exe: %d ... speaker feedback: %d/%d", t0.tv_sec, t0.tv_nsec, ti.tv_sec, ti.tv_nsec, dbg_cycles_executed, speaker_neg_feedback, speaker_pos_feedback);
+                dbg_cycles_executed = 0;
                 dbg_ticks = 0;
                 speaker_neg_feedback = 0;
                 speaker_pos_feedback = 0;
