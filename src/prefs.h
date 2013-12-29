@@ -62,7 +62,6 @@ extern uint8_t auto_recenter;
 /* real joystick settings */
 extern int js_center_x;
 extern int js_center_y;
-extern long js_timelimit;
 extern int js_max_x;
 extern int js_max_y;
 extern int js_min_x;

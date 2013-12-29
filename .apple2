@@ -6,5 +6,5 @@ color = interpolated
 volume = 8
 joystick = joy keypad
 system path = /usr/local/games/apple2/rom
-pc joystick parms = 128 128 255 1 255 1 6
+pc joystick parms = 128 128 255 1 255 1
 keypad joystick parms = 8 1

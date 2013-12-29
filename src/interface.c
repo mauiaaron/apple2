@@ -71,11 +71,6 @@ static void pad_string(char *s, const char c, const int len) {
 /* in keys.c */
 //extern void c_mouse_close();
 
-#ifdef PC_JOYSTICK
-extern long js_timelimit;
-#endif
-
-
 /* -------------------------------------------------------------------------
     c_load_interface_font()
    ------------------------------------------------------------------------- */

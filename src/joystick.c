@@ -46,7 +46,6 @@ uint8_t auto_recenter = 0;
 #ifdef PC_JOYSTICK
 int js_center_x;
 int js_center_y;
-long js_timelimit;
 int js_max_x;
 int js_max_y;
 int js_min_x;
@@ -72,7 +71,7 @@ float
     js_adjusthigh_y;
 
 /* -------------------------------------------------------------------------
-    c_open_pc_joystick() - opens joystick device and sets timelimit value
+    c_open_pc_joystick() - opens joystick device
    ------------------------------------------------------------------------- */
 static void c_calculate_pc_joystick_parms();
 int c_open_pc_joystick()
@@ -90,12 +89,6 @@ int c_open_pc_joystick()
                     return 1; /* problem */
                 }
             }
-        }
-
-        /* set timelimit value */
-        if (ioctl(js_fd, JS_SET_TIMELIMIT, &js_timelimit) == -1)
-        {
-            return 1; /* problem */
         }
     }
 
