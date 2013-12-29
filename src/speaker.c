@@ -514,7 +514,7 @@ static void ReinitRemainderBuffer(UINT nCyclesRemaining)
 	if(nCyclesRemaining == 0)
 		return;
 
-	for(g_nRemainderBufferIdx=0; g_nRemainderBufferIdx<nCyclesRemaining; g_nRemainderBufferIdx++)
+	for(g_nRemainderBufferIdx=0; (g_nRemainderBufferIdx<nCyclesRemaining) && (g_nRemainderBufferIdx<g_nRemainderBufferSize); g_nRemainderBufferIdx++)
 		g_pRemainderBuffer[g_nRemainderBufferIdx] = g_nSpeakerData;
 
 	_ASSERT(g_nRemainderBufferIdx < g_nRemainderBufferSize);
