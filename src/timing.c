@@ -46,7 +46,7 @@ static unsigned int g_nCyclesExecuted; // # of cycles executed up to last IO acc
 struct timespec timespec_diff(struct timespec start, struct timespec end, bool *negative) {
     struct timespec t;
 
-    if (*negative)
+    if (negative)
     {
         *negative = false;
     }
