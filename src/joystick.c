@@ -160,10 +160,10 @@ static void c_calibrate_pc_joystick()
     while (c_mygetch(1) == -1) { }
 
     /* reset all the extremes */
-    js_max_x = -1;
-    js_max_y = -1;
-    js_min_x = MAXINT;
-    js_min_y = MAXINT;
+    js_max_x = INT_MIN;
+    js_max_y = INT_MIN;
+    js_min_x = INT_MAX;
+    js_min_y = INT_MAX;
 
     /* open joystick device if not open */
     if (js_fd < 0)
