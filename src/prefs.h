@@ -55,6 +55,7 @@ extern joystick_mode_t joy_mode;
 
 #ifdef KEYPAD_JOYSTICK
 extern short joy_step;
+extern uint8_t auto_recenter;
 #endif
 
 #ifdef PC_JOYSTICK

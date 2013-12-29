@@ -39,7 +39,8 @@ unsigned char joy_button0 = 0;
 unsigned char joy_button1 = 0;
 
 #ifdef KEYPAD_JOYSTICK
-short joy_step;
+short joy_step = 1;
+uint8_t auto_recenter = 0;
 #endif
 
 #ifdef PC_JOYSTICK
@@ -360,8 +361,8 @@ static void c_calibrate_keypad_joystick()
       "|  |       .       |       1 @ 3       |",
       "|  |               | Alt-l       Alt-r |",
       "|  |               |                   |",
-      "|  |               |                   |",
-      "|  |               |                   |",
+      "|  |               | + toggles auto-   |",
+      "|  |               |  recentering: @@@ |",
       "|  |               | < or > to change  |",
       "|  |||||||||||||||||   sensitivity: @@ |",
       "|                                      |",
@@ -392,6 +393,9 @@ static void c_calibrate_keypad_joystick()
 
         snprintf(temp, TEMPSIZE, "%02x", (uint8_t)joy_step);
         copy_and_pad_string(&submenu[KEYPAD_SUBMENU_H-4][36], temp, ' ', 3, ' ');
+
+        snprintf(temp, TEMPSIZE, "%s", auto_recenter ? " on" : "off" );
+        copy_and_pad_string(&submenu[KEYPAD_SUBMENU_H-6][35], temp, ' ', 4, ' ');
 
         int x_plot = CALIBRATE_TURTLE_KP_X0 + (int)(joy_x * CALIBRATE_TURTLE_KP_STEP_X);
         int y_plot = CALIBRATE_TURTLE_KP_Y0 + (int)(joy_y * CALIBRATE_TURTLE_STEP_Y);
@@ -424,6 +428,15 @@ static void c_calibrate_keypad_joystick()
             if (joy_step < 0xFF)
             {
                 ++joy_step;
+            }
+        }
+        else if (ch == '+')
+        {
+            auto_recenter = (auto_recenter+1) % 2;
+            if (auto_recenter)
+            {
+                joy_x = HALF_JOY_RANGE;
+                joy_y = HALF_JOY_RANGE;
             }
         }
 

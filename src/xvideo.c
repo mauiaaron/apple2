@@ -898,6 +898,16 @@ void video_init() {
     // reset Apple2 softframebuffers
     memset(video__fb1,0,SCANWIDTH*SCANHEIGHT);
     memset(video__fb2,0,SCANWIDTH*SCANHEIGHT);
+
+#ifdef KEYPAD_JOYSTICK
+    int autorepeat_supported = 0;
+    XkbGetDetectableAutoRepeat(display, &autorepeat_supported);
+    if (autorepeat_supported)
+    {
+        LOG("Xkb Setting detectable autorepeat ...");
+        XkbSetDetectableAutoRepeat(display, true, NULL);
+    }
+#endif
 }
 
 void video_shutdown(void)

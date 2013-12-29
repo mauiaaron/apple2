@@ -330,11 +330,13 @@ void load_settings(void)
                 {
                     joy_step = 1;
                 }
-                else
-                if (joy_step > 255)
+                else if (joy_step > 255)
                 {
                     joy_step = 255;
                 }
+
+                auto_recenter = strtol(argument, &argument, 10);
+
                 break;
 #endif
 
@@ -415,7 +417,7 @@ bool save_settings(void)
 
 #ifdef KEYPAD_JOYSTICK
     err = fprintf(config_file,
-            "keypad joystick parms = %d\n", joy_step);
+            "keypad joystick parms = %d %u\n", joy_step, auto_recenter ? 1 : 0);
 #endif
     anErr = anErr || (err < 0);
 

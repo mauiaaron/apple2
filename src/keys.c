@@ -398,6 +398,14 @@ void c_handle_input(int scancode, int pressed)
 #if defined(KEYPAD_JOYSTICK)
     else if (joy_mode == JOY_KPAD)
     {
+        bool joy_axis_unpressed = (!pressed && ((scancode == SCODE_J_U) || (scancode == SCODE_J_D) || (scancode == SCODE_J_L) || (scancode == SCODE_J_R)) );
+
+        if (key_pressed[ SCODE_J_C ] || (auto_recenter && joy_axis_unpressed))
+        {
+            joy_x = HALF_JOY_RANGE;
+            joy_y = HALF_JOY_RANGE;
+        }
+
         if (key_pressed[ SCODE_J_U ])
         {
             if (joy_y > joy_step)
@@ -445,14 +453,9 @@ void c_handle_input(int scancode, int pressed)
                 joy_x = JOY_RANGE-1;
             }
         }
-
-        if (key_pressed[ SCODE_J_C ])
-        {
-            joy_x = HALF_JOY_RANGE;
-            joy_y = HALF_JOY_RANGE;
-        }
     }
 #endif
+
 #if defined(PC_JOYSTICK)
     else if ((joy_mode == JOY_PCJOY) && !(js_fd < 0))
     {
