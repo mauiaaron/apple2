@@ -37,6 +37,7 @@ short joy_x = HALF_JOY_RANGE;
 short joy_y = HALF_JOY_RANGE;
 unsigned char joy_button0 = 0;
 unsigned char joy_button1 = 0;
+unsigned char joy_button2 = 0; // unused?
 
 #ifdef KEYPAD_JOYSTICK
 short joy_step = 1;
@@ -489,6 +490,17 @@ void c_calibrate_joystick()
     if (joy_mode == JOY_KPAD)
     {
         c_calibrate_keypad_joystick();
+    }
+#endif
+}
+
+void c_joystick_reset()
+{
+#ifdef KEYPAD_JOYSTICK
+    if (joy_mode == JOY_KPAD)
+    {
+        joy_x = HALF_JOY_RANGE;
+        joy_y = HALF_JOY_RANGE;
     }
 #endif
 }

@@ -68,9 +68,6 @@ static void pad_string(char *s, const char c, const int len) {
     *p = '\0';
 }
 
-/* in keys.c */
-//extern void c_mouse_close();
-
 /* -------------------------------------------------------------------------
     c_load_interface_font()
    ------------------------------------------------------------------------- */
@@ -547,7 +544,7 @@ void c_interface_select_diskette( int drive )
                     curpos--;
                 }
             }
-            else if (ch == kDOWN)
+            else if (ch == kDN)
             {
                 if (curpos < entries - 1)
                 {
@@ -968,7 +965,7 @@ void c_interface_parameters()
                 }
             }
         }
-        else if (ch == kDOWN)                  /* Arrow down */
+        else if (ch == kDN)                  /* Arrow down */
         {
             ++option;
 
@@ -982,7 +979,7 @@ void c_interface_parameters()
                 cur_y = option = 0;     /* wrap both to first */
             }
         }
-        else if ((ch == kLEFT) && (c_rawkey() != SCODE_BS))           /* Arrow left */
+        else if ((ch == kLT) && (c_rawkey() != SCODE_BS))           /* Arrow left */
         {
             switch (option)
             {
@@ -1072,7 +1069,7 @@ void c_interface_parameters()
                 break;
             }
         }
-        else if (ch == kRIGHT)                         /* Arrow right */
+        else if (ch == kRT)                         /* Arrow right */
         {
             switch (option)
             {
@@ -1459,7 +1456,7 @@ void c_interface_credits()
                 pos = 0;
             }
         }
-        else if (ch == kDOWN)
+        else if (ch == kDN)
         {
             ++pos;
             if (pos >= SCROLL_LENGTH-SCROLL_AREA_HEIGHT)

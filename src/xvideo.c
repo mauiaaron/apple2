@@ -313,50 +313,49 @@ static void c_initialize_colors() {
     //XStoreColors(display, cmap, colors, 256);
 }
 
-
-/* HACK: this is incredibly broken.
- * Map the X keysyms back into scancodes so the routines in keys.c can deal
- * with it.  We do this to be compatible with what the SVGAlib version does.
- */
+// Map X keysyms into Apple//ix internal-representation scancodes.
 static int keysym_to_scancode(void) {
-    static int rc = 0xFF;
-
-    switch (rc = XkbKeycodeToKeysym(display, xevent.xkey.keycode, 0, 0))
+    int rc = XkbKeycodeToKeysym(display, xevent.xkey.keycode, 0, 0);
+    switch (rc)
     {
     case XK_F1:
-        rc = 59; break;
+        rc = SCODE_F1; break;
     case XK_F2:
-        rc = 60; break;
+        rc = SCODE_F2; break;
     case XK_F3:
-        rc = 61; break;
+        rc = SCODE_F3; break;
     case XK_F4:
-        rc = 62; break;
+        rc = SCODE_F4; break;
     case XK_F5:
-        rc = 63; break;
+        rc = SCODE_F5; break;
     case XK_F6:
-        rc = 64; break;
+        rc = SCODE_F6; break;
     case XK_F7:
-        rc = 65; break;
+        rc = SCODE_F7; break;
     case XK_F8:
-        rc = 66; break;
+        rc = SCODE_F8; break;
     case XK_F9:
-        rc = 67; break;
+        rc = SCODE_F9; break;
     case XK_F10:
-        rc = 68; break;
+        rc = SCODE_F10; break;
+    case XK_F11:
+        rc = SCODE_F11; break;
+    case XK_F12:
+        rc = SCODE_F12; break;
     case XK_Left:
-        rc = 105; break;
+        rc = SCODE_L; break;
     case XK_Right:
-        rc = 106; break;
+        rc = SCODE_R; break;
     case XK_Down:
-        rc = 108; break;
+        rc = SCODE_D; break;
     case XK_Up:
-        rc = 103; break;
+        rc = SCODE_U; break;
     case XK_Escape:
-        rc = 1; break;
+        rc = SCODE_ESC; break;
     case XK_Return:
-        rc = 28; break;
+        rc = SCODE_RET; break;
     case XK_Tab:
-        rc = 15; break;
+        rc = SCODE_TAB; break;
     case XK_Shift_L:
         rc = SCODE_L_SHIFT; break;
     case XK_Shift_R:
@@ -368,11 +367,11 @@ static int keysym_to_scancode(void) {
     case XK_Caps_Lock:
         rc = SCODE_CAPS; break;
     case XK_BackSpace:
-        rc = 14; break;
+        rc = SCODE_BS; break;
     case XK_Insert:
-        rc = 110; break;
+        rc = SCODE_INS; break;
     case XK_Pause:
-        rc = 119; break;
+        rc = SCODE_PAUSE; break;
     case XK_Break:
         /* Pause and Break are the same key, but have different
          * scancodes (on PC keyboards).  Ctrl makes the difference.
@@ -380,52 +379,72 @@ static int keysym_to_scancode(void) {
          * We assume the X server is passing along the distinction to us,
          * rather than making us check Ctrl manually.
          */
-        rc = 101; break;
+        rc = SCODE_BRK; break;
     case XK_Print:
-        rc = 99; break;
+        rc = SCODE_PRNT; break;
     case XK_Delete:
-        rc = 111; break;
+        rc = SCODE_DEL; break;
     case XK_End:
-        rc = 107; break;
+        rc = SCODE_END; break;
     case XK_Home:
-        rc = 102; break;
+        rc = SCODE_HOME; break;
     case XK_Page_Down:
-        rc = 109; break;
+        rc = SCODE_PGDN; break;
     case XK_Page_Up:
-        rc = 104; break;
+        rc = SCODE_PGUP; break;
 
     // keypad joystick movement
     case XK_KP_5:
     case XK_KP_Begin:
-        rc = SCODE_J_C; break;
+        rc = SCODE_KPAD_C; break;
     case XK_KP_4:
     case XK_KP_Left:
-        rc = SCODE_J_L; break;
+        rc = SCODE_KPAD_L; break;
     case XK_KP_8:
     case XK_KP_Up:
-        rc = SCODE_J_U; break;
+        rc = SCODE_KPAD_U; break;
     case XK_KP_6:
     case XK_KP_Right:
-        rc = SCODE_J_R; break;
+        rc = SCODE_KPAD_R; break;
     case XK_KP_2:
     case XK_KP_Down:
-        rc = SCODE_J_D; break;
+        rc = SCODE_KPAD_D; break;
+    case XK_KP_7:
+    case XK_KP_Home:
+        rc = SCODE_KPAD_UL; break;
+        break;
+    case XK_KP_9:
+    case XK_KP_Page_Up:
+        rc = SCODE_KPAD_UR; break;
+        break;
+    case XK_KP_1:
+    case XK_KP_End:
+        rc = SCODE_KPAD_DL; break;
+        break;
+    case XK_KP_3:
+    case XK_KP_Page_Down:
+        rc = SCODE_KPAD_DR; break;
+        break;
 
     case XK_Alt_L:
-        rc = 56; break;
+        rc = SCODE_L_ALT; break;
     case XK_Alt_R:
-        rc = 100; break;
+        rc = SCODE_R_ALT; break;
 
     default:
         if ((rc >= XK_space) && (rc <= XK_asciitilde))
         {
             rc = xevent.xkey.keycode - 8;
         }
-
+        else
+        {
+            rc = -1; // unmapped
+        }
         break;
     }
 
-    return rc & 0xFF; /* normalize */
+    assert(rc < 0x80);
+    return rc;
 }
 
 static void post_image() {

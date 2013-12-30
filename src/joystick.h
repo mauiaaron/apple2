@@ -25,5 +25,6 @@
 void c_open_joystick();
 void c_close_joystick();
 void c_calibrate_joystick();
+void c_joystick_reset();
 
 #endif // whole file
