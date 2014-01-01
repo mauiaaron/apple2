@@ -1360,7 +1360,7 @@ void c_interface_credits()
     screen[ 22 ][ 18 ] = MOUSETEXT_BEGIN + 0x0b;
     screen[ 22 ][ 20 ] = MOUSETEXT_BEGIN + 0x0a;
 
-#define SCROLL_LENGTH 54
+#define SCROLL_LENGTH 58
 #define SCROLL_WIDTH (INTERFACE_SCREEN_X+1-(SCROLL_AREA_X*2))
     char credits[SCROLL_LENGTH][SCROLL_WIDTH]=
     //1.  5.  10.  15.  20.  25.  30.  35.  40.  45.  50.  55.  60.  65.  70.  75.  80.",
@@ -1399,6 +1399,10 @@ void c_interface_credits()
         "Foundation.  https://fsf.org                                                ",
         "                                                                            ",
         "Emulator source is freely available at https://github.com/mauiaaron/apple2  ",
+        "                                                                            ",
+        "REPORTING BUGS                                                              ",
+        "                                                                            ",
+        "Bugs can be reported at https://github.com/mauiaaron/apple2/issues/         ",
         "                                                                            ",
         "FREEDOM                                                                     ",
         "                                                                            ",
@@ -1483,34 +1487,6 @@ void c_interface_credits()
 
 void c_interface_keyboard_layout()
 {
-    /* FIXME !!!!!!!!!!!!1  - deprecating ][+ modes ...
-    char screen1[24][INTERFACE_SCREEN_X+1] =
-    { "||||||||||||||||||||||||||||||||||||||||",
-      "|     Apple II+ US Keyboard Layout     |",
-      "||||||||||||||||||||||||||||||||||||||||",
-      "|                                      |",
-      "| 1! 2\" 3# 4$ 5% 6& 7' 8( 9) 0 :* -=   |",
-      "|  Q  W  E  R  T  Y  U  I  O  P@    CR |",
-      "|   A  S  D  F  G  H  J  K  L  ;+ <- ->|",
-      "|    Z  X  C  V  B  N^ M ,< .> /?      |",
-      "| Where <- -> are the left and right   |",
-      "| arrow keys respectively.             |",
-      "|                                      |",
-      "| Joystick emulation on numeric keypad |",
-      "| 7  8  9  for various directions.     |",
-      "| 4     6  Press 5 to center linear    |",
-      "| 1  2  3  joystick.                   |",
-      "|                                      |",
-      "| Ctrl-PrintScrn/SysRq is REBOOT.      |",
-      "| Ctrl-Pause/Break is RESET.           |",
-      "| Pause/Break alone pauses emulation.  |",
-      "| Alt Left and Alt Right are Apple     |",
-      "| Keys (Joystick buttons 0 & 1).       |",
-      "||||||||||||||||||||||||||||||||||||||||",
-      "|       (Press any key to exit)        |",
-      "||||||||||||||||||||||||||||||||||||||||" };
-      */
-
     char screen[24][INTERFACE_SCREEN_X+1] =
     //1.  5.  10.  15.  20.  25.  30.  35.  40.  45.  50.  55.  60.  65.  70.  75.  80.",
     { "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||",
@@ -1523,11 +1499,11 @@ void c_interface_keyboard_layout()
       "|              shift  Z  X  C  V  B  N  M ,< .> /?  shift          @ @         |",
       "|                ctrl    @        space        @    ctrl            @          |",
       "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||",
-      "|                                                           |      Menus:      |",
+      "|                                                           |    Quick Help    |",
       "| Left Alt is @ (OpenApple) key (Joystick button 1)         | F1: Disk Drive A |",
       "| Right Alt is @ (ClosedApple) key (Joystick button 2)      | F2: Disk Drive B |",
       "| End is //e RESET key                                      | F5: This Menu    |",
-      "|                                                           | F7: 6502 Debugger|",
+      "|                                                           | F8: Credits      |",
       "| Ctrl-End triggers //e reset vector                        |F10: Options      |",
       "| Ctrl-LeftAlt-End triggers //e reboot                      ||||||||||||||||||||",
       "| Ctrl-RightAlt-End triggers //e system test                                   |",
