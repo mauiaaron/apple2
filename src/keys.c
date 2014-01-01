@@ -323,7 +323,9 @@ void c_handle_input(int scancode, int pressed)
     else if (joy_mode == JOY_KPAD)
     {
         bool joy_axis_unpressed = !( key_pressed[SCODE_KPAD_U]  || key_pressed[SCODE_KPAD_D]  || key_pressed[SCODE_KPAD_L]  || key_pressed[SCODE_KPAD_R] ||
-                                     key_pressed[SCODE_KPAD_UL] || key_pressed[SCODE_KPAD_DL] || key_pressed[SCODE_KPAD_UR] || key_pressed[SCODE_KPAD_DR] );
+                                     key_pressed[SCODE_KPAD_UL] || key_pressed[SCODE_KPAD_DL] || key_pressed[SCODE_KPAD_UR] || key_pressed[SCODE_KPAD_DR] ||
+                                     // and allow regular PC arrow keys to manipulate joystick...
+                                     key_pressed[SCODE_U]       || key_pressed[SCODE_D]       || key_pressed[SCODE_L]       || key_pressed[SCODE_R]);
 
         if (key_pressed[ SCODE_KPAD_C ] || (auto_recenter && joy_axis_unpressed))
         {
@@ -331,7 +333,7 @@ void c_handle_input(int scancode, int pressed)
             joy_y = HALF_JOY_RANGE;
         }
 
-        if (key_pressed[ SCODE_KPAD_UL ] || key_pressed[ SCODE_KPAD_U ] || key_pressed[ SCODE_KPAD_UR ])
+        if (key_pressed[ SCODE_KPAD_UL ] || key_pressed[ SCODE_KPAD_U ] || key_pressed[ SCODE_KPAD_UR ] ||/* regular arrow up */key_pressed[ SCODE_U ])
         {
             if (joy_y > joy_step)
             {
@@ -343,7 +345,7 @@ void c_handle_input(int scancode, int pressed)
             }
         }
 
-        if (key_pressed[ SCODE_KPAD_DL ] || key_pressed[ SCODE_KPAD_D ] || key_pressed[ SCODE_KPAD_DR ])
+        if (key_pressed[ SCODE_KPAD_DL ] || key_pressed[ SCODE_KPAD_D ] || key_pressed[ SCODE_KPAD_DR ] ||/* regular arrow dn */key_pressed[ SCODE_D ])
         {
             if (joy_y < JOY_RANGE - joy_step)
             {
@@ -355,7 +357,7 @@ void c_handle_input(int scancode, int pressed)
             }
         }
 
-        if (key_pressed[ SCODE_KPAD_UL ] || key_pressed[ SCODE_KPAD_L ] || key_pressed[ SCODE_KPAD_DL ])
+        if (key_pressed[ SCODE_KPAD_UL ] || key_pressed[ SCODE_KPAD_L ] || key_pressed[ SCODE_KPAD_DL ] ||/* regular arrow l */key_pressed[ SCODE_L ])
         {
             if (joy_x > joy_step)
             {
@@ -367,7 +369,7 @@ void c_handle_input(int scancode, int pressed)
             }
         }
 
-        if (key_pressed[ SCODE_KPAD_UR ] || key_pressed[ SCODE_KPAD_R ] || key_pressed[ SCODE_KPAD_DR ])
+        if (key_pressed[ SCODE_KPAD_UR ] || key_pressed[ SCODE_KPAD_R ] || key_pressed[ SCODE_KPAD_DR ] ||/* regular arrow r */key_pressed[ SCODE_R ])
         {
             if (joy_x < JOY_RANGE - joy_step)
             {
