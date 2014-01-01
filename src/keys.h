@@ -137,6 +137,7 @@
 // ----------------------------------------------------------------------------
 
 extern pthread_mutex_t interface_mutex;
+extern bool caps_lock;
 
 #ifdef PC_JOYSTICK
 extern int js_fd;

@@ -52,7 +52,7 @@ extern int raw_js_y;
 
 static int next_key = -1;
 static int last_scancode = -1;
-static char caps_lock = 1;              /* is enabled */
+bool caps_lock = false;              /* is enabled */
 static bool in_interface = false;
 
 /* ----------------------------------------------------
@@ -164,11 +164,6 @@ void c_handle_input(int scancode, int pressed)
     if (scancode >= 0)
     {
         last_scancode = scancode;
-
-        if (key_pressed[ SCODE_CAPS ])
-        {
-            caps_lock = !caps_lock;
-        }
 
         if ((key_pressed[ SCODE_L_SHIFT ] || key_pressed[ SCODE_R_SHIFT ]) &&
             (key_pressed[ SCODE_L_CTRL ] || key_pressed[ SCODE_R_CTRL ]))

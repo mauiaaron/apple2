@@ -556,6 +556,11 @@ void video_sync(int block) {
     // also process other input events
     post_image();
 
+    // sync to the capslock state (which could be modified outside this app)
+    unsigned int caps_state = 0;
+    XkbGetIndicatorState(display, XkbUseCoreKbd, &caps_state);
+    caps_lock = (caps_state & 0x01);
+
     bool keyevent = true;
     do {
         if (doShm)
