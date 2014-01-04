@@ -735,6 +735,7 @@ typedef enum interface_enum_t {
     OPT_PATH,
     //OPT_MODE,
     OPT_COLOR,
+    OPT_VIDEO,
     OPT_VOLUME,
     OPT_JOYSTICK,
     OPT_CALIBRATE,
@@ -750,6 +751,7 @@ static const char *options[] =
     " Path     :  ",
     //" Mode     : ",
     " Color    :  ",
+    " Video    :  ",
     " Volume   :  ",
     " Joystick :  ",
     " Calibrate Joystick...",
@@ -862,6 +864,10 @@ void c_interface_parameters()
             case OPT_COLOR:
                 sprintf(temp, "%s", (color_mode == COLOR) ? "Color       " :
                         (color_mode == COLOR_INTERP) ? "Interpolated" : "Black/White ");
+                break;
+
+            case OPT_VIDEO:
+                sprintf(temp, "%s", (a2_video_mode == VIDEO_1X) ? "1X       " : (a2_video_mode == VIDEO_2X) ? "2X       " : "Fullscreen");
                 break;
 
             case OPT_VOLUME:
@@ -1031,6 +1037,18 @@ void c_interface_parameters()
                 }
                 break;
 
+            case OPT_VIDEO:
+                if (a2_video_mode == 1)
+                {
+                    a2_video_mode = NUM_VIDOPTS-1;
+                }
+                else
+                {
+                    --a2_video_mode;
+                }
+                video_set_mode(a2_video_mode);
+                break;
+
             case OPT_VOLUME:
                 if (sound_volume > 0)
                 {
@@ -1122,6 +1140,18 @@ void c_interface_parameters()
                 {
                     ++color_mode;
                 }
+                break;
+
+            case OPT_VIDEO:
+                if (a2_video_mode == NUM_VIDOPTS-1)
+                {
+                    a2_video_mode = 1;
+                }
+                else
+                {
+                    ++a2_video_mode;
+                }
+                video_set_mode(a2_video_mode);
                 break;
 
             case OPT_VOLUME:

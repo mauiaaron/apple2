@@ -41,6 +41,13 @@ typedef enum color_mode_t {
     NUM_COLOROPTS
 } color_mode_t;
 
+typedef enum a2_video_mode_t {
+    VIDEO_FULLSCREEN = 0,
+    VIDEO_1X,
+    VIDEO_2X,
+    NUM_VIDOPTS
+} a2_video_mode_t;
+
 #define SYSSIZE         4096
 extern char system_path[SYSSIZE];
 #define DISKSIZE        4096
@@ -49,6 +56,7 @@ extern char disk_path[DISKSIZE];
 extern int apple_mode; /* undocumented instructions or //e mode */
 extern int sound_volume;
 extern color_mode_t color_mode;
+extern a2_video_mode_t a2_video_mode;
 
 /* generic joystick settings */
 extern joystick_mode_t joy_mode;

@@ -19,6 +19,8 @@
 
 #ifndef __ASSEMBLER__
 
+#include "prefs.h"
+
 /* Prepare the video system, converting console to graphics mode, or
  * opening X window, or whatever.  This is called only once when the
  * emulator is run
@@ -104,13 +106,7 @@ void video_plotchar(int row, int col, int color, unsigned char code);
  */
 void video_sync(int block);
 
-typedef enum A2_VIDSCALE {
-    VIDEO_FULL_SCREEN = 0,
-    VIDEO_SCALE_1,
-    VIDEO_SCALE_2
-} A2_VIDSCALE;
-
-void video_setscale();
+void video_set_mode(a2_video_mode_t mode);
 
 #endif /* !__ASSEMBLER__ */
 

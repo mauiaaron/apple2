@@ -37,6 +37,7 @@
 #define         PRM_HIRES_COLOR                 4
 #define         PRM_VOLUME                      5
 #define         PRM_JOY_INPUT                   6
+#define         PRM_VIDEO_MODE                  7
 #define         PRM_JOY_PC_CALIBRATE            10
 #define         PRM_JOY_KPAD_CALIBRATE          11
 #define         PRM_ROM_PATH                    12
@@ -48,6 +49,7 @@ char disk_path[DISKSIZE];
 int apple_mode;
 int sound_volume;
 color_mode_t color_mode;
+a2_video_mode_t a2_video_mode;
 joystick_mode_t joy_mode;
 
 static char *config_filename = NULL;
@@ -68,6 +70,7 @@ static const struct match_table prefs_table[] =
     { "disk_path", PRM_DISK_PATH },
     { "path", PRM_DISK_PATH },
     { "color", PRM_HIRES_COLOR },
+    { "video", PRM_VIDEO_MODE },
     { "volume", PRM_VOLUME },
     { "joystick", PRM_JOY_INPUT },
     { "pc joystick parms", PRM_JOY_PC_CALIBRATE },
@@ -97,6 +100,14 @@ static const struct match_table color_table[] =
     { "off", 0 },
     { "on", COLOR },
     { 0, COLOR }
+};
+
+static const struct match_table video_table[] =
+{
+    { "1X", VIDEO_1X },
+    { "2X", VIDEO_2X },
+    { "Fullscreen", VIDEO_FULLSCREEN },
+    { 0, VIDEO_1X }
 };
 
 static const struct match_table volume_table[] =
@@ -274,6 +285,10 @@ void load_settings(void)
                 color_mode = match(color_table, argument);
                 break;
 
+            case PRM_VIDEO_MODE:
+                a2_video_mode = match(video_table, argument);
+                break;
+
             case PRM_VOLUME:
                 sound_volume = match(volume_table, argument);
                 break;
@@ -388,6 +403,7 @@ bool save_settings(void)
             "mode = %s\n"
             "disk path = %s\n"
             "color = %s\n"
+            "video = %s\n"
             "volume = %s\n"
             "joystick = %s\n"
             "system path = %s\n",
@@ -396,6 +412,7 @@ bool save_settings(void)
             reverse_match(modes_table, apple_mode),
             disk_path,
             reverse_match(color_table, color_mode),
+            reverse_match(video_table, a2_video_mode),
             reverse_match(volume_table, sound_volume),
             reverse_match(joy_input_table, joy_mode),
             system_path);

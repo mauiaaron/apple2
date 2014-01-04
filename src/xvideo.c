@@ -42,24 +42,39 @@ static Display *display;
 static Window win;
 static GC gc;
 static unsigned int width, height;      /* window size */
-static A2_VIDSCALE scale = VIDEO_SCALE_1;
+static unsigned int scale = 1;
 
 static int screen_num;
 static XVisualInfo visualinfo;
 static XColor colors[256];
-XImage *image;
+static XImage *image=NULL;
 static Colormap cmap;
-XEvent xevent;
+static XEvent xevent;
+
+static XSizeHints *size_hints=NULL;
+static XWMHints *wm_hints=NULL;
+static XClassHint *class_hints=NULL;
+static XTextProperty windowName, iconName;
 
 static uint32_t red_shift;
 static uint32_t green_shift;
 static uint32_t blue_shift;
 static uint32_t alpha_shift;
 
-int doShm = 1;            /* assume true */
-XShmSegmentInfo xshminfo;
-int xshmeventtype;
+static int doShm = 1;            /* assume true */
+static XShmSegmentInfo xshminfo;
+static int xshmeventtype;
 
+// pad pixels to uint32_t boundaries
+static int bitmap_pad = sizeof(uint32_t);
+
+typedef struct {
+    unsigned long flags;
+    unsigned long functions;
+    unsigned long decorations;
+    long inputMode;
+    unsigned long status;
+} FullScreenHints;
 
 /* -------------------------------------------------------------------------
     video_setpage(p):    Switch to screen page p
@@ -462,7 +477,7 @@ static void post_image() {
             ((uint32_t)(colors[index].blue)  << blue_shift)  |
             ((uint32_t)0xff /* alpha */ << alpha_shift)
             );
-        if (scale == VIDEO_SCALE_2)
+        if (scale > 1)
         {
             j+=4;
 
@@ -637,11 +652,135 @@ static void parseArgs() {
         {
             doShm=0;
         }
-        else if (strstr(argv[i], "-2"))
+    }
+}
+
+static void _destroy_image() {
+    if (doShm)
+    {
+        // Detach from X server
+        if (!XShmDetach(display, &xshminfo))
         {
-            scale=VIDEO_SCALE_2;
+            fprintf(stderr,"XShmDetach() failed in video_shutdown()\n");
+        }
+
+        XDestroyImage(image);
+
+        // Release shared memory.
+        shmdt(xshminfo.shmaddr);
+        shmctl(xshminfo.shmid, IPC_RMID, 0);
+    }
+    else
+    {
+        XDestroyImage(image);
+        //free(image->data);
+    }
+}
+
+static void _create_image() {
+    int pixel_buffer_size = width*height*bitmap_pad;
+
+    if (doShm) {
+        image = XShmCreateImage(display, visualinfo.visual, visualinfo.depth, ZPixmap, NULL, &xshminfo, width, height);
+
+        if (!image) {
+            ERRQUIT("XShmCreateImage failed");
+        }
+
+        LOG("Allocating shared memory: bytes_per_line:%ds height:x%d (depth:%d) bitmap_pad:%d",
+               image->bytes_per_line, image->height, visualinfo.depth, bitmap_pad);
+
+        getshm(pixel_buffer_size);
+
+        /* get the X server to attach to it */
+        if (!XShmAttach(display, &xshminfo)) {
+            ERRQUIT("XShmAttach() failed");
+        }
+    } else {
+        void *data = malloc(pixel_buffer_size);
+        if (!data) {
+            ERRQUIT("no memory for image data!");
+        }
+
+        LOG("Creating regular XImage");
+        image = XCreateImage(display, visualinfo.visual, visualinfo.depth, ZPixmap, 0 /*offset*/, data, width, height, 8, width*bitmap_pad /*bytes_per_line*/);
+
+        if (!image) {
+            ERRQUIT("XCreateImage failed");
         }
     }
+}
+
+static void _size_hints_set_fixed() {
+    size_hints->flags = PPosition | PSize | PMinSize | PMaxSize;
+    size_hints->min_width = width;
+    size_hints->min_height = height;
+    size_hints->max_width = XDisplayWidth(display, 0);
+    size_hints->max_height = XDisplayHeight(display, 0);
+}
+
+static void _size_hints_set_resize() {
+    size_hints->flags = USPosition | USSize | PMinSize | PMaxSize;
+    size_hints->min_width = width;
+    size_hints->min_height = height;
+    size_hints->max_width = XDisplayWidth(display, 0);
+    size_hints->max_height = XDisplayHeight(display, 0);
+}
+
+void video_set_mode(a2_video_mode_t mode) {
+    _destroy_image();
+
+    scale = mode;
+    if (mode == VIDEO_FULLSCREEN) {
+        scale = 1; // HACK FIXME for now ................
+    }
+
+    width = SCANWIDTH*scale;
+    height = SCANHEIGHT*scale;
+
+    _size_hints_set_resize();
+
+    //XResizeWindow(display, win, width, height);
+    XSetWMProperties(display, win, &windowName, &iconName,
+                     argv, argc, size_hints, wm_hints,
+                     class_hints);
+
+#if 0
+    // TODO ...
+    // Fullscreen mode really should "fuzz" the graphics like AppleWin does when emulating NTSC.
+    // Also will need to verify the canonical way to switch to fullscreen in X11
+    //      http://www.tonyobryan.com/index.php?article=9
+    if (mode == VIDEO_FULLSCREEN) {
+        FullScreenHints hints = { .flags=2, .decorations=0 };
+        Atom property = XInternAtom(display, "_MOTIF_WM_HINTS", True);
+
+        XChangeProperty(display, win, property, property, 32, PropModeReplace, (unsigned char *)&hints, 5);
+
+        /*
+        int modecount_return = 0;
+        XF86VidModeModeInfo *modesinfo = NULL;
+        XF86VidModeGetAllModeLines(display, DefaultScreen(display), &modecount_return, &modesinfo);
+        XF86VidModeSwitchToMode(display, DefaultScreen(display), video_mode);
+        XF86VidModeSetViewPort(display, DefaultScreen(display), 0, 0);
+        */
+
+        int display_w = XDisplayWidth(display, 0);
+        int display_h = XDisplayHeight(display, 0);
+        LOG("Fullscreen : %d x %d", display_w, display_h);
+
+        XMoveResizeWindow(display, win, 0, 0, display_w, display_h);
+        XMapRaised(display, win);
+        XGrabPointer(display, win, True, 0, GrabModeAsync, GrabModeAsync, win, 0L, CurrentTime);
+        XGrabKeyboard(display, win, False, GrabModeAsync, GrabModeAsync, CurrentTime);
+    }
+#endif
+
+    XWindowChanges changes = { .width=width, .height=height };
+    XConfigureWindow(display, win, CWWidth|CWHeight, &changes);
+
+    _create_image();
+
+    _size_hints_set_fixed();
 }
 
 void video_init() {
@@ -652,12 +791,8 @@ void video_init() {
     //unsigned int display_width, display_height;
     XGCValues xgcvalues;
     int valuemask;
-    char *window_name = "Apple ][";
+    char *window_name = "Apple //ix";
     char *icon_name = window_name;
-    XSizeHints *size_hints;
-    XWMHints *wm_hints;
-    XClassHint *class_hints;
-    XTextProperty windowName, iconName;
     //GC gc;
     char *progname;    /* name this program was invoked by */
     char *displayname = NULL;
@@ -728,7 +863,7 @@ void video_init() {
     unsigned int shift = 0;
     for (unsigned int i=0; i<4; i++)
     {
-        if        ((((uint32_t)visualinfo.red_mask  >>shift) & 0xff) == (uint32_t)0xff)
+        if      ((((uint32_t)visualinfo.red_mask  >>shift) & 0xff) == (uint32_t)0xff)
         {
             red_shift   = shift;
         }
@@ -756,6 +891,11 @@ void video_init() {
 
     fprintf(stderr, "red mask:%08x green mask:%08x blue mask:%08x\n", (uint32_t)visualinfo.red_mask, (uint32_t)visualinfo.blue_mask, (uint32_t)visualinfo.green_mask);
     fprintf(stderr, "redshift:%08d greenshift:%08d blueshift:%08d alphashift:%08d\n", red_shift, blue_shift, green_shift, alpha_shift);
+
+    scale = a2_video_mode;
+    if (a2_video_mode == VIDEO_FULLSCREEN) {
+        scale = 1; // HACK FIXME FOR NOW ...
+    }
 
     /* Note that in a real Xlib application, x and y would default to 0
      * but would be settable from the command line or resource database.
@@ -811,16 +951,6 @@ void video_init() {
                         attribmask,
                         &attribs);
 
-    /* set size hints for window manager.  We don't want the user to
-     * dynamically allocate window size since we won't do the right
-     * scaling in response.  Whaddya want, performance or a snazzy gui?
-     */
-    size_hints->flags = PPosition | PSize | PMinSize | PMaxSize;
-    size_hints->min_width = width;
-    size_hints->min_height = height;
-    size_hints->max_width = width;
-    size_hints->max_height = height;
-
     /* store window_name and icon_name for niceity. */
     if (XStringListToTextProperty(&window_name, 1, &windowName) == 0)
     {
@@ -842,6 +972,7 @@ void video_init() {
     class_hints->res_name = progname;
     class_hints->res_class = "Apple2";
 
+    _size_hints_set_fixed();
     XSetWMProperties(display, win, &windowName, &iconName,
                      argv, argc, size_hints, wm_hints,
                      class_hints);
@@ -868,53 +999,9 @@ void video_init() {
         }
     }
 
-    // pad pixels to uint32_t boundaries
-    int bitmap_pad = sizeof(uint32_t);
-    int pixel_buffer_size = width*height*bitmap_pad;
-
     xshmeventtype = XShmGetEventBase(display) + ShmCompletion;
 
-    /* create the image */
-    if (doShm)
-    {
-        image = XShmCreateImage(display, visualinfo.visual, visualinfo.depth, ZPixmap, NULL, &xshminfo, width, height);
-
-        if (!image)
-        {
-            fprintf(stderr, "XShmCreateImage failed\n");
-            exit(1);
-        }
-
-        printf("Allocating shared memory: bytes_per_line:%ds height:x%d (depth:%d) bitmap_pad:%d\n",
-               image->bytes_per_line, image->height, visualinfo.depth, bitmap_pad);
-
-        getshm(pixel_buffer_size);
-
-        /* get the X server to attach to it */
-        if (!XShmAttach(display, &xshminfo))
-        {
-            fprintf(stderr, "XShmAttach() failed in InitGraphics()\n");
-            exit(1);
-        }
-    }
-    else
-    {
-        void *data = malloc(pixel_buffer_size);     // pad to uint32_t
-        if (!data)
-        {
-            fprintf(stderr, "no memory for image data!\n");
-            exit(1);
-        }
-
-        printf("Creating regular XImage\n");
-        image = XCreateImage(display, visualinfo.visual, visualinfo.depth, ZPixmap, 0 /*offset*/, data, width, height, 8, width*bitmap_pad /*bytes_per_line*/);
-
-        if (!image)
-        {
-            fprintf(stderr, "XCreateImage failed\n");
-            exit(1);
-        }
-    }
+    _create_image();
 
     video__fb1 = vga_mem_page_0;
     video__fb2 = vga_mem_page_1;
@@ -936,25 +1023,7 @@ void video_init() {
 
 void video_shutdown(void)
 {
-    if (doShm)
-    {
-        // Detach from X server
-        if (!XShmDetach(display, &xshminfo))
-        {
-            fprintf(stderr,"XShmDetach() failed in video_shutdown()\n");
-        }
-
-        // Release shared memory.
-        shmdt(xshminfo.shmaddr);
-        shmctl(xshminfo.shmid, IPC_RMID, 0);
-
-        // Paranoia.
-        image->data = NULL;
-    }
-    else
-    {
-        free(image->data);
-    }
-
+    _destroy_image();
     exit(0);
 }
+
