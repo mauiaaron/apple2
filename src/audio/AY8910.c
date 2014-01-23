@@ -24,10 +24,9 @@
 
 // [AppleWin-TC] From FUSE's sound.c module
 
-#ifdef APPLE2IX
 #include "common.h"
-#include "win-shim.h"
-#include "timing.h"
+#ifdef APPLE2IX
+#include "audio/win-shim.h"
 #else
 #include "StdAfx.h"
 #include <windows.h>
@@ -35,10 +34,11 @@
 #include <crtdbg.h>
 #endif
 
-#include "AY8910.h"
 #ifdef APPLE2IX
-#include "mockingboard.h"
+#include "audio/AY8910.h"
+#include "audio/mockingboard.h"
 #else
+#include "AY8910.h"
 #include "Common.h"
 #include "Structs.h"
 #include "Applewin.h"		// For g_fh

@@ -78,15 +78,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //   . ORB  = 0x3F (STOP)
 //
 
-#ifdef APPLE2IX
 #include "common.h"
-#include "glue.h"
-#include "cpu.h"
-#include "win-shim.h"
-#include "soundcore.h"
-#include "speaker.h"
-#include "timing.h"
-#include "mockingboard.h"
+#ifdef APPLE2IX
+#include "audio/win-shim.h"
 #       ifdef  __linux
 #       include <sys/io.h>
 #       endif
@@ -108,8 +102,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <wchar.h>
 
-#include "AY8910.h"
-#include "SSI263Phonemes.h"
+#include "audio/AY8910.h"
+#include "audio/SSI263Phonemes.h"
 
 
 #define SY6522_DEVICE_A 0

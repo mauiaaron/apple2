@@ -1,0 +1,234 @@
+.\" Apple //e emulator manpage
+.\"
+.\" MODIFICATION HISTORY
+.\"  v0.8 by Aaron Culliney @ BitR0t.com                      Feb 2014.
+.\"  v0.5 by Aaron Culliney <chernabog@baldmountain.bbn.com>, Feb 1998.
+.\"  v0.6 by Aaron Culliney <chernabog@baldmountain.bbn.com>, Aug 1998.
+.\"    This code has nothing to do with my employer, GTE Internetworking,
+.\"    BBN Technologies.  It was written completely on my own time and on
+.\"    my own machine.
+.\"
+.TH APPLE2IX 6 "v0.8 February 2014"
+.UC 7
+.SH NAME
+apple2ix \- Apple //e emulator
+.SH SYNOPSIS
+.ft B
+apple2ix
+.ft R
+.SH DESCRIPTION
+.I apple2ix
+emulates a 128k Apple //e computer. To use the emulator effectively you need to
+acquire the original //e ROM file which is not distributed due to copyright
+reasons.  The emulator reads standard 143360-byte and 232960-byte disk image
+files with
+.I .dsk
+,
+.I .do
+, and 
+.I .nib
+suffixes.
+.PP
+There are only a few command line options:
+.TP
+.I --help
+Display a quick help
+.TP
+.I --version
+Display version of emulator
+.TP
+.I --noshm
+Run emulator with no shared memory (for remote X11 desktops)
+.PP
+.ft R
+.SH THE .apple2 FILE
+The emulator reads user preferences from a
+.I .apple2
+file located in your home directory.  This file is auto-magically created for
+you.
+.I .apple2
+You can edit the settings using your favorite editor, but most of the settings
+can be adjusted from the emulator itself (see menus section below).
+.TP
+.I speed
+Multiple of the Apple //e CPU speed.  1.0 attempts to match the speed of the
+//e.  2.0 is twice as fast.  0.5 is half.
+.TP
+.I altspeed
+Alternate speed setting.  F9 key in emulator will toggle between this and the
+regular configured speed.  This is useful to slow or speed up emulation as
+needed.
+.TP
+.I disk path
+Toplevel path of disk images directory.  Personally I like
+/path/to/your/home/directory/.apple2ix/disks
+.TP
+.I color
+Color modes.  One of Black/white, color, interpolated.
+.TP
+.I video
+The size of the emulation 1X, 2X 
+.TP
+.I volume
+Speaker Volume setting 0-10
+.TP
+.I joystick
+Off, joy keypad, or pc joystick
+.TP
+.I pc joystick parms
+PC Joystick calibration parameters.  This is best adjusted from the calibration
+routine from within the emulator.  Press F10 to bring up the settings menu and
+select Calibrate Joystick.
+If the emulator complains that it cannot open the joystick device, make sure
+your joystick or gamepad is connected to the PC and make sure the Linux joystick
+module is loaded.
+.TP
+.I keypad joystick parms
+Keypad/arrow-keys joystick parameters.  Change this through the calibration
+routine from the F10 settings menu.
+.TP
+.I system path
+The directory holding the rom files.  The emulator won't run if this is not set
+properly.  You can only change this by editing the
+.I .apple2
+file.
+.PP
+A sample .apple2 file:
+.nf
+        speed = 1.00
+        altspeed = 4.00
+        disk path = /usr/local/games/apple2/disks
+        color = interpolated
+        video = 1X
+        volume = 8
+        joystick = joy keypad
+        system path = /usr/local/games/apple2/rom
+        pc joystick parms = 128 128 255 1 255 1
+        keypad joystick parms = 8 1
+.fi
+.PP
+.ft R
+.SH ROM FILES
+The emulator requires several ROM files to run.
+.TP
+.I slot6.rom
+You need this file for basic disk drive emulation.  It is 256 byte
+memory dump of the consecutive addresses from C600 to C6FF. This file
+is not distributed again due to copyright issues.  This file may also
+be named
+.I controller.rom,
+but is referenced internally as
+.I slot6.rom.
+.TP
+.I apple_IIe.rom
+It is the 32K ROM of your 128k Apple //e, a dump of main memory (bank 0)
+addresses C000-FFFF concatenated with auxiliary memory (bank 1) addresses
+C000-FFFF.  Because the
+.I apple_IIe.rom
+contains the C600 slot, you can construct the
+.I slot6.rom
+file from this one. The
+.I apple_IIe.rom
+file may also be named
+.I apple2e.rom
+but is referenced internally as
+.I apple_IIe.rom.
+.PP
+.ft R
+.SH DISK IMAGES
+The emulator reads standard DOS3.3-order 143360 byte '.dsk' images (sometimes
+with a '.do' extension and raw-nibble 232960 byte '.nib' images.  The emulator
+will also attempt to read and write to compressed disk images with an additional .gz
+extension.
+.PP
+The images are raw binary dumps, containing the tracks from 0 to 34 from the
+original 5.25 disk.  For the standard 143360 byte '.dsk' format each track is
+partitioned into sectors of 256 bytes, numbered from 0 to 15.
+.PP
+The raw nibblized 232960-byte images are usually made of programs that have
+non-standard formatting as a means of copy protection.  The nibblized format
+attempts to preserve the non-standard format, and so defeats the copy protection
+without "cracking" the program.
+.PP
+To transfer Apple ][ diskettes into one of these formats requires that you own
+an original Apple ][. Since the drives provided by the IBM PC's are not
+compatible with the original Apple ][ drives there are no conversion programs
+directly available. If you have used other Apple ][ emulators it is most likely
+that the files will work with this emulator too. For more information on Apple
+][ disk formats and such, see
+.I Beneath Apple DOS
+by Don Worth and Pieter Lechner, published long ago by Quality Software.
+.PP
+.ft R
+.SH EMULATOR KEYS/MENUS
+.TP
+.I F1
+Interface to switch disk in Drive A, Slot 6.  Arrow keys navigate the
+selection.  If the disk highlighted is already in the drive, it will
+have a <rw1> or <r1> tag after the name indicating read/write or
+read-only access.  Select this disk to eject it.  To select a disk,
+you can press 'w' or RETURN to insert it into the drive.  Pressing 'w'
+will attempt to open the disk as read/write (if you have permission to
+do so).
+Pressing RETURN defaults to opening the disk read-only.  Press
+ESC to accept current settings and exit the menu.
+.TP
+.I F2
+Interface to switch disk in Drive B, Slot 6.  Same controls as for
+.I F1.
+.TP
+.I Pause/Break key
+Pause the emulation.  Hit a key to resume emulation.
+.TP
+.I F5
+Display the Apple //e keyboard layout.
+.TP
+.I F7
+Enter the Debugger console (if this support was compiled into the
+program).  See the file README.debugger that came with the emulator for
+more information.
+.TP
+.I F8
+The boot/welcome screen!  Just in case you need to get back here =)
+.TP
+.I F9
+Toggles between the speed and altspeed settings.  This is useful to 'fastboot'
+programs, or possibly to slow them down, and then slip back to normal Apple //e
+speed.
+.TP
+.I F10
+General parameter settings menu, including the all-important QUIT option.
+You can edit most of the parameters in your
+.I .apple2
+file from this menu.  Adjusting a parameter will auto-magically save it to your
+.I .apple
+preferences file.
+You can also select to calibrate/tune the PC Joystick or keypad joystick here.
+.TP
+.I Special Keys
+The key combination Ctrl-End will trigger an Apple //e reset.  Ctrl-AltLeft-End
+operates just like a Ctrl-OpenApple-Reset and reboots the Apple //e.  AltLeft
+and AltRight keys correspond to the OpenApple and ClosedApple keys (joystick
+buttons 0 & 1).  NOTE: In //e mode try Ctrl-AltRight-End to trigger a system
+self-test.  The numeric keypad and general arrow keys are also used for emulated
+joystick movement.
+.ft R
+.SH BUGS AND STUFF
+See the PROBLEMS file that came with the code.
+.ft R
+.SH MORE INFO
+More information is available in the online newsgroups
+.I comp.emulators.apple2,
+and
+.I comp.sys.apple2.
+.PP
+See also:
+.TP
+.I Apple //e Technical Reference Manual
+.TP
+.I Beneath Apple DOS
+.TP
+.I Beneath Apple ProDOS
+.ft R
+.SH AUTHORS
+See the AUTHORS file that was packaged with this software.

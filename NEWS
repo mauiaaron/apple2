@@ -1,3 +1,20 @@
+Changed in 0.8:
+
+Upgraded to modern-ish times...X11 now uses 32bit color!
+
+Audio is now OpenAL instead of raw PC speaker access.  We are indebted to
+AppleWin for much of the sound code including preliminary suport for
+Mockingboard emulation.
+
+Bugfix and simplification for PC Joystick.  Joystick emulation is now
+bug-for-bug compatible with original Apple ][.  Better calibration routines and
+better "feel" for emulation of joystick on keypad/arrow-keys.
+
+Better emulation fidelity overall by counting 6502 CPU cycles.  This was
+necessary for proper output of stream digital audio in OpenAL.
+
+Significant interface and preferences changes and simplifications.
+
 Changed in 0.7.4:
 
 Many bugs have been fixed, including a calling-convention mistake that

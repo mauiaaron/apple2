@@ -14,7 +14,7 @@
  *
  */
 
-#include "debug.h"
+#include "common.h"
 
 const char * const disasm_templates[15] =
 {

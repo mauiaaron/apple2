@@ -14,23 +14,11 @@
  *
  */
 
-#ifdef PC_JOYSTICK
+#include "common.h"
+
+#ifdef LINUX_JOYSTICK
 #include <linux/joystick.h>
 #endif
-
-#include <stdio.h>
-#include <string.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <sys/ioctl.h>
-#include <values.h>
-
-#include "joystick.h"
-#include "interface.h"
-#include "video.h"
-#include "keys.h"
-#include "misc.h"
-#include "prefs.h"
 
 /* parameters for generic and keyboard-simulated joysticks */
 short joy_x = HALF_JOY_RANGE;
@@ -44,7 +32,7 @@ short joy_step = 1;
 uint8_t auto_recenter = 0;
 #endif
 
-#ifdef PC_JOYSTICK
+#ifdef LINUX_JOYSTICK
 int js_center_x;
 int js_center_y;
 int js_max_x;
@@ -329,7 +317,7 @@ static void c_calibrate_pc_joystick()
         nanosleep(&ts, NULL);
     }
 }
-#endif // PC_JOYSTICK
+#endif // LINUX_JOYSTICK
 
 #ifdef KEYPAD_JOYSTICK
 static void c_calibrate_keypad_joystick()
@@ -438,7 +426,7 @@ static void c_calibrate_keypad_joystick()
         nanosleep(&ts, NULL);
     }
 }
-#endif
+#endif // KEYPAD_JOYSTICK
 
 #ifdef TOUCH_JOYSTICK
 // TBD ...
@@ -448,7 +436,7 @@ static void c_calibrate_keypad_joystick()
 
 void c_open_joystick()
 {
-#ifdef PC_JOYSTICK
+#ifdef LINUX_JOYSTICK
     if (joy_mode == JOY_PCJOY)
     {
         c_open_pc_joystick();
@@ -465,7 +453,7 @@ void c_open_joystick()
 
 void c_close_joystick()
 {
-#ifdef PC_JOYSTICK
+#ifdef LINUX_JOYSTICK
     c_close_pc_joystick();
 #endif
 
@@ -479,7 +467,7 @@ void c_close_joystick()
 
 void c_calibrate_joystick()
 {
-#ifdef PC_JOYSTICK
+#ifdef LINUX_JOYSTICK
     if (joy_mode == JOY_PCJOY)
     {
         c_calibrate_pc_joystick();

@@ -22,17 +22,9 @@
 %{
 
 /* process includes only the second time we parse this file. */
-#include "misc.h"
-#include "interface.h"
-#include "debug.h"
-#include "disk.h"
-#include "video.h"
-#include "keys.h"
-#include <unistd.h>
-#include <strings.h>
-#include <ctype.h>
-#include "cpu.h"
+#include "common.h"
 
+#define debugtext yytext
 
 YY_BUFFER_STATE buffer = 0;
 

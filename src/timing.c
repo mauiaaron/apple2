@@ -16,12 +16,7 @@
  *
  */
 
-#include "timing.h"
-#include "misc.h"
-#include "cpu.h"
-#include "speaker.h"
-#include "keys.h"
-#include "mockingboard.h"
+#include "common.h"
 
 #define EXECUTION_PERIOD_NSECS 1000000  // AppleWin: nExecutionPeriodUsec
 
@@ -209,7 +204,9 @@ void cpu_thread(void *dummyptr) {
             cpu65_cycle_count = 0;
             g_nCyclesExecuted = 0;
 
+#ifdef AUDIO_ENABLED
             MB_StartOfCpuExecute();
+#endif
 
             cpu65_run(); // run emulation for cpu65_cycles_to_execute cycles ...
 
@@ -223,6 +220,7 @@ void cpu_thread(void *dummyptr) {
 #endif
             unsigned int uExecutedCycles = cpu65_cycle_count;
 
+#ifdef AUDIO_ENABLED
             MB_UpdateCycles(uExecutedCycles);   // Update 6522s (NB. Do this before updating g_nCumulativeCycles below)
 
             // N.B.: IO calls that depend on accurate timing will update g_nCyclesExecuted
@@ -236,6 +234,7 @@ void cpu_thread(void *dummyptr) {
 
             // N.B.: technically this is not the end of the video frame...
             MB_EndOfVideoFrame();
+#endif
 
             clock_gettime(CLOCK_MONOTONIC, &tj);
             pthread_mutex_unlock(&interface_mutex);

@@ -14,10 +14,7 @@
  *
  */
 
-#include "video.h"
-#include "cpu.h"
-#include "misc.h"
-#include "prefs.h"
+#include "common.h"
 
 #ifdef _640x400
 unsigned char video__wider_font[0x8000];

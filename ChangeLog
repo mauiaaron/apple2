@@ -1,3 +1,19 @@
+Thu Feb 27, 2014 : Aaron Culliney @ bitr0t.com
+	* Rebranded as "apple2ix" with a 0.8 revision
+	* X11 now uses true color and can dynamically resize window between 1x
+	  and 2x.
+	* Better emulation fidelity by counting 6502 CPU cycles.  This is
+	  necessary for proper generation of digital audio.
+	* Use OpenAL backend for all sound (some soundcode/speaker source
+	  derived/shimmed from AppleWin source).
+	* Preliminary support for Mockingboard (again sourced from AppleWin)
+	* Fixes for Linux Joystick (both PC Joystick and Emulated Keypad/Arrows)
+	* Simplifications to interface modes and preferences
+	* Interfaces are now 80columns
+	* Removed support for console SVGAlib
+	* Use zlib for inflating/deflating disk images
+	* Deprecated support for ][+ and ][+ undocumented modes
+
 Thu Mar 23, 2000 : Michael Deutschmann  <michael@talamasca.ocis.net>
 
 	* configure.in: set revision to 0.7.4, final release

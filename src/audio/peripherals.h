@@ -12,8 +12,8 @@
 #ifndef _PERIPHERALS_H_
 #define _PERIPHERALS_H_
 
-#include "cpu.h"
-#include "win-shim.h"
+#include "common.h"
+#include "audio/win-shim.h"
 
 typedef enum eIRQSRC {
     IS_6522=0x08, // NOTE : matches IRQ... defines in cpu.h

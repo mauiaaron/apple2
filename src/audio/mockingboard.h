@@ -13,8 +13,8 @@
 #define _MOCKINGBOARD_H__
 
 #ifdef APPLE2IX
-#include "win-shim.h"
-#include "peripherals.h"
+#include "audio/win-shim.h"
+#include "audio/peripherals.h"
 
 extern bool g_bDisableDirectSoundMockingboard;
 

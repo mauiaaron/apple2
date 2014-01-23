@@ -14,14 +14,7 @@
  *
  */
 
-#include "debug.h"
-#include "misc.h"
-#include "keys.h"
-#include "video.h"
-#include "disk.h"
-#include "interface.h"
-#include "cpu.h"
-#include "prefs.h"
+#include "common.h"
 
 const struct opcode_struct *opcodes;
 
@@ -68,7 +61,7 @@ unsigned char current_opcode;
 int op_breakpoints[256];                /* opcode breakpoints */
 
 /* in debug.l */
-extern int debuglex();                  /* yylex() */
+extern int yylex();
 extern void init_lex(char *buf, int size);
 
 /* -------------------------------------------------------------------------
@@ -1186,7 +1179,7 @@ void do_debug_command() {
     /* call lex to perform the command.*/
     strncpy(lexbuf, command_line + PROMPT_X, BUF_X);
     init_lex(lexbuf, BUF_X+2);
-    debuglex();
+    yylex();
 
     /* set up to copy results into main buffer */
     if (num_buffer_lines >= PROMPT_Y)

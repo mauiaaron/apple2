@@ -17,7 +17,7 @@
 #ifndef _SOUNDCORE_H_
 #define _SOUNDCORE_H_
 
-#include "ds-shim.h"
+#include "audio/ds-shim.h"
 
 #define MAX_SAMPLES (8*1024)
 

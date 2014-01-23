@@ -14,8 +14,9 @@
 // Here I must confess that because of general ignorance of the mockingboard and other soundcard code at this time,
 // there is a need to track any changes/fixes implemented in AppleWin...
 
-#include "soundcore-openal.h"
-#include "alhelpers.h"
+#include "common.h"
+#include "audio/soundcore-openal.h"
+#include "audio/alhelpers.h"
 
 LPALBUFFERSAMPLESSOFT alBufferSamplesSOFT = wrap_BufferSamples;
 LPALISBUFFERFORMATSUPPORTEDSOFT alIsBufferFormatSupportedSOFT = NULL;

@@ -14,19 +14,7 @@
  *
  */
 
-#include "interface.h"
-#include "timing.h"
-#include "keys.h"
-#include "disk.h"
-#include "misc.h"
-#include "video.h"
-#include "cpu.h"
-#include "prefs.h"
-#include "joystick.h"
 #include "common.h"
-#include "zlib-helpers.h"
-
-#include <zlib.h>
 
 static struct stat statbuf;
 static int altdrive;

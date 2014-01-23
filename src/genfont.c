@@ -104,8 +104,7 @@ int main(void)
                 {
                     printf("0x%02x, ",byte);
                 }
-                else
-                if (i)
+                else if (i)
                 {
                     printf("0x%02x,\n  ",byte); /* last byte in glyph */
                 }

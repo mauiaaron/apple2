@@ -13,8 +13,6 @@
 #define _SOUNDCORE_OPENAL_H_
 
 #include "common.h"
-#include "soundcore.h"
-#include "uthash.h"
 
 #include <AL/al.h>
 #include <AL/alc.h>

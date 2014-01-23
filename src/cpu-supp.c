@@ -15,8 +15,6 @@
  */
 
 #include "common.h"
-#include "cpu.h"
-#include "mockingboard.h"
 
 // These match the bit positions of the 6502 P-register, they are not the same as in cpu.h -- see note there
 #define C_Flag_6502     0x1         // [C]arry

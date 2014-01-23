@@ -19,10 +19,6 @@
 
 #ifndef __ASSEMBLER__
 
-#include "common.h"
-#include <unistd.h>
-#include <sys/types.h>
-
 #define SW_TEXT 0xC050
 #define SW_MIXED 0xC052
 #define SW_PAGE2 0xC054

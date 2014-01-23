@@ -139,7 +139,7 @@
 extern pthread_mutex_t interface_mutex;
 extern bool caps_lock;
 
-#ifdef PC_JOYSTICK
+#ifdef LINUX_JOYSTICK
 extern int js_fd;
 extern struct JS_DATA_TYPE js;
 extern int js_offset_x, js_offset_y;

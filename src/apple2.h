@@ -14,8 +14,10 @@
  *
  */
 
-#ifndef A2_H
-#define A2_H
+#ifndef _A2_H_
+#define _A2_H_
+
+#include "config.h"
 
 #define BANK2           0x10000
 
@@ -35,4 +37,4 @@
 #define         E(foo)          .globl _##foo; ALIGN; _##foo##:
 #endif /* !NO_UNDERSCORES */
 
-#endif /* A2_H */
+#endif /* _A2_H_ */

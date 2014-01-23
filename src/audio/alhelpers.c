@@ -28,14 +28,12 @@
  * finding an appropriate buffer format, and getting readable strings for
  * channel configs and sample types. */
 
-#include <stdio.h>
+#include <AL/al.h>
+#include <AL/alc.h>
+#include <AL/alext.h>
 
-#include "AL/al.h"
-#include "AL/alc.h"
-#include "AL/alext.h"
-
-#include "alhelpers.h"
 #include "common.h"
+#include "audio/alhelpers.h"
 
 
 /* InitAL opens the default device and sets up a context using default

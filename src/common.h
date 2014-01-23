@@ -16,8 +16,12 @@
 #   define _GNU_SOURCE
 #endif
 
-#include <stdio.h>
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <stdlib.h>
+#include <stdio.h>
 #include <errno.h>
 #include <string.h>
 #include <stdint.h>
@@ -28,10 +32,37 @@
 #include <pthread.h>
 #include <ctype.h>
 #include <dirent.h>
+#include <fcntl.h>
+#include <limits.h>
+
+#include <zlib.h>
 
 #include <sys/time.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+
+#include "misc.h"
+#include "timing.h"
+#include "cpu.h"
+#include "video/video.h"
+#include "disk.h"
+#include "interface.h"
+#include "keys.h"
+#include "joystick.h"
+#include "glue.h"
+#include "prefs.h"
+#include "uthash.h"
+#include "zlib-helpers.h"
+
+#ifdef DEBUGGER
+#include "meta/debug.h"
+#endif
+
+#ifdef AUDIO_ENABLED
+#include "audio/soundcore.h"
+#include "audio/speaker.h"
+#include "audio/mockingboard.h"
+#endif
 
 #ifndef NDEBUG
 #       if defined(__GNUC__)
@@ -57,7 +88,7 @@ static FILE *error_log=0;
 #define ERRQUIT(...) \
     do { \
         ERRLOG(__VA_ARGS__); \
-        exit(0); \
+        exit(1); \
     } while(0);
 
 #else // NDEBUG

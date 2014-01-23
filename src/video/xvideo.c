@@ -14,26 +14,18 @@
  *
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <unistd.h>
-#include <string.h>
-#include <sys/types.h>
-#include <sys/ipc.h>
-#include <sys/shm.h>
-#include <sys/time.h>
+#include "common.h"
 
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/keysym.h>
 #include <X11/XKBlib.h>
+
+#ifdef HAVE_X11_SHM
+#include <sys/ipc.h>
+#include <sys/shm.h>
 #include <X11/extensions/XShm.h> /* MITSHM! */
-
-
-#include "video.h"
-#include "misc.h"
-#include "keys.h"
+#endif
 
 static unsigned char vga_mem_page_0[SCANWIDTH*SCANHEIGHT];              /* page0 framebuffer */
 static unsigned char vga_mem_page_1[SCANWIDTH*SCANHEIGHT];              /* page1 framebuffer */
@@ -61,9 +53,11 @@ static uint32_t green_shift;
 static uint32_t blue_shift;
 static uint32_t alpha_shift;
 
+#ifdef HAVE_X11_SHM
 static int doShm = 1;            /* assume true */
 static XShmSegmentInfo xshminfo;
 static int xshmeventtype;
+#endif
 
 // pad pixels to uint32_t boundaries
 static int bitmap_pad = sizeof(uint32_t);
@@ -84,6 +78,7 @@ void video_setpage(int p)
     video__current_page = p;
 }
 
+#ifdef HAVE_X11_SHM
 /*
  * XShm code influenced from the DOOM source code.
  * This tries to find some shared memory to use.  It checks for stale segments
@@ -202,7 +197,7 @@ static void getshm(int size) {
 
     printf("Using shared memory key=`%c%c%c%c', id=%d, addr=%p\n", (key & 0xff000000)>>24, (key & 0xff0000)>>16, (key & 0xff00)>>8, (key & 0xff), id, image->data);
 }
-
+#endif
 
 static void c_initialize_colors() {
     static unsigned char col2[ 3 ] = { 255,255,255 };
@@ -500,6 +495,7 @@ static void post_image() {
     }
 
     // post image...
+#ifdef HAVE_X11_SHM
     if (doShm)
     {
         if (!XShmPutImage(
@@ -514,8 +510,8 @@ static void post_image() {
         {
             fprintf(stderr, "XShmPutImage() failed\n");
         }
-    }
-    else
+    } else
+#endif
     {
         if (XPutImage(
                 display,
@@ -578,12 +574,13 @@ void video_sync(int block) {
 
     bool keyevent = true;
     do {
+#ifdef HAVE_X11_SHM
         if (doShm)
         {
             XNextEvent(display, &xevent);
             keyevent = !(xevent.type == xshmeventtype);
-        }
-        else
+        } else
+#endif
         {
             keyevent = XCheckMaskEvent(display, KeyPressMask|KeyReleaseMask, &xevent);
         }
@@ -648,14 +645,26 @@ static void parseArgs() {
     int i;
     for (i=0; i<argc; i++)
     {
-        if (strstr(argv[i], "-noshm"))
+#ifdef HAVE_X11_SHM
+        if (strstr(argv[i], "--noshm"))
         {
             doShm=0;
+        } else
+#endif
+        if (strstr(argv[i], "--help") || strstr(argv[i], "-h")) {
+            printf("%s v%s emulator help :\n", PACKAGE_NAME, PACKAGE_VERSION);
+            printf("\tManpage : %s\n", PACKAGE_MANPAGE);
+            printf("\tWeb Resources : %s\n", WEB_RESOURCES);
+            exit(0);
+        } else if (strstr(argv[i], "--version") || strstr(argv[i], "-v")) {
+            printf("%s v%s\n", PACKAGE_NAME, PACKAGE_VERSION);
+            exit(0);
         }
     }
 }
 
 static void _destroy_image() {
+#ifdef HAVE_X11_SHM
     if (doShm)
     {
         // Detach from X server
@@ -669,8 +678,8 @@ static void _destroy_image() {
         // Release shared memory.
         shmdt(xshminfo.shmaddr);
         shmctl(xshminfo.shmid, IPC_RMID, 0);
-    }
-    else
+    } else
+#endif
     {
         XDestroyImage(image);
         //free(image->data);
@@ -680,6 +689,7 @@ static void _destroy_image() {
 static void _create_image() {
     int pixel_buffer_size = width*height*bitmap_pad;
 
+#ifdef HAVE_X11_SHM
     if (doShm) {
         image = XShmCreateImage(display, visualinfo.visual, visualinfo.depth, ZPixmap, NULL, &xshminfo, width, height);
 
@@ -696,7 +706,9 @@ static void _create_image() {
         if (!XShmAttach(display, &xshminfo)) {
             ERRQUIT("XShmAttach() failed");
         }
-    } else {
+    } else
+#endif
+    {
         void *data = malloc(pixel_buffer_size);
         if (!data) {
             ERRQUIT("no memory for image data!");
@@ -904,12 +916,14 @@ void video_init() {
     width = SCANWIDTH*scale;
     height = SCANHEIGHT*scale;
 
+#ifdef HAVE_X11_SHM
     /* init MITSHM if we're doing it */
     if (doShm)
     {
         /* make sure we have it */
         doShm = XShmQueryExtension(display);
     }
+#endif
 
     displayname = getenv("DISPLAY");
     if (displayname)
@@ -917,6 +931,7 @@ void video_init() {
         if (*displayname != ':')
         {
             printf("NOTE: Sound not allowed for remote display \"%s\".\n", displayname);
+#ifdef HAVE_X11_SHM
             if (doShm)
             {
                 printf("NOTE: Cannot run MITSHM version of emulator with display \"%s\"\n"
@@ -926,6 +941,7 @@ void video_init() {
 
             doShm=0;
             //soundAllowed=0; FIXME TODO enforce this ...
+#endif
         }
     }
 
@@ -999,7 +1015,9 @@ void video_init() {
         }
     }
 
+#ifdef HAVE_X11_SHM
     xshmeventtype = XShmGetEventBase(display) + ShmCompletion;
+#endif
 
     _create_image();
 

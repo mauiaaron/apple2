@@ -13,7 +13,7 @@
 #define _SPEAKER_H_
 
 #ifdef APPLE2IX
-#include "win-shim.h"
+#include "audio/win-shim.h"
 #endif
 
 extern DWORD      soundtype;

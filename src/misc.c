@@ -14,29 +14,7 @@
  *
  */
 
-#include <stdio.h>
-#include <string.h>
-#include <ctype.h>
-#include <stdlib.h>
-#include <signal.h>
-#include <time.h>
-#include <sys/ioctl.h>
-#include <sys/time.h>
-#include <sys/io.h>
-
-#include "misc.h"
-#include "video.h"
-#include "disk.h"
-#include "interface.h"
-#include "keys.h"
-#include "debug.h"
-#include "cpu.h"
-#include "glue.h"
-#include "prefs.h"
-#include "timing.h"
-#include "speaker.h"
-#include "soundcore.h"
-#include "mockingboard.h"
+#include "common.h"
 
 /* ----------------------------------
     internal apple2 variables
@@ -519,7 +497,9 @@ void c_initialize_tables() {
 
     // HACK TODO FIXME : this needs to be tied to the UI/configuration system (once we have more/conflicting options)
 
+#ifdef AUDIO_ENABLED
     mb_io_initialize(4, 5); /* Mockingboard(s) and/or Phasor in slots 4 & 5 */
+#endif
     disk_io_initialize(6); /* Put a Disk ][ Controller in slot 6 */
 }
 
@@ -643,10 +623,16 @@ void c_initialize_apple_ii_memory()
 
 void c_initialize_sound_hooks()
 {
+#ifdef AUDIO_ENABLED
     SpkrSetVolume(sound_volume * (SPKR_DATA_INIT/10));
+#endif
     for (int i = 0xC030; i < 0xC040; i++)
     {
-        cpu65_vmem[i].r = cpu65_vmem[i].w = (sound_volume > 0) ? read_speaker_toggle_pc : ram_nop;
+        cpu65_vmem[i].r = cpu65_vmem[i].w =
+#ifdef AUDIO_ENABLED
+            (sound_volume > 0) ? read_speaker_toggle_pc :
+#endif
+            ram_nop;
     }
 }
 
@@ -708,6 +694,7 @@ void reinitialize(void)
 {
     int i;
 
+#ifdef DEBUGGER
     /* reset the watchpoints and breakpoints */
     for (i=0; i<MAX_BRKPTS; i++)
     {
@@ -719,6 +706,7 @@ void reinitialize(void)
     {
         op_breakpoints[(unsigned char)i] = 0;
     }
+#endif
 
     c_initialize_vm();
 
@@ -743,7 +731,9 @@ void reinitialize(void)
 
     timing_initialize();
 
+#ifdef AUDIO_ENABLED
     MB_Reset();
+#endif 
 }
 
 static void c_initialize_firsttime()
@@ -755,9 +745,11 @@ static void c_initialize_firsttime()
     video_init();
 
     // TODO FIXME : sound system never released ...
+#ifdef AUDIO_ENABLED
     DSInit();
     SpkrInitialize();
     MB_Initialize();
+#endif
 
     reinitialize();
 }
@@ -808,11 +800,12 @@ GLUE_C_READ(read_gc1)
 
 // HACK FIXME TODO : candidate for GLUE_C_READ(...)
 void c_read_random() {
-    static unsigned int seed=0;
+    static time_t seed=0;
     if (!seed) {
         seed = time(NULL);
+        srandom(seed);
     }
-    random_value = (unsigned char)rand_r(&seed);
+    random_value = (unsigned char)random();
 }
 
 static void main_thread(void *dummyptr) {

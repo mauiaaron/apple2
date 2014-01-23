@@ -14,20 +14,7 @@
  *
  */
 
-#ifdef __linux__
-#include <linux/keyboard.h>
-#endif
-
 #include "common.h"
-#include "keys.h"
-#include "misc.h"
-#include "video.h"
-#include "interface.h"
-#include "cpu.h"
-#include "prefs.h"
-#include "timing.h"
-#include "soundcore.h"
-#include "joystick.h"
 
 /* from misc.c */
 extern uid_t user, privileged;
@@ -44,7 +31,7 @@ extern unsigned char joy_button1;
 /* mutex used to synchronize between cpu and main threads */
 pthread_mutex_t interface_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-#ifdef PC_JOYSTICK
+#ifdef LINUX_JOYSTICK
 #include <linux/joystick.h>
 extern int raw_js_x;
 extern int raw_js_y;
@@ -378,7 +365,7 @@ void c_handle_input(int scancode, int pressed)
     }
 #endif
 
-#if defined(PC_JOYSTICK)
+#if defined(LINUX_JOYSTICK)
     else if ((joy_mode == JOY_PCJOY) && !(js_fd < 0))
     {
         if (read(js_fd, &js, JS_RETURN) == -1)

@@ -10,7 +10,7 @@
  */
 
 #include "common.h"
-#include "win-shim.h"
+#include "audio/win-shim.h"
 
 pthread_t CreateThread(void* unused_lpThreadAttributes, int unused_dwStackSize, LPTHREAD_START_ROUTINE lpStartRoutine, LPVOID lpParameter, DWORD unused_dwCreationFlags, LPDWORD lpThreadId)
 {

@@ -24,20 +24,18 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 /* Description: Core sound related functionality
  *
  * Author: Tom Charlesworth
- * Linux ALSA Port : Aaron Culliney
+ * Linux ALSA/OpenAL Port : Aaron Culliney
  */
+
+#include "common.h"
 
 #ifdef APPLE2IX
 
 #ifdef USE_ALSA
-#include "soundcore-alsa.h"
+#include "audio/soundcore-alsa.h"
 #endif
 
-#include "common.h"
-#include "win-shim.h"
-#include "soundcore.h"
-#include "speaker.h"
-#include "misc.h"
+#include "audio/win-shim.h"
 
 #if defined(__GNUC__)
 #   pragma GCC diagnostic push

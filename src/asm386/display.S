@@ -17,7 +17,7 @@
 
 #define __ASSEMBLY__
 #include "apple2.h"
-#include "video.h"
+#include "video/video.h"
 #include "cpu.h"
 #include "misc.h"
 

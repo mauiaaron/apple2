@@ -24,16 +24,14 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 /* Description: Speaker emulation
  *
  * Author: Various
- * Linux ALSA Port : Aaron Culliney
+ * Linux ALSA/OpenAL Port : Aaron Culliney
  */
 
-#ifdef APPLE2IX
 #include "common.h"
-#include "cpu.h"
-#include "win-shim.h"
-#include "speaker.h"
-#include "timing.h"
-#include "soundcore.h"
+
+#ifdef APPLE2IX
+
+#include "audio/win-shim.h"
 #       ifdef  __linux
 #       include <sys/io.h>
 #       endif

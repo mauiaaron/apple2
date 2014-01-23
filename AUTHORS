@@ -1,11 +1,19 @@
-Alexander Jean-Claude Bottema <alexb@csd.uu.se> made the original 
-version of the emulator in 1994. 
+Apple //ix was originally developed as the "apple2-emul-linux" package.
 
-Stephen Lee <sl14@cornell.edu> and particularly Aaron Culliney 
-<asc@mhpcc.edu> have done much work on the emulator since.
+Alexander Jean-Claude Bottema <alexb@csd.uu.se> made the original version of the
+emulator in 1994. 
 
-Michael Deutschmann <michael@talamasca.ocis.net> cleaned up the 
-build sequence to use standard GNU tools, and is the present coordinator.
+Stephen Lee <sl14@cornell.edu> contributed early work on the emulator.
 
-Tom Lear <tom@trap.mtview.ca.us> maintains the Debian package of  
-this program, and has contributed some fixes.
+Michael Deutschmann <michael@talamasca.ocis.net> cleaned up the build sequence
+to use standard GNU tools.
+
+Tom Lear <tom@trap.mtview.ca.us> maintained a Debian package of  this program,
+and has contributed some fixes.
+
+Aaron Culliney contributed to early versions of this emulator, and picked up
+development again in 2012.
+
+In addition we are indebted to Tom Charlesworth from the AppleWin emulator
+project.  AppleWin is free software for the Windows platform.
+

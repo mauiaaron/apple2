@@ -26,10 +26,7 @@
    xxx  22 Dec 2013  Switched to gz...() routines for simplicity and to be compatible with gzip
  */
 
-#include "misc.h"
-#include "zlib-helpers.h"
-
-#include <zlib.h>
+#include "common.h"
 
 #define CHUNK 16384
 #define UNKNOWN_ERR 42

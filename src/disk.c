@@ -14,17 +14,7 @@
  *
  */
 
-#include "disk.h"
-#include "misc.h"
-#include "cpu.h"
-#include "glue.h"
-#include "prefs.h"
-#include "keys.h"
-#include "interface.h"
 #include "common.h"
-#include "zlib-helpers.h"
-
-#include <zlib.h>
 
 #define PHASE_BYTES 3328
 

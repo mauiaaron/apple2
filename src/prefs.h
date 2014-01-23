@@ -17,8 +17,6 @@
 #ifndef PREFS_H
 #define PREFS_H
 
-#include "common.h"
-
 #ifndef __ASSEMBLER__
 
 typedef enum joystick_mode_t {
@@ -26,7 +24,7 @@ typedef enum joystick_mode_t {
 #ifdef KEYPAD_JOYSTICK
     JOY_KPAD,
 #endif
-#ifdef PC_JOYSTICK
+#ifdef LINUX_JOYSTICK
     JOY_PCJOY,
 #endif
     NUM_JOYOPTS
@@ -66,7 +64,7 @@ extern short joy_step;
 extern uint8_t auto_recenter;
 #endif
 
-#ifdef PC_JOYSTICK
+#ifdef LINUX_JOYSTICK
 /* real joystick settings */
 extern int js_center_x;
 extern int js_center_y;
@@ -74,7 +72,7 @@ extern int js_max_x;
 extern int js_max_y;
 extern int js_min_x;
 extern int js_min_y;
-#endif /* PC_JOYSTICK */
+#endif /* LINUX_JOYSTICK */
 
 /* functions in prefs.c */
 extern void load_settings(void);
