@@ -721,7 +721,6 @@ typedef enum interface_enum_t {
     OPT_CPU = 0,
     OPT_ALTCPU,
     OPT_PATH,
-    //OPT_MODE,
     OPT_COLOR,
     OPT_VIDEO,
     OPT_VOLUME,
@@ -737,7 +736,6 @@ static const char *options[] =
     " CPU%     :  ",
     " ALT CPU% :  ",
     " Path     :  ",
-    //" Mode     : ",
     " Color    :  ",
     " Video    :  ",
     " Volume   :  ",
@@ -840,14 +838,6 @@ void c_interface_parameters()
                 strncpy(temp, disk_path + cur_pos, INTERFACE_PATH_MAX);
                 temp[INTERFACE_PATH_MAX] = '\0';
                 break;
-
-#if 0
-            case OPT_MODE:
-                sprintf(temp, "%s", (apple_mode == 0) ? "][+             " :
-                        (apple_mode == 1) ? "][+ undocumented" :
-                        "//e             ");
-                break;
-#endif
 
             case OPT_COLOR:
                 sprintf(temp, "%s", (color_mode == COLOR) ? "Color       " :
@@ -1004,16 +994,6 @@ void c_interface_parameters()
                 }
                 break;
 
-#if 0
-            case OPT_MODE:
-                apple_mode--;
-                if (apple_mode < 0)
-                {
-                    apple_mode = 2;
-                }
-                break;
-#endif
-
             case OPT_COLOR:
                 if (color_mode == 0)
                 {
@@ -1108,16 +1088,6 @@ void c_interface_parameters()
                     cur_pos++;
                 }
                 break;
-
-#if 0
-            case OPT_MODE:
-                apple_mode++;
-                if (apple_mode > 2)
-                {
-                    apple_mode = 0;
-                }
-                break;
-#endif
 
             case OPT_COLOR:
                 if (color_mode == NUM_COLOROPTS-1)
