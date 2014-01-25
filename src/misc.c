@@ -105,7 +105,6 @@ void c_initialize_font()
     video_loadfont(0x80,0x40,ucase_glyphs,0);
     video_loadfont(0xC0,0x20,ucase_glyphs,0);
     video_loadfont(0xE0,0x20,lcase_glyphs,0);
-
     video_redraw();
 }
 
@@ -533,19 +532,17 @@ void c_initialize_apple_ii_memory()
     if (!ii_rom_loaded)
     {
         snprintf(temp, TEMPSIZE, "%s/apple_II.rom", system_path);
-        if ((f = fopen(temp, "r")) == NULL)
-        {
+        if ((f = fopen(temp, "r")) == NULL) {
             printf("OOPS!\n");
             printf("Cannot find file '%s'.\n",temp);
-            exit(0);
+            //exit(0);
+        } else {
+            if (fread(apple_ii_rom, 0x3000, 1, f) != 0x3000)
+            {
+                // ERROR ...
+            }
+            fclose(f);
         }
-
-        if (fread(apple_ii_rom, 0x3000, 1, f) != 0x3000)
-        {
-            // ERROR ...
-        }
-
-        fclose(f);
         ii_rom_loaded = 1;
     }
 
@@ -678,12 +675,7 @@ void c_initialize_vm() {
     c_initialize_tables();              /* read/write memory jump tables */
     c_initialize_sound_hooks();         /* sound system */
     c_init_6();                         /* drive ][, slot 6 */
-
     c_initialize_iie_switches();        /* set the //e softswitches */
-
-#ifdef MOUSE_EMULATION
-    c_initialize_mouse();
-#endif
 }
 
 /* -------------------------------------------------------------------------
@@ -736,7 +728,7 @@ void reinitialize(void)
 #endif 
 }
 
-static void c_initialize_firsttime()
+void c_initialize_firsttime()
 {
     /* read in system files and calculate system defaults */
     c_load_interface_font();
@@ -808,6 +800,7 @@ void c_read_random() {
     random_value = (unsigned char)random();
 }
 
+#if !defined(TESTING)
 static void main_thread(void *dummyptr) {
     struct timespec sleeptime = { .tv_sec=0, .tv_nsec=8333333 }; // 120Hz
 
@@ -836,3 +829,5 @@ int main(int sargc, char *sargv[])
     // continue with main render thread
     main_thread(NULL);
 }
+#endif // TESTING
+

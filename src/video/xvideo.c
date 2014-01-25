@@ -27,9 +27,6 @@
 #include <X11/extensions/XShm.h> /* MITSHM! */
 #endif
 
-static unsigned char vga_mem_page_0[SCANWIDTH*SCANHEIGHT];              /* page0 framebuffer */
-static unsigned char vga_mem_page_1[SCANWIDTH*SCANHEIGHT];              /* page1 framebuffer */
-
 static Display *display;
 static Window win;
 static GC gc;
@@ -795,7 +792,7 @@ void video_set_mode(a2_video_mode_t mode) {
     _size_hints_set_fixed();
 }
 
-void video_init() {
+void _video_init() {
     XSetWindowAttributes attribs;
     unsigned long attribmask;
     int x, y;           /* window position */
@@ -809,11 +806,12 @@ void video_init() {
     char *progname;    /* name this program was invoked by */
     char *displayname = NULL;
 
-    progname = argv[0];
+    if (argv == NULL) {
+        LOG("No command line arguments, won't initialize xvideo ...");
+        return;
+    }
 
-    /* give up root privileges. equivalent of vga_init() */
-    //setegid(getgid());
-    //seteuid(getuid());
+    progname = argv[0];
 
     parseArgs();
 
@@ -1020,13 +1018,6 @@ void video_init() {
 #endif
 
     _create_image();
-
-    video__fb1 = vga_mem_page_0;
-    video__fb2 = vga_mem_page_1;
-
-    // reset Apple2 softframebuffers
-    memset(video__fb1,0,SCANWIDTH*SCANHEIGHT);
-    memset(video__fb2,0,SCANWIDTH*SCANHEIGHT);
 
 #ifdef KEYPAD_JOYSTICK
     int autorepeat_supported = 0;

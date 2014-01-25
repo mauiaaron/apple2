@@ -171,18 +171,18 @@ void video_set_mode(a2_video_mode_t mode);
 /* Pointers to framebuffer (can be VGA memory or host buffer)
  */
 
-extern unsigned char    *video__fb1,*video__fb2;
+extern uint8_t *video__fb1,*video__fb2;
 
 #ifdef _640x400
-extern unsigned char video__wider_hires_even[0x1000];
-extern unsigned char video__wider_hires_odd[0x1000];
+extern uint8_t video__wider_hires_even[0x1000];
+extern uint8_t video__wider_hires_odd[0x1000];
 #endif /* _640x400 */
 
-extern unsigned char video__hires_even[0x800];
-extern unsigned char video__hires_odd[0x800];
+extern uint8_t video__hires_even[0x800];
+extern uint8_t video__hires_odd[0x800];
 
-extern unsigned char video__dhires1[256];
-extern unsigned char video__dhires2[256];
+extern uint8_t video__dhires1[256];
+extern uint8_t video__dhires2[256];
 
 extern int video__current_page; /* Current visual page */
 
@@ -190,10 +190,10 @@ extern int video__strictcolors;
 
 /* --- Precalculated hi-res page offsets given addr --- */
 extern unsigned int video__screen_addresses[8192];
-extern unsigned char video__columns[8192];
+extern uint8_t video__columns[8192];
 
-extern unsigned char video__odd_colors[2];
-extern unsigned char video__even_colors[2];
+extern uint8_t video__odd_colors[2];
+extern uint8_t video__even_colors[2];
 
 /* Hooks */
 

@@ -16,30 +16,33 @@
 
 #include "common.h"
 
+static uint8_t vga_mem_page_0[SCANWIDTH*SCANHEIGHT];              /* page0 framebuffer */
+static uint8_t vga_mem_page_1[SCANWIDTH*SCANHEIGHT];              /* page1 framebuffer */
+
 #ifdef _640x400
-unsigned char video__wider_font[0x8000];
+uint8_t video__wider_font[0x8000];
 #endif  /* _640x400 */
 
-unsigned char video__font[0x4000];
+uint8_t video__font[0x4000];
 
 /* --- Precalculated hi-res page offsets given addr --- */
 unsigned int video__screen_addresses[8192];
-unsigned char video__columns[8192];
+uint8_t video__columns[8192];
 
-unsigned char   *video__fb1,*video__fb2;
+uint8_t *video__fb1,*video__fb2;
 
 #ifdef _640x400
-unsigned char video__wider_hires_even[0x1000];
-unsigned char video__wider_hires_odd[0x1000];
+uint8_t video__wider_hires_even[0x1000];
+uint8_t video__wider_hires_odd[0x1000];
 #endif
-unsigned char video__hires_even[0x800];
-unsigned char video__hires_odd[0x800];
+uint8_t video__hires_even[0x800];
+uint8_t video__hires_odd[0x800];
 
-unsigned char video__dhires1[256];
-unsigned char video__dhires2[256];
+uint8_t video__dhires1[256];
+uint8_t video__dhires2[256];
 
 // Interface font
-static unsigned char video__int_font[3][0x4000];
+static uint8_t video__int_font[3][0x4000];
 
 int video__current_page;        /* Current visual page */
 
@@ -83,8 +86,8 @@ void video_loadfont(int first,
     }
 }
 
-unsigned char video__odd_colors[2] = { COLOR_LIGHT_PURPLE, COLOR_LIGHT_BLUE };
-unsigned char video__even_colors[2] = { COLOR_LIGHT_GREEN, COLOR_LIGHT_RED };
+uint8_t video__odd_colors[2] = { COLOR_LIGHT_PURPLE, COLOR_LIGHT_BLUE };
+uint8_t video__even_colors[2] = { COLOR_LIGHT_GREEN, COLOR_LIGHT_RED };
 
 /* 40col/80col/lores/hires/dhires line offsets */
 unsigned short video__line_offset[24] =
@@ -92,7 +95,7 @@ unsigned short video__line_offset[24] =
   0x028, 0x0A8, 0x128, 0x1A8, 0x228, 0x2A8, 0x328, 0x3A8,
   0x050, 0x0D0, 0x150, 0x1D0, 0x250, 0x2D0, 0x350, 0x3D0 };
 
-unsigned char video__dhires1[256] = {
+uint8_t video__dhires1[256] = {
     0x0,0x1,0x2,0x3,0x4,0x5,0x6,0x7,0x8,0x9,0xa,0xb,0xc,0xd,0xe,0xf,
     0x0,0x1,0x3,0x3,0x5,0x5,0x7,0x7,0x9,0x9,0xb,0xb,0xd,0xd,0xf,0xf,
     0x0,0x1,0x2,0x3,0x6,0x5,0x6,0x7,0xa,0x9,0xa,0xb,0xe,0xd,0xe,0xf,
@@ -103,7 +106,7 @@ unsigned char video__dhires1[256] = {
     0x0,0x1,0x7,0x3,0x7,0x5,0x7,0x7,0xf,0x9,0xb,0xb,0xf,0xd,0xf,0xf,
 };
 
-unsigned char video__dhires2[256] = {
+uint8_t video__dhires2[256] = {
     0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x8,0x8,0x0,0xb,0x8,0xd,0x0,0x0,
     0x1,0x1,0x1,0x1,0x0,0x5,0x1,0x1,0x0,0x9,0xb,0xb,0x0,0xd,0xf,0xf,
     0x0,0x1,0x2,0x2,0x2,0x5,0x2,0x2,0x0,0xa,0xa,0xa,0xe,0xd,0x2,0x2,
@@ -518,7 +521,7 @@ static void c_initialize_row_col_tables(void)
                     (y*8 + off + 4) * 320 + x*7 + 20;
 #endif
                 video__columns[video__line_offset[y] + 0x400*off + x] =
-                    (unsigned char)x;
+                    (uint8_t)x;
             }
         }
     }
@@ -695,3 +698,17 @@ void video_plotchar( int x, int y, int scheme, unsigned char c )
     c_interface_print_char80_line(&d,&s);
     c_interface_print_char80_line(&d,&s);
 }
+
+extern void _video_init();
+void video_init() {
+
+    video__fb1 = vga_mem_page_0;
+    video__fb2 = vga_mem_page_1;
+
+    // reset Apple2 softframebuffers
+    memset(video__fb1,0,SCANWIDTH*SCANHEIGHT);
+    memset(video__fb2,0,SCANWIDTH*SCANHEIGHT);
+
+    _video_init();
+}
+

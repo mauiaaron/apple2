@@ -121,6 +121,7 @@ extern int32_t softswitches;
     misc.c functions
    ------------------------------------------------------------------------- */
 
+void c_initialize_firsttime();
 void c_initialize_sound_hooks();
 void c_disable_sound_hooks();
 void c_initialize_font();

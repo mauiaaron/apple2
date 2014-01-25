@@ -30,7 +30,7 @@
 #define DebugCurrByte   SN(cpu65_debug)+2
 #define DebugCurrRW     SN(cpu65_debug)+3
 #define DebugCurrOpcode SN(cpu65_debug)+4
-#define DebugCycleCount SN(cpu65_debug)+5               // TODO FIXME : need a better name here and possibly in the .h file too (reflecting the fact that this is an xtra cycles counter
+#define DebugCycleCount SN(cpu65_debug)+5
 
 /* -------------------------------------------------------------------------
     CPU (6502) Helper Routines
@@ -57,6 +57,7 @@
                 GetFromPC_B                                                    \
                 movb    %al, DebugCurrOpcode;                                  \
                 movb    $0, DebugCycleCount;                                   \
+                movb    $0, DebugCurrRW;                                       \
                 jmp     *cpu65__opcodes(,%eax,4);
 
 #define GetFromEA_B                                                            \
@@ -75,7 +76,7 @@
 
 #define PutToEA_B                                                              \
                 orb     $2, DebugCurrRW;                                       \
-                orb     %al, DebugCurrByte;                                    \
+                movb    %al, DebugCurrByte;                                    \
                 call    *SN(cpu65_vmem)+4                                      \
                         (,EffectiveAddr_E,8);
 #define GetFromMem_B(x)                                                        \
@@ -2692,10 +2693,11 @@ continue:
                 movb    DebugCurrOpcode, %al
                 movb    SN(cpu65__opcycles)(,%eax,1), %al
                 addb    DebugCycleCount, %al
-                addw    %ax, SN(cpu65_cycle_count)          // TODO: cycle counting is slightly incorrect, it should be done earlier per instruction ...
+                movb    %al, DebugCycleCount
+                addw    %ax, SN(cpu65_cycle_count)
                 subl    %eax, SN(gc_cycles_timer_0)
                 subl    %eax, SN(gc_cycles_timer_1)
-                subw    %ax, SN(cpu65_cycles_to_execute)    //       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ orly?
+                subw    %ax, SN(cpu65_cycles_to_execute)
                 jle     exit_cpu65_run
                 xorl    %eax, %eax
                 orb     SN(cpu65__signal), %al
