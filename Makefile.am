@@ -1,10 +1,12 @@
 
 AM_CPPFLAGS = -Isrc
 AM_CPPFLAGS += -I../src # work around some bug in make distcheck
+#AM_COLOR_TESTS = no
 #LDFLAGS =
 #LDADD =
 
-man_MANS = docs/apple2ix.6
+###############################################################################
+# No install
 
 noinst_HEADERS = src/apple2.h src/common.h src/cpu.h src/disk.h src/glue.h \
 	src/interface.h src/joystick.h src/keys.h src/misc.h src/prefs.h \
@@ -20,14 +22,15 @@ noinst_HEADERS = src/apple2.h src/common.h src/cpu.h src/disk.h src/glue.h \
 
 noinst_PROGRAMS = genfont
 
-genfont_SOURCES = src/genfont.c
+###############################################################################
+# Apple //ix and supporting sources
 
 bin_PROGRAMS = apple2ix
 
-
-# selectively enabled through configuration process ...
+# NOTE : selectively enabled through configuration process ...
 EXTRA_apple2ix_SOURCES = \
-	src/asm386/glue.S src/asm386/cpu.S src/asm386/display.S src/asm386/memory.S \
+	src/asm386/glue.S src/asm386/cpu.S src/asm386/display.S \
+	src/asm386/memory.S \
 	\
 	src/meta/debug.l src/meta/debugger.c src/meta/opcodes.c \
 	\
@@ -46,11 +49,35 @@ apple2ix_LDFLAGS = @ARCHOS_HACK_LDFLAGS@
 apple2ix_LDADD = @ASM_O@ @VIDEO_O@ @AUDIO_O@ @META_O@ @X_LIBS@
 apple2ix_DEPENDENCIES = @ASM_O@ @VIDEO_O@ @AUDIO_O@ @META_O@
 
+genfont_SOURCES = src/genfont.c
+
 src/font.c: src/font.txt genfont
 	./genfont < $< > $@
 
 src/asm386/glue.S: src/disk.c src/misc.c @AUDIO_GLUE_C@
 	./src/asm386/genglue $^ > $@
+
+###############################################################################
+# Testing
+
+LOG_DRIVER = testcpu  ## hack TODO/FIXME ... should be wrapper shell script accepting standard GNU testing API args ...
+
+A2_TEST_SOURCES = src/test/testrunner.c $(apple2ix_SOURCES)
+A2_TEST_CFLAGS = -DTESTING=1 -Isrc/greatest
+
+TESTS          = testcpu
+check_PROGRAMS = testcpu
+
+testcpu_SOURCES = src/test/testcpu.c $(A2_TEST_SOURCES)
+testcpu_CFLAGS = $(apple2ix_CFLAGS) $(A2_TEST_CFLAGS)
+testcpu_LDFLAGS = $(apple2ix_LDFLAGS)
+testcpu_LDADD = $(apple2ix_LDADD)
+testcpu_DEPENDENCIES = $(apple2ix_DEPENDENCIES)
+
+###############################################################################
+# Misc
+
+man_MANS = docs/apple2ix.6
 
 EXTRA_DIST = reconf.sh configure README.debugger PROBLEMS .apple2 \
 	\
