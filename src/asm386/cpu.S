@@ -101,10 +101,13 @@
  * Save CPU state when returning from being called from C
  */
 #define SaveState                                                              \
+                xorl    %eax, %eax;                                            \
                 movw    EffectiveAddr, DebugCurrEA;                            \
                 movw    PC_Reg, SN(cpu65_current);                             \
                 movb    A_Reg, SN(cpu65_current)+2;                            \
-                movb    F_Reg, SN(cpu65_current)+3;                            \
+                movb    F_Reg, %al;                                            \
+                movb    SN(cpu65_flags_encode)(,%eax,1), %al;                  \
+                movb    %al, SN(cpu65_current)+3;                              \
                 movb    X_Reg, SN(cpu65_current)+4;                            \
                 movb    Y_Reg, SN(cpu65_current)+5;                            \
                 movb    SP_Reg_L, SN(cpu65_current)+6;
@@ -129,7 +132,8 @@
                 movw    DebugCurrEA, EffectiveAddr;                            \
                 movw    SN(cpu65_current), PC_Reg;                             \
                 movb    SN(cpu65_current)+2, A_Reg;                            \
-                movb    SN(cpu65_current)+3, F_Reg;                            \
+                movb    SN(cpu65_current)+3, %al;                              \
+                movb    SN(cpu65_flags_decode)(,%eax,1), F_Reg;                \
                 movb    SN(cpu65_current)+4, X_Reg;                            \
                 movb    SN(cpu65_current)+5, Y_Reg;                            \
                 movb    SN(cpu65_current)+6, SP_Reg_L;                         \
@@ -339,6 +343,7 @@
                 adcb    %al, A_Reg;                                            \
                 FlagNVZC
 
+// REFACTOR:
 #define DoADC_d GetFromEA_B                                                    \
                 bt      $C_Flag_Bit, FF_Reg;                                   \
                 adcb    A_Reg, %al;                                            \
@@ -490,7 +495,7 @@ op_ADC_dec:
                 DoADC_d
                 Continue
 
-op_ADC_imm:
+op_ADC_imm: // 0x69
                 GetImm
                 testb   $D_Flag, F_Reg          // Decimal mode?
                 jnz     op_ADC_dec              // Yes, jump to decimal version
@@ -513,7 +518,7 @@ op_ADC_zpage_x:
 
 // UNIMPLEMENTED : W65C02S datasheet
 op_ADC_zpage_y:
-                hlt
+                jmp op_NOP
 
 op_ADC_abs:
                 GetAbs
@@ -580,7 +585,7 @@ op_AND_zpage_x:
 
 // UNIMPLEMENTED : W65C02S datasheet
 op_AND_zpage_y:
-                hlt
+                jmp op_NOP
 
 op_AND_abs:
                 GetAbs
@@ -944,7 +949,7 @@ op_CMP_zpage_x:
 
 // UNIMPLEMENTED : W65C02S datasheet
 op_CMP_zpage_y:
-                hlt
+                jmp op_NOP
 
 op_CMP_abs:
                 GetAbs
@@ -1092,7 +1097,7 @@ op_EOR_zpage_x:
 
 // UNIMPLEMENTED : W65C02S datasheet
 op_EOR_zpage_y:
-                hlt
+                jmp op_NOP
 
 op_EOR_abs:
                 GetAbs
@@ -1266,7 +1271,7 @@ op_LDA_zpage_x:
 
 // UNIMPLEMENTED : W65C02S datasheet
 op_LDA_zpage_y:
-                hlt
+                jmp op_NOP
 
 op_LDA_abs:
                 GetAbs
@@ -1415,7 +1420,7 @@ op_ORA_zpage_x:
 
 // UNIMPLEMENTED : W65C02S datasheet
 op_ORA_zpage_y:
-                hlt
+                jmp op_NOP
 
 op_ORA_abs:
                 GetAbs
@@ -1644,7 +1649,7 @@ op_SBC_zpage_x:
 
 // UNIMPLEMENTED : W65C02S datasheet
 op_SBC_zpage_y:
-                hlt
+                jmp op_NOP
 
 op_SBC_abs:
                 GetAbs
@@ -1764,7 +1769,7 @@ op_STA_zpage_x:
 
 // UNIMPLEMENTED : W65C02S datasheet
 op_STA_zpage_y:
-                hlt
+                jmp op_NOP
 
 op_STA_abs:
                 GetAbs
@@ -2782,7 +2787,6 @@ emul_reinit:    movb    $0, SN(cpu65__signal)               // Return to timing 
    ------------------------------------------------------------------------- */
 
 ex_step:        orb     $~DebugStepSig, SN(cpu65__signal)
-                xorl    %eax, %eax
                 SaveState
                 call    SN(c_stepping_yield)
                 RestoreState

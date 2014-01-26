@@ -73,9 +73,10 @@
 #               pragma clang diagnostic ignored "-Wunused-variable"
 #       endif
 
-static FILE *error_log=0;
+extern bool do_logging;
+extern FILE *error_log;
 #define ERRLOG(/* err message format string, args */...)                                \
-    do {                                                                                \
+    if (do_logging) {                                                                   \
         int saverr = errno; errno = 0;                                                  \
         fprintf(error_log ? error_log : stderr, "%s:%d - ", __FILE__, __LINE__);        \
         fprintf(error_log ? error_log : stderr, __VA_ARGS__);                           \
@@ -83,13 +84,13 @@ static FILE *error_log=0;
             fprintf(error_log ? error_log : stderr, " (syserr: %s)", strerror(saverr)); \
         }                                                                               \
         fprintf(error_log ? error_log : stderr, "\n");                                  \
-    } while(0);
+    }
 
 #define ERRQUIT(...) \
-    do { \
+    if (do_logging) { \
         ERRLOG(__VA_ARGS__); \
         exit(1); \
-    } while(0);
+    }
 
 #else // NDEBUG
 
@@ -100,9 +101,7 @@ static FILE *error_log=0;
 #endif
 
 #define ERRLOG(...) \
-    do \
-    { \
-    } while(0);
+    do { } while(0);
 
 #endif
 

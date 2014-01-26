@@ -637,42 +637,42 @@ void show_regs() {
     sprintf(second_buf[num_buffer_lines++], "X = %02X Y = %02X A = %02X F = %02X", cpu65_current.x, cpu65_current.y, cpu65_current.a, cpu65_current.f);
 
     memset(second_buf[num_buffer_lines], ' ', BUF_X);
-    if (cpu65_current.f & C_Flag)
+    if (cpu65_current.f & C_Flag_6502)
     {
         second_buf[num_buffer_lines][0]='C';
     }
 
-    if (cpu65_current.f & X_Flag)
+    if (cpu65_current.f & X_Flag_6502)
     {
         second_buf[num_buffer_lines][1]='X';
     }
 
-    if (cpu65_current.f & I_Flag)
+    if (cpu65_current.f & I_Flag_6502)
     {
         second_buf[num_buffer_lines][2]='I';
     }
 
-    if (cpu65_current.f & V_Flag)
+    if (cpu65_current.f & V_Flag_6502)
     {
         second_buf[num_buffer_lines][3]='V';
     }
 
-    if (cpu65_current.f & B_Flag)
+    if (cpu65_current.f & B_Flag_6502)
     {
         second_buf[num_buffer_lines][4]='B';
     }
 
-    if (cpu65_current.f & D_Flag)
+    if (cpu65_current.f & D_Flag_6502)
     {
         second_buf[num_buffer_lines][5]='D';
     }
 
-    if (cpu65_current.f & Z_Flag)
+    if (cpu65_current.f & Z_Flag_6502)
     {
         second_buf[num_buffer_lines][6]='Z';
     }
 
-    if (cpu65_current.f & N_Flag)
+    if (cpu65_current.f & N_Flag_6502)
     {
         second_buf[num_buffer_lines][7]='N';
     }
@@ -693,23 +693,23 @@ static int will_branch() {
     switch (op)
     {
     case 0x10:                          /* BPL */
-        return (int) !(cpu65_current.f & N_Flag);
+        return (int) !(cpu65_current.f & N_Flag_6502);
     case 0x30:                          /* BMI */
-        return (int) (cpu65_current.f & N_Flag);
+        return (int) (cpu65_current.f & N_Flag_6502);
     case 0x50:                          /* BVC */
-        return (int) !(cpu65_current.f & V_Flag);
+        return (int) !(cpu65_current.f & V_Flag_6502);
     case 0x70:                          /* BVS */
-        return (int) (cpu65_current.f & V_Flag);
+        return (int) (cpu65_current.f & V_Flag_6502);
     case 0x80:                          /* BRA */
         return 1;
     case 0x90:                          /* BCC */
-        return (int) !(cpu65_current.f & C_Flag);
+        return (int) !(cpu65_current.f & C_Flag_6502);
     case 0xb0:                          /* BCS */
-        return (int) (cpu65_current.f & C_Flag);
+        return (int) (cpu65_current.f & C_Flag_6502);
     case 0xd0:                          /* BNE */
-        return (int) !(cpu65_current.f & Z_Flag);
+        return (int) !(cpu65_current.f & Z_Flag_6502);
     case 0xf0:                          /* BEQ */
-        return (int) (cpu65_current.f & Z_Flag);
+        return (int) (cpu65_current.f & Z_Flag_6502);
     }
 
     return -1;

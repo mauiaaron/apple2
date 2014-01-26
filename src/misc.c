@@ -23,6 +23,9 @@
 static unsigned char apple_ii_rom[12288];
 static unsigned char apple_iie_rom[32768];              /* //e */
 
+bool do_logging = true; // also controlled by NDEBUG
+FILE *error_log = NULL;
+
 /* in debugger.c */
 extern int breakpoints[];
 extern int watchpoints[];

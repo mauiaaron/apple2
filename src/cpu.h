@@ -36,7 +36,7 @@ struct cpu65_state
 {
     uint16_t pc;        /* Program counter */
     uint8_t a;          /* Accumulator */
-    uint8_t f;          /* Flags (order not same as in real 6502) */
+    uint8_t f;          /* Flags (host-order) */
     uint8_t x;          /* X Index register */
     uint8_t y;          /* Y Index register */
     uint8_t sp;         /* Stack Pointer */
@@ -115,6 +115,18 @@ extern uint8_t emul_reinitialize;
 #define D_Flag_Bit      13              /* 6502 Decimal mode       */
 #define Z_Flag_Bit      14              /* 6502 Zero               */
 #define N_Flag_Bit      15              /* 6502 Neg                */
+
+/*
+ * These are the 6502 Flags bit positions
+ */
+#define C_Flag_6502     0x1         // [C]arry
+#define Z_Flag_6502     0x2         // [Z]ero
+#define I_Flag_6502     0x4         // [I]nterrupt
+#define D_Flag_6502     0x8         // [D]ecimal
+#define B_Flag_6502     0x10        // [B]reak
+#define X_Flag_6502     0x20        // [X]tra (reserved)...
+#define V_Flag_6502     0x40        // o[V]erflow
+#define N_Flag_6502     0x80        // [N]egative
 
 #define X_Reg           %bl             /* 6502 X register in %bl  */
 #define Y_Reg           %bh             /* 6502 Y register in %bh  */

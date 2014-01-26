@@ -16,16 +16,6 @@
 
 #include "common.h"
 
-// These match the bit positions of the 6502 P-register, they are not the same as in cpu.h -- see note there
-#define C_Flag_6502     0x1         // [C]arry
-#define X_Flag_6502     0x20        // [X]tra (reserved)...
-#define I_Flag_6502     0x4         // [I]nterrupt
-#define V_Flag_6502     0x40        // o[V]erfly
-#define B_Flag_6502     0x10        // [B]reak
-#define D_Flag_6502     0x8         // [D]ecimal
-#define Z_Flag_6502     0x2         // [Z]ero
-#define N_Flag_6502     0x80        // [N]egative
-
 struct cpu65_state cpu65_current;
 struct cpu65_extra cpu65_debug;
 
@@ -82,7 +72,7 @@ static void initialize_code_tables()
             val |= N_Flag_6502;
         }
 
-        cpu65_flags_encode[ i ] = val | 0x20;
+        cpu65_flags_encode[ i ] = val/* | 0x20 WTF?*/;
         cpu65_flags_decode[ val ] = i;
     }
 }
