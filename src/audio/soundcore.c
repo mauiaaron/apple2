@@ -616,7 +616,9 @@ bool DSInit()
 
 	if(g_fh)
 	{
+#if !defined(APPLE2IX)
 		fprintf(g_fh, "Number of sound devices = %d\n",num_sound_devices);
+#endif
 	}
 
 	bool bCreatedOK = false;
@@ -633,7 +635,9 @@ bool DSInit()
 #endif
 		if(SUCCEEDED(hr))
 		{
+#if !defined(APPLE2IX)
 			if(g_fh) fprintf(g_fh, "DSCreate succeeded for sound device #%d\n",x);
+#endif
 			bCreatedOK = true;
 			break;
 		}
