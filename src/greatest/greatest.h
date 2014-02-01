@@ -119,6 +119,7 @@ typedef void (greatest_suite_cb)(void);
  * and passed the pointer to their additional data. */
 typedef void (greatest_setup_cb)(void *udata);
 typedef void (greatest_teardown_cb)(void *udata);
+typedef void (greatest_breakpoint_cb)(void *udata);
 
 typedef enum {
     GREATEST_FLAG_VERBOSE = 0x01,
@@ -148,6 +149,8 @@ typedef struct greatest_run_info {
     void *setup_udata;
     greatest_teardown_cb *teardown;
     void *teardown_udata;
+    greatest_breakpoint_cb *breakpoint;
+    void *break_udata;
 
     /* formatting info for ".....s...F"-style output */
     unsigned int col;
@@ -179,6 +182,7 @@ void greatest_post_test(const char *name, int res);
 void greatest_usage(const char *name);
 void GREATEST_SET_SETUP_CB(greatest_setup_cb *cb, void *udata);
 void GREATEST_SET_TEARDOWN_CB(greatest_teardown_cb *cb, void *udata);
+void GREATEST_SET_BREAKPOINT_CB(greatest_breakpoint_cb *cb, void *udata);
 
 
 /**********
@@ -261,7 +265,12 @@ void GREATEST_SET_TEARDOWN_CB(greatest_teardown_cb *cb, void *udata);
         greatest_info.msg = strdup(MSG);                                \
         greatest_info.fail_file = __FILE__;                             \
         greatest_info.fail_line = __LINE__;                             \
-        if (!(COND)) return -1;                                         \
+        if (!(COND)) {                                                  \
+            if (greatest_info.breakpoint) {                             \
+                greatest_info.breakpoint(greatest_info.break_udata);    \
+            }                                                           \
+            return -1;                                                  \
+        }                                                               \
         free(greatest_info.msg);                                        \
         greatest_info.msg = NULL;                                       \
     } while (0)
@@ -271,7 +280,12 @@ void GREATEST_SET_TEARDOWN_CB(greatest_teardown_cb *cb, void *udata);
         greatest_info.msg = strdup(MSG);                                \
         greatest_info.fail_file = __FILE__;                             \
         greatest_info.fail_line = __LINE__;                             \
-        if ((COND)) return -1;                                          \
+        if (!(COND)) {                                                  \
+            if (greatest_info.breakpoint) {                             \
+                greatest_info.breakpoint(greatest_info.break_udata);    \
+            }                                                           \
+            return -1;                                                  \
+        }                                                               \
         free(greatest_info.msg);                                        \
         greatest_info.msg = NULL;                                       \
     } while (0)
@@ -281,7 +295,12 @@ void GREATEST_SET_TEARDOWN_CB(greatest_teardown_cb *cb, void *udata);
         greatest_info.msg = strdup(MSG);                                \
         greatest_info.fail_file = __FILE__;                             \
         greatest_info.fail_line = __LINE__;                             \
-        if ((EXP) != (GOT)) return -1;                                  \
+        if ((EXP) != (GOT)) {                                           \
+            if (greatest_info.breakpoint) {                             \
+                greatest_info.breakpoint(greatest_info.break_udata);    \
+            }                                                           \
+            return -1;                                                  \
+        }                                                               \
         free(greatest_info.msg);                                        \
         greatest_info.msg = NULL;                                       \
     } while (0)
@@ -298,6 +317,9 @@ void GREATEST_SET_TEARDOWN_CB(greatest_teardown_cb *cb, void *udata);
                 "Expected:\n####\n%s\n####\n", exp_s);                  \
             fprintf(GREATEST_STDOUT,                                    \
                 "Got:\n####\n%s\n####\n", got_s);                       \
+            if (greatest_info.breakpoint) {                             \
+                greatest_info.breakpoint(greatest_info.break_udata);    \
+            }                                                           \
             return -1;                                                  \
         }                                                               \
         free(greatest_info.msg);                                        \
@@ -433,6 +455,8 @@ static void greatest_run_suite(greatest_suite_cb *suite_cb,             \
     greatest_info.setup_udata = NULL;                                   \
     greatest_info.teardown = NULL;                                      \
     greatest_info.teardown_udata = NULL;                                \
+    greatest_info.breakpoint = NULL;                                    \
+    greatest_info.break_udata = NULL;                                   \
     greatest_info.passed += greatest_info.suite.passed;                 \
     greatest_info.failed += greatest_info.suite.failed;                 \
     greatest_info.skipped += greatest_info.suite.skipped;               \
@@ -514,6 +538,12 @@ void GREATEST_SET_TEARDOWN_CB(greatest_teardown_cb *cb,                 \
                                     void *udata) {                      \
     greatest_info.teardown = cb;                                        \
     greatest_info.teardown_udata = udata;                               \
+}                                                                       \
+                                                                        \
+void GREATEST_SET_BREAKPOINT_CB(greatest_breakpoint_cb *cb,             \
+                                    void *udata) {                      \
+    greatest_info.breakpoint = cb;                                      \
+    greatest_info.break_udata = udata;                                  \
 }                                                                       \
                                                                         \
 greatest_run_info greatest_info
