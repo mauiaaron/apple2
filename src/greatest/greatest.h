@@ -124,7 +124,8 @@ typedef void (greatest_breakpoint_cb)(void *udata);
 typedef enum {
     GREATEST_FLAG_VERBOSE = 0x01,
     GREATEST_FLAG_FIRST_FAIL = 0x02,
-    GREATEST_FLAG_LIST_ONLY = 0x04
+    GREATEST_FLAG_LIST_ONLY = 0x04,
+    GREATEST_FLAG_SILENT_SUCCESS = 0x08
 } GREATEST_FLAG;
 
 typedef struct greatest_run_info {
@@ -243,6 +244,7 @@ void GREATEST_SET_BREAKPOINT_CB(greatest_breakpoint_cb *cb, void *udata);
 
 /* Check if the test runner is in verbose mode. */
 #define GREATEST_IS_VERBOSE() (greatest_info.flags & GREATEST_FLAG_VERBOSE)
+#define GREATEST_SILENT_SUCCESS() (greatest_info.flags & GREATEST_FLAG_SILENT_SUCCESS)
 #define GREATEST_LIST_ONLY() (greatest_info.flags & GREATEST_FLAG_LIST_ONLY)
 #define GREATEST_FIRST_FAIL() (greatest_info.flags & GREATEST_FLAG_FIRST_FAIL)
 #define GREATEST_FAILURE_ABORT() (greatest_info.suite.failed > 0 && GREATEST_FIRST_FAIL())
@@ -414,6 +416,8 @@ void greatest_post_test(const char *name, int res) {                    \
         GREATEST_CLOCK_DIFF(greatest_info.suite.pre_test,               \
             greatest_info.suite.post_test);                             \
         fprintf(GREATEST_STDOUT, "\n");                                 \
+    } else if (GREATEST_SILENT_SUCCESS()) {                             \
+        greatest_info.col = 0;                                          \
     } else if (greatest_info.col % greatest_info.width == 0) {          \
         fprintf(GREATEST_STDOUT, "\n");                                 \
         greatest_info.col = 0;                                          \
@@ -467,6 +471,7 @@ void greatest_do_pass(const char *name) {                               \
     if (GREATEST_IS_VERBOSE()) {                                        \
         fprintf(GREATEST_STDOUT, "PASS %s: %s",                         \
             name, greatest_info.msg ? greatest_info.msg : "");          \
+    } else if (GREATEST_SILENT_SUCCESS()) {                             \
     } else {                                                            \
         fprintf(GREATEST_STDOUT, ".");                                  \
     }                                                                   \
