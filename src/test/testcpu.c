@@ -110,6 +110,12 @@ static void logic_ADC_dec(/*uint8_t*/int _a, /*uint8_t*/int _b, uint8_t *result,
     uint8_t b_hi = (((uint8_t)_b) & 0xf0)>>4;
 
     x_lo = a_lo + b_lo;
+
+    if (*flags & fC) {
+        x_lo += 1;
+    }
+    *flags &= ~fC;
+
     if (x_lo > 9) {
         x_lo += 6;
         x_hi += (x_lo>>4);
@@ -137,12 +143,21 @@ static void logic_ADC_dec(/*uint8_t*/int _a, /*uint8_t*/int _b, uint8_t *result,
 
 static void logic_ADC(/*uint8_t*/int _a, /*uint8_t*/int _b, uint8_t *result, uint8_t *flags) {
 
+    if (*flags & fD) {
+        logic_ADC_dec(_a, _b, result, flags);
+        return;
+    }
+
     int8_t a = (int8_t)_a;
     int8_t b = (int8_t)_b;
     bool is_neg = (a < 0);
     bool is_negb = (b < 0);
 
-    int8_t res = a + b;
+    int8_t carry = (*flags & fC) ? 1 : 0;
+    *flags &= ~fC;
+
+    int8_t res = a + b + carry;
+
     if ((res & 0xff) == 0x0) {
         *flags |= fZ;
     }
@@ -150,8 +165,8 @@ static void logic_ADC(/*uint8_t*/int _a, /*uint8_t*/int _b, uint8_t *result, uin
         *flags |= fN;
     }
 
-    int res32 = (uint8_t)a+(uint8_t)b;
-    if (res32 & 0x0000ff00) {
+    int32_t res32 = (uint8_t)a+(uint8_t)b+(uint8_t)carry;
+    if (res32 & 0x00000100) {
         *flags |= fC;
     }
 
@@ -169,14 +184,13 @@ static void logic_ADC(/*uint8_t*/int _a, /*uint8_t*/int _b, uint8_t *result, uin
     *result = (uint8_t)(res & 0xff);
 }
 
-TEST test_ADC_imm(bool decimal, uint8_t regA, uint8_t val) {
+TEST test_ADC_imm(uint8_t regA, uint8_t val, bool decimal, bool carry) {
     HEADER0();
 
-    if (decimal) {
-        logic_ADC_dec(regA, val, &result, &flags);
-    } else {
-        logic_ADC(regA, val, &result, &flags);
-    }
+    flags |= decimal ? (fD) : 0x00;
+    flags |= carry   ? (fC) : 0x00;
+
+    logic_ADC(regA, val, &result, &flags);
 
     testcpu_set_opcode2(0x69, val);
 
@@ -184,7 +198,8 @@ TEST test_ADC_imm(bool decimal, uint8_t regA, uint8_t val) {
     cpu65_current.x  = 0x03;
     cpu65_current.y  = 0x04;
     cpu65_current.sp = 0x80;
-    cpu65_current.f  = decimal ? (fD) : 0x00;
+    cpu65_current.f |= decimal ? (fD) : 0x00;
+    cpu65_current.f |= carry   ? (fC) : 0x00;
 
     cpu65_run();
 
@@ -205,7 +220,7 @@ TEST test_ADC_imm(bool decimal, uint8_t regA, uint8_t val) {
     PASS();
 }
 
-TEST test_ADC_zpage(bool decimal, uint8_t regA, uint8_t val, uint8_t arg0) {
+TEST test_ADC_zpage(uint8_t regA, uint8_t val, uint8_t arg0, bool decimal) {
     HEADER0();
 
     if (decimal) {
@@ -243,7 +258,7 @@ TEST test_ADC_zpage(bool decimal, uint8_t regA, uint8_t val, uint8_t arg0) {
     PASS();
 }
 
-TEST test_ADC_zpage_x(bool decimal, uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX) {
+TEST test_ADC_zpage_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX, bool decimal) {
     HEADER0();
 
     if (decimal) {
@@ -283,7 +298,7 @@ TEST test_ADC_zpage_x(bool decimal, uint8_t regA, uint8_t val, uint8_t arg0, uin
     PASS();
 }
 
-TEST test_ADC_abs(bool decimal, uint8_t regA, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
+TEST test_ADC_abs(uint8_t regA, uint8_t val, uint8_t lobyte, uint8_t hibyte, bool decimal) {
     HEADER0();
 
     if (decimal) {
@@ -322,7 +337,7 @@ TEST test_ADC_abs(bool decimal, uint8_t regA, uint8_t val, uint8_t lobyte, uint8
     PASS();
 }
 
-TEST test_ADC_abs_x(bool decimal, uint8_t regA, uint8_t val, uint8_t regX, uint8_t lobyte, uint8_t hibyte) {
+TEST test_ADC_abs_x(uint8_t regA, uint8_t val, uint8_t regX, uint8_t lobyte, uint8_t hibyte, bool decimal) {
     HEADER0();
 
     if (decimal) {
@@ -368,7 +383,7 @@ TEST test_ADC_abs_x(bool decimal, uint8_t regA, uint8_t val, uint8_t regX, uint8
     PASS();
 }
 
-TEST test_ADC_abs_y(bool decimal, uint8_t regA, uint8_t val, uint8_t regY, uint8_t lobyte, uint8_t hibyte) {
+TEST test_ADC_abs_y(uint8_t regA, uint8_t val, uint8_t regY, uint8_t lobyte, uint8_t hibyte, bool decimal) {
     HEADER0();
 
     if (decimal) {
@@ -414,7 +429,7 @@ TEST test_ADC_abs_y(bool decimal, uint8_t regA, uint8_t val, uint8_t regY, uint8
     PASS();
 }
 
-TEST test_ADC_ind_x(bool decimal, uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX, uint8_t lobyte, uint8_t hibyte) {
+TEST test_ADC_ind_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX, uint8_t lobyte, uint8_t hibyte, bool decimal) {
     HEADER0();
 
     if (decimal) {
@@ -459,7 +474,7 @@ TEST test_ADC_ind_x(bool decimal, uint8_t regA, uint8_t val, uint8_t arg0, uint8
     PASS();
 }
 
-TEST test_ADC_ind_y(bool decimal, uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regY, uint8_t val_zp0, uint8_t val_zp1) {
+TEST test_ADC_ind_y(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regY, uint8_t val_zp0, uint8_t val_zp1, bool decimal) {
     HEADER0();
 
     if (decimal) {
@@ -511,7 +526,7 @@ TEST test_ADC_ind_y(bool decimal, uint8_t regA, uint8_t val, uint8_t arg0, uint8
     PASS();
 }
 
-TEST test_ADC_ind_zpage(bool decimal, uint8_t regA, uint8_t val, uint8_t arg0, uint8_t lobyte, uint8_t hibyte) {
+TEST test_ADC_ind_zpage(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t lobyte, uint8_t hibyte, bool decimal) {
     HEADER0();
 
     if (decimal) {
@@ -574,8 +589,9 @@ static void logic_AND(/*uint8_t*/int _a, /*uint8_t*/int _b, uint8_t *result, uin
     *result = res;
 }
 
-TEST test_AND_imm(bool unused, uint8_t regA, uint8_t val) {
+TEST test_AND_imm(uint8_t regA, uint8_t val) {
     HEADER0();
+
     logic_AND(regA, val, &result, &flags);
 
     testcpu_set_opcode2(0x29, val);
@@ -605,7 +621,7 @@ TEST test_AND_imm(bool unused, uint8_t regA, uint8_t val) {
     PASS();
 }
 
-TEST test_AND_zpage(bool unused, uint8_t regA, uint8_t val, uint8_t arg0) {
+TEST test_AND_zpage(uint8_t regA, uint8_t val, uint8_t arg0) {
     HEADER0();
     logic_AND(regA, val, &result, &flags);
 
@@ -638,7 +654,7 @@ TEST test_AND_zpage(bool unused, uint8_t regA, uint8_t val, uint8_t arg0) {
     PASS();
 }
 
-TEST test_AND_zpage_x(bool unused, uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX) {
+TEST test_AND_zpage_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX) {
     HEADER0();
     logic_AND(regA, val, &result, &flags);
 
@@ -673,7 +689,7 @@ TEST test_AND_zpage_x(bool unused, uint8_t regA, uint8_t val, uint8_t arg0, uint
     PASS();
 }
 
-TEST test_AND_abs(bool unused, uint8_t regA, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
+TEST test_AND_abs(uint8_t regA, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
     HEADER0();
     logic_AND(regA, val, &result, &flags);
 
@@ -707,7 +723,7 @@ TEST test_AND_abs(bool unused, uint8_t regA, uint8_t val, uint8_t lobyte, uint8_
     PASS();
 }
 
-TEST test_AND_abs_x(bool unused, uint8_t regA, uint8_t val, uint8_t regX, uint8_t lobyte, uint8_t hibyte) {
+TEST test_AND_abs_x(uint8_t regA, uint8_t val, uint8_t regX, uint8_t lobyte, uint8_t hibyte) {
     HEADER0();
     logic_AND(regA, val, &result, &flags);
 
@@ -746,7 +762,7 @@ TEST test_AND_abs_x(bool unused, uint8_t regA, uint8_t val, uint8_t regX, uint8_
     PASS();
 }
 
-TEST test_AND_abs_y(bool unused, uint8_t regA, uint8_t val, uint8_t regY, uint8_t lobyte, uint8_t hibyte) {
+TEST test_AND_abs_y(uint8_t regA, uint8_t val, uint8_t regY, uint8_t lobyte, uint8_t hibyte) {
     HEADER0();
     logic_AND(regA, val, &result, &flags);
 
@@ -785,7 +801,7 @@ TEST test_AND_abs_y(bool unused, uint8_t regA, uint8_t val, uint8_t regY, uint8_
     PASS();
 }
 
-TEST test_AND_ind_x(bool unused, uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX, uint8_t lobyte, uint8_t hibyte) {
+TEST test_AND_ind_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX, uint8_t lobyte, uint8_t hibyte) {
     HEADER0();
     logic_AND(regA, val, &result, &flags);
 
@@ -825,7 +841,7 @@ TEST test_AND_ind_x(bool unused, uint8_t regA, uint8_t val, uint8_t arg0, uint8_
     PASS();
 }
 
-TEST test_AND_ind_y(bool unused, uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regY, uint8_t val_zp0, uint8_t val_zp1) {
+TEST test_AND_ind_y(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regY, uint8_t val_zp0, uint8_t val_zp1) {
     HEADER0();
     logic_AND(regA, val, &result, &flags);
 
@@ -871,7 +887,7 @@ TEST test_AND_ind_y(bool unused, uint8_t regA, uint8_t val, uint8_t arg0, uint8_
     PASS();
 }
 
-TEST test_AND_ind_zpage(bool unused, uint8_t regA, uint8_t val, uint8_t arg0, uint8_t lobyte, uint8_t hibyte) {
+TEST test_AND_ind_zpage(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t lobyte, uint8_t hibyte) {
     HEADER0();
     logic_AND(regA, val, &result, &flags);
 
@@ -1028,8 +1044,9 @@ GREATEST_SUITE(test_suite_cpu) {
 
     c_initialize_firsttime();
 
-    test_func_t *func, *tmp;
+    test_func_t *func=NULL, *tmp=NULL;
 
+    // --------------------------------
     A2_ADD_TEST(test_BRK);
     A2_ADD_TEST(test_IRQ);
     A2_ADD_TEST(test_NOP);
@@ -1038,6 +1055,10 @@ GREATEST_SUITE(test_suite_cpu) {
         RUN_TEST(((test_func_ptr0)(func->func)));
         A2_REMOVE_TEST(func);
     }
+
+    // ------------------------------------------------------------------------
+    // Immediate addressing mode tests :
+    // NOTE : these should be a comprehensive exercise of the instruction logic
 
     greatest_info.flags = GREATEST_FLAG_SILENT_SUCCESS;
     A2_ADD_TEST(test_ADC_imm);
@@ -1050,8 +1071,10 @@ GREATEST_SUITE(test_suite_cpu) {
         do {
             uint8_t val=0x00;
             do {
-                A2_RUN_TESTp( func->func, /*decimal*/false, regA, val);
-                A2_RUN_TESTp( func->func, /*decimal*/ true, regA, val);
+                A2_RUN_TESTp( func->func, regA, val, /*decimal*/false, /*carry*/false);
+                A2_RUN_TESTp( func->func, regA, val, /*decimal*/ true, /*carry*/false);
+                A2_RUN_TESTp( func->func, regA, val, /*decimal*/false, /*carry*/true);
+                A2_RUN_TESTp( func->func, regA, val, /*decimal*/ true, /*carry*/true);
             } while (++val);
         } while (++regA);
 
@@ -1059,6 +1082,14 @@ GREATEST_SUITE(test_suite_cpu) {
     }
     greatest_info.flags = 0x0;
 
+    // ------------------------------------------------------------------------
+    // Other addressing modes tests :
+    // NOTE : unlike immediate-mode addressing tests above, these tests are not designed to be a comprehensive test of
+    // instruction logic.  Rather--for clarity--they are designed to comprehensively test the addressing logic,
+    // including all edge cases 
+
+    // --------------------------------
+    // zpage TODO FIXME DESCRIPTION HERE .....................................
     A2_ADD_TEST(test_ADC_zpage);
     A2_ADD_TEST(test_AND_zpage);
     HASH_ITER(hh, test_funcs, func, tmp) {
@@ -1068,10 +1099,10 @@ GREATEST_SUITE(test_suite_cpu) {
         for (uint8_t decimal=0; decimal<2; decimal++) {
             uint8_t arg0 = 0x00;
             do {
-                A2_RUN_TESTp( func->func, decimal, /*A*/0x0f, /*val*/0x0f, arg0);
-                A2_RUN_TESTp( func->func, decimal, /*A*/0x7f, /*val*/0x7f, arg0);
-                A2_RUN_TESTp( func->func, decimal, /*A*/0xaa, /*val*/0x55, arg0);
-                A2_RUN_TESTp( func->func, decimal, /*A*/0x00, /*val*/0xff, arg0);
+                A2_RUN_TESTp( func->func, /*A*/0x0f, /*val*/0x0f, arg0, decimal);
+                A2_RUN_TESTp( func->func, /*A*/0x7f, /*val*/0x7f, arg0, decimal);
+                A2_RUN_TESTp( func->func, /*A*/0xaa, /*val*/0x55, arg0, decimal);
+                A2_RUN_TESTp( func->func, /*A*/0x00, /*val*/0xff, arg0, decimal);
                 ++arg0;
             } while (arg0);
         }
@@ -1079,6 +1110,7 @@ GREATEST_SUITE(test_suite_cpu) {
         A2_REMOVE_TEST(func);
     }
 
+    // --------------------------------
     A2_ADD_TEST(test_ADC_zpage_x);
     A2_ADD_TEST(test_AND_zpage_x);
     HASH_ITER(hh, test_funcs, func, tmp) {
@@ -1097,6 +1129,7 @@ GREATEST_SUITE(test_suite_cpu) {
         A2_REMOVE_TEST(func);
     }
 
+    // --------------------------------
     A2_ADD_TEST(test_ADC_abs);
     A2_ADD_TEST(test_AND_abs);
     HASH_ITER(hh, test_funcs, func, tmp) {
@@ -1116,6 +1149,7 @@ GREATEST_SUITE(test_suite_cpu) {
         A2_REMOVE_TEST(func);
     }
 
+    // --------------------------------
     A2_ADD_TEST(test_ADC_abs_x);
     A2_ADD_TEST(test_AND_abs_x);
     HASH_ITER(hh, test_funcs, func, tmp) {
@@ -1137,6 +1171,7 @@ GREATEST_SUITE(test_suite_cpu) {
         A2_REMOVE_TEST(func);
     }
 
+    // --------------------------------
     A2_ADD_TEST(test_ADC_abs_y);
     A2_ADD_TEST(test_AND_abs_y);
     HASH_ITER(hh, test_funcs, func, tmp) {
@@ -1158,6 +1193,7 @@ GREATEST_SUITE(test_suite_cpu) {
         A2_REMOVE_TEST(func);
     }
 
+    // --------------------------------
     A2_ADD_TEST(test_ADC_ind_x);
     A2_ADD_TEST(test_AND_ind_x);
     HASH_ITER(hh, test_funcs, func, tmp) {
@@ -1179,6 +1215,7 @@ GREATEST_SUITE(test_suite_cpu) {
         A2_REMOVE_TEST(func);
     }
 
+    // --------------------------------
     A2_ADD_TEST(test_ADC_ind_y);
     A2_ADD_TEST(test_AND_ind_y);
     HASH_ITER(hh, test_funcs, func, tmp) {
@@ -1195,6 +1232,7 @@ GREATEST_SUITE(test_suite_cpu) {
         A2_REMOVE_TEST(func);
     }
 
+    // --------------------------------
     A2_ADD_TEST(test_ADC_ind_zpage);
     A2_ADD_TEST(test_AND_ind_zpage);
     HASH_ITER(hh, test_funcs, func, tmp) {
