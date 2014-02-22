@@ -243,14 +243,10 @@ TEST test_ADC_imm(uint8_t regA, uint8_t val, bool decimal, bool carry) {
     PASS();
 }
 
-TEST test_ADC_zpage(uint8_t regA, uint8_t val, uint8_t arg0, bool decimal) {
+TEST test_ADC_zpage(uint8_t regA, uint8_t val, uint8_t arg0) {
     HEADER0();
 
-    if (decimal) {
-        logic_ADC_dec(regA, val, &result, &flags);
-    } else {
-        logic_ADC(regA, val, &result, &flags);
-    }
+    logic_ADC(regA, val, &result, &flags);
 
     testcpu_set_opcode2(0x65, arg0);
 
@@ -260,7 +256,6 @@ TEST test_ADC_zpage(uint8_t regA, uint8_t val, uint8_t arg0, bool decimal) {
     cpu65_current.x  = 0x03;
     cpu65_current.y  = 0x04;
     cpu65_current.sp = 0x80;
-    cpu65_current.f  = decimal ? (fD) : 0x00;
 
     cpu65_run();
 
@@ -276,19 +271,15 @@ TEST test_ADC_zpage(uint8_t regA, uint8_t val, uint8_t arg0, bool decimal) {
     ASSERT(cpu65_debug.d         == 0xff);
     ASSERT(cpu65_debug.rw        == RW_READ);
     ASSERT(cpu65_debug.opcode    == 0x65);
-    ASSERT(cpu65_debug.opcycles  == (decimal ? 4 : 3));
+    ASSERT(cpu65_debug.opcycles  == (3));
 
     PASS();
 }
 
-TEST test_ADC_zpage_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX, bool decimal) {
+TEST test_ADC_zpage_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX) {
     HEADER0();
 
-    if (decimal) {
-        logic_ADC_dec(regA, val, &result, &flags);
-    } else {
-        logic_ADC(regA, val, &result, &flags);
-    }
+    logic_ADC(regA, val, &result, &flags);
 
     uint8_t idx = arg0 + regX;
 
@@ -300,7 +291,6 @@ TEST test_ADC_zpage_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX, boo
     cpu65_current.x  = regX;
     cpu65_current.y  = 0x05;
     cpu65_current.sp = 0x81;
-    cpu65_current.f  = decimal ? (fD) : 0x00;
 
     cpu65_run();
 
@@ -316,19 +306,15 @@ TEST test_ADC_zpage_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX, boo
     ASSERT(cpu65_debug.d         == 0xff);
     ASSERT(cpu65_debug.rw        == RW_READ);
     ASSERT(cpu65_debug.opcode    == 0x75);
-    ASSERT(cpu65_debug.opcycles  == (decimal ? 5 : 4));
+    ASSERT(cpu65_debug.opcycles  == (4));
 
     PASS();
 }
 
-TEST test_ADC_abs(uint8_t regA, uint8_t val, uint8_t lobyte, uint8_t hibyte, bool decimal) {
+TEST test_ADC_abs(uint8_t regA, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
     HEADER0();
 
-    if (decimal) {
-        logic_ADC_dec(regA, val, &result, &flags);
-    } else {
-        logic_ADC(regA, val, &result, &flags);
-    }
+    logic_ADC(regA, val, &result, &flags);
 
     testcpu_set_opcode3(0x6d, lobyte, hibyte);
 
@@ -339,7 +325,6 @@ TEST test_ADC_abs(uint8_t regA, uint8_t val, uint8_t lobyte, uint8_t hibyte, boo
     cpu65_current.x  = 0xf4;
     cpu65_current.y  = 0x05;
     cpu65_current.sp = 0x81;
-    cpu65_current.f  = decimal ? (fD) : 0x00;
 
     cpu65_run();
 
@@ -355,19 +340,15 @@ TEST test_ADC_abs(uint8_t regA, uint8_t val, uint8_t lobyte, uint8_t hibyte, boo
     ASSERT(cpu65_debug.d         == 0xff);
     ASSERT(cpu65_debug.rw        == RW_READ);
     ASSERT(cpu65_debug.opcode    == 0x6d);
-    ASSERT(cpu65_debug.opcycles  == (decimal ? 5 : 4));
+    ASSERT(cpu65_debug.opcycles  == (4));
 
     PASS();
 }
 
-TEST test_ADC_abs_x(uint8_t regA, uint8_t val, uint8_t regX, uint8_t lobyte, uint8_t hibyte, bool decimal) {
+TEST test_ADC_abs_x(uint8_t regA, uint8_t val, uint8_t regX, uint8_t lobyte, uint8_t hibyte) {
     HEADER0();
 
-    if (decimal) {
-        logic_ADC_dec(regA, val, &result, &flags);
-    } else {
-        logic_ADC(regA, val, &result, &flags);
-    }
+    logic_ADC(regA, val, &result, &flags);
 
     testcpu_set_opcode3(0x7d, lobyte, hibyte);
 
@@ -383,7 +364,6 @@ TEST test_ADC_abs_x(uint8_t regA, uint8_t val, uint8_t regX, uint8_t lobyte, uin
     cpu65_current.x  = regX;
     cpu65_current.y  = 0x05;
     cpu65_current.sp = 0x81;
-    cpu65_current.f  = decimal ? (fD) : 0x00;
 
     cpu65_run();
 
@@ -400,20 +380,16 @@ TEST test_ADC_abs_x(uint8_t regA, uint8_t val, uint8_t regX, uint8_t lobyte, uin
     ASSERT(cpu65_debug.rw        == RW_READ);
     ASSERT(cpu65_debug.opcode    == 0x7d);
 
-    cycle_count += decimal ? 5 : 4;
+    cycle_count += 4;
     ASSERT(cpu65_debug.opcycles == cycle_count);
 
     PASS();
 }
 
-TEST test_ADC_abs_y(uint8_t regA, uint8_t val, uint8_t regY, uint8_t lobyte, uint8_t hibyte, bool decimal) {
+TEST test_ADC_abs_y(uint8_t regA, uint8_t val, uint8_t regY, uint8_t lobyte, uint8_t hibyte) {
     HEADER0();
 
-    if (decimal) {
-        logic_ADC_dec(regA, val, &result, &flags);
-    } else {
-        logic_ADC(regA, val, &result, &flags);
-    }
+    logic_ADC(regA, val, &result, &flags);
 
     testcpu_set_opcode3(0x79, lobyte, hibyte);
 
@@ -429,7 +405,6 @@ TEST test_ADC_abs_y(uint8_t regA, uint8_t val, uint8_t regY, uint8_t lobyte, uin
     cpu65_current.x  = 0x02;
     cpu65_current.y  = regY;
     cpu65_current.sp = 0x81;
-    cpu65_current.f  = decimal ? (fD) : 0x00;
 
     cpu65_run();
 
@@ -446,20 +421,16 @@ TEST test_ADC_abs_y(uint8_t regA, uint8_t val, uint8_t regY, uint8_t lobyte, uin
     ASSERT(cpu65_debug.rw        == RW_READ);
     ASSERT(cpu65_debug.opcode    == 0x79);
 
-    cycle_count += decimal ? 5 : 4;
+    cycle_count += 4;
     ASSERT(cpu65_debug.opcycles == cycle_count);
 
     PASS();
 }
 
-TEST test_ADC_ind_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX, uint8_t lobyte, uint8_t hibyte, bool decimal) {
+TEST test_ADC_ind_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX, uint8_t lobyte, uint8_t hibyte) {
     HEADER0();
 
-    if (decimal) {
-        logic_ADC_dec(regA, val, &result, &flags);
-    } else {
-        logic_ADC(regA, val, &result, &flags);
-    }
+    logic_ADC(regA, val, &result, &flags);
 
     testcpu_set_opcode2(0x61, arg0);
 
@@ -475,7 +446,6 @@ TEST test_ADC_ind_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX, uint8
     cpu65_current.x  = regX;
     cpu65_current.y  = 0x15;
     cpu65_current.sp = 0x81;
-    cpu65_current.f  = decimal ? (fD) : 0x00;
 
     cpu65_run();
 
@@ -492,19 +462,15 @@ TEST test_ADC_ind_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX, uint8
     ASSERT(cpu65_debug.rw        == RW_READ);
     ASSERT(cpu65_debug.opcode    == 0x61);
 
-    ASSERT(cpu65_debug.opcycles  == (decimal ? 7 : 6));
+    ASSERT(cpu65_debug.opcycles  == (6));
 
     PASS();
 }
 
-TEST test_ADC_ind_y(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regY, uint8_t val_zp0, uint8_t val_zp1, bool decimal) {
+TEST test_ADC_ind_y(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regY, uint8_t val_zp0, uint8_t val_zp1) {
     HEADER0();
 
-    if (decimal) {
-        logic_ADC_dec(regA, val, &result, &flags);
-    } else {
-        logic_ADC(regA, val, &result, &flags);
-    }
+    logic_ADC(regA, val, &result, &flags);
 
     testcpu_set_opcode2(0x71, arg0);
 
@@ -527,7 +493,6 @@ TEST test_ADC_ind_y(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regY, uint8
     cpu65_current.x  = 0x84;
     cpu65_current.y  = regY;
     cpu65_current.sp = 0x81;
-    cpu65_current.f  = decimal ? (fD) : 0x00;
 
     cpu65_run();
 
@@ -543,20 +508,16 @@ TEST test_ADC_ind_y(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regY, uint8
     ASSERT(cpu65_debug.d         == 0xff);
     ASSERT(cpu65_debug.rw        == RW_READ);
     ASSERT(cpu65_debug.opcode    == 0x71);
-    cycle_count += decimal ? 6 : 5;
+    cycle_count += 5;
     ASSERT(cpu65_debug.opcycles == cycle_count);
 
     PASS();
 }
 
-TEST test_ADC_ind_zpage(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t lobyte, uint8_t hibyte, bool decimal) {
+TEST test_ADC_ind_zpage(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t lobyte, uint8_t hibyte) {
     HEADER0();
 
-    if (decimal) {
-        logic_ADC_dec(regA, val, &result, &flags);
-    } else {
-        logic_ADC(regA, val, &result, &flags);
-    }
+    logic_ADC(regA, val, &result, &flags);
 
     testcpu_set_opcode2(0x72, arg0);
 
@@ -573,7 +534,6 @@ TEST test_ADC_ind_zpage(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t lobyte,
     cpu65_current.x  = 0x14;
     cpu65_current.y  = 0x85;
     cpu65_current.sp = 0x81;
-    cpu65_current.f  = decimal ? (fD) : 0x00;
 
     cpu65_run();
 
@@ -589,7 +549,7 @@ TEST test_ADC_ind_zpage(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t lobyte,
     ASSERT(cpu65_debug.d         == 0xff);
     ASSERT(cpu65_debug.rw        == RW_READ);
     ASSERT(cpu65_debug.opcode    == 0x72);
-    ASSERT(cpu65_debug.opcycles  == (decimal ? 6 : 5));
+    ASSERT(cpu65_debug.opcycles  == (5));
 
     PASS();
 }
@@ -1102,6 +1062,7 @@ GREATEST_SUITE(test_suite_cpu) {
             } while (++val);
         } while (++regA);
 
+        fprintf(GREATEST_STDOUT, "...OK\n");
         A2_REMOVE_TEST(func);
     }
     greatest_info.flags = 0x0;
@@ -1120,16 +1081,14 @@ GREATEST_SUITE(test_suite_cpu) {
         fprintf(GREATEST_STDOUT, "\n%s :\n", func->name);
 
         // test addressing is working ...
-        for (uint8_t decimal=0; decimal<2; decimal++) {
-            uint8_t arg0 = 0x00;
-            do {
-                A2_RUN_TESTp( func->func, /*A*/0x0f, /*val*/0x0f, arg0, decimal);
-                A2_RUN_TESTp( func->func, /*A*/0x7f, /*val*/0x7f, arg0, decimal);
-                A2_RUN_TESTp( func->func, /*A*/0xaa, /*val*/0x55, arg0, decimal);
-                A2_RUN_TESTp( func->func, /*A*/0x00, /*val*/0xff, arg0, decimal);
-                ++arg0;
-            } while (arg0);
-        }
+        uint8_t arg0 = 0x00;
+        do {
+            A2_RUN_TESTp( func->func, /*A*/0x0f, /*val*/0x0f, arg0);
+            A2_RUN_TESTp( func->func, /*A*/0x7f, /*val*/0x7f, arg0);
+            A2_RUN_TESTp( func->func, /*A*/0xaa, /*val*/0x55, arg0);
+            A2_RUN_TESTp( func->func, /*A*/0x00, /*val*/0xff, arg0);
+            ++arg0;
+        } while (arg0);
 
         A2_REMOVE_TEST(func);
     }
@@ -1141,13 +1100,11 @@ GREATEST_SUITE(test_suite_cpu) {
         fprintf(GREATEST_STDOUT, "\n%s :\n", func->name);
 
         // test addressing is working ...
-        for (uint8_t decimal=0; decimal<2; decimal++) {
-            for (uint8_t regX=0x42; regX>0x3F; regX+=0x40) {
-                A2_RUN_TESTp( func->func, decimal, /*A*/0x0f, /*val*/0x0f, /*arg0*/0x24, regX);
-                A2_RUN_TESTp( func->func, decimal, /*A*/0x7f, /*val*/0x7f, /*arg0*/0x24, regX);
-                A2_RUN_TESTp( func->func, decimal, /*A*/0xaa, /*val*/0x55, /*arg0*/0x24, regX);
-                A2_RUN_TESTp( func->func, decimal, /*A*/0x00, /*val*/0xff, /*arg0*/0x24, regX);
-            }
+        for (uint8_t regX=0x42; regX>0x3F; regX+=0x40) {
+            A2_RUN_TESTp( func->func, /*A*/0x0f, /*val*/0x0f, /*arg0*/0x24, regX);
+            A2_RUN_TESTp( func->func, /*A*/0x7f, /*val*/0x7f, /*arg0*/0x24, regX);
+            A2_RUN_TESTp( func->func, /*A*/0xaa, /*val*/0x55, /*arg0*/0x24, regX);
+            A2_RUN_TESTp( func->func, /*A*/0x00, /*val*/0xff, /*arg0*/0x24, regX);
         }
 
         A2_REMOVE_TEST(func);
@@ -1160,14 +1117,12 @@ GREATEST_SUITE(test_suite_cpu) {
         fprintf(GREATEST_STDOUT, "\n%s :\n", func->name);
 
         // test addressing is working ...
-        for (uint8_t decimal=0; decimal<2; decimal++) {
-            for (uint8_t lobyte=0xfd; lobyte>0xf0; lobyte++) {
-                uint8_t hibyte = 0x1f;
-                A2_RUN_TESTp( func->func, decimal, /*A*/0x0f, /*val*/0x0f, lobyte, hibyte);
-                A2_RUN_TESTp( func->func, decimal, /*A*/0x7f, /*val*/0x7f, lobyte, hibyte);
-                A2_RUN_TESTp( func->func, decimal, /*A*/0xaa, /*val*/0x55, lobyte, hibyte);
-                A2_RUN_TESTp( func->func, decimal, /*A*/0x00, /*val*/0xff, lobyte, hibyte);
-            }
+        for (uint8_t lobyte=0xfd; lobyte>0xf0; lobyte++) {
+            uint8_t hibyte = 0x1f;
+            A2_RUN_TESTp( func->func, /*A*/0x0f, /*val*/0x0f, lobyte, hibyte);
+            A2_RUN_TESTp( func->func, /*A*/0x7f, /*val*/0x7f, lobyte, hibyte);
+            A2_RUN_TESTp( func->func, /*A*/0xaa, /*val*/0x55, lobyte, hibyte);
+            A2_RUN_TESTp( func->func, /*A*/0x00, /*val*/0xff, lobyte, hibyte);
         }
 
         A2_REMOVE_TEST(func);
@@ -1180,16 +1135,14 @@ GREATEST_SUITE(test_suite_cpu) {
         fprintf(GREATEST_STDOUT, "\n%s :\n", func->name);
 
         // test addressing is working ...
-        for (uint8_t decimal=0; decimal<2; decimal++) {
-            uint8_t hibyte = 0x1f;
-            uint8_t lobyte = 0x20;
-            for (uint8_t regX=0x50; regX>0x4f; regX+=0x30) {
-                A2_RUN_TESTp( func->func, decimal, /*A*/0x0f, /*val*/0x0f, regX, lobyte, hibyte);
-                A2_RUN_TESTp( func->func, decimal, /*A*/0x7f, /*val*/0x7f, regX, lobyte, hibyte);
-                A2_RUN_TESTp( func->func, decimal, /*A*/0xaa, /*val*/0x55, regX, lobyte, hibyte);
-                A2_RUN_TESTp( func->func, decimal, /*A*/0x00, /*val*/0xff, regX, lobyte, hibyte);
-                A2_RUN_TESTp( func->func, decimal, /*A*/0x24, /*val*/0x42, 0x20, 0xfe,   0xff); // wrap to zpage
-            }
+        uint8_t hibyte = 0x1f;
+        uint8_t lobyte = 0x20;
+        for (uint8_t regX=0x50; regX>0x4f; regX+=0x30) {
+            A2_RUN_TESTp( func->func, /*A*/0x0f, /*val*/0x0f, regX, lobyte, hibyte);
+            A2_RUN_TESTp( func->func, /*A*/0x7f, /*val*/0x7f, regX, lobyte, hibyte);
+            A2_RUN_TESTp( func->func, /*A*/0xaa, /*val*/0x55, regX, lobyte, hibyte);
+            A2_RUN_TESTp( func->func, /*A*/0x00, /*val*/0xff, regX, lobyte, hibyte);
+            A2_RUN_TESTp( func->func, /*A*/0x24, /*val*/0x42, 0x20, 0xfe,   0xff); // wrap to zpage
         }
 
         A2_REMOVE_TEST(func);
@@ -1202,16 +1155,14 @@ GREATEST_SUITE(test_suite_cpu) {
         fprintf(GREATEST_STDOUT, "\n%s :\n", func->name);
 
         // test addressing is working ...
-        for (uint8_t decimal=0; decimal<2; decimal++) {
-            uint8_t hibyte = 0x1f;
-            uint8_t lobyte = 0x20;
-            for (uint8_t regY=0x50; regY>0x4f; regY+=0x30) {
-                A2_RUN_TESTp( func->func, decimal, /*A*/0x0f, /*val*/0x0f, regY, lobyte, hibyte);
-                A2_RUN_TESTp( func->func, decimal, /*A*/0x7f, /*val*/0x7f, regY, lobyte, hibyte);
-                A2_RUN_TESTp( func->func, decimal, /*A*/0xaa, /*val*/0x55, regY, lobyte, hibyte);
-                A2_RUN_TESTp( func->func, decimal, /*A*/0x00, /*val*/0xff, regY, lobyte, hibyte);
-                A2_RUN_TESTp( func->func, decimal, /*A*/0x24, /*val*/0x42, 0x20, 0xfe,   0xff); // wrap to zpage
-            }
+        uint8_t hibyte = 0x1f;
+        uint8_t lobyte = 0x20;
+        for (uint8_t regY=0x50; regY>0x4f; regY+=0x30) {
+            A2_RUN_TESTp( func->func, /*A*/0x0f, /*val*/0x0f, regY, lobyte, hibyte);
+            A2_RUN_TESTp( func->func, /*A*/0x7f, /*val*/0x7f, regY, lobyte, hibyte);
+            A2_RUN_TESTp( func->func, /*A*/0xaa, /*val*/0x55, regY, lobyte, hibyte);
+            A2_RUN_TESTp( func->func, /*A*/0x00, /*val*/0xff, regY, lobyte, hibyte);
+            A2_RUN_TESTp( func->func, /*A*/0x24, /*val*/0x42, 0x20, 0xfe,   0xff); // wrap to zpage
         }
 
         A2_REMOVE_TEST(func);
@@ -1224,15 +1175,13 @@ GREATEST_SUITE(test_suite_cpu) {
         fprintf(GREATEST_STDOUT, "\n%s :\n", func->name);
 
         // test addressing is working ...
-        for (uint8_t decimal=0; decimal<2; decimal++) {
-            uint8_t hibyte = 0x1f;
-            for (uint8_t lobyte=0xfd; lobyte>0xf0; lobyte++) {
-                for (uint8_t regX=0x42; regX>0x3F; regX+=0x40) {
-                    A2_RUN_TESTp( func->func, decimal, /*A*/0x0f, /*val*/0x0f, /*arg0*/0x24, regX, lobyte, hibyte);
-                    A2_RUN_TESTp( func->func, decimal, /*A*/0x7f, /*val*/0x7f, /*arg0*/0x24, regX, lobyte, hibyte);
-                    A2_RUN_TESTp( func->func, decimal, /*A*/0xaa, /*val*/0x55, /*arg0*/0x24, regX, lobyte, hibyte);
-                    A2_RUN_TESTp( func->func, decimal, /*A*/0x00, /*val*/0xff, /*arg0*/0x24, regX, lobyte, hibyte);
-                }
+        uint8_t hibyte = 0x1f;
+        for (uint8_t lobyte=0xfd; lobyte>0xf0; lobyte++) {
+            for (uint8_t regX=0x42; regX>0x3F; regX+=0x40) {
+                A2_RUN_TESTp( func->func, /*A*/0x0f, /*val*/0x0f, /*arg0*/0x24, regX, lobyte, hibyte);
+                A2_RUN_TESTp( func->func, /*A*/0x7f, /*val*/0x7f, /*arg0*/0x24, regX, lobyte, hibyte);
+                A2_RUN_TESTp( func->func, /*A*/0xaa, /*val*/0x55, /*arg0*/0x24, regX, lobyte, hibyte);
+                A2_RUN_TESTp( func->func, /*A*/0x00, /*val*/0xff, /*arg0*/0x24, regX, lobyte, hibyte);
             }
         }
 
@@ -1246,12 +1195,10 @@ GREATEST_SUITE(test_suite_cpu) {
         fprintf(GREATEST_STDOUT, "\n%s :\n", func->name);
 
         // test addressing is working ...
-        for (uint8_t decimal=0; decimal<2; decimal++) {
-            A2_RUN_TESTp( func->func, decimal, /*A*/0x0f, /*val*/0x0f, /*arg0*/0x24, /*regY*/0x10, /*val_zp0*/0x22, /*val_zp1*/0x1f);
-            A2_RUN_TESTp( func->func, decimal, /*A*/0x7f, /*val*/0x7f, /*arg0*/0x24, /*regY*/0x80, /*val_zp0*/0x80, /*val_zp1*/0x1f);
-            A2_RUN_TESTp( func->func, decimal, /*A*/0xaa, /*val*/0x55, /*arg0*/0x24, /*regY*/0xAA, /*val_zp0*/0xAA, /*val_zp1*/0x1f);
-            A2_RUN_TESTp( func->func, decimal, /*A*/0x00, /*val*/0xff, /*arg0*/0x24, /*regY*/0x80, /*val_zp0*/0x90, /*val_zp1*/0xff);
-        }
+        A2_RUN_TESTp( func->func, /*A*/0x0f, /*val*/0x0f, /*arg0*/0x24, /*regY*/0x10, /*val_zp0*/0x22, /*val_zp1*/0x1f);
+        A2_RUN_TESTp( func->func, /*A*/0x7f, /*val*/0x7f, /*arg0*/0x24, /*regY*/0x80, /*val_zp0*/0x80, /*val_zp1*/0x1f);
+        A2_RUN_TESTp( func->func, /*A*/0xaa, /*val*/0x55, /*arg0*/0x24, /*regY*/0xAA, /*val_zp0*/0xAA, /*val_zp1*/0x1f);
+        A2_RUN_TESTp( func->func, /*A*/0x00, /*val*/0xff, /*arg0*/0x24, /*regY*/0x80, /*val_zp0*/0x90, /*val_zp1*/0xff);
 
         A2_REMOVE_TEST(func);
     }
@@ -1263,14 +1210,12 @@ GREATEST_SUITE(test_suite_cpu) {
         fprintf(GREATEST_STDOUT, "\n%s :\n", func->name);
 
         // test addressing is working ...
-        for (uint8_t decimal=0; decimal<2; decimal++) {
-            for (uint8_t lobyte=0xfd; lobyte>0xf0; lobyte++) {
-                uint8_t hibyte = 0x1f;
-                A2_RUN_TESTp( func->func, decimal, /*A*/0x0f, /*val*/0x0f, /*arg0*/0x00, /*lobyte*/0x33, /*hibyte*/0x1f);
-                A2_RUN_TESTp( func->func, decimal, /*A*/0x7f, /*val*/0x7f, /*arg0*/0x7f, /*lobyte*/0x33, /*hibyte*/0x1f);
-                A2_RUN_TESTp( func->func, decimal, /*A*/0xaa, /*val*/0x55, /*arg0*/0xAB, /*lobyte*/0x33, /*hibyte*/0x1f);
-                A2_RUN_TESTp( func->func, decimal, /*A*/0x00, /*val*/0xff, /*arg0*/0xff, /*lobyte*/0x33, /*hibyte*/0x1f);
-            }
+        for (uint8_t lobyte=0xfd; lobyte>0xf0; lobyte++) {
+            uint8_t hibyte = 0x1f;
+            A2_RUN_TESTp( func->func, /*A*/0x0f, /*val*/0x0f, /*arg0*/0x00, /*lobyte*/0x33, /*hibyte*/0x1f);
+            A2_RUN_TESTp( func->func, /*A*/0x7f, /*val*/0x7f, /*arg0*/0x7f, /*lobyte*/0x33, /*hibyte*/0x1f);
+            A2_RUN_TESTp( func->func, /*A*/0xaa, /*val*/0x55, /*arg0*/0xAB, /*lobyte*/0x33, /*hibyte*/0x1f);
+            A2_RUN_TESTp( func->func, /*A*/0x00, /*val*/0xff, /*arg0*/0xff, /*lobyte*/0x33, /*hibyte*/0x1f);
         }
 
         A2_REMOVE_TEST(func);
