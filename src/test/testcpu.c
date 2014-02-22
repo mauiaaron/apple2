@@ -982,6 +982,447 @@ TEST test_NOP() {
 }
 
 // ----------------------------------------------------------------------------
+// SBC instructions
+
+static void logic_SBC_dec(/*uint8_t*/int _a, /*uint8_t*/int _b, uint8_t *result, uint8_t *flags) {
+
+    // componentize
+    uint8_t x_lo = 0x0;
+    uint8_t x_hi = 0x0;
+
+    uint8_t a_lo = (((uint8_t)_a) & 0x0f);
+    uint8_t b_lo = (((uint8_t)_b) & 0x0f);
+
+    uint8_t a_hi = (((uint8_t)_a) & 0xf0)>>4;
+    uint8_t b_hi = (((uint8_t)_b) & 0xf0)>>4;
+
+    uint8_t borrow = ((*flags & fC) == 0x0) ? 1 : 0;
+    *flags |= fC;
+
+    // BCD subtract
+    x_lo = a_lo - b_lo - borrow;
+    borrow = 0;
+    if (x_lo > 9) {
+        borrow = 1;
+        x_lo -= 6;
+        x_lo &= 0x0f;
+    }
+    x_hi = a_hi - b_hi - borrow;
+    if (x_hi > 9) {
+        *flags &= ~fC;
+        x_hi -= 6;
+    }
+
+    // merge result
+    x_hi <<= 4;
+    *result = x_hi | x_lo;
+
+    // flags
+    if (*result == 0x00) {
+        *flags |= fZ;
+    }
+
+    if (*result & 0x80) {
+        *flags |= fN;
+    }
+}
+
+static void logic_SBC(/*uint8_t*/int _a, /*uint8_t*/int _b, uint8_t *result, uint8_t *flags) {
+
+    if (*flags & fD) {
+        logic_SBC_dec(_a, _b, result, flags);
+        return;
+    }
+
+    int8_t a = (int8_t)_a;
+    int8_t b = (int8_t)_b;
+    bool is_neg = (a < 0);
+    bool is_negb = (b < 0);
+
+    int8_t borrow = ((*flags & fC) == 0x0) ? 1 : 0;
+    *flags |= fC;
+
+    int8_t res = a - b - borrow;
+    if ((res & 0xff) == 0x0) {
+        *flags |= fZ;
+    }
+    if (res & 0x80) {
+        *flags |= fN;
+    }
+
+    int32_t res32 = (uint8_t)a-(uint8_t)b-(uint8_t)borrow;
+    if (res32 & 0x10000000) {
+        *flags &= ~fC;
+    }
+
+    if ( !is_neg && is_negb ) {
+        if (a > res) {
+            *flags |= fV;
+        }
+    }
+    if ( is_neg && !is_negb ) {
+        if (a < res) {
+            *flags |= fV;
+        }
+    }
+
+    *result = (uint8_t)(res & 0xff);
+}
+
+TEST test_SBC_imm(uint8_t regA, uint8_t val, bool decimal, bool carry) {
+    HEADER0();
+
+    if (decimal && check_skip_illegal_bcd(regA, val)) {
+        // NOTE : FIXME TODO skip undocumented/illegal BCD
+        SKIPm("Z");
+    }
+
+    flags |= decimal ? (fD) : 0x00;
+    flags |= carry   ? (fC) : 0x00;
+
+    logic_SBC(regA, val, &result, &flags);
+
+    testcpu_set_opcode2(0xe9, val);
+
+    cpu65_current.a  = regA;
+    cpu65_current.x  = 0x33;
+    cpu65_current.y  = 0x44;
+    cpu65_current.sp = 0x88;
+    cpu65_current.f |= decimal ? (fD) : 0x00;
+    cpu65_current.f |= carry   ? (fC) : 0x00;
+
+    cpu65_run();
+
+    ASSERT(cpu65_current.pc      == TEST_LOC+2);
+    ASSERT(cpu65_current.x       == 0x33);
+    ASSERT(cpu65_current.y       == 0x44);
+    ASSERT(cpu65_current.sp      == 0x88);
+
+    snprintf(msgbuf, MSG_SIZE, MSG_FLAGS0, regA, val, result, buf0, cpu65_current.a, buf1);
+    ASSERTm(msgbuf, cpu65_current.a == result); 
+    VERIFY_FLAGS();
+
+    ASSERT(cpu65_debug.ea        == TEST_LOC+1);
+    ASSERT(cpu65_debug.d         == 0xff);
+    ASSERT(cpu65_debug.rw        == RW_READ);
+    ASSERT(cpu65_debug.opcode    == 0xe9);
+    ASSERT(cpu65_debug.opcycles  == (decimal ? 3 : 2));
+
+    PASS();
+}
+
+TEST test_SBC_zpage(uint8_t regA, uint8_t val, uint8_t arg0) {
+    HEADER0();
+
+    logic_SBC(regA, val, &result, &flags);
+
+    testcpu_set_opcode2(0xe5, arg0);
+
+    apple_ii_64k[0][arg0] = val;
+
+    cpu65_current.a  = regA;
+    cpu65_current.x  = 0x03;
+    cpu65_current.y  = 0x04;
+    cpu65_current.sp = 0x80;
+
+    cpu65_run();
+
+    ASSERT(cpu65_current.pc      == TEST_LOC+2);
+    ASSERT(cpu65_current.x       == 0x03);
+    ASSERT(cpu65_current.y       == 0x04);
+    ASSERT(cpu65_current.sp      == 0x80);
+
+    ASSERT(cpu65_current.a == result); 
+    VERIFY_FLAGS();
+
+    ASSERT(cpu65_debug.ea        == arg0);
+    ASSERT(cpu65_debug.d         == 0xff);
+    ASSERT(cpu65_debug.rw        == RW_READ);
+    ASSERT(cpu65_debug.opcode    == 0xe5);
+    ASSERT(cpu65_debug.opcycles  == (3));
+
+    PASS();
+}
+
+TEST test_SBC_zpage_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX) {
+    HEADER0();
+
+    logic_SBC(regA, val, &result, &flags);
+
+    uint8_t idx = arg0 + regX;
+
+    testcpu_set_opcode2(0xf5, arg0);
+
+    apple_ii_64k[0][idx] = val;
+
+    cpu65_current.a  = regA;
+    cpu65_current.x  = regX;
+    cpu65_current.y  = 0x05;
+    cpu65_current.sp = 0x81;
+
+    cpu65_run();
+
+    ASSERT(cpu65_current.pc      == TEST_LOC+2);
+    ASSERT(cpu65_current.x       == regX);
+    ASSERT(cpu65_current.y       == 0x05);
+    ASSERT(cpu65_current.sp      == 0x81);
+
+    ASSERT(cpu65_current.a == result); 
+    VERIFY_FLAGS();
+
+    ASSERT(cpu65_debug.ea        == idx);
+    ASSERT(cpu65_debug.d         == 0xff);
+    ASSERT(cpu65_debug.rw        == RW_READ);
+    ASSERT(cpu65_debug.opcode    == 0xf5);
+    ASSERT(cpu65_debug.opcycles  == (4));
+
+    PASS();
+}
+
+TEST test_SBC_abs(uint8_t regA, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
+    HEADER0();
+
+    logic_SBC(regA, val, &result, &flags);
+
+    testcpu_set_opcode3(0xed, lobyte, hibyte);
+
+    uint16_t addrs = lobyte | (hibyte<<8);
+    apple_ii_64k[0][addrs] = val;
+
+    cpu65_current.a  = regA;
+    cpu65_current.x  = 0xf4;
+    cpu65_current.y  = 0x05;
+    cpu65_current.sp = 0x81;
+
+    cpu65_run();
+
+    ASSERT(cpu65_current.pc      == TEST_LOC+3);
+    ASSERT(cpu65_current.x       == 0xf4);
+    ASSERT(cpu65_current.y       == 0x05);
+    ASSERT(cpu65_current.sp      == 0x81);
+
+    ASSERT(cpu65_current.a == result); 
+    VERIFY_FLAGS();
+
+    ASSERT(cpu65_debug.ea        == addrs);
+    ASSERT(cpu65_debug.d         == 0xff);
+    ASSERT(cpu65_debug.rw        == RW_READ);
+    ASSERT(cpu65_debug.opcode    == 0xed);
+    ASSERT(cpu65_debug.opcycles  == (4));
+
+    PASS();
+}
+
+TEST test_SBC_abs_x(uint8_t regA, uint8_t val, uint8_t regX, uint8_t lobyte, uint8_t hibyte) {
+    HEADER0();
+
+    logic_SBC(regA, val, &result, &flags);
+
+    testcpu_set_opcode3(0xfd, lobyte, hibyte);
+
+    uint8_t cycle_count = 0;
+    uint16_t addrs = lobyte | (hibyte<<8);
+    addrs = addrs + regX;
+    if ((uint8_t)((addrs>>8)&0xff) != (uint8_t)hibyte) {
+        ++cycle_count;
+    }
+    apple_ii_64k[0][addrs] = val;
+
+    cpu65_current.a  = regA;
+    cpu65_current.x  = regX;
+    cpu65_current.y  = 0x05;
+    cpu65_current.sp = 0x81;
+
+    cpu65_run();
+
+    ASSERT(cpu65_current.pc      == TEST_LOC+3);
+    ASSERT(cpu65_current.x       == regX);
+    ASSERT(cpu65_current.y       == 0x05);
+    ASSERT(cpu65_current.sp      == 0x81);
+
+    ASSERT(cpu65_current.a == result); 
+    VERIFY_FLAGS();
+
+    ASSERT(cpu65_debug.ea        == addrs);
+    ASSERT(cpu65_debug.d         == 0xff);
+    ASSERT(cpu65_debug.rw        == RW_READ);
+    ASSERT(cpu65_debug.opcode    == 0xfd);
+
+    cycle_count += 4;
+    ASSERT(cpu65_debug.opcycles == cycle_count);
+
+    PASS();
+}
+
+TEST test_SBC_abs_y(uint8_t regA, uint8_t val, uint8_t regY, uint8_t lobyte, uint8_t hibyte) {
+    HEADER0();
+
+    logic_SBC(regA, val, &result, &flags);
+
+    testcpu_set_opcode3(0xf9, lobyte, hibyte);
+
+    uint8_t cycle_count = 0;
+    uint16_t addrs = lobyte | (hibyte<<8);
+    addrs = addrs + regY;
+    if ((uint8_t)((addrs>>8)&0xff) != (uint8_t)hibyte) {
+        ++cycle_count;
+    }
+    apple_ii_64k[0][addrs] = val;
+
+    cpu65_current.a  = regA;
+    cpu65_current.x  = 0x02;
+    cpu65_current.y  = regY;
+    cpu65_current.sp = 0x81;
+
+    cpu65_run();
+
+    ASSERT(cpu65_current.pc      == TEST_LOC+3);
+    ASSERT(cpu65_current.x       == 0x02);
+    ASSERT(cpu65_current.y       == regY);
+    ASSERT(cpu65_current.sp      == 0x81);
+
+    ASSERT(cpu65_current.a == result); 
+    VERIFY_FLAGS();
+
+    ASSERT(cpu65_debug.ea        == addrs);
+    ASSERT(cpu65_debug.d         == 0xff);
+    ASSERT(cpu65_debug.rw        == RW_READ);
+    ASSERT(cpu65_debug.opcode    == 0xf9);
+
+    cycle_count += 4;
+    ASSERT(cpu65_debug.opcycles == cycle_count);
+
+    PASS();
+}
+
+TEST test_SBC_ind_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX, uint8_t lobyte, uint8_t hibyte) {
+    HEADER0();
+
+    logic_SBC(regA, val, &result, &flags);
+
+    testcpu_set_opcode2(0xe1, arg0);
+
+    uint8_t idx_lo = arg0 + regX;
+    uint8_t idx_hi = idx_lo+1;
+    uint16_t addrs = lobyte | (hibyte<<8);
+
+    apple_ii_64k[0][idx_lo] = lobyte;
+    apple_ii_64k[0][idx_hi] = hibyte;
+    apple_ii_64k[0][addrs] = val;
+
+    cpu65_current.a  = regA;
+    cpu65_current.x  = regX;
+    cpu65_current.y  = 0x15;
+    cpu65_current.sp = 0x81;
+
+    cpu65_run();
+
+    ASSERT(cpu65_current.pc      == TEST_LOC+2);
+    ASSERT(cpu65_current.x       == regX);
+    ASSERT(cpu65_current.y       == 0x15);
+    ASSERT(cpu65_current.sp      == 0x81);
+
+    ASSERT(cpu65_current.a == result); 
+    VERIFY_FLAGS();
+
+    ASSERT(cpu65_debug.ea        == addrs);
+    ASSERT(cpu65_debug.d         == 0xff);
+    ASSERT(cpu65_debug.rw        == RW_READ);
+    ASSERT(cpu65_debug.opcode    == 0xe1);
+
+    ASSERT(cpu65_debug.opcycles  == (6));
+
+    PASS();
+}
+
+TEST test_SBC_ind_y(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regY, uint8_t val_zp0, uint8_t val_zp1) {
+    HEADER0();
+
+    logic_SBC(regA, val, &result, &flags);
+
+    testcpu_set_opcode2(0xf1, arg0);
+
+    uint8_t idx0 = arg0;
+    uint8_t idx1 = arg0+1;
+
+    apple_ii_64k[0][idx0] = val_zp0;
+    apple_ii_64k[0][idx1] = val_zp1;
+
+    uint8_t cycle_count = 0;
+    uint16_t addrs = val_zp0 | (val_zp1<<8);
+    addrs += (uint8_t)regY;
+    if ((uint8_t)((addrs>>8)&0xff) != (uint8_t)val_zp1) {
+        ++cycle_count;
+    }
+
+    apple_ii_64k[0][addrs] = val;
+
+    cpu65_current.a  = regA;
+    cpu65_current.x  = 0x84;
+    cpu65_current.y  = regY;
+    cpu65_current.sp = 0x81;
+
+    cpu65_run();
+
+    ASSERT(cpu65_current.pc      == TEST_LOC+2);
+    ASSERT(cpu65_current.x       == 0x84);
+    ASSERT(cpu65_current.y       == regY);
+    ASSERT(cpu65_current.sp      == 0x81);
+
+    ASSERT(cpu65_current.a == result); 
+    VERIFY_FLAGS();
+
+    ASSERT(cpu65_debug.ea        == addrs);
+    ASSERT(cpu65_debug.d         == 0xff);
+    ASSERT(cpu65_debug.rw        == RW_READ);
+    ASSERT(cpu65_debug.opcode    == 0xf1);
+    cycle_count += 5;
+    ASSERT(cpu65_debug.opcycles == cycle_count);
+
+    PASS();
+}
+
+TEST test_SBC_ind_zpage(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t lobyte, uint8_t hibyte) {
+    HEADER0();
+
+    logic_SBC(regA, val, &result, &flags);
+
+    testcpu_set_opcode2(0xf2, arg0);
+
+    uint8_t idx0 = arg0;
+    uint8_t idx1 = arg0+1;
+
+    apple_ii_64k[0][idx0] = lobyte;
+    apple_ii_64k[0][idx1] = hibyte;
+
+    uint16_t addrs = lobyte | (hibyte<<8);
+    apple_ii_64k[0][addrs] = val;
+
+    cpu65_current.a  = regA;
+    cpu65_current.x  = 0x14;
+    cpu65_current.y  = 0x85;
+    cpu65_current.sp = 0x81;
+
+    cpu65_run();
+
+    ASSERT(cpu65_current.pc      == TEST_LOC+2);
+    ASSERT(cpu65_current.x       == 0x14);
+    ASSERT(cpu65_current.y       == 0x85);
+    ASSERT(cpu65_current.sp      == 0x81);
+
+    ASSERT(cpu65_current.a == result); 
+    VERIFY_FLAGS();
+
+    ASSERT(cpu65_debug.ea        == addrs);
+    ASSERT(cpu65_debug.d         == 0xff);
+    ASSERT(cpu65_debug.rw        == RW_READ);
+    ASSERT(cpu65_debug.opcode    == 0xf2);
+    ASSERT(cpu65_debug.opcycles  == (5));
+
+    PASS();
+}
+
+// ----------------------------------------------------------------------------
 // Test Suite
 
 static unsigned int testcounter = 0;
@@ -1047,6 +1488,7 @@ GREATEST_SUITE(test_suite_cpu) {
     greatest_info.flags = GREATEST_FLAG_SILENT_SUCCESS;
     A2_ADD_TEST(test_ADC_imm);
     A2_ADD_TEST(test_AND_imm);
+    A2_ADD_TEST(test_SBC_imm);
     HASH_ITER(hh, test_funcs, func, tmp) {
         fprintf(GREATEST_STDOUT, "\n%s (SILENCED OUTPUT) :\n", func->name);
 
@@ -1077,6 +1519,7 @@ GREATEST_SUITE(test_suite_cpu) {
     // zpage TODO FIXME DESCRIPTION HERE .....................................
     A2_ADD_TEST(test_ADC_zpage);
     A2_ADD_TEST(test_AND_zpage);
+    A2_ADD_TEST(test_SBC_zpage);
     HASH_ITER(hh, test_funcs, func, tmp) {
         fprintf(GREATEST_STDOUT, "\n%s :\n", func->name);
 
@@ -1096,6 +1539,7 @@ GREATEST_SUITE(test_suite_cpu) {
     // --------------------------------
     A2_ADD_TEST(test_ADC_zpage_x);
     A2_ADD_TEST(test_AND_zpage_x);
+    A2_ADD_TEST(test_SBC_zpage_x);
     HASH_ITER(hh, test_funcs, func, tmp) {
         fprintf(GREATEST_STDOUT, "\n%s :\n", func->name);
 
@@ -1113,6 +1557,7 @@ GREATEST_SUITE(test_suite_cpu) {
     // --------------------------------
     A2_ADD_TEST(test_ADC_abs);
     A2_ADD_TEST(test_AND_abs);
+    A2_ADD_TEST(test_SBC_abs);
     HASH_ITER(hh, test_funcs, func, tmp) {
         fprintf(GREATEST_STDOUT, "\n%s :\n", func->name);
 
@@ -1131,6 +1576,7 @@ GREATEST_SUITE(test_suite_cpu) {
     // --------------------------------
     A2_ADD_TEST(test_ADC_abs_x);
     A2_ADD_TEST(test_AND_abs_x);
+    A2_ADD_TEST(test_SBC_abs_x);
     HASH_ITER(hh, test_funcs, func, tmp) {
         fprintf(GREATEST_STDOUT, "\n%s :\n", func->name);
 
@@ -1151,6 +1597,7 @@ GREATEST_SUITE(test_suite_cpu) {
     // --------------------------------
     A2_ADD_TEST(test_ADC_abs_y);
     A2_ADD_TEST(test_AND_abs_y);
+    A2_ADD_TEST(test_SBC_abs_y);
     HASH_ITER(hh, test_funcs, func, tmp) {
         fprintf(GREATEST_STDOUT, "\n%s :\n", func->name);
 
@@ -1171,6 +1618,7 @@ GREATEST_SUITE(test_suite_cpu) {
     // --------------------------------
     A2_ADD_TEST(test_ADC_ind_x);
     A2_ADD_TEST(test_AND_ind_x);
+    A2_ADD_TEST(test_SBC_ind_x);
     HASH_ITER(hh, test_funcs, func, tmp) {
         fprintf(GREATEST_STDOUT, "\n%s :\n", func->name);
 
@@ -1191,6 +1639,7 @@ GREATEST_SUITE(test_suite_cpu) {
     // --------------------------------
     A2_ADD_TEST(test_ADC_ind_y);
     A2_ADD_TEST(test_AND_ind_y);
+    A2_ADD_TEST(test_SBC_ind_y);
     HASH_ITER(hh, test_funcs, func, tmp) {
         fprintf(GREATEST_STDOUT, "\n%s :\n", func->name);
 
@@ -1206,6 +1655,7 @@ GREATEST_SUITE(test_suite_cpu) {
     // --------------------------------
     A2_ADD_TEST(test_ADC_ind_zpage);
     A2_ADD_TEST(test_AND_ind_zpage);
+    A2_ADD_TEST(test_SBC_ind_zpage);
     HASH_ITER(hh, test_funcs, func, tmp) {
         fprintf(GREATEST_STDOUT, "\n%s :\n", func->name);
 
