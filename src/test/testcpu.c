@@ -28,7 +28,7 @@
 #define RW_READ 0x1
 #define RW_WRITE 0x2
 
-#define MSG_FLAGS0 "A:%02X op %02X = %02X flags = %s (is %s)"
+#define MSG_FLAGS0 "A:%02X op %02X = %02X : %s (emul2ix = %02X : %s)"
 
 #define HEADER0() \
     uint8_t result = 0x0; \
@@ -40,7 +40,7 @@
 #define VERIFY_FLAGS() \
     flags_to_string(flags, buf0); \
     flags_to_string(cpu65_current.f, buf1); \
-    snprintf(msgbuf, MSG_SIZE, MSG_FLAGS0, regA, val, result, buf0, buf1); \
+    snprintf(msgbuf, MSG_SIZE, MSG_FLAGS0, regA, val, result, buf0, cpu65_current.a, buf1); \
     ASSERTm(msgbuf, cpu65_current.f == flags);
 
 static void testcpu_setup(void *arg) {
@@ -94,12 +94,30 @@ static void testcpu_set_opcode1(uint8_t op) {
     testcpu_set_opcode3(op, val, arg1);
 }
 
+static bool check_skip_illegal_bcd(uint8_t bcd0, uint8_t bcd1) {
+    if (bcd0 >= 0xA0) {
+        return true;
+    }
+    if ((bcd0 & 0x0f) >= 0x0A) {
+        return true;
+    }
+
+    if (bcd1 >= 0xA0) {
+        return true;
+    }
+    if ((bcd1 & 0x0f) >= 0x0A) {
+        return true;
+    }
+
+    return false;
+}
+
 // ----------------------------------------------------------------------------
 // ADC instructions
 
 static void logic_ADC_dec(/*uint8_t*/int _a, /*uint8_t*/int _b, uint8_t *result, uint8_t *flags) {
-    *flags |= fD;
 
+    // componentize
     uint8_t x_lo = 0x0;
     uint8_t x_hi = 0x0;
 
@@ -109,29 +127,28 @@ static void logic_ADC_dec(/*uint8_t*/int _a, /*uint8_t*/int _b, uint8_t *result,
     uint8_t a_hi = (((uint8_t)_a) & 0xf0)>>4;
     uint8_t b_hi = (((uint8_t)_b) & 0xf0)>>4;
 
-    x_lo = a_lo + b_lo;
+    uint8_t carry = (*flags & fC) ? 1 : 0;
+    *flags &= ~ fC;
 
-    if (*flags & fC) {
-        x_lo += 1;
-    }
-    *flags &= ~fC;
-
+    // BCD add
+    x_lo = a_lo + b_lo + carry;
+    carry = 0;
     if (x_lo > 9) {
         x_lo += 6;
-        x_hi += (x_lo>>4);
+        carry = (x_lo>>4); // +1 or +2
         x_lo &= 0x0f;
     }
-
-    x_hi += a_hi + b_hi;
+    x_hi = a_hi + b_hi + carry;
     if (x_hi > 9) {
         *flags |= fC;
         x_hi += 6;
     }
 
+    // merge result
     x_hi <<= 4;
-
     *result = x_hi | x_lo;
 
+    // flags
     if (*result == 0x00) {
         *flags |= fZ;
     }
@@ -190,6 +207,11 @@ TEST test_ADC_imm(uint8_t regA, uint8_t val, bool decimal, bool carry) {
     flags |= decimal ? (fD) : 0x00;
     flags |= carry   ? (fC) : 0x00;
 
+    if (decimal && check_skip_illegal_bcd(regA, val)) {
+        // NOTE : FIXME TODO skip undocumented/illegal BCD
+        SKIPm("Z");
+    }
+
     logic_ADC(regA, val, &result, &flags);
 
     testcpu_set_opcode2(0x69, val);
@@ -208,7 +230,8 @@ TEST test_ADC_imm(uint8_t regA, uint8_t val, bool decimal, bool carry) {
     ASSERT(cpu65_current.y       == 0x04);
     ASSERT(cpu65_current.sp      == 0x80);
 
-    ASSERT(cpu65_current.a == result); 
+    snprintf(msgbuf, MSG_SIZE, MSG_FLAGS0, regA, val, result, buf0, cpu65_current.a, buf1);
+    ASSERTm(msgbuf, cpu65_current.a == result); 
     VERIFY_FLAGS();
 
     ASSERT(cpu65_debug.ea        == TEST_LOC+1);
@@ -609,7 +632,8 @@ TEST test_AND_imm(uint8_t regA, uint8_t val) {
     ASSERT(cpu65_current.y       == 0x04);
     ASSERT(cpu65_current.sp      == 0x80);
 
-    ASSERT(cpu65_current.a == result); 
+    snprintf(msgbuf, MSG_SIZE, MSG_FLAGS0, regA, val, result, buf0, cpu65_current.a, buf1);
+    ASSERTm(msgbuf, cpu65_current.a == result); 
     VERIFY_FLAGS();
 
     ASSERT(cpu65_debug.ea        == TEST_LOC+1);
