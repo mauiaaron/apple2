@@ -912,6 +912,207 @@ TEST test_AND_ind_zpage(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t lobyte,
 }
 
 // ----------------------------------------------------------------------------
+// ASL instructions
+
+static void logic_ASL(/*uint8_t*/int _a, uint8_t *result, uint8_t *flags) {
+    uint8_t a = (uint8_t)_a;
+
+    *flags |= (a & 0x80) ? fC : 0;
+    uint8_t res = a<<1;
+
+    if ((res & 0xff) == 0x0) {
+        *flags |= fZ;
+    }
+    if (res & 0x80) {
+        *flags |= fN;
+    }
+
+    *result = res;
+}
+
+TEST test_ASL_acc(uint8_t regA) {
+    uint8_t val = 0xff;
+    HEADER0();
+
+    logic_ASL(regA, &result, &flags);
+
+    testcpu_set_opcode1(0x0a);
+
+    cpu65_current.a  = regA;
+    cpu65_current.x  = 0x03;
+    cpu65_current.y  = 0x04;
+    cpu65_current.sp = 0x80;
+    cpu65_current.f  = 0x00;
+
+    cpu65_run();
+
+    ASSERT(cpu65_current.pc      == TEST_LOC+1);
+    ASSERT(cpu65_current.x       == 0x03);
+    ASSERT(cpu65_current.y       == 0x04);
+    ASSERT(cpu65_current.sp      == 0x80);
+
+    ASSERT(cpu65_current.a == result); 
+    VERIFY_FLAGS();
+
+    ASSERT(cpu65_debug.ea        == TEST_LOC);
+    ASSERT(cpu65_debug.d         == 0xff);
+    ASSERT(cpu65_debug.rw        == 0);
+    ASSERT(cpu65_debug.opcode    == 0x0a);
+    ASSERT(cpu65_debug.opcycles  == (2));
+
+    PASS();
+}
+
+TEST test_ASL_zpage(uint8_t regA, uint8_t val, uint8_t arg0) {
+    HEADER0();
+    logic_ASL(val, &result, &flags);
+
+    testcpu_set_opcode2(0x06, arg0);
+
+    apple_ii_64k[0][arg0] = val;
+
+    cpu65_current.a  = regA;
+    cpu65_current.x  = 0x03;
+    cpu65_current.y  = 0x04;
+    cpu65_current.sp = 0x80;
+    cpu65_current.f  = 0x00;
+
+    cpu65_run();
+
+    ASSERT(apple_ii_64k[0][arg0] == result);
+
+    ASSERT(cpu65_current.a  == regA);
+    ASSERT(cpu65_current.pc == TEST_LOC+2);
+    ASSERT(cpu65_current.x  == 0x03);
+    ASSERT(cpu65_current.y  == 0x04);
+    ASSERT(cpu65_current.sp == 0x80);
+
+    VERIFY_FLAGS();
+
+    ASSERT(cpu65_debug.ea        == arg0);
+    ASSERT(cpu65_debug.d         == result);
+    ASSERT(cpu65_debug.rw        == (RW_READ|RW_WRITE));
+    ASSERT(cpu65_debug.opcode    == 0x06);
+    ASSERT(cpu65_debug.opcycles  == (5));
+
+    PASS();
+}
+
+TEST test_ASL_zpage_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX) {
+    HEADER0();
+    logic_ASL(val, &result, &flags);
+
+    testcpu_set_opcode2(0x16, arg0);
+
+    uint8_t idx = arg0+regX;
+
+    apple_ii_64k[0][idx] = val;
+
+    cpu65_current.a  = regA;
+    cpu65_current.x  = regX;
+    cpu65_current.y  = 0x05;
+    cpu65_current.sp = 0x81;
+    cpu65_current.f  = 0x00;
+
+    cpu65_run();
+
+    ASSERT(apple_ii_64k[0][idx] == result);
+
+    ASSERT(cpu65_current.a   == regA); 
+    ASSERT(cpu65_current.pc  == TEST_LOC+2);
+    ASSERT(cpu65_current.x   == regX);
+    ASSERT(cpu65_current.y   == 0x05);
+    ASSERT(cpu65_current.sp  == 0x81);
+    VERIFY_FLAGS();
+
+    ASSERT(cpu65_debug.ea        == idx);
+    ASSERT(cpu65_debug.d         == result);
+    ASSERT(cpu65_debug.rw        == (RW_READ|RW_WRITE));
+    ASSERT(cpu65_debug.opcode    == 0x16);
+    ASSERT(cpu65_debug.opcycles  == (6));
+
+    PASS();
+}
+
+TEST test_ASL_abs(uint8_t regA, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
+    HEADER0();
+    logic_ASL(val, &result, &flags);
+
+    testcpu_set_opcode3(0x0e, lobyte, hibyte);
+
+    uint16_t addrs = lobyte | (hibyte<<8);
+    apple_ii_64k[0][addrs] = val;
+
+    cpu65_current.a  = regA;
+    cpu65_current.x  = 0xf4;
+    cpu65_current.y  = 0x05;
+    cpu65_current.sp = 0x81;
+    cpu65_current.f  = 0x00;
+
+    cpu65_run();
+
+    ASSERT(apple_ii_64k[0][addrs] == result); 
+
+    ASSERT(cpu65_current.a  == regA); 
+    ASSERT(cpu65_current.pc == TEST_LOC+3);
+    ASSERT(cpu65_current.x  == 0xf4);
+    ASSERT(cpu65_current.y  == 0x05);
+    ASSERT(cpu65_current.sp == 0x81);
+
+    VERIFY_FLAGS();
+
+    ASSERT(cpu65_debug.ea        == addrs);
+    ASSERT(cpu65_debug.d         == result);
+    ASSERT(cpu65_debug.rw        == (RW_READ|RW_WRITE));
+    ASSERT(cpu65_debug.opcode    == 0x0e);
+    ASSERT(cpu65_debug.opcycles  == (6));
+
+    PASS();
+}
+
+TEST test_ASL_abs_x(uint8_t regA, uint8_t val, uint8_t regX, uint8_t lobyte, uint8_t hibyte) {
+    HEADER0();
+    logic_ASL(val, &result, &flags);
+
+    testcpu_set_opcode3(0x1e, lobyte, hibyte);
+
+    uint8_t cycle_count = 6;
+    uint16_t addrs = lobyte | (hibyte<<8);
+    addrs = addrs + regX;
+    if ((uint8_t)((addrs>>8)&0xff) != (uint8_t)hibyte) {
+        fprintf(stderr, "CROSS PG BOUNDARY\n");
+        ++cycle_count;
+    }
+    apple_ii_64k[0][addrs] = val;
+
+    cpu65_current.a  = regA;
+    cpu65_current.x  = regX;
+    cpu65_current.y  = 0x05;
+    cpu65_current.sp = 0x81;
+    cpu65_current.f  = 0x00;
+
+    cpu65_run();
+
+    ASSERT(apple_ii_64k[0][addrs] == result); 
+
+    ASSERT(cpu65_current.a  == regA); 
+    ASSERT(cpu65_current.pc == TEST_LOC+3);
+    ASSERT(cpu65_current.x  == regX);
+    ASSERT(cpu65_current.y  == 0x05);
+    ASSERT(cpu65_current.sp == 0x81);
+
+    VERIFY_FLAGS();
+
+    ASSERT(cpu65_debug.ea        == addrs);
+    ASSERT(cpu65_debug.d         == result);
+    ASSERT(cpu65_debug.rw        == (RW_READ|RW_WRITE));
+    ASSERT(cpu65_debug.opcode    == 0x1e);
+    ASSERT(cpu65_debug.opcycles  == cycle_count);
+
+    PASS();
+}
+
+// ----------------------------------------------------------------------------
 // BRK operand (and IRQ handling)
 
 TEST test_BRK() {
@@ -1510,15 +1711,35 @@ GREATEST_SUITE(test_suite_cpu) {
     greatest_info.flags = 0x0;
 
     // ------------------------------------------------------------------------
+    // Accumulator addressing mode tests :
+    // NOTE : these should be a comprehensive exercise of the instruction logic
+
+    greatest_info.flags = GREATEST_FLAG_SILENT_SUCCESS;
+    A2_ADD_TEST(test_ASL_acc);
+    HASH_ITER(hh, test_funcs, func, tmp) {
+        fprintf(GREATEST_STDOUT, "\n%s (SILENCED OUTPUT) :\n", func->name);
+
+        // test comprehensive logic in immediate mode (since no addressing to test) ...
+        uint8_t regA=0x00;
+        do {
+            A2_RUN_TESTp( func->func, regA);
+        } while (++regA);
+
+        fprintf(GREATEST_STDOUT, "...OK\n");
+        A2_REMOVE_TEST(func);
+    }
+    greatest_info.flags = 0x0;
+
+    // ------------------------------------------------------------------------
     // Other addressing modes tests :
     // NOTE : unlike immediate-mode addressing tests above, these tests are not designed to be a comprehensive test of
     // instruction logic.  Rather--for clarity--they are designed to comprehensively test the addressing logic,
     // including all edge cases 
 
     // --------------------------------
-    // zpage TODO FIXME DESCRIPTION HERE .....................................
     A2_ADD_TEST(test_ADC_zpage);
     A2_ADD_TEST(test_AND_zpage);
+    A2_ADD_TEST(test_ASL_zpage);
     A2_ADD_TEST(test_SBC_zpage);
     HASH_ITER(hh, test_funcs, func, tmp) {
         fprintf(GREATEST_STDOUT, "\n%s :\n", func->name);
@@ -1539,6 +1760,7 @@ GREATEST_SUITE(test_suite_cpu) {
     // --------------------------------
     A2_ADD_TEST(test_ADC_zpage_x);
     A2_ADD_TEST(test_AND_zpage_x);
+    A2_ADD_TEST(test_ASL_zpage_x);
     A2_ADD_TEST(test_SBC_zpage_x);
     HASH_ITER(hh, test_funcs, func, tmp) {
         fprintf(GREATEST_STDOUT, "\n%s :\n", func->name);
@@ -1557,6 +1779,7 @@ GREATEST_SUITE(test_suite_cpu) {
     // --------------------------------
     A2_ADD_TEST(test_ADC_abs);
     A2_ADD_TEST(test_AND_abs);
+    A2_ADD_TEST(test_ASL_abs);
     A2_ADD_TEST(test_SBC_abs);
     HASH_ITER(hh, test_funcs, func, tmp) {
         fprintf(GREATEST_STDOUT, "\n%s :\n", func->name);
@@ -1576,6 +1799,7 @@ GREATEST_SUITE(test_suite_cpu) {
     // --------------------------------
     A2_ADD_TEST(test_ADC_abs_x);
     A2_ADD_TEST(test_AND_abs_x);
+    A2_ADD_TEST(test_ASL_abs_x);
     A2_ADD_TEST(test_SBC_abs_x);
     HASH_ITER(hh, test_funcs, func, tmp) {
         fprintf(GREATEST_STDOUT, "\n%s :\n", func->name);
