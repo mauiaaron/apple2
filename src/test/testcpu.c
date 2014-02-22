@@ -22,7 +22,8 @@
 #define fV V_Flag_6502  // o[V]erflow
 #define fN N_Flag_6502  // [N]egative
 
-#define TEST_LOC 0x1f00
+#define TEST_LOC 0x1f82
+#define TEST_LOC_LO 0x82
 
 #define RW_NONE 0x0
 #define RW_READ 0x1
@@ -1080,7 +1081,6 @@ TEST test_ASL_abs_x(uint8_t regA, uint8_t val, uint8_t regX, uint8_t lobyte, uin
     uint16_t addrs = lobyte | (hibyte<<8);
     addrs = addrs + regX;
     if ((uint8_t)((addrs>>8)&0xff) != (uint8_t)hibyte) {
-        fprintf(stderr, "CROSS PG BOUNDARY\n");
         ++cycle_count;
     }
     apple_ii_64k[0][addrs] = val;
@@ -1113,13 +1113,424 @@ TEST test_ASL_abs_x(uint8_t regA, uint8_t val, uint8_t regX, uint8_t lobyte, uin
 }
 
 // ----------------------------------------------------------------------------
+// Branch instructions
+
+TEST test_BCC(int8_t off, bool flag, uint16_t addrs) {
+    HEADER0();
+
+    cpu65_current.pc = addrs;
+    flags |= flag ? fC : 0;
+
+    uint8_t cycle_count = 2;
+    uint16_t newpc = 0xffff;
+    if (flag) {
+        newpc = addrs+2;
+    } else {
+        newpc = addrs+2+off;
+        ++cycle_count;
+        if ((newpc&0xFF00) != (addrs&0xFF00)) {
+            ++cycle_count;
+        }
+    }
+
+    apple_ii_64k[0][addrs+0] = 0x90;
+    apple_ii_64k[0][addrs+1] = off;
+    apple_ii_64k[0][addrs+2] = (uint8_t)random();
+
+    cpu65_current.a  = 0xed;
+    cpu65_current.x  = 0xde;
+    cpu65_current.y  = 0x05;
+    cpu65_current.sp = 0x81;
+    cpu65_current.f  = flags;
+
+    cpu65_run();
+
+    ASSERT(cpu65_current.pc == newpc);
+    ASSERT(cpu65_current.a  == 0xed); 
+    ASSERT(cpu65_current.x  == 0xde);
+    ASSERT(cpu65_current.y  == 0x05);
+    ASSERT(cpu65_current.sp == 0x81);
+    ASSERT(cpu65_current.f  == flags);
+
+    ASSERT(cpu65_debug.ea        == addrs+1);
+    ASSERT(cpu65_debug.d         == 0xff);
+    ASSERT(cpu65_debug.rw        == 0);
+    ASSERT(cpu65_debug.opcode    == 0x90);
+    ASSERT(cpu65_debug.opcycles  == cycle_count);
+
+    PASS();
+}
+
+TEST test_BCS(int8_t off, bool flag, uint16_t addrs) {
+    HEADER0();
+
+    cpu65_current.pc = addrs;
+    flags |= flag ? fC : 0;
+
+    uint8_t cycle_count = 2;
+    uint16_t newpc = 0xffff;
+    if (!flag) {
+        newpc = addrs+2;
+    } else {
+        newpc = addrs+2+off;
+        ++cycle_count;
+        if ((newpc&0xFF00) != (addrs&0xFF00)) {
+            ++cycle_count;
+        }
+    }
+
+    apple_ii_64k[0][addrs+0] = 0xB0;
+    apple_ii_64k[0][addrs+1] = off;
+    apple_ii_64k[0][addrs+2] = (uint8_t)random();
+
+    cpu65_current.a  = 0xed;
+    cpu65_current.x  = 0xde;
+    cpu65_current.y  = 0x05;
+    cpu65_current.sp = 0x81;
+    cpu65_current.f  = flags;
+
+    cpu65_run();
+
+    ASSERT(cpu65_current.pc == newpc);
+    ASSERT(cpu65_current.a  == 0xed); 
+    ASSERT(cpu65_current.x  == 0xde);
+    ASSERT(cpu65_current.y  == 0x05);
+    ASSERT(cpu65_current.sp == 0x81);
+    ASSERT(cpu65_current.f  == flags);
+
+    ASSERT(cpu65_debug.ea        == addrs+1);
+    ASSERT(cpu65_debug.d         == 0xff);
+    ASSERT(cpu65_debug.rw        == 0);
+    ASSERT(cpu65_debug.opcode    == 0xB0);
+    ASSERT(cpu65_debug.opcycles  == cycle_count);
+
+    PASS();
+}
+
+TEST test_BEQ(int8_t off, bool flag, uint16_t addrs) {
+    HEADER0();
+
+    cpu65_current.pc = addrs;
+    flags |= flag ? fZ : 0;
+
+    uint8_t cycle_count = 2;
+    uint16_t newpc = 0xffff;
+    if (!flag) {
+        newpc = addrs+2;
+    } else {
+        newpc = addrs+2+off;
+        ++cycle_count;
+        if ((newpc&0xFF00) != (addrs&0xFF00)) {
+            ++cycle_count;
+        }
+    }
+
+    apple_ii_64k[0][addrs+0] = 0xF0;
+    apple_ii_64k[0][addrs+1] = off;
+    apple_ii_64k[0][addrs+2] = (uint8_t)random();
+
+    cpu65_current.a  = 0xed;
+    cpu65_current.x  = 0xde;
+    cpu65_current.y  = 0x05;
+    cpu65_current.sp = 0x81;
+    cpu65_current.f  = flags;
+
+    cpu65_run();
+
+    ASSERT(cpu65_current.pc == newpc);
+    ASSERT(cpu65_current.a  == 0xed); 
+    ASSERT(cpu65_current.x  == 0xde);
+    ASSERT(cpu65_current.y  == 0x05);
+    ASSERT(cpu65_current.sp == 0x81);
+    ASSERT(cpu65_current.f  == flags);
+
+    ASSERT(cpu65_debug.ea        == addrs+1);
+    ASSERT(cpu65_debug.d         == 0xff);
+    ASSERT(cpu65_debug.rw        == 0);
+    ASSERT(cpu65_debug.opcode    == 0xF0);
+    ASSERT(cpu65_debug.opcycles  == cycle_count);
+
+    PASS();
+}
+
+TEST test_BNE(int8_t off, bool flag, uint16_t addrs) {
+    HEADER0();
+
+    cpu65_current.pc = addrs;
+    flags |= flag ? fZ : 0;
+
+    uint8_t cycle_count = 2;
+    uint16_t newpc = 0xffff;
+    if (flag) {
+        newpc = addrs+2;
+    } else {
+        newpc = addrs+2+off;
+        ++cycle_count;
+        if ((newpc&0xFF00) != (addrs&0xFF00)) {
+            ++cycle_count;
+        }
+    }
+
+    apple_ii_64k[0][addrs+0] = 0xD0;
+    apple_ii_64k[0][addrs+1] = off;
+    apple_ii_64k[0][addrs+2] = (uint8_t)random();
+
+    cpu65_current.a  = 0xed;
+    cpu65_current.x  = 0xde;
+    cpu65_current.y  = 0x05;
+    cpu65_current.sp = 0x81;
+    cpu65_current.f  = flags;
+
+    cpu65_run();
+
+    ASSERT(cpu65_current.pc == newpc);
+    ASSERT(cpu65_current.a  == 0xed); 
+    ASSERT(cpu65_current.x  == 0xde);
+    ASSERT(cpu65_current.y  == 0x05);
+    ASSERT(cpu65_current.sp == 0x81);
+    ASSERT(cpu65_current.f  == flags);
+
+    ASSERT(cpu65_debug.ea        == addrs+1);
+    ASSERT(cpu65_debug.d         == 0xff);
+    ASSERT(cpu65_debug.rw        == 0);
+    ASSERT(cpu65_debug.opcode    == 0xD0);
+    ASSERT(cpu65_debug.opcycles  == cycle_count);
+
+    PASS();
+}
+
+TEST test_BMI(int8_t off, bool flag, uint16_t addrs) {
+    HEADER0();
+
+    cpu65_current.pc = addrs;
+    flags |= flag ? fN : 0;
+
+    uint8_t cycle_count = 2;
+    uint16_t newpc = 0xffff;
+    if (!flag) {
+        newpc = addrs+2;
+    } else {
+        newpc = addrs+2+off;
+        ++cycle_count;
+        if ((newpc&0xFF00) != (addrs&0xFF00)) {
+            ++cycle_count;
+        }
+    }
+
+    apple_ii_64k[0][addrs+0] = 0x30;
+    apple_ii_64k[0][addrs+1] = off;
+    apple_ii_64k[0][addrs+2] = (uint8_t)random();
+
+    cpu65_current.a  = 0xed;
+    cpu65_current.x  = 0xde;
+    cpu65_current.y  = 0x05;
+    cpu65_current.sp = 0x81;
+    cpu65_current.f  = flags;
+
+    cpu65_run();
+
+    ASSERT(cpu65_current.pc == newpc);
+    ASSERT(cpu65_current.a  == 0xed); 
+    ASSERT(cpu65_current.x  == 0xde);
+    ASSERT(cpu65_current.y  == 0x05);
+    ASSERT(cpu65_current.sp == 0x81);
+    ASSERT(cpu65_current.f  == flags);
+
+    ASSERT(cpu65_debug.ea        == addrs+1);
+    ASSERT(cpu65_debug.d         == 0xff);
+    ASSERT(cpu65_debug.rw        == 0);
+    ASSERT(cpu65_debug.opcode    == 0x30);
+    ASSERT(cpu65_debug.opcycles  == cycle_count);
+
+    PASS();
+}
+
+TEST test_BPL(int8_t off, bool flag, uint16_t addrs) {
+    HEADER0();
+
+    cpu65_current.pc = addrs;
+    flags |= flag ? fN : 0;
+
+    uint8_t cycle_count = 2;
+    uint16_t newpc = 0xffff;
+    if (flag) {
+        newpc = addrs+2;
+    } else {
+        newpc = addrs+2+off;
+        ++cycle_count;
+        if ((newpc&0xFF00) != (addrs&0xFF00)) {
+            ++cycle_count;
+        }
+    }
+
+    apple_ii_64k[0][addrs+0] = 0x10;
+    apple_ii_64k[0][addrs+1] = off;
+    apple_ii_64k[0][addrs+2] = (uint8_t)random();
+
+    cpu65_current.a  = 0xed;
+    cpu65_current.x  = 0xde;
+    cpu65_current.y  = 0x05;
+    cpu65_current.sp = 0x81;
+    cpu65_current.f  = flags;
+
+    cpu65_run();
+
+    ASSERT(cpu65_current.pc == newpc);
+    ASSERT(cpu65_current.a  == 0xed); 
+    ASSERT(cpu65_current.x  == 0xde);
+    ASSERT(cpu65_current.y  == 0x05);
+    ASSERT(cpu65_current.sp == 0x81);
+    ASSERT(cpu65_current.f  == flags);
+
+    ASSERT(cpu65_debug.ea        == addrs+1);
+    ASSERT(cpu65_debug.d         == 0xff);
+    ASSERT(cpu65_debug.rw        == 0);
+    ASSERT(cpu65_debug.opcode    == 0x10);
+    ASSERT(cpu65_debug.opcycles  == cycle_count);
+
+    PASS();
+}
+
+TEST test_BRA(int8_t off, bool flag, uint16_t addrs) {
+    HEADER0();
+
+    cpu65_current.pc = addrs;
+    flags |= flag ? fN : 0;
+
+    uint8_t cycle_count = 3;
+    uint16_t newpc = addrs+2+off;
+    if ((newpc&0xFF00) != (addrs&0xFF00)) {
+        ++cycle_count;
+    }
+
+    apple_ii_64k[0][addrs+0] = 0x80;
+    apple_ii_64k[0][addrs+1] = off;
+    apple_ii_64k[0][addrs+2] = (uint8_t)random();
+
+    cpu65_current.a  = 0xed;
+    cpu65_current.x  = 0xde;
+    cpu65_current.y  = 0x05;
+    cpu65_current.sp = 0x81;
+    cpu65_current.f  = flags;
+
+    cpu65_run();
+
+    ASSERT(cpu65_current.pc == newpc);
+    ASSERT(cpu65_current.a  == 0xed); 
+    ASSERT(cpu65_current.x  == 0xde);
+    ASSERT(cpu65_current.y  == 0x05);
+    ASSERT(cpu65_current.sp == 0x81);
+    ASSERT(cpu65_current.f  == flags);
+
+    ASSERT(cpu65_debug.ea        == addrs+1);
+    ASSERT(cpu65_debug.d         == 0xff);
+    ASSERT(cpu65_debug.rw        == 0);
+    ASSERT(cpu65_debug.opcode    == 0x80);
+    ASSERT(cpu65_debug.opcycles  == cycle_count);
+
+    PASS();
+}
+
+TEST test_BVC(int8_t off, bool flag, uint16_t addrs) {
+    HEADER0();
+
+    cpu65_current.pc = addrs;
+    flags |= flag ? fV : 0;
+
+    uint8_t cycle_count = 2;
+    uint16_t newpc = 0xffff;
+    if (flag) {
+        newpc = addrs+2;
+    } else {
+        newpc = addrs+2+off;
+        ++cycle_count;
+        if ((newpc&0xFF00) != (addrs&0xFF00)) {
+            ++cycle_count;
+        }
+    }
+
+    apple_ii_64k[0][addrs+0] = 0x50;
+    apple_ii_64k[0][addrs+1] = off;
+    apple_ii_64k[0][addrs+2] = (uint8_t)random();
+
+    cpu65_current.a  = 0xed;
+    cpu65_current.x  = 0xde;
+    cpu65_current.y  = 0x05;
+    cpu65_current.sp = 0x81;
+    cpu65_current.f  = flags;
+
+    cpu65_run();
+
+    ASSERT(cpu65_current.pc == newpc);
+    ASSERT(cpu65_current.a  == 0xed); 
+    ASSERT(cpu65_current.x  == 0xde);
+    ASSERT(cpu65_current.y  == 0x05);
+    ASSERT(cpu65_current.sp == 0x81);
+    ASSERT(cpu65_current.f  == flags);
+
+    ASSERT(cpu65_debug.ea        == addrs+1);
+    ASSERT(cpu65_debug.d         == 0xff);
+    ASSERT(cpu65_debug.rw        == 0);
+    ASSERT(cpu65_debug.opcode    == 0x50);
+    ASSERT(cpu65_debug.opcycles  == cycle_count);
+
+    PASS();
+}
+
+TEST test_BVS(int8_t off, bool flag, uint16_t addrs) {
+    HEADER0();
+
+    cpu65_current.pc = addrs;
+    flags |= flag ? fV : 0;
+
+    uint8_t cycle_count = 2;
+    uint16_t newpc = 0xffff;
+    if (!flag) {
+        newpc = addrs+2;
+    } else {
+        newpc = addrs+2+off;
+        ++cycle_count;
+        if ((newpc&0xFF00) != (addrs&0xFF00)) {
+            ++cycle_count;
+        }
+    }
+
+    apple_ii_64k[0][addrs+0] = 0x70;
+    apple_ii_64k[0][addrs+1] = off;
+    apple_ii_64k[0][addrs+2] = (uint8_t)random();
+
+    cpu65_current.a  = 0xed;
+    cpu65_current.x  = 0xde;
+    cpu65_current.y  = 0x05;
+    cpu65_current.sp = 0x81;
+    cpu65_current.f  = flags;
+
+    cpu65_run();
+
+    ASSERT(cpu65_current.pc == newpc);
+    ASSERT(cpu65_current.a  == 0xed); 
+    ASSERT(cpu65_current.x  == 0xde);
+    ASSERT(cpu65_current.y  == 0x05);
+    ASSERT(cpu65_current.sp == 0x81);
+    ASSERT(cpu65_current.f  == flags);
+
+    ASSERT(cpu65_debug.ea        == addrs+1);
+    ASSERT(cpu65_debug.d         == 0xff);
+    ASSERT(cpu65_debug.rw        == 0);
+    ASSERT(cpu65_debug.opcode    == 0x70);
+    ASSERT(cpu65_debug.opcycles  == cycle_count);
+
+    PASS();
+}
+
+// ----------------------------------------------------------------------------
 // BRK operand (and IRQ handling)
 
 TEST test_BRK() {
     testcpu_set_opcode1(0x00);
 
     ASSERT(apple_ii_64k[0][0x1ff] != 0x1f);
-    ASSERT(apple_ii_64k[0][0x1fe] != 0x01);
+    ASSERT(apple_ii_64k[0][0x1fe] != TEST_LOC_LO+2);
 
     cpu65_current.a = 0x02;
     cpu65_current.x = 0x03;
@@ -1135,7 +1546,7 @@ TEST test_BRK() {
     ASSERT(cpu65_current.sp     == 0xfc);
 
     ASSERT(apple_ii_64k[0][0x1ff] == 0x1f);
-    ASSERT(apple_ii_64k[0][0x1fe] == 0x02);
+    ASSERT(apple_ii_64k[0][0x1fe] == TEST_LOC_LO+2);
     ASSERT(apple_ii_64k[0][0x1fd] == cpu65_flags_encode[B_Flag|X_Flag]);
 
     ASSERT(cpu65_debug.ea       == 0xfffe);
@@ -1149,7 +1560,7 @@ TEST test_BRK() {
 
 TEST test_IRQ() {
     // NOTE : not an opcode
-    SKIPm("unimplemented for now");
+    FAILm("unimplemented for now");
 }
 
 // ----------------------------------------------------------------------------
@@ -1162,7 +1573,7 @@ TEST test_NOP() {
     cpu65_current.x  = 0x03;
     cpu65_current.y  = 0x04;
     cpu65_current.sp = 0x80;
-    cpu65_current.f  = 0x05;
+    cpu65_current.f  = 0x55;
 
     cpu65_run();
 
@@ -1170,7 +1581,7 @@ TEST test_NOP() {
     ASSERT(cpu65_current.a      == 0x02);
     ASSERT(cpu65_current.x      == 0x03);
     ASSERT(cpu65_current.y      == 0x04);
-    ASSERT(cpu65_current.f      == 0x05);
+    ASSERT(cpu65_current.f      == 0x55);
     ASSERT(cpu65_current.sp     == 0x80);
 
     ASSERT(cpu65_debug.ea       == TEST_LOC);
@@ -1681,6 +2092,38 @@ GREATEST_SUITE(test_suite_cpu) {
         RUN_TEST(((test_func_ptr0)(func->func)));
         A2_REMOVE_TEST(func);
     }
+
+    // ------------------------------------------------------------------------
+    // Branch tests :
+    // NOTE : these should be a comprehensive exercise of the branching logic
+
+    greatest_info.flags = GREATEST_FLAG_SILENT_SUCCESS;
+    A2_ADD_TEST(test_BCC);
+    A2_ADD_TEST(test_BCS);
+    A2_ADD_TEST(test_BEQ);
+    A2_ADD_TEST(test_BNE);
+    A2_ADD_TEST(test_BMI);
+    A2_ADD_TEST(test_BPL);
+    A2_ADD_TEST(test_BRA);
+    A2_ADD_TEST(test_BVC);
+    A2_ADD_TEST(test_BVS);
+    HASH_ITER(hh, test_funcs, func, tmp) {
+        fprintf(GREATEST_STDOUT, "\n%s (SILENCED OUTPUT) :\n", func->name);
+
+        // test comprehensive logic in immediate mode (since no addressing to test) ...
+        for (uint16_t addrs = 0x1f02; addrs < 0x2000; addrs+=0x80) {
+            for (uint8_t flag = 0x00; flag < 0x02; flag++) {
+                uint8_t off=0x00;
+                do {
+                    A2_RUN_TESTp( func->func, off, flag, addrs);
+                } while (++off);
+            }
+        }
+
+        fprintf(GREATEST_STDOUT, "...OK\n");
+        A2_REMOVE_TEST(func);
+    }
+    greatest_info.flags = 0x0;
 
     // ------------------------------------------------------------------------
     // Immediate addressing mode tests :
