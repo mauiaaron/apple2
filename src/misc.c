@@ -77,6 +77,17 @@ uint8_t *base_cxrom;
 
 
 /* -------------------------------------------------------------------------
+    c_debug_illegal_bcd - illegal BCD (decimal mode) computation
+   ------------------------------------------------------------------------- */
+void c_debug_illegal_bcd()
+{
+    ERRLOG("Illegal/undefined BCD operation encountered, debug break on c_debug_illegal_bcd to debug...");
+    char *ptr = (char*)0x0bad;
+    *ptr = 0x1337; // segfault
+}
+
+
+/* -------------------------------------------------------------------------
     c_set_altchar() - set alternate character set
    ------------------------------------------------------------------------- */
 void c_set_altchar()

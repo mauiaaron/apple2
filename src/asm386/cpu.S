@@ -343,8 +343,35 @@
                 adcb    %al, A_Reg;                                            \
                 FlagNVZC
 
-// REFACTOR:
+#ifndef NDEBUG
+#define DebugBCDCheck                                                          \
+                testb   $0x80, A_Reg;                                          \
+                jz      6f;                                                    \
+                testb   $0x60, A_Reg;                                          \
+                jz      6f;                                                    \
+                call    SN(c_debug_illegal_bcd);                               \
+6:              testb   $0x08, A_Reg;                                          \
+                jz      7f;                                                    \
+                testb   $0x06, A_Reg;                                          \
+                jz      7f;                                                    \
+                call    SN(c_debug_illegal_bcd);                               \
+7:              testb   $0x80, %al;                                            \
+                jz      8f;                                                    \
+                testb   $0x60, %al;                                            \
+                jz      8f;                                                    \
+                call    SN(c_debug_illegal_bcd);                               \
+8:              testb   $0x08, %al;                                            \
+                jz      9f;                                                    \
+                testb   $0x06, %al;                                            \
+                jz      9f;                                                    \
+                call    SN(c_debug_illegal_bcd);                               \
+9:
+#else
+#define DebugBCDCheck
+#endif
+
 #define DoADC_d GetFromEA_B                                                    \
+                DebugBCDCheck                                                  \
                 bt      $C_Flag_Bit, FF_Reg;                                   \
                 adcb    A_Reg, %al;                                            \
                 daa;                                                           \
@@ -445,6 +472,7 @@
                 FlagNVZC
 
 #define DoSBC_d GetFromEA_B                                                    \
+                DebugBCDCheck                                                  \
                 bt      $C_Flag_Bit, FF_Reg;                                   \
                 cmc;                                                           \
                 xchgb   A_Reg, %al;                                            \
@@ -1619,6 +1647,7 @@ op_RTS:
 
 /* ----------------------------------
        SBC instructions
+       SuBtract memory from accumulator with Borrow
    ---------------------------------- */
 
 op_SBC_dec:
