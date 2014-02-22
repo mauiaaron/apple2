@@ -146,11 +146,13 @@
                 incb    DebugCycleCount; /* +1 branch taken */                 \
                 pushl   %ebx;                                                  \
                 movw    PC_Reg, %bx;                                           \
-                addb    %al, %bl;                                              \
-                jnc     9f;                                                    \
-                incb    DebugCycleCount; /* +1 branch across pg boundary */    \
-9:              addw    %ax, PC_Reg;                                           \
-                popl    %ebx;
+                cbw;                                                           \
+                addw    %bx, %ax;                                              \
+                movw    %ax, PC_Reg;                                           \
+                cmpb    %ah, %bh;                                              \
+                je      9f;                                                    \
+                incb    DebugCycleCount; /* +1 branch new page */              \
+9:              popl    %ebx;
 
 #define FlagC   lahf;                                                          \
                 andb    $C_Flag, %ah;                                          \
@@ -747,7 +749,6 @@ op_BCC:
                 GetFromPC_B
                 testb   $C_Flag, F_Reg
                 jnz     op_BCC_not              // branch not taken
-                cbw
                 BranchXCycles
 op_BCC_not:
                 Continue
@@ -761,7 +762,6 @@ op_BCS:
                 GetFromPC_B
                 testb   $C_Flag, F_Reg
                 jz      op_BCS_not              // branch not taken
-                cbw
                 BranchXCycles
 op_BCS_not:
                 Continue
@@ -775,7 +775,6 @@ op_BEQ:
                 GetFromPC_B
                 testb   $Z_Flag, F_Reg
                 jz      op_BEQ_not              // branch not taken
-                cbw
                 BranchXCycles
 op_BEQ_not:
                 Continue
@@ -828,7 +827,6 @@ op_BMI:
                 testb   F_Reg, F_Reg    /* optimized check of N flag,
                                          * which happens to be sign bit */
                 jns     op_BMI_not
-                cbw
                 BranchXCycles
 op_BMI_not:
                 Continue
@@ -842,7 +840,6 @@ op_BNE:
                 GetFromPC_B
                 testb   $Z_Flag, F_Reg
                 jnz     op_BNE_not
-                cbw
                 BranchXCycles
 op_BNE_not:
                 Continue
@@ -857,7 +854,6 @@ op_BPL:
                 testb   F_Reg, F_Reg    /* optimized check of N flag,
                                          * which happens to be sign bit */
                 js      op_BPL_not
-                cbw
                 BranchXCycles
 op_BPL_not:
                 Continue
@@ -870,7 +866,6 @@ op_BPL_not:
 // 65c02 : 0x80
 op_BRA:
                 GetFromPC_B
-                cbw
                 BranchXCycles
                 Continue
 
@@ -904,7 +899,6 @@ op_BVC:
                 GetFromPC_B
                 testb   $V_Flag, F_Reg
                 jnz     op_BVC_not
-                cbw
                 BranchXCycles
 op_BVC_not:
                 Continue
@@ -918,7 +912,6 @@ op_BVS:
                 GetFromPC_B
                 testb   $V_Flag, F_Reg
                 jz      op_BVS_not
-                cbw
                 BranchXCycles
 op_BVS_not:
                 Continue
