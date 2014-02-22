@@ -344,7 +344,9 @@ void GREATEST_SET_BREAKPOINT_CB(greatest_breakpoint_cb *cb, void *udata);
 
 #define GREATEST_SKIPm(MSG)                                             \
     do {                                                                \
-        greatest_info.msg = strdup(MSG);                                \
+        if (MSG) {                                                      \
+            greatest_info.msg = strdup(MSG);                            \
+        }                                                               \
         return 1;                                                       \
     } while (0)
 
@@ -512,6 +514,7 @@ void greatest_do_skip(const char *name) {                               \
             name,                                                       \
             greatest_info.msg ?                                         \
             greatest_info.msg : "" );                                   \
+    } else if (GREATEST_SILENT_SUCCESS()) {                             \
     } else {                                                            \
         fprintf(GREATEST_STDOUT, "s");                                  \
     }                                                                   \
