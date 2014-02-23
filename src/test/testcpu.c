@@ -1727,6 +1727,7 @@ TEST test_BRK() {
     cpu65_current.a = 0x02;
     cpu65_current.x = 0x03;
     cpu65_current.y = 0x04;
+    cpu65_current.f = 0x00;
 
     cpu65_run();
 
@@ -1752,7 +1753,39 @@ TEST test_BRK() {
 
 TEST test_IRQ() {
     // NOTE : not an opcode
-    FAILm("unimplemented for now");
+    testcpu_set_opcode1(0xea/*NOP*/); // Implementation NOTE: first an instruction, then reset is handled
+
+    cpu65_cycles_to_execute = 3;
+    cpu65_interrupt(IRQGeneric);
+
+    ASSERT(apple_ii_64k[0][0x1ff] != 0x1f);
+    ASSERT(apple_ii_64k[0][0x1fe] != TEST_LOC_LO+1);
+
+    cpu65_current.a = 0x02;
+    cpu65_current.x = 0x03;
+    cpu65_current.y = 0x04;
+    cpu65_current.f = 0x00;
+
+    cpu65_run();
+
+    ASSERT(cpu65_current.pc     == 0xc3fd);
+    ASSERT(cpu65_current.a      == 0x02);
+    ASSERT(cpu65_current.x      == 0x03);
+    ASSERT(cpu65_current.y      == 0x04);
+    ASSERT(cpu65_current.f      == (fB|fX|fI|fZ)); // Implementation NOTE : Z set by 2nd BIT instruction at C3FA
+    ASSERT(cpu65_current.sp     == 0xfc);
+
+    ASSERT(apple_ii_64k[0][0x1ff] == 0x1f);
+    ASSERT(apple_ii_64k[0][0x1fe] == TEST_LOC_LO+1);
+    ASSERT(apple_ii_64k[0][0x1fd] == cpu65_flags_encode[X_Flag]);
+
+    ASSERT(cpu65_debug.ea       == 0xc015);
+    ASSERT(cpu65_debug.d        == 0xff);
+    ASSERT(cpu65_debug.rw       == RW_READ);
+    ASSERT(cpu65_debug.opcode   == 0x2c);
+    ASSERT(cpu65_debug.opcycles == (4));
+
+    PASS();
 }
 
 // ----------------------------------------------------------------------------

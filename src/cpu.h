@@ -89,6 +89,7 @@ extern uint8_t emul_reinitialize;
 #define IRQSpeech       0x10
 #define IRQSSC          0x20
 #define IRQMouse        0x40
+#define IRQGeneric      0x80
 
 /* Note: These are *not* the bit positions used for the flags in the P
  * register of a real 6502. Rather, they have been distorted so that C,
