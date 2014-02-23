@@ -796,7 +796,7 @@ op_BIT_abs:
 
 // 65c02 : 0x34
 op_BIT_zpage_x:
-                GetIndZPage
+                GetZPage_X
                 DoBIT
                 Continue
 
