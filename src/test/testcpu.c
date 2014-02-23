@@ -1756,6 +1756,117 @@ TEST test_IRQ() {
 }
 
 // ----------------------------------------------------------------------------
+// CLx operands
+
+TEST test_CLC() {
+    testcpu_set_opcode1(0x18);
+
+    cpu65_current.a  = 0x02;
+    cpu65_current.x  = 0x03;
+    cpu65_current.y  = 0x04;
+    cpu65_current.sp = 0x81;
+    cpu65_current.f  = fC;
+
+    cpu65_run();
+
+    ASSERT(cpu65_current.pc     == TEST_LOC+1);
+    ASSERT(cpu65_current.a      == 0x02);
+    ASSERT(cpu65_current.x      == 0x03);
+    ASSERT(cpu65_current.y      == 0x04);
+    ASSERT(cpu65_current.sp     == 0x81);
+    ASSERT(cpu65_current.f      == 0x00);
+
+    ASSERT(cpu65_debug.ea       == TEST_LOC);
+    ASSERT(cpu65_debug.d        == 0xff);
+    ASSERT(cpu65_debug.rw       == RW_NONE);
+    ASSERT(cpu65_debug.opcode   == 0x18);
+    ASSERT(cpu65_debug.opcycles == (2));
+
+    PASS();
+}
+
+TEST test_CLD(uint8_t regA, uint8_t val) {
+    testcpu_set_opcode1(0xd8);
+
+    cpu65_current.a  = 0x02;
+    cpu65_current.x  = 0x03;
+    cpu65_current.y  = 0x04;
+    cpu65_current.sp = 0x81;
+    cpu65_current.f  = fD;
+
+    cpu65_run();
+
+    ASSERT(cpu65_current.pc     == TEST_LOC+1);
+    ASSERT(cpu65_current.a      == 0x02);
+    ASSERT(cpu65_current.x      == 0x03);
+    ASSERT(cpu65_current.y      == 0x04);
+    ASSERT(cpu65_current.sp     == 0x81);
+    ASSERT(cpu65_current.f      == 0x00);
+
+    ASSERT(cpu65_debug.ea       == TEST_LOC);
+    ASSERT(cpu65_debug.d        == 0xff);
+    ASSERT(cpu65_debug.rw       == RW_NONE);
+    ASSERT(cpu65_debug.opcode   == 0xd8);
+    ASSERT(cpu65_debug.opcycles == (2));
+
+    PASS();
+}
+
+TEST test_CLI(uint8_t regA, uint8_t val) {
+    testcpu_set_opcode1(0x58);
+
+    cpu65_current.a  = 0x02;
+    cpu65_current.x  = 0x03;
+    cpu65_current.y  = 0x04;
+    cpu65_current.sp = 0x81;
+    cpu65_current.f  = fI;
+
+    cpu65_run();
+
+    ASSERT(cpu65_current.pc     == TEST_LOC+1);
+    ASSERT(cpu65_current.a      == 0x02);
+    ASSERT(cpu65_current.x      == 0x03);
+    ASSERT(cpu65_current.y      == 0x04);
+    ASSERT(cpu65_current.sp     == 0x81);
+    ASSERT(cpu65_current.f      == 0x00);
+
+    ASSERT(cpu65_debug.ea       == TEST_LOC);
+    ASSERT(cpu65_debug.d        == 0xff);
+    ASSERT(cpu65_debug.rw       == RW_NONE);
+    ASSERT(cpu65_debug.opcode   == 0x58);
+    ASSERT(cpu65_debug.opcycles == (2));
+
+    PASS();
+}
+
+TEST test_CLV(uint8_t regA, uint8_t val) {
+    testcpu_set_opcode1(0xb8);
+
+    cpu65_current.a  = 0x02;
+    cpu65_current.x  = 0x03;
+    cpu65_current.y  = 0x04;
+    cpu65_current.sp = 0x81;
+    cpu65_current.f  = fV;
+
+    cpu65_run();
+
+    ASSERT(cpu65_current.pc     == TEST_LOC+1);
+    ASSERT(cpu65_current.a      == 0x02);
+    ASSERT(cpu65_current.x      == 0x03);
+    ASSERT(cpu65_current.y      == 0x04);
+    ASSERT(cpu65_current.sp     == 0x81);
+    ASSERT(cpu65_current.f      == 0x00);
+
+    ASSERT(cpu65_debug.ea       == TEST_LOC);
+    ASSERT(cpu65_debug.d        == 0xff);
+    ASSERT(cpu65_debug.rw       == RW_NONE);
+    ASSERT(cpu65_debug.opcode   == 0xb8);
+    ASSERT(cpu65_debug.opcycles == (2));
+
+    PASS();
+}
+
+// ----------------------------------------------------------------------------
 // NOP operand
 
 TEST test_NOP() {
@@ -2278,6 +2389,10 @@ GREATEST_SUITE(test_suite_cpu) {
     // --------------------------------
     A2_ADD_TEST(test_BRK);
     A2_ADD_TEST(test_IRQ);
+    A2_ADD_TEST(test_CLC);
+    A2_ADD_TEST(test_CLD);
+    A2_ADD_TEST(test_CLI);
+    A2_ADD_TEST(test_CLV);
     A2_ADD_TEST(test_NOP);
     HASH_ITER(hh, test_funcs, func, tmp) {
         fprintf(GREATEST_STDOUT, "\n%s :\n", func->name);
