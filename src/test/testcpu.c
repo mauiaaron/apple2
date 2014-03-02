@@ -3372,6 +3372,213 @@ TEST test_INC_abs_x(uint8_t regA, uint8_t val, uint8_t regX, uint8_t lobyte, uin
 }
 
 // ----------------------------------------------------------------------------
+// JMP instructions
+
+TEST test_JMP_abs(uint8_t lobyte, uint8_t hibyte) {
+    HEADER0();
+
+    testcpu_set_opcode3(0x4c, lobyte, hibyte);
+
+    uint8_t regA = (uint8_t)random();
+    uint8_t regX = (uint8_t)random();
+    uint8_t regY = (uint8_t)random();
+    uint8_t f    = (uint8_t)random();
+    uint8_t sp   = (uint8_t)random();
+
+    uint16_t addrs = (hibyte<<8) | lobyte;
+
+    cpu65_current.a  = regA;
+    cpu65_current.x  = regX;
+    cpu65_current.y  = regY;
+    cpu65_current.sp = sp;
+    cpu65_current.f  = f;
+
+    cpu65_run();
+
+    ASSERT(cpu65_current.pc     == addrs);
+    ASSERT(cpu65_current.a      == regA);
+    ASSERT(cpu65_current.x      == regX);
+    ASSERT(cpu65_current.y      == regY);
+    ASSERT(cpu65_current.f      == f);
+    ASSERT(cpu65_current.sp     == sp);
+
+    ASSERT(cpu65_debug.ea       == addrs);
+    ASSERT(cpu65_debug.d        == 0xff);
+    ASSERT(cpu65_debug.rw       == RW_NONE);
+    ASSERT(cpu65_debug.opcode   == 0x4c);
+    ASSERT(cpu65_debug.opcycles == (3));
+
+    PASS();
+}
+
+/*
+TEST test_JMP_ind(uint8_t lobyte, uint8_t hibyte) {
+    // differs for nmos 6502?
+    FAILm("unimplemented");
+}
+*/
+
+// 65c02 : 0x6C
+TEST test_JMP_ind_65c02(uint8_t _lobyte, uint8_t _hibyte, uint8_t set) {
+    HEADER0();
+
+    testcpu_set_opcode3(0x6c, _lobyte, _hibyte);
+
+    uint8_t regA = (uint8_t)random();
+    uint8_t regX = (uint8_t)random();
+    uint8_t regY = (uint8_t)random();
+    uint8_t f    = (uint8_t)random();
+    uint8_t sp   = (uint8_t)random();
+
+    uint16_t _addrs = (_hibyte<<8) | _lobyte;
+
+    if ((_addrs >= 0xbfff) && (_addrs < 0xd000)) {
+        // HACK FIXME TODO NOTE : for now don't test slot memory ...
+        PASS();
+    }
+
+    uint8_t lo = apple_ii_64k[0][_addrs];
+    ++_addrs;
+    uint8_t hi = apple_ii_64k[0][_addrs];
+    uint16_t addr = (hi<<8) | lo;
+    --_addrs;
+
+#if 0
+    // Interesting memory will be HI ROM ... enable this to sanity-check
+    if (addr != 0) {
+        fprintf(stderr, "%04x -> (%04x)\n", _addrs, addr);
+    }
+#endif
+
+    cpu65_current.a  = regA;
+    cpu65_current.x  = regX;
+    cpu65_current.y  = regY;
+    cpu65_current.sp = sp;
+    cpu65_current.f  = f;
+
+    cpu65_run();
+
+    ASSERT(cpu65_current.pc     == addr);
+    ASSERT(cpu65_current.a      == regA);
+    ASSERT(cpu65_current.x      == regX);
+    ASSERT(cpu65_current.y      == regY);
+    ASSERT(cpu65_current.f      == f);
+    ASSERT(cpu65_current.sp     == sp);
+
+    ASSERT(cpu65_debug.ea       == _addrs);
+    ASSERT(cpu65_debug.d        == 0xff);
+    ASSERT(cpu65_debug.rw       == RW_NONE);
+    ASSERT(cpu65_debug.opcode   == 0x6c);
+    ASSERT(cpu65_debug.opcycles == (6));
+
+    PASS();
+}
+
+// 65c02 : 0x7C
+TEST test_JMP_abs_ind_x(uint8_t _lobyte, uint8_t _hibyte, uint8_t set) {
+    HEADER0();
+
+    testcpu_set_opcode3(0x7c, _lobyte, _hibyte);
+
+    uint8_t regA = (uint8_t)random();
+    uint8_t regX = (set == 0xfe) ? set : (uint8_t)random();
+    uint8_t regY = (uint8_t)random();
+    uint8_t f    = (uint8_t)random();
+    uint8_t sp   = (uint8_t)random();
+
+    uint16_t _addrs = (_hibyte<<8) | _lobyte;
+    _addrs += regX;
+
+    if ((_addrs >= 0xbfff) && (_addrs < 0xd000)) {
+        // HACK FIXME TODO NOTE : for now don't test slot memory ...
+        PASS();
+    }
+
+    uint8_t lo = apple_ii_64k[0][_addrs];
+    ++_addrs;
+    uint8_t hi = apple_ii_64k[0][_addrs];
+    uint16_t addr = (hi<<8) | lo;
+    --_addrs;
+
+#if 0
+    // Interesting memory will be HI ROM ... enable this to sanity-check
+    if (addr != 0) {
+        fprintf(stderr, "%04x -> (%04x)\n", _addrs, addr);
+    }
+#endif
+
+    cpu65_current.a  = regA;
+    cpu65_current.x  = regX;
+    cpu65_current.y  = regY;
+    cpu65_current.sp = sp;
+    cpu65_current.f  = f;
+
+    cpu65_run();
+
+    ASSERT(cpu65_current.pc     == addr);
+    ASSERT(cpu65_current.a      == regA);
+    ASSERT(cpu65_current.x      == regX);
+    ASSERT(cpu65_current.y      == regY);
+    ASSERT(cpu65_current.f      == f);
+    ASSERT(cpu65_current.sp     == sp);
+
+    ASSERT(cpu65_debug.ea       == _addrs);
+    ASSERT(cpu65_debug.d        == 0xff);
+    ASSERT(cpu65_debug.rw       == RW_NONE);
+    ASSERT(cpu65_debug.opcode   == 0x7c);
+    ASSERT(cpu65_debug.opcycles == (6));
+
+    PASS();
+}
+
+// ----------------------------------------------------------------------------
+// JSR operand
+
+TEST test_JSR_abs(uint8_t lobyte, uint8_t hibyte) {
+    HEADER0();
+
+    testcpu_set_opcode3(0x20, lobyte, hibyte);
+
+    uint8_t regA = (uint8_t)random();
+    uint8_t regX = (uint8_t)random();
+    uint8_t regY = (uint8_t)random();
+    uint8_t f    = (uint8_t)random();
+
+    uint16_t addrs = (hibyte<<8) | lobyte;
+    uint8_t hi_ret = ((addrs+1) >> 8) & 0xff;
+    uint8_t lo_ret = (addrs+1) & 0xff;
+
+    cpu65_current.a  = regA;
+    cpu65_current.x  = regX;
+    cpu65_current.y  = regY;
+    cpu65_current.sp = 0xff;
+    cpu65_current.f  = f;
+
+    ASSERT(apple_ii_64k[0][0x1ff] != TEST_LOC);
+    ASSERT(apple_ii_64k[0][0x1fe] != TEST_LOC_LO+2);
+
+    cpu65_run();
+
+    ASSERT(cpu65_current.pc     == addrs);
+    ASSERT(cpu65_current.a      == regA);
+    ASSERT(cpu65_current.x      == regX);
+    ASSERT(cpu65_current.y      == regY);
+    ASSERT(cpu65_current.f      == f);
+    ASSERT(cpu65_current.sp     == 0xfd);
+
+    ASSERT(apple_ii_64k[0][0x1ff] == 0x1f);
+    ASSERT(apple_ii_64k[0][0x1fe] == TEST_LOC_LO+2);
+
+    ASSERT(cpu65_debug.ea       == addrs);
+    ASSERT(cpu65_debug.d        == 0xff);
+    ASSERT(cpu65_debug.rw       == RW_NONE);
+    ASSERT(cpu65_debug.opcode   == 0x20);
+    ASSERT(cpu65_debug.opcycles == (6));
+
+    PASS();
+}
+
+// ----------------------------------------------------------------------------
 // NOP operand
 
 TEST test_NOP() {
@@ -3955,6 +4162,10 @@ GREATEST_SUITE(test_suite_cpu) {
     A2_ADD_TEST(test_INA);
     A2_ADD_TEST(test_INX);
     A2_ADD_TEST(test_INY);
+    A2_ADD_TEST(test_JMP_abs);
+    A2_ADD_TEST(test_JMP_ind_65c02);
+    A2_ADD_TEST(test_JMP_abs_ind_x);
+    A2_ADD_TEST(test_JSR_abs);
     A2_ADD_TEST(test_SBC_imm);
     HASH_ITER(hh, test_funcs, func, tmp) {
         fprintf(GREATEST_STDOUT, "\n%s (SILENCED OUTPUT) :\n", func->name);
@@ -3970,6 +4181,10 @@ GREATEST_SUITE(test_suite_cpu) {
                 A2_RUN_TESTp( func->func, regA, val, /*decimal*/ true, /*carry*/true);
             } while (++val);
         } while (++regA);
+
+        if (func->func == (void*)test_JMP_abs_ind_x) {
+            A2_RUN_TESTp( func->func, 0x01, 0xff, /*alt*/0xfe);
+        }
 
         fprintf(GREATEST_STDOUT, "...OK\n");
         A2_REMOVE_TEST(func);
