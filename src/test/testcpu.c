@@ -2494,8 +2494,9 @@ static void logic_DEx(/*uint8_t*/int _a, uint8_t *result, uint8_t *flags) {
     *result = res;
 }
 
-TEST test_DEA(uint8_t regA, uint8_t val) {
+TEST test_DEA(uint8_t regA) {
     HEADER0();
+    uint8_t val = regA;
 
     logic_DEx(regA, &result, &flags);
 
@@ -2527,9 +2528,10 @@ TEST test_DEA(uint8_t regA, uint8_t val) {
     PASS();
 }
 
-TEST test_DEX(uint8_t regX, uint8_t val) {
+TEST test_DEX(uint8_t regX) {
     HEADER0();
     uint8_t regA = 0x12;
+    uint8_t val = regX;
 
     logic_DEx(regX, &result, &flags);
 
@@ -2560,9 +2562,10 @@ TEST test_DEX(uint8_t regX, uint8_t val) {
     PASS();
 }
 
-TEST test_DEY(uint8_t regY, uint8_t val) {
+TEST test_DEY(uint8_t regY) {
     HEADER0();
     uint8_t regA = 0x12;
+    uint8_t val = regY;
 
     logic_DEx(regY, &result, &flags);
 
@@ -3120,8 +3123,9 @@ static void logic_INx(/*uint8_t*/int _a, uint8_t *result, uint8_t *flags) {
     *result = res;
 }
 
-TEST test_INA(uint8_t regA, uint8_t val) {
+TEST test_INA(uint8_t regA) {
     HEADER0();
+    uint8_t val = regA;
 
     logic_INx(regA, &result, &flags);
 
@@ -3153,9 +3157,10 @@ TEST test_INA(uint8_t regA, uint8_t val) {
     PASS();
 }
 
-TEST test_INX(uint8_t regX, uint8_t val) {
+TEST test_INX(uint8_t regX) {
     HEADER0();
     uint8_t regA = 0x31;
+    uint8_t val = regX;
 
     logic_INx(regX, &result, &flags);
 
@@ -3186,9 +3191,10 @@ TEST test_INX(uint8_t regX, uint8_t val) {
     PASS();
 }
 
-TEST test_INY(uint8_t regY, uint8_t val) {
+TEST test_INY(uint8_t regY) {
     HEADER0();
     uint8_t regA = 0x21;
+    uint8_t val = regY;
 
     logic_INx(regY, &result, &flags);
 
@@ -4884,13 +4890,7 @@ GREATEST_SUITE(test_suite_cpu) {
     A2_ADD_TEST(test_CMP_imm);
     A2_ADD_TEST(test_CPX_imm);
     A2_ADD_TEST(test_CPY_imm);
-    A2_ADD_TEST(test_DEA);
-    A2_ADD_TEST(test_DEX);
-    A2_ADD_TEST(test_DEY);
     A2_ADD_TEST(test_EOR_imm);
-    A2_ADD_TEST(test_INA);
-    A2_ADD_TEST(test_INX);
-    A2_ADD_TEST(test_INY);
     A2_ADD_TEST(test_JMP_abs);
     A2_ADD_TEST(test_JMP_ind_65c02);
     A2_ADD_TEST(test_JMP_abs_ind_x);
@@ -4929,6 +4929,12 @@ GREATEST_SUITE(test_suite_cpu) {
 
     greatest_info.flags = GREATEST_FLAG_SILENT_SUCCESS;
     A2_ADD_TEST(test_ASL_acc);
+    A2_ADD_TEST(test_DEA);
+    A2_ADD_TEST(test_DEX);
+    A2_ADD_TEST(test_DEY);
+    A2_ADD_TEST(test_INA);
+    A2_ADD_TEST(test_INX);
+    A2_ADD_TEST(test_INY);
     HASH_ITER(hh, test_funcs, func, tmp) {
         fprintf(GREATEST_STDOUT, "\n%s (SILENCED OUTPUT) :\n", func->name);
 
