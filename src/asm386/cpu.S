@@ -72,7 +72,7 @@
                 decw    EffectiveAddr;                                         \
                 movb    %al, %ah;                                              \
                 call    *SN(cpu65_vmem)                                        \
-                (,EffectiveAddr_E,8);
+                        (,EffectiveAddr_E,8);
 
 #define PutToEA_B                                                              \
                 orb     $2, DebugCurrRW;                                       \
@@ -1761,15 +1761,9 @@ op_SMB7_65c02:
        STA instructions
    ---------------------------------- */
 
-op_STA_imm:
-                GetImm
-                DoSTA
-                Continue
-
 op_STA_zpage:
                 GetZPage
                 DoSTA
-                incb    DebugCycleCount         // +1 cycle on write
                 Continue
 
 op_STA_zpage_x:
@@ -1789,13 +1783,11 @@ op_STA_abs:
 op_STA_abs_x:
                 GetAbs_X_STx
                 DoSTA
-                incb    DebugCycleCount         // +1 cycle on write
                 Continue
 
 op_STA_abs_y:
                 GetAbs_Y_STA
                 DoSTA
-                incb    DebugCycleCount         // +1 cycle on write
                 Continue
 
 op_STA_ind_x:
@@ -1806,7 +1798,6 @@ op_STA_ind_x:
 op_STA_ind_y:
                 GetIndZPage_Y_STA
                 DoSTA
-                incb    DebugCycleCount         // +1 cycle on write
                 Continue
 
 // 65c02 : 0x92
@@ -1859,7 +1850,6 @@ op_RMB7_65c02:
 op_STX_zpage:
                 GetZPage
                 DoSTX
-                incb    DebugCycleCount         // +1 cycle on write
                 Continue
 
 // HACK : is this used? need to study coverage ...
@@ -1880,7 +1870,6 @@ op_STX_abs:
 op_STY_zpage:
                 GetZPage
                 DoSTY
-                incb    DebugCycleCount         // +1 cycle on write
                 Continue
 
 op_STY_zpage_x:
@@ -1902,12 +1891,12 @@ op_STY_abs:
 op_STZ_zpage:
                 GetZPage
                 DoSTZ
-                incb    DebugCycleCount         // +1 cycle on write
                 Continue
 
 // 65c02 : 0x74
 op_STZ_zpage_x:
                 GetZPage_X
+                DoSTZ
                 Continue
 
 // 65c02 : 0x9C
