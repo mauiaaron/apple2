@@ -4904,6 +4904,282 @@ TEST test_ORA_ind_zpage(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t lobyte,
 }
 
 // ----------------------------------------------------------------------------
+// PHx instructions
+
+TEST test_PHA() {
+    testcpu_set_opcode1(0x48);
+
+    uint8_t regA = (uint8_t)random();
+    ASSERT(apple_ii_64k[0][0x1ff] != regA);
+
+    cpu65_current.a  = regA;
+    cpu65_current.x  = 0x03;
+    cpu65_current.y  = 0x04;
+    cpu65_current.f  = 0x55;
+
+    cpu65_run();
+
+    ASSERT(cpu65_current.pc     == TEST_LOC+1);
+    ASSERT(cpu65_current.a      == regA);
+    ASSERT(cpu65_current.x      == 0x03);
+    ASSERT(cpu65_current.y      == 0x04);
+    ASSERT(cpu65_current.f      == 0x55);
+    ASSERT(cpu65_current.sp     == 0xfe);
+
+    ASSERT(apple_ii_64k[0][0x1ff] == regA);
+
+    ASSERT(cpu65_debug.ea       == TEST_LOC);
+    ASSERT(cpu65_debug.d        == 0xff);
+    ASSERT(cpu65_debug.rw       == RW_NONE);
+    ASSERT(cpu65_debug.opcode   == 0x48);
+    ASSERT(cpu65_debug.opcycles == (3));
+
+    PASS();
+}
+
+TEST test_PHP() {
+    testcpu_set_opcode1(0x08);
+
+    uint8_t flags = (uint8_t)random();
+
+    cpu65_current.a  = 0x02;
+    cpu65_current.x  = 0x03;
+    cpu65_current.y  = 0x04;
+    cpu65_current.f  = flags;
+
+    cpu65_run();
+
+    ASSERT(cpu65_current.pc     == TEST_LOC+1);
+    ASSERT(cpu65_current.a      == 0x02);
+    ASSERT(cpu65_current.x      == 0x03);
+    ASSERT(cpu65_current.y      == 0x04);
+    ASSERT(cpu65_current.f      == flags);
+    ASSERT(cpu65_current.sp     == 0xfe);
+
+    ASSERT(apple_ii_64k[0][0x1ff] == flags);
+
+    ASSERT(cpu65_debug.ea       == TEST_LOC);
+    ASSERT(cpu65_debug.d        == 0xff);
+    ASSERT(cpu65_debug.rw       == RW_NONE);
+    ASSERT(cpu65_debug.opcode   == 0x08);
+    ASSERT(cpu65_debug.opcycles == (3));
+
+    PASS();
+}
+
+TEST test_PHX() {
+    testcpu_set_opcode1(0xda);
+
+    uint8_t regX = (uint8_t)random();
+
+    cpu65_current.a  = 0x03;
+    cpu65_current.x  = regX;
+    cpu65_current.y  = 0x05;
+    cpu65_current.f  = 0x53;
+
+    cpu65_run();
+
+    ASSERT(cpu65_current.pc     == TEST_LOC+1);
+    ASSERT(cpu65_current.a      == 0x03);
+    ASSERT(cpu65_current.x      == regX);
+    ASSERT(cpu65_current.y      == 0x05);
+    ASSERT(cpu65_current.f      == 0x53);
+    ASSERT(cpu65_current.sp     == 0xfe);
+
+    ASSERT(apple_ii_64k[0][0x1ff] == regX);
+
+    ASSERT(cpu65_debug.ea       == TEST_LOC);
+    ASSERT(cpu65_debug.d        == 0xff);
+    ASSERT(cpu65_debug.rw       == RW_NONE);
+    ASSERT(cpu65_debug.opcode   == 0xda);
+    ASSERT(cpu65_debug.opcycles == (3));
+
+    PASS();
+}
+
+TEST test_PHY() {
+    testcpu_set_opcode1(0x5a);
+
+    uint8_t regY = (uint8_t)random();
+
+    cpu65_current.a  = 0x03;
+    cpu65_current.x  = 0x50;
+    cpu65_current.y  = regY;
+    cpu65_current.f  = 0x53;
+
+    cpu65_run();
+
+    ASSERT(cpu65_current.pc     == TEST_LOC+1);
+    ASSERT(cpu65_current.a      == 0x03);
+    ASSERT(cpu65_current.x      == 0x50);
+    ASSERT(cpu65_current.y      == regY);
+    ASSERT(cpu65_current.f      == 0x53);
+    ASSERT(cpu65_current.sp     == 0xfe);
+
+    ASSERT(apple_ii_64k[0][0x1ff] == regY);
+
+    ASSERT(cpu65_debug.ea       == TEST_LOC);
+    ASSERT(cpu65_debug.d        == 0xff);
+    ASSERT(cpu65_debug.rw       == RW_NONE);
+    ASSERT(cpu65_debug.opcode   == 0x5a);
+    ASSERT(cpu65_debug.opcycles == (3));
+
+    PASS();
+}
+
+// ----------------------------------------------------------------------------
+// PLx instructions
+
+static void logic_PLx(/*uint8_t*/int _a, uint8_t *flags) {
+    uint8_t a = (uint8_t)_a;
+
+    uint8_t res = a | a;
+    if ((res & 0xff) == 0x0) {
+        *flags |= fZ;
+    }
+    if (res & 0x80) {
+        *flags |= fN;
+    }
+}
+
+TEST test_PLA(uint8_t regA) {
+    HEADER0();
+    uint8_t val = regA;
+    uint8_t sp = 0x80;
+
+    logic_PLx(regA, &flags);
+
+    testcpu_set_opcode1(0x68);
+    apple_ii_64k[0][0x101+sp] = regA;
+
+    cpu65_current.a  = 0x00;
+    cpu65_current.x  = 0x03;
+    cpu65_current.y  = 0x04;
+    cpu65_current.f  = 0x00;
+    cpu65_current.sp = sp;
+
+    cpu65_run();
+
+    ASSERT(cpu65_current.pc     == TEST_LOC+1);
+    ASSERT(cpu65_current.a      == regA);
+    ASSERT(cpu65_current.x      == 0x03);
+    ASSERT(cpu65_current.y      == 0x04);
+    ASSERT(cpu65_current.sp     == sp+1);
+
+    VERIFY_FLAGS();
+
+    ASSERT(cpu65_debug.ea       == TEST_LOC);
+    ASSERT(cpu65_debug.d        == 0xff);
+    ASSERT(cpu65_debug.rw       == RW_NONE);
+    ASSERT(cpu65_debug.opcode   == 0x68);
+    ASSERT(cpu65_debug.opcycles == (4));
+
+    PASS();
+}
+
+TEST test_PLP(uint8_t flags) {
+    uint8_t sp = 0x80;
+
+    testcpu_set_opcode1(0x28);
+    apple_ii_64k[0][0x101+sp] = flags;
+
+    cpu65_current.a  = 0x02;
+    cpu65_current.x  = 0x03;
+    cpu65_current.y  = 0x04;
+    cpu65_current.f  = flags;
+    cpu65_current.sp = sp;
+
+    cpu65_run();
+
+    ASSERT(cpu65_current.pc     == TEST_LOC+1);
+    ASSERT(cpu65_current.a      == 0x02);
+    ASSERT(cpu65_current.x      == 0x03);
+    ASSERT(cpu65_current.y      == 0x04);
+    ASSERT(cpu65_current.sp     == sp+1);
+    ASSERT(cpu65_current.f      == (flags | B_Flag_6502 | X_Flag_6502 | I_Flag_6502) );
+
+    ASSERT(cpu65_debug.ea       == TEST_LOC);
+    ASSERT(cpu65_debug.d        == 0xff);
+    ASSERT(cpu65_debug.rw       == RW_NONE);
+    ASSERT(cpu65_debug.opcode   == 0x28);
+    ASSERT(cpu65_debug.opcycles == (4));
+
+    PASS();
+}
+
+TEST test_PLX(uint8_t regX) {
+    HEADER0();
+    uint8_t regA = 0x00;
+    uint8_t val = 0x00;
+    uint8_t sp = 0x80;
+
+    logic_PLx(regX, &flags);
+
+    testcpu_set_opcode1(0xfa);
+    apple_ii_64k[0][0x101+sp] = regX;
+
+    cpu65_current.a  = 0x43;
+    cpu65_current.x  = 0x00;
+    cpu65_current.y  = 0x04;
+    cpu65_current.f  = 0x00;
+    cpu65_current.sp = sp;
+
+    cpu65_run();
+
+    ASSERT(cpu65_current.pc     == TEST_LOC+1);
+    ASSERT(cpu65_current.a      == 0x43);
+    ASSERT(cpu65_current.x      == regX);
+    ASSERT(cpu65_current.y      == 0x04);
+    ASSERT(cpu65_current.sp     == sp+1);
+
+    VERIFY_FLAGS();
+
+    ASSERT(cpu65_debug.ea       == TEST_LOC);
+    ASSERT(cpu65_debug.d        == 0xff);
+    ASSERT(cpu65_debug.rw       == RW_NONE);
+    ASSERT(cpu65_debug.opcode   == 0xfa);
+    ASSERT(cpu65_debug.opcycles == (4));
+
+    PASS();
+}
+
+TEST test_PLY(uint8_t regY) {
+    HEADER0();
+    uint8_t regA = 0x00;
+    uint8_t val = 0x00;
+    uint8_t sp = 0x80;
+
+    logic_PLx(regY, &flags);
+
+    testcpu_set_opcode1(0x7a);
+    apple_ii_64k[0][0x101+sp] = regY;
+
+    cpu65_current.a  = 0x43;
+    cpu65_current.x  = 0x34;
+    cpu65_current.y  = 0x00;
+    cpu65_current.f  = 0x00;
+    cpu65_current.sp = sp;
+
+    cpu65_run();
+
+    ASSERT(cpu65_current.pc     == TEST_LOC+1);
+    ASSERT(cpu65_current.a      == 0x43);
+    ASSERT(cpu65_current.x      == 0x34);
+    ASSERT(cpu65_current.y      == regY);
+    ASSERT(cpu65_current.sp     == sp+1);
+
+    VERIFY_FLAGS();
+
+    ASSERT(cpu65_debug.ea       == TEST_LOC);
+    ASSERT(cpu65_debug.d        == 0xff);
+    ASSERT(cpu65_debug.rw       == RW_NONE);
+    ASSERT(cpu65_debug.opcode   == 0x7a);
+    ASSERT(cpu65_debug.opcycles == (4));
+
+    PASS();
+}
+
+// ----------------------------------------------------------------------------
 // SBC instructions
 
 static void logic_SBC_dec(/*uint8_t*/int _a, /*uint8_t*/int _b, uint8_t *result, uint8_t *flags) {
@@ -5403,6 +5679,10 @@ GREATEST_SUITE(test_suite_cpu) {
     A2_ADD_TEST(test_CLI);
     A2_ADD_TEST(test_CLV);
     A2_ADD_TEST(test_NOP);
+    A2_ADD_TEST(test_PHA);
+    A2_ADD_TEST(test_PHP);
+    A2_ADD_TEST(test_PHX);
+    A2_ADD_TEST(test_PHY);
     HASH_ITER(hh, test_funcs, func, tmp) {
         fprintf(GREATEST_STDOUT, "\n%s :\n", func->name);
         RUN_TEST(((test_func_ptr0)(func->func)));
@@ -5487,7 +5767,7 @@ GREATEST_SUITE(test_suite_cpu) {
     greatest_info.flags = 0x0;
 
     // ------------------------------------------------------------------------
-    // Accumulator addressing mode tests :
+    // Accumulator addressing & PLx tests :
     // NOTE : these should be a comprehensive exercise of the instruction logic
 
     greatest_info.flags = GREATEST_FLAG_SILENT_SUCCESS;
@@ -5499,6 +5779,10 @@ GREATEST_SUITE(test_suite_cpu) {
     A2_ADD_TEST(test_INX);
     A2_ADD_TEST(test_INY);
     A2_ADD_TEST(test_LSR_acc);
+    A2_ADD_TEST(test_PLA);
+    A2_ADD_TEST(test_PLP);
+    A2_ADD_TEST(test_PLX);
+    A2_ADD_TEST(test_PLY);
     HASH_ITER(hh, test_funcs, func, tmp) {
         fprintf(GREATEST_STDOUT, "\n%s (SILENCED OUTPUT) :\n", func->name);
 
