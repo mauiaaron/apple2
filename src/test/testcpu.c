@@ -3417,15 +3417,7 @@ TEST test_JMP_abs(uint8_t lobyte, uint8_t hibyte) {
     PASS();
 }
 
-/*
-TEST test_JMP_ind(uint8_t lobyte, uint8_t hibyte) {
-    // differs for nmos 6502?
-    FAILm("unimplemented");
-}
-*/
-
-// 65c02 : 0x6C
-TEST test_JMP_ind_65c02(uint8_t _lobyte, uint8_t _hibyte, uint8_t set) {
+TEST test_JMP_ind(uint8_t _lobyte, uint8_t _hibyte, uint8_t set) {
     HEADER0();
 
     testcpu_set_opcode3(0x6c, _lobyte, _hibyte);
@@ -3445,8 +3437,14 @@ TEST test_JMP_ind_65c02(uint8_t _lobyte, uint8_t _hibyte, uint8_t set) {
 
     uint8_t lo = apple_ii_64k[0][_addrs];
     ++_addrs;
+    if (_lobyte == 0xff) {
+        _addrs -= 0x100;
+    }
     uint8_t hi = apple_ii_64k[0][_addrs];
     uint16_t addr = (hi<<8) | lo;
+    if (_lobyte == 0xff) {
+        _addrs += 0x100;
+    }
     --_addrs;
 
 #if 0
@@ -5454,7 +5452,7 @@ GREATEST_SUITE(test_suite_cpu) {
     A2_ADD_TEST(test_CPY_imm);
     A2_ADD_TEST(test_EOR_imm);
     A2_ADD_TEST(test_JMP_abs);
-    A2_ADD_TEST(test_JMP_ind_65c02);
+    A2_ADD_TEST(test_JMP_ind);
     A2_ADD_TEST(test_JMP_abs_ind_x);
     A2_ADD_TEST(test_JSR_abs);
     A2_ADD_TEST(test_LDA_imm);

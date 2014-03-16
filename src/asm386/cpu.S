@@ -1214,36 +1214,24 @@ op_JMP_abs:
                 movw    EffectiveAddr, PC_Reg;
                 Continue
 
-op_JMP_ind:
+op_JMP_ind: // 0x6c
                 xorl    %eax, %eax
-                GetFromMem_B(PC_Reg_E)
+                GetFromPC_B
                 xchgb   %al, %ah
-                cmpb    $0xFF, %ah
-                je      special_case
-                incw    PC_Reg
-                GetFromMem_B(PC_Reg_E)
+                GetFromPC_B
                 xchgb   %al, %ah
+                cmpb    $0xFF, %al
+                je      jmp_special
                 GetFromMem_W(%eax)
                 movw    %ax, PC_Reg
                 Continue
-special_case: /*?*/
-                incw    PC_Reg
-                subw    $0x100, PC_Reg
-                GetFromMem_B(PC_Reg_E)
-                xchgb   %al, %ah
-                GetFromMem_W(%eax)
+jmp_special: // see JMP indirect note in _Understanding the Apple IIe_ 4-25
                 movw    %ax, PC_Reg
-                Continue
-
-// 65c02 : 0x6C
-op_JMP_ind_65c02:
-                xorl    %eax, %eax
+                subw    $0xff, PC_Reg
                 GetFromMem_B(PC_Reg_E)
                 xchgb   %al, %ah
-                incw    PC_Reg
+                addw    $0xff, PC_Reg
                 GetFromMem_B(PC_Reg_E)
-                xchgb   %al, %ah
-                GetFromMem_W(%eax)
                 movw    %ax, PC_Reg
                 Continue
 
@@ -2942,7 +2930,7 @@ E(cpu65__opcycles)        // ---------------------------------------------------
                 .byte   2 // op_ADC_imm         op_ADC_imm      op_ADC_imm
                 .byte   2 // op_ROR_acc         op_ROR_acc      op_ROR_acc
                 .byte   7 // op_UNK_65c02       op_UNK          op_UNK_RBM_imm
-                .byte   6 // op_JMP_ind_65c02   op_JMP_ind      op_JMP_ind
+                .byte   6 // op_JMP_ind         op_JMP_ind      op_JMP_ind
                 .byte   4 // op_ADC_abs         op_ADC_abs      op_ADC_abs
                 .byte   6 // op_ROR_abs         op_ROR_abs      op_ROR_abs
                 .byte   5 // op_BBR6_65c02      op_UNK          op_UNK_RAD_abs
@@ -3463,7 +3451,7 @@ E(cpu65__cmos)
                 .long   op_ADC_imm
                 .long   op_ROR_acc
                 .long   op_UNK_65c02
-                .long   op_JMP_ind_65c02
+                .long   op_JMP_ind
                 .long   op_ADC_abs
                 .long   op_ROR_abs
                 .long   op_BBR6_65c02
