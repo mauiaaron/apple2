@@ -1154,7 +1154,7 @@ TEST test_BCC(int8_t off, bool flag, uint16_t addrs) {
 
     ASSERT(cpu65_debug.ea        == addrs+1);
     ASSERT(cpu65_debug.d         == 0xff);
-    ASSERT(cpu65_debug.rw        == 0);
+    ASSERT(cpu65_debug.rw        == RW_NONE);
     ASSERT(cpu65_debug.opcode    == 0x90);
     ASSERT(cpu65_debug.opcycles  == cycle_count);
 
@@ -1200,7 +1200,7 @@ TEST test_BCS(int8_t off, bool flag, uint16_t addrs) {
 
     ASSERT(cpu65_debug.ea        == addrs+1);
     ASSERT(cpu65_debug.d         == 0xff);
-    ASSERT(cpu65_debug.rw        == 0);
+    ASSERT(cpu65_debug.rw        == RW_NONE);
     ASSERT(cpu65_debug.opcode    == 0xB0);
     ASSERT(cpu65_debug.opcycles  == cycle_count);
 
@@ -1246,7 +1246,7 @@ TEST test_BEQ(int8_t off, bool flag, uint16_t addrs) {
 
     ASSERT(cpu65_debug.ea        == addrs+1);
     ASSERT(cpu65_debug.d         == 0xff);
-    ASSERT(cpu65_debug.rw        == 0);
+    ASSERT(cpu65_debug.rw        == RW_NONE);
     ASSERT(cpu65_debug.opcode    == 0xF0);
     ASSERT(cpu65_debug.opcycles  == cycle_count);
 
@@ -1292,7 +1292,7 @@ TEST test_BNE(int8_t off, bool flag, uint16_t addrs) {
 
     ASSERT(cpu65_debug.ea        == addrs+1);
     ASSERT(cpu65_debug.d         == 0xff);
-    ASSERT(cpu65_debug.rw        == 0);
+    ASSERT(cpu65_debug.rw        == RW_NONE);
     ASSERT(cpu65_debug.opcode    == 0xD0);
     ASSERT(cpu65_debug.opcycles  == cycle_count);
 
@@ -1338,7 +1338,7 @@ TEST test_BMI(int8_t off, bool flag, uint16_t addrs) {
 
     ASSERT(cpu65_debug.ea        == addrs+1);
     ASSERT(cpu65_debug.d         == 0xff);
-    ASSERT(cpu65_debug.rw        == 0);
+    ASSERT(cpu65_debug.rw        == RW_NONE);
     ASSERT(cpu65_debug.opcode    == 0x30);
     ASSERT(cpu65_debug.opcycles  == cycle_count);
 
@@ -1384,7 +1384,7 @@ TEST test_BPL(int8_t off, bool flag, uint16_t addrs) {
 
     ASSERT(cpu65_debug.ea        == addrs+1);
     ASSERT(cpu65_debug.d         == 0xff);
-    ASSERT(cpu65_debug.rw        == 0);
+    ASSERT(cpu65_debug.rw        == RW_NONE);
     ASSERT(cpu65_debug.opcode    == 0x10);
     ASSERT(cpu65_debug.opcycles  == cycle_count);
 
@@ -1424,7 +1424,7 @@ TEST test_BRA(int8_t off, bool flag, uint16_t addrs) {
 
     ASSERT(cpu65_debug.ea        == addrs+1);
     ASSERT(cpu65_debug.d         == 0xff);
-    ASSERT(cpu65_debug.rw        == 0);
+    ASSERT(cpu65_debug.rw        == RW_NONE);
     ASSERT(cpu65_debug.opcode    == 0x80);
     ASSERT(cpu65_debug.opcycles  == cycle_count);
 
@@ -1470,7 +1470,7 @@ TEST test_BVC(int8_t off, bool flag, uint16_t addrs) {
 
     ASSERT(cpu65_debug.ea        == addrs+1);
     ASSERT(cpu65_debug.d         == 0xff);
-    ASSERT(cpu65_debug.rw        == 0);
+    ASSERT(cpu65_debug.rw        == RW_NONE);
     ASSERT(cpu65_debug.opcode    == 0x50);
     ASSERT(cpu65_debug.opcycles  == cycle_count);
 
@@ -1516,7 +1516,7 @@ TEST test_BVS(int8_t off, bool flag, uint16_t addrs) {
 
     ASSERT(cpu65_debug.ea        == addrs+1);
     ASSERT(cpu65_debug.d         == 0xff);
-    ASSERT(cpu65_debug.rw        == 0);
+    ASSERT(cpu65_debug.rw        == RW_NONE);
     ASSERT(cpu65_debug.opcode    == 0x70);
     ASSERT(cpu65_debug.opcycles  == cycle_count);
 
@@ -4356,7 +4356,7 @@ TEST test_LSR_acc(uint8_t regA) {
 
     ASSERT(cpu65_debug.ea        == TEST_LOC);
     ASSERT(cpu65_debug.d         == 0xff);
-    ASSERT(cpu65_debug.rw        == 0);
+    ASSERT(cpu65_debug.rw        == RW_NONE);
     ASSERT(cpu65_debug.opcode    == 0x4a);
     ASSERT(cpu65_debug.opcycles  == (2));
 
@@ -5380,6 +5380,8 @@ static test_func_t *test_funcs = NULL;
 #define A2_RUN_TESTp(TEST, ...) RUN_TESTp( ((test_func_ptr)(TEST)), __VA_ARGS__)
 
 GREATEST_SUITE(test_suite_cpu) {
+
+    srandom(time(NULL));
 
     GREATEST_SET_SETUP_CB(testcpu_setup, NULL);
     GREATEST_SET_TEARDOWN_CB(testcpu_teardown, NULL);
