@@ -5096,7 +5096,7 @@ TEST test_PLP(uint8_t flags) {
     ASSERT(cpu65_current.x      == 0x03);
     ASSERT(cpu65_current.y      == 0x04);
     ASSERT(cpu65_current.sp     == sp+1);
-    ASSERT(cpu65_current.f      == (flags | B_Flag_6502 | X_Flag_6502 | I_Flag_6502) );
+    ASSERT(cpu65_current.f      == (flags | fB | fX | fI));
 
     ASSERT(cpu65_debug.ea       == TEST_LOC);
     ASSERT(cpu65_debug.d        == 0xff);
@@ -5625,6 +5625,79 @@ TEST test_ROR_abs_x(uint8_t regA, uint8_t val, uint8_t regX, uint8_t lobyte, uin
     ASSERT(cpu65_debug.rw        == (RW_READ|RW_WRITE));
     ASSERT(cpu65_debug.opcode    == 0x7e);
     ASSERT(cpu65_debug.opcycles  == cycle_count);
+
+    PASS();
+}
+
+// ----------------------------------------------------------------------------
+// RTI operand
+
+TEST test_RTI(uint8_t flags) {
+
+    testcpu_set_opcode1(0x40);
+
+    cpu65_current.a  = 0x02;
+    cpu65_current.x  = 0x03;
+    cpu65_current.y  = 0x04;
+    cpu65_current.f  = 0x00;
+    cpu65_current.sp = 0x80;
+
+    uint8_t lo_ret = (uint8_t)random();
+    uint8_t hi_ret = (uint8_t)random();
+
+    apple_ii_64k[0][0x181] = flags;
+    apple_ii_64k[0][0x182] = lo_ret;
+    apple_ii_64k[0][0x183] = hi_ret;
+
+    cpu65_run();
+
+    ASSERT(cpu65_current.pc     == ((hi_ret<<8)| lo_ret));
+    ASSERT(cpu65_current.a      == 0x02);
+    ASSERT(cpu65_current.x      == 0x03);
+    ASSERT(cpu65_current.y      == 0x04);
+    ASSERT(cpu65_current.f      == (flags | fB | fX | fI));
+    ASSERT(cpu65_current.sp     == 0x83);
+
+    ASSERT(cpu65_debug.ea       == TEST_LOC);
+    ASSERT(cpu65_debug.d        == 0xff);
+    ASSERT(cpu65_debug.rw       == RW_NONE);
+    ASSERT(cpu65_debug.opcode   == 0x40);
+    ASSERT(cpu65_debug.opcycles == (6));
+
+    PASS();
+}
+
+// ----------------------------------------------------------------------------
+// RTS operand
+
+TEST test_RTS(uint8_t lobyte, uint8_t hibyte) {
+
+    testcpu_set_opcode1(0x60);
+
+    cpu65_current.a  = 0x02;
+    cpu65_current.x  = 0x03;
+    cpu65_current.y  = 0x04;
+    cpu65_current.f  = 0x00;
+    cpu65_current.sp = 0x80;
+
+    apple_ii_64k[0][0x181] = lobyte;
+    apple_ii_64k[0][0x182] = hibyte;
+
+    cpu65_run();
+
+    uint16_t newpc = ((hibyte<<8) | lobyte) + 1;
+    ASSERT(cpu65_current.pc     == newpc);
+    ASSERT(cpu65_current.a      == 0x02);
+    ASSERT(cpu65_current.x      == 0x03);
+    ASSERT(cpu65_current.y      == 0x04);
+    ASSERT(cpu65_current.f      == 0x00);
+    ASSERT(cpu65_current.sp     == 0x82);
+
+    ASSERT(cpu65_debug.ea       == TEST_LOC);
+    ASSERT(cpu65_debug.d        == 0xff);
+    ASSERT(cpu65_debug.rw       == RW_NONE);
+    ASSERT(cpu65_debug.opcode   == 0x60);
+    ASSERT(cpu65_debug.opcycles == (6));
 
     PASS();
 }
@@ -6190,6 +6263,7 @@ GREATEST_SUITE(test_suite_cpu) {
     A2_ADD_TEST(test_LDX_imm);
     A2_ADD_TEST(test_LDY_imm);
     A2_ADD_TEST(test_ORA_imm);
+    A2_ADD_TEST(test_RTS);
     A2_ADD_TEST(test_SBC_imm);
     HASH_ITER(hh, test_funcs, func, tmp) {
         fprintf(GREATEST_STDOUT, "\n%s (SILENCED OUTPUT) :\n", func->name);
@@ -6234,6 +6308,7 @@ GREATEST_SUITE(test_suite_cpu) {
     A2_ADD_TEST(test_PLY);
     A2_ADD_TEST(test_ROL_acc);
     A2_ADD_TEST(test_ROR_acc);
+    A2_ADD_TEST(test_RTI);
     HASH_ITER(hh, test_funcs, func, tmp) {
         fprintf(GREATEST_STDOUT, "\n%s (SILENCED OUTPUT) :\n", func->name);
 
