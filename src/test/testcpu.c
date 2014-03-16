@@ -6855,6 +6855,411 @@ TEST test_STZ_abs_x(uint8_t regA, uint8_t val, uint8_t regX, uint8_t lobyte, uin
 }
 
 // ----------------------------------------------------------------------------
+// TAx, TxA instructions
+
+static void logic_TAx(/*uint8_t*/int _a, uint8_t *flags) {
+    uint8_t a = (uint8_t)_a;
+
+    if ((a & 0xff) == 0x0) {
+        *flags |= fZ;
+    }
+    if (a & 0x80) {
+        *flags |= fN;
+    }
+}
+
+TEST test_TAX(uint8_t regA) {
+    HEADER0();
+    uint8_t val = regA;
+
+    logic_TAx(regA, &flags);
+    uint8_t regX = ~regA;
+
+    testcpu_set_opcode1(0xaa);
+
+    cpu65_current.a  = regA;
+    cpu65_current.x  = regX;
+    cpu65_current.y  = 0x04;
+    cpu65_current.sp = 0x80;
+    cpu65_current.f  = 0x00;
+
+    cpu65_run();
+
+    ASSERT(cpu65_current.pc      == TEST_LOC+1);
+    ASSERT(cpu65_current.a       == regA);
+    ASSERT(cpu65_current.x       == regA);
+    ASSERT(cpu65_current.y       == 0x04);
+    ASSERT(cpu65_current.sp      == 0x80);
+
+    VERIFY_FLAGS();
+
+    ASSERT(cpu65_debug.ea        == TEST_LOC);
+    ASSERT(cpu65_debug.d         == 0xff);
+    ASSERT(cpu65_debug.rw        == RW_NONE);
+    ASSERT(cpu65_debug.opcode    == 0xaa);
+    ASSERT(cpu65_debug.opcycles  == (2));
+
+    PASS();
+}
+
+TEST test_TAY(uint8_t regA) {
+    HEADER0();
+    uint8_t val = regA;
+
+    logic_TAx(regA, &flags);
+    uint8_t regY = ~regA;
+
+    testcpu_set_opcode1(0xa8);
+
+    cpu65_current.a  = regA;
+    cpu65_current.x  = 0x6e;
+    cpu65_current.y  = regY;
+    cpu65_current.sp = 0x80;
+    cpu65_current.f  = 0x00;
+
+    cpu65_run();
+
+    ASSERT(cpu65_current.pc      == TEST_LOC+1);
+    ASSERT(cpu65_current.a       == regA);
+    ASSERT(cpu65_current.x       == 0x6e);
+    ASSERT(cpu65_current.y       == regA);
+    ASSERT(cpu65_current.sp      == 0x80);
+
+    VERIFY_FLAGS();
+
+    ASSERT(cpu65_debug.ea        == TEST_LOC);
+    ASSERT(cpu65_debug.d         == 0xff);
+    ASSERT(cpu65_debug.rw        == RW_NONE);
+    ASSERT(cpu65_debug.opcode    == 0xa8);
+    ASSERT(cpu65_debug.opcycles  == (2));
+
+    PASS();
+}
+
+TEST test_TXA(uint8_t regX) {
+    HEADER0();
+    uint8_t val = regX;
+
+    logic_TAx(regX, &flags);
+    uint8_t regA = ~regX;
+
+    testcpu_set_opcode1(0x8a);
+
+    cpu65_current.a  = regA;
+    cpu65_current.x  = regX;
+    cpu65_current.y  = 0x04;
+    cpu65_current.sp = 0x80;
+    cpu65_current.f  = 0x00;
+
+    cpu65_run();
+
+    ASSERT(cpu65_current.pc      == TEST_LOC+1);
+    ASSERT(cpu65_current.a       == regX);
+    ASSERT(cpu65_current.x       == regX);
+    ASSERT(cpu65_current.y       == 0x04);
+    ASSERT(cpu65_current.sp      == 0x80);
+
+    VERIFY_FLAGS();
+
+    ASSERT(cpu65_debug.ea        == TEST_LOC);
+    ASSERT(cpu65_debug.d         == 0xff);
+    ASSERT(cpu65_debug.rw        == RW_NONE);
+    ASSERT(cpu65_debug.opcode    == 0x8a);
+    ASSERT(cpu65_debug.opcycles  == (2));
+
+    PASS();
+}
+
+TEST test_TYA(uint8_t regY) {
+    HEADER0();
+    uint8_t val = regY;
+
+    logic_TAx(regY, &flags);
+    uint8_t regA = ~regY;
+
+    testcpu_set_opcode1(0x98);
+
+    cpu65_current.a  = regA;
+    cpu65_current.x  = 0xa4;
+    cpu65_current.y  = regY;
+    cpu65_current.sp = 0x80;
+    cpu65_current.f  = 0x00;
+
+    cpu65_run();
+
+    ASSERT(cpu65_current.pc      == TEST_LOC+1);
+    ASSERT(cpu65_current.a       == regY);
+    ASSERT(cpu65_current.x       == 0xa4);
+    ASSERT(cpu65_current.y       == regY);
+    ASSERT(cpu65_current.sp      == 0x80);
+
+    VERIFY_FLAGS();
+
+    ASSERT(cpu65_debug.ea        == TEST_LOC);
+    ASSERT(cpu65_debug.d         == 0xff);
+    ASSERT(cpu65_debug.rw        == RW_NONE);
+    ASSERT(cpu65_debug.opcode    == 0x98);
+    ASSERT(cpu65_debug.opcycles  == (2));
+
+    PASS();
+}
+
+// ----------------------------------------------------------------------------
+// TRB & TSB operands
+
+static void logic_TRB(/*uint8_t*/int _a, /*uint8_t*/int _b, uint8_t *result, uint8_t *flags) {
+    uint8_t a = (uint8_t)_a;
+    uint8_t b = (uint8_t)_b;
+
+    uint8_t res = (~a) & b;
+    if ((a & b) == 0x0) {
+        *flags |= fZ;
+    }
+
+    *result = res;
+}
+
+TEST test_TRB_abs(uint8_t regA, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
+    HEADER0();
+
+    logic_TRB(regA, val, &result, &flags);
+
+    testcpu_set_opcode3(0x1c, lobyte, hibyte);
+
+    uint16_t addrs = lobyte | (hibyte<<8);
+    apple_ii_64k[0][addrs] = val;
+
+    cpu65_current.a  = regA;
+    cpu65_current.x  = 0xf4;
+    cpu65_current.y  = 0x05;
+    cpu65_current.sp = 0x81;
+    cpu65_current.f  = 0x00;
+
+    cpu65_run();
+
+    ASSERT(apple_ii_64k[0][addrs] == result); 
+
+    ASSERT(cpu65_current.pc      == TEST_LOC+3);
+    ASSERT(cpu65_current.a       == regA);
+    ASSERT(cpu65_current.x       == 0xf4);
+    ASSERT(cpu65_current.y       == 0x05);
+    ASSERT(cpu65_current.sp      == 0x81);
+
+    VERIFY_FLAGS();
+
+    ASSERT(cpu65_debug.ea        == addrs);
+    ASSERT(cpu65_debug.d         == result);
+    ASSERT(cpu65_debug.rw        == (RW_READ|RW_WRITE));
+    ASSERT(cpu65_debug.opcode    == 0x1c);
+    ASSERT(cpu65_debug.opcycles  == (6));
+
+    PASS();
+}
+
+// 65c02 : 0x14
+TEST test_TRB_zpage(uint8_t regA, uint8_t val, uint8_t arg0) {
+    HEADER0();
+
+    logic_TRB(regA, val, &result, &flags);
+
+    testcpu_set_opcode2(0x14, arg0);
+
+    apple_ii_64k[0][arg0] = val;
+
+    cpu65_current.a  = regA;
+    cpu65_current.x  = 0x03;
+    cpu65_current.y  = 0x04;
+    cpu65_current.sp = 0x80;
+    cpu65_current.f  = 0x00;
+
+    cpu65_run();
+
+    ASSERT(apple_ii_64k[0][arg0] == result); 
+
+    ASSERT(cpu65_current.pc      == TEST_LOC+2);
+    ASSERT(cpu65_current.a       == regA);
+    ASSERT(cpu65_current.x       == 0x03);
+    ASSERT(cpu65_current.y       == 0x04);
+    ASSERT(cpu65_current.sp      == 0x80);
+
+    VERIFY_FLAGS();
+
+    ASSERT(cpu65_debug.ea        == arg0);
+    ASSERT(cpu65_debug.d         == result);
+    ASSERT(cpu65_debug.rw        == (RW_READ|RW_WRITE));
+    ASSERT(cpu65_debug.opcode    == 0x14);
+    ASSERT(cpu65_debug.opcycles  == (5));
+
+    PASS();
+}
+
+static void logic_TSB(/*uint8_t*/int _a, /*uint8_t*/int _b, uint8_t *result, uint8_t *flags) {
+    uint8_t a = (uint8_t)_a;
+    uint8_t b = (uint8_t)_b;
+
+    uint8_t res = a | b;
+    if ((a & b) == 0x0) {
+        *flags |= fZ;
+    }
+
+    *result = res;
+}
+
+// 65c02 : 0x0C
+TEST test_TSB_abs(uint8_t regA, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
+    HEADER0();
+
+    logic_TSB(regA, val, &result, &flags);
+
+    testcpu_set_opcode3(0x0c, lobyte, hibyte);
+
+    uint16_t addrs = lobyte | (hibyte<<8);
+    apple_ii_64k[0][addrs] = val;
+
+    cpu65_current.a  = regA;
+    cpu65_current.x  = 0xf4;
+    cpu65_current.y  = 0x05;
+    cpu65_current.sp = 0x81;
+    cpu65_current.f  = 0x00;
+
+    cpu65_run();
+
+    ASSERT(apple_ii_64k[0][addrs] == result); 
+
+    ASSERT(cpu65_current.pc      == TEST_LOC+3);
+    ASSERT(cpu65_current.a       == regA);
+    ASSERT(cpu65_current.x       == 0xf4);
+    ASSERT(cpu65_current.y       == 0x05);
+    ASSERT(cpu65_current.sp      == 0x81);
+
+    VERIFY_FLAGS();
+
+    ASSERT(cpu65_debug.ea        == addrs);
+    ASSERT(cpu65_debug.d         == result);
+    ASSERT(cpu65_debug.rw        == (RW_READ|RW_WRITE));
+    ASSERT(cpu65_debug.opcode    == 0x0c);
+    ASSERT(cpu65_debug.opcycles  == (6));
+
+    PASS();
+}
+
+// 65c02 : 0x04
+TEST test_TSB_zpage(uint8_t regA, uint8_t val, uint8_t arg0) {
+    HEADER0();
+
+    logic_TSB(regA, val, &result, &flags);
+
+    testcpu_set_opcode2(0x04, arg0);
+
+    apple_ii_64k[0][arg0] = val;
+
+    cpu65_current.a  = regA;
+    cpu65_current.x  = 0x03;
+    cpu65_current.y  = 0x04;
+    cpu65_current.sp = 0x80;
+    cpu65_current.f  = 0x00;
+
+    cpu65_run();
+
+    ASSERT(apple_ii_64k[0][arg0] == result); 
+
+    ASSERT(cpu65_current.pc      == TEST_LOC+2);
+    ASSERT(cpu65_current.a       == regA);
+    ASSERT(cpu65_current.x       == 0x03);
+    ASSERT(cpu65_current.y       == 0x04);
+    ASSERT(cpu65_current.sp      == 0x80);
+
+    VERIFY_FLAGS();
+
+    ASSERT(cpu65_debug.ea        == arg0);
+    ASSERT(cpu65_debug.d         == result);
+    ASSERT(cpu65_debug.rw        == (RW_READ|RW_WRITE));
+    ASSERT(cpu65_debug.opcode    == 0x04);
+    ASSERT(cpu65_debug.opcycles  == (5));
+
+    PASS();
+}
+
+// ----------------------------------------------------------------------------
+// TSX, TXS instructions
+
+static void logic_TSX(/*uint8_t*/int _a, uint8_t *flags) {
+    uint8_t a = (uint8_t)_a;
+
+    if ((a & 0xff) == 0x0) {
+        *flags |= fZ;
+    }
+    if (a & 0x80) {
+        *flags |= fN;
+    }
+}
+
+TEST test_TSX(uint8_t sp) {
+    HEADER0();
+    uint8_t regA = (uint8_t)random();
+    uint8_t val = regA;
+    uint8_t regX = ~sp;
+
+    logic_TSX(sp, &flags);
+
+    testcpu_set_opcode1(0xba);
+
+    cpu65_current.a  = regA;
+    cpu65_current.x  = regX;
+    cpu65_current.y  = 0x04;
+    cpu65_current.sp = sp;
+    cpu65_current.f  = 0x00;
+
+    cpu65_run();
+
+    ASSERT(cpu65_current.pc      == TEST_LOC+1);
+    ASSERT(cpu65_current.a       == regA);
+    ASSERT(cpu65_current.x       == sp);
+    ASSERT(cpu65_current.y       == 0x04);
+    ASSERT(cpu65_current.sp      == sp);
+
+    VERIFY_FLAGS();
+
+    ASSERT(cpu65_debug.ea        == TEST_LOC);
+    ASSERT(cpu65_debug.d         == 0xff);
+    ASSERT(cpu65_debug.rw        == RW_NONE);
+    ASSERT(cpu65_debug.opcode    == 0xba);
+    ASSERT(cpu65_debug.opcycles  == (2));
+
+    PASS();
+}
+
+TEST test_TXS(uint8_t regX) {
+    HEADER0();
+    uint8_t sp = ~regX;
+
+    testcpu_set_opcode1(0x9a);
+
+    cpu65_current.a  = 0x22;
+    cpu65_current.x  = regX;
+    cpu65_current.y  = 0x04;
+    cpu65_current.sp = sp;
+    cpu65_current.f  = 0x00;
+
+    cpu65_run();
+
+    ASSERT(cpu65_current.pc      == TEST_LOC+1);
+    ASSERT(cpu65_current.a       == 0x22);
+    ASSERT(cpu65_current.x       == regX);
+    ASSERT(cpu65_current.y       == 0x04);
+    ASSERT(cpu65_current.sp      == regX);
+    ASSERT(cpu65_current.f       == 0x00);
+
+    ASSERT(cpu65_debug.ea        == TEST_LOC);
+    ASSERT(cpu65_debug.d         == 0xff);
+    ASSERT(cpu65_debug.rw        == RW_NONE);
+    ASSERT(cpu65_debug.opcode    == 0x9a);
+    ASSERT(cpu65_debug.opcycles  == (2));
+
+    PASS();
+}
+
+// ----------------------------------------------------------------------------
 // Test Suite
 
 static unsigned int testcounter = 0;
@@ -7023,6 +7428,12 @@ GREATEST_SUITE(test_suite_cpu) {
     A2_ADD_TEST(test_ROL_acc);
     A2_ADD_TEST(test_ROR_acc);
     A2_ADD_TEST(test_RTI);
+    A2_ADD_TEST(test_TAX);
+    A2_ADD_TEST(test_TAY);
+    A2_ADD_TEST(test_TSX);
+    A2_ADD_TEST(test_TXS);
+    A2_ADD_TEST(test_TXA);
+    A2_ADD_TEST(test_TYA);
     HASH_ITER(hh, test_funcs, func, tmp) {
         fprintf(GREATEST_STDOUT, "\n%s (SILENCED OUTPUT) :\n", func->name);
 
@@ -7067,6 +7478,8 @@ GREATEST_SUITE(test_suite_cpu) {
     A2_ADD_TEST(test_STX_zpage);
     A2_ADD_TEST(test_STY_zpage);
     A2_ADD_TEST(test_STZ_zpage);
+    A2_ADD_TEST(test_TRB_zpage);
+    A2_ADD_TEST(test_TSB_zpage);
     HASH_ITER(hh, test_funcs, func, tmp) {
         fprintf(GREATEST_STDOUT, "\n%s :\n", func->name);
 
@@ -7149,6 +7562,8 @@ GREATEST_SUITE(test_suite_cpu) {
     A2_ADD_TEST(test_STX_abs);
     A2_ADD_TEST(test_STY_abs);
     A2_ADD_TEST(test_STZ_abs);
+    A2_ADD_TEST(test_TRB_abs);
+    A2_ADD_TEST(test_TSB_abs);
     HASH_ITER(hh, test_funcs, func, tmp) {
         fprintf(GREATEST_STDOUT, "\n%s :\n", func->name);
 
