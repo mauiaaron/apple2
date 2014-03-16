@@ -6144,6 +6144,90 @@ TEST test_SBC_ind_zpage(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t lobyte,
 }
 
 // ----------------------------------------------------------------------------
+// SEx operands [sic]
+
+TEST test_SEC() {
+    testcpu_set_opcode1(0x38);
+
+    cpu65_current.a  = 0x02;
+    cpu65_current.x  = 0x03;
+    cpu65_current.y  = 0x04;
+    cpu65_current.sp = 0x81;
+    cpu65_current.f  = 0x00;
+
+    cpu65_run();
+
+    ASSERT(cpu65_current.pc     == TEST_LOC+1);
+    ASSERT(cpu65_current.a      == 0x02);
+    ASSERT(cpu65_current.x      == 0x03);
+    ASSERT(cpu65_current.y      == 0x04);
+    ASSERT(cpu65_current.sp     == 0x81);
+    ASSERT(cpu65_current.f      == (fC));
+
+    ASSERT(cpu65_debug.ea       == TEST_LOC);
+    ASSERT(cpu65_debug.d        == 0xff);
+    ASSERT(cpu65_debug.rw       == RW_NONE);
+    ASSERT(cpu65_debug.opcode   == 0x38);
+    ASSERT(cpu65_debug.opcycles == (2));
+
+    PASS();
+}
+
+TEST test_SED(uint8_t regA, uint8_t val) {
+    testcpu_set_opcode1(0xf8);
+
+    cpu65_current.a  = 0x02;
+    cpu65_current.x  = 0x03;
+    cpu65_current.y  = 0x04;
+    cpu65_current.sp = 0x81;
+    cpu65_current.f  = 0x00;
+
+    cpu65_run();
+
+    ASSERT(cpu65_current.pc     == TEST_LOC+1);
+    ASSERT(cpu65_current.a      == 0x02);
+    ASSERT(cpu65_current.x      == 0x03);
+    ASSERT(cpu65_current.y      == 0x04);
+    ASSERT(cpu65_current.sp     == 0x81);
+    ASSERT(cpu65_current.f      == (fD));
+
+    ASSERT(cpu65_debug.ea       == TEST_LOC);
+    ASSERT(cpu65_debug.d        == 0xff);
+    ASSERT(cpu65_debug.rw       == RW_NONE);
+    ASSERT(cpu65_debug.opcode   == 0xf8);
+    ASSERT(cpu65_debug.opcycles == (2));
+
+    PASS();
+}
+
+TEST test_SEI(uint8_t regA, uint8_t val) {
+    testcpu_set_opcode1(0x78);
+
+    cpu65_current.a  = 0x02;
+    cpu65_current.x  = 0x03;
+    cpu65_current.y  = 0x04;
+    cpu65_current.sp = 0x81;
+    cpu65_current.f  = 0x00;
+
+    cpu65_run();
+
+    ASSERT(cpu65_current.pc     == TEST_LOC+1);
+    ASSERT(cpu65_current.a      == 0x02);
+    ASSERT(cpu65_current.x      == 0x03);
+    ASSERT(cpu65_current.y      == 0x04);
+    ASSERT(cpu65_current.sp     == 0x81);
+    ASSERT(cpu65_current.f      == (fI));
+
+    ASSERT(cpu65_debug.ea       == TEST_LOC);
+    ASSERT(cpu65_debug.d        == 0xff);
+    ASSERT(cpu65_debug.rw       == RW_NONE);
+    ASSERT(cpu65_debug.opcode   == 0x78);
+    ASSERT(cpu65_debug.opcycles == (2));
+
+    PASS();
+}
+
+// ----------------------------------------------------------------------------
 // Test Suite
 
 static unsigned int testcounter = 0;
@@ -6206,6 +6290,9 @@ GREATEST_SUITE(test_suite_cpu) {
     A2_ADD_TEST(test_PHP);
     A2_ADD_TEST(test_PHX);
     A2_ADD_TEST(test_PHY);
+    A2_ADD_TEST(test_SEC);
+    A2_ADD_TEST(test_SED);
+    A2_ADD_TEST(test_SEI);
     HASH_ITER(hh, test_funcs, func, tmp) {
         fprintf(GREATEST_STDOUT, "\n%s :\n", func->name);
         RUN_TEST(((test_func_ptr0)(func->func)));
