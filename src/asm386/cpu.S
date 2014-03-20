@@ -532,14 +532,14 @@ op_ADC_imm: // 0x69
                 DoADC_b
                 Continue
 
-op_ADC_zpage:
+op_ADC_zpage: // 0x65
                 GetZPage
                 testb   $D_Flag, F_Reg          // Decimal mode?
                 jnz     op_ADC_dec              // Yes, jump to decimal version
                 DoADC_b
                 Continue
 
-op_ADC_zpage_x:
+op_ADC_zpage_x: // 0x75
                 GetZPage_X
                 testb   $D_Flag, F_Reg          // Decimal mode?
                 jnz     op_ADC_dec              // Yes, jump to decimal version
@@ -550,35 +550,35 @@ op_ADC_zpage_x:
 op_ADC_zpage_y:
                 jmp op_NOP
 
-op_ADC_abs:
+op_ADC_abs: // 0x6d
                 GetAbs
                 testb   $D_Flag, F_Reg          // Decimal mode?
                 jnz     op_ADC_dec              // Yes, jump to decimal version
                 DoADC_b
                 Continue
 
-op_ADC_abs_x:
+op_ADC_abs_x: // 0x7d
                 GetAbs_X
                 testb   $D_Flag, F_Reg          // Decimal mode?
                 jnz     op_ADC_dec              // Yes, jump to decimal version
                 DoADC_b
                 Continue
 
-op_ADC_abs_y:
+op_ADC_abs_y: // 0x79
                 GetAbs_Y
                 testb   $D_Flag, F_Reg          // Decimal mode?
                 jnz     op_ADC_dec              // Yes, jump to decimal version
                 DoADC_b
                 Continue
 
-op_ADC_ind_x:
+op_ADC_ind_x: // 0x61
                 GetIndZPage_X
                 testb   $D_Flag, F_Reg          // Decimal mode?
                 jnz     op_ADC_dec              // Yes, jump to decimal version
                 DoADC_b
                 Continue
 
-op_ADC_ind_y:
+op_ADC_ind_y: // 0x71
                 GetIndZPage_Y
                 testb   $D_Flag, F_Reg          // Decimal mode?
                 jnz     op_ADC_dec              // Yes, jump to decimal version
@@ -598,17 +598,17 @@ op_ADC_ind_zpage:
        logical AND memory with accumulator
    ---------------------------------- */
 
-op_AND_imm:
+op_AND_imm: // 0x29
                 GetImm
                 DoAND
                 Continue
 
-op_AND_zpage:
+op_AND_zpage: // 0x25
                 GetZPage
                 DoAND
                 Continue
 
-op_AND_zpage_x:
+op_AND_zpage_x: // 0x35
                 GetZPage_X
                 DoAND
                 Continue
@@ -617,27 +617,27 @@ op_AND_zpage_x:
 op_AND_zpage_y:
                 jmp op_NOP
 
-op_AND_abs:
+op_AND_abs: // 0x2d
                 GetAbs
                 DoAND
                 Continue
 
-op_AND_abs_x:
+op_AND_abs_x: // 0x3d
                 GetAbs_X
                 DoAND
                 Continue
 
-op_AND_abs_y:
+op_AND_abs_y: // 0x39
                 GetAbs_Y
                 DoAND
                 Continue
 
-op_AND_ind_x:
+op_AND_ind_x: // 0x21
                 GetIndZPage_X
                 DoAND
                 Continue
 
-op_AND_ind_y:
+op_AND_ind_y: // 0x31
                 GetIndZPage_Y
                 DoAND
                 Continue
@@ -653,27 +653,27 @@ op_AND_ind_zpage:
        Arithmetic Shift one bit Left, memory or accumulator
    ---------------------------------- */
 
-op_ASL_acc:
+op_ASL_acc: // 0x0a
                 addb    A_Reg, A_Reg
                 FlagNZC
                 Continue
 
-op_ASL_zpage:
+op_ASL_zpage: // 0x06
                 GetZPage
                 DoASL
                 Continue
 
-op_ASL_zpage_x:
+op_ASL_zpage_x: // 0x16
                 GetZPage_X
                 DoASL
                 Continue
 
-op_ASL_abs:
+op_ASL_abs: // 0x0e
                 GetAbs
                 DoASL
                 Continue
 
-op_ASL_abs_x:
+op_ASL_abs_x: // 0x1e
                 GetAbs_X
                 DoASL
                 Continue
@@ -745,7 +745,7 @@ op_BBS7_65c02:
        Branch on Carry Clear
    ---------------------------------- */
 
-op_BCC:
+op_BCC: // 0x90
                 GetFromPC_B
                 testb   $C_Flag, F_Reg
                 jnz     op_BCC_not              // branch not taken
@@ -758,7 +758,7 @@ op_BCC_not:
        Branch on Carry Set
    ---------------------------------- */
 
-op_BCS:
+op_BCS: // 0xB0
                 GetFromPC_B
                 testb   $C_Flag, F_Reg
                 jz      op_BCS_not              // branch not taken
@@ -771,7 +771,7 @@ op_BCS_not:
        Branch if EQual
    ---------------------------------- */
 
-op_BEQ:
+op_BEQ: // 0xF0
                 GetFromPC_B
                 testb   $Z_Flag, F_Reg
                 jz      op_BEQ_not              // branch not taken
@@ -784,12 +784,12 @@ op_BEQ_not:
        BIt Test
    ---------------------------------- */
 
-op_BIT_zpage:
+op_BIT_zpage: // 0x24
                 GetZPage
                 DoBIT
                 Continue
 
-op_BIT_abs:
+op_BIT_abs: // 0x2c
                 GetAbs
                 DoBIT
                 Continue
@@ -822,7 +822,7 @@ op_BIT_imm:
        Branch on result MInus
    ---------------------------------- */
 
-op_BMI:
+op_BMI: // 0x30
                 GetFromPC_B
                 testb   F_Reg, F_Reg    /* optimized check of N flag,
                                          * which happens to be sign bit */
@@ -836,7 +836,7 @@ op_BMI_not:
        Branch on result Not Equal
    ---------------------------------- */
 
-op_BNE:
+op_BNE: // 0xD0
                 GetFromPC_B
                 testb   $Z_Flag, F_Reg
                 jnz     op_BNE_not
@@ -849,7 +849,7 @@ op_BNE_not:
        Branch on result PLus
    ---------------------------------- */
 
-op_BPL:
+op_BPL: // 0x10
                 GetFromPC_B
                 testb   F_Reg, F_Reg    /* optimized check of N flag,
                                          * which happens to be sign bit */
@@ -895,7 +895,7 @@ op_BRK:
        Branch on oVerflow Clear
    ---------------------------------- */
 
-op_BVC:
+op_BVC: // 0x50
                 GetFromPC_B
                 testb   $V_Flag, F_Reg
                 jnz     op_BVC_not
@@ -908,7 +908,7 @@ op_BVC_not:
        Branch on oVerflow Set
    ---------------------------------- */
 
-op_BVS:
+op_BVS: // 0x70
                 GetFromPC_B
                 testb   $V_Flag, F_Reg
                 jz      op_BVS_not
@@ -920,7 +920,7 @@ op_BVS_not:
        CLC instruction
    ---------------------------------- */
 
-op_CLC:
+op_CLC: // 0x18
                 andb    $~C_Flag, F_Reg
                 Continue
 
@@ -928,7 +928,7 @@ op_CLC:
        CLD instruction
    ---------------------------------- */
 
-op_CLD:
+op_CLD: // 0xd8
                 andb    $~D_Flag, F_Reg
                 Continue
 
@@ -936,7 +936,7 @@ op_CLD:
        CLI instruction
    ---------------------------------- */
 
-op_CLI:
+op_CLI: // 0x58
                 andb    $~I_Flag, F_Reg
                 Continue
 
@@ -944,7 +944,7 @@ op_CLI:
        CLV instruction
    ---------------------------------- */
 
-op_CLV:
+op_CLV: // 0xB8
                 andb    $~V_Flag, F_Reg
                 Continue
 
@@ -953,17 +953,17 @@ op_CLV:
        CoMPare memory and accumulator
    ---------------------------------- */
 
-op_CMP_imm:
+op_CMP_imm: // 0xc9
                 GetImm
                 DoCMP
                 Continue
 
-op_CMP_zpage:
+op_CMP_zpage: // 0xc5
                 GetZPage
                 DoCMP
                 Continue
 
-op_CMP_zpage_x:
+op_CMP_zpage_x: // 0xd5
                 GetZPage_X
                 DoCMP
                 Continue
@@ -972,27 +972,27 @@ op_CMP_zpage_x:
 op_CMP_zpage_y:
                 jmp op_NOP
 
-op_CMP_abs:
+op_CMP_abs: // 0xcd
                 GetAbs
                 DoCMP
                 Continue
 
-op_CMP_abs_x:
+op_CMP_abs_x: // 0xdd
                 GetAbs_X
                 DoCMP
                 Continue
 
-op_CMP_abs_y:
+op_CMP_abs_y: // 0xd9
                 GetAbs_Y
                 DoCMP
                 Continue
 
-op_CMP_ind_x:
+op_CMP_ind_x: // 0xc1
                 GetIndZPage_X
                 DoCMP
                 Continue
 
-op_CMP_ind_y:
+op_CMP_ind_y: // 0xd1
                 GetIndZPage_Y
                 DoCMP
                 Continue
@@ -1008,17 +1008,17 @@ op_CMP_ind_zpage:
        ComPare memory and X register
    ---------------------------------- */
 
-op_CPX_imm:
+op_CPX_imm: // 0xe0
                 GetImm
                 DoCPX
                 Continue
 
-op_CPX_zpage:
+op_CPX_zpage: // 0xe4
                 GetZPage
                 DoCPX
                 Continue
 
-op_CPX_abs:
+op_CPX_abs: // 0xec
                 GetAbs
                 DoCPX
                 Continue
@@ -1028,17 +1028,17 @@ op_CPX_abs:
        ComPare memory and Y register
    ---------------------------------- */
 
-op_CPY_imm:
+op_CPY_imm: // 0xc0
                 GetImm
                 DoCPY
                 Continue
 
-op_CPY_zpage:
+op_CPY_zpage: // 0xc4
                 GetZPage
                 DoCPY
                 Continue
 
-op_CPY_abs:
+op_CPY_abs: // 0xcc
                 GetAbs
                 DoCPY
                 Continue
@@ -1048,7 +1048,7 @@ op_CPY_abs:
    ---------------------------------- */
 
 op_DEC_acc:
-op_DEA:                         # 3A
+op_DEA: // 0x3A
                 decb    A_Reg
                 FlagNZ
                 Continue
@@ -1058,22 +1058,22 @@ op_DEA:                         # 3A
        DECrement memory or accumulator by one
    ---------------------------------- */
 
-op_DEC_zpage:
+op_DEC_zpage: // 0xc6
                 GetZPage
                 DoDEC
                 Continue
 
-op_DEC_zpage_x:
+op_DEC_zpage_x: // 0xd6
                 GetZPage_X
                 DoDEC
                 Continue
 
-op_DEC_abs:
+op_DEC_abs: // 0xce
                 GetAbs
                 DoDEC
                 Continue
 
-op_DEC_abs_x:
+op_DEC_abs_x: // 0xde
                 GetAbs_X
                 DoDEC
                 Continue
@@ -1082,7 +1082,7 @@ op_DEC_abs_x:
        DEX instruction
    ---------------------------------- */
 
-op_DEX:
+op_DEX: // 0xca
                 decb    X_Reg
                 FlagNZ
                 Continue
@@ -1091,7 +1091,7 @@ op_DEX:
        DEY instruction
    ---------------------------------- */
 
-op_DEY:
+op_DEY: // 0x88
                 decb    Y_Reg
                 FlagNZ
                 Continue
@@ -1101,17 +1101,17 @@ op_DEY:
        Exclusive OR memory with accumulator
    ---------------------------------- */
 
-op_EOR_imm:
+op_EOR_imm: // 0x49
                 GetImm
                 DoEOR
                 Continue
 
-op_EOR_zpage:
+op_EOR_zpage: // 0x45
                 GetZPage
                 DoEOR
                 Continue
 
-op_EOR_zpage_x:
+op_EOR_zpage_x: // 0x55
                 GetZPage_X
                 DoEOR
                 Continue
@@ -1120,27 +1120,27 @@ op_EOR_zpage_x:
 op_EOR_zpage_y:
                 jmp op_NOP
 
-op_EOR_abs:
+op_EOR_abs: // 0x4d
                 GetAbs
                 DoEOR
                 Continue
 
-op_EOR_abs_x:
+op_EOR_abs_x: // 0x5d
                 GetAbs_X
                 DoEOR
                 Continue
 
-op_EOR_abs_y:
+op_EOR_abs_y: // 0x59
                 GetAbs_Y
                 DoEOR
                 Continue
 
-op_EOR_ind_x:
+op_EOR_ind_x: // 0x41
                 GetIndZPage_X
                 DoEOR
                 Continue
 
-op_EOR_ind_y:
+op_EOR_ind_y: // 0x51
                 GetIndZPage_Y
                 DoEOR
                 Continue
@@ -1156,7 +1156,7 @@ op_EOR_ind_zpage:
    ---------------------------------- */
 
 op_INC_acc:
-op_INA:                         # 1A
+op_INA: // 0x1A
                 incb    A_Reg
                 FlagNZ
                 Continue
@@ -1166,22 +1166,22 @@ op_INA:                         # 1A
        INCrement memory
    ---------------------------------- */
 
-op_INC_zpage:
+op_INC_zpage: // 0xe6
                 GetZPage
                 DoINC
                 Continue
 
-op_INC_zpage_x:
+op_INC_zpage_x: // 0xf6
                 GetZPage_X
                 DoINC
                 Continue
 
-op_INC_abs:
+op_INC_abs: // 0xee
                 GetAbs
                 DoINC
                 Continue
 
-op_INC_abs_x:
+op_INC_abs_x: // 0xfe
                 GetAbs_X
                 DoINC
                 Continue
@@ -1190,7 +1190,7 @@ op_INC_abs_x:
        INX instruction
    ---------------------------------- */
 
-op_INX:
+op_INX: // 0xe8
                 incb    X_Reg
                 FlagNZ
                 Continue
@@ -1199,7 +1199,7 @@ op_INX:
        INY instruction
    ---------------------------------- */
 
-op_INY:
+op_INY: // 0xc8
                 incb    Y_Reg
                 FlagNZ
                 Continue
@@ -1249,7 +1249,7 @@ op_JMP_abs_ind_x:
        JSR instruction
    ---------------------------------- */
 
-op_JSR:
+op_JSR: // 0x20
                 GetAbs
                 movw    PC_Reg, %ax
                 decw    %ax
@@ -1263,17 +1263,17 @@ op_JSR:
        LoaD Accumulator with memory
    ---------------------------------- */
 
-op_LDA_imm:
+op_LDA_imm: // 0xa9
                 GetImm
                 DoLDA
                 Continue
 
-op_LDA_zpage:
+op_LDA_zpage: // 0xa5
                 GetZPage
                 DoLDA
                 Continue
 
-op_LDA_zpage_x:
+op_LDA_zpage_x: // 0xb5
                 GetZPage_X
                 DoLDA
                 Continue
@@ -1282,33 +1282,33 @@ op_LDA_zpage_x:
 op_LDA_zpage_y:
                 jmp op_NOP
 
-op_LDA_abs:
+op_LDA_abs: // 0xad
                 GetAbs
                 DoLDA
                 Continue
 
-op_LDA_abs_x:
+op_LDA_abs_x: // 0xbd
                 GetAbs_X
                 DoLDA
                 Continue
 
-op_LDA_abs_y:
+op_LDA_abs_y: // 0xb9
                 GetAbs_Y
                 DoLDA
                 Continue
 
-op_LDA_ind_x:
+op_LDA_ind_x: // 0xa1
                 GetIndZPage_X
                 DoLDA
                 Continue
 
-op_LDA_ind_y:
+op_LDA_ind_y: // 0xb1
                 GetIndZPage_Y
                 DoLDA
                 Continue
 
 // 65c02 : 0xB2
-op_LDA_ind_zpage:               # B2
+op_LDA_ind_zpage:
                 GetIndZPage
                 DoLDA
                 Continue
@@ -1317,28 +1317,28 @@ op_LDA_ind_zpage:               # B2
        LDX instructions
    ---------------------------------- */
 
-op_LDX_imm:
+op_LDX_imm: // 0xa2
                 GetImm
                 DoLDX
                 Continue
 
-op_LDX_zpage:
+op_LDX_zpage: // 0xa6
                 GetZPage
                 DoLDX
                 Continue
 
 // HACK : is this used? need to study coverage ...
-op_LDX_zpage_y:
+op_LDX_zpage_y: // 0xb6
                 GetZPage_Y
                 DoLDX
                 Continue
 
-op_LDX_abs:
+op_LDX_abs: // 0xae
                 GetAbs
                 DoLDX
                 Continue
 
-op_LDX_abs_y:
+op_LDX_abs_y: // 0xbe
                 GetAbs_Y
                 DoLDX
                 Continue
@@ -1347,27 +1347,27 @@ op_LDX_abs_y:
        LDY instructions
    ---------------------------------- */
 
-op_LDY_imm:
+op_LDY_imm: // 0xa0
                 GetImm
                 DoLDY
                 Continue
 
-op_LDY_zpage:
+op_LDY_zpage: // 0xa4
                 GetZPage
                 DoLDY
                 Continue
 
-op_LDY_zpage_x:
+op_LDY_zpage_x: // 0xb4
                 GetZPage_X
                 DoLDY
                 Continue
 
-op_LDY_abs:
+op_LDY_abs: // 0xac
                 GetAbs
                 DoLDY
                 Continue
 
-op_LDY_abs_x:
+op_LDY_abs_x: // 0xbc
                 GetAbs_X
                 DoLDY
                 Continue
@@ -1376,27 +1376,27 @@ op_LDY_abs_x:
        LSR instructions
    ---------------------------------- */
 
-op_LSR_acc:
+op_LSR_acc: // 0x4a
                 shrb    $1, A_Reg
                 FlagNZC
                 Continue
 
-op_LSR_zpage:
+op_LSR_zpage: // 0x46
                 GetZPage
                 DoLSR
                 Continue
 
-op_LSR_zpage_x:
+op_LSR_zpage_x: // 0x56
                 GetZPage_X
                 DoLSR
                 Continue
 
-op_LSR_abs:
+op_LSR_abs: // 0x4e
                 GetAbs
                 DoLSR
                 Continue
 
-op_LSR_abs_x:
+op_LSR_abs_x: // 0x5e
                 GetAbs_X
                 DoLSR
                 Continue
@@ -1405,24 +1405,24 @@ op_LSR_abs_x:
        NOP instruction
    ---------------------------------- */
 
-op_NOP:
+op_NOP: // 0xea
                 Continue
 
 /* ----------------------------------
        ORA instructions
    ---------------------------------- */
 
-op_ORA_imm:
+op_ORA_imm: // 0x09
                 GetImm
                 DoORA
                 Continue
 
-op_ORA_zpage:
+op_ORA_zpage: // 0x05
                 GetZPage
                 DoORA
                 Continue
 
-op_ORA_zpage_x:
+op_ORA_zpage_x: // 0x15
                 GetZPage_X
                 DoORA
                 Continue
@@ -1431,33 +1431,33 @@ op_ORA_zpage_x:
 op_ORA_zpage_y:
                 jmp op_NOP
 
-op_ORA_abs:
+op_ORA_abs: // 0x0d
                 GetAbs
                 DoORA
                 Continue
 
-op_ORA_abs_x:
+op_ORA_abs_x: // 0x1d
                 GetAbs_X
                 DoORA
                 Continue
 
-op_ORA_abs_y:
+op_ORA_abs_y: // 0x19
                 GetAbs_Y
                 DoORA
                 Continue
 
-op_ORA_ind_x:
+op_ORA_ind_x: // 0x01
                 GetIndZPage_X
                 DoORA
                 Continue
 
-op_ORA_ind_y:
+op_ORA_ind_y: // 0x11
                 GetIndZPage_Y
                 DoORA
                 Continue
 
 // 65c02 : 0x12
-op_ORA_ind_zpage:               # 12
+op_ORA_ind_zpage:
                 GetIndZPage
                 DoORA
                 Continue
@@ -1466,7 +1466,7 @@ op_ORA_ind_zpage:               # 12
        PHA instruction
    ---------------------------------- */
 
-op_PHA:
+op_PHA: // 0x48
                 Push(A_Reg)
                 Continue
 
@@ -1474,7 +1474,7 @@ op_PHA:
        PHP instruction
    ---------------------------------- */
 
-op_PHP:
+op_PHP: // 0x08
                 movb    F_Reg, %al
                 movb    SN(cpu65_flags_encode)(,%eax,1), %al
                 Push(%al)
@@ -1502,7 +1502,7 @@ op_PHY:
        PLA instruction
    ---------------------------------- */
 
-op_PLA:
+op_PLA: // 0x68
                 Pop(A_Reg)
                 orb     A_Reg, A_Reg
                 FlagNZ
@@ -1512,7 +1512,7 @@ op_PLA:
        PLP instruction
    ---------------------------------- */
 
-op_PLP:
+op_PLP: // 0x28
                 xorl    %eax, %eax
                 Pop(%al)
                 movb    SN(cpu65_flags_decode)(,%eax,1), F_Reg
@@ -1545,27 +1545,28 @@ op_PLY:
        ROL instructions
    ---------------------------------- */
 
-op_ROL_acc:     bt      $C_Flag_Bit, FF_Reg
+op_ROL_acc: // 0x2a
+                bt      $C_Flag_Bit, FF_Reg
                 adcb    A_Reg, A_Reg
                 FlagNZC
                 Continue
 
-op_ROL_zpage:
+op_ROL_zpage: // 0x26
                 GetZPage
                 DoROL
                 Continue
 
-op_ROL_zpage_x:
+op_ROL_zpage_x: // 0x36
                 GetZPage_X
                 DoROL
                 Continue
 
-op_ROL_abs:
+op_ROL_abs: // 0x2e
                 GetAbs
                 DoROL
                 Continue
 
-op_ROL_abs_x:
+op_ROL_abs_x: // 0x3e
                 GetAbs_X
                 DoROL
                 Continue
@@ -1574,29 +1575,29 @@ op_ROL_abs_x:
        ROR instructions
    ---------------------------------- */
                 /* NB: assumes A_Reg = %cl, F_Reg = %ch */
-op_ROR_acc:
+op_ROR_acc: // 0x6a
                 rorw    $1, %cx         /* Roll flags into accum */
                 adcb    F_Reg, F_Reg    /* Roll carry into flags */
                 orb     A_Reg, A_Reg
                 FlagNZ                  /* implied C */
                 Continue
 
-op_ROR_zpage:
+op_ROR_zpage: // 0x66
                 GetZPage
                 DoROR
                 Continue
 
-op_ROR_zpage_x:
+op_ROR_zpage_x: // 0x76
                 GetZPage_X
                 DoROR
                 Continue
 
-op_ROR_abs:
+op_ROR_abs: // 0x6e
                 GetAbs
                 DoROR
                 Continue
 
-op_ROR_abs_x:
+op_ROR_abs_x: // 0x7e
                 GetAbs_X
                 DoROR
                 Continue
@@ -1605,7 +1606,7 @@ op_ROR_abs_x:
        RTI instruction
    ---------------------------------- */
 
-op_RTI:
+op_RTI: // 0x40
                 xorl    %eax, %eax
                 Pop(%al)
                 movb    SN(cpu65_flags_decode)(,%eax,1), F_Reg
@@ -1619,7 +1620,7 @@ op_RTI:
        RTS instruction
    ---------------------------------- */
 
-op_RTS:
+op_RTS: // 0x60
                 Pop(%al)
                 Pop(%ah)
                 incw    %ax
@@ -1636,21 +1637,21 @@ op_SBC_dec:
                 DoSBC_d
                 Continue
 
-op_SBC_imm:
+op_SBC_imm: // 0xe9
                 GetImm
                 testb   $D_Flag, F_Reg          // Decimal mode?
                 jnz     op_SBC_dec              // Yes, jump to decimal version
                 DoSBC_b
                 Continue
 
-op_SBC_zpage:
+op_SBC_zpage: // 0xe5
                 GetZPage
                 testb   $D_Flag, F_Reg          // Decimal mode?
                 jnz     op_SBC_dec              // Yes, jump to decimal version
                 DoSBC_b
                 Continue
 
-op_SBC_zpage_x:
+op_SBC_zpage_x: // 0xf5
                 GetZPage_X
                 testb   $D_Flag, F_Reg          // Decimal mode?
                 jnz     op_SBC_dec              // Yes, jump to decimal version
@@ -1661,35 +1662,35 @@ op_SBC_zpage_x:
 op_SBC_zpage_y:
                 jmp op_NOP
 
-op_SBC_abs:
+op_SBC_abs: // 0xed
                 GetAbs
                 testb   $D_Flag, F_Reg          // Decimal mode?
                 jnz     op_SBC_dec              // Yes, jump to decimal version
                 DoSBC_b
                 Continue
 
-op_SBC_abs_x:
+op_SBC_abs_x: // 0xfd
                 GetAbs_X
                 testb   $D_Flag, F_Reg          // Decimal mode?
                 jnz     op_SBC_dec              // Yes, jump to decimal version
                 DoSBC_b
                 Continue
 
-op_SBC_abs_y:
+op_SBC_abs_y: // 0xf9
                 GetAbs_Y
                 testb   $D_Flag, F_Reg          // Decimal mode?
                 jnz     op_SBC_dec              // Yes, jump to decimal version
                 DoSBC_b
                 Continue
 
-op_SBC_ind_x:
+op_SBC_ind_x: // 0xe1
                 GetIndZPage_X
                 testb   $D_Flag, F_Reg          // Decimal mode?
                 jnz     op_SBC_dec              // Yes, jump to decimal version
                 DoSBC_b
                 Continue
 
-op_SBC_ind_y:
+op_SBC_ind_y: // 0xf1
                 GetIndZPage_Y
                 testb   $D_Flag, F_Reg          // Decimal mode?
                 jnz     op_SBC_dec              // Yes, jump to decimal version
@@ -1708,7 +1709,7 @@ op_SBC_ind_zpage:
        SEC instruction
    ---------------------------------- */
 
-op_SEC:
+op_SEC: // 0x38
                 orb     $C_Flag, F_Reg
                 Continue
 
@@ -1716,7 +1717,7 @@ op_SEC:
        SED instruction
    ---------------------------------- */
 
-op_SED:
+op_SED: // 0xf8
                 orb     $D_Flag, F_Reg
                 Continue
 
@@ -1724,7 +1725,7 @@ op_SED:
        SEI instruction
    ---------------------------------- */
 
-op_SEI:
+op_SEI: // 0x78
                 orb     $I_Flag, F_Reg
                 Continue
 
@@ -1761,12 +1762,12 @@ op_SMB7_65c02:
        STA instructions
    ---------------------------------- */
 
-op_STA_zpage:
+op_STA_zpage: // 0x85
                 GetZPage
                 DoSTA
                 Continue
 
-op_STA_zpage_x:
+op_STA_zpage_x: // 0x95
                 GetZPage_X
                 DoSTA
                 Continue
@@ -1775,27 +1776,27 @@ op_STA_zpage_x:
 op_STA_zpage_y:
                 jmp op_NOP
 
-op_STA_abs:
+op_STA_abs: // 0x8d
                 GetAbs
                 DoSTA
                 Continue
 
-op_STA_abs_x:
+op_STA_abs_x: // 0x9d
                 GetAbs_X_STx
                 DoSTA
                 Continue
 
-op_STA_abs_y:
+op_STA_abs_y: // 0x99
                 GetAbs_Y_STA
                 DoSTA
                 Continue
 
-op_STA_ind_x:
+op_STA_ind_x: // 0x81
                 GetIndZPage_X
                 DoSTA
                 Continue
 
-op_STA_ind_y:
+op_STA_ind_y: // 0x91
                 GetIndZPage_Y_STA
                 DoSTA
                 Continue
@@ -1847,18 +1848,18 @@ op_RMB7_65c02:
        STX instructions
    ---------------------------------- */
 
-op_STX_zpage:
+op_STX_zpage: // 0x86
                 GetZPage
                 DoSTX
                 Continue
 
 // HACK : is this used? need to study coverage ...
-op_STX_zpage_y:
+op_STX_zpage_y: // 0x96
                 GetZPage_Y
                 DoSTX
                 Continue
 
-op_STX_abs:
+op_STX_abs: // 0x8e
                 GetAbs
                 DoSTX
                 Continue
@@ -1867,17 +1868,17 @@ op_STX_abs:
        STY instructions
    ---------------------------------- */
 
-op_STY_zpage:
+op_STY_zpage: // 0x84
                 GetZPage
                 DoSTY
                 Continue
 
-op_STY_zpage_x:
+op_STY_zpage_x: // 0x94
                 GetZPage_X
                 DoSTY
                 Continue
 
-op_STY_abs:
+op_STY_abs: // 0x8c
                 GetAbs
                 DoSTY
                 Continue
@@ -1916,7 +1917,7 @@ op_STZ_abs_x:
        TAX instruction
    ---------------------------------- */
 
-op_TAX:
+op_TAX: // 0xaa
                 movb    A_Reg, X_Reg
                 orb     X_Reg, X_Reg
                 FlagNZ
@@ -1926,7 +1927,7 @@ op_TAX:
        TAY instruction
    ---------------------------------- */
 
-op_TAY:
+op_TAY: // 0xa8
                 movb    A_Reg, Y_Reg
                 orb     Y_Reg, Y_Reg
                 FlagNZ
@@ -1954,12 +1955,14 @@ op_TRB_zpage:
        65c02 only
    ---------------------------------- */
 
-op_TSB_abs: // 65c02 : 0x0C
+// 65c02 : 0x0C
+op_TSB_abs:
                 GetAbs
                 DoTSB
                 Continue
 
-op_TSB_zpage: // 65c02 : 0x04
+// 65c02 : 0x04
+op_TSB_zpage:
                 GetZPage
                 DoTSB
                 Continue
@@ -1968,7 +1971,7 @@ op_TSB_zpage: // 65c02 : 0x04
        TSX instruction
    ---------------------------------- */
 
-op_TSX:
+op_TSX: // 0xba
                 movb    SP_Reg_L, X_Reg
                 orb     X_Reg, X_Reg
                 FlagNZ
@@ -1978,7 +1981,7 @@ op_TSX:
        TXA instruction
    ---------------------------------- */
 
-op_TXA:
+op_TXA: // 0x8a
                 movb    X_Reg, A_Reg
                 orb     A_Reg, A_Reg
                 FlagNZ
@@ -1988,7 +1991,7 @@ op_TXA:
        TXS instruction
    ---------------------------------- */
 
-op_TXS:
+op_TXS: // 0x9a
                 movb    X_Reg, SP_Reg_L
                 Continue
 
@@ -1996,7 +1999,7 @@ op_TXS:
        TYA instruction
    ---------------------------------- */
 
-op_TYA:
+op_TYA: // 0x98
                 movb    Y_Reg, A_Reg
                 orb     A_Reg, A_Reg
                 FlagNZ
