@@ -2706,7 +2706,7 @@ continue:
                 subl    %eax, SN(gc_cycles_timer_1)
                 subw    %ax, SN(cpu65_cycles_to_execute)
                 jle     exit_cpu65_run
-                xorl    %eax, %eax
+continue1:      xorl    %eax, %eax
                 orb     SN(cpu65__signal), %al
                 jnz     exception
 1:              JumpNextInstruction
@@ -2760,7 +2760,7 @@ E(cpu65_run)
                 cmpb    $0, SN(emul_reinitialize)
                 jnz     1f
                 RestoreState
-                JumpNextInstruction
+                jmp     continue1
 1:              movb    $0, SN(emul_reinitialize)
                 /* Zero all registers, as well as the unused 32-bit parts
                  * of variables. (which may need to be kept 0)

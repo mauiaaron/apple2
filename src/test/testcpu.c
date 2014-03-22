@@ -47,7 +47,7 @@
 static void testcpu_setup(void *arg) {
 
     //reinitialize();
-
+    cpu65_uninterrupt(0xff);
     cpu65_cycles_to_execute = 1;
 
     cpu65_current.pc = TEST_LOC;
@@ -1755,7 +1755,6 @@ TEST test_IRQ() {
     // NOTE : not an opcode
     testcpu_set_opcode1(0xea/*NOP*/); // Implementation NOTE: first an instruction, then reset is handled
 
-    cpu65_cycles_to_execute = 3;
     cpu65_interrupt(IRQGeneric);
 
     ASSERT(apple_ii_64k[0][0x1ff] != 0x1f);
@@ -1776,7 +1775,7 @@ TEST test_IRQ() {
     ASSERT(cpu65_current.sp     == 0xfc);
 
     ASSERT(apple_ii_64k[0][0x1ff] == 0x1f);
-    ASSERT(apple_ii_64k[0][0x1fe] == TEST_LOC_LO+1);
+    ASSERT(apple_ii_64k[0][0x1fe] == TEST_LOC_LO);
     ASSERT(apple_ii_64k[0][0x1fd] == cpu65_flags_encode[X_Flag]);
 
     ASSERT(cpu65_debug.ea       == 0xc015);
