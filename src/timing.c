@@ -173,7 +173,6 @@ void cpu_thread(void *dummyptr) {
     do
     {
         g_nCumulativeCycles = 0;
-        static int16_t cycles_adjust = 0;
         LOG("cpu_thread : begin main loop ...");
 
         clock_gettime(CLOCK_MONOTONIC, &t0);
@@ -198,7 +197,6 @@ void cpu_thread(void *dummyptr) {
             // set up increment & decrement counters
             cpu65_cycles_to_execute = (g_fCurrentCLK6502 / 1000); // g_fCurrentCLK6502 * EXECUTION_PERIOD_NSECS / NANOSECONDS
             cpu65_cycles_to_execute += g_nCpuCyclesFeedback;
-            cpu65_cycles_to_execute -= cycles_adjust;
             if (cpu65_cycles_to_execute < 0)
             {
                 cpu65_cycles_to_execute = 0;
@@ -239,12 +237,6 @@ void cpu_thread(void *dummyptr) {
                     }
                 }
             } while (is_debugging);
-
-            cycles_adjust = cpu65_cycles_to_execute; // counter is decremented in cpu65_run()
-            if (cycles_adjust < 0)
-            {
-                cycles_adjust = ~cycles_adjust +1; // cycles_adjust *= -1
-            }
 #ifndef NDEBUG
             dbg_cycles_executed += cpu65_cycle_count;
 #endif
