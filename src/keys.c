@@ -19,9 +19,6 @@
 /* from misc.c */
 extern uid_t user, privileged;
 
-/* from debugger.c */
-extern void c_do_debugging();
-
 /* parameters for generic and keyboard-simulated joysticks */
 extern short joy_x;
 extern short joy_y;
@@ -30,6 +27,7 @@ extern unsigned char joy_button1;
 
 /* mutex used to synchronize between cpu and main threads */
 pthread_mutex_t interface_mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t interface_cond = PTHREAD_COND_INITIALIZER;
 
 #ifdef LINUX_JOYSTICK
 #include <linux/joystick.h>
@@ -270,7 +268,7 @@ void c_handle_input(int scancode, int pressed)
 
 #ifdef DEBUGGER
             case kF7:
-                c_do_debugging();
+                c_interface_debugging();
                 break;
 #endif
 

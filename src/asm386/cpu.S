@@ -2716,8 +2716,6 @@ continue1:      xorl    %eax, %eax
 
 exception:      testb   $ResetSig, %al
                 jnz     ex_reset0
-                testb   $DebugStepSig, %al
-                jnz     ex_step
                 jmp     ex_irq
 
 ex_reset0:      testb   $0xff, SN(joy_button0)              // OpenApple
@@ -2786,12 +2784,6 @@ emul_reinit:    movb    $0, SN(cpu65__signal)               // Return to timing 
 /* -------------------------------------------------------------------------
         Debugger hooks
    ------------------------------------------------------------------------- */
-
-ex_step:        orb     $~DebugStepSig, SN(cpu65__signal)
-                SaveState
-                call    SN(c_stepping_yield)
-                RestoreState
-                JumpNextInstruction
 
 E(cpu65_direct_write)
                 /* NB: dependent on register choices */

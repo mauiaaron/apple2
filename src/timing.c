@@ -158,7 +158,10 @@ void cpu_thread(void *dummyptr) {
     struct timespec t0;         // the target timer
     struct timespec ti, tj;     // actual time samples
     bool negative = false;
-    long drift_adj_nsecs = 0;         // generic drift adjustment between target and actual
+    long drift_adj_nsecs = 0;   // generic drift adjustment between target and actual
+
+    int debugging_cycles0 = 0;
+    int debugging_cycles = 0;
 
 #ifndef NDEBUG
     unsigned long dbg_ticks = 0;
@@ -201,14 +204,41 @@ void cpu_thread(void *dummyptr) {
                 cpu65_cycles_to_execute = 0;
             }
 
-            cpu65_cycle_count = 0;
             g_nCyclesExecuted = 0;
 
 #ifdef AUDIO_ENABLED
             MB_StartOfCpuExecute();
 #endif
+            if (is_debugging) {
+                debugging_cycles0 = cpu65_cycles_to_execute;
+                debugging_cycles  = cpu65_cycles_to_execute;
+            }
 
-            cpu65_run(); // run emulation for cpu65_cycles_to_execute cycles ...
+            do {
+                if (is_debugging) {
+                    cpu65_cycles_to_execute = 1;
+                }
+
+                cpu65_cycle_count = 0;
+                cpu65_run(); // run emulation for cpu65_cycles_to_execute cycles ...
+
+                if (is_debugging) {
+                    debugging_cycles -= cpu65_cycle_count;
+                    if (c_debugger_should_break() || (debugging_cycles <= 0)) {
+                        int err = 0;
+                        if ((err = pthread_cond_signal(&interface_cond))) {
+                            ERRLOG("pthread_cond_signal : %d", err);
+                        }
+                        if ((err = pthread_cond_wait(&interface_cond, &interface_mutex))) {
+                            ERRLOG("pthread_cond_wait : %d", err);
+                        }
+                        if (debugging_cycles <= 0) {
+                            cpu65_cycle_count = debugging_cycles0 - debugging_cycles/*<=0*/;
+                            break;
+                        }
+                    }
+                }
+            } while (is_debugging);
 
             cycles_adjust = cpu65_cycles_to_execute; // counter is decremented in cpu65_run()
             if (cycles_adjust < 0)

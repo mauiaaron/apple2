@@ -66,8 +66,6 @@ extern void cpu65_uninterrupt(int reason);
 
 extern void cpu65_run(void);
 
-extern void cpu65_set_stepping(int flag);
-
 extern void cpu65_direct_write(int ea,int data);
 
 extern struct memory_vector cpu65_vmem[65536];
@@ -84,7 +82,6 @@ extern uint8_t emul_reinitialize;
 #endif /* !__ASSEMBLER__ */
 
 #define ResetSig        0x02
-#define DebugStepSig    0x04
 #define IRQ6522         0x08
 #define IRQSpeech       0x10
 #define IRQSSC          0x20

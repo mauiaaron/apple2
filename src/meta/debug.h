@@ -20,25 +20,38 @@
 
 #include "common.h"
 
-/* debugger defines */
-#define BUF_X           39
-#define BUF_Y           22
+#ifdef DEBUGGER
+extern volatile bool is_debugging;
+#else
+#define is_debugging false
+#endif
+
+typedef enum {
+    STEPPING = 0,
+    NEXTING,
+    FINISHING,
+    UNTILING,
+    GOING
+} stepping_type_t;
+
+typedef struct stepping_struct_t {
+    stepping_type_t step_type;
+    uint16_t step_count;
+    uint16_t step_frame;
+    uint16_t step_pc;
+    bool should_break;
+} stepping_struct_t;
+
+#define DEBUGGER_BUF_X  39
+#define DEBUGGER_BUF_Y  22
 #define MAX_BRKPTS      16
-#define SCREEN_X        81 // 80col + 1
-#define SCREEN_Y        24
-#define PROMPT_X        2
-#define PROMPT_Y        BUF_Y - 1
-#define PROMPT_END_X    BUF_X - 2
-#define command_line    command_buf[PROMPT_Y]
-#define uchar           unsigned char
 
 /* debugger commands */
 enum token_type { MEM, DIS, REGS, SETMEM, STEP, FINISH, UNTIL, GO, VM,
                   BREAK, WATCH, CLEAR, IGNORE, STATUS, OPCODES, LC, DRIVE,
                   SEARCH, HELP, LOG, BSAVE, BLOAD, SAVE, UNKNOWN };
 
-enum addressing_mode
-{
+typedef enum {
     addr_implied,
     addr_accumulator,
     addr_immediate,
@@ -54,27 +67,21 @@ enum addressing_mode
     addr_j_indirect,    /* non-zeropage indirects, used in JMP only */
     addr_j_indirect_x,
     addr_relative
-};
+} addressing_mode_t;
 
 struct opcode_struct
 {
     const char *mnemonic;
-    enum addressing_mode mode;
+    addressing_mode_t mode;
 };
 
 extern const struct opcode_struct *opcodes;
 
-extern int step_next;                   /* stepping over instructions */
-extern char second_buf[BUF_Y][BUF_X];   /* scratch buffer for output */
-extern int num_buffer_lines;            /* num lines of output */
-extern int arg1, arg2, arg3;            /* command arguments */
-extern int breakpoints[MAX_BRKPTS];     /* memory breakpoints */
-extern int watchpoints[MAX_BRKPTS];     /* memory watchpoints */
-
+// Debugger commands
 void clear_debugger_screen();
 void bload(FILE*, char*, int);
 void show_misc_info();
-unsigned char get_current_opcode();
+uint8_t get_current_opcode();
 void dump_mem(int, int, int, int, int);
 void search_mem(char*, int, int);
 void set_mem(int, char*);
@@ -87,17 +94,15 @@ void show_regs();
 void display_help();
 void show_lc_info();
 void show_disk_info();
-void do_step_or_next(int);
-void begin_cpu_step();
-void end_cpu_step();
-int at_haltpt();
-void set_halt_opcode(unsigned char opcode);
+void set_halt_opcode(uint8_t opcode);
 void set_halt_65c02();
 void clear_halt_65c02();
-void clear_halt_opcode(unsigned char opcode);
+void clear_halt_opcode(uint8_t opcode);
 void show_opcode_breakpts();
 
-void c_stepping_yield();
+bool c_debugger_should_break();
+void c_debugger_begin_stepping(stepping_struct_t s);
+void c_interface_debugging();
 
 extern const struct opcode_struct opcodes_6502[256];
 extern const struct opcode_struct opcodes_65c02[256];

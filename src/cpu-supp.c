@@ -119,15 +119,3 @@ void cpu65_uninterrupt(int reason)
     pthread_mutex_unlock(&irq_mutex);
 }
 
-void cpu65_set_stepping(int flag)
-{
-    if (flag)
-    {
-        cpu65_interrupt(DebugStepSig);
-    }
-    else
-    {
-        cpu65_interrupt(0);
-    }
-}
-

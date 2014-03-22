@@ -18,7 +18,19 @@
 
 const struct opcode_struct *opcodes;
 
-int step_next;                          /* stepping over instructions */
+static stepping_struct_t stepping_struct;
+
+volatile bool is_debugging = false;
+
+#define BUF_X           DEBUGGER_BUF_X
+#define BUF_Y           DEBUGGER_BUF_Y
+#define SCREEN_X        81 // 80col + 1
+#define SCREEN_Y        24
+#define PROMPT_X        2
+#define PROMPT_Y        BUF_Y - 1
+#define PROMPT_END_X    BUF_X - 2
+#define command_line    command_buf[PROMPT_Y]
+
 char second_buf[BUF_Y][BUF_X];          /* scratch buffer for output */
 int num_buffer_lines;                   /* num lines of output */
 int arg1, arg2, arg3;                   /* command arguments */
@@ -56,7 +68,7 @@ static char screen[SCREEN_Y][SCREEN_X] =
 static char command_buf[BUF_Y][BUF_X];  /* command line prompt */
 char lexbuf[BUF_X+2];                   /* comman line to be flex'ed */
 
-unsigned char current_opcode;
+uint8_t current_opcode;
 
 int op_breakpoints[256];                /* opcode breakpoints */
 
@@ -124,12 +136,17 @@ int c_get_current_rambank(int addrs) {
 }
 
 /* -------------------------------------------------------------------------
+    get_last_opcode () - returns the last executed opcode
+   ------------------------------------------------------------------------- */
+uint8_t get_last_opcode() {
+    return cpu65_debug.opcode;
+}
+
+/* -------------------------------------------------------------------------
     get_current_opcode () - returns the opcode from the address that
         the PC is currently reading from.
-        returns 0 = bank 0
-                1 = bank 1
    ------------------------------------------------------------------------- */
-unsigned char get_current_opcode() {
+uint8_t get_current_opcode() {
     int bank = c_get_current_rambank(cpu65_current.pc);
     int lcbank = 0;
 
@@ -175,7 +192,7 @@ unsigned char get_current_opcode() {
 
 void dump_mem(int addrs, int len, int lc, int do_ascii, int rambank) {
     int i, j, mod, end;
-    unsigned char op;
+    uint8_t op;
     int orig_addrs = addrs;             /* address for display */
 
     /* check which rambank */
@@ -285,7 +302,7 @@ void dump_mem(int addrs, int len, int lc, int do_ascii, int rambank) {
 void search_mem(char *hexstr, int lc, int rambank) {
     int i = 0, j = 0, end, op;
     static char scratch[3];
-    unsigned char byte;
+    uint8_t byte;
 
     end = (lc) ? 0x3000 : 0x10000;
 
@@ -299,7 +316,7 @@ void search_mem(char *hexstr, int lc, int rambank) {
     for (i = 0; i < end; i++)
     {
         strncpy(scratch, hexstr+j, 2);          /* extract a byte */
-        byte = (unsigned char) strtol(scratch, (char**)NULL, 16);
+        byte = (uint8_t) strtol(scratch, (char**)NULL, 16);
 
         if (lc)
         {
@@ -342,7 +359,7 @@ void search_mem(char *hexstr, int lc, int rambank) {
    ------------------------------------------------------------------------- */
 void set_mem(int addrs, char *hexstr) {
     static char scratch[3];
-    unsigned char data;
+    uint8_t data;
 
     if ((addrs < 0) || (addrs > 0xffff))
     {
@@ -353,7 +370,7 @@ void set_mem(int addrs, char *hexstr) {
     while (*hexstr)
     {
         strncpy(scratch, hexstr, 2);
-        data = (unsigned char) strtol(scratch, (char**)NULL, 16);
+        data = (uint8_t) strtol(scratch, (char**)NULL, 16);
 
         /* call the set_memory routine, which knows how to route the
            request */
@@ -379,7 +396,7 @@ void set_mem(int addrs, char *hexstr) {
    ------------------------------------------------------------------------- */
 void set_lc_mem(int addrs, int lcbank, char *hexstr) {
     static char scratch[3];
-    unsigned char data;
+    uint8_t data;
 
     if ((addrs >= 0xd000) && (addrs <= 0xffff))
     {
@@ -395,7 +412,7 @@ void set_lc_mem(int addrs, int lcbank, char *hexstr) {
     while (*hexstr)
     {
         strncpy(scratch, hexstr, 2);
-        data = (unsigned char) strtol(scratch, (char**)NULL, 16);
+        data = (uint8_t) strtol(scratch, (char**)NULL, 16);
 
         /* ??? no way to write to aux LC banks */
 
@@ -432,9 +449,9 @@ void set_lc_mem(int addrs, int lcbank, char *hexstr) {
     "safely" set memory...
    ------------------------------------------------------------------------- */
 void bload(FILE *f, char *name, int addrs) {
-    unsigned char *hexstr = NULL;
+    uint8_t *hexstr = NULL;
     int len = -1;
-    unsigned char data;
+    uint8_t data;
 
     if ((addrs < 0) || (addrs > 0xffff))
     {
@@ -444,7 +461,7 @@ void bload(FILE *f, char *name, int addrs) {
 
     while ((len = fread(temp, 1, TEMPSIZE, f)))
     {
-        hexstr = (unsigned char*)temp;
+        hexstr = (uint8_t*)temp;
         for (; len > 0; len--)
         {
             data = *hexstr;
@@ -472,7 +489,7 @@ void bload(FILE *f, char *name, int addrs) {
 
 void disasm(int addrs, int len, int lc, int rambank) {
     static char fmt[64];
-    unsigned char op;
+    uint8_t op;
     char arg1, arg2;
     int i, j, k, end, orig_addrs = addrs;
 
@@ -557,9 +574,9 @@ void disasm(int addrs, int len, int lc, int rambank) {
                 arg1 = apple_ii_64k[rambank][++j];
             }
 
-            sprintf(fmt, "/%02X/%04X: %02X%02X    %s %s", rambank, k, op, (unsigned char)arg1, opcodes[op].mnemonic, disasm_templates[opcodes[op].mode]);
+            sprintf(fmt, "/%02X/%04X: %02X%02X    %s %s", rambank, k, op, (uint8_t)arg1, opcodes[op].mnemonic, disasm_templates[opcodes[op].mode]);
 
-            sprintf(second_buf[i], fmt, (unsigned char)arg1);
+            sprintf(second_buf[i], fmt, (uint8_t)arg1);
             k+=2;
             break;
 
@@ -585,8 +602,8 @@ void disasm(int addrs, int len, int lc, int rambank) {
                 arg2 = apple_ii_64k[rambank][++j];
             }
 
-            sprintf(fmt, "/%02X/%04X: %02X%02X%02X  %s %s", rambank, k, op, (unsigned char)arg1, (unsigned char)arg2, opcodes[op].mnemonic, disasm_templates[opcodes[op].mode]);
-            sprintf(second_buf[i], fmt, (unsigned char)arg2, (unsigned char)arg1);
+            sprintf(fmt, "/%02X/%04X: %02X%02X%02X  %s %s", rambank, k, op, (uint8_t)arg1, (uint8_t)arg2, opcodes[op].mnemonic, disasm_templates[opcodes[op].mode]);
+            sprintf(second_buf[i], fmt, (uint8_t)arg2, (uint8_t)arg1);
             k+=3;
             break;
 
@@ -606,14 +623,14 @@ void disasm(int addrs, int len, int lc, int rambank) {
                 arg1 = apple_ii_64k[rambank][++j];
             }
 
-            sprintf(fmt, "/%02X/%04X: %02X%02X    %s %s", rambank, k, op, (unsigned char)arg1, opcodes[op].mnemonic, disasm_templates[opcodes[op].mode]);
+            sprintf(fmt, "/%02X/%04X: %02X%02X    %s %s", rambank, k, op, (uint8_t)arg1, opcodes[op].mnemonic, disasm_templates[opcodes[op].mode]);
             if (arg1 < 0)
             {
-                sprintf(second_buf[i], fmt, k + arg1 + 2, '-', (unsigned char)(-arg1));
+                sprintf(second_buf[i], fmt, k + arg1 + 2, '-', (uint8_t)(-arg1));
             }
             else
             {
-                sprintf(second_buf[i], fmt, k + arg1 + 2, '+', (unsigned char)arg1);
+                sprintf(second_buf[i], fmt, k + arg1 + 2, '+', (uint8_t)arg1);
             }
 
             k+=2;
@@ -688,7 +705,7 @@ void show_regs() {
    ------------------------------------------------------------------------- */
 static int will_branch() {
 
-    unsigned char op = get_current_opcode();
+    uint8_t op = get_current_opcode();
 
     switch (op)
     {
@@ -760,14 +777,14 @@ void clear_halt(int *type, int pt) {
 /* -------------------------------------------------------------------------
     set_halt_opcode () = set a breakpoint on a particular opcode.
    ------------------------------------------------------------------------- */
-void set_halt_opcode(unsigned char opcode) {
+void set_halt_opcode(uint8_t opcode) {
     op_breakpoints[opcode] = 1;
 }
 
 /* -------------------------------------------------------------------------
     clear_halt_opcode () = unset an opcode breakpoint.
    ------------------------------------------------------------------------- */
-void clear_halt_opcode(unsigned char opcode) {
+void clear_halt_opcode(uint8_t opcode) {
     op_breakpoints[opcode] = 0;
 }
 
@@ -776,40 +793,40 @@ void clear_halt_opcode(unsigned char opcode) {
     assumes that you are in //e mode...
    ------------------------------------------------------------------------- */
 void set_halt_65c02() {
-    set_halt_opcode((uchar)0x02); set_halt_opcode((uchar)0x04);
-    set_halt_opcode((uchar)0x0C); set_halt_opcode((uchar)0x12);
-    set_halt_opcode((uchar)0x14); set_halt_opcode((uchar)0x1A);
-    set_halt_opcode((uchar)0x1C); set_halt_opcode((uchar)0x32);
-    set_halt_opcode((uchar)0x34); set_halt_opcode((uchar)0x3A);
-    set_halt_opcode((uchar)0x3C); set_halt_opcode((uchar)0x52);
-    set_halt_opcode((uchar)0x5A); set_halt_opcode((uchar)0x64);
-    set_halt_opcode((uchar)0x72); set_halt_opcode((uchar)0x74);
-    set_halt_opcode((uchar)0x7A); set_halt_opcode((uchar)0x7C);
-    set_halt_opcode((uchar)0x80); set_halt_opcode((uchar)0x89);
-    set_halt_opcode((uchar)0x92); set_halt_opcode((uchar)0x9C);
-    set_halt_opcode((uchar)0x9E); set_halt_opcode((uchar)0xB2);
-    set_halt_opcode((uchar)0xD2); set_halt_opcode((uchar)0xDA);
-    set_halt_opcode((uchar)0xF2); set_halt_opcode((uchar)0xFA);
+    set_halt_opcode((uint8_t)0x02); set_halt_opcode((uint8_t)0x04);
+    set_halt_opcode((uint8_t)0x0C); set_halt_opcode((uint8_t)0x12);
+    set_halt_opcode((uint8_t)0x14); set_halt_opcode((uint8_t)0x1A);
+    set_halt_opcode((uint8_t)0x1C); set_halt_opcode((uint8_t)0x32);
+    set_halt_opcode((uint8_t)0x34); set_halt_opcode((uint8_t)0x3A);
+    set_halt_opcode((uint8_t)0x3C); set_halt_opcode((uint8_t)0x52);
+    set_halt_opcode((uint8_t)0x5A); set_halt_opcode((uint8_t)0x64);
+    set_halt_opcode((uint8_t)0x72); set_halt_opcode((uint8_t)0x74);
+    set_halt_opcode((uint8_t)0x7A); set_halt_opcode((uint8_t)0x7C);
+    set_halt_opcode((uint8_t)0x80); set_halt_opcode((uint8_t)0x89);
+    set_halt_opcode((uint8_t)0x92); set_halt_opcode((uint8_t)0x9C);
+    set_halt_opcode((uint8_t)0x9E); set_halt_opcode((uint8_t)0xB2);
+    set_halt_opcode((uint8_t)0xD2); set_halt_opcode((uint8_t)0xDA);
+    set_halt_opcode((uint8_t)0xF2); set_halt_opcode((uint8_t)0xFA);
 }
 
 /* -------------------------------------------------------------------------
     clear_halt_65c02 () = clear all 65c02 instructions
    ------------------------------------------------------------------------- */
 void clear_halt_65c02() {
-    clear_halt_opcode((uchar)0x02); clear_halt_opcode((uchar)0x04);
-    clear_halt_opcode((uchar)0x0C); clear_halt_opcode((uchar)0x12);
-    clear_halt_opcode((uchar)0x14); clear_halt_opcode((uchar)0x1A);
-    clear_halt_opcode((uchar)0x1C); clear_halt_opcode((uchar)0x32);
-    clear_halt_opcode((uchar)0x34); clear_halt_opcode((uchar)0x3A);
-    clear_halt_opcode((uchar)0x3C); clear_halt_opcode((uchar)0x52);
-    clear_halt_opcode((uchar)0x5A); clear_halt_opcode((uchar)0x64);
-    clear_halt_opcode((uchar)0x72); clear_halt_opcode((uchar)0x74);
-    clear_halt_opcode((uchar)0x7A); clear_halt_opcode((uchar)0x7C);
-    clear_halt_opcode((uchar)0x80); clear_halt_opcode((uchar)0x89);
-    clear_halt_opcode((uchar)0x92); clear_halt_opcode((uchar)0x9C);
-    clear_halt_opcode((uchar)0x9E); clear_halt_opcode((uchar)0xB2);
-    clear_halt_opcode((uchar)0xD2); clear_halt_opcode((uchar)0xDA);
-    clear_halt_opcode((uchar)0xF2); clear_halt_opcode((uchar)0xFA);
+    clear_halt_opcode((uint8_t)0x02); clear_halt_opcode((uint8_t)0x04);
+    clear_halt_opcode((uint8_t)0x0C); clear_halt_opcode((uint8_t)0x12);
+    clear_halt_opcode((uint8_t)0x14); clear_halt_opcode((uint8_t)0x1A);
+    clear_halt_opcode((uint8_t)0x1C); clear_halt_opcode((uint8_t)0x32);
+    clear_halt_opcode((uint8_t)0x34); clear_halt_opcode((uint8_t)0x3A);
+    clear_halt_opcode((uint8_t)0x3C); clear_halt_opcode((uint8_t)0x52);
+    clear_halt_opcode((uint8_t)0x5A); clear_halt_opcode((uint8_t)0x64);
+    clear_halt_opcode((uint8_t)0x72); clear_halt_opcode((uint8_t)0x74);
+    clear_halt_opcode((uint8_t)0x7A); clear_halt_opcode((uint8_t)0x7C);
+    clear_halt_opcode((uint8_t)0x80); clear_halt_opcode((uint8_t)0x89);
+    clear_halt_opcode((uint8_t)0x92); clear_halt_opcode((uint8_t)0x9C);
+    clear_halt_opcode((uint8_t)0x9E); clear_halt_opcode((uint8_t)0xB2);
+    clear_halt_opcode((uint8_t)0xD2); clear_halt_opcode((uint8_t)0xDA);
+    clear_halt_opcode((uint8_t)0xF2); clear_halt_opcode((uint8_t)0xFA);
 }
 
 /* -------------------------------------------------------------------------
@@ -822,7 +839,7 @@ int at_haltpt() {
     int i;
 
     /* check op_breakpoints */
-    unsigned char op = get_current_opcode();
+    uint8_t op = get_last_opcode();
     if (op_breakpoints[op])
     {
         sprintf(second_buf[num_buffer_lines++], "stopped at %04X bank %d instruction %02X", cpu65_current.pc, c_get_current_rambank(cpu65_current.pc), op);
@@ -1043,9 +1060,7 @@ void clear_debugger_screen() {
     end_cpu_step () - finish a stepping command
         display the next instruction, and tell whether it will branch
    ------------------------------------------------------------------------- */
-void end_cpu_step() {
-
-    cpu65_set_stepping(0);
+static void end_cpu_step() {
 
     clear_debugger_screen();
     disasm(cpu65_current.pc, 1, 0, -1);
@@ -1057,80 +1072,113 @@ void end_cpu_step() {
 
     sprintf(second_buf[num_buffer_lines++], "%s", (branch) ? "will branch" : "will not branch");
 }
+
 /* -------------------------------------------------------------------------
     begin_cpu_step() - step the CPU
         set the CPU into stepping mode and yield to CPU thread
    ------------------------------------------------------------------------- */
-void begin_cpu_step()
-{
-    cpu65_set_stepping(1);
-    c_stepping_yield();
-}
-
-/* -------------------------------------------------------------------------
-    c_stepping_yield()
-        called to yield execution between cpu and main threads when stepping
-   ------------------------------------------------------------------------- */
-void c_stepping_yield()
+static void begin_cpu_step()
 {
     int err = 0;
-    if ((err = pthread_mutex_unlock(&interface_mutex)))
-    {
-        ERRLOG("pthread_mutex_unlock : %d", err);
+
+    do {
+        if ((err = pthread_cond_signal(&interface_cond))) {
+            ERRLOG("pthread_cond_signal : %d", err);
+        }
+        if ((err = pthread_cond_wait(&interface_cond, &interface_mutex))) {
+            ERRLOG("pthread_cond_wait : %d", err);
+        }
+
+        if (c_mygetch(0) != -1) {
+            break;
+        }
+    } while (!stepping_struct.should_break);
+
+    if ((err = pthread_cond_signal(&interface_cond))) {
+        ERRLOG("pthread_cond_signal : %d", err);
     }
 
-    // presumably other thread executes while we yield and sleep ...
-    if ((err = pthread_yield()))
-    {
-        ERRLOG("pthread_yield ; %d", err);
-    }
-    static struct timespec deltat = { .tv_sec=0, .tv_nsec=1 };
-    nanosleep(&deltat, NULL);
-
-    if ((err = pthread_mutex_lock(&interface_mutex)))
-    {
-        ERRLOG("pthread_mutex_lock : %d", err);
-    }
+    end_cpu_step();
 }
 
 /* -------------------------------------------------------------------------
-    do_step_or_next () - step into or step over commands
+    c_debugger_should_break()
    ------------------------------------------------------------------------- */
-void do_step_or_next(int step_count) {
-    char ch;
-    unsigned char op;
-    int step_frame = 0;
+bool c_debugger_should_break() {
 
-    /* do step while step_count AND no breaks AND no keypress */
-    do
-    {
-        op = get_current_opcode();
+    // WARNING : this state management function should be called from CPU thread only!
 
-        if (step_next && (op == 0x20))
-        {
-            do
+    if (at_haltpt()) {
+        stepping_struct.should_break = true;
+    } else {
+        uint8_t op = get_last_opcode();
+
+        switch (stepping_struct.step_type) {
+            case STEPPING:
             {
-                op = get_current_opcode();
-                if (op == 0x20)
-                {
-                    ++step_frame;            /* JSR */
+                --stepping_struct.step_count;
+                if (stepping_struct.step_count == 0) {
+                    stepping_struct.should_break = true;
+                }
+            }
+            break;
+
+            case NEXTING:
+            {
+                if (stepping_struct.step_count > 0) {
+                    --stepping_struct.step_count;
                 }
 
-                if (op == 0x60)
-                {
-                    --step_frame;            /* RTS */
+                if (op == 0x20) {
+                    ++stepping_struct.step_frame; // JSR
+                }
+                if (op == 0x60) {
+                    --stepping_struct.step_frame; // RTS
                 }
 
-                begin_cpu_step();
-            } while (((ch = c_mygetch(0)) == -1) && !at_haltpt() && step_frame);
-        }
-        else
-        {
-            begin_cpu_step();
-        }
-    } while (--step_count && !at_haltpt() && (c_mygetch(0) == -1));
+                if ((stepping_struct.step_frame == 0) && (stepping_struct.step_count == 0)) {
+                    stepping_struct.should_break = true;
+                }
+            }
+            break;
 
-    end_cpu_step();
+            case UNTILING:
+            {
+                if (stepping_struct.step_pc == cpu65_current.pc) {
+                    stepping_struct.should_break = true;
+                }
+            }
+            break;
+
+            case FINISHING:
+            {
+                if (op == 0x20) {
+                    ++stepping_struct.step_frame; // JSR
+                }
+                if (op == 0x60) {
+                    --stepping_struct.step_frame; // RTS
+                }
+
+                if (stepping_struct.step_frame == 0) {
+                    stepping_struct.should_break = true;
+                }
+            }
+            break;
+
+            case GOING:
+            break;
+        }
+    }
+
+    return stepping_struct.should_break;
+}
+
+/* -------------------------------------------------------------------------
+    c_debugger_begin_stepping () - step into or step over commands
+   ------------------------------------------------------------------------- */
+void c_debugger_begin_stepping(stepping_struct_t s) {
+    stepping_struct = s;
+    begin_cpu_step();
 }
 
 /* -------------------------------------------------------------------------
@@ -1173,7 +1221,6 @@ void do_debug_command() {
     int i = 0, j = 0, k = 0;
 
     /* reset key local vars */
-    step_next = 0;
     num_buffer_lines = 0;
 
     /* call lex to perform the command.*/
@@ -1233,14 +1280,15 @@ void do_debug_command() {
 }
 
 /* -------------------------------------------------------------------------
-    c_do_debugging()
+    c_interface_debugging()
         main debugging console
    ------------------------------------------------------------------------- */
 
-void c_do_debugging() {
+void c_interface_debugging() {
 
     static char lex_initted = 0;
 
+    int err = 0;
     int i;
     int ch;
     int command_pos = PROMPT_X;
@@ -1275,6 +1323,8 @@ void c_do_debugging() {
         c_interface_print(0, i, 2, screen[ i ] );
     }
 
+    is_debugging = true;
+
     for (;;)
     {
         /* print command line */
@@ -1289,8 +1339,7 @@ void c_do_debugging() {
 
         if (ch == kESC)
         {
-            c_interface_exit(-1);
-            return;
+            break;
         }
         else
         {
@@ -1313,5 +1362,13 @@ void c_do_debugging() {
             }
         }
     }
+
+    c_interface_exit(-1);
+    is_debugging = false;
+    if ((err = pthread_cond_signal(&interface_cond)))
+    {
+        ERRLOG("pthread_cond_signal : %d", err);
+    }
+    return;
 }
 

@@ -137,6 +137,7 @@
 // ----------------------------------------------------------------------------
 
 extern pthread_mutex_t interface_mutex;
+extern pthread_cond_t interface_cond;
 extern bool caps_lock;
 
 #ifdef LINUX_JOYSTICK

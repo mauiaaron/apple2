@@ -28,6 +28,12 @@
 
 YY_BUFFER_STATE buffer = 0;
 
+extern char second_buf[DEBUGGER_BUF_Y][DEBUGGER_BUF_X];/* scratch buffer for output */
+extern int num_buffer_lines;            /* num lines of output */
+extern int arg1, arg2, arg3;            /* command arguments */
+extern int breakpoints[MAX_BRKPTS];     /* memory breakpoints */
+extern int watchpoints[MAX_BRKPTS];     /* memory watchpoints */
+
 /*
   d{is} {lc1|lc2} {/bank/}{addr} {+}{len}
   m{em} {lc1|lc2} {/bank/}{addr} {+}{len}
@@ -436,50 +442,56 @@ ADDRS	[0-9a-fA-F]+
 }
 
 {BOS}(st?e?p?|ne?x?t?){EOS} {
-    /* step / step next instruction */
-    if (*debugtext == 'n') step_next = 1;
 
-    do_step_or_next(1);
+    stepping_struct_t s = {
+        .step_type = STEPPING,
+        .step_count = 1
+    };
+
+    if (*debugtext == 'n') {
+        s.step_type = NEXTING;
+    }
+
+    c_debugger_begin_stepping(s);
     return STEP;
 }
 
 {BOS}(st?e?p?|ne?x?t?){WS}+{HEX}+{EOS} {
-    /* step / step next <n> instructions */
-    if (*debugtext == 'n') step_next = 1;
 
     while (!isspace(*debugtext)) ++debugtext;
 
     arg1 = strtol(debugtext, (char**)NULL, 16);
     if ((arg1 < 1) || (arg1 > 255)) arg1 = 255;
 
-    do_step_or_next(arg1);
+    stepping_struct_t s = {
+        .step_type = STEPPING,
+        .step_count = arg1
+    };
+
+    if (*debugtext == 'n') {
+        s.step_type = NEXTING;
+    }
+
+    c_debugger_begin_stepping(s);
     return STEP;
 }
 
 {BOS}fi?n?i?s?h?{EOS} {
-    int step_frame = 1;
-    unsigned char op;
 
-    /* step until finished with curent stack frame */
-    while ((c_mygetch(0) == -1) && !at_haltpt()) {
-	op = get_current_opcode();
+    stepping_struct_t s = {
+        .step_type = FINISHING,
+        .step_frame = 1
+    };
 
-	if (op == 0x20) ++step_frame;	/* JSR */
-	if (op == 0x60) --step_frame;	/* RTS */
-	
-	if (!step_frame) break;				/* finished */
-	begin_cpu_step();
-    }
-    end_cpu_step();			/* print location */
+    c_debugger_begin_stepping(s);
     return FINISH;
 }
 
 {BOS}un?t?i?l?{EOS} {
     /* step until PC == next instruction.  good for finishing backward
        loops */
-    unsigned char op;
+    uint8_t op = get_current_opcode();
     int delta=0;
-    op = get_current_opcode();
 	
     switch (opcodes[op].mode)
     {
@@ -506,11 +518,12 @@ ADDRS	[0-9a-fA-F]+
         break; 
     }
 
-    arg1 = cpu65_current.pc + delta;
+    stepping_struct_t s = {
+        .step_type = UNTILING,
+        .step_pc = cpu65_current.pc + delta
+    };
 
-    while ((cpu65_current.pc != arg1) && !at_haltpt() && (c_mygetch(0) == -1))
-	begin_cpu_step();
-    end_cpu_step();			/* print location */
+    c_debugger_begin_stepping(s);
     return UNTIL;
 }
 
@@ -520,17 +533,21 @@ ADDRS	[0-9a-fA-F]+
 
     /* DANGEROUS! */
     cpu65_current.pc = strtol(debugtext, (char**)NULL, 16);
-    while (!at_haltpt() && (c_mygetch(0) == -1))
-	begin_cpu_step();
-    end_cpu_step();			/* print location */
+
+    stepping_struct_t s = {
+        .step_type = GOING
+    };
+
+    c_debugger_begin_stepping(s);
     return GO;
 }
 
 {BOS}go?{EOS} {
-    /* run while remaining in debugger console */
-    while (!at_haltpt() && (c_mygetch(0) == -1))
-	begin_cpu_step();
-    end_cpu_step();			/* print location */
+    stepping_struct_t s = {
+        .step_type = GOING
+    };
+
+    c_debugger_begin_stepping(s);
     return GO;
 }
 
@@ -586,7 +603,7 @@ ADDRS	[0-9a-fA-F]+
 	return BREAK;
     }
 
-    set_halt_opcode((unsigned char)arg1);
+    set_halt_opcode((uint8_t)arg1);
     return BREAK;
 }
 
@@ -655,9 +672,9 @@ ADDRS	[0-9a-fA-F]+
 	    sprintf(second_buf[num_buffer_lines++], "invalid opcode");
 	    return CLEAR;
 	}
-	clear_halt_opcode((unsigned char)arg1);
+	clear_halt_opcode((uint8_t)arg1);
 	sprintf(second_buf[num_buffer_lines++], "cleared opcode %02X",
-		(unsigned char)arg1);
+		(uint8_t)arg1);
     }
     return CLEAR;
 }
@@ -740,11 +757,11 @@ ADDRS	[0-9a-fA-F]+
 
 {BOS}key{WS}+{HEX}+{EOS} {
     /* send key code to emulator */
-    unsigned char key;
+    uint8_t key;
 
     while (!isspace(*debugtext)) ++debugtext;
     while (isspace(*debugtext)) ++debugtext;
-    key = (unsigned char) strtol(debugtext, &debugtext, 16);
+    key = (uint8_t) strtol(debugtext, &debugtext, 16);
 
     apple_ii_64k[0][0xC000] = key;
     apple_ii_64k[1][0xC000] = key;
