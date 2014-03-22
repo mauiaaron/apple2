@@ -1910,7 +1910,6 @@ op_STZ_abs:
 op_STZ_abs_x:
                 GetAbs_X_STx
                 DoSTZ
-                incb    DebugCycleCount         // +1 cycle on write
                 Continue
 
 /* ----------------------------------
