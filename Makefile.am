@@ -27,27 +27,44 @@ noinst_PROGRAMS = genfont
 
 bin_PROGRAMS = apple2ix
 
-# NOTE : selectively enabled through configuration process ...
-EXTRA_apple2ix_SOURCES = \
+VM_SRC = \
 	src/asm386/glue.S src/asm386/cpu.S src/asm386/display.S \
-	src/asm386/memory.S \
-	\
-	src/meta/debug.l src/meta/debugger.c src/meta/opcodes.c \
-	\
-	src/video/xvideo.c \
-	\
+	src/asm386/memory.S
+
+INTERFACE_CLASSIC_SRC = \
+	src/interface.c
+
+VIDEO_SRC = \
+	src/video/xvideo.c
+
+AUDIO_SRC = \
 	src/audio/soundcore.c src/audio/soundcore-openal.c src/audio/speaker.c \
 	src/audio/win-shim.c src/audio/alhelpers.c src/audio/mockingboard.c \
 	src/audio/AY8910.c
 
-apple2ix_SOURCES = src/font.c src/misc.c src/vidsup.c src/interface.c \
+META_SRC = \
+	src/meta/debug.l src/meta/debugger.c src/meta/opcodes.c
+
+# NOTE : selectively enabled through configuration process ...
+EXTRA_apple2ix_SOURCES = \
+	$(VM_SRC) \
+	\
+	$(INTERFACE_CLASSIC_SRC) \
+	\
+	$(VIDEO_SRC) \
+	\
+	$(AUDIO_SRC) \
+	\
+	$(META_SRC)
+
+apple2ix_SOURCES = src/font.c src/misc.c src/vidsup.c \
 	src/timing.c src/zlib-helpers.c src/joystick.c src/keys.c src/prefs.c \
 	src/disk.c src/cpu-supp.c
 
 apple2ix_CFLAGS = @AM_CFLAGS@ @X_CFLAGS@
 apple2ix_LDFLAGS = @ARCHOS_HACK_LDFLAGS@
-apple2ix_LDADD = @ASM_O@ @VIDEO_O@ @AUDIO_O@ @META_O@ @X_LIBS@
-apple2ix_DEPENDENCIES = @ASM_O@ @VIDEO_O@ @AUDIO_O@ @META_O@
+apple2ix_LDADD = @VM_O@ @INTERFACE_O@ @VIDEO_O@ @AUDIO_O@ @META_O@ @X_LIBS@
+apple2ix_DEPENDENCIES = @VM_O@ @INTERFACE_O@ @VIDEO_O@ @AUDIO_O@ @META_O@
 
 genfont_SOURCES = src/genfont.c
 
@@ -68,10 +85,9 @@ A2_TEST_CFLAGS = -DTESTING=1 -Isrc/greatest
 TESTS          = testcpu
 check_PROGRAMS = testcpu
 
-testcpu_SOURCES = src/test/testcpu.c $(A2_TEST_SOURCES)
+testcpu_SOURCES = src/test/testcpu.c $(A2_TEST_SOURCES) $(EXTRA_apple2ix_SOURCES)
 testcpu_CFLAGS = $(apple2ix_CFLAGS) $(A2_TEST_CFLAGS)
 testcpu_LDFLAGS = $(apple2ix_LDFLAGS)
-testcpu_LDADD = $(apple2ix_LDADD)
 testcpu_DEPENDENCIES = $(apple2ix_DEPENDENCIES)
 
 ###############################################################################

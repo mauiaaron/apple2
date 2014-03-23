@@ -5,7 +5,7 @@ AC_INIT([apple2ix], [0.8])
 
 AM_INIT_AUTOMAKE([foreign subdir-objects])
 
-AM_CONFIG_HEADER(src/config.h)
+dnl AM_CONFIG_HEADER(src/config.h) -- disable config.h because it makes it difficult/impossible to do modular builds for the test suite
 
 AC_PROG_CC([clang gcc])
 AM_PROG_CC_C_O      dnl apparently required for custom font.c target?
@@ -76,8 +76,8 @@ dnl at this point we believe arch/os is good ...
 ARCHOS_HACK_LDFLAGS="-L/usr/lib/i386-linux-gnu -L/lib/i386-linux-gnu"
 AC_SUBST(ARCHOS_HACK_LDFLAGS)
 
-ASM_O="src/asm386/glue.o src/asm386/cpu.o src/asm386/display.o src/asm386/memory.o"
-AC_SUBST(ASM_O)
+VM_O="src/asm386/glue.o src/asm386/cpu.o src/asm386/display.o src/asm386/memory.o"
+AC_SUBST(VM_O)
 
 
 dnl ---------------------------------------------------------------------------
@@ -173,13 +173,16 @@ dnl ])
 
 
 dnl ---------------------------------------------------------------------------
-dnl Debugger ...
+dnl Debugger & classic interface ...
 AC_ARG_ENABLE([debugger], AS_HELP_STRING([--disable-debugger], [Disable 6502 debugging console]), [], [
     AC_DEFINE(DEBUGGER, 1, [Enable 6502 debugger module])
     META_O="src/meta/debug.o src/meta/debugger.o src/meta/opcodes.o"
 ])
 AC_SUBST(META_O)
 
+INTERFACE_O="src/interface.o"
+AC_SUBST(INTERFACE_O)
+AC_DEFINE(INTERFACE_CLASSIC, 1, [Use the classic menu interface])
 
 dnl ---------------------------------------------------------------------------
 dnl Misc ...
