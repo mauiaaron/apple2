@@ -95,10 +95,12 @@ static void _timing_initialize(double scale)
 
     g_fCurrentCLK6502 = CLK_6502 * scale;
     // this is extracted out of SetClksPerSpkrSample -- speaker.c
+#ifdef AUDIO_ENABLED
     g_fClksPerSpkrSample = (double) (UINT) (g_fCurrentCLK6502 / (double)SPKR_SAMPLE_RATE);
     SpkrReinitialize();
 
     LOG("timing_initialize() ... ClockRate:%0.2lf  ClockCyclesPerSpeakerSample:%0.2lf", g_fCurrentCLK6502, g_fClksPerSpkrSample);
+#endif
 }
 
 static void _switch_to_fullspeed(double scale)

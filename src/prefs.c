@@ -209,11 +209,11 @@ void load_settings(void)
         config_file = fopen(config_filename, "r");
         if (config_file == NULL)
         {
-            printf(
+            ERRLOG(
                 "Warning. Cannot open the .apple2 system defaults file.\n"
                 "Make sure it's readable in your home directory.");
-            printf("Press RETURN to continue...");
-            getchar();
+            ERRLOG("Press RETURN to continue...");
+            getchar(); // HACK FIXME -- this needs to be decoupled from both testing and mobile targets
             return;
         }
 
@@ -236,7 +236,7 @@ void load_settings(void)
             switch (main_match)
             {
             case PRM_NONE:
-                fprintf(stderr, "Unrecognized config parameter `%s'", parameter);
+                ERRLOG("Unrecognized config parameter `%s'", parameter);
                 break;
 
             case PRM_SPEED:
@@ -352,6 +352,11 @@ bool save_settings(void)
 
     LOG("Saving preferences...");
 
+#define PREFS_ERRPRINT() \
+        ERRLOG( \
+            "Cannot open the .apple2/apple2.cfg system defaults file for writing.\n" \
+            "Make sure it has rw permission in your home directory.")
+
 #define ERROR_SUBMENU_H 9
 #define ERROR_SUBMENU_W 40
     int ch = -1;
@@ -370,14 +375,13 @@ bool save_settings(void)
     config_file = fopen(config_filename, "w");
     if (config_file == NULL)
     {
-        printf(
-            "Cannot open the .apple2/apple2.cfg system defaults file for writing.\n"
-            "Make sure it has rw permission in your home directory.");
+        PREFS_ERRPRINT();
+#ifdef INTERFACE_CLASSIC
         c_interface_print_submenu_centered(submenu[0], ERROR_SUBMENU_W, ERROR_SUBMENU_H);
         while ((ch = c_mygetch(1)) == -1)
         {
         }
-
+#endif
         return false;
     }
 
@@ -417,10 +421,13 @@ bool save_settings(void)
 
     if (anErr)
     {
+        PREFS_ERRPRINT();
+#ifdef INTERFACE_CLASSIC
         c_interface_print_submenu_centered(submenu[0], ERROR_SUBMENU_W, ERROR_SUBMENU_H);
         while ((ch = c_mygetch(1)) == -1)
         {
         }
+#endif
         return false;
     }
 

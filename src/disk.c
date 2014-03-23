@@ -106,9 +106,14 @@ void c_eject_6(int drive) {
         const char* const err = def(disk6.disk[drive].file_name);
         if (err)
         {
+            ERRLOG("OOPS: An error occurred when attempting to compress a disk image : %s", err);
+#ifdef INTERFACE_CLASSIC
             snprintf(&zlibmenu[4][2], 37, "%s", err);
             c_interface_print_submenu_centered(zlibmenu[0], ZLIB_SUBMENU_W, ZLIB_SUBMENU_H);
-            while ((ch = c_mygetch(1)) == -1) { }
+            while ((ch = c_mygetch(1)) == -1) {
+                // ...
+            }
+#endif
         }
         else
         {
@@ -158,14 +163,12 @@ int c_new_diskette_6(int drive, char *file_name, int cmpr, int nib, int force) {
 
         if (!force)
         {
-            /* Open read only */
             disk6.disk[drive].fp = fopen(disk6.disk[drive].file_name, "r+");
             disk6.disk[drive].is_protected = 0;
         }
 
         if ((disk6.disk[drive].fp == NULL) || (force))
         {
-            /* Open for read AND write */
             disk6.disk[drive].fp = fopen(disk6.disk[drive].file_name, "r");
             disk6.disk[drive].is_protected = 1;    /* disk is write protected! */
         }

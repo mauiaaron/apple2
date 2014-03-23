@@ -241,11 +241,14 @@ void c_handle_input(int scancode, int pressed)
             }
 
             pthread_mutex_lock(&interface_mutex);
+#ifdef AUDIO_ENABLED
             SoundSystemPause();
+#endif
             in_interface = true;
 
             switch (current_key)
             {
+#ifdef INTERFACE_CLASSIC
             case kF1:
                 c_interface_select_diskette( 0 );
                 break;
@@ -253,6 +256,7 @@ void c_handle_input(int scancode, int pressed)
             case kF2:
                 c_interface_select_diskette( 1 );
                 break;
+#endif
 
             case kPAUSE:
                 while (c_mygetch(1) == -1)
@@ -262,6 +266,7 @@ void c_handle_input(int scancode, int pressed)
                 }
                 break;
 
+#ifdef INTERFACE_CLASSIC
             case kF5:
                 c_interface_keyboard_layout();
                 break;
@@ -279,12 +284,15 @@ void c_handle_input(int scancode, int pressed)
             case kF10:
                 c_interface_parameters();
                 break;
+#endif
 
             default:
                 break;
             }
 
+#ifdef AUDIO_ENABLED
             SoundSystemUnpause();
+#endif
             c_joystick_reset();
             pthread_mutex_unlock(&interface_mutex);
             in_interface = false;

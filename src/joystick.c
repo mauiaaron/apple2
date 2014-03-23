@@ -121,6 +121,7 @@ static void c_calculate_pc_joystick_parms()
     js_adjusthigh_y = (float)HALF_JOY_RANGE / (float)js_upperrange_y;
 }
 
+#ifdef INTERFACE_CLASSIC
 /* -------------------------------------------------------------------------
     c_calibrate_pc_joystick() - calibrates joystick.  determines extreme
     and center coordinates.  assumes that it can write to the interface
@@ -143,10 +144,6 @@ static void c_calibrate_pc_joystick()
       "| Is the proper kernel module loaded?  |",
       "|                                      |",
       "||||||||||||||||||||||||||||||||||||||||" };
-#define JOYERR_SHOWERR(ERR) \
-    copy_and_pad_string(&errmenu[3][2], ERR, ' ', JOYERR_PAD, ' '); \
-    c_interface_print_submenu_centered(errmenu[0], JOYERR_SUBMENU_W, JOYERR_SUBMENU_H); \
-    while (c_mygetch(1) == -1) { }
 
     /* reset all the extremes */
     js_max_x = INT_MIN;
@@ -159,7 +156,15 @@ static void c_calibrate_pc_joystick()
     {
         if (c_open_pc_joystick())
         {
-            JOYERR_SHOWERR(strerror(errno));
+            const char *err = strerror(errno);
+            ERRLOG("OOPS, cannot open pc joystick : %s", err);
+#ifdef INTERFACE_CLASSIC
+            copy_and_pad_string(&errmenu[3][2], err, ' ', JOYERR_PAD, ' ');
+            c_interface_print_submenu_centered(errmenu[0], JOYERR_SUBMENU_W, JOYERR_SUBMENU_H);
+            while (c_mygetch(1) == -1) {
+                // ...
+            }
+#endif
             return;
         }
     }
@@ -317,9 +322,10 @@ static void c_calibrate_pc_joystick()
         nanosleep(&ts, NULL);
     }
 }
+#endif // INTERFACE_CLASSIC
 #endif // LINUX_JOYSTICK
 
-#ifdef KEYPAD_JOYSTICK
+#if defined(KEYPAD_JOYSTICK) && defined(INTERFACE_CLASSIC)
 static void c_calibrate_keypad_joystick()
 {
 
@@ -426,7 +432,7 @@ static void c_calibrate_keypad_joystick()
         nanosleep(&ts, NULL);
     }
 }
-#endif // KEYPAD_JOYSTICK
+#endif // KEYPAD_JOYSTICK && INTERFACE_CLASSIC
 
 #ifdef TOUCH_JOYSTICK
 // TBD ...
@@ -465,6 +471,7 @@ void c_close_joystick()
 #endif
 }
 
+#ifdef INTERFACE_CLASSIC
 void c_calibrate_joystick()
 {
 #ifdef LINUX_JOYSTICK
@@ -481,6 +488,7 @@ void c_calibrate_joystick()
     }
 #endif
 }
+#endif // INTERFACE_CLASSIC
 
 void c_joystick_reset()
 {

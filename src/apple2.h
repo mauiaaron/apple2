@@ -17,7 +17,9 @@
 #ifndef _A2_H_
 #define _A2_H_
 
+#ifdef HAVE_CONFIG_H
 #include "config.h"
+#endif
 
 #define BANK2           0x10000
 

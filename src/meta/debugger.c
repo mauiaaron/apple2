@@ -1284,6 +1284,7 @@ void do_debug_command() {
         main debugging console
    ------------------------------------------------------------------------- */
 
+#ifdef INTERFACE_CLASSIC
 void c_interface_debugging() {
 
     static char lex_initted = 0;
@@ -1371,4 +1372,5 @@ void c_interface_debugging() {
     }
     return;
 }
+#endif
 

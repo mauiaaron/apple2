@@ -179,9 +179,11 @@ E(read_random)
 		ret
 
 E(read_speaker_toggle_pc)
+#ifdef AUDIO_ENABLED
                 pushal
 		call	SN(SpkrToggle)
                 popal // FIXME, do we need to set %al to something here?
+#endif
 		ret
 
 E(read_switch_primary_page)
