@@ -792,7 +792,7 @@ void video_set_mode(a2_video_mode_t mode) {
     _size_hints_set_fixed();
 }
 
-void _video_init() {
+void X11_video_init() {
     XSetWindowAttributes attribs;
     unsigned long attribmask;
     int x, y;           /* window position */
@@ -1030,7 +1030,7 @@ void _video_init() {
 #endif
 }
 
-void video_shutdown(void)
+void X11_video_shutdown(void)
 {
     _destroy_image();
     exit(0);

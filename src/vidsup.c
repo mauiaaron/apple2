@@ -699,7 +699,10 @@ void video_plotchar( int x, int y, int scheme, unsigned char c )
     c_interface_print_char80_line(&d,&s);
 }
 
-extern void _video_init();
+#ifdef VIDEO_X11
+extern void X11_video_init();
+extern void X11_video_shutdown();
+#endif
 void video_init() {
 
     video__fb1 = vga_mem_page_0;
@@ -709,6 +712,15 @@ void video_init() {
     memset(video__fb1,0,SCANWIDTH*SCANHEIGHT);
     memset(video__fb2,0,SCANWIDTH*SCANHEIGHT);
 
-    _video_init();
+#ifdef VIDEO_X11
+    X11_video_init();
+#endif
+}
+
+void video_shutdown(void)
+{
+#ifdef VIDEO_X11
+    X11_video_shutdown();
+#endif
 }
 
