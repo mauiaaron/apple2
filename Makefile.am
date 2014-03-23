@@ -79,7 +79,7 @@ src/asm386/glue.S: src/disk.c src/misc.c @AUDIO_GLUE_C@
 
 LOG_DRIVER = testcpu  ## hack TODO/FIXME ... should be wrapper shell script accepting standard GNU testing API args ...
 
-A2_TEST_SOURCES = src/test/testrunner.c $(apple2ix_SOURCES)
+A2_TEST_SOURCES = $(apple2ix_SOURCES)
 A2_TEST_CFLAGS = -DTESTING=1 -Isrc/greatest
 
 TESTS          = testcpu

@@ -14,7 +14,4 @@
 
 #include "common.h"
 
-#define MSG_SIZE 256
-void flags_to_string(uint8_t flags, char *buf);
-
 #endif // whole file

@@ -9,9 +9,14 @@
  *
  */
 
+//
+// Tests for virtual 65c02 CPU (opcodes and addressing modes)
+//
+
 #include "greatest.h"
 #include "testcommon.h"
-#include "common.h"
+
+#define MSG_SIZE 256
 
 #define fC C_Flag_6502  // [C]arry
 #define fZ Z_Flag_6502  // [Z]ero
@@ -111,6 +116,18 @@ static bool check_skip_illegal_bcd(uint8_t bcd0, uint8_t bcd1) {
     }
 
     return false;
+}
+
+static void flags_to_string(uint8_t flags, char *buf) {
+    snprintf(buf, MSG_SIZE, "%c%c%c%c%c%c%c%c",
+        (flags & N_Flag_6502) ? 'N' : '-',
+        (flags & V_Flag_6502) ? 'V' : '-',
+        (flags & X_Flag_6502) ? 'X' : '-',
+        (flags & B_Flag_6502) ? 'B' : '-',
+        (flags & D_Flag_6502) ? 'D' : '-',
+        (flags & I_Flag_6502) ? 'I' : '-',
+        (flags & Z_Flag_6502) ? 'Z' : '-',
+        (flags & C_Flag_6502) ? 'C' : '-' );
 }
 
 // ----------------------------------------------------------------------------
@@ -1751,8 +1768,8 @@ TEST test_BRK() {
     PASS();
 }
 
+// FIXME TODO : this tests the Apple //e vm, so it prolly should be moved  machine/memory tests ...
 TEST test_IRQ() {
-    // NOTE : not an opcode
     testcpu_set_opcode1(0xea/*NOP*/); // Implementation NOTE: first an instruction, then reset is handled
 
     cpu65_interrupt(IRQGeneric);
@@ -7720,5 +7737,14 @@ GREATEST_SUITE(test_suite_cpu) {
 
         A2_REMOVE_TEST(func);
     }
+}
+
+SUITE(test_suite_cpu);
+GREATEST_MAIN_DEFS();
+
+int main(int argc, char **argv) {
+    GREATEST_MAIN_BEGIN();
+    RUN_SUITE(test_suite_cpu);
+    GREATEST_MAIN_END();
 }
 
