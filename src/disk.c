@@ -62,6 +62,37 @@ static int translate_table_6[256] =     /* Translation table */
     0x80, 0x39, 0x3a, 0x3b, 0x3c, 0x3d, 0x3e, 0x3f
 };
 
+static void cut_gz(char *name) {
+    char *p = name + strlen(name) - 1;
+    p--;
+    p--;
+    *p = '\0';
+}
+
+static bool is_gz(const char * const name) {
+    size_t len = strlen( name );
+
+    if (len > 3) {
+        return (strcmp(name+len-3, ".gz") == 0);
+    }
+
+    return false;
+}
+
+static bool is_nib(const char * const name) {
+    size_t len = strlen( name );
+
+    if (is_gz(name)) {
+        len -= 3;
+    }
+
+    if (!strncmp(name + len - 4, ".nib", 4)) {
+        return true;
+    }
+
+    return false;
+}
+
 /* -------------------------------------------------------------------------
     c_init_6()
    ------------------------------------------------------------------------- */
@@ -81,24 +112,26 @@ void c_init_6()
 #endif
 }
 
+#ifdef INTERFACE_CLASSIC
+#define ZLIB_SUBMENU_H 7
+#define ZLIB_SUBMENU_W 40
+static char zlibmenu[ZLIB_SUBMENU_H][ZLIB_SUBMENU_W+1] =
+    //1.  5.  10.  15.  20.  25.  30.  35.  40.
+    { "||||||||||||||||||||||||||||||||||||||||",
+      "|                                      |",
+      "| An error occurred when attempting to |",
+      "| handle a compressed disk image:      |",
+      "|                                      |",
+      "|                                      |",
+      "||||||||||||||||||||||||||||||||||||||||" };
+#endif
+
 /* -------------------------------------------------------------------------
     c_eject_6() - ejects/gzips image file
    ------------------------------------------------------------------------- */
 
 void c_eject_6(int drive) {
     int ch = -1;
-
-#define ZLIB_SUBMENU_H 7
-#define ZLIB_SUBMENU_W 40
-    char zlibmenu[ZLIB_SUBMENU_H][ZLIB_SUBMENU_W+1] =
-    //1.  5.  10.  15.  20.  25.  30.  35.  40.
-    { "||||||||||||||||||||||||||||||||||||||||",
-      "|                                      |",
-      "| An error occurred when attempting to |",
-      "| compress a disk image:               |",
-      "|                                      |",
-      "|                                      |",
-      "||||||||||||||||||||||||||||||||||||||||" };
 
     if (disk6.disk[drive].compressed)
     {
@@ -132,19 +165,46 @@ void c_eject_6(int drive) {
 }
 
 /* -------------------------------------------------------------------------
-    c_new_diskette_6( int drive, char *filename, Tr cmpr, Tr nib )
-    inserts a new disk image into the appropriate drive.  assumes
-    privileged user level on entry, sets to the user when using disks.
-    return 1 if we can't open an image file for reading.
+    c_new_diskette_6()
+    inserts a new disk image into the appropriate drive.
+    return 0 on success
    ------------------------------------------------------------------------- */
-
-int c_new_diskette_6(int drive, char *file_name, int cmpr, int nib, int force) {
+int c_new_diskette_6(int drive, const char * const raw_file_name, int force) {
     struct stat buf;
+    int ch = -1;
+
+    /* uncompress the gziped disk */
+    char *file_name = strdup(raw_file_name);
+    if (is_gz(file_name))
+    {
+        const char* const err = inf(file_name); // foo.dsk.gz -> foo.dsk
+        if (err)
+        {
+            ERRLOG("OOPS: An error occurred when attempting to inflate/load a disk image : %s", err);
+#ifdef INTERFACE_CLASSIC
+            snprintf(&zlibmenu[4][2], 37, "%s", err);
+            c_interface_print_submenu_centered(zlibmenu[0], ZLIB_SUBMENU_W, ZLIB_SUBMENU_H);
+            while ((ch = c_mygetch(1)) == -1) {
+                // ...
+            }
+#endif
+            return 1;
+        }
+        if (unlink(file_name)) // temporarily remove .gz file
+        {
+            ERRLOG("OOPS, cannot unlink %s", file_name);
+        }
+
+        cut_gz(file_name);
+    }
 
     strcpy(disk6.disk[drive].file_name, file_name);
     disk6.disk[drive].file_name[1023]='\0';
-    disk6.disk[drive].compressed = cmpr;
-    disk6.disk[drive].nibblized = nib;
+    disk6.disk[drive].compressed = true;// always using gz
+    disk6.disk[drive].nibblized = is_nib(file_name);
+    free(file_name);
+    file_name = NULL;
+
     if (disk6.disk[drive].fp)
     {
         fclose(disk6.disk[drive].fp);
@@ -164,13 +224,13 @@ int c_new_diskette_6(int drive, char *file_name, int cmpr, int nib, int force) {
         if (!force)
         {
             disk6.disk[drive].fp = fopen(disk6.disk[drive].file_name, "r+");
-            disk6.disk[drive].is_protected = 0;
+            disk6.disk[drive].is_protected = false;
         }
 
         if ((disk6.disk[drive].fp == NULL) || (force))
         {
             disk6.disk[drive].fp = fopen(disk6.disk[drive].file_name, "r");
-            disk6.disk[drive].is_protected = 1;    /* disk is write protected! */
+            disk6.disk[drive].is_protected = true;    /* disk is write protected! */
         }
 
         if (disk6.disk[drive].fp == NULL)
@@ -204,7 +264,7 @@ unsigned char c_read_nibblized_6_6()
     if (disk6.disk[disk6.drive].phase_change)
     {
         fseek(disk6.disk[disk6.drive].fp, PHASE_BYTES * disk6.disk[disk6.drive].phase, SEEK_SET);
-        disk6.disk[disk6.drive].phase_change = 0;
+        disk6.disk[disk6.drive].phase_change = false;
     }
 
     disk6.disk_byte = fgetc(disk6.disk[disk6.drive].fp);
@@ -402,7 +462,7 @@ void c_write_nibblized_6_6()
     if (disk6.disk[disk6.drive].phase_change)
     {
         fseek(disk6.disk[disk6.drive].fp, PHASE_BYTES * disk6.disk[disk6.drive].phase, SEEK_SET);
-        disk6.disk[disk6.drive].phase_change = 0;
+        disk6.disk[disk6.drive].phase_change = false;
     }
 
     fputc(disk6.disk_byte, disk6.disk[disk6.drive].fp);
@@ -585,7 +645,6 @@ GLUE_C_READ(disk_read_byte)
         if (disk6.disk[disk6.drive].fp == NULL)
         {
             return 0xFF;        /* Return FF if there is no disk in drive */
-
         }
 
         if (disk6.motor)                /* Motor turned on? */
@@ -636,7 +695,7 @@ GLUE_C_READ(disk_read_phase)
         disk6.disk[disk6.drive].phase=69;
     }
 
-    disk6.disk[disk6.drive].phase_change = 1;
+    disk6.disk[disk6.drive].phase_change = true;
 
     return 0;
 }

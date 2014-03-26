@@ -257,57 +257,7 @@ static int c_interface_cut_name(char *name)
     return is_gz;
 }
 
-static void c_interface_cut_gz(char *name)
-{
-    char *p = name + strlen(name) - 1;
-
-    p--;
-    p--;
-    *p = '\0';
-}
-
-#define GZ_EXT ".gz"
-#define GZ_EXT_LEN 3
-#define DISK_EXT1 ".dsk"
-#define DISK_EXT2 ".nib"
-#define DISK_EXT3 ".do"
-#define DISK_EXT_LEN1 4
-#define DISK_EXT_LEN2 4
-#define DISK_EXT_LEN3 3
-
-/* does name end with ".gz" ? */
-static int c_interface_is_gz(const char *name)
-{
-    size_t len = strlen( name );
-
-    if (len > GZ_EXT_LEN)    /* shouldn't have a file called ".gz"... */
-    {   /*name += len - GZ_EXT_LEN;*/
-        return ((strcmp(name+len-GZ_EXT_LEN, GZ_EXT) == 0) ? 1 : 0);
-    }
-
-    return 0;
-}
-
-
-/* does name end with ".nib{.gz}" */
-static int c_interface_is_nibblized(const char *name)
-{
-    size_t len = strlen( name );
-
-    if (c_interface_is_gz(name))
-    {
-        len -= GZ_EXT_LEN;
-    }
-
-    if (!strncmp(name + len - DISK_EXT_LEN2, DISK_EXT2, DISK_EXT_LEN2))
-    {
-        return 1;
-    }
-
-    return 0;
-}
-
-static int c_interface_disk_select(const struct dirent *e)
+static int disk_select(const struct dirent *e)
 {
     static char cmp[ DISKSIZE ];
     size_t len;
@@ -334,24 +284,24 @@ static int c_interface_disk_select(const struct dirent *e)
     p = e->d_name;
     len = strlen(p);
 
-    if (len > GZ_EXT_LEN && (!strcmp(p + len - GZ_EXT_LEN, GZ_EXT)))
+    if (len > 3 && (!strcmp(p + len - 3, ".gz")))
     {
-        len -= GZ_EXT_LEN;
+        len -= 3;
     }
 
-    if (!strncmp(p + len - DISK_EXT_LEN1, DISK_EXT1, DISK_EXT_LEN1))
+    if (!strncmp(p + len - 4, ".dsk", 4))
     {
-        return 1; // .dsk
+        return 1;
     }
 
-    if (!strncmp(p + len - DISK_EXT_LEN2, DISK_EXT2, DISK_EXT_LEN2))
+    if (!strncmp(p + len - 4, ".nib", 4))
     {
-        return 1; // .nib
+        return 1;
     }
 
-    if (!strncmp(p + len - DISK_EXT_LEN3, DISK_EXT3, DISK_EXT_LEN3))
+    if (!strncmp(p + len - 3, ".do", 3))
     {
-        return 1; // .do
+        return 1;
     }
 
     return 0;
@@ -449,7 +399,7 @@ void c_interface_select_diskette( int drive )
         while ((ch = c_mygetch(1)) == -1) { }
 
         /* set to users privilege level for directory access */
-        entries = scandir(disk_path, &namelist, c_interface_disk_select, alphasort);
+        entries = scandir(disk_path, &namelist, disk_select, alphasort);
 
         if (entries <= 0)
         {
@@ -613,13 +563,9 @@ void c_interface_select_diskette( int drive )
                     /* reopen disk, forcing write enabled */
                     if (toupper(ch) == 'W')
                     {
-                        if (c_new_diskette_6(
-                                drive,
-                                temp,
-                                disk6.disk[drive].compressed,
-                                disk6.disk[drive].nibblized, 0))
+                        if (c_new_diskette_6(drive, temp, 0))
                         {
-                            DISKERR_SHOWERR("Disk is read and write protected");
+                            ERRLOG("Problem loading readonly disk image");
                             c_interface_print_screen( screen );
                             continue;
                         }
@@ -666,32 +612,12 @@ void c_interface_select_diskette( int drive )
                     break;
                 }
 
-                /* uncompress the gziped disk */
-                if (c_interface_is_gz(temp))
-                {
-                    const char* const err = inf(temp); // foo.dsk.gz -> foo.dsk
-                    if (err)
-                    {
-                        DISKERR_SHOWERR(err);
-                        c_interface_print_screen( screen );
-                        continue;
-                    }
-                    if (unlink(temp)) // temporarily remove .gz file
-                    {
-                        ERRLOG("OOPS, cannot unlink %s", temp);
-                    }
-
-                    c_interface_cut_gz(temp);
-                }
-
                 c_eject_6(drive);
                 c_interface_print_screen( screen );
 
-                if (c_new_diskette_6(
-                        drive, temp, 1, c_interface_is_nibblized(temp),
-                        (toupper(ch) != 'W')))
+                if (c_new_diskette_6(drive, temp, (toupper(ch) != 'W')))
                 {
-                    DISKERR_SHOWERR("Disk is read and write protected");
+                    ERRLOG("Problem loading disk image");
                     c_interface_print_screen( screen );
                     continue;
                 }
