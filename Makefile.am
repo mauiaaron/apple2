@@ -1,6 +1,7 @@
 
 AM_CPPFLAGS = -Isrc
 AM_CPPFLAGS += -I../src # work around some bug in make distcheck
+AM_LFLAGS = -i
 #AM_COLOR_TESTS = no
 #LDFLAGS =
 #LDADD =
