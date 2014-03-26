@@ -646,28 +646,32 @@ void c_interface_select_diskette( int drive )
 typedef enum interface_enum_t {
     OPT_CPU = 0,
     OPT_ALTCPU,
+    OPT_QUIT,
+    OPT_REBOOT,
+    OPT_JOYSTICK,
+    OPT_CALIBRATE,
     OPT_PATH,
     OPT_COLOR,
     OPT_VIDEO,
     OPT_VOLUME,
-    OPT_JOYSTICK,
-    OPT_CALIBRATE,
-    OPT_QUIT,
+    OPT_CAPS,
 
     NUM_OPTIONS
 } interface_enum_t;
 
 static const char *options[] =
 {
-    " CPU%     :  ",
+    "     CPU% :  ",
     " ALT CPU% :  ",
-    " Path     :  ",
-    " Color    :  ",
-    " Video    :  ",
-    " Volume   :  ",
+    "        --> Quit Emulator",
+    "        --> Reboot Emulator",
     " Joystick :  ",
-    " Calibrate Joystick...",
-    " Quit Emulator...",
+    "        --> Calibrate Joystick",
+    "     Path :  ",
+    "    Color :  ",
+    "    Video :  ",
+    "   Volume :  ",
+    " CAPSlock :  ",
 };
 
 #define INTERFACE_PATH_MAX 65
@@ -702,7 +706,7 @@ void c_interface_parameters()
       "|               For interface help press '?' ... ESC exits menu                |",
       "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||" };
 
-#define PARAMS_H 9
+#define PARAMS_H 9 /* visual height */
     int i;
     int ch;
     static interface_enum_t option = OPT_CPU;
@@ -723,7 +727,7 @@ void c_interface_parameters()
     {
         for (i = 0; (i < PARAMS_H) && (i < NUM_OPTIONS); i++)
         {
-            cur_off = option - PARAMS_H-1;
+            cur_off = (option - PARAMS_H) +1;
             if (cur_off < 0)
             {
                 cur_off = 0;
@@ -774,6 +778,11 @@ void c_interface_parameters()
                 sprintf(temp, "%s", (a2_video_mode == VIDEO_1X) ? "1X       " : (a2_video_mode == VIDEO_2X) ? "2X       " : "Fullscreen");
                 break;
 
+            case OPT_JOYSTICK:
+                snprintf(temp, TEMPSIZE, "%s", (joy_mode == JOY_KPAD) ? "Emulated on Keypad" :
+                        (joy_mode == JOY_PCJOY) ? "PC Joystick      " : "Off              ");
+                break;
+
             case OPT_VOLUME:
                 if (sound_volume == 0)
                 {
@@ -785,9 +794,15 @@ void c_interface_parameters()
                 }
                 break;
 
-            case OPT_JOYSTICK:
-                snprintf(temp, TEMPSIZE, "%s", (joy_mode == JOY_KPAD) ? "Emulated on Keypad" :
-                        (joy_mode == JOY_PCJOY) ? "PC Joystick      " : "Off              ");
+            case OPT_CAPS:
+                if (caps_lock)
+                {
+                    snprintf(temp, TEMPSIZE, "%s", "On        ");
+                }
+                else
+                {
+                    snprintf(temp, TEMPSIZE, "%s", "Off       ");
+                }
                 break;
 
             case OPT_CALIBRATE:
@@ -796,13 +811,16 @@ void c_interface_parameters()
             case OPT_QUIT:
                 break;
 
+            case OPT_REBOOT:
+                break;
+
             default:
                 break;
             }
 
             pad_string(temp, ' ', INTERFACE_PATH_MAX+1);
             int loc = i+cur_off;
-            if ((loc != OPT_PATH) && (loc != OPT_CALIBRATE) && (loc != OPT_QUIT))
+            if ((loc != OPT_PATH) && (loc != OPT_QUIT) && (loc != OPT_REBOOT) && (loc != OPT_CALIBRATE))
             {
                 c_interface_print(INTERFACE_PATH_MIN, 5 + i, 0, temp);
             }
@@ -950,6 +968,12 @@ void c_interface_parameters()
                 }
                 break;
 
+            case OPT_CAPS:
+                if (caps_lock) {
+                    caps_lock = false;
+                }
+                break;
+
             case OPT_JOYSTICK:
                 if (joy_mode == JOY_PCJOY)
                 {
@@ -975,6 +999,9 @@ void c_interface_parameters()
                 break;
 
             case OPT_QUIT:
+                break;
+
+            case OPT_REBOOT:
                 break;
 
             default:
@@ -1046,6 +1073,12 @@ void c_interface_parameters()
                 }
                 break;
 
+            case OPT_CAPS:
+                if (!caps_lock) {
+                    caps_lock = true;
+                }
+                break;
+
             case OPT_JOYSTICK:
                 if (joy_mode == JOY_PCJOY)
                 {
@@ -1071,6 +1104,9 @@ void c_interface_parameters()
                 break;
 
             case OPT_QUIT:
+                break;
+
+            case OPT_REBOOT:
                 break;
 
             default:
@@ -1183,47 +1219,74 @@ void c_interface_parameters()
                 c_interface_print_screen( screen );
             }
 
-            /* quit apple II simulator */
-            if (ch == 13 && option == OPT_QUIT)
-            {
-                int ch;
 
 #define QUIT_SUBMENU_H 10
 #define QUIT_SUBMENU_W 40
-                char submenu[QUIT_SUBMENU_H][QUIT_SUBMENU_W+1] =
-                //1.  5.  10.  15.  20.  25.  30.  35.  40.
-                { "||||||||||||||||||||||||||||||||||||||||",
-                  "|                                      |",
-                  "|                                      |",
-                  "|                                      |",
-                  "|           Quit Emulator...           |",
-                  "|          Are you sure? (Y/N)         |",
-                  "|                                      |",
-                  "|                                      |",
-                  "|                                      |",
-                  "||||||||||||||||||||||||||||||||||||||||" };
-                c_interface_print_submenu_centered(submenu[0], QUIT_SUBMENU_W, QUIT_SUBMENU_H);
+            {
+                char qsubmenu[QUIT_SUBMENU_H][QUIT_SUBMENU_W+1] =
+                    //1.  5.  10.  15.  20.  25.  30.  35.  40.
+                    { "||||||||||||||||||||||||||||||||||||||||",
+                      "|                                      |",
+                      "|                                      |",
+                      "|                                      |",
+                      "|            Quit Emulator...          |",
+                      "|          Are you sure? (Y/N)         |",
+                      "|                                      |",
+                      "|                                      |",
+                      "|                                      |",
+                      "||||||||||||||||||||||||||||||||||||||||" };
 
-                while ((ch = c_mygetch(1)) == -1)
+                /* quit emulator */
+                if ((ch == 13) && (option == OPT_QUIT))
                 {
+                    int ch;
+                    c_interface_print_submenu_centered(qsubmenu[0], QUIT_SUBMENU_W, QUIT_SUBMENU_H);
+
+                    while ((ch = c_mygetch(1)) == -1)
+                    {
+                    }
+
+                    ch = toupper(ch);
+                    if (ch == 'Y')
+                    {
+                        save_settings();
+
+                        c_eject_6( 0 );
+                        c_interface_print_screen( screen );
+                        c_eject_6( 1 );
+                        c_interface_print_screen( screen );
+                        c_close_joystick();
+#ifdef __linux__
+                        LOG("Back to Linux, w00t!\n");
+#endif
+                        video_shutdown();
+                        //audio_shutdown(); TODO : fixme ...
+                        exit( 0 );
+                    }
                 }
 
-                ch = toupper(ch);
-                if (ch == 'Y')
-                {
-                    save_settings();
+                /* reboot emulator */
+                if ((ch == 13) && (option == OPT_REBOOT)) {
+                    int ch;
+                    memcpy(qsubmenu[4]+11, "Reboot", 6);
+                    c_interface_print_submenu_centered(qsubmenu[0], QUIT_SUBMENU_W, QUIT_SUBMENU_H);
 
-                    c_eject_6( 0 );
-                    c_interface_print_screen( screen );
-                    c_eject_6( 1 );
-                    c_interface_print_screen( screen );
-                    c_close_joystick();
-#ifdef __linux__
-                    LOG("Back to Linux, w00t!\n");
-#endif
-                    video_shutdown();
-                    //audio_shutdown(); TODO : fixme ...
-                    exit( 0 );
+                    while ((ch = c_mygetch(1)) == -1)
+                    {
+                    }
+
+                    ch = toupper(ch);
+                    if (ch == 'Y')
+                    {
+                        timing_initialize();
+                        video_set(0);
+                        extern unsigned char joy_button0;
+                        joy_button0 = 0xff; // OpenApple
+                        cpu65_interrupt(ResetSig);
+                        c_initialize_sound_hooks();
+                        c_interface_exit(ch);
+                        return;
+                    }
                 }
 
                 c_interface_print_screen( screen );

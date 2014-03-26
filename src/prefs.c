@@ -30,6 +30,7 @@
 #define         PRM_JOY_PC_CALIBRATE            10
 #define         PRM_JOY_KPAD_CALIBRATE          11
 #define         PRM_ROM_PATH                    12
+#define         PRM_CAPSLOCK                    102
 
 
 char system_path[SYSSIZE];
@@ -61,6 +62,8 @@ static const struct match_table prefs_table[] =
     { "color", PRM_HIRES_COLOR },
     { "video", PRM_VIDEO_MODE },
     { "volume", PRM_VOLUME },
+    { "caps_lock", PRM_CAPSLOCK },
+    { "caps lock", PRM_CAPSLOCK },
     { "joystick", PRM_JOY_INPUT },
     { "pc joystick parms", PRM_JOY_PC_CALIBRATE },
     { "pc_joystick_parms", PRM_JOY_PC_CALIBRATE },
@@ -113,6 +116,12 @@ static const struct match_table volume_table[] =
     { "9", 9 },
     { "10", 10 },
     { 0, 10 },
+};
+
+static const struct match_table capslock_table[] =
+{
+    { "0", 0 },
+    { "1", 1 },
 };
 
 static const struct match_table joy_input_table[] =
@@ -189,7 +198,10 @@ void load_settings(void)
     strcpy(disk_path, "./disks");
     strcpy(system_path, "./rom");
 
-    {
+    const char *apple2cfg = getenv("APPLE2IXCFG");
+    if (apple2cfg) {
+        config_filename = strdup(apple2cfg);
+    } else {
         const char *homedir;
 
         homedir = getenv("HOME");
@@ -202,18 +214,15 @@ void load_settings(void)
     }
 
     {
-        FILE *config_file;
         char *buffer = 0;
         size_t size = 0;
 
-        config_file = fopen(config_filename, "r");
+        FILE *config_file = fopen(config_filename, "r");
         if (config_file == NULL)
         {
             ERRLOG(
                 "Warning. Cannot open the .apple2 system defaults file.\n"
                 "Make sure it's readable in your home directory.");
-            ERRLOG("Press RETURN to continue...");
-            getchar(); // HACK FIXME -- this needs to be decoupled from both testing and mobile targets
             return;
         }
 
@@ -276,6 +285,10 @@ void load_settings(void)
 
             case PRM_VOLUME:
                 sound_volume = match(volume_table, argument);
+                break;
+
+            case PRM_CAPSLOCK:
+                caps_lock = match(capslock_table, argument) ? true : false;
                 break;
 
             case PRM_JOY_INPUT:
@@ -393,6 +406,7 @@ bool save_settings(void)
             "color = %s\n"
             "video = %s\n"
             "volume = %s\n"
+            "caps lock = %s\n"
             "joystick = %s\n"
             "system path = %s\n",
             cpu_scale_factor,
@@ -401,6 +415,7 @@ bool save_settings(void)
             reverse_match(color_table, color_mode),
             reverse_match(video_table, a2_video_mode),
             reverse_match(volume_table, sound_volume),
+            reverse_match(capslock_table, (int)caps_lock),
             reverse_match(joy_input_table, joy_mode),
             system_path);
     anErr = anErr || (err < 0);

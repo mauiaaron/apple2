@@ -567,7 +567,8 @@ void video_sync(int block) {
     // sync to the capslock state (which could be modified outside this app)
     unsigned int caps_state = 0;
     XkbGetIndicatorState(display, XkbUseCoreKbd, &caps_state);
-    caps_lock = (caps_state & 0x01);
+    // caps_lock = (caps_state & 0x01); -- NOTE: synching to caps_lock in X11 leads to a broken work flow if switching
+    // between a terminal app and the emulator, so disable this
 
     bool keyevent = true;
     do {

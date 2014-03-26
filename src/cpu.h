@@ -77,7 +77,6 @@ extern unsigned char cpu65_flags_decode[256];
 
 extern int16_t cpu65_cycle_count;
 extern int16_t cpu65_cycles_to_execute;
-extern uint8_t emul_reinitialize;
 
 #endif /* !__ASSEMBLER__ */
 

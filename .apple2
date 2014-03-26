@@ -4,6 +4,7 @@ disk path = /usr/local/games/apple2/disks
 color = interpolated
 video = 1X
 volume = 8
+caps lock = 1
 joystick = joy keypad
 system path = /usr/local/games/apple2/rom
 pc joystick parms = 128 128 255 1 255 1
