@@ -26,6 +26,8 @@
 
 #define debugtext yytext
 
+#define DEBUG_BUFSZ 256
+
 YY_BUFFER_STATE buffer = 0;
 
 extern char second_buf[DEBUGGER_BUF_Y][DEBUGGER_BUF_X];/* scratch buffer for output */
@@ -33,6 +35,31 @@ extern int num_buffer_lines;            /* num lines of output */
 extern int arg1, arg2, arg3;            /* command arguments */
 extern int breakpoints[MAX_BRKPTS];     /* memory breakpoints */
 extern int watchpoints[MAX_BRKPTS];     /* memory watchpoints */
+
+// internal debugger commands
+extern void clear_debugger_screen();
+extern void bload(FILE*, char*, int);
+extern void show_misc_info();
+extern uint8_t get_current_opcode();
+extern void dump_mem(int, int, int, int, int);
+extern void search_mem(char*, int, int);
+extern void set_mem(int, char*);
+extern void set_lc_mem(int, int, char*);
+extern void disasm(int, int, int, int);
+extern void clear_halt(int*, int);
+extern bool set_halt(int*, int);
+extern void show_breakpts();
+extern void show_regs();
+extern void display_help();
+extern void show_lc_info();
+extern void show_disk_info();
+extern void set_halt_opcode(uint8_t opcode);
+extern void set_halt_65c02();
+extern void clear_halt_65c02();
+extern void clear_halt_opcode(uint8_t opcode);
+extern void show_opcode_breakpts();
+extern int debugger_go(stepping_struct_t s);
+extern void fb_sha1();
 
 /*
   d{is} {lc1|lc2} {/bank/}{addr} {+}{len}
@@ -452,7 +479,7 @@ ADDRS	[0-9a-fA-F]+
         s.step_type = NEXTING;
     }
 
-    c_debugger_begin_stepping(s);
+    debugger_go(s);
     return STEP;
 }
 
@@ -472,7 +499,7 @@ ADDRS	[0-9a-fA-F]+
         s.step_type = NEXTING;
     }
 
-    c_debugger_begin_stepping(s);
+    debugger_go(s);
     return STEP;
 }
 
@@ -483,7 +510,7 @@ ADDRS	[0-9a-fA-F]+
         .step_frame = 1
     };
 
-    c_debugger_begin_stepping(s);
+    debugger_go(s);
     return FINISH;
 }
 
@@ -523,7 +550,7 @@ ADDRS	[0-9a-fA-F]+
         .step_pc = cpu65_current.pc + delta
     };
 
-    c_debugger_begin_stepping(s);
+    debugger_go(s);
     return UNTIL;
 }
 
@@ -538,7 +565,7 @@ ADDRS	[0-9a-fA-F]+
         .step_type = GOING
     };
 
-    c_debugger_begin_stepping(s);
+    debugger_go(s);
     return GO;
 }
 
@@ -547,7 +574,7 @@ ADDRS	[0-9a-fA-F]+
         .step_type = GOING
     };
 
-    c_debugger_begin_stepping(s);
+    debugger_go(s);
     return GO;
 }
 
@@ -755,16 +782,60 @@ ADDRS	[0-9a-fA-F]+
     return SEARCH;
 }
 
-{BOS}key{WS}+{HEX}+{EOS} {
-    /* send key code to emulator */
-    uint8_t key;
+{BOS}type{WS}+{CHAR}+{EOS} {
+    /* type ASCII to emulator */
+    char buf[DEBUG_BUFSZ];
 
     while (!isspace(*debugtext)) ++debugtext;
     while (isspace(*debugtext)) ++debugtext;
-    key = (uint8_t) strtol(debugtext, &debugtext, 16);
 
-    apple_ii_64k[0][0xC000] = key;
-    apple_ii_64k[1][0xC000] = key;
+    strncpy(buf, debugtext, DEBUG_BUFSZ-2);
+    int len = strlen(buf);
+    buf[len] = '\r';
+    buf[len+1] = '\0';
+
+    stepping_struct_t s = {
+        .step_type = TYPING,
+        .step_text = buf
+    };
+
+    debugger_go(s);
+
+    return TYPE;
+}
+
+{BOS}load{WS}+{CHAR}+{EOS} {
+    /* load/type ASCII <file> */
+    FILE *fp = NULL;
+    char buf[DEBUG_BUFSZ];
+
+    while (!isspace(*debugtext)) ++debugtext;
+    while (isspace(*debugtext)) ++debugtext;
+
+    fp = fopen(debugtext, "r");
+    if (fp == NULL) {
+	perror(debugtext);
+	sprintf(second_buf[num_buffer_lines++], "problem: %s", debugtext);
+	return LOAD;
+    }
+
+    LOG("Typing...");
+    while (fgets(buf, DEBUG_BUFSZ, fp)) {
+        LOG(buf);
+
+        stepping_struct_t s = {
+            .step_type = TYPING,
+            .step_text = buf
+        };
+
+        int ch = debugger_go(s);
+        if (ch != -1) {
+            break;
+        }
+    }
+
+    fclose(fp);
+    return LOAD;
 }
 
 {BOS}la?n?g?{EOS} {
@@ -788,6 +859,11 @@ ADDRS	[0-9a-fA-F]+
 {BOS}fre?s?h?{EOS} {
     /* refresh the screen */
     clear_debugger_screen();
+}
+
+{BOS}(fbsha1?){EOS} {
+    fb_sha1();
+    return FBSHA1;
 }
 
 {BOS}(\?|he?l?p?){EOS} {

@@ -31,6 +31,7 @@ typedef enum {
     NEXTING,
     FINISHING,
     UNTILING,
+    TYPING,
     GOING
 } stepping_type_t;
 
@@ -40,6 +41,8 @@ typedef struct stepping_struct_t {
     uint16_t step_frame;
     uint16_t step_pc;
     bool should_break;
+    time_t timeout;
+    const char *step_text;
 } stepping_struct_t;
 
 #define DEBUGGER_BUF_X  39
@@ -49,7 +52,8 @@ typedef struct stepping_struct_t {
 /* debugger commands */
 enum token_type { MEM, DIS, REGS, SETMEM, STEP, FINISH, UNTIL, GO, VM,
                   BREAK, WATCH, CLEAR, IGNORE, STATUS, OPCODES, LC, DRIVE,
-                  SEARCH, HELP, LOG, BSAVE, BLOAD, SAVE, UNKNOWN };
+                  SEARCH, HELP, LOG, BSAVE, BLOAD, SAVE, FBSHA1, TYPE,
+                  LOAD, UNKNOWN };
 
 typedef enum {
     addr_implied,
@@ -77,35 +81,14 @@ struct opcode_struct
 
 extern const struct opcode_struct *opcodes;
 
-// Debugger commands
-void clear_debugger_screen();
-void bload(FILE*, char*, int);
-void show_misc_info();
-uint8_t get_current_opcode();
-void dump_mem(int, int, int, int, int);
-void search_mem(char*, int, int);
-void set_mem(int, char*);
-void set_lc_mem(int, int, char*);
-void disasm(int, int, int, int);
-void clear_halt(int*, int);
-void set_halt(int*, int);
-void show_breakpts();
-void show_regs();
-void display_help();
-void show_lc_info();
-void show_disk_info();
-void set_halt_opcode(uint8_t opcode);
-void set_halt_65c02();
-void clear_halt_65c02();
-void clear_halt_opcode(uint8_t opcode);
-void show_opcode_breakpts();
 #ifdef INTERFACE_CLASSIC
 void c_interface_debugging();
 #endif
 
 void c_debugger_init();
+void c_debugger_go();
 bool c_debugger_should_break();
-void c_debugger_begin_stepping(stepping_struct_t s);
+void c_debugger_set_timeout(const unsigned int secs);
 
 extern const struct opcode_struct opcodes_6502[256];
 extern const struct opcode_struct opcodes_65c02[256];

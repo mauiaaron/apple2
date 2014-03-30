@@ -16,9 +16,14 @@
 
 #include "common.h"
 
+#ifdef HAVE_OPENSSL
+#include <openssl/sha.h>
+#endif
+
 const struct opcode_struct *opcodes;
 
-static stepping_struct_t stepping_struct;
+static stepping_struct_t stepping_struct = { 0 };
+static unsigned int stepping_timeout = 0;
 
 volatile bool is_debugging = false;
 
@@ -703,6 +708,7 @@ void show_regs() {
                 0  - no it won't
                 >0  - yes it will
    ------------------------------------------------------------------------- */
+#define BRANCH_NA -1
 static int will_branch() {
 
     uint8_t op = get_current_opcode();
@@ -729,9 +735,8 @@ static int will_branch() {
         return (int) (cpu65_current.f & Z_Flag_6502);
     }
 
-    return -1;
+    return BRANCH_NA;
 }
-
 
 /* -------------------------------------------------------------------------
     set_halt () = set a breakpoint or watchpoint in memory
@@ -1057,31 +1062,76 @@ void clear_debugger_screen() {
 }
 
 /* -------------------------------------------------------------------------
-    end_cpu_step () - finish a stepping command
-        display the next instruction, and tell whether it will branch
+    fb_sha1 () -- prints SHA1 of the current Apple // framebuffer
    ------------------------------------------------------------------------- */
-static void end_cpu_step() {
+void fb_sha1() {
+#ifdef HAVE_OPENSSL
+    uint8_t md[SHA_DIGEST_LENGTH];
+    char buf[(SHA_DIGEST_LENGTH*2)+1];
 
-    clear_debugger_screen();
-    disasm(cpu65_current.pc, 1, 0, -1);
-    int branch = will_branch();
-    if (branch == -1)
-    {
-        return;
+    video_setpage(!!(softswitches & SS_SCREEN));
+    video_redraw();
+
+    const uint8_t * const fb = video_current_framebuffer();
+    SHA1(fb, SCANWIDTH*SCANHEIGHT, md);
+
+    int i=0;
+    for (int j=0; j<SHA_DIGEST_LENGTH; j++, i+=2) {
+        sprintf(buf+i, "%02X", md[j]);
     }
+    sprintf(buf+i, "%c", '\0');
+    LOG("SHA1 : %s", buf);
 
-    sprintf(second_buf[num_buffer_lines++], "%s", (branch) ? "will branch" : "will not branch");
+    int ch = -1;
+    while ((ch = c_mygetch(1)) == -1) {
+        // ...
+    }
+    clear_debugger_screen();
+
+    sprintf(second_buf[num_buffer_lines++], "%s", buf);
+#else
+    sprintf(second_buf[num_buffer_lines++], "SHA1 unavailable, not built with OpenSSL");
+#endif
 }
 
 /* -------------------------------------------------------------------------
-    begin_cpu_step() - step the CPU
+    begin_cpu_stepping() - step the CPU
         set the CPU into stepping mode and yield to CPU thread
    ------------------------------------------------------------------------- */
-static void begin_cpu_step()
-{
+static int begin_cpu_stepping() {
+    int ch = -1;
     int err = 0;
 
+    // kludgey set max CPU speed... 
+    double saved_scale = cpu_scale_factor;
+    double saved_altscale = cpu_altscale_factor;
+    bool saved_fullspeed = g_bFullSpeed;
+    cpu_scale_factor = CPU_SCALE_FASTEST;
+    cpu_altscale_factor = CPU_SCALE_FASTEST;
+    g_bFullSpeed = true;
+
+    unsigned int idx = 0;
+    unsigned int textlen = 0;
+    if (stepping_struct.step_text) {
+        textlen = strlen(stepping_struct.step_text);
+    }
+
     do {
+        if (textlen && !((apple_ii_64k[0][0xC000] & 0x80) || (apple_ii_64k[1][0xC000] & 0x80)) ) {
+            uint8_t text_ch = (uint8_t)stepping_struct.step_text[idx];
+            if (text_ch == '\n') {
+                text_ch = '\r';
+            }
+
+            apple_ii_64k[0][0xC000] = text_ch | 0x80;
+            apple_ii_64k[1][0xC000] = text_ch | 0x80;
+
+            ++idx;
+            if (idx >= textlen) {
+                textlen = 0;
+            }
+        }
+
         if ((err = pthread_cond_signal(&cpu_thread_cond))) {
             ERRLOG("pthread_cond_signal : %d", err);
         }
@@ -1089,8 +1139,19 @@ static void begin_cpu_step()
             ERRLOG("pthread_cond_wait : %d", err);
         }
 
-        if (c_mygetch(0) != -1) {
+#ifdef TESTING
+        video_sync(0);
+#else
+        if ((ch = c_mygetch(0)) != -1) {
             break;
+        }
+#endif
+
+        if (idx > textlen) {
+            break; // finished typing
+        }
+        if (stepping_timeout && (stepping_struct.timeout < time(NULL))) {
+            break; // timeout
         }
     } while (!stepping_struct.should_break);
 
@@ -1098,7 +1159,11 @@ static void begin_cpu_step()
         ERRLOG("pthread_cond_signal : %d", err);
     }
 
-    end_cpu_step();
+    cpu_scale_factor = saved_scale;
+    cpu_altscale_factor = saved_altscale;
+    g_bFullSpeed = saved_fullspeed;
+
+    return ch;
 }
 
 /* -------------------------------------------------------------------------
@@ -1171,6 +1236,7 @@ bool c_debugger_should_break() {
             break;
 
             case GOING:
+            case TYPING:
             break;
         }
     }
@@ -1179,11 +1245,27 @@ bool c_debugger_should_break() {
 }
 
 /* -------------------------------------------------------------------------
-    c_debugger_begin_stepping () - step into or step over commands
+    debugger_go () - step into or step over commands
    ------------------------------------------------------------------------- */
-void c_debugger_begin_stepping(stepping_struct_t s) {
+int debugger_go(stepping_struct_t s) {
     stepping_struct = s;
-    begin_cpu_step();
+
+    int ch = begin_cpu_stepping();
+
+#if !defined(TESTING)
+    clear_debugger_screen();
+    if (stepping_struct.step_type != TYPING) {
+        disasm(cpu65_current.pc, 1, 0, -1);
+        int branch = will_branch();
+        if (branch != BRANCH_NA) {
+            sprintf(second_buf[num_buffer_lines++], "%s", (branch) ? "will branch" : "will not branch");
+        }
+    }
+#endif
+
+    stepping_struct = (stepping_struct_t){ 0 };
+
+    return ch;
 }
 
 /* -------------------------------------------------------------------------
@@ -1230,12 +1312,13 @@ void c_debugger_init() {
     }
 }
 
+#ifdef INTERFACE_CLASSIC
 /* -------------------------------------------------------------------------
     do_debug_command ()
         perform a debugger command
    ------------------------------------------------------------------------- */
 
-void do_debug_command() {
+static void do_debug_command() {
     int i = 0, j = 0, k = 0;
 
     /* reset key local vars */
@@ -1302,7 +1385,6 @@ void do_debug_command() {
         main debugging console
    ------------------------------------------------------------------------- */
 
-#ifdef INTERFACE_CLASSIC
 void c_interface_debugging() {
 
     static char lex_initted = 0;
@@ -1391,4 +1473,27 @@ void c_interface_debugging() {
     return;
 }
 #endif
+
+/* -------------------------------------------------------------------------
+    debugger testing-driven API
+   ------------------------------------------------------------------------- */
+
+void c_debugger_go() {
+    stepping_struct_t s = (stepping_struct_t){
+        .step_type = GOING,
+        .timeout = time(NULL) + stepping_timeout
+    };
+
+    num_buffer_lines = 0;
+    is_debugging = true;
+
+    debugger_go(s);
+
+    is_debugging = false;
+    num_buffer_lines = 0;
+}
+
+void c_debugger_set_timeout(const unsigned int secs) {
+    stepping_timeout = secs;
+}
 
