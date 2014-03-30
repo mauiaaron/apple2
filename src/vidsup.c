@@ -724,3 +724,15 @@ void video_shutdown(void)
 #endif
 }
 
+/* -------------------------------------------------------------------------
+    video_setpage(p):    Switch to screen page p
+   ------------------------------------------------------------------------- */
+void video_setpage(int p)
+{
+    video__current_page = p;
+}
+
+const uint8_t * const video_current_framebuffer() {
+    return !video__current_page ? video__fb1 : video__fb2;
+}
+

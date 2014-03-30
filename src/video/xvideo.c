@@ -67,14 +67,6 @@ typedef struct {
     unsigned long status;
 } FullScreenHints;
 
-/* -------------------------------------------------------------------------
-    video_setpage(p):    Switch to screen page p
-   ------------------------------------------------------------------------- */
-void video_setpage(int p)
-{
-    video__current_page = p;
-}
-
 #ifdef HAVE_X11_SHM
 /*
  * XShm code influenced from the DOOM source code.

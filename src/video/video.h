@@ -97,8 +97,8 @@ void video_loadfont_int(int first, int qty, const unsigned char *data);
  */
 void video_plotchar(int row, int col, int color, unsigned char code);
 
-/* Called at about 30Hz (this may change in future), and when waiting in
- * the interface screens.
+/*
+ * Draws video and possibly handles keyboard input.
  *
  * Should flush any video data to the real screen (if any kind of caching
  * is in use), check for keyboard input (presently reported via
@@ -107,6 +107,11 @@ void video_plotchar(int row, int col, int color, unsigned char code);
 void video_sync(int block);
 
 void video_set_mode(a2_video_mode_t mode);
+
+/*
+ * Get a reference to current internal framebuffer
+ */
+const uint8_t * const video_current_framebuffer();
 
 #endif /* !__ASSEMBLER__ */
 
