@@ -27,7 +27,8 @@ extern unsigned char joy_button1;
 
 /* mutex used to synchronize between cpu and main threads */
 pthread_mutex_t interface_mutex = PTHREAD_MUTEX_INITIALIZER;
-pthread_cond_t interface_cond = PTHREAD_COND_INITIALIZER;
+pthread_cond_t ui_thread_cond = PTHREAD_COND_INITIALIZER;
+pthread_cond_t cpu_thread_cond = PTHREAD_COND_INITIALIZER;
 
 #ifdef LINUX_JOYSTICK
 #include <linux/joystick.h>

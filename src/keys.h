@@ -137,7 +137,8 @@
 // ----------------------------------------------------------------------------
 
 extern pthread_mutex_t interface_mutex;
-extern pthread_cond_t interface_cond;
+extern pthread_cond_t cpu_thread_cond;
+extern pthread_cond_t ui_thread_cond;
 extern bool caps_lock;
 
 #ifdef LINUX_JOYSTICK
@@ -147,7 +148,6 @@ extern int js_offset_x, js_offset_y;
 extern float js_adjustlow_x, js_adjustlow_y, js_adjusthigh_x, js_adjusthigh_y;
 #endif
 
-void enter_debugger(void);
 int c_mygetch(int block);
 int c_rawkey();
 void c_keys_set_key(int key);

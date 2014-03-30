@@ -1082,10 +1082,10 @@ static void begin_cpu_step()
     int err = 0;
 
     do {
-        if ((err = pthread_cond_signal(&interface_cond))) {
+        if ((err = pthread_cond_signal(&cpu_thread_cond))) {
             ERRLOG("pthread_cond_signal : %d", err);
         }
-        if ((err = pthread_cond_wait(&interface_cond, &interface_mutex))) {
+        if ((err = pthread_cond_wait(&ui_thread_cond, &interface_mutex))) {
             ERRLOG("pthread_cond_wait : %d", err);
         }
 
@@ -1094,7 +1094,7 @@ static void begin_cpu_step()
         }
     } while (!stepping_struct.should_break);
 
-    if ((err = pthread_cond_signal(&interface_cond))) {
+    if ((err = pthread_cond_signal(&cpu_thread_cond))) {
         ERRLOG("pthread_cond_signal : %d", err);
     }
 
@@ -1384,7 +1384,7 @@ void c_interface_debugging() {
 
     c_interface_exit(-1);
     is_debugging = false;
-    if ((err = pthread_cond_signal(&interface_cond)))
+    if ((err = pthread_cond_signal(&cpu_thread_cond)))
     {
         ERRLOG("pthread_cond_signal : %d", err);
     }

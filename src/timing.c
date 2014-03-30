@@ -32,7 +32,7 @@ double cpu_altscale_factor = 1.0;
 int gc_cycles_timer_0 = 0;
 int gc_cycles_timer_1 = 0;
 
-uint8_t emul_reinitialize;
+uint8_t emul_reinitialize = 0;
 pthread_t cpu_thread_id = 0;
 
 static unsigned int g_nCyclesExecuted; // # of cycles executed up to last IO access
@@ -230,10 +230,10 @@ void cpu_thread(void *dummyptr) {
                     debugging_cycles -= cpu65_cycle_count;
                     if (c_debugger_should_break() || (debugging_cycles <= 0)) {
                         int err = 0;
-                        if ((err = pthread_cond_signal(&interface_cond))) {
+                        if ((err = pthread_cond_signal(&ui_thread_cond))) {
                             ERRLOG("pthread_cond_signal : %d", err);
                         }
-                        if ((err = pthread_cond_wait(&interface_cond, &interface_mutex))) {
+                        if ((err = pthread_cond_wait(&cpu_thread_cond, &interface_mutex))) {
                             ERRLOG("pthread_cond_wait : %d", err);
                         }
                         if (debugging_cycles <= 0) {
