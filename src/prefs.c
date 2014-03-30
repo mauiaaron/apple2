@@ -37,10 +37,10 @@ char system_path[SYSSIZE];
 char disk_path[DISKSIZE];
 
 int apple_mode = IIE_MODE;
-int sound_volume;
-color_mode_t color_mode;
-a2_video_mode_t a2_video_mode;
-joystick_mode_t joy_mode;
+int sound_volume = 2;
+color_mode_t color_mode = COLOR;
+a2_video_mode_t a2_video_mode = VIDEO_1X;
+joystick_mode_t joy_mode = JOY_OFF;
 
 static char *config_filename = NULL;
 
