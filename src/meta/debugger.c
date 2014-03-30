@@ -460,7 +460,7 @@ void bload(FILE *f, char *name, int addrs) {
 
     if ((addrs < 0) || (addrs > 0xffff))
     {
-        sprintf(second_buf[num_buffer_lines++], "invalid address");
+        sprintf(second_buf[num_buffer_lines++], "problem: invalid address");
         return;
     }
 
@@ -470,6 +470,11 @@ void bload(FILE *f, char *name, int addrs) {
         for (; len > 0; len--)
         {
             data = *hexstr;
+
+            if (addrs+len >= 0x10000) {
+                sprintf(second_buf[num_buffer_lines++], "problem: bload will overflow");
+                return;
+            }
 
             /* call the set_memory routine, which knows how to route
                the request */

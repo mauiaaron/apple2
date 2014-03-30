@@ -439,31 +439,30 @@ ADDRS	[0-9a-fA-F]+
     /* bload <file> <addr> */
     FILE *fp = NULL;
     char *ptr = NULL;
-    char name[128];
-    int len = -1;
+    char buf[DEBUG_BUFSZ];
 
     while (!isspace(*debugtext)) ++debugtext;
     while (isspace(*debugtext)) ++debugtext;
     ptr = debugtext;
     while (!isspace(*debugtext)) ++debugtext;
-    len = debugtext-ptr;
+    int len = MIN(debugtext-ptr, DEBUG_BUFSZ-1);
 
     /* filename */
-    strncpy(name, ptr, len);
-    name[len] = '\0';
+    strncpy(buf, ptr, len);
+    buf[len] = '\0';
 
     /* bload addr */
     while (isspace(*debugtext)) ++debugtext;
     arg1 = strtol(debugtext, (char**)NULL, 16);
 
-    fp = fopen(name, "r");
+    fp = fopen(buf, "r");
     if (fp == NULL) {
-	sprintf(second_buf[num_buffer_lines++], "problem: %s", name);
-	perror(name);
+	perror(buf);
+	sprintf(second_buf[num_buffer_lines++], "problem: %s", buf);
 	return BLOAD;
     }
 
-    bload(fp, name, arg1);
+    bload(fp, buf, arg1);
     fclose(fp);
     return BLOAD;
 }
@@ -876,7 +875,7 @@ ADDRS	[0-9a-fA-F]+
     /* save memory dump to file */
     FILE *fp = NULL;
     char *ptr = NULL;
-    int len, start, len2, bank;
+    char buf[DEBUG_BUFSZ];
 
     while (!isspace(*debugtext)) ++debugtext;
     while (isspace(*debugtext)) ++debugtext;
@@ -884,35 +883,40 @@ ADDRS	[0-9a-fA-F]+
     /* copy file name */
     ptr = debugtext;
     while (!isspace(*debugtext)) ++debugtext;
-    len = debugtext - ptr;
-    strncpy(temp, ptr, len);
-    temp[len] = '\0';
+    int len = MIN(debugtext - ptr, TEMPSIZE-1);
+    strncpy(buf, ptr, len);
+    buf[len] = '\0';
 
     /* get bank info */
     while (*debugtext != '/') ++debugtext;
     ++debugtext;
-    bank = strtol(debugtext, &debugtext, 10);
+    int bank = strtol(debugtext, &debugtext, 10);
     ++debugtext;
 
-    /* extract start and len */
-    start = strtol(debugtext, &debugtext, 16);
-    len2 = strtol(debugtext, &debugtext, 16);
+    /* extract addrs and len */
+    unsigned int addrs = strtol(debugtext, &debugtext, 16);
+    while (isspace(*debugtext)) ++debugtext;
+    len = strtol(debugtext, &debugtext, 16);
 
-    fp = fopen(temp, "w");	/* try to open file for writing */
+    if (addrs+len > 0x10000) {
+        sprintf(second_buf[num_buffer_lines++], "buffer length overflow");
+        return BSAVE;
+    }
+
+    fp = fopen(buf, "w");	/* try to open file for writing */
     if (fp == NULL) {
-	sprintf(second_buf[num_buffer_lines++], "problem: %s", temp);
-	perror(temp);
-	return BSAVE;
-    }
-    len = fwrite(apple_ii_64k[bank]+start, 1, len2, fp);
-    if (len < len2) {
-	sprintf(second_buf[num_buffer_lines++], "problem: %s", temp);
-	perror(temp);
-	fclose(fp);
+	perror(buf);
+	sprintf(second_buf[num_buffer_lines++], "problem: %s", buf);
 	return BSAVE;
     }
 
-    sprintf(second_buf[num_buffer_lines++], "bsaved: %s", temp);
+    do {
+        int written = fwrite(apple_ii_64k[bank]+addrs, 1, len, fp);
+        len -= written;
+        addrs += written;
+    } while(len);
+
+    sprintf(second_buf[num_buffer_lines++], "bsaved: %s", buf);
     fclose(fp);
     return BSAVE;
 }
