@@ -5112,7 +5112,7 @@ TEST test_PLP(uint8_t flags) {
     ASSERT(cpu65_current.x      == 0x03);
     ASSERT(cpu65_current.y      == 0x04);
     ASSERT(cpu65_current.sp     == sp+1);
-    ASSERT(cpu65_current.f      == (flags | fB | fX | fI));
+    ASSERT(cpu65_current.f      == (flags | fB | fX));
 
     ASSERT(cpu65_debug.ea       == TEST_LOC);
     ASSERT(cpu65_debug.d        == 0xff);
@@ -5671,7 +5671,7 @@ TEST test_RTI(uint8_t flags) {
     ASSERT(cpu65_current.a      == 0x02);
     ASSERT(cpu65_current.x      == 0x03);
     ASSERT(cpu65_current.y      == 0x04);
-    ASSERT(cpu65_current.f      == (flags | fB | fX | fI));
+    ASSERT(cpu65_current.f      == (flags | fB | fX));
     ASSERT(cpu65_current.sp     == 0x83);
 
     ASSERT(cpu65_debug.ea       == TEST_LOC);
