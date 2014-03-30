@@ -364,7 +364,14 @@ static int keysym_to_scancode(void) {
     case XK_Control_R:
         rc = SCODE_R_CTRL; break;
     case XK_Caps_Lock:
-        rc = SCODE_CAPS; break;
+    {
+        // NOTE : emulator initially sets state based on a user preference.  But if the user actually taps the Caps Lock
+        // key, then sync to system state.
+        unsigned int caps_state = 0;
+        XkbGetIndicatorState(display, XkbUseCoreKbd, &caps_state);
+        caps_lock = (caps_state & 0x01);
+        rc = -1; break;
+    }
     case XK_BackSpace:
         rc = SCODE_BS; break;
     case XK_Insert:
@@ -555,12 +562,6 @@ void video_sync(int block) {
     // post the image and loop waiting for it to finish and
     // also process other input events
     post_image();
-
-    // sync to the capslock state (which could be modified outside this app)
-    unsigned int caps_state = 0;
-    XkbGetIndicatorState(display, XkbUseCoreKbd, &caps_state);
-    // caps_lock = (caps_state & 0x01); -- NOTE: synching to caps_lock in X11 leads to a broken work flow if switching
-    // between a terminal app and the emulator, so disable this
 
     bool keyevent = true;
     do {
