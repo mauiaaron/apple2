@@ -742,7 +742,7 @@ static int will_branch() {
     set_halt () = set a breakpoint or watchpoint in memory
         type = points to "watchpoints" or "breakpoints" array
    ------------------------------------------------------------------------- */
-void set_halt(int *type, int addrs) {
+bool set_halt(int *type, int addrs) {
     int i;
 
     for (i = 0; i < MAX_BRKPTS; i++)
@@ -751,11 +751,12 @@ void set_halt(int *type, int addrs) {
         {
             type[i] = addrs;
             sprintf(second_buf[num_buffer_lines++], "set at %04X", addrs);
-            return;
+            return true;
         }
     }
 
     sprintf(second_buf[num_buffer_lines++], "too many!");
+    return false;
 }
 
 /* -------------------------------------------------------------------------
@@ -841,37 +842,40 @@ void clear_halt_65c02() {
                 n = two or more breaks and/or watches fired
    ------------------------------------------------------------------------- */
 int at_haltpt() {
-    int i;
+    int count = 0;
 
     /* check op_breakpoints */
     uint8_t op = get_last_opcode();
     if (op_breakpoints[op])
     {
         sprintf(second_buf[num_buffer_lines++], "stopped at %04X bank %d instruction %02X", cpu65_current.pc, c_get_current_rambank(cpu65_current.pc), op);
+        ++count;
     }
 
-    for (i = 0; i < MAX_BRKPTS; i++)
+    for (int i = 0; i < MAX_BRKPTS; i++)
     {
-
         if (cpu65_current.pc == breakpoints[i])
         {
             sprintf(second_buf[num_buffer_lines++], "stopped at %04X bank %d", breakpoints[i], c_get_current_rambank(cpu65_current.pc));
+            ++count;
         }
     }
 
     if (cpu65_debug.rw)   /* only check watchpoints if read/write occured */
     {
-        for (i = 0; i < MAX_BRKPTS; i++)
+        for (int i = 0; i < MAX_BRKPTS; i++)
         {
             if (cpu65_debug.ea == watchpoints[i])
             {
-                if (cpu65_debug.rw & 2)
+                if (cpu65_debug.rw & 0x2)
                 {
                     sprintf(second_buf[num_buffer_lines++], "wrote: %04X: %02X", watchpoints[i], cpu65_debug.d);
+                    ++count;
                 }
                 else
                 {
                     sprintf(second_buf[num_buffer_lines++], "read: %04X", watchpoints[i]);
+                    ++count;
                 }
 
                 cpu65_debug.rw = 0; /* only allow WP to trip once */
@@ -879,7 +883,7 @@ int at_haltpt() {
         }
     }
 
-    return num_buffer_lines;    /* 0 indicates nothing happened */
+    return count;    /* 0 indicates nothing happened */
 }
 
 /* -------------------------------------------------------------------------
@@ -1495,5 +1499,9 @@ void c_debugger_go() {
 
 void c_debugger_set_timeout(const unsigned int secs) {
     stepping_timeout = secs;
+}
+
+bool c_debugger_set_watchpoint(const uint16_t addr) {
+    return set_halt(watchpoints, addr);
 }
 

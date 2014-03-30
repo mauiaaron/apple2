@@ -89,6 +89,7 @@ void c_debugger_init();
 void c_debugger_go();
 bool c_debugger_should_break();
 void c_debugger_set_timeout(const unsigned int secs);
+bool c_debugger_set_watchpoint(const uint16_t addr);
 
 extern const struct opcode_struct opcodes_6502[256];
 extern const struct opcode_struct opcodes_65c02[256];
