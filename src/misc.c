@@ -824,8 +824,7 @@ int main(int sargc, char *sargv[])
     c_initialize_firsttime();           /* init svga graphics and vm */
 
     // spin off cpu thread
-    pthread_t thread1;
-    pthread_create(&thread1, NULL, (void *) &cpu_thread, (void *)NULL);
+    pthread_create(&cpu_thread_id, NULL, (void *) &cpu_thread, (void *)NULL);
 
     // continue with main render thread
     main_thread(NULL);

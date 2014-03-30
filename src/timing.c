@@ -33,6 +33,7 @@ int gc_cycles_timer_0 = 0;
 int gc_cycles_timer_1 = 0;
 
 uint8_t emul_reinitialize;
+pthread_t cpu_thread_id = 0;
 
 static unsigned int g_nCyclesExecuted; // # of cycles executed up to last IO access
 
@@ -156,6 +157,9 @@ void timing_initialize()
 }
 
 void cpu_thread(void *dummyptr) {
+
+    assert(pthread_self() == cpu_thread_id);
+
     struct timespec deltat;
     struct timespec t0;         // the target timer
     struct timespec ti, tj;     // actual time samples

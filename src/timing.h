@@ -45,6 +45,8 @@ extern int g_nCpuCyclesFeedback;
 extern double cpu_scale_factor;
 extern double cpu_altscale_factor;
 
+extern pthread_t cpu_thread_id;
+
 extern int gc_cycles_timer_0;
 extern int gc_cycles_timer_1;
 

@@ -1106,7 +1106,12 @@ static void begin_cpu_step()
    ------------------------------------------------------------------------- */
 bool c_debugger_should_break() {
 
-    // WARNING : this state management function should be called from CPU thread only!
+    if (pthread_self() != cpu_thread_id) {
+        // OOPS ...
+        ERRLOG("should only call this from cpu thread, bailing...");
+        void *ptr = NULL;
+        free(ptr);
+    }
 
     if (at_haltpt()) {
         stepping_struct.should_break = true;
