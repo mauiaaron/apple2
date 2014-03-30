@@ -99,10 +99,13 @@ void set_halt_65c02();
 void clear_halt_65c02();
 void clear_halt_opcode(uint8_t opcode);
 void show_opcode_breakpts();
+#ifdef INTERFACE_CLASSIC
+void c_interface_debugging();
+#endif
 
+void c_debugger_init();
 bool c_debugger_should_break();
 void c_debugger_begin_stepping(stepping_struct_t s);
-void c_interface_debugging();
 
 extern const struct opcode_struct opcodes_6502[256];
 extern const struct opcode_struct opcodes_65c02[256];

@@ -1211,6 +1211,19 @@ void display_help() {
     num_buffer_lines = i;
 }
 
+void c_debugger_init() {
+    /* reset the watchpoints and breakpoints */
+    for (unsigned int i=0; i<MAX_BRKPTS; i++)
+    {
+        breakpoints[i] = -1;
+        watchpoints[i] = -1;
+    }
+
+    for (unsigned int i=0; i<0x100; i++)
+    {
+        op_breakpoints[(unsigned char)i] = 0;
+    }
+}
 
 /* -------------------------------------------------------------------------
     do_debug_command ()

@@ -26,11 +26,6 @@ static unsigned char apple_iie_rom[32768];              /* //e */
 bool do_logging = true; // also controlled by NDEBUG
 FILE *error_log = NULL;
 
-/* in debugger.c */
-extern int breakpoints[];
-extern int watchpoints[];
-extern int op_breakpoints[256];
-
 GLUE_FIXED_READ(read_ram_default,apple_ii_64k)
 GLUE_FIXED_WRITE(write_ram_default,apple_ii_64k)
 GLUE_BANK_READ(read_ram_bank,base_d000_rd)
@@ -700,20 +695,6 @@ void reinitialize(void)
 {
     int i;
 
-#ifdef DEBUGGER
-    /* reset the watchpoints and breakpoints */
-    for (i=0; i<MAX_BRKPTS; i++)
-    {
-        breakpoints[i] = -1;
-        watchpoints[i] = -1;
-    }
-
-    for (i=0; i<0x100; i++)
-    {
-        op_breakpoints[(unsigned char)i] = 0;
-    }
-#endif
-
     c_initialize_vm();
 
     softswitches = SS_TEXT | SS_IOUDIS | SS_C3ROM | SS_LCWRT | SS_LCSEC;
@@ -757,6 +738,10 @@ void c_initialize_firsttime()
     DSInit();
     SpkrInitialize();
     MB_Initialize();
+#endif
+
+#ifdef DEBUGGER
+    c_debugger_init();
 #endif
 
     reinitialize();
