@@ -957,4 +957,15 @@ void init_lex (char *str, int size) {
 	printf("lex buffer not big enough\n");
 	exit(1);
     }	       
+
+#define WONT_EXECUTE 0
+    static volatile int hack_warnings = (int)&hack_warnings;
+    if (hack_warnings == WONT_EXECUTE) {
+        // flex defines these, but we don't use 'em ...
+        char hack[2];
+        yyunput('\0', hack);
+        input();
+    }
+#undef WONT_EXECUTE
 }
+
