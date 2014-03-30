@@ -1155,8 +1155,7 @@ static int begin_cpu_stepping() {
             break;
         }
 #endif
-
-        if (idx > textlen) {
+        if ( (stepping_struct.step_type != TYPING) && (idx > textlen) ) {
             break; // finished typing
         }
         if (stepping_timeout && (stepping_struct.timeout < time(NULL))) {
@@ -1246,6 +1245,7 @@ bool c_debugger_should_break() {
 
             case GOING:
             case TYPING:
+            case LOADING:
             break;
         }
     }
@@ -1262,8 +1262,8 @@ int debugger_go(stepping_struct_t s) {
     int ch = begin_cpu_stepping();
 
 #if !defined(TESTING)
-    clear_debugger_screen();
-    if (stepping_struct.step_type != TYPING) {
+    if (stepping_struct.step_type != LOADING) {
+        clear_debugger_screen();
         disasm(cpu65_current.pc, 1, 0, -1);
         int branch = will_branch();
         if (branch != BRANCH_NA) {

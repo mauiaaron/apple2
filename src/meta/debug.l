@@ -819,21 +819,29 @@ ADDRS	[0-9a-fA-F]+
     }
 
     LOG("Typing...");
+    int ch = -1;
     while (fgets(buf, DEBUG_BUFSZ, fp)) {
         LOG(buf);
 
         stepping_struct_t s = {
-            .step_type = TYPING,
+            .step_type = LOADING,
             .step_text = buf
         };
 
-        int ch = debugger_go(s);
+        ch = debugger_go(s);
         if (ch != -1) {
             break;
         }
     }
-
     fclose(fp);
+
+    if (ch == -1) {
+        stepping_struct_t s = {
+            .step_type = GOING,
+        };
+        debugger_go(s);
+    }
+
     return LOAD;
 }
 

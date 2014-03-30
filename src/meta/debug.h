@@ -32,6 +32,7 @@ typedef enum {
     FINISHING,
     UNTILING,
     TYPING,
+    LOADING,
     GOING
 } stepping_type_t;
 
