@@ -83,13 +83,19 @@ LOG_DRIVER = testcpu  ## hack TODO/FIXME ... should be wrapper shell script acce
 A2_TEST_SOURCES = $(apple2ix_SOURCES)
 A2_TEST_CFLAGS = -DTESTING=1 -Isrc/greatest
 
-TESTS          = testcpu
-check_PROGRAMS = testcpu
+TESTS          = testcpu testvm
+check_PROGRAMS = testcpu testvm
 
 testcpu_SOURCES = src/test/testcpu.c $(A2_TEST_SOURCES) $(EXTRA_apple2ix_SOURCES)
 testcpu_CFLAGS = $(apple2ix_CFLAGS) $(A2_TEST_CFLAGS)
 testcpu_LDFLAGS = $(apple2ix_LDFLAGS)
 testcpu_DEPENDENCIES = $(apple2ix_DEPENDENCIES)
+
+testvm_SOURCES = src/test/testvm.c $(A2_TEST_SOURCES) $(VM_SRC) $(META_SRC)
+# HACK FIXME TODO NOTE: why don't these CFLAGS here pass down to the .S and .c files in the subdirectories?
+testvm_CFLAGS = $(apple2ix_CFLAGS) $(A2_TEST_CFLAGS) -UAUDIO_ENABLED -UVIDEO_X11 -UINTERFACE_CLASSIC
+testvm_LDFLAGS = $(apple2ix_LDFLAGS)
+testvm_DEPENDENCIES = @VM_O@ @META_O@
 
 ###############################################################################
 # Misc
