@@ -58,7 +58,7 @@ EXTRA_apple2ix_SOURCES = \
 	\
 	$(META_SRC)
 
-apple2ix_SOURCES = src/font.c src/misc.c src/vidsup.c \
+apple2ix_SOURCES = src/font.c src/misc.c src/display.c \
 	src/timing.c src/zlib-helpers.c src/joystick.c src/keys.c src/prefs.c \
 	src/disk.c src/cpu-supp.c
 
