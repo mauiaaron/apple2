@@ -139,7 +139,7 @@
                 movb    SN(cpu65_current)+6, SP_Reg_L;                         \
                 testl   $SS_ALTZP, SN(softswitches);                           \
                 jz      9f;                                                    \
-                orl     $0x10000, %edx;                                        \
+                orl     $BANK2, %edx;                                          \
 9:
 
 #define BranchXCycles                                                          \

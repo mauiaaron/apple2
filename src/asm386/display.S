@@ -951,7 +951,7 @@ plot_80character0:
 		pushl	%ebx
 		pushl	EffectiveAddr_E
 
-		orl	$0x10000, EffectiveAddr_E	# aux ram
+		orl	$BANK2, EffectiveAddr_E	# aux ram
 		movl	$0, %ebx			# +0 screen offset
 		movb	SN(apple_ii_64k)(,EffectiveAddr_E,1), %al
 		andl	$0xFFFF, EffectiveAddr_E
@@ -970,7 +970,7 @@ plot_80character1:
 		pushl	%ebx
 		pushl	EffectiveAddr_E
 
-		orl	$0x10000, EffectiveAddr_E	# aux ram
+		orl	$BANK2, EffectiveAddr_E	# aux ram
 		movl	$0, %ebx			# +0 screen offset
 		movb	SN(apple_ii_64k)(,EffectiveAddr_E,1), %al
 		andl	$0xFFFF, EffectiveAddr_E
