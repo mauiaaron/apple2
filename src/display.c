@@ -16,11 +16,14 @@
 
 #include "common.h"
 
+#define TEXT_ROWS 24
+#define BEGIN_MIX 20
+#define TEXT_COLS 40
+
 static uint8_t vga_mem_page_0[SCANWIDTH*SCANHEIGHT];              /* page0 framebuffer */
 static uint8_t vga_mem_page_1[SCANWIDTH*SCANHEIGHT];              /* page1 framebuffer */
 
 uint8_t video__wider_font[0x8000];
-
 uint8_t video__font[0x4000];
 
 /* --- Precalculated hi-res page offsets given addr --- */
@@ -84,7 +87,7 @@ uint8_t video__odd_colors[2] = { COLOR_LIGHT_PURPLE, COLOR_LIGHT_BLUE };
 uint8_t video__even_colors[2] = { COLOR_LIGHT_GREEN, COLOR_LIGHT_RED };
 
 /* 40col/80col/lores/hires/dhires line offsets */
-unsigned short video__line_offset[24] =
+unsigned short video__line_offset[TEXT_ROWS] =
 { 0x000, 0x080, 0x100, 0x180, 0x200, 0x280, 0x300, 0x380,
   0x028, 0x0A8, 0x128, 0x1A8, 0x228, 0x2A8, 0x328, 0x3A8,
   0x050, 0x0D0, 0x150, 0x1D0, 0x250, 0x2D0, 0x350, 0x3D0 };
@@ -498,7 +501,7 @@ static void c_initialize_row_col_tables(void)
         video__screen_addresses[i] = -1;
     }
 
-    for (y = 0; y < 24; y++)
+    for (y = 0; y < TEXT_ROWS; y++)
     {
         for (off = 0; off < 8; off++)
         {
@@ -518,81 +521,35 @@ static void c_initialize_tables_video(void) {
     int x, y, i;
 
     /* initialize text/lores & hires graphics */
-    for (y = 0; y < 24; y++)            /* 24 rows */
+    for (y = 0; y < TEXT_ROWS; y++)
     {
-        for (x = 0; x < 40; x++)        /* 40 cols */
+        for (x = 0; x < TEXT_COLS; x++)
         {
-            if (apple_mode == IIE_MODE)
-            {
-                /* //e mode: text/lores page 0 */
-                cpu65_vmem[ video__line_offset[ y ] + x + 0x400].w =
-                    (y < 20) ? video__write_2e_text0 :
-                    video__write_2e_text0_mixed;
-            }
-            else
-            {
-                /* ][+ modes: text/lores page 0 */
-                cpu65_vmem[ video__line_offset[ y ] + x + 0x400].w =
-                    (y < 20) ? video__write_text0 :
-                    video__write_text0_mixed;
-            }
+            /* //e mode: text/lores page 0 */
+            cpu65_vmem[ video__line_offset[ y ] + x + 0x400].w =
+                (y < 20) ? video__write_2e_text0 :
+                video__write_2e_text0_mixed;
 
-            if (apple_mode == IIE_MODE)
-            {
-                cpu65_vmem[ video__line_offset[ y ] + x + 0x800].w =
-                    (y < 20) ? video__write_2e_text1 :
-                    video__write_2e_text1_mixed;
-            }
-            else
-            {
-                /* ][+ modes: text/lores page 1 in main memory */
-                cpu65_vmem[ video__line_offset[ y ] + x + 0x800].w =
-                    (y < 20) ? video__write_text1 :
-                    video__write_text1_mixed;
-            }
+            cpu65_vmem[ video__line_offset[ y ] + x + 0x800].w =
+                (y < 20) ? video__write_2e_text1 :
+                video__write_2e_text1_mixed;
 
             for (i = 0; i < 8; i++)
             {
                 /* //e mode: hires/double hires page 0 */
-                if (apple_mode == IIE_MODE)
-                {
-                    cpu65_vmem[ 0x2000 + video__line_offset[ y ]
-                                + 0x400 * i + x ].w =
-                        (y < 20) ? ((x & 1) ? video__write_2e_odd0 :
-                                    video__write_2e_even0)
-                        : ((x & 1) ? video__write_2e_odd0_mixed :
-                           video__write_2e_even0_mixed);
-                }
-                /* ][+ modes: hires page 0 */
-                else
-                {
-                    cpu65_vmem[ 0x2000 + video__line_offset[ y ]
-                                + 0x400 * i + x ].w =
-                        (y < 20) ? ((x & 1) ? video__write_odd0 :
-                                    video__write_even0)
-                        : ((x & 1) ? video__write_odd0_mixed :
-                           video__write_even0_mixed);
-                }
+                cpu65_vmem[ 0x2000 + video__line_offset[ y ]
+                            + 0x400 * i + x ].w =
+                    (y < 20) ? ((x & 1) ? video__write_2e_odd0 :
+                                video__write_2e_even0)
+                    : ((x & 1) ? video__write_2e_odd0_mixed :
+                       video__write_2e_even0_mixed);
 
-                if (apple_mode == IIE_MODE)
-                {
-                    cpu65_vmem[ 0x4000 + video__line_offset[ y ]
-                                + 0x400 * i + x ].w =
-                        (y < 20) ? ((x & 1) ? video__write_2e_odd1 :
-                                    video__write_2e_even1)
-                        : ((x & 1) ? video__write_2e_odd1_mixed :
-                           video__write_2e_even1_mixed);
-                }
-                /* ][+ modes: hires page 1 */
-                else
-                {
-                    cpu65_vmem[ 0x4000 + video__line_offset[ y ]
-                                + 0x400 * i + x ].w =
-                        (y < 20) ? ((x & 1) ? video__write_odd1 :
-                                    video__write_even1)
-                        : ((x & 1) ? video__write_odd1_mixed :
-                           video__write_even1_mixed);
-                }
+                cpu65_vmem[ 0x4000 + video__line_offset[ y ]
+                            + 0x400 * i + x ].w =
+                    (y < 20) ? ((x & 1) ? video__write_2e_odd1 :
+                                video__write_2e_even1)
+                    : ((x & 1) ? video__write_2e_odd1_mixed :
+                       video__write_2e_even1_mixed);
             }
         }
     }

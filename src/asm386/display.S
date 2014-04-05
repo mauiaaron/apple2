@@ -600,7 +600,7 @@ E(video_redraw)
 		andl	$~(SS_TEXTWRT|SS_HGRWRT|SS_RAMWRT),SN(softswitches)
 
 		xorl	%eax, %eax
-		xorl	%edi, %edi
+		xorl	EffectiveAddr_E, EffectiveAddr_E
 
 		/* 24 rows text/lores page 0 */
 		movl	$23, %ebx
@@ -623,40 +623,6 @@ E(video_redraw)
 		ret
 	
 		/******************************************/
-
-E(video__write_text0)
-		movb	%al, SN(apple_ii_64k)(,EffectiveAddr_E,1)
-		testl	$SS_TEXT, SN(softswitches) # Text mode?
-		jnz	plot_character0
-		testl	$SS_HIRES, SN(softswitches) # lores mode?
-		jz	plot_block0
-		ret
-
-E(video__write_text0_mixed)
-		movb	%al, SN(apple_ii_64k)(,EffectiveAddr_E,1)
-		testl	$(SS_TEXT|SS_MIXED), SN(softswitches)
-                                 # Text or mixed mode?
-		jnz	plot_character0
-		testl	$SS_HIRES, SN(softswitches) # Not hires mode?
-		jz	plot_block0
-		ret
-
-E(video__write_text1)
-		movb	%al, SN(apple_ii_64k)(,EffectiveAddr_E,1)
-		testl	$SS_TEXT, SN(softswitches)
-		jnz	plot_character1
-		testl	$SS_HIRES, SN(softswitches) # lores mode?
-		jz	plot_block1
-		ret
-
-E(video__write_text1_mixed)
-		movb	%al, SN(apple_ii_64k)(,EffectiveAddr_E,1)
-		testl	$(SS_TEXT|SS_MIXED), SN(softswitches)
-                                 # Text or mixed mode?
-		jnz	plot_character1
-		testl	$SS_HIRES, SN(softswitches) # Not hires mode?
-		jz	plot_block1
-		ret
 
 /* video__write_2e_text0 - handle text page //e specific */
 E(video__write_2e_text0)
@@ -725,38 +691,6 @@ iie_soft_write_text1_mixed:
 		jnz	ram_nop				# NOP (in auxram)
 		jmp	plot_character1			# 40 col text
 
-
-E(video__write_even0)
-		movb	%al, SN(apple_ii_64k)(,EffectiveAddr_E,1)
-		testl	$SS_TEXT, SN(softswitches) # Text mode?
-		jnz	ram_nop
-		testl	$SS_HIRES, SN(softswitches) # hires mode?
-		jnz	plot_even_byte0
-		ret
-
-E(video__write_even0_mixed)
-		movb	%al, SN(apple_ii_64k)(,EffectiveAddr_E,1)
-		testl	$(SS_TEXT|SS_MIXED), SN(softswitches) 
-                 jnz    ram_nop         # Text/mixed mode?
-		testl	$SS_HIRES, SN(softswitches) # hires mode?
-		jnz	plot_even_byte0
-		ret
-
-E(video__write_odd0)
-		movb	%al, SN(apple_ii_64k)(,EffectiveAddr_E,1)
-		testl	$SS_TEXT, SN(softswitches) # Text mode?
-		jnz	ram_nop
-		testl	$SS_HIRES, SN(softswitches) # hires mode?
-		jnz	plot_odd_byte0
-		ret
-
-E(video__write_odd0_mixed)
-		movb	%al, SN(apple_ii_64k)(,EffectiveAddr_E,1)
-		testl	$(SS_TEXT|SS_MIXED), SN(softswitches)	
-                jnz    ram_nop          # Text/mixed mode?
-		testl	$SS_HIRES, SN(softswitches) # hires mode?
-		jnz	plot_odd_byte0
-		ret
 
 /* video__write_2e_even0 - handle hires page //e specific */
 E(video__write_2e_even0)
@@ -831,37 +765,6 @@ iie_soft_write_odd0_mixed:
 		jnz	ram_nop				# in auxram
 		jmp	plot_odd_byte0			# plot hires
 
-E(video__write_even1)
-		movb	%al, SN(apple_ii_64k)(,EffectiveAddr_E,1)
-		testl	$SS_TEXT, SN(softswitches) # Text mode?
-		jnz	ram_nop
-		testl	$SS_HIRES, SN(softswitches) # hires mode?
-		jnz	plot_even_byte1
-		ret
-
-E(video__write_even1_mixed)
-		movb	%al, SN(apple_ii_64k)(,EffectiveAddr_E,1)
-		testl	$SS_TEXT|SS_MIXED, SN(softswitches)
-		jnz	ram_nop # text/mixed
-		testl	$SS_HIRES, SN(softswitches) # hires mode?
-		jnz	plot_even_byte1
-		ret
-
-E(video__write_odd1)
-		movb	%al, SN(apple_ii_64k)(,EffectiveAddr_E,1)
-		testl	$SS_TEXT, SN(softswitches)	# Text mode?
-		jnz	ram_nop
-		testl	$SS_HIRES, SN(softswitches) # hires mode?
-		jnz	plot_odd_byte1
-		ret
-
-E(video__write_odd1_mixed)
-		movb	%al, SN(apple_ii_64k)(,EffectiveAddr_E,1)
-		testl 	$(SS_TEXT|SS_MIXED), SN(softswitches)
-		jnz	ram_nop  # text/mixed
-		testl	$SS_HIRES, SN(softswitches) # hires mode?
-		jnz	plot_odd_byte1
-		ret
 
 /* video__write_2e_even1 - write hires page1 //e specific */
 E(video__write_2e_even1)

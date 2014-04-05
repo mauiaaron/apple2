@@ -194,19 +194,6 @@ extern uint8_t video__even_colors[2];
 
 /* Hooks */
 
-void            video__write_text0(),
-video__write_text0_mixed(),
-video__write_text1(),
-video__write_text1_mixed(),
-video__write_even0(),
-video__write_odd0(),
-video__write_even0_mixed(),
-video__write_odd0_mixed(),
-video__write_even1(),
-video__write_odd1(),
-video__write_even1_mixed(),
-video__write_odd1_mixed();
-
 void            video__write_2e_text0(),
 video__write_2e_text0_mixed(),
 video__write_2e_text1(),

@@ -186,32 +186,6 @@ E(read_speaker_toggle_pc)
 #endif
 		ret
 
-E(read_switch_primary_page)
-		testl	$SS_PAGE2, SN(softswitches)
-		jnz	_read_switch_primary
-		ret
-_read_switch_primary:
-		andl	$~(SS_PAGE2|SS_SCREEN), SN(softswitches)
-		pushal
-		pushl	$0
-		call	SN(video_setpage)
-		addl	$4, %esp
-		popal
-		ret
-
-E(read_switch_secondary_page)
-		testl	$SS_PAGE2, SN(softswitches)
-		jz	_read_switch_secondary
-		ret
-_read_switch_secondary:
-		orl	$(SS_PAGE2|SS_SCREEN), SN(softswitches)
-		pushal
-		pushl	$1
-		call	SN(video_setpage)
-		addl	$4, %esp
-		popal
-		ret
-
 /* PAGE2 off. if 80STORE on then we use main text page1, and if HIRES
 	on we also use main hires page1, regardless of RAMRD and
 	RAMWRT. */
@@ -297,20 +271,6 @@ E(read_switch_mixed)
 		call	SN(video_redraw)
 		ret
 
-E(read_switch_lores)
-		testl	$SS_HIRES, SN(softswitches)
-		jz	ram_nop
-		andl	$~SS_HIRES, SN(softswitches)
-		call	SN(video_redraw)
-		ret
-
-E(read_switch_hires)
-		testl	$SS_HIRES, SN(softswitches)
-		jnz	ram_nop
-		orl	$SS_HIRES, SN(softswitches)
-		call	SN(video_redraw)
-		ret
-
 /* HIRES off. use RAMRD/RAMWRT offsets for hires page 1. */
 E(iie_hires_off)
 		testl	$SS_HIRES, SN(softswitches)	# already off?
@@ -382,7 +342,7 @@ E(iie_c080)
 				       * ][+ routine exits */
 
 /* c080: read RAM; no write; use $D000 bank 2. */
-E(lc_c080)
+lc_c080:
 		orl	$SS_LCRAM|SS_BANK2, SN(softswitches)
 		andl	$~(SS_LCSEC|SS_LCWRT), SN(softswitches)
 		movl	$SN(language_banks)-0xD000, SN(base_d000_rd)
@@ -398,7 +358,7 @@ E(iie_c081)
 			 	       * ][+ routine exits */
 
 /* c081: read ROM; write RAM; use $D000 bank 2. */
-E(lc_c081)
+lc_c081:
 		testl	$SS_LCSEC, SN(softswitches)
 		je	lc_c081_exit
 		orl	$SS_LCWRT, SN(softswitches)
@@ -431,7 +391,7 @@ E(iie_c083)
 				       * ][+ routine exits */
 
 /* c083: read and write RAM; no write; use $D000 bank 2. */
-E(lc_c083)	testl	$SS_LCSEC, SN(softswitches)
+lc_c083:	testl	$SS_LCSEC, SN(softswitches)
 		je	lc_c083_exit
 		orl	$SS_LCWRT, SN(softswitches)
 		movl	$SN(language_banks)-0xD000, SN(base_d000_wrt)
@@ -449,7 +409,7 @@ E(iie_c088)
 				       * ][+ routine exits */
 
 /* c088: read RAM; no write; use $D000 bank 1. */
-E(lc_c088)
+lc_c088:
 		orl	$(SS_LCRAM), SN(softswitches)
 		andl	$~(SS_LCWRT|SS_LCSEC|SS_BANK2), SN(softswitches)
 		movl	$SN(language_banks)-0xC000, SN(base_d000_rd)
@@ -465,7 +425,7 @@ E(iie_c089)
 				       * ][+ routine exits */
 
 /* c089: read ROM; write RAM; use $D000 bank 1. */
-E(lc_c089)
+lc_c089:
 		testl	$SS_LCSEC, SN(softswitches)
 		jz	lc_c089_exit
 		orl	$SS_LCWRT, SN(softswitches)
@@ -496,7 +456,7 @@ E(iie_c08b)
 				       * ][+ routine exits */
 
 /* c08b: read and write RAM; use $D000 bank 1. */
-E(lc_c08b)
+lc_c08b:
 		testl	$SS_LCSEC, SN(softswitches)
 		jz	lc_c08b_exit
 		orl	$SS_LCWRT, SN(softswitches)

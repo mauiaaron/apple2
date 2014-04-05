@@ -79,7 +79,7 @@ extern uint8_t *base_cxrom;
 
 /* softswitches */
 
-extern int32_t softswitches;
+extern uint32_t softswitches;
 
 #endif /* !__ASSEMBLER__ */
 
@@ -138,23 +138,17 @@ void compact(void);
 
 void            ram_nop(),
 
-write_ram_default(),
 write_unmapped_softswitch(),
 
-read_ram_default(),
 read_random(),
 read_unmapped_softswitch(),
 read_keyboard(),
 read_keyboard_strobe(),
 read_speaker_toggle_pc(),
-read_switch_primary_page(),
-read_switch_secondary_page(),
 read_switch_graphics(),
 read_switch_text(),
 read_switch_no_mixed(),
 read_switch_mixed(),
-read_switch_lores(),
-read_switch_hires(),
 
 read_button0(),
 read_button1(),
@@ -163,14 +157,8 @@ read_gc0(),
 read_gc1(),
 read_gc_strobe(),
 
-lc_c080(),
-lc_c081(),
 lc_c082(),
-lc_c083(),
-lc_c088(),
-lc_c089(),
 lc_c08a(),
-lc_c08b(),
 write_ram_bank(),
 read_ram_bank(),
 write_ram_lc(),

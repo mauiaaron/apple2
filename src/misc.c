@@ -26,8 +26,6 @@ static unsigned char apple_iie_rom[32768];              /* //e */
 bool do_logging = true; // also controlled by NDEBUG
 FILE *error_log = NULL;
 
-GLUE_FIXED_READ(read_ram_default,apple_ii_64k)
-GLUE_FIXED_WRITE(write_ram_default,apple_ii_64k)
 GLUE_BANK_READ(read_ram_bank,base_d000_rd)
 GLUE_BANK_MAYBEWRITE(write_ram_bank,base_d000_wrt)
 GLUE_BANK_READ(read_ram_lc,base_e000_rd)
@@ -50,7 +48,7 @@ GLUE_BANK_MAYBEREAD(iie_read_slot5,base_c5rom)
 GLUE_BANK_READ(iie_read_slotx,base_cxrom)
 
 
-int32_t softswitches;
+uint32_t softswitches;
 
 uint8_t *base_ramrd;
 uint8_t *base_ramwrt;
@@ -130,16 +128,8 @@ void c_initialize_tables() {
     /* reset everything */
     for (i = 0; i < 0x10000; i++)
     {
-        if (apple_mode == IIE_MODE)
-        {
-            cpu65_vmem[i].r = iie_read_ram_default;
-            cpu65_vmem[i].w = iie_write_ram_default;
-        }
-        else
-        {
-            cpu65_vmem[i].r = read_ram_default;
-            cpu65_vmem[i].w = write_ram_default;
-        }
+        cpu65_vmem[i].r = iie_read_ram_default;
+        cpu65_vmem[i].w = iie_write_ram_default;
     }
 
     /* language card read/write area */
@@ -166,15 +156,12 @@ void c_initialize_tables() {
     /* done common initialization */
 
     /* initialize zero-page, //e specific */
-    if (apple_mode == IIE_MODE)
+    for (i = 0; i < 0x200; i++)
     {
-        for (i = 0; i < 0x200; i++)
-        {
-            cpu65_vmem[i].r =
-                iie_read_ram_zpage_and_stack;
-            cpu65_vmem[i].w =
-                iie_write_ram_zpage_and_stack;
-        }
+        cpu65_vmem[i].r =
+            iie_read_ram_zpage_and_stack;
+        cpu65_vmem[i].w =
+            iie_write_ram_zpage_and_stack;
     }
 
     /* initialize first text & hires page, which are specially bank switched
@@ -231,61 +218,57 @@ void c_initialize_tables() {
                 read_keyboard_strobe;
     }
 
-    if (apple_mode == IIE_MODE)
-    {
+    /* RDBNK2 switch */
+    cpu65_vmem[0xC011].r =
+        iie_check_bank;
 
-        /* RDBNK2 switch */
-        cpu65_vmem[0xC011].r =
-            iie_check_bank;
+    /* RDLCRAM switch */
+    cpu65_vmem[0xC012].r =
+        iie_check_lcram;
 
-        /* RDLCRAM switch */
-        cpu65_vmem[0xC012].r =
-            iie_check_lcram;
+    /* 80STORE switch */
+    cpu65_vmem[0xC000].w = iie_80store_off;
+    cpu65_vmem[0xC001].w = iie_80store_on;
+    cpu65_vmem[0xC018].r = iie_check_80store;
 
-        /* 80STORE switch */
-        cpu65_vmem[0xC000].w = iie_80store_off;
-        cpu65_vmem[0xC001].w = iie_80store_on;
-        cpu65_vmem[0xC018].r = iie_check_80store;
+    /* RAMRD switch */
+    cpu65_vmem[0xC002].w = iie_ramrd_main;
+    cpu65_vmem[0xC003].w = iie_ramrd_aux;
+    cpu65_vmem[0xC013].r = iie_check_ramrd;
 
-        /* RAMRD switch */
-        cpu65_vmem[0xC002].w = iie_ramrd_main;
-        cpu65_vmem[0xC003].w = iie_ramrd_aux;
-        cpu65_vmem[0xC013].r = iie_check_ramrd;
+    /* RAMWRT switch */
+    cpu65_vmem[0xC004].w = iie_ramwrt_main;
+    cpu65_vmem[0xC005].w = iie_ramwrt_aux;
+    cpu65_vmem[0xC014].r = iie_check_ramwrt;
 
-        /* RAMWRT switch */
-        cpu65_vmem[0xC004].w = iie_ramwrt_main;
-        cpu65_vmem[0xC005].w = iie_ramwrt_aux;
-        cpu65_vmem[0xC014].r = iie_check_ramwrt;
+    /* ALTZP switch */
+    cpu65_vmem[0xC008].w = iie_altzp_main;
+    cpu65_vmem[0xC009].w = iie_altzp_aux;
+    cpu65_vmem[0xC016].r = iie_check_altzp;
 
-        /* ALTZP switch */
-        cpu65_vmem[0xC008].w = iie_altzp_main;
-        cpu65_vmem[0xC009].w = iie_altzp_aux;
-        cpu65_vmem[0xC016].r = iie_check_altzp;
+    /* 80COL switch */
+    cpu65_vmem[0xC00C].w = iie_80col_off;
+    cpu65_vmem[0xC00D].w = iie_80col_on;
+    cpu65_vmem[0xC01F].r = iie_check_80col;
 
-        /* 80COL switch */
-        cpu65_vmem[0xC00C].w = iie_80col_off;
-        cpu65_vmem[0xC00D].w = iie_80col_on;
-        cpu65_vmem[0xC01F].r = iie_check_80col;
+    /* ALTCHAR switch */
+    cpu65_vmem[0xC00E].w = iie_altchar_off;
+    cpu65_vmem[0xC00F].w = iie_altchar_on;
+    cpu65_vmem[0xC01E].r = iie_check_altchar;
 
-        /* ALTCHAR switch */
-        cpu65_vmem[0xC00E].w = iie_altchar_off;
-        cpu65_vmem[0xC00F].w = iie_altchar_on;
-        cpu65_vmem[0xC01E].r = iie_check_altchar;
+    /* SLOTC3ROM switch */
+    cpu65_vmem[0xC00A].w = iie_c3rom_internal;
+    cpu65_vmem[0xC00B].w = iie_c3rom_peripheral;
+    cpu65_vmem[0xC017].r = iie_check_c3rom;
 
-        /* SLOTC3ROM switch */
-        cpu65_vmem[0xC00A].w = iie_c3rom_internal;
-        cpu65_vmem[0xC00B].w = iie_c3rom_peripheral;
-        cpu65_vmem[0xC017].r = iie_check_c3rom;
+    /* SLOTCXROM switch */
+    cpu65_vmem[0xC006].w = iie_cxrom_peripheral;
+    cpu65_vmem[0xC007].w = iie_cxrom_internal;
+    cpu65_vmem[0xC015].r = iie_check_cxrom;
 
-        /* SLOTCXROM switch */
-        cpu65_vmem[0xC006].w = iie_cxrom_peripheral;
-        cpu65_vmem[0xC007].w = iie_cxrom_internal;
-        cpu65_vmem[0xC015].r = iie_check_cxrom;
-
-        /* RDVBLBAR switch */
-        cpu65_vmem[0xC019].r =
-            iie_check_vbl;
-    }
+    /* RDVBLBAR switch */
+    cpu65_vmem[0xC019].r =
+        iie_check_vbl;
 
     /* random number generator */
     for (i = 0xC020; i < 0xC030; i++)
@@ -303,11 +286,8 @@ void c_initialize_tables() {
         cpu65_vmem[0xC051].w =
             read_switch_text;
 
-    if (apple_mode == IIE_MODE)
-    {
-        cpu65_vmem[0xC01A].r =
-            iie_check_text;
-    }
+    cpu65_vmem[0xC01A].r =
+        iie_check_text;
 
     /* MIXED switch */
     cpu65_vmem[0xC052].r =
@@ -317,67 +297,31 @@ void c_initialize_tables() {
         cpu65_vmem[0xC053].w =
             read_switch_mixed;
 
-    if (apple_mode == IIE_MODE)
-    {
-        cpu65_vmem[0xC01B].r =
-            iie_check_mixed;
-    }
+    cpu65_vmem[0xC01B].r =
+        iie_check_mixed;
 
     /* PAGE2 switch */
-    if (apple_mode == IIE_MODE)
-    {
-        cpu65_vmem[0xC054].r =
-            cpu65_vmem[0xC054].w =
-                iie_page2_off;
-    }
-    else
-    {
-        cpu65_vmem[0xC054].r =
-            cpu65_vmem[0xC054].w =
-                read_switch_primary_page;
-    }
+    cpu65_vmem[0xC054].r =
+        cpu65_vmem[0xC054].w =
+            iie_page2_off;
 
-    if (apple_mode == IIE_MODE)
-    {
-        cpu65_vmem[0xC01C].r =
-            iie_check_page2;
-    }
+    cpu65_vmem[0xC01C].r =
+        iie_check_page2;
 
     /* PAGE2 switch */
-    if (apple_mode == IIE_MODE)
-    {
-        cpu65_vmem[0xC055].r =
-            cpu65_vmem[0xC055].w =
-                iie_page2_on;
-    }
-    else
-    {
-        cpu65_vmem[0xC055].r =
-            cpu65_vmem[0xC055].w =
-                read_switch_secondary_page;
-    }
+    cpu65_vmem[0xC055].r =
+        cpu65_vmem[0xC055].w =
+            iie_page2_on;
 
     /* HIRES switch */
-    if (apple_mode == IIE_MODE)
-    {
-        cpu65_vmem[0xC01D].r =
-            iie_check_hires;
-        cpu65_vmem[0xC056].r =
-            cpu65_vmem[0xC056].w =
-                iie_hires_off;
-        cpu65_vmem[0xC057].r =
-            cpu65_vmem[0xC057].w =
-                iie_hires_on;
-    }
-    else
-    {
-        cpu65_vmem[0xC056].r =
-            cpu65_vmem[0xC056].w =
-                read_switch_lores;
-        cpu65_vmem[0xC057].r =
-            cpu65_vmem[0xC057].w =
-                read_switch_hires;
-    }
+    cpu65_vmem[0xC01D].r =
+        iie_check_hires;
+    cpu65_vmem[0xC056].r =
+        cpu65_vmem[0xC056].w =
+            iie_hires_off;
+    cpu65_vmem[0xC057].r =
+        cpu65_vmem[0xC057].w =
+            iie_hires_on;
 
     /* game I/O switches */
     cpu65_vmem[0xC061].r =
@@ -395,13 +339,10 @@ void c_initialize_tables() {
     cpu65_vmem[0xC065].r =
         cpu65_vmem[0xC06D].r =
             read_gc1;
-    if (apple_mode == IIE_MODE)
-    {
-        cpu65_vmem[0xC066].r =
-            iie_read_gc2;
-        cpu65_vmem[0xC067].r =
-            iie_read_gc3;
-    }
+    cpu65_vmem[0xC066].r =
+        iie_read_gc2;
+    cpu65_vmem[0xC067].r =
+        iie_read_gc3;
 
     for (i = 0xC070; i < 0xC080; i++)
     {
@@ -410,53 +351,42 @@ void c_initialize_tables() {
                 read_gc_strobe;
     }
 
-    if (apple_mode == IIE_MODE)
-    {
-        /* IOUDIS switch & read_gc_strobe */
-        cpu65_vmem[0xC07E].w =
-            iie_ioudis_on;
-        cpu65_vmem[0xC07F].w =
-            iie_ioudis_off;
-        cpu65_vmem[0xC07E].r =
-            iie_check_ioudis;
-        cpu65_vmem[0xC07F].r =
-            iie_check_dhires;
+    /* IOUDIS switch & read_gc_strobe */
+    cpu65_vmem[0xC07E].w =
+        iie_ioudis_on;
+    cpu65_vmem[0xC07F].w =
+        iie_ioudis_off;
+    cpu65_vmem[0xC07E].r =
+        iie_check_ioudis;
+    cpu65_vmem[0xC07F].r =
+        iie_check_dhires;
 
-        /* DHIRES/Annunciator switches */
-        cpu65_vmem[0xC05E].w =
-            cpu65_vmem[0xC05E].r =
-                iie_dhires_on;
-        cpu65_vmem[0xC05F].w =
-            cpu65_vmem[0xC05F].r =
-                iie_dhires_off;
-    }
+    /* DHIRES/Annunciator switches */
+    cpu65_vmem[0xC05E].w =
+        cpu65_vmem[0xC05E].r =
+            iie_dhires_on;
+    cpu65_vmem[0xC05F].w =
+        cpu65_vmem[0xC05F].r =
+            iie_dhires_off;
 
     /* language card softswitches */
     cpu65_vmem[0xC080].r = cpu65_vmem[0xC080].w =
-                               cpu65_vmem[0xC084].r = cpu65_vmem[0xC084].w =
-                                                          (apple_mode == IIE_MODE) ? iie_c080 : lc_c080;
+                               cpu65_vmem[0xC084].r = cpu65_vmem[0xC084].w = iie_c080;
     cpu65_vmem[0xC081].r = cpu65_vmem[0xC081].w =
-                               cpu65_vmem[0xC085].r = cpu65_vmem[0xC085].w =
-                                                          (apple_mode == IIE_MODE) ? iie_c081 : lc_c081;
+                               cpu65_vmem[0xC085].r = cpu65_vmem[0xC085].w = iie_c081;
     cpu65_vmem[0xC082].r = cpu65_vmem[0xC082].w =
-                               cpu65_vmem[0xC086].r = cpu65_vmem[0xC086].w =
-                                                          lc_c082;
+                               cpu65_vmem[0xC086].r = cpu65_vmem[0xC086].w = lc_c082;
     cpu65_vmem[0xC083].r = cpu65_vmem[0xC083].w =
-                               cpu65_vmem[0xC087].r = cpu65_vmem[0xC087].w =
-                                                          (apple_mode == IIE_MODE) ? iie_c083 : lc_c083;
+                               cpu65_vmem[0xC087].r = cpu65_vmem[0xC087].w = iie_c083;
 
     cpu65_vmem[0xC088].r = cpu65_vmem[0xC088].w =
-                               cpu65_vmem[0xC08C].r = cpu65_vmem[0xC08C].w =
-                                                          (apple_mode == IIE_MODE) ? iie_c088 : lc_c088;
+                               cpu65_vmem[0xC08C].r = cpu65_vmem[0xC08C].w = iie_c088;
     cpu65_vmem[0xC089].r = cpu65_vmem[0xC089].w =
-                               cpu65_vmem[0xC08D].r = cpu65_vmem[0xC08D].w =
-                                                          (apple_mode == IIE_MODE) ? iie_c089 : lc_c089;
+                               cpu65_vmem[0xC08D].r = cpu65_vmem[0xC08D].w = iie_c089;
     cpu65_vmem[0xC08A].r = cpu65_vmem[0xC08A].w =
-                               cpu65_vmem[0xC08E].r = cpu65_vmem[0xC08E].w =
-                                                          lc_c08a;
+                               cpu65_vmem[0xC08E].r = cpu65_vmem[0xC08E].w = lc_c08a;
     cpu65_vmem[0xC08B].r = cpu65_vmem[0xC08B].w =
-                               cpu65_vmem[0xC08F].r = cpu65_vmem[0xC08F].w =
-                                                          (apple_mode == IIE_MODE) ? iie_c08b : lc_c08b;
+                               cpu65_vmem[0xC08F].r = cpu65_vmem[0xC08F].w = iie_c08b;
 
     /* slot i/o area */
     for (i = 0xC100; i < 0xC300; i++)
@@ -588,35 +518,23 @@ void c_initialize_apple_ii_memory()
         language_card[0][i] = apple_ii_rom[i + 0x1000];
     }
 
-    if (apple_mode == IIE_MODE)
+    /* load the rom from 0xC000, slot rom main, internal rom aux */
+    for (i = 0xC000; i < 0x10000; i++)
     {
-        /* load the rom from 0xC000, slot rom main, internal rom aux */
-        for (i = 0xC000; i < 0x10000; i++)
-        {
-            apple_ii_64k[0][i] = apple_iie_rom[i - 0xC000];
-            apple_ii_64k[1][i] = apple_iie_rom[i - 0x8000];
-        }
-
-        for (i = 0; i < 0x1000; i++)
-        {
-            language_banks[0][i] = apple_iie_rom[i + 0x1000];
-            language_banks[1][i] = apple_iie_rom[i + 0x5000];
-        }
-
-        for (i = 0; i < 0x2000; i++)
-        {
-            language_card[0][i] = apple_iie_rom[i + 0x2000];
-            language_card[1][i] = apple_iie_rom[i + 0x6000];
-        }
+        apple_ii_64k[0][i] = apple_iie_rom[i - 0xC000];
+        apple_ii_64k[1][i] = apple_iie_rom[i - 0x8000];
     }
-    else
-    /* softswitch memory HACK - why this? */
+
+    for (i = 0; i < 0x1000; i++)
     {
-        for (i = 0xC100; i < 0xD000; i++)
-        {
-            apple_ii_64k[0][i] = i & 0xFF;
-            apple_ii_64k[1][i] = i & 0xFF;
-        }
+        language_banks[0][i] = apple_iie_rom[i + 0x1000];
+        language_banks[1][i] = apple_iie_rom[i + 0x5000];
+    }
+
+    for (i = 0; i < 0x2000; i++)
+    {
+        language_card[0][i] = apple_iie_rom[i + 0x2000];
+        language_card[1][i] = apple_iie_rom[i + 0x6000];
     }
 
     apple_ii_64k[0][0xC000] = 0x00;
@@ -703,18 +621,7 @@ void reinitialize(void)
 
     video_redraw();
 
-    if (apple_mode == IIE_MODE)
-    {
-        cpu65_set(CPU65_C02);
-    }
-    else if (apple_mode == IIU_MODE)
-    {
-        cpu65_set(CPU65_NMOS);
-    }
-    else
-    {
-        cpu65_set(CPU65_NMOS|CPU65_FAULT);
-    }
+    cpu65_set(CPU65_C02);
 
     timing_initialize();
 

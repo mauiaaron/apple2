@@ -70,7 +70,7 @@ E(func)			pushl	%eax;			\
 			popl	%edx;			\
 			popl	%ecx;			\
 			popl	%eax;			\
-			ret;				\
+			ret;
 
 // TODO FIXME : implement CDECL prologue/epilogues...
 #define GLUE_C_READ(func) \
