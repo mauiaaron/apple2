@@ -72,7 +72,7 @@ genfont_SOURCES = src/genfont.c
 src/font.c: src/font.txt genfont
 	./genfont < $< > $@
 
-src/asm386/glue.S: src/disk.c src/misc.c @AUDIO_GLUE_C@
+src/asm386/glue.S: src/disk.c src/misc.c src/display.c @AUDIO_GLUE_C@
 	./src/asm386/genglue $^ > $@
 
 ###############################################################################

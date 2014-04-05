@@ -514,7 +514,6 @@ static void c_initialize_row_col_tables(void)
             }
         }
     }
-
 }
 
 static void c_initialize_tables_video(void) {
@@ -598,21 +597,37 @@ void video_loadfont_int(int first, int quantity, const unsigned char *data)
     }
 }
 
-static void c_interface_print_char80_line(
-    unsigned char **d, unsigned char **s)
-{
-    *((unsigned int *)(*d)) = *((unsigned int *)(*s)); /*32bits*/
+static inline void _plot_char40(uint8_t **d, uint8_t **s) {
+    *((uint32_t *)(*d)) = *((uint32_t *)(*s));
     *d += 4, *s += 4;
-    *((unsigned short *)(*d)) = *((unsigned short *)(*s)); /*16bits*/
-    *d += 2, *s += 2;
-    *((unsigned char *)(*d)) = *((unsigned char *)(*s)); /*8bits*/
-    *d += SCANWIDTH-6, *s -= 6;
+    *((uint32_t *)(*d)) = *((uint32_t *)(*s));
+    *d += 4, *s += 4;
+    *((uint32_t *)(*d)) = *((uint32_t *)(*s));
+    *d += 4, *s += 4;
+    *((uint16_t *)(*d)) = *((uint16_t *)(*s));
+    *d += SCANSTEP, *s -= 12;
+    *((uint32_t *)(*d)) = *((uint32_t *)(*s));
+    *d += 4, *s += 4;
+    *((uint32_t *)(*d)) = *((uint32_t *)(*s));
+    *d += 4, *s += 4;
+    *((uint32_t *)(*d)) = *((uint32_t *)(*s));
+    *d += 4, *s += 4;
+    *((uint16_t *)(*d)) = *((uint16_t *)(*s));
+    *d += SCANSTEP, *s += 4;
+}
 
-    *((unsigned int *)(*d)) = *((unsigned int *)(*s)); /*32bits*/
+static inline void _plot_char80(uint8_t **d, uint8_t **s) {
+    *((uint32_t *)(*d)) = *((uint32_t *)(*s));
     *d += 4, *s += 4;
-    *((unsigned short *)(*d)) = *((unsigned short *)(*s)); /*16bits*/
+    *((uint16_t *)(*d)) = *((uint16_t *)(*s));
     *d += 2, *s += 2;
-    *((unsigned char *)(*d)) = *((unsigned char *)(*s)); /*8bits*/
+    *((uint8_t *)(*d)) = *((uint8_t *)(*s));
+    *d += SCANWIDTH-6, *s -= 6;
+    *((uint32_t *)(*d)) = *((uint32_t *)(*s));
+    *d += 4, *s += 4;
+    *((uint16_t *)(*d)) = *((uint16_t *)(*s));
+    *d += 2, *s += 2;
+    *((uint8_t *)(*d)) = *((uint8_t *)(*s));
     *d += SCANWIDTH-6, *s += 2;
 }
 
@@ -626,14 +641,14 @@ void video_plotchar( int x, int y, int scheme, unsigned char c )
     s = video__int_font[scheme] + c * 64;
     d = video__fb1 + off;
 
-    c_interface_print_char80_line(&d,&s);
-    c_interface_print_char80_line(&d,&s);
-    c_interface_print_char80_line(&d,&s);
-    c_interface_print_char80_line(&d,&s);
-    c_interface_print_char80_line(&d,&s);
-    c_interface_print_char80_line(&d,&s);
-    c_interface_print_char80_line(&d,&s);
-    c_interface_print_char80_line(&d,&s);
+    _plot_char80(&d,&s);
+    _plot_char80(&d,&s);
+    _plot_char80(&d,&s);
+    _plot_char80(&d,&s);
+    _plot_char80(&d,&s);
+    _plot_char80(&d,&s);
+    _plot_char80(&d,&s);
+    _plot_char80(&d,&s);
 }
 
 #ifdef VIDEO_X11
@@ -671,5 +686,61 @@ void video_setpage(int p)
 
 const uint8_t * const video_current_framebuffer() {
     return !video__current_page ? video__fb1 : video__fb2;
+}
+
+
+// ----------------------------------------------------------------------------
+
+static inline void _plot_character(const unsigned int font_off, const unsigned int fb_off, uint8_t *fb_base) {
+    uint8_t *fb_ptr = fb_base+fb_off;
+    uint8_t *font_ptr = video__wider_font+font_off;
+    _plot_char40(/*dst*/&fb_ptr, /*src*/&font_ptr);
+    _plot_char40(/*dst*/&fb_ptr, /*src*/&font_ptr);
+    _plot_char40(/*dst*/&fb_ptr, /*src*/&font_ptr);
+    _plot_char40(/*dst*/&fb_ptr, /*src*/&font_ptr);
+    _plot_char40(/*dst*/&fb_ptr, /*src*/&font_ptr);
+    _plot_char40(/*dst*/&fb_ptr, /*src*/&font_ptr);
+    _plot_char40(/*dst*/&fb_ptr, /*src*/&font_ptr);
+    _plot_char40(/*dst*/&fb_ptr, /*src*/&font_ptr);
+}
+
+GLUE_C_WRITE(plot_character0)
+{
+    _plot_character(b<<7/* *128 */, video__screen_addresses[ea-0x0400], video__fb1);
+}
+
+GLUE_C_WRITE(plot_character1)
+{
+    _plot_character(b<<7/* *128 */, video__screen_addresses[ea-0x0800], video__fb2);
+}
+
+static inline void _plot_80character(const unsigned int font_off, const unsigned int fb_off, uint8_t *fb_base) {
+    uint8_t *fb_ptr = fb_base+fb_off;
+    uint8_t *font_ptr = video__font+font_off;
+    _plot_char80(/*dst*/&fb_ptr, /*src*/&font_ptr);
+    _plot_char80(/*dst*/&fb_ptr, /*src*/&font_ptr);
+    _plot_char80(/*dst*/&fb_ptr, /*src*/&font_ptr);
+    _plot_char80(/*dst*/&fb_ptr, /*src*/&font_ptr);
+    _plot_char80(/*dst*/&fb_ptr, /*src*/&font_ptr);
+    _plot_char80(/*dst*/&fb_ptr, /*src*/&font_ptr);
+    _plot_char80(/*dst*/&fb_ptr, /*src*/&font_ptr);
+    _plot_char80(/*dst*/&fb_ptr, /*src*/&font_ptr);
+}
+
+// FIXME TODO NOTE : we are dup'ing the work here
+GLUE_C_WRITE(plot_80character0)
+{
+    b = apple_ii_64k[1][ea];
+    _plot_80character(b<<6/* *64 */, video__screen_addresses[ea-0x0400], video__fb1);
+    b = apple_ii_64k[0][ea];
+    _plot_80character(b<<6/* *64 */, video__screen_addresses[ea-0x0400]+7, video__fb1);
+}
+
+GLUE_C_WRITE(plot_80character1)
+{
+    b = apple_ii_64k[1][ea];
+    _plot_80character(b<<6/* *64 */, video__screen_addresses[ea-0x0800], video__fb2);
+    b = apple_ii_64k[0][ea];
+    _plot_80character(b<<6/* *64 */, video__screen_addresses[ea-0x0800]+7, video__fb2);
 }
 

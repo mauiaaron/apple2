@@ -126,12 +126,6 @@
  * esi: from table
  * eax: to graphics memory
  * ------------------------------------------------------------------------- */
-#define PlotCharacter40Row\
-		PlotCharacter40Row640\
-		subl	$12, %esi;\
-		addl	$ SCANWIDTH-12, %eax;\
-		PlotCharacter40Row640\
-		addl	$2, %esi;
 #define PlotCharacter40Row640\
 		movl	(%esi), %ecx;	\
 		movl	%ecx, (%eax);	\
@@ -522,7 +516,7 @@ plot_dhires##X##_cont:							      \
  * setup to plot the text/lores stuff.
  * eax: graphics memory pointer
  * ------------------------------------------------------------------------- */
-#define PlotTextPagePre(OFF,GM,PAGE)\
+#define PlotTextPagePre(OFF,GM)\
 		pushal;					/*Save everything -MUST BE MATCHED!*/\
 		xorb	%ah, %ah;\
 		movl	%eax, %esi;			/*ESI=EAX=Chr code*/\
@@ -530,55 +524,6 @@ plot_dhires##X##_cont:							      \
 							/*Compute row*/\
 		movl	SN(video__screen_addresses)(,EffectiveAddr_E,4), %eax;\
 		addl	SN(GM), %eax;		/*Graphic addr*/
-
-
-/* -------------------------------------------------------------------------
- * Common code for plotting an 80 column character.
- * Only 640x400 resolution can do this.
- * eax: graphics memory pointer
- * esi: precalculated font pointer
- * OFF 0x400, 0x800
- * PAGE 0, 1
- * ------------------------------------------------------------------------- */
-#define Plot80Character(TAG,OFF,GM,PAGE)\
-		PlotTextPagePre(OFF,GM,PAGE)/* does a pushal */\
-plot_80character_correct_page##TAG:\
-    		addw	%bx, %ax;				/*screen offset*/\
-		shll	$6, %esi;				/* * 64 = 8cols * 8rows*/\
-		addl	$ Font80, %esi;	/*Font addr*/\
-		\
-		PlotCharacter80Row;\
-		addl	$2, %esi;\
-		addl	$ SCANWIDTH-6, %eax;			/*Go to next row*/\
-		\
-		PlotCharacter80Row;\
-		addl	$2, %esi;\
-		addl	$ SCANWIDTH-6, %eax;			/*Go to next row*/\
-		\
-		PlotCharacter80Row;\
-		addl	$2, %esi;\
-		addl	$ SCANWIDTH-6, %eax;			/*Go to next row*/\
-		\
-		PlotCharacter80Row;\
-		addl	$2, %esi;\
-		addl	$ SCANWIDTH-6, %eax;			/*Go to next row*/\
-		\
-		PlotCharacter80Row;\
-		addl	$2, %esi;\
-		addl	$ SCANWIDTH-6, %eax;			/*Go to next row*/\
-		\
-		PlotCharacter80Row;\
-		addl	$2, %esi;\
-		addl	$ SCANWIDTH-6, %eax;			/*Go to next row*/\
-		\
-		PlotCharacter80Row;\
-		addl	$2, %esi;\
-		addl	$ SCANWIDTH-6, %eax;			/*Go to next row*/\
-		\
-		PlotCharacter80Row;\
-		\
-		popal;	/* MATCHES pushal from PlotTextPagePre */
-
 
 
 	/* -----------------------------------------------------------------
@@ -633,10 +578,15 @@ iie_soft_write_text0:
 		testl	$SS_TEXT, SN(softswitches)	# Text mode?
 		jz	iie_write_lores0		# graphics
 		testl	$SS_80COL, SN(softswitches)
-    		jnz	plot_80character0		# 80 col text
+    		jnz	iie_plot_80character0		# 80 col text
 		testl	$SS_TEXTWRT, SN(softswitches)
 		jnz	ram_nop				# NOP (in auxram)
-		jmp	plot_character0			# 40 col text
+		call    plot_character0			# 40 col text
+                ret
+
+iie_plot_80character0:
+                call plot_80character0
+                ret
 
 iie_write_lores0:
 		testl	$(SS_HIRES|SS_TEXTWRT), SN(softswitches)
@@ -652,10 +602,11 @@ iie_soft_write_text0_mixed:
 		testl	$(SS_TEXT|SS_MIXED), SN(softswitches)
 		jz	iie_write_lores0
 		testl	$SS_80COL, SN(softswitches)
-		jnz	plot_80character0
+		jnz	iie_plot_80character0
 		testl	$SS_TEXTWRT, SN(softswitches)
 		jnz	ram_nop				# NOP (in auxram)
-		jmp	plot_character0			# 40 col text
+		call	plot_character0			# 40 col text
+                ret
 
 /* video__write_2e_text1 - handle text page1 //e specific */
 E(video__write_2e_text1)
@@ -666,10 +617,15 @@ iie_soft_write_text1:
 		testl	$SS_TEXT, SN(softswitches)	# Text mode?
 		jz	iie_write_lores1		# graphics
 		testl	$SS_80COL, SN(softswitches)
-    		jnz	plot_80character1		# 80 col text
+    		jnz	iie_plot_80character1		# 80 col text
 		testl	$SS_RAMWRT, SN(softswitches)
 		jnz	ram_nop				# NOP (in auxram)
-		jmp	plot_character1			# 40 col text
+		call	plot_character1			# 40 col text
+                ret
+
+iie_plot_80character1:
+                call plot_80character1
+                ret
 
 iie_write_lores1:
 		testl	$(SS_HIRES|SS_RAMWRT), SN(softswitches) 
@@ -686,10 +642,11 @@ iie_soft_write_text1_mixed:
 		testl	$(SS_TEXT|SS_MIXED), SN(softswitches)
 		jz	iie_write_lores1
 		testl	$SS_80COL, SN(softswitches)
-		jnz	plot_80character1
+		jnz	iie_plot_80character1
 		testl	$SS_RAMWRT, SN(softswitches)
 		jnz	ram_nop				# NOP (in auxram)
-		jmp	plot_character1			# 40 col text
+		call	plot_character1			# 40 col text
+                ret
 
 
 /* video__write_2e_even0 - handle hires page //e specific */
@@ -849,98 +806,10 @@ iie_plot_dhires1:
 		ret
 
 
-		.align 4
-plot_80character0:
-		pushl	%ebx
-		pushl	EffectiveAddr_E
-
-		orl	$BANK2, EffectiveAddr_E	# aux ram
-		movl	$0, %ebx			# +0 screen offset
-		movb	SN(apple_ii_64k)(,EffectiveAddr_E,1), %al
-		andl	$0xFFFF, EffectiveAddr_E
-		Plot80Character(0a,$0x400,video__fb1,$0)
-
-		popl	EffectiveAddr_E			# main ram
-		movl	$7, %ebx			# +7 screen offset
-		movb	SN(apple_ii_64k)(,EffectiveAddr_E,1), %al
-		Plot80Character(0b,$0x400,video__fb1,$0)
-
-		popl	%ebx
-		ret
-
-		.align 4
-plot_80character1:
-		pushl	%ebx
-		pushl	EffectiveAddr_E
-
-		orl	$BANK2, EffectiveAddr_E	# aux ram
-		movl	$0, %ebx			# +0 screen offset
-		movb	SN(apple_ii_64k)(,EffectiveAddr_E,1), %al
-		andl	$0xFFFF, EffectiveAddr_E
-		Plot80Character(1a,$0x800,video__fb2,$1)
-
-		popl	EffectiveAddr_E			# main ram
-		movl	$7, %ebx			# +7 screen offset
-		movb	SN(apple_ii_64k)(,EffectiveAddr_E,1), %al
-		Plot80Character(1b,$0x800,video__fb2,$1)
-
-		popl	%ebx
-		ret
-
-
-/* plot character on first text page */
-		.align 4
-plot_character0:
-		PlotTextPagePre($0x400,video__fb1,$0)
-plot_character_correct_page:
-		shll	$7, %esi				# * 128
-		addl	$ Font, %esi				# Font addr
-
-		PlotCharacter40Row
-		addl	$2, %esi;
-		addl	$ SCANSTEP, %eax			# Go to next row
-
-		PlotCharacter40Row
-		addl	$2, %esi;
-		addl	$ SCANSTEP, %eax			# Go to next row
-
-		PlotCharacter40Row
-		addl	$2, %esi;
-		addl	$ SCANSTEP, %eax			# Go to next row
-
-		PlotCharacter40Row
-		addl	$2, %esi;
-		addl	$ SCANSTEP, %eax			# Go to next row
-
-		PlotCharacter40Row
-		addl	$2, %esi;
-		addl	$ SCANSTEP, %eax			# Go to next row
-
-		PlotCharacter40Row
-		addl	$2, %esi;
-		addl	$ SCANSTEP, %eax			# Go to next row
-
-		PlotCharacter40Row
-		addl	$2, %esi;
-		addl	$ SCANSTEP, %eax			# Go to next row
-
-		PlotCharacter40Row
-
-		popal
-		ret
-
-
-/* plot character on second text page */
-		.align 4
-plot_character1:
-		PlotTextPagePre($0x800,video__fb2,$1)
-		jmp	plot_character_correct_page	# same as page 0
-
-
 /* plot lores block first page */
 	
 plot_block0:
-		PlotTextPagePre($0x400,video__fb1,$0)
+		PlotTextPagePre($0x400,video__fb1)
 plot_block_correct_page:
 		movw	%si, %dx			# Compute color
 		andb	$0x0F, %dl
@@ -988,7 +857,7 @@ plot_block_correct_page:
 
 		.align 4
 plot_block1:
-		PlotTextPagePre($0x800,video__fb2,$1)
+		PlotTextPagePre($0x800,video__fb2)
     		jmp plot_block_correct_page
 	
 	
