@@ -117,7 +117,6 @@ const uint8_t * const video_current_framebuffer();
 
 /**** Private stuff follows *****/
 
-#ifdef _640x400
 /* 640x400 mode really isn't what it advertises.  It's really 560x384 with 4
  * extra bytes on each side for color interpolation hack.  This is yet another
  * area where I've traded the optimization gain (especially on older slower
@@ -126,11 +125,6 @@ const uint8_t * const video_current_framebuffer();
 #define SCANWIDTH 568
 #define SCANHEIGHT 384
 #define SCANSTEP SCANWIDTH-12
-#else /* !_640x400 */
-#define SCANWIDTH 320
-#define SCANHEIGHT 200
-#define SCANSTEP SCANWIDTH-6
-#endif /* !_640x400 */
 
 #define COLOR_BLACK             0
 
@@ -178,10 +172,8 @@ const uint8_t * const video_current_framebuffer();
 
 extern uint8_t *video__fb1,*video__fb2;
 
-#ifdef _640x400
 extern uint8_t video__wider_hires_even[0x1000];
 extern uint8_t video__wider_hires_odd[0x1000];
-#endif /* _640x400 */
 
 extern uint8_t video__hires_even[0x800];
 extern uint8_t video__hires_odd[0x800];

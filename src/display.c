@@ -19,9 +19,7 @@
 static uint8_t vga_mem_page_0[SCANWIDTH*SCANHEIGHT];              /* page0 framebuffer */
 static uint8_t vga_mem_page_1[SCANWIDTH*SCANHEIGHT];              /* page1 framebuffer */
 
-#ifdef _640x400
 uint8_t video__wider_font[0x8000];
-#endif  /* _640x400 */
 
 uint8_t video__font[0x4000];
 
@@ -31,10 +29,8 @@ uint8_t video__columns[8192];
 
 uint8_t *video__fb1,*video__fb2;
 
-#ifdef _640x400
 uint8_t video__wider_hires_even[0x1000];
 uint8_t video__wider_hires_odd[0x1000];
-#endif
 uint8_t video__hires_even[0x800];
 uint8_t video__hires_odd[0x800];
 
@@ -76,10 +72,8 @@ void video_loadfont(int first,
         {
             y = (x & 128) ? fg : bg;
 
-#ifdef _640x400
             video__wider_font[(first << 7) + (i << 4) + (j << 1)] =
                 video__wider_font[(first << 7) + (i << 4) + (j << 1) + 1] =
-#endif /* _640x400 */
             video__font[(first << 6) + (i << 3) + j] = y;
             x <<= 1;
         }
@@ -479,7 +473,6 @@ static void c_initialize_hires_values(void)
         }
     }
 
-#ifdef _640x400
     /* *2 for 640x400 */
     for (b=0, e=0; b<4096; b++, e++)
     {
@@ -489,8 +482,6 @@ static void c_initialize_hires_values(void)
         video__wider_hires_even[b] = video__hires_even[e];
         video__wider_hires_odd[b] = video__hires_odd[e];
     }
-
-#endif
 }
 
 
@@ -513,13 +504,8 @@ static void c_initialize_row_col_tables(void)
         {
             for (x = 0; x < 40; x++)
             {
-#ifdef _640x400
                 video__screen_addresses[video__line_offset[y] + 0x400*off + x ] =
                     (y*16 + 2*off /* + 8*/) * SCANWIDTH + x*14 + 4;
-#else
-                video__screen_addresses[video__line_offset[y] + 0x400*off + x ] =
-                    (y*8 + off + 4) * 320 + x*7 + 20;
-#endif
                 video__columns[video__line_offset[y] + 0x400*off + x] =
                     (uint8_t)x;
             }
@@ -658,14 +644,13 @@ void video_loadfont_int(int first, int quantity, const unsigned char *data)
 static void c_interface_print_char80_line(
     unsigned char **d, unsigned char **s)
 {
-#ifdef _640x400
     *((unsigned int *)(*d)) = *((unsigned int *)(*s)); /*32bits*/
     *d += 4, *s += 4;
     *((unsigned short *)(*d)) = *((unsigned short *)(*s)); /*16bits*/
     *d += 2, *s += 2;
     *((unsigned char *)(*d)) = *((unsigned char *)(*s)); /*8bits*/
     *d += SCANWIDTH-6, *s -= 6;
-#endif
+
     *((unsigned int *)(*d)) = *((unsigned int *)(*s)); /*32bits*/
     *d += 4, *s += 4;
     *((unsigned short *)(*d)) = *((unsigned short *)(*s)); /*16bits*/
@@ -680,13 +665,8 @@ void video_plotchar( int x, int y, int scheme, unsigned char c )
     unsigned char *d;
     unsigned char *s;
 
-#ifdef _640x400
     off = y * SCANWIDTH * 16 + x * 7 + 4;
     s = video__int_font[scheme] + c * 64;
-#else
-    off = y * SCANWIDTH * 8 + x * 7 + /*WtF?*/1300;
-    s = video__int_font[scheme] + c * 64;
-#endif
     d = video__fb1 + off;
 
     c_interface_print_char80_line(&d,&s);

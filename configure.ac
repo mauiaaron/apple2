@@ -200,7 +200,6 @@ dnl ---------------------------------------------------------------------------
 dnl Misc ...
 
 AC_DEFINE(APPLE2IX, 1, [Denotes a section of code as Apple//ix sourced, used with external sources])
-AC_DEFINE(_640x400, 1, [Screen dimensions ... this should be evenutally deprecated when we support dynamic resolutions])
 AC_DEFINE(KEYPAD_JOYSTICK, 1, [Joystick emulated on keyboard ... should not be true on mobile devices])
 
 dnl Joystick device

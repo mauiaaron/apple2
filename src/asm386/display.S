@@ -27,12 +27,8 @@
     routines.
    ------------------------------------------------------------------------- */
 
-#ifdef _640x400
 #define Font		SN(video__wider_font)
 #define Font80		SN(video__font)
-#else /* !_640x400 */
-#define Font		SN(video__font)
-#endif /* !_640x400 */
 
 /* -------------------------------------------------------------------------
  * Plot exatly 7 pixels from FROM to TO.
@@ -50,8 +46,6 @@
 		movb	(FROM), %cl;			/* byte -> GM */      \
 		movb	%cl, (TO);
 
-
-#ifdef _640x400
 
 #define LoadHiresTableRef(TABLE)\
 		leal	SN(video__wider_hires_##TABLE), %ebx;\
@@ -208,82 +202,6 @@
 #define PlotDHiresFirstByte\
 		subl	$4, %eax;\
 		PlotDHiresByte
-
-#else /* if ! _640x400 */
-
-#define LoadHiresTableRef(TABLE)\
-		leal	SN(video__hires_##TABLE)(,%eax,8), %ebx;
-
-
-/* -------------------------------------------------------------------------
- * Plot a normal swath of pixels.
- * For 320x200 this is exactly 7 pixels.
- * ebx: from table
- * eax: to graphics memory
- * ------------------------------------------------------------------------- */
-#define PlotPixels\
-		Plot7Pixels(%ebx,%eax)
-#define PlotCharacter40Row		\
-		Plot7Pixels(%esi,%eax)
-#define PlotBlockRow				\
-		movl	%edx, (%eax);		\
-		addl	$4, %eax;		\
-		movw	%dx, (%eax);		\
-		addl	$2, %eax;		\
-		movb	%dl, (%eax);
-
-/* -------------------------------------------------------------------------
- * Plot a dynamically interpolated swath of pixels
- * For 320x200 this is exactly 9 pixels.
- * ebx: from table
- * eax: to graphics memory
- * ecx: scratch
- * ------------------------------------------------------------------------- */
-#define PlotPixelsExtra\
-		decl	%eax;\
-		movl	(%ebx), %ecx;\
-		movl	%ecx, (%eax);\
-		addl	$4, %eax;\
-		addl	$4, %ebx;\
-		movl	(%ebx), %ecx;\
-		movl	%ecx, (%eax);\
-		addl	$4, %eax;\
-		addl	$4, %ebx;\
-		movb	(%ebx), %cl;\
-		movb	%cl, (%eax);
-
-/* -------------------------------------------------------------------------
- * Get the adjancent color bytes in memory.
- * ebx: graphics memory index
- * eax: temp buffer for comparison
- * ------------------------------------------------------------------------- */
-#define GrabAdjGMBytes\
-		subl	$2, %ebx;\
-		movw	(%ebx), %cx;\
-		movw	%cx, (%eax);			/* GM -> temp */\
-		addl	$9, %eax;\
-		addl	$9, %ebx;\
-		movw	(%ebx), %cx;\
-		movw	%cx, (%eax);			/* GM -> temp */\
-		decl	%eax;
-
-/* -------------------------------------------------------------------------
- * Plots a normalized byte of dhires color directly into graphics memory.
- * eax: graphics memory index
- * ebx: dhires_colors index
- * edx: scratch
- * ------------------------------------------------------------------------- */
-#define PlotDHiresByte							\
-		movb	SN(video__dhires1)(,%ebx,1), %dl;	\
-		movb	SN(video__dhires2)(,%ebx,1), %dh;	\
-		movw	%dx, (%eax);					\
-		addl	$2, %eax;
-
-#define PlotDHiresFirstByte\
-		subl	$2, %eax;\
-		PlotDHiresByte
-
-#endif/*_640x400*/
 
 
 /* -------------------------------------------------------------------------
@@ -1028,7 +946,6 @@ iie_plot_dhires1:
 		ret
 
 
-#ifdef _640x400
 		.align 4
 plot_80character0:
 		pushl	%ebx
@@ -1067,29 +984,13 @@ plot_80character1:
 		popl	%ebx
 		ret
 
-#else /* !640x400 resolution is not sufficient for 80 column */
-		.align 4
-plot_80character0:
-		andl	$0xFFFF, EffectiveAddr_E/* for safety */
-		ret
-
-		.align 4
-plot_80character1:
-		andl	$0xFFFF, EffectiveAddr_E/* for safety */
-		ret
-#endif /* _640x400 */
-
 
 /* plot character on first text page */
 		.align 4
 plot_character0:
 		PlotTextPagePre($0x400,video__fb1,$0)
 plot_character_correct_page:
-#ifdef _640x400
 		shll	$7, %esi				# * 128
-#else
-		shll	$6, %esi				# * 64
-#endif
 		addl	$ Font, %esi				# Font addr
 
 		PlotCharacter40Row
