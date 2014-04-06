@@ -338,6 +338,9 @@ void GREATEST_SET_BREAKPOINT_CB(greatest_breakpoint_cb *cb, void *udata);
     do {                                                                \
         greatest_info.fail_file = __FILE__;                             \
         greatest_info.fail_line = __LINE__;                             \
+        if (greatest_info.breakpoint) {                                 \
+            greatest_info.breakpoint(greatest_info.break_udata);        \
+        }                                                               \
         greatest_info.msg = strdup(MSG);                                \
         return -1;                                                      \
     } while (0)

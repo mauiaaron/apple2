@@ -707,6 +707,7 @@ void show_regs() {
     ++num_buffer_lines;
 }
 
+#if !defined(TESTING)
 /* -------------------------------------------------------------------------
     will_branch () = will instruction branch?
                 -1 - n/a
@@ -742,6 +743,7 @@ static int will_branch() {
 
     return BRANCH_NA;
 }
+#endif
 
 /* -------------------------------------------------------------------------
     set_halt () = set a breakpoint or watchpoint in memory

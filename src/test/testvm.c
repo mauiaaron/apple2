@@ -22,6 +22,11 @@
 #define MIXSWITCH_ADDR 0x1f32   // PEEK(7986)
 #define WATCHPOINT_ADDR 0x1f33  // PEEK(7987)
 
+#define BLANK_SCREEN "6C8ABA272F220F00BE0E76A8659A1E30C2D3CDBE"
+#define BOOT_SCREEN  "F8D6C781E0BB7B3DDBECD69B25E429D845506594"
+
+#define TESTBUF_SZ 256
+
 static char *input_str = NULL; // ASCII
 static unsigned int input_length = 0;
 static unsigned int input_counter = 0;
@@ -112,34 +117,29 @@ void c_interface_print(int x, int y, const int cs, const char *s) {
 // ----------------------------------------------------------------------------
 // VM TESTS ...
 
-#define DO_SHA(SHA_STR) \
-    uint8_t md[SHA_DIGEST_LENGTH]; \
-    char mdstr[(SHA_DIGEST_LENGTH*2)+1]; \
-    const uint8_t * const fb = video_current_framebuffer(); \
-    SHA1(fb, SCANWIDTH*SCANHEIGHT, md); \
-    sha1_to_str(md, mdstr);
+#define ASSERT_SHA(SHA_STR) \
+    do { \
+        uint8_t md[SHA_DIGEST_LENGTH]; \
+        char mdstr[(SHA_DIGEST_LENGTH*2)+1]; \
+        const uint8_t * const fb = video_current_framebuffer(); \
+        SHA1(fb, SCANWIDTH*SCANHEIGHT, md); \
+        sha1_to_str(md, mdstr); \
+        ASSERT(strcmp(mdstr, SHA_STR) == 0); \
+    } while(0);
 
 #define BOOT_TO_DOS() \
     if (test_do_reboot) { \
         ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED); \
         c_debugger_go(); \
-        if (apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED) { \
-            DO_SHA(); \
-            if (strcmp(mdstr, "F8D6C781E0BB7B3DDBECD69B25E429D845506594") != 0) { \
-                FAILm("expected boot framebuffer not found"); \
-            } \
-        } else { \
-            FAILm("boot watchpoint not triggered"); \
-        } \
+        ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED); \
+        ASSERT_SHA(BOOT_SCREEN); \
         apple_ii_64k[0][WATCHPOINT_ADDR] = 0x00; \
     }
 
 
 TEST test_boot_disk() {
     char *disk = "./disks/testvm1.dsk.gz";
-    if (c_new_diskette_6(0, disk, 0)) {
-        FAILm("Cannot insert test diskette!");
-    }
+    ASSERT(!c_new_diskette_6(0, disk, 0));
 
     BOOT_TO_DOS();
 
@@ -156,14 +156,11 @@ TEST test_40col_normal() {
     input_str = strdup("RUN TESTNORMALTEXT\r");
     input_length = strlen(input_str);
     c_debugger_go();
-    if (apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED) {
-        DO_SHA();
-        if (strcmp(mdstr, "51E5960115380C64351ED00A2ACAB0EB67970249") == 0) {
-            PASS();
-        }
-    }
 
-    FAILm("test fail");
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+    ASSERT_SHA("51E5960115380C64351ED00A2ACAB0EB67970249");
+
+    PASS();
 }
 
 TEST test_80col_normal() {
@@ -173,14 +170,11 @@ TEST test_80col_normal() {
     input_str = strdup("PR#3\rRUN TESTNORMALTEXT\r");
     input_length = strlen(input_str);
     c_debugger_go();
-    if (apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED) {
-        DO_SHA();
-        if (strcmp(mdstr, "ED9CE59F41A51A5ABB1617383A411455677A78E3") == 0) {
-            PASS();
-        }
-    }
 
-    FAILm("test fail");
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+    ASSERT_SHA("ED9CE59F41A51A5ABB1617383A411455677A78E3");
+
+    PASS();
 }
 
 TEST test_40col_inverse() {
@@ -190,14 +184,11 @@ TEST test_40col_inverse() {
     input_str = strdup("RUN TESTINVERSETEXT\r");
     input_length = strlen(input_str);
     c_debugger_go();
-    if (apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED) {
-        DO_SHA();
-        if (strcmp(mdstr, "20957B960C3C0DE0ABEE0058A08C0DDA24AB31D8") == 0) {
-            PASS();
-        }
-    }
 
-    FAILm("test fail");
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+    ASSERT_SHA("20957B960C3C0DE0ABEE0058A08C0DDA24AB31D8");
+
+    PASS();
 }
 
 TEST test_80col_inverse() {
@@ -207,14 +198,115 @@ TEST test_80col_inverse() {
     input_str = strdup("PR#3\rRUN TESTINVERSETEXT\r");
     input_length = strlen(input_str);
     c_debugger_go();
-    if (apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED) {
-        DO_SHA();
-        if (strcmp(mdstr, "037798F4BCF740D0A7CBF7CDF5FC5D1B0B3C77A2") == 0) {
-            PASS();
-        }
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+    ASSERT_SHA("037798F4BCF740D0A7CBF7CDF5FC5D1B0B3C77A2");
+
+    PASS();
+}
+
+// ----------------------------------------------------------------------------
+// LORES
+//
+// 2014/04/05 NOTE : Tests may be successful but graphics display appears to be somewhat b0rken
+//
+// NOTE : These tests assume standard color mode (not b/w or interpolated)
+//
+
+TEST test_lores_with_80col() {
+    BOOT_TO_DOS();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
+
+    input_str = strdup("TEXT\rPR#3\rRUN TESTLORES\r");
+    input_length = strlen(input_str);
+    c_debugger_go();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+    ASSERT_SHA("7B642FF04DE03142A2CE1062C28A4D92E492EDDC");
+
+    PASS();
+}
+
+TEST test_lores_with_40col() {
+    BOOT_TO_DOS();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
+
+    input_str = strdup("TEXT\rHOME\rLOAD TESTLORES\rLIST\rLIST\rRUN\r");
+    input_length = strlen(input_str);
+    c_debugger_go();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+    ASSERT_SHA("D7DC78F5718B4CF8716614E79ADABCAB919FCE5D");
+
+    PASS();
+}
+
+TEST test_lores_40colmix_normal() {
+    BOOT_TO_DOS();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
+
+    input_str = strdup("TEXT\rHOME\rLOAD TESTLORES\rLIST\rLIST\rPOKE 7986,127\rRUN\r");
+    input_length = strlen(input_str);
+    c_debugger_go();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+    ASSERT_SHA("9097A6AE967E4501B40C7CD7EEE115B8C478B345");
+
+    PASS();
+}
+
+TEST test_lores_40colmix_inverse() {
+    BOOT_TO_DOS();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
+
+    input_str = strdup("TEXT\rINVERSE\rHOME\rLOAD TESTLORES\rLIST\rLIST\rPOKE 7986,127\rRUN\r");
+    input_length = strlen(input_str);
+    c_debugger_go();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+    ASSERT_SHA("5256E8B96CB04F48324B587ECCCF8A435077B5DE");
+
+    PASS();
+}
+
+TEST test_lores_80colmix_normal() {
+    BOOT_TO_DOS();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
+
+    input_str = strdup("TEXT\rPR#3\rLOAD TESTLORES\rLIST\rLIST\rPOKE 7986,127\rRUN\r");
+    input_length = strlen(input_str);
+    c_debugger_go();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+    ASSERT_SHA("9D5D5382B0A18A71DC135CAD51BEA2665ADB5FB2");
+
+    PASS();
+}
+
+TEST test_lores_80colmix_inverse() {
+    BOOT_TO_DOS();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
+
+    input_str = strdup("TEXT\rINVERSE\rPR#3\rLOAD TESTLORES\rLIST\rLIST\rPOKE 7986,127\rRUN\r");
+    input_length = strlen(input_str);
+    c_debugger_go();
+
+    if (test_do_reboot) {
+        // HACK FIXME TODO -- softswitch settings appear to be initially screwy on reboot, so we start, abort, and then start again ...
+        ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+        ASSERT_SHA("7936E87BE1F920AACD43268DB288746528E89959");
+    } else {
+        ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+        ASSERT_SHA("7936E87BE1F920AACD43268DB288746528E89959");
     }
 
-    FAILm("test fail");
+    PASS();
 }
 
 // ----------------------------------------------------------------------------
@@ -226,20 +318,22 @@ TEST test_80col_inverse() {
 TEST test_hires_with_80col() {
     BOOT_TO_DOS();
 
-    SKIPm("hires with 80col appears to be b0rken");
-
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
+
     input_str = strdup("PR#3\rRUN TESTHIRES_2\r");
     input_length = strlen(input_str);
     c_debugger_go();
-    if (apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED) {
-        DO_SHA();
-        if (strcmp(mdstr, "8EF89A5E0501191847E9907416309B33D4B48713") == 0) {
-            PASS();
-        }
+
+    if (test_do_reboot) {
+        // HACK FIXME TODO -- softswitch settings appear to be initially screwy on reboot, so we start, abort, and then start again ...
+        ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+        ASSERT_SHA("8EF89A5E0501191847E9907416309B33D4B48713");
+    } else {
+        ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+        ASSERT_SHA("1A5DD96B7E3538C2C3625A37653E013E3998F825");
     }
 
-    FAILm("test fail");
+    PASS();
 }
 
 TEST test_hires_with_40col() {
@@ -249,14 +343,11 @@ TEST test_hires_with_40col() {
     input_str = strdup("RUN TESTHIRES_2\r");
     input_length = strlen(input_str);
     c_debugger_go();
-    if (apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED) {
-        DO_SHA();
-        if (strcmp(mdstr, "1A5DD96B7E3538C2C3625A37653E013E3998F825") == 0) {
-            PASS();
-        }
-    }
 
-    FAILm("test fail");
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+    ASSERT_SHA("1A5DD96B7E3538C2C3625A37653E013E3998F825");
+
+    PASS();
 }
 
 TEST test_hires_40colmix_normal() {
@@ -266,14 +357,11 @@ TEST test_hires_40colmix_normal() {
     input_str = strdup("POKE 7986,127\rRUN TESTHIRES\r");
     input_length = strlen(input_str);
     c_debugger_go();
-    if (apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED) {
-        DO_SHA();
-        if (strcmp(mdstr, "37F41F74EB23F8812498F732E6DA34A0EBC4D68A") == 0) {
-            PASS();
-        }
-    }
 
-    FAILm("test fail");
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+    ASSERT_SHA("37F41F74EB23F8812498F732E6DA34A0EBC4D68A");
+
+    PASS();
 }
 
 TEST test_hires_40colmix_inverse() {
@@ -283,52 +371,51 @@ TEST test_hires_40colmix_inverse() {
     input_str = strdup("INVERSE\rPOKE 7986,127\rRUN TESTHIRES\r");
     input_length = strlen(input_str);
     c_debugger_go();
-    if (apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED) {
-        DO_SHA();
-        if (strcmp(mdstr, "253D1823F5DAC0300B46B3D49C04CD59CC70076F") == 0) {
-            PASS();
-        }
-    }
 
-    FAILm("test fail");
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+    ASSERT_SHA("253D1823F5DAC0300B46B3D49C04CD59CC70076F");
+
+    PASS();
 }
 
 TEST test_hires_80colmix_normal() {
     BOOT_TO_DOS();
 
-    SKIPm("hires with 80col appears to be b0rken");
-
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
     input_str = strdup("PR#3\rLOAD TESTHIRES\rLIST\rLIST\rPOKE 7986,127\rRUN\r");
     input_length = strlen(input_str);
     c_debugger_go();
-    if (apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED) {
-        DO_SHA();
-        if (strcmp(mdstr, "032BD68899749265EB2934A76A35D7068642824B") == 0) {
-            PASS();
-        }
+
+    if (test_do_reboot) {
+        // HACK FIXME TODO -- softswitch settings appear to be initially screwy on reboot, so we start, abort, and then start again ...
+        ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+        ASSERT_SHA("A8CEF48107EDD6A0E727302259BEBC34B8700C1D");
+    } else {
+        ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+        ASSERT_SHA("032BD68899749265EB2934A76A35D7068642824B");
     }
 
-    FAILm("test fail");
+    PASS();
 }
 
 TEST test_hires_80colmix_inverse() {
     BOOT_TO_DOS();
 
-    SKIPm("hires with 80col appears to be b0rken");
-
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
-    input_str = strdup("PR#3\rLOAD TESTHIRES\rLIST\rLIST\rPOKE 7986,127\rINVERSE\rRUN\r");
+    input_str = strdup("INVERSE\rPR#3\rLOAD TESTHIRES\rLIST\rLIST\rPOKE 7986,127\rRUN\r");
     input_length = strlen(input_str);
     c_debugger_go();
-    if (apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED) {
-        DO_SHA();
-        if (strcmp(mdstr, "253D1823F5DAC0300B46B3D49C04CD59CC70076F") == 0) {
-            PASS();
-        }
+
+    if (test_do_reboot) {
+        // HACK FIXME TODO -- softswitch settings appear to be initially screwy on reboot, so we start, abort, and then start again ...
+        ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+        ASSERT_SHA("984672DD673E9EC3C2CD5CD03D1D79FD0F3D626A");
+    } else {
+        ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+        ASSERT_SHA("FAFBB65013DA3D5173487C3F434C36A7C04DE92E");
     }
 
-    FAILm("test fail");
+    PASS();
 }
 
 TEST test_80col_lores() {
@@ -412,15 +499,35 @@ GREATEST_SUITE(test_suite_vm) {
 
     // lores
 
-//    RUN_TEST(test_lores);
-//
-//    RUN_TEST(test_lores_40colmix_normal);
-//
-//    RUN_TEST(test_lores_40colmix_inverse);
-//
-//    RUN_TEST(test_lores_80colmix_normal);
-//
-//    RUN_TEST(test_lores_80colmix_inverse);
+    RUN_TEST(test_lores_with_80col);
+    test_do_reboot = false;
+    RUN_TEST(test_lores_with_80col);
+    test_do_reboot = true;
+
+    RUN_TEST(test_lores_with_40col);
+    test_do_reboot = false;
+    RUN_TEST(test_lores_with_40col);
+    test_do_reboot = true;
+
+    RUN_TEST(test_lores_40colmix_normal);
+    test_do_reboot = false;
+    RUN_TEST(test_lores_40colmix_normal);
+    test_do_reboot = true;
+
+    RUN_TEST(test_lores_40colmix_inverse);
+    test_do_reboot = false;
+    RUN_TEST(test_lores_40colmix_inverse);
+    test_do_reboot = true;
+
+    RUN_TEST(test_lores_80colmix_normal);
+    test_do_reboot = false;
+    RUN_TEST(test_lores_80colmix_normal);
+    test_do_reboot = true;
+
+    RUN_TEST(test_lores_80colmix_inverse);
+    test_do_reboot = false;
+    RUN_TEST(test_lores_80colmix_inverse);
+    test_do_reboot = true;
 
     // hires
 
