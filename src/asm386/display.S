@@ -107,60 +107,6 @@
 		decb	%dl;\
 		jnz	1b;
 
-
-/* -------------------------------------------------------------------------
- * Plot an 80 column character row.  We can do this only in 640x400 resolution.
- * For 640x400 this is 2 rows of 7 pixels.
- * esi: from table
- * eax: to graphics memory
- * ------------------------------------------------------------------------- */
-#define PlotCharacter80Row\
-		Plot7Pixels(%esi,%eax);\
-		addl	$ SCANWIDTH-6, %eax;/* Go to next row */\
-		subl	$6, %esi;\
-		Plot7Pixels(%esi,%eax);\
-
-/* -------------------------------------------------------------------------
- * Plot a 40 column character row.
- * For 640x400 this is 2 rows of 14 pixels.
- * esi: from table
- * eax: to graphics memory
- * ------------------------------------------------------------------------- */
-#define PlotCharacter40Row640\
-		movl	(%esi), %ecx;	\
-		movl	%ecx, (%eax);	\
-		addl	$4, %esi;	\
-		addl	$4, %eax;	\
-		movl	(%esi), %ecx;	\
-		movl	%ecx, (%eax);	\
-		addl	$4, %esi;	\
-		addl	$4, %eax;	\
-		movl	(%esi), %ecx;	\
-		movl	%ecx, (%eax);	\
-		addl	$4, %esi;	\
-		addl	$4, %eax;	\
-		movw	(%esi), %cx;	\
-		movw	%cx, (%eax);
-
-/* -------------------------------------------------------------------------
- * Plot a 40 column row of lores graphics.
- * For 640x400 this is 2 rows of 14 pixels.
- * esi: from table
- * eax: to graphics memory
- * ------------------------------------------------------------------------- */
-#define PlotBlockRow				\
-		PlotBlockRow640			\
-		addl	$ SCANWIDTH-12, %eax;	\
-		PlotBlockRow640
-#define PlotBlockRow640\
-		movl	%edx, (%eax);		\
-		addl	$4, %eax;		\
-		movl	%edx, (%eax);		\
-		addl	$4, %eax;		\
-		movl	%edx, (%eax);		\
-		addl	$4, %eax;		\
-		movw	%dx, (%eax);
-
 /* -------------------------------------------------------------------------
  * Get the adjancent color bytes in memory.
  * For 640x400 mode, we need to remember to move around by a factor of 2.
@@ -512,20 +458,6 @@ plot_dhires##X##_cont:							      \
 		ret;
 
 
-/* -------------------------------------------------------------------------
- * setup to plot the text/lores stuff.
- * eax: graphics memory pointer
- * ------------------------------------------------------------------------- */
-#define PlotTextPagePre(OFF,GM)\
-		pushal;					/*Save everything -MUST BE MATCHED!*/\
-		xorb	%ah, %ah;\
-		movl	%eax, %esi;			/*ESI=EAX=Chr code*/\
-		subw	OFF, EffectiveAddr;		/*Normalize scrn addr*/\
-							/*Compute row*/\
-		movl	SN(video__screen_addresses)(,EffectiveAddr_E,4), %eax;\
-		addl	SN(GM), %eax;		/*Graphic addr*/
-
-
 	/* -----------------------------------------------------------------
 	 * Scan through video memory (text & graphics) and call the updating
 	 * routines.  Depending on softswitch settings, either text or
@@ -568,86 +500,6 @@ E(video_redraw)
 		ret
 	
 		/******************************************/
-
-/* video__write_2e_text0 - handle text page //e specific */
-E(video__write_2e_text0)
-		addl	SN(base_textwrt), EffectiveAddr_E
-		movb	%al, (EffectiveAddr_E)
-		subl	SN(base_textwrt), EffectiveAddr_E
-iie_soft_write_text0:
-		testl	$SS_TEXT, SN(softswitches)	# Text mode?
-		jz	iie_write_lores0		# graphics
-		testl	$SS_80COL, SN(softswitches)
-    		jnz	iie_plot_80character0		# 80 col text
-		testl	$SS_TEXTWRT, SN(softswitches)
-		jnz	ram_nop				# NOP (in auxram)
-		call    plot_character0			# 40 col text
-                ret
-
-iie_plot_80character0:
-                call plot_80character0
-                ret
-
-iie_write_lores0:
-		testl	$(SS_HIRES|SS_TEXTWRT), SN(softswitches)
-		jz	plot_block0  # lores & 80col
-		ret
-
-/* video__write_2e_text0_mixed - handle mixed text page //e specific */
-E(video__write_2e_text0_mixed)
-		addl	SN(base_textwrt), EffectiveAddr_E
-		movb	%al, (EffectiveAddr_E)
-		subl	SN(base_textwrt), EffectiveAddr_E
-iie_soft_write_text0_mixed:
-		testl	$(SS_TEXT|SS_MIXED), SN(softswitches)
-		jz	iie_write_lores0
-		testl	$SS_80COL, SN(softswitches)
-		jnz	iie_plot_80character0
-		testl	$SS_TEXTWRT, SN(softswitches)
-		jnz	ram_nop				# NOP (in auxram)
-		call	plot_character0			# 40 col text
-                ret
-
-/* video__write_2e_text1 - handle text page1 //e specific */
-E(video__write_2e_text1)
-		addl	SN(base_ramwrt), EffectiveAddr_E
-		movb	%al, (EffectiveAddr_E)
-		subl	SN(base_ramwrt), EffectiveAddr_E
-iie_soft_write_text1:
-		testl	$SS_TEXT, SN(softswitches)	# Text mode?
-		jz	iie_write_lores1		# graphics
-		testl	$SS_80COL, SN(softswitches)
-    		jnz	iie_plot_80character1		# 80 col text
-		testl	$SS_RAMWRT, SN(softswitches)
-		jnz	ram_nop				# NOP (in auxram)
-		call	plot_character1			# 40 col text
-                ret
-
-iie_plot_80character1:
-                call plot_80character1
-                ret
-
-iie_write_lores1:
-		testl	$(SS_HIRES|SS_RAMWRT), SN(softswitches) 
-		jz	plot_block1	# lores & main bank
-		ret
-
-
-/* video__write_2e_text1_mixed - handle mixed page 1 //e specific */
-E(video__write_2e_text1_mixed)
-		addl	SN(base_ramwrt), EffectiveAddr_E
-		movb	%al, (EffectiveAddr_E)
-		subl	SN(base_ramwrt), EffectiveAddr_E
-iie_soft_write_text1_mixed:
-		testl	$(SS_TEXT|SS_MIXED), SN(softswitches)
-		jz	iie_write_lores1
-		testl	$SS_80COL, SN(softswitches)
-		jnz	iie_plot_80character1
-		testl	$SS_RAMWRT, SN(softswitches)
-		jnz	ram_nop				# NOP (in auxram)
-		call	plot_character1			# 40 col text
-                ret
-
 
 /* video__write_2e_even0 - handle hires page //e specific */
 E(video__write_2e_even0)
@@ -804,62 +656,6 @@ iie_plot_dhires0:
 iie_plot_dhires1:
 		PlotDHires($0x4000,1,video__fb2)
 		ret
-
-
-/* plot lores block first page */
-	
-plot_block0:
-		PlotTextPagePre($0x400,video__fb1)
-plot_block_correct_page:
-		movw	%si, %dx			# Compute color
-		andb	$0x0F, %dl
-		shlb	$4, %dl
-		movb	%dl, %dh
-		shll	$16, %edx
-		movw	%si, %dx
-		andb	$0x0F, %dl
-		shlb	$4, %dl
-		movb	%dl, %dh
-
-		PlotBlockRow
-		addl	$ SCANSTEP, %eax		# Go to next row
-
-		PlotBlockRow
-		addl	$ SCANSTEP, %eax		# Go to next row
-
-		PlotBlockRow
-		addl	$ SCANSTEP, %eax		# Go to next row
-
-		PlotBlockRow
-		addl	$ SCANSTEP, %eax		# Go to next row
-
-		movw	%si, %dx			# Compute color
-		andb	$0xF0, %dl
-		movb	%dl, %dh
-		shll	$16, %edx
-		movw	%si, %dx
-		andb	$0xF0, %dl
-		movb	%dl, %dh
-
-		PlotBlockRow
-		addl	$ SCANSTEP, %eax		# Go to next row
-
-		PlotBlockRow
-		addl	$ SCANSTEP, %eax		# Go to next row
-
-		PlotBlockRow
-		addl	$ SCANSTEP, %eax		# Go to next row
-
-		PlotBlockRow
-
-		popal
-		ret
-
-		.align 4
-plot_block1:
-		PlotTextPagePre($0x800,video__fb2)
-    		jmp plot_block_correct_page
-	
 	
 
 /* plot even column hires byte on page 0 */

@@ -631,6 +631,24 @@ static inline void _plot_char80(uint8_t **d, uint8_t **s) {
     *d += SCANWIDTH-6, *s += 2;
 }
 
+static inline void _plot_lores(uint8_t **d, const uint32_t val) {
+    *((uint32_t *)(*d)) = val;
+    *d += 4;
+    *((uint32_t *)(*d)) = val;
+    *d += 4;
+    *((uint32_t *)(*d)) = val;
+    *d += 4;
+    *((uint16_t *)(*d)) = (uint16_t)(val & 0xffff);
+    *d += (SCANWIDTH-12);
+    *((uint32_t *)(*d)) = val;
+    *d += 4;
+    *((uint32_t *)(*d)) = val;
+    *d += 4;
+    *((uint32_t *)(*d)) = val;
+    *d += 4;
+    *((uint16_t *)(*d)) = (uint16_t)(val & 0xffff);
+}
+
 void video_plotchar( int x, int y, int scheme, unsigned char c )
 {
     int off;
@@ -727,8 +745,9 @@ static inline void _plot_80character(const unsigned int font_off, const unsigned
     _plot_char80(/*dst*/&fb_ptr, /*src*/&font_ptr);
 }
 
-// FIXME TODO NOTE : we are dup'ing the work here
+// FIXME TODO NOTE : dup'ing work here?
 GLUE_C_WRITE(plot_80character0)
+//static inline void _plot_80character0(uint16_t ea, uint8_t b)
 {
     b = apple_ii_64k[1][ea];
     _plot_80character(b<<6/* *64 */, video__screen_addresses[ea-0x0400], video__fb1);
@@ -737,10 +756,132 @@ GLUE_C_WRITE(plot_80character0)
 }
 
 GLUE_C_WRITE(plot_80character1)
+//static inline void _plot_80character1(uint16_t ea, uint8_t b)
 {
     b = apple_ii_64k[1][ea];
     _plot_80character(b<<6/* *64 */, video__screen_addresses[ea-0x0800], video__fb2);
     b = apple_ii_64k[0][ea];
     _plot_80character(b<<6/* *64 */, video__screen_addresses[ea-0x0800]+7, video__fb2);
+}
+
+static inline void _plot_block(const uint32_t val, uint8_t *fb_ptr) {
+    uint8_t color = (val & 0x0F) << 4;
+    uint32_t val32 = (color << 24) | (color << 16) | (color << 8) | color;
+
+    _plot_lores(/*dst*/&fb_ptr, val32);
+    fb_ptr += SCANSTEP;
+    _plot_lores(/*dst*/&fb_ptr, val32);
+    fb_ptr += SCANSTEP;
+    _plot_lores(/*dst*/&fb_ptr, val32);
+    fb_ptr += SCANSTEP;
+    _plot_lores(/*dst*/&fb_ptr, val32);
+
+    fb_ptr += SCANSTEP;
+    color = val & 0xF0;
+    val32 = (color << 24) | (color << 16) | (color << 8) | color;
+
+    _plot_lores(/*dst*/&fb_ptr, val32);
+    fb_ptr += SCANSTEP;
+    _plot_lores(/*dst*/&fb_ptr, val32);
+    fb_ptr += SCANSTEP;
+    _plot_lores(/*dst*/&fb_ptr, val32);
+    fb_ptr += SCANSTEP;
+    _plot_lores(/*dst*/&fb_ptr, val32);
+}
+
+/* plot lores block first page */
+GLUE_C_WRITE(plot_block0)
+//static inline void _plot_block0(uint16_t ea, uint8_t b)
+{
+    _plot_block(b, video__fb1+video__screen_addresses[ea-0x0400]);
+}
+
+GLUE_C_WRITE(plot_block1)
+//static inline void _plot_block1(uint16_t ea, uint8_t b)
+{
+    _plot_block(b, video__fb2+video__screen_addresses[ea-0x0800]);
+}
+
+#define DRAW_TEXT(PAGE, SW) \
+    do { \
+        if (softswitches & SS_TEXT) { \
+            if (softswitches & SS_80COL) { \
+                c_plot_80character##PAGE(ea, b); \
+            } else if (softswitches & SW) { \
+                /* ??? */ \
+            } else { \
+                c_plot_character##PAGE(ea, b); \
+            } \
+        } else { \
+            if (softswitches & (SS_HIRES|SW)) { \
+                /* ??? */ \
+            } else { \
+                c_plot_block##PAGE(ea, b); \
+            } \
+        } \
+    } while(0)
+
+
+#define DRAW_MIXED(PAGE, SW) \
+    do { \
+        if (softswitches & (SS_TEXT|SS_MIXED)) { \
+            if (softswitches & SS_80COL) { \
+                c_plot_80character##PAGE(ea, b); \
+            } else if (softswitches & SW) { \
+                /* ??? */ \
+            } else { \
+                c_plot_character##PAGE(ea, b); \
+            } \
+        } else { \
+            if (softswitches & (SS_HIRES|SW)) { \
+                /* ??? */ \
+            } else { \
+                c_plot_block##PAGE(ea, b); \
+            } \
+        } \
+    } while(0)
+
+GLUE_C_WRITE(iie_soft_write_text0)
+{
+    DRAW_TEXT(0, SS_TEXTWRT);
+}
+
+GLUE_C_WRITE(video__write_2e_text0)
+{
+    base_textwrt[ea] = b;
+    c_iie_soft_write_text0(ea, b);
+}
+
+GLUE_C_WRITE(iie_soft_write_text0_mixed)
+{
+    DRAW_MIXED(0, SS_TEXTWRT);
+}
+
+GLUE_C_WRITE(video__write_2e_text0_mixed)
+{
+    base_textwrt[ea] = b;
+    c_iie_soft_write_text0_mixed(ea, b);
+}
+
+GLUE_C_WRITE(iie_soft_write_text1)
+{
+    DRAW_TEXT(1, SS_RAMWRT);
+}
+
+GLUE_C_WRITE(video__write_2e_text1)
+{
+    base_ramwrt[ea] = b;
+    c_iie_soft_write_text1(ea, b);
+}
+
+GLUE_C_WRITE(iie_soft_write_text1_mixed)
+{
+    DRAW_MIXED(1, SS_RAMWRT);
+}
+
+GLUE_C_WRITE(video__write_2e_text1_mixed)
+{
+    base_ramwrt[ea] = b;
+    c_iie_soft_write_text1_mixed(ea, b);
 }
 
