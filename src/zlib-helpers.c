@@ -180,6 +180,8 @@ const char* const inf(const char* const src)
                 ERRLOG("OOPS fwrite ...");
                 break;
             }
+
+            fflush(dest);
         } while (1);
 
     } while (0);
