@@ -48,7 +48,7 @@ static const char* const _gzerr(gzFile gzf)
    for processing, Z_VERSION_ERROR if the version of zlib.h and the version of
    the library linked do not match, or Z_ERRNO if there is an error reading or
    writing the files. */
-const char* const def(const char* const src)
+const char *def(const char* const src, const int expected_bytecount)
 {
     unsigned char buf[CHUNK];
     FILE *source = NULL;
@@ -58,6 +58,7 @@ const char* const def(const char* const src)
         return NULL;
     }
 
+    int bytecount = 0;
     int ret = UNKNOWN_ERR;
     do {
         source = fopen(src, "r");
@@ -96,10 +97,16 @@ const char* const def(const char* const src)
                     ERRLOG("OOPS gzwrite ...");
                     break;
                 }
+                bytecount += written;
             }
 
             if (feof(source)) {
-                ret = Z_OK;
+                if (bytecount != expected_bytecount) {
+                    ERRLOG("OOPS did not write expected_bytecount of %d ... apparently wrote %d", expected_bytecount, bytecount);
+                    ret = UNKNOWN_ERR;
+                } else {
+                    ret = Z_OK;
+                }
                 break; // finished deflating
             }
         } while (1);
@@ -130,7 +137,7 @@ const char* const def(const char* const src)
    invalid or incomplete, Z_VERSION_ERROR if the version of zlib.h and
    the version of the library linked do not match, or Z_ERRNO if there
    is an error reading or writing the files. */
-const char* const inf(const char* const src)
+const char *inf(const char* const src, int *rawcount)
 {
     unsigned char buf[CHUNK];
     gzFile gzsource = NULL;
@@ -140,6 +147,9 @@ const char* const inf(const char* const src)
         return NULL;
     }
 
+    if (rawcount) {
+        *rawcount = 0;
+    }
     int ret = UNKNOWN_ERR;
     do {
         gzsource = gzopen(src, "rb");
@@ -180,7 +190,9 @@ const char* const inf(const char* const src)
                 ERRLOG("OOPS fwrite ...");
                 break;
             }
-
+            if (rawcount) {
+                *rawcount += buflen;
+            }
             fflush(dest);
         } while (1);
 

@@ -18,6 +18,9 @@
 
 #define PHASE_BYTES 3328
 
+#define NIB_SIZE 232960
+#define DSK_SIZE 143360
+
 static unsigned char slot6_rom[256];
 static int slot6_rom_loaded = 0;
 
@@ -136,7 +139,7 @@ void c_eject_6(int drive) {
     if (disk6.disk[drive].compressed)
     {
         // foo.dsk -> foo.dsk.gz
-        const char* const err = def(disk6.disk[drive].file_name);
+        const char* const err = def(disk6.disk[drive].file_name, is_nib(disk6.disk[drive].file_name) ? NIB_SIZE : DSK_SIZE);
         if (err)
         {
             ERRLOG("OOPS: An error occurred when attempting to compress a disk image : %s", err);
@@ -177,7 +180,14 @@ int c_new_diskette_6(int drive, const char * const raw_file_name, int force) {
     char *file_name = strdup(raw_file_name);
     if (is_gz(file_name))
     {
-        const char* const err = inf(file_name); // foo.dsk.gz -> foo.dsk
+        int rawcount = 0;
+        const char *err = inf(file_name, &rawcount); // foo.dsk.gz -> foo.dsk
+        if (!err) {
+            int expected = is_nib(file_name) ? NIB_SIZE : DSK_SIZE;
+            if (rawcount != expected) {
+                err = "disk image is not expected size!";
+            }
+        }
         if (err)
         {
             ERRLOG("OOPS: An error occurred when attempting to inflate/load a disk image : %s", err);
