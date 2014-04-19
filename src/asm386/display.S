@@ -27,9 +27,6 @@
     routines.
    ------------------------------------------------------------------------- */
 
-#define Font		SN(video__wider_font)
-#define Font80		SN(video__font)
-
 /* -------------------------------------------------------------------------
  * Plot exatly 7 pixels from FROM to TO.
  * ecx: scratch
@@ -45,41 +42,6 @@
 		addl	$2, TO;					      \
 		movb	(FROM), %cl;			/* byte -> GM */      \
 		movb	%cl, (TO);
-
-
-#define LoadHiresTableRef(TABLE)\
-		leal	SN(video__wider_hires_##TABLE), %ebx;\
-		shll	$4, %eax;/* *16 */\
-		addl	%eax, %ebx;
-
-/* -------------------------------------------------------------------------
- * Plot a normal swath of pixels.
- * For 640x400 this is 2 rows of 14 pixels.
- * ebx: from table
- * eax: to graphics memory
- * ------------------------------------------------------------------------- */
-#define PlotPixels\
-		PlotPixels640\
-		subl	$12, %ebx;\
-		addl	$SCANWIDTH-12, %eax;\
-		PlotPixels640\
-		subl	$SCANWIDTH, %eax;\
-		addl	$1, %eax;
-#define PlotPixels640\
-		movl	(%ebx), %ecx;			/* long -> GM */      \
-		movl	%ecx, (%eax);				      \
-		addl	$4, %eax;			/* inc pointers */    \
-		addl	$4, %ebx;					      \
-		movl	(%ebx), %ecx;			/* long -> GM */      \
-		movl	%ecx, (%eax);				      \
-		addl	$4, %eax;			/* inc pointers */    \
-		addl	$4, %ebx;					      \
-		movl	(%ebx), %ecx;			/* long -> GM */      \
-		movl	%ecx, (%eax);				      \
-		addl	$4, %eax;			/* inc pointers */    \
-		addl	$4, %ebx;					      \
-		movw	(%ebx), %cx;			/* word -> GM */      \
-		movw	%cx, (%eax);
 
 /* -------------------------------------------------------------------------
  * Plot a dynamically interpolated swath of pixels.
@@ -172,13 +134,6 @@
 		pushl	%ecx;						      \
 		\
 		xorb	%ah, %ah;			/* clear noise */     \
-		testb	$0xFF, SN(video__strictcolors);		      \
-		jnz	PB_dynamic##X;			/* dynamic color mode */\
-		LoadHiresTableRef(TABLE);\
-		CalcHiresGM(BASE,%eax,GM);		/* eax = GM */\
-		PlotPixels;				/* temp -> GM */\
-		jmp	PB_exit##X;\
-		\
 PB_dynamic##X:\
 		leal	SN(video__hires_##TABLE)(,%eax,8), %ebx;\
 		leal	SN(temp), %eax;	/* eax = temp */\
@@ -501,24 +456,27 @@ E(video_redraw)
 	
 		/******************************************/
 
+#define DRAW_GRAPHICS(PARITY, PAGE, TEXT_SW) \
+		testl	TEXT_SW, SN(softswitches); \
+		jnz	ram_nop /* text */; \
+		testl	$SS_HIRES, SN(softswitches); \
+		jz	ram_nop	/* lores */; \
+		testl	$SS_80COL, SN(softswitches); \
+    		jz	1f; \
+		testl	$SS_DHIRES, SN(softswitches); \
+		jnz	iie_plot_dhires##PAGE /* plot dhires */; \
+1:		testl	$SS_HGRWRT, SN(softswitches); \
+		jnz	ram_nop	/* in auxram */; \
+		call	plot_##PARITY##_byte##PAGE /* plot hires */; \
+                ret;
+
 /* video__write_2e_even0 - handle hires page //e specific */
 E(video__write_2e_even0)
 		addl	SN(base_hgrwrt), EffectiveAddr_E
 		movb	%al, (EffectiveAddr_E)
 		subl	SN(base_hgrwrt), EffectiveAddr_E
 iie_soft_write_even0:
-		testl	$SS_TEXT, SN(softswitches)
-		jnz	ram_nop				# text
-		testl	$SS_HIRES, SN(softswitches) # hires mode?
-		jz	ram_nop				# lores
-		testl	$SS_80COL, SN(softswitches)
-    		jz	1f				# not dhires
-		testl	$SS_DHIRES, SN(softswitches)# dhires mode?
-		jnz	iie_plot_dhires0		# dhires
-1:		testl	$SS_HGRWRT, SN(softswitches)
-		jnz	ram_nop				# in auxram
-		jmp	plot_even_byte0			# plot hires
-
+                DRAW_GRAPHICS(even, 0, $SS_TEXT)
 
 /* video__write_2e_even0_mixed - handle mixed hires page //e specific */
 E(video__write_2e_even0_mixed)
@@ -526,17 +484,8 @@ E(video__write_2e_even0_mixed)
 		movb	%al, (EffectiveAddr_E)
 		subl	SN(base_hgrwrt), EffectiveAddr_E
 iie_soft_write_even0_mixed:
-		testl	$(SS_TEXT|SS_MIXED), SN(softswitches)
-		jnz	ram_nop	 			# text/mix
-		testl	$SS_HIRES, SN(softswitches) # hires mode?
-		jz	ram_nop				# lores
-		testl	$SS_80COL, SN(softswitches)
-    		jz	1f				# not dhires
-		testl	$SS_DHIRES, SN(softswitches)# dhires mode?
-		jnz	iie_plot_dhires0		# dhires
-1:		testl	$SS_HGRWRT, SN(softswitches)
-		jnz	ram_nop				# in auxram
-		jmp	plot_even_byte0			# plot hires
+                DRAW_GRAPHICS(even, 0, $(SS_TEXT|SS_MIXED))
+
 
 /* video__write_2e_odd0 - handle hires page //e specific */
 E(video__write_2e_odd0)
@@ -544,17 +493,7 @@ E(video__write_2e_odd0)
 		movb	%al, (EffectiveAddr_E)
 		subl	SN(base_hgrwrt), EffectiveAddr_E
 iie_soft_write_odd0:
-		testl	$SS_TEXT, SN(softswitches)	# Text mode?
-		jnz	ram_nop				# text
-		testl	$SS_HIRES, SN(softswitches) # hires mode?
-		jz	ram_nop				# lores
-		testl	$SS_80COL, SN(softswitches)
-    		jz	1f				# not dhires
-		testl	$SS_DHIRES, SN(softswitches)# dhires mode?
-		jnz	iie_plot_dhires0		# dhires
-1:		testl	$SS_HGRWRT, SN(softswitches)
-		jnz	ram_nop				# in auxram
-		jmp	plot_odd_byte0			# plot hires
+                DRAW_GRAPHICS(odd, 0, $SS_TEXT)
 
 /* video__write_2e_odd0_mixed - handle mixed hires page //e specific */
 E(video__write_2e_odd0_mixed)
@@ -562,17 +501,7 @@ E(video__write_2e_odd0_mixed)
 		movb	%al, (EffectiveAddr_E)
 		subl	SN(base_hgrwrt), EffectiveAddr_E
 iie_soft_write_odd0_mixed:
-		testl	$(SS_TEXT|SS_MIXED), SN(softswitches)	
-		jnz	ram_nop			# text/mix
-		testl	$SS_HIRES, SN(softswitches) # hires mode?
-		jz	ram_nop				# lores
-		testl	$SS_80COL, SN(softswitches)
-    		jz	1f				# not dhires
-		testl	$SS_DHIRES, SN(softswitches) # dhires mode?
-		jnz	iie_plot_dhires0		# dhires
-1:		testl	$SS_HGRWRT, SN(softswitches)
-		jnz	ram_nop				# in auxram
-		jmp	plot_odd_byte0			# plot hires
+                DRAW_GRAPHICS(odd, 0, $(SS_TEXT|SS_MIXED))
 
 
 /* video__write_2e_even1 - write hires page1 //e specific */
@@ -581,17 +510,7 @@ E(video__write_2e_even1)
 		movb	%al, (EffectiveAddr_E)
 		subl	SN(base_ramwrt), EffectiveAddr_E
 iie_soft_write_even1:
-		testl	$SS_TEXT, SN(softswitches) # Text mode?
-		jnz	ram_nop				# text
-		testl	$SS_HIRES, SN(softswitches) # hires mode?
-		jz	ram_nop				# lores
-		testl	$SS_80COL, SN(softswitches)
-    		jz	1f				# not dhires
-		testl	$SS_DHIRES, SN(softswitches) # dhires mode?
-		jnz	iie_plot_dhires1		# dhires
-1:		testl	$SS_RAMWRT, SN(softswitches)
-		jnz	ram_nop				# in auxram
-		jmp	plot_even_byte1			# plot hires
+                DRAW_GRAPHICS(even, 1, $SS_TEXT)
 
 /* video__write_2e_even1_mixed - write hires page1 //e specific */
 E(video__write_2e_even1_mixed)
@@ -599,17 +518,8 @@ E(video__write_2e_even1_mixed)
 		movb	%al, (EffectiveAddr_E)
 		subl	SN(base_ramwrt), EffectiveAddr_E
 iie_soft_write_even1_mixed:
-		testl	$(SS_TEXT|SS_MIXED), SN(softswitches)
-		jnz	ram_nop			# text/mix
-		testl	$SS_HIRES, SN(softswitches) # hires mode?
-		jz	ram_nop				# lores
-		testl	$SS_80COL, SN(softswitches)
-    		jz	1f				# not dhires
-		testl	$SS_DHIRES, SN(softswitches)# dhires mode?
-		jnz	iie_plot_dhires1		# dhires
-1:		testl	$SS_RAMWRT, SN(softswitches)
-		jnz	ram_nop				# in auxram
-		jmp	plot_even_byte1			# plot hires
+                DRAW_GRAPHICS(even, 1, $(SS_TEXT|SS_MIXED))
+
 
 /* video__write_2e_odd1 - write hires page1 //e specific */
 E(video__write_2e_odd1)
@@ -617,18 +527,7 @@ E(video__write_2e_odd1)
 		movb	%al, (EffectiveAddr_E)
 		subl	SN(base_ramwrt), EffectiveAddr_E
 iie_soft_write_odd1:
-		testl	$SS_TEXT, SN(softswitches)	# Text mode?
-		jnz	ram_nop				# text
-		testl	$SS_HIRES, SN(softswitches) # hires mode?
-		jz	ram_nop				# lores
-		testl	$SS_80COL, SN(softswitches)
-    		jz	1f				# not dhires
-		testl	$SS_DHIRES, SN(softswitches)# dhires mode?
-		jnz	iie_plot_dhires1		# dhires
-1:		testl	$SS_RAMWRT, SN(softswitches) 
-		jnz	ram_nop				# in auxram
-_iie_plot_hires_page1_odd:
-		jmp	plot_odd_byte1			# plot hires
+                DRAW_GRAPHICS(odd, 1, $SS_TEXT)
 
 /* video__write_2e_odd1_mixed - write hires page1 //e specific */
 E(video__write_2e_odd1_mixed)
@@ -636,17 +535,7 @@ E(video__write_2e_odd1_mixed)
 		movb	%al, (EffectiveAddr_E)
 		subl	SN(base_ramwrt), EffectiveAddr_E
 iie_soft_write_odd1_mixed:
-		testl	$(SS_TEXT|SS_MIXED), SN(softswitches)
-		jnz	ram_nop			# text/mix
-		testl	$SS_HIRES, SN(softswitches) # hires mode?
-		jz	ram_nop				# lores
-		testl	$SS_80COL, SN(softswitches)
-    		jz	1f				# not dhires
-		testl	$SS_DHIRES, SN(softswitches)# dhires mode?
-		jnz	iie_plot_dhires1		# dhires
-1:		testl	$SS_RAMWRT, SN(softswitches)
-		jnz	ram_nop				# in auxram
-		jmp	plot_odd_byte1			# plot hires
+                DRAW_GRAPHICS(odd, 1, $(SS_TEXT|SS_MIXED))
 
 		.align	4
 iie_plot_dhires0:
