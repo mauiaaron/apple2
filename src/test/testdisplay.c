@@ -34,7 +34,7 @@ static bool test_do_reboot = true;
 
 extern unsigned char joy_button0;
 
-static void testvm_setup(void *arg) {
+static void testdisplay_setup(void *arg) {
     apple_ii_64k[0][MIXSWITCH_ADDR] = 0x00;
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x00;
     input_counter = 0;
@@ -45,15 +45,15 @@ static void testvm_setup(void *arg) {
     }
 }
 
-static void testvm_teardown(void *arg) {
+static void testdisplay_teardown(void *arg) {
     if (input_str) {
         free(input_str);
     }
     input_str = NULL;
 }
 
-static void testvm_breakpoint(void *arg) {
-    fprintf(GREATEST_STDOUT, "set breakpoint on testvm_breakpoint to check for problems...\n");
+static void testdisplay_breakpoint(void *arg) {
+    fprintf(GREATEST_STDOUT, "set breakpoint on testdisplay_breakpoint to check for problems...\n");
 }
 
 static void sha1_to_str(const uint8_t * const md, char *buf) {
@@ -138,7 +138,7 @@ void c_interface_print(int x, int y, const int cs, const char *s) {
 
 
 TEST test_boot_disk() {
-    char *disk = "./disks/testvm1.dsk.gz";
+    char *disk = "./disks/testdisplay1.dsk.gz";
     ASSERT(!c_new_diskette_6(0, disk, 0));
 
     BOOT_TO_DOS();
@@ -437,13 +437,13 @@ TEST test_80col_hires() {
 
 extern void cpu_thread(void *dummyptr);
 
-GREATEST_SUITE(test_suite_vm) {
+GREATEST_SUITE(test_suite_display) {
 
     srandom(time(NULL));
 
-    GREATEST_SET_SETUP_CB(testvm_setup, NULL);
-    GREATEST_SET_TEARDOWN_CB(testvm_teardown, NULL);
-    GREATEST_SET_BREAKPOINT_CB(testvm_breakpoint, NULL);
+    GREATEST_SET_SETUP_CB(testdisplay_setup, NULL);
+    GREATEST_SET_TEARDOWN_CB(testdisplay_teardown, NULL);
+    GREATEST_SET_BREAKPOINT_CB(testdisplay_breakpoint, NULL);
 
     do_logging = false;// silence regular emulator logging
     setenv("APPLE2IXCFG", "nosuchconfigfile", 1);
@@ -580,12 +580,12 @@ GREATEST_SUITE(test_suite_vm) {
     pthread_mutex_unlock(&interface_mutex);
 }
 
-SUITE(test_suite_vm);
+SUITE(test_suite_display);
 GREATEST_MAIN_DEFS();
 
 int main(int argc, char **argv) {
     GREATEST_MAIN_BEGIN();
-    RUN_SUITE(test_suite_vm);
+    RUN_SUITE(test_suite_display);
     GREATEST_MAIN_END();
 }
 
