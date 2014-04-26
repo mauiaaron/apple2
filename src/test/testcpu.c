@@ -48,10 +48,6 @@
     snprintf(msgbuf, MSG_SIZE, MSG_FLAGS0, regA, val, result, buf0, cpu65_current.a, buf1); \
     ASSERTm(msgbuf, cpu65_current.f == flags);
 
-void testing_video_sync() {
-    // user input and video output not simulated in this test
-}
-
 static void testcpu_setup(void *arg) {
 
     //reinitialize();

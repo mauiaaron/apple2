@@ -17,21 +17,14 @@
 #error "these tests require OpenSSL libraries"
 #endif
 
-static char *input_str = NULL; // ASCII
-static unsigned int input_length = 0;
-static unsigned int input_counter = 0;
 static bool test_do_reboot = true;
-
-static struct timespec t0 = { 0 };
-static struct timespec ti = { 0 };
 
 extern unsigned char joy_button0;
 
 static void testdisplay_setup(void *arg) {
+    test_common_setup();
     apple_ii_64k[0][MIXSWITCH_ADDR] = 0x00;
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x00;
-    input_counter = 0;
-    input_length = 0;
     joy_button0 = 0xff; // OpenApple
     if (test_do_reboot) {
         cpu65_interrupt(ResetSig);
@@ -39,10 +32,6 @@ static void testdisplay_setup(void *arg) {
 }
 
 static void testdisplay_teardown(void *arg) {
-    if (input_str) {
-        free(input_str);
-    }
-    input_str = NULL;
 }
 
 static void sha1_to_str(const uint8_t * const md, char *buf) {
@@ -52,45 +41,6 @@ static void sha1_to_str(const uint8_t * const md, char *buf) {
     }
     sprintf(buf+i, "%c", '\0');
 }
-
-// ----------------------------------------------------------------------------
-// test video functions and stubs
-
-void testing_video_sync(int ignored) {
-
-#if !HEADLESS
-    if (!is_headless) {
-        clock_gettime(CLOCK_MONOTONIC, &ti);
-        struct timespec deltat = timespec_diff(t0, ti, NULL);
-        if (deltat.tv_sec || (deltat.tv_nsec >= NANOSECONDS/15) ) {
-            video_sync(0);
-            ti = t0;
-        }
-    }
-#endif
-
-    if (input_counter >= input_length) {
-        return;
-    }
-
-    uint8_t ch = (uint8_t)input_str[input_counter];
-    if (ch == '\n') {
-        fprintf(stderr, "converting '\\n' to '\\r' in test input string...");
-        ch = '\r';
-    }
-
-    if ( (apple_ii_64k[0][0xC000] & 0x80) || (apple_ii_64k[1][0xC000] & 0x80) ) {
-        // last character typed not processed by emulator...
-        return;
-    }
-
-    apple_ii_64k[0][0xC000] = ch | 0x80;
-    apple_ii_64k[1][0xC000] = ch | 0x80;
-
-    ++input_counter;
-}
-
-// ----------------------------------------------------------------------------
 
 TEST test_boot_disk() {
     char *disk = "./disks/testdisplay1.dsk.gz";
@@ -108,8 +58,7 @@ TEST test_40col_normal() {
     BOOT_TO_DOS();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
-    input_str = strdup("RUN TESTNORMALTEXT\r");
-    input_length = strlen(input_str);
+    test_type_input("RUN TESTNORMALTEXT\r");
     c_debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
@@ -122,8 +71,7 @@ TEST test_80col_normal() {
     BOOT_TO_DOS();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
-    input_str = strdup("PR#3\rRUN TESTNORMALTEXT\r");
-    input_length = strlen(input_str);
+    test_type_input("PR#3\rRUN TESTNORMALTEXT\r");
     c_debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
@@ -136,8 +84,7 @@ TEST test_40col_inverse() {
     BOOT_TO_DOS();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
-    input_str = strdup("RUN TESTINVERSETEXT\r");
-    input_length = strlen(input_str);
+    test_type_input("RUN TESTINVERSETEXT\r");
     c_debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
@@ -150,8 +97,7 @@ TEST test_80col_inverse() {
     BOOT_TO_DOS();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
-    input_str = strdup("PR#3\rRUN TESTINVERSETEXT\r");
-    input_length = strlen(input_str);
+    test_type_input("PR#3\rRUN TESTINVERSETEXT\r");
     c_debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
@@ -173,8 +119,7 @@ TEST test_lores_with_80col() {
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
 
-    input_str = strdup("TEXT\rPR#3\rRUN TESTLORES\r");
-    input_length = strlen(input_str);
+    test_type_input("TEXT\rPR#3\rRUN TESTLORES\r");
     c_debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
@@ -188,8 +133,7 @@ TEST test_lores_with_40col() {
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
 
-    input_str = strdup("TEXT\rHOME\rLOAD TESTLORES\rLIST\rLIST\rRUN\r");
-    input_length = strlen(input_str);
+    test_type_input("TEXT\rHOME\rLOAD TESTLORES\rLIST\rLIST\rRUN\r");
     c_debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
@@ -203,8 +147,7 @@ TEST test_lores_40colmix_normal() {
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
 
-    input_str = strdup("TEXT\rHOME\rLOAD TESTLORES\rLIST\rLIST\rPOKE 7986,127\rRUN\r");
-    input_length = strlen(input_str);
+    test_type_input("TEXT\rHOME\rLOAD TESTLORES\rLIST\rLIST\rPOKE 7986,127\rRUN\r");
     c_debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
@@ -218,8 +161,7 @@ TEST test_lores_40colmix_inverse() {
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
 
-    input_str = strdup("TEXT\rINVERSE\rHOME\rLOAD TESTLORES\rLIST\rLIST\rPOKE 7986,127\rRUN\r");
-    input_length = strlen(input_str);
+    test_type_input("TEXT\rINVERSE\rHOME\rLOAD TESTLORES\rLIST\rLIST\rPOKE 7986,127\rRUN\r");
     c_debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
@@ -233,8 +175,7 @@ TEST test_lores_80colmix_normal() {
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
 
-    input_str = strdup("TEXT\rPR#3\rLOAD TESTLORES\rLIST\rLIST\rPOKE 7986,127\rRUN\r");
-    input_length = strlen(input_str);
+    test_type_input("TEXT\rPR#3\rLOAD TESTLORES\rLIST\rLIST\rPOKE 7986,127\rRUN\r");
     c_debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
@@ -248,8 +189,7 @@ TEST test_lores_80colmix_inverse() {
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
 
-    input_str = strdup("TEXT\rINVERSE\rPR#3\rLOAD TESTLORES\rLIST\rLIST\rPOKE 7986,127\rRUN\r");
-    input_length = strlen(input_str);
+    test_type_input("TEXT\rINVERSE\rPR#3\rLOAD TESTLORES\rLIST\rLIST\rPOKE 7986,127\rRUN\r");
     c_debugger_go();
 
     if (test_do_reboot) {
@@ -275,8 +215,7 @@ TEST test_hires_with_80col() {
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
 
-    input_str = strdup("PR#3\rRUN TESTHIRES_2\r");
-    input_length = strlen(input_str);
+    test_type_input("PR#3\rRUN TESTHIRES_2\r");
     c_debugger_go();
 
     if (test_do_reboot) {
@@ -295,8 +234,7 @@ TEST test_hires_with_40col() {
     BOOT_TO_DOS();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
-    input_str = strdup("RUN TESTHIRES_2\r");
-    input_length = strlen(input_str);
+    test_type_input("RUN TESTHIRES_2\r");
     c_debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
@@ -309,8 +247,7 @@ TEST test_hires_40colmix_normal() {
     BOOT_TO_DOS();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
-    input_str = strdup("POKE 7986,127\rRUN TESTHIRES\r");
-    input_length = strlen(input_str);
+    test_type_input("POKE 7986,127\rRUN TESTHIRES\r");
     c_debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
@@ -323,8 +260,7 @@ TEST test_hires_40colmix_inverse() {
     BOOT_TO_DOS();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
-    input_str = strdup("INVERSE\rPOKE 7986,127\rRUN TESTHIRES\r");
-    input_length = strlen(input_str);
+    test_type_input("INVERSE\rPOKE 7986,127\rRUN TESTHIRES\r");
     c_debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
@@ -337,8 +273,7 @@ TEST test_hires_80colmix_normal() {
     BOOT_TO_DOS();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
-    input_str = strdup("PR#3\rLOAD TESTHIRES\rLIST\rLIST\rPOKE 7986,127\rRUN\r");
-    input_length = strlen(input_str);
+    test_type_input("PR#3\rLOAD TESTHIRES\rLIST\rLIST\rPOKE 7986,127\rRUN\r");
     c_debugger_go();
 
     if (test_do_reboot) {
@@ -357,8 +292,7 @@ TEST test_hires_80colmix_inverse() {
     BOOT_TO_DOS();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
-    input_str = strdup("INVERSE\rPR#3\rLOAD TESTHIRES\rLIST\rLIST\rPOKE 7986,127\rRUN\r");
-    input_length = strlen(input_str);
+    test_type_input("INVERSE\rPR#3\rLOAD TESTHIRES\rLIST\rLIST\rPOKE 7986,127\rRUN\r");
     c_debugger_go();
 
     if (test_do_reboot) {

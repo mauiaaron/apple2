@@ -11,6 +11,13 @@
 
 #include "testcommon.h"
 
+static char input_str[TESTBUF_SZ]; // ASCII
+static unsigned int input_length = 0;
+static unsigned int input_counter = 0;
+
+static struct timespec t0 = { 0 };
+static struct timespec ti = { 0 };
+
 // ----------------------------------------------------------------------------
 // Stub functions because I've reached diminishing returns with the build system ...
 //
@@ -37,6 +44,59 @@ void c_interface_print(int x, int y, const int cs, const char *s) {
 
 // ----------------------------------------------------------------------------
 
+void test_common_setup() {
+    input_counter = 0;
+    input_length = 0;
+    input_str[0] = '\0';
+    clock_gettime(CLOCK_MONOTONIC, &t0);
+}
+
+// ----------------------------------------------------------------------------
+// test video functions and stubs
+
+void testing_video_sync() {
+
+#if !HEADLESS
+    if (!is_headless) {
+        clock_gettime(CLOCK_MONOTONIC, &ti);
+        struct timespec deltat = timespec_diff(t0, ti, NULL);
+        if (deltat.tv_sec || (deltat.tv_nsec >= NANOSECONDS/15) ) {
+            video_sync(0);
+            ti = t0;
+        }
+    }
+#endif
+
+    if (!input_length) {
+        input_length = strlen(input_str);
+    }
+
+    if (input_counter >= input_length) {
+        return;
+    }
+
+    uint8_t ch = (uint8_t)input_str[input_counter];
+    if (ch == '\n') {
+        ch = '\r';
+    }
+
+    if ( (apple_ii_64k[0][0xC000] & 0x80) || (apple_ii_64k[1][0xC000] & 0x80) ) {
+        // last character typed not processed by emulator...
+        return;
+    }
+
+    apple_ii_64k[0][0xC000] = ch | 0x80;
+    apple_ii_64k[1][0xC000] = ch | 0x80;
+
+    ++input_counter;
+}
+
+void test_type_input(const char *input) {
+    strcat(input_str, input);
+}
+
+// ----------------------------------------------------------------------------
+
 void test_breakpoint(void *arg) {
     fprintf(GREATEST_STDOUT, "set breakpoint on test_breakpoint to check for problems...\n");
 #if !HEADLESS
@@ -45,6 +105,8 @@ void test_breakpoint(void *arg) {
     }
 #endif
 }
+
+// ----------------------------------------------------------------------------
 
 void test_common_init(bool do_cputhread) {
     GREATEST_SET_BREAKPOINT_CB(test_breakpoint, NULL);
@@ -69,7 +131,9 @@ void test_common_init(bool do_cputhread) {
         if (is_headless) {
             c_debugger_set_timeout(5);
         } else {
+            fprintf(stderr, "NOTE : RUNNING WITH DISPLAY ... pass HEADLESS=1 to environment to run test in faster headless mode\n");
             c_debugger_set_timeout(0);
         }
     }
 }
+

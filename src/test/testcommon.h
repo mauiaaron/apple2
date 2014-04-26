@@ -44,8 +44,9 @@
         apple_ii_64k[0][WATCHPOINT_ADDR] = 0x00; \
     }
 
-
 void test_breakpoint(void *arg);
 void test_common_init(bool do_cputhread);
+void test_common_setup();
+void test_type_input(const char *input);
 
 #endif // whole file

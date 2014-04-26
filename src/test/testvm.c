@@ -11,10 +11,7 @@
 
 #include "testcommon.h"
 
-#define RESET_INPUT() \
-    input_counter = 0; \
-    input_length = 0; \
-    input_str[0] = '\0'
+#define RESET_INPUT() test_common_setup()
 
 #ifdef HAVE_OPENSSL
 #include <openssl/sha.h>
@@ -22,26 +19,19 @@
 #error "these tests require OpenSSL libraries (SHA)"
 #endif
 
-static char input_str[TESTBUF_SZ]; // ASCII
-static unsigned int input_length = 0;
-static unsigned int input_counter = 0;
 static bool test_do_reboot = true;
-
-static struct timespec t0 = { 0 };
-static struct timespec ti = { 0 };
 
 extern unsigned char joy_button0;
 
 static void testvm_setup(void *arg) {
+    RESET_INPUT();
     apple_ii_64k[0][MIXSWITCH_ADDR] = 0x00;
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x00;
     apple_ii_64k[0][TESTOUT_ADDR] = 0x00;
-    RESET_INPUT();
     joy_button0 = 0xff; // OpenApple
     if (test_do_reboot) {
         cpu65_interrupt(ResetSig);
     }
-    clock_gettime(CLOCK_MONOTONIC, &t0);
 }
 
 static void testvm_teardown(void *arg) {
@@ -53,46 +43,6 @@ static void sha1_to_str(const uint8_t * const md, char *buf) {
         sprintf(buf+i, "%02X", md[j]);
     }
     sprintf(buf+i, "%c", '\0');
-}
-
-// ----------------------------------------------------------------------------
-// test video functions and stubs
-
-void testing_video_sync() {
-
-#if !HEADLESS
-    if (!is_headless) {
-        clock_gettime(CLOCK_MONOTONIC, &ti);
-        struct timespec deltat = timespec_diff(t0, ti, NULL);
-        if (deltat.tv_sec || (deltat.tv_nsec >= NANOSECONDS/15) ) {
-            video_sync(0);
-            ti = t0;
-        }
-    }
-#endif
-
-    if (!input_length) {
-        input_length = strlen(input_str);
-    }
-
-    if (input_counter >= input_length) {
-        return;
-    }
-
-    uint8_t ch = (uint8_t)input_str[input_counter];
-    if (ch == '\n') {
-        ch = '\r';
-    }
-
-    if ( (apple_ii_64k[0][0xC000] & 0x80) || (apple_ii_64k[1][0xC000] & 0x80) ) {
-        // last character typed not processed by emulator...
-        return;
-    }
-
-    apple_ii_64k[0][0xC000] = ch | 0x80;
-    apple_ii_64k[1][0xC000] = ch | 0x80;
-
-    ++input_counter;
 }
 
 // ----------------------------------------------------------------------------
@@ -113,8 +63,7 @@ TEST test_read_keyboard() {
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
     ASSERT(apple_ii_64k[0][TESTOUT_ADDR]    == 0x00);
 
-    strcpy(input_str, "RUN TESTGETKEY\rZ");
-    input_length = strlen(input_str);
+    test_type_input("RUN TESTGETKEY\rZ");
     c_debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
@@ -129,7 +78,7 @@ TEST test_clear_keyboard() {
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
     ASSERT(apple_ii_64k[0][TESTOUT_ADDR]    == 0x00);
 
-    strcpy(input_str, "RUN TESTCLEARKEY\rZA");
+    test_type_input("RUN TESTCLEARKEY\rZA");
     c_debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
@@ -146,7 +95,7 @@ TEST test_read_random() {
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
     ASSERT(apple_ii_64k[0][TESTOUT_ADDR]    == 0x00);
 
-    strcpy(input_str, "RUN TESTRND\r");
+    test_type_input("RUN TESTRND\r");
     c_debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
@@ -158,26 +107,38 @@ TEST test_read_random() {
 // ----------------------------------------------------------------------------
 // Softswitch tests
 
-#define TYPE_PAGE2_OFF() \
-    strcat(input_str, "POKE49236,0\r") /* C054 */
-
-#define TYPE_PAGE2_ON() \
-    strcat(input_str, "POKE49237,0\r") /* C055 */
-
 #define TYPE_80STORE_OFF() \
-    strcat(input_str, "POKE49152,0\r") /* C000 */
+    test_type_input("POKE49152,0:REM C000 80STORE OFF\r")
 
 #define TYPE_80STORE_ON() \
-    strcat(input_str, "POKE49153,0\r") /* C001 */
+    test_type_input("POKE49153,0:REM C001 80STORE ON\r")
+
+#define TYPE_TEXT_OFF() \
+    test_type_input("POKE49232,0:REM C050 TEXT OFF\r")
+
+#define TYPE_TEXT_ON() \
+    test_type_input("POKE49233,0:REM C051 TEXT ON\r")
+
+#define TYPE_MIXED_OFF() \
+    test_type_input("POKE49234,0:REM C052 MIXED OFF\r")
+
+#define TYPE_MIXED_ON() \
+    test_type_input("POKE49235,0:REM C053 MIXED ON\r")
+
+#define TYPE_PAGE2_OFF() \
+    test_type_input("POKE49236,0:REM C054 PAGE2 OFF\r")
+
+#define TYPE_PAGE2_ON() \
+    test_type_input("POKE49237,0:REM C055 PAGE2 ON\r")
 
 #define TYPE_HIRES_OFF() \
-    strcat(input_str, "POKE49238,0\r") /* C056 */
+    test_type_input("POKE49238,0:REM C056 SS_HIRES OFF\r")
 
 #define TYPE_HIRES_ON() \
-    strcat(input_str, "POKE49239,0\r") /* C057 */
+    test_type_input("POKE49239,0:REM C057 SS_HIRES ON\r")
 
 #define TYPE_TRIGGER_WATCHPT() \
-    strcat(input_str, "POKE7987,255\r")
+    test_type_input("POKE7987,255:REM TRIGGER DEBUGGER\r")
 
 TEST test_PAGE2_on(bool ss_80store, bool ss_hires) {
     BOOT_TO_DOS();
