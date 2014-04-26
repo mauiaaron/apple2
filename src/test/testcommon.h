@@ -13,6 +13,7 @@
 #define _TESTCOMMON_H_
 
 #include "common.h"
+#include "greatest.h"
 
 #define TEST_FINISHED 0xff
 #define MIXSWITCH_ADDR 0x1f32   // PEEK(7986)
@@ -42,5 +43,9 @@
         ASSERT_SHA(BOOT_SCREEN); \
         apple_ii_64k[0][WATCHPOINT_ADDR] = 0x00; \
     }
+
+
+void test_breakpoint(void *arg);
+void test_common_init(bool do_cputhread);
 
 #endif // whole file

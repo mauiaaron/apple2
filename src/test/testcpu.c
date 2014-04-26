@@ -13,7 +13,6 @@
 // Tests for virtual 65c02 CPU (opcodes and addressing modes)
 //
 
-#include "greatest.h"
 #include "testcommon.h"
 
 #define MSG_SIZE 256
@@ -83,10 +82,6 @@ static void testcpu_teardown(void *arg) {
     // ...
 }
 
-static void testcpu_breakpoint(void *arg) {
-    fprintf(GREATEST_STDOUT, "set breakpoint on testcpu_breakpoint to check for problems...\n");
-}
-
 static void testcpu_set_opcode3(uint8_t op, uint8_t val, uint8_t arg1) {
     apple_ii_64k[0][TEST_LOC+0] = op;
     apple_ii_64k[0][TEST_LOC+1] = val;
@@ -132,30 +127,6 @@ static void flags_to_string(uint8_t flags, char *buf) {
         (flags & I_Flag_6502) ? 'I' : '-',
         (flags & Z_Flag_6502) ? 'Z' : '-',
         (flags & C_Flag_6502) ? 'C' : '-' );
-}
-
-// ----------------------------------------------------------------------------
-// Stub functions because I've reached diminishing returns with the build system ...
-//
-// NOTE: You'd think the commandline CFLAGS set specifically for this test program would pass down to the sources in
-// subdirectories, but it apparently isn't.  GNU buildsystem bug?  Also see HACK FIXME TODO NOTE in Makefile.am
-//
-
-uint8_t c_MB_Read(uint16_t addr) {
-    return 0x0;
-}
-
-void c_MB_Write(uint16_t addr, uint8_t byte) {
-}
-
-uint8_t c_PhasorIO(uint16_t addr) {
-    return 0x0;
-}
-
-void SpkrToggle() {
-}
-
-void c_interface_print(int x, int y, const int cs, const char *s) {
 }
 
 // ----------------------------------------------------------------------------
@@ -7340,17 +7311,12 @@ static test_func_t *test_funcs = NULL;
 
 GREATEST_SUITE(test_suite_cpu) {
 
-    srandom(time(NULL));
-
     GREATEST_SET_SETUP_CB(testcpu_setup, NULL);
     GREATEST_SET_TEARDOWN_CB(testcpu_teardown, NULL);
-    GREATEST_SET_BREAKPOINT_CB(testcpu_breakpoint, NULL);
 
-    load_settings();
-    sound_volume = 0;
-    do_logging = false;// silence regular emulator logging
+    srandom(time(NULL));
 
-    c_initialize_firsttime();
+    test_common_init(/*cputhread*/false);
 
     test_func_t *func=NULL, *tmp=NULL;
 

@@ -9,7 +9,6 @@
  *
  */
 
-#include "greatest.h"
 #include "testcommon.h"
 
 #ifdef HAVE_OPENSSL
@@ -44,15 +43,6 @@ static void testdisplay_teardown(void *arg) {
         free(input_str);
     }
     input_str = NULL;
-}
-
-static void testdisplay_breakpoint(void *arg) {
-    fprintf(GREATEST_STDOUT, "set breakpoint on testdisplay_breakpoint to check for problems...\n");
-#if !HEADLESS
-    if (!is_headless) {
-        video_sync(0);
-    }
-#endif
 }
 
 static void sha1_to_str(const uint8_t * const md, char *buf) {
@@ -98,30 +88,6 @@ void testing_video_sync(int ignored) {
     apple_ii_64k[1][0xC000] = ch | 0x80;
 
     ++input_counter;
-}
-
-// ----------------------------------------------------------------------------
-// Stub functions because I've reached diminishing returns with the build system ...
-//
-// NOTE: You'd think the commandline CFLAGS set specifically for this test program would pass down to the sources in
-// subdirectories, but it apparently isn't.  GNU buildsystem bug?  Also see HACK FIXME TODO NOTE in Makefile.am
-//
-
-uint8_t c_MB_Read(uint16_t addr) {
-    return 0x0;
-}
-
-void c_MB_Write(uint16_t addr, uint8_t byte) {
-}
-
-uint8_t c_PhasorIO(uint16_t addr) {
-    return 0x0;
-}
-
-void SpkrToggle() {
-}
-
-void c_interface_print(int x, int y, const int cs, const char *s) {
 }
 
 // ----------------------------------------------------------------------------
@@ -428,36 +394,14 @@ extern void cpu_thread(void *dummyptr);
 
 GREATEST_SUITE(test_suite_display) {
 
-    srandom(time(NULL));
-
     GREATEST_SET_SETUP_CB(testdisplay_setup, NULL);
     GREATEST_SET_TEARDOWN_CB(testdisplay_teardown, NULL);
-    GREATEST_SET_BREAKPOINT_CB(testdisplay_breakpoint, NULL);
 
-    do_logging = false;// silence regular emulator logging
-    setenv("APPLE2IXCFG", "nosuchconfigfile", 1);
+    srandom(time(NULL));
 
-    load_settings();
-    c_initialize_firsttime();
-
-    // kludgey set max CPU speed... 
-    cpu_scale_factor = CPU_SCALE_FASTEST;
-    cpu_altscale_factor = CPU_SCALE_FASTEST;
-    g_bFullSpeed = true;
-
-    caps_lock = true;
-
-    // spin off cpu thread
-    pthread_create(&cpu_thread_id, NULL, (void *) &cpu_thread, (void *)NULL);
+    test_common_init(/*cputhread*/true);
 
     pthread_mutex_lock(&interface_mutex);
-
-    c_debugger_set_watchpoint(WATCHPOINT_ADDR);
-    if (is_headless) {
-        c_debugger_set_timeout(5);
-    } else {
-        c_debugger_set_timeout(0);
-    }
 
     // TESTS --------------------------
 
