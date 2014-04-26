@@ -1151,7 +1151,8 @@ static int begin_cpu_stepping() {
         }
 
 #ifdef TESTING
-        video_sync(0);
+        extern void testing_video_sync();
+        testing_video_sync();
 #else
         if ((ch = c_mygetch(0)) != -1) {
             break;

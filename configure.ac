@@ -129,11 +129,10 @@ AC_SEARCH_LIBS(XShmAttach, Xext, [
     AC_MSG_WARN([Building emulator without support of X11 MITSHM extension...])
 ], [-lX11])
 
-AC_DEFINE(VIDEO_X11, 1, [Enable common X11 video])
-
 VIDEO_O="src/video/xvideo.o"
 AC_SUBST(VIDEO_O)
 
+AC_DEFINE(HEADLESS, 0, [Set to 1 to disable video output driver])
 
 dnl ---------------------------------------------------------------------------
 dnl Sound ...

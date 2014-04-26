@@ -49,6 +49,10 @@
     snprintf(msgbuf, MSG_SIZE, MSG_FLAGS0, regA, val, result, buf0, cpu65_current.a, buf1); \
     ASSERTm(msgbuf, cpu65_current.f == flags);
 
+void testing_video_sync() {
+    // user input and video output not simulated in this test
+}
+
 static void testcpu_setup(void *arg) {
 
     //reinitialize();
@@ -128,6 +132,30 @@ static void flags_to_string(uint8_t flags, char *buf) {
         (flags & I_Flag_6502) ? 'I' : '-',
         (flags & Z_Flag_6502) ? 'Z' : '-',
         (flags & C_Flag_6502) ? 'C' : '-' );
+}
+
+// ----------------------------------------------------------------------------
+// Stub functions because I've reached diminishing returns with the build system ...
+//
+// NOTE: You'd think the commandline CFLAGS set specifically for this test program would pass down to the sources in
+// subdirectories, but it apparently isn't.  GNU buildsystem bug?  Also see HACK FIXME TODO NOTE in Makefile.am
+//
+
+uint8_t c_MB_Read(uint16_t addr) {
+    return 0x0;
+}
+
+void c_MB_Write(uint16_t addr, uint8_t byte) {
+}
+
+uint8_t c_PhasorIO(uint16_t addr) {
+    return 0x0;
+}
+
+void SpkrToggle() {
+}
+
+void c_interface_print(int x, int y, const int cs, const char *s) {
 }
 
 // ----------------------------------------------------------------------------

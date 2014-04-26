@@ -53,6 +53,7 @@ extern char disk_path[DISKSIZE];
 
 extern int apple_mode; /* undocumented instructions or //e mode */
 extern int sound_volume;
+extern bool is_headless;
 extern color_mode_t color_mode;
 extern a2_video_mode_t a2_video_mode;
 

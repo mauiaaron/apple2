@@ -312,6 +312,7 @@ static void c_initialize_colors() {
     //XStoreColors(display, cmap, colors, 256);
 }
 
+#if !defined(TESTING)
 // Map X keysyms into Apple//ix internal-representation scancodes.
 static int keysym_to_scancode(void) {
     int rc = XkbKeycodeToKeysym(display, xevent.xkey.keycode, 0, 0);
@@ -452,6 +453,7 @@ static int keysym_to_scancode(void) {
     assert(rc < 0x80);
     return rc;
 }
+#endif
 
 static void post_image() {
     // copy Apple //e video memory into XImage uint32_t buffer
@@ -558,11 +560,18 @@ extern void c_handle_input(int scancode, int pressed);
 
 /* FIXME: blocking not implemented... */
 void video_sync(int block) {
+    if (is_headless) {
+        return;
+    }
+
     static int flash_count = 0;
     // post the image and loop waiting for it to finish and
     // also process other input events
     post_image();
 
+#ifdef TESTING
+    // no input processing if test-driven ...
+#else
     bool keyevent = true;
     do {
 #ifdef HAVE_X11_SHM
@@ -595,6 +604,7 @@ void video_sync(int block) {
         c_handle_input(scancode, pressed);
 
     } while (keyevent);
+#endif
 
     switch (++flash_count)
     {
@@ -786,7 +796,7 @@ void video_set_mode(a2_video_mode_t mode) {
     _size_hints_set_fixed();
 }
 
-void X11_video_init() {
+void video_driver_init() {
     XSetWindowAttributes attribs;
     unsigned long attribmask;
     int x, y;           /* window position */
@@ -797,17 +807,14 @@ void X11_video_init() {
     char *window_name = "Apple //ix";
     char *icon_name = window_name;
     //GC gc;
-    char *progname;    /* name this program was invoked by */
     char *displayname = NULL;
 
     if (argv == NULL) {
-        LOG("No command line arguments, won't initialize xvideo ...");
-        return;
+        LOG("No command line arguments ...");
+        argc = 0;
+    } else {
+        parseArgs();
     }
-
-    progname = argv[0];
-
-    parseArgs();
 
     if (!(size_hints = XAllocSizeHints()))
     {
@@ -977,7 +984,7 @@ void X11_video_init() {
     wm_hints->input = True;
     wm_hints->flags = StateHint | IconPixmapHint /* | InputHint*/;
 
-    class_hints->res_name = progname;
+    class_hints->res_name = "apple2ix";
     class_hints->res_class = "Apple2";
 
     _size_hints_set_fixed();
@@ -1024,7 +1031,7 @@ void X11_video_init() {
 #endif
 }
 
-void X11_video_shutdown(void)
+void video_driver_shutdown(void)
 {
     _destroy_image();
     exit(0);

@@ -23,6 +23,9 @@ static unsigned int input_length = 0;
 static unsigned int input_counter = 0;
 static bool test_do_reboot = true;
 
+static struct timespec t0 = { 0 };
+static struct timespec ti = { 0 };
+
 extern unsigned char joy_button0;
 
 static void testdisplay_setup(void *arg) {
@@ -45,6 +48,11 @@ static void testdisplay_teardown(void *arg) {
 
 static void testdisplay_breakpoint(void *arg) {
     fprintf(GREATEST_STDOUT, "set breakpoint on testdisplay_breakpoint to check for problems...\n");
+#if !HEADLESS
+    if (!is_headless) {
+        video_sync(0);
+    }
+#endif
 }
 
 static void sha1_to_str(const uint8_t * const md, char *buf) {
@@ -58,7 +66,18 @@ static void sha1_to_str(const uint8_t * const md, char *buf) {
 // ----------------------------------------------------------------------------
 // test video functions and stubs
 
-void video_sync(int ignored) {
+void testing_video_sync(int ignored) {
+
+#if !HEADLESS
+    if (!is_headless) {
+        clock_gettime(CLOCK_MONOTONIC, &ti);
+        struct timespec deltat = timespec_diff(t0, ti, NULL);
+        if (deltat.tv_sec || (deltat.tv_nsec >= NANOSECONDS/15) ) {
+            video_sync(0);
+            ti = t0;
+        }
+    }
+#endif
 
     if (input_counter >= input_length) {
         return;
@@ -434,7 +453,11 @@ GREATEST_SUITE(test_suite_display) {
     pthread_mutex_lock(&interface_mutex);
 
     c_debugger_set_watchpoint(WATCHPOINT_ADDR);
-    c_debugger_set_timeout(5);
+    if (is_headless) {
+        c_debugger_set_timeout(5);
+    } else {
+        c_debugger_set_timeout(0);
+    }
 
     // TESTS --------------------------
 

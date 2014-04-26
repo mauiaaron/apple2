@@ -86,22 +86,22 @@ A2_TEST_CFLAGS = -DTESTING=1 -Isrc/greatest
 TESTS          = testcpu testdisplay testvm
 check_PROGRAMS = testcpu testdisplay testvm
 
-testcpu_SOURCES = src/test/testcpu.c $(A2_TEST_SOURCES) $(EXTRA_apple2ix_SOURCES)
-testcpu_CFLAGS = $(apple2ix_CFLAGS) $(A2_TEST_CFLAGS)
+testcpu_SOURCES = src/test/testcpu.c $(A2_TEST_SOURCES) $(VM_SRC) $(META_SRC) $(VIDEO_SRC)
+testcpu_CFLAGS = $(apple2ix_CFLAGS) $(A2_TEST_CFLAGS) -UAUDIO_ENABLED -UINTERFACE_CLASSIC -DHEADLESS=1
 testcpu_LDFLAGS = $(apple2ix_LDFLAGS)
-testcpu_DEPENDENCIES = $(apple2ix_DEPENDENCIES)
+testcpu_DEPENDENCIES = @VM_O@ @META_O@
 
-testdisplay_SOURCES = src/test/testdisplay.c $(A2_TEST_SOURCES) $(VM_SRC) $(META_SRC)
+testdisplay_SOURCES = src/test/testdisplay.c $(A2_TEST_SOURCES) $(VM_SRC) $(META_SRC) $(VIDEO_SRC)
 # HACK FIXME TODO NOTE: why don't these CFLAGS here pass down to the .S and .c files in the subdirectories?
-testdisplay_CFLAGS = $(apple2ix_CFLAGS) $(A2_TEST_CFLAGS) -UAUDIO_ENABLED -UVIDEO_X11 -UINTERFACE_CLASSIC
+testdisplay_CFLAGS = $(apple2ix_CFLAGS) $(A2_TEST_CFLAGS) -UAUDIO_ENABLED -UINTERFACE_CLASSIC -DHEADLESS=0
 testdisplay_LDFLAGS = $(apple2ix_LDFLAGS)
-testdisplay_DEPENDENCIES = @VM_O@ @META_O@
+testdisplay_DEPENDENCIES = @VM_O@ @META_O@ @VIDEO_O@
 
-testvm_SOURCES = src/test/testvm.c $(A2_TEST_SOURCES) $(VM_SRC) $(META_SRC)
+testvm_SOURCES = src/test/testvm.c $(A2_TEST_SOURCES) $(VM_SRC) $(META_SRC) $(VIDEO_SRC)
 # HACK FIXME TODO NOTE: why don't these CFLAGS here pass down to the .S and .c files in the subdirectories?
-testvm_CFLAGS = $(apple2ix_CFLAGS) $(A2_TEST_CFLAGS) -UAUDIO_ENABLED -UVIDEO_X11 -UINTERFACE_CLASSIC
+testvm_CFLAGS = $(apple2ix_CFLAGS) $(A2_TEST_CFLAGS) -UAUDIO_ENABLED -UINTERFACE_CLASSIC -DHEADLESS=0
 testvm_LDFLAGS = $(apple2ix_LDFLAGS)
-testvm_DEPENDENCIES = @VM_O@ @META_O@
+testvm_DEPENDENCIES = @VM_O@ @META_O@ @VIDEO_O@
 
 ###############################################################################
 # Misc

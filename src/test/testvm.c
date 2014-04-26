@@ -12,16 +12,24 @@
 #include "greatest.h"
 #include "testcommon.h"
 
+#define RESET_INPUT() \
+    input_counter = 0; \
+    input_length = 0; \
+    input_str[0] = '\0'
+
 #ifdef HAVE_OPENSSL
 #include <openssl/sha.h>
 #else
 #error "these tests require OpenSSL libraries (SHA)"
 #endif
 
-static char *input_str = NULL; // ASCII
+static char input_str[TESTBUF_SZ]; // ASCII
 static unsigned int input_length = 0;
 static unsigned int input_counter = 0;
 static bool test_do_reboot = true;
+
+static struct timespec t0 = { 0 };
+static struct timespec ti = { 0 };
 
 extern unsigned char joy_button0;
 
@@ -29,23 +37,24 @@ static void testvm_setup(void *arg) {
     apple_ii_64k[0][MIXSWITCH_ADDR] = 0x00;
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x00;
     apple_ii_64k[0][TESTOUT_ADDR] = 0x00;
-    input_counter = 0;
-    input_length = 0;
+    RESET_INPUT();
     joy_button0 = 0xff; // OpenApple
     if (test_do_reboot) {
         cpu65_interrupt(ResetSig);
     }
+    clock_gettime(CLOCK_MONOTONIC, &t0);
 }
 
 static void testvm_teardown(void *arg) {
-    if (input_str) {
-        free(input_str);
-    }
-    input_str = NULL;
 }
 
 static void testvm_breakpoint(void *arg) {
     fprintf(GREATEST_STDOUT, "set breakpoint on testvm_breakpoint to check for problems...\n");
+#if !HEADLESS
+    if (!is_headless) {
+        video_sync(0);
+    }
+#endif
 }
 
 static void sha1_to_str(const uint8_t * const md, char *buf) {
@@ -59,7 +68,22 @@ static void sha1_to_str(const uint8_t * const md, char *buf) {
 // ----------------------------------------------------------------------------
 // test video functions and stubs
 
-void video_sync(int ignored) {
+void testing_video_sync() {
+
+#if !HEADLESS
+    if (!is_headless) {
+        clock_gettime(CLOCK_MONOTONIC, &ti);
+        struct timespec deltat = timespec_diff(t0, ti, NULL);
+        if (deltat.tv_sec || (deltat.tv_nsec >= NANOSECONDS/15) ) {
+            video_sync(0);
+            ti = t0;
+        }
+    }
+#endif
+
+    if (!input_length) {
+        input_length = strlen(input_str);
+    }
 
     if (input_counter >= input_length) {
         return;
@@ -67,7 +91,6 @@ void video_sync(int ignored) {
 
     uint8_t ch = (uint8_t)input_str[input_counter];
     if (ch == '\n') {
-        fprintf(stderr, "converting '\\n' to '\\r' in test input string...");
         ch = '\r';
     }
 
@@ -124,7 +147,7 @@ TEST test_read_keyboard() {
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
     ASSERT(apple_ii_64k[0][TESTOUT_ADDR]    == 0x00);
 
-    input_str = strdup("RUN TESTGETKEY\rZ");
+    strcpy(input_str, "RUN TESTGETKEY\rZ");
     input_length = strlen(input_str);
     c_debugger_go();
 
@@ -140,8 +163,7 @@ TEST test_clear_keyboard() {
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
     ASSERT(apple_ii_64k[0][TESTOUT_ADDR]    == 0x00);
 
-    input_str = strdup("RUN TESTCLEARKEY\rZA");
-    input_length = strlen(input_str);
+    strcpy(input_str, "RUN TESTCLEARKEY\rZA");
     c_debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
@@ -151,15 +173,14 @@ TEST test_clear_keyboard() {
 }
 
 TEST test_read_random() {
-    SKIPm("random numbers current b0rken...");
+    SKIPm("random numbers currently b0rken...");
 
     BOOT_TO_DOS();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
     ASSERT(apple_ii_64k[0][TESTOUT_ADDR]    == 0x00);
 
-    input_str = strdup("RUN TESTRND\r");
-    input_length = strlen(input_str);
+    strcpy(input_str, "RUN TESTRND\r");
     c_debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
@@ -201,7 +222,11 @@ GREATEST_SUITE(test_suite_vm) {
     pthread_mutex_lock(&interface_mutex);
 
     c_debugger_set_watchpoint(WATCHPOINT_ADDR);
-    c_debugger_set_timeout(5);
+    if (is_headless) {
+        c_debugger_set_timeout(5);
+    } else {
+        c_debugger_set_timeout(0);
+    }
 
     // TESTS --------------------------
 

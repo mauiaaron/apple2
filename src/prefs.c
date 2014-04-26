@@ -38,6 +38,7 @@ char disk_path[DISKSIZE];
 
 int apple_mode = IIE_MODE;
 int sound_volume = 2;
+bool is_headless = false;
 color_mode_t color_mode = COLOR;
 a2_video_mode_t a2_video_mode = VIDEO_1X;
 joystick_mode_t joy_mode = JOY_OFF;
@@ -194,6 +195,12 @@ static char * clean_string(char *x)
 /* Load the configuration. Must be called *once* at start. */
 void load_settings(void)
 {
+    /* running a headless emulator? */
+    char *headless = getenv("HEADLESS");
+    if (headless && (strncasecmp(headless, "1", 2) == 0) ) {
+        is_headless = true;
+    }
+
     /* set system defaults before user defaults. */
     strcpy(disk_path, "./disks");
     strcpy(system_path, "./rom");

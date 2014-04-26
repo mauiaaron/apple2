@@ -577,9 +577,9 @@ void video_plotchar( int x, int y, int scheme, unsigned char c )
     _plot_char80(&d,&s);
 }
 
-#ifdef VIDEO_X11
-extern void X11_video_init();
-extern void X11_video_shutdown();
+#if !HEADLESS
+extern void video_driver_init();
+extern void video_driver_shutdown();
 #endif
 void video_init() {
 
@@ -590,15 +590,19 @@ void video_init() {
     memset(video__fb1,0,SCANWIDTH*SCANHEIGHT);
     memset(video__fb2,0,SCANWIDTH*SCANHEIGHT);
 
-#ifdef VIDEO_X11
-    X11_video_init();
+#if !HEADLESS
+    if (!is_headless) {
+        video_driver_init();
+    }
 #endif
 }
 
 void video_shutdown(void)
 {
-#ifdef VIDEO_X11
-    X11_video_shutdown();
+#if !HEADLESS
+    if (!is_headless) {
+        video_driver_shutdown();
+    }
 #endif
 }
 
