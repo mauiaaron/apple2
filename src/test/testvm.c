@@ -179,6 +179,12 @@ TEST test_read_random() {
 #define ASM_RAMWRT_ON() \
     test_type_input(" STA $C005\r")
 
+#define ASM_ALTZP_OFF() \
+    test_type_input(" STA $C008\r")
+
+#define ASM_ALTZP_ON() \
+    test_type_input(" STA $C009\r")
+
 #define TYPE_TEXT_OFF() \
     test_type_input("POKE49232,0:REM C050 TEXT OFF\r")
 
@@ -208,6 +214,9 @@ TEST test_read_random() {
 
 #define TYPE_HIRES_ON() \
     test_type_input("POKE49239,0:REM C057 HIRES ON\r")
+
+#define ASM_IIE_C080() \
+    test_type_input(" STA $C080\r")
 
 #define TYPE_TRIGGER_WATCHPT() \
     test_type_input("POKE7987,255:REM TRIGGER DEBUGGER\r")
@@ -731,6 +740,65 @@ TEST test_HIRES_off(bool flag_ramrd, bool flag_ramwrt) {
     PASS();
 }
 
+TEST test_iie_c080(bool flag_altzp) {
+    BOOT_TO_DOS();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
+
+    ASM_INIT();
+    if (flag_altzp) {
+        ASM_ALTZP_ON();
+    } else {
+        ASM_ALTZP_OFF();
+    }
+    ASM_TRIGGER_WATCHPT();
+    ASM_IIE_C080();
+    ASM_TRIGGER_WATCHPT();
+    ASM_DONE();
+
+    ASM_GO();
+    c_debugger_go();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+    ASSERT(flag_altzp ? (softswitches & SS_ALTZP) : !(softswitches & SS_ALTZP) );
+
+    uint32_t switch_save = softswitches;
+    uint8_t *save_base_textrd = base_textrd;
+    uint8_t *save_base_textwrt = base_textwrt;
+    uint8_t *save_base_hgrrd = base_hgrrd;
+    uint8_t *save_base_hgrwrt = base_hgrwrt;
+    int save_current_page = video__current_page;
+
+    apple_ii_64k[0][WATCHPOINT_ADDR] = 0x00;
+    c_debugger_go();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+
+    switch_save = switch_save | (SS_LCRAM|SS_BANK2);
+    switch_save = switch_save & ~(SS_LCSEC|SS_LCWRT);
+
+    ASSERT(video__current_page == save_current_page);
+
+    ASSERT(base_textrd  == save_base_textrd);
+    ASSERT(base_textwrt == save_base_textwrt);
+    ASSERT(base_hgrrd  == save_base_hgrrd);
+    ASSERT(base_hgrwrt == save_base_hgrwrt);
+
+    if (flag_altzp) {
+        ASSERT((base_d000_rd == language_banks[0]-0xB000));
+        ASSERT((base_e000_rd == language_card[0]-0xC000));
+    } else {
+        ASSERT((base_d000_rd == language_banks[0]-0xD000));
+        ASSERT((base_e000_rd == language_card[0]-0xE000));
+    }
+    ASSERT((base_d000_wrt == 0));
+    ASSERT((base_e000_wrt == 0));
+
+    ASSERT((softswitches ^ switch_save) == 0);
+
+    PASS();
+}
+
 // ----------------------------------------------------------------------------
 // Test Suite
 
@@ -783,6 +851,9 @@ GREATEST_SUITE(test_suite_vm) {
     RUN_TESTp(test_HIRES_off, /*RAMRD*/0, /*RAMWRT*/1);
     RUN_TESTp(test_HIRES_off, /*RAMRD*/1, /*RAMWRT*/0);
     RUN_TESTp(test_HIRES_off, /*RAMRD*/1, /*RAMWRT*/1);
+
+    RUN_TESTp(test_iie_c080, /*ALTZP*/0);
+    RUN_TESTp(test_iie_c080, /*ALTZP*/1);
 
     // ...
     c_eject_6(0);
