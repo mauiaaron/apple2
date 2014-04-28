@@ -11,6 +11,8 @@
 
 #include "testcommon.h"
 
+#define TESTBUF_SZ 1024
+
 static char input_str[TESTBUF_SZ]; // ASCII
 static unsigned int input_length = 0;
 static unsigned int input_counter = 0;
