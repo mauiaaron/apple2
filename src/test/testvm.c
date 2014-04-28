@@ -570,6 +570,171 @@ TEST test_MIXED_off() {
     PASS();
 }
 
+TEST test_HIRES_on(bool ss_80store, bool ss_page2) {
+    BOOT_TO_DOS();
+
+    // setup for testing ...
+
+    TYPE_HIRES_OFF();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
+
+    if (ss_80store) {
+        TYPE_80STORE_ON();
+    } else {
+        TYPE_80STORE_OFF();
+    }
+
+    if (ss_page2) {
+        TYPE_PAGE2_ON();
+    } else {
+        TYPE_PAGE2_OFF();
+    }
+
+    TYPE_TRIGGER_WATCHPT();
+
+    c_debugger_go();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+    ASSERT(!(softswitches & SS_HIRES));
+    ASSERT( (ss_80store ? (softswitches & ss_80store) : !(softswitches & ss_80store)) );
+    ASSERT( (ss_page2   ? (softswitches & ss_page2)   : !(softswitches & ss_page2)) );
+
+    uint32_t ss_save = softswitches;
+
+    // run actual test ...
+
+    RESET_INPUT();
+    apple_ii_64k[0][WATCHPOINT_ADDR] = 0x00;
+    TYPE_HIRES_ON();
+    TYPE_TRIGGER_WATCHPT();
+
+    uint8_t *save_base_textrd = base_textrd;
+    uint8_t *save_base_textwrt = base_textwrt;
+    uint8_t *save_base_hgrrd = base_hgrrd;
+    uint8_t *save_base_hgrwrt = base_hgrwrt;
+    int save_current_page = video__current_page;
+
+    c_debugger_go();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+    ASSERT((softswitches & SS_HIRES));
+    ASSERT( (ss_80store ? (softswitches & ss_80store) : !(softswitches & ss_80store)) );
+    ASSERT( (ss_page2   ? (softswitches & ss_page2)   : !(softswitches & ss_page2)) );
+
+    ss_save = ss_save | SS_HIRES;
+
+    if (ss_80store) {
+        if (ss_page2) {
+            ss_save = ss_save & ~(SS_HGRRD|SS_HGRWRT);
+            ASSERT((void *)base_hgrrd  == (void *)(apple_ii_64k[0]));
+            ASSERT((void *)base_hgrwrt == (void *)(apple_ii_64k[0]));
+        } else {
+            ss_save = ss_save | (SS_HGRRD|SS_HGRWRT);
+            ASSERT((void *)base_hgrrd  == (void *)(apple_ii_64k[1]));
+            ASSERT((void *)base_hgrwrt == (void *)(apple_ii_64k[1]));
+        }
+    } else {
+        ASSERT(base_hgrrd  == save_base_hgrrd);    // unchanged
+        ASSERT(base_hgrwrt == save_base_hgrwrt);   // unchanged
+    }
+
+    ASSERT((softswitches == ss_save));
+    ASSERT(video__current_page == save_current_page);
+    ASSERT(base_textrd  == save_base_textrd);  // unchanged
+    ASSERT(base_textwrt == save_base_textwrt); // unchanged
+
+    PASS();
+}
+
+TEST test_HIRES_off(bool ss_ramrd, bool ss_ramwrt) {
+    BOOT_TO_DOS();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
+
+    /* setup */
+    ASM_INIT();
+    ASM_HIRES_ON();
+    if (ss_ramrd) {
+        ASM_RAMRD_ON();
+    } else {
+        ASM_RAMRD_OFF();
+    }
+    if (ss_ramwrt) {
+        ASM_RAMWRT_ON();
+    } else {
+        ASM_RAMWRT_OFF();
+    }
+    ASM_TRIGGER_WATCHPT();
+    /* test */
+    ASM_HIRES_OFF();
+    ASM_TRIGGER_WATCHPT();
+    ASM_DONE();
+
+    if (ss_ramrd) {
+        // sets up to copy the test script into auxram (because execution will continue there when RAMRD on)
+        ASM_XFER_TEST_TO_AUXMEM();
+    }
+
+    ASM_GO();
+    c_debugger_go();
+
+    if (ss_ramwrt) {
+        ASSERT(apple_ii_64k[1][WATCHPOINT_ADDR] == TEST_FINISHED);
+    } else {
+        ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+    }
+    ASSERT((softswitches & SS_HIRES));
+    ASSERT( (ss_ramrd  ? (softswitches & ss_ramrd)  : !(softswitches & ss_ramrd)) );
+    ASSERT( (ss_ramwrt ? (softswitches & ss_ramwrt) : !(softswitches & ss_ramwrt)) );
+
+    uint32_t ss_save = softswitches;
+
+    apple_ii_64k[0][WATCHPOINT_ADDR] = 0x00;
+    ASM_HIRES_OFF();
+    ASM_TRIGGER_WATCHPT();
+
+    uint8_t *save_base_textrd = base_textrd;
+    uint8_t *save_base_textwrt = base_textwrt;
+    uint8_t *save_base_hgrrd = base_hgrrd;
+    uint8_t *save_base_hgrwrt = base_hgrwrt;
+    int save_current_page = video__current_page;
+
+    c_debugger_go();
+
+    if (ss_ramwrt) {
+        ASSERT(apple_ii_64k[1][WATCHPOINT_ADDR] == TEST_FINISHED);
+    } else {
+        ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+    }
+    ASSERT(!(softswitches & SS_HIRES));
+    ASSERT( (ss_ramrd  ? (softswitches & ss_ramrd)  : !(softswitches & ss_ramrd)) );
+    ASSERT( (ss_ramwrt ? (softswitches & ss_ramwrt) : !(softswitches & ss_ramwrt)) );
+
+    ss_save = ss_save & ~(SS_HIRES|SS_HGRRD|SS_HGRWRT);
+
+    if (ss_ramrd) {
+        ASSERT((void *)base_hgrrd  == (void *)(apple_ii_64k[1]));
+        ss_save = ss_save | SS_HGRRD;
+    } else {
+        ASSERT((void *)base_hgrrd  == (void *)(apple_ii_64k[0]));
+    }
+
+    if (ss_ramwrt) {
+        ASSERT((void *)base_hgrwrt == (void *)(apple_ii_64k[1]));
+        ss_save = ss_save | SS_HGRWRT;
+    } else {
+        ASSERT((void *)base_hgrwrt == (void *)(apple_ii_64k[0]));
+    }
+
+    ASSERT((softswitches == ss_save));
+    ASSERT(video__current_page == save_current_page);
+    ASSERT(base_textrd  == save_base_textrd);  // unchanged
+    ASSERT(base_textwrt == save_base_textwrt); // unchanged
+
+    PASS();
+}
+
 // ----------------------------------------------------------------------------
 // Test Suite
 
@@ -612,6 +777,16 @@ GREATEST_SUITE(test_suite_vm) {
 
     RUN_TESTp(test_MIXED_on);
     RUN_TESTp(test_MIXED_off);
+
+    RUN_TESTp(test_HIRES_on,  /*80STORE*/0, /*PAGE2*/0);
+    RUN_TESTp(test_HIRES_on,  /*80STORE*/0, /*PAGE2*/1);
+    RUN_TESTp(test_HIRES_on,  /*80STORE*/1, /*PAGE2*/0);
+    RUN_TESTp(test_HIRES_on,  /*80STORE*/1, /*PAGE2*/1);
+
+    RUN_TESTp(test_HIRES_off, /*RAMRD*/0, /*RAMWRT*/0);
+    RUN_TESTp(test_HIRES_off, /*RAMRD*/0, /*RAMWRT*/1);
+    RUN_TESTp(test_HIRES_off, /*RAMRD*/1, /*RAMWRT*/0);
+    RUN_TESTp(test_HIRES_off, /*RAMRD*/1, /*RAMWRT*/1);
 
     // ...
     c_eject_6(0);
