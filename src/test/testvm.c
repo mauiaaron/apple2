@@ -49,8 +49,13 @@ static void sha1_to_str(const uint8_t * const md, char *buf) {
 // VM TESTS ...
 
 TEST test_boot_disk() {
-    char *disk = "./disks/testvm1.dsk.gz";
-    ASSERT(!c_new_diskette_6(0, disk, 0));
+    char *disk = strdup("./disks/testvm1.dsk.gz");
+    if (c_new_diskette_6(0, disk, 0)) {
+        int len = strlen(disk);
+        disk[len-3] = '\0';
+        ASSERT(!c_new_diskette_6(0, disk, 0));
+    }
+    free(disk);
 
     BOOT_TO_DOS();
 
