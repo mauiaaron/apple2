@@ -112,11 +112,72 @@ TEST test_read_random() {
 // ----------------------------------------------------------------------------
 // Softswitch tests
 
+#define ASM_INIT() \
+    test_type_input( \
+            "CALL-151\r" \
+            "!\r" \
+            "1E00: NOP\r" \
+            )
+
+#define ASM_INIT() \
+    test_type_input( \
+            "CALL-151\r" \
+            "!\r" \
+            "1E00: NOP\r" \
+            )
+
+#define ASM_BEGIN() test_type_input("!\r")
+
+#define ASM_TRIGGER_WATCHPT() \
+    test_type_input( \
+            " LDA #FF\r" \
+            " STA $1F33\r" \
+            )
+
+#define ASM_XFER_TEST_TO_AUXMEM() \
+    test_type_input( \
+            "!\r" \
+            "1E80: NOP\r" \
+            " LDA #$00\r" \
+            " STA $3C\r" \
+            " LDA #$1E\r" \
+            " STA $3D\r" \
+            " LDA #$FF\r" \
+            " STA $3E\r" \
+            " LDA #$1E\r" \
+            " STA $3F\r" \
+            " LDA #$00\r" \
+            " STA $42\r" \
+            " LDA #$1E\r" \
+            " STA $43\r" \
+            " SEC\r"                  /* MAIN 1E00..1EFF -> AUX 1E00 */ \
+            " JSR $C311\r"            /* call AUXMOVE */ \
+            " RTS\r" \
+            "\r" \
+            "1E80G\r" \
+            )
+
+#define ASM_DONE() test_type_input("\r")
+
+#define ASM_GO() test_type_input("1E00G\r")
+
 #define TYPE_80STORE_OFF() \
     test_type_input("POKE49152,0:REM C000 80STORE OFF\r")
 
 #define TYPE_80STORE_ON() \
     test_type_input("POKE49153,0:REM C001 80STORE ON\r")
+
+#define ASM_RAMRD_OFF() \
+    test_type_input(" STA $C002\r")
+
+#define ASM_RAMRD_ON() \
+    test_type_input(" STA $C003\r")
+
+#define ASM_RAMWRT_OFF() \
+    test_type_input(" STA $C004\r")
+
+#define ASM_RAMWRT_ON() \
+    test_type_input(" STA $C005\r")
 
 #define TYPE_TEXT_OFF() \
     test_type_input("POKE49232,0:REM C050 TEXT OFF\r")
@@ -136,11 +197,17 @@ TEST test_read_random() {
 #define TYPE_PAGE2_ON() \
     test_type_input("POKE49237,0:REM C055 PAGE2 ON\r")
 
+#define ASM_HIRES_OFF() \
+    test_type_input(" STA $C056\r")
+
+#define ASM_HIRES_ON() \
+    test_type_input(" STA $C057\r")
+
 #define TYPE_HIRES_OFF() \
-    test_type_input("POKE49238,0:REM C056 SS_HIRES OFF\r")
+    test_type_input("POKE49238,0:REM C056 HIRES OFF\r")
 
 #define TYPE_HIRES_ON() \
-    test_type_input("POKE49239,0:REM C057 SS_HIRES ON\r")
+    test_type_input("POKE49239,0:REM C057 HIRES ON\r")
 
 #define TYPE_TRIGGER_WATCHPT() \
     test_type_input("POKE7987,255:REM TRIGGER DEBUGGER\r")
