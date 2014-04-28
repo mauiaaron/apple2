@@ -198,6 +198,7 @@ int c_new_diskette_6(int drive, const char * const raw_file_name, int force) {
                 // ...
             }
 #endif
+            free(file_name);
             return 1;
         }
         if (unlink(file_name)) // temporarily remove .gz file
