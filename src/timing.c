@@ -242,6 +242,9 @@ void cpu_thread(void *dummyptr) {
                         }
                     }
                 }
+                if (emul_reinitialize) {
+                    reinitialize();
+                }
             } while (is_debugging);
 #ifndef NDEBUG
             dbg_cycles_executed += cpu65_cycle_count;
