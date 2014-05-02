@@ -911,6 +911,125 @@ TEST test_iie_c081(bool flag_altzp, bool flag_lcsec) {
     PASS();
 }
 
+TEST test_lc_c082() {
+    BOOT_TO_DOS();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
+
+    uint32_t switch_save = softswitches;
+    uint8_t *save_base_textrd = base_textrd;
+    uint8_t *save_base_textwrt = base_textwrt;
+    uint8_t *save_base_hgrrd = base_hgrrd;
+    uint8_t *save_base_hgrwrt = base_hgrwrt;
+    uint8_t *save_base_d000_wrt = base_d000_wrt;
+    uint8_t *save_base_e000_wrt = base_e000_wrt;
+    int save_current_page = video__current_page;
+
+    ASM_INIT();
+    ASM_LC_C082();
+    ASM_TRIGGER_WATCHPT();
+    ASM_DONE();
+    ASM_GO();
+    c_debugger_go();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+
+    switch_save = switch_save | SS_BANK2;
+    switch_save = switch_save & ~(SS_LCRAM|SS_LCWRT|SS_LCSEC);
+
+    ASSERT(video__current_page == save_current_page);
+    ASSERT(base_textrd   == save_base_textrd);
+    ASSERT(base_textwrt  == save_base_textwrt);
+    ASSERT(base_hgrrd    == save_base_hgrrd);
+    ASSERT(base_hgrwrt   == save_base_hgrwrt);
+    ASSERT(base_d000_rd  == apple_ii_64k[0]);
+    ASSERT(base_e000_rd  == apple_ii_64k[0]);
+    ASSERT(base_d000_wrt == 0);
+    ASSERT(base_e000_wrt == 0);
+
+    ASSERT((softswitches ^ switch_save) == 0);
+
+    PASS();
+}
+
+TEST test_iie_c083(bool flag_altzp, bool flag_lcsec) {
+    BOOT_TO_DOS();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
+
+    ASM_INIT();
+    if (flag_altzp) {
+        ASM_ALTZP_ON();
+    } else {
+        ASM_ALTZP_OFF();
+    }
+
+    if (!flag_lcsec) {
+        ASM_IIE_C080(); // HACK NOTE : turns off SS_LCSEC
+    } else {
+        ASSERT((softswitches & SS_LCSEC));
+    }
+
+    ASM_TRIGGER_WATCHPT();
+    ASM_IIE_C083();
+    ASM_TRIGGER_WATCHPT();
+    ASM_DONE();
+
+    ASM_GO();
+    c_debugger_go();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+    ASSERT(flag_altzp ? (softswitches & SS_ALTZP) : !(softswitches & SS_ALTZP) );
+    ASSERT(flag_lcsec ? (softswitches & SS_LCSEC) : !(softswitches & SS_LCSEC) );
+
+    uint32_t switch_save = softswitches;
+    uint8_t *save_base_textrd = base_textrd;
+    uint8_t *save_base_textwrt = base_textwrt;
+    uint8_t *save_base_hgrrd = base_hgrrd;
+    uint8_t *save_base_hgrwrt = base_hgrwrt;
+    uint8_t *save_base_d000_wrt = base_d000_wrt;
+    uint8_t *save_base_e000_wrt = base_e000_wrt;
+    int save_current_page = video__current_page;
+
+    apple_ii_64k[0][WATCHPOINT_ADDR] = 0x00;
+    c_debugger_go();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+
+    switch_save = switch_save | (SS_LCSEC|SS_LCRAM|SS_BANK2);
+
+    ASSERT(video__current_page == save_current_page);
+    ASSERT(base_textrd  == save_base_textrd);
+    ASSERT(base_textwrt == save_base_textwrt);
+    ASSERT(base_hgrrd  == save_base_hgrrd);
+    ASSERT(base_hgrwrt == save_base_hgrwrt);
+
+    if (flag_lcsec) {
+        switch_save = switch_save | SS_LCWRT;
+    }
+
+    if (flag_altzp) {
+        ASSERT((base_d000_rd == language_banks[0]-0xB000));
+        ASSERT((base_e000_rd  == language_card[0]-0xC000));
+        if (flag_lcsec) {
+            ASSERT((base_d000_wrt == language_banks[0]-0xB000));
+            ASSERT((base_e000_wrt == language_card[0]-0xC000));
+        } else {
+            ASSERT((base_d000_wrt == save_base_d000_wrt));
+            ASSERT((base_e000_wrt == save_base_e000_wrt));
+        }
+    } else {
+        ASSERT((base_d000_rd  == language_banks[0]-0xD000));
+        ASSERT((base_e000_rd  == language_card[0]-0xE000));
+        ASSERT((base_d000_wrt == save_base_d000_wrt));
+        ASSERT((base_e000_wrt == save_base_e000_wrt));
+    }
+
+    ASSERT((softswitches ^ switch_save) == 0);
+
+    PASS();
+}
+
 // ----------------------------------------------------------------------------
 // Test Suite
 
@@ -971,6 +1090,13 @@ GREATEST_SUITE(test_suite_vm) {
     RUN_TESTp(test_iie_c081, /*ALTZP*/0, /*LCSEC*/1);
     RUN_TESTp(test_iie_c081, /*ALTZP*/1, /*LCSEC*/0);
     RUN_TESTp(test_iie_c081, /*ALTZP*/1, /*LCSEC*/1);
+
+    RUN_TESTp(test_lc_c082);
+
+    RUN_TESTp(test_iie_c083, /*ALTZP*/0, /*LCSEC*/0);
+    RUN_TESTp(test_iie_c083, /*ALTZP*/0, /*LCSEC*/1);
+    RUN_TESTp(test_iie_c083, /*ALTZP*/1, /*LCSEC*/0);
+    RUN_TESTp(test_iie_c083, /*ALTZP*/1, /*LCSEC*/1);
 
     // ...
     c_eject_6(0);
