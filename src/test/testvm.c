@@ -700,6 +700,7 @@ TEST test_HIRES_off(bool flag_ramrd, bool flag_ramwrt) {
     BOOT_TO_DOS();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
+    ASSERT(apple_ii_64k[1][WATCHPOINT_ADDR] != TEST_FINISHED);
 
     /* setup */
     ASM_INIT();
@@ -745,6 +746,7 @@ TEST test_HIRES_off(bool flag_ramrd, bool flag_ramwrt) {
     int save_current_page = video__current_page;
 
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x00;
+    apple_ii_64k[1][WATCHPOINT_ADDR] = 0x00;
     c_debugger_go();
 
     if (flag_ramwrt) {
