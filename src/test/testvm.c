@@ -313,6 +313,8 @@ TEST test_PAGE2_on(bool flag_80store, bool flag_hires) {
 
     if (flag_80store) {
         ASSERT(video__current_page == 0);
+        switch_save = switch_save & ~SS_SCREEN;
+        switch_save = switch_save | SS_80STORE;
         switch_save = switch_save | (SS_TEXTRD|SS_TEXTWRT);
         ASSERT((void *)base_textrd  == (void *)(apple_ii_64k[1]));
         ASSERT((void *)base_textwrt == (void *)(apple_ii_64k[1]));
@@ -325,7 +327,8 @@ TEST test_PAGE2_on(bool flag_80store, bool flag_hires) {
             ASSERT(base_hgrwrt == save_base_hgrwrt); // unchanged
         }
     } else {
-        switch_save = (switch_save | SS_SCREEN);
+        switch_save = switch_save | SS_SCREEN;
+        switch_save = switch_save & ~SS_80STORE;
         ASSERT(video__current_page = 1);
         ASSERT(base_textrd  == save_base_textrd);  // unchanged
         ASSERT(base_textwrt == save_base_textwrt); // unchanged
@@ -388,10 +391,10 @@ TEST test_PAGE2_off(bool flag_80store, bool flag_hires) {
     ASSERT( (flag_80store ? (softswitches & SS_80STORE) : !(softswitches & SS_80STORE)) );
     ASSERT( (flag_hires   ? (softswitches & SS_HIRES)   : !(softswitches & SS_HIRES)) );
 
-    ASSERT(!(softswitches & (SS_PAGE2|SS_SCREEN)));
     ASSERT(video__current_page == 0);
 
-    switch_save = (switch_save & ~(SS_PAGE2|SS_SCREEN));
+    switch_save = switch_save & ~SS_SCREEN;
+    switch_save = switch_save & ~SS_PAGE2;
     if (flag_80store) {
         switch_save = switch_save & ~(SS_TEXTRD|SS_TEXTWRT);
         ASSERT((void *)base_textrd  == (void *)(apple_ii_64k));
