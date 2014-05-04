@@ -257,11 +257,23 @@ TEST test_read_random() {
 #define TYPE_TEXT_ON() \
     test_type_input("POKE49233,0:REM C051 TEXT ON\r")
 
+#define TYPE_CHECK_TEXT() \
+    test_type_input( \
+            "A=PEEK(49178):REM C01A CHECK TEXT\r" \
+            "POKE8003,A:REM C01A->1F43\r" /* TESTOUT_ADDR */ \
+            )
+
 #define TYPE_MIXED_OFF() \
     test_type_input("POKE49234,0:REM C052 MIXED OFF\r")
 
 #define TYPE_MIXED_ON() \
     test_type_input("POKE49235,0:REM C053 MIXED ON\r")
+
+#define TYPE_CHECK_MIXED() \
+    test_type_input( \
+            "A=PEEK(49179):REM C01B CHECK MIXED\r" \
+            "POKE8003,A:REM C019->1F43\r" /* TESTOUT_ADDR */ \
+            )
 
 #define ASM_PAGE2_OFF() \
     test_type_input(" STA $C054\r")
@@ -275,6 +287,12 @@ TEST test_read_random() {
 #define TYPE_PAGE2_ON() \
     test_type_input("POKE49237,0:REM C055 PAGE2 ON\r")
 
+#define TYPE_CHECK_PAGE2() \
+    test_type_input( \
+            "A=PEEK(49180):REM C01C CHECK PAGE2\r" \
+            "POKE8003,A:REM ->1F43\r" /* TESTOUT_ADDR */ \
+            )
+
 #define ASM_HIRES_OFF() \
     test_type_input(" STA $C056\r")
 
@@ -286,6 +304,12 @@ TEST test_read_random() {
 
 #define TYPE_HIRES_ON() \
     test_type_input("POKE49239,0:REM C057 HIRES ON\r")
+
+#define TYPE_CHECK_HIRES() \
+    test_type_input( \
+            "A=PEEK(49181):REM C01D CHECK HIRES\r" \
+            "POKE8003,A:REM ->1F43\r" /* TESTOUT_ADDR */ \
+            )
 
 #define ASM_DHIRES_ON() \
     test_type_input(" STA $C05E\r")
@@ -320,6 +344,9 @@ TEST test_read_random() {
 #define ASM_LC_C082() \
     test_type_input(" STA $C082\r")
 
+#define TYPE_BANK2_ON() \
+    test_type_input("POKE49282,0:REM C082 BANK2 on\r")
+
 #define ASM_IIE_C083() \
     test_type_input(" STA $C083\r")
 
@@ -339,6 +366,15 @@ TEST test_read_random() {
 
 #define ASM_LC_C08A() \
     test_type_input(" STA $C08A\r")
+
+#define TYPE_BANK2_OFF() \
+    test_type_input("POKE49290,0:REM C08A BANK2 off\r")
+
+#define TYPE_CHECK_BANK2() \
+    test_type_input( \
+            "A=PEEK(49169):REM C011 CHECK BANK2\r" \
+            "POKE8003,A:REM ->1F43\r" /* TESTOUT_ADDR */ \
+            )
 
 #define ASM_IIE_C08B() \
     test_type_input(" STA $C08B\r")
@@ -370,6 +406,18 @@ TEST test_read_random() {
     test_type_input( \
             " STA $C089\r" \
             " STA $C089\r" \
+            )
+
+#define ASM_LCRAM_ON() \
+    test_type_input(" STA $C088\r")
+
+#define ASM_LCRAM_OFF() \
+    test_type_input(" STA $C08A\r")
+
+#define ASM_CHECK_LCRAM() \
+    test_type_input( \
+            " LDA $C012\r" \
+            " STA $1F43\r" \
             )
 
 #define TYPE_TRIGGER_WATCHPT() \
@@ -536,6 +584,38 @@ TEST test_PAGE2_off(bool flag_80store, bool flag_hires) {
     PASS();
 }
 
+TEST test_check_PAGE2(bool flag_page2) {
+    BOOT_TO_DOS();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
+
+    RESET_INPUT();
+
+    if (flag_page2) {
+        TYPE_PAGE2_ON();
+    } else {
+        TYPE_PAGE2_OFF();
+    }
+
+    TYPE_CHECK_PAGE2();
+    TYPE_TRIGGER_WATCHPT();
+
+    apple_ii_64k[0][TESTOUT_ADDR] = 0x96;
+    c_debugger_go();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+
+    if (flag_page2) {
+        ASSERT((softswitches & SS_PAGE2));
+        ASSERT(apple_ii_64k[0][TESTOUT_ADDR] == 0x80);
+    } else {
+        ASSERT(!(softswitches & SS_PAGE2));
+        ASSERT(apple_ii_64k[0][TESTOUT_ADDR] == 0x00);
+    }
+
+    PASS();
+}
+
 TEST test_TEXT_on() {
     BOOT_TO_DOS();
 
@@ -636,6 +716,38 @@ TEST test_TEXT_off() {
     PASS();
 }
 
+TEST test_check_TEXT(bool flag_text) {
+    BOOT_TO_DOS();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
+
+    RESET_INPUT();
+
+    if (flag_text) {
+        TYPE_TEXT_ON();
+    } else {
+        TYPE_TEXT_OFF();
+    }
+
+    TYPE_CHECK_TEXT();
+    TYPE_TRIGGER_WATCHPT();
+
+    apple_ii_64k[0][TESTOUT_ADDR] = 0x96;
+    c_debugger_go();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+
+    if (flag_text) {
+        ASSERT((softswitches & SS_TEXT));
+        ASSERT(apple_ii_64k[0][TESTOUT_ADDR] == 0x80);
+    } else {
+        ASSERT(!(softswitches & SS_TEXT));
+        ASSERT(apple_ii_64k[0][TESTOUT_ADDR] == 0x00);
+    }
+
+    PASS();
+}
+
 TEST test_MIXED_on() {
     BOOT_TO_DOS();
 
@@ -732,6 +844,38 @@ TEST test_MIXED_off() {
     ASSERT(base_hgrwrt == save_base_hgrwrt);   // unchanged
 
     ASSERT((softswitches ^ switch_save) == 0);
+
+    PASS();
+}
+
+TEST test_check_MIXED(bool flag_mixed) {
+    BOOT_TO_DOS();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
+
+    RESET_INPUT();
+
+    if (flag_mixed) {
+        TYPE_MIXED_ON();
+    } else {
+        TYPE_MIXED_OFF();
+    }
+
+    TYPE_CHECK_MIXED();
+    TYPE_TRIGGER_WATCHPT();
+
+    apple_ii_64k[0][TESTOUT_ADDR] = 0x96;
+    c_debugger_go();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+
+    if (flag_mixed) {
+        ASSERT((softswitches & SS_MIXED));
+        ASSERT(apple_ii_64k[0][TESTOUT_ADDR] == 0x80);
+    } else {
+        ASSERT(!(softswitches & SS_MIXED));
+        ASSERT(apple_ii_64k[0][TESTOUT_ADDR] == 0x00);
+    }
 
     PASS();
 }
@@ -896,6 +1040,38 @@ TEST test_HIRES_off(bool flag_ramrd, bool flag_ramwrt) {
     ASSERT(base_textwrt == save_base_textwrt); // unchanged
 
     ASSERT((softswitches ^ switch_save) == 0);
+    PASS();
+}
+
+TEST test_check_HIRES(bool flag_hires) {
+    BOOT_TO_DOS();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
+
+    RESET_INPUT();
+
+    if (flag_hires) {
+        TYPE_HIRES_ON();
+    } else {
+        TYPE_HIRES_OFF();
+    }
+
+    TYPE_CHECK_HIRES();
+    TYPE_TRIGGER_WATCHPT();
+
+    apple_ii_64k[0][TESTOUT_ADDR] = 0x96;
+    c_debugger_go();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+
+    if (flag_hires) {
+        ASSERT((softswitches & SS_HIRES));
+        ASSERT(apple_ii_64k[0][TESTOUT_ADDR] == 0x80);
+    } else {
+        ASSERT(!(softswitches & SS_HIRES));
+        ASSERT(apple_ii_64k[0][TESTOUT_ADDR] == 0x00);
+    }
+
     PASS();
 }
 
@@ -1403,6 +1579,71 @@ TEST test_iie_c08b(bool flag_altzp, bool flag_lcsec) {
     }
 
     ASSERT((softswitches ^ switch_save) == 0);
+
+    PASS();
+}
+
+TEST test_check_BANK2(bool flag_bank2) {
+    BOOT_TO_DOS();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
+
+    RESET_INPUT();
+
+    if (flag_bank2) {
+        TYPE_BANK2_ON();
+    } else {
+        TYPE_BANK2_OFF();
+    }
+
+    TYPE_CHECK_BANK2();
+    TYPE_TRIGGER_WATCHPT();
+
+    apple_ii_64k[0][TESTOUT_ADDR] = 0x96;
+    c_debugger_go();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+
+    if (flag_bank2) {
+        ASSERT((softswitches & SS_BANK2));
+        ASSERT(apple_ii_64k[0][TESTOUT_ADDR] == 0x80);
+    } else {
+        ASSERT(!(softswitches & SS_BANK2));
+        ASSERT(apple_ii_64k[0][TESTOUT_ADDR] == 0x00);
+    }
+
+    PASS();
+}
+
+TEST test_check_LCRAM(bool flag_lcram) {
+    BOOT_TO_DOS();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
+
+    ASM_INIT();
+
+    if (flag_lcram) {
+        ASM_LCRAM_ON();
+    } else {
+        ASSERT(!(softswitches & SS_LCRAM));
+    }
+
+    ASM_CHECK_LCRAM();
+    ASM_TRIGGER_WATCHPT();
+    ASM_DONE();
+
+    ASM_GO();
+
+    apple_ii_64k[0][TESTOUT_ADDR] = 0x96;
+    c_debugger_go();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+
+    if (flag_lcram) {
+        ASSERT(apple_ii_64k[0][TESTOUT_ADDR] == 0x80);
+    } else {
+        ASSERT(apple_ii_64k[0][TESTOUT_ADDR] == 0x00);
+    }
 
     PASS();
 }
@@ -2728,11 +2969,18 @@ GREATEST_SUITE(test_suite_vm) {
     RUN_TESTp(test_PAGE2_off, /*80STORE*/1, /*HIRES*/0);
     RUN_TESTp(test_PAGE2_off, /*80STORE*/1, /*HIRES*/1);
 
+    RUN_TESTp(test_check_PAGE2, /*PAGE2*/0);
+    RUN_TESTp(test_check_PAGE2, /*PAGE2*/1);
+
     RUN_TESTp(test_TEXT_on);
     RUN_TESTp(test_TEXT_off);
+    RUN_TESTp(test_check_TEXT, /*TEXT*/0);
+    RUN_TESTp(test_check_TEXT, /*TEXT*/1);
 
     RUN_TESTp(test_MIXED_on);
     RUN_TESTp(test_MIXED_off);
+    RUN_TESTp(test_check_MIXED, /*TEXT*/0);
+    RUN_TESTp(test_check_MIXED, /*TEXT*/1);
 
     RUN_TESTp(test_HIRES_on,  /*80STORE*/0, /*PAGE2*/0);
     RUN_TESTp(test_HIRES_on,  /*80STORE*/0, /*PAGE2*/1);
@@ -2743,6 +2991,9 @@ GREATEST_SUITE(test_suite_vm) {
     RUN_TESTp(test_HIRES_off, /*RAMRD*/0, /*RAMWRT*/1);
     RUN_TESTp(test_HIRES_off, /*RAMRD*/1, /*RAMWRT*/0);
     RUN_TESTp(test_HIRES_off, /*RAMRD*/1, /*RAMWRT*/1);
+
+    RUN_TESTp(test_check_HIRES, /*HIRES*/0);
+    RUN_TESTp(test_check_HIRES, /*HIRES*/1);
 
     RUN_TESTp(test_iie_c080, /*ALTZP*/0);
     RUN_TESTp(test_iie_c080, /*ALTZP*/1);
@@ -2773,6 +3024,11 @@ GREATEST_SUITE(test_suite_vm) {
     RUN_TESTp(test_iie_c08b, /*ALTZP*/0, /*LCSEC*/1);
     RUN_TESTp(test_iie_c08b, /*ALTZP*/1, /*LCSEC*/0);
     RUN_TESTp(test_iie_c08b, /*ALTZP*/1, /*LCSEC*/1);
+
+    RUN_TESTp(test_check_BANK2, /*ALTZP*/0);
+    RUN_TESTp(test_check_BANK2, /*ALTZP*/1);
+    RUN_TESTp(test_check_LCRAM, /*LCRAM*/0);
+    RUN_TESTp(test_check_LCRAM, /*LCRAM*/1);
 
     RUN_TESTp(test_80store_on, /*HIRES*/0, /*PAGE2*/0);
     RUN_TESTp(test_80store_on, /*HIRES*/0, /*PAGE2*/1);
