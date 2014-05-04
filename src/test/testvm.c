@@ -1526,6 +1526,8 @@ TEST test_check_80store(bool flag_80store) {
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
 
+    uint32_t switch_save = softswitches;
+
     ASM_INIT();
 
     if (flag_80store) {
@@ -1537,10 +1539,9 @@ TEST test_check_80store(bool flag_80store) {
     ASM_CHECK_80STORE();
     ASM_TRIGGER_WATCHPT();
     ASM_DONE();
-
-    uint32_t switch_save = softswitches;
-
     ASM_GO();
+
+    apple_ii_64k[0][TESTOUT_ADDR] = 0x96;
     c_debugger_go();
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
 
@@ -1743,6 +1744,8 @@ TEST test_check_ramrd(bool flag_ramrd) {
     }
 
     ASM_GO();
+
+    apple_ii_64k[0][TESTOUT_ADDR] = 0x96;
     c_debugger_go();
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
 
@@ -1936,17 +1939,17 @@ TEST test_check_ramwrt(bool flag_ramwrt) {
     ASM_DONE();
 
     ASM_GO();
+
+    apple_ii_64k[0][TESTOUT_ADDR] = 0x96;
+    apple_ii_64k[1][TESTOUT_ADDR] = 0x96;
     c_debugger_go();
-    if (flag_ramwrt) {
-        ASSERT(apple_ii_64k[1][WATCHPOINT_ADDR] == TEST_FINISHED);
-    } else {
-        ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
-    }
 
     if (flag_ramwrt) {
+        ASSERT(apple_ii_64k[1][WATCHPOINT_ADDR] == TEST_FINISHED);
         ASSERT(apple_ii_64k[1][TESTOUT_ADDR] == 0x80);
     } else {
-        ASSERT(apple_ii_64k[1][TESTOUT_ADDR] == 0x00);
+        ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+        ASSERT(apple_ii_64k[0][TESTOUT_ADDR] == 0x00);
     }
 
     PASS();
