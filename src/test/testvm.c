@@ -287,6 +287,18 @@ TEST test_read_random() {
 #define TYPE_HIRES_ON() \
     test_type_input("POKE49239,0:REM C057 HIRES ON\r")
 
+#define ASM_IOUDIS_ON() \
+    test_type_input(" STA $C07E\r")
+
+#define ASM_IOUDIS_OFF() \
+    test_type_input(" STA $C07F\r")
+
+#define ASM_CHECK_IOUDIS() \
+    test_type_input( \
+            " LDA $C07E\r" \
+            " STA $1F43\r" \
+            )
+
 #define ASM_IIE_C080() \
     test_type_input(" STA $C080\r")
 
@@ -2433,6 +2445,115 @@ TEST test_check_altchar(bool flag_altchar) {
     PASS();
 }
 
+TEST test_ioudis_on() {
+    BOOT_TO_DOS();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
+
+    ASM_INIT();
+    ASM_IOUDIS_OFF();
+    ASM_TRIGGER_WATCHPT();
+    ASM_IOUDIS_ON();
+    ASM_TRIGGER_WATCHPT();
+    ASM_DONE();
+
+    ASM_GO();
+    c_debugger_go();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+    ASSERT(!(softswitches & SS_IOUDIS));
+
+    uint32_t switch_save = softswitches;
+    int save_current_page = video__current_page;
+
+    apple_ii_64k[0][WATCHPOINT_ADDR] = 0x00;
+    c_debugger_go();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+    ASSERT((softswitches & SS_IOUDIS));
+
+    switch_save = switch_save | SS_IOUDIS;
+
+    ASSERT(video__current_page == save_current_page);
+
+    ASSERT((softswitches ^ switch_save) == 0);
+
+    PASS();
+}
+
+TEST test_ioudis_off() {
+    BOOT_TO_DOS();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
+
+    ASM_INIT();
+    ASM_IOUDIS_ON();
+    ASM_TRIGGER_WATCHPT();
+    ASM_IOUDIS_OFF();
+    ASM_TRIGGER_WATCHPT();
+    ASM_DONE();
+
+    ASM_GO();
+    c_debugger_go();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+    ASSERT((softswitches & SS_IOUDIS));
+
+    uint32_t switch_save = softswitches;
+    uint8_t *save_base_d000_rd = base_d000_rd;
+    uint8_t *save_base_d000_wrt = base_d000_wrt;
+    uint8_t *save_base_e000_rd = base_e000_rd;
+    uint8_t *save_base_e000_wrt = base_e000_wrt;
+    int save_current_page = video__current_page;
+
+    apple_ii_64k[0][WATCHPOINT_ADDR] = 0x00;
+    c_debugger_go();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+    ASSERT(!(softswitches & SS_IOUDIS));
+
+    switch_save = switch_save & ~SS_IOUDIS;
+
+    ASSERT(video__current_page == save_current_page);
+
+    ASSERT((softswitches ^ switch_save) == 0);
+
+    PASS();
+}
+
+TEST test_check_ioudis(bool flag_ioudis) {
+    BOOT_TO_DOS();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
+
+    ASM_INIT();
+
+    if (flag_ioudis) {
+        ASSERT((softswitches & SS_IOUDIS));
+    } else {
+        ASM_IOUDIS_OFF();
+    }
+
+    ASM_CHECK_IOUDIS();
+    ASM_TRIGGER_WATCHPT();
+    ASM_DONE();
+
+    ASM_GO();
+
+    apple_ii_64k[0][TESTOUT_ADDR] = 0x96;
+    c_debugger_go();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+
+    if (flag_ioudis) {
+        ASSERT(apple_ii_64k[0][TESTOUT_ADDR] == 0x80);
+    } else {
+        ASSERT(apple_ii_64k[0][TESTOUT_ADDR] == 0x00);
+    }
+
+    PASS();
+}
+
 // ----------------------------------------------------------------------------
 // Test Suite
 
@@ -2581,6 +2702,11 @@ GREATEST_SUITE(test_suite_vm) {
     RUN_TESTp(test_altchar_off);
     RUN_TESTp(test_check_altchar, /*ALTCHAR*/0);
     RUN_TESTp(test_check_altchar, /*ALTCHAR*/1);
+
+    RUN_TESTp(test_ioudis_on);
+    RUN_TESTp(test_ioudis_off);
+    RUN_TESTp(test_check_ioudis, /*IOUDIS*/0);
+    RUN_TESTp(test_check_ioudis, /*IOUDIS*/1);
 
     // ...
     c_eject_6(0);
