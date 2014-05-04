@@ -239,6 +239,18 @@ TEST test_read_random() {
             " STA $1F43\r" \
             )
 
+#define ASM_ALTCHAR_OFF() \
+    test_type_input(" STA $C00E\r")
+
+#define ASM_ALTCHAR_ON() \
+    test_type_input(" STA $C00F\r")
+
+#define ASM_CHECK_ALTCHAR() \
+    test_type_input( \
+            " LDA $C01E\r" \
+            " STA $1F43\r" \
+            )
+
 #define TYPE_TEXT_OFF() \
     test_type_input("POKE49232,0:REM C050 TEXT OFF\r")
 
@@ -2308,6 +2320,119 @@ TEST test_check_80col(bool flag_80col) {
     PASS();
 }
 
+TEST test_altchar_on() {
+    BOOT_TO_DOS();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
+
+    ASM_INIT();
+    ASM_ALTCHAR_OFF();
+    ASM_TRIGGER_WATCHPT();
+    ASM_ALTCHAR_ON();
+    ASM_TRIGGER_WATCHPT();
+    ASM_DONE();
+
+    ASM_GO();
+    c_debugger_go();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+    ASSERT(!(softswitches & SS_ALTCHAR));
+
+    uint32_t switch_save = softswitches;
+    int save_current_page = video__current_page;
+
+    apple_ii_64k[0][WATCHPOINT_ADDR] = 0x00;
+    c_debugger_go();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+    ASSERT((softswitches & SS_ALTCHAR));
+
+    // TODO : test/verify font?
+
+    switch_save = switch_save | SS_ALTCHAR;
+
+    ASSERT(video__current_page == save_current_page);
+
+    ASSERT((softswitches ^ switch_save) == 0);
+
+    PASS();
+}
+
+TEST test_altchar_off() {
+    BOOT_TO_DOS();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
+
+    ASM_INIT();
+    ASM_ALTCHAR_ON();
+    ASM_TRIGGER_WATCHPT();
+    ASM_ALTCHAR_OFF();
+    ASM_TRIGGER_WATCHPT();
+    ASM_DONE();
+
+    ASM_GO();
+    c_debugger_go();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+    ASSERT((softswitches & SS_ALTCHAR));
+
+    uint32_t switch_save = softswitches;
+    uint8_t *save_base_d000_rd = base_d000_rd;
+    uint8_t *save_base_d000_wrt = base_d000_wrt;
+    uint8_t *save_base_e000_rd = base_e000_rd;
+    uint8_t *save_base_e000_wrt = base_e000_wrt;
+    int save_current_page = video__current_page;
+
+    apple_ii_64k[0][WATCHPOINT_ADDR] = 0x00;
+    c_debugger_go();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+    ASSERT(!(softswitches & SS_ALTCHAR));
+
+    // TODO : test/verify font?
+
+    switch_save = switch_save & ~SS_ALTCHAR;
+
+    ASSERT(video__current_page == save_current_page);
+
+    ASSERT((softswitches ^ switch_save) == 0);
+
+    PASS();
+}
+
+TEST test_check_altchar(bool flag_altchar) {
+    BOOT_TO_DOS();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
+
+    ASM_INIT();
+
+    if (flag_altchar) {
+        ASM_ALTCHAR_ON();
+    } else {
+        ASSERT(!(softswitches & SS_ALTCHAR));
+    }
+
+    ASM_CHECK_ALTCHAR();
+    ASM_TRIGGER_WATCHPT();
+    ASM_DONE();
+
+    ASM_GO();
+
+    apple_ii_64k[0][TESTOUT_ADDR] = 0x96;
+    c_debugger_go();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+
+    if (flag_altchar) {
+        ASSERT(apple_ii_64k[0][TESTOUT_ADDR] == 0x80);
+    } else {
+        ASSERT(apple_ii_64k[0][TESTOUT_ADDR] == 0x00);
+    }
+
+    PASS();
+}
+
 // ----------------------------------------------------------------------------
 // Test Suite
 
@@ -2451,6 +2576,11 @@ GREATEST_SUITE(test_suite_vm) {
     RUN_TESTp(test_80col_off);
     RUN_TESTp(test_check_80col, /*80COL*/0);
     RUN_TESTp(test_check_80col, /*80COL*/1);
+
+    RUN_TESTp(test_altchar_on);
+    RUN_TESTp(test_altchar_off);
+    RUN_TESTp(test_check_altchar, /*ALTCHAR*/0);
+    RUN_TESTp(test_check_altchar, /*ALTCHAR*/1);
 
     // ...
     c_eject_6(0);
