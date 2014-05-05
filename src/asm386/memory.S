@@ -488,7 +488,7 @@ E(iie_80store_off)
 		movl	$SN(apple_ii_64k)+BANK2,SN(base_textrd)
 		movl	$SN(apple_ii_64k)+BANK2,SN(base_hgrrd)
 iie_80store_off_noramrd:
-		testl	$SS_RAMRD, SN(softswitches)
+		testl	$SS_RAMWRT, SN(softswitches)
 		jz 	iie_80store_off_noramwrt
 		orl	$(SS_TEXTWRT|SS_HGRWRT),SN(softswitches)
 		movl	$SN(apple_ii_64k)+BANK2,SN(base_textwrt)
