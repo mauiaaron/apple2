@@ -211,6 +211,18 @@ TEST test_read_random() {
             " STA $1F43\r" \
             )
 
+#define ASM_CXROM_INTERNAL() \
+    test_type_input(" STA $C007\r")
+
+#define ASM_CXROM_PERIPHERAL() \
+    test_type_input(" STA $C006\r")
+
+#define ASM_CHECK_CXROM() \
+    test_type_input( \
+            " LDA $C015\r" \
+            " STA $1F43\r" \
+            )
+
 #define ASM_ALTZP_OFF() \
     test_type_input(" STA $C008\r")
 
@@ -224,6 +236,18 @@ TEST test_read_random() {
 #define ASM_CHECK_ALTZP() \
     test_type_input( \
             " LDA $C016\r" \
+            " STA $1F43\r" \
+            )
+
+#define ASM_C3ROM_INTERNAL() \
+    test_type_input(" STA $C00A\r")
+
+#define ASM_C3ROM_PERIPHERAL() \
+    test_type_input(" STA $C00B\r")
+
+#define ASM_CHECK_C3ROM() \
+    test_type_input( \
+            " LDA $C017\r" \
             " STA $1F43\r" \
             )
 
@@ -2932,6 +2956,257 @@ TEST test_check_dhires(bool flag_dhires, bool flag_ioudis/* FIXME TODO : possibl
     PASS();
 }
 
+TEST test_c3rom_internal() {
+    BOOT_TO_DOS();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
+
+    ASM_INIT();
+    ASM_C3ROM_PERIPHERAL();
+    ASM_TRIGGER_WATCHPT();
+    ASM_C3ROM_INTERNAL();
+    ASM_TRIGGER_WATCHPT();
+    ASM_DONE();
+
+    ASM_GO();
+    c_debugger_go();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+    ASSERT(!(softswitches & SS_C3ROM));
+
+    uint32_t switch_save = softswitches;
+    uint8_t *save_base_c3rom = base_c3rom;
+
+    apple_ii_64k[0][WATCHPOINT_ADDR] = 0x00;
+    c_debugger_go();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+    ASSERT((softswitches & SS_C3ROM));
+
+    switch_save = switch_save | SS_C3ROM;
+
+    ASSERT((base_c3rom == apple_ii_64k[1]));
+
+    ASSERT((softswitches ^ switch_save) == 0);
+
+    PASS();
+}
+
+TEST test_c3rom_peripheral(bool flag_cxrom) {
+    BOOT_TO_DOS();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
+
+    ASM_INIT();
+
+    if (flag_cxrom) {
+        ASM_CXROM_INTERNAL();
+    } else {
+        ASM_CXROM_PERIPHERAL();
+    }
+
+    ASM_C3ROM_INTERNAL();
+    ASM_TRIGGER_WATCHPT();
+    ASM_C3ROM_PERIPHERAL();
+    ASM_TRIGGER_WATCHPT();
+    ASM_DONE();
+
+    ASM_GO();
+    c_debugger_go();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+    ASSERT((softswitches & SS_C3ROM));
+
+    uint32_t switch_save = softswitches;
+    uint8_t *save_base_c3rom = base_c3rom;
+
+    apple_ii_64k[0][WATCHPOINT_ADDR] = 0x00;
+    c_debugger_go();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+    ASSERT(!(softswitches & SS_C3ROM));
+
+    switch_save = switch_save & ~SS_C3ROM;
+
+    if (flag_cxrom) {
+        ASSERT((softswitches & SS_CXROM));
+        ASSERT((base_c3rom == save_base_c3rom));
+    } else {
+        ASSERT(!(softswitches & SS_CXROM));
+        ASSERT((base_c3rom == apple_ii_64k[0]));
+    }
+
+    ASSERT((softswitches ^ switch_save) == 0);
+
+    PASS();
+}
+
+TEST test_check_c3rom(bool flag_c3rom) {
+    BOOT_TO_DOS();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
+
+    ASM_INIT();
+
+    if (flag_c3rom) {
+        ASSERT((softswitches & SS_C3ROM));
+    } else {
+        ASM_C3ROM_PERIPHERAL();
+    }
+
+    ASM_CHECK_C3ROM();
+    ASM_TRIGGER_WATCHPT();
+    ASM_DONE();
+
+    ASM_GO();
+
+    apple_ii_64k[0][TESTOUT_ADDR] = 0x96;
+    c_debugger_go();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+
+    if (flag_c3rom) {
+        ASSERT((softswitches & SS_C3ROM));
+        ASSERT(apple_ii_64k[0][TESTOUT_ADDR] == 0x00);
+    } else {
+        ASSERT(!(softswitches & SS_C3ROM));
+        ASSERT(apple_ii_64k[0][TESTOUT_ADDR] == 0x80);
+    }
+
+    PASS();
+}
+
+TEST test_cxrom_internal() {
+    BOOT_TO_DOS();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
+
+    ASM_INIT();
+    ASM_CXROM_PERIPHERAL();
+    ASM_TRIGGER_WATCHPT();
+    ASM_CXROM_INTERNAL();
+    ASM_TRIGGER_WATCHPT();
+    ASM_DONE();
+
+    ASM_GO();
+    c_debugger_go();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+    ASSERT(!(softswitches & SS_CXROM));
+
+    uint32_t switch_save = softswitches;
+    uint8_t *save_base_cxrom = base_cxrom;
+    uint8_t *save_base_c3rom = base_c3rom;
+    uint8_t *save_base_c4rom = base_c4rom;
+    uint8_t *save_base_c5rom = base_c5rom;
+
+    apple_ii_64k[0][WATCHPOINT_ADDR] = 0x00;
+    c_debugger_go();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+    ASSERT((softswitches & SS_CXROM));
+
+    switch_save = switch_save | SS_CXROM;
+
+    ASSERT((base_cxrom == apple_ii_64k[1]));
+    ASSERT((base_c3rom == apple_ii_64k[1]));
+    ASSERT((base_c4rom == apple_ii_64k[1]));
+    ASSERT((base_c5rom == apple_ii_64k[1]));
+
+    ASSERT((softswitches ^ switch_save) == 0);
+
+    PASS();
+}
+
+TEST test_cxrom_peripheral(bool flag_c3rom) {
+    BOOT_TO_DOS();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
+
+    ASM_INIT();
+
+    if (flag_c3rom) {
+        ASM_C3ROM_INTERNAL();
+    } else {
+        ASM_C3ROM_PERIPHERAL();
+    }
+
+    ASM_CXROM_INTERNAL();
+    ASM_TRIGGER_WATCHPT();
+    ASM_CXROM_PERIPHERAL();
+    ASM_TRIGGER_WATCHPT();
+    ASM_DONE();
+
+    ASM_GO();
+    c_debugger_go();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+    ASSERT((softswitches & SS_CXROM));
+
+    uint32_t switch_save = softswitches;
+    uint8_t *save_base_cxrom = base_cxrom;
+    uint8_t *save_base_c3rom = base_c3rom;
+
+    apple_ii_64k[0][WATCHPOINT_ADDR] = 0x00;
+    c_debugger_go();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+    ASSERT(!(softswitches & SS_CXROM));
+
+    switch_save = switch_save & ~SS_CXROM;
+
+    if (flag_c3rom) {
+        ASSERT((softswitches & SS_C3ROM));
+        ASSERT((base_c3rom == save_base_c3rom));
+    } else {
+        ASSERT(!(softswitches & SS_C3ROM));
+        ASSERT((base_c3rom == apple_ii_64k[0]));
+    }
+
+    ASSERT(base_cxrom == apple_ii_64k[0]);
+
+    // TODO FIXME ... test other peripherals base_xxx here ...
+
+    ASSERT((softswitches ^ switch_save) == 0);
+
+    PASS();
+}
+
+TEST test_check_cxrom(bool flag_cxrom) {
+    BOOT_TO_DOS();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
+
+    ASM_INIT();
+
+    if (flag_cxrom) {
+        ASM_CXROM_INTERNAL();
+    } else {
+        ASSERT(!(softswitches & SS_CXROM));
+    }
+
+    ASM_CHECK_CXROM();
+    ASM_TRIGGER_WATCHPT();
+    ASM_DONE();
+
+    ASM_GO();
+
+    apple_ii_64k[0][TESTOUT_ADDR] = 0x96;
+    c_debugger_go();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+
+    if (flag_cxrom) {
+        ASSERT((softswitches & SS_CXROM));
+        ASSERT(apple_ii_64k[0][TESTOUT_ADDR] == 0x80);
+    } else {
+        ASSERT(!(softswitches & SS_CXROM));
+        ASSERT(apple_ii_64k[0][TESTOUT_ADDR] == 0x00);
+    }
+
+    PASS();
+}
+
 // ----------------------------------------------------------------------------
 // Test Suite
 
@@ -3109,6 +3384,18 @@ GREATEST_SUITE(test_suite_vm) {
     RUN_TESTp(test_check_dhires, /*DHIRES*/0, /*IOUDIS*/1);
     RUN_TESTp(test_check_dhires, /*DHIRES*/1, /*IOUDIS*/0);
     RUN_TESTp(test_check_dhires, /*DHIRES*/1, /*IOUDIS*/1);
+
+    RUN_TESTp(test_c3rom_internal);
+    RUN_TESTp(test_c3rom_peripheral, /*CXROM*/0);
+    RUN_TESTp(test_c3rom_peripheral, /*CXROM*/1);
+    RUN_TESTp(test_check_c3rom, /*C3ROM*/0);
+    RUN_TESTp(test_check_c3rom, /*C3ROM*/1);
+
+    RUN_TESTp(test_cxrom_internal);
+    RUN_TESTp(test_cxrom_peripheral, /*C3ROM*/0);
+    RUN_TESTp(test_cxrom_peripheral, /*C3ROM*/1);
+    RUN_TESTp(test_check_cxrom, /*CXROM*/0);
+    RUN_TESTp(test_check_cxrom, /*CXROM*/1);
 
     // ...
     c_eject_6(0);
