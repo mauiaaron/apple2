@@ -17,6 +17,7 @@
 #define __ASSEMBLY__
 #include "apple2.h"
 #include "misc.h"
+#include "cpu.h"
 
 #define GLUE_FIXED_READ(func,address) \
 E(func)                 movb    SN(address)(%edi),%al; \
@@ -59,30 +60,30 @@ E(func)                 addl    SN(pointer),%edi; \
 // TODO FIXME : implement CDECL prologue/epilogues...
 #define GLUE_C_WRITE(func) \
 E(func)                 pushl   %eax; \
-                        pushl   %ecx; \
-                        pushl   %edx; \
+                        pushl   FF_Reg; \
+                        pushl   SP_Reg; \
                         andl    $0xff,%eax; \
                         pushl   %eax; \
-                        pushl   %edi; \
+                        pushl   EffectiveAddr_E; \
                         call    SN(c_##func); \
                         popl    %edx; /* dummy */ \
                         popl    %edx; /* dummy */ \
-                        popl    %edx; \
-                        popl    %ecx; \
+                        popl    SP_Reg; \
+                        popl    FF_Reg; \
                         popl    %eax; \
                         ret;
 
 // TODO FIXME : implement CDECL prologue/epilogues...
 #define GLUE_C_READ(func) \
 E(func)                 /*pushl %eax;*/ \
-                        pushl   %ecx; \
-                        pushl   %edx; \
-                        pushl   %edi; \
+                        pushl   FF_Reg; \
+                        pushl   SP_Reg; \
+                        pushl   EffectiveAddr_E; \
                         call    SN(c_##func); \
                         /*movb  %al,12(%esp);*/ \
                         popl    %edx; /* dummy */ \
-                        popl    %edx; \
-                        popl    %ecx; \
+                        popl    SP_Reg; \
+                        popl    FF_Reg; \
                         /*popl  %eax;*/ \
                         ret;
 
