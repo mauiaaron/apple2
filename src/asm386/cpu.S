@@ -126,7 +126,7 @@
                 xorl    %eax, %eax;                                            \
                 xorl    %ebx, %ebx;                                            \
                 xorl    %ecx, %ecx;                                            \
-                movl    $0x0100, %edx;                                         \
+                movl    $0x0100, SP_Reg;                                       \
                 xorl    %esi, %esi;                                            \
                 xorl    %edi, %edi;                                            \
                 movw    DebugCurrEA, EffectiveAddr;                            \
@@ -139,7 +139,7 @@
                 movb    SN(cpu65_current)+6, SP_Reg_L;                         \
                 testl   $SS_ALTZP, SN(softswitches);                           \
                 jz      9f;                                                    \
-                orl     $BANK2, %edx;                                          \
+                orl     $BANK2, SP_Reg;                                        \
 9:
 
 #define BranchXCycles                                                          \
@@ -2769,7 +2769,7 @@ E(cpu65_run)
                 xorl    %ecx, %ecx
                 xorl    %esi, %esi
                 xorl    %edi, %edi
-                movl    $0x1FF, %edx # Stack pointer
+                movl    $0x1FF, SP_Reg
                 jmp     ex_reset
 
 exit_cpu65_run: SaveState                                   // Return to timing loop ...
