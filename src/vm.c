@@ -61,3 +61,55 @@ GLUE_C_READ(speaker_toggle)
     return 0;
 }
 
+// ----------------------------------------------------------------------------
+// Softswitches
+
+GLUE_C_READ(iie_page2_off)
+{
+    if (!(softswitches & SS_PAGE2)) {
+        return 0x0; // TODO: no early return?
+    }
+
+    softswitches &= ~(SS_PAGE2|SS_SCREEN);
+
+    if (softswitches & SS_80STORE) {
+        softswitches &= ~(SS_TEXTRD|SS_TEXTWRT);
+        base_textrd  = apple_ii_64k[0];
+        base_textwrt = apple_ii_64k[0];
+        if (softswitches & SS_HIRES) {
+            softswitches &= ~(SS_HGRRD|SS_HGRWRT);
+            base_hgrrd  = apple_ii_64k[0];
+            base_hgrwrt = apple_ii_64k[0];
+        }
+    }
+
+    video_setpage(0);
+
+    return 0x0;
+}
+
+GLUE_C_READ(iie_page2_on)
+{
+    if (softswitches & SS_PAGE2) {
+        return 0x0; // TODO: no early return?
+    }
+
+    softswitches |= SS_PAGE2;
+
+    if (softswitches & SS_80STORE) {
+        softswitches |= (SS_TEXTRD|SS_TEXTWRT);
+        base_textrd  = apple_ii_64k[1];
+        base_textwrt = apple_ii_64k[1];
+        if (softswitches & SS_HIRES) {
+            softswitches |= (SS_HGRRD|SS_HGRWRT);
+            base_hgrrd  = apple_ii_64k[1];
+            base_hgrwrt = apple_ii_64k[1];
+        }
+    } else {
+        softswitches |= SS_SCREEN;
+        video_setpage(1);
+    }
+
+    return 0x0;
+}
+
