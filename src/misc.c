@@ -20,7 +20,6 @@
     internal apple2 variables
    ---------------------------------- */
 
-static unsigned char apple_ii_rom[12288];
 static unsigned char apple_iie_rom[32768];              /* //e */
 
 bool do_logging = true; // also controlled by NDEBUG
@@ -449,7 +448,6 @@ void c_initialize_apple_ii_memory()
 {
     FILE       *f;
     int i;
-    static int ii_rom_loaded = 0;
     static int iie_rom_loaded = 0;
 
     for (i = 0; i < 0x10000; i++)
@@ -468,23 +466,6 @@ void c_initialize_apple_ii_memory()
         language_banks[0][i] = language_banks[1][i] = 0;
     }
 
-    if (!ii_rom_loaded)
-    {
-        snprintf(temp, TEMPSIZE, "%s/apple_II.rom", system_path);
-        if ((f = fopen(temp, "r")) == NULL) {
-            printf("OOPS!\n");
-            printf("Cannot find file '%s'.\n",temp);
-            //exit(0);
-        } else {
-            if (fread(apple_ii_rom, 0x3000, 1, f) != 0x3000)
-            {
-                // ERROR ...
-            }
-            fclose(f);
-        }
-        ii_rom_loaded = 1;
-    }
-
     if (!iie_rom_loaded)
     {
         snprintf(temp, TEMPSIZE, "%s/apple_IIe.rom", system_path);
@@ -501,21 +482,6 @@ void c_initialize_apple_ii_memory()
 
         fclose(f);
         iie_rom_loaded = 1;
-    }
-
-    for (i = 0xD000; i < 0x10000; i++)
-    {
-        apple_ii_64k[0][i] = apple_ii_rom[i - 0xD000];
-    }
-
-    for (i = 0; i < 0x1000; i++)
-    {
-        language_banks[0][i] = apple_ii_rom[i];
-    }
-
-    for (i = 0; i < 0x2000; i++)
-    {
-        language_card[0][i] = apple_ii_rom[i + 0x1000];
     }
 
     /* load the rom from 0xC000, slot rom main, internal rom aux */
