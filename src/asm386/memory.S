@@ -149,34 +149,6 @@
 	  			enabled.
 	   ----------------------------------------------------------------- */
 
-E(read_switch_graphics)
-		testl	$SS_TEXT, SN(softswitches)
-		jz	ram_nop
-		andl	$~SS_TEXT, SN(softswitches)
-		call	SN(video_redraw)
-		ret		
-
-E(read_switch_text)
-		testl	$SS_TEXT, SN(softswitches)
-		jnz	ram_nop
-		orl	$SS_TEXT, SN(softswitches)
-		call	SN(video_redraw)
-		ret
-
-E(read_switch_no_mixed)
-		testl	$SS_MIXED, SN(softswitches)
-		jz	ram_nop
-		andl	$~SS_MIXED, SN(softswitches)
-		call	SN(video_redraw)
-		ret		
-
-E(read_switch_mixed)
-		testl	$SS_MIXED, SN(softswitches)
-		jnz	ram_nop
-		orl	$SS_MIXED, SN(softswitches)
-		call	SN(video_redraw)
-		ret
-
 /* HIRES off. use RAMRD/RAMWRT offsets for hires page 1. */
 E(iie_hires_off)
 		testl	$SS_HIRES, SN(softswitches)	# already off?

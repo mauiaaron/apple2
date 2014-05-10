@@ -113,3 +113,39 @@ GLUE_C_READ(iie_page2_on)
     return 0x0;
 }
 
+GLUE_C_READ(read_switch_graphics)
+{
+    if (softswitches & SS_TEXT) {
+        softswitches &= ~SS_TEXT;
+        video_redraw();
+    }
+    return 0x0;
+}
+
+GLUE_C_READ(read_switch_text)
+{
+    if (!(softswitches & SS_TEXT)) {
+        softswitches |= SS_TEXT;
+        video_redraw();
+    }
+    return 0x0;
+}
+
+GLUE_C_READ(read_switch_no_mixed)
+{
+    if (softswitches & SS_MIXED) {
+        softswitches &= ~SS_MIXED;
+        video_redraw();
+    }
+    return 0x0;
+}
+
+GLUE_C_READ(read_switch_mixed)
+{
+    if (!(softswitches & SS_MIXED)) {
+        softswitches |= SS_MIXED;
+        video_redraw();
+    }
+    return 0x0;
+}
+
