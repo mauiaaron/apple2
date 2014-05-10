@@ -21,11 +21,11 @@
 #endif
 
 /* parameters for generic and keyboard-simulated joysticks */
-short joy_x = HALF_JOY_RANGE;
-short joy_y = HALF_JOY_RANGE;
-unsigned char joy_button0 = 0;
-unsigned char joy_button1 = 0;
-unsigned char joy_button2 = 0; // unused?
+uint16_t joy_x = HALF_JOY_RANGE;
+uint16_t joy_y = HALF_JOY_RANGE;
+uint8_t joy_button0 = 0;
+uint8_t joy_button1 = 0;
+uint8_t joy_button2 = 0; // unused?
 
 #ifdef KEYPAD_JOYSTICK
 short joy_step = 1;

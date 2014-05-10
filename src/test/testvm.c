@@ -21,8 +21,6 @@
 
 static bool test_do_reboot = true;
 
-extern unsigned char joy_button0;
-
 static void testvm_setup(void *arg) {
     RESET_INPUT();
     apple_ii_64k[0][MIXSWITCH_ADDR] = 0x00;

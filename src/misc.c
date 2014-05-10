@@ -654,50 +654,6 @@ void c_initialize_firsttime()
     reinitialize();
 }
 
-// Read Game Controller (paddle) strobe ...
-// From _Understanding the Apple IIe_ :
-//  * 7-29, discussing PREAD : "The timer duration will vary between 2 and 3302 usecs"
-//  * 7-30, timer reset : "But the timer pulse may still be high from the previous [strobe access] and the timers are
-//  not retriggered by C07X' if they have not yet reset from the previous trigger"
-#define JOY_STEP_USEC (3300.0 / 256.0)
-#define CYCLES_PER_USEC (CLK_6502 / 1000000)
-#define JOY_STEP_CYCLES (JOY_STEP_USEC / CYCLES_PER_USEC)
-extern short joy_x;
-extern short joy_y;
-GLUE_C_READ(read_gc_strobe)
-{
-    if (gc_cycles_timer_0 <= 0)
-    {
-        gc_cycles_timer_0 = (int)(joy_x * JOY_STEP_CYCLES) + 2;
-    }
-    if (gc_cycles_timer_1 <= 0)
-    {
-        gc_cycles_timer_1 = (int)(joy_y * JOY_STEP_CYCLES) + 2;
-    }
-    // NOTE: unimplemented GC2 and GC3 timers since they were not wired on the //e ...
-    return 0;
-}
-
-GLUE_C_READ(read_gc0)
-{
-    if (gc_cycles_timer_0 <= 0)
-    {
-        gc_cycles_timer_0 = 0;
-        return 0;
-    }
-    return 0xFF;
-}
-
-GLUE_C_READ(read_gc1)
-{
-    if (gc_cycles_timer_1 <= 0)
-    {
-        gc_cycles_timer_1 = 0;
-        return 0;
-    }
-    return 0xFF;
-}
-
 #if !defined(TESTING)
 static void main_thread(void *dummyptr) {
     struct timespec sleeptime = { .tv_sec=0, .tv_nsec=8333333 }; // 120Hz

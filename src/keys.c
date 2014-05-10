@@ -19,12 +19,6 @@
 /* from misc.c */
 extern uid_t user, privileged;
 
-/* parameters for generic and keyboard-simulated joysticks */
-extern short joy_x;
-extern short joy_y;
-extern unsigned char joy_button0;
-extern unsigned char joy_button1;
-
 /* mutex used to synchronize between cpu and main threads */
 pthread_mutex_t interface_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t ui_thread_cond = PTHREAD_COND_INITIALIZER;

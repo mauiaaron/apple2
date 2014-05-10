@@ -19,8 +19,6 @@
 
 static bool test_do_reboot = true;
 
-extern unsigned char joy_button0;
-
 static void testdisplay_setup(void *arg) {
     test_common_setup();
     apple_ii_64k[0][MIXSWITCH_ADDR] = 0x00;

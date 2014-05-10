@@ -1280,7 +1280,6 @@ void c_interface_parameters()
                     {
                         timing_initialize();
                         video_set(0);
-                        extern unsigned char joy_button0;
                         joy_button0 = 0xff; // OpenApple
                         cpu65_interrupt(ResetSig);
                         c_initialize_sound_hooks();

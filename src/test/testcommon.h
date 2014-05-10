@@ -16,9 +16,9 @@
 #include "greatest.h"
 
 #define TEST_FINISHED 0xff
-#define MIXSWITCH_ADDR 0x1f32   // PEEK(7986)
-#define WATCHPOINT_ADDR 0x1f33  // PEEK(7987)
-#define TESTOUT_ADDR 0x1f43     // PEEK(8003)
+#define MIXSWITCH_ADDR 0x1f32   // PEEK(7986) -- NOTE : value is hardcoded in various places
+#define WATCHPOINT_ADDR 0x1f33  // PEEK(7987) -- NOTE : value is hardcoded in various places
+#define TESTOUT_ADDR 0x1f43     // PEEK(8003) -- NOTE : value is hardcoded in various places
 
 #define BLANK_SCREEN "6C8ABA272F220F00BE0E76A8659A1E30C2D3CDBE"
 #define BOOT_SCREEN  "F8D6C781E0BB7B3DDBECD69B25E429D845506594"

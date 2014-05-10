@@ -62,7 +62,7 @@ GLUE_C_READ(speaker_toggle)
 }
 
 // ----------------------------------------------------------------------------
-// Softswitches
+// graphics softswitches
 
 GLUE_C_READ(iie_page2_off)
 {
@@ -194,6 +194,77 @@ GLUE_C_READ(iie_hires_on)
     }
 
     video_redraw();
+    return 0x0;
+}
+
+// ----------------------------------------------------------------------------
+// GC softswitches : Game Controller (joystick/paddles)
+#define JOY_STEP_USEC (3300.0 / 256.0)
+#define CYCLES_PER_USEC (CLK_6502 / 1000000)
+#define JOY_STEP_CYCLES (JOY_STEP_USEC / CYCLES_PER_USEC)
+
+GLUE_C_READ(read_button0)
+{
+    return joy_button0;
+}
+
+GLUE_C_READ(read_button1)
+{
+    return joy_button1;
+}
+
+GLUE_C_READ(read_button2)
+{
+    return joy_button2;
+}
+
+GLUE_C_READ(read_gc_strobe)
+{
+    // Read Game Controller (paddle) strobe ...
+    // From _Understanding the Apple IIe_ :
+    //  * 7-29, discussing PREAD : "The timer duration will vary between 2 and 3302 usecs"
+    //  * 7-30, timer reset : "But the timer pulse may still be high from the previous [strobe access] and the timers are
+    //  not retriggered by C07X' if they have not yet reset from the previous trigger"
+    if (gc_cycles_timer_0 <= 0)
+    {
+        gc_cycles_timer_0 = (int)(joy_x * JOY_STEP_CYCLES) + 2;
+    }
+    if (gc_cycles_timer_1 <= 0)
+    {
+        gc_cycles_timer_1 = (int)(joy_y * JOY_STEP_CYCLES) + 2;
+    }
+
+    // NOTE (possible TODO FIXME): unimplemented GC2 and GC3 timers since they were not wired on the //e ...
+    return 0x0;
+}
+
+GLUE_C_READ(read_gc0)
+{
+    if (gc_cycles_timer_0 <= 0)
+    {
+        gc_cycles_timer_0 = 0;
+        return 0;
+    }
+    return 0xFF;
+}
+
+GLUE_C_READ(read_gc1)
+{
+    if (gc_cycles_timer_1 <= 0)
+    {
+        gc_cycles_timer_1 = 0;
+        return 0;
+    }
+    return 0xFF;
+}
+
+GLUE_C_READ(iie_read_gc2)
+{
+    return 0x0;
+}
+
+GLUE_C_READ(iie_read_gc3)
+{
     return 0x0;
 }
 

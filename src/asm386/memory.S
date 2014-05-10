@@ -149,27 +149,6 @@
 	  			enabled.
 	   ----------------------------------------------------------------- */
 
-E(read_button0)
-		movb	SN(joy_button0), %al
-		ret
-
-E(read_button1)
-		movb	SN(joy_button1), %al
-		ret
-
-E(read_button2)
-		movb	SN(joy_button2), %al
-		ret
-
-/* NOTE : Game Controller axis 2 & 3 is not hooked up on a normal //e */
-E(iie_read_gc2)
-                movb    $0, %al
-		ret
-
-E(iie_read_gc3)
-                movb    $0, %al
-		ret
-
 E(iie_c080)
 		testl	$SS_ALTZP, SN(softswitches)
 		jz	lc_c080
