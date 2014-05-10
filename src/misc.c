@@ -64,8 +64,8 @@ uint8_t *base_d000_wrt;
 uint8_t *base_e000_wrt;
 
 uint8_t *base_c3rom;
-void *base_c4rom;
-void *base_c5rom;
+uint8_t *base_c4rom;
+uint8_t *base_c5rom;
 uint8_t *base_cxrom;
 
 
@@ -554,7 +554,7 @@ void c_initialize_sound_hooks()
     {
         cpu65_vmem[i].r = cpu65_vmem[i].w =
 #ifdef AUDIO_ENABLED
-            (sound_volume > 0) ? read_speaker_toggle_pc :
+            (sound_volume > 0) ? speaker_toggle :
 #endif
             ram_nop;
     }
@@ -696,16 +696,6 @@ GLUE_C_READ(read_gc1)
         return 0;
     }
     return 0xFF;
-}
-
-// HACK FIXME TODO : candidate for GLUE_C_READ(...)
-void c_read_random() {
-    static time_t seed=0;
-    if (!seed) {
-        seed = time(NULL);
-        srandom(seed);
-    }
-    random_value = (unsigned char)random();
 }
 
 #if !defined(TESTING)

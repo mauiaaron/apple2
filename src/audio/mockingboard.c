@@ -1712,14 +1712,12 @@ WORD VideoGetScannerAddress(bool* pbVblBar_OUT, const DWORD uExecutedCycles)
 }
 */
 
-extern void c_read_random();
-extern uint8_t random_value;
+extern uint8_t c_read_random(uint16_t);
 static uint8_t MemReadFloatingBus(const unsigned long uExecutedCycles)
 {
     //return*(LPBYTE)(mem + VideoGetScannerAddress(NULL, uExecutedCycles));
     // HUGE HACK FIXME TODO
-    c_read_random();
-    return random_value;
+    return c_read_random(0x0);
 }
 
 #define nCyclesLeft cpu65_cycle_count

@@ -58,7 +58,7 @@ EXTRA_apple2ix_SOURCES = \
 	\
 	$(META_SRC)
 
-apple2ix_SOURCES = src/font.c src/misc.c src/display.c \
+apple2ix_SOURCES = src/font.c src/misc.c src/display.c src/vm.c \
 	src/timing.c src/zlib-helpers.c src/joystick.c src/keys.c src/prefs.c \
 	src/disk.c src/cpu-supp.c
 
@@ -72,7 +72,7 @@ genfont_SOURCES = src/genfont.c
 src/font.c: src/font.txt genfont
 	./genfont < $< > $@
 
-src/asm386/glue.S: src/disk.c src/misc.c src/display.c @AUDIO_GLUE_C@
+src/asm386/glue.S: src/disk.c src/misc.c src/display.c src/vm.c @AUDIO_GLUE_C@
 	./src/asm386/genglue $^ > $@
 
 ###############################################################################

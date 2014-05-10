@@ -40,13 +40,10 @@ extern const unsigned char lcase_glyphs[0x100];
 extern const unsigned char mousetext_glyphs[0x100];
 extern const unsigned char interface_glyphs[88];
 
-unsigned char apple_ii_64k[2][65536]; /* 128k memory */
+uint8_t apple_ii_64k[2][65536]; /* 128k memory */
 
 /* language card memory and settings */
-unsigned char language_card[2][8192], language_banks[2][8192];
-
-/* misc stuff */
-uint8_t random_value;
+uint8_t language_card[2][8192], language_banks[2][8192];
 
 /* global ref to commandline args */
 char            **argv;
@@ -73,8 +70,8 @@ extern uint8_t *base_d000_wrt;
 extern uint8_t *base_e000_wrt;
 
 extern uint8_t *base_c3rom;
-extern void *base_c4rom; // points to function or memory vector
-extern void *base_c5rom; // points to function or memory vector
+extern uint8_t *base_c4rom; // points to function or memory vector
+extern uint8_t *base_c5rom; // points to function or memory vector
 extern uint8_t *base_cxrom;
 
 /* softswitches */
@@ -126,7 +123,6 @@ void c_initialize_sound_hooks();
 void c_disable_sound_hooks();
 void c_initialize_font();
 void c_initialize_vm();
-void c_read_random();
 void reinitialize();
 
 /* virtual memory compacter */
@@ -144,7 +140,7 @@ read_random(),
 read_unmapped_softswitch(),
 read_keyboard(),
 read_keyboard_strobe(),
-read_speaker_toggle_pc(),
+speaker_toggle(),
 read_switch_graphics(),
 read_switch_text(),
 read_switch_no_mixed(),

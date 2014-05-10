@@ -149,43 +149,6 @@
 	  			enabled.
 	   ----------------------------------------------------------------- */
 
-/* ram_nop, read_ram_default, write_ram_default: default ram/rom
-   read/write functions. */
-E(ram_nop)
-		ret
-
-E(read_unmapped_softswitch)
-		movb	SN(apple_ii_64k)(,EffectiveAddr_E,1), %al
-    		ret
-
-E(write_unmapped_softswitch)
-    		ret
-	
-E(read_keyboard)
-		movb	SN(apple_ii_64k)+0xC000, %al
-        	ret
-
-E(read_keyboard_strobe)
-		andb	$0x7f, SN(apple_ii_64k)+0xC000
-		andb	$0x7f, SN(apple_ii_64k)+0x1C000
-		movb	SN(apple_ii_64k)+0xC000, %al /* HACK: necessary? */
-		ret
-
-E(read_random)
-                pushal
-		call	SN(c_read_random)
-                popal
-		movb	SN(random_value), %al
-		ret
-
-E(read_speaker_toggle_pc)
-#ifdef AUDIO_ENABLED
-                pushal
-		call	SN(SpkrToggle)
-                popal // FIXME, do we need to set %al to something here?
-#endif
-		ret
-
 /* PAGE2 off. if 80STORE on then we use main text page1, and if HIRES
 	on we also use main hires page1, regardless of RAMRD and
 	RAMWRT. */
