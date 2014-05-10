@@ -419,3 +419,77 @@ GLUE_C_READ(iie_c08b)
     return 0x0;
 }
 
+// ----------------------------------------------------------------------------
+// Misc //e softswitches and vm routines
+
+GLUE_C_READ(iie_80store_off)
+{
+    if (!(softswitches & SS_80STORE)) {
+        return 0x0; // TODO: no early return?
+    }
+
+    softswitches &= ~(SS_80STORE|SS_TEXTRD|SS_TEXTWRT|SS_HGRRD|SS_HGRWRT);
+
+    base_textrd  = apple_ii_64k[0];
+    base_textwrt = apple_ii_64k[0];
+    base_hgrrd   = apple_ii_64k[0];
+    base_hgrwrt  = apple_ii_64k[0];
+
+    if (softswitches & SS_RAMRD) {
+        softswitches |= (SS_TEXTRD|SS_HGRRD);
+        base_textrd = apple_ii_64k[1];
+        base_hgrrd  = apple_ii_64k[1];
+    }
+
+    if (softswitches & SS_RAMWRT) {
+        softswitches |= (SS_TEXTWRT|SS_HGRWRT);
+        base_textwrt = apple_ii_64k[1];
+        base_hgrwrt  = apple_ii_64k[1];
+    }
+
+    if (softswitches & SS_PAGE2) {
+        softswitches |= SS_SCREEN;
+        video_setpage(1);
+    }
+
+    return 0x0;
+}
+
+GLUE_C_READ(iie_80store_on)
+{
+    if (softswitches & SS_80STORE) {
+        return 0x0; // TODO: no early return?
+    }
+
+    softswitches |= SS_80STORE;
+
+    if (softswitches & SS_PAGE2) {
+        softswitches |= (SS_TEXTRD|SS_TEXTWRT);
+        base_textrd  = apple_ii_64k[1];
+        base_textwrt = apple_ii_64k[1];
+        if (softswitches & SS_HIRES) {
+            softswitches |= (SS_HGRRD|SS_HGRWRT);
+            base_hgrrd  = apple_ii_64k[1];
+            base_hgrwrt = apple_ii_64k[1];
+        }
+    } else {
+        softswitches &= ~(SS_TEXTRD|SS_TEXTWRT);
+        base_textrd  = apple_ii_64k[0];
+        base_textwrt = apple_ii_64k[0];
+        if (softswitches & SS_HIRES) {
+            softswitches &= ~(SS_HGRRD|SS_HGRWRT);
+            base_hgrrd  = apple_ii_64k[0];
+            base_hgrwrt = apple_ii_64k[0];
+        }
+    }
+
+    softswitches &= ~SS_SCREEN;
+    video_setpage(0);
+    return 0x0;
+}
+
+GLUE_C_READ(iie_check_80store)
+{
+    return (softswitches & SS_80STORE) ? 0x80 : 0x00;
+}
+
