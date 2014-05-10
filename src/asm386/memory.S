@@ -763,14 +763,14 @@ E(iie_check_ioudis)
 		ret
 
 E(iie_dhires_on)
-		testl	$SS_IOUDIS, SN(softswitches)
-		jz	ram_nop
+		testl	$SS_DHIRES, SN(softswitches)
+		jnz	ram_nop
 		orl	$SS_DHIRES, SN(softswitches)
 		call	SN(video_redraw)
 		ret
 
 E(iie_dhires_off)
-		testl	$SS_IOUDIS, SN(softswitches)
+		testl	$SS_DHIRES, SN(softswitches)
 		jz	ram_nop
 		andl	$~SS_DHIRES, SN(softswitches)
 		call	SN(video_redraw)
