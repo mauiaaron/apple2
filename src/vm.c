@@ -149,3 +149,51 @@ GLUE_C_READ(read_switch_mixed)
     return 0x0;
 }
 
+GLUE_C_READ(iie_hires_off)
+{
+    if (!(softswitches & SS_HIRES)) {
+        return 0x0; // TODO: no early return?
+    }
+
+    softswitches &= ~(SS_HIRES|SS_HGRRD|SS_HGRWRT);
+    base_hgrrd  = apple_ii_64k[0];
+    base_hgrwrt = apple_ii_64k[0];
+
+    if (softswitches & SS_RAMRD) {
+        base_hgrrd = apple_ii_64k[1];
+        softswitches |= SS_HGRRD;
+    }
+
+    if (softswitches & SS_RAMWRT) {
+        base_hgrwrt = apple_ii_64k[1];
+        softswitches |= SS_HGRWRT;
+    }
+
+    video_redraw();
+    return 0x0;
+}
+
+GLUE_C_READ(iie_hires_on)
+{
+    if (softswitches & SS_HIRES) {
+        return 0x0; // TODO: no early return?
+    }
+
+    softswitches |= SS_HIRES;
+
+    if (softswitches & SS_80STORE) {
+        if (softswitches & SS_PAGE2) {
+            softswitches &= ~(SS_HGRRD|SS_HGRWRT);
+            base_hgrrd  = apple_ii_64k[0];
+            base_hgrwrt = apple_ii_64k[0];
+        } else {
+            softswitches |= (SS_HGRRD|SS_HGRWRT);
+            base_hgrrd  = apple_ii_64k[1];
+            base_hgrwrt = apple_ii_64k[1];
+        }
+    }
+
+    video_redraw();
+    return 0x0;
+}
+

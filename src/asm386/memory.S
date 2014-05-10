@@ -149,49 +149,6 @@
 	  			enabled.
 	   ----------------------------------------------------------------- */
 
-/* HIRES off. use RAMRD/RAMWRT offsets for hires page 1. */
-E(iie_hires_off)
-		testl	$SS_HIRES, SN(softswitches)	# already off?
-		jz	ram_nop
-		andl	$~(SS_HIRES|SS_HGRRD|SS_HGRWRT), SN(softswitches)
-		movl	$SN(apple_ii_64k), SN(base_hgrrd)
-		movl	$SN(apple_ii_64k), SN(base_hgrwrt)
-		testl	$SS_RAMRD,SN(softswitches)
-		jz	iie_hires_off_no_ramrd
-		movl	$SN(apple_ii_64k)+BANK2, SN(base_hgrrd)
-		orl	$SS_HGRRD, SN(softswitches)
-iie_hires_off_no_ramrd:
-		testl	$SS_RAMWRT,SN(softswitches)
-		jz	iie_hires_off_no_ramwrt
-		movl	$SN(apple_ii_64k)+BANK2, SN(base_hgrwrt)
-		orl	$SS_HGRWRT, SN(softswitches)
-iie_hires_off_no_ramwrt: 
-		call	SN(video_redraw)	# update screen
-		ret
-
-/* HIRES on. if 80STORE on, use PAGE2 offset for hires page 1. */
-E(iie_hires_on)
-		testl	$SS_HIRES, SN(softswitches)	# already on?
-		jnz	ram_nop
-		orl	$SS_HIRES, SN(softswitches)	# hires on
-		testl	$SS_80STORE, SN(softswitches)
-		jz	iie_hires_on_80store_off	# no 80STORE
-		testl	$SS_PAGE2, SN(softswitches)
-		jz	iie_hires_on_80store_aux
-		andl	$~(SS_HGRRD|SS_HGRWRT), SN(softswitches)
-		movl	$SN(apple_ii_64k), SN(base_hgrrd)
-		movl	$SN(apple_ii_64k), SN(base_hgrwrt)
-		jmp	iie_hires_on_80store_off
-iie_hires_on_80store_aux:
-		orl	$(SS_HGRRD|SS_HGRWRT), SN(softswitches)
-		movl	$SN(apple_ii_64k)+BANK2, SN(base_hgrrd)
-		movl	$SN(apple_ii_64k)+BANK2, SN(base_hgrwrt)
-iie_hires_on_80store_off:
-		call	SN(video_redraw)	# update screen
-		ret
-
-/*****************************************************************************/
-
 E(read_button0)
 		movb	SN(joy_button0), %al
 		ret
