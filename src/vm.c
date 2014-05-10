@@ -493,3 +493,105 @@ GLUE_C_READ(iie_check_80store)
     return (softswitches & SS_80STORE) ? 0x80 : 0x00;
 }
 
+GLUE_C_READ(iie_ramrd_main)
+{
+    if (!(softswitches & SS_RAMRD)) {
+        return 0x0; // TODO: no early return?
+    }
+
+    softswitches &= ~SS_RAMRD;
+    base_ramrd = apple_ii_64k[0];
+
+    if (softswitches & SS_80STORE) {
+        if (!(softswitches & SS_HIRES)) {
+            softswitches &= ~SS_HGRRD;
+            base_hgrrd = apple_ii_64k[0];
+        }
+    } else {
+        softswitches &= ~(SS_TEXTRD|SS_HGRRD);
+        base_textrd = apple_ii_64k[0];
+        base_hgrrd  = apple_ii_64k[0];
+    }
+
+    return 0x0;
+}
+
+GLUE_C_READ(iie_ramrd_aux)
+{
+    if (softswitches & SS_RAMRD) {
+        return 0x0; // TODO: no early return?
+    }
+
+    softswitches |= SS_RAMRD;
+    base_ramrd = apple_ii_64k[1];
+
+    if (softswitches & SS_80STORE) {
+        if (!(softswitches & SS_HIRES)) {
+            softswitches |= SS_HGRRD;
+            base_hgrrd = apple_ii_64k[1];
+        }
+    } else {
+        softswitches |= (SS_TEXTRD|SS_HGRRD);
+        base_textrd = apple_ii_64k[1];
+        base_hgrrd  = apple_ii_64k[1];
+    }
+
+    return 0x0;
+}
+
+GLUE_C_READ(iie_check_ramrd)
+{
+    return (softswitches & SS_RAMRD) ? 0x80 : 0x00;
+}
+
+GLUE_C_READ(iie_ramwrt_main)
+{
+    if (!(softswitches & SS_RAMWRT)) {
+        return 0x0; // TODO: no early return?
+    }
+
+    softswitches &= ~SS_RAMWRT;
+    base_ramwrt = apple_ii_64k[0];
+
+    if (softswitches & SS_80STORE) {
+        if (!(softswitches & SS_HIRES)) {
+            softswitches &= ~SS_HGRWRT;
+            base_hgrwrt = apple_ii_64k[0];
+        }
+    } else {
+        softswitches &= ~(SS_TEXTWRT|SS_HGRWRT);
+        base_textwrt = apple_ii_64k[0];
+        base_hgrwrt  = apple_ii_64k[0];
+    }
+
+    return 0x0;
+}
+
+GLUE_C_READ(iie_ramwrt_aux)
+{
+    if (softswitches & SS_RAMWRT) {
+        return 0x0; // TODO: no early return?
+    }
+
+    softswitches |= SS_RAMWRT;
+    base_ramwrt = apple_ii_64k[1];
+
+    if (softswitches & SS_80STORE) {
+        if (!(softswitches & SS_HIRES)) {
+            softswitches |= SS_HGRWRT;
+            base_hgrwrt = apple_ii_64k[1];
+        }
+    } else {
+        softswitches |= (SS_TEXTWRT|SS_HGRWRT);
+        base_textwrt = apple_ii_64k[1];
+        base_hgrwrt  = apple_ii_64k[1];
+    }
+
+    return 0x0;
+}
+
+GLUE_C_READ(iie_check_ramwrt)
+{
+    return (softswitches & SS_RAMWRT) ? 0x80 : 0x00;
+}
+
