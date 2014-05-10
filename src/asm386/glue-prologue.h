@@ -60,30 +60,35 @@ E(func)                 addl    SN(pointer),%edi; \
 // TODO FIXME : implement CDECL prologue/epilogues...
 #define GLUE_C_WRITE(func) \
 E(func)                 pushl   %eax; \
+                        pushl   XY_Regs_32; \
                         pushl   FF_Reg; \
                         pushl   SP_Reg; \
+                        pushl   PC_Reg_E; \
                         andl    $0xff,%eax; \
                         pushl   %eax; \
                         pushl   EffectiveAddr_E; \
                         call    SN(c_##func); \
                         popl    %edx; /* dummy */ \
                         popl    %edx; /* dummy */ \
+                        popl    PC_Reg_E; \
                         popl    SP_Reg; \
                         popl    FF_Reg; \
+                        popl    XY_Regs_32; \
                         popl    %eax; \
                         ret;
 
 // TODO FIXME : implement CDECL prologue/epilogues...
 #define GLUE_C_READ(func) \
-E(func)                 /*pushl %eax;*/ \
+E(func)                 pushl   XY_Regs_32; \
                         pushl   FF_Reg; \
                         pushl   SP_Reg; \
+                        pushl   PC_Reg_E; \
                         pushl   EffectiveAddr_E; \
                         call    SN(c_##func); \
-                        /*movb  %al,12(%esp);*/ \
                         popl    %edx; /* dummy */ \
+                        popl    PC_Reg_E; \
                         popl    SP_Reg; \
                         popl    FF_Reg; \
-                        /*popl  %eax;*/ \
+                        popl    XY_Regs_32; \
                         ret;
 
