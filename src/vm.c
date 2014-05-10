@@ -268,3 +268,154 @@ GLUE_C_READ(iie_read_gc3)
     return 0x0;
 }
 
+static inline void _lc_to_auxmem() {
+    if (softswitches & SS_LCRAM) {
+        base_d000_rd += 0x2000;
+        base_e000_rd = language_card[0]-0xC000;
+    }
+
+    if (softswitches & SS_LCWRT) {
+        base_d000_wrt += 0x2000;
+        base_e000_wrt = language_card[0]-0xC000;
+    }
+}
+
+GLUE_C_READ(iie_c080)
+{
+    softswitches |= (SS_LCRAM|SS_BANK2);
+    softswitches &= ~(SS_LCSEC|SS_LCWRT);
+
+    base_d000_rd = language_banks[0]-0xD000;
+    base_e000_rd = language_card[0]-0xE000;
+
+    base_d000_wrt = 0;
+    base_e000_wrt = 0;
+
+    if (softswitches & SS_ALTZP) {
+        _lc_to_auxmem();
+    }
+    return 0x0;
+}
+
+GLUE_C_READ(iie_c081)
+{
+    if (softswitches & SS_LCSEC) {
+        softswitches |= SS_LCWRT;
+        base_d000_wrt = language_banks[0]-0xD000;
+        base_e000_wrt = language_card[0]-0xE000;
+    }
+
+    softswitches |= (SS_LCSEC|SS_BANK2);
+    softswitches &= ~SS_LCRAM;
+
+    base_d000_rd = apple_ii_64k[0];
+    base_e000_rd = apple_ii_64k[0];
+
+    if (softswitches & SS_ALTZP) {
+        _lc_to_auxmem();
+    }
+    return 0x0;
+}
+
+GLUE_C_READ(lc_c082)
+{
+    softswitches &= ~(SS_LCRAM|SS_LCWRT|SS_LCSEC);
+    softswitches |= SS_BANK2;
+
+    base_d000_rd = apple_ii_64k[0];
+    base_e000_rd = apple_ii_64k[0];
+
+    base_d000_wrt = 0;
+    base_e000_wrt = 0;
+
+    return 0x0;
+}
+
+GLUE_C_READ(iie_c083)
+{
+    if (softswitches & SS_LCSEC) {
+        softswitches |= SS_LCWRT;
+        base_d000_wrt = language_banks[0]-0xD000;
+        base_e000_wrt = language_card[0]-0xE000;
+    }
+
+    softswitches |= (SS_LCSEC|SS_LCRAM|SS_BANK2);
+    base_d000_rd = language_banks[0]-0xD000;
+    base_e000_rd = language_card[0]-0xE000;
+
+    if (softswitches & SS_ALTZP) {
+        _lc_to_auxmem();
+    }
+    return 0x0;
+}
+
+GLUE_C_READ(iie_c088)
+{
+    softswitches |= SS_LCRAM;
+    softswitches &= ~(SS_LCWRT|SS_LCSEC|SS_BANK2);
+
+    base_d000_rd = language_banks[0]-0xC000;
+    base_e000_rd = language_card[0]-0xE000;
+
+    base_d000_wrt = 0;
+    base_e000_wrt = 0;
+
+    if (softswitches & SS_ALTZP) {
+        _lc_to_auxmem();
+    }
+    return 0x0;
+}
+
+GLUE_C_READ(iie_c089)
+{
+    if (softswitches & SS_LCSEC) {
+        softswitches |= SS_LCWRT;
+        base_d000_wrt = language_banks[0]-0xC000;
+        base_e000_wrt = language_card[0]-0xE000;
+    }
+
+    softswitches |= SS_LCSEC;
+    softswitches &= ~(SS_LCRAM|SS_BANK2);
+
+    base_d000_rd = apple_ii_64k[0];
+    base_e000_rd = apple_ii_64k[0];
+
+    if (softswitches & SS_ALTZP) {
+        _lc_to_auxmem();
+    }
+    return 0x0;
+}
+
+GLUE_C_READ(lc_c08a)
+{
+    softswitches &= ~(SS_LCRAM|SS_LCWRT|SS_LCSEC|SS_BANK2);
+
+    base_d000_rd = apple_ii_64k[0];
+    base_e000_rd = apple_ii_64k[0];
+
+    base_d000_wrt = 0;
+    base_e000_wrt = 0;
+
+    return 0x0;
+}
+
+GLUE_C_READ(iie_c08b)
+{
+    if (softswitches & SS_LCSEC) {
+        softswitches |= SS_LCWRT;
+        base_d000_wrt = language_banks[0]-0xC000;
+        base_e000_wrt = language_card[0]-0xE000;
+    }
+
+    softswitches |= (SS_LCRAM|SS_LCSEC);
+    softswitches &= ~SS_BANK2;
+
+    base_d000_rd = language_banks[0]-0xC000;
+    base_e000_rd = language_card[0]-0xE000;
+
+    if (softswitches & SS_ALTZP) {
+        _lc_to_auxmem();
+    }
+    return 0x0;
+}
+
