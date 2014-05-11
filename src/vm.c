@@ -638,3 +638,38 @@ GLUE_C_READ(iie_check_altzp)
     return (softswitches & SS_ALTZP) ? 0x80 : 0x00;
 }
 
+GLUE_C_READ(iie_80col_off)
+{
+    if (!(softswitches & SS_80COL)) {
+        return 0x0; // TODO: no early return?
+    }
+
+    softswitches &= ~SS_80COL;
+
+    if (softswitches & (SS_TEXT|SS_MIXED|SS_DHIRES)) {
+        video_redraw();
+    }
+
+    return 0x0;
+}
+
+GLUE_C_READ(iie_80col_on)
+{
+    if (softswitches & SS_80COL) {
+        return 0x0;
+    }
+
+    softswitches |= SS_80COL;
+
+    if (softswitches & (SS_TEXT|SS_MIXED|SS_DHIRES)) {
+        video_redraw();
+    }
+
+    return 0x0;
+}
+
+GLUE_C_READ(iie_check_80col)
+{
+    return (softswitches & SS_80COL) ? 0x80 : 0x00;
+}
+

@@ -152,28 +152,6 @@
 return80:	movb	$0x80,%al
 		ret
 
-E(iie_80col_off)
-    		testl	$SS_80COL, SN(softswitches)
-    		jz	ram_nop
-		andl	$~SS_80COL, SN(softswitches)
-		testl	$(SS_TEXT|SS_MIXED|SS_DHIRES), SN(softswitches)
-		jnz	SN(video_redraw)
-		ret
-
-E(iie_80col_on)
-    		testl	$SS_80COL, SN(softswitches)
-    		jnz	ram_nop
-		orl	$SS_80COL, SN(softswitches)
-		testl	$(SS_TEXT|SS_MIXED|SS_DHIRES), SN(softswitches)
-		jnz	SN(video_redraw)
-		ret
-
-E(iie_check_80col)
-		testl	$SS_80COL, SN(softswitches)
-		jnz	return80
-		xorb	%al, %al
-		ret
-
 E(iie_altchar_off)
 		testl	$SS_ALTCHAR, SN(softswitches)
     		jz	ram_nop
