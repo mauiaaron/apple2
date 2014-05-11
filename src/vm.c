@@ -773,3 +773,62 @@ GLUE_C_READ(iie_check_dhires)
     return (softswitches & SS_DHIRES) ? 0x80 : 0x00;
 }
 
+GLUE_C_READ(iie_check_vbl)
+{
+    // HACK FIXME TODO : enable vertical blanking timing/detection */
+    return 0x0;
+}
+
+GLUE_C_READ(iie_c3rom_peripheral)
+{
+    softswitches &= ~SS_C3ROM;
+    if (!(softswitches & SS_CXROM)) {
+        base_c3rom = apple_ii_64k[0];
+    }
+    return 0x0;
+}
+
+GLUE_C_READ(iie_c3rom_internal)
+{
+    softswitches |= SS_C3ROM;
+    base_c3rom = apple_ii_64k[1];
+    return 0x0;
+}
+
+GLUE_C_READ(iie_check_c3rom)
+{
+    return (softswitches & SS_C3ROM) ? 0x00 : 0x80; // reversed pattern
+}
+
+typedef uint8_t *(VMFunc)(uint16_t);
+
+GLUE_C_READ(iie_cxrom_peripheral)
+{
+    softswitches &= ~SS_CXROM;
+    base_cxrom = apple_ii_64k[0];
+#ifdef AUDIO_ENABLED
+    extern VMFunc MB_Read;
+    base_c4rom = (void*)MB_Read;
+    base_c5rom = (void*)MB_Read;
+#endif
+    if (!(softswitches & SS_C3ROM)) {
+        base_c3rom = apple_ii_64k[0];
+    }
+    return 0x0;
+}
+
+GLUE_C_READ(iie_cxrom_internal)
+{
+    softswitches |= SS_CXROM;
+    base_cxrom = apple_ii_64k[1];
+    base_c3rom = apple_ii_64k[1];
+    base_c4rom = apple_ii_64k[1];
+    base_c5rom = apple_ii_64k[1];
+    return 0x0;
+}
+
+GLUE_C_READ(iie_check_cxrom)
+{
+    return (softswitches & SS_CXROM) ? 0x80 : 0x00;
+}
+

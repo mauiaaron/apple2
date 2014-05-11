@@ -152,56 +152,6 @@
 return80:	movb	$0x80,%al
 		ret
 
-/* HACK not doing anything... */
-E(iie_check_vbl)
-		ret
-
-	/* ---------------------------------- */
-
-E(iie_c3rom_peripheral)
-		andl	$~SS_C3ROM, SN(softswitches)
-		testl	$SS_CXROM, SN(softswitches)
-		jnz	1f /* CXROM-internal preempts C3ROM */
-		movl	$SN(apple_ii_64k), SN(base_c3rom)
-1:		ret
-
-E(iie_c3rom_internal)
-		orl	$SS_C3ROM, SN(softswitches)
-		movl	$SN(apple_ii_64k)+BANK2, SN(base_c3rom)
-		ret
-
-E(iie_check_c3rom)
-		testl	$SS_C3ROM, SN(softswitches)
-		jz	return80
-		xorb	%al, %al
-		ret
-
-E(iie_cxrom_peripheral)
-		andl	$~SS_CXROM, SN(softswitches)
-		movl	$SN(apple_ii_64k), SN(base_cxrom)
-#ifdef AUDIO_ENABLED
-		movl	$SN(MB_Read), SN(base_c4rom)
-		movl	$SN(MB_Read), SN(base_c5rom) // HACK FIXME -- MB is hardcoded, what about Phasor?
-#endif
-		testl	$SS_C3ROM, SN(softswitches)
-		jnz	1f
-		movl	$SN(apple_ii_64k), SN(base_c3rom)
-1:		ret
-
-E(iie_cxrom_internal)
-		orl	$SS_CXROM, SN(softswitches)
-		movl	$SN(apple_ii_64k)+BANK2, SN(base_cxrom)
-		movl	$SN(apple_ii_64k)+BANK2, SN(base_c3rom)
-		movl	$SN(apple_ii_64k)+BANK2, SN(base_c4rom)
-		movl	$SN(apple_ii_64k)+BANK2, SN(base_c5rom)
-		ret
-
-E(iie_check_cxrom)
-		testl	$SS_CXROM, SN(softswitches)
-		jnz	return80
-		xorb	%al, %al
-		ret
-
 /* HACK!!!!! - how does the expansion slot get referenced? need to handle other roms requesting to use this area!!!! */
 E(iie_read_slot_expansion)
 		orl	SN(c8rom_offset), EffectiveAddr_E
