@@ -83,9 +83,13 @@ E(func)                 pushl   XY_Regs_32; \
                         pushl   FF_Reg; \
                         pushl   SP_Reg; \
                         pushl   PC_Reg_E; \
+                        pushl   %eax; /* HACK: works around mysterious issue with generated mov(%eax), %eax ... */ \
                         pushl   EffectiveAddr_E; \
                         call    SN(c_##func); \
                         popl    %edx; /* dummy */ \
+                        movb    %al, %dl; \
+                        popl    %eax; /* ... ugh */ \
+                        movb    %dl, %al; \
                         popl    PC_Reg_E; \
                         popl    SP_Reg; \
                         popl    FF_Reg; \
