@@ -2047,7 +2047,11 @@ void MB_UpdateCycles(ULONG uExecutedCycles)
 	CpuCalcCycles(uExecutedCycles);
 	UINT64 uCycles = g_nCumulativeCycles - g_uLastCumulativeCycles;
 	g_uLastCumulativeCycles = g_nCumulativeCycles;
-	_ASSERT(uCycles < 0x10000);
+	//_ASSERT(uCycles < 0x10000);
+        if (uCycles >= 0x10000) {
+            printf("OOPS!!! Mockingboard failed assert!\n");
+            return;
+        }
 	USHORT nClocks = (USHORT) uCycles;
 
 	for(unsigned int i=0; i<NUM_SY6522; i++)
