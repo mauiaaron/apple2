@@ -23,14 +23,11 @@
 
 /* types */
 
-typedef void *WMEM;
-typedef void *RMEM;
 
-struct memory_vector
-{
-    RMEM r;
-    WMEM w;
-};
+typedef struct memory_vector_t {
+    void *r;
+    void *w;
+} memory_vector_t;
 
 struct cpu65_state
 {
@@ -51,14 +48,8 @@ struct cpu65_extra
     uint8_t opcycles;   /* Last opcode extra cycles */
 };
 
-/* 6502 CPU models */
-#define         CPU65_NMOS      0x0
-#define         CPU65_C02       0x1
-
-#define         CPU65_FAULT     0x100   /* Undoc. opcodes are BRK */
-
 /* Set up the processor for a new run. Sets up opcode table. */
-extern void cpu65_set(int flags);
+extern void cpu65_init();
 
 /* Interrupt the processor */
 extern void cpu65_interrupt(int reason);
@@ -68,7 +59,7 @@ extern void cpu65_run(void);
 
 extern void cpu65_direct_write(int ea,int data);
 
-extern struct memory_vector cpu65_vmem[65536];
+extern memory_vector_t cpu65_vmem[65536];
 extern struct cpu65_state cpu65_current;
 extern struct cpu65_extra cpu65_debug;
 
@@ -138,17 +129,5 @@ extern int16_t cpu65_cycles_to_execute;
 #define PC_Reg_E        %esi            /* 6502 Program Counter    */
 #define EffectiveAddr   %di             /* Effective address       */
 #define EffectiveAddr_E %edi            /* Effective address       */
-
-#ifndef __ASSEMBLER__
-/* Private data. */
-extern void *cpu65__opcodes[256];
-extern void *const cpu65__nmos[256];
-extern void *const cpu65__nmosbrk[256];
-extern void *const cpu65__cmos[256];
-
-extern uint8_t cpu65__opcycles[256];// cycle counter
-
-extern uint8_t cpu65__signal;
-#endif /* !__ASSEMBLER__ */
 
 #endif // whole file

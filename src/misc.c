@@ -586,7 +586,7 @@ void reinitialize(void)
 
     video_redraw();
 
-    cpu65_set(CPU65_C02);
+    cpu65_init();
 
     timing_initialize();
 
