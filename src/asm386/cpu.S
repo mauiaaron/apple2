@@ -137,10 +137,10 @@
                 movb    SN(cpu65_current)+4, X_Reg;                            \
                 movb    SN(cpu65_current)+5, Y_Reg;                            \
                 movb    SN(cpu65_current)+6, SP_Reg_L;                         \
-                testl   $SS_ALTZP, SN(softswitches);                           \
-                jz      9f;                                                    \
-                orl     $BANK2, SP_Reg;                                        \
-9:
+                movl    SN(base_stackzp), %eax;                                \
+                subl    $SN(apple_ii_64k), %eax;                               \
+                orl     %eax, SP_Reg;                                          \
+                xorl    %eax, %eax;
 
 #define BranchXCycles                                                          \
                 incb    DebugCycleCount; /* +1 branch taken */                 \
