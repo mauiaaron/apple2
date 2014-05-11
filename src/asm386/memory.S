@@ -152,45 +152,6 @@
 return80:	movb	$0x80,%al
 		ret
 
-/* unset ioudis flag and read_gc_strobe */
-E(iie_ioudis_off)
-		andl	$~SS_IOUDIS, SN(softswitches)
-		jmp	SN(read_gc_strobe)
-
-/* set ioudis flag and read_gc_strobe */
-E(iie_ioudis_on)
-		orl	$SS_IOUDIS, SN(softswitches)
-		jmp	SN(read_gc_strobe)
-
-/* check ioudis flag and read_gc_strobe */
-E(iie_check_ioudis)
-		call	SN(read_gc_strobe)
-		testl	$SS_IOUDIS, SN(softswitches)		
-		jnz	return80
-		xorb	%al, %al
-		ret
-
-E(iie_dhires_on)
-		testl	$SS_DHIRES, SN(softswitches)
-		jnz	ram_nop
-		orl	$SS_DHIRES, SN(softswitches)
-		call	SN(video_redraw)
-		ret
-
-E(iie_dhires_off)
-		testl	$SS_DHIRES, SN(softswitches)
-		jz	ram_nop
-		andl	$~SS_DHIRES, SN(softswitches)
-		call	SN(video_redraw)
-		ret
-
-/* check dhires flag and read_gc_strobe */
-E(iie_check_dhires)
-		call	SN(read_gc_strobe)
-		testl	$SS_DHIRES, SN(softswitches)
-		jnz	return80
-		ret
-
 E(iie_check_text)
 		testl	$SS_TEXT, SN(softswitches)
 		jnz	return80

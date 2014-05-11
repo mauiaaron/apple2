@@ -696,3 +696,47 @@ GLUE_C_READ(iie_check_altchar)
     return (softswitches & SS_ALTCHAR) ? 0x80 : 0x00;
 }
 
+GLUE_C_READ(iie_ioudis_off)
+{
+    softswitches &= ~SS_IOUDIS;
+    return c_read_gc_strobe(ea);
+}
+
+GLUE_C_READ(iie_ioudis_on)
+{
+    softswitches |= SS_IOUDIS;
+    return c_read_gc_strobe(ea);
+}
+
+GLUE_C_READ(iie_check_ioudis)
+{
+    c_read_gc_strobe(ea);
+    return (softswitches & SS_IOUDIS) ? 0x80 : 0x00;
+}
+
+GLUE_C_READ(iie_dhires_on)
+{
+    // FIXME : does this depend on IOUDIS?
+    if (!(softswitches & SS_DHIRES)) {
+        softswitches |= SS_DHIRES;
+        video_redraw();
+    }
+    return 0x0;
+}
+
+GLUE_C_READ(iie_dhires_off)
+{
+    // FIXME : does this depend on IOUDIS?
+    if (softswitches & SS_DHIRES) {
+        softswitches &= ~SS_DHIRES;
+        video_redraw();
+    }
+    return 0x0;
+}
+
+GLUE_C_READ(iie_check_dhires)
+{
+    c_read_gc_strobe(ea); // HACK FIXME : is this correct?
+    return (softswitches & SS_DHIRES) ? 0x80 : 0x00;
+}
+
