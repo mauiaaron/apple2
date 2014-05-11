@@ -673,3 +673,26 @@ GLUE_C_READ(iie_check_80col)
     return (softswitches & SS_80COL) ? 0x80 : 0x00;
 }
 
+GLUE_C_READ(iie_altchar_off)
+{
+    if (softswitches & SS_ALTCHAR) {
+        softswitches &= ~SS_ALTCHAR;
+        c_set_primary_char();
+    }
+    return 0x0;
+}
+
+GLUE_C_READ(iie_altchar_on)
+{
+    if (!(softswitches & SS_ALTCHAR)) {
+        softswitches |= SS_ALTCHAR;
+        c_set_altchar();
+    }
+    return 0x0;
+}
+
+GLUE_C_READ(iie_check_altchar)
+{
+    return (softswitches & SS_ALTCHAR) ? 0x80 : 0x00;
+}
+

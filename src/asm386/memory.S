@@ -152,30 +152,6 @@
 return80:	movb	$0x80,%al
 		ret
 
-E(iie_altchar_off)
-		testl	$SS_ALTCHAR, SN(softswitches)
-    		jz	ram_nop
-		andl	$~SS_ALTCHAR, SN(softswitches)
-		pushal
-		call	SN(c_set_primary_char)
-		popal
-		ret
-
-E(iie_altchar_on)
-		testl	$SS_ALTCHAR, SN(softswitches)
-    		jnz	ram_nop
-		orl	$SS_ALTCHAR, SN(softswitches)
-		pushal
-		call	SN(c_set_altchar)
-		popal
-		ret
-
-E(iie_check_altchar)
-		testl	$SS_ALTCHAR, SN(softswitches)
-		jnz	return80
-		xorb	%al, %al
-                ret
-
 /* unset ioudis flag and read_gc_strobe */
 E(iie_ioudis_off)
 		andl	$~SS_IOUDIS, SN(softswitches)
