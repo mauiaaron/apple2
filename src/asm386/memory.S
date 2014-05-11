@@ -154,6 +154,16 @@ return80:	movb	$0x80,%al
 
 /* HACK!!!!! - how does the expansion slot get referenced? need to handle other roms requesting to use this area!!!! */
 E(iie_read_slot_expansion)
+#if 0
+/* HACK FIXME TODO NOTE: why is this a problematic pattern?
+   Shouldn't it be the same result as the original?  The mov (%eax), %eax appears suspicious ...
+*/
+                movl    $SN(apple_ii_64k), %eax
+                addl    $c8rom_offset, %eax
+                addl    EffectiveAddr_E, %eax
+                movzbl  (%eax), %eax
+                ret
+#endif
 		orl	SN(c8rom_offset), EffectiveAddr_E
 		movb	SN(apple_ii_64k)(,EffectiveAddr_E,1), %al
 		andl	$0xFFFF, EffectiveAddr_E
