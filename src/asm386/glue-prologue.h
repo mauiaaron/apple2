@@ -78,7 +78,7 @@ E(func)                 pushl   %eax; \
                         ret;
 
 // TODO FIXME : implement CDECL prologue/epilogues...
-#define GLUE_C_READ(func) \
+#define _GLUE_C_READ(func, ...) \
 E(func)                 pushl   XY_Regs_32; \
                         pushl   FF_Reg; \
                         pushl   SP_Reg; \
@@ -90,5 +90,18 @@ E(func)                 pushl   XY_Regs_32; \
                         popl    SP_Reg; \
                         popl    FF_Reg; \
                         popl    XY_Regs_32; \
+                        __VA_ARGS__ \
                         ret;
+
+// TODO FIXME : implement CDECL prologue/epilogues...
+#define GLUE_C_READ(FUNC) _GLUE_C_READ(FUNC)
+
+#define GLUE_C_READ_ALTZP(FUNC) _GLUE_C_READ(FUNC, \
+        pushl   %eax; \
+        andl    $0xFFFF, SP_Reg; \
+        movl    SN(base_stackzp), %eax; \
+        subl    $SN(apple_ii_64k), %eax; \
+        orl     %eax, SP_Reg; \
+        popl    %eax; \
+        )
 

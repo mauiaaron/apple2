@@ -595,3 +595,46 @@ GLUE_C_READ(iie_check_ramwrt)
     return (softswitches & SS_RAMWRT) ? 0x80 : 0x00;
 }
 
+GLUE_C_READ_ALTZP(iie_altzp_main)
+{
+    if (!(softswitches & SS_ALTZP)) {
+        /* NOTE : test if ALTZP already off - due to d000-bank issues it is *needed*, not just a shortcut */
+        return 0x0;
+    }
+
+    softswitches &= ~SS_ALTZP;
+    base_stackzp = apple_ii_64k[0];
+
+    if (softswitches & SS_LCRAM) {
+        base_d000_rd -= 0x2000;
+        base_e000_rd = language_card[0] - 0xE000;
+    }
+
+    if (softswitches & SS_LCWRT) {
+        base_d000_wrt -= 0x2000;
+        base_e000_wrt = language_card[0] - 0xE000;
+    }
+
+    return 0x0;
+}
+
+GLUE_C_READ_ALTZP(iie_altzp_aux)
+{
+    if (softswitches & SS_ALTZP) {
+        /* NOTE : test if ALTZP already on - due to d000-bank issues it is *needed*, not just a shortcut */
+        return 0x0;
+    }
+
+    softswitches |= SS_ALTZP;
+    base_stackzp = apple_ii_64k[1];
+
+    _lc_to_auxmem();
+
+    return 0x0;
+}
+
+GLUE_C_READ(iie_check_altzp)
+{
+    return (softswitches & SS_ALTZP) ? 0x80 : 0x00;
+}
+

@@ -29,3 +29,5 @@
     extern void func(); \
     uint8_t c_##func(uint16_t ea) /* you complete definition */
 
+#define GLUE_C_READ_ALTZP(func, ...) GLUE_C_READ(func)
+

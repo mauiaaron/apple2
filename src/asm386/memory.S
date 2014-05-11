@@ -152,53 +152,6 @@
 return80:	movb	$0x80,%al
 		ret
 
-E(iie_altzp_main)
-		testl	$SS_ALTZP, SN(softswitches)
-		jz	1f	/* test if ALTZP already off -
-				 * due to d000-bank issues it is 
-				 * *needed*, not just a shortcut */
-		andl	$~SS_ALTZP, SN(softswitches)
-		movl	$SN(apple_ii_64k), SN(base_stackzp)
-		andl	$0xFFFF, SP_Reg
-		testl	$SS_LCRAM|SS_LCWRT, SN(softswitches)
-		jz	1f /* shortest path for common case */
-		testl	$SS_LCRAM, SN(softswitches)
-		jz	2f
-		subl	$0x2000, SN(base_d000_rd)
-		movl	$SN(language_card)-0xE000, SN(base_e000_rd)
-2:		testl	$SS_LCWRT, SN(softswitches)
-		jz	1f
-		subl	$0x2000, SN(base_d000_wrt)
-		movl	$SN(language_card)-0xE000, SN(base_e000_wrt)
-1:		ret
-
-E(iie_altzp_aux)
-		testl	$SS_ALTZP, SN(softswitches)
-		jnz	1f	/* test if ALTZP already on -
-				 * due to d000-bank issues it is 
-				 * *needed*, not just a shortcut */
-		orl	$SS_ALTZP, SN(softswitches)
-		movl	$SN(apple_ii_64k)+BANK2, SN(base_stackzp)
-		orl	$BANK2, SP_Reg
-		testl	$SS_LCRAM|SS_LCWRT, SN(softswitches)
-		jz	1f /* shortest path for common case */
-lc_to_auxmem:	/* called by lc routines */
-		testl	$SS_LCRAM, SN(softswitches)
-		jz	2f
-		addl	$0x2000, SN(base_d000_rd)
-		movl	$SN(language_card)-0xC000, SN(base_e000_rd)
-2:		testl	$SS_LCWRT, SN(softswitches)
-		jz	1f
-		addl	$0x2000, SN(base_d000_wrt)
-		movl	$SN(language_card)-0xC000, SN(base_e000_wrt)
-1:		ret
-
-E(iie_check_altzp)
-		testl	$SS_ALTZP, SN(softswitches)
-		jnz	return80
-		xorb	%al, %al
-		ret
-
 E(iie_80col_off)
     		testl	$SS_80COL, SN(softswitches)
     		jz	ram_nop
