@@ -520,26 +520,26 @@
    ---------------------------------- */
 
 // Decimal mode
-op_ADC_dec:
+E(op_ADC_dec)
                 incb    DebugCycleCount         // +1 cycle
                 DoADC_d
                 Continue
 
-op_ADC_imm: // 0x69
+E(op_ADC_imm) // 0x69
                 GetImm
                 testb   $D_Flag, F_Reg          // Decimal mode?
                 jnz     op_ADC_dec              // Yes, jump to decimal version
                 DoADC_b
                 Continue
 
-op_ADC_zpage: // 0x65
+E(op_ADC_zpage) // 0x65
                 GetZPage
                 testb   $D_Flag, F_Reg          // Decimal mode?
                 jnz     op_ADC_dec              // Yes, jump to decimal version
                 DoADC_b
                 Continue
 
-op_ADC_zpage_x: // 0x75
+E(op_ADC_zpage_x) // 0x75
                 GetZPage_X
                 testb   $D_Flag, F_Reg          // Decimal mode?
                 jnz     op_ADC_dec              // Yes, jump to decimal version
@@ -547,38 +547,38 @@ op_ADC_zpage_x: // 0x75
                 Continue
 
 // UNIMPLEMENTED : W65C02S datasheet
-op_ADC_zpage_y:
+E(op_ADC_zpage_y)
                 jmp op_NOP
 
-op_ADC_abs: // 0x6d
+E(op_ADC_abs) // 0x6d
                 GetAbs
                 testb   $D_Flag, F_Reg          // Decimal mode?
                 jnz     op_ADC_dec              // Yes, jump to decimal version
                 DoADC_b
                 Continue
 
-op_ADC_abs_x: // 0x7d
+E(op_ADC_abs_x) // 0x7d
                 GetAbs_X
                 testb   $D_Flag, F_Reg          // Decimal mode?
                 jnz     op_ADC_dec              // Yes, jump to decimal version
                 DoADC_b
                 Continue
 
-op_ADC_abs_y: // 0x79
+E(op_ADC_abs_y) // 0x79
                 GetAbs_Y
                 testb   $D_Flag, F_Reg          // Decimal mode?
                 jnz     op_ADC_dec              // Yes, jump to decimal version
                 DoADC_b
                 Continue
 
-op_ADC_ind_x: // 0x61
+E(op_ADC_ind_x) // 0x61
                 GetIndZPage_X
                 testb   $D_Flag, F_Reg          // Decimal mode?
                 jnz     op_ADC_dec              // Yes, jump to decimal version
                 DoADC_b
                 Continue
 
-op_ADC_ind_y: // 0x71
+E(op_ADC_ind_y) // 0x71
                 GetIndZPage_Y
                 testb   $D_Flag, F_Reg          // Decimal mode?
                 jnz     op_ADC_dec              // Yes, jump to decimal version
@@ -586,7 +586,7 @@ op_ADC_ind_y: // 0x71
                 Continue
 
 // 65c02 : 0x72
-op_ADC_ind_zpage:
+E(op_ADC_ind_zpage)
                 GetIndZPage
                 testb   $D_Flag, F_Reg          // Decimal mode?
                 jnz     op_ADC_dec              // Yes, jump to decimal version
@@ -598,52 +598,52 @@ op_ADC_ind_zpage:
        logical AND memory with accumulator
    ---------------------------------- */
 
-op_AND_imm: // 0x29
+E(op_AND_imm) // 0x29
                 GetImm
                 DoAND
                 Continue
 
-op_AND_zpage: // 0x25
+E(op_AND_zpage) // 0x25
                 GetZPage
                 DoAND
                 Continue
 
-op_AND_zpage_x: // 0x35
+E(op_AND_zpage_x) // 0x35
                 GetZPage_X
                 DoAND
                 Continue
 
 // UNIMPLEMENTED : W65C02S datasheet
-op_AND_zpage_y:
+E(op_AND_zpage_y)
                 jmp op_NOP
 
-op_AND_abs: // 0x2d
+E(op_AND_abs) // 0x2d
                 GetAbs
                 DoAND
                 Continue
 
-op_AND_abs_x: // 0x3d
+E(op_AND_abs_x) // 0x3d
                 GetAbs_X
                 DoAND
                 Continue
 
-op_AND_abs_y: // 0x39
+E(op_AND_abs_y) // 0x39
                 GetAbs_Y
                 DoAND
                 Continue
 
-op_AND_ind_x: // 0x21
+E(op_AND_ind_x) // 0x21
                 GetIndZPage_X
                 DoAND
                 Continue
 
-op_AND_ind_y: // 0x31
+E(op_AND_ind_y) // 0x31
                 GetIndZPage_Y
                 DoAND
                 Continue
 
 // 65c02 : 0x32
-op_AND_ind_zpage:
+E(op_AND_ind_zpage)
                 GetIndZPage
                 DoAND
                 Continue
@@ -653,27 +653,27 @@ op_AND_ind_zpage:
        Arithmetic Shift one bit Left, memory or accumulator
    ---------------------------------- */
 
-op_ASL_acc: // 0x0a
+E(op_ASL_acc) // 0x0a
                 addb    A_Reg, A_Reg
                 FlagNZC
                 Continue
 
-op_ASL_zpage: // 0x06
+E(op_ASL_zpage) // 0x06
                 GetZPage
                 DoASL
                 Continue
 
-op_ASL_zpage_x: // 0x16
+E(op_ASL_zpage_x) // 0x16
                 GetZPage_X
                 DoASL
                 Continue
 
-op_ASL_abs: // 0x0e
+E(op_ASL_abs) // 0x0e
                 GetAbs
                 DoASL
                 Continue
 
-op_ASL_abs_x: // 0x1e
+E(op_ASL_abs_x) // 0x1e
                 GetAbs_X
                 DoASL
                 Continue
@@ -685,28 +685,28 @@ op_ASL_abs_x: // 0x1e
        + 2 cycles if branch across page boundary
    ---------------------------------- */
 
-op_BBR0_65c02:
+E(op_BBR0_65c02)
                 Continue
 
-op_BBR1_65c02:
+E(op_BBR1_65c02)
                 Continue
 
-op_BBR2_65c02:
+E(op_BBR2_65c02)
                 Continue
 
-op_BBR3_65c02:
+E(op_BBR3_65c02)
                 Continue
 
-op_BBR4_65c02:
+E(op_BBR4_65c02)
                 Continue
 
-op_BBR5_65c02:
+E(op_BBR5_65c02)
                 Continue
 
-op_BBR6_65c02:
+E(op_BBR6_65c02)
                 Continue
 
-op_BBR7_65c02:
+E(op_BBR7_65c02)
                 Continue
 
 /* ----------------------------------
@@ -716,28 +716,28 @@ op_BBR7_65c02:
        + 2 cycles if branch across page boundary
    ---------------------------------- */
 
-op_BBS0_65c02:
+E(op_BBS0_65c02)
                 Continue
 
-op_BBS1_65c02:
+E(op_BBS1_65c02)
                 Continue
 
-op_BBS2_65c02:
+E(op_BBS2_65c02)
                 Continue
 
-op_BBS3_65c02:
+E(op_BBS3_65c02)
                 Continue
 
-op_BBS4_65c02:
+E(op_BBS4_65c02)
                 Continue
 
-op_BBS5_65c02:
+E(op_BBS5_65c02)
                 Continue
 
-op_BBS6_65c02:
+E(op_BBS6_65c02)
                 Continue
 
-op_BBS7_65c02:
+E(op_BBS7_65c02)
                 Continue
 
 /* ----------------------------------
@@ -745,7 +745,7 @@ op_BBS7_65c02:
        Branch on Carry Clear
    ---------------------------------- */
 
-op_BCC: // 0x90
+E(op_BCC) // 0x90
                 GetFromPC_B
                 testb   $C_Flag, F_Reg
                 jnz     op_BCC_not              // branch not taken
@@ -758,7 +758,7 @@ op_BCC_not:
        Branch on Carry Set
    ---------------------------------- */
 
-op_BCS: // 0xB0
+E(op_BCS) // 0xB0
                 GetFromPC_B
                 testb   $C_Flag, F_Reg
                 jz      op_BCS_not              // branch not taken
@@ -771,7 +771,7 @@ op_BCS_not:
        Branch if EQual
    ---------------------------------- */
 
-op_BEQ: // 0xF0
+E(op_BEQ) // 0xF0
                 GetFromPC_B
                 testb   $Z_Flag, F_Reg
                 jz      op_BEQ_not              // branch not taken
@@ -784,24 +784,24 @@ op_BEQ_not:
        BIt Test
    ---------------------------------- */
 
-op_BIT_zpage: // 0x24
+E(op_BIT_zpage) // 0x24
                 GetZPage
                 DoBIT
                 Continue
 
-op_BIT_abs: // 0x2c
+E(op_BIT_abs) // 0x2c
                 GetAbs
                 DoBIT
                 Continue
 
 // 65c02 : 0x34
-op_BIT_zpage_x:
+E(op_BIT_zpage_x)
                 GetZPage_X
                 DoBIT
                 Continue
 
 // 65c02 : 0x3C
-op_BIT_abs_x:
+E(op_BIT_abs_x)
                 GetAbs_X
                 DoBIT
                 Continue
@@ -810,7 +810,7 @@ op_BIT_abs_x:
                  * N and V flags, unlike in other addressing modes.
                  */
 // 65c02 : 0x89
-op_BIT_imm:
+E(op_BIT_imm)
                 GetImm
                 GetFromEA_B
                 testb   %al, A_Reg
@@ -822,7 +822,7 @@ op_BIT_imm:
        Branch on result MInus
    ---------------------------------- */
 
-op_BMI: // 0x30
+E(op_BMI) // 0x30
                 GetFromPC_B
                 testb   F_Reg, F_Reg    /* optimized check of N flag,
                                          * which happens to be sign bit */
@@ -836,7 +836,7 @@ op_BMI_not:
        Branch on result Not Equal
    ---------------------------------- */
 
-op_BNE: // 0xD0
+E(op_BNE) // 0xD0
                 GetFromPC_B
                 testb   $Z_Flag, F_Reg
                 jnz     op_BNE_not
@@ -849,7 +849,7 @@ op_BNE_not:
        Branch on result PLus
    ---------------------------------- */
 
-op_BPL: // 0x10
+E(op_BPL) // 0x10
                 GetFromPC_B
                 testb   F_Reg, F_Reg    /* optimized check of N flag,
                                          * which happens to be sign bit */
@@ -864,7 +864,7 @@ op_BPL_not:
    ---------------------------------- */
 
 // 65c02 : 0x80
-op_BRA:
+E(op_BRA)
                 GetFromPC_B
                 BranchXCycles
                 Continue
@@ -873,8 +873,8 @@ op_BRA:
        BRK instruction
    ---------------------------------- */
 
-op_UNK: /* make undefined nmos opcodes fault */
-op_BRK:
+E(op_UNK) /* make undefined opcodes fault */
+E(op_BRK)
                 incw    PC_Reg
                 movw    PC_Reg, %ax
                 Push(%ah)
@@ -895,7 +895,7 @@ op_BRK:
        Branch on oVerflow Clear
    ---------------------------------- */
 
-op_BVC: // 0x50
+E(op_BVC) // 0x50
                 GetFromPC_B
                 testb   $V_Flag, F_Reg
                 jnz     op_BVC_not
@@ -908,7 +908,7 @@ op_BVC_not:
        Branch on oVerflow Set
    ---------------------------------- */
 
-op_BVS: // 0x70
+E(op_BVS) // 0x70
                 GetFromPC_B
                 testb   $V_Flag, F_Reg
                 jz      op_BVS_not
@@ -920,7 +920,7 @@ op_BVS_not:
        CLC instruction
    ---------------------------------- */
 
-op_CLC: // 0x18
+E(op_CLC) // 0x18
                 andb    $~C_Flag, F_Reg
                 Continue
 
@@ -928,7 +928,7 @@ op_CLC: // 0x18
        CLD instruction
    ---------------------------------- */
 
-op_CLD: // 0xd8
+E(op_CLD) // 0xd8
                 andb    $~D_Flag, F_Reg
                 Continue
 
@@ -936,7 +936,7 @@ op_CLD: // 0xd8
        CLI instruction
    ---------------------------------- */
 
-op_CLI: // 0x58
+E(op_CLI) // 0x58
                 andb    $~I_Flag, F_Reg
                 Continue
 
@@ -944,7 +944,7 @@ op_CLI: // 0x58
        CLV instruction
    ---------------------------------- */
 
-op_CLV: // 0xB8
+E(op_CLV) // 0xB8
                 andb    $~V_Flag, F_Reg
                 Continue
 
@@ -953,52 +953,52 @@ op_CLV: // 0xB8
        CoMPare memory and accumulator
    ---------------------------------- */
 
-op_CMP_imm: // 0xc9
+E(op_CMP_imm) // 0xc9
                 GetImm
                 DoCMP
                 Continue
 
-op_CMP_zpage: // 0xc5
+E(op_CMP_zpage) // 0xc5
                 GetZPage
                 DoCMP
                 Continue
 
-op_CMP_zpage_x: // 0xd5
+E(op_CMP_zpage_x) // 0xd5
                 GetZPage_X
                 DoCMP
                 Continue
 
 // UNIMPLEMENTED : W65C02S datasheet
-op_CMP_zpage_y:
+E(op_CMP_zpage_y)
                 jmp op_NOP
 
-op_CMP_abs: // 0xcd
+E(op_CMP_abs) // 0xcd
                 GetAbs
                 DoCMP
                 Continue
 
-op_CMP_abs_x: // 0xdd
+E(op_CMP_abs_x) // 0xdd
                 GetAbs_X
                 DoCMP
                 Continue
 
-op_CMP_abs_y: // 0xd9
+E(op_CMP_abs_y) // 0xd9
                 GetAbs_Y
                 DoCMP
                 Continue
 
-op_CMP_ind_x: // 0xc1
+E(op_CMP_ind_x) // 0xc1
                 GetIndZPage_X
                 DoCMP
                 Continue
 
-op_CMP_ind_y: // 0xd1
+E(op_CMP_ind_y) // 0xd1
                 GetIndZPage_Y
                 DoCMP
                 Continue
 
 // 65c02 : 0xD2
-op_CMP_ind_zpage:
+E(op_CMP_ind_zpage)
                 GetIndZPage
                 DoCMP
                 Continue
@@ -1008,17 +1008,17 @@ op_CMP_ind_zpage:
        ComPare memory and X register
    ---------------------------------- */
 
-op_CPX_imm: // 0xe0
+E(op_CPX_imm) // 0xe0
                 GetImm
                 DoCPX
                 Continue
 
-op_CPX_zpage: // 0xe4
+E(op_CPX_zpage) // 0xe4
                 GetZPage
                 DoCPX
                 Continue
 
-op_CPX_abs: // 0xec
+E(op_CPX_abs) // 0xec
                 GetAbs
                 DoCPX
                 Continue
@@ -1028,27 +1028,27 @@ op_CPX_abs: // 0xec
        ComPare memory and Y register
    ---------------------------------- */
 
-op_CPY_imm: // 0xc0
+E(op_CPY_imm) // 0xc0
                 GetImm
                 DoCPY
                 Continue
 
-op_CPY_zpage: // 0xc4
+E(op_CPY_zpage) // 0xc4
                 GetZPage
                 DoCPY
                 Continue
 
-op_CPY_abs: // 0xcc
+E(op_CPY_abs) // 0xcc
                 GetAbs
                 DoCPY
                 Continue
 
 /* ----------------------------------
-       DEA : DEcrement Accumulator
+       DEA: DEcrement Accumulator
    ---------------------------------- */
 
-op_DEC_acc:
-op_DEA: // 0x3A
+E(op_DEC_acc)
+E(op_DEA) // 0x3A
                 decb    A_Reg
                 FlagNZ
                 Continue
@@ -1058,22 +1058,22 @@ op_DEA: // 0x3A
        DECrement memory or accumulator by one
    ---------------------------------- */
 
-op_DEC_zpage: // 0xc6
+E(op_DEC_zpage) // 0xc6
                 GetZPage
                 DoDEC
                 Continue
 
-op_DEC_zpage_x: // 0xd6
+E(op_DEC_zpage_x) // 0xd6
                 GetZPage_X
                 DoDEC
                 Continue
 
-op_DEC_abs: // 0xce
+E(op_DEC_abs) // 0xce
                 GetAbs
                 DoDEC
                 Continue
 
-op_DEC_abs_x: // 0xde
+E(op_DEC_abs_x) // 0xde
                 GetAbs_X
                 DoDEC
                 Continue
@@ -1082,7 +1082,7 @@ op_DEC_abs_x: // 0xde
        DEX instruction
    ---------------------------------- */
 
-op_DEX: // 0xca
+E(op_DEX) // 0xca
                 decb    X_Reg
                 FlagNZ
                 Continue
@@ -1091,7 +1091,7 @@ op_DEX: // 0xca
        DEY instruction
    ---------------------------------- */
 
-op_DEY: // 0x88
+E(op_DEY) // 0x88
                 decb    Y_Reg
                 FlagNZ
                 Continue
@@ -1101,52 +1101,52 @@ op_DEY: // 0x88
        Exclusive OR memory with accumulator
    ---------------------------------- */
 
-op_EOR_imm: // 0x49
+E(op_EOR_imm) // 0x49
                 GetImm
                 DoEOR
                 Continue
 
-op_EOR_zpage: // 0x45
+E(op_EOR_zpage) // 0x45
                 GetZPage
                 DoEOR
                 Continue
 
-op_EOR_zpage_x: // 0x55
+E(op_EOR_zpage_x) // 0x55
                 GetZPage_X
                 DoEOR
                 Continue
 
 // UNIMPLEMENTED : W65C02S datasheet
-op_EOR_zpage_y:
+E(op_EOR_zpage_y)
                 jmp op_NOP
 
-op_EOR_abs: // 0x4d
+E(op_EOR_abs) // 0x4d
                 GetAbs
                 DoEOR
                 Continue
 
-op_EOR_abs_x: // 0x5d
+E(op_EOR_abs_x) // 0x5d
                 GetAbs_X
                 DoEOR
                 Continue
 
-op_EOR_abs_y: // 0x59
+E(op_EOR_abs_y) // 0x59
                 GetAbs_Y
                 DoEOR
                 Continue
 
-op_EOR_ind_x: // 0x41
+E(op_EOR_ind_x) // 0x41
                 GetIndZPage_X
                 DoEOR
                 Continue
 
-op_EOR_ind_y: // 0x51
+E(op_EOR_ind_y) // 0x51
                 GetIndZPage_Y
                 DoEOR
                 Continue
 
 // 65c02 : 0x52
-op_EOR_ind_zpage:
+E(op_EOR_ind_zpage)
                 GetIndZPage
                 DoEOR
                 Continue
@@ -1155,8 +1155,8 @@ op_EOR_ind_zpage:
        INA : INcrement Accumulator
    ---------------------------------- */
 
-op_INC_acc:
-op_INA: // 0x1A
+E(op_INC_acc)
+E(op_INA) // 0x1A
                 incb    A_Reg
                 FlagNZ
                 Continue
@@ -1166,22 +1166,22 @@ op_INA: // 0x1A
        INCrement memory
    ---------------------------------- */
 
-op_INC_zpage: // 0xe6
+E(op_INC_zpage) // 0xe6
                 GetZPage
                 DoINC
                 Continue
 
-op_INC_zpage_x: // 0xf6
+E(op_INC_zpage_x) // 0xf6
                 GetZPage_X
                 DoINC
                 Continue
 
-op_INC_abs: // 0xee
+E(op_INC_abs) // 0xee
                 GetAbs
                 DoINC
                 Continue
 
-op_INC_abs_x: // 0xfe
+E(op_INC_abs_x) // 0xfe
                 GetAbs_X
                 DoINC
                 Continue
@@ -1190,7 +1190,7 @@ op_INC_abs_x: // 0xfe
        INX instruction
    ---------------------------------- */
 
-op_INX: // 0xe8
+E(op_INX) // 0xe8
                 incb    X_Reg
                 FlagNZ
                 Continue
@@ -1199,7 +1199,7 @@ op_INX: // 0xe8
        INY instruction
    ---------------------------------- */
 
-op_INY: // 0xc8
+E(op_INY) // 0xc8
                 incb    Y_Reg
                 FlagNZ
                 Continue
@@ -1209,12 +1209,12 @@ op_INY: // 0xc8
        JuMP to new location
    ---------------------------------- */
 
-op_JMP_abs:
+E(op_JMP_abs)
                 GetAbs
                 movw    EffectiveAddr, PC_Reg;
                 Continue
 
-op_JMP_ind: // 0x6c
+E(op_JMP_ind) // 0x6c
                 xorl    %eax, %eax
                 GetFromPC_B
                 xchgb   %al, %ah
@@ -1236,7 +1236,7 @@ jmp_special: // see JMP indirect note in _Understanding the Apple IIe_ 4-25
                 Continue
 
 // 65c02 : 0x7C
-op_JMP_abs_ind_x:
+E(op_JMP_abs_ind_x)
                 GetFromPC_W
                 movw    %ax, EffectiveAddr
                 movzbl  X_Reg, %eax
@@ -1249,7 +1249,7 @@ op_JMP_abs_ind_x:
        JSR instruction
    ---------------------------------- */
 
-op_JSR: // 0x20
+E(op_JSR) // 0x20
                 GetAbs
                 movw    PC_Reg, %ax
                 decw    %ax
@@ -1263,52 +1263,52 @@ op_JSR: // 0x20
        LoaD Accumulator with memory
    ---------------------------------- */
 
-op_LDA_imm: // 0xa9
+E(op_LDA_imm) // 0xa9
                 GetImm
                 DoLDA
                 Continue
 
-op_LDA_zpage: // 0xa5
+E(op_LDA_zpage) // 0xa5
                 GetZPage
                 DoLDA
                 Continue
 
-op_LDA_zpage_x: // 0xb5
+E(op_LDA_zpage_x) // 0xb5
                 GetZPage_X
                 DoLDA
                 Continue
 
 // UNIMPLEMENTED : W65C02S datasheet
-op_LDA_zpage_y:
+E(op_LDA_zpage_y)
                 jmp op_NOP
 
-op_LDA_abs: // 0xad
+E(op_LDA_abs) // 0xad
                 GetAbs
                 DoLDA
                 Continue
 
-op_LDA_abs_x: // 0xbd
+E(op_LDA_abs_x) // 0xbd
                 GetAbs_X
                 DoLDA
                 Continue
 
-op_LDA_abs_y: // 0xb9
+E(op_LDA_abs_y) // 0xb9
                 GetAbs_Y
                 DoLDA
                 Continue
 
-op_LDA_ind_x: // 0xa1
+E(op_LDA_ind_x) // 0xa1
                 GetIndZPage_X
                 DoLDA
                 Continue
 
-op_LDA_ind_y: // 0xb1
+E(op_LDA_ind_y) // 0xb1
                 GetIndZPage_Y
                 DoLDA
                 Continue
 
 // 65c02 : 0xB2
-op_LDA_ind_zpage:
+E(op_LDA_ind_zpage)
                 GetIndZPage
                 DoLDA
                 Continue
@@ -1317,28 +1317,28 @@ op_LDA_ind_zpage:
        LDX instructions
    ---------------------------------- */
 
-op_LDX_imm: // 0xa2
+E(op_LDX_imm) // 0xa2
                 GetImm
                 DoLDX
                 Continue
 
-op_LDX_zpage: // 0xa6
+E(op_LDX_zpage) // 0xa6
                 GetZPage
                 DoLDX
                 Continue
 
 // HACK : is this used? need to study coverage ...
-op_LDX_zpage_y: // 0xb6
+E(op_LDX_zpage_y) // 0xb6
                 GetZPage_Y
                 DoLDX
                 Continue
 
-op_LDX_abs: // 0xae
+E(op_LDX_abs) // 0xae
                 GetAbs
                 DoLDX
                 Continue
 
-op_LDX_abs_y: // 0xbe
+E(op_LDX_abs_y) // 0xbe
                 GetAbs_Y
                 DoLDX
                 Continue
@@ -1347,27 +1347,27 @@ op_LDX_abs_y: // 0xbe
        LDY instructions
    ---------------------------------- */
 
-op_LDY_imm: // 0xa0
+E(op_LDY_imm) // 0xa0
                 GetImm
                 DoLDY
                 Continue
 
-op_LDY_zpage: // 0xa4
+E(op_LDY_zpage) // 0xa4
                 GetZPage
                 DoLDY
                 Continue
 
-op_LDY_zpage_x: // 0xb4
+E(op_LDY_zpage_x) // 0xb4
                 GetZPage_X
                 DoLDY
                 Continue
 
-op_LDY_abs: // 0xac
+E(op_LDY_abs) // 0xac
                 GetAbs
                 DoLDY
                 Continue
 
-op_LDY_abs_x: // 0xbc
+E(op_LDY_abs_x) // 0xbc
                 GetAbs_X
                 DoLDY
                 Continue
@@ -1376,27 +1376,27 @@ op_LDY_abs_x: // 0xbc
        LSR instructions
    ---------------------------------- */
 
-op_LSR_acc: // 0x4a
+E(op_LSR_acc) // 0x4a
                 shrb    $1, A_Reg
                 FlagNZC
                 Continue
 
-op_LSR_zpage: // 0x46
+E(op_LSR_zpage) // 0x46
                 GetZPage
                 DoLSR
                 Continue
 
-op_LSR_zpage_x: // 0x56
+E(op_LSR_zpage_x) // 0x56
                 GetZPage_X
                 DoLSR
                 Continue
 
-op_LSR_abs: // 0x4e
+E(op_LSR_abs) // 0x4e
                 GetAbs
                 DoLSR
                 Continue
 
-op_LSR_abs_x: // 0x5e
+E(op_LSR_abs_x) // 0x5e
                 GetAbs_X
                 DoLSR
                 Continue
@@ -1405,59 +1405,59 @@ op_LSR_abs_x: // 0x5e
        NOP instruction
    ---------------------------------- */
 
-op_NOP: // 0xea
+E(op_NOP) // 0xea
                 Continue
 
 /* ----------------------------------
        ORA instructions
    ---------------------------------- */
 
-op_ORA_imm: // 0x09
+E(op_ORA_imm) // 0x09
                 GetImm
                 DoORA
                 Continue
 
-op_ORA_zpage: // 0x05
+E(op_ORA_zpage) // 0x05
                 GetZPage
                 DoORA
                 Continue
 
-op_ORA_zpage_x: // 0x15
+E(op_ORA_zpage_x) // 0x15
                 GetZPage_X
                 DoORA
                 Continue
 
 // UNIMPLEMENTED : W65C02S datasheet
-op_ORA_zpage_y:
+E(op_ORA_zpage_y)
                 jmp op_NOP
 
-op_ORA_abs: // 0x0d
+E(op_ORA_abs) // 0x0d
                 GetAbs
                 DoORA
                 Continue
 
-op_ORA_abs_x: // 0x1d
+E(op_ORA_abs_x) // 0x1d
                 GetAbs_X
                 DoORA
                 Continue
 
-op_ORA_abs_y: // 0x19
+E(op_ORA_abs_y) // 0x19
                 GetAbs_Y
                 DoORA
                 Continue
 
-op_ORA_ind_x: // 0x01
+E(op_ORA_ind_x) // 0x01
                 GetIndZPage_X
                 DoORA
                 Continue
 
-op_ORA_ind_y: // 0x11
+E(op_ORA_ind_y) // 0x11
                 GetIndZPage_Y
                 DoORA
                 Continue
 
 // 65c02 : 0x12
-op_ORA_ind_zpage:
+E(op_ORA_ind_zpage)
                 GetIndZPage
                 DoORA
                 Continue
@@ -1466,7 +1466,7 @@ op_ORA_ind_zpage:
        PHA instruction
    ---------------------------------- */
 
-op_PHA: // 0x48
+E(op_PHA) // 0x48
                 Push(A_Reg)
                 Continue
 
@@ -1474,7 +1474,7 @@ op_PHA: // 0x48
        PHP instruction
    ---------------------------------- */
 
-op_PHP: // 0x08
+E(op_PHP) // 0x08
                 movb    F_Reg, %al
                 movb    SN(cpu65_flags_encode)(,%eax,1), %al
                 Push(%al)
@@ -1485,7 +1485,7 @@ op_PHP: // 0x08
        65c02 : 0xDA
    ---------------------------------- */
 
-op_PHX:
+E(op_PHX)
                 Push(X_Reg)
                 Continue
 
@@ -1494,7 +1494,7 @@ op_PHX:
        65c02 : 0x5A
    ---------------------------------- */
 
-op_PHY:
+E(op_PHY)
                 Push(Y_Reg)
                 Continue
 
@@ -1502,7 +1502,7 @@ op_PHY:
        PLA instruction
    ---------------------------------- */
 
-op_PLA: // 0x68
+E(op_PLA) // 0x68
                 Pop(A_Reg)
                 orb     A_Reg, A_Reg
                 FlagNZ
@@ -1512,7 +1512,7 @@ op_PLA: // 0x68
        PLP instruction
    ---------------------------------- */
 
-op_PLP: // 0x28
+E(op_PLP) // 0x28
                 xorl    %eax, %eax
                 Pop(%al)
                 movb    SN(cpu65_flags_decode)(,%eax,1), F_Reg
@@ -1524,7 +1524,7 @@ op_PLP: // 0x28
        65c02 : 0xFA
    ---------------------------------- */
 
-op_PLX:
+E(op_PLX)
                 Pop(X_Reg)
                 orb X_Reg, X_Reg
                 FlagNZ
@@ -1535,7 +1535,7 @@ op_PLX:
        65c02 : 0x7A
    ---------------------------------- */
 
-op_PLY:
+E(op_PLY)
                 Pop(Y_Reg)
                 orb Y_Reg, Y_Reg
                 FlagNZ
@@ -1545,28 +1545,28 @@ op_PLY:
        ROL instructions
    ---------------------------------- */
 
-op_ROL_acc: // 0x2a
+E(op_ROL_acc) // 0x2a
                 bt      $C_Flag_Bit, FF_Reg
                 adcb    A_Reg, A_Reg
                 FlagNZC
                 Continue
 
-op_ROL_zpage: // 0x26
+E(op_ROL_zpage) // 0x26
                 GetZPage
                 DoROL
                 Continue
 
-op_ROL_zpage_x: // 0x36
+E(op_ROL_zpage_x) // 0x36
                 GetZPage_X
                 DoROL
                 Continue
 
-op_ROL_abs: // 0x2e
+E(op_ROL_abs) // 0x2e
                 GetAbs
                 DoROL
                 Continue
 
-op_ROL_abs_x: // 0x3e
+E(op_ROL_abs_x) // 0x3e
                 GetAbs_X
                 DoROL
                 Continue
@@ -1575,29 +1575,29 @@ op_ROL_abs_x: // 0x3e
        ROR instructions
    ---------------------------------- */
                 /* NB: assumes A_Reg = %cl, F_Reg = %ch */
-op_ROR_acc: // 0x6a
+E(op_ROR_acc) // 0x6a
                 rorw    $1, %cx         /* Roll flags into accum */
                 adcb    F_Reg, F_Reg    /* Roll carry into flags */
                 orb     A_Reg, A_Reg
                 FlagNZ                  /* implied C */
                 Continue
 
-op_ROR_zpage: // 0x66
+E(op_ROR_zpage) // 0x66
                 GetZPage
                 DoROR
                 Continue
 
-op_ROR_zpage_x: // 0x76
+E(op_ROR_zpage_x) // 0x76
                 GetZPage_X
                 DoROR
                 Continue
 
-op_ROR_abs: // 0x6e
+E(op_ROR_abs) // 0x6e
                 GetAbs
                 DoROR
                 Continue
 
-op_ROR_abs_x: // 0x7e
+E(op_ROR_abs_x) // 0x7e
                 GetAbs_X
                 DoROR
                 Continue
@@ -1606,7 +1606,7 @@ op_ROR_abs_x: // 0x7e
        RTI instruction
    ---------------------------------- */
 
-op_RTI: // 0x40
+E(op_RTI) // 0x40
                 xorl    %eax, %eax
                 Pop(%al)
                 movb    SN(cpu65_flags_decode)(,%eax,1), F_Reg
@@ -1620,7 +1620,7 @@ op_RTI: // 0x40
        RTS instruction
    ---------------------------------- */
 
-op_RTS: // 0x60
+E(op_RTS) // 0x60
                 Pop(%al)
                 Pop(%ah)
                 incw    %ax
@@ -1632,26 +1632,26 @@ op_RTS: // 0x60
        SuBtract memory from accumulator with Borrow
    ---------------------------------- */
 
-op_SBC_dec:
+E(op_SBC_dec)
                 incb    DebugCycleCount         // +1 cycle
                 DoSBC_d
                 Continue
 
-op_SBC_imm: // 0xe9
+E(op_SBC_imm) // 0xe9
                 GetImm
                 testb   $D_Flag, F_Reg          // Decimal mode?
                 jnz     op_SBC_dec              // Yes, jump to decimal version
                 DoSBC_b
                 Continue
 
-op_SBC_zpage: // 0xe5
+E(op_SBC_zpage) // 0xe5
                 GetZPage
                 testb   $D_Flag, F_Reg          // Decimal mode?
                 jnz     op_SBC_dec              // Yes, jump to decimal version
                 DoSBC_b
                 Continue
 
-op_SBC_zpage_x: // 0xf5
+E(op_SBC_zpage_x) // 0xf5
                 GetZPage_X
                 testb   $D_Flag, F_Reg          // Decimal mode?
                 jnz     op_SBC_dec              // Yes, jump to decimal version
@@ -1659,38 +1659,38 @@ op_SBC_zpage_x: // 0xf5
                 Continue
 
 // UNIMPLEMENTED : W65C02S datasheet
-op_SBC_zpage_y:
+E(op_SBC_zpage_y)
                 jmp op_NOP
 
-op_SBC_abs: // 0xed
+E(op_SBC_abs) // 0xed
                 GetAbs
                 testb   $D_Flag, F_Reg          // Decimal mode?
                 jnz     op_SBC_dec              // Yes, jump to decimal version
                 DoSBC_b
                 Continue
 
-op_SBC_abs_x: // 0xfd
+E(op_SBC_abs_x) // 0xfd
                 GetAbs_X
                 testb   $D_Flag, F_Reg          // Decimal mode?
                 jnz     op_SBC_dec              // Yes, jump to decimal version
                 DoSBC_b
                 Continue
 
-op_SBC_abs_y: // 0xf9
+E(op_SBC_abs_y) // 0xf9
                 GetAbs_Y
                 testb   $D_Flag, F_Reg          // Decimal mode?
                 jnz     op_SBC_dec              // Yes, jump to decimal version
                 DoSBC_b
                 Continue
 
-op_SBC_ind_x: // 0xe1
+E(op_SBC_ind_x) // 0xe1
                 GetIndZPage_X
                 testb   $D_Flag, F_Reg          // Decimal mode?
                 jnz     op_SBC_dec              // Yes, jump to decimal version
                 DoSBC_b
                 Continue
 
-op_SBC_ind_y: // 0xf1
+E(op_SBC_ind_y) // 0xf1
                 GetIndZPage_Y
                 testb   $D_Flag, F_Reg          // Decimal mode?
                 jnz     op_SBC_dec              // Yes, jump to decimal version
@@ -1698,7 +1698,7 @@ op_SBC_ind_y: // 0xf1
                 Continue
 
 // 65c02 : 0xF2
-op_SBC_ind_zpage:
+E(op_SBC_ind_zpage)
                 GetIndZPage
                 testb   $D_Flag, F_Reg          // Decimal mode?
                 jnz     op_SBC_dec              // Yes, jump to decimal version
@@ -1709,7 +1709,7 @@ op_SBC_ind_zpage:
        SEC instruction
    ---------------------------------- */
 
-op_SEC: // 0x38
+E(op_SEC) // 0x38
                 orb     $C_Flag, F_Reg
                 Continue
 
@@ -1717,7 +1717,7 @@ op_SEC: // 0x38
        SED instruction
    ---------------------------------- */
 
-op_SED: // 0xf8
+E(op_SED) // 0xf8
                 orb     $D_Flag, F_Reg
                 Continue
 
@@ -1725,7 +1725,7 @@ op_SED: // 0xf8
        SEI instruction
    ---------------------------------- */
 
-op_SEI: // 0x78
+E(op_SEI) // 0x78
                 orb     $I_Flag, F_Reg
                 Continue
 
@@ -1734,75 +1734,75 @@ op_SEI: // 0x78
        UNIMPLEMENTED : These are documented in the W65C02S datasheet ...
    ---------------------------------- */
 
-op_SMB0_65c02:
+E(op_SMB0_65c02)
                 Continue
 
-op_SMB1_65c02:
+E(op_SMB1_65c02)
                 Continue
 
-op_SMB2_65c02:
+E(op_SMB2_65c02)
                 Continue
 
-op_SMB3_65c02:
+E(op_SMB3_65c02)
                 Continue
 
-op_SMB4_65c02:
+E(op_SMB4_65c02)
                 Continue
 
-op_SMB5_65c02:
+E(op_SMB5_65c02)
                 Continue
 
-op_SMB6_65c02:
+E(op_SMB6_65c02)
                 Continue
 
-op_SMB7_65c02:
+E(op_SMB7_65c02)
                 Continue
 
 /* ----------------------------------
        STA instructions
    ---------------------------------- */
 
-op_STA_zpage: // 0x85
+E(op_STA_zpage) // 0x85
                 GetZPage
                 DoSTA
                 Continue
 
-op_STA_zpage_x: // 0x95
+E(op_STA_zpage_x) // 0x95
                 GetZPage_X
                 DoSTA
                 Continue
 
 // UNIMPLEMENTED : W65C02S datasheet
-op_STA_zpage_y:
+E(op_STA_zpage_y)
                 jmp op_NOP
 
-op_STA_abs: // 0x8d
+E(op_STA_abs) // 0x8d
                 GetAbs
                 DoSTA
                 Continue
 
-op_STA_abs_x: // 0x9d
+E(op_STA_abs_x) // 0x9d
                 GetAbs_X_STx
                 DoSTA
                 Continue
 
-op_STA_abs_y: // 0x99
+E(op_STA_abs_y) // 0x99
                 GetAbs_Y_STA
                 DoSTA
                 Continue
 
-op_STA_ind_x: // 0x81
+E(op_STA_ind_x) // 0x81
                 GetIndZPage_X
                 DoSTA
                 Continue
 
-op_STA_ind_y: // 0x91
+E(op_STA_ind_y) // 0x91
                 GetIndZPage_Y_STA
                 DoSTA
                 Continue
 
 // 65c02 : 0x92
-op_STA_ind_zpage:
+E(op_STA_ind_zpage)
                 GetIndZPage
                 DoSTA
                 Continue
@@ -1812,7 +1812,7 @@ op_STA_ind_zpage:
        UNIMPLEMENTED : This is documented in the W65C02S datasheet ...
    ---------------------------------- */
 
-op_STP_65c02:
+E(op_STP_65c02)
                 Continue
 
 /* ----------------------------------
@@ -1820,46 +1820,46 @@ op_STP_65c02:
        UNIMPLEMENTED : These are documented in the W65C02S datasheet ...
    ---------------------------------- */
 
-op_RMB0_65c02:
+E(op_RMB0_65c02)
                 Continue
 
-op_RMB1_65c02:
+E(op_RMB1_65c02)
                 Continue
 
-op_RMB2_65c02:
+E(op_RMB2_65c02)
                 Continue
 
-op_RMB3_65c02:
+E(op_RMB3_65c02)
                 Continue
 
-op_RMB4_65c02:
+E(op_RMB4_65c02)
                 Continue
 
-op_RMB5_65c02:
+E(op_RMB5_65c02)
                 Continue
 
-op_RMB6_65c02:
+E(op_RMB6_65c02)
                 Continue
 
-op_RMB7_65c02:
+E(op_RMB7_65c02)
                 Continue
 
 /* ----------------------------------
        STX instructions
    ---------------------------------- */
 
-op_STX_zpage: // 0x86
+E(op_STX_zpage) // 0x86
                 GetZPage
                 DoSTX
                 Continue
 
 // HACK : is this used? need to study coverage ...
-op_STX_zpage_y: // 0x96
+E(op_STX_zpage_y) // 0x96
                 GetZPage_Y
                 DoSTX
                 Continue
 
-op_STX_abs: // 0x8e
+E(op_STX_abs) // 0x8e
                 GetAbs
                 DoSTX
                 Continue
@@ -1868,17 +1868,17 @@ op_STX_abs: // 0x8e
        STY instructions
    ---------------------------------- */
 
-op_STY_zpage: // 0x84
+E(op_STY_zpage) // 0x84
                 GetZPage
                 DoSTY
                 Continue
 
-op_STY_zpage_x: // 0x94
+E(op_STY_zpage_x) // 0x94
                 GetZPage_X
                 DoSTY
                 Continue
 
-op_STY_abs: // 0x8c
+E(op_STY_abs) // 0x8c
                 GetAbs
                 DoSTY
                 Continue
@@ -1889,25 +1889,25 @@ op_STY_abs: // 0x8c
    ---------------------------------- */
 
 // 65c02 : 0x64
-op_STZ_zpage:
+E(op_STZ_zpage)
                 GetZPage
                 DoSTZ
                 Continue
 
 // 65c02 : 0x74
-op_STZ_zpage_x:
+E(op_STZ_zpage_x)
                 GetZPage_X
                 DoSTZ
                 Continue
 
 // 65c02 : 0x9C
-op_STZ_abs:
+E(op_STZ_abs)
                 GetAbs
                 DoSTZ
                 Continue
 
 // 65c02 : 0x9E
-op_STZ_abs_x:
+E(op_STZ_abs_x)
                 GetAbs_X_STx
                 DoSTZ
                 Continue
@@ -1916,7 +1916,7 @@ op_STZ_abs_x:
        TAX instruction
    ---------------------------------- */
 
-op_TAX: // 0xaa
+E(op_TAX) // 0xaa
                 movb    A_Reg, X_Reg
                 orb     X_Reg, X_Reg
                 FlagNZ
@@ -1926,7 +1926,7 @@ op_TAX: // 0xaa
        TAY instruction
    ---------------------------------- */
 
-op_TAY: // 0xa8
+E(op_TAY) // 0xa8
                 movb    A_Reg, Y_Reg
                 orb     Y_Reg, Y_Reg
                 FlagNZ
@@ -1938,13 +1938,13 @@ op_TAY: // 0xa8
    ---------------------------------- */
 
 // 65c02 : 0x1C
-op_TRB_abs:
+E(op_TRB_abs)
                 GetAbs
                 DoTRB
                 Continue
 
 // 65c02 : 0x14
-op_TRB_zpage:
+E(op_TRB_zpage)
                 GetZPage
                 DoTRB
                 Continue
@@ -1955,13 +1955,13 @@ op_TRB_zpage:
    ---------------------------------- */
 
 // 65c02 : 0x0C
-op_TSB_abs:
+E(op_TSB_abs)
                 GetAbs
                 DoTSB
                 Continue
 
 // 65c02 : 0x04
-op_TSB_zpage:
+E(op_TSB_zpage)
                 GetZPage
                 DoTSB
                 Continue
@@ -1970,7 +1970,7 @@ op_TSB_zpage:
        TSX instruction
    ---------------------------------- */
 
-op_TSX: // 0xba
+E(op_TSX) // 0xba
                 movb    SP_Reg_L, X_Reg
                 orb     X_Reg, X_Reg
                 FlagNZ
@@ -1980,7 +1980,7 @@ op_TSX: // 0xba
        TXA instruction
    ---------------------------------- */
 
-op_TXA: // 0x8a
+E(op_TXA) // 0x8a
                 movb    X_Reg, A_Reg
                 orb     A_Reg, A_Reg
                 FlagNZ
@@ -1990,7 +1990,7 @@ op_TXA: // 0x8a
        TXS instruction
    ---------------------------------- */
 
-op_TXS: // 0x9a
+E(op_TXS) // 0x9a
                 movb    X_Reg, SP_Reg_L
                 Continue
 
@@ -1998,7 +1998,7 @@ op_TXS: // 0x9a
        TYA instruction
    ---------------------------------- */
 
-op_TYA: // 0x98
+E(op_TYA) // 0x98
                 movb    Y_Reg, A_Reg
                 orb     A_Reg, A_Reg
                 FlagNZ
@@ -2008,14 +2008,14 @@ op_TYA: // 0x98
        ??? instruction - 65c02
        Defined as NOPs by spec
    ---------------------------------- */
-op_UNK_65c02:
+E(op_UNK_65c02)
                 Continue
 
 /* ----------------------------------
        WAI instruction - 65c02
        UNIMPLEMENTED : This is documented in the W65C02S datasheet ...
    ---------------------------------- */
-op_WAI_65c02:
+E(op_WAI_65c02)
                 Continue
 
 #pragma mark -
