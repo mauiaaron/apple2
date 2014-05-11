@@ -152,42 +152,6 @@
 return80:	movb	$0x80,%al
 		ret
 
-E(iie_check_text)
-		testl	$SS_TEXT, SN(softswitches)
-		jnz	return80
-		xorb	%al, %al
-		ret
-
-E(iie_check_mixed)
-		testl	$SS_MIXED, SN(softswitches)
-		jnz	return80
-		xorb	%al, %al
-		ret
-
-E(iie_check_page2)
-		testl	$SS_PAGE2, SN(softswitches)
-		jnz	return80
-		xorb	%al, %al
-		ret
-
-E(iie_check_hires)
-		testl	$SS_HIRES, SN(softswitches)
-		jnz	return80
-		xorb	%al, %al
-		ret
-
-E(iie_check_bank)
-		testl	$SS_BANK2, SN(softswitches)
-		jnz	return80
-		xorb	%al, %al
-		ret
-
-E(iie_check_lcram)
-		testl	$SS_LCRAM, SN(softswitches)
-		jnz	return80
-		xorb	%al, %al
-		ret
-
 /* HACK not doing anything... */
 E(iie_check_vbl)
 		ret

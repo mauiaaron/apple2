@@ -113,6 +113,11 @@ GLUE_C_READ(iie_page2_on)
     return 0x0;
 }
 
+GLUE_C_READ(iie_check_page2)
+{
+    return (softswitches & SS_PAGE2) ? 0x80 : 0x00;
+}
+
 GLUE_C_READ(read_switch_graphics)
 {
     if (softswitches & SS_TEXT) {
@@ -131,6 +136,11 @@ GLUE_C_READ(read_switch_text)
     return 0x0;
 }
 
+GLUE_C_READ(iie_check_text)
+{
+    return (softswitches & SS_TEXT) ? 0x80 : 0x00;
+}
+
 GLUE_C_READ(read_switch_no_mixed)
 {
     if (softswitches & SS_MIXED) {
@@ -147,6 +157,11 @@ GLUE_C_READ(read_switch_mixed)
         video_redraw();
     }
     return 0x0;
+}
+
+GLUE_C_READ(iie_check_mixed)
+{
+    return (softswitches & SS_MIXED) ? 0x80 : 0x00;
 }
 
 GLUE_C_READ(iie_hires_off)
@@ -195,6 +210,11 @@ GLUE_C_READ(iie_hires_on)
 
     video_redraw();
     return 0x0;
+}
+
+GLUE_C_READ(iie_check_hires)
+{
+    return (softswitches & SS_HIRES) ? 0x80 : 0x00;
 }
 
 // ----------------------------------------------------------------------------
@@ -267,6 +287,9 @@ GLUE_C_READ(iie_read_gc3)
 {
     return 0x0;
 }
+
+// ----------------------------------------------------------------------------
+// LC : language card routines
 
 static inline void _lc_to_auxmem() {
     if (softswitches & SS_LCRAM) {
@@ -417,6 +440,16 @@ GLUE_C_READ(iie_c08b)
         _lc_to_auxmem();
     }
     return 0x0;
+}
+
+GLUE_C_READ(iie_check_bank)
+{
+    return (softswitches & SS_BANK2) ? 0x80 : 0x00;
+}
+
+GLUE_C_READ(iie_check_lcram)
+{
+    return (softswitches & SS_LCRAM) ? 0x80 : 0x00;
 }
 
 // ----------------------------------------------------------------------------
