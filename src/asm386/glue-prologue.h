@@ -20,11 +20,11 @@
 #include "cpu.h"
 
 #define GLUE_FIXED_READ(func,address) \
-E(func)                 movb    SN(address)(%edi),%al; \
+E(func)                 movb    SN(address)(EffectiveAddr_E),%al; \
                         ret;
 
 #define GLUE_FIXED_WRITE(func,address) \
-E(func)                 movb    %al,SN(address)(%edi); \
+E(func)                 movb    %al,SN(address)(EffectiveAddr_E); \
                         ret;
 
 #define GLUE_BANK_MAYBEREAD(func,pointer) \
@@ -32,28 +32,28 @@ E(func)                 testl   $SS_CXROM, SN(softswitches); \
                         jnz     1f; \
                         call    *SN(pointer); \
                         ret; \
-1:                      addl    SN(pointer),%edi; \
-                        movb    (%edi),%al; \
-                        subl    SN(pointer),%edi; \
+1:                      addl    SN(pointer),EffectiveAddr_E; \
+                        movb    (EffectiveAddr_E),%al; \
+                        subl    SN(pointer),EffectiveAddr_E; \
                         ret;
 
 #define GLUE_BANK_READ(func,pointer) \
-E(func)                 addl    SN(pointer),%edi; \
-                        movb    (%edi),%al; \
-                        subl    SN(pointer),%edi; \
+E(func)                 addl    SN(pointer),EffectiveAddr_E; \
+                        movb    (EffectiveAddr_E),%al; \
+                        subl    SN(pointer),EffectiveAddr_E; \
                         ret;
 
 #define GLUE_BANK_WRITE(func,pointer) \
-E(func)                 addl    SN(pointer),%edi; \
-                        movb    %al,(%edi); \
-                        subl    SN(pointer),%edi; \
+E(func)                 addl    SN(pointer),EffectiveAddr_E; \
+                        movb    %al,(EffectiveAddr_E); \
+                        subl    SN(pointer),EffectiveAddr_E; \
                         ret;
 
 #define GLUE_BANK_MAYBEWRITE(func,pointer) \
-E(func)                 addl    SN(pointer),%edi; \
+E(func)                 addl    SN(pointer),EffectiveAddr_E; \
                         cmpl    $0,SN(pointer); \
                         jz      1f; \
-                        movb    %al,(%edi); \
+                        movb    %al,(EffectiveAddr_E); \
 1:                      ret;
 
 
