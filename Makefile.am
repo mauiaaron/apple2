@@ -28,9 +28,8 @@ noinst_PROGRAMS = genfont
 
 bin_PROGRAMS = apple2ix
 
-VM_SRC = \
-	src/asm386/glue.S src/asm386/cpu.S src/asm386/display.S \
-	src/asm386/memory.S
+ASM_SRC = \
+	src/asm386/glue.S src/asm386/cpu.S src/asm386/display.S
 
 INTERFACE_CLASSIC_SRC = \
 	src/interface.c
@@ -48,7 +47,7 @@ META_SRC = \
 
 # NOTE : selectively enabled through configuration process ...
 EXTRA_apple2ix_SOURCES = \
-	$(VM_SRC) \
+	$(ASM_SRC) \
 	\
 	$(INTERFACE_CLASSIC_SRC) \
 	\
@@ -64,8 +63,8 @@ apple2ix_SOURCES = src/font.c src/misc.c src/display.c src/vm.c \
 
 apple2ix_CFLAGS = @AM_CFLAGS@ @X_CFLAGS@
 apple2ix_LDFLAGS = @ARCHOS_HACK_LDFLAGS@
-apple2ix_LDADD = @VM_O@ @INTERFACE_O@ @VIDEO_O@ @AUDIO_O@ @META_O@ @X_LIBS@
-apple2ix_DEPENDENCIES = @VM_O@ @INTERFACE_O@ @VIDEO_O@ @AUDIO_O@ @META_O@
+apple2ix_LDADD = @ASM_O@ @INTERFACE_O@ @VIDEO_O@ @AUDIO_O@ @META_O@ @X_LIBS@
+apple2ix_DEPENDENCIES = @ASM_O@ @INTERFACE_O@ @VIDEO_O@ @AUDIO_O@ @META_O@
 
 genfont_SOURCES = src/genfont.c
 
@@ -86,22 +85,22 @@ A2_TEST_CFLAGS = -DTESTING=1 -Isrc/greatest
 TESTS          = testcpu testdisplay testvm
 check_PROGRAMS = testcpu testdisplay testvm
 
-testcpu_SOURCES = src/test/testcpu.c $(A2_TEST_SOURCES) $(VM_SRC) $(META_SRC) $(VIDEO_SRC)
+testcpu_SOURCES = src/test/testcpu.c $(A2_TEST_SOURCES) $(ASM_SRC) $(META_SRC) $(VIDEO_SRC)
 testcpu_CFLAGS = $(apple2ix_CFLAGS) $(A2_TEST_CFLAGS) -UAUDIO_ENABLED -UINTERFACE_CLASSIC -DHEADLESS=1
 testcpu_LDFLAGS = $(apple2ix_LDFLAGS)
-testcpu_DEPENDENCIES = @VM_O@ @META_O@
+testcpu_DEPENDENCIES = @ASM_O@ @META_O@
 
-testdisplay_SOURCES = src/test/testdisplay.c $(A2_TEST_SOURCES) $(VM_SRC) $(META_SRC) $(VIDEO_SRC)
+testdisplay_SOURCES = src/test/testdisplay.c $(A2_TEST_SOURCES) $(ASM_SRC) $(META_SRC) $(VIDEO_SRC)
 # HACK FIXME TODO NOTE: why don't these CFLAGS here pass down to the .S and .c files in the subdirectories?
 testdisplay_CFLAGS = $(apple2ix_CFLAGS) $(A2_TEST_CFLAGS) -UAUDIO_ENABLED -UINTERFACE_CLASSIC -DHEADLESS=0
 testdisplay_LDFLAGS = $(apple2ix_LDFLAGS)
-testdisplay_DEPENDENCIES = @VM_O@ @META_O@ @VIDEO_O@
+testdisplay_DEPENDENCIES = @ASM_O@ @META_O@ @VIDEO_O@
 
-testvm_SOURCES = src/test/testvm.c $(A2_TEST_SOURCES) $(VM_SRC) $(META_SRC) $(VIDEO_SRC)
+testvm_SOURCES = src/test/testvm.c $(A2_TEST_SOURCES) $(ASM_SRC) $(META_SRC) $(VIDEO_SRC)
 # HACK FIXME TODO NOTE: why don't these CFLAGS here pass down to the .S and .c files in the subdirectories?
 testvm_CFLAGS = $(apple2ix_CFLAGS) $(A2_TEST_CFLAGS) -UAUDIO_ENABLED -UINTERFACE_CLASSIC -DHEADLESS=0
 testvm_LDFLAGS = $(apple2ix_LDFLAGS)
-testvm_DEPENDENCIES = @VM_O@ @META_O@ @VIDEO_O@
+testvm_DEPENDENCIES = @ASM_O@ @META_O@ @VIDEO_O@
 
 ###############################################################################
 # Misc

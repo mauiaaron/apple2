@@ -138,7 +138,7 @@
                 movb    SN(cpu65_current)+5, Y_Reg;                            \
                 movb    SN(cpu65_current)+6, SP_Reg_L;                         \
                 movl    SN(base_stackzp), %eax;                                \
-                subl    $SN(apple_ii_64k), %eax;                               \
+                subl    $SN(apple_ii_64k), %eax; /* $ for pointer addr */      \
                 orl     %eax, SP_Reg;                                          \
                 xorl    %eax, %eax;
 

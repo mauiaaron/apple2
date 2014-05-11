@@ -76,8 +76,8 @@ dnl at this point we believe arch/os is good ...
 ARCHOS_HACK_LDFLAGS="-L/usr/lib/i386-linux-gnu -L/lib/i386-linux-gnu"
 AC_SUBST(ARCHOS_HACK_LDFLAGS)
 
-VM_O="src/asm386/glue.o src/asm386/cpu.o src/asm386/display.o src/asm386/memory.o"
-AC_SUBST(VM_O)
+ASM_O="src/asm386/glue.o src/asm386/cpu.o src/asm386/display.o"
+AC_SUBST(ASM_O)
 
 
 dnl ---------------------------------------------------------------------------

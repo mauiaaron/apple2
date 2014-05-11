@@ -53,9 +53,6 @@ int argc;
 #define TEMPSIZE        4096
 char temp[ TEMPSIZE ];   /* should be >=4096 (stuff depends on this) */
 
-/* memory offsets from softswitches */
-int c8rom_offset;
-
 extern uint8_t *base_ramrd;
 extern uint8_t *base_ramwrt;
 extern uint8_t *base_textrd;
@@ -121,6 +118,8 @@ extern uint32_t softswitches;
 void c_initialize_firsttime();
 void c_initialize_sound_hooks();
 void c_disable_sound_hooks();
+void c_set_primary_char();
+void c_set_altchar();
 void c_initialize_font();
 void c_initialize_vm();
 void reinitialize();

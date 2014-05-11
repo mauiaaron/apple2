@@ -555,7 +555,6 @@ void c_initialize_iie_switches() {
     base_c3rom = apple_ii_64k[1];               /* c3rom internal */
     base_c4rom = apple_ii_64k[1];               /* c4rom internal */
     base_c5rom = apple_ii_64k[1];               /* c5rom internal */
-    c8rom_offset = 0x10000;                     /* c8rom internal */
     base_cxrom = apple_ii_64k[0];               /* cxrom peripheral */
 }
 

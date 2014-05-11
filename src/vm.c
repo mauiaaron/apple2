@@ -9,10 +9,107 @@
  *
  */
 
-/*
- * Apple //e VM Routines
- *
- */
+/* ----------------------------------------------------------------------------
+        Apple //e 64K VM
+
+        (Two byte addresses are represented with least significant
+         byte first, e.g. address FA59 is represented as 59 FA)
+
+        This is not meant to be definitive.
+        Verify against _Understanding the Apple IIe_ by Jim Sather
+
+        Address         Description
+        -----------     -----------
+        0000 - 00FF     Zero page RAM
+        0100 - 01FF     Stack
+        0200 - 03EF     RAM
+        03F0 - 03F1     Address for BRK instruction (normally 59 FA = FA59)
+        03F2 - 03F3     Soft entry vector (normally BF 9D = 9DBF)
+        03F4            Power-up byte
+        03F5 - 03F7     Jump instruction to the subroutine which handles
+                        Applesoft II &-commands (normally 4C 58 FF = JMP FF58)
+        03F8 - 03FA     Jump instruction to the subroutine which handles User
+                        CTRL-Y commands (normally 4C 65 FF = JMP FF65)
+        03FB - 03FD     Jump instruction to the subroutine which handles
+                        Non-Maskable Interrupts (NMI) (normally 4C 65 FF = JMP FF65)
+        03FE - 03FF     Address of the subroutine which handles Interrupt
+                        ReQuests (IRQ) (normally 65 FF = FF65)
+        0400 - 07FF     Basically primary video text page
+        0478 - 047F     I/O Scratchpad RAM Addresses for Slot 0 - 7
+        04F8 - 04FF                  - " " -
+        0578 - 057F                  - " " -
+        05F8 - 05FF                  - " " -
+        0678 - 067F                  - " " -
+        06F8 - 06FF                  - " " -
+        0778 - 077F                  - " " -
+        07F8 - 07FF                  - " " -
+        05F8            Holds the slot number of the disk controller card from
+                        which DOS was booted. ??? VERIFY...
+        07F8            Holds the slot number (CX, X = Slot #) of the slot that
+                        is currently active. ??? VERIFY...
+        0800 - 0BFF     Secondary video text page
+        0C00 - 1FFF     Plain RAM
+        2000 - 3FFF     Primary video hires page (RAM)
+        4000 - 5FFF     Secondary video hires page (RAM)
+        6000 - BFFF     Plain RAM (Normally the OS is loaded into ~9C00 - BFFF)
+        C000 - C00F     Keyboard data (C00X contains the character ASCII code of
+                        the pressed key. The value is available at any C00X address)
+        C010 - C01F     Clear Keyboard strobe
+        C020 - C02F     Cassette output toggle
+        C030 - C03F     Speaker toggle
+        C040 - C04F     Utility strobe
+        C050            Set graphics mode
+        C051            Set text mode
+        C052            Set all text or graphics
+        C053            Mix text and graphics
+        C054            Display primary page
+        C055            Display secondary page
+        C056            Display low-res graphics
+        C057            Display hi-res graphics
+        C058 - C05F     Annunciator outputs
+        C060            Cassette input
+        C061 - C063     Pushbutton inputs (button 1, 2 and 3)
+        C064 - C067     Game controller inputs
+        C068 - C06F     Same as C060 - C067
+        C070 - C07F     Game controller strobe
+        C080 - C08F     Slot 0 I/O space (usually a language card)
+        C080            Reset language card
+                            * Read enabled
+                            * Write disabled
+                            * Read from language card
+        C081            --- First access
+                            * Read mode disabled
+                            * Read from ROM
+                        --- On second+ access
+                            * Write mode enabled
+                            * Write to language card
+        C082            --- (Disable language card)
+                            * Read mode disabled
+                            * Write mode disabled
+                            * Read from ROM
+        C083            --- First access
+                            * Read mode enabled
+                            * Read from language card
+                        --- On second+ access
+                            * Write mode enabled
+                            * Write to language card
+        C088 - C08B     Same as C080 - C083, but switch to second bank, i.e.
+                        map addresses D000-DFFF to other 4K area.
+        C100 - C1FF     Slot 1 PROM
+        C200 - C2FF     Slot 2 PROM
+        C300 - C3FF     Slot 3 PROM
+        C400 - C4FF     Slot 4 PROM
+        C500 - C5FF     Slot 5 PROM
+        C600 - C6FF     Slot 6 PROM
+        C700 - C7FF     Slot 7 PROM
+        C800 - CFFF     Expansion ROM (for peripheral cards)
+        CFFF            Disable access to expansion ROM for
+                        ALL peripheral cards.
+        D000 - DFFF     ROM or 4K RAM if language card is enabled. However,
+                        there are TWO 4K banks that can be mapped onto addresses
+                        D000 - DFFF.  See C088 - C08B.
+        E000 - FFFF     ROM or 8K RAM if language card is enabled.
+---------------------------------------------------------------------------- */
 
 #include "common.h"
 
@@ -830,5 +927,19 @@ GLUE_C_READ(iie_cxrom_internal)
 GLUE_C_READ(iie_check_cxrom)
 {
     return (softswitches & SS_CXROM) ? 0x80 : 0x00;
+}
+
+GLUE_C_READ(iie_read_slot_expansion)
+{
+    // HACK TODO FIXME : how does the expansion slot get referenced?  Need to handle other ROMs that might use this area
+    // ... Also Need moar tests ...
+    return apple_ii_64k[1][ea];
+}
+
+GLUE_C_READ(iie_disable_slot_expansion)
+{
+    // HACK TODO FIXME : how does the expansion slot get referenced?  Need to handle other ROMs that might use this area
+    // ... Also Need moar tests ...
+    return 0x0;
 }
 
