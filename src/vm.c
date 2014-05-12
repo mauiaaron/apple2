@@ -344,7 +344,7 @@ GLUE_C_READ(read_gc_strobe)
     //  not retriggered by C07X' if they have not yet reset from the previous trigger"
     if (gc_cycles_timer_0 <= 0)
     {
-        gc_cycles_timer_0 = (int)(joy_x * JOY_STEP_CYCLES) + 2;
+        gc_cycles_timer_0 = (int)((joy_x-5) * JOY_STEP_CYCLES);
     }
     if (gc_cycles_timer_1 <= 0)
     {
