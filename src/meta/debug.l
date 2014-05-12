@@ -891,7 +891,7 @@ ADDRS	[0-9a-fA-F]+
     /* copy file name */
     ptr = debugtext;
     while (!isspace(*debugtext)) ++debugtext;
-    int len = MIN(debugtext - ptr, TEMPSIZE-1);
+    int len = MIN(debugtext - ptr, DEBUG_BUFSZ-1);
     strncpy(buf, ptr, len);
     buf[len] = '\0';
 

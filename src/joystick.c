@@ -169,6 +169,9 @@ static void c_calibrate_pc_joystick()
         }
     }
 
+#define TEMPSIZE 256
+    char temp[TEMPSIZE];
+
 #define CALIBRATE_SUBMENU_H 9
 #define CALIBRATE_SUBMENU_W 40
     char submenu[CALIBRATE_SUBMENU_H][CALIBRATE_SUBMENU_W+1] =
@@ -369,6 +372,7 @@ static void c_calibrate_keypad_joystick()
     uint8_t x_last=CALIBRATE_JOYMENU_W>>1, y_last=CALIBRATE_JOYMENU_H>>1;
     const char* const spinney = "|/-\\";
     uint8_t spinney_idx=0;
+    char temp[TEMPSIZE];
     for (;;)
     {
         submenu[KEYPAD_SUBMENU_H-2][12] = joy_button0 ? 'X' : ' ';

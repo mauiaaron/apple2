@@ -468,7 +468,8 @@ void c_initialize_apple_ii_memory()
 
     if (!iie_rom_loaded)
     {
-        snprintf(temp, TEMPSIZE, "%s/apple_IIe.rom", system_path);
+        char temp[PATH_MAX];
+        snprintf(temp, PATH_MAX, "%s/apple_IIe.rom", system_path);
         if ((f = fopen(temp, "r")) == NULL)
         {
             printf("Cannot find file '%s'.\n",temp);
@@ -633,10 +634,10 @@ static void main_thread(void *dummyptr) {
 
 extern void cpu_thread(void *dummyptr);
 
-int main(int sargc, char *sargv[])
+int main(int _argc, char **_argv)
 {
-    argc = sargc;
-    argv = sargv;
+    argc = _argc;
+    argv = _argv;
 
     load_settings();                    /* user prefs */
     c_initialize_firsttime();           /* init svga graphics and vm */

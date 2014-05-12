@@ -464,6 +464,8 @@ void bload(FILE *f, char *name, int addrs) {
         return;
     }
 
+#define TEMPSIZE 1024
+    char temp[TEMPSIZE];
     while ((len = fread(temp, 1, TEMPSIZE, f)))
     {
         hexstr = (uint8_t*)temp;

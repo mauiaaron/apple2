@@ -20,6 +20,8 @@
 #define BEGIN_MIX 20
 #define TEXT_COLS 40
 
+uint8_t temp[1024];// HACK to be removed
+
 static uint8_t vga_mem_page_0[SCANWIDTH*SCANHEIGHT];              /* page0 framebuffer */
 static uint8_t vga_mem_page_1[SCANWIDTH*SCANHEIGHT];              /* page1 framebuffer */
 

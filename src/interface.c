@@ -414,6 +414,7 @@ void c_interface_select_diskette( int drive )
             curpos = entries - 1;
         }
 
+        char temp[PATH_MAX];
         for (;;)
         {
             for (i = 0; i < 18; i++)
@@ -424,7 +425,7 @@ void c_interface_select_diskette( int drive )
                 strcpy( temp, " " );
                 if (ent_no >= 0 && ent_no < entries)
                 {
-                    snprintf(temp, TEMPSIZE, "%s/%s",
+                    snprintf(temp, PATH_MAX, "%s/%s",
                              disk_path, namelist[ent_no]->d_name);
                     if (!strcmp(temp, disk6.disk[drive].file_name))
                     {
@@ -434,27 +435,27 @@ void c_interface_select_diskette( int drive )
                     stat(temp, &statbuf);
                     if (S_ISDIR(statbuf.st_mode))
                     {
-                        snprintf(temp, TEMPSIZE, " %s/",
+                        snprintf(temp, PATH_MAX, " %s/",
                                  namelist[ ent_no ]->d_name );
                     }
                     else
                     {
-                        snprintf(temp, TEMPSIZE, " %s",
+                        snprintf(temp, PATH_MAX, " %s",
                                  namelist[ ent_no ]->d_name );
                     }
 
                     if (c_interface_cut_name(temp))
                     {
-                        strncat(temp, " <gz>", TEMPSIZE-1);
+                        strncat(temp, " <gz>", PATH_MAX-1);
                     }
                     /* write protected disk in drive? */
                     else if ((in_drive) && (disk6.disk[drive].is_protected))
                     {
-                        strncat(temp, (drive == 0) ? " <r1>" : " <r2>", TEMPSIZE-1);
+                        strncat(temp, (drive == 0) ? " <r1>" : " <r2>", PATH_MAX-1);
                     }
                     else if (in_drive)
                     {
-                        strncat(temp, (drive == 0) ? " <rw1>" : " <rw2>", TEMPSIZE-1);
+                        strncat(temp, (drive == 0) ? " <rw1>" : " <rw2>", PATH_MAX-1);
                     }
                 }
 
@@ -553,7 +554,7 @@ void c_interface_select_diskette( int drive )
             {
                 int len;
 
-                snprintf(temp, TEMPSIZE, "%s/%s",
+                snprintf(temp, PATH_MAX, "%s/%s",
                          disk_path, namelist[ curpos ]->d_name );
                 len = strlen(disk_path);
 
@@ -723,6 +724,8 @@ void c_interface_parameters()
     c_interface_translate_screen( screen );
     c_interface_print_screen( screen );
 
+#define TEMPSIZE 1024
+    char temp[TEMPSIZE];
     for (;;)
     {
         for (i = 0; (i < PARAMS_H) && (i < NUM_OPTIONS); i++)

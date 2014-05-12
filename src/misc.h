@@ -46,12 +46,8 @@ uint8_t apple_ii_64k[2][65536]; /* 128k memory */
 uint8_t language_card[2][8192], language_banks[2][8192];
 
 /* global ref to commandline args */
-char            **argv;
+char **argv;
 int argc;
-
-/* misc arrays */
-#define TEMPSIZE        4096
-char temp[ TEMPSIZE ];   /* should be >=4096 (stuff depends on this) */
 
 extern uint8_t *base_ramrd;
 extern uint8_t *base_ramwrt;

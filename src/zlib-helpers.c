@@ -67,8 +67,8 @@ const char *def(const char* const src, const int expected_bytecount)
             break;
         }
 
-        char dst[TEMPSIZE];
-        snprintf(dst, TEMPSIZE-1, "%s%s", src, ".gz");
+        char dst[PATH_MAX];
+        snprintf(dst, PATH_MAX-1, "%s%s", src, ".gz");
 
         gzdest = gzopen(dst, "wb");
         if (gzdest == NULL) {
@@ -159,8 +159,8 @@ const char *inf(const char* const src, int *rawcount)
         }
 
         int len = strlen(src);
-        char dst[TEMPSIZE];
-        snprintf(dst, TEMPSIZE-1, "%s", src);
+        char dst[PATH_MAX];
+        snprintf(dst, PATH_MAX-1, "%s", src);
         if (! ( (dst[len-3] == '.') && (dst[len-2] == 'g') && (dst[len-1] == 'z') ) ) {
             ERRLOG("Expected filename ending in .gz");
             break;

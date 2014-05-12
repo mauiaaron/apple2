@@ -761,13 +761,14 @@ void disk_io_initialize(unsigned int slot)
 {
     FILE *f;
     int i;
+    char temp[PATH_MAX];
 
     assert(slot == 6);
 
     /* load Disk II rom */
     if (!slot6_rom_loaded)
     {
-        snprintf(temp, TEMPSIZE, "%s/slot6.rom", system_path);
+        snprintf(temp, PATH_MAX, "%s/slot6.rom", system_path);
         if ((f = fopen( temp, "r" )) == NULL)
         {
             printf("Cannot find file '%s'.\n",temp);
