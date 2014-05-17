@@ -21,8 +21,6 @@
 #include "config.h"
 #endif
 
-#define BANK2           0x10000
-
 /* Code alignment */
 #if defined(__i486__) || defined(__i586__)
 #define         ALIGN                   .balign 16

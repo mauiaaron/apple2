@@ -126,23 +126,8 @@ PB_dynamic##X:\
 		movw	%cx, (%eax);			/* GM -> temp */\
 		decl	%eax; \
 		\
-		/* calculate dynamic colors in temp array */\
-		DynamicCalculateColor(X,OPP_TABLE,INTERP_COLOR,ALT_INTERP_COLOR);\
-PB_plot_dynamic##X:\
-		leal	SN(temp), %ebx;	/* ebx = temp */\
-		incl	%ebx;\
-		CalcHiresGM(BASE,%eax,GM);		/* eax = GM */\
-		PlotPixelsExtra				/* temp -> GM: 1 + 7 + 1 */\
-PB_exit##X:\
-		popl	%ecx;				/* restore regs */    \
-		popl	%ebx;						      \
-		popl	%eax;
-
-
-/* -------------------------------------------------------------------------
- * Dynamic calculation of color at the edges of bytes.
- * ------------------------------------------------------------------------- */
-#define DynamicCalculateColor(X,OPP_TABLE,INTERP_COLOR,ALT_INTERP_COLOR);\
+/* ------------------------------------------------------------------------- */ \
+/* calculate dynamic colors in temp array                                    */ \
 		movw	(%eax), %cx;					      \
 		testb	$0xFF, %ch;	/* check right color */		      \
 		jz	PB_next0##X;	/* right black, do other end */	      \
@@ -155,8 +140,7 @@ PB_exit##X:\
 		jmp	PB_next0##X;					      \
 PB_black0##X:								      \
 	movzwl	SN(apple_ii_64k)(,EffectiveAddr_E,1), %ecx;\
-		movb	%ch, %cl;					      \
-		xorb	%ch, %ch;					      \
+		movzbl	%ch, %ecx;      				      \
 		leal	SN(video__hires_##OPP_TABLE)	      \
 			(,%ecx,8), %ebx;				      \
 		incl	%eax;						      \
@@ -203,7 +187,19 @@ PB_next4##X:								      \
 		incl	%eax;						      \
 		CalculateInterpColor(X,5,ALT_INTERP_COLOR);		      \
 PB_next5##X:								      \
-	decw	EffectiveAddr;
+	decw	EffectiveAddr; \
+/* ------------------------------------------------------------------------- */ \
+\
+PB_plot_dynamic##X:\
+		leal	SN(temp), %ebx;	/* ebx = temp */\
+		incl	%ebx;\
+		CalcHiresGM(BASE,%eax,GM);		/* eax = GM */\
+		PlotPixelsExtra				/* temp -> GM: 1 + 7 + 1 */\
+PB_exit##X:\
+		popl	%ecx;				/* restore regs */    \
+		popl	%ebx;						      \
+		popl	%eax;
+
 
 
 /* -------------------------------------------------------------------------
@@ -315,7 +311,7 @@ update_cont_##X:							\
 		pushl	%edx;						      \
 		pushl	EffectiveAddr_E;				      \
 									      \
-		andw	$0xFFFF, EffectiveAddr;		/* erase offset */    \
+		andl	$0xFFFF, EffectiveAddr_E;		/* erase offset */    \
 		btr	$0, EffectiveAddr_E;		/* normalize */	      \
 		movl	EffectiveAddr_E, %ecx;		/* ecx = mem addrs */ \
 		subw	OFF, EffectiveAddr;		/* - graphics base */ \
@@ -328,7 +324,7 @@ update_cont_##X:							\
 	leal	SN(apple_ii_64k), EffectiveAddr_E;\
 		addl	%ecx, EffectiveAddr_E;				      \
 		movl	EffectiveAddr_E, %ecx;				      \
-		addl	$BANK2, %ecx;					      \
+		addl	$0x10000, %ecx;					      \
 									      \
 		testb	$0xFF, %bl;					      \
 		jz	plot_dhires##X##_cont;				      \
