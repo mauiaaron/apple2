@@ -21,27 +21,6 @@
 #include "cpu.h"
 #include "misc.h"
 
-/* -------------------------------------------------------------------------
-    Graphics routines.
-    Care has been taken to isolate the dimension-dependent (320x200 vs 640x400)
-    routines.
-   ------------------------------------------------------------------------- */
-
-/* -------------------------------------------------------------------------
- * Plot exatly 7 pixels from FROM to TO.
- * ecx: scratch
- * ------------------------------------------------------------------------- */
-#define Plot7Pixels(FROM,TO)\
-		movl	(FROM), %ecx;			/* long -> GM */      \
-		movl	%ecx, (TO);				      \
-		addl	$4, FROM;			/* inc pointers */    \
-		addl	$4, TO;					      \
-		movw	(FROM), %cx;			/* word -> GM */      \
-		movw	%cx, (TO);				      \
-		addl	$2, FROM;			/* inc pointers */    \
-		addl	$2, TO;					      \
-		movb	(FROM), %cl;			/* byte -> GM */      \
-		movb	%cl, (TO);
 
 /* -------------------------------------------------------------------------
  * Plot a dynamically interpolated swath of pixels.
@@ -68,22 +47,6 @@
 		addl	$2, %eax;\
 		decb	%dl;\
 		jnz	1b;
-
-/* -------------------------------------------------------------------------
- * Get the adjancent color bytes in memory.
- * For 640x400 mode, we need to remember to move around by a factor of 2.
- * ebx: graphics memory index
- * eax: temp buffer for comparison
- * ------------------------------------------------------------------------- */
-#define GrabAdjGMBytes\
-		subl	$3, %ebx;\
-		movw	(%ebx), %cx;\
-		movw	%cx, (%eax);			/* GM -> temp */\
-		addl	$9, %eax;\
-		addl	$18, %ebx;\
-		movw	(%ebx), %cx;\
-		movw	%cx, (%eax);			/* GM -> temp */\
-		decl	%eax;
 
 /* -------------------------------------------------------------------------
  * Plots a normalized byte of dhires color directly into graphics memory.
@@ -138,12 +101,30 @@ PB_dynamic##X:\
 		leal	SN(video__hires_##TABLE)(,%eax,8), %ebx;\
 		leal	SN(temp), %eax;	/* eax = temp */\
 		addl	$2, %eax;\
-		Plot7Pixels(%ebx,%eax);			/* 7bytes -> temp+2 */\
+                \
+                /* plot exactly 7 pixels */ \
+		movl	(%ebx), %ecx;			/* long -> GM */      \
+		movl	%ecx, (%eax);				      \
+		addl	$4, %ebx;			/* inc pointers */    \
+		addl	$4, %eax;					      \
+		movw	(%ebx), %cx;			/* word -> GM */      \
+		movw	%cx, (%eax);				      \
+		addl	$2, %ebx;			/* inc pointers */    \
+		addl	$2, %eax;					      \
+		movb	(%ebx), %cl;			/* byte -> GM */      \
+		movb	%cl, (%eax); \
 		\
 		subl	$8, %eax;\
 		CalcHiresGM(BASE,%ebx,GM);	/* ebx = GM */\
 		/* copy adjacent color bytes into temp array */\
-		GrabAdjGMBytes;\
+		subl	$3, %ebx;\
+		movw	(%ebx), %cx;\
+		movw	%cx, (%eax);			/* GM -> temp */\
+		addl	$9, %eax;\
+		addl	$18, %ebx;\
+		movw	(%ebx), %cx;\
+		movw	%cx, (%eax);			/* GM -> temp */\
+		decl	%eax; \
 		\
 		/* calculate dynamic colors in temp array */\
 		DynamicCalculateColor(X,OPP_TABLE,INTERP_COLOR,ALT_INTERP_COLOR);\
