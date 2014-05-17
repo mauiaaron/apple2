@@ -172,9 +172,6 @@ const uint8_t * const video_current_framebuffer();
 
 extern uint8_t *video__fb1,*video__fb2;
 
-extern uint8_t video__wider_hires_even[0x1000];
-extern uint8_t video__wider_hires_odd[0x1000];
-
 extern uint8_t video__hires_even[0x800];
 extern uint8_t video__hires_odd[0x800];
 

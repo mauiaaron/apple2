@@ -34,8 +34,6 @@ uint8_t video__columns[8192];
 
 uint8_t *video__fb1,*video__fb2;
 
-uint8_t video__wider_hires_even[0x1000];
-uint8_t video__wider_hires_odd[0x1000];
 uint8_t video__hires_even[0x800];
 uint8_t video__hires_odd[0x800];
 
@@ -157,45 +155,43 @@ static void c_initialize_hires_values(void)
     int value, b, v, e, /*color_toggle,*/ last_not_black;
 
     /* precalculate the colors for all the 256*8 bit combinations. */
-    for (value = 0x00; value <= 0xFF; value++)
-    {
-        for (e = value * 8, last_not_black = 0, v = value, b = 0;
-             b < 7; b++, v >>= 1, e++)
-        {
-            if (v & 1)
-            {
-                video__hires_even[ e ] = last_not_black ?
-                                         COLOR_LIGHT_WHITE :
-                                         ((b & 1) ?
-                                          ((value & 0x80) ?
-                                           COLOR_LIGHT_RED :
-                                           COLOR_LIGHT_GREEN) :
-                                          ((value & 0x80) ?
-                                           COLOR_LIGHT_BLUE :
-                                           COLOR_LIGHT_PURPLE));
-
-                video__hires_odd[ e ] = last_not_black ?
-                                        COLOR_LIGHT_WHITE :
-                                        ((b & 1) ?
-                                         ((value & 0x80) ?
-                                          COLOR_LIGHT_BLUE :
-                                          COLOR_LIGHT_PURPLE) :
-                                         ((value & 0x80) ?
-                                          COLOR_LIGHT_RED :
-                                          COLOR_LIGHT_GREEN));
-
-                if (last_not_black && b > 0)
-                {
-                    video__hires_even[ e - 1 ] = COLOR_LIGHT_WHITE,
-                    video__hires_odd[ e - 1 ] = COLOR_LIGHT_WHITE;
+    for (value = 0x00; value <= 0xFF; value++) {
+        for (e = value * 8, last_not_black = 0, v = value, b = 0; b < 7; b++, v >>= 1, e++) {
+            if (v & 1) {
+                if (last_not_black) {
+                    video__hires_even[e] = COLOR_LIGHT_WHITE;
+                    video__hires_odd[e] = COLOR_LIGHT_WHITE;
+                    if (b > 0)
+                    {
+                        video__hires_even[ e - 1 ] = COLOR_LIGHT_WHITE,
+                        video__hires_odd[ e - 1 ] = COLOR_LIGHT_WHITE;
+                    }
+                } else {
+                    if (b & 1) {
+                        if (value & 0x80) {
+                            video__hires_even[e] = COLOR_LIGHT_RED;
+                            video__hires_odd[e] = COLOR_LIGHT_BLUE;
+                        } else {
+                            video__hires_even[e] = COLOR_LIGHT_GREEN;
+                            video__hires_odd[e] = COLOR_LIGHT_PURPLE;
+                        }
+                    } else {
+                        if (value & 0x80) {
+                            video__hires_even[e] = COLOR_LIGHT_BLUE;
+                            video__hires_odd[e] = COLOR_LIGHT_RED;
+                        } else {
+                            video__hires_even[e] = COLOR_LIGHT_PURPLE;
+                            video__hires_odd[e] = COLOR_LIGHT_GREEN;
+                        }
+                    }
                 }
 
                 last_not_black = 1;
             }
             else
             {
-                video__hires_even[ e ] = COLOR_BLACK,
-                video__hires_odd[ e ] = COLOR_BLACK,
+                video__hires_even[e] = COLOR_BLACK,
+                video__hires_odd[e] = COLOR_BLACK,
                 last_not_black = 0;
             }
         }
@@ -232,8 +228,7 @@ static void c_initialize_hires_values(void)
                         video__hires_even[e-1] != COLOR_LIGHT_WHITE &&
                         video__hires_even[e+1] != COLOR_LIGHT_WHITE)
                     {
-                        video__hires_even[e] =
-                            video__hires_even[e-1];
+                        video__hires_even[e] = video__hires_even[e-1];
                     }
                     else if (
                         video__hires_even[e-1] != COLOR_BLACK &&
@@ -241,8 +236,7 @@ static void c_initialize_hires_values(void)
                         video__hires_even[e-1] != COLOR_LIGHT_WHITE &&
                         video__hires_even[e+1] == COLOR_LIGHT_WHITE)
                     {
-                        video__hires_even[e] =
-                            video__hires_even[e-1];
+                        video__hires_even[e] = video__hires_even[e-1];
                     }
                     else if (
                         video__hires_even[e-1] != COLOR_BLACK &&
@@ -250,15 +244,13 @@ static void c_initialize_hires_values(void)
                         video__hires_even[e-1] == COLOR_LIGHT_WHITE &&
                         video__hires_even[e+1] != COLOR_LIGHT_WHITE)
                     {
-                        video__hires_even[e] =
-                            video__hires_even[e+1];
+                        video__hires_even[e] = video__hires_even[e+1];
                     }
                     else if (
                         video__hires_even[e-1] == COLOR_LIGHT_WHITE &&
                         video__hires_even[e+1] == COLOR_LIGHT_WHITE)
                     {
-                        video__hires_even[e] = (value & 0x80)
-                                               ? COLOR_LIGHT_BLUE : COLOR_LIGHT_PURPLE;
+                        video__hires_even[e] = (value & 0x80) ? COLOR_LIGHT_BLUE : COLOR_LIGHT_PURPLE;
                     }
 
                 }
@@ -270,8 +262,7 @@ static void c_initialize_hires_values(void)
                         video__hires_odd[e-1] != COLOR_LIGHT_WHITE &&
                         video__hires_odd[e+1] != COLOR_LIGHT_WHITE)
                     {
-                        video__hires_odd[e] =
-                            video__hires_odd[e-1];
+                        video__hires_odd[e] = video__hires_odd[e-1];
                     }
                     else if (
                         video__hires_odd[e-1] != COLOR_BLACK &&
@@ -279,8 +270,7 @@ static void c_initialize_hires_values(void)
                         video__hires_odd[e-1] != COLOR_LIGHT_WHITE &&
                         video__hires_odd[e+1] == COLOR_LIGHT_WHITE)
                     {
-                        video__hires_odd[e] =
-                            video__hires_odd[e-1];
+                        video__hires_odd[e] = video__hires_odd[e-1];
                     }
                     else if (
                         video__hires_odd[e-1] != COLOR_BLACK &&
@@ -288,15 +278,13 @@ static void c_initialize_hires_values(void)
                         video__hires_odd[e-1] == COLOR_LIGHT_WHITE &&
                         video__hires_odd[e+1] != COLOR_LIGHT_WHITE)
                     {
-                        video__hires_odd[e] =
-                            video__hires_odd[e+1];
+                        video__hires_odd[e] = video__hires_odd[e+1];
                     }
                     else if (
                         video__hires_odd[e-1] == COLOR_LIGHT_WHITE &&
                         video__hires_odd[e+1] == COLOR_LIGHT_WHITE)
                     {
-                        video__hires_odd[e] = (value & 0x80)
-                                              ? COLOR_LIGHT_RED : COLOR_LIGHT_GREEN;
+                        video__hires_odd[e] = (value & 0x80) ? COLOR_LIGHT_RED : COLOR_LIGHT_GREEN;
                     }
                 }
             }
@@ -312,8 +300,7 @@ static void c_initialize_hires_values(void)
                             video__hires_even[e-1] != COLOR_LIGHT_WHITE &&
                             video__hires_even[e+1] != COLOR_LIGHT_WHITE)
                         {
-                            video__hires_even[e] =
-                                video__hires_even[e-1];
+                            video__hires_even[e] = video__hires_even[e-1];
                         }
                         else if (
                             video__hires_even[e-1] != COLOR_BLACK &&
@@ -321,8 +308,7 @@ static void c_initialize_hires_values(void)
                             video__hires_even[e-1] != COLOR_LIGHT_WHITE &&
                             video__hires_even[e+1] == COLOR_LIGHT_WHITE)
                         {
-                            video__hires_even[e] =
-                                video__hires_even[e-1];
+                            video__hires_even[e] = video__hires_even[e-1];
                         }
                         else if (
                             video__hires_even[e-1] != COLOR_BLACK &&
@@ -330,15 +316,13 @@ static void c_initialize_hires_values(void)
                             video__hires_even[e-1] == COLOR_LIGHT_WHITE &&
                             video__hires_even[e+1] != COLOR_LIGHT_WHITE)
                         {
-                            video__hires_even[e] =
-                                video__hires_even[e+1];
+                            video__hires_even[e] = video__hires_even[e+1];
                         }
                         else if (
                             video__hires_even[e-1] == COLOR_LIGHT_WHITE &&
                             video__hires_even[e+1] == COLOR_LIGHT_WHITE)
                         {
-                            video__hires_even[e] = (value & 0x80)
-                                                   ? COLOR_LIGHT_RED : COLOR_LIGHT_GREEN;
+                            video__hires_even[e] = (value & 0x80) ? COLOR_LIGHT_RED : COLOR_LIGHT_GREEN;
                         }
                     }
                 }
@@ -352,8 +336,7 @@ static void c_initialize_hires_values(void)
                             video__hires_odd[e-1] != COLOR_LIGHT_WHITE &&
                             video__hires_odd[e+1] != COLOR_LIGHT_WHITE)
                         {
-                            video__hires_odd[e] =
-                                video__hires_odd[e-1];
+                            video__hires_odd[e] = video__hires_odd[e-1];
                         }
                         else if (
                             video__hires_odd[e-1] != COLOR_BLACK &&
@@ -361,8 +344,7 @@ static void c_initialize_hires_values(void)
                             video__hires_odd[e-1] != COLOR_LIGHT_WHITE &&
                             video__hires_odd[e+1] == COLOR_LIGHT_WHITE)
                         {
-                            video__hires_odd[e] =
-                                video__hires_odd[e-1];
+                            video__hires_odd[e] = video__hires_odd[e-1];
                         }
                         else if (
                             video__hires_odd[e-1] != COLOR_BLACK &&
@@ -370,30 +352,18 @@ static void c_initialize_hires_values(void)
                             video__hires_odd[e-1] == COLOR_LIGHT_WHITE &&
                             video__hires_odd[e+1] != COLOR_LIGHT_WHITE)
                         {
-                            video__hires_odd[e] =
-                                video__hires_odd[e+1];
+                            video__hires_odd[e] = video__hires_odd[e+1];
                         }
                         else if (
                             video__hires_odd[e-1] == COLOR_LIGHT_WHITE &&
                             video__hires_odd[e+1] == COLOR_LIGHT_WHITE)
                         {
-                            video__hires_odd[e] = (value & 0x80)
-                                                  ? COLOR_LIGHT_BLUE : COLOR_LIGHT_PURPLE;
+                            video__hires_odd[e] = (value & 0x80) ? COLOR_LIGHT_BLUE : COLOR_LIGHT_PURPLE;
                         }
                     }
                 }
             }
         }
-    }
-
-    /* *2 for 640x400 */
-    for (b=0, e=0; b<4096; b++, e++)
-    {
-        video__wider_hires_even[b] = video__hires_even[e];
-        video__wider_hires_odd[b] = video__hires_odd[e];
-        b++;
-        video__wider_hires_even[b] = video__hires_even[e];
-        video__wider_hires_odd[b] = video__hires_odd[e];
     }
 }
 
