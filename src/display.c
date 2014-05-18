@@ -16,6 +16,8 @@
 
 #include "common.h"
 
+#define DYNAMIC_SZ 11 // 7 pixels (as bytes) + 2pre + 2post
+
 #define TEXT_ROWS 24
 #define BEGIN_MIX 20
 #define TEXT_COLS 40
@@ -682,5 +684,237 @@ GLUE_C_WRITE(video__write_2e_text1_mixed)
 {
     base_ramwrt[ea] = b;
     c_iie_soft_write_text1_mixed(ea, b);
+}
+
+// ----------------------------------------------------------------------------
+// Hires (and Double-Hires) GRaphics
+
+// CalculateInterpColor
+static inline void _calculate_interp_color(uint8_t *color_buf, const unsigned int idx, const uint8_t *interp_base, const uint16_t ea) {
+    if (color_buf[idx] != 0x0) {
+        return;
+    }
+    uint8_t pixR = color_buf[idx+1];
+    if (pixR == 0x0) {
+        return;
+    }
+    uint8_t pixL = color_buf[idx-1];
+    if (pixL == 0x0) {
+        return;
+    }
+
+    // Calculates the color at the edge of interpolated bytes: called 4 times in little endian order (...7 0...7 0...)
+    if (pixL == COLOR_LIGHT_WHITE) {
+        if (pixR == COLOR_LIGHT_WHITE) {
+            pixL = apple_ii_64k[0][ea];
+            color_buf[idx] = interp_base[pixL>>7];
+        } else {
+            color_buf[idx] = pixR;
+        }
+    } else {
+        color_buf[idx] = pixL;
+    }
+}
+
+// PlotPixelsExtra
+static inline void _plot_pixels(uint8_t *dst, const uint8_t *src) {
+    uint8_t pix;
+
+    for (unsigned int i=2; i; i--) {
+        for (unsigned int j=DYNAMIC_SZ-1; j; j--) {
+            uint16_t pix = *src;
+            pix = ((pix<<8) | pix);
+            *((uint16_t *)dst) = pix; 
+            ++src;
+            dst+=2;
+        }
+
+        dst += (SCANWIDTH-18);
+        src -= DYNAMIC_SZ-2;
+    }
+}
+
+// PlotByte
+static inline void _plot_hires(uint16_t ea, uint8_t b, bool is_even, uint8_t *fb_ptr) {
+    uint8_t *hires_altbase = NULL;
+    uint8_t *interp_base = NULL;
+    uint8_t color_buf[DYNAMIC_SZ];
+
+    uint8_t *hires_ptr = NULL;
+    if (is_even) {
+        hires_ptr = (uint8_t *)&video__hires_even[b<<3];
+        hires_altbase = (uint8_t *)&video__hires_odd[0];
+        interp_base = (uint8_t *)&video__even_colors[0];
+    } else {
+        hires_ptr = (uint8_t *)&video__hires_odd[b<<3];
+        hires_altbase = (uint8_t *)&video__hires_even[0];
+        interp_base = (uint8_t *)&video__odd_colors[0];
+    }
+    *((uint32_t *)&color_buf[2]) = *((uint32_t *)(hires_ptr+0));
+    *((uint16_t *)&color_buf[6]) = *((uint16_t *)(hires_ptr+4));
+    *((uint8_t  *)&color_buf[8]) = *((uint8_t  *)(hires_ptr+6));
+    hires_ptr = NULL;
+
+    // copy adjacent pixel bytes
+    *((uint16_t *)&color_buf[0]) = *((uint16_t *)(fb_ptr-3));
+    *((uint16_t *)&color_buf[DYNAMIC_SZ-2]) = *((uint16_t *)(fb_ptr+15));
+
+    // %eax = +8
+    if (color_mode != COLOR_NONE) {
+        // if right-side color is not black, re-calculate edge values
+        if (color_buf[DYNAMIC_SZ-2] & 0xff) {
+            uint16_t pix16 = *((uint16_t *)&apple_ii_64k[0][ea]);
+            if ((pix16 & 0x100) && (pix16 & 0x40)) {
+                *((uint16_t *)&color_buf[DYNAMIC_SZ-3]) = (uint16_t)0x3737;// COLOR_LIGHT_WHITE
+            } else {
+                // PB_black0:
+                pix16 >>= 8;
+                color_buf[DYNAMIC_SZ-2] = hires_altbase[pix16<<3];
+            }
+        }
+
+        // if left-side color is not black, re-calculate edge values
+        if (color_buf[1] & 0xff) {
+            uint16_t pix16 = *((uint16_t *)&apple_ii_64k[0][ea-1]);
+            if ((pix16 & 0x100) && (pix16 & 0x40)) {
+                *((uint16_t *)&color_buf[1]) = (uint16_t)0x3737;// COLOR_LIGHT_WHITE
+            } else {
+                // PB_black1:
+                pix16 &= 0xFF;
+                color_buf[1] = hires_altbase[(pix16<<3)+6];
+            }
+        }
+
+        if (color_mode == COLOR_INTERP) {
+            // calculate interpolated/bleed colors
+            _calculate_interp_color(color_buf, 1, interp_base, ea-1);
+            _calculate_interp_color(color_buf, 2, interp_base, ea);
+            _calculate_interp_color(color_buf, 8, interp_base, ea);
+            _calculate_interp_color(color_buf, 9, interp_base, ea+1);
+        }
+    }
+
+    _plot_pixels(fb_ptr-4, color_buf);
+}
+
+// DRAW_GRAPHICS
+static inline void _draw_hires_graphics(uint16_t ea, uint8_t b, bool is_even, uint8_t page, unsigned int ss_textflags) {
+    if (softswitches & ss_textflags) {
+        return;
+    }
+    if (!(softswitches & SS_HIRES)) {
+        return;
+    }
+    if ((softswitches & SS_80COL) && (softswitches & SS_DHIRES)) {
+        if (page) {
+            extern void iie_plot_dhires1();
+            iie_plot_dhires1();
+        } else {
+            extern void iie_plot_dhires0();
+            iie_plot_dhires0();
+        }
+        return;
+    }
+    if (softswitches & SS_HGRWRT) {
+        return;
+    }
+
+    uint16_t off = ea - 0x2000;
+    uint8_t *fb_base = NULL;
+    if (page) {
+        off -= 0x2000;
+        fb_base = video__fb2;
+    } else {
+        fb_base = video__fb1;
+    }
+    _plot_hires(ea, b, is_even, fb_base+video__screen_addresses[off]);
+}
+
+GLUE_C_WRITE(iie_soft_write_even0) // refactor : remove
+{
+    _draw_hires_graphics(ea, b, /*even*/true, 0, SS_TEXT);
+}
+
+GLUE_C_WRITE(video__write_2e_even0)
+{
+    base_hgrwrt[ea] = b;
+    _draw_hires_graphics(ea, b, /*even*/true, 0, SS_TEXT);
+}
+
+GLUE_C_WRITE(iie_soft_write_even0_mixed) // refactor : remove
+{
+    _draw_hires_graphics(ea, b, /*even*/true, 0, (SS_TEXT|SS_MIXED));
+}
+
+GLUE_C_WRITE(video__write_2e_even0_mixed)
+{
+    base_hgrwrt[ea] = b;
+    _draw_hires_graphics(ea, b, /*even*/true, 0, (SS_TEXT|SS_MIXED));
+}
+
+GLUE_C_WRITE(iie_soft_write_odd0) // refactor : remove
+{
+    _draw_hires_graphics(ea, b, /*even*/false, 0, SS_TEXT);
+}
+
+GLUE_C_WRITE(video__write_2e_odd0)
+{
+    base_hgrwrt[ea] = b;
+    _draw_hires_graphics(ea, b, /*even*/false, 0, SS_TEXT);
+}
+
+GLUE_C_WRITE(iie_soft_write_odd0_mixed) // refactor : remove
+{
+    _draw_hires_graphics(ea, b, /*even*/false, 0, (SS_TEXT|SS_MIXED));
+}
+
+GLUE_C_WRITE(video__write_2e_odd0_mixed)
+{
+    base_hgrwrt[ea] = b;
+    _draw_hires_graphics(ea, b, /*even*/false, 0, (SS_TEXT|SS_MIXED));
+}
+
+GLUE_C_WRITE(iie_soft_write_even1) // refactor : remove
+{
+    _draw_hires_graphics(ea, b, /*even*/true, 1, SS_TEXT);
+}
+
+GLUE_C_WRITE(video__write_2e_even1)
+{
+    base_ramwrt[ea] = b;
+    _draw_hires_graphics(ea, b, /*even*/true, 1, SS_TEXT);
+}
+
+GLUE_C_WRITE(iie_soft_write_even1_mixed) // refactor : remove
+{
+    _draw_hires_graphics(ea, b, /*even*/true, 1, (SS_TEXT|SS_MIXED));
+}
+
+GLUE_C_WRITE(video__write_2e_even1_mixed)
+{
+    base_ramwrt[ea] = b;
+    _draw_hires_graphics(ea, b, /*even*/true, 1, (SS_TEXT|SS_MIXED));
+}
+
+GLUE_C_WRITE(iie_soft_write_odd1) // refactor : remove
+{
+    _draw_hires_graphics(ea, b, /*even*/false, 1, SS_TEXT);
+}
+
+GLUE_C_WRITE(video__write_2e_odd1)
+{
+    base_ramwrt[ea] = b;
+    _draw_hires_graphics(ea, b, /*even*/false, 1, SS_TEXT);
+}
+
+GLUE_C_WRITE(iie_soft_write_odd1_mixed) // refactor : remove
+{
+    _draw_hires_graphics(ea, b, /*even*/false, 1, (SS_TEXT|SS_MIXED));
+}
+
+GLUE_C_WRITE(video__write_2e_odd1_mixed)
+{
+    base_ramwrt[ea] = b;
+    _draw_hires_graphics(ea, b, /*even*/false, 1, (SS_TEXT|SS_MIXED));
 }
 
