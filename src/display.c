@@ -20,19 +20,19 @@
 #define BEGIN_MIX 20
 #define TEXT_COLS 40
 
-uint8_t temp[1024];// HACK to be removed
-
-static uint8_t vga_mem_page_0[SCANWIDTH*SCANHEIGHT];              /* page0 framebuffer */
-static uint8_t vga_mem_page_1[SCANWIDTH*SCANHEIGHT];              /* page1 framebuffer */
+// framebuffers
+static uint8_t vga_mem_page_0[SCANWIDTH*SCANHEIGHT];
+static uint8_t vga_mem_page_1[SCANWIDTH*SCANHEIGHT];
 
 uint8_t video__wider_font[0x8000];
 uint8_t video__font[0x4000];
 
-/* --- Precalculated hi-res page offsets given addr --- */
+// Precalculated framebuffer offsets given VM addr
 unsigned int video__screen_addresses[8192];
 uint8_t video__columns[8192];
 
-uint8_t *video__fb1,*video__fb2;
+uint8_t *video__fb1 = NULL;
+uint8_t *video__fb2 = NULL;
 
 uint8_t video__hires_even[0x800];
 uint8_t video__hires_odd[0x800];
@@ -43,40 +43,34 @@ uint8_t video__dhires2[256];
 // Interface font
 static uint8_t video__int_font[3][0x4000];
 
-int video__current_page;        /* Current visual page */
+int video__current_page; // current visual page
+int video__strictcolors = 1;// refactor : should be static
 
-int video__strictcolors = 1;// 0 is deprecated
-
-void video_loadfont(int first,
-                    int quantity,
-                    const unsigned char *data,
-                    int mode)
-{
-    int i,j;
-    unsigned char x,y,fg,bg;
-
-    switch (mode)
-    {
-    case 2:
-        fg = COLOR_BLACK; bg = COLOR_LIGHT_WHITE; break;
-    case 3:
-        fg = COLOR_FLASHING_WHITE; bg = COLOR_FLASHING_BLACK; break;
-    default:
-        fg = COLOR_LIGHT_WHITE; bg = COLOR_BLACK; break;
+void video_loadfont(int first, int quantity, const uint8_t *data, int mode) {
+    uint8_t fg = 0;
+    uint8_t bg = 0;
+    switch (mode) {
+        case 2:
+            fg = COLOR_BLACK;
+            bg = COLOR_LIGHT_WHITE;
+            break;
+        case 3:
+            fg = COLOR_FLASHING_WHITE;
+            bg = COLOR_FLASHING_BLACK;
+            break;
+        default:
+            fg = COLOR_LIGHT_WHITE;
+            bg = COLOR_BLACK;
+            break;
     }
 
-    i = quantity * 8;
-
-    while (i--)
-    {
-        j = 8;
-        x = data[i];
-        while (j--)
-        {
-            y = (x & 128) ? fg : bg;
-
-            video__wider_font[(first << 7) + (i << 4) + (j << 1)] =
-                video__wider_font[(first << 7) + (i << 4) + (j << 1) + 1] =
+    unsigned int i = quantity * 8;
+    while (i--) {
+        unsigned int j = 8;
+        uint8_t x = data[i];
+        while (j--) {
+            uint8_t y = (x & 128) ? fg : bg;
+            video__wider_font[(first << 7) + (i << 4) + (j << 1)] = video__wider_font[(first << 7) + (i << 4) + (j << 1) + 1] =
             video__font[(first << 6) + (i << 3) + j] = y;
             x <<= 1;
         }
@@ -86,11 +80,12 @@ void video_loadfont(int first,
 uint8_t video__odd_colors[2] = { COLOR_LIGHT_PURPLE, COLOR_LIGHT_BLUE };
 uint8_t video__even_colors[2] = { COLOR_LIGHT_GREEN, COLOR_LIGHT_RED };
 
-/* 40col/80col/lores/hires/dhires line offsets */
-unsigned short video__line_offset[TEXT_ROWS] =
-{ 0x000, 0x080, 0x100, 0x180, 0x200, 0x280, 0x300, 0x380,
+// 40col/80col/lores/hires/dhires line offsets
+unsigned short video__line_offset[TEXT_ROWS] = {
+  0x000, 0x080, 0x100, 0x180, 0x200, 0x280, 0x300, 0x380,
   0x028, 0x0A8, 0x128, 0x1A8, 0x228, 0x2A8, 0x328, 0x3A8,
-  0x050, 0x0D0, 0x150, 0x1D0, 0x250, 0x2D0, 0x350, 0x3D0 };
+  0x050, 0x0D0, 0x150, 0x1D0, 0x250, 0x2D0, 0x350, 0x3D0
+};
 
 uint8_t video__dhires1[256] = {
     0x0,0x1,0x2,0x3,0x4,0x5,0x6,0x7,0x8,0x9,0xa,0xb,0xc,0xd,0xe,0xf,
@@ -115,114 +110,69 @@ uint8_t video__dhires2[256] = {
 };
 
 
-/* -------------------------------------------------------------------------
-    c_initialize_dhires_values()
-   ------------------------------------------------------------------------- */
 static void c_initialize_dhires_values(void) {
-    int i;
-/*     int value, v; */
-/*     unsigned char locolor, hicolor; */
-
-    /* precalculate the colors for all the 256*8 bit combinations. */
-/*     for (value = 0x00, v = 0; value <= 0xFF; value++) { */
-/*      locolor = (value & 0x0F) | 0x10; */
-/*      hicolor = (value << 4) | 0x10; */
-
-/*      dhires_colors[v++] = locolor; */
-/*      dhires_colors[v++] = locolor; */
-/*      dhires_colors[v++] = locolor; */
-/*      dhires_colors[v++] = locolor; */
-
-/*      dhires_colors[v++] = hicolor; */
-/*      dhires_colors[v++] = hicolor; */
-/*      dhires_colors[v++] = hicolor; */
-/*      dhires_colors[v++] = hicolor; */
-/*     } */
-
-    for (i = 0; i < 0x80; i++)
-    {
+    for (unsigned int i = 0; i < 0x80; i++) {
         video__dhires1[i+0x80] = video__dhires1[i];
         video__dhires2[i+0x80] = video__dhires2[i];
     }
 }
 
-/* -------------------------------------------------------------------------
-    c_initialize_hires_values()
-   ------------------------------------------------------------------------- */
-
-static void c_initialize_hires_values(void)
-{
-    int value, b, v, e, /*color_toggle,*/ last_not_black;
-
-    /* precalculate the colors for all the 256*8 bit combinations. */
-    for (value = 0x00; value <= 0xFF; value++) {
-        for (e = value * 8, last_not_black = 0, v = value, b = 0; b < 7; b++, v >>= 1, e++) {
+static void c_initialize_hires_values(void) {
+    // precalculate colors for all the 256*8 bit combinations. */
+    for (unsigned int value = 0x00; value <= 0xFF; value++) {
+        for (unsigned int e = value*8, last_not_black=0, v=value, b=0; b < 7; b++, v >>= 1, e++) {
             if (v & 1) {
                 if (last_not_black) {
                     video__hires_even[e] = COLOR_LIGHT_WHITE;
                     video__hires_odd[e] = COLOR_LIGHT_WHITE;
                     if (b > 0)
                     {
-                        video__hires_even[ e - 1 ] = COLOR_LIGHT_WHITE,
-                        video__hires_odd[ e - 1 ] = COLOR_LIGHT_WHITE;
+                        video__hires_even[e-1] = COLOR_LIGHT_WHITE,
+                        video__hires_odd [e-1] = COLOR_LIGHT_WHITE;
                     }
                 } else {
                     if (b & 1) {
                         if (value & 0x80) {
                             video__hires_even[e] = COLOR_LIGHT_RED;
-                            video__hires_odd[e] = COLOR_LIGHT_BLUE;
+                            video__hires_odd [e] = COLOR_LIGHT_BLUE;
                         } else {
                             video__hires_even[e] = COLOR_LIGHT_GREEN;
-                            video__hires_odd[e] = COLOR_LIGHT_PURPLE;
+                            video__hires_odd [e] = COLOR_LIGHT_PURPLE;
                         }
                     } else {
                         if (value & 0x80) {
                             video__hires_even[e] = COLOR_LIGHT_BLUE;
-                            video__hires_odd[e] = COLOR_LIGHT_RED;
+                            video__hires_odd [e] = COLOR_LIGHT_RED;
                         } else {
                             video__hires_even[e] = COLOR_LIGHT_PURPLE;
-                            video__hires_odd[e] = COLOR_LIGHT_GREEN;
+                            video__hires_odd [e] = COLOR_LIGHT_GREEN;
                         }
                     }
                 }
-
                 last_not_black = 1;
-            }
-            else
-            {
+            } else {
                 video__hires_even[e] = COLOR_BLACK,
-                video__hires_odd[e] = COLOR_BLACK,
+                video__hires_odd [e] = COLOR_BLACK,
                 last_not_black = 0;
             }
         }
     }
 
-    if (color_mode == COLOR_NONE)        /* Black and White */
-    {
-        for (value = 0x00; value <= 0xFF; value++)
-        {
-            for (b = 0, e = value * 8; b < 7; b++, e++)
-            {
-                if (video__hires_even[ e ] != COLOR_BLACK)
-                {
-                    video__hires_even[ e ] = COLOR_LIGHT_WHITE;
+    if (color_mode == COLOR_NONE) {
+        for (unsigned int value = 0x00; value <= 0xFF; value++) {
+            for (unsigned int b = 0, e = value * 8; b < 7; b++, e++) {
+                if (video__hires_even[e] != COLOR_BLACK) {
+                    video__hires_even[e] = COLOR_LIGHT_WHITE;
                 }
-
-                if (video__hires_odd[ e ] != COLOR_BLACK)
-                {
-                    video__hires_odd[ e ] = COLOR_LIGHT_WHITE;
+                if (video__hires_odd[e] != COLOR_BLACK) {
+                    video__hires_odd[e] = COLOR_LIGHT_WHITE;
                 }
             }
         }
-    }
-    else if (color_mode == COLOR_INTERP)             /* Color and strict interpolation */
-    {
-        for (value = 0x00; value <= 0xFF; value++)
-        {
-            for (b = 1, e = value * 8 + 1; b <= 5; b += 2, e += 2)
-            {
-                if (video__hires_even[e] == COLOR_BLACK)
-                {
+    } else if (color_mode == COLOR_INTERP) {
+        for (unsigned int value = 0x00; value <= 0xFF; value++) {
+            for (unsigned int b=1, e=value*8 + 1; b <= 5; b += 2, e += 2) {
+                if (video__hires_even[e] == COLOR_BLACK) {
                     if (video__hires_even[e-1] != COLOR_BLACK &&
                         video__hires_even[e+1] != COLOR_BLACK &&
                         video__hires_even[e-1] != COLOR_LIGHT_WHITE &&
@@ -252,11 +202,9 @@ static void c_initialize_hires_values(void)
                     {
                         video__hires_even[e] = (value & 0x80) ? COLOR_LIGHT_BLUE : COLOR_LIGHT_PURPLE;
                     }
-
                 }
 
-                if (video__hires_odd[e] == COLOR_BLACK)
-                {
+                if (video__hires_odd[e] == COLOR_BLACK) {
                     if (video__hires_odd[e-1] != COLOR_BLACK &&
                         video__hires_odd[e+1] != COLOR_BLACK &&
                         video__hires_odd[e-1] != COLOR_LIGHT_WHITE &&
@@ -289,12 +237,9 @@ static void c_initialize_hires_values(void)
                 }
             }
 
-            for (b = 0, e = value * 8; b <= 6; b += 2, e += 2)
-            {
-                if (video__hires_even[ e ] == COLOR_BLACK)
-                {
-                    if (b > 0 && b < 6)
-                    {
+            for (unsigned int b = 0, e = value * 8; b <= 6; b += 2, e += 2) {
+                if (video__hires_even[ e ] == COLOR_BLACK) {
+                    if (b > 0 && b < 6) {
                         if (video__hires_even[e-1] != COLOR_BLACK &&
                             video__hires_even[e+1] != COLOR_BLACK &&
                             video__hires_even[e-1] != COLOR_LIGHT_WHITE &&
@@ -327,10 +272,8 @@ static void c_initialize_hires_values(void)
                     }
                 }
 
-                if (video__hires_odd[e] == COLOR_BLACK)
-                {
-                    if (b > 0 && b < 6)
-                    {
+                if (video__hires_odd[e] == COLOR_BLACK) {
+                    if (b > 0 && b < 6) {
                         if (video__hires_odd[e-1] != COLOR_BLACK &&
                             video__hires_odd[e+1] != COLOR_BLACK &&
                             video__hires_odd[e-1] != COLOR_LIGHT_WHITE &&
@@ -367,115 +310,89 @@ static void c_initialize_hires_values(void)
     }
 }
 
-
-/* -------------------------------------------------------------------------
-    c_initialize_row_col_tables()
-   ------------------------------------------------------------------------- */
-static void c_initialize_row_col_tables(void)
-{
-    int x, y, off, i;
-
-    /* hires page offsets. initialize to invalid values. */
-    for (i = 0; i < 8192; i++)
-    {
+static void c_initialize_row_col_tables(void) {
+    for (unsigned int i = 0; i < 8192; i++) {
         video__screen_addresses[i] = -1;
     }
 
-    for (y = 0; y < TEXT_ROWS; y++)
-    {
-        for (off = 0; off < 8; off++)
-        {
-            for (x = 0; x < 40; x++)
-            {
-                video__screen_addresses[video__line_offset[y] + 0x400*off + x ] =
-                    (y*16 + 2*off /* + 8*/) * SCANWIDTH + x*14 + 4;
-                video__columns[video__line_offset[y] + 0x400*off + x] =
-                    (uint8_t)x;
+    for (unsigned int y = 0; y < TEXT_ROWS; y++) {
+        for (unsigned int off = 0; off < 8; off++) {
+            for (unsigned int x = 0; x < 40; x++) {
+                video__screen_addresses[video__line_offset[y] + (0x400*off) + x] = (y*16 + 2*off /* + 8*/) * SCANWIDTH + x*14 + 4;
+                video__columns         [video__line_offset[y] + (0x400*off) + x] = (uint8_t)x;
             }
         }
     }
 }
 
 static void c_initialize_tables_video(void) {
-    int x, y, i;
+    // initialize text/lores & hires graphics routines
+    for (unsigned int y = 0; y < TEXT_ROWS; y++) {
+        for (unsigned int x = 0; x < TEXT_COLS; x++) {
+            unsigned int idx = video__line_offset[y] + x + 0x400;
+            // text/lores pages
+            if (y < 20) {
+                cpu65_vmem[idx      ].w = video__write_2e_text0;
+                cpu65_vmem[idx+0x400].w = video__write_2e_text1;
+            } else {
+                cpu65_vmem[idx      ].w = video__write_2e_text0_mixed;
+                cpu65_vmem[idx+0x400].w = video__write_2e_text1_mixed;
+            }
 
-    /* initialize text/lores & hires graphics */
-    for (y = 0; y < TEXT_ROWS; y++)
-    {
-        for (x = 0; x < TEXT_COLS; x++)
-        {
-            /* //e mode: text/lores page 0 */
-            cpu65_vmem[ video__line_offset[ y ] + x + 0x400].w =
-                (y < 20) ? video__write_2e_text0 :
-                video__write_2e_text0_mixed;
-
-            cpu65_vmem[ video__line_offset[ y ] + x + 0x800].w =
-                (y < 20) ? video__write_2e_text1 :
-                video__write_2e_text1_mixed;
-
-            for (i = 0; i < 8; i++)
-            {
-                /* //e mode: hires/double hires page 0 */
-                cpu65_vmem[ 0x2000 + video__line_offset[ y ]
-                            + 0x400 * i + x ].w =
-                    (y < 20) ? ((x & 1) ? video__write_2e_odd0 :
-                                video__write_2e_even0)
-                    : ((x & 1) ? video__write_2e_odd0_mixed :
-                       video__write_2e_even0_mixed);
-
-                cpu65_vmem[ 0x4000 + video__line_offset[ y ]
-                            + 0x400 * i + x ].w =
-                    (y < 20) ? ((x & 1) ? video__write_2e_odd1 :
-                                video__write_2e_even1)
-                    : ((x & 1) ? video__write_2e_odd1_mixed :
-                       video__write_2e_even1_mixed);
+            // hires/dhires pages
+            for (unsigned int i = 0; i < 8; i++) {
+                idx = 0x2000 + video__line_offset[ y ] + (0x400*i) + x;
+                if (y < 20) {
+                    if (x & 1) {
+                        cpu65_vmem[idx       ].w = video__write_2e_odd0;
+                        cpu65_vmem[idx+0x2000].w = video__write_2e_odd1;
+                    } else {
+                        cpu65_vmem[idx       ].w = video__write_2e_even0;
+                        cpu65_vmem[idx+0x2000].w = video__write_2e_even1;
+                    }
+                } else {
+                    if (x & 1) {
+                        cpu65_vmem[idx       ].w = video__write_2e_odd0_mixed;
+                        cpu65_vmem[idx+0x2000].w = video__write_2e_odd1_mixed;
+                    } else {
+                        cpu65_vmem[idx       ].w = video__write_2e_even0_mixed;
+                        cpu65_vmem[idx+0x2000].w = video__write_2e_even1_mixed;
+                    }
+                }
             }
         }
     }
 }
 
-void video_set(int flags)
-{
+void video_set(int flags) {
     video__strictcolors = (color_mode == COLOR_INTERP) ? 2 : 1;
-
-    c_initialize_hires_values();        /* precalculate hires values */
-    c_initialize_row_col_tables();      /* precalculate hires offsets */
-    c_initialize_tables_video();        /* memory jump tables for video */
-
-    c_initialize_dhires_values();       /* set up dhires colors */
+    c_initialize_hires_values();
+    c_initialize_row_col_tables();
+    c_initialize_tables_video();
+    c_initialize_dhires_values();
 }
 
-void video_loadfont_int(int first, int quantity, const unsigned char *data)
-{
-    int i,j;
-    unsigned char x;
-    int y;
-
-    i = quantity * 8;
-
-    while (i--)
-    {
-        j = 8;
-        x = data[i];
-        while (j--)
-        {
-            y = (first << 6) + (i << 3) + j;
-            if (x & 128)
-            {
-                video__int_font[0][y] =
-                    video__int_font[1][y] = COLOR_LIGHT_GREEN;
+void video_loadfont_int(int first, int quantity, const uint8_t *data) {
+    unsigned int i = quantity * 8;
+    while (i--) {
+        unsigned int j = 8;
+        uint8_t x = data[i];
+        while (j--) {
+            unsigned int y = (first << 6) + (i << 3) + j;
+            if (x & 128) {
+                video__int_font[0][y] = video__int_font[1][y] = COLOR_LIGHT_GREEN;
                 video__int_font[2][y] = COLOR_LIGHT_RED;
-            }
-            else
-            {
-                video__int_font[0][y] =
-                    video__int_font[2][y] = COLOR_BLACK;
+            } else {
+                video__int_font[0][y] = video__int_font[2][y] = COLOR_BLACK;
                 video__int_font[1][y] = COLOR_MEDIUM_BLUE;
             }
             x <<= 1;
         }
     }
 }
+
+// ----------------------------------------------------------------------------
+// Plotting routines
 
 static inline void _plot_char40(uint8_t **d, uint8_t **s) {
     *((uint32_t *)(*d)) = *((uint32_t *)(*s));
@@ -529,13 +446,11 @@ static inline void _plot_lores(uint8_t **d, const uint32_t val) {
     *((uint16_t *)(*d)) = (uint16_t)(val & 0xffff);
 }
 
-void video_plotchar( int x, int y, int scheme, unsigned char c )
-{
-    int off;
-    unsigned char *d;
-    unsigned char *s;
+void video_plotchar( int x, int y, int scheme, uint8_t c ) {
+    uint8_t *d;
+    uint8_t *s;
 
-    off = y * SCANWIDTH * 16 + x * 7 + 4;
+    unsigned int off = y * SCANWIDTH * 16 + x * 7 + 4;
     s = video__int_font[scheme] + c * 64;
     d = video__fb1 + off;
 

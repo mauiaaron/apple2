@@ -63,10 +63,7 @@ void video_set(int flags);
  * adaptors which color normal text and MouseText differently.  I had one
  * once for a //c.
  */
-void video_loadfont(int first,
-                    int qty,
-                    const unsigned char *data,
-                    int mode);
+void video_loadfont(int first, int qty, const uint8_t *data, int mode);
 
 /* Redraw the display. This is called after exiting an interface display,
  * when changes have been made to the Apple's emulated framebuffer that
@@ -83,7 +80,7 @@ void video_setpage(int page);
 /* Like loadfont, but writes to a seperate 256 character table used by
  * video_plotchar and not the apple text-mode display.
  */
-void video_loadfont_int(int first, int qty, const unsigned char *data);
+void video_loadfont_int(int first, int qty, const uint8_t *data);
 
 /* Plot a character to the text mode screen, *not* writing to apple
  * memory. This is used by the interface screens.
@@ -95,7 +92,7 @@ void video_loadfont_int(int first, int qty, const unsigned char *data);
  *  1 - Green text on Blue background
  *  2 - Red text on Black background
  */
-void video_plotchar(int row, int col, int color, unsigned char code);
+void video_plotchar(int row, int col, int color, uint8_t code);
 
 /*
  * Draws video and possibly handles keyboard input.
