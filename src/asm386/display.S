@@ -253,16 +253,24 @@ update_hires_columns_##X:						 \
 	movb	SN(apple_ii_64k)(,EffectiveAddr_E,1), %al;\
 		cmpw	$159, %bx;	/* mixed mode boundary */	 \
 		jg	update_hires_mixed_##X;				 \
+                pushal;\
 		call	SN(PRE##odd##X##);	 \
+                popal;\
 		decw	EffectiveAddr;	/* previous address */		 \
 	movb	SN(apple_ii_64k)(,EffectiveAddr_E,1), %al;\
+                pushal;\
 		call	SN(PRE##even##X##);	 \
+                popal;\
 		jmp	update_hires_cont_##X;				 \
 update_hires_mixed_##X:							 \
+                pushal;\
 		call	SN(PRE##odd##X##_mixed);	 \
+                popal;\
 		decw	EffectiveAddr;	/* previous address */		 \
 	movb	SN(apple_ii_64k)(,EffectiveAddr_E,1), %al;\
+                pushal;\
 		call	SN(PRE##even##X##_mixed);	 \
+                popal;\
 update_hires_cont_##X:							 \
 		decw	EffectiveAddr;	/* previous address */		 \
 		decb	%cl;		/* dec column counter */	 \
@@ -286,10 +294,14 @@ update_columns_##X:							\
 	movb	SN(apple_ii_64k)(,EffectiveAddr_E,1), %al;\
 		cmpb	$19, %bl;					\
 		jg	update_mixed_##X;				\
+                pushal;\
 		call	SN(PRE##text##X);		\
+                popal; \
 		jmp	update_cont_##X;				\
 update_mixed_##X:							\
+                pushal; \
 		call	SN(PRE##text##X##_mixed);		\
+                popal; \
 update_cont_##X:							\
 		decw	%di;						\
 		decb	%cl;						\
@@ -447,6 +459,7 @@ E(video_redraw)
 		call	plot_##PARITY##_byte##PAGE /* plot hires */; \
                 ret;
 
+#if 1
 /* video__write_2e_even0 - handle hires page //e specific */
 E(video__write_2e_even0)
 		addl	SN(base_hgrwrt), EffectiveAddr_E
@@ -514,16 +527,6 @@ E(video__write_2e_odd1_mixed)
 iie_soft_write_odd1_mixed:
                 DRAW_GRAPHICS(odd, 1, $(SS_TEXT|SS_MIXED))
 
-		.align	4
-iie_plot_dhires0:
-		PlotDHires($0x2000,0,video__fb1)
-		ret
-
-iie_plot_dhires1:
-		PlotDHires($0x4000,1,video__fb2)
-		ret
-	
-
 /* plot even column hires byte on page 0 */
 		.align 4
 plot_even_byte0:
@@ -547,4 +550,12 @@ plot_even_byte1:
 plot_odd_byte1:
 		PlotByte($0x4000,3,odd,even,video__odd_colors,video__even_colors,video__fb2)
 		ret
+#endif
 	
+E(iie_plot_dhires0)
+		PlotDHires($0x2000,0,video__fb1)
+		ret
+
+E(iie_plot_dhires1)
+		PlotDHires($0x4000,1,video__fb2)
+		ret
