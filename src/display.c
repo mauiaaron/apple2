@@ -730,19 +730,13 @@ static inline void _plot_pixels(uint8_t *dst, const uint8_t *src) {
 
 // PlotByte
 static inline void _plot_hires(uint16_t ea, uint8_t b, bool is_even, uint8_t *fb_ptr) {
-    uint8_t *hires_altbase = NULL;
-    uint8_t *interp_base = NULL;
     uint8_t color_buf[DYNAMIC_SZ];
 
     uint8_t *hires_ptr = NULL;
     if (is_even) {
         hires_ptr = (uint8_t *)&video__hires_even[b<<3];
-        hires_altbase = (uint8_t *)&video__hires_odd[0];
-        interp_base = (uint8_t *)&video__even_colors[0];
     } else {
         hires_ptr = (uint8_t *)&video__hires_odd[b<<3];
-        hires_altbase = (uint8_t *)&video__hires_even[0];
-        interp_base = (uint8_t *)&video__odd_colors[0];
     }
     *((uint32_t *)&color_buf[2]) = *((uint32_t *)(hires_ptr+0));
     *((uint16_t *)&color_buf[6]) = *((uint16_t *)(hires_ptr+4));
@@ -755,6 +749,13 @@ static inline void _plot_hires(uint16_t ea, uint8_t b, bool is_even, uint8_t *fb
 
     // %eax = +8
     if (color_mode != COLOR_NONE) {
+        uint8_t *hires_altbase = NULL;
+        if (is_even) {
+            hires_altbase = (uint8_t *)&video__hires_odd[0];
+        } else {
+            hires_altbase = (uint8_t *)&video__hires_even[0];
+        }
+
         // if right-side color is not black, re-calculate edge values
         if (color_buf[DYNAMIC_SZ-2] & 0xff) {
             uint16_t pix16 = *((uint16_t *)&apple_ii_64k[0][ea]);
@@ -780,11 +781,21 @@ static inline void _plot_hires(uint16_t ea, uint8_t b, bool is_even, uint8_t *fb
         }
 
         if (color_mode == COLOR_INTERP) {
+            uint8_t *interp_base = NULL;
+            uint8_t *interp_altbase = NULL;
+            if (is_even) {
+                interp_base = (uint8_t *)&video__even_colors[0];
+                interp_altbase = (uint8_t *)&video__odd_colors[0];
+            } else {
+                interp_base = (uint8_t *)&video__odd_colors[0];
+                interp_altbase = (uint8_t *)&video__even_colors[0];
+            }
+
             // calculate interpolated/bleed colors
-            _calculate_interp_color(color_buf, 1, interp_base, ea-1);
+            _calculate_interp_color(color_buf, 1, interp_altbase, ea-1);
             _calculate_interp_color(color_buf, 2, interp_base, ea);
             _calculate_interp_color(color_buf, 8, interp_base, ea);
-            _calculate_interp_color(color_buf, 9, interp_base, ea+1);
+            _calculate_interp_color(color_buf, 9, interp_altbase, ea+1);
         }
     }
 
