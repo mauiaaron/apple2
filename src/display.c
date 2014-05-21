@@ -636,48 +636,28 @@ static inline void _plot_block1(uint16_t ea, uint8_t b)
         } \
     } while(0)
 
-GLUE_C_WRITE(iie_soft_write_text0)
-{
-    DRAW_TEXT(0, SS_TEXTWRT);
-}
-
 GLUE_C_WRITE(video__write_2e_text0)
 {
     base_textwrt[ea] = b;
-    c_iie_soft_write_text0(ea, b);
-}
-
-GLUE_C_WRITE(iie_soft_write_text0_mixed)
-{
-    DRAW_MIXED(0, SS_TEXTWRT);
+    DRAW_TEXT(0, SS_TEXTWRT);
 }
 
 GLUE_C_WRITE(video__write_2e_text0_mixed)
 {
     base_textwrt[ea] = b;
-    c_iie_soft_write_text0_mixed(ea, b);
-}
-
-GLUE_C_WRITE(iie_soft_write_text1)
-{
-    DRAW_TEXT(1, SS_RAMWRT);
+    DRAW_MIXED(0, SS_TEXTWRT);
 }
 
 GLUE_C_WRITE(video__write_2e_text1)
 {
     base_ramwrt[ea] = b;
-    c_iie_soft_write_text1(ea, b);
-}
-
-GLUE_C_WRITE(iie_soft_write_text1_mixed)
-{
-    DRAW_MIXED(1, SS_RAMWRT);
+    DRAW_TEXT(1, SS_RAMWRT);
 }
 
 GLUE_C_WRITE(video__write_2e_text1_mixed)
 {
     base_ramwrt[ea] = b;
-    c_iie_soft_write_text1_mixed(ea, b);
+    DRAW_MIXED(1, SS_RAMWRT);
 }
 
 // ----------------------------------------------------------------------------
@@ -835,20 +815,10 @@ static inline void _draw_hires_graphics(uint16_t ea, uint8_t b, bool is_even, ui
     _plot_hires(ea, b, is_even, fb_base+video__screen_addresses[off]);
 }
 
-GLUE_C_WRITE(iie_soft_write_even0) // refactor : remove
-{
-    _draw_hires_graphics(ea, b, /*even*/true, 0, SS_TEXT);
-}
-
 GLUE_C_WRITE(video__write_2e_even0)
 {
     base_hgrwrt[ea] = b;
     _draw_hires_graphics(ea, b, /*even*/true, 0, SS_TEXT);
-}
-
-GLUE_C_WRITE(iie_soft_write_even0_mixed) // refactor : remove
-{
-    _draw_hires_graphics(ea, b, /*even*/true, 0, (SS_TEXT|SS_MIXED));
 }
 
 GLUE_C_WRITE(video__write_2e_even0_mixed)
@@ -857,20 +827,10 @@ GLUE_C_WRITE(video__write_2e_even0_mixed)
     _draw_hires_graphics(ea, b, /*even*/true, 0, (SS_TEXT|SS_MIXED));
 }
 
-GLUE_C_WRITE(iie_soft_write_odd0) // refactor : remove
-{
-    _draw_hires_graphics(ea, b, /*even*/false, 0, SS_TEXT);
-}
-
 GLUE_C_WRITE(video__write_2e_odd0)
 {
     base_hgrwrt[ea] = b;
     _draw_hires_graphics(ea, b, /*even*/false, 0, SS_TEXT);
-}
-
-GLUE_C_WRITE(iie_soft_write_odd0_mixed) // refactor : remove
-{
-    _draw_hires_graphics(ea, b, /*even*/false, 0, (SS_TEXT|SS_MIXED));
 }
 
 GLUE_C_WRITE(video__write_2e_odd0_mixed)
@@ -879,20 +839,10 @@ GLUE_C_WRITE(video__write_2e_odd0_mixed)
     _draw_hires_graphics(ea, b, /*even*/false, 0, (SS_TEXT|SS_MIXED));
 }
 
-GLUE_C_WRITE(iie_soft_write_even1) // refactor : remove
-{
-    _draw_hires_graphics(ea, b, /*even*/true, 1, SS_TEXT);
-}
-
 GLUE_C_WRITE(video__write_2e_even1)
 {
     base_ramwrt[ea] = b;
     _draw_hires_graphics(ea, b, /*even*/true, 1, SS_TEXT);
-}
-
-GLUE_C_WRITE(iie_soft_write_even1_mixed) // refactor : remove
-{
-    _draw_hires_graphics(ea, b, /*even*/true, 1, (SS_TEXT|SS_MIXED));
 }
 
 GLUE_C_WRITE(video__write_2e_even1_mixed)
@@ -901,20 +851,10 @@ GLUE_C_WRITE(video__write_2e_even1_mixed)
     _draw_hires_graphics(ea, b, /*even*/true, 1, (SS_TEXT|SS_MIXED));
 }
 
-GLUE_C_WRITE(iie_soft_write_odd1) // refactor : remove
-{
-    _draw_hires_graphics(ea, b, /*even*/false, 1, SS_TEXT);
-}
-
 GLUE_C_WRITE(video__write_2e_odd1)
 {
     base_ramwrt[ea] = b;
     _draw_hires_graphics(ea, b, /*even*/false, 1, SS_TEXT);
-}
-
-GLUE_C_WRITE(iie_soft_write_odd1_mixed) // refactor : remove
-{
-    _draw_hires_graphics(ea, b, /*even*/false, 1, (SS_TEXT|SS_MIXED));
 }
 
 GLUE_C_WRITE(video__write_2e_odd1_mixed)
@@ -923,3 +863,52 @@ GLUE_C_WRITE(video__write_2e_odd1_mixed)
     _draw_hires_graphics(ea, b, /*even*/false, 1, (SS_TEXT|SS_MIXED));
 }
 
+void video_redraw(void) {
+
+    // temporarily reset softswitches
+    uint32_t softswitches_save = softswitches;
+    softswitches &= ~(SS_TEXTWRT|SS_HGRWRT|SS_RAMWRT);
+
+    for (unsigned int y = 0; y < TEXT_ROWS; y++) {
+        for (unsigned int x = 0; x < TEXT_COLS; x++) {
+            uint16_t ea = video__line_offset[y] + x + 0x400;
+            uint8_t b = apple_ii_64k[0][ea];
+
+            // text/lores pages
+            if (y < 20) {
+                DRAW_TEXT(0, SS_TEXTWRT);
+                ea += 0x400;
+                DRAW_TEXT(1, SS_RAMWRT);
+            } else {
+                DRAW_MIXED(0, SS_TEXTWRT);
+                ea += 0x400;
+                DRAW_MIXED(1, SS_RAMWRT);
+            }
+
+            // hires/dhires pages
+            for (unsigned int i = 0; i < 8; i++) {
+                ea = 0x2000 + video__line_offset[y] + (0x400*i) + x;
+                uint8_t b = apple_ii_64k[0][ea];
+                if (y < 20) {
+                    if (x & 1) {
+                        _draw_hires_graphics(ea,        b, /*even*/false, 0, SS_TEXT);
+                        _draw_hires_graphics(ea+0x2000, b, /*even*/false, 1, SS_TEXT);
+                    } else {
+                        _draw_hires_graphics(ea,        b, /*even*/true,  0, SS_TEXT);
+                        _draw_hires_graphics(ea+0x2000, b, /*even*/true,  1, SS_TEXT);
+                    }
+                } else {
+                    if (x & 1) {
+                        _draw_hires_graphics(ea,        b, /*even*/false, 0, (SS_TEXT|SS_MIXED));
+                        _draw_hires_graphics(ea+0x2000, b, /*even*/false, 1, (SS_TEXT|SS_MIXED));
+                    } else {
+                        _draw_hires_graphics(ea,        b, /*even*/true,  0, (SS_TEXT|SS_MIXED));
+                        _draw_hires_graphics(ea+0x2000, b, /*even*/true,  1, (SS_TEXT|SS_MIXED));
+                    }
+                }
+            }
+        }
+    }
+
+    softswitches = softswitches_save;
+}
