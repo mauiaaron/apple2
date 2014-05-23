@@ -29,7 +29,7 @@ noinst_PROGRAMS = genfont
 bin_PROGRAMS = apple2ix
 
 ASM_SRC = \
-	src/asm386/glue.S src/asm386/cpu.S src/asm386/display.S
+	src/asm386/glue.S src/asm386/cpu.S
 
 INTERFACE_CLASSIC_SRC = \
 	src/interface.c

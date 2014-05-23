@@ -661,7 +661,97 @@ GLUE_C_WRITE(video__write_2e_text1_mixed)
 }
 
 // ----------------------------------------------------------------------------
-// Hires (and Double-Hires) GRaphics
+// Double-Hires GRaphics
+
+// PlotDHiresByte
+static inline void _plot_dhires_pixels(uint8_t idx, uint8_t *fb_ptr) {
+    uint8_t b1 = video__dhires1[idx];
+    uint8_t b2 = video__dhires2[idx];
+    uint32_t b = (b2<<24) | (b1<<8);
+    *((uint32_t *)fb_ptr) = b;
+    *((uint32_t *)(fb_ptr+SCANWIDTH)) = b;
+}
+
+// PlotDHires
+static inline void _plot_dhires(uint16_t base, uint16_t ea, uint8_t *fb_base) {
+    ea &= ~0x1;
+
+    uint16_t memoff = ea - base;
+    uint8_t *fb_ptr = fb_base+video__screen_addresses[memoff];
+    uint8_t col = video__columns[memoff];
+
+    uint8_t b0 = 0x0;
+    uint8_t b1 = 0x0;
+    uint32_t b = 0x0;
+
+    if (col) {
+        b0 = apple_ii_64k[0][ea-1];
+        b1 = apple_ii_64k[1][ea];
+
+        b0 &= ~0x80;
+        b0 = (b1<<4)|(b0>>3);
+
+        _plot_dhires_pixels(b0, fb_ptr-4);
+    }
+
+    b1 = apple_ii_64k[1][ea+2];
+    b = (b1<<28);
+
+    b0 = apple_ii_64k[0][ea+1];
+    b0 &= ~0x80;
+    b |= (b0<<21);
+
+    b1 = apple_ii_64k[1][ea+1];
+    b1 &= ~0x80;
+    b |= (b1<<14);
+
+    b0 = apple_ii_64k[0][ea];
+    b0 &= ~0x80;
+    b |= (b0<<7);
+
+    b1 = apple_ii_64k[1][ea];
+    b1 &= ~0x80;
+    b |= b1;
+
+    // 00000001 11111122 22222333 3333xxxx
+
+    _plot_dhires_pixels(b, fb_ptr);
+
+    b >>= 4;
+    fb_ptr += 4;
+    _plot_dhires_pixels(b, fb_ptr);
+
+    b >>= 4;
+    fb_ptr += 4;
+    _plot_dhires_pixels(b, fb_ptr);
+
+    b >>= 4;
+    fb_ptr += 4;
+    _plot_dhires_pixels(b, fb_ptr);
+
+    b >>= 4;
+    fb_ptr += 4;
+    _plot_dhires_pixels(b, fb_ptr);
+
+    b >>= 4;
+    fb_ptr += 4;
+    _plot_dhires_pixels(b, fb_ptr);
+
+    b >>= 4;
+    fb_ptr += 4;
+    _plot_dhires_pixels(b, fb_ptr);
+}
+
+static inline void iie_plot_dhires0(uint16_t ea) {
+    _plot_dhires(0x2000, ea, video__fb1);
+}
+
+static inline void iie_plot_dhires1(uint16_t ea) {
+    _plot_dhires(0x4000, ea, video__fb2);
+}
+
+// ----------------------------------------------------------------------------
+// Hires GRaphics
 
 // CalculateInterpColor
 static inline void _calculate_interp_color(uint8_t *color_buf, const unsigned int idx, const uint8_t *interp_base, const uint16_t ea) {
@@ -691,14 +781,14 @@ static inline void _calculate_interp_color(uint8_t *color_buf, const unsigned in
 }
 
 // PlotPixelsExtra
-static inline void _plot_pixels(uint8_t *dst, const uint8_t *src) {
+static inline void _plot_hires_pixels(uint8_t *dst, const uint8_t *src) {
     uint8_t pix;
 
     for (unsigned int i=2; i; i--) {
         for (unsigned int j=DYNAMIC_SZ-1; j; j--) {
             uint16_t pix = *src;
             pix = ((pix<<8) | pix);
-            *((uint16_t *)dst) = pix; 
+            *((uint16_t *)dst) = pix;
             ++src;
             dst+=2;
         }
@@ -779,7 +869,7 @@ static inline void _plot_hires(uint16_t ea, uint8_t b, bool is_even, uint8_t *fb
         }
     }
 
-    _plot_pixels(fb_ptr-4, color_buf);
+    _plot_hires_pixels(fb_ptr-4, color_buf);
 }
 
 // DRAW_GRAPHICS
@@ -792,11 +882,9 @@ static inline void _draw_hires_graphics(uint16_t ea, uint8_t b, bool is_even, ui
     }
     if ((softswitches & SS_80COL) && (softswitches & SS_DHIRES)) {
         if (page) {
-            extern void iie_plot_dhires1();
-            iie_plot_dhires1();
+            iie_plot_dhires1(ea);
         } else {
-            extern void iie_plot_dhires0();
-            iie_plot_dhires0();
+            iie_plot_dhires0(ea);
         }
         return;
     }
@@ -912,3 +1000,4 @@ void video_redraw(void) {
 
     softswitches = softswitches_save;
 }
+
