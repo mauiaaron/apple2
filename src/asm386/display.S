@@ -27,19 +27,26 @@
  * ebx: dhires_colors index
  * edx: scratch
  * ------------------------------------------------------------------------- */
+#if 1
 #define PlotDHiresByte\
+                xorl    %edx, %edx;\
 		movb	SN(video__dhires2)(,%ebx,1), %dl;\
-		movb	%dl, %dh;\
+		/*movb	%dl, %dh;*/\
 		shll	$16, %edx;\
 		movb	SN(video__dhires1)(,%ebx,1), %dl;\
-		movb	%dl, %dh;\
+		/*movb	%dl, %dh;*/\
 		movl	%edx, (%eax);\
-		movl	%edx, SCANWIDTH(%eax);\
-		addl	$4, %eax;
-
-#define PlotDHiresFirstByte\
-		subl	$4, %eax;\
-		PlotDHiresByte
+		movl	%edx, SCANWIDTH(%eax);
+#else
+#define PlotDHiresByte\
+                pushal;\
+                pushl %eax;\
+                pushl %ebx;\
+                call _plot_dhires_pixels;\
+                popl %ebx;\
+                popl %eax;\
+                popal;
+#endif
 
 /* -------------------------------------------------------------------------
  * Plot a full double hires color byte into GM
@@ -77,8 +84,10 @@
 		shrb	$3, %bl;					      \
 		shlb	$4, %bh;					      \
 		orb	%bh, %bl;					      \
-		xorb	%bh, %bh;					      \
-		PlotDHiresFirstByte					      \
+		movzbl	%bl, %ebx;					      \
+		subl	$4, %eax;\
+		PlotDHiresByte\
+		addl	$4, %eax;\
 									      \
 plot_dhires##X##_cont:							      \
 		movl	%ecx, %edx;					      \
@@ -106,21 +115,27 @@ plot_dhires##X##_cont:							      \
 		/* 00000001 11111122 22222333 3333xxxx */		      \
 									      \
 		PlotDHiresByte						      \
+		addl	$4, %eax;\
 		shrl	$4, %ecx;					      \
 		movb	%cl, %bl;					      \
 		PlotDHiresByte						      \
+		addl	$4, %eax;\
 		shrl	$4, %ecx;					      \
 		movb	%cl, %bl;					      \
 		PlotDHiresByte						      \
+		addl	$4, %eax;\
 		shrl	$4, %ecx;					      \
 		movb	%cl, %bl;					      \
 		PlotDHiresByte						      \
+		addl	$4, %eax;\
 		shrl	$4, %ecx;					      \
 		movb	%cl, %bl;					      \
 		PlotDHiresByte						      \
+		addl	$4, %eax;\
 		shrl	$4, %ecx;					      \
 		movb	%cl, %bl;					      \
 		PlotDHiresByte						      \
+		addl	$4, %eax;\
 		shrl	$4, %ecx;					      \
 		movb	%cl, %bl;					      \
 		PlotDHiresByte						      \
