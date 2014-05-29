@@ -22,11 +22,12 @@
 220     REM
 230     PTS = 208 : REM NUMBER OF ANGLES SAMPLED
 240     FOR ANGLE = 0 TO PTS-1
-250         A1 = 6.2831852 * ANGLE / PTS : SI = SIN(A1) : C0 = COS(A1)
+250         A1 = 6.2831852 * ANGLE / PTS : SI = SIN(A1) : CO = COS(A1)
 260         FOR C = 0 TO 7 : COLOR = C : IF ANGLE > PTS/2 THEN COLOR = C+8
 270             IF C = 0 THEN COLOR = 15
-280             R = 24 - C*3 : V = 24 - SI * R : H = 40 + C0 * R * 1.36 : GOSUB 330
+280             R = 24 - C*3 : V = 24 - SI * R : H = 40 + CO * R * 1.36 : GOSUB 330
 290         NEXT C : NEXT ANGLE
+295     POKE 7987,255
 300     GOTO 300
 
 320     REM

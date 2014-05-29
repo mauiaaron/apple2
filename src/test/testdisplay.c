@@ -282,7 +282,7 @@ TEST test_hires_80colmix_normal() {
     if (test_do_reboot) {
         // HACK FIXME TODO -- softswitch settings appear to be initially screwy on reboot, so we start, abort, and then start again ...
         ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
-        ASSERT_SHA("A8CEF48107EDD6A0E727302259BEBC34B8700C1D");
+        ASSERT_SHA("F200479ABE6050CE3A071E36487ADF4C3791415F");
     } else {
         ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
         ASSERT_SHA("032BD68899749265EB2934A76A35D7068642824B");
@@ -313,15 +313,33 @@ TEST test_hires_80colmix_inverse() {
 TEST test_80col_lores() {
     BOOT_TO_DOS();
 
-    // this graphic looks wrong compared to the manual ...
-    SKIPm("mode needs to be properly implemented");
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
+    test_type_input("RUN TESTLORES80\r");
+    c_debugger_go();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+    ASSERT_SHA("18C69AEA1510485839F9724AFB54F74C4991FCCB");
+
+    PASS();
 }
 
 TEST test_80col_hires() {
     BOOT_TO_DOS();
 
-    // double-hires graphics are in-flux ...
-    SKIPm("mode needs to be properly implemented");
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
+    test_type_input("RUN TESTHIRES80_2\r");
+    c_debugger_go();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+    ASSERT_SHA("10F63A7B11EBF5019AE6D1F64AA7BACEA903426D");
+
+    apple_ii_64k[0][WATCHPOINT_ADDR] = 0x00;
+    c_debugger_go();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+    ASSERT_SHA("CC81BD3FE7055126D3FA13231CBD86E7C49590AA");
+
+    PASS();
 }
 
 // ----------------------------------------------------------------------------
@@ -345,7 +363,6 @@ GREATEST_SUITE(test_suite_display) {
     RUN_TESTp(test_boot_disk);
 
     // text modes
-
     RUN_TESTp(test_40col_normal);
     test_do_reboot = false;
     RUN_TESTp(test_40col_normal);
@@ -440,14 +457,7 @@ GREATEST_SUITE(test_suite_display) {
     // double-lo/hi
 
     RUN_TEST(test_80col_lores);
-    test_do_reboot = false;
-    RUN_TEST(test_80col_lores);
-    test_do_reboot = true;
-
     RUN_TEST(test_80col_hires);
-    test_do_reboot = false;
-    RUN_TEST(test_80col_hires);
-    test_do_reboot = true;
 
     // ...
     c_eject_6(0);
