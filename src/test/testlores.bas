@@ -1,0 +1,15 @@
+10      REM
+20      REM SINEWAVE LORES TEST
+30      REM
+
+35      REM FOR EMULATOR : DEADC0DE.ORG/apple2
+
+40      GR
+50      IF PEEK(7986)<>127 THEN POKE -16302,0 : REM SET NOMIXED
+60      FOR X = 0 TO 39
+70          COLOR = 3
+80          Y = 20 + SIN(45*(X-K)/279) * 18
+90          PLOT X,Y
+100     NEXT X
+110     POKE 7987,255
+
