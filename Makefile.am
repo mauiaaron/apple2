@@ -13,7 +13,7 @@ noinst_HEADERS = src/apple2.h src/common.h src/cpu.h src/disk.h src/glue.h \
 	src/interface.h src/joystick.h src/keys.h src/misc.h src/prefs.h \
 	src/timing.h src/uthash.h src/video/video.h src/zlib-helpers.h \
 	\
-	src/asm386/glue-prologue.h \
+	src/x86/glue-prologue.h \
 	src/meta/debug.h \
 	\
 	src/audio/alhelpers.h src/audio/AY8910.h src/audio/ds-shim.h \
@@ -29,7 +29,7 @@ noinst_PROGRAMS = genfont
 bin_PROGRAMS = apple2ix
 
 ASM_SRC = \
-	src/asm386/glue.S src/asm386/cpu.S
+	src/x86/glue.S src/x86/cpu.S
 
 INTERFACE_CLASSIC_SRC = \
 	src/interface.c
@@ -71,8 +71,8 @@ genfont_SOURCES = src/genfont.c
 src/font.c: src/font.txt genfont
 	./genfont < $< > $@
 
-src/asm386/glue.S: src/disk.c src/misc.c src/display.c src/vm.c @AUDIO_GLUE_C@
-	./src/asm386/genglue $^ > $@
+src/x86/glue.S: src/disk.c src/misc.c src/display.c src/vm.c @AUDIO_GLUE_C@
+	./src/x86/genglue $^ > $@
 
 ###############################################################################
 # Testing
@@ -115,6 +115,6 @@ EXTRA_DIST = reconf.sh configure README.debugger PROBLEMS .apple2 \
 	docs/apple2ix.6 \
 	\
 	src/font.txt \
-	src/asm386/genglue
+	src/x86/genglue
 
-CLEANFILES = src/font.c src/meta/debug.c src/asm386/glue.S
+CLEANFILES = src/font.c src/meta/debug.c src/x86/glue.S

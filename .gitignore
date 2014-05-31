@@ -42,7 +42,7 @@ apple2ix*.tar.gz
 
 # generated sources
 src/font.c
-src/asm386/glue.S
+src/x86/glue.S
 src/meta/debug.c
 
 # generated binaries
