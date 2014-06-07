@@ -3,6 +3,8 @@ dnl ---------------------------------------------------------------------------
 AC_PREREQ([2.69])
 AC_INIT([apple2ix], [0.8])
 
+AC_CANONICAL_TARGET
+
 AM_INIT_AUTOMAKE([foreign subdir-objects])
 
 dnl AM_CONFIG_HEADER(src/config.h) -- disable config.h because it makes it difficult/impossible to do modular builds for the test suite
@@ -12,30 +14,67 @@ AM_PROG_CC_C_O      dnl apparently required for custom font.c target?
 AM_PROG_AS
 AC_PROG_INSTALL
 
-
 dnl ---------------------------------------------------------------------------
-dnl Arch i386 checks, sigh... The plan is to eventually support x64 and certain
-dnl ARM targets, but we only handle i386 at the moment thus this hackishness
+dnl Arch checks
 
-dnl arch check (currently must be i386)
-my_save_cflags="$CFLAGS"
-CFLAGS="-m32 -Xassembler --32"
-AC_MSG_CHECKING([whether CC supports compiling for i386 ])
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([])], [
-    AC_MSG_RESULT([w00t!])
-    AC_MSG_WARN([compiling for i386 architecture appears to work, but emulator may fail to link if i386 versions of required libraries are not present...])
-    AM_CFLAGS="-std=gnu11 -Wall $CFLAGS"
-], [
-    AC_MSG_RESULT([oops])
-    AC_MSG_ERROR([emulator currently supports (cross-)compilation for i386 architecture only])
-])
+arch=''
+case $target in
+    x86_64-*-*)
+        ASM_O="src/x64/glue.o src/x64/cpu.o"
+        arch='x64'
+        ;;
+    i?86-*-*)
+        arch='x86'
+        ;;
+    x86*)
+        dnl support shorthand ./configure --target=x86
+        arch='x86'
+        ;;
+    *)
+        AC_MSG_ERROR([emulator does not presently support architecture $target])
+        ;;
+esac
 
-CFLAGS="$my_save_cflags"
-CCASFLAGS="$CCASFLAGS -m32 -Xassembler --32"
+AM_CFLAGS="-std=gnu11 -Wall"
 
+dnl double-check compilation for x86 target
+if test "$arch" = "x86" ; then
+    ASM_O="src/x86/glue.o src/x86/cpu.o"
+    my_save_cflags="$CFLAGS"
+    AC_MSG_CHECKING([whether compiler supports x86 target])
+    case $host in
+        i?86-*-*)
+            dnl building on an actual x86 machine presumably works
+            AC_COMPILE_IFELSE([AC_LANG_PROGRAM([])], [
+                AC_MSG_RESULT([32bit w00t!])
+            ], [
+                AC_MSG_RESULT([oops])
+                AC_MSG_ERROR([world is b0rken])
+            ])
+            ;;
+        *)
+            dnl check x86 compilation on x86_64 (or other) host
+            CFLAGS="-m32 -Xassembler --32"
+            AC_COMPILE_IFELSE([AC_LANG_PROGRAM([])], [
+                AC_MSG_RESULT([w00t!])
+                AC_MSG_WARN([compiling for x86 architecture appears to work, but emulator may fail to link if x86 versions of required libraries are not present...])
+                dnl HACK FIXME TODO --------------------------------------------------------- ^^^^^^^^^^^^ should check for this (and check linking against all x86 versions of needed libraries
+                AM_CFLAGS="$AM_CFLAGS $CFLAGS"
+                dnl -------- ARCHOS_HACK_LDFLAGS="-L/usr/lib/i386-linux-gnu -L/lib/i386-linux-gnu"
+            ], [
+                AC_MSG_RESULT([oops])
+                AC_MSG_ERROR([build system does not support building for $arch architecture])
+            ])
+            ;;
+    esac
+    CFLAGS="$my_save_cflags"
+fi
+
+AC_SUBST(ASM_O)
 AC_SUBST([AM_CFLAGS])
 
-dnl OS Check (currently must be Linux until we sort the arch crap out) ...
+
+dnl OS Check
 AC_EGREP_CPP(unsupported_, [
 #if defined(__ANDROID__)
 unsupported_for_now
@@ -50,9 +89,11 @@ unsupported_for_now
 #elif __linux
 linux
 #elif __unix
-unsupported_for_now
+unix
 #elif __posix
-unsupported_for_now
+posix
+#else
+unknown
 #endif
 ], [
     AC_MSG_CHECKING([Operating System ])
@@ -70,14 +111,6 @@ AC_TRY_LINK([asm("_glibc_foobar:");], [glibc_foobar()], [
     AC_MSG_NOTICE([Underscores in assembly linkage not allowed...])
     AC_DEFINE(NO_UNDERSCORES, 1, [Underscores allowed in assembly linkage])
 ])
-
-dnl at this point we believe arch/os is good ...
-
-ARCHOS_HACK_LDFLAGS="-L/usr/lib/i386-linux-gnu -L/lib/i386-linux-gnu"
-AC_SUBST(ARCHOS_HACK_LDFLAGS)
-
-ASM_O="src/x86/glue.o src/x86/cpu.o"
-AC_SUBST(ASM_O)
 
 
 dnl ---------------------------------------------------------------------------
