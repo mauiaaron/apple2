@@ -15,7 +15,7 @@
  */
 
 #include "apple2.h"
-#include "cpu.h"
+#include "cpu-regs.h"
 #include "misc.h"
 
 #define DebugCurrEA     SN(cpu65_debug)

@@ -17,7 +17,7 @@
 #ifndef __CPU_H_
 #define __CPU_H_
 
-#ifndef __ASSEMBLER__
+#if !defined(__ASSEMBLER__)
 #include <sys/types.h>
 #include <stdint.h>
 
@@ -115,19 +115,5 @@ extern int16_t cpu65_cycles_to_execute;
 #define X_Flag_6502     0x20        // [X]tra (reserved)...
 #define V_Flag_6502     0x40        // o[V]erflow
 #define N_Flag_6502     0x80        // [N]egative
-
-#define X_Reg           %bl             /* 6502 X register in %bl  */
-#define Y_Reg           %bh             /* 6502 Y register in %bh  */
-#define XY_Regs_32      %ebx            /* 6502 X&Y flags          */
-#define A_Reg           %cl             /* 6502 A register in %cl  */
-#define F_Reg           %ch             /* 6502 flags in %ch       */
-#define FF_Reg          %ecx            /* 6502 F&A flags          */
-#define SP_Reg_L        %dl             /* 6502 Stack pointer low  */
-#define SP_Reg_H        %dh             /* 6502 Stack pointer high */
-#define SP_Reg          %edx            /* 6502 Stack pointer      */
-#define PC_Reg          %si             /* 6502 Program Counter    */
-#define PC_Reg_E        %esi            /* 6502 Program Counter    */
-#define EffectiveAddr   %di             /* Effective address       */
-#define EffectiveAddr_E %edi            /* Effective address       */
 
 #endif // whole file
