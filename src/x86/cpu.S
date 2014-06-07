@@ -28,80 +28,71 @@
     CPU (6502) Helper Routines
    ------------------------------------------------------------------------- */
 
-#define GetFromPC_B                                                            \
-                movl    PC_Reg_E, EffectiveAddr_E;                             \
-                incw    PC_Reg;                                                \
-                call    *SN(cpu65_vmem)                                        \
-                        (,EffectiveAddr_E,8);
+#define GetFromPC_B \
+                movl    PC_Reg_E, EffectiveAddr_E; \
+                incw    PC_Reg; \
+                call    *SN(cpu65_vmem)(,EffectiveAddr_E,8);
 
-#define GetFromPC_W                                                            \
-                movl    PC_Reg_E, EffectiveAddr_E;                             \
-                incw    EffectiveAddr;                                         \
-                addw    $2, PC_Reg;                                            \
-                call    *SN(cpu65_vmem)                                        \
-                        (,EffectiveAddr_E,8);                                  \
-                decw    EffectiveAddr;                                         \
-                movb    %al, %ah;                                              \
-                call    *SN(cpu65_vmem)                                        \
-                        (,EffectiveAddr_E,8);
+#define GetFromPC_W \
+                movl    PC_Reg_E, EffectiveAddr_E; \
+                incw    EffectiveAddr; \
+                addw    $2, PC_Reg; \
+                call    *SN(cpu65_vmem)(,EffectiveAddr_E,8); \
+                decw    EffectiveAddr; \
+                movb    %al, %ah; \
+                call    *SN(cpu65_vmem)(,EffectiveAddr_E,8);
 
-#define JumpNextInstruction                                                    \
-                GetFromPC_B                                                    \
-                movb    %al, DebugCurrOpcode;                                  \
-                movb    $0, DebugCycleCount;                                   \
-                movb    $0, DebugCurrRW;                                       \
+#define JumpNextInstruction \
+                GetFromPC_B \
+                movb    %al, DebugCurrOpcode; \
+                movb    $0, DebugCycleCount; \
+                movb    $0, DebugCurrRW; \
                 jmp     *cpu65__opcodes(,%eax,4);
 
-#define GetFromEA_B                                                            \
-                orb     $1, DebugCurrRW;                                       \
-                call    *SN(cpu65_vmem)                                        \
-                        (,EffectiveAddr_E,8);
+#define GetFromEA_B \
+                orb     $1, DebugCurrRW; \
+                call    *SN(cpu65_vmem)(,EffectiveAddr_E,8);
 
-#define GetFromEA_W                                                            \
-                incw    EffectiveAddr;                                         \
-                call    *SN(cpu65_vmem)                                        \
-                        (,EffectiveAddr_E,8);                                  \
-                decw    EffectiveAddr;                                         \
-                movb    %al, %ah;                                              \
-                call    *SN(cpu65_vmem)                                        \
-                        (,EffectiveAddr_E,8);
+#define GetFromEA_W \
+                incw    EffectiveAddr; \
+                call    *SN(cpu65_vmem)(,EffectiveAddr_E,8); \
+                decw    EffectiveAddr; \
+                movb    %al, %ah; \
+                call    *SN(cpu65_vmem)(,EffectiveAddr_E,8);
 
-#define PutToEA_B                                                              \
-                orb     $2, DebugCurrRW;                                       \
-                movb    %al, DebugCurrByte;                                    \
-                call    *SN(cpu65_vmem)+4                                      \
-                        (,EffectiveAddr_E,8);
-#define GetFromMem_B(x)                                                        \
-                movl    x, EffectiveAddr_E;                                    \
-                call    *SN(cpu65_vmem)                                        \
-                        (,EffectiveAddr_E,8);
+#define PutToEA_B \
+                orb     $2, DebugCurrRW; \
+                movb    %al, DebugCurrByte; \
+                call    *SN(cpu65_vmem)+4(,EffectiveAddr_E,8);
 
-#define GetFromMem_W(x)                                                        \
-                movl    x, EffectiveAddr_E;                                    \
-                incw    EffectiveAddr;                                         \
-                call    *SN(cpu65_vmem)                                        \
-                        (,EffectiveAddr_E,8);                                  \
-                decw    EffectiveAddr;                                         \
-                movb    %al, %ah;                                              \
-                call    *SN(cpu65_vmem)                                        \
-                        (,EffectiveAddr_E,8);                                  \
+#define GetFromMem_B(x) \
+                movl    x, EffectiveAddr_E; \
+                call    *SN(cpu65_vmem)(,EffectiveAddr_E,8);
 
-#define Continue                                                               \
+#define GetFromMem_W(x) \
+                movl    x, EffectiveAddr_E; \
+                incw    EffectiveAddr; \
+                call    *SN(cpu65_vmem)(,EffectiveAddr_E,8); \
+                decw    EffectiveAddr; \
+                movb    %al, %ah; \
+                call    *SN(cpu65_vmem)(,EffectiveAddr_E,8);
+
+#define Continue \
                 jmp     continue;
 
 /*
  * Save CPU state when returning from being called from C
  */
-#define SaveState                                                              \
-                xorl    %eax, %eax;                                            \
-                movw    EffectiveAddr, DebugCurrEA;                            \
-                movw    PC_Reg, SN(cpu65_current);                             \
-                movb    A_Reg, SN(cpu65_current)+2;                            \
-                movb    F_Reg, %al;                                            \
-                movb    SN(cpu65_flags_encode)(,%eax,1), %al;                  \
-                movb    %al, SN(cpu65_current)+3;                              \
-                movb    X_Reg, SN(cpu65_current)+4;                            \
-                movb    Y_Reg, SN(cpu65_current)+5;                            \
+#define SaveState \
+                xorl    %eax, %eax; \
+                movw    EffectiveAddr, DebugCurrEA; \
+                movw    PC_Reg, SN(cpu65_current); \
+                movb    A_Reg, SN(cpu65_current)+2; \
+                movb    F_Reg, %al; \
+                movb    SN(cpu65_flags_encode)(,%eax,1), %al; \
+                movb    %al, SN(cpu65_current)+3; \
+                movb    X_Reg, SN(cpu65_current)+4; \
+                movb    Y_Reg, SN(cpu65_current)+5; \
                 movb    SP_Reg_L, SN(cpu65_current)+6;
 
 /* Restore CPU state when being called from C.
@@ -114,61 +105,61 @@
  * polluting this module with Apple-specific stuff.  But we need to do
  * it, else aux-stack using programs will crash when debugged.)
  */
-#define RestoreState                                                           \
-                xorl    %eax, %eax;                                            \
-                xorl    %ebx, %ebx;                                            \
-                xorl    %ecx, %ecx;                                            \
-                movl    $0x0100, SP_Reg;                                       \
-                xorl    %esi, %esi;                                            \
-                xorl    %edi, %edi;                                            \
-                movw    DebugCurrEA, EffectiveAddr;                            \
-                movw    SN(cpu65_current), PC_Reg;                             \
-                movb    SN(cpu65_current)+2, A_Reg;                            \
-                movb    SN(cpu65_current)+3, %al;                              \
-                movb    SN(cpu65_flags_decode)(,%eax,1), F_Reg;                \
-                movb    SN(cpu65_current)+4, X_Reg;                            \
-                movb    SN(cpu65_current)+5, Y_Reg;                            \
-                movb    SN(cpu65_current)+6, SP_Reg_L;                         \
-                movl    SN(base_stackzp), %eax;                                \
-                subl    $SN(apple_ii_64k), %eax; /* $ for pointer addr */      \
-                orl     %eax, SP_Reg;                                          \
+#define RestoreState \
+                xorl    %eax, %eax; \
+                xorl    %ebx, %ebx; \
+                xorl    %ecx, %ecx; \
+                movl    $0x0100, SP_Reg; \
+                xorl    %esi, %esi; \
+                xorl    %edi, %edi; \
+                movw    DebugCurrEA, EffectiveAddr; \
+                movw    SN(cpu65_current), PC_Reg; \
+                movb    SN(cpu65_current)+2, A_Reg; \
+                movb    SN(cpu65_current)+3, %al; \
+                movb    SN(cpu65_flags_decode)(,%eax,1), F_Reg; \
+                movb    SN(cpu65_current)+4, X_Reg; \
+                movb    SN(cpu65_current)+5, Y_Reg; \
+                movb    SN(cpu65_current)+6, SP_Reg_L; \
+                movl    SN(base_stackzp), %eax; \
+                subl    $SN(apple_ii_64k), %eax; /* $ for pointer addr */ \
+                orl     %eax, SP_Reg; \
                 xorl    %eax, %eax;
 
-#define BranchXCycles                                                          \
-                incb    DebugCycleCount; /* +1 branch taken */                 \
-                pushl   %ebx;                                                  \
-                movw    PC_Reg, %bx;                                           \
-                cbw;                                                           \
-                addw    %bx, %ax;                                              \
-                movw    %ax, PC_Reg;                                           \
-                cmpb    %ah, %bh;                                              \
-                je      9f;                                                    \
-                incb    DebugCycleCount; /* +1 branch new page */              \
+#define BranchXCycles \
+                incb    DebugCycleCount; /* +1 branch taken */ \
+                pushl   %ebx; \
+                movw    PC_Reg, %bx; \
+                cbw; \
+                addw    %bx, %ax; \
+                movw    %ax, PC_Reg; \
+                cmpb    %ah, %bh; \
+                je      9f; \
+                incb    DebugCycleCount; /* +1 branch new page */ \
 9:              popl    %ebx;
 
-#define FlagC   lahf;                                                          \
-                andb    $C_Flag, %ah;                                          \
-                andb    $~C_Flag, F_Reg;                                       \
+#define FlagC   lahf; \
+                andb    $C_Flag, %ah; \
+                andb    $~C_Flag, F_Reg; \
                 orb     %ah, F_Reg;
 
-#define FlagZ   lahf;                                                          \
-                andb    $Z_Flag, %ah;                                          \
-                andb    $~Z_Flag, F_Reg;                                       \
+#define FlagZ   lahf; \
+                andb    $Z_Flag, %ah; \
+                andb    $~Z_Flag, F_Reg; \
                 orb     %ah, F_Reg;
 
-#define FlagN   lahf;                                                          \
-                andb    $N_Flag, %ah;                                          \
-                andb    $~N_Flag, F_Reg;                                       \
+#define FlagN   lahf; \
+                andb    $N_Flag, %ah; \
+                andb    $~N_Flag, F_Reg; \
                 orb     %ah, F_Reg;
 
-#define FlagNZ  lahf;                                                          \
-                andb    $(N_Flag|Z_Flag), %ah;                                 \
-                andb    $~(N_Flag|Z_Flag), F_Reg;                              \
+#define FlagNZ  lahf; \
+                andb    $(N_Flag|Z_Flag), %ah; \
+                andb    $~(N_Flag|Z_Flag), F_Reg; \
                 orb     %ah, F_Reg;
 
-#define FlagNZC lahf;                                                          \
-                andb    $(N_Flag|Z_Flag|C_Flag), %ah;                          \
-                andb    $~(N_Flag|Z_Flag|C_Flag), F_Reg;                       \
+#define FlagNZC lahf; \
+                andb    $(N_Flag|Z_Flag|C_Flag), %ah; \
+                andb    $~(N_Flag|Z_Flag|C_Flag), F_Reg; \
                 orb     %ah, F_Reg;
 
                 /* Have to do things a little differently since
@@ -178,34 +169,34 @@
                  * constant, but saves three instruction prefixes.
                  * This doesn't affect the cycle count.
                  */
-#define FlagNVZC                                                               \
-                pushfl;                                                        \
-                popl    %eax;                                                  \
-                andl    $0x08C1,%eax;                                          \
-                andb    $~(N_Flag|V_Flag|Z_Flag|C_Flag), F_Reg;                \
-                orb     %ah, F_Reg;                                            \
+#define FlagNVZC \
+                pushfl; \
+                popl    %eax; \
+                andl    $0x08C1,%eax; \
+                andb    $~(N_Flag|V_Flag|Z_Flag|C_Flag), F_Reg; \
+                orb     %ah, F_Reg; \
                 orb     %al, F_Reg;
 
-#define Push(x) movb    x, SN(apple_ii_64k)(,SP_Reg,1);                        \
+#define Push(x) movb    x, SN(apple_ii_64k)(,SP_Reg,1); \
                 decb    SP_Reg_L;
 
-#define Pop(x)  incb    SP_Reg_L;                                              \
+#define Pop(x)  incb    SP_Reg_L; \
                 movb    SN(apple_ii_64k)(,SP_Reg,1), x;
 
 /* Immediate Addressing - the operand is contained in the second byte of the
    instruction. */
-#define GetImm  movl    PC_Reg_E, EffectiveAddr_E;                             \
+#define GetImm  movl    PC_Reg_E, EffectiveAddr_E; \
                 incw    PC_Reg;
 
 /* Absolute Addressing - the second byte of the instruction is the low
    order address, and the third byte is the high order byte. */
-#define GetAbs  GetFromPC_W;                                                   \
+#define GetAbs  GetFromPC_W; \
                 movl    %eax, EffectiveAddr_E;
 
 /* Zero Page Addressing - the second byte of the instruction is an
    address on the zero page */
-#define GetZPage                                                               \
-                GetFromPC_B;                                                   \
+#define GetZPage \
+                GetFromPC_B; \
                 movl    %eax, EffectiveAddr_E;
 
 /* Zero Page Indexed Addressing - The effective address is calculated by
@@ -213,48 +204,48 @@
    to the zero page addressing nature of this mode, no carry is added
    to the high address byte, and the crossing of page boundaries does
    not occur. */
-#define GetZPage_X                                                             \
-                GetFromPC_B;                                                   \
-                addb    X_Reg, %al;                                            \
+#define GetZPage_X \
+                GetFromPC_B; \
+                addb    X_Reg, %al; \
                 movl    %eax, EffectiveAddr_E;
 
 // HACK IS THIS EVER USED?
-#define GetZPage_Y                                                             \
-                GetFromPC_B;                                                   \
-                addb    Y_Reg, %al;                                            \
+#define GetZPage_Y \
+                GetFromPC_B; \
+                addb    Y_Reg, %al; \
                 movl    %eax, EffectiveAddr_E;
 
 /* Absolute Indexed Addressing - The effective address is formed by
    adding the contents of X or Y to the address contained in the
    second and third bytes of the instruction. */
-#define _GetAbs_X                                                              \
-                GetFromPC_W;                                                   \
-                addb    X_Reg, %al;                                            \
-                jnc     9f;                                                    \
+#define _GetAbs_X \
+                GetFromPC_W; \
+                addb    X_Reg, %al; \
+                jnc     9f; \
                 adcb    $0, %ah;
 
-#define GetAbs_X                                                               \
-                _GetAbs_X                                                      \
-                incb    DebugCycleCount; /* +1 cycle on page boundary */       \
+#define GetAbs_X \
+                _GetAbs_X \
+                incb    DebugCycleCount; /* +1 cycle on page boundary */ \
 9:              movl    %eax, EffectiveAddr_E;
 
-#define GetAbs_X_STx                                                           \
-                _GetAbs_X                                                      \
+#define GetAbs_X_STx \
+                _GetAbs_X \
 9:              movl    %eax, EffectiveAddr_E;
 
-#define _GetAbs_Y                                                              \
-                GetFromPC_W;                                                   \
-                addb    Y_Reg, %al;                                            \
-                jnc     9f;                                                    \
+#define _GetAbs_Y \
+                GetFromPC_W; \
+                addb    Y_Reg, %al; \
+                jnc     9f; \
                 adcb    $0, %ah;
 
-#define GetAbs_Y                                                               \
-                _GetAbs_Y                                                      \
-                incb    DebugCycleCount; /* +1 cycle on page boundary */       \
+#define GetAbs_Y \
+                _GetAbs_Y \
+                incb    DebugCycleCount; /* +1 cycle on page boundary */ \
 9:              movl    %eax, EffectiveAddr_E;
 
-#define GetAbs_Y_STA                                                           \
-                _GetAbs_Y                                                      \
+#define GetAbs_Y_STA \
+                _GetAbs_Y \
 9:              movl    %eax, EffectiveAddr_E;
 
 /* Absolute Indirect Addressing - The second and third bytes of the
@@ -265,22 +256,22 @@
 /* (unused at the moment. It applies to JMP, but JMP's addressing is done
  * without the macro)
  */
-#define GetInd  GetFromPC_W;                                                   \
+#define GetInd  GetFromPC_W; \
                 GetFromMem_W(%eax)
 
 /* Zero Page Indirect Addressing (65c02) - The second byte of the
    instruction points to a memory location on page zero containing the
    low order byte of the effective address.  The next location on page
    zero contains the high order byte of the address. */
-#define GetIndZPage                                                            \
-                GetFromPC_B;                                                   \
-                incb    %al;                                                   \
-                movl    %eax, EffectiveAddr_E;                                 \
-                GetFromEA_B;                                                   \
-                movb    %al, %ah;                                              \
-                decl    EffectiveAddr_E;                                       \
-                andl    $0xFF, EffectiveAddr_E;                                \
-                GetFromEA_B;                                                   \
+#define GetIndZPage \
+                GetFromPC_B; \
+                incb    %al; \
+                movl    %eax, EffectiveAddr_E; \
+                GetFromEA_B; \
+                movb    %al, %ah; \
+                decl    EffectiveAddr_E; \
+                andl    $0xFF, EffectiveAddr_E; \
+                GetFromEA_B; \
                 movl    %eax, EffectiveAddr_E;
 
 /* Zero Page Indexed Indirect Addressing - The second byte is added to
@@ -290,16 +281,16 @@
    next memory location in page zero contains the high-order byte of
    the effective address.  Both memory locations specifying the high
    and low-order bytes must be in page zero. */
-#define GetIndZPage_X                                                          \
-                GetFromPC_B;                                                   \
-                addb    X_Reg, %al;                                            \
-                incb    %al;                                                   \
-                movl    %eax, EffectiveAddr_E;                                 \
-                GetFromEA_B;                                                   \
-                movb    %al, %ah;                                              \
-                decl    EffectiveAddr_E;                                       \
-                andl    $0xFF, EffectiveAddr_E;                                \
-                GetFromEA_B;                                                   \
+#define GetIndZPage_X \
+                GetFromPC_B; \
+                addb    X_Reg, %al; \
+                incb    %al; \
+                movl    %eax, EffectiveAddr_E; \
+                GetFromEA_B; \
+                movb    %al, %ah; \
+                decl    EffectiveAddr_E; \
+                andl    $0xFF, EffectiveAddr_E; \
+                GetFromEA_B; \
                 movl    %eax, EffectiveAddr_E;
 
 /* Indirect Indexed Addressing - The second byte of the instruction
@@ -309,197 +300,197 @@
    carry from this addition is added to the contents of the next page
    zero memory location, the result being the high order byte of the
    effective address. */
-#define _GetIndZPage_Y                                                         \
-                GetFromPC_B;                                                   \
-                incb    %al;                                                   \
-                movl    %eax, EffectiveAddr_E;                                 \
-                GetFromEA_B;                                                   \
-                movb    %al, %ah;                                              \
-                decl    EffectiveAddr_E;                                       \
-                andl    $0xFF, EffectiveAddr_E;                                \
-                GetFromEA_B;                                                   \
-                addb    Y_Reg, %al;                                            \
+#define _GetIndZPage_Y \
+                GetFromPC_B; \
+                incb    %al; \
+                movl    %eax, EffectiveAddr_E; \
+                GetFromEA_B; \
+                movb    %al, %ah; \
+                decl    EffectiveAddr_E; \
+                andl    $0xFF, EffectiveAddr_E; \
+                GetFromEA_B; \
+                addb    Y_Reg, %al; \
                 jnc 9f;
 
-#define GetIndZPage_Y                                                          \
-                _GetIndZPage_Y                                                 \
-                adcb    $0, %ah;                                               \
-                incb    DebugCycleCount; /* +1 cycle on page boundary */       \
+#define GetIndZPage_Y \
+                _GetIndZPage_Y \
+                adcb    $0, %ah; \
+                incb    DebugCycleCount; /* +1 cycle on page boundary */ \
 9:              movl    %eax, EffectiveAddr_E;
 
-#define GetIndZPage_Y_STA                                                      \
-                _GetIndZPage_Y                                                 \
-                adcb    $0, %ah;                                               \
+#define GetIndZPage_Y_STA \
+                _GetIndZPage_Y \
+                adcb    $0, %ah; \
 9:              movl    %eax, EffectiveAddr_E;
 
-#define DoADC_b GetFromEA_B                                                    \
-                bt      $C_Flag_Bit, FF_Reg;                                   \
-                adcb    %al, A_Reg;                                            \
+#define DoADC_b GetFromEA_B \
+                bt      $C_Flag_Bit, FF_Reg; \
+                adcb    %al, A_Reg; \
                 FlagNVZC
 
 #ifndef NDEBUG
-#define DebugBCDCheck                                                          \
-                testb   $0x80, A_Reg;                                          \
-                jz      6f;                                                    \
-                testb   $0x60, A_Reg;                                          \
-                jz      6f;                                                    \
-                call    SN(c_debug_illegal_bcd);                               \
-6:              testb   $0x08, A_Reg;                                          \
-                jz      7f;                                                    \
-                testb   $0x06, A_Reg;                                          \
-                jz      7f;                                                    \
-                call    SN(c_debug_illegal_bcd);                               \
-7:              testb   $0x80, %al;                                            \
-                jz      8f;                                                    \
-                testb   $0x60, %al;                                            \
-                jz      8f;                                                    \
-                call    SN(c_debug_illegal_bcd);                               \
-8:              testb   $0x08, %al;                                            \
-                jz      9f;                                                    \
-                testb   $0x06, %al;                                            \
-                jz      9f;                                                    \
-                call    SN(c_debug_illegal_bcd);                               \
+#define DebugBCDCheck \
+                testb   $0x80, A_Reg; \
+                jz      6f; \
+                testb   $0x60, A_Reg; \
+                jz      6f; \
+                call    SN(c_debug_illegal_bcd); \
+6:              testb   $0x08, A_Reg; \
+                jz      7f; \
+                testb   $0x06, A_Reg; \
+                jz      7f; \
+                call    SN(c_debug_illegal_bcd); \
+7:              testb   $0x80, %al; \
+                jz      8f; \
+                testb   $0x60, %al; \
+                jz      8f; \
+                call    SN(c_debug_illegal_bcd); \
+8:              testb   $0x08, %al; \
+                jz      9f; \
+                testb   $0x06, %al; \
+                jz      9f; \
+                call    SN(c_debug_illegal_bcd); \
 9:
 #else
 #define DebugBCDCheck
 #endif
 
-#define DoADC_d GetFromEA_B                                                    \
-                DebugBCDCheck                                                  \
-                bt      $C_Flag_Bit, FF_Reg;                                   \
-                adcb    A_Reg, %al;                                            \
-                daa;                                                           \
-                movb    %al, A_Reg;                                            \
+#define DoADC_d GetFromEA_B \
+                DebugBCDCheck \
+                bt      $C_Flag_Bit, FF_Reg; \
+                adcb    A_Reg, %al; \
+                daa; \
+                movb    %al, A_Reg; \
                 FlagNVZC
 
-#define DoAND   GetFromEA_B                                                    \
-                andb    %al, A_Reg;                                            \
+#define DoAND   GetFromEA_B \
+                andb    %al, A_Reg; \
                 FlagNZ
 
-#define DoASL   GetFromEA_B                                                    \
-                addb    %al, %al;                                              \
-                FlagNZC                                                        \
-                PutToEA_B                                                      \
+#define DoASL   GetFromEA_B \
+                addb    %al, %al; \
+                FlagNZC \
+                PutToEA_B \
 
 /* SAR (and the following AND) effectively moves
  * bit 6 to Bit 3 while leaving Bit 7 unchanged */
-#define DoBIT   GetFromEA_B                                                    \
-                testb   %al, A_Reg;                                            \
-                lahf;                                                          \
-                sarb    $3, %al;                                               \
-                andw    $0x4088, %ax;                                          \
-                andb    $~(N_Flag|V_Flag|Z_Flag), F_Reg;                       \
-                orb     %al, F_Reg;                                            \
+#define DoBIT   GetFromEA_B \
+                testb   %al, A_Reg; \
+                lahf; \
+                sarb    $3, %al; \
+                andw    $0x4088, %ax; \
+                andb    $~(N_Flag|V_Flag|Z_Flag), F_Reg; \
+                orb     %al, F_Reg; \
                 orb     %ah, F_Reg;
 
-#define DoCMP   GetFromEA_B                                                    \
-                cmpb    %al, A_Reg;                                            \
-                cmc;                                                           \
+#define DoCMP   GetFromEA_B \
+                cmpb    %al, A_Reg; \
+                cmc; \
                 FlagNZC
 
-#define DoCPX   GetFromEA_B                                                    \
-                cmpb    %al, X_Reg;                                            \
-                cmc;                                                           \
+#define DoCPX   GetFromEA_B \
+                cmpb    %al, X_Reg; \
+                cmc; \
                 FlagNZC
 
-#define DoCPY   GetFromEA_B                                                    \
-                cmpb    %al, Y_Reg;                                            \
-                cmc;                                                           \
+#define DoCPY   GetFromEA_B \
+                cmpb    %al, Y_Reg; \
+                cmc; \
                 FlagNZC
 
-#define DoDEC   GetFromEA_B                                                    \
-                decb    %al;                                                   \
-                FlagNZ                                                         \
+#define DoDEC   GetFromEA_B \
+                decb    %al; \
+                FlagNZ \
                 PutToEA_B
 
-#define DoEOR   GetFromEA_B                                                    \
-                xorb    %al, A_Reg;                                            \
+#define DoEOR   GetFromEA_B \
+                xorb    %al, A_Reg; \
                 FlagNZ
 
-#define DoINC   GetFromEA_B                                                    \
-                incb    %al;                                                   \
-                FlagNZ                                                         \
+#define DoINC   GetFromEA_B \
+                incb    %al; \
+                FlagNZ \
                 PutToEA_B
 
-#define DoLDA   GetFromEA_B                                                    \
-                movb    %al, A_Reg;                                            \
-                orb     %al, %al;                                              \
+#define DoLDA   GetFromEA_B \
+                movb    %al, A_Reg; \
+                orb     %al, %al; \
                 FlagNZ
 
-#define DoLDX   GetFromEA_B                                                    \
-                movb    %al, X_Reg;                                            \
-                orb     %al, %al;                                              \
+#define DoLDX   GetFromEA_B \
+                movb    %al, X_Reg; \
+                orb     %al, %al; \
                 FlagNZ
 
-#define DoLDY   GetFromEA_B                                                    \
-                movb    %al, Y_Reg;                                            \
-                orb     %al, %al;                                              \
+#define DoLDY   GetFromEA_B \
+                movb    %al, Y_Reg; \
+                orb     %al, %al; \
                 FlagNZ
 
-#define DoLSR   GetFromEA_B                                                    \
-                shrb    $1, %al;                                               \
-                FlagNZC                                                        \
+#define DoLSR   GetFromEA_B \
+                shrb    $1, %al; \
+                FlagNZC \
                 PutToEA_B
 
-#define DoORA   GetFromEA_B                                                    \
-                orb     %al, A_Reg;                                            \
+#define DoORA   GetFromEA_B \
+                orb     %al, A_Reg; \
                 FlagNZ
 
-#define DoROL   GetFromEA_B                                                    \
-                bt      $C_Flag_Bit, FF_Reg;                                   \
-                adcb    %al,%al;                                               \
-                FlagNZC                                                        \
+#define DoROL   GetFromEA_B \
+                bt      $C_Flag_Bit, FF_Reg; \
+                adcb    %al,%al; \
+                FlagNZC \
                 PutToEA_B
 
-#define DoROR   GetFromEA_B                                                    \
-                movb    F_Reg, %ah;                                            \
-                rorl    $1, %eax;                                              \
-                orb     %al, %al;                                              \
-                btr     $31, %eax;                                             \
-                FlagNZC                                                        \
+#define DoROR   GetFromEA_B \
+                movb    F_Reg, %ah; \
+                rorl    $1, %eax; \
+                orb     %al, %al; \
+                btr     $31, %eax; \
+                FlagNZC \
                 PutToEA_B
 
-#define DoSBC_b GetFromEA_B                                                    \
-                notb    %al;                                                   \
-                bt      $C_Flag_Bit, FF_Reg;                                   \
-                adcb    %al, A_Reg;                                            \
+#define DoSBC_b GetFromEA_B \
+                notb    %al; \
+                bt      $C_Flag_Bit, FF_Reg; \
+                adcb    %al, A_Reg; \
                 FlagNVZC
 
-#define DoSBC_d GetFromEA_B                                                    \
-                DebugBCDCheck                                                  \
-                bt      $C_Flag_Bit, FF_Reg;                                   \
-                cmc;                                                           \
-                xchgb   A_Reg, %al;                                            \
-                sbbb    A_Reg, %al;                                            \
-                das;                                                           \
-                movb    %al, A_Reg;                                            \
-                cmc;                                                           \
+#define DoSBC_d GetFromEA_B \
+                DebugBCDCheck \
+                bt      $C_Flag_Bit, FF_Reg; \
+                cmc; \
+                xchgb   A_Reg, %al; \
+                sbbb    A_Reg, %al; \
+                das; \
+                movb    %al, A_Reg; \
+                cmc; \
                 FlagNVZC
 
-#define DoSTA   movb    A_Reg, %al;                                            \
+#define DoSTA   movb    A_Reg, %al; \
                 PutToEA_B
 
-#define DoSTX   movb    X_Reg, %al;                                            \
+#define DoSTX   movb    X_Reg, %al; \
                 PutToEA_B
 
-#define DoSTY   movb    Y_Reg, %al;                                            \
+#define DoSTY   movb    Y_Reg, %al; \
                 PutToEA_B
 
-#define DoSTZ   movb    $0x0, %al;                                             \
+#define DoSTZ   movb    $0x0, %al; \
                 PutToEA_B
 
-#define DoTRB   GetFromEA_B                                                    \
-                testb   A_Reg, %al;                                            \
-                FlagZ                                                          \
-                notb    A_Reg;                                                 \
-                andb    A_Reg, %al;                                            \
-                notb    A_Reg;                                                 \
+#define DoTRB   GetFromEA_B \
+                testb   A_Reg, %al; \
+                FlagZ \
+                notb    A_Reg; \
+                andb    A_Reg, %al; \
+                notb    A_Reg; \
                 PutToEA_B
 
-#define DoTSB   GetFromEA_B                                                    \
-                testb   A_Reg, %al;                                            \
-                FlagZ                                                          \
-                orb     A_Reg, %al;                                            \
+#define DoTSB   GetFromEA_B \
+                testb   A_Reg, %al; \
+                FlagZ \
+                orb     A_Reg, %al; \
                 PutToEA_B
 
 /* ----------------------------------------------------------------------
