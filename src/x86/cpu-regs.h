@@ -32,7 +32,9 @@
 #   error not ready
 #else
 #   define SZ_PTR           4
+#   define _XSP             %esp        /* x86 stack pointer       */
 #   define _XAX             %eax        /* scratch                 */
+#   define _XBX             %ebx        /* scratch2                */
 #   define XY_Reg_X         %ebx        /* 6502 X&Y flags          */
 #   define AF_Reg_X         %ecx        /* 6502 F&A flags          */
 #   define SP_Reg_X         %edx        /* 6502 Stack pointer      */

@@ -82,7 +82,7 @@
 
 #define BranchXCycles \
                 incb    DebugCycleCount; /* +1 branch taken */ \
-                shll    $16, %ebx; \
+                shll    $16, _XBX; \
                 movw    PC_Reg, %bx; \
                 cbw; \
                 addw    %bx, %ax; \
@@ -90,7 +90,7 @@
                 cmpb    %ah, %bh; \
                 je      9f; \
                 incb    DebugCycleCount; /* +1 branch new page */ \
-9:              shrl    $16, %ebx;
+9:              shrl    $16, _XBX;
 
 #define FlagC   lahf; \
                 andb    $C_Flag, %ah; \
@@ -2047,20 +2047,16 @@ E(cpu65_run)
                 jmp     continue1
 
 1:              movb    $0, SN(emul_reinitialize)
-                /* Zero all registers, as well as the unused 32-bit parts
-                 * of variables. (which may need to be kept 0)
-                 *
-                 * Note: dependent on assignment of registers
-                 */
+                // Zero all used registers
                 xorl    _XAX, _XAX
-                xorl    %ebx, %ebx
-                xorl    %ecx, %ecx
-                xorl    %esi, %esi
-                xorl    %edi, %edi
+                xorl    XY_Reg_X, XY_Reg_X
+                xorl    AF_Reg_X, AF_Reg_X
+                xorl    PC_Reg_X, PC_Reg_X
+                xorl    EffectiveAddr_X, EffectiveAddr_X
                 movl    $0x1FF, SP_Reg_X
                 jmp     ex_reset
 
-exit_cpu65_run:                                             // Return to timing loop ...
+exit_cpu65_run:
                 // Save CPU state when returning from being called from C
                 xorl    _XAX, _XAX
                 movw    EffectiveAddr, DebugCurrEA
@@ -2075,7 +2071,7 @@ exit_cpu65_run:                                             // Return to timing 
                 popal
                 ret
 
-emul_reinit:    movb    $0, SN(cpu65__signal)               // Return to timing loop ...
+emul_reinit:    movb    $0, SN(cpu65__signal)
                 movb    $1, SN(emul_reinitialize)
                 popal
                 ret
@@ -2085,11 +2081,10 @@ emul_reinit:    movb    $0, SN(cpu65__signal)               // Return to timing 
    ------------------------------------------------------------------------- */
 
 E(cpu65_direct_write)
-                /* NB: dependent on register choices */
-                pushl   %edi
-                movl    8(%esp),%edi
-                movl    12(%esp),_XAX
+                pushl   EffectiveAddr_X
+                movl    8(_XSP),EffectiveAddr_X
+                movl    12(_XSP),_XAX
                 call    *SN(cpu65_vmem)+4(,EffectiveAddr_X,SZ_PTR*2)
-                popl    %edi
+                popl    EffectiveAddr_X
                 ret
 

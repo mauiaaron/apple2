@@ -68,8 +68,8 @@ E(func)                 pushl   _XAX; \
                         pushl   _XAX; \
                         pushl   EffectiveAddr_X; \
                         call    SN(c_##func); \
-                        popl    %edx; /* dummy */ \
-                        popl    %edx; /* dummy */ \
+                        popl    EffectiveAddr_X; /* dummy */ \
+                        popl    _XAX; /* dummy */ \
                         popl    PC_Reg_X; \
                         popl    SP_Reg_X; \
                         popl    AF_Reg_X; \
@@ -86,7 +86,7 @@ E(func)                 pushl   XY_Reg_X; \
                         pushl   _XAX; /* HACK: works around mysterious issue with generated mov(_XAX), _XAX ... */ \
                         pushl   EffectiveAddr_X; \
                         call    SN(c_##func); \
-                        popl    %edx; /* dummy */ \
+                        popl    EffectiveAddr_X; /* dummy */ \
                         movb    %al, %dl; \
                         popl    _XAX; /* ... ugh */ \
                         movb    %dl, %al; \
