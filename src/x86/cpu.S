@@ -818,8 +818,7 @@ E(op_BRK)
                 Push(%ah)
                 Push(%al)
                 orb     $(B_Flag|X_Flag), F_Reg
-                xorl    _XAX,_XAX
-                movb    F_Reg, %al
+                movzbl  F_Reg, _XAX
                 movb    SN(cpu65_flags_encode)(,_XAX,1), %al
                 Push(%al)
                 orb     $I_Flag, F_Reg
@@ -1153,7 +1152,6 @@ E(op_JMP_abs)
                 Continue
 
 E(op_JMP_ind) // 0x6c
-                xorl    _XAX, _XAX
                 GetFromPC_B
                 xchgb   %al, %ah
                 GetFromPC_B
@@ -1451,7 +1449,6 @@ E(op_PLA) // 0x68
    ---------------------------------- */
 
 E(op_PLP) // 0x28
-                xorl    _XAX, _XAX
                 Pop(%al)
                 movb    SN(cpu65_flags_decode)(,_XAX,1), F_Reg
                 orb     $(B_Flag|X_Flag), F_Reg
@@ -1545,7 +1542,6 @@ E(op_ROR_abs_x) // 0x7e
    ---------------------------------- */
 
 E(op_RTI) // 0x40
-                xorl    _XAX, _XAX
                 Pop(%al)
                 movb    SN(cpu65_flags_decode)(,_XAX,1), F_Reg
                 orb     $(B_Flag|X_Flag), F_Reg
@@ -1965,8 +1961,7 @@ E(op_WAI_65c02)
    ------------------------------------------------------------------------- */
 
 continue:
-                xorl    _XAX, _XAX
-                movb    DebugCurrOpcode, %al
+                movzbl  DebugCurrOpcode, _XAX
                 movb    SN(cpu65__opcycles)(,_XAX,1), %al
                 addb    DebugCycleCount, %al
                 movb    %al, DebugCycleCount
@@ -2006,14 +2001,12 @@ ex_irq:         testb   $I_Flag, F_Reg                      // Already interrupt
                 Push(%ah)
                 Push(%al)
                 orb     $X_Flag, F_Reg
-                xorl    _XAX,_XAX
-                movb    F_Reg, %al
+                movzbl  F_Reg, _XAX
                 movb    SN(cpu65_flags_encode)(,_XAX,1), %al
                 Push(%al)
                 orb     $(B_Flag | I_Flag), F_Reg
                 //andb    $~D_Flag, F_Reg // AppleWin clears Decimal bit?
-                andl    $0xFFFF, EffectiveAddr_X// HACK FIXME : there is a bug somewhere that is occasionally corrupting EffectiveAddr_X
-                movw    $0xFFFE, EffectiveAddr              // ROM interrupt vector
+                movl    $0xFFFE, EffectiveAddr_X// HACK FIXME : there is a bug somewhere that is occasionally corrupting EffectiveAddr_X
                 GetFromEA_W
                 movw    %ax, PC_Reg
                 xorb    %ah, %ah
@@ -2043,7 +2036,6 @@ E(cpu65_run)
                 subl    $SN(apple_ii_64k), _XAX
                 orl     _XAX, SP_Reg_X
 #endif
-                xorl    _XAX, _XAX
                 jmp     continue1
 
 1:              movb    $0, SN(emul_reinitialize)
@@ -2058,11 +2050,10 @@ E(cpu65_run)
 
 exit_cpu65_run:
                 // Save CPU state when returning from being called from C
-                xorl    _XAX, _XAX
                 movw    EffectiveAddr, DebugCurrEA
                 movw    PC_Reg, SN(cpu65_current)
                 movb    A_Reg, SN(cpu65_current)+2
-                movb    F_Reg, %al
+                movzbl  F_Reg, _XAX
                 movb    SN(cpu65_flags_encode)(,_XAX,1), %al
                 movb    %al, SN(cpu65_current)+3
                 movb    X_Reg, SN(cpu65_current)+4
