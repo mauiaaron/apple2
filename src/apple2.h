@@ -27,10 +27,10 @@
 /* Symbol naming issues */
 #ifdef NO_UNDERSCORES
 #define         SN(foo) foo
-#define         E(foo)          .globl foo; ALIGN; foo##:
+#define         E(foo)          .globl foo; .balign 16; foo##:
 #else /* !NO_UNDERSCORES */
 #define         SN(foo) _##foo
-#define         E(foo)          .globl _##foo; ALIGN; _##foo##:
+#define         E(foo)          .globl _##foo; .balign 16; _##foo##:
 #endif /* !NO_UNDERSCORES */
 
 #endif /* _A2_H_ */
