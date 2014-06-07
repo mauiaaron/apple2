@@ -29,18 +29,18 @@
    ------------------------------------------------------------------------- */
 
 #define GetFromPC_B \
-                movl    PC_Reg_E, EffectiveAddr_E; \
+                movl    PC_Reg_X, EffectiveAddr_X; \
                 incw    PC_Reg; \
-                call    *SN(cpu65_vmem)(,EffectiveAddr_E,8);
+                call    *SN(cpu65_vmem)(,EffectiveAddr_X,8);
 
 #define GetFromPC_W \
-                movl    PC_Reg_E, EffectiveAddr_E; \
+                movl    PC_Reg_X, EffectiveAddr_X; \
                 incw    EffectiveAddr; \
                 addw    $2, PC_Reg; \
-                call    *SN(cpu65_vmem)(,EffectiveAddr_E,8); \
+                call    *SN(cpu65_vmem)(,EffectiveAddr_X,8); \
                 decw    EffectiveAddr; \
                 movb    %al, %ah; \
-                call    *SN(cpu65_vmem)(,EffectiveAddr_E,8);
+                call    *SN(cpu65_vmem)(,EffectiveAddr_X,8);
 
 #define JumpNextInstruction \
                 GetFromPC_B \
@@ -51,31 +51,31 @@
 
 #define GetFromEA_B \
                 orb     $1, DebugCurrRW; \
-                call    *SN(cpu65_vmem)(,EffectiveAddr_E,8);
+                call    *SN(cpu65_vmem)(,EffectiveAddr_X,8);
 
 #define GetFromEA_W \
                 incw    EffectiveAddr; \
-                call    *SN(cpu65_vmem)(,EffectiveAddr_E,8); \
+                call    *SN(cpu65_vmem)(,EffectiveAddr_X,8); \
                 decw    EffectiveAddr; \
                 movb    %al, %ah; \
-                call    *SN(cpu65_vmem)(,EffectiveAddr_E,8);
+                call    *SN(cpu65_vmem)(,EffectiveAddr_X,8);
 
 #define PutToEA_B \
                 orb     $2, DebugCurrRW; \
                 movb    %al, DebugCurrByte; \
-                call    *SN(cpu65_vmem)+4(,EffectiveAddr_E,8);
+                call    *SN(cpu65_vmem)+4(,EffectiveAddr_X,8);
 
 #define GetFromMem_B(x) \
-                movl    x, EffectiveAddr_E; \
-                call    *SN(cpu65_vmem)(,EffectiveAddr_E,8);
+                movl    x, EffectiveAddr_X; \
+                call    *SN(cpu65_vmem)(,EffectiveAddr_X,8);
 
 #define GetFromMem_W(x) \
-                movl    x, EffectiveAddr_E; \
+                movl    x, EffectiveAddr_X; \
                 incw    EffectiveAddr; \
-                call    *SN(cpu65_vmem)(,EffectiveAddr_E,8); \
+                call    *SN(cpu65_vmem)(,EffectiveAddr_X,8); \
                 decw    EffectiveAddr; \
                 movb    %al, %ah; \
-                call    *SN(cpu65_vmem)(,EffectiveAddr_E,8);
+                call    *SN(cpu65_vmem)(,EffectiveAddr_X,8);
 
 #define Continue \
                 jmp     continue;
@@ -109,7 +109,7 @@
                 xorl    %eax, %eax; \
                 xorl    %ebx, %ebx; \
                 xorl    %ecx, %ecx; \
-                movl    $0x0100, SP_Reg; \
+                movl    $0x0100, SP_Reg_X; \
                 xorl    %esi, %esi; \
                 xorl    %edi, %edi; \
                 movw    DebugCurrEA, EffectiveAddr; \
@@ -122,7 +122,7 @@
                 movb    SN(cpu65_current)+6, SP_Reg_L; \
                 movl    SN(base_stackzp), %eax; \
                 subl    $SN(apple_ii_64k), %eax; /* $ for pointer addr */ \
-                orl     %eax, SP_Reg; \
+                orl     %eax, SP_Reg_X; \
                 xorl    %eax, %eax;
 
 #define BranchXCycles \
@@ -177,27 +177,27 @@
                 orb     %ah, F_Reg; \
                 orb     %al, F_Reg;
 
-#define Push(x) movb    x, SN(apple_ii_64k)(,SP_Reg,1); \
+#define Push(x) movb    x, SN(apple_ii_64k)(,SP_Reg_X,1); \
                 decb    SP_Reg_L;
 
 #define Pop(x)  incb    SP_Reg_L; \
-                movb    SN(apple_ii_64k)(,SP_Reg,1), x;
+                movb    SN(apple_ii_64k)(,SP_Reg_X,1), x;
 
 /* Immediate Addressing - the operand is contained in the second byte of the
    instruction. */
-#define GetImm  movl    PC_Reg_E, EffectiveAddr_E; \
+#define GetImm  movl    PC_Reg_X, EffectiveAddr_X; \
                 incw    PC_Reg;
 
 /* Absolute Addressing - the second byte of the instruction is the low
    order address, and the third byte is the high order byte. */
 #define GetAbs  GetFromPC_W; \
-                movl    %eax, EffectiveAddr_E;
+                movl    %eax, EffectiveAddr_X;
 
 /* Zero Page Addressing - the second byte of the instruction is an
    address on the zero page */
 #define GetZPage \
                 GetFromPC_B; \
-                movl    %eax, EffectiveAddr_E;
+                movl    %eax, EffectiveAddr_X;
 
 /* Zero Page Indexed Addressing - The effective address is calculated by
    adding the second byte to the contents of the index register.  Due
@@ -207,13 +207,13 @@
 #define GetZPage_X \
                 GetFromPC_B; \
                 addb    X_Reg, %al; \
-                movl    %eax, EffectiveAddr_E;
+                movl    %eax, EffectiveAddr_X;
 
 // HACK IS THIS EVER USED?
 #define GetZPage_Y \
                 GetFromPC_B; \
                 addb    Y_Reg, %al; \
-                movl    %eax, EffectiveAddr_E;
+                movl    %eax, EffectiveAddr_X;
 
 /* Absolute Indexed Addressing - The effective address is formed by
    adding the contents of X or Y to the address contained in the
@@ -227,11 +227,11 @@
 #define GetAbs_X \
                 _GetAbs_X \
                 incb    DebugCycleCount; /* +1 cycle on page boundary */ \
-9:              movl    %eax, EffectiveAddr_E;
+9:              movl    %eax, EffectiveAddr_X;
 
 #define GetAbs_X_STx \
                 _GetAbs_X \
-9:              movl    %eax, EffectiveAddr_E;
+9:              movl    %eax, EffectiveAddr_X;
 
 #define _GetAbs_Y \
                 GetFromPC_W; \
@@ -242,11 +242,11 @@
 #define GetAbs_Y \
                 _GetAbs_Y \
                 incb    DebugCycleCount; /* +1 cycle on page boundary */ \
-9:              movl    %eax, EffectiveAddr_E;
+9:              movl    %eax, EffectiveAddr_X;
 
 #define GetAbs_Y_STA \
                 _GetAbs_Y \
-9:              movl    %eax, EffectiveAddr_E;
+9:              movl    %eax, EffectiveAddr_X;
 
 /* Absolute Indirect Addressing - The second and third bytes of the
    instruction are the low and high bytes of an address, respectively.
@@ -266,13 +266,13 @@
 #define GetIndZPage \
                 GetFromPC_B; \
                 incb    %al; \
-                movl    %eax, EffectiveAddr_E; \
+                movl    %eax, EffectiveAddr_X; \
                 GetFromEA_B; \
                 movb    %al, %ah; \
-                decl    EffectiveAddr_E; \
-                andl    $0xFF, EffectiveAddr_E; \
+                decl    EffectiveAddr_X; \
+                andl    $0xFF, EffectiveAddr_X; \
                 GetFromEA_B; \
-                movl    %eax, EffectiveAddr_E;
+                movl    %eax, EffectiveAddr_X;
 
 /* Zero Page Indexed Indirect Addressing - The second byte is added to
    the contents of the X index register; the carry is discarded.  The
@@ -285,13 +285,13 @@
                 GetFromPC_B; \
                 addb    X_Reg, %al; \
                 incb    %al; \
-                movl    %eax, EffectiveAddr_E; \
+                movl    %eax, EffectiveAddr_X; \
                 GetFromEA_B; \
                 movb    %al, %ah; \
-                decl    EffectiveAddr_E; \
-                andl    $0xFF, EffectiveAddr_E; \
+                decl    EffectiveAddr_X; \
+                andl    $0xFF, EffectiveAddr_X; \
                 GetFromEA_B; \
-                movl    %eax, EffectiveAddr_E;
+                movl    %eax, EffectiveAddr_X;
 
 /* Indirect Indexed Addressing - The second byte of the instruction
    points to a memory location in page zero.  The contents of this
@@ -303,11 +303,11 @@
 #define _GetIndZPage_Y \
                 GetFromPC_B; \
                 incb    %al; \
-                movl    %eax, EffectiveAddr_E; \
+                movl    %eax, EffectiveAddr_X; \
                 GetFromEA_B; \
                 movb    %al, %ah; \
-                decl    EffectiveAddr_E; \
-                andl    $0xFF, EffectiveAddr_E; \
+                decl    EffectiveAddr_X; \
+                andl    $0xFF, EffectiveAddr_X; \
                 GetFromEA_B; \
                 addb    Y_Reg, %al; \
                 jnc 9f;
@@ -316,15 +316,15 @@
                 _GetIndZPage_Y \
                 adcb    $0, %ah; \
                 incb    DebugCycleCount; /* +1 cycle on page boundary */ \
-9:              movl    %eax, EffectiveAddr_E;
+9:              movl    %eax, EffectiveAddr_X;
 
 #define GetIndZPage_Y_STA \
                 _GetIndZPage_Y \
                 adcb    $0, %ah; \
-9:              movl    %eax, EffectiveAddr_E;
+9:              movl    %eax, EffectiveAddr_X;
 
 #define DoADC_b GetFromEA_B \
-                bt      $C_Flag_Bit, FF_Reg; \
+                bt      $C_Flag_Bit, AF_Reg_X; \
                 adcb    %al, A_Reg; \
                 FlagNVZC
 
@@ -357,7 +357,7 @@
 
 #define DoADC_d GetFromEA_B \
                 DebugBCDCheck \
-                bt      $C_Flag_Bit, FF_Reg; \
+                bt      $C_Flag_Bit, AF_Reg_X; \
                 adcb    A_Reg, %al; \
                 daa; \
                 movb    %al, A_Reg; \
@@ -437,7 +437,7 @@
                 FlagNZ
 
 #define DoROL   GetFromEA_B \
-                bt      $C_Flag_Bit, FF_Reg; \
+                bt      $C_Flag_Bit, AF_Reg_X; \
                 adcb    %al,%al; \
                 FlagNZC \
                 PutToEA_B
@@ -452,13 +452,13 @@
 
 #define DoSBC_b GetFromEA_B \
                 notb    %al; \
-                bt      $C_Flag_Bit, FF_Reg; \
+                bt      $C_Flag_Bit, AF_Reg_X; \
                 adcb    %al, A_Reg; \
                 FlagNVZC
 
 #define DoSBC_d GetFromEA_B \
                 DebugBCDCheck \
-                bt      $C_Flag_Bit, FF_Reg; \
+                bt      $C_Flag_Bit, AF_Reg_X; \
                 cmc; \
                 xchgb   A_Reg, %al; \
                 sbbb    A_Reg, %al; \
@@ -1211,10 +1211,10 @@ E(op_JMP_ind) // 0x6c
 jmp_special: // see JMP indirect note in _Understanding the Apple IIe_ 4-25
                 movw    %ax, PC_Reg
                 subw    $0xff, PC_Reg
-                GetFromMem_B(PC_Reg_E)
+                GetFromMem_B(PC_Reg_X)
                 xchgb   %al, %ah
                 addw    $0xff, PC_Reg
-                GetFromMem_B(PC_Reg_E)
+                GetFromMem_B(PC_Reg_X)
                 movw    %ax, PC_Reg
                 Continue
 
@@ -1224,7 +1224,7 @@ E(op_JMP_abs_ind_x)
                 movw    %ax, EffectiveAddr
                 movzbl  X_Reg, %eax
                 addw    %ax, EffectiveAddr
-                GetFromMem_W(EffectiveAddr_E)
+                GetFromMem_W(EffectiveAddr_X)
                 movw    %ax, PC_Reg
                 Continue
 
@@ -1529,7 +1529,7 @@ E(op_PLY)
    ---------------------------------- */
 
 E(op_ROL_acc) // 0x2a
-                bt      $C_Flag_Bit, FF_Reg
+                bt      $C_Flag_Bit, AF_Reg_X
                 adcb    A_Reg, A_Reg
                 FlagNZC
                 Continue
@@ -2057,7 +2057,7 @@ ex_irq:         testb   $I_Flag, F_Reg                      // Already interrupt
                 Push(%al)
                 orb     $(B_Flag | I_Flag), F_Reg
                 //andb    $~D_Flag, F_Reg // AppleWin clears Decimal bit?
-                andl    $0xFFFF, EffectiveAddr_E// HACK FIXME : there is a bug somewhere that is occasionally corrupting EffectiveAddr_E
+                andl    $0xFFFF, EffectiveAddr_X// HACK FIXME : there is a bug somewhere that is occasionally corrupting EffectiveAddr_X
                 movw    $0xFFFE, EffectiveAddr              // ROM interrupt vector
                 GetFromEA_W
                 movw    %ax, PC_Reg
@@ -2084,7 +2084,7 @@ E(cpu65_run)
                 xorl    %ecx, %ecx
                 xorl    %esi, %esi
                 xorl    %edi, %edi
-                movl    $0x1FF, SP_Reg
+                movl    $0x1FF, SP_Reg_X
                 jmp     ex_reset
 
 exit_cpu65_run: SaveState                                   // Return to timing loop ...
@@ -2105,7 +2105,7 @@ E(cpu65_direct_write)
                 pushl   %edi
                 movl    8(%esp),%edi
                 movl    12(%esp),%eax
-                call    *SN(cpu65_vmem)+4(,EffectiveAddr_E,8)
+                call    *SN(cpu65_vmem)+4(,EffectiveAddr_X,8)
                 popl    %edi
                 ret
 

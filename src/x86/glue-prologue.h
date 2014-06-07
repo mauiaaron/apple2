@@ -20,11 +20,11 @@
 #include "cpu-regs.h"
 
 #define GLUE_FIXED_READ(func,address) \
-E(func)                 movb    SN(address)(EffectiveAddr_E),%al; \
+E(func)                 movb    SN(address)(EffectiveAddr_X),%al; \
                         ret;
 
 #define GLUE_FIXED_WRITE(func,address) \
-E(func)                 movb    %al,SN(address)(EffectiveAddr_E); \
+E(func)                 movb    %al,SN(address)(EffectiveAddr_X); \
                         ret;
 
 #define GLUE_BANK_MAYBEREAD(func,pointer) \
@@ -32,68 +32,68 @@ E(func)                 testl   $SS_CXROM, SN(softswitches); \
                         jnz     1f; \
                         call    *SN(pointer); \
                         ret; \
-1:                      addl    SN(pointer),EffectiveAddr_E; \
-                        movb    (EffectiveAddr_E),%al; \
-                        subl    SN(pointer),EffectiveAddr_E; \
+1:                      addl    SN(pointer),EffectiveAddr_X; \
+                        movb    (EffectiveAddr_X),%al; \
+                        subl    SN(pointer),EffectiveAddr_X; \
                         ret;
 
 #define GLUE_BANK_READ(func,pointer) \
-E(func)                 addl    SN(pointer),EffectiveAddr_E; \
-                        movb    (EffectiveAddr_E),%al; \
-                        subl    SN(pointer),EffectiveAddr_E; \
+E(func)                 addl    SN(pointer),EffectiveAddr_X; \
+                        movb    (EffectiveAddr_X),%al; \
+                        subl    SN(pointer),EffectiveAddr_X; \
                         ret;
 
 #define GLUE_BANK_WRITE(func,pointer) \
-E(func)                 addl    SN(pointer),EffectiveAddr_E; \
-                        movb    %al,(EffectiveAddr_E); \
-                        subl    SN(pointer),EffectiveAddr_E; \
+E(func)                 addl    SN(pointer),EffectiveAddr_X; \
+                        movb    %al,(EffectiveAddr_X); \
+                        subl    SN(pointer),EffectiveAddr_X; \
                         ret;
 
 #define GLUE_BANK_MAYBEWRITE(func,pointer) \
-E(func)                 addl    SN(pointer),EffectiveAddr_E; \
+E(func)                 addl    SN(pointer),EffectiveAddr_X; \
                         cmpl    $0,SN(pointer); \
                         jz      1f; \
-                        movb    %al,(EffectiveAddr_E); \
+                        movb    %al,(EffectiveAddr_X); \
 1:                      ret;
 
 
 // TODO FIXME : implement CDECL prologue/epilogues...
 #define GLUE_C_WRITE(func) \
 E(func)                 pushl   %eax; \
-                        pushl   XY_Regs; \
-                        pushl   FF_Reg; \
-                        pushl   SP_Reg; \
-                        pushl   PC_Reg_E; \
+                        pushl   XY_Reg_X; \
+                        pushl   AF_Reg_X; \
+                        pushl   SP_Reg_X; \
+                        pushl   PC_Reg_X; \
                         andl    $0xff,%eax; \
                         pushl   %eax; \
-                        pushl   EffectiveAddr_E; \
+                        pushl   EffectiveAddr_X; \
                         call    SN(c_##func); \
                         popl    %edx; /* dummy */ \
                         popl    %edx; /* dummy */ \
-                        popl    PC_Reg_E; \
-                        popl    SP_Reg; \
-                        popl    FF_Reg; \
-                        popl    XY_Regs; \
+                        popl    PC_Reg_X; \
+                        popl    SP_Reg_X; \
+                        popl    AF_Reg_X; \
+                        popl    XY_Reg_X; \
                         popl    %eax; \
                         ret;
 
 // TODO FIXME : implement CDECL prologue/epilogues...
 #define _GLUE_C_READ(func, ...) \
-E(func)                 pushl   XY_Regs; \
-                        pushl   FF_Reg; \
-                        pushl   SP_Reg; \
-                        pushl   PC_Reg_E; \
+E(func)                 pushl   XY_Reg_X; \
+                        pushl   AF_Reg_X; \
+                        pushl   SP_Reg_X; \
+                        pushl   PC_Reg_X; \
                         pushl   %eax; /* HACK: works around mysterious issue with generated mov(%eax), %eax ... */ \
-                        pushl   EffectiveAddr_E; \
+                        pushl   EffectiveAddr_X; \
                         call    SN(c_##func); \
                         popl    %edx; /* dummy */ \
                         movb    %al, %dl; \
                         popl    %eax; /* ... ugh */ \
                         movb    %dl, %al; \
-                        popl    PC_Reg_E; \
-                        popl    SP_Reg; \
-                        popl    FF_Reg; \
-                        popl    XY_Regs; \
+                        popl    PC_Reg_X; \
+                        popl    SP_Reg_X; \
+                        popl    AF_Reg_X; \
+                        popl    XY_Reg_X; \
                         __VA_ARGS__ \
                         ret;
 
@@ -102,10 +102,10 @@ E(func)                 pushl   XY_Regs; \
 
 #define GLUE_C_READ_ALTZP(FUNC) _GLUE_C_READ(FUNC, \
         pushl   %eax; \
-        andl    $0xFFFF, SP_Reg; \
+        andl    $0xFFFF, SP_Reg_X; \
         movl    SN(base_stackzp), %eax; \
         subl    $SN(apple_ii_64k), %eax; \
-        orl     %eax, SP_Reg; \
+        orl     %eax, SP_Reg_X; \
         popl    %eax; \
         )
 
