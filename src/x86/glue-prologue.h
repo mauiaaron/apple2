@@ -28,29 +28,29 @@ E(func)                 movb    %al,SN(address)(EffectiveAddr_X); \
                         ret;
 
 #define GLUE_BANK_MAYBEREAD(func,pointer) \
-E(func)                 testl   $SS_CXROM, SN(softswitches); \
+E(func)                 testLQ  $SS_CXROM, SN(softswitches); \
                         jnz     1f; \
                         call    *SN(pointer); \
                         ret; \
-1:                      addl    SN(pointer),EffectiveAddr_X; \
+1:                      addLQ   SN(pointer),EffectiveAddr_X; \
                         movb    (EffectiveAddr_X),%al; \
-                        subl    SN(pointer),EffectiveAddr_X; \
+                        subLQ   SN(pointer),EffectiveAddr_X; \
                         ret;
 
 #define GLUE_BANK_READ(func,pointer) \
-E(func)                 addl    SN(pointer),EffectiveAddr_X; \
+E(func)                 addLQ   SN(pointer),EffectiveAddr_X; \
                         movb    (EffectiveAddr_X),%al; \
-                        subl    SN(pointer),EffectiveAddr_X; \
+                        subLQ   SN(pointer),EffectiveAddr_X; \
                         ret;
 
 #define GLUE_BANK_WRITE(func,pointer) \
-E(func)                 addl    SN(pointer),EffectiveAddr_X; \
+E(func)                 addLQ   SN(pointer),EffectiveAddr_X; \
                         movb    %al,(EffectiveAddr_X); \
-                        subl    SN(pointer),EffectiveAddr_X; \
+                        subLQ   SN(pointer),EffectiveAddr_X; \
                         ret;
 
 #define GLUE_BANK_MAYBEWRITE(func,pointer) \
-E(func)                 addl    SN(pointer),EffectiveAddr_X; \
+E(func)                 addLQ   SN(pointer),EffectiveAddr_X; \
                         cmpl    $0,SN(pointer); \
                         jz      1f; \
                         movb    %al,(EffectiveAddr_X); \
@@ -59,41 +59,41 @@ E(func)                 addl    SN(pointer),EffectiveAddr_X; \
 
 // TODO FIXME : implement CDECL prologue/epilogues...
 #define GLUE_C_WRITE(func) \
-E(func)                 pushl   _XAX; \
-                        pushl   XY_Reg_X; \
-                        pushl   AF_Reg_X; \
-                        pushl   SP_Reg_X; \
-                        pushl   PC_Reg_X; \
-                        andl    $0xff,_XAX; \
-                        pushl   _XAX; \
-                        pushl   EffectiveAddr_X; \
+E(func)                 pushLQ  _XAX; \
+                        pushLQ  XY_Reg_X; \
+                        pushLQ  AF_Reg_X; \
+                        pushLQ  SP_Reg_X; \
+                        pushLQ  PC_Reg_X; \
+                        andLQ   $0xff,_XAX; \
+                        pushLQ  _XAX; \
+                        pushLQ  EffectiveAddr_X; \
                         call    SN(c_##func); \
-                        popl    EffectiveAddr_X; /* dummy */ \
-                        popl    _XAX; /* dummy */ \
-                        popl    PC_Reg_X; \
-                        popl    SP_Reg_X; \
-                        popl    AF_Reg_X; \
-                        popl    XY_Reg_X; \
-                        popl    _XAX; \
+                        popLQ   EffectiveAddr_X; /* dummy */ \
+                        popLQ   _XAX; /* dummy */ \
+                        popLQ   PC_Reg_X; \
+                        popLQ   SP_Reg_X; \
+                        popLQ   AF_Reg_X; \
+                        popLQ   XY_Reg_X; \
+                        popLQ   _XAX; \
                         ret;
 
 // TODO FIXME : implement CDECL prologue/epilogues...
 #define _GLUE_C_READ(func, ...) \
-E(func)                 pushl   XY_Reg_X; \
-                        pushl   AF_Reg_X; \
-                        pushl   SP_Reg_X; \
-                        pushl   PC_Reg_X; \
-                        pushl   _XAX; /* HACK: works around mysterious issue with generated mov(_XAX), _XAX ... */ \
-                        pushl   EffectiveAddr_X; \
+E(func)                 pushLQ  XY_Reg_X; \
+                        pushLQ  AF_Reg_X; \
+                        pushLQ  SP_Reg_X; \
+                        pushLQ  PC_Reg_X; \
+                        pushLQ  _XAX; /* HACK: works around mysterious issue with generated mov(_XAX), _XAX ... */ \
+                        pushLQ  EffectiveAddr_X; \
                         call    SN(c_##func); \
-                        popl    EffectiveAddr_X; /* dummy */ \
+                        popLQ   EffectiveAddr_X; /* dummy */ \
                         movb    %al, %dl; \
-                        popl    _XAX; /* ... ugh */ \
+                        popLQ   _XAX; /* ... ugh */ \
                         movb    %dl, %al; \
-                        popl    PC_Reg_X; \
-                        popl    SP_Reg_X; \
-                        popl    AF_Reg_X; \
-                        popl    XY_Reg_X; \
+                        popLQ   PC_Reg_X; \
+                        popLQ   SP_Reg_X; \
+                        popLQ   AF_Reg_X; \
+                        popLQ   XY_Reg_X; \
                         __VA_ARGS__ \
                         ret;
 
@@ -101,11 +101,11 @@ E(func)                 pushl   XY_Reg_X; \
 #define GLUE_C_READ(FUNC) _GLUE_C_READ(FUNC)
 
 #define GLUE_C_READ_ALTZP(FUNC) _GLUE_C_READ(FUNC, \
-        pushl   _XAX; \
-        andl    $0xFFFF, SP_Reg_X; \
-        movl    SN(base_stackzp), _XAX; \
-        subl    $SN(apple_ii_64k), _XAX; \
-        orl     _XAX, SP_Reg_X; \
-        popl    _XAX; \
+        pushLQ  _XAX; \
+        andLQ   $0xFFFF, SP_Reg_X; \
+        movLQ   SN(base_stackzp), _XAX; \
+        subLQ   $SN(apple_ii_64k), _XAX; \
+        orLQ    _XAX, SP_Reg_X; \
+        popLQ   _XAX; \
         )
 

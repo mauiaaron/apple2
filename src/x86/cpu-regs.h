@@ -35,10 +35,30 @@
 #   define _XSP             %esp        /* x86 stack pointer       */
 #   define _XAX             %eax        /* scratch                 */
 #   define _XBX             %ebx        /* scratch2                */
+// full-length Apple ][ registers
 #   define XY_Reg_X         %ebx        /* 6502 X&Y flags          */
 #   define AF_Reg_X         %ecx        /* 6502 F&A flags          */
 #   define SP_Reg_X         %edx        /* 6502 Stack pointer      */
 #   define PC_Reg_X         %esi        /* 6502 Program Counter    */
 #   define EffectiveAddr_X  %edi        /* Effective address       */
+// full-length assembly instructions
+#   define addLQ            addl
+#   define andLQ            andl
+#   define decLQ            decl
+#   define orLQ             orl
+#   define movLQ            movl
+#   define movzbLQ          movzbl
+#   define movzwLQ          movzwl
+#   define popaLQ           popal
+#   define popLQ            popl
+#   define pushaLQ          pushal
+#   define pushfLQ          pushfl
+#   define pushLQ           pushl
+#   define rorLQ            rorl
+#   define shlLQ            shll
+#   define shrLQ            shrl
+#   define subLQ            subl
+#   define testLQ           testl
+#   define xorLQ            xorl
 #endif
 
