@@ -106,18 +106,13 @@
  * it, else aux-stack using programs will crash when debugged.)
  */
 #define RestoreState \
-                xorl    _XAX, _XAX; \
-                xorl    %ebx, %ebx; \
-                xorl    %ecx, %ecx; \
                 movl    $0x0100, SP_Reg_X; \
-                xorl    %esi, %esi; \
-                xorl    %edi, %edi; \
-                movw    DebugCurrEA, EffectiveAddr; \
-                movw    SN(cpu65_current), PC_Reg; \
-                movb    SN(cpu65_current)+2, A_Reg; \
-                movb    SN(cpu65_current)+3, %al; \
+                movzwl  DebugCurrEA, EffectiveAddr_X; \
+                movzwl  SN(cpu65_current), PC_Reg_X; \
+                movzbl  SN(cpu65_current)+2, AF_Reg_X; \
+                movzbl  SN(cpu65_current)+3, _XAX; \
                 movb    SN(cpu65_flags_decode)(,_XAX,1), F_Reg; \
-                movb    SN(cpu65_current)+4, X_Reg; \
+                movzbl  SN(cpu65_current)+4, XY_Reg_X; \
                 movb    SN(cpu65_current)+5, Y_Reg; \
                 movb    SN(cpu65_current)+6, SP_Reg_L; \
                 movl    SN(base_stackzp), _XAX; \
