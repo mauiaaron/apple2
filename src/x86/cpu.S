@@ -82,7 +82,7 @@
 
 #define BranchXCycles \
                 incb    DebugCycleCount; /* +1 branch taken */ \
-                pushl   %ebx; \
+                shll    $16, %ebx; \
                 movw    PC_Reg, %bx; \
                 cbw; \
                 addw    %bx, %ax; \
@@ -90,7 +90,7 @@
                 cmpb    %ah, %bh; \
                 je      9f; \
                 incb    DebugCycleCount; /* +1 branch new page */ \
-9:              popl    %ebx;
+9:              shrl    $16, %ebx;
 
 #define FlagC   lahf; \
                 andb    $C_Flag, %ah; \
