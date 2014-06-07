@@ -21,6 +21,8 @@
 #include "config.h"
 #endif
 
+// Virtual machine is an Apple ][ (not an NES, etc...)
+#define __APPLE2_VM__ 1
 
 /* Symbol naming issues */
 #ifdef NO_UNDERSCORES

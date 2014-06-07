@@ -14,8 +14,8 @@
  *
  */
 
-#include "apple2.h"
 #include "cpu-regs.h"
+#include "apple2.h"
 #include "misc.h"
 
 #define DebugCurrEA     SN(cpu65_debug)
@@ -79,46 +79,6 @@
 
 #define Continue \
                 jmp     continue;
-
-/*
- * Save CPU state when returning from being called from C
- */
-#define SaveState \
-                xorl    _XAX, _XAX; \
-                movw    EffectiveAddr, DebugCurrEA; \
-                movw    PC_Reg, SN(cpu65_current); \
-                movb    A_Reg, SN(cpu65_current)+2; \
-                movb    F_Reg, %al; \
-                movb    SN(cpu65_flags_encode)(,_XAX,1), %al; \
-                movb    %al, SN(cpu65_current)+3; \
-                movb    X_Reg, SN(cpu65_current)+4; \
-                movb    Y_Reg, SN(cpu65_current)+5; \
-                movb    SP_Reg_L, SN(cpu65_current)+6;
-
-/* Restore CPU state when being called from C.
- *
- * The xorls clear the high parts of the registers
- * Note: dependent on register assignment
- *
- * The extra bit at the end points the stack pointer at the alternate
- * stack in ALTZP mode.  (Note, this is not good -- I'd prefer to avoid
- * polluting this module with Apple-specific stuff.  But we need to do
- * it, else aux-stack using programs will crash when debugged.)
- */
-#define RestoreState \
-                movl    $0x0100, SP_Reg_X; \
-                movzwl  DebugCurrEA, EffectiveAddr_X; \
-                movzwl  SN(cpu65_current), PC_Reg_X; \
-                movzbl  SN(cpu65_current)+2, AF_Reg_X; \
-                movzbl  SN(cpu65_current)+3, _XAX; \
-                movb    SN(cpu65_flags_decode)(,_XAX,1), F_Reg; \
-                movzbl  SN(cpu65_current)+4, XY_Reg_X; \
-                movb    SN(cpu65_current)+5, Y_Reg; \
-                movb    SN(cpu65_current)+6, SP_Reg_L; \
-                movl    SN(base_stackzp), _XAX; \
-                subl    $SN(apple_ii_64k), _XAX; /* $ for pointer addr */ \
-                orl     _XAX, SP_Reg_X; \
-                xorl    _XAX, _XAX;
 
 #define BranchXCycles \
                 incb    DebugCycleCount; /* +1 branch taken */ \
@@ -2066,8 +2026,26 @@ E(cpu65_run)
                 pushal                                      // ENTER CPURUN
                 cmpb    $0, SN(emul_reinitialize)
                 jnz     1f
-                RestoreState
+
+                // Restore CPU state when being called from C.
+                movl    $0x0100, SP_Reg_X
+                movzwl  DebugCurrEA, EffectiveAddr_X
+                movzwl  SN(cpu65_current), PC_Reg_X
+                movzbl  SN(cpu65_current)+2, AF_Reg_X
+                movzbl  SN(cpu65_current)+3, _XAX
+                movb    SN(cpu65_flags_decode)(,_XAX,1), F_Reg
+                movzbl  SN(cpu65_current)+4, XY_Reg_X
+                movb    SN(cpu65_current)+5, Y_Reg
+                movb    SN(cpu65_current)+6, SP_Reg_L
+#ifdef __APPLE2_VM__
+                // Apple //e machine specific set stack point to ALTZP (or not)
+                movl    SN(base_stackzp), _XAX
+                subl    $SN(apple_ii_64k), _XAX
+                orl     _XAX, SP_Reg_X
+#endif
+                xorl    _XAX, _XAX
                 jmp     continue1
+
 1:              movb    $0, SN(emul_reinitialize)
                 /* Zero all registers, as well as the unused 32-bit parts
                  * of variables. (which may need to be kept 0)
@@ -2082,7 +2060,18 @@ E(cpu65_run)
                 movl    $0x1FF, SP_Reg_X
                 jmp     ex_reset
 
-exit_cpu65_run: SaveState                                   // Return to timing loop ...
+exit_cpu65_run:                                             // Return to timing loop ...
+                // Save CPU state when returning from being called from C
+                xorl    _XAX, _XAX
+                movw    EffectiveAddr, DebugCurrEA
+                movw    PC_Reg, SN(cpu65_current)
+                movb    A_Reg, SN(cpu65_current)+2
+                movb    F_Reg, %al
+                movb    SN(cpu65_flags_encode)(,_XAX,1), %al
+                movb    %al, SN(cpu65_current)+3
+                movb    X_Reg, SN(cpu65_current)+4
+                movb    Y_Reg, SN(cpu65_current)+5
+                movb    SP_Reg_L, SN(cpu65_current)+6
                 popal
                 ret
 
