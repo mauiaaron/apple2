@@ -21,12 +21,6 @@
 #include "config.h"
 #endif
 
-/* Code alignment */
-#if defined(__i486__) || defined(__i586__)
-#define         ALIGN                   .balign 16
-#else /* !(__i486__ || __i586__) */
-#define         ALIGN                   .balign 4
-#endif /* !(__i486__ || __i586__) */
 
 /* Symbol naming issues */
 #ifdef NO_UNDERSCORES

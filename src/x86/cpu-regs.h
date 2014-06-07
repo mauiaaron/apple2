@@ -11,6 +11,14 @@
 
 #include "cpu.h"
 
+#if defined(__LP64__)
+#   error TBD
+#elif defined(__i486__) || defined(__i586__) || defined(__i686__)
+#   define ALIGN .balign 16
+#else
+#   define ALIGN .balign 4
+#endif
+
 #define X_Reg           %bl             /* 6502 X register in %bl  */
 #define Y_Reg           %bh             /* 6502 Y register in %bh  */
 #define A_Reg           %cl             /* 6502 A register in %cl  */
