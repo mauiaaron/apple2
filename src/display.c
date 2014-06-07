@@ -334,11 +334,11 @@ static void c_initialize_tables_video(void) {
             unsigned int idx = video__line_offset[y] + x + 0x400;
             // text/lores pages
             if (y < 20) {
-                cpu65_vmem[idx      ].w = video__write_2e_text0;
-                cpu65_vmem[idx+0x400].w = video__write_2e_text1;
+                cpu65_vmem_w[idx      ] = video__write_2e_text0;
+                cpu65_vmem_w[idx+0x400] = video__write_2e_text1;
             } else {
-                cpu65_vmem[idx      ].w = video__write_2e_text0_mixed;
-                cpu65_vmem[idx+0x400].w = video__write_2e_text1_mixed;
+                cpu65_vmem_w[idx      ] = video__write_2e_text0_mixed;
+                cpu65_vmem_w[idx+0x400] = video__write_2e_text1_mixed;
             }
 
             // hires/dhires pages
@@ -346,19 +346,19 @@ static void c_initialize_tables_video(void) {
                 idx = 0x2000 + video__line_offset[ y ] + (0x400*i) + x;
                 if (y < 20) {
                     if (x & 1) {
-                        cpu65_vmem[idx       ].w = video__write_2e_odd0;
-                        cpu65_vmem[idx+0x2000].w = video__write_2e_odd1;
+                        cpu65_vmem_w[idx       ] = video__write_2e_odd0;
+                        cpu65_vmem_w[idx+0x2000] = video__write_2e_odd1;
                     } else {
-                        cpu65_vmem[idx       ].w = video__write_2e_even0;
-                        cpu65_vmem[idx+0x2000].w = video__write_2e_even1;
+                        cpu65_vmem_w[idx       ] = video__write_2e_even0;
+                        cpu65_vmem_w[idx+0x2000] = video__write_2e_even1;
                     }
                 } else {
                     if (x & 1) {
-                        cpu65_vmem[idx       ].w = video__write_2e_odd0_mixed;
-                        cpu65_vmem[idx+0x2000].w = video__write_2e_odd1_mixed;
+                        cpu65_vmem_w[idx       ] = video__write_2e_odd0_mixed;
+                        cpu65_vmem_w[idx+0x2000] = video__write_2e_odd1_mixed;
                     } else {
-                        cpu65_vmem[idx       ].w = video__write_2e_even0_mixed;
-                        cpu65_vmem[idx+0x2000].w = video__write_2e_even1_mixed;
+                        cpu65_vmem_w[idx       ] = video__write_2e_even0_mixed;
+                        cpu65_vmem_w[idx+0x2000] = video__write_2e_even1_mixed;
                     }
                 }
             }

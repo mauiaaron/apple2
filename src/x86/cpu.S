@@ -31,16 +31,16 @@
 #define GetFromPC_B \
                 movLQ   PC_Reg_X, EffectiveAddr_X; \
                 incw    PC_Reg; \
-                call    *SN(cpu65_vmem)(,EffectiveAddr_X,SZ_PTR*2);
+                call    *SN(cpu65_vmem_r)(,EffectiveAddr_X,SZ_PTR);
 
 #define GetFromPC_W \
                 movLQ   PC_Reg_X, EffectiveAddr_X; \
                 incw    EffectiveAddr; \
                 addw    $2, PC_Reg; \
-                call    *SN(cpu65_vmem)(,EffectiveAddr_X,SZ_PTR*2); \
+                call    *SN(cpu65_vmem_r)(,EffectiveAddr_X,SZ_PTR); \
                 decw    EffectiveAddr; \
                 movb    %al, %ah; \
-                call    *SN(cpu65_vmem)(,EffectiveAddr_X,SZ_PTR*2);
+                call    *SN(cpu65_vmem_r)(,EffectiveAddr_X,SZ_PTR);
 
 #define JumpNextInstruction \
                 GetFromPC_B \
@@ -51,31 +51,31 @@
 
 #define GetFromEA_B \
                 orb     $1, DebugCurrRW; \
-                call    *SN(cpu65_vmem)(,EffectiveAddr_X,SZ_PTR*2);
+                call    *SN(cpu65_vmem_r)(,EffectiveAddr_X,SZ_PTR);
 
 #define GetFromEA_W \
                 incw    EffectiveAddr; \
-                call    *SN(cpu65_vmem)(,EffectiveAddr_X,SZ_PTR*2); \
+                call    *SN(cpu65_vmem_r)(,EffectiveAddr_X,SZ_PTR); \
                 decw    EffectiveAddr; \
                 movb    %al, %ah; \
-                call    *SN(cpu65_vmem)(,EffectiveAddr_X,SZ_PTR*2);
+                call    *SN(cpu65_vmem_r)(,EffectiveAddr_X,SZ_PTR);
 
 #define PutToEA_B \
                 orb     $2, DebugCurrRW; \
                 movb    %al, DebugCurrByte; \
-                call    *SN(cpu65_vmem)+4(,EffectiveAddr_X,SZ_PTR*2);
+                call    *SN(cpu65_vmem_w)(,EffectiveAddr_X,SZ_PTR);
 
 #define GetFromMem_B(x) \
                 movLQ   x, EffectiveAddr_X; \
-                call    *SN(cpu65_vmem)(,EffectiveAddr_X,SZ_PTR*2);
+                call    *SN(cpu65_vmem_r)(,EffectiveAddr_X,SZ_PTR);
 
 #define GetFromMem_W(x) \
                 movLQ   x, EffectiveAddr_X; \
                 incw    EffectiveAddr; \
-                call    *SN(cpu65_vmem)(,EffectiveAddr_X,SZ_PTR*2); \
+                call    *SN(cpu65_vmem_r)(,EffectiveAddr_X,SZ_PTR); \
                 decw    EffectiveAddr; \
                 movb    %al, %ah; \
-                call    *SN(cpu65_vmem)(,EffectiveAddr_X,SZ_PTR*2);
+                call    *SN(cpu65_vmem_r)(,EffectiveAddr_X,SZ_PTR);
 
 #define Continue \
                 jmp     continue;
@@ -2075,7 +2075,7 @@ E(cpu65_direct_write)
                 pushLQ  EffectiveAddr_X
                 movLQ   8(_XSP),EffectiveAddr_X
                 movLQ   12(_XSP),_XAX
-                call    *SN(cpu65_vmem)+4(,EffectiveAddr_X,SZ_PTR*2)
+                call    *SN(cpu65_vmem_w)(,EffectiveAddr_X,SZ_PTR)
                 popLQ   EffectiveAddr_X
                 ret
 

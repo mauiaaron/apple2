@@ -28,7 +28,8 @@ static pthread_mutex_t irq_mutex = PTHREAD_MUTEX_INITIALIZER;
 uint8_t cpu65_flags_encode[256] = { 0 };
 uint8_t cpu65_flags_decode[256] = { 0 };
 
-memory_vector_t cpu65_vmem[0x10000] = { 0 };
+void *cpu65_vmem_r[0x10000] = { 0 };
+void *cpu65_vmem_w[0x10000] = { 0 };
 
 // ----------------------------------------------------------------------------
 // 65c02 Opcode Jump Table

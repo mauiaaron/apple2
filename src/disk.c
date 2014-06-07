@@ -788,37 +788,37 @@ void disk_io_initialize(unsigned int slot)
 
     // disk softswitches
     // 0xC0Xi : X = slot 0x6 + 0x8 == 0xE
-    cpu65_vmem[0xC0E0].r = cpu65_vmem[0xC0E2].r =
-                               cpu65_vmem[0xC0E4].r = cpu65_vmem[0xC0E6].r =
+    cpu65_vmem_r[0xC0E0] = cpu65_vmem_r[0xC0E2] =
+                               cpu65_vmem_r[0xC0E4] = cpu65_vmem_r[0xC0E6] =
                                                           ram_nop;
 
-    cpu65_vmem[0xC0E1].r = cpu65_vmem[0xC0E3].r =
-                               cpu65_vmem[0xC0E5].r = cpu65_vmem[0xC0E7].r =
+    cpu65_vmem_r[0xC0E1] = cpu65_vmem_r[0xC0E3] =
+                               cpu65_vmem_r[0xC0E5] = cpu65_vmem_r[0xC0E7] =
                                                           disk_read_phase;
 
-    cpu65_vmem[0xC0E8].r =
+    cpu65_vmem_r[0xC0E8] =
         disk_read_motor_off;
-    cpu65_vmem[0xC0E9].r =
+    cpu65_vmem_r[0xC0E9] =
         disk_read_motor_on;
-    cpu65_vmem[0xC0EA].r =
+    cpu65_vmem_r[0xC0EA] =
         disk_read_select_a;
-    cpu65_vmem[0xC0EB].r =
+    cpu65_vmem_r[0xC0EB] =
         disk_read_select_b;
-    cpu65_vmem[0xC0EC].r =
+    cpu65_vmem_r[0xC0EC] =
         disk_read_byte;
-    cpu65_vmem[0xC0ED].r =
+    cpu65_vmem_r[0xC0ED] =
         disk_read_latch;        /* read latch */
-    cpu65_vmem[0xC0EE].r =
+    cpu65_vmem_r[0xC0EE] =
         disk_read_prepare_in;
-    cpu65_vmem[0xC0EF].r =
+    cpu65_vmem_r[0xC0EF] =
         disk_read_prepare_out;
 
     for (i = 0xC0E0; i < 0xC0F0; i++)
     {
-        cpu65_vmem[i].w =
-            cpu65_vmem[i].r;
+        cpu65_vmem_w[i] =
+            cpu65_vmem_r[i];
     }
 
-    cpu65_vmem[0xC0ED].w =
+    cpu65_vmem_w[0xC0ED] =
         disk_write_latch;       /* write latch */
 }

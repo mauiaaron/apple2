@@ -23,12 +23,6 @@
 
 /* types */
 
-
-typedef struct memory_vector_t {
-    void *r;
-    void *w;
-} memory_vector_t;
-
 struct cpu65_state
 {
     uint16_t pc;        /* Program counter */
@@ -59,7 +53,8 @@ extern void cpu65_run(void);
 
 extern void cpu65_direct_write(int ea,int data);
 
-extern memory_vector_t cpu65_vmem[65536];
+extern void *cpu65_vmem_r[65536];
+extern void *cpu65_vmem_w[65536];
 extern struct cpu65_state cpu65_current;
 extern struct cpu65_extra cpu65_debug;
 
