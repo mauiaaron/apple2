@@ -179,7 +179,7 @@ static void getshm(int size) {
     /* attach to the shared memory segment */
     image->data = xshminfo.shmaddr = shmat(id, 0, 0);
 
-    if ((int)(image->data) == -1)
+    if ((size_t)(image->data) == -1)
     {
         perror("shmat");
         printf("Could not attach to shared memory\n");
