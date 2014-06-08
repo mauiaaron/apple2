@@ -25,6 +25,8 @@
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #include <X11/extensions/XShm.h> /* MITSHM! */
+#else
+#error non-XShm is buggy ... key autorepeat delay is somehow set too low
 #endif
 
 static Display *display;
@@ -715,7 +717,7 @@ static void _create_image() {
             ERRQUIT("no memory for image data!");
         }
 
-        LOG("Creating regular XImage");
+        LOG("WARNING!!! No XShm extension ... creating regular XImage");
         image = XCreateImage(display, visualinfo.visual, visualinfo.depth, ZPixmap, 0 /*offset*/, data, width, height, 8, width*bitmap_pad /*bytes_per_line*/);
 
         if (!image) {
