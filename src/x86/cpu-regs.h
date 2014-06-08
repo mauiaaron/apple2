@@ -21,9 +21,39 @@
 #define EffectiveAddr   %di             /* Effective address       */
 
 #if __LP64__
-#   error not ready
+#   define SZ_PTR           8
+#   define _XBP             %rbp        /* x86_64 base pointer     */
+#   define _XSP             %rsp        /* x86_64 stack pointer    */
+#   define _XAX             %rax        /* scratch                 */
+#   define _XBX             %rbx        /* scratch2                */
+// full-length Apple ][ registers
+#   define XY_Reg_X         %rbx        /* 6502 X&Y flags          */
+#   define AF_Reg_X         %rcx        /* 6502 F&A flags          */
+#   define SP_Reg_X         %rdx        /* 6502 Stack pointer      */
+#   define PC_Reg_X         %rsi        /* 6502 Program Counter    */
+#   define EffectiveAddr_X  %rdi        /* Effective address       */
+// full-length assembly instructions
+#   define addLQ            addq
+#   define andLQ            andq
+#   define decLQ            decq
+#   define orLQ             orq
+#   define movLQ            movq
+#   define movzbLQ          movzbq
+#   define movzwLQ          movzwq
+#   define popaLQ           popaq
+#   define popLQ            popq
+#   define pushaLQ          pushaq
+#   define pushfLQ          pushfq
+#   define pushLQ           pushq
+#   define rorLQ            rorq
+#   define shlLQ            shlq
+#   define shrLQ            shrq
+#   define subLQ            subq
+#   define testLQ           testq
+#   define xorLQ            xorq
 #else
 #   define SZ_PTR           4
+#   define _XBP             %ebp        /* x86 base pointer        */
 #   define _XSP             %esp        /* x86 stack pointer       */
 #   define _XAX             %eax        /* scratch                 */
 #   define _XBX             %ebx        /* scratch2                */

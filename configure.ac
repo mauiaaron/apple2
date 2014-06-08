@@ -17,10 +17,10 @@ AC_PROG_INSTALL
 dnl ---------------------------------------------------------------------------
 dnl Arch checks
 
+ASM_O="src/x86/glue.o src/x86/cpu.o"
 arch=''
 case $target in
     x86_64-*-*)
-        ASM_O="src/x64/glue.o src/x64/cpu.o"
         arch='x64'
         ;;
     i?86-*-*)
@@ -31,6 +31,7 @@ case $target in
         arch='x86'
         ;;
     *)
+        ASM_O=""
         AC_MSG_ERROR([emulator does not presently support architecture $target])
         ;;
 esac
@@ -39,7 +40,6 @@ AM_CFLAGS="-std=gnu11 -Wall"
 
 dnl double-check compilation for x86 target
 if test "$arch" = "x86" ; then
-    ASM_O="src/x86/glue.o src/x86/cpu.o"
     my_save_cflags="$CFLAGS"
     AC_MSG_CHECKING([whether compiler supports x86 target])
     case $host in

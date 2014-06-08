@@ -310,14 +310,6 @@
 #define DebugBCDCheck
 #endif
 
-#define DoADC_d GetFromEA_B \
-                DebugBCDCheck \
-                bt      $C_Flag_Bit, AF_Reg_X; \
-                adcb    A_Reg, %al; \
-                daa; \
-                movb    %al, A_Reg; \
-                FlagNVZC
-
 #define DoAND   GetFromEA_B \
                 andb    %al, A_Reg; \
                 FlagNZ
@@ -411,17 +403,6 @@
                 adcb    %al, A_Reg; \
                 FlagNVZC
 
-#define DoSBC_d GetFromEA_B \
-                DebugBCDCheck \
-                bt      $C_Flag_Bit, AF_Reg_X; \
-                cmc; \
-                xchgb   A_Reg, %al; \
-                sbbb    A_Reg, %al; \
-                das; \
-                movb    %al, A_Reg; \
-                cmc; \
-                FlagNVZC
-
 #define DoSTA   movb    A_Reg, %al; \
                 PutToEA_B
 
@@ -460,7 +441,17 @@
 // Decimal mode
 E(op_ADC_dec)
                 incb    DebugCycleCount         // +1 cycle
-                DoADC_d
+                GetFromEA_B
+                DebugBCDCheck
+                bt      $C_Flag_Bit, AF_Reg_X
+                adcb    A_Reg, %al
+#ifdef __LP64__
+#warning TODO FIXME das instruction
+#else
+                daa
+#endif
+                movb    %al, A_Reg
+                FlagNVZC
                 Continue
 
 E(op_ADC_imm) // 0x69
@@ -818,7 +809,8 @@ E(op_BRK)
                 Push(%ah)
                 Push(%al)
                 orb     $(B_Flag|X_Flag), F_Reg
-                movzbLQ F_Reg, _XAX
+                xorw    %ax, %ax 
+                movb    F_Reg, %al
                 movb    SN(cpu65_flags_encode)(,_XAX,1), %al
                 Push(%al)
                 orb     $I_Flag, F_Reg
@@ -1568,7 +1560,20 @@ E(op_RTS) // 0x60
 
 E(op_SBC_dec)
                 incb    DebugCycleCount         // +1 cycle
-                DoSBC_d
+                GetFromEA_B
+                DebugBCDCheck
+                bt      $C_Flag_Bit, AF_Reg_X
+                cmc
+                xchgb   A_Reg, %al
+                sbbb    A_Reg, %al
+#ifdef __LP64__
+#warning TODO FIXME das instruction
+#else
+                das
+#endif
+                movb    %al, A_Reg
+                cmc
+                FlagNVZC
                 Continue
 
 E(op_SBC_imm) // 0xe9
@@ -2001,7 +2006,8 @@ ex_irq:         testb   $I_Flag, F_Reg                      // Already interrupt
                 Push(%ah)
                 Push(%al)
                 orb     $X_Flag, F_Reg
-                movzbLQ F_Reg, _XAX
+                xorw    %ax, %ax
+                movb    F_Reg, %al
                 movb    SN(cpu65_flags_encode)(,_XAX,1), %al
                 Push(%al)
                 orb     $(B_Flag | I_Flag), F_Reg
@@ -2016,7 +2022,8 @@ ex_irq:         testb   $I_Flag, F_Reg                      // Already interrupt
         CPU thread main entry and exit points
    ------------------------------------------------------------------------- */
 E(cpu65_run)
-                pushaLQ                                     // ENTER CPURUN
+                pushLQ  _XBP
+                movLQ   _XSP, _XBP
                 cmpb    $0, SN(emul_reinitialize)
                 jnz     1f
 
@@ -2053,18 +2060,19 @@ exit_cpu65_run:
                 movw    EffectiveAddr, DebugCurrEA
                 movw    PC_Reg, SN(cpu65_current)
                 movb    A_Reg, SN(cpu65_current)+2
-                movzbLQ F_Reg, _XAX
+                xorw    %ax, %ax
+                movb    F_Reg, %al
                 movb    SN(cpu65_flags_encode)(,_XAX,1), %al
                 movb    %al, SN(cpu65_current)+3
                 movb    X_Reg, SN(cpu65_current)+4
                 movb    Y_Reg, SN(cpu65_current)+5
                 movb    SP_Reg_L, SN(cpu65_current)+6
-                popaLQ
+                popLQ   _XBP
                 ret
 
 emul_reinit:    movb    $0, SN(cpu65__signal)
                 movb    $1, SN(emul_reinitialize)
-                popaLQ
+                popLQ   _XBP
                 ret
 
 /* -------------------------------------------------------------------------

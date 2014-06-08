@@ -967,7 +967,7 @@ void init_lex (char *str, int size) {
     }	       
 
 #define WONT_EXECUTE 0
-    static volatile int hack_warnings = (int)&hack_warnings;
+    static volatile void *hack_warnings = &hack_warnings;
     if (hack_warnings == WONT_EXECUTE) {
         // flex defines these, but we don't use 'em ...
         char hack[2];
