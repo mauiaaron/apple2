@@ -2021,7 +2021,12 @@ ex_irq:         testb   $I_Flag, F_Reg                      // Already interrupt
 /* -------------------------------------------------------------------------
         CPU thread main entry and exit points
    ------------------------------------------------------------------------- */
+
 E(cpu65_run)
+#ifdef __LP64__
+                pushq   %rbx
+                // NOTE: should we be also preserving r12-r15?
+#endif
                 pushLQ  _XBP
                 movLQ   _XSP, _XBP
                 cmpb    $0, SN(emul_reinitialize)
@@ -2067,12 +2072,15 @@ exit_cpu65_run:
                 movb    X_Reg, SN(cpu65_current)+4
                 movb    Y_Reg, SN(cpu65_current)+5
                 movb    SP_Reg_L, SN(cpu65_current)+6
-                popLQ   _XBP
-                ret
+                jmp     exit_frame
 
 emul_reinit:    movb    $0, SN(cpu65__signal)
                 movb    $1, SN(emul_reinitialize)
-                popLQ   _XBP
+
+exit_frame:     popLQ   _XBP
+#ifdef __LP64__
+                popq    %rbx
+#endif
                 ret
 
 /* -------------------------------------------------------------------------

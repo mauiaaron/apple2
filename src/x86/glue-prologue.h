@@ -57,7 +57,17 @@ E(func)                 addLQ   SN(pointer),EffectiveAddr_X; \
 1:                      ret;
 
 
-// TODO FIXME : implement CDECL prologue/epilogues...
+#ifdef __LP64__
+#   define _PUSH_ARGS   pushLQ  EffectiveAddr_X; /* preserve */ \
+                        movLQ   _XAX, %rsi; /* %rdi = ea, %rsi = byte */
+#   define _POP_ARGS    popLQ   EffectiveAddr_X; /* restore */
+#else
+#   define _PUSH_ARGS   pushLQ  _XAX; /* byte is arg2 */ \
+                        pushLQ  EffectiveAddr_X; /* ea is arg1 (and preserved) */
+#   define _POP_ARGS    popLQ   EffectiveAddr_X; /* restore ea */ \
+                        popLQ   _XAX;
+#endif
+
 #define GLUE_C_WRITE(func) \
 E(func)                 pushLQ  _XAX; \
                         pushLQ  XY_Reg_X; \
@@ -65,11 +75,9 @@ E(func)                 pushLQ  _XAX; \
                         pushLQ  SP_Reg_X; \
                         pushLQ  PC_Reg_X; \
                         andLQ   $0xff,_XAX; \
-                        pushLQ  _XAX; \
-                        pushLQ  EffectiveAddr_X; \
+                        _PUSH_ARGS \
                         call    SN(c_##func); \
-                        popLQ   EffectiveAddr_X; /* dummy */ \
-                        popLQ   _XAX; /* dummy */ \
+                        _POP_ARGS \
                         popLQ   PC_Reg_X; \
                         popLQ   SP_Reg_X; \
                         popLQ   AF_Reg_X; \
@@ -84,9 +92,9 @@ E(func)                 pushLQ  XY_Reg_X; \
                         pushLQ  SP_Reg_X; \
                         pushLQ  PC_Reg_X; \
                         pushLQ  _XAX; /* HACK: works around mysterious issue with generated mov(_XAX), _XAX ... */ \
-                        pushLQ  EffectiveAddr_X; \
+                        pushLQ  EffectiveAddr_X; /* ea is arg0 (and preserved) */ \
                         call    SN(c_##func); \
-                        popLQ   EffectiveAddr_X; /* dummy */ \
+                        popLQ   EffectiveAddr_X; /* restore ea */ \
                         movb    %al, %dl; \
                         popLQ   _XAX; /* ... ugh */ \
                         movb    %dl, %al; \
