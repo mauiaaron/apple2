@@ -22,6 +22,8 @@
 
 #if __LP64__
 #   define SZ_PTR           8
+#   define ROR_BIT          63
+// x86_64 registers
 #   define _XBP             %rbp        /* x86_64 base pointer     */
 #   define _XSP             %rsp        /* x86_64 stack pointer    */
 #   define _XAX             %rax        /* scratch                 */
@@ -53,6 +55,8 @@
 #   define xorLQ            xorq
 #else
 #   define SZ_PTR           4
+#   define ROR_BIT          31
+// x86 registers
 #   define _XBP             %ebp        /* x86 base pointer        */
 #   define _XSP             %esp        /* x86 stack pointer       */
 #   define _XAX             %eax        /* scratch                 */

@@ -393,7 +393,7 @@
                 movb    F_Reg, %ah; \
                 rorLQ   $1, _XAX; \
                 orb     %al, %al; \
-                btr     $31, _XAX; \
+                btr     $ROR_BIT, _XAX; \
                 FlagNZC \
                 PutToEA_B
 
