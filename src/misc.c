@@ -25,6 +25,11 @@ static unsigned char apple_iie_rom[32768];              /* //e */
 bool do_logging = true; // also controlled by NDEBUG
 FILE *error_log = NULL;
 
+__attribute__((constructor))
+static void _init_common() {
+    error_log = stderr;
+}
+
 GLUE_BANK_READ(read_ram_bank,base_d000_rd)
 GLUE_BANK_MAYBEWRITE(write_ram_bank,base_d000_wrt)
 GLUE_BANK_READ(read_ram_lc,base_e000_rd)
@@ -73,9 +78,7 @@ uint8_t *base_cxrom;
    ------------------------------------------------------------------------- */
 void c_debug_illegal_bcd()
 {
-    ERRLOG("Illegal/undefined BCD operation encountered, debug break on c_debug_illegal_bcd to debug...");
-    char *ptr = (char*)0x0bad;
-    *ptr = 0x1337; // segfault
+    RELEASE_LOG("Illegal/undefined BCD operation encountered, debug break on c_debug_illegal_bcd to debug...");
 }
 
 

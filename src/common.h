@@ -72,51 +72,60 @@
 #define MAX(a,b) (((a) >= (b)) ? (a) : (b))
 #endif
 
-#ifndef NDEBUG
-#       if defined(__GNUC__)
-#               pragma GCC diagnostic push
-#               pragma GCC diagnostic ignored "-Wunused-variable"
-#       elif defined(__clang__)
-#               pragma clang diagnostic push
-#               pragma clang diagnostic ignored "-Wunused-variable"
-#       endif
-
 extern bool do_logging;
 extern FILE *error_log;
-#define ERRLOG(/* err message format string, args */...)                                \
-    if (do_logging) {                                                                   \
-        int saverr = errno; errno = 0;                                                  \
-        fprintf(error_log ? error_log : stderr, "%s:%d - ", __FILE__, __LINE__);        \
-        fprintf(error_log ? error_log : stderr, __VA_ARGS__);                           \
-        if (saverr) {                                                                   \
-            fprintf(error_log ? error_log : stderr, " (syserr: %s)", strerror(saverr)); \
-        }                                                                               \
-        fprintf(error_log ? error_log : stderr, "\n");                                  \
+
+#define _LOG(...) \
+    int saverr = errno; \
+    errno = 0; \
+    fprintf(error_log, "%s:%d - ", __FILE__, __LINE__); \
+    fprintf(error_log, __VA_ARGS__); \
+    if (saverr) { \
+        fprintf(error_log, " (syserr: %s)", strerror(saverr)); \
+    } \
+    fprintf(error_log, "\n");
+
+#ifndef NDEBUG
+
+#define ERRLOG(...) \
+    if (do_logging) { \
+        _LOG(__VA_ARGS__); \
     }
 
 #define ERRQUIT(...) \
     if (do_logging) { \
-        ERRLOG(__VA_ARGS__); \
-        exit(1); \
+        _LOG(__VA_ARGS__); \
+    } \
+    exit(1);
+
+#define LOG(...) \
+    if (do_logging) { \
+        errno = 0; \
+        _LOG(__VA_ARGS__); \
     }
 
 #else // NDEBUG
 
-#if defined(__GNUC__)
-#   pragma GCC diagnostic pop
-#elif defined(__clang__)
-#   pragma clang diagnostic pop
-#endif
-
 #define ERRLOG(...) \
+    do { } while(0);
+
+#define ERRQUIT(...) \
+    do { } while(0);
+
+#define LOG(...) \
     do { } while(0);
 
 #endif
 
-#define LOG(...) \
+#define RELEASE_ERRLOG(...) \
+    do { \
+        _LOG(__VA_ARGS__); \
+    } while (0);
+
+#define RELEASE_LOG(...) \
     do { \
         errno = 0; \
-        ERRLOG(__VA_ARGS__); \
+        _LOG(__VA_ARGS__); \
     } while(0);
 
 #define Free(X) \
