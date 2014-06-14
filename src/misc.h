@@ -79,8 +79,8 @@ extern uint32_t softswitches;
 #define         SS_PAGE2        0x00000008
 #define         SS_BANK2        0x00000010
 #define         SS_LCRAM        0x00000020
-#define         SS_LCSEC        0x00000040 /* check for double read */
-#define         SS_LCWRT        0x00000080 /* LC write enable */
+#define         SS_LCSEC        0x00000040 /* Pseudo-softswitch : enabled if 2+ reads have occurred */
+#define         SS_LCWRT        0x00000080 /* Pseudo-softswitch : LC write enable */
 #define         SS_80STORE      0x00000100
 #define         SS_80COL        0x00000200
 #define         SS_RAMRD        0x00000400

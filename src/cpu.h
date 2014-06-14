@@ -100,7 +100,7 @@ extern int16_t cpu65_cycles_to_execute;
 #define N_Flag_Bit      15              /* 6502 Neg                */
 
 /*
- * These are the 6502 Flags bit positions
+ * 6502 flags bit mask
  */
 #define C_Flag_6502     0x1         // [C]arry
 #define Z_Flag_6502     0x2         // [Z]ero
