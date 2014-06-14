@@ -1294,10 +1294,10 @@ static bool MB_DSInit()
 		return false;
 
 	HRESULT hr = DSGetSoundBuffer(&MockingboardVoice, DSBCAPS_CTRLVOLUME, g_dwDSBufferSize, SAMPLE_RATE, 2);
-	LogFileOutput("MB_DSInit: DSGetSoundBuffer(), hr=0x%08X\n", hr);
+	LogFileOutput("MB_DSInit: DSGetSoundBuffer(), hr=0x%08X\n", (unsigned int)hr);
 	if(FAILED(hr))
 	{
-		if(g_fh) fprintf(g_fh, "MB: DSGetSoundBuffer failed (%08X)\n",hr);
+		if(g_fh) fprintf(g_fh, "MB: DSGetSoundBuffer failed (%08X)\n",(unsigned int)hr);
 		return false;
 	}
 
@@ -1319,7 +1319,7 @@ static bool MB_DSInit()
 #else
 	hr = MockingboardVoice.lpDSBvoice->SetVolume(MockingboardVoice.nVolume);
 #endif
-	LogFileOutput("MB_DSInit: SetVolume(), hr=0x%08X\n", hr);
+	LogFileOutput("MB_DSInit: SetVolume(), hr=0x%08X\n", (unsigned int)hr);
 
 	//---------------------------------
 
@@ -1391,10 +1391,10 @@ static bool MB_DSInit()
 
 		// NB. DSBCAPS_LOCSOFTWARE required for
 		hr = DSGetSoundBuffer(&SSI263Voice[i], DSBCAPS_CTRLVOLUME+DSBCAPS_CTRLPOSITIONNOTIFY+DSBCAPS_LOCSOFTWARE, nPhonemeByteLength, 22050, 1);
-		LogFileOutput("MB_DSInit: (%02d) DSGetSoundBuffer(), hr=0x%08X\n", i, hr);
+		LogFileOutput("MB_DSInit: (%02d) DSGetSoundBuffer(), hr=0x%08X\n", i, (unsigned int)hr);
 		if(FAILED(hr))
 		{
-			if(g_fh) fprintf(g_fh, "SSI263: DSGetSoundBuffer failed (%08X)\n",hr);
+			if(g_fh) fprintf(g_fh, "SSI263: DSGetSoundBuffer failed (%08X)\n",(unsigned int)hr);
 			return false;
 		}
 
@@ -1406,7 +1406,7 @@ static bool MB_DSInit()
 		//LogFileOutput("MB_DSInit: (%02d) DSGetLock(), res=%d\n", i, hr ? 1 : 0);	// WARNING: Lock acquired && doing heavy-weight logging
 		if(FAILED(hr))
 		{
-			if(g_fh) fprintf(g_fh, "SSI263: DSGetLock failed (%08X)\n",hr);
+			if(g_fh) fprintf(g_fh, "SSI263: DSGetLock failed (%08X)\n",(unsigned int)hr);
 			return false;
 		}
 
@@ -1459,10 +1459,10 @@ static bool MB_DSInit()
 #else
 		hr = SSI263Voice[i].lpDSBvoice->Unlock((void*)pDSLockedBuffer, dwDSLockedBufferSize, NULL, 0);
 #endif
-		LogFileOutput("MB_DSInit: (%02d) Unlock(),hr=0x%08X\n", i, hr);
+		LogFileOutput("MB_DSInit: (%02d) Unlock(),hr=0x%08X\n", i, (unsigned int)hr);
 		if(FAILED(hr))
 		{
-			if(g_fh) fprintf(g_fh, "SSI263: DSUnlock failed (%08X)\n",hr);
+			if(g_fh) fprintf(g_fh, "SSI263: DSUnlock failed (%08X)\n",(unsigned int)hr);
 			return false;
 		}
 
@@ -1473,7 +1473,7 @@ static bool MB_DSInit()
 #else
 		hr = SSI263Voice[i].lpDSBvoice->SetVolume(SSI263Voice[i].nVolume);
 #endif
-		LogFileOutput("MB_DSInit: (%02d) SetVolume(), hr=0x%08X\n", i, hr);
+		LogFileOutput("MB_DSInit: (%02d) SetVolume(), hr=0x%08X\n", i, (unsigned int)hr);
 	}
 
 	//

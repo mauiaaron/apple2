@@ -298,7 +298,7 @@ bool DSZeroVoiceBuffer(PVOICE Voice, char* pszDevName, DWORD dwBufferSize)
 	HRESULT hr = Voice->lpDSBvoice->Stop(Voice->lpDSBvoice->_this);
 	if(FAILED(hr))
 	{
-		if(g_fh) fprintf(g_fh, "%s: DSStop failed (%08X)\n",pszDevName,hr);
+		if(g_fh) fprintf(g_fh, "%s: DSStop failed (%08X)\n",pszDevName,(unsigned int)hr);
 		return false;
 	}
 	hr = !DSGetLock(Voice->lpDSBvoice, 0, 0, &pDSLockedBuffer, &dwDSLockedBufferSize, NULL, &argX);
@@ -308,7 +308,7 @@ bool DSZeroVoiceBuffer(PVOICE Voice, char* pszDevName, DWORD dwBufferSize)
 #endif
 	if(FAILED(hr))
 	{
-		if(g_fh) fprintf(g_fh, "%s: DSGetLock failed (%08X)\n",pszDevName,hr);
+		if(g_fh) fprintf(g_fh, "%s: DSGetLock failed (%08X)\n",pszDevName,(unsigned int)hr);
 		return false;
 	}
 
@@ -322,7 +322,7 @@ bool DSZeroVoiceBuffer(PVOICE Voice, char* pszDevName, DWORD dwBufferSize)
 #endif
 	if(FAILED(hr))
 	{
-		if(g_fh) fprintf(g_fh, "%s: DSUnlock failed (%08X)\n",pszDevName,hr);
+		if(g_fh) fprintf(g_fh, "%s: DSUnlock failed (%08X)\n",pszDevName,(unsigned int)hr);
 		return false;
 	}
 
@@ -333,7 +333,7 @@ bool DSZeroVoiceBuffer(PVOICE Voice, char* pszDevName, DWORD dwBufferSize)
 #endif
 	if(FAILED(hr))
 	{
-		if(g_fh) fprintf(g_fh, "%s: DSPlay failed (%08X)\n",pszDevName,hr);
+		if(g_fh) fprintf(g_fh, "%s: DSPlay failed (%08X)\n",pszDevName,(unsigned int)hr);
 		return false;
 	}
 
@@ -357,7 +357,7 @@ bool DSZeroVoiceWritableBuffer(PVOICE Voice, char* pszDevName, DWORD dwBufferSiz
 #endif
 	if(FAILED(hr))
 	{
-		if(g_fh) fprintf(g_fh, "%s: DSGetLock failed (%08X)\n",pszDevName,hr);
+		if(g_fh) fprintf(g_fh, "%s: DSGetLock failed (%08X)\n",pszDevName,(unsigned int)hr);
 		return false;
 	}
 
@@ -373,7 +373,7 @@ bool DSZeroVoiceWritableBuffer(PVOICE Voice, char* pszDevName, DWORD dwBufferSiz
 									(void*)pDSLockedBuffer1, dwDSLockedBufferSize1);
 	if(FAILED(hr))
 	{
-		if(g_fh) fprintf(g_fh, "%s: DSUnlock failed (%08X)\n",pszDevName,hr);
+		if(g_fh) fprintf(g_fh, "%s: DSUnlock failed (%08X)\n",pszDevName,(unsigned int)hr);
 		return false;
 	}
 
@@ -609,7 +609,7 @@ bool DSInit()
 #endif
 	if(FAILED(hr))
 	{
-		if(g_fh) fprintf(g_fh, "DSEnumerate failed (%08X)\n",hr);
+		if(g_fh) fprintf(g_fh, "DSEnumerate failed (%08X)\n",(unsigned int)hr);
 		return false;
 	}
 
@@ -641,7 +641,7 @@ bool DSInit()
 			break;
 		}
 
-		if(g_fh) fprintf(g_fh, "DSCreate failed for sound device #%d (%08X)\n",x,hr);
+		if(g_fh) fprintf(g_fh, "DSCreate failed for sound device #%d (%08X)\n",x,(unsigned int)hr);
 	}
 	if(!bCreatedOK)
 	{
