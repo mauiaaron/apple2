@@ -36,14 +36,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #       include <sys/io.h>
 #       endif
 
-#       if defined(__GNUC__)
-#               pragma GCC diagnostic push
-#               pragma GCC diagnostic ignored "-Wformat"
-#       elif defined(__clang__)
-#               pragma clang diagnostic push
-#               pragma clang diagnostic ignored "-Wunused-variable"
-#       endif
-
 #else
 #include "StdAfx.h"
 #endif
@@ -515,7 +507,11 @@ static void ReinitRemainderBuffer(UINT nCyclesRemaining)
 	for(g_nRemainderBufferIdx=0; (g_nRemainderBufferIdx<nCyclesRemaining) && (g_nRemainderBufferIdx<g_nRemainderBufferSize); g_nRemainderBufferIdx++)
 		g_pRemainderBuffer[g_nRemainderBufferIdx] = g_nSpeakerData;
 
+#ifdef APPLE2IX
+        // believe this is a erroneous (comparison should be <=) but ultimately spurious assert
+#else
 	_ASSERT(g_nRemainderBufferIdx < g_nRemainderBufferSize);
+#endif
 }
 
 static void UpdateRemainderBuffer(ULONG* pnCycleDiff)
@@ -1341,10 +1337,3 @@ DWORD SpkrSetSnapshot(SS_IO_Speaker* pSS)
 	return 0;
 }
 
-#ifdef APPLE2IX
-#       if defined(__GNUC__)
-#               pragma GCC diagnostic pop
-#       elif defined(__clang__)
-#               pragma clang diagnostic pop
-#       endif
-#endif

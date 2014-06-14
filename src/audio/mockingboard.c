@@ -85,14 +85,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #       include <sys/io.h>
 #       endif
 
-#       if defined(__GNUC__)
-#               pragma GCC diagnostic push
-#               pragma GCC diagnostic ignored "-Wformat"
-#       elif defined(__clang__)
-#               pragma clang diagnostic push
-#               pragma clang diagnostic ignored "-Wformat"
-#       endif
-
 #else
 #include "StdAfx.h"
 #endif
@@ -2254,10 +2246,3 @@ DWORD MB_SetSnapshot(SS_CARD_MOCKINGBOARD* pSS, DWORD dwSlot_unused)
 #endif
 }
 
-#ifdef APPLE2IX
-#   if defined(__GNUC__)
-#       pragma GCC diagnostic pop
-#   elif defined(__clang__)
-#       pragma clang diagnostic pop
-#   endif
-#endif

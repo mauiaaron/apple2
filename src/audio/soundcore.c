@@ -37,14 +37,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include "audio/win-shim.h"
 
-#if defined(__GNUC__)
-#   pragma GCC diagnostic push
-#   pragma GCC diagnostic ignored "-Wformat"
-#elif defined(__clang__)
-#   pragma clang diagnostic push
-#   pragma clang diagnostic ignored "-Wformat"
-#endif
-
 #else
 #include "StdAfx.h"
 #endif
@@ -88,6 +80,11 @@ bool g_bDSAvailable = false;
 #ifdef APPLE2IX
 bool g_bDisableDirectSound = false;
 FILE *g_fh = NULL;
+
+__attribute__((constructor))
+static void _init_soundcore() {
+    g_fh = error_log;
+}
 #endif
 
 //-----------------------------------------------------------------------------
@@ -863,10 +860,3 @@ void SysClk_StopTimer()
 #endif
 }
 
-#ifdef APPLE2IX
-#   if defined(__GNUC__)
-#       pragma GCC diagnostic pop
-#   elif defined(__clang__)
-#       pragma clang diagnostic pop
-#   endif
-#endif
