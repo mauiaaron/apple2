@@ -293,7 +293,6 @@ static void c_calibrate_pc_joystick()
       "| ESC quits calibration                |",
       "||||||||||||||||||||||||||||||||||||||||" };
 
-    uint8_t x_val=0, y_val=0;
     uint8_t x_last=CALIBRATE_JOYMENU_W>>1, y_last=CALIBRATE_JOYMENU_H>>1;
     const char* const spinney = "|/-\\";
     uint8_t spinney_idx=0;

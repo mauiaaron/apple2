@@ -782,8 +782,6 @@ static inline void _calculate_interp_color(uint8_t *color_buf, const unsigned in
 
 // PlotPixelsExtra
 static inline void _plot_hires_pixels(uint8_t *dst, const uint8_t *src) {
-    uint8_t pix;
-
     for (unsigned int i=2; i; i--) {
         for (unsigned int j=DYNAMIC_SZ-1; j; j--) {
             uint16_t pix = *src;

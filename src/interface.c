@@ -362,7 +362,6 @@ void c_interface_select_diskette( int drive )
     struct dirent **namelist;
     bool nextdir = false;
     int i, entries;
-    pid_t pid;
     static int curpos=0;
     int ch = -1;
 
@@ -712,7 +711,6 @@ void c_interface_parameters()
     int ch;
     static interface_enum_t option = OPT_CPU;
     static int cur_y = 0, cur_off = 0, cur_x = 0, cur_pos = 0;
-    int current_mode = apple_mode;
 
     /* reset the x position, so we don't lose our cursor if path changes */
     cur_x = 0;
@@ -1120,15 +1118,6 @@ void c_interface_parameters()
         {
             timing_initialize();
             video_set(0);                       /* redo colors */
-
-#if 0
-            /* reboot machine if different */
-            if (current_mode != apple_mode)
-            {
-                // FIXME : broken ...
-                cpu65_interrupt(RebootSig);
-            }
-#endif
             c_initialize_sound_hooks();
             c_interface_exit(ch);
             return;
@@ -1492,8 +1481,6 @@ void c_interface_keyboard_layout()
       "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||",
       "|                           (Press any key to exit)                            |",
       "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||" };
-
-    int i;
 
     video_setpage( 0 );
 

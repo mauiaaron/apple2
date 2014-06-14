@@ -386,8 +386,10 @@ bool DSZeroVoiceWritableBuffer(PVOICE Voice, char* pszDevName, DWORD dwBufferSiz
 //-----------------------------------------------------------------------------
 
 static bool g_bTimerActive = false;
+#ifndef APPLE2IX
 static eFADE g_FadeType = FADE_NONE;
 static UINT_PTR g_nTimerID = 0;
+#endif
 
 //-------------------------------------
 
@@ -745,13 +747,13 @@ void SoundCore_SetErrorMax(const int nErrorMax)
 
 //=============================================================================
 
-static DWORD g_dwAdviseToken;
 #ifndef APPLE2IX
+static DWORD g_dwAdviseToken;
 static IReferenceClock *g_pRefClock = NULL;
 static HANDLE g_hSemaphore = NULL;
-#endif
 static bool g_bRefClockTimerActive = false;
 static DWORD g_dwLastUsecPeriod = 0;
+#endif
 
 
 bool SysClk_InitTimer()

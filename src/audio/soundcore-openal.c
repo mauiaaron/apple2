@@ -115,7 +115,6 @@ long SoundSystemCreate(const char *sound_device, SoundSystemStruct **sound_struc
     assert(*sound_struct == NULL);
     assert(voices == NULL);
 
-    int err = -1;
     ALCcontext *ctx = NULL;
 
     do {
@@ -763,7 +762,6 @@ static long OpenALCreateSoundBuffer(ALBufferParamsStruct *params, ALSoundBufferS
     assert(ctx != NULL);
 
     ALVoice *voice = NULL;
-    int err = -1;
 
     do {
 

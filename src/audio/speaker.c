@@ -100,8 +100,8 @@ double		    g_fClksPerSpkrSample;		// Setup in SetClksPerSpkrSample()
 // Globals
 #ifndef APPLE2IX
 static DWORD	lastcyclenum	= 0;
-#endif
 static DWORD	toggles			= 0;
+#endif
 static unsigned __int64	g_nSpkrQuietCycleCount = 0;
 static unsigned __int64 g_nSpkrLastCycle = 0;
 static bool g_bSpkrToggleFlag = false;
@@ -109,9 +109,9 @@ static VOICE SpeakerVoice = {0};
 static bool g_bSpkrAvailable = false;
 
 
+#ifndef APPLE2IX
 // Globals (SOUND_DIRECT/SOUND_SMART)
 static BOOL		directio		= 0;
-#ifndef APPLE2IX
 static DWORD	lastdelta[2]	= {0,0};
 static DWORD	quietcycles		= 0;
 static DWORD	soundeffect		= 0;
@@ -763,6 +763,7 @@ void SpkrUpdate(DWORD totalcycles)
 #endif
 }
 
+#ifndef APPLE2IX
 // Called from SoundCore_TimerFunc() for FADE_OUT
 void SpkrUpdate_Timer()
 {
@@ -781,7 +782,6 @@ void SpkrUpdate_Timer()
 
 //=============================================================================
 
-#ifndef APPLE2IX
 static DWORD dwByteOffset = (DWORD)-1;
 #endif
 static int nNumSamplesError = 0;
@@ -991,7 +991,9 @@ static ULONG Spkr_SubmitWaveBuffer_FullSpeed(short* pSpeakerBuffer, ULONG nNumSa
 
 static ULONG Spkr_SubmitWaveBuffer(short* pSpeakerBuffer, ULONG nNumSamples)
 {
+#ifndef APPLE2IX
 	char szDbg[200];
+#endif
 	nDbgSpkrCnt++;
 
 	if(!SpeakerVoice.bActive)

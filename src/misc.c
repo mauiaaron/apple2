@@ -580,8 +580,6 @@ void c_initialize_vm() {
 
 void reinitialize(void)
 {
-    int i;
-
     c_initialize_vm();
 
     softswitches = SS_TEXT | SS_IOUDIS | SS_C3ROM | SS_LCWRT | SS_LCSEC;

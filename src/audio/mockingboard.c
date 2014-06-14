@@ -197,7 +197,7 @@ static bool g_bMB_RegAccessedFlag = false;
 static bool g_bMB_Active = false;
 
 #ifdef APPLE2IX
-static pthread_t mockingboard_thread = (pthread_t)-1;
+//static pthread_t mockingboard_thread = (pthread_t)-1;
 static pthread_t g_hThread = 0;
 #else
 static HANDLE g_hThread = NULL;
@@ -253,8 +253,8 @@ static pthread_mutex_t mockingboard_mutex = PTHREAD_MUTEX_INITIALIZER;
 static uint8_t quit_event = false;
 #else
 static HANDLE g_hSSI263Event[g_nNumEvents] = {NULL};	// 1: Phoneme finished playing, 2: Exit thread
-#endif
 static DWORD g_dwMaxPhonemeLen = 0;
+#endif
 
 // When 6522 IRQ is *not* active use 60Hz update freq for MB voices
 static const double g_f6522TimerPeriod_NoIRQ = CLK_6502 / 60.0;		// Constant whatever the CLK is set to
@@ -817,7 +817,6 @@ static void Votrax_Write(BYTE nDevice, BYTE nValue)
 
 static void MB_Update()
 {
-	char szDbg[200];
 #ifdef APPLE2IX
         static int nNumSamplesError = 0;
         if (!MockingboardVoice.bActive || !g_bMB_Active)
@@ -826,6 +825,7 @@ static void MB_Update()
             return;
         }
 #else
+	char szDbg[200];
 	if (!MockingboardVoice.bActive)
 		return;
 #endif
@@ -2059,14 +2059,18 @@ void MB_UpdateCycles(ULONG uExecutedCycles)
 		SY6522_AY8910* pMB = &g_MB[i];
 
 		USHORT OldTimer1 = pMB->sy6522.TIMER1_COUNTER.w;
+#ifndef APPLE2IX
 		USHORT OldTimer2 = pMB->sy6522.TIMER2_COUNTER.w;
+#endif
 
 		pMB->sy6522.TIMER1_COUNTER.w -= nClocks;
 		pMB->sy6522.TIMER2_COUNTER.w -= nClocks;
 
 		// Check for counter underflow
 		bool bTimer1Underflow = (!(OldTimer1 & 0x8000) && (pMB->sy6522.TIMER1_COUNTER.w & 0x8000));
+#ifndef APPLE2IX
 		bool bTimer2Underflow = (!(OldTimer2 & 0x8000) && (pMB->sy6522.TIMER2_COUNTER.w & 0x8000));
+#endif
 
 		if( bTimer1Underflow && (g_nMBTimerDevice == i) && g_bMBTimerIrqActive )
 		{
