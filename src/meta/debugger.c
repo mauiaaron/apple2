@@ -453,7 +453,7 @@ void set_lc_mem(int addrs, int lcbank, char *hexstr) {
     same as the set_mem routine.  we use the do_write_memory routine to
     "safely" set memory...
    ------------------------------------------------------------------------- */
-void bload(FILE *f, char *name, int addrs) {
+void bload(FILE *f, char *name, int bank, int addrs) {
     uint8_t *hexstr = NULL;
     int len = -1;
     uint8_t data;
@@ -1306,7 +1306,7 @@ void display_help() {
     sprintf(second_buf[i++], "(sta{tus} | op{codes})               ");
     sprintf(second_buf[i++], "(l{ang} | d{rive} | vm)              ");
     sprintf(second_buf[i++], "bsave <filename> </bank/addr> <len>  ");
-    sprintf(second_buf[i++], "bload <filename> <addr>              ");
+    sprintf(second_buf[i++], "bload <filename> </bank/addr>        ");
     sprintf(second_buf[i++], "fr{esh}                              ");
     sprintf(second_buf[i++], "(h{elp} | ?)                         ");
     num_buffer_lines = i;

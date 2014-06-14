@@ -38,7 +38,7 @@ extern int watchpoints[MAX_BRKPTS];     /* memory watchpoints */
 
 // internal debugger commands
 extern void clear_debugger_screen();
-extern void bload(FILE*, char*, int);
+extern void bload(FILE*, char*, int, int);
 extern void show_misc_info();
 extern uint8_t get_current_opcode();
 extern void dump_mem(int, int, int, int, int);
@@ -67,7 +67,7 @@ extern void fb_sha1();
   a{scii} {lc1|lc2} {/bank/}{addr} {+}{len}
   r{egs}
   <addr> {lc1|lc2} : <byteseq>
-  bload <file> <addrs>
+  bload <file> /<bank>/<addrs>
   bsave <file> /<bank>/<addrs> <len>
   (s{tep} | n{ext}) {len}
   f{inish}
@@ -435,8 +435,8 @@ ADDRS	[0-9a-fA-F]+
     return SETMEM;
 }
 
-{BOS}bload{WS}+{CHAR}+{WS}+{ADDRS}{EOS} {
-    /* bload <file> <addr> */
+{BOS}bload{WS}+{CHAR}+{WS}+{BANK}{ADDRS}{EOS} {
+    /* bload <file> /<bank>/<addr> */
     FILE *fp = NULL;
     char *ptr = NULL;
     char buf[DEBUG_BUFSZ];
@@ -451,8 +451,13 @@ ADDRS	[0-9a-fA-F]+
     strncpy(buf, ptr, len);
     buf[len] = '\0';
 
-    /* bload addr */
-    while (isspace(*debugtext)) ++debugtext;
+    /* get bank info */
+    while (*debugtext != '/') ++debugtext;
+    ++debugtext;
+    int bank = strtol(debugtext, &debugtext, 10);
+
+    /* extract addrs */
+    ++debugtext;
     arg1 = strtol(debugtext, (char**)NULL, 16);
 
     fp = fopen(buf, "r");
@@ -462,7 +467,7 @@ ADDRS	[0-9a-fA-F]+
 	return BLOAD;
     }
 
-    bload(fp, buf, arg1);
+    bload(fp, buf, bank, arg1);
     fclose(fp);
     return BLOAD;
 }
