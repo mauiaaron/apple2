@@ -20,6 +20,9 @@
 #define PC_Reg          %si             /* 6502 Program Counter    */
 #define EffectiveAddr   %di             /* Effective address       */
 
+#define X86_CF_Bit 0x0                  /* x86 carry               */
+#define X86_AF_Bit 0x4                  /* x86 adj (nybble carry)  */
+
 #if __LP64__
 #   define SZ_PTR           8
 #   define ROR_BIT          63

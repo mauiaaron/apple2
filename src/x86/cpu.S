@@ -127,7 +127,7 @@
 #define FlagNVZC \
                 pushfLQ; \
                 popLQ   _XAX; \
-                andLQ   $0x08C1,_XAX; \
+                andLQ   $(N_Flag|(V_Flag<<8)|Z_Flag|C_Flag),_XAX; \
                 andb    $~(N_Flag|V_Flag|Z_Flag|C_Flag), F_Reg; \
                 orb     %ah, F_Reg; \
                 orb     %al, F_Reg;
@@ -445,13 +445,50 @@ E(op_ADC_dec)
                 DebugBCDCheck
                 bt      $C_Flag_Bit, AF_Reg_X
                 adcb    A_Reg, %al
-#ifdef __LP64__
-#warning TODO FIXME das instruction
-#else
+#if !defined(__LP64__)
                 daa
-#endif
                 movb    %al, A_Reg
                 FlagNVZC
+#else
+                // DAA algorithm : http://www.ray.masmcode.com/BCDdaa.html
+                // CF_old = CF
+                // IF (al AND 0Fh > 9) or (the Auxilliary Flag is set)
+                //    al = al + 6
+                //    CF = CF (automagically) or CF_old
+                //    AF set (automagically)
+                // ENDIF
+                // IF (al > 99h) or (Carry Flag is set)
+                //    al = al + 60h
+                //    CF set
+                // ENDIF
+                pushq   _XBX
+                pushfq
+                popq    _XBX
+                andb    $~(N_Flag|V_Flag|Z_Flag|C_Flag), F_Reg
+                movb    %al, %ah
+                andb    $0x0f, %ah
+                cmpb    $9, %ah
+                jg      _daa_lo_nyb
+                btq     $X86_AF_Bit, _XBX
+                jnc     _daa_next0
+_daa_lo_nyb:    addb    $6, %al         // adjust lo nybble
+                jc      _daa_hi_nyb
+_daa_next0:     btq     $X86_CF_Bit, _XBX
+                jc      _daa_hi_nyb
+                xorb    %ah, %ah
+                cmpw    $0x99, %ax
+                jle     _daa_next1
+_daa_hi_nyb:    addb    $0x60, %al      // adjust hi nybble
+                orb     $C_Flag, F_Reg  // FlagC
+_daa_next1:     testq   $0x80, %rax
+                jz      _daa_next2
+                orb     $N_Flag, F_Reg  // FlagN
+_daa_next2:     testq   $0xFF, %rax
+                jnz     _daa_finish
+                orb     $Z_Flag, F_Reg  // FlagZ
+_daa_finish:    popq    _XBX
+                movb    %al, A_Reg
+#endif
                 Continue
 
 E(op_ADC_imm) // 0x69
@@ -1562,18 +1599,57 @@ E(op_SBC_dec)
                 incb    DebugCycleCount         // +1 cycle
                 GetFromEA_B
                 DebugBCDCheck
-                bt      $C_Flag_Bit, AF_Reg_X
-                cmc
+                btc     $C_Flag_Bit, AF_Reg_X
                 xchgb   A_Reg, %al
+#if !defined(__LP64__)
                 sbbb    A_Reg, %al
-#ifdef __LP64__
-#warning TODO FIXME das instruction
-#else
                 das
-#endif
                 movb    %al, A_Reg
                 cmc
                 FlagNVZC
+#else
+                cmc
+                sbbb    A_Reg, %al
+                // DAS algorithm : http://www.ray.masmcode.com/BCDdas.html
+                // CF_old = CF
+                // IF (al AND 0Fh > 9) or (the Auxilliary Flag is set)
+                //    al = al - 6
+                //    CF = CF (automagically) or CF_old
+                //    AF set (automagically)
+                // ENDIF
+                // IF (al > 99h) or (Carry Flag is set)
+                //    al = al - 60h
+                //    ^CF set
+                // ENDIF
+                pushq   _XBX
+                pushfq
+                popq    _XBX
+                andb    $~(N_Flag|V_Flag|Z_Flag), F_Reg
+                orb     $C_Flag, F_Reg
+                movb    %al, %ah
+                andb    $0x0f, %ah
+                cmpb    $9, %ah
+                jg      _das_lo_nyb
+                btq     $X86_AF_Bit, _XBX
+                jnc     _das_next0
+_das_lo_nyb:    subb    $6, %al         // adjust lo nybble
+                jc      _das_hi_nyb
+_das_next0:     btq     $X86_CF_Bit, _XBX
+                jc      _das_hi_nyb
+                xorb    %ah, %ah
+                cmpw    $0x99, %ax
+                jle     _das_next1
+_das_hi_nyb:    subb    $0x60, %al      // adjust hi nybble
+                andb    $~C_Flag, F_Reg // !FlagC
+_das_next1:     testq   $0x80, %rax
+                jz      _das_next2
+                orb     $N_Flag, F_Reg  // FlagN
+_das_next2:     testq   $0xFF, %rax
+                jnz     _das_finish
+                orb     $Z_Flag, F_Reg  // FlagZ
+_das_finish:    popq    _XBX
+                movb    %al, A_Reg
+#endif
                 Continue
 
 E(op_SBC_imm) // 0xe9
