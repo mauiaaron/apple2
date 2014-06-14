@@ -800,7 +800,9 @@ static inline void _plot_hires_pixels(uint8_t *dst, const uint8_t *src) {
 
 // PlotByte
 static inline void _plot_hires(uint16_t ea, uint8_t b, bool is_even, uint8_t *fb_ptr) {
-    uint8_t color_buf[DYNAMIC_SZ];
+    uint8_t _buf[DYNAMIC_SZ];
+    uint8_t *color_buf = (uint8_t *)_buf; // <--- work around for -Wstrict-aliasing
+    uint8_t *apple2_vmem = (uint8_t *)apple_ii_64k[0];
 
     uint8_t *hires_ptr = NULL;
     if (is_even) {
@@ -828,7 +830,7 @@ static inline void _plot_hires(uint16_t ea, uint8_t b, bool is_even, uint8_t *fb
 
         // if right-side color is not black, re-calculate edge values
         if (color_buf[DYNAMIC_SZ-2] & 0xff) {
-            uint16_t pix16 = *((uint16_t *)&apple_ii_64k[0][ea]);
+            uint16_t pix16 = *((uint16_t *)(apple2_vmem+ea));
             if ((pix16 & 0x100) && (pix16 & 0x40)) {
                 *((uint16_t *)&color_buf[DYNAMIC_SZ-3]) = (uint16_t)0x3737;// COLOR_LIGHT_WHITE
             } else {
@@ -840,7 +842,7 @@ static inline void _plot_hires(uint16_t ea, uint8_t b, bool is_even, uint8_t *fb
 
         // if left-side color is not black, re-calculate edge values
         if (color_buf[1] & 0xff) {
-            uint16_t pix16 = *((uint16_t *)&apple_ii_64k[0][ea-1]);
+            uint16_t pix16 = *((uint16_t *)(apple2_vmem+ea-1));
             if ((pix16 & 0x100) && (pix16 & 0x40)) {
                 *((uint16_t *)&color_buf[1]) = (uint16_t)0x3737;// COLOR_LIGHT_WHITE
             } else {
