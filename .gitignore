@@ -41,6 +41,7 @@ missing
 ylwrap
 .dirstamp
 apple2ix*.tar.gz
+test-driver
 
 # generated sources
 src/font.c
