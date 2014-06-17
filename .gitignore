@@ -56,3 +56,6 @@ genfont
 man
 man6
 
+# Xcode
+xcuserdata
+
