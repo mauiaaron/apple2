@@ -27,10 +27,19 @@
 /* Symbol naming issues */
 #ifdef NO_UNDERSCORES
 #define         SN(foo) foo
+#define         SNX(foo, INDEX, SCALE) _##foo(%rip,INDEX,SCALE)
 #define         E(foo)          .globl foo; .balign 16; foo##:
+#define         CALL(foo) foo
 #else /* !NO_UNDERSCORES */
+#if defined(__APPLE__)
+#define         SN(foo) _##foo(%rip)
+#define         SNX(foo, INDEX, SCALE) _##foo(%rip,INDEX,SCALE)
+#else
 #define         SN(foo) _##foo
+#define         SNX(foo, INDEX, SCALE) _##foo(,INDEX,SCALE)
+#endif
 #define         E(foo)          .globl _##foo; .balign 16; _##foo##:
+#define         CALL(foo) _##foo
 #endif /* !NO_UNDERSCORES */
 
 #endif /* _A2_H_ */

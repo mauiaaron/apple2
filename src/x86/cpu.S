@@ -31,51 +31,51 @@
 #define GetFromPC_B \
                 movLQ   PC_Reg_X, EffectiveAddr_X; \
                 incw    PC_Reg; \
-                callLQ  *SN(cpu65_vmem_r)(,EffectiveAddr_X,SZ_PTR);
+                callLQ  *SNX(cpu65_vmem_r,EffectiveAddr_X,SZ_PTR);
 
 #define GetFromPC_W \
                 movLQ   PC_Reg_X, EffectiveAddr_X; \
                 incw    EffectiveAddr; \
                 addw    $2, PC_Reg; \
-                callLQ  *SN(cpu65_vmem_r)(,EffectiveAddr_X,SZ_PTR); \
+                callLQ  *SNX(cpu65_vmem_r,EffectiveAddr_X,SZ_PTR); \
                 decw    EffectiveAddr; \
                 movb    %al, %ah; \
-                callLQ  *SN(cpu65_vmem_r)(,EffectiveAddr_X,SZ_PTR);
+                callLQ  *SNX(cpu65_vmem_r,EffectiveAddr_X,SZ_PTR);
 
 #define JumpNextInstruction \
                 GetFromPC_B \
                 movb    %al, DebugCurrOpcode; \
                 movb    $0, DebugCycleCount; \
                 movb    $0, DebugCurrRW; \
-                jmp     *cpu65__opcodes(,_XAX,SZ_PTR);
+                jmp     *SNX(cpu65__opcodes,_XAX,SZ_PTR);
 
 #define GetFromEA_B \
                 orb     $1, DebugCurrRW; \
-                callLQ  *SN(cpu65_vmem_r)(,EffectiveAddr_X,SZ_PTR);
+                callLQ  *SNX(cpu65_vmem_r,EffectiveAddr_X,SZ_PTR);
 
 #define GetFromEA_W \
                 incw    EffectiveAddr; \
-                callLQ  *SN(cpu65_vmem_r)(,EffectiveAddr_X,SZ_PTR); \
+                callLQ  *SNX(cpu65_vmem_r,EffectiveAddr_X,SZ_PTR); \
                 decw    EffectiveAddr; \
                 movb    %al, %ah; \
-                callLQ  *SN(cpu65_vmem_r)(,EffectiveAddr_X,SZ_PTR);
+                callLQ  *SNX(cpu65_vmem_r,EffectiveAddr_X,SZ_PTR);
 
 #define PutToEA_B \
                 orb     $2, DebugCurrRW; \
                 movb    %al, DebugCurrByte; \
-                callLQ  *SN(cpu65_vmem_w)(,EffectiveAddr_X,SZ_PTR);
+                callLQ  *SNX(cpu65_vmem_w,EffectiveAddr_X,SZ_PTR);
 
 #define GetFromMem_B(x) \
                 movLQ   x, EffectiveAddr_X; \
-                callLQ  *SN(cpu65_vmem_r)(,EffectiveAddr_X,SZ_PTR);
+                callLQ  *SNX(cpu65_vmem_r,EffectiveAddr_X,SZ_PTR);
 
 #define GetFromMem_W(x) \
                 movLQ   x, EffectiveAddr_X; \
                 incw    EffectiveAddr; \
-                callLQ  *SN(cpu65_vmem_r)(,EffectiveAddr_X,SZ_PTR); \
+                callLQ  *SNX(cpu65_vmem_r,EffectiveAddr_X,SZ_PTR); \
                 decw    EffectiveAddr; \
                 movb    %al, %ah; \
-                callLQ  *SN(cpu65_vmem_r)(,EffectiveAddr_X,SZ_PTR);
+                callLQ  *SNX(cpu65_vmem_r,EffectiveAddr_X,SZ_PTR);
 
 #define Continue \
                 jmp     continue;
@@ -132,11 +132,11 @@
                 orb     %ah, F_Reg; \
                 orb     %al, F_Reg;
 
-#define Push(x) movb    x, SN(apple_ii_64k)(,SP_Reg_X,1); \
+#define Push(x) movb    x, SNX(apple_ii_64k,SP_Reg_X,1); \
                 decb    SP_Reg_L;
 
 #define Pop(x)  incb    SP_Reg_L; \
-                movb    SN(apple_ii_64k)(,SP_Reg_X,1), x;
+                movb    SNX(apple_ii_64k,SP_Reg_X,1), x;
 
 /* Immediate Addressing - the operand is contained in the second byte of the
    instruction. */
@@ -289,22 +289,22 @@
                 jz      6f; \
                 testb   $0x60, A_Reg; \
                 jz      6f; \
-                callLQ  SN(c_debug_illegal_bcd); \
+                callLQ  CALL(debug_illegal_bcd); \
 6:              testb   $0x08, A_Reg; \
                 jz      7f; \
                 testb   $0x06, A_Reg; \
                 jz      7f; \
-                callLQ  SN(c_debug_illegal_bcd); \
+                callLQ  CALL(debug_illegal_bcd); \
 7:              testb   $0x80, %al; \
                 jz      8f; \
                 testb   $0x60, %al; \
                 jz      8f; \
-                callLQ  SN(c_debug_illegal_bcd); \
+                callLQ  CALL(debug_illegal_bcd); \
 8:              testb   $0x08, %al; \
                 jz      9f; \
                 testb   $0x06, %al; \
                 jz      9f; \
-                callLQ  SN(c_debug_illegal_bcd); \
+                callLQ  CALL(debug_illegal_bcd); \
 9:
 #else
 #define DebugBCDCheck
@@ -494,60 +494,60 @@ _daa_finish:    popq    _XBX
 E(op_ADC_imm) // 0x69
                 GetImm
                 testb   $D_Flag, F_Reg          // Decimal mode?
-                jnz     op_ADC_dec              // Yes, jump to decimal version
+                jnz     CALL(op_ADC_dec)        // Yes, jump to decimal version
                 DoADC_b
                 Continue
 
 E(op_ADC_zpage) // 0x65
                 GetZPage
                 testb   $D_Flag, F_Reg          // Decimal mode?
-                jnz     op_ADC_dec              // Yes, jump to decimal version
+                jnz     CALL(op_ADC_dec)        // Yes, jump to decimal version
                 DoADC_b
                 Continue
 
 E(op_ADC_zpage_x) // 0x75
                 GetZPage_X
                 testb   $D_Flag, F_Reg          // Decimal mode?
-                jnz     op_ADC_dec              // Yes, jump to decimal version
+                jnz     CALL(op_ADC_dec)        // Yes, jump to decimal version
                 DoADC_b
                 Continue
 
 // UNIMPLEMENTED : W65C02S datasheet
 E(op_ADC_zpage_y)
-                jmp op_NOP
+                jmp CALL(op_NOP)
 
 E(op_ADC_abs) // 0x6d
                 GetAbs
                 testb   $D_Flag, F_Reg          // Decimal mode?
-                jnz     op_ADC_dec              // Yes, jump to decimal version
+                jnz     CALL(op_ADC_dec)        // Yes, jump to decimal version
                 DoADC_b
                 Continue
 
 E(op_ADC_abs_x) // 0x7d
                 GetAbs_X
                 testb   $D_Flag, F_Reg          // Decimal mode?
-                jnz     op_ADC_dec              // Yes, jump to decimal version
+                jnz     CALL(op_ADC_dec)        // Yes, jump to decimal version
                 DoADC_b
                 Continue
 
 E(op_ADC_abs_y) // 0x79
                 GetAbs_Y
                 testb   $D_Flag, F_Reg          // Decimal mode?
-                jnz     op_ADC_dec              // Yes, jump to decimal version
+                jnz     CALL(op_ADC_dec)        // Yes, jump to decimal version
                 DoADC_b
                 Continue
 
 E(op_ADC_ind_x) // 0x61
                 GetIndZPage_X
                 testb   $D_Flag, F_Reg          // Decimal mode?
-                jnz     op_ADC_dec              // Yes, jump to decimal version
+                jnz     CALL(op_ADC_dec)        // Yes, jump to decimal version
                 DoADC_b
                 Continue
 
 E(op_ADC_ind_y) // 0x71
                 GetIndZPage_Y
                 testb   $D_Flag, F_Reg          // Decimal mode?
-                jnz     op_ADC_dec              // Yes, jump to decimal version
+                jnz     CALL(op_ADC_dec)        // Yes, jump to decimal version
                 DoADC_b
                 Continue
 
@@ -555,7 +555,7 @@ E(op_ADC_ind_y) // 0x71
 E(op_ADC_ind_zpage)
                 GetIndZPage
                 testb   $D_Flag, F_Reg          // Decimal mode?
-                jnz     op_ADC_dec              // Yes, jump to decimal version
+                jnz     CALL(op_ADC_dec)        // Yes, jump to decimal version
                 DoADC_b
                 Continue
 
@@ -581,7 +581,7 @@ E(op_AND_zpage_x) // 0x35
 
 // UNIMPLEMENTED : W65C02S datasheet
 E(op_AND_zpage_y)
-                jmp op_NOP
+                jmp CALL(op_NOP)
 
 E(op_AND_abs) // 0x2d
                 GetAbs
@@ -848,7 +848,7 @@ E(op_BRK)
                 orb     $(B_Flag|X_Flag), F_Reg
                 xorw    %ax, %ax 
                 movb    F_Reg, %al
-                movb    SN(cpu65_flags_encode)(,_XAX,1), %al
+                movb    SNX(cpu65_flags_encode,_XAX,1), %al
                 Push(%al)
                 orb     $I_Flag, F_Reg
                 movw    $0xFFFE, EffectiveAddr              // ROM interrupt vector
@@ -936,7 +936,7 @@ E(op_CMP_zpage_x) // 0xd5
 
 // UNIMPLEMENTED : W65C02S datasheet
 E(op_CMP_zpage_y)
-                jmp op_NOP
+                jmp CALL(op_NOP)
 
 E(op_CMP_abs) // 0xcd
                 GetAbs
@@ -1084,7 +1084,7 @@ E(op_EOR_zpage_x) // 0x55
 
 // UNIMPLEMENTED : W65C02S datasheet
 E(op_EOR_zpage_y)
-                jmp op_NOP
+                jmp CALL(op_NOP)
 
 E(op_EOR_abs) // 0x4d
                 GetAbs
@@ -1245,7 +1245,7 @@ E(op_LDA_zpage_x) // 0xb5
 
 // UNIMPLEMENTED : W65C02S datasheet
 E(op_LDA_zpage_y)
-                jmp op_NOP
+                jmp CALL(op_NOP)
 
 E(op_LDA_abs) // 0xad
                 GetAbs
@@ -1394,7 +1394,7 @@ E(op_ORA_zpage_x) // 0x15
 
 // UNIMPLEMENTED : W65C02S datasheet
 E(op_ORA_zpage_y)
-                jmp op_NOP
+                jmp CALL(op_NOP)
 
 E(op_ORA_abs) // 0x0d
                 GetAbs
@@ -1441,7 +1441,7 @@ E(op_PHA) // 0x48
 
 E(op_PHP) // 0x08
                 movb    F_Reg, %al
-                movb    SN(cpu65_flags_encode)(,_XAX,1), %al
+                movb    SNX(cpu65_flags_encode,_XAX,1), %al
                 Push(%al)
                 Continue
 
@@ -1479,7 +1479,7 @@ E(op_PLA) // 0x68
 
 E(op_PLP) // 0x28
                 Pop(%al)
-                movb    SN(cpu65_flags_decode)(,_XAX,1), F_Reg
+                movb    SNX(cpu65_flags_decode,_XAX,1), F_Reg
                 orb     $(B_Flag|X_Flag), F_Reg
                 Continue
 
@@ -1572,7 +1572,7 @@ E(op_ROR_abs_x) // 0x7e
 
 E(op_RTI) // 0x40
                 Pop(%al)
-                movb    SN(cpu65_flags_decode)(,_XAX,1), F_Reg
+                movb    SNX(cpu65_flags_decode,_XAX,1), F_Reg
                 orb     $(B_Flag|X_Flag), F_Reg
                 Pop(%al)
                 Pop(%ah)
@@ -1655,60 +1655,60 @@ _das_finish:    popq    _XBX
 E(op_SBC_imm) // 0xe9
                 GetImm
                 testb   $D_Flag, F_Reg          // Decimal mode?
-                jnz     op_SBC_dec              // Yes, jump to decimal version
+                jnz     CALL(op_SBC_dec)        // Yes, jump to decimal version
                 DoSBC_b
                 Continue
 
 E(op_SBC_zpage) // 0xe5
                 GetZPage
                 testb   $D_Flag, F_Reg          // Decimal mode?
-                jnz     op_SBC_dec              // Yes, jump to decimal version
+                jnz     CALL(op_SBC_dec)        // Yes, jump to decimal version
                 DoSBC_b
                 Continue
 
 E(op_SBC_zpage_x) // 0xf5
                 GetZPage_X
                 testb   $D_Flag, F_Reg          // Decimal mode?
-                jnz     op_SBC_dec              // Yes, jump to decimal version
+                jnz     CALL(op_SBC_dec)        // Yes, jump to decimal version
                 DoSBC_b
                 Continue
 
 // UNIMPLEMENTED : W65C02S datasheet
 E(op_SBC_zpage_y)
-                jmp op_NOP
+                jmp CALL(op_NOP)
 
 E(op_SBC_abs) // 0xed
                 GetAbs
                 testb   $D_Flag, F_Reg          // Decimal mode?
-                jnz     op_SBC_dec              // Yes, jump to decimal version
+                jnz     CALL(op_SBC_dec)        // Yes, jump to decimal version
                 DoSBC_b
                 Continue
 
 E(op_SBC_abs_x) // 0xfd
                 GetAbs_X
                 testb   $D_Flag, F_Reg          // Decimal mode?
-                jnz     op_SBC_dec              // Yes, jump to decimal version
+                jnz     CALL(op_SBC_dec)        // Yes, jump to decimal version
                 DoSBC_b
                 Continue
 
 E(op_SBC_abs_y) // 0xf9
                 GetAbs_Y
                 testb   $D_Flag, F_Reg          // Decimal mode?
-                jnz     op_SBC_dec              // Yes, jump to decimal version
+                jnz     CALL(op_SBC_dec)        // Yes, jump to decimal version
                 DoSBC_b
                 Continue
 
 E(op_SBC_ind_x) // 0xe1
                 GetIndZPage_X
                 testb   $D_Flag, F_Reg          // Decimal mode?
-                jnz     op_SBC_dec              // Yes, jump to decimal version
+                jnz     CALL(op_SBC_dec)        // Yes, jump to decimal version
                 DoSBC_b
                 Continue
 
 E(op_SBC_ind_y) // 0xf1
                 GetIndZPage_Y
                 testb   $D_Flag, F_Reg          // Decimal mode?
-                jnz     op_SBC_dec              // Yes, jump to decimal version
+                jnz     CALL(op_SBC_dec)        // Yes, jump to decimal version
                 DoSBC_b
                 Continue
 
@@ -1716,7 +1716,7 @@ E(op_SBC_ind_y) // 0xf1
 E(op_SBC_ind_zpage)
                 GetIndZPage
                 testb   $D_Flag, F_Reg          // Decimal mode?
-                jnz     op_SBC_dec              // Yes, jump to decimal version
+                jnz     CALL(op_SBC_dec)        // Yes, jump to decimal version
                 DoSBC_b
                 Continue
 
@@ -1789,7 +1789,7 @@ E(op_STA_zpage_x) // 0x95
 
 // UNIMPLEMENTED : W65C02S datasheet
 E(op_STA_zpage_y)
-                jmp op_NOP
+                jmp CALL(op_NOP)
 
 E(op_STA_abs) // 0x8d
                 GetAbs
@@ -2043,7 +2043,7 @@ E(op_WAI_65c02)
 
 continue:
                 movzbLQ DebugCurrOpcode, _XAX
-                movb    SN(cpu65__opcycles)(,_XAX,1), %al
+                movb    SNX(cpu65__opcycles,_XAX,1), %al
                 addb    DebugCycleCount, %al
                 movb    %al, DebugCycleCount
                 addw    %ax, SN(cpu65_cycle_count)
@@ -2084,7 +2084,7 @@ ex_irq:         testb   $I_Flag, F_Reg                      // Already interrupt
                 orb     $X_Flag, F_Reg
                 xorw    %ax, %ax
                 movb    F_Reg, %al
-                movb    SN(cpu65_flags_encode)(,_XAX,1), %al
+                movb    SNX(cpu65_flags_encode,_XAX,1), %al
                 Push(%al)
                 orb     $(B_Flag | I_Flag), F_Reg
                 //andb    $~D_Flag, F_Reg // AppleWin clears Decimal bit?
@@ -2114,7 +2114,7 @@ E(cpu65_run)
                 movzwLQ SN(_cpu65_pc), PC_Reg_X
                 movzbLQ SN(_cpu65_a), AF_Reg_X
                 movzbLQ SN(_cpu65_f), _XAX
-                movb    SN(cpu65_flags_decode)(,_XAX,1), F_Reg
+                movb    SNX(cpu65_flags_decode,_XAX,1), F_Reg
                 movzbLQ SN(_cpu65_x), XY_Reg_X
                 movb    SN(_cpu65_y), Y_Reg
                 movb    SN(_cpu65_sp), SP_Reg_L
@@ -2140,7 +2140,7 @@ exit_cpu65_run:
                 movb    A_Reg, SN(_cpu65_a)
                 xorw    %ax, %ax
                 movb    F_Reg, %al
-                movb    SN(cpu65_flags_encode)(,_XAX,1), %al
+                movb    SNX(cpu65_flags_encode,_XAX,1), %al
                 movb    %al, SN(_cpu65_f)
                 movb    X_Reg, SN(_cpu65_x)
                 movb    Y_Reg, SN(_cpu65_y)
@@ -2164,7 +2164,7 @@ E(cpu65_direct_write)
                 pushLQ  EffectiveAddr_X
                 movLQ   8(_XSP),EffectiveAddr_X
                 movLQ   12(_XSP),_XAX
-                callLQ  *SN(cpu65_vmem_w)(,EffectiveAddr_X,SZ_PTR)
+                callLQ  *SNX(cpu65_vmem_w,EffectiveAddr_X,SZ_PTR)
                 popLQ   EffectiveAddr_X
                 ret
 

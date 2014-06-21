@@ -77,9 +77,10 @@ uint8_t *base_cxrom;
 /* -------------------------------------------------------------------------
     c_debug_illegal_bcd - illegal BCD (decimal mode) computation
    ------------------------------------------------------------------------- */
-void c_debug_illegal_bcd()
+GLUE_C_READ(debug_illegal_bcd)
 {
     RELEASE_LOG("Illegal/undefined BCD operation encountered, debug break on c_debug_illegal_bcd to debug...");
+    return 0;
 }
 
 
