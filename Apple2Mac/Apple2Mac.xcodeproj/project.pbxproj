@@ -16,6 +16,22 @@
 		7751DD661955F59B007F8BDF /* testvm.c in Sources */ = {isa = PBXBuildFile; fileRef = 77A916601950108F00F5B902 /* testvm.c */; };
 		7751DD671955F5D7007F8BDF /* testdisplay.c in Sources */ = {isa = PBXBuildFile; fileRef = 77A916591950108F00F5B902 /* testdisplay.c */; };
 		7751DD69195611A1007F8BDF /* font.c in Sources */ = {isa = PBXBuildFile; fileRef = 7751DD68195611A1007F8BDF /* font.c */; };
+		7751DD6E1956161C007F8BDF /* darwin-glue.S in Sources */ = {isa = PBXBuildFile; fileRef = 7751DD6D1956161C007F8BDF /* darwin-glue.S */; };
+		7751DD7119561B4A007F8BDF /* DarwinVideo.m in Sources */ = {isa = PBXBuildFile; fileRef = 7751DD7019561B4A007F8BDF /* DarwinVideo.m */; };
+		7751DD7219561DC4007F8BDF /* cpu-supp.c in Sources */ = {isa = PBXBuildFile; fileRef = 77A9163B1950108F00F5B902 /* cpu-supp.c */; };
+		7751DD7319561DC4007F8BDF /* darwin-shim.c in Sources */ = {isa = PBXBuildFile; fileRef = 7751DD4D1955EFF5007F8BDF /* darwin-shim.c */; };
+		7751DD7419561DC4007F8BDF /* disk.c in Sources */ = {isa = PBXBuildFile; fileRef = 77A9163E1950108F00F5B902 /* disk.c */; };
+		7751DD7519561DC4007F8BDF /* display.c in Sources */ = {isa = PBXBuildFile; fileRef = 77A916401950108F00F5B902 /* display.c */; };
+		7751DD7619561DC4007F8BDF /* font.c in Sources */ = {isa = PBXBuildFile; fileRef = 7751DD68195611A1007F8BDF /* font.c */; };
+		7751DD7719561DC4007F8BDF /* joystick.c in Sources */ = {isa = PBXBuildFile; fileRef = 77A916461950108F00F5B902 /* joystick.c */; };
+		7751DD7819561DC4007F8BDF /* keys.c in Sources */ = {isa = PBXBuildFile; fileRef = 77A916481950108F00F5B902 /* keys.c */; };
+		7751DD7919561DC4007F8BDF /* debugger.c in Sources */ = {isa = PBXBuildFile; fileRef = 77A9164D1950108F00F5B902 /* debugger.c */; };
+		7751DD7A19561DC4007F8BDF /* opcodes.c in Sources */ = {isa = PBXBuildFile; fileRef = 77A9164E1950108F00F5B902 /* opcodes.c */; };
+		7751DD7B19561DC4007F8BDF /* misc.c in Sources */ = {isa = PBXBuildFile; fileRef = 77A9164F1950108F00F5B902 /* misc.c */; };
+		7751DD7C19561DC4007F8BDF /* prefs.c in Sources */ = {isa = PBXBuildFile; fileRef = 77A916511950108F00F5B902 /* prefs.c */; };
+		7751DD7D19561DC4007F8BDF /* timing.c in Sources */ = {isa = PBXBuildFile; fileRef = 77A916611950108F00F5B902 /* timing.c */; };
+		7751DD7E19561DC4007F8BDF /* vm.c in Sources */ = {isa = PBXBuildFile; fileRef = 77A916671950108F00F5B902 /* vm.c */; };
+		7751DD7F19561DC4007F8BDF /* zlib-helpers.c in Sources */ = {isa = PBXBuildFile; fileRef = 77A9166D1950108F00F5B902 /* zlib-helpers.c */; };
 		77A913BE19500F6000F5B902 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 77A913BD19500F6000F5B902 /* QuartzCore.framework */; };
 		77A913C019500F6000F5B902 /* GLKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 77A913BF19500F6000F5B902 /* GLKit.framework */; };
 		77A913C219500F6000F5B902 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 77A913C119500F6000F5B902 /* OpenGL.framework */; };
@@ -236,6 +252,9 @@
 		7751DD5C1955F567007F8BDF /* Apple2Mac_Tests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Apple2Mac_Tests.m; sourceTree = "<group>"; };
 		7751DD5E1955F567007F8BDF /* Apple2Mac Tests-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Apple2Mac Tests-Prefix.pch"; sourceTree = "<group>"; };
 		7751DD68195611A1007F8BDF /* font.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = font.c; sourceTree = "<group>"; };
+		7751DD6D1956161C007F8BDF /* darwin-glue.S */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.asm; path = "darwin-glue.S"; sourceTree = "<group>"; };
+		7751DD6F19561B4A007F8BDF /* DarwinVideo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DarwinVideo.h; path = Classes/DarwinVideo.h; sourceTree = "<group>"; };
+		7751DD7019561B4A007F8BDF /* DarwinVideo.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DarwinVideo.m; path = Classes/DarwinVideo.m; sourceTree = "<group>"; };
 		77A913BA19500F6000F5B902 /* Apple2Mac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Apple2Mac.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		77A913BD19500F6000F5B902 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
 		77A913BF19500F6000F5B902 /* GLKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GLKit.framework; path = System/Library/Frameworks/GLKit.framework; sourceTree = SDKROOT; };
@@ -1476,6 +1495,8 @@
 				77A9161619500F6600F5B902 /* AppDelegate.m */,
 				77A9161819500F6600F5B902 /* HelloWorldLayer.h */,
 				77A9161919500F6600F5B902 /* HelloWorldLayer.m */,
+				7751DD6F19561B4A007F8BDF /* DarwinVideo.h */,
+				7751DD7019561B4A007F8BDF /* DarwinVideo.m */,
 			);
 			name = Classes;
 			sourceTree = "<group>";
@@ -1554,6 +1575,7 @@
 			children = (
 				77A916691950108F00F5B902 /* cpu-regs.h */,
 				77A9166A1950108F00F5B902 /* cpu.S */,
+				7751DD6D1956161C007F8BDF /* darwin-glue.S */,
 				77A9166B1950108F00F5B902 /* genglue */,
 				77A9166C1950108F00F5B902 /* glue-prologue.h */,
 			);
@@ -1585,6 +1607,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 77A9162019500F6600F5B902 /* Build configuration list for PBXNativeTarget "Apple2Mac" */;
 			buildPhases = (
+				7751DD6A195612C3007F8BDF /* ShellScript */,
 				77A913B619500F6000F5B902 /* Sources */,
 				77A913B719500F6000F5B902 /* Frameworks */,
 				77A913B819500F6000F5B902 /* Resources */,
@@ -1621,7 +1644,7 @@
 			isa = PBXProject;
 			attributes = {
 				LastUpgradeCheck = 0510;
-				ORGANIZATIONNAME = fl0wstate;
+				ORGANIZATIONNAME = deadc0de.org;
 				TargetAttributes = {
 					7751DD521955F567007F8BDF = {
 						TestTargetID = 77A913B919500F6000F5B902;
@@ -1673,11 +1696,41 @@
 		};
 /* End PBXResourcesBuildPhase section */
 
+/* Begin PBXShellScriptBuildPhase section */
+		7751DD6A195612C3007F8BDF /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"$SRCROOT/../src/x86/genglue\" \"$SRCROOT/../src/disk.c\" \"$SRCROOT/../src/misc.c\" \"$SRCROOT/../src/display.c\" \"$SRCROOT/../src/vm.c\" > \"$SRCROOT/../src/x86/glue.S\"";
+		};
+/* End PBXShellScriptBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		7751DD4F1955F567007F8BDF /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7751DD7219561DC4007F8BDF /* cpu-supp.c in Sources */,
+				7751DD7319561DC4007F8BDF /* darwin-shim.c in Sources */,
+				7751DD7419561DC4007F8BDF /* disk.c in Sources */,
+				7751DD7519561DC4007F8BDF /* display.c in Sources */,
+				7751DD7619561DC4007F8BDF /* font.c in Sources */,
+				7751DD7719561DC4007F8BDF /* joystick.c in Sources */,
+				7751DD7819561DC4007F8BDF /* keys.c in Sources */,
+				7751DD7919561DC4007F8BDF /* debugger.c in Sources */,
+				7751DD7A19561DC4007F8BDF /* opcodes.c in Sources */,
+				7751DD7B19561DC4007F8BDF /* misc.c in Sources */,
+				7751DD7C19561DC4007F8BDF /* prefs.c in Sources */,
+				7751DD7D19561DC4007F8BDF /* timing.c in Sources */,
+				7751DD7E19561DC4007F8BDF /* vm.c in Sources */,
+				7751DD7F19561DC4007F8BDF /* zlib-helpers.c in Sources */,
 				7751DD661955F59B007F8BDF /* testvm.c in Sources */,
 				7751DD671955F5D7007F8BDF /* testdisplay.c in Sources */,
 				7751DD641955F58B007F8BDF /* testcommon.c in Sources */,
@@ -1693,7 +1746,6 @@
 				77A9157C19500F6500F5B902 /* CCScrollView.m in Sources */,
 				77A9151719500F6400F5B902 /* OALAction.m in Sources */,
 				77A914B319500F6300F5B902 /* CCTexturePVR.m in Sources */,
-				77A916821950108F00F5B902 /* debugger.c in Sources */,
 				77A9159419500F6500F5B902 /* CCBReader.m in Sources */,
 				77A9153319500F6400F5B902 /* ALBuffer.m in Sources */,
 				77A9153919500F6400F5B902 /* ALChannelSource.m in Sources */,
@@ -1709,11 +1761,9 @@
 				77A9156819500F6400F5B902 /* OALAudioFile.m in Sources */,
 				77A9143F19500F6200F5B902 /* CCDrawNode.m in Sources */,
 				77A9152A19500F6400F5B902 /* OALAudioTracks.m in Sources */,
-				77A916941950108F00F5B902 /* cpu.S in Sources */,
 				77A913F619500F6100F5B902 /* CCEffectColor.m in Sources */,
 				77A913F019500F6100F5B902 /* CCEffect.m in Sources */,
 				77A9158E19500F6500F5B902 /* CCBAnimationManager.m in Sources */,
-				77A916931950108F00F5B902 /* vm.c in Sources */,
 				77A914FC19500F6300F5B902 /* CCVertex.m in Sources */,
 				77A9143019500F6100F5B902 /* CCAnimationCache.m in Sources */,
 				77A914EA19500F6300F5B902 /* base64.c in Sources */,
@@ -1727,28 +1777,22 @@
 				77A914FF19500F6300F5B902 /* CGPointExtension.m in Sources */,
 				77A9142919500F6100F5B902 /* CCActionTween.m in Sources */,
 				77A9158B19500F6500F5B902 /* CCAnimationManager.m in Sources */,
-				77A916781950108F00F5B902 /* cpu-supp.c in Sources */,
-				77A916911950108F00F5B902 /* timing.c in Sources */,
 				77A9146019500F6200F5B902 /* CCNode+Debug.m in Sources */,
-				77A916831950108F00F5B902 /* opcodes.c in Sources */,
 				77A913FE19500F6100F5B902 /* CCEffectNode.m in Sources */,
 				77A9147819500F6200F5B902 /* CCPhysicsBody.m in Sources */,
 				77A9161A19500F6600F5B902 /* HelloWorldLayer.m in Sources */,
 				77A914E819500F6300F5B902 /* NSEvent+CC.m in Sources */,
 				77A9153F19500F6400F5B902 /* ALDevice.m in Sources */,
-				7751DD69195611A1007F8BDF /* font.c in Sources */,
 				77A9150519500F6300F5B902 /* NSThread+performBlock.m in Sources */,
 				77A914A219500F6300F5B902 /* CCSpriteBatchNode.m in Sources */,
 				77A913F219500F6100F5B902 /* CCEffectBrightness.m in Sources */,
 				77A9152719500F6400F5B902 /* OALAudioTrackNotifications.m in Sources */,
-				77A9167F1950108F00F5B902 /* joystick.c in Sources */,
 				77A914EE19500F6300F5B902 /* CCFileUtils.m in Sources */,
 				77A9141319500F6100F5B902 /* CCAction.m in Sources */,
 				77A9154D19500F6400F5B902 /* ALWrapper.m in Sources */,
 				77A9159719500F6500F5B902 /* CCBsequence.m in Sources */,
 				77A9158219500F6500F5B902 /* CCTableView.m in Sources */,
 				77A9145119500F6200F5B902 /* CCLayout.m in Sources */,
-				77A916851950108F00F5B902 /* prefs.c in Sources */,
 				77A9148119500F6200F5B902 /* CCPhysicsShape.m in Sources */,
 				77A9140719500F6100F5B902 /* CCRenderer.m in Sources */,
 				77A9149C19500F6300F5B902 /* CCSprite.m in Sources */,
@@ -1779,7 +1823,7 @@
 				77A9144A19500F6200F5B902 /* CCLabelTTF.m in Sources */,
 				77A9154919500F6400F5B902 /* ALSource.m in Sources */,
 				77A9156C19500F6400F5B902 /* OALTools.m in Sources */,
-				77A9167A1950108F00F5B902 /* disk.c in Sources */,
+				7751DD7119561B4A007F8BDF /* DarwinVideo.m in Sources */,
 				77A914C719500F6300F5B902 /* cocos2d.m in Sources */,
 				77A9149F19500F6300F5B902 /* CCSprite9Slice.m in Sources */,
 				77A914DF19500F6300F5B902 /* CCDirectorMac.m in Sources */,
@@ -1793,7 +1837,6 @@
 				77A9143319500F6100F5B902 /* CCClippingNode.m in Sources */,
 				77A9155E19500F6400F5B902 /* mach_timing.c in Sources */,
 				77A9149819500F6300F5B902 /* CCScheduler.m in Sources */,
-				77A916801950108F00F5B902 /* keys.c in Sources */,
 				77A914B619500F6300F5B902 /* CCTiledMap.m in Sources */,
 				77A913F819500F6100F5B902 /* CCEffectColorPulse.m in Sources */,
 				77A9148E19500F6300F5B902 /* CCResponder.m in Sources */,
@@ -1805,16 +1848,12 @@
 				77A914D119500F6300F5B902 /* CCES2Renderer.m in Sources */,
 				77A9142619500F6100F5B902 /* CCActionProgressTimer.m in Sources */,
 				77A9150919500F6400F5B902 /* TGAlib.m in Sources */,
-				77A916961950108F00F5B902 /* zlib-helpers.c in Sources */,
 				77A9141C19500F6100F5B902 /* CCActionInstant.m in Sources */,
 				77A9141F19500F6100F5B902 /* CCActionInterval.m in Sources */,
 				77A9144D19500F6200F5B902 /* CCNodeColor.m in Sources */,
-				7751DD4E1955EFF5007F8BDF /* darwin-shim.c in Sources */,
-				77A916811950108F00F5B902 /* debug.l in Sources */,
 				77A914DB19500F6300F5B902 /* CCAppDelegate.m in Sources */,
 				77A9143B19500F6200F5B902 /* CCDirector.m in Sources */,
 				77A9141919500F6100F5B902 /* CCActionEase.m in Sources */,
-				77A916841950108F00F5B902 /* misc.c in Sources */,
 				77A913FA19500F6100F5B902 /* CCEffectGlow.m in Sources */,
 				77A9154619500F6400F5B902 /* ALSoundSourcePool.m in Sources */,
 				77A9159119500F6500F5B902 /* CCBKeyframe.m in Sources */,
@@ -1822,7 +1861,6 @@
 				77A9153619500F6400F5B902 /* ALCaptureDevice.m in Sources */,
 				77A914BA19500F6300F5B902 /* CCTiledMapLayer.m in Sources */,
 				77A9140219500F6100F5B902 /* CCEffectTexture.m in Sources */,
-				77A9167B1950108F00F5B902 /* display.c in Sources */,
 				77A914F119500F6300F5B902 /* CCColor.m in Sources */,
 				77A9140B19500F6100F5B902 /* CCShader.m in Sources */,
 				77A9142D19500F6100F5B902 /* CCAnimation.m in Sources */,
@@ -1832,8 +1870,25 @@
 				77A914CE19500F6300F5B902 /* CCDirectorIOS.m in Sources */,
 				77A9146819500F6200F5B902 /* CCParticleBatchNode.m in Sources */,
 				77A9150219500F6300F5B902 /* NSAttributedString+CCAdditions.m in Sources */,
-				77A9161319500F6600F5B902 /* main.m in Sources */,
 				77A9140019500F6100F5B902 /* CCEffectStack.m in Sources */,
+				77A916941950108F00F5B902 /* cpu.S in Sources */,
+				7751DD6E1956161C007F8BDF /* darwin-glue.S in Sources */,
+				77A916781950108F00F5B902 /* cpu-supp.c in Sources */,
+				77A916911950108F00F5B902 /* timing.c in Sources */,
+				77A916831950108F00F5B902 /* opcodes.c in Sources */,
+				7751DD69195611A1007F8BDF /* font.c in Sources */,
+				77A9167F1950108F00F5B902 /* joystick.c in Sources */,
+				77A916931950108F00F5B902 /* vm.c in Sources */,
+				77A916851950108F00F5B902 /* prefs.c in Sources */,
+				77A9167A1950108F00F5B902 /* disk.c in Sources */,
+				77A916801950108F00F5B902 /* keys.c in Sources */,
+				77A916821950108F00F5B902 /* debugger.c in Sources */,
+				77A916811950108F00F5B902 /* debug.l in Sources */,
+				77A916961950108F00F5B902 /* zlib-helpers.c in Sources */,
+				7751DD4E1955EFF5007F8BDF /* darwin-shim.c in Sources */,
+				77A9167B1950108F00F5B902 /* display.c in Sources */,
+				77A916841950108F00F5B902 /* misc.c in Sources */,
+				77A9161319500F6600F5B902 /* main.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1946,6 +2001,10 @@
 				GCC_PREFIX_HEADER = "Apple2Mac Tests/Apple2Mac Tests-Prefix.pch";
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
+					"APPLE2IX=1",
+					"DEBUGGER=1",
+					"KEYPAD_JOYSTICK=1",
+					"TESTING=1",
 					"$(inherited)",
 				);
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;

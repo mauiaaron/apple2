@@ -3,9 +3,11 @@
 //  Apple2Mac
 //
 //  Created by Aaron Culliney on 6/16/14.
-//  Copyright fl0wstate 2014. All rights reserved.
+//  Copyright deadc0de.org 2014. All rights reserved.
 //
 
+
+#include "common.h"
 
 // Import the interfaces
 #import "HelloWorldLayer.h"
@@ -13,7 +15,7 @@
 // HelloWorldLayer implementation
 @implementation HelloWorldLayer
 
-+(CCScene *) scene
++ (CCScene *)scene
 {
 	// 'scene' is an autorelease object.
 	CCScene *scene = [CCScene node];
@@ -29,7 +31,7 @@
 }
 
 // on "init" you need to initialize your instance
--(id) init
+- (id)init
 {
 	// always call "super" init
 	// Apple recommends to re-assign "self" with the "super" return value
@@ -46,6 +48,15 @@
 		
 		// add the label as a child to this Layer
 		[self addChild: label];
+        
+#warning TODO FIXME ...
+#if 0
+        // initialize emulator
+        c_initialize_firsttime();
+        
+        // spin off CPU thread
+        pthread_create(&cpu_thread_id, NULL, (void *) &cpu_thread, (void *)NULL);
+#endif
 	}
 	return self;
 }

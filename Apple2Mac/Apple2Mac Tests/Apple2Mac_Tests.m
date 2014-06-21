@@ -3,7 +3,7 @@
 //  Apple2Mac Tests
 //
 //  Created by Aaron Culliney on 6/21/14.
-//  Copyright (c) 2014 fl0wstate. All rights reserved.
+//  Copyright (c) 2014 deadc0de.org. All rights reserved.
 //
 
 #import <XCTest/XCTest.h>

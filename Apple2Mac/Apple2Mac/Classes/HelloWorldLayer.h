@@ -3,7 +3,7 @@
 //  Apple2Mac
 //
 //  Created by Aaron Culliney on 6/16/14.
-//  Copyright fl0wstate 2014. All rights reserved.
+//  Copyright deadc0de.org 2014. All rights reserved.
 //
 
 
