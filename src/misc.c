@@ -623,7 +623,7 @@ void c_initialize_firsttime()
     reinitialize();
 }
 
-#if !defined(TESTING)
+#if !defined(TESTING) && !defined(__APPLE__)
 static void main_thread(void *dummyptr) {
     struct timespec sleeptime = { .tv_sec=0, .tv_nsec=8333333 }; // 120Hz
 

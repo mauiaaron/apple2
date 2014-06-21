@@ -17,6 +17,9 @@
  */
 
 #include "common.h"
+#ifdef __APPLE__
+#include "darwin-shim.h"
+#endif
 
 #define EXECUTION_PERIOD_NSECS 1000000  // AppleWin: nExecutionPeriodUsec
 

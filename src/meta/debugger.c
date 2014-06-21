@@ -1066,12 +1066,14 @@ void show_disk_info() {
     clear_debugger_screen () - clears the screen of graphics artifacts.
    ------------------------------------------------------------------------- */
 void clear_debugger_screen() {
+#ifdef INTERFACE_CLASSIC
     int i;
     video_setpage( 0 );
     for (i = 0; i < 24; i++)
     {
         c_interface_print(0, i, 2, screen[ i ] );
     }
+#endif
 }
 
 /* -------------------------------------------------------------------------
