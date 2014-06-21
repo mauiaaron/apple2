@@ -19,6 +19,19 @@
 struct cpu65_state cpu65_current = { 0 };
 struct cpu65_extra cpu65_debug = { 0 };
 
+const uint16_t *_cpu65_pc       = &cpu65_current.pc;
+const uint8_t  *_cpu65_a        = &cpu65_current.a;
+const uint8_t  *_cpu65_f        = &cpu65_current.f;
+const uint8_t  *_cpu65_x        = &cpu65_current.x;
+const uint8_t  *_cpu65_y        = &cpu65_current.y;
+const uint8_t  *_cpu65_sp       = &cpu65_current.sp;
+
+const uint16_t *_cpu65_ea       = &cpu65_debug.ea;
+const uint8_t  *_cpu65_d        = &cpu65_debug.d;
+const uint8_t  *_cpu65_rw       = &cpu65_debug.rw;
+const uint8_t  *_cpu65_opcode   = &cpu65_debug.opcode;
+const uint8_t  *_cpu65_opcycles = &cpu65_debug.opcycles;
+
 int16_t cpu65_cycle_count = 0;
 int16_t cpu65_cycles_to_execute = 0;
 uint8_t cpu65__signal = 0;
