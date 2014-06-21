@@ -15,6 +15,12 @@
 #include "common.h"
 #include "greatest.h"
 
+#ifdef __APPLE__
+#include <CommonCrypto/CommonDigest.h>
+#define SHA_DIGEST_LENGTH CC_SHA1_DIGEST_LENGTH
+#define SHA1 CC_SHA1
+#endif
+
 #define TEST_FINISHED 0xff
 #define MIXSWITCH_ADDR 0x1f32   // PEEK(7986) -- NOTE : value is hardcoded in various places
 #define WATCHPOINT_ADDR 0x1f33  // PEEK(7987) -- NOTE : value is hardcoded in various places

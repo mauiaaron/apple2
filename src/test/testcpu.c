@@ -7732,9 +7732,14 @@ GREATEST_SUITE(test_suite_cpu) {
 SUITE(test_suite_cpu);
 GREATEST_MAIN_DEFS();
 
-int main(int argc, char **argv) {
+int test_cpu(int argc, char **argv) {
     GREATEST_MAIN_BEGIN();
     RUN_SUITE(test_suite_cpu);
     GREATEST_MAIN_END();
 }
 
+#if !defined(__APPLE__)
+int main(int argc, char **argv) {
+    test_cpu(argc, argv);
+}
+#endif

@@ -13,7 +13,7 @@
 
 #ifdef HAVE_OPENSSL
 #include <openssl/sha.h>
-#else
+#elif !defined(__APPLE__)
 #error "these tests require OpenSSL libraries"
 #endif
 
@@ -467,9 +467,14 @@ GREATEST_SUITE(test_suite_display) {
 SUITE(test_suite_display);
 GREATEST_MAIN_DEFS();
 
-int main(int argc, char **argv) {
+int test_display(int argc, char **argv) {
     GREATEST_MAIN_BEGIN();
     RUN_SUITE(test_suite_display);
     GREATEST_MAIN_END();
 }
 
+#if !defined(__APPLE__)
+int main(int argc, char **argv) {
+    test_display(argc, argv);
+}
+#endif

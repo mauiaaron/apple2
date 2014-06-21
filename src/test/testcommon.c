@@ -10,6 +10,9 @@
  */
 
 #include "testcommon.h"
+#ifdef __APPLE__
+#include "darwin-shim.h"
+#endif
 
 #define TESTBUF_SZ 1024
 

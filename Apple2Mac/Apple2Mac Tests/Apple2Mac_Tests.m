@@ -8,11 +8,11 @@
 
 #import <XCTest/XCTest.h>
 
-@interface Apple2Mac_Tests : XCTestCase
+@interface Apple2Mac_CPUTests : XCTestCase
 
 @end
 
-@implementation Apple2Mac_Tests
+@implementation Apple2Mac_CPUTests
 
 - (void)setUp
 {
@@ -26,9 +26,21 @@
     [super tearDown];
 }
 
-- (void)testExample
+extern int test_cpu(int, char **);
+
+- (void)testCPU
 {
-    XCTFail(@"No implementation for \"%s\"", __PRETTY_FUNCTION__);
+    char *argv[] = {
+        "-f",
+        NULL
+    };
+    int argc = 0;
+    for (char **p = &argv[0]; *p != NULL; p++) {
+        ++argc;
+    }
+    int val = test_cpu(argc, argv);
+
+    XCTAssertEqual(val, 0);
 }
 
 @end

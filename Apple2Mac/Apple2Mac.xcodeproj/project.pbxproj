@@ -13,8 +13,6 @@
 		7751DD5D1955F567007F8BDF /* Apple2Mac_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 7751DD5C1955F567007F8BDF /* Apple2Mac_Tests.m */; };
 		7751DD641955F58B007F8BDF /* testcommon.c in Sources */ = {isa = PBXBuildFile; fileRef = 77A916561950108F00F5B902 /* testcommon.c */; };
 		7751DD651955F596007F8BDF /* testcpu.c in Sources */ = {isa = PBXBuildFile; fileRef = 77A916581950108F00F5B902 /* testcpu.c */; };
-		7751DD661955F59B007F8BDF /* testvm.c in Sources */ = {isa = PBXBuildFile; fileRef = 77A916601950108F00F5B902 /* testvm.c */; };
-		7751DD671955F5D7007F8BDF /* testdisplay.c in Sources */ = {isa = PBXBuildFile; fileRef = 77A916591950108F00F5B902 /* testdisplay.c */; };
 		7751DD69195611A1007F8BDF /* font.c in Sources */ = {isa = PBXBuildFile; fileRef = 7751DD68195611A1007F8BDF /* font.c */; };
 		7751DD6E1956161C007F8BDF /* darwin-glue.S in Sources */ = {isa = PBXBuildFile; fileRef = 7751DD6D1956161C007F8BDF /* darwin-glue.S */; };
 		7751DD7119561B4A007F8BDF /* DarwinVideo.m in Sources */ = {isa = PBXBuildFile; fileRef = 7751DD7019561B4A007F8BDF /* DarwinVideo.m */; };
@@ -32,6 +30,7 @@
 		7751DD7D19561DC4007F8BDF /* timing.c in Sources */ = {isa = PBXBuildFile; fileRef = 77A916611950108F00F5B902 /* timing.c */; };
 		7751DD7E19561DC4007F8BDF /* vm.c in Sources */ = {isa = PBXBuildFile; fileRef = 77A916671950108F00F5B902 /* vm.c */; };
 		7751DD7F19561DC4007F8BDF /* zlib-helpers.c in Sources */ = {isa = PBXBuildFile; fileRef = 77A9166D1950108F00F5B902 /* zlib-helpers.c */; };
+		7751DD8519563BDC007F8BDF /* libz.1.1.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 7751DD8419563BDC007F8BDF /* libz.1.1.3.dylib */; };
 		77A913BE19500F6000F5B902 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 77A913BD19500F6000F5B902 /* QuartzCore.framework */; };
 		77A913C019500F6000F5B902 /* GLKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 77A913BF19500F6000F5B902 /* GLKit.framework */; };
 		77A913C219500F6000F5B902 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 77A913C119500F6000F5B902 /* OpenGL.framework */; };
@@ -255,6 +254,7 @@
 		7751DD6D1956161C007F8BDF /* darwin-glue.S */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.asm; path = "darwin-glue.S"; sourceTree = "<group>"; };
 		7751DD6F19561B4A007F8BDF /* DarwinVideo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DarwinVideo.h; path = Classes/DarwinVideo.h; sourceTree = "<group>"; };
 		7751DD7019561B4A007F8BDF /* DarwinVideo.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DarwinVideo.m; path = Classes/DarwinVideo.m; sourceTree = "<group>"; };
+		7751DD8419563BDC007F8BDF /* libz.1.1.3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.1.1.3.dylib; path = usr/lib/libz.1.1.3.dylib; sourceTree = SDKROOT; };
 		77A913BA19500F6000F5B902 /* Apple2Mac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Apple2Mac.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		77A913BD19500F6000F5B902 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
 		77A913BF19500F6000F5B902 /* GLKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GLKit.framework; path = System/Library/Frameworks/GLKit.framework; sourceTree = SDKROOT; };
@@ -677,6 +677,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7751DD8519563BDC007F8BDF /* libz.1.1.3.dylib in Frameworks */,
 				7751DD551955F567007F8BDF /* XCTest.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -703,6 +704,7 @@
 		7751DD561955F567007F8BDF /* Apple2Mac Tests */ = {
 			isa = PBXGroup;
 			children = (
+				77A916531950108F00F5B902 /* test */,
 				7751DD5C1955F567007F8BDF /* Apple2Mac_Tests.m */,
 				7751DD571955F567007F8BDF /* Supporting Files */,
 			);
@@ -742,6 +744,7 @@
 		77A913BC19500F6000F5B902 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				7751DD8419563BDC007F8BDF /* libz.1.1.3.dylib */,
 				77A913BD19500F6000F5B902 /* QuartzCore.framework */,
 				77A913BF19500F6000F5B902 /* GLKit.framework */,
 				77A913C119500F6000F5B902 /* OpenGL.framework */,
@@ -1524,7 +1527,6 @@
 				77A916501950108F00F5B902 /* misc.h */,
 				77A916511950108F00F5B902 /* prefs.c */,
 				77A916521950108F00F5B902 /* prefs.h */,
-				77A916531950108F00F5B902 /* test */,
 				77A916611950108F00F5B902 /* timing.c */,
 				77A916621950108F00F5B902 /* timing.h */,
 				77A916631950108F00F5B902 /* uthash.h */,
@@ -1559,7 +1561,8 @@
 				77A916591950108F00F5B902 /* testdisplay.c */,
 				77A916601950108F00F5B902 /* testvm.c */,
 			);
-			path = test;
+			name = test;
+			path = ../../src/test;
 			sourceTree = "<group>";
 		};
 		77A916641950108F00F5B902 /* video */ = {
@@ -1731,8 +1734,6 @@
 				7751DD7D19561DC4007F8BDF /* timing.c in Sources */,
 				7751DD7E19561DC4007F8BDF /* vm.c in Sources */,
 				7751DD7F19561DC4007F8BDF /* zlib-helpers.c in Sources */,
-				7751DD661955F59B007F8BDF /* testvm.c in Sources */,
-				7751DD671955F5D7007F8BDF /* testdisplay.c in Sources */,
 				7751DD641955F58B007F8BDF /* testcommon.c in Sources */,
 				7751DD5D1955F567007F8BDF /* Apple2Mac_Tests.m in Sources */,
 				7751DD651955F596007F8BDF /* testcpu.c in Sources */,
@@ -2209,6 +2210,7 @@
 				7751DD621955F567007F8BDF /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		77A913B519500F6000F5B902 /* Build configuration list for PBXProject "Apple2Mac" */ = {
 			isa = XCConfigurationList;
