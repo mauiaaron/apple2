@@ -335,7 +335,10 @@ void CpuCalcCycles(const unsigned long nExecutedCycles)
     const long nCycles = nExecutedCycles - g_nCyclesExecuted;
     assert(nCycles >= 0);
     g_nCumulativeCycles += nCycles;
-
+    // HACK FIXME TODO
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "--Wshorten-64-to-32"
     g_nCyclesExecuted = nExecutedCycles;
+#pragma clang diagnostic pop
 }
 
