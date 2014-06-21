@@ -142,12 +142,7 @@ GLUE_C_READ(read_keyboard_strobe)
 
 GLUE_C_READ(read_random)
 {
-    static time_t seed=0;
-    if (!seed) {
-        seed = time(NULL);
-        srandom(seed);
-    }
-    return (random() % UINT_MAX);
+    return arc4random_uniform(0x100);
 }
 
 GLUE_C_READ(speaker_toggle)
