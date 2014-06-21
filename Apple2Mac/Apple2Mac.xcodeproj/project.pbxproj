@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		7751DD4E1955EFF5007F8BDF /* darwin-shim.c in Sources */ = {isa = PBXBuildFile; fileRef = 7751DD4D1955EFF5007F8BDF /* darwin-shim.c */; };
 		77A913BE19500F6000F5B902 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 77A913BD19500F6000F5B902 /* QuartzCore.framework */; };
 		77A913C019500F6000F5B902 /* GLKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 77A913BF19500F6000F5B902 /* GLKit.framework */; };
 		77A913C219500F6000F5B902 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 77A913C119500F6000F5B902 /* OpenGL.framework */; };
@@ -218,6 +219,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		7751DD4B1955EB60007F8BDF /* darwin-shim.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "darwin-shim.h"; sourceTree = "<group>"; };
+		7751DD4D1955EFF5007F8BDF /* darwin-shim.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = "darwin-shim.c"; sourceTree = "<group>"; };
 		77A913BA19500F6000F5B902 /* Apple2Mac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Apple2Mac.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		77A913BD19500F6000F5B902 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
 		77A913BF19500F6000F5B902 /* GLKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GLKit.framework; path = System/Library/Frameworks/GLKit.framework; sourceTree = SDKROOT; };
@@ -1443,6 +1446,8 @@
 				77A9163A1950108F00F5B902 /* common.h */,
 				77A9163B1950108F00F5B902 /* cpu-supp.c */,
 				77A9163C1950108F00F5B902 /* cpu.h */,
+				7751DD4D1955EFF5007F8BDF /* darwin-shim.c */,
+				7751DD4B1955EB60007F8BDF /* darwin-shim.h */,
 				77A9163E1950108F00F5B902 /* disk.c */,
 				77A9163F1950108F00F5B902 /* disk.h */,
 				77A916401950108F00F5B902 /* display.c */,
@@ -1726,6 +1731,7 @@
 				77A9141C19500F6100F5B902 /* CCActionInstant.m in Sources */,
 				77A9141F19500F6100F5B902 /* CCActionInterval.m in Sources */,
 				77A9144D19500F6200F5B902 /* CCNodeColor.m in Sources */,
+				7751DD4E1955EFF5007F8BDF /* darwin-shim.c in Sources */,
 				77A916811950108F00F5B902 /* debug.l in Sources */,
 				77A914DB19500F6300F5B902 /* CCAppDelegate.m in Sources */,
 				77A9143B19500F6200F5B902 /* CCDirector.m in Sources */,
