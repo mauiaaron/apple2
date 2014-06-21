@@ -15,6 +15,7 @@
 		7751DD651955F596007F8BDF /* testcpu.c in Sources */ = {isa = PBXBuildFile; fileRef = 77A916581950108F00F5B902 /* testcpu.c */; };
 		7751DD661955F59B007F8BDF /* testvm.c in Sources */ = {isa = PBXBuildFile; fileRef = 77A916601950108F00F5B902 /* testvm.c */; };
 		7751DD671955F5D7007F8BDF /* testdisplay.c in Sources */ = {isa = PBXBuildFile; fileRef = 77A916591950108F00F5B902 /* testdisplay.c */; };
+		7751DD69195611A1007F8BDF /* font.c in Sources */ = {isa = PBXBuildFile; fileRef = 7751DD68195611A1007F8BDF /* font.c */; };
 		77A913BE19500F6000F5B902 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 77A913BD19500F6000F5B902 /* QuartzCore.framework */; };
 		77A913C019500F6000F5B902 /* GLKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 77A913BF19500F6000F5B902 /* GLKit.framework */; };
 		77A913C219500F6000F5B902 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 77A913C119500F6000F5B902 /* OpenGL.framework */; };
@@ -194,8 +195,6 @@
 		77A916781950108F00F5B902 /* cpu-supp.c in Sources */ = {isa = PBXBuildFile; fileRef = 77A9163B1950108F00F5B902 /* cpu-supp.c */; };
 		77A9167A1950108F00F5B902 /* disk.c in Sources */ = {isa = PBXBuildFile; fileRef = 77A9163E1950108F00F5B902 /* disk.c */; };
 		77A9167B1950108F00F5B902 /* display.c in Sources */ = {isa = PBXBuildFile; fileRef = 77A916401950108F00F5B902 /* display.c */; };
-		77A9167C1950108F00F5B902 /* font.txt in Resources */ = {isa = PBXBuildFile; fileRef = 77A916411950108F00F5B902 /* font.txt */; };
-		77A9167D1950108F00F5B902 /* genfont.c in Sources */ = {isa = PBXBuildFile; fileRef = 77A916421950108F00F5B902 /* genfont.c */; };
 		77A9167F1950108F00F5B902 /* joystick.c in Sources */ = {isa = PBXBuildFile; fileRef = 77A916461950108F00F5B902 /* joystick.c */; };
 		77A916801950108F00F5B902 /* keys.c in Sources */ = {isa = PBXBuildFile; fileRef = 77A916481950108F00F5B902 /* keys.c */; };
 		77A916811950108F00F5B902 /* debug.l in Sources */ = {isa = PBXBuildFile; fileRef = 77A9164C1950108F00F5B902 /* debug.l */; };
@@ -236,6 +235,7 @@
 		7751DD5A1955F567007F8BDF /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		7751DD5C1955F567007F8BDF /* Apple2Mac_Tests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Apple2Mac_Tests.m; sourceTree = "<group>"; };
 		7751DD5E1955F567007F8BDF /* Apple2Mac Tests-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Apple2Mac Tests-Prefix.pch"; sourceTree = "<group>"; };
+		7751DD68195611A1007F8BDF /* font.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = font.c; sourceTree = "<group>"; };
 		77A913BA19500F6000F5B902 /* Apple2Mac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Apple2Mac.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		77A913BD19500F6000F5B902 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
 		77A913BF19500F6000F5B902 /* GLKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GLKit.framework; path = System/Library/Frameworks/GLKit.framework; sourceTree = SDKROOT; };
@@ -621,8 +621,6 @@
 		77A9163E1950108F00F5B902 /* disk.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = disk.c; sourceTree = "<group>"; };
 		77A9163F1950108F00F5B902 /* disk.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = disk.h; sourceTree = "<group>"; };
 		77A916401950108F00F5B902 /* display.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = display.c; sourceTree = "<group>"; };
-		77A916411950108F00F5B902 /* font.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = font.txt; sourceTree = "<group>"; };
-		77A916421950108F00F5B902 /* genfont.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = genfont.c; sourceTree = "<group>"; };
 		77A916431950108F00F5B902 /* glue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = glue.h; sourceTree = "<group>"; };
 		77A916461950108F00F5B902 /* joystick.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = joystick.c; sourceTree = "<group>"; };
 		77A916471950108F00F5B902 /* joystick.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = joystick.h; sourceTree = "<group>"; };
@@ -1494,8 +1492,7 @@
 				77A9163E1950108F00F5B902 /* disk.c */,
 				77A9163F1950108F00F5B902 /* disk.h */,
 				77A916401950108F00F5B902 /* display.c */,
-				77A916411950108F00F5B902 /* font.txt */,
-				77A916421950108F00F5B902 /* genfont.c */,
+				7751DD68195611A1007F8BDF /* font.c */,
 				77A916431950108F00F5B902 /* glue.h */,
 				77A916461950108F00F5B902 /* joystick.c */,
 				77A916471950108F00F5B902 /* joystick.h */,
@@ -1669,7 +1666,6 @@
 				77A913D819500F6000F5B902 /* InfoPlist.strings in Resources */,
 				77A913DB19500F6000F5B902 /* MainMenu.xib in Resources */,
 				77A913DD19500F6000F5B902 /* icon.icns in Resources */,
-				77A9167C1950108F00F5B902 /* font.txt in Resources */,
 				77A916951950108F00F5B902 /* genglue in Resources */,
 				77A915A119500F6500F5B902 /* LICENSE_CCBReader.txt in Resources */,
 			);
@@ -1712,7 +1708,6 @@
 				77A9140F19500F6100F5B902 /* CCCache.m in Sources */,
 				77A9156819500F6400F5B902 /* OALAudioFile.m in Sources */,
 				77A9143F19500F6200F5B902 /* CCDrawNode.m in Sources */,
-				77A9167D1950108F00F5B902 /* genfont.c in Sources */,
 				77A9152A19500F6400F5B902 /* OALAudioTracks.m in Sources */,
 				77A916941950108F00F5B902 /* cpu.S in Sources */,
 				77A913F619500F6100F5B902 /* CCEffectColor.m in Sources */,
@@ -1741,6 +1736,7 @@
 				77A9161A19500F6600F5B902 /* HelloWorldLayer.m in Sources */,
 				77A914E819500F6300F5B902 /* NSEvent+CC.m in Sources */,
 				77A9153F19500F6400F5B902 /* ALDevice.m in Sources */,
+				7751DD69195611A1007F8BDF /* font.c in Sources */,
 				77A9150519500F6300F5B902 /* NSThread+performBlock.m in Sources */,
 				77A914A219500F6300F5B902 /* CCSpriteBatchNode.m in Sources */,
 				77A913F219500F6100F5B902 /* CCEffectBrightness.m in Sources */,
