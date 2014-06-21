@@ -92,7 +92,14 @@ const char *def(const char* const src, const int expected_bytecount)
             }
 
             if (buflen > 0) {
-                size_t written = gzwrite(gzdest, buf, buflen);
+                unsigned int buflen_ = 0;
+                if (buflen > UINT_MAX) {
+                    ERRLOG("OOPS buffer is huge!");
+                    break;
+                } else {
+                    buflen_ = (unsigned int)buflen;
+                }
+                size_t written = gzwrite(gzdest, buf, buflen_);
                 if (written < buflen) {
                     ERRLOG("OOPS gzwrite ...");
                     break;
