@@ -9,6 +9,9 @@
  *
  */
 
+#ifndef _CPU_REGS_H_
+#define _CPU_REGS_H_
+
 #include "cpu.h"
 
 #define X_Reg           %bl             /* 6502 X register in %bl  */
@@ -40,6 +43,7 @@
 // full-length assembly instructions
 #   define addLQ            addq
 #   define andLQ            andq
+#   define callLQ           callq
 #   define decLQ            decq
 #   define orLQ             orq
 #   define movLQ            movq
@@ -73,6 +77,7 @@
 // full-length assembly instructions
 #   define addLQ            addl
 #   define andLQ            andl
+#   define callLQ           calll
 #   define decLQ            decl
 #   define orLQ             orl
 #   define movLQ            movl
@@ -91,3 +96,4 @@
 #   define xorLQ            xorl
 #endif
 
+#endif // whole file

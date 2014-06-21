@@ -30,7 +30,7 @@ E(func)                 movb    %al,SN(address)(EffectiveAddr_X); \
 #define GLUE_BANK_MAYBEREAD(func,pointer) \
 E(func)                 testLQ  $SS_CXROM, SN(softswitches); \
                         jnz     1f; \
-                        call    *SN(pointer); \
+                        callLQ  *SN(pointer); \
                         ret; \
 1:                      addLQ   SN(pointer),EffectiveAddr_X; \
                         movb    (EffectiveAddr_X),%al; \
@@ -76,7 +76,7 @@ E(func)                 pushLQ  _XAX; \
                         pushLQ  PC_Reg_X; \
                         andLQ   $0xff,_XAX; \
                         _PUSH_ARGS \
-                        call    SN(c_##func); \
+                        callLQ  SN(c_##func); \
                         _POP_ARGS \
                         popLQ   PC_Reg_X; \
                         popLQ   SP_Reg_X; \
@@ -93,7 +93,7 @@ E(func)                 pushLQ  XY_Reg_X; \
                         pushLQ  PC_Reg_X; \
                         pushLQ  _XAX; /* HACK: works around mysterious issue with generated mov(_XAX), _XAX ... */ \
                         pushLQ  EffectiveAddr_X; /* ea is arg0 (and preserved) */ \
-                        call    SN(c_##func); \
+                        callLQ  SN(c_##func); \
                         popLQ   EffectiveAddr_X; /* restore ea */ \
                         movb    %al, %dl; \
                         popLQ   _XAX; /* ... ugh */ \
