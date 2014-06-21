@@ -183,6 +183,28 @@
 		77A9161319500F6600F5B902 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 77A9161219500F6600F5B902 /* main.m */; };
 		77A9161719500F6600F5B902 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 77A9161619500F6600F5B902 /* AppDelegate.m */; };
 		77A9161A19500F6600F5B902 /* HelloWorldLayer.m in Sources */ = {isa = PBXBuildFile; fileRef = 77A9161919500F6600F5B902 /* HelloWorldLayer.m */; };
+		77A916781950108F00F5B902 /* cpu-supp.c in Sources */ = {isa = PBXBuildFile; fileRef = 77A9163B1950108F00F5B902 /* cpu-supp.c */; };
+		77A9167A1950108F00F5B902 /* disk.c in Sources */ = {isa = PBXBuildFile; fileRef = 77A9163E1950108F00F5B902 /* disk.c */; };
+		77A9167B1950108F00F5B902 /* display.c in Sources */ = {isa = PBXBuildFile; fileRef = 77A916401950108F00F5B902 /* display.c */; };
+		77A9167C1950108F00F5B902 /* font.txt in Resources */ = {isa = PBXBuildFile; fileRef = 77A916411950108F00F5B902 /* font.txt */; };
+		77A9167D1950108F00F5B902 /* genfont.c in Sources */ = {isa = PBXBuildFile; fileRef = 77A916421950108F00F5B902 /* genfont.c */; };
+		77A9167E1950108F00F5B902 /* interface.c in Sources */ = {isa = PBXBuildFile; fileRef = 77A916441950108F00F5B902 /* interface.c */; };
+		77A9167F1950108F00F5B902 /* joystick.c in Sources */ = {isa = PBXBuildFile; fileRef = 77A916461950108F00F5B902 /* joystick.c */; };
+		77A916801950108F00F5B902 /* keys.c in Sources */ = {isa = PBXBuildFile; fileRef = 77A916481950108F00F5B902 /* keys.c */; };
+		77A916811950108F00F5B902 /* debug.l in Sources */ = {isa = PBXBuildFile; fileRef = 77A9164C1950108F00F5B902 /* debug.l */; };
+		77A916821950108F00F5B902 /* debugger.c in Sources */ = {isa = PBXBuildFile; fileRef = 77A9164D1950108F00F5B902 /* debugger.c */; };
+		77A916831950108F00F5B902 /* opcodes.c in Sources */ = {isa = PBXBuildFile; fileRef = 77A9164E1950108F00F5B902 /* opcodes.c */; };
+		77A916841950108F00F5B902 /* misc.c in Sources */ = {isa = PBXBuildFile; fileRef = 77A9164F1950108F00F5B902 /* misc.c */; };
+		77A916851950108F00F5B902 /* prefs.c in Sources */ = {isa = PBXBuildFile; fileRef = 77A916511950108F00F5B902 /* prefs.c */; };
+		77A916871950108F00F5B902 /* testcommon.c in Sources */ = {isa = PBXBuildFile; fileRef = 77A916561950108F00F5B902 /* testcommon.c */; };
+		77A916881950108F00F5B902 /* testcpu.c in Sources */ = {isa = PBXBuildFile; fileRef = 77A916581950108F00F5B902 /* testcpu.c */; };
+		77A916891950108F00F5B902 /* testdisplay.c in Sources */ = {isa = PBXBuildFile; fileRef = 77A916591950108F00F5B902 /* testdisplay.c */; };
+		77A916901950108F00F5B902 /* testvm.c in Sources */ = {isa = PBXBuildFile; fileRef = 77A916601950108F00F5B902 /* testvm.c */; };
+		77A916911950108F00F5B902 /* timing.c in Sources */ = {isa = PBXBuildFile; fileRef = 77A916611950108F00F5B902 /* timing.c */; };
+		77A916931950108F00F5B902 /* vm.c in Sources */ = {isa = PBXBuildFile; fileRef = 77A916671950108F00F5B902 /* vm.c */; };
+		77A916941950108F00F5B902 /* cpu.S in Sources */ = {isa = PBXBuildFile; fileRef = 77A9166A1950108F00F5B902 /* cpu.S */; };
+		77A916951950108F00F5B902 /* genglue in Resources */ = {isa = PBXBuildFile; fileRef = 77A9166B1950108F00F5B902 /* genglue */; };
+		77A916961950108F00F5B902 /* zlib-helpers.c in Sources */ = {isa = PBXBuildFile; fileRef = 77A9166D1950108F00F5B902 /* zlib-helpers.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -574,6 +596,47 @@
 		77A9161619500F6600F5B902 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = AppDelegate.m; path = Classes/AppDelegate.m; sourceTree = "<group>"; };
 		77A9161819500F6600F5B902 /* HelloWorldLayer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = HelloWorldLayer.h; path = Classes/HelloWorldLayer.h; sourceTree = "<group>"; };
 		77A9161919500F6600F5B902 /* HelloWorldLayer.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = HelloWorldLayer.m; path = Classes/HelloWorldLayer.m; sourceTree = "<group>"; };
+		77A916251950108E00F5B902 /* apple2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = apple2.h; sourceTree = "<group>"; };
+		77A9163A1950108F00F5B902 /* common.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = common.h; sourceTree = "<group>"; };
+		77A9163B1950108F00F5B902 /* cpu-supp.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = "cpu-supp.c"; sourceTree = "<group>"; };
+		77A9163C1950108F00F5B902 /* cpu.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = cpu.h; sourceTree = "<group>"; };
+		77A9163E1950108F00F5B902 /* disk.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = disk.c; sourceTree = "<group>"; };
+		77A9163F1950108F00F5B902 /* disk.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = disk.h; sourceTree = "<group>"; };
+		77A916401950108F00F5B902 /* display.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = display.c; sourceTree = "<group>"; };
+		77A916411950108F00F5B902 /* font.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = font.txt; sourceTree = "<group>"; };
+		77A916421950108F00F5B902 /* genfont.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = genfont.c; sourceTree = "<group>"; };
+		77A916431950108F00F5B902 /* glue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = glue.h; sourceTree = "<group>"; };
+		77A916441950108F00F5B902 /* interface.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = interface.c; sourceTree = "<group>"; };
+		77A916451950108F00F5B902 /* interface.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = interface.h; sourceTree = "<group>"; };
+		77A916461950108F00F5B902 /* joystick.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = joystick.c; sourceTree = "<group>"; };
+		77A916471950108F00F5B902 /* joystick.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = joystick.h; sourceTree = "<group>"; };
+		77A916481950108F00F5B902 /* keys.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = keys.c; sourceTree = "<group>"; };
+		77A916491950108F00F5B902 /* keys.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = keys.h; sourceTree = "<group>"; };
+		77A9164B1950108F00F5B902 /* debug.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = debug.h; sourceTree = "<group>"; };
+		77A9164C1950108F00F5B902 /* debug.l */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.lex; path = debug.l; sourceTree = "<group>"; };
+		77A9164D1950108F00F5B902 /* debugger.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = debugger.c; sourceTree = "<group>"; };
+		77A9164E1950108F00F5B902 /* opcodes.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = opcodes.c; sourceTree = "<group>"; };
+		77A9164F1950108F00F5B902 /* misc.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = misc.c; sourceTree = "<group>"; };
+		77A916501950108F00F5B902 /* misc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = misc.h; sourceTree = "<group>"; };
+		77A916511950108F00F5B902 /* prefs.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = prefs.c; sourceTree = "<group>"; };
+		77A916521950108F00F5B902 /* prefs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = prefs.h; sourceTree = "<group>"; };
+		77A916541950108F00F5B902 /* greatest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = greatest.h; sourceTree = "<group>"; };
+		77A916561950108F00F5B902 /* testcommon.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = testcommon.c; sourceTree = "<group>"; };
+		77A916571950108F00F5B902 /* testcommon.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = testcommon.h; sourceTree = "<group>"; };
+		77A916581950108F00F5B902 /* testcpu.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = testcpu.c; sourceTree = "<group>"; };
+		77A916591950108F00F5B902 /* testdisplay.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = testdisplay.c; sourceTree = "<group>"; };
+		77A916601950108F00F5B902 /* testvm.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = testvm.c; sourceTree = "<group>"; };
+		77A916611950108F00F5B902 /* timing.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = timing.c; sourceTree = "<group>"; };
+		77A916621950108F00F5B902 /* timing.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = timing.h; sourceTree = "<group>"; };
+		77A916631950108F00F5B902 /* uthash.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = uthash.h; sourceTree = "<group>"; };
+		77A916651950108F00F5B902 /* video.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = video.h; sourceTree = "<group>"; };
+		77A916671950108F00F5B902 /* vm.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = vm.c; sourceTree = "<group>"; };
+		77A916691950108F00F5B902 /* cpu-regs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "cpu-regs.h"; sourceTree = "<group>"; };
+		77A9166A1950108F00F5B902 /* cpu.S */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.asm; path = cpu.S; sourceTree = "<group>"; };
+		77A9166B1950108F00F5B902 /* genglue */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = genglue; sourceTree = "<group>"; };
+		77A9166C1950108F00F5B902 /* glue-prologue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "glue-prologue.h"; sourceTree = "<group>"; };
+		77A9166D1950108F00F5B902 /* zlib-helpers.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = "zlib-helpers.c"; sourceTree = "<group>"; };
+		77A9166E1950108F00F5B902 /* zlib-helpers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "zlib-helpers.h"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -632,6 +695,7 @@
 		77A913D319500F6000F5B902 /* Apple2Mac */ = {
 			isa = PBXGroup;
 			children = (
+				77A916231950108E00F5B902 /* src */,
 				77A913D419500F6000F5B902 /* Resources */,
 				77A913DF19500F6100F5B902 /* Libraries */,
 				77A9161419500F6600F5B902 /* Classes */,
@@ -1372,6 +1436,87 @@
 			name = Classes;
 			sourceTree = "<group>";
 		};
+		77A916231950108E00F5B902 /* src */ = {
+			isa = PBXGroup;
+			children = (
+				77A916251950108E00F5B902 /* apple2.h */,
+				77A9163A1950108F00F5B902 /* common.h */,
+				77A9163B1950108F00F5B902 /* cpu-supp.c */,
+				77A9163C1950108F00F5B902 /* cpu.h */,
+				77A9163E1950108F00F5B902 /* disk.c */,
+				77A9163F1950108F00F5B902 /* disk.h */,
+				77A916401950108F00F5B902 /* display.c */,
+				77A916411950108F00F5B902 /* font.txt */,
+				77A916421950108F00F5B902 /* genfont.c */,
+				77A916431950108F00F5B902 /* glue.h */,
+				77A916441950108F00F5B902 /* interface.c */,
+				77A916451950108F00F5B902 /* interface.h */,
+				77A916461950108F00F5B902 /* joystick.c */,
+				77A916471950108F00F5B902 /* joystick.h */,
+				77A916481950108F00F5B902 /* keys.c */,
+				77A916491950108F00F5B902 /* keys.h */,
+				77A9164A1950108F00F5B902 /* meta */,
+				77A9164F1950108F00F5B902 /* misc.c */,
+				77A916501950108F00F5B902 /* misc.h */,
+				77A916511950108F00F5B902 /* prefs.c */,
+				77A916521950108F00F5B902 /* prefs.h */,
+				77A916531950108F00F5B902 /* test */,
+				77A916611950108F00F5B902 /* timing.c */,
+				77A916621950108F00F5B902 /* timing.h */,
+				77A916631950108F00F5B902 /* uthash.h */,
+				77A916641950108F00F5B902 /* video */,
+				77A916671950108F00F5B902 /* vm.c */,
+				77A916681950108F00F5B902 /* x86 */,
+				77A9166D1950108F00F5B902 /* zlib-helpers.c */,
+				77A9166E1950108F00F5B902 /* zlib-helpers.h */,
+			);
+			name = src;
+			path = ../../src;
+			sourceTree = "<group>";
+		};
+		77A9164A1950108F00F5B902 /* meta */ = {
+			isa = PBXGroup;
+			children = (
+				77A9164B1950108F00F5B902 /* debug.h */,
+				77A9164C1950108F00F5B902 /* debug.l */,
+				77A9164D1950108F00F5B902 /* debugger.c */,
+				77A9164E1950108F00F5B902 /* opcodes.c */,
+			);
+			path = meta;
+			sourceTree = "<group>";
+		};
+		77A916531950108F00F5B902 /* test */ = {
+			isa = PBXGroup;
+			children = (
+				77A916541950108F00F5B902 /* greatest.h */,
+				77A916561950108F00F5B902 /* testcommon.c */,
+				77A916571950108F00F5B902 /* testcommon.h */,
+				77A916581950108F00F5B902 /* testcpu.c */,
+				77A916591950108F00F5B902 /* testdisplay.c */,
+				77A916601950108F00F5B902 /* testvm.c */,
+			);
+			path = test;
+			sourceTree = "<group>";
+		};
+		77A916641950108F00F5B902 /* video */ = {
+			isa = PBXGroup;
+			children = (
+				77A916651950108F00F5B902 /* video.h */,
+			);
+			path = video;
+			sourceTree = "<group>";
+		};
+		77A916681950108F00F5B902 /* x86 */ = {
+			isa = PBXGroup;
+			children = (
+				77A916691950108F00F5B902 /* cpu-regs.h */,
+				77A9166A1950108F00F5B902 /* cpu.S */,
+				77A9166B1950108F00F5B902 /* genglue */,
+				77A9166C1950108F00F5B902 /* glue-prologue.h */,
+			);
+			path = x86;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -1446,6 +1591,8 @@
 				77A913D819500F6000F5B902 /* InfoPlist.strings in Resources */,
 				77A913DB19500F6000F5B902 /* MainMenu.xib in Resources */,
 				77A913DD19500F6000F5B902 /* icon.icns in Resources */,
+				77A9167C1950108F00F5B902 /* font.txt in Resources */,
+				77A916951950108F00F5B902 /* genglue in Resources */,
 				77A915A119500F6500F5B902 /* LICENSE_CCBReader.txt in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1460,6 +1607,7 @@
 				77A9157C19500F6500F5B902 /* CCScrollView.m in Sources */,
 				77A9151719500F6400F5B902 /* OALAction.m in Sources */,
 				77A914B319500F6300F5B902 /* CCTexturePVR.m in Sources */,
+				77A916821950108F00F5B902 /* debugger.c in Sources */,
 				77A9159419500F6500F5B902 /* CCBReader.m in Sources */,
 				77A9153319500F6400F5B902 /* ALBuffer.m in Sources */,
 				77A9153919500F6400F5B902 /* ALChannelSource.m in Sources */,
@@ -1471,13 +1619,17 @@
 				77A9149519500F6300F5B902 /* CCScene.m in Sources */,
 				77A914BD19500F6300F5B902 /* CCTiledMapObjectGroup.m in Sources */,
 				77A9150F19500F6400F5B902 /* ZipUtils.m in Sources */,
+				77A916881950108F00F5B902 /* testcpu.c in Sources */,
 				77A9140F19500F6100F5B902 /* CCCache.m in Sources */,
 				77A9156819500F6400F5B902 /* OALAudioFile.m in Sources */,
 				77A9143F19500F6200F5B902 /* CCDrawNode.m in Sources */,
+				77A9167D1950108F00F5B902 /* genfont.c in Sources */,
 				77A9152A19500F6400F5B902 /* OALAudioTracks.m in Sources */,
+				77A916941950108F00F5B902 /* cpu.S in Sources */,
 				77A913F619500F6100F5B902 /* CCEffectColor.m in Sources */,
 				77A913F019500F6100F5B902 /* CCEffect.m in Sources */,
 				77A9158E19500F6500F5B902 /* CCBAnimationManager.m in Sources */,
+				77A916931950108F00F5B902 /* vm.c in Sources */,
 				77A914FC19500F6300F5B902 /* CCVertex.m in Sources */,
 				77A9143019500F6100F5B902 /* CCAnimationCache.m in Sources */,
 				77A914EA19500F6300F5B902 /* base64.c in Sources */,
@@ -1491,7 +1643,10 @@
 				77A914FF19500F6300F5B902 /* CGPointExtension.m in Sources */,
 				77A9142919500F6100F5B902 /* CCActionTween.m in Sources */,
 				77A9158B19500F6500F5B902 /* CCAnimationManager.m in Sources */,
+				77A916781950108F00F5B902 /* cpu-supp.c in Sources */,
+				77A916911950108F00F5B902 /* timing.c in Sources */,
 				77A9146019500F6200F5B902 /* CCNode+Debug.m in Sources */,
+				77A916831950108F00F5B902 /* opcodes.c in Sources */,
 				77A913FE19500F6100F5B902 /* CCEffectNode.m in Sources */,
 				77A9147819500F6200F5B902 /* CCPhysicsBody.m in Sources */,
 				77A9161A19500F6600F5B902 /* HelloWorldLayer.m in Sources */,
@@ -1501,17 +1656,20 @@
 				77A914A219500F6300F5B902 /* CCSpriteBatchNode.m in Sources */,
 				77A913F219500F6100F5B902 /* CCEffectBrightness.m in Sources */,
 				77A9152719500F6400F5B902 /* OALAudioTrackNotifications.m in Sources */,
+				77A9167F1950108F00F5B902 /* joystick.c in Sources */,
 				77A914EE19500F6300F5B902 /* CCFileUtils.m in Sources */,
 				77A9141319500F6100F5B902 /* CCAction.m in Sources */,
 				77A9154D19500F6400F5B902 /* ALWrapper.m in Sources */,
 				77A9159719500F6500F5B902 /* CCBsequence.m in Sources */,
 				77A9158219500F6500F5B902 /* CCTableView.m in Sources */,
 				77A9145119500F6200F5B902 /* CCLayout.m in Sources */,
+				77A916851950108F00F5B902 /* prefs.c in Sources */,
 				77A9148119500F6200F5B902 /* CCPhysicsShape.m in Sources */,
 				77A9140719500F6100F5B902 /* CCRenderer.m in Sources */,
 				77A9149C19500F6300F5B902 /* CCSprite.m in Sources */,
 				77A9152419500F6400F5B902 /* OALAudioTrack.m in Sources */,
 				77A9156519500F6400F5B902 /* NSMutableDictionary+WeakReferences.m in Sources */,
+				77A916871950108F00F5B902 /* testcommon.c in Sources */,
 				77A9142319500F6100F5B902 /* CCActionManager.m in Sources */,
 				77A9148519500F6200F5B902 /* CCProgressNode.m in Sources */,
 				77A9149119500F6300F5B902 /* CCResponderManager.m in Sources */,
@@ -1537,6 +1695,7 @@
 				77A9144A19500F6200F5B902 /* CCLabelTTF.m in Sources */,
 				77A9154919500F6400F5B902 /* ALSource.m in Sources */,
 				77A9156C19500F6400F5B902 /* OALTools.m in Sources */,
+				77A9167A1950108F00F5B902 /* disk.c in Sources */,
 				77A914C719500F6300F5B902 /* cocos2d.m in Sources */,
 				77A9149F19500F6300F5B902 /* CCSprite9Slice.m in Sources */,
 				77A914DF19500F6300F5B902 /* CCDirectorMac.m in Sources */,
@@ -1550,8 +1709,10 @@
 				77A9143319500F6100F5B902 /* CCClippingNode.m in Sources */,
 				77A9155E19500F6400F5B902 /* mach_timing.c in Sources */,
 				77A9149819500F6300F5B902 /* CCScheduler.m in Sources */,
+				77A916801950108F00F5B902 /* keys.c in Sources */,
 				77A914B619500F6300F5B902 /* CCTiledMap.m in Sources */,
 				77A913F819500F6100F5B902 /* CCEffectColorPulse.m in Sources */,
+				77A916901950108F00F5B902 /* testvm.c in Sources */,
 				77A9148E19500F6300F5B902 /* CCResponder.m in Sources */,
 				77A9148A19500F6200F5B902 /* CCRenderTexture.m in Sources */,
 				77A9144219500F6200F5B902 /* ccFPSImages.m in Sources */,
@@ -1561,12 +1722,17 @@
 				77A914D119500F6300F5B902 /* CCES2Renderer.m in Sources */,
 				77A9142619500F6100F5B902 /* CCActionProgressTimer.m in Sources */,
 				77A9150919500F6400F5B902 /* TGAlib.m in Sources */,
+				77A916961950108F00F5B902 /* zlib-helpers.c in Sources */,
 				77A9141C19500F6100F5B902 /* CCActionInstant.m in Sources */,
 				77A9141F19500F6100F5B902 /* CCActionInterval.m in Sources */,
 				77A9144D19500F6200F5B902 /* CCNodeColor.m in Sources */,
+				77A916811950108F00F5B902 /* debug.l in Sources */,
 				77A914DB19500F6300F5B902 /* CCAppDelegate.m in Sources */,
 				77A9143B19500F6200F5B902 /* CCDirector.m in Sources */,
 				77A9141919500F6100F5B902 /* CCActionEase.m in Sources */,
+				77A916841950108F00F5B902 /* misc.c in Sources */,
+				77A9167E1950108F00F5B902 /* interface.c in Sources */,
+				77A916891950108F00F5B902 /* testdisplay.c in Sources */,
 				77A913FA19500F6100F5B902 /* CCEffectGlow.m in Sources */,
 				77A9154619500F6400F5B902 /* ALSoundSourcePool.m in Sources */,
 				77A9159119500F6500F5B902 /* CCBKeyframe.m in Sources */,
@@ -1574,6 +1740,7 @@
 				77A9153619500F6400F5B902 /* ALCaptureDevice.m in Sources */,
 				77A914BA19500F6300F5B902 /* CCTiledMapLayer.m in Sources */,
 				77A9140219500F6100F5B902 /* CCEffectTexture.m in Sources */,
+				77A9167B1950108F00F5B902 /* display.c in Sources */,
 				77A914F119500F6300F5B902 /* CCColor.m in Sources */,
 				77A9140B19500F6100F5B902 /* CCShader.m in Sources */,
 				77A9142D19500F6100F5B902 /* CCAnimation.m in Sources */,
@@ -1741,13 +1908,22 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(ARCHS_STANDARD)";
+				CLANG_ENABLE_OBJC_ARC = YES;
 				COPY_PHASE_STRIP = NO;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Apple2Mac/Supporting Files/Prefix.pch";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					DEBUG,
+					"COCOS2D_DEBUG=1",
+					"APPLE2IX=1",
+					"DEBUGGER=1",
+					"KEYPAD_JOYSTICK=1",
+				);
 				HEADER_SEARCH_PATHS = (
 					"\"$(SRCROOT)/$(PROJECT_NAME)/Libraries/Chipmunk/chipmunk/include\"",
 					"\"$(SRCROOT)/$(PROJECT_NAME)/Libraries/Chipmunk/objectivec/include\"",
+					"\"$(SRCROOT)/../src\"",
 				);
 				INFOPLIST_FILE = Apple2Mac/Resources/Info.plist;
 				OTHER_LDFLAGS = (
@@ -1765,12 +1941,21 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(ARCHS_STANDARD)";
+				CLANG_ENABLE_OBJC_ARC = YES;
 				COPY_PHASE_STRIP = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Apple2Mac/Supporting Files/Prefix.pch";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					NDEBUG,
+					"NS_BLOCK_ASSERTIONS=1",
+					"APPLE2IX=1",
+					"DEBUGGER=1",
+					"KEYPAD_JOYSTICK=1",
+				);
 				HEADER_SEARCH_PATHS = (
 					"\"$(SRCROOT)/$(PROJECT_NAME)/Libraries/Chipmunk/chipmunk/include\"",
 					"\"$(SRCROOT)/$(PROJECT_NAME)/Libraries/Chipmunk/objectivec/include\"",
+					"\"$(SRCROOT)/../src\"",
 				);
 				INFOPLIST_FILE = Apple2Mac/Resources/Info.plist;
 				OTHER_LDFLAGS = (
@@ -1803,6 +1988,7 @@
 				77A9161F19500F6600F5B902 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		77A9162019500F6600F5B902 /* Build configuration list for PBXNativeTarget "Apple2Mac" */ = {
 			isa = XCConfigurationList;
@@ -1811,6 +1997,7 @@
 				77A9162219500F6600F5B902 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
