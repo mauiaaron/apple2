@@ -54,6 +54,7 @@ GLUE_BANK_READ(iie_read_slotx,base_cxrom)
 
 uint32_t softswitches;
 
+const uint8_t *base_vmem = apple_ii_64k[0];
 uint8_t *base_ramrd;
 uint8_t *base_ramwrt;
 uint8_t *base_textrd;

@@ -111,9 +111,7 @@ E(func)                 pushLQ  XY_Reg_X; \
 #define GLUE_C_READ_ALTZP(FUNC) _GLUE_C_READ(FUNC, \
         pushLQ  _XAX; \
         andLQ   $0xFFFF, SP_Reg_X; \
-        movLQ   SN(base_stackzp), _XAX; \
-        subLQ   $SN(apple_ii_64k), _XAX; \
-        orLQ    _XAX, SP_Reg_X; \
+        RestoreAltZP \
         popLQ   _XAX; \
         )
 
