@@ -2118,7 +2118,7 @@ E(cpu65_run)
                 movzbLQ SN(cpu65_current)+4, XY_Reg_X
                 movb    SN(cpu65_current)+5, Y_Reg
                 movb    SN(cpu65_current)+6, SP_Reg_L
-#ifdef __APPLE2_VM__
+#ifdef APPLE2_VM
                 // Apple //e machine specific set stack point to ALTZP (or not)
                 movLQ   SN(base_stackzp), _XAX
                 subLQ   $SN(apple_ii_64k), _XAX
