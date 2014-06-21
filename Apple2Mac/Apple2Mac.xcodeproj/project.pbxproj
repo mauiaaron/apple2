@@ -8,6 +8,13 @@
 
 /* Begin PBXBuildFile section */
 		7751DD4E1955EFF5007F8BDF /* darwin-shim.c in Sources */ = {isa = PBXBuildFile; fileRef = 7751DD4D1955EFF5007F8BDF /* darwin-shim.c */; };
+		7751DD551955F567007F8BDF /* XCTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7751DD541955F567007F8BDF /* XCTest.framework */; };
+		7751DD5B1955F567007F8BDF /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 7751DD591955F567007F8BDF /* InfoPlist.strings */; };
+		7751DD5D1955F567007F8BDF /* Apple2Mac_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 7751DD5C1955F567007F8BDF /* Apple2Mac_Tests.m */; };
+		7751DD641955F58B007F8BDF /* testcommon.c in Sources */ = {isa = PBXBuildFile; fileRef = 77A916561950108F00F5B902 /* testcommon.c */; };
+		7751DD651955F596007F8BDF /* testcpu.c in Sources */ = {isa = PBXBuildFile; fileRef = 77A916581950108F00F5B902 /* testcpu.c */; };
+		7751DD661955F59B007F8BDF /* testvm.c in Sources */ = {isa = PBXBuildFile; fileRef = 77A916601950108F00F5B902 /* testvm.c */; };
+		7751DD671955F5D7007F8BDF /* testdisplay.c in Sources */ = {isa = PBXBuildFile; fileRef = 77A916591950108F00F5B902 /* testdisplay.c */; };
 		77A913BE19500F6000F5B902 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 77A913BD19500F6000F5B902 /* QuartzCore.framework */; };
 		77A913C019500F6000F5B902 /* GLKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 77A913BF19500F6000F5B902 /* GLKit.framework */; };
 		77A913C219500F6000F5B902 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 77A913C119500F6000F5B902 /* OpenGL.framework */; };
@@ -189,7 +196,6 @@
 		77A9167B1950108F00F5B902 /* display.c in Sources */ = {isa = PBXBuildFile; fileRef = 77A916401950108F00F5B902 /* display.c */; };
 		77A9167C1950108F00F5B902 /* font.txt in Resources */ = {isa = PBXBuildFile; fileRef = 77A916411950108F00F5B902 /* font.txt */; };
 		77A9167D1950108F00F5B902 /* genfont.c in Sources */ = {isa = PBXBuildFile; fileRef = 77A916421950108F00F5B902 /* genfont.c */; };
-		77A9167E1950108F00F5B902 /* interface.c in Sources */ = {isa = PBXBuildFile; fileRef = 77A916441950108F00F5B902 /* interface.c */; };
 		77A9167F1950108F00F5B902 /* joystick.c in Sources */ = {isa = PBXBuildFile; fileRef = 77A916461950108F00F5B902 /* joystick.c */; };
 		77A916801950108F00F5B902 /* keys.c in Sources */ = {isa = PBXBuildFile; fileRef = 77A916481950108F00F5B902 /* keys.c */; };
 		77A916811950108F00F5B902 /* debug.l in Sources */ = {isa = PBXBuildFile; fileRef = 77A9164C1950108F00F5B902 /* debug.l */; };
@@ -197,10 +203,6 @@
 		77A916831950108F00F5B902 /* opcodes.c in Sources */ = {isa = PBXBuildFile; fileRef = 77A9164E1950108F00F5B902 /* opcodes.c */; };
 		77A916841950108F00F5B902 /* misc.c in Sources */ = {isa = PBXBuildFile; fileRef = 77A9164F1950108F00F5B902 /* misc.c */; };
 		77A916851950108F00F5B902 /* prefs.c in Sources */ = {isa = PBXBuildFile; fileRef = 77A916511950108F00F5B902 /* prefs.c */; };
-		77A916871950108F00F5B902 /* testcommon.c in Sources */ = {isa = PBXBuildFile; fileRef = 77A916561950108F00F5B902 /* testcommon.c */; };
-		77A916881950108F00F5B902 /* testcpu.c in Sources */ = {isa = PBXBuildFile; fileRef = 77A916581950108F00F5B902 /* testcpu.c */; };
-		77A916891950108F00F5B902 /* testdisplay.c in Sources */ = {isa = PBXBuildFile; fileRef = 77A916591950108F00F5B902 /* testdisplay.c */; };
-		77A916901950108F00F5B902 /* testvm.c in Sources */ = {isa = PBXBuildFile; fileRef = 77A916601950108F00F5B902 /* testvm.c */; };
 		77A916911950108F00F5B902 /* timing.c in Sources */ = {isa = PBXBuildFile; fileRef = 77A916611950108F00F5B902 /* timing.c */; };
 		77A916931950108F00F5B902 /* vm.c in Sources */ = {isa = PBXBuildFile; fileRef = 77A916671950108F00F5B902 /* vm.c */; };
 		77A916941950108F00F5B902 /* cpu.S in Sources */ = {isa = PBXBuildFile; fileRef = 77A9166A1950108F00F5B902 /* cpu.S */; };
@@ -209,6 +211,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		7751DD5F1955F567007F8BDF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 77A913B219500F6000F5B902 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 77A913B919500F6000F5B902;
+			remoteInfo = Apple2Mac;
+		};
 		77A913D019500F6000F5B902 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 77A913B219500F6000F5B902 /* Project object */;
@@ -221,6 +230,12 @@
 /* Begin PBXFileReference section */
 		7751DD4B1955EB60007F8BDF /* darwin-shim.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "darwin-shim.h"; sourceTree = "<group>"; };
 		7751DD4D1955EFF5007F8BDF /* darwin-shim.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = "darwin-shim.c"; sourceTree = "<group>"; };
+		7751DD531955F567007F8BDF /* Apple2Mac Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Apple2Mac Tests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		7751DD541955F567007F8BDF /* XCTest.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XCTest.framework; path = Library/Frameworks/XCTest.framework; sourceTree = DEVELOPER_DIR; };
+		7751DD581955F567007F8BDF /* Apple2Mac Tests-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Apple2Mac Tests-Info.plist"; sourceTree = "<group>"; };
+		7751DD5A1955F567007F8BDF /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		7751DD5C1955F567007F8BDF /* Apple2Mac_Tests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Apple2Mac_Tests.m; sourceTree = "<group>"; };
+		7751DD5E1955F567007F8BDF /* Apple2Mac Tests-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Apple2Mac Tests-Prefix.pch"; sourceTree = "<group>"; };
 		77A913BA19500F6000F5B902 /* Apple2Mac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Apple2Mac.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		77A913BD19500F6000F5B902 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
 		77A913BF19500F6000F5B902 /* GLKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GLKit.framework; path = System/Library/Frameworks/GLKit.framework; sourceTree = SDKROOT; };
@@ -609,8 +624,6 @@
 		77A916411950108F00F5B902 /* font.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = font.txt; sourceTree = "<group>"; };
 		77A916421950108F00F5B902 /* genfont.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = genfont.c; sourceTree = "<group>"; };
 		77A916431950108F00F5B902 /* glue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = glue.h; sourceTree = "<group>"; };
-		77A916441950108F00F5B902 /* interface.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = interface.c; sourceTree = "<group>"; };
-		77A916451950108F00F5B902 /* interface.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = interface.h; sourceTree = "<group>"; };
 		77A916461950108F00F5B902 /* joystick.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = joystick.c; sourceTree = "<group>"; };
 		77A916471950108F00F5B902 /* joystick.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = joystick.h; sourceTree = "<group>"; };
 		77A916481950108F00F5B902 /* keys.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = keys.c; sourceTree = "<group>"; };
@@ -643,6 +656,14 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		7751DD501955F567007F8BDF /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7751DD551955F567007F8BDF /* XCTest.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		77A913B719500F6000F5B902 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -662,10 +683,30 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		7751DD561955F567007F8BDF /* Apple2Mac Tests */ = {
+			isa = PBXGroup;
+			children = (
+				7751DD5C1955F567007F8BDF /* Apple2Mac_Tests.m */,
+				7751DD571955F567007F8BDF /* Supporting Files */,
+			);
+			path = "Apple2Mac Tests";
+			sourceTree = "<group>";
+		};
+		7751DD571955F567007F8BDF /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				7751DD581955F567007F8BDF /* Apple2Mac Tests-Info.plist */,
+				7751DD591955F567007F8BDF /* InfoPlist.strings */,
+				7751DD5E1955F567007F8BDF /* Apple2Mac Tests-Prefix.pch */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
 		77A913B119500F6000F5B902 = {
 			isa = PBXGroup;
 			children = (
 				77A913D319500F6000F5B902 /* Apple2Mac */,
+				7751DD561955F567007F8BDF /* Apple2Mac Tests */,
 				77A913BC19500F6000F5B902 /* Frameworks */,
 				77A913BB19500F6000F5B902 /* Products */,
 			);
@@ -676,6 +717,7 @@
 			children = (
 				77A913BA19500F6000F5B902 /* Apple2Mac.app */,
 				77A913CF19500F6000F5B902 /* libObjectiveChipmunk.a */,
+				7751DD531955F567007F8BDF /* Apple2Mac Tests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -691,6 +733,7 @@
 				77A913C719500F6000F5B902 /* AudioToolbox.framework */,
 				77A913C919500F6000F5B902 /* AppKit.framework */,
 				77A913CB19500F6000F5B902 /* Foundation.framework */,
+				7751DD541955F567007F8BDF /* XCTest.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -1454,8 +1497,6 @@
 				77A916411950108F00F5B902 /* font.txt */,
 				77A916421950108F00F5B902 /* genfont.c */,
 				77A916431950108F00F5B902 /* glue.h */,
-				77A916441950108F00F5B902 /* interface.c */,
-				77A916451950108F00F5B902 /* interface.h */,
 				77A916461950108F00F5B902 /* joystick.c */,
 				77A916471950108F00F5B902 /* joystick.h */,
 				77A916481950108F00F5B902 /* keys.c */,
@@ -1525,6 +1566,24 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		7751DD521955F567007F8BDF /* Apple2Mac Tests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 7751DD631955F567007F8BDF /* Build configuration list for PBXNativeTarget "Apple2Mac Tests" */;
+			buildPhases = (
+				7751DD4F1955F567007F8BDF /* Sources */,
+				7751DD501955F567007F8BDF /* Frameworks */,
+				7751DD511955F567007F8BDF /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				7751DD601955F567007F8BDF /* PBXTargetDependency */,
+			);
+			name = "Apple2Mac Tests";
+			productName = "Apple2Mac Tests";
+			productReference = 7751DD531955F567007F8BDF /* Apple2Mac Tests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 		77A913B919500F6000F5B902 /* Apple2Mac */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 77A9162019500F6600F5B902 /* Build configuration list for PBXNativeTarget "Apple2Mac" */;
@@ -1566,6 +1625,11 @@
 			attributes = {
 				LastUpgradeCheck = 0510;
 				ORGANIZATIONNAME = fl0wstate;
+				TargetAttributes = {
+					7751DD521955F567007F8BDF = {
+						TestTargetID = 77A913B919500F6000F5B902;
+					};
+				};
 			};
 			buildConfigurationList = 77A913B519500F6000F5B902 /* Build configuration list for PBXProject "Apple2Mac" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -1581,12 +1645,21 @@
 			projectRoot = "";
 			targets = (
 				77A913B919500F6000F5B902 /* Apple2Mac */,
+				7751DD521955F567007F8BDF /* Apple2Mac Tests */,
 				77A913CE19500F6000F5B902 /* ObjectiveChipmunk */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		7751DD511955F567007F8BDF /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7751DD5B1955F567007F8BDF /* InfoPlist.strings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		77A913B819500F6000F5B902 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -1605,6 +1678,18 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		7751DD4F1955F567007F8BDF /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7751DD661955F59B007F8BDF /* testvm.c in Sources */,
+				7751DD671955F5D7007F8BDF /* testdisplay.c in Sources */,
+				7751DD641955F58B007F8BDF /* testcommon.c in Sources */,
+				7751DD5D1955F567007F8BDF /* Apple2Mac_Tests.m in Sources */,
+				7751DD651955F596007F8BDF /* testcpu.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		77A913B619500F6000F5B902 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -1624,7 +1709,6 @@
 				77A9149519500F6300F5B902 /* CCScene.m in Sources */,
 				77A914BD19500F6300F5B902 /* CCTiledMapObjectGroup.m in Sources */,
 				77A9150F19500F6400F5B902 /* ZipUtils.m in Sources */,
-				77A916881950108F00F5B902 /* testcpu.c in Sources */,
 				77A9140F19500F6100F5B902 /* CCCache.m in Sources */,
 				77A9156819500F6400F5B902 /* OALAudioFile.m in Sources */,
 				77A9143F19500F6200F5B902 /* CCDrawNode.m in Sources */,
@@ -1674,7 +1758,6 @@
 				77A9149C19500F6300F5B902 /* CCSprite.m in Sources */,
 				77A9152419500F6400F5B902 /* OALAudioTrack.m in Sources */,
 				77A9156519500F6400F5B902 /* NSMutableDictionary+WeakReferences.m in Sources */,
-				77A916871950108F00F5B902 /* testcommon.c in Sources */,
 				77A9142319500F6100F5B902 /* CCActionManager.m in Sources */,
 				77A9148519500F6200F5B902 /* CCProgressNode.m in Sources */,
 				77A9149119500F6300F5B902 /* CCResponderManager.m in Sources */,
@@ -1717,7 +1800,6 @@
 				77A916801950108F00F5B902 /* keys.c in Sources */,
 				77A914B619500F6300F5B902 /* CCTiledMap.m in Sources */,
 				77A913F819500F6100F5B902 /* CCEffectColorPulse.m in Sources */,
-				77A916901950108F00F5B902 /* testvm.c in Sources */,
 				77A9148E19500F6300F5B902 /* CCResponder.m in Sources */,
 				77A9148A19500F6200F5B902 /* CCRenderTexture.m in Sources */,
 				77A9144219500F6200F5B902 /* ccFPSImages.m in Sources */,
@@ -1737,8 +1819,6 @@
 				77A9143B19500F6200F5B902 /* CCDirector.m in Sources */,
 				77A9141919500F6100F5B902 /* CCActionEase.m in Sources */,
 				77A916841950108F00F5B902 /* misc.c in Sources */,
-				77A9167E1950108F00F5B902 /* interface.c in Sources */,
-				77A916891950108F00F5B902 /* testdisplay.c in Sources */,
 				77A913FA19500F6100F5B902 /* CCEffectGlow.m in Sources */,
 				77A9154619500F6400F5B902 /* ALSoundSourcePool.m in Sources */,
 				77A9159119500F6500F5B902 /* CCBKeyframe.m in Sources */,
@@ -1804,6 +1884,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		7751DD601955F567007F8BDF /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 77A913B919500F6000F5B902 /* Apple2Mac */;
+			targetProxy = 7751DD5F1955F567007F8BDF /* PBXContainerItemProxy */;
+		};
 		77A913D119500F6000F5B902 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 77A913CE19500F6000F5B902 /* ObjectiveChipmunk */;
@@ -1812,6 +1897,14 @@
 /* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
+		7751DD591955F567007F8BDF /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				7751DD5A1955F567007F8BDF /* en */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
 		77A913D619500F6000F5B902 /* InfoPlist.strings */ = {
 			isa = PBXVariantGroup;
 			children = (
@@ -1831,6 +1924,82 @@
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
+		7751DD611955F567007F8BDF /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				BUNDLE_LOADER = "$(BUILT_PRODUCTS_DIR)/Apple2Mac.app/Contents/MacOS/Apple2Mac";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(DEVELOPER_FRAMEWORKS_DIR)",
+					"$(inherited)",
+				);
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "Apple2Mac Tests/Apple2Mac Tests-Prefix.pch";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				INFOPLIST_FILE = "Apple2Mac Tests/Apple2Mac Tests-Info.plist";
+				MACOSX_DEPLOYMENT_TARGET = 10.9;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TEST_HOST = "$(BUNDLE_LOADER)";
+				WRAPPER_EXTENSION = xctest;
+			};
+			name = Debug;
+		};
+		7751DD621955F567007F8BDF /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				BUNDLE_LOADER = "$(BUILT_PRODUCTS_DIR)/Apple2Mac.app/Contents/MacOS/Apple2Mac";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = YES;
+				ENABLE_NS_ASSERTIONS = NO;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(DEVELOPER_FRAMEWORKS_DIR)",
+					"$(inherited)",
+				);
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "Apple2Mac Tests/Apple2Mac Tests-Prefix.pch";
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				INFOPLIST_FILE = "Apple2Mac Tests/Apple2Mac Tests-Info.plist";
+				MACOSX_DEPLOYMENT_TARGET = 10.9;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TEST_HOST = "$(BUNDLE_LOADER)";
+				WRAPPER_EXTENSION = xctest;
+			};
+			name = Release;
+		};
 		77A9161B19500F6600F5B902 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1978,6 +2147,14 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		7751DD631955F567007F8BDF /* Build configuration list for PBXNativeTarget "Apple2Mac Tests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7751DD611955F567007F8BDF /* Debug */,
+				7751DD621955F567007F8BDF /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+		};
 		77A913B519500F6000F5B902 /* Build configuration list for PBXProject "Apple2Mac" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
