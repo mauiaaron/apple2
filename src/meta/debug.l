@@ -113,8 +113,8 @@ ADDRS	[0-9a-fA-F]+
 	do_ascii = 1;
     while (!isspace(*debugtext)) ++debugtext;
 
-    arg1 = strtol(debugtext, &debugtext, 16);
-    arg2 = strtol(debugtext, &debugtext, 16);
+    arg1 = (int)strtol(debugtext, &debugtext, 16);
+    arg2 = (int)strtol(debugtext, &debugtext, 16);
     dump_mem(arg1, arg2, 0, do_ascii, -1);
     return MEM;
 }
@@ -127,11 +127,11 @@ ADDRS	[0-9a-fA-F]+
 	do_ascii = 1;
     while (*debugtext != '/') ++debugtext;
     ++debugtext;	/* after / */
-    arg3 = strtol(debugtext, &debugtext, 10);
+    arg3 = (int)strtol(debugtext, &debugtext, 10);
     ++debugtext;	/* after / */
 
-    arg1 = strtol(debugtext, &debugtext, 16);
-    arg2 = strtol(debugtext, &debugtext, 16);
+    arg1 = (int)strtol(debugtext, &debugtext, 16);
+    arg2 = (int)strtol(debugtext, &debugtext, 16);
     dump_mem(arg1, arg2, 0, do_ascii, arg3);
     return MEM;
 }
@@ -144,7 +144,7 @@ ADDRS	[0-9a-fA-F]+
 	do_ascii = 1;
     while (!isspace(*debugtext)) ++debugtext;
 
-    arg1 = strtol(debugtext, &debugtext, 16);
+    arg1 = (int)strtol(debugtext, &debugtext, 16);
     dump_mem(arg1, 256, 0, do_ascii, -1);
     return MEM;
 }
@@ -157,10 +157,10 @@ ADDRS	[0-9a-fA-F]+
 	do_ascii = 1;
     while (*debugtext != '/') ++debugtext;
     ++debugtext;	/* after / */
-    arg3 = strtol(debugtext, &debugtext, 10);
+    arg3 = (int)strtol(debugtext, &debugtext, 10);
     ++debugtext;	/* after / */
 
-    arg1 = strtol(debugtext, &debugtext, 16);
+    arg1 = (int)strtol(debugtext, &debugtext, 16);
     dump_mem(arg1, 256, 0, do_ascii, arg3);
     return MEM;
 }
@@ -174,7 +174,7 @@ ADDRS	[0-9a-fA-F]+
     while (*debugtext != '+') ++debugtext;
     ++debugtext;
 
-    arg1 = strtol(debugtext, &debugtext, 16);
+    arg1 = (int)strtol(debugtext, &debugtext, 16);
     dump_mem(cpu65_current.pc, arg1, 0, do_ascii, -1);
     return MEM;
 }
@@ -199,9 +199,9 @@ ADDRS	[0-9a-fA-F]+
     while (tolower(*debugtext) != 'l') ++debugtext; ++debugtext;
     if (tolower(*debugtext) == 'c') ++debugtext;
 
-    lc = strtol(debugtext, &debugtext, 10);
-    arg1 = strtol(debugtext, &debugtext, 16);
-    arg2 = strtol(debugtext, &debugtext, 16);
+    lc = (int)strtol(debugtext, &debugtext, 10);
+    arg1 = (int)strtol(debugtext, &debugtext, 16);
+    arg2 = (int)strtol(debugtext, &debugtext, 16);
 
     dump_mem(arg1, arg2, lc, do_ascii, -1);
     return MEM;
@@ -216,14 +216,14 @@ ADDRS	[0-9a-fA-F]+
 	do_ascii = 1;
     while (tolower(*debugtext) != 'l') ++debugtext; ++debugtext;
     if (tolower(*debugtext) == 'c') ++debugtext;
-    lc = strtol(debugtext, &debugtext, 10);
+    lc = (int)strtol(debugtext, &debugtext, 10);
 
     while (*debugtext != '/') ++debugtext;
     ++debugtext;	/* after / */
-    arg3 = strtol(debugtext, &debugtext, 10);
+    arg3 = (int)strtol(debugtext, &debugtext, 10);
     ++debugtext;	/* after / */
-    arg1 = strtol(debugtext, &debugtext, 16);
-    arg2 = strtol(debugtext, &debugtext, 16);
+    arg1 = (int)strtol(debugtext, &debugtext, 16);
+    arg2 = (int)strtol(debugtext, &debugtext, 16);
 
     dump_mem(arg1, arg2, lc, do_ascii, arg3);
     return MEM;
@@ -239,8 +239,8 @@ ADDRS	[0-9a-fA-F]+
     while (tolower(*debugtext) != 'l') ++debugtext; ++debugtext;
     if (tolower(*debugtext) == 'c') ++debugtext;
 
-    lc = strtol(debugtext, &debugtext, 10);
-    arg1 = strtol(debugtext, &debugtext, 16);
+    lc = (int)strtol(debugtext, &debugtext, 10);
+    arg1 = (int)strtol(debugtext, &debugtext, 16);
 
     dump_mem(arg1, 256, lc, do_ascii, -1);
     return MEM;
@@ -255,13 +255,13 @@ ADDRS	[0-9a-fA-F]+
 	do_ascii = 1;
     while (tolower(*debugtext) != 'l') ++debugtext; ++debugtext;
     if (tolower(*debugtext) == 'c') ++debugtext;
-    lc = strtol(debugtext, &debugtext, 10);
+    lc = (int)strtol(debugtext, &debugtext, 10);
 
     while (*debugtext != '/') ++debugtext;
     ++debugtext;	/* after / */
-    arg3 = strtol(debugtext, &debugtext, 10);
+    arg3 = (int)strtol(debugtext, &debugtext, 10);
     ++debugtext;	/* after / */
-    arg1 = strtol(debugtext, &debugtext, 16);
+    arg1 = (int)strtol(debugtext, &debugtext, 16);
 
     dump_mem(arg1, 256, lc, do_ascii, arg3);
     return MEM;
@@ -271,8 +271,8 @@ ADDRS	[0-9a-fA-F]+
     /* disassemble at <addrs> <len> */
     while (!isspace(*debugtext)) ++debugtext;
 
-    arg1 = strtol(debugtext, &debugtext, 16);
-    arg2 = strtol(debugtext, &debugtext, 16);
+    arg1 = (int)strtol(debugtext, &debugtext, 16);
+    arg2 = (int)strtol(debugtext, &debugtext, 16);
 
     disasm(arg1, arg2, 0, -1);
     return DIS;
@@ -282,11 +282,11 @@ ADDRS	[0-9a-fA-F]+
     /* disassemble at /<bank>/<addrs> <len> */
     while (*debugtext != '/') ++debugtext;
     ++debugtext;	/* after / */
-    arg3 = strtol(debugtext, &debugtext, 10);
+    arg3 = (int)strtol(debugtext, &debugtext, 10);
     ++debugtext;	/* after / */
 
-    arg1 = strtol(debugtext, &debugtext, 16);
-    arg2 = strtol(debugtext, &debugtext, 16);
+    arg1 = (int)strtol(debugtext, &debugtext, 16);
+    arg2 = (int)strtol(debugtext, &debugtext, 16);
 
     disasm(arg1, arg2, 0, arg3);
     return DIS;
@@ -296,7 +296,7 @@ ADDRS	[0-9a-fA-F]+
     /* disassemble at <addrs> */
     while (!isspace(*debugtext)) ++debugtext;
 
-    arg1 = strtol(debugtext, &debugtext, 16);
+    arg1 = (int)strtol(debugtext, &debugtext, 16);
     arg2 = 256;
     if ((arg1 < 0) || (arg1 > 65535)) arg1 = cpu65_current.pc;
 
@@ -308,10 +308,10 @@ ADDRS	[0-9a-fA-F]+
     /* disassemble at /<bank>/<addrs> */
     while (*debugtext != '/') ++debugtext;
     ++debugtext;	/* after / */
-    arg3 = strtol(debugtext, &debugtext, 10);
+    arg3 = (int)strtol(debugtext, &debugtext, 10);
     ++debugtext;	/* after / */
 
-    arg1 = strtol(debugtext, &debugtext, 16);
+    arg1 = (int)strtol(debugtext, &debugtext, 16);
     arg2 = 256;
     if ((arg1 < 0) || (arg1 > 65535)) arg1 = cpu65_current.pc;
 
@@ -324,7 +324,7 @@ ADDRS	[0-9a-fA-F]+
     while (*debugtext != '+') ++debugtext;
     ++debugtext;
 
-    arg1 = strtol(debugtext, &debugtext, 16);
+    arg1 = (int)strtol(debugtext, &debugtext, 16);
     disasm(cpu65_current.pc, arg1, 0, -1);
     return DIS;
 }
@@ -342,9 +342,9 @@ ADDRS	[0-9a-fA-F]+
     while (tolower(*debugtext) != 'l') ++debugtext; ++debugtext;
     if (tolower(*debugtext) == 'c') ++debugtext;
 
-    lc = strtol(debugtext, &debugtext, 10);
-    arg1 = strtol(debugtext, &debugtext, 16);
-    arg2 = strtol(debugtext, &debugtext, 16);
+    lc = (int)strtol(debugtext, &debugtext, 10);
+    arg1 = (int)strtol(debugtext, &debugtext, 16);
+    arg2 = (int)strtol(debugtext, &debugtext, 16);
     
     disasm(arg1, arg2, lc, -1);
     return DIS;
@@ -356,15 +356,15 @@ ADDRS	[0-9a-fA-F]+
 
     while (tolower(*debugtext) != 'l') ++debugtext; ++debugtext;
     if (tolower(*debugtext) == 'c') ++debugtext;
-    lc = strtol(debugtext, &debugtext, 10);
+    lc = (int)strtol(debugtext, &debugtext, 10);
 
     while (*debugtext != '/') ++debugtext;
     ++debugtext;	/* after / */
-    arg3 = strtol(debugtext, &debugtext, 10);
+    arg3 = (int)strtol(debugtext, &debugtext, 10);
     ++debugtext;	/* after / */
 
-    arg1 = strtol(debugtext, &debugtext, 16);
-    arg2 = strtol(debugtext, &debugtext, 16);
+    arg1 = (int)strtol(debugtext, &debugtext, 16);
+    arg2 = (int)strtol(debugtext, &debugtext, 16);
     
     disasm(arg1, arg2, lc, arg3);
     return DIS;
@@ -377,8 +377,8 @@ ADDRS	[0-9a-fA-F]+
     while (tolower(*debugtext) != 'l') ++debugtext; ++debugtext;
     if (tolower(*debugtext) == 'c') ++debugtext;
 
-    lc = strtol(debugtext, &debugtext, 10);
-    arg1 = strtol(debugtext, &debugtext, 16);
+    lc = (int)strtol(debugtext, &debugtext, 10);
+    arg1 = (int)strtol(debugtext, &debugtext, 16);
 
     disasm(arg1, 256, lc, -1);
     return DIS;
@@ -390,14 +390,14 @@ ADDRS	[0-9a-fA-F]+
 
     while (tolower(*debugtext) != 'l') ++debugtext; ++debugtext;
     if (tolower(*debugtext) == 'c') ++debugtext;
-    lc = strtol(debugtext, &debugtext, 10);
+    lc = (int)strtol(debugtext, &debugtext, 10);
 
     while (*debugtext != '/') ++debugtext;
     ++debugtext;	/* after / */
-    arg3 = strtol(debugtext, &debugtext, 10);
+    arg3 = (int)strtol(debugtext, &debugtext, 10);
     ++debugtext;	/* after / */
 
-    arg1 = strtol(debugtext, &debugtext, 16);
+    arg1 = (int)strtol(debugtext, &debugtext, 16);
 
     disasm(arg1, 256, lc, arg3);
     return DIS;
@@ -411,7 +411,7 @@ ADDRS	[0-9a-fA-F]+
 
 {BOS}{ADDRS}{WS}*\:{WS}*{HEX}+{EOS} {
     /* set memory <addr> : <hex string> */
-    arg1 = strtol(debugtext, &debugtext, 16);
+    arg1 = (int)strtol(debugtext, &debugtext, 16);
 
     while (*debugtext != ':') ++debugtext; ++debugtext;
     while (isspace(*debugtext)) ++debugtext;
@@ -424,11 +424,11 @@ ADDRS	[0-9a-fA-F]+
     /* set LC memory <addr> lc1|lc2 : <hex string> */
     int lc;
 
-    arg1 = strtol(debugtext, &debugtext, 16);
+    arg1 = (int)strtol(debugtext, &debugtext, 16);
 
     while (tolower(*debugtext) != 'l') ++debugtext; ++debugtext;
     if (tolower(*debugtext) == 'c') ++debugtext;
-    lc = strtol(debugtext, &debugtext, 10);
+    lc = (int)strtol(debugtext, &debugtext, 10);
     ++debugtext; while (isspace(*debugtext)) ++debugtext;
 
     set_lc_mem(arg1, lc, debugtext);
@@ -445,7 +445,7 @@ ADDRS	[0-9a-fA-F]+
     while (isspace(*debugtext)) ++debugtext;
     ptr = debugtext;
     while (!isspace(*debugtext)) ++debugtext;
-    int len = MIN(debugtext-ptr, DEBUG_BUFSZ-1);
+    int len = MIN((int)(debugtext-ptr), DEBUG_BUFSZ-1);
 
     /* filename */
     strncpy(buf, ptr, len);
@@ -454,11 +454,11 @@ ADDRS	[0-9a-fA-F]+
     /* get bank info */
     while (*debugtext != '/') ++debugtext;
     ++debugtext;
-    int bank = strtol(debugtext, &debugtext, 10);
+    int bank = (int)strtol(debugtext, &debugtext, 10);
 
     /* extract addrs */
     ++debugtext;
-    arg1 = strtol(debugtext, (char**)NULL, 16);
+    arg1 = (int)strtol(debugtext, (char**)NULL, 16);
 
     fp = fopen(buf, "r");
     if (fp == NULL) {
@@ -491,7 +491,7 @@ ADDRS	[0-9a-fA-F]+
 
     while (!isspace(*debugtext)) ++debugtext;
 
-    arg1 = strtol(debugtext, (char**)NULL, 16);
+    arg1 = (int)strtol(debugtext, (char**)NULL, 16);
     if ((arg1 < 1) || (arg1 > 255)) arg1 = 255;
 
     stepping_struct_t s = {
@@ -563,7 +563,7 @@ ADDRS	[0-9a-fA-F]+
     while (!isspace(*debugtext)) ++debugtext;
 
     /* DANGEROUS! */
-    cpu65_current.pc = strtol(debugtext, (char**)NULL, 16);
+    cpu65_current.pc = (int)strtol(debugtext, (char**)NULL, 16);
 
     stepping_struct_t s = {
         .step_type = GOING
@@ -592,7 +592,7 @@ ADDRS	[0-9a-fA-F]+
     /* set watchpoint */
     while (!isspace(*debugtext)) ++debugtext;
 
-    arg1 = strtol(debugtext, (char**)NULL, 16);
+    arg1 = (int)strtol(debugtext, (char**)NULL, 16);
     if ((arg1 < 0) || (arg1 > 65535)) {
 	sprintf(second_buf[num_buffer_lines++], "invalid address");
 	return WATCH;
@@ -613,7 +613,7 @@ ADDRS	[0-9a-fA-F]+
     /* set breakpoint */
     while (!isspace(*debugtext)) ++debugtext;
 
-    arg1 = strtol(debugtext, (char**)NULL, 16);
+    arg1 = (int)strtol(debugtext, (char**)NULL, 16);
     if ((arg1 < 0) || (arg1 > 65535)) {
 	sprintf(second_buf[num_buffer_lines++], "invalid address");
 	return BREAK;
@@ -628,7 +628,7 @@ ADDRS	[0-9a-fA-F]+
     while (!(*debugtext == 'p')) ++debugtext;
     ++debugtext;
 
-    arg1 = strtol(debugtext, (char**)NULL, 16);
+    arg1 = (int)strtol(debugtext, (char**)NULL, 16);
     if ((arg1 < 0) || (arg1 > 0xFF)) {
 	sprintf(second_buf[num_buffer_lines++], "invalid opcode");
 	return BREAK;
@@ -657,7 +657,7 @@ ADDRS	[0-9a-fA-F]+
     while (!isspace(*debugtext)) ++debugtext;
 
     while (*debugtext) {
-	arg1 = strtol(debugtext, &debugtext, 10);
+	arg1 = (int)strtol(debugtext, &debugtext, 10);
 	if ((arg1 < 1) || (arg1 > MAX_BRKPTS)) {
 	    sprintf(second_buf[num_buffer_lines++], "invalid watchpoint");
 	    return IGNORE;
@@ -681,7 +681,7 @@ ADDRS	[0-9a-fA-F]+
     while (!isspace(*debugtext)) ++debugtext;
 
     while (*debugtext) {
-	arg1 = strtol(debugtext, &debugtext, 10);
+	arg1 = (int)strtol(debugtext, &debugtext, 10);
 	if ((arg1 < 1) || (arg1 > MAX_BRKPTS)) {
 	    sprintf(second_buf[num_buffer_lines++], "invalid breakpoint");
 	    return CLEAR;
@@ -698,7 +698,7 @@ ADDRS	[0-9a-fA-F]+
     ++debugtext;
 
     while (*debugtext) {
-	arg1 = strtol(debugtext, &debugtext, 16);
+	arg1 = (int)strtol(debugtext, &debugtext, 16);
 	if ((arg1 < 0) || (arg1 > 255)) {
 	    sprintf(second_buf[num_buffer_lines++], "invalid opcode");
 	    return CLEAR;
@@ -742,7 +742,7 @@ ADDRS	[0-9a-fA-F]+
     /* search memory<bank> for <bytes> */
     while (*debugtext != '/') ++debugtext;
     ++debugtext;	/* after / */
-    arg3 = strtol(debugtext, &debugtext, 10);
+    arg3 = (int)strtol(debugtext, &debugtext, 10);
     ++debugtext;	/* after / */
     while (isspace(*debugtext)) ++debugtext;
 
@@ -757,7 +757,7 @@ ADDRS	[0-9a-fA-F]+
 
     while (tolower(*debugtext) != 'l') ++debugtext; ++debugtext;
     if (tolower(*debugtext) == 'c') ++debugtext;
-    lc = strtol(debugtext, &debugtext, 10);
+    lc = (int)strtol(debugtext, &debugtext, 10);
 
     while (!isspace(*debugtext)) ++debugtext;
     while (isspace(*debugtext)) ++debugtext;
@@ -773,11 +773,11 @@ ADDRS	[0-9a-fA-F]+
 
     while (tolower(*debugtext) != 'l') ++debugtext; ++debugtext;
     if (tolower(*debugtext) == 'c') ++debugtext;
-    lc = strtol(debugtext, &debugtext, 10);
+    lc = (int)strtol(debugtext, &debugtext, 10);
 
     while (*debugtext != '/') ++debugtext;
     ++debugtext;	/* after / */
-    arg3 = strtol(debugtext, &debugtext, 10);
+    arg3 = (int)strtol(debugtext, &debugtext, 10);
     ++debugtext;	/* after / */
     while (isspace(*debugtext)) ++debugtext;
 
@@ -794,7 +794,7 @@ ADDRS	[0-9a-fA-F]+
     while (isspace(*debugtext)) ++debugtext;
 
     strncpy(buf, debugtext, DEBUG_BUFSZ-2);
-    int len = strlen(buf);
+    int len = (int)strlen(buf);
     buf[len] = '\r';
     buf[len+1] = '\0';
 
@@ -826,7 +826,7 @@ ADDRS	[0-9a-fA-F]+
     LOG("Typing...");
     int ch = -1;
     while (fgets(buf, DEBUG_BUFSZ, fp)) {
-        LOG(buf);
+        LOG("%s", buf);
 
         stepping_struct_t s = {
             .step_type = LOADING,
@@ -896,20 +896,20 @@ ADDRS	[0-9a-fA-F]+
     /* copy file name */
     ptr = debugtext;
     while (!isspace(*debugtext)) ++debugtext;
-    int len = MIN(debugtext - ptr, DEBUG_BUFSZ-1);
+    int len = MIN((int)(debugtext-ptr), DEBUG_BUFSZ-1);
     strncpy(buf, ptr, len);
     buf[len] = '\0';
 
     /* get bank info */
     while (*debugtext != '/') ++debugtext;
     ++debugtext;
-    int bank = strtol(debugtext, &debugtext, 10);
+    int bank = (int)strtol(debugtext, &debugtext, 10);
     ++debugtext;
 
     /* extract addrs and len */
-    unsigned int addrs = strtol(debugtext, &debugtext, 16);
+    unsigned int addrs = (int)strtol(debugtext, &debugtext, 16);
     while (isspace(*debugtext)) ++debugtext;
-    len = strtol(debugtext, &debugtext, 16);
+    len = (int)strtol(debugtext, &debugtext, 16);
 
     if (addrs+len > 0x10000) {
         sprintf(second_buf[num_buffer_lines++], "buffer length overflow");
@@ -924,7 +924,7 @@ ADDRS	[0-9a-fA-F]+
     }
 
     do {
-        int written = fwrite(apple_ii_64k[bank]+addrs, 1, len, fp);
+        size_t written = fwrite(apple_ii_64k[bank]+addrs, 1, len, fp);
         len -= written;
         addrs += written;
     } while(len);

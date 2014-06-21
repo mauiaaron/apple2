@@ -252,9 +252,9 @@ void cpu_thread(void *dummyptr) {
 #ifndef NDEBUG
             dbg_cycles_executed += cpu65_cycle_count;
 #endif
+#ifdef AUDIO_ENABLED
             unsigned int uExecutedCycles = cpu65_cycle_count;
 
-#ifdef AUDIO_ENABLED
             MB_UpdateCycles(uExecutedCycles);   // Update 6522s (NB. Do this before updating g_nCumulativeCycles below)
 
             // N.B.: IO calls that depend on accurate timing will update g_nCyclesExecuted

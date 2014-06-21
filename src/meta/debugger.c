@@ -42,6 +42,7 @@ int arg1, arg2, arg3;                   /* command arguments */
 int breakpoints[MAX_BRKPTS];            /* memory breakpoints */
 int watchpoints[MAX_BRKPTS];            /* memory watchpoints */
 
+#ifdef INTERFACE_CLASSIC
 /* debugger globals */
 //1.  5.  10.  15.  20.  25.  30.  35.  40.  45.  50.  55.  60.  65.  70.  75.  80.",
 static char screen[SCREEN_Y][SCREEN_X] =
@@ -71,6 +72,7 @@ static char screen[SCREEN_Y][SCREEN_X] =
   "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||" };
 
 static char command_buf[BUF_Y][BUF_X];  /* command line prompt */
+#endif
 char lexbuf[BUF_X+2];                   /* comman line to be flex'ed */
 
 uint8_t current_opcode;
@@ -455,7 +457,7 @@ void set_lc_mem(int addrs, int lcbank, char *hexstr) {
    ------------------------------------------------------------------------- */
 void bload(FILE *f, char *name, int bank, int addrs) {
     uint8_t *hexstr = NULL;
-    int len = -1;
+    size_t len = -1;
     uint8_t data;
 
     if ((addrs < 0) || (addrs > 0xffff))
@@ -995,7 +997,9 @@ void show_misc_info() {
    ------------------------------------------------------------------------- */
 void show_disk_info() {
     static char tmp[32];
-    int i = num_buffer_lines, len = 0, off = 19;
+    int i = num_buffer_lines;
+    size_t len = 0;
+    int off = 19;
 
     /* generic information */
     sprintf(second_buf[i++], "drive %s", (disk6.drive) ? "B" : "A");
@@ -1126,7 +1130,7 @@ static int begin_cpu_stepping() {
     g_bFullSpeed = true;
 
     unsigned int idx = 0;
-    unsigned int textlen = 0;
+    size_t textlen = 0;
     if (stepping_struct.step_text) {
         textlen = strlen(stepping_struct.step_text);
     }

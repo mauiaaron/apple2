@@ -134,7 +134,6 @@ static char zlibmenu[ZLIB_SUBMENU_H][ZLIB_SUBMENU_W+1] =
    ------------------------------------------------------------------------- */
 
 void c_eject_6(int drive) {
-    int ch = -1;
 
     if (disk6.disk[drive].compressed)
     {
@@ -146,7 +145,7 @@ void c_eject_6(int drive) {
 #ifdef INTERFACE_CLASSIC
             snprintf(&zlibmenu[4][2], 37, "%s", err);
             c_interface_print_submenu_centered(zlibmenu[0], ZLIB_SUBMENU_W, ZLIB_SUBMENU_H);
-            while ((ch = c_mygetch(1)) == -1) {
+            while ((int ch = c_mygetch(1)) == -1) {
                 // ...
             }
 #endif
@@ -174,7 +173,6 @@ void c_eject_6(int drive) {
    ------------------------------------------------------------------------- */
 int c_new_diskette_6(int drive, const char * const raw_file_name, int force) {
     struct stat buf;
-    int ch = -1;
 
     /* uncompress the gziped disk */
     char *file_name = strdup(raw_file_name);
@@ -194,7 +192,7 @@ int c_new_diskette_6(int drive, const char * const raw_file_name, int force) {
 #ifdef INTERFACE_CLASSIC
             snprintf(&zlibmenu[4][2], 37, "%s", err);
             c_interface_print_submenu_centered(zlibmenu[0], ZLIB_SUBMENU_W, ZLIB_SUBMENU_H);
-            while ((ch = c_mygetch(1)) == -1) {
+            while ((int ch = c_mygetch(1)) == -1) {
                 // ...
             }
 #endif

@@ -75,14 +75,6 @@ static const struct match_table prefs_table[] =
     { 0, PRM_NONE }
 };
 
-static const struct match_table modes_table[] =
-{
-    { "][+", II_MODE },
-    { "][+ undocumented", IIU_MODE },
-    { "//e", IIE_MODE },
-    { 0, IIE_MODE }
-};
-
 static const struct match_table color_table[] =
 {
     { "black/white", COLOR_NONE },
@@ -379,7 +371,7 @@ bool save_settings(void)
 
 #define ERROR_SUBMENU_H 9
 #define ERROR_SUBMENU_W 40
-    int ch = -1;
+#ifdef INTERFACE_CLASSIC
     char submenu[ERROR_SUBMENU_H][ERROR_SUBMENU_W+1] =
     //1.  5.  10.  15.  20.  25.  30.  35.  40.
     { "||||||||||||||||||||||||||||||||||||||||",
@@ -391,6 +383,7 @@ bool save_settings(void)
       "|                                      |",
       "|                                      |",
       "||||||||||||||||||||||||||||||||||||||||" };
+#endif
 
     config_file = fopen(config_filename, "w");
     if (config_file == NULL)
@@ -398,7 +391,7 @@ bool save_settings(void)
         PREFS_ERRPRINT();
 #ifdef INTERFACE_CLASSIC
         c_interface_print_submenu_centered(submenu[0], ERROR_SUBMENU_W, ERROR_SUBMENU_H);
-        while ((ch = c_mygetch(1)) == -1)
+        while ((int ch = c_mygetch(1)) == -1)
         {
         }
 #endif

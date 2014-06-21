@@ -92,7 +92,7 @@ const char *def(const char* const src, const int expected_bytecount)
             }
 
             if (buflen > 0) {
-                int written = gzwrite(gzdest, buf, buflen);
+                size_t written = gzwrite(gzdest, buf, buflen);
                 if (written < buflen) {
                     ERRLOG("OOPS gzwrite ...");
                     break;
@@ -158,7 +158,7 @@ const char *inf(const char* const src, int *rawcount)
             break;
         }
 
-        int len = strlen(src);
+        size_t len = strlen(src);
         char dst[PATH_MAX];
         snprintf(dst, PATH_MAX-1, "%s", src);
         if (! ( (dst[len-3] == '.') && (dst[len-2] == 'g') && (dst[len-1] == 'z') ) ) {
