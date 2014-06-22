@@ -67,13 +67,13 @@ int main(int argc, const char *argv[]) {
         error = true;
         do {
             if (idx >= argc) {
-                fprintf(stderr, "rom file unspecified\n");
+                fprintf(stderr, "WARNING : rom file unspecified\n");
                 break;
             }
 
             fp = fopen(argv[idx], "r");
             if (!fp) {
-                fprintf(stderr, "cannot open %s\n", argv[idx]);
+                fprintf(stderr, "WARNING : cannot open %s\n", argv[idx]);
                 break;
             }
 
@@ -84,14 +84,14 @@ int main(int argc, const char *argv[]) {
 
             num = fread(buf, 1, sizes[idx], fp);
             if (num != sizes[idx]) {
-                fprintf(stderr, "rom file size %d mismatched with expected %d\n", num, sizes[idx]);
+                fprintf(stderr, "WARNING : rom file size %u mismatched with expected %u\n", (unsigned int)num, (unsigned int)sizes[idx]);
                 break;
             }
 
             fclose(fp);
 
             printf("\nbool %s = true;\n", bools[idx]);
-            printf("\nuint8_t %s[%u] = {", roms[idx], sizes[idx]);
+            printf("\nuint8_t %s[%u] = {", roms[idx], (unsigned int)sizes[idx]);
             convert_rom(buf, sizes[idx]);
             printf("\n};\n");
 
@@ -100,7 +100,7 @@ int main(int argc, const char *argv[]) {
 
         if (error) {
             printf("\nbool %s = false;\n", bools[idx]);
-            printf("\nuint8_t %s[%u] = { 0 };\n", roms[idx], sizes[idx]);
+            printf("\nuint8_t %s[%u] = { 0 };\n", roms[idx], (unsigned int)sizes[idx]);
         }
 
         if (buf) {
@@ -110,6 +110,6 @@ int main(int argc, const char *argv[]) {
 
     } while(roms[++idx] != NULL);
 
-    return error;
+    return 0; // no error so build can continue
 }
 
