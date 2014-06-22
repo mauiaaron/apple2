@@ -21,8 +21,8 @@
 #define NIB_SIZE 232960
 #define DSK_SIZE 143360
 
-static unsigned char slot6_rom[256];
-static int slot6_rom_loaded = 0;
+extern uint8_t slot6_rom[256];
+extern bool slot6_rom_loaded;
 
 struct drive disk6;
 
@@ -781,7 +781,7 @@ void disk_io_initialize(unsigned int slot)
         }
 
         fclose(f);
-        slot6_rom_loaded = 1;
+        slot6_rom_loaded = true;
     }
 
     memcpy(apple_ii_64k[0] + 0xC600, slot6_rom, 0x100);

@@ -20,7 +20,8 @@
     internal apple2 variables
    ---------------------------------- */
 
-static unsigned char apple_iie_rom[32768];              /* //e */
+extern uint8_t apple_iie_rom[32768];
+extern bool iie_rom_loaded;
 
 bool do_logging = true; // also controlled by NDEBUG
 FILE *error_log = NULL;
@@ -453,7 +454,6 @@ void c_initialize_apple_ii_memory()
 {
     FILE       *f;
     int i;
-    static int iie_rom_loaded = 0;
 
     for (i = 0; i < 0x10000; i++)
     {

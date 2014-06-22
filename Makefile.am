@@ -21,7 +21,7 @@ noinst_HEADERS = src/apple2.h src/common.h src/cpu.h src/disk.h src/glue.h \
 	src/audio/soundcore-openal.h src/audio/speaker.h \
 	src/audio/SSI263Phonemes.h src/audio/win-shim.h
 
-noinst_PROGRAMS = genfont
+noinst_PROGRAMS = genfont genrom
 
 ###############################################################################
 # Apple //ix and supporting sources
@@ -57,7 +57,7 @@ EXTRA_apple2ix_SOURCES = \
 	\
 	$(META_SRC)
 
-apple2ix_SOURCES = src/font.c src/misc.c src/display.c src/vm.c \
+apple2ix_SOURCES = src/font.c src/rom.c src/misc.c src/display.c src/vm.c \
 	src/timing.c src/zlib-helpers.c src/joystick.c src/keys.c src/prefs.c \
 	src/disk.c src/cpu-supp.c
 
@@ -68,8 +68,13 @@ apple2ix_DEPENDENCIES = @ASM_O@ @INTERFACE_O@ @VIDEO_O@ @AUDIO_O@ @META_O@
 
 genfont_SOURCES = src/genfont.c
 
+genrom_SOURCES = src/genrom.c
+
 src/font.c: src/font.txt genfont
 	./genfont < $< > $@
+
+src/rom.c: src/rom/apple_IIe.rom src/rom/slot6.rom genrom
+	./genrom $^ > $@
 
 src/x86/glue.S: src/disk.c src/misc.c src/display.c src/vm.c @AUDIO_GLUE_C@
 	./src/x86/genglue $^ > $@
@@ -126,4 +131,4 @@ EXTRA_DIST = reconf.sh configure README.debugger PROBLEMS .apple2 \
 	src/font.txt \
 	src/x86/genglue
 
-CLEANFILES = src/font.c src/meta/debug.c src/x86/glue.S
+CLEANFILES = src/font.c src/rom.c src/meta/debug.c src/x86/glue.S

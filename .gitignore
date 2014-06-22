@@ -44,12 +44,14 @@ apple2ix*.tar.gz
 test-driver
 
 # generated sources
+src/rom.c
 src/x86/glue.S
 src/meta/debug.c
 
 # generated binaries
 apple2ix
 genfont
+genrom
 
 # man testing
 man
