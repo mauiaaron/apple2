@@ -18,11 +18,11 @@
 #include "apple2.h"
 #include "misc.h"
 
-#define DebugCurrEA     SN(_cpu65_ea)
-#define DebugCurrByte   SN(_cpu65_d)
-#define DebugCurrRW     SN(_cpu65_rw)
-#define DebugCurrOpcode SN(_cpu65_opcode)
-#define DebugCycleCount SN(_cpu65_opcycles)
+#define DebugCurrEA     SN(cpu65_ea)
+#define DebugCurrByte   SN(cpu65_d)
+#define DebugCurrRW     SN(cpu65_rw)
+#define DebugCurrOpcode SN(cpu65_opcode)
+#define DebugCycleCount SN(cpu65_opcycles)
 
 /* -------------------------------------------------------------------------
     CPU (6502) Helper Routines
@@ -2111,13 +2111,13 @@ E(cpu65_run)
                 // Restore CPU state when being called from C.
                 movLQ   $0x0100, SP_Reg_X
                 movzwLQ DebugCurrEA, EffectiveAddr_X
-                movzwLQ SN(_cpu65_pc), PC_Reg_X
-                movzbLQ SN(_cpu65_a), AF_Reg_X
-                movzbLQ SN(_cpu65_f), _XAX
+                movzwLQ SN(cpu65_pc), PC_Reg_X
+                movzbLQ SN(cpu65_a), AF_Reg_X
+                movzbLQ SN(cpu65_f), _XAX
                 movb    SNX(cpu65_flags_decode,_XAX,1), F_Reg
-                movzbLQ SN(_cpu65_x), XY_Reg_X
-                movb    SN(_cpu65_y), Y_Reg
-                movb    SN(_cpu65_sp), SP_Reg_L
+                movzbLQ SN(cpu65_x), XY_Reg_X
+                movb    SN(cpu65_y), Y_Reg
+                movb    SN(cpu65_sp), SP_Reg_L
 #ifdef APPLE2_VM
                 RestoreAltZP
 #endif
@@ -2136,15 +2136,15 @@ E(cpu65_run)
 exit_cpu65_run:
                 // Save CPU state when returning from being called from C
                 movw    EffectiveAddr, DebugCurrEA
-                movw    PC_Reg, SN(_cpu65_pc)
-                movb    A_Reg, SN(_cpu65_a)
+                movw    PC_Reg, SN(cpu65_pc)
+                movb    A_Reg, SN(cpu65_a)
                 xorw    %ax, %ax
                 movb    F_Reg, %al
                 movb    SNX(cpu65_flags_encode,_XAX,1), %al
-                movb    %al, SN(_cpu65_f)
-                movb    X_Reg, SN(_cpu65_x)
-                movb    Y_Reg, SN(_cpu65_y)
-                movb    SP_Reg_L, SN(_cpu65_sp)
+                movb    %al, SN(cpu65_f)
+                movb    X_Reg, SN(cpu65_x)
+                movb    Y_Reg, SN(cpu65_y)
+                movb    SP_Reg_L, SN(cpu65_sp)
                 jmp     exit_frame
 
 emul_reinit:    movb    $0, SN(cpu65__signal)

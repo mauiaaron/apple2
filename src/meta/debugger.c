@@ -146,7 +146,7 @@ int c_get_current_rambank(int addrs) {
     get_last_opcode () - returns the last executed opcode
    ------------------------------------------------------------------------- */
 uint8_t get_last_opcode() {
-    return cpu65_debug.opcode;
+    return cpu65_opcode;
 }
 
 /* -------------------------------------------------------------------------
@@ -154,25 +154,25 @@ uint8_t get_last_opcode() {
         the PC is currently reading from.
    ------------------------------------------------------------------------- */
 uint8_t get_current_opcode() {
-    int bank = c_get_current_rambank(cpu65_current.pc);
+    int bank = c_get_current_rambank(cpu65_pc);
     int lcbank = 0;
 
     /* main RAM */
-    if (cpu65_current.pc < 0xD000)
+    if (cpu65_pc < 0xD000)
     {
-        return apple_ii_64k[bank][cpu65_current.pc];
+        return apple_ii_64k[bank][cpu65_pc];
     }
 
     /* LC RAM */
-    if (cpu65_current.pc >= 0xE000)
+    if (cpu65_pc >= 0xE000)
     {
         if (softswitches & SS_LCRAM)
         {
-            return language_card[bank][cpu65_current.pc-0xE000];
+            return language_card[bank][cpu65_pc-0xE000];
         }
         else
         {
-            return apple_ii_64k[bank][cpu65_current.pc];
+            return apple_ii_64k[bank][cpu65_pc];
         }
     }
 
@@ -184,11 +184,11 @@ uint8_t get_current_opcode() {
 
     if (softswitches & SS_LCRAM)
     {
-        return language_banks[bank][cpu65_current.pc-0xD000+lcbank];
+        return language_banks[bank][cpu65_pc-0xD000+lcbank];
     }
     else
     {
-        return apple_ii_64k[bank][cpu65_current.pc];
+        return apple_ii_64k[bank][cpu65_pc];
     }
 }
 
@@ -216,7 +216,7 @@ void dump_mem(int addrs, int len, int lc, int do_ascii, int rambank) {
 
     if ((addrs < 0) || (addrs > 0xffff))
     {
-        addrs = cpu65_current.pc;
+        addrs = cpu65_pc;
         orig_addrs = addrs;
     }
 
@@ -313,10 +313,10 @@ void search_mem(char *hexstr, int lc, int rambank) {
 
     end = (lc) ? 0x3000 : 0x10000;
 
-    /* check which rambank for cpu65_current.pc */
+    /* check which rambank for cpu65_pc */
     if (rambank == -1)
     {
-        rambank = c_get_current_rambank(cpu65_current.pc);
+        rambank = c_get_current_rambank(cpu65_pc);
     }
 
     /* iterate over memory */
@@ -507,7 +507,7 @@ void disasm(int addrs, int len, int lc, int rambank) {
     char arg1, arg2;
     int i, j, k, end, orig_addrs = addrs;
 
-    /* check which rambank for cpu65_current.pc */
+    /* check which rambank for cpu65_pc */
     if (rambank == -1)
     {
         rambank = c_get_current_rambank(addrs);
@@ -522,7 +522,7 @@ void disasm(int addrs, int len, int lc, int rambank) {
     /* handle invalid address request */
     if ((addrs < 0) || (addrs > 0xffff))
     {
-        addrs = cpu65_current.pc;
+        addrs = cpu65_pc;
         orig_addrs = addrs;
     }
 
@@ -664,46 +664,46 @@ void disasm(int addrs, int len, int lc, int rambank) {
    ------------------------------------------------------------------------- */
 
 void show_regs() {
-    sprintf(second_buf[num_buffer_lines++], "PC = %04X EA = %04X SP = %04X", cpu65_current.pc, cpu65_debug.ea, cpu65_current.sp + 0x0100);
-    sprintf(second_buf[num_buffer_lines++], "X = %02X Y = %02X A = %02X F = %02X", cpu65_current.x, cpu65_current.y, cpu65_current.a, cpu65_current.f);
+    sprintf(second_buf[num_buffer_lines++], "PC = %04X EA = %04X SP = %04X", cpu65_pc, cpu65_ea, cpu65_sp + 0x0100);
+    sprintf(second_buf[num_buffer_lines++], "X = %02X Y = %02X A = %02X F = %02X", cpu65_x, cpu65_y, cpu65_a, cpu65_f);
 
     memset(second_buf[num_buffer_lines], ' ', BUF_X);
-    if (cpu65_current.f & C_Flag_6502)
+    if (cpu65_f & C_Flag_6502)
     {
         second_buf[num_buffer_lines][0]='C';
     }
 
-    if (cpu65_current.f & X_Flag_6502)
+    if (cpu65_f & X_Flag_6502)
     {
         second_buf[num_buffer_lines][1]='X';
     }
 
-    if (cpu65_current.f & I_Flag_6502)
+    if (cpu65_f & I_Flag_6502)
     {
         second_buf[num_buffer_lines][2]='I';
     }
 
-    if (cpu65_current.f & V_Flag_6502)
+    if (cpu65_f & V_Flag_6502)
     {
         second_buf[num_buffer_lines][3]='V';
     }
 
-    if (cpu65_current.f & B_Flag_6502)
+    if (cpu65_f & B_Flag_6502)
     {
         second_buf[num_buffer_lines][4]='B';
     }
 
-    if (cpu65_current.f & D_Flag_6502)
+    if (cpu65_f & D_Flag_6502)
     {
         second_buf[num_buffer_lines][5]='D';
     }
 
-    if (cpu65_current.f & Z_Flag_6502)
+    if (cpu65_f & Z_Flag_6502)
     {
         second_buf[num_buffer_lines][6]='Z';
     }
 
-    if (cpu65_current.f & N_Flag_6502)
+    if (cpu65_f & N_Flag_6502)
     {
         second_buf[num_buffer_lines][7]='N';
     }
@@ -726,23 +726,23 @@ static int will_branch() {
     switch (op)
     {
     case 0x10:                          /* BPL */
-        return (int) !(cpu65_current.f & N_Flag_6502);
+        return (int) !(cpu65_f & N_Flag_6502);
     case 0x30:                          /* BMI */
-        return (int) (cpu65_current.f & N_Flag_6502);
+        return (int) (cpu65_f & N_Flag_6502);
     case 0x50:                          /* BVC */
-        return (int) !(cpu65_current.f & V_Flag_6502);
+        return (int) !(cpu65_f & V_Flag_6502);
     case 0x70:                          /* BVS */
-        return (int) (cpu65_current.f & V_Flag_6502);
+        return (int) (cpu65_f & V_Flag_6502);
     case 0x80:                          /* BRA */
         return 1;
     case 0x90:                          /* BCC */
-        return (int) !(cpu65_current.f & C_Flag_6502);
+        return (int) !(cpu65_f & C_Flag_6502);
     case 0xb0:                          /* BCS */
-        return (int) (cpu65_current.f & C_Flag_6502);
+        return (int) (cpu65_f & C_Flag_6502);
     case 0xd0:                          /* BNE */
-        return (int) !(cpu65_current.f & Z_Flag_6502);
+        return (int) !(cpu65_f & Z_Flag_6502);
     case 0xf0:                          /* BEQ */
-        return (int) (cpu65_current.f & Z_Flag_6502);
+        return (int) (cpu65_f & Z_Flag_6502);
     }
 
     return BRANCH_NA;
@@ -859,28 +859,28 @@ int at_haltpt() {
     uint8_t op = get_last_opcode();
     if (op_breakpoints[op])
     {
-        sprintf(second_buf[num_buffer_lines++], "stopped at %04X bank %d instruction %02X", cpu65_current.pc, c_get_current_rambank(cpu65_current.pc), op);
+        sprintf(second_buf[num_buffer_lines++], "stopped at %04X bank %d instruction %02X", cpu65_pc, c_get_current_rambank(cpu65_pc), op);
         ++count;
     }
 
     for (int i = 0; i < MAX_BRKPTS; i++)
     {
-        if (cpu65_current.pc == breakpoints[i])
+        if (cpu65_pc == breakpoints[i])
         {
-            sprintf(second_buf[num_buffer_lines++], "stopped at %04X bank %d", breakpoints[i], c_get_current_rambank(cpu65_current.pc));
+            sprintf(second_buf[num_buffer_lines++], "stopped at %04X bank %d", breakpoints[i], c_get_current_rambank(cpu65_pc));
             ++count;
         }
     }
 
-    if (cpu65_debug.rw)   /* only check watchpoints if read/write occured */
+    if (cpu65_rw)   /* only check watchpoints if read/write occured */
     {
         for (int i = 0; i < MAX_BRKPTS; i++)
         {
-            if (cpu65_debug.ea == watchpoints[i])
+            if (cpu65_ea == watchpoints[i])
             {
-                if (cpu65_debug.rw & 0x2)
+                if (cpu65_rw & 0x2)
                 {
-                    sprintf(second_buf[num_buffer_lines++], "wrote: %04X: %02X", watchpoints[i], cpu65_debug.d);
+                    sprintf(second_buf[num_buffer_lines++], "wrote: %04X: %02X", watchpoints[i], cpu65_d);
                     ++count;
                 }
                 else
@@ -889,7 +889,7 @@ int at_haltpt() {
                     ++count;
                 }
 
-                cpu65_debug.rw = 0; /* only allow WP to trip once */
+                cpu65_rw = 0; /* only allow WP to trip once */
             }
         }
     }
@@ -1233,7 +1233,7 @@ bool c_debugger_should_break() {
 
             case UNTILING:
             {
-                if (stepping_struct.step_pc == cpu65_current.pc) {
+                if (stepping_struct.step_pc == cpu65_pc) {
                     stepping_struct.should_break = true;
                 }
             }
@@ -1275,7 +1275,7 @@ int debugger_go(stepping_struct_t s) {
 #if !defined(TESTING)
     if (stepping_struct.step_type != LOADING) {
         clear_debugger_screen();
-        disasm(cpu65_current.pc, 1, 0, -1);
+        disasm(cpu65_pc, 1, 0, -1);
         int branch = will_branch();
         if (branch != BRANCH_NA) {
             sprintf(second_buf[num_buffer_lines++], "%s", (branch) ? "will branch" : "will not branch");

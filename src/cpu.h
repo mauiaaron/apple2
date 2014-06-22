@@ -23,24 +23,18 @@
 
 /* types */
 
-struct cpu65_state
-{
-    uint16_t pc;        /* Program counter */
-    uint8_t a;          /* Accumulator */
-    uint8_t f;          /* Flags (host-order) */
-    uint8_t x;          /* X Index register */
-    uint8_t y;          /* Y Index register */
-    uint8_t sp;         /* Stack Pointer */
-};
+extern uint16_t cpu65_pc;       // Program counter
+extern uint8_t  cpu65_a;        // Accumulator
+extern uint8_t  cpu65_f;        // Flags (host-order)
+extern uint8_t  cpu65_x;        // X Index register
+extern uint8_t  cpu65_y;        // Y Index register
+extern uint8_t  cpu65_sp;       // Stack Pointer
 
-struct cpu65_extra
-{
-    uint16_t ea;        /* Last effective address */
-    uint8_t d;          /* Last data byte written */
-    uint8_t rw;         /* 1 = read occured, 2 = write, 3 = both */
-    uint8_t opcode;     /* Last opcode */
-    uint8_t opcycles;   /* Last opcode extra cycles */
-};
+extern uint16_t cpu65_ea;       // Last effective address
+extern uint8_t  cpu65_d;        // Last data byte written
+extern uint8_t  cpu65_rw;       // 1 = read occured, 2 = write, 3 = both
+extern uint8_t  cpu65_opcode;   // Last opcode
+extern uint8_t  cpu65_opcycles; // Last opcode extra cycles
 
 /* Set up the processor for a new run. Sets up opcode table. */
 extern void cpu65_init();
@@ -55,8 +49,6 @@ extern void cpu65_direct_write(int ea,int data);
 
 extern void *cpu65_vmem_r[65536];
 extern void *cpu65_vmem_w[65536];
-extern struct cpu65_state cpu65_current;
-extern struct cpu65_extra cpu65_debug;
 
 extern unsigned char cpu65_flags_encode[256];
 extern unsigned char cpu65_flags_decode[256];
