@@ -39,6 +39,8 @@
 		773B3DC519568AAA0085CE5F /* testcpu.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D7E19568A570085CE5F /* testcpu.c */; };
 		773B3DCB1956903D0085CE5F /* libz.1.1.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 773B3DCA1956903D0085CE5F /* libz.1.1.3.dylib */; };
 		773B3DD3195697290085CE5F /* EmulatorView.m in Sources */ = {isa = PBXBuildFile; fileRef = 773B3DD2195697290085CE5F /* EmulatorView.m */; };
+		779DD827195764E200DF89E5 /* rom-shim.c in Sources */ = {isa = PBXBuildFile; fileRef = 779DD826195764E200DF89E5 /* rom-shim.c */; };
+		779DD8281957653F00DF89E5 /* rom-shim.c in Sources */ = {isa = PBXBuildFile; fileRef = 779DD826195764E200DF89E5 /* rom-shim.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -114,6 +116,7 @@
 		773B3DCA1956903D0085CE5F /* libz.1.1.3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.1.1.3.dylib; path = usr/lib/libz.1.1.3.dylib; sourceTree = SDKROOT; };
 		773B3DD1195697290085CE5F /* EmulatorView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EmulatorView.h; sourceTree = "<group>"; };
 		773B3DD2195697290085CE5F /* EmulatorView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EmulatorView.m; sourceTree = "<group>"; };
+		779DD826195764E200DF89E5 /* rom-shim.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = "rom-shim.c"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -263,6 +266,7 @@
 				773B3D7619568A570085CE5F /* misc.h */,
 				773B3D7719568A570085CE5F /* prefs.c */,
 				773B3D7819568A570085CE5F /* prefs.h */,
+				779DD826195764E200DF89E5 /* rom-shim.c */,
 				773B3D8719568A570085CE5F /* timing.c */,
 				773B3D8819568A570085CE5F /* timing.h */,
 				773B3D8919568A570085CE5F /* uthash.h */,
@@ -460,6 +464,7 @@
 				773B3DBC19568A570085CE5F /* timing.c in Sources */,
 				773B3DAF19568A570085CE5F /* misc.c in Sources */,
 				773B3DAE19568A570085CE5F /* opcodes.c in Sources */,
+				779DD827195764E200DF89E5 /* rom-shim.c in Sources */,
 				773B3DC319568A570085CE5F /* zlib-helpers.c in Sources */,
 				773B3DA219568A570085CE5F /* darwin-shim.c in Sources */,
 				773B3D231956885A0085CE5F /* AppDelegate.m in Sources */,
@@ -481,6 +486,7 @@
 				773B3DC419568AA70085CE5F /* testcommon.c in Sources */,
 				773B3D3A1956885A0085CE5F /* Apple2MacTests.m in Sources */,
 				773B3DC519568AAA0085CE5F /* testcpu.c in Sources */,
+				779DD8281957653F00DF89E5 /* rom-shim.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

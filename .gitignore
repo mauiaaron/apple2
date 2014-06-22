@@ -48,6 +48,9 @@ src/rom.c
 src/x86/glue.S
 src/meta/debug.c
 
+# sub{tree,module}
+src/rom
+
 # generated binaries
 apple2ix
 genfont
