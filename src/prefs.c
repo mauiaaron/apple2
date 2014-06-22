@@ -372,6 +372,7 @@ bool save_settings(void)
 #define ERROR_SUBMENU_H 9
 #define ERROR_SUBMENU_W 40
 #ifdef INTERFACE_CLASSIC
+    int ch = -1;
     char submenu[ERROR_SUBMENU_H][ERROR_SUBMENU_W+1] =
     //1.  5.  10.  15.  20.  25.  30.  35.  40.
     { "||||||||||||||||||||||||||||||||||||||||",
@@ -391,7 +392,7 @@ bool save_settings(void)
         PREFS_ERRPRINT();
 #ifdef INTERFACE_CLASSIC
         c_interface_print_submenu_centered(submenu[0], ERROR_SUBMENU_W, ERROR_SUBMENU_H);
-        while ((int ch = c_mygetch(1)) == -1)
+        while ((ch = c_mygetch(1)) == -1)
         {
         }
 #endif

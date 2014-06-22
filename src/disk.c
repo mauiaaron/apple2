@@ -143,9 +143,10 @@ void c_eject_6(int drive) {
         {
             ERRLOG("OOPS: An error occurred when attempting to compress a disk image : %s", err);
 #ifdef INTERFACE_CLASSIC
+            int ch = -1;
             snprintf(&zlibmenu[4][2], 37, "%s", err);
             c_interface_print_submenu_centered(zlibmenu[0], ZLIB_SUBMENU_W, ZLIB_SUBMENU_H);
-            while ((int ch = c_mygetch(1)) == -1) {
+            while ((ch = c_mygetch(1)) == -1) {
                 // ...
             }
 #endif
@@ -190,9 +191,10 @@ int c_new_diskette_6(int drive, const char * const raw_file_name, int force) {
         {
             ERRLOG("OOPS: An error occurred when attempting to inflate/load a disk image : %s", err);
 #ifdef INTERFACE_CLASSIC
+            int ch = -1;
             snprintf(&zlibmenu[4][2], 37, "%s", err);
             c_interface_print_submenu_centered(zlibmenu[0], ZLIB_SUBMENU_W, ZLIB_SUBMENU_H);
-            while ((int ch = c_mygetch(1)) == -1) {
+            while ((ch = c_mygetch(1)) == -1) {
                 // ...
             }
 #endif

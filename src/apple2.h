@@ -27,7 +27,7 @@
 /* Symbol naming issues */
 #ifdef NO_UNDERSCORES
 #define         SN(foo) foo
-#define         SNX(foo, INDEX, SCALE) _##foo(%rip,INDEX,SCALE)
+#define         SNX(foo, INDEX, SCALE) foo(,INDEX,SCALE)
 #define         E(foo)          .globl foo; .balign 16; foo##:
 #define         CALL(foo) foo
 #else /* !NO_UNDERSCORES */
