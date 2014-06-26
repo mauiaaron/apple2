@@ -14,9 +14,6 @@
 		773B3D231956885A0085CE5F /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D221956885A0085CE5F /* AppDelegate.m */; };
 		773B3D261956885A0085CE5F /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 773B3D241956885A0085CE5F /* MainMenu.xib */; };
 		773B3D281956885A0085CE5F /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 773B3D271956885A0085CE5F /* Images.xcassets */; };
-		773B3D2F1956885A0085CE5F /* XCTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 773B3D2E1956885A0085CE5F /* XCTest.framework */; };
-		773B3D301956885A0085CE5F /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 773B3D0F1956885A0085CE5F /* Cocoa.framework */; };
-		773B3D381956885A0085CE5F /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 773B3D361956885A0085CE5F /* InfoPlist.strings */; };
 		773B3DA019568A570085CE5F /* cpu-supp.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D5D19568A570085CE5F /* cpu-supp.c */; };
 		773B3DA219568A570085CE5F /* darwin-shim.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D6019568A570085CE5F /* darwin-shim.c */; };
 		773B3DA319568A570085CE5F /* disk.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D6219568A570085CE5F /* disk.c */; };
@@ -34,24 +31,38 @@
 		773B3DBF19568A570085CE5F /* cpu.S in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D9019568A570085CE5F /* cpu.S */; };
 		773B3DC019568A570085CE5F /* darwin-glue.S in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D9119568A570085CE5F /* darwin-glue.S */; };
 		773B3DC319568A570085CE5F /* zlib-helpers.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D9519568A570085CE5F /* zlib-helpers.c */; };
-		773B3DC419568AA70085CE5F /* testcommon.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D7C19568A570085CE5F /* testcommon.c */; };
-		773B3DC519568AAA0085CE5F /* testcpu.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D7E19568A570085CE5F /* testcpu.c */; };
 		773B3DCB1956903D0085CE5F /* libz.1.1.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 773B3DCA1956903D0085CE5F /* libz.1.1.3.dylib */; };
 		773B3DD3195697290085CE5F /* EmulatorView.m in Sources */ = {isa = PBXBuildFile; fileRef = 773B3DD2195697290085CE5F /* EmulatorView.m */; };
 		779DD827195764E200DF89E5 /* rom-shim.c in Sources */ = {isa = PBXBuildFile; fileRef = 779DD826195764E200DF89E5 /* rom-shim.c */; };
-		779DD8281957653F00DF89E5 /* rom-shim.c in Sources */ = {isa = PBXBuildFile; fileRef = 779DD826195764E200DF89E5 /* rom-shim.c */; };
-		779DD82A195765DD00DF89E5 /* Apple2MacCPUTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 779DD829195765DD00DF89E5 /* Apple2MacCPUTests.m */; };
+		779DD82F195BD9F900DF89E5 /* cpu.S in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D9019568A570085CE5F /* cpu.S */; };
+		779DD830195BD9F900DF89E5 /* prefs.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D7719568A570085CE5F /* prefs.c */; };
+		779DD831195BD9F900DF89E5 /* display.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D6419568A570085CE5F /* display.c */; };
+		779DD832195BD9F900DF89E5 /* disk.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D6219568A570085CE5F /* disk.c */; };
+		779DD833195BD9F900DF89E5 /* debugger.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D7319568A570085CE5F /* debugger.c */; };
+		779DD834195BD9F900DF89E5 /* keys.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D6E19568A570085CE5F /* keys.c */; };
+		779DD835195BD9F900DF89E5 /* timing.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D8719568A570085CE5F /* timing.c */; };
+		779DD836195BD9F900DF89E5 /* misc.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D7519568A570085CE5F /* misc.c */; };
+		779DD837195BD9F900DF89E5 /* opcodes.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D7419568A570085CE5F /* opcodes.c */; };
+		779DD838195BD9F900DF89E5 /* rom-shim.c in Sources */ = {isa = PBXBuildFile; fileRef = 779DD826195764E200DF89E5 /* rom-shim.c */; };
+		779DD839195BD9F900DF89E5 /* zlib-helpers.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D9519568A570085CE5F /* zlib-helpers.c */; };
+		779DD83A195BD9F900DF89E5 /* darwin-shim.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D6019568A570085CE5F /* darwin-shim.c */; };
+		779DD83C195BD9F900DF89E5 /* debug.l in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D7219568A570085CE5F /* debug.l */; };
+		779DD83D195BD9F900DF89E5 /* font.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D6519568A570085CE5F /* font.c */; };
+		779DD83E195BD9F900DF89E5 /* cpu-supp.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D5D19568A570085CE5F /* cpu-supp.c */; };
+		779DD83F195BD9F900DF89E5 /* vm.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D8D19568A570085CE5F /* vm.c */; };
+		779DD840195BD9F900DF89E5 /* darwin-glue.S in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D9119568A570085CE5F /* darwin-glue.S */; };
+		779DD842195BD9F900DF89E5 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D1B1956885A0085CE5F /* main.m */; };
+		779DD843195BD9F900DF89E5 /* joystick.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D6C19568A570085CE5F /* joystick.c */; };
+		779DD845195BD9F900DF89E5 /* libz.1.1.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 773B3DCA1956903D0085CE5F /* libz.1.1.3.dylib */; };
+		779DD846195BD9F900DF89E5 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 773B3D0F1956885A0085CE5F /* Cocoa.framework */; };
+		779DD849195BD9F900DF89E5 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 773B3D181956885A0085CE5F /* InfoPlist.strings */; };
+		779DD84A195BD9F900DF89E5 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 773B3D271956885A0085CE5F /* Images.xcassets */; };
+		779DD84B195BD9F900DF89E5 /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = 773B3D1E1956885A0085CE5F /* Credits.rtf */; };
+		779DD84C195BD9F900DF89E5 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 773B3D241956885A0085CE5F /* MainMenu.xib */; };
+		779DD852195BDA3000DF89E5 /* testcpu.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D7E19568A570085CE5F /* testcpu.c */; };
+		779DD853195BDA3400DF89E5 /* testcommon.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D7C19568A570085CE5F /* testcommon.c */; };
+		779DD856195BDB1700DF89E5 /* CPUTestAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 779DD854195BDB1700DF89E5 /* CPUTestAppDelegate.m */; };
 /* End PBXBuildFile section */
-
-/* Begin PBXContainerItemProxy section */
-		773B3D311956885A0085CE5F /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 773B3D04195688590085CE5F /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 773B3D0B195688590085CE5F;
-			remoteInfo = Apple2Mac;
-		};
-/* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		773B3D0C1956885A0085CE5F /* Apple2Mac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Apple2Mac.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -68,9 +79,7 @@
 		773B3D221956885A0085CE5F /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
 		773B3D251956885A0085CE5F /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/MainMenu.xib; sourceTree = "<group>"; };
 		773B3D271956885A0085CE5F /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
-		773B3D2D1956885A0085CE5F /* Apple2MacTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = Apple2MacTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		773B3D2E1956885A0085CE5F /* XCTest.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XCTest.framework; path = Library/Frameworks/XCTest.framework; sourceTree = DEVELOPER_DIR; };
-		773B3D351956885A0085CE5F /* Apple2MacTests-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Apple2MacTests-Info.plist"; sourceTree = "<group>"; };
 		773B3D371956885A0085CE5F /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		773B3D4719568A570085CE5F /* apple2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = apple2.h; sourceTree = "<group>"; };
 		773B3D5C19568A570085CE5F /* common.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = common.h; sourceTree = "<group>"; };
@@ -116,7 +125,10 @@
 		773B3DD1195697290085CE5F /* EmulatorView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EmulatorView.h; sourceTree = "<group>"; };
 		773B3DD2195697290085CE5F /* EmulatorView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EmulatorView.m; sourceTree = "<group>"; };
 		779DD826195764E200DF89E5 /* rom-shim.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = "rom-shim.c"; sourceTree = "<group>"; };
-		779DD829195765DD00DF89E5 /* Apple2MacCPUTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Apple2MacCPUTests.m; sourceTree = "<group>"; };
+		779DD850195BD9F900DF89E5 /* Apple2MacTestCPU.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Apple2MacTestCPU.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		779DD851195BD9F900DF89E5 /* Apple2MacTestCPU-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "Apple2MacTestCPU-Info.plist"; path = "/Users/aaronculliney/Documents/00web/apple2/Apple2Mac/Apple2MacTests/Apple2MacTestCPU-Info.plist"; sourceTree = "<absolute>"; };
+		779DD854195BDB1700DF89E5 /* CPUTestAppDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CPUTestAppDelegate.m; sourceTree = "<group>"; };
+		779DD855195BDB1700DF89E5 /* CPUTestAppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CPUTestAppDelegate.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -129,12 +141,12 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		773B3D2A1956885A0085CE5F /* Frameworks */ = {
+		779DD844195BD9F900DF89E5 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				773B3D301956885A0085CE5F /* Cocoa.framework in Frameworks */,
-				773B3D2F1956885A0085CE5F /* XCTest.framework in Frameworks */,
+				779DD845195BD9F900DF89E5 /* libz.1.1.3.dylib in Frameworks */,
+				779DD846195BD9F900DF89E5 /* Cocoa.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -155,7 +167,7 @@
 			isa = PBXGroup;
 			children = (
 				773B3D0C1956885A0085CE5F /* Apple2Mac.app */,
-				773B3D2D1956885A0085CE5F /* Apple2MacTests.xctest */,
+				779DD850195BD9F900DF89E5 /* Apple2MacTestCPU.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -207,7 +219,8 @@
 		773B3D331956885A0085CE5F /* Apple2MacTests */ = {
 			isa = PBXGroup;
 			children = (
-				779DD829195765DD00DF89E5 /* Apple2MacCPUTests.m */,
+				779DD854195BDB1700DF89E5 /* CPUTestAppDelegate.m */,
+				779DD855195BDB1700DF89E5 /* CPUTestAppDelegate.h */,
 				773B3D7919568A570085CE5F /* test */,
 				773B3D341956885A0085CE5F /* Supporting Files */,
 			);
@@ -217,7 +230,7 @@
 		773B3D341956885A0085CE5F /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
-				773B3D351956885A0085CE5F /* Apple2MacTests-Info.plist */,
+				779DD851195BD9F900DF89E5 /* Apple2MacTestCPU-Info.plist */,
 				773B3D361956885A0085CE5F /* InfoPlist.strings */,
 			);
 			name = "Supporting Files";
@@ -346,23 +359,24 @@
 			productReference = 773B3D0C1956885A0085CE5F /* Apple2Mac.app */;
 			productType = "com.apple.product-type.application";
 		};
-		773B3D2C1956885A0085CE5F /* Apple2MacTests */ = {
+		779DD82C195BD9F900DF89E5 /* Apple2MacTestCPU */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 773B3D401956885A0085CE5F /* Build configuration list for PBXNativeTarget "Apple2MacTests" */;
+			buildConfigurationList = 779DD84D195BD9F900DF89E5 /* Build configuration list for PBXNativeTarget "Apple2MacTestCPU" */;
 			buildPhases = (
-				773B3D291956885A0085CE5F /* Sources */,
-				773B3D2A1956885A0085CE5F /* Frameworks */,
-				773B3D2B1956885A0085CE5F /* Resources */,
+				779DD82D195BD9F900DF89E5 /* ShellScript */,
+				779DD82E195BD9F900DF89E5 /* Sources */,
+				779DD844195BD9F900DF89E5 /* Frameworks */,
+				779DD847195BD9F900DF89E5 /* ShellScript */,
+				779DD848195BD9F900DF89E5 /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				773B3D321956885A0085CE5F /* PBXTargetDependency */,
 			);
-			name = Apple2MacTests;
-			productName = Apple2MacTests;
-			productReference = 773B3D2D1956885A0085CE5F /* Apple2MacTests.xctest */;
-			productType = "com.apple.product-type.bundle.unit-test";
+			name = Apple2MacTestCPU;
+			productName = Apple2Mac;
+			productReference = 779DD850195BD9F900DF89E5 /* Apple2MacTestCPU.app */;
+			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
 
@@ -372,11 +386,6 @@
 			attributes = {
 				LastUpgradeCheck = 0510;
 				ORGANIZATIONNAME = deadc0de.org;
-				TargetAttributes = {
-					773B3D2C1956885A0085CE5F = {
-						TestTargetID = 773B3D0B195688590085CE5F;
-					};
-				};
 			};
 			buildConfigurationList = 773B3D07195688590085CE5F /* Build configuration list for PBXProject "Apple2Mac" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -392,7 +401,7 @@
 			projectRoot = "";
 			targets = (
 				773B3D0B195688590085CE5F /* Apple2Mac */,
-				773B3D2C1956885A0085CE5F /* Apple2MacTests */,
+				779DD82C195BD9F900DF89E5 /* Apple2MacTestCPU */,
 			);
 		};
 /* End PBXProject section */
@@ -409,11 +418,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		773B3D2B1956885A0085CE5F /* Resources */ = {
+		779DD848195BD9F900DF89E5 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				773B3D381956885A0085CE5F /* InfoPlist.strings in Resources */,
+				779DD849195BD9F900DF89E5 /* InfoPlist.strings in Resources */,
+				779DD84A195BD9F900DF89E5 /* Images.xcassets in Resources */,
+				779DD84B195BD9F900DF89E5 /* Credits.rtf in Resources */,
+				779DD84C195BD9F900DF89E5 /* MainMenu.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -435,6 +447,34 @@
 			showEnvVarsInLog = 0;
 		};
 		773B3DC919568BF20085CE5F /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "/bin/rm -f \"$SRCROOT/../src/x86/glue.S\"";
+			showEnvVarsInLog = 0;
+		};
+		779DD82D195BD9F900DF89E5 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"$SRCROOT/../src/x86/genglue\" \"$SRCROOT/../src/disk.c\" \"$SRCROOT/../src/misc.c\" \"$SRCROOT/../src/display.c\" \"$SRCROOT/../src/vm.c\" > \"$SRCROOT/../src/x86/glue.S\"";
+			showEnvVarsInLog = 0;
+		};
+		779DD847195BD9F900DF89E5 /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -479,26 +519,36 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		773B3D291956885A0085CE5F /* Sources */ = {
+		779DD82E195BD9F900DF89E5 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				773B3DC419568AA70085CE5F /* testcommon.c in Sources */,
-				773B3DC519568AAA0085CE5F /* testcpu.c in Sources */,
-				779DD82A195765DD00DF89E5 /* Apple2MacCPUTests.m in Sources */,
-				779DD8281957653F00DF89E5 /* rom-shim.c in Sources */,
+				779DD82F195BD9F900DF89E5 /* cpu.S in Sources */,
+				779DD830195BD9F900DF89E5 /* prefs.c in Sources */,
+				779DD831195BD9F900DF89E5 /* display.c in Sources */,
+				779DD832195BD9F900DF89E5 /* disk.c in Sources */,
+				779DD833195BD9F900DF89E5 /* debugger.c in Sources */,
+				779DD834195BD9F900DF89E5 /* keys.c in Sources */,
+				779DD835195BD9F900DF89E5 /* timing.c in Sources */,
+				779DD853195BDA3400DF89E5 /* testcommon.c in Sources */,
+				779DD836195BD9F900DF89E5 /* misc.c in Sources */,
+				779DD837195BD9F900DF89E5 /* opcodes.c in Sources */,
+				779DD838195BD9F900DF89E5 /* rom-shim.c in Sources */,
+				779DD839195BD9F900DF89E5 /* zlib-helpers.c in Sources */,
+				779DD83A195BD9F900DF89E5 /* darwin-shim.c in Sources */,
+				779DD83C195BD9F900DF89E5 /* debug.l in Sources */,
+				779DD856195BDB1700DF89E5 /* CPUTestAppDelegate.m in Sources */,
+				779DD852195BDA3000DF89E5 /* testcpu.c in Sources */,
+				779DD83D195BD9F900DF89E5 /* font.c in Sources */,
+				779DD83E195BD9F900DF89E5 /* cpu-supp.c in Sources */,
+				779DD83F195BD9F900DF89E5 /* vm.c in Sources */,
+				779DD840195BD9F900DF89E5 /* darwin-glue.S in Sources */,
+				779DD842195BD9F900DF89E5 /* main.m in Sources */,
+				779DD843195BD9F900DF89E5 /* joystick.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
-
-/* Begin PBXTargetDependency section */
-		773B3D321956885A0085CE5F /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 773B3D0B195688590085CE5F /* Apple2Mac */;
-			targetProxy = 773B3D311956885A0085CE5F /* PBXContainerItemProxy */;
-		};
-/* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
 		773B3D181956885A0085CE5F /* InfoPlist.strings */ = {
@@ -657,43 +707,54 @@
 			};
 			name = Release;
 		};
-		773B3D411956885A0085CE5F /* Debug */ = {
+		779DD84E195BD9F900DF89E5 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				BUNDLE_LOADER = "$(BUILT_PRODUCTS_DIR)/Apple2Mac.app/Contents/MacOS/Apple2Mac";
+				ALWAYS_SEARCH_USER_PATHS = YES;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ENABLE_OBJC_ARC = NO;
 				COMBINE_HIDPI_IMAGES = YES;
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(DEVELOPER_FRAMEWORKS_DIR)",
-					"$(inherited)",
-				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Apple2Mac/Apple2Mac-Prefix.pch";
 				GCC_PREPROCESSOR_DEFINITIONS = (
-					"DEBUG=1",
-					"$(inherited)",
+					"APPLE2IX=1",
+					"DEBUGGER=1",
+					"KEYPAD_JOYSTICK=1",
 				);
-				INFOPLIST_FILE = "Apple2MacTests/Apple2MacTests-Info.plist";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				TEST_HOST = "$(BUNDLE_LOADER)";
-				WRAPPER_EXTENSION = xctest;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+				);
+				INFOPLIST_FILE = "Apple2MacTests/Apple2MacTestCPU-Info.plist";
+				PRODUCT_NAME = Apple2MacTestCPU;
+				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/../src";
+				WRAPPER_EXTENSION = app;
 			};
 			name = Debug;
 		};
-		773B3D421956885A0085CE5F /* Release */ = {
+		779DD84F195BD9F900DF89E5 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				BUNDLE_LOADER = "$(BUILT_PRODUCTS_DIR)/Apple2Mac.app/Contents/MacOS/Apple2Mac";
+				ALWAYS_SEARCH_USER_PATHS = YES;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ENABLE_OBJC_ARC = NO;
 				COMBINE_HIDPI_IMAGES = YES;
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(DEVELOPER_FRAMEWORKS_DIR)",
-					"$(inherited)",
-				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Apple2Mac/Apple2Mac-Prefix.pch";
-				INFOPLIST_FILE = "Apple2MacTests/Apple2MacTests-Info.plist";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				TEST_HOST = "$(BUNDLE_LOADER)";
-				WRAPPER_EXTENSION = xctest;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"NDEBUG=1",
+					"APPLE2IX=1",
+					"DEBUGGER=1",
+					"KEYPAD_JOYSTICK=1",
+				);
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+				);
+				INFOPLIST_FILE = "Apple2MacTests/Apple2MacTestCPU-Info.plist";
+				PRODUCT_NAME = Apple2MacTestCPU;
+				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/../src";
+				WRAPPER_EXTENSION = app;
 			};
 			name = Release;
 		};
@@ -718,11 +779,11 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		773B3D401956885A0085CE5F /* Build configuration list for PBXNativeTarget "Apple2MacTests" */ = {
+		779DD84D195BD9F900DF89E5 /* Build configuration list for PBXNativeTarget "Apple2MacTestCPU" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				773B3D411956885A0085CE5F /* Debug */,
-				773B3D421956885A0085CE5F /* Release */,
+				779DD84E195BD9F900DF89E5 /* Debug */,
+				779DD84F195BD9F900DF89E5 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
