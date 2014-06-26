@@ -21,7 +21,11 @@
 #define SP_Reg_L        %dl             /* 6502 Stack pointer low  */
 #define SP_Reg_H        %dh             /* 6502 Stack pointer high */
 #define PC_Reg          %si             /* 6502 Program Counter    */
+#define PC_Reg_L        %sil            /* 6502 PC low             */
+#define PC_Reg_H        %sih            /* 6502 PC high            */
 #define EffectiveAddr   %di             /* Effective address       */
+#define EffectiveAddr_L %dil            /* Effective address low   */
+#define EffectiveAddr_H %dih            /* Effective address high   */
 
 #define X86_CF_Bit 0x0                  /* x86 carry               */
 #define X86_AF_Bit 0x4                  /* x86 adj (nybble carry)  */
@@ -40,6 +44,7 @@
 #   define _XSP             %rsp        /* x86_64 stack pointer    */
 #   define _XAX             %rax        /* scratch                 */
 #   define _XBX             %rbx        /* scratch2                */
+#   define _X8              %r8
 // full-length Apple ][ registers
 #   define XY_Reg_X         %rbx        /* 6502 X&Y flags          */
 #   define AF_Reg_X         %rcx        /* 6502 F&A flags          */
@@ -51,6 +56,7 @@
 #   define andLQ            andq
 #   define callLQ           callq
 #   define decLQ            decq
+#   define leaLQ            leaq
 #   define orLQ             orq
 #   define movLQ            movq
 #   define movzbLQ          movzbq
@@ -85,6 +91,7 @@
 #   define andLQ            andl
 #   define callLQ           calll
 #   define decLQ            decl
+#   define leaLQ            leal
 #   define orLQ             orl
 #   define movLQ            movl
 #   define movzbLQ          movzbl

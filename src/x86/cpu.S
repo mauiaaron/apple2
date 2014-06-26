@@ -31,15 +31,18 @@
 #define GetFromPC_B \
                 movLQ   PC_Reg_X, EffectiveAddr_X; \
                 incw    PC_Reg; \
+                SNX_PROLOGUE(cpu65_vmem_r); \
                 callLQ  *SNX(cpu65_vmem_r,EffectiveAddr_X,SZ_PTR);
 
 #define GetFromPC_W \
                 movLQ   PC_Reg_X, EffectiveAddr_X; \
                 incw    EffectiveAddr; \
                 addw    $2, PC_Reg; \
+                SNX_PROLOGUE(cpu65_vmem_r); \
                 callLQ  *SNX(cpu65_vmem_r,EffectiveAddr_X,SZ_PTR); \
                 decw    EffectiveAddr; \
                 movb    %al, %ah; \
+                SNX_PROLOGUE(cpu65_vmem_r); \
                 callLQ  *SNX(cpu65_vmem_r,EffectiveAddr_X,SZ_PTR);
 
 #define JumpNextInstruction \
@@ -47,34 +50,42 @@
                 movb    %al, DebugCurrOpcode; \
                 movb    $0, DebugCycleCount; \
                 movb    $0, DebugCurrRW; \
+                SNX_PROLOGUE(cpu65__opcodes); \
                 jmp     *SNX(cpu65__opcodes,_XAX,SZ_PTR);
 
 #define GetFromEA_B \
                 orb     $1, DebugCurrRW; \
+                SNX_PROLOGUE(cpu65_vmem_r); \
                 callLQ  *SNX(cpu65_vmem_r,EffectiveAddr_X,SZ_PTR);
 
 #define GetFromEA_W \
                 incw    EffectiveAddr; \
+                SNX_PROLOGUE(cpu65_vmem_r); \
                 callLQ  *SNX(cpu65_vmem_r,EffectiveAddr_X,SZ_PTR); \
                 decw    EffectiveAddr; \
                 movb    %al, %ah; \
+                SNX_PROLOGUE(cpu65_vmem_r); \
                 callLQ  *SNX(cpu65_vmem_r,EffectiveAddr_X,SZ_PTR);
 
 #define PutToEA_B \
                 orb     $2, DebugCurrRW; \
                 movb    %al, DebugCurrByte; \
+                SNX_PROLOGUE(cpu65_vmem_w); \
                 callLQ  *SNX(cpu65_vmem_w,EffectiveAddr_X,SZ_PTR);
 
 #define GetFromMem_B(x) \
                 movLQ   x, EffectiveAddr_X; \
+                SNX_PROLOGUE(cpu65_vmem_r); \
                 callLQ  *SNX(cpu65_vmem_r,EffectiveAddr_X,SZ_PTR);
 
 #define GetFromMem_W(x) \
                 movLQ   x, EffectiveAddr_X; \
                 incw    EffectiveAddr; \
+                SNX_PROLOGUE(cpu65_vmem_r); \
                 callLQ  *SNX(cpu65_vmem_r,EffectiveAddr_X,SZ_PTR); \
                 decw    EffectiveAddr; \
                 movb    %al, %ah; \
+                SNX_PROLOGUE(cpu65_vmem_r); \
                 callLQ  *SNX(cpu65_vmem_r,EffectiveAddr_X,SZ_PTR);
 
 #define Continue \
@@ -132,10 +143,13 @@
                 orb     %ah, F_Reg; \
                 orb     %al, F_Reg;
 
-#define Push(x) movb    x, SNX(apple_ii_64k,SP_Reg_X,1); \
+#define Push(x) \
+                SNX_PROLOGUE(apple_ii_64k); \
+                movb    x, SNX(apple_ii_64k,SP_Reg_X,1); \
                 decb    SP_Reg_L;
 
 #define Pop(x)  incb    SP_Reg_L; \
+                SNX_PROLOGUE(apple_ii_64k); \
                 movb    SNX(apple_ii_64k,SP_Reg_X,1), x;
 
 /* Immediate Addressing - the operand is contained in the second byte of the
@@ -843,11 +857,18 @@ E(op_UNK) /* make undefined opcodes fault */
 E(op_BRK)
                 incw    PC_Reg
                 movw    PC_Reg, %ax
+#ifdef APPLE_ASSEMBLER_IS_BROKEN
+                xchgb   %al, %ah
+                Push(%al)
+                shrw    $8, %ax
+#else
                 Push(%ah)
+#endif
                 Push(%al)
                 orb     $(B_Flag|X_Flag), F_Reg
                 xorw    %ax, %ax 
                 movb    F_Reg, %al
+                SNX_PROLOGUE(cpu65_flags_encode)
                 movb    SNX(cpu65_flags_encode,_XAX,1), %al
                 Push(%al)
                 orb     $I_Flag, F_Reg
@@ -1218,7 +1239,13 @@ E(op_JSR) // 0x20
                 GetAbs
                 movw    PC_Reg, %ax
                 decw    %ax
+#ifdef APPLE_ASSEMBLER_IS_BROKEN
+                xchgb   %al, %ah
+                Push(%al)
+                shrw    $8, %ax
+#else
                 Push(%ah)
+#endif
                 Push(%al)
                 movw    EffectiveAddr, PC_Reg
                 Continue
@@ -1441,6 +1468,7 @@ E(op_PHA) // 0x48
 
 E(op_PHP) // 0x08
                 movb    F_Reg, %al
+                SNX_PROLOGUE(cpu65_flags_encode)
                 movb    SNX(cpu65_flags_encode,_XAX,1), %al
                 Push(%al)
                 Continue
@@ -1460,7 +1488,12 @@ E(op_PHX)
    ---------------------------------- */
 
 E(op_PHY)
+#ifdef APPLE_ASSEMBLER_IS_BROKEN
+                movb Y_Reg, %al
+                Push(%al)
+#else
                 Push(Y_Reg)
+#endif
                 Continue
 
 /* ----------------------------------
@@ -1479,6 +1512,7 @@ E(op_PLA) // 0x68
 
 E(op_PLP) // 0x28
                 Pop(%al)
+                SNX_PROLOGUE(cpu65_flags_decode)
                 movb    SNX(cpu65_flags_decode,_XAX,1), F_Reg
                 orb     $(B_Flag|X_Flag), F_Reg
                 Continue
@@ -1500,7 +1534,12 @@ E(op_PLX)
    ---------------------------------- */
 
 E(op_PLY)
+#ifdef APPLE_ASSEMBLER_IS_BROKEN
+                Pop(%al)
+                movb    %al, Y_Reg
+#else
                 Pop(Y_Reg)
+#endif
                 orb Y_Reg, Y_Reg
                 FlagNZ
                 Continue
@@ -1572,10 +1611,22 @@ E(op_ROR_abs_x) // 0x7e
 
 E(op_RTI) // 0x40
                 Pop(%al)
+                SNX_PROLOGUE(cpu65_flags_decode)
+#ifdef APPLE_ASSEMBLER_IS_BROKEN
+                movb    SNX(cpu65_flags_decode,_XAX,1), %al
+                movb    %al, F_Reg
+#else
                 movb    SNX(cpu65_flags_decode,_XAX,1), F_Reg
+#endif
                 orb     $(B_Flag|X_Flag), F_Reg
                 Pop(%al)
+#ifdef APPLE_ASSEMBLER_IS_BROKEN
+                shlw    $8, %ax
+                Pop(%al)
+                xchgb   %al, %ah
+#else
                 Pop(%ah)
+#endif
                 movw    %ax, PC_Reg
                 Continue
 
@@ -1584,8 +1635,15 @@ E(op_RTI) // 0x40
    ---------------------------------- */
 
 E(op_RTS) // 0x60
+
                 Pop(%al)
+#ifdef APPLE_ASSEMBLER_IS_BROKEN
+                shlw    $8, %ax
+                Pop(%al)
+                xchgb   %al, %ah
+#else
                 Pop(%ah)
+#endif
                 incw    %ax
                 movw    %ax, PC_Reg
                 Continue
@@ -2043,6 +2101,7 @@ E(op_WAI_65c02)
 
 continue:
                 movzbLQ DebugCurrOpcode, _XAX
+                SNX_PROLOGUE(cpu65__opcycles)
                 movb    SNX(cpu65__opcycles,_XAX,1), %al
                 addb    DebugCycleCount, %al
                 movb    %al, DebugCycleCount
@@ -2079,11 +2138,18 @@ ex_irq:         testb   $I_Flag, F_Reg                      // Already interrupt
                 jz      1f
                 JumpNextInstruction                         // Yes (ignored) ...
 1:              movw    PC_Reg, %ax                         // No (handle IRQ) ...
+#ifdef APPLE_ASSEMBLER_IS_BROKEN
+                xchgb   %al, %ah
+                Push(%al)
+                shrw    $8, %ax
+#else
                 Push(%ah)
+#endif
                 Push(%al)
                 orb     $X_Flag, F_Reg
                 xorw    %ax, %ax
                 movb    F_Reg, %al
+                SNX_PROLOGUE(cpu65_flags_encode)
                 movb    SNX(cpu65_flags_encode,_XAX,1), %al
                 Push(%al)
                 orb     $(B_Flag | I_Flag), F_Reg
@@ -2114,7 +2180,13 @@ E(cpu65_run)
                 movzwLQ SN(cpu65_pc), PC_Reg_X
                 movzbLQ SN(cpu65_a), AF_Reg_X
                 movzbLQ SN(cpu65_f), _XAX
+                SNX_PROLOGUE(cpu65_flags_decode)
+#ifdef APPLE_ASSEMBLER_IS_BROKEN
+                movb    SNX(cpu65_flags_decode,_XAX,1), %al
+                movb    %al, %ch
+#else
                 movb    SNX(cpu65_flags_decode,_XAX,1), F_Reg
+#endif
                 movzbLQ SN(cpu65_x), XY_Reg_X
                 movb    SN(cpu65_y), Y_Reg
                 movb    SN(cpu65_sp), SP_Reg_L
@@ -2140,6 +2212,7 @@ exit_cpu65_run:
                 movb    A_Reg, SN(cpu65_a)
                 xorw    %ax, %ax
                 movb    F_Reg, %al
+                SNX_PROLOGUE(cpu65_flags_encode)
                 movb    SNX(cpu65_flags_encode,_XAX,1), %al
                 movb    %al, SN(cpu65_f)
                 movb    X_Reg, SN(cpu65_x)
@@ -2164,6 +2237,7 @@ E(cpu65_direct_write)
                 pushLQ  EffectiveAddr_X
                 movLQ   8(_XSP),EffectiveAddr_X
                 movLQ   12(_XSP),_XAX
+                SNX_PROLOGUE(cpu65_vmem_w)
                 callLQ  *SNX(cpu65_vmem_w,EffectiveAddr_X,SZ_PTR)
                 popLQ   EffectiveAddr_X
                 ret
