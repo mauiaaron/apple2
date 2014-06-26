@@ -17,7 +17,6 @@
 		773B3D2F1956885A0085CE5F /* XCTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 773B3D2E1956885A0085CE5F /* XCTest.framework */; };
 		773B3D301956885A0085CE5F /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 773B3D0F1956885A0085CE5F /* Cocoa.framework */; };
 		773B3D381956885A0085CE5F /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 773B3D361956885A0085CE5F /* InfoPlist.strings */; };
-		773B3D3A1956885A0085CE5F /* Apple2MacTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D391956885A0085CE5F /* Apple2MacTests.m */; };
 		773B3DA019568A570085CE5F /* cpu-supp.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D5D19568A570085CE5F /* cpu-supp.c */; };
 		773B3DA219568A570085CE5F /* darwin-shim.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D6019568A570085CE5F /* darwin-shim.c */; };
 		773B3DA319568A570085CE5F /* disk.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D6219568A570085CE5F /* disk.c */; };
@@ -41,6 +40,7 @@
 		773B3DD3195697290085CE5F /* EmulatorView.m in Sources */ = {isa = PBXBuildFile; fileRef = 773B3DD2195697290085CE5F /* EmulatorView.m */; };
 		779DD827195764E200DF89E5 /* rom-shim.c in Sources */ = {isa = PBXBuildFile; fileRef = 779DD826195764E200DF89E5 /* rom-shim.c */; };
 		779DD8281957653F00DF89E5 /* rom-shim.c in Sources */ = {isa = PBXBuildFile; fileRef = 779DD826195764E200DF89E5 /* rom-shim.c */; };
+		779DD82A195765DD00DF89E5 /* Apple2MacCPUTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 779DD829195765DD00DF89E5 /* Apple2MacCPUTests.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -72,7 +72,6 @@
 		773B3D2E1956885A0085CE5F /* XCTest.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XCTest.framework; path = Library/Frameworks/XCTest.framework; sourceTree = DEVELOPER_DIR; };
 		773B3D351956885A0085CE5F /* Apple2MacTests-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Apple2MacTests-Info.plist"; sourceTree = "<group>"; };
 		773B3D371956885A0085CE5F /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
-		773B3D391956885A0085CE5F /* Apple2MacTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Apple2MacTests.m; sourceTree = "<group>"; };
 		773B3D4719568A570085CE5F /* apple2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = apple2.h; sourceTree = "<group>"; };
 		773B3D5C19568A570085CE5F /* common.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = common.h; sourceTree = "<group>"; };
 		773B3D5D19568A570085CE5F /* cpu-supp.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = "cpu-supp.c"; sourceTree = "<group>"; };
@@ -117,6 +116,7 @@
 		773B3DD1195697290085CE5F /* EmulatorView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EmulatorView.h; sourceTree = "<group>"; };
 		773B3DD2195697290085CE5F /* EmulatorView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EmulatorView.m; sourceTree = "<group>"; };
 		779DD826195764E200DF89E5 /* rom-shim.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = "rom-shim.c"; sourceTree = "<group>"; };
+		779DD829195765DD00DF89E5 /* Apple2MacCPUTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Apple2MacCPUTests.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -207,8 +207,8 @@
 		773B3D331956885A0085CE5F /* Apple2MacTests */ = {
 			isa = PBXGroup;
 			children = (
+				779DD829195765DD00DF89E5 /* Apple2MacCPUTests.m */,
 				773B3D7919568A570085CE5F /* test */,
-				773B3D391956885A0085CE5F /* Apple2MacTests.m */,
 				773B3D341956885A0085CE5F /* Supporting Files */,
 			);
 			path = Apple2MacTests;
@@ -484,8 +484,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				773B3DC419568AA70085CE5F /* testcommon.c in Sources */,
-				773B3D3A1956885A0085CE5F /* Apple2MacTests.m in Sources */,
 				773B3DC519568AAA0085CE5F /* testcpu.c in Sources */,
+				779DD82A195765DD00DF89E5 /* Apple2MacCPUTests.m in Sources */,
 				779DD8281957653F00DF89E5 /* rom-shim.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
