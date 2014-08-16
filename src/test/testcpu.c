@@ -1403,7 +1403,7 @@ TEST test_BPL(int8_t off, bool flag, uint16_t addrs) {
     PASS();
 }
 
-TEST test_BRA(int8_t off, bool flag, uint16_t addrs) {
+TEST test_BRA(volatile int8_t off, volatile bool flag, volatile uint16_t addrs) {
     HEADER0();
 
     cpu65_pc = addrs;
