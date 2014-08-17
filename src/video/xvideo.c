@@ -603,7 +603,7 @@ void video_sync(int block) {
             break;
         }
 
-        c_handle_input(scancode, pressed);
+        c_keys_handle_input(scancode, pressed);
 
     } while (keyevent);
 #endif
