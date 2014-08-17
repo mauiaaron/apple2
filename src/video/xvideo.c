@@ -37,7 +37,6 @@ static unsigned int scale = 1;
 
 static int screen_num;
 static XVisualInfo visualinfo;
-static XColor colors[256];
 static XImage *image=NULL;
 static Colormap cmap;
 static XEvent xevent;
@@ -189,130 +188,6 @@ static void getshm(int size) {
     printf("Using shared memory key=`%c%c%c%c', id=%d, addr=%p\n", (key & 0xff000000)>>24, (key & 0xff0000)>>16, (key & 0xff00)>>8, (key & 0xff), id, image->data);
 }
 #endif
-
-static void c_initialize_colors() {
-    static unsigned char col2[ 3 ] = { 255,255,255 };
-    static int firstcall = 1;
-    int c,i,j;
-
-    /* initialize the colormap */
-    if (firstcall)
-    {
-        firstcall = 0;
-        for (i=0; i<256; i++)
-        {
-            colors[i].pixel = i;
-            colors[i].flags = DoRed|DoGreen|DoBlue;
-        }
-    }
-
-    /* align the palette for hires graphics */
-    for (i = 0; i < 8; i++)
-    {
-        for (j = 0; j < 3; j++)
-        {
-            c = (i & 1) ? col2[ j ] : 0;
-            colors[ j+i*3+32].red = c;
-            c = (i & 2) ? col2[ j ] : 0;
-            colors[ j+i*3+32].green = c;
-            c = (i & 4) ? col2[ j ] : 0;
-            colors[ j+i*3+32].blue = c;
-        }
-    }
-
-    colors[ COLOR_FLASHING_BLACK].red = 0;
-    colors[ COLOR_FLASHING_BLACK].green = 0;
-    colors[ COLOR_FLASHING_BLACK].blue = 0;
-
-    colors[ COLOR_LIGHT_WHITE].red   = (255<<8)|255;
-    colors[ COLOR_LIGHT_WHITE].green = (255<<8)|255;
-    colors[ COLOR_LIGHT_WHITE].blue  = (255<<8)|255;
-
-    colors[ COLOR_FLASHING_WHITE].red   = (255<<8)|255;
-    colors[ COLOR_FLASHING_WHITE].green = (255<<8)|255;
-    colors[ COLOR_FLASHING_WHITE].blue  = (255<<8)|255;
-
-    colors[0x00].red = 0; colors[0x00].green = 0;
-    colors[0x00].blue = 0;   /* Black */
-    colors[0x10].red = 195; colors[0x10].green = 0;
-    colors[0x10].blue = 48;  /* Magenta */
-    colors[0x20].red = 0; colors[0x20].green = 0;
-    colors[0x20].blue = 130; /* Dark Blue */
-    colors[0x30].red = 166; colors[0x30].green = 52;
-    colors[0x30].blue = 170; /* Purple */
-    colors[0x40].red = 0; colors[0x40].green = 146;
-    colors[0x40].blue = 0;   /* Dark Green */
-    colors[0x50].red = 105; colors[0x50].green = 105;
-    colors[0x50].blue = 105; /* Dark Grey*/
-    colors[0x60].red = 113; colors[0x60].green = 24;
-    colors[0x60].blue = 255; /* Medium Blue */
-    colors[0x70].red = 12; colors[0x70].green = 190;
-    colors[0x70].blue = 235; /* Light Blue */
-    colors[0x80].red = 150; colors[0x80].green = 85;
-    colors[0x80].blue = 40; /* Brown */
-    colors[0x90].red = 255; colors[0xa0].green = 24;
-    colors[0x90].blue = 44; /* Orange */
-    colors[0xa0].red = 150; colors[0xa0].green = 170;
-    colors[0xa0].blue = 170; /* Light Gray */
-    colors[0xb0].red = 255; colors[0xb0].green = 158;
-    colors[0xb0].blue = 150; /* Pink */
-    colors[0xc0].red = 0; colors[0xc0].green = 255;
-    colors[0xc0].blue = 0; /* Green */
-    colors[0xd0].red = 255; colors[0xd0].green = 255;
-    colors[0xd0].blue = 0; /* Yellow */
-    colors[0xe0].red = 130; colors[0xe0].green = 255;
-    colors[0xe0].blue = 130; /* Aqua */
-    colors[0xf0].red = 255; colors[0xf0].green = 255;
-    colors[0xf0].blue = 255; /* White */
-
-    /* mirror of lores colors optimized for dhires code */
-    colors[0x00].red = 0; colors[0x00].green = 0;
-    colors[0x00].blue = 0;   /* Black */
-    colors[0x08].red = 195; colors[0x08].green = 0;
-    colors[0x08].blue = 48;  /* Magenta */
-    colors[0x01].red = 0; colors[0x01].green = 0;
-    colors[0x01].blue = 130; /* Dark Blue */
-    colors[0x09].red = 166; colors[0x09].green = 52;
-    colors[0x09].blue = 170; /* Purple */
-    colors[0x02].red = 0; colors[0x02].green = 146;
-    colors[0x02].blue = 0;   /* Dark Green */
-    colors[0x0a].red = 105; colors[0x0A].green = 105;
-    colors[0x0a].blue = 105; /* Dark Grey*/
-    colors[0x03].red = 113; colors[0x03].green = 24;
-    colors[0x03].blue = 255; /* Medium Blue */
-    colors[0x0b].red = 12; colors[0x0b].green = 190;
-    colors[0x0b].blue = 235; /* Light Blue */
-    colors[0x04].red = 150; colors[0x04].green = 85;
-    colors[0x04].blue = 40; /* Brown */
-    colors[0x0c].red = 255; colors[0x0c].green = 24;
-    colors[0x0c].blue = 44; /* Orange */
-    colors[0x05].red = 150; colors[0x05].green = 170;
-    colors[0x05].blue = 170; /* Light Gray */
-    colors[0x0d].red = 255; colors[0x0d].green = 158;
-    colors[0x0d].blue = 150; /* Pink */
-    colors[0x06].red = 0; colors[0x06].green = 255;
-    colors[0x06].blue = 0; /* Green */
-    colors[0x0e].red = 255; colors[0x0e].green = 255;
-    colors[0x0e].blue = 0; /* Yellow */
-    colors[0x07].red = 130; colors[0x07].green = 255;
-    colors[0x07].blue = 130; /* Aqua */
-    colors[0x0f].red = 255; colors[0x0f].green = 255;
-    colors[0x0f].blue = 255; /* White */
-
-    for (i=0; i<16; i++)
-    {
-        colors[i].red = (colors[i].red<<8) | colors[i].red;
-        colors[i].green = (colors[i].green<<8) | colors[i].green;
-        colors[i].blue = (colors[i].blue<<8) | colors[i].blue;
-
-        colors[i<<4].red = (colors[i<<4].red<<8) | colors[i<<4].red;
-        colors[i<<4].green = (colors[i<<4].green<<8) | colors[i<<4].green;
-        colors[i<<4].blue = (colors[i<<4].blue<<8) | colors[i<<4].blue;
-    }
-
-    // store the colors to the current colormap
-    //XStoreColors(display, cmap, colors, 256);
-}
 
 #if !defined(TESTING)
 // Map X keysyms into Apple//ix internal-representation scancodes.
@@ -467,9 +342,9 @@ static void post_image() {
     {
         index = *(fb + i);
         *( (uint32_t*)(image->data + j) ) = (uint32_t)(
-            ((uint32_t)(colors[index].red)   << red_shift)   |
-            ((uint32_t)(colors[index].green) << green_shift) |
-            ((uint32_t)(colors[index].blue)  << blue_shift)  |
+            ((uint32_t)(colormap[index].red)   << red_shift)   |
+            ((uint32_t)(colormap[index].green) << green_shift) |
+            ((uint32_t)(colormap[index].blue)  << blue_shift)  |
             ((uint32_t)0xff /* alpha */ << alpha_shift)
             );
         if (scale > 1)
@@ -478,9 +353,9 @@ static void post_image() {
 
             // duplicate pixel
             *( (uint32_t*)(image->data + j) ) = (uint32_t)(
-                ((uint32_t)(colors[index].red)   << red_shift)   |
-                ((uint32_t)(colors[index].green) << green_shift) |
-                ((uint32_t)(colors[index].blue)  << blue_shift)  |
+                ((uint32_t)(colormap[index].red)   << red_shift)   |
+                ((uint32_t)(colormap[index].green) << green_shift) |
+                ((uint32_t)(colormap[index].blue)  << blue_shift)  |
                 ((uint32_t)0xff /* alpha */ << alpha_shift)
                 );
 
@@ -534,31 +409,26 @@ static void c_flash_cursor(int on) {
     {
         if (!on)
         {
-            colors[ COLOR_FLASHING_BLACK].red   = 0;
-            colors[ COLOR_FLASHING_BLACK].green = 0;
-            colors[ COLOR_FLASHING_BLACK].blue  = 0;
+            colormap[ COLOR_FLASHING_BLACK].red   = 0;
+            colormap[ COLOR_FLASHING_BLACK].green = 0;
+            colormap[ COLOR_FLASHING_BLACK].blue  = 0;
 
-            colors[ COLOR_FLASHING_WHITE].red   = 0xffff;
-            colors[ COLOR_FLASHING_WHITE].green = 0xffff;
-            colors[ COLOR_FLASHING_WHITE].blue  = 0xffff;
+            colormap[ COLOR_FLASHING_WHITE].red   = 0xffff;
+            colormap[ COLOR_FLASHING_WHITE].green = 0xffff;
+            colormap[ COLOR_FLASHING_WHITE].blue  = 0xffff;
         }
         else
         {
-            colors[ COLOR_FLASHING_WHITE].red   = 0;
-            colors[ COLOR_FLASHING_WHITE].green = 0;
-            colors[ COLOR_FLASHING_WHITE].blue  = 0;
+            colormap[ COLOR_FLASHING_WHITE].red   = 0;
+            colormap[ COLOR_FLASHING_WHITE].green = 0;
+            colormap[ COLOR_FLASHING_WHITE].blue  = 0;
 
-            colors[ COLOR_FLASHING_BLACK].red   = 0xffff;
-            colors[ COLOR_FLASHING_BLACK].green = 0xffff;
-            colors[ COLOR_FLASHING_BLACK].blue  = 0xffff;
+            colormap[ COLOR_FLASHING_BLACK].red   = 0xffff;
+            colormap[ COLOR_FLASHING_BLACK].green = 0xffff;
+            colormap[ COLOR_FLASHING_BLACK].blue  = 0xffff;
         }
-
-        // store the colors to the current colormap
-        //XStoreColors(display, cmap, colors, 256);
     }
 }
-
-extern void c_handle_input(int scancode, int pressed);
 
 /* FIXME: blocking not implemented... */
 void video_sync(int block) {
@@ -945,9 +815,6 @@ void video_driver_init() {
 #endif
         }
     }
-
-    /* initialize colors */
-    c_initialize_colors();
 
     cmap = XCreateColormap(display, XDefaultRootWindow(display), visualinfo.visual, AllocNone);
     //XStoreColors(display, cmap, colors, 256);

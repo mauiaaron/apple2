@@ -26,6 +26,8 @@
 static uint8_t vga_mem_page_0[SCANWIDTH*SCANHEIGHT];
 static uint8_t vga_mem_page_1[SCANWIDTH*SCANHEIGHT];
 
+extern A2Color colormap[256] = { 0 };
+
 uint8_t video__wider_font[0x8000];
 uint8_t video__font[0x4000];
 
@@ -112,14 +114,14 @@ uint8_t video__dhires2[256] = {
 };
 
 
-static void c_initialize_dhires_values(void) {
+static void video_initialize_dhires_values(void) {
     for (unsigned int i = 0; i < 0x80; i++) {
         video__dhires1[i+0x80] = video__dhires1[i];
         video__dhires2[i+0x80] = video__dhires2[i];
     }
 }
 
-static void c_initialize_hires_values(void) {
+static void video_initialize_hires_values(void) {
     // precalculate colors for all the 256*8 bit combinations. */
     for (unsigned int value = 0x00; value <= 0xFF; value++) {
         for (unsigned int e = value*8, last_not_black=0, v=value, b=0; b < 7; b++, v >>= 1, e++) {
@@ -312,7 +314,7 @@ static void c_initialize_hires_values(void) {
     }
 }
 
-static void c_initialize_row_col_tables(void) {
+static void video_initialize_row_col_tables(void) {
     for (unsigned int i = 0; i < 8192; i++) {
         video__screen_addresses[i] = -1;
     }
@@ -327,7 +329,7 @@ static void c_initialize_row_col_tables(void) {
     }
 }
 
-static void c_initialize_tables_video(void) {
+static void video_initialize_tables_video(void) {
     // initialize text/lores & hires graphics routines
     for (unsigned int y = 0; y < TEXT_ROWS; y++) {
         for (unsigned int x = 0; x < TEXT_COLS; x++) {
@@ -366,12 +368,117 @@ static void c_initialize_tables_video(void) {
     }
 }
 
+static void video_initialize_color() {
+    unsigned char col2[ 3 ] = { 255,255,255 };
+
+    /* align the palette for hires graphics */
+    for (unsigned int i = 0; i < 8; i++) {
+        for (unsigned int j = 0; j < 3; j++) {
+            unsigned int c = 0;
+            c = (i & 1) ? col2[ j ] : 0;
+            colormap[ j+i*3+32].red = c;
+            c = (i & 2) ? col2[ j ] : 0;
+            colormap[ j+i*3+32].green = c;
+            c = (i & 4) ? col2[ j ] : 0;
+            colormap[ j+i*3+32].blue = c;
+        }
+    }
+
+    colormap[ COLOR_FLASHING_BLACK].red = 0;
+    colormap[ COLOR_FLASHING_BLACK].green = 0;
+    colormap[ COLOR_FLASHING_BLACK].blue = 0;
+
+    colormap[ COLOR_LIGHT_WHITE].red   = (255<<8)|255;
+    colormap[ COLOR_LIGHT_WHITE].green = (255<<8)|255;
+    colormap[ COLOR_LIGHT_WHITE].blue  = (255<<8)|255;
+
+    colormap[ COLOR_FLASHING_WHITE].red   = (255<<8)|255;
+    colormap[ COLOR_FLASHING_WHITE].green = (255<<8)|255;
+    colormap[ COLOR_FLASHING_WHITE].blue  = (255<<8)|255;
+
+    colormap[0x00].red = 0; colormap[0x00].green = 0;
+    colormap[0x00].blue = 0;   /* Black */
+    colormap[0x10].red = 195; colormap[0x10].green = 0;
+    colormap[0x10].blue = 48;  /* Magenta */
+    colormap[0x20].red = 0; colormap[0x20].green = 0;
+    colormap[0x20].blue = 130; /* Dark Blue */
+    colormap[0x30].red = 166; colormap[0x30].green = 52;
+    colormap[0x30].blue = 170; /* Purple */
+    colormap[0x40].red = 0; colormap[0x40].green = 146;
+    colormap[0x40].blue = 0;   /* Dark Green */
+    colormap[0x50].red = 105; colormap[0x50].green = 105;
+    colormap[0x50].blue = 105; /* Dark Grey*/
+    colormap[0x60].red = 113; colormap[0x60].green = 24;
+    colormap[0x60].blue = 255; /* Medium Blue */
+    colormap[0x70].red = 12; colormap[0x70].green = 190;
+    colormap[0x70].blue = 235; /* Light Blue */
+    colormap[0x80].red = 150; colormap[0x80].green = 85;
+    colormap[0x80].blue = 40; /* Brown */
+    colormap[0x90].red = 255; colormap[0xa0].green = 24;
+    colormap[0x90].blue = 44; /* Orange */
+    colormap[0xa0].red = 150; colormap[0xa0].green = 170;
+    colormap[0xa0].blue = 170; /* Light Gray */
+    colormap[0xb0].red = 255; colormap[0xb0].green = 158;
+    colormap[0xb0].blue = 150; /* Pink */
+    colormap[0xc0].red = 0; colormap[0xc0].green = 255;
+    colormap[0xc0].blue = 0; /* Green */
+    colormap[0xd0].red = 255; colormap[0xd0].green = 255;
+    colormap[0xd0].blue = 0; /* Yellow */
+    colormap[0xe0].red = 130; colormap[0xe0].green = 255;
+    colormap[0xe0].blue = 130; /* Aqua */
+    colormap[0xf0].red = 255; colormap[0xf0].green = 255;
+    colormap[0xf0].blue = 255; /* White */
+
+    /* mirror of lores colormap optimized for dhires code */
+    colormap[0x00].red = 0; colormap[0x00].green = 0;
+    colormap[0x00].blue = 0;   /* Black */
+    colormap[0x08].red = 195; colormap[0x08].green = 0;
+    colormap[0x08].blue = 48;  /* Magenta */
+    colormap[0x01].red = 0; colormap[0x01].green = 0;
+    colormap[0x01].blue = 130; /* Dark Blue */
+    colormap[0x09].red = 166; colormap[0x09].green = 52;
+    colormap[0x09].blue = 170; /* Purple */
+    colormap[0x02].red = 0; colormap[0x02].green = 146;
+    colormap[0x02].blue = 0;   /* Dark Green */
+    colormap[0x0a].red = 105; colormap[0x0A].green = 105;
+    colormap[0x0a].blue = 105; /* Dark Grey*/
+    colormap[0x03].red = 113; colormap[0x03].green = 24;
+    colormap[0x03].blue = 255; /* Medium Blue */
+    colormap[0x0b].red = 12; colormap[0x0b].green = 190;
+    colormap[0x0b].blue = 235; /* Light Blue */
+    colormap[0x04].red = 150; colormap[0x04].green = 85;
+    colormap[0x04].blue = 40; /* Brown */
+    colormap[0x0c].red = 255; colormap[0x0c].green = 24;
+    colormap[0x0c].blue = 44; /* Orange */
+    colormap[0x05].red = 150; colormap[0x05].green = 170;
+    colormap[0x05].blue = 170; /* Light Gray */
+    colormap[0x0d].red = 255; colormap[0x0d].green = 158;
+    colormap[0x0d].blue = 150; /* Pink */
+    colormap[0x06].red = 0; colormap[0x06].green = 255;
+    colormap[0x06].blue = 0; /* Green */
+    colormap[0x0e].red = 255; colormap[0x0e].green = 255;
+    colormap[0x0e].blue = 0; /* Yellow */
+    colormap[0x07].red = 130; colormap[0x07].green = 255;
+    colormap[0x07].blue = 130; /* Aqua */
+    colormap[0x0f].red = 255; colormap[0x0f].green = 255;
+    colormap[0x0f].blue = 255; /* White */
+
+    for (unsigned int i=0; i<16; i++) {
+        colormap[i].red      = (colormap[i].red<<8)      | colormap[i].red;
+        colormap[i].green    = (colormap[i].green<<8)    | colormap[i].green;
+        colormap[i].blue     = (colormap[i].blue<<8)     | colormap[i].blue;
+        colormap[i<<4].red   = (colormap[i<<4].red<<8)   | colormap[i<<4].red;
+        colormap[i<<4].green = (colormap[i<<4].green<<8) | colormap[i<<4].green;
+        colormap[i<<4].blue  = (colormap[i<<4].blue<<8)  | colormap[i<<4].blue;
+    }
+}
+
 void video_set(int flags) {
     video__strictcolors = (color_mode == COLOR_INTERP) ? 2 : 1;
-    c_initialize_hires_values();
-    c_initialize_row_col_tables();
-    c_initialize_tables_video();
-    c_initialize_dhires_values();
+    video_initialize_hires_values();
+    video_initialize_row_col_tables();
+    video_initialize_tables_video();
+    video_initialize_dhires_values();
 }
 
 void video_loadfont_int(int first, int quantity, const uint8_t *data) {
@@ -479,6 +586,7 @@ void video_init() {
     memset(video__fb1,0,SCANWIDTH*SCANHEIGHT);
     memset(video__fb2,0,SCANWIDTH*SCANHEIGHT);
 
+    video_initialize_color();
 #if !HEADLESS
     if (!is_headless) {
         video_driver_init();

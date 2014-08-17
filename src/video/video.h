@@ -19,6 +19,17 @@
 
 #ifndef __ASSEMBLER__
 
+typedef struct A2Color {
+    uint8_t red;
+    uint8_t green;
+    uint8_t blue;
+} A2Color;
+
+/*
+ * Reference to the internal 8bit-indexed color format
+ */
+extern A2Color colormap[];
+
 #include "prefs.h"
 
 /* Prepare the video system, converting console to graphics mode, or
