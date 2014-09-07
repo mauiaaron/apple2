@@ -22,7 +22,7 @@
 #define MAX_SAMPLES (8*1024)
 
 #if defined(APPLE2IX)
-#define SAFE_RELEASE(p)      Free(p)
+#define SAFE_RELEASE(p)      FREE(p)
 #else
 #define SAFE_RELEASE(p)      { if(p) { (p)->Release(); (p)=NULL; } }
 #endif

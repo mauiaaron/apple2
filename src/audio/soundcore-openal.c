@@ -152,7 +152,7 @@ long SoundSystemCreate(const char *sound_device, SoundSystemStruct **sound_struc
     // ERRQUIT
     if (*sound_struct)
     {
-        Free(*sound_struct);
+        FREE(*sound_struct);
     }
 
     return -1;
@@ -166,7 +166,7 @@ long SoundSystemDestroy(SoundSystemStruct **sound_struct)
     ALCcontext *ctx = (ALCcontext*) (*sound_struct)->implementation_specific;
     assert(ctx != NULL);
     (*sound_struct)->implementation_specific = NULL;
-    Free(*sound_struct);
+    FREE(*sound_struct);
 
     CloseAL();
 
@@ -234,7 +234,7 @@ static void DeleteVoice(ALVoice *voice)
 
     if (voice->data)
     {
-        Free(voice->data);
+        FREE(voice->data);
     }
 
     ALPlayBuf *node = NULL;
@@ -829,9 +829,9 @@ static long OpenALDestroySoundBuffer(ALSoundBufferStruct **soundbuf_struct)
     ALVoices *vnode = NULL;
     HASH_FIND_INT(voices, &source, vnode);
     HASH_DEL(voices, vnode);
-    Free(vnode);
+    FREE(vnode);
 
-    Free(*soundbuf_struct);
+    FREE(*soundbuf_struct);
     return 0;
 }
 

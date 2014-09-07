@@ -596,10 +596,10 @@ bool DSInit()
             char **ptr = sound_devices;
             while (*ptr)
             {
-                Free(*ptr);
+                FREE(*ptr);
                 ++ptr;
             }
-            Free(sound_devices);
+            FREE(sound_devices);
             sound_devices = NULL;
         }
 	num_sound_devices = SoundSystemEnumerate(&sound_devices, MAX_SOUND_DEVICES);

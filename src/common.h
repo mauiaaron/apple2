@@ -128,10 +128,10 @@ extern FILE *error_log;
         _LOG(__VA_ARGS__); \
     } while(0);
 
-#define Free(X) \
+#define FREE(x) \
     do { \
-        free(X); \
-        X=NULL; \
+        free((x)); \
+        (x) = NULL; \
     } while (0);
 
 #endif // whole file

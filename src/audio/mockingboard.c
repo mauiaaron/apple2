@@ -1644,7 +1644,7 @@ void MB_Destroy()
 	for(int i=0; i<NUM_VOICES; i++)
         {
 #ifdef APPLE2IX
-		Free(ppAYVoiceBuffer[i]);
+		FREE(ppAYVoiceBuffer[i]);
 #else
 		delete [] ppAYVoiceBuffer[i];
 #endif
