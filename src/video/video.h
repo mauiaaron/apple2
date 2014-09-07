@@ -38,7 +38,11 @@ extern A2Color colormap[];
  */
 void video_init(void);
 
-/* Undo anything done by video_init. This is called before exiting the
+/* Begin main video loop (does not return)
+ */
+void video_main_loop(void);
+
+/* Undo anything done by video_init() and video_start(). Called before exiting the
  * emulator.
  */
 void video_shutdown(void);
@@ -104,15 +108,6 @@ void video_loadfont_int(int first, int qty, const uint8_t *data);
  *  2 - Red text on Black background
  */
 void video_plotchar(int row, int col, int color, uint8_t code);
-
-/*
- * Draws video and possibly handles keyboard input.
- *
- * Should flush any video data to the real screen (if any kind of caching
- * is in use), check for keyboard input (presently reported via
- * c_read_raw_key), and handle flashing text characters.
- */
-void video_sync(int block);
 
 void video_set_mode(a2_video_mode_t mode);
 

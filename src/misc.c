@@ -624,21 +624,9 @@ void c_initialize_firsttime()
 }
 
 #if !defined(TESTING) && !defined(__APPLE__)
-static void main_thread(void *dummyptr) {
-    struct timespec sleeptime = { .tv_sec=0, .tv_nsec=8333333 }; // 120Hz
-
-    c_keys_set_key(kF8); // show credits
-    do
-    {
-        video_sync(0);
-        nanosleep(&sleeptime, NULL);
-    } while (1);
-}
-
 extern void cpu_thread(void *dummyptr);
 
-int main(int _argc, char **_argv)
-{
+int main(int _argc, char **_argv) {
     argc = _argc;
     argv = _argv;
 
@@ -648,8 +636,9 @@ int main(int _argc, char **_argv)
     // spin off cpu thread
     pthread_create(&cpu_thread_id, NULL, (void *) &cpu_thread, (void *)NULL);
 
-    // continue with main render thread
-    main_thread(NULL);
+    c_keys_set_key(kF8); // show credits
+
+    video_main_loop();
 }
 #endif // TESTING
 

@@ -3208,8 +3208,6 @@ TEST test_check_cxrom(bool flag_cxrom) {
 // ----------------------------------------------------------------------------
 // Test Suite
 
-extern void cpu_thread(void *dummyptr);
-
 GREATEST_SUITE(test_suite_vm) {
 
     GREATEST_SET_SETUP_CB(testvm_setup, NULL);

@@ -430,8 +430,7 @@ static void c_flash_cursor(int on) {
     }
 }
 
-/* FIXME: blocking not implemented... */
-void video_sync(int block) {
+void video_driver_sync(void) {
     if (is_headless) {
         return;
     }
@@ -478,6 +477,7 @@ void video_sync(int block) {
     } while (keyevent);
 #endif
 
+#warning HACKISH flash count needs refactoring ...
     switch (++flash_count)
     {
     case 6:
@@ -490,6 +490,14 @@ void video_sync(int block) {
     default:
         break;
     }
+}
+
+void video_driver_main_loop(void) {
+    struct timespec sleeptime = { .tv_sec=0, .tv_nsec=8333333 }; // 120Hz
+    do {
+        video_driver_sync();
+        nanosleep(&sleeptime, NULL);
+    } while (1);
 }
 
 #if 0
@@ -900,9 +908,7 @@ void video_driver_init() {
 #endif
 }
 
-void video_driver_shutdown(void)
-{
+void video_driver_shutdown(void) {
     _destroy_image();
-    exit(0);
 }
 

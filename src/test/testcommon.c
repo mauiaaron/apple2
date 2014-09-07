@@ -59,6 +59,7 @@ void test_common_setup() {
 // ----------------------------------------------------------------------------
 // test video functions and stubs
 
+extern void video_driver_sync(void);
 void testing_video_sync() {
 
 #if !HEADLESS
@@ -66,7 +67,7 @@ void testing_video_sync() {
         clock_gettime(CLOCK_MONOTONIC, &ti);
         struct timespec deltat = timespec_diff(t0, ti, NULL);
         if (deltat.tv_sec || (deltat.tv_nsec >= NANOSECONDS/15) ) {
-            video_sync(0);
+            video_driver_sync();
             ti = t0;
         }
     }
@@ -106,7 +107,7 @@ void test_breakpoint(void *arg) {
     fprintf(GREATEST_STDOUT, "set breakpoint on test_breakpoint to check for problems...\n");
 #if !HEADLESS
     if (!is_headless) {
-        video_sync(0);
+        video_driver_sync();
     }
 #endif
 }

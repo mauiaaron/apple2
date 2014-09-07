@@ -166,7 +166,7 @@ int c_keys_is_shifted()
 }
 
 /* -------------------------------------------------------------------------
-    void c_handle_input() : Handle input : keys and joystick.
+    Handle input : keys and joystick.
    ------------------------------------------------------------------------- */
 void c_keys_handle_input(int scancode, int pressed)
 {
@@ -459,12 +459,7 @@ int c_mygetch(int block)
         {
             static struct timespec ts = { .tv_sec=0, .tv_nsec=33333333 };
             nanosleep(&ts, NULL); // 30Hz framerate
-            video_sync(1);
         }
-    }
-    else
-    {
-        video_sync(0);
     }
 
     retval = next_key;

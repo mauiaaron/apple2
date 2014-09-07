@@ -1443,7 +1443,6 @@ void c_interface_credits()
 
         static struct timespec ts = { .tv_sec=0, .tv_nsec=33333333 };
         nanosleep(&ts, NULL);
-        video_sync(1);
     }
 
     c_interface_exit(ch);

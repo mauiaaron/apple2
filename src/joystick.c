@@ -311,7 +311,6 @@ static void c_calibrate_pc_joystick()
 
         SHOW_BUTTONS(joymenu, CALIBRATE_JOYMENU_H);
         SHOW_JOYSTICK_AXES(joymenu, CALIBRATE_JOYMENU_W, CALIBRATE_JOYMENU_H, joy_x, joy_y);
-        video_sync(0);
 
         spinney_idx = (spinney_idx+1) % 4;
 

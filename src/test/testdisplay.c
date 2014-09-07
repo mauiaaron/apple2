@@ -345,8 +345,6 @@ TEST test_80col_hires() {
 // ----------------------------------------------------------------------------
 // Test Suite
 
-extern void cpu_thread(void *dummyptr);
-
 GREATEST_SUITE(test_suite_display) {
 
     GREATEST_SET_SETUP_CB(testdisplay_setup, NULL);

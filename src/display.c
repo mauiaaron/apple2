@@ -26,7 +26,7 @@
 static uint8_t vga_mem_page_0[SCANWIDTH*SCANHEIGHT];
 static uint8_t vga_mem_page_1[SCANWIDTH*SCANHEIGHT];
 
-extern A2Color colormap[256] = { 0 };
+A2Color colormap[256] = { 0 };
 
 uint8_t video__wider_font[0x8000];
 uint8_t video__font[0x4000];
@@ -574,10 +574,12 @@ void video_plotchar( int x, int y, int scheme, uint8_t c ) {
 }
 
 #if !HEADLESS
-extern void video_driver_init();
-extern void video_driver_shutdown();
+extern void video_driver_init(void);
+extern void video_driver_main_loop(void);
+extern void video_driver_sync(void);
+extern void video_driver_shutdown(void);
 #endif
-void video_init() {
+void video_init(void) {
 
     video__fb1 = vga_mem_page_0;
     video__fb2 = vga_mem_page_1;
@@ -594,12 +596,18 @@ void video_init() {
 #endif
 }
 
-void video_shutdown(void)
-{
+void video_main_loop(void) {
+#if !HEADLESS
+    video_driver_main_loop();
+#endif
+}
+
+void video_shutdown(void) {
 #if !HEADLESS
     if (!is_headless) {
         video_driver_shutdown();
     }
+    exit(0);
 #endif
 }
 
