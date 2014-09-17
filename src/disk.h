@@ -51,8 +51,8 @@ struct drive
 extern struct drive disk6;
 
 void c_init_6();
-int c_new_diskette_6(int drive, const char * const file_name, int force);
-void c_eject_6(int drive);
+const char *c_new_diskette_6(int drive, const char * const file_name, int force);
+const char *c_eject_6(int drive);
 void disk_io_initialize(unsigned int slot);
 
 void disk_read_nop(),

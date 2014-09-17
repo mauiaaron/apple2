@@ -115,44 +115,21 @@ void c_init_6()
 #endif
 }
 
-#ifdef INTERFACE_CLASSIC
-#define ZLIB_SUBMENU_H 7
-#define ZLIB_SUBMENU_W 40
-static char zlibmenu[ZLIB_SUBMENU_H][ZLIB_SUBMENU_W+1] =
-    //1.  5.  10.  15.  20.  25.  30.  35.  40.
-    { "||||||||||||||||||||||||||||||||||||||||",
-      "|                                      |",
-      "| An error occurred when attempting to |",
-      "| handle a compressed disk image:      |",
-      "|                                      |",
-      "|                                      |",
-      "||||||||||||||||||||||||||||||||||||||||" };
-#endif
-
 /* -------------------------------------------------------------------------
     c_eject_6() - ejects/gzips image file
    ------------------------------------------------------------------------- */
 
-void c_eject_6(int drive) {
+const char *c_eject_6(int drive) {
+
+    const char *err = NULL;
 
     if (disk6.disk[drive].compressed)
     {
         // foo.dsk -> foo.dsk.gz
-        const char* const err = def(disk6.disk[drive].file_name, is_nib(disk6.disk[drive].file_name) ? NIB_SIZE : DSK_SIZE);
-        if (err)
-        {
+        err = def(disk6.disk[drive].file_name, is_nib(disk6.disk[drive].file_name) ? NIB_SIZE : DSK_SIZE);
+        if (err) {
             ERRLOG("OOPS: An error occurred when attempting to compress a disk image : %s", err);
-#ifdef INTERFACE_CLASSIC
-            int ch = -1;
-            snprintf(&zlibmenu[4][2], 37, "%s", err);
-            c_interface_print_submenu_centered(zlibmenu[0], ZLIB_SUBMENU_W, ZLIB_SUBMENU_H);
-            while ((ch = c_mygetch(1)) == -1) {
-                // ...
-            }
-#endif
-        }
-        else
-        {
+        } else {
             unlink(disk6.disk[drive].file_name);
         }
     }
@@ -165,6 +142,8 @@ void c_eject_6(int drive) {
         fclose(disk6.disk[drive].fp);
         disk6.disk[drive].fp = NULL;
     }
+
+    return err;
 }
 
 /* -------------------------------------------------------------------------
@@ -172,7 +151,7 @@ void c_eject_6(int drive) {
     inserts a new disk image into the appropriate drive.
     return 0 on success
    ------------------------------------------------------------------------- */
-int c_new_diskette_6(int drive, const char * const raw_file_name, int force) {
+const char *c_new_diskette_6(int drive, const char * const raw_file_name, int force) {
     struct stat buf;
 
     /* uncompress the gziped disk */
@@ -190,16 +169,8 @@ int c_new_diskette_6(int drive, const char * const raw_file_name, int force) {
         if (err)
         {
             ERRLOG("OOPS: An error occurred when attempting to inflate/load a disk image : %s", err);
-#ifdef INTERFACE_CLASSIC
-            int ch = -1;
-            snprintf(&zlibmenu[4][2], 37, "%s", err);
-            c_interface_print_submenu_centered(zlibmenu[0], ZLIB_SUBMENU_W, ZLIB_SUBMENU_H);
-            while ((ch = c_mygetch(1)) == -1) {
-                // ...
-            }
-#endif
             free(file_name);
-            return 1;
+            return err;
         }
         if (unlink(file_name)) // temporarily remove .gz file
         {
@@ -226,7 +197,7 @@ int c_new_diskette_6(int drive, const char * const raw_file_name, int force) {
     {
         disk6.disk[drive].fp = NULL;
         c_eject_6(drive);
-        return 1;                       /* problem: disk unreadable */
+        return "disk unreadable 1";
     }
     else
     {
@@ -248,7 +219,7 @@ int c_new_diskette_6(int drive, const char * const raw_file_name, int force) {
         {
             /* Failed to open file. */
             c_eject_6(drive);
-            return 1;                   /* problem: disk unreadable */
+            return "disk unreadable 2";
         }
 
         /* seek to current head position. */
@@ -258,7 +229,7 @@ int c_new_diskette_6(int drive, const char * const raw_file_name, int force) {
     disk6.disk[drive].sector = 0;
     disk6.disk[drive].run_byte = 0;
 
-    return 0;                           /* no problem */
+    return NULL;
 }
 
 
