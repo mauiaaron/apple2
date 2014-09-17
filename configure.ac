@@ -120,7 +120,7 @@ AM_PROG_LEX
 dnl AS_IF([test "x$LEX" = "xno"], [
 dnl     AC_MSG_ERROR([Emulator needs lex/flex to build source...])
 dnl ], [
-dnl     AC_MSG_WARN([Found lex $LEX])
+dnl     AC_MSG_RESULT([Found lex $LEX])
 dnl ])
 
 dnl POSIX high-precision clock
@@ -142,29 +142,70 @@ AC_SEARCH_LIBS(pthread_create, pthread, [], [
     AC_MSG_ERROR([Emulator requires pthread library to build...])
 ], [])
 
+AC_SEARCH_LIBS(sqrtf, m, [], [
+    AC_MSG_ERROR([Emulator requires math library to build...])
+], [])
+
 
 dnl ---------------------------------------------------------------------------
 dnl Video ...
 
-dnl currently X11 is required ...
 AC_PATH_XTRA
 
-AC_CHECK_HEADER(X11/XKBlib.h, [], [
-    AC_MSG_ERROR([Emulator needs X11 headers to build this software...])
-])
-AC_SEARCH_LIBS(XPutImage, [X11], [], [
-    AC_MSG_ERROR([Emulator need X11 libraries to build the emulator...])
-], [-LX11])
-
-AC_SEARCH_LIBS(XShmAttach, Xext, [
-    AC_DEFINE(HAVE_X11_SHM, 1, [Enable X11 MIT SHM extension])
+opengl_selected='yes'
+AC_ARG_ENABLE([opengl], AS_HELP_STRING([--disable-opengl], [Disable OpenGL video driver (uses regular X11)]), [
+    opengl_selected='no'
 ], [
-    AC_MSG_WARN([Building emulator without support of X11 MITSHM extension...])
-], [-lX11])
+    AC_CHECK_HEADER(GL/glew.h, [
+        AC_CHECK_HEADER(GL/freeglut.h, [
+            AC_SEARCH_LIBS(glCreateProgram, [GL], [
+                AC_SEARCH_LIBS(glutMainLoop, [glut freeglut], [
+                    AC_SEARCH_LIBS(glewInit, [GLEW glew], [
+                        opengl_supported='yes'
+                        AC_DEFINE(VIDEO_OPENGL, 1, [Use OpenGL])
+                        VIDEO_O="src/video/glvideo.o"
+                        AC_MSG_RESULT([Building emulator with OpenGL support, w00t!])
+                    ], [
+                        AC_MSG_WARN([Did not find OpenGL GLEW library...])
+                    ], [-lGL -lGLEW -lglut])
+                ], [
+                    AC_MSG_WARN([Did not find glut library...])
+                ], [-lGL -lGLEW -lglut])
+            ], [
+                AC_MSG_WARN([Did not find OpenGL library...])
+            ], [-lGL])
+        ], [
+            AC_MSG_WARN([Did not find GL/freeglut.h header ...])
+        ])
+    ], [
+        AC_MSG_WARN([Did not find GL/glew.h header ...])
+    ])
+])
 
-VIDEO_O="src/video/xvideo.o"
+AS_IF([test "x$opengl_supported" = "xyes"], [
+], [
+    dnl OpenGL not supported
+    AS_IF([test "x$opengl_selected" = "xyes"], [
+        AC_MSG_WARN([Did not find OpenGL libraries, will attempt to build legacy X11 variant ...])
+    ], [])
+
+    AC_CHECK_HEADER(X11/XKBlib.h, [
+        AC_SEARCH_LIBS(XPutImage, [X11], [
+            AC_SEARCH_LIBS(XShmAttach, Xext, [
+                AC_DEFINE(HAVE_X11_SHM, 1, [Enable X11 MIT SHM extension])
+            ], [
+                AC_MSG_WARN([Building emulator without support of X11 MITSHM extension...])
+            ], [-lX11])
+            VIDEO_O="src/video/xvideo.o"
+        ], [
+            AC_MSG_ERROR([Did not find OpenGL nor X11 libraries...])
+        ], [-LX11])
+    ], [
+        AC_MSG_ERROR([Did not find OpenGL nor X11 headers...])
+    ])
+])
+
 AC_SUBST(VIDEO_O)
-
 AC_DEFINE(HEADLESS, 0, [Set to 1 to disable video output driver])
 
 dnl ---------------------------------------------------------------------------

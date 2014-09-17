@@ -35,7 +35,8 @@ INTERFACE_CLASSIC_SRC = \
 	src/interface.c
 
 VIDEO_SRC = \
-	src/video/xvideo.c
+	src/video/xvideo.c \
+	src/video/glvideo.c
 
 AUDIO_SRC = \
 	src/audio/soundcore.c src/audio/soundcore-openal.c src/audio/speaker.c \
@@ -90,7 +91,7 @@ A2_TEST_CFLAGS = -DTESTING=1 -Isrc/test
 TESTS          = testcpu testdisplay testvm
 check_PROGRAMS = testcpu testdisplay testvm
 
-testcpu_SOURCES = src/test/testcpu.c $(A2_TEST_SOURCES) $(META_SRC) $(VIDEO_SRC)
+testcpu_SOURCES = src/test/testcpu.c $(A2_TEST_SOURCES) $(META_SRC)
 testcpu_CFLAGS = $(apple2ix_CFLAGS) $(A2_TEST_CFLAGS) -UAUDIO_ENABLED -UINTERFACE_CLASSIC -DHEADLESS=1
 testcpu_LDFLAGS = $(apple2ix_LDFLAGS)
 testcpu_LDADD = @ASM_O@
@@ -98,23 +99,23 @@ testcpu_DEPENDENCIES = @ASM_O@ @META_O@
 
 EXTRA_testcpu_SOURCES = $(ASM_SRC_x86)
 
-testdisplay_SOURCES = src/test/testdisplay.c $(A2_TEST_SOURCES) $(META_SRC) $(VIDEO_SRC)
+testdisplay_SOURCES = src/test/testdisplay.c $(A2_TEST_SOURCES) $(META_SRC)
 # HACK FIXME TODO NOTE: why don't these CFLAGS here pass down to the .S and .c files in the subdirectories?
 testdisplay_CFLAGS = $(apple2ix_CFLAGS) $(A2_TEST_CFLAGS) -UAUDIO_ENABLED -UINTERFACE_CLASSIC -DHEADLESS=0
 testdisplay_LDFLAGS = $(apple2ix_LDFLAGS)
-testdisplay_LDADD = @ASM_O@
+testdisplay_LDADD = @ASM_O@ @VIDEO_O@
 testdisplay_DEPENDENCIES = @ASM_O@ @META_O@ @VIDEO_O@
 
-EXTRA_testdisplay_SOURCES = $(ASM_SRC_x86)
+EXTRA_testdisplay_SOURCES = $(ASM_SRC_x86) $(VIDEO_SRC)
 
-testvm_SOURCES = src/test/testvm.c $(A2_TEST_SOURCES) $(META_SRC) $(VIDEO_SRC)
+testvm_SOURCES = src/test/testvm.c $(A2_TEST_SOURCES) $(META_SRC)
 # HACK FIXME TODO NOTE: why don't these CFLAGS here pass down to the .S and .c files in the subdirectories?
 testvm_CFLAGS = $(apple2ix_CFLAGS) $(A2_TEST_CFLAGS) -UAUDIO_ENABLED -UINTERFACE_CLASSIC -DHEADLESS=0
 testvm_LDFLAGS = $(apple2ix_LDFLAGS)
-testvm_LDADD = @ASM_O@
+testvm_LDADD = @ASM_O@ @VIDEO_O@
 testvm_DEPENDENCIES = @ASM_O@ @META_O@ @VIDEO_O@
 
-EXTRA_testvm_SOURCES = $(ASM_SRC_x86)
+EXTRA_testvm_SOURCES = $(ASM_SRC_x86) $(VIDEO_SRC)
 
 ###############################################################################
 # Misc

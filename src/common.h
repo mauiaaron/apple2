@@ -54,6 +54,14 @@
 #include "uthash.h"
 #include "zlib-helpers.h"
 
+
+#if VIDEO_OPENGL
+#include "video/vgl.h"
+#else
+#define GLint int
+#define glGetError() 0
+#endif
+
 #ifdef DEBUGGER
 #include "meta/debug.h"
 #endif
@@ -75,34 +83,59 @@
 extern bool do_logging;
 extern FILE *error_log;
 
+#define QUIT_FUNCTION(x) exit(x)
+
 #define _LOG(...) \
-    int saverr = errno; \
+    int _err = errno; \
     errno = 0; \
     fprintf(error_log, "%s:%d - ", __FILE__, __LINE__); \
     fprintf(error_log, __VA_ARGS__); \
-    if (saverr) { \
-        fprintf(error_log, " (syserr: %s)", strerror(saverr)); \
+    if (_err) { \
+        fprintf(error_log, " (syserr: %s)", strerror(_err)); \
+    } \
+    if (_glerr) { \
+        fprintf(error_log, " (OOPS glerr:%04X)", _glerr); \
     } \
     fprintf(error_log, "\n");
 
 #ifndef NDEBUG
 
-#define ERRLOG(...) \
-    if (do_logging) { \
-        _LOG(__VA_ARGS__); \
-    }
-
-#define ERRQUIT(...) \
-    if (do_logging) { \
-        _LOG(__VA_ARGS__); \
-    } \
-    exit(1);
-
 #define LOG(...) \
     if (do_logging) { \
         errno = 0; \
+        GLint _glerr = 0; \
         _LOG(__VA_ARGS__); \
     }
+
+#define ERRLOG(...) \
+    if (do_logging) { \
+        GLint _glerr = glGetError(); \
+        _LOG(__VA_ARGS__); \
+    }
+
+#define GL_ERRLOG(...) \
+    if (do_logging) { \
+        GLint _glerr = glGetError(); \
+        if (_glerr) { \
+            _LOG(__VA_ARGS__); \
+        } \
+    }
+
+#define ERRQUIT(...) \
+    do { \
+        GLint _glerr = glGetError(); \
+        _LOG(__VA_ARGS__); \
+        QUIT_FUNCTION(1); \
+    } while(0)
+
+#define GL_ERRQUIT(...) \
+    do { \
+        GLint _glerr = glGetError(); \
+        if (_glerr) { \
+            _LOG( __VA_ARGS__); \
+            QUIT_FUNCTION(_glerr); \
+        } \
+    } while(0)
 
 #else // NDEBUG
 
@@ -115,7 +148,7 @@ extern FILE *error_log;
 #define LOG(...) \
     do { } while(0);
 
-#endif
+#endif // NDEBUG
 
 #define RELEASE_ERRLOG(...) \
     do { \
@@ -124,6 +157,7 @@ extern FILE *error_log;
 
 #define RELEASE_LOG(...) \
     do { \
+        GLint _glerr = glGetError(); \
         errno = 0; \
         _LOG(__VA_ARGS__); \
     } while(0);
