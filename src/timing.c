@@ -159,7 +159,7 @@ void timing_initialize()
     _timing_initialize(cpu_scale_factor);
 }
 
-void cpu_thread(void *dummyptr) {
+void *cpu_thread(void *dummyptr) {
 
     assert(pthread_self() == cpu_thread_id);
 
@@ -325,6 +325,8 @@ void cpu_thread(void *dummyptr) {
 
         reinitialize();
     } while (1);
+
+    return NULL;
 }
 
 // From AppleWin...

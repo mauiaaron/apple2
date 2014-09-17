@@ -56,7 +56,7 @@ void timing_toggle_cpu_speed();
 
 void timing_initialize();
 
-void cpu_thread();
+void *cpu_thread(void *ignored);
 
 void CpuCalcCycles(const unsigned long nExecutedCycles);
 

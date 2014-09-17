@@ -624,7 +624,7 @@ void c_initialize_firsttime()
 }
 
 #if !defined(TESTING) && !defined(__APPLE__)
-extern void cpu_thread(void *dummyptr);
+extern void *cpu_thread(void *dummyptr);
 
 int main(int _argc, char **_argv) {
     argc = _argc;
@@ -634,7 +634,7 @@ int main(int _argc, char **_argv) {
     c_initialize_firsttime();           /* init svga graphics and vm */
 
     // spin off cpu thread
-    pthread_create(&cpu_thread_id, NULL, (void *) &cpu_thread, (void *)NULL);
+    pthread_create(&cpu_thread_id, NULL, (void *) &cpu_thread,(void *)NULL);
 
     c_keys_set_key(kF8); // show credits
 
