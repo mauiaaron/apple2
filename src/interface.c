@@ -16,6 +16,8 @@
 
 #include "common.h"
 
+bool in_interface = false;
+
 static struct stat statbuf;
 static int altdrive;
 
@@ -1537,5 +1539,76 @@ void c_interface_keyboard_layout()
     }
 
     c_interface_exit(ch);
+}
+
+/* -------------------------------------------------------------------------
+    c_interface_begin()
+   ------------------------------------------------------------------------- */
+
+static void *interface_thread(void *current_key)
+{
+    pthread_mutex_lock(&interface_mutex);
+#ifdef AUDIO_ENABLED
+    SoundSystemPause();
+#endif
+    in_interface = true;
+
+    switch ((int)current_key) {
+#ifdef INTERFACE_CLASSIC
+    case kF1:
+        c_interface_select_diskette( 0 );
+        break;
+
+    case kF2:
+        c_interface_select_diskette( 1 );
+        break;
+#endif
+
+    case kPAUSE:
+        while (c_mygetch(1) == -1)
+        {
+            struct timespec ts = { .tv_sec=0, .tv_nsec=1 };
+            nanosleep(&ts, NULL);
+        }
+        break;
+
+#ifdef INTERFACE_CLASSIC
+    case kF5:
+        c_interface_keyboard_layout();
+        break;
+
+#ifdef DEBUGGER
+    case kF7:
+        c_interface_debugging();
+        break;
+#endif
+
+    case kF8:
+        c_interface_credits();
+        break;
+
+    case kF10:
+        c_interface_parameters();
+        break;
+#endif
+
+    default:
+        break;
+    }
+
+#ifdef AUDIO_ENABLED
+    SoundSystemUnpause();
+#endif
+    c_joystick_reset();
+    pthread_mutex_unlock(&interface_mutex);
+    in_interface = false;
+
+    return NULL;
+}
+
+void c_interface_begin(int current_key)
+{
+    pthread_t t = 0;
+    pthread_create(&t, NULL, (void *) &interface_thread, (void *)current_key);
 }
 

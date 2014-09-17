@@ -21,6 +21,9 @@
 
 #define MOUSETEXT_BEGIN 0x90
 
+extern bool in_interface;
+
+void c_interface_begin(int current_key);
 void c_interface_print(int x, int y, const int cs, const char *s);
 void c_interface_print_submenu_centered(char *submenu, const int xlen, const int ylen);
 void c_load_interface_font();

@@ -33,7 +33,6 @@ extern int raw_js_y;
 static int next_key = -1;
 static int last_scancode = -1;
 bool caps_lock = false;              /* is enabled */
-static bool in_interface = false;
 
 /* ----------------------------------------------------
     //e Keymap. Mapping scancodes to Apple //e US Keyboard
@@ -234,8 +233,11 @@ void c_keys_handle_input(int scancode, int pressed)
 
     // key input consumption
 
-    if ((next_key >= 0) && !in_interface)
-    {
+    if ((next_key >= 0)
+#ifdef INTERFACE_CLASSIC
+            && !in_interface
+#endif
+       ) {
         do {
             int current_key = next_key;
             next_key = -1;
@@ -262,67 +264,12 @@ void c_keys_handle_input(int scancode, int pressed)
                 break;
             }
 
-            if ( !(c_keys_is_interface_key(current_key) || (current_key == kPAUSE)) )
-            {
-                break;
-            }
-
-            pthread_mutex_lock(&interface_mutex);
-#ifdef AUDIO_ENABLED
-            SoundSystemPause();
-#endif
-            in_interface = true;
-
-            switch (current_key)
-            {
 #ifdef INTERFACE_CLASSIC
-            case kF1:
-                c_interface_select_diskette( 0 );
-                break;
-
-            case kF2:
-                c_interface_select_diskette( 1 );
-                break;
-#endif
-
-            case kPAUSE:
-                while (c_mygetch(1) == -1)
-                {
-                    struct timespec ts = { .tv_sec=0, .tv_nsec=1 };
-                    nanosleep(&ts, NULL);
-                }
-                break;
-
-#ifdef INTERFACE_CLASSIC
-            case kF5:
-                c_interface_keyboard_layout();
-                break;
-
-#ifdef DEBUGGER
-            case kF7:
-                c_interface_debugging();
-                break;
-#endif
-
-            case kF8:
-                c_interface_credits();
-                break;
-
-            case kF10:
-                c_interface_parameters();
-                break;
-#endif
-
-            default:
-                break;
+            if ( c_keys_is_interface_key(current_key) || (current_key == kPAUSE) )
+            {
+                c_interface_begin(current_key);
             }
-
-#ifdef AUDIO_ENABLED
-            SoundSystemUnpause();
 #endif
-            c_joystick_reset();
-            pthread_mutex_unlock(&interface_mutex);
-            in_interface = false;
 
         } while(0);
     }
