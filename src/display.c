@@ -388,13 +388,13 @@ static void video_initialize_color() {
     colormap[ COLOR_FLASHING_BLACK].green = 0;
     colormap[ COLOR_FLASHING_BLACK].blue = 0;
 
-    colormap[ COLOR_LIGHT_WHITE].red   = (255<<8)|255;
-    colormap[ COLOR_LIGHT_WHITE].green = (255<<8)|255;
-    colormap[ COLOR_LIGHT_WHITE].blue  = (255<<8)|255;
+    colormap[ COLOR_LIGHT_WHITE].red   = 255;
+    colormap[ COLOR_LIGHT_WHITE].green = 255;
+    colormap[ COLOR_LIGHT_WHITE].blue  = 255;
 
-    colormap[ COLOR_FLASHING_WHITE].red   = (255<<8)|255;
-    colormap[ COLOR_FLASHING_WHITE].green = (255<<8)|255;
-    colormap[ COLOR_FLASHING_WHITE].blue  = (255<<8)|255;
+    colormap[ COLOR_FLASHING_WHITE].red   = 255;
+    colormap[ COLOR_FLASHING_WHITE].green = 255;
+    colormap[ COLOR_FLASHING_WHITE].blue  = 255;
 
     colormap[0x00].red = 0; colormap[0x00].green = 0;
     colormap[0x00].blue = 0;   /* Black */
@@ -408,7 +408,7 @@ static void video_initialize_color() {
     colormap[0x40].blue = 0;   /* Dark Green */
     colormap[0x50].red = 105; colormap[0x50].green = 105;
     colormap[0x50].blue = 105; /* Dark Grey*/
-    colormap[0x60].red = 113; colormap[0x60].green = 24;
+    colormap[0x60].red = 24; colormap[0x60].green = 113;
     colormap[0x60].blue = 255; /* Medium Blue */
     colormap[0x70].red = 12; colormap[0x70].green = 190;
     colormap[0x70].blue = 235; /* Light Blue */
@@ -440,9 +440,9 @@ static void video_initialize_color() {
     colormap[0x09].blue = 170; /* Purple */
     colormap[0x02].red = 0; colormap[0x02].green = 146;
     colormap[0x02].blue = 0;   /* Dark Green */
-    colormap[0x0a].red = 105; colormap[0x0A].green = 105;
+    colormap[0x0a].red = 105; colormap[0x0a].green = 105;
     colormap[0x0a].blue = 105; /* Dark Grey*/
-    colormap[0x03].red = 113; colormap[0x03].green = 24;
+    colormap[0x03].red = 24; colormap[0x03].green = 113;
     colormap[0x03].blue = 255; /* Medium Blue */
     colormap[0x0b].red = 12; colormap[0x0b].green = 190;
     colormap[0x0b].blue = 235; /* Light Blue */
@@ -462,15 +462,6 @@ static void video_initialize_color() {
     colormap[0x07].blue = 130; /* Aqua */
     colormap[0x0f].red = 255; colormap[0x0f].green = 255;
     colormap[0x0f].blue = 255; /* White */
-
-    for (unsigned int i=0; i<16; i++) {
-        colormap[i].red      = (colormap[i].red<<8)      | colormap[i].red;
-        colormap[i].green    = (colormap[i].green<<8)    | colormap[i].green;
-        colormap[i].blue     = (colormap[i].blue<<8)     | colormap[i].blue;
-        colormap[i<<4].red   = (colormap[i<<4].red<<8)   | colormap[i<<4].red;
-        colormap[i<<4].green = (colormap[i<<4].green<<8) | colormap[i<<4].green;
-        colormap[i<<4].blue  = (colormap[i<<4].blue<<8)  | colormap[i<<4].blue;
-    }
 }
 
 void video_set(int flags) {
