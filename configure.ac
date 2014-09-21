@@ -163,7 +163,7 @@ AC_ARG_ENABLE([opengl], AS_HELP_STRING([--disable-opengl], [Disable OpenGL video
                     AC_SEARCH_LIBS(glewInit, [GLEW glew], [
                         opengl_supported='yes'
                         AC_DEFINE(VIDEO_OPENGL, 1, [Use OpenGL])
-                        VIDEO_O="src/video/glvideo.o"
+                        VIDEO_O="src/video/glvideo.o src/video/glinput.o"
                         AC_MSG_RESULT([Building emulator with OpenGL support, w00t!])
                     ], [
                         AC_MSG_WARN([Did not find OpenGL GLEW library...])

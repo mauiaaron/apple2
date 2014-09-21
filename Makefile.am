@@ -36,7 +36,8 @@ INTERFACE_CLASSIC_SRC = \
 
 VIDEO_SRC = \
 	src/video/xvideo.c \
-	src/video/glvideo.c
+	src/video/glvideo.c \
+	src/video/glinput.c
 
 AUDIO_SRC = \
 	src/audio/soundcore.c src/audio/soundcore-openal.c src/audio/speaker.c \

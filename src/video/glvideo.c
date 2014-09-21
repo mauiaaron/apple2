@@ -12,6 +12,7 @@
 // glvideo -- Created by Aaron Culliney
 
 #include "common.h"
+#include "video/glinput.h"
 #include "video/vgl.h"
 #if 0
 #include "video/matmath.h"
@@ -220,7 +221,7 @@ static void _generate_crt_object(void) {
 // initialization routines
 //
 
-static void vdriver_init_common(void) {
+static void gldriver_init_common(void) {
 
     _generate_crt_object();
 
@@ -279,191 +280,9 @@ static void vdriver_init_common(void) {
 
 //----------------------------------------------------------------------------
 //
-// keyboard
-//
-
-static inline void _capslock_hackaround(void) {
-    // NOTE : Unfortunately it appears that we cannot get a raw key down/up notification for CAPSlock, so hack that here
-    // ALSO : Emulator initially sets CAPS state based on a user preference, but sync to system state if user changes it
-    static bool modified_caps_lock = false;
-    int modifiers = glutGetModifiers();
-    if (!c_keys_is_shifted()) {
-        if (modifiers & GLUT_ACTIVE_SHIFT) {
-            modified_caps_lock = true;
-            caps_lock = true;
-        } else if (modified_caps_lock) {
-            caps_lock = false;
-        }
-    }
-}
-
-// Map glut keys into Apple//ix internal-representation scancodes.
-static int _glutkey_to_scancode(int key) {
-
-    switch (key) {
-        case GLUT_KEY_F1:
-            key = SCODE_F1;
-            break;
-        case GLUT_KEY_F2:
-            key = SCODE_F2;
-            break;
-        case GLUT_KEY_F3:
-            key = SCODE_F3;
-            break;
-        case GLUT_KEY_F4:
-            key = SCODE_F4;
-            break;
-        case GLUT_KEY_F5:
-            key = SCODE_F5;
-            break;
-        case GLUT_KEY_F6:
-            key = SCODE_F6;
-            break;
-        case GLUT_KEY_F7:
-            key = SCODE_F7;
-            break;
-        case GLUT_KEY_F8:
-            key = SCODE_F8;
-            break;
-        case GLUT_KEY_F9:
-            key = SCODE_F9;
-            break;
-        case GLUT_KEY_F10:
-            key = SCODE_F10;
-            break;
-        case GLUT_KEY_F11:
-            key = SCODE_F11;
-            break;
-        case GLUT_KEY_F12:
-            key = SCODE_F12;
-            break;
-
-        case GLUT_KEY_LEFT:
-            key = SCODE_L;
-            break;
-        case GLUT_KEY_RIGHT:
-            key = SCODE_R;
-            break;
-        case GLUT_KEY_DOWN:
-            key = SCODE_D;
-            break;
-        case GLUT_KEY_UP:
-            key = SCODE_U;
-            break;
-
-        case GLUT_KEY_PAGE_UP:
-            key = SCODE_PGUP;
-            break;
-        case GLUT_KEY_PAGE_DOWN:
-            key = SCODE_PGDN;
-            break;
-        case GLUT_KEY_HOME:
-            key = SCODE_HOME;
-            break;
-        case GLUT_KEY_END:
-            key = SCODE_END;
-            break;
-        case GLUT_KEY_INSERT:
-            key = SCODE_INS;
-            break;
-
-        case GLUT_KEY_SHIFT_L:
-            key = SCODE_L_SHIFT;
-            break;
-        case GLUT_KEY_SHIFT_R:
-            key = SCODE_R_SHIFT;
-            break;
-
-        case GLUT_KEY_CTRL_L:
-            key = SCODE_L_CTRL;
-            break;
-        case GLUT_KEY_CTRL_R:
-            key = SCODE_R_CTRL;
-            break;
-
-        case GLUT_KEY_ALT_L:
-            key = SCODE_L_ALT;
-            break;
-        case GLUT_KEY_ALT_R:
-            key = SCODE_R_ALT;
-            break;
-
-        //---------------------------------------------------------------------
-        // GLUT does not appear to differentiate keypad keys?
-        //case XK_KP_5:
-        case GLUT_KEY_BEGIN:
-            key = SCODE_KPAD_C;
-            break;
-
-        default:
-            key = c_keys_ascii_to_scancode(key);
-            break;
-    }
-
-    assert(key < 0x80);
-    return key;
-}
-
-#if !defined(TESTING)
-static void vdriver_on_key_down(unsigned char key, int x, int y) {
-    _capslock_hackaround();
-    int scancode = c_keys_ascii_to_scancode(key);
-    LOG("onKeyDown %02x '%c' -> %02X", key, key, scancode);
-    c_keys_handle_input(scancode, 1);
-}
-
-static void vdriver_on_key_up(unsigned char key, int x, int y) {
-    _capslock_hackaround();
-    int scancode = c_keys_ascii_to_scancode(key);
-    LOG("onKeyUp %02x '%c' -> %02X", key, key, scancode);
-    c_keys_handle_input(scancode, 0);
-}
-
-static void vdriver_on_key_special_down(int key, int x, int y) {
-    _capslock_hackaround();
-    int scancode = _glutkey_to_scancode(key);
-    LOG("onKeySpecialDown %08x -> %02X", key, scancode);
-    c_keys_handle_input(scancode, 1);
-}
-
-static void vdriver_on_key_special_up(int key, int x, int y) {
-    _capslock_hackaround();
-    int scancode = _glutkey_to_scancode(key);
-    LOG("onKeySpecialUp %08x -> %02X", key, scancode);
-    c_keys_handle_input(scancode, 0);
-}
-#endif
-
-//----------------------------------------------------------------------------
-//
-// mouse
-//
-#if 0
-static void vdriver_drag(int x, int y) {
-    //LOG("drag %d,%d", x, y);
-    ivec2 currentMouse(x, y);
-    applicationEngine->OnFingerMove(previousMouse, currentMouse);
-    previousMouse.x = x;
-    previousMouse.y = y;
-}
-
-static void vdriver_mouse(int button, int state, int x, int y) {
-    LOG("mouse button:%d state:%d %d,%d", button, state, x, y);
-    if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
-        previousMouse.x = x;
-        previousMouse.y = y;
-        applicationEngine->OnFingerDown(ivec2(x, y));
-    } else if (button == GLUT_LEFT_BUTTON && state == GLUT_UP) {
-        applicationEngine->OnFingerUp(ivec2(x, y));
-    }
-}
-#endif
-
-//----------------------------------------------------------------------------
-//
 // update, display, reshape
 //
-static void vdriver_update(void) {
+static void gldriver_update(void) {
 #if !defined(__APPLE__)
     // HACK MAYBE FIXME : pumps the joystick sampling code that is currently integrated into the keys routine
     c_keys_handle_input(-1, 0);
@@ -471,7 +290,7 @@ static void vdriver_update(void) {
     glutPostRedisplay();
 }
 
-static void vdriver_display(void) {
+static void gldriver_display(void) {
     if (is_headless) {
         return;
     }
@@ -540,7 +359,7 @@ static void vdriver_display(void) {
     glutSwapBuffers();
 }
 
-static void vdriver_reshape(int w, int h) {
+static void gldriver_reshape(int w, int h) {
     LOG("reshape to w:%d h:%d", w, h);
     windowWidth = w;
     windowHeight = h;
@@ -578,7 +397,7 @@ void video_set_mode(a2_video_mode_t mode) {
 
 void video_driver_init(void) {
 #if defined(__APPLE__)
-    vdriver_init_common();
+    gldriver_init_common();
 #else
     glutInit(&argc, argv);
     glutInitDisplayMode(/*GLUT_DOUBLE|*/GLUT_RGBA/*|GLUT_DEPTH*/);
@@ -592,19 +411,19 @@ void video_driver_init(void) {
         ERRQUIT("Unable to initialize GLEW");
     }
 
-    vdriver_init_common();
+    gldriver_init_common();
 
-    glutIdleFunc(vdriver_update);
-    glutDisplayFunc(vdriver_display);
-    glutReshapeFunc(vdriver_reshape);
-    //glutMouseFunc(vdriver_mouse);
-    //glutMotionFunc(vdriver_drag);
+    glutIdleFunc(gldriver_update);
+    glutDisplayFunc(gldriver_display);
+    glutReshapeFunc(gldriver_reshape);
+    //glutMouseFunc(gldriver_mouse);
+    //glutMotionFunc(gldriver_mouse_drag);
 
 #if !defined(TESTING)
-    glutKeyboardFunc(vdriver_on_key_down);
-    glutKeyboardUpFunc(vdriver_on_key_up);
-    glutSpecialFunc(vdriver_on_key_special_down);
-    glutSpecialUpFunc(vdriver_on_key_special_up);
+    glutKeyboardFunc(gldriver_on_key_down);
+    glutKeyboardUpFunc(gldriver_on_key_up);
+    glutSpecialFunc(gldriver_on_key_special_down);
+    glutSpecialUpFunc(gldriver_on_key_special_up);
 #endif
 #endif // !__APPLE__
 }
@@ -621,6 +440,6 @@ void video_driver_sync(void) {
 }
 
 void video_driver_shutdown(void) {
-    // no-op ...
+    // FIXME TODO ...
 }
 
