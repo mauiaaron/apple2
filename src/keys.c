@@ -289,10 +289,24 @@ void c_keys_handle_input(int scancode, int pressed)
                                      // and allow regular PC arrow keys to manipulate joystick...
                                      key_pressed[SCODE_U]       || key_pressed[SCODE_D]       || key_pressed[SCODE_L]       || key_pressed[SCODE_R]);
 
-        if (key_pressed[ SCODE_KPAD_C ] || (auto_recenter && joy_axis_unpressed))
+        if (key_pressed[ SCODE_KPAD_C ])
         {
             joy_x = HALF_JOY_RANGE;
             joy_y = HALF_JOY_RANGE;
+        }
+
+        if (auto_recenter) {
+            static int unpressed_count = 0;
+            if (joy_axis_unpressed) {
+                ++unpressed_count;
+                if (unpressed_count > 2) {
+                    unpressed_count = 0;
+                    joy_x = HALF_JOY_RANGE;
+                    joy_y = HALF_JOY_RANGE;
+                }
+            } else {
+                unpressed_count = 0;
+            }
         }
 
         if (key_pressed[ SCODE_KPAD_UL ] || key_pressed[ SCODE_KPAD_U ] || key_pressed[ SCODE_KPAD_UR ] ||/* regular arrow up */key_pressed[ SCODE_U ])
