@@ -52,7 +52,6 @@ typedef struct ShaderInfo {
     UT_hash_handle hh;
 } ShaderInfo;
 
-static GLuint colorRenderbuffer = 0;
 static int windowWidth = SCANWIDTH*1.5;
 static int windowHeight = SCANHEIGHT*1.5;
 
@@ -60,7 +59,6 @@ static int viewportX = 0;
 static int viewportY = 0;
 static int viewportWidth = SCANWIDTH*1.5;
 static int viewportHeight = SCANHEIGHT*1.5;
-//static GLuint depthRenderbuffer = 0;
 
 #if 0
 static matT translation = {};
@@ -224,33 +222,8 @@ static void _generate_crt_object(void) {
 
 static void vdriver_init_common(void) {
 
-    glGenRenderbuffers(1, &colorRenderbuffer);
-    glBindRenderbuffer(GL_RENDERBUFFER, colorRenderbuffer);
-
     _generate_crt_object();
 
-    // Extract width and height from the color buffer.
-    int width, height;
-    glGetRenderbufferParameteriv(GL_RENDERBUFFER, GL_RENDERBUFFER_WIDTH, &width);
-    glGetRenderbufferParameteriv(GL_RENDERBUFFER, GL_RENDERBUFFER_HEIGHT, &height);
-
-#if 0
-    // Create a depth buffer that has the same size as the color buffer.
-    glGenRenderbuffers(1, &depthRenderbuffer);
-    glBindRenderbuffer(GL_RENDERBUFFER, depthRenderbuffer);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16, width, height);
-#endif
-
-    // Create the framebuffer object.
-    GLuint framebuffer = 0;
-    glGenFramebuffers(1, &framebuffer);
-    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, colorRenderbuffer);
-    //glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthRenderbuffer);
-    glBindRenderbuffer(GL_RENDERBUFFER, colorRenderbuffer);
-    GL_ERRLOG("renderbuffer setup");
-
-    // Create the GLSL program.
     _create_gl_program();
 
     // Extract the handles to attributes and uniforms
@@ -277,7 +250,7 @@ static void vdriver_init_common(void) {
     //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
-    glTexImage2D(GL_TEXTURE_2D, /*level*/0, /*internal format*/GL_RGBA, width, height, /*border*/0, /*format*/GL_RGBA, GL_UNSIGNED_BYTE, 0);
+    glTexImage2D(GL_TEXTURE_2D, /*level*/0, /*internal format*/GL_RGBA, windowWidth, windowHeight, /*border*/0, /*format*/GL_RGBA, GL_UNSIGNED_BYTE, 0);
     GL_ERRLOG("glTexImage2D");
 
     // Initialize various state
@@ -298,10 +271,6 @@ static void vdriver_init_common(void) {
     translation = mat4_translate_xyz(0.f, 0.f, -7.f, MAT4);
 #endif
 
-#if !defined(__APPLE__)
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    GL_ERRLOG("bind main framebuffer");
-#endif
     GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     if (status != GL_FRAMEBUFFER_COMPLETE) {
         ERRQUIT("framebuffer status: %04X", status);
