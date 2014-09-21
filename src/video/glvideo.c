@@ -513,6 +513,10 @@ static void vdriver_mouse(int button, int state, int x, int y) {
 // update, display, reshape
 //
 static void vdriver_update(void) {
+#if !defined(__APPLE__)
+    // HACK MAYBE FIXME : pumps the joystick sampling code that is currently integrated into the keys routine
+    c_keys_handle_input(-1, 0);
+#endif
     glutPostRedisplay();
 }
 
