@@ -389,65 +389,11 @@ static int _glutkey_to_scancode(int key) {
             break;
 
         //---------------------------------------------------------------------
-        // GLUT does not appear to handle these PC keys ...
-#if 0
-        case XK_Pause:
-            key = SCODE_PAUSE;
-            break;
-        case XK_Break:
-            /* Pause and Break are the same key, but have different
-             * scancodes (on PC keyboards).  Ctrl makes the difference.
-             *
-             * We assume the X server is passing along the distinction to us,
-             * rather than making us check Ctrl manually.
-             */
-            key = SCODE_BRK;
-            break;
-        case XK_Print:
-            key = SCODE_PRNT;
-            break;
-#endif
-
-        //---------------------------------------------------------------------
         // GLUT does not appear to differentiate keypad keys?
         //case XK_KP_5:
         case GLUT_KEY_BEGIN:
             key = SCODE_KPAD_C;
             break;
-#if 0
-        case XK_KP_4:
-        case XK_KP_Left:
-            key = SCODE_KPAD_L;
-            break;
-        case XK_KP_8:
-        case XK_KP_Up:
-            key = SCODE_KPAD_U;
-            break;
-        case XK_KP_6:
-        case XK_KP_Right:
-            key = SCODE_KPAD_R;
-            break;
-        case XK_KP_2:
-        case XK_KP_Down:
-            key = SCODE_KPAD_D;
-            break;
-        case XK_KP_7:
-        case XK_KP_Home:
-            key = SCODE_KPAD_UL;
-            break;
-        case XK_KP_9:
-        case XK_KP_Page_Up:
-            key = SCODE_KPAD_UR;
-            break;
-        case XK_KP_1:
-        case XK_KP_End:
-            key = SCODE_KPAD_DL;
-            break;
-        case XK_KP_3:
-        case XK_KP_Page_Down:
-            key = SCODE_KPAD_DR;
-            break;
-#endif
 
         default:
             key = c_keys_ascii_to_scancode(key);
