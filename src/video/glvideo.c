@@ -282,12 +282,10 @@ static void vdriver_init_common(void) {
 // keyboard
 //
 
-// Map glut keys into Apple//ix internal-representation scancodes.
-static int _glutkey_to_scancode(int key) {
-    static bool modified_caps_lock = false;
-
+static inline void _capslock_hackaround(void) {
     // NOTE : Unfortunately it appears that we cannot get a raw key down/up notification for CAPSlock, so hack that here
     // ALSO : Emulator initially sets CAPS state based on a user preference, but sync to system state if user changes it
+    static bool modified_caps_lock = false;
     int modifiers = glutGetModifiers();
     if (!c_keys_is_shifted()) {
         if (modifiers & GLUT_ACTIVE_SHIFT) {
@@ -297,6 +295,10 @@ static int _glutkey_to_scancode(int key) {
             caps_lock = false;
         }
     }
+}
+
+// Map glut keys into Apple//ix internal-representation scancodes.
+static int _glutkey_to_scancode(int key) {
 
     switch (key) {
         case GLUT_KEY_F1:
@@ -458,25 +460,28 @@ static int _glutkey_to_scancode(int key) {
 
 #if !defined(TESTING)
 static void vdriver_on_key_down(unsigned char key, int x, int y) {
-    // no input processing if test-driven ...
-    int scancode = _glutkey_to_scancode(key);
+    _capslock_hackaround();
+    int scancode = c_keys_ascii_to_scancode(key);
     LOG("onKeyDown %02x '%c' -> %02X", key, key, scancode);
     c_keys_handle_input(scancode, 1);
 }
 
 static void vdriver_on_key_up(unsigned char key, int x, int y) {
-    int scancode = _glutkey_to_scancode(key);
+    _capslock_hackaround();
+    int scancode = c_keys_ascii_to_scancode(key);
     LOG("onKeyUp %02x '%c' -> %02X", key, key, scancode);
     c_keys_handle_input(scancode, 0);
 }
 
 static void vdriver_on_key_special_down(int key, int x, int y) {
+    _capslock_hackaround();
     int scancode = _glutkey_to_scancode(key);
     LOG("onKeySpecialDown %08x -> %02X", key, scancode);
     c_keys_handle_input(scancode, 1);
 }
 
 static void vdriver_on_key_special_up(int key, int x, int y) {
+    _capslock_hackaround();
     int scancode = _glutkey_to_scancode(key);
     LOG("onKeySpecialUp %08x -> %02X", key, scancode);
     c_keys_handle_input(scancode, 0);
