@@ -472,7 +472,7 @@ void video_driver_sync(void) {
             break;
         }
 
-        c_keys_handle_input(scancode, pressed);
+        c_keys_handle_input(scancode, pressed, 0);
 
     } while (keyevent);
 #endif

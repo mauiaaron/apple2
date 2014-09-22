@@ -285,7 +285,7 @@ static void gldriver_init_common(void) {
 static void gldriver_update(void) {
 #if !defined(__APPLE__)
     // HACK MAYBE FIXME : pumps the joystick sampling code that is currently integrated into the keys routine
-    c_keys_handle_input(-1, 0);
+    c_keys_handle_input(-1, 0, 0);
 #endif
     glutPostRedisplay();
 }

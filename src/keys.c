@@ -167,13 +167,23 @@ int c_keys_is_shifted()
 /* -------------------------------------------------------------------------
     Handle input : keys and joystick.
    ------------------------------------------------------------------------- */
-void c_keys_handle_input(int scancode, int pressed)
+void c_keys_handle_input(int scancode, int pressed, int is_cooked)
 {
     int *keymap = NULL;
 
     assert(scancode < 0x80);
-    if (scancode >= 0)
-    {
+    if (is_cooked) {
+        last_scancode = -1;
+        if (!pressed) {
+            return;
+        }
+        if (! (key_pressed[ SCODE_L_CTRL ] || key_pressed[ SCODE_R_CTRL ]) ) {
+            if (caps_lock && scancode >= 'a' && scancode <= 'z') {
+                scancode -= 32;
+            }
+        }
+        next_key = scancode;
+    } else if (scancode >= 0) {
         last_scancode = scancode;
 
         if ((key_pressed[ SCODE_L_SHIFT ] || key_pressed[ SCODE_R_SHIFT ]) &&

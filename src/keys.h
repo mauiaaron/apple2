@@ -154,6 +154,6 @@ void c_keys_set_key(int key);
 bool c_keys_is_interface_key(int key);
 int c_keys_is_shifted();
 int c_keys_ascii_to_scancode(int ch);
-void c_keys_handle_input(int scancode, int pressed);
+void c_keys_handle_input(int scancode, int pressed, int is_cooked);
 
 #endif

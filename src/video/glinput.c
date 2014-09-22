@@ -145,30 +145,28 @@ static int _glutkey_to_scancode(int key) {
 #if !defined(TESTING)
 void gldriver_on_key_down(unsigned char key, int x, int y) {
     _capslock_hackaround();
-    int scancode = c_keys_ascii_to_scancode(key);
-    //LOG("onKeyDown %02x '%c' -> %02X", key, key, scancode);
-    c_keys_handle_input(scancode, 1);
+    //LOG("onKeyDown %02x(%d)'%c'", key, key, key);
+    c_keys_handle_input(key, 1, 1);
 }
 
 void gldriver_on_key_up(unsigned char key, int x, int y) {
     _capslock_hackaround();
-    int scancode = c_keys_ascii_to_scancode(key);
-    //LOG("onKeyUp %02x '%c' -> %02X", key, key, scancode);
-    c_keys_handle_input(scancode, 0);
+    //LOG("onKeyUp %02x(%d)'%c'", key, key, key);
+    c_keys_handle_input(key, 0, 1);
 }
 
 void gldriver_on_key_special_down(int key, int x, int y) {
     _capslock_hackaround();
     int scancode = _glutkey_to_scancode(key);
-    //LOG("onKeySpecialDown %08x -> %02X", key, scancode);
-    c_keys_handle_input(scancode, 1);
+    //LOG("onKeySpecialDown %08x(%d) -> %02X(%d)", key, key, scancode, scancode);
+    c_keys_handle_input(scancode, 1, 0);
 }
 
 void gldriver_on_key_special_up(int key, int x, int y) {
     _capslock_hackaround();
     int scancode = _glutkey_to_scancode(key);
-    //LOG("onKeySpecialUp %08x -> %02X", key, scancode);
-    c_keys_handle_input(scancode, 0);
+    //LOG("onKeySpecialDown %08x(%d) -> %02X(%d)", key, key, scancode, scancode);
+    c_keys_handle_input(scancode, 0, 0);
 }
 #endif
 
