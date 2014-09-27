@@ -14,8 +14,14 @@
 // #define USE_GL3W
 
 #if defined(__APPLE__)
-#   include <OpenGLES/ES2/gl.h>
-#   include <OpenGLES/ES2/glext.h>
+#   include <TargetConditionals.h>
+#   if TARGET_OS_MAC
+#       include <OpenGL/OpenGL.h>
+#       include <OpenGL/gl3.h>
+#   else
+#       include <OpenGLES/ES2/gl.h>
+#       include <OpenGLES/ES2/glext.h>
+#   endif
 #elif defined(USE_GL3W)
 #   include <GL3/gl3.h>
 #   include <GL3/gl3w.h>

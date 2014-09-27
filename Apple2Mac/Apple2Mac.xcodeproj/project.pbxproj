@@ -11,8 +11,6 @@
 		773B3D1A1956885A0085CE5F /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 773B3D181956885A0085CE5F /* InfoPlist.strings */; };
 		773B3D1C1956885A0085CE5F /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D1B1956885A0085CE5F /* main.m */; };
 		773B3D201956885A0085CE5F /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = 773B3D1E1956885A0085CE5F /* Credits.rtf */; };
-		773B3D231956885A0085CE5F /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D221956885A0085CE5F /* AppDelegate.m */; };
-		773B3D261956885A0085CE5F /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 773B3D241956885A0085CE5F /* MainMenu.xib */; };
 		773B3D281956885A0085CE5F /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 773B3D271956885A0085CE5F /* Images.xcassets */; };
 		773B3DA019568A570085CE5F /* cpu-supp.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D5D19568A570085CE5F /* cpu-supp.c */; };
 		773B3DA219568A570085CE5F /* darwin-shim.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D6019568A570085CE5F /* darwin-shim.c */; };
@@ -32,7 +30,6 @@
 		773B3DC019568A570085CE5F /* darwin-glue.S in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D9119568A570085CE5F /* darwin-glue.S */; };
 		773B3DC319568A570085CE5F /* zlib-helpers.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D9519568A570085CE5F /* zlib-helpers.c */; };
 		773B3DCB1956903D0085CE5F /* libz.1.1.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 773B3DCA1956903D0085CE5F /* libz.1.1.3.dylib */; };
-		773B3DD3195697290085CE5F /* EmulatorView.m in Sources */ = {isa = PBXBuildFile; fileRef = 773B3DD2195697290085CE5F /* EmulatorView.m */; };
 		779DD827195764E200DF89E5 /* rom-shim.c in Sources */ = {isa = PBXBuildFile; fileRef = 779DD826195764E200DF89E5 /* rom-shim.c */; };
 		779DD82F195BD9F900DF89E5 /* cpu.S in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D9019568A570085CE5F /* cpu.S */; };
 		779DD830195BD9F900DF89E5 /* prefs.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D7719568A570085CE5F /* prefs.c */; };
@@ -62,6 +59,18 @@
 		779DD852195BDA3000DF89E5 /* testcpu.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D7E19568A570085CE5F /* testcpu.c */; };
 		779DD853195BDA3400DF89E5 /* testcommon.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D7C19568A570085CE5F /* testcommon.c */; };
 		779DD856195BDB1700DF89E5 /* CPUTestAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 779DD854195BDB1700DF89E5 /* CPUTestAppDelegate.m */; };
+		779F561C19D7929100A6F107 /* glvideo.c in Sources */ = {isa = PBXBuildFile; fileRef = 77E1C0C719D736EB004344E0 /* glvideo.c */; };
+		779F562119DA584800A6F107 /* Basic.vert in Resources */ = {isa = PBXBuildFile; fileRef = 779F561D19D79AC000A6F107 /* Basic.vert */; };
+		779F562219DA585200A6F107 /* Basic.frag in Resources */ = {isa = PBXBuildFile; fileRef = 779F561E19D79AC000A6F107 /* Basic.frag */; };
+		779F562319DA59D600A6F107 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 773B3D241956885A0085CE5F /* MainMenu.xib */; };
+		77E1C0B319D72700004344E0 /* vectorUtil.c in Sources */ = {isa = PBXBuildFile; fileRef = 77E1C0A919D72700004344E0 /* vectorUtil.c */; };
+		77E1C0B419D72700004344E0 /* sourceUtil.c in Sources */ = {isa = PBXBuildFile; fileRef = 77E1C0AB19D72700004344E0 /* sourceUtil.c */; };
+		77E1C0B519D72700004344E0 /* modelUtil.c in Sources */ = {isa = PBXBuildFile; fileRef = 77E1C0AD19D72700004344E0 /* modelUtil.c */; };
+		77E1C0B619D72700004344E0 /* matrixUtil.c in Sources */ = {isa = PBXBuildFile; fileRef = 77E1C0AF19D72700004344E0 /* matrixUtil.c */; };
+		77E1C0B719D72700004344E0 /* imageUtil.m in Sources */ = {isa = PBXBuildFile; fileRef = 77E1C0B019D72700004344E0 /* imageUtil.m */; };
+		77E1C0C419D7298F004344E0 /* EmulatorWindowController.m in Sources */ = {isa = PBXBuildFile; fileRef = 77E1C0BE19D7298F004344E0 /* EmulatorWindowController.m */; };
+		77E1C0C519D7298F004344E0 /* EmulatorGLView.m in Sources */ = {isa = PBXBuildFile; fileRef = 77E1C0C019D7298F004344E0 /* EmulatorGLView.m */; };
+		77E1C0C619D7298F004344E0 /* EmulatorFullscreenWindow.m in Sources */ = {isa = PBXBuildFile; fileRef = 77E1C0C219D7298F004344E0 /* EmulatorFullscreenWindow.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -75,8 +84,6 @@
 		773B3D1B1956885A0085CE5F /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		773B3D1D1956885A0085CE5F /* Apple2Mac-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Apple2Mac-Prefix.pch"; sourceTree = "<group>"; };
 		773B3D1F1956885A0085CE5F /* en */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = en; path = en.lproj/Credits.rtf; sourceTree = "<group>"; };
-		773B3D211956885A0085CE5F /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
-		773B3D221956885A0085CE5F /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
 		773B3D251956885A0085CE5F /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/MainMenu.xib; sourceTree = "<group>"; };
 		773B3D271956885A0085CE5F /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
 		773B3D2E1956885A0085CE5F /* XCTest.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XCTest.framework; path = Library/Frameworks/XCTest.framework; sourceTree = DEVELOPER_DIR; };
@@ -122,13 +129,34 @@
 		773B3D9519568A570085CE5F /* zlib-helpers.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = "zlib-helpers.c"; sourceTree = "<group>"; };
 		773B3D9619568A570085CE5F /* zlib-helpers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "zlib-helpers.h"; sourceTree = "<group>"; };
 		773B3DCA1956903D0085CE5F /* libz.1.1.3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.1.1.3.dylib; path = usr/lib/libz.1.1.3.dylib; sourceTree = SDKROOT; };
-		773B3DD1195697290085CE5F /* EmulatorView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EmulatorView.h; sourceTree = "<group>"; };
-		773B3DD2195697290085CE5F /* EmulatorView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EmulatorView.m; sourceTree = "<group>"; };
 		779DD826195764E200DF89E5 /* rom-shim.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = "rom-shim.c"; sourceTree = "<group>"; };
 		779DD850195BD9F900DF89E5 /* Apple2MacTestCPU.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Apple2MacTestCPU.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		779DD851195BD9F900DF89E5 /* Apple2MacTestCPU-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "Apple2MacTestCPU-Info.plist"; path = "/Users/aaronculliney/Documents/00web/apple2/Apple2Mac/Apple2MacTests/Apple2MacTestCPU-Info.plist"; sourceTree = "<absolute>"; };
 		779DD854195BDB1700DF89E5 /* CPUTestAppDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CPUTestAppDelegate.m; sourceTree = "<group>"; };
 		779DD855195BDB1700DF89E5 /* CPUTestAppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CPUTestAppDelegate.h; sourceTree = "<group>"; };
+		779F561B19D78B8200A6F107 /* renderer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = renderer.h; sourceTree = "<group>"; };
+		779F561D19D79AC000A6F107 /* Basic.vert */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = Basic.vert; sourceTree = "<group>"; };
+		779F561E19D79AC000A6F107 /* Basic.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = Basic.frag; sourceTree = "<group>"; };
+		77E1C0A119D726C9004344E0 /* character.vsh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; name = character.vsh; path = Shaders/character.vsh; sourceTree = "<group>"; };
+		77E1C0A219D726C9004344E0 /* character.fsh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; name = character.fsh; path = Shaders/character.fsh; sourceTree = "<group>"; };
+		77E1C0A819D72700004344E0 /* vectorUtil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vectorUtil.h; path = video_util/vectorUtil.h; sourceTree = "<group>"; };
+		77E1C0A919D72700004344E0 /* vectorUtil.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = vectorUtil.c; path = video_util/vectorUtil.c; sourceTree = "<group>"; };
+		77E1C0AA19D72700004344E0 /* sourceUtil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sourceUtil.h; path = video_util/sourceUtil.h; sourceTree = "<group>"; };
+		77E1C0AB19D72700004344E0 /* sourceUtil.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = sourceUtil.c; path = video_util/sourceUtil.c; sourceTree = "<group>"; };
+		77E1C0AC19D72700004344E0 /* modelUtil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = modelUtil.h; path = video_util/modelUtil.h; sourceTree = "<group>"; };
+		77E1C0AD19D72700004344E0 /* modelUtil.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = modelUtil.c; path = video_util/modelUtil.c; sourceTree = "<group>"; };
+		77E1C0AE19D72700004344E0 /* matrixUtil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = matrixUtil.h; path = video_util/matrixUtil.h; sourceTree = "<group>"; };
+		77E1C0AF19D72700004344E0 /* matrixUtil.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = matrixUtil.c; path = video_util/matrixUtil.c; sourceTree = "<group>"; };
+		77E1C0B019D72700004344E0 /* imageUtil.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = imageUtil.m; path = video_util/imageUtil.m; sourceTree = "<group>"; };
+		77E1C0B119D72700004344E0 /* imageUtil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = imageUtil.h; path = video_util/imageUtil.h; sourceTree = "<group>"; };
+		77E1C0B219D72700004344E0 /* glUtil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = glUtil.h; path = video_util/glUtil.h; sourceTree = "<group>"; };
+		77E1C0BE19D7298F004344E0 /* EmulatorWindowController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = EmulatorWindowController.m; path = Classes/OSX/EmulatorWindowController.m; sourceTree = "<group>"; };
+		77E1C0BF19D7298F004344E0 /* EmulatorWindowController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = EmulatorWindowController.h; path = Classes/OSX/EmulatorWindowController.h; sourceTree = "<group>"; };
+		77E1C0C019D7298F004344E0 /* EmulatorGLView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = EmulatorGLView.m; path = Classes/OSX/EmulatorGLView.m; sourceTree = "<group>"; };
+		77E1C0C119D7298F004344E0 /* EmulatorGLView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = EmulatorGLView.h; path = Classes/OSX/EmulatorGLView.h; sourceTree = "<group>"; };
+		77E1C0C219D7298F004344E0 /* EmulatorFullscreenWindow.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = EmulatorFullscreenWindow.m; path = Classes/OSX/EmulatorFullscreenWindow.m; sourceTree = "<group>"; };
+		77E1C0C319D7298F004344E0 /* EmulatorFullscreenWindow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = EmulatorFullscreenWindow.h; path = Classes/OSX/EmulatorFullscreenWindow.h; sourceTree = "<group>"; };
+		77E1C0C719D736EB004344E0 /* glvideo.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = glvideo.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -198,6 +226,7 @@
 			children = (
 				773B3D4519568A570085CE5F /* src */,
 				773B3D431956897D0085CE5F /* Classes */,
+				77E1C09E19D726B8004344E0 /* Shaders */,
 				773B3D44195689910085CE5F /* Resources */,
 				773B3D161956885A0085CE5F /* Supporting Files */,
 			);
@@ -239,10 +268,12 @@
 		773B3D431956897D0085CE5F /* Classes */ = {
 			isa = PBXGroup;
 			children = (
-				773B3D211956885A0085CE5F /* AppDelegate.h */,
-				773B3D221956885A0085CE5F /* AppDelegate.m */,
-				773B3DD1195697290085CE5F /* EmulatorView.h */,
-				773B3DD2195697290085CE5F /* EmulatorView.m */,
+				77E1C0BE19D7298F004344E0 /* EmulatorWindowController.m */,
+				77E1C0BF19D7298F004344E0 /* EmulatorWindowController.h */,
+				77E1C0C019D7298F004344E0 /* EmulatorGLView.m */,
+				77E1C0C119D7298F004344E0 /* EmulatorGLView.h */,
+				77E1C0C219D7298F004344E0 /* EmulatorFullscreenWindow.m */,
+				77E1C0C319D7298F004344E0 /* EmulatorFullscreenWindow.h */,
 			);
 			name = Classes;
 			sourceTree = "<group>";
@@ -284,6 +315,7 @@
 				773B3D8819568A570085CE5F /* timing.h */,
 				773B3D8919568A570085CE5F /* uthash.h */,
 				773B3D8A19568A570085CE5F /* video */,
+				77E1C0A719D726E8004344E0 /* video_util */,
 				773B3D8D19568A570085CE5F /* vm.c */,
 				773B3D8E19568A570085CE5F /* x86 */,
 				773B3D9519568A570085CE5F /* zlib-helpers.c */,
@@ -321,7 +353,11 @@
 		773B3D8A19568A570085CE5F /* video */ = {
 			isa = PBXGroup;
 			children = (
+				779F561D19D79AC000A6F107 /* Basic.vert */,
+				779F561E19D79AC000A6F107 /* Basic.frag */,
+				77E1C0C719D736EB004344E0 /* glvideo.c */,
 				773B3D8B19568A570085CE5F /* video.h */,
+				779F561B19D78B8200A6F107 /* renderer.h */,
 			);
 			path = video;
 			sourceTree = "<group>";
@@ -335,6 +371,33 @@
 				773B3D9319568A570085CE5F /* glue-prologue.h */,
 			);
 			path = x86;
+			sourceTree = "<group>";
+		};
+		77E1C09E19D726B8004344E0 /* Shaders */ = {
+			isa = PBXGroup;
+			children = (
+				77E1C0A119D726C9004344E0 /* character.vsh */,
+				77E1C0A219D726C9004344E0 /* character.fsh */,
+			);
+			name = Shaders;
+			sourceTree = "<group>";
+		};
+		77E1C0A719D726E8004344E0 /* video_util */ = {
+			isa = PBXGroup;
+			children = (
+				77E1C0A819D72700004344E0 /* vectorUtil.h */,
+				77E1C0A919D72700004344E0 /* vectorUtil.c */,
+				77E1C0AA19D72700004344E0 /* sourceUtil.h */,
+				77E1C0AB19D72700004344E0 /* sourceUtil.c */,
+				77E1C0AC19D72700004344E0 /* modelUtil.h */,
+				77E1C0AD19D72700004344E0 /* modelUtil.c */,
+				77E1C0AE19D72700004344E0 /* matrixUtil.h */,
+				77E1C0AF19D72700004344E0 /* matrixUtil.c */,
+				77E1C0B019D72700004344E0 /* imageUtil.m */,
+				77E1C0B119D72700004344E0 /* imageUtil.h */,
+				77E1C0B219D72700004344E0 /* glUtil.h */,
+			);
+			name = video_util;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -413,8 +476,10 @@
 			files = (
 				773B3D1A1956885A0085CE5F /* InfoPlist.strings in Resources */,
 				773B3D281956885A0085CE5F /* Images.xcassets in Resources */,
+				779F562219DA585200A6F107 /* Basic.frag in Resources */,
 				773B3D201956885A0085CE5F /* Credits.rtf in Resources */,
-				773B3D261956885A0085CE5F /* MainMenu.xib in Resources */,
+				779F562119DA584800A6F107 /* Basic.vert in Resources */,
+				779F562319DA59D600A6F107 /* MainMenu.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -500,20 +565,27 @@
 				773B3DA419568A570085CE5F /* display.c in Sources */,
 				773B3DA319568A570085CE5F /* disk.c in Sources */,
 				773B3DAD19568A570085CE5F /* debugger.c in Sources */,
+				77E1C0B319D72700004344E0 /* vectorUtil.c in Sources */,
 				773B3DAB19568A570085CE5F /* keys.c in Sources */,
 				773B3DBC19568A570085CE5F /* timing.c in Sources */,
 				773B3DAF19568A570085CE5F /* misc.c in Sources */,
+				77E1C0C419D7298F004344E0 /* EmulatorWindowController.m in Sources */,
+				77E1C0B619D72700004344E0 /* matrixUtil.c in Sources */,
+				77E1C0C519D7298F004344E0 /* EmulatorGLView.m in Sources */,
 				773B3DAE19568A570085CE5F /* opcodes.c in Sources */,
 				779DD827195764E200DF89E5 /* rom-shim.c in Sources */,
 				773B3DC319568A570085CE5F /* zlib-helpers.c in Sources */,
+				77E1C0B719D72700004344E0 /* imageUtil.m in Sources */,
 				773B3DA219568A570085CE5F /* darwin-shim.c in Sources */,
-				773B3D231956885A0085CE5F /* AppDelegate.m in Sources */,
+				77E1C0B519D72700004344E0 /* modelUtil.c in Sources */,
 				773B3DAC19568A570085CE5F /* debug.l in Sources */,
+				77E1C0C619D7298F004344E0 /* EmulatorFullscreenWindow.m in Sources */,
 				773B3DA519568A570085CE5F /* font.c in Sources */,
 				773B3DA019568A570085CE5F /* cpu-supp.c in Sources */,
+				779F561C19D7929100A6F107 /* glvideo.c in Sources */,
+				77E1C0B419D72700004344E0 /* sourceUtil.c in Sources */,
 				773B3DBE19568A570085CE5F /* vm.c in Sources */,
 				773B3DC019568A570085CE5F /* darwin-glue.S in Sources */,
-				773B3DD3195697290085CE5F /* EmulatorView.m in Sources */,
 				773B3D1C1956885A0085CE5F /* main.m in Sources */,
 				773B3DAA19568A570085CE5F /* joystick.c in Sources */,
 			);

@@ -15,6 +15,7 @@
  */
 
 #include "common.h"
+#include "video/renderer.h"
 
 #define DYNAMIC_SZ 11 // 7 pixels (as bytes) + 2pre + 2post
 
@@ -564,12 +565,6 @@ void video_plotchar( int x, int y, int scheme, uint8_t c ) {
     _plot_char80(&d,&s);
 }
 
-#if !HEADLESS
-extern void video_driver_init(void);
-extern void video_driver_main_loop(void);
-extern void video_driver_sync(void);
-extern void video_driver_shutdown(void);
-#endif
 void video_init(void) {
 
     video__fb1 = vga_mem_page_0;
@@ -581,9 +576,11 @@ void video_init(void) {
 
     video_initialize_color();
 #if !HEADLESS
+#if !defined(__APPLE__)
     if (!is_headless) {
-        video_driver_init();
+        video_driver_init((void *)0);
     }
+#endif
 #endif
 }
 
@@ -598,7 +595,9 @@ void video_shutdown(void) {
     if (!is_headless) {
         video_driver_shutdown();
     }
+#if !defined(__APPLE__)
     exit(0);
+#endif
 #endif
 }
 

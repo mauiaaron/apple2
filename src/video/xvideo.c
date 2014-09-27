@@ -430,7 +430,7 @@ static void c_flash_cursor(int on) {
     }
 }
 
-void video_driver_sync(void) {
+static void video_driver_sync(void) {
     if (is_headless) {
         return;
     }
@@ -676,7 +676,7 @@ void video_set_mode(a2_video_mode_t mode) {
     _size_hints_set_fixed();
 }
 
-void video_driver_init() {
+void video_driver_init(void *context) {
     XSetWindowAttributes attribs;
     unsigned long attribmask;
     int x, y;           /* window position */

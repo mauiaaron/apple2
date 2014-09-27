@@ -58,7 +58,7 @@
 #if VIDEO_OPENGL
 #include "video/vgl.h"
 #else
-#define GLint int
+#define GLenum int
 #define glGetError() 0
 #endif
 
@@ -103,36 +103,42 @@ extern FILE *error_log;
 #define LOG(...) \
     if (do_logging) { \
         errno = 0; \
-        GLint _glerr = 0; \
+        GLenum _glerr = 0; \
         _LOG(__VA_ARGS__); \
     }
 
 #define ERRLOG(...) \
     if (do_logging) { \
-        GLint _glerr = glGetError(); \
+        GLenum _glerr = glGetError(); \
         _LOG(__VA_ARGS__); \
+        while ( (_glerr = glGetError()) ) { \
+            _LOG(__VA_ARGS__); \
+        } \
     }
 
 #define GL_ERRLOG(...) \
     if (do_logging) { \
-        GLint _glerr = glGetError(); \
-        if (_glerr) { \
+        GLenum _glerr = 0; \
+        while ( (_glerr = glGetError()) ) { \
             _LOG(__VA_ARGS__); \
         } \
     }
 
 #define ERRQUIT(...) \
     do { \
-        GLint _glerr = glGetError(); \
+        GLenum _glerr = glGetError(); \
         _LOG(__VA_ARGS__); \
+        while ( (_glerr = glGetError()) ) { \
+            _LOG(__VA_ARGS__); \
+        } \
         QUIT_FUNCTION(1); \
     } while(0)
 
 #define GL_ERRQUIT(...) \
     do { \
-        GLint _glerr = glGetError(); \
-        if (_glerr) { \
-            _LOG( __VA_ARGS__); \
+        GLenum _glerr = 0; \
+        while ( (_glerr = glGetError()) ) { \
+            _LOG(__VA_ARGS__); \
             QUIT_FUNCTION(_glerr); \
         } \
     } while(0)
@@ -157,7 +163,7 @@ extern FILE *error_log;
 
 #define RELEASE_LOG(...) \
     do { \
-        GLint _glerr = glGetError(); \
+        GLenum _glerr = glGetError(); \
         errno = 0; \
         _LOG(__VA_ARGS__); \
     } while(0);
@@ -167,5 +173,13 @@ extern FILE *error_log;
         free((x)); \
         (x) = NULL; \
     } while (0);
+
+#ifdef __APPLE__
+#define CFRELEASE(x) \
+    do { \
+        CFRelease((x)); \
+        (x) = NULL; \
+    } while (0);
+#endif
 
 #endif // whole file

@@ -109,8 +109,6 @@ void video_loadfont_int(int first, int qty, const uint8_t *data);
  */
 void video_plotchar(int row, int col, int color, uint8_t code);
 
-void video_set_mode(a2_video_mode_t mode);
-
 /*
  * Get a reference to current internal framebuffer
  */
