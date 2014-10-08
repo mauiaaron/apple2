@@ -305,7 +305,7 @@ static GLuint _build_program(demoSource *vertexSource, demoSource *fragmentSourc
     //  with the proper version preprocessor string prepended
     float  glLanguageVersion;
 
-#if ESSENTIAL_GL_PRACTICES_IOS
+#if TARGET_OS_IPHONE
     sscanf((char *)glGetString(GL_SHADING_LANGUAGE_VERSION), "OpenGL ES GLSL ES %f", &glLanguageVersion);
 #else
     sscanf((char *)glGetString(GL_SHADING_LANGUAGE_VERSION), "%f", &glLanguageVersion);

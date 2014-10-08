@@ -100,10 +100,8 @@ static CVReturn displayLinkCallback(CVDisplayLinkRef displayLink, const CVTimeSt
 		NSOpenGLPFADoubleBuffer,
 		NSOpenGLPFADepthSize, 24,
 		// Must specify the 3.2 Core Profile to use OpenGL 3.2
-#if ESSENTIAL_GL_PRACTICES_SUPPORT_GL3
 		NSOpenGLPFAOpenGLProfile,
 		NSOpenGLProfileVersion3_2Core,
-#endif
 		0
 	};
 	
@@ -116,7 +114,7 @@ static CVReturn displayLinkCallback(CVDisplayLinkRef displayLink, const CVTimeSt
 	   
     NSOpenGLContext* context = [[[NSOpenGLContext alloc] initWithFormat:pf shareContext:nil] autorelease];
     
-#if ESSENTIAL_GL_PRACTICES_SUPPORT_GL3 && defined(DEBUG)
+#if defined(DEBUG)
 	// When we're using a CoreProfile context, crash if we call a legacy OpenGL function
 	// This will make it much more obvious where and when such a function call is made so
 	// that we can remove such calls.
