@@ -56,7 +56,7 @@
 
 
 #if VIDEO_OPENGL
-#include "video/vgl.h"
+#include "video_util/glUtil.h"
 #else
 #define GLenum int
 #define glGetError() 0

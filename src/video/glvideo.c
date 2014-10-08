@@ -13,7 +13,6 @@
 
 #include "common.h"
 #include "video/glinput.h"
-#include "video/vgl.h"
 #include "video/renderer.h"
 
 #include "video_util/modelUtil.h"
