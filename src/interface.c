@@ -689,7 +689,9 @@ typedef enum interface_enum_t {
     OPT_CALIBRATE,
     OPT_PATH,
     OPT_COLOR,
+#if !VIDEO_OPENGL
     OPT_VIDEO,
+#endif
     OPT_VOLUME,
     OPT_CAPS,
 
@@ -812,9 +814,11 @@ void c_interface_parameters()
                         (color_mode == COLOR_INTERP) ? "Interpolated" : "Black/White ");
                 break;
 
+#if !VIDEO_OPENGL
             case OPT_VIDEO:
                 sprintf(temp, "%s", (a2_video_mode == VIDEO_1X) ? "1X       " : (a2_video_mode == VIDEO_2X) ? "2X       " : "Fullscreen");
                 break;
+#endif
 
             case OPT_JOYSTICK:
                 snprintf(temp, TEMPSIZE, "%s", (joy_mode == JOY_KPAD) ? "Emulated on Keypad" :
@@ -987,6 +991,7 @@ void c_interface_parameters()
                 }
                 break;
 
+#if !VIDEO_OPENGL
             case OPT_VIDEO:
                 if (a2_video_mode == 1)
                 {
@@ -998,6 +1003,7 @@ void c_interface_parameters()
                 }
                 video_set_mode(a2_video_mode);
                 break;
+#endif
 
             case OPT_VOLUME:
                 if (sound_volume > 0)
@@ -1091,6 +1097,7 @@ void c_interface_parameters()
                 }
                 break;
 
+#if !VIDEO_OPENGL
             case OPT_VIDEO:
                 if (a2_video_mode == NUM_VIDOPTS-1)
                 {
@@ -1102,6 +1109,7 @@ void c_interface_parameters()
                 }
                 video_set_mode(a2_video_mode);
                 break;
+#endif
 
             case OPT_VOLUME:
                 sound_volume++;

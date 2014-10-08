@@ -1,5 +1,5 @@
 
-AM_CPPFLAGS = -Isrc
+AM_CPPFLAGS = -Isrc -DCONFIG_DATADIR=\"@datadir@\"
 AM_CPPFLAGS += -I../src # work around some bug in make distcheck
 AM_LFLAGS = -i
 #AM_COLOR_TESTS = no
@@ -37,7 +37,11 @@ INTERFACE_CLASSIC_SRC = \
 VIDEO_SRC = \
 	src/video/xvideo.c \
 	src/video/glvideo.c \
-	src/video/glinput.c
+	src/video/glinput.c \
+	src/video_util/matrixUtil.c \
+	src/video_util/modelUtil.c \
+	src/video_util/sourceUtil.c \
+	src/video_util/vectorUtil.c
 
 AUDIO_SRC = \
 	src/audio/soundcore.c src/audio/soundcore-openal.c src/audio/speaker.c \
@@ -119,10 +123,22 @@ testvm_DEPENDENCIES = @ASM_O@ @META_O@ @VIDEO_O@
 EXTRA_testvm_SOURCES = $(ASM_SRC_x86) $(VIDEO_SRC)
 
 ###############################################################################
-# Misc
+# Misc & Installation
 
+# manpage
 man_MANS = docs/apple2ix.6
 
+# shaders
+shadersdir = @datadir@/@PACKAGE@/shaders
+shaders_DATA = src/video/Basic.vsh src/video/Basic.fsh
+
+# disk images
+disksdir = @datadir@/@PACKAGE@/disks
+disks_DATA = \
+	disks/README disks/blank.dsk.gz disks/blank.nib.gz disks/etc.dsk.gz \
+	disks/mystery.dsk.gz disks/speedtest.dsk.gz disks/speedtest.txt
+
+# Extra distribution stuff
 EXTRA_DIST = reconf.sh configure README.debugger PROBLEMS .apple2 \
 	\
 	disks/README disks/blank.dsk.gz disks/blank.nib.gz disks/etc.dsk.gz \
@@ -131,6 +147,8 @@ EXTRA_DIST = reconf.sh configure README.debugger PROBLEMS .apple2 \
 	docs/apple2ix.6 \
 	\
 	src/font.txt \
-	src/x86/genglue
+	src/x86/genglue \
+	\
+	src/video/Basic.vsh src/video/Basic.fsh
 
 CLEANFILES = src/font.c src/rom.c src/meta/debug.c src/x86/glue.S

@@ -468,7 +468,7 @@ static GLuint _build_program(demoSource *vertexSource, demoSource *fragmentSourc
 
 static demoSource *_create_shader_source(const char *fileName) {
     demoSource *src = NULL;
-#ifdef __APPLE__
+#if defined(__APPLE__)
     CFBundleRef mainBundle = CFBundleGetMainBundle();
     CFStringRef fileString = CFStringCreateWithCString(/*allocator*/NULL, fileName, CFStringGetSystemEncoding());
     CFURLRef fileURL = CFBundleCopyResourceURL(mainBundle, fileString, NULL, NULL);
@@ -477,8 +477,17 @@ static demoSource *_create_shader_source(const char *fileName) {
     CFRELEASE(fileURL);
     src = srcLoadSource(CFStringGetCStringPtr(filePath, CFStringGetSystemEncoding()));
     CFRELEASE(filePath);
+#elif defined(CONFIG_DATADIR)
+    char *filePath = NULL;
+    asprintf(&filePath, "%s/%s/shaders/%s", CONFIG_DATADIR, PACKAGE_NAME, fileName);
+    if (filePath) {
+        src = srcLoadSource(filePath);
+        free(filePath);
+    } else {
+        ERRLOG("OOPS Could not load shader from %s (%s)", filePath, fileName);
+    }
 #else
-#error FIXME TODO need to leveage GNU build system install_dir or somesuch stuff ...
+#error need to specify a DATADIR for shader files, etc
 #endif
     return src;
 }
@@ -538,7 +547,7 @@ static void gldriver_init_common(void) {
     glEnable(GL_CULL_FACE);
 
     // Always use this clear color
-    glClearColor(0.5f, 0.4f, 0.5f, 1.0f);
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
     // Draw our scene once without presenting the rendered image.
     //   This is done in order to pre-warm OpenGL
@@ -548,6 +557,14 @@ static void gldriver_init_common(void) {
 
     // Check for errors to make sure all of our setup went ok
     GL_ERRLOG("finished initialization");
+
+#if !defined(__APPLE__)
+    glBindFramebuffer(GL_FRAMEBUFFER, defaultFBO);
+#endif
+    GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    if (status != GL_FRAMEBUFFER_COMPLETE) {
+        ERRQUIT("framebuffer status: %04X", status);
+    }
 }
 
 static void gldriver_shutdown(void) {
@@ -632,6 +649,10 @@ static void gldriver_render(void) {
 
     // Draw the CRT object
     glDrawElements(GL_TRIANGLES, crtNumElements, crtElementType, 0);
+
+#if USE_GLUT
+    glutSwapBuffers();
+#endif
 }
 
 static void gldriver_reshape(int w, int h) {
@@ -667,7 +688,7 @@ static void gldriver_reshape(int w, int h) {
 }
 
 #if USE_GLUT
-static void _init_with_glut(GLuint fbo) {
+static void gldriver_init_glut(GLuint fbo) {
     glutInit(&argc, argv);
     glutInitDisplayMode(/*GLUT_DOUBLE|*/GLUT_RGBA|GLUT_DEPTH);
     glutInitWindowSize(windowWidth, windowHeight);
@@ -705,7 +726,7 @@ void video_driver_init(void *fbo) {
 #if defined(__APPLE__)
     gldriver_init_common();
 #elif USE_GLUT
-    gldriver_init_glut();
+    gldriver_init_glut(fbo);
 #else
 #error no working codepaths
 #endif
