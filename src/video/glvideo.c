@@ -513,8 +513,8 @@ static void gldriver_init_common(void) {
     // ----------------------------
     // Load/setup shaders
 
-    demoSource *vtxSource = _create_shader_source("Basic.vert");
-    demoSource *frgSource = _create_shader_source("Basic.frag");
+    demoSource *vtxSource = _create_shader_source("Basic.vsh");
+    demoSource *frgSource = _create_shader_source("Basic.fsh");
 
     // Build Program
     program = _build_program(vtxSource, frgSource, /*withNormal:*/false, /*withTexcoord:*/true);
