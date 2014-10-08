@@ -60,9 +60,9 @@
 		779DD853195BDA3400DF89E5 /* testcommon.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D7C19568A570085CE5F /* testcommon.c */; };
 		779DD856195BDB1700DF89E5 /* CPUTestAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 779DD854195BDB1700DF89E5 /* CPUTestAppDelegate.m */; };
 		779F561C19D7929100A6F107 /* glvideo.c in Sources */ = {isa = PBXBuildFile; fileRef = 77E1C0C719D736EB004344E0 /* glvideo.c */; };
-		779F562119DA584800A6F107 /* Basic.vert in Resources */ = {isa = PBXBuildFile; fileRef = 779F561D19D79AC000A6F107 /* Basic.vert */; };
-		779F562219DA585200A6F107 /* Basic.frag in Resources */ = {isa = PBXBuildFile; fileRef = 779F561E19D79AC000A6F107 /* Basic.frag */; };
 		779F562319DA59D600A6F107 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 773B3D241956885A0085CE5F /* MainMenu.xib */; };
+		779F562919E4FE9E00A6F107 /* Basic.vsh in Resources */ = {isa = PBXBuildFile; fileRef = 779F562719E4FE9E00A6F107 /* Basic.vsh */; };
+		779F562A19E4FE9E00A6F107 /* Basic.fsh in Resources */ = {isa = PBXBuildFile; fileRef = 779F562819E4FE9E00A6F107 /* Basic.fsh */; };
 		77E1C0B319D72700004344E0 /* vectorUtil.c in Sources */ = {isa = PBXBuildFile; fileRef = 77E1C0A919D72700004344E0 /* vectorUtil.c */; };
 		77E1C0B419D72700004344E0 /* sourceUtil.c in Sources */ = {isa = PBXBuildFile; fileRef = 77E1C0AB19D72700004344E0 /* sourceUtil.c */; };
 		77E1C0B519D72700004344E0 /* modelUtil.c in Sources */ = {isa = PBXBuildFile; fileRef = 77E1C0AD19D72700004344E0 /* modelUtil.c */; };
@@ -135,10 +135,8 @@
 		779DD854195BDB1700DF89E5 /* CPUTestAppDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CPUTestAppDelegate.m; sourceTree = "<group>"; };
 		779DD855195BDB1700DF89E5 /* CPUTestAppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CPUTestAppDelegate.h; sourceTree = "<group>"; };
 		779F561B19D78B8200A6F107 /* renderer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = renderer.h; sourceTree = "<group>"; };
-		779F561D19D79AC000A6F107 /* Basic.vert */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = Basic.vert; sourceTree = "<group>"; };
-		779F561E19D79AC000A6F107 /* Basic.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = Basic.frag; sourceTree = "<group>"; };
-		77E1C0A119D726C9004344E0 /* character.vsh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; name = character.vsh; path = Shaders/character.vsh; sourceTree = "<group>"; };
-		77E1C0A219D726C9004344E0 /* character.fsh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; name = character.fsh; path = Shaders/character.fsh; sourceTree = "<group>"; };
+		779F562719E4FE9E00A6F107 /* Basic.vsh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = Basic.vsh; sourceTree = "<group>"; };
+		779F562819E4FE9E00A6F107 /* Basic.fsh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = Basic.fsh; sourceTree = "<group>"; };
 		77E1C0A819D72700004344E0 /* vectorUtil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vectorUtil.h; path = video_util/vectorUtil.h; sourceTree = "<group>"; };
 		77E1C0A919D72700004344E0 /* vectorUtil.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = vectorUtil.c; path = video_util/vectorUtil.c; sourceTree = "<group>"; };
 		77E1C0AA19D72700004344E0 /* sourceUtil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sourceUtil.h; path = video_util/sourceUtil.h; sourceTree = "<group>"; };
@@ -353,8 +351,8 @@
 		773B3D8A19568A570085CE5F /* video */ = {
 			isa = PBXGroup;
 			children = (
-				779F561D19D79AC000A6F107 /* Basic.vert */,
-				779F561E19D79AC000A6F107 /* Basic.frag */,
+				779F562719E4FE9E00A6F107 /* Basic.vsh */,
+				779F562819E4FE9E00A6F107 /* Basic.fsh */,
 				77E1C0C719D736EB004344E0 /* glvideo.c */,
 				773B3D8B19568A570085CE5F /* video.h */,
 				779F561B19D78B8200A6F107 /* renderer.h */,
@@ -376,8 +374,6 @@
 		77E1C09E19D726B8004344E0 /* Shaders */ = {
 			isa = PBXGroup;
 			children = (
-				77E1C0A119D726C9004344E0 /* character.vsh */,
-				77E1C0A219D726C9004344E0 /* character.fsh */,
 			);
 			name = Shaders;
 			sourceTree = "<group>";
@@ -476,9 +472,9 @@
 			files = (
 				773B3D1A1956885A0085CE5F /* InfoPlist.strings in Resources */,
 				773B3D281956885A0085CE5F /* Images.xcassets in Resources */,
-				779F562219DA585200A6F107 /* Basic.frag in Resources */,
 				773B3D201956885A0085CE5F /* Credits.rtf in Resources */,
-				779F562119DA584800A6F107 /* Basic.vert in Resources */,
+				779F562919E4FE9E00A6F107 /* Basic.vsh in Resources */,
+				779F562A19E4FE9E00A6F107 /* Basic.fsh in Resources */,
 				779F562319DA59D600A6F107 /* MainMenu.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
