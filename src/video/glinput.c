@@ -157,6 +157,9 @@ void gldriver_on_key_up(unsigned char key, int x, int y) {
 void gldriver_on_key_special_down(int key, int x, int y) {
     _capslock_hackaround();
     int scancode = _glutkey_to_scancode(key);
+    if (scancode == SCODE_F11) {
+        glutFullScreenToggle();
+    }
     //LOG("onKeySpecialDown %08x(%d) -> %02X(%d)", key, key, scancode, scancode);
     c_keys_handle_input(scancode, 1, 0);
 }
