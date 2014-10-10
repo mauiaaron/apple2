@@ -430,7 +430,7 @@ static void c_flash_cursor(int on) {
     }
 }
 
-static void video_driver_sync(void) {
+void video_driver_sync(void) {
     if (is_headless) {
         return;
     }
