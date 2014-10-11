@@ -1,5 +1,5 @@
 //
-//  AppDelegate.h
+//  CPUTestAppDelegate.h
 //  Apple2Mac
 //
 //  Created by Aaron Culliney on 6/21/14.
@@ -8,7 +8,7 @@
 
 #import <Cocoa/Cocoa.h>
 
-@interface AppDelegate : NSObject <NSApplicationDelegate>
+@interface CPUTestAppDelegate : NSObject <NSApplicationDelegate>
 
 @property (assign) IBOutlet NSWindow *window;
 

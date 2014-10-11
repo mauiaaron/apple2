@@ -29,7 +29,7 @@
 	<key>NSHumanReadableCopyright</key>
 	<string>Copyright © 2014 deadc0de.org. All rights reserved.</string>
 	<key>NSMainNibFile</key>
-	<string>MainMenu</string>
+	<string>MainMenu-Test</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
 </dict>

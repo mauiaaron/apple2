@@ -7,6 +7,15 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4ADC51C219E8BD3700186B36 /* vectorUtil.c in Sources */ = {isa = PBXBuildFile; fileRef = 77E1C0A919D72700004344E0 /* vectorUtil.c */; };
+		4ADC51C319E8BD3A00186B36 /* sourceUtil.c in Sources */ = {isa = PBXBuildFile; fileRef = 77E1C0AB19D72700004344E0 /* sourceUtil.c */; };
+		4ADC51C419E8BD3D00186B36 /* modelUtil.c in Sources */ = {isa = PBXBuildFile; fileRef = 77E1C0AD19D72700004344E0 /* modelUtil.c */; };
+		4ADC51C519E8BD4000186B36 /* matrixUtil.c in Sources */ = {isa = PBXBuildFile; fileRef = 77E1C0AF19D72700004344E0 /* matrixUtil.c */; };
+		4ADC51C619E8BD5200186B36 /* glvideo.c in Sources */ = {isa = PBXBuildFile; fileRef = 77E1C0C719D736EB004344E0 /* glvideo.c */; };
+		4ADC51C719E8BD5800186B36 /* Basic.vsh in Resources */ = {isa = PBXBuildFile; fileRef = 779F562719E4FE9E00A6F107 /* Basic.vsh */; };
+		4ADC51C819E8BD5A00186B36 /* Basic.fsh in Resources */ = {isa = PBXBuildFile; fileRef = 779F562819E4FE9E00A6F107 /* Basic.fsh */; };
+		4ADC51CD19E8C19A00186B36 /* MainMenu-Test.xib in Resources */ = {isa = PBXBuildFile; fileRef = 4ADC51C919E8BEB700186B36 /* MainMenu-Test.xib */; };
+		4ADC51FA19E8C6EF00186B36 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D1B1956885A0085CE5F /* main.m */; };
 		773B3D101956885A0085CE5F /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 773B3D0F1956885A0085CE5F /* Cocoa.framework */; };
 		773B3D1A1956885A0085CE5F /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 773B3D181956885A0085CE5F /* InfoPlist.strings */; };
 		773B3D1C1956885A0085CE5F /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D1B1956885A0085CE5F /* main.m */; };
@@ -48,14 +57,12 @@
 		779DD83E195BD9F900DF89E5 /* cpu-supp.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D5D19568A570085CE5F /* cpu-supp.c */; };
 		779DD83F195BD9F900DF89E5 /* vm.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D8D19568A570085CE5F /* vm.c */; };
 		779DD840195BD9F900DF89E5 /* darwin-glue.S in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D9119568A570085CE5F /* darwin-glue.S */; };
-		779DD842195BD9F900DF89E5 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D1B1956885A0085CE5F /* main.m */; };
 		779DD843195BD9F900DF89E5 /* joystick.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D6C19568A570085CE5F /* joystick.c */; };
 		779DD845195BD9F900DF89E5 /* libz.1.1.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 773B3DCA1956903D0085CE5F /* libz.1.1.3.dylib */; };
 		779DD846195BD9F900DF89E5 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 773B3D0F1956885A0085CE5F /* Cocoa.framework */; };
 		779DD849195BD9F900DF89E5 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 773B3D181956885A0085CE5F /* InfoPlist.strings */; };
 		779DD84A195BD9F900DF89E5 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 773B3D271956885A0085CE5F /* Images.xcassets */; };
 		779DD84B195BD9F900DF89E5 /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = 773B3D1E1956885A0085CE5F /* Credits.rtf */; };
-		779DD84C195BD9F900DF89E5 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 773B3D241956885A0085CE5F /* MainMenu.xib */; };
 		779DD852195BDA3000DF89E5 /* testcpu.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D7E19568A570085CE5F /* testcpu.c */; };
 		779DD853195BDA3400DF89E5 /* testcommon.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D7C19568A570085CE5F /* testcommon.c */; };
 		779DD856195BDB1700DF89E5 /* CPUTestAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 779DD854195BDB1700DF89E5 /* CPUTestAppDelegate.m */; };
@@ -74,6 +81,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		4ADC51CA19E8BEB700186B36 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = "Base.lproj/MainMenu-Test.xib"; sourceTree = "<group>"; };
 		773B3D0C1956885A0085CE5F /* Apple2Mac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Apple2Mac.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		773B3D0F1956885A0085CE5F /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		773B3D121956885A0085CE5F /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
@@ -131,7 +139,7 @@
 		773B3DCA1956903D0085CE5F /* libz.1.1.3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.1.1.3.dylib; path = usr/lib/libz.1.1.3.dylib; sourceTree = SDKROOT; };
 		779DD826195764E200DF89E5 /* rom-shim.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = "rom-shim.c"; sourceTree = "<group>"; };
 		779DD850195BD9F900DF89E5 /* Apple2MacTestCPU.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Apple2MacTestCPU.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		779DD851195BD9F900DF89E5 /* Apple2MacTestCPU-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "Apple2MacTestCPU-Info.plist"; path = "/Users/aaronculliney/Documents/00web/apple2/Apple2Mac/Apple2MacTests/Apple2MacTestCPU-Info.plist"; sourceTree = "<absolute>"; };
+		779DD851195BD9F900DF89E5 /* Apple2MacTestCPU-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "Apple2MacTestCPU-Info.plist"; path = "/Users/asc/XREPOS/apple2/Apple2Mac/Apple2MacTests/Apple2MacTestCPU-Info.plist"; sourceTree = "<absolute>"; };
 		779DD854195BDB1700DF89E5 /* CPUTestAppDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CPUTestAppDelegate.m; sourceTree = "<group>"; };
 		779DD855195BDB1700DF89E5 /* CPUTestAppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CPUTestAppDelegate.h; sourceTree = "<group>"; };
 		779F561B19D78B8200A6F107 /* renderer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = renderer.h; sourceTree = "<group>"; };
@@ -281,6 +289,7 @@
 			children = (
 				773B3D271956885A0085CE5F /* Images.xcassets */,
 				773B3D241956885A0085CE5F /* MainMenu.xib */,
+				4ADC51C919E8BEB700186B36 /* MainMenu-Test.xib */,
 			);
 			name = Resources;
 			sourceTree = "<group>";
@@ -483,10 +492,12 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4ADC51CD19E8C19A00186B36 /* MainMenu-Test.xib in Resources */,
 				779DD849195BD9F900DF89E5 /* InfoPlist.strings in Resources */,
 				779DD84A195BD9F900DF89E5 /* Images.xcassets in Resources */,
 				779DD84B195BD9F900DF89E5 /* Credits.rtf in Resources */,
-				779DD84C195BD9F900DF89E5 /* MainMenu.xib in Resources */,
+				4ADC51C719E8BD5800186B36 /* Basic.vsh in Resources */,
+				4ADC51C819E8BD5A00186B36 /* Basic.fsh in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -595,15 +606,20 @@
 				779DD830195BD9F900DF89E5 /* prefs.c in Sources */,
 				779DD831195BD9F900DF89E5 /* display.c in Sources */,
 				779DD832195BD9F900DF89E5 /* disk.c in Sources */,
+				4ADC51C319E8BD3A00186B36 /* sourceUtil.c in Sources */,
+				4ADC51C419E8BD3D00186B36 /* modelUtil.c in Sources */,
 				779DD833195BD9F900DF89E5 /* debugger.c in Sources */,
 				779DD834195BD9F900DF89E5 /* keys.c in Sources */,
 				779DD835195BD9F900DF89E5 /* timing.c in Sources */,
 				779DD853195BDA3400DF89E5 /* testcommon.c in Sources */,
 				779DD836195BD9F900DF89E5 /* misc.c in Sources */,
 				779DD837195BD9F900DF89E5 /* opcodes.c in Sources */,
+				4ADC51C619E8BD5200186B36 /* glvideo.c in Sources */,
 				779DD838195BD9F900DF89E5 /* rom-shim.c in Sources */,
 				779DD839195BD9F900DF89E5 /* zlib-helpers.c in Sources */,
 				779DD83A195BD9F900DF89E5 /* darwin-shim.c in Sources */,
+				4ADC51FA19E8C6EF00186B36 /* main.m in Sources */,
+				4ADC51C219E8BD3700186B36 /* vectorUtil.c in Sources */,
 				779DD83C195BD9F900DF89E5 /* debug.l in Sources */,
 				779DD856195BDB1700DF89E5 /* CPUTestAppDelegate.m in Sources */,
 				779DD852195BDA3000DF89E5 /* testcpu.c in Sources */,
@@ -611,7 +627,7 @@
 				779DD83E195BD9F900DF89E5 /* cpu-supp.c in Sources */,
 				779DD83F195BD9F900DF89E5 /* vm.c in Sources */,
 				779DD840195BD9F900DF89E5 /* darwin-glue.S in Sources */,
-				779DD842195BD9F900DF89E5 /* main.m in Sources */,
+				4ADC51C519E8BD4000186B36 /* matrixUtil.c in Sources */,
 				779DD843195BD9F900DF89E5 /* joystick.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -619,6 +635,14 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXVariantGroup section */
+		4ADC51C919E8BEB700186B36 /* MainMenu-Test.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				4ADC51CA19E8BEB700186B36 /* Base */,
+			);
+			name = "MainMenu-Test.xib";
+			sourceTree = "<group>";
+		};
 		773B3D181956885A0085CE5F /* InfoPlist.strings */ = {
 			isa = PBXVariantGroup;
 			children = (
