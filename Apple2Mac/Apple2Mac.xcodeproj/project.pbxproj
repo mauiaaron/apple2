@@ -16,6 +16,55 @@
 		4ADC51C819E8BD5A00186B36 /* Basic.fsh in Resources */ = {isa = PBXBuildFile; fileRef = 779F562819E4FE9E00A6F107 /* Basic.fsh */; };
 		4ADC51CD19E8C19A00186B36 /* MainMenu-Test.xib in Resources */ = {isa = PBXBuildFile; fileRef = 4ADC51C919E8BEB700186B36 /* MainMenu-Test.xib */; };
 		4ADC51FA19E8C6EF00186B36 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D1B1956885A0085CE5F /* main.m */; };
+		4ADC51FE19E8CA4500186B36 /* cpu.S in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D9019568A570085CE5F /* cpu.S */; };
+		4ADC51FF19E8CA4500186B36 /* prefs.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D7719568A570085CE5F /* prefs.c */; };
+		4ADC520019E8CA4500186B36 /* display.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D6419568A570085CE5F /* display.c */; };
+		4ADC520119E8CA4500186B36 /* disk.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D6219568A570085CE5F /* disk.c */; };
+		4ADC520219E8CA4500186B36 /* sourceUtil.c in Sources */ = {isa = PBXBuildFile; fileRef = 77E1C0AB19D72700004344E0 /* sourceUtil.c */; };
+		4ADC520319E8CA4500186B36 /* modelUtil.c in Sources */ = {isa = PBXBuildFile; fileRef = 77E1C0AD19D72700004344E0 /* modelUtil.c */; };
+		4ADC520419E8CA4500186B36 /* debugger.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D7319568A570085CE5F /* debugger.c */; };
+		4ADC520519E8CA4500186B36 /* keys.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D6E19568A570085CE5F /* keys.c */; };
+		4ADC520619E8CA4500186B36 /* timing.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D8719568A570085CE5F /* timing.c */; };
+		4ADC520719E8CA4500186B36 /* testcommon.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D7C19568A570085CE5F /* testcommon.c */; };
+		4ADC520819E8CA4500186B36 /* misc.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D7519568A570085CE5F /* misc.c */; };
+		4ADC520919E8CA4500186B36 /* opcodes.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D7419568A570085CE5F /* opcodes.c */; };
+		4ADC520A19E8CA4500186B36 /* glvideo.c in Sources */ = {isa = PBXBuildFile; fileRef = 77E1C0C719D736EB004344E0 /* glvideo.c */; };
+		4ADC520B19E8CA4500186B36 /* rom-shim.c in Sources */ = {isa = PBXBuildFile; fileRef = 779DD826195764E200DF89E5 /* rom-shim.c */; };
+		4ADC520C19E8CA4500186B36 /* zlib-helpers.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D9519568A570085CE5F /* zlib-helpers.c */; };
+		4ADC520D19E8CA4500186B36 /* darwin-shim.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D6019568A570085CE5F /* darwin-shim.c */; };
+		4ADC520E19E8CA4500186B36 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D1B1956885A0085CE5F /* main.m */; };
+		4ADC520F19E8CA4500186B36 /* vectorUtil.c in Sources */ = {isa = PBXBuildFile; fileRef = 77E1C0A919D72700004344E0 /* vectorUtil.c */; };
+		4ADC521019E8CA4500186B36 /* debug.l in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D7219568A570085CE5F /* debug.l */; };
+		4ADC521119E8CA4500186B36 /* CPUTestAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 779DD854195BDB1700DF89E5 /* CPUTestAppDelegate.m */; };
+		4ADC521319E8CA4500186B36 /* font.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D6519568A570085CE5F /* font.c */; };
+		4ADC521419E8CA4500186B36 /* cpu-supp.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D5D19568A570085CE5F /* cpu-supp.c */; };
+		4ADC521519E8CA4500186B36 /* vm.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D8D19568A570085CE5F /* vm.c */; };
+		4ADC521619E8CA4500186B36 /* darwin-glue.S in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D9119568A570085CE5F /* darwin-glue.S */; };
+		4ADC521719E8CA4500186B36 /* matrixUtil.c in Sources */ = {isa = PBXBuildFile; fileRef = 77E1C0AF19D72700004344E0 /* matrixUtil.c */; };
+		4ADC521819E8CA4500186B36 /* joystick.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D6C19568A570085CE5F /* joystick.c */; };
+		4ADC521A19E8CA4500186B36 /* libz.1.1.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 773B3DCA1956903D0085CE5F /* libz.1.1.3.dylib */; };
+		4ADC521B19E8CA4500186B36 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 773B3D0F1956885A0085CE5F /* Cocoa.framework */; };
+		4ADC521E19E8CA4500186B36 /* MainMenu-Test.xib in Resources */ = {isa = PBXBuildFile; fileRef = 4ADC51C919E8BEB700186B36 /* MainMenu-Test.xib */; };
+		4ADC521F19E8CA4500186B36 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 773B3D181956885A0085CE5F /* InfoPlist.strings */; };
+		4ADC522019E8CA4500186B36 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 773B3D271956885A0085CE5F /* Images.xcassets */; };
+		4ADC522119E8CA4500186B36 /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = 773B3D1E1956885A0085CE5F /* Credits.rtf */; };
+		4ADC522219E8CA4500186B36 /* Basic.vsh in Resources */ = {isa = PBXBuildFile; fileRef = 779F562719E4FE9E00A6F107 /* Basic.vsh */; };
+		4ADC522319E8CA4500186B36 /* Basic.fsh in Resources */ = {isa = PBXBuildFile; fileRef = 779F562819E4FE9E00A6F107 /* Basic.fsh */; };
+		4ADC522919E8CEAD00186B36 /* testvm.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D8619568A570085CE5F /* testvm.c */; };
+		4ADC523919E8D3F600186B36 /* blank.dsk.gz in Resources */ = {isa = PBXBuildFile; fileRef = 4ADC523019E8D3F600186B36 /* blank.dsk.gz */; };
+		4ADC523C19E8D3F600186B36 /* blank.nib.gz in Resources */ = {isa = PBXBuildFile; fileRef = 4ADC523119E8D3F600186B36 /* blank.nib.gz */; };
+		4ADC523F19E8D3F600186B36 /* etc.dsk.gz in Resources */ = {isa = PBXBuildFile; fileRef = 4ADC523219E8D3F600186B36 /* etc.dsk.gz */; };
+		4ADC524219E8D3F600186B36 /* mystery.dsk.gz in Resources */ = {isa = PBXBuildFile; fileRef = 4ADC523319E8D3F600186B36 /* mystery.dsk.gz */; };
+		4ADC524519E8D3F600186B36 /* README in Resources */ = {isa = PBXBuildFile; fileRef = 4ADC523419E8D3F600186B36 /* README */; };
+		4ADC524619E8D3F600186B36 /* README in Resources */ = {isa = PBXBuildFile; fileRef = 4ADC523419E8D3F600186B36 /* README */; };
+		4ADC524719E8D3F600186B36 /* README in Resources */ = {isa = PBXBuildFile; fileRef = 4ADC523419E8D3F600186B36 /* README */; };
+		4ADC524819E8D3F600186B36 /* speedtest.dsk.gz in Resources */ = {isa = PBXBuildFile; fileRef = 4ADC523519E8D3F600186B36 /* speedtest.dsk.gz */; };
+		4ADC524B19E8D3F600186B36 /* speedtest.txt in Resources */ = {isa = PBXBuildFile; fileRef = 4ADC523619E8D3F600186B36 /* speedtest.txt */; };
+		4ADC524C19E8D3F600186B36 /* speedtest.txt in Resources */ = {isa = PBXBuildFile; fileRef = 4ADC523619E8D3F600186B36 /* speedtest.txt */; };
+		4ADC524D19E8D3F600186B36 /* speedtest.txt in Resources */ = {isa = PBXBuildFile; fileRef = 4ADC523619E8D3F600186B36 /* speedtest.txt */; };
+		4ADC524E19E8D3F600186B36 /* testdisplay1.dsk.gz in Resources */ = {isa = PBXBuildFile; fileRef = 4ADC523719E8D3F600186B36 /* testdisplay1.dsk.gz */; };
+		4ADC525319E8D3F600186B36 /* testvm1.dsk.gz in Resources */ = {isa = PBXBuildFile; fileRef = 4ADC523819E8D3F600186B36 /* testvm1.dsk.gz */; };
+		4ADC525419E8D59B00186B36 /* testvm1.dsk.gz in Resources */ = {isa = PBXBuildFile; fileRef = 4ADC523819E8D3F600186B36 /* testvm1.dsk.gz */; };
 		773B3D101956885A0085CE5F /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 773B3D0F1956885A0085CE5F /* Cocoa.framework */; };
 		773B3D1A1956885A0085CE5F /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 773B3D181956885A0085CE5F /* InfoPlist.strings */; };
 		773B3D1C1956885A0085CE5F /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D1B1956885A0085CE5F /* main.m */; };
@@ -82,6 +131,17 @@
 
 /* Begin PBXFileReference section */
 		4ADC51CA19E8BEB700186B36 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = "Base.lproj/MainMenu-Test.xib"; sourceTree = "<group>"; };
+		4ADC522719E8CA4500186B36 /* Apple2MacTestVM.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Apple2MacTestVM.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		4ADC522819E8CA4500186B36 /* Apple2MacTestVM-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "Apple2MacTestVM-Info.plist"; path = "/Users/asc/XREPOS/apple2/Apple2Mac/Apple2MacTestVM-Info.plist"; sourceTree = "<absolute>"; };
+		4ADC523019E8D3F600186B36 /* blank.dsk.gz */ = {isa = PBXFileReference; lastKnownFileType = archive.gzip; path = blank.dsk.gz; sourceTree = "<group>"; };
+		4ADC523119E8D3F600186B36 /* blank.nib.gz */ = {isa = PBXFileReference; lastKnownFileType = archive.gzip; path = blank.nib.gz; sourceTree = "<group>"; };
+		4ADC523219E8D3F600186B36 /* etc.dsk.gz */ = {isa = PBXFileReference; lastKnownFileType = archive.gzip; path = etc.dsk.gz; sourceTree = "<group>"; };
+		4ADC523319E8D3F600186B36 /* mystery.dsk.gz */ = {isa = PBXFileReference; lastKnownFileType = archive.gzip; path = mystery.dsk.gz; sourceTree = "<group>"; };
+		4ADC523419E8D3F600186B36 /* README */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = README; sourceTree = "<group>"; };
+		4ADC523519E8D3F600186B36 /* speedtest.dsk.gz */ = {isa = PBXFileReference; lastKnownFileType = archive.gzip; path = speedtest.dsk.gz; sourceTree = "<group>"; };
+		4ADC523619E8D3F600186B36 /* speedtest.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = speedtest.txt; sourceTree = "<group>"; };
+		4ADC523719E8D3F600186B36 /* testdisplay1.dsk.gz */ = {isa = PBXFileReference; lastKnownFileType = archive.gzip; path = testdisplay1.dsk.gz; sourceTree = "<group>"; };
+		4ADC523819E8D3F600186B36 /* testvm1.dsk.gz */ = {isa = PBXFileReference; lastKnownFileType = archive.gzip; path = testvm1.dsk.gz; sourceTree = "<group>"; };
 		773B3D0C1956885A0085CE5F /* Apple2Mac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Apple2Mac.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		773B3D0F1956885A0085CE5F /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		773B3D121956885A0085CE5F /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
@@ -166,6 +226,15 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		4ADC521919E8CA4500186B36 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4ADC521A19E8CA4500186B36 /* libz.1.1.3.dylib in Frameworks */,
+				4ADC521B19E8CA4500186B36 /* Cocoa.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		773B3D09195688590085CE5F /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -187,6 +256,23 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		4ADC522F19E8D3F600186B36 /* disks */ = {
+			isa = PBXGroup;
+			children = (
+				4ADC523019E8D3F600186B36 /* blank.dsk.gz */,
+				4ADC523119E8D3F600186B36 /* blank.nib.gz */,
+				4ADC523219E8D3F600186B36 /* etc.dsk.gz */,
+				4ADC523319E8D3F600186B36 /* mystery.dsk.gz */,
+				4ADC523419E8D3F600186B36 /* README */,
+				4ADC523519E8D3F600186B36 /* speedtest.dsk.gz */,
+				4ADC523619E8D3F600186B36 /* speedtest.txt */,
+				4ADC523719E8D3F600186B36 /* testdisplay1.dsk.gz */,
+				4ADC523819E8D3F600186B36 /* testvm1.dsk.gz */,
+			);
+			name = disks;
+			path = ../../disks;
+			sourceTree = "<group>";
+		};
 		773B3D03195688590085CE5F = {
 			isa = PBXGroup;
 			children = (
@@ -202,6 +288,7 @@
 			children = (
 				773B3D0C1956885A0085CE5F /* Apple2Mac.app */,
 				779DD850195BD9F900DF89E5 /* Apple2MacTestCPU.app */,
+				4ADC522719E8CA4500186B36 /* Apple2MacTestVM.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -230,6 +317,7 @@
 		773B3D151956885A0085CE5F /* Apple2Mac */ = {
 			isa = PBXGroup;
 			children = (
+				4ADC522F19E8D3F600186B36 /* disks */,
 				773B3D4519568A570085CE5F /* src */,
 				773B3D431956897D0085CE5F /* Classes */,
 				77E1C09E19D726B8004344E0 /* Shaders */,
@@ -266,6 +354,7 @@
 			isa = PBXGroup;
 			children = (
 				779DD851195BD9F900DF89E5 /* Apple2MacTestCPU-Info.plist */,
+				4ADC522819E8CA4500186B36 /* Apple2MacTestVM-Info.plist */,
 				773B3D361956885A0085CE5F /* InfoPlist.strings */,
 			);
 			name = "Supporting Files";
@@ -408,6 +497,25 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		4ADC51FB19E8CA4500186B36 /* Apple2MacTestVM */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 4ADC522419E8CA4500186B36 /* Build configuration list for PBXNativeTarget "Apple2MacTestVM" */;
+			buildPhases = (
+				4ADC51FC19E8CA4500186B36 /* ShellScript */,
+				4ADC51FD19E8CA4500186B36 /* Sources */,
+				4ADC521919E8CA4500186B36 /* Frameworks */,
+				4ADC521C19E8CA4500186B36 /* ShellScript */,
+				4ADC521D19E8CA4500186B36 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Apple2MacTestVM;
+			productName = Apple2Mac;
+			productReference = 4ADC522719E8CA4500186B36 /* Apple2MacTestVM.app */;
+			productType = "com.apple.product-type.application";
+		};
 		773B3D0B195688590085CE5F /* Apple2Mac */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 773B3D3D1956885A0085CE5F /* Build configuration list for PBXNativeTarget "Apple2Mac" */;
@@ -470,21 +578,47 @@
 			targets = (
 				773B3D0B195688590085CE5F /* Apple2Mac */,
 				779DD82C195BD9F900DF89E5 /* Apple2MacTestCPU */,
+				4ADC51FB19E8CA4500186B36 /* Apple2MacTestVM */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		4ADC521D19E8CA4500186B36 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4ADC525319E8D3F600186B36 /* testvm1.dsk.gz in Resources */,
+				4ADC524719E8D3F600186B36 /* README in Resources */,
+				4ADC521E19E8CA4500186B36 /* MainMenu-Test.xib in Resources */,
+				4ADC521F19E8CA4500186B36 /* InfoPlist.strings in Resources */,
+				4ADC522019E8CA4500186B36 /* Images.xcassets in Resources */,
+				4ADC524D19E8D3F600186B36 /* speedtest.txt in Resources */,
+				4ADC522119E8CA4500186B36 /* Credits.rtf in Resources */,
+				4ADC522219E8CA4500186B36 /* Basic.vsh in Resources */,
+				4ADC522319E8CA4500186B36 /* Basic.fsh in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		773B3D0A195688590085CE5F /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4ADC524219E8D3F600186B36 /* mystery.dsk.gz in Resources */,
+				4ADC525419E8D59B00186B36 /* testvm1.dsk.gz in Resources */,
+				4ADC524519E8D3F600186B36 /* README in Resources */,
 				773B3D1A1956885A0085CE5F /* InfoPlist.strings in Resources */,
+				4ADC523919E8D3F600186B36 /* blank.dsk.gz in Resources */,
+				4ADC523C19E8D3F600186B36 /* blank.nib.gz in Resources */,
 				773B3D281956885A0085CE5F /* Images.xcassets in Resources */,
+				4ADC523F19E8D3F600186B36 /* etc.dsk.gz in Resources */,
 				773B3D201956885A0085CE5F /* Credits.rtf in Resources */,
+				4ADC524819E8D3F600186B36 /* speedtest.dsk.gz in Resources */,
+				4ADC524B19E8D3F600186B36 /* speedtest.txt in Resources */,
 				779F562919E4FE9E00A6F107 /* Basic.vsh in Resources */,
 				779F562A19E4FE9E00A6F107 /* Basic.fsh in Resources */,
 				779F562319DA59D600A6F107 /* MainMenu.xib in Resources */,
+				4ADC524E19E8D3F600186B36 /* testdisplay1.dsk.gz in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -492,9 +626,11 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4ADC524619E8D3F600186B36 /* README in Resources */,
 				4ADC51CD19E8C19A00186B36 /* MainMenu-Test.xib in Resources */,
 				779DD849195BD9F900DF89E5 /* InfoPlist.strings in Resources */,
 				779DD84A195BD9F900DF89E5 /* Images.xcassets in Resources */,
+				4ADC524C19E8D3F600186B36 /* speedtest.txt in Resources */,
 				779DD84B195BD9F900DF89E5 /* Credits.rtf in Resources */,
 				4ADC51C719E8BD5800186B36 /* Basic.vsh in Resources */,
 				4ADC51C819E8BD5A00186B36 /* Basic.fsh in Resources */,
@@ -504,6 +640,34 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		4ADC51FC19E8CA4500186B36 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"$SRCROOT/../src/x86/genglue\" \"$SRCROOT/../src/disk.c\" \"$SRCROOT/../src/misc.c\" \"$SRCROOT/../src/display.c\" \"$SRCROOT/../src/vm.c\" > \"$SRCROOT/../src/x86/glue.S\"";
+			showEnvVarsInLog = 0;
+		};
+		4ADC521C19E8CA4500186B36 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "/bin/rm -f \"$SRCROOT/../src/x86/glue.S\"";
+			showEnvVarsInLog = 0;
+		};
 		773B3DC819568B6C0085CE5F /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -563,6 +727,40 @@
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		4ADC51FD19E8CA4500186B36 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4ADC51FE19E8CA4500186B36 /* cpu.S in Sources */,
+				4ADC51FF19E8CA4500186B36 /* prefs.c in Sources */,
+				4ADC520019E8CA4500186B36 /* display.c in Sources */,
+				4ADC520119E8CA4500186B36 /* disk.c in Sources */,
+				4ADC520219E8CA4500186B36 /* sourceUtil.c in Sources */,
+				4ADC520319E8CA4500186B36 /* modelUtil.c in Sources */,
+				4ADC520419E8CA4500186B36 /* debugger.c in Sources */,
+				4ADC520519E8CA4500186B36 /* keys.c in Sources */,
+				4ADC520619E8CA4500186B36 /* timing.c in Sources */,
+				4ADC520719E8CA4500186B36 /* testcommon.c in Sources */,
+				4ADC520819E8CA4500186B36 /* misc.c in Sources */,
+				4ADC520919E8CA4500186B36 /* opcodes.c in Sources */,
+				4ADC520A19E8CA4500186B36 /* glvideo.c in Sources */,
+				4ADC520B19E8CA4500186B36 /* rom-shim.c in Sources */,
+				4ADC520C19E8CA4500186B36 /* zlib-helpers.c in Sources */,
+				4ADC520D19E8CA4500186B36 /* darwin-shim.c in Sources */,
+				4ADC520E19E8CA4500186B36 /* main.m in Sources */,
+				4ADC520F19E8CA4500186B36 /* vectorUtil.c in Sources */,
+				4ADC521019E8CA4500186B36 /* debug.l in Sources */,
+				4ADC521119E8CA4500186B36 /* CPUTestAppDelegate.m in Sources */,
+				4ADC522919E8CEAD00186B36 /* testvm.c in Sources */,
+				4ADC521319E8CA4500186B36 /* font.c in Sources */,
+				4ADC521419E8CA4500186B36 /* cpu-supp.c in Sources */,
+				4ADC521519E8CA4500186B36 /* vm.c in Sources */,
+				4ADC521619E8CA4500186B36 /* darwin-glue.S in Sources */,
+				4ADC521719E8CA4500186B36 /* matrixUtil.c in Sources */,
+				4ADC521819E8CA4500186B36 /* joystick.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		773B3D08195688590085CE5F /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -678,6 +876,61 @@
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
+		4ADC522519E8CA4500186B36 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = YES;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ENABLE_OBJC_ARC = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "Apple2Mac/Apple2Mac-Prefix.pch";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"APPLE2IX=1",
+					"DEBUGGER=1",
+					"KEYPAD_JOYSTICK=1",
+					"TEST_VM=1",
+					"HEADLESS=1",
+				);
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+				);
+				INFOPLIST_FILE = "Apple2MacTestVM-Info.plist";
+				PRODUCT_NAME = Apple2MacTestVM;
+				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/../src";
+				WRAPPER_EXTENSION = app;
+			};
+			name = Debug;
+		};
+		4ADC522619E8CA4500186B36 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = YES;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ENABLE_OBJC_ARC = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "Apple2Mac/Apple2Mac-Prefix.pch";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"NDEBUG=1",
+					"APPLE2IX=1",
+					"DEBUGGER=1",
+					"KEYPAD_JOYSTICK=1",
+					"TEST_VM=1",
+					"HEADLESS=1",
+				);
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+				);
+				INFOPLIST_FILE = "Apple2MacTestVM-Info.plist";
+				PRODUCT_NAME = Apple2MacTestVM;
+				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/../src";
+				WRAPPER_EXTENSION = app;
+			};
+			name = Release;
+		};
 		773B3D3B1956885A0085CE5F /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -812,6 +1065,7 @@
 					"APPLE2IX=1",
 					"DEBUGGER=1",
 					"KEYPAD_JOYSTICK=1",
+					"TEST_CPU=1",
 				);
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
@@ -838,6 +1092,7 @@
 					"APPLE2IX=1",
 					"DEBUGGER=1",
 					"KEYPAD_JOYSTICK=1",
+					"TEST_CPU=1",
 				);
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
@@ -853,6 +1108,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		4ADC522419E8CA4500186B36 /* Build configuration list for PBXNativeTarget "Apple2MacTestVM" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4ADC522519E8CA4500186B36 /* Debug */,
+				4ADC522619E8CA4500186B36 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		773B3D07195688590085CE5F /* Build configuration list for PBXProject "Apple2Mac" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

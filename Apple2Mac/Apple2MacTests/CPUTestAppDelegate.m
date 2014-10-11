@@ -10,29 +10,31 @@
 
 #import "common.h"
 
-extern void c_initialize_firsttime(void);
-
+extern int test_cpu(int, char **);
+extern int test_vm(int argc, char **argv);
 
 @implementation CPUTestAppDelegate
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification
 {
-    [self testCPU];
-}
-
-extern int test_cpu(int, char **);
-
-- (void)testCPU
-{
-    char *argv[] = {
-        "-f",
-        NULL
-    };
-    int argc = 0;
-    for (char **p = &argv[0]; *p != NULL; p++) {
-        ++argc;
-    }
-    test_cpu(argc, argv);
+    dispatch_async(dispatch_get_main_queue(), ^{
+        char *local_argv[] = {
+            "-f",
+            NULL
+        };
+        int local_argc = 0;
+        for (char **p = &local_argv[0]; *p != NULL; p++) {
+            ++local_argc;
+        }
+        
+#if defined(TEST_CPU)
+        test_cpu(local_argc, local_argv);
+#elif defined(TEST_VM)
+        test_vm(local_argc, local_argv);
+#else
+#error "OOPS, no tests specified"
+#endif
+    });
 }
 
 @end

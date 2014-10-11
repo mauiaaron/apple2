@@ -11,6 +11,10 @@
 
 #include "testcommon.h"
 
+#ifdef __APPLE__
+#import <CoreFoundation/CoreFoundation.h>
+#endif
+
 #define RESET_INPUT() test_common_setup()
 
 #ifdef HAVE_OPENSSL
@@ -47,7 +51,24 @@ static void sha1_to_str(const uint8_t * const md, char *buf) {
 // VM TESTS ...
 
 TEST test_boot_disk() {
-    char *disk = strdup("./disks/testvm1.dsk.gz");
+    char *disk = NULL;
+#ifdef __APPLE__
+    CFBundleRef mainBundle = CFBundleGetMainBundle();
+    CFStringRef fileString = CFStringCreateWithCString(/*allocator*/NULL, "testvm1.dsk.gz", CFStringGetSystemEncoding());
+    CFURLRef fileURL = CFBundleCopyResourceURL(mainBundle, fileString, NULL, NULL);
+    CFRELEASE(fileString);
+    CFStringRef filePath = CFURLCopyFileSystemPath(fileURL, kCFURLPOSIXPathStyle);
+    CFRELEASE(fileURL);
+    CFIndex length = CFStringGetLength(filePath);
+    CFIndex maxSize = CFStringGetMaximumSizeForEncoding(length, kCFStringEncodingUTF8);
+    disk = (char *)malloc(maxSize);
+    if (!CFStringGetCString(filePath, disk, maxSize, kCFStringEncodingUTF8)) {
+        FREE(disk);
+    }
+    CFRELEASE(filePath);
+#else
+    disk = strdup("./disks/testvm1.dsk.gz");
+#endif
     if (c_new_diskette_6(0, disk, 0)) {
         int len = strlen(disk);
         disk[len-3] = '\0';
