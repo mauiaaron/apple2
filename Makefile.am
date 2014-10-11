@@ -83,7 +83,7 @@ src/font.c: src/font.txt genfont
 src/rom.c: genrom
 	./genrom src/rom/apple_IIe.rom src/rom/slot6.rom > $@
 
-src/x86/glue.S: src/disk.c src/misc.c src/display.c src/vm.c @AUDIO_GLUE_C@
+src/x86/glue.S: src/disk.c src/misc.c src/display.c src/vm.c src/cpu-supp.c @AUDIO_GLUE_C@
 	./src/x86/genglue $^ > $@
 
 ###############################################################################

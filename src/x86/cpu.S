@@ -24,6 +24,25 @@
 #define DebugCurrOpcode SN(cpu65_opcode)
 #define DebugCycleCount SN(cpu65_opcycles)
 
+#if CPU_TRACING
+#   define TRACE_PROLOGUE \
+                callLQ  cpu65_trace_prologue;
+#   define TRACE_ARG \
+                callLQ  cpu65_trace_arg;
+#   define TRACE_ARG1 \
+                callLQ  cpu65_trace_arg1;
+#   define TRACE_ARG2 \
+                callLQ  cpu65_trace_arg2;
+#   define TRACE_EPILOGUE \
+                callLQ  cpu65_trace_epilogue;
+#else
+#   define TRACE_PROLOGUE
+#   define TRACE_ARG
+#   define TRACE_ARG1
+#   define TRACE_ARG2
+#   define TRACE_EPILOGUE
+#endif
+
 /* -------------------------------------------------------------------------
     CPU (6502) Helper Routines
    ------------------------------------------------------------------------- */
@@ -32,7 +51,8 @@
                 movLQ   PC_Reg_X, EffectiveAddr_X; \
                 incw    PC_Reg; \
                 SNX_PROLOGUE(cpu65_vmem_r); \
-                callLQ  *SNX(cpu65_vmem_r,EffectiveAddr_X,SZ_PTR);
+                callLQ  *SNX(cpu65_vmem_r,EffectiveAddr_X,SZ_PTR); \
+                TRACE_ARG;
 
 #define GetFromPC_W \
                 movLQ   PC_Reg_X, EffectiveAddr_X; \
@@ -41,11 +61,14 @@
                 SNX_PROLOGUE(cpu65_vmem_r); \
                 callLQ  *SNX(cpu65_vmem_r,EffectiveAddr_X,SZ_PTR); \
                 decw    EffectiveAddr; \
+                TRACE_ARG2; \
                 movb    %al, %ah; \
                 SNX_PROLOGUE(cpu65_vmem_r); \
-                callLQ  *SNX(cpu65_vmem_r,EffectiveAddr_X,SZ_PTR);
+                callLQ  *SNX(cpu65_vmem_r,EffectiveAddr_X,SZ_PTR); \
+                TRACE_ARG1;
 
 #define JumpNextInstruction \
+                TRACE_PROLOGUE; \
                 GetFromPC_B \
                 movb    %al, DebugCurrOpcode; \
                 movb    $0, DebugCycleCount; \
@@ -2105,6 +2128,7 @@ continue:
                 movb    SNX(cpu65__opcycles,_XAX,1), %al
                 addb    DebugCycleCount, %al
                 movb    %al, DebugCycleCount
+                TRACE_EPILOGUE
                 addw    %ax, SN(cpu65_cycle_count)
                 subl    %eax, SN(gc_cycles_timer_0)
                 subl    %eax, SN(gc_cycles_timer_1)

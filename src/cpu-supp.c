@@ -41,6 +41,13 @@ uint8_t cpu65_flags_decode[256] = { 0 };
 void *cpu65_vmem_r[0x10000] = { 0 };
 void *cpu65_vmem_w[0x10000] = { 0 };
 
+#if CPU_TRACING
+static int8_t opargs[3] = { 0 };
+static int8_t nargs = 0;
+static uint16_t current_pc = 0x0;
+static FILE *cpu_trace_fp = NULL;
+#endif
+
 // ----------------------------------------------------------------------------
 // 65c02 Opcode Jump Table
 
@@ -638,4 +645,144 @@ void cpu65_uninterrupt(int reason)
     cpu65__signal &= ~reason;
     pthread_mutex_unlock(&irq_mutex);
 }
+
+#if CPU_TRACING
+
+/* -------------------------------------------------------------------------
+    CPU Tracing routines
+   ------------------------------------------------------------------------- */
+
+void cpu65_trace_begin(const char *trace_file) {
+    if (trace_file) {
+        cpu_trace_fp = fopen(trace_file, "w");
+    }
+}
+
+void cpu65_trace_end(void) {
+    if (cpu_trace_fp) {
+        fflush(cpu_trace_fp);
+        fclose(cpu_trace_fp);
+        cpu_trace_fp = NULL;
+    }
+}
+
+GLUE_C_WRITE(cpu65_trace_prologue)
+{
+    nargs = 0;
+    current_pc = cpu65_pc;
+}
+
+GLUE_C_WRITE(cpu65_trace_arg)
+{
+    assert(nargs <= 2);
+    opargs[nargs++] = b;
+}
+
+GLUE_C_WRITE(cpu65_trace_arg1)
+{
+    assert(nargs <= 2);
+    opargs[2] = b;
+    ++nargs;
+}
+
+GLUE_C_WRITE(cpu65_trace_arg2)
+{
+    assert(nargs <= 2);
+    opargs[1] = b;
+    ++nargs;
+}
+
+GLUE_C_WRITE(cpu65_trace_epilogue)
+{
+    char fmt[64];
+    char buf[64];
+
+    int8_t arg1 = opargs[1];
+    int8_t arg2 = opargs[2];
+
+    if (!cpu_trace_fp) {
+        return;
+    }
+
+    assert(nargs > 0);
+    assert(nargs <= 3);
+
+#warning FIXME TODO ... need to refactor this and the debugger routines to use the same codepaths ...
+    switch (opcodes_65c02[cpu65_opcode].mode) {
+        case addr_implied:
+        case addr_accumulator:                  /* no arg */
+            sprintf(buf, "%04X: %02X %s %s", current_pc, cpu65_opcode, opcodes_65c02[cpu65_opcode].mnemonic, disasm_templates[opcodes_65c02[cpu65_opcode].mode]);
+            break;
+
+        case addr_immediate:
+        case addr_zeropage:
+        case addr_zeropage_x:
+        case addr_zeropage_y:
+        case addr_indirect:
+        case addr_indirect_x:
+        case addr_indirect_y:                   /* byte arg */
+            sprintf(fmt, "%04X: %02X%02X %s %s", current_pc, cpu65_opcode, (uint8_t)arg1, opcodes_65c02[cpu65_opcode].mnemonic, disasm_templates[opcodes_65c02[cpu65_opcode].mode]);
+            sprintf(buf, fmt, (uint8_t)arg1);
+            break;
+
+        case addr_absolute:
+        case addr_absolute_x:
+        case addr_absolute_y:
+        case addr_j_indirect:
+        case addr_j_indirect_x:                 /* word arg */
+            sprintf(fmt, "%04X: %02X%02X%02X %s %s", current_pc, cpu65_opcode, (uint8_t)arg1, (uint8_t)arg2, opcodes_65c02[cpu65_opcode].mnemonic, disasm_templates[opcodes_65c02[cpu65_opcode].mode]);
+            sprintf(buf, fmt, (uint8_t)arg2, (uint8_t)arg1);
+            break;
+
+        case addr_relative:                     /* offset */
+            sprintf(fmt, "%04X: %02X%02X %s %s", current_pc, cpu65_opcode, (uint8_t)arg1, opcodes_65c02[cpu65_opcode].mnemonic, disasm_templates[opcodes_65c02[cpu65_opcode].mode]);
+            if (arg1 < 0) {
+                sprintf(buf, fmt, current_pc + arg1 + 2, '-', (uint8_t)(-arg1));
+            } else {
+                sprintf(buf, fmt, current_pc + arg1 + 2, '+', (uint8_t)arg1);
+            }
+            break;
+
+        default:                                /* shouldn't happen */
+            sprintf(buf, "invalid opcode mode");
+            break;
+    }
+
+    char regs_buf[64];
+    sprintf(regs_buf, "EA:%04X SP:%02X X:%02X Y:%02X A:%02X", cpu65_ea, cpu65_sp, cpu65_x, cpu65_y, cpu65_a);
+
+#define FLAGS_BUFSZ 9
+    char flags_buf[FLAGS_BUFSZ];
+    memset(flags_buf, '-', FLAGS_BUFSZ);
+    if (cpu65_f & C_Flag_6502) {
+        flags_buf[0]='C';
+    }
+    if (cpu65_f & X_Flag_6502) {
+        flags_buf[1]='X';
+    }
+    if (cpu65_f & I_Flag_6502) {
+        flags_buf[2]='I';
+    }
+    if (cpu65_f & V_Flag_6502) {
+        flags_buf[3]='V';
+    }
+    if (cpu65_f & B_Flag_6502) {
+        flags_buf[4]='B';
+    }
+    if (cpu65_f & D_Flag_6502) {
+        flags_buf[5]='D';
+    }
+    if (cpu65_f & Z_Flag_6502) {
+        flags_buf[6]='Z';
+    }
+    if (cpu65_f & N_Flag_6502) {
+        flags_buf[7]='N';
+    }
+    flags_buf[8] = '\0';
+
+    fprintf(cpu_trace_fp, "%s %s %s\n", buf, regs_buf, flags_buf);
+    fflush(cpu_trace_fp);
+}
+
+#endif // CPU_TRACING
 

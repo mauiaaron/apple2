@@ -121,6 +121,49 @@ TEST test_boot_disk_bytes() {
     PASS();
 }
 
+// This test is fairly abusive ... it creates an ~88MB file in $HOME
+// ... but if it's correct, you're fairly assured the cpu/vm is working =)
+#define EXPECTED_CPU_TRACE_FILE_SIZE 87611579
+#define EXPECTED_CPU_TRACE_SHA "8DE74ED640E0CE4AB1AAC40E95BE9B8507A37434"
+TEST test_boot_disk_cputrace() {
+    setup_boot_disk();
+
+    char *homedir = getenv("HOME");
+    char *output = NULL;
+    asprintf(&output, "%s/a2_cputrace.raw", homedir);
+    if (output) {
+        unlink(output);
+        cpu65_trace_begin(output);
+    }
+
+    BOOT_TO_DOS();
+
+    cpu65_trace_end();
+    c_eject_6(0);
+
+    do {
+        uint8_t md[SHA_DIGEST_LENGTH];
+        char mdstr[(SHA_DIGEST_LENGTH*2)+1];
+
+        FILE *fp = fopen(output, "r");
+        char *buf = malloc(EXPECTED_CPU_TRACE_FILE_SIZE);
+        if (fread(buf, 1, EXPECTED_CPU_TRACE_FILE_SIZE, fp) != EXPECTED_CPU_TRACE_FILE_SIZE) {
+            ASSERT(false);
+        }
+        fclose(fp); fp = NULL;
+        SHA1(buf, EXPECTED_CPU_TRACE_FILE_SIZE, md);
+        FREE(buf);
+
+        sha1_to_str(md, mdstr);
+        ASSERT(strcmp(mdstr, EXPECTED_CPU_TRACE_SHA) == 0);
+    } while(0);
+
+    unlink(output);
+    FREE(output);
+
+    PASS();
+}
+
 TEST test_boot_disk() {
     setup_boot_disk();
 
@@ -3293,6 +3336,8 @@ GREATEST_SUITE(test_suite_vm) {
     // TESTS --------------------------
 
     RUN_TESTp(test_boot_disk_bytes);
+
+    RUN_TESTp(test_boot_disk_cputrace);
 
     RUN_TESTp(test_boot_disk);
 
