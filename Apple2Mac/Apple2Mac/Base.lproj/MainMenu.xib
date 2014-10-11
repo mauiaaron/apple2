@@ -92,8 +92,8 @@
                 <autoresizingMask key="autoresizingMask"/>
             </view>
         </window>
-        <customObject id="494" userLabel="GL Essentials View" customClass="EmulatorGLView"/>
-        <customObject id="M8b-ga-iOS" userLabel="GL Essentials Window Controller" customClass="EmulatorWindowController" colorLabel="IBBuiltInLabel-Blue">
+        <customObject id="494" userLabel="EmulatorGLView" customClass="EmulatorGLView"/>
+        <customObject id="M8b-ga-iOS" userLabel="EmulatorWindowController" customClass="EmulatorWindowController" colorLabel="IBBuiltInLabel-Blue">
             <connections>
                 <outlet property="view" destination="372" id="pRG-Kn-92X"/>
                 <outlet property="window" destination="371" id="z3B-S9-PsV"/>
