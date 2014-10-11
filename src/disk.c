@@ -21,6 +21,11 @@
 #define NIB_SIZE 232960
 #define DSK_SIZE 143360
 
+#ifdef TESTING
+static FILE *test_read_fp = NULL;
+static FILE *test_write_fp = NULL;
+#endif
+
 extern uint8_t slot6_rom[256];
 extern bool slot6_rom_loaded;
 
@@ -114,6 +119,30 @@ void c_init_6()
     file_name_6[1][1024] = '\0';
 #endif
 }
+
+#ifdef TESTING
+void c_begin_test_6(const char *read_file, const char *write_file) {
+    if (read_file) {
+        test_read_fp = fopen(read_file, "w");
+    }
+    if (write_file) {
+        test_write_fp = fopen(write_file, "w");
+    }
+}
+
+void c_end_test_6() {
+    if (test_read_fp) {
+        fflush(test_read_fp);
+        fclose(test_read_fp);
+        test_read_fp = NULL;
+    }
+    if (test_write_fp) {
+        fflush(test_write_fp);
+        fclose(test_write_fp);
+        test_write_fp = NULL;
+    }
+}
+#endif
 
 /* -------------------------------------------------------------------------
     c_eject_6() - ejects/gzips image file
@@ -256,6 +285,12 @@ unsigned char c_read_nibblized_6_6()
     {
         fseek(disk6.disk[disk6.drive].fp, -2 * PHASE_BYTES, SEEK_CUR);
     }
+
+#ifdef TESTING
+    if (test_read_fp) {
+        fputc(ch, test_read_fp);
+    }
+#endif
 
     return ch;
 }
@@ -427,6 +462,12 @@ unsigned char c_read_normal_6()
         disk6.disk[disk6.drive].run_byte = 0;
     }
 
+#ifdef TESTING
+    if (test_read_fp) {
+        fputc(value, test_read_fp);
+    }
+#endif
+
     disk6.disk_byte = value;
     return value;
 }
@@ -448,6 +489,13 @@ void c_write_nibblized_6_6()
     }
 
     fputc(disk6.disk_byte, disk6.disk[disk6.drive].fp);
+
+#ifdef TESTING
+    if (test_write_fp) {
+        fputc(disk6.disk_byte, test_write_fp);
+    }
+#endif
+
     /* track revolves... */
     if (ftell(disk6.disk[disk6.drive].fp) == (PHASE_BYTES * (disk6.disk[disk6.drive].phase + 2)))
     {
@@ -554,6 +602,11 @@ void c_write_normal_6()
 
         /* Write sector */
         fwrite(disk6.disk_data, 1, 256, disk6.disk[disk6.drive].fp);
+#ifdef TESTING
+        if (test_write_fp) {
+            fwrite(disk6.disk_data, 1, 256, test_write_fp);
+        }
+#endif
         fflush( disk6.disk[disk6.drive].fp );
         /* Increment sector number (and wrap if necessary) */
         disk6.disk[disk6.drive].sector++;

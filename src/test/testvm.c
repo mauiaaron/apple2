@@ -50,7 +50,7 @@ static void sha1_to_str(const uint8_t * const md, char *buf) {
 // ----------------------------------------------------------------------------
 // VM TESTS ...
 
-TEST test_boot_disk() {
+TEST setup_boot_disk(void) {
     char *disk = NULL;
 #ifdef __APPLE__
     CFBundleRef mainBundle = CFBundleGetMainBundle();
@@ -74,7 +74,55 @@ TEST test_boot_disk() {
         disk[len-3] = '\0';
         ASSERT(!c_new_diskette_6(0, disk, 0));
     }
-    free(disk);
+    FREE(disk);
+
+    PASS();
+}
+
+TEST test_boot_disk_bytes() {
+    setup_boot_disk();
+
+    char *homedir = getenv("HOME");
+    char *disk = NULL;
+    asprintf(&disk, "%s/a2_read_disk_test.raw", homedir);
+    if (disk) {
+        unlink(disk);
+        c_begin_test_6(disk, NULL);
+    }
+
+    BOOT_TO_DOS();
+
+    c_end_test_6();
+    c_eject_6(0);
+
+    do {
+        uint8_t md[SHA_DIGEST_LENGTH];
+        char mdstr[(SHA_DIGEST_LENGTH*2)+1];
+
+        FILE *fp = fopen(disk, "r");
+        fseek(fp, 0L, SEEK_END);
+        long nbytes = ftell(fp);
+        fseek(fp, 0L, SEEK_SET);
+        char *buf = malloc(nbytes);
+        if (fread(buf, 1, nbytes, fp) != nbytes) {
+            ASSERT(false);
+        }
+        fclose(fp); fp = NULL;
+        SHA1(buf, nbytes, md);
+        FREE(buf);
+
+        sha1_to_str(md, mdstr);
+        ASSERT(strcmp(mdstr, "D21CC686571ADE868A909B5A7044A973DE70DFFB") == 0);
+    } while(0);
+
+    unlink(disk);
+    FREE(disk);
+
+    PASS();
+}
+
+TEST test_boot_disk() {
+    setup_boot_disk();
 
     BOOT_TO_DOS();
 
@@ -3243,6 +3291,8 @@ GREATEST_SUITE(test_suite_vm) {
     pthread_mutex_lock(&interface_mutex);
 
     // TESTS --------------------------
+
+    RUN_TESTp(test_boot_disk_bytes);
 
     RUN_TESTp(test_boot_disk);
 
