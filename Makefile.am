@@ -68,6 +68,7 @@ apple2ix_SOURCES = src/font.c src/rom.c src/misc.c src/display.c src/vm.c \
 	src/disk.c src/cpu-supp.c
 
 apple2ix_CFLAGS = @AM_CFLAGS@ @X_CFLAGS@
+apple2ix_CCASFLAGS = $(apple2ix_CFLAGS)
 apple2ix_LDFLAGS =
 apple2ix_LDADD = @ASM_O@ @INTERFACE_O@ @VIDEO_O@ @AUDIO_O@ @META_O@ @X_LIBS@
 apple2ix_DEPENDENCIES = @ASM_O@ @INTERFACE_O@ @VIDEO_O@ @AUDIO_O@ @META_O@
@@ -91,13 +92,14 @@ src/x86/glue.S: src/disk.c src/misc.c src/display.c src/vm.c @AUDIO_GLUE_C@
 LOG_DRIVER = testcpu  ## hack TODO/FIXME ... should be wrapper shell script accepting standard GNU testing API args ...
 
 A2_TEST_SOURCES = $(apple2ix_SOURCES) src/test/testcommon.c
-A2_TEST_CFLAGS = -DTESTING=1 -Isrc/test
+A2_TEST_CFLAGS = -DTESTING=1 -DCPU_TRACING=1 -Isrc/test
 
 TESTS          = testcpu testdisplay testvm
 check_PROGRAMS = testcpu testdisplay testvm
 
 testcpu_SOURCES = src/test/testcpu.c $(A2_TEST_SOURCES) $(META_SRC)
 testcpu_CFLAGS = $(apple2ix_CFLAGS) $(A2_TEST_CFLAGS) -UAUDIO_ENABLED -UINTERFACE_CLASSIC -DHEADLESS=1
+testcpu_CCASFLAGS = $(testcpu_CFLAGS)
 testcpu_LDFLAGS = $(apple2ix_LDFLAGS)
 testcpu_LDADD = @ASM_O@
 testcpu_DEPENDENCIES = @ASM_O@ @META_O@
@@ -105,8 +107,8 @@ testcpu_DEPENDENCIES = @ASM_O@ @META_O@
 EXTRA_testcpu_SOURCES = $(ASM_SRC_x86)
 
 testdisplay_SOURCES = src/test/testdisplay.c $(A2_TEST_SOURCES) $(META_SRC)
-# HACK FIXME TODO NOTE: why don't these CFLAGS here pass down to the .S and .c files in the subdirectories?
 testdisplay_CFLAGS = $(apple2ix_CFLAGS) $(A2_TEST_CFLAGS) -UAUDIO_ENABLED -UINTERFACE_CLASSIC -DHEADLESS=0
+testdisplay_CCASFLAGS = $(testdisplay_CFLAGS)
 testdisplay_LDFLAGS = $(apple2ix_LDFLAGS)
 testdisplay_LDADD = @ASM_O@ @VIDEO_O@
 testdisplay_DEPENDENCIES = @ASM_O@ @META_O@ @VIDEO_O@
@@ -114,11 +116,12 @@ testdisplay_DEPENDENCIES = @ASM_O@ @META_O@ @VIDEO_O@
 EXTRA_testdisplay_SOURCES = $(ASM_SRC_x86) $(VIDEO_SRC)
 
 testvm_SOURCES = src/test/testvm.c $(A2_TEST_SOURCES) $(META_SRC)
-# HACK FIXME TODO NOTE: why don't these CFLAGS here pass down to the .S and .c files in the subdirectories?
 testvm_CFLAGS = $(apple2ix_CFLAGS) $(A2_TEST_CFLAGS) -UAUDIO_ENABLED -UINTERFACE_CLASSIC -DHEADLESS=0
+testvm_CCASFLAGS = $(testvm_CFLAGS)
 testvm_LDFLAGS = $(apple2ix_LDFLAGS)
-testvm_LDADD = @ASM_O@ @VIDEO_O@
-testvm_DEPENDENCIES = @ASM_O@ @META_O@ @VIDEO_O@
+# HACK FIXME TODO NOTE: specify TESTVM_ASM_O to force it to rebuild with proper CCASFLAGS ... automake bug?
+testvm_LDADD = @TESTVM_ASM_O@ @VIDEO_O@
+testvm_DEPENDENCIES = @TESTVM_ASM_O@ @META_O@ @VIDEO_O@
 
 EXTRA_testvm_SOURCES = $(ASM_SRC_x86) $(VIDEO_SRC)
 
