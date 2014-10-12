@@ -1536,7 +1536,12 @@ E(op_PLA) // 0x68
 E(op_PLP) // 0x28
                 Pop(%al)
                 SNX_PROLOGUE(cpu65_flags_decode)
+#ifdef APPLE_ASSEMBLER_IS_BROKEN
+                movb    SNX(cpu65_flags_decode,_XAX,1), %al
+                movb    %al, F_Reg
+#else
                 movb    SNX(cpu65_flags_decode,_XAX,1), F_Reg
+#endif
                 orb     $(B_Flag|X_Flag), F_Reg
                 Continue
 
@@ -2207,7 +2212,7 @@ E(cpu65_run)
                 SNX_PROLOGUE(cpu65_flags_decode)
 #ifdef APPLE_ASSEMBLER_IS_BROKEN
                 movb    SNX(cpu65_flags_decode,_XAX,1), %al
-                movb    %al, %ch
+                movb    %al, F_Reg
 #else
                 movb    SNX(cpu65_flags_decode,_XAX,1), F_Reg
 #endif
