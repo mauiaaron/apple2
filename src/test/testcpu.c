@@ -4948,10 +4948,9 @@ TEST test_PHA() {
     PASS();
 }
 
-TEST test_PHP() {
+static int test_PLP(uint8_t flags);
+TEST test_PHP(uint8_t flags) {
     testcpu_set_opcode1(0x08);
-
-    uint8_t flags = (uint8_t)random();
 
     cpu65_a  = 0x02;
     cpu65_x  = 0x03;
@@ -4974,6 +4973,8 @@ TEST test_PHP() {
     ASSERT(cpu65_rw       == RW_NONE);
     ASSERT(cpu65_opcode   == 0x08);
     ASSERT(cpu65_opcycles == (3));
+
+    test_PLP(flags);
 
     PASS();
 }
@@ -5097,7 +5098,7 @@ TEST test_PLP(uint8_t flags) {
     cpu65_a  = 0x02;
     cpu65_x  = 0x03;
     cpu65_y  = 0x04;
-    cpu65_f  = flags;
+    cpu65_f  = ~flags;
     cpu65_sp = sp;
 
     cpu65_run();
@@ -7325,7 +7326,6 @@ GREATEST_SUITE(test_suite_cpu) {
     A2_ADD_TEST(test_CLV);
     A2_ADD_TEST(test_NOP);
     A2_ADD_TEST(test_PHA);
-    A2_ADD_TEST(test_PHP);
     A2_ADD_TEST(test_PHX);
     A2_ADD_TEST(test_PHY);
     A2_ADD_TEST(test_SEC);
@@ -7427,6 +7427,7 @@ GREATEST_SUITE(test_suite_cpu) {
     A2_ADD_TEST(test_INX);
     A2_ADD_TEST(test_INY);
     A2_ADD_TEST(test_LSR_acc);
+    A2_ADD_TEST(test_PHP);
     A2_ADD_TEST(test_PLA);
     A2_ADD_TEST(test_PLP);
     A2_ADD_TEST(test_PLX);
