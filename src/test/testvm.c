@@ -120,6 +120,8 @@ TEST test_boot_disk_bytes() {
     PASS();
 }
 
+#if 0
+#error this is not a stable test ... we don't know exactly where the CPU will be at when we begin
 // This test is fairly abusive ... it creates an ~88MB file in $HOME
 // ... but if it's correct, you're fairly assured the cpu/vm is working =)
 #define EXPECTED_CPU_TRACE_FILE_SIZE 87611579
@@ -162,6 +164,7 @@ TEST test_boot_disk_cputrace() {
 
     PASS();
 }
+#endif
 
 TEST test_boot_disk() {
     setup_boot_disk();
@@ -3336,7 +3339,7 @@ GREATEST_SUITE(test_suite_vm) {
 
     RUN_TESTp(test_boot_disk_bytes);
 
-    RUN_TESTp(test_boot_disk_cputrace);
+    //RUN_TESTp(test_boot_disk_cputrace);
 
     RUN_TESTp(test_boot_disk);
 
