@@ -121,7 +121,7 @@ void c_init_6()
 }
 
 #ifdef TESTING
-void c_begin_test_6(const char *read_file, const char *write_file) {
+void c_begin_disk_trace_6(const char *read_file, const char *write_file) {
     if (read_file) {
         test_read_fp = fopen(read_file, "w");
     }
@@ -130,7 +130,7 @@ void c_begin_test_6(const char *read_file, const char *write_file) {
     }
 }
 
-void c_end_test_6() {
+void c_end_disk_trace_6(void) {
     if (test_read_fp) {
         fflush(test_read_fp);
         fclose(test_read_fp);
@@ -289,6 +289,7 @@ unsigned char c_read_nibblized_6_6()
 #ifdef TESTING
     if (test_read_fp) {
         fputc(ch, test_read_fp);
+        fflush(test_read_fp);
     }
 #endif
 
@@ -465,6 +466,7 @@ unsigned char c_read_normal_6()
 #ifdef TESTING
     if (test_read_fp) {
         fputc(value, test_read_fp);
+        fflush(test_read_fp);
     }
 #endif
 
@@ -493,6 +495,7 @@ void c_write_nibblized_6_6()
 #ifdef TESTING
     if (test_write_fp) {
         fputc(disk6.disk_byte, test_write_fp);
+        fflush(test_write_fp);
     }
 #endif
 
@@ -605,6 +608,7 @@ void c_write_normal_6()
 #ifdef TESTING
         if (test_write_fp) {
             fwrite(disk6.disk_data, 1, 256, test_write_fp);
+            fflush(test_write_fp);
         }
 #endif
         fflush( disk6.disk[disk6.drive].fp );

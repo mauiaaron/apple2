@@ -79,6 +79,8 @@ TEST setup_boot_disk(void) {
     PASS();
 }
 
+#define EXPECTED_DISK_TRACE_FILE_SIZE 60961
+#define EXPECTED_DISK_TRACE_SHA "D21CC686571ADE868A909B5A7044A973DE70DFFB"
 TEST test_boot_disk_bytes() {
     setup_boot_disk();
 
@@ -87,12 +89,12 @@ TEST test_boot_disk_bytes() {
     asprintf(&disk, "%s/a2_read_disk_test.raw", homedir);
     if (disk) {
         unlink(disk);
-        c_begin_test_6(disk, NULL);
+        c_begin_disk_trace_6(disk, NULL);
     }
 
     BOOT_TO_DOS();
 
-    c_end_test_6();
+    c_end_disk_trace_6();
     c_eject_6(0);
 
     do {
@@ -100,19 +102,16 @@ TEST test_boot_disk_bytes() {
         char mdstr[(SHA_DIGEST_LENGTH*2)+1];
 
         FILE *fp = fopen(disk, "r");
-        fseek(fp, 0L, SEEK_END);
-        long nbytes = ftell(fp);
-        fseek(fp, 0L, SEEK_SET);
-        char *buf = malloc(nbytes);
-        if (fread(buf, 1, nbytes, fp) != nbytes) {
+        char *buf = malloc(EXPECTED_DISK_TRACE_FILE_SIZE);
+        if (fread(buf, 1, EXPECTED_DISK_TRACE_FILE_SIZE, fp) != EXPECTED_DISK_TRACE_FILE_SIZE) {
             ASSERT(false);
         }
         fclose(fp); fp = NULL;
-        SHA1(buf, nbytes, md);
+        SHA1(buf, EXPECTED_DISK_TRACE_FILE_SIZE, md);
         FREE(buf);
 
         sha1_to_str(md, mdstr);
-        ASSERT(strcmp(mdstr, "D21CC686571ADE868A909B5A7044A973DE70DFFB") == 0);
+        ASSERT(strcmp(mdstr, EXPECTED_DISK_TRACE_SHA) == 0);
     } while(0);
 
     unlink(disk);

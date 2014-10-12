@@ -67,4 +67,9 @@ disk_write_latch(),
 disk_read_prepare_in(),
 disk_read_prepare_out();
 
+#ifdef TESTING
+void c_begin_disk_trace_6(const char *read_file, const char *write_file);
+void c_end_disk_trace_6(void);
+#endif
+
 #endif
