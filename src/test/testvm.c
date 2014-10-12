@@ -11,11 +11,9 @@
 
 #include "testcommon.h"
 
-#ifdef __APPLE__
-#import <CoreFoundation/CoreFoundation.h>
-#endif
-
 #define RESET_INPUT() test_common_setup()
+
+#define TESTING_DISK "testvm1.dsk.gz"
 
 #ifdef HAVE_OPENSSL
 #include <openssl/sha.h>
@@ -50,39 +48,10 @@ static void sha1_to_str(const uint8_t * const md, char *buf) {
 // ----------------------------------------------------------------------------
 // VM TESTS ...
 
-TEST setup_boot_disk(void) {
-    char *disk = NULL;
-#ifdef __APPLE__
-    CFBundleRef mainBundle = CFBundleGetMainBundle();
-    CFStringRef fileString = CFStringCreateWithCString(/*allocator*/NULL, "testvm1.dsk.gz", CFStringGetSystemEncoding());
-    CFURLRef fileURL = CFBundleCopyResourceURL(mainBundle, fileString, NULL, NULL);
-    CFRELEASE(fileString);
-    CFStringRef filePath = CFURLCopyFileSystemPath(fileURL, kCFURLPOSIXPathStyle);
-    CFRELEASE(fileURL);
-    CFIndex length = CFStringGetLength(filePath);
-    CFIndex maxSize = CFStringGetMaximumSizeForEncoding(length, kCFStringEncodingUTF8);
-    disk = (char *)malloc(maxSize);
-    if (!CFStringGetCString(filePath, disk, maxSize, kCFStringEncodingUTF8)) {
-        FREE(disk);
-    }
-    CFRELEASE(filePath);
-#else
-    disk = strdup("./disks/testvm1.dsk.gz");
-#endif
-    if (c_new_diskette_6(0, disk, 0)) {
-        int len = strlen(disk);
-        disk[len-3] = '\0';
-        ASSERT(!c_new_diskette_6(0, disk, 0));
-    }
-    FREE(disk);
-
-    PASS();
-}
-
 #define EXPECTED_DISK_TRACE_FILE_SIZE 60961
 #define EXPECTED_DISK_TRACE_SHA "D21CC686571ADE868A909B5A7044A973DE70DFFB"
 TEST test_boot_disk_bytes() {
-    setup_boot_disk();
+    setup_boot_disk(TESTING_DISK);
 
     char *homedir = getenv("HOME");
     char *disk = NULL;
@@ -127,7 +96,7 @@ TEST test_boot_disk_bytes() {
 #define EXPECTED_CPU_TRACE_FILE_SIZE 87611579
 #define EXPECTED_CPU_TRACE_SHA "8DE74ED640E0CE4AB1AAC40E95BE9B8507A37434"
 TEST test_boot_disk_cputrace() {
-    setup_boot_disk();
+    setup_boot_disk(TESTING_DISK);
 
     char *homedir = getenv("HOME");
     char *output = NULL;
@@ -167,7 +136,7 @@ TEST test_boot_disk_cputrace() {
 #endif
 
 TEST test_boot_disk() {
-    setup_boot_disk();
+    setup_boot_disk(TESTING_DISK);
 
     BOOT_TO_DOS();
 

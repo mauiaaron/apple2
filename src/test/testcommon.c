@@ -12,6 +12,7 @@
 #include "testcommon.h"
 #ifdef __APPLE__
 #include "darwin-shim.h"
+#import <CoreFoundation/CoreFoundation.h>
 #endif
 
 #define TESTBUF_SZ 1024
@@ -143,3 +144,31 @@ void test_common_init(bool do_cputhread) {
     }
 }
 
+int setup_boot_disk(const char *fileName) {
+    char *disk = NULL;
+    int err = 0;
+#ifdef __APPLE__
+    CFBundleRef mainBundle = CFBundleGetMainBundle();
+    CFStringRef fileString = CFStringCreateWithCString(/*allocator*/NULL, fileName, CFStringGetSystemEncoding());
+    CFURLRef fileURL = CFBundleCopyResourceURL(mainBundle, fileString, NULL, NULL);
+    CFRELEASE(fileString);
+    CFStringRef filePath = CFURLCopyFileSystemPath(fileURL, kCFURLPOSIXPathStyle);
+    CFRELEASE(fileURL);
+    CFIndex length = CFStringGetLength(filePath);
+    CFIndex maxSize = CFStringGetMaximumSizeForEncoding(length, kCFStringEncodingUTF8);
+    disk = (char *)malloc(maxSize);
+    if (!CFStringGetCString(filePath, disk, maxSize, kCFStringEncodingUTF8)) {
+        FREE(disk);
+    }
+    CFRELEASE(filePath);
+#else
+    asprintf(&disk, "./disks/%s", fileName)
+#endif
+    if (c_new_diskette_6(0, disk, 0)) {
+        int len = strlen(disk);
+        disk[len-3] = '\0';
+        err = (c_new_diskette_6(0, disk, 0) != NULL);
+    }
+    FREE(disk);
+    return err;
+}

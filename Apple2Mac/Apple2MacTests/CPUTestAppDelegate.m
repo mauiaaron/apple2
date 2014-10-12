@@ -12,6 +12,7 @@
 
 extern int test_cpu(int, char **);
 extern int test_vm(int argc, char **argv);
+extern int test_display(int argc, char **argv);
 
 @implementation CPUTestAppDelegate
 
@@ -31,6 +32,8 @@ extern int test_vm(int argc, char **argv);
         test_cpu(local_argc, local_argv);
 #elif defined(TEST_VM)
         test_vm(local_argc, local_argv);
+#elif defined(TEST_DISPLAY)
+        test_display(local_argc, local_argv);
 #else
 #error "OOPS, no tests specified"
 #endif

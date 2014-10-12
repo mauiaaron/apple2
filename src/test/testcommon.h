@@ -52,5 +52,6 @@ void test_breakpoint(void *arg);
 void test_common_init(bool do_cputhread);
 void test_common_setup();
 void test_type_input(const char *input);
+int setup_boot_disk(const char *fileName);
 
 #endif // whole file
