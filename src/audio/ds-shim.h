@@ -133,6 +133,12 @@ typedef struct IDirectSoundBuffer {
 
 #define DSSCL_NORMAL                0x00000001
 
+#if defined(FAILED)
+#undef FAILED
+#endif
+#if defined(SUCCEEDED)
+#undef SUCCEEDED
+#endif
 static inline bool FAILED(HRESULT x) { return x != DS_OK; }
 static inline bool SUCCEEDED(HRESULT x) { return x == DS_OK; }
 

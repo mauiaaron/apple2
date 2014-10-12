@@ -27,7 +27,9 @@ pthread_t CreateThread(void* unused_lpThreadAttributes, int unused_dwStackSize, 
 bool SetThreadPriority(pthread_t thread, int unused_nPriority)
 {
     // assuming time critical ...
-
+#if defined(__APPLE__)
+#warning possible FIXME possible TODO : set thread priority in Darwin/Mach ?
+#else
     int policy = sched_getscheduler(getpid());
 
     int prio = 0;
@@ -43,12 +45,22 @@ bool SetThreadPriority(pthread_t thread, int unused_nPriority)
         ERRLOG("OOPS pthread_setschedprio");
         return 0;
     }
+#endif
 
     return 1;
 }
 
 bool GetExitCodeThread(pthread_t thread, unsigned long *lpExitCode)
 {
+#if defined(__APPLE__)
+    int err = 0;
+    if ( (err = pthread_join(thread, NULL)) ) {
+        ERRLOG("OOPS pthread_join");
+    }
+    if (lpExitCode) {
+        *lpExitCode = err;
+    }
+#else
     if (pthread_tryjoin_np(thread, NULL))
     {
         if (lpExitCode)
@@ -60,6 +72,7 @@ bool GetExitCodeThread(pthread_t thread, unsigned long *lpExitCode)
     {
         *lpExitCode = 0;
     }
+#endif
     return 1;
 }
 

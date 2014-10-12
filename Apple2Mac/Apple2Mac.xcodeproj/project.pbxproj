@@ -119,6 +119,14 @@
 		779F562319DA59D600A6F107 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 773B3D241956885A0085CE5F /* MainMenu.xib */; };
 		779F562919E4FE9E00A6F107 /* Basic.vsh in Resources */ = {isa = PBXBuildFile; fileRef = 779F562719E4FE9E00A6F107 /* Basic.vsh */; };
 		779F562A19E4FE9E00A6F107 /* Basic.fsh in Resources */ = {isa = PBXBuildFile; fileRef = 779F562819E4FE9E00A6F107 /* Basic.fsh */; };
+		779F565819EAF66E00A6F107 /* alhelpers.c in Sources */ = {isa = PBXBuildFile; fileRef = 779F564719EAF66E00A6F107 /* alhelpers.c */; };
+		779F565919EAF66E00A6F107 /* AY8910.c in Sources */ = {isa = PBXBuildFile; fileRef = 779F564919EAF66E00A6F107 /* AY8910.c */; };
+		779F565A19EAF66E00A6F107 /* mockingboard.c in Sources */ = {isa = PBXBuildFile; fileRef = 779F564C19EAF66E00A6F107 /* mockingboard.c */; };
+		779F565B19EAF66E00A6F107 /* soundcore-openal.c in Sources */ = {isa = PBXBuildFile; fileRef = 779F564F19EAF66E00A6F107 /* soundcore-openal.c */; };
+		779F565C19EAF66E00A6F107 /* soundcore.c in Sources */ = {isa = PBXBuildFile; fileRef = 779F565119EAF66E00A6F107 /* soundcore.c */; };
+		779F565D19EAF66E00A6F107 /* speaker.c in Sources */ = {isa = PBXBuildFile; fileRef = 779F565319EAF66E00A6F107 /* speaker.c */; };
+		779F565E19EAF66E00A6F107 /* win-shim.c in Sources */ = {isa = PBXBuildFile; fileRef = 779F565619EAF66E00A6F107 /* win-shim.c */; };
+		779F566019EAF6D000A6F107 /* OpenAL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 779F565F19EAF6D000A6F107 /* OpenAL.framework */; };
 		77E1C0B319D72700004344E0 /* vectorUtil.c in Sources */ = {isa = PBXBuildFile; fileRef = 77E1C0A919D72700004344E0 /* vectorUtil.c */; };
 		77E1C0B419D72700004344E0 /* sourceUtil.c in Sources */ = {isa = PBXBuildFile; fileRef = 77E1C0AB19D72700004344E0 /* sourceUtil.c */; };
 		77E1C0B519D72700004344E0 /* modelUtil.c in Sources */ = {isa = PBXBuildFile; fileRef = 77E1C0AD19D72700004344E0 /* modelUtil.c */; };
@@ -205,6 +213,24 @@
 		779F561B19D78B8200A6F107 /* renderer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = renderer.h; sourceTree = "<group>"; };
 		779F562719E4FE9E00A6F107 /* Basic.vsh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = Basic.vsh; sourceTree = "<group>"; };
 		779F562819E4FE9E00A6F107 /* Basic.fsh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = Basic.fsh; sourceTree = "<group>"; };
+		779F564719EAF66E00A6F107 /* alhelpers.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = alhelpers.c; sourceTree = "<group>"; };
+		779F564819EAF66E00A6F107 /* alhelpers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = alhelpers.h; sourceTree = "<group>"; };
+		779F564919EAF66E00A6F107 /* AY8910.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = AY8910.c; sourceTree = "<group>"; };
+		779F564A19EAF66E00A6F107 /* AY8910.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AY8910.h; sourceTree = "<group>"; };
+		779F564B19EAF66E00A6F107 /* ds-shim.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "ds-shim.h"; sourceTree = "<group>"; };
+		779F564C19EAF66E00A6F107 /* mockingboard.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = mockingboard.c; sourceTree = "<group>"; };
+		779F564D19EAF66E00A6F107 /* mockingboard.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = mockingboard.h; sourceTree = "<group>"; };
+		779F564E19EAF66E00A6F107 /* peripherals.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = peripherals.h; sourceTree = "<group>"; };
+		779F564F19EAF66E00A6F107 /* soundcore-openal.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = "soundcore-openal.c"; sourceTree = "<group>"; };
+		779F565019EAF66E00A6F107 /* soundcore-openal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "soundcore-openal.h"; sourceTree = "<group>"; };
+		779F565119EAF66E00A6F107 /* soundcore.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = soundcore.c; sourceTree = "<group>"; };
+		779F565219EAF66E00A6F107 /* soundcore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = soundcore.h; sourceTree = "<group>"; };
+		779F565319EAF66E00A6F107 /* speaker.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = speaker.c; sourceTree = "<group>"; };
+		779F565419EAF66E00A6F107 /* speaker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = speaker.h; sourceTree = "<group>"; };
+		779F565519EAF66E00A6F107 /* SSI263Phonemes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SSI263Phonemes.h; sourceTree = "<group>"; };
+		779F565619EAF66E00A6F107 /* win-shim.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = "win-shim.c"; sourceTree = "<group>"; };
+		779F565719EAF66E00A6F107 /* win-shim.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "win-shim.h"; sourceTree = "<group>"; };
+		779F565F19EAF6D000A6F107 /* OpenAL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenAL.framework; path = System/Library/Frameworks/OpenAL.framework; sourceTree = SDKROOT; };
 		77E1C0A819D72700004344E0 /* vectorUtil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vectorUtil.h; path = video_util/vectorUtil.h; sourceTree = "<group>"; };
 		77E1C0A919D72700004344E0 /* vectorUtil.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = vectorUtil.c; path = video_util/vectorUtil.c; sourceTree = "<group>"; };
 		77E1C0AA19D72700004344E0 /* sourceUtil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sourceUtil.h; path = video_util/sourceUtil.h; sourceTree = "<group>"; };
@@ -230,6 +256,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				779F566019EAF6D000A6F107 /* OpenAL.framework in Frameworks */,
 				4ADC521A19E8CA4500186B36 /* libz.1.1.3.dylib in Frameworks */,
 				4ADC521B19E8CA4500186B36 /* Cocoa.framework in Frameworks */,
 			);
@@ -296,6 +323,7 @@
 		773B3D0E1956885A0085CE5F /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				779F565F19EAF6D000A6F107 /* OpenAL.framework */,
 				773B3DCA1956903D0085CE5F /* libz.1.1.3.dylib */,
 				773B3D0F1956885A0085CE5F /* Cocoa.framework */,
 				773B3D2E1956885A0085CE5F /* XCTest.framework */,
@@ -386,6 +414,7 @@
 		773B3D4519568A570085CE5F /* src */ = {
 			isa = PBXGroup;
 			children = (
+				779F564619EAF66E00A6F107 /* audio */,
 				773B3D4719568A570085CE5F /* apple2.h */,
 				773B3D5C19568A570085CE5F /* common.h */,
 				773B3D5D19568A570085CE5F /* cpu-supp.c */,
@@ -467,6 +496,30 @@
 				773B3D9319568A570085CE5F /* glue-prologue.h */,
 			);
 			path = x86;
+			sourceTree = "<group>";
+		};
+		779F564619EAF66E00A6F107 /* audio */ = {
+			isa = PBXGroup;
+			children = (
+				779F564719EAF66E00A6F107 /* alhelpers.c */,
+				779F564819EAF66E00A6F107 /* alhelpers.h */,
+				779F564919EAF66E00A6F107 /* AY8910.c */,
+				779F564A19EAF66E00A6F107 /* AY8910.h */,
+				779F564B19EAF66E00A6F107 /* ds-shim.h */,
+				779F564C19EAF66E00A6F107 /* mockingboard.c */,
+				779F564D19EAF66E00A6F107 /* mockingboard.h */,
+				779F564E19EAF66E00A6F107 /* peripherals.h */,
+				779F564F19EAF66E00A6F107 /* soundcore-openal.c */,
+				779F565019EAF66E00A6F107 /* soundcore-openal.h */,
+				779F565119EAF66E00A6F107 /* soundcore.c */,
+				779F565219EAF66E00A6F107 /* soundcore.h */,
+				779F565319EAF66E00A6F107 /* speaker.c */,
+				779F565419EAF66E00A6F107 /* speaker.h */,
+				779F565519EAF66E00A6F107 /* SSI263Phonemes.h */,
+				779F565619EAF66E00A6F107 /* win-shim.c */,
+				779F565719EAF66E00A6F107 /* win-shim.h */,
+			);
+			path = audio;
 			sourceTree = "<group>";
 		};
 		77E1C09E19D726B8004344E0 /* Shaders */ = {
@@ -679,7 +732,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"$SRCROOT/../src/x86/genglue\" \"$SRCROOT/../src/disk.c\" \"$SRCROOT/../src/misc.c\" \"$SRCROOT/../src/display.c\" \"$SRCROOT/../src/vm.c\" > \"$SRCROOT/../src/x86/glue.S\"";
+			shellScript = "\"$SRCROOT/../src/x86/genglue\" \"$SRCROOT/../src/disk.c\" \"$SRCROOT/../src/misc.c\" \"$SRCROOT/../src/display.c\" \"$SRCROOT/../src/vm.c\" \"$SRCROOT/../src/audio/mockingboard.c\" > \"$SRCROOT/../src/x86/glue.S\"";
 			showEnvVarsInLog = 0;
 		};
 		773B3DC919568BF20085CE5F /* ShellScript */ = {
@@ -766,6 +819,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				773B3DBF19568A570085CE5F /* cpu.S in Sources */,
+				779F565D19EAF66E00A6F107 /* speaker.c in Sources */,
+				779F565B19EAF66E00A6F107 /* soundcore-openal.c in Sources */,
 				773B3DB019568A570085CE5F /* prefs.c in Sources */,
 				773B3DA419568A570085CE5F /* display.c in Sources */,
 				773B3DA319568A570085CE5F /* disk.c in Sources */,
@@ -778,17 +833,22 @@
 				77E1C0B619D72700004344E0 /* matrixUtil.c in Sources */,
 				77E1C0C519D7298F004344E0 /* EmulatorGLView.m in Sources */,
 				773B3DAE19568A570085CE5F /* opcodes.c in Sources */,
+				779F565C19EAF66E00A6F107 /* soundcore.c in Sources */,
 				779DD827195764E200DF89E5 /* rom-shim.c in Sources */,
 				773B3DC319568A570085CE5F /* zlib-helpers.c in Sources */,
 				77E1C0B719D72700004344E0 /* imageUtil.m in Sources */,
 				773B3DA219568A570085CE5F /* darwin-shim.c in Sources */,
 				77E1C0B519D72700004344E0 /* modelUtil.c in Sources */,
 				773B3DAC19568A570085CE5F /* debug.l in Sources */,
+				779F565E19EAF66E00A6F107 /* win-shim.c in Sources */,
+				779F565919EAF66E00A6F107 /* AY8910.c in Sources */,
 				77E1C0C619D7298F004344E0 /* EmulatorFullscreenWindow.m in Sources */,
 				773B3DA519568A570085CE5F /* font.c in Sources */,
 				773B3DA019568A570085CE5F /* cpu-supp.c in Sources */,
 				779F561C19D7929100A6F107 /* glvideo.c in Sources */,
+				779F565A19EAF66E00A6F107 /* mockingboard.c in Sources */,
 				77E1C0B419D72700004344E0 /* sourceUtil.c in Sources */,
+				779F565819EAF66E00A6F107 /* alhelpers.c in Sources */,
 				773B3DBE19568A570085CE5F /* vm.c in Sources */,
 				773B3DC019568A570085CE5F /* darwin-glue.S in Sources */,
 				773B3D1C1956885A0085CE5F /* main.m in Sources */,
@@ -1018,6 +1078,7 @@
 					"APPLE2IX=1",
 					"DEBUGGER=1",
 					"KEYPAD_JOYSTICK=1",
+					"AUDIO_ENABLED=1",
 				);
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1044,6 +1105,7 @@
 					"APPLE2IX=1",
 					"DEBUGGER=1",
 					"KEYPAD_JOYSTICK=1",
+					"AUDIO_ENABLED=1",
 				);
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",

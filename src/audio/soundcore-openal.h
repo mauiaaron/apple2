@@ -14,9 +14,14 @@
 
 #include "common.h"
 
+#ifdef __APPLE__
+#import <OpenAL/al.h>
+#import <OpenAL/alc.h>
+#else
 #include <AL/al.h>
 #include <AL/alc.h>
 #include <AL/alext.h>
+#endif
 
 #undef DSBVOLUME_MIN
 #define DSBVOLUME_MIN 0

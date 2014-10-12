@@ -14,6 +14,10 @@
 
 #include "common.h"
 
+#ifdef __APPLE__
+#import <MacTypes.h>
+#endif
+
 /*
  * This is mostly a shim for Windows-related stuff but also contains some AppleWin-isms
  *
@@ -22,13 +26,19 @@
 // 2013/09/19 - http://msdn.microsoft.com/en-us/library/windows/desktop/aa383751(v=vs.85).aspx
 
 typedef unsigned long DWORD;
+#ifdef __APPLE__
+typedef UInt32 ULONG;
+typedef SInt32 HRESULT;
+typedef signed char BOOL;
+#else
 typedef unsigned long ULONG;
-typedef long LONG;
 typedef long HRESULT;
+typedef bool BOOL;
+#endif
+typedef long LONG;
 typedef unsigned int UINT;
 typedef uint32_t UINT32;
 typedef uint64_t UINT64;
-typedef bool BOOL;
 typedef char TCHAR;
 typedef uint8_t UCHAR;
 typedef int16_t INT16;
@@ -45,7 +55,9 @@ typedef DWORD *LPDWORD;
 
 typedef char *GUID; // HACK
 typedef GUID IID;
+#if !defined(__APPLE__)
 typedef IID* REFIID;
+#endif
 
 typedef GUID *LPGUID;
 typedef char *LPCSTR;
@@ -67,9 +79,12 @@ typedef void* HANDLE;
 #define CALLBACK
 #define FAR
 
-typedef bool BOOL;
+#if !defined(TRUE)
 #define TRUE true
+#endif
+#if !defined(FALSE)
 #define FALSE false
+#endif
 
 extern FILE *g_fh;
 
