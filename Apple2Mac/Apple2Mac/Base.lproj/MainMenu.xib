@@ -23,15 +23,36 @@
                                     <action selector="orderFrontStandardAboutPanel:" target="-2" id="142"/>
                                 </connections>
                             </menuItem>
+                            <menuItem title="Reboot..." id="FjO-UG-hG2" userLabel="Menu Item - Reboot">
+                                <string key="keyEquivalent" base64-UTF8="YES">
+CA
+</string>
+                                <modifierMask key="keyEquivalentModifierMask" shift="YES" command="YES"/>
+                                <connections>
+                                    <action selector="reboot:" target="M8b-ga-iOS" id="AbH-Xq-1VZ"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Disks" id="IU3-Bt-BuK" userLabel="Menu Item - Disks">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <menu key="submenu" title="Disks" systemMenu="help" id="Wh3-tN-xkr">
+                                    <items>
+                                        <menuItem title="Insert..." keyEquivalent="D" id="Oj8-qO-A80" userLabel="Menu Item - Insert">
+                                            <connections>
+                                                <action selector="makeKeyAndOrderFront:" target="RAk-at-ZT4" id="KbU-Gy-HOD"/>
+                                            </connections>
+                                        </menuItem>
+                                    </items>
+                                </menu>
+                            </menuItem>
                             <menuItem isSeparatorItem="YES" id="236">
                                 <modifierMask key="keyEquivalentModifierMask" command="YES"/>
                             </menuItem>
+                            <menuItem title="Preferences…" keyEquivalent="," id="129"/>
                             <menuItem title="Toggle Full Screen..." keyEquivalent="F" id="rP9-cs-9dM">
                                 <connections>
                                     <action selector="toggleFullScreen:" target="M8b-ga-iOS" id="Xan-eQ-CRM"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Preferences…" keyEquivalent="," id="129"/>
                             <menuItem isSeparatorItem="YES" id="143">
                                 <modifierMask key="keyEquivalentModifierMask" command="YES"/>
                             </menuItem>
@@ -85,19 +106,190 @@
         <window title="Apple2Mac" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" animationBehavior="default" id="371" userLabel="Window - Apple2Mac">
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
-            <rect key="contentRect" x="200" y="200" width="320" height="480"/>
+            <rect key="contentRect" x="200" y="200" width="320" height="280"/>
             <rect key="screenRect" x="0.0" y="0.0" width="1920" height="1178"/>
             <view key="contentView" id="372" customClass="EmulatorGLView">
-                <rect key="frame" x="0.0" y="0.0" width="320" height="480"/>
+                <rect key="frame" x="0.0" y="0.0" width="320" height="280"/>
                 <autoresizingMask key="autoresizingMask"/>
             </view>
         </window>
         <customObject id="494" userLabel="EmulatorGLView" customClass="EmulatorGLView"/>
         <customObject id="M8b-ga-iOS" userLabel="EmulatorWindowController" customClass="EmulatorWindowController" colorLabel="IBBuiltInLabel-Blue">
             <connections>
+                <outlet property="chooseDiskA" destination="j1W-BP-P7S" id="CuH-rj-ae4"/>
+                <outlet property="chooseDiskB" destination="lI0-3f-IsR" id="Ym9-IW-I4c"/>
+                <outlet property="diskAProperties" destination="e89-G9-nNt" id="rwR-9Z-oT4"/>
+                <outlet property="diskAProtection" destination="0vx-rm-Mio" id="zF2-n5-s1R"/>
+                <outlet property="diskBProperties" destination="AOj-bZ-LXp" id="6Q1-mW-fpP"/>
+                <outlet property="diskBProtection" destination="Alr-gf-yTN" id="Tyr-Oa-jKg"/>
+                <outlet property="diskInA" destination="cb9-Pc-Ggd" id="kP3-qf-vci"/>
+                <outlet property="diskInB" destination="5oU-oN-vUH" id="lNx-Lm-0FA"/>
+                <outlet property="disksWindow" destination="RAk-at-ZT4" id="pTD-TW-9v8"/>
                 <outlet property="view" destination="372" id="pRG-Kn-92X"/>
                 <outlet property="window" destination="371" id="z3B-S9-PsV"/>
             </connections>
         </customObject>
+        <window title="Insert Disks" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" oneShot="NO" releasedWhenClosed="NO" showsToolbarButton="NO" visibleAtLaunch="NO" animationBehavior="default" id="RAk-at-ZT4">
+            <windowStyleMask key="styleMask" titled="YES" closable="YES"/>
+            <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
+            <rect key="contentRect" x="109" y="132" width="480" height="237"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="1280" height="778"/>
+            <view key="contentView" id="rBl-rx-7uF">
+                <rect key="frame" x="0.0" y="0.0" width="480" height="237"/>
+                <autoresizingMask key="autoresizingMask"/>
+                <subviews>
+                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" id="laF-n4-ciZ">
+                        <rect key="frame" x="18" y="200" width="225" height="17"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="Slot 6 Drive A" id="Vea-pb-q49">
+                            <font key="font" metaFont="systemBold"/>
+                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
+                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" id="Wzz-Yt-xlT">
+                        <rect key="frame" x="237" y="200" width="225" height="17"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="Slot 6 Drive B" id="pUB-KI-7ef">
+                            <font key="font" metaFont="systemBold"/>
+                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
+                    <box autoresizesSubviews="NO" horizontalHuggingPriority="750" title="Box" boxType="separator" titlePosition="noTitle" id="6cp-Ig-hvh">
+                        <rect key="frame" x="238" y="61" width="5" height="164"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <color key="borderColor" white="0.0" alpha="0.41999999999999998" colorSpace="calibratedWhite"/>
+                        <color key="fillColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
+                        <font key="titleFont" metaFont="system"/>
+                    </box>
+                    <button verticalHuggingPriority="750" id="j1W-BP-P7S">
+                        <rect key="frame" x="81" y="85" width="99" height="32"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <buttonCell key="cell" type="push" title="Choose..." bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="nVq-kA-8RS">
+                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="system"/>
+                        </buttonCell>
+                        <connections>
+                            <action selector="chooseDriveA:" target="M8b-ga-iOS" id="TzG-WI-I5a"/>
+                        </connections>
+                    </button>
+                    <button verticalHuggingPriority="750" id="lI0-3f-IsR">
+                        <rect key="frame" x="300" y="85" width="99" height="32"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <buttonCell key="cell" type="push" title="Choose..." bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="nmE-5R-fEx">
+                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="system"/>
+                        </buttonCell>
+                        <connections>
+                            <action selector="chooseDriveB:" target="M8b-ga-iOS" id="RVk-Bv-LBc"/>
+                        </connections>
+                    </button>
+                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" id="cb9-Pc-Ggd">
+                        <rect key="frame" x="18" y="175" width="216" height="17"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="U5Boot.do" id="UOE-Fx-vng">
+                            <font key="font" metaFont="system"/>
+                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
+                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" id="e89-G9-nNt">
+                        <rect key="frame" x="18" y="124" width="216" height="17"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="left" title=".dsk 143360 bytes" id="rQi-K1-5Cu">
+                            <font key="font" metaFont="system"/>
+                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
+                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" id="AOj-bZ-LXp">
+                        <rect key="frame" x="249" y="124" width="216" height="17"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="left" title=".dsk 143360 bytes" id="POW-zB-gIf">
+                            <font key="font" metaFont="system"/>
+                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
+                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" id="5oU-oN-vUH">
+                        <rect key="frame" x="249" y="175" width="213" height="17"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="U5Brit.do" id="KvS-JR-AdI">
+                            <font key="font" metaFont="system"/>
+                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
+                    <button verticalHuggingPriority="750" id="uLZ-yk-ywF">
+                        <rect key="frame" x="198" y="13" width="85" height="32"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <buttonCell key="cell" type="push" title="Reboot" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="6er-wF-Uql">
+                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="system"/>
+                        </buttonCell>
+                        <connections>
+                            <action selector="reboot:" target="M8b-ga-iOS" id="nKX-T4-WQa"/>
+                        </connections>
+                    </button>
+                    <matrix verticalHuggingPriority="750" allowsEmptySelection="NO" autorecalculatesCellSize="YES" id="0vx-rm-Mio">
+                        <rect key="frame" x="20" y="149" width="212" height="18"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                        <size key="cellSize" width="91" height="18"/>
+                        <size key="intercellSpacing" width="4" height="2"/>
+                        <buttonCell key="prototype" type="radio" title="Radio" imagePosition="left" alignment="left" inset="2" id="800-L1-WxW">
+                            <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                            <font key="font" metaFont="system"/>
+                        </buttonCell>
+                        <cells>
+                            <column>
+                                <buttonCell type="radio" title="Read only" imagePosition="left" alignment="left" state="on" tag="1" inset="2" id="2ap-2b-hRw">
+                                    <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                                    <font key="font" metaFont="system"/>
+                                </buttonCell>
+                            </column>
+                            <column>
+                                <buttonCell type="radio" title="Read/write" imagePosition="left" alignment="left" inset="2" id="aq6-LE-mOR">
+                                    <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                                    <font key="font" metaFont="system"/>
+                                </buttonCell>
+                            </column>
+                        </cells>
+                        <connections>
+                            <action selector="diskAProtectionChanged:" target="M8b-ga-iOS" id="Ok4-Cd-vhu"/>
+                        </connections>
+                    </matrix>
+                    <matrix verticalHuggingPriority="750" allowsEmptySelection="NO" autorecalculatesCellSize="YES" id="Alr-gf-yTN">
+                        <rect key="frame" x="249" y="149" width="212" height="18"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                        <size key="cellSize" width="91" height="18"/>
+                        <size key="intercellSpacing" width="4" height="2"/>
+                        <buttonCell key="prototype" type="radio" title="Radio" imagePosition="left" alignment="left" inset="2" id="uEc-fa-XXZ">
+                            <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                            <font key="font" metaFont="system"/>
+                        </buttonCell>
+                        <cells>
+                            <column>
+                                <buttonCell type="radio" title="Read only" imagePosition="left" alignment="left" state="on" tag="1" inset="2" id="1XS-2y-htU">
+                                    <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                                    <font key="font" metaFont="system"/>
+                                </buttonCell>
+                            </column>
+                            <column>
+                                <buttonCell type="radio" title="Read/write" imagePosition="left" alignment="left" inset="2" id="Obp-F0-hno">
+                                    <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                                    <font key="font" metaFont="system"/>
+                                </buttonCell>
+                            </column>
+                        </cells>
+                        <connections>
+                            <action selector="diskBProtectionChanged:" target="M8b-ga-iOS" id="1ty-fR-QWq"/>
+                        </connections>
+                    </matrix>
+                </subviews>
+            </view>
+        </window>
     </objects>
 </document>

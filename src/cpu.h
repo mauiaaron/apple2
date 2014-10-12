@@ -44,6 +44,7 @@ extern void cpu65_interrupt(int reason);
 extern void cpu65_uninterrupt(int reason);
 
 extern void cpu65_run(void);
+extern void cpu65_reboot(void);
 
 extern void cpu65_direct_write(int ea,int data);
 

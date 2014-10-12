@@ -1315,11 +1315,7 @@ void c_interface_parameters()
                     ch = toupper(ch);
                     if (ch == 'Y')
                     {
-                        timing_initialize();
-                        video_set(0);
-                        joy_button0 = 0xff; // OpenApple
-                        cpu65_interrupt(ResetSig);
-                        c_initialize_sound_hooks();
+                        cpu65_reboot();
                         c_interface_exit(ch);
                         return;
                     }
