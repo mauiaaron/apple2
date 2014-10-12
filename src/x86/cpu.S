@@ -26,15 +26,15 @@
 
 #if CPU_TRACING
 #   define TRACE_PROLOGUE \
-                callLQ  cpu65_trace_prologue;
+                callLQ  CALL(cpu65_trace_prologue);
 #   define TRACE_ARG \
-                callLQ  cpu65_trace_arg;
+                callLQ  CALL(cpu65_trace_arg);
 #   define TRACE_ARG1 \
-                callLQ  cpu65_trace_arg1;
+                callLQ  CALL(cpu65_trace_arg1);
 #   define TRACE_ARG2 \
-                callLQ  cpu65_trace_arg2;
+                callLQ  CALL(cpu65_trace_arg2);
 #   define TRACE_EPILOGUE \
-                callLQ  cpu65_trace_epilogue;
+                callLQ  CALL(cpu65_trace_epilogue);
 #else
 #   define TRACE_PROLOGUE
 #   define TRACE_ARG

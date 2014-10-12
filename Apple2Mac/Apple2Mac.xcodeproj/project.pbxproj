@@ -651,7 +651,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"$SRCROOT/../src/x86/genglue\" \"$SRCROOT/../src/disk.c\" \"$SRCROOT/../src/misc.c\" \"$SRCROOT/../src/display.c\" \"$SRCROOT/../src/vm.c\" > \"$SRCROOT/../src/x86/glue.S\"";
+			shellScript = "\"$SRCROOT/../src/x86/genglue\" \"$SRCROOT/../src/disk.c\" \"$SRCROOT/../src/misc.c\" \"$SRCROOT/../src/display.c\" \"$SRCROOT/../src/vm.c\" \"$SRCROOT/../src/cpu-supp.c\" > \"$SRCROOT/../src/x86/glue.S\"";
 			showEnvVarsInLog = 0;
 		};
 		4ADC521C19E8CA4500186B36 /* ShellScript */ = {
@@ -891,6 +891,8 @@
 					"KEYPAD_JOYSTICK=1",
 					"TEST_VM=1",
 					"HEADLESS=1",
+					"TESTING=1",
+					"CPU_TRACING=1",
 				);
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
@@ -919,6 +921,8 @@
 					"KEYPAD_JOYSTICK=1",
 					"TEST_VM=1",
 					"HEADLESS=1",
+					"TESTING=1",
+					"CPU_TRACING=1",
 				);
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1066,6 +1070,7 @@
 					"DEBUGGER=1",
 					"KEYPAD_JOYSTICK=1",
 					"TEST_CPU=1",
+					"TESTING=1",
 				);
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1093,6 +1098,7 @@
 					"DEBUGGER=1",
 					"KEYPAD_JOYSTICK=1",
 					"TEST_CPU=1",
+					"TESTING=1",
 				);
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
