@@ -18,9 +18,6 @@
 #include "audio/soundcore-openal.h"
 #include "audio/alhelpers.h"
 
-LPALBUFFERSAMPLESSOFT alBufferSamplesSOFT = wrap_BufferSamples;
-LPALISBUFFERFORMATSUPPORTEDSOFT alIsBufferFormatSupportedSOFT = NULL;
-
 static long OpenALCreateSoundBuffer(ALBufferParamsStruct *params, ALSoundBufferStruct **soundbuf_struct, void *extra_data);
 static long OpenALDestroySoundBuffer(ALSoundBufferStruct **soundbuf_struct);
 
@@ -128,8 +125,6 @@ long SoundSystemCreate(const char *sound_device, SoundSystemStruct **sound_struc
         if (alIsExtensionPresent("AL_SOFT_buffer_samples"))
         {
             LOG("AL_SOFT_buffer_samples supported, good!");
-            alBufferSamplesSOFT = alGetProcAddress("alBufferSamplesSOFT");
-            alIsBufferFormatSupportedSOFT = alGetProcAddress("alIsBufferFormatSupportedSOFT");
         }
         else
         {
@@ -340,22 +335,14 @@ static ALVoice *NewVoice(ALBufferParamsStruct *params)
         // Emulator supports only mono and stereo 
         if (params->lpwfxFormat->nChannels == 2)
         {
-            voice->channels = AL_STEREO_SOFT;
+            voice->format = AL_FORMAT_STEREO16;
         }
         else
         {
-            voice->channels = AL_MONO_SOFT;
-        }
-        voice->type = AL_SHORT_SOFT; // signed 16bit
-        voice->format = GetFormat(voice->channels, voice->type, alIsBufferFormatSupportedSOFT);
-        if (voice->format == 0)
-        {
-            ERRLOG("OOPS, Unsupported format (%s, %s)", ChannelsName(voice->channels), TypeName(voice->type));
-            break;
+            voice->format = AL_FORMAT_MONO16;
         }
 
         /* Allocate enough space for the temp buffer, given the format */
-        //voice->buffersize = FramesToBytes(params->dwBufferBytes, voice->channels, voice->type);
         voice->buffersize = params->dwBufferBytes;
         voice->data = malloc(voice->buffersize);
         if (voice->data == NULL)
@@ -364,12 +351,9 @@ static ALVoice *NewVoice(ALBufferParamsStruct *params)
             break;
         }
 
-        LOG("\tType     : 0x%08x", voice->type);
         LOG("\tRate     : 0x%08x", voice->rate);
-        LOG("\tChannels : 0x%08x", voice->channels);
         LOG("\tFormat   : 0x%08x", voice->format);
         LOG("\tbuffersize : %d", voice->buffersize);
-        LOG("\tSOFT     : %s", alIsBufferFormatSupportedSOFT ? "YES" : "NO");
 
         return voice;
 
@@ -417,59 +401,6 @@ static long ALRestore(void *_this)
 static long ALPlay(void *_this, unsigned long reserved1, unsigned long reserved2, unsigned long flags)
 {
     LOG("ALPlay ...");
-#if 0
-    ALVoice *voice = (ALVoice*)_this;
-    int err = 0;
-
-    // Rewind the source position and clear the buffer queue
-    alSourceRewind(voice->source);
-    if((err = alGetError()) != AL_NO_ERROR)
-    {
-        ERRLOG("OOPS, alSourceRewind : 0x%08x", err);
-        return err;
-    }
-
-    alSourcei(voice->source, AL_BUFFER, 0);
-    if((err = alGetError()) != AL_NO_ERROR)
-    {
-        ERRLOG("OOPS, alSourcei : 0x%08x", err);
-        return err;
-    }
-
-if (false) {
-    // fill buffer queue with quiet
-    memset(voice->data, 0x0, voice->buffersize);
-    int half_buffers = (OPENAL_NUM_BUFFERS>>1);
-    for (size_t i=0; i<half_buffers; i++)
-    {
-        alBufferSamplesSOFT(voice->buffers[i], voice->rate, voice->format,
-                            BytesToFrames(voice->buffersize, voice->channels, voice->type),
-                            voice->channels, voice->type, voice->data);
-        err = alGetError();
-        if (err != AL_NO_ERROR)
-        {
-            LOG("Error buffering initial samples : 0x%08x", err);
-            return err;
-        }
-    }
-
-    alSourceQueueBuffers(voice->source, OPENAL_NUM_BUFFERS, voice->buffers);
-    err = alGetError();
-    if (err != AL_NO_ERROR)
-    {
-        LOG("Error queueing initial buffers : 0x%08x", err);
-        return err;
-    }
-
-    alSourcePlay(voice->source);
-    err = alGetError();
-    if (err != AL_NO_ERROR)
-    {
-        LOG("Error starting playback : 0x%08x", err);
-        return err;
-    }
-}
-#endif
 
     return 0;
 }
@@ -616,13 +547,12 @@ static long _ALSubmitBufferToOpenAL(ALVoice *voice)
         return -1;
     }
     //LOG("Enqueing OpenAL buffer %u (%u bytes)", node->bufid, node->bytes);
-    alBufferSamplesSOFT(node->bufid, voice->rate, voice->format,
-                        BytesToFrames(node->bytes, voice->channels, voice->type),
-                        voice->channels, voice->type, voice->data);
+    alBufferData(node->bufid, voice->format, voice->data, node->bytes, voice->rate);
+
     if ((err = alGetError()) != AL_NO_ERROR)
     {
         PlaylistDequeue(voice, node);
-        ERRLOG("OOPS, Error alBufferSamplesSOFT : 0x%08x", err);
+        ERRLOG("OOPS, Error alBufferData : 0x%08x", err);
         return err;
     }
 
