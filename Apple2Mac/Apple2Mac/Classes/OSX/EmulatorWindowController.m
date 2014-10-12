@@ -18,6 +18,8 @@
 #define NIB_PROPERTIES @".nib 232960 bytes"
 #define GZ_EXTENSION @"gz"
 
+#define KEYCODE_CAPS_LOCK 0x39
+
 @interface EmulatorWindowController ()
 
 @property (nonatomic, assign) IBOutlet EmulatorGLView *view;
@@ -312,22 +314,42 @@
     self.fullscreenWindow = nil;
 }
 
+- (void)flagsChanged:(NSEvent*)event
+{
+    static BOOL modified_caps_lock = NO;
+    if ([event keyCode] == KEYCODE_CAPS_LOCK)
+    {
+        NSUInteger flags = [event modifierFlags];
+        if (flags & NSAlphaShiftKeyMask)
+        {
+            modified_caps_lock = YES;
+            caps_lock = true;
+        }
+        else
+        {
+            caps_lock = false;
+        }
+    }
+}
+
+- (void)keyUp:(NSEvent *)event
+{
+    unichar c = [[event charactersIgnoringModifiers] characterAtIndex:0];
+    
+    c_keys_handle_input((int)c, 0, 1);
+    
+    // Allow other character to be handled (or not and beep)
+    //[super keyDown:event];
+}
+
 - (void)keyDown:(NSEvent *)event
 {
-	unichar c = [[event charactersIgnoringModifiers] characterAtIndex:0];
+    unichar c = [[event charactersIgnoringModifiers] characterAtIndex:0];
 
-	switch (c)
-	{
-		case 27:
-            NSLog(@"key ESC");
-			return;
-		case 'f':
-            NSLog(@"key 'f'");
-			return;
-	}
+    c_keys_handle_input((int)c, 1, 1);
 
-	// Allow other character to be handled (or not and beep)
-	[super keyDown:event];
+    // Allow other character to be handled (or not and beep)
+    //[super keyDown:event];
 }
 
 @end

@@ -32,7 +32,7 @@ extern int raw_js_y;
 
 static int next_key = -1;
 static int last_scancode = -1;
-bool caps_lock = false;              /* is enabled */
+bool caps_lock = true; // default enabled because so much breaks otherwise
 
 /* ----------------------------------------------------
     //e Keymap. Mapping scancodes to Apple //e US Keyboard
@@ -171,7 +171,6 @@ void c_keys_handle_input(int scancode, int pressed, int is_cooked)
 {
     int *keymap = NULL;
 
-    assert(scancode < 0x80);
     if (is_cooked) {
         last_scancode = -1;
         if (!pressed) {
@@ -184,6 +183,7 @@ void c_keys_handle_input(int scancode, int pressed, int is_cooked)
         }
         next_key = scancode;
     } else if (scancode >= 0) {
+        assert(scancode < 0x80);
         last_scancode = scancode;
 
         if ((key_pressed[ SCODE_L_SHIFT ] || key_pressed[ SCODE_R_SHIFT ]) &&
