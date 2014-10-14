@@ -18,7 +18,13 @@
 #define NIB_PROPERTIES @".nib 232960 bytes"
 #define GZ_EXTENSION @"gz"
 
-#define KEYCODE_CAPS_LOCK 0x39
+#define CAPS_LOCK 0x39
+#define SHIFT_LT 0x38
+#define SHIFT_RT 0x3c
+#define CTRL_LT 0x3b
+#define CTRL_RT 0x3e
+#define ALT_LT 0x3a
+#define ALT_RT 0x3d
 
 @interface EmulatorWindowController ()
 
@@ -317,26 +323,159 @@
 - (void)flagsChanged:(NSEvent*)event
 {
     static BOOL modified_caps_lock = NO;
-    if ([event keyCode] == KEYCODE_CAPS_LOCK)
+    switch ([event keyCode])
     {
-        NSUInteger flags = [event modifierFlags];
-        if (flags & NSAlphaShiftKeyMask)
+        case CAPS_LOCK:
         {
-            modified_caps_lock = YES;
-            caps_lock = true;
+            if ([event modifierFlags] & NSAlphaShiftKeyMask)
+            {
+                modified_caps_lock = YES;
+                caps_lock = true;
+            }
+            else
+            {
+                caps_lock = false;
+            }
         }
-        else
-        {
-            caps_lock = false;
-        }
+
+        case SHIFT_LT:
+            c_keys_handle_input(SCODE_L_SHIFT, ([event modifierFlags] & NSShiftKeyMask), 0);
+            break;
+
+        case SHIFT_RT:
+            c_keys_handle_input(SCODE_R_SHIFT, ([event modifierFlags] & NSShiftKeyMask), 0);
+            break;
+
+        case CTRL_LT:
+            c_keys_handle_input(SCODE_L_CTRL, ([event modifierFlags] & NSControlKeyMask), 0);
+            break;
+
+        case CTRL_RT:
+            c_keys_handle_input(SCODE_R_CTRL, ([event modifierFlags] & NSControlKeyMask), 0);
+            break;
+
+        case ALT_LT:
+            c_keys_handle_input(SCODE_L_ALT, ([event modifierFlags] & NSAlternateKeyMask), 0);
+            break;
+
+        case ALT_RT:
+            c_keys_handle_input(SCODE_R_ALT, ([event modifierFlags] & NSAlternateKeyMask), 0);
+            break;
+
+        default:
+            break;
     }
+    
+    NSLog(@"keyCode : %04x", [event keyCode]);
+}
+
+- (void)_handleKeyEvent:(NSEvent *)event pressed:(BOOL)pressed
+{
+    unichar c = [[event charactersIgnoringModifiers] characterAtIndex:0];
+    int scode = (int)c;
+    
+    NSLog(@"key = %08x", c);
+    
+    int cooked = 0;
+    switch (scode)
+    {
+        case 0x1b:
+            scode = SCODE_ESC;
+            NSLog(@"ESC...");
+            break;
+            
+        case NSUpArrowFunctionKey:
+            scode = SCODE_U;
+            break;
+        case NSDownArrowFunctionKey:
+            scode = SCODE_D;
+            break;
+        case NSLeftArrowFunctionKey:
+            NSLog(@"LEFT ARROW");
+            scode = SCODE_L;
+            break;
+        case NSRightArrowFunctionKey:
+            scode = SCODE_R;
+            break;
+
+        case NSF1FunctionKey:
+            scode = SCODE_F1;
+            break;
+        case NSF2FunctionKey:
+            scode = SCODE_F2;
+            break;
+        case NSF3FunctionKey:
+            scode = SCODE_F3;
+            break;
+        case NSF4FunctionKey:
+            scode = SCODE_F4;
+            break;
+        case NSF5FunctionKey:
+            scode = SCODE_F5;
+            break;
+        case NSF6FunctionKey:
+            scode = SCODE_F6;
+            break;
+        case NSF7FunctionKey:
+            scode = SCODE_F7;
+            break;
+        case NSF8FunctionKey:
+            scode = SCODE_F8;
+            break;
+        case NSF9FunctionKey:
+            scode = SCODE_F9;
+            break;
+        case NSF10FunctionKey:
+            scode = SCODE_F10;
+            break;
+        case NSF11FunctionKey:
+            scode = SCODE_F11;
+            break;
+        case NSF12FunctionKey:
+            scode = SCODE_F12;
+            break;
+
+        case NSInsertFunctionKey:
+            scode = SCODE_INS;
+            break;
+        case NSDeleteFunctionKey:
+            scode = SCODE_DEL;
+            break;
+        case NSHomeFunctionKey:
+            scode = SCODE_HOME;
+            break;
+        case NSEndFunctionKey:
+            scode = SCODE_END;
+            break;
+
+        case NSPageUpFunctionKey:
+            scode = SCODE_PGUP;
+            break;
+        case NSPageDownFunctionKey:
+            scode = SCODE_PGDN;
+            break;
+
+        case NSPrintScreenFunctionKey:
+            scode = SCODE_PRNT;
+            break;
+        case NSPauseFunctionKey:
+            scode = SCODE_PAUSE;
+            break;
+        case NSBreakFunctionKey:
+            scode = SCODE_BRK;
+            break;
+            
+        default:
+            cooked = 1;
+            break;
+    }
+    
+    c_keys_handle_input(scode, pressed, cooked);
 }
 
 - (void)keyUp:(NSEvent *)event
 {
-    unichar c = [[event charactersIgnoringModifiers] characterAtIndex:0];
-    
-    c_keys_handle_input((int)c, 0, 1);
+    [self _handleKeyEvent:event pressed:NO];
     
     // Allow other character to be handled (or not and beep)
     //[super keyDown:event];
@@ -344,9 +483,7 @@
 
 - (void)keyDown:(NSEvent *)event
 {
-    unichar c = [[event charactersIgnoringModifiers] characterAtIndex:0];
-
-    c_keys_handle_input((int)c, 1, 1);
+    [self _handleKeyEvent:event pressed:YES];
 
     // Allow other character to be handled (or not and beep)
     //[super keyDown:event];
