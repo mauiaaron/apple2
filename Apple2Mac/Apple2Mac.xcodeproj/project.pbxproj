@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4AC7A76D19ECC3FB00BCD457 /* EmulatorWindow.m in Sources */ = {isa = PBXBuildFile; fileRef = 4AC7A76C19ECC3FB00BCD457 /* EmulatorWindow.m */; };
 		4ADC51C219E8BD3700186B36 /* vectorUtil.c in Sources */ = {isa = PBXBuildFile; fileRef = 77E1C0A919D72700004344E0 /* vectorUtil.c */; };
 		4ADC51C319E8BD3A00186B36 /* sourceUtil.c in Sources */ = {isa = PBXBuildFile; fileRef = 77E1C0AB19D72700004344E0 /* sourceUtil.c */; };
 		4ADC51C419E8BD3D00186B36 /* modelUtil.c in Sources */ = {isa = PBXBuildFile; fileRef = 77E1C0AD19D72700004344E0 /* modelUtil.c */; };
@@ -177,6 +178,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		4AC7A76B19ECC3FB00BCD457 /* EmulatorWindow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = EmulatorWindow.h; path = Classes/OSX/EmulatorWindow.h; sourceTree = "<group>"; };
+		4AC7A76C19ECC3FB00BCD457 /* EmulatorWindow.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = EmulatorWindow.m; path = Classes/OSX/EmulatorWindow.m; sourceTree = "<group>"; };
 		4ADC51CA19E8BEB700186B36 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = "Base.lproj/MainMenu-Test.xib"; sourceTree = "<group>"; };
 		4ADC522719E8CA4500186B36 /* Apple2MacTestVM.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Apple2MacTestVM.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		4ADC522819E8CA4500186B36 /* Apple2MacTestVM-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "Apple2MacTestVM-Info.plist"; path = "/Users/aaronculliney/Documents/00web/apple2/Apple2Mac/Apple2MacTests/Apple2MacTestVM-Info.plist"; sourceTree = "<absolute>"; };
@@ -446,6 +449,8 @@
 			children = (
 				77E1C0BE19D7298F004344E0 /* EmulatorWindowController.m */,
 				77E1C0BF19D7298F004344E0 /* EmulatorWindowController.h */,
+				4AC7A76B19ECC3FB00BCD457 /* EmulatorWindow.h */,
+				4AC7A76C19ECC3FB00BCD457 /* EmulatorWindow.m */,
 				77E1C0C019D7298F004344E0 /* EmulatorGLView.m */,
 				77E1C0C119D7298F004344E0 /* EmulatorGLView.h */,
 				77E1C0C219D7298F004344E0 /* EmulatorFullscreenWindow.m */,
@@ -943,6 +948,7 @@
 				773B3DA319568A570085CE5F /* disk.c in Sources */,
 				773B3DAD19568A570085CE5F /* debugger.c in Sources */,
 				77E1C0B319D72700004344E0 /* vectorUtil.c in Sources */,
+				4AC7A76D19ECC3FB00BCD457 /* EmulatorWindow.m in Sources */,
 				773B3DAB19568A570085CE5F /* keys.c in Sources */,
 				773B3DBC19568A570085CE5F /* timing.c in Sources */,
 				773B3DAF19568A570085CE5F /* misc.c in Sources */,
