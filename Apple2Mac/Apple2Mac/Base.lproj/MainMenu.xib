@@ -114,7 +114,7 @@ CA
             </view>
         </window>
         <customObject id="494" userLabel="EmulatorGLView" customClass="EmulatorGLView"/>
-        <customObject id="M8b-ga-iOS" userLabel="EmulatorWindowController" customClass="EmulatorWindowController" colorLabel="IBBuiltInLabel-Blue">
+        <customObject id="M8b-ga-iOS" customClass="EmulatorWindowController" colorLabel="IBBuiltInLabel-Blue">
             <connections>
                 <outlet property="chooseDiskA" destination="j1W-BP-P7S" id="CuH-rj-ae4"/>
                 <outlet property="chooseDiskB" destination="lI0-3f-IsR" id="Ym9-IW-I4c"/>
@@ -124,7 +124,7 @@ CA
                 <outlet property="diskBProtection" destination="Alr-gf-yTN" id="Tyr-Oa-jKg"/>
                 <outlet property="diskInA" destination="cb9-Pc-Ggd" id="kP3-qf-vci"/>
                 <outlet property="diskInB" destination="5oU-oN-vUH" id="lNx-Lm-0FA"/>
-                <outlet property="disksWindow" destination="RAk-at-ZT4" id="pTD-TW-9v8"/>
+                <outlet property="disksWindow" destination="RAk-at-ZT4" id="64k-qW-zF5"/>
                 <outlet property="view" destination="372" id="pRG-Kn-92X"/>
                 <outlet property="window" destination="371" id="z3B-S9-PsV"/>
             </connections>
@@ -171,7 +171,7 @@ CA
                             <font key="font" metaFont="system"/>
                         </buttonCell>
                         <connections>
-                            <action selector="chooseDriveA:" target="M8b-ga-iOS" id="TzG-WI-I5a"/>
+                            <action selector="chooseDriveA:" target="FHO-g2-V3A" id="aXp-cp-feH"/>
                         </connections>
                     </button>
                     <button verticalHuggingPriority="750" id="lI0-3f-IsR">
@@ -182,7 +182,7 @@ CA
                             <font key="font" metaFont="system"/>
                         </buttonCell>
                         <connections>
-                            <action selector="chooseDriveB:" target="M8b-ga-iOS" id="RVk-Bv-LBc"/>
+                            <action selector="chooseDriveB:" target="FHO-g2-V3A" id="HMf-d7-88j"/>
                         </connections>
                     </button>
                     <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" id="cb9-Pc-Ggd">
@@ -257,7 +257,7 @@ CA
                             </column>
                         </cells>
                         <connections>
-                            <action selector="diskAProtectionChanged:" target="M8b-ga-iOS" id="Ok4-Cd-vhu"/>
+                            <action selector="diskAProtectionChanged:" target="FHO-g2-V3A" id="Mes-Qd-Soy"/>
                         </connections>
                     </matrix>
                     <matrix verticalHuggingPriority="750" allowsEmptySelection="NO" autorecalculatesCellSize="YES" id="Alr-gf-yTN">
@@ -285,11 +285,25 @@ CA
                             </column>
                         </cells>
                         <connections>
-                            <action selector="diskBProtectionChanged:" target="M8b-ga-iOS" id="1ty-fR-QWq"/>
+                            <action selector="diskBProtectionChanged:" target="FHO-g2-V3A" id="kmz-zd-Zal"/>
                         </connections>
                     </matrix>
                 </subviews>
             </view>
+            <point key="canvasLocation" x="260" y="-361.5"/>
         </window>
+        <customObject id="FHO-g2-V3A" customClass="EmulatorDiskController">
+            <connections>
+                <outlet property="chooseDiskA" destination="j1W-BP-P7S" id="1jF-yu-aLA"/>
+                <outlet property="chooseDiskB" destination="lI0-3f-IsR" id="8rt-Zh-lzZ"/>
+                <outlet property="diskAProperties" destination="e89-G9-nNt" id="rw2-9O-jsk"/>
+                <outlet property="diskAProtection" destination="0vx-rm-Mio" id="vNp-5l-F4p"/>
+                <outlet property="diskBProperties" destination="AOj-bZ-LXp" id="dFn-b1-mHV"/>
+                <outlet property="diskBProtection" destination="Alr-gf-yTN" id="MPY-dd-Zp3"/>
+                <outlet property="diskInA" destination="cb9-Pc-Ggd" id="chv-2S-Y2R"/>
+                <outlet property="diskInB" destination="5oU-oN-vUH" id="8fb-s5-EKa"/>
+                <outlet property="disksWindow" destination="RAk-at-ZT4" id="4wu-vw-EhL"/>
+            </connections>
+        </customObject>
     </objects>
 </document>
