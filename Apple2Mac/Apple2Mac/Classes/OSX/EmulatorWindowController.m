@@ -183,8 +183,6 @@
         default:
             break;
     }
-    
-    NSLog(@"keyCode : %04x", [event keyCode]);
 }
 
 - (void)_handleKeyEvent:(NSEvent *)event pressed:(BOOL)pressed
@@ -192,14 +190,11 @@
     unichar c = [[event charactersIgnoringModifiers] characterAtIndex:0];
     int scode = (int)c;
     
-    NSLog(@"key = %08x", c);
-    
     int cooked = 0;
     switch (scode)
     {
         case 0x1b:
             scode = SCODE_ESC;
-            NSLog(@"ESC...");
             break;
             
         case NSUpArrowFunctionKey:
@@ -209,7 +204,6 @@
             scode = SCODE_D;
             break;
         case NSLeftArrowFunctionKey:
-            NSLog(@"LEFT ARROW");
             scode = SCODE_L;
             break;
         case NSRightArrowFunctionKey:
@@ -284,7 +278,15 @@
             break;
             
         default:
-            cooked = 1;
+            if ([event modifierFlags] & NSControlKeyMask)
+            {
+                scode = c_keys_ascii_to_scancode(scode);
+                cooked = 0;
+            }
+            else
+            {
+                cooked = 1;
+            }
             break;
     }
     

@@ -299,4 +299,20 @@ static CVReturn displayLinkCallback(CVDisplayLinkRef displayLink, const CVTimeSt
 	
 	[super dealloc];
 }
+
+#pragma mark -
+#pragma mark Application Delegate methods
+
+- (BOOL)applicationShouldTerminateAfterLastWindowClosed:(NSApplication *)application
+{
+    return YES;
+}
+
+- (NSApplicationTerminateReply)applicationShouldTerminate:(NSApplication *)application
+{
+    c_eject_6(0);
+    c_eject_6(1);
+    return NSTerminateNow;
+}
+
 @end
