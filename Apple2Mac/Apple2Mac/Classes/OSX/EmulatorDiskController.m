@@ -7,6 +7,8 @@
 //
 
 #import "EmulatorDiskController.h"
+#import "EmulatorPrefsController.h"
+#import "common.h"
 
 #define READONLY_CHOICE_INDEX 0
 #define NO_DISK_INSERTED @"(No Disk Inserted)"
@@ -27,6 +29,7 @@
 @property (assign) IBOutlet NSMatrix *diskBProtection;
 @property (assign) IBOutlet NSButton *chooseDiskA;
 @property (assign) IBOutlet NSButton *chooseDiskB;
+@property (assign) IBOutlet NSButton *startupDisksChoice;
 
 @property (nonatomic, copy) NSString *diskAPath;
 @property (nonatomic, copy) NSString *diskBPath;
@@ -46,11 +49,47 @@
     [self.diskBProperties setStringValue:@""];
     [self.chooseDiskA setKeyEquivalent:@"\r"];
     [self.chooseDiskA setBezelStyle:NSRoundedBezelStyle];
+    [self.startupDisksChoice setState:NSOffState];
+    
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    
+    NSString *startupDiskA = [defaults stringForKey:kApple2PrefStartupDiskA];
+    BOOL startupDiskAProtection = [defaults boolForKey:kApple2PrefStartupDiskAProtected];
+    if (startupDiskA)
+    {
+        const char *err = c_new_diskette_6(0, [startupDiskA UTF8String], startupDiskAProtection);
+        if (err)
+        {
+            NSString *diskA = [NSString stringWithFormat:@"%@.gz", startupDiskA];
+            err = c_new_diskette_6(0, [diskA UTF8String], startupDiskAProtection);
+        }
+        if (!err)
+        {
+            [self.diskInA setStringValue:[[startupDiskA pathComponents] lastObject]];
+            [self.startupDisksChoice setState:NSOnState];
+        }
+    }
+    
+    NSString *startupDiskB = [defaults stringForKey:kApple2PrefStartupDiskB];
+    BOOL startupDiskBProtection = [defaults boolForKey:kApple2PrefStartupDiskBProtected];
+    if (startupDiskB)
+    {
+        const char *err = c_new_diskette_6(1, [startupDiskB UTF8String], startupDiskBProtection);
+        if (err)
+        {
+            NSString *diskB = [NSString stringWithFormat:@"%@.gz", startupDiskB];
+            err = c_new_diskette_6(0, [diskB UTF8String], startupDiskBProtection);
+        }
+        if (!err)
+        {
+            [self.diskInB setStringValue:[[startupDiskB pathComponents] lastObject]];
+            [self.startupDisksChoice setState:NSOnState];
+        }
+    }
 }
 
 - (void)dealloc
 {
-#warning TODO FIXME ... probably should exit emulator if this gets invoked ...
     self.diskAPath = nil;
     self.diskBPath = nil;
     [super dealloc];
@@ -66,7 +105,7 @@
     dispatch_async(dispatch_get_main_queue(), ^{
         NSButtonCell *readOnlyChoice = [[[self diskAProtection] cells] firstObject];
         NSString *path = [self diskAPath];
-        [self _insertDisketteInDrive:0 path:path type:[self _extensionForPath:path] readOnly:([readOnlyChoice state] == NSOnState)];
+        [self _insertDisketteInDrive:0 path:path type:[EmulatorDiskController extensionForPath:path] readOnly:([readOnlyChoice state] == NSOnState)];
     });
 }
 
@@ -80,7 +119,7 @@
     dispatch_async(dispatch_get_main_queue(), ^{
         NSButtonCell *readOnlyChoice = [[[self diskBProtection] cells] firstObject];
         NSString *path = [self diskBPath];
-        [self _insertDisketteInDrive:1 path:path type:[self _extensionForPath:path] readOnly:([readOnlyChoice state] == NSOnState)];
+        [self _insertDisketteInDrive:1 path:path type:[EmulatorDiskController extensionForPath:path] readOnly:([readOnlyChoice state] == NSOnState)];
     });
 }
 
@@ -146,7 +185,17 @@
     return YES;
 }
 
-- (NSString *)_extensionForPath:(NSString *)path
++ (NSSet *)emulatorFileTypes
+{
+    static NSSet *set = nil;
+    static dispatch_once_t onceToken = 0L;
+    dispatch_once(&onceToken, ^{
+        set = [[NSSet alloc] initWithObjects:@"dsk", @"nib", @"do", @"po", GZ_EXTENSION, nil];
+    });
+    return [[set retain] autorelease];
+}
+
++ (NSString *)extensionForPath:(NSString *)path
 {
     NSString *extension0 = [path pathExtension];
     NSString *extension1 = [[path stringByDeletingPathExtension] pathExtension];
@@ -157,9 +206,9 @@
     return extension0;
 }
 
-- (void)_chooseDisk:(int)drive readOnly:(BOOL)readOnly
++ (void)chooseDiskForWindow:(NSWindow *)window completionHandler:(DiskCompletionHandler)handler
 {
-    NSOpenPanel *openPanel = [NSOpenPanel openPanel];
+    NSOpenPanel *openPanel = [[NSOpenPanel openPanel] retain];
     [openPanel setTitle:@"Choose a disk image"];
     NSURL *url = [[NSUserDefaults standardUserDefaults] URLForKey:kApple2DisksURL];
     if (!url)
@@ -167,7 +216,6 @@
         url = [[NSBundle mainBundle] URLForResource:@"blank" withExtension:@"dsk.gz"];
         url = [url URLByDeletingLastPathComponent];
     }
-    [[NSUserDefaults standardUserDefaults] setURL:url forKey:kApple2DisksURL];
     [openPanel setDirectoryURL:url];
     [openPanel setShowsResizeIndicator:YES];
     [openPanel setShowsHiddenFiles:NO];
@@ -177,23 +225,39 @@
     [openPanel setAllowsMultipleSelection:NO];
     
     // NOTE : Doesn't appear to be a way to specify ".dsk.gz" ... so we may inadvertently allow files of ".foo.gz" here
-    NSSet *fileTypes = [NSSet setWithObjects:@"dsk", @"nib", @"do", @"po", GZ_EXTENSION, nil];
+    NSSet *fileTypes = [EmulatorDiskController emulatorFileTypes];
     [openPanel setAllowedFileTypes:[fileTypes allObjects]];
-    [openPanel beginSheetModalForWindow:[self disksWindow] completionHandler:^(NSInteger result) {
+    handler = Block_copy(handler);
+    [openPanel beginSheetModalForWindow:window completionHandler:^(NSInteger result) {
+        handler(openPanel, result);
+        Block_release(handler);
+        [openPanel autorelease];
+    }];
+}
+
+- (void)_chooseDisk:(int)drive readOnly:(BOOL)readOnly
+{
+    [EmulatorDiskController chooseDiskForWindow:[self disksWindow] completionHandler:^(NSOpenPanel *openPanel, NSInteger result) {
         if (result == NSOKButton)
         {
             NSURL *selection = [[openPanel URLs] firstObject];
             NSString *path = [[selection path] stringByResolvingSymlinksInPath];
-            NSString *extension = [self _extensionForPath:path];
-            
+            NSString *extension = [EmulatorDiskController extensionForPath:path];
+            NSSet *fileTypes = [EmulatorDiskController emulatorFileTypes];
+
+            NSString *directory = [path stringByDeletingLastPathComponent];
+            NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+            [defaults setURL:[NSURL URLWithString:directory] forKey:kApple2DisksURL];
+
             if (![fileTypes containsObject:extension])
             {
                 NSAlert *alert = [NSAlert alertWithError:[NSError errorWithDomain:@"Disk image must have file extension of .dsk, .do, .po, or .nib only" code:-1 userInfo:nil]];
                 [alert beginSheetModalForWindow:[self disksWindow] completionHandler:nil];
                 return;
             }
-            
+
             [self _insertDisketteInDrive:drive path:path type:extension readOnly:readOnly];
+            [self startupDiskChoiceChanged:nil];
         }
     }];
 }
@@ -208,6 +272,33 @@
 {
     NSButtonCell *readOnlyChoice = [[[self diskBProtection] cells] firstObject];
     [self _chooseDisk:1 readOnly:([readOnlyChoice state] == NSOnState)];
+}
+
+- (IBAction)startupDiskChoiceChanged:(id)sender
+{
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    [defaults removeObjectForKey:kApple2PrefStartupDiskA];
+    [defaults removeObjectForKey:kApple2PrefStartupDiskB];
+    [defaults removeObjectForKey:kApple2PrefStartupDiskAProtected];
+    [defaults removeObjectForKey:kApple2PrefStartupDiskBProtected];
+    
+    if ([self.startupDisksChoice state] == NSOnState)
+    {
+        if (disk6.disk[0].fp)
+        {
+            NSString *diskA = [NSString stringWithUTF8String:disk6.disk[0].file_name];
+            [defaults setObject:diskA forKey:kApple2PrefStartupDiskA];
+            NSButtonCell *readOnlyChoice = [[[self diskAProtection] cells] firstObject];
+            [defaults setBool:([readOnlyChoice state] == NSOnState) forKey:kApple2PrefStartupDiskAProtected];
+        }
+        if (disk6.disk[1].fp)
+        {
+            NSString *diskB = [NSString stringWithUTF8String:disk6.disk[1].file_name];
+            [defaults setObject:diskB forKey:kApple2PrefStartupDiskB];
+            NSButtonCell *readOnlyChoice = [[[self diskBProtection] cells] firstObject];
+            [defaults setBool:([readOnlyChoice state] == NSOnState) forKey:kApple2PrefStartupDiskBProtected];
+        }
+    }
 }
 
 @end

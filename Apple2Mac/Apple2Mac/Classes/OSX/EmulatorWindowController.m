@@ -24,6 +24,7 @@
 
 @property (assign) IBOutlet EmulatorGLView *view;
 @property (assign) IBOutlet NSWindow *disksWindow;
+@property (assign) IBOutlet NSWindow *prefsWindow;
 
 @property (nonatomic, retain) EmulatorFullscreenWindow *fullscreenWindow;
 @property (nonatomic, retain) NSWindow *standardWindow;
@@ -72,6 +73,11 @@
     {
         [self goFullscreen];
     }
+}
+
+- (IBAction)toggleCPUSpeed:(id)sender
+{
+    timing_toggle_cpu_speed();
 }
 
 - (void)goFullscreen

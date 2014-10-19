@@ -8,6 +8,12 @@
 
 #import <Cocoa/Cocoa.h>
 
+typedef void (^DiskCompletionHandler)(NSOpenPanel *openPanel, NSInteger result);
+
 @interface EmulatorDiskController : NSWindowController
+
++ (NSSet *)emulatorFileTypes;
++ (NSString *)extensionForPath:(NSString *)path;
++ (void)chooseDiskForWindow:(NSWindow *)window completionHandler:(DiskCompletionHandler)handler;
 
 @end

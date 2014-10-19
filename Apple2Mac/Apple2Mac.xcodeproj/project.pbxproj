@@ -82,7 +82,6 @@
 		773B3DAD19568A570085CE5F /* debugger.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D7319568A570085CE5F /* debugger.c */; };
 		773B3DAE19568A570085CE5F /* opcodes.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D7419568A570085CE5F /* opcodes.c */; };
 		773B3DAF19568A570085CE5F /* misc.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D7519568A570085CE5F /* misc.c */; };
-		773B3DB019568A570085CE5F /* prefs.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D7719568A570085CE5F /* prefs.c */; };
 		773B3DBC19568A570085CE5F /* timing.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D8719568A570085CE5F /* timing.c */; };
 		773B3DBE19568A570085CE5F /* vm.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D8D19568A570085CE5F /* vm.c */; };
 		773B3DBF19568A570085CE5F /* cpu.S in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D9019568A570085CE5F /* cpu.S */; };
@@ -90,6 +89,8 @@
 		773B3DC319568A570085CE5F /* zlib-helpers.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D9519568A570085CE5F /* zlib-helpers.c */; };
 		773B3DCB1956903D0085CE5F /* libz.1.1.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 773B3DCA1956903D0085CE5F /* libz.1.1.3.dylib */; };
 		773BC91619F2E6A900996893 /* EmulatorDiskController.m in Sources */ = {isa = PBXBuildFile; fileRef = 773BC91519F2E6A900996893 /* EmulatorDiskController.m */; };
+		773BC91919F2FD4500996893 /* EmulatorPrefsController.m in Sources */ = {isa = PBXBuildFile; fileRef = 773BC91819F2FD4500996893 /* EmulatorPrefsController.m */; };
+		773BC91A19F31E7B00996893 /* prefs.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D7719568A570085CE5F /* prefs.c */; };
 		779DD827195764E200DF89E5 /* rom-shim.c in Sources */ = {isa = PBXBuildFile; fileRef = 779DD826195764E200DF89E5 /* rom-shim.c */; };
 		779DD82F195BD9F900DF89E5 /* cpu.S in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D9019568A570085CE5F /* cpu.S */; };
 		779DD830195BD9F900DF89E5 /* prefs.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D7719568A570085CE5F /* prefs.c */; };
@@ -250,6 +251,8 @@
 		773B3DCA1956903D0085CE5F /* libz.1.1.3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.1.1.3.dylib; path = usr/lib/libz.1.1.3.dylib; sourceTree = SDKROOT; };
 		773BC91419F2E6A900996893 /* EmulatorDiskController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = EmulatorDiskController.h; path = Classes/OSX/EmulatorDiskController.h; sourceTree = "<group>"; };
 		773BC91519F2E6A900996893 /* EmulatorDiskController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = EmulatorDiskController.m; path = Classes/OSX/EmulatorDiskController.m; sourceTree = "<group>"; };
+		773BC91719F2FD4500996893 /* EmulatorPrefsController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = EmulatorPrefsController.h; path = Classes/OSX/EmulatorPrefsController.h; sourceTree = "<group>"; };
+		773BC91819F2FD4500996893 /* EmulatorPrefsController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = EmulatorPrefsController.m; path = Classes/OSX/EmulatorPrefsController.m; sourceTree = "<group>"; };
 		779DD826195764E200DF89E5 /* rom-shim.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = "rom-shim.c"; sourceTree = "<group>"; };
 		779DD850195BD9F900DF89E5 /* Apple2MacTestCPU.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Apple2MacTestCPU.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		779DD851195BD9F900DF89E5 /* Apple2MacTestCPU-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "Apple2MacTestCPU-Info.plist"; path = "/Users/aaronculliney/Documents/00web/apple2/Apple2Mac/Apple2MacTests/Apple2MacTestCPU-Info.plist"; sourceTree = "<absolute>"; };
@@ -450,16 +453,18 @@
 		773B3D431956897D0085CE5F /* Classes */ = {
 			isa = PBXGroup;
 			children = (
+				773BC91419F2E6A900996893 /* EmulatorDiskController.h */,
+				773BC91519F2E6A900996893 /* EmulatorDiskController.m */,
 				77E1C0C219D7298F004344E0 /* EmulatorFullscreenWindow.m */,
 				77E1C0C319D7298F004344E0 /* EmulatorFullscreenWindow.h */,
 				77E1C0C019D7298F004344E0 /* EmulatorGLView.m */,
 				77E1C0C119D7298F004344E0 /* EmulatorGLView.h */,
+				773BC91719F2FD4500996893 /* EmulatorPrefsController.h */,
+				773BC91819F2FD4500996893 /* EmulatorPrefsController.m */,
 				77E1C0BE19D7298F004344E0 /* EmulatorWindowController.m */,
 				77E1C0BF19D7298F004344E0 /* EmulatorWindowController.h */,
 				4AC7A76B19ECC3FB00BCD457 /* EmulatorWindow.h */,
 				4AC7A76C19ECC3FB00BCD457 /* EmulatorWindow.m */,
-				773BC91419F2E6A900996893 /* EmulatorDiskController.h */,
-				773BC91519F2E6A900996893 /* EmulatorDiskController.m */,
 			);
 			name = Classes;
 			sourceTree = "<group>";
@@ -948,7 +953,6 @@
 				773B3DBF19568A570085CE5F /* cpu.S in Sources */,
 				779F565D19EAF66E00A6F107 /* speaker.c in Sources */,
 				779F565B19EAF66E00A6F107 /* soundcore-openal.c in Sources */,
-				773B3DB019568A570085CE5F /* prefs.c in Sources */,
 				773B3DA419568A570085CE5F /* display.c in Sources */,
 				773B3DA319568A570085CE5F /* disk.c in Sources */,
 				773B3DAD19568A570085CE5F /* debugger.c in Sources */,
@@ -958,6 +962,7 @@
 				773B3DBC19568A570085CE5F /* timing.c in Sources */,
 				773B3DAF19568A570085CE5F /* misc.c in Sources */,
 				77E1C0C419D7298F004344E0 /* EmulatorWindowController.m in Sources */,
+				773BC91A19F31E7B00996893 /* prefs.c in Sources */,
 				77E1C0B619D72700004344E0 /* matrixUtil.c in Sources */,
 				77E1C0C519D7298F004344E0 /* EmulatorGLView.m in Sources */,
 				773B3DAE19568A570085CE5F /* opcodes.c in Sources */,
@@ -972,6 +977,7 @@
 				779F565E19EAF66E00A6F107 /* win-shim.c in Sources */,
 				779F565919EAF66E00A6F107 /* AY8910.c in Sources */,
 				77E1C0C619D7298F004344E0 /* EmulatorFullscreenWindow.m in Sources */,
+				773BC91919F2FD4500996893 /* EmulatorPrefsController.m in Sources */,
 				773B3DA519568A570085CE5F /* font.c in Sources */,
 				773B3DA019568A570085CE5F /* cpu-supp.c in Sources */,
 				779F561C19D7929100A6F107 /* glvideo.c in Sources */,
