@@ -17,7 +17,7 @@
 #ifndef PREFS_H
 #define PREFS_H
 
-#ifndef __ASSEMBLER__
+#include "common.h"
 
 typedef enum joystick_mode_t {
     JOY_OFF = 0,
@@ -60,11 +60,6 @@ extern a2_video_mode_t a2_video_mode;
 /* generic joystick settings */
 extern joystick_mode_t joy_mode;
 
-#ifdef KEYPAD_JOYSTICK
-extern short joy_step;
-extern uint8_t auto_recenter;
-#endif
-
 #ifdef LINUX_JOYSTICK
 /* real joystick settings */
 extern int js_center_x;
@@ -78,12 +73,5 @@ extern int js_min_y;
 /* functions in prefs.c */
 extern void load_settings(void);
 extern bool save_settings(void);
-
-#endif /* !__ASSEMBLER__ */
-
-/* values for apple_mode */
-#define IIE_MODE 2
-#define IIU_MODE 1
-#define II_MODE  0
 
 #endif /* PREFS_H */

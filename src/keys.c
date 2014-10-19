@@ -305,7 +305,7 @@ void c_keys_handle_input(int scancode, int pressed, int is_cooked)
             joy_y = HALF_JOY_RANGE;
         }
 
-        if (auto_recenter) {
+        if (joy_auto_recenter) {
             static int unpressed_count = 0;
             if (joy_axis_unpressed) {
                 ++unpressed_count;

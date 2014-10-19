@@ -209,8 +209,7 @@ const char *c_new_diskette_6(int drive, const char * const raw_file_name, int fo
         cut_gz(file_name);
     }
 
-    strcpy(disk6.disk[drive].file_name, file_name);
-    disk6.disk[drive].file_name[1023]='\0';
+    strncpy(disk6.disk[drive].file_name, file_name, 1023);
     disk6.disk[drive].compressed = true;// always using gz
     disk6.disk[drive].nibblized = is_nib(file_name);
     free(file_name);

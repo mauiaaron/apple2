@@ -22,11 +22,16 @@
 #define JOY_RANGE 0x100
 #define HALF_JOY_RANGE 0x80
 
-uint16_t joy_x;
-uint16_t joy_y;
-uint8_t joy_button0;
-uint8_t joy_button1;
-uint8_t joy_button2;
+extern uint16_t joy_x;
+extern uint16_t joy_y;
+extern uint8_t joy_button0;
+extern uint8_t joy_button1;
+extern uint8_t joy_button2;
+
+#ifdef KEYPAD_JOYSTICK
+extern uint8_t joy_auto_recenter;
+extern short joy_step;
+#endif
 
 void c_open_joystick();
 void c_close_joystick();

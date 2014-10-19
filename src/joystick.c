@@ -29,7 +29,7 @@ uint8_t joy_button2 = 0; // unused?
 
 #ifdef KEYPAD_JOYSTICK
 short joy_step = 1;
-uint8_t auto_recenter = 0;
+uint8_t joy_auto_recenter = 0;
 #endif
 
 #ifdef LINUX_JOYSTICK
@@ -384,7 +384,7 @@ static void c_calibrate_keypad_joystick()
         snprintf(temp, TEMPSIZE, "%02x", (uint8_t)joy_step);
         copy_and_pad_string(&submenu[KEYPAD_SUBMENU_H-4][36], temp, ' ', 3, ' ');
 
-        snprintf(temp, TEMPSIZE, "%s", auto_recenter ? " on" : "off" );
+        snprintf(temp, TEMPSIZE, "%s", joy_auto_recenter ? " on" : "off" );
         copy_and_pad_string(&submenu[KEYPAD_SUBMENU_H-6][35], temp, ' ', 4, ' ');
 
         int x_plot = CALIBRATE_TURTLE_KP_X0 + (int)(joy_x * CALIBRATE_TURTLE_KP_STEP_X);
@@ -422,8 +422,8 @@ static void c_calibrate_keypad_joystick()
         }
         else if (ch == '+')
         {
-            auto_recenter = (auto_recenter+1) % 2;
-            if (auto_recenter)
+            joy_auto_recenter = (joy_auto_recenter+1) % 2;
+            if (joy_auto_recenter)
             {
                 joy_x = HALF_JOY_RANGE;
                 joy_y = HALF_JOY_RANGE;

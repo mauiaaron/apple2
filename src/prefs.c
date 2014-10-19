@@ -36,7 +36,8 @@
 char system_path[SYSSIZE];
 char disk_path[DISKSIZE];
 
-int apple_mode = IIE_MODE;
+#warning FIXME TODO : completely excise deprecated apple_mode stuff
+int apple_mode = 2/*IIE_MODE*/;
 int sound_volume = 2;
 bool is_headless = false;
 color_mode_t color_mode = COLOR;
@@ -341,7 +342,7 @@ void load_settings(void)
                     joy_step = 255;
                 }
 
-                auto_recenter = strtol(argument, &argument, 10);
+                joy_auto_recenter = strtol(argument, &argument, 10);
 
                 break;
 #endif
@@ -431,7 +432,7 @@ bool save_settings(void)
 
 #ifdef KEYPAD_JOYSTICK
     err = fprintf(config_file,
-            "keypad joystick parms = %d %u\n", joy_step, auto_recenter ? 1 : 0);
+            "keypad joystick parms = %d %u\n", joy_step, joy_auto_recenter ? 1 : 0);
 #endif
     anErr = anErr || (err < 0);
 
