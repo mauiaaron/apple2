@@ -579,13 +579,13 @@ static void gldriver_shutdown(void) {
 //
 // update, render, reshape
 //
+#if USE_GLUT
 static void gldriver_update(void) {
     // HACK MAYBE FIXME : pumps the joystick sampling code that is currently integrated into the keys routine
     c_keys_handle_input(-1, 0, 0);
-#if USE_GLUT
     glutPostRedisplay();
-#endif
 }
+#endif
 
 static void gldriver_render(void) {
     if (is_headless) {
@@ -622,7 +622,7 @@ static void gldriver_render(void) {
     // Update texture from Apple //e internal framebuffer
     const uint8_t * const fb = video_current_framebuffer();
     uint8_t index;
-#warning FIXME TODO use memcpy?
+#warning FIXME TODO use memcpy ... or don't use indexed color so that we don't need to do this copy?
     unsigned int count = SCANWIDTH * SCANHEIGHT;
     char pixels[SCANWIDTH * SCANHEIGHT * 4];
     if (fb != NULL) {

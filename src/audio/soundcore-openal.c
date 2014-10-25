@@ -138,8 +138,8 @@ long SoundSystemCreate(const char *sound_device, SoundSystemStruct **sound_struc
         }
 
         (*sound_struct)->implementation_specific = ctx;
-        (*sound_struct)->CreateSoundBuffer = OpenALCreateSoundBuffer;
-        (*sound_struct)->DestroySoundBuffer = OpenALDestroySoundBuffer;
+        (*sound_struct)->CreateSoundBuffer = (HRESULT (*)(DSBUFFERDESC *, LPDIRECTSOUNDBUFFER *, void *))OpenALCreateSoundBuffer;
+        (*sound_struct)->DestroySoundBuffer = (HRESULT (*)(LPDIRECTSOUNDBUFFER *))OpenALDestroySoundBuffer;
 
         return 0;
     } while(0);
@@ -330,7 +330,7 @@ static ALVoice *NewVoice(ALBufferParamsStruct *params)
             voice->avail_buffers = node;
         }
 
-        voice->rate = params->lpwfxFormat->nSamplesPerSec;
+        voice->rate = (ALuint)params->lpwfxFormat->nSamplesPerSec;
 
         // Emulator supports only mono and stereo 
         if (params->lpwfxFormat->nChannels == 2)
@@ -343,7 +343,7 @@ static ALVoice *NewVoice(ALBufferParamsStruct *params)
         }
 
         /* Allocate enough space for the temp buffer, given the format */
-        voice->buffersize = params->dwBufferBytes;
+        voice->buffersize = (ALsizei)params->dwBufferBytes;
         voice->data = malloc(voice->buffersize);
         if (voice->data == NULL)
         {
@@ -405,7 +405,7 @@ static long ALPlay(void *_this, unsigned long reserved1, unsigned long reserved2
     return 0;
 }
 
-static long _ALProcessPlayBuffers(ALVoice *voice, ALuint *bytes_queued)
+static int _ALProcessPlayBuffers(ALVoice *voice, ALuint *bytes_queued)
 {
     ALint processed = 0;
     int err = 0;
@@ -537,7 +537,7 @@ static long ALBegin(void *_this, unsigned long unused, unsigned long write_bytes
     return 0;
 }
 
-static long _ALSubmitBufferToOpenAL(ALVoice *voice)
+static int _ALSubmitBufferToOpenAL(ALVoice *voice)
 {
     int err =0;
 
@@ -636,7 +636,7 @@ static long ALCommit(void *_this, void *unused_audio_ptr1, unsigned long audio_b
 static long ALCommitStaticBuffer(void *_this, unsigned long audio_bytes1)
 {
     ALVoice *voice = (ALVoice*)_this;
-    voice->replay_index = audio_bytes1;
+    voice->replay_index = (ALsizei)audio_bytes1;
     return 0;
 }
 
@@ -719,19 +719,19 @@ static long OpenALCreateSoundBuffer(ALBufferParamsStruct *params, ALSoundBufferS
         }
 
         (*soundbuf_struct)->_this = voice;
-        (*soundbuf_struct)->SetVolume          = ALSetVolume;
-        (*soundbuf_struct)->GetVolume          = ALGetVolume;
-        (*soundbuf_struct)->GetCurrentPosition = ALGetPosition;
-        (*soundbuf_struct)->Stop               = ALStop;
-        (*soundbuf_struct)->Restore            = ALRestore;
-        (*soundbuf_struct)->Play               = ALPlay;
-        (*soundbuf_struct)->Lock               = ALBegin;
-        (*soundbuf_struct)->Unlock             = ALCommit;
-        (*soundbuf_struct)->GetStatus          = ALGetStatus;
+        (*soundbuf_struct)->SetVolume          = (HRESULT (*)(void *, LONG))ALSetVolume;
+        (*soundbuf_struct)->GetVolume          = (HRESULT (*)(void *, LPLONG))ALGetVolume;
+        (*soundbuf_struct)->GetCurrentPosition = (HRESULT (*)(void *, LPDWORD, LPDWORD))ALGetPosition;
+        (*soundbuf_struct)->Stop               = (HRESULT (*)(void *))ALStop;
+        (*soundbuf_struct)->Restore            = (HRESULT (*)(void *))ALRestore;
+        (*soundbuf_struct)->Play               = (HRESULT (*)(void *, DWORD, DWORD, DWORD))ALPlay;
+        (*soundbuf_struct)->Lock               = (HRESULT (*)(void *, DWORD, DWORD, LPVOID *, LPDWORD, LPVOID *, LPDWORD, DWORD))ALBegin;
+        (*soundbuf_struct)->Unlock             = (HRESULT (*)(void *, LPVOID, DWORD, LPVOID, DWORD))ALCommit;
+        (*soundbuf_struct)->GetStatus          = (HRESULT (*)(void *, LPDWORD))ALGetStatus;
 
         // mockingboard-specific hacks
-        (*soundbuf_struct)->UnlockStaticBuffer = ALCommitStaticBuffer;
-        (*soundbuf_struct)->Replay             = ALReplay;
+        (*soundbuf_struct)->UnlockStaticBuffer = (HRESULT (*)(void *, DWORD))ALCommitStaticBuffer;
+        (*soundbuf_struct)->Replay             = (HRESULT (*)(void *))ALReplay;
 
         return 0;
     } while(0);

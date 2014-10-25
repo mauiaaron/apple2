@@ -47,7 +47,7 @@ static char **sound_devices = NULL;
 static char *sound_devices[MAX_SOUND_DEVICES];
 static GUID sound_device_guid[MAX_SOUND_DEVICES];
 #endif
-static int num_sound_devices = 0;
+static long num_sound_devices = 0;
 
 #ifdef APPLE2IX
 LPDIRECTSOUND g_lpDS = NULL;
@@ -624,7 +624,7 @@ bool DSInit()
                 {
                     SoundSystemDestroy((SoundSystemStruct**)&g_lpDS);
                 }
-                hr = SoundSystemCreate(sound_devices[x], (SoundSystemStruct**)&g_lpDS);
+                hr = (int)SoundSystemCreate(sound_devices[x], (SoundSystemStruct**)&g_lpDS);
 #else
 		hr = DirectSoundCreate(&sound_device_guid[x], &g_lpDS, NULL);
 #endif

@@ -39,14 +39,14 @@ demoImage *imgLoadImage(const char *filepathname, int flipVertical) {
     }
 
     demoImage *image = malloc(sizeof(demoImage));
-    image->width = CGImageGetWidth(cgImage);
-    image->height = CGImageGetHeight(cgImage);
+    image->width = (GLuint)CGImageGetWidth(cgImage);
+    image->height = (GLuint)CGImageGetHeight(cgImage);
     image->rowByteSize = image->width * 4;
     image->data = malloc(image->height * image->rowByteSize);
     image->format = GL_RGBA;
     image->type = GL_UNSIGNED_BYTE;
 
-    CGContextRef context = CGBitmapContextCreate(image->data, image->width, image->height, 8, image->rowByteSize, CGImageGetColorSpace(cgImage), kCGImageAlphaNoneSkipLast);
+    CGContextRef context = CGBitmapContextCreate(image->data, image->width, image->height, 8, image->rowByteSize, CGImageGetColorSpace(cgImage), 0x0);
     CGContextSetBlendMode(context, kCGBlendModeCopy);
     if (flipVertical) {
         CGContextTranslateCTM(context, 0.0, image->height);

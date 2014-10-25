@@ -94,8 +94,8 @@ double		    g_fClksPerSpkrSample;		// Setup in SetClksPerSpkrSample()
 static DWORD	lastcyclenum	= 0;
 static DWORD	toggles			= 0;
 #endif
-static unsigned __int64	g_nSpkrQuietCycleCount = 0;
-static unsigned __int64 g_nSpkrLastCycle = 0;
+static uint64_t	g_nSpkrQuietCycleCount = 0;
+static uint64_t g_nSpkrLastCycle = 0;
 static bool g_bSpkrToggleFlag = false;
 static VOICE SpeakerVoice = {0};
 static bool g_bSpkrAvailable = false;
@@ -856,7 +856,7 @@ static ULONG Spkr_SubmitWaveBuffer_FullSpeed(short* pSpeakerBuffer, ULONG nNumSa
 	// Calc bytes remaining to be played
 	int nBytesRemaining = dwByteOffset - dwCurrentPlayCursor;
 #else
-        int nBytesRemaining = dwCurrentPlayCursor;
+        int nBytesRemaining = (int)dwCurrentPlayCursor;
 #endif
 	if(nBytesRemaining < 0)
 		nBytesRemaining += g_dwDSSpkrBufferSize;
@@ -929,7 +929,7 @@ static ULONG Spkr_SubmitWaveBuffer_FullSpeed(short* pSpeakerBuffer, ULONG nNumSa
 #ifdef RIFF_SPKR
 			RiffPutSamples(pDSLockedBuffer0, dwBufferSize0/sizeof(short));
 #endif
-			nNumSamples = dwBufferSize0/sizeof(short);
+			nNumSamples = (ULONG)(dwBufferSize0/sizeof(short));
 
 			if(pDSLockedBuffer1 && dwBufferSize1)
 			{
@@ -1084,7 +1084,7 @@ static ULONG Spkr_SubmitWaveBuffer(short* pSpeakerBuffer, ULONG nNumSamples)
 	// Calc bytes remaining to be played
 	int nBytesRemaining = dwByteOffset - dwCurrentPlayCursor;
 #else
-        int nBytesRemaining = dwCurrentPlayCursor;
+        int nBytesRemaining = (int)dwCurrentPlayCursor;
 #endif
 	if(nBytesRemaining < 0)
 		nBytesRemaining += g_dwDSSpkrBufferSize;
@@ -1325,6 +1325,7 @@ void Spkr_DSUninit()
 
 //=============================================================================
 
+#if !defined(APPLE2IX)
 DWORD SpkrGetSnapshot(SS_IO_Speaker* pSS)
 {
 	pSS->g_nSpkrLastCycle = g_nSpkrLastCycle;
@@ -1336,4 +1337,5 @@ DWORD SpkrSetSnapshot(SS_IO_Speaker* pSS)
 	g_nSpkrLastCycle = pSS->g_nSpkrLastCycle;
 	return 0;
 }
+#endif
 

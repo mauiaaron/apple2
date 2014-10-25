@@ -36,7 +36,7 @@ demoSource *srcLoadSource(const char *filepathname) {
 
     // Get the size of the source
     fseek(curFile, 0, SEEK_END);
-    GLsizei fileSize = ftell (curFile);
+    GLsizei fileSize = (GLsizei)ftell(curFile);
 
     // Add 1 to the file size to include the null terminator for the string
     source->byteSize = fileSize + 1;

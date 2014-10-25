@@ -943,7 +943,7 @@ static void MB_Update()
 
 	int nBytesRemaining = dwByteOffset - dwCurrentPlayCursor;
 #else
-	int nBytesRemaining = dwCurrentPlayCursor;
+	int nBytesRemaining = (int)dwCurrentPlayCursor;
         //LOG("Mockingboard : sound buffer position : %d", nBytesRemaining);
 #endif
 	if(nBytesRemaining < 0)
