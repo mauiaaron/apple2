@@ -33,9 +33,10 @@ extern uint8_t joy_auto_recenter;
 extern short joy_step;
 #endif
 
-void c_open_joystick();
-void c_close_joystick();
-void c_calibrate_joystick();
-void c_joystick_reset();
+void c_initialize_joystick(void);
+void c_open_joystick(void);
+void c_close_joystick(void);
+void c_calibrate_joystick(void);
+void c_joystick_reset(void);
 
 #endif // whole file

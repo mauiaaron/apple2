@@ -326,6 +326,12 @@ static void c_calibrate_pc_joystick()
 #endif // INTERFACE_CLASSIC
 #endif // LINUX_JOYSTICK
 
+void c_initialize_joystick(void) {
+    joy_button0 = 0x0;
+    joy_button1 = 0x0;
+    joy_button2 = 0x0;
+}
+
 #if defined(KEYPAD_JOYSTICK) && defined(INTERFACE_CLASSIC)
 static void c_calibrate_keypad_joystick()
 {
