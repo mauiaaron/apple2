@@ -1029,7 +1029,7 @@ static void MB_Update()
 
 	// Commit sound buffer
 #ifdef APPLE2IX
-	hr = MockingboardVoice.lpDSBvoice->Unlock(MockingboardVoice.lpDSBvoice->_this, (void*)pDSLockedBuffer0, dwDSLockedBufferSize0,
+	MockingboardVoice.lpDSBvoice->Unlock(MockingboardVoice.lpDSBvoice->_this, (void*)pDSLockedBuffer0, dwDSLockedBufferSize0,
 #else
 	hr = MockingboardVoice.lpDSBvoice->Unlock((void*)pDSLockedBuffer0, dwDSLockedBufferSize0,
 #endif

@@ -904,7 +904,7 @@ static inline void _plot_hires_pixels(uint8_t *dst, const uint8_t *src) {
 
 // PlotByte
 static inline void _plot_hires(uint16_t ea, uint8_t b, bool is_even, uint8_t *fb_ptr) {
-    uint8_t _buf[DYNAMIC_SZ];
+    uint8_t _buf[DYNAMIC_SZ] = { 0 };
     uint8_t *color_buf = (uint8_t *)_buf; // <--- work around for -Wstrict-aliasing
     uint8_t *apple2_vmem = (uint8_t *)apple_ii_64k[0];
 

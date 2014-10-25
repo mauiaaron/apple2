@@ -105,7 +105,7 @@ extern FILE *error_log;
         errno = 0; \
         GLenum _glerr = 0; \
         _LOG(__VA_ARGS__); \
-    }
+    } //
 
 #define ERRLOG(...) \
     if (do_logging) { \
@@ -114,7 +114,7 @@ extern FILE *error_log;
         while ( (_glerr = glGetError()) ) { \
             _LOG(__VA_ARGS__); \
         } \
-    }
+    } //
 
 #define GL_ERRLOG(...) \
     if (do_logging) { \
@@ -122,7 +122,7 @@ extern FILE *error_log;
         while ( (_glerr = glGetError()) ) { \
             _LOG(__VA_ARGS__); \
         } \
-    }
+    } //
 
 #define ERRQUIT(...) \
     do { \
@@ -132,7 +132,7 @@ extern FILE *error_log;
             _LOG(__VA_ARGS__); \
         } \
         QUIT_FUNCTION(1); \
-    } while(0)
+    } while (0)
 
 #define GL_ERRQUIT(...) \
     do { \
@@ -141,45 +141,52 @@ extern FILE *error_log;
             _LOG(__VA_ARGS__); \
             QUIT_FUNCTION(_glerr); \
         } \
-    } while(0)
+    } while (0)
 
 #else // NDEBUG
 
 #define ERRLOG(...) \
-    do { } while(0);
+    do { } while (0)
 
 #define ERRQUIT(...) \
-    do { } while(0);
+    do { } while (0)
 
 #define LOG(...) \
-    do { } while(0);
+    do { } while (0)
+
+#define GL_ERRLOG(...) \
+    do { } while (0)
+
+#define GL_ERRQUIT(...) \
+    do { } while (0)
 
 #endif // NDEBUG
 
 #define RELEASE_ERRLOG(...) \
     do { \
+        GLenum _glerr = 0; \
         _LOG(__VA_ARGS__); \
-    } while (0);
+    } while (0)
 
 #define RELEASE_LOG(...) \
     do { \
         GLenum _glerr = glGetError(); \
         errno = 0; \
         _LOG(__VA_ARGS__); \
-    } while(0);
+    } while (0)
 
 #define FREE(x) \
     do { \
         free((x)); \
         (x) = NULL; \
-    } while (0);
+    } while (0)
 
 #ifdef __APPLE__
 #define CFRELEASE(x) \
     do { \
         CFRelease((x)); \
         (x) = NULL; \
-    } while (0);
+    } while (0)
 #endif
 
 #endif // whole file

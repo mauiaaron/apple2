@@ -612,7 +612,7 @@ void mtxRotateZApply(float *mtx, float deg) {
 }
 
 void mtxRotateApply(float *mtx, float deg, float xAxis, float yAxis, float zAxis) {
-    if(yAxis == 0.0f && zAxis == 0.0f) {
+    if (yAxis == 0.0f && zAxis == 0.0f) {
         mtxRotateXApply(mtx, deg);
     } else if(xAxis == 0.0f && zAxis == 0.0f) {
         mtxRotateYApply(mtx, deg);
@@ -792,11 +792,21 @@ void mtxRotateZMatrix(float *mtx, float rad) {
 }
 
 void mtxRotateMatrix(float *mtx, float rad, float xAxis, float yAxis, float zAxis) {
-    float rotMtx[16];
-
-    mtxLoadRotate(rotMtx, rad, xAxis, yAxis, zAxis);
-
-    mtxMultiply(mtx, rotMtx, mtx);
+    if (yAxis == 0.0f && zAxis == 0.0f) {
+        mtxRotateXMatrix(mtx, rad);
+    } else if(xAxis == 0.0f && zAxis == 0.0f) {
+        mtxRotateYMatrix(mtx, rad);
+    } else if(xAxis == 0.0f && yAxis == 0.0f) {
+        mtxRotateZMatrix(mtx, rad);
+    } else {
+        float rotMtx[16];
+#if !defined(USE_ORIGINAL_BUGGY_IMPLEMENTATION)
+#warning fixed a use of garbage stack memory, but unsure of algorithm ... need testing =)
+        mtxLoadIdentity(rotMtx);
+#endif
+        mtxLoadRotate(rotMtx, rad, xAxis, yAxis, zAxis);
+        mtxMultiply(mtx, rotMtx, mtx);
+    }
 }
 
 void mtx3x3LoadIdentity(float *mtx) {

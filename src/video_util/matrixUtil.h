@@ -72,13 +72,13 @@ void mtxScaleApply(float *mtx, float xScale, float yScale, float zScale);
 void mtxRotateApply(float *mtx, float deg, float xAxis, float yAxis, float zAxis);
 
 // MTX = MTX * RotateXMatrix
-void mtxRotateXApply(float *mtx, float rad);
+void mtxRotateXApply(float *mtx, float deg);
 
 // MTX = MTX * RotateYMatrix
-void mtxRotateYApply(float *mtx, float rad);
+void mtxRotateYApply(float *mtx, float deg);
 
 // MTX = MTX * RotateZMatrix
-void mtxRotateZApply(float *mtx, float rad);
+void mtxRotateZApply(float *mtx, float deg);
 
 // MTX = TranslationMatrix * MTX
 void mtxTranslateMatrix(float *mtx, float xTrans, float yTrans, float zTrans);

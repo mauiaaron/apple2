@@ -228,7 +228,7 @@ static GLuint _create_VAO(demoModel *model) {
     // Allocate and load vertex array element data into VBO
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, model->elementArraySize, model->elements, GL_STATIC_DRAW);
 
-    GL_ERRLOG("finished creating VAO/VBOs")
+    GL_ERRLOG("finished creating VAO/VBOs");
 
     return vaoName;
 }

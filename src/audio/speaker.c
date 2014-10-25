@@ -531,6 +531,12 @@ static void UpdateRemainderBuffer(ULONG* pnCycleDiff)
 			signed long nSampleMean = 0;
 			for(UINT i=0; i<g_nRemainderBufferSize; i++)
 				nSampleMean += (signed long) g_pRemainderBuffer[i];
+#ifdef APPLE2IX
+            if (!g_nRemainderBufferSize) {
+                RELEASE_ERRLOG("OOPS preventing div-by-zero in UpdateRemainderBuffer ...");
+                g_nRemainderBufferSize = 1;
+            }
+#endif
 			nSampleMean /= (signed long) g_nRemainderBufferSize;
 
 			if(g_nBufferIdx < SPKR_SAMPLE_RATE-1)

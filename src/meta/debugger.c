@@ -274,7 +274,7 @@ void dump_mem(int addrs, int len, int lc, int do_ascii, int rambank) {
                 }
             }
 
-            memset(second_buf[i], ' ', BUF_X); mod = 0;
+            memset(second_buf[i], ' ', BUF_X);
             sprintf(second_buf[i], "%04X:%02X", orig_addrs+j, op);
             if (do_ascii)
             {

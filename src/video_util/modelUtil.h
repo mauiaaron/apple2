@@ -19,22 +19,22 @@
 typedef struct demoModelRec {
     GLuint numVertices;
 
-    GLubyte *positions;
+    GLvoid *positions;
     GLenum positionType;
     GLuint positionSize;
     GLsizei positionArraySize;
 
-    GLubyte *texcoords;
+    GLvoid *texcoords;
     GLenum texcoordType;
     GLuint texcoordSize;
     GLsizei texcoordArraySize;
 
-    GLubyte *normals;
+    GLvoid *normals;
     GLenum normalType;
     GLuint normalSize;
     GLsizei normalArraySize;
 
-    GLubyte *elements;
+    GLvoid *elements;
     GLenum elementType;
     GLuint numElements;
     GLsizei elementArraySize;

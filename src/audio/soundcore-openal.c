@@ -233,27 +233,25 @@ static void DeleteVoice(ALVoice *voice)
     }
 
     ALPlayBuf *node = NULL;
+    ALPlayBuf *tmp = NULL;
+    HASH_ITER(hh, voice->queued_buffers, node, tmp) {
+        PlaylistDequeue(voice, node);
+    }
+
     while (voice->avail_buffers)
     {
         node = voice->avail_buffers;
-        alDeleteBuffers(1, &node->bufid);
-        voice->avail_buffers = node->_avail_next;
-        free(node);
-    }
-
-    ALPlayBuf *tmp = NULL;
-    HASH_ITER(hh, voice->queued_buffers, node, tmp) {
-        HASH_DEL(voice->queued_buffers, node);
         alDeleteBuffers(1, &node->bufid);
         if (alGetError() != AL_NO_ERROR)
         {
             ERRLOG("OOPS, Failed to delete object IDs");
         }
-        free(node);
+        voice->avail_buffers = node->_avail_next;
+        FREE(node);
     }
 
     memset(voice, 0, sizeof(*voice));
-    free(voice);
+    FREE(voice);
 }
 
 /* Creates a new voice object, and allocates the needed OpenAL source and
@@ -758,8 +756,10 @@ static long OpenALDestroySoundBuffer(ALSoundBufferStruct **soundbuf_struct)
 
     ALVoices *vnode = NULL;
     HASH_FIND_INT(voices, &source, vnode);
-    HASH_DEL(voices, vnode);
-    FREE(vnode);
+    if (vnode) {
+        HASH_DEL(voices, vnode);
+        FREE(vnode);
+    }
 
     FREE(*soundbuf_struct);
     return 0;
