@@ -162,7 +162,7 @@ int setup_boot_disk(const char *fileName) {
     }
     CFRELEASE(filePath);
 #else
-    asprintf(&disk, "./disks/%s", fileName)
+    asprintf(&disk, "./disks/%s", fileName);
 #endif
     if (c_new_diskette_6(0, disk, 0)) {
         int len = strlen(disk);
