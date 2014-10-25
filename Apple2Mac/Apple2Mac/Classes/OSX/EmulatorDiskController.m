@@ -14,7 +14,6 @@
 #define NO_DISK_INSERTED @"(No Disk Inserted)"
 #define DSK_PROPERTIES @".dsk 143360 bytes"
 #define NIB_PROPERTIES @".nib 232960 bytes"
-#define GZ_EXTENSION @"gz"
 
 #define kApple2DisksURL @"kApple2DisksURL"
 
@@ -29,17 +28,12 @@
 @property (assign) IBOutlet NSMatrix *diskBProtection;
 @property (assign) IBOutlet NSButton *chooseDiskA;
 @property (assign) IBOutlet NSButton *chooseDiskB;
-@property (assign) IBOutlet NSButton *startupDisksChoice;
-
-@property (nonatomic, copy) NSString *diskAPath;
-@property (nonatomic, copy) NSString *diskBPath;
+@property (assign) IBOutlet NSButton *startupLoadDiskA;
+@property (assign) IBOutlet NSButton *startupLoadDiskB;
 
 @end
 
 @implementation EmulatorDiskController
-
-@synthesize diskAPath = _diskAPath;
-@synthesize diskBPath = _diskBPath;
 
 - (void)awakeFromNib
 {
@@ -49,78 +43,105 @@
     [self.diskBProperties setStringValue:@""];
     [self.chooseDiskA setKeyEquivalent:@"\r"];
     [self.chooseDiskA setBezelStyle:NSRoundedBezelStyle];
-    [self.startupDisksChoice setState:NSOffState];
+    [self.startupLoadDiskA setState:NSOffState];
+    [self.startupLoadDiskB setState:NSOffState];
     
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
     
     NSString *startupDiskA = [defaults stringForKey:kApple2PrefStartupDiskA];
-    BOOL startupDiskAProtection = [defaults boolForKey:kApple2PrefStartupDiskAProtected];
+    BOOL readOnlyA = [defaults boolForKey:kApple2PrefStartupDiskAProtected];
     if (startupDiskA)
     {
-        const char *err = c_new_diskette_6(0, [startupDiskA UTF8String], startupDiskAProtection);
+        const char *err = c_new_diskette_6(0, [startupDiskA UTF8String], readOnlyA);
         if (err)
         {
             NSString *diskA = [NSString stringWithFormat:@"%@.gz", startupDiskA];
-            err = c_new_diskette_6(0, [diskA UTF8String], startupDiskAProtection);
+            err = c_new_diskette_6(0, [diskA UTF8String], readOnlyA);
         }
         if (!err)
         {
             [self.diskInA setStringValue:[[startupDiskA pathComponents] lastObject]];
-            [self.startupDisksChoice setState:NSOnState];
+            [self.startupLoadDiskA setState:NSOnState];
+            [self.diskAProtection setState:(readOnlyA ? NSOnState : NSOffState) atRow:0 column:0];
+            [self.diskAProtection setState:(!readOnlyA ? NSOnState : NSOffState) atRow:0 column:1];
         }
     }
     
     NSString *startupDiskB = [defaults stringForKey:kApple2PrefStartupDiskB];
-    BOOL startupDiskBProtection = [defaults boolForKey:kApple2PrefStartupDiskBProtected];
+    BOOL readOnlyB = [defaults boolForKey:kApple2PrefStartupDiskBProtected];
     if (startupDiskB)
     {
-        const char *err = c_new_diskette_6(1, [startupDiskB UTF8String], startupDiskBProtection);
+        const char *err = c_new_diskette_6(1, [startupDiskB UTF8String], readOnlyB);
         if (err)
         {
             NSString *diskB = [NSString stringWithFormat:@"%@.gz", startupDiskB];
-            err = c_new_diskette_6(0, [diskB UTF8String], startupDiskBProtection);
+            err = c_new_diskette_6(1, [diskB UTF8String], readOnlyB);
         }
         if (!err)
         {
             [self.diskInB setStringValue:[[startupDiskB pathComponents] lastObject]];
-            [self.startupDisksChoice setState:NSOnState];
+            [self.startupLoadDiskB setState:NSOnState];
+            [self.diskBProtection setState:(readOnlyB ? NSOnState : NSOffState) atRow:0 column:0];
+            [self.diskBProtection setState:(!readOnlyB ? NSOnState : NSOffState) atRow:0 column:1];
         }
     }
 }
 
-- (void)dealloc
+- (void)_savePrefs
 {
-    self.diskAPath = nil;
-    self.diskBPath = nil;
-    [super dealloc];
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    
+    [defaults removeObjectForKey:kApple2PrefStartupDiskA];
+    [defaults removeObjectForKey:kApple2PrefStartupDiskB];
+    [defaults removeObjectForKey:kApple2PrefStartupDiskAProtected];
+    [defaults removeObjectForKey:kApple2PrefStartupDiskBProtected];
+    
+    if ([self.startupLoadDiskA state] == NSOnState)
+    {
+        if (disk6.disk[0].fp)
+        {
+            NSString *diskA = [NSString stringWithUTF8String:disk6.disk[0].file_name];
+            [defaults setObject:diskA forKey:kApple2PrefStartupDiskA];
+            NSButtonCell *readOnlyChoice = [[[self diskAProtection] cells] firstObject];
+            [defaults setBool:([readOnlyChoice state] == NSOnState) forKey:kApple2PrefStartupDiskAProtected];
+        }
+    }
+    
+    if ([self.startupLoadDiskB state] == NSOnState)
+    {
+        if (disk6.disk[1].fp)
+        {
+            NSString *diskB = [NSString stringWithUTF8String:disk6.disk[1].file_name];
+            [defaults setObject:diskB forKey:kApple2PrefStartupDiskB];
+            NSButtonCell *readOnlyChoice = [[[self diskBProtection] cells] firstObject];
+            [defaults setBool:([readOnlyChoice state] == NSOnState) forKey:kApple2PrefStartupDiskBProtected];
+        }
+    }
+}
+
+- (void)_protectionChangedForDrive:(int)drive
+{
+    if (disk6.disk[drive].fp == NULL)
+    {
+        return;
+    }
+    // HACK NOTE : dispatch so that state of outlet property is set properly
+    dispatch_async(dispatch_get_main_queue(), ^{
+        NSButtonCell *readOnlyChoice = [[(drive == 0 ? [self diskAProtection] : [self diskBProtection]) cells] firstObject];
+        NSString *path = [NSString stringWithUTF8String:disk6.disk[drive].file_name];
+        [self _insertDisketteInDrive:drive path:path type:[EmulatorDiskController extensionForPath:path] readOnly:([readOnlyChoice state] == NSOnState)];
+        [self _savePrefs];
+    });
 }
 
 - (IBAction)diskAProtectionChanged:(id)sender
 {
-    if ([[[self diskInA] stringValue] isEqualToString:NO_DISK_INSERTED])
-    {
-        return;
-    }
-    // HACK NOTE : dispatch so that state of outlet property is set properly
-    dispatch_async(dispatch_get_main_queue(), ^{
-        NSButtonCell *readOnlyChoice = [[[self diskAProtection] cells] firstObject];
-        NSString *path = [self diskAPath];
-        [self _insertDisketteInDrive:0 path:path type:[EmulatorDiskController extensionForPath:path] readOnly:([readOnlyChoice state] == NSOnState)];
-    });
+    [self _protectionChangedForDrive:0];
 }
 
 - (IBAction)diskBProtectionChanged:(id)sender
 {
-    if ([[[self diskInB] stringValue] isEqualToString:NO_DISK_INSERTED])
-    {
-        return;
-    }
-    // HACK NOTE : dispatch so that state of outlet property is set properly
-    dispatch_async(dispatch_get_main_queue(), ^{
-        NSButtonCell *readOnlyChoice = [[[self diskBProtection] cells] firstObject];
-        NSString *path = [self diskBPath];
-        [self _insertDisketteInDrive:1 path:path type:[EmulatorDiskController extensionForPath:path] readOnly:([readOnlyChoice state] == NSOnState)];
-    });
+    [self _protectionChangedForDrive:1];
 }
 
 - (BOOL)_insertDisketteInDrive:(int)drive path:(NSString *)path type:(NSString *)type readOnly:(BOOL)readOnly
@@ -130,33 +151,48 @@
     const char *errMsg = c_new_diskette_6(drive, [path UTF8String], readOnly);
     if (errMsg)
     {
-        NSAlert *alert = [NSAlert alertWithError:[NSError errorWithDomain:[NSString stringWithUTF8String:errMsg] code:-1 userInfo:nil]];
-        [alert beginSheetModalForWindow:[self disksWindow] completionHandler:nil];
-        if (!drive)
+        path = [NSString stringWithFormat:@"%@.gz", path];
+        errMsg = c_new_diskette_6(drive, [path UTF8String], readOnly);
+        if (errMsg)
         {
-            [[self diskInA] setStringValue:NO_DISK_INSERTED];
-            [[self diskAProperties] setStringValue:@""];
+            NSAlert *alert = [NSAlert alertWithError:[NSError errorWithDomain:[NSString stringWithUTF8String:errMsg] code:-1 userInfo:nil]];
+            [alert beginSheetModalForWindow:[self disksWindow] completionHandler:nil];
+            if (!drive)
+            {
+                [[self diskInA] setStringValue:NO_DISK_INSERTED];
+                [[self diskAProperties] setStringValue:@""];
+            }
+            else
+            {
+                [[self diskInB] setStringValue:NO_DISK_INSERTED];
+                [[self diskBProperties] setStringValue:@""];
+            }
+            return NO;
         }
-        else
-        {
-            [[self diskInB] setStringValue:NO_DISK_INSERTED];
-            [[self diskBProperties] setStringValue:@""];
-        }
-        
-        return NO;
     }
-    
+    path = [NSString stringWithUTF8String:disk6.disk[drive].file_name];
     NSString *imageName = [[path pathComponents] lastObject];
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
     
-    if (!drive)
+    if (drive == 0)
     {
-        self.diskAPath = path;
         [[self diskInA] setStringValue:imageName];
+        if ([[defaults stringForKey:kApple2PrefStartupDiskA] isEqualToString:path])
+        {
+            [self.startupLoadDiskA setState:NSOnState];
+            //[self.diskAProtection setState:(readOnly ? NSOnState : NSOffState) atRow:0 column:0];
+            //[self.diskAProtection setState:(!readOnly ? NSOnState : NSOffState) atRow:0 column:1];
+        }
     }
     else
     {
-        self.diskBPath = path;
         [[self diskInB] setStringValue:imageName];
+        if ([[defaults stringForKey:kApple2PrefStartupDiskB] isEqualToString:path])
+        {
+            [self.startupLoadDiskB setState:NSOnState];
+            //[self.diskBProtection setState:(readOnly ? NSOnState : NSOffState) atRow:0 column:0];
+            //[self.diskBProtection setState:(!readOnly ? NSOnState : NSOffState) atRow:0 column:1];
+        }
     }
     
     if ([type isEqualToString:@"dsk"] || [type isEqualToString:@"do"] || [type isEqualToString:@"po"])
@@ -190,7 +226,7 @@
     static NSSet *set = nil;
     static dispatch_once_t onceToken = 0L;
     dispatch_once(&onceToken, ^{
-        set = [[NSSet alloc] initWithObjects:@"dsk", @"nib", @"do", @"po", GZ_EXTENSION, nil];
+        set = [[NSSet alloc] initWithObjects:@"dsk", @"nib", @"do", @"po", @"gz", nil];
     });
     return [[set retain] autorelease];
 }
@@ -199,7 +235,7 @@
 {
     NSString *extension0 = [path pathExtension];
     NSString *extension1 = [[path stringByDeletingPathExtension] pathExtension];
-    if ([extension0 isEqualToString:GZ_EXTENSION])
+    if ([extension0 isEqualToString:@"gz"])
     {
         extension0 = extension1;
     }
@@ -256,8 +292,8 @@
                 return;
             }
 
+            [(drive == 0) ? self.startupLoadDiskA : self.startupLoadDiskB setState:NSOffState];
             [self _insertDisketteInDrive:drive path:path type:extension readOnly:readOnly];
-            [self startupDiskChoiceChanged:nil];
         }
     }];
 }
@@ -274,31 +310,19 @@
     [self _chooseDisk:1 readOnly:([readOnlyChoice state] == NSOnState)];
 }
 
-- (IBAction)startupDiskChoiceChanged:(id)sender
+- (IBAction)startupDiskAChoiceChanged:(id)sender
 {
-    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-    [defaults removeObjectForKey:kApple2PrefStartupDiskA];
-    [defaults removeObjectForKey:kApple2PrefStartupDiskB];
-    [defaults removeObjectForKey:kApple2PrefStartupDiskAProtected];
-    [defaults removeObjectForKey:kApple2PrefStartupDiskBProtected];
-    
-    if ([self.startupDisksChoice state] == NSOnState)
-    {
-        if (disk6.disk[0].fp)
-        {
-            NSString *diskA = [NSString stringWithUTF8String:disk6.disk[0].file_name];
-            [defaults setObject:diskA forKey:kApple2PrefStartupDiskA];
-            NSButtonCell *readOnlyChoice = [[[self diskAProtection] cells] firstObject];
-            [defaults setBool:([readOnlyChoice state] == NSOnState) forKey:kApple2PrefStartupDiskAProtected];
-        }
-        if (disk6.disk[1].fp)
-        {
-            NSString *diskB = [NSString stringWithUTF8String:disk6.disk[1].file_name];
-            [defaults setObject:diskB forKey:kApple2PrefStartupDiskB];
-            NSButtonCell *readOnlyChoice = [[[self diskBProtection] cells] firstObject];
-            [defaults setBool:([readOnlyChoice state] == NSOnState) forKey:kApple2PrefStartupDiskBProtected];
-        }
-    }
+    [self _savePrefs];
+}
+
+- (IBAction)startupDiskBChoiceChanged:(id)sender
+{
+    [self _savePrefs];
+}
+
+- (IBAction)disksOK:(id)sender
+{
+    [[self disksWindow] close];
 }
 
 @end
