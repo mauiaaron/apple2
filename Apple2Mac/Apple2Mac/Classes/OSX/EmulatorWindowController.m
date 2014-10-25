@@ -25,6 +25,7 @@
 @property (assign) IBOutlet EmulatorGLView *view;
 @property (assign) IBOutlet NSWindow *disksWindow;
 @property (assign) IBOutlet NSWindow *prefsWindow;
+@property (assign) IBOutlet NSMenuItem *pauseMenuItem;
 
 @property (nonatomic, retain) EmulatorFullscreenWindow *fullscreenWindow;
 @property (nonatomic, retain) NSWindow *standardWindow;
@@ -78,6 +79,30 @@
 - (IBAction)toggleCPUSpeed:(id)sender
 {
     timing_toggle_cpu_speed();
+}
+
+- (IBAction)togglePause:(id)sender
+{
+    NSAssert(pthread_main_np(), @"Pause emulation called from non-main thread");
+    static BOOL paused = NO;
+    if (paused)
+    {
+        [[self pauseMenuItem] setTitle:@"Pause Emulation"];
+#ifdef AUDIO_ENABLED
+        SoundSystemUnpause();
+#endif
+        pthread_mutex_unlock(&interface_mutex);
+        paused = NO;
+    }
+    else
+    {
+        paused = YES;
+        [[self pauseMenuItem] setTitle:@"Resume Emulation"];
+        pthread_mutex_lock(&interface_mutex);
+#ifdef AUDIO_ENABLED
+        SoundSystemPause();
+#endif
+    }
 }
 
 - (void)goFullscreen
