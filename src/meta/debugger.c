@@ -963,10 +963,11 @@ void show_opcode_breakpts() {
    ------------------------------------------------------------------------- */
 void show_lc_info() {
     int i = num_buffer_lines;
-    sprintf(second_buf[i++], "lc bank = %d", 1 + !!(softswitches && SS_BANK2));
+#warning FIXME TODO ... investigate/refactor all uses of !! here and elsewhere
+    sprintf(second_buf[i++], "lc bank = %d", 1 + !!(softswitches & SS_BANK2));
     (softswitches & SS_LCWRT) ? sprintf(second_buf[i++], "write LC") : sprintf(second_buf[i++], "LC write protected");
     (softswitches & SS_LCRAM) ? sprintf(second_buf[i++], "read LC")  : sprintf(second_buf[i++], "read ROM");
-    sprintf(second_buf[i++], "second = %d", !!(softswitches && SS_LCSEC));
+    sprintf(second_buf[i++], "second = %d", !!(softswitches & SS_LCSEC));
     num_buffer_lines = i;
 }
 
@@ -984,8 +985,8 @@ void show_misc_info() {
     sprintf(second_buf[i++], "ALTCHAR (%04X): %s", SW_ALTCHAR + !!(softswitches & SS_ALTCHAR), (softswitches & SS_ALTCHAR) ? "on" : "off");
     sprintf(second_buf[i++], "SLOTC3ROM (%04X): %s", SW_SLOTC3ROM -/*anomaly*/ !!(softswitches & SS_C3ROM), (softswitches & SS_C3ROM) ? "on" : "off");
     sprintf(second_buf[i++], "SLOTCXROM (%04X): %s", SW_SLOTCXROM + !!(softswitches & SS_CXROM), (softswitches & SS_CXROM) ? "on" : "off");
-    sprintf(second_buf[i++], "DHIRES (%04X): %s", SW_DHIRES + !!(softswitches && SS_DHIRES), (softswitches & SS_DHIRES) ? "on" : "off");
-    sprintf(second_buf[i++], "IOUDIS (%04X): %s", SW_IOUDIS + !!(softswitches && SS_IOUDIS), (softswitches && SS_IOUDIS) ? "on" : "off");
+    sprintf(second_buf[i++], "DHIRES (%04X): %s", SW_DHIRES + !!(softswitches & SS_DHIRES), (softswitches & SS_DHIRES) ? "on" : "off");
+    sprintf(second_buf[i++], "IOUDIS (%04X): %s", SW_IOUDIS + !!(softswitches & SS_IOUDIS), (softswitches & SS_IOUDIS) ? "on" : "off");
 /*     sprintf(second_buf[i++], "RDVBLBAR: %s", (SLOTCXROM & 0x80) */
 /*          ? "on" : "off"); */
 
