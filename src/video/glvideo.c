@@ -16,6 +16,7 @@
 #include "video/renderer.h"
 
 #include "video_util/modelUtil.h"
+#include "video_util/matrixUtil.h"
 #include "video_util/sourceUtil.h"
 
 #ifdef __APPLE__
@@ -726,7 +727,7 @@ void video_driver_init(void *fbo) {
 #if defined(__APPLE__)
     gldriver_init_common();
 #elif USE_GLUT
-    gldriver_init_glut(fbo);
+    gldriver_init_glut(defaultFBO);
 #else
 #error no working codepaths
 #endif

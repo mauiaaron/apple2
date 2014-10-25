@@ -238,12 +238,12 @@ static VOICE SSI263Voice[MAX_VOICES];
 static VOICE SSI263Voice[MAX_VOICES] = {0};
 #endif
 
-static const int g_nNumEvents = 2;
 #ifdef APPLE2IX
 static pthread_cond_t mockingboard_cond = PTHREAD_COND_INITIALIZER;
 static pthread_mutex_t mockingboard_mutex = PTHREAD_MUTEX_INITIALIZER;
 static uint8_t quit_event = false;
 #else
+static const int g_nNumEvents = 2;
 static HANDLE g_hSSI263Event[g_nNumEvents] = {NULL};	// 1: Phoneme finished playing, 2: Exit thread
 static DWORD g_dwMaxPhonemeLen = 0;
 #endif

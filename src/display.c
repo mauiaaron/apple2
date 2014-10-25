@@ -27,7 +27,7 @@
 static uint8_t vga_mem_page_0[SCANWIDTH*SCANHEIGHT];
 static uint8_t vga_mem_page_1[SCANWIDTH*SCANHEIGHT];
 
-A2Color colormap[256] = { 0 };
+A2Color colormap[256] = { { 0 } };
 
 uint8_t video__wider_font[0x8000];
 uint8_t video__font[0x4000];

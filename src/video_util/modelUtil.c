@@ -56,7 +56,7 @@ demoModel *mdlLoadModel(const char *filepathname) {
         return NULL;
     }
 
-    modelHeader header = { 0 };
+    modelHeader header = { { 0 } };
     sizeRead = fread(&header, 1, sizeof(modelHeader), curFile);
     if (sizeRead != sizeof(modelHeader)) {
         fclose(curFile);
