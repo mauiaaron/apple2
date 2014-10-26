@@ -38,7 +38,7 @@ CA
                                     <items>
                                         <menuItem title="Insert..." keyEquivalent="D" id="Oj8-qO-A80" userLabel="Menu Item - Insert">
                                             <connections>
-                                                <action selector="makeKeyAndOrderFront:" target="RAk-at-ZT4" id="KbU-Gy-HOD"/>
+                                                <action selector="showDisksWindow:" target="M8b-ga-iOS" id="GVw-D1-gi0"/>
                                             </connections>
                                         </menuItem>
                                     </items>
@@ -49,7 +49,7 @@ CA
                             </menuItem>
                             <menuItem title="Preferences…" keyEquivalent="," id="129">
                                 <connections>
-                                    <action selector="makeKeyAndOrderFront:" target="Mzv-VG-jce" id="Oek-48-Eyd"/>
+                                    <action selector="showPreferences:" target="M8b-ga-iOS" id="oDD-g4-QEJ"/>
                                 </connections>
                             </menuItem>
                             <menuItem title="Toggle Full Screen" keyEquivalent="F" id="rP9-cs-9dM">
@@ -723,14 +723,5 @@ DQ
                 <outlet property="soundCardChoice" destination="3d5-Z5-xDN" id="uHI-Ip-s2E"/>
             </connections>
         </customObject>
-        <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" id="pRW-C0-1xO">
-            <rect key="frame" x="0.0" y="0.0" width="38" height="17"/>
-            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-            <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Label" id="F3o-9U-Mth">
-                <font key="font" metaFont="system"/>
-                <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
-                <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
-            </textFieldCell>
-        </textField>
     </objects>
 </document>

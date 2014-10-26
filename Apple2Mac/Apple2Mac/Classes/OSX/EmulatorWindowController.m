@@ -64,14 +64,36 @@
     cpu65_reboot();
 }
 
+- (IBAction)showDisksWindow:(id)sender
+{
+    if (self.fullscreenWindow)
+    {
+        [self toggleFullScreen:nil];
+        [self.standardWindow setFrame:[[NSScreen mainScreen] frame] display:YES];
+    }
+    [self.disksWindow makeKeyAndOrderFront:sender];
+}
+
+- (IBAction)showPreferences:(id)sender
+{
+    if (self.fullscreenWindow)
+    {
+        [self toggleFullScreen:nil];
+        [self.standardWindow setFrame:[[NSScreen mainScreen] frame] display:YES];
+    }
+    [self.prefsWindow makeKeyAndOrderFront:sender];
+}
+
 - (IBAction)toggleFullScreen:(id)sender
 {
     if (self.fullscreenWindow)
     {
+        [NSCursor unhide];
         [self goWindow];
     }
     else
     {
+        [NSCursor hide];
         [self goFullscreen];
     }
 }
