@@ -708,7 +708,9 @@ static const char *options[] =
     "        --> Calibrate Joystick",
     "     Path :  ",
     "    Color :  ",
+#if !VIDEO_OPENGL
     "    Video :  ",
+#endif
     "   Volume :  ",
     " CAPSlock :  ",
 };
