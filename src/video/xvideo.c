@@ -413,9 +413,9 @@ static void c_flash_cursor(int on) {
             colormap[ COLOR_FLASHING_BLACK].green = 0;
             colormap[ COLOR_FLASHING_BLACK].blue  = 0;
 
-            colormap[ COLOR_FLASHING_WHITE].red   = 0xffff;
-            colormap[ COLOR_FLASHING_WHITE].green = 0xffff;
-            colormap[ COLOR_FLASHING_WHITE].blue  = 0xffff;
+            colormap[ COLOR_FLASHING_WHITE].red   = (uint8_t)0xffff;
+            colormap[ COLOR_FLASHING_WHITE].green = (uint8_t)0xffff;
+            colormap[ COLOR_FLASHING_WHITE].blue  = (uint8_t)0xffff;
         }
         else
         {
@@ -423,9 +423,9 @@ static void c_flash_cursor(int on) {
             colormap[ COLOR_FLASHING_WHITE].green = 0;
             colormap[ COLOR_FLASHING_WHITE].blue  = 0;
 
-            colormap[ COLOR_FLASHING_BLACK].red   = 0xffff;
-            colormap[ COLOR_FLASHING_BLACK].green = 0xffff;
-            colormap[ COLOR_FLASHING_BLACK].blue  = 0xffff;
+            colormap[ COLOR_FLASHING_BLACK].red   = (uint8_t)0xffff;
+            colormap[ COLOR_FLASHING_BLACK].green = (uint8_t)0xffff;
+            colormap[ COLOR_FLASHING_BLACK].blue  = (uint8_t)0xffff;
         }
     }
 }
@@ -534,8 +534,8 @@ static void parseArgs() {
 #endif
         if (strstr(argv[i], "--help") || strstr(argv[i], "-h")) {
             printf("%s v%s emulator help :\n", PACKAGE_NAME, PACKAGE_VERSION);
-            printf("\tManpage : %s\n", PACKAGE_MANPAGE);
-            printf("\tWeb Resources : %s\n", WEB_RESOURCES);
+            printf("\tPress F10 for main menu\n");
+            printf("\tPress F1 and F2 to insert disk images\n");
             exit(0);
         } else if (strstr(argv[i], "--version") || strstr(argv[i], "-v")) {
             printf("%s v%s\n", PACKAGE_NAME, PACKAGE_VERSION);

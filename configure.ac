@@ -1,8 +1,6 @@
 dnl ---------------------------------------------------------------------------
 
 AC_DEFINE(PACKAGE_URL, "https://github.com/mauiaaron/apple2", [apple2ix project URL])
-AC_DEFINE(WEB_RESOURCES, "ftp://ftp.apple.asimov.net", [Apple II Web Resources])
-AC_DEFINE(PACKAGE_MANPAGE, "man apple2ix", [manpage info])
 
 AC_PREREQ([2.69])
 AC_INIT([apple2ix], [0.8])
