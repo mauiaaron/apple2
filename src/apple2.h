@@ -37,7 +37,7 @@
 #   define APPLE_ASSEMBLER_IS_BROKEN 1
 #   define         SN(foo) _##foo(%rip)
 #   define         SNX(foo, INDEX, SCALE) (_X8,INDEX,SCALE)
-#   if defined(__LP64__)
+#   ifdef __LP64__
 #       define     SNX_PROLOGUE(foo)  leaLQ   _##foo(%rip), _X8;
 #   else
 #       error "Building 32bit Darwin/x86 is not supported (unless you're a go-getter and make it supported)"

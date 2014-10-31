@@ -36,7 +36,7 @@
     subLQ   SN(base_vmem), _XAX; \
     orLQ    _XAX, SP_Reg_X;
 
-#if __LP64__
+#ifdef __LP64__
 #   define SZ_PTR           8
 #   define ROR_BIT          63
 // x86_64 registers

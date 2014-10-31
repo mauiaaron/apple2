@@ -1559,7 +1559,7 @@ static void *interface_thread(void *current_key)
 #endif
     in_interface = true;
 
-    switch ((int)current_key) {
+    switch ((__SWORD_TYPE)current_key) {
 #ifdef INTERFACE_CLASSIC
     case kF1:
         c_interface_select_diskette( 0 );

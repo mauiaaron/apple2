@@ -723,7 +723,10 @@ static void gldriver_init_glut(GLuint fbo) {
 // renderer API
 
 void video_driver_init(void *fbo) {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpointer-to-int-cast"
     defaultFBO = (GLuint)fbo;
+#pragma GCC diagnostic pop
 #if defined(__APPLE__)
     gldriver_init_common();
 #elif USE_GLUT
