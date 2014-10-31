@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>en_us</string>
+	<key>CFBundleIdentifier</key>
+	<string>org.deadc0de.Apple2Mac.help</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>Apple2Mac</string>
+	<key>CFBundlePackageType</key>
+	<string>BNDL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>1.0</string>
+	<key>CFBundleSignature</key>
+	<string>hbwr</string>
+	<key>CFBundleVersion</key>
+	<string>1.0</string>
+	<key>HPDBookAccessPath</key>
+	<string>Apple2Mac.html</string>
+	<key>HPDBookIconPath</key>
+        <string>shrd/Apple2Mac.png</string>
+	<key>HPDBookIndexPath</key>
+	<string>Apple2Mac.helpindex</string>
+	<key>HPDBookKBProduct</key>
+	<string>apple2mac</string>
+	<key>HPDBookRemoteURL</key>
+        <string>https://github.com/mauiaaron/apple2/</string>
+	<key>HPDBookKBURL</key>
+	<string>https://github.com/mauiaaron/apple2/</string>
+	<key>HPDBookTitle</key>
+	<string>Apple2Mac Help</string>
+	<key>HPDBookType</key>
+	<string>3</string>
+</dict>
+</plist>

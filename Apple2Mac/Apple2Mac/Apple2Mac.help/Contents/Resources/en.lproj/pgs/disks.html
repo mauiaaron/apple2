@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<html xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <meta name="offlineflag" content="true"/>
+        <meta name="tabletitle" content="Disk Images"/>
+        <meta name="toc" content=""/>
+        <meta name="keywords" content="disk, image, disks, images, dsk, nib, DOS, ProDOS"/>
+        <meta name="description" content="Apple //e emulator working with disk images"/>
+        <meta name="robots" content="anchors"/>
+        <meta name="project" content="Apple2Mac"/>
+        <title>Disk Images Help</title>
+    </head>
+    <body id="disk_images">
+        <div class="subjectids"><a name="disk_images"></a></div>
+        <h1 class="title topictitle1">Disk Images Help</h1>
+        <div class="body taskbody">
+            <div class="section context">
+                <p class="p">
+                Disk images are files on your computer that were converted from the floppy disks that you originally
+                used with the Apple //e.  The Apple //e computer usually came with 2 disk drives (A &amp; B) that were
+                connected in slot 6 on the motherboard.
+                </p>
+                <p class="p">
+                Apple2Mac can read and write disk images in DOS-order (file extensions of .dsk and .do) or disk images
+                that are raw nibble-encoded (file extension .nib).  In the disk selection window you can specify whether
+                they are inserted read-only or read+write in either disk drive A or drive B.
+                </p>
+                <h2 class="title topictitle2">Procuring Disk Images</h2>
+                <p class="p">
+                Disk images can be procured from various online sources.  In particular, you can use anonymous FTP to
+                the Apple2 archive at <a class="xref" href="ftp://ftp.apple.asimov.net/" target="_blank">ftp.apple.asimov.net</a>.
+                </p>
+                <h2 class="title topictitle2">More Disk Image Info</h2>
+                <p class="p">
+                Disk images are binary files that actually are raw dumps of the original 5.25" disk. A disk image will
+                contain all tracks from 0 to 34.  For the standard 143360 byte .dsk format each track is partitioned
+                into sectors numbered from 0 to 15.  Each sector is 256 bytes.
+                </p>
+                <p class="p">
+                Emulated diskettes MUST have the .dsk or .nib extension (143360 bytes or 232960 bytes respectively),
+                otherwise the emulator will not recognize the file as a valid diskette.  However, it is valid to
+                compress them by using gzip (then the extension becomes .dsk.gz or .nib.gz). The emulator will
+                automatically decompress/compress them whenever required.
+                </p>
+            </div>
+        </div>
+    </body>
+</html>
