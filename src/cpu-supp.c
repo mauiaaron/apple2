@@ -674,6 +674,14 @@ void cpu65_trace_end(void) {
     }
 }
 
+void cpu65_trace_toggle(const char *trace_file) {
+    if (cpu_trace_fp) {
+        cpu65_trace_end();
+    } else {
+        cpu65_trace_begin(trace_file);
+    }
+}
+
 GLUE_C_WRITE(cpu65_trace_prologue)
 {
     nargs = 0;
@@ -739,7 +747,7 @@ GLUE_C_WRITE(cpu65_trace_epilogue)
         case addr_j_indirect:
         case addr_j_indirect_x:                 /* word arg */
             sprintf(fmt, "%04X: %02X%02X%02X %s %s", current_pc, cpu65_opcode, (uint8_t)arg1, (uint8_t)arg2, opcodes_65c02[cpu65_opcode].mnemonic, disasm_templates[opcodes_65c02[cpu65_opcode].mode]);
-            sprintf(buf, fmt, (uint8_t)arg2, (uint8_t)arg1);
+            sprintf(buf, fmt, (uint8_t)arg1, (uint8_t)arg2);
             break;
 
         case addr_relative:                     /* offset */

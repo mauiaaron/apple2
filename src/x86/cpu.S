@@ -26,6 +26,7 @@
 
 #if CPU_TRACING
 #   define TRACE_PROLOGUE \
+                movw    PC_Reg, SN(cpu65_pc); \
                 callLQ  CALL(cpu65_trace_prologue);
 #   define TRACE_ARG \
                 callLQ  CALL(cpu65_trace_arg);
@@ -34,6 +35,7 @@
 #   define TRACE_ARG2 \
                 callLQ  CALL(cpu65_trace_arg2);
 #   define TRACE_EPILOGUE \
+                movw    EffectiveAddr, DebugCurrEA; \
                 callLQ  CALL(cpu65_trace_epilogue);
 #else
 #   define TRACE_PROLOGUE

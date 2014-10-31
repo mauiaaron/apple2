@@ -850,6 +850,17 @@ ADDRS	[0-9a-fA-F]+
     return LOAD;
 }
 
+{BOS}cput?r?a?c?e?{EOS} {
+#if CPU_TRACING
+    char *buf = NULL;
+    asprintf(&buf, "%s/%s", getenv("HOME"), "cputrace.txt");
+    cpu65_trace_toggle(buf);
+    free(buf);
+#else
+    LOG("CPU tracing not enabled...");
+#endif
+}
+
 {BOS}la?n?g?{EOS} {
     /* display language card settings */
     show_lc_info();
