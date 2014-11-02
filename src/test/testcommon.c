@@ -144,7 +144,7 @@ void test_common_init(bool do_cputhread) {
     }
 }
 
-int setup_boot_disk(const char *fileName) {
+int test_setup_boot_disk(const char *fileName, int readonly) {
     char *disk = NULL;
     int err = 0;
 #ifdef __APPLE__
@@ -164,10 +164,10 @@ int setup_boot_disk(const char *fileName) {
 #else
     asprintf(&disk, "./disks/%s", fileName);
 #endif
-    if (c_new_diskette_6(0, disk, 0)) {
+    if (c_new_diskette_6(0, disk, readonly)) {
         int len = strlen(disk);
         disk[len-3] = '\0';
-        err = (c_new_diskette_6(0, disk, 0) != NULL);
+        err = (c_new_diskette_6(0, disk, readonly) != NULL);
     }
     FREE(disk);
     return err;

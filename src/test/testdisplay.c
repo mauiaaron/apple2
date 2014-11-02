@@ -41,7 +41,7 @@ static void sha1_to_str(const uint8_t * const md, char *buf) {
 }
 
 TEST test_boot_disk() {
-    setup_boot_disk("testdisplay1.dsk.gz");
+    test_setup_boot_disk("testdisplay1.dsk.gz", 1);
 
     BOOT_TO_DOS();
 

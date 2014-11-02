@@ -29,6 +29,7 @@ static void testvm_setup(void *arg) {
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x00;
     apple_ii_64k[0][TESTOUT_ADDR] = 0x00;
     joy_button0 = 0xff; // OpenApple
+    test_setup_boot_disk(TESTING_DISK, 1);
     if (test_do_reboot) {
         cpu65_interrupt(ResetSig);
     }
@@ -51,8 +52,6 @@ static void sha1_to_str(const uint8_t * const md, char *buf) {
 #define EXPECTED_DISK_TRACE_FILE_SIZE 60961
 #define EXPECTED_DISK_TRACE_SHA "D21CC686571ADE868A909B5A7044A973DE70DFFB"
 TEST test_boot_disk_bytes() {
-    setup_boot_disk(TESTING_DISK);
-
     char *homedir = getenv("HOME");
     char *disk = NULL;
     asprintf(&disk, "%s/a2_read_disk_test.raw", homedir);
@@ -96,8 +95,6 @@ TEST test_boot_disk_bytes() {
 #define EXPECTED_CPU_TRACE_FILE_SIZE 87611579
 #define EXPECTED_CPU_TRACE_SHA "8DE74ED640E0CE4AB1AAC40E95BE9B8507A37434"
 TEST test_boot_disk_cputrace() {
-    setup_boot_disk(TESTING_DISK);
-
     char *homedir = getenv("HOME");
     char *output = NULL;
     asprintf(&output, "%s/a2_cputrace.raw", homedir);
