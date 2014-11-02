@@ -14,12 +14,23 @@
 #define RESET_INPUT() test_common_setup()
 
 #define TESTING_DISK "testvm1.dsk.gz"
+#define BLANK_DSK "blank.dsk.gz"
+#define BLANK_NIB "blank.nib.gz"
+#define REBOOT_TO_DOS() \
+    do { \
+        apple_ii_64k[0][TESTOUT_ADDR] = 0x00; \
+        joy_button0 = 0xff; \
+        cpu65_interrupt(ResetSig); \
+    } while (0)
 
 #ifdef HAVE_OPENSSL
 #include <openssl/sha.h>
 #elif !defined(__APPLE__)
 #error "these tests require OpenSSL libraries (SHA)"
 #endif
+
+#define TYPE_TRIGGER_WATCHPT() \
+    test_type_input("POKE7987,255:REM TRIGGER DEBUGGER\r")
 
 static bool test_do_reboot = true;
 
@@ -133,9 +144,49 @@ TEST test_boot_disk_cputrace() {
 #endif
 
 TEST test_boot_disk() {
-    setup_boot_disk(TESTING_DISK);
-
     BOOT_TO_DOS();
+    PASS();
+}
+
+TEST test_inithello_dsk() {
+
+    test_setup_boot_disk(BLANK_DSK, 0);
+    BOOT_TO_DOS();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
+    ASSERT(apple_ii_64k[0][TESTOUT_ADDR]    == 0x00);
+
+    test_type_input("INIT HELLO\r");
+    TYPE_TRIGGER_WATCHPT();
+
+    c_debugger_go();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+    ASSERT_SHA("10F15B516E4CF2FC5B1712951A6F9C3D90BF595C");
+
+    REBOOT_TO_DOS();
+    c_eject_6(0);
+
+    PASS();
+}
+
+TEST test_inithello_nib() {
+
+    test_setup_boot_disk(BLANK_NIB, 0);
+    BOOT_TO_DOS();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
+
+    test_type_input("INIT HELLO\r");
+    TYPE_TRIGGER_WATCHPT();
+
+    c_debugger_go();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+    ASSERT_SHA("10F15B516E4CF2FC5B1712951A6F9C3D90BF595C");
+
+    REBOOT_TO_DOS();
+    c_eject_6(0);
 
     PASS();
 }
@@ -521,9 +572,6 @@ TEST test_read_random() {
             " LDA $C012\r" \
             " STA $1F43\r" \
             )
-
-#define TYPE_TRIGGER_WATCHPT() \
-    test_type_input("POKE7987,255:REM TRIGGER DEBUGGER\r")
 
 TEST test_PAGE2_on(bool flag_80store, bool flag_hires) {
     BOOT_TO_DOS();
@@ -3308,6 +3356,9 @@ GREATEST_SUITE(test_suite_vm) {
     //RUN_TESTp(test_boot_disk_cputrace);
 
     RUN_TESTp(test_boot_disk);
+
+    RUN_TESTp(test_inithello_dsk);
+    RUN_TESTp(test_inithello_nib);
 
     RUN_TESTp(test_read_keyboard);
 
