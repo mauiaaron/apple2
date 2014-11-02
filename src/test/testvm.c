@@ -99,12 +99,10 @@ TEST test_boot_disk_bytes() {
     PASS();
 }
 
-#if 0
-#error this is not a stable test ... we don't know exactly where the CPU will be at when we begin
 // This test is fairly abusive ... it creates an ~88MB file in $HOME
 // ... but if it's correct, you're fairly assured the cpu/vm is working =)
-#define EXPECTED_CPU_TRACE_FILE_SIZE 87611579
-#define EXPECTED_CPU_TRACE_SHA "8DE74ED640E0CE4AB1AAC40E95BE9B8507A37434"
+#define EXPECTED_CPU_TRACE_FILE_SIZE 86057107
+#define EXPECTED_CPU_TRACE_SHA "525098EDD23E4602791D0167DAE0FB65ACE33ABD"
 TEST test_boot_disk_cputrace() {
     char *homedir = getenv("HOME");
     char *output = NULL;
@@ -141,7 +139,6 @@ TEST test_boot_disk_cputrace() {
 
     PASS();
 }
-#endif
 
 TEST test_boot_disk() {
     BOOT_TO_DOS();
@@ -3352,9 +3349,7 @@ GREATEST_SUITE(test_suite_vm) {
     // TESTS --------------------------
 
     RUN_TESTp(test_boot_disk_bytes);
-
-    //RUN_TESTp(test_boot_disk_cputrace);
-
+    RUN_TESTp(test_boot_disk_cputrace);
     RUN_TESTp(test_boot_disk);
 
     RUN_TESTp(test_inithello_dsk);

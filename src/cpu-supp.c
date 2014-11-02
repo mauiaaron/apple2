@@ -727,7 +727,7 @@ GLUE_C_WRITE(cpu65_trace_epilogue)
     switch (opcodes_65c02[cpu65_opcode].mode) {
         case addr_implied:
         case addr_accumulator:                  /* no arg */
-            sprintf(buf, "%04X: %02X %s %s", current_pc, cpu65_opcode, opcodes_65c02[cpu65_opcode].mnemonic, disasm_templates[opcodes_65c02[cpu65_opcode].mode]);
+            sprintf(buf, "%04X:%02X %s %s", current_pc, cpu65_opcode, opcodes_65c02[cpu65_opcode].mnemonic, disasm_templates[opcodes_65c02[cpu65_opcode].mode]);
             break;
 
         case addr_immediate:
@@ -737,7 +737,7 @@ GLUE_C_WRITE(cpu65_trace_epilogue)
         case addr_indirect:
         case addr_indirect_x:
         case addr_indirect_y:                   /* byte arg */
-            sprintf(fmt, "%04X: %02X%02X %s %s", current_pc, cpu65_opcode, (uint8_t)arg1, opcodes_65c02[cpu65_opcode].mnemonic, disasm_templates[opcodes_65c02[cpu65_opcode].mode]);
+            sprintf(fmt, "%04X:%02X%02X %s %s", current_pc, cpu65_opcode, (uint8_t)arg1, opcodes_65c02[cpu65_opcode].mnemonic, disasm_templates[opcodes_65c02[cpu65_opcode].mode]);
             sprintf(buf, fmt, (uint8_t)arg1);
             break;
 
@@ -746,12 +746,12 @@ GLUE_C_WRITE(cpu65_trace_epilogue)
         case addr_absolute_y:
         case addr_j_indirect:
         case addr_j_indirect_x:                 /* word arg */
-            sprintf(fmt, "%04X: %02X%02X%02X %s %s", current_pc, cpu65_opcode, (uint8_t)arg1, (uint8_t)arg2, opcodes_65c02[cpu65_opcode].mnemonic, disasm_templates[opcodes_65c02[cpu65_opcode].mode]);
+            sprintf(fmt, "%04X:%02X%02X%02X %s %s", current_pc, cpu65_opcode, (uint8_t)arg1, (uint8_t)arg2, opcodes_65c02[cpu65_opcode].mnemonic, disasm_templates[opcodes_65c02[cpu65_opcode].mode]);
             sprintf(buf, fmt, (uint8_t)arg1, (uint8_t)arg2);
             break;
 
         case addr_relative:                     /* offset */
-            sprintf(fmt, "%04X: %02X%02X %s %s", current_pc, cpu65_opcode, (uint8_t)arg1, opcodes_65c02[cpu65_opcode].mnemonic, disasm_templates[opcodes_65c02[cpu65_opcode].mode]);
+            sprintf(fmt, "%04X:%02X%02X %s %s", current_pc, cpu65_opcode, (uint8_t)arg1, opcodes_65c02[cpu65_opcode].mnemonic, disasm_templates[opcodes_65c02[cpu65_opcode].mode]);
             if (arg1 < 0) {
                 sprintf(buf, fmt, current_pc + arg1 + 2, '-', (uint8_t)(-arg1));
             } else {

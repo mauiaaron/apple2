@@ -24,6 +24,18 @@
 #define DebugCurrOpcode SN(cpu65_opcode)
 #define DebugCycleCount SN(cpu65_opcycles)
 
+#define CommonSaveCPUState() \
+                movw    EffectiveAddr, DebugCurrEA; \
+                movb    A_Reg, SN(cpu65_a); \
+                xorw    %ax, %ax; \
+                movb    F_Reg, %al; \
+                SNX_PROLOGUE(cpu65_flags_encode); \
+                movb    SNX(cpu65_flags_encode,_XAX,1), %al; \
+                movb    %al, SN(cpu65_f); \
+                movb    X_Reg, SN(cpu65_x); \
+                movb    Y_Reg, SN(cpu65_y); \
+                movb    SP_Reg_L, SN(cpu65_sp)
+
 #if CPU_TRACING
 #   define TRACE_PROLOGUE \
                 movw    PC_Reg, SN(cpu65_pc); \
@@ -35,7 +47,9 @@
 #   define TRACE_ARG2 \
                 callLQ  CALL(cpu65_trace_arg2);
 #   define TRACE_EPILOGUE \
-                movw    EffectiveAddr, DebugCurrEA; \
+                pushLQ _XAX; \
+                CommonSaveCPUState(); \
+                popLQ _XAX; \
                 callLQ  CALL(cpu65_trace_epilogue);
 #else
 #   define TRACE_PROLOGUE
@@ -2238,17 +2252,8 @@ E(cpu65_run)
 
 exit_cpu65_run:
                 // Save CPU state when returning from being called from C
-                movw    EffectiveAddr, DebugCurrEA
                 movw    PC_Reg, SN(cpu65_pc)
-                movb    A_Reg, SN(cpu65_a)
-                xorw    %ax, %ax
-                movb    F_Reg, %al
-                SNX_PROLOGUE(cpu65_flags_encode)
-                movb    SNX(cpu65_flags_encode,_XAX,1), %al
-                movb    %al, SN(cpu65_f)
-                movb    X_Reg, SN(cpu65_x)
-                movb    Y_Reg, SN(cpu65_y)
-                movb    SP_Reg_L, SN(cpu65_sp)
+                CommonSaveCPUState()
                 jmp     exit_frame
 
 emul_reinit:    movb    $0, SN(cpu65__signal)
