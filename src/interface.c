@@ -1573,7 +1573,7 @@ static void *interface_thread(void *current_key)
     case kPAUSE:
         while (c_mygetch(1) == -1)
         {
-            struct timespec ts = { .tv_sec=0, .tv_nsec=1 };
+            struct timespec ts = { .tv_sec=0, .tv_nsec=33333333/*30Hz*/ };
             nanosleep(&ts, NULL);
         }
         break;
