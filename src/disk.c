@@ -511,6 +511,9 @@ void c_write_nibblized_6_6()
 
 void c_write_normal_6()
 {
+    static int wr_sec_6 = 0x0; // static bugfix from pre-git-history ...
+    //static int wr_trk_6 = 0x0; is this needed? ... this truly appeared to be deadc0de in apple2-emul-v006
+
     int position;
     int old_value;
 
@@ -556,11 +559,20 @@ void c_write_normal_6()
         break;
 
     case 11: case 12:
-        /* Track */
+        /* Track -- FIXME TODO ... should this do anything? */
         break;
 
-    case 13: case 14:
-        /* Sector */
+    case 13:
+        /* Sector number (encode it) */
+        wr_sec_6 = disk6.disk_byte << 1;
+        wr_sec_6 &= 0xFF;
+        wr_sec_6 |= 0x55;
+        break;
+
+    case 14:
+        /* Sector number (encode it) */
+        wr_sec_6 &= disk6.disk_byte;
+        disk6.disk[disk6.drive].sector = wr_sec_6;
         break;
 
     case 15:
