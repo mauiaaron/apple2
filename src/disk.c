@@ -79,34 +79,28 @@ static void cut_gz(char *name) {
 
 static bool is_gz(const char * const name) {
     size_t len = strlen( name );
-
     if (len > 3) {
         return (strcmp(name+len-3, ".gz") == 0);
     }
-
     return false;
 }
 
 static bool is_nib(const char * const name) {
     size_t len = strlen( name );
-
     if (is_gz(name)) {
         len -= 3;
     }
-
     if (!strncmp(name + len - 4, ".nib", 4)) {
         return true;
     }
-
     return false;
 }
 
 /* -------------------------------------------------------------------------
-    c_init_6()
+    c_init_6() -- initialize disk system
    ------------------------------------------------------------------------- */
 
-void c_init_6()
-{
+void c_init_6(void) {
     disk6.disk[0].phase = disk6.disk[1].phase = 42;
     disk6.disk[0].phase_change = disk6.disk[1].phase_change = 0;
 
@@ -147,13 +141,11 @@ void c_end_disk_trace_6(void) {
 /* -------------------------------------------------------------------------
     c_eject_6() - ejects/gzips image file
    ------------------------------------------------------------------------- */
-
 const char *c_eject_6(int drive) {
 
     const char *err = NULL;
 
-    if (disk6.disk[drive].compressed)
-    {
+    if (disk6.disk[drive].compressed) {
         // foo.dsk -> foo.dsk.gz
         err = def(disk6.disk[drive].file_name, is_nib(disk6.disk[drive].file_name) ? NIB_SIZE : DSK_SIZE);
         if (err) {
@@ -166,8 +158,7 @@ const char *c_eject_6(int drive) {
     disk6.disk[drive].compressed = 0;
     disk6.disk[drive].nibblized = 0;
     sprintf(disk6.disk[drive].file_name, "%s", "");
-    if (disk6.disk[drive].fp)
-    {
+    if (disk6.disk[drive].fp) {
         fclose(disk6.disk[drive].fp);
         disk6.disk[drive].fp = NULL;
     }
@@ -185,8 +176,7 @@ const char *c_new_diskette_6(int drive, const char * const raw_file_name, int fo
 
     /* uncompress the gziped disk */
     char *file_name = strdup(raw_file_name);
-    if (is_gz(file_name))
-    {
+    if (is_gz(file_name)) {
         int rawcount = 0;
         const char *err = inf(file_name, &rawcount); // foo.dsk.gz -> foo.dsk
         if (!err) {
@@ -195,14 +185,12 @@ const char *c_new_diskette_6(int drive, const char * const raw_file_name, int fo
                 err = "disk image is not expected size!";
             }
         }
-        if (err)
-        {
+        if (err) {
             ERRLOG("OOPS: An error occurred when attempting to inflate/load a disk image : %s", err);
             free(file_name);
             return err;
         }
-        if (unlink(file_name)) // temporarily remove .gz file
-        {
+        if (unlink(file_name)) { // temporarily remove .gz file
             ERRLOG("OOPS, cannot unlink %s", file_name);
         }
 
@@ -215,36 +203,29 @@ const char *c_new_diskette_6(int drive, const char * const raw_file_name, int fo
     free(file_name);
     file_name = NULL;
 
-    if (disk6.disk[drive].fp)
-    {
+    if (disk6.disk[drive].fp) {
         fclose(disk6.disk[drive].fp);
         disk6.disk[drive].fp = NULL;
     }
 
-    if (stat(disk6.disk[drive].file_name, &buf) < 0)
-    {
+    if (stat(disk6.disk[drive].file_name, &buf) < 0) {
         disk6.disk[drive].fp = NULL;
         c_eject_6(drive);
         return "disk unreadable 1";
-    }
-    else
-    {
+    } else {
         disk6.disk[drive].file_size = buf.st_size;
 
-        if (!force)
-        {
+        if (!force) {
             disk6.disk[drive].fp = fopen(disk6.disk[drive].file_name, "r+");
             disk6.disk[drive].is_protected = false;
         }
 
-        if ((disk6.disk[drive].fp == NULL) || (force))
-        {
+        if ((disk6.disk[drive].fp == NULL) || (force)) {
             disk6.disk[drive].fp = fopen(disk6.disk[drive].file_name, "r");
             disk6.disk[drive].is_protected = true;    /* disk is write protected! */
         }
 
-        if (disk6.disk[drive].fp == NULL)
-        {
+        if (disk6.disk[drive].fp == NULL) {
             /* Failed to open file. */
             c_eject_6(drive);
             return "disk unreadable 2";
@@ -260,19 +241,14 @@ const char *c_new_diskette_6(int drive, const char * const raw_file_name, int fo
     return NULL;
 }
 
-
 /* -------------------------------------------------------------------------
     c_read_nibblized_6_6() - reads a standard .nib file of length 232960 bytes.
-
         there are 70 phases positioned every 3328 bytes.
    ------------------------------------------------------------------------- */
-
-unsigned char c_read_nibblized_6_6()
-{
+unsigned char c_read_nibblized_6_6(void) {
     static unsigned char ch;
 
-    if (disk6.disk[disk6.drive].phase_change)
-    {
+    if (disk6.disk[disk6.drive].phase_change) {
         fseek(disk6.disk[disk6.drive].fp, PHASE_BYTES * disk6.disk[disk6.drive].phase, SEEK_SET);
         disk6.disk[disk6.drive].phase_change = false;
     }
@@ -280,8 +256,7 @@ unsigned char c_read_nibblized_6_6()
     disk6.disk_byte = fgetc(disk6.disk[disk6.drive].fp);
     ch = disk6.disk_byte;
     /* track revolves... */
-    if (ftell(disk6.disk[disk6.drive].fp) == (PHASE_BYTES * (disk6.disk[disk6.drive].phase + 2)))
-    {
+    if (ftell(disk6.disk[disk6.drive].fp) == (PHASE_BYTES * (disk6.disk[disk6.drive].phase + 2))) {
         fseek(disk6.disk[disk6.drive].fp, -2 * PHASE_BYTES, SEEK_CUR);
     }
 
@@ -298,167 +273,157 @@ unsigned char c_read_nibblized_6_6()
 /* -------------------------------------------------------------------------
     c_read_normal_6()
    ------------------------------------------------------------------------- */
-unsigned char c_read_normal_6()
-{
+unsigned char c_read_normal_6(void) {
     int position;
     int old_value;
 
     unsigned char value = 0;
 
     /* The run byte tells what's to do */
-    switch (disk6.disk[disk6.drive].run_byte)
-    {
-    case 0: case 1: case 2: case 3: case 4: case 5:
-    case 20: case 21: case 22: case 23: case 24:
-        /* Sync */
-        value = 0xFF;
-        break;
+    switch (disk6.disk[disk6.drive].run_byte) {
+        case 0: case 1: case 2: case 3: case 4: case 5:
+        case 20: case 21: case 22: case 23: case 24:
+            /* Sync */
+            value = 0xFF;
+            break;
 
-    case 6: case 25:
-        /* Prologue (first byte) */
-        value = 0xD5;
-        break;
+        case 6: case 25:
+            /* Prologue (first byte) */
+            value = 0xD5;
+            break;
 
-    case 7: case 26:
-        /* Prologue (second byte) */
-        value = 0xAA;
-        break;
+        case 7: case 26:
+            /* Prologue (second byte) */
+            value = 0xAA;
+            break;
 
-    case 8:
-        /* Prologue (third byte) */
-        value = 0x96;
-        break;
+        case 8:
+            /* Prologue (third byte) */
+            value = 0x96;
+            break;
 
-    case 9:
-        /* Volume (encoded) */
-        value = (disk6.volume >> 1) | 0xAA;
-        disk6.checksum = disk6.volume;
-        break;
+        case 9:
+            /* Volume (encoded) */
+            value = (disk6.volume >> 1) | 0xAA;
+            disk6.checksum = disk6.volume;
+            break;
 
-    case 10:
-        /* Volume (encoded) */
-        value = disk6.volume | 0xAA;
-        break;
+        case 10:
+            /* Volume (encoded) */
+            value = disk6.volume | 0xAA;
+            break;
 
-    case 11:
-        /* Track number (encoded) */
-        disk6.checksum ^= (disk6.disk[disk6.drive].phase >> 1);
-        value = (disk6.disk[disk6.drive].phase >> 2) | 0xAA;
-        break;
+        case 11:
+            /* Track number (encoded) */
+            disk6.checksum ^= (disk6.disk[disk6.drive].phase >> 1);
+            value = (disk6.disk[disk6.drive].phase >> 2) | 0xAA;
+            break;
 
-    case 12:
-        /* Track number (encoded) */
-        value = (disk6.disk[disk6.drive].phase >> 1) | 0xAA;
-        break;
+        case 12:
+            /* Track number (encoded) */
+            value = (disk6.disk[disk6.drive].phase >> 1) | 0xAA;
+            break;
 
-    case 13:
-        /* Sector number (encoded) */
-        disk6.checksum ^= disk6.disk[disk6.drive].sector;
-        value = (disk6.disk[disk6.drive].sector >> 1) | 0xAA;
-        break;
+        case 13:
+            /* Sector number (encoded) */
+            disk6.checksum ^= disk6.disk[disk6.drive].sector;
+            value = (disk6.disk[disk6.drive].sector >> 1) | 0xAA;
+            break;
 
-    case 14:
-        /* Sector number (encoded) */
-        value = disk6.disk[disk6.drive].sector | 0xAA;
-        break;
+        case 14:
+            /* Sector number (encoded) */
+            value = disk6.disk[disk6.drive].sector | 0xAA;
+            break;
 
-    case 15:
-        /* Checksum */
-        value = (disk6.checksum >> 1) | 0xAA;
-        break;
+        case 15:
+            /* Checksum */
+            value = (disk6.checksum >> 1) | 0xAA;
+            break;
 
-    case 16:
-        /* Checksum */
-        value = disk6.checksum | 0xAA;
-        break;
+        case 16:
+            /* Checksum */
+            value = disk6.checksum | 0xAA;
+            break;
 
-    case 17: case 371:
-        /* Epilogue (first byte) */
-        value = 0xDE;
-        break;
+        case 17: case 371:
+            /* Epilogue (first byte) */
+            value = 0xDE;
+            break;
 
-    case 18: case 372:
-        /* Epilogue (second byte) */
-        value = 0xAA;
-        break;
+        case 18: case 372:
+            /* Epilogue (second byte) */
+            value = 0xAA;
+            break;
 
-    case 19: case 373:
-        /* Epilogue (third byte) */
-        value = 0xEB;
-        break;
+        case 19: case 373:
+            /* Epilogue (third byte) */
+            value = 0xEB;
+            break;
 
-    case 27:
-        /* Data header */
-        disk6.exor_value = 0;
+        case 27:
+            /* Data header */
+            disk6.exor_value = 0;
 
-        /* Set file position variable */
-        disk6.disk[disk6.drive].file_pos = 256 * 16 * (disk6.disk[disk6.drive].phase >> 1) +
-                                           256 * skew_table_6[ disk6.disk[disk6.drive].sector ];
+            /* Set file position variable */
+            disk6.disk[disk6.drive].file_pos = 256 * 16 * (disk6.disk[disk6.drive].phase >> 1) +
+                                               256 * skew_table_6[ disk6.disk[disk6.drive].sector ];
 
-        /* File large enough? */
-        if (disk6.disk[disk6.drive].file_pos + 255 > disk6.disk[disk6.drive].file_size)
-        {
-            return 0xFF;
-        }
+            /* File large enough? */
+            if (disk6.disk[disk6.drive].file_pos + 255 > disk6.disk[disk6.drive].file_size) {
+                return 0xFF;
+            }
 
-        /* Set position */
-        fseek( disk6.disk[disk6.drive].fp, disk6.disk[disk6.drive].file_pos, SEEK_SET );
+            /* Set position */
+            fseek( disk6.disk[disk6.drive].fp, disk6.disk[disk6.drive].file_pos, SEEK_SET );
 
-        /* Read sector */
-        if (fread( disk6.disk_data, 1, 256, disk6.disk[disk6.drive].fp ) != 256)
-        {
-            // error
-        }
+            /* Read sector */
+            if (fread( disk6.disk_data, 1, 256, disk6.disk[disk6.drive].fp ) != 256) {
+#warning FIXME TODO ... does this really happen in the wild?  we may need/want a crash reporter for this...
+                ERRQUIT("OOPS read sector failed ...");
+            }
 
-        disk6.disk_data[ 256 ] = disk6.disk_data[ 257 ] = 0;
-        value = 0xAD;
-        break;
+            disk6.disk_data[ 256 ] = disk6.disk_data[ 257 ] = 0;
+            value = 0xAD;
+            break;
 
-    case 370:
-        /* Checksum */
-        value = translate_table_6[disk6.exor_value & 0x3F];
-
-        /* Increment sector number (and wrap if necessary) */
-        disk6.disk[disk6.drive].sector++;
-        if (disk6.disk[disk6.drive].sector == 16)
-        {
-            disk6.disk[disk6.drive].sector = 0;
-        }
-
-        break;
-
-    default:
-        position = disk6.disk[disk6.drive].run_byte - 28;
-        if (position >= 0x56)
-        {
-            position -= 0x56;
-            old_value = disk6.disk_data[ position ];
-            old_value = old_value >> 2;
-            disk6.exor_value ^= old_value;
+        case 370:
+            /* Checksum */
             value = translate_table_6[disk6.exor_value & 0x3F];
-            disk6.exor_value = old_value;
-        }
-        else
-        {
-            old_value = 0;
-            old_value |= (disk6.disk_data[position] & 0x1) << 1;
-            old_value |= (disk6.disk_data[position] & 0x2) >> 1;
-            old_value |= (disk6.disk_data[position+0x56] & 0x1) << 3;
-            old_value |= (disk6.disk_data[position+0x56] & 0x2) << 1;
-            old_value |= (disk6.disk_data[position+0xAC] & 0x1) << 5;
-            old_value |= (disk6.disk_data[position+0xAC] & 0x2) << 3;
-            disk6.exor_value ^= old_value;
-            value = translate_table_6[disk6.exor_value & 0x3F];
-            disk6.exor_value = old_value;
-        }
 
-        break;
+            /* Increment sector number (and wrap if necessary) */
+            disk6.disk[disk6.drive].sector++;
+            if (disk6.disk[disk6.drive].sector == 16) {
+                disk6.disk[disk6.drive].sector = 0;
+            }
+            break;
+
+        default:
+            position = disk6.disk[disk6.drive].run_byte - 28;
+            if (position >= 0x56) {
+                position -= 0x56;
+                old_value = disk6.disk_data[ position ];
+                old_value = old_value >> 2;
+                disk6.exor_value ^= old_value;
+                value = translate_table_6[disk6.exor_value & 0x3F];
+                disk6.exor_value = old_value;
+            } else {
+                old_value = 0;
+                old_value |= (disk6.disk_data[position] & 0x1) << 1;
+                old_value |= (disk6.disk_data[position] & 0x2) >> 1;
+                old_value |= (disk6.disk_data[position+0x56] & 0x1) << 3;
+                old_value |= (disk6.disk_data[position+0x56] & 0x2) << 1;
+                old_value |= (disk6.disk_data[position+0xAC] & 0x1) << 5;
+                old_value |= (disk6.disk_data[position+0xAC] & 0x2) << 3;
+                disk6.exor_value ^= old_value;
+                value = translate_table_6[disk6.exor_value & 0x3F];
+                disk6.exor_value = old_value;
+            }
+            break;
     } /* End switch */
 
     /* Continue by increasing run byte value */
     disk6.disk[disk6.drive].run_byte++;
-    if (disk6.disk[disk6.drive].run_byte > 373)
-    {
+    if (disk6.disk[disk6.drive].run_byte > 373) {
         disk6.disk[disk6.drive].run_byte = 0;
     }
 
@@ -474,17 +439,12 @@ unsigned char c_read_normal_6()
 }
 
 
-
 /* -------------------------------------------------------------------------
     c_write_nibblized_6_6() - writes a standard .nib file of length 232960 bytes.
-
         there are 70 phases positioned every 3328 bytes.
    ------------------------------------------------------------------------- */
-
-void c_write_nibblized_6_6()
-{
-    if (disk6.disk[disk6.drive].phase_change)
-    {
+void c_write_nibblized_6_6(void) {
+    if (disk6.disk[disk6.drive].phase_change) {
         fseek(disk6.disk[disk6.drive].fp, PHASE_BYTES * disk6.disk[disk6.drive].phase, SEEK_SET);
         disk6.disk[disk6.drive].phase_change = false;
     }
@@ -499,8 +459,7 @@ void c_write_nibblized_6_6()
 #endif
 
     /* track revolves... */
-    if (ftell(disk6.disk[disk6.drive].fp) == (PHASE_BYTES * (disk6.disk[disk6.drive].phase + 2)))
-    {
+    if (ftell(disk6.disk[disk6.drive].fp) == (PHASE_BYTES * (disk6.disk[disk6.drive].phase + 2))) {
         fseek(disk6.disk[disk6.drive].fp, -2 * PHASE_BYTES, SEEK_CUR);
     }
 }
@@ -508,203 +467,173 @@ void c_write_nibblized_6_6()
 /* -------------------------------------------------------------------------
     c_write_normal_6()   disk6.disk_byte contains the value
    ------------------------------------------------------------------------- */
-
-void c_write_normal_6()
-{
+void c_write_normal_6(void) {
     static int wr_sec_6 = 0x0; // static bugfix from pre-git-history ...
     //static int wr_trk_6 = 0x0; is this needed? ... this truly appeared to be deadc0de in apple2-emul-v006
 
     int position;
     int old_value;
 
-    if (disk6.disk_byte == 0xD5)
-    {
+    if (disk6.disk_byte == 0xD5) {
         disk6.disk[disk6.drive].run_byte = 6;    /* Initialize run byte value */
-
     }
 
     /* The run byte tells what's to do */
 
-    switch (disk6.disk[disk6.drive].run_byte)
-    {
-    case 0: case 1: case 2: case 3: case 4: case 5:
-    case 20: case 21: case 22: case 23: case 24:
-        /* Sync */
-        break;
+    switch (disk6.disk[disk6.drive].run_byte) {
+        case 0: case 1: case 2: case 3: case 4: case 5:
+        case 20: case 21: case 22: case 23: case 24:
+            /* Sync */
+            break;
 
-    case 6: case 25:
-        /* Prologue (first byte) */
-        if (disk6.disk_byte == 0xFF)
-        {
-            disk6.disk[disk6.drive].run_byte--;
-        }
+        case 6: case 25:
+            /* Prologue (first byte) */
+            if (disk6.disk_byte == 0xFF) {
+                disk6.disk[disk6.drive].run_byte--;
+            }
+            break;
 
-        break;
+        case 7: case 26:
+            /* Prologue (second byte) */
+            break;
 
-    case 7: case 26:
-        /* Prologue (second byte) */
-        break;
+        case 8:
+            /* Prologue (third byte) */
+            if (disk6.disk_byte == 0xAD) {
+                disk6.exor_value = 0, disk6.disk[disk6.drive].run_byte = 27;
+            }
+            break;
 
-    case 8:
-        /* Prologue (third byte) */
-        if (disk6.disk_byte == 0xAD)
-        {
-            disk6.exor_value = 0, disk6.disk[disk6.drive].run_byte = 27;
-        }
+        case 9: case 10:
+            /* Volume */
+            break;
 
-        break;
+        case 11: case 12:
+            /* Track -- FIXME TODO ... should this do anything? */
+            break;
 
-    case 9: case 10:
-        /* Volume */
-        break;
+        case 13:
+            /* Sector number (encode it) */
+            wr_sec_6 = disk6.disk_byte << 1;
+            wr_sec_6 &= 0xFF;
+            wr_sec_6 |= 0x55;
+            break;
 
-    case 11: case 12:
-        /* Track -- FIXME TODO ... should this do anything? */
-        break;
+        case 14:
+            /* Sector number (encode it) */
+            wr_sec_6 &= disk6.disk_byte;
+            disk6.disk[disk6.drive].sector = wr_sec_6;
+            break;
 
-    case 13:
-        /* Sector number (encode it) */
-        wr_sec_6 = disk6.disk_byte << 1;
-        wr_sec_6 &= 0xFF;
-        wr_sec_6 |= 0x55;
-        break;
+        case 15:
+            /* Checksum */
+            break;
 
-    case 14:
-        /* Sector number (encode it) */
-        wr_sec_6 &= disk6.disk_byte;
-        disk6.disk[disk6.drive].sector = wr_sec_6;
-        break;
+        case 16:
+            /* Checksum */
+            break;
 
-    case 15:
-        /* Checksum */
-        break;
+        case 17: case 371:
+            /* Epilogue (first byte) */
+            break;
 
-    case 16:
-        /* Checksum */
-        break;
+        case 18: case 372:
+            /* Epilogue (second byte) */
+            break;
 
-    case 17: case 371:
-        /* Epilogue (first byte) */
-        break;
+        case 19: case 373:
+            /* Epilogue (third byte) */
+            break;
 
-    case 18: case 372:
-        /* Epilogue (second byte) */
-        break;
+        case 27:
+            disk6.exor_value = 0;
+            break;
 
-    case 19: case 373:
-        /* Epilogue (third byte) */
-        break;
+        case 370:
+            /* Set file position variable */
+            disk6.disk[disk6.drive].file_pos = 256 * 16 * (disk6.disk[disk6.drive].phase >> 1) +
+                                               256 * skew_table_6[ disk6.disk[disk6.drive].sector ];
 
-    case 27:
-        disk6.exor_value = 0;
-        break;
-
-    case 370:
-        /* Set file position variable */
-        disk6.disk[disk6.drive].file_pos = 256 * 16 * (disk6.disk[disk6.drive].phase >> 1) +
-                                           256 * skew_table_6[ disk6.disk[disk6.drive].sector ];
-
-        /* Is the file large enough? */
-        if (disk6.disk[disk6.drive].file_pos + 255 > disk6.disk[disk6.drive].file_size)
-        {
-            return;
-        }
+            /* Is the file large enough? */
+            if (disk6.disk[disk6.drive].file_pos + 255 > disk6.disk[disk6.drive].file_size) {
+                return;
+            }
 
 
-        /* Set position */
-        fseek( disk6.disk[disk6.drive].fp, disk6.disk[disk6.drive].file_pos, SEEK_SET );
+            /* Set position */
+            fseek( disk6.disk[disk6.drive].fp, disk6.disk[disk6.drive].file_pos, SEEK_SET );
 
-        /* Write sector */
-        fwrite(disk6.disk_data, 1, 256, disk6.disk[disk6.drive].fp);
+            /* Write sector */
+            fwrite(disk6.disk_data, 1, 256, disk6.disk[disk6.drive].fp);
 #ifdef TESTING
-        if (test_write_fp) {
-            fwrite(disk6.disk_data, 1, 256, test_write_fp);
-            fflush(test_write_fp);
-        }
+            if (test_write_fp) {
+                fwrite(disk6.disk_data, 1, 256, test_write_fp);
+                fflush(test_write_fp);
+            }
 #endif
-        fflush( disk6.disk[disk6.drive].fp );
-        /* Increment sector number (and wrap if necessary) */
-        disk6.disk[disk6.drive].sector++;
-        if (disk6.disk[disk6.drive].sector == 16)
-        {
-            disk6.disk[disk6.drive].sector = 0;
-        }
+            fflush( disk6.disk[disk6.drive].fp );
+            /* Increment sector number (and wrap if necessary) */
+            disk6.disk[disk6.drive].sector++;
+            if (disk6.disk[disk6.drive].sector == 16) {
+                disk6.disk[disk6.drive].sector = 0;
+            }
+            break;
 
-        break;
-
-    default:
-        position = disk6.disk[disk6.drive].run_byte - 28;
-        disk6.disk_byte = translate_table_6[ disk6.disk_byte ];
-        if (position >= 0x56)
-        {
-            position -= 0x56;
-            disk6.disk_byte ^= disk6.exor_value;
-            old_value = disk6.disk_byte;
-            disk6.disk_data[position] |= (disk6.disk_byte << 2) & 0xFC;
-            disk6.exor_value = old_value;
-        }
-        else
-        {
-            disk6.disk_byte ^= disk6.exor_value;
-            old_value = disk6.disk_byte;
-            disk6.disk_data[position] = (disk6.disk_byte & 0x01) << 1;
-            disk6.disk_data[position] |= (disk6.disk_byte & 0x02) >> 1;
-            disk6.disk_data[position + 0x56] = (disk6.disk_byte & 0x04) >> 1;
-            disk6.disk_data[position + 0x56] |= (disk6.disk_byte & 0x08) >> 3;
-            disk6.disk_data[position + 0xAC] = (disk6.disk_byte & 0x10) >> 3;
-            disk6.disk_data[position + 0xAC] |= (disk6.disk_byte & 0x20) >> 5;
-            disk6.exor_value = old_value;
-        }
-
-        break;
+        default:
+            position = disk6.disk[disk6.drive].run_byte - 28;
+            disk6.disk_byte = translate_table_6[ disk6.disk_byte ];
+            if (position >= 0x56) {
+                position -= 0x56;
+                disk6.disk_byte ^= disk6.exor_value;
+                old_value = disk6.disk_byte;
+                disk6.disk_data[position] |= (disk6.disk_byte << 2) & 0xFC;
+                disk6.exor_value = old_value;
+            } else {
+                disk6.disk_byte ^= disk6.exor_value;
+                old_value = disk6.disk_byte;
+                disk6.disk_data[position] = (disk6.disk_byte & 0x01) << 1;
+                disk6.disk_data[position] |= (disk6.disk_byte & 0x02) >> 1;
+                disk6.disk_data[position + 0x56] = (disk6.disk_byte & 0x04) >> 1;
+                disk6.disk_data[position + 0x56] |= (disk6.disk_byte & 0x08) >> 3;
+                disk6.disk_data[position + 0xAC] = (disk6.disk_byte & 0x10) >> 3;
+                disk6.disk_data[position + 0xAC] |= (disk6.disk_byte & 0x20) >> 5;
+                disk6.exor_value = old_value;
+            }
+            break;
     } /* End switch */
 
     disk6.disk[disk6.drive].run_byte++;
-    if (disk6.disk[disk6.drive].run_byte > 373)
-    {
+    if (disk6.disk[disk6.drive].run_byte > 373) {
         disk6.disk[disk6.drive].run_byte = 0;
     }
 }
 
 GLUE_C_READ(disk_read_byte)
 {
-    if (disk6.ddrw)
-    {
-        if (disk6.disk[disk6.drive].fp == NULL)
-        {
+    if (disk6.ddrw) {
+        if (disk6.disk[disk6.drive].fp == NULL) {
             return 0;           /* Return if there is no disk in drive */
         }
 
-        if (disk6.disk[disk6.drive].is_protected)
-        {
+        if (disk6.disk[disk6.drive].is_protected) {
             return 0;           /* Do not write if diskette is write protected */
-
         }
 
-        if (disk6.disk_byte < 0x96)
-        {
+        if (disk6.disk_byte < 0x96) {
             return 0;           /* Only byte values at least 0x96 are allowed */
-
         }
 
         (disk6.disk[disk6.drive].nibblized) ? c_write_nibblized_6_6() : c_write_normal_6();
         return 0; /* ??? */
-    }
-    else
-    {
-        if (disk6.disk[disk6.drive].fp == NULL)
-        {
+    } else {
+        if (disk6.disk[disk6.drive].fp == NULL) {
             return 0xFF;        /* Return FF if there is no disk in drive */
         }
 
-        if (disk6.motor)                /* Motor turned on? */
-        {
-            if (disk6.motor > 99)
-            {
+        if (disk6.motor) {      /* Motor turned on? */
+            if (disk6.motor > 99) {
                 return 0;
-            }
-            else
-            {
+            } else {
                 disk6.motor++;
             }
         }
@@ -725,23 +654,20 @@ GLUE_C_READ(disk_read_phase)
      * computed as the track number % 4.
      */
 
-    switch (((ea >> 1) - disk6.disk[disk6.drive].phase) & 3)
-    {
-    case 1:
-        disk6.disk[disk6.drive].phase++;
-        break;
-    case 3:
-        disk6.disk[disk6.drive].phase--;
-        break;
+    switch (((ea >> 1) - disk6.disk[disk6.drive].phase) & 3) {
+        case 1:
+            disk6.disk[disk6.drive].phase++;
+            break;
+        case 3:
+            disk6.disk[disk6.drive].phase--;
+            break;
     }
 
-    if (disk6.disk[disk6.drive].phase<0)
-    {
+    if (disk6.disk[disk6.drive].phase<0) {
         disk6.disk[disk6.drive].phase=0;
     }
 
-    if (disk6.disk[disk6.drive].phase>69)
-    {
+    if (disk6.disk[disk6.drive].phase>69) {
         disk6.disk[disk6.drive].phase=69;
     }
 
@@ -796,8 +722,7 @@ GLUE_C_WRITE(disk_write_latch)
     disk6.disk_byte = b;
 }
 
-void disk_io_initialize(unsigned int slot)
-{
+void disk_io_initialize(unsigned int slot) {
     FILE *f;
     int i;
     char temp[PATH_MAX];
@@ -805,18 +730,16 @@ void disk_io_initialize(unsigned int slot)
     assert(slot == 6);
 
     /* load Disk II rom */
-    if (!slot6_rom_loaded)
-    {
+    if (!slot6_rom_loaded) {
         snprintf(temp, PATH_MAX, "%s/slot6.rom", system_path);
-        if ((f = fopen( temp, "r" )) == NULL)
-        {
+        if ((f = fopen( temp, "r" )) == NULL) {
             printf("Cannot find file '%s'.\n",temp);
             exit( 0 );
         }
 
-        if (fread(slot6_rom, 0x100, 1, f) != 0x100)
-        {
+        if (fread(slot6_rom, 0x100, 1, f) != 0x100) {
             // error
+#warning FIXME TODO ... slot6 rom is read elsewhere 
         }
 
         fclose(f);
@@ -827,37 +750,23 @@ void disk_io_initialize(unsigned int slot)
 
     // disk softswitches
     // 0xC0Xi : X = slot 0x6 + 0x8 == 0xE
-    cpu65_vmem_r[0xC0E0] = cpu65_vmem_r[0xC0E2] =
-                               cpu65_vmem_r[0xC0E4] = cpu65_vmem_r[0xC0E6] =
-                                                          ram_nop;
+    cpu65_vmem_r[0xC0E0] = cpu65_vmem_r[0xC0E2] = cpu65_vmem_r[0xC0E4] = cpu65_vmem_r[0xC0E6] = ram_nop;
 
-    cpu65_vmem_r[0xC0E1] = cpu65_vmem_r[0xC0E3] =
-                               cpu65_vmem_r[0xC0E5] = cpu65_vmem_r[0xC0E7] =
-                                                          disk_read_phase;
+    cpu65_vmem_r[0xC0E1] = cpu65_vmem_r[0xC0E3] = cpu65_vmem_r[0xC0E5] = cpu65_vmem_r[0xC0E7] = disk_read_phase;
 
-    cpu65_vmem_r[0xC0E8] =
-        disk_read_motor_off;
-    cpu65_vmem_r[0xC0E9] =
-        disk_read_motor_on;
-    cpu65_vmem_r[0xC0EA] =
-        disk_read_select_a;
-    cpu65_vmem_r[0xC0EB] =
-        disk_read_select_b;
-    cpu65_vmem_r[0xC0EC] =
-        disk_read_byte;
-    cpu65_vmem_r[0xC0ED] =
-        disk_read_latch;        /* read latch */
-    cpu65_vmem_r[0xC0EE] =
-        disk_read_prepare_in;
-    cpu65_vmem_r[0xC0EF] =
-        disk_read_prepare_out;
+    cpu65_vmem_r[0xC0E8] = disk_read_motor_off;
+    cpu65_vmem_r[0xC0E9] = disk_read_motor_on;
+    cpu65_vmem_r[0xC0EA] = disk_read_select_a;
+    cpu65_vmem_r[0xC0EB] = disk_read_select_b;
+    cpu65_vmem_r[0xC0EC] = disk_read_byte;
+    cpu65_vmem_r[0xC0ED] = disk_read_latch;
+    cpu65_vmem_r[0xC0EE] = disk_read_prepare_in;
+    cpu65_vmem_r[0xC0EF] = disk_read_prepare_out;
 
-    for (i = 0xC0E0; i < 0xC0F0; i++)
-    {
-        cpu65_vmem_w[i] =
-            cpu65_vmem_r[i];
+    for (i = 0xC0E0; i < 0xC0F0; i++) {
+        cpu65_vmem_w[i] = cpu65_vmem_r[i];
     }
 
-    cpu65_vmem_w[0xC0ED] =
-        disk_write_latch;       /* write latch */
+    cpu65_vmem_w[0xC0ED] = disk_write_latch;
 }
+

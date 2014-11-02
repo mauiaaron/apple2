@@ -14,14 +14,12 @@
  *
  */
 
-
 #ifndef A2_DISK_H
 #define A2_DISK_H
 
 #include "common.h"
 
-struct diskette
-{
+struct diskette {
     char file_name[1024];
     bool compressed;
     bool nibblized;
@@ -35,8 +33,7 @@ struct diskette
     int file_pos;
 };
 
-struct drive
-{
+struct drive {
     int motor;
     int drive;
     int ddrw;
@@ -50,22 +47,22 @@ struct drive
 
 extern struct drive disk6;
 
-void c_init_6();
+void c_init_6(void);
 const char *c_new_diskette_6(int drive, const char * const file_name, int force);
 const char *c_eject_6(int drive);
 void disk_io_initialize(unsigned int slot);
 
-void disk_read_nop(),
-disk_read_phase(),
-disk_read_motor_off(),
-disk_read_motor_on(),
-disk_read_select_a(),
-disk_read_select_b(),
-disk_read_byte(),
-disk_read_latch(),
-disk_write_latch(),
-disk_read_prepare_in(),
-disk_read_prepare_out();
+void disk_read_nop(void),
+disk_read_phase(void),
+disk_read_motor_off(void),
+disk_read_motor_on(void),
+disk_read_select_a(void),
+disk_read_select_b(void),
+disk_read_byte(void),
+disk_read_latch(void),
+disk_write_latch(void),
+disk_read_prepare_in(void),
+disk_read_prepare_out(void);
 
 #ifdef TESTING
 void c_begin_disk_trace_6(const char *read_file, const char *write_file);
