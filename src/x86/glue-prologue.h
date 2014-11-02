@@ -54,7 +54,8 @@ E(func)                 addLQ   SN(pointer),EffectiveAddr_X; \
                         cmpl    $0,SN(pointer); \
                         jz      1f; \
                         movb    %al,(EffectiveAddr_X); \
-1:                      ret;
+1:                      subLQ   SN(pointer),EffectiveAddr_X; \
+                        ret;
 
 
 #ifdef __LP64__
