@@ -461,6 +461,14 @@ void c_initialize_apple_ii_memory()
         apple_ii_64k[1][i] = 0;
     }
 
+    // Stripe words of main memory on machine reset ...
+    // NOTE: cracked version of J---- will lock up without this
+    for (i = 0; i < 0xC000;) {
+        apple_ii_64k[0][i++] = 0xFF;
+        apple_ii_64k[0][i++] = 0xFF;
+        i += 2;
+    }
+
     for (i = 0; i < 8192; i++)
     {
         language_card[0][i] = language_card[1][i] = 0;
