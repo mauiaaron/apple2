@@ -101,8 +101,8 @@ TEST test_boot_disk_bytes() {
 
 // This test is fairly abusive ... it creates an ~88MB file in $HOME
 // ... but if it's correct, you're fairly assured the cpu/vm is working =)
-#define EXPECTED_CPU_TRACE_FILE_SIZE 86057107
-#define EXPECTED_CPU_TRACE_SHA "525098EDD23E4602791D0167DAE0FB65ACE33ABD"
+#define EXPECTED_CPU_TRACE_FILE_SIZE 86057401
+#define EXPECTED_CPU_TRACE_SHA "B6154D9DCC39EFD2AA69BEBF981E3024427F5240"
 TEST test_boot_disk_cputrace() {
     char *homedir = getenv("HOME");
     char *output = NULL;
@@ -122,6 +122,10 @@ TEST test_boot_disk_cputrace() {
         char mdstr[(SHA_DIGEST_LENGTH*2)+1];
 
         FILE *fp = fopen(output, "r");
+        fseek(fp, 0, SEEK_END);
+        long expectedSize = ftell(fp);
+        ASSERT(expectedSize == EXPECTED_CPU_TRACE_FILE_SIZE);
+        fseek(fp, 0, SEEK_SET);
         char *buf = malloc(EXPECTED_CPU_TRACE_FILE_SIZE);
         if (fread(buf, 1, EXPECTED_CPU_TRACE_FILE_SIZE, fp) != EXPECTED_CPU_TRACE_FILE_SIZE) {
             ASSERT(false);
