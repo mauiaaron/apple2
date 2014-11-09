@@ -24,12 +24,6 @@ pthread_mutex_t interface_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t ui_thread_cond = PTHREAD_COND_INITIALIZER;
 pthread_cond_t cpu_thread_cond = PTHREAD_COND_INITIALIZER;
 
-#ifdef LINUX_JOYSTICK
-#include <linux/joystick.h>
-extern int raw_js_x;
-extern int raw_js_y;
-#endif
-
 static int next_key = -1;
 static int last_scancode = -1;
 bool caps_lock = true; // default enabled because so much breaks otherwise
@@ -284,15 +278,9 @@ void c_keys_handle_input(int scancode, int pressed, int is_cooked)
         } while(0);
     }
 
-    // joystick processing
-
-    if (joy_mode == JOY_OFF)
-    {
-        joy_x = joy_y = 0xFF;
-    }
 #if defined(KEYPAD_JOYSTICK)
     // Keypad emulated joystick relies on "raw" keyboard input
-    else if (joy_mode == JOY_KPAD)
+    if (joy_mode == JOY_KPAD)
     {
         bool joy_axis_unpressed = !( key_pressed[SCODE_KPAD_U]  || key_pressed[SCODE_KPAD_D]  || key_pressed[SCODE_KPAD_L]  || key_pressed[SCODE_KPAD_R] ||
                                      key_pressed[SCODE_KPAD_UL] || key_pressed[SCODE_KPAD_DL] || key_pressed[SCODE_KPAD_UR] || key_pressed[SCODE_KPAD_DR] ||
@@ -365,51 +353,6 @@ void c_keys_handle_input(int scancode, int pressed, int is_cooked)
             {
                 joy_x = JOY_RANGE-1;
             }
-        }
-    }
-#endif
-
-#if defined(LINUX_JOYSTICK)
-    else if ((joy_mode == JOY_PCJOY) && !(js_fd < 0))
-    {
-        if (read(js_fd, &js, JS_RETURN) == -1)
-        {
-            // error
-        }
-
-        raw_js_x = js.x;
-        raw_js_y = js.y;
-
-        int x_val = (js.x < js_center_x)
-                ? (js.x - js_offset_x) * js_adjustlow_x
-                : (js.x - js_center_x) * js_adjusthigh_x + HALF_JOY_RANGE;
-
-        int y_val = (js.y < js_center_y)
-                ? (js.y - js_offset_y) * js_adjustlow_y
-                : (js.y - js_center_y) * js_adjusthigh_y + HALF_JOY_RANGE;
-
-        joy_y = (y_val > 0xff) ? 0xff : (y_val < 0) ? 0 : y_val;
-        joy_x = (x_val > 0xff) ? 0xff : (x_val < 0) ? 0 : x_val;
-
-/*      almost_x = (x_val > 0xff) ? 0xff : (x_val < 0) ? 0 : x_val; */
-/*      adj_x = (3-(joy_y/0x40)) + 10; */
-/*      turnpt_x = joy_y + adj_x; */
-/*      almost_x = (almost_x < turnpt_x) */
-/*          ? almost_x */
-/*          : (almost_x - turnpt_x) * adjusthigh_x; */
-
-/*      joy_x = (almost_x > 0xff) ? 0xff : (almost_x < 0) ? 0 : almost_x; */
-
-        /* sample buttons only if apple keys aren't pressed. keys get set to
-         * 0xff, and js buttons are set to 0x80. */
-        if (!(joy_button0 & 0x7f))
-        {
-            joy_button0 = (js.buttons & 0x01) ? 0x80 : 0x0;
-        }
-
-        if (!(joy_button1 & 0x7f))
-        {
-            joy_button1 = (js.buttons & 0x02) ? 0x80 : 0x0;
         }
     }
 #endif

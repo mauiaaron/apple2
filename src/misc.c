@@ -582,7 +582,7 @@ void c_initialize_vm() {
     c_initialize_sound_hooks();         /* sound system */
     c_init_6();                         /* drive ][, slot 6 */
     c_initialize_iie_switches();        /* set the //e softswitches */
-    c_initialize_joystick();            /* reset joystick buttons */
+    c_joystick_reset();                 /* reset joystick */
 }
 
 /* -------------------------------------------------------------------------

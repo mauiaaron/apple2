@@ -13,6 +13,7 @@
 
 #include "common.h"
 #include "video/glinput.h"
+#include <math.h>
 
 //----------------------------------------------------------------------------
 //
@@ -170,6 +171,37 @@ void gldriver_on_key_special_up(int key, int x, int y) {
     //LOG("onKeySpecialDown %08x(%d) -> %02X(%d)", key, key, scancode, scancode);
     c_keys_handle_input(scancode, 0, 0);
 }
+
+#define JOYSTICK_POLL_INTERVAL_MILLIS (ceilf(1000.f/60))
+
+static void gldriver_joystick_callback(unsigned int buttonMask, int x, int y, int z) {
+
+#ifdef KEYPAD_JOYSTICK
+    if (joy_mode == JOY_KPAD) {
+        return;
+    }
+#endif
+
+    // sample buttons only if apple keys aren't pressed. keys get set to 0xff, and js buttons are set to 0x80.
+    if (!(joy_button0 & 0x7f)) {
+        joy_button0 = (buttonMask & 0x01) ? 0x80 : 0x0;
+    }
+    if (!(joy_button1 & 0x7f)) {
+        joy_button1 = (buttonMask & 0x02) ? 0x80 : 0x0;
+    }
+
+    // normalize GLUT range
+    static const float normalizer = 256.f/2000.f;
+
+    joy_x = (uint16_t)((x+1000)*normalizer);
+    joy_y = (uint16_t)((y+1000)*normalizer);
+    if (joy_x > 0xFF) {
+        joy_x = 0xFF;
+    }
+    if (joy_y > 0xFF) {
+        joy_y = 0xFF;
+    }
+}
 #endif
 
 //----------------------------------------------------------------------------
@@ -197,4 +229,9 @@ void gldriver_mouse(int button, int state, int x, int y) {
     }
 }
 #endif
+
+void gldriver_joystick_reset(void) {
+    glutJoystickFunc(NULL, 0);
+    glutJoystickFunc(gldriver_joystick_callback, (int)JOYSTICK_POLL_INTERVAL_MILLIS);
+}
 

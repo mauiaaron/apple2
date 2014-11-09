@@ -20,12 +20,9 @@
 #include "common.h"
 
 typedef enum joystick_mode_t {
-    JOY_OFF = 0,
+    JOY_PCJOY = 0,
 #ifdef KEYPAD_JOYSTICK
     JOY_KPAD,
-#endif
-#ifdef LINUX_JOYSTICK
-    JOY_PCJOY,
 #endif
     NUM_JOYOPTS
 } joystick_mode_t;
@@ -59,16 +56,6 @@ extern a2_video_mode_t a2_video_mode;
 
 /* generic joystick settings */
 extern joystick_mode_t joy_mode;
-
-#ifdef LINUX_JOYSTICK
-/* real joystick settings */
-extern int js_center_x;
-extern int js_center_y;
-extern int js_max_x;
-extern int js_max_y;
-extern int js_min_x;
-extern int js_min_y;
-#endif /* LINUX_JOYSTICK */
 
 /* functions in prefs.c */
 extern void load_settings(void);

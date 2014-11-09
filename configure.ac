@@ -280,15 +280,6 @@ dnl Misc ...
 AC_DEFINE(APPLE2IX, 1, [Denotes a section of code as Apple//ix sourced, used with external sources])
 AC_DEFINE(KEYPAD_JOYSTICK, 1, [Joystick emulated on keyboard ... should not be true on mobile devices])
 
-dnl Joystick device
-AC_CHECK_HEADER(linux/joystick.h, [
-    AC_DEFINE(LINUX_JOYSTICK, 1, [Enable Linux joystick device])
-], [
-    AC_MSG_WARN([Could not find Linux PC Joystick/GamePad header...])
-    AC_MSG_WARN([Emulator will be built without Joystick device support, but this may diminish the experience!])
-])
-
-
 dnl ---------------------------------------------------------------------------
 
 AC_CONFIG_FILES([Makefile])

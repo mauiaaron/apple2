@@ -101,8 +101,8 @@ testcpu_SOURCES = src/test/testcpu.c $(A2_TEST_SOURCES) $(META_SRC)
 testcpu_CFLAGS = $(apple2ix_CFLAGS) $(A2_TEST_CFLAGS) -UAUDIO_ENABLED -UINTERFACE_CLASSIC -DHEADLESS=1
 testcpu_CCASFLAGS = $(testcpu_CFLAGS)
 testcpu_LDFLAGS = $(apple2ix_LDFLAGS)
-testcpu_LDADD = @ASM_O@
-testcpu_DEPENDENCIES = @ASM_O@ @META_O@
+testcpu_LDADD = @ASM_O@ @VIDEO_O@
+testcpu_DEPENDENCIES = @ASM_O@ @META_O@ @VIDEO_O@
 
 EXTRA_testcpu_SOURCES = $(ASM_SRC_x86)
 

@@ -823,8 +823,7 @@ void c_interface_parameters()
 #endif
 
             case OPT_JOYSTICK:
-                snprintf(temp, TEMPSIZE, "%s", (joy_mode == JOY_KPAD) ? "Emulated on Keypad" :
-                        (joy_mode == JOY_PCJOY) ? "PC Joystick      " : "Off              ");
+                snprintf(temp, TEMPSIZE, "%s", (joy_mode == JOY_KPAD) ? "Emulated on Keypad" : "PC Joystick      ");
                 break;
 
             case OPT_VOLUME:
@@ -1021,11 +1020,6 @@ void c_interface_parameters()
                 break;
 
             case OPT_JOYSTICK:
-                if (joy_mode == JOY_PCJOY)
-                {
-                    c_close_joystick();
-                }
-
                 if (joy_mode == 0)
                 {
                     joy_mode = NUM_JOYOPTS-1;
@@ -1033,11 +1027,6 @@ void c_interface_parameters()
                 else
                 {
                     --joy_mode;
-                }
-
-                if (joy_mode == JOY_PCJOY)
-                {
-                    c_open_joystick();
                 }
                 break;
 
@@ -1128,11 +1117,6 @@ void c_interface_parameters()
                 break;
 
             case OPT_JOYSTICK:
-                if (joy_mode == JOY_PCJOY)
-                {
-                    c_close_joystick();
-                }
-
                 if (joy_mode == NUM_JOYOPTS-1)
                 {
                     joy_mode = 0;
@@ -1140,11 +1124,6 @@ void c_interface_parameters()
                 else
                 {
                     ++joy_mode;
-                }
-
-                if (joy_mode == JOY_PCJOY)
-                {
-                    c_open_joystick();
                 }
                 break;
 
@@ -1252,12 +1231,10 @@ void c_interface_parameters()
             /* calibrate joystick */
             if ((ch == 13) && (option == OPT_CALIBRATE))
             {
-                c_close_joystick();
-                c_open_joystick();
+                c_joystick_reset();
                 c_calibrate_joystick();
                 c_interface_print_screen( screen );
             }
-
 
 #define QUIT_SUBMENU_H 10
 #define QUIT_SUBMENU_W 40
@@ -1294,7 +1271,6 @@ void c_interface_parameters()
                         c_interface_print_screen( screen );
                         c_eject_6( 1 );
                         c_interface_print_screen( screen );
-                        c_close_joystick();
 #ifdef __linux__
                         LOG("Back to Linux, w00t!\n");
 #endif

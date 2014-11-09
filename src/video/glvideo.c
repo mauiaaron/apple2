@@ -581,7 +581,6 @@ static void gldriver_shutdown(void) {
 //
 #if USE_GLUT
 static void gldriver_update(void) {
-    // HACK MAYBE FIXME : pumps the joystick sampling code that is currently integrated into the keys routine
     c_keys_handle_input(-1, 0, 0);
     glutPostRedisplay();
 }
