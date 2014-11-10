@@ -110,9 +110,9 @@
     color_mode = (color_mode_t)mode;
     
     mode = [defaults integerForKey:kApple2JoystickConfig];
-    if (! ((mode >= JOY_OFF) && (mode < NUM_JOYOPTS)) )
+    if (! ((mode >= JOY_PCJOY) && (mode < NUM_JOYOPTS)) )
     {
-        mode = JOY_OFF;
+        mode = JOY_PCJOY;
     }
     joy_mode = (joystick_mode_t)mode;
     [self.joystickChoice selectItemAtIndex:mode];
@@ -204,9 +204,9 @@
 - (IBAction)joystickChoiceChanged:(id)sender
 {
     NSInteger mode = [self.joystickChoice indexOfSelectedItem];
-    if (! ((mode >= JOY_OFF) && (mode < NUM_JOYOPTS)) )
+    if (! ((mode >= JOY_PCJOY) && (mode < NUM_JOYOPTS)) )
     {
-        mode = JOY_OFF;
+        mode = JOY_PCJOY;
     }
     joy_mode = (joystick_mode_t)mode;
     [self _savePrefs];

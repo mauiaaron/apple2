@@ -576,19 +576,6 @@ DQ
                                         <customView id="OWJ-x7-P0q">
                                             <rect key="frame" x="259" y="37" width="200" height="200"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                            <subviews>
-                                                <button verticalHuggingPriority="750" id="qrP-3M-EgH">
-                                                    <rect key="frame" x="46" y="83" width="109" height="32"/>
-                                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                                    <buttonCell key="cell" type="push" title="Calibrate..." bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="Zhp-bX-Quw">
-                                                        <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                                                        <font key="font" metaFont="system"/>
-                                                    </buttonCell>
-                                                    <connections>
-                                                        <action selector="calibrateJoystick:" target="mUW-Rh-bL1" id="zBh-I8-o6E"/>
-                                                    </connections>
-                                                </button>
-                                            </subviews>
                                         </customView>
                                         <popUpButton verticalHuggingPriority="750" id="gBd-cR-p7O">
                                             <rect key="frame" x="15" y="213" width="218" height="26"/>
@@ -598,13 +585,12 @@ DQ
                                                 <font key="font" metaFont="menu"/>
                                                 <menu key="menu" id="hWa-Gt-x3s">
                                                     <items>
-                                                        <menuItem title="Joystick Off" id="T86-gP-P52">
+                                                        <menuItem title="Mac Joystick/Gamepad" id="T86-gP-P52">
                                                             <modifierMask key="keyEquivalentModifierMask"/>
                                                         </menuItem>
                                                         <menuItem title="Keypad Emulation" id="fm9-GS-v01">
                                                             <modifierMask key="keyEquivalentModifierMask"/>
                                                         </menuItem>
-                                                        <menuItem title="Mac Joystick/Gamepad" id="rYd-Zm-Btm"/>
                                                     </items>
                                                 </menu>
                                             </popUpButtonCell>
@@ -694,6 +680,17 @@ DQ
                                                 <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                             </textFieldCell>
                                         </textField>
+                                        <button verticalHuggingPriority="750" id="qrP-3M-EgH">
+                                            <rect key="frame" x="69" y="110" width="109" height="32"/>
+                                            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                            <buttonCell key="cell" type="push" title="Calibrate..." bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="Zhp-bX-Quw">
+                                                <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                                <font key="font" metaFont="system"/>
+                                            </buttonCell>
+                                            <connections>
+                                                <action selector="calibrateJoystick:" target="mUW-Rh-bL1" id="zBh-I8-o6E"/>
+                                            </connections>
+                                        </button>
                                     </subviews>
                                 </view>
                             </tabViewItem>
@@ -701,7 +698,7 @@ DQ
                     </tabView>
                 </subviews>
             </view>
-            <point key="canvasLocation" x="-349" y="-891"/>
+            <point key="canvasLocation" x="-328" y="-1027"/>
         </window>
         <customObject id="mUW-Rh-bL1" customClass="EmulatorPrefsController">
             <connections>

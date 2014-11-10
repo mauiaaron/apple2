@@ -170,6 +170,8 @@
 		779F568D19EB0B9100A6F107 /* Basic.fsh in Resources */ = {isa = PBXBuildFile; fileRef = 779F562819E4FE9E00A6F107 /* Basic.fsh */; };
 		779F569319EB0D1E00A6F107 /* testdisplay.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D7F19568A570085CE5F /* testdisplay.c */; };
 		779F569419EB10A100A6F107 /* testdisplay1.dsk.gz in Resources */ = {isa = PBXBuildFile; fileRef = 4ADC523719E8D3F600186B36 /* testdisplay1.dsk.gz */; };
+		77C279701A1047DD000FE33F /* DDHidLib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 77C2796F1A1047AF000FE33F /* DDHidLib.framework */; };
+		77C279751A1048B4000FE33F /* EmulatorJoystickController.m in Sources */ = {isa = PBXBuildFile; fileRef = 77C279741A1048B4000FE33F /* EmulatorJoystickController.m */; };
 		77E1C0B319D72700004344E0 /* vectorUtil.c in Sources */ = {isa = PBXBuildFile; fileRef = 77E1C0A919D72700004344E0 /* vectorUtil.c */; };
 		77E1C0B419D72700004344E0 /* sourceUtil.c in Sources */ = {isa = PBXBuildFile; fileRef = 77E1C0AB19D72700004344E0 /* sourceUtil.c */; };
 		77E1C0B519D72700004344E0 /* modelUtil.c in Sources */ = {isa = PBXBuildFile; fileRef = 77E1C0AD19D72700004344E0 /* modelUtil.c */; };
@@ -179,6 +181,44 @@
 		77E1C0C519D7298F004344E0 /* EmulatorGLView.m in Sources */ = {isa = PBXBuildFile; fileRef = 77E1C0C019D7298F004344E0 /* EmulatorGLView.m */; };
 		77E1C0C619D7298F004344E0 /* EmulatorFullscreenWindow.m in Sources */ = {isa = PBXBuildFile; fileRef = 77E1C0C219D7298F004344E0 /* EmulatorFullscreenWindow.m */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		77C279681A1047AF000FE33F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 77C279601A1047AE000FE33F /* DDHidLib.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 8D1107320486CEB800E47090;
+			remoteInfo = HIDBrowser;
+		};
+		77C2796A1A1047AF000FE33F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 77C279601A1047AE000FE33F /* DDHidLib.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 559CBAE10B5B313000C8FD74;
+			remoteInfo = HIDDeviceTest;
+		};
+		77C2796C1A1047AF000FE33F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 77C279601A1047AE000FE33F /* DDHidLib.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 559CBBCC0B5B336600C8FD74;
+			remoteInfo = ddhid;
+		};
+		77C2796E1A1047AF000FE33F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 77C279601A1047AE000FE33F /* DDHidLib.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 55193E500B93F2EE004C0C98;
+			remoteInfo = DDHidLib;
+		};
+		77C279711A1047E7000FE33F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 77C279601A1047AE000FE33F /* DDHidLib.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 55193E4F0B93F2EE004C0C98;
+			remoteInfo = DDHidLib;
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		4A2636F819FDEDB700DBFB00 /* Apple2Mac.help */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Apple2Mac.help; sourceTree = "<group>"; };
@@ -208,7 +248,6 @@
 		773B3D1F1956885A0085CE5F /* en */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = en; path = en.lproj/Credits.rtf; sourceTree = "<group>"; };
 		773B3D251956885A0085CE5F /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/MainMenu.xib; sourceTree = "<group>"; };
 		773B3D271956885A0085CE5F /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
-		773B3D2E1956885A0085CE5F /* XCTest.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XCTest.framework; path = Library/Frameworks/XCTest.framework; sourceTree = DEVELOPER_DIR; };
 		773B3D371956885A0085CE5F /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		773B3D4719568A570085CE5F /* apple2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = apple2.h; sourceTree = "<group>"; };
 		773B3D5C19568A570085CE5F /* common.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = common.h; sourceTree = "<group>"; };
@@ -283,6 +322,9 @@
 		779F565F19EAF6D000A6F107 /* OpenAL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenAL.framework; path = System/Library/Frameworks/OpenAL.framework; sourceTree = SDKROOT; };
 		779F569119EB0B9100A6F107 /* Apple2MacTestDisplay.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Apple2MacTestDisplay.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		779F569219EB0B9100A6F107 /* Apple2MacTestDisplay-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "Apple2MacTestDisplay-Info.plist"; path = "/Users/aaronculliney/Documents/00web/apple2/Apple2Mac/Apple2MacTests/Apple2MacTestDisplay-Info.plist"; sourceTree = "<absolute>"; };
+		77C279601A1047AE000FE33F /* DDHidLib.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = DDHidLib.xcodeproj; path = DDHidLib/DDHidLib.xcodeproj; sourceTree = "<group>"; };
+		77C279731A1048B4000FE33F /* EmulatorJoystickController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = EmulatorJoystickController.h; path = Classes/OSX/EmulatorJoystickController.h; sourceTree = "<group>"; };
+		77C279741A1048B4000FE33F /* EmulatorJoystickController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = EmulatorJoystickController.m; path = Classes/OSX/EmulatorJoystickController.m; sourceTree = "<group>"; };
 		77E1C0A819D72700004344E0 /* vectorUtil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vectorUtil.h; path = video_util/vectorUtil.h; sourceTree = "<group>"; };
 		77E1C0A919D72700004344E0 /* vectorUtil.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = vectorUtil.c; path = video_util/vectorUtil.c; sourceTree = "<group>"; };
 		77E1C0AA19D72700004344E0 /* sourceUtil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sourceUtil.h; path = video_util/sourceUtil.h; sourceTree = "<group>"; };
@@ -318,6 +360,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				77C279701A1047DD000FE33F /* DDHidLib.framework in Frameworks */,
 				773B3DCB1956903D0085CE5F /* libz.1.1.3.dylib in Frameworks */,
 				773B3D101956885A0085CE5F /* Cocoa.framework in Frameworks */,
 			);
@@ -386,10 +429,10 @@
 		773B3D0E1956885A0085CE5F /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				77C279601A1047AE000FE33F /* DDHidLib.xcodeproj */,
 				779F565F19EAF6D000A6F107 /* OpenAL.framework */,
 				773B3DCA1956903D0085CE5F /* libz.1.1.3.dylib */,
 				773B3D0F1956885A0085CE5F /* Cocoa.framework */,
-				773B3D2E1956885A0085CE5F /* XCTest.framework */,
 				773B3D111956885A0085CE5F /* Other Frameworks */,
 			);
 			name = Frameworks;
@@ -461,6 +504,8 @@
 				77E1C0C319D7298F004344E0 /* EmulatorFullscreenWindow.h */,
 				77E1C0C019D7298F004344E0 /* EmulatorGLView.m */,
 				77E1C0C119D7298F004344E0 /* EmulatorGLView.h */,
+				77C279731A1048B4000FE33F /* EmulatorJoystickController.h */,
+				77C279741A1048B4000FE33F /* EmulatorJoystickController.m */,
 				773BC91719F2FD4500996893 /* EmulatorPrefsController.h */,
 				773BC91819F2FD4500996893 /* EmulatorPrefsController.m */,
 				77E1C0BE19D7298F004344E0 /* EmulatorWindowController.m */,
@@ -593,6 +638,17 @@
 			path = audio;
 			sourceTree = "<group>";
 		};
+		77C279611A1047AE000FE33F /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				77C279691A1047AF000FE33F /* HIDBrowser.app */,
+				77C2796B1A1047AF000FE33F /* HIDDeviceTest.app */,
+				77C2796D1A1047AF000FE33F /* libddhid.a */,
+				77C2796F1A1047AF000FE33F /* DDHidLib.framework */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 		77E1C09E19D726B8004344E0 /* Shaders */ = {
 			isa = PBXGroup;
 			children = (
@@ -653,6 +709,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				77C279721A1047E7000FE33F /* PBXTargetDependency */,
 			);
 			name = Apple2Mac;
 			productName = Apple2Mac;
@@ -717,6 +774,12 @@
 			mainGroup = 773B3D03195688590085CE5F;
 			productRefGroup = 773B3D0D1956885A0085CE5F /* Products */;
 			projectDirPath = "";
+			projectReferences = (
+				{
+					ProductGroup = 77C279611A1047AE000FE33F /* Products */;
+					ProjectRef = 77C279601A1047AE000FE33F /* DDHidLib.xcodeproj */;
+				},
+			);
 			projectRoot = "";
 			targets = (
 				773B3D0B195688590085CE5F /* Apple2Mac */,
@@ -726,6 +789,37 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXReferenceProxy section */
+		77C279691A1047AF000FE33F /* HIDBrowser.app */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.application;
+			path = HIDBrowser.app;
+			remoteRef = 77C279681A1047AF000FE33F /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		77C2796B1A1047AF000FE33F /* HIDDeviceTest.app */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.application;
+			path = HIDDeviceTest.app;
+			remoteRef = 77C2796A1A1047AF000FE33F /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		77C2796D1A1047AF000FE33F /* libddhid.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libddhid.a;
+			remoteRef = 77C2796C1A1047AF000FE33F /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		77C2796F1A1047AF000FE33F /* DDHidLib.framework */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.framework;
+			path = DDHidLib.framework;
+			remoteRef = 77C2796E1A1047AF000FE33F /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+/* End PBXReferenceProxy section */
 
 /* Begin PBXResourcesBuildPhase section */
 		4ADC521D19E8CA4500186B36 /* Resources */ = {
@@ -984,6 +1078,7 @@
 				773BC91919F2FD4500996893 /* EmulatorPrefsController.m in Sources */,
 				773B3DA519568A570085CE5F /* font.c in Sources */,
 				773B3DA019568A570085CE5F /* cpu-supp.c in Sources */,
+				77C279751A1048B4000FE33F /* EmulatorJoystickController.m in Sources */,
 				779F561C19D7929100A6F107 /* glvideo.c in Sources */,
 				779F565A19EAF66E00A6F107 /* mockingboard.c in Sources */,
 				77E1C0B419D72700004344E0 /* sourceUtil.c in Sources */,
@@ -1064,6 +1159,14 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		77C279721A1047E7000FE33F /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = DDHidLib;
+			targetProxy = 77C279711A1047E7000FE33F /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
 		4ADC51C919E8BEB700186B36 /* MainMenu-Test.xib */ = {
