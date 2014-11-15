@@ -21,7 +21,7 @@
 #define NIB_SIZE 232960
 #define DSK_SIZE 143360
 
-#ifdef TESTING
+#if DISK_TRACING
 static FILE *test_read_fp = NULL;
 static FILE *test_write_fp = NULL;
 #endif
@@ -114,7 +114,7 @@ void c_init_6(void) {
 #endif
 }
 
-#ifdef TESTING
+#if DISK_TRACING
 void c_begin_disk_trace_6(const char *read_file, const char *write_file) {
     if (read_file) {
         test_read_fp = fopen(read_file, "w");
@@ -134,6 +134,14 @@ void c_end_disk_trace_6(void) {
         fflush(test_write_fp);
         fclose(test_write_fp);
         test_write_fp = NULL;
+    }
+}
+
+void c_toggle_disk_trace_6(const char *read_file, const char *write_file) {
+    if (test_read_fp) {
+        c_end_disk_trace_6();
+    } else {
+        c_begin_disk_trace_6(read_file, write_file);
     }
 }
 #endif
@@ -260,9 +268,9 @@ unsigned char c_read_nibblized_6_6(void) {
         fseek(disk6.disk[disk6.drive].fp, -2 * PHASE_BYTES, SEEK_CUR);
     }
 
-#ifdef TESTING
+#if DISK_TRACING
     if (test_read_fp) {
-        fputc(ch, test_read_fp);
+        fprintf(test_read_fp, "%02X", ch);
         fflush(test_read_fp);
     }
 #endif
@@ -367,6 +375,11 @@ unsigned char c_read_normal_6(void) {
             /* Set file position variable */
             disk6.disk[disk6.drive].file_pos = 256 * 16 * (disk6.disk[disk6.drive].phase >> 1) +
                                                256 * skew_table_6[ disk6.disk[disk6.drive].sector ];
+#if DISK_TRACING
+            if (test_read_fp) {
+                fprintf(test_read_fp,  "\nTRK:%02X SECTOR:%02X SKEW:%02X (FILE_POS:%d)\n", disk6.disk[disk6.drive].phase, disk6.disk[disk6.drive].sector, skew_table_6[ disk6.disk[disk6.drive].sector ], disk6.disk[disk6.drive].file_pos);
+            }
+#endif
 
             /* File large enough? */
             if (disk6.disk[disk6.drive].file_pos + 255 > disk6.disk[disk6.drive].file_size) {
@@ -427,9 +440,9 @@ unsigned char c_read_normal_6(void) {
         disk6.disk[disk6.drive].run_byte = 0;
     }
 
-#ifdef TESTING
+#if DISK_TRACING
     if (test_read_fp) {
-        fputc(value, test_read_fp);
+        fprintf(test_read_fp, "%02X", value);
         fflush(test_read_fp);
     }
 #endif
@@ -451,9 +464,9 @@ void c_write_nibblized_6_6(void) {
 
     fputc(disk6.disk_byte, disk6.disk[disk6.drive].fp);
 
-#ifdef TESTING
+#if DISK_TRACING
     if (test_write_fp) {
-        fputc(disk6.disk_byte, test_write_fp);
+        fprintf(test_read_fp, "%02X", disk6.disk_byte);
         fflush(test_write_fp);
     }
 #endif
@@ -565,9 +578,12 @@ void c_write_normal_6(void) {
 
             /* Write sector */
             fwrite(disk6.disk_data, 1, 256, disk6.disk[disk6.drive].fp);
-#ifdef TESTING
+#if DISK_TRACING
             if (test_write_fp) {
-                fwrite(disk6.disk_data, 1, 256, test_write_fp);
+                fprintf(test_write_fp, "\nTRK:%02X SECTOR:%02X SKEW:%02X (FILE_POS:%d)\n", disk6.disk[disk6.drive].phase, disk6.disk[disk6.drive].sector, skew_table_6[ disk6.disk[disk6.drive].sector ], disk6.disk[disk6.drive].file_pos);
+                for (unsigned int i=0; i<256; i++) {
+                    fprintf(test_write_fp, "%02X", disk6.disk_data[i]);
+                }
                 fflush(test_write_fp);
             }
 #endif

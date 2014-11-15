@@ -861,6 +861,17 @@ ADDRS	[0-9a-fA-F]+
 #endif
 }
 
+{BOS}diskt?r?a?c?e?{EOS} {
+#if DISK_TRACING
+    char *buf = NULL;
+    asprintf(&buf, "%s/%s", getenv("HOME"), "disktrace.txt");
+    c_toggle_disk_trace_6(buf, NULL);
+    free(buf);
+#else
+    LOG("CPU tracing not enabled...");
+#endif
+}
+
 {BOS}la?n?g?{EOS} {
     /* display language card settings */
     show_lc_info();

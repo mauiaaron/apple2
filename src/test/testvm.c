@@ -60,12 +60,12 @@ static void sha1_to_str(const uint8_t * const md, char *buf) {
 // ----------------------------------------------------------------------------
 // VM TESTS ...
 
-#define EXPECTED_DISK_TRACE_FILE_SIZE 60961
-#define EXPECTED_DISK_TRACE_SHA "D21CC686571ADE868A909B5A7044A973DE70DFFB"
+#define EXPECTED_DISK_TRACE_FILE_SIZE 128794
+#define EXPECTED_DISK_TRACE_SHA "7CEBB3690E66605E558D98D9041C29AE10C92D42"
 TEST test_boot_disk_bytes() {
     char *homedir = getenv("HOME");
     char *disk = NULL;
-    asprintf(&disk, "%s/a2_read_disk_test.raw", homedir);
+    asprintf(&disk, "%s/a2_read_disk_test.txt", homedir);
     if (disk) {
         unlink(disk);
         c_begin_disk_trace_6(disk, NULL);
