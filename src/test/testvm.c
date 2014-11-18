@@ -99,10 +99,10 @@ TEST test_boot_disk_bytes() {
     PASS();
 }
 
-// This test is fairly abusive ... it creates an ~88MB file in $HOME
+// This test is fairly abusive ... it creates an ~90MB file in $HOME
 // ... but if it's correct, you're fairly assured the cpu/vm is working =)
-#define EXPECTED_CPU_TRACE_FILE_SIZE 86057401
-#define EXPECTED_CPU_TRACE_SHA "B6154D9DCC39EFD2AA69BEBF981E3024427F5240"
+#define EXPECTED_CPU_TRACE_FILE_SIZE 89130253
+#define EXPECTED_CPU_TRACE_SHA "2A86C5298CACBB1A894E91D41AA3061542286104"
 TEST test_boot_disk_cputrace() {
     char *homedir = getenv("HOME");
     char *output = NULL;

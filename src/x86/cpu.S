@@ -193,8 +193,16 @@
 
 /* Immediate Addressing - the operand is contained in the second byte of the
    instruction. */
-#define GetImm  movLQ   PC_Reg_X, EffectiveAddr_X; \
+#define _GetImm movLQ   PC_Reg_X, EffectiveAddr_X; \
                 incw    PC_Reg;
+#if CPU_TRACING
+#define GetImm  _GetImm \
+                SNX_PROLOGUE(cpu65_vmem_r); \
+                callLQ  *SNX(cpu65_vmem_r,EffectiveAddr_X,SZ_PTR); \
+                TRACE_ARG;
+#else
+#define GetImm _GetImm
+#endif
 
 /* Absolute Addressing - the second byte of the instruction is the low
    order address, and the third byte is the high order byte. */

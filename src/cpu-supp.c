@@ -710,9 +710,6 @@ GLUE_C_WRITE(cpu65_trace_arg2)
 
 GLUE_C_WRITE(cpu65_trace_epilogue)
 {
-    char fmt[64];
-    char buf[64];
-
     int8_t arg1 = opargs[1];
     int8_t arg2 = opargs[2];
 
@@ -722,50 +719,38 @@ GLUE_C_WRITE(cpu65_trace_epilogue)
 
     assert(nargs > 0);
     assert(nargs <= 3);
+    if (nargs != opcodes_65c02_numargs[cpu65_opcode]+1) {
+        assert(false && "OOPS, most likely some cpu.S routine is not properly setting the arg value");
+    }
 
-#warning FIXME TODO ... need to refactor this and the debugger routines to use the same codepaths ...
     switch (opcodes_65c02[cpu65_opcode].mode) {
         case addr_implied:
-        case addr_accumulator:                  /* no arg */
-            sprintf(buf, "%04X:%02X %s %s", current_pc, cpu65_opcode, opcodes_65c02[cpu65_opcode].mnemonic, disasm_templates[opcodes_65c02[cpu65_opcode].mode]);
+        case addr_accumulator:
+            fprintf(cpu_trace_fp, "%04X:%02X    ", current_pc, cpu65_opcode);
             break;
-
         case addr_immediate:
         case addr_zeropage:
         case addr_zeropage_x:
         case addr_zeropage_y:
         case addr_indirect:
         case addr_indirect_x:
-        case addr_indirect_y:                   /* byte arg */
-            sprintf(fmt, "%04X:%02X%02X %s %s", current_pc, cpu65_opcode, (uint8_t)arg1, opcodes_65c02[cpu65_opcode].mnemonic, disasm_templates[opcodes_65c02[cpu65_opcode].mode]);
-            sprintf(buf, fmt, (uint8_t)arg1);
+        case addr_indirect_y:
+        case addr_relative:
+            fprintf(cpu_trace_fp, "%04X:%02X%02X  ", current_pc, cpu65_opcode, (uint8_t)arg1);
             break;
-
         case addr_absolute:
         case addr_absolute_x:
         case addr_absolute_y:
         case addr_j_indirect:
-        case addr_j_indirect_x:                 /* word arg */
-            sprintf(fmt, "%04X:%02X%02X%02X %s %s", current_pc, cpu65_opcode, (uint8_t)arg2, (uint8_t)arg1, opcodes_65c02[cpu65_opcode].mnemonic, disasm_templates[opcodes_65c02[cpu65_opcode].mode]);
-            sprintf(buf, fmt, (uint8_t)arg1, (uint8_t)arg2);
+        case addr_j_indirect_x:
+            fprintf(cpu_trace_fp, "%04X:%02X%02X%02X", current_pc, cpu65_opcode, (uint8_t)arg2, (uint8_t)arg1);
             break;
-
-        case addr_relative:                     /* offset */
-            sprintf(fmt, "%04X:%02X%02X %s %s", current_pc, cpu65_opcode, (uint8_t)arg1, opcodes_65c02[cpu65_opcode].mnemonic, disasm_templates[opcodes_65c02[cpu65_opcode].mode]);
-            if (arg1 < 0) {
-                sprintf(buf, fmt, current_pc + arg1 + 2, '-', (uint8_t)(-arg1));
-            } else {
-                sprintf(buf, fmt, current_pc + arg1 + 2, '+', (uint8_t)arg1);
-            }
-            break;
-
-        default:                                /* shouldn't happen */
-            sprintf(buf, "invalid opcode mode");
+        default:
+            fprintf(cpu_trace_fp, "invalid opcode mode");
             break;
     }
 
-    char regs_buf[64];
-    sprintf(regs_buf, "EA:%04X SP:%02X X:%02X Y:%02X A:%02X", cpu65_ea, cpu65_sp, cpu65_x, cpu65_y, cpu65_a);
+    fprintf(cpu_trace_fp, " SP:%02X X:%02X Y:%02X A:%02X", cpu65_sp, cpu65_x, cpu65_y, cpu65_a);
 
 #define FLAGS_BUFSZ 9
     char flags_buf[FLAGS_BUFSZ];
@@ -796,7 +781,44 @@ GLUE_C_WRITE(cpu65_trace_epilogue)
     }
     flags_buf[8] = '\0';
 
-    fprintf(cpu_trace_fp, "%s %s %s\n", buf, regs_buf, flags_buf);
+    fprintf(cpu_trace_fp, " %s EA:%04X", flags_buf, cpu65_ea);
+
+    char fmt[64];
+    sprintf(fmt, " %s %s", opcodes_65c02[cpu65_opcode].mnemonic, disasm_templates[opcodes_65c02[cpu65_opcode].mode]);
+
+    switch (opcodes_65c02[cpu65_opcode].mode) {
+        case addr_implied:
+        case addr_accumulator:
+            fprintf(cpu_trace_fp, "%s", fmt);
+            break;
+        case addr_immediate:
+        case addr_zeropage:
+        case addr_zeropage_x:
+        case addr_zeropage_y:
+        case addr_indirect:
+        case addr_indirect_x:
+        case addr_indirect_y:
+            fprintf(cpu_trace_fp, fmt, (uint8_t)arg1);
+            break;
+        case addr_absolute:
+        case addr_absolute_x:
+        case addr_absolute_y:
+        case addr_j_indirect:
+        case addr_j_indirect_x:
+            fprintf(cpu_trace_fp, fmt, (uint8_t)arg1, (uint8_t)arg2);
+            break;
+        case addr_relative:
+            if (arg1 < 0) {
+                fprintf(cpu_trace_fp, fmt, current_pc + arg1 + 2, '-', (uint8_t)(-arg1));
+            } else {
+                fprintf(cpu_trace_fp, fmt, current_pc + arg1 + 2, '+', (uint8_t)arg1);
+            }
+            break;
+        default:
+            break;
+    }
+
+    fprintf(cpu_trace_fp, "%s", "\n");
     fflush(cpu_trace_fp);
 }
 

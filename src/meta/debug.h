@@ -96,5 +96,6 @@ extern const struct opcode_struct opcodes_6502[256];
 extern const struct opcode_struct opcodes_65c02[256];
 extern const struct opcode_struct opcodes_undoc[256];
 extern const char* const disasm_templates[15];
+extern const uint8_t opcodes_65c02_numargs[256];
 
 #endif
