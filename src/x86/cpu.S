@@ -913,7 +913,7 @@ E(op_BRK)
 #endif
                 Push(%al)
                 orb     $(B_Flag|X_Flag), F_Reg
-                xorw    %ax, %ax 
+                xorw    %ax, %ax
                 movb    F_Reg, %al
                 SNX_PROLOGUE(cpu65_flags_encode)
                 movb    SNX(cpu65_flags_encode,_XAX,1), %al
@@ -1249,10 +1249,7 @@ E(op_JMP_abs)
                 Continue
 
 E(op_JMP_ind) // 0x6c
-                GetFromPC_B
-                xchgb   %al, %ah
-                GetFromPC_B
-                xchgb   %al, %ah
+                GetFromPC_W
                 cmpb    $0xFF, %al
                 je      jmp_special
                 GetFromMem_W(_XAX)
@@ -2252,10 +2249,14 @@ E(cpu65_run)
                 // Zero all used registers
                 xorLQ   _XAX, _XAX
                 xorLQ   XY_Reg_X, XY_Reg_X
+                movb    $0xFF, X_Reg
+                movb    $0xFF, Y_Reg
                 xorLQ   AF_Reg_X, AF_Reg_X
+                movb    $0xFF, A_Reg
+                orb     $(C_Flag|X_Flag|I_Flag|V_Flag|B_Flag|Z_Flag|N_Flag), F_Reg
                 xorLQ   PC_Reg_X, PC_Reg_X
                 xorLQ   EffectiveAddr_X, EffectiveAddr_X
-                movLQ   $0x1FF, SP_Reg_X
+                movLQ   $0x1FC, SP_Reg_X
                 jmp     ex_reset
 
 exit_cpu65_run:
