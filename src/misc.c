@@ -366,7 +366,12 @@ void c_initialize_tables() {
     cpu65_vmem_r[0xC07F] =
         iie_check_dhires;
 
-    /* DHIRES/Annunciator switches */
+    /* Annunciator */
+    for (i = 0xC058; i <= 0xC05D; i++) {
+        cpu65_vmem_w[i] = cpu65_vmem_r[i] = iie_annunciator_noop;
+    }
+
+    /* DHIRES */
     cpu65_vmem_w[0xC05E] =
         cpu65_vmem_r[0xC05E] =
             iie_dhires_on;

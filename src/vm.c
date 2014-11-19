@@ -265,6 +265,11 @@ GLUE_C_READ(iie_check_mixed)
     return (softswitches & SS_MIXED) ? 0x80 : 0x00;
 }
 
+GLUE_C_READ(iie_annunciator_noop)
+{
+    return 0x0;// TBD : mem_floating_bus()
+}
+
 GLUE_C_READ(iie_hires_off)
 {
     if (!(softswitches & SS_HIRES)) {
