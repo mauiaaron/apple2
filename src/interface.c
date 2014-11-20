@@ -1145,6 +1145,7 @@ void c_interface_parameters()
             timing_initialize();
             video_set(0);                       /* redo colors */
             c_initialize_sound_hooks();
+            c_joystick_reset();
             c_interface_exit(ch);
             return;
         }
@@ -1293,6 +1294,7 @@ void c_interface_parameters()
                     ch = toupper(ch);
                     if (ch == 'Y')
                     {
+                        c_joystick_reset();
                         cpu65_reboot();
                         c_interface_exit(ch);
                         return;
@@ -1581,7 +1583,6 @@ static void *interface_thread(void *current_key)
 #ifdef AUDIO_ENABLED
     SoundSystemUnpause();
 #endif
-    c_joystick_reset();
     pthread_mutex_unlock(&interface_mutex);
     in_interface = false;
 
