@@ -3342,7 +3342,6 @@ GREATEST_SUITE(test_suite_vm) {
     GREATEST_SET_SETUP_CB(testvm_setup, NULL);
     GREATEST_SET_TEARDOWN_CB(testvm_teardown, NULL);
 
-    extern uint8_t c_read_random(uint16_t);
     c_read_random(0x0);
     srandom(0); // force a known sequence
 

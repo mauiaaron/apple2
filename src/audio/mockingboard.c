@@ -1704,7 +1704,6 @@ WORD VideoGetScannerAddress(bool* pbVblBar_OUT, const DWORD uExecutedCycles)
 }
 */
 
-extern uint8_t c_read_random(uint16_t);
 static uint8_t MemReadFloatingBus(const unsigned long uExecutedCycles)
 {
     //return*(LPBYTE)(mem + VideoGetScannerAddress(NULL, uExecutedCycles));
