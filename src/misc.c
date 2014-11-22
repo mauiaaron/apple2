@@ -644,13 +644,12 @@ int main(int _argc, char **_argv) {
     argc = _argc;
     argv = _argv;
 
-    load_settings();                    /* user prefs */
-    c_initialize_firsttime();           /* init svga graphics and vm */
+    load_settings(); // user prefs
+    c_keys_set_key(kF8); // show credits before emulation start
+    c_initialize_firsttime(); // one-time initializations
 
     // spin off cpu thread
     pthread_create(&cpu_thread_id, NULL, (void *)&cpu_thread, (void *)NULL);
-
-    c_keys_set_key(kF8); // show credits
 
     video_main_loop();
 }
