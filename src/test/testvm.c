@@ -61,7 +61,7 @@ static void sha1_to_str(const uint8_t * const md, char *buf) {
 // VM TESTS ...
 
 #define EXPECTED_DISK_TRACE_FILE_SIZE 128794
-#define EXPECTED_DISK_TRACE_SHA "7CEBB3690E66605E558D98D9041C29AE10C92D42"
+#define EXPECTED_DISK_TRACE_SHA "43960E8F2A588D1C59DDBC1F2C9F6CCFE0725CE0"
 TEST test_boot_disk_bytes() {
     char *homedir = getenv("HOME");
     char *disk = NULL;
@@ -102,7 +102,7 @@ TEST test_boot_disk_bytes() {
 // This test is fairly abusive ... it creates an ~90MB file in $HOME
 // ... but if it's correct, you're fairly assured the cpu/vm is working =)
 #define EXPECTED_CPU_TRACE_FILE_SIZE 89130253
-#define EXPECTED_CPU_TRACE_SHA "B21C6A11C02D2D8C6FF8D7F8F5E85C95E64BC6FE"
+#define EXPECTED_CPU_TRACE_SHA "0E9D690959A26A34DC9456B141CB91A2BDF3798E"
 TEST test_boot_disk_cputrace() {
     char *homedir = getenv("HOME");
     char *output = NULL;
@@ -223,7 +223,6 @@ TEST test_clear_keyboard() {
 }
 
 TEST test_read_random() {
-    SKIPm("random numbers currently b0rken...");
 
     BOOT_TO_DOS();
 
@@ -234,7 +233,80 @@ TEST test_read_random() {
     c_debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
-    ASSERT(apple_ii_64k[0][TESTOUT_ADDR] == 0xFF);
+    ASSERT(apple_ii_64k[0][TESTOUT_ADDR] == 249);
+
+    apple_ii_64k[0][WATCHPOINT_ADDR] = 0x0;
+    test_common_setup();
+    test_type_input("RUN\r");
+    c_debugger_go();
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+    ASSERT(apple_ii_64k[0][TESTOUT_ADDR] == 26);
+
+    apple_ii_64k[0][WATCHPOINT_ADDR] = 0x0;
+    test_common_setup();
+    test_type_input("RUN\r");
+    c_debugger_go();
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+    ASSERT(apple_ii_64k[0][TESTOUT_ADDR] == 4);
+
+    apple_ii_64k[0][WATCHPOINT_ADDR] = 0x0;
+    test_common_setup();
+    test_type_input("RUN\r");
+    c_debugger_go();
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+    ASSERT(apple_ii_64k[0][TESTOUT_ADDR] == 199);
+
+    apple_ii_64k[0][WATCHPOINT_ADDR] = 0x0;
+    test_common_setup();
+    test_type_input("RUN\r");
+    c_debugger_go();
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+    ASSERT(apple_ii_64k[0][TESTOUT_ADDR] == 141);
+
+    PASS();
+}
+
+TEST test_read_random2() {
+
+    srandom(0); // force a known sequence
+    BOOT_TO_DOS();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
+    ASSERT(apple_ii_64k[0][TESTOUT_ADDR]    == 0x00);
+
+    test_type_input("RUN TESTRND2\r");
+    c_debugger_go();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+    ASSERT(apple_ii_64k[0][TESTOUT_ADDR] == 103);
+
+    apple_ii_64k[0][WATCHPOINT_ADDR] = 0x0;
+    test_common_setup();
+    test_type_input("RUN\r");
+    c_debugger_go();
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+    ASSERT(apple_ii_64k[0][TESTOUT_ADDR] == 198);
+
+    apple_ii_64k[0][WATCHPOINT_ADDR] = 0x0;
+    test_common_setup();
+    test_type_input("RUN\r");
+    c_debugger_go();
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+    ASSERT(apple_ii_64k[0][TESTOUT_ADDR] == 105);
+
+    apple_ii_64k[0][WATCHPOINT_ADDR] = 0x0;
+    test_common_setup();
+    test_type_input("RUN\r");
+    c_debugger_go();
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+    ASSERT(apple_ii_64k[0][TESTOUT_ADDR] == 115);
+
+    apple_ii_64k[0][WATCHPOINT_ADDR] = 0x0;
+    test_common_setup();
+    test_type_input("RUN\r");
+    c_debugger_go();
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+    ASSERT(apple_ii_64k[0][TESTOUT_ADDR] == 81);
 
     PASS();
 }
@@ -3363,6 +3435,7 @@ GREATEST_SUITE(test_suite_vm) {
     RUN_TESTp(test_clear_keyboard);
 
     RUN_TESTp(test_read_random);
+    RUN_TESTp(test_read_random2);
 
     RUN_TESTp(test_PAGE2_on,  /*80STORE*/0, /*HIRES*/0);
     RUN_TESTp(test_PAGE2_on,  /*80STORE*/0, /*HIRES*/1);
