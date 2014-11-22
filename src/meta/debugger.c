@@ -1160,6 +1160,7 @@ static int begin_cpu_stepping() {
         }
 
 #ifdef TESTING
+#warning FIXME TODO : this is mis-named now ... GLVideo pushes sync state so we don't need to force poll ... but we need this to type the testing strings ... should refactor to leverage a common codepath, preferablly using the 'typing' mechanism here...
         extern void testing_video_sync();
         testing_video_sync();
 #else

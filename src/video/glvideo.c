@@ -526,9 +526,8 @@ static void gldriver_init_common(void) {
     demoSource *vtxSource = _create_shader_source("Basic.vsh");
     demoSource *frgSource = _create_shader_source("Basic.fsh");
 
-    // Build Program
+    // Build/use Program
     program = _build_program(vtxSource, frgSource, /*withNormal:*/false, /*withTexcoord:*/true);
-    glUseProgram(program);
 
     srcDestroySource(vtxSource);
     srcDestroySource(frgSource);
@@ -560,7 +559,7 @@ static void gldriver_init_common(void) {
     GL_ERRLOG("finished initialization");
 
 #if !defined(__APPLE__)
-    glBindFramebuffer(GL_FRAMEBUFFER, defaultFBO);
+    //glBindFramebuffer(GL_FRAMEBUFFER, defaultFBO);
 #endif
     GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     if (status != GL_FRAMEBUFFER_COMPLETE) {
@@ -587,10 +586,6 @@ static void gldriver_update(void) {
 #endif
 
 static void gldriver_render(void) {
-    if (is_headless) {
-        return;
-    }
-
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 #if PERSPECTIVE
@@ -706,14 +701,14 @@ static void gldriver_init_glut(GLuint fbo) {
     glutIdleFunc(gldriver_update);
     glutDisplayFunc(gldriver_render);
     glutReshapeFunc(gldriver_reshape);
-    //glutMouseFunc(gldriver_mouse);
-    //glutMotionFunc(gldriver_mouse_drag);
 
 #if !defined(TESTING)
     glutKeyboardFunc(gldriver_on_key_down);
     glutKeyboardUpFunc(gldriver_on_key_up);
     glutSpecialFunc(gldriver_on_key_special_down);
     glutSpecialUpFunc(gldriver_on_key_special_up);
+    //glutMouseFunc(gldriver_mouse);
+    //glutMotionFunc(gldriver_mouse_drag);
 #endif
 }
 #endif
@@ -749,15 +744,7 @@ void video_driver_reshape(int w, int h) {
     gldriver_reshape(w, h);
 }
 
-void video_driver_sync(void) {
-    if (is_headless) {
-        return;
-    }
-#if USE_GLUT
-    glutPostRedisplay();
-#endif
-}
-
 void video_driver_shutdown(void) {
     gldriver_shutdown();
 }
+

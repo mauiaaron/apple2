@@ -3409,19 +3409,12 @@ TEST test_check_cxrom(bool flag_cxrom) {
 // ----------------------------------------------------------------------------
 // Test Suite
 
-GREATEST_SUITE(test_suite_vm) {
+static int begin_video = -1;
 
-    GREATEST_SET_SETUP_CB(testvm_setup, NULL);
-    GREATEST_SET_TEARDOWN_CB(testvm_teardown, NULL);
-
-    c_read_random(0x0);
-    srandom(0); // force a known sequence
-
-    test_common_init(/*cputhread*/true);
-
-    pthread_mutex_lock(&interface_mutex);
+static void *test_thread(void *dummyptr) {
 
     // TESTS --------------------------
+    begin_video=!is_headless;
 
     RUN_TESTp(test_boot_disk_bytes);
     RUN_TESTp(test_boot_disk_cputrace);
@@ -3603,6 +3596,33 @@ GREATEST_SUITE(test_suite_vm) {
     // ...
     c_eject_6(0);
     pthread_mutex_unlock(&interface_mutex);
+
+    GREATEST_MAIN_END();
+}
+
+GREATEST_SUITE(test_suite_vm) {
+
+    GREATEST_SET_SETUP_CB(testvm_setup, NULL);
+    GREATEST_SET_TEARDOWN_CB(testvm_teardown, NULL);
+
+    c_read_random(0x0);
+    srandom(0); // force a known sequence
+
+    pthread_mutex_lock(&interface_mutex);
+
+    test_common_init(/*cputhread*/true);
+
+    pthread_t p;
+    pthread_create(&p, NULL, (void *)&test_thread, (void *)NULL);
+
+    while (begin_video < 0) {
+        struct timespec ts = { .tv_sec=0, .tv_nsec=33333333 };
+        nanosleep(&ts, NULL);
+    }
+    if (begin_video) {
+        video_main_loop();
+    }
+    pthread_join(p, NULL);
 }
 
 SUITE(test_suite_vm);
@@ -3611,7 +3631,6 @@ GREATEST_MAIN_DEFS();
 int test_vm(int argc, char **argv) {
     GREATEST_MAIN_BEGIN();
     RUN_SUITE(test_suite_vm);
-    GREATEST_MAIN_END();
 }
 
 #if !defined(__APPLE__)

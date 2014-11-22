@@ -15,6 +15,8 @@
 #include "video/glinput.h"
 #include <math.h>
 
+#if !defined(TESTING)
+
 //----------------------------------------------------------------------------
 //
 // keyboard
@@ -142,7 +144,6 @@ static int _glutkey_to_scancode(int key) {
     return key;
 }
 
-#if !defined(TESTING)
 void gldriver_on_key_down(unsigned char key, int x, int y) {
     _capslock_hackaround();
     //LOG("onKeyDown %02x(%d)'%c'", key, key, key);
@@ -202,7 +203,6 @@ static void gldriver_joystick_callback(unsigned int buttonMask, int x, int y, in
         joy_y = 0xFF;
     }
 }
-#endif
 
 //----------------------------------------------------------------------------
 //
@@ -234,4 +234,6 @@ void gldriver_joystick_reset(void) {
     glutJoystickFunc(NULL, 0);
     glutJoystickFunc(gldriver_joystick_callback, (int)JOYSTICK_POLL_INTERVAL_MILLIS);
 }
+
+#endif // TESTING
 

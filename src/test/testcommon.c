@@ -60,19 +60,7 @@ void test_common_setup() {
 // ----------------------------------------------------------------------------
 // test video functions and stubs
 
-extern void video_driver_sync(void);
 void testing_video_sync() {
-
-#if !HEADLESS
-    if (!is_headless) {
-        clock_gettime(CLOCK_MONOTONIC, &ti);
-        struct timespec deltat = timespec_diff(t0, ti, NULL);
-        if (deltat.tv_sec || (deltat.tv_nsec >= NANOSECONDS/15) ) {
-            video_driver_sync();
-            ti = t0;
-        }
-    }
-#endif
 
     if (!input_length) {
         input_length = strlen(input_str);
@@ -108,7 +96,12 @@ void test_breakpoint(void *arg) {
     fprintf(GREATEST_STDOUT, "set breakpoint on test_breakpoint to check for problems...\n");
 #if !HEADLESS
     if (!is_headless) {
-        video_driver_sync();
+        fprintf(GREATEST_STDOUT, "DISPLAY NOTE: busy-spinning, needs gdb/lldb intervention to continue...\n");
+        static volatile bool debug_continue = false;
+        while (!debug_continue) {
+            struct timespec ts = { .tv_sec=0, .tv_nsec=33333333 };
+            nanosleep(&ts, NULL);
+        }
     }
 #endif
 }
@@ -136,7 +129,7 @@ void test_common_init(bool do_cputhread) {
         pthread_create(&cpu_thread_id, NULL, (void *) &cpu_thread, (void *)NULL);
         c_debugger_set_watchpoint(WATCHPOINT_ADDR);
         if (is_headless) {
-            c_debugger_set_timeout(5);
+            c_debugger_set_timeout(10);
         } else {
             fprintf(stderr, "NOTE : RUNNING WITH DISPLAY ... pass HEADLESS=1 to environment to run test in faster headless mode\n");
             c_debugger_set_timeout(0);
