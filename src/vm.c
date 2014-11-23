@@ -115,6 +115,11 @@
 
 #if VM_TRACING
 FILE *test_vm_fp = NULL;
+
+typedef struct vm_trace_range_t {
+    uint16_t lo;
+    uint16_t hi;
+} vm_trace_range_t;
 #endif
 
 GLUE_C_READ(ram_nop)
@@ -1044,16 +1049,16 @@ void debug_print_softwitches(void) {
 }
 
 #if VM_TRACING
-void vm_begin_trace(const char *vm_file) {
+void vm_trace_begin(const char *vm_file) {
     if (vm_file) {
         if (test_vm_fp) {
-            vm_end_trace();
+            vm_trace_end();
         }
         test_vm_fp = fopen(vm_file, "w");
     }
 }
 
-void vm_end_trace(void) {
+void vm_trace_end(void) {
     if (test_vm_fp) {
         fflush(test_vm_fp);
         fclose(test_vm_fp);
@@ -1061,12 +1066,23 @@ void vm_end_trace(void) {
     }
 }
 
-void vm_toggle_trace(const char *vm_file) {
+void vm_trace_toggle(const char *vm_file) {
     if (test_vm_fp) {
-        vm_end_trace();
+        vm_trace_end();
     } else {
-        vm_begin_trace(vm_file);
+        vm_trace_begin(vm_file);
     }
 }
+
+void vm_trace_ignore(vm_trace_range_t range) {
+    // TODO ...
+}
+
+bool vm_trace_is_ignored(uint16_t ea) {
+    if ((ea < 0xC000) || (ea > 0xCFFF)) {
+        return true;
+    }
+}
+
 #endif
 

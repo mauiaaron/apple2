@@ -26,11 +26,12 @@
 #define GLUE_C_WRITE(func) \
     void c__##func(uint16_t ea, uint8_t b); \
     void c_##func(uint16_t ea, uint8_t b) { \
-        extern FILE *test_vm_fp; \
-        if (test_vm_fp && ((ea >= 0xC000) && (ea < 0xD000)) ) { \
-            fprintf(test_vm_fp, "%04X w:%02X %s (%s:%d)\n", ea, b, __FUNCTION__, __FILE__, __LINE__); \
-        } \
         c__##func(ea, b); \
+        extern FILE *test_vm_fp; \
+        if (test_vm_fp && !vm_trace_is_ignored(ea)) { \
+            fprintf(test_vm_fp, "%04X w:%02X %s (%s:%d)\n", ea, b, __FUNCTION__, __FILE__, __LINE__); \
+            fflush(test_vm_fp); \
+        } \
     } \
     void c__##func(uint16_t ea, uint8_t b)
 
@@ -39,8 +40,9 @@
     uint8_t c_##func(uint16_t ea) { \
         uint8_t b = c__##func(ea); \
         extern FILE *test_vm_fp; \
-        if (test_vm_fp && ((ea >= 0xC000) && (ea < 0xD000)) ) { \
+        if (test_vm_fp && !vm_trace_is_ignored(ea)) { \
             fprintf(test_vm_fp, "%04X r:%02X %s (%s:%d)\n", ea, b, __FUNCTION__, __FILE__, __LINE__); \
+            fflush(test_vm_fp); \
         } \
         return b; \
     } \

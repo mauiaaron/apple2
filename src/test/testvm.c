@@ -144,20 +144,20 @@ TEST test_boot_disk_cputrace() {
     PASS();
 }
 
-#define EXPECTED_VM_TRACE_FILE_SIZE 3688453
-#define EXPECTED_VM_TRACE_SHA "9946B0C5288228535A37475CDAB5C9E685EEDDE9"
+#define EXPECTED_VM_TRACE_FILE_SIZE 2670370
+#define EXPECTED_VM_TRACE_SHA "E808CFF531554AC825A6A2D9E49170887AC9594C"
 TEST test_boot_disk_vmtrace() {
     char *homedir = getenv("HOME");
     char *disk = NULL;
     asprintf(&disk, "%s/a2_vmtrace.txt", homedir);
     if (disk) {
         unlink(disk);
-        vm_begin_trace(disk);
+        vm_trace_begin(disk);
     }
 
     BOOT_TO_DOS();
 
-    vm_end_trace();
+    vm_trace_end();
     c_eject_6(0);
 
     do {

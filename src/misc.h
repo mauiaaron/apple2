@@ -124,9 +124,10 @@ void reinitialize();
 /* vm hooks */
 
 #if VM_TRACING
-void vm_begin_trace(const char *vm_file);
-void vm_end_trace(void);
-void vm_toggle_trace(const char *vm_file);
+void vm_trace_begin(const char *vm_file);
+void vm_trace_end(void);
+void vm_trace_toggle(const char *vm_file);
+bool vm_trace_is_ignored(uint16_t ea);
 #endif
 
 void ram_nop(),
