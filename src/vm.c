@@ -952,3 +952,89 @@ GLUE_C_READ(iie_disable_slot_expansion)
     return 0x0;
 }
 
+// ----------------------------------------------------------------------------
+
+void debug_print_softwitches(void) {
+    // useful from GDB ...
+
+    fprintf(stderr, "STANDARD: ");
+    if (softswitches & SS_TEXT) {
+        fprintf(stderr, "SS_TEXT ");
+    }
+    if (softswitches & SS_MIXED) {
+        fprintf(stderr, "SS_MIXED ");
+    }
+    if (softswitches & SS_HIRES) {
+        fprintf(stderr, "SS_HIRES ");
+    }
+    if (softswitches & SS_PAGE2) {
+        fprintf(stderr, "SS_PAGE2 ");
+    }
+    if (softswitches & SS_BANK2) {
+        fprintf(stderr, "SS_BANK2 ");
+    }
+    if (softswitches & SS_LCRAM) {
+        fprintf(stderr, "SS_LCRAM ");
+    }
+    if (softswitches & SS_80STORE) {
+        fprintf(stderr, "SS_80STORE ");
+    }
+    if (softswitches & SS_80COL) {
+        fprintf(stderr, "SS_80COL ");
+    }
+    if (softswitches & SS_RAMRD) {
+        fprintf(stderr, "SS_RAMRD ");
+    }
+    if (softswitches & SS_RAMWRT) {
+        fprintf(stderr, "SS_RAMWRT ");
+    }
+    if (softswitches & SS_ALTZP) {
+        fprintf(stderr, "SS_ALTZP ");
+    }
+    if (softswitches & SS_DHIRES) {
+        fprintf(stderr, "SS_DHIRES ");
+    }
+    if (softswitches & SS_IOUDIS) {
+        fprintf(stderr, "SS_IOUDIS ");
+    }
+    if (softswitches & SS_CXROM) {
+        fprintf(stderr, "SS_CXROM ");
+    }
+    if (softswitches & SS_C3ROM) {
+        fprintf(stderr, "SS_C3ROM ");
+    }
+    if (softswitches & SS_ALTCHAR) {
+        fprintf(stderr, "SS_ALTCHAR ");
+    }
+    fprintf(stderr, "\n");
+
+    // pseudo #1
+    fprintf(stderr, "PSEUDO 1: ");
+    if (softswitches & SS_LCSEC) {
+        fprintf(stderr, "SS_LCSEC ");
+    }
+    if (softswitches & SS_LCWRT) {
+        fprintf(stderr, "SS_LCWRT ");
+    }
+    fprintf(stderr, "\n");
+
+    // pseudo #2
+    fprintf(stderr, "PSEUDO 2: ");
+    if (softswitches & SS_SCREEN) {
+        fprintf(stderr, "SS_SCREEN ");
+    }
+    if (softswitches & SS_TEXTRD) {
+        fprintf(stderr, "SS_TEXTRD ");
+    }
+    if (softswitches & SS_TEXTWRT) {
+        fprintf(stderr, "SS_TEXTWRT ");
+    }
+    if (softswitches & SS_HGRRD) {
+        fprintf(stderr, "SS_HGRRD ");
+    }
+    if (softswitches & SS_HGRWRT) {
+        fprintf(stderr, "SS_HGRWRT ");
+    }
+
+    fprintf(stderr, "\n");
+}

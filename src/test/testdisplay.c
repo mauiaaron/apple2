@@ -189,14 +189,8 @@ TEST test_lores_80colmix_inverse() {
     test_type_input("TEXT\rINVERSE\rPR#3\rLOAD TESTLORES\rLIST\rLIST\rPOKE 7986,127\rRUN\r");
     c_debugger_go();
 
-    if (test_do_reboot) {
-        // HACK FIXME TODO -- softswitch settings appear to be initially screwy on reboot, so we start, abort, and then start again ...
-        ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
-        ASSERT_SHA("7936E87BE1F920AACD43268DB288746528E89959");
-    } else {
-        ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
-        ASSERT_SHA("7936E87BE1F920AACD43268DB288746528E89959");
-    }
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+    ASSERT_SHA("7936E87BE1F920AACD43268DB288746528E89959");
 
     PASS();
 }
@@ -215,14 +209,8 @@ TEST test_hires_with_80col() {
     test_type_input("PR#3\rRUN TESTHIRES_2\r");
     c_debugger_go();
 
-    if (test_do_reboot) {
-        // HACK FIXME TODO -- softswitch settings appear to be initially screwy on reboot, so we start, abort, and then start again ...
-        ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
-        ASSERT_SHA("8EF89A5E0501191847E9907416309B33D4B48713");
-    } else {
-        ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
-        ASSERT_SHA("1A5DD96B7E3538C2C3625A37653E013E3998F825");
-    }
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+    ASSERT_SHA("1A5DD96B7E3538C2C3625A37653E013E3998F825");
 
     PASS();
 }
@@ -273,14 +261,8 @@ TEST test_hires_80colmix_normal() {
     test_type_input("PR#3\rLOAD TESTHIRES\rLIST\rLIST\rPOKE 7986,127\rRUN\r");
     c_debugger_go();
 
-    if (test_do_reboot) {
-        // HACK FIXME TODO -- softswitch settings appear to be initially screwy on reboot, so we start, abort, and then start again ...
-        ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
-        ASSERT_SHA("F200479ABE6050CE3A071E36487ADF4C3791415F");
-    } else {
-        ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
-        ASSERT_SHA("032BD68899749265EB2934A76A35D7068642824B");
-    }
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+    ASSERT_SHA("032BD68899749265EB2934A76A35D7068642824B");
 
     PASS();
 }
@@ -292,14 +274,8 @@ TEST test_hires_80colmix_inverse() {
     test_type_input("INVERSE\rPR#3\rLOAD TESTHIRES\rLIST\rLIST\rPOKE 7986,127\rRUN\r");
     c_debugger_go();
 
-    if (test_do_reboot) {
-        // HACK FIXME TODO -- softswitch settings appear to be initially screwy on reboot, so we start, abort, and then start again ...
-        ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
-        ASSERT_SHA("984672DD673E9EC3C2CD5CD03D1D79FD0F3D626A");
-    } else {
-        ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
-        ASSERT_SHA("FAFBB65013DA3D5173487C3F434C36A7C04DE92E");
-    }
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+    ASSERT_SHA("FAFBB65013DA3D5173487C3F434C36A7C04DE92E");
 
     PASS();
 }
@@ -407,8 +383,6 @@ static void *test_thread(void *dummyptr) {
     test_do_reboot = true;
 
     // hires
-
-    // HACK FIXME TODO : there appears to be bugs with various 80col graphics modes ...
 
     RUN_TESTp(test_hires_with_80col);
     test_do_reboot = false;
