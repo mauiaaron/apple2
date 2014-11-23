@@ -113,6 +113,10 @@
 
 #include "common.h"
 
+#if VM_TRACING
+FILE *test_vm_fp = NULL;
+#endif
+
 GLUE_C_READ(ram_nop)
 {
     return 0x0;
@@ -1038,3 +1042,31 @@ void debug_print_softwitches(void) {
 
     fprintf(stderr, "\n");
 }
+
+#if VM_TRACING
+void vm_begin_trace(const char *vm_file) {
+    if (vm_file) {
+        if (test_vm_fp) {
+            vm_end_trace();
+        }
+        test_vm_fp = fopen(vm_file, "w");
+    }
+}
+
+void vm_end_trace(void) {
+    if (test_vm_fp) {
+        fflush(test_vm_fp);
+        fclose(test_vm_fp);
+        test_vm_fp = NULL;
+    }
+}
+
+void vm_toggle_trace(const char *vm_file) {
+    if (test_vm_fp) {
+        vm_end_trace();
+    } else {
+        vm_begin_trace(vm_file);
+    }
+}
+#endif
+

@@ -92,7 +92,7 @@ src/x86/glue.S: src/disk.c src/misc.c src/display.c src/vm.c src/cpu-supp.c @AUD
 LOG_DRIVER = testcpu  ## hack TODO/FIXME ... should be wrapper shell script accepting standard GNU testing API args ...
 
 A2_TEST_SOURCES = $(apple2ix_SOURCES) src/test/testcommon.c
-A2_TEST_CFLAGS = -DTESTING=1 -DCPU_TRACING=1 -DDISK_TRACING=1 -Isrc/test
+A2_TEST_CFLAGS = -DTESTING=1 -DCPU_TRACING=1 -DDISK_TRACING=1 -DVM_TRACING=1 -Isrc/test
 
 TESTS          = testcpu testdisplay testvm
 check_PROGRAMS = testcpu testdisplay testvm

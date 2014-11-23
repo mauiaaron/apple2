@@ -121,14 +121,15 @@ void c_initialize_vm();
 uint8_t c_read_random(uint16_t ea);
 void reinitialize();
 
-/* virtual memory compacter */
-
-void pre_compact(void);
-void compact(void);
-
 /* vm hooks */
 
-void            ram_nop(),
+#if VM_TRACING
+void vm_begin_trace(const char *vm_file);
+void vm_end_trace(void);
+void vm_toggle_trace(const char *vm_file);
+#endif
+
+void ram_nop(),
 
 write_unmapped_softswitch(),
 

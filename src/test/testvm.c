@@ -106,7 +106,7 @@ TEST test_boot_disk_bytes() {
 TEST test_boot_disk_cputrace() {
     char *homedir = getenv("HOME");
     char *output = NULL;
-    asprintf(&output, "%s/a2_cputrace.raw", homedir);
+    asprintf(&output, "%s/a2_cputrace.txt", homedir);
     if (output) {
         unlink(output);
         cpu65_trace_begin(output);
@@ -140,6 +140,45 @@ TEST test_boot_disk_cputrace() {
 
     unlink(output);
     FREE(output);
+
+    PASS();
+}
+
+#define EXPECTED_VM_TRACE_FILE_SIZE 3688453
+#define EXPECTED_VM_TRACE_SHA "9946B0C5288228535A37475CDAB5C9E685EEDDE9"
+TEST test_boot_disk_vmtrace() {
+    char *homedir = getenv("HOME");
+    char *disk = NULL;
+    asprintf(&disk, "%s/a2_vmtrace.txt", homedir);
+    if (disk) {
+        unlink(disk);
+        vm_begin_trace(disk);
+    }
+
+    BOOT_TO_DOS();
+
+    vm_end_trace();
+    c_eject_6(0);
+
+    do {
+        uint8_t md[SHA_DIGEST_LENGTH];
+        char mdstr[(SHA_DIGEST_LENGTH*2)+1];
+
+        FILE *fp = fopen(disk, "r");
+        char *buf = malloc(EXPECTED_VM_TRACE_FILE_SIZE);
+        if (fread(buf, 1, EXPECTED_VM_TRACE_FILE_SIZE, fp) != EXPECTED_VM_TRACE_FILE_SIZE) {
+            ASSERT(false);
+        }
+        fclose(fp); fp = NULL;
+        SHA1(buf, EXPECTED_VM_TRACE_FILE_SIZE, md);
+        FREE(buf);
+
+        sha1_to_str(md, mdstr);
+        ASSERT(strcmp(mdstr, EXPECTED_VM_TRACE_SHA) == 0);
+    } while(0);
+
+    unlink(disk);
+    FREE(disk);
 
     PASS();
 }
@@ -3418,6 +3457,7 @@ static void *test_thread(void *dummyptr) {
 
     RUN_TESTp(test_boot_disk_bytes);
     RUN_TESTp(test_boot_disk_cputrace);
+    RUN_TESTp(test_boot_disk_vmtrace);
     RUN_TESTp(test_boot_disk);
 
     RUN_TESTp(test_inithello_dsk);

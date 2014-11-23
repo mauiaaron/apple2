@@ -14,6 +14,13 @@
  *
  */
 
+#if CPU_TRACING
+#   if VM_TRACING
+#       define RESET_VM_TRACING 1
+#   endif
+#   undef VM_TRACING
+#endif
+
 #include "common.h"
 
 uint16_t cpu65_pc;
@@ -821,6 +828,11 @@ GLUE_C_WRITE(cpu65_trace_epilogue)
     fprintf(cpu_trace_fp, "%s", "\n");
     fflush(cpu_trace_fp);
 }
+
+#   if RESET_VM_TRACING
+#       define VM_TRACING 1
+#   endif
+#   undef RESET_VM_TRACING
 
 #endif // CPU_TRACING
 
