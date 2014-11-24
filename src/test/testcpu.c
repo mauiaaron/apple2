@@ -4974,6 +4974,7 @@ TEST test_PHP(uint8_t flags) {
     ASSERT(cpu65_opcode   == 0x08);
     ASSERT(cpu65_opcycles == (3));
 
+    cpu65_pc = TEST_LOC;
     test_PLP(flags);
 
     PASS();
@@ -5091,6 +5092,8 @@ TEST test_PLA(uint8_t regA) {
 
 TEST test_PLP(uint8_t flags) {
     uint8_t sp = 0x80;
+
+    ASSERT(cpu65_pc     == TEST_LOC);
 
     testcpu_set_opcode1(0x28);
     apple_ii_64k[0][0x101+sp] = flags;
