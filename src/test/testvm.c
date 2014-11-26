@@ -1198,13 +1198,13 @@ TEST test_HIRES_on(bool flag_80store, bool flag_page2) {
 
     if (flag_80store) {
         if (flag_page2) {
-            switch_save = switch_save & ~(SS_HGRRD|SS_HGRWRT);
-            ASSERT((void *)base_hgrrd  == (void *)(apple_ii_64k[0]));
-            ASSERT((void *)base_hgrwrt == (void *)(apple_ii_64k[0]));
-        } else {
             switch_save = switch_save | (SS_HGRRD|SS_HGRWRT);
             ASSERT((void *)base_hgrrd  == (void *)(apple_ii_64k[1]));
             ASSERT((void *)base_hgrwrt == (void *)(apple_ii_64k[1]));
+        } else {
+            switch_save = switch_save & ~(SS_HGRRD|SS_HGRWRT);
+            ASSERT((void *)base_hgrrd  == (void *)(apple_ii_64k[0]));
+            ASSERT((void *)base_hgrwrt == (void *)(apple_ii_64k[0]));
         }
     } else {
         ASSERT(base_hgrrd  == save_base_hgrrd);    // unchanged

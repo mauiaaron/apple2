@@ -313,13 +313,13 @@ GLUE_C_READ(iie_hires_on)
 
     if (softswitches & SS_80STORE) {
         if (softswitches & SS_PAGE2) {
-            softswitches &= ~(SS_HGRRD|SS_HGRWRT);
-            base_hgrrd  = apple_ii_64k[0];
-            base_hgrwrt = apple_ii_64k[0];
-        } else {
             softswitches |= (SS_HGRRD|SS_HGRWRT);
             base_hgrrd  = apple_ii_64k[1];
             base_hgrwrt = apple_ii_64k[1];
+        } else {
+            softswitches &= ~(SS_HGRRD|SS_HGRWRT);
+            base_hgrrd  = apple_ii_64k[0];
+            base_hgrwrt = apple_ii_64k[0];
         }
     }
 
