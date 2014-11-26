@@ -200,6 +200,7 @@ TEST test_lores_80colmix_inverse() {
 //
 // NOTE : These tests assume standard color mode (not b/w or interpolated)
 //
+#define MOIRE_SHA "1A5DD96B7E3538C2C3625A37653E013E3998F825"
 
 TEST test_hires_with_80col() {
     BOOT_TO_DOS();
@@ -210,7 +211,7 @@ TEST test_hires_with_80col() {
     c_debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
-    ASSERT_SHA("1A5DD96B7E3538C2C3625A37653E013E3998F825");
+    ASSERT_SHA(MOIRE_SHA);
 
     PASS();
 }
@@ -223,7 +224,20 @@ TEST test_hires_with_40col() {
     c_debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
-    ASSERT_SHA("1A5DD96B7E3538C2C3625A37653E013E3998F825");
+    ASSERT_SHA(MOIRE_SHA);
+
+    PASS();
+}
+
+TEST test_hires_with_40col_page2() {
+    BOOT_TO_DOS();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
+    test_type_input("RUN TESTHIRES_PG2\r");
+    c_debugger_go();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+    ASSERT_SHA(MOIRE_SHA);
 
     PASS();
 }
@@ -392,6 +406,11 @@ static void *test_thread(void *dummyptr) {
     RUN_TEST(test_hires_with_40col);
     test_do_reboot = false;
     RUN_TEST(test_hires_with_40col);
+    test_do_reboot = true;
+
+    RUN_TEST(test_hires_with_40col_page2);
+    test_do_reboot = false;
+    RUN_TEST(test_hires_with_40col_page2);
     test_do_reboot = true;
 
     RUN_TEST(test_hires_40colmix_normal);
