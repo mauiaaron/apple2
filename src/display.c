@@ -114,7 +114,6 @@ uint8_t video__dhires2[256] = {
     0x7,0x7,0x7,0x7,0x7,0x7,0x7,0x7,0xf,0xf,0xb,0xb,0xf,0xf,0xf,0xf,
 };
 
-
 static void video_initialize_dhires_values(void) {
     for (unsigned int i = 0; i < 0x80; i++) {
         video__dhires1[i+0x80] = video__dhires1[i];
@@ -613,7 +612,6 @@ const uint8_t * const video_current_framebuffer() {
     return !video__current_page ? video__fb1 : video__fb2;
 }
 
-
 // ----------------------------------------------------------------------------
 
 static inline void _plot_character(const unsigned int font_off, uint8_t *fb_ptr) {
@@ -1072,32 +1070,36 @@ void video_redraw(void) {
             if (y < 20) {
                 DRAW_TEXT(0, SS_TEXTWRT);
                 ea += 0x400;
+                b = apple_ii_64k[0][ea];
                 DRAW_TEXT(1, SS_RAMWRT);
             } else {
                 DRAW_MIXED(0, SS_TEXTWRT);
                 ea += 0x400;
+                b = apple_ii_64k[0][ea];
                 DRAW_MIXED(1, SS_RAMWRT);
             }
 
             // hires/dhires pages
             for (unsigned int i = 0; i < 8; i++) {
-                ea = 0x2000 + video__line_offset[y] + (0x400*i) + x;
-                uint8_t b = apple_ii_64k[0][ea];
+                uint16_t ea0 = 0x2000 + video__line_offset[y] + (0x400*i) + x;
+                uint16_t ea1 = ea0+0x2000;
+                uint8_t b0 = apple_ii_64k[0][ea0];
+                uint8_t b1 = apple_ii_64k[0][ea1];
                 if (y < 20) {
                     if (x & 1) {
-                        _draw_hires_graphics(ea,        b, /*even*/false, 0, SS_TEXT);
-                        _draw_hires_graphics(ea+0x2000, b, /*even*/false, 1, SS_TEXT);
+                        _draw_hires_graphics(ea0,       b0, /*even*/false, 0, SS_TEXT);
+                        _draw_hires_graphics(ea1,       b1, /*even*/false, 1, SS_TEXT);
                     } else {
-                        _draw_hires_graphics(ea,        b, /*even*/true,  0, SS_TEXT);
-                        _draw_hires_graphics(ea+0x2000, b, /*even*/true,  1, SS_TEXT);
+                        _draw_hires_graphics(ea0,       b0, /*even*/true,  0, SS_TEXT);
+                        _draw_hires_graphics(ea1,       b1, /*even*/true,  1, SS_TEXT);
                     }
                 } else {
                     if (x & 1) {
-                        _draw_hires_graphics(ea,        b, /*even*/false, 0, (SS_TEXT|SS_MIXED));
-                        _draw_hires_graphics(ea+0x2000, b, /*even*/false, 1, (SS_TEXT|SS_MIXED));
+                        _draw_hires_graphics(ea0,       b0, /*even*/false, 0, (SS_TEXT|SS_MIXED));
+                        _draw_hires_graphics(ea1,       b1, /*even*/false, 1, (SS_TEXT|SS_MIXED));
                     } else {
-                        _draw_hires_graphics(ea,        b, /*even*/true,  0, (SS_TEXT|SS_MIXED));
-                        _draw_hires_graphics(ea+0x2000, b, /*even*/true,  1, (SS_TEXT|SS_MIXED));
+                        _draw_hires_graphics(ea0,       b0, /*even*/true,  0, (SS_TEXT|SS_MIXED));
+                        _draw_hires_graphics(ea1,       b1, /*even*/true,  1, (SS_TEXT|SS_MIXED));
                     }
                 }
             }
