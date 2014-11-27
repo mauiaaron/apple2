@@ -1082,6 +1082,7 @@ bool vm_trace_is_ignored(uint16_t ea) {
     if ((ea < 0xC000) || (ea > 0xCFFF)) {
         return true;
     }
+    return false;
 }
 
 #endif

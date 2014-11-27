@@ -180,6 +180,8 @@
 		77E1C0C419D7298F004344E0 /* EmulatorWindowController.m in Sources */ = {isa = PBXBuildFile; fileRef = 77E1C0BE19D7298F004344E0 /* EmulatorWindowController.m */; };
 		77E1C0C519D7298F004344E0 /* EmulatorGLView.m in Sources */ = {isa = PBXBuildFile; fileRef = 77E1C0C019D7298F004344E0 /* EmulatorGLView.m */; };
 		77E1C0C619D7298F004344E0 /* EmulatorFullscreenWindow.m in Sources */ = {isa = PBXBuildFile; fileRef = 77E1C0C219D7298F004344E0 /* EmulatorFullscreenWindow.m */; };
+		77EB316C1A27A9AF00DC5A8A /* blank.dsk.gz in Resources */ = {isa = PBXBuildFile; fileRef = 4ADC523019E8D3F600186B36 /* blank.dsk.gz */; };
+		77EB316D1A27A9AF00DC5A8A /* blank.nib.gz in Resources */ = {isa = PBXBuildFile; fileRef = 4ADC523119E8D3F600186B36 /* blank.nib.gz */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -826,6 +828,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				77EB316C1A27A9AF00DC5A8A /* blank.dsk.gz in Resources */,
+				77EB316D1A27A9AF00DC5A8A /* blank.nib.gz in Resources */,
 				4ADC525319E8D3F600186B36 /* testvm1.dsk.gz in Resources */,
 				4ADC524719E8D3F600186B36 /* README in Resources */,
 				4ADC521E19E8CA4500186B36 /* MainMenu-Test.xib in Resources */,
@@ -1229,6 +1233,8 @@
 					"HEADLESS=1",
 					"TESTING=1",
 					"CPU_TRACING=1",
+					"DISK_TRACING=1",
+					"VM_TRACING=1",
 				);
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1466,6 +1472,8 @@
 					"HEADLESS=1",
 					"TESTING=1",
 					"CPU_TRACING=1",
+					"DISK_TRACING=1",
+					"VM_TRACING=1",
 				);
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",

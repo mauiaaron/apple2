@@ -331,7 +331,9 @@ TEST test_80col_hires() {
 
 static int begin_video = -1;
 
-static void *test_thread(void *dummyptr) {
+GREATEST_SUITE(test_suite_display) {
+    GREATEST_SET_SETUP_CB(testdisplay_setup, NULL);
+    GREATEST_SET_TEARDOWN_CB(testdisplay_teardown, NULL);
 
     // TESTS --------------------------
     begin_video=!is_headless;
@@ -441,14 +443,30 @@ static void *test_thread(void *dummyptr) {
     // ...
     c_eject_6(0);
     pthread_mutex_unlock(&interface_mutex);
+}
 
+SUITE(test_suite_display);
+GREATEST_MAIN_DEFS();
+
+static char **test_argv = NULL;
+static int test_argc = 0;
+
+static int _test_display(void) {
+    int argc = test_argc;
+    char **argv = test_argv;
+    GREATEST_MAIN_BEGIN();
+    RUN_SUITE(test_suite_display);
     GREATEST_MAIN_END();
 }
 
-GREATEST_SUITE(test_suite_display) {
+static void *test_thread(void *dummyptr) {
+    _test_display();
+    return NULL;
+}
 
-    GREATEST_SET_SETUP_CB(testdisplay_setup, NULL);
-    GREATEST_SET_TEARDOWN_CB(testdisplay_teardown, NULL);
+void test_display(int argc, char **argv) {
+    test_argc = argc;
+    test_argv = argv;
 
     srandom(time(NULL));
 
@@ -467,14 +485,6 @@ GREATEST_SUITE(test_suite_display) {
         video_main_loop();
     }
     pthread_join(p, NULL);
-}
-
-SUITE(test_suite_display);
-GREATEST_MAIN_DEFS();
-
-int test_display(int argc, char **argv) {
-    GREATEST_MAIN_BEGIN();
-    RUN_SUITE(test_suite_display);
 }
 
 #if !defined(__APPLE__)
