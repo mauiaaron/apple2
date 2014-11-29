@@ -57,6 +57,15 @@
 
 #if VIDEO_OPENGL
 #include "video_util/glUtil.h"
+#define CRASH_APP_ON_LOAD_BECAUSE_YAY_GJ_APPLE 0
+// 2014/11/29 -- Yay GJ Apple! ... you would think that early app lifecycle calls to glGetError() would not segfault on Macs
+extern bool safe_to_do_opengl_logging;
+static inline GLenum safeGLGetError(void) {
+    if (safe_to_do_opengl_logging) {
+        return glGetError();
+    }
+    return (GLenum)0;
+}
 #else
 #define GLenum int
 #define glGetError() 0
@@ -109,9 +118,9 @@ extern FILE *error_log;
 
 #define ERRLOG(...) \
     if (do_logging) { \
-        GLenum _glerr = glGetError(); \
+        GLenum _glerr = safeGLGetError(); \
         _LOG(__VA_ARGS__); \
-        while ( (_glerr = glGetError()) ) { \
+        while ( (_glerr = safeGLGetError()) ) { \
             _LOG(__VA_ARGS__); \
         } \
     } //
@@ -119,16 +128,16 @@ extern FILE *error_log;
 #define GL_ERRLOG(...) \
     if (do_logging) { \
         GLenum _glerr = 0; \
-        while ( (_glerr = glGetError()) ) { \
+        while ( (_glerr = safeGLGetError()) ) { \
             _LOG(__VA_ARGS__); \
         } \
     } //
 
 #define ERRQUIT(...) \
     do { \
-        GLenum _glerr = glGetError(); \
+        GLenum _glerr = safeGLGetError(); \
         _LOG(__VA_ARGS__); \
-        while ( (_glerr = glGetError()) ) { \
+        while ( (_glerr = safeGLGetError()) ) { \
             _LOG(__VA_ARGS__); \
         } \
         QUIT_FUNCTION(1); \
@@ -137,7 +146,7 @@ extern FILE *error_log;
 #define GL_ERRQUIT(...) \
     do { \
         GLenum _glerr = 0; \
-        while ( (_glerr = glGetError()) ) { \
+        while ( (_glerr = safeGLGetError()) ) { \
             _LOG(__VA_ARGS__); \
             QUIT_FUNCTION(_glerr); \
         } \
@@ -170,7 +179,7 @@ extern FILE *error_log;
 
 #define RELEASE_LOG(...) \
     do { \
-        GLenum _glerr = glGetError(); \
+        GLenum _glerr = safeGLGetError(); \
         errno = 0; \
         _LOG(__VA_ARGS__); \
     } while (0)

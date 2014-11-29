@@ -32,6 +32,8 @@ enum {
     TEXCOORD_ATTRIB_IDX
 };
 
+bool safe_to_do_opengl_logging = false;
+
 static int windowWidth = SCANWIDTH*1.5;
 static int windowHeight = SCANHEIGHT*1.5;
 
@@ -717,6 +719,7 @@ static void gldriver_init_glut(GLuint fbo) {
 // renderer API
 
 void video_driver_init(void *fbo) {
+    safe_to_do_opengl_logging = true;
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpointer-to-int-cast"
     defaultFBO = (GLuint)fbo;

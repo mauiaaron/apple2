@@ -37,6 +37,10 @@
 
 - (void)awakeFromNib
 {
+#if CRASH_APP_ON_LOAD_BECAUSE_YAY_GJ_APPLE
+    glGetError();
+#endif
+    
     [self.diskInA setStringValue:NO_DISK_INSERTED];
     [self.diskAProperties setStringValue:@""];
     [self.diskInB setStringValue:NO_DISK_INSERTED];
