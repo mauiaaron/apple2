@@ -29,7 +29,7 @@
         c__##func(ea, b); \
         extern FILE *test_vm_fp; \
         if (test_vm_fp && !vm_trace_is_ignored(ea)) { \
-            fprintf(test_vm_fp, "%04X w:%02X %s (%s:%d)\n", ea, b, __FUNCTION__, __FILE__, __LINE__); \
+            fprintf(test_vm_fp, "%04X w:%02X %s\n", ea, b, __FUNCTION__); \
             fflush(test_vm_fp); \
         } \
     } \
@@ -41,7 +41,7 @@
         uint8_t b = c__##func(ea); \
         extern FILE *test_vm_fp; \
         if (test_vm_fp && !vm_trace_is_ignored(ea)) { \
-            fprintf(test_vm_fp, "%04X r:%02X %s (%s:%d)\n", ea, b, __FUNCTION__, __FILE__, __LINE__); \
+            fprintf(test_vm_fp, "%04X r:%02X %s\n", ea, b, __FUNCTION__); \
             fflush(test_vm_fp); \
         } \
         return b; \
