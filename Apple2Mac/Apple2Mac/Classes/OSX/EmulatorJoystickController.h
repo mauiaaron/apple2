@@ -11,5 +11,7 @@
 @interface EmulatorJoystickController : NSObject
 
 + (EmulatorJoystickController *)sharedInstance;
+- (void)connectivityPoll;
+
 
 @end

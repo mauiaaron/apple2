@@ -1361,6 +1361,7 @@
 					"DEBUGGER=1",
 					"KEYPAD_JOYSTICK=1",
 					"AUDIO_ENABLED=1",
+					"VIDEO_OPENGL=1",
 				);
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1388,6 +1389,7 @@
 					"DEBUGGER=1",
 					"KEYPAD_JOYSTICK=1",
 					"AUDIO_ENABLED=1",
+					"VIDEO_OPENGL=1",
 				);
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",

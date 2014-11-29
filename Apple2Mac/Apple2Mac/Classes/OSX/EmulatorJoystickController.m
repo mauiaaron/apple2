@@ -11,7 +11,7 @@
 #import "common.h"
 
 @interface EmulatorJoystickController()
-@property (nonatomic, retain) NSArray *allJoysticks;
+@property (nonatomic, retain) NSDictionary *allJoysticks;
 - (void)resetJoysticks;
 @end
 
@@ -52,20 +52,58 @@ void gldriver_joystick_reset(void) {
 
 - (void)resetJoysticks
 {
-    for (DDHidJoystick *joystick in self.allJoysticks)
+    for (DDHidJoystick *joystick in [self.allJoysticks allValues])
     {
-        [joystick setDelegate:nil];
-        [joystick stopListening];
+        @try {
+            [joystick setDelegate:nil];
+            [joystick stopListening];
+        } @catch (NSException *e) {
+            // hot-plugging joysticks can cause glitches
+            NSLog(@"Joystick device library raised exception on close : %@", e);
+        }
     }
-    self.allJoysticks = [DDHidJoystick allJoysticks];
+    NSArray *joysticks = [DDHidJoystick allJoysticks];
+    NSMutableDictionary *allJoysticks = [NSMutableDictionary dictionary];
+    for (DDHidJoystick *joystick in joysticks) {
+        NSString *key =[NSString stringWithFormat:@"%@-%@-%@", [joystick manufacturer], [joystick serialNumber], [joystick transport]];
+        [allJoysticks setObject:joystick forKey:key];
+    }
+    self.allJoysticks = allJoysticks;
     dispatch_async(dispatch_get_main_queue(), ^ {
-        for (DDHidJoystick *joystick in self.allJoysticks)
+        for (DDHidJoystick *joystick in [self.allJoysticks allValues])
         {
             NSLog(@"found joystick : '%@' '%@' '%@' %@", [joystick manufacturer], [joystick serialNumber], [joystick transport], joystick);
-            [joystick setDelegate:self];
-            [joystick startListening];
+            @try {
+                [joystick setDelegate:self];
+                [joystick startListening];
+            } @catch (NSException *e) {
+                // hot-plugging joystick can cause glitches
+                NSLog(@"Joystick device library raised exception on start : %@", e);
+            }
         }
     });
+}
+
+#pragma mark -
+#pragma mark Joystick connectivity polling
+
+- (void)connectivityPoll
+{
+    NSArray *joysticks = [DDHidJoystick allJoysticks];
+    BOOL changed = ([joysticks count] != [self.allJoysticks count]);
+    for (DDHidJoystick *joystick in joysticks)
+    {
+        NSString *key =[NSString stringWithFormat:@"%@-%@-%@", [joystick manufacturer], [joystick serialNumber], [joystick transport]];
+        if (![self.allJoysticks objectForKey:key])
+        {
+            changed = YES;
+            break;
+        }
+    }
+    if (changed)
+    {
+        [self resetJoysticks];
+    }
 }
 
 #pragma mark -
