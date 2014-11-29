@@ -56,12 +56,7 @@
     BOOL readOnlyA = [defaults boolForKey:kApple2PrefStartupDiskAProtected];
     if (startupDiskA)
     {
-        const char *err = c_new_diskette_6(0, [startupDiskA UTF8String], readOnlyA);
-        if (err)
-        {
-            NSString *diskA = [NSString stringWithFormat:@"%@.gz", startupDiskA];
-            err = c_new_diskette_6(0, [diskA UTF8String], readOnlyA);
-        }
+        const char *err = c_new_diskette_6(0, [[NSString stringWithFormat:@"%@.gz", startupDiskA] UTF8String], readOnlyA);
         if (!err)
         {
             [self.diskInA setStringValue:[[startupDiskA pathComponents] lastObject]];
@@ -75,12 +70,7 @@
     BOOL readOnlyB = [defaults boolForKey:kApple2PrefStartupDiskBProtected];
     if (startupDiskB)
     {
-        const char *err = c_new_diskette_6(1, [startupDiskB UTF8String], readOnlyB);
-        if (err)
-        {
-            NSString *diskB = [NSString stringWithFormat:@"%@.gz", startupDiskB];
-            err = c_new_diskette_6(1, [diskB UTF8String], readOnlyB);
-        }
+        const char *err = c_new_diskette_6(1, [[NSString stringWithFormat:@"%@.gz", startupDiskB] UTF8String], readOnlyB);
         if (!err)
         {
             [self.diskInB setStringValue:[[startupDiskB pathComponents] lastObject]];
