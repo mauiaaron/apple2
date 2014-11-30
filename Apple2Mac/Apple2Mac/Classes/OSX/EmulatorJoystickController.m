@@ -7,17 +7,19 @@
 //
 
 #import "EmulatorJoystickController.h"
-#import <DDHidLib/DDHidJoystick.h>
+#import "EmulatorWindowController.h"
 #import "common.h"
+
+#import <DDHidLib/DDHidJoystick.h>
 
 @interface EmulatorJoystickController()
 @property (nonatomic, retain) NSDictionary *allJoysticks;
++ (EmulatorJoystickController *)sharedInstance;
 - (void)resetJoysticks;
 @end
 
 void gldriver_joystick_reset(void) {
-    EmulatorJoystickController *joystickController = [EmulatorJoystickController sharedInstance];
-    [joystickController resetJoysticks];
+    [EmulatorJoystickController sharedInstance];
 }
 
 @implementation EmulatorJoystickController
@@ -39,13 +41,14 @@ void gldriver_joystick_reset(void) {
     self = [super init];
     if (self)
     {
-        // ...
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(connectivityPoll:) name:(NSString *)kDrawTimerNotification object:nil];
     }
     return self;
 }
 
 - (void)dealloc
 {
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
     self.allJoysticks = nil;
     [super dealloc];
 }
@@ -87,7 +90,7 @@ void gldriver_joystick_reset(void) {
 #pragma mark -
 #pragma mark Joystick connectivity polling
 
-- (void)connectivityPoll
+- (void)connectivityPoll:(NSNotification *)notification
 {
     NSArray *joysticks = [DDHidJoystick allJoysticks];
     BOOL changed = ([joysticks count] != [self.allJoysticks count]);

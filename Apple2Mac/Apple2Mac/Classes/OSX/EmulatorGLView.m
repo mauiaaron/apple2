@@ -9,7 +9,6 @@
 // Based on sample code from https://developer.apple.com/library/mac/samplecode/GLEssentials/Introduction/Intro.html
 
 #import "EmulatorGLView.h"
-#import "EmulatorJoystickController.h"
 
 // Apple //e common routines
 #import "common.h"
@@ -23,8 +22,9 @@
 #define USE_DISPLAYLINK 1
 #endif
 
-
 #define SUPPORT_RETINA_RESOLUTION 1
+
+const NSString *kDrawTimerNotification = @"kDrawTimerNotification";
 
 @interface EmulatorGLView ()
 
@@ -280,7 +280,7 @@ static CVReturn displayLinkCallback(CVDisplayLinkRef displayLink, const CVTimeSt
     video_driver_render();
 	CGLFlushDrawable([[self openGLContext] CGLContextObj]);
     CGLUnlockContext([[self openGLContext] CGLContextObj]);
-    [[EmulatorJoystickController sharedInstance] connectivityPoll];
+    [[NSNotificationCenter defaultCenter] postNotificationName:(NSString *)kDrawTimerNotification object:nil];
 }
 
 - (void)dealloc

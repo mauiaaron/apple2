@@ -11,6 +11,8 @@
 #import <Cocoa/Cocoa.h>
 #import "EmulatorGLView.h"
 
+extern const NSString *kDrawTimerNotification;
+
 @interface EmulatorWindowController : NSWindowController
 
 @end
