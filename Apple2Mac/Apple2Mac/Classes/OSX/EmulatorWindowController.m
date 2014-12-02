@@ -22,6 +22,8 @@
 
 @interface EmulatorWindowController ()
 
+@property (nonatomic, assign) BOOL paused;
+
 @property (assign) IBOutlet EmulatorGLView *view;
 @property (assign) IBOutlet NSWindow *disksWindow;
 @property (assign) IBOutlet NSWindow *prefsWindow;
@@ -35,7 +37,7 @@
 
 @implementation EmulatorWindowController
 
-@synthesize view = _view;
+@synthesize paused = _paused;
 @synthesize fullscreenWindow = _fullscreenWindow;
 @synthesize standardWindow = _standardWindow;
 
@@ -47,6 +49,8 @@
     {
         // Initialize to nil since it indicates app is not fullscreen
         self.fullscreenWindow = nil;
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(windowWillClose:) name:NSWindowWillCloseNotification object:nil];
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(windowWillOpen:) name:NSWindowDidBecomeKeyNotification object:nil];
     }
 
     return self;
@@ -55,6 +59,7 @@
 - (void)dealloc
 {
 #warning TODO FIXME ... probably should exit emulator if this gets invoked ...
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
     [super dealloc];
 }
 
@@ -106,24 +111,52 @@
 - (IBAction)togglePause:(id)sender
 {
     NSAssert(pthread_main_np(), @"Pause emulation called from non-main thread");
-    static BOOL paused = NO;
+    self.paused = !_paused;
+}
+
+- (void)setPaused:(BOOL)paused
+{
+    if (_paused == paused)
+    {
+        return;
+    }
+    
+    _paused = paused;
     if (paused)
+    {
+        [[self pauseMenuItem] setTitle:@"Resume Emulation"];
+        pthread_mutex_lock(&interface_mutex);
+#ifdef AUDIO_ENABLED
+        SoundSystemPause();
+#endif
+    }
+    else
     {
         [[self pauseMenuItem] setTitle:@"Pause Emulation"];
 #ifdef AUDIO_ENABLED
         SoundSystemUnpause();
 #endif
         pthread_mutex_unlock(&interface_mutex);
-        paused = NO;
     }
-    else
+}
+
+- (void)windowWillOpen:(NSNotification *)notification
+{
+    if ((self.prefsWindow == notification.object) || (self.disksWindow == notification.object))
     {
-        paused = YES;
-        [[self pauseMenuItem] setTitle:@"Resume Emulation"];
-        pthread_mutex_lock(&interface_mutex);
-#ifdef AUDIO_ENABLED
-        SoundSystemPause();
-#endif
+        self.paused = YES;
+    }
+}
+
+- (void)windowWillClose:(NSNotification *)notification
+{
+    if (self.prefsWindow == notification.object)
+    {
+        self.paused = [self.disksWindow isVisible];
+    }
+    if (self.disksWindow == notification.object)
+    {
+        self.paused = [self.prefsWindow isVisible];
     }
 }
 
