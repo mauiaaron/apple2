@@ -253,11 +253,13 @@ void c_keys_handle_input(int scancode, int pressed, int is_cooked)
                 break;
             }
 
+#ifdef INTERFACE_CLASSIC
             if (current_key == kF9)
             {
                 timing_toggle_cpu_speed();
                 break;
             }
+#endif
 
             if (current_key == kEND)
             {
@@ -282,10 +284,13 @@ void c_keys_handle_input(int scancode, int pressed, int is_cooked)
     // Keypad emulated joystick relies on "raw" keyboard input
     if (joy_mode == JOY_KPAD)
     {
-        bool joy_axis_unpressed = !( key_pressed[SCODE_KPAD_U]  || key_pressed[SCODE_KPAD_D]  || key_pressed[SCODE_KPAD_L]  || key_pressed[SCODE_KPAD_R] ||
+        bool joy_x_axis_unpressed = !( key_pressed[SCODE_KPAD_L]  || key_pressed[SCODE_KPAD_R] ||
+                                      key_pressed[SCODE_KPAD_UL] || key_pressed[SCODE_KPAD_DL] || key_pressed[SCODE_KPAD_UR] || key_pressed[SCODE_KPAD_DR] ||
+                                      // and allow regular PC arrow keys to manipulate joystick...
+                                      key_pressed[SCODE_L] || key_pressed[SCODE_R]);
+        bool joy_y_axis_unpressed = !( key_pressed[SCODE_KPAD_U]  || key_pressed[SCODE_KPAD_D] ||
                                      key_pressed[SCODE_KPAD_UL] || key_pressed[SCODE_KPAD_DL] || key_pressed[SCODE_KPAD_UR] || key_pressed[SCODE_KPAD_DR] ||
-                                     // and allow regular PC arrow keys to manipulate joystick...
-                                     key_pressed[SCODE_U]       || key_pressed[SCODE_D]       || key_pressed[SCODE_L]       || key_pressed[SCODE_R]);
+                                     key_pressed[SCODE_U] || key_pressed[SCODE_D]);
 
         if (key_pressed[ SCODE_KPAD_C ])
         {
@@ -294,16 +299,25 @@ void c_keys_handle_input(int scancode, int pressed, int is_cooked)
         }
 
         if (joy_auto_recenter) {
-            static int unpressed_count = 0;
-            if (joy_axis_unpressed) {
-                ++unpressed_count;
-                if (unpressed_count > 2) {
-                    unpressed_count = 0;
+            static int x_unpressed_count = 0;
+            if (joy_x_axis_unpressed) {
+                ++x_unpressed_count;
+                if (x_unpressed_count > 2) {
+                    x_unpressed_count = 0;
                     joy_x = HALF_JOY_RANGE;
+                }
+            } else {
+                x_unpressed_count = 0;
+            }
+            static int y_unpressed_count = 0;
+            if (joy_y_axis_unpressed) {
+                ++y_unpressed_count;
+                if (y_unpressed_count > 2) {
+                    y_unpressed_count = 0;
                     joy_y = HALF_JOY_RANGE;
                 }
             } else {
-                unpressed_count = 0;
+                y_unpressed_count = 0;
             }
         }
 
@@ -382,6 +396,7 @@ int c_mygetch(int block)
     return retval;
 }
 
+#ifdef INTERFACE_CLASSIC
 void c_keys_set_key(int key)
 {
     next_key = key;
@@ -405,4 +420,5 @@ bool c_keys_is_interface_key(int key)
     }
     return false;
 }
+#endif
 
