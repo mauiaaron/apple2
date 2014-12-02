@@ -12,14 +12,6 @@
 #import "EmulatorFullscreenWindow.h"
 #import "common.h"
 
-#define CAPS_LOCK 0x39
-#define SHIFT_LT 0x38
-#define SHIFT_RT 0x3c
-#define CTRL_LT 0x3b
-#define CTRL_RT 0x3e
-#define ALT_LT 0x3a
-#define ALT_RT 0x3d
-
 @interface EmulatorWindowController ()
 
 @property (nonatomic, assign) BOOL paused;

@@ -8,6 +8,8 @@
 
 #import "EmulatorPrefsController.h"
 #import "EmulatorDiskController.h"
+#import "EmulatorJoystickCalibrationView.h"
+#import "EmulatorWindowController.h"
 #import "common.h"
 
 #define kApple2SavedPrefs @"kApple2SavedPrefs"
@@ -23,8 +25,6 @@
 
 @interface EmulatorPrefsController ()
 
-@property (assign) IBOutlet NSWindow *prefsWindow;
-
 @property (assign) IBOutlet NSSlider *cpuSlider;
 @property (assign) IBOutlet NSSlider *altSlider;
 @property (assign) IBOutlet NSTextField *cpuSliderLabel;
@@ -38,12 +38,16 @@
 
 @property (assign) IBOutlet NSPopUpButton *joystickChoice;
 @property (assign) IBOutlet NSButton *joystickRecenter;
+@property (assign) IBOutlet NSButton *joystickClipToRadius;
 @property (assign) IBOutlet NSTextField *joystickStepLabel;
 @property (assign) IBOutlet NSStepper *joystickStepper;
+@property (assign) IBOutlet NSTextField *joystickStepperLabel;
+@property (assign) IBOutlet NSTextField *joystickKPadNotes;
+@property (assign) IBOutlet NSTextField *joystickDeviceNotes;
 
 @property (assign) IBOutlet NSTextField *button0Pressed;
 @property (assign) IBOutlet NSTextField *button1Pressed;
-@property (assign) IBOutlet NSView *joystickCalibrationView;
+@property (assign) IBOutlet EmulatorJoystickCalibrationView *joystickCalibrationView;
 
 @end
 
@@ -122,6 +126,15 @@
     joy_step = [defaults integerForKey:kApple2JoystickStep];
     [self.joystickStepLabel setIntegerValue:joy_step];
     [self.joystickStepper setIntegerValue:joy_step];
+    
+    [self _setupJoystickUI];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(drawJoystickCalibration:) name:(NSString *)kDrawTimerNotification object:nil];
+}
+
+- (void)dealloc
+{
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
+    [super dealloc];
 }
 
 - (void)_savePrefs
@@ -134,6 +147,7 @@
     [defaults setBool:([self.altMaxChoice state] == NSOnState) forKey:kApple2AltSpeedIsMax];
     [defaults setInteger:color_mode forKey:kApple2ColorConfig];
     [defaults setInteger:joy_mode forKey:kApple2JoystickConfig];
+    [defaults setInteger:joy_step forKey:kApple2JoystickStep];
     [defaults setBool:joy_auto_recenter forKey:kApple2JoystickAutoRecenter];
 }
 
@@ -201,6 +215,20 @@
 #warning TODO : make soundcard configurable at runtime
 }
 
+#pragma mark -
+#pragma mark Joystick preferences
+
+- (void)_setupJoystickUI
+{
+    [self.joystickRecenter setHidden:(joy_mode == JOY_PCJOY)];
+    [self.joystickClipToRadius setHidden:(joy_mode != JOY_PCJOY)];
+    [self.joystickStepLabel setHidden:(joy_mode == JOY_PCJOY)];
+    [self.joystickStepper setHidden:(joy_mode == JOY_PCJOY)];
+    [self.joystickStepperLabel setHidden:(joy_mode == JOY_PCJOY)];
+    [self.joystickKPadNotes setHidden:(joy_mode == JOY_PCJOY)];
+    [self.joystickDeviceNotes setHidden:(joy_mode != JOY_PCJOY)];
+}
+
 - (IBAction)joystickChoiceChanged:(id)sender
 {
     NSInteger mode = [self.joystickChoice indexOfSelectedItem];
@@ -209,6 +237,7 @@
         mode = JOY_PCJOY;
     }
     joy_mode = (joystick_mode_t)mode;
+    [self _setupJoystickUI];
     [self _savePrefs];
 }
 
@@ -218,6 +247,11 @@
     [self _savePrefs];
 }
 
+- (IBAction)clipToRadiusChoiceChanged:(id)sender
+{
+    // TBD : handle joysticks with radius (most gamepads)
+}
+
 - (IBAction)stepValueChanged:(id)sender
 {
     joy_step = [self.joystickStepper intValue];
@@ -225,8 +259,84 @@
     [self _savePrefs];
 }
 
-- (IBAction)calibrateJoystick:(id)sender
+#pragma mark -
+#pragma Joystick calibration
+
+- (void)drawJoystickCalibration:(NSNotification *)notification
 {
+    if (![self.joystickCalibrationView isHidden])
+    {
+        [self.joystickCalibrationView setNeedsDisplay:YES];
+        [self.button0Pressed setHidden:!(joy_button0)];
+        [self.button1Pressed setHidden:!(joy_button1)];
+    }
+}
+
+- (void)flagsChanged:(NSEvent*)event
+{
+    // NOTE : yay, awesome! checking for ([event modifierFlags] & NSAlternateKeyMask) does not work properly if both were pressed and then one ALT key is unpressed ... kudoes to Apple for an excellent key-handling API /sarc
+    static BOOL leftAltEngaged = NO;
+    static BOOL rightAltEngaged = NO;
+    switch ([event keyCode])
+    {
+        case ALT_LT:
+            leftAltEngaged = !leftAltEngaged;
+            c_keys_handle_input(SCODE_L_ALT, /*pressed:*/leftAltEngaged, /*cooked:*/0);
+            break;
+        case ALT_RT:
+            rightAltEngaged = !rightAltEngaged;
+            c_keys_handle_input(SCODE_R_ALT, /*pressed:*/rightAltEngaged, /*cooked:*/0);
+            break;
+        default:
+            break;
+    }
+    if (!([event modifierFlags] & NSAlternateKeyMask))
+    {
+        // But we can trust the system state if no alt modifier exists ... this resets b0rken edge cases
+        leftAltEngaged = NO;
+        rightAltEngaged = NO;
+    }
+    [self.button0Pressed setHidden:!(joy_button0)];
+    [self.button1Pressed setHidden:!(joy_button1)];
+}
+
+- (void)_handleKeyEvent:(NSEvent *)event pressed:(BOOL)pressed
+{
+    unichar c = [[event charactersIgnoringModifiers] characterAtIndex:0];
+    int scode = (int)c;
+    switch (scode)
+    {
+        case NSUpArrowFunctionKey:
+            c_keys_handle_input(SCODE_U, pressed, /*cooked:*/0);
+            break;
+        case NSDownArrowFunctionKey:
+            c_keys_handle_input(SCODE_D, pressed, /*cooked:*/0);
+            break;
+        case NSLeftArrowFunctionKey:
+            c_keys_handle_input(SCODE_L, pressed, /*cooked:*/0);
+            break;
+        case NSRightArrowFunctionKey:
+            c_keys_handle_input(SCODE_R, pressed, /*cooked:*/0);
+            break;
+        default:
+            break;
+    }
+}
+
+- (void)keyUp:(NSEvent *)event
+{
+    [self _handleKeyEvent:event pressed:NO];
+    
+    // Allow other character to be handled (or not and beep)
+    //[super keyDown:event];
+}
+
+- (void)keyDown:(NSEvent *)event
+{
+    [self _handleKeyEvent:event pressed:YES];
+    
+    // Allow other character to be handled (or not and beep)
+    //[super keyDown:event];
 }
 
 @end

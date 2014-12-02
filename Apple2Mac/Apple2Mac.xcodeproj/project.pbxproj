@@ -182,6 +182,7 @@
 		77E1C0C619D7298F004344E0 /* EmulatorFullscreenWindow.m in Sources */ = {isa = PBXBuildFile; fileRef = 77E1C0C219D7298F004344E0 /* EmulatorFullscreenWindow.m */; };
 		77EB316C1A27A9AF00DC5A8A /* blank.dsk.gz in Resources */ = {isa = PBXBuildFile; fileRef = 4ADC523019E8D3F600186B36 /* blank.dsk.gz */; };
 		77EB316D1A27A9AF00DC5A8A /* blank.nib.gz in Resources */ = {isa = PBXBuildFile; fileRef = 4ADC523119E8D3F600186B36 /* blank.nib.gz */; };
+		77F80B441A2D95E300D45030 /* EmulatorJoystickCalibrationView.m in Sources */ = {isa = PBXBuildFile; fileRef = 77F80B421A2D95E300D45030 /* EmulatorJoystickCalibrationView.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -345,6 +346,8 @@
 		77E1C0C219D7298F004344E0 /* EmulatorFullscreenWindow.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = EmulatorFullscreenWindow.m; path = Classes/OSX/EmulatorFullscreenWindow.m; sourceTree = "<group>"; };
 		77E1C0C319D7298F004344E0 /* EmulatorFullscreenWindow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = EmulatorFullscreenWindow.h; path = Classes/OSX/EmulatorFullscreenWindow.h; sourceTree = "<group>"; };
 		77E1C0C719D736EB004344E0 /* glvideo.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = glvideo.c; sourceTree = "<group>"; };
+		77F80B421A2D95E300D45030 /* EmulatorJoystickCalibrationView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = EmulatorJoystickCalibrationView.m; path = Classes/OSX/EmulatorJoystickCalibrationView.m; sourceTree = "<group>"; };
+		77F80B431A2D95E300D45030 /* EmulatorJoystickCalibrationView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = EmulatorJoystickCalibrationView.h; path = Classes/OSX/EmulatorJoystickCalibrationView.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -506,6 +509,8 @@
 				77E1C0C319D7298F004344E0 /* EmulatorFullscreenWindow.h */,
 				77E1C0C019D7298F004344E0 /* EmulatorGLView.m */,
 				77E1C0C119D7298F004344E0 /* EmulatorGLView.h */,
+				77F80B421A2D95E300D45030 /* EmulatorJoystickCalibrationView.m */,
+				77F80B431A2D95E300D45030 /* EmulatorJoystickCalibrationView.h */,
 				77C279731A1048B4000FE33F /* EmulatorJoystickController.h */,
 				77C279741A1048B4000FE33F /* EmulatorJoystickController.m */,
 				773BC91719F2FD4500996893 /* EmulatorPrefsController.h */,
@@ -1060,6 +1065,7 @@
 				773B3DAD19568A570085CE5F /* debugger.c in Sources */,
 				77E1C0B319D72700004344E0 /* vectorUtil.c in Sources */,
 				4AC7A76D19ECC3FB00BCD457 /* EmulatorWindow.m in Sources */,
+				77F80B441A2D95E300D45030 /* EmulatorJoystickCalibrationView.m in Sources */,
 				773B3DAB19568A570085CE5F /* keys.c in Sources */,
 				773B3DBC19568A570085CE5F /* timing.c in Sources */,
 				773B3DAF19568A570085CE5F /* misc.c in Sources */,
