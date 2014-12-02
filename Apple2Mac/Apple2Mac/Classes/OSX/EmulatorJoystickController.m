@@ -92,21 +92,32 @@ void gldriver_joystick_reset(void) {
 
 - (void)connectivityPoll:(NSNotification *)notification
 {
-    NSArray *joysticks = [DDHidJoystick allJoysticks];
-    BOOL changed = ([joysticks count] != [self.allJoysticks count]);
-    for (DDHidJoystick *joystick in joysticks)
+    static unsigned int counter = 0;
+    counter = (counter+1) % 60;
+    if (counter == 0)
     {
-        NSString *key =[NSString stringWithFormat:@"%@-%@-%@", [joystick manufacturer], [joystick serialNumber], [joystick transport]];
-        if (![self.allJoysticks objectForKey:key])
+        NSArray *joysticks = [DDHidJoystick allJoysticks];
+        BOOL changed = ([joysticks count] != [self.allJoysticks count]);
+        for (DDHidJoystick *joystick in joysticks)
         {
-            changed = YES;
-            break;
+            NSString *key =[NSString stringWithFormat:@"%@-%@-%@", [joystick manufacturer], [joystick serialNumber], [joystick transport]];
+            if (![self.allJoysticks objectForKey:key])
+            {
+                changed = YES;
+                break;
+            }
+        }
+        if (changed)
+        {
+            [self resetJoysticks];
         }
     }
-    if (changed)
+#ifdef KEYPAD_JOYSTICK
+    if (joy_mode == JOY_KPAD)
     {
-        [self resetJoysticks];
+        c_keys_handle_input(-1, 0, 0);
     }
+#endif
 }
 
 #pragma mark -
