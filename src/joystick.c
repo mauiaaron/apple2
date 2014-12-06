@@ -27,6 +27,7 @@ uint16_t joy_y = HALF_JOY_RANGE;
 uint8_t joy_button0 = 0;
 uint8_t joy_button1 = 0;
 uint8_t joy_button2 = 0; // unused?
+bool joy_clip_to_radius = false;
 
 #ifdef KEYPAD_JOYSTICK
 short joy_step = 1;

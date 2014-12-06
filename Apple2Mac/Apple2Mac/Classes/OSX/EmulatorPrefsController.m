@@ -21,6 +21,7 @@
 #define kApple2ColorConfig @"kApple2ColorConfig"
 #define kApple2JoystickConfig @"kApple2JoystickConfig"
 #define kApple2JoystickAutoRecenter @"kApple2JoystickAutoRecenter"
+#define kApple2JoystickClipToRadius @"kApple2JoystickClipToRadius"
 #define kApple2JoystickStep @"kApple2JoystickStep"
 
 @interface EmulatorPrefsController ()
@@ -121,11 +122,16 @@
     joy_mode = (joystick_mode_t)mode;
     [self.joystickChoice selectItemAtIndex:mode];
     
+#ifdef KEYPAD_JOYSTICK
     joy_auto_recenter = [defaults integerForKey:kApple2JoystickAutoRecenter];
     [self.joystickRecenter setState:joy_auto_recenter ? NSOnState : NSOffState];
     joy_step = [defaults integerForKey:kApple2JoystickStep];
     [self.joystickStepLabel setIntegerValue:joy_step];
     [self.joystickStepper setIntegerValue:joy_step];
+#endif
+    
+    joy_clip_to_radius = [defaults boolForKey:kApple2JoystickClipToRadius];
+    [self.joystickClipToRadius setState:joy_clip_to_radius ? NSOnState : NSOffState];
     
     [self _setupJoystickUI];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(drawJoystickCalibration:) name:(NSString *)kDrawTimerNotification object:nil];
@@ -149,6 +155,7 @@
     [defaults setInteger:joy_mode forKey:kApple2JoystickConfig];
     [defaults setInteger:joy_step forKey:kApple2JoystickStep];
     [defaults setBool:joy_auto_recenter forKey:kApple2JoystickAutoRecenter];
+    [defaults setBool:joy_clip_to_radius forKey:kApple2JoystickClipToRadius];
 }
 
 - (IBAction)sliderDidMove:(id)sender
@@ -249,7 +256,8 @@
 
 - (IBAction)clipToRadiusChoiceChanged:(id)sender
 {
-    // TBD : handle joysticks with radius (most gamepads)
+    joy_clip_to_radius = ([self.joystickClipToRadius state] == NSOnState);
+    [self _savePrefs];
 }
 
 - (IBAction)stepValueChanged:(id)sender

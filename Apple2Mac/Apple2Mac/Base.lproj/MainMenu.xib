@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="6245" systemVersion="13F34" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="6254" systemVersion="14B25" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
         <deployment version="1060" identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="6245"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="6254"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="NSApplication">
@@ -244,7 +244,7 @@ CA
                         <rect key="frame" x="20" y="153" width="212" height="18"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
-                        <size key="cellSize" width="91" height="18"/>
+                        <size key="cellSize" width="89" height="18"/>
                         <size key="intercellSpacing" width="4" height="2"/>
                         <buttonCell key="prototype" type="radio" title="Radio" imagePosition="left" alignment="left" inset="2" id="800-L1-WxW">
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
@@ -272,7 +272,7 @@ CA
                         <rect key="frame" x="271" y="153" width="212" height="18"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
-                        <size key="cellSize" width="91" height="18"/>
+                        <size key="cellSize" width="89" height="18"/>
                         <size key="intercellSpacing" width="4" height="2"/>
                         <buttonCell key="prototype" type="radio" title="Radio" imagePosition="left" alignment="left" inset="2" id="uEc-fa-XXZ">
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
@@ -318,14 +318,14 @@ CA
                             <action selector="startupDiskBChoiceChanged:" target="FHO-g2-V3A" id="tQS-5l-DDf"/>
                         </connections>
                     </button>
-                    <box autoresizesSubviews="NO" verticalHuggingPriority="750" title="Box" boxType="separator" titlePosition="noTitle" id="7ZU-H6-jQn">
+                    <box verticalHuggingPriority="750" title="Box" boxType="separator" titlePosition="noTitle" id="7ZU-H6-jQn">
                         <rect key="frame" x="12" y="59" width="498" height="5"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <color key="borderColor" white="0.0" alpha="0.41999999999999998" colorSpace="calibratedWhite"/>
                         <color key="fillColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
                         <font key="titleFont" metaFont="system"/>
                     </box>
-                    <box autoresizesSubviews="NO" horizontalHuggingPriority="750" title="Box" boxType="separator" titlePosition="noTitle" id="864-Ov-2tE">
+                    <box horizontalHuggingPriority="750" title="Box" boxType="separator" titlePosition="noTitle" id="864-Ov-2tE">
                         <rect key="frame" x="259" y="70" width="5" height="217"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <color key="borderColor" white="0.0" alpha="0.41999999999999998" colorSpace="calibratedWhite"/>
@@ -441,7 +441,7 @@ DQ
                                                 <action selector="peggedChoiceChanged:" target="mUW-Rh-bL1" id="K2H-Vc-15h"/>
                                             </connections>
                                         </button>
-                                        <box autoresizesSubviews="NO" verticalHuggingPriority="750" title="Box" boxType="separator" titlePosition="noTitle" id="9U0-v9-wTm">
+                                        <box verticalHuggingPriority="750" title="Box" boxType="separator" titlePosition="noTitle" id="9U0-v9-wTm">
                                             <rect key="frame" x="17" y="183" width="508" height="5"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <color key="borderColor" white="0.0" alpha="0.41999999999999998" colorSpace="calibratedWhite"/>
@@ -485,7 +485,7 @@ DQ
                                             </buttonCell>
                                             <cells>
                                                 <column>
-                                                    <buttonCell type="radio" title="No soundcard" imagePosition="left" alignment="left" enabled="NO" state="on" tag="1" inset="2" id="QsT-B1-n2t">
+                                                    <buttonCell type="radio" title="No soundcard" imagePosition="left" alignment="left" enabled="NO" tag="1" inset="2" id="QsT-B1-n2t">
                                                         <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                                         <font key="font" metaFont="system"/>
                                                     </buttonCell>
@@ -511,15 +511,6 @@ DQ
                                     <rect key="frame" x="10" y="33" width="534" height="298"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
-                                        <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" id="dak-eg-hHn">
-                                            <rect key="frame" x="15" y="278" width="96" height="17"/>
-                                            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                            <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Color :" id="eHo-1T-edz">
-                                                <font key="font" metaFont="system"/>
-                                                <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
-                                                <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
-                                            </textFieldCell>
-                                        </textField>
                                         <popUpButton verticalHuggingPriority="750" id="1sF-py-jCs">
                                             <rect key="frame" x="115" y="271" width="158" height="26"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
@@ -558,6 +549,15 @@ DQ
                                                 <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                             </textFieldCell>
                                         </textField>
+                                        <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" id="dak-eg-hHn">
+                                            <rect key="frame" x="15" y="277" width="96" height="17"/>
+                                            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                            <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Color :" id="eHo-1T-edz">
+                                                <font key="font" metaFont="system"/>
+                                                <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                                                <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                            </textFieldCell>
+                                        </textField>
                                     </subviews>
                                 </view>
                             </tabViewItem>
@@ -566,7 +566,7 @@ DQ
                                     <rect key="frame" x="10" y="33" width="534" height="298"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
-                                        <box autoresizesSubviews="NO" horizontalHuggingPriority="750" title="Box" boxType="separator" titlePosition="noTitle" id="Fkg-X3-0XG">
+                                        <box horizontalHuggingPriority="750" title="Box" boxType="separator" titlePosition="noTitle" id="Fkg-X3-0XG">
                                             <rect key="frame" x="265" y="9" width="5" height="286"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <color key="borderColor" white="0.0" alpha="0.41999999999999998" colorSpace="calibratedWhite"/>
@@ -654,15 +654,15 @@ DQ
                                                 <action selector="autoRecenterChoiceChanged:" target="mUW-Rh-bL1" id="Ehf-jm-Exs"/>
                                             </connections>
                                         </button>
-                                        <button id="wu9-dx-Rxy" userLabel="Clip to Radius">
+                                        <button id="wu9-dx-Rxy" userLabel="Clamp beyond Radius">
                                             <rect key="frame" x="15" y="245" width="217" height="18"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                            <buttonCell key="cell" type="check" title="Clip to Radius" bezelStyle="regularSquare" imagePosition="left" alignment="left" state="on" inset="2" id="AMY-tC-0Yf">
+                                            <buttonCell key="cell" type="check" title="Clamp Beyond Radius" bezelStyle="regularSquare" imagePosition="left" alignment="left" state="on" inset="2" id="AMY-tC-0Yf" userLabel="Clip beyond Radius">
                                                 <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                                 <font key="font" metaFont="system"/>
                                             </buttonCell>
                                             <connections>
-                                                <action selector="clipToRadiusChoiceChanged:" target="mUW-Rh-bL1" id="CWO-Ct-YTC"/>
+                                                <action selector="clipToRadiusChoiceChanged:" target="mUW-Rh-bL1" id="I8b-k9-H4g"/>
                                             </connections>
                                         </button>
                                         <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" id="e2h-SS-aex">
@@ -692,14 +692,15 @@ DQ
                                             </textFieldCell>
                                         </textField>
                                         <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" setsMaxLayoutWidthAtFirstLayout="YES" id="LUN-A2-S1l">
-                                            <rect key="frame" x="15" y="9" width="246" height="34"/>
+                                            <rect key="frame" x="15" y="9" width="246" height="85"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <textFieldCell key="cell" sendsActionOnEndEditing="YES" id="TEm-S7-9qg">
                                                 <font key="font" metaFont="system"/>
-                                                <string key="title">We recommend the Clip to Radius setting for gamepad devices (not traditional joysticks) which cannot generate values in the extreme corners.</string>
+                                                <string key="title">"Clamp Beyond Radius" setting is recommended for gamepad devices (not traditional joysticks) which cannot generate values in the extreme corners.</string>
                                                 <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                                 <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                             </textFieldCell>
+                                            <string key="userLabel">Clamp Beyond Radius setting is recommended for gamepad devices (not traditional joysticks) which cannot generate values in the extreme corners.</string>
                                         </textField>
                                     </subviews>
                                 </view>

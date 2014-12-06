@@ -27,6 +27,7 @@ extern uint16_t joy_y;
 extern uint8_t joy_button0;
 extern uint8_t joy_button1;
 extern uint8_t joy_button2;
+extern bool joy_clip_to_radius;
 
 #ifdef KEYPAD_JOYSTICK
 extern uint8_t joy_auto_recenter;

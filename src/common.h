@@ -68,6 +68,7 @@ static inline GLenum safeGLGetError(void) {
 }
 #else
 #define GLenum int
+#define safeGLGetError() 0
 #define glGetError() 0
 #endif
 

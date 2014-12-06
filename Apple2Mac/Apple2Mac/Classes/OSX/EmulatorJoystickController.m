@@ -123,7 +123,27 @@ void gldriver_joystick_reset(void) {
 #pragma mark -
 #pragma mark NSObject(DDHidJoystickDelegate)
 
-#define DDHID_JOYSTICK_NORMALIZER (256.f/(DDHID_JOYSTICK_VALUE_MAX*2))
+#define DDHID_JOYSTICK_NORMALIZER ((float)JOY_RANGE/(DDHID_JOYSTICK_VALUE_MAX*2))
+#define QUARTER_JOY (HALF_JOY_RANGE>>1)
+
+static inline void clampBeyondRadius(void) {
+    CGFloat half_x = joy_x - HALF_JOY_RANGE;
+    CGFloat half_y = joy_y - HALF_JOY_RANGE;
+    CGFloat r = sqrtf(half_x*half_x + half_y*half_y);
+    bool shouldClip = (r > HALF_JOY_RANGE);
+    if (joy_clip_to_radius && shouldClip) {
+        if (joy_x < HALF_JOY_RANGE) {
+            joy_x = (joy_x < QUARTER_JOY) ? 0.f : joy_x;
+        } else {
+            joy_x = (joy_x < HALF_JOY_RANGE+QUARTER_JOY) ? joy_x : JOY_RANGE-1;
+        }
+        if (joy_y < HALF_JOY_RANGE) {
+            joy_y = (joy_y < QUARTER_JOY) ? 0.f : joy_y;
+        } else {
+            joy_y = (joy_y < HALF_JOY_RANGE+QUARTER_JOY) ? joy_y : JOY_RANGE-1;
+        }
+    }
+}
 
 - (void)ddhidJoystick:(DDHidJoystick *)joystick stick:(unsigned int)stick xChanged:(int)value
 {
@@ -137,6 +157,8 @@ void gldriver_joystick_reset(void) {
     if (joy_x > 0xFF) {
         joy_x = 0xFF;
     }
+    
+    clampBeyondRadius();
 }
 
 - (void)ddhidJoystick:(DDHidJoystick *)joystick stick:(unsigned int)stick yChanged:(int)value
@@ -151,6 +173,8 @@ void gldriver_joystick_reset(void) {
     if (joy_y > 0xFF) {
         joy_y = 0xFF;
     }
+    
+    clampBeyondRadius();
 }
 
 - (void)ddhidJoystick:(DDHidJoystick *)joystick stick:(unsigned int)stick otherAxis:(unsigned)otherAxis valueChanged:(int)value

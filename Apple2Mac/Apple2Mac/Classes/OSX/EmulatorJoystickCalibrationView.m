@@ -24,19 +24,22 @@
     
     CGRect bounds = [self bounds];
     
-    NSAssert(bounds.size.height == 256.f, @"view should be 256pts high");
-    NSAssert(bounds.size.width == 256.f, @"view should be 256pts wide");
+    NSAssert(bounds.size.height == JOY_RANGE, @"view should be 256pts high");
+    NSAssert(bounds.size.width == JOY_RANGE, @"view should be 256pts wide");
     
     CGContextRef context = [[NSGraphicsContext currentContext] graphicsPort];
     CGContextSaveGState(context);
     CGContextSetLineWidth(context, 1);
-    CGContextSetRGBStrokeColor(context, 0, 0, 0, 1);
     
-    CGContextAddEllipseInRect(context, bounds);
-    CGContextStrokePath(context);
+    if (joy_clip_to_radius && (joy_mode == JOY_PCJOY))
+    {
+        CGContextSetRGBStrokeColor(context, 0, 0, 0, 1);
+        CGContextAddEllipseInRect(context, bounds);
+        CGContextStrokePath(context);
+    }
 
     CGFloat x_val = joy_x;
-    CGFloat y_val = 256-joy_y;
+    CGFloat y_val = JOY_RANGE-joy_y;
     
     CGContextSetRGBStrokeColor(context, 1, 0, 0, 1);
     CGRect cursor = CGRectMake(x_val-(pulseSize/2.f), y_val-(pulseSize/2.f), pulseSize, pulseSize);
