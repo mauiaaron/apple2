@@ -20,7 +20,7 @@ Screenshots show an earlier version of the Linux variant.
 Mac Package
 -----------
 
-A binary package for Macintosh is available at [bitr0t.com](http://bitr0t.com/Apple2Mac/)
+A binary package for Macintosh is available at [deadc0de.org](http://deadc0de.org/Apple2Mac/)
 
 Linux Package
 -------------
