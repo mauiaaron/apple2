@@ -1,41 +1,53 @@
 Apple //ix
 ==========
 
-A salvaged Apple //e emulator, originally written in the mid-90's in C and x86 assembly and currently suffering from
-quite a bit of rot...
+Apple2ix is an Apple //e emulator written primarily in C and x86 assembly language with a smattering of Objective-C
+(Cocoa port).  Apple2ix is derived from the apple2-emul-linux project originally coded in the mid 90's.
 
 Project Goals
 -------------
 
-* Approach 100% emulation fidelity with Apple //e machine
-* POSIX portability
-* A tech playground for me :-) ... This is actually an important point...  I'm doing this because it's fun and allows me
-  to play with a wide swath of fundamental tech : virtual CPU, virtual machines, assembly language programming, video
-  and audio programming to name a few...  So you might say that the process and practice is as important as the goals.
+The project seeks to be portable across a wide range of modern POSIX systesm including MacOSX desktop, Desktop
+Linux/BSD, iOS, and Android.
+
+As of December 2014, the emulator run on MacOSX 10.9+ and Debian GNU/Linux, and mobile ports are currently on the
+drawing board.
+
+Screenshots show an earlier version of the Linux variant.
 
 ![Apple //ix](https://raw.github.com/mauiaaron/apple2/master/docs/Apple2ix.png "Apple //ix")
 
-Status Update
+Mac Package
+-----------
+
+A binary package for Macintosh is available at [bitr0t.com](http://bitr0t.com/Apple2Mac/)
+
+Linux Package
 -------------
 
-20131214 ...
+At the moment consists of `./configure --prefix=...`, `make`, `make install` ;-)
 
-* It builds and works for me :-) as a 32bit binary on GNU/Linux with X11 and OpenAL
-* Ideally I'd like to maintain the CPU thread tightloop in assembly, and so will need to write new x86-64, ARM, (and
-  also a generic C target) in addition to maintaining existing x86 assembly routines
-* Before any significant platform/architecture porting is started, need to develop unit tests!!! :-)
+Project Tech
+------------
 
-![Public Domain Mystery House Disk Image](https://raw.github.com/mauiaaron/apple2/master/docs/MysteryHouse.png "Public Domain Mystery House Disk Image")
+* Majority of coding in the C language (still the most portable/reliable after all these years ;-)
+* Assembly language for 65c02 CPU tightloop
+* Extensive CPU, VirtualMachine, and display (expected output) tests
+* OpenGLES 2.x
+* OpenAL
+* Cocoa APIs
+
+![DOS 3.3](https://raw.github.com/mauiaaron/apple2/master/docs/DOS33.png "DOS 3.3 Applesoft BASIC and //e monitor")
 
 Semi-Ordered TODO
 -----------------
 
-* GNU/Linux x86 alpha-test binaries
-* Unit tests
-* POSIX x64 target (Linux, \*BSD, ...)
-* MacOS port
-* ARM tablets (iOS, Android, ...)
-* General refactoring for modularity, clarity, and portability as I go (and have tests to double-check stuff :-)
-
-![DOS 3.3](https://raw.github.com/mauiaaron/apple2/master/docs/DOS33.png "DOS 3.3 Applesoft BASIC and //e monitor")
+* Proper VBL timing
+* ProDOS-order Disk Images
+* ARM assembly/ABI variant (in prep for mobile)
+* iOS port
+* Android NDK port
+* Emulator save/restore and image compatibility with AppleWin
+* Other feature parity with AppleWin
+* Improved debugger routines
 
