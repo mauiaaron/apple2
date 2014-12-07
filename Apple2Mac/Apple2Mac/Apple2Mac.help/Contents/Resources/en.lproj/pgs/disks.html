@@ -31,6 +31,26 @@
                 Disk images can be procured from various online sources.  In particular, you can use anonymous FTP to
                 the Apple2 archive at <a class="xref" href="ftp://ftp.apple.asimov.net/" target="_blank">ftp.apple.asimov.net</a>.
                 </p>
+
+                <h2 class="title topictitle2">Troubleshooting Disk Images</h2>
+                <p class="p">
+                If you have a disk image that appears problematic, (won't boot or errors out), it may be one of several things:
+                <ul>
+                    <li>You have "inserted" the disk in a read-only mode, and you are attempting to write information to
+                    that disk.  Usually the game or app will complain if it needs write access, but not always.  Open
+                    the disks dialog and select read/write status for that disk image file.</li>
+                    <li>The disk image itself is corrupted.  If you suspect Apple2Mac is reponsible, please <a
+                        href="https://github.com/mauiaaron/apple2/issues/">file an issue report on Github</a>.</li>
+                    <li>There is a bug in the emulator.  Check the <a href="https://github.com/mauiaaron/apple2/issues/">Github
+                        issues page</a> to see the status of known issues.</li>
+                </ul>
+                </p>
+                <p class="p">
+                Some games make use of both disk drives, but only if something was inserted into the second disk drive.
+                For example you might load the "boot" disk in drive A, and the "player" disk in drive B before rebooting
+                the emulator.
+                </p>
+
                 <h2 class="title topictitle2">More Disk Image Info</h2>
                 <p class="p">
                 Disk images are binary files that actually are raw dumps of the original 5.25" disk. A disk image will
