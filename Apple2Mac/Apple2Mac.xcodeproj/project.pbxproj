@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		4A2636F919FDEDB700DBFB00 /* Apple2Mac.help in Resources */ = {isa = PBXBuildFile; fileRef = 4A2636F819FDEDB700DBFB00 /* Apple2Mac.help */; };
 		4A69C1801A33D6D7001579EF /* images in Resources */ = {isa = PBXBuildFile; fileRef = 4A69C17F1A33D6D7001579EF /* images */; };
+		4A69C1921A33DB90001579EF /* DDHidLib.framework in Copy Files (1 item) */ = {isa = PBXBuildFile; fileRef = 77C2796F1A1047AF000FE33F /* DDHidLib.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		4AC7A76D19ECC3FB00BCD457 /* EmulatorWindow.m in Sources */ = {isa = PBXBuildFile; fileRef = 4AC7A76C19ECC3FB00BCD457 /* EmulatorWindow.m */; };
 		4ADC51C219E8BD3700186B36 /* vectorUtil.c in Sources */ = {isa = PBXBuildFile; fileRef = 77E1C0A919D72700004344E0 /* vectorUtil.c */; };
 		4ADC51C319E8BD3A00186B36 /* sourceUtil.c in Sources */ = {isa = PBXBuildFile; fileRef = 77E1C0AB19D72700004344E0 /* sourceUtil.c */; };
@@ -214,6 +215,20 @@
 			remoteInfo = DDHidLib;
 		};
 /* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		4A69C18D1A33DB66001579EF /* Copy Files (1 item) */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				4A69C1921A33DB90001579EF /* DDHidLib.framework in Copy Files (1 item) */,
+			);
+			name = "Copy Files (1 item)";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		4A2636F819FDEDB700DBFB00 /* Apple2Mac.help */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Apple2Mac.help; sourceTree = "<group>"; };
@@ -703,6 +718,7 @@
 			buildPhases = (
 				773B3DC819568B6C0085CE5F /* ShellScript */,
 				773B3D08195688590085CE5F /* Sources */,
+				4A69C18D1A33DB66001579EF /* Copy Files (1 item) */,
 				773B3D09195688590085CE5F /* Frameworks */,
 				773B3DC919568BF20085CE5F /* ShellScript */,
 				773B3D0A195688590085CE5F /* Resources */,
