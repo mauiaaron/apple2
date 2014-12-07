@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		4A2636F919FDEDB700DBFB00 /* Apple2Mac.help in Resources */ = {isa = PBXBuildFile; fileRef = 4A2636F819FDEDB700DBFB00 /* Apple2Mac.help */; };
+		4A69C1801A33D6D7001579EF /* images in Resources */ = {isa = PBXBuildFile; fileRef = 4A69C17F1A33D6D7001579EF /* images */; };
 		4AC7A76D19ECC3FB00BCD457 /* EmulatorWindow.m in Sources */ = {isa = PBXBuildFile; fileRef = 4AC7A76C19ECC3FB00BCD457 /* EmulatorWindow.m */; };
 		4ADC51C219E8BD3700186B36 /* vectorUtil.c in Sources */ = {isa = PBXBuildFile; fileRef = 77E1C0A919D72700004344E0 /* vectorUtil.c */; };
 		4ADC51C319E8BD3A00186B36 /* sourceUtil.c in Sources */ = {isa = PBXBuildFile; fileRef = 77E1C0AB19D72700004344E0 /* sourceUtil.c */; };
@@ -53,20 +54,11 @@
 		4ADC522219E8CA4500186B36 /* Basic.vsh in Resources */ = {isa = PBXBuildFile; fileRef = 779F562719E4FE9E00A6F107 /* Basic.vsh */; };
 		4ADC522319E8CA4500186B36 /* Basic.fsh in Resources */ = {isa = PBXBuildFile; fileRef = 779F562819E4FE9E00A6F107 /* Basic.fsh */; };
 		4ADC522919E8CEAD00186B36 /* testvm.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D8619568A570085CE5F /* testvm.c */; };
-		4ADC523919E8D3F600186B36 /* blank.dsk.gz in Resources */ = {isa = PBXBuildFile; fileRef = 4ADC523019E8D3F600186B36 /* blank.dsk.gz */; };
-		4ADC523C19E8D3F600186B36 /* blank.nib.gz in Resources */ = {isa = PBXBuildFile; fileRef = 4ADC523119E8D3F600186B36 /* blank.nib.gz */; };
-		4ADC523F19E8D3F600186B36 /* etc.dsk.gz in Resources */ = {isa = PBXBuildFile; fileRef = 4ADC523219E8D3F600186B36 /* etc.dsk.gz */; };
-		4ADC524219E8D3F600186B36 /* mystery.dsk.gz in Resources */ = {isa = PBXBuildFile; fileRef = 4ADC523319E8D3F600186B36 /* mystery.dsk.gz */; };
-		4ADC524519E8D3F600186B36 /* README in Resources */ = {isa = PBXBuildFile; fileRef = 4ADC523419E8D3F600186B36 /* README */; };
 		4ADC524619E8D3F600186B36 /* README in Resources */ = {isa = PBXBuildFile; fileRef = 4ADC523419E8D3F600186B36 /* README */; };
 		4ADC524719E8D3F600186B36 /* README in Resources */ = {isa = PBXBuildFile; fileRef = 4ADC523419E8D3F600186B36 /* README */; };
-		4ADC524819E8D3F600186B36 /* speedtest.dsk.gz in Resources */ = {isa = PBXBuildFile; fileRef = 4ADC523519E8D3F600186B36 /* speedtest.dsk.gz */; };
-		4ADC524B19E8D3F600186B36 /* speedtest.txt in Resources */ = {isa = PBXBuildFile; fileRef = 4ADC523619E8D3F600186B36 /* speedtest.txt */; };
 		4ADC524C19E8D3F600186B36 /* speedtest.txt in Resources */ = {isa = PBXBuildFile; fileRef = 4ADC523619E8D3F600186B36 /* speedtest.txt */; };
 		4ADC524D19E8D3F600186B36 /* speedtest.txt in Resources */ = {isa = PBXBuildFile; fileRef = 4ADC523619E8D3F600186B36 /* speedtest.txt */; };
-		4ADC524E19E8D3F600186B36 /* testdisplay1.dsk.gz in Resources */ = {isa = PBXBuildFile; fileRef = 4ADC523719E8D3F600186B36 /* testdisplay1.dsk.gz */; };
 		4ADC525319E8D3F600186B36 /* testvm1.dsk.gz in Resources */ = {isa = PBXBuildFile; fileRef = 4ADC523819E8D3F600186B36 /* testvm1.dsk.gz */; };
-		4ADC525419E8D59B00186B36 /* testvm1.dsk.gz in Resources */ = {isa = PBXBuildFile; fileRef = 4ADC523819E8D3F600186B36 /* testvm1.dsk.gz */; };
 		773B3D101956885A0085CE5F /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 773B3D0F1956885A0085CE5F /* Cocoa.framework */; };
 		773B3D1A1956885A0085CE5F /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 773B3D181956885A0085CE5F /* InfoPlist.strings */; };
 		773B3D1C1956885A0085CE5F /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D1B1956885A0085CE5F /* main.m */; };
@@ -225,6 +217,7 @@
 
 /* Begin PBXFileReference section */
 		4A2636F819FDEDB700DBFB00 /* Apple2Mac.help */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Apple2Mac.help; sourceTree = "<group>"; };
+		4A69C17F1A33D6D7001579EF /* images */ = {isa = PBXFileReference; lastKnownFileType = folder; name = images; path = ../../images; sourceTree = "<group>"; };
 		4AC7A76B19ECC3FB00BCD457 /* EmulatorWindow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = EmulatorWindow.h; path = Classes/OSX/EmulatorWindow.h; sourceTree = "<group>"; };
 		4AC7A76C19ECC3FB00BCD457 /* EmulatorWindow.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = EmulatorWindow.m; path = Classes/OSX/EmulatorWindow.m; sourceTree = "<group>"; };
 		4ADC51CA19E8BEB700186B36 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = "Base.lproj/MainMenu-Test.xib"; sourceTree = "<group>"; };
@@ -456,6 +449,7 @@
 		773B3D151956885A0085CE5F /* Apple2Mac */ = {
 			isa = PBXGroup;
 			children = (
+				4A69C17F1A33D6D7001579EF /* images */,
 				4ADC522F19E8D3F600186B36 /* disks */,
 				773B3D4519568A570085CE5F /* src */,
 				773B3D431956897D0085CE5F /* Classes */,
@@ -851,22 +845,14 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4ADC524219E8D3F600186B36 /* mystery.dsk.gz in Resources */,
-				4ADC525419E8D59B00186B36 /* testvm1.dsk.gz in Resources */,
-				4ADC524519E8D3F600186B36 /* README in Resources */,
+				4A69C1801A33D6D7001579EF /* images in Resources */,
 				773B3D1A1956885A0085CE5F /* InfoPlist.strings in Resources */,
-				4ADC523919E8D3F600186B36 /* blank.dsk.gz in Resources */,
-				4ADC523C19E8D3F600186B36 /* blank.nib.gz in Resources */,
 				773B3D281956885A0085CE5F /* Images.xcassets in Resources */,
-				4ADC523F19E8D3F600186B36 /* etc.dsk.gz in Resources */,
 				773B3D201956885A0085CE5F /* Credits.rtf in Resources */,
-				4ADC524819E8D3F600186B36 /* speedtest.dsk.gz in Resources */,
 				4A2636F919FDEDB700DBFB00 /* Apple2Mac.help in Resources */,
-				4ADC524B19E8D3F600186B36 /* speedtest.txt in Resources */,
 				779F562919E4FE9E00A6F107 /* Basic.vsh in Resources */,
 				779F562A19E4FE9E00A6F107 /* Basic.fsh in Resources */,
 				779F562319DA59D600A6F107 /* MainMenu.xib in Resources */,
-				4ADC524E19E8D3F600186B36 /* testdisplay1.dsk.gz in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
