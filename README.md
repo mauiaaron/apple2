@@ -15,10 +15,10 @@ drawing board.
 
 Screenshots show an earlier version of the Linux variant.
 
-![Apple //ix](https://raw.github.com/mauiaaron/apple2/master/docs/Apple2ix.png "Apple //ix")
-
 Mac Package
 -----------
+
+![Apple2Mac](https://raw.github.com/mauiaaron/apple2/master/docs/Apple2Mac.png "Apple2Mac")
 
 A binary package for Macintosh is available at [deadc0de.org](http://deadc0de.org/Apple2Mac/)
 
@@ -26,6 +26,8 @@ Linux Package
 -------------
 
 At the moment consists of `./configure --prefix=...`, `make`, `make install` ;-)
+
+![Apple //ix](https://raw.github.com/mauiaaron/apple2/master/docs/Apple2ix.png "Apple //ix")
 
 Project Tech
 ------------
