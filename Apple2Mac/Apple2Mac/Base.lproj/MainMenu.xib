@@ -131,12 +131,6 @@ CA
         <customObject id="494" userLabel="EmulatorGLView" customClass="EmulatorGLView"/>
         <customObject id="M8b-ga-iOS" customClass="EmulatorWindowController" colorLabel="IBBuiltInLabel-Blue">
             <connections>
-                <outlet property="chooseDiskA" destination="j1W-BP-P7S" id="CuH-rj-ae4"/>
-                <outlet property="chooseDiskB" destination="lI0-3f-IsR" id="Ym9-IW-I4c"/>
-                <outlet property="diskAProperties" destination="e89-G9-nNt" id="rwR-9Z-oT4"/>
-                <outlet property="diskBProperties" destination="AOj-bZ-LXp" id="6Q1-mW-fpP"/>
-                <outlet property="diskInA" destination="cb9-Pc-Ggd" id="kP3-qf-vci"/>
-                <outlet property="diskInB" destination="5oU-oN-vUH" id="lNx-Lm-0FA"/>
                 <outlet property="disksWindow" destination="RAk-at-ZT4" id="64k-qW-zF5"/>
                 <outlet property="pauseMenuItem" destination="r9g-Ro-UwW" id="4YW-pt-lai"/>
                 <outlet property="prefsWindow" destination="Mzv-VG-jce" id="dQt-pf-qdi"/>
