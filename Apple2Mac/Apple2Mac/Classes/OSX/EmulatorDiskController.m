@@ -243,8 +243,7 @@
     NSURL *url = [[NSUserDefaults standardUserDefaults] URLForKey:kApple2DisksURL];
     if (!url)
     {
-        url = [[NSBundle mainBundle] URLForResource:@"blank" withExtension:@"dsk.gz"];
-        url = [url URLByDeletingLastPathComponent];
+        url = [[NSBundle mainBundle] URLForResource:@"images" withExtension:nil];
     }
     [openPanel setDirectoryURL:url];
     [openPanel setShowsResizeIndicator:YES];
