@@ -7,13 +7,11 @@ Apple2ix is an Apple //e emulator written primarily in C and x86 assembly langua
 Project Goals
 -------------
 
-The project seeks to be portable across a wide range of modern POSIX systesm including MacOSX desktop, Desktop
-Linux/BSD, iOS, and Android.
+The project seeks to be portable across a wide range of modern POSIX systesm including MacOSX, desktop Linux/BSD, iOS,
+and Android.
 
-As of December 2014, the emulator run on MacOSX 10.9+ and Debian GNU/Linux, and mobile ports are currently on the
+As of December 2014, the emulator runs on MacOSX 10.9+ and Debian GNU/Linux, and mobile ports are currently on the
 drawing board.
-
-Screenshots show an earlier version of the Linux variant.
 
 Mac Package
 -----------
@@ -25,14 +23,15 @@ A binary package for Macintosh is available at [deadc0de.org](http://deadc0de.or
 Linux Package
 -------------
 
-At the moment consists of `./configure --prefix=...`, `make`, `make install` ;-)
+At the moment consists of `./configure --prefix=...`, `make`, `make install` ;-)  You will need GCC or Clang compiler
+and other tools as determined by the `configure` script.
 
 ![Apple //ix](https://raw.github.com/mauiaaron/apple2/master/docs/Apple2ix.png "Apple //ix")
 
 Project Tech
 ------------
 
-* C language for the majority of the project (still the most portable/reliable after all these years ;-)
+* C language for the majority of the project (still the most portable/reliable language after all these years ;-)
 * Assembly language for 65c02 CPU tightloop
 * Extensive tests for 65c02 CPU, Apple //e VM, and display (expected framebuffer output)
 * OpenGLES 2.x graphics
