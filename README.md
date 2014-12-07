@@ -30,12 +30,12 @@ At the moment consists of `./configure --prefix=...`, `make`, `make install` ;-)
 Project Tech
 ------------
 
-* Majority of coding in the C language (still the most portable/reliable after all these years ;-)
+* C language for the majority of the project (still the most portable/reliable after all these years ;-)
 * Assembly language for 65c02 CPU tightloop
-* Extensive CPU, VirtualMachine, and display (expected output) tests
-* OpenGLES 2.x
-* OpenAL
-* Cocoa APIs
+* Extensive tests for 65c02 CPU, Apple //e VM, and display (expected framebuffer output)
+* OpenGLES 2.x graphics
+* OpenAL audio (emulated speaker and emulated Mockingboard/Phasor soundcards)
+* Objective-C and Cocoa APIs (Mac/iOS variant)
 
 ![DOS 3.3](https://raw.github.com/mauiaaron/apple2/master/docs/DOS33.png "DOS 3.3 Applesoft BASIC and //e monitor")
 
@@ -50,4 +50,5 @@ Semi-Ordered TODO
 * Emulator save/restore and image compatibility with AppleWin
 * Other feature parity with AppleWin
 * Improved debugger routines
+* Emscripten/web frontend?
 
