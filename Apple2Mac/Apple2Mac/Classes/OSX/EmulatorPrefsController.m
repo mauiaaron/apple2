@@ -126,6 +126,10 @@
     joy_auto_recenter = [defaults integerForKey:kApple2JoystickAutoRecenter];
     [self.joystickRecenter setState:joy_auto_recenter ? NSOnState : NSOffState];
     joy_step = [defaults integerForKey:kApple2JoystickStep];
+    if (!joy_step)
+    {
+        joy_step = 1;
+    }
     [self.joystickStepLabel setIntegerValue:joy_step];
     [self.joystickStepper setIntegerValue:joy_step];
 #endif
