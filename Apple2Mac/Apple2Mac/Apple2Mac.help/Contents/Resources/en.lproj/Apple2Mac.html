@@ -9,14 +9,44 @@
     <body>
         <h1 class="title topictitle1">Apple2Mac Help</h1>
         <p class="p">
-        Apple2Mac emulates a 128k Apple //e computer with 2 "Disk II" floppy disk drives. The emulator supports disk
-        image formats either in DOS-order (.dsk, .do files) or raw nibble format (.nib).
+        Apple2Mac emulates an enhanced 128k Apple //e computer with the following peripherals
+        <ul>
+            <li>Two 5.25" <i>Disk ][</i> floppy disk drives (controller in slot 6)</li>
+            <li>Two Mockingboard sound cards in slot 4 &amp; 5</li>
+            <li>80 column card in slot 3</li>
+        </ul>
         </p>
+
+        <h2 class="title topictitle2">Specific Help Topics</h2>
         <p class="p">
         <a class="xref" href="pgs/settings.html">Emulator Configuration</a><br/>
         <a class="xref" href="pgs/disks.html">Disk Images</a><br/>
+        <a class="xref" href="pgs/keyboard.html">Keyboard</a><br/>
         <a class="xref" href="pgs/joystick.html">Joystick</a><br/>
         <a class="xref" href="pgs/audio.html">Audio</a><br/>
+        </p>
+
+        <h2 class="title topictitle2">Notices</h2>
+        <p class="p">
+        The Apple2Mac emulator software itself is Free Software, subject to the <a class="xref" href="LICENSE">GNU
+        General Public License version 2</a>.  Apple2Mac is copyright Aaron Culliney and other contributors.  The source
+        code is available from <a class="xref" href="https://github.com/mauiaaron/apple2">https://github.com/mauiaaron/apple2</a>.
+        </p>
+
+        <p class="p">
+        Apple2Mac relies on a number of free and open source software.
+        <ul>
+            <li>Portions of the sound and timing emulation were derived from <a class="xref" href="https://github.com/AppleWin/AppleWin">AppleWin</a></li>
+            <li>Sound output depends on the <a href="http://sourceforge.net/projects/openal-soft">OpenAL</a> audio library</li>
+            <li>Disk image compression routines handled by <a class="xref" href="http://zlib.net">zlib</a></li>
+            <li>Efficent C-language hashing with <a class="xref" href="https://troydhanson.github.io/uthash/">uthash</a></li>
+            <li>Unit testing by <a class="xret" href="https://github.com/silentbicycle/greatest">GreaTEST</a></li>
+        </ul>
+        </p>
+
+        <p class="p">
+        The binary disk image files that run through Apple2Mac are subject to other copyright and licensing.  They are
+        included for educational and historic archival purposes only.
         </p>
     </body>
 </html>
