@@ -18,12 +18,12 @@ Mac Package
 
 ![Apple2Mac](https://raw.github.com/mauiaaron/apple2/master/docs/Apple2Mac.png "Apple2Mac")
 
-A binary package for Macintosh is available at [deadc0de.org](http://deadc0de.org/Apple2Mac/Apple2Mac-0.9.dmg)
-Size : 10240000 (10MB)
-SHASUM : 81f2d55c2daaa0d3f9b33af9b50f69f6789738bf
+A binary package for Macintosh is available at [deadc0de.org](http://deadc0de.org/Apple2Mac/Apple2Mac-0.9.dmg)  
+Size : 10240000 (10MB)  
+SHASUM : 81f2d55c2daaa0d3f9b33af9b50f69f6789738bf  
 
-Alt Size : 76820480 (75MB)
-ALTSUM : 488a40d7f1187bcfd16d0045258f606a95f448cb
+Alt Size : 76820480 (75MB)  
+ALTSUM : 488a40d7f1187bcfd16d0045258f606a95f448cb  
 
 Linux Package
 -------------
