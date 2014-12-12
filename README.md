@@ -7,7 +7,7 @@ Apple2ix is an Apple //e emulator written primarily in C and x86 assembly langua
 Project Goals
 -------------
 
-The project seeks to be portable across a wide range of modern POSIX systesm including MacOSX, desktop Linux/BSD, iOS,
+The project seeks to be portable across a wide range of modern POSIX systems including MacOSX, desktop Linux/BSD, iOS,
 and Android.
 
 As of December 2014, the emulator runs on MacOSX 10.9+ and Debian GNU/Linux, and mobile ports are currently on the
