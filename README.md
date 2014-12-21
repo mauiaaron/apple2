@@ -51,6 +51,7 @@ Semi-Ordered TODO
 * Proper VBL timing
 * ProDOS-order Disk Images
 * ARM assembly/ABI variant (in prep for mobile)
+* OpenGL shaders/tricks for style (various screen artifacts) and functionality (Disk ][ status overlays, etc)
 * iOS port
 * Android NDK port
 * Emulator save/restore and image compatibility with AppleWin
