@@ -236,15 +236,14 @@ static GLuint _create_VAO(demoModel *model) {
 }
 
 static void _destroy_VAO(GLuint vaoName) {
-    GLuint index;
-    GLuint bufName;
 
     // Bind the VAO so we can get data from it
     glBindVertexArray(vaoName);
 
     // For every possible attribute set in the VAO
-    for (index = 0; index < 16; index++) {
+    for (GLuint index = 0; index < 16; index++) {
         // Get the VBO set for that attibute
+        GLuint bufName = 0;
         glGetVertexAttribiv(index , GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING, (GLint*)&bufName);
 
         // If there was a VBO set...
@@ -255,12 +254,15 @@ static void _destroy_VAO(GLuint vaoName) {
     }
 
     // Get any element array VBO set in the VAO
-    glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, (GLint*)&bufName);
+    {
+        GLuint bufName = 0;
+        glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, (GLint*)&bufName);
 
-    // If there was a element array VBO set in the VAO
-    if(bufName) {
-        //...delete the VBO
-        glDeleteBuffers(1, &bufName);
+        // If there was a element array VBO set in the VAO
+        if (bufName) {
+            //...delete the VBO
+            glDeleteBuffers(1, &bufName);
+        }
     }
 
     // Finally, delete the VAO

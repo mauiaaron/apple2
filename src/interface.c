@@ -1353,7 +1353,7 @@ void c_interface_credits()
 
 #define SCROLL_LENGTH 58
 #define SCROLL_WIDTH (INTERFACE_SCREEN_X+1-(SCROLL_AREA_X*2))
-    char credits[SCROLL_LENGTH][SCROLL_WIDTH]=
+    char credits[SCROLL_LENGTH+1][SCROLL_WIDTH]=
     //1.  5.  10.  15.  20.  25.  30.  35.  40.  45.  50.  55.  60.  65.  70.  75.  80.",
       { "                                                                            ",
         "                  An Apple //e Emulator for POSIX Systems!                  ",
@@ -1412,6 +1412,7 @@ void c_interface_credits()
         " > ROM images used by the emulator are copyright Apple Computer             ",
         "                                                                            ",
         " > Disk images are copyright by various third parties                       ",
+        "                                                                            ",
         "                                                                            " };
 
     video_setpage( 0 );
