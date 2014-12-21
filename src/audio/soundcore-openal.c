@@ -748,6 +748,10 @@ static long OpenALCreateSoundBuffer(ALBufferParamsStruct *params, ALSoundBufferS
 
 static long OpenALDestroySoundBuffer(ALSoundBufferStruct **soundbuf_struct)
 {
+    if (!*soundbuf_struct) {
+        // already dealloced
+        return 0;
+    }
     LOG("OpenALDestroySoundBuffer ...");
     ALVoice *voice = (*soundbuf_struct)->_this;
     ALint source = voice->source;

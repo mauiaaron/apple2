@@ -1275,8 +1275,10 @@ void c_interface_parameters()
 #ifdef __linux__
                         LOG("Back to Linux, w00t!\n");
 #endif
+                        SpkrDestroy();
+                        MB_Destroy();
+
                         video_shutdown();
-                        //audio_shutdown(); TODO : fixme ...
                         exit( 0 );
                     }
                 }

@@ -685,13 +685,14 @@ static void gldriver_reshape(int w, int h) {
 }
 
 #if USE_GLUT
+static int glutWindow = -1;
 static void gldriver_init_glut(GLuint fbo) {
     glutInit(&argc, argv);
     glutInitDisplayMode(/*GLUT_DOUBLE|*/GLUT_RGBA|GLUT_DEPTH);
     glutInitWindowSize(windowWidth, windowHeight);
     //glutInitContextVersion(4, 0); -- Is this needed?
     glutInitContextProfile(GLUT_CORE_PROFILE);
-    glutCreateWindow(PACKAGE_NAME);
+    glutWindow = glutCreateWindow(PACKAGE_NAME);
     GL_ERRQUIT("GLUT initialization");
 
     if (glewInit()) {
@@ -748,6 +749,9 @@ void video_driver_reshape(int w, int h) {
 }
 
 void video_driver_shutdown(void) {
+#if USE_GLUT
+    glutDestroyWindow(glutWindow);
+#endif
     gldriver_shutdown();
 }
 
