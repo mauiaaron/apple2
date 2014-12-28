@@ -24,6 +24,7 @@
 #if VM_TRACING
 
 #define GLUE_C_WRITE(func) \
+    extern void func(void); \
     void c__##func(uint16_t ea, uint8_t b); \
     void c_##func(uint16_t ea, uint8_t b) { \
         c__##func(ea, b); \
@@ -36,6 +37,7 @@
     void c__##func(uint16_t ea, uint8_t b)
 
 #define GLUE_C_READ(func) \
+    extern void func(void); \
     uint8_t c__##func(uint16_t ea); \
     uint8_t c_##func(uint16_t ea) { \
         uint8_t b = c__##func(ea); \
@@ -51,9 +53,11 @@
 #else
 
 #define GLUE_C_WRITE(func) \
+    extern void func(void); \
     void c_##func(uint16_t ea, uint8_t b)
 
 #define GLUE_C_READ(func) \
+    extern void func(void); \
     uint8_t c_##func(uint16_t ea)
 
 #endif

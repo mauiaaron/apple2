@@ -272,8 +272,7 @@ void c_initialize_tables() {
     cpu65_vmem_r[0xC015] = iie_check_cxrom;
 
     /* RDVBLBAR switch */
-    cpu65_vmem_r[0xC019] =
-        iie_check_vbl;
+    cpu65_vmem_r[0xC019] = iie_check_vbl;
 
     /* random number generator */
     for (i = 0xC020; i < 0xC030; i++)

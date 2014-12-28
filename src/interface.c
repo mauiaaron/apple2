@@ -306,6 +306,11 @@ static int disk_select(const struct dirent *e)
         return 1;
     }
 
+    if (!strncmp(p + len - 3, ".po", 3))
+    {
+        return 1;
+    }
+
     return 0;
 }
 

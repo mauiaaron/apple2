@@ -19,50 +19,52 @@
 
 #include "common.h"
 
-struct diskette {
+#define DSK_SIZE 143360
+#define NIB_SIZE 232960
+#define NI2_SIZE 223440
+
+#define NUM_TRACKS 35
+#define NUM_SECTORS 16
+
+#define DSK_TRACK_SIZE 0x1000 // DOS order, ProDOS order
+#define NIB_TRACK_SIZE 0x1A00 // NIB format
+#define NI2_TRACK_SIZE 0x18F0 // NI2 format
+
+#define PHASE_BYTES (NIB_TRACK_SIZE/2)
+#define NIB_SEC_SIZE (NIB_TRACK_SIZE/NUM_SECTORS)
+
+#define DSK_VOLUME 254
+
+typedef struct diskette_t {
+    uint8_t track_image[NIB_TRACK_SIZE];
     char file_name[1024];
-    bool compressed;
     bool nibblized;
     bool is_protected;
-    bool phase_change;
+    bool track_valid;
+    bool track_dirty;
+    int *skew_table;
     int sector;
-    long file_size;
+    long nib_count;
     int phase;
     int run_byte;
     FILE *fp;
-    int file_pos;
-};
+} diskette_t;
 
-struct drive {
+typedef struct drive_t {
     int motor;
     int drive;
     int ddrw;
     int disk_byte;
-    int volume;
-    int checksum;
     int exor_value;
-    unsigned char disk_data[258];
-    struct diskette disk[2];
-};
+    diskette_t disk[2];
+} drive_t;
 
-extern struct drive disk6;
+extern drive_t disk6;
 
 void c_init_6(void);
 const char *c_new_diskette_6(int drive, const char * const file_name, int force);
 const char *c_eject_6(int drive);
 void disk_io_initialize(unsigned int slot);
-
-void disk_read_nop(void),
-disk_read_phase(void),
-disk_read_motor_off(void),
-disk_read_motor_on(void),
-disk_read_select_a(void),
-disk_read_select_b(void),
-disk_read_byte(void),
-disk_read_latch(void),
-disk_write_latch(void),
-disk_read_prepare_in(void),
-disk_read_prepare_out(void);
 
 #if DISK_TRACING
 void c_toggle_disk_trace_6(const char *read_file, const char *write_file);

@@ -60,8 +60,8 @@ static void sha1_to_str(const uint8_t * const md, char *buf) {
 // ----------------------------------------------------------------------------
 // VM TESTS ...
 
-#define EXPECTED_DISK_TRACE_FILE_SIZE 128794
-#define EXPECTED_DISK_TRACE_SHA "43960E8F2A588D1C59DDBC1F2C9F6CCFE0725CE0"
+#define EXPECTED_DISK_TRACE_FILE_SIZE 141350
+#define EXPECTED_DISK_TRACE_SHA "471EB3D01917B1C6EF9F13C5C7BC1ACE4E74C851"
 TEST test_boot_disk_bytes() {
     char *homedir = getenv("HOME");
     char *disk = NULL;
@@ -99,10 +99,9 @@ TEST test_boot_disk_bytes() {
     PASS();
 }
 
-// This test is fairly abusive ... it creates an ~90MB file in $HOME
+// This test is majorly abusive ... it creates an ~800MB file in $HOME
 // ... but if it's correct, you're fairly assured the cpu/vm is working =)
-#define EXPECTED_CPU_TRACE_FILE_SIZE 89130253
-#define EXPECTED_CPU_TRACE_SHA "0E9D690959A26A34DC9456B141CB91A2BDF3798E"
+#define EXPECTED_CPU_TRACE_FILE_SIZE 809430487
 TEST test_boot_disk_cputrace() {
     char *homedir = getenv("HOME");
     char *output = NULL;
@@ -134,8 +133,11 @@ TEST test_boot_disk_cputrace() {
         SHA1(buf, EXPECTED_CPU_TRACE_FILE_SIZE, md);
         FREE(buf);
 
+#if 0
+        // this is no longer a stable value to check due to random return values from disk VM routines
         sha1_to_str(md, mdstr);
         ASSERT(strcmp(mdstr, EXPECTED_CPU_TRACE_SHA) == 0);
+#endif
     } while(0);
 
     unlink(output);
@@ -144,8 +146,7 @@ TEST test_boot_disk_cputrace() {
     PASS();
 }
 
-#define EXPECTED_VM_TRACE_FILE_SIZE 2352827
-#define EXPECTED_VM_TRACE_SHA "D137B7D312A66F4F19E5846D1BBC56C2A53A8C3F"
+#define EXPECTED_VM_TRACE_FILE_SIZE 2830810
 TEST test_boot_disk_vmtrace() {
     char *homedir = getenv("HOME");
     char *disk = NULL;
@@ -173,8 +174,11 @@ TEST test_boot_disk_vmtrace() {
         SHA1(buf, EXPECTED_VM_TRACE_FILE_SIZE, md);
         FREE(buf);
 
+#if 0
+        // this is no longer a stable value to check due to random return values from disk VM routines
         sha1_to_str(md, mdstr);
         ASSERT(strcmp(mdstr, EXPECTED_VM_TRACE_SHA) == 0);
+#endif
     } while(0);
 
     unlink(disk);

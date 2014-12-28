@@ -868,7 +868,7 @@ ADDRS	[0-9a-fA-F]+
     c_toggle_disk_trace_6(buf, NULL);
     free(buf);
 #else
-    LOG("CPU tracing not enabled...");
+    LOG("Disk tracing not enabled...");
 #endif
 }
 

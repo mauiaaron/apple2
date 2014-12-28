@@ -122,6 +122,12 @@ typedef struct vm_trace_range_t {
 } vm_trace_range_t;
 #endif
 
+static uint16_t video_scanner_get_address(uint8_t *vbl_bar /*, current_executed_cycles*/) {
+    // HACK HACK HACK of course this is wrong ...
+    *vbl_bar = (c_read_random(0x0) < 0x40) ? 0x80 : 0x0;
+    return 0x000;
+}
+
 GLUE_C_READ(ram_nop)
 {
     return 0x0;
@@ -886,8 +892,16 @@ GLUE_C_READ(iie_check_dhires)
 
 GLUE_C_READ(iie_check_vbl)
 {
-    // HACK FIXME TODO : enable vertical blanking timing/detection */
-    return 0x0;
+
+    uint8_t vbl_bar = 0;
+    video_scanner_get_address(&vbl_bar /*, current_executed_cycles*/);
+    uint8_t key = c_read_keyboard(0xC000);
+
+    if (vbl_bar) {
+        vbl_bar = 0x80;
+    }
+
+    return (key & ~0x80) | vbl_bar;
 }
 
 GLUE_C_READ(iie_c3rom_peripheral)

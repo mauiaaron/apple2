@@ -14,12 +14,11 @@
  *
  */
 
+/*
+ * (De-)nibblizing routines sourced from AppleWin project.
+ */
+
 #include "common.h"
-
-#define PHASE_BYTES 3328
-
-#define NIB_SIZE 232960
-#define DSK_SIZE 143360
 
 #if DISK_TRACING
 static FILE *test_read_fp = NULL;
@@ -29,13 +28,13 @@ static FILE *test_write_fp = NULL;
 extern uint8_t slot6_rom[256];
 extern bool slot6_rom_loaded;
 
-struct drive disk6;
+drive_t disk6;
 
-static int skew_table_6[16] =           /* Sector skew table */
-{ 0,7,14,6,13,5,12,4,11,3,10,2,9,1,8,15 };
+static int stepper_phases = 0; // state bits for stepper magnet phases 0-3
+static int skew_table_6_po[16] = { 0x00,0x08,0x01,0x09,0x02,0x0A,0x03,0x0B, 0x04,0x0C,0x05,0x0D,0x06,0x0E,0x07,0x0F }; // ProDOS order
+static int skew_table_6_do[16] = { 0x00,0x07,0x0E,0x06,0x0D,0x05,0x0C,0x04, 0x0B,0x03,0x0A,0x02,0x09,0x01,0x08,0x0F }; // DOS order
 
-static int translate_table_6[256] =     /* Translation table */
-{
+static int translate_table_6[0x40] = {
     0x96, 0x97, 0x9a, 0x9b, 0x9d, 0x9e, 0x9f, 0xa6,
     0xa7, 0xab, 0xac, 0xad, 0xae, 0xaf, 0xb2, 0xb3,
     0xb4, 0xb5, 0xb6, 0xb7, 0xb9, 0xba, 0xbb, 0xbc,
@@ -44,6 +43,7 @@ static int translate_table_6[256] =     /* Translation table */
     0xdf, 0xe5, 0xe6, 0xe7, 0xe9, 0xea, 0xeb, 0xec,
     0xed, 0xee, 0xef, 0xf2, 0xf3, 0xf4, 0xf5, 0xf6,
     0xf7, 0xf9, 0xfa, 0xfb, 0xfc, 0xfd, 0xfe, 0xff,
+    /*
     0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
     0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
     0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
@@ -68,6 +68,7 @@ static int translate_table_6[256] =     /* Translation table */
     0x80, 0x2c, 0x2d, 0x2e, 0x2f, 0x30, 0x31, 0x32,
     0x80, 0x80, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38,
     0x80, 0x39, 0x3a, 0x3b, 0x3c, 0x3d, 0x3e, 0x3f
+    */
 };
 
 static void cut_gz(char *name) {
@@ -96,22 +97,733 @@ static bool is_nib(const char * const name) {
     return false;
 }
 
-/* -------------------------------------------------------------------------
-    c_init_6() -- initialize disk system
-   ------------------------------------------------------------------------- */
+static bool is_po(const char * const name) {
+    size_t len = strlen( name );
+    if (is_gz(name)) {
+        len -= 3;
+    }
+    if (!strncmp(name + len - 3, ".po", 3)) {
+        return true;
+    }
+    return false;
+}
+
+#define NUM_SIXBIT_NIBS 342
+
+static void nibblize_sector(const uint8_t *src, uint8_t *out) {
+
+    uint8_t work_buf[NUM_SIXBIT_NIBS];
+    uint8_t *nib = work_buf;
+
+    // Convert 256 8-bit bytes into 342 6-bit bytes
+    {
+        unsigned int counter = 0;
+        uint8_t offset = 0xAC;
+        while (offset != 0x02) {
+            uint8_t value =        (( (*(src+offset)) & 0x01) << 1) | (( (*(src+offset)) & 0x02) >> 1);
+            offset -= 0x56;
+            value = (value << 2) | (( (*(src+offset)) & 0x01) << 1) | (( (*(src+offset)) & 0x02) >> 1);
+            offset -= 0x56;
+            value = (value << 2) | (( (*(src+offset)) & 0x01) << 1) | (( (*(src+offset)) & 0x02) >> 1);
+            offset -= 0x53;
+            *(nib++) = value << 2;
+            ++counter;
+        }
+        *(nib-2) &= 0x3F;
+        *(nib-1) &= 0x3F;
+        ++counter;
+        unsigned int loop = 0;
+        while (loop < 0x100) {
+            *(nib++) = *(src+(loop++));
+            ++counter;
+        }
+        assert((counter == NUM_SIXBIT_NIBS+1) && "nibblizing counter overflow");
+    }
+
+    src = work_buf;
+    uint8_t work_buf2[NUM_SIXBIT_NIBS+1];
+    nib = work_buf2;
+
+    // XOR the entire data block with itself offset by one byte, creating a final checksum byte
+    {
+        uint8_t savedval = 0;
+        int loop = NUM_SIXBIT_NIBS;
+        while (loop--) {
+            *(nib++) = savedval ^ *src;
+            savedval = *(src++);
+        }
+        *nib = savedval;
+    }
+
+    src = work_buf2;
+    nib = NULL;
+
+    // Convert the 6-bit bytes into disk bytes using a lookup table.  A valid disk byte is a byte that has the high bit
+    // set, at least two adjacent bits set (excluding the high bit), and at most one pair of consecutive zero bits.
+    {
+        int loop = NUM_SIXBIT_NIBS+1;
+        while (loop--) {
+            *(out++) = translate_table_6[(*(src++)) >> 2];
+        }
+    }
+}
+
+static void denibblize_sector(const uint8_t *src, uint8_t *out) {
+
+    uint8_t work_buf[NUM_SIXBIT_NIBS+1];
+    uint8_t *dsk = work_buf;
+
+    static uint8_t denib[0x80] = { 0 };
+    static bool tablegenerated = false;
+    if (!tablegenerated) {
+        unsigned int loop = 0;
+        while (loop < 0x40) {
+            denib[translate_table_6[loop]-0x80] = loop << 2;
+            loop++;
+        }
+        tablegenerated = true;
+    }
+
+    // Convert disk bytes into 6-bit bytes
+    {
+        unsigned int loop = NUM_SIXBIT_NIBS+1;
+        while (loop--) {
+            *(dsk++) = denib[*(src++) & 0x7F];
+        }
+    }
+
+#if DISK_TRACING
+    if (test_write_fp) {
+        fprintf(test_write_fp, "SIXBITNIBS:\n");
+        for (unsigned int i=0; i<NUM_SIXBIT_NIBS+1; i++) {
+            fprintf(test_write_fp, "%02X", work_buf[i]);
+        }
+        fprintf(test_write_fp, "\n");
+    }
+#endif
+
+    src = work_buf;
+    uint8_t work_buf2[NUM_SIXBIT_NIBS];
+    dsk = work_buf2;
+
+    // XOR the entire data block with itself offset by one byte to undo checksumming
+    {
+        uint8_t savedval  = 0;
+        unsigned int loop = NUM_SIXBIT_NIBS;
+        while (loop--) {
+            *dsk = savedval ^ *(src++);
+            savedval = *(dsk++);
+        }
+    }
+
+#if DISK_TRACING
+    if (test_write_fp) {
+        fprintf(test_write_fp, "XORNIBS:\n");
+        for (unsigned int i=0; i<NUM_SIXBIT_NIBS; i++) {
+            fprintf(test_write_fp, "%02X", work_buf2[i]);
+        }
+        fprintf(test_write_fp, "\n");
+    }
+#endif
+
+    // Convert 342 6-bit bytes into 256 8-bit bytes
+    {
+        uint8_t *lowbitsptr = work_buf2;
+        uint8_t *sectorbase = work_buf2+0x56;
+        uint8_t offset = 0xAC;
+        unsigned int counter = 0;
+        while (offset != 0x02) {
+            assert(counter < 256 && "denibblizing counter overflow");
+            if (offset >= 0xAC) {
+                *(out+offset) = (*(sectorbase+offset) & 0xFC) | (((*lowbitsptr) & 0x80) >> 7) | (((*lowbitsptr) & 0x40) >> 5);
+                ++counter;
+            }
+            offset -= 0x56;
+
+            *(out+offset) = (*(sectorbase+offset) & 0xFC) | (((*lowbitsptr) & 0x20) >> 5) | (((*lowbitsptr) & 0x10) >> 3);
+            ++counter;
+            offset -= 0x56;
+
+            *(out+offset) = (*(sectorbase+offset) & 0xFC) | (((*lowbitsptr) & 0x08) >> 3) | (((*lowbitsptr) & 0x04) >> 1);
+            ++counter;
+            offset -= 0x53;
+
+            ++lowbitsptr;
+        }
+        assert(counter == 256 && "invalid bytes count");
+    }
+
+#ifdef DISK_TRACING
+    if (test_write_fp) {
+        fprintf(test_write_fp, "SECTOR:\n");
+        for (unsigned int i = 0; i < 256; i++) {
+            fprintf(test_write_fp, "%02X", out[i]);
+        }
+        fprintf(test_write_fp, "%s", "\n");
+    }
+#endif
+}
+
+#define CODE44A(a) ((((a)>> 1) & 0x55) | 0xAA)
+#define CODE44B(b) (((b) & 0x55) | 0xAA)
+
+static unsigned long nibblize_track(uint8_t *buf, int drive) {
+
+    uint8_t *output = disk6.disk[drive].track_image;
+    
+    // Write track beginning gap containing 48 self-sync bytes
+    for (unsigned int i=0; i<48; i++) {
+        *(output++) = 0xFF;
+    }
+
+    unsigned int sector = 0;
+    while (sector < 16) {
+        // --- Address field
+
+        // Prologue
+        *(output)++ = 0xD5;
+        *(output)++ = 0xAA;
+        *(output)++ = 0x96;
+
+        // Volume   (4-and-4 encoded)
+        *(output)++ = CODE44A(DSK_VOLUME);
+        *(output)++ = CODE44B(DSK_VOLUME);
+
+        // Track    (4-and-4 encoded)
+        int track = (disk6.disk[drive].phase>>1);
+        *(output)++ = CODE44A(track);
+        *(output)++ = CODE44B(track);
+
+        // Sector   (4-and-4 encoded)
+        *(output)++ = CODE44A(sector);
+        *(output)++ = CODE44B(sector);
+
+        // Checksum (4-and-4 encoded)
+        uint8_t checksum = (DSK_VOLUME ^ track ^ sector);
+        *(output)++ = CODE44A(checksum);
+        *(output)++ = CODE44B(checksum);
+
+        // Epilogue
+        *(output)++ = 0xDE;
+        *(output)++ = 0xAA;
+        *(output)++ = 0xEB;
+
+        // Gap of 6 self-sync bytes
+        for (unsigned int i=0; i<6; i++) {
+            *(output++) = 0xFF;
+        }
+
+        // --- Data field
+
+        // Prologue
+        *(output)++ = 0xD5;
+        *(output)++ = 0xAA;
+        *(output)++ = 0xAD;
+
+        // 343 6-bit bytes of nibblized data + 6-bit checksum
+        int sec_off = 256 * disk6.disk[drive].skew_table[ sector ];
+        nibblize_sector(buf+sec_off, output);
+        output += NUM_SIXBIT_NIBS+1;
+
+        // Epilogue
+        *(output)++ = 0xDE;
+        *(output)++ = 0xAA;
+        *(output)++ = 0xEB;
+
+        // Sector gap of 27 self-sync bytes
+        for (unsigned int i=0; i<27; i++) {
+            *(output++) = 0xFF;
+        }
+
+        ++sector;
+    }
+
+    return output-disk6.disk[drive].track_image;
+}
+
+static void denibblize_track(int drive, uint8_t *dst) {
+    // Searches through the track data for each sector and decodes it
+#warning TODO FIXME inefficient -- refactor after moar tests =P
+
+    uint8_t *trackimage = disk6.disk[drive].track_image;
+#if DISK_TRACING
+    if (test_write_fp) {
+        fprintf(test_write_fp, "DSK OUT:\n");
+    }
+#endif
+
+    unsigned int offset = 0;
+    unsigned int partsleft = (NUM_SECTORS<<1) +1;
+    int sector = -1;
+    while (partsleft) {
+        --partsleft;
+        uint8_t prologue[3] = {0,0,0}; // D5AA..
+
+        // Find prologue
+        unsigned int count = 0;
+        unsigned int loop = NIB_TRACK_SIZE;
+        while (loop && (count < 3)) {
+            --loop;
+            if (count || (*(trackimage+offset) == 0xD5)) {
+                prologue[count] = *(trackimage+offset);
+                ++count;
+            }
+            ++offset;
+            if (offset >= disk6.disk[drive].nib_count) {
+                offset = 0;
+            }
+        }
+
+        if ((count == 3) && (prologue[1] = 0xAA)) {
+#define DATA_BYTES_LEN (256+128)
+            unsigned int secloop = 0;
+            unsigned int tmpoff = offset;
+            uint8_t work_buf[DATA_BYTES_LEN] = { 0 };
+            uint8_t *nib = work_buf;
+            while (secloop < DATA_BYTES_LEN) {
+                *(nib+secloop) = *(trackimage+tmpoff);
+                if (tmpoff >= disk6.disk[drive].nib_count) {
+                    tmpoff = 0;
+                }
+                ++secloop;
+                ++tmpoff;
+            }
+
+            if (prologue[2] == 0x96) { // header
+                sector = ((*(nib+4) & 0x55) << 1) | (*(nib+5) & 0x55);
+            } else if (prologue[2] == 0xAD) { // data
+                int sec_off = 256 * disk6.disk[drive].skew_table[ sector ];
+                denibblize_sector(nib, dst+sec_off);
+                sector = -1;
+            }
+        }
+    }
+}
+
+static bool load_track_data(void) {
+
+    if (disk6.disk[disk6.drive].nibblized) {
+        // .nib image
+        int track_pos = NIB_TRACK_SIZE * (disk6.disk[disk6.drive].phase >> 1);
+        fseek(disk6.disk[disk6.drive].fp, track_pos, SEEK_SET);
+
+        if (fread(disk6.disk[disk6.drive].track_image, 1, NIB_TRACK_SIZE, disk6.disk[disk6.drive].fp) != NIB_TRACK_SIZE) {
+            ERRLOG("nib image corrupted ...");
+            return false;
+        }
+        disk6.disk[disk6.drive].nib_count = NIB_TRACK_SIZE;
+//  } else if ( THIS IS NI2 FORMAT ... ) {
+//      Do stuff-n-things
+    } else {
+        // .dsk, .do, .po images
+        int track_pos = DSK_TRACK_SIZE * (disk6.disk[disk6.drive].phase >> 1);
+        fseek(disk6.disk[disk6.drive].fp, track_pos, SEEK_SET);
+
+        uint8_t buf[DSK_TRACK_SIZE];
+        if (fread(buf, 1, DSK_TRACK_SIZE, disk6.disk[disk6.drive].fp) != DSK_TRACK_SIZE) {
+            ERRLOG("dsk image corrupted ...");
+            return false;
+        }
+
+        disk6.disk[disk6.drive].nib_count = nibblize_track(buf, disk6.drive);
+        if ( (disk6.disk[disk6.drive].nib_count != NIB_TRACK_SIZE) && (disk6.disk[disk6.drive].nib_count != NI2_TRACK_SIZE) ) {
+            ERRLOG("Invalid dsk image creation...");
+            return false;
+        }
+    }
+
+    disk6.disk[disk6.drive].track_valid = true;
+    disk6.disk[disk6.drive].run_byte = 0;
+    return true;
+}
+
+static bool save_track_data(void) {
+
+    if (disk6.disk[disk6.drive].nibblized) {
+        // .nib image
+        int track_pos = NIB_TRACK_SIZE * (disk6.disk[disk6.drive].phase >> 1);
+        fseek(disk6.disk[disk6.drive].fp, track_pos, SEEK_SET);
+        if (fwrite(disk6.disk[disk6.drive].track_image, 1, NIB_TRACK_SIZE, disk6.disk[disk6.drive].fp) != NIB_TRACK_SIZE) {
+            ERRLOG("could not write nib data ...");
+            return false;
+        }
+    } else {
+        // .dsk, .do, .po images
+        uint8_t buf[DSK_TRACK_SIZE];
+        denibblize_track(disk6.drive, buf);
+        int track_pos = DSK_TRACK_SIZE * (disk6.disk[disk6.drive].phase >> 1);
+        fseek(disk6.disk[disk6.drive].fp, track_pos, SEEK_SET);
+        LOG("writing data ...");
+        if (fwrite(buf, 1, DSK_TRACK_SIZE, disk6.disk[disk6.drive].fp) != DSK_TRACK_SIZE) {
+            ERRLOG("could not write dsk data ...");
+            return false;
+        }
+        fflush(disk6.disk[disk6.drive].fp);
+    }
+
+    disk6.disk[disk6.drive].track_dirty = false;
+    return true;
+}
+
+static uint8_t disk_io_pseudo_random(uint8_t hibit) {
+    // AppleWin algorithm ... unsure of the source or whether it fixes issues with particular images
+    static const uint8_t ret[16] = {
+        0x00, 0x2D, 0x2D, 0x30, 0x30, 0x32, 0x32, 0x34,
+        0x35, 0x39, 0x43, 0x43, 0x43, 0x60, 0x7F, 0x7F
+    };
+    if (hibit) {
+        hibit = 0x80;
+    }
+    uint8_t r = c_read_random(/*ignored*/0x0);
+    if (r <= 0xAA) {
+        return 0x20 | hibit;
+    } else {
+        return ret[r&0x0f] | hibit;
+    }
+}
+
+// ----------------------------------------------------------------------------
+// Emulator hooks
+
+GLUE_C_READ(disk_read_write_byte)
+{
+    uint8_t value = 0xFF;
+    do {
+        if (disk6.disk[disk6.drive].fp == NULL) {
+            value = 0x00;
+            break;
+        }
+
+        if (!disk6.disk[disk6.drive].track_valid) {
+            if (!load_track_data()) {
+                ERRLOG("OOPS, problem loading track data");
+                break;
+            }
+        }
+
+        if (disk6.ddrw) {
+            if (disk6.disk[disk6.drive].is_protected) {
+                value = 0x00;
+                break;           /* Do not write if diskette is write protected */
+            }
+
+            if (disk6.disk_byte < 0x96) {
+                ERRLOG("OOPS, attempting to write a non-nibblized byte");
+                value = 0x00;
+                break;
+            }
+
+#if DISK_TRACING
+            if (test_write_fp) {
+                fprintf(test_write_fp, "%02X", disk6.disk_byte);
+            }
+#endif
+            disk6.disk[disk6.drive].track_image[disk6.disk[disk6.drive].run_byte] = disk6.disk_byte;
+            disk6.disk[disk6.drive].track_dirty = true;
+        } else {
+
+            if (disk6.motor) { // ???
+                if (disk6.motor > 99) {
+                    ERRLOG("OOPS, potential disk motor issue");
+                    value = 0x00;
+                    break;
+                } else {
+                    disk6.motor++;
+                }
+            }
+
+            value = disk6.disk[disk6.drive].track_image[disk6.disk[disk6.drive].run_byte];
+#if DISK_TRACING
+            if (test_read_fp) {
+                fprintf(test_read_fp, "%02X", value);
+            }
+#endif
+        }
+    } while (0);
+
+    ++disk6.disk[disk6.drive].run_byte;
+    if (disk6.disk[disk6.drive].run_byte >= disk6.disk[disk6.drive].nib_count) {
+        disk6.disk[disk6.drive].run_byte = 0;
+    }
+#if DISK_TRACING
+    if ((disk6.disk[disk6.drive].run_byte % NIB_SEC_SIZE) == 0) {
+        if (disk6.ddrw) {
+            if (test_write_fp) {
+                fprintf(test_write_fp, "%s", "\n");
+            }
+        } else {
+            if (test_read_fp) {
+                fprintf(test_read_fp, "%s", "\n");
+            }
+        }
+    }
+#endif
+
+    return value;
+}
+
+GLUE_C_READ(disk_read_phase)
+{
+    ea &= 0xFF;
+    int phase = (ea>>1)&3;
+    int phase_bit = (1 << phase);
+
+    char *phase_str = NULL;
+    if (ea & 1) {
+        phase_str = "on ";
+        stepper_phases |= phase_bit;
+    } else {
+        phase_str = "off";
+        stepper_phases &= ~phase_bit;
+    }
+#if DISK_TRACING
+    if (test_read_fp) {
+        fprintf(test_read_fp,  "\ntrack %02X phases %X phase %d %s address $C0E%X\n", disk6.disk[disk6.drive].phase, stepper_phases, phase, phase_str, ea&0xF);
+    }
+    if (test_write_fp) {
+        fprintf(test_write_fp, "\ntrack %02X phases %X phase %d %s address $C0E%X\n", disk6.disk[disk6.drive].phase, stepper_phases, phase, phase_str, ea&0xF);
+    }
+#endif
+
+    // Disk ][ Magnet causes stepping effect:
+    //  - move only when the magnet opposite the cog is off
+    //  - move in the direction of an adjacent magnet if one is on
+    //  - do not move if both adjacent magnets are on
+    int direction = 0;
+    int cur_phase = disk6.disk[disk6.drive].phase;
+    if (stepper_phases & (1 << ((cur_phase + 1) & 3))) {
+        direction += 1;
+    }
+    if (stepper_phases & (1 << ((cur_phase + 3) & 3))) {
+        direction -= 1;
+    }
+
+    if (direction) {
+        if (disk6.disk[disk6.drive].track_dirty) {
+            save_track_data();
+        }
+        disk6.disk[disk6.drive].track_valid = false;
+        disk6.disk[disk6.drive].phase += direction;
+
+        if (disk6.disk[disk6.drive].phase<0) {
+            disk6.disk[disk6.drive].phase=0;
+        }
+
+        if (disk6.disk[disk6.drive].phase>69) { // AppleWin uses 79 (extra tracks/phases)?
+            disk6.disk[disk6.drive].phase=69;
+        }
+
+#if DISK_TRACING
+        if (test_read_fp) {
+            fprintf(test_read_fp, "NEW TRK:%d\n", (disk6.disk[disk6.drive].phase>>1));
+        }
+        if (test_write_fp) {
+            fprintf(test_write_fp, "NEW TRK:%d\n", (disk6.disk[disk6.drive].phase>>1));
+        }
+#endif
+    }
+
+    return ea == 0xE0 ? 0xFF : disk_io_pseudo_random(1);
+}
+
+GLUE_C_READ(disk_read_motor_off)
+{
+    disk6.motor = 1;
+    return disk_io_pseudo_random(1);
+}
+
+GLUE_C_READ(disk_read_motor_on)
+{
+    disk6.motor = 0;
+    return disk_io_pseudo_random(1);
+}
+
+GLUE_C_READ(disk_read_select_a)
+{
+    disk6.drive = 0;
+    return 0;
+}
+
+GLUE_C_READ(disk_read_select_b)
+{
+    disk6.drive = 1;
+    return 0;
+}
+
+GLUE_C_READ(disk_read_latch)
+{
+    return disk6.drive;
+}
+
+GLUE_C_READ(disk_read_prepare_in)
+{
+    disk6.ddrw = 0;
+    return disk_io_pseudo_random(disk6.disk[disk6.drive].is_protected);
+}
+
+GLUE_C_READ(disk_read_prepare_out)
+{
+    disk6.ddrw = 1;
+    return disk_io_pseudo_random(1);
+}
+
+GLUE_C_WRITE(disk_write_latch)
+{
+    disk6.disk_byte = b;
+}
+
+// ----------------------------------------------------------------------------
+
+void disk_io_initialize(unsigned int slot) {
+    FILE *f;
+    int i;
+    char temp[PATH_MAX];
+
+    assert(slot == 6);
+
+    /* load Disk II rom */
+    if (!slot6_rom_loaded) {
+        snprintf(temp, PATH_MAX, "%s/slot6.rom", system_path);
+        if ((f = fopen( temp, "r" )) == NULL) {
+            printf("Cannot find file '%s'.\n",temp);
+            exit( 0 );
+        }
+
+        if (fread(slot6_rom, 0x100, 1, f) != 0x100) {
+            // error
+#warning FIXME TODO ... slot6 rom is read elsewhere
+        }
+
+        fclose(f);
+        slot6_rom_loaded = true;
+    }
+
+    memcpy(apple_ii_64k[0] + 0xC600, slot6_rom, 0x100);
+
+    // disk softswitches
+    // 0xC0Xi : X = slot 0x6 + 0x8 == 0xE
+    cpu65_vmem_r[0xC0E0] = cpu65_vmem_r[0xC0E2] = cpu65_vmem_r[0xC0E4] = cpu65_vmem_r[0xC0E6] = disk_read_phase;
+    cpu65_vmem_r[0xC0E1] = cpu65_vmem_r[0xC0E3] = cpu65_vmem_r[0xC0E5] = cpu65_vmem_r[0xC0E7] = disk_read_phase;
+
+    cpu65_vmem_r[0xC0E8] = disk_read_motor_off;
+    cpu65_vmem_r[0xC0E9] = disk_read_motor_on;
+    cpu65_vmem_r[0xC0EA] = disk_read_select_a;
+    cpu65_vmem_r[0xC0EB] = disk_read_select_b;
+    cpu65_vmem_r[0xC0EC] = disk_read_write_byte;
+    cpu65_vmem_r[0xC0ED] = disk_read_latch;
+    cpu65_vmem_r[0xC0EE] = disk_read_prepare_in;
+    cpu65_vmem_r[0xC0EF] = disk_read_prepare_out;
+
+    for (i = 0xC0E0; i < 0xC0F0; i++) {
+        cpu65_vmem_w[i] = cpu65_vmem_r[i];
+    }
+
+    cpu65_vmem_w[0xC0ED] = disk_write_latch;
+}
 
 void c_init_6(void) {
-    disk6.disk[0].phase = disk6.disk[1].phase = 42;
-    disk6.disk[0].phase_change = disk6.disk[1].phase_change = 0;
-
+    disk6.disk[0].phase = disk6.disk[1].phase = 0;
+    disk6.disk[0].track_valid = disk6.disk[1].track_valid = 0;
     disk6.motor = 1;            /* motor on */
     disk6.drive = 0;            /* first drive active */
     disk6.ddrw = 0;
-    disk6.volume = 254;
-#if 0 /* BUGS!: */
-    file_name_6[0][1024] = '\0';
-    file_name_6[1][1024] = '\0';
-#endif
+}
+
+const char *c_eject_6(int drive) {
+
+    const char *err = NULL;
+
+    // foo.dsk -> foo.dsk.gz
+    err = def(disk6.disk[drive].file_name, is_nib(disk6.disk[drive].file_name) ? NIB_SIZE : DSK_SIZE);
+    if (err) {
+        ERRLOG("OOPS: An error occurred when attempting to compress a disk image : %s", err);
+    } else {
+        unlink(disk6.disk[drive].file_name);
+    }
+
+    disk6.disk[drive].nibblized = 0;
+    sprintf(disk6.disk[drive].file_name, "%s", "");
+    if (disk6.disk[drive].fp) {
+        fclose(disk6.disk[drive].fp);
+        disk6.disk[drive].fp = NULL;
+        disk6.disk[drive].nib_count = 0;
+    }
+
+    return err;
+}
+
+const char *c_new_diskette_6(int drive, const char * const raw_file_name, int force) {
+    struct stat buf;
+
+    /* uncompress the gziped disk */
+    char *file_name = strdup(raw_file_name);
+    if (is_gz(file_name)) {
+        int rawcount = 0;
+        const char *err = inf(file_name, &rawcount); // foo.dsk.gz -> foo.dsk
+        if (!err) {
+            int expected = is_nib(file_name) ? NIB_SIZE : DSK_SIZE;
+            if (rawcount != expected) {
+                err = "disk image is not expected size!";
+            }
+        }
+        if (err) {
+            ERRLOG("OOPS: An error occurred when attempting to inflate/load a disk image : %s", err);
+            free(file_name);
+            return err;
+        }
+        if (unlink(file_name)) { // temporarily remove .gz file
+            ERRLOG("OOPS, cannot unlink %s", file_name);
+        }
+
+        cut_gz(file_name);
+    }
+
+    strncpy(disk6.disk[drive].file_name, file_name, 1023);
+    disk6.disk[drive].nibblized = is_nib(file_name);
+    disk6.disk[drive].skew_table = skew_table_6_do;
+    if (is_po(file_name)) {
+        disk6.disk[drive].skew_table = skew_table_6_po;
+    }
+    free(file_name);
+    file_name = NULL;
+
+    if (disk6.disk[drive].fp) {
+        fclose(disk6.disk[drive].fp);
+        disk6.disk[drive].fp = NULL;
+    }
+
+    if (stat(disk6.disk[drive].file_name, &buf) < 0) {
+        disk6.disk[drive].fp = NULL;
+        c_eject_6(drive);
+        return "disk unreadable 1";
+    } else {
+        if (!force) {
+            disk6.disk[drive].fp = fopen(disk6.disk[drive].file_name, "r+");
+            disk6.disk[drive].is_protected = false;
+        }
+
+        if ((disk6.disk[drive].fp == NULL) || (force)) {
+            disk6.disk[drive].fp = fopen(disk6.disk[drive].file_name, "r");
+            disk6.disk[drive].is_protected = true;    /* disk is write protected! */
+        }
+
+        if (disk6.disk[drive].fp == NULL) {
+            /* Failed to open file. */
+            c_eject_6(drive);
+            return "disk unreadable 2";
+        }
+
+        /* seek to current head position. */
+        fseek(disk6.disk[drive].fp, PHASE_BYTES * disk6.disk[drive].phase, SEEK_SET);
+    }
+
+    disk6.disk[drive].sector = 0;
+    disk6.disk[drive].track_valid = false;
+    disk6.disk[drive].nib_count = 0;
+    disk6.disk[drive].run_byte = 0;
+    stepper_phases = 0;
+
+    return NULL;
 }
 
 #if DISK_TRACING
@@ -145,644 +857,4 @@ void c_toggle_disk_trace_6(const char *read_file, const char *write_file) {
     }
 }
 #endif
-
-/* -------------------------------------------------------------------------
-    c_eject_6() - ejects/gzips image file
-   ------------------------------------------------------------------------- */
-const char *c_eject_6(int drive) {
-
-    const char *err = NULL;
-
-    if (disk6.disk[drive].compressed) {
-        // foo.dsk -> foo.dsk.gz
-        err = def(disk6.disk[drive].file_name, is_nib(disk6.disk[drive].file_name) ? NIB_SIZE : DSK_SIZE);
-        if (err) {
-            ERRLOG("OOPS: An error occurred when attempting to compress a disk image : %s", err);
-        } else {
-            unlink(disk6.disk[drive].file_name);
-        }
-    }
-
-    disk6.disk[drive].compressed = 0;
-    disk6.disk[drive].nibblized = 0;
-    sprintf(disk6.disk[drive].file_name, "%s", "");
-    if (disk6.disk[drive].fp) {
-        fclose(disk6.disk[drive].fp);
-        disk6.disk[drive].fp = NULL;
-    }
-
-    return err;
-}
-
-/* -------------------------------------------------------------------------
-    c_new_diskette_6()
-    inserts a new disk image into the appropriate drive.
-    return 0 on success
-   ------------------------------------------------------------------------- */
-const char *c_new_diskette_6(int drive, const char * const raw_file_name, int force) {
-    struct stat buf;
-
-    /* uncompress the gziped disk */
-    char *file_name = strdup(raw_file_name);
-    if (is_gz(file_name)) {
-        int rawcount = 0;
-        const char *err = inf(file_name, &rawcount); // foo.dsk.gz -> foo.dsk
-        if (!err) {
-            int expected = is_nib(file_name) ? NIB_SIZE : DSK_SIZE;
-            if (rawcount != expected) {
-                err = "disk image is not expected size!";
-            }
-        }
-        if (err) {
-            ERRLOG("OOPS: An error occurred when attempting to inflate/load a disk image : %s", err);
-            free(file_name);
-            return err;
-        }
-        if (unlink(file_name)) { // temporarily remove .gz file
-            ERRLOG("OOPS, cannot unlink %s", file_name);
-        }
-
-        cut_gz(file_name);
-    }
-
-    strncpy(disk6.disk[drive].file_name, file_name, 1023);
-    disk6.disk[drive].compressed = true;// always using gz
-    disk6.disk[drive].nibblized = is_nib(file_name);
-    free(file_name);
-    file_name = NULL;
-
-    if (disk6.disk[drive].fp) {
-        fclose(disk6.disk[drive].fp);
-        disk6.disk[drive].fp = NULL;
-    }
-
-    if (stat(disk6.disk[drive].file_name, &buf) < 0) {
-        disk6.disk[drive].fp = NULL;
-        c_eject_6(drive);
-        return "disk unreadable 1";
-    } else {
-        disk6.disk[drive].file_size = buf.st_size;
-
-        if (!force) {
-            disk6.disk[drive].fp = fopen(disk6.disk[drive].file_name, "r+");
-            disk6.disk[drive].is_protected = false;
-        }
-
-        if ((disk6.disk[drive].fp == NULL) || (force)) {
-            disk6.disk[drive].fp = fopen(disk6.disk[drive].file_name, "r");
-            disk6.disk[drive].is_protected = true;    /* disk is write protected! */
-        }
-
-        if (disk6.disk[drive].fp == NULL) {
-            /* Failed to open file. */
-            c_eject_6(drive);
-            return "disk unreadable 2";
-        }
-
-        /* seek to current head position. */
-        fseek(disk6.disk[drive].fp, PHASE_BYTES * disk6.disk[drive].phase, SEEK_SET);
-    }
-
-    disk6.disk[drive].sector = 0;
-    disk6.disk[drive].run_byte = 0;
-
-    return NULL;
-}
-
-/* -------------------------------------------------------------------------
-    c_read_nibblized_6_6() - reads a standard .nib file of length 232960 bytes.
-        there are 70 phases positioned every 3328 bytes.
-   ------------------------------------------------------------------------- */
-unsigned char c_read_nibblized_6_6(void) {
-    static unsigned char ch;
-
-    if (disk6.disk[disk6.drive].phase_change) {
-        fseek(disk6.disk[disk6.drive].fp, PHASE_BYTES * disk6.disk[disk6.drive].phase, SEEK_SET);
-        disk6.disk[disk6.drive].phase_change = false;
-    }
-
-    disk6.disk_byte = fgetc(disk6.disk[disk6.drive].fp);
-    ch = disk6.disk_byte;
-    /* track revolves... */
-    if (ftell(disk6.disk[disk6.drive].fp) == (PHASE_BYTES * (disk6.disk[disk6.drive].phase + 2))) {
-        fseek(disk6.disk[disk6.drive].fp, -2 * PHASE_BYTES, SEEK_CUR);
-    }
-
-#if DISK_TRACING
-    if (test_read_fp) {
-        fprintf(test_read_fp, "%02X", ch);
-        fflush(test_read_fp);
-    }
-#endif
-
-    return ch;
-}
-
-/* -------------------------------------------------------------------------
-    c_read_normal_6()
-   ------------------------------------------------------------------------- */
-unsigned char c_read_normal_6(void) {
-    int position;
-    int old_value;
-
-    unsigned char value = 0;
-
-    /* The run byte tells what's to do */
-    switch (disk6.disk[disk6.drive].run_byte) {
-        case 0: case 1: case 2: case 3: case 4: case 5:
-        case 20: case 21: case 22: case 23: case 24:
-            /* Sync */
-            value = 0xFF;
-            break;
-
-        case 6: case 25:
-            /* Prologue (first byte) */
-            value = 0xD5;
-            break;
-
-        case 7: case 26:
-            /* Prologue (second byte) */
-            value = 0xAA;
-            break;
-
-        case 8:
-            /* Prologue (third byte) */
-            value = 0x96;
-            break;
-
-        case 9:
-            /* Volume (encoded) */
-            value = (disk6.volume >> 1) | 0xAA;
-            disk6.checksum = disk6.volume;
-            break;
-
-        case 10:
-            /* Volume (encoded) */
-            value = disk6.volume | 0xAA;
-            break;
-
-        case 11:
-            /* Track number (encoded) */
-            disk6.checksum ^= (disk6.disk[disk6.drive].phase >> 1);
-            value = (disk6.disk[disk6.drive].phase >> 2) | 0xAA;
-            break;
-
-        case 12:
-            /* Track number (encoded) */
-            value = (disk6.disk[disk6.drive].phase >> 1) | 0xAA;
-            break;
-
-        case 13:
-            /* Sector number (encoded) */
-            disk6.checksum ^= disk6.disk[disk6.drive].sector;
-            value = (disk6.disk[disk6.drive].sector >> 1) | 0xAA;
-            break;
-
-        case 14:
-            /* Sector number (encoded) */
-            value = disk6.disk[disk6.drive].sector | 0xAA;
-            break;
-
-        case 15:
-            /* Checksum */
-            value = (disk6.checksum >> 1) | 0xAA;
-            break;
-
-        case 16:
-            /* Checksum */
-            value = disk6.checksum | 0xAA;
-            break;
-
-        case 17: case 371:
-            /* Epilogue (first byte) */
-            value = 0xDE;
-            break;
-
-        case 18: case 372:
-            /* Epilogue (second byte) */
-            value = 0xAA;
-            break;
-
-        case 19: case 373:
-            /* Epilogue (third byte) */
-            value = 0xEB;
-            break;
-
-        case 27:
-            /* Data header */
-            disk6.exor_value = 0;
-
-            /* Set file position variable */
-            disk6.disk[disk6.drive].file_pos = 256 * 16 * (disk6.disk[disk6.drive].phase >> 1) +
-                                               256 * skew_table_6[ disk6.disk[disk6.drive].sector ];
-#if DISK_TRACING
-            if (test_read_fp) {
-                fprintf(test_read_fp,  "\nTRK:%02X SECTOR:%02X SKEW:%02X (FILE_POS:%d)\n", disk6.disk[disk6.drive].phase, disk6.disk[disk6.drive].sector, skew_table_6[ disk6.disk[disk6.drive].sector ], disk6.disk[disk6.drive].file_pos);
-            }
-#endif
-
-            /* File large enough? */
-            if (disk6.disk[disk6.drive].file_pos + 255 > disk6.disk[disk6.drive].file_size) {
-                return 0xFF;
-            }
-
-            /* Set position */
-            fseek( disk6.disk[disk6.drive].fp, disk6.disk[disk6.drive].file_pos, SEEK_SET );
-
-            /* Read sector */
-            if (fread( disk6.disk_data, 1, 256, disk6.disk[disk6.drive].fp ) != 256) {
-#warning FIXME TODO ... does this really happen in the wild?  we may need/want a crash reporter for this...
-                ERRQUIT("OOPS read sector failed ...");
-            }
-
-            disk6.disk_data[ 256 ] = disk6.disk_data[ 257 ] = 0;
-            value = 0xAD;
-            break;
-
-        case 370:
-            /* Checksum */
-            value = translate_table_6[disk6.exor_value & 0x3F];
-
-            /* Increment sector number (and wrap if necessary) */
-            disk6.disk[disk6.drive].sector++;
-            if (disk6.disk[disk6.drive].sector == 16) {
-                disk6.disk[disk6.drive].sector = 0;
-            }
-            break;
-
-        default:
-            position = disk6.disk[disk6.drive].run_byte - 28;
-            if (position >= 0x56) {
-                position -= 0x56;
-                old_value = disk6.disk_data[ position ];
-                old_value = old_value >> 2;
-                disk6.exor_value ^= old_value;
-                value = translate_table_6[disk6.exor_value & 0x3F];
-                disk6.exor_value = old_value;
-            } else {
-                old_value = 0;
-                old_value |= (disk6.disk_data[position] & 0x1) << 1;
-                old_value |= (disk6.disk_data[position] & 0x2) >> 1;
-                old_value |= (disk6.disk_data[position+0x56] & 0x1) << 3;
-                old_value |= (disk6.disk_data[position+0x56] & 0x2) << 1;
-                old_value |= (disk6.disk_data[position+0xAC] & 0x1) << 5;
-                old_value |= (disk6.disk_data[position+0xAC] & 0x2) << 3;
-                disk6.exor_value ^= old_value;
-                value = translate_table_6[disk6.exor_value & 0x3F];
-                disk6.exor_value = old_value;
-            }
-            break;
-    } /* End switch */
-
-    /* Continue by increasing run byte value */
-    disk6.disk[disk6.drive].run_byte++;
-    if (disk6.disk[disk6.drive].run_byte > 373) {
-        disk6.disk[disk6.drive].run_byte = 0;
-    }
-
-#if DISK_TRACING
-    if (test_read_fp) {
-        fprintf(test_read_fp, "%02X", value);
-        fflush(test_read_fp);
-    }
-#endif
-
-    disk6.disk_byte = value;
-    return value;
-}
-
-
-/* -------------------------------------------------------------------------
-    c_write_nibblized_6_6() - writes a standard .nib file of length 232960 bytes.
-        there are 70 phases positioned every 3328 bytes.
-   ------------------------------------------------------------------------- */
-void c_write_nibblized_6_6(void) {
-    if (disk6.disk[disk6.drive].phase_change) {
-        fseek(disk6.disk[disk6.drive].fp, PHASE_BYTES * disk6.disk[disk6.drive].phase, SEEK_SET);
-        disk6.disk[disk6.drive].phase_change = false;
-    }
-
-    fputc(disk6.disk_byte, disk6.disk[disk6.drive].fp);
-
-#if DISK_TRACING
-    if (test_write_fp) {
-        fprintf(test_read_fp, "%02X", disk6.disk_byte);
-        fflush(test_write_fp);
-    }
-#endif
-
-    /* track revolves... */
-    if (ftell(disk6.disk[disk6.drive].fp) == (PHASE_BYTES * (disk6.disk[disk6.drive].phase + 2))) {
-        fseek(disk6.disk[disk6.drive].fp, -2 * PHASE_BYTES, SEEK_CUR);
-    }
-}
-
-/* -------------------------------------------------------------------------
-    c_write_normal_6()   disk6.disk_byte contains the value
-   ------------------------------------------------------------------------- */
-void c_write_normal_6(void) {
-    static int wr_sec_6 = 0x0; // static bugfix from pre-git-history ...
-    //static int wr_trk_6 = 0x0; is this needed? ... this truly appeared to be deadc0de in apple2-emul-v006
-
-    int position;
-    int old_value;
-
-    if (disk6.disk_byte == 0xD5) {
-        disk6.disk[disk6.drive].run_byte = 6;    /* Initialize run byte value */
-    }
-
-    /* The run byte tells what's to do */
-
-    switch (disk6.disk[disk6.drive].run_byte) {
-        case 0: case 1: case 2: case 3: case 4: case 5:
-        case 20: case 21: case 22: case 23: case 24:
-            /* Sync */
-            break;
-
-        case 6: case 25:
-            /* Prologue (first byte) */
-            if (disk6.disk_byte == 0xFF) {
-                disk6.disk[disk6.drive].run_byte--;
-            }
-            break;
-
-        case 7: case 26:
-            /* Prologue (second byte) */
-            break;
-
-        case 8:
-            /* Prologue (third byte) */
-            if (disk6.disk_byte == 0xAD) {
-                disk6.exor_value = 0, disk6.disk[disk6.drive].run_byte = 27;
-            }
-            break;
-
-        case 9: case 10:
-            /* Volume */
-            break;
-
-        case 11: case 12:
-            /* Track -- FIXME TODO ... should this do anything? */
-            break;
-
-        case 13:
-            /* Sector number (encode it) */
-            wr_sec_6 = disk6.disk_byte << 1;
-            wr_sec_6 &= 0xFF;
-            wr_sec_6 |= 0x55;
-            break;
-
-        case 14:
-            /* Sector number (encode it) */
-            wr_sec_6 &= disk6.disk_byte;
-            disk6.disk[disk6.drive].sector = wr_sec_6;
-            break;
-
-        case 15:
-            /* Checksum */
-            break;
-
-        case 16:
-            /* Checksum */
-            break;
-
-        case 17: case 371:
-            /* Epilogue (first byte) */
-            break;
-
-        case 18: case 372:
-            /* Epilogue (second byte) */
-            break;
-
-        case 19: case 373:
-            /* Epilogue (third byte) */
-            break;
-
-        case 27:
-            disk6.exor_value = 0;
-            break;
-
-        case 370:
-            /* Set file position variable */
-            disk6.disk[disk6.drive].file_pos = 256 * 16 * (disk6.disk[disk6.drive].phase >> 1) +
-                                               256 * skew_table_6[ disk6.disk[disk6.drive].sector ];
-
-            /* Is the file large enough? */
-            if (disk6.disk[disk6.drive].file_pos + 255 > disk6.disk[disk6.drive].file_size) {
-                return;
-            }
-
-
-            /* Set position */
-            fseek( disk6.disk[disk6.drive].fp, disk6.disk[disk6.drive].file_pos, SEEK_SET );
-
-            /* Write sector */
-            fwrite(disk6.disk_data, 1, 256, disk6.disk[disk6.drive].fp);
-#if DISK_TRACING
-            if (test_write_fp) {
-                fprintf(test_write_fp, "\nTRK:%02X SECTOR:%02X SKEW:%02X (FILE_POS:%d)\n", disk6.disk[disk6.drive].phase, disk6.disk[disk6.drive].sector, skew_table_6[ disk6.disk[disk6.drive].sector ], disk6.disk[disk6.drive].file_pos);
-                for (unsigned int i=0; i<256; i++) {
-                    fprintf(test_write_fp, "%02X", disk6.disk_data[i]);
-                }
-                fflush(test_write_fp);
-            }
-#endif
-            fflush( disk6.disk[disk6.drive].fp );
-            /* Increment sector number (and wrap if necessary) */
-            disk6.disk[disk6.drive].sector++;
-            if (disk6.disk[disk6.drive].sector == 16) {
-                disk6.disk[disk6.drive].sector = 0;
-            }
-            break;
-
-        default:
-            position = disk6.disk[disk6.drive].run_byte - 28;
-            disk6.disk_byte = translate_table_6[ disk6.disk_byte ];
-            if (position >= 0x56) {
-                position -= 0x56;
-                disk6.disk_byte ^= disk6.exor_value;
-                old_value = disk6.disk_byte;
-                disk6.disk_data[position] |= (disk6.disk_byte << 2) & 0xFC;
-                disk6.exor_value = old_value;
-            } else {
-                disk6.disk_byte ^= disk6.exor_value;
-                old_value = disk6.disk_byte;
-                disk6.disk_data[position] = (disk6.disk_byte & 0x01) << 1;
-                disk6.disk_data[position] |= (disk6.disk_byte & 0x02) >> 1;
-                disk6.disk_data[position + 0x56] = (disk6.disk_byte & 0x04) >> 1;
-                disk6.disk_data[position + 0x56] |= (disk6.disk_byte & 0x08) >> 3;
-                disk6.disk_data[position + 0xAC] = (disk6.disk_byte & 0x10) >> 3;
-                disk6.disk_data[position + 0xAC] |= (disk6.disk_byte & 0x20) >> 5;
-                disk6.exor_value = old_value;
-            }
-            break;
-    } /* End switch */
-
-    disk6.disk[disk6.drive].run_byte++;
-    if (disk6.disk[disk6.drive].run_byte > 373) {
-        disk6.disk[disk6.drive].run_byte = 0;
-    }
-}
-
-GLUE_C_READ(disk_read_byte)
-{
-    if (disk6.ddrw) {
-        if (disk6.disk[disk6.drive].fp == NULL) {
-            return 0;           /* Return if there is no disk in drive */
-        }
-
-        if (disk6.disk[disk6.drive].is_protected) {
-            return 0;           /* Do not write if diskette is write protected */
-        }
-
-        if (disk6.disk_byte < 0x96) {
-            return 0;           /* Only byte values at least 0x96 are allowed */
-        }
-
-        (disk6.disk[disk6.drive].nibblized) ? c_write_nibblized_6_6() : c_write_normal_6();
-        return 0; /* ??? */
-    } else {
-        if (disk6.disk[disk6.drive].fp == NULL) {
-            return 0xFF;        /* Return FF if there is no disk in drive */
-        }
-
-        if (disk6.motor) {      /* Motor turned on? */
-            if (disk6.motor > 99) {
-                return 0;
-            } else {
-                disk6.motor++;
-            }
-        }
-
-        /* handle nibblized_6 or regular disks */
-        return (disk6.disk[disk6.drive].nibblized) ? c_read_nibblized_6_6() : c_read_normal_6();
-    }
-}
-
-GLUE_C_READ(disk_read_phase)
-{
-    /*
-     * Comment from xapple2+ by Phillip Stephens:
-     * Turn motor phases 0 to 3 on.  Turning on the previous phase + 1
-     * increments the track position, turning on the previous phase - 1
-     * decrements the track position.  In this scheme phase 0 and 3 are
-     * considered to be adjacent.  The previous phase number can be
-     * computed as the track number % 4.
-     */
-
-    switch (((ea >> 1) - disk6.disk[disk6.drive].phase) & 3) {
-        case 1:
-            disk6.disk[disk6.drive].phase++;
-            break;
-        case 3:
-            disk6.disk[disk6.drive].phase--;
-            break;
-    }
-
-    if (disk6.disk[disk6.drive].phase<0) {
-        disk6.disk[disk6.drive].phase=0;
-    }
-
-    if (disk6.disk[disk6.drive].phase>69) {
-        disk6.disk[disk6.drive].phase=69;
-    }
-
-    disk6.disk[disk6.drive].phase_change = true;
-
-    return 0;
-}
-
-
-GLUE_C_READ(disk_read_motor_off)
-{
-    disk6.motor = 1;
-    return disk6.drive;
-}
-
-GLUE_C_READ(disk_read_motor_on)
-{
-    disk6.motor = 0;
-    return disk6.drive;
-}
-
-GLUE_C_READ(disk_read_select_a)
-{
-    return disk6.drive = 0;
-}
-
-GLUE_C_READ(disk_read_select_b)
-{
-    return disk6.drive = 1;
-}
-
-
-GLUE_C_READ(disk_read_latch)
-{
-    return disk6.drive;
-}
-
-GLUE_C_READ(disk_read_prepare_in)
-{
-    disk6.ddrw = 0;
-    return disk6.disk[disk6.drive].is_protected ? 0x80 : 0x00;
-}
-
-GLUE_C_READ(disk_read_prepare_out)
-{
-    disk6.ddrw = 1;
-    return disk6.drive;
-}
-
-GLUE_C_WRITE(disk_write_latch)
-{
-    disk6.disk_byte = b;
-}
-
-void disk_io_initialize(unsigned int slot) {
-    FILE *f;
-    int i;
-    char temp[PATH_MAX];
-
-    assert(slot == 6);
-
-    /* load Disk II rom */
-    if (!slot6_rom_loaded) {
-        snprintf(temp, PATH_MAX, "%s/slot6.rom", system_path);
-        if ((f = fopen( temp, "r" )) == NULL) {
-            printf("Cannot find file '%s'.\n",temp);
-            exit( 0 );
-        }
-
-        if (fread(slot6_rom, 0x100, 1, f) != 0x100) {
-            // error
-#warning FIXME TODO ... slot6 rom is read elsewhere 
-        }
-
-        fclose(f);
-        slot6_rom_loaded = true;
-    }
-
-    memcpy(apple_ii_64k[0] + 0xC600, slot6_rom, 0x100);
-
-    // disk softswitches
-    // 0xC0Xi : X = slot 0x6 + 0x8 == 0xE
-    cpu65_vmem_r[0xC0E0] = cpu65_vmem_r[0xC0E2] = cpu65_vmem_r[0xC0E4] = cpu65_vmem_r[0xC0E6] = ram_nop;
-
-    cpu65_vmem_r[0xC0E1] = cpu65_vmem_r[0xC0E3] = cpu65_vmem_r[0xC0E5] = cpu65_vmem_r[0xC0E7] = disk_read_phase;
-
-    cpu65_vmem_r[0xC0E8] = disk_read_motor_off;
-    cpu65_vmem_r[0xC0E9] = disk_read_motor_on;
-    cpu65_vmem_r[0xC0EA] = disk_read_select_a;
-    cpu65_vmem_r[0xC0EB] = disk_read_select_b;
-    cpu65_vmem_r[0xC0EC] = disk_read_byte;
-    cpu65_vmem_r[0xC0ED] = disk_read_latch;
-    cpu65_vmem_r[0xC0EE] = disk_read_prepare_in;
-    cpu65_vmem_r[0xC0EF] = disk_read_prepare_out;
-
-    for (i = 0xC0E0; i < 0xC0F0; i++) {
-        cpu65_vmem_w[i] = cpu65_vmem_r[i];
-    }
-
-    cpu65_vmem_w[0xC0ED] = disk_write_latch;
-}
 

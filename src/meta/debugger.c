@@ -1009,8 +1009,8 @@ void show_disk_info() {
     sprintf(second_buf[i++], "byte = %02X", disk6.disk_byte);
     if (!disk6.disk[disk6.drive].nibblized)
     {
-        sprintf(second_buf[i++], "volume = %d", disk6.volume);
-        sprintf(second_buf[i++], "checksum = %d", disk6.checksum);
+        //sprintf(second_buf[i++], "volume = %d", disk6.volume);
+        //sprintf(second_buf[i++], "checksum = %d", disk6.checksum);
     }
 
     sprintf(second_buf[i++], "-------------------------------------");
@@ -1038,16 +1038,16 @@ void show_disk_info() {
     }
 
     memset(second_buf[++i], ' ', BUF_X);
-    *(second_buf[i] + sprintf(second_buf[i], "%s %d bytes", (disk6.disk[0].nibblized) ? ".nib" : ".dsk", (int)disk6.disk[0].file_size)) = ' ';
-    sprintf(second_buf[i++]+off, "%s %d bytes", (disk6.disk[1].nibblized) ? ".nib" : ".dsk", (int)disk6.disk[1].file_size);
+    *(second_buf[i] + sprintf(second_buf[i], "%s", (disk6.disk[0].nibblized) ? ".nib" : ".dsk")) = ' ';
+    sprintf(second_buf[i++]+off, "%s", (disk6.disk[1].nibblized) ? ".nib" : ".dsk");
 
     memset(second_buf[i], ' ', BUF_X);
     *(second_buf[i] + sprintf(second_buf[i], "write %s", (disk6.disk[0].is_protected) ? "protected" : "enabled")) = ' ';
     sprintf(second_buf[i++]+off, "write %s", (disk6.disk[1].is_protected) ? "protected" : "enabled");
 
     memset(second_buf[i], ' ', BUF_X);
-    *(second_buf[i] + sprintf(second_buf[i], "phase %d %s", disk6.disk[0].phase, (disk6.disk[0].phase_change) ? "(new)" : "")) = ' ';
-    sprintf(second_buf[i++]+off, "phase %d %s", disk6.disk[1].phase, (disk6.disk[1].phase_change) ? "(new)" : "");
+    *(second_buf[i] + sprintf(second_buf[i], "phase %d", disk6.disk[0].phase)) = ' ';
+    sprintf(second_buf[i++]+off, "phase %d", disk6.disk[1].phase);
 
     memset(second_buf[i], ' ', BUF_X);
     if (!disk6.disk[0].nibblized)
