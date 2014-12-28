@@ -21,6 +21,7 @@ dnl Arch checks
 
 ASM_O="src/x86/glue.o src/x86/cpu.o"
 TESTVM_ASM_O="src/x86/testvm-glue.o src/x86/testvm-cpu.o"
+TESTDISK_ASM_O="src/x86/testdisk-glue.o src/x86/testdisk-cpu.o"
 arch=''
 case $target in
     x86_64-*-*)
@@ -75,6 +76,7 @@ fi
 
 AC_SUBST(ASM_O)
 AC_SUBST(TESTVM_ASM_O)
+AC_SUBST(TESTDISK_ASM_O)
 AC_SUBST([AM_CFLAGS])
 
 

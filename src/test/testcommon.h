@@ -16,9 +16,13 @@
 #include "greatest.h"
 
 #ifdef __APPLE__
-#include <CommonCrypto/CommonDigest.h>
-#define SHA_DIGEST_LENGTH CC_SHA1_DIGEST_LENGTH
-#define SHA1 CC_SHA1
+#   include <CommonCrypto/CommonDigest.h>
+#   define SHA_DIGEST_LENGTH CC_SHA1_DIGEST_LENGTH
+#   define SHA1 CC_SHA1
+#elif HAVE_OPENSSL
+#   include <openssl/sha.h>
+#else
+#   error "these tests require OpenSSL libraries (SHA)"
 #endif
 
 #define TEST_FINISHED 0xff
@@ -48,10 +52,12 @@
         apple_ii_64k[0][WATCHPOINT_ADDR] = 0x00; \
     }
 
+extern bool test_do_reboot;
 void test_breakpoint(void *arg);
 void test_common_init(bool do_cputhread);
 void test_common_setup();
 void test_type_input(const char *input);
 int test_setup_boot_disk(const char *fileName, int readonly);
+void sha1_to_str(const uint8_t * const md, char *buf);
 
 #endif // whole file

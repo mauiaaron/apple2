@@ -17,6 +17,8 @@
 
 #define TESTBUF_SZ 1024
 
+bool test_do_reboot = true;
+
 static char input_str[TESTBUF_SZ]; // ASCII
 static unsigned int input_length = 0;
 static unsigned int input_counter = 0;
@@ -165,3 +167,12 @@ int test_setup_boot_disk(const char *fileName, int readonly) {
     FREE(disk);
     return err;
 }
+
+void sha1_to_str(const uint8_t * const md, char *buf) {
+    int i=0;
+    for (int j=0; j<SHA_DIGEST_LENGTH; j++, i+=2) {
+        sprintf(buf+i, "%02X", md[j]);
+    }
+    sprintf(buf+i, "%c", '\0');
+}
+

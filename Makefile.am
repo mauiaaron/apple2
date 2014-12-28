@@ -94,8 +94,8 @@ LOG_DRIVER = testcpu  ## hack TODO/FIXME ... should be wrapper shell script acce
 A2_TEST_SOURCES = $(apple2ix_SOURCES) src/test/testcommon.c
 A2_TEST_CFLAGS = -DTESTING=1 -DCPU_TRACING=1 -DDISK_TRACING=1 -DVM_TRACING=1 -Isrc/test
 
-TESTS          = testcpu testdisplay testvm
-check_PROGRAMS = testcpu testdisplay testvm
+TESTS          = testcpu testdisplay testvm testdisk
+check_PROGRAMS = testcpu testdisplay testvm testdisk
 
 testcpu_SOURCES = src/test/testcpu.c $(A2_TEST_SOURCES) $(META_SRC)
 testcpu_CFLAGS = $(apple2ix_CFLAGS) $(A2_TEST_CFLAGS) -UAUDIO_ENABLED -UINTERFACE_CLASSIC -DHEADLESS=1
@@ -125,6 +125,16 @@ testvm_DEPENDENCIES = @TESTVM_ASM_O@ @META_O@ @VIDEO_O@
 
 EXTRA_testvm_SOURCES = $(ASM_SRC_x86) $(VIDEO_SRC)
 
+testdisk_SOURCES = src/test/testdisk.c $(A2_TEST_SOURCES) $(META_SRC)
+testdisk_CFLAGS = $(apple2ix_CFLAGS) $(A2_TEST_CFLAGS) -UAUDIO_ENABLED -UINTERFACE_CLASSIC -DHEADLESS=0
+testdisk_CCASFLAGS = $(testdisk_CFLAGS)
+testdisk_LDFLAGS = $(apple2ix_LDFLAGS)
+# HACK FIXME TODO NOTE: specify testdisk_ASM_O to force it to rebuild with proper CCASFLAGS ... automake bug?
+testdisk_LDADD = @TESTDISK_ASM_O@ @VIDEO_O@
+testdisk_DEPENDENCIES = @TESTDISK_ASM_O@ @META_O@ @VIDEO_O@
+
+EXTRA_testdisk_SOURCES = $(ASM_SRC_x86) $(VIDEO_SRC)
+
 ###############################################################################
 # Misc & Installation
 
@@ -139,19 +149,20 @@ shaders_DATA = src/video/Basic.vsh src/video/Basic.fsh
 disksdir = @datadir@/@PACKAGE@/disks
 disks_DATA = \
 	disks/README disks/blank.dsk.gz disks/blank.nib.gz disks/etc.dsk.gz \
-	disks/mystery.dsk.gz disks/speedtest.dsk.gz disks/speedtest.txt
+	disks/mystery.dsk.gz disks/speedtest.dsk.gz disks/speedtest.txt \
+	disks/flapple140.po.gz disks/testdisplay1.dsk.gz disks/testvm1.dsk.gz
+
 
 # Extra distribution stuff
 EXTRA_DIST = reconf.sh configure README.debugger PROBLEMS .apple2 \
 	\
-	disks/README disks/blank.dsk.gz disks/blank.nib.gz disks/etc.dsk.gz \
-	disks/mystery.dsk.gz disks/speedtest.dsk.gz disks/speedtest.txt \
+	$(disks_DATA) \
 	\
-	docs/apple2ix.6 \
+	$(man_MANS) \
 	\
 	src/font.txt \
 	src/x86/genglue \
 	\
-	src/video/Basic.vsh src/video/Basic.fsh
+	$(shaders_DATA)
 
 CLEANFILES = src/font.c src/rom.c src/meta/debug.c src/x86/glue.S

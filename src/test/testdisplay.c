@@ -11,14 +11,6 @@
 
 #include "testcommon.h"
 
-#ifdef HAVE_OPENSSL
-#include <openssl/sha.h>
-#elif !defined(__APPLE__)
-#error "these tests require OpenSSL libraries"
-#endif
-
-static bool test_do_reboot = true;
-
 static void testdisplay_setup(void *arg) {
     test_common_setup();
     apple_ii_64k[0][MIXSWITCH_ADDR] = 0x00;
@@ -30,14 +22,6 @@ static void testdisplay_setup(void *arg) {
 }
 
 static void testdisplay_teardown(void *arg) {
-}
-
-static void sha1_to_str(const uint8_t * const md, char *buf) {
-    int i=0;
-    for (int j=0; j<SHA_DIGEST_LENGTH; j++, i+=2) {
-        sprintf(buf+i, "%02X", md[j]);
-    }
-    sprintf(buf+i, "%c", '\0');
 }
 
 TEST test_boot_disk() {
