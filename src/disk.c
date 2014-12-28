@@ -453,7 +453,6 @@ static bool save_track_data(void) {
         denibblize_track(disk6.drive, buf);
         int track_pos = DSK_TRACK_SIZE * (disk6.disk[disk6.drive].phase >> 1);
         fseek(disk6.disk[disk6.drive].fp, track_pos, SEEK_SET);
-        LOG("writing data ...");
         if (fwrite(buf, 1, DSK_TRACK_SIZE, disk6.disk[disk6.drive].fp) != DSK_TRACK_SIZE) {
             ERRLOG("could not write dsk data ...");
             return false;
@@ -754,6 +753,10 @@ const char *c_eject_6(int drive) {
 
 const char *c_new_diskette_6(int drive, const char * const raw_file_name, int force) {
     struct stat buf;
+
+    if (disk6.disk[drive].fp) {
+        c_eject_6(drive);
+    }
 
     /* uncompress the gziped disk */
     char *file_name = strdup(raw_file_name);
