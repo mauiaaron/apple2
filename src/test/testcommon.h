@@ -33,10 +33,10 @@
 #define BLANK_SCREEN "6C8ABA272F220F00BE0E76A8659A1E30C2D3CDBE"
 #define BOOT_SCREEN  "F8D6C781E0BB7B3DDBECD69B25E429D845506594"
 
+extern char mdstr[(SHA_DIGEST_LENGTH*2)+1];
 #define ASSERT_SHA(SHA_STR) \
     do { \
         uint8_t md[SHA_DIGEST_LENGTH]; \
-        char mdstr[(SHA_DIGEST_LENGTH*2)+1]; \
         const uint8_t * const fb = video_current_framebuffer(); \
         SHA1(fb, SCANWIDTH*SCANHEIGHT, md); \
         sha1_to_str(md, mdstr); \

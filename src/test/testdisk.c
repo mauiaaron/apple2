@@ -62,10 +62,10 @@ TEST test_boot_disk_bytes() {
 
     do {
         uint8_t md[SHA_DIGEST_LENGTH];
-        char mdstr[(SHA_DIGEST_LENGTH*2)+1];
+        char mdstr0[(SHA_DIGEST_LENGTH*2)+1];
 
         FILE *fp = fopen(disk, "r");
-        char *buf = malloc(EXPECTED_DISK_TRACE_FILE_SIZE);
+        unsigned char *buf = malloc(EXPECTED_DISK_TRACE_FILE_SIZE);
         if (fread(buf, 1, EXPECTED_DISK_TRACE_FILE_SIZE, fp) != EXPECTED_DISK_TRACE_FILE_SIZE) {
             ASSERT(false);
         }
@@ -73,8 +73,8 @@ TEST test_boot_disk_bytes() {
         SHA1(buf, EXPECTED_DISK_TRACE_FILE_SIZE, md);
         FREE(buf);
 
-        sha1_to_str(md, mdstr);
-        ASSERT(strcmp(mdstr, EXPECTED_DISK_TRACE_SHA) == 0);
+        sha1_to_str(md, mdstr0);
+        ASSERT(strcmp(mdstr0, EXPECTED_DISK_TRACE_SHA) == 0);
     } while(0);
 
     unlink(disk);
@@ -87,6 +87,7 @@ TEST test_boot_disk_bytes() {
 // ... but if it's correct, you're fairly assured the cpu/vm is working =)
 #if ABUSIVE_TESTS
 #define EXPECTED_CPU_TRACE_FILE_SIZE 809430487
+#define EXPECTED_CPU_TRACE_SHA "4DB0C2547A0F02450A0E5E663C5BE8EA776C7A41"
 TEST test_boot_disk_cputrace() {
     char *homedir = getenv("HOME");
     char *output = NULL;
@@ -96,6 +97,7 @@ TEST test_boot_disk_cputrace() {
         cpu65_trace_begin(output);
     }
 
+    srandom(0);
     BOOT_TO_DOS();
 
     cpu65_trace_end();
@@ -103,14 +105,14 @@ TEST test_boot_disk_cputrace() {
 
     do {
         uint8_t md[SHA_DIGEST_LENGTH];
-        char mdstr[(SHA_DIGEST_LENGTH*2)+1];
+        char mdstr0[(SHA_DIGEST_LENGTH*2)+1];
 
         FILE *fp = fopen(output, "r");
         fseek(fp, 0, SEEK_END);
         long expectedSize = ftell(fp);
         ASSERT(expectedSize == EXPECTED_CPU_TRACE_FILE_SIZE);
         fseek(fp, 0, SEEK_SET);
-        char *buf = malloc(EXPECTED_CPU_TRACE_FILE_SIZE);
+        unsigned char *buf = malloc(EXPECTED_CPU_TRACE_FILE_SIZE);
         if (fread(buf, 1, EXPECTED_CPU_TRACE_FILE_SIZE, fp) != EXPECTED_CPU_TRACE_FILE_SIZE) {
             ASSERT(false);
         }
@@ -118,11 +120,8 @@ TEST test_boot_disk_cputrace() {
         SHA1(buf, EXPECTED_CPU_TRACE_FILE_SIZE, md);
         FREE(buf);
 
-#if 0
-        // this is no longer a stable value to check due to random return values from disk VM routines
-        sha1_to_str(md, mdstr);
-        ASSERT(strcmp(mdstr, EXPECTED_CPU_TRACE_SHA) == 0);
-#endif
+        sha1_to_str(md, mdstr0);
+        ASSERT(strcmp(mdstr0, EXPECTED_CPU_TRACE_SHA) == 0);
     } while(0);
 
     unlink(output);
@@ -133,6 +132,7 @@ TEST test_boot_disk_cputrace() {
 #endif
 
 #define EXPECTED_VM_TRACE_FILE_SIZE 2830810
+#define EXPECTED_VM_TRACE_SHA "8B7A8169E34354773F82442DB6A0C3D6B69741D9"
 TEST test_boot_disk_vmtrace() {
     char *homedir = getenv("HOME");
     char *disk = NULL;
@@ -142,6 +142,7 @@ TEST test_boot_disk_vmtrace() {
         vm_trace_begin(disk);
     }
 
+    srandom(0);
     BOOT_TO_DOS();
 
     vm_trace_end();
@@ -149,10 +150,10 @@ TEST test_boot_disk_vmtrace() {
 
     do {
         uint8_t md[SHA_DIGEST_LENGTH];
-        char mdstr[(SHA_DIGEST_LENGTH*2)+1];
+        char mdstr0[(SHA_DIGEST_LENGTH*2)+1];
 
         FILE *fp = fopen(disk, "r");
-        char *buf = malloc(EXPECTED_VM_TRACE_FILE_SIZE);
+        unsigned char *buf = malloc(EXPECTED_VM_TRACE_FILE_SIZE);
         if (fread(buf, 1, EXPECTED_VM_TRACE_FILE_SIZE, fp) != EXPECTED_VM_TRACE_FILE_SIZE) {
             ASSERT(false);
         }
@@ -160,11 +161,8 @@ TEST test_boot_disk_vmtrace() {
         SHA1(buf, EXPECTED_VM_TRACE_FILE_SIZE, md);
         FREE(buf);
 
-#if 0
-        // this is no longer a stable value to check due to random return values from disk VM routines
-        sha1_to_str(md, mdstr);
-        ASSERT(strcmp(mdstr, EXPECTED_VM_TRACE_SHA) == 0);
-#endif
+        sha1_to_str(md, mdstr0);
+        ASSERT(strcmp(mdstr0, EXPECTED_VM_TRACE_SHA) == 0);
     } while(0);
 
     unlink(disk);
@@ -178,6 +176,8 @@ TEST test_boot_disk() {
     PASS();
 }
 
+
+#define INIT_SHA1 "10F15B516E4CF2FC5B1712951A6F9C3D90BF595C"
 TEST test_inithello_dsk() {
 
     test_setup_boot_disk(BLANK_DSK, 0);
@@ -192,7 +192,7 @@ TEST test_inithello_dsk() {
     c_debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
-    ASSERT_SHA("10F15B516E4CF2FC5B1712951A6F9C3D90BF595C");
+    ASSERT_SHA(INIT_SHA1);
 
     REBOOT_TO_DOS();
     c_eject_6(0);
@@ -213,7 +213,7 @@ TEST test_inithello_nib() {
     c_debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
-    ASSERT_SHA("10F15B516E4CF2FC5B1712951A6F9C3D90BF595C");
+    ASSERT_SHA(INIT_SHA1);
 
     REBOOT_TO_DOS();
     c_eject_6(0);

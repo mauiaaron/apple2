@@ -18,6 +18,7 @@
 #define TESTBUF_SZ 1024
 
 bool test_do_reboot = true;
+char mdstr[(SHA_DIGEST_LENGTH*2)+1];
 
 static char input_str[TESTBUF_SZ]; // ASCII
 static unsigned int input_length = 0;
