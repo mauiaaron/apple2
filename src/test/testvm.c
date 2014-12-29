@@ -3265,6 +3265,7 @@ static int begin_video = -1;
 GREATEST_SUITE(test_suite_vm) {
     GREATEST_SET_SETUP_CB(testvm_setup, NULL);
     GREATEST_SET_TEARDOWN_CB(testvm_teardown, NULL);
+    GREATEST_SET_BREAKPOINT_CB(test_breakpoint, NULL);
 
     // TESTS --------------------------
     begin_video=!is_headless;

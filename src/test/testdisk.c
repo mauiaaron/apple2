@@ -229,6 +229,7 @@ static int begin_video = -1;
 GREATEST_SUITE(test_suite_disk) {
     GREATEST_SET_SETUP_CB(testdisk_setup, NULL);
     GREATEST_SET_TEARDOWN_CB(testdisk_teardown, NULL);
+    GREATEST_SET_BREAKPOINT_CB(test_breakpoint, NULL);
 
     // TESTS --------------------------
     begin_video=!is_headless;

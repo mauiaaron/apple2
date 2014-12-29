@@ -134,7 +134,9 @@ void test_common_init(bool do_cputhread) {
         if (is_headless) {
             c_debugger_set_timeout(10);
         } else {
-            fprintf(stderr, "NOTE : RUNNING WITH DISPLAY ... pass HEADLESS=1 to environment to run test in faster headless mode\n");
+            fprintf(stderr, "NOTE : RUNNING WITH DISPLAY\n");
+            fprintf(stderr, "Will spinloop on failed tests for debugger intervention\n");
+            fprintf(stderr, "Pass HEADLESS=1 to environment to run nonstop\n");
             c_debugger_set_timeout(0);
         }
     }
