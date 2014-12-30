@@ -34,6 +34,8 @@ extern int test_display(int argc, char **argv);
         test_vm(local_argc, local_argv);
 #elif defined(TEST_DISPLAY)
         test_display(local_argc, local_argv);
+#elif defined(TEST_DISK)
+        test_disk(local_argc, local_argv);
 #else
 #error "OOPS, no tests specified"
 #endif
