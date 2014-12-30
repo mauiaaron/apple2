@@ -124,7 +124,7 @@ typedef struct vm_trace_range_t {
 
 static uint16_t video_scanner_get_address(uint8_t *vbl_bar /*, current_executed_cycles*/) {
     // HACK HACK HACK of course this is wrong ...
-    *vbl_bar = (c_read_random(0x0) < 0x40) ? 0x80 : 0x0;
+    *vbl_bar = (c_read_rand(0x0) < 0x40) ? 0x80 : 0x0;
     return 0x000;
 }
 
@@ -155,7 +155,7 @@ GLUE_C_READ(read_keyboard_strobe)
     return apple_ii_64k[0][0xC000];
 }
 
-GLUE_C_READ(read_random)
+GLUE_C_READ(read_rand)
 {
     static time_t seed=0;
     if (!seed) {

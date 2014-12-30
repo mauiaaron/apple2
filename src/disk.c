@@ -473,7 +473,7 @@ static uint8_t disk_io_pseudo_random(uint8_t hibit) {
     if (hibit) {
         hibit = 0x80;
     }
-    uint8_t r = c_read_random(/*ignored*/0x0);
+    uint8_t r = c_read_rand(/*ignored*/0x0);
     if (r <= 0xAA) {
         return 0x20 | hibit;
     } else {

@@ -1708,7 +1708,7 @@ static uint8_t MemReadFloatingBus(const unsigned long uExecutedCycles)
 {
     //return*(LPBYTE)(mem + VideoGetScannerAddress(NULL, uExecutedCycles));
     // HUGE HACK FIXME TODO
-    return c_read_random(0x0);
+    return c_read_rand(0x0);
 }
 
 #define nCyclesLeft cpu65_cycle_count

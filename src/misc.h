@@ -118,7 +118,7 @@ void c_set_primary_char();
 void c_set_altchar();
 void c_initialize_font();
 void c_initialize_vm();
-uint8_t c_read_random(uint16_t ea);
+uint8_t c_read_rand(uint16_t ea);
 void reinitialize();
 
 /* vm hooks */
@@ -134,7 +134,7 @@ void ram_nop(),
 
 write_unmapped_softswitch(),
 
-read_random(),
+read_rand(),
 read_unmapped_softswitch(),
 read_keyboard(),
 read_keyboard_strobe(),

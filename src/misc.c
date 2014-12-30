@@ -279,7 +279,7 @@ void c_initialize_tables() {
     {
         cpu65_vmem_r[i] =
             cpu65_vmem_w[i] =
-                read_random;
+                read_rand;
     }
 
     /* TEXT switch */
