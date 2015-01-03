@@ -16,8 +16,10 @@
 #define TESTING_DISK "testvm1.dsk.gz"
 #define BLANK_DSK "blank.dsk.gz"
 #define BLANK_NIB "blank.nib.gz"
+#define BLANK_PO  "blank.po.gz"
 #define REBOOT_TO_DOS() \
     do { \
+        apple_ii_64k[0][WATCHPOINT_ADDR] = 0x00; \
         apple_ii_64k[0][TESTOUT_ADDR] = 0x00; \
         joy_button0 = 0xff; \
         cpu65_interrupt(ResetSig); \
@@ -47,6 +49,8 @@ static void testdisk_teardown(void *arg) {
 #define EXPECTED_DISK_TRACE_FILE_SIZE 141350
 #define EXPECTED_DISK_TRACE_SHA "471EB3D01917B1C6EF9F13C5C7BC1ACE4E74C851"
 TEST test_boot_disk_bytes() {
+    srandom(0);
+
     char *homedir = getenv("HOME");
     char *disk = NULL;
     asprintf(&disk, "%s/a2_read_disk_test.txt", homedir);
@@ -65,6 +69,12 @@ TEST test_boot_disk_bytes() {
         char mdstr0[(SHA_DIGEST_LENGTH*2)+1];
 
         FILE *fp = fopen(disk, "r");
+
+        fseek(fp, 0, SEEK_END);
+        long expectedSize = ftell(fp);
+        ASSERT(expectedSize == EXPECTED_DISK_TRACE_FILE_SIZE);
+        fseek(fp, 0, SEEK_SET);
+
         unsigned char *buf = malloc(EXPECTED_DISK_TRACE_FILE_SIZE);
         if (fread(buf, 1, EXPECTED_DISK_TRACE_FILE_SIZE, fp) != EXPECTED_DISK_TRACE_FILE_SIZE) {
             ASSERT(false);
@@ -75,6 +85,102 @@ TEST test_boot_disk_bytes() {
 
         sha1_to_str(md, mdstr0);
         ASSERT(strcmp(mdstr0, EXPECTED_DISK_TRACE_SHA) == 0);
+    } while(0);
+
+    unlink(disk);
+    FREE(disk);
+
+    PASS();
+}
+
+#define EXPECTED_DISK_TRACE_NIB_FILE_SIZE 147368
+#define EXPECTED_DISK_TRACE_NIB_SHA "DE92EABF6C9747353E9C8A367706D70E520CC2C1"
+TEST test_boot_disk_bytes_nib() {
+    test_setup_boot_disk(BLANK_NIB, 0);
+    srandom(0);
+
+    char *homedir = getenv("HOME");
+    char *disk = NULL;
+    asprintf(&disk, "%s/a2_read_disk_test_nib.txt", homedir);
+    if (disk) {
+        unlink(disk);
+        c_begin_disk_trace_6(disk, NULL);
+    }
+
+    BOOT_TO_DOS();
+
+    c_end_disk_trace_6();
+    c_eject_6(0);
+
+    do {
+        uint8_t md[SHA_DIGEST_LENGTH];
+        char mdstr0[(SHA_DIGEST_LENGTH*2)+1];
+
+        FILE *fp = fopen(disk, "r");
+
+        fseek(fp, 0, SEEK_END);
+        long expectedSize = ftell(fp);
+        ASSERT(expectedSize == EXPECTED_DISK_TRACE_NIB_FILE_SIZE);
+        fseek(fp, 0, SEEK_SET);
+
+        unsigned char *buf = malloc(EXPECTED_DISK_TRACE_NIB_FILE_SIZE);
+        if (fread(buf, 1, EXPECTED_DISK_TRACE_NIB_FILE_SIZE, fp) != EXPECTED_DISK_TRACE_NIB_FILE_SIZE) {
+            ASSERT(false);
+        }
+        fclose(fp); fp = NULL;
+        SHA1(buf, EXPECTED_DISK_TRACE_NIB_FILE_SIZE, md);
+        FREE(buf);
+
+        sha1_to_str(md, mdstr0);
+        ASSERT(strcmp(mdstr0, EXPECTED_DISK_TRACE_NIB_SHA) == 0);
+    } while(0);
+
+    unlink(disk);
+    FREE(disk);
+
+    PASS();
+}
+
+#define EXPECTED_DISK_TRACE_PO_FILE_SIZE 141350
+#define EXPECTED_DISK_TRACE_PO_SHA "6C2170D3AA82F87DD34E177309808199BDCCB018"
+TEST test_boot_disk_bytes_po() {
+    test_setup_boot_disk(BLANK_PO, 0);
+    srandom(0);
+
+    char *homedir = getenv("HOME");
+    char *disk = NULL;
+    asprintf(&disk, "%s/a2_read_disk_test_po.txt", homedir);
+    if (disk) {
+        unlink(disk);
+        c_begin_disk_trace_6(disk, NULL);
+    }
+
+    BOOT_TO_DOS();
+
+    c_end_disk_trace_6();
+    c_eject_6(0);
+
+    do {
+        uint8_t md[SHA_DIGEST_LENGTH];
+        char mdstr0[(SHA_DIGEST_LENGTH*2)+1];
+
+        FILE *fp = fopen(disk, "r");
+
+        fseek(fp, 0, SEEK_END);
+        long expectedSize = ftell(fp);
+        ASSERT(expectedSize == EXPECTED_DISK_TRACE_PO_FILE_SIZE);
+        fseek(fp, 0, SEEK_SET);
+
+        unsigned char *buf = malloc(EXPECTED_DISK_TRACE_PO_FILE_SIZE);
+        if (fread(buf, 1, EXPECTED_DISK_TRACE_PO_FILE_SIZE, fp) != EXPECTED_DISK_TRACE_PO_FILE_SIZE) {
+            ASSERT(false);
+        }
+        fclose(fp); fp = NULL;
+        SHA1(buf, EXPECTED_DISK_TRACE_PO_FILE_SIZE, md);
+        FREE(buf);
+
+        sha1_to_str(md, mdstr0);
+        ASSERT(strcmp(mdstr0, EXPECTED_DISK_TRACE_PO_SHA) == 0);
     } while(0);
 
     unlink(disk);
@@ -131,6 +237,156 @@ TEST test_boot_disk_cputrace() {
 }
 #endif
 
+#define EXPECTED_CPUTRACE_HELLO_DSK_FILE_SIZE 107523409
+#define EXPECTED_CPUTRACE_HELLO_DSK_SHA "586F218EC3C368C73DE1945B7EF441919E0D5B0F"
+TEST test_cputrace_hello_dsk() {
+    test_setup_boot_disk(BLANK_DSK, 0);
+
+    BOOT_TO_DOS();
+
+    char *homedir = getenv("HOME");
+    char *output = NULL;
+    asprintf(&output, "%s/a2_cputrace_hello_dsk.txt", homedir);
+    if (output) {
+        unlink(output);
+        cpu65_trace_begin(output);
+    }
+
+    srandom(0);
+    apple_ii_64k[0][WATCHPOINT_ADDR] = 0x00;
+    test_type_input("RUN HELLO\r");
+    c_debugger_go();
+
+    cpu65_trace_end();
+    c_eject_6(0);
+
+    do {
+        uint8_t md[SHA_DIGEST_LENGTH];
+        char mdstr0[(SHA_DIGEST_LENGTH*2)+1];
+
+        FILE *fp = fopen(output, "r");
+        fseek(fp, 0, SEEK_END);
+        long expectedSize = ftell(fp);
+        ASSERT(expectedSize == EXPECTED_CPUTRACE_HELLO_DSK_FILE_SIZE);
+        fseek(fp, 0, SEEK_SET);
+        unsigned char *buf = malloc(EXPECTED_CPUTRACE_HELLO_DSK_FILE_SIZE);
+        if (fread(buf, 1, EXPECTED_CPUTRACE_HELLO_DSK_FILE_SIZE, fp) != EXPECTED_CPUTRACE_HELLO_DSK_FILE_SIZE) {
+            ASSERT(false);
+        }
+        fclose(fp); fp = NULL;
+        SHA1(buf, EXPECTED_CPUTRACE_HELLO_DSK_FILE_SIZE, md);
+        FREE(buf);
+
+        sha1_to_str(md, mdstr0);
+        ASSERT(strcmp(mdstr0, EXPECTED_CPUTRACE_HELLO_DSK_SHA) == 0);
+    } while(0);
+
+    unlink(output);
+    FREE(output);
+
+    PASS();
+}
+
+#define EXPECTED_CPUTRACE_HELLO_NIB_FILE_SIZE 12888005
+#define EXPECTED_CPUTRACE_HELLO_NIB_SHA "539A628524ACCF066A82FA67D0A488C8D3DC01BF"
+TEST test_cputrace_hello_nib() {
+    test_setup_boot_disk(BLANK_NIB, 0);
+
+    BOOT_TO_DOS();
+
+    char *homedir = getenv("HOME");
+    char *output = NULL;
+    asprintf(&output, "%s/a2_cputrace_hello_nib.txt", homedir);
+    if (output) {
+        unlink(output);
+        cpu65_trace_begin(output);
+    }
+
+    srandom(0);
+    apple_ii_64k[0][WATCHPOINT_ADDR] = 0x00;
+    test_type_input("RUN HELLO\r");
+    c_debugger_go();
+
+    cpu65_trace_end();
+    c_eject_6(0);
+
+    do {
+        uint8_t md[SHA_DIGEST_LENGTH];
+        char mdstr0[(SHA_DIGEST_LENGTH*2)+1];
+
+        FILE *fp = fopen(output, "r");
+        fseek(fp, 0, SEEK_END);
+        long expectedSize = ftell(fp);
+        ASSERT(expectedSize == EXPECTED_CPUTRACE_HELLO_NIB_FILE_SIZE);
+        fseek(fp, 0, SEEK_SET);
+        unsigned char *buf = malloc(EXPECTED_CPUTRACE_HELLO_NIB_FILE_SIZE);
+        if (fread(buf, 1, EXPECTED_CPUTRACE_HELLO_NIB_FILE_SIZE, fp) != EXPECTED_CPUTRACE_HELLO_NIB_FILE_SIZE) {
+            ASSERT(false);
+        }
+        fclose(fp); fp = NULL;
+        SHA1(buf, EXPECTED_CPUTRACE_HELLO_NIB_FILE_SIZE, md);
+        FREE(buf);
+
+        sha1_to_str(md, mdstr0);
+        ASSERT(strcmp(mdstr0, EXPECTED_CPUTRACE_HELLO_NIB_SHA) == 0);
+    } while(0);
+
+    unlink(output);
+    FREE(output);
+
+    PASS();
+}
+
+#define EXPECTED_CPUTRACE_HELLO_PO_FILE_SIZE 107523284
+#define EXPECTED_CPUTRACE_HELLO_PO_SHA "A99C1D02B898E02662DEDBF235C55B175D01D05D"
+TEST test_cputrace_hello_po() {
+    test_setup_boot_disk(BLANK_PO, 0);
+
+    BOOT_TO_DOS();
+
+    char *homedir = getenv("HOME");
+    char *output = NULL;
+    asprintf(&output, "%s/a2_cputrace_hello_po.txt", homedir);
+    if (output) {
+        unlink(output);
+        cpu65_trace_begin(output);
+    }
+
+    srandom(0);
+    apple_ii_64k[0][WATCHPOINT_ADDR] = 0x00;
+    test_type_input("RUN HELLO\r");
+    c_debugger_go();
+
+    cpu65_trace_end();
+    c_eject_6(0);
+
+    do {
+        uint8_t md[SHA_DIGEST_LENGTH];
+        char mdstr0[(SHA_DIGEST_LENGTH*2)+1];
+
+        FILE *fp = fopen(output, "r");
+        fseek(fp, 0, SEEK_END);
+        long expectedSize = ftell(fp);
+        ASSERT(expectedSize == EXPECTED_CPUTRACE_HELLO_PO_FILE_SIZE);
+        fseek(fp, 0, SEEK_SET);
+        unsigned char *buf = malloc(EXPECTED_CPUTRACE_HELLO_PO_FILE_SIZE);
+        if (fread(buf, 1, EXPECTED_CPUTRACE_HELLO_PO_FILE_SIZE, fp) != EXPECTED_CPUTRACE_HELLO_PO_FILE_SIZE) {
+            ASSERT(false);
+        }
+        fclose(fp); fp = NULL;
+        SHA1(buf, EXPECTED_CPUTRACE_HELLO_PO_FILE_SIZE, md);
+        FREE(buf);
+
+        sha1_to_str(md, mdstr0);
+        ASSERT(strcmp(mdstr0, EXPECTED_CPUTRACE_HELLO_PO_SHA) == 0);
+    } while(0);
+
+    unlink(output);
+    FREE(output);
+
+    PASS();
+}
+
 #define EXPECTED_VM_TRACE_FILE_SIZE 2830810
 #define EXPECTED_VM_TRACE_SHA "8B7A8169E34354773F82442DB6A0C3D6B69741D9"
 TEST test_boot_disk_vmtrace() {
@@ -153,6 +409,12 @@ TEST test_boot_disk_vmtrace() {
         char mdstr0[(SHA_DIGEST_LENGTH*2)+1];
 
         FILE *fp = fopen(disk, "r");
+
+        fseek(fp, 0, SEEK_END);
+        long expectedSize = ftell(fp);
+        ASSERT(expectedSize == EXPECTED_VM_TRACE_FILE_SIZE);
+        fseek(fp, 0, SEEK_SET);
+
         unsigned char *buf = malloc(EXPECTED_VM_TRACE_FILE_SIZE);
         if (fread(buf, 1, EXPECTED_VM_TRACE_FILE_SIZE, fp) != EXPECTED_VM_TRACE_FILE_SIZE) {
             ASSERT(false);
@@ -171,11 +433,473 @@ TEST test_boot_disk_vmtrace() {
     PASS();
 }
 
+#define EXPECTED_VM_TRACE_NIB_FILE_SIZE 2930074
+#define EXPECTED_VM_TRACE_NIB_SHA "BD2BA2B9C8E7712F9E6ABF1049ED8D2C4D979934"
+TEST test_boot_disk_vmtrace_nib() {
+    test_setup_boot_disk(BLANK_NIB, 0);
+
+    char *homedir = getenv("HOME");
+    char *disk = NULL;
+    asprintf(&disk, "%s/a2_vmtrace_nib.txt", homedir);
+    if (disk) {
+        unlink(disk);
+        vm_trace_begin(disk);
+    }
+
+    srandom(0);
+    BOOT_TO_DOS();
+
+    vm_trace_end();
+    c_eject_6(0);
+
+    do {
+        uint8_t md[SHA_DIGEST_LENGTH];
+        char mdstr0[(SHA_DIGEST_LENGTH*2)+1];
+
+        FILE *fp = fopen(disk, "r");
+
+        fseek(fp, 0, SEEK_END);
+        long expectedSize = ftell(fp);
+        ASSERT(expectedSize == EXPECTED_VM_TRACE_NIB_FILE_SIZE);
+        fseek(fp, 0, SEEK_SET);
+
+        unsigned char *buf = malloc(EXPECTED_VM_TRACE_NIB_FILE_SIZE);
+        if (fread(buf, 1, EXPECTED_VM_TRACE_NIB_FILE_SIZE, fp) != EXPECTED_VM_TRACE_NIB_FILE_SIZE) {
+            ASSERT(false);
+        }
+        fclose(fp); fp = NULL;
+        SHA1(buf, EXPECTED_VM_TRACE_NIB_FILE_SIZE, md);
+        FREE(buf);
+
+        sha1_to_str(md, mdstr0);
+        ASSERT(strcmp(mdstr0, EXPECTED_VM_TRACE_NIB_SHA) == 0);
+    } while(0);
+
+    unlink(disk);
+    FREE(disk);
+
+    PASS();
+}
+
+#define EXPECTED_VM_TRACE_PO_FILE_SIZE 2830810
+#define EXPECTED_VM_TRACE_PO_SHA "3432149815E9142FDAD6D9DF94C8621FEB56F7D7"
+TEST test_boot_disk_vmtrace_po() {
+    test_setup_boot_disk(BLANK_PO, 0);
+
+    char *homedir = getenv("HOME");
+    char *disk = NULL;
+    asprintf(&disk, "%s/a2_vmtrace_po.txt", homedir);
+    if (disk) {
+        unlink(disk);
+        vm_trace_begin(disk);
+    }
+
+    srandom(0);
+    BOOT_TO_DOS();
+
+    vm_trace_end();
+    c_eject_6(0);
+
+    do {
+        uint8_t md[SHA_DIGEST_LENGTH];
+        char mdstr0[(SHA_DIGEST_LENGTH*2)+1];
+
+        FILE *fp = fopen(disk, "r");
+
+        fseek(fp, 0, SEEK_END);
+        long expectedSize = ftell(fp);
+        ASSERT(expectedSize == EXPECTED_VM_TRACE_PO_FILE_SIZE);
+        fseek(fp, 0, SEEK_SET);
+
+        unsigned char *buf = malloc(EXPECTED_VM_TRACE_PO_FILE_SIZE);
+        if (fread(buf, 1, EXPECTED_VM_TRACE_PO_FILE_SIZE, fp) != EXPECTED_VM_TRACE_PO_FILE_SIZE) {
+            ASSERT(false);
+        }
+        fclose(fp); fp = NULL;
+        SHA1(buf, EXPECTED_VM_TRACE_PO_FILE_SIZE, md);
+        FREE(buf);
+
+        sha1_to_str(md, mdstr0);
+        ASSERT(strcmp(mdstr0, EXPECTED_VM_TRACE_PO_SHA) == 0);
+    } while(0);
+
+    unlink(disk);
+    FREE(disk);
+
+    PASS();
+}
+
 TEST test_boot_disk() {
     BOOT_TO_DOS();
     PASS();
 }
 
+#define SAVE_SHA1 "B721C61BD10E28F9B833C5F661AA60C73B2D9F74"
+TEST test_savehello_dsk() {
+
+    test_setup_boot_disk(BLANK_DSK, 0);
+    BOOT_TO_DOS();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
+    ASSERT(apple_ii_64k[0][TESTOUT_ADDR]    == 0x00);
+
+    apple_ii_64k[0][WATCHPOINT_ADDR] = 0x0;
+    test_type_input("SAVE HELLO\r");
+    TYPE_TRIGGER_WATCHPT();
+
+    c_debugger_go();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+    ASSERT_SHA(SAVE_SHA1);
+
+    REBOOT_TO_DOS();
+    c_debugger_go();
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+    ASSERT_SHA(BOOT_SCREEN);
+
+    c_eject_6(0);
+
+    PASS();
+}
+
+TEST test_savehello_nib() {
+
+    test_setup_boot_disk(BLANK_NIB, 0);
+    BOOT_TO_DOS();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
+
+    apple_ii_64k[0][WATCHPOINT_ADDR] = 0x0;
+    test_type_input("SAVE HELLO\r");
+    TYPE_TRIGGER_WATCHPT();
+
+    c_debugger_go();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+    ASSERT_SHA(SAVE_SHA1);
+
+    REBOOT_TO_DOS();
+    c_debugger_go();
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+    ASSERT_SHA(BOOT_SCREEN);
+
+    c_eject_6(0);
+
+    PASS();
+}
+
+TEST test_savehello_po() {
+
+    test_setup_boot_disk(BLANK_PO, 0);
+    BOOT_TO_DOS();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
+
+    apple_ii_64k[0][WATCHPOINT_ADDR] = 0x0;
+    test_type_input("SAVE HELLO\r");
+    TYPE_TRIGGER_WATCHPT();
+
+    c_debugger_go();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+    ASSERT_SHA(SAVE_SHA1);
+
+    REBOOT_TO_DOS();
+    c_debugger_go();
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+    ASSERT_SHA(BOOT_SCREEN);
+
+    c_eject_6(0);
+
+    PASS();
+}
+
+#define EXPECTED_DISKWRITE_TRACE_DSK_FILE_SIZE 63675
+#define EXPECTED_DISKWRITE_TRACE_DSK_SHA "CFA1C3AB2CA4F245D291DFC8C277773C5275946C"
+TEST test_disk_bytes_savehello_dsk() {
+    test_setup_boot_disk(BLANK_DSK, 0);
+    BOOT_TO_DOS();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
+    ASSERT(apple_ii_64k[0][TESTOUT_ADDR]    == 0x00);
+
+    srandom(0);
+    char *homedir = getenv("HOME");
+    char *disk = NULL;
+    asprintf(&disk, "%s/a2_write_disk_test_dsk.txt", homedir);
+    if (disk) {
+        unlink(disk);
+        c_begin_disk_trace_6(NULL, disk);
+    }
+
+    apple_ii_64k[0][WATCHPOINT_ADDR] = 0x0;
+    test_type_input("SAVE HELLO\r");
+    TYPE_TRIGGER_WATCHPT();
+
+    c_debugger_go();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+    ASSERT_SHA(SAVE_SHA1);
+
+    c_end_disk_trace_6();
+
+    do {
+        uint8_t md[SHA_DIGEST_LENGTH];
+        char mdstr0[(SHA_DIGEST_LENGTH*2)+1];
+
+        FILE *fp = fopen(disk, "r");
+
+        fseek(fp, 0, SEEK_END);
+        long expectedSize = ftell(fp);
+        ASSERT(expectedSize == EXPECTED_DISKWRITE_TRACE_DSK_FILE_SIZE);
+        fseek(fp, 0, SEEK_SET);
+
+        unsigned char *buf = malloc(EXPECTED_DISKWRITE_TRACE_DSK_FILE_SIZE);
+        if (fread(buf, 1, EXPECTED_DISKWRITE_TRACE_DSK_FILE_SIZE, fp) != EXPECTED_DISKWRITE_TRACE_DSK_FILE_SIZE) {
+            ASSERT(false);
+        }
+        fclose(fp); fp = NULL;
+        SHA1(buf, EXPECTED_DISKWRITE_TRACE_DSK_FILE_SIZE, md);
+        FREE(buf);
+
+        sha1_to_str(md, mdstr0);
+        ASSERT(strcmp(mdstr0, EXPECTED_DISKWRITE_TRACE_DSK_SHA) == 0);
+    } while(0);
+
+    unlink(disk);
+    FREE(disk);
+
+    REBOOT_TO_DOS();
+    c_debugger_go();
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+    ASSERT_SHA(BOOT_SCREEN);
+
+    c_eject_6(0);
+
+    PASS();
+}
+
+#define EXPECTED_DISKWRITE_TRACE_NIB_FILE_SIZE 2409
+#define EXPECTED_DISKWRITE_TRACE_NIB_SHA "332EA76D8BCE45ACA6F805B978E6A3327386ABD6"
+TEST test_disk_bytes_savehello_nib() {
+    test_setup_boot_disk(BLANK_NIB, 0);
+    BOOT_TO_DOS();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
+    ASSERT(apple_ii_64k[0][TESTOUT_ADDR]    == 0x00);
+
+    srandom(0);
+    char *homedir = getenv("HOME");
+    char *disk = NULL;
+    asprintf(&disk, "%s/a2_write_disk_test_nib.txt", homedir);
+    if (disk) {
+        unlink(disk);
+        c_begin_disk_trace_6(NULL, disk);
+    }
+
+    apple_ii_64k[0][WATCHPOINT_ADDR] = 0x0;
+    test_type_input("SAVE HELLO\r");
+    TYPE_TRIGGER_WATCHPT();
+
+    c_debugger_go();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+    ASSERT_SHA(SAVE_SHA1);
+
+    c_end_disk_trace_6();
+
+    do {
+        uint8_t md[SHA_DIGEST_LENGTH];
+        char mdstr0[(SHA_DIGEST_LENGTH*2)+1];
+
+        FILE *fp = fopen(disk, "r");
+
+        fseek(fp, 0, SEEK_END);
+        long expectedSize = ftell(fp);
+        ASSERT(expectedSize == EXPECTED_DISKWRITE_TRACE_NIB_FILE_SIZE);
+        fseek(fp, 0, SEEK_SET);
+
+        unsigned char *buf = malloc(EXPECTED_DISKWRITE_TRACE_NIB_FILE_SIZE);
+        if (fread(buf, 1, EXPECTED_DISKWRITE_TRACE_NIB_FILE_SIZE, fp) != EXPECTED_DISKWRITE_TRACE_NIB_FILE_SIZE) {
+            ASSERT(false);
+        }
+        fclose(fp); fp = NULL;
+        SHA1(buf, EXPECTED_DISKWRITE_TRACE_NIB_FILE_SIZE, md);
+        FREE(buf);
+
+        sha1_to_str(md, mdstr0);
+        ASSERT(strcmp(mdstr0, EXPECTED_DISKWRITE_TRACE_NIB_SHA) == 0);
+    } while(0);
+
+    unlink(disk);
+    FREE(disk);
+
+    REBOOT_TO_DOS();
+    c_debugger_go();
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+    ASSERT_SHA(BOOT_SCREEN);
+
+    c_eject_6(0);
+
+    PASS();
+}
+
+#define EXPECTED_DISKWRITE_TRACE_PO_FILE_SIZE 63675
+#define EXPECTED_DISKWRITE_TRACE_PO_SHA "CFA1C3AB2CA4F245D291DFC8C277773C5275946C"
+TEST test_disk_bytes_savehello_po() {
+    test_setup_boot_disk(BLANK_PO, 0);
+    BOOT_TO_DOS();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
+    ASSERT(apple_ii_64k[0][TESTOUT_ADDR]    == 0x00);
+
+    srandom(0);
+    char *homedir = getenv("HOME");
+    char *disk = NULL;
+    asprintf(&disk, "%s/a2_write_disk_test_po.txt", homedir);
+    if (disk) {
+        unlink(disk);
+        c_begin_disk_trace_6(NULL, disk);
+    }
+
+    apple_ii_64k[0][WATCHPOINT_ADDR] = 0x0;
+    test_type_input("SAVE HELLO\r");
+    TYPE_TRIGGER_WATCHPT();
+
+    c_debugger_go();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+    ASSERT_SHA(SAVE_SHA1);
+
+    c_end_disk_trace_6();
+
+    do {
+        uint8_t md[SHA_DIGEST_LENGTH];
+        char mdstr0[(SHA_DIGEST_LENGTH*2)+1];
+
+        FILE *fp = fopen(disk, "r");
+
+        fseek(fp, 0, SEEK_END);
+        long expectedSize = ftell(fp);
+        ASSERT(expectedSize == EXPECTED_DISKWRITE_TRACE_PO_FILE_SIZE);
+        fseek(fp, 0, SEEK_SET);
+
+        unsigned char *buf = malloc(EXPECTED_DISKWRITE_TRACE_PO_FILE_SIZE);
+        if (fread(buf, 1, EXPECTED_DISKWRITE_TRACE_PO_FILE_SIZE, fp) != EXPECTED_DISKWRITE_TRACE_PO_FILE_SIZE) {
+            ASSERT(false);
+        }
+        fclose(fp); fp = NULL;
+        SHA1(buf, EXPECTED_DISKWRITE_TRACE_PO_FILE_SIZE, md);
+        FREE(buf);
+
+        sha1_to_str(md, mdstr0);
+        ASSERT(strcmp(mdstr0, EXPECTED_DISKWRITE_TRACE_PO_SHA) == 0);
+    } while(0);
+
+    unlink(disk);
+    FREE(disk);
+
+    REBOOT_TO_DOS();
+    c_debugger_go();
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+    ASSERT_SHA(BOOT_SCREEN);
+
+    c_eject_6(0);
+
+    PASS();
+}
+
+#define EAT_UP_DISK_SPACE() \
+    do { \
+        test_type_input("CALL-151\r"); \
+        test_type_input("BSAVEJUNK0,A$2000,L$4000\r"); \
+        test_type_input("BSAVEJUNK1,A$2000,L$4000\r"); \
+        test_type_input("BSAVEJUNK2,A$2000,L$4000\r"); \
+        test_type_input("BSAVEJUNK3,A$2000,L$4000\r"); \
+        test_type_input("BSAVEJUNK4,A$2000,L$4000\r"); \
+        test_type_input("BSAVEJUNK5,A$2000,L$4000\r"); \
+        test_type_input("BSAVEJUNK6,A$2000,L$4000\r"); \
+        test_type_input("BSAVEJUNK7,A$2000,L$4000\r"); \
+    } while (0)
+
+#define NOSPACE_SHA1 "2EA4D4B9F1C6797E476CD0FE59970CC243263B16"
+TEST test_outofspace_dsk() {
+    test_setup_boot_disk(BLANK_DSK, 0);
+    BOOT_TO_DOS();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
+    ASSERT(apple_ii_64k[0][TESTOUT_ADDR]    == 0x00);
+
+    apple_ii_64k[0][WATCHPOINT_ADDR] = 0x0;
+    EAT_UP_DISK_SPACE();
+    TYPE_TRIGGER_WATCHPT();
+
+    c_debugger_go();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+    ASSERT_SHA(NOSPACE_SHA1);
+
+    REBOOT_TO_DOS();
+    c_debugger_go();
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+    ASSERT_SHA(BOOT_SCREEN);
+
+    c_eject_6(0);
+
+    PASS();
+}
+
+TEST test_outofspace_nib() {
+    test_setup_boot_disk(BLANK_NIB, 0);
+    BOOT_TO_DOS();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
+    ASSERT(apple_ii_64k[0][TESTOUT_ADDR]    == 0x00);
+
+    apple_ii_64k[0][WATCHPOINT_ADDR] = 0x0;
+    EAT_UP_DISK_SPACE();
+    TYPE_TRIGGER_WATCHPT();
+
+    c_debugger_go();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+    ASSERT_SHA(NOSPACE_SHA1);
+
+    REBOOT_TO_DOS();
+    c_debugger_go();
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+    ASSERT_SHA(BOOT_SCREEN);
+
+    c_eject_6(0);
+
+    PASS();
+}
+
+TEST test_outofspace_po() {
+    test_setup_boot_disk(BLANK_PO, 0);
+    BOOT_TO_DOS();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
+    ASSERT(apple_ii_64k[0][TESTOUT_ADDR]    == 0x00);
+
+    apple_ii_64k[0][WATCHPOINT_ADDR] = 0x0;
+    EAT_UP_DISK_SPACE();
+    TYPE_TRIGGER_WATCHPT();
+
+    c_debugger_go();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+    ASSERT_SHA(NOSPACE_SHA1);
+
+    REBOOT_TO_DOS();
+    c_debugger_go();
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+    ASSERT_SHA(BOOT_SCREEN);
+
+    c_eject_6(0);
+
+    PASS();
+}
 
 #define INIT_SHA1 "10F15B516E4CF2FC5B1712951A6F9C3D90BF595C"
 TEST test_inithello_dsk() {
@@ -195,6 +919,10 @@ TEST test_inithello_dsk() {
     ASSERT_SHA(INIT_SHA1);
 
     REBOOT_TO_DOS();
+    c_debugger_go();
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+    ASSERT_SHA(BOOT_SCREEN);
+
     c_eject_6(0);
 
     PASS();
@@ -216,6 +944,35 @@ TEST test_inithello_nib() {
     ASSERT_SHA(INIT_SHA1);
 
     REBOOT_TO_DOS();
+    c_debugger_go();
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+    ASSERT_SHA(BOOT_SCREEN);
+
+    c_eject_6(0);
+
+    PASS();
+}
+
+TEST test_inithello_po() {
+
+    test_setup_boot_disk(BLANK_PO, 0);
+    BOOT_TO_DOS();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
+
+    test_type_input("INIT HELLO\r");
+    TYPE_TRIGGER_WATCHPT();
+
+    c_debugger_go();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+    ASSERT_SHA(INIT_SHA1);
+
+    REBOOT_TO_DOS();
+    c_debugger_go();
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+    ASSERT_SHA(BOOT_SCREEN);
+
     c_eject_6(0);
 
     PASS();
@@ -235,14 +992,37 @@ GREATEST_SUITE(test_suite_disk) {
     begin_video=!is_headless;
 
     RUN_TESTp(test_boot_disk_bytes);
+    RUN_TESTp(test_boot_disk_bytes_nib);
+    RUN_TESTp(test_boot_disk_bytes_po);
+
 #if ABUSIVE_TESTS
     RUN_TESTp(test_boot_disk_cputrace);
 #endif
+    RUN_TESTp(test_cputrace_hello_dsk);
+    RUN_TESTp(test_cputrace_hello_nib);
+    RUN_TESTp(test_cputrace_hello_po);
+
     RUN_TESTp(test_boot_disk_vmtrace);
+    RUN_TESTp(test_boot_disk_vmtrace_nib);
+    RUN_TESTp(test_boot_disk_vmtrace_po);
+
     RUN_TESTp(test_boot_disk);
+
+    RUN_TESTp(test_savehello_dsk);
+    RUN_TESTp(test_savehello_nib);
+    RUN_TESTp(test_savehello_po);
+
+    RUN_TESTp(test_disk_bytes_savehello_dsk);
+    RUN_TESTp(test_disk_bytes_savehello_nib);
+    RUN_TESTp(test_disk_bytes_savehello_po);
+
+    RUN_TESTp(test_outofspace_dsk);
+    RUN_TESTp(test_outofspace_nib);
+    RUN_TESTp(test_outofspace_po);
 
     RUN_TESTp(test_inithello_dsk);
     RUN_TESTp(test_inithello_nib);
+    RUN_TESTp(test_inithello_po);
 
     // ...
     c_eject_6(0);

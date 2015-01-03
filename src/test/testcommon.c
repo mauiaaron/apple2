@@ -100,7 +100,7 @@ void test_breakpoint(void *arg) {
 #if !HEADLESS
     if (!is_headless) {
         fprintf(GREATEST_STDOUT, "DISPLAY NOTE: busy-spinning, needs gdb/lldb intervention to continue...\n");
-        static volatile bool debug_continue = false;
+        volatile bool debug_continue = false;
         while (!debug_continue) {
             struct timespec ts = { .tv_sec=0, .tv_nsec=33333333 };
             nanosleep(&ts, NULL);
