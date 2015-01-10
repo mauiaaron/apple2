@@ -116,6 +116,13 @@ void video_plotchar(int row, int col, int color, uint8_t code);
  */
 const uint8_t * const video_current_framebuffer();
 
+/*
+ * VBL routines
+ */
+uint16_t video_scanner_get_address(bool *vblBarOut, const unsigned int executedCycles);
+uint8_t floating_bus(const unsigned int executedCycles);
+uint8_t floating_bus_hibit(const bool hibit, const unsigned int executedCycles);
+
 #endif /* !__ASSEMBLER__ */
 
 /**** Private stuff follows *****/

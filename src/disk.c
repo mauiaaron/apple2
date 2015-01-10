@@ -464,23 +464,6 @@ static bool save_track_data(void) {
     return true;
 }
 
-static uint8_t disk_io_pseudo_random(uint8_t hibit) {
-    // AppleWin algorithm ... unsure of the source or whether it fixes issues with particular images
-    static const uint8_t ret[16] = {
-        0x00, 0x2D, 0x2D, 0x30, 0x30, 0x32, 0x32, 0x34,
-        0x35, 0x39, 0x43, 0x43, 0x43, 0x60, 0x7F, 0x7F
-    };
-    if (hibit) {
-        hibit = 0x80;
-    }
-    uint8_t r = c_read_rand(/*ignored*/0x0);
-    if (r <= 0xAA) {
-        return 0x20 | hibit;
-    } else {
-        return ret[r&0x0f] | hibit;
-    }
-}
-
 // ----------------------------------------------------------------------------
 // Emulator hooks
 
@@ -622,31 +605,31 @@ GLUE_C_READ(disk_read_phase)
 #endif
     }
 
-    return ea == 0xE0 ? 0xFF : disk_io_pseudo_random(1);
+    return ea == 0xE0 ? 0xFF : floating_bus_hibit(1, cpu65_cycle_count);
 }
 
 GLUE_C_READ(disk_read_motor_off)
 {
     disk6.motor = 1;
-    return disk_io_pseudo_random(1);
+    return floating_bus_hibit(1, cpu65_cycle_count);
 }
 
 GLUE_C_READ(disk_read_motor_on)
 {
     disk6.motor = 0;
-    return disk_io_pseudo_random(1);
+    return floating_bus_hibit(1, cpu65_cycle_count);
 }
 
 GLUE_C_READ(disk_read_select_a)
 {
     disk6.drive = 0;
-    return 0;
+    return floating_bus(cpu65_cycle_count);
 }
 
 GLUE_C_READ(disk_read_select_b)
 {
     disk6.drive = 1;
-    return 0;
+    return floating_bus(cpu65_cycle_count);
 }
 
 GLUE_C_READ(disk_read_latch)
@@ -657,18 +640,19 @@ GLUE_C_READ(disk_read_latch)
 GLUE_C_READ(disk_read_prepare_in)
 {
     disk6.ddrw = 0;
-    return disk_io_pseudo_random(disk6.disk[disk6.drive].is_protected);
+    return floating_bus_hibit(disk6.disk[disk6.drive].is_protected, cpu65_cycle_count);
 }
 
 GLUE_C_READ(disk_read_prepare_out)
 {
     disk6.ddrw = 1;
-    return disk_io_pseudo_random(1);
+    return floating_bus_hibit(1, cpu65_cycle_count);
 }
 
 GLUE_C_WRITE(disk_write_latch)
 {
     disk6.disk_byte = b;
+    //return b;
 }
 
 // ----------------------------------------------------------------------------

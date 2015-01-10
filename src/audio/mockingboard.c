@@ -1693,24 +1693,7 @@ void MB_Reset()
 //-----------------------------------------------------------------------------
 
 #ifdef APPLE2IX
-// TODO FIXME!!!
-// From AppleWin ... We don't do anything clever (yet) with video emulation ...
-// References to Jim Sather's books are given as eg:
-// UTAIIe:5-7,P3 (Understanding the Apple IIe, chapter 5, page 7, Paragraph 3)
-/*
-WORD VideoGetScannerAddress(bool* pbVblBar_OUT, const DWORD uExecutedCycles)
-{
-    ...;
-}
-*/
-
-static uint8_t MemReadFloatingBus(const unsigned long uExecutedCycles)
-{
-    //return*(LPBYTE)(mem + VideoGetScannerAddress(NULL, uExecutedCycles));
-    // HUGE HACK FIXME TODO
-    return c_read_rand(0x0);
-}
-
+#define MemReadFloatingBus floating_bus
 #define nCyclesLeft cpu65_cycle_count
 #define nAddr ea
 GLUE_C_READ(MB_Read)

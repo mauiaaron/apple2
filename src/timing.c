@@ -23,10 +23,16 @@
 
 #define EXECUTION_PERIOD_NSECS 1000000  // AppleWin: nExecutionPeriodUsec
 
+const unsigned int uCyclesPerLine = 65; // 25 cycles of HBL & 40 cycles of HBL'
+const unsigned int uVisibleLinesPerFrame = 64*3; // 192
+const unsigned int uLinesPerFrame = 262; // 64 in each third of the screen & 70 in VBL
+const unsigned int dwClksPerFrame = uCyclesPerLine * uLinesPerFrame; // 17030
+
 double g_fCurrentCLK6502 = CLK_6502;
 bool g_bFullSpeed = false; // HACK TODO FIXME : prolly shouldn't be global anymore -- don't think it's necessary for speaker/soundcore/etc anymore ...
 uint64_t g_nCumulativeCycles = 0;       // cumulative cycles since emulator (re)start
 int g_nCpuCyclesFeedback = 0;
+static unsigned int g_dwCyclesThisFrame = 0;
 
 static bool alt_speed_enabled = false;
 double cpu_scale_factor = 1.0;
@@ -253,22 +259,29 @@ void *cpu_thread(void *dummyptr) {
             dbg_cycles_executed += cpu65_cycle_count;
 #endif
 #ifdef AUDIO_ENABLED
-            unsigned int uExecutedCycles = cpu65_cycle_count;
+            unsigned int uActualCyclesExecuted = cpu65_cycle_count;
+            g_dwCyclesThisFrame += uActualCyclesExecuted;
 
-            MB_UpdateCycles(uExecutedCycles);   // Update 6522s (NB. Do this before updating g_nCumulativeCycles below)
+            MB_UpdateCycles(uActualCyclesExecuted);   // Update 6522s (NB. Do this before updating g_nCumulativeCycles below)
 
             // N.B.: IO calls that depend on accurate timing will update g_nCyclesExecuted
-            const unsigned int nRemainingCycles = uExecutedCycles - g_nCyclesExecuted;
+            const unsigned int nRemainingCycles = uActualCyclesExecuted - g_nCyclesExecuted;
             g_nCumulativeCycles += nRemainingCycles;
 
             if (!g_bFullSpeed)
             {
-                SpkrUpdate(uExecutedCycles); // play audio
+                SpkrUpdate(uActualCyclesExecuted); // play audio
             }
-
-            // N.B.: technically this is not the end of the video frame...
-            MB_EndOfVideoFrame();
 #endif
+
+            if (g_dwCyclesThisFrame >= dwClksPerFrame)
+            {
+                g_dwCyclesThisFrame -= dwClksPerFrame;
+                //VideoEndOfVideoFrame();
+#ifdef AUDIO_ENABLED
+                MB_EndOfVideoFrame();
+#endif
+            }
 
             clock_gettime(CLOCK_MONOTONIC, &tj);
             pthread_mutex_unlock(&interface_mutex);
@@ -330,9 +343,14 @@ void *cpu_thread(void *dummyptr) {
 }
 
 // From AppleWin...
+
+unsigned int CpuGetCyclesThisVideoFrame(const unsigned int nExecutedCycles) {
+    CpuCalcCycles(nExecutedCycles);
+    return g_dwCyclesThisFrame + g_nCyclesExecuted;
+}
+
 //      Called when an IO-reg is accessed & accurate cycle info is needed
-void CpuCalcCycles(const unsigned long nExecutedCycles)
-{
+void CpuCalcCycles(const unsigned long nExecutedCycles) {
     // Calc # of cycles executed since this func was last called
     const long nCycles = nExecutedCycles - g_nCyclesExecuted;
     assert(nCycles >= 0);
