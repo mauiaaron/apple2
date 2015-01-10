@@ -45,8 +45,10 @@ uint8_t video__hires_odd[0x800];
 uint8_t video__dhires1[256];
 uint8_t video__dhires2[256];
 
+#ifdef INTERFACE_CLASSIC
 // Interface font
 static uint8_t video__int_font[3][0x4000];
+#endif
 
 int video__current_page; // current visual page
 int video__strictcolors = 1;// refactor : should be static
@@ -472,6 +474,7 @@ void video_set(int flags) {
     video_initialize_dhires_values();
 }
 
+#ifdef INTERFACE_CLASSIC
 void video_loadfont_int(int first, int quantity, const uint8_t *data) {
     unsigned int i = quantity * 8;
     while (i--) {
@@ -490,6 +493,7 @@ void video_loadfont_int(int first, int quantity, const uint8_t *data) {
         }
     }
 }
+#endif
 
 // ----------------------------------------------------------------------------
 // Plotting routines
@@ -546,6 +550,7 @@ static inline void _plot_lores(uint8_t **d, const uint32_t val) {
     *((uint16_t *)(*d)) = (uint16_t)(val & 0xffff);
 }
 
+#ifdef INTERFACE_CLASSIC
 void video_plotchar( int x, int y, int scheme, uint8_t c ) {
     uint8_t *d;
     uint8_t *s;
@@ -563,6 +568,7 @@ void video_plotchar( int x, int y, int scheme, uint8_t c ) {
     _plot_char80(&d,&s);
     _plot_char80(&d,&s);
 }
+#endif
 
 void video_init(void) {
 

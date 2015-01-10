@@ -92,6 +92,7 @@ void video_redraw(void);
  */
 void video_setpage(int page);
 
+#ifdef INTERFACE_CLASSIC
 /* Like loadfont, but writes to a seperate 256 character table used by
  * video_plotchar and not the apple text-mode display.
  */
@@ -108,6 +109,7 @@ void video_loadfont_int(int first, int qty, const uint8_t *data);
  *  2 - Red text on Black background
  */
 void video_plotchar(int row, int col, int color, uint8_t code);
+#endif
 
 /*
  * Get a reference to current internal framebuffer
