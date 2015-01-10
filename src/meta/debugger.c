@@ -20,6 +20,21 @@
 #include <openssl/sha.h>
 #endif
 
+#define SW_TEXT 0xC050
+#define SW_MIXED 0xC052
+#define SW_PAGE2 0xC054
+#define SW_HIRES 0xC056
+#define SW_80STORE 0xC000
+#define SW_RAMRD 0xC002
+#define SW_RAMWRT 0xC004
+#define SW_ALTZP 0xC008
+#define SW_80COL 0xC00C
+#define SW_ALTCHAR 0xC00E
+#define SW_SLOTC3ROM 0xC00B     /* anomaly */
+#define SW_SLOTCXROM 0xC006
+#define SW_DHIRES 0xC05E
+#define SW_IOUDIS 0xC07E
+
 const struct opcode_struct *opcodes;
 
 static stepping_struct_t stepping_struct = { 0 };
