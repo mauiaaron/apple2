@@ -47,6 +47,7 @@ static bool alt_speed_enabled = false;
 
 double cpu_scale_factor = 1.0;
 double cpu_altscale_factor = 1.0;
+bool auto_adjust_speed = true;
 
 int gc_cycles_timer_0 = 0;
 int gc_cycles_timer_1 = 0;
@@ -54,7 +55,7 @@ int gc_cycles_timer_1 = 0;
 volatile uint8_t emul_reinitialize = 0;
 pthread_t cpu_thread_id = 0;
 
-static unsigned int g_nCyclesExecuted; // # of cycles executed up to last IO access
+static unsigned int g_nCyclesExecuted = 0; // # of cycles executed up to last IO access
 
 // -----------------------------------------------------------------------------
 
@@ -245,21 +246,24 @@ void *cpu_thread(void *dummyptr) {
 #if DEBUG_TIMING
             dbg_cycles_executed += cpu65_cycle_count;
 #endif
-#ifdef AUDIO_ENABLED
             unsigned int uActualCyclesExecuted = cpu65_cycle_count;
             g_dwCyclesThisFrame += uActualCyclesExecuted;
 
+#ifdef AUDIO_ENABLED
             MB_UpdateCycles(uActualCyclesExecuted);   // Update 6522s (NB. Do this before updating g_nCumulativeCycles below)
+#endif
 
             // N.B.: IO calls that depend on accurate timing will update g_nCyclesExecuted
-            const unsigned int nRemainingCycles = uActualCyclesExecuted - g_nCyclesExecuted;
+            const int nRemainingCycles = uActualCyclesExecuted - g_nCyclesExecuted;
+            assert(nRemainingCycles >= 0);
             g_nCumulativeCycles += nRemainingCycles;
 
             if (!g_bFullSpeed)
             {
+#ifdef AUDIO_ENABLED
                 SpkrUpdate(uActualCyclesExecuted); // play audio
-            }
 #endif
+            }
 
             if (g_dwCyclesThisFrame >= dwClksPerFrame)
             {
@@ -273,6 +277,28 @@ void *cpu_thread(void *dummyptr) {
             clock_gettime(CLOCK_MONOTONIC, &tj);
             pthread_mutex_unlock(&interface_mutex);
             // -UNLOCK--------------------------------------------------------------------------------------- SAMPLE tj
+
+            if (auto_adjust_speed) {
+                deltat = timespec_diff(disk6.motor_time, tj, &negative);
+                assert(!negative);
+                if (!g_bFullSpeed &&
+#ifdef AUDIO_ENABLED
+                        !Spkr_IsActive() &&
+#endif
+                        !video_dirty() && (!disk6.motor_off && (deltat.tv_sec || deltat.tv_nsec > DISK_MOTOR_QUIET_NSECS)) )
+                {
+                    TIMING_LOG("auto switching to full speed");
+                    _switch_to_fullspeed();
+                } else if (g_bFullSpeed && (
+#ifdef AUDIO_ENABLED
+                            Spkr_IsActive() ||
+#endif
+                            video_dirty() || (disk6.motor_off && (deltat.tv_sec || deltat.tv_nsec > DISK_MOTOR_QUIET_NSECS))) )
+                {
+                    TIMING_LOG("auto switching to regular speed");
+                    _switch_to_regular_speed(alt_speed_enabled ? cpu_altscale_factor : cpu_scale_factor);
+                }
+            }
 
             if (!g_bFullSpeed) {
                 deltat = timespec_diff(ti, tj, &negative);

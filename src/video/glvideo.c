@@ -34,6 +34,8 @@ enum {
 
 bool safe_to_do_opengl_logging = false;
 
+volatile bool _vid_dirty = true;
+
 static int windowWidth = SCANWIDTH*1.5;
 static int windowHeight = SCANHEIGHT*1.5;
 
@@ -648,6 +650,8 @@ static void gldriver_render(void) {
 
     // Draw the CRT object
     glDrawElements(GL_TRIANGLES, crtNumElements, crtElementType, 0);
+
+    _vid_dirty = false;
 
 #if USE_GLUT
     glutSwapBuffers();

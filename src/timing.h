@@ -45,6 +45,7 @@ extern int g_nCpuCyclesFeedback;
 
 extern double cpu_scale_factor;
 extern double cpu_altscale_factor;
+extern bool auto_adjust_speed;
 
 extern pthread_t cpu_thread_id;
 

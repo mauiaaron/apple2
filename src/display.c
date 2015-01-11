@@ -53,6 +53,8 @@ static uint8_t video__int_font[3][0x4000];
 int video__current_page; // current visual page
 int video__strictcolors = 1;// refactor : should be static
 
+extern volatile bool _vid_dirty;
+
 // Video constants -- sourced from AppleWin
 static const bool bVideoScannerNTSC = true;
 static const int kHBurstClock   =    53; // clock when Color Burst starts
@@ -571,6 +573,7 @@ static inline void _plot_lores(uint8_t **d, const uint32_t val) {
 
 #ifdef INTERFACE_CLASSIC
 void video_plotchar( int x, int y, int scheme, uint8_t c ) {
+    _vid_dirty = true;
     uint8_t *d;
     uint8_t *s;
 
@@ -653,11 +656,13 @@ static inline void _plot_character(const unsigned int font_off, uint8_t *fb_ptr)
 
 static inline void _plot_character0(uint16_t ea, uint8_t b)
 {
+    _vid_dirty = (video__current_page == 0);
     _plot_character(b<<7/* *128 */, video__fb1+video__screen_addresses[ea-0x0400]);
 }
 
 static inline void _plot_character1(uint16_t ea, uint8_t b)
 {
+    _vid_dirty = (video__current_page == 1);
     _plot_character(b<<7/* *128 */, video__fb2+video__screen_addresses[ea-0x0800]);
 }
 
@@ -676,6 +681,7 @@ static inline void _plot_80character(const unsigned int font_off, uint8_t *fb_pt
 // FIXME TODO NOTE : dup'ing work here?
 static inline void _plot_80character0(uint16_t ea, uint8_t b)
 {
+    _vid_dirty = (video__current_page == 0);
     b = apple_ii_64k[1][ea];
     _plot_80character(b<<6/* *64 */, video__fb1+video__screen_addresses[ea-0x0400]);
     b = apple_ii_64k[0][ea];
@@ -684,6 +690,7 @@ static inline void _plot_80character0(uint16_t ea, uint8_t b)
 
 static inline void _plot_80character1(uint16_t ea, uint8_t b)
 {
+    _vid_dirty = (video__current_page == 1);
     b = apple_ii_64k[1][ea];
     _plot_80character(b<<6/* *64 */, video__fb2+video__screen_addresses[ea-0x0800]);
     b = apple_ii_64k[0][ea];
@@ -718,11 +725,13 @@ static inline void _plot_block(const uint32_t val, uint8_t *fb_ptr) {
 /* plot lores block first page */
 static inline void _plot_block0(uint16_t ea, uint8_t b)
 {
+    _vid_dirty = (video__current_page == 0);
     _plot_block(b, video__fb1+video__screen_addresses[ea-0x0400]);
 }
 
 static inline void _plot_block1(uint16_t ea, uint8_t b)
 {
+    _vid_dirty = (video__current_page == 1);
     _plot_block(b, video__fb2+video__screen_addresses[ea-0x0800]);
 }
 
@@ -803,6 +812,7 @@ static inline void _plot_dhires_pixels(uint8_t idx, uint8_t *fb_ptr) {
 
 // PlotDHires
 static inline void _plot_dhires(uint16_t base, uint16_t ea, uint8_t *fb_base) {
+    _vid_dirty = true;
     ea &= ~0x1;
 
     uint16_t memoff = ea - base;
@@ -927,6 +937,7 @@ static inline void _plot_hires_pixels(uint8_t *dst, const uint8_t *src) {
 
 // PlotByte
 static inline void _plot_hires(uint16_t ea, uint8_t b, bool is_even, uint8_t *fb_ptr) {
+
     uint8_t _buf[DYNAMIC_SZ] = { 0 };
     uint8_t *color_buf = (uint8_t *)_buf; // <--- work around for -Wstrict-aliasing
     uint8_t *apple2_vmem = (uint8_t *)apple_ii_64k[0];
@@ -1025,8 +1036,10 @@ static inline void _draw_hires_graphics(uint16_t ea, uint8_t b, bool is_even, ui
     uint8_t *fb_base = NULL;
     if (page) {
         off -= 0x2000;
+        _vid_dirty = (video__current_page == 1);
         fb_base = video__fb2;
     } else {
+        _vid_dirty = (video__current_page == 0);
         fb_base = video__fb1;
     }
     _plot_hires(ea, b, is_even, fb_base+video__screen_addresses[off]);
@@ -1078,6 +1091,10 @@ GLUE_C_WRITE(video__write_2e_odd1_mixed)
 {
     base_ramwrt[ea] = b;
     _draw_hires_graphics(ea, b, /*even*/false, 1, (SS_TEXT|SS_MIXED));
+}
+
+bool video_dirty(void) {
+    return _vid_dirty;
 }
 
 void video_redraw(void) {

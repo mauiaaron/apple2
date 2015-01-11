@@ -117,6 +117,11 @@ void video_plotchar(int row, int col, int color, uint8_t code);
 const uint8_t * const video_current_framebuffer();
 
 /*
+ * True if anything changed in framebuffer and not yet drawn
+ */
+bool video_dirty(void);
+
+/*
  * VBL routines
  */
 uint16_t video_scanner_get_address(bool *vblBarOut, const unsigned int executedCycles);
