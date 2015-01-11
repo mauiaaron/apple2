@@ -412,8 +412,6 @@ static bool load_track_data(void) {
             return false;
         }
         disk6.disk[disk6.drive].nib_count = NIB_TRACK_SIZE;
-//  } else if ( THIS IS NI2 FORMAT ... ) {
-//      Do stuff-n-things
     } else {
         // .dsk, .do, .po images
         int track_pos = DSK_TRACK_SIZE * (disk6.disk[disk6.drive].phase >> 1);
@@ -426,7 +424,7 @@ static bool load_track_data(void) {
         }
 
         disk6.disk[disk6.drive].nib_count = nibblize_track(buf, disk6.drive);
-        if ( (disk6.disk[disk6.drive].nib_count != NIB_TRACK_SIZE) && (disk6.disk[disk6.drive].nib_count != NI2_TRACK_SIZE) ) {
+        if (disk6.disk[disk6.drive].nib_count != NI2_TRACK_SIZE) {
             ERRLOG("Invalid dsk image creation...");
             return false;
         }
