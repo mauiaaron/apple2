@@ -1019,7 +1019,7 @@ void show_disk_info() {
 
     /* generic information */
     sprintf(second_buf[i++], "drive %s", (disk6.drive) ? "B" : "A");
-    sprintf(second_buf[i++], "motor %s", (disk6.motor) ? "off" : "on");
+    sprintf(second_buf[i++], "motor %s", (disk6.motor_off) ? "off" : "on");
     sprintf(second_buf[i++], "%s", (disk6.ddrw) ? "write" : "read");
     sprintf(second_buf[i++], "byte = %02X", disk6.disk_byte);
     if (!disk6.disk[disk6.drive].nibblized)

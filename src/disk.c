@@ -502,13 +502,13 @@ GLUE_C_READ(disk_read_write_byte)
             disk6.disk[disk6.drive].track_dirty = true;
         } else {
 
-            if (disk6.motor) { // ???
-                if (disk6.motor > 99) {
+            if (disk6.motor_off) { // ???
+                if (disk6.motor_off > 99) {
                     ERRLOG("OOPS, potential disk motor issue");
                     value = 0x00;
                     break;
                 } else {
-                    disk6.motor++;
+                    disk6.motor_off++;
                 }
             }
 
@@ -608,13 +608,15 @@ GLUE_C_READ(disk_read_phase)
 
 GLUE_C_READ(disk_read_motor_off)
 {
-    disk6.motor = 1;
+    clock_gettime(CLOCK_MONOTONIC, &disk6.motor_time);
+    disk6.motor_off = 1;
     return floating_bus_hibit(1, cpu65_cycle_count);
 }
 
 GLUE_C_READ(disk_read_motor_on)
 {
-    disk6.motor = 0;
+    clock_gettime(CLOCK_MONOTONIC, &disk6.motor_time);
+    disk6.motor_off = 0;
     return floating_bus_hibit(1, cpu65_cycle_count);
 }
 
@@ -705,8 +707,9 @@ void disk_io_initialize(unsigned int slot) {
 void c_init_6(void) {
     disk6.disk[0].phase = disk6.disk[1].phase = 0;
     disk6.disk[0].track_valid = disk6.disk[1].track_valid = 0;
-    disk6.motor = 1;            /* motor on */
-    disk6.drive = 0;            /* first drive active */
+    disk6.motor_time = (struct timespec){ 0 };
+    disk6.motor_off = 1;
+    disk6.drive = 0;
     disk6.ddrw = 0;
 }
 

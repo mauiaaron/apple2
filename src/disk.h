@@ -51,7 +51,8 @@ typedef struct diskette_t {
 } diskette_t;
 
 typedef struct drive_t {
-    int motor;
+    struct timespec motor_time;
+    int motor_off;
     int drive;
     int ddrw;
     int disk_byte;
