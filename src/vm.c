@@ -149,16 +149,6 @@ GLUE_C_READ(read_keyboard_strobe)
     return apple_ii_64k[0][0xC000];
 }
 
-GLUE_C_READ(read_rand)
-{
-    static time_t seed=0;
-    if (!seed) {
-        seed = time(NULL);
-        srandom(seed);
-    }
-    return (random() & 0xFF);
-}
-
 GLUE_C_READ(speaker_toggle)
 {
 #ifdef AUDIO_ENABLED

@@ -337,6 +337,8 @@ TEST test_cputrace_hello_nib() {
     PASS();
 }
 
+#define EXPECTED_CPUTRACE_HELLO_PO_FILE_SIZE EXPECTED_CPUTRACE_HELLO_FILE_SIZE
+#define EXPECTED_CPUTRACE_HELLO_PO_SHA EXPECTED_CPUTRACE_HELLO_SHA
 TEST test_cputrace_hello_po() {
     test_setup_boot_disk(BLANK_PO, 0);
 
@@ -365,18 +367,18 @@ TEST test_cputrace_hello_po() {
         FILE *fp = fopen(output, "r");
         fseek(fp, 0, SEEK_END);
         long expectedSize = ftell(fp);
-        ASSERT(expectedSize == EXPECTED_CPUTRACE_HELLO_FILE_SIZE);
+        ASSERT(expectedSize == EXPECTED_CPUTRACE_HELLO_PO_FILE_SIZE);
         fseek(fp, 0, SEEK_SET);
-        unsigned char *buf = malloc(EXPECTED_CPUTRACE_HELLO_FILE_SIZE);
-        if (fread(buf, 1, EXPECTED_CPUTRACE_HELLO_FILE_SIZE, fp) != EXPECTED_CPUTRACE_HELLO_FILE_SIZE) {
+        unsigned char *buf = malloc(EXPECTED_CPUTRACE_HELLO_PO_FILE_SIZE);
+        if (fread(buf, 1, EXPECTED_CPUTRACE_HELLO_PO_FILE_SIZE, fp) != EXPECTED_CPUTRACE_HELLO_PO_FILE_SIZE) {
             ASSERT(false);
         }
         fclose(fp); fp = NULL;
-        SHA1(buf, EXPECTED_CPUTRACE_HELLO_FILE_SIZE, md);
+        SHA1(buf, EXPECTED_CPUTRACE_HELLO_PO_FILE_SIZE, md);
         FREE(buf);
 
         sha1_to_str(md, mdstr0);
-        ASSERT(strcmp(mdstr0, EXPECTED_CPUTRACE_HELLO_SHA) == 0);
+        ASSERT(strcmp(mdstr0, EXPECTED_CPUTRACE_HELLO_PO_SHA) == 0);
     } while(0);
 
     unlink(output);
@@ -1049,9 +1051,6 @@ static void *test_thread(void *dummyptr) {
 void test_disk(int argc, char **argv) {
     test_argc = argc;
     test_argv = argv;
-
-    c_read_rand(0x0);
-    srandom(0); // force a known sequence
 
     pthread_mutex_lock(&interface_mutex);
 

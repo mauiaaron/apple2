@@ -3471,9 +3471,6 @@ void test_vm(int argc, char **argv) {
     test_argc = argc;
     test_argv = argv;
 
-    c_read_rand(0x0);
-    srandom(0); // force a known sequence
-
     pthread_mutex_lock(&interface_mutex);
 
     test_common_init(/*cputhread*/true);
