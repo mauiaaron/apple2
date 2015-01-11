@@ -237,8 +237,8 @@ TEST test_boot_disk_cputrace() {
 }
 #endif
 
-#define EXPECTED_CPUTRACE_HELLO_DSK_FILE_SIZE 107523409
-#define EXPECTED_CPUTRACE_HELLO_DSK_SHA "586F218EC3C368C73DE1945B7EF441919E0D5B0F"
+#define EXPECTED_CPUTRACE_HELLO_FILE_SIZE 107500760
+#define EXPECTED_CPUTRACE_HELLO_SHA "CAF2507BAB937488F85377528041705114F06CA4"
 TEST test_cputrace_hello_dsk() {
     test_setup_boot_disk(BLANK_DSK, 0);
 
@@ -267,18 +267,18 @@ TEST test_cputrace_hello_dsk() {
         FILE *fp = fopen(output, "r");
         fseek(fp, 0, SEEK_END);
         long expectedSize = ftell(fp);
-        ASSERT(expectedSize == EXPECTED_CPUTRACE_HELLO_DSK_FILE_SIZE);
+        ASSERT(expectedSize == EXPECTED_CPUTRACE_HELLO_FILE_SIZE);
         fseek(fp, 0, SEEK_SET);
-        unsigned char *buf = malloc(EXPECTED_CPUTRACE_HELLO_DSK_FILE_SIZE);
-        if (fread(buf, 1, EXPECTED_CPUTRACE_HELLO_DSK_FILE_SIZE, fp) != EXPECTED_CPUTRACE_HELLO_DSK_FILE_SIZE) {
+        unsigned char *buf = malloc(EXPECTED_CPUTRACE_HELLO_FILE_SIZE);
+        if (fread(buf, 1, EXPECTED_CPUTRACE_HELLO_FILE_SIZE, fp) != EXPECTED_CPUTRACE_HELLO_FILE_SIZE) {
             ASSERT(false);
         }
         fclose(fp); fp = NULL;
-        SHA1(buf, EXPECTED_CPUTRACE_HELLO_DSK_FILE_SIZE, md);
+        SHA1(buf, EXPECTED_CPUTRACE_HELLO_FILE_SIZE, md);
         FREE(buf);
 
         sha1_to_str(md, mdstr0);
-        ASSERT(strcmp(mdstr0, EXPECTED_CPUTRACE_HELLO_DSK_SHA) == 0);
+        ASSERT(strcmp(mdstr0, EXPECTED_CPUTRACE_HELLO_SHA) == 0);
     } while(0);
 
     unlink(output);
@@ -287,8 +287,8 @@ TEST test_cputrace_hello_dsk() {
     PASS();
 }
 
-#define EXPECTED_CPUTRACE_HELLO_NIB_FILE_SIZE 12888005
-#define EXPECTED_CPUTRACE_HELLO_NIB_SHA "539A628524ACCF066A82FA67D0A488C8D3DC01BF"
+#define EXPECTED_CPUTRACE_HELLO_NIB_FILE_SIZE 12887880
+#define EXPECTED_CPUTRACE_HELLO_NIB_SHA "CE14642D70BA42B214C22BFB460F00AA54C8BB5C"
 TEST test_cputrace_hello_nib() {
     test_setup_boot_disk(BLANK_NIB, 0);
 
@@ -337,8 +337,6 @@ TEST test_cputrace_hello_nib() {
     PASS();
 }
 
-#define EXPECTED_CPUTRACE_HELLO_PO_FILE_SIZE 107523284
-#define EXPECTED_CPUTRACE_HELLO_PO_SHA "A99C1D02B898E02662DEDBF235C55B175D01D05D"
 TEST test_cputrace_hello_po() {
     test_setup_boot_disk(BLANK_PO, 0);
 
@@ -367,18 +365,18 @@ TEST test_cputrace_hello_po() {
         FILE *fp = fopen(output, "r");
         fseek(fp, 0, SEEK_END);
         long expectedSize = ftell(fp);
-        ASSERT(expectedSize == EXPECTED_CPUTRACE_HELLO_PO_FILE_SIZE);
+        ASSERT(expectedSize == EXPECTED_CPUTRACE_HELLO_FILE_SIZE);
         fseek(fp, 0, SEEK_SET);
-        unsigned char *buf = malloc(EXPECTED_CPUTRACE_HELLO_PO_FILE_SIZE);
-        if (fread(buf, 1, EXPECTED_CPUTRACE_HELLO_PO_FILE_SIZE, fp) != EXPECTED_CPUTRACE_HELLO_PO_FILE_SIZE) {
+        unsigned char *buf = malloc(EXPECTED_CPUTRACE_HELLO_FILE_SIZE);
+        if (fread(buf, 1, EXPECTED_CPUTRACE_HELLO_FILE_SIZE, fp) != EXPECTED_CPUTRACE_HELLO_FILE_SIZE) {
             ASSERT(false);
         }
         fclose(fp); fp = NULL;
-        SHA1(buf, EXPECTED_CPUTRACE_HELLO_PO_FILE_SIZE, md);
+        SHA1(buf, EXPECTED_CPUTRACE_HELLO_FILE_SIZE, md);
         FREE(buf);
 
         sha1_to_str(md, mdstr0);
-        ASSERT(strcmp(mdstr0, EXPECTED_CPUTRACE_HELLO_PO_SHA) == 0);
+        ASSERT(strcmp(mdstr0, EXPECTED_CPUTRACE_HELLO_SHA) == 0);
     } while(0);
 
     unlink(output);
@@ -387,8 +385,8 @@ TEST test_cputrace_hello_po() {
     PASS();
 }
 
-#define EXPECTED_VM_TRACE_FILE_SIZE 2830810
-#define EXPECTED_VM_TRACE_SHA "8B7A8169E34354773F82442DB6A0C3D6B69741D9"
+#define EXPECTED_VM_TRACE_FILE_SIZE 2830792
+#define EXPECTED_VM_TRACE_SHA "0659556B878848A6421D93057F18B3FB518A7D76"
 TEST test_boot_disk_vmtrace() {
     char *homedir = getenv("HOME");
     char *disk = NULL;
@@ -433,8 +431,8 @@ TEST test_boot_disk_vmtrace() {
     PASS();
 }
 
-#define EXPECTED_VM_TRACE_NIB_FILE_SIZE 2930074
-#define EXPECTED_VM_TRACE_NIB_SHA "BD2BA2B9C8E7712F9E6ABF1049ED8D2C4D979934"
+#define EXPECTED_VM_TRACE_NIB_FILE_SIZE 2930056
+#define EXPECTED_VM_TRACE_NIB_SHA "9C1B64255B1946011FAAF5DF53C24114401485EE"
 TEST test_boot_disk_vmtrace_nib() {
     test_setup_boot_disk(BLANK_NIB, 0);
 
@@ -481,8 +479,8 @@ TEST test_boot_disk_vmtrace_nib() {
     PASS();
 }
 
-#define EXPECTED_VM_TRACE_PO_FILE_SIZE 2830810
-#define EXPECTED_VM_TRACE_PO_SHA "3432149815E9142FDAD6D9DF94C8621FEB56F7D7"
+#define EXPECTED_VM_TRACE_PO_FILE_SIZE EXPECTED_VM_TRACE_FILE_SIZE
+#define EXPECTED_VM_TRACE_PO_SHA "23236C80A9CC38E75BB27F2E70359234B6B8D4DA"
 TEST test_boot_disk_vmtrace_po() {
     test_setup_boot_disk(BLANK_PO, 0);
 

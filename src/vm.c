@@ -124,12 +124,12 @@ typedef struct vm_trace_range_t {
 
 GLUE_C_READ(ram_nop)
 {
-    return 0x0;
+    return (cpu65_rw&MEM_WRITE_FLAG) ? 0x0 : floating_bus(cpu65_cycle_count);
 }
 
 GLUE_C_READ(read_unmapped_softswitch)
 {
-    return apple_ii_64k[0][ea];
+    return c_ram_nop(ea);
 }
 
 GLUE_C_WRITE(write_unmapped_softswitch)
@@ -164,7 +164,7 @@ GLUE_C_READ(speaker_toggle)
 #ifdef AUDIO_ENABLED
     SpkrToggle();
 #endif
-    return 0;
+    return floating_bus(cpu65_cycle_count);
 }
 
 // ----------------------------------------------------------------------------
@@ -173,7 +173,7 @@ GLUE_C_READ(speaker_toggle)
 GLUE_C_READ(iie_page2_off)
 {
     if (!(softswitches & SS_PAGE2)) {
-        return 0x0; // TODO: no early return?
+        return floating_bus(cpu65_cycle_count);
     }
 
     softswitches &= ~(SS_PAGE2|SS_SCREEN);
@@ -191,13 +191,13 @@ GLUE_C_READ(iie_page2_off)
 
     video_setpage(0);
 
-    return 0x0;
+    return floating_bus(cpu65_cycle_count);
 }
 
 GLUE_C_READ(iie_page2_on)
 {
     if (softswitches & SS_PAGE2) {
-        return 0x0; // TODO: no early return?
+        return floating_bus(cpu65_cycle_count);
     }
 
     softswitches |= SS_PAGE2;
@@ -216,7 +216,7 @@ GLUE_C_READ(iie_page2_on)
         video_setpage(1);
     }
 
-    return 0x0;
+    return floating_bus(cpu65_cycle_count);
 }
 
 GLUE_C_READ(iie_check_page2)
@@ -230,7 +230,7 @@ GLUE_C_READ(read_switch_graphics)
         softswitches &= ~SS_TEXT;
         video_redraw();
     }
-    return 0x0;
+    return floating_bus(cpu65_cycle_count);
 }
 
 GLUE_C_READ(read_switch_text)
@@ -239,7 +239,7 @@ GLUE_C_READ(read_switch_text)
         softswitches |= SS_TEXT;
         video_redraw();
     }
-    return 0x0;
+    return floating_bus(cpu65_cycle_count);
 }
 
 GLUE_C_READ(iie_check_text)
@@ -253,7 +253,7 @@ GLUE_C_READ(read_switch_no_mixed)
         softswitches &= ~SS_MIXED;
         video_redraw();
     }
-    return 0x0;
+    return floating_bus(cpu65_cycle_count);
 }
 
 GLUE_C_READ(read_switch_mixed)
@@ -262,7 +262,7 @@ GLUE_C_READ(read_switch_mixed)
         softswitches |= SS_MIXED;
         video_redraw();
     }
-    return 0x0;
+    return floating_bus(cpu65_cycle_count);
 }
 
 GLUE_C_READ(iie_check_mixed)
@@ -270,15 +270,18 @@ GLUE_C_READ(iie_check_mixed)
     return (softswitches & SS_MIXED) ? 0x80 : 0x00;
 }
 
-GLUE_C_READ(iie_annunciator_noop)
+GLUE_C_READ(iie_annunciator)
 {
-    return 0x0;// TBD : mem_floating_bus()
+    if ((ea >= 0xC058) && (ea <= 0xC05B)) {
+        // TODO: alternate joystick management?
+    }
+    return (cpu65_rw&MEM_WRITE_FLAG) ? 0x0 : floating_bus(cpu65_cycle_count);
 }
 
 GLUE_C_READ(iie_hires_off)
 {
     if (!(softswitches & SS_HIRES)) {
-        return 0x0; // TODO: no early return?
+        return floating_bus(cpu65_cycle_count);
     }
 
     softswitches &= ~(SS_HIRES|SS_HGRRD|SS_HGRWRT);
@@ -296,13 +299,13 @@ GLUE_C_READ(iie_hires_off)
     }
 
     video_redraw();
-    return 0x0;
+    return floating_bus(cpu65_cycle_count);
 }
 
 GLUE_C_READ(iie_hires_on)
 {
     if (softswitches & SS_HIRES) {
-        return 0x0; // TODO: no early return?
+        return floating_bus(cpu65_cycle_count);
     }
 
     softswitches |= SS_HIRES;
@@ -320,7 +323,7 @@ GLUE_C_READ(iie_hires_on)
     }
 
     video_redraw();
-    return 0x0;
+    return floating_bus(cpu65_cycle_count);
 }
 
 GLUE_C_READ(iie_check_hires)
@@ -366,7 +369,7 @@ GLUE_C_READ(read_gc_strobe)
     }
 
     // NOTE (possible TODO FIXME): unimplemented GC2 and GC3 timers since they were not wired on the //e ...
-    return 0x0;
+    return floating_bus(cpu65_cycle_count);
 }
 
 GLUE_C_READ(read_gc0)
@@ -391,12 +394,12 @@ GLUE_C_READ(read_gc1)
 
 GLUE_C_READ(iie_read_gc2)
 {
-    return 0x0;
+    return floating_bus(cpu65_cycle_count);
 }
 
 GLUE_C_READ(iie_read_gc3)
 {
-    return 0x0;
+    return floating_bus(cpu65_cycle_count);
 }
 
 // ----------------------------------------------------------------------------
@@ -428,7 +431,7 @@ GLUE_C_READ(iie_c080)
     if (softswitches & SS_ALTZP) {
         _lc_to_auxmem();
     }
-    return 0x0;
+    return floating_bus(cpu65_cycle_count);
 }
 
 GLUE_C_READ(iie_c081)
@@ -448,7 +451,7 @@ GLUE_C_READ(iie_c081)
     if (softswitches & SS_ALTZP) {
         _lc_to_auxmem();
     }
-    return 0x0;
+    return floating_bus(cpu65_cycle_count);
 }
 
 GLUE_C_READ(lc_c082)
@@ -462,7 +465,7 @@ GLUE_C_READ(lc_c082)
     base_d000_wrt = 0;
     base_e000_wrt = 0;
 
-    return 0x0;
+    return floating_bus(cpu65_cycle_count);
 }
 
 GLUE_C_READ(iie_c083)
@@ -480,7 +483,7 @@ GLUE_C_READ(iie_c083)
     if (softswitches & SS_ALTZP) {
         _lc_to_auxmem();
     }
-    return 0x0;
+    return floating_bus(cpu65_cycle_count);
 }
 
 GLUE_C_READ(iie_c088)
@@ -497,7 +500,7 @@ GLUE_C_READ(iie_c088)
     if (softswitches & SS_ALTZP) {
         _lc_to_auxmem();
     }
-    return 0x0;
+    return floating_bus(cpu65_cycle_count);
 }
 
 GLUE_C_READ(iie_c089)
@@ -517,7 +520,7 @@ GLUE_C_READ(iie_c089)
     if (softswitches & SS_ALTZP) {
         _lc_to_auxmem();
     }
-    return 0x0;
+    return floating_bus(cpu65_cycle_count);
 }
 
 GLUE_C_READ(lc_c08a)
@@ -530,7 +533,7 @@ GLUE_C_READ(lc_c08a)
     base_d000_wrt = 0;
     base_e000_wrt = 0;
 
-    return 0x0;
+    return floating_bus(cpu65_cycle_count);
 }
 
 GLUE_C_READ(iie_c08b)
@@ -550,7 +553,7 @@ GLUE_C_READ(iie_c08b)
     if (softswitches & SS_ALTZP) {
         _lc_to_auxmem();
     }
-    return 0x0;
+    return floating_bus(cpu65_cycle_count);
 }
 
 GLUE_C_READ(iie_check_bank)
@@ -569,7 +572,7 @@ GLUE_C_READ(iie_check_lcram)
 GLUE_C_READ(iie_80store_off)
 {
     if (!(softswitches & SS_80STORE)) {
-        return 0x0; // TODO: no early return?
+        return floating_bus(cpu65_cycle_count);
     }
 
     softswitches &= ~(SS_80STORE|SS_TEXTRD|SS_TEXTWRT|SS_HGRRD|SS_HGRWRT);
@@ -596,13 +599,13 @@ GLUE_C_READ(iie_80store_off)
         video_setpage(1);
     }
 
-    return 0x0;
+    return floating_bus(cpu65_cycle_count);
 }
 
 GLUE_C_READ(iie_80store_on)
 {
     if (softswitches & SS_80STORE) {
-        return 0x0; // TODO: no early return?
+        return floating_bus(cpu65_cycle_count);
     }
 
     softswitches |= SS_80STORE;
@@ -629,7 +632,7 @@ GLUE_C_READ(iie_80store_on)
 
     softswitches &= ~SS_SCREEN;
     video_setpage(0);
-    return 0x0;
+    return floating_bus(cpu65_cycle_count);
 }
 
 GLUE_C_READ(iie_check_80store)
@@ -640,7 +643,7 @@ GLUE_C_READ(iie_check_80store)
 GLUE_C_READ(iie_ramrd_main)
 {
     if (!(softswitches & SS_RAMRD)) {
-        return 0x0; // TODO: no early return?
+        return floating_bus(cpu65_cycle_count);
     }
 
     softswitches &= ~SS_RAMRD;
@@ -657,13 +660,13 @@ GLUE_C_READ(iie_ramrd_main)
         base_hgrrd  = apple_ii_64k[0];
     }
 
-    return 0x0;
+    return floating_bus(cpu65_cycle_count);
 }
 
 GLUE_C_READ(iie_ramrd_aux)
 {
     if (softswitches & SS_RAMRD) {
-        return 0x0; // TODO: no early return?
+        return floating_bus(cpu65_cycle_count);
     }
 
     softswitches |= SS_RAMRD;
@@ -680,7 +683,7 @@ GLUE_C_READ(iie_ramrd_aux)
         base_hgrrd  = apple_ii_64k[1];
     }
 
-    return 0x0;
+    return floating_bus(cpu65_cycle_count);
 }
 
 GLUE_C_READ(iie_check_ramrd)
@@ -691,7 +694,7 @@ GLUE_C_READ(iie_check_ramrd)
 GLUE_C_READ(iie_ramwrt_main)
 {
     if (!(softswitches & SS_RAMWRT)) {
-        return 0x0; // TODO: no early return?
+        return floating_bus(cpu65_cycle_count);
     }
 
     softswitches &= ~SS_RAMWRT;
@@ -708,13 +711,13 @@ GLUE_C_READ(iie_ramwrt_main)
         base_hgrwrt  = apple_ii_64k[0];
     }
 
-    return 0x0;
+    return floating_bus(cpu65_cycle_count);
 }
 
 GLUE_C_READ(iie_ramwrt_aux)
 {
     if (softswitches & SS_RAMWRT) {
-        return 0x0; // TODO: no early return?
+        return floating_bus(cpu65_cycle_count);
     }
 
     softswitches |= SS_RAMWRT;
@@ -731,7 +734,7 @@ GLUE_C_READ(iie_ramwrt_aux)
         base_hgrwrt  = apple_ii_64k[1];
     }
 
-    return 0x0;
+    return floating_bus(cpu65_cycle_count);
 }
 
 GLUE_C_READ(iie_check_ramwrt)
@@ -743,7 +746,7 @@ GLUE_C_READ_ALTZP(iie_altzp_main)
 {
     if (!(softswitches & SS_ALTZP)) {
         /* NOTE : test if ALTZP already off - due to d000-bank issues it is *needed*, not just a shortcut */
-        return 0x0;
+        return floating_bus(cpu65_cycle_count);
     }
 
     softswitches &= ~SS_ALTZP;
@@ -759,14 +762,14 @@ GLUE_C_READ_ALTZP(iie_altzp_main)
         base_e000_wrt = language_card[0] - 0xE000;
     }
 
-    return 0x0;
+    return floating_bus(cpu65_cycle_count);
 }
 
 GLUE_C_READ_ALTZP(iie_altzp_aux)
 {
     if (softswitches & SS_ALTZP) {
         /* NOTE : test if ALTZP already on - due to d000-bank issues it is *needed*, not just a shortcut */
-        return 0x0;
+        return floating_bus(cpu65_cycle_count);
     }
 
     softswitches |= SS_ALTZP;
@@ -774,7 +777,7 @@ GLUE_C_READ_ALTZP(iie_altzp_aux)
 
     _lc_to_auxmem();
 
-    return 0x0;
+    return floating_bus(cpu65_cycle_count);
 }
 
 GLUE_C_READ(iie_check_altzp)
@@ -785,7 +788,7 @@ GLUE_C_READ(iie_check_altzp)
 GLUE_C_READ(iie_80col_off)
 {
     if (!(softswitches & SS_80COL)) {
-        return 0x0; // TODO: no early return?
+        return floating_bus(cpu65_cycle_count);
     }
 
     softswitches &= ~SS_80COL;
@@ -794,13 +797,13 @@ GLUE_C_READ(iie_80col_off)
         video_redraw();
     }
 
-    return 0x0;
+    return floating_bus(cpu65_cycle_count);
 }
 
 GLUE_C_READ(iie_80col_on)
 {
     if (softswitches & SS_80COL) {
-        return 0x0;
+        return floating_bus(cpu65_cycle_count);
     }
 
     softswitches |= SS_80COL;
@@ -809,7 +812,7 @@ GLUE_C_READ(iie_80col_on)
         video_redraw();
     }
 
-    return 0x0;
+    return floating_bus(cpu65_cycle_count);
 }
 
 GLUE_C_READ(iie_check_80col)
@@ -823,7 +826,7 @@ GLUE_C_READ(iie_altchar_off)
         softswitches &= ~SS_ALTCHAR;
         c_set_primary_char();
     }
-    return 0x0;
+    return floating_bus(cpu65_cycle_count);
 }
 
 GLUE_C_READ(iie_altchar_on)
@@ -832,7 +835,7 @@ GLUE_C_READ(iie_altchar_on)
         softswitches |= SS_ALTCHAR;
         c_set_altchar();
     }
-    return 0x0;
+    return floating_bus(cpu65_cycle_count);
 }
 
 GLUE_C_READ(iie_check_altchar)
@@ -860,22 +863,20 @@ GLUE_C_READ(iie_check_ioudis)
 
 GLUE_C_READ(iie_dhires_on)
 {
-    // FIXME : does this depend on IOUDIS?
     if (!(softswitches & SS_DHIRES)) {
         softswitches |= SS_DHIRES;
         video_redraw();
     }
-    return 0x0;
+    return floating_bus(cpu65_cycle_count);
 }
 
 GLUE_C_READ(iie_dhires_off)
 {
-    // FIXME : does this depend on IOUDIS?
     if (softswitches & SS_DHIRES) {
         softswitches &= ~SS_DHIRES;
         video_redraw();
     }
-    return 0x0;
+    return floating_bus(cpu65_cycle_count);
 }
 
 GLUE_C_READ(iie_check_dhires)
@@ -949,14 +950,10 @@ GLUE_C_READ(iie_read_slot_expansion)
 {
     // HACK TODO FIXME : how does the expansion slot get referenced?  Need to handle other ROMs that might use this area
     // ... Also Need moar tests ...
+    if (ea == 0xCFFF) {
+        // disable expansion ROM
+    }
     return apple_ii_64k[1][ea];
-}
-
-GLUE_C_READ(iie_disable_slot_expansion)
-{
-    // HACK TODO FIXME : how does the expansion slot get referenced?  Need to handle other ROMs that might use this area
-    // ... Also Need moar tests ...
-    return 0x0;
 }
 
 // ----------------------------------------------------------------------------

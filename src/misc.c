@@ -262,12 +262,12 @@ void c_initialize_tables() {
     cpu65_vmem_r[0xC01E] = iie_check_altchar;
 
     /* SLOTC3ROM switch */
-    cpu65_vmem_w[0xC00A] = iie_c3rom_internal; // HACK FIXME TODO VERIFY : the pattern here is reversed from cxrom?
+    cpu65_vmem_w[0xC00A] = iie_c3rom_internal;
     cpu65_vmem_w[0xC00B] = iie_c3rom_peripheral;
     cpu65_vmem_r[0xC017] = iie_check_c3rom;
 
     /* SLOTCXROM switch */
-    cpu65_vmem_w[0xC006] = iie_cxrom_peripheral; // HACK FIXME TODO VERIFY : the pattern here is reversed from c3rom?
+    cpu65_vmem_w[0xC006] = iie_cxrom_peripheral;
     cpu65_vmem_w[0xC007] = iie_cxrom_internal;
     cpu65_vmem_r[0xC015] = iie_check_cxrom;
 
@@ -367,7 +367,7 @@ void c_initialize_tables() {
 
     /* Annunciator */
     for (i = 0xC058; i <= 0xC05D; i++) {
-        cpu65_vmem_w[i] = cpu65_vmem_r[i] = iie_annunciator_noop;
+        cpu65_vmem_w[i] = cpu65_vmem_r[i] = iie_annunciator;
     }
 
     /* DHIRES */
@@ -430,13 +430,9 @@ void c_initialize_tables() {
 
     for (i = 0xC800; i < 0xD000; i++)
     {
-        cpu65_vmem_r[i] =
-            iie_read_slot_expansion;    /* expansion rom */
+        cpu65_vmem_r[i] = iie_read_slot_expansion;
     }
-
-    cpu65_vmem_r[0xCFFF] =
-        cpu65_vmem_w[0xCFFF] =
-            iie_disable_slot_expansion;
+    cpu65_vmem_w[0xCFFF] = iie_read_slot_expansion;
 
     video_set(0);
 

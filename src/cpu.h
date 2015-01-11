@@ -23,6 +23,9 @@
 
 /* types */
 
+#define MEM_READ_FLAG  (1<<0)
+#define MEM_WRITE_FLAG (1<<1)
+
 extern uint16_t cpu65_pc;       // Program counter
 extern uint8_t  cpu65_a;        // Accumulator
 extern uint8_t  cpu65_f;        // Flags (host-order)
@@ -32,7 +35,7 @@ extern uint8_t  cpu65_sp;       // Stack Pointer
 
 extern uint16_t cpu65_ea;       // Last effective address
 extern uint8_t  cpu65_d;        // Last data byte written
-extern uint8_t  cpu65_rw;       // 1 = read occured, 2 = write, 3 = both
+extern uint8_t  cpu65_rw;       // MEM_READ_FLAG = read occured, MEM_WRITE_FLAG = write
 extern uint8_t  cpu65_opcode;   // Last opcode
 extern uint8_t  cpu65_opcycles; // Last opcode extra cycles
 
