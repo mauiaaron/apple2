@@ -42,6 +42,7 @@ extern double g_fCurrentCLK6502;
 extern bool g_bFullSpeed;
 extern uint64_t g_nCumulativeCycles;
 extern int g_nCpuCyclesFeedback;
+
 extern double cpu_scale_factor;
 extern double cpu_altscale_factor;
 
@@ -52,9 +53,9 @@ extern int gc_cycles_timer_1;
 
 struct timespec timespec_diff(struct timespec start, struct timespec end, bool *negative);
 
-void timing_toggle_cpu_speed();
+void timing_toggle_cpu_speed(void);
 
-void timing_initialize();
+void timing_initialize(void);
 
 void *cpu_thread(void *ignored);
 

@@ -23,10 +23,19 @@
 
 #define EXECUTION_PERIOD_NSECS 1000000  // AppleWin: nExecutionPeriodUsec
 
-const unsigned int uCyclesPerLine = 65; // 25 cycles of HBL & 40 cycles of HBL'
-const unsigned int uVisibleLinesPerFrame = 64*3; // 192
-const unsigned int uLinesPerFrame = 262; // 64 in each third of the screen & 70 in VBL
-const unsigned int dwClksPerFrame = uCyclesPerLine * uLinesPerFrame; // 17030
+#define DEBUG_TIMING (!defined(NDEBUG) && 0) // enable to print timing stats
+#if DEBUG_TIMING
+#   define TIMING_LOG(...) LOG(__VA_ARGS__)
+#else
+#   define TIMING_LOG(...)
+#endif
+
+#define DISK_MOTOR_QUIET_NSECS 2000000
+
+static const unsigned int uCyclesPerLine = 65; // 25 cycles of HBL & 40 cycles of HBL'
+static const unsigned int uVisibleLinesPerFrame = 64*3; // 192
+static const unsigned int uLinesPerFrame = 262; // 64 in each third of the screen & 70 in VBL
+static const unsigned int dwClksPerFrame = uCyclesPerLine * uLinesPerFrame; // 17030
 
 double g_fCurrentCLK6502 = CLK_6502;
 bool g_bFullSpeed = false; // HACK TODO FIXME : prolly shouldn't be global anymore -- don't think it's necessary for speaker/soundcore/etc anymore ...
@@ -35,13 +44,14 @@ int g_nCpuCyclesFeedback = 0;
 static unsigned int g_dwCyclesThisFrame = 0;
 
 static bool alt_speed_enabled = false;
+
 double cpu_scale_factor = 1.0;
 double cpu_altscale_factor = 1.0;
 
 int gc_cycles_timer_0 = 0;
 int gc_cycles_timer_1 = 0;
 
-uint8_t emul_reinitialize = 0;
+volatile uint8_t emul_reinitialize = 0;
 pthread_t cpu_thread_id = 0;
 
 static unsigned int g_nCyclesExecuted; // # of cycles executed up to last IO access
@@ -99,7 +109,7 @@ static void _timing_initialize(double scale)
 {
     if (g_bFullSpeed)
     {
-        LOG("timing_initialize() emulation at fullspeed ...");
+        TIMING_LOG("timing_initialize() emulation at fullspeed ...");
         return;
     }
 
@@ -109,58 +119,36 @@ static void _timing_initialize(double scale)
     g_fClksPerSpkrSample = (double) (UINT) (g_fCurrentCLK6502 / (double)SPKR_SAMPLE_RATE);
     SpkrReinitialize();
 
-    LOG("timing_initialize() ... ClockRate:%0.2lf  ClockCyclesPerSpeakerSample:%0.2lf", g_fCurrentCLK6502, g_fClksPerSpkrSample);
+    TIMING_LOG("timing_initialize() ... ClockRate:%0.2lf  ClockCyclesPerSpeakerSample:%0.2lf", g_fCurrentCLK6502, g_fClksPerSpkrSample);
 #endif
 }
 
-static void _switch_to_fullspeed(double scale)
+static inline void _switch_to_fullspeed(void)
 {
-    if (!g_bFullSpeed)
-    {
-        g_bFullSpeed = true;
-        c_disable_sound_hooks();
-    }
+    g_bFullSpeed = true;
 }
 
-static void _switch_to_regular_speed(double scale)
+static inline void _switch_to_regular_speed(double scale)
 {
-    if (g_bFullSpeed)
-    {
-        g_bFullSpeed = false;
-        c_initialize_sound_hooks();
-    }
+    g_bFullSpeed = false;
     _timing_initialize(scale);
 }
 
-void timing_toggle_cpu_speed()
+void timing_toggle_cpu_speed(void)
 {
     alt_speed_enabled = !alt_speed_enabled;
-
-    if (alt_speed_enabled)
+    double scale_factor = alt_speed_enabled ? cpu_altscale_factor : cpu_scale_factor;
+    if (scale_factor >= CPU_SCALE_FASTEST)
     {
-        if (cpu_altscale_factor >= CPU_SCALE_FASTEST)
-        {
-            _switch_to_fullspeed(cpu_altscale_factor);
-        }
-        else
-        {
-            _switch_to_regular_speed(cpu_altscale_factor);
-        }
+        _switch_to_fullspeed();
     }
     else
     {
-        if (cpu_scale_factor >= CPU_SCALE_FASTEST)
-        {
-            _switch_to_fullspeed(cpu_scale_factor);
-        }
-        else
-        {
-            _switch_to_regular_speed(cpu_scale_factor);
-        }
+        _switch_to_regular_speed(scale_factor);
     }
 }
 
-void timing_initialize()
+void timing_initialize(void)
 {
     _timing_initialize(cpu_scale_factor);
 }
@@ -178,7 +166,7 @@ void *cpu_thread(void *dummyptr) {
     int debugging_cycles0 = 0;
     int debugging_cycles = 0;
 
-#ifndef NDEBUG
+#if DEBUG_TIMING
     unsigned long dbg_ticks = 0;
     int speaker_neg_feedback = 0;
     int speaker_pos_feedback = 0;
@@ -201,8 +189,7 @@ void *cpu_thread(void *dummyptr) {
             deltat = timespec_diff(t0, ti, &negative);
             if (deltat.tv_sec)
             {
-                // TODO FIXME : this is innocuous when coming out of interface menus, but are there any other edge cases?
-                LOG("NOTE : serious divergence from target time ...");
+                TIMING_LOG("NOTE : serious divergence from target time ...");
                 t0 = ti;
                 deltat = timespec_diff(t0, ti, &negative);
             }
@@ -255,7 +242,7 @@ void *cpu_thread(void *dummyptr) {
                     reinitialize();
                 }
             } while (is_debugging);
-#ifndef NDEBUG
+#if DEBUG_TIMING
             dbg_cycles_executed += cpu65_cycle_count;
 #endif
 #ifdef AUDIO_ENABLED
@@ -287,53 +274,54 @@ void *cpu_thread(void *dummyptr) {
             pthread_mutex_unlock(&interface_mutex);
             // -UNLOCK--------------------------------------------------------------------------------------- SAMPLE tj
 
-            deltat = timespec_diff(ti, tj, &negative);
-            assert(!negative);
-            long sleepfor = 0;
-            if (!deltat.tv_sec && !g_bFullSpeed)
-            {
-                sleepfor = EXECUTION_PERIOD_NSECS - drift_adj_nsecs - deltat.tv_nsec;
-            }
-
-            if (sleepfor <= 0)
-            {
-                // lagging ...
-                static time_t throttle_warning = 0;
-                if (t0.tv_sec - throttle_warning > 0)
+            if (!g_bFullSpeed) {
+                deltat = timespec_diff(ti, tj, &negative);
+                assert(!negative);
+                long sleepfor = 0;
+                if (!deltat.tv_sec)
                 {
-                    LOG("lagging... %ld . %ld", deltat.tv_sec, deltat.tv_nsec);
-                    throttle_warning = t0.tv_sec;
+                    sleepfor = EXECUTION_PERIOD_NSECS - drift_adj_nsecs - deltat.tv_nsec;
                 }
-            }
-            else
-            {
-                deltat.tv_sec = 0;
-                deltat.tv_nsec = sleepfor;
-                nanosleep(&deltat, NULL);
-            }
 
-#ifndef NDEBUG
-            // collect timing statistics
+                if (sleepfor <= 0)
+                {
+                    // lagging ...
+                    static time_t throttle_warning = 0;
+                    if (t0.tv_sec - throttle_warning > 0)
+                    {
+                        TIMING_LOG("lagging... %ld . %ld", deltat.tv_sec, deltat.tv_nsec);
+                        throttle_warning = t0.tv_sec;
+                    }
+                }
+                else
+                {
+                    deltat.tv_sec = 0;
+                    deltat.tv_nsec = sleepfor;
+                    nanosleep(&deltat, NULL);
+                }
 
-            if (speaker_neg_feedback > g_nCpuCyclesFeedback)
-            {
-                speaker_neg_feedback = g_nCpuCyclesFeedback;
-            }
-            if (speaker_pos_feedback < g_nCpuCyclesFeedback)
-            {
-                speaker_pos_feedback = g_nCpuCyclesFeedback;
-            }
+#if DEBUG_TIMING
+                // collect timing statistics
+                if (speaker_neg_feedback > g_nCpuCyclesFeedback)
+                {
+                    speaker_neg_feedback = g_nCpuCyclesFeedback;
+                }
+                if (speaker_pos_feedback < g_nCpuCyclesFeedback)
+                {
+                    speaker_pos_feedback = g_nCpuCyclesFeedback;
+                }
 
-            dbg_ticks += EXECUTION_PERIOD_NSECS;
-            if ((dbg_ticks % NANOSECONDS) == 0)
-            {
-                LOG("tick:(%ld.%ld) real:(%ld.%ld) cycles exe: %d ... speaker feedback: %d/%d", t0.tv_sec, t0.tv_nsec, ti.tv_sec, ti.tv_nsec, dbg_cycles_executed, speaker_neg_feedback, speaker_pos_feedback);
-                dbg_cycles_executed = 0;
-                dbg_ticks = 0;
-                speaker_neg_feedback = 0;
-                speaker_pos_feedback = 0;
-            }
+                dbg_ticks += EXECUTION_PERIOD_NSECS;
+                if ((dbg_ticks % NANOSECONDS) == 0)
+                {
+                    LOG("tick:(%ld.%ld) real:(%ld.%ld) cycles exe: %d ... speaker feedback: %d/%d", t0.tv_sec, t0.tv_nsec, ti.tv_sec, ti.tv_nsec, dbg_cycles_executed, speaker_neg_feedback, speaker_pos_feedback);
+                    dbg_cycles_executed = 0;
+                    dbg_ticks = 0;
+                    speaker_neg_feedback = 0;
+                    speaker_pos_feedback = 0;
+                }
 #endif
+            }
         } while (!emul_reinitialize);
 
         reinitialize();
