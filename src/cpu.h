@@ -64,6 +64,7 @@ extern int16_t cpu65_cycles_to_execute;
 void cpu65_trace_begin(const char *trace_file);
 void cpu65_trace_end(void);
 void cpu65_trace_toggle(const char *trace_file);
+void cpu65_trace_checkpoint(void);
 #endif
 
 #endif /* !__ASSEMBLER__ */

@@ -257,6 +257,9 @@ void *cpu_thread(void *dummyptr) {
             const int nRemainingCycles = uActualCyclesExecuted - g_nCyclesExecuted;
             assert(nRemainingCycles >= 0);
             g_nCumulativeCycles += nRemainingCycles;
+#if CPU_TRACING
+            cpu65_trace_checkpoint();
+#endif
 
             if (!g_bFullSpeed)
             {

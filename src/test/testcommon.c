@@ -132,7 +132,7 @@ void test_common_init(bool do_cputhread) {
         pthread_create(&cpu_thread_id, NULL, (void *) &cpu_thread, (void *)NULL);
         c_debugger_set_watchpoint(WATCHPOINT_ADDR);
         if (is_headless) {
-            c_debugger_set_timeout(10);
+            c_debugger_set_timeout(15);
         } else {
             fprintf(stderr, "NOTE : RUNNING WITH DISPLAY\n");
             fprintf(stderr, "Will spinloop on failed tests for debugger intervention\n");

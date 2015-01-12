@@ -788,7 +788,7 @@ GLUE_C_WRITE(cpu65_trace_epilogue)
     }
     flags_buf[8] = '\0';
 
-    fprintf(cpu_trace_fp, " %s EA:%04X", flags_buf, cpu65_ea);
+    fprintf(cpu_trace_fp, " %s CYC:%u EA:%04X", flags_buf, cpu65_opcycles, cpu65_ea);
 
     char fmt[64];
     sprintf(fmt, " %s %s", opcodes_65c02[cpu65_opcode].mnemonic, disasm_templates[opcodes_65c02[cpu65_opcode].mode]);
@@ -827,6 +827,13 @@ GLUE_C_WRITE(cpu65_trace_epilogue)
 
     fprintf(cpu_trace_fp, "%s", "\n");
     fflush(cpu_trace_fp);
+}
+
+void cpu65_trace_checkpoint(void) {
+    if (cpu_trace_fp) {
+        fprintf(cpu_trace_fp, "---TOTAL CYC:%lu\n",g_nCumulativeCycles);
+        fflush(cpu_trace_fp);
+    }
 }
 
 #   if RESET_VM_TRACING
