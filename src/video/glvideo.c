@@ -585,9 +585,10 @@ static void gldriver_shutdown(void) {
 // update, render, reshape
 //
 #if USE_GLUT
-static void gldriver_update(void) {
+static void gldriver_update(int unused) {
     c_keys_handle_input(-1, 0, 0);
     glutPostRedisplay();
+    glutTimerFunc(17, gldriver_update, 0);
 }
 #endif
 
@@ -707,7 +708,7 @@ static void gldriver_init_glut(GLuint fbo) {
 
     gldriver_init_common();
 
-    glutIdleFunc(gldriver_update);
+    glutTimerFunc(16, gldriver_update, 0);
     glutDisplayFunc(gldriver_render);
     glutReshapeFunc(gldriver_reshape);
 
