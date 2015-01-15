@@ -311,6 +311,8 @@ void load_settings(void)
             }
         }
 
+        FREE(buffer);
+
         fclose(config_file);
     }
 }
