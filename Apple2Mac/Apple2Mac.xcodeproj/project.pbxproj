@@ -8,6 +8,9 @@
 
 /* Begin PBXBuildFile section */
 		4A2636F919FDEDB700DBFB00 /* Apple2Mac.help in Resources */ = {isa = PBXBuildFile; fileRef = 4A2636F819FDEDB700DBFB00 /* Apple2Mac.help */; };
+		4A61119C1A6A1DE60035F7DE /* blank.po.gz in Resources */ = {isa = PBXBuildFile; fileRef = 4A61119B1A6A1DE60035F7DE /* blank.po.gz */; };
+		4A61119D1A6A1DE60035F7DE /* blank.po.gz in Resources */ = {isa = PBXBuildFile; fileRef = 4A61119B1A6A1DE60035F7DE /* blank.po.gz */; };
+		4A6111A31A6A1DFC0035F7DE /* flapple140.po.gz in Resources */ = {isa = PBXBuildFile; fileRef = 4A6111A21A6A1DFC0035F7DE /* flapple140.po.gz */; };
 		4A69C1801A33D6D7001579EF /* images in Resources */ = {isa = PBXBuildFile; fileRef = 4A69C17F1A33D6D7001579EF /* images */; };
 		4A69C1921A33DB90001579EF /* DDHidLib.framework in Copy Files (1 item) */ = {isa = PBXBuildFile; fileRef = 77C2796F1A1047AF000FE33F /* DDHidLib.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		4AC7A76D19ECC3FB00BCD457 /* EmulatorWindow.m in Sources */ = {isa = PBXBuildFile; fileRef = 4AC7A76C19ECC3FB00BCD457 /* EmulatorWindow.m */; };
@@ -274,6 +277,8 @@
 
 /* Begin PBXFileReference section */
 		4A2636F819FDEDB700DBFB00 /* Apple2Mac.help */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Apple2Mac.help; sourceTree = "<group>"; };
+		4A61119B1A6A1DE60035F7DE /* blank.po.gz */ = {isa = PBXFileReference; lastKnownFileType = archive.gzip; path = blank.po.gz; sourceTree = "<group>"; };
+		4A6111A21A6A1DFC0035F7DE /* flapple140.po.gz */ = {isa = PBXFileReference; lastKnownFileType = archive.gzip; path = flapple140.po.gz; sourceTree = "<group>"; };
 		4A69C17F1A33D6D7001579EF /* images */ = {isa = PBXFileReference; lastKnownFileType = folder; name = images; path = ../../images; sourceTree = "<group>"; };
 		4AC7A76B19ECC3FB00BCD457 /* EmulatorWindow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = EmulatorWindow.h; path = Classes/OSX/EmulatorWindow.h; sourceTree = "<group>"; };
 		4AC7A76C19ECC3FB00BCD457 /* EmulatorWindow.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = EmulatorWindow.m; path = Classes/OSX/EmulatorWindow.m; sourceTree = "<group>"; };
@@ -459,6 +464,8 @@
 		4ADC522F19E8D3F600186B36 /* disks */ = {
 			isa = PBXGroup;
 			children = (
+				4A6111A21A6A1DFC0035F7DE /* flapple140.po.gz */,
+				4A61119B1A6A1DE60035F7DE /* blank.po.gz */,
 				4ADC523019E8D3F600186B36 /* blank.dsk.gz */,
 				4ADC523119E8D3F600186B36 /* blank.nib.gz */,
 				4ADC523219E8D3F600186B36 /* etc.dsk.gz */,
@@ -929,6 +936,7 @@
 				4AD4FEB91A52464F00F958EC /* MainMenu-Test.xib in Resources */,
 				4AD4FEBA1A52464F00F958EC /* InfoPlist.strings in Resources */,
 				4AD4FEBB1A52464F00F958EC /* Images.xcassets in Resources */,
+				4A61119D1A6A1DE60035F7DE /* blank.po.gz in Resources */,
 				4AD4FEBC1A52464F00F958EC /* speedtest.txt in Resources */,
 				4AD4FEBD1A52464F00F958EC /* Credits.rtf in Resources */,
 				4AD4FEBE1A52464F00F958EC /* Basic.vsh in Resources */,
@@ -961,7 +969,9 @@
 				4A69C1801A33D6D7001579EF /* images in Resources */,
 				773B3D1A1956885A0085CE5F /* InfoPlist.strings in Resources */,
 				773B3D281956885A0085CE5F /* Images.xcassets in Resources */,
+				4A6111A31A6A1DFC0035F7DE /* flapple140.po.gz in Resources */,
 				773B3D201956885A0085CE5F /* Credits.rtf in Resources */,
+				4A61119C1A6A1DE60035F7DE /* blank.po.gz in Resources */,
 				4A2636F919FDEDB700DBFB00 /* Apple2Mac.help in Resources */,
 				779F562919E4FE9E00A6F107 /* Basic.vsh in Resources */,
 				779F562A19E4FE9E00A6F107 /* Basic.fsh in Resources */,

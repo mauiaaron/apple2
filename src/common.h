@@ -54,6 +54,10 @@
 #include "uthash.h"
 #include "zlib-helpers.h"
 
+#ifdef __APPLE__
+#include "darwin-shim.h"
+#import <CoreFoundation/CoreFoundation.h>
+#endif
 
 #if VIDEO_OPENGL
 #include "video_util/glUtil.h"

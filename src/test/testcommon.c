@@ -10,10 +10,6 @@
  */
 
 #include "testcommon.h"
-#ifdef __APPLE__
-#include "darwin-shim.h"
-#import <CoreFoundation/CoreFoundation.h>
-#endif
 
 #define TESTBUF_SZ 1024
 

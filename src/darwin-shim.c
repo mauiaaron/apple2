@@ -10,7 +10,6 @@
  */
 
 #include "common.h"
-#include "darwin-shim.h"
 #include <mach/mach_time.h>
 
 // Derived from http://stackoverflow.com/questions/5167269/clock-gettime-alternative-in-mac-os-x
