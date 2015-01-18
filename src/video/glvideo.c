@@ -586,6 +586,23 @@ static void gldriver_shutdown(void) {
 //
 #if USE_GLUT
 static void gldriver_update(int unused) {
+#if DEBUG_GL
+    static uint32_t prevCount = 0;
+    static uint32_t idleCount = 0;
+
+    idleCount++;
+
+    static struct timespec prev = { 0 };
+    struct timespec now;
+    clock_gettime(CLOCK_MONOTONIC, &now);
+
+    if (now.tv_sec != prev.tv_sec) {
+        LOG("gldriver_update() : %u", idleCount-prevCount);
+        prevCount = idleCount;
+        prev = now;
+    }
+#endif
+
     c_keys_handle_input(-1, 0, 0);
     glutPostRedisplay();
     glutTimerFunc(17, gldriver_update, 0);
