@@ -137,10 +137,7 @@ GLUE_C_WRITE(write_unmapped_softswitch)
     // ...
 }
 
-GLUE_C_READ(read_keyboard)
-{
-    return apple_ii_64k[0][0xC000];
-}
+GLUE_FIXED_READ(read_keyboard,apple_ii_64k);
 
 GLUE_C_READ(read_keyboard_strobe)
 {
@@ -879,7 +876,7 @@ GLUE_C_READ(iie_check_vbl)
 {
     bool vbl_bar = false;
     video_scanner_get_address(&vbl_bar, cpu65_cycle_count);
-    uint8_t key = c_read_keyboard(0xC000);
+    uint8_t key = apple_ii_64k[0][0xC000];
     return (key & ~0x80) | (vbl_bar ? 0x80 : 0x00);
 }
 
