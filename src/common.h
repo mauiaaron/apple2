@@ -203,4 +203,8 @@ extern FILE *error_log;
     } while (0)
 #endif
 
+// branch prediction
+#define LIKELY(x)   __builtin_expect((x), true)
+#define UNLIKELY(x) __builtin_expect((x), false)
+
 #endif // whole file
