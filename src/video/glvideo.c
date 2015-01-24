@@ -604,12 +604,19 @@ static void gldriver_update(int unused) {
 #endif
 
     c_keys_handle_input(-1, 0, 0);
-    glutPostRedisplay();
+    if (_vid_dirty) {
+        glutPostRedisplay();
+    }
     glutTimerFunc(17, gldriver_update, 0);
 }
 #endif
 
 static void gldriver_render(void) {
+    const uint8_t * const fb = video_current_framebuffer();
+    if (UNLIKELY(!fb)) {
+        return;
+    }
+
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 #if PERSPECTIVE
@@ -637,22 +644,17 @@ static void gldriver_render(void) {
     // that we calculated above
     glUniformMatrix4fv(uniformMVPIdx, 1, GL_FALSE, mvp);
 
-    // Update texture from Apple //e internal framebuffer
-    const uint8_t * const fb = video_current_framebuffer();
-    uint8_t index;
-#warning FIXME TODO use memcpy ... or don't use indexed color so that we don't need to do this copy?
+    // Update texture from indexed-color Apple //e internal framebuffer
     unsigned int count = SCANWIDTH * SCANHEIGHT;
     char pixels[SCANWIDTH * SCANHEIGHT * 4];
-    if (fb != NULL) {
-        for (unsigned int i=0, j=0; i<count; i++, j+=4) {
-            index = *(fb + i);
-            *( (uint32_t*)(pixels + j) ) = (uint32_t)(
-                                                      ((uint32_t)(colormap[index].red)   << 0 ) |
-                                                      ((uint32_t)(colormap[index].green) << 8 ) |
-                                                      ((uint32_t)(colormap[index].blue)  << 16) |
-                                                      ((uint32_t)0xff                    << 24)
-                                                      );
-        }
+    for (unsigned int i=0, j=0; i<count; i++, j+=4) {
+        uint8_t index = *(fb + i);
+        *( (uint32_t*)(pixels + j) ) = (uint32_t)(
+                                                  ((uint32_t)(colormap[index].red)   << 0 ) |
+                                                  ((uint32_t)(colormap[index].green) << 8 ) |
+                                                  ((uint32_t)(colormap[index].blue)  << 16) |
+                                                  ((uint32_t)0xff                    << 24)
+                                                  );
     }
 
     glBindTexture(GL_TEXTURE_2D, a2TextureName);

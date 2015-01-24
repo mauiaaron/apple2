@@ -633,6 +633,7 @@ void video_shutdown(void) {
    ------------------------------------------------------------------------- */
 void video_setpage(int p)
 {
+    _vid_dirty = true;
     video__current_page = p;
 }
 
@@ -643,6 +644,7 @@ const uint8_t * const video_current_framebuffer() {
 // ----------------------------------------------------------------------------
 
 static inline void _plot_character(const unsigned int font_off, uint8_t *fb_ptr) {
+    _vid_dirty = true;
     uint8_t *font_ptr = video__wider_font+font_off;
     _plot_char40(/*dst*/&fb_ptr, /*src*/&font_ptr);
     _plot_char40(/*dst*/&fb_ptr, /*src*/&font_ptr);
@@ -656,17 +658,16 @@ static inline void _plot_character(const unsigned int font_off, uint8_t *fb_ptr)
 
 static inline void _plot_character0(uint16_t ea, uint8_t b)
 {
-    _vid_dirty = (video__current_page == 0);
     _plot_character(b<<7/* *128 */, video__fb1+video__screen_addresses[ea-0x0400]);
 }
 
 static inline void _plot_character1(uint16_t ea, uint8_t b)
 {
-    _vid_dirty = (video__current_page == 1);
     _plot_character(b<<7/* *128 */, video__fb2+video__screen_addresses[ea-0x0800]);
 }
 
 static inline void _plot_80character(const unsigned int font_off, uint8_t *fb_ptr) {
+    _vid_dirty = true;
     uint8_t *font_ptr = video__font+font_off;
     _plot_char80(/*dst*/&fb_ptr, /*src*/&font_ptr);
     _plot_char80(/*dst*/&fb_ptr, /*src*/&font_ptr);
@@ -681,7 +682,6 @@ static inline void _plot_80character(const unsigned int font_off, uint8_t *fb_pt
 // FIXME TODO NOTE : dup'ing work here?
 static inline void _plot_80character0(uint16_t ea, uint8_t b)
 {
-    _vid_dirty = (video__current_page == 0);
     b = apple_ii_64k[1][ea];
     _plot_80character(b<<6/* *64 */, video__fb1+video__screen_addresses[ea-0x0400]);
     b = apple_ii_64k[0][ea];
@@ -690,7 +690,6 @@ static inline void _plot_80character0(uint16_t ea, uint8_t b)
 
 static inline void _plot_80character1(uint16_t ea, uint8_t b)
 {
-    _vid_dirty = (video__current_page == 1);
     b = apple_ii_64k[1][ea];
     _plot_80character(b<<6/* *64 */, video__fb2+video__screen_addresses[ea-0x0800]);
     b = apple_ii_64k[0][ea];
@@ -698,6 +697,7 @@ static inline void _plot_80character1(uint16_t ea, uint8_t b)
 }
 
 static inline void _plot_block(const uint32_t val, uint8_t *fb_ptr) {
+    _vid_dirty = true;
     uint8_t color = (val & 0x0F) << 4;
     uint32_t val32 = (color << 24) | (color << 16) | (color << 8) | color;
 
@@ -725,13 +725,11 @@ static inline void _plot_block(const uint32_t val, uint8_t *fb_ptr) {
 /* plot lores block first page */
 static inline void _plot_block0(uint16_t ea, uint8_t b)
 {
-    _vid_dirty = (video__current_page == 0);
     _plot_block(b, video__fb1+video__screen_addresses[ea-0x0400]);
 }
 
 static inline void _plot_block1(uint16_t ea, uint8_t b)
 {
-    _vid_dirty = (video__current_page == 1);
     _plot_block(b, video__fb2+video__screen_addresses[ea-0x0800]);
 }
 
@@ -1032,14 +1030,13 @@ static inline void _draw_hires_graphics(uint16_t ea, uint8_t b, bool is_even, ui
         return;
     }
 
+    _vid_dirty = true;
     uint16_t off = ea - 0x2000;
     uint8_t *fb_base = NULL;
     if (page) {
         off -= 0x2000;
-        _vid_dirty = (video__current_page == 1);
         fb_base = video__fb2;
     } else {
-        _vid_dirty = (video__current_page == 0);
         fb_base = video__fb1;
     }
     _plot_hires(ea, b, is_even, fb_base+video__screen_addresses[off]);
