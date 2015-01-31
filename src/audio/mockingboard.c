@@ -822,13 +822,13 @@ static void MB_Update()
 		return;
 #endif
 
-	if (g_bFullSpeed)
+	if (is_fullspeed)
 	{
 		// Keep AY reg writes relative to the current 'frame'
 		// - Required for Ultima3:
 		//   . Tune ends
-		//   . g_bFullSpeed:=true (disk-spinning) for ~50 frames
-		//   . U3 sets AY_ENABLE:=0xFF (as a side-effect, this sets g_bFullSpeed:=false)
+		//   . is_fullspeed:=true (disk-spinning) for ~50 frames
+		//   . U3 sets AY_ENABLE:=0xFF (as a side-effect, this sets is_fullspeed:=false)
 		//   o Without this, the write to AY_ENABLE gets ignored (since AY8910's /g_uLastCumulativeCycles/ was last set 50 frame ago)
 		AY8910UpdateSetCycles();
 
@@ -844,12 +844,12 @@ static void MB_Update()
 	{
 		if(!g_nMB_InActiveCycleCount)
 		{
-			g_nMB_InActiveCycleCount = g_nCumulativeCycles;
+			g_nMB_InActiveCycleCount = cycles_count_total;
 		}
 #ifdef APPLE2IX
-		else if(g_nCumulativeCycles - g_nMB_InActiveCycleCount > (uint64_t)g_fCurrentCLK6502/10)
+		else if(cycles_count_total - g_nMB_InActiveCycleCount > (uint64_t)cycles_persec_target/10)
 #else
-		else if(g_nCumulativeCycles - g_nMB_InActiveCycleCount > (unsigned __int64)g_fCurrentCLK6502/10)
+		else if(cycles_count_total - g_nMB_InActiveCycleCount > (unsigned __int64)cycles_persec_target/10)
 #endif
 		{
 			// After 0.1 sec of Apple time, assume MB is not active
@@ -872,7 +872,7 @@ static void MB_Update()
 
 	const double n6522TimerPeriod = MB_GetFramePeriod();
 
-	const double nIrqFreq = g_fCurrentCLK6502 / n6522TimerPeriod + 0.5;			// Round-up
+	const double nIrqFreq = cycles_persec_target / n6522TimerPeriod + 0.5;			// Round-up
 	const int nNumSamplesPerPeriod = (int) ((double)SAMPLE_RATE / nIrqFreq);	// Eg. For 60Hz this is 735
 	int nNumSamples = nNumSamplesPerPeriod + nNumSamplesError;					// Apply correction
 	if(nNumSamples <= 0)
@@ -968,7 +968,7 @@ static void MB_Update()
         if (dbg_print != now)
         {
             dbg_print = now;
-            LOG("g_nCpuCyclesFeedback:%d nNumSamplesError:%d n6522TimerPeriod:%f nIrqFreq:%f nNumSamplesPerPeriod:%d nNumSamples:%d nBytesRemaining:%d ", g_nCpuCyclesFeedback, nNumSamplesError, n6522TimerPeriod, nIrqFreq, nNumSamplesPerPeriod, nNumSamples, nBytesRemaining);
+            LOG("cycles_speaker_feedback:%d nNumSamplesError:%d n6522TimerPeriod:%f nIrqFreq:%f nNumSamplesPerPeriod:%d nNumSamples:%d nBytesRemaining:%d ", cycles_speaker_feedback, nNumSamplesError, n6522TimerPeriod, nIrqFreq, nNumSamplesPerPeriod, nNumSamples, nBytesRemaining);
         }
 #endif
 
@@ -1611,7 +1611,7 @@ void MB_Initialize()
 #endif
                 }
 
-		AY8910_InitAll((int)g_fCurrentCLK6502, SAMPLE_RATE);
+		AY8910_InitAll((int)cycles_persec_target, SAMPLE_RATE);
 		LogFileOutput("MB_Initialize: AY8910_InitAll()\n");
 
 		for(i=0; i<NUM_AY8910; i++)
@@ -1629,10 +1629,10 @@ void MB_Initialize()
 
 //-----------------------------------------------------------------------------
 
-// NB. Called when /g_fCurrentCLK6502/ changes
+// NB. Called when /cycles_persec_target/ changes
 void MB_Reinitialize()
 {
-	AY8910_InitClock((int)g_fCurrentCLK6502);
+	AY8910_InitClock((int)cycles_persec_target);
 }
 
 //-----------------------------------------------------------------------------
@@ -1694,14 +1694,13 @@ void MB_Reset()
 
 #ifdef APPLE2IX
 #define MemReadFloatingBus floating_bus
-#define nCyclesLeft cpu65_cycle_count
 #define nAddr ea
 GLUE_C_READ(MB_Read)
 #else
 static BYTE __stdcall MB_Read(WORD PC, WORD nAddr, BYTE bWrite, BYTE nValue, ULONG nCyclesLeft)
 #endif
 {
-	MB_UpdateCycles(nCyclesLeft);
+	MB_UpdateCycles();
 
 #ifdef _DEBUG
 	if(!IS_APPLE2 && !MemCheckSLOTCXROM())
@@ -1713,7 +1712,7 @@ static BYTE __stdcall MB_Read(WORD PC, WORD nAddr, BYTE bWrite, BYTE nValue, ULO
 	if(g_SoundcardType == CT_Empty)
 	{
 		_ASSERT(0);	// Card unplugged, so IORead_Cxxx() returns the floating bus
-		return MemReadFloatingBus(nCyclesLeft);
+		return MemReadFloatingBus();
 	}
 #endif
 
@@ -1724,7 +1723,7 @@ static BYTE __stdcall MB_Read(WORD PC, WORD nAddr, BYTE bWrite, BYTE nValue, ULO
 	{
 		if(nMB != 0)	// Slot4 only
                 {
-			return MemReadFloatingBus(nCyclesLeft);
+			return MemReadFloatingBus();
                 }
 
 		int CS;
@@ -1749,7 +1748,7 @@ static BYTE __stdcall MB_Read(WORD PC, WORD nAddr, BYTE bWrite, BYTE nValue, ULO
 			bAccessedDevice = true;
 		}
 
-		return bAccessedDevice ? nRes : MemReadFloatingBus(nCyclesLeft);
+		return bAccessedDevice ? nRes : MemReadFloatingBus();
 	}
 
 	if(nOffset <= (SY6522A_Offset+0x0F))
@@ -1766,7 +1765,7 @@ static BYTE __stdcall MB_Read(WORD PC, WORD nAddr, BYTE bWrite, BYTE nValue, ULO
         }
 	else
         {
-		return MemReadFloatingBus(nCyclesLeft);
+		return MemReadFloatingBus();
         }
 }
 
@@ -1779,7 +1778,7 @@ GLUE_C_WRITE(MB_Write)
 static BYTE __stdcall MB_Write(WORD PC, WORD nAddr, BYTE bWrite, BYTE nValue, ULONG nCyclesLeft)
 #endif
 {
-	MB_UpdateCycles(nCyclesLeft);
+	MB_UpdateCycles();
 
 #ifdef _DEBUG
 	if(!IS_APPLE2 && !MemCheckSLOTCXROM())
@@ -1864,7 +1863,7 @@ static BYTE __stdcall PhasorIO(WORD PC, WORD nAddr, BYTE bWrite, BYTE nValue, UL
 {
 	if(!g_bPhasorEnable)
         {
-		return MemReadFloatingBus(nCyclesLeft);
+		return MemReadFloatingBus();
         }
 
 	if(g_nPhasorMode < 2)
@@ -1874,7 +1873,7 @@ static BYTE __stdcall PhasorIO(WORD PC, WORD nAddr, BYTE bWrite, BYTE nValue, UL
 
 	AY8910_InitClock((int)fCLK);
 
-	return MemReadFloatingBus(nCyclesLeft);
+	return MemReadFloatingBus();
 }
 
 //-----------------------------------------------------------------------------
@@ -2002,7 +2001,7 @@ void MB_Demute()
 // Called by CpuExecute() before doing CPU emulation
 void MB_StartOfCpuExecute()
 {
-	g_uLastCumulativeCycles = g_nCumulativeCycles;
+	g_uLastCumulativeCycles = cycles_count_total;
 }
 
 // Called by ContinueExecution() at the end of every video frame
@@ -2018,14 +2017,14 @@ void MB_EndOfVideoFrame()
 //-----------------------------------------------------------------------------
 
 // Called by CpuExecute() after every N opcodes (N = ~1000 @ 1MHz)
-void MB_UpdateCycles(ULONG uExecutedCycles)
+void MB_UpdateCycles(void)
 {
 	if(g_SoundcardType == CT_Empty)
 		return;
 
-	CpuCalcCycles(uExecutedCycles);
-	UINT64 uCycles = g_nCumulativeCycles - g_uLastCumulativeCycles;
-	g_uLastCumulativeCycles = g_nCumulativeCycles;
+	timing_checkpoint_cycles();
+	UINT64 uCycles = cycles_count_total - g_uLastCumulativeCycles;
+	g_uLastCumulativeCycles = cycles_count_total;
 	//_ASSERT(uCycles < 0x10000);
         if (uCycles >= 0x10000) {
             printf("OOPS!!! Mockingboard failed assert!\n");
@@ -2137,6 +2136,11 @@ DWORD MB_GetVolume()
 
 void MB_SetVolume(DWORD dwVolume, DWORD dwVolumeMax)
 {
+#ifdef APPLE2IX
+#warning TODO FIXME ... why is OpenAL on my Linux box so damn loud?!
+    dwVolume >>= 2;
+    dwVolumeMax >>= 2;
+#endif
 	MockingboardVoice.dwUserVolume = dwVolume;
 
 	MockingboardVoice.nVolume = NewVolume(dwVolume, dwVolumeMax);

@@ -58,7 +58,6 @@ extern unsigned char cpu65_flags_encode[256];
 extern unsigned char cpu65_flags_decode[256];
 
 extern int16_t cpu65_cycle_count;
-extern int16_t cpu65_cycles_to_execute;
 
 #if CPU_TRACING
 void cpu65_trace_begin(const char *trace_file);

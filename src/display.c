@@ -1151,8 +1151,8 @@ void video_redraw(void) {
 // References to Jim Sather's books are given as eg:
 // UTAIIe:5-7,P3 (Understanding the Apple IIe, chapter 5, page 7, Paragraph 3)
 
-extern unsigned int CpuGetCyclesThisVideoFrame(const unsigned int nExecutedCycles);
-uint16_t video_scanner_get_address(bool *vblBarOut, const unsigned int executedCycles) {
+extern unsigned int CpuGetCyclesThisVideoFrame(void);
+uint16_t video_scanner_get_address(bool *vblBarOut) {
     const bool SW_HIRES   = (softswitches & SS_HIRES);
     const bool SW_TEXT    = (softswitches & SS_TEXT);
     const bool SW_PAGE2   = (softswitches & SS_PAGE2);
@@ -1160,7 +1160,7 @@ uint16_t video_scanner_get_address(bool *vblBarOut, const unsigned int executedC
     const bool SW_MIXED   = (softswitches & SS_MIXED);
 
     // get video scanner position
-    unsigned int nCycles = CpuGetCyclesThisVideoFrame(executedCycles);
+    unsigned int nCycles = CpuGetCyclesThisVideoFrame();
 
     // machine state switches
     int nHires   = (SW_HIRES && !SW_TEXT) ? 1 : 0;
@@ -1258,13 +1258,13 @@ uint16_t video_scanner_get_address(bool *vblBarOut, const unsigned int executedC
     return (uint16_t)nAddress;
 }
 
-uint8_t floating_bus(const unsigned int executedCycles) {
-    uint16_t scanner_addr = video_scanner_get_address(NULL, executedCycles);
+uint8_t floating_bus(void) {
+    uint16_t scanner_addr = video_scanner_get_address(NULL);
     return apple_ii_64k[0][scanner_addr];
 }
 
-uint8_t floating_bus_hibit(const bool hibit, const unsigned int executedCycles) {
-    uint16_t scanner_addr = video_scanner_get_address(NULL, executedCycles);
+uint8_t floating_bus_hibit(const bool hibit) {
+    uint16_t scanner_addr = video_scanner_get_address(NULL);
     uint8_t b = apple_ii_64k[0][scanner_addr];
     return (b & ~0x80) | (hibit ? 0x80 : 0);
 }

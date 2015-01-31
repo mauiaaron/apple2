@@ -41,7 +41,7 @@ uint8_t c_PhasorIO(uint16_t addr) {
     return 0x0;
 }
 
-void SpkrToggle() {
+void c_speaker_toggle(void) {
 }
 
 void c_interface_print(int x, int y, const int cs, const char *s) {
@@ -119,7 +119,7 @@ void test_common_init(bool do_cputhread) {
     // kludgey set max CPU speed... 
     cpu_scale_factor = CPU_SCALE_FASTEST;
     cpu_altscale_factor = CPU_SCALE_FASTEST;
-    g_bFullSpeed = true;
+    is_fullspeed = true;
 
     caps_lock = true;
 

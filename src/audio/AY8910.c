@@ -137,7 +137,7 @@ void CAY8910_init(CAY8910 *_this)
 	_this->env_first = 1;
         _this->env_rev = 0;
         _this->env_counter = 15;
-	//m_fCurrentCLK_AY8910 = g_fCurrentCLK6502; -- believe this is handled by an initial call to SetCLK()
+	//m_fCurrentCLK_AY8910 = cycles_persec_target; -- believe this is handled by an initial call to SetCLK()
 };
 
 
@@ -983,7 +983,7 @@ void SetCLK(double CLK)
 // AY8910 interface
 
 #ifndef APPLE2IX
-#include "CPU.h"	// For g_nCumulativeCycles
+#include "CPU.h"	// For cycles_count_total
 #endif
 
 static CAY8910 g_AY8910[MAX_8910];
@@ -996,7 +996,7 @@ static unsigned __int64 g_uLastCumulativeCycles = 0;
 
 void _AYWriteReg(int chip, int r, int v)
 {
-	libspectrum_dword uOffset = (libspectrum_dword) (g_nCumulativeCycles - g_uLastCumulativeCycles);
+	libspectrum_dword uOffset = (libspectrum_dword) (cycles_count_total - g_uLastCumulativeCycles);
 	sound_ay_write(&g_AY8910[chip], r, v, uOffset);
 }
 
@@ -1008,7 +1008,7 @@ void AY8910_reset(int chip)
 
 void AY8910UpdateSetCycles()
 {
-	g_uLastCumulativeCycles = g_nCumulativeCycles;
+	g_uLastCumulativeCycles = cycles_count_total;
 }
 
 void AY8910Update(int chip, INT16** buffer, int nNumSamples)

@@ -1280,7 +1280,7 @@ void c_interface_parameters()
 #ifdef __linux__
                         LOG("Back to Linux, w00t!\n");
 #endif
-                        SpkrDestroy();
+                        speaker_destroy();
                         MB_Destroy();
 
                         video_shutdown();

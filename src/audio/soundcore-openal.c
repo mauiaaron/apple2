@@ -469,7 +469,10 @@ static long ALGetPosition(void *_this, unsigned long *bytes_queued, unsigned lon
 {
     ALVoice *voice = (ALVoice*)_this;
     *bytes_queued = 0;
-    *unused_write_cursor = 0;
+    if (unused_write_cursor)
+    {
+        *unused_write_cursor = 0;
+    }
 
     ALuint queued = 0;
     int err = _ALProcessPlayBuffers(voice, &queued);
@@ -537,7 +540,7 @@ static long ALBegin(void *_this, unsigned long unused, unsigned long write_bytes
 
 static int _ALSubmitBufferToOpenAL(ALVoice *voice)
 {
-    int err =0;
+    int err = 0;
 
     ALPlayBuf *node = PlaylistEnqueue(voice, voice->index);
     if (!node)

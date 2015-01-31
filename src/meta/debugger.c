@@ -1140,10 +1140,10 @@ static int begin_cpu_stepping() {
     // kludgey set max CPU speed... 
     double saved_scale = cpu_scale_factor;
     double saved_altscale = cpu_altscale_factor;
-    bool saved_fullspeed = g_bFullSpeed;
+    bool saved_fullspeed = is_fullspeed;
     cpu_scale_factor = CPU_SCALE_FASTEST;
     cpu_altscale_factor = CPU_SCALE_FASTEST;
-    g_bFullSpeed = true;
+    is_fullspeed = true;
 
     unsigned int idx = 0;
     size_t textlen = 0;
@@ -1197,7 +1197,7 @@ static int begin_cpu_stepping() {
 
     cpu_scale_factor = saved_scale;
     cpu_altscale_factor = saved_altscale;
-    g_bFullSpeed = saved_fullspeed;
+    is_fullspeed = saved_fullspeed;
 
     return ch;
 }

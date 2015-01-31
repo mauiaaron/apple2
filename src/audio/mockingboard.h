@@ -105,7 +105,7 @@ void    MB_Mute();
 void    MB_Demute();
 void    MB_StartOfCpuExecute();
 void    MB_EndOfVideoFrame();
-void    MB_UpdateCycles(ULONG uExecutedCycles);
+void    MB_UpdateCycles(void);
 SS_CARDTYPE MB_GetSoundcardType();
 void    MB_SetSoundcardType(SS_CARDTYPE NewSoundcardType);
 double  MB_GetFramePeriod();

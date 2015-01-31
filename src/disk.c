@@ -603,33 +603,33 @@ GLUE_C_READ(disk_read_phase)
 #endif
     }
 
-    return ea == 0xE0 ? 0xFF : floating_bus_hibit(1, cpu65_cycle_count);
+    return ea == 0xE0 ? 0xFF : floating_bus_hibit(1);
 }
 
 GLUE_C_READ(disk_read_motor_off)
 {
     clock_gettime(CLOCK_MONOTONIC, &disk6.motor_time);
     disk6.motor_off = 1;
-    return floating_bus_hibit(1, cpu65_cycle_count);
+    return floating_bus_hibit(1);
 }
 
 GLUE_C_READ(disk_read_motor_on)
 {
     clock_gettime(CLOCK_MONOTONIC, &disk6.motor_time);
     disk6.motor_off = 0;
-    return floating_bus_hibit(1, cpu65_cycle_count);
+    return floating_bus_hibit(1);
 }
 
 GLUE_C_READ(disk_read_select_a)
 {
     disk6.drive = 0;
-    return floating_bus(cpu65_cycle_count);
+    return floating_bus();
 }
 
 GLUE_C_READ(disk_read_select_b)
 {
     disk6.drive = 1;
-    return floating_bus(cpu65_cycle_count);
+    return floating_bus();
 }
 
 GLUE_C_READ(disk_read_latch)
@@ -640,13 +640,13 @@ GLUE_C_READ(disk_read_latch)
 GLUE_C_READ(disk_read_prepare_in)
 {
     disk6.ddrw = 0;
-    return floating_bus_hibit(disk6.disk[disk6.drive].is_protected, cpu65_cycle_count);
+    return floating_bus_hibit(disk6.disk[disk6.drive].is_protected);
 }
 
 GLUE_C_READ(disk_read_prepare_out)
 {
     disk6.ddrw = 1;
-    return floating_bus_hibit(1, cpu65_cycle_count);
+    return floating_bus_hibit(1);
 }
 
 GLUE_C_WRITE(disk_write_latch)

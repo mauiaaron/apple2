@@ -36,8 +36,6 @@ uint8_t  cpu65_rw;
 uint8_t  cpu65_opcode;
 uint8_t  cpu65_opcycles;
 
-int16_t cpu65_cycle_count = 0;
-int16_t cpu65_cycles_to_execute = 0;
 uint8_t cpu65__signal = 0;
 
 static pthread_mutex_t irq_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -831,7 +829,7 @@ GLUE_C_WRITE(cpu65_trace_epilogue)
 
 void cpu65_trace_checkpoint(void) {
     if (cpu_trace_fp) {
-        fprintf(cpu_trace_fp, "---TOTAL CYC:%lu\n",g_nCumulativeCycles);
+        fprintf(cpu_trace_fp, "---TOTAL CYC:%lu\n",cycles_count_total);
         fflush(cpu_trace_fp);
     }
 }

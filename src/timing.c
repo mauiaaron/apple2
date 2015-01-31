@@ -10,9 +10,24 @@
  */
 
 /*
- * 65c02 CPU Timing Support. Some source derived from AppleWin.
+ * 65c02 CPU timing support. Source inspired/derived from AppleWin.
  *
- * Copyleft 2013 Aaron Culliney
+ * Simplified timing loop for each execution period:
+ *
+ * ..{...+....[....|..................|.........]....^....|....^....^....}......
+ *  ti  MBB       CHK                CHK            MBE  CHX  SPK  MBX  tj   ZZZ
+ *         
+ *      - ti  : timing sample begin (lock out interface thread)
+ *      - tj  : timing sample end   (unlock interface thread)
+ *      -  [  : cpu65_run()
+ *      -  ]  : cpu65_run() finished
+ *      - CHK : incoming timing_checkpoint_cycles() call from IO (bumps cycles_count_total)
+ *      - CHX : update remainder of timing_checkpoint_cycles() for execution period
+ *      - MBB : Mockingboard begin
+ *      - MBE : Mockingboard end/flush (output)
+ *      - MBX : Mockingboard end video frame (output)
+ *      - SPK : Speaker output
+ *      - ZZZ : housekeeping+sleep (or not)
  *
  */
 
@@ -29,30 +44,31 @@
 
 #define DISK_MOTOR_QUIET_NSECS 2000000
 
-static const unsigned int uCyclesPerLine = 65; // 25 cycles of HBL & 40 cycles of HBL'
-static const unsigned int uVisibleLinesPerFrame = 64*3; // 192
-static const unsigned int uLinesPerFrame = 262; // 64 in each third of the screen & 70 in VBL
-static const unsigned int dwClksPerFrame = uCyclesPerLine * uLinesPerFrame; // 17030
+// VBL constants?
+#define uCyclesPerLine 65 // 25 cycles of HBL & 40 cycles of HBL'
+#define uVisibleLinesPerFrame (64*3) // 192
+#define uLinesPerFrame (262) // 64 in each third of the screen & 70 in VBL
+#define dwClksPerFrame (uCyclesPerLine * uLinesPerFrame) // 17030
 
-double g_fCurrentCLK6502 = CLK_6502;
-bool g_bFullSpeed = false; // HACK TODO FIXME : prolly shouldn't be global anymore -- don't think it's necessary for speaker/soundcore/etc anymore ...
-uint64_t g_nCumulativeCycles = 0;       // cumulative cycles since emulator (re)start
-int g_nCpuCyclesFeedback = 0;
+// cycle counting
+double cycles_persec_target = CLK_6502;
+unsigned long long cycles_count_total = 0;
+int cycles_speaker_feedback = 0;
+int16_t cpu65_cycles_to_execute = 0;            // cycles-to-execute by cpu65_run()
+int16_t cpu65_cycle_count = 0;                  // cycles currently excuted by cpu65_run()
+static int16_t cycles_checkpoint_count = 0;
 static unsigned int g_dwCyclesThisFrame = 0;
 
-static bool alt_speed_enabled = false;
-
+// scaling and speed adjustments
+static bool auto_adjust_speed = true;
 double cpu_scale_factor = 1.0;
 double cpu_altscale_factor = 1.0;
-bool auto_adjust_speed = true;
+bool is_fullspeed = false;
+static bool alt_speed_enabled = false;
 
-int gc_cycles_timer_0 = 0;
-int gc_cycles_timer_1 = 0;
-
+// misc
 volatile uint8_t emul_reinitialize = 0;
 pthread_t cpu_thread_id = 0;
-
-static unsigned int g_nCyclesExecuted = 0; // # of cycles executed up to last IO access
 
 // -----------------------------------------------------------------------------
 
@@ -94,68 +110,59 @@ struct timespec timespec_diff(struct timespec start, struct timespec end, bool *
 static inline struct timespec timespec_add(struct timespec start, unsigned long nsecs) {
 
     start.tv_nsec += nsecs;
-    if (start.tv_nsec > NANOSECONDS)
+    if (start.tv_nsec > NANOSECONDS_PER_SECOND)
     {
-        start.tv_sec += (start.tv_nsec / NANOSECONDS);
-        start.tv_nsec %= NANOSECONDS;
+        start.tv_sec += (start.tv_nsec / NANOSECONDS_PER_SECOND);
+        start.tv_nsec %= NANOSECONDS_PER_SECOND;
     }
 
     return start;
 }
 
-static void _timing_initialize(double scale)
-{
-    if (g_bFullSpeed)
-    {
-        TIMING_LOG("timing_initialize() emulation at fullspeed ...");
-        return;
+static void _timing_initialize(double scale) {
+    is_fullspeed = (scale >= CPU_SCALE_FASTEST);
+    if (!is_fullspeed) {
+        cycles_persec_target = CLK_6502 * scale;
     }
-
-    g_fCurrentCLK6502 = CLK_6502 * scale;
-    // this is extracted out of SetClksPerSpkrSample -- speaker.c
 #ifdef AUDIO_ENABLED
-    g_fClksPerSpkrSample = (double) (UINT) (g_fCurrentCLK6502 / (double)SPKR_SAMPLE_RATE);
-    SpkrReinitialize();
-
-    TIMING_LOG("timing_initialize() ... ClockRate:%0.2lf  ClockCyclesPerSpeakerSample:%0.2lf", g_fCurrentCLK6502, g_fClksPerSpkrSample);
+    speaker_reset();
+    //TIMING_LOG("ClockRate:%0.2lf  ClockCyclesPerSpeakerSample:%0.2lf", cycles_persec_target, speaker_cycles_per_sample());
 #endif
 }
 
-static inline void _switch_to_fullspeed(void)
-{
-    g_bFullSpeed = true;
+void timing_initialize(void) {
+    _timing_initialize(alt_speed_enabled ? cpu_altscale_factor : cpu_scale_factor);
 }
 
-static inline void _switch_to_regular_speed(double scale)
-{
-    g_bFullSpeed = false;
-    _timing_initialize(scale);
-}
-
-void timing_toggle_cpu_speed(void)
-{
+void timing_toggle_cpu_speed(void) {
     alt_speed_enabled = !alt_speed_enabled;
-    double scale_factor = alt_speed_enabled ? cpu_altscale_factor : cpu_scale_factor;
-    if (scale_factor >= CPU_SCALE_FASTEST)
-    {
-        _switch_to_fullspeed();
-    }
-    else
-    {
-        _switch_to_regular_speed(scale_factor);
-    }
+    timing_initialize();
 }
 
-void timing_initialize(void)
-{
-    _timing_initialize(cpu_scale_factor);
+void timing_set_auto_adjust_speed(bool auto_adjust) {
+    auto_adjust_speed = auto_adjust;
+    timing_initialize();
+}
+
+bool timing_should_auto_adjust_speed(void) {
+    double speed = alt_speed_enabled ? cpu_altscale_factor : cpu_scale_factor;
+    return auto_adjust_speed && (speed < CPU_SCALE_FASTEST);
 }
 
 void *cpu_thread(void *dummyptr) {
 
     assert(pthread_self() == cpu_thread_id);
 
+#ifdef AUDIO_ENABLED
+    DSInit();
+    speaker_init();
+    MB_Initialize();
+#endif
+
+    reinitialize();
+
     struct timespec deltat;
+    struct timespec disk_motor_time;
     struct timespec t0;         // the target timer
     struct timespec ti, tj;     // actual time samples
     bool negative = false;
@@ -173,7 +180,6 @@ void *cpu_thread(void *dummyptr) {
 
     do
     {
-        g_nCumulativeCycles = 0;
         LOG("cpu_thread : begin main loop ...");
 
         clock_gettime(CLOCK_MONOTONIC, &t0);
@@ -187,7 +193,9 @@ void *cpu_thread(void *dummyptr) {
             deltat = timespec_diff(t0, ti, &negative);
             if (deltat.tv_sec)
             {
-                TIMING_LOG("NOTE : serious divergence from target time ...");
+                if (!is_fullspeed) {
+                    TIMING_LOG("NOTE : serious divergence from target time ...");
+                }
                 t0 = ti;
                 deltat = timespec_diff(t0, ti, &negative);
             }
@@ -195,14 +203,14 @@ void *cpu_thread(void *dummyptr) {
             drift_adj_nsecs = negative ? ~deltat.tv_nsec : deltat.tv_nsec;
 
             // set up increment & decrement counters
-            cpu65_cycles_to_execute = (g_fCurrentCLK6502 / 1000); // g_fCurrentCLK6502 * EXECUTION_PERIOD_NSECS / NANOSECONDS
-            cpu65_cycles_to_execute += g_nCpuCyclesFeedback;
+            cpu65_cycles_to_execute = (cycles_persec_target / 1000); // cycles_persec_target * EXECUTION_PERIOD_NSECS / NANOSECONDS_PER_SECOND
+            if (!is_fullspeed) {
+                cpu65_cycles_to_execute += cycles_speaker_feedback;
+            }
             if (cpu65_cycles_to_execute < 0)
             {
                 cpu65_cycles_to_execute = 0;
             }
-
-            g_nCyclesExecuted = 0;
 
 #ifdef AUDIO_ENABLED
             MB_StartOfCpuExecute();
@@ -218,6 +226,7 @@ void *cpu_thread(void *dummyptr) {
                 }
 
                 cpu65_cycle_count = 0;
+                cycles_checkpoint_count = 0;
                 cpu65_run(); // run emulation for cpu65_cycles_to_execute cycles ...
 
                 if (is_debugging) {
@@ -243,32 +252,23 @@ void *cpu_thread(void *dummyptr) {
 #if DEBUG_TIMING
             dbg_cycles_executed += cpu65_cycle_count;
 #endif
-            unsigned int uActualCyclesExecuted = cpu65_cycle_count;
-            g_dwCyclesThisFrame += uActualCyclesExecuted;
+            g_dwCyclesThisFrame += cpu65_cycle_count;
 
 #ifdef AUDIO_ENABLED
-            MB_UpdateCycles(uActualCyclesExecuted);   // Update 6522s (NB. Do this before updating g_nCumulativeCycles below)
+            MB_UpdateCycles(); // update 6522s (NOTE: do this before updating cycles_count_total)
 #endif
 
-            // N.B.: IO calls that depend on accurate timing will update g_nCyclesExecuted
-            const int nRemainingCycles = uActualCyclesExecuted - g_nCyclesExecuted;
-            assert(nRemainingCycles >= 0);
-            g_nCumulativeCycles += nRemainingCycles;
+            timing_checkpoint_cycles();
 #if CPU_TRACING
             cpu65_trace_checkpoint();
 #endif
 
-            if (!g_bFullSpeed)
-            {
 #ifdef AUDIO_ENABLED
-                SpkrUpdate(uActualCyclesExecuted); // play audio
+            speaker_flush(); // play audio
 #endif
-            }
 
-            if (g_dwCyclesThisFrame >= dwClksPerFrame)
-            {
+            if (g_dwCyclesThisFrame >= dwClksPerFrame) {
                 g_dwCyclesThisFrame -= dwClksPerFrame;
-                //VideoEndOfVideoFrame();
 #ifdef AUDIO_ENABLED
                 MB_EndOfVideoFrame();
 #endif
@@ -278,29 +278,21 @@ void *cpu_thread(void *dummyptr) {
             pthread_mutex_unlock(&interface_mutex);
             // -UNLOCK--------------------------------------------------------------------------------------- SAMPLE tj
 
-            if (auto_adjust_speed) {
-                deltat = timespec_diff(disk6.motor_time, tj, &negative);
+            if (timing_should_auto_adjust_speed()) {
+                disk_motor_time = timespec_diff(disk6.motor_time, tj, &negative);
                 assert(!negative);
-                if (!g_bFullSpeed &&
+                if (!is_fullspeed &&
 #ifdef AUDIO_ENABLED
-                        !Spkr_IsActive() &&
+                        !speaker_is_active() &&
 #endif
-                        !video_dirty() && (!disk6.motor_off && (deltat.tv_sec || deltat.tv_nsec > DISK_MOTOR_QUIET_NSECS)) )
+                        !video_dirty() && (!disk6.motor_off && (disk_motor_time.tv_sec || disk_motor_time.tv_nsec > DISK_MOTOR_QUIET_NSECS)) )
                 {
                     TIMING_LOG("auto switching to full speed");
-                    _switch_to_fullspeed();
-                } else if (g_bFullSpeed && (
-#ifdef AUDIO_ENABLED
-                            Spkr_IsActive() ||
-#endif
-                            video_dirty() || (disk6.motor_off && (deltat.tv_sec || deltat.tv_nsec > DISK_MOTOR_QUIET_NSECS))) )
-                {
-                    TIMING_LOG("auto switching to regular speed");
-                    _switch_to_regular_speed(alt_speed_enabled ? cpu_altscale_factor : cpu_scale_factor);
+                    _timing_initialize(CPU_SCALE_FASTEST);
                 }
             }
 
-            if (!g_bFullSpeed) {
+            if (!is_fullspeed) {
                 deltat = timespec_diff(ti, tj, &negative);
                 assert(!negative);
                 long sleepfor = 0;
@@ -328,25 +320,40 @@ void *cpu_thread(void *dummyptr) {
 
 #if DEBUG_TIMING
                 // collect timing statistics
-                if (speaker_neg_feedback > g_nCpuCyclesFeedback)
+                if (speaker_neg_feedback > cycles_speaker_feedback)
                 {
-                    speaker_neg_feedback = g_nCpuCyclesFeedback;
+                    speaker_neg_feedback = cycles_speaker_feedback;
                 }
-                if (speaker_pos_feedback < g_nCpuCyclesFeedback)
+                if (speaker_pos_feedback < cycles_speaker_feedback)
                 {
-                    speaker_pos_feedback = g_nCpuCyclesFeedback;
+                    speaker_pos_feedback = cycles_speaker_feedback;
                 }
 
                 dbg_ticks += EXECUTION_PERIOD_NSECS;
-                if ((dbg_ticks % NANOSECONDS) == 0)
+                if ((dbg_ticks % NANOSECONDS_PER_SECOND) == 0)
                 {
-                    LOG("tick:(%ld.%ld) real:(%ld.%ld) cycles exe: %d ... speaker feedback: %d/%d", t0.tv_sec, t0.tv_nsec, ti.tv_sec, ti.tv_nsec, dbg_cycles_executed, speaker_neg_feedback, speaker_pos_feedback);
+                    TIMING_LOG("tick:(%ld.%ld) real:(%ld.%ld) cycles exe: %d ... speaker feedback: %d/%d", t0.tv_sec, t0.tv_nsec, ti.tv_sec, ti.tv_nsec, dbg_cycles_executed, speaker_neg_feedback, speaker_pos_feedback);
                     dbg_cycles_executed = 0;
                     dbg_ticks = 0;
                     speaker_neg_feedback = 0;
                     speaker_pos_feedback = 0;
                 }
 #endif
+            }
+
+            if (timing_should_auto_adjust_speed()) {
+                if (is_fullspeed && (
+#ifdef AUDIO_ENABLED
+                            speaker_is_active() ||
+#endif
+                            video_dirty() || (disk6.motor_off && (disk_motor_time.tv_sec || disk_motor_time.tv_nsec > DISK_MOTOR_QUIET_NSECS))) )
+                {
+                    double speed = alt_speed_enabled ? cpu_altscale_factor : cpu_scale_factor;
+                    if (speed < CPU_SCALE_FASTEST) {
+                        TIMING_LOG("auto switching to configured speed");
+                        _timing_initialize(speed);
+                    }
+                }
             }
         } while (!emul_reinitialize);
 
@@ -356,23 +363,16 @@ void *cpu_thread(void *dummyptr) {
     return NULL;
 }
 
-// From AppleWin...
-
-unsigned int CpuGetCyclesThisVideoFrame(const unsigned int nExecutedCycles) {
-    CpuCalcCycles(nExecutedCycles);
-    return g_dwCyclesThisFrame + g_nCyclesExecuted;
+unsigned int CpuGetCyclesThisVideoFrame(void) {
+    timing_checkpoint_cycles();
+    return g_dwCyclesThisFrame + cycles_checkpoint_count;
 }
 
-//      Called when an IO-reg is accessed & accurate cycle info is needed
-void CpuCalcCycles(const unsigned long nExecutedCycles) {
-    // Calc # of cycles executed since this func was last called
-    const long nCycles = nExecutedCycles - g_nCyclesExecuted;
-    assert(nCycles >= 0);
-    g_nCumulativeCycles += nCycles;
-    // HACK FIXME TODO
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wshorten-64-to-32"
-    g_nCyclesExecuted = nExecutedCycles;
-#pragma clang diagnostic pop
+// Called when an IO-reg is accessed & accurate global cycle count info is needed
+void timing_checkpoint_cycles(void) {
+    const int16_t d = cpu65_cycle_count - cycles_checkpoint_count;
+    assert(d >= 0);
+    cycles_count_total += d;
+    cycles_checkpoint_count = cpu65_cycle_count;
 }
 

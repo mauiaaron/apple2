@@ -12,48 +12,21 @@
 #ifndef _SPEAKER_H_
 #define _SPEAKER_H_
 
-#ifdef APPLE2IX
-#include "audio/win-shim.h"
-#endif
-
-extern DWORD      soundtype;
-extern double     g_fClksPerSpkrSample;
-
-void    SpkrDestroy ();
-void    SpkrInitialize ();
-void    SpkrReinitialize ();
-void    SpkrReset();
-BOOL    SpkrSetEmulationType (HWND,DWORD);
-void    SpkrUpdate (DWORD);
-void    SpkrUpdate_Timer();
-void    Spkr_SetErrorInc(const int nErrorInc);
-void    Spkr_SetErrorMax(const int nErrorMax);
-DWORD   SpkrGetVolume();
-#ifdef APPLE2IX
+#define SPKR_SAMPLE_RATE 22050
 #define SPKR_DATA_INIT 0x4000
-void    SpkrSetVolume(short amplitude);
-#else
-void    SpkrSetVolume(DWORD dwVolume, DWORD dwVolumeMax);
-#endif
-void    Spkr_Mute();
-void    Spkr_Demute();
-bool    Spkr_IsActive();
-bool    Spkr_DSInit();
-void    Spkr_DSUninit();
-#ifdef APPLE2IX
-#define __int64
-typedef struct {
-    unsigned __int64 g_nSpkrLastCycle;
-} SS_IO_Speaker;
-#endif
-DWORD   SpkrGetSnapshot(SS_IO_Speaker* pSS);
-DWORD   SpkrSetSnapshot(SS_IO_Speaker* pSS);
 
-#ifdef APPLE2IX
-void SpkrToggle();
-#else
-BYTE __stdcall SpkrToggle (WORD pc, WORD addr, BYTE bWrite, BYTE d, ULONG nCyclesLeft);
-#endif
+void speaker_init(void);
+void speaker_destroy(void);
+void speaker_reset(void);
+void speaker_flush(void);
+void speaker_set_volume(int16_t amplitude);
+bool speaker_is_active(void);
+
+/*
+ * returns the machine cycles per sample
+ *  - for emulator running at normal speed: CLK_6502 / SPKR_SAMPLE_RATE == ~46
+ */
+double speaker_cycles_per_sample(void);
 
 #endif /* whole file */
 

@@ -520,7 +520,7 @@ void c_initialize_apple_ii_memory()
 void c_initialize_sound_hooks()
 {
 #ifdef AUDIO_ENABLED
-    SpkrSetVolume(sound_volume * (SPKR_DATA_INIT/10));
+    speaker_set_volume(sound_volume * (SPKR_DATA_INIT/10));
 #endif
     for (int i = 0xC030; i < 0xC040; i++)
     {
@@ -581,8 +581,11 @@ void c_initialize_vm() {
     void c_initialize_firsttime()
    ------------------------------------------------------------------------- */
 
-void reinitialize(void)
-{
+void reinitialize(void) {
+    assert(pthread_self() == cpu_thread_id);
+
+    cycles_count_total = 0;
+
     c_initialize_vm();
 
     softswitches = SS_TEXT | SS_IOUDIS | SS_C3ROM | SS_LCWRT | SS_LCSEC;
@@ -600,8 +603,7 @@ void reinitialize(void)
 #endif 
 }
 
-void c_initialize_firsttime()
-{
+void c_initialize_firsttime(void) {
 #ifdef INTERFACE_CLASSIC
     /* read in system files and calculate system defaults */
     c_load_interface_font();
@@ -610,18 +612,9 @@ void c_initialize_firsttime()
     /* initialize the video system */
     video_init();
 
-    // TODO FIXME : sound system never released ...
-#ifdef AUDIO_ENABLED
-    DSInit();
-    SpkrInitialize();
-    MB_Initialize();
-#endif
-
 #ifdef DEBUGGER
     c_debugger_init();
 #endif
-
-    reinitialize();
 }
 
 #if !defined(TESTING) && !defined(__APPLE__)

@@ -21,41 +21,29 @@
 
 #define MAX_SAMPLES (8*1024)
 
-#if defined(APPLE2IX)
-#define SAFE_RELEASE(p)      FREE(p)
-#else
-#define SAFE_RELEASE(p)      { if(p) { (p)->Release(); (p)=NULL; } }
-#endif
-
-// Define max 1 of these:
-//#define RIFF_SPKR
-//#define RIFF_MB
-
-#ifdef APPLE2IX
 extern bool g_bDisableDirectSound;
-#endif
 
 typedef struct
 {
-	LPDIRECTSOUNDBUFFER lpDSBvoice;
+    LPDIRECTSOUNDBUFFER lpDSBvoice;
 #ifdef APPLE2IX
         // apparently lpDSNotify isn't used...
 #define LPDIRECTSOUNDNOTIFY void*
 #endif
-	LPDIRECTSOUNDNOTIFY lpDSNotify;
-	bool bActive;			// Playback is active
-	bool bMute;
-	LONG nVolume;			// Current volume (as used by DirectSound)
-	LONG nFadeVolume;		// Current fade volume (as used by DirectSound)
-	DWORD dwUserVolume;		// Volume from slider on Property Sheet (0=Max)
-	bool bIsSpeaker;
-	bool bRecentlyActive;	// (Speaker only) false after 0.2s of speaker inactivity
+    LPDIRECTSOUNDNOTIFY lpDSNotify;
+    bool bActive;            // Playback is active
+    bool bMute;
+    LONG nVolume;            // Current volume (as used by DirectSound)
+    LONG nFadeVolume;        // Current fade volume (as used by DirectSound)
+    DWORD dwUserVolume;        // Volume from slider on Property Sheet (0=Max)
+    bool bIsSpeaker;
+    bool bRecentlyActive;    // (Speaker only) false after 0.2s of speaker inactivity
 } VOICE, *PVOICE;
 
 
 bool DSGetLock(LPDIRECTSOUNDBUFFER pVoice, DWORD dwOffset, DWORD dwBytes,
-					  SHORT** ppDSLockedBuffer0, DWORD* pdwDSLockedBufferSize0,
-					  SHORT** ppDSLockedBuffer1, DWORD* pdwDSLockedBufferSize1);
+                      SHORT** ppDSLockedBuffer0, DWORD* pdwDSLockedBufferSize0,
+                      SHORT** ppDSLockedBuffer1, DWORD* pdwDSLockedBufferSize1);
 
 HRESULT DSGetSoundBuffer(VOICE* pVoice, DWORD dwFlags, DWORD dwBufferSize, DWORD nSampleRate, int nChannels);
 void DSReleaseSoundBuffer(VOICE* pVoice);
@@ -63,14 +51,8 @@ void DSReleaseSoundBuffer(VOICE* pVoice);
 bool DSZeroVoiceBuffer(PVOICE Voice, char* pszDevName, DWORD dwBufferSize);
 bool DSZeroVoiceWritableBuffer(PVOICE Voice, char* pszDevName, DWORD dwBufferSize);
 
-#if defined(APPLE2IX)
 typedef enum eFADE {FADE_NONE, FADE_IN, FADE_OUT} eFADE;
-#else
-enum eFADE {FADE_NONE, FADE_IN, FADE_OUT};
-#endif
 void SoundCore_SetFade(eFADE FadeType);
-bool SoundCore_GetTimerState();
-void SoundCore_TweakVolumes();
 
 int SoundCore_GetErrorInc();
 void SoundCore_SetErrorInc(const int nErrorInc);

@@ -124,9 +124,9 @@ bool video_dirty(void);
 /*
  * VBL routines
  */
-uint16_t video_scanner_get_address(bool *vblBarOut, const unsigned int executedCycles);
-uint8_t floating_bus(const unsigned int executedCycles);
-uint8_t floating_bus_hibit(const bool hibit, const unsigned int executedCycles);
+uint16_t video_scanner_get_address(bool *vblBarOut);
+uint8_t floating_bus(void);
+uint8_t floating_bus_hibit(const bool hibit);
 
 #endif /* !__ASSEMBLER__ */
 
