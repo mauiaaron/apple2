@@ -135,6 +135,13 @@ void test_common_init(bool do_cputhread) {
             fprintf(stderr, "Pass HEADLESS=1 to environment to run nonstop\n");
             c_debugger_set_timeout(0);
         }
+    } else {
+#ifdef AUDIO_ENABLED
+        DSInit();
+        speaker_init();
+        MB_Initialize();
+#endif
+        reinitialize();
     }
 }
 

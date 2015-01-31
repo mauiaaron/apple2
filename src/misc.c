@@ -582,7 +582,9 @@ void c_initialize_vm() {
    ------------------------------------------------------------------------- */
 
 void reinitialize(void) {
+#if !TESTING
     assert(pthread_self() == cpu_thread_id);
+#endif
 
     cycles_count_total = 0;
 
