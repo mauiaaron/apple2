@@ -13,6 +13,9 @@
 
 #define RESET_INPUT() test_common_setup()
 
+#define ABUSIVE_TESTS 0
+#define FINICKY_TESTS 0
+
 #define TESTING_DISK "testvm1.dsk.gz"
 #define BLANK_DSK "blank.dsk.gz"
 #define BLANK_NIB "blank.nib.gz"
@@ -998,13 +1001,15 @@ GREATEST_SUITE(test_suite_disk) {
 #if ABUSIVE_TESTS
     RUN_TESTp(test_boot_disk_cputrace);
 #endif
+
+#if FINICKY_TESTS
     RUN_TESTp(test_cputrace_hello_dsk);
     RUN_TESTp(test_cputrace_hello_nib);
     RUN_TESTp(test_cputrace_hello_po);
-
     RUN_TESTp(test_boot_disk_vmtrace);
     RUN_TESTp(test_boot_disk_vmtrace_nib);
     RUN_TESTp(test_boot_disk_vmtrace_po);
+#endif
 
     RUN_TESTp(test_boot_disk);
 
@@ -1015,6 +1020,8 @@ GREATEST_SUITE(test_suite_disk) {
     RUN_TESTp(test_disk_bytes_savehello_dsk);
     RUN_TESTp(test_disk_bytes_savehello_nib);
     RUN_TESTp(test_disk_bytes_savehello_po);
+
+    c_debugger_set_timeout(60);
 
     RUN_TESTp(test_outofspace_dsk);
     RUN_TESTp(test_outofspace_nib);
