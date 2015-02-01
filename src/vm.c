@@ -141,7 +141,10 @@ GLUE_C_WRITE(write_unmapped_softswitch)
     // ...
 }
 
-GLUE_FIXED_READ(read_keyboard,apple_ii_64k);
+GLUE_C_READ(read_keyboard)
+{
+    return apple_ii_64k[0][0xC000];
+}
 
 GLUE_C_READ(read_keyboard_strobe)
 {
