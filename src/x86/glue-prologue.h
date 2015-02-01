@@ -19,14 +19,6 @@
 #include "misc.h"
 #include "cpu-regs.h"
 
-#define GLUE_FIXED_READ(func,address) \
-E(func)                 movb    SN(address)(EffectiveAddr_X),%al; \
-                        ret;
-
-#define GLUE_FIXED_WRITE(func,address) \
-E(func)                 movb    %al,SN(address)(EffectiveAddr_X); \
-                        ret;
-
 #define GLUE_BANK_MAYBEREAD(func,pointer) \
 E(func)                 testLQ  $SS_CXROM, SN(softswitches); \
                         jnz     1f; \
