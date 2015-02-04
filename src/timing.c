@@ -54,9 +54,9 @@
 double cycles_persec_target = CLK_6502;
 unsigned long long cycles_count_total = 0;
 int cycles_speaker_feedback = 0;
-int16_t cpu65_cycles_to_execute = 0;            // cycles-to-execute by cpu65_run()
-int16_t cpu65_cycle_count = 0;                  // cycles currently excuted by cpu65_run()
-static int16_t cycles_checkpoint_count = 0;
+int32_t cpu65_cycles_to_execute = 0;            // cycles-to-execute by cpu65_run()
+int32_t cpu65_cycle_count = 0;                  // cycles currently excuted by cpu65_run()
+static int32_t cycles_checkpoint_count = 0;
 static unsigned int g_dwCyclesThisFrame = 0;
 
 // scaling and speed adjustments
@@ -370,7 +370,7 @@ unsigned int CpuGetCyclesThisVideoFrame(void) {
 
 // Called when an IO-reg is accessed & accurate global cycle count info is needed
 void timing_checkpoint_cycles(void) {
-    const int16_t d = cpu65_cycle_count - cycles_checkpoint_count;
+    const int32_t d = cpu65_cycle_count - cycles_checkpoint_count;
     assert(d >= 0);
     cycles_count_total += d;
     cycles_checkpoint_count = cpu65_cycle_count;

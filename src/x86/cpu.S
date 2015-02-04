@@ -2155,10 +2155,10 @@ continue:
                 addb    DebugCycleCount, %al
                 movb    %al, DebugCycleCount
                 TRACE_EPILOGUE
-                addw    %ax, SN(cpu65_cycle_count)
+                addl    %eax, SN(cpu65_cycle_count)
                 subl    %eax, SN(gc_cycles_timer_0)
                 subl    %eax, SN(gc_cycles_timer_1)
-                subw    %ax, SN(cpu65_cycles_to_execute)
+                subl    %eax, SN(cpu65_cycles_to_execute)
                 jle     exit_cpu65_run
 continue1:      xorLQ   _XAX, _XAX
                 orb     SN(cpu65__signal), %al

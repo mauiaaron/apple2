@@ -52,7 +52,9 @@ static void testcpu_setup(void *arg) {
 
     //reinitialize();
     cpu65_uninterrupt(0xff);
-    extern int16_t cpu65_cycles_to_execute;
+    extern int32_t cpu65_cycles_to_execute;
+    extern int32_t cpu65_cycle_count;
+    cpu65_cycle_count = 0;
     cpu65_cycles_to_execute = 1;
 
     cpu65_pc = TEST_LOC;
