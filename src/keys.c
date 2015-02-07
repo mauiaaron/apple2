@@ -19,11 +19,6 @@
 /* from misc.c */
 extern uid_t user, privileged;
 
-/* mutex used to synchronize between cpu and main threads */
-pthread_mutex_t interface_mutex = PTHREAD_MUTEX_INITIALIZER;
-pthread_cond_t ui_thread_cond = PTHREAD_COND_INITIALIZER;
-pthread_cond_t cpu_thread_cond = PTHREAD_COND_INITIALIZER;
-
 static int next_key = -1;
 static int last_scancode = -1;
 bool caps_lock = true; // default enabled because so much breaks otherwise

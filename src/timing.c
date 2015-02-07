@@ -69,8 +69,19 @@ static bool alt_speed_enabled = false;
 // misc
 volatile uint8_t emul_reinitialize = 0;
 pthread_t cpu_thread_id = 0;
+pthread_mutex_t interface_mutex = { 0 };
+pthread_cond_t ui_thread_cond = PTHREAD_COND_INITIALIZER;
+pthread_cond_t cpu_thread_cond = PTHREAD_COND_INITIALIZER;
 
 // -----------------------------------------------------------------------------
+
+__attribute__((constructor))
+static void _init_timing() {
+    pthread_mutexattr_t attr;
+    pthread_mutexattr_init(&attr);
+    pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
+    pthread_mutex_init(&interface_mutex, &attr);
+}
 
 struct timespec timespec_diff(struct timespec start, struct timespec end, bool *negative) {
     struct timespec t;
@@ -130,18 +141,36 @@ static void _timing_initialize(double scale) {
 #endif
 }
 
+static inline void _lock_gui_thread(void) {
+    if (pthread_self() != cpu_thread_id) {
+        pthread_mutex_lock(&interface_mutex);
+    }
+}
+
+static inline void _unlock_gui_thread(void) {
+    if (pthread_self() != cpu_thread_id) {
+        pthread_mutex_unlock(&interface_mutex);
+    }
+}
+
 void timing_initialize(void) {
+    _lock_gui_thread();
     _timing_initialize(alt_speed_enabled ? cpu_altscale_factor : cpu_scale_factor);
+    _unlock_gui_thread();
 }
 
 void timing_toggle_cpu_speed(void) {
+    _lock_gui_thread();
     alt_speed_enabled = !alt_speed_enabled;
     timing_initialize();
+    _unlock_gui_thread();
 }
 
 void timing_set_auto_adjust_speed(bool auto_adjust) {
+    _lock_gui_thread();
     auto_adjust_speed = auto_adjust;
     timing_initialize();
+    _unlock_gui_thread();
 }
 
 bool timing_should_auto_adjust_speed(void) {
@@ -370,6 +399,8 @@ unsigned int CpuGetCyclesThisVideoFrame(void) {
 
 // Called when an IO-reg is accessed & accurate global cycle count info is needed
 void timing_checkpoint_cycles(void) {
+    assert(pthread_self() == cpu_thread_id);
+
     const int32_t d = cpu65_cycle_count - cycles_checkpoint_count;
     assert(d >= 0);
     cycles_count_total += d;
