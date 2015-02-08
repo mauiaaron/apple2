@@ -15,7 +15,6 @@
  */
 
 #define __ASSEMBLY__
-#include "apple2.h"
 #include "misc.h"
 #include "cpu-regs.h"
 

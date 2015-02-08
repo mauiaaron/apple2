@@ -9,7 +9,7 @@ AM_LFLAGS = -i
 ###############################################################################
 # No install
 
-noinst_HEADERS = src/apple2.h src/common.h src/cpu.h src/disk.h src/glue.h \
+noinst_HEADERS = src/common.h src/cpu.h src/disk.h src/glue.h \
 	src/interface.h src/joystick.h src/keys.h src/misc.h src/prefs.h \
 	src/timing.h src/uthash.h src/video/video.h src/zlib-helpers.h \
 	\
