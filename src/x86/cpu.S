@@ -17,27 +17,27 @@
 #include "cpu-regs.h"
 #include "misc.h"
 
-#define DebugCurrEA     SN(cpu65_ea)
-#define DebugCurrByte   SN(cpu65_d)
-#define DebugCurrRW     SN(cpu65_rw)
-#define DebugCurrOpcode SN(cpu65_opcode)
-#define DebugCycleCount SN(cpu65_opcycles)
+#define DebugCurrEA     SYM(cpu65_ea)
+#define DebugCurrByte   SYM(cpu65_d)
+#define DebugCurrRW     SYM(cpu65_rw)
+#define DebugCurrOpcode SYM(cpu65_opcode)
+#define DebugCycleCount SYM(cpu65_opcycles)
 
 #define CommonSaveCPUState() \
                 movw    EffectiveAddr, DebugCurrEA; \
-                movb    A_Reg, SN(cpu65_a); \
+                movb    A_Reg, SYM(cpu65_a); \
                 xorw    %ax, %ax; \
                 movb    F_Reg, %al; \
-                SNX_PROLOGUE(cpu65_flags_encode); \
-                movb    SNX(cpu65_flags_encode,_XAX,1), %al; \
-                movb    %al, SN(cpu65_f); \
-                movb    X_Reg, SN(cpu65_x); \
-                movb    Y_Reg, SN(cpu65_y); \
-                movb    SP_Reg_L, SN(cpu65_sp)
+                SYMX_PROLOGUE(cpu65_flags_encode); \
+                movb    SYMX(cpu65_flags_encode,_XAX,1), %al; \
+                movb    %al, SYM(cpu65_f); \
+                movb    X_Reg, SYM(cpu65_x); \
+                movb    Y_Reg, SYM(cpu65_y); \
+                movb    SP_Reg_L, SYM(cpu65_sp)
 
 #if CPU_TRACING
 #   define TRACE_PROLOGUE \
-                movw    PC_Reg, SN(cpu65_pc); \
+                movw    PC_Reg, SYM(cpu65_pc); \
                 callLQ  CALL(cpu65_trace_prologue);
 #   define TRACE_ARG \
                 callLQ  CALL(cpu65_trace_arg);
@@ -65,21 +65,21 @@
 #define GetFromPC_B \
                 movLQ   PC_Reg_X, EffectiveAddr_X; \
                 incw    PC_Reg; \
-                SNX_PROLOGUE(cpu65_vmem_r); \
-                callLQ  *SNX(cpu65_vmem_r,EffectiveAddr_X,SZ_PTR); \
+                SYMX_PROLOGUE(cpu65_vmem_r); \
+                callLQ  *SYMX(cpu65_vmem_r,EffectiveAddr_X,SZ_PTR); \
                 TRACE_ARG;
 
 #define GetFromPC_W \
                 movLQ   PC_Reg_X, EffectiveAddr_X; \
                 incw    EffectiveAddr; \
                 addw    $2, PC_Reg; \
-                SNX_PROLOGUE(cpu65_vmem_r); \
-                callLQ  *SNX(cpu65_vmem_r,EffectiveAddr_X,SZ_PTR); \
+                SYMX_PROLOGUE(cpu65_vmem_r); \
+                callLQ  *SYMX(cpu65_vmem_r,EffectiveAddr_X,SZ_PTR); \
                 decw    EffectiveAddr; \
                 TRACE_ARG2; \
                 movb    %al, %ah; \
-                SNX_PROLOGUE(cpu65_vmem_r); \
-                callLQ  *SNX(cpu65_vmem_r,EffectiveAddr_X,SZ_PTR); \
+                SYMX_PROLOGUE(cpu65_vmem_r); \
+                callLQ  *SYMX(cpu65_vmem_r,EffectiveAddr_X,SZ_PTR); \
                 TRACE_ARG1;
 
 #define JumpNextInstruction \
@@ -88,43 +88,43 @@
                 movb    %al, DebugCurrOpcode; \
                 movb    $0, DebugCycleCount; \
                 movb    $0, DebugCurrRW; \
-                SNX_PROLOGUE(cpu65__opcodes); \
-                jmp     *SNX(cpu65__opcodes,_XAX,SZ_PTR);
+                SYMX_PROLOGUE(cpu65__opcodes); \
+                jmp     *SYMX(cpu65__opcodes,_XAX,SZ_PTR);
 
 #define GetFromEA_B \
                 orb     $1, DebugCurrRW; \
-                SNX_PROLOGUE(cpu65_vmem_r); \
-                callLQ  *SNX(cpu65_vmem_r,EffectiveAddr_X,SZ_PTR);
+                SYMX_PROLOGUE(cpu65_vmem_r); \
+                callLQ  *SYMX(cpu65_vmem_r,EffectiveAddr_X,SZ_PTR);
 
 #define GetFromEA_W \
                 incw    EffectiveAddr; \
-                SNX_PROLOGUE(cpu65_vmem_r); \
-                callLQ  *SNX(cpu65_vmem_r,EffectiveAddr_X,SZ_PTR); \
+                SYMX_PROLOGUE(cpu65_vmem_r); \
+                callLQ  *SYMX(cpu65_vmem_r,EffectiveAddr_X,SZ_PTR); \
                 decw    EffectiveAddr; \
                 movb    %al, %ah; \
-                SNX_PROLOGUE(cpu65_vmem_r); \
-                callLQ  *SNX(cpu65_vmem_r,EffectiveAddr_X,SZ_PTR);
+                SYMX_PROLOGUE(cpu65_vmem_r); \
+                callLQ  *SYMX(cpu65_vmem_r,EffectiveAddr_X,SZ_PTR);
 
 #define PutToEA_B \
                 orb     $2, DebugCurrRW; \
                 movb    %al, DebugCurrByte; \
-                SNX_PROLOGUE(cpu65_vmem_w); \
-                callLQ  *SNX(cpu65_vmem_w,EffectiveAddr_X,SZ_PTR);
+                SYMX_PROLOGUE(cpu65_vmem_w); \
+                callLQ  *SYMX(cpu65_vmem_w,EffectiveAddr_X,SZ_PTR);
 
 #define GetFromMem_B(x) \
                 movLQ   x, EffectiveAddr_X; \
-                SNX_PROLOGUE(cpu65_vmem_r); \
-                callLQ  *SNX(cpu65_vmem_r,EffectiveAddr_X,SZ_PTR);
+                SYMX_PROLOGUE(cpu65_vmem_r); \
+                callLQ  *SYMX(cpu65_vmem_r,EffectiveAddr_X,SZ_PTR);
 
 #define GetFromMem_W(x) \
                 movLQ   x, EffectiveAddr_X; \
                 incw    EffectiveAddr; \
-                SNX_PROLOGUE(cpu65_vmem_r); \
-                callLQ  *SNX(cpu65_vmem_r,EffectiveAddr_X,SZ_PTR); \
+                SYMX_PROLOGUE(cpu65_vmem_r); \
+                callLQ  *SYMX(cpu65_vmem_r,EffectiveAddr_X,SZ_PTR); \
                 decw    EffectiveAddr; \
                 movb    %al, %ah; \
-                SNX_PROLOGUE(cpu65_vmem_r); \
-                callLQ  *SNX(cpu65_vmem_r,EffectiveAddr_X,SZ_PTR);
+                SYMX_PROLOGUE(cpu65_vmem_r); \
+                callLQ  *SYMX(cpu65_vmem_r,EffectiveAddr_X,SZ_PTR);
 
 #define Continue \
                 jmp     continue;
@@ -182,13 +182,13 @@
                 orb     %al, F_Reg;
 
 #define Push(x) \
-                SNX_PROLOGUE(apple_ii_64k); \
-                movb    x, SNX(apple_ii_64k,SP_Reg_X,1); \
+                SYMX_PROLOGUE(apple_ii_64k); \
+                movb    x, SYMX(apple_ii_64k,SP_Reg_X,1); \
                 decb    SP_Reg_L;
 
 #define Pop(x)  incb    SP_Reg_L; \
-                SNX_PROLOGUE(apple_ii_64k); \
-                movb    SNX(apple_ii_64k,SP_Reg_X,1), x;
+                SYMX_PROLOGUE(apple_ii_64k); \
+                movb    SYMX(apple_ii_64k,SP_Reg_X,1), x;
 
 /* Immediate Addressing - the operand is contained in the second byte of the
    instruction. */
@@ -196,8 +196,8 @@
                 incw    PC_Reg;
 #if CPU_TRACING
 #define GetImm  _GetImm \
-                SNX_PROLOGUE(cpu65_vmem_r); \
-                callLQ  *SNX(cpu65_vmem_r,EffectiveAddr_X,SZ_PTR); \
+                SYMX_PROLOGUE(cpu65_vmem_r); \
+                callLQ  *SYMX(cpu65_vmem_r,EffectiveAddr_X,SZ_PTR); \
                 TRACE_ARG;
 #else
 #define GetImm _GetImm
@@ -499,7 +499,7 @@
    ---------------------------------- */
 
 // Decimal mode
-E(op_ADC_dec)
+ENTRY(op_ADC_dec)
                 incb    DebugCycleCount         // +1 cycle
                 GetFromEA_B
                 DebugBCDCheck
@@ -551,21 +551,21 @@ _daa_finish:    popq    _XBX
 #endif
                 Continue
 
-E(op_ADC_imm) // 0x69
+ENTRY(op_ADC_imm) // 0x69
                 GetImm
                 testb   $D_Flag, F_Reg          // Decimal mode?
                 jnz     CALL(op_ADC_dec)        // Yes, jump to decimal version
                 DoADC_b
                 Continue
 
-E(op_ADC_zpage) // 0x65
+ENTRY(op_ADC_zpage) // 0x65
                 GetZPage
                 testb   $D_Flag, F_Reg          // Decimal mode?
                 jnz     CALL(op_ADC_dec)        // Yes, jump to decimal version
                 DoADC_b
                 Continue
 
-E(op_ADC_zpage_x) // 0x75
+ENTRY(op_ADC_zpage_x) // 0x75
                 GetZPage_X
                 testb   $D_Flag, F_Reg          // Decimal mode?
                 jnz     CALL(op_ADC_dec)        // Yes, jump to decimal version
@@ -573,38 +573,38 @@ E(op_ADC_zpage_x) // 0x75
                 Continue
 
 // UNIMPLEMENTED : W65C02S datasheet
-E(op_ADC_zpage_y)
+ENTRY(op_ADC_zpage_y)
                 jmp CALL(op_NOP)
 
-E(op_ADC_abs) // 0x6d
+ENTRY(op_ADC_abs) // 0x6d
                 GetAbs
                 testb   $D_Flag, F_Reg          // Decimal mode?
                 jnz     CALL(op_ADC_dec)        // Yes, jump to decimal version
                 DoADC_b
                 Continue
 
-E(op_ADC_abs_x) // 0x7d
+ENTRY(op_ADC_abs_x) // 0x7d
                 GetAbs_X
                 testb   $D_Flag, F_Reg          // Decimal mode?
                 jnz     CALL(op_ADC_dec)        // Yes, jump to decimal version
                 DoADC_b
                 Continue
 
-E(op_ADC_abs_y) // 0x79
+ENTRY(op_ADC_abs_y) // 0x79
                 GetAbs_Y
                 testb   $D_Flag, F_Reg          // Decimal mode?
                 jnz     CALL(op_ADC_dec)        // Yes, jump to decimal version
                 DoADC_b
                 Continue
 
-E(op_ADC_ind_x) // 0x61
+ENTRY(op_ADC_ind_x) // 0x61
                 GetIndZPage_X
                 testb   $D_Flag, F_Reg          // Decimal mode?
                 jnz     CALL(op_ADC_dec)        // Yes, jump to decimal version
                 DoADC_b
                 Continue
 
-E(op_ADC_ind_y) // 0x71
+ENTRY(op_ADC_ind_y) // 0x71
                 GetIndZPage_Y
                 testb   $D_Flag, F_Reg          // Decimal mode?
                 jnz     CALL(op_ADC_dec)        // Yes, jump to decimal version
@@ -612,7 +612,7 @@ E(op_ADC_ind_y) // 0x71
                 Continue
 
 // 65c02 : 0x72
-E(op_ADC_ind_zpage)
+ENTRY(op_ADC_ind_zpage)
                 GetIndZPage
                 testb   $D_Flag, F_Reg          // Decimal mode?
                 jnz     CALL(op_ADC_dec)        // Yes, jump to decimal version
@@ -624,52 +624,52 @@ E(op_ADC_ind_zpage)
        logical AND memory with accumulator
    ---------------------------------- */
 
-E(op_AND_imm) // 0x29
+ENTRY(op_AND_imm) // 0x29
                 GetImm
                 DoAND
                 Continue
 
-E(op_AND_zpage) // 0x25
+ENTRY(op_AND_zpage) // 0x25
                 GetZPage
                 DoAND
                 Continue
 
-E(op_AND_zpage_x) // 0x35
+ENTRY(op_AND_zpage_x) // 0x35
                 GetZPage_X
                 DoAND
                 Continue
 
 // UNIMPLEMENTED : W65C02S datasheet
-E(op_AND_zpage_y)
+ENTRY(op_AND_zpage_y)
                 jmp CALL(op_NOP)
 
-E(op_AND_abs) // 0x2d
+ENTRY(op_AND_abs) // 0x2d
                 GetAbs
                 DoAND
                 Continue
 
-E(op_AND_abs_x) // 0x3d
+ENTRY(op_AND_abs_x) // 0x3d
                 GetAbs_X
                 DoAND
                 Continue
 
-E(op_AND_abs_y) // 0x39
+ENTRY(op_AND_abs_y) // 0x39
                 GetAbs_Y
                 DoAND
                 Continue
 
-E(op_AND_ind_x) // 0x21
+ENTRY(op_AND_ind_x) // 0x21
                 GetIndZPage_X
                 DoAND
                 Continue
 
-E(op_AND_ind_y) // 0x31
+ENTRY(op_AND_ind_y) // 0x31
                 GetIndZPage_Y
                 DoAND
                 Continue
 
 // 65c02 : 0x32
-E(op_AND_ind_zpage)
+ENTRY(op_AND_ind_zpage)
                 GetIndZPage
                 DoAND
                 Continue
@@ -679,27 +679,27 @@ E(op_AND_ind_zpage)
        Arithmetic Shift one bit Left, memory or accumulator
    ---------------------------------- */
 
-E(op_ASL_acc) // 0x0a
+ENTRY(op_ASL_acc) // 0x0a
                 addb    A_Reg, A_Reg
                 FlagNZC
                 Continue
 
-E(op_ASL_zpage) // 0x06
+ENTRY(op_ASL_zpage) // 0x06
                 GetZPage
                 DoASL
                 Continue
 
-E(op_ASL_zpage_x) // 0x16
+ENTRY(op_ASL_zpage_x) // 0x16
                 GetZPage_X
                 DoASL
                 Continue
 
-E(op_ASL_abs) // 0x0e
+ENTRY(op_ASL_abs) // 0x0e
                 GetAbs
                 DoASL
                 Continue
 
-E(op_ASL_abs_x) // 0x1e
+ENTRY(op_ASL_abs_x) // 0x1e
                 GetAbs_X
                 DoASL
                 Continue
@@ -711,28 +711,28 @@ E(op_ASL_abs_x) // 0x1e
        + 2 cycles if branch across page boundary
    ---------------------------------- */
 
-E(op_BBR0_65c02)
+ENTRY(op_BBR0_65c02)
                 Continue
 
-E(op_BBR1_65c02)
+ENTRY(op_BBR1_65c02)
                 Continue
 
-E(op_BBR2_65c02)
+ENTRY(op_BBR2_65c02)
                 Continue
 
-E(op_BBR3_65c02)
+ENTRY(op_BBR3_65c02)
                 Continue
 
-E(op_BBR4_65c02)
+ENTRY(op_BBR4_65c02)
                 Continue
 
-E(op_BBR5_65c02)
+ENTRY(op_BBR5_65c02)
                 Continue
 
-E(op_BBR6_65c02)
+ENTRY(op_BBR6_65c02)
                 Continue
 
-E(op_BBR7_65c02)
+ENTRY(op_BBR7_65c02)
                 Continue
 
 /* ----------------------------------
@@ -742,28 +742,28 @@ E(op_BBR7_65c02)
        + 2 cycles if branch across page boundary
    ---------------------------------- */
 
-E(op_BBS0_65c02)
+ENTRY(op_BBS0_65c02)
                 Continue
 
-E(op_BBS1_65c02)
+ENTRY(op_BBS1_65c02)
                 Continue
 
-E(op_BBS2_65c02)
+ENTRY(op_BBS2_65c02)
                 Continue
 
-E(op_BBS3_65c02)
+ENTRY(op_BBS3_65c02)
                 Continue
 
-E(op_BBS4_65c02)
+ENTRY(op_BBS4_65c02)
                 Continue
 
-E(op_BBS5_65c02)
+ENTRY(op_BBS5_65c02)
                 Continue
 
-E(op_BBS6_65c02)
+ENTRY(op_BBS6_65c02)
                 Continue
 
-E(op_BBS7_65c02)
+ENTRY(op_BBS7_65c02)
                 Continue
 
 /* ----------------------------------
@@ -771,7 +771,7 @@ E(op_BBS7_65c02)
        Branch on Carry Clear
    ---------------------------------- */
 
-E(op_BCC) // 0x90
+ENTRY(op_BCC) // 0x90
                 GetFromPC_B
                 testb   $C_Flag, F_Reg
                 jnz     op_BCC_not              // branch not taken
@@ -784,7 +784,7 @@ op_BCC_not:
        Branch on Carry Set
    ---------------------------------- */
 
-E(op_BCS) // 0xB0
+ENTRY(op_BCS) // 0xB0
                 GetFromPC_B
                 testb   $C_Flag, F_Reg
                 jz      op_BCS_not              // branch not taken
@@ -797,7 +797,7 @@ op_BCS_not:
        Branch if EQual
    ---------------------------------- */
 
-E(op_BEQ) // 0xF0
+ENTRY(op_BEQ) // 0xF0
                 GetFromPC_B
                 testb   $Z_Flag, F_Reg
                 jz      op_BEQ_not              // branch not taken
@@ -810,24 +810,24 @@ op_BEQ_not:
        BIt Test
    ---------------------------------- */
 
-E(op_BIT_zpage) // 0x24
+ENTRY(op_BIT_zpage) // 0x24
                 GetZPage
                 DoBIT
                 Continue
 
-E(op_BIT_abs) // 0x2c
+ENTRY(op_BIT_abs) // 0x2c
                 GetAbs
                 DoBIT
                 Continue
 
 // 65c02 : 0x34
-E(op_BIT_zpage_x)
+ENTRY(op_BIT_zpage_x)
                 GetZPage_X
                 DoBIT
                 Continue
 
 // 65c02 : 0x3C
-E(op_BIT_abs_x)
+ENTRY(op_BIT_abs_x)
                 GetAbs_X
                 DoBIT
                 Continue
@@ -836,7 +836,7 @@ E(op_BIT_abs_x)
                  * N and V flags, unlike in other addressing modes.
                  */
 // 65c02 : 0x89
-E(op_BIT_imm)
+ENTRY(op_BIT_imm)
                 GetImm
                 GetFromEA_B
                 testb   %al, A_Reg
@@ -848,7 +848,7 @@ E(op_BIT_imm)
        Branch on result MInus
    ---------------------------------- */
 
-E(op_BMI) // 0x30
+ENTRY(op_BMI) // 0x30
                 GetFromPC_B
                 testb   F_Reg, F_Reg    /* optimized check of N flag,
                                          * which happens to be sign bit */
@@ -862,7 +862,7 @@ op_BMI_not:
        Branch on result Not Equal
    ---------------------------------- */
 
-E(op_BNE) // 0xD0
+ENTRY(op_BNE) // 0xD0
                 GetFromPC_B
                 testb   $Z_Flag, F_Reg
                 jnz     op_BNE_not
@@ -875,7 +875,7 @@ op_BNE_not:
        Branch on result PLus
    ---------------------------------- */
 
-E(op_BPL) // 0x10
+ENTRY(op_BPL) // 0x10
                 GetFromPC_B
                 testb   F_Reg, F_Reg    /* optimized check of N flag,
                                          * which happens to be sign bit */
@@ -890,7 +890,7 @@ op_BPL_not:
    ---------------------------------- */
 
 // 65c02 : 0x80
-E(op_BRA)
+ENTRY(op_BRA)
                 GetFromPC_B
                 BranchXCycles
                 Continue
@@ -899,8 +899,8 @@ E(op_BRA)
        BRK instruction
    ---------------------------------- */
 
-E(op_UNK) /* make undefined opcodes fault */
-E(op_BRK)
+ENTRY(op_UNK) /* make undefined opcodes fault */
+ENTRY(op_BRK)
                 incw    PC_Reg
                 movw    PC_Reg, %ax
 #ifdef APPLE_ASSEMBLER_IS_BROKEN
@@ -914,8 +914,8 @@ E(op_BRK)
                 orb     $(B_Flag|X_Flag), F_Reg
                 xorw    %ax, %ax
                 movb    F_Reg, %al
-                SNX_PROLOGUE(cpu65_flags_encode)
-                movb    SNX(cpu65_flags_encode,_XAX,1), %al
+                SYMX_PROLOGUE(cpu65_flags_encode)
+                movb    SYMX(cpu65_flags_encode,_XAX,1), %al
                 Push(%al)
                 orb     $I_Flag, F_Reg
                 movw    $0xFFFE, EffectiveAddr              // ROM interrupt vector
@@ -928,7 +928,7 @@ E(op_BRK)
        Branch on oVerflow Clear
    ---------------------------------- */
 
-E(op_BVC) // 0x50
+ENTRY(op_BVC) // 0x50
                 GetFromPC_B
                 testb   $V_Flag, F_Reg
                 jnz     op_BVC_not
@@ -941,7 +941,7 @@ op_BVC_not:
        Branch on oVerflow Set
    ---------------------------------- */
 
-E(op_BVS) // 0x70
+ENTRY(op_BVS) // 0x70
                 GetFromPC_B
                 testb   $V_Flag, F_Reg
                 jz      op_BVS_not
@@ -953,7 +953,7 @@ op_BVS_not:
        CLC instruction
    ---------------------------------- */
 
-E(op_CLC) // 0x18
+ENTRY(op_CLC) // 0x18
                 andb    $~C_Flag, F_Reg
                 Continue
 
@@ -961,7 +961,7 @@ E(op_CLC) // 0x18
        CLD instruction
    ---------------------------------- */
 
-E(op_CLD) // 0xd8
+ENTRY(op_CLD) // 0xd8
                 andb    $~D_Flag, F_Reg
                 Continue
 
@@ -969,7 +969,7 @@ E(op_CLD) // 0xd8
        CLI instruction
    ---------------------------------- */
 
-E(op_CLI) // 0x58
+ENTRY(op_CLI) // 0x58
                 andb    $~I_Flag, F_Reg
                 Continue
 
@@ -977,7 +977,7 @@ E(op_CLI) // 0x58
        CLV instruction
    ---------------------------------- */
 
-E(op_CLV) // 0xB8
+ENTRY(op_CLV) // 0xB8
                 andb    $~V_Flag, F_Reg
                 Continue
 
@@ -986,52 +986,52 @@ E(op_CLV) // 0xB8
        CoMPare memory and accumulator
    ---------------------------------- */
 
-E(op_CMP_imm) // 0xc9
+ENTRY(op_CMP_imm) // 0xc9
                 GetImm
                 DoCMP
                 Continue
 
-E(op_CMP_zpage) // 0xc5
+ENTRY(op_CMP_zpage) // 0xc5
                 GetZPage
                 DoCMP
                 Continue
 
-E(op_CMP_zpage_x) // 0xd5
+ENTRY(op_CMP_zpage_x) // 0xd5
                 GetZPage_X
                 DoCMP
                 Continue
 
 // UNIMPLEMENTED : W65C02S datasheet
-E(op_CMP_zpage_y)
+ENTRY(op_CMP_zpage_y)
                 jmp CALL(op_NOP)
 
-E(op_CMP_abs) // 0xcd
+ENTRY(op_CMP_abs) // 0xcd
                 GetAbs
                 DoCMP
                 Continue
 
-E(op_CMP_abs_x) // 0xdd
+ENTRY(op_CMP_abs_x) // 0xdd
                 GetAbs_X
                 DoCMP
                 Continue
 
-E(op_CMP_abs_y) // 0xd9
+ENTRY(op_CMP_abs_y) // 0xd9
                 GetAbs_Y
                 DoCMP
                 Continue
 
-E(op_CMP_ind_x) // 0xc1
+ENTRY(op_CMP_ind_x) // 0xc1
                 GetIndZPage_X
                 DoCMP
                 Continue
 
-E(op_CMP_ind_y) // 0xd1
+ENTRY(op_CMP_ind_y) // 0xd1
                 GetIndZPage_Y
                 DoCMP
                 Continue
 
 // 65c02 : 0xD2
-E(op_CMP_ind_zpage)
+ENTRY(op_CMP_ind_zpage)
                 GetIndZPage
                 DoCMP
                 Continue
@@ -1041,17 +1041,17 @@ E(op_CMP_ind_zpage)
        ComPare memory and X register
    ---------------------------------- */
 
-E(op_CPX_imm) // 0xe0
+ENTRY(op_CPX_imm) // 0xe0
                 GetImm
                 DoCPX
                 Continue
 
-E(op_CPX_zpage) // 0xe4
+ENTRY(op_CPX_zpage) // 0xe4
                 GetZPage
                 DoCPX
                 Continue
 
-E(op_CPX_abs) // 0xec
+ENTRY(op_CPX_abs) // 0xec
                 GetAbs
                 DoCPX
                 Continue
@@ -1061,17 +1061,17 @@ E(op_CPX_abs) // 0xec
        ComPare memory and Y register
    ---------------------------------- */
 
-E(op_CPY_imm) // 0xc0
+ENTRY(op_CPY_imm) // 0xc0
                 GetImm
                 DoCPY
                 Continue
 
-E(op_CPY_zpage) // 0xc4
+ENTRY(op_CPY_zpage) // 0xc4
                 GetZPage
                 DoCPY
                 Continue
 
-E(op_CPY_abs) // 0xcc
+ENTRY(op_CPY_abs) // 0xcc
                 GetAbs
                 DoCPY
                 Continue
@@ -1080,8 +1080,8 @@ E(op_CPY_abs) // 0xcc
        DEA: DEcrement Accumulator
    ---------------------------------- */
 
-E(op_DEC_acc)
-E(op_DEA) // 0x3A
+ENTRY(op_DEC_acc)
+ENTRY(op_DEA) // 0x3A
                 decb    A_Reg
                 FlagNZ
                 Continue
@@ -1091,22 +1091,22 @@ E(op_DEA) // 0x3A
        DECrement memory or accumulator by one
    ---------------------------------- */
 
-E(op_DEC_zpage) // 0xc6
+ENTRY(op_DEC_zpage) // 0xc6
                 GetZPage
                 DoDEC
                 Continue
 
-E(op_DEC_zpage_x) // 0xd6
+ENTRY(op_DEC_zpage_x) // 0xd6
                 GetZPage_X
                 DoDEC
                 Continue
 
-E(op_DEC_abs) // 0xce
+ENTRY(op_DEC_abs) // 0xce
                 GetAbs
                 DoDEC
                 Continue
 
-E(op_DEC_abs_x) // 0xde
+ENTRY(op_DEC_abs_x) // 0xde
                 GetAbs_X
                 DoDEC
                 Continue
@@ -1115,7 +1115,7 @@ E(op_DEC_abs_x) // 0xde
        DEX instruction
    ---------------------------------- */
 
-E(op_DEX) // 0xca
+ENTRY(op_DEX) // 0xca
                 decb    X_Reg
                 FlagNZ
                 Continue
@@ -1124,7 +1124,7 @@ E(op_DEX) // 0xca
        DEY instruction
    ---------------------------------- */
 
-E(op_DEY) // 0x88
+ENTRY(op_DEY) // 0x88
                 decb    Y_Reg
                 FlagNZ
                 Continue
@@ -1134,52 +1134,52 @@ E(op_DEY) // 0x88
        Exclusive OR memory with accumulator
    ---------------------------------- */
 
-E(op_EOR_imm) // 0x49
+ENTRY(op_EOR_imm) // 0x49
                 GetImm
                 DoEOR
                 Continue
 
-E(op_EOR_zpage) // 0x45
+ENTRY(op_EOR_zpage) // 0x45
                 GetZPage
                 DoEOR
                 Continue
 
-E(op_EOR_zpage_x) // 0x55
+ENTRY(op_EOR_zpage_x) // 0x55
                 GetZPage_X
                 DoEOR
                 Continue
 
 // UNIMPLEMENTED : W65C02S datasheet
-E(op_EOR_zpage_y)
+ENTRY(op_EOR_zpage_y)
                 jmp CALL(op_NOP)
 
-E(op_EOR_abs) // 0x4d
+ENTRY(op_EOR_abs) // 0x4d
                 GetAbs
                 DoEOR
                 Continue
 
-E(op_EOR_abs_x) // 0x5d
+ENTRY(op_EOR_abs_x) // 0x5d
                 GetAbs_X
                 DoEOR
                 Continue
 
-E(op_EOR_abs_y) // 0x59
+ENTRY(op_EOR_abs_y) // 0x59
                 GetAbs_Y
                 DoEOR
                 Continue
 
-E(op_EOR_ind_x) // 0x41
+ENTRY(op_EOR_ind_x) // 0x41
                 GetIndZPage_X
                 DoEOR
                 Continue
 
-E(op_EOR_ind_y) // 0x51
+ENTRY(op_EOR_ind_y) // 0x51
                 GetIndZPage_Y
                 DoEOR
                 Continue
 
 // 65c02 : 0x52
-E(op_EOR_ind_zpage)
+ENTRY(op_EOR_ind_zpage)
                 GetIndZPage
                 DoEOR
                 Continue
@@ -1188,8 +1188,8 @@ E(op_EOR_ind_zpage)
        INA : INcrement Accumulator
    ---------------------------------- */
 
-E(op_INC_acc)
-E(op_INA) // 0x1A
+ENTRY(op_INC_acc)
+ENTRY(op_INA) // 0x1A
                 incb    A_Reg
                 FlagNZ
                 Continue
@@ -1199,22 +1199,22 @@ E(op_INA) // 0x1A
        INCrement memory
    ---------------------------------- */
 
-E(op_INC_zpage) // 0xe6
+ENTRY(op_INC_zpage) // 0xe6
                 GetZPage
                 DoINC
                 Continue
 
-E(op_INC_zpage_x) // 0xf6
+ENTRY(op_INC_zpage_x) // 0xf6
                 GetZPage_X
                 DoINC
                 Continue
 
-E(op_INC_abs) // 0xee
+ENTRY(op_INC_abs) // 0xee
                 GetAbs
                 DoINC
                 Continue
 
-E(op_INC_abs_x) // 0xfe
+ENTRY(op_INC_abs_x) // 0xfe
                 GetAbs_X
                 DoINC
                 Continue
@@ -1223,7 +1223,7 @@ E(op_INC_abs_x) // 0xfe
        INX instruction
    ---------------------------------- */
 
-E(op_INX) // 0xe8
+ENTRY(op_INX) // 0xe8
                 incb    X_Reg
                 FlagNZ
                 Continue
@@ -1232,7 +1232,7 @@ E(op_INX) // 0xe8
        INY instruction
    ---------------------------------- */
 
-E(op_INY) // 0xc8
+ENTRY(op_INY) // 0xc8
                 incb    Y_Reg
                 FlagNZ
                 Continue
@@ -1242,12 +1242,12 @@ E(op_INY) // 0xc8
        JuMP to new location
    ---------------------------------- */
 
-E(op_JMP_abs)
+ENTRY(op_JMP_abs)
                 GetAbs
                 movw    EffectiveAddr, PC_Reg;
                 Continue
 
-E(op_JMP_ind) // 0x6c
+ENTRY(op_JMP_ind) // 0x6c
                 GetFromPC_W
                 cmpb    $0xFF, %al
                 je      jmp_special
@@ -1265,7 +1265,7 @@ jmp_special: // see JMP indirect note in _Understanding the Apple IIe_ 4-25
                 Continue
 
 // 65c02 : 0x7C
-E(op_JMP_abs_ind_x)
+ENTRY(op_JMP_abs_ind_x)
                 GetFromPC_W
                 movw    %ax, EffectiveAddr
                 movzbLQ X_Reg, _XAX
@@ -1278,7 +1278,7 @@ E(op_JMP_abs_ind_x)
        JSR instruction
    ---------------------------------- */
 
-E(op_JSR) // 0x20
+ENTRY(op_JSR) // 0x20
                 GetAbs
                 movw    PC_Reg, %ax
                 decw    %ax
@@ -1298,52 +1298,52 @@ E(op_JSR) // 0x20
        LoaD Accumulator with memory
    ---------------------------------- */
 
-E(op_LDA_imm) // 0xa9
+ENTRY(op_LDA_imm) // 0xa9
                 GetImm
                 DoLDA
                 Continue
 
-E(op_LDA_zpage) // 0xa5
+ENTRY(op_LDA_zpage) // 0xa5
                 GetZPage
                 DoLDA
                 Continue
 
-E(op_LDA_zpage_x) // 0xb5
+ENTRY(op_LDA_zpage_x) // 0xb5
                 GetZPage_X
                 DoLDA
                 Continue
 
 // UNIMPLEMENTED : W65C02S datasheet
-E(op_LDA_zpage_y)
+ENTRY(op_LDA_zpage_y)
                 jmp CALL(op_NOP)
 
-E(op_LDA_abs) // 0xad
+ENTRY(op_LDA_abs) // 0xad
                 GetAbs
                 DoLDA
                 Continue
 
-E(op_LDA_abs_x) // 0xbd
+ENTRY(op_LDA_abs_x) // 0xbd
                 GetAbs_X
                 DoLDA
                 Continue
 
-E(op_LDA_abs_y) // 0xb9
+ENTRY(op_LDA_abs_y) // 0xb9
                 GetAbs_Y
                 DoLDA
                 Continue
 
-E(op_LDA_ind_x) // 0xa1
+ENTRY(op_LDA_ind_x) // 0xa1
                 GetIndZPage_X
                 DoLDA
                 Continue
 
-E(op_LDA_ind_y) // 0xb1
+ENTRY(op_LDA_ind_y) // 0xb1
                 GetIndZPage_Y
                 DoLDA
                 Continue
 
 // 65c02 : 0xB2
-E(op_LDA_ind_zpage)
+ENTRY(op_LDA_ind_zpage)
                 GetIndZPage
                 DoLDA
                 Continue
@@ -1352,28 +1352,28 @@ E(op_LDA_ind_zpage)
        LDX instructions
    ---------------------------------- */
 
-E(op_LDX_imm) // 0xa2
+ENTRY(op_LDX_imm) // 0xa2
                 GetImm
                 DoLDX
                 Continue
 
-E(op_LDX_zpage) // 0xa6
+ENTRY(op_LDX_zpage) // 0xa6
                 GetZPage
                 DoLDX
                 Continue
 
 // HACK : is this used? need to study coverage ...
-E(op_LDX_zpage_y) // 0xb6
+ENTRY(op_LDX_zpage_y) // 0xb6
                 GetZPage_Y
                 DoLDX
                 Continue
 
-E(op_LDX_abs) // 0xae
+ENTRY(op_LDX_abs) // 0xae
                 GetAbs
                 DoLDX
                 Continue
 
-E(op_LDX_abs_y) // 0xbe
+ENTRY(op_LDX_abs_y) // 0xbe
                 GetAbs_Y
                 DoLDX
                 Continue
@@ -1382,27 +1382,27 @@ E(op_LDX_abs_y) // 0xbe
        LDY instructions
    ---------------------------------- */
 
-E(op_LDY_imm) // 0xa0
+ENTRY(op_LDY_imm) // 0xa0
                 GetImm
                 DoLDY
                 Continue
 
-E(op_LDY_zpage) // 0xa4
+ENTRY(op_LDY_zpage) // 0xa4
                 GetZPage
                 DoLDY
                 Continue
 
-E(op_LDY_zpage_x) // 0xb4
+ENTRY(op_LDY_zpage_x) // 0xb4
                 GetZPage_X
                 DoLDY
                 Continue
 
-E(op_LDY_abs) // 0xac
+ENTRY(op_LDY_abs) // 0xac
                 GetAbs
                 DoLDY
                 Continue
 
-E(op_LDY_abs_x) // 0xbc
+ENTRY(op_LDY_abs_x) // 0xbc
                 GetAbs_X
                 DoLDY
                 Continue
@@ -1411,27 +1411,27 @@ E(op_LDY_abs_x) // 0xbc
        LSR instructions
    ---------------------------------- */
 
-E(op_LSR_acc) // 0x4a
+ENTRY(op_LSR_acc) // 0x4a
                 shrb    $1, A_Reg
                 FlagNZC
                 Continue
 
-E(op_LSR_zpage) // 0x46
+ENTRY(op_LSR_zpage) // 0x46
                 GetZPage
                 DoLSR
                 Continue
 
-E(op_LSR_zpage_x) // 0x56
+ENTRY(op_LSR_zpage_x) // 0x56
                 GetZPage_X
                 DoLSR
                 Continue
 
-E(op_LSR_abs) // 0x4e
+ENTRY(op_LSR_abs) // 0x4e
                 GetAbs
                 DoLSR
                 Continue
 
-E(op_LSR_abs_x) // 0x5e
+ENTRY(op_LSR_abs_x) // 0x5e
                 GetAbs_X
                 DoLSR
                 Continue
@@ -1440,59 +1440,59 @@ E(op_LSR_abs_x) // 0x5e
        NOP instruction
    ---------------------------------- */
 
-E(op_NOP) // 0xea
+ENTRY(op_NOP) // 0xea
                 Continue
 
 /* ----------------------------------
        ORA instructions
    ---------------------------------- */
 
-E(op_ORA_imm) // 0x09
+ENTRY(op_ORA_imm) // 0x09
                 GetImm
                 DoORA
                 Continue
 
-E(op_ORA_zpage) // 0x05
+ENTRY(op_ORA_zpage) // 0x05
                 GetZPage
                 DoORA
                 Continue
 
-E(op_ORA_zpage_x) // 0x15
+ENTRY(op_ORA_zpage_x) // 0x15
                 GetZPage_X
                 DoORA
                 Continue
 
 // UNIMPLEMENTED : W65C02S datasheet
-E(op_ORA_zpage_y)
+ENTRY(op_ORA_zpage_y)
                 jmp CALL(op_NOP)
 
-E(op_ORA_abs) // 0x0d
+ENTRY(op_ORA_abs) // 0x0d
                 GetAbs
                 DoORA
                 Continue
 
-E(op_ORA_abs_x) // 0x1d
+ENTRY(op_ORA_abs_x) // 0x1d
                 GetAbs_X
                 DoORA
                 Continue
 
-E(op_ORA_abs_y) // 0x19
+ENTRY(op_ORA_abs_y) // 0x19
                 GetAbs_Y
                 DoORA
                 Continue
 
-E(op_ORA_ind_x) // 0x01
+ENTRY(op_ORA_ind_x) // 0x01
                 GetIndZPage_X
                 DoORA
                 Continue
 
-E(op_ORA_ind_y) // 0x11
+ENTRY(op_ORA_ind_y) // 0x11
                 GetIndZPage_Y
                 DoORA
                 Continue
 
 // 65c02 : 0x12
-E(op_ORA_ind_zpage)
+ENTRY(op_ORA_ind_zpage)
                 GetIndZPage
                 DoORA
                 Continue
@@ -1501,7 +1501,7 @@ E(op_ORA_ind_zpage)
        PHA instruction
    ---------------------------------- */
 
-E(op_PHA) // 0x48
+ENTRY(op_PHA) // 0x48
                 Push(A_Reg)
                 Continue
 
@@ -1509,10 +1509,10 @@ E(op_PHA) // 0x48
        PHP instruction
    ---------------------------------- */
 
-E(op_PHP) // 0x08
+ENTRY(op_PHP) // 0x08
                 movb    F_Reg, %al
-                SNX_PROLOGUE(cpu65_flags_encode)
-                movb    SNX(cpu65_flags_encode,_XAX,1), %al
+                SYMX_PROLOGUE(cpu65_flags_encode)
+                movb    SYMX(cpu65_flags_encode,_XAX,1), %al
                 Push(%al)
                 Continue
 
@@ -1521,7 +1521,7 @@ E(op_PHP) // 0x08
        65c02 : 0xDA
    ---------------------------------- */
 
-E(op_PHX)
+ENTRY(op_PHX)
                 Push(X_Reg)
                 Continue
 
@@ -1530,7 +1530,7 @@ E(op_PHX)
        65c02 : 0x5A
    ---------------------------------- */
 
-E(op_PHY)
+ENTRY(op_PHY)
 #ifdef APPLE_ASSEMBLER_IS_BROKEN
                 movb Y_Reg, %al
                 Push(%al)
@@ -1543,7 +1543,7 @@ E(op_PHY)
        PLA instruction
    ---------------------------------- */
 
-E(op_PLA) // 0x68
+ENTRY(op_PLA) // 0x68
                 Pop(A_Reg)
                 orb     A_Reg, A_Reg
                 FlagNZ
@@ -1553,14 +1553,14 @@ E(op_PLA) // 0x68
        PLP instruction
    ---------------------------------- */
 
-E(op_PLP) // 0x28
+ENTRY(op_PLP) // 0x28
                 Pop(%al)
-                SNX_PROLOGUE(cpu65_flags_decode)
+                SYMX_PROLOGUE(cpu65_flags_decode)
 #ifdef APPLE_ASSEMBLER_IS_BROKEN
-                movb    SNX(cpu65_flags_decode,_XAX,1), %al
+                movb    SYMX(cpu65_flags_decode,_XAX,1), %al
                 movb    %al, F_Reg
 #else
-                movb    SNX(cpu65_flags_decode,_XAX,1), F_Reg
+                movb    SYMX(cpu65_flags_decode,_XAX,1), F_Reg
 #endif
                 orb     $(B_Flag|X_Flag), F_Reg
                 Continue
@@ -1570,7 +1570,7 @@ E(op_PLP) // 0x28
        65c02 : 0xFA
    ---------------------------------- */
 
-E(op_PLX)
+ENTRY(op_PLX)
                 Pop(X_Reg)
                 orb X_Reg, X_Reg
                 FlagNZ
@@ -1581,7 +1581,7 @@ E(op_PLX)
        65c02 : 0x7A
    ---------------------------------- */
 
-E(op_PLY)
+ENTRY(op_PLY)
 #ifdef APPLE_ASSEMBLER_IS_BROKEN
                 Pop(%al)
                 movb    %al, Y_Reg
@@ -1596,28 +1596,28 @@ E(op_PLY)
        ROL instructions
    ---------------------------------- */
 
-E(op_ROL_acc) // 0x2a
+ENTRY(op_ROL_acc) // 0x2a
                 bt      $C_Flag_Bit, AF_Reg_X
                 adcb    A_Reg, A_Reg
                 FlagNZC
                 Continue
 
-E(op_ROL_zpage) // 0x26
+ENTRY(op_ROL_zpage) // 0x26
                 GetZPage
                 DoROL
                 Continue
 
-E(op_ROL_zpage_x) // 0x36
+ENTRY(op_ROL_zpage_x) // 0x36
                 GetZPage_X
                 DoROL
                 Continue
 
-E(op_ROL_abs) // 0x2e
+ENTRY(op_ROL_abs) // 0x2e
                 GetAbs
                 DoROL
                 Continue
 
-E(op_ROL_abs_x) // 0x3e
+ENTRY(op_ROL_abs_x) // 0x3e
                 GetAbs_X
                 DoROL
                 Continue
@@ -1626,29 +1626,29 @@ E(op_ROL_abs_x) // 0x3e
        ROR instructions
    ---------------------------------- */
                 /* NB: assumes A_Reg = %cl, F_Reg = %ch */
-E(op_ROR_acc) // 0x6a
+ENTRY(op_ROR_acc) // 0x6a
                 rorw    $1, %cx         /* Roll flags into accum */
                 adcb    F_Reg, F_Reg    /* Roll carry into flags */
                 orb     A_Reg, A_Reg
                 FlagNZ                  /* implied C */
                 Continue
 
-E(op_ROR_zpage) // 0x66
+ENTRY(op_ROR_zpage) // 0x66
                 GetZPage
                 DoROR
                 Continue
 
-E(op_ROR_zpage_x) // 0x76
+ENTRY(op_ROR_zpage_x) // 0x76
                 GetZPage_X
                 DoROR
                 Continue
 
-E(op_ROR_abs) // 0x6e
+ENTRY(op_ROR_abs) // 0x6e
                 GetAbs
                 DoROR
                 Continue
 
-E(op_ROR_abs_x) // 0x7e
+ENTRY(op_ROR_abs_x) // 0x7e
                 GetAbs_X
                 DoROR
                 Continue
@@ -1657,14 +1657,14 @@ E(op_ROR_abs_x) // 0x7e
        RTI instruction
    ---------------------------------- */
 
-E(op_RTI) // 0x40
+ENTRY(op_RTI) // 0x40
                 Pop(%al)
-                SNX_PROLOGUE(cpu65_flags_decode)
+                SYMX_PROLOGUE(cpu65_flags_decode)
 #ifdef APPLE_ASSEMBLER_IS_BROKEN
-                movb    SNX(cpu65_flags_decode,_XAX,1), %al
+                movb    SYMX(cpu65_flags_decode,_XAX,1), %al
                 movb    %al, F_Reg
 #else
-                movb    SNX(cpu65_flags_decode,_XAX,1), F_Reg
+                movb    SYMX(cpu65_flags_decode,_XAX,1), F_Reg
 #endif
                 orb     $(B_Flag|X_Flag), F_Reg
                 Pop(%al)
@@ -1682,7 +1682,7 @@ E(op_RTI) // 0x40
        RTS instruction
    ---------------------------------- */
 
-E(op_RTS) // 0x60
+ENTRY(op_RTS) // 0x60
 
                 Pop(%al)
 #ifdef APPLE_ASSEMBLER_IS_BROKEN
@@ -1701,7 +1701,7 @@ E(op_RTS) // 0x60
        SuBtract memory from accumulator with Borrow
    ---------------------------------- */
 
-E(op_SBC_dec)
+ENTRY(op_SBC_dec)
                 incb    DebugCycleCount         // +1 cycle
                 GetFromEA_B
                 DebugBCDCheck
@@ -1758,21 +1758,21 @@ _das_finish:    popq    _XBX
 #endif
                 Continue
 
-E(op_SBC_imm) // 0xe9
+ENTRY(op_SBC_imm) // 0xe9
                 GetImm
                 testb   $D_Flag, F_Reg          // Decimal mode?
                 jnz     CALL(op_SBC_dec)        // Yes, jump to decimal version
                 DoSBC_b
                 Continue
 
-E(op_SBC_zpage) // 0xe5
+ENTRY(op_SBC_zpage) // 0xe5
                 GetZPage
                 testb   $D_Flag, F_Reg          // Decimal mode?
                 jnz     CALL(op_SBC_dec)        // Yes, jump to decimal version
                 DoSBC_b
                 Continue
 
-E(op_SBC_zpage_x) // 0xf5
+ENTRY(op_SBC_zpage_x) // 0xf5
                 GetZPage_X
                 testb   $D_Flag, F_Reg          // Decimal mode?
                 jnz     CALL(op_SBC_dec)        // Yes, jump to decimal version
@@ -1780,38 +1780,38 @@ E(op_SBC_zpage_x) // 0xf5
                 Continue
 
 // UNIMPLEMENTED : W65C02S datasheet
-E(op_SBC_zpage_y)
+ENTRY(op_SBC_zpage_y)
                 jmp CALL(op_NOP)
 
-E(op_SBC_abs) // 0xed
+ENTRY(op_SBC_abs) // 0xed
                 GetAbs
                 testb   $D_Flag, F_Reg          // Decimal mode?
                 jnz     CALL(op_SBC_dec)        // Yes, jump to decimal version
                 DoSBC_b
                 Continue
 
-E(op_SBC_abs_x) // 0xfd
+ENTRY(op_SBC_abs_x) // 0xfd
                 GetAbs_X
                 testb   $D_Flag, F_Reg          // Decimal mode?
                 jnz     CALL(op_SBC_dec)        // Yes, jump to decimal version
                 DoSBC_b
                 Continue
 
-E(op_SBC_abs_y) // 0xf9
+ENTRY(op_SBC_abs_y) // 0xf9
                 GetAbs_Y
                 testb   $D_Flag, F_Reg          // Decimal mode?
                 jnz     CALL(op_SBC_dec)        // Yes, jump to decimal version
                 DoSBC_b
                 Continue
 
-E(op_SBC_ind_x) // 0xe1
+ENTRY(op_SBC_ind_x) // 0xe1
                 GetIndZPage_X
                 testb   $D_Flag, F_Reg          // Decimal mode?
                 jnz     CALL(op_SBC_dec)        // Yes, jump to decimal version
                 DoSBC_b
                 Continue
 
-E(op_SBC_ind_y) // 0xf1
+ENTRY(op_SBC_ind_y) // 0xf1
                 GetIndZPage_Y
                 testb   $D_Flag, F_Reg          // Decimal mode?
                 jnz     CALL(op_SBC_dec)        // Yes, jump to decimal version
@@ -1819,7 +1819,7 @@ E(op_SBC_ind_y) // 0xf1
                 Continue
 
 // 65c02 : 0xF2
-E(op_SBC_ind_zpage)
+ENTRY(op_SBC_ind_zpage)
                 GetIndZPage
                 testb   $D_Flag, F_Reg          // Decimal mode?
                 jnz     CALL(op_SBC_dec)        // Yes, jump to decimal version
@@ -1830,7 +1830,7 @@ E(op_SBC_ind_zpage)
        SEC instruction
    ---------------------------------- */
 
-E(op_SEC) // 0x38
+ENTRY(op_SEC) // 0x38
                 orb     $C_Flag, F_Reg
                 Continue
 
@@ -1838,7 +1838,7 @@ E(op_SEC) // 0x38
        SED instruction
    ---------------------------------- */
 
-E(op_SED) // 0xf8
+ENTRY(op_SED) // 0xf8
                 orb     $D_Flag, F_Reg
                 Continue
 
@@ -1846,7 +1846,7 @@ E(op_SED) // 0xf8
        SEI instruction
    ---------------------------------- */
 
-E(op_SEI) // 0x78
+ENTRY(op_SEI) // 0x78
                 orb     $I_Flag, F_Reg
                 Continue
 
@@ -1855,75 +1855,75 @@ E(op_SEI) // 0x78
        UNIMPLEMENTED : These are documented in the W65C02S datasheet ...
    ---------------------------------- */
 
-E(op_SMB0_65c02)
+ENTRY(op_SMB0_65c02)
                 Continue
 
-E(op_SMB1_65c02)
+ENTRY(op_SMB1_65c02)
                 Continue
 
-E(op_SMB2_65c02)
+ENTRY(op_SMB2_65c02)
                 Continue
 
-E(op_SMB3_65c02)
+ENTRY(op_SMB3_65c02)
                 Continue
 
-E(op_SMB4_65c02)
+ENTRY(op_SMB4_65c02)
                 Continue
 
-E(op_SMB5_65c02)
+ENTRY(op_SMB5_65c02)
                 Continue
 
-E(op_SMB6_65c02)
+ENTRY(op_SMB6_65c02)
                 Continue
 
-E(op_SMB7_65c02)
+ENTRY(op_SMB7_65c02)
                 Continue
 
 /* ----------------------------------
        STA instructions
    ---------------------------------- */
 
-E(op_STA_zpage) // 0x85
+ENTRY(op_STA_zpage) // 0x85
                 GetZPage
                 DoSTA
                 Continue
 
-E(op_STA_zpage_x) // 0x95
+ENTRY(op_STA_zpage_x) // 0x95
                 GetZPage_X
                 DoSTA
                 Continue
 
 // UNIMPLEMENTED : W65C02S datasheet
-E(op_STA_zpage_y)
+ENTRY(op_STA_zpage_y)
                 jmp CALL(op_NOP)
 
-E(op_STA_abs) // 0x8d
+ENTRY(op_STA_abs) // 0x8d
                 GetAbs
                 DoSTA
                 Continue
 
-E(op_STA_abs_x) // 0x9d
+ENTRY(op_STA_abs_x) // 0x9d
                 GetAbs_X_STx
                 DoSTA
                 Continue
 
-E(op_STA_abs_y) // 0x99
+ENTRY(op_STA_abs_y) // 0x99
                 GetAbs_Y_STA
                 DoSTA
                 Continue
 
-E(op_STA_ind_x) // 0x81
+ENTRY(op_STA_ind_x) // 0x81
                 GetIndZPage_X
                 DoSTA
                 Continue
 
-E(op_STA_ind_y) // 0x91
+ENTRY(op_STA_ind_y) // 0x91
                 GetIndZPage_Y_STA
                 DoSTA
                 Continue
 
 // 65c02 : 0x92
-E(op_STA_ind_zpage)
+ENTRY(op_STA_ind_zpage)
                 GetIndZPage
                 DoSTA
                 Continue
@@ -1933,7 +1933,7 @@ E(op_STA_ind_zpage)
        UNIMPLEMENTED : This is documented in the W65C02S datasheet ...
    ---------------------------------- */
 
-E(op_STP_65c02)
+ENTRY(op_STP_65c02)
                 Continue
 
 /* ----------------------------------
@@ -1941,46 +1941,46 @@ E(op_STP_65c02)
        UNIMPLEMENTED : These are documented in the W65C02S datasheet ...
    ---------------------------------- */
 
-E(op_RMB0_65c02)
+ENTRY(op_RMB0_65c02)
                 Continue
 
-E(op_RMB1_65c02)
+ENTRY(op_RMB1_65c02)
                 Continue
 
-E(op_RMB2_65c02)
+ENTRY(op_RMB2_65c02)
                 Continue
 
-E(op_RMB3_65c02)
+ENTRY(op_RMB3_65c02)
                 Continue
 
-E(op_RMB4_65c02)
+ENTRY(op_RMB4_65c02)
                 Continue
 
-E(op_RMB5_65c02)
+ENTRY(op_RMB5_65c02)
                 Continue
 
-E(op_RMB6_65c02)
+ENTRY(op_RMB6_65c02)
                 Continue
 
-E(op_RMB7_65c02)
+ENTRY(op_RMB7_65c02)
                 Continue
 
 /* ----------------------------------
        STX instructions
    ---------------------------------- */
 
-E(op_STX_zpage) // 0x86
+ENTRY(op_STX_zpage) // 0x86
                 GetZPage
                 DoSTX
                 Continue
 
 // HACK : is this used? need to study coverage ...
-E(op_STX_zpage_y) // 0x96
+ENTRY(op_STX_zpage_y) // 0x96
                 GetZPage_Y
                 DoSTX
                 Continue
 
-E(op_STX_abs) // 0x8e
+ENTRY(op_STX_abs) // 0x8e
                 GetAbs
                 DoSTX
                 Continue
@@ -1989,17 +1989,17 @@ E(op_STX_abs) // 0x8e
        STY instructions
    ---------------------------------- */
 
-E(op_STY_zpage) // 0x84
+ENTRY(op_STY_zpage) // 0x84
                 GetZPage
                 DoSTY
                 Continue
 
-E(op_STY_zpage_x) // 0x94
+ENTRY(op_STY_zpage_x) // 0x94
                 GetZPage_X
                 DoSTY
                 Continue
 
-E(op_STY_abs) // 0x8c
+ENTRY(op_STY_abs) // 0x8c
                 GetAbs
                 DoSTY
                 Continue
@@ -2010,25 +2010,25 @@ E(op_STY_abs) // 0x8c
    ---------------------------------- */
 
 // 65c02 : 0x64
-E(op_STZ_zpage)
+ENTRY(op_STZ_zpage)
                 GetZPage
                 DoSTZ
                 Continue
 
 // 65c02 : 0x74
-E(op_STZ_zpage_x)
+ENTRY(op_STZ_zpage_x)
                 GetZPage_X
                 DoSTZ
                 Continue
 
 // 65c02 : 0x9C
-E(op_STZ_abs)
+ENTRY(op_STZ_abs)
                 GetAbs
                 DoSTZ
                 Continue
 
 // 65c02 : 0x9E
-E(op_STZ_abs_x)
+ENTRY(op_STZ_abs_x)
                 GetAbs_X_STx
                 DoSTZ
                 Continue
@@ -2037,7 +2037,7 @@ E(op_STZ_abs_x)
        TAX instruction
    ---------------------------------- */
 
-E(op_TAX) // 0xaa
+ENTRY(op_TAX) // 0xaa
                 movb    A_Reg, X_Reg
                 orb     X_Reg, X_Reg
                 FlagNZ
@@ -2047,7 +2047,7 @@ E(op_TAX) // 0xaa
        TAY instruction
    ---------------------------------- */
 
-E(op_TAY) // 0xa8
+ENTRY(op_TAY) // 0xa8
                 movb    A_Reg, Y_Reg
                 orb     Y_Reg, Y_Reg
                 FlagNZ
@@ -2059,13 +2059,13 @@ E(op_TAY) // 0xa8
    ---------------------------------- */
 
 // 65c02 : 0x1C
-E(op_TRB_abs)
+ENTRY(op_TRB_abs)
                 GetAbs
                 DoTRB
                 Continue
 
 // 65c02 : 0x14
-E(op_TRB_zpage)
+ENTRY(op_TRB_zpage)
                 GetZPage
                 DoTRB
                 Continue
@@ -2076,13 +2076,13 @@ E(op_TRB_zpage)
    ---------------------------------- */
 
 // 65c02 : 0x0C
-E(op_TSB_abs)
+ENTRY(op_TSB_abs)
                 GetAbs
                 DoTSB
                 Continue
 
 // 65c02 : 0x04
-E(op_TSB_zpage)
+ENTRY(op_TSB_zpage)
                 GetZPage
                 DoTSB
                 Continue
@@ -2091,7 +2091,7 @@ E(op_TSB_zpage)
        TSX instruction
    ---------------------------------- */
 
-E(op_TSX) // 0xba
+ENTRY(op_TSX) // 0xba
                 movb    SP_Reg_L, X_Reg
                 orb     X_Reg, X_Reg
                 FlagNZ
@@ -2101,7 +2101,7 @@ E(op_TSX) // 0xba
        TXA instruction
    ---------------------------------- */
 
-E(op_TXA) // 0x8a
+ENTRY(op_TXA) // 0x8a
                 movb    X_Reg, A_Reg
                 orb     A_Reg, A_Reg
                 FlagNZ
@@ -2111,7 +2111,7 @@ E(op_TXA) // 0x8a
        TXS instruction
    ---------------------------------- */
 
-E(op_TXS) // 0x9a
+ENTRY(op_TXS) // 0x9a
                 movb    X_Reg, SP_Reg_L
                 Continue
 
@@ -2119,7 +2119,7 @@ E(op_TXS) // 0x9a
        TYA instruction
    ---------------------------------- */
 
-E(op_TYA) // 0x98
+ENTRY(op_TYA) // 0x98
                 movb    Y_Reg, A_Reg
                 orb     A_Reg, A_Reg
                 FlagNZ
@@ -2129,14 +2129,14 @@ E(op_TYA) // 0x98
        ??? instruction - 65c02
        Defined as NOPs by spec
    ---------------------------------- */
-E(op_UNK_65c02)
+ENTRY(op_UNK_65c02)
                 Continue
 
 /* ----------------------------------
        WAI instruction - 65c02
        UNIMPLEMENTED : This is documented in the W65C02S datasheet ...
    ---------------------------------- */
-E(op_WAI_65c02)
+ENTRY(op_WAI_65c02)
                 Continue
 
 #pragma mark -
@@ -2149,18 +2149,18 @@ E(op_WAI_65c02)
 
 continue:
                 movzbLQ DebugCurrOpcode, _XAX
-                SNX_PROLOGUE(cpu65__opcycles)
-                movb    SNX(cpu65__opcycles,_XAX,1), %al
+                SYMX_PROLOGUE(cpu65__opcycles)
+                movb    SYMX(cpu65__opcycles,_XAX,1), %al
                 addb    DebugCycleCount, %al
                 movb    %al, DebugCycleCount
                 TRACE_EPILOGUE
-                addl    %eax, SN(cpu65_cycle_count)
-                subl    %eax, SN(gc_cycles_timer_0)
-                subl    %eax, SN(gc_cycles_timer_1)
-                subl    %eax, SN(cpu65_cycles_to_execute)
+                addl    %eax, SYM(cpu65_cycle_count)
+                subl    %eax, SYM(gc_cycles_timer_0)
+                subl    %eax, SYM(gc_cycles_timer_1)
+                subl    %eax, SYM(cpu65_cycles_to_execute)
                 jle     exit_cpu65_run
 continue1:      xorLQ   _XAX, _XAX
-                orb     SN(cpu65__signal), %al
+                orb     SYM(cpu65__signal), %al
                 jnz     exception
 1:              JumpNextInstruction
 
@@ -2172,11 +2172,11 @@ exception:      testb   $ResetSig, %al
                 jnz     ex_reset0
                 jmp     ex_irq
 
-ex_reset0:      testb   $0xff, SN(joy_button0)              // OpenApple
+ex_reset0:      testb   $0xff, SYM(joy_button0)              // OpenApple
                 jnz     emul_reinit
-                testb   $0xff, SN(joy_button1)              // ClosedApple
+                testb   $0xff, SYM(joy_button1)              // ClosedApple
                 jnz     emul_reinit
-ex_reset:       movb    $0, SN(cpu65__signal)
+ex_reset:       movb    $0, SYM(cpu65__signal)
                 movw    $0xFFFC, EffectiveAddr              // ROM reset vector
                 GetFromEA_W
                 movw    %ax, PC_Reg
@@ -2198,8 +2198,8 @@ ex_irq:         testb   $I_Flag, F_Reg                      // Already interrupt
                 orb     $X_Flag, F_Reg
                 xorw    %ax, %ax
                 movb    F_Reg, %al
-                SNX_PROLOGUE(cpu65_flags_encode)
-                movb    SNX(cpu65_flags_encode,_XAX,1), %al
+                SYMX_PROLOGUE(cpu65_flags_encode)
+                movb    SYMX(cpu65_flags_encode,_XAX,1), %al
                 Push(%al)
                 orb     $(B_Flag | I_Flag), F_Reg
                 //andb    $~D_Flag, F_Reg // AppleWin clears Decimal bit?
@@ -2213,38 +2213,38 @@ ex_irq:         testb   $I_Flag, F_Reg                      // Already interrupt
         CPU thread main entry and exit points
    ------------------------------------------------------------------------- */
 
-E(cpu65_run)
+ENTRY(cpu65_run)
 #ifdef __LP64__
                 pushq   %rbx
                 // NOTE: should we be also preserving r12-r15?
 #endif
                 pushLQ  _XBP
                 movLQ   _XSP, _XBP
-                cmpb    $0, SN(emul_reinitialize)
+                cmpb    $0, SYM(emul_reinitialize)
                 jnz     1f
 
                 // Restore CPU state when being called from C.
                 movLQ   $0x0100, SP_Reg_X
                 movzwLQ DebugCurrEA, EffectiveAddr_X
-                movzwLQ SN(cpu65_pc), PC_Reg_X
-                movzbLQ SN(cpu65_a), AF_Reg_X
-                movzbLQ SN(cpu65_f), _XAX
-                SNX_PROLOGUE(cpu65_flags_decode)
+                movzwLQ SYM(cpu65_pc), PC_Reg_X
+                movzbLQ SYM(cpu65_a), AF_Reg_X
+                movzbLQ SYM(cpu65_f), _XAX
+                SYMX_PROLOGUE(cpu65_flags_decode)
 #ifdef APPLE_ASSEMBLER_IS_BROKEN
-                movb    SNX(cpu65_flags_decode,_XAX,1), %al
+                movb    SYMX(cpu65_flags_decode,_XAX,1), %al
                 movb    %al, F_Reg
 #else
-                movb    SNX(cpu65_flags_decode,_XAX,1), F_Reg
+                movb    SYMX(cpu65_flags_decode,_XAX,1), F_Reg
 #endif
-                movzbLQ SN(cpu65_x), XY_Reg_X
-                movb    SN(cpu65_y), Y_Reg
-                movb    SN(cpu65_sp), SP_Reg_L
+                movzbLQ SYM(cpu65_x), XY_Reg_X
+                movb    SYM(cpu65_y), Y_Reg
+                movb    SYM(cpu65_sp), SP_Reg_L
 #ifdef APPLE2_VM
                 RestoreAltZP
 #endif
                 jmp     continue1
 
-1:              movb    $0, SN(emul_reinitialize)
+1:              movb    $0, SYM(emul_reinitialize)
                 // Zero all used registers
                 xorLQ   _XAX, _XAX
                 xorLQ   XY_Reg_X, XY_Reg_X
@@ -2260,12 +2260,12 @@ E(cpu65_run)
 
 exit_cpu65_run:
                 // Save CPU state when returning from being called from C
-                movw    PC_Reg, SN(cpu65_pc)
+                movw    PC_Reg, SYM(cpu65_pc)
                 CommonSaveCPUState()
                 jmp     exit_frame
 
-emul_reinit:    movb    $0, SN(cpu65__signal)
-                movb    $1, SN(emul_reinitialize)
+emul_reinit:    movb    $0, SYM(cpu65__signal)
+                movb    $1, SYM(emul_reinitialize)
 
 exit_frame:     popLQ   _XBP
 #ifdef __LP64__
@@ -2277,12 +2277,12 @@ exit_frame:     popLQ   _XBP
         Debugger hooks
    ------------------------------------------------------------------------- */
 
-E(cpu65_direct_write)
+ENTRY(cpu65_direct_write)
                 pushLQ  EffectiveAddr_X
                 movLQ   8(_XSP),EffectiveAddr_X
                 movLQ   12(_XSP),_XAX
-                SNX_PROLOGUE(cpu65_vmem_w)
-                callLQ  *SNX(cpu65_vmem_w,EffectiveAddr_X,SZ_PTR)
+                SYMX_PROLOGUE(cpu65_vmem_w)
+                callLQ  *SYMX(cpu65_vmem_w,EffectiveAddr_X,SZ_PTR)
                 popLQ   EffectiveAddr_X
                 ret
 

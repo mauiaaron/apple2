@@ -39,8 +39,8 @@
 
 #define RestoreAltZP \
     /* Apple //e set stack point to ALTZP (or not) */ \
-    movLQ   SN(base_stackzp), _XAX; \
-    subLQ   SN(base_vmem), _XAX; \
+    movLQ   SYM(base_stackzp), _XAX; \
+    subLQ   SYM(base_vmem), _XAX; \
     orLQ    _XAX, SP_Reg_X;
 
 #ifdef __LP64__
@@ -118,28 +118,28 @@
 
 /* Symbol naming issues */
 #ifdef NO_UNDERSCORES
-#define         SN(foo) foo
-#define         SNX(foo, INDEX, SCALE) foo(,INDEX,SCALE)
-#define         SNX_PROLOGUE(foo)
-#define         E(foo)          .globl foo; .balign 16; foo##:
+#define         SYM(foo) foo
+#define         SYMX(foo, INDEX, SCALE) foo(,INDEX,SCALE)
+#define         SYMX_PROLOGUE(foo)
+#define         ENTRY(foo)          .globl foo; .balign 16; foo##:
 #define         CALL(foo) foo
 #else /* !NO_UNDERSCORES */
 #if defined(__APPLE__)
 #   warning "2014/06/22 -- Apple's clang appears to not like certain manipulations of %_h register values (for example %ah, %ch) that are valid on *nix ... and it creates bizarre bytecode
 #   define APPLE_ASSEMBLER_IS_BROKEN 1
-#   define         SN(foo) _##foo(%rip)
-#   define         SNX(foo, INDEX, SCALE) (_X8,INDEX,SCALE)
+#   define         SYM(foo) _##foo(%rip)
+#   define         SYMX(foo, INDEX, SCALE) (_X8,INDEX,SCALE)
 #   ifdef __LP64__
-#       define     SNX_PROLOGUE(foo)  leaLQ   _##foo(%rip), _X8;
+#       define     SYMX_PROLOGUE(foo)  leaLQ   _##foo(%rip), _X8;
 #   else
 #       error "Building 32bit Darwin/x86 is not supported (unless you're a go-getter and make it supported)"
 #   endif
-#   define         E(foo)          .globl _##foo; .balign 4; _##foo##:
+#   define         ENTRY(foo)          .globl _##foo; .balign 4; _##foo##:
 #else
-#   define         SN(foo) _##foo
-#   define         SNX(foo, INDEX, SCALE) _##foo(,INDEX,SCALE)
-#   define         SNX_PROLOGUE(foo)
-#   define         E(foo)          .globl _##foo; .balign 16; _##foo##:
+#   define         SYM(foo) _##foo
+#   define         SYMX(foo, INDEX, SCALE) _##foo(,INDEX,SCALE)
+#   define         SYMX_PROLOGUE(foo)
+#   define         ENTRY(foo)          .globl _##foo; .balign 16; _##foo##:
 #endif
 #define         CALL(foo) _##foo
 #endif /* !NO_UNDERSCORES */
