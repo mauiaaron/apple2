@@ -14,7 +14,6 @@
  *
  */
 
-#define __ASSEMBLY__
 #include "misc.h"
 #include "cpu-regs.h"
 

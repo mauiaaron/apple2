@@ -17,6 +17,9 @@
 #ifndef __CPU_H_
 #define __CPU_H_
 
+// Virtual machine is an Apple //e (not an NES, etc...)
+#define APPLE2_VM 1
+
 #if !defined(__ASSEMBLER__)
 #include <sys/types.h>
 #include <stdint.h>
@@ -76,30 +79,28 @@ void cpu65_trace_checkpoint(void);
 #define IRQGeneric      0x80
 
 /* Note: These are *not* the bit positions used for the flags in the P
- * register of a real 6502. Rather, they have been distorted so that C,
- * N and Z match the analogous flags in the _80386_ flags register.
- *
- * Additionally, V matches the position of the overflow flag in the high byte
- * of the 80386 register.
- *
+ * register of a real 65c02. Rather, they have been distorted so that C,
+ * N, Z, etc match the analogous flags in the host flags register.
  */
-#define C_Flag          0x1             /* 6502 Carry              */
-#define X_Flag          0x2             /* 6502 Xtra               */
-#define I_Flag          0x4             /* 6502 Interrupt disable  */
-#define V_Flag          0x8             /* 6502 Overflow           */
-#define B_Flag          0x10            /* 6502 Break              */
-#define D_Flag          0x20            /* 6502 Decimal mode       */
-#define Z_Flag          0x40            /* 6502 Zero               */
-#define N_Flag          0x80            /* 6502 Neg                */
-
-#define C_Flag_Bit      8               /* 6502 Carry              */
-#define X_Flag_Bit      9               /* 6502 Xtra               */
-#define I_Flag_Bit      10              /* 6502 Interrupt disable  */
-#define V_Flag_Bit      11              /* 6502 Overflow           */
-#define B_Flag_Bit      12              /* 6502 Break              */
-#define D_Flag_Bit      13              /* 6502 Decimal mode       */
-#define Z_Flag_Bit      14              /* 6502 Zero               */
-#define N_Flag_Bit      15              /* 6502 Neg                */
+#if defined(__i386__) || defined(__x86_64__)
+/*
+ * x86 NOTE: V matches the position of the overflow flag in the high byte
+ * of the 80386 register.
+ */
+#   define C_Flag_Bit      8               /* 6502 Carry              */
+#   define C_Flag          (C_Flag_Bit>>3) /* 6502 Carry              */
+#   define X_Flag          0x2             /* 6502 Xtra               */
+#   define I_Flag          0x4             /* 6502 Interrupt disable  */
+#   define V_Flag          0x8             /* 6502 Overflow           */
+#   define B_Flag          0x10            /* 6502 Break              */
+#   define D_Flag          0x20            /* 6502 Decimal mode       */
+#   define Z_Flag          0x40            /* 6502 Zero               */
+#   define N_Flag          0x80            /* 6502 Neg                */
+#elif defined(__arm__)
+#   error in progress ...
+#elif defined(__aarch64__)
+#   error soon ...
+#endif
 
 /*
  * 6502 flags bit mask

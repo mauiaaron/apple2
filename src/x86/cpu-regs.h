@@ -18,9 +18,6 @@
 
 #include "cpu.h"
 
-// Virtual machine is an Apple ][ (not an NES, etc...)
-#define APPLE2_VM 1
-
 #define X_Reg           %bl             /* 6502 X register in %bl  */
 #define Y_Reg           %bh             /* 6502 Y register in %bh  */
 #define A_Reg           %cl             /* 6502 A register in %cl  */
