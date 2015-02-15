@@ -626,8 +626,16 @@ static void initialize_code_tables()
             val |= N_Flag_6502;
         }
 
+#if defined(__i386__) || defined(__x86_64__)
         cpu65_flags_encode[ i ] = val/* | 0x20 WTF?*/;
         cpu65_flags_decode[ val ] = i;
+#elif defined(__arm__)
+#   error TODO FIXME proper map of ARM processor flags
+#elif defined(__aarch64__)
+#   error soon ...
+#else
+#   error unknown machine architecture
+#endif
     }
 }
 

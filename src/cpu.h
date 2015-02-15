@@ -97,7 +97,20 @@ void cpu65_trace_checkpoint(void);
 #   define Z_Flag          0x40            /* 6502 Zero               */
 #   define N_Flag          0x80            /* 6502 Negative           */
 #elif defined(__arm__)
-#   error in progress ...
+#   define V_Flag          0x1
+#   define C_Flag          0x2
+#   define Z_Flag          0x4
+#   define N_Flag          0x8
+#   define NZ_Flags        0xC
+#   define NZC_Flags       0xE
+#   define NVZ_Flags       0xD
+#   define NVZC_Flags      0xF
+#   define X_Flag          0x10
+#   define I_Flag          0x20
+#   define B_Flag          0x40
+#   define D_Flag          0x80
+#   define BX_Flags        0x50
+#   define BI_Flags        0x60
 #elif defined(__aarch64__)
 #   error soon ...
 #else
