@@ -2137,23 +2137,23 @@ continue:
                 subl    %eax, SYM(gc_cycles_timer_1)
                 subl    %eax, SYM(cpu65_cycles_to_execute)
                 jle     exit_cpu65_run
+
 continue1:      xorLQ   _XAX, _XAX
                 orb     SYM(cpu65__signal), %al
                 jnz     exception
-1:              JumpNextInstruction
+                JumpNextInstruction
 
 /* -------------------------------------------------------------------------
         Exception handlers
    ------------------------------------------------------------------------- */
 
 exception:      testb   $ResetSig, %al
-                jnz     ex_reset0
-                jmp     ex_irq
+                jz      ex_irq
+                testb   $0xff, SYM(joy_button0)             // OpenApple
+                jnz     exit_reinit
+                testb   $0xff, SYM(joy_button1)             // ClosedApple
+                jnz     exit_reinit
 
-ex_reset0:      testb   $0xff, SYM(joy_button0)              // OpenApple
-                jnz     emul_reinit
-                testb   $0xff, SYM(joy_button1)              // ClosedApple
-                jnz     emul_reinit
 ex_reset:       movb    $0, SYM(cpu65__signal)
                 movw    $0xFFFC, EffectiveAddr              // ROM reset vector
                 GetFromEA_W
@@ -2188,7 +2188,7 @@ ex_irq:         testb   $I_Flag, F_Reg                      // Already interrupt
                 JumpNextInstruction
 
 /* -------------------------------------------------------------------------
-        CPU thread main entry and exit points
+        65c02 CPU processing loop entry point
    ------------------------------------------------------------------------- */
 
 ENTRY(cpu65_run)
@@ -2199,7 +2199,7 @@ ENTRY(cpu65_run)
                 pushLQ  _XBP
                 movLQ   _XSP, _XBP
                 cmpb    $0, SYM(emul_reinitialize)
-                jnz     1f
+                jnz     enter_reinit
 
                 // Restore CPU state when being called from C.
                 movzwLQ DebugCurrEA, EffectiveAddr_X
@@ -2221,7 +2221,7 @@ ENTRY(cpu65_run)
 #endif
                 jmp     continue1
 
-1:              movb    $0, SYM(emul_reinitialize)
+enter_reinit:   movb    $0, SYM(emul_reinitialize)
                 // Zero all used registers
                 xorLQ   _XAX, _XAX
                 xorLQ   XY_Reg_X, XY_Reg_X
@@ -2235,16 +2235,23 @@ ENTRY(cpu65_run)
                 movLQ   $0x1FC, SP_Reg_X
                 jmp     ex_reset
 
+/* -------------------------------------------------------------------------
+        65c02 CPU processing loop exit point
+   ------------------------------------------------------------------------- */
+
 exit_cpu65_run:
                 // Save CPU state when returning from being called from C
                 movw    PC_Reg, SYM(cpu65_pc)
                 CommonSaveCPUState()
-                jmp     exit_frame
+                popLQ   _XBP
+#ifdef __LP64__
+                popq    %rbx
+#endif
+                ret
 
-emul_reinit:    movb    $0, SYM(cpu65__signal)
+exit_reinit:    movb    $0, SYM(cpu65__signal)
                 movb    $1, SYM(emul_reinitialize)
-
-exit_frame:     popLQ   _XBP
+                popLQ   _XBP
 #ifdef __LP64__
                 popq    %rbx
 #endif
