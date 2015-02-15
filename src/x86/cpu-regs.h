@@ -38,6 +38,7 @@
     /* Apple //e set stack point to ALTZP (or not) */ \
     movLQ   SYM(base_stackzp), _XAX; \
     subLQ   SYM(base_vmem), _XAX; \
+    orLQ    $0x0100, SP_Reg_X; \
     orLQ    _XAX, SP_Reg_X;
 
 #ifdef __LP64__

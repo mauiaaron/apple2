@@ -2224,7 +2224,6 @@ ENTRY(cpu65_run)
                 jnz     1f
 
                 // Restore CPU state when being called from C.
-                movLQ   $0x0100, SP_Reg_X
                 movzwLQ DebugCurrEA, EffectiveAddr_X
                 movzwLQ SYM(cpu65_pc), PC_Reg_X
                 movzbLQ SYM(cpu65_a), AF_Reg_X
@@ -2238,7 +2237,7 @@ ENTRY(cpu65_run)
 #endif
                 movzbLQ SYM(cpu65_x), XY_Reg_X
                 movb    SYM(cpu65_y), Y_Reg
-                movb    SYM(cpu65_sp), SP_Reg_L
+                movzbLQ SYM(cpu65_sp), SP_Reg_X
 #ifdef APPLE2_VM
                 RestoreAltZP
 #endif
