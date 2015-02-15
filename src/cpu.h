@@ -91,15 +91,17 @@ void cpu65_trace_checkpoint(void);
 #   define C_Flag          (C_Flag_Bit>>3) /* 6502 Carry              */
 #   define X_Flag          0x2             /* 6502 Xtra               */
 #   define I_Flag          0x4             /* 6502 Interrupt disable  */
-#   define V_Flag          0x8             /* 6502 Overflow           */
+#   define V_Flag          0x8             /* 6502 oVerflow           */
 #   define B_Flag          0x10            /* 6502 Break              */
 #   define D_Flag          0x20            /* 6502 Decimal mode       */
 #   define Z_Flag          0x40            /* 6502 Zero               */
-#   define N_Flag          0x80            /* 6502 Neg                */
+#   define N_Flag          0x80            /* 6502 Negative           */
 #elif defined(__arm__)
 #   error in progress ...
 #elif defined(__aarch64__)
 #   error soon ...
+#else
+#   error unknown machine architecture
 #endif
 
 /*

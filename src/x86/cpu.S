@@ -263,17 +263,6 @@
                 _GetAbs_Y \
 9:              movLQ   _XAX, EffectiveAddr_X;
 
-/* Absolute Indirect Addressing - The second and third bytes of the
-   instruction are the low and high bytes of an address, respectively.
-   The contents of the fully specified memory location is the
-   low-order byte of the effective address.  The next memory location
-   contains the high order byte of the effective address. */
-/* (unused at the moment. It applies to JMP, but JMP's addressing is done
- * without the macro)
- */
-#define GetInd  GetFromPC_W; \
-                GetFromMem_W(_XAX)
-
 /* Zero Page Indirect Addressing (65c02) - The second byte of the
    instruction points to a memory location on page zero containing the
    low order byte of the effective address.  The next location on page
@@ -377,7 +366,7 @@
 #define DoASL   GetFromEA_B \
                 addb    %al, %al; \
                 FlagNZC \
-                PutToEA_B \
+                PutToEA_B
 
 /* SAR (and the following AND) effectively moves
  * bit 6 to Bit 3 while leaving Bit 7 unchanged */
@@ -421,17 +410,17 @@
 
 #define DoLDA   GetFromEA_B \
                 movb    %al, A_Reg; \
-                orb     %al, %al; \
+                orb     A_Reg, A_Reg; \
                 FlagNZ
 
 #define DoLDX   GetFromEA_B \
                 movb    %al, X_Reg; \
-                orb     %al, %al; \
+                orb     X_Reg, X_Reg; \
                 FlagNZ
 
 #define DoLDY   GetFromEA_B \
                 movb    %al, Y_Reg; \
-                orb     %al, %al; \
+                orb     Y_Reg, Y_Reg; \
                 FlagNZ
 
 #define DoLSR   GetFromEA_B \
@@ -445,7 +434,7 @@
 
 #define DoROL   GetFromEA_B \
                 bt      $C_Flag_Bit, AF_Reg_X; \
-                adcb    %al,%al; \
+                adcb    %al, %al; \
                 FlagNZC \
                 PutToEA_B
 
@@ -551,24 +540,25 @@ _daa_finish:    popq    _XBX
 #endif
                 Continue
 
+#define maybe_DoADC_d \
+                testb   $D_Flag, F_Reg;  /* Decimal mode? */ \
+                jnz     CALL(op_ADC_dec) /* Yes, jump to decimal version */
+
 ENTRY(op_ADC_imm) // 0x69
                 GetImm
-                testb   $D_Flag, F_Reg          // Decimal mode?
-                jnz     CALL(op_ADC_dec)        // Yes, jump to decimal version
+          maybe_DoADC_d
                 DoADC_b
                 Continue
 
 ENTRY(op_ADC_zpage) // 0x65
                 GetZPage
-                testb   $D_Flag, F_Reg          // Decimal mode?
-                jnz     CALL(op_ADC_dec)        // Yes, jump to decimal version
+          maybe_DoADC_d
                 DoADC_b
                 Continue
 
 ENTRY(op_ADC_zpage_x) // 0x75
                 GetZPage_X
-                testb   $D_Flag, F_Reg          // Decimal mode?
-                jnz     CALL(op_ADC_dec)        // Yes, jump to decimal version
+          maybe_DoADC_d
                 DoADC_b
                 Continue
 
@@ -578,44 +568,38 @@ ENTRY(op_ADC_zpage_y)
 
 ENTRY(op_ADC_abs) // 0x6d
                 GetAbs
-                testb   $D_Flag, F_Reg          // Decimal mode?
-                jnz     CALL(op_ADC_dec)        // Yes, jump to decimal version
+          maybe_DoADC_d
                 DoADC_b
                 Continue
 
 ENTRY(op_ADC_abs_x) // 0x7d
                 GetAbs_X
-                testb   $D_Flag, F_Reg          // Decimal mode?
-                jnz     CALL(op_ADC_dec)        // Yes, jump to decimal version
+          maybe_DoADC_d
                 DoADC_b
                 Continue
 
 ENTRY(op_ADC_abs_y) // 0x79
                 GetAbs_Y
-                testb   $D_Flag, F_Reg          // Decimal mode?
-                jnz     CALL(op_ADC_dec)        // Yes, jump to decimal version
+          maybe_DoADC_d
                 DoADC_b
                 Continue
 
 ENTRY(op_ADC_ind_x) // 0x61
                 GetIndZPage_X
-                testb   $D_Flag, F_Reg          // Decimal mode?
-                jnz     CALL(op_ADC_dec)        // Yes, jump to decimal version
+          maybe_DoADC_d
                 DoADC_b
                 Continue
 
 ENTRY(op_ADC_ind_y) // 0x71
                 GetIndZPage_Y
-                testb   $D_Flag, F_Reg          // Decimal mode?
-                jnz     CALL(op_ADC_dec)        // Yes, jump to decimal version
+          maybe_DoADC_d
                 DoADC_b
                 Continue
 
 // 65c02 : 0x72
 ENTRY(op_ADC_ind_zpage)
                 GetIndZPage
-                testb   $D_Flag, F_Reg          // Decimal mode?
-                jnz     CALL(op_ADC_dec)        // Yes, jump to decimal version
+          maybe_DoADC_d
                 DoADC_b
                 Continue
 
@@ -1532,7 +1516,7 @@ ENTRY(op_PHX)
 
 ENTRY(op_PHY)
 #ifdef APPLE_ASSEMBLER_IS_BROKEN
-                movb Y_Reg, %al
+                movb    Y_Reg, %al
                 Push(%al)
 #else
                 Push(Y_Reg)
@@ -1572,7 +1556,7 @@ ENTRY(op_PLP) // 0x28
 
 ENTRY(op_PLX)
                 Pop(X_Reg)
-                orb X_Reg, X_Reg
+                orb     X_Reg, X_Reg
                 FlagNZ
                 Continue
 
@@ -1588,7 +1572,7 @@ ENTRY(op_PLY)
 #else
                 Pop(Y_Reg)
 #endif
-                orb Y_Reg, Y_Reg
+                orb     Y_Reg, Y_Reg
                 FlagNZ
                 Continue
 
@@ -1683,7 +1667,6 @@ ENTRY(op_RTI) // 0x40
    ---------------------------------- */
 
 ENTRY(op_RTS) // 0x60
-
                 Pop(%al)
 #ifdef APPLE_ASSEMBLER_IS_BROKEN
                 shlw    $8, %ax
@@ -1758,24 +1741,25 @@ _das_finish:    popq    _XBX
 #endif
                 Continue
 
+#define maybe_DoSBC_d \
+                testb   $D_Flag, F_Reg;  /* Decimal mode? */ \
+                jnz     CALL(op_SBC_dec) /* Yes, jump to decimal version */
+
 ENTRY(op_SBC_imm) // 0xe9
                 GetImm
-                testb   $D_Flag, F_Reg          // Decimal mode?
-                jnz     CALL(op_SBC_dec)        // Yes, jump to decimal version
+          maybe_DoSBC_d
                 DoSBC_b
                 Continue
 
 ENTRY(op_SBC_zpage) // 0xe5
                 GetZPage
-                testb   $D_Flag, F_Reg          // Decimal mode?
-                jnz     CALL(op_SBC_dec)        // Yes, jump to decimal version
+          maybe_DoSBC_d
                 DoSBC_b
                 Continue
 
 ENTRY(op_SBC_zpage_x) // 0xf5
                 GetZPage_X
-                testb   $D_Flag, F_Reg          // Decimal mode?
-                jnz     CALL(op_SBC_dec)        // Yes, jump to decimal version
+          maybe_DoSBC_d
                 DoSBC_b
                 Continue
 
@@ -1785,44 +1769,38 @@ ENTRY(op_SBC_zpage_y)
 
 ENTRY(op_SBC_abs) // 0xed
                 GetAbs
-                testb   $D_Flag, F_Reg          // Decimal mode?
-                jnz     CALL(op_SBC_dec)        // Yes, jump to decimal version
+          maybe_DoSBC_d
                 DoSBC_b
                 Continue
 
 ENTRY(op_SBC_abs_x) // 0xfd
                 GetAbs_X
-                testb   $D_Flag, F_Reg          // Decimal mode?
-                jnz     CALL(op_SBC_dec)        // Yes, jump to decimal version
+          maybe_DoSBC_d
                 DoSBC_b
                 Continue
 
 ENTRY(op_SBC_abs_y) // 0xf9
                 GetAbs_Y
-                testb   $D_Flag, F_Reg          // Decimal mode?
-                jnz     CALL(op_SBC_dec)        // Yes, jump to decimal version
+          maybe_DoSBC_d
                 DoSBC_b
                 Continue
 
 ENTRY(op_SBC_ind_x) // 0xe1
                 GetIndZPage_X
-                testb   $D_Flag, F_Reg          // Decimal mode?
-                jnz     CALL(op_SBC_dec)        // Yes, jump to decimal version
+          maybe_DoSBC_d
                 DoSBC_b
                 Continue
 
 ENTRY(op_SBC_ind_y) // 0xf1
                 GetIndZPage_Y
-                testb   $D_Flag, F_Reg          // Decimal mode?
-                jnz     CALL(op_SBC_dec)        // Yes, jump to decimal version
+          maybe_DoSBC_d
                 DoSBC_b
                 Continue
 
 // 65c02 : 0xF2
 ENTRY(op_SBC_ind_zpage)
                 GetIndZPage
-                testb   $D_Flag, F_Reg          // Decimal mode?
-                jnz     CALL(op_SBC_dec)        // Yes, jump to decimal version
+          maybe_DoSBC_d
                 DoSBC_b
                 Continue
 
