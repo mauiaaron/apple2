@@ -64,3 +64,9 @@ man6
 xcuserdata
 .DS_Store
 xcshareddata
+
+# Android builds
+Android/bin
+Android/gen
+Android/libs
+
