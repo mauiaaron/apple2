@@ -631,10 +631,17 @@ static void initialize_code_tables()
     }
 }
 
-void cpu65_init()
+void cpu65_init(void)
 {
     initialize_code_tables();
     cpu65__signal = 0;
+    cpu65_pc = 0x0;
+    cpu65_ea = 0x0;
+    cpu65_a = 0xFF;
+    cpu65_x = 0xFF;
+    cpu65_y = 0xFF;
+    cpu65_f = (C_Flag_6502|X_Flag_6502|I_Flag_6502|V_Flag_6502|B_Flag_6502|Z_Flag_6502|N_Flag_6502);
+    cpu65_sp = 0xFC;
 }
 
 void cpu65_interrupt(int reason)

@@ -2198,8 +2198,6 @@ ENTRY(cpu65_run)
 #endif
                 pushLQ  _XBP
                 movLQ   _XSP, _XBP
-                cmpb    $0, SYM(emul_reinitialize)
-                jnz     enter_reinit
 
                 // Restore CPU state when being called from C.
                 movzwLQ DebugCurrEA, EffectiveAddr_X
@@ -2219,20 +2217,11 @@ ENTRY(cpu65_run)
 #ifdef APPLE2_VM
                 RestoreAltZP
 #endif
+                cmpb    $0, SYM(emul_reinitialize)
+                jnz     enter_reinit
                 jmp     continue1
 
 enter_reinit:   movb    $0, SYM(emul_reinitialize)
-                // Zero all used registers
-                xorLQ   _XAX, _XAX
-                xorLQ   XY_Reg_X, XY_Reg_X
-                movb    $0xFF, X_Reg
-                movb    $0xFF, Y_Reg
-                xorLQ   AF_Reg_X, AF_Reg_X
-                movb    $0xFF, A_Reg
-                orb     $(C_Flag|X_Flag|I_Flag|V_Flag|B_Flag|Z_Flag|N_Flag), F_Reg
-                xorLQ   PC_Reg_X, PC_Reg_X
-                xorLQ   EffectiveAddr_X, EffectiveAddr_X
-                movLQ   $0x1FC, SP_Reg_X
                 jmp     ex_reset
 
 /* -------------------------------------------------------------------------
@@ -2262,6 +2251,7 @@ exit_reinit:    movb    $0, SYM(cpu65__signal)
    ------------------------------------------------------------------------- */
 
 ENTRY(cpu65_direct_write)
+#warning FIXME TODO cpu65_direct_write should be implemented in plain C ...
                 pushLQ  EffectiveAddr_X
                 movLQ   8(_XSP),EffectiveAddr_X
                 movLQ   12(_XSP),_XAX
