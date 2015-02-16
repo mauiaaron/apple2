@@ -1137,15 +1137,14 @@ TEST test_BCC(int8_t off, bool flag, uint16_t addrs) {
     flags |= flag ? fC : 0;
 
     uint8_t cycle_count = 2;
-    uint16_t newpc = 0xffff;
-    if (flag) {
-        newpc = addrs+2;
-    } else {
-        newpc = addrs+2+off;
+    uint16_t newpc = addrs+2;
+    if (!flag) {
+        uint16_t prebranch = newpc;
+        newpc += off;
         ++cycle_count;
-        if ((newpc&0xFF00) != (addrs&0xFF00)) {
+        if ((newpc&0xFF00) != (prebranch&0xFF00)) {
             ++cycle_count;
-        }
+       }
     }
 
     apple_ii_64k[0][addrs+0] = 0x90;
@@ -1183,13 +1182,12 @@ TEST test_BCS(int8_t off, bool flag, uint16_t addrs) {
     flags |= flag ? fC : 0;
 
     uint8_t cycle_count = 2;
-    uint16_t newpc = 0xffff;
-    if (!flag) {
-        newpc = addrs+2;
-    } else {
-        newpc = addrs+2+off;
+    uint16_t newpc = addrs+2;
+    if (flag) {
+        uint16_t prebranch = newpc;
+        newpc += off;
         ++cycle_count;
-        if ((newpc&0xFF00) != (addrs&0xFF00)) {
+        if ((newpc&0xFF00) != (prebranch&0xFF00)) {
             ++cycle_count;
         }
     }
@@ -1229,13 +1227,12 @@ TEST test_BEQ(int8_t off, bool flag, uint16_t addrs) {
     flags |= flag ? fZ : 0;
 
     uint8_t cycle_count = 2;
-    uint16_t newpc = 0xffff;
-    if (!flag) {
-        newpc = addrs+2;
-    } else {
-        newpc = addrs+2+off;
+    uint16_t newpc = addrs+2;
+    if (flag) {
+        uint16_t prebranch = newpc;
+        newpc += off;
         ++cycle_count;
-        if ((newpc&0xFF00) != (addrs&0xFF00)) {
+        if ((newpc&0xFF00) != (prebranch&0xFF00)) {
             ++cycle_count;
         }
     }
@@ -1275,13 +1272,12 @@ TEST test_BNE(int8_t off, bool flag, uint16_t addrs) {
     flags |= flag ? fZ : 0;
 
     uint8_t cycle_count = 2;
-    uint16_t newpc = 0xffff;
-    if (flag) {
-        newpc = addrs+2;
-    } else {
-        newpc = addrs+2+off;
+    uint16_t newpc = addrs+2;
+    if (!flag) {
+        uint16_t prebranch = newpc;
+        newpc += off;
         ++cycle_count;
-        if ((newpc&0xFF00) != (addrs&0xFF00)) {
+        if ((newpc&0xFF00) != (prebranch&0xFF00)) {
             ++cycle_count;
         }
     }
@@ -1321,13 +1317,12 @@ TEST test_BMI(int8_t off, bool flag, uint16_t addrs) {
     flags |= flag ? fN : 0;
 
     uint8_t cycle_count = 2;
-    uint16_t newpc = 0xffff;
-    if (!flag) {
-        newpc = addrs+2;
-    } else {
-        newpc = addrs+2+off;
+    uint16_t newpc = addrs+2;
+    if (flag) {
+        uint16_t prebranch = newpc;
+        newpc += off;
         ++cycle_count;
-        if ((newpc&0xFF00) != (addrs&0xFF00)) {
+        if ((newpc&0xFF00) != (prebranch&0xFF00)) {
             ++cycle_count;
         }
     }
@@ -1367,13 +1362,12 @@ TEST test_BPL(int8_t off, bool flag, uint16_t addrs) {
     flags |= flag ? fN : 0;
 
     uint8_t cycle_count = 2;
-    uint16_t newpc = 0xffff;
-    if (flag) {
-        newpc = addrs+2;
-    } else {
-        newpc = addrs+2+off;
+    uint16_t newpc = addrs+2;
+    if (!flag) {
+        uint16_t prebranch = newpc;
+        newpc += off;
         ++cycle_count;
-        if ((newpc&0xFF00) != (addrs&0xFF00)) {
+        if ((newpc&0xFF00) != (prebranch&0xFF00)) {
             ++cycle_count;
         }
     }
@@ -1413,8 +1407,10 @@ TEST test_BRA(volatile int8_t off, volatile bool flag, volatile uint16_t addrs) 
     flags |= flag ? fN : 0;
 
     uint8_t cycle_count = 3;
-    uint16_t newpc = addrs+2+off;
-    if ((newpc&0xFF00) != (addrs&0xFF00)) {
+    uint16_t newpc = addrs+2;
+    uint16_t prebranch = newpc;
+    newpc += off;
+    if ((newpc&0xFF00) != (prebranch&0xFF00)) {
         ++cycle_count;
     }
 
@@ -1453,13 +1449,12 @@ TEST test_BVC(int8_t off, bool flag, uint16_t addrs) {
     flags |= flag ? fV : 0;
 
     uint8_t cycle_count = 2;
-    uint16_t newpc = 0xffff;
-    if (flag) {
-        newpc = addrs+2;
-    } else {
-        newpc = addrs+2+off;
+    uint16_t newpc = addrs+2;
+    if (!flag) {
+        uint16_t prebranch = newpc;
+        newpc += off;
         ++cycle_count;
-        if ((newpc&0xFF00) != (addrs&0xFF00)) {
+        if ((newpc&0xFF00) != (prebranch&0xFF00)) {
             ++cycle_count;
         }
     }
@@ -1499,13 +1494,12 @@ TEST test_BVS(int8_t off, bool flag, uint16_t addrs) {
     flags |= flag ? fV : 0;
 
     uint8_t cycle_count = 2;
-    uint16_t newpc = 0xffff;
-    if (!flag) {
-        newpc = addrs+2;
-    } else {
-        newpc = addrs+2+off;
+    uint16_t newpc = addrs+2;
+    if (flag) {
+        uint16_t prebranch = newpc;
+        newpc += off;
         ++cycle_count;
-        if ((newpc&0xFF00) != (addrs&0xFF00)) {
+        if ((newpc&0xFF00) != (prebranch&0xFF00)) {
             ++cycle_count;
         }
     }
