@@ -95,22 +95,50 @@ static inline GLenum safeGLGetError(void) {
 #endif
 
 extern bool do_logging;
-extern FILE *error_log;
 
-#define QUIT_FUNCTION(x) exit(x)
+#ifdef ANDROID
+static const char *log_end = "";
+#   include <android/log.h>
+#   error  QUIT_FUNCTION(x) __FIXME_TODO__exit(x)
+#   define _LOG_CMD(str) __android_log_print(ANDROID_LOG_ERROR, "apple2ix", "%s", str)
+#else
+extern FILE *error_log;
+static const char *log_end = "\n";
+#   define QUIT_FUNCTION(x) exit(x)
+#   define _LOG_CMD(str) fprintf(error_log, "%s", str)
+#endif
 
 #define _LOG(...) \
-    int _err = errno; \
-    errno = 0; \
-    fprintf(error_log, "%s:%d - ", __FILE__, __LINE__); \
-    fprintf(error_log, __VA_ARGS__); \
-    if (_err) { \
-        fprintf(error_log, " (syserr: %s)", strerror(_err)); \
-    } \
-    if (_glerr) { \
-        fprintf(error_log, " (OOPS glerr:%04X)", _glerr); \
-    } \
-    fprintf(error_log, "\n");
+    do { \
+        int _err = errno; \
+        errno = 0; \
+        \
+        char *syserr_str = NULL; \
+        char *glerr_str = NULL; \
+        if (_err) { \
+            asprintf(&syserr_str, " (syserr:%s)", strerror(_err)); \
+        } \
+        if (_glerr) { \
+            asprintf(&glerr_str, " (glerr:%04X)", _glerr); \
+        } \
+        \
+        char *buf0 = NULL; \
+        asprintf(&buf0, __VA_ARGS__); \
+        \
+        char *buf = NULL; \
+        asprintf(&buf, "%s:%d -%s%s %s%s", __FILE__, __LINE__, syserr_str ? : "", glerr_str ? : "", buf0, log_end); \
+        \
+        _LOG_CMD(buf); \
+        \
+        free(buf0); \
+        free(buf); \
+        if (syserr_str) { \
+            free(syserr_str); \
+        } \
+        if (glerr_str) { \
+            free(glerr_str); \
+        } \
+    } while (0)
 
 #ifndef NDEBUG
 
