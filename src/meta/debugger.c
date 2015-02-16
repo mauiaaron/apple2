@@ -16,7 +16,7 @@
 
 #include "common.h"
 
-#ifdef HAVE_OPENSSL
+#if HAVE_OPENSSL
 #include <openssl/sha.h>
 #endif
 
@@ -726,7 +726,7 @@ void show_regs() {
     ++num_buffer_lines;
 }
 
-#if !defined(TESTING)
+#if !TESTING
 /* -------------------------------------------------------------------------
     will_branch () = will instruction branch?
                 -1 - n/a
@@ -1100,7 +1100,7 @@ void clear_debugger_screen() {
     fb_sha1 () -- prints SHA1 of the current Apple // framebuffer
    ------------------------------------------------------------------------- */
 void fb_sha1() {
-#ifdef HAVE_OPENSSL
+#if HAVE_OPENSSL
     uint8_t md[SHA_DIGEST_LENGTH];
     char buf[(SHA_DIGEST_LENGTH*2)+1];
 
@@ -1174,8 +1174,8 @@ static int begin_cpu_stepping() {
             ERRLOG("pthread_cond_wait : %d", err);
         }
 
-#ifdef TESTING
-#warning FIXME TODO : this is mis-named now ... GLVideo pushes sync state so we don't need to force poll ... but we need this to type the testing strings ... should refactor to leverage a common codepath, preferablly using the 'typing' mechanism here...
+#if TESTING
+#warning FIXME TODO : this is mis-named now ... GLVideo pushes sync state so we do not need to force poll ... but we need this to type the testing strings ... should refactor to leverage a common codepath, preferablly using the 'typing' mechanism here...
         extern void testing_video_sync();
         testing_video_sync();
 #else
@@ -1289,7 +1289,7 @@ int debugger_go(stepping_struct_t s) {
 
     int ch = begin_cpu_stepping();
 
-#if !defined(TESTING)
+#if !TESTING
     if (stepping_struct.step_type != LOADING) {
         clear_debugger_screen();
         disasm(cpu65_pc, 1, 0, -1);

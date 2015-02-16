@@ -619,7 +619,7 @@ void c_initialize_firsttime(void) {
 #endif
 }
 
-#if !defined(TESTING) && !defined(__APPLE__)
+#if !TESTING && !defined(__APPLE__)
 extern void *cpu_thread(void *dummyptr);
 
 int main(int _argc, char **_argv) {

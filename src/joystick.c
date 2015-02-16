@@ -247,7 +247,7 @@ void c_calibrate_joystick()
 extern void gldriver_joystick_reset(void);
 void c_joystick_reset()
 {
-#if VIDEO_OPENGL && !defined(TESTING)
+#if VIDEO_OPENGL && !TESTING
     if (!is_headless) {
         gldriver_joystick_reset();
     }

@@ -189,7 +189,7 @@ static void getshm(int size) {
 }
 #endif
 
-#if !defined(TESTING)
+#if !TESTING
 // Map X keysyms into Apple//ix internal-representation scancodes.
 static int keysym_to_scancode(void) {
     int rc = XkbKeycodeToKeysym(display, xevent.xkey.keycode, 0, 0);
@@ -440,7 +440,7 @@ void video_driver_sync(void) {
     // also process other input events
     post_image();
 
-#ifdef TESTING
+#if TESTING
     // no input processing if test-driven ...
 #else
     bool keyevent = true;

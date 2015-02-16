@@ -731,7 +731,7 @@ static void gldriver_init_glut(GLuint fbo) {
     glutDisplayFunc(gldriver_render);
     glutReshapeFunc(gldriver_reshape);
 
-#if !defined(TESTING)
+#if !TESTING
     glutKeyboardFunc(gldriver_on_key_down);
     glutKeyboardUpFunc(gldriver_on_key_up);
     glutSpecialFunc(gldriver_on_key_special_down);

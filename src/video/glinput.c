@@ -15,7 +15,7 @@
 #include "video/glinput.h"
 #include <math.h>
 
-#if !defined(TESTING)
+#if !TESTING
 
 //----------------------------------------------------------------------------
 //
