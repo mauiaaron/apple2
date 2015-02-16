@@ -99,7 +99,8 @@ extern bool do_logging;
 #ifdef ANDROID
 static const char *log_end = "";
 #   include <android/log.h>
-#   error  QUIT_FUNCTION(x) __FIXME_TODO__exit(x)
+#   warning TODO ... FOSS crash reporting?
+#   define QUIT_FUNCTION(x) exit(x)
 #   define _LOG_CMD(str) __android_log_print(ANDROID_LOG_ERROR, "apple2ix", "%s", str)
 #else
 extern FILE *error_log;

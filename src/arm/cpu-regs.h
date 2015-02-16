@@ -40,26 +40,21 @@
 #define ret     mov pc, r14
 
 
-#ifdef __LP64__
+#ifdef __aarch64__
 #   error 20150205 ARM 64bit untested!!!
-#   define LSL_SHIFT        #4 // 4<<1 = 8
-#   define SZ_PTR           8
-#   define ROR_BIT          63
+#   define PTR_SHIFT        #4 // 4<<1 = 8
 #else
-#   define LSL_SHIFT        #2 // 2<<1 = 4
-#   define SZ_PTR           4
-#   define ROR_BIT          31
+#   define PTR_SHIFT        #2 // 2<<1 = 4
 #endif
 
 
-#ifdef NO_UNDERSCORES
-#   define SYM(x)                   x
-#   define SYMX(x,INDEX,SCALE)      x(,INDEX,SCALE)
+#define NO_UNDERSCORES 1
+#if NO_UNDERSCORES
+#   define SYM(x)                   =x
 #   define ENTRY(x)                 .globl x; .balign 16; x##:
 #   define CALL(x)                  x
 #else
-#   define SYM(x)                   _##x
-#   define SYMX(x,INDEX,SCALE)      _##x(,INDEX,SCALE)
+#   define SYM(x)                   =_##x
 #   define ENTRY(x)                 .globl _##x; .balign 16; _##x##:
 #   define CALL(x)                  _##x
 #endif

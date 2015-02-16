@@ -10,9 +10,7 @@
  */
 
 #include <jni.h>
-#include <android/log.h>
-
-#define LOG(fmt, ...) __android_log_print(ANDROID_LOG_ERROR, "apple2ix", fmt, __VA_ARGS__)
+#include "common.h"
 
 #define LAUNCH_WITHOUT_JAVA 0
 #if LAUNCH_WITHOUT_JAVA

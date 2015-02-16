@@ -43,16 +43,16 @@ ENTRY(func)             ldr     r1, SYM(pointer); \
 
 
 #define GLUE_C_WRITE(func) \
-ENTRY(func)             push    {r0, A_Reg, X_Reg, Y_Reg, F_Reg, SP_Reg, PC_Reg}; \
+ENTRY(func)             push    {r0, PC_Reg, SP_Reg, F_Reg, Y_Reg, X_Reg, A_Reg}; \
                         and     r0, #0xff; \
                         mov     r1, r0; \
                         mov     r0, EffectiveAddr; \
                         bl      CALL(c_##func); \
-                        pop     {PC_Reg, SP_Reg, F_Reg, Y_Reg, X_Reg, A_Reg, r0}; \
+                        pop     {r0, PC_Reg, SP_Reg, F_Reg, Y_Reg, X_Reg, A_Reg}; \
                         ret;
 
 #define _GLUE_C_READ(func, ...) \
-ENTRY(func)             push    {A_Reg, X_Reg, Y_Reg, F_Reg, SP_Reg, PC_Reg}; \
+ENTRY(func)             push    {PC_Reg, SP_Reg, F_Reg, Y_Reg, X_Reg, A_Reg}; \
                         mov     r0, EffectiveAddr; \
                         bl      CALL(c_##func); \
                         pop     {PC_Reg, SP_Reg, F_Reg, Y_Reg, X_Reg, A_Reg}; \
@@ -60,10 +60,5 @@ ENTRY(func)             push    {A_Reg, X_Reg, Y_Reg, F_Reg, SP_Reg, PC_Reg}; \
                         ret;
 
 #define GLUE_C_READ(FUNC) _GLUE_C_READ(FUNC)
-
-#define GLUE_C_READ_ALTZP(FUNC) _GLUE_C_READ(FUNC, \
-        push    {r0}; \
-        RestoreAltZP \
-        pop     {r0}; \
-        )
+#define GLUE_C_READ_ALTZP(FUNC) _GLUE_C_READ(FUNC)
 

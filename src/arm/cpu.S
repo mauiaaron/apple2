@@ -1,5 +1,5 @@
 /*
- * Apple // emulator for *nix 
+ * Apple // emulator for *nix
  *
  * This software package is subject to the GNU General Public License
  * version 2 or later (your choice) as published by the Free Software
@@ -22,24 +22,18 @@
 #define CPU_DEBUGGING 1
 #endif
 
-#define MemDebugCurrEA     SYM(cpu65_ea)
-#define MemDebugCurrByte   SYM(cpu65_d)
-#define MemDebugCurrRW     SYM(cpu65_rw)
-#define MemDebugCurrOpcode SYM(cpu65_opcode)
-#define MemDebugCycleCount SYM(cpu65_opcycles)
-
 #define DecodeFlags \
-                ldr     r1, SYM(cpu65_flags_decode) \
-                ldrb    F_Reg, [r1, r0]
+                ldr     r1, SYM(cpu65_flags_decode); \
+                ldrb    F_Reg, [r1, r0];
 
 #define EncodeFlags \
-                mov     r0, F_Reg \
-                ldr     r1, SYM(cpu65_flags_encode) \
-                ldrb    r0, [r1, r0]
+                mov     r0, F_Reg; \
+                ldr     r1, SYM(cpu65_flags_encode); \
+                ldrb    r0, [r1, r0];
 
 #define CommonSaveCPUState \
                 /* save EA */ \
-                ldr     r0, MemDebugCurrEA; \
+                ldr     r0, SYM(cpu65_ea); \
                 strh    EffectiveAddr, [r0]; \
                 /* save stack pointer */ \
                 ldr     r0, SYM(cpu65_sp); \
@@ -87,24 +81,24 @@
 
 #if CPU_DEBUGGING
 #   define CPU_DEBUGGING_RESET \
-                ldr     r1, MemDebugCurrOpcode; \
+                ldr     r1, SYM(cpu65_opcode); \
                 strb    r0, [r1]; /* r0 should be next opcode */ \
-                xor     r9, r9, r9; \
-                ldr     r1, MemDebugCycleCount; \
+                eor     r9, r9, r9; \
+                ldr     r1, SYM(cpu65_opcycles); \
                 strb    r9, [r1]; \
-                ldr     r1, MemDebugCurrRW; \
+                /*ldr     r1, SYM(cpu65_rw);*/ \
                 strb    r9, [r1];
 #   define CPU_DEBUGGING_SET_READ \
-                ldr     r1, SYM(MemDebugCurrRW); \
+                /*ldr     r1, SYM(cpu65_rw);*/ \
                 ldrb    r9, [r1]; \
-                or      r9, r9, #1; \
+                orr     r9, r9, #1; \
                 strb    r9, [r1];
 #   define CPU_DEBUGGING_SET_WRITE \
-                ldr     r1, SYM(MemDebugCurrRW); \
+                /*ldr     r1, SYM(cpu65_rw);*/ \
                 ldrb    r9, [r1]; \
-                or      r9, r9, #2; \
+                orr     r9, r9, #2; \
                 strb    r9, [r1]; \
-                ldr     r1, SYM(MemDebugCurrByte); \
+                ldr     r1, SYM(cpu65_d); \
                 strb    r0, [r1];
 #else
 #   define CPU_DEBUGGING_SET_READ
@@ -147,7 +141,7 @@
 #define GetFromEA_B \
                 CPU_DEBUGGING_SET_READ \
                 ldr     r1, [reg_vmem_r, EffectiveAddr, LSL PTR_SHIFT]; \
-                blx     r1
+                blx     r1;
 
 #define GetFromEA_W \
                 add     EffectiveAddr, EffectiveAddr, #1; \
@@ -178,7 +172,7 @@
                 sub     EffectiveAddr, EffectiveAddr, #1; \
                 mov     r9, r0, LSL #8; \
                 ldr     r1, [reg_vmem_r, EffectiveAddr, LSL PTR_SHIFT]; \
-                blx     r1;
+                blx     r1; \
                 orr     r0, r9, r0;
 
 #define Continue \
@@ -198,8 +192,8 @@
 #define pc_hi_prev      r9
 #define pc_hi_next      r0
 #define BranchXCycles \
-                ldr     mem_cycle_count, MemDebugCycleCount; \
-                xor     scratch_count, scratch_count, scratch_count; /* HACK FIXME TODO VERIFY IN GDB : is this necessary? */ \
+                ldr     mem_cycle_count, SYM(cpu65_opcycles); \
+                eor     scratch_count, scratch_count, scratch_count; /* HACK FIXME TODO VERIFY IN GDB : is this necessary? */ \
                 ldrb    scratch_count, [mem_cycle_count]; \
                 add     scratch_count, scratch_count, #1; /* +1 branch taken */ \
                 mov     pc_hi_prev, PC_Reg; \
@@ -219,7 +213,7 @@
 #define arm_flags r12
 #define lahf \
                 /* Virtual x86: Load %AH (r12) from Flags */ \
-                mov     arm_flags, r15, LSR #28w
+                mov     arm_flags, r15, LSR #28;
 
 #define FlagC \
                 lahf; \
@@ -269,7 +263,6 @@
                 ldr     stack_loc, SYM(base_stackzp); \
                 add     stack_loc, stack_loc, #0x100; \
                 add     stack_loc, stack_loc, SP_Reg;
-                #error FIXME TODO STACK OVERFLOW PROTECTIONZ
 #else
 #define RestoreAltZP
 #endif
@@ -278,7 +271,7 @@
                 RestoreAltZP \
                 strb    x, [stack_loc]; \
                 subs    SP_Reg, SP_Reg, #1; \
-                movmi   SP_Reg, #0xFF; 
+                movmi   SP_Reg, #0xFF;
 #warning TODO FIXME ... need to write a 65c02 stack_loc underflow vm test ... also how does AppleWin handle 65c02 underflow?
 
 #define Pop(x)  \
@@ -295,11 +288,13 @@
    instruction. */
 #define _GetImm \
                 mov     EffectiveAddr, PC_Reg; \
-                teq     PC_Reg, #0xFFFF; \
+                ldr     r0, SYM(mask_FFFF); \
+                ldrh    r0, [r0]; \
+                teq     PC_Reg, r0; \
                 addne   PC_Reg, PC_Reg, #1; \
                 moveq   PC_Reg, #0
 #warning TODO write test cases for immediate addressing 16bit overflow
-#error FIXME TODO ... can all/many of the 16bit overflow cases be handled in Continue instead of in various one-off/bespoke ways ?
+#warning FIXME TODO ... can all/many of the 16bit overflow cases be handled in Continue instead of in various one-off/bespoke ways ?
 
 #if CPU_TRACING
 #define GetImm \
@@ -351,8 +346,8 @@
                 beq     9f;
 
 #define PageBoundaryCrossed \
-                ldr     mem_cycle_count, MemDebugCycleCount; \
-                xor     scratch_count, scratch_count, scratch_count; /* HACK FIXME TODO VERIFY IN GDB : is this necessary? */ \
+                ldr     mem_cycle_count, SYM(cpu65_opcycles); \
+                eor     scratch_count, scratch_count, scratch_count; /* HACK FIXME TODO VERIFY IN GDB : is this necessary? */ \
                 ldrb    scratch_count, [mem_cycle_count]; \
                 add     scratch_count, scratch_count, #1; /* +1 cycle on page_boundary */ \
                 strb    scratch_count, [mem_cycle_count];
@@ -467,9 +462,9 @@
                 mov     r0, r0, LSL #24; \
                 mov     A_Reg, A_Reg, LSL #24; \
                 bt \
-                adcs    regA, regA, r0; \
+                adcs    A_Reg, A_Reg, r0; \
                 FlagNVZC \
-                mov     regA, regA, LSR #24;
+                mov     A_Reg, A_Reg, LSR #24;
 
 #ifndef NDEBUG
 #define DebugBCDCheck \
@@ -511,11 +506,11 @@
                 GetFromEA_B \
                 mov     r0, r0, LSL #24; \
                 mov     r1, A_Reg, LSL #24; \
-                tsts    r1, r0;
+                tst     r1, r0;
 
 #define DoBIT \
                 _DoBIT \
-                FlagNVZ 
+                FlagNVZ
 
 #define DoCMP \
                 GetFromEA_B \
@@ -548,7 +543,7 @@
                 mov     x, x, LSL #24; \
                 subs    x, x, r1; \
                 FlagNZ \
-                mov     x, x, LSR #24
+                mov     x, x, LSR #24;
 
 #define DoDEC \
                 GetFromEA_B \
@@ -569,7 +564,7 @@
                 mov     x, x, LSL #24; \
                 adds    x, x, r1; \
                 FlagNZ \
-                mov     x, x, LSR #24
+                mov     x, x, LSR #24;
 
 #define DoINC \
                 GetFromEA_B \
@@ -613,7 +608,7 @@
 
 #define _DoROL(x) \
                 mov     x, x, LSL #8; \
-                tsts    F_Reg, #C_Flag; \
+                tst     F_Reg, #C_Flag; \
                 orrne   x, x, #0x80; \
                 lsls    x, x, #17; \
                 FlagNZC \
@@ -626,7 +621,7 @@
 
 
 #define _DoROR(x) \
-                tsts    F_Reg, #C_Flag; \
+                tst     F_Reg, #C_Flag; \
                 orrne   x, x, #0x100; \
                 rors    x, x, #1; \
                 FlagNZC
@@ -661,7 +656,7 @@
 
 #define DoTRB \
                 GetFromEA_B \
-                teqs    r0, A_Reg, r0; \
+                teq     r0, A_Reg; \
                 FlagZ \
                 mvn     r1, A_Reg; \
                 and     r0, r0, r1; \
@@ -669,7 +664,7 @@
 
 #define DoTSB \
                 GetFromEA_B \
-                teqs    r0, A_Reg; \
+                teq     r0, A_Reg; \
                 FlagZ \
                 orr     r0, A_Reg, r0; \
                 PutToEA_B
@@ -687,7 +682,7 @@
 ENTRY(op_ADC_dec)
 #warning FIXME TODO op_ADC_dec
 #if 0
-                incb    MemDebugCycleCount         // +1 cycle
+                incb    SYM(cpu65_opcycles) // +1 cycle
                 GetFromEA_B
                 DebugBCDCheck
                 bt      $C_Flag_Bit, AF_Reg_X
@@ -757,7 +752,7 @@ ENTRY(op_ADC_zpage_x) // 0x75
 
 // UNIMPLEMENTED : W65C02S datasheet
 ENTRY(op_ADC_zpage_y)
-                jmp CALL(op_NOP)
+                b CALL(op_NOP)
 
 ENTRY(op_ADC_abs) // 0x6d
                 GetAbs
@@ -795,6 +790,11 @@ ENTRY(op_ADC_ind_zpage)
           maybe_DoADC_d
                 DoADC_b
                 Continue
+
+mask_FFFF:        .hword 0xFFFF
+interrupt_vector: .hword 0xFFFE
+reset_vector:     .hword 0xFFFC
+.ltorg
 
 /* ----------------------------------
        AND instructions
@@ -851,6 +851,8 @@ ENTRY(op_AND_ind_zpage)
                 DoAND
                 Continue
 
+.ltorg
+
 /* ----------------------------------
        ASL instructions
        Arithmetic Shift one bit Left, memory or accumulator
@@ -879,6 +881,8 @@ ENTRY(op_ASL_abs_x) // 0x1e
                 GetAbs_X
                 DoASL
                 Continue
+
+.ltorg
 
 /* ----------------------------------
        BBRx instructions
@@ -942,6 +946,8 @@ ENTRY(op_BBS6_65c02)
 ENTRY(op_BBS7_65c02)
                 Continue
 
+.ltorg
+
 /* ----------------------------------
        BCC instruction
        Branch on Carry Clear
@@ -977,6 +983,8 @@ ENTRY(op_BEQ) // 0xF0
                 beq     continue                // branch not taken
                 BranchXCycles
                 Continue
+
+.ltorg
 
 /* ----------------------------------
        BIT instructions
@@ -1015,6 +1023,8 @@ ENTRY(op_BIT_imm)
                 FlagZ
                 Continue
 
+.ltorg
+
 /* ----------------------------------
        BMI instruction
        Branch on result MInus
@@ -1023,7 +1033,7 @@ ENTRY(op_BIT_imm)
 ENTRY(op_BMI) // 0x30
                 GetFromPC_B
                 tst     F_Reg, #N_Flag
-                beq     continue   
+                beq     continue
                 BranchXCycles
                 Continue
 
@@ -1035,7 +1045,7 @@ ENTRY(op_BMI) // 0x30
 ENTRY(op_BNE) // 0xD0
                 GetFromPC_B
                 tst     F_Reg, #Z_Flag
-                bne     continue  
+                bne     continue
                 BranchXCycles
                 Continue
 
@@ -1062,13 +1072,17 @@ ENTRY(op_BRA)
                 BranchXCycles
                 Continue
 
+.ltorg
+
 /* ----------------------------------
        BRK instruction
    ---------------------------------- */
 
 ENTRY(op_UNK) /* make undefined opcodes fault */
 ENTRY(op_BRK)
-                teq     PC_Reg, #0xFFFF
+                ldr     r0, SYM(mask_FFFF)
+                ldrh    r0, [r0]
+                teq     PC_Reg, r0
                 addne   PC_Reg, PC_Reg, #1
                 moveq   PC_Reg, #0
 #warning TODO FIXME ... write test for overflow in op_BRK
@@ -1081,10 +1095,13 @@ ENTRY(op_BRK)
                 EncodeFlags
                 Push(r0)
                 orr     F_Reg, F_Reg, #I_Flag
-                mov     EffectiveAddr, #0xFFFE
+                ldr     EffectiveAddr, SYM(interrupt_vector) 
+                ldrh    EffectiveAddr, [EffectiveAddr]
                 GetFromEA_W
                 mov     PC_Reg, r0
                 Continue
+
+.ltorg
 
 /* ----------------------------------
        BVC instruction
@@ -1109,6 +1126,8 @@ ENTRY(op_BVS) // 0x70
                 beq     continue
                 BranchXCycles
                 Continue
+
+.ltorg
 
 /* ----------------------------------
        CLC instruction
@@ -1142,6 +1161,8 @@ ENTRY(op_CLV) // 0xB8
                 bic     F_Reg, #V_Flag
                 Continue
 
+.ltorg
+
 /* ----------------------------------
        CMP instructions
        CoMPare memory and accumulator
@@ -1164,7 +1185,7 @@ ENTRY(op_CMP_zpage_x) // 0xd5
 
 // UNIMPLEMENTED : W65C02S datasheet
 ENTRY(op_CMP_zpage_y)
-                jmp CALL(op_NOP)
+                b CALL(op_NOP)
 
 ENTRY(op_CMP_abs) // 0xcd
                 GetAbs
@@ -1196,6 +1217,8 @@ ENTRY(op_CMP_ind_zpage)
                 GetIndZPage
                 DoCMP
                 Continue
+
+.ltorg
 
 /* ----------------------------------
        CPX instructions
@@ -1236,6 +1259,8 @@ ENTRY(op_CPY_abs) // 0xcc
                 GetAbs
                 DoCPY
                 Continue
+
+.ltorg
 
 /* ----------------------------------
        DEA: DEcrement Accumulator
@@ -1287,6 +1312,8 @@ ENTRY(op_DEY) // 0x88
                 _DoDEC(Y_Reg)
                 Continue
 
+.ltorg
+
 /* ----------------------------------
        EOR instructions
        Exclusive OR memory with accumulator
@@ -1309,7 +1336,7 @@ ENTRY(op_EOR_zpage_x) // 0x55
 
 // UNIMPLEMENTED : W65C02S datasheet
 ENTRY(op_EOR_zpage_y)
-                jmp CALL(op_NOP)
+                b CALL(op_NOP)
 
 ENTRY(op_EOR_abs) // 0x4d
                 GetAbs
@@ -1341,6 +1368,8 @@ ENTRY(op_EOR_ind_zpage)
                 GetIndZPage
                 DoEOR
                 Continue
+
+.ltorg
 
 /* ----------------------------------
        INA : INcrement Accumulator
@@ -1392,6 +1421,8 @@ ENTRY(op_INY) // 0xc8
                 _DoINC(Y_Reg)
                 Continue
 
+.ltorg
+
 /* ----------------------------------
        JMP instructions
        JuMP to new location
@@ -1431,7 +1462,7 @@ ENTRY(op_JMP_abs_ind_x)
                 mov     EffectiveAddr, EffectiveAddr, LSL #24 // 16bit under/overflow protection
                 mov     EffectiveAddr, EffectiveAddr, LSR #24
 #warning FIXME TODO write test for op_JMP_abs_ind_x under/overflow protection
-                GetFromMem_W(EffectiveAddr_X)
+                GetFromMem_W(EffectiveAddr)
                 mov     PC_Reg, r0
                 Continue
 
@@ -1442,9 +1473,9 @@ ENTRY(op_JMP_abs_ind_x)
 ENTRY(op_JSR) // 0x20
                 GetAbs
                 mov     r0, PC_Reg
-                teq     r0, #0
-                subne   r0, r0, #1
-                moveq   r0, #0xFFFF // handle underflow -- considered highly unlikely
+                subs    r0, r0, #1
+                ldrmi   r0, SYM(mask_FFFF) // handle underflow -- considered highly unlikely
+                ldrmih  r0, [r0]
                 mov     r0, r0, ROR #8
 #warning TODO FIXME write test for op_JSR underflow ...
                 Push(r0) // push hi_byte
@@ -1452,6 +1483,8 @@ ENTRY(op_JSR) // 0x20
                 Push(r0) // push lo_byte
                 mov     PC_Reg, EffectiveAddr
                 Continue
+
+.ltorg
 
 /* ----------------------------------
        LDA instructions
@@ -1507,6 +1540,8 @@ ENTRY(op_LDA_ind_zpage)
                 GetIndZPage
                 DoLDA
                 Continue
+
+.ltorg
 
 /* ----------------------------------
        LDX instructions
@@ -1567,6 +1602,8 @@ ENTRY(op_LDY_abs_x) // 0xbc
                 DoLDY
                 Continue
 
+.ltorg
+
 /* ----------------------------------
        LSR instructions
    ---------------------------------- */
@@ -1602,6 +1639,8 @@ ENTRY(op_LSR_abs_x) // 0x5e
 
 ENTRY(op_NOP) // 0xea
                 Continue
+
+.ltorg
 
 /* ----------------------------------
        ORA instructions
@@ -1656,6 +1695,8 @@ ENTRY(op_ORA_ind_zpage)
                 GetIndZPage
                 DoORA
                 Continue
+
+.ltorg
 
 /* ----------------------------------
        PHA instruction
@@ -1721,7 +1762,7 @@ ENTRY(op_PLP) // 0x28
 ENTRY(op_PLX)
                 Pop(X_Reg)
                 mov     r0, X_Reg, LSL #24
-                orr     r0, r0, r0 
+                orr     r0, r0, r0
                 FlagNZ
                 Continue
 
@@ -1736,6 +1777,8 @@ ENTRY(op_PLY)
                 orr     Y_Reg, Y_Reg
                 FlagNZ
                 Continue
+
+.ltorg
 
 /* ----------------------------------
        ROL instructions
@@ -1792,6 +1835,8 @@ ENTRY(op_ROR_abs_x) // 0x7e
                 DoROR
                 Continue
 
+.ltorg
+
 /* ----------------------------------
        RTI instruction
    ---------------------------------- */
@@ -1816,12 +1861,16 @@ ENTRY(op_RTS) // 0x60
                 Pop(hi_byte)
                 mov     hi_byte, hi_byte, LSL #8
                 orr     r0, hi_byte, lo_byte
-                teq     r0, #0xFFFF
+                ldr     r1, SYM(mask_FFFF)
+                ldr     r1, [r1]
+                teq     r0, r1
                 addne   r0, r0, #1
                 moveq   r0, #0 // handle overflow -- considered highly unlikely
 #warning TODO FIXME write test for this overflow ...
                 mov     PC_Reg, r0
                 Continue
+
+.ltorg
 
 /* ----------------------------------
        SBC instructions
@@ -1830,7 +1879,7 @@ ENTRY(op_RTS) // 0x60
 ENTRY(op_SBC_dec)
 #warning FIXME TODO op_ADC_dec
 #if 0
-                incb    MemDebugCycleCount         // +1 cycle
+                incb    SYM(cpu65_opcycles) // +1 cycle
                 GetFromEA_B
                 DebugBCDCheck
                 btc     $C_Flag_Bit, AF_Reg_X
@@ -1903,7 +1952,7 @@ ENTRY(op_SBC_zpage_x) // 0xf5
 
 // UNIMPLEMENTED : W65C02S datasheet
 ENTRY(op_SBC_zpage_y)
-                jmp CALL(op_NOP)
+                b CALL(op_NOP)
 
 ENTRY(op_SBC_abs) // 0xed
                 GetAbs
@@ -1941,6 +1990,8 @@ ENTRY(op_SBC_ind_zpage)
           maybe_DoSBC_d
                 DoSBC_b
                 Continue
+
+.ltorg
 
 /* ----------------------------------
        SEC instruction
@@ -1995,6 +2046,8 @@ ENTRY(op_SMB6_65c02)
 ENTRY(op_SMB7_65c02)
                 Continue
 
+.ltorg
+
 /* ----------------------------------
        STA instructions
    ---------------------------------- */
@@ -2044,6 +2097,8 @@ ENTRY(op_STA_ind_zpage)
                 DoSTA
                 Continue
 
+.ltorg
+
 /* ----------------------------------
        STP instruction
        UNIMPLEMENTED : This is documented in the W65C02S datasheet ...
@@ -2080,6 +2135,8 @@ ENTRY(op_RMB6_65c02)
 
 ENTRY(op_RMB7_65c02)
                 Continue
+
+.ltorg
 
 /* ----------------------------------
        STX instructions
@@ -2148,6 +2205,8 @@ ENTRY(op_STZ_abs_x)
                 GetAbs_X_STx
                 DoSTZ
                 Continue
+
+.ltorg
 
 /* ----------------------------------
        TAX instruction
@@ -2246,6 +2305,8 @@ ENTRY(op_TYA) // 0x98
                 FlagNZ
                 Continue
 
+.ltorg
+
 /* ----------------------------------
        ??? instruction - 65c02
        Defined as NOPs by spec
@@ -2271,9 +2332,10 @@ ENTRY(op_WAI_65c02)
 #define cycles_exe r0
 continue:
                 ldr     r1, SYM(cpu65__opcycles)
-                ldr     r0, SYM(MemDebugCurrOpcode)
+                ldr     r0, SYM(cpu65_opcode)
+                ldrb    r0, [r0]
                 ldrb    cycles_exe, [r1, r0]
-                ldr     r1, SYM(MemDebugCycleCount)
+                ldr     r1, SYM(cpu65_opcycles)
                 ldrb    r2, [r1]
                 add     cycles_exe, cycles_exe, r2
                 strb    cycles_exe, [r1]
@@ -2301,10 +2363,9 @@ continue:
                 bmi     exit_cpu65_run
                 beq     exit_cpu65_run
 
-#define r_cpu65__signal r1
 continue1:      eor     r0, r0, r0
-                ldr     r_cpu65__signal, SYM(cpu65__signal)
-                ldrb    r0, [r_cpu65__signal]
+                ldr     r1, SYM(cpu65__signal)
+                ldrb    r0, [r1]
                 orr     r0, r0, r0
                 bne     exception
                 JumpNextInstruction
@@ -2315,14 +2376,20 @@ continue1:      eor     r0, r0, r0
 
 exception:      tst     r0, #ResetSig
                 beq     ex_irq
-                tst     SYM(joy_button0), #0xFF             // OpenApple
+                ldr     r1, SYM(joy_button0)                // OpenApple
+                ldrb    r0, [r1]
+                tst     r0, #0xFF
                 bne     exit_reinit
-                tst     SYM(joy_button1), #0xFF             // ClosedApple
+                ldr     r1, SYM(joy_button1)                // ClosedApple
+                ldrb    r0, [r1]
+                tst     r0, #0xFF
                 bne     exit_reinit
 
 ex_reset:       mov     r0, #0
-                strb    r0, [r_cpu65__signal]
-                mov     EffectiveAddr, #0xFFFC              // ROM reset vector
+                ldr     r1, SYM(cpu65__signal)
+                strb    r0, [r1]
+                ldr     EffectiveAddr, SYM(reset_vector)
+                ldrh    EffectiveAddr, [EffectiveAddr]
                 GetFromEA_W
                 mov     PC_Reg, r0
                 JumpNextInstruction
@@ -2340,7 +2407,8 @@ ex_irq:         tst     F_Reg, #I_Flag                      // Already interrupt
                 Push(r0)
                 orr     F_Reg, F_Reg, #BI_Flags
                 //bic   F_Reg, F_Reg, #D_Flag // AppleWin clears Decimal bit?
-                mov     EffectiveAddr, #0xFFFE
+                ldr     EffectiveAddr, SYM(interrupt_vector)
+                ldrh    EffectiveAddr, [EffectiveAddr]
                 GetFromEA_W
                 mov     PC_Reg, r0
                 JumpNextInstruction
@@ -2352,7 +2420,7 @@ ex_irq:         tst     F_Reg, #I_Flag                      // Already interrupt
 ENTRY(cpu65_run)
                 // Restore CPU state when being called from C.
 #warning FIXME TODO ... do all the ldrb's zero-out the high-24bits of the destination reg?
-                ldr     r1, SYM(MemDebugCurrEA)
+                ldr     r1, SYM(cpu65_ea)
                 ldrh    EffectiveAddr, [r1]
                 ldr     r1, SYM(cpu65_pc)
                 ldrh    PC_Reg, [r1]
@@ -2371,7 +2439,7 @@ ENTRY(cpu65_run)
                 ldrb    r0, [r1]
                 tst     r0, #0
                 movne   r0, #0
-                strbne  r0, [r1]
+                strneb  r0, [r1]
                 bne     ex_reset
                 b       continue1
 
