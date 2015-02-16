@@ -1147,9 +1147,9 @@ TEST test_BCC(int8_t off, bool flag, uint16_t addrs) {
        }
     }
 
-    apple_ii_64k[0][addrs+0] = 0x90;
-    apple_ii_64k[0][addrs+1] = off;
-    apple_ii_64k[0][addrs+2] = (uint8_t)random();
+    apple_ii_64k[0][addrs] = 0x90;
+    apple_ii_64k[0][(uint16_t)(addrs+1)] = off;
+    apple_ii_64k[0][(uint16_t)(addrs+2)] = (uint8_t)random();
 
     cpu65_a  = 0xed;
     cpu65_x  = 0xde;
@@ -1166,7 +1166,7 @@ TEST test_BCC(int8_t off, bool flag, uint16_t addrs) {
     ASSERT(cpu65_sp == 0x81);
     ASSERT(cpu65_f  == flags);
 
-    ASSERT(cpu65_ea        == addrs+1);
+    ASSERT(cpu65_ea        == (uint16_t)(addrs+1));
     ASSERT(cpu65_d         == 0xff);
     ASSERT(cpu65_rw        == RW_NONE);
     ASSERT(cpu65_opcode    == 0x90);
@@ -1192,9 +1192,9 @@ TEST test_BCS(int8_t off, bool flag, uint16_t addrs) {
         }
     }
 
-    apple_ii_64k[0][addrs+0] = 0xB0;
-    apple_ii_64k[0][addrs+1] = off;
-    apple_ii_64k[0][addrs+2] = (uint8_t)random();
+    apple_ii_64k[0][addrs] = 0xB0;
+    apple_ii_64k[0][(uint16_t)(addrs+1)] = off;
+    apple_ii_64k[0][(uint16_t)(addrs+2)] = (uint8_t)random();
 
     cpu65_a  = 0xed;
     cpu65_x  = 0xde;
@@ -1211,7 +1211,7 @@ TEST test_BCS(int8_t off, bool flag, uint16_t addrs) {
     ASSERT(cpu65_sp == 0x81);
     ASSERT(cpu65_f  == flags);
 
-    ASSERT(cpu65_ea        == addrs+1);
+    ASSERT(cpu65_ea        == (uint16_t)(addrs+1));
     ASSERT(cpu65_d         == 0xff);
     ASSERT(cpu65_rw        == RW_NONE);
     ASSERT(cpu65_opcode    == 0xB0);
@@ -1237,9 +1237,9 @@ TEST test_BEQ(int8_t off, bool flag, uint16_t addrs) {
         }
     }
 
-    apple_ii_64k[0][addrs+0] = 0xF0;
-    apple_ii_64k[0][addrs+1] = off;
-    apple_ii_64k[0][addrs+2] = (uint8_t)random();
+    apple_ii_64k[0][addrs] = 0xF0;
+    apple_ii_64k[0][(uint16_t)(addrs+1)] = off;
+    apple_ii_64k[0][(uint16_t)(addrs+2)] = (uint8_t)random();
 
     cpu65_a  = 0xed;
     cpu65_x  = 0xde;
@@ -1256,7 +1256,7 @@ TEST test_BEQ(int8_t off, bool flag, uint16_t addrs) {
     ASSERT(cpu65_sp == 0x81);
     ASSERT(cpu65_f  == flags);
 
-    ASSERT(cpu65_ea        == addrs+1);
+    ASSERT(cpu65_ea        == (uint16_t)(addrs+1));
     ASSERT(cpu65_d         == 0xff);
     ASSERT(cpu65_rw        == RW_NONE);
     ASSERT(cpu65_opcode    == 0xF0);
@@ -1282,9 +1282,9 @@ TEST test_BNE(int8_t off, bool flag, uint16_t addrs) {
         }
     }
 
-    apple_ii_64k[0][addrs+0] = 0xD0;
-    apple_ii_64k[0][addrs+1] = off;
-    apple_ii_64k[0][addrs+2] = (uint8_t)random();
+    apple_ii_64k[0][addrs] = 0xD0;
+    apple_ii_64k[0][(uint16_t)(addrs+1)] = off;
+    apple_ii_64k[0][(uint16_t)(addrs+2)] = (uint8_t)random();
 
     cpu65_a  = 0xed;
     cpu65_x  = 0xde;
@@ -1301,7 +1301,7 @@ TEST test_BNE(int8_t off, bool flag, uint16_t addrs) {
     ASSERT(cpu65_sp == 0x81);
     ASSERT(cpu65_f  == flags);
 
-    ASSERT(cpu65_ea        == addrs+1);
+    ASSERT(cpu65_ea        == (uint16_t)(addrs+1));
     ASSERT(cpu65_d         == 0xff);
     ASSERT(cpu65_rw        == RW_NONE);
     ASSERT(cpu65_opcode    == 0xD0);
@@ -1327,9 +1327,9 @@ TEST test_BMI(int8_t off, bool flag, uint16_t addrs) {
         }
     }
 
-    apple_ii_64k[0][addrs+0] = 0x30;
-    apple_ii_64k[0][addrs+1] = off;
-    apple_ii_64k[0][addrs+2] = (uint8_t)random();
+    apple_ii_64k[0][addrs] = 0x30;
+    apple_ii_64k[0][(uint16_t)(addrs+1)] = off;
+    apple_ii_64k[0][(uint16_t)(addrs+2)] = (uint8_t)random();
 
     cpu65_a  = 0xed;
     cpu65_x  = 0xde;
@@ -1346,7 +1346,7 @@ TEST test_BMI(int8_t off, bool flag, uint16_t addrs) {
     ASSERT(cpu65_sp == 0x81);
     ASSERT(cpu65_f  == flags);
 
-    ASSERT(cpu65_ea        == addrs+1);
+    ASSERT(cpu65_ea        == (uint16_t)(addrs+1));
     ASSERT(cpu65_d         == 0xff);
     ASSERT(cpu65_rw        == RW_NONE);
     ASSERT(cpu65_opcode    == 0x30);
@@ -1372,9 +1372,9 @@ TEST test_BPL(int8_t off, bool flag, uint16_t addrs) {
         }
     }
 
-    apple_ii_64k[0][addrs+0] = 0x10;
-    apple_ii_64k[0][addrs+1] = off;
-    apple_ii_64k[0][addrs+2] = (uint8_t)random();
+    apple_ii_64k[0][addrs] = 0x10;
+    apple_ii_64k[0][(uint16_t)(addrs+1)] = off;
+    apple_ii_64k[0][(uint16_t)(addrs+2)] = (uint8_t)random();
 
     cpu65_a  = 0xed;
     cpu65_x  = 0xde;
@@ -1391,7 +1391,7 @@ TEST test_BPL(int8_t off, bool flag, uint16_t addrs) {
     ASSERT(cpu65_sp == 0x81);
     ASSERT(cpu65_f  == flags);
 
-    ASSERT(cpu65_ea        == addrs+1);
+    ASSERT(cpu65_ea        == (uint16_t)(addrs+1));
     ASSERT(cpu65_d         == 0xff);
     ASSERT(cpu65_rw        == RW_NONE);
     ASSERT(cpu65_opcode    == 0x10);
@@ -1414,9 +1414,9 @@ TEST test_BRA(volatile int8_t off, volatile bool flag, volatile uint16_t addrs) 
         ++cycle_count;
     }
 
-    apple_ii_64k[0][addrs+0] = 0x80;
-    apple_ii_64k[0][addrs+1] = off;
-    apple_ii_64k[0][addrs+2] = (uint8_t)random();
+    apple_ii_64k[0][addrs] = 0x80;
+    apple_ii_64k[0][(uint16_t)(addrs+1)] = off;
+    apple_ii_64k[0][(uint16_t)(addrs+2)] = (uint8_t)random();
 
     cpu65_a  = 0xed;
     cpu65_x  = 0xde;
@@ -1433,7 +1433,7 @@ TEST test_BRA(volatile int8_t off, volatile bool flag, volatile uint16_t addrs) 
     ASSERT(cpu65_sp == 0x81);
     ASSERT(cpu65_f  == flags);
 
-    ASSERT(cpu65_ea        == addrs+1);
+    ASSERT(cpu65_ea        == (uint16_t)(addrs+1));
     ASSERT(cpu65_d         == 0xff);
     ASSERT(cpu65_rw        == RW_NONE);
     ASSERT(cpu65_opcode    == 0x80);
@@ -1459,9 +1459,9 @@ TEST test_BVC(int8_t off, bool flag, uint16_t addrs) {
         }
     }
 
-    apple_ii_64k[0][addrs+0] = 0x50;
-    apple_ii_64k[0][addrs+1] = off;
-    apple_ii_64k[0][addrs+2] = (uint8_t)random();
+    apple_ii_64k[0][addrs] = 0x50;
+    apple_ii_64k[0][(uint16_t)(addrs+1)] = off;
+    apple_ii_64k[0][(uint16_t)(addrs+2)] = (uint8_t)random();
 
     cpu65_a  = 0xed;
     cpu65_x  = 0xde;
@@ -1478,7 +1478,7 @@ TEST test_BVC(int8_t off, bool flag, uint16_t addrs) {
     ASSERT(cpu65_sp == 0x81);
     ASSERT(cpu65_f  == flags);
 
-    ASSERT(cpu65_ea        == addrs+1);
+    ASSERT(cpu65_ea        == (uint16_t)(addrs+1));
     ASSERT(cpu65_d         == 0xff);
     ASSERT(cpu65_rw        == RW_NONE);
     ASSERT(cpu65_opcode    == 0x50);
@@ -1504,9 +1504,9 @@ TEST test_BVS(int8_t off, bool flag, uint16_t addrs) {
         }
     }
 
-    apple_ii_64k[0][addrs+0] = 0x70;
-    apple_ii_64k[0][addrs+1] = off;
-    apple_ii_64k[0][addrs+2] = (uint8_t)random();
+    apple_ii_64k[0][addrs] = 0x70;
+    apple_ii_64k[0][(uint16_t)(addrs+1)] = off;
+    apple_ii_64k[0][(uint16_t)(addrs+2)] = (uint8_t)random();
 
     cpu65_a  = 0xed;
     cpu65_x  = 0xde;
@@ -1523,7 +1523,7 @@ TEST test_BVS(int8_t off, bool flag, uint16_t addrs) {
     ASSERT(cpu65_sp == 0x81);
     ASSERT(cpu65_f  == flags);
 
-    ASSERT(cpu65_ea        == addrs+1);
+    ASSERT(cpu65_ea        == (uint16_t)(addrs+1));
     ASSERT(cpu65_d         == 0xff);
     ASSERT(cpu65_rw        == RW_NONE);
     ASSERT(cpu65_opcode    == 0x70);
