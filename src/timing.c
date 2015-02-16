@@ -70,16 +70,18 @@ static bool alt_speed_enabled = false;
 volatile uint8_t emul_reinitialize = 0;
 pthread_t cpu_thread_id = 0;
 pthread_mutex_t interface_mutex = { 0 };
-pthread_cond_t ui_thread_cond = PTHREAD_COND_INITIALIZER;
+pthread_cond_t dbg_thread_cond = PTHREAD_COND_INITIALIZER;
 pthread_cond_t cpu_thread_cond = PTHREAD_COND_INITIALIZER;
 
 // -----------------------------------------------------------------------------
 
 __attribute__((constructor))
-static void _init_timing() {
+static void _init_timing(void) {
     pthread_mutexattr_t attr;
     pthread_mutexattr_init(&attr);
+#if !TESTING
     pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
+#endif
     pthread_mutex_init(&interface_mutex, &attr);
 }
 
@@ -262,7 +264,7 @@ void *cpu_thread(void *dummyptr) {
                     debugging_cycles -= cpu65_cycle_count;
                     if (c_debugger_should_break() || (debugging_cycles <= 0)) {
                         int err = 0;
-                        if ((err = pthread_cond_signal(&ui_thread_cond))) {
+                        if ((err = pthread_cond_signal(&dbg_thread_cond))) {
                             ERRLOG("pthread_cond_signal : %d", err);
                         }
                         if ((err = pthread_cond_wait(&cpu_thread_cond, &interface_mutex))) {

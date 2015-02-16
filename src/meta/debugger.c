@@ -1170,7 +1170,7 @@ static int begin_cpu_stepping() {
         if ((err = pthread_cond_signal(&cpu_thread_cond))) {
             ERRLOG("pthread_cond_signal : %d", err);
         }
-        if ((err = pthread_cond_wait(&ui_thread_cond, &interface_mutex))) {
+        if ((err = pthread_cond_wait(&dbg_thread_cond, &interface_mutex))) {
             ERRLOG("pthread_cond_wait : %d", err);
         }
 

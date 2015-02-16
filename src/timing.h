@@ -52,6 +52,9 @@ extern double cpu_altscale_factor;          // scale factor #2
 extern bool is_fullspeed;                   // emulation in full native speed?
 
 extern pthread_t cpu_thread_id;
+extern pthread_mutex_t interface_mutex;
+extern pthread_cond_t cpu_thread_cond;
+extern pthread_cond_t dbg_thread_cond;
 
 /*
  * calculate the difference between two timespec structures

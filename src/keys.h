@@ -136,9 +136,6 @@
 
 // ----------------------------------------------------------------------------
 
-extern pthread_mutex_t interface_mutex;
-extern pthread_cond_t cpu_thread_cond;
-extern pthread_cond_t ui_thread_cond;
 extern bool caps_lock;
 
 int c_mygetch(int block);
