@@ -17,14 +17,8 @@
 #include "cpu-regs.h"
 #include "misc.h"
 
-#define DebugCurrEA     SYM(cpu65_ea)
-#define DebugCurrByte   SYM(cpu65_d)
-#define DebugCurrRW     SYM(cpu65_rw)
-#define DebugCurrOpcode SYM(cpu65_opcode)
-#define DebugCycleCount SYM(cpu65_opcycles)
-
-#define CommonSaveCPUState() \
-                movw    EffectiveAddr, DebugCurrEA; \
+#define CommonSaveCPUState \
+                movw    EffectiveAddr, SYM(cpu65_ea); \
                 movb    A_Reg, SYM(cpu65_a); \
                 xorw    %ax, %ax; \
                 movb    F_Reg, %al; \
@@ -47,7 +41,7 @@
                 callLQ  CALL(cpu65_trace_arg2);
 #   define TRACE_EPILOGUE \
                 pushLQ _XAX; \
-                CommonSaveCPUState(); \
+                CommonSaveCPUState; \
                 popLQ _XAX; \
                 callLQ  CALL(cpu65_trace_epilogue);
 #else
@@ -85,14 +79,14 @@
 #define JumpNextInstruction \
                 TRACE_PROLOGUE; \
                 GetFromPC_B \
-                movb    %al, DebugCurrOpcode; \
-                movb    $0, DebugCycleCount; \
-                movb    $0, DebugCurrRW; \
+                movb    %al, SYM(cpu65_opcode); \
+                movb    $0, SYM(cpu65_opcycles); \
+                movb    $0, SYM(cpu65_rw); \
                 SYMX_PROLOGUE(cpu65__opcodes); \
                 jmp     *SYMX(cpu65__opcodes,_XAX,SZ_PTR);
 
 #define GetFromEA_B \
-                orb     $1, DebugCurrRW; \
+                orb     $1, SYM(cpu65_rw); \
                 SYMX_PROLOGUE(cpu65_vmem_r); \
                 callLQ  *SYMX(cpu65_vmem_r,EffectiveAddr_X,SZ_PTR);
 
@@ -106,8 +100,8 @@
                 callLQ  *SYMX(cpu65_vmem_r,EffectiveAddr_X,SZ_PTR);
 
 #define PutToEA_B \
-                orb     $2, DebugCurrRW; \
-                movb    %al, DebugCurrByte; \
+                orb     $2, SYM(cpu65_rw); \
+                movb    %al, SYM(cpu65_d); \
                 SYMX_PROLOGUE(cpu65_vmem_w); \
                 callLQ  *SYMX(cpu65_vmem_w,EffectiveAddr_X,SZ_PTR);
 
@@ -130,7 +124,7 @@
                 jmp     continue;
 
 #define BranchXCycles \
-                incb    DebugCycleCount; /* +1 branch taken */ \
+                incb    SYM(cpu65_opcycles); /* +1 branch taken */ \
                 shlLQ   $16, _XBX; \
                 movw    PC_Reg, %bx; \
                 cbw; \
@@ -138,30 +132,35 @@
                 movw    %ax, PC_Reg; \
                 cmpb    %ah, %bh; \
                 je      9f; \
-                incb    DebugCycleCount; /* +1 branch new page */ \
+                incb    SYM(cpu65_opcycles); /* +1 branch new page */ \
 9:              shrLQ   $16, _XBX;
 
-#define FlagC   lahf; \
+#define FlagC \
+                lahf; \
                 andb    $C_Flag, %ah; \
                 andb    $~C_Flag, F_Reg; \
                 orb     %ah, F_Reg;
 
-#define FlagZ   lahf; \
+#define FlagZ \
+                lahf; \
                 andb    $Z_Flag, %ah; \
                 andb    $~Z_Flag, F_Reg; \
                 orb     %ah, F_Reg;
 
-#define FlagN   lahf; \
+#define FlagN \
+                lahf; \
                 andb    $N_Flag, %ah; \
                 andb    $~N_Flag, F_Reg; \
                 orb     %ah, F_Reg;
 
-#define FlagNZ  lahf; \
+#define FlagNZ \
+                lahf; \
                 andb    $(N_Flag|Z_Flag), %ah; \
                 andb    $~(N_Flag|Z_Flag), F_Reg; \
                 orb     %ah, F_Reg;
 
-#define FlagNZC lahf; \
+#define FlagNZC \
+                lahf; \
                 andb    $(N_Flag|Z_Flag|C_Flag), %ah; \
                 andb    $~(N_Flag|Z_Flag|C_Flag), F_Reg; \
                 orb     %ah, F_Reg;
@@ -186,26 +185,31 @@
                 movb    x, SYMX(apple_ii_64k,SP_Reg_X,1); \
                 decb    SP_Reg_L;
 
-#define Pop(x)  incb    SP_Reg_L; \
+#define Pop(x) \
+                incb    SP_Reg_L; \
                 SYMX_PROLOGUE(apple_ii_64k); \
                 movb    SYMX(apple_ii_64k,SP_Reg_X,1), x;
 
 /* Immediate Addressing - the operand is contained in the second byte of the
    instruction. */
-#define _GetImm movLQ   PC_Reg_X, EffectiveAddr_X; \
+#define _GetImm \
+                movLQ   PC_Reg_X, EffectiveAddr_X; \
                 incw    PC_Reg;
 #if CPU_TRACING
-#define GetImm  _GetImm \
+#define GetImm \
+                _GetImm \
                 SYMX_PROLOGUE(cpu65_vmem_r); \
                 callLQ  *SYMX(cpu65_vmem_r,EffectiveAddr_X,SZ_PTR); \
                 TRACE_ARG;
 #else
-#define GetImm _GetImm
+#define GetImm \
+                _GetImm
 #endif
 
 /* Absolute Addressing - the second byte of the instruction is the low
    order address, and the third byte is the high order byte. */
-#define GetAbs  GetFromPC_W; \
+#define GetAbs  \
+                GetFromPC_W; \
                 movLQ   _XAX, EffectiveAddr_X;
 
 /* Zero Page Addressing - the second byte of the instruction is an
@@ -224,7 +228,6 @@
                 addb    X_Reg, %al; \
                 movLQ   _XAX, EffectiveAddr_X;
 
-// HACK IS THIS EVER USED?
 #define GetZPage_Y \
                 GetFromPC_B; \
                 addb    Y_Reg, %al; \
@@ -241,7 +244,7 @@
 
 #define GetAbs_X \
                 _GetAbs_X \
-                incb    DebugCycleCount; /* +1 cycle on page boundary */ \
+                incb    SYM(cpu65_opcycles); /* +1 cycle on page boundary */ \
 9:              movLQ   _XAX, EffectiveAddr_X;
 
 #define GetAbs_X_STx \
@@ -256,7 +259,7 @@
 
 #define GetAbs_Y \
                 _GetAbs_Y \
-                incb    DebugCycleCount; /* +1 cycle on page boundary */ \
+                incb    SYM(cpu65_opcycles); /* +1 cycle on page boundary */ \
 9:              movLQ   _XAX, EffectiveAddr_X;
 
 #define GetAbs_Y_STA \
@@ -319,7 +322,7 @@
 #define GetIndZPage_Y \
                 _GetIndZPage_Y \
                 adcb    $0, %ah; \
-                incb    DebugCycleCount; /* +1 cycle on page boundary */ \
+                incb    SYM(cpu65_opcycles); /* +1 cycle on page boundary */ \
 9:              movLQ   _XAX, EffectiveAddr_X;
 
 #define GetIndZPage_Y_STA \
@@ -359,19 +362,28 @@
 #define DebugBCDCheck
 #endif
 
-#define DoAND   GetFromEA_B \
+#define DoAND \
+                GetFromEA_B \
                 andb    %al, A_Reg; \
                 FlagNZ
 
-#define DoASL   GetFromEA_B \
-                addb    %al, %al; \
-                FlagNZC \
+#define _DoASL(x) \
+                addb    x, x; \
+                FlagNZC
+
+#define DoASL \
+                GetFromEA_B \
+                _DoASL(%al) \
                 PutToEA_B
+
+#define _DoBIT \
+                GetFromEA_B \
+                testb   %al, A_Reg;
 
 /* SAR (and the following AND) effectively moves
  * bit 6 to Bit 3 while leaving Bit 7 unchanged */
-#define DoBIT   GetFromEA_B \
-                testb   %al, A_Reg; \
+#define DoBIT \
+                _DoBIT \
                 lahf; \
                 sarb    $3, %al; \
                 andw    $0x4088, %ax; \
@@ -379,66 +391,79 @@
                 orb     %al, F_Reg; \
                 orb     %ah, F_Reg;
 
-#define DoCMP   GetFromEA_B \
+#define DoCMP \
+                GetFromEA_B \
                 cmpb    %al, A_Reg; \
                 cmc; \
                 FlagNZC
 
-#define DoCPX   GetFromEA_B \
+#define DoCPX \
+                GetFromEA_B \
                 cmpb    %al, X_Reg; \
                 cmc; \
                 FlagNZC
 
-#define DoCPY   GetFromEA_B \
+#define DoCPY \
+                GetFromEA_B \
                 cmpb    %al, Y_Reg; \
                 cmc; \
                 FlagNZC
 
-#define DoDEC   GetFromEA_B \
+#define DoDEC \
+                GetFromEA_B \
                 decb    %al; \
                 FlagNZ \
                 PutToEA_B
 
-#define DoEOR   GetFromEA_B \
+#define DoEOR \
+                GetFromEA_B \
                 xorb    %al, A_Reg; \
                 FlagNZ
 
-#define DoINC   GetFromEA_B \
+#define DoINC \
+                GetFromEA_B \
                 incb    %al; \
                 FlagNZ \
                 PutToEA_B
 
-#define DoLDA   GetFromEA_B \
+#define DoLDA \
+                GetFromEA_B \
                 movb    %al, A_Reg; \
                 orb     A_Reg, A_Reg; \
                 FlagNZ
 
-#define DoLDX   GetFromEA_B \
+#define DoLDX \
+                GetFromEA_B \
                 movb    %al, X_Reg; \
                 orb     X_Reg, X_Reg; \
                 FlagNZ
 
-#define DoLDY   GetFromEA_B \
+#define DoLDY \
+                GetFromEA_B \
                 movb    %al, Y_Reg; \
                 orb     Y_Reg, Y_Reg; \
                 FlagNZ
 
-#define DoLSR   GetFromEA_B \
+#define DoLSR \
+                GetFromEA_B \
                 shrb    $1, %al; \
                 FlagNZC \
                 PutToEA_B
 
-#define DoORA   GetFromEA_B \
+#define DoORA \
+                GetFromEA_B \
                 orb     %al, A_Reg; \
                 FlagNZ
 
-#define DoROL   GetFromEA_B \
+#define DoROL \
+                GetFromEA_B \
                 bt      $C_Flag_Bit, AF_Reg_X; \
                 adcb    %al, %al; \
                 FlagNZC \
                 PutToEA_B
 
-#define DoROR   GetFromEA_B \
+#define DoROR \
+                GetFromEA_B \
                 movb    F_Reg, %ah; \
                 rorLQ   $1, _XAX; \
                 orb     %al, %al; \
@@ -446,25 +471,31 @@
                 FlagNZC \
                 PutToEA_B
 
-#define DoSBC_b GetFromEA_B \
+#define DoSBC_b \
+                GetFromEA_B \
                 notb    %al; \
                 bt      $C_Flag_Bit, AF_Reg_X; \
                 adcb    %al, A_Reg; \
                 FlagNVZC
 
-#define DoSTA   movb    A_Reg, %al; \
+#define DoSTA \
+                movb    A_Reg, %al; \
                 PutToEA_B
 
-#define DoSTX   movb    X_Reg, %al; \
+#define DoSTX \
+                movb    X_Reg, %al; \
                 PutToEA_B
 
-#define DoSTY   movb    Y_Reg, %al; \
+#define DoSTY \
+                movb    Y_Reg, %al; \
                 PutToEA_B
 
-#define DoSTZ   movb    $0x0, %al; \
+#define DoSTZ \
+                movb    $0x0, %al; \
                 PutToEA_B
 
-#define DoTRB   GetFromEA_B \
+#define DoTRB \
+                GetFromEA_B \
                 testb   A_Reg, %al; \
                 FlagZ \
                 notb    A_Reg; \
@@ -472,7 +503,8 @@
                 notb    A_Reg; \
                 PutToEA_B
 
-#define DoTSB   GetFromEA_B \
+#define DoTSB \
+                GetFromEA_B \
                 testb   A_Reg, %al; \
                 FlagZ \
                 orb     A_Reg, %al; \
@@ -489,7 +521,7 @@
 
 // Decimal mode
 ENTRY(op_ADC_dec)
-                incb    DebugCycleCount         // +1 cycle
+                incb    SYM(cpu65_opcycles)         // +1 cycle
                 GetFromEA_B
                 DebugBCDCheck
                 bt      $C_Flag_Bit, AF_Reg_X
@@ -664,8 +696,7 @@ ENTRY(op_AND_ind_zpage)
    ---------------------------------- */
 
 ENTRY(op_ASL_acc) // 0x0a
-                addb    A_Reg, A_Reg
-                FlagNZC
+                _DoASL(A_Reg)
                 Continue
 
 ENTRY(op_ASL_zpage) // 0x06
@@ -822,8 +853,7 @@ ENTRY(op_BIT_abs_x)
 // 65c02 : 0x89
 ENTRY(op_BIT_imm)
                 GetImm
-                GetFromEA_B
-                testb   %al, A_Reg
+                _DoBIT
                 FlagZ
                 Continue
 
@@ -1346,7 +1376,6 @@ ENTRY(op_LDX_zpage) // 0xa6
                 DoLDX
                 Continue
 
-// HACK : is this used? need to study coverage ...
 ENTRY(op_LDX_zpage_y) // 0xb6
                 GetZPage_Y
                 DoLDX
@@ -1685,7 +1714,7 @@ ENTRY(op_RTS) // 0x60
    ---------------------------------- */
 
 ENTRY(op_SBC_dec)
-                incb    DebugCycleCount         // +1 cycle
+                incb    SYM(cpu65_opcycles)         // +1 cycle
                 GetFromEA_B
                 DebugBCDCheck
                 btc     $C_Flag_Bit, AF_Reg_X
@@ -1952,7 +1981,6 @@ ENTRY(op_STX_zpage) // 0x86
                 DoSTX
                 Continue
 
-// HACK : is this used? need to study coverage ...
 ENTRY(op_STX_zpage_y) // 0x96
                 GetZPage_Y
                 DoSTX
@@ -2126,11 +2154,11 @@ ENTRY(op_WAI_65c02)
    ------------------------------------------------------------------------- */
 
 continue:
-                movzbLQ DebugCurrOpcode, _XAX
+                movzbLQ SYM(cpu65_opcode), _XAX
                 SYMX_PROLOGUE(cpu65__opcycles)
                 movb    SYMX(cpu65__opcycles,_XAX,1), %al
-                addb    DebugCycleCount, %al
-                movb    %al, DebugCycleCount
+                addb    SYM(cpu65_opcycles), %al
+                movb    %al, SYM(cpu65_opcycles)
                 TRACE_EPILOGUE
                 addl    %eax, SYM(cpu65_cycle_count)
                 subl    %eax, SYM(gc_cycles_timer_0)
@@ -2200,7 +2228,7 @@ ENTRY(cpu65_run)
                 movLQ   _XSP, _XBP
 
                 // Restore CPU state when being called from C.
-                movzwLQ DebugCurrEA, EffectiveAddr_X
+                movzwLQ SYM(cpu65_ea), EffectiveAddr_X
                 movzwLQ SYM(cpu65_pc), PC_Reg_X
                 movzbLQ SYM(cpu65_a), AF_Reg_X
                 movzbLQ SYM(cpu65_f), _XAX
@@ -2231,7 +2259,7 @@ enter_reinit:   movb    $0, SYM(emul_reinitialize)
 exit_cpu65_run:
                 // Save CPU state when returning from being called from C
                 movw    PC_Reg, SYM(cpu65_pc)
-                CommonSaveCPUState()
+                CommonSaveCPUState
                 popLQ   _XBP
 #ifdef __LP64__
                 popq    %rbx
@@ -2251,7 +2279,6 @@ exit_reinit:    movb    $0, SYM(cpu65__signal)
    ------------------------------------------------------------------------- */
 
 ENTRY(cpu65_direct_write)
-#warning FIXME TODO cpu65_direct_write should be implemented in plain C ...
                 pushLQ  EffectiveAddr_X
                 movLQ   8(_XSP),EffectiveAddr_X
                 movLQ   12(_XSP),_XAX

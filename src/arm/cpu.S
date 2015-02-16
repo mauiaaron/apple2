@@ -2467,6 +2467,8 @@ exit_reinit:    ldr     r1, SYM(cpu65__signal)
    ------------------------------------------------------------------------- */
 
 ENTRY(cpu65_direct_write)
-#warning FIXME TODO cpu65_direct_write should be implemented in plain C ...
+#warning FIXME TODO implement cpu65_direct_write ...
+                ldr     r0, #42
+                ldr     r0, [r0] // segfault
                 ret
 
