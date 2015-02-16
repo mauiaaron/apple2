@@ -409,10 +409,13 @@
                 cmc; \
                 FlagNZC
 
+#define _DoDEC(x) \
+                decb    x; \
+                FlagNZ
+
 #define DoDEC \
                 GetFromEA_B \
-                decb    %al; \
-                FlagNZ \
+                _DoDEC(%al) \
                 PutToEA_B
 
 #define DoEOR \
@@ -420,10 +423,13 @@
                 xorb    %al, A_Reg; \
                 FlagNZ
 
+#define _DoINC(x) \
+                incb    x; \
+                FlagNZ
+
 #define DoINC \
                 GetFromEA_B \
-                incb    %al; \
-                FlagNZ \
+                _DoINC(%al) \
                 PutToEA_B
 
 #define DoLDA \
@@ -444,10 +450,13 @@
                 orb     Y_Reg, Y_Reg; \
                 FlagNZ
 
+#define _DoLSR(x) \
+                shrb    $1, x; \
+                FlagNZC
+
 #define DoLSR \
                 GetFromEA_B \
-                shrb    $1, %al; \
-                FlagNZC \
+                _DoLSR(%al) \
                 PutToEA_B
 
 #define DoORA \
@@ -455,11 +464,14 @@
                 orb     %al, A_Reg; \
                 FlagNZ
 
+#define _DoROL(x) \
+                bt      $C_Flag_Bit, AF_Reg_X; \
+                adcb    x, x; \
+                FlagNZC
+
 #define DoROL \
                 GetFromEA_B \
-                bt      $C_Flag_Bit, AF_Reg_X; \
-                adcb    %al, %al; \
-                FlagNZC \
+                _DoROL(%al) \
                 PutToEA_B
 
 #define DoROR \
@@ -864,8 +876,7 @@ ENTRY(op_BIT_imm)
 
 ENTRY(op_BMI) // 0x30
                 GetFromPC_B
-                testb   F_Reg, F_Reg    /* optimized check of N flag,
-                                         * which happens to be sign bit */
+                testb   F_Reg, F_Reg    // check N flag, (which happens to be sign bit)
                 jns     op_BMI_not
                 BranchXCycles
 op_BMI_not:
@@ -891,8 +902,7 @@ op_BNE_not:
 
 ENTRY(op_BPL) // 0x10
                 GetFromPC_B
-                testb   F_Reg, F_Reg    /* optimized check of N flag,
-                                         * which happens to be sign bit */
+                testb   F_Reg, F_Reg    // check N flag, (which happens to be sign bit)
                 js      op_BPL_not
                 BranchXCycles
 op_BPL_not:
@@ -1096,8 +1106,7 @@ ENTRY(op_CPY_abs) // 0xcc
 
 ENTRY(op_DEC_acc)
 ENTRY(op_DEA) // 0x3A
-                decb    A_Reg
-                FlagNZ
+                _DoDEC(A_Reg)
                 Continue
 
 /* ----------------------------------
@@ -1130,8 +1139,7 @@ ENTRY(op_DEC_abs_x) // 0xde
    ---------------------------------- */
 
 ENTRY(op_DEX) // 0xca
-                decb    X_Reg
-                FlagNZ
+                _DoDEC(X_Reg)
                 Continue
 
 /* ----------------------------------
@@ -1139,8 +1147,7 @@ ENTRY(op_DEX) // 0xca
    ---------------------------------- */
 
 ENTRY(op_DEY) // 0x88
-                decb    Y_Reg
-                FlagNZ
+                _DoDEC(Y_Reg)
                 Continue
 
 /* ----------------------------------
@@ -1204,8 +1211,7 @@ ENTRY(op_EOR_ind_zpage)
 
 ENTRY(op_INC_acc)
 ENTRY(op_INA) // 0x1A
-                incb    A_Reg
-                FlagNZ
+                _DoINC(A_Reg)
                 Continue
 
 /* ----------------------------------
@@ -1238,8 +1244,7 @@ ENTRY(op_INC_abs_x) // 0xfe
    ---------------------------------- */
 
 ENTRY(op_INX) // 0xe8
-                incb    X_Reg
-                FlagNZ
+                _DoINC(X_Reg)
                 Continue
 
 /* ----------------------------------
@@ -1247,8 +1252,7 @@ ENTRY(op_INX) // 0xe8
    ---------------------------------- */
 
 ENTRY(op_INY) // 0xc8
-                incb    Y_Reg
-                FlagNZ
+                _DoINC(Y_Reg)
                 Continue
 
 /* ----------------------------------
@@ -1425,8 +1429,7 @@ ENTRY(op_LDY_abs_x) // 0xbc
    ---------------------------------- */
 
 ENTRY(op_LSR_acc) // 0x4a
-                shrb    $1, A_Reg
-                FlagNZC
+                _DoLSR(A_Reg)
                 Continue
 
 ENTRY(op_LSR_zpage) // 0x46
@@ -1610,9 +1613,7 @@ ENTRY(op_PLY)
    ---------------------------------- */
 
 ENTRY(op_ROL_acc) // 0x2a
-                bt      $C_Flag_Bit, AF_Reg_X
-                adcb    A_Reg, A_Reg
-                FlagNZC
+                _DoROL(A_Reg)
                 Continue
 
 ENTRY(op_ROL_zpage) // 0x26
@@ -1638,12 +1639,12 @@ ENTRY(op_ROL_abs_x) // 0x3e
 /* ----------------------------------
        ROR instructions
    ---------------------------------- */
-                /* NB: assumes A_Reg = %cl, F_Reg = %ch */
 ENTRY(op_ROR_acc) // 0x6a
-                rorw    $1, %cx         /* Roll flags into accum */
-                adcb    F_Reg, F_Reg    /* Roll carry into flags */
+                // NB: assumes A_Reg = %cl, F_Reg = %ch
+                rorw    $1, %cx         // Roll flags into accum
+                adcb    F_Reg, F_Reg    // Roll carry into flags
                 orb     A_Reg, A_Reg
-                FlagNZ                  /* implied C */
+                FlagNZ                  // implied C
                 Continue
 
 ENTRY(op_ROR_zpage) // 0x66

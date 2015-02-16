@@ -592,10 +592,13 @@
                 orrs    r0, r0, r0; \
                 FlagNZ
 
+#define _DoLSR(x) \
+                lsrs    x, x, #1; \
+                FlagNZC
+
 #define DoLSR \
                 GetFromEA_B \
-                lsrs    r0, r0, #1; \
-                FlagNZC \
+                _DoLSR(r0) \
                 PutToEA_B
 
 #define DoORA \
@@ -605,6 +608,12 @@
                 orrs    A_Reg, A_Reg, r0; \
                 FlagNZ \
                 mov     A_Reg, A_Reg, LSR #24;
+
+#define _DoPLx(x) \
+                Pop(x); \
+                mov     r0, x, LSL #24; \
+                orr     r0, r0, r0; \
+                FlagNZ
 
 #define _DoROL(x) \
                 mov     x, x, LSL #8; \
@@ -1609,8 +1618,7 @@ ENTRY(op_LDY_abs_x) // 0xbc
    ---------------------------------- */
 
 ENTRY(op_LSR_acc) // 0x4a
-                lsrs    r0, r0, #1
-                FlagNZC
+                _DoLSR(A_Reg)
                 Continue
 
 ENTRY(op_LSR_zpage) // 0x46
@@ -1738,10 +1746,7 @@ ENTRY(op_PHY)
    ---------------------------------- */
 
 ENTRY(op_PLA) // 0x68
-                Pop(A_Reg)
-                mov     r0, A_Reg, LSL #24
-                orr     r0, r0, r0
-                FlagNZ
+                _DoPLx(A_Reg)
                 Continue
 
 /* ----------------------------------
@@ -1760,10 +1765,7 @@ ENTRY(op_PLP) // 0x28
    ---------------------------------- */
 
 ENTRY(op_PLX)
-                Pop(X_Reg)
-                mov     r0, X_Reg, LSL #24
-                orr     r0, r0, r0
-                FlagNZ
+                _DoPLx(X_Reg)
                 Continue
 
 /* ----------------------------------
@@ -1772,10 +1774,7 @@ ENTRY(op_PLX)
    ---------------------------------- */
 
 ENTRY(op_PLY)
-                Pop(Y_Reg)
-                mov     r0, Y_Reg, LSL #24
-                orr     Y_Reg, Y_Reg
-                FlagNZ
+                _DoPLx(Y_Reg)
                 Continue
 
 .ltorg
