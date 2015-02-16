@@ -26,6 +26,9 @@
 #elif defined(USE_GL3W)
 #   include <GL3/gl3.h>
 #   include <GL3/gl3w.h>
+#elif defined(ANDROID)
+#   include <GLES2/gl2.h>
+#   include <GLES2/gl2ext.h>
 #else
 #   define GLEW_STATIC
 #   include <GL/glew.h>

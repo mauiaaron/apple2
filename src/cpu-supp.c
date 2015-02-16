@@ -580,68 +580,50 @@ uint8_t cpu65__opcycles[256] = {
 };
 
 // NOTE: currently this is a conversion table between i386 flags <-> 6502 P register
-static void initialize_code_tables()
-{
-    for (unsigned i = 0; i < 256; i++)
-    {
+static void init_flags_conversion_tables(void) {
+    for (unsigned i = 0; i < 256; i++) {
         unsigned char val = 0;
 
-        if (i & C_Flag)
-        {
+        if (i & C_Flag) {
             val |= C_Flag_6502;
         }
 
-        if (i & X_Flag)
-        {
+        if (i & X_Flag) {
             val |= X_Flag_6502;
         }
 
-        if (i & I_Flag)
-        {
+        if (i & I_Flag) {
             val |= I_Flag_6502;
         }
 
-        if (i & V_Flag)
-        {
+        if (i & V_Flag) {
             val |= V_Flag_6502;
         }
 
-        if (i & B_Flag)
-        {
+        if (i & B_Flag) {
             val |= B_Flag_6502;
         }
 
-        if (i & D_Flag)
-        {
+        if (i & D_Flag) {
             val |= D_Flag_6502;
         }
 
-        if (i & Z_Flag)
-        {
+        if (i & Z_Flag) {
             val |= Z_Flag_6502;
         }
 
-        if (i & N_Flag)
-        {
+        if (i & N_Flag) {
             val |= N_Flag_6502;
         }
 
-#if defined(__i386__) || defined(__x86_64__)
-        cpu65_flags_encode[ i ] = val/* | 0x20 WTF?*/;
+        cpu65_flags_encode[ i ] = val;
         cpu65_flags_decode[ val ] = i;
-#elif defined(__arm__)
-#   error TODO FIXME proper map of ARM processor flags
-#elif defined(__aarch64__)
-#   error soon ...
-#else
-#   error unknown machine architecture
-#endif
     }
 }
 
 void cpu65_init(void)
 {
-    initialize_code_tables();
+    init_flags_conversion_tables();
     cpu65__signal = 0;
     cpu65_pc = 0x0;
     cpu65_ea = 0x0;

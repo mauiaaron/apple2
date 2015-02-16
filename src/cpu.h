@@ -97,6 +97,7 @@ void cpu65_trace_checkpoint(void);
 #   define Z_Flag          0x40            /* 6502 Zero               */
 #   define N_Flag          0x80            /* 6502 Negative           */
 #elif defined(__arm__)
+// VCZN positions match positions of shifted status register
 #   define V_Flag          0x1
 #   define C_Flag          0x2
 #   define Z_Flag          0x4
