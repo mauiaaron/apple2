@@ -1546,7 +1546,6 @@ static void *interface_thread(void *current_key)
     in_interface = true;
 
     switch ((__SWORD_TYPE)current_key) {
-#ifdef INTERFACE_CLASSIC
     case kF1:
         c_interface_select_diskette( 0 );
         break;
@@ -1554,7 +1553,6 @@ static void *interface_thread(void *current_key)
     case kF2:
         c_interface_select_diskette( 1 );
         break;
-#endif
 
     case kPAUSE:
         while (c_mygetch(1) == -1)
@@ -1564,7 +1562,6 @@ static void *interface_thread(void *current_key)
         }
         break;
 
-#ifdef INTERFACE_CLASSIC
     case kF5:
         c_interface_keyboard_layout();
         break;
@@ -1582,7 +1579,6 @@ static void *interface_thread(void *current_key)
     case kF10:
         c_interface_parameters();
         break;
-#endif
 
     default:
         break;

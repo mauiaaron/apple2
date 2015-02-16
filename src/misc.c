@@ -627,7 +627,9 @@ int main(int _argc, char **_argv) {
     argv = _argv;
 
     load_settings(); // user prefs
+#ifdef INTERFACE_CLASSIC
     c_keys_set_key(kF8); // show credits before emulation start
+#endif
     c_initialize_firsttime(); // one-time initializations
 
     // spin off cpu thread
