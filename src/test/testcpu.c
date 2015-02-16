@@ -7354,11 +7354,31 @@ GREATEST_SUITE(test_suite_cpu) {
     HASH_ITER(hh, test_funcs, func, tmp) {
         fprintf(GREATEST_STDOUT, "\n%s (SILENCED OUTPUT) :\n", func->name);
 
-        for (uint16_t addrs = 0x1f02; addrs < 0x2000; addrs+=0x80) {
+        for (uint16_t addrs = 0x1f02; addrs < 0x2000; addrs++) {
             for (uint8_t flag = 0x00; flag < 0x02; flag++) {
                 uint8_t off=0x00;
                 do {
                     A2_RUN_TESTp( func->func, off, flag, addrs);
+                } while (++off);
+            }
+        }
+
+        // 16bit branch overflow tests
+        for (uint16_t addrs = 0xff00; addrs >= 0xff00 || addrs < 0x00fe; addrs++) {
+            for (uint8_t flag = 0x00; flag < 0x02; flag++) {
+                uint8_t off=0x00;
+                do {
+                    A2_RUN_TESTp(func->func, off, flag, addrs);
+                } while (++off);
+            }
+        }
+
+        // 16bit branch underflow tests
+        for (uint16_t addrs = 0x00fe; addrs <= 0x00fe || addrs > 0xff00; addrs--) {
+            for (uint8_t flag = 0x00; flag < 0x02; flag++) {
+                uint8_t off=0x00;
+                do {
+                    A2_RUN_TESTp(func->func, off, flag, addrs);
                 } while (++off);
             }
         }
