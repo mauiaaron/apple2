@@ -112,13 +112,7 @@
 
 #define GetFromMem_W(x) \
                 movLQ   x, EffectiveAddr_X; \
-                incw    EffectiveAddr; \
-                SYMX_PROLOGUE(cpu65_vmem_r); \
-                callLQ  *SYMX(cpu65_vmem_r,EffectiveAddr_X,SZ_PTR); \
-                decw    EffectiveAddr; \
-                movb    %al, %ah; \
-                SYMX_PROLOGUE(cpu65_vmem_r); \
-                callLQ  *SYMX(cpu65_vmem_r,EffectiveAddr_X,SZ_PTR);
+                GetFromEA_W
 
 #define Continue \
                 jmp     continue;
