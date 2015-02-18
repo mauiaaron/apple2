@@ -12,7 +12,7 @@ include $(COMMON_SOURCES_MK)
 
 LOCAL_MODULE    := apple2ix
 LOCAL_SRC_FILES := $(APPLE2_SRC_PATH)/test/testcommon.c $(APPLE2_SRC_PATH)/test/testcpu.c
-LOCAL_CFLAGS    := $(APPLE2_BASE_CFLAGS) -DHEADLESS=1 -DDEBUGGER=1 -DHAVE_OPENSSL=0
+LOCAL_CFLAGS    := $(APPLE2_BASE_CFLAGS) -DHEADLESS=1 -DDEBUGGER=1
 LOCAL_LDLIBS    := -llog -landroid -lGLESv2 -lz
 
 # Add assembly files first ... mostly for the benefit of the ARM assembler ...

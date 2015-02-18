@@ -16,9 +16,7 @@
 
 #include "common.h"
 
-#if HAVE_OPENSSL
-#include <openssl/sha.h>
-#endif
+#include <test/sha1.h>
 
 #define SW_TEXT 0xC050
 #define SW_MIXED 0xC052
@@ -1100,7 +1098,6 @@ void clear_debugger_screen() {
     fb_sha1 () -- prints SHA1 of the current Apple // framebuffer
    ------------------------------------------------------------------------- */
 void fb_sha1() {
-#if HAVE_OPENSSL
     uint8_t md[SHA_DIGEST_LENGTH];
     char buf[(SHA_DIGEST_LENGTH*2)+1];
 
@@ -1124,9 +1121,6 @@ void fb_sha1() {
     clear_debugger_screen();
 
     sprintf(second_buf[num_buffer_lines++], "%s", buf);
-#else
-    sprintf(second_buf[num_buffer_lines++], "SHA1 unavailable, not built with OpenSSL");
-#endif
 }
 
 /* -------------------------------------------------------------------------

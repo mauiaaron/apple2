@@ -49,7 +49,8 @@ AUDIO_SRC = \
 	src/audio/AY8910.c
 
 META_SRC = \
-	src/meta/debug.l src/meta/debugger.c src/meta/opcodes.c
+	src/meta/debug.l src/meta/debugger.c src/meta/opcodes.c \
+	src/test/sha1.c
 
 # NOTE : selectively enabled through configuration process ...
 EXTRA_apple2ix_SOURCES = \

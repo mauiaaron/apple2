@@ -19,10 +19,8 @@
 #   include <CommonCrypto/CommonDigest.h>
 #   define SHA_DIGEST_LENGTH CC_SHA1_DIGEST_LENGTH
 #   define SHA1 CC_SHA1
-#elif HAVE_OPENSSL
-#   include <openssl/sha.h>
 #else
-#   error "these tests require OpenSSL libraries (SHA)"
+#   include "test/sha1.h"
 #endif
 
 #define TEST_FINISHED 0xff

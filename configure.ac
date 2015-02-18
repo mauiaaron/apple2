@@ -256,19 +256,7 @@ dnl ---------------------------------------------------------------------------
 dnl Debugger & classic interface ...
 AC_ARG_ENABLE([debugger], AS_HELP_STRING([--disable-debugger], [Disable 6502 debugging console]), [], [
     AC_DEFINE(DEBUGGER, 1, [Enable 6502 debugger module])
-    META_O="src/meta/debug.o src/meta/debugger.o src/meta/opcodes.o"
-
-    AC_CHECK_HEADER(openssl/sha.h, [
-        AC_SEARCH_LIBS(SHA1, crypto, [
-            AC_DEFINE(HAVE_OPENSSL, 1, [Use OpenSSL])
-        ], [
-            AC_MSG_WARN([Could not find OpenSSL libraries, certain functionality will be disabled])
-        ], [])
-    ], [
-        AC_MSG_WARN([Could not find openssl/sha.h header])
-    ], [
-#include <openssl/sha.h>
-    ])
+    META_O="src/meta/debug.o src/meta/debugger.o src/meta/opcodes.o src/test/sha1.o"
 ])
 AC_SUBST(META_O)
 
