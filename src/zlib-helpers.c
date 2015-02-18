@@ -28,7 +28,13 @@
 
 #include "common.h"
 
+#ifdef ANDROID
+// Ugh, why is gzbuffer() symbol not part of zlib.h on Android?  I guess maybe we should just go with the published
+// default buffer size?  Yay, GJ Goog!
+#define CHUNK 8192
+#else
 #define CHUNK 16384
+#endif
 #define UNKNOWN_ERR 42
 
 /* report a zlib or i/o error */
@@ -76,11 +82,13 @@ const char *def(const char* const src, const int expected_bytecount)
             break;
         }
 
+#if !defined(ANDROID)
         int err = gzbuffer(gzdest, CHUNK);
         if (err != Z_OK) {
             ERRLOG("Cannot set bufsize on gz output");
             break;
         }
+#endif
 
         // deflate ...
         do {
