@@ -26,10 +26,13 @@
 // TODO: implement 3D CRT object, possibly with perspective drawing?
 #define PERSPECTIVE 0
 
+// VAO optimization (may not be available on all platforms)
+#define USE_VAO 0
+
 enum {
     POS_ATTRIB_IDX,
+    TEXCOORD_ATTRIB_IDX,
     NORMAL_ATTRIB_IDX,
-    TEXCOORD_ATTRIB_IDX
 };
 
 bool safe_to_do_opengl_logging = false;
@@ -45,7 +48,6 @@ static int viewportWidth = SCANWIDTH*1.5;
 static int viewportHeight = SCANHEIGHT*1.5;
 
 static GLint uniformMVPIdx;
-static GLuint crtVAOName;
 static GLenum crtElementType;
 static GLuint crtNumElements;
 
@@ -53,12 +55,18 @@ static GLuint a2TextureName = 0;
 static GLuint defaultFBO = 0;
 static GLuint program = 0;
 
+static GLuint crtVAOName = 0;
+static GLuint posBufferName = 0;
+static GLuint texcoordBufferName;
+static GLuint elementBufferName = 0;
+static demoModel *crtModel = NULL;
+
 //----------------------------------------------------------------------------
 //
 // OpenGL helper routines
 //
 
-static GLsizei _get_gl_type_size(GLenum type) {
+static inline GLsizei _get_gl_type_size(GLenum type) {
     switch (type) {
         case GL_BYTE:
             return sizeof(GLbyte);
@@ -78,7 +86,7 @@ static GLsizei _get_gl_type_size(GLenum type) {
     return 0;
 }
 
-static demoModel *_create_CRT_model() {
+static void _create_CRT_model(void) {
 #define STRIDE 9*sizeof(GLfloat)
 #define TEST_COLOR_OFF (GLvoid *)(3*sizeof(GLfloat))
 #define TEX_COORD_OFF (GLvoid *)(7*sizeof(GLfloat))
@@ -135,40 +143,43 @@ static demoModel *_create_CRT_model() {
     crt->elementType = GL_UNSIGNED_SHORT;
     crt->elementArraySize = sizeof(indices);
 
-    return crt;
+    mdlDestroyModel(crtModel);
+    crtModel = crt;
 }
 
-static GLuint _create_VAO(demoModel *model) {
-    GLuint vaoName;
+static void _create_VAO_VBOs(void) {
 
     // Create a vertex array object (VAO) to cache model parameters
-    glGenVertexArrays(1, &vaoName);
-    glBindVertexArray(vaoName);
-
-    GLuint posBufferName;
+#if USE_VAO
+    glGenVertexArrays(1, &crtVAOName);
+    glBindVertexArray(crtVAOName);
+#endif
 
     // Create a vertex buffer object (VBO) to store positions and load data
     glGenBuffers(1, &posBufferName);
     glBindBuffer(GL_ARRAY_BUFFER, posBufferName);
-    glBufferData(GL_ARRAY_BUFFER, model->positionArraySize, model->positions, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, crtModel->positionArraySize, crtModel->positions, GL_STATIC_DRAW);
 
+#if USE_VAO
     // Enable the position attribute for this VAO
     glEnableVertexAttribArray(POS_ATTRIB_IDX);
 
     // Get the size of the position type so we can set the stride properly
-    GLsizei posTypeSize = _get_gl_type_size(model->positionType);
+    GLsizei posTypeSize = _get_gl_type_size(crtModel->positionType);
 
     // Set up parmeters for position attribute in the VAO including,
     //  size, type, stride, and offset in the currenly bound VAO
     // This also attaches the position VBO to the VAO
     glVertexAttribPointer(POS_ATTRIB_IDX,        // What attibute index will this array feed in the vertex shader (see buildProgram)
-                          model->positionSize,    // How many elements are there per position?
-                          model->positionType,    // What is the type of this data?
+                          crtModel->positionSize,    // How many elements are there per position?
+                          crtModel->positionType,    // What is the type of this data?
                           GL_FALSE,                // Do we want to normalize this data (0-1 range for fixed-pont types)
-                          model->positionSize*posTypeSize, // What is the stride (i.e. bytes between positions)?
+                          crtModel->positionSize*posTypeSize, // What is the stride (i.e. bytes between positions)?
                           0);    // What is the offset in the VBO to the position data?
+#endif
 
-    if (model->normals) {
+#if 0
+    if (crtModel->normals) {
         GLuint normalBufferName;
 
         // Create a vertex buffer object (VBO) to store positions
@@ -176,53 +187,52 @@ static GLuint _create_VAO(demoModel *model) {
         glBindBuffer(GL_ARRAY_BUFFER, normalBufferName);
 
         // Allocate and load normal data into the VBO
-        glBufferData(GL_ARRAY_BUFFER, model->normalArraySize, model->normals, GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, crtModel->normalArraySize, crtModel->normals, GL_STATIC_DRAW);
 
         // Enable the normal attribute for this VAO
         glEnableVertexAttribArray(NORMAL_ATTRIB_IDX);
 
         // Get the size of the normal type so we can set the stride properly
-        GLsizei normalTypeSize = _get_gl_type_size(model->normalType);
+        GLsizei normalTypeSize = _get_gl_type_size(crtModel->normalType);
 
         // Set up parmeters for position attribute in the VAO including,
         //   size, type, stride, and offset in the currenly bound VAO
         // This also attaches the position VBO to the VAO
         glVertexAttribPointer(NORMAL_ATTRIB_IDX,    // What attibute index will this array feed in the vertex shader (see buildProgram)
-                              model->normalSize,    // How many elements are there per normal?
-                              model->normalType,    // What is the type of this data?
+                              crtModel->normalSize,    // How many elements are there per normal?
+                              crtModel->normalType,    // What is the type of this data?
                               GL_FALSE,                // Do we want to normalize this data (0-1 range for fixed-pont types)
-                              model->normalSize*normalTypeSize, // What is the stride (i.e. bytes between normals)?
+                              crtModel->normalSize*normalTypeSize, // What is the stride (i.e. bytes between normals)?
                               0);    // What is the offset in the VBO to the normal data?
     }
+#endif
 
-    if (model->texcoords) {
-        GLuint texcoordBufferName;
-
+    if (crtModel->texcoords) {
         // Create a VBO to store texcoords
         glGenBuffers(1, &texcoordBufferName);
         glBindBuffer(GL_ARRAY_BUFFER, texcoordBufferName);
 
         // Allocate and load texcoord data into the VBO
-        glBufferData(GL_ARRAY_BUFFER, model->texcoordArraySize, model->texcoords, GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, crtModel->texcoordArraySize, crtModel->texcoords, GL_STATIC_DRAW);
 
+#if USE_VAO
         // Enable the texcoord attribute for this VAO
         glEnableVertexAttribArray(TEXCOORD_ATTRIB_IDX);
 
         // Get the size of the texcoord type so we can set the stride properly
-        GLsizei texcoordTypeSize = _get_gl_type_size(model->texcoordType);
+        GLsizei texcoordTypeSize = _get_gl_type_size(crtModel->texcoordType);
 
         // Set up parmeters for texcoord attribute in the VAO including,
         //   size, type, stride, and offset in the currenly bound VAO
         // This also attaches the texcoord VBO to VAO
         glVertexAttribPointer(TEXCOORD_ATTRIB_IDX,    // What attibute index will this array feed in the vertex shader (see buildProgram)
-                              model->texcoordSize,    // How many elements are there per texture coord?
-                              model->texcoordType,    // What is the type of this data in the array?
+                              crtModel->texcoordSize,    // How many elements are there per texture coord?
+                              crtModel->texcoordType,    // What is the type of this data in the array?
                               GL_TRUE,                // Do we want to normalize this data (0-1 range for fixed-point types)
-                              model->texcoordSize*texcoordTypeSize,  // What is the stride (i.e. bytes between texcoords)?
+                              crtModel->texcoordSize*texcoordTypeSize,  // What is the stride (i.e. bytes between texcoords)?
                               0);    // What is the offset in the VBO to the texcoord data?
+#endif
     }
-
-    GLuint elementBufferName;
 
     // Create a VBO to vertex array elements
     // This also attaches the element array buffer to the VAO
@@ -230,16 +240,15 @@ static GLuint _create_VAO(demoModel *model) {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBufferName);
 
     // Allocate and load vertex array element data into VBO
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, model->elementArraySize, model->elements, GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, crtModel->elementArraySize, crtModel->elements, GL_STATIC_DRAW);
 
     GL_ERRLOG("finished creating VAO/VBOs");
-
-    return vaoName;
 }
 
 static void _destroy_VAO(GLuint vaoName) {
 
     // Bind the VAO so we can get data from it
+#if USE_VAO
     glBindVertexArray(vaoName);
 
     // For every possible attribute set in the VAO
@@ -269,6 +278,11 @@ static void _destroy_VAO(GLuint vaoName) {
 
     // Finally, delete the VAO
     glDeleteVertexArrays(1, &vaoName);
+#else
+    glDeleteBuffers(1, &posBufferName);
+    glDeleteBuffers(1, &texcoordBufferName);
+    glDeleteBuffers(1, &elementBufferName);
+#endif
 
     GL_ERRLOG("destroying VAO/VBOs");
 }
@@ -509,19 +523,21 @@ static void gldriver_init_common(void) {
     // Create CRT model VAO/VBOs
 
     // create CRT model
-    demoModel *crtModel = _create_CRT_model();
+    _create_CRT_model();
 
     // Build Vertex Buffer Objects (VBOs) and Vertex Array Object (VAOs) with our model data
-    crtVAOName = _create_VAO(crtModel);
+    _create_VAO_VBOs();
 
     // Cache the number of element and primType to use later in our glDrawElements calls
     crtNumElements = crtModel->numElements;
     crtElementType = crtModel->elementType;
 
+#if USE_VAO
     // We're using VBOs we can destroy all this memory since buffers are
     // loaded into GL and we've saved anything else we need
     mdlDestroyModel(crtModel);
     crtModel = NULL;
+#endif
 
     // Build a default texture object with our image data
     a2TextureName = _create_CRT_texture();
@@ -577,6 +593,8 @@ static void gldriver_shutdown(void) {
     // Cleanup all OpenGL objects
     glDeleteTextures(1, &a2TextureName);
     _destroy_VAO(crtVAOName);
+    mdlDestroyModel(crtModel);
+    crtModel = NULL;
     glDeleteProgram(program);
 }
 
@@ -662,7 +680,36 @@ static void gldriver_render(void) {
     glGetError();
 
     // Bind our vertex array object
+#if USE_VAO
     glBindVertexArray(crtVAOName);
+#else
+    glBindBuffer(GL_ARRAY_BUFFER, posBufferName);
+
+    GLsizei posTypeSize      = _get_gl_type_size(crtModel->positionType);
+    GLsizei texcoordTypeSize = _get_gl_type_size(crtModel->texcoordType);
+
+    // Set up parmeters for position attribute in the VAO including, size, type, stride, and offset in the currenly
+    // bound VAO This also attaches the position VBO to the VAO
+    glVertexAttribPointer(POS_ATTRIB_IDX,                       // What attibute index will this array feed in the vertex shader (see buildProgram)
+                          crtModel->positionSize,               // How many elements are there per position?
+                          crtModel->positionType,               // What is the type of this data?
+                          GL_FALSE,                             // Do we want to normalize this data (0-1 range for fixed-pont types)
+                          crtModel->positionSize*posTypeSize,   // What is the stride (i.e. bytes between positions)?
+                          0);                                   // What is the offset in the VBO to the position data?
+    glEnableVertexAttribArray(POS_ATTRIB_IDX);
+    glBindBuffer(GL_ARRAY_BUFFER, texcoordBufferName);
+
+    // Set up parmeters for texcoord attribute in the VAO including, size, type, stride, and offset in the currenly
+    // bound VAO This also attaches the texcoord VBO to VAO
+    glVertexAttribPointer(TEXCOORD_ATTRIB_IDX,                      // What attibute index will this array feed in the vertex shader (see buildProgram)
+                          crtModel->texcoordSize,                   // How many elements are there per texture coord?
+                          crtModel->texcoordType,                   // What is the type of this data in the array?
+                          GL_TRUE,                                  // Do we want to normalize this data (0-1 range for fixed-point types)
+                          crtModel->texcoordSize*texcoordTypeSize,  // What is the stride (i.e. bytes between texcoords)?
+                          0);                                       // What is the offset in the VBO to the texcoord data?
+    glEnableVertexAttribArray(TEXCOORD_ATTRIB_IDX);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBufferName);
+#endif
 
     // Cull back faces now that we no longer render
     // with an inverted matrix
@@ -752,6 +799,8 @@ void video_driver_init(void *fbo) {
     defaultFBO = (GLuint)fbo;
 #pragma GCC diagnostic pop
 #if defined(__APPLE__)
+    gldriver_init_common();
+#elif defined(ANDROID)
     gldriver_init_common();
 #elif USE_GLUT
     gldriver_init_glut(defaultFBO);
