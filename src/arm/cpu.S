@@ -27,9 +27,8 @@
                 ldrb    F_Reg, [r1, r0];
 
 #define EncodeFlags \
-                mov     r0, F_Reg; \
                 ldr     r1, SYM(cpu65_flags_encode); \
-                ldrb    r0, [r1, r0];
+                ldrb    r0, [r1, F_Reg];
 
 #define CommonSaveCPUState \
                 /* save EA */ \
@@ -103,32 +102,50 @@
 #else
 #   define CPU_DEBUGGING_SET_READ
 #   define CPU_DEBUGGING_RESET
-#   define CPU_DEBUGGING_SET_WRIT
+#   define CPU_DEBUGGING_SET_WRITE
 #endif
 
 // ----------------------------------------------------------------------------
 // CPU (6502) helper macros
 
+#define AddUint16(x, amt) \
+                add     x, x, amt; \
+                bic     x, #0x10000;
+
+#define IncUint16(x) \
+                AddUint16(x, #1)
+
+#define SubUint16(x, amt) \
+                sub     x, x, amt; \
+                mov     x, x, LSL #16; \
+                mov     x, x, LSR #16;
+
+#define DecUint16(x) \
+                SubUint16(x, #1)
+
 #define GetFromPC_B \
                 mov     EffectiveAddr, PC_Reg; \
-                add     PC_Reg, PC_Reg, #1; \
+                IncUint16(PC_Reg) \
                 ldr     r1, [reg_vmem_r, EffectiveAddr, LSL PTR_SHIFT]; \
                 blx     r1; \
                 TRACE_ARG
 
+#define hi_byte         r0
+#define lo_byte         r9
+
 #define GetFromPC_W \
                 mov     EffectiveAddr, PC_Reg; \
-                add     PC_Reg, PC_Reg, #2; \
-                add     EffectiveAddr, EffectiveAddr, #1; \
+                AddUint16(PC_Reg, #2) \
                 ldr     r1, [reg_vmem_r, EffectiveAddr, LSL PTR_SHIFT]; \
                 blx     r1; \
                 TRACE_ARG2 \
-                sub     EffectiveAddr, EffectiveAddr, #1; \
-                mov     r9, r0, LSL #8; \
+                mov     lo_byte, r0; \
+                IncUint16(EffectiveAddr) \
                 ldr     r1, [reg_vmem_r, EffectiveAddr, LSL PTR_SHIFT]; \
                 blx     r1; \
                 TRACE_ARG1; \
-                orr     r0, r9, r0;
+                mov     hi_byte, hi_byte, LSL #8; \
+                orr     r0, hi_byte, lo_byte;
 
 #define JumpNextInstruction \
                 TRACE_PROLOGUE \
@@ -144,14 +161,14 @@
                 blx     r1;
 
 #define GetFromEA_W \
-                add     EffectiveAddr, EffectiveAddr, #1; \
                 ldr     r1, [reg_vmem_r, EffectiveAddr, LSL PTR_SHIFT]; \
                 blx     r1; \
-                sub     EffectiveAddr, EffectiveAddr, #1; \
-                mov     r9, r0, LSL #8; \
+                mov     lo_byte, r0; \
+                IncUint16(EffectiveAddr) \
                 ldr     r1, [reg_vmem_r, EffectiveAddr, LSL PTR_SHIFT]; \
                 blx     r1; \
-                orr     r0, r9, r0;
+                mov     hi_byte, hi_byte, LSL #8; \
+                orr     r0, hi_byte, lo_byte;
 
 #define PutToEA_B \
                 CPU_DEBUGGING_SET_WRITE \
@@ -166,14 +183,7 @@
 
 #define GetFromMem_W(x) \
                 mov     EffectiveAddr, x; \
-                add     EffectiveAddr, EffectiveAddr, #1; \
-                ldr     r1, [reg_vmem_r, EffectiveAddr, LSL PTR_SHIFT]; \
-                blx     r1; \
-                sub     EffectiveAddr, EffectiveAddr, #1; \
-                mov     r9, r0, LSL #8; \
-                ldr     r1, [reg_vmem_r, EffectiveAddr, LSL PTR_SHIFT]; \
-                blx     r1; \
-                orr     r0, r9, r0;
+                GetFromEA_W
 
 #define Continue \
                 b       continue;
@@ -182,9 +192,6 @@
                 /* Virtual x86: Convert Byte-to-Word */ \
                 mov     r0, r0, LSL #24; \
                 mov     r0, r0, ASR #24;
-
-#define hi_byte         r9
-#define lo_byte         r0
 
 #define pc_hi_byte      r9
 #define mem_cycle_count r1
@@ -207,8 +214,6 @@
                 teq     pc_hi_next, pc_hi_prev; \
                 addne   scratch_count, scratch_count, #1; /* +1 branch taken */ \
                 strb    scratch_count, [mem_cycle_count];
-
-#warning FIXME TODO write tests for 16bit branch over/under protection
 
 #define arm_flags r12
 #define lahf \
@@ -288,13 +293,7 @@
    instruction. */
 #define _GetImm \
                 mov     EffectiveAddr, PC_Reg; \
-                ldr     r0, SYM(mask_FFFF); \
-                ldrh    r0, [r0]; \
-                teq     PC_Reg, r0; \
-                addne   PC_Reg, PC_Reg, #1; \
-                moveq   PC_Reg, #0
-#warning TODO write test cases for immediate addressing 16bit overflow
-#warning FIXME TODO ... can all/many of the 16bit overflow cases be handled in Continue instead of in various one-off/bespoke ways ?
+                IncUint16(PC_Reg)
 
 #if CPU_TRACING
 #define GetImm \
@@ -1089,12 +1088,8 @@ ENTRY(op_BRA)
 
 ENTRY(op_UNK) /* make undefined opcodes fault */
 ENTRY(op_BRK)
-                ldr     r0, SYM(mask_FFFF)
-                ldrh    r0, [r0]
-                teq     PC_Reg, r0
-                addne   PC_Reg, PC_Reg, #1
-                moveq   PC_Reg, #0
 #warning TODO FIXME ... write test for overflow in op_BRK
+                IncUint16(PC_Reg)
                 mov     r0, PC_Reg
                 mov     r0, r0, ROR #8
                 Push(r0)
@@ -1480,13 +1475,12 @@ ENTRY(op_JMP_abs_ind_x)
    ---------------------------------- */
 
 ENTRY(op_JSR) // 0x20
+#warning TODO FIXME write test for op_JSR underflow ...
                 GetAbs
                 mov     r0, PC_Reg
                 subs    r0, r0, #1
-                ldrmi   r0, SYM(mask_FFFF) // handle underflow -- considered highly unlikely
-                ldrmih  r0, [r0]
-                mov     r0, r0, ROR #8
-#warning TODO FIXME write test for op_JSR underflow ...
+                mov     r0, r0, LSL #16 // handle underflow
+                mov     r0, r0, ROR #24
                 Push(r0) // push hi_byte
                 mov     r0, r0, LSR #24
                 Push(r0) // push lo_byte
@@ -1847,8 +1841,7 @@ ENTRY(op_RTI) // 0x40
                 Pop(lo_byte)
                 Pop(hi_byte)
                 mov     hi_byte, hi_byte, LSL #8
-                orr     r0, hi_byte, lo_byte
-                mov     PC_Reg, r0
+                orr     PC_Reg, hi_byte, lo_byte
                 Continue
 
 /* ----------------------------------
@@ -1856,17 +1849,12 @@ ENTRY(op_RTI) // 0x40
    ---------------------------------- */
 
 ENTRY(op_RTS) // 0x60
+#warning TODO FIXME write test for this overflow ...
                 Pop(lo_byte)
                 Pop(hi_byte)
                 mov     hi_byte, hi_byte, LSL #8
-                orr     r0, hi_byte, lo_byte
-                ldr     r1, SYM(mask_FFFF)
-                ldr     r1, [r1]
-                teq     r0, r1
-                addne   r0, r0, #1
-                moveq   r0, #0 // handle overflow -- considered highly unlikely
-#warning TODO FIXME write test for this overflow ...
-                mov     PC_Reg, r0
+                orr     PC_Reg, hi_byte, lo_byte
+                IncUint16(PC_Reg)
                 Continue
 
 .ltorg
@@ -2467,7 +2455,7 @@ exit_reinit:    ldr     r1, SYM(cpu65__signal)
 
 ENTRY(cpu65_direct_write)
 #warning FIXME TODO implement cpu65_direct_write ...
-                ldr     r0, #42
+                mov     r0, #42
                 ldr     r0, [r0] // segfault
                 ret
 
