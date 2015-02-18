@@ -86,8 +86,6 @@ typedef void* HANDLE;
 #define FALSE false
 #endif
 
-extern FILE *g_fh;
-
 #define _strdup strdup
 #define _ASSERT assert
 #define Sleep(x) usleep(x)

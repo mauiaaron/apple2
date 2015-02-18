@@ -54,12 +54,6 @@ static VOICE* g_pSpeakerVoice = NULL;
 bool g_bDSAvailable = false;
 
 bool g_bDisableDirectSound = false;
-FILE *g_fh = NULL;
-
-__attribute__((constructor))
-static void _init_soundcore() {
-    g_fh = error_log;
-}
 
 //-----------------------------------------------------------------------------
 
@@ -183,13 +177,13 @@ bool DSZeroVoiceBuffer(PVOICE Voice, char* pszDevName, DWORD dwBufferSize)
     HRESULT hr = Voice->lpDSBvoice->Stop(Voice->lpDSBvoice->_this);
     if(FAILED(hr))
     {
-        if(g_fh) fprintf(g_fh, "%s: DSStop failed (%08X)\n",pszDevName,(unsigned int)hr);
+        LOG("%s: DSStop failed (%08X)\n",pszDevName,(unsigned int)hr);
         return false;
     }
     hr = !DSGetLock(Voice->lpDSBvoice, 0, 0, &pDSLockedBuffer, &dwDSLockedBufferSize, NULL, &argX);
     if(FAILED(hr))
     {
-        if(g_fh) fprintf(g_fh, "%s: DSGetLock failed (%08X)\n",pszDevName,(unsigned int)hr);
+        LOG("%s: DSGetLock failed (%08X)\n",pszDevName,(unsigned int)hr);
         return false;
     }
 
@@ -199,14 +193,14 @@ bool DSZeroVoiceBuffer(PVOICE Voice, char* pszDevName, DWORD dwBufferSize)
     hr = Voice->lpDSBvoice->Unlock(Voice->lpDSBvoice->_this, (void*)pDSLockedBuffer, dwDSLockedBufferSize, NULL, argX);
     if(FAILED(hr))
     {
-        if(g_fh) fprintf(g_fh, "%s: DSUnlock failed (%08X)\n",pszDevName,(unsigned int)hr);
+        LOG("%s: DSUnlock failed (%08X)\n",pszDevName,(unsigned int)hr);
         return false;
     }
 
     hr = Voice->lpDSBvoice->Play(Voice->lpDSBvoice->_this,0,0,0);
     if(FAILED(hr))
     {
-        if(g_fh) fprintf(g_fh, "%s: DSPlay failed (%08X)\n",pszDevName,(unsigned int)hr);
+        LOG("%s: DSPlay failed (%08X)\n",pszDevName,(unsigned int)hr);
         return false;
     }
 
@@ -228,7 +222,7 @@ bool DSZeroVoiceWritableBuffer(PVOICE Voice, char* pszDevName, DWORD dwBufferSiz
         hr = !hr;
     if(FAILED(hr))
     {
-        if(g_fh) fprintf(g_fh, "%s: DSGetLock failed (%08X)\n",pszDevName,(unsigned int)hr);
+        LOG("%s: DSGetLock failed (%08X)\n",pszDevName,(unsigned int)hr);
         return false;
     }
 
@@ -240,7 +234,7 @@ bool DSZeroVoiceWritableBuffer(PVOICE Voice, char* pszDevName, DWORD dwBufferSiz
                                     (void*)pDSLockedBuffer1, dwDSLockedBufferSize1);
     if(FAILED(hr))
     {
-        if(g_fh) fprintf(g_fh, "%s: DSUnlock failed (%08X)\n",pszDevName,(unsigned int)hr);
+        LOG("%s: DSUnlock failed (%08X)\n",pszDevName,(unsigned int)hr);
         return false;
     }
 
@@ -253,10 +247,6 @@ static UINT g_uDSInitRefCount = 0;
 
 bool DSInit()
 {
-    if (!g_fh)
-    {
-        g_fh = stderr;
-    }
     if(g_bDSAvailable)
     {
         g_uDSInitRefCount++;
@@ -279,14 +269,11 @@ bool DSInit()
         HRESULT hr = (num_sound_devices <= 0);
     if(FAILED(hr))
     {
-        if(g_fh) fprintf(g_fh, "DSEnumerate failed (%08X)\n",(unsigned int)hr);
+        LOG("DSEnumerate failed (%08X)\n",(unsigned int)hr);
         return false;
     }
 
-    if(g_fh)
-    {
-        fprintf(g_fh, "Number of sound devices = %ld\n",num_sound_devices);
-    }
+    LOG("Number of sound devices = %ld\n",num_sound_devices);
 
     bool bCreatedOK = false;
     for(int x=0; x<num_sound_devices; x++)
@@ -302,11 +289,11 @@ bool DSInit()
             break;
         }
 
-        if(g_fh) fprintf(g_fh, "DSCreate failed for sound device #%d (%08X)\n",x,(unsigned int)hr);
+        LOG("DSCreate failed for sound device #%d (%08X)\n",x,(unsigned int)hr);
     }
     if(!bCreatedOK)
     {
-        if(g_fh) fprintf(g_fh, "DSCreate failed for all sound devices\n");
+        LOG("DSCreate failed for all sound devices\n");
         return false;
     }
 
@@ -364,7 +351,7 @@ int SoundCore_GetErrorInc()
 void SoundCore_SetErrorInc(const int nErrorInc)
 {
     g_nErrorInc = nErrorInc < g_nErrorMax ? nErrorInc : g_nErrorMax;
-    if(g_fh) fprintf(g_fh, "Speaker/MB Error Inc = %d\n", g_nErrorInc);
+    LOG("Speaker/MB Error Inc = %d\n", g_nErrorInc);
 }
 
 int SoundCore_GetErrorMax()
@@ -375,7 +362,6 @@ int SoundCore_GetErrorMax()
 void SoundCore_SetErrorMax(const int nErrorMax)
 {
     g_nErrorMax = nErrorMax < MAX_SAMPLES ? nErrorMax : MAX_SAMPLES;
-    if(g_fh) fprintf(g_fh, "Speaker/MB Error Max = %d\n", g_nErrorMax);
+    LOG("Speaker/MB Error Max = %d\n", g_nErrorMax);
 }
-
 

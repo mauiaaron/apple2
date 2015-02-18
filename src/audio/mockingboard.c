@@ -653,7 +653,7 @@ static void SSI263_Write(BYTE nDevice, BYTE nReg, BYTE nValue)
 	{
 	case SSI_DURPHON:
 #if LOG_SSI263
-		if(g_fh) fprintf(g_fh, "DUR   = 0x%02X, PHON = 0x%02X\n\n", nValue>>6, nValue&PHONEME_MASK);
+		LOG("DUR   = 0x%02X, PHON = 0x%02X\n\n", nValue>>6, nValue&PHONEME_MASK);
 #endif
 
 		// Datasheet is not clear, but a write to DURPHON must clear the IRQ
@@ -689,19 +689,19 @@ static void SSI263_Write(BYTE nDevice, BYTE nReg, BYTE nValue)
 		break;
 	case SSI_INFLECT:
 #if LOG_SSI263
-		if(g_fh) fprintf(g_fh, "INF   = 0x%02X\n", nValue);
+		LOG("INF   = 0x%02X\n", nValue);
 #endif
 		pMB->SpeechChip.Inflection = nValue;
 		break;
 	case SSI_RATEINF:
 #if LOG_SSI263
-		if(g_fh) fprintf(g_fh, "RATE  = 0x%02X, INF = 0x%02X\n", nValue>>4, nValue&0x0F);
+		LOG("RATE  = 0x%02X, INF = 0x%02X\n", nValue>>4, nValue&0x0F);
 #endif
 		pMB->SpeechChip.RateInflection = nValue;
 		break;
 	case SSI_CTTRAMP:
 #if LOG_SSI263
-		if(g_fh) fprintf(g_fh, "CTRL  = %d, ART = 0x%02X, AMP=0x%02X\n", nValue>>7, (nValue&ARTICULATION_MASK)>>4, nValue&AMPLITUDE_MASK);
+		LOG("CTRL  = %d, ART = 0x%02X, AMP=0x%02X\n", nValue>>7, (nValue&ARTICULATION_MASK)>>4, nValue&AMPLITUDE_MASK);
 #endif
 		if((pMB->SpeechChip.CtrlArtAmp & CONTROL_MASK) && !(nValue & CONTROL_MASK))	// H->L
 			pMB->SpeechChip.CurrentMode = pMB->SpeechChip.DurationPhonome & DURATION_MODE_MASK;
@@ -709,7 +709,7 @@ static void SSI263_Write(BYTE nDevice, BYTE nReg, BYTE nValue)
 		break;
 	case SSI_FILFREQ:
 #if LOG_SSI263
-		if(g_fh) fprintf(g_fh, "FFREQ = 0x%02X\n", nValue);
+		LOG("FFREQ = 0x%02X\n", nValue);
 #endif
 		pMB->SpeechChip.FilterFreq = nValue;
 		break;
@@ -1297,7 +1297,7 @@ static bool MB_DSInit()
 	LogFileOutput("MB_DSInit: DSGetSoundBuffer(), hr=0x%08X\n", (unsigned int)hr);
 	if(FAILED(hr))
 	{
-		if(g_fh) fprintf(g_fh, "MB: DSGetSoundBuffer failed (%08X)\n",(unsigned int)hr);
+		LOG("MB: DSGetSoundBuffer failed (%08X)\n",(unsigned int)hr);
 		return false;
 	}
 
@@ -1363,7 +1363,7 @@ static bool MB_DSInit()
 
 	if((g_hSSI263Event[0] == NULL) || (g_hSSI263Event[1] == NULL))
 	{
-		if(g_fh) fprintf(g_fh, "SSI263: CreateEvent failed\n");
+		LOG("SSI263: CreateEvent failed\n");
 		return false;
 	}
 #endif
@@ -1394,7 +1394,7 @@ static bool MB_DSInit()
 		LogFileOutput("MB_DSInit: (%02d) DSGetSoundBuffer(), hr=0x%08X\n", i, (unsigned int)hr);
 		if(FAILED(hr))
 		{
-			if(g_fh) fprintf(g_fh, "SSI263: DSGetSoundBuffer failed (%08X)\n",(unsigned int)hr);
+			LOG("SSI263: DSGetSoundBuffer failed (%08X)\n",(unsigned int)hr);
 			return false;
 		}
 
@@ -1406,7 +1406,7 @@ static bool MB_DSInit()
 		//LogFileOutput("MB_DSInit: (%02d) DSGetLock(), res=%d\n", i, hr ? 1 : 0);	// WARNING: Lock acquired && doing heavy-weight logging
 		if(FAILED(hr))
 		{
-			if(g_fh) fprintf(g_fh, "SSI263: DSGetLock failed (%08X)\n",(unsigned int)hr);
+			LOG("SSI263: DSGetLock failed (%08X)\n",(unsigned int)hr);
 			return false;
 		}
 
@@ -1435,7 +1435,7 @@ static bool MB_DSInit()
 		//LogFileOutput("MB_DSInit: (%02d) QueryInterface(), hr=0x%08X\n", i, hr);	// WARNING: Lock acquired && doing heavy-weight logging
 		if(FAILED(hr))
 		{
-			if(g_fh) fprintf(g_fh, "SSI263: QueryInterface failed (%08X)\n",hr);
+			LOG("SSI263: QueryInterface failed (%08X)\n",hr);
 			return false;
 		}
 
@@ -1449,7 +1449,7 @@ static bool MB_DSInit()
 		//LogFileOutput("MB_DSInit: (%02d) SetNotificationPositions(), hr=0x%08X\n", i, hr);	// WARNING: Lock acquired && doing heavy-weight logging
 		if(FAILED(hr))
 		{
-			if(g_fh) fprintf(g_fh, "SSI263: SetNotifyPos failed (%08X)\n",hr);
+			LOG("SSI263: SetNotifyPos failed (%08X)\n",hr);
 			return false;
 		}
 #endif
@@ -1462,7 +1462,7 @@ static bool MB_DSInit()
 		LogFileOutput("MB_DSInit: (%02d) Unlock(),hr=0x%08X\n", i, (unsigned int)hr);
 		if(FAILED(hr))
 		{
-			if(g_fh) fprintf(g_fh, "SSI263: DSUnlock failed (%08X)\n",(unsigned int)hr);
+			LOG("SSI263: DSUnlock failed (%08X)\n",(unsigned int)hr);
 			return false;
 		}
 
