@@ -25,6 +25,10 @@ extern uint8_t apple_iie_rom[32768];
 bool do_logging = true; // also controlled by NDEBUG
 FILE *error_log = NULL;
 
+int sound_volume = 2;
+bool is_headless = false;
+color_mode_t color_mode = COLOR;
+
 __attribute__((constructor))
 static void _init_common() {
     error_log = stderr;
@@ -34,7 +38,6 @@ GLUE_BANK_READ(read_ram_bank,base_d000_rd)
 GLUE_BANK_MAYBEWRITE(write_ram_bank,base_d000_wrt)
 GLUE_BANK_READ(read_ram_lc,base_e000_rd)
 GLUE_BANK_MAYBEWRITE(write_ram_lc,base_e000_wrt)
-
 
 GLUE_BANK_READ(iie_read_ram_default,base_ramrd)
 GLUE_BANK_WRITE(iie_write_ram_default,base_ramwrt)
@@ -50,7 +53,6 @@ GLUE_BANK_READ(iie_read_slot3,base_c3rom)
 GLUE_BANK_MAYBEREAD(iie_read_slot4,base_c4rom)
 GLUE_BANK_MAYBEREAD(iie_read_slot5,base_c5rom)
 GLUE_BANK_READ(iie_read_slotx,base_cxrom)
-
 
 uint32_t softswitches;
 
@@ -73,7 +75,6 @@ uint8_t *base_c4rom;
 uint8_t *base_c5rom;
 uint8_t *base_cxrom;
 
-
 /* -------------------------------------------------------------------------
     c_debug_illegal_bcd - illegal BCD (decimal mode) computation
    ------------------------------------------------------------------------- */
@@ -82,7 +83,6 @@ GLUE_C_READ(debug_illegal_bcd)
     RELEASE_LOG("Illegal/undefined BCD operation encountered, debug break on c_debug_illegal_bcd to debug...");
     return 0;
 }
-
 
 /* -------------------------------------------------------------------------
     c_set_altchar() - set alternate character set
