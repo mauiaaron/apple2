@@ -26,7 +26,6 @@ static FILE *test_write_fp = NULL;
 #endif
 
 extern uint8_t slot6_rom[256];
-extern bool slot6_rom_loaded;
 
 drive_t disk6;
 
@@ -665,22 +664,6 @@ void disk_io_initialize(unsigned int slot) {
     assert(slot == 6);
 
     /* load Disk II rom */
-    if (!slot6_rom_loaded) {
-        snprintf(temp, PATH_MAX, "%s/slot6.rom", system_path);
-        if ((f = fopen( temp, "r" )) == NULL) {
-            printf("Cannot find file '%s'.\n",temp);
-            exit( 0 );
-        }
-
-        if (fread(slot6_rom, 0x100, 1, f) != 0x100) {
-            // error
-#warning FIXME TODO ... slot6 rom is read elsewhere
-        }
-
-        fclose(f);
-        slot6_rom_loaded = true;
-    }
-
     memcpy(apple_ii_64k[0] + 0xC600, slot6_rom, 0x100);
 
     // disk softswitches

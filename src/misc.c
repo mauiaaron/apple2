@@ -21,7 +21,6 @@
    ---------------------------------- */
 
 extern uint8_t apple_iie_rom[32768];
-extern bool iie_rom_loaded;
 
 bool do_logging = true; // also controlled by NDEBUG
 FILE *error_log = NULL;
@@ -469,25 +468,6 @@ void c_initialize_apple_ii_memory()
     for (i = 0; i < 8192; i++)
     {
         language_banks[0][i] = language_banks[1][i] = 0;
-    }
-
-    if (!iie_rom_loaded)
-    {
-        char temp[PATH_MAX];
-        snprintf(temp, PATH_MAX, "%s/apple_IIe.rom", system_path);
-        if ((f = fopen(temp, "r")) == NULL)
-        {
-            printf("Cannot find file '%s'.\n",temp);
-            exit(0);
-        }
-
-        if (fread(apple_iie_rom, 32768, 1, f) != 32768)
-        {
-            // ERROR ...
-        }
-
-        fclose(f);
-        iie_rom_loaded = 1;
     }
 
     /* load the rom from 0xC000, slot rom main, internal rom aux */
