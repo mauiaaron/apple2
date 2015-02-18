@@ -37,4 +37,4 @@ void Java_org_deadc0de_apple2_Apple2Activity_nativeOnPause(JNIEnv *env, jobject 
     LOG("%s", "native onPause...");
 }
 
-#endif
+#endif // LAUNCH_WITHOUT_JAVA

@@ -599,7 +599,7 @@ void c_initialize_firsttime(void) {
 #endif
 }
 
-#if !TESTING && !defined(__APPLE__)
+#if !TESTING && !defined(__APPLE__) && !defined(ANDROID)
 extern void *cpu_thread(void *dummyptr);
 
 int main(int _argc, char **_argv) {
@@ -617,5 +617,5 @@ int main(int _argc, char **_argv) {
 
     video_main_loop();
 }
-#endif // TESTING
+#endif
 
