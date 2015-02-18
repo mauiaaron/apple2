@@ -81,10 +81,15 @@ static void testcpu_teardown(void *arg) {
     // ...
 }
 
+static void testcpu_set_opcodeX(uint8_t op, uint8_t val, uint8_t arg1, uint16_t addrs) {
+    cpu65_pc = addrs;
+    apple_ii_64k[0][addrs] = op;
+    apple_ii_64k[0][(uint16_t)(addrs+1)] = val;
+    apple_ii_64k[0][(uint16_t)(addrs+2)] = arg1;
+}
+
 static void testcpu_set_opcode3(uint8_t op, uint8_t val, uint8_t arg1) {
-    apple_ii_64k[0][TEST_LOC+0] = op;
-    apple_ii_64k[0][TEST_LOC+1] = val;
-    apple_ii_64k[0][TEST_LOC+2] = arg1;
+    testcpu_set_opcodeX(op, val, arg1, TEST_LOC);
 }
 
 static void testcpu_set_opcode2(uint8_t op, uint8_t val) {
@@ -3546,10 +3551,10 @@ TEST test_JMP_abs_ind_x(uint8_t _lobyte, uint8_t _hibyte, uint8_t set) {
 // ----------------------------------------------------------------------------
 // JSR operand
 
-TEST test_JSR_abs(uint8_t lobyte, uint8_t hibyte) {
+TEST test_JSR_abs(uint8_t lobyte, uint8_t hibyte, uint16_t insAddrs) {
     HEADER0();
 
-    testcpu_set_opcode3(0x20, lobyte, hibyte);
+    testcpu_set_opcodeX(0x20, lobyte, hibyte, insAddrs);
 
     uint8_t regA = (uint8_t)random();
     uint8_t regX = (uint8_t)random();
@@ -3557,17 +3562,16 @@ TEST test_JSR_abs(uint8_t lobyte, uint8_t hibyte) {
     uint8_t f    = (uint8_t)random();
 
     uint16_t addrs = (hibyte<<8) | lobyte;
-    uint8_t hi_ret = ((addrs+1) >> 8) & 0xff;
-    uint8_t lo_ret = (addrs+1) & 0xff;
+
+    insAddrs += 2;
+    uint8_t hi_ret = (insAddrs >> 8) & 0xff;
+    uint8_t lo_ret = insAddrs & 0xff;
 
     cpu65_a  = regA;
     cpu65_x  = regX;
     cpu65_y  = regY;
     cpu65_sp = 0xff;
     cpu65_f  = f;
-
-    ASSERT(apple_ii_64k[0][0x1ff] != TEST_LOC);
-    ASSERT(apple_ii_64k[0][0x1fe] != TEST_LOC_LO+2);
 
     cpu65_run();
 
@@ -3578,8 +3582,8 @@ TEST test_JSR_abs(uint8_t lobyte, uint8_t hibyte) {
     ASSERT(cpu65_f      == f);
     ASSERT(cpu65_sp     == 0xfd);
 
-    ASSERT(apple_ii_64k[0][0x1ff] == 0x1f);
-    ASSERT(apple_ii_64k[0][0x1fe] == TEST_LOC_LO+2);
+    ASSERT(apple_ii_64k[0][0x1ff] == hi_ret);
+    ASSERT(apple_ii_64k[0][0x1fe] == lo_ret);
 
     ASSERT(cpu65_ea       == addrs);
     ASSERT(cpu65_d        == 0xff);
@@ -5682,9 +5686,9 @@ TEST test_RTI(uint8_t flags) {
 // ----------------------------------------------------------------------------
 // RTS operand
 
-TEST test_RTS(uint8_t lobyte, uint8_t hibyte) {
+TEST test_RTS(uint8_t lobyte, uint8_t hibyte, uint16_t insAddrs) {
 
-    testcpu_set_opcode1(0x60);
+    testcpu_set_opcodeX(0x60, random(), random(), insAddrs);
 
     cpu65_a  = 0x02;
     cpu65_x  = 0x03;
@@ -5705,7 +5709,7 @@ TEST test_RTS(uint8_t lobyte, uint8_t hibyte) {
     ASSERT(cpu65_f      == 0x00);
     ASSERT(cpu65_sp     == 0x82);
 
-    ASSERT(cpu65_ea       == TEST_LOC);
+    ASSERT(cpu65_ea       == insAddrs);
     ASSERT(cpu65_d        == 0xff);
     ASSERT(cpu65_rw       == RW_NONE);
     ASSERT(cpu65_opcode   == 0x60);
@@ -7389,7 +7393,7 @@ GREATEST_SUITE(test_suite_cpu) {
     greatest_info.flags = 0x0;
 
     // ------------------------------------------------------------------------
-    // Immediate addressing mode tests :
+    // Immediate addressing mode tests #1 :
     // NOTE : these should be a comprehensive exercise of the instruction logic
 
     greatest_info.flags = GREATEST_FLAG_SILENT_SUCCESS;
@@ -7403,12 +7407,10 @@ GREATEST_SUITE(test_suite_cpu) {
     A2_ADD_TEST(test_JMP_abs);
     A2_ADD_TEST(test_JMP_ind);
     A2_ADD_TEST(test_JMP_abs_ind_x);
-    A2_ADD_TEST(test_JSR_abs);
     A2_ADD_TEST(test_LDA_imm);
     A2_ADD_TEST(test_LDX_imm);
     A2_ADD_TEST(test_LDY_imm);
     A2_ADD_TEST(test_ORA_imm);
-    A2_ADD_TEST(test_RTS);
     A2_ADD_TEST(test_SBC_imm);
     HASH_ITER(hh, test_funcs, func, tmp) {
         fprintf(GREATEST_STDOUT, "\n%s (SILENCED OUTPUT) :\n", func->name);
@@ -7427,7 +7429,51 @@ GREATEST_SUITE(test_suite_cpu) {
 
         if (func->func == (void*)test_JMP_abs_ind_x) {
             A2_RUN_TESTp( func->func, 0x01, 0xff, /*alt*/0xfe);
+            uint8_t val=0x00;
+            do {
+                A2_RUN_TESTp( func->func, 0xf0, 0xff, val);
+            } while (++val);
+            do {
+                A2_RUN_TESTp( func->func, 0x0f, 0x00, val);
+            } while (++val);
         }
+
+        fprintf(GREATEST_STDOUT, "...OK\n");
+        A2_REMOVE_TEST(func);
+    }
+    greatest_info.flags = 0x0;
+
+    // ------------------------------------------------------------------------
+    // Immediate addressing mode tests #2 :
+
+    greatest_info.flags = GREATEST_FLAG_SILENT_SUCCESS;
+    A2_ADD_TEST(test_JSR_abs);
+    A2_ADD_TEST(test_RTS);
+    HASH_ITER(hh, test_funcs, func, tmp) {
+        fprintf(GREATEST_STDOUT, "\n%s (SILENCED OUTPUT) :\n", func->name);
+
+        // test comprehensive logic in immediate mode (since no addressing to test) ...
+        uint8_t lobyte=0x00;
+        do {
+            uint8_t hibyte=0x00;
+            do {
+                A2_RUN_TESTp( func->func, lobyte, hibyte, TEST_LOC);
+            } while (++hibyte);
+        } while (++lobyte);
+
+        // test 16bit overflow/underflow
+        lobyte=0x00;
+        do {
+            uint8_t hibyte=0x00;
+            do {
+                A2_RUN_TESTp( func->func, lobyte, hibyte, 0xFFFD);
+                A2_RUN_TESTp( func->func, lobyte, hibyte, 0xFFFE);
+                A2_RUN_TESTp( func->func, lobyte, hibyte, 0xFFFF);
+                A2_RUN_TESTp( func->func, lobyte, hibyte, 0x0000);
+                A2_RUN_TESTp( func->func, lobyte, hibyte, 0x0001);
+                A2_RUN_TESTp( func->func, lobyte, hibyte, 0x0002);
+            } while (++hibyte);
+        } while (++lobyte);
 
         fprintf(GREATEST_STDOUT, "...OK\n");
         A2_REMOVE_TEST(func);
