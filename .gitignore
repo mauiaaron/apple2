@@ -70,3 +70,6 @@ Android/bin
 Android/gen
 Android/libs
 
+# Android.mk is tEh dynamicz!
+Android/jni/Android.mk
+
