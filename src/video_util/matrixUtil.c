@@ -13,6 +13,7 @@
 
 #include "matrixUtil.h"
 #include "vectorUtil.h"
+#include <string.h>
 #include <math.h>
 #include <memory.h>
 
