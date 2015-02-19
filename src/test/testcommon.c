@@ -113,7 +113,6 @@ void test_common_init(bool do_cputhread) {
     do_logging = false;// silence regular emulator logging
     setenv("APPLE2IXCFG", "nosuchconfigfile", 1);
 
-    load_settings();
     c_initialize_firsttime();
 
     // kludgey set max CPU speed... 
