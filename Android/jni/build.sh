@@ -1,9 +1,43 @@
 #!/bin/sh
 
-set -x
-
+package_id="org.deadc0de.apple2"
 apple2_src_path=../../src
 glue_srcs="$apple2_src_path/disk.c $apple2_src_path/misc.c $apple2_src_path/display.c $apple2_src_path/vm.c $apple2_src_path/cpu-supp.c"
+do_load=0
+do_debug=0
+
+usage() {
+    echo "$0 [--load|--debug]"
+    exit 0
+}
+
+while test "x$1" != "x"; do
+    case "$1" in
+        "--debug")
+            do_load=1
+            do_debug=1
+            ;;
+
+        "--load")
+            do_load=1
+            do_debug=0
+            ;;
+
+        "-h")
+            usage
+            ;;
+
+        "--help")
+            usage
+            ;;
+
+    esac
+    shift
+done
+
+set -x
+
+/bin/rm Android.mk
 
 if test "$(basename $0)" = "clean" ; then
     /bin/rm $apple2_src_path/rom.c
@@ -11,26 +45,17 @@ if test "$(basename $0)" = "clean" ; then
     /bin/rm $apple2_src_path/x86/glue.S
     /bin/rm $apple2_src_path/arm/glue.S
 
-    ln -s apple2ix.mk Android.mk
-    ndk-build -f apple2ix.mk clean
-    /bin/rm Android.mk
+    # considered dangerous
+    /bin/rm -rf ../bin
+    /bin/rm -rf ../libs
+    /bin/rm -rf ../gen
+    /bin/rm -rf ../obj
 
-    ln -s testcpu.mk Android.mk
-    ndk-build -f testcpu.mk clean
-    /bin/rm Android.mk
+    exit 0
+fi
 
-    ln -s testvm.mk Android.mk
-    ndk-build -f testvm.mk clean
-    /bin/rm Android.mk
-
-    ln -s testdisplay.mk Android.mk
-    ndk-build -f testdisplay.mk clean
-    /bin/rm Android.mk
-
-    ln -s testdisk.mk Android.mk
-    ndk-build -f testdisk.m clean
-    /bin/rm Android.mk
-
+if test "$(basename $0)" = "uninstall" ; then
+    adb uninstall $package_id
     exit 0
 fi
 
@@ -52,31 +77,28 @@ $apple2_src_path/arm/genglue $glue_srcs > $apple2_src_path/arm/glue.S
 
 if test "$(basename $0)" = "testcpu" ; then
     ln -s testcpu.mk Android.mk
-    ndk-build V=1 NDK_DEBUG=1 && ant -f ../build.xml debug
 elif test "$(basename $0)" = "testvm" ; then
     ln -s testvm.mk Android.mk
-    ndk-build V=1 NDK_DEBUG=1 && ant -f ../build.xml debug
 elif test "$(basename $0)" = "testdisplay" ; then
     ln -s testdisplay.mk Android.mk
-    ndk-build V=1 NDK_DEBUG=1 && ant -f ../build.xml debug
 elif test "$(basename $0)" = "testdisk" ; then
     ln -s testdisk.mk Android.mk
-    ndk-build V=1 NDK_DEBUG=1 && ant -f ../build.xml debug
 else
     ln -s apple2ix.mk Android.mk
-    ndk-build V=1 NDK_DEBUG=1 && ant -f ../build.xml debug
 fi
 
-if test "$(basename $0)" = "run" ; then
-    ant -f ../build.xml install && \
-        adb shell am start -a android.intent.action.MAIN -n org.deadc0de.apple2/.Apple2Activity
+ndk-build V=1 NDK_DEBUG=1 && \
+    ant -f ../build.xml debug
+
+if test "x$do_load" = "x1" ; then
+    ant -f ../build.xml debug install
 fi
 
-if test "$(basename $0)" = "debug" ; then
-    echo "TODO FIXME ..."
+if test "x$do_debug" = "x1" ; then
+    ( cd .. && ndk-gdb.py --force --start )
+elif test "x$do_load" = "x1" ; then
+    adb shell am start -a android.intent.action.MAIN -n $package_id/.Apple2Activity
 fi
-
-/bin/rm Android.mk
 
 set +x
 

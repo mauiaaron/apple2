@@ -10,9 +10,9 @@ include $(COMMON_SOURCES_MK)
 # -----------------------------------------------------------------------------
 # Android build config
 
-LOCAL_MODULE    := apple2ix
+LOCAL_MODULE    := libapple2ix
 LOCAL_SRC_FILES := jnihooks.c
-LOCAL_CFLAGS    := $(APPLE2_BASE_CFLAGS) -DHEADLESS=0 -DVIDEO_OPENGL=1 -DDEBUGGER=0
+LOCAL_CFLAGS    := $(APPLE2_BASE_CFLAGS) -DHEADLESS=0
 LOCAL_LDLIBS    := -llog -landroid -lGLESv2 -lz
 
 # Add assembly files first ... mostly for the benefit of the ARM assembler ...
