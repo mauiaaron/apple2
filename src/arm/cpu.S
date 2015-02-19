@@ -17,11 +17,6 @@
 #include "misc.h"
 
 
-// debugging is necessary for running CPU test suite and to use the 65c02 debugger
-#ifndef NDEBUG
-#define CPU_DEBUGGING 1
-#endif
-
 #define DecodeFlags \
                 ldr     r1, SYM(cpu65_flags_decode); \
                 ldrb    F_Reg, [r1, r0];
@@ -51,7 +46,6 @@
                 ldr     r1, SYM(cpu65_f); \
                 strb    r0, [r1]
 
-
 // Tracing is necessary for some CPU tests and to verify operation against other emulators
 #if CPU_TRACING
 #   define TRACE_PROLOGUE \
@@ -65,10 +59,10 @@
 #   define TRACE_ARG2 \
                 bl      CALL(cpu65_trace_arg2);
 #   define TRACE_EPILOGUE \
-                push    {r0}; \
                 CommonSaveCPUState; \
+                push    {r0, EffectiveAddr, PC_Reg, lr}; \
                 bl      CALL(cpu65_trace_epilogue); \
-                pop     {r0};
+                pop     {r0, EffectiveAddr, PC_Reg, lr};
 #else
 #   define TRACE_PROLOGUE
 #   define TRACE_ARG
@@ -78,50 +72,57 @@
 #endif
 
 
-#if CPU_DEBUGGING
-#   define CPU_DEBUGGING_RESET \
+#define CPUStatsReset \
                 ldr     r1, SYM(cpu65_opcode); \
                 strb    r0, [r1]; /* r0 should be next opcode */ \
                 eor     r9, r9, r9; \
                 ldr     r1, SYM(cpu65_opcycles); \
                 strb    r9, [r1]; \
-                /*ldr     r1, SYM(cpu65_rw);*/ \
+                ldr     r1, SYM(cpu65_rw); \
                 strb    r9, [r1];
-#   define CPU_DEBUGGING_SET_READ \
-                /*ldr     r1, SYM(cpu65_rw);*/ \
+#define CPUStatsSetRead \
+                ldr     r1, SYM(cpu65_rw); \
                 ldrb    r9, [r1]; \
                 orr     r9, r9, #1; \
                 strb    r9, [r1];
-#   define CPU_DEBUGGING_SET_WRITE \
-                /*ldr     r1, SYM(cpu65_rw);*/ \
+
+#define CPUStatsSetWrite \
+                ldr     r1, SYM(cpu65_rw); \
                 ldrb    r9, [r1]; \
                 orr     r9, r9, #2; \
                 strb    r9, [r1]; \
                 ldr     r1, SYM(cpu65_d); \
                 strb    r0, [r1];
-#else
-#   define CPU_DEBUGGING_SET_READ
-#   define CPU_DEBUGGING_RESET
-#   define CPU_DEBUGGING_SET_WRITE
-#endif
 
 // ----------------------------------------------------------------------------
 // CPU (6502) helper macros
 
+// Add 16bit x with <=16bit amt
 #define AddUint16(x, amt) \
                 add     x, x, amt; \
                 bic     x, #0x10000;
 
+// Increment 16bit x
 #define IncUint16(x) \
                 AddUint16(x, #1)
 
-#define SubUint16(x, amt) \
-                sub     x, x, amt; \
-                mov     x, x, LSL #16; \
-                mov     x, x, LSR #16;
+// Add 8bit x with <=8bit amt
+#define AddUint8(x, amt) \
+                add     x, x, amt; \
+                bic     SP_Reg, #0x0100;
 
-#define DecUint16(x) \
-                SubUint16(x, #1)
+// Increment 8bit x
+#define IncUint8(x) \
+                AddUint8(x, #1)
+
+// Subtract 8bit x by <=8bit amt
+#define SubUint8(x, amt) \
+                subs    x, x, amt; \
+                movmi   x, #0xFF;
+
+// Decrement 8bit x
+#define DecUint8(x) \
+                SubUint8(x, #1)
 
 #define GetFromPC_B \
                 mov     EffectiveAddr, PC_Reg; \
@@ -150,13 +151,13 @@
 #define JumpNextInstruction \
                 TRACE_PROLOGUE \
                 GetFromPC_B \
-                CPU_DEBUGGING_RESET \
+                CPUStatsReset \
                 ldr     r1, SYM(cpu65__opcodes); \
                 ldr     r1, [r1, r0, LSL PTR_SHIFT]; \
                 bx      r1;
 
 #define GetFromEA_B \
-                CPU_DEBUGGING_SET_READ \
+                CPUStatsSetRead \
                 ldr     r1, [reg_vmem_r, EffectiveAddr, LSL PTR_SHIFT]; \
                 blx     r1;
 
@@ -171,7 +172,7 @@
                 orr     r0, hi_byte, lo_byte;
 
 #define PutToEA_B \
-                CPU_DEBUGGING_SET_WRITE \
+                CPUStatsSetWrite \
                 ldr     r1, SYM(cpu65_vmem_w); \
                 ldr     r1, [r1, EffectiveAddr, LSL PTR_SHIFT]; \
                 blx     r1;
@@ -200,15 +201,14 @@
 #define pc_hi_next      r0
 #define BranchXCycles \
                 ldr     mem_cycle_count, SYM(cpu65_opcycles); \
-                eor     scratch_count, scratch_count, scratch_count; /* HACK FIXME TODO VERIFY IN GDB : is this necessary? */ \
                 ldrb    scratch_count, [mem_cycle_count]; \
                 add     scratch_count, scratch_count, #1; /* +1 branch taken */ \
                 mov     pc_hi_prev, PC_Reg; \
                 mov     pc_hi_prev, pc_hi_prev, LSR #8; \
                 cbw; \
                 add     PC_Reg, PC_Reg, r0; /* branch PC */ \
-                mov     PC_Reg, PC_Reg, LSL #24; /* 16bit under/overflow protection */ \
-                mov     PC_Reg, PC_Reg, LSR #24; \
+                mov     PC_Reg, PC_Reg, LSL #16; /* 16bit under/overflow protection */ \
+                mov     PC_Reg, PC_Reg, LSR #16; \
                 mov     pc_hi_next, PC_Reg; \
                 mov     pc_hi_next, pc_hi_next, LSR #8; \
                 teq     pc_hi_next, pc_hi_prev; \
@@ -266,6 +266,7 @@
 #ifdef APPLE2_VM
 #define RestoreAltZP \
                 ldr     stack_loc, SYM(base_stackzp); \
+                ldr     stack_loc, [stack_loc]; \
                 add     stack_loc, stack_loc, #0x100; \
                 add     stack_loc, stack_loc, SP_Reg;
 #else
@@ -275,16 +276,14 @@
 #define Push(x) \
                 RestoreAltZP \
                 strb    x, [stack_loc]; \
-                subs    SP_Reg, SP_Reg, #1; \
-                movmi   SP_Reg, #0xFF;
-#warning TODO FIXME ... need to write a 65c02 stack_loc underflow vm test ... also how does AppleWin handle 65c02 underflow?
+                DecUint8(SP_Reg)
+#warning TODO FIXME ... need to write a 65c02 stack underflow vm test ... also how does AppleWin handle 65c02 underflow?
 
 #define Pop(x)  \
-                add     SP_Reg, SP_Reg, #1; \
-                bic     SP_Reg, #0x0100; \
+                IncUint8(SP_Reg) \
                 RestoreAltZP \
                 ldrb    x, [stack_loc];
-#warning TODO FIXME ... need to write a 65c02 stack overflow vm test ... also how does AppleWin handle 65c02 underflow?
+#warning TODO FIXME ... need to write a 65c02 stack overflow vm test ... also how does AppleWin handle 65c02 overflow?
 
 // ----------------------------------------------------------------------------
 // addressing macros
@@ -799,9 +798,6 @@ ENTRY(op_ADC_ind_zpage)
                 DoADC_b
                 Continue
 
-mask_FFFF:        .hword 0xFFFF
-interrupt_vector: .hword 0xFFFE
-reset_vector:     .hword 0xFFFC
 .ltorg
 
 /* ----------------------------------
@@ -1088,7 +1084,6 @@ ENTRY(op_BRA)
 
 ENTRY(op_UNK) /* make undefined opcodes fault */
 ENTRY(op_BRK)
-#warning TODO FIXME ... write test for overflow in op_BRK
                 IncUint16(PC_Reg)
                 mov     r0, PC_Reg
                 mov     r0, r0, ROR #8
@@ -1465,7 +1460,6 @@ ENTRY(op_JMP_abs_ind_x)
                 add     EffectiveAddr, r0
                 mov     EffectiveAddr, EffectiveAddr, LSL #24 // 16bit under/overflow protection
                 mov     EffectiveAddr, EffectiveAddr, LSR #24
-#warning FIXME TODO write test for op_JMP_abs_ind_x under/overflow protection
                 GetFromMem_W(EffectiveAddr)
                 mov     PC_Reg, r0
                 Continue
@@ -1475,11 +1469,10 @@ ENTRY(op_JMP_abs_ind_x)
    ---------------------------------- */
 
 ENTRY(op_JSR) // 0x20
-#warning TODO FIXME write test for op_JSR underflow ...
                 GetAbs
                 mov     r0, PC_Reg
-                subs    r0, r0, #1
-                mov     r0, r0, LSL #16 // handle underflow
+                sub     r0, r0, #1
+                mov     r0, r0, LSL #16 // handle underflow -- can this happen in second mem page?
                 mov     r0, r0, ROR #24
                 Push(r0) // push hi_byte
                 mov     r0, r0, LSR #24
@@ -1849,7 +1842,6 @@ ENTRY(op_RTI) // 0x40
    ---------------------------------- */
 
 ENTRY(op_RTS) // 0x60
-#warning TODO FIXME write test for this overflow ...
                 Pop(lo_byte)
                 Pop(hi_byte)
                 mov     hi_byte, hi_byte, LSL #8
@@ -2323,37 +2315,36 @@ continue:
                 ldrb    r0, [r0]
                 ldrb    cycles_exe, [r1, r0]
                 ldr     r1, SYM(cpu65_opcycles)
-                ldrb    r2, [r1]
-                add     cycles_exe, cycles_exe, r2
+                ldrb    r9, [r1]
+                add     cycles_exe, cycles_exe, r9
                 strb    cycles_exe, [r1]
                 TRACE_EPILOGUE
 
                 ldr     r1, SYM(gc_cycles_timer_0)
-                ldr     r2, [r1]
-                sub     r2, r2, cycles_exe
-                str     r2, [r1]
+                ldr     r9, [r1]
+                sub     r9, r9, cycles_exe
+                str     r9, [r1]
 
                 ldr     r1, SYM(gc_cycles_timer_1)
-                ldr     r2, [r1]
-                sub     r2, r2, cycles_exe
-                str     r2, [r1]
+                ldr     r9, [r1]
+                sub     r9, r9, cycles_exe
+                str     r9, [r1]
 
                 ldr     r1, SYM(cpu65_cycle_count)
-                ldr     r2, [r1]
-                add     r2, r2, cycles_exe
-                str     r2, [r1]
+                ldr     r9, [r1]
+                add     r9, r9, cycles_exe
+                str     r9, [r1]
 
                 ldr     r1, SYM(cpu65_cycles_to_execute)
-                ldr     r2, [r1]
-                subs    r2, r2, cycles_exe
-                str     r2, [r1]
+                ldr     r9, [r1]
+                subs    r9, r9, cycles_exe
+                str     r9, [r1]
                 bmi     exit_cpu65_run
                 beq     exit_cpu65_run
 
-continue1:      eor     r0, r0, r0
-                ldr     r1, SYM(cpu65__signal)
+continue1:      ldr     r1, SYM(cpu65__signal)
                 ldrb    r0, [r1]
-                orr     r0, r0, r0
+                orrs    r0, r0, r0
                 bne     exception
                 JumpNextInstruction
 
@@ -2405,8 +2396,9 @@ ex_irq:         tst     F_Reg, #I_Flag                      // Already interrupt
    ------------------------------------------------------------------------- */
 
 ENTRY(cpu65_run)
+                push    {r4, r5, r6, r7, r8, r9, r10, r11, lr}
                 // Restore CPU state when being called from C.
-#warning FIXME TODO ... do all the ldrb's zero-out the high-24bits of the destination reg?
+                ldr     reg_vmem_r, SYM(cpu65_vmem_r)
                 ldr     r1, SYM(cpu65_ea)
                 ldrh    EffectiveAddr, [r1]
                 ldr     r1, SYM(cpu65_pc)
@@ -2439,7 +2431,7 @@ exit_cpu65_run:
                 ldr     r1, SYM(cpu65_pc)
                 strh    PC_Reg, [r1]
                 CommonSaveCPUState
-                ret
+                pop     {r4, r5, r6, r7, r8, r9, r10, r11, pc}
 
 exit_reinit:    ldr     r1, SYM(cpu65__signal)
                 mov     r0, #0
@@ -2447,7 +2439,7 @@ exit_reinit:    ldr     r1, SYM(cpu65__signal)
                 ldr     r1, SYM(emul_reinitialize)
                 mov     r0, #1
                 strb    r0, [r1]
-                ret
+                pop     {r4, r5, r6, r7, r8, r9, r10, r11, pc}
 
 /* -------------------------------------------------------------------------
         Debugger hooks
@@ -2457,5 +2449,9 @@ ENTRY(cpu65_direct_write)
 #warning FIXME TODO implement cpu65_direct_write ...
                 mov     r0, #42
                 ldr     r0, [r0] // segfault
-                ret
+                mov     pc, lr
+
+interrupt_vector: .hword 0xFFFE
+reset_vector:     .hword 0xFFFC
+.ltorg
 

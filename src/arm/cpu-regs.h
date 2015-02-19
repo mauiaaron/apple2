@@ -24,20 +24,16 @@
 #define Y_Reg           r6              /* 8bit 6502 Y register       */
 #define X_Reg           r7              /* 8bit 6502 X register       */
 #define A_Reg           r8              /* 8bit 6502 A register       */
-// r9 is another scratch variable
-#define reg_64k         r10             /* apple_ii_64k table address */
+// r9 is "ARM platform register" ... used as a scratch register
+// r10 is another scratch variable
 #define reg_vmem_r      r11             /* cpu65_vmem_r table address */
-// r12 unused
+// r12 is "ARM Intra-Procedure-call scratch register" ... used as a scratch register
 // r13 ARM SP
 // r14 ARM return addr
 // r15 ARM PC
 
 #define ARM_CF_Bit ...                  /* ARM carry                  */
 #define ARM_AF_Bit ...
-
-
-// x86-ish instruction macros for legibility =P
-#define ret     mov pc, r14
 
 
 #ifdef __aarch64__
