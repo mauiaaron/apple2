@@ -83,9 +83,17 @@ int main(int argc, char **argv) {
 #define GREATEST_DEFAULT_WIDTH 72
 #endif
 
+#ifdef ANDROID
+#include <android/log.h>
+#define GREATEST_STDOUT NULL
+#define fprintf(fp, ...) __android_log_print(ANDROID_LOG_ERROR, "greatest", __VA_ARGS__)
+#endif
+
 /* FILE *, for test logging. */
+#ifndef ANDROID
 #ifndef GREATEST_STDOUT
 #define GREATEST_STDOUT stdout
+#endif
 #endif
 
 /* Remove GREATEST_ prefix from most commonly used symbols? */
