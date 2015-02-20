@@ -32,9 +32,6 @@
 // r14 ARM return addr
 // r15 ARM PC
 
-#define ARM_CF_Bit ...                  /* ARM carry                  */
-#define ARM_AF_Bit ...
-
 
 #ifdef __aarch64__
 #   error 20150205 ARM 64bit untested!!!

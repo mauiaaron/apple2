@@ -194,15 +194,22 @@
                 mov     r0, r0, LSL #24; \
                 mov     r0, r0, ASR #24;
 
+#define _IncOpCycles \
+                ldr     mem_cycle_count, SYM(cpu65_opcycles); \
+                ldrb    scratch_count, [mem_cycle_count]; \
+                add     scratch_count, scratch_count, #1;
+
+#define IncOpCycles \
+                _IncOpCycles \
+                strb    scratch_count, [mem_cycle_count];
+
 #define pc_hi_byte      r9
 #define mem_cycle_count r1
 #define scratch_count   r12
 #define pc_hi_prev      r9
 #define pc_hi_next      r0
 #define BranchXCycles \
-                ldr     mem_cycle_count, SYM(cpu65_opcycles); \
-                ldrb    scratch_count, [mem_cycle_count]; \
-                add     scratch_count, scratch_count, #1; /* +1 branch taken */ \
+                _IncOpCycles \
                 mov     pc_hi_prev, PC_Reg; \
                 mov     pc_hi_prev, pc_hi_prev, LSR #8; \
                 cbw; \
@@ -217,7 +224,7 @@
 
 #define arm_flags r12
 #define lahf \
-                /* Virtual x86: Load %AH (r12) from Flags */ \
+                /* Virtual x86: Load %AH (r12) from ARM CPU Flags */ \
                 mov     arm_flags, r15, LSR #28;
 
 #define FlagC \
@@ -343,13 +350,6 @@
                 teq     ea_hi_prev, ea_hi_next; \
                 beq     9f;
 
-#define PageBoundaryCrossed \
-                ldr     mem_cycle_count, SYM(cpu65_opcycles); \
-                eor     scratch_count, scratch_count, scratch_count; /* HACK FIXME TODO VERIFY IN GDB : is this necessary? */ \
-                ldrb    scratch_count, [mem_cycle_count]; \
-                add     scratch_count, scratch_count, #1; /* +1 cycle on page_boundary */ \
-                strb    scratch_count, [mem_cycle_count];
-
 /* Absolute Indexed Addressing - The effective address is formed by
    adding the contents of X or Y to the address contained in the
    second and third bytes of the instruction. */
@@ -357,25 +357,25 @@
 #define GetAbs_X \
                 GetFromPC_W \
                 AddIndexRegAndTestPageBoundary(X_Reg) \
-                PageBoundaryCrossed \
+                IncOpCycles \
 9:              mov     EffectiveAddr, r0;
 
 #define GetAbs_X_STx \
                 GetFromPC_W \
                 AddIndexRegAndTestPageBoundary(X_Reg) \
-                /* PageBoundaryCrossed */ \
+                /* IncOpCycles */ \
 9:              mov     EffectiveAddr, r0;
 
 #define GetAbs_Y \
                 GetFromPC_W \
                 AddIndexRegAndTestPageBoundary(Y_Reg) \
-                PageBoundaryCrossed \
+                IncOpCycles \
 9:              mov     EffectiveAddr, r0;
 
 #define GetAbs_Y_STA \
                 GetFromPC_W \
                 AddIndexRegAndTestPageBoundary(Y_Reg) \
-                /* PageBoundaryCrossed */ \
+                /* IncOpCycles */ \
 9:              mov     EffectiveAddr, r0;
 
 /* Zero Page Indirect Addressing (65c02) - The second byte of the
@@ -438,12 +438,12 @@
 
 #define GetIndZPage_Y \
                 _GetIndZPage_Y \
-                PageBoundaryCrossed \
+                IncOpCycles \
 9:              mov     EffectiveAddr, r0;
 
 #define GetIndZPage_Y_STA \
                 _GetIndZPage_Y \
-                PageBoundaryCrossed \
+                IncOpCycles \
 9:              mov     EffectiveAddr, r0;
 
 #define bt \
@@ -451,6 +451,11 @@
                 tst     F_Reg, #C_Flag; \
                 biceq   r15, r15, #30; \
                 orrne   r15, r15, #30;
+
+#define btc \
+                /* Virtual x86: Bit Test and Clear (carry flag only) */ \
+                tst     F_Reg, #C_Flag; \
+                biceq   r15, r15, #30;
 
 // ----------------------------------------------------------------------------
 // 65c02 instruction macros
@@ -685,15 +690,23 @@
        ADd memory to accumulator with Carry
    ---------------------------------- */
 
+#define _AF r10
+#define hi_nib r0
+#define lo_nib r9
+
 // Decimal mode
 ENTRY(op_ADC_dec)
-#warning FIXME TODO op_ADC_dec
-#if 0
-                incb    SYM(cpu65_opcycles) // +1 cycle
+                IncOpCycles
                 GetFromEA_B
                 DebugBCDCheck
-                bt      $C_Flag_Bit, AF_Reg_X
-                adcb    A_Reg, %al
+
+                // initial addition with nybble carry check
+                and     _AF, A_Reg, #0x10
+                bt
+                adcs    r0, A_Reg, r0
+                and     r1, A_Reg, #0x10
+                eor     _AF, _AF, r1
+
                 // DAA algorithm : http://www.ray.masmcode.com/BCDdaa.html
                 // CF_old = CF
                 // IF (al AND 0Fh > 9) or (the Auxilliary Flag is set)
@@ -705,34 +718,32 @@ ENTRY(op_ADC_dec)
                 //    al = al + 60h
                 //    CF set
                 // ENDIF
-                pushq   _XBX
-                pushfq
-                popq    _XBX
-                andb    $~(N_Flag|V_Flag|Z_Flag|C_Flag), F_Reg
-                movb    %al, %ah
-                andb    $0x0f, %ah
-                cmpb    $9, %ah
-                jg      _daa_lo_nyb
-                btq     $X86_AF_Bit, _XBX
-                jnc     _daa_next0
-_daa_lo_nyb:    addb    $6, %al         // adjust lo nybble
-                jc      _daa_hi_nyb
-_daa_next0:     btq     $X86_CF_Bit, _XBX
-                jc      _daa_hi_nyb
-                xorb    %ah, %ah
-                cmpw    $0x99, %ax
-                jle     _daa_next1
-_daa_hi_nyb:    addb    $0x60, %al      // adjust hi nybble
-                orb     $C_Flag, F_Reg  // FlagC
-_daa_next1:     testq   $0x80, %rax
-                jz      _daa_next2
-                orb     $N_Flag, F_Reg  // FlagN
-_daa_next2:     testq   $0xFF, %rax
-                jnz     _daa_finish
-                orb     $Z_Flag, F_Reg  // FlagZ
-_daa_finish:    popq    _XBX
-                movb    %al, A_Reg
-#endif
+
+                lahf
+                bic     F_Reg, #NVZC_Flags
+                mov     r1, r0
+                and     r1, r1, #0x0f
+                cmp     r1, #0x09
+                bhi     _daa_lo_nyb
+                teq     _AF, #0
+                beq     _daa_next0
+_daa_lo_nyb:    mov     r0, r0, LSL #24
+                adds    r0, r0, #0x06000000             // adjust lo nybble
+                mov     r0, r0, LSR #24
+                bcs     _daa_hi_nyb
+_daa_next0:     tst     arm_flags, #C_Flag
+                bne     _daa_hi_nyb
+                cmp     r0, #0x9A
+                bmi     _daa_next1
+_daa_hi_nyb:    add     r0, r0, #0x60                   // adjust hi nybble
+                orr     F_Reg, F_Reg, #C_Flag           // FlagC
+_daa_next1:     tst     r0, #0x80
+                beq     _daa_next2
+                orr     F_Reg, F_Reg, #N_Flag           // FlagN
+_daa_next2:     tst     r0, #0xFF
+                bne     _daa_finish
+                orr     F_Reg, F_Reg, #Z_Flag           // FlagZ
+_daa_finish:    mov     A_Reg, r0
                 Continue
 
 #define maybe_DoADC_d \
@@ -1094,7 +1105,7 @@ ENTRY(op_BRK)
                 EncodeFlags
                 Push(r0)
                 orr     F_Reg, F_Reg, #I_Flag
-                ldr     EffectiveAddr, SYM(interrupt_vector) 
+                ldr     EffectiveAddr, SYM(interrupt_vector)
                 ldrh    EffectiveAddr, [EffectiveAddr]
                 GetFromEA_W
                 mov     PC_Reg, r0
@@ -1856,15 +1867,18 @@ ENTRY(op_RTS) // 0x60
        SuBtract memory from accumulator with Borrow
    ---------------------------------- */
 ENTRY(op_SBC_dec)
-#warning FIXME TODO op_ADC_dec
-#if 0
-                incb    SYM(cpu65_opcycles) // +1 cycle
+                IncOpCycles
                 GetFromEA_B
                 DebugBCDCheck
-                btc     $C_Flag_Bit, AF_Reg_X
-                xchgb   A_Reg, %al
-                cmc
-                sbbb    A_Reg, %al
+
+                // initial subtraction with nybble borrow check
+                and     _AF, A_Reg, #0x10
+                btc
+                /*cmc*/
+                sbcs    r0, A_Reg, r0
+                and     r1, A_Reg, #0x10
+                eor     _AF, _AF, r1
+
                 // DAS algorithm : http://www.ray.masmcode.com/BCDdas.html
                 // CF_old = CF
                 // IF (al AND 0Fh > 9) or (the Auxilliary Flag is set)
@@ -1876,35 +1890,31 @@ ENTRY(op_SBC_dec)
                 //    al = al - 60h
                 //    ^CF set
                 // ENDIF
-                pushq   _XBX
-                pushfq
-                popq    _XBX
-                andb    $~(N_Flag|V_Flag|Z_Flag), F_Reg
-                orb     $C_Flag, F_Reg
-                movb    %al, %ah
-                andb    $0x0f, %ah
-                cmpb    $9, %ah
-                jg      _das_lo_nyb
-                btq     $X86_AF_Bit, _XBX
-                jnc     _das_next0
-_das_lo_nyb:    subb    $6, %al         // adjust lo nybble
-                jc      _das_hi_nyb
-_das_next0:     btq     $X86_CF_Bit, _XBX
-                jc      _das_hi_nyb
-                xorb    %ah, %ah
-                cmpw    $0x99, %ax
-                jle     _das_next1
-_das_hi_nyb:    subb    $0x60, %al      // adjust hi nybble
-                andb    $~C_Flag, F_Reg // !FlagC
-_das_next1:     testq   $0x80, %rax
-                jz      _das_next2
-                orb     $N_Flag, F_Reg  // FlagN
-_das_next2:     testq   $0xFF, %rax
-                jnz     _das_finish
-                orb     $Z_Flag, F_Reg  // FlagZ
-_das_finish:    popq    _XBX
-                movb    %al, A_Reg
-#endif
+
+                lahf
+                bic     F_Reg, F_Reg, #NVZ_Flags
+                orr     F_Reg, #C_Flag
+                mov     r1, r0
+                and     r1, r1, #0x0f
+                cmp     r1, #0x09
+                bhi     _das_lo_nyb
+                teq     _AF, #0
+                beq     _das_next0
+_das_lo_nyb:    sbcs    r0, r0, #0x06000000             // adjust lo nybble
+                bcs     _das_hi_nyb
+_das_next0:     tst     arm_flags, #C_Flag
+                bne     _das_hi_nyb
+                cmp     r0, #0x9A
+                bmi     _das_next1
+_das_hi_nyb:    sub     r0, r0, #0x60                   // adjust hi nybble
+                bic     F_Reg, F_Reg, #C_Flag           // !FlagC
+_das_next1:     tst     r0, #0x80
+                beq     _das_next2
+                orr     F_Reg, F_Reg, #N_Flag           // FlagN
+_das_next2:     tst     r0, #0xFF
+                bne     _das_finish
+                orr     F_Reg, F_Reg, #Z_Flag           // FlagZ
+_das_finish:    mov     A_Reg, r0
                 Continue
 
 #define maybe_DoSBC_d \
