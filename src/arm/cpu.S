@@ -225,7 +225,24 @@
 #define arm_flags r12
 #define lahf \
                 /* Virtual x86: Load %AH (r12) from ARM CPU Flags */ \
-                mov     arm_flags, r15, LSR #28;
+                mrs     arm_flags, APSR; \
+                mov     arm_flags, arm_flags, LSR #28;
+
+#define bt \
+                /* Virtual x86: Bit Test (and set ... carry flag only) */ \
+                tst     F_Reg, #C_Flag; \
+                mrs     arm_flags, APSR; \
+                biceq   arm_flags, arm_flags, #0x20000000; \
+                orrne   arm_flags, arm_flags, #0x20000000; \
+                msr     APSR_nzcvq, arm_flags;
+
+#define btc \
+                /* Virtual x86: Bit Test and Clear (carry flag only) */ \
+                tst     F_Reg, #C_Flag; \
+                mrs     arm_flags, APSR; \
+                bicne   arm_flags, arm_flags, #0x20000000; \
+                /*orreq   arm_flags, arm_flags, #0x20000000;*/ \
+                msr     APSR_nzcvq, arm_flags;
 
 #define FlagC \
                 lahf; \
@@ -265,7 +282,6 @@
 
 #define FlagNVZC \
                 lahf; \
-                and     arm_flags, arm_flags, #NVZC_Flags; \
                 bic     F_Reg, F_Reg, #NVZC_Flags; \
                 orr     F_Reg, F_Reg, arm_flags;
 
@@ -446,27 +462,29 @@
                 IncOpCycles \
 9:              mov     EffectiveAddr, r0;
 
-#define bt \
-                /* Virtual x86: Bit Test (carry flag only) */ \
-                tst     F_Reg, #C_Flag; \
-                biceq   r15, r15, #30; \
-                orrne   r15, r15, #30;
-
-#define btc \
-                /* Virtual x86: Bit Test and Clear (carry flag only) */ \
-                tst     F_Reg, #C_Flag; \
-                biceq   r15, r15, #30;
-
 // ----------------------------------------------------------------------------
 // 65c02 instruction macros
 
 #define DoADC_b \
                 GetFromEA_B \
-                mov     r0, r0, LSL #24; \
                 mov     A_Reg, A_Reg, LSL #24; \
-                bt \
+                mov     r0, r0, LSL #24; \
+                \
+                /* clear ARM 'C' */ \
+                adcs    r1, r1, #0; \
+                \
+                /* set HI-C */ \
+                tst     F_Reg, #C_Flag; \
+                adcnes  A_Reg, A_Reg, #0x01000000; \
+                \
+                /* lahf; */ \
+                /* and     arm_flags, arm_flags, #VC_Flags; */ \
+                /* mov     arm_flags_int, arm_flags; */ \
+                \
                 adcs    A_Reg, A_Reg, r0; \
                 FlagNVZC \
+                /* merge intermediate V,C */ \
+                /* orr     F_Reg, F_Reg, arm_flags_int; */ \
                 mov     A_Reg, A_Reg, LSR #24;
 
 #ifndef NDEBUG
@@ -491,8 +509,9 @@
                 GetFromEA_B \
                 mov     r0, r0, LSL #24; \
                 mov     A_Reg, A_Reg, LSL #24; \
-                ands    A_Reg, r0; \
-                FlagNZ
+                ands    A_Reg, A_Reg, r0; \
+                FlagNZ \
+                mov     A_Reg, A_Reg, LSR #24;
 
 #define _DoASL(x) \
                 mov     x, x, LSL #24; \
