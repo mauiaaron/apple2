@@ -188,8 +188,8 @@ static void logic_ADC(/*uint8_t*/int _a, /*uint8_t*/int _b, uint8_t *result, uin
 
     int8_t a = (int8_t)_a;
     int8_t b = (int8_t)_b;
-    bool is_neg = (a < 0);
-    bool is_negb = (b < 0);
+    bool signA = a>>7;
+    bool signB = b>>7;
 
     int8_t carry = (*flags & fC) ? 1 : 0;
     *flags &= ~fC;
@@ -208,13 +208,9 @@ static void logic_ADC(/*uint8_t*/int _a, /*uint8_t*/int _b, uint8_t *result, uin
         *flags |= fC;
     }
 
-    if ( is_neg && is_negb ) {
-        if (a < res) {
-            *flags |= fV;
-        }
-    }
-    if ( !is_neg && !is_negb ) {
-        if (a > res) {
+    if (signA == signB) {
+        uint8_t signResult = (res&0xff)>>7;
+        if (signA != signResult) {
             *flags |= fV;
         }
     }
@@ -5773,8 +5769,8 @@ static void logic_SBC(/*uint8_t*/int _a, /*uint8_t*/int _b, uint8_t *result, uin
 
     int8_t a = (int8_t)_a;
     int8_t b = (int8_t)_b;
-    bool is_neg = (a < 0);
-    bool is_negb = (b < 0);
+    bool signA = a>>7;
+    bool signB = b>>7;
 
     int8_t borrow = ((*flags & fC) == 0x0) ? 1 : 0;
     *flags |= fC;
@@ -5792,13 +5788,9 @@ static void logic_SBC(/*uint8_t*/int _a, /*uint8_t*/int _b, uint8_t *result, uin
         *flags &= ~fC;
     }
 
-    if ( !is_neg && is_negb ) {
-        if (a > res) {
-            *flags |= fV;
-        }
-    }
-    if ( is_neg && !is_negb ) {
-        if (a < res) {
+    if (signA != signB) {
+        uint8_t signResult = (res&0xff)>>7;
+        if (signA != signResult) {
             *flags |= fV;
         }
     }
