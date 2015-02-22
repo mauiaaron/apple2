@@ -1752,7 +1752,7 @@ TEST test_BRK() {
     ASSERT(apple_ii_64k[0][0x1fe] == TEST_LOC_LO+2);
     ASSERT(apple_ii_64k[0][0x1fd] == cpu65_flags_encode[B_Flag|X_Flag]);
 
-    ASSERT(cpu65_ea       == 0xfffe);
+    //ASSERT(cpu65_ea       == 0xfffe); -- EA is managed differently on ARM
     ASSERT(cpu65_d        == 0xff);
     ASSERT(cpu65_rw       == RW_NONE);
     ASSERT(cpu65_opcode   == 0x0);
@@ -3389,10 +3389,10 @@ TEST test_INC_abs_x(uint8_t regA, uint8_t val, uint8_t regX, uint8_t lobyte, uin
 // ----------------------------------------------------------------------------
 // JMP instructions
 
-TEST test_JMP_abs(uint8_t lobyte, uint8_t hibyte) {
+TEST test_JMP_abs(uint8_t lobyte, uint8_t hibyte, uint16_t insAddrs) {
     HEADER0();
 
-    testcpu_set_opcode3(0x4c, lobyte, hibyte);
+    testcpu_set_opcodeX(0x4c, lobyte, hibyte, insAddrs);
 
     uint8_t regA = (uint8_t)random();
     uint8_t regX = (uint8_t)random();
@@ -3426,10 +3426,10 @@ TEST test_JMP_abs(uint8_t lobyte, uint8_t hibyte) {
     PASS();
 }
 
-TEST test_JMP_ind(uint8_t _lobyte, uint8_t _hibyte, uint8_t set) {
+TEST test_JMP_ind(uint8_t _lobyte, uint8_t _hibyte, uint16_t insAddrs) {
     HEADER0();
 
-    testcpu_set_opcode3(0x6c, _lobyte, _hibyte);
+    testcpu_set_opcodeX(0x6c, _lobyte, _hibyte, insAddrs);
 
     uint8_t regA = (uint8_t)random();
     uint8_t regX = (uint8_t)random();
@@ -3478,7 +3478,7 @@ TEST test_JMP_ind(uint8_t _lobyte, uint8_t _hibyte, uint8_t set) {
     ASSERT(cpu65_f      == f);
     ASSERT(cpu65_sp     == sp);
 
-    ASSERT(cpu65_ea       == _addrs);
+    //ASSERT(cpu65_ea       == _addrs); -- EA is managed differently on ARM
     ASSERT(cpu65_d        == 0xff);
     ASSERT(cpu65_rw       == RW_NONE);
     ASSERT(cpu65_opcode   == 0x6c);
@@ -3488,13 +3488,13 @@ TEST test_JMP_ind(uint8_t _lobyte, uint8_t _hibyte, uint8_t set) {
 }
 
 // 65c02 : 0x7C
-TEST test_JMP_abs_ind_x(uint8_t _lobyte, uint8_t _hibyte, uint8_t set) {
+TEST test_JMP_abs_ind_x(uint8_t _lobyte, uint8_t _hibyte, uint16_t insAddrs, uint8_t _regX) {
     HEADER0();
 
-    testcpu_set_opcode3(0x7c, _lobyte, _hibyte);
+    testcpu_set_opcodeX(0x7c, _lobyte, _hibyte, insAddrs);
 
     uint8_t regA = (uint8_t)random();
-    uint8_t regX = (set == 0xfe) ? set : (uint8_t)random();
+    uint8_t regX = _regX;
     uint8_t regY = (uint8_t)random();
     uint8_t f    = (uint8_t)random();
     uint8_t sp   = (uint8_t)random();
@@ -3535,7 +3535,7 @@ TEST test_JMP_abs_ind_x(uint8_t _lobyte, uint8_t _hibyte, uint8_t set) {
     ASSERT(cpu65_f      == f);
     ASSERT(cpu65_sp     == sp);
 
-    ASSERT(cpu65_ea       == _addrs);
+    //ASSERT(cpu65_ea       == _addrs); -- EA is managed differently on ARM
     ASSERT(cpu65_d        == 0xff);
     ASSERT(cpu65_rw       == RW_NONE);
     ASSERT(cpu65_opcode   == 0x7c);
@@ -5783,8 +5783,8 @@ static void logic_SBC(/*uint8_t*/int _a, /*uint8_t*/int _b, uint8_t *result, uin
         *flags |= fN;
     }
 
-    int32_t res32 = (uint8_t)a-(uint8_t)b-(uint8_t)borrow;
-    if (res32 & 0x10000000) {
+    uint32_t res32 = (uint8_t)a-(uint8_t)b-(uint8_t)borrow;
+    if (res32 & 0x80000000) {
         *flags &= ~fC;
     }
 
@@ -7396,9 +7396,6 @@ GREATEST_SUITE(test_suite_cpu) {
     A2_ADD_TEST(test_CPX_imm);
     A2_ADD_TEST(test_CPY_imm);
     A2_ADD_TEST(test_EOR_imm);
-    A2_ADD_TEST(test_JMP_abs);
-    A2_ADD_TEST(test_JMP_ind);
-    A2_ADD_TEST(test_JMP_abs_ind_x);
     A2_ADD_TEST(test_LDA_imm);
     A2_ADD_TEST(test_LDX_imm);
     A2_ADD_TEST(test_LDY_imm);
@@ -7419,26 +7416,18 @@ GREATEST_SUITE(test_suite_cpu) {
             } while (++val);
         } while (++regA);
 
-        if (func->func == (void*)test_JMP_abs_ind_x) {
-            A2_RUN_TESTp( func->func, 0x01, 0xff, /*alt*/0xfe);
-            uint8_t val=0x00;
-            do {
-                A2_RUN_TESTp( func->func, 0xf0, 0xff, val);
-            } while (++val);
-            do {
-                A2_RUN_TESTp( func->func, 0x0f, 0x00, val);
-            } while (++val);
-        }
-
         fprintf(GREATEST_STDOUT, "...OK\n");
         A2_REMOVE_TEST(func);
     }
     greatest_info.flags = 0x0;
 
     // ------------------------------------------------------------------------
-    // Immediate addressing mode tests #2 :
+    // Immediate/absolute addressing mode tests
 
     greatest_info.flags = GREATEST_FLAG_SILENT_SUCCESS;
+    A2_ADD_TEST(test_JMP_abs);
+    A2_ADD_TEST(test_JMP_abs_ind_x);
+    A2_ADD_TEST(test_JMP_ind);
     A2_ADD_TEST(test_JSR_abs);
     A2_ADD_TEST(test_RTS);
     HASH_ITER(hh, test_funcs, func, tmp) {
@@ -7449,22 +7438,24 @@ GREATEST_SUITE(test_suite_cpu) {
         do {
             uint8_t hibyte=0x00;
             do {
-                A2_RUN_TESTp( func->func, lobyte, hibyte, TEST_LOC);
+                A2_RUN_TESTp( func->func, lobyte, hibyte, TEST_LOC, (uint8_t)random());
             } while (++hibyte);
         } while (++lobyte);
 
         // test 16bit overflow/underflow
         lobyte=0x00;
         do {
-            uint8_t hibyte=0x00;
+            uint8_t regX=0x00;
             do {
-                A2_RUN_TESTp( func->func, lobyte, hibyte, 0xFFFD);
-                A2_RUN_TESTp( func->func, lobyte, hibyte, 0xFFFE);
-                A2_RUN_TESTp( func->func, lobyte, hibyte, 0xFFFF);
-                A2_RUN_TESTp( func->func, lobyte, hibyte, 0x0000);
-                A2_RUN_TESTp( func->func, lobyte, hibyte, 0x0001);
-                A2_RUN_TESTp( func->func, lobyte, hibyte, 0x0002);
-            } while (++hibyte);
+                A2_RUN_TESTp( func->func, lobyte, (uint8_t)random(), 0xFFFC, regX);
+                A2_RUN_TESTp( func->func, lobyte, (uint8_t)random(), 0xFFFD, regX);
+                A2_RUN_TESTp( func->func, lobyte, (uint8_t)random(), 0xFFFE, regX);
+                A2_RUN_TESTp( func->func, lobyte, (uint8_t)random(), 0xFFFF, regX);
+                A2_RUN_TESTp( func->func, lobyte, (uint8_t)random(), 0x0000, regX);
+                A2_RUN_TESTp( func->func, lobyte, (uint8_t)random(), 0x0001, regX);
+                A2_RUN_TESTp( func->func, lobyte, (uint8_t)random(), 0x0002, regX);
+                A2_RUN_TESTp( func->func, lobyte, (uint8_t)random(), 0x0003, regX);
+            } while (++regX);
         } while (++lobyte);
 
         fprintf(GREATEST_STDOUT, "...OK\n");
@@ -7521,6 +7512,9 @@ GREATEST_SUITE(test_suite_cpu) {
     // including all edge cases 
 
     // --------------------------------
+#ifdef ANDROID
+    greatest_info.flags = GREATEST_FLAG_SILENT_SUCCESS;
+#endif
     A2_ADD_TEST(test_ADC_zpage);
     A2_ADD_TEST(test_AND_zpage);
     A2_ADD_TEST(test_ASL_zpage);
@@ -7562,6 +7556,9 @@ GREATEST_SUITE(test_suite_cpu) {
             ++arg0;
         } while (arg0);
 
+#ifdef ANDROID
+        fprintf(GREATEST_STDOUT, "...OK\n");
+#endif
         A2_REMOVE_TEST(func);
     }
 
@@ -7601,6 +7598,9 @@ GREATEST_SUITE(test_suite_cpu) {
             A2_RUN_TESTp( func->func, /*A*/0x00, /*val*/0xff, /*arg0*/0x24, regX, /*carry*/false);
         }
 
+#ifdef ANDROID
+        fprintf(GREATEST_STDOUT, "...OK\n");
+#endif
         A2_REMOVE_TEST(func);
     }
 
@@ -7645,6 +7645,9 @@ GREATEST_SUITE(test_suite_cpu) {
             A2_RUN_TESTp( func->func, /*A*/0x00, /*val*/0xff, lobyte, hibyte, /*carry*/true);
         }
 
+#ifdef ANDROID
+        fprintf(GREATEST_STDOUT, "...OK\n");
+#endif
         A2_REMOVE_TEST(func);
     }
 
@@ -7686,6 +7689,9 @@ GREATEST_SUITE(test_suite_cpu) {
             A2_RUN_TESTp( func->func, /*A*/0x24, /*val*/0x42, 0x20, 0xfe,   0xff,   /*carry*/false); // wrap to zpage
         }
 
+#ifdef ANDROID
+        fprintf(GREATEST_STDOUT, "...OK\n");
+#endif
         A2_REMOVE_TEST(func);
     }
 
@@ -7713,6 +7719,9 @@ GREATEST_SUITE(test_suite_cpu) {
             A2_RUN_TESTp( func->func, /*A*/0x24, /*val*/0x42, 0x20, 0xfe,   0xff); // wrap to zpage
         }
 
+#ifdef ANDROID
+        fprintf(GREATEST_STDOUT, "...OK\n");
+#endif
         A2_REMOVE_TEST(func);
     }
 
@@ -7739,6 +7748,9 @@ GREATEST_SUITE(test_suite_cpu) {
             }
         }
 
+#ifdef ANDROID
+        fprintf(GREATEST_STDOUT, "...OK\n");
+#endif
         A2_REMOVE_TEST(func);
     }
 
@@ -7760,6 +7772,9 @@ GREATEST_SUITE(test_suite_cpu) {
         A2_RUN_TESTp( func->func, /*A*/0xaa, /*val*/0x55, /*arg0*/0x24, /*regY*/0xAA, /*val_zp0*/0xAA, /*val_zp1*/0x1f);
         A2_RUN_TESTp( func->func, /*A*/0x00, /*val*/0xff, /*arg0*/0x24, /*regY*/0x80, /*val_zp0*/0x90, /*val_zp1*/0xff);
 
+#ifdef ANDROID
+        fprintf(GREATEST_STDOUT, "...OK\n");
+#endif
         A2_REMOVE_TEST(func);
     }
 
@@ -7784,6 +7799,9 @@ GREATEST_SUITE(test_suite_cpu) {
             A2_RUN_TESTp( func->func, /*A*/0x00, /*val*/0xff, /*arg0*/0xff, /*lobyte*/0x33, /*hibyte*/0x1f);
         }
 
+#ifdef ANDROID
+        fprintf(GREATEST_STDOUT, "...OK\n");
+#endif
         A2_REMOVE_TEST(func);
     }
 }
