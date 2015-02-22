@@ -539,7 +539,7 @@ ENTRY(op_ADC_dec)
 #else
                 // DAA algorithm : http://www.ray.masmcode.com/BCDdaa.html
                 // CF_old = CF
-                // IF (al AND 0Fh > 9) or (the Auxilliary Flag is set)
+                // IF (al AND 0Fh > 9) or (the Auxiliary Flag is set)
                 //    al = al + 6
                 //    CF = CF (automagically) or CF_old
                 //    AF set (automagically)
@@ -1727,7 +1727,7 @@ ENTRY(op_SBC_dec)
                 sbbb    A_Reg, %al
                 // DAS algorithm : http://www.ray.masmcode.com/BCDdas.html
                 // CF_old = CF
-                // IF (al AND 0Fh > 9) or (the Auxilliary Flag is set)
+                // IF (al AND 0Fh > 9) or (the Auxiliary Flag is set)
                 //    al = al - 6
                 //    CF = CF (automagically) or CF_old
                 //    AF set (automagically)

@@ -782,60 +782,48 @@
        ADd memory to accumulator with Carry
    ---------------------------------- */
 
-#define _AF r10
-#define hi_nib r0
-#define lo_nib r9
+#define carry r9
+#define lo_nyb r1
 
 // Decimal mode
 ENTRY(op_ADC_dec)
                 IncOpCycles
                 GetFromEA_B
                 DebugBCDCheck
-
-                // initial addition with nybble carry check
-                and     _AF, A_Reg, #0x10
-                bt
-                adcs    r0, A_Reg, r0
-                and     r1, A_Reg, #0x10
-                eor     _AF, _AF, r1
-
-                // DAA algorithm : http://www.ray.masmcode.com/BCDdaa.html
-                // CF_old = CF
-                // IF (al AND 0Fh > 9) or (the Auxilliary Flag is set)
-                //    al = al + 6
-                //    CF = CF (automagically) or CF_old
-                //    AF set (automagically)
-                // ENDIF
-                // IF (al > 99h) or (Carry Flag is set)
-                //    al = al + 60h
-                //    CF set
-                // ENDIF
-
-                lahf
+                // isolate lo nybbles
+                mov     lo_nyb, A_Reg
+                mov     r9, r0
+                and     lo_nyb, lo_nyb, #0x0F
+                and     r9, r9, #0x0F
+                // lo nybble addition with carry
+                tst     F_Reg, #C_Flag
+                addne   r9, r9, #1
+                add     lo_nyb, lo_nyb, r9
+                // prep 65c02 flags
                 bic     F_Reg, #NVZC_Flags
-                mov     r1, r0
-                and     r1, r1, #0x0f
-                cmp     r1, #0x09
-                bhi     _daa_lo_nyb
-                teq     _AF, #0
-                beq     _daa_next0
-_daa_lo_nyb:    mov     r0, r0, LSL #24
-                adds    r0, r0, #0x06000000             // adjust lo nybble
-                mov     r0, r0, LSR #24
-                bcs     _daa_hi_nyb
-_daa_next0:     tst     arm_flags, #C_Flag
-                bne     _daa_hi_nyb
-                cmp     r0, #0x9A
-                bmi     _daa_next1
-_daa_hi_nyb:    add     r0, r0, #0x60                   // adjust hi nybble
-                orr     F_Reg, F_Reg, #C_Flag           // FlagC
-_daa_next1:     tst     r0, #0x80
-                beq     _daa_next2
-                orr     F_Reg, F_Reg, #N_Flag           // FlagN
-_daa_next2:     tst     r0, #0xFF
-                bne     _daa_finish
-                orr     F_Reg, F_Reg, #Z_Flag           // FlagZ
-_daa_finish:    mov     A_Reg, r0
+                // lo nybble DAA (Decimal Adjustment after Addition), saving carry (+0, +1, +2)
+                cmp     lo_nyb, #0x09
+                addhi   lo_nyb, lo_nyb, #6
+                mov     carry, lo_nyb, LSR #4
+                and     lo_nyb, lo_nyb, #0x0F
+                // isolate hi nybbles
+                mov     A_Reg, A_Reg, LSR #4
+                mov     r0, r0, LSR #4
+                // hi nybble addition with carry
+                add     r0, r0, carry
+                add     r0, A_Reg, r0
+                // hi nybble DAA
+                cmp     r0, #0x09
+                addhi   r0, #6
+                orrhi   F_Reg, #C_Flag
+                // merge nybbles
+                mov     r0, r0, LSL #4
+                orr     A_Reg, r0, lo_nyb
+                // NZ flags
+                tst     A_Reg, #0x80
+                orrne   F_Reg, F_Reg, #N_Flag
+                tst     A_Reg, #0xFF
+                orreq   F_Reg, F_Reg, #Z_Flag
                 Continue
 
 #define maybe_DoADC_d \
@@ -1964,55 +1952,52 @@ ENTRY(op_RTS) // 0x60
        SBC instructions
        SuBtract memory from accumulator with Borrow
    ---------------------------------- */
+#define borrow carry
 ENTRY(op_SBC_dec)
                 IncOpCycles
                 GetFromEA_B
                 DebugBCDCheck
-
-                // initial subtraction with nybble borrow check
-                and     _AF, A_Reg, #0x10
-                btc
-                /*cmc*/
-                sbcs    r0, A_Reg, r0
-                and     r1, A_Reg, #0x10
-                eor     _AF, _AF, r1
-
-                // DAS algorithm : http://www.ray.masmcode.com/BCDdas.html
-                // CF_old = CF
-                // IF (al AND 0Fh > 9) or (the Auxilliary Flag is set)
-                //    al = al - 6
-                //    CF = CF (automagically) or CF_old
-                //    AF set (automagically)
-                // ENDIF
-                // IF (al > 99h) or (Carry Flag is set)
-                //    al = al - 60h
-                //    ^CF set
-                // ENDIF
-
-                lahf
-                bic     F_Reg, F_Reg, #NVZ_Flags
+                // isolate lo nybbles
+                mov     lo_nyb, A_Reg
+                mov     r9, r0
+                and     lo_nyb, lo_nyb, #0x0F
+                and     r9, r9, #0x0F
+                // lo nybble subtraction with borrow
+                sub     lo_nyb, lo_nyb, r9
+                and     lo_nyb, lo_nyb, #0xFF
+                tst     F_Reg, #C_Flag
+                subeq   lo_nyb, lo_nyb, #1
+                andeq   lo_nyb, lo_nyb, #0xFF
+                // prep 65c02 flags
+                bic     F_Reg, #NVZC_Flags
                 orr     F_Reg, #C_Flag
-                mov     r1, r0
-                and     r1, r1, #0x0f
-                cmp     r1, #0x09
-                bhi     _das_lo_nyb
-                teq     _AF, #0
-                beq     _das_next0
-_das_lo_nyb:    sbcs    r0, r0, #0x06000000             // adjust lo nybble
-                bcs     _das_hi_nyb
-_das_next0:     tst     arm_flags, #C_Flag
-                bne     _das_hi_nyb
-                cmp     r0, #0x9A
-                bmi     _das_next1
-_das_hi_nyb:    sub     r0, r0, #0x60                   // adjust hi nybble
-                bic     F_Reg, F_Reg, #C_Flag           // !FlagC
-_das_next1:     tst     r0, #0x80
-                beq     _das_next2
-                orr     F_Reg, F_Reg, #N_Flag           // FlagN
-_das_next2:     tst     r0, #0xFF
-                bne     _das_finish
-                orr     F_Reg, F_Reg, #Z_Flag           // FlagZ
-_das_finish:    mov     A_Reg, r0
+                // lo nybble DAS (Decimal Adjustment after Subtraction), saving borrow
+                eor     borrow, borrow, borrow
+                cmp     lo_nyb, #0x09
+                movhi   borrow, #1
+                subhi   lo_nyb, lo_nyb, #6
+                andhi   lo_nyb, lo_nyb, #0x0F
+                // isolate hi nybbles
+                mov     A_Reg, A_Reg, LSR #4
+                mov     r0, r0, LSR #4
+                // hi nybble subtraction with borrow
+                sub     r0, A_Reg, r0
+                and     r0, r0, #0xFF
+                sub     r0, r0, borrow
+                and     r0, r0, #0xFF
+                // hi nybble DAS
+                cmp     r0, #0x09
+                subhi   r0, #6
+                bichi   F_Reg, #C_Flag
+                andhi   r0, r0, #0x0F
+                // merge nybbles
+                mov     r0, r0, LSL #4
+                orr     A_Reg, r0, lo_nyb
+                // NZ flags
+                tst     A_Reg, #0x80
+                orrne   F_Reg, F_Reg, #N_Flag
+                tst     A_Reg, #0xFF
+                orreq   F_Reg, F_Reg, #Z_Flag
                 Continue
 
 #define maybe_DoSBC_d \
