@@ -358,11 +358,10 @@
 #define ea_hi_prev r1
 #define ea_hi_next r9
 #define AddIndexRegAndTestPageBoundary(IndexReg) \
-                mov     ea_hi_prev, r0; \
-                mov     ea_hi_prev, ea_hi_prev, LSR #8; \
+                mov     ea_hi_prev, r0, LSR #8; \
                 add     r0, r0, IndexReg; \
-                mov     ea_hi_next, r0; \
-                mov     ea_hi_next, ea_hi_next, LSR #8; \
+                bic     r0, #0x10000; \
+                mov     ea_hi_next, r0, LSR #8; \
                 teq     ea_hi_prev, ea_hi_next; \
                 beq     9f;
 
@@ -400,15 +399,14 @@
    zero contains the high order byte of the address. */
 #define GetIndZPage \
                 GetFromPC_B \
-                add     r0, r0, #1; \
-                and     r0, r0, #0xFF; \
                 mov     EffectiveAddr, r0; \
                 GetFromEA_B \
-                mov     r9, r0, LSL #8; \
-                sub     EffectiveAddr, EffectiveAddr, #1; \
-                and     EffectiveAddr, EffectiveAddr, #0xFF; \
+                mov     r12, r0; \
+                add     EffectiveAddr, EffectiveAddr, #1; \
+                bic     EffectiveAddr, #0x100; \
                 GetFromEA_B \
-                orr     r0, r9, r0; \
+                mov     r0, r0, LSL #8; \
+                orr     r0, r12, r0; \
                 mov     EffectiveAddr, r0;
 
 /* Zero Page Indexed Indirect Addressing - The second byte is added to
@@ -420,16 +418,16 @@
    and low-order bytes must be in page zero. */
 #define GetIndZPage_X \
                 GetFromPC_B \
-                add     r0, r0, X_Reg; \
-                add     r0, r0, #1; \
-                and     r0, r0, #0xFF; \
                 mov     EffectiveAddr, r0; \
+                add     EffectiveAddr, EffectiveAddr, X_Reg; \
+                bic     EffectiveAddr, #0x100; \
                 GetFromEA_B \
-                mov     r9, r0, LSL #8; \
-                sub     EffectiveAddr, EffectiveAddr, #1; \
-                and     EffectiveAddr, EffectiveAddr, #0xFF; \
+                mov     r12, r0; \
+                add     EffectiveAddr, EffectiveAddr, #1; \
+                bic     EffectiveAddr, #0x100; \
                 GetFromEA_B \
-                orr     r0, r9, r0; \
+                mov     r0, r0, LSL #8; \
+                orr     r0, r12, r0; \
                 mov     EffectiveAddr, r0;
 
 /* Indirect Indexed Addressing - The second byte of the instruction
@@ -441,15 +439,14 @@
    effective address. */
 #define _GetIndZPage_Y \
                 GetFromPC_B \
-                add     r0, r0, #1; \
-                and     r0, r0, #0xFF; \
                 mov     EffectiveAddr, r0; \
                 GetFromEA_B \
-                mov     r9, r0, LSL #8; \
-                sub     EffectiveAddr, EffectiveAddr, #1; \
-                and     EffectiveAddr, EffectiveAddr, #0xFF; \
+                mov     r12, r0; \
+                add     EffectiveAddr, EffectiveAddr, #1; \
+                bic     EffectiveAddr, #0x100; \
                 GetFromEA_B \
-                orr     r0, r9, r0; \
+                mov     r0, r0, LSL #8; \
+                orr     r0, r12, r0; \
                 AddIndexRegAndTestPageBoundary(Y_Reg)
 
 #define GetIndZPage_Y \
@@ -459,12 +456,14 @@
 
 #define GetIndZPage_Y_STA \
                 _GetIndZPage_Y \
-                IncOpCycles \
+                /*IncOpCycles*/ \
 9:              mov     EffectiveAddr, r0;
 
 // ----------------------------------------------------------------------------
 // 65c02 instruction macros
 
+#if 0
+#error this attempts to leverage ARM 32bit flags, but does so incorrectly ... possibly there is some efficiency gains here if correctness can be assured
 #define DoADC_b \
                 GetFromEA_B \
                 mov     A_Reg, A_Reg, LSL #24; \
@@ -486,6 +485,36 @@
                 /* merge intermediate V,C */ \
                 /* orr     F_Reg, F_Reg, arm_flags_int; */ \
                 mov     A_Reg, A_Reg, LSR #24;
+#else
+#define sign_a r1
+#define sign_0 r9
+#define DoADC_b \
+                GetFromEA_B \
+                /* save operand sign bits */ \
+                mov     sign_a, A_Reg, LSR #7; \
+                mov     sign_0, r0, LSR #7; \
+                /* perform ADC with incoming carry */\
+                tst     F_Reg, #C_Flag; \
+                addne   A_Reg, A_Reg, #1; \
+                add     A_Reg, A_Reg, r0; \
+                /* clear and set flags */ \
+                bic     F_Reg, F_Reg, #NVZC_Flags; \
+                tst     A_Reg, #0x100; \
+                orrne   F_Reg, F_Reg, #C_Flag; \
+                bic     A_Reg, #0x100; \
+                \
+                tst     A_Reg, #0x80; \
+                orrne   F_Reg, F_Reg, #N_Flag; \
+                \
+                teq     sign_a, sign_0; \
+                bne     1f; \
+                mov     sign_0, A_Reg, LSR #7; \
+                cmp     sign_a, sign_0; \
+                orrne   F_Reg, F_Reg, #V_Flag; \
+                \
+1:              tst     A_Reg, #0xFF; \
+                orreq   F_Reg, F_Reg, #Z_Flag;
+#endif
 
 #ifndef NDEBUG
 #define DebugBCDCheck \
@@ -526,13 +555,18 @@
 
 #define _DoBIT \
                 GetFromEA_B \
-                mov     r0, r0, LSL #24; \
-                mov     r1, A_Reg, LSL #24; \
-                tst     r1, r0;
+                mov     r1, A_Reg; \
+                and     r1, r1, r0;
 
 #define DoBIT \
                 _DoBIT \
-                FlagNVZ
+                bic     F_Reg, F_Reg, #NVZ_Flags; \
+                tst     r1, #0xFF; \
+                orreq   F_Reg, F_Reg, #Z_Flag; \
+                tst     r0, #0x40; \
+                orrne   F_Reg, F_Reg, #V_Flag; \
+                tst     r0, #0x80; \
+                orrne   F_Reg, F_Reg, #N_Flag;
 
 #define DoCMP \
                 GetFromEA_B \
@@ -634,7 +668,7 @@
 #define _DoPLx(x) \
                 Pop(x); \
                 mov     r0, x, LSL #24; \
-                orr     r0, r0, r0; \
+                orrs    r0, r0, r0; \
                 FlagNZ
 
 #define _DoROL(x) \
@@ -654,20 +688,59 @@
 #define _DoROR(x) \
                 tst     F_Reg, #C_Flag; \
                 orrne   x, x, #0x100; \
-                rors    x, x, #1; \
-                FlagNZC
+                ror     x, x, #1; \
+                bic     F_Reg, F_Reg, #NZC_Flags; \
+                tst     x, #ROR_BIT; \
+                bicne   x, #ROR_BIT; \
+                orrne   F_Reg, F_Reg, #C_Flag; \
+                tst     x, #0xFF; \
+                orreq   F_Reg, F_Reg, #Z_Flag; \
+                tst     x, #0x80; \
+                orrne   F_Reg, F_Reg, #N_Flag;
 
 #define DoROR \
                 GetFromEA_B \
                 _DoROR(r0) \
                 PutToEA_B
 
+#if 0
+#error this attempts to leverage ARM 32bit flags, but does so incorrectly ... possibly there is some efficiency gains here if correctness can be assured
 #define DoSBC_b \
                 GetFromEA_B \
                 mvn     r0, r0; \
+                adcs    r1, r1, #0; \
                 bt; \
                 adcs    A_Reg, A_Reg, r0; \
                 FlagNVZC
+#else
+#define DoSBC_b \
+                GetFromEA_B \
+                /* save operand sign bits */ \
+                mov     sign_a, A_Reg, LSR #7; \
+                mov     sign_0, r0, LSR #7; \
+                /* perform SBC with incoming borrow */\
+                sub     A_Reg, A_Reg, r0; \
+                tst     F_Reg, #C_Flag; \
+                subeq   A_Reg, A_Reg, #1; \
+                /* clear and set flags */ \
+                bic     F_Reg, F_Reg, #NVZC_Flags; \
+                tst     A_Reg, #0x80000000; \
+                orreq   F_Reg, F_Reg, #C_Flag; \
+                mov     A_Reg, A_Reg, LSL #24; \
+                mov     A_Reg, A_Reg, LSR #24; \
+                \
+                tst     A_Reg, #0x80; \
+                orrne   F_Reg, F_Reg, #N_Flag; \
+                \
+                teq     sign_a, sign_0; \
+                beq     1f; \
+                mov     sign_0, A_Reg, LSR #7; \
+                cmp     sign_a, sign_0; \
+                orrne   F_Reg, F_Reg, #V_Flag; \
+                \
+1:              tst     A_Reg, #0xFF; \
+                orreq   F_Reg, F_Reg, #Z_Flag;
+#endif
 
 #define DoSTA \
                 mov     r0, A_Reg; \
@@ -687,7 +760,7 @@
 
 #define DoTRB \
                 GetFromEA_B \
-                teq     r0, A_Reg; \
+                tst     r0, A_Reg; \
                 FlagZ \
                 mvn     r1, A_Reg; \
                 and     r0, r0, r1; \
@@ -695,7 +768,7 @@
 
 #define DoTSB \
                 GetFromEA_B \
-                teq     r0, A_Reg; \
+                tst     r0, A_Reg; \
                 FlagZ \
                 orr     r0, A_Reg, r0; \
                 PutToEA_B
@@ -1054,7 +1127,9 @@ ENTRY(op_BIT_abs_x)
 ENTRY(op_BIT_imm)
                 GetImm
                 _DoBIT
-                FlagZ
+                tst     r1, #0xFF
+                orreq   F_Reg, F_Reg, #Z_Flag
+                bicne   F_Reg, F_Reg, #Z_Flag
                 Continue
 
 .ltorg
@@ -1464,18 +1539,21 @@ ENTRY(op_JMP_abs)
 
 ENTRY(op_JMP_ind) // 0x6c
                 GetFromPC_W
-                and     r1, r0, #0xFF
-                eor     r1, #0xFF
+                mov     r1, r0, LSL #24
+                teq     r1, #0xFF000000
                 beq     jmp_special
                 GetFromMem_W(r0)
                 mov     PC_Reg, r0
                 Continue
 jmp_special: // see JMP indirect note in _Understanding the Apple IIe_ 4-25
                 mov     PC_Reg, r0
-                sub     PC_Reg, #0xFF
+                subs    PC_Reg, PC_Reg, #0xFF
+                movmi   PC_Reg, PC_Reg, LSL #16
+                movmi   PC_Reg, PC_Reg, LSR #16
                 GetFromMem_B(PC_Reg)
                 mov     r9, r0, LSL #8
-                add     PC_Reg, #0xFF
+                add     PC_Reg, PC_Reg, #0xFF
+                bic     PC_Reg, #0x10000
                 GetFromMem_B(PC_Reg)
                 orr     r0, r9, r0
                 mov     PC_Reg, r0
@@ -1486,10 +1564,11 @@ ENTRY(op_JMP_abs_ind_x)
                 GetFromPC_W
                 mov     EffectiveAddr, r0
                 mov     r0, X_Reg
-                cbw
-                add     EffectiveAddr, r0
-                mov     EffectiveAddr, EffectiveAddr, LSL #24 // 16bit under/overflow protection
-                mov     EffectiveAddr, EffectiveAddr, LSR #24
+#warning HACK FIXME TODO : need to check the Bible here ... is this a signed addition (in which case we need to cbw)
+                //cbw
+                add     EffectiveAddr, EffectiveAddr, r0
+                mov     EffectiveAddr, EffectiveAddr, LSL #16 // 16bit under/overflow protection
+                mov     EffectiveAddr, EffectiveAddr, LSR #16
                 GetFromMem_W(EffectiveAddr)
                 mov     PC_Reg, r0
                 Continue

@@ -36,8 +36,10 @@
 #ifdef __aarch64__
 #   error 20150205 ARM 64bit untested!!!
 #   define PTR_SHIFT        #4 // 4<<1 = 8
+#   define ROR_BIT          0x8000000000000000
 #else
 #   define PTR_SHIFT        #2 // 2<<1 = 4
+#   define ROR_BIT          0x80000000
 #endif
 
 

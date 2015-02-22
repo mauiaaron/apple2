@@ -1268,10 +1268,10 @@ ENTRY(op_JMP_ind) // 0x6c
                 Continue
 jmp_special: // see JMP indirect note in _Understanding the Apple IIe_ 4-25
                 movw    %ax, PC_Reg
-                subw    $0xff, PC_Reg
+                subw    $0xFF, PC_Reg
                 GetFromMem_B(PC_Reg_X)
                 xchgb   %al, %ah
-                addw    $0xff, PC_Reg
+                addw    $0xFF, PC_Reg
                 GetFromMem_B(PC_Reg_X)
                 movw    %ax, PC_Reg
                 Continue
@@ -1281,6 +1281,8 @@ ENTRY(op_JMP_abs_ind_x)
                 GetFromPC_W
                 movw    %ax, EffectiveAddr
                 movzbLQ X_Reg, _XAX
+#warning HACK FIXME TODO : need to check the Bible here ... is this a signed addition (in which case we need to cbw)
+                //cbw
                 addw    %ax, EffectiveAddr
                 GetFromMem_W(EffectiveAddr_X)
                 movw    %ax, PC_Reg
