@@ -28,10 +28,18 @@ FILE *error_log = NULL;
 int sound_volume = 2;
 bool is_headless = false;
 color_mode_t color_mode = COLOR;
+const char *data_dir = NULL;
 
 __attribute__((constructor))
 static void _init_common() {
     error_log = stderr;
+#if defined(CONFIG_DATADIR)
+    data_dir = strdup(CONFIG_DATADIR "/" PACKAGE_NAME);
+#elif defined(ANDROID)
+    // data_dir is set up in JNI nativeOnCreate()
+#else
+#error "Specify a CONFIG_DATADIR and PACKAGE_NAME"
+#endif
 }
 
 GLUE_BANK_READ(read_ram_bank,base_d000_rd)
@@ -443,7 +451,6 @@ void c_initialize_tables() {
 
 void c_initialize_apple_ii_memory()
 {
-    FILE       *f;
     int i;
 
     for (i = 0; i < 0x10000; i++)

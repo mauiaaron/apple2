@@ -162,7 +162,7 @@ int test_setup_boot_disk(const char *fileName, int readonly) {
     }
     CFRELEASE(filePath);
 #else
-    asprintf(&disk, "./disks/%s", fileName);
+    asprintf(&disk, "%s/disks/%s", data_dir, fileName);
 #endif
     if (c_new_diskette_6(0, disk, readonly)) {
         int len = strlen(disk);

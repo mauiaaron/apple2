@@ -25,8 +25,13 @@ int main(int argc, char **argv) {
 
 #else
 
-void Java_org_deadc0de_apple2_Apple2Activity_nativeOnCreate(JNIEnv *env, jobject obj) {
-    LOG("%s", "native onCreate...");
+void Java_org_deadc0de_apple2_Apple2Activity_nativeOnCreate(JNIEnv *env, jobject obj, jstring j_dataDir) {
+
+    const char *dataDir = (*env)->GetStringUTFChars(env, j_dataDir, 0);
+    data_dir = strdup(dataDir);
+    (*env)->ReleaseStringUTFChars(env, j_dataDir, dataDir);
+
+    LOG("nativeOnCreate(%s)...", data_dir);
 
 #if !TESTING
     // TODO ...

@@ -498,17 +498,15 @@ static demoSource *_create_shader_source(const char *fileName) {
     CFRELEASE(fileURL);
     src = srcLoadSource(CFStringGetCStringPtr(filePath, CFStringGetSystemEncoding()));
     CFRELEASE(filePath);
-#elif defined(CONFIG_DATADIR)
+#else
     char *filePath = NULL;
-    asprintf(&filePath, "%s/%s/shaders/%s", CONFIG_DATADIR, PACKAGE_NAME, fileName);
+    asprintf(&filePath, "%s/shaders/%s", data_dir, fileName);
     if (filePath) {
         src = srcLoadSource(filePath);
         free(filePath);
     } else {
         ERRLOG("OOPS Could not load shader from %s (%s)", filePath, fileName);
     }
-#else
-#error need to specify a DATADIR for shader files, etc
 #endif
     return src;
 }

@@ -19,6 +19,8 @@
 
 #ifndef __ASSEMBLER__
 
+extern const char *data_dir;
+
 /* Text characters */
 extern const unsigned char ucase_glyphs[0x200];
 extern const unsigned char lcase_glyphs[0x100];
