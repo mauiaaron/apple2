@@ -1081,7 +1081,7 @@ void test_disk(int argc, char **argv) {
     if (begin_video) {
         video_main_loop();
     }
-    pthread_join(p, NULL);
+    //pthread_join(p, NULL);
 }
 
 #if !defined(__APPLE__)
