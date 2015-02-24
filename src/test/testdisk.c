@@ -13,6 +13,12 @@
 
 #define RESET_INPUT() test_common_setup()
 
+#ifdef ANDROID
+#   define HOMEDIR data_dir
+#else
+#   define HOMEDIR getenv("HOME")
+#endif
+
 #define ABUSIVE_TESTS 0
 #define FINICKY_TESTS 0
 
@@ -54,7 +60,7 @@ static void testdisk_teardown(void *arg) {
 TEST test_boot_disk_bytes() {
     srandom(0);
 
-    char *homedir = getenv("HOME");
+    const char *homedir = HOMEDIR;
     char *disk = NULL;
     asprintf(&disk, "%s/a2_read_disk_test.txt", homedir);
     if (disk) {
@@ -102,7 +108,7 @@ TEST test_boot_disk_bytes_nib() {
     test_setup_boot_disk(BLANK_NIB, 0);
     srandom(0);
 
-    char *homedir = getenv("HOME");
+    const char *homedir = HOMEDIR;
     char *disk = NULL;
     asprintf(&disk, "%s/a2_read_disk_test_nib.txt", homedir);
     if (disk) {
@@ -150,7 +156,7 @@ TEST test_boot_disk_bytes_po() {
     test_setup_boot_disk(BLANK_PO, 0);
     srandom(0);
 
-    char *homedir = getenv("HOME");
+    const char *homedir = HOMEDIR;
     char *disk = NULL;
     asprintf(&disk, "%s/a2_read_disk_test_po.txt", homedir);
     if (disk) {
@@ -198,7 +204,7 @@ TEST test_boot_disk_bytes_po() {
 #define EXPECTED_CPU_TRACE_FILE_SIZE 809430487
 #define EXPECTED_CPU_TRACE_SHA "4DB0C2547A0F02450A0E5E663C5BE8EA776C7A41"
 TEST test_boot_disk_cputrace() {
-    char *homedir = getenv("HOME");
+    const char *homedir = HOMEDIR;
     char *output = NULL;
     asprintf(&output, "%s/a2_cputrace.txt", homedir);
     if (output) {
@@ -247,7 +253,7 @@ TEST test_cputrace_hello_dsk() {
 
     BOOT_TO_DOS();
 
-    char *homedir = getenv("HOME");
+    const char *homedir = HOMEDIR;
     char *output = NULL;
     asprintf(&output, "%s/a2_cputrace_hello_dsk.txt", homedir);
     if (output) {
@@ -297,7 +303,7 @@ TEST test_cputrace_hello_nib() {
 
     BOOT_TO_DOS();
 
-    char *homedir = getenv("HOME");
+    const char *homedir = HOMEDIR;
     char *output = NULL;
     asprintf(&output, "%s/a2_cputrace_hello_nib.txt", homedir);
     if (output) {
@@ -347,7 +353,7 @@ TEST test_cputrace_hello_po() {
 
     BOOT_TO_DOS();
 
-    char *homedir = getenv("HOME");
+    const char *homedir = HOMEDIR;
     char *output = NULL;
     asprintf(&output, "%s/a2_cputrace_hello_po.txt", homedir);
     if (output) {
@@ -393,7 +399,7 @@ TEST test_cputrace_hello_po() {
 #define EXPECTED_VM_TRACE_FILE_SIZE 2830792
 #define EXPECTED_VM_TRACE_SHA "E3AA4EBEACF9053D619E115F6AEB454A8939BFB4"
 TEST test_boot_disk_vmtrace() {
-    char *homedir = getenv("HOME");
+    const char *homedir = HOMEDIR;
     char *disk = NULL;
     asprintf(&disk, "%s/a2_vmtrace.txt", homedir);
     if (disk) {
@@ -441,7 +447,7 @@ TEST test_boot_disk_vmtrace() {
 TEST test_boot_disk_vmtrace_nib() {
     test_setup_boot_disk(BLANK_NIB, 0);
 
-    char *homedir = getenv("HOME");
+    const char *homedir = HOMEDIR;
     char *disk = NULL;
     asprintf(&disk, "%s/a2_vmtrace_nib.txt", homedir);
     if (disk) {
@@ -489,7 +495,7 @@ TEST test_boot_disk_vmtrace_nib() {
 TEST test_boot_disk_vmtrace_po() {
     test_setup_boot_disk(BLANK_PO, 0);
 
-    char *homedir = getenv("HOME");
+    const char *homedir = HOMEDIR;
     char *disk = NULL;
     asprintf(&disk, "%s/a2_vmtrace_po.txt", homedir);
     if (disk) {
@@ -627,7 +633,7 @@ TEST test_disk_bytes_savehello_dsk() {
     ASSERT(apple_ii_64k[0][TESTOUT_ADDR]    == 0x00);
 
     srandom(0);
-    char *homedir = getenv("HOME");
+    const char *homedir = HOMEDIR;
     char *disk = NULL;
     asprintf(&disk, "%s/a2_write_disk_test_dsk.txt", homedir);
     if (disk) {
@@ -692,7 +698,7 @@ TEST test_disk_bytes_savehello_nib() {
     ASSERT(apple_ii_64k[0][TESTOUT_ADDR]    == 0x00);
 
     srandom(0);
-    char *homedir = getenv("HOME");
+    const char *homedir = HOMEDIR;
     char *disk = NULL;
     asprintf(&disk, "%s/a2_write_disk_test_nib.txt", homedir);
     if (disk) {
@@ -757,7 +763,7 @@ TEST test_disk_bytes_savehello_po() {
     ASSERT(apple_ii_64k[0][TESTOUT_ADDR]    == 0x00);
 
     srandom(0);
-    char *homedir = getenv("HOME");
+    const char *homedir = HOMEDIR;
     char *disk = NULL;
     asprintf(&disk, "%s/a2_write_disk_test_po.txt", homedir);
     if (disk) {
@@ -1021,7 +1027,9 @@ GREATEST_SUITE(test_suite_disk) {
     RUN_TESTp(test_disk_bytes_savehello_nib);
     RUN_TESTp(test_disk_bytes_savehello_po);
 
+#ifndef ANDROID
     c_debugger_set_timeout(60);
+#endif
 
     RUN_TESTp(test_outofspace_dsk);
     RUN_TESTp(test_outofspace_nib);
