@@ -2456,7 +2456,7 @@ exception:      tst     r0, #ResetSig
                 tst     r0, #0xFF
                 bne     exit_reinit
 
-ex_reset:       mov     r0, #0
+ex_reset:       eor     r0, r0, r0
                 ldr     r1, SYM(cpu65__signal)
                 strb    r0, [r1]
                 ldr     EffectiveAddr, SYM(reset_vector)
@@ -2509,8 +2509,8 @@ ENTRY(cpu65_run)
                 ldrb    SP_Reg, [r1]
                 ldr     r1, SYM(emul_reinitialize)
                 ldrb    r0, [r1]
-                tst     r0, #0
-                movne   r0, #0
+                teq     r0, #0
+                eorne   r0, r0, r0
                 strneb  r0, [r1]
                 bne     ex_reset
                 b       continue1
