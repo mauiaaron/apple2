@@ -19,7 +19,6 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
-import android.widget.TextView;
 
 import java.io.File;
 import java.io.InputStream;
@@ -34,6 +33,8 @@ public class Apple2Activity extends Activity {
 
     private final static String PREFS_CONFIGURED = "prefs_configured";
 
+    private Apple2View mView = null;
+
     static {
         System.loadLibrary("apple2ix");
     }
@@ -41,6 +42,8 @@ public class Apple2Activity extends Activity {
     private native void nativeOnCreate(String dataDir);
     private native void nativeOnResume();
     private native void nativeOnPause();
+    public native void nativeGraphicsInitialized(int width, int height);
+    public native void nativeRender();
 
     // HACK NOTE 2015/02/22 : Apparently native code cannot easily access stuff in the APK ... so copy various resources
     // out of the APK and into the /data/data/... for ease of access.  Because this is FOSS software we don't care about
@@ -129,20 +132,21 @@ public class Apple2Activity extends Activity {
         String dataDir = firstTimeInitialization();
         nativeOnCreate(dataDir);
 
-        TextView tv = new TextView(this);
-        tv.setText("Hello Apple2!");
-        setContentView(tv);
+        mView = new Apple2View(this);
+        setContentView(mView);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+        mView.onResume();
         nativeOnResume();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
+        mView.onPause();
         nativeOnPause();
     }
 }

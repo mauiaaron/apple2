@@ -11,29 +11,20 @@
 
 #include <jni.h>
 #include "common.h"
-
-#define LAUNCH_WITHOUT_JAVA 0
-#if LAUNCH_WITHOUT_JAVA
-
-int main(int argc, char **argv) {
-    for (unsigned int i=0; i<10; i++) {
-        LOG("counter : %u", i);
-        sleep(1);
-    }
-    LOG("%s", "finished...");
-}
-
-#else
+#include "video/renderer.h"
 
 void Java_org_deadc0de_apple2_Apple2Activity_nativeOnCreate(JNIEnv *env, jobject obj, jstring j_dataDir) {
-
     const char *dataDir = (*env)->GetStringUTFChars(env, j_dataDir, 0);
     data_dir = strdup(dataDir);
     (*env)->ReleaseStringUTFChars(env, j_dataDir, dataDir);
-
     LOG("nativeOnCreate(%s)...", data_dir);
+}
 
+void Java_org_deadc0de_apple2_Apple2Activity_nativeGraphicsInitialized(JNIEnv *env, jobject obj, jint width, jint height) {
+    LOG("%s", "native graphicsInitialized...");
+    video_driver_reshape(width, height);
 #if !TESTING
+#warning FIXME TODO ...
     // TODO ...
 #else
     char *local_argv[] = {
@@ -44,24 +35,21 @@ void Java_org_deadc0de_apple2_Apple2Activity_nativeOnCreate(JNIEnv *env, jobject
     for (char **p = &local_argv[0]; *p != NULL; p++) {
         ++local_argc;
     }
-
-#if defined(TEST_CPU)
+#   if defined(TEST_CPU)
     extern int test_cpu(int, char *[]);
     test_cpu(local_argc, local_argv);
-#elif defined(TEST_VM)
+#   elif defined(TEST_VM)
     extern int test_vm(int, char *[]);
     test_vm(local_argc, local_argv);
-#elif defined(TEST_DISPLAY)
+#   elif defined(TEST_DISPLAY)
     extern int test_display(int, char *[]);
     test_display(local_argc, local_argv);
-#elif defined(TEST_DISK)
+#   elif defined(TEST_DISK)
     extern int test_disk(int, char *[]);
     test_disk(local_argc, local_argv);
-#else
-#   error "OOPS, no tests specified"
-#endif
-
-    exit(0);
+#   else
+#       error "OOPS, no tests specified"
+#   endif
 #endif
 }
 
@@ -73,4 +61,29 @@ void Java_org_deadc0de_apple2_Apple2Activity_nativeOnPause(JNIEnv *env, jobject 
     LOG("%s", "native onPause...");
 }
 
-#endif // LAUNCH_WITHOUT_JAVA
+void Java_org_deadc0de_apple2_Apple2Activity_nativeRender(JNIEnv *env, jobject obj) {
+    c_keys_handle_input(-1, 0, 0);
+
+#define FPS_LOG 1
+#if FPS_LOG
+    static uint32_t prevCount = 0;
+    static uint32_t idleCount = 0;
+
+    idleCount++;
+
+    static struct timespec prev = { 0 };
+    struct timespec now;
+    clock_gettime(CLOCK_MONOTONIC, &now);
+
+    if (now.tv_sec != prev.tv_sec) {
+        LOG("native render() : %u", idleCount-prevCount);
+        prevCount = idleCount;
+        prev = now;
+    }
+#endif
+
+    if (_vid_dirty) {
+        video_driver_render();
+    }
+}
+
