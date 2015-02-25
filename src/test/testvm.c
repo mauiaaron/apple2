@@ -13,7 +13,7 @@
 
 #define RESET_INPUT() test_common_setup()
 
-#define TESTING_DISK "testvm1.dsk.gz"
+#define TESTING_DISK "testvm1.nib.gz"
 
 #define TYPE_TRIGGER_WATCHPT() \
     test_type_input("POKE7987,255:REM TRIGGER DEBUGGER\r")

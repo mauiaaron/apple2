@@ -25,7 +25,7 @@ static void testdisplay_teardown(void *arg) {
 }
 
 TEST test_boot_disk() {
-    test_setup_boot_disk("testdisplay1.dsk.gz", 1);
+    test_setup_boot_disk("testdisplay1.nib.gz", 1);
 
     BOOT_TO_DOS();
 
