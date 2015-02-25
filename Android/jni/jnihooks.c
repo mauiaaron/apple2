@@ -64,7 +64,6 @@ void Java_org_deadc0de_apple2_Apple2Activity_nativeOnPause(JNIEnv *env, jobject 
 void Java_org_deadc0de_apple2_Apple2Activity_nativeRender(JNIEnv *env, jobject obj) {
     c_keys_handle_input(-1, 0, 0);
 
-#define FPS_LOG 1
 #if FPS_LOG
     static uint32_t prevCount = 0;
     static uint32_t idleCount = 0;
@@ -82,8 +81,6 @@ void Java_org_deadc0de_apple2_Apple2Activity_nativeRender(JNIEnv *env, jobject o
     }
 #endif
 
-    if (_vid_dirty) {
-        video_driver_render();
-    }
+    video_driver_render();
 }
 

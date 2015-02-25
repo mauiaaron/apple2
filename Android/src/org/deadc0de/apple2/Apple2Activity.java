@@ -68,18 +68,14 @@ public class Apple2Activity extends Activity {
         Log.d(TAG, "First time copying stuff-n-things out of APK for ease-of-NDK access...");
 
         try {
-            _copyFile(dataDir, "shaders", "Basic.vsh");
-            _copyFile(dataDir, "shaders", "Basic.fsh");
-            _copyFile(dataDir, "disks", "blank.dsk");
-            _copyFile(dataDir, "disks", "blank.nib");
-            _copyFile(dataDir, "disks", "blank.po");
-            _copyFile(dataDir, "disks", "etc.dsk");
-            _copyFile(dataDir, "disks", "flapple140.po");
-            _copyFile(dataDir, "disks", "mystery.dsk");
-            _copyFile(dataDir, "disks", "ProDOS.dsk");
-            _copyFile(dataDir, "disks", "speedtest.dsk");
-            _copyFile(dataDir, "disks", "testdisplay1.dsk");
-            _copyFile(dataDir, "disks", "testvm1.dsk");
+            String[] shaders = getAssets().list("shaders");
+            for (String shader : shaders) {
+                _copyFile(dataDir, "shaders", shader);
+            }
+            String[] disks = getAssets().list("disks");
+            for (String disk : disks) {
+                _copyFile(dataDir, "disks", disk);
+            }
         } catch (IOException e) {
             Log.e(TAG, "problem copying resources : "+e);
             System.exit(1);

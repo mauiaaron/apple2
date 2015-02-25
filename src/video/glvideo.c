@@ -324,12 +324,16 @@ static GLuint _build_program(demoSource *vertexSource, demoSource *fragmentSourc
     // Determine if GLSL version 140 is supported by this context.
     //  We'll use this info to generate a GLSL shader source string
     //  with the proper version preprocessor string prepended
-    float  glLanguageVersion;
+    float glLanguageVersion = 0.f;
 
+    char *shaderLangVersion = (char *)glGetString(GL_SHADING_LANGUAGE_VERSION);
+    if (shaderLangVersion == NULL) {
+        ERRQUIT("shader toolchain unavailable");
+    }
 #if TARGET_OS_IPHONE
-    sscanf((char *)glGetString(GL_SHADING_LANGUAGE_VERSION), "OpenGL ES GLSL ES %f", &glLanguageVersion);
+    sscanf(shaderLangVersion, "OpenGL ES GLSL ES %f", &glLanguageVersion);
 #else
-    sscanf((char *)glGetString(GL_SHADING_LANGUAGE_VERSION), "%f", &glLanguageVersion);
+    sscanf(shaderLangVersion, "%f", &glLanguageVersion);
 #endif
 
     // GL_SHADING_LANGUAGE_VERSION returns the version standard version form
@@ -620,9 +624,7 @@ static void gldriver_update(int unused) {
 #endif
 
     c_keys_handle_input(-1, 0, 0);
-    if (_vid_dirty) {
-        glutPostRedisplay();
-    }
+    glutPostRedisplay();
     glutTimerFunc(17, gldriver_update, 0);
 }
 #endif
@@ -660,22 +662,25 @@ static void gldriver_render(void) {
     // that we calculated above
     glUniformMatrix4fv(uniformMVPIdx, 1, GL_FALSE, mvp);
 
-    // Update texture from indexed-color Apple //e internal framebuffer
-    unsigned int count = SCANWIDTH * SCANHEIGHT;
     char pixels[SCANWIDTH * SCANHEIGHT * 4];
-    for (unsigned int i=0, j=0; i<count; i++, j+=4) {
-        uint8_t index = *(fb + i);
-        *( (uint32_t*)(pixels + j) ) = (uint32_t)(
-                                                  ((uint32_t)(colormap[index].red)   << 0 ) |
-                                                  ((uint32_t)(colormap[index].green) << 8 ) |
-                                                  ((uint32_t)(colormap[index].blue)  << 16) |
-                                                  ((uint32_t)0xff                    << 24)
-                                                  );
+    if (_vid_dirty) {
+        // Update texture from indexed-color Apple //e internal framebuffer
+        unsigned int count = SCANWIDTH * SCANHEIGHT;
+        for (unsigned int i=0, j=0; i<count; i++, j+=4) {
+            uint8_t index = *(fb + i);
+            *( (uint32_t*)(pixels + j) ) = (uint32_t)(
+                                                      ((uint32_t)(colormap[index].red)   << 0 ) |
+                                                      ((uint32_t)(colormap[index].green) << 8 ) |
+                                                      ((uint32_t)(colormap[index].blue)  << 16) |
+                                                      ((uint32_t)0xff                    << 24)
+                                                      );
+        }
     }
 
     glBindTexture(GL_TEXTURE_2D, a2TextureName);
-    glTexImage2D(GL_TEXTURE_2D, /*level*/0, /*internal format*/GL_RGBA, SCANWIDTH, SCANHEIGHT, /*border*/0, /*format*/GL_RGBA, GL_UNSIGNED_BYTE, (GLvoid *)&pixels[0]);
-    glGetError();
+    if (_vid_dirty) {
+        glTexImage2D(GL_TEXTURE_2D, /*level*/0, /*internal format*/GL_RGBA, SCANWIDTH, SCANHEIGHT, /*border*/0, /*format*/GL_RGBA, GL_UNSIGNED_BYTE, (GLvoid *)&pixels[0]);
+    }
 
     // Bind our vertex array object
 #if USE_VAO

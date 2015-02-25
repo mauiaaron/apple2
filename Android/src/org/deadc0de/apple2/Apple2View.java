@@ -49,7 +49,7 @@ import javax.microedition.khronos.opengles.GL10;
  */
 class Apple2View extends GLSurfaceView {
     private final static String TAG = "Apple2View";
-    private final static boolean DEBUG = true;
+    private final static boolean DEBUG = false;
 
     private Apple2Activity mActivity = null;
 
@@ -165,10 +165,8 @@ class Apple2View extends GLSurfaceView {
 
             // Now return the "best" one
             EGLConfig best = chooseConfig(egl, display, configs);
-            if (DEBUG) {
-                Log.w(TAG, "BEST CONFIG : ");
-                printConfig(egl, display, best);
-            }
+            Log.w(TAG, "Using EGL CONFIG : ");
+            printConfig(egl, display, best);
             return best;
         }
 
