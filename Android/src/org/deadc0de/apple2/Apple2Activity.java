@@ -19,6 +19,7 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.KeyEvent;
 
 import java.io.File;
 import java.io.InputStream;
@@ -44,6 +45,8 @@ public class Apple2Activity extends Activity {
     private native void nativeOnPause();
     public native void nativeGraphicsInitialized(int width, int height);
     public native void nativeRender();
+    private native void nativeOnKeyDown(int keyCode, int metaState);
+    private native void nativeOnKeyUp(int keyCode, int metaState);
 
     // HACK NOTE 2015/02/22 : Apparently native code cannot easily access stuff in the APK ... so copy various resources
     // out of the APK and into the /data/data/... for ease of access.  Because this is FOSS software we don't care about
@@ -145,4 +148,17 @@ public class Apple2Activity extends Activity {
         mView.onPause();
         nativeOnPause();
     }
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        nativeOnKeyDown(keyCode, event.getMetaState());
+        return true;
+    }
+
+    @Override
+    public boolean onKeyUp(int keyCode, KeyEvent event) {
+        nativeOnKeyUp(keyCode, event.getMetaState());
+        return true;
+    }
+
 }

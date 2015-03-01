@@ -12,6 +12,7 @@
 #include <jni.h>
 #include "common.h"
 #include "video/renderer.h"
+#include "androidkeys.h"
 
 void Java_org_deadc0de_apple2_Apple2Activity_nativeOnCreate(JNIEnv *env, jobject obj, jstring j_dataDir) {
     const char *dataDir = (*env)->GetStringUTFChars(env, j_dataDir, 0);
@@ -24,8 +25,8 @@ void Java_org_deadc0de_apple2_Apple2Activity_nativeGraphicsInitialized(JNIEnv *e
     LOG("%s", "native graphicsInitialized...");
     video_driver_reshape(width, height);
 #if !TESTING
-#warning FIXME TODO ...
-    // TODO ...
+    c_initialize_firsttime();
+    pthread_create(&cpu_thread_id, NULL, (void *) &cpu_thread, (void *)NULL);
 #else
     char *local_argv[] = {
         "-f",
@@ -81,6 +82,20 @@ void Java_org_deadc0de_apple2_Apple2Activity_nativeRender(JNIEnv *env, jobject o
     }
 #endif
 
+    extern volatile bool _vid_dirty;
+    _vid_dirty = true;
     video_driver_render();
+}
+
+void Java_org_deadc0de_apple2_Apple2Activity_nativeOnKeyDown(JNIEnv *env, jobject obj, jint keyCode, jint metaState) {
+#if !TESTING
+    android_keycode_to_emulator(keyCode, metaState, true);
+#endif
+}
+
+void Java_org_deadc0de_apple2_Apple2Activity_nativeOnKeyUp(JNIEnv *env, jobject obj, jint keyCode, jint metaState) {
+#if !TESTING
+    android_keycode_to_emulator(keyCode, metaState, false);
+#endif
 }
 

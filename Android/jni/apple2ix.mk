@@ -4,14 +4,14 @@ include $(CLEAR_VARS)
 
 PACKAGE_IDENTIFIER := "org.deadc0de.apple2"
 PACKAGE_NAME := "apple2ix"
-COMMON_SOURCES_MK := sources.mk
+COMMON_SOURCES_MK := $(LOCAL_PATH)/sources.mk
 include $(COMMON_SOURCES_MK)
 
 # -----------------------------------------------------------------------------
 # Android build config
 
 LOCAL_MODULE    := libapple2ix
-LOCAL_SRC_FILES := jnihooks.c
+LOCAL_SRC_FILES := jnihooks.c androidkeys.c
 LOCAL_CFLAGS    := $(APPLE2_BASE_CFLAGS) -DHEADLESS=0
 LOCAL_LDLIBS    := -llog -landroid -lGLESv2 -lz
 
