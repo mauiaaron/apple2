@@ -172,15 +172,6 @@ TEST test_read_random2() {
             "1E00: NOP\r" \
             )
 
-#define ASM_INIT() \
-    test_type_input( \
-            "CALL-151\r" \
-            "!\r" \
-            "1E00: NOP\r" \
-            )
-
-#define ASM_BEGIN() test_type_input("!\r")
-
 #define ASM_TRIGGER_WATCHPT() \
     test_type_input( \
             " LDA #FF\r" \
