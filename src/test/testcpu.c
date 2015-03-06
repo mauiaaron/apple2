@@ -7563,6 +7563,7 @@ GREATEST_SUITE(test_suite_cpu) {
     }
 
     // --------------------------------
+    greatest_info.flags = GREATEST_FLAG_SILENT_SUCCESS;
     A2_ADD_TEST(test_ADC_zpage_x);
     A2_ADD_TEST(test_AND_zpage_x);
     A2_ADD_TEST(test_ASL_zpage_x);
@@ -7587,24 +7588,30 @@ GREATEST_SUITE(test_suite_cpu) {
         fprintf(GREATEST_STDOUT, "\n%s :\n", func->name);
 
         // test addressing is working ...
-        for (uint8_t regX=0x42; regX>0x3F; regX+=0x40) {
-            A2_RUN_TESTp( func->func, /*A*/0x0f, /*val*/0x0f, /*arg0*/0x24, regX, /*carry*/true);
-            A2_RUN_TESTp( func->func, /*A*/0x0f, /*val*/0x0f, /*arg0*/0x24, regX, /*carry*/false);
-            A2_RUN_TESTp( func->func, /*A*/0x7f, /*val*/0x7f, /*arg0*/0x24, regX, /*carry*/true);
-            A2_RUN_TESTp( func->func, /*A*/0x7f, /*val*/0x7f, /*arg0*/0x24, regX, /*carry*/false);
-            A2_RUN_TESTp( func->func, /*A*/0xaa, /*val*/0x55, /*arg0*/0x24, regX, /*carry*/true);
-            A2_RUN_TESTp( func->func, /*A*/0xaa, /*val*/0x55, /*arg0*/0x24, regX, /*carry*/false);
-            A2_RUN_TESTp( func->func, /*A*/0x00, /*val*/0xff, /*arg0*/0x24, regX, /*carry*/true);
-            A2_RUN_TESTp( func->func, /*A*/0x00, /*val*/0xff, /*arg0*/0x24, regX, /*carry*/false);
-        }
+        uint8_t regX = 0x0;
+        do {
+            uint8_t arg0 = 0x0;
+            do {
+                A2_RUN_TESTp( func->func, /*A*/0x0f, /*val*/0x0f, arg0, regX, /*carry*/true);
+                A2_RUN_TESTp( func->func, /*A*/0x0f, /*val*/0x0f, arg0, regX, /*carry*/false);
+                A2_RUN_TESTp( func->func, /*A*/0x7f, /*val*/0x7f, arg0, regX, /*carry*/true);
+                A2_RUN_TESTp( func->func, /*A*/0x7f, /*val*/0x7f, arg0, regX, /*carry*/false);
+                A2_RUN_TESTp( func->func, /*A*/0xaa, /*val*/0x55, arg0, regX, /*carry*/true);
+                A2_RUN_TESTp( func->func, /*A*/0xaa, /*val*/0x55, arg0, regX, /*carry*/false);
+                A2_RUN_TESTp( func->func, /*A*/0x00, /*val*/0xff, arg0, regX, /*carry*/true);
+                A2_RUN_TESTp( func->func, /*A*/0x00, /*val*/0xff, arg0, regX, /*carry*/false);
+            } while (++arg0);
+        } while (++regX);
 
-#ifdef ANDROID
         fprintf(GREATEST_STDOUT, "...OK\n");
-#endif
         A2_REMOVE_TEST(func);
     }
+    greatest_info.flags = 0x0;
 
     // --------------------------------
+#ifdef ANDROID
+    greatest_info.flags = GREATEST_FLAG_SILENT_SUCCESS;
+#endif
     A2_ADD_TEST(test_ADC_abs);
     A2_ADD_TEST(test_AND_abs);
     A2_ADD_TEST(test_ASL_abs);
