@@ -139,12 +139,12 @@
                 AddUint16(PC_Reg, #2) \
                 ldr     r1, [reg_vmem_r, EffectiveAddr, LSL PTR_SHIFT]; \
                 blx     r1; \
-                TRACE_ARG2 \
+                TRACE_ARG1 \
                 mov     lo_byte, r0; \
                 IncUint16(EffectiveAddr) \
                 ldr     r1, [reg_vmem_r, EffectiveAddr, LSL PTR_SHIFT]; \
                 blx     r1; \
-                TRACE_ARG1; \
+                TRACE_ARG2; \
                 mov     hi_byte, hi_byte, LSL #8; \
                 orr     r0, hi_byte, lo_byte;
 
@@ -1534,6 +1534,7 @@ ENTRY(op_JMP_ind) // 0x6c
                 beq     jmp_special
                 GetFromMem_W(r0)
                 mov     PC_Reg, r0
+                sub     EffectiveAddr, EffectiveAddr, #1
                 Continue
 jmp_special: // see JMP indirect note in _Understanding the Apple IIe_ 4-25
                 mov     PC_Reg, r0
