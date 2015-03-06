@@ -348,11 +348,13 @@
 #define GetZPage_X \
                 GetFromPC_B; \
                 add     r0, r0, X_Reg; \
+                bic     r0, #0x100; \
                 mov     EffectiveAddr, r0;
 
 #define GetZPage_Y \
                 GetFromPC_B; \
                 add     r0, r0, Y_Reg; \
+                bic     r0, #0x100; \
                 mov     EffectiveAddr, r0;
 
 #define ea_hi_prev r1
