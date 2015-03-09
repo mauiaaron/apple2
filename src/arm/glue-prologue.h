@@ -42,7 +42,7 @@ ENTRY(func)             ldr     r1, SYM(pointer); \
 #define GLUE_BANK_MAYBEWRITE(func,pointer) \
 ENTRY(func)             ldr     r1, SYM(pointer); \
                         ldr     r1, [r1]; \
-                        tst     r1, #0; \
+                        teq     r1, #0; \
                         strneb  r0, [r1, EffectiveAddr]; \
                         mov     pc, lr;
 
