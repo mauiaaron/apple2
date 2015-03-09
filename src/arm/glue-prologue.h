@@ -17,14 +17,15 @@ ENTRY(func)             ldr     r1, SYM(softswitches); \
                         ldr     r0, [r1]; \
                         ldr     r1, SYM(pointer); \
                         tst     r0, $SS_CXROM; \
-                        beq     1f; \
+                        bne     1f; \
+                        push    {r0, EffectiveAddr, PC_Reg, SP_Reg, F_Reg, Y_Reg, X_Reg, A_Reg, lr}; \
                         ldr     r1, [r1]; \
-                        ldrb    r0, [r1, EffectiveAddr]; \
-                        mov     pc, lr; \
-1:                      push    {lr}; \
                         blx     r1; \
-                        pop     {pc};
-#warning FIXME TODO     ^^^^^^^^^^^^^ this CXROM codepath is quite likely buggy since this stuff is unimplemented =)
+                        pop     {r0, EffectiveAddr, PC_Reg, SP_Reg, F_Reg, Y_Reg, X_Reg, A_Reg, pc}; \
+1:                      ldr     r1, [r1]; \
+                        ldrb    r0, [r1, EffectiveAddr]; \
+                        mov     pc, lr;
+
 
 #define GLUE_BANK_READ(func,pointer) \
 ENTRY(func)             ldr     r1, SYM(pointer); \
