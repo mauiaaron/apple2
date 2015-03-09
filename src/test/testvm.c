@@ -2340,6 +2340,7 @@ TEST test_check_ramwrt(bool flag_ramwrt) {
     PASS();
 }
 
+#warning WARNING TODO FIXME ... these are poor tests ... really we should be testing small assembly programs that read/write/check banked memory
 TEST test_altzp_main(bool flag_lcram, bool flag_lcwrt) {
     BOOT_TO_DOS();
 
@@ -2424,6 +2425,7 @@ TEST test_altzp_main(bool flag_lcram, bool flag_lcwrt) {
     PASS();
 }
 
+#warning WARNING TODO FIXME ... these are poor tests ... really we should be testing small assembly programs that read/write/check banked memory
 TEST test_altzp_aux(bool flag_lcram, bool flag_lcwrt) {
     BOOT_TO_DOS();
 
@@ -2997,6 +2999,7 @@ TEST test_check_dhires(bool flag_dhires, bool flag_ioudis/* FIXME TODO : possibl
     PASS();
 }
 
+#warning WARNING TODO FIXME ... these are poor tests ... really we should be testing small assembly programs that read/write/check banked memory
 TEST test_c3rom_internal() {
     BOOT_TO_DOS();
 
@@ -3033,6 +3036,7 @@ TEST test_c3rom_internal() {
     PASS();
 }
 
+#warning WARNING TODO FIXME ... these are poor tests ... really we should be testing small assembly programs that read/write/check banked memory
 TEST test_c3rom_peripheral(bool flag_cxrom) {
     BOOT_TO_DOS();
 
@@ -3117,6 +3121,7 @@ TEST test_check_c3rom(bool flag_c3rom) {
     PASS();
 }
 
+#warning WARNING TODO FIXME ... these are poor tests ... really we should be testing small assembly programs that read/write/check banked memory
 TEST test_cxrom_internal() {
     BOOT_TO_DOS();
 
@@ -3159,6 +3164,7 @@ TEST test_cxrom_internal() {
     PASS();
 }
 
+#warning WARNING TODO FIXME ... these are poor tests ... really we should be testing small assembly programs that read/write/check banked memory
 TEST test_cxrom_peripheral(bool flag_c3rom) {
     BOOT_TO_DOS();
 
