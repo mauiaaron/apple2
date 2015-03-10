@@ -270,10 +270,18 @@ static unsigned long nibblize_track(uint8_t *buf, int drive) {
 
     uint8_t *output = disk6.disk[drive].track_image;
     
-    // Write track beginning gap containing 48 self-sync bytes
+#if CONFORMANT_TRACKS
+    // Write track-beginning gap containing 48 self-sync bytes
     for (unsigned int i=0; i<48; i++) {
         *(output++) = 0xFF;
     }
+#else
+    // NOTE : original apple2emul used 6 sync bytes here and disk loading becomes much faster at a cost of conformance
+    // for certain disk images.  For resource-constrained mobile/wearable devices, this is prolly the right path.
+    for (unsigned int i=0; i<6; i++) {
+        *(output++) = 0xFF;
+    }
+#endif
 
     unsigned int sector = 0;
     while (sector < 16) {
@@ -329,10 +337,17 @@ static unsigned long nibblize_track(uint8_t *buf, int drive) {
         *(output)++ = 0xAA;
         *(output)++ = 0xEB;
 
+#if CONFORMANT_TRACKS
         // Sector gap of 27 self-sync bytes
         for (unsigned int i=0; i<27; i++) {
             *(output++) = 0xFF;
         }
+#else
+        // NOTE : original apple2emul used 5 self-sync bytes here
+        for (unsigned int i=0; i<5; i++) {
+            *(output++) = 0xFF;
+        }
+#endif
 
         ++sector;
     }
@@ -424,8 +439,10 @@ static bool load_track_data(void) {
 
         disk6.disk[disk6.drive].nib_count = nibblize_track(buf, disk6.drive);
         if (disk6.disk[disk6.drive].nib_count != NI2_TRACK_SIZE) {
+#if CONFORMANT_TRACKS
             ERRLOG("Invalid dsk image creation...");
             return false;
+#endif
         }
     }
 

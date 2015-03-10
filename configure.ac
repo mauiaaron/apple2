@@ -269,6 +269,7 @@ dnl Misc ...
 
 AC_DEFINE(APPLE2IX, 1, [Denotes a section of code as Apple//ix sourced, used with external sources])
 AC_DEFINE(KEYPAD_JOYSTICK, 1, [Joystick emulated on keyboard ... should not be true on mobile devices])
+AC_DEFINE(CONFORMANT_TRACKS, 1, [Conformant to Applewin, and apparently also to the original //e disk timing, but hella-slow on low-end mobile devices])
 
 dnl ---------------------------------------------------------------------------
 
