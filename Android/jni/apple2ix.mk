@@ -2,7 +2,7 @@ LOCAL_PATH := $(call my-dir)
 
 include $(CLEAR_VARS)
 
-PACKAGE_IDENTIFIER := "org.deadc0de.apple2"
+PACKAGE_IDENTIFIER := "org.deadc0de.apple2ix"
 PACKAGE_NAME := "apple2ix"
 COMMON_SOURCES_MK := $(LOCAL_PATH)/sources.mk
 include $(COMMON_SOURCES_MK)

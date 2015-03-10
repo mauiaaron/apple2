@@ -9,7 +9,7 @@
  *
  */
 
-package org.deadc0de.apple2;
+package org.deadc0de.apple2ix;
 
 import android.app.Activity;
 import android.content.Context;

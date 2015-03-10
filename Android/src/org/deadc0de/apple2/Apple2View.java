@@ -13,7 +13,7 @@
  * Sourced from AOSP "GL2JNI" sample code.
  */
 
-package org.deadc0de.apple2;
+package org.deadc0de.apple2ix;
 
 import android.content.Context;
 import android.graphics.PixelFormat;

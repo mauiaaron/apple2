@@ -14,14 +14,14 @@
 #include "video/renderer.h"
 #include "androidkeys.h"
 
-void Java_org_deadc0de_apple2_Apple2Activity_nativeOnCreate(JNIEnv *env, jobject obj, jstring j_dataDir) {
+void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnCreate(JNIEnv *env, jobject obj, jstring j_dataDir) {
     const char *dataDir = (*env)->GetStringUTFChars(env, j_dataDir, 0);
     data_dir = strdup(dataDir);
     (*env)->ReleaseStringUTFChars(env, j_dataDir, dataDir);
     LOG("nativeOnCreate(%s)...", data_dir);
 }
 
-void Java_org_deadc0de_apple2_Apple2Activity_nativeGraphicsInitialized(JNIEnv *env, jobject obj, jint width, jint height) {
+void Java_org_deadc0de_apple2ix_Apple2Activity_nativeGraphicsInitialized(JNIEnv *env, jobject obj, jint width, jint height) {
     LOG("%s", "native graphicsInitialized...");
     video_driver_reshape(width, height);
 #if !TESTING
@@ -54,15 +54,15 @@ void Java_org_deadc0de_apple2_Apple2Activity_nativeGraphicsInitialized(JNIEnv *e
 #endif
 }
 
-void Java_org_deadc0de_apple2_Apple2Activity_nativeOnResume(JNIEnv *env, jobject obj) {
+void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnResume(JNIEnv *env, jobject obj) {
     LOG("%s", "native onResume...");
 }
 
-void Java_org_deadc0de_apple2_Apple2Activity_nativeOnPause(JNIEnv *env, jobject obj) {
+void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnPause(JNIEnv *env, jobject obj) {
     LOG("%s", "native onPause...");
 }
 
-void Java_org_deadc0de_apple2_Apple2Activity_nativeRender(JNIEnv *env, jobject obj) {
+void Java_org_deadc0de_apple2ix_Apple2Activity_nativeRender(JNIEnv *env, jobject obj) {
     c_keys_handle_input(-1, 0, 0);
 
 #if FPS_LOG
@@ -87,13 +87,13 @@ void Java_org_deadc0de_apple2_Apple2Activity_nativeRender(JNIEnv *env, jobject o
     video_driver_render();
 }
 
-void Java_org_deadc0de_apple2_Apple2Activity_nativeOnKeyDown(JNIEnv *env, jobject obj, jint keyCode, jint metaState) {
+void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnKeyDown(JNIEnv *env, jobject obj, jint keyCode, jint metaState) {
 #if !TESTING
     android_keycode_to_emulator(keyCode, metaState, true);
 #endif
 }
 
-void Java_org_deadc0de_apple2_Apple2Activity_nativeOnKeyUp(JNIEnv *env, jobject obj, jint keyCode, jint metaState) {
+void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnKeyUp(JNIEnv *env, jobject obj, jint keyCode, jint metaState) {
 #if !TESTING
     android_keycode_to_emulator(keyCode, metaState, false);
 #endif
