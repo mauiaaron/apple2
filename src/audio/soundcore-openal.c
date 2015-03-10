@@ -407,6 +407,8 @@ static int _ALProcessPlayBuffers(ALVoice *voice, ALuint *bytes_queued)
 {
     ALint processed = 0;
     int err = 0;
+    *bytes_queued = 0;
+
     alGetSourcei(voice->source, AL_BUFFERS_PROCESSED, &processed);
     if ((err = alGetError()) != AL_NO_ERROR)
     {
@@ -458,8 +460,10 @@ static int _ALProcessPlayBuffers(ALVoice *voice, ALuint *bytes_queued)
     assert((play_offset >= 0)/* && (play_offset < voice->buffersize)*/);
 
     long q = voice->_queued_total_bytes/* + voice->index*/ - play_offset;
-    assert(q >= 0);
-    *bytes_queued = (ALuint)q;
+
+    if (q >= 0) {
+        *bytes_queued = (ALuint)q;
+    }
 
     return 0;
 }
