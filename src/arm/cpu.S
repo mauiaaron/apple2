@@ -60,9 +60,7 @@
                 bl      CALL(cpu65_trace_arg2);
 #   define TRACE_EPILOGUE \
                 CommonSaveCPUState; \
-                push    {r0, EffectiveAddr, PC_Reg, lr}; \
-                bl      CALL(cpu65_trace_epilogue); \
-                pop     {r0, EffectiveAddr, PC_Reg, lr};
+                bl      CALL(cpu65_trace_epilogue);
 #else
 #   define TRACE_PROLOGUE
 #   define TRACE_ARG
