@@ -1,7 +1,7 @@
 #!/bin/sh
 
 package_id="org.deadc0de.apple2"
-apple2_src_path=../../src
+apple2_src_path=apple2ix-src
 glue_srcs="$apple2_src_path/disk.c $apple2_src_path/misc.c $apple2_src_path/display.c $apple2_src_path/vm.c $apple2_src_path/cpu-supp.c"
 do_load=0
 do_debug=0

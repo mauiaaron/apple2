@@ -1,7 +1,7 @@
 # -----------------------------------------------------------------------------
 # Common emulator sources and build settings
 
-APPLE2_SRC_PATH := ../../src
+APPLE2_SRC_PATH := apple2ix-src
 
 APPLE2_X86_SRC := \
     $(APPLE2_SRC_PATH)/x86/glue.S $(APPLE2_SRC_PATH)/x86/cpu.S
