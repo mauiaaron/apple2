@@ -7,7 +7,7 @@ android {
     defaultConfig {
         applicationId "org.deadc0de.apple2ix"
         minSdkVersion 10
-        targetSdkVersion 21
+        targetSdkVersion 10
         versionCode 1
         versionName "1.0"
     }
