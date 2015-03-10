@@ -127,6 +127,7 @@
 #define GetFromPC_B \
                 mov     EffectiveAddr, PC_Reg; \
                 IncUint16(PC_Reg) \
+                orrs    r0, r0, #0x10000; /* clear ARM processor flags */ \
                 ldr     r1, [reg_vmem_r, EffectiveAddr, LSL PTR_SHIFT]; \
                 blx     r1; \
                 TRACE_ARG
