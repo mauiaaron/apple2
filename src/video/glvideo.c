@@ -21,13 +21,19 @@
 
 #ifdef __APPLE__
 #import <CoreFoundation/CoreFoundation.h>
+#define USE_VAO 1
 #endif
 
 // TODO: implement 3D CRT object, possibly with perspective drawing?
 #define PERSPECTIVE 0
 
 // VAO optimization (may not be available on all platforms)
+#ifdef ANDROID
+#warning YAY Awesome! Various older Android and Android-ish devices (*cough* Kindle *cough*) have buggy OpenGL VAO support, so do like Nancy and just say no
 #define USE_VAO 0
+#elif !defined(USE_VAO)
+#define USE_VAO 1
+#endif
 
 enum {
     POS_ATTRIB_IDX,
