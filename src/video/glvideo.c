@@ -378,7 +378,12 @@ static GLuint _build_program(demoSource *vertexSource, demoSource *fragmentSourc
 
     // Prepend our vertex shader source string with the supported GLSL version so
     //  the shader will work on ES, Legacy, and OpenGL 3.2 Core Profile contexts
-    sprintf(sourceString, "#version %d\n%s", version, vertexSource->string);
+    if (version) {
+        sprintf(sourceString, "#version %d\n%s", version, vertexSource->string);
+    } else {
+        RELEASE_LOG("YAY, you have an awesome OpenGL vendor for this device ... no GLSL version specified ... so NOT adding a #version directive to shader sources =P");
+        sprintf(sourceString, "%s", vertexSource->string);
+    }
 
     GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertexShader, 1, (const GLchar **)&(sourceString), NULL);
@@ -417,7 +422,11 @@ static GLuint _build_program(demoSource *vertexSource, demoSource *fragmentSourc
 
     // Prepend our fragment shader source string with the supported GLSL version so
     //  the shader will work on ES, Legacy, and OpenGL 3.2 Core Profile contexts
-    sprintf(sourceString, "#version %d\n%s", version, fragmentSource->string);
+    if (version) {
+        sprintf(sourceString, "#version %d\n%s", version, fragmentSource->string);
+    } else {
+        sprintf(sourceString, "%s", fragmentSource->string);
+    }
 
     GLuint fragShader = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fragShader, 1, (const GLchar **)&(sourceString), NULL);
