@@ -37,7 +37,7 @@ static void _init_common() {
     data_dir = strdup(CONFIG_DATADIR "/" PACKAGE_NAME);
 #elif defined(ANDROID)
     // data_dir is set up in JNI nativeOnCreate()
-#else
+#elif !defined(__APPLE__)
 #error "Specify a CONFIG_DATADIR and PACKAGE_NAME"
 #endif
 }

@@ -151,8 +151,8 @@ int test_setup_boot_disk(const char *fileName, int readonly) {
     CFBundleRef mainBundle = CFBundleGetMainBundle();
     CFStringRef fileString = CFStringCreateWithCString(/*allocator*/NULL, fileName, CFStringGetSystemEncoding());
     CFURLRef fileURL = CFBundleCopyResourceURL(mainBundle, fileString, NULL, NULL);
-    CFRELEASE(fileString);
     CFStringRef filePath = CFURLCopyFileSystemPath(fileURL, kCFURLPOSIXPathStyle);
+    CFRELEASE(fileString);
     CFRELEASE(fileURL);
     CFIndex length = CFStringGetLength(filePath);
     CFIndex maxSize = CFStringGetMaximumSizeForEncoding(length, kCFStringEncodingUTF8);

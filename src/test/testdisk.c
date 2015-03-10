@@ -1027,9 +1027,7 @@ GREATEST_SUITE(test_suite_disk) {
     RUN_TESTp(test_disk_bytes_savehello_nib);
     RUN_TESTp(test_disk_bytes_savehello_po);
 
-#ifndef ANDROID
-    c_debugger_set_timeout(60);
-#endif
+    c_debugger_set_timeout(0);
 
     RUN_TESTp(test_outofspace_dsk);
     RUN_TESTp(test_outofspace_nib);
