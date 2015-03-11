@@ -14,12 +14,12 @@ package org.deadc0de.apple2ix;
 import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.KeyEvent;
+import android.view.MotionEvent;
 
 import java.io.File;
 import java.io.InputStream;
@@ -35,15 +35,17 @@ public class Apple2Activity extends Activity {
     private final static String PREFS_CONFIGURED = "prefs_configured";
 
     private Apple2View mView = null;
+    private int mWidth = 0;
+    private int mHeight = 0;
 
     static {
         System.loadLibrary("apple2ix");
     }
 
     private native void nativeOnCreate(String dataDir);
-    private native void nativeOnResume();
-    private native void nativeOnPause();
-    public native void nativeGraphicsInitialized(int width, int height);
+    public native void nativeOnResume();
+    public native void nativeOnPause();
+    private native void nativeGraphicsInitialized(int width, int height);
     public native void nativeRender();
     private native void nativeOnKeyDown(int keyCode, int metaState);
     private native void nativeOnKeyUp(int keyCode, int metaState);
@@ -87,7 +89,7 @@ public class Apple2Activity extends Activity {
         Log.d(TAG, "Saving default preferences");
         SharedPreferences.Editor editor = settings.edit();
         editor.putBoolean(PREFS_CONFIGURED, true);
-        editor.commit();
+        editor.apply();
 
         return dataDir;
     }
@@ -100,16 +102,9 @@ public class Apple2Activity extends Activity {
         new File(outputPath).mkdirs();
 
         InputStream is = getAssets().open(subdir+File.separator+assetName);
-        if (is == null) {
-            Log.e(TAG, "inputstream is null");
-        }
         File file = new File(outputPath+File.separator+assetName);
         file.setWritable(true);
-
         FileOutputStream os = new FileOutputStream(file);
-        if (os == null) {
-            Log.e(TAG, "outputstream is null");
-        }
 
         byte[] buf = new byte[BUF_SZ];
         while (true) {
@@ -161,4 +156,23 @@ public class Apple2Activity extends Activity {
         return true;
     }
 
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        Log.d(TAG, "onTouchEvent...");
+        return true;
+    }
+
+    public void graphicsInitialized(int width, int height) {
+        mWidth = width;
+        mHeight = height;
+        nativeGraphicsInitialized(width, height);
+    }
+
+    public int getWidth() {
+        return mWidth;
+    }
+
+    public int getHeight() {
+        return mHeight;
+    }
 }

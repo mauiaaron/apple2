@@ -56,10 +56,12 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeGraphicsInitialized(JNIEnv 
 
 void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnResume(JNIEnv *env, jobject obj) {
     LOG("%s", "native onResume...");
+    pthread_mutex_unlock(&interface_mutex);
 }
 
 void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnPause(JNIEnv *env, jobject obj) {
     LOG("%s", "native onPause...");
+    pthread_mutex_lock(&interface_mutex);
 }
 
 void Java_org_deadc0de_apple2ix_Apple2Activity_nativeRender(JNIEnv *env, jobject obj) {

@@ -15,12 +15,9 @@
 
 package org.deadc0de.apple2ix;
 
-import android.content.Context;
 import android.graphics.PixelFormat;
 import android.opengl.GLSurfaceView;
-import android.util.AttributeSet;
 import android.util.Log;
-import android.view.KeyEvent;
 import android.view.MotionEvent;
 
 import javax.microedition.khronos.egl.EGL10;
@@ -50,8 +47,17 @@ import javax.microedition.khronos.opengles.GL10;
 class Apple2View extends GLSurfaceView {
     private final static String TAG = "Apple2View";
     private final static boolean DEBUG = false;
+    private final static int MENU_CANCEL_MOVE_THRESHOLD = 20;
 
     private Apple2Activity mActivity = null;
+    private Apple2MainMenu mMainMenu = null;
+
+    private boolean mUltiTapEventBegin = false;
+    private boolean mTapEventBegin = false;
+    private float mSingleX = 0;
+    private float mSingleY = 0;
+    private float mUltiX = 0;
+    private float mUltiY = 0;
 
     private boolean inefficient8888 = true; // HACK FIXME TODO : rewrite GL code to accommodate 565 rendering ...
 
@@ -94,6 +100,84 @@ class Apple2View extends GLSurfaceView {
 
         /* Set the renderer responsible for frame rendering */
         setRenderer(new Renderer());
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        if (mMainMenu == null) {
+            return false;
+        }
+
+        Log.d(TAG, "VIEW onTouchEvent : " + event.toString());
+
+        int action = event.getActionMasked();
+
+        if (mMainMenu.isShowing()) {
+            mMainMenu.dismiss();
+            return true;
+        }
+
+        // TODO : native GL touch joystick ...
+
+        switch (action) {
+            case (MotionEvent.ACTION_DOWN):
+                mSingleX = event.getX();
+                mSingleY = event.getY();
+                mTapEventBegin = true;
+                mUltiTapEventBegin = false;
+                return true;
+
+            case (MotionEvent.ACTION_MOVE):
+                if (mTapEventBegin) {
+                    float thresholdX = Math.abs(event.getX() - mSingleX);
+                    float thresholdY = Math.abs(event.getY() - mSingleY);
+                    if (thresholdX > MENU_CANCEL_MOVE_THRESHOLD || thresholdY > MENU_CANCEL_MOVE_THRESHOLD) {
+                        mTapEventBegin = false;
+                    }
+                } else if (mUltiTapEventBegin) {
+                    float thresholdX = Math.abs(event.getX() - mUltiX);
+                    float thresholdY = Math.abs(event.getY() - mUltiY);
+                    if (thresholdX > MENU_CANCEL_MOVE_THRESHOLD || thresholdY > MENU_CANCEL_MOVE_THRESHOLD) {
+                        mUltiTapEventBegin = false;
+                    }
+                }
+                return true;
+
+            case (MotionEvent.ACTION_POINTER_DOWN):
+                mUltiX = event.getX();
+                mUltiY = event.getY();
+                mTapEventBegin = false;
+                mUltiTapEventBegin = true;
+                return true;
+
+            case (MotionEvent.ACTION_POINTER_UP):
+                if (mUltiTapEventBegin) {
+                    showMultiTapMenu();
+                }
+                mTapEventBegin = false;
+                mUltiTapEventBegin = false;
+                return true;
+
+            case (MotionEvent.ACTION_UP):
+                if (mTapEventBegin) {
+                    showMainMenu();
+                }
+                mTapEventBegin = false;
+                mUltiTapEventBegin = false;
+                return true;
+        }
+
+        return super.onTouchEvent(event);
+    }
+
+    public void showMainMenu() {
+        if (mMainMenu != null) {
+            mMainMenu.show();
+        }
+    }
+
+    public void showMultiTapMenu() {
+        Log.d(TAG, "showMultiTapMenu...");
     }
 
     private static class ContextFactory implements GLSurfaceView.EGLContextFactory {
@@ -310,7 +394,8 @@ class Apple2View extends GLSurfaceView {
         }
 
         public void onSurfaceChanged(GL10 gl, int width, int height) {
-            Apple2View.this.mActivity.nativeGraphicsInitialized(width, height);
+            Apple2View.this.mActivity.graphicsInitialized(width, height);
+            Apple2View.this.mMainMenu = new Apple2MainMenu(Apple2View.this.mActivity, Apple2View.this);
         }
 
         public void onSurfaceCreated(GL10 gl, EGLConfig config) {
