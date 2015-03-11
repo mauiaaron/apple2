@@ -21,6 +21,11 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnCreate(JNIEnv *env, jobje
     LOG("nativeOnCreate(%s)...", data_dir);
 }
 
+void Java_org_deadc0de_apple2ix_Apple2Activity_nativeGraphicsChanged(JNIEnv *env, jobject obj, jint width, jint height) {
+    LOG("%s", "native graphicsChanged...");
+    video_driver_reshape(width, height);
+}
+
 void Java_org_deadc0de_apple2ix_Apple2Activity_nativeGraphicsInitialized(JNIEnv *env, jobject obj, jint width, jint height) {
     LOG("%s", "native graphicsInitialized...");
     video_driver_reshape(width, height);
@@ -100,4 +105,3 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnKeyUp(JNIEnv *env, jobjec
     android_keycode_to_emulator(keyCode, metaState, false);
 #endif
 }
-

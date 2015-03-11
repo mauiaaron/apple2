@@ -52,6 +52,9 @@ static int viewportX = 0;
 static int viewportY = 0;
 static int viewportWidth = SCANWIDTH*1.5;
 static int viewportHeight = SCANHEIGHT*1.5;
+#if MOBILE_DEVICE
+static int adjustedHeight = 0;
+#endif
 
 static GLint uniformMVPIdx;
 static GLenum crtElementType;
@@ -533,8 +536,12 @@ static demoSource *_create_shader_source(const char *fileName) {
 static void gldriver_init_common(void) {
     LOG("%s %s", glGetString(GL_RENDERER), glGetString(GL_VERSION));
 
-    viewportWidth = 400;
-    viewportHeight = 400;
+    if (!viewportWidth) {
+        viewportWidth = 400;
+    }
+    if (!viewportHeight) {
+        viewportHeight = 400;
+    }
 
     // ----------------------------
     // Create CRT model VAO/VBOs
@@ -651,6 +658,9 @@ static void gldriver_render(void) {
     }
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+#if MOBILE_DEVICE
+    glViewport(viewportX, adjustedHeight, viewportWidth, viewportHeight);
+#endif
 
 #if PERSPECTIVE
     // Calculate modelview and projection matrices
@@ -748,6 +758,10 @@ static void gldriver_reshape(int w, int h) {
     windowWidth = w;
     windowHeight = h;
 
+#if MOBILE_DEVICE
+    int viewportHeightPrevious = viewportHeight;
+#endif
+
     int w2 = ((float)h * (SCANWIDTH/(float)SCANHEIGHT));
     int h2 = ((float)w / (SCANWIDTH/(float)SCANHEIGHT));
 
@@ -771,6 +785,14 @@ static void gldriver_reshape(int w, int h) {
         viewportHeight = h;
         //LOG("small viewport : x:%d,y:%d w:%d,h:%d", viewportX, viewportY, viewportWidth, viewportHeight);
     }
+
+#if MOBILE_DEVICE
+    if (viewportHeight < viewportHeightPrevious) {
+        adjustedHeight = viewportHeightPrevious - viewportHeight;
+    } else {
+        adjustedHeight = 0;
+    }
+#endif
 
     glViewport(viewportX, viewportY, viewportWidth, viewportHeight);
 }

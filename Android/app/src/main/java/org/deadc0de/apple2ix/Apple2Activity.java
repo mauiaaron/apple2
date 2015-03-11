@@ -16,10 +16,12 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.graphics.Rect;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
+import android.view.ViewTreeObserver;
 
 import java.io.File;
 import java.io.InputStream;
@@ -29,14 +31,14 @@ import java.io.FileOutputStream;
 public class Apple2Activity extends Activity {
 
     private final static String TAG = "Apple2Activity";
-
     private final static int BUF_SZ = 4096;
-
     private final static String PREFS_CONFIGURED = "prefs_configured";
+    private final static int SOFTKEYBOARD_THRESHOLD = 10;
 
     private Apple2View mView = null;
     private int mWidth = 0;
     private int mHeight = 0;
+    private boolean mSoftKeyboardShowing = false;
 
     static {
         System.loadLibrary("apple2ix");
@@ -46,6 +48,7 @@ public class Apple2Activity extends Activity {
     public native void nativeOnResume();
     public native void nativeOnPause();
     private native void nativeGraphicsInitialized(int width, int height);
+    private native void nativeGraphicsChanged(int width, int height);
     public native void nativeRender();
     private native void nativeOnKeyDown(int keyCode, int metaState);
     private native void nativeOnKeyUp(int keyCode, int metaState);
@@ -128,6 +131,21 @@ public class Apple2Activity extends Activity {
 
         mView = new Apple2View(this);
         setContentView(mView);
+
+        mView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            public void onGlobalLayout() {
+                Rect rect = new Rect();
+                mView.getWindowVisibleDisplayFrame(rect);
+                int h = rect.height();
+                if (mView.getHeight() - h > SOFTKEYBOARD_THRESHOLD) {
+                    Log.d(TAG, "Soft keyboard appears to be occupying screen real estate ...");
+                    Apple2Activity.this.mSoftKeyboardShowing = true;
+                } else {
+                    Apple2Activity.this.mSoftKeyboardShowing = false;
+                }
+                nativeGraphicsChanged(rect.width(), h);
+            }
+        });
     }
 
     @Override
@@ -174,5 +192,9 @@ public class Apple2Activity extends Activity {
 
     public int getHeight() {
         return mHeight;
+    }
+
+    public boolean isSoftKeyboardShowing() {
+        return mSoftKeyboardShowing;
     }
 }

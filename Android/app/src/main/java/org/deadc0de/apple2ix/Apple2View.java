@@ -15,10 +15,12 @@
 
 package org.deadc0de.apple2ix;
 
+import android.content.Context;
 import android.graphics.PixelFormat;
 import android.opengl.GLSurfaceView;
 import android.util.Log;
 import android.view.MotionEvent;
+import android.view.inputmethod.InputMethodManager;
 
 import javax.microedition.khronos.egl.EGL10;
 import javax.microedition.khronos.egl.EGLConfig;
@@ -152,7 +154,7 @@ class Apple2View extends GLSurfaceView {
 
             case (MotionEvent.ACTION_POINTER_UP):
                 if (mUltiTapEventBegin) {
-                    showMultiTapMenu();
+                    toggleMultiTapMenu();
                 }
                 mTapEventBegin = false;
                 mUltiTapEventBegin = false;
@@ -172,12 +174,16 @@ class Apple2View extends GLSurfaceView {
 
     public void showMainMenu() {
         if (mMainMenu != null) {
+            if (mActivity.isSoftKeyboardShowing()) {
+                toggleMultiTapMenu();
+            }
             mMainMenu.show();
         }
     }
 
-    public void showMultiTapMenu() {
-        Log.d(TAG, "showMultiTapMenu...");
+    public void toggleMultiTapMenu() {
+        InputMethodManager inputMethodManager=(InputMethodManager)mActivity.getSystemService(Context.INPUT_METHOD_SERVICE);
+        inputMethodManager.toggleSoftInputFromWindow(getApplicationWindowToken(), InputMethodManager.SHOW_FORCED, 0);
     }
 
     private static class ContextFactory implements GLSurfaceView.EGLContextFactory {
