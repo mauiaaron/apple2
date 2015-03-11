@@ -12,6 +12,8 @@
 package org.deadc0de.apple2ix;
 
 import android.content.Context;
+import android.graphics.drawable.BitmapDrawable;
+import android.os.Build;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -70,20 +72,34 @@ public class Apple2MainMenu {
             }
         });
 
-        // WTF ... is there an easier way to dynamically calculate these dimensions?
-        int totalHeight = 0;
-        int maxWidth = 0;
-        for (int i=0; i<adapter.getCount(); i++) {
-            View view = adapter.getView(i, null, mainMenuView);
-            view.measure(View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED), View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED));
-            totalHeight += view.getMeasuredHeight();
-            int width = view.getMeasuredWidth();
-            if (width > maxWidth) {
-                maxWidth = width;
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.GINGERBREAD_MR1) {
+            mMainMenuPopup = new PopupWindow(mainPopupContainer, android.app.ActionBar.LayoutParams.WRAP_CONTENT, android.app.ActionBar.LayoutParams.WRAP_CONTENT, true);
+        } else {
+            // 2015/03/11 ... there may well be a less hackish way to support Gingerbread, but eh ... diminishing returns
+            final int TOTAL_MARGINS = 16;
+            int totalHeight = TOTAL_MARGINS;
+            int maxWidth = 0;
+            for (int i = 0; i < adapter.getCount(); i++) {
+                View view = adapter.getView(i, null, mainMenuView);
+                view.measure(View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED), View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED));
+                totalHeight += view.getMeasuredHeight();
+                int width = view.getMeasuredWidth();
+                if (width > maxWidth) {
+                    maxWidth = width;
+                }
             }
+            mMainMenuPopup = new PopupWindow(mainPopupContainer, maxWidth+TOTAL_MARGINS, totalHeight, true);
         }
 
-        mMainMenuPopup = new PopupWindow(mainPopupContainer, maxWidth+MENU_INSET, totalHeight+MENU_INSET, true);
+        // This kludgery allows touching the outside or back-buttoning to dismiss
+        mMainMenuPopup.setBackgroundDrawable(new BitmapDrawable());
+        mMainMenuPopup.setOutsideTouchable(true);
+        mMainMenuPopup.setOnDismissListener(new PopupWindow.OnDismissListener() {
+            @Override
+            public void onDismiss() {
+                Apple2MainMenu.this.mActivity.nativeOnResume();
+            }
+        });
     }
 
     public void showDisksMenu() {
@@ -94,10 +110,6 @@ public class Apple2MainMenu {
         Log.d(TAG, "showSettings...");
     }
 
-    public void quitEmulator() {
-
-    }
-
     public void show() {
         if (mMainMenuPopup.isShowing()) {
             return;
@@ -105,21 +117,13 @@ public class Apple2MainMenu {
 
         mActivity.nativeOnPause();
 
-        int x = (mActivity.getWidth()-mMainMenuPopup.getWidth())/2;
-        int y = (mActivity.getHeight()-mMainMenuPopup.getHeight())/2;
-
-        mMainMenuPopup.showAtLocation(mParentView, Gravity.NO_GRAVITY, x, y);
+        mMainMenuPopup.showAtLocation(mParentView, Gravity.CENTER, 0, 0);
     }
 
     public void dismiss() {
         if (mMainMenuPopup.isShowing()) {
-            mActivity.nativeOnResume();
             mMainMenuPopup.dismiss();
         }
-    }
-
-    public void androidBackButton() {
-        dismiss();
     }
 
     public boolean isShowing() {

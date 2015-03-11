@@ -14,6 +14,8 @@
 #include "video/renderer.h"
 #include "androidkeys.h"
 
+static bool nativePaused = false;
+
 void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnCreate(JNIEnv *env, jobject obj, jstring j_dataDir) {
     const char *dataDir = (*env)->GetStringUTFChars(env, j_dataDir, 0);
     data_dir = strdup(dataDir);
@@ -60,16 +62,27 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeGraphicsInitialized(JNIEnv 
 }
 
 void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnResume(JNIEnv *env, jobject obj) {
+    if (!nativePaused) {
+        return;
+    }
+    nativePaused = false;
     LOG("%s", "native onResume...");
     pthread_mutex_unlock(&interface_mutex);
 }
 
 void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnPause(JNIEnv *env, jobject obj) {
+    if (nativePaused) {
+        return;
+    }
+    nativePaused = true;
     LOG("%s", "native onPause...");
     pthread_mutex_lock(&interface_mutex);
 }
 
 void Java_org_deadc0de_apple2ix_Apple2Activity_nativeRender(JNIEnv *env, jobject obj) {
+    if (nativePaused) {
+        return;
+    }
     c_keys_handle_input(-1, 0, 0);
 
 #if FPS_LOG
@@ -92,6 +105,26 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeRender(JNIEnv *env, jobject
     extern volatile bool _vid_dirty;
     _vid_dirty = true;
     video_driver_render();
+}
+
+void Java_org_deadc0de_apple2ix_Apple2Activity_nativeReboot(JNIEnv *env, jobject obj) {
+    LOG("%s", "native reboot...");
+    cpu65_reboot();
+}
+
+void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnQuit(JNIEnv *env, jobject obj) {
+    LOG("%s", "native quit...");
+
+    c_eject_6(0);
+    c_eject_6(1);
+
+#ifdef AUDIO_ENABLED
+    speaker_destroy();
+    MB_Destroy();
+#endif
+
+    video_shutdown();
+    exit(0);
 }
 
 void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnKeyDown(JNIEnv *env, jobject obj, jint keyCode, jint metaState) {

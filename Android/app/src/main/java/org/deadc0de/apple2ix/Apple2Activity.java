@@ -12,7 +12,9 @@
 package org.deadc0de.apple2ix;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -47,6 +49,8 @@ public class Apple2Activity extends Activity {
     private native void nativeOnCreate(String dataDir);
     public native void nativeOnResume();
     public native void nativeOnPause();
+    public native void nativeOnQuit();
+    public native void nativeReboot();
     private native void nativeGraphicsInitialized(int width, int height);
     private native void nativeGraphicsChanged(int width, int height);
     public native void nativeRender();
@@ -170,6 +174,9 @@ public class Apple2Activity extends Activity {
 
     @Override
     public boolean onKeyUp(int keyCode, KeyEvent event) {
+        if (keyCode == KeyEvent.KEYCODE_BACK) {
+            maybeQuitApp();
+        }
         nativeOnKeyUp(keyCode, event.getMetaState());
         return true;
     }
@@ -196,5 +203,31 @@ public class Apple2Activity extends Activity {
 
     public boolean isSoftKeyboardShowing() {
         return mSoftKeyboardShowing;
+    }
+
+    public void maybeQuitApp() {
+        nativeOnPause();
+
+        AlertDialog dialog = new AlertDialog.Builder(this).setCancelable(true).setMessage("Quit Apple2ix?").setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                nativeOnQuit();
+            }
+        }).setNegativeButton("No", null).create();
+
+        dialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+            @Override
+            public void onCancel(DialogInterface dialog) {
+                nativeOnResume();
+            }
+        });
+        dialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
+            @Override
+            public void onDismiss(DialogInterface dialog) {
+                nativeOnResume();
+            }
+        });
+
+        dialog.show();
     }
 }
