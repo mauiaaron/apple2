@@ -181,6 +181,10 @@ class Apple2View extends GLSurfaceView {
         }
     }
 
+    public Apple2MainMenu getMainMenu() {
+        return mMainMenu;
+    }
+
     public void toggleMultiTapMenu() {
         InputMethodManager inputMethodManager=(InputMethodManager)mActivity.getSystemService(Context.INPUT_METHOD_SERVICE);
         inputMethodManager.toggleSoftInputFromWindow(getApplicationWindowToken(), InputMethodManager.SHOW_FORCED, 0);

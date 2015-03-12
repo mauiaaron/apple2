@@ -176,6 +176,10 @@ public class Apple2Activity extends Activity {
     public boolean onKeyUp(int keyCode, KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_BACK) {
             maybeQuitApp();
+        } else if (keyCode == KeyEvent.KEYCODE_MENU) {
+            mView.showMainMenu();
+        } else if ((keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) || (keyCode == KeyEvent.KEYCODE_VOLUME_MUTE) || (keyCode == KeyEvent.KEYCODE_VOLUME_UP)) {
+            return false;
         }
         nativeOnKeyUp(keyCode, event.getMetaState());
         return true;
