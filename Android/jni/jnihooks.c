@@ -21,6 +21,9 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnCreate(JNIEnv *env, jobje
     data_dir = strdup(dataDir);
     (*env)->ReleaseStringUTFChars(env, j_dataDir, dataDir);
     LOG("nativeOnCreate(%s)...", data_dir);
+
+    c_initialize_firsttime();
+    pthread_create(&cpu_thread_id, NULL, (void *) &cpu_thread, (void *)NULL);
 }
 
 void Java_org_deadc0de_apple2ix_Apple2Activity_nativeGraphicsChanged(JNIEnv *env, jobject obj, jint width, jint height) {
@@ -31,9 +34,15 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeGraphicsChanged(JNIEnv *env
 void Java_org_deadc0de_apple2ix_Apple2Activity_nativeGraphicsInitialized(JNIEnv *env, jobject obj, jint width, jint height) {
     LOG("%s", "native graphicsInitialized...");
     video_driver_reshape(width, height);
+
 #if !TESTING
-    c_initialize_firsttime();
-    pthread_create(&cpu_thread_id, NULL, (void *) &cpu_thread, (void *)NULL);
+    static bool graphicsPreviouslyInitialized = false;
+    if (graphicsPreviouslyInitialized) {
+        video_driver_shutdown();
+    }
+    graphicsPreviouslyInitialized = true;
+    video_driver_init((void *)0);
+
 #else
     char *local_argv[] = {
         "-f",

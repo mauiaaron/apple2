@@ -616,10 +616,13 @@ static void gldriver_init_common(void) {
 static void gldriver_shutdown(void) {
     // Cleanup all OpenGL objects
     glDeleteTextures(1, &a2TextureName);
+    a2TextureName = 0;
     _destroy_VAO(crtVAOName);
+    crtVAOName = 0;
     mdlDestroyModel(crtModel);
     crtModel = NULL;
     glDeleteProgram(program);
+    program = 0;
 }
 
 //----------------------------------------------------------------------------

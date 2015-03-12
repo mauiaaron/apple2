@@ -604,9 +604,11 @@ void video_init(void) {
     video_initialize_color();
 #if !HEADLESS
 #if !defined(__APPLE__)
+#if !defined(ANDROID)
     if (!is_headless) {
         video_driver_init((void *)0);
     }
+#endif
 #endif
 #endif
 }
