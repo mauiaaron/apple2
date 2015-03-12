@@ -35,9 +35,10 @@ public class Apple2Activity extends Activity {
     private final static String TAG = "Apple2Activity";
     private final static int BUF_SZ = 4096;
     private final static String PREFS_CONFIGURED = "prefs_configured";
-    private final static int SOFTKEYBOARD_THRESHOLD = 10;
+    private final static int SOFTKEYBOARD_THRESHOLD = 50;
 
     private Apple2View mView = null;
+    private AlertDialog mQuitDialog = null;
     private int mWidth = 0;
     private int mHeight = 0;
     private boolean mSoftKeyboardShowing = false;
@@ -59,7 +60,7 @@ public class Apple2Activity extends Activity {
 
     // HACK NOTE 2015/02/22 : Apparently native code cannot easily access stuff in the APK ... so copy various resources
     // out of the APK and into the /data/data/... for ease of access.  Because this is FOSS software we don't care about
-    // these assets
+    // security or DRM for these assets =)
     private String firstTimeInitialization() {
 
         String dataDir = null;
@@ -156,14 +157,46 @@ public class Apple2Activity extends Activity {
     protected void onResume() {
         super.onResume();
         mView.onResume();
-        nativeOnResume();
+
+        Apple2MainMenu mainMenu = mView.getMainMenu();
+
+        boolean noMenusShowing = !(
+                (mainMenu != null && mainMenu.isShowing()) ||
+                (mQuitDialog != null && mQuitDialog.isShowing()) );
+
+        if (noMenusShowing) {
+            nativeOnResume();
+        }
     }
 
     @Override
     protected void onPause() {
         super.onPause();
         mView.onPause();
+
+        Apple2MainMenu mainMenu = mView.getMainMenu();
+        if (mainMenu == null) {
+            // wow, early onPause, just quit and restart later
+            nativeOnQuit();
+            return;
+        }
+
         nativeOnPause();
+
+        if (isSoftKeyboardShowing()) {
+            mView.toggleKeyboard();
+        }
+
+        Apple2SettingsMenu settingsMenu = mView.getSettingsMenu();
+        if (settingsMenu != null) {
+            settingsMenu.dismissWithoutResume();
+        }
+
+        if (mainMenu.isShowing() || (mQuitDialog != null && mQuitDialog.isShowing())) {
+            // this is a good paused state
+        } else {
+            mView.showMainMenu();
+        }
     }
 
     @Override
@@ -175,14 +208,22 @@ public class Apple2Activity extends Activity {
     @Override
     public boolean onKeyUp(int keyCode, KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_BACK) {
-            maybeQuitApp();
+            Apple2SettingsMenu settingsMenu = mView.getSettingsMenu();
+            if (settingsMenu != null && settingsMenu.isShowing()) {
+                settingsMenu.dismiss();
+            } else {
+                maybeQuitApp();
+            }
+            return true;
         } else if (keyCode == KeyEvent.KEYCODE_MENU) {
             mView.showMainMenu();
+            return true;
         } else if ((keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) || (keyCode == KeyEvent.KEYCODE_VOLUME_MUTE) || (keyCode == KeyEvent.KEYCODE_VOLUME_UP)) {
             return false;
+        } else {
+            nativeOnKeyUp(keyCode, event.getMetaState());
+            return true;
         }
-        nativeOnKeyUp(keyCode, event.getMetaState());
-        return true;
     }
 
     @Override
@@ -211,27 +252,26 @@ public class Apple2Activity extends Activity {
 
     public void maybeQuitApp() {
         nativeOnPause();
-
-        AlertDialog dialog = new AlertDialog.Builder(this).setCancelable(true).setMessage("Quit Apple2ix?").setPositiveButton("OK", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                nativeOnQuit();
-            }
-        }).setNegativeButton("No", null).create();
-
-        dialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
-            @Override
-            public void onCancel(DialogInterface dialog) {
-                nativeOnResume();
-            }
-        });
-        dialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
-            @Override
-            public void onDismiss(DialogInterface dialog) {
-                nativeOnResume();
-            }
-        });
-
-        dialog.show();
+        if (mQuitDialog == null) {
+            mQuitDialog = new AlertDialog.Builder(this).setCancelable(true).setMessage(R.string.quit).setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    nativeOnQuit();
+                }
+            }).setNegativeButton(R.string.no, null).create();
+            mQuitDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+                @Override
+                public void onCancel(DialogInterface dialog) {
+                    nativeOnResume();
+                }
+            });
+            mQuitDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
+                @Override
+                public void onDismiss(DialogInterface dialog) {
+                    nativeOnResume();
+                }
+            });
+        }
+        mQuitDialog.show();
     }
 }

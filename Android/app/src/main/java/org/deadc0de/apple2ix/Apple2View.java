@@ -154,7 +154,8 @@ class Apple2View extends GLSurfaceView {
 
             case (MotionEvent.ACTION_POINTER_UP):
                 if (mUltiTapEventBegin) {
-                    toggleMultiTapMenu();
+                    Log.d(TAG, "Toggling keyboard...");
+                    toggleKeyboard();
                 }
                 mTapEventBegin = false;
                 mUltiTapEventBegin = false;
@@ -174,10 +175,13 @@ class Apple2View extends GLSurfaceView {
 
     public void showMainMenu() {
         if (mMainMenu != null) {
-            if (mActivity.isSoftKeyboardShowing()) {
-                toggleMultiTapMenu();
+            Apple2SettingsMenu settingsMenu = mMainMenu.getSettingsMenu();
+            if (!settingsMenu.isShowing()) {
+                if (mActivity.isSoftKeyboardShowing()) {
+                    toggleKeyboard();
+                }
+                mMainMenu.show();
             }
-            mMainMenu.show();
         }
     }
 
@@ -185,7 +189,11 @@ class Apple2View extends GLSurfaceView {
         return mMainMenu;
     }
 
-    public void toggleMultiTapMenu() {
+    public Apple2SettingsMenu getSettingsMenu() {
+        return (mMainMenu == null) ? null : mMainMenu.getSettingsMenu();
+    }
+
+    public void toggleKeyboard() {
         InputMethodManager inputMethodManager=(InputMethodManager)mActivity.getSystemService(Context.INPUT_METHOD_SERVICE);
         inputMethodManager.toggleSoftInputFromWindow(getApplicationWindowToken(), InputMethodManager.SHOW_FORCED, 0);
     }
@@ -405,7 +413,9 @@ class Apple2View extends GLSurfaceView {
 
         public void onSurfaceChanged(GL10 gl, int width, int height) {
             Apple2View.this.mActivity.graphicsInitialized(width, height);
-            Apple2View.this.mMainMenu = new Apple2MainMenu(Apple2View.this.mActivity, Apple2View.this);
+            if (Apple2View.this.mMainMenu == null) {
+                Apple2View.this.mMainMenu = new Apple2MainMenu(Apple2View.this.mActivity, Apple2View.this);
+            }
         }
 
         public void onSurfaceCreated(GL10 gl, EGLConfig config) {

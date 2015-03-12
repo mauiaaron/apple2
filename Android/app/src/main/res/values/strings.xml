@@ -1,4 +1,25 @@
 <resources>
-    <string name="app_name">Apple2ix</string>
     <color name="black">#000000</color>
+    <color name="white">#ffffff</color>
+    <string name="app_name">Apple2ix</string>
+    <string name="joystick">Joystick</string>
+    <string name="joystick_configure">Configure emulated joysticks…</string>
+    <string name="joystick_keyA">Key Joystick 1</string>
+    <string name="joystick_keyB">Key Joystick 2</string>
+    <string name="joystick_show">Show emulated joystick</string>
+    <string name="keyboard">Keyboard</string>
+    <string name="keyboard_two_finger">2-finger-tap shows keyboard</string>
+    <string name="max">Max</string>
+    <string name="menu_disks">Load disk image…</string>
+    <string name="menu_settings">Emulator settings…</string>
+    <string name="no">No</string>
+    <string name="ok">OK</string>
+    <string name="quit">Quit Apple2ix?</string>
+    <string name="reboot">Reboot Apple //e…</string>
+    <string name="spacer"> </string>
+    <string name="speed_alt">Alternate CPU Speed</string>
+    <string name="speed_cpu">CPU Speed</string>
+    <string name="speed_swipe">Swipe toggles between configured speeds</string>
+    <string name="tab_general">General</string>
+    <string name="tab_joystick">Joystick</string>
 </resources>

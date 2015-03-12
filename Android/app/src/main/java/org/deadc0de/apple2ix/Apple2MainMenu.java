@@ -26,34 +26,48 @@ import android.widget.PopupWindow;
 
 public class Apple2MainMenu {
 
-    public final static int MENU_INSET = 20;
-
+    private final static int MENU_INSET = 20;
     private final static String TAG = "Apple2MainMenu";
 
     private Apple2Activity mActivity = null;
     private Apple2View mParentView = null;
     private PopupWindow mMainMenuPopup = null;
+    private Apple2SettingsMenu mSettingsMenu = null;
 
     public Apple2MainMenu(Apple2Activity activity, Apple2View parent) {
         mActivity = activity;
         mParentView = parent;
-        init();
+        setup();
     }
 
-    private void init() {
+    private void setup() {
 
         LayoutInflater inflater = (LayoutInflater)mActivity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         View listLayout=inflater.inflate(R.layout.activity_main_menu, null, false);
         ListView mainMenuView = (ListView)listLayout.findViewById(R.id.main_popup_menu);
         mainMenuView.setEnabled(true);
         LinearLayout mainPopupContainer = (LinearLayout)listLayout.findViewById(R.id.main_popup_container);
+
         String[] values = new String[] {
-                "Emulation Settings...",
-                "Load Disk Image...",
-                "Resume...",
+                mActivity.getResources().getString(R.string.menu_settings),
+                mActivity.getResources().getString(R.string.menu_disks),
+                mActivity.getResources().getString(R.string.spacer),
+                mActivity.getResources().getString(R.string.reboot),
         };
 
-        ArrayAdapter<?> adapter = new ArrayAdapter<String>(mActivity, android.R.layout.simple_list_item_1, android.R.id.text1, values);
+        ArrayAdapter<?> adapter = new ArrayAdapter<String>(mActivity, android.R.layout.simple_list_item_1, android.R.id.text1, values) {
+            @Override
+            public boolean areAllItemsEnabled() {
+                return false;
+            }
+            @Override
+            public boolean isEnabled(int position) {
+                if (position < 0 || position > 3) {
+                    throw new ArrayIndexOutOfBoundsException();
+                }
+                return position != 2;
+            }
+        };
         mainMenuView.setAdapter(adapter);
         mainMenuView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -64,6 +78,9 @@ public class Apple2MainMenu {
                         break;
                     case 1:
                         Apple2MainMenu.this.showDisksMenu();
+                        break;
+                    case 3:
+                        Apple2MainMenu.this.reboot();
                         break;
                     default:
                         Apple2MainMenu.this.dismiss();
@@ -97,7 +114,9 @@ public class Apple2MainMenu {
         mMainMenuPopup.setOnDismissListener(new PopupWindow.OnDismissListener() {
             @Override
             public void onDismiss() {
-                Apple2MainMenu.this.mActivity.nativeOnResume();
+                if ( !(getSettingsMenu().isShowing() /*|| getDisksMenu().isShowing()*/) ) {
+                    Apple2MainMenu.this.mActivity.nativeOnResume();
+                }
             }
         });
     }
@@ -107,7 +126,21 @@ public class Apple2MainMenu {
     }
 
     public void showSettings() {
-        Log.d(TAG, "showSettings...");
+        Apple2SettingsMenu settings = getSettingsMenu();
+        settings.show();
+        mMainMenuPopup.dismiss();
+    }
+
+    public void reboot() {
+        mActivity.nativeReboot();
+        mMainMenuPopup.dismiss();
+    }
+
+    public synchronized Apple2SettingsMenu getSettingsMenu() {
+        if (mSettingsMenu == null) {
+            mSettingsMenu = new Apple2SettingsMenu(mActivity, mParentView);
+        }
+        return mSettingsMenu;
     }
 
     public void show() {
@@ -123,6 +156,7 @@ public class Apple2MainMenu {
     public void dismiss() {
         if (mMainMenuPopup.isShowing()) {
             mMainMenuPopup.dismiss();
+            // listener will resume ...
         }
     }
 
