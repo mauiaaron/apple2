@@ -19,10 +19,6 @@
 
 #define DYNAMIC_SZ 11 // 7 pixels (as bytes) + 2pre + 2post
 
-#define TEXT_ROWS 24
-#define BEGIN_MIX 20
-#define TEXT_COLS 40
-
 // framebuffers
 static uint8_t vga_mem_page_0[SCANWIDTH*SCANHEIGHT];
 static uint8_t vga_mem_page_1[SCANWIDTH*SCANHEIGHT];
@@ -73,38 +69,6 @@ static const int kVLine0State   = 0x100; // V[543210CBA] = 100000000
 static const int kVPresetLine   =   256; // line when V state presets
 static const int kVSyncLines    =     4; // lines per VSync duration
 
-
-void video_loadfont(int first, int quantity, const uint8_t *data, int mode) {
-    uint8_t fg = 0;
-    uint8_t bg = 0;
-    switch (mode) {
-        case 2:
-            fg = COLOR_BLACK;
-            bg = COLOR_LIGHT_WHITE;
-            break;
-        case 3:
-            fg = COLOR_FLASHING_WHITE;
-            bg = COLOR_FLASHING_BLACK;
-            break;
-        default:
-            fg = COLOR_LIGHT_WHITE;
-            bg = COLOR_BLACK;
-            break;
-    }
-
-    unsigned int i = quantity * 8;
-    while (i--) {
-        unsigned int j = 8;
-        uint8_t x = data[i];
-        while (j--) {
-            uint8_t y = (x & 128) ? fg : bg;
-            video__wider_font[(first << 7) + (i << 4) + (j << 1)] = video__wider_font[(first << 7) + (i << 4) + (j << 1) + 1] =
-            video__font[(first << 6) + (i << 3) + j] = y;
-            x <<= 1;
-        }
-    }
-}
-
 uint8_t video__odd_colors[2] = { COLOR_LIGHT_PURPLE, COLOR_LIGHT_BLUE };
 uint8_t video__even_colors[2] = { COLOR_LIGHT_GREEN, COLOR_LIGHT_RED };
 
@@ -136,6 +100,9 @@ uint8_t video__dhires2[256] = {
     0x6,0x6,0x6,0x2,0xe,0x6,0x6,0x6,0xe,0xe,0xa,0xa,0xe,0x6,0xe,0x6,
     0x7,0x7,0x7,0x7,0x7,0x7,0x7,0x7,0xf,0xf,0xb,0xb,0xf,0xf,0xf,0xf,
 };
+
+// ----------------------------------------------------------------------------
+// Initialization routines
 
 static void video_initialize_dhires_values(void) {
     for (unsigned int i = 0; i < 0x80; i++) {
@@ -495,6 +462,37 @@ void video_set(int flags) {
     video_initialize_dhires_values();
 }
 
+void video_loadfont(int first, int quantity, const uint8_t *data, int mode) {
+    uint8_t fg = 0;
+    uint8_t bg = 0;
+    switch (mode) {
+        case 2:
+            fg = COLOR_BLACK;
+            bg = COLOR_LIGHT_WHITE;
+            break;
+        case 3:
+            fg = COLOR_FLASHING_WHITE;
+            bg = COLOR_FLASHING_BLACK;
+            break;
+        default:
+            fg = COLOR_LIGHT_WHITE;
+            bg = COLOR_BLACK;
+            break;
+    }
+
+    unsigned int i = quantity * 8;
+    while (i--) {
+        unsigned int j = 8;
+        uint8_t x = data[i];
+        while (j--) {
+            uint8_t y = (x & 128) ? fg : bg;
+            video__wider_font[(first << 7) + (i << 4) + (j << 1)] = video__wider_font[(first << 7) + (i << 4) + (j << 1) + 1] =
+            video__font[(first << 6) + (i << 3) + j] = y;
+            x <<= 1;
+        }
+    }
+}
+
 #ifdef INTERFACE_CLASSIC
 void video_loadfont_int(int first, int quantity, const uint8_t *data) {
     unsigned int i = quantity * 8;
@@ -591,59 +589,6 @@ void video_plotchar( int x, int y, int scheme, uint8_t c ) {
     _plot_char80(&d,&s);
 }
 #endif
-
-void video_init(void) {
-
-    video__fb1 = vga_mem_page_0;
-    video__fb2 = vga_mem_page_1;
-
-    // reset Apple2 softframebuffers
-    memset(video__fb1,0,SCANWIDTH*SCANHEIGHT);
-    memset(video__fb2,0,SCANWIDTH*SCANHEIGHT);
-
-    video_initialize_color();
-#if !HEADLESS
-#if !defined(__APPLE__)
-#if !defined(ANDROID)
-    if (!is_headless) {
-        video_driver_init((void *)0);
-    }
-#endif
-#endif
-#endif
-}
-
-void video_main_loop(void) {
-#if !HEADLESS
-    video_driver_main_loop();
-#endif
-}
-
-void video_shutdown(void) {
-#if !HEADLESS
-    if (!is_headless) {
-        video_driver_shutdown();
-    }
-#if !defined(__APPLE__)
-    exit(0);
-#endif
-#endif
-}
-
-/* -------------------------------------------------------------------------
-    video_setpage(p):    Switch to screen page p
-   ------------------------------------------------------------------------- */
-void video_setpage(int p)
-{
-    _vid_dirty = true;
-    video__current_page = p;
-}
-
-const uint8_t * const video_current_framebuffer() {
-    return !video__current_page ? video__fb1 : video__fb2;
-}
-
-// ----------------------------------------------------------------------------
 
 static inline void _plot_character(const unsigned int font_off, uint8_t *fb_ptr) {
     _vid_dirty = true;
@@ -1092,6 +1037,54 @@ GLUE_C_WRITE(video__write_2e_odd1_mixed)
     _draw_hires_graphics(ea, b, /*even*/false, 1, (SS_TEXT|SS_MIXED));
 }
 
+// ----------------------------------------------------------------------------
+
+void video_init(void) {
+    video__fb1 = vga_mem_page_0;
+    video__fb2 = vga_mem_page_1;
+
+    // reset Apple2 softframebuffers
+    memset(video__fb1,0,SCANWIDTH*SCANHEIGHT);
+    memset(video__fb2,0,SCANWIDTH*SCANHEIGHT);
+
+    video_initialize_color();
+#if !HEADLESS
+#if !defined(__APPLE__)
+#if !defined(ANDROID)
+    if (!is_headless) {
+        video_driver_init((void *)0);
+    }
+#endif
+#endif
+#endif
+}
+
+void video_shutdown(void) {
+#if !HEADLESS
+    if (!is_headless) {
+        video_driver_shutdown();
+    }
+#if !defined(__APPLE__)
+    exit(0);
+#endif
+#endif
+}
+
+void video_main_loop(void) {
+#if !HEADLESS
+    video_driver_main_loop();
+#endif
+}
+
+void video_setpage(int p) {
+    _vid_dirty = true;
+    video__current_page = p;
+}
+
+const uint8_t * const video_current_framebuffer() {
+    return !video__current_page ? video__fb1 : video__fb2;
+}
+
 bool video_dirty(void) {
     return _vid_dirty;
 }
@@ -1149,6 +1142,9 @@ void video_redraw(void) {
 
     softswitches = softswitches_save;
 }
+
+// ----------------------------------------------------------------------------
+// VBL/timing routines
 
 // References to Jim Sather's books are given as eg:
 // UTAIIe:5-7,P3 (Understanding the Apple IIe, chapter 5, page 7, Paragraph 3)
