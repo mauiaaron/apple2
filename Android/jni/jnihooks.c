@@ -16,6 +16,34 @@
 
 static bool nativePaused = false;
 
+#if TESTING
+static bool _run_tests(void) {
+    char *local_argv[] = {
+        "-f",
+        NULL
+    };
+    int local_argc = 0;
+    for (char **p = &local_argv[0]; *p != NULL; p++) {
+        ++local_argc;
+    }
+#if defined(TEST_CPU)
+    extern int test_cpu(int, char *[]);
+    test_cpu(local_argc, local_argv);
+#elif defined(TEST_VM)
+    extern int test_vm(int, char *[]);
+    test_vm(local_argc, local_argv);
+#elif defined(TEST_DISPLAY)
+    extern int test_display(int, char *[]);
+    test_display(local_argc, local_argv);
+#elif defined(TEST_DISK)
+    extern int test_disk(int, char *[]);
+    test_disk(local_argc, local_argv);
+#else
+#   error "OOPS, no tests specified"
+#endif
+}
+#endif
+
 void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnCreate(JNIEnv *env, jobject obj, jstring j_dataDir) {
     const char *dataDir = (*env)->GetStringUTFChars(env, j_dataDir, 0);
     data_dir = strdup(dataDir);
@@ -35,38 +63,15 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeGraphicsInitialized(JNIEnv 
     LOG("%s", "native graphicsInitialized...");
     video_driver_reshape(width, height);
 
-#if !TESTING
+#if TESTING
+    _run_tests();
+#else
     static bool graphicsPreviouslyInitialized = false;
     if (graphicsPreviouslyInitialized) {
         video_driver_shutdown();
     }
     graphicsPreviouslyInitialized = true;
     video_driver_init((void *)0);
-
-#else
-    char *local_argv[] = {
-        "-f",
-        NULL
-    };
-    int local_argc = 0;
-    for (char **p = &local_argv[0]; *p != NULL; p++) {
-        ++local_argc;
-    }
-#   if defined(TEST_CPU)
-    extern int test_cpu(int, char *[]);
-    test_cpu(local_argc, local_argv);
-#   elif defined(TEST_VM)
-    extern int test_vm(int, char *[]);
-    test_vm(local_argc, local_argv);
-#   elif defined(TEST_DISPLAY)
-    extern int test_display(int, char *[]);
-    test_display(local_argc, local_argv);
-#   elif defined(TEST_DISK)
-    extern int test_disk(int, char *[]);
-    test_disk(local_argc, local_argv);
-#   else
-#       error "OOPS, no tests specified"
-#   endif
 #endif
 }
 
@@ -147,3 +152,52 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnKeyUp(JNIEnv *env, jobjec
     android_keycode_to_emulator(keyCode, metaState, false);
 #endif
 }
+
+jboolean Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnTouch(JNIEnv *env, jobject obj, jint action, jfloat keyCode, jfloat metaState) {
+    return false;
+}
+
+void Java_org_deadc0de_apple2ix_Apple2Activity_nativeIncreaseCPUSpeed(JNIEnv *env, jobject obj) {
+    pthread_mutex_lock(&interface_mutex);
+
+    if (cpu_scale_factor > 1.0) {
+        cpu_scale_factor += 0.25;
+    } else {
+        cpu_scale_factor += 0.05;
+    }
+
+    if (cpu_scale_factor > CPU_SCALE_FASTEST) {
+        cpu_scale_factor = CPU_SCALE_FASTEST;
+    }
+
+    //video_driver_animate_speedscale();
+
+#warning HACK TODO FIXME ... refactor timing stuff
+    timing_toggle_cpu_speed();
+    timing_toggle_cpu_speed();
+
+    pthread_mutex_unlock(&interface_mutex);
+}
+
+void Java_org_deadc0de_apple2ix_Apple2Activity_nativeDecreaseCPUSpeed(JNIEnv *env, jobject obj) {
+    pthread_mutex_lock(&interface_mutex);
+
+    if (cpu_scale_factor > 1.0) {
+        cpu_scale_factor -= 0.25;
+    } else {
+        cpu_scale_factor -= 0.05;
+    }
+
+    if (cpu_scale_factor < CPU_SCALE_SLOWEST) {
+        cpu_scale_factor = CPU_SCALE_SLOWEST;
+    }
+
+    //video_driver_animate_speedscale();
+
+#warning HACK TODO FIXME ... refactor timing stuff
+    timing_toggle_cpu_speed();
+    timing_toggle_cpu_speed();
+
+    pthread_mutex_unlock(&interface_mutex);
+}
+

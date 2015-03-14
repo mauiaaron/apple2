@@ -18,7 +18,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.FrameLayout;
 import android.widget.ListView;
 import android.widget.TabHost;
@@ -41,12 +42,31 @@ public class Apple2SettingsMenu {
 
         LayoutInflater inflater = (LayoutInflater)mActivity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         mSettingsView = inflater.inflate(R.layout.activity_settings, null, false);
-        ListView settingsMenuView = (ListView)mSettingsView.findViewById(R.id.joystick_settings_listview);
 
+        // General Settings
+
+        final CheckBox swipeToChangeSpeeds = (CheckBox)mSettingsView.findViewById(R.id.checkBox_speedswipe);
+        swipeToChangeSpeeds.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                Apple2SettingsMenu.this.mActivity.setSwipeTogglesSpeed(isChecked);
+            }
+        });
+
+        final CheckBox doubleTapShowsKeyboard = (CheckBox)mSettingsView.findViewById(R.id.checkBox_doubletapkeyboard);
+        doubleTapShowsKeyboard.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                Apple2SettingsMenu.this.mActivity.setDoubleTapShowsKeyboard(isChecked);
+            }
+        });
+
+        // Joystick Settings
+
+        ListView settingsMenuView = (ListView)mSettingsView.findViewById(R.id.joystick_settings_listview);
         String[] values = new String[] {
                 mActivity.getResources().getString(R.string.joystick_configure),
         };
-
         ArrayAdapter<?> adapter = new ArrayAdapter<String>(mActivity, android.R.layout.simple_list_item_1, android.R.id.text1, values);
         settingsMenuView.setAdapter(adapter);
         settingsMenuView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -62,6 +82,8 @@ public class Apple2SettingsMenu {
             }
         });
 
+        // Tab management
+
         TabHost tabHost = (TabHost)mSettingsView.findViewById(R.id.tabHost_settings);
         tabHost.setup();
         TabHost.TabSpec spec = tabHost.newTabSpec("tab_general");
@@ -73,15 +95,6 @@ public class Apple2SettingsMenu {
         spec.setIndicator(mActivity.getResources().getString(R.string.tab_joystick), mActivity.getResources().getDrawable(android.R.drawable.ic_menu_compass));
         spec.setContent(R.id.tab_joystick);
         tabHost.addTab(spec);
-
-        Button rebootButton = (Button)mSettingsView.findViewById(R.id.reboot_button);
-        rebootButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Apple2SettingsMenu.this.mActivity.nativeReboot();
-                Apple2SettingsMenu.this.dismiss();
-            }
-        });
     }
 
     public void showJoystickConfiguration() {

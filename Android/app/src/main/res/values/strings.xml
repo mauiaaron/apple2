@@ -8,7 +8,7 @@
     <string name="joystick_keyB">Key Joystick 2</string>
     <string name="joystick_show">Show emulated joystick</string>
     <string name="keyboard">Keyboard</string>
-    <string name="keyboard_two_finger">2-finger-tap shows keyboard</string>
+    <string name="keyboard_doubletap">Double-tap shows keyboard</string>
     <string name="max">Max</string>
     <string name="menu_disks">Load disk image…</string>
     <string name="menu_settings">Emulator settings…</string>
@@ -19,7 +19,7 @@
     <string name="spacer"> </string>
     <string name="speed_alt">Alternate CPU Speed</string>
     <string name="speed_cpu">CPU Speed</string>
-    <string name="speed_swipe">Swipe toggles between configured speeds</string>
+    <string name="speed_swipe">Left/right swiping changes emulation speed</string>
     <string name="tab_general">General</string>
     <string name="tab_joystick">Joystick</string>
 </resources>

@@ -21,6 +21,7 @@ import android.content.pm.PackageManager;
 import android.graphics.Rect;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.GestureDetector;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.ViewTreeObserver;
@@ -39,6 +40,10 @@ public class Apple2Activity extends Activity {
 
     private Apple2View mView = null;
     private AlertDialog mQuitDialog = null;
+    private GestureDetector mDetector = null;
+    private boolean mSwipeTogglesSpeed = true;
+    private boolean mDoubleTapShowsKeyboard = true;
+
     private int mWidth = 0;
     private int mHeight = 0;
     private boolean mSoftKeyboardShowing = false;
@@ -48,15 +53,19 @@ public class Apple2Activity extends Activity {
     }
 
     private native void nativeOnCreate(String dataDir);
+    private native void nativeGraphicsInitialized(int width, int height);
+    private native void nativeGraphicsChanged(int width, int height);
+    private native void nativeOnKeyDown(int keyCode, int metaState);
+    private native void nativeOnKeyUp(int keyCode, int metaState);
+    private native void nativeIncreaseCPUSpeed();
+    private native void nativeDecreaseCPUSpeed();
+
     public native void nativeOnResume();
     public native void nativeOnPause();
     public native void nativeOnQuit();
+    public native boolean nativeOnTouch(int action, float x, float y);
     public native void nativeReboot();
-    private native void nativeGraphicsInitialized(int width, int height);
-    private native void nativeGraphicsChanged(int width, int height);
     public native void nativeRender();
-    private native void nativeOnKeyDown(int keyCode, int metaState);
-    private native void nativeOnKeyUp(int keyCode, int metaState);
 
     // HACK NOTE 2015/02/22 : Apparently native code cannot easily access stuff in the APK ... so copy various resources
     // out of the APK and into the /data/data/... for ease of access.  Because this is FOSS software we don't care about
@@ -146,11 +155,14 @@ public class Apple2Activity extends Activity {
                     Log.d(TAG, "Soft keyboard appears to be occupying screen real estate ...");
                     Apple2Activity.this.mSoftKeyboardShowing = true;
                 } else {
+                    Log.d(TAG, "Soft keyboard appears to be gone ...");
                     Apple2Activity.this.mSoftKeyboardShowing = false;
                 }
                 nativeGraphicsChanged(rect.width(), h);
             }
         });
+
+        mDetector = new GestureDetector(this, new Apple2GestureListener());
     }
 
     @Override
@@ -219,7 +231,7 @@ public class Apple2Activity extends Activity {
             mView.showMainMenu();
             return true;
         } else if ((keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) || (keyCode == KeyEvent.KEYCODE_VOLUME_MUTE) || (keyCode == KeyEvent.KEYCODE_VOLUME_UP)) {
-            return false;
+            return super.onKeyUp(keyCode, event);
         } else {
             nativeOnKeyUp(keyCode, event.getMetaState());
             return true;
@@ -228,8 +240,83 @@ public class Apple2Activity extends Activity {
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        Log.d(TAG, "onTouchEvent...");
-        return true;
+        do {
+            Apple2MainMenu mainMenu = mView.getMainMenu();
+            if (mainMenu == null) {
+                break;
+            }
+
+            Apple2SettingsMenu settingsMenu = mainMenu.getSettingsMenu();
+            if (settingsMenu != null && settingsMenu.isShowing()) {
+                break;
+            }
+
+            int action = event.getActionMasked();
+            float x = event.getX();
+            float y = event.getY();
+
+            boolean nativeHandled = nativeOnTouch(action, x, y);
+            if (nativeHandled) {
+                break;
+            }
+
+            this.mDetector.onTouchEvent(event);
+        } while (false);
+
+        return super.onTouchEvent(event);
+    }
+
+    private class Apple2GestureListener extends GestureDetector.SimpleOnGestureListener {
+        private static final String TAG = "Gestures";
+
+        @Override
+        public boolean onDown(MotionEvent event) {
+            Log.d(TAG,"onDown: " + event.toString());
+            return true;
+        }
+
+        @Override
+        public boolean onFling(MotionEvent event1, MotionEvent event2, float velocityX, float velocityY) {
+            if (mSwipeTogglesSpeed) {
+                float ev1X = event1.getX();
+                float ev2X = event2.getX();
+                if (ev1X < ev2X) {
+                    nativeIncreaseCPUSpeed();
+                } else {
+                    nativeDecreaseCPUSpeed();
+                }
+            }
+            return true;
+        }
+
+        @Override
+        public boolean onSingleTapConfirmed(MotionEvent event) {
+            Log.d(TAG, "onSingleTapConfirmed: " + event.toString());
+            Apple2MainMenu mainMenu = Apple2Activity.this.mView.getMainMenu();
+            if (mainMenu.isShowing()) {
+                Log.d(TAG, "dismissing main menu");
+                mainMenu.dismiss();
+            } else if (Apple2Activity.this.isSoftKeyboardShowing()) {
+                Log.d(TAG, "hiding keyboard");
+                Apple2Activity.this.mView.toggleKeyboard();
+            } else {
+                Log.d(TAG, "showing main menu");
+                Apple2Activity.this.mView.showMainMenu();
+            }
+            return true;
+        }
+
+        @Override
+        public boolean onDoubleTap(MotionEvent event) {
+            if (mDoubleTapShowsKeyboard) {
+                Log.d(TAG, "onDoubleTap: " + event.toString());
+                if (!Apple2Activity.this.isSoftKeyboardShowing()) {
+                    Log.d(TAG, "showing keyboard");
+                    Apple2Activity.this.mView.toggleKeyboard();
+                }
+            }
+            return true;
+        }
     }
 
     public void graphicsInitialized(int width, int height) {
@@ -273,5 +360,13 @@ public class Apple2Activity extends Activity {
             });
         }
         mQuitDialog.show();
+    }
+
+    public void setSwipeTogglesSpeed(boolean swipeTogglesSpeed) {
+        mSwipeTogglesSpeed = swipeTogglesSpeed;
+    }
+
+    public void setDoubleTapShowsKeyboard(boolean doubleTapShowsKeyboard) {
+        mDoubleTapShowsKeyboard = doubleTapShowsKeyboard;
     }
 }

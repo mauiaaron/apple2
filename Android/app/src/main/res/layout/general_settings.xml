@@ -6,99 +6,16 @@
     android:orientation="vertical" >
 
     <LinearLayout
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center_vertical|center_horizontal"
-        android:orientation="horizontal">
-
-        <TextView
-            android:id="@+id/cpuspeed_section_label"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/speed_cpu"
-            android:textAppearance="?android:attr/textAppearanceSmall"
-            android:layout_marginTop="4dp"
-            android:textSize="14sp" />
-    </LinearLayout>
-
-    <LinearLayout
         android:orientation="horizontal"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:gravity="center_vertical">
 
-        <SeekBar
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:id="@+id/cpuspeed_scale"
-            android:max="375"
-            android:progress="75"
-            android:layout_margin="4dp"
-            android:layout_weight=".75" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceSmall"
-            android:text="100%"
-            android:id="@+id/cpuspeed_label"
-            android:layout_marginRight="4dp"
-            android:textSize="14sp" />
-
         <CheckBox
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/max"
-            android:id="@+id/cpuspeed_max"
-            android:layout_marginRight="4dp"
-            android:textSize="14sp" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center_vertical|center_horizontal"
-        android:orientation="horizontal">
-
-        <TextView
-            android:id="@+id/altspeed_section_label"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/speed_alt"
-            android:textAppearance="?android:attr/textAppearanceSmall"
-            android:textSize="14sp" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:orientation="horizontal"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center_vertical">
-
-        <SeekBar
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:id="@+id/altspeed_scale"
-            android:max="375"
-            android:progress="375"
-            android:layout_margin="4dp"
-            android:layout_weight=".75" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceSmall"
-            android:text="400%"
-            android:id="@+id/altspeed_label"
-            android:layout_marginRight="4dp"
-            android:textSize="14sp" />
-
-        <CheckBox
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/max"
-            android:id="@+id/altspeed_max"
-            android:layout_marginRight="4dp"
+            android:text="@string/keyboard_doubletap"
+            android:id="@+id/checkBox_doubletapkeyboard"
             android:textSize="14sp"
             android:checked="true" />
     </LinearLayout>
@@ -116,19 +33,5 @@
             android:id="@+id/checkBox_speedswipe"
             android:checked="true"
             android:textSize="14sp" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:orientation="horizontal"
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
-        android:gravity="bottom|right"
-        android:layout_margin="4dp">
-
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/reboot"
-            android:id="@+id/reboot_button" />
     </LinearLayout>
 </LinearLayout>
