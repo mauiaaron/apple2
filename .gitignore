@@ -74,6 +74,7 @@ Android/gen
 Android/libs
 # Android.mk is tEh dynamicz!
 Android/jni/Android.mk
+*.apk
 
 # Android Studio
 .gradle

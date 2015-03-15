@@ -31,6 +31,9 @@ while test "x$1" != "x"; do
             usage
             ;;
 
+        *)
+            package_id=$1
+            ;;
     esac
     shift
 done

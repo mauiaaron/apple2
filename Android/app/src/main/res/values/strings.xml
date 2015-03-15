@@ -1,6 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
+
     <color name="black">#000000</color>
     <color name="white">#ffffff</color>
+
     <string name="app_name">Apple2ix</string>
     <string name="joystick">Joystick</string>
     <string name="joystick_configure">Configure emulated joysticks…</string>
@@ -16,10 +19,13 @@
     <string name="ok">OK</string>
     <string name="quit">Quit Apple2ix?</string>
     <string name="reboot">Reboot Apple //e…</string>
-    <string name="spacer"> </string>
+    <string name="spacer"></string>
     <string name="speed_alt">Alternate CPU Speed</string>
     <string name="speed_cpu">CPU Speed</string>
     <string name="speed_swipe">Left/right swiping changes emulation speed</string>
     <string name="tab_general">General</string>
     <string name="tab_joystick">Joystick</string>
+    <string name="title_activity_second">SecondActivity</string>
+    <string name="action_settings">Settings</string>
+
 </resources>
