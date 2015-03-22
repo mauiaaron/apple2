@@ -209,14 +209,12 @@
 #define pc_hi_next      r0
 #define BranchXCycles \
                 _IncOpCycles \
-                mov     pc_hi_prev, PC_Reg; \
-                mov     pc_hi_prev, pc_hi_prev, LSR #8; \
+                mov     pc_hi_prev, PC_Reg, LSR #8; \
                 cbw; \
                 add     PC_Reg, PC_Reg, r0; /* branch PC */ \
                 mov     PC_Reg, PC_Reg, LSL #16; /* 16bit under/overflow protection */ \
                 mov     PC_Reg, PC_Reg, LSR #16; \
-                mov     pc_hi_next, PC_Reg; \
-                mov     pc_hi_next, pc_hi_next, LSR #8; \
+                mov     pc_hi_next, PC_Reg, LSR #8; \
                 teq     pc_hi_next, pc_hi_prev; \
                 addne   scratch_count, scratch_count, #1; /* +1 branch taken */ \
                 strb    scratch_count, [mem_cycle_count];
