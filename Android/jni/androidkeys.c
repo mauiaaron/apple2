@@ -206,7 +206,7 @@ void android_keycode_to_emulator(int keyCode, int metaState, bool pressed) {
                 caps_lock = (metaState & META_CAPS_LOCK_ON);
                 return;
             case KEYCODE_DEL:
-                key = SCODE_DEL;
+                key = SCODE_L;// DEL is prolly not what they meant =P
                 break;
             case KEYCODE_ENTER:
                 key = SCODE_RET;
