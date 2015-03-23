@@ -37,6 +37,8 @@ INTERFACE_CLASSIC_SRC = \
 VIDEO_SRC = \
 	src/video/xvideo.c \
 	src/video/glvideo.c \
+	src/video/glanimation.c \
+	src/video/glcpuanim.c \
 	src/video/glutinput.c \
 	src/video_util/matrixUtil.c \
 	src/video_util/modelUtil.c \

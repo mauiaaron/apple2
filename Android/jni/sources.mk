@@ -11,6 +11,8 @@ APPLE2_ARM_SRC := \
 
 APPLE2_VIDEO_SRC = \
     $(APPLE2_SRC_PATH)/video/glvideo.c \
+    $(APPLE2_SRC_PATH)/video/glanimation.c \
+    $(APPLE2_SRC_PATH)/video/glcpuanim.c \
     $(APPLE2_SRC_PATH)/video/gltouchjoy.c \
     $(APPLE2_SRC_PATH)/video_util/matrixUtil.c \
     $(APPLE2_SRC_PATH)/video_util/modelUtil.c \

@@ -15,7 +15,8 @@
  */
 
 #include "common.h"
-#include "video/renderer.h"
+
+#define SCANSTEP SCANWIDTH-12
 
 #define DYNAMIC_SZ 11 // 7 pixels (as bytes) + 2pre + 2post
 
@@ -23,10 +24,12 @@
 static uint8_t vga_mem_page_0[SCANWIDTH*SCANHEIGHT];
 static uint8_t vga_mem_page_1[SCANWIDTH*SCANHEIGHT];
 
-A2Color colormap[256] = { { 0 } };
+A2Color_s colormap[256] = { { 0 } };
+video_backend_s *video_backend = NULL;
 
-uint8_t video__wider_font[0x8000];
-uint8_t video__font[0x4000];
+static uint8_t video__wider_font[0x8000];
+static uint8_t video__font[0x4000];
+static uint8_t video__int_font[3][0x4000]; // interface font
 
 // Precalculated framebuffer offsets given VM addr
 unsigned int video__screen_addresses[8192];
@@ -40,11 +43,6 @@ uint8_t video__hires_odd[0x800];
 
 uint8_t video__dhires1[256];
 uint8_t video__dhires2[256];
-
-#ifdef INTERFACE_CLASSIC
-// Interface font
-static uint8_t video__int_font[3][0x4000];
-#endif
 
 int video__current_page; // current visual page
 int video__strictcolors = 1;// refactor : should be static
@@ -493,8 +491,7 @@ void video_loadfont(int first, int quantity, const uint8_t *data, int mode) {
     }
 }
 
-#ifdef INTERFACE_CLASSIC
-void video_loadfont_int(int first, int quantity, const uint8_t *data) {
+static void video_loadfont_int(int first, int quantity, const uint8_t *data) {
     unsigned int i = quantity * 8;
     while (i--) {
         unsigned int j = 8;
@@ -512,10 +509,9 @@ void video_loadfont_int(int first, int quantity, const uint8_t *data) {
         }
     }
 }
-#endif
 
 // ----------------------------------------------------------------------------
-// Plotting routines
+// lores/char plotting routines
 
 static inline void _plot_char40(uint8_t **d, uint8_t **s) {
     *((uint32_t *)(*d)) = *((uint32_t *)(*s));
@@ -536,19 +532,19 @@ static inline void _plot_char40(uint8_t **d, uint8_t **s) {
     *d += SCANSTEP, *s += 4;
 }
 
-static inline void _plot_char80(uint8_t **d, uint8_t **s) {
+static inline void _plot_char80(uint8_t **d, uint8_t **s, const unsigned int fb_width) {
     *((uint32_t *)(*d)) = *((uint32_t *)(*s));
     *d += 4, *s += 4;
     *((uint16_t *)(*d)) = *((uint16_t *)(*s));
     *d += 2, *s += 2;
     *((uint8_t *)(*d)) = *((uint8_t *)(*s));
-    *d += SCANWIDTH-6, *s -= 6;
+    *d += fb_width-6, *s -= 6;
     *((uint32_t *)(*d)) = *((uint32_t *)(*s));
     *d += 4, *s += 4;
     *((uint16_t *)(*d)) = *((uint16_t *)(*s));
     *d += 2, *s += 2;
     *((uint8_t *)(*d)) = *((uint8_t *)(*s));
-    *d += SCANWIDTH-6, *s += 2;
+    *d += fb_width-6, *s += 2;
 }
 
 static inline void _plot_lores(uint8_t **d, const uint32_t val) {
@@ -568,27 +564,6 @@ static inline void _plot_lores(uint8_t **d, const uint32_t val) {
     *d += 4;
     *((uint16_t *)(*d)) = (uint16_t)(val & 0xffff);
 }
-
-#ifdef INTERFACE_CLASSIC
-void video_plotchar( int x, int y, int scheme, uint8_t c ) {
-    _vid_dirty = true;
-    uint8_t *d;
-    uint8_t *s;
-
-    unsigned int off = y * SCANWIDTH * 16 + x * 7 + 4;
-    s = video__int_font[scheme] + c * 64;
-    d = video__fb1 + off;
-
-    _plot_char80(&d,&s);
-    _plot_char80(&d,&s);
-    _plot_char80(&d,&s);
-    _plot_char80(&d,&s);
-    _plot_char80(&d,&s);
-    _plot_char80(&d,&s);
-    _plot_char80(&d,&s);
-    _plot_char80(&d,&s);
-}
-#endif
 
 static inline void _plot_character(const unsigned int font_off, uint8_t *fb_ptr) {
     _vid_dirty = true;
@@ -616,14 +591,14 @@ static inline void _plot_character1(uint16_t ea, uint8_t b)
 static inline void _plot_80character(const unsigned int font_off, uint8_t *fb_ptr) {
     _vid_dirty = true;
     uint8_t *font_ptr = video__font+font_off;
-    _plot_char80(/*dst*/&fb_ptr, /*src*/&font_ptr);
-    _plot_char80(/*dst*/&fb_ptr, /*src*/&font_ptr);
-    _plot_char80(/*dst*/&fb_ptr, /*src*/&font_ptr);
-    _plot_char80(/*dst*/&fb_ptr, /*src*/&font_ptr);
-    _plot_char80(/*dst*/&fb_ptr, /*src*/&font_ptr);
-    _plot_char80(/*dst*/&fb_ptr, /*src*/&font_ptr);
-    _plot_char80(/*dst*/&fb_ptr, /*src*/&font_ptr);
-    _plot_char80(/*dst*/&fb_ptr, /*src*/&font_ptr);
+    _plot_char80(/*dst*/&fb_ptr, /*src*/&font_ptr, SCANWIDTH);
+    _plot_char80(/*dst*/&fb_ptr, /*src*/&font_ptr, SCANWIDTH);
+    _plot_char80(/*dst*/&fb_ptr, /*src*/&font_ptr, SCANWIDTH);
+    _plot_char80(/*dst*/&fb_ptr, /*src*/&font_ptr, SCANWIDTH);
+    _plot_char80(/*dst*/&fb_ptr, /*src*/&font_ptr, SCANWIDTH);
+    _plot_char80(/*dst*/&fb_ptr, /*src*/&font_ptr, SCANWIDTH);
+    _plot_char80(/*dst*/&fb_ptr, /*src*/&font_ptr, SCANWIDTH);
+    _plot_char80(/*dst*/&fb_ptr, /*src*/&font_ptr, SCANWIDTH);
 }
 
 // FIXME TODO NOTE : dup'ing work here?
@@ -741,6 +716,162 @@ GLUE_C_WRITE(video__write_2e_text1_mixed)
 {
     base_ramwrt[ea] = b;
     DRAW_MIXED(1, SS_RAMWRT);
+}
+
+// ----------------------------------------------------------------------------
+// interface/messages plotting
+
+void video_load_interface_fonts(void) {
+    video_loadfont_int(0x00,0x40,ucase_glyphs);
+    video_loadfont_int(0x40,0x20,ucase_glyphs);
+    video_loadfont_int(0x60,0x20,lcase_glyphs);
+    video_loadfont_int(0x80,0x40,ucase_glyphs);
+    video_loadfont_int(0xC0,0x20,ucase_glyphs);
+    video_loadfont_int(0xE0,0x20,lcase_glyphs);
+    video_loadfont_int(0x80,11,interface_glyphs);
+    video_loadfont_int(MOUSETEXT_BEGIN,0x20,mousetext_glyphs);
+}
+
+// Classic interface and messages
+void video_plotchar_fb(uint8_t *fb, int fb_width, int x, int y, int scheme, uint8_t c) {
+    _vid_dirty = true;
+
+    unsigned int off = y * fb_width * 16 + x * 7 + 4;
+    uint8_t *dst = fb + off;
+    uint8_t *src = video__int_font[scheme] + c * 64;
+
+    _plot_char80(&dst, &src, fb_width);
+    _plot_char80(&dst, &src, fb_width);
+    _plot_char80(&dst, &src, fb_width);
+    _plot_char80(&dst, &src, fb_width);
+    _plot_char80(&dst, &src, fb_width);
+    _plot_char80(&dst, &src, fb_width);
+    _plot_char80(&dst, &src, fb_width);
+    _plot_char80(&dst, &src, fb_width);
+}
+
+void video_plotchar(int x, int y, int scheme, uint8_t c) {
+    video_plotchar_fb(video__fb1, SCANWIDTH, x, y, scheme, c);
+}
+
+void video_interface_print_fb(uint8_t *fb, int fb_width, int x, int y, int cs, const char *s) {
+    for (; *s; x++, s++) {
+        video_plotchar_fb(fb, fb_width, x, y, cs, *s);
+    }
+}
+
+void video_interface_print(int x, int y, int cs, const char *s) {
+    video_interface_print_fb(video__fb1, SCANWIDTH, x, y, cs, s);
+}
+
+#define IsGraphic(c) ((c) == '|' || (((unsigned char)c) >= 0x80 && ((unsigned char)c) <= 0x8A))
+#define IsInside(x,y) ((x) >= 0 && (x) <= xlen-1 && (y) >= 0 && (y) <= ylen-1)
+
+static void _convert_screen_graphics(char *screen, const int x, const int y, const int xlen, const int ylen) {
+    static char map[11][3][4] ={ { "...",
+                                   ".||",
+                                   ".|." },
+
+                                 { "...",
+                                   "||.",
+                                   ".|." },
+
+                                 { ".|.",
+                                   ".||",
+                                   "..." },
+
+                                 { ".|.",
+                                   "||.",
+                                   "..." },
+
+                                 { "~|~",
+                                   ".|.",
+                                   "~|~" },
+
+                                 { "~.~",
+                                   "|||",
+                                   "~.~" },
+
+                                 { ".|.",
+                                   ".||",
+                                   ".|." },
+
+                                 { ".|.",
+                                   "||.",
+                                   ".|." },
+
+                                 { "...",
+                                   "|||",
+                                   ".|." },
+
+                                 { ".|.",
+                                   "|||",
+                                   "..." },
+
+                                 { ".|.",
+                                   "|||",
+                                   ".|." } };
+
+    bool found_glyph = false;
+    int k = 10;
+    for (; k >= 0; k--) {
+        found_glyph = true;
+
+        for (int yy = y - 1; found_glyph && yy <= y + 1; yy++) {
+            int idx = yy*(xlen+1);
+            for (int xx = x - 1; xx <= x + 1; xx++) {
+                char map_ch = map[k][ yy - y + 1 ][ xx - x + 1 ];
+
+                if (IsInside(xx, yy)) {
+                    char c = *(screen + idx + xx);
+                    if (!IsGraphic( c ) && (map_ch == '|')) {
+                        found_glyph = false;
+                        break;
+                    } else if (IsGraphic( c ) && (map_ch == '.')) {
+                        found_glyph = false;
+                        break;
+                    }
+                } else if (map_ch == '|') {
+                    found_glyph = false;
+                    break;
+                }
+            }
+            idx += xlen+1;
+        }
+
+        if (found_glyph) {
+            break;
+        }
+    }
+
+    if (found_glyph) {
+        *(screen + y*(xlen+1) + x) = 0x80 + k;
+    }
+}
+
+void video_interface_translate_screen_x_y(char *screen, const int xlen, const int ylen) {
+    for (int idx=0, y=0; y < ylen; y++, idx+=xlen+1) {
+        for (int x = 0; x < xlen; x++) {
+            if (*(screen + idx + x) == '|') {
+                _convert_screen_graphics(screen, x, y, xlen, ylen);
+            }
+        }
+    }
+}
+
+void video_interface_print_submenu_centered_fb(uint8_t *fb, int submenu_width, int submenu_height, char *submenu, const int xlen, const int ylen) {
+    video_interface_translate_screen_x_y(submenu, xlen, ylen);
+    int x = (submenu_width - xlen) >> 1;
+    int y = (submenu_height - ylen) >> 1;
+    int fb_width = (submenu_width*7) + INTERPOLATED_PIXEL_ADJUSTMENT; // HACK NOTE : interpolated pixel adjustment still necessary ...
+    int ymax = y+ylen;
+    for (int idx=0; y < ymax; y++, idx+=xlen+1) {
+        video_interface_print_fb(fb, fb_width, x, y, 2, &submenu[ idx ]);
+    }
+}
+
+void video_interface_print_submenu_centered(char *submenu, const int xlen, const int ylen) {
+    video_interface_print_submenu_centered_fb(video__fb1, INTERFACE_SCREEN_X, TEXT_ROWS, submenu, xlen, ylen);
 }
 
 // ----------------------------------------------------------------------------
@@ -1052,7 +1183,7 @@ void video_init(void) {
 #if !defined(__APPLE__)
 #if !defined(ANDROID)
     if (!is_headless) {
-        video_driver_init((void *)0);
+        video_backend->init((void*)0);
     }
 #endif
 #endif
@@ -1062,7 +1193,7 @@ void video_init(void) {
 void video_shutdown(void) {
 #if !HEADLESS
     if (!is_headless) {
-        video_driver_shutdown();
+        video_backend->shutdown();
     }
 #if !defined(__APPLE__)
     exit(0);
@@ -1072,7 +1203,7 @@ void video_shutdown(void) {
 
 void video_main_loop(void) {
 #if !HEADLESS
-    video_driver_main_loop();
+    video_backend->main_loop();
 #endif
 }
 

@@ -9,10 +9,11 @@
  *
  */
 
-#include <jni.h>
 #include "common.h"
-#include "video/renderer.h"
 #include "androidkeys.h"
+
+#include <jni.h>
+#include <math.h>
 
 static bool nativePaused = false;
 
@@ -56,22 +57,22 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnCreate(JNIEnv *env, jobje
 
 void Java_org_deadc0de_apple2ix_Apple2Activity_nativeGraphicsChanged(JNIEnv *env, jobject obj, jint width, jint height) {
     LOG("%s", "native graphicsChanged...");
-    video_driver_reshape(width, height);
+    video_backend->reshape(width, height);
 }
 
 void Java_org_deadc0de_apple2ix_Apple2Activity_nativeGraphicsInitialized(JNIEnv *env, jobject obj, jint width, jint height) {
     LOG("%s", "native graphicsInitialized...");
-    video_driver_reshape(width, height);
+    video_backend->reshape(width, height);
 
 #if TESTING
     _run_tests();
 #else
     static bool graphicsPreviouslyInitialized = false;
     if (graphicsPreviouslyInitialized) {
-        video_driver_shutdown();
+        video_backend->shutdown();
     }
     graphicsPreviouslyInitialized = true;
-    video_driver_init((void *)0);
+    video_backend->init((void *)0);
 #endif
 }
 
@@ -118,7 +119,7 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeRender(JNIEnv *env, jobject
 
     extern volatile bool _vid_dirty;
     _vid_dirty = true;
-    video_driver_render();
+    video_backend->render();
 }
 
 void Java_org_deadc0de_apple2ix_Apple2Activity_nativeReboot(JNIEnv *env, jobject obj) {
@@ -160,17 +161,23 @@ jboolean Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnTouch(JNIEnv *env, jo
 void Java_org_deadc0de_apple2ix_Apple2Activity_nativeIncreaseCPUSpeed(JNIEnv *env, jobject obj) {
     pthread_mutex_lock(&interface_mutex);
 
-    if (cpu_scale_factor > 1.0) {
-        cpu_scale_factor += 0.25;
+    int percent_scale = (int)round(cpu_scale_factor * 100.0);
+    if (percent_scale >= 100) {
+        percent_scale += 25;
     } else {
-        cpu_scale_factor += 0.05;
+        percent_scale += 5;
     }
+    cpu_scale_factor = percent_scale/100.0;
 
     if (cpu_scale_factor > CPU_SCALE_FASTEST) {
         cpu_scale_factor = CPU_SCALE_FASTEST;
     }
 
-    //video_driver_animate_speedscale();
+    LOG("native set emulation percentage to %f", cpu_scale_factor);
+
+    if (video_animation_show_cpuspeed) {
+        video_animation_show_cpuspeed();
+    }
 
 #warning HACK TODO FIXME ... refactor timing stuff
     timing_toggle_cpu_speed();
@@ -182,17 +189,28 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeIncreaseCPUSpeed(JNIEnv *en
 void Java_org_deadc0de_apple2ix_Apple2Activity_nativeDecreaseCPUSpeed(JNIEnv *env, jobject obj) {
     pthread_mutex_lock(&interface_mutex);
 
-    if (cpu_scale_factor > 1.0) {
-        cpu_scale_factor -= 0.25;
+    int percent_scale = (int)round(cpu_scale_factor * 100.0);
+    if (cpu_scale_factor == CPU_SCALE_FASTEST) {
+        cpu_scale_factor = CPU_SCALE_FASTEST0;
+        percent_scale = (int)round(cpu_scale_factor * 100);
     } else {
-        cpu_scale_factor -= 0.05;
+        if (percent_scale > 100) {
+            percent_scale -= 25;
+        } else {
+            percent_scale -= 5;
+        }
     }
+    cpu_scale_factor = percent_scale/100.0;
 
     if (cpu_scale_factor < CPU_SCALE_SLOWEST) {
         cpu_scale_factor = CPU_SCALE_SLOWEST;
     }
 
-    //video_driver_animate_speedscale();
+    LOG("native set emulation percentage to %f", cpu_scale_factor);
+
+    if (video_animation_show_cpuspeed) {
+        video_animation_show_cpuspeed();
+    }
 
 #warning HACK TODO FIXME ... refactor timing stuff
     timing_toggle_cpu_speed();

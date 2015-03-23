@@ -37,6 +37,7 @@
 #define CLK_6502_INT ((_M14_INT * 65)   / 912)
 
 #define CPU_SCALE_SLOWEST 0.25
+#define CPU_SCALE_FASTEST0 4.0
 #define CPU_SCALE_FASTEST 4.05
 #ifdef INTERFACE_CLASSIC
 #   define CPU_SCALE_STEP_DIV 0.01
@@ -50,6 +51,7 @@ extern int cycles_speaker_feedback;         // current -/+ speaker requested fee
 extern double cpu_scale_factor;             // scale factor #1
 extern double cpu_altscale_factor;          // scale factor #2
 extern bool is_fullspeed;                   // emulation in full native speed?
+extern bool alt_speed_enabled;
 
 extern pthread_t cpu_thread_id;
 extern pthread_mutex_t interface_mutex;

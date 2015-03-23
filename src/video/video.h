@@ -17,37 +17,53 @@
 #ifndef A2_VIDEO_H
 #define A2_VIDEO_H
 
-#ifndef __ASSEMBLER__
+typedef struct video_backend_s {
+    void (*init)(void *context);
+    void (*main_loop)(void);
+    void (*reshape)(int width, int height);
+    void (*render)(void);
+    void (*shutdown)(void);
+} video_backend_s;
 
-typedef struct A2Color {
+/*
+ * Color structure
+ */
+typedef struct A2Color_s {
     uint8_t red;
     uint8_t green;
     uint8_t blue;
-} A2Color;
+} A2Color_s;
 
 /*
  * Reference to the internal 8bit-indexed color format
  */
-extern A2Color colormap[];
+extern A2Color_s colormap[];
 
-#include "prefs.h"
+/*
+ * The registered video backend (renderer).
+ */
+extern video_backend_s *video_backend;
 
-/* Prepare the video system, converting console to graphics mode, or
+/*
+ * Prepare the video system, converting console to graphics mode, or
  * opening X window, or whatever.  This is called only once when the
  * emulator is run
  */
 void video_init(void);
 
-/* Begin main video loop (does not return)
+/*
+ * Begin main video loop (does not return)
  */
 void video_main_loop(void);
 
-/* Undo anything done by video_init() and video_start(). Called before exiting the
+/*
+ * Undo anything done by video_init() and video_start(). Called before exiting the
  * emulator.
  */
 void video_shutdown(void);
 
-/* Setup the display. This may be called multiple times in a run, and is
+/*
+ * Setup the display. This may be called multiple times in a run, and is
  * used when graphics parameters (II+ vs //e, hires color representation) may
  * have changed.
  *
@@ -62,7 +78,8 @@ void video_shutdown(void);
  */
 void video_set(int flags);
 
-/* Set the font used by the display.  QTY characters are loaded starting
+/*
+ * Set the font used by the display.  QTY characters are loaded starting
  * with FIRST, from DATA.  DATA contains 8 bytes for each character, each
  * byte representing a row (top-to-bottom).  The row byte contains 7
  * pixels in little-endian format.
@@ -80,36 +97,24 @@ void video_set(int flags);
  */
 void video_loadfont(int first, int qty, const uint8_t *data, int mode);
 
-/* Redraw the display. This is called after exiting an interface display,
+/*
+ * Loads the interface/messages to a seperate character table for system menus/messages
+ */
+void video_load_interface_fonts(void);
+
+/*
+ * Redraw the display. This is called after exiting an interface display,
  * when changes have been made to the Apple's emulated framebuffer that
  * bypass the driver's hooks, or when the video mode has changed.
  */
 void video_redraw(void);
 
-/* Change the displayed video page to PAGE
+/*
+ * Change the displayed video page to PAGE
  *   0 - Page 1: $400-$7ff/$2000-$3fff
  *   1 - Page 2: $800-$bff/$4000-$5fff
  */
 void video_setpage(int page);
-
-#ifdef INTERFACE_CLASSIC
-/* Like loadfont, but writes to a seperate 256 character table used by
- * video_plotchar and not the apple text-mode display.
- */
-void video_loadfont_int(int first, int qty, const uint8_t *data);
-
-/* Plot a character to the text mode screen, *not* writing to apple
- * memory. This is used by the interface screens.
- *
- * ROW, COL, and CODE are self-expanatory. COLOR gives the color scheme
- * to use:
- *
- *  0 - Green text on Black background
- *  1 - Green text on Blue background
- *  2 - Red text on Black background
- */
-void video_plotchar(int row, int col, int color, uint8_t code);
-#endif
 
 /*
  * Get a reference to current internal framebuffer
@@ -121,6 +126,49 @@ const uint8_t * const video_current_framebuffer();
  */
 bool video_dirty(void);
 
+// ----------------------------------------------------------------------------
+
+/*
+ * Plot a character to the text mode screen, *not* writing to apple
+ * memory. This is used by the interface screens.
+ *
+ * ROW, COL, and CODE are self-expanatory. COLOR gives the color scheme
+ * to use:
+ *
+ *  0 - Green text on Black background
+ *  1 - Green text on Blue background
+ *  2 - Red text on Black background
+ */
+void video_plotchar(int row, int col, int color, uint8_t code);
+
+/*
+ * Same as video_plotchar(), but allows plotting to a separate buffer
+ */
+void video_plotchar_fb(uint8_t *fb, int fb_width, int row, int col, int color, uint8_t code);
+
+void video_interface_print(int x, int y, const int cs, const char *s);
+
+void video_interface_print_fb(uint8_t *fb, int fb_width, int x, int y, const int cs, const char *s);
+
+void video_interface_print_submenu_centered(char *submenu, const int xlen, const int ylen);
+
+void video_interface_print_submenu_centered_fb(uint8_t *fb, int screen_char_width, int screen_char_height, char *submenu, const int xlen, const int ylen);
+
+// ----------------------------------------------------------------------------
+
+
+/*
+ * Show CPU speed animation
+ */
+extern void (*video_animation_show_cpuspeed)(void);
+
+/*
+ * Show track/sector animation
+ */
+extern void (*video_animation_show_track_sector)(int drive, int track, int sect);
+
+// ----------------------------------------------------------------------------
+
 /*
  * VBL routines
  */
@@ -128,18 +176,30 @@ uint16_t video_scanner_get_address(bool *vblBarOut);
 uint8_t floating_bus(void);
 uint8_t floating_bus_hibit(const bool hibit);
 
-#endif /* !__ASSEMBLER__ */
 
-/**** Private stuff follows *****/
-
-/* 640x400 mode really isn't what it advertises.  It's really 560x384 with 4
+/*
+ * 640x400 mode really isn't what it advertises.  It's really 560x384 with 4
  * extra bytes on each side for color interpolation hack.  This is yet another
  * area where I've traded the optimization gain (especially on older slower
  * machines) for a standard resolution.
  */
-#define SCANWIDTH 568
+#define _SCANWIDTH 560
+#define INTERPOLATED_PIXEL_ADJUSTMENT (4+4)
+#define SCANWIDTH (_SCANWIDTH+INTERPOLATED_PIXEL_ADJUSTMENT)
 #define SCANHEIGHT 384
-#define SCANSTEP SCANWIDTH-12
+
+#define TEXT_ROWS 24
+#define BEGIN_MIX 20
+#define TEXT_COLS 40
+#define TEXT80_COLS 80
+
+#define INTERFACE_SCREEN_X TEXT80_COLS
+
+#define FONT_HEIGHT_PIXELS 16
+#define FONT_WIDTH_PIXELS  14
+#define FONT80_WIDTH_PIXELS 7
+
+#define MOUSETEXT_BEGIN 0x90
 
 #define COLOR_BLACK             0
 
@@ -177,14 +237,13 @@ uint8_t floating_bus_hibit(const bool hibit);
 #define COLOR_FLASHING_GREEN    59
 
 
-#ifndef __ASSEMBLER__
 /* ----------------------------------
     generic graphics globals
    ---------------------------------- */
 
-/* Pointers to framebuffer (can be VGA memory or host buffer)
+/*
+ * Pointers to framebuffer (can be VGA memory or host buffer)
  */
-
 extern uint8_t *video__fb1,*video__fb2;
 
 extern uint8_t video__hires_even[0x800];
@@ -219,6 +278,5 @@ video__write_2e_even1(),
 video__write_2e_odd1_mixed(),
 video__write_2e_even1_mixed();
 
-#endif /* !__ASSEMBLER__ */
-
 #endif /* !A2_VIDEO_H */
+

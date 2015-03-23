@@ -593,12 +593,8 @@ void reinitialize(void) {
 }
 
 void c_initialize_firsttime(void) {
-#ifdef INTERFACE_CLASSIC
-    /* read in system files and calculate system defaults */
-    c_load_interface_font();
-#endif
+    video_load_interface_fonts();
 
-    /* initialize the video system */
     video_init();
 
 #ifdef DEBUGGER

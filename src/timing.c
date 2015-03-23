@@ -64,7 +64,7 @@ static bool auto_adjust_speed = true;
 double cpu_scale_factor = 1.0;
 double cpu_altscale_factor = 1.0;
 bool is_fullspeed = false;
-static bool alt_speed_enabled = false;
+bool alt_speed_enabled = false;
 
 // misc
 volatile uint8_t emul_reinitialize = 0;

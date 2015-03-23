@@ -16,27 +16,20 @@
 
 #include "common.h"
 
+static struct stat statbuf = { 0 };
+static int altdrive = 0;
+
 bool in_interface = false;
 
-static struct stat statbuf;
-static int altdrive;
-
-/*#define undoc_supported 1*/
-/*#else*/
-/*#define undoc_supported 0*/
-
-void copy_and_pad_string(char *dest, const char* src, const char c, const int len, const char cap)
-{
-    const char* p;
+void copy_and_pad_string(char *dest, const char* src, const char c, const int len, const char cap) {
+    const char* p = src;
     char* d = dest;
 
-    for (p = src; ((*p != '\0') && (p-src < len-1)); p++)
-    {
+    for (; ((*p != '\0') && (p-src < len-1)); p++) {
         *d++ = *p;
     }
 
-    while (d-dest < len-1)
-    {
+    while (d-dest < len-1) {
         *d++ = c;
     }
 
@@ -44,198 +37,45 @@ void copy_and_pad_string(char *dest, const char* src, const char c, const int le
 }
 
 static void pad_string(char *s, const char c, const int len) {
-    char *p;
+    char *p = s;
 
-    for (p = s; ((*p != '\0') && (p-s < len-1)); p++)
-    {
+    for (; ((*p != '\0') && (p-s < len-1)); p++) {
+        // counting ...
     }
 
-    while (p-s < len-1)
-    {
+    while (p-s < len-1) {
         *p++ = c;
     }
 
     *p = '\0';
 }
 
-/* -------------------------------------------------------------------------
-    c_load_interface_font()
-   ------------------------------------------------------------------------- */
-
-void c_load_interface_font()
-{
-    video_loadfont_int(0x00,0x40,ucase_glyphs);
-    video_loadfont_int(0x40,0x20,ucase_glyphs);
-    video_loadfont_int(0x60,0x20,lcase_glyphs);
-    video_loadfont_int(0x80,0x40,ucase_glyphs);
-    video_loadfont_int(0xC0,0x20,ucase_glyphs);
-    video_loadfont_int(0xE0,0x20,lcase_glyphs);
-
-    video_loadfont_int(0x80,11,interface_glyphs);
-    video_loadfont_int(MOUSETEXT_BEGIN,0x20,mousetext_glyphs);
-}
-
-/* -------------------------------------------------------------------------
-    c_interface_print()
-   ------------------------------------------------------------------------- */
-void c_interface_print( int x, int y, int cs, const char *s )
-{
-    for (; *s; x++, s++)
-    {
-        video_plotchar( x, y, cs, *s );
-    }
+void c_interface_print( int x, int y, int cs, const char *s ) {
+    video_interface_print(x, y, cs, s);
 }
 
 /* -------------------------------------------------------------------------
     c_interface_print_screen()
    ------------------------------------------------------------------------- */
-void c_interface_print_screen( char screen[24][INTERFACE_SCREEN_X+1] )
-{
-    for (int y = 0; y < 24; y++)
-    {
+void c_interface_print_screen( char screen[24][INTERFACE_SCREEN_X+1] ) {
+    for (int y = 0; y < 24; y++) {
         c_interface_print( 0, y, 2, screen[ y ] );
     }
 }
 
-/* -------------------------------------------------------------------------
-    c_interface_translate_screen()
-   ------------------------------------------------------------------------- */
-
-#define IsGraphic(c) ((c) == '|' || (((unsigned char)c) >= 0x80 && ((unsigned char)c) <= 0x8A))
-#define IsInside(x,y) ((x) >= 0 && (x) <= xlen-1 && (y) >= 0 && (y) <= ylen-1)
-
-static void _convert_screen_graphics( char *screen, const int x, const int y, const int xlen, const int ylen )
-{
-    static char map[11][3][4] ={ { "...",
-                                   ".||",
-                                   ".|." },
-
-                                 { "...",
-                                   "||.",
-                                   ".|." },
-
-                                 { ".|.",
-                                   ".||",
-                                   "..." },
-
-                                 { ".|.",
-                                   "||.",
-                                   "..." },
-
-                                 { "~|~",
-                                   ".|.",
-                                   "~|~" },
-
-                                 { "~.~",
-                                   "|||",
-                                   "~.~" },
-
-                                 { ".|.",
-                                   ".||",
-                                   ".|." },
-
-                                 { ".|.",
-                                   "||.",
-                                   ".|." },
-
-                                 { "...",
-                                   "|||",
-                                   ".|." },
-
-                                 { ".|.",
-                                   "|||",
-                                   "..." },
-
-                                 { ".|.",
-                                   "|||",
-                                   ".|." } };
-
-    bool found_glyph = false;
-    int k = 10;
-    for (; k >= 0; k--)
-    {
-        found_glyph = true;
-
-        for (int yy = y - 1; found_glyph && yy <= y + 1; yy++)
-        {
-            int idx = yy*(xlen+1);
-            for (int xx = x - 1; xx <= x + 1; xx++)
-            {
-                char map_ch = map[k][ yy - y + 1 ][ xx - x + 1 ];
-
-                if (IsInside(xx, yy))
-                {
-                    char c = *(screen + idx + xx);
-                    if (!IsGraphic( c ) && (map_ch == '|'))
-                    {
-                        found_glyph = false;
-                        break;
-                    }
-                    else if (IsGraphic( c ) && (map_ch == '.'))
-                    {
-                        found_glyph = false;
-                        break;
-                    }
-                }
-                else if (map_ch == '|')
-                {
-                    found_glyph = false;
-                    break;
-                }
-            }
-            idx += xlen+1;
-        }
-
-        if (found_glyph)
-        {
-            break;
-        }
-    }
-
-    if (found_glyph)
-    {
-        *(screen + y*(xlen+1) + x) = 0x80 + k;
-    }
+static void c_interface_translate_screen_x_y(char *screen, const int xlen, const int ylen) {
+    video_interface_translate_screen_x_y(screen, xlen, ylen);
 }
 
-static void c_interface_translate_screen_x_y(char *screen, const int xlen, const int ylen)
-{
-    for (int idx=0, y=0; y < ylen; y++, idx+=xlen+1)
-    {
-        for (int x = 0; x < xlen; x++)
-        {
-            if (*(screen + idx + x) == '|')
-            {
-                _convert_screen_graphics(screen, x, y, xlen, ylen);
-            }
-        }
-    }
-}
-
-void c_interface_translate_screen( char screen[24][INTERFACE_SCREEN_X+1] )
-{
-
+void c_interface_translate_screen( char screen[24][INTERFACE_SCREEN_X+1] ) {
     c_interface_translate_screen_x_y(screen[0], INTERFACE_SCREEN_X, 24);
 }
 
-/* -------------------------------------------------------------------------
-    c_interface_print_submenu_centered()
-   ------------------------------------------------------------------------- */
-void c_interface_print_submenu_centered( char *submenu, const int xlen, const int ylen )
-{
-    c_interface_translate_screen_x_y(submenu, xlen, ylen);
-    int x = (INTERFACE_SCREEN_X - xlen) >> 1;
-    int y = (24 - ylen) >> 1;
-
-    int ymax = y+ylen;
-    for (int idx=0; y < ymax; y++, idx+=xlen+1)
-    {
-        c_interface_print( x, y, 2, &submenu[ idx ] );
-    }
+void c_interface_print_submenu_centered( char *submenu, const int xlen, const int ylen ) {
+    video_interface_print_submenu_centered(submenu, xlen, ylen);
 }
 
 /* ------------------------------------------------------------------------- */
-
 
 static int c_interface_cut_name(char *name)
 {
@@ -1280,8 +1120,10 @@ void c_interface_parameters()
 #ifdef __linux__
                         LOG("Back to Linux, w00t!\n");
 #endif
+#ifdef AUDIO_ENABLED
                         speaker_destroy();
                         MB_Destroy();
+#endif
 
                         video_shutdown();
                         exit( 0 );

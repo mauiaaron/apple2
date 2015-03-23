@@ -254,6 +254,72 @@ void c_keys_handle_input(int scancode, int pressed, int is_cooked)
                 timing_toggle_cpu_speed();
                 break;
             }
+//#define CPUSCALE_ANIMATIONS_KEYS 1
+#if CPUSCALE_ANIMATIONS_KEYS
+            if (current_key == kF3) {
+
+                double scale = (alt_speed_enabled ? cpu_altscale_factor : cpu_scale_factor);
+                int percent_scale = (int)round(scale * 100);
+                if (scale == CPU_SCALE_FASTEST) {
+                    scale = CPU_SCALE_FASTEST0;
+                    percent_scale = (int)round(scale * 100);
+                } else {
+                    if (percent_scale > 100) {
+                        percent_scale -= 25;
+                    } else {
+                        percent_scale -= 5;
+                    }
+                }
+                scale = percent_scale/100.0;
+
+                if (scale < CPU_SCALE_SLOWEST) {
+                    scale = CPU_SCALE_SLOWEST;
+                }
+
+                if (alt_speed_enabled) {
+                    cpu_altscale_factor = scale;
+                } else {
+                    cpu_scale_factor = scale;
+                }
+
+                if (video_animation_show_cpuspeed) {
+                    video_animation_show_cpuspeed();
+                }
+#warning HACK TODO FIXME ... refactor timing stuff
+                timing_toggle_cpu_speed();
+                timing_toggle_cpu_speed();
+                break;
+            }
+            if (current_key == kF4) {
+
+                int percent_scale = (int)round((alt_speed_enabled ? cpu_altscale_factor : cpu_scale_factor) * 100);
+                double scale = 0.0;
+                if (percent_scale >= 100) {
+                    percent_scale += 25;
+                } else {
+                    percent_scale += 5;
+                }
+                scale = percent_scale/100.0;
+
+                if (scale > CPU_SCALE_FASTEST) {
+                    scale = CPU_SCALE_FASTEST;
+                }
+
+                if (alt_speed_enabled) {
+                    cpu_altscale_factor = scale;
+                } else {
+                    cpu_scale_factor = scale;
+                }
+
+                if (video_animation_show_cpuspeed) {
+                    video_animation_show_cpuspeed();
+                }
+#warning HACK TODO FIXME ... refactor timing stuff
+                timing_toggle_cpu_speed();
+                timing_toggle_cpu_speed();
+                break;
+            }
+#endif
 #endif
 
             if (current_key == kEND)

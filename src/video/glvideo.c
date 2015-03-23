@@ -12,34 +12,9 @@
 // glvideo -- Created by Aaron Culliney
 
 #include "common.h"
+#include "video/glvideo.h"
 #include "video/glinput.h"
-#include "video/renderer.h"
-
-#include "video_util/modelUtil.h"
-#include "video_util/matrixUtil.h"
-#include "video_util/sourceUtil.h"
-
-#ifdef __APPLE__
-#import <CoreFoundation/CoreFoundation.h>
-#define USE_VAO 1
-#endif
-
-// TODO: implement 3D CRT object, possibly with perspective drawing?
-#define PERSPECTIVE 0
-
-// VAO optimization (may not be available on all platforms)
-#ifdef ANDROID
-#warning YAY Awesome! Various older Android and Android-ish devices (*cough* Kindle *cough*) have buggy OpenGL VAO support, so do like Nancy and just say no
-#define USE_VAO 0
-#elif !defined(USE_VAO)
-#define USE_VAO 1
-#endif
-
-enum {
-    POS_ATTRIB_IDX,
-    TEXCOORD_ATTRIB_IDX,
-    NORMAL_ATTRIB_IDX,
-};
+#include "video/glanimation.h"
 
 bool safe_to_do_opengl_logging = false;
 
@@ -56,57 +31,42 @@ static int viewportHeight = SCANHEIGHT*1.5;
 static int adjustedHeight = 0;
 #endif
 
-static GLint uniformMVPIdx;
-static GLenum crtElementType;
-static GLuint crtNumElements;
+GLint uniformTex2Use = UNINITIALIZED_GL;
+GLint alphaValue = UNINITIALIZED_GL;
+static GLint uniformMVPIdx = UNINITIALIZED_GL;
+static GLenum crtElementType = UNINITIALIZED_GL;
+static GLuint crtNumElements = UNINITIALIZED_GL;
 
-static GLuint a2TextureName = 0;
-static GLuint defaultFBO = 0;
-static GLuint program = 0;
+static GLuint a2TextureName = UNINITIALIZED_GL;
+static GLuint defaultFBO = UNINITIALIZED_GL;
+static GLuint program = UNINITIALIZED_GL;
 
-static GLuint crtVAOName = 0;
-static GLuint posBufferName = 0;
-static GLuint texcoordBufferName;
-static GLuint elementBufferName = 0;
+static GLuint crtVAOName = UNINITIALIZED_GL;
+static GLuint posBufferName = UNINITIALIZED_GL;
+static GLuint texcoordBufferName = UNINITIALIZED_GL;
+static GLuint elementBufferName = UNINITIALIZED_GL;
 static demoModel *crtModel = NULL;
+
+static video_backend_s glvideo_backend = { 0 };
+
+#if USE_GLUT
+static int glutWindow = -1;
+#endif
 
 //----------------------------------------------------------------------------
 //
 // OpenGL helper routines
 //
 
-static inline GLsizei _get_gl_type_size(GLenum type) {
-    switch (type) {
-        case GL_BYTE:
-            return sizeof(GLbyte);
-        case GL_UNSIGNED_BYTE:
-            return sizeof(GLubyte);
-        case GL_SHORT:
-            return sizeof(GLshort);
-        case GL_UNSIGNED_SHORT:
-            return sizeof(GLushort);
-        case GL_INT:
-            return sizeof(GLint);
-        case GL_UNSIGNED_INT:
-            return sizeof(GLuint);
-        case GL_FLOAT:
-            return sizeof(GLfloat);
-    }
-    return 0;
-}
-
 static void _create_CRT_model(void) {
-#define STRIDE 9*sizeof(GLfloat)
-#define TEST_COLOR_OFF (GLvoid *)(3*sizeof(GLfloat))
-#define TEX_COORD_OFF (GLvoid *)(7*sizeof(GLfloat))
 
     // NOTE: vertices in Normalized Device Coordinates
     const GLfloat crt_positions[] = {
         // CRT screen quad
         -1.0, -1.0,  0.0, 1.0,
-        1.0, -1.0,  0.0, 1.0,
+         1.0, -1.0,  0.0, 1.0,
         -1.0,  1.0,  0.0, 1.0,
-        1.0,  1.0,  0.0, 1.0,
+         1.0,  1.0,  0.0, 1.0,
 #if PERSPECTIVE
         // CRT back side point
         0.0,  0.0, -1.0, 1.0,
@@ -289,8 +249,11 @@ static void _destroy_VAO(GLuint vaoName) {
     glDeleteVertexArrays(1, &vaoName);
 #else
     glDeleteBuffers(1, &posBufferName);
+    posBufferName = UNINITIALIZED_GL;
     glDeleteBuffers(1, &texcoordBufferName);
+    texcoordBufferName = UNINITIALIZED_GL;
     glDeleteBuffers(1, &elementBufferName);
+    elementBufferName = UNINITIALIZED_GL;
 #endif
 
     GL_ERRLOG("destroying VAO/VBOs");
@@ -301,6 +264,7 @@ static GLuint _create_CRT_texture(void) {
 
     // Create a texture object to apply to model
     glGenTextures(1, &texName);
+    glActiveTexture(TEXTURE_ACTIVE_FRAMEBUFFER);
     glBindTexture(GL_TEXTURE_2D, texName);
 
     // Set up filter and wrap modes for this texture object
@@ -498,11 +462,34 @@ static GLuint _build_program(demoSource *vertexSource, demoSource *fragmentSourc
     // Setup common program input points //
     ///////////////////////////////////////
 
-    GLint samplerLoc = glGetUniformLocation(prgName, "diffuseTexture");
+    GLint fbSamplerLoc = glGetUniformLocation(prgName, "framebufferTexture");
+    if (fbSamplerLoc < 0) {
+        LOG("OOPS, no framebufferTexture shader : %d", fbSamplerLoc);
+    } else {
+        glUniform1i(fbSamplerLoc, TEXTURE_ID_FRAMEBUFFER);
+    }
 
-    // Indicate that the diffuse texture will be bound to texture unit 0
-    GLint unit = 0;
-    glUniform1i(samplerLoc, unit);
+    GLint messageSamplerLoc = glGetUniformLocation(prgName, "messageTexture");
+    if (messageSamplerLoc < 0) {
+        LOG("OOPS, no messageSamplerLoc shader : %d", messageSamplerLoc);
+    } else {
+        glUniform1i(messageSamplerLoc, TEXTURE_ID_MESSAGE);
+    }
+
+    uniformMVPIdx = glGetUniformLocation(prgName, "modelViewProjectionMatrix");
+    if (uniformMVPIdx < 0) {
+        LOG("OOPS, no modelViewProjectionMatrix in shader : %d", uniformMVPIdx);
+    }
+
+    uniformTex2Use = glGetUniformLocation(prgName, "tex2Use");
+    if (uniformTex2Use < 0) {
+        LOG("OOPS, no texture selector in shader : %d", uniformTex2Use);
+    }
+
+    alphaValue = glGetUniformLocation(prgName, "aValue");
+    if (alphaValue < 0) {
+        LOG("OOPS, no texture selector in shader : %d", alphaValue);
+    }
 
     GL_ERRLOG("build program");
 
@@ -532,6 +519,8 @@ static demoSource *_create_shader_source(const char *fileName) {
 #endif
     return src;
 }
+
+static void gldriver_render(void);
 
 static void gldriver_init_common(void) {
     LOG("%s %s", glGetString(GL_RENDERER), glGetString(GL_VERSION));
@@ -578,11 +567,6 @@ static void gldriver_init_common(void) {
     srcDestroySource(vtxSource);
     srcDestroySource(frgSource);
 
-    uniformMVPIdx = glGetUniformLocation(program, "modelViewProjectionMatrix");
-    if (uniformMVPIdx < 0) {
-        LOG("No modelViewProjectionMatrix in character shader");
-    }
-
     // ----------------------------
     // setup static OpenGL state
 
@@ -593,13 +577,16 @@ static void gldriver_init_common(void) {
     glEnable(GL_CULL_FACE);
 
     // Always use this clear color
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     // Draw our scene once without presenting the rendered image.
     //   This is done in order to pre-warm OpenGL
     // We don't need to present the buffer since we don't actually want the
     //   user to see this, we're only drawing as a pre-warm stage
-    video_driver_render();
+    gldriver_render();
 
     // Check for errors to make sure all of our setup went ok
     GL_ERRLOG("finished initialization");
@@ -614,15 +601,19 @@ static void gldriver_init_common(void) {
 }
 
 static void gldriver_shutdown(void) {
+#if USE_GLUT
+    glutDestroyWindow(glutWindow);
+#endif
     // Cleanup all OpenGL objects
     glDeleteTextures(1, &a2TextureName);
-    a2TextureName = 0;
+    a2TextureName = UNINITIALIZED_GL;
     _destroy_VAO(crtVAOName);
-    crtVAOName = 0;
+    crtVAOName = UNINITIALIZED_GL;
     mdlDestroyModel(crtModel);
     crtModel = NULL;
     glDeleteProgram(program);
-    program = 0;
+    program = UNINITIALIZED_GL;
+    gldriver_animation_destroy();
 }
 
 //----------------------------------------------------------------------------
@@ -705,7 +696,9 @@ static void gldriver_render(void) {
         }
     }
 
+    glActiveTexture(TEXTURE_ACTIVE_FRAMEBUFFER);
     glBindTexture(GL_TEXTURE_2D, a2TextureName);
+    glUniform1i(uniformTex2Use, TEXTURE_ID_FRAMEBUFFER);
     if (_vid_dirty) {
         glTexImage2D(GL_TEXTURE_2D, /*level*/0, /*internal format*/GL_RGBA, SCANWIDTH, SCANHEIGHT, /*border*/0, /*format*/GL_RGBA, GL_UNSIGNED_BYTE, (GLvoid *)&pixels[0]);
     }
@@ -728,10 +721,10 @@ static void gldriver_render(void) {
                           crtModel->positionSize*posTypeSize,   // What is the stride (i.e. bytes between positions)?
                           0);                                   // What is the offset in the VBO to the position data?
     glEnableVertexAttribArray(POS_ATTRIB_IDX);
-    glBindBuffer(GL_ARRAY_BUFFER, texcoordBufferName);
 
     // Set up parmeters for texcoord attribute in the VAO including, size, type, stride, and offset in the currenly
     // bound VAO This also attaches the texcoord VBO to VAO
+    glBindBuffer(GL_ARRAY_BUFFER, texcoordBufferName);
     glVertexAttribPointer(TEXCOORD_ATTRIB_IDX,                      // What attibute index will this array feed in the vertex shader (see buildProgram)
                           crtModel->texcoordSize,                   // How many elements are there per texture coord?
                           crtModel->texcoordType,                   // What is the type of this data in the array?
@@ -739,21 +732,29 @@ static void gldriver_render(void) {
                           crtModel->texcoordSize*texcoordTypeSize,  // What is the stride (i.e. bytes between texcoords)?
                           0);                                       // What is the offset in the VBO to the texcoord data?
     glEnableVertexAttribArray(TEXCOORD_ATTRIB_IDX);
+
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBufferName);
 #endif
 
+    glUniform1f(alphaValue, 1.0);
+
     // Cull back faces now that we no longer render
     // with an inverted matrix
-    glCullFace(GL_BACK);
+    //glCullFace(GL_BACK);
 
-    // Draw the CRT object
+    // Draw the CRT object and others
     glDrawElements(GL_TRIANGLES, crtNumElements, crtElementType, 0);
+
+    // Prep any other objects/animations
+    gldriver_animation_render();
 
     _vid_dirty = false;
 
 #if USE_GLUT
     glutSwapBuffers();
 #endif
+
+    GL_ERRLOG("gldriver_render");
 }
 
 static void gldriver_reshape(int w, int h) {
@@ -801,7 +802,6 @@ static void gldriver_reshape(int w, int h) {
 }
 
 #if USE_GLUT
-static int glutWindow = -1;
 static void gldriver_init_glut(GLuint fbo) {
     glutInit(&argc, argv);
     glutInitDisplayMode(/*GLUT_DOUBLE|*/GLUT_RGBA|GLUT_DEPTH);
@@ -833,9 +833,9 @@ static void gldriver_init_glut(GLuint fbo) {
 #endif
 
 //----------------------------------------------------------------------------
-// renderer API
+// backend renderer API
 
-void video_driver_init(void *fbo) {
+static void gldriver_init(void *fbo) {
     safe_to_do_opengl_logging = true;
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpointer-to-int-cast"
@@ -850,26 +850,26 @@ void video_driver_init(void *fbo) {
 #else
 #error no working codepaths
 #endif
+    gldriver_animation_init();
 }
 
-void video_driver_main_loop(void) {
+static void gldriver_main_loop(void) {
 #if USE_GLUT
     glutMainLoop();
 #endif
+    // fall through if not GLUT
 }
 
-void video_driver_render(void) {
-    gldriver_render();
-}
+__attribute__((constructor))
+static void _init_glvideo(void) {
+    LOG("Initializing OpenGL renderer");
 
-void video_driver_reshape(int w, int h) {
-    gldriver_reshape(w, h);
-}
+    glvideo_backend.init      = &gldriver_init;
+    glvideo_backend.main_loop = &gldriver_main_loop;
+    glvideo_backend.reshape   = &gldriver_reshape;
+    glvideo_backend.render    = &gldriver_render;
+    glvideo_backend.shutdown  = &gldriver_shutdown;
 
-void video_driver_shutdown(void) {
-#if USE_GLUT
-    glutDestroyWindow(glutWindow);
-#endif
-    gldriver_shutdown();
+    video_backend = &glvideo_backend;
 }
 
