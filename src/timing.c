@@ -60,7 +60,11 @@ static int32_t cycles_checkpoint_count = 0;
 static unsigned int g_dwCyclesThisFrame = 0;
 
 // scaling and speed adjustments
+#if MOBILE_DEVICE
+static bool auto_adjust_speed = false;
+#else
 static bool auto_adjust_speed = true;
+#endif
 double cpu_scale_factor = 1.0;
 double cpu_altscale_factor = 1.0;
 bool is_fullspeed = false;
