@@ -25,6 +25,19 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
             signingConfig signingConfigs.release
         }
+        debug {
+            debuggable true
+        }
+    }
+    productFlavors {
+        demo {
+            applicationId "org.deadc0de.apple2ix.demo"
+            versionName "0.9.1-demo"
+        }
+        full {
+            applicationId "org.deadc0de.apple2ix.full"
+            versionName "0.9.1-full"
+        }
     }
 }
 
