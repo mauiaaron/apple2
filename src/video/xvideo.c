@@ -60,6 +60,10 @@ static int xshmeventtype;
 // pad pixels to uint32_t boundaries
 static int bitmap_pad = sizeof(uint32_t);
 
+static video_backend_s xvideo_backend = { 0 };
+
+volatile bool _vid_dirty = true;
+
 typedef struct {
     unsigned long flags;
     unsigned long functions;
@@ -492,7 +496,7 @@ void video_driver_sync(void) {
     }
 }
 
-void video_driver_main_loop(void) {
+static void xdriver_main_loop(void) {
     struct timespec sleeptime = { .tv_sec=0, .tv_nsec=8333333 }; // 120Hz
     do {
         video_driver_sync();
@@ -676,7 +680,7 @@ void video_set_mode(a2_video_mode_t mode) {
     _size_hints_set_fixed();
 }
 
-void video_driver_init(void *context) {
+static void xdriver_init(void *context) {
     XSetWindowAttributes attribs;
     unsigned long attribmask;
     int x, y;           /* window position */
@@ -908,7 +912,28 @@ void video_driver_init(void *context) {
 #endif
 }
 
-void video_driver_shutdown(void) {
+static void xdriver_shutdown(void) {
     _destroy_image();
+}
+
+static void xdriver_reshape(int width, int height) {
+    // no-op
+}
+
+static void xdriver_render(void) {
+    // no-op
+}
+
+__attribute__((constructor))
+static void _init_xvideo(void) {
+    LOG("Initializing X11 renderer");
+
+    xvideo_backend.init      = &xdriver_init;
+    xvideo_backend.main_loop = &xdriver_main_loop;
+    xvideo_backend.reshape   = &xdriver_reshape;
+    xvideo_backend.render    = &xdriver_render;
+    xvideo_backend.shutdown  = &xdriver_shutdown;
+
+    video_backend = &xvideo_backend;
 }
 
