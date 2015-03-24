@@ -61,6 +61,8 @@ static int xshmeventtype;
 static int bitmap_pad = sizeof(uint32_t);
 
 static video_backend_s xvideo_backend = { 0 };
+static bool request_set_mode = false;
+static int request_mode = 0;
 
 volatile bool _vid_dirty = true;
 
@@ -496,9 +498,15 @@ void video_driver_sync(void) {
     }
 }
 
+static void _redo_image(void);
+
 static void xdriver_main_loop(void) {
     struct timespec sleeptime = { .tv_sec=0, .tv_nsec=8333333 }; // 120Hz
     do {
+        if (request_set_mode) {
+            request_set_mode = false;
+            _redo_image();
+        }
         video_driver_sync();
         nanosleep(&sleeptime, NULL);
     } while (1);
@@ -625,8 +633,14 @@ static void _size_hints_set_resize() {
 }
 
 void video_set_mode(a2_video_mode_t mode) {
+    request_mode = mode;
+    request_set_mode = true;
+}
+
+static void _redo_image(void) {
     _destroy_image();
 
+    int mode = request_mode;
     scale = mode;
     if (mode == VIDEO_FULLSCREEN) {
         scale = 1; // HACK FIXME for now ................
