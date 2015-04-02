@@ -411,8 +411,8 @@ void c_interface_select_diskette( int drive )
                   "|                                      |",
                   "||||||||||||||||||||||||||||||||||||||||" };
 
-                submenu[ 2 ][ 14 ] = MOUSETEXT_BEGIN + 0x0b;
-                submenu[ 2 ][ 20 ] = MOUSETEXT_BEGIN + 0x0a;
+                submenu[ 2 ][ 14 ] = MOUSETEXT_UP;
+                submenu[ 2 ][ 20 ] = MOUSETEXT_DOWN;
                 c_interface_print_submenu_centered(submenu[0], DISKHELP_SUBMENU_W, DISKHELP_SUBMENU_H);
                 while ((ch = c_mygetch(1)) == -1)
                 {
@@ -602,8 +602,8 @@ void c_interface_parameters()
     cur_x = 0;
     video_setpage( 0 );
 
-    screen[ 2 ][ 33 ] = MOUSETEXT_BEGIN + 0x01;
-    screen[ 2 ][ 46 ] = MOUSETEXT_BEGIN + 0x00;
+    screen[ 2 ][ 33 ] = MOUSETEXT_OPENAPPLE;
+    screen[ 2 ][ 46 ] = MOUSETEXT_CLOSEDAPPLE;
 
     c_interface_translate_screen( screen );
     c_interface_print_screen( screen );
@@ -1018,10 +1018,10 @@ void c_interface_parameters()
               "| Ctrl-LeftAlt-End Reboots //e         |",
               "| Pause/Brk : Pause Emulator           |",
               "||||||||||||||||||||||||||||||||||||||||" };
-            submenu[ 1 ][ 14 ] = MOUSETEXT_BEGIN + 0x0b;
-            submenu[ 1 ][ 20 ] = MOUSETEXT_BEGIN + 0x0a;
-            submenu[ 3 ][ 14 ] = MOUSETEXT_BEGIN + 0x08;
-            submenu[ 3 ][ 20 ] = MOUSETEXT_BEGIN + 0x15;
+            submenu[ 1 ][ 14 ] = MOUSETEXT_UP;
+            submenu[ 1 ][ 20 ] = MOUSETEXT_DOWN;
+            submenu[ 3 ][ 14 ] = MOUSETEXT_LEFT;
+            submenu[ 3 ][ 20 ] = MOUSETEXT_RIGHT;
 
             c_interface_print_submenu_centered(submenu[0], MAINHELP_SUBMENU_W, MAINHELP_SUBMENU_H);
             while ((ch = c_mygetch(1)) == -1)
@@ -1192,11 +1192,11 @@ void c_interface_credits()
 #define SCROLL_AREA_Y 5
 #define SCROLL_AREA_HEIGHT 16
 
-    screen[ 2 ][ 33 ] = MOUSETEXT_BEGIN + 0x01;
-    screen[ 2 ][ 46 ] = MOUSETEXT_BEGIN + 0x00;
+    screen[ 2 ][ 33 ] = MOUSETEXT_OPENAPPLE;
+    screen[ 2 ][ 46 ] = MOUSETEXT_CLOSEDAPPLE;
 
-    screen[ 22 ][ 18 ] = MOUSETEXT_BEGIN + 0x0b;
-    screen[ 22 ][ 20 ] = MOUSETEXT_BEGIN + 0x0a;
+    screen[ 22 ][ 18 ] = MOUSETEXT_UP;
+    screen[ 22 ][ 20 ] = MOUSETEXT_DOWN;
 
 #define SCROLL_LENGTH 58
 #define SCROLL_WIDTH (INTERFACE_SCREEN_X+1-(SCROLL_AREA_X*2))
@@ -1354,15 +1354,15 @@ void c_interface_keyboard_layout()
 
     video_setpage( 0 );
 
-    screen[ 6 ][ 68 ] = MOUSETEXT_BEGIN + 0x0b;
-    screen[ 7 ][ 67 ] = MOUSETEXT_BEGIN + 0x08;
-    screen[ 7 ][ 69 ] = MOUSETEXT_BEGIN + 0x15;
-    screen[ 8 ][ 68 ] = MOUSETEXT_BEGIN + 0x0a;
+    screen[ 6 ][ 68 ] = MOUSETEXT_UP;
+    screen[ 7 ][ 67 ] = MOUSETEXT_LEFT;
+    screen[ 7 ][ 69 ] = MOUSETEXT_RIGHT;
+    screen[ 8 ][ 68 ] = MOUSETEXT_DOWN;
 
-    screen[ 8 ][ 25 ] = MOUSETEXT_BEGIN + 0x01;
-    screen[ 8 ][ 47 ] = MOUSETEXT_BEGIN + 0x00;
-    screen[ 11 ][ 14 ] = MOUSETEXT_BEGIN + 0x01;
-    screen[ 12 ][ 15 ] = MOUSETEXT_BEGIN + 0x00;
+    screen[ 8 ][ 25 ] = MOUSETEXT_OPENAPPLE;
+    screen[ 8 ][ 47 ] = MOUSETEXT_CLOSEDAPPLE;
+    screen[ 11 ][ 14 ] = MOUSETEXT_OPENAPPLE;
+    screen[ 12 ][ 15 ] = MOUSETEXT_CLOSEDAPPLE;
 
     c_interface_translate_screen(screen);
     c_interface_print_screen( screen );
