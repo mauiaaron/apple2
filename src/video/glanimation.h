@@ -14,14 +14,11 @@
 #ifndef _GLANIMATION_H_
 #define _GLANIMATION_H_
 
-typedef void (*glanim_ctor_fn)(void);
-typedef void (*glanim_dtor_fn)(void);
-typedef void (*glanim_render_fn)(void);
-
 typedef struct glanim_t {
-    glanim_ctor_fn ctor;
-    glanim_dtor_fn dtor;
-    glanim_render_fn render;
+    void (*ctor)(void);
+    void (*dtor)(void);
+    void (*render)(void);
+    void (*reshape)(int w, int h);
 } glanim_t;
 
 // register an animation
@@ -35,6 +32,9 @@ void gldriver_animation_destroy(void);
 
 // renders the animation
 void gldriver_animation_render(void);
+
+// renders the animation
+void gldriver_animation_reshape(int w, int h);
 
 #endif
 

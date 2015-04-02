@@ -15,6 +15,15 @@
 #include <jni.h>
 #include <math.h>
 
+enum {
+    ANDROID_ACTION_DOWN = 0x0,
+    ANDROID_ACTION_UP = 0x1,
+    ANDROID_ACTION_MOVE = 0x2,
+    ANDROID_ACTION_CANCEL = 0x3,
+    ANDROID_ACTION_POINTER_DOWN = 0x5,
+    ANDROID_ACTION_POINTER_UP = 0x6,
+};
+
 static bool nativePaused = false;
 
 #if TESTING
@@ -44,6 +53,26 @@ static bool _run_tests(void) {
 #endif
 }
 #endif
+
+static inline int _androidTouchEvent2JoystickEvent(jint action) {
+    switch (action) {
+        case ANDROID_ACTION_DOWN:
+            return TOUCH_DOWN;
+        case ANDROID_ACTION_MOVE:
+            return TOUCH_MOVE;
+        case ANDROID_ACTION_UP:
+            return TOUCH_UP;
+        case ANDROID_ACTION_POINTER_DOWN:
+            return TOUCH_POINTER_DOWN;
+        case ANDROID_ACTION_POINTER_UP:
+            return TOUCH_POINTER_UP;
+        case ANDROID_ACTION_CANCEL:
+            return TOUCH_CANCEL;
+        default:
+            LOG("Unknown Android event : %d", action);
+            return TOUCH_CANCEL;
+    }
+}
 
 void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnCreate(JNIEnv *env, jobject obj, jstring j_dataDir) {
     const char *dataDir = (*env)->GetStringUTFChars(env, j_dataDir, 0);
@@ -154,8 +183,23 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnKeyUp(JNIEnv *env, jobjec
 #endif
 }
 
-jboolean Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnTouch(JNIEnv *env, jobject obj, jint action, jfloat keyCode, jfloat metaState) {
-    return false;
+jboolean Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnTouch(JNIEnv *env, jobject obj, jint action, jint pointerCount, jint pointerIndex, jfloatArray xCoords, jfloatArray yCoords) {
+    //LOG("nativeOnTouch : %d/%d/%d :", action, pointerCount, pointerIndex);
+
+    jfloat *x_coords = (*env)->GetFloatArrayElements(env, xCoords, 0);
+    jfloat *y_coords = (*env)->GetFloatArrayElements(env, yCoords, 0);
+
+    int joyaction = _androidTouchEvent2JoystickEvent(action);
+
+    //for (unsigned int i=0; i<pointerCount; i++) {
+    //  LOG("\t[%f,%f]", x_coords[i], y_coords[i]);
+    //}
+
+    bool consumed = joydriver_onTouchEvent(joyaction, pointerCount, pointerIndex, x_coords, y_coords);
+
+    (*env)->ReleaseFloatArrayElements(env, xCoords, x_coords, 0);
+    (*env)->ReleaseFloatArrayElements(env, yCoords, y_coords, 0);
+    return consumed;
 }
 
 void Java_org_deadc0de_apple2ix_Apple2Activity_nativeIncreaseCPUSpeed(JNIEnv *env, jobject obj) {

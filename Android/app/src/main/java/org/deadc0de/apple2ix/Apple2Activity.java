@@ -37,6 +37,7 @@ public class Apple2Activity extends Activity {
     private final static int BUF_SZ = 4096;
     private final static String PREFS_CONFIGURED = "prefs_configured";
     private final static int SOFTKEYBOARD_THRESHOLD = 50;
+    private final static int MAX_FINGERS = 32;// HACK ...
 
     private Apple2View mView = null;
     private AlertDialog mQuitDialog = null;
@@ -47,6 +48,9 @@ public class Apple2Activity extends Activity {
     private int mWidth = 0;
     private int mHeight = 0;
     private boolean mSoftKeyboardShowing = false;
+
+    private float[] mXCoords = new float[MAX_FINGERS];
+    private float[] mYCoords = new float[MAX_FINGERS];
 
     static {
         System.loadLibrary("apple2ix");
@@ -63,7 +67,8 @@ public class Apple2Activity extends Activity {
     public native void nativeOnResume();
     public native void nativeOnPause();
     public native void nativeOnQuit();
-    public native boolean nativeOnTouch(int action, float x, float y);
+    public native boolean nativeOnTouch(int action, int pointerCount, int pointerIndex, float[] xCoords, float[] yCoords);
+
     public native void nativeReboot();
     public native void nativeRender();
 
@@ -238,6 +243,45 @@ public class Apple2Activity extends Activity {
         }
     }
 
+    private String actionToString(int action) {
+        switch (action) {
+            case MotionEvent.ACTION_CANCEL:
+                return "CANCEL:"+action;
+            case MotionEvent.ACTION_DOWN:
+                return "DOWN:"+action;
+            case MotionEvent.ACTION_MOVE:
+                return "MOVE:"+action;
+            case MotionEvent.ACTION_UP:
+                return "UP:"+action;
+            case MotionEvent.ACTION_POINTER_DOWN:
+                return "PDOWN:"+action;
+            case MotionEvent.ACTION_POINTER_UP:
+                return "PUP:"+action;
+            default:
+                return "UNK:"+action;
+        }
+    }
+
+    private void printSamples(MotionEvent ev) {
+        final int historySize = ev.getHistorySize();
+        final int pointerCount = ev.getPointerCount();
+
+        /*
+        for (int h = 0; h < historySize; h++) {
+            Log.d(TAG, "Event "+ev.getAction().toString()+" at historical time "+ev.getHistoricalEventTime(h)+" :");
+            for (int p = 0; p < pointerCount; p++) {
+                Log.d(TAG, "  pointer "+ev.getPointerId(p)+": ("+ev.getHistoricalX(p, h)+","+ev.getHistoricalY(p, h)+")");
+            }
+        }
+        */
+        int pointerIndex = ev.getActionIndex();
+
+        Log.d(TAG, "Event "+actionToString(ev.getActionMasked())+" for "+pointerIndex+" at time "+ev.getEventTime()+" :");
+        for (int p=0; p<pointerCount; p++) {
+            Log.d(TAG, "  pointer "+ev.getPointerId(p)+": ("+ev.getX(p)+","+ev.getY(p)+")");
+        }
+    }
+
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         do {
@@ -251,16 +295,21 @@ public class Apple2Activity extends Activity {
                 break;
             }
 
+            printSamples(event);
             int action = event.getActionMasked();
-            float x = event.getX();
-            float y = event.getY();
+            int pointerIndex = event.getActionIndex();
+            int pointerCount = event.getPointerCount();
+            for (int i=0; i<pointerCount/* && i < MAX_FINGERS */; i++) {
+                mXCoords[i] = event.getX(i);
+                mYCoords[i] = event.getY(i);
+            }
 
-            boolean nativeHandled = nativeOnTouch(action, x, y);
+            boolean nativeHandled = nativeOnTouch(action, pointerCount, pointerIndex, mXCoords, mYCoords);
             if (nativeHandled) {
                 break;
             }
 
-            this.mDetector.onTouchEvent(event);
+            //this.mDetector.onTouchEvent(event);
         } while (false);
 
         return super.onTouchEvent(event);

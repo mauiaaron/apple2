@@ -48,10 +48,10 @@ static glanim_t cpuMessageAnimation = { 0 };
 static void _create_message_model(void) {
 
     const GLfloat messageObj_positions[] = {
-        -0.3, -0.3, -0.1, 1.0,
-         0.3, -0.3, -0.1, 1.0,
-        -0.3,  0.3, -0.1, 1.0,
-         0.3,  0.3, -0.1, 1.0,
+        -0.3, -0.3, -0.0625, 1.0,
+         0.3, -0.3, -0.0625, 1.0,
+        -0.3,  0.3, -0.0625, 1.0,
+         0.3,  0.3, -0.0625, 1.0,
     };
     const GLfloat messageObj_texcoords[] = {
         0.0, 1.0,
@@ -349,6 +349,10 @@ static void cpuanim_render(void) {
     _render_message_object(alpha, cpuMessageObjVAOName, cpuMessageObjPosBufferName, cpuMessageObjTexcoordBufferName, cpuMessageObjElementBufferName);
 }
 
+static void cpuanim_reshape(int w, int h) {
+    // no-op
+}
+
 static void cpuanim_show(void) {
     if (!animation_subsystem_functional) {
         return;
@@ -403,6 +407,7 @@ static void _init_glcpuanim(void) {
     cpuMessageAnimation.ctor = &cpuanim_init;
     cpuMessageAnimation.dtor = &cpuanim_destroy;
     cpuMessageAnimation.render = &cpuanim_render;
+    cpuMessageAnimation.reshape = &cpuanim_reshape;
     gldriver_register_animation(&cpuMessageAnimation);
 }
 

@@ -9,13 +9,6 @@
  *
  */
 
-/*
- * 65c02 CPU Timing Support.
- *
- * Copyleft 2013 Aaron Culliney
- *
- */
-
 #ifndef _JOYSTICK_H_
 #define _JOYSTICK_H_
 
@@ -38,5 +31,41 @@ void c_joystick_reset(void);
 #ifdef INTERFACE_CLASSIC
 void c_calibrate_joystick(void);
 #endif
+
+#if TOUCH_JOYSTICK
+
+typedef enum joystick_touch_event_t {
+    TOUCH_CANCEL = 0,
+    TOUCH_DOWN,
+    TOUCH_MOVE,
+    TOUCH_UP,
+    TOUCH_POINTER_DOWN,
+    TOUCH_POINTER_UP,
+} joystick_touch_event_t;
+
+typedef enum touchjoy_axis_type_t {
+    AXIS_EMULATED_DEVICE = 0,   // touch joystick axes emulate a physical joystick device
+    AXIS_EMULATED_KEYBOARD,     // touch joystick axes send single key events
+} touchjoy_axis_type_t;
+
+// handle touch event
+extern bool (*joydriver_onTouchEvent)(joystick_touch_event_t action, int pointer_count, int pointer_idx, float *x_coords, float *y_coords);
+
+// is the touch joystick available
+extern bool (*joydriver_isTouchJoystickAvailable)(void);
+
+// enable/disable touch joystick
+extern void (*joydriver_setTouchJoyEnabled)(bool enabled);
+
+// set the joystick button parameters (7bit ASCII characters or MOUSETEXT values)
+extern void (*joydriver_setTouchButtonValues)(char button0Val, char button1Val);
+
+// set the axis type
+extern void (*joydriver_setTouchAxisType)(touchjoy_axis_type_t axisType);
+
+// set the axis button parameters (7bit ASCII characters or MOUSETEXT values)
+extern void (*joydriver_setTouchAxisValues)(char up, char left, char right, char down);
+
+#endif // TOUCH_JOYSTICK
 
 #endif // whole file

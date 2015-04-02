@@ -74,3 +74,11 @@ void gldriver_animation_render(void) {
     }
 }
 
+void gldriver_animation_reshape(int w, int h) {
+    glanim_array_node_t *p = animations;
+    while (p) {
+        p->anim->reshape(w, h);
+        p = p->next;
+    }
+}
+

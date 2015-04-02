@@ -476,6 +476,22 @@ static GLuint _build_program(demoSource *vertexSource, demoSource *fragmentSourc
         glUniform1i(messageSamplerLoc, TEXTURE_ID_MESSAGE);
     }
 
+#if TOUCH_JOYSTICK
+    GLint axisSamplerLoc = glGetUniformLocation(prgName, "axisTexture");
+    if (axisSamplerLoc < 0) {
+        LOG("OOPS, no axisSamplerLoc shader : %d", axisSamplerLoc);
+    } else {
+        glUniform1i(axisSamplerLoc, TEXTURE_ID_TOUCHJOY_AXIS);
+    }
+
+    GLint buttonSamplerLoc = glGetUniformLocation(prgName, "buttonTexture");
+    if (buttonSamplerLoc < 0) {
+        LOG("OOPS, no buttonSamplerLoc shader : %d", buttonSamplerLoc);
+    } else {
+        glUniform1i(buttonSamplerLoc, TEXTURE_ID_TOUCHJOY_BUTTON);
+    }
+#endif
+
     uniformMVPIdx = glGetUniformLocation(prgName, "modelViewProjectionMatrix");
     if (uniformMVPIdx < 0) {
         LOG("OOPS, no modelViewProjectionMatrix in shader : %d", uniformMVPIdx);
@@ -799,6 +815,9 @@ static void gldriver_reshape(int w, int h) {
 #endif
 
     glViewport(viewportX, viewportY, viewportWidth, viewportHeight);
+
+    // Prep any other objects/animations
+    gldriver_animation_reshape(w, h);
 }
 
 #if USE_GLUT

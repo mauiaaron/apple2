@@ -30,21 +30,37 @@ uniform sampler2D framebufferTexture;
 // Floating message
 uniform sampler2D messageTexture;
 
+// Joystick axis
+uniform sampler2D axisTexture;
+
+// Joystick buttons
+uniform sampler2D buttonTexture;
+
 #if __VERSION__ >= 140
 #define OUTPUT_TEXTURE(TEX) \
         vec4 tex = texture(TEX, varTexcoord.st, 0.0); \
-        fragColor = vec4(tex.r, tex.g, tex.b, 1.0*aValue)
+        fragColor = vec4(tex.r, tex.g, tex.b, tex.a*aValue)
+#define OUTPUT_RED() \
+        fragColor = vec4(1.0, 0.0, 0.0, 1.0)
 #else
 #define OUTPUT_TEXTURE(TEX) \
         vec4 tex = texture2D(TEX, varTexcoord.st, 0.0); \
-        gl_FragColor = vec4(tex.r, tex.g, tex.b, 1.0*aValue)
+        gl_FragColor = vec4(tex.r, tex.g, tex.b, tex.a*aValue)
+#define OUTPUT_RED() \
+        gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0)
 #endif
 
 void main(void)
 {
-    if (tex2Use == 1) {
-        OUTPUT_TEXTURE(messageTexture);
-    } else {
+    if (tex2Use == 0) {
         OUTPUT_TEXTURE(framebufferTexture);
+    } else if (tex2Use == 1) {
+        OUTPUT_TEXTURE(messageTexture);
+    } else if (tex2Use == 2) {
+        OUTPUT_TEXTURE(axisTexture);
+    } else if (tex2Use == 3) {
+        OUTPUT_TEXTURE(buttonTexture);
+    } else {
+        //OUTPUT_RED(); -- WTF is this failing?
     }
 }

@@ -219,15 +219,7 @@ static void c_calibrate_keypad_joystick()
     }
 }
 #endif // KEYPAD_JOYSTICK
-#endif // INTERFACE_CLASSIC
 
-#ifdef TOUCH_JOYSTICK
-// TBD ...
-#endif
-
-/* ---------------------------------------------------------------------- */
-
-#ifdef INTERFACE_CLASSIC
 void c_calibrate_joystick()
 {
     if (joy_mode == JOY_PCJOY)
@@ -245,7 +237,7 @@ void c_calibrate_joystick()
 #endif // INTERFACE_CLASSIC
 
 extern void gldriver_joystick_reset(void);
-void c_joystick_reset()
+void c_joystick_reset(void)
 {
 #if VIDEO_OPENGL && !TESTING
     if (!is_headless) {
@@ -263,4 +255,24 @@ void c_joystick_reset()
     }
 #endif
 }
+
+#if TOUCH_JOYSTICK
+bool (*joydriver_onTouchEvent)(joystick_touch_event_t action, int pointer_count, int pointer_idx, float *x_coords, float *y_coords) = NULL;
+
+// is the touch joystick available
+bool (*joydriver_isTouchJoystickAvailable)(void) = NULL;
+
+// enable/disable touch joystick
+void (*joydriver_setTouchJoyEnabled)(bool enabled) = NULL;
+
+// set the joystick button parameters (7bit ASCII characters or MOUSETEXT values)
+void (*joydriver_setTouchButtonValues)(char button0Val, char button1Val) = NULL;
+
+// set the axis type
+void (*joydriver_setTouchAxisType)(touchjoy_axis_type_t axisType) = NULL;
+
+// set the axis button parameters (7bit ASCII characters or MOUSETEXT values)
+void (*joydriver_setTouchAxisValues)(char up, char left, char right, char down) = NULL;
+
+#endif
 
