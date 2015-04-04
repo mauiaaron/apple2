@@ -44,8 +44,8 @@ typedef enum joystick_touch_event_t {
 } joystick_touch_event_t;
 
 typedef enum touchjoy_axis_type_t {
-    AXIS_EMULATED_DEVICE = 0,   // touch joystick axes emulate a physical joystick device
-    AXIS_EMULATED_KEYBOARD,     // touch joystick axes send single key events
+    AXIS_EMULATED_DEVICE = 0,   // touch joystick axis emulate a physical joystick device
+    AXIS_EMULATED_KEYBOARD,     // touch joystick axis send single key events
 } touchjoy_axis_type_t;
 
 // handle touch event
