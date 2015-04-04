@@ -273,7 +273,7 @@ static void cpuanim_destroy(void) {
     cpuMessageObjModel = NULL;
 }
 
-static void _render_message_object(GLfloat alpha, GLuint vaoName, GLuint posBufferName, GLuint texcoordBufferName, GLuint elementBufferName) {
+static void _render_message_object(GLuint vaoName, GLuint posBufferName, GLuint texcoordBufferName, GLuint elementBufferName) {
 
     // Bind our vertex array object
 #if USE_VAO
@@ -308,8 +308,6 @@ static void _render_message_object(GLfloat alpha, GLuint vaoName, GLuint posBuff
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBufferName);
 #endif
 
-    glUniform1f(alphaValue, alpha);
-
     // Draw the message object
     glDrawElements(GL_TRIANGLES, cpuMessageObjNumElements, cpuMessageObjElementType, 0);
     GL_ERRLOG("CPU message render");
@@ -338,6 +336,7 @@ static void cpuanim_render(void) {
         }
     }
     //LOG("alpha : %f", alpha);
+    glUniform1f(alphaValue, alpha);
 
     glActiveTexture(TEXTURE_ACTIVE_MESSAGE);
     glBindTexture(GL_TEXTURE_2D, cpuMessageObjTextureName);
@@ -346,7 +345,7 @@ static void cpuanim_render(void) {
         glTexImage2D(GL_TEXTURE_2D, /*level*/0, /*internal format*/GL_RGBA, MESSAGE_FB_WIDTH, MESSAGE_FB_HEIGHT, /*border*/0, /*format*/GL_RGBA, GL_UNSIGNED_BYTE, (GLvoid *)cpuMessagePixels);
     }
     glUniform1i(uniformTex2Use, TEXTURE_ID_MESSAGE);
-    _render_message_object(alpha, cpuMessageObjVAOName, cpuMessageObjPosBufferName, cpuMessageObjTexcoordBufferName, cpuMessageObjElementBufferName);
+    _render_message_object(cpuMessageObjVAOName, cpuMessageObjPosBufferName, cpuMessageObjTexcoordBufferName, cpuMessageObjElementBufferName);
 }
 
 static void cpuanim_reshape(int w, int h) {
