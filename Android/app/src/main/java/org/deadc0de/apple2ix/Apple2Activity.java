@@ -295,7 +295,7 @@ public class Apple2Activity extends Activity {
                 break;
             }
 
-            printSamples(event);
+            //printSamples(event);
             int action = event.getActionMasked();
             int pointerIndex = event.getActionIndex();
             int pointerCount = event.getPointerCount();
@@ -309,7 +309,7 @@ public class Apple2Activity extends Activity {
                 break;
             }
 
-            //this.mDetector.onTouchEvent(event);
+            this.mDetector.onTouchEvent(event);
         } while (false);
 
         return super.onTouchEvent(event);
@@ -326,6 +326,9 @@ public class Apple2Activity extends Activity {
 
         @Override
         public boolean onFling(MotionEvent event1, MotionEvent event2, float velocityX, float velocityY) {
+            if ((event1 == null) || (event2 == null)) {
+                return false;
+            }
             if (mSwipeTogglesSpeed) {
                 float ev1X = event1.getX();
                 float ev2X = event2.getX();
@@ -340,6 +343,9 @@ public class Apple2Activity extends Activity {
 
         @Override
         public boolean onSingleTapConfirmed(MotionEvent event) {
+            if (event == null) {
+                return false;
+            }
             Log.d(TAG, "onSingleTapConfirmed: " + event.toString());
             Apple2MainMenu mainMenu = Apple2Activity.this.mView.getMainMenu();
             if (mainMenu.isShowing()) {
@@ -357,6 +363,9 @@ public class Apple2Activity extends Activity {
 
         @Override
         public boolean onDoubleTap(MotionEvent event) {
+            if (event == null) {
+                return false;
+            }
             if (mDoubleTapShowsKeyboard) {
                 Log.d(TAG, "onDoubleTap: " + event.toString());
                 if (!Apple2Activity.this.isSoftKeyboardShowing()) {
