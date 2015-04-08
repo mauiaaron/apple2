@@ -66,17 +66,6 @@ public class Apple2MainMenu {
                 mainMenu.showDisksMenu();
             }
         },
-        QUIT_EMULATOR {
-            @Override public String getTitle(Context ctx) {
-                return ctx.getResources().getString(R.string.quit);
-            }
-            @Override public String getSummary(Context ctx) {
-                return ctx.getResources().getString(R.string.quit_summary);
-            }
-            @Override public void handleSelection(Apple2MainMenu mainMenu) {
-                mainMenu.mActivity.maybeQuitApp();
-            }
-        },
         REBOOT_EMULATOR {
             @Override public String getTitle(Context ctx) {
                 return ctx.getResources().getString(R.string.reboot);
@@ -86,6 +75,17 @@ public class Apple2MainMenu {
             }
             @Override public void handleSelection(Apple2MainMenu mainMenu) {
                 mainMenu.mActivity.maybeReboot();
+            }
+        },
+        QUIT_EMULATOR {
+            @Override public String getTitle(Context ctx) {
+                return ctx.getResources().getString(R.string.quit);
+            }
+            @Override public String getSummary(Context ctx) {
+                return ctx.getResources().getString(R.string.quit_summary);
+            }
+            @Override public void handleSelection(Apple2MainMenu mainMenu) {
+                mainMenu.mActivity.maybeQuitApp();
             }
         };
 
