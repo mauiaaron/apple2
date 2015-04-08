@@ -39,6 +39,8 @@ public class Apple2Activity extends Activity {
     private final static int SOFTKEYBOARD_THRESHOLD = 50;
     private final static int MAX_FINGERS = 32;// HACK ...
 
+    private String mDataDir = null;
+
     private Apple2View mView = null;
     private AlertDialog mQuitDialog = null;
     private AlertDialog mRebootDialog = null;
@@ -77,6 +79,7 @@ public class Apple2Activity extends Activity {
 
     public native void nativeEnableTouchJoystick(boolean visibility);
     public native void nativeSetColor(int color);
+    public native void nativeChooseDisk(String path, boolean driveA, boolean readOnly);
 
 
     // HACK NOTE 2015/02/22 : Apparently native code cannot easily access stuff in the APK ... so copy various resources
@@ -152,8 +155,8 @@ public class Apple2Activity extends Activity {
         super.onCreate(savedInstanceState);
         Log.e(TAG, "onCreate()");
 
-        String dataDir = firstTimeInitialization();
-        nativeOnCreate(dataDir);
+        mDataDir = firstTimeInitialization();
+        nativeOnCreate(mDataDir);
 
         mView = new Apple2View(this);
         setContentView(mView);
@@ -214,8 +217,12 @@ public class Apple2Activity extends Activity {
         }
 
         Apple2SettingsMenu settingsMenu = mView.getSettingsMenu();
+        Apple2DisksMenu disksMenu = mView.getDisksMenu();
         if (settingsMenu != null) {
             settingsMenu.dismissWithoutResume();
+        }
+        if (disksMenu != null) {
+            disksMenu.dismissWithoutResume();
         }
 
         boolean someMenuShowing = mainMenu.isShowing() ||
@@ -237,9 +244,12 @@ public class Apple2Activity extends Activity {
     public boolean onKeyUp(int keyCode, KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_BACK) {
             Apple2SettingsMenu settingsMenu = mView.getSettingsMenu();
+            Apple2DisksMenu disksMenu = mView.getDisksMenu();
             if (settingsMenu != null) {
                 if (settingsMenu.isShowing()) {
                     settingsMenu.dismiss();
+                } else if (disksMenu.isShowing()) {
+                    disksMenu.dismiss();
                 } else {
                     mView.showMainMenu();
                 }
@@ -304,7 +314,11 @@ public class Apple2Activity extends Activity {
             }
 
             Apple2SettingsMenu settingsMenu = mainMenu.getSettingsMenu();
+            Apple2DisksMenu disksMenu = mView.getDisksMenu();
             if (settingsMenu != null && settingsMenu.isShowing()) {
+                break;
+            }
+            if (disksMenu != null && disksMenu.isShowing()) {
                 break;
             }
 
@@ -394,6 +408,14 @@ public class Apple2Activity extends Activity {
         mWidth = width;
         mHeight = height;
         nativeGraphicsInitialized(width, height);
+    }
+
+    public Apple2View getView() {
+        return mView;
+    }
+
+    public String getDataDir() {
+        return mDataDir;
     }
 
     public int getWidth() {

@@ -15,6 +15,10 @@
     <string name="configure_joystick_summary">TouchJoy axis and buttons, hitboxes, etc</string>
     <string name="configure_video">Configure video…</string>
     <string name="configure_video_summary">Color settings</string>
+    <string name="diskA">Drive 1</string>
+    <string name="diskB">Drive 2</string>
+    <string name="disk_read_write">Read/write</string>
+    <string name="header_disks">Insert disk:</string>
     <string name="joystick">Joystick</string>
     <string name="joystick_keyA">Key Joystick 1</string>
     <string name="joystick_keyB">Key Joystick 2</string>

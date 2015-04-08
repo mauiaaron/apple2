@@ -276,3 +276,23 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeSetColor(JNIEnv *env, jobje
     video_redraw();
 }
 
+void Java_org_deadc0de_apple2ix_Apple2Activity_nativeChooseDisk(JNIEnv *env, jobject obj, jstring jPath, jboolean driveA, jboolean readOnly) {
+    const char *path = (*env)->GetStringUTFChars(env, jPath, 0);
+    int drive = driveA ? 0 : 1;
+    int ro = readOnly ? 1 : 0;
+    LOG("nativeChooseDisk(%s, %s, %s)", path, driveA ? "drive A" : "drive B", readOnly ? "read only" : "read/write");
+    if (c_new_diskette_6(drive, path, ro)) {
+        char *gzPath = NULL;
+        asprintf(&gzPath, "%s.gz", path);
+        if (c_new_diskette_6(drive, gzPath, ro)) {
+            // TODO FIXME : show error message disk was unreadable ...
+        } else {
+            // TODO FIXME : show an OpenGL message that the disk was chosen ...
+        }
+        FREE(gzPath);
+    } else {
+        // TODO FIXME : show an OpenGL message that the disk was chosen ...
+    }
+    (*env)->ReleaseStringUTFChars(env, jPath, path);
+}
+

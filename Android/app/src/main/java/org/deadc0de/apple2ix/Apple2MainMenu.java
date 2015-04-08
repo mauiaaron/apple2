@@ -35,6 +35,7 @@ public class Apple2MainMenu {
     private Apple2View mParentView = null;
     private PopupWindow mMainMenuPopup = null;
     private Apple2SettingsMenu mSettingsMenu = null;
+    private Apple2DisksMenu mDisksMenu = null;
 
     public Apple2MainMenu(Apple2Activity activity, Apple2View parent) {
         mActivity = activity;
@@ -161,7 +162,8 @@ public class Apple2MainMenu {
         mMainMenuPopup.setOnDismissListener(new PopupWindow.OnDismissListener() {
             @Override
             public void onDismiss() {
-                if ( !(getSettingsMenu().isShowing() /*|| getDisksMenu().isShowing()*/) ) {
+                boolean otherMenusShowing = (getSettingsMenu().isShowing() || getDisksMenu().isShowing());
+                if (!otherMenusShowing) {
                     Apple2MainMenu.this.mActivity.nativeOnResume();
                 }
             }
@@ -169,13 +171,22 @@ public class Apple2MainMenu {
     }
 
     public void showDisksMenu() {
-        Log.d(TAG, "showDisksMenu...");
+        Apple2DisksMenu disksMenu = getDisksMenu();
+        disksMenu.show();
+        mMainMenuPopup.dismiss();
     }
 
     public void showSettings() {
         Apple2SettingsMenu settings = getSettingsMenu();
         settings.show();
         mMainMenuPopup.dismiss();
+    }
+
+    public synchronized Apple2DisksMenu getDisksMenu() {
+        if (mDisksMenu == null) {
+            mDisksMenu = new Apple2DisksMenu(mActivity, mParentView);
+        }
+        return mDisksMenu;
     }
 
     public synchronized Apple2SettingsMenu getSettingsMenu() {

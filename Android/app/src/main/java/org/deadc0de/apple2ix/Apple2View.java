@@ -93,7 +93,8 @@ class Apple2View extends GLSurfaceView {
     public void showMainMenu() {
         if (mMainMenu != null) {
             Apple2SettingsMenu settingsMenu = mMainMenu.getSettingsMenu();
-            if (!settingsMenu.isShowing()) {
+            Apple2DisksMenu disksMenu = mMainMenu.getDisksMenu();
+            if (! (settingsMenu.isShowing() || disksMenu.isShowing()) ) {
                 mMainMenu.show();
             }
         }
@@ -105,6 +106,10 @@ class Apple2View extends GLSurfaceView {
 
     public Apple2SettingsMenu getSettingsMenu() {
         return (mMainMenu == null) ? null : mMainMenu.getSettingsMenu();
+    }
+
+    public Apple2DisksMenu getDisksMenu() {
+        return (mMainMenu == null) ? null : mMainMenu.getDisksMenu();
     }
 
     public void toggleKeyboard() {
