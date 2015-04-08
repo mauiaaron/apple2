@@ -263,3 +263,16 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeDecreaseCPUSpeed(JNIEnv *en
     pthread_mutex_unlock(&interface_mutex);
 }
 
+void Java_org_deadc0de_apple2ix_Apple2Activity_nativeSetColor(JNIEnv *env, jobject obj, jint color) {
+    LOG("native set color : %d", color);
+    if (color < COLOR_NONE || color > COLOR_INTERP) {
+        return;
+    }
+    color_mode = color;
+
+#warning HACK TODO FIXME need to refactor video resetting procedure
+    video_set(0);
+    video_setpage(!!(softswitches & SS_SCREEN));
+    video_redraw();
+}
+

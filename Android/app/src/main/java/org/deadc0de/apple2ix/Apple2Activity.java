@@ -41,9 +41,11 @@ public class Apple2Activity extends Activity {
 
     private Apple2View mView = null;
     private AlertDialog mQuitDialog = null;
+    private AlertDialog mRebootDialog = null;
     private GestureDetector mDetector = null;
     private boolean mSwipeTogglesSpeed = true;
     private boolean mDoubleTapShowsKeyboard = true;
+    private boolean mSingleTapShowsMainMenu = true;
 
     private int mWidth = 0;
     private int mHeight = 0;
@@ -67,10 +69,15 @@ public class Apple2Activity extends Activity {
     public native void nativeOnResume();
     public native void nativeOnPause();
     public native void nativeOnQuit();
+
     public native boolean nativeOnTouch(int action, int pointerCount, int pointerIndex, float[] xCoords, float[] yCoords);
 
     public native void nativeReboot();
     public native void nativeRender();
+
+    public native void nativeEnableTouchJoystick(boolean visibility);
+    public native void nativeSetColor(int color);
+
 
     // HACK NOTE 2015/02/22 : Apparently native code cannot easily access stuff in the APK ... so copy various resources
     // out of the APK and into the /data/data/... for ease of access.  Because this is FOSS software we don't care about
@@ -179,7 +186,9 @@ public class Apple2Activity extends Activity {
 
         boolean noMenusShowing = !(
                 (mainMenu != null && mainMenu.isShowing()) ||
-                (mQuitDialog != null && mQuitDialog.isShowing()) );
+                (mQuitDialog != null && mQuitDialog.isShowing()) ||
+                (mRebootDialog != null && mRebootDialog.isShowing())
+        );
 
         if (noMenusShowing) {
             nativeOnResume();
@@ -209,9 +218,11 @@ public class Apple2Activity extends Activity {
             settingsMenu.dismissWithoutResume();
         }
 
-        if (mainMenu.isShowing() || (mQuitDialog != null && mQuitDialog.isShowing())) {
-            // this is a good paused state
-        } else {
+        boolean someMenuShowing = mainMenu.isShowing() ||
+                (mQuitDialog != null && mQuitDialog.isShowing()) ||
+                (mRebootDialog != null && mRebootDialog.isShowing());
+        if (!someMenuShowing) {
+            // show main menu on pause
             mView.showMainMenu();
         }
     }
@@ -226,10 +237,12 @@ public class Apple2Activity extends Activity {
     public boolean onKeyUp(int keyCode, KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_BACK) {
             Apple2SettingsMenu settingsMenu = mView.getSettingsMenu();
-            if (settingsMenu != null && settingsMenu.isShowing()) {
-                settingsMenu.dismiss();
-            } else {
-                maybeQuitApp();
+            if (settingsMenu != null) {
+                if (settingsMenu.isShowing()) {
+                    settingsMenu.dismiss();
+                } else {
+                    mView.showMainMenu();
+                }
             }
             return true;
         } else if (keyCode == KeyEvent.KEYCODE_MENU) {
@@ -354,7 +367,7 @@ public class Apple2Activity extends Activity {
             } else if (Apple2Activity.this.isSoftKeyboardShowing()) {
                 Log.d(TAG, "hiding keyboard");
                 Apple2Activity.this.mView.toggleKeyboard();
-            } else {
+            } else if (mSingleTapShowsMainMenu) {
                 Log.d(TAG, "showing main menu");
                 Apple2Activity.this.mView.showMainMenu();
             }
@@ -398,13 +411,13 @@ public class Apple2Activity extends Activity {
     public void maybeQuitApp() {
         nativeOnPause();
         if (mQuitDialog == null) {
-            mQuitDialog = new AlertDialog.Builder(this).setCancelable(true).setMessage(R.string.quit).setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+            mQuitDialog = new AlertDialog.Builder(this).setIcon(R.drawable.ic_launcher).setCancelable(true).setTitle(R.string.quit_really).setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
                     nativeOnQuit();
                 }
             }).setNegativeButton(R.string.no, null).create();
-            mQuitDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+            /*mQuitDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
                 @Override
                 public void onCancel(DialogInterface dialog) {
                     nativeOnResume();
@@ -415,13 +428,43 @@ public class Apple2Activity extends Activity {
                 public void onDismiss(DialogInterface dialog) {
                     nativeOnResume();
                 }
-            });
+            });*/
         }
         mQuitDialog.show();
     }
 
+    public void maybeReboot() {
+        nativeOnPause();
+        if (mRebootDialog == null) {
+            mRebootDialog = new AlertDialog.Builder(this).setIcon(R.drawable.ic_launcher).setCancelable(true).setTitle(R.string.reboot_really).setMessage(R.string.reboot_warning).setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    nativeReboot();
+                    Apple2Activity.this.mView.getMainMenu().dismiss();
+                }
+            }).setNegativeButton(R.string.no, null).create();
+            /*mRebootDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+                @Override
+                public void onCancel(DialogInterface dialog) {
+                    nativeOnResume();
+                }
+            });
+            mRebootDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
+                @Override
+                public void onDismiss(DialogInterface dialog) {
+                    nativeOnResume();
+                }
+            });*/
+        }
+        mRebootDialog.show();
+    }
+
     public void setSwipeTogglesSpeed(boolean swipeTogglesSpeed) {
         mSwipeTogglesSpeed = swipeTogglesSpeed;
+    }
+
+    public void setSingleTapShowsMainMenu(boolean singleTapShowsMainMenu) {
+        mSingleTapShowsMainMenu = singleTapShowsMainMenu;
     }
 
     public void setDoubleTapShowsKeyboard(boolean doubleTapShowsKeyboard) {

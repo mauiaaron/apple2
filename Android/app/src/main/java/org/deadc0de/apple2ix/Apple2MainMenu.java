@@ -18,11 +18,13 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.PopupWindow;
+import android.widget.TextView;
 
 public class Apple2MainMenu {
 
@@ -40,6 +42,66 @@ public class Apple2MainMenu {
         setup();
     }
 
+    enum SETTINGS {
+        SHOW_SETTINGS {
+            @Override public String getTitle(Context ctx) {
+                return ctx.getResources().getString(R.string.menu_settings);
+            }
+            @Override public String getSummary(Context ctx) {
+                return ctx.getResources().getString(R.string.menu_settings_summary);
+            }
+            @Override public void handleSelection(Apple2MainMenu mainMenu) {
+                mainMenu.showSettings();
+            }
+        },
+        LOAD_DISK {
+            @Override public String getTitle(Context ctx) {
+                return ctx.getResources().getString(R.string.menu_disks);
+            }
+            @Override public String getSummary(Context ctx) {
+                return ctx.getResources().getString(R.string.menu_disks_summary);
+            }
+            @Override public void handleSelection(Apple2MainMenu mainMenu) {
+                mainMenu.showDisksMenu();
+            }
+        },
+        QUIT_EMULATOR {
+            @Override public String getTitle(Context ctx) {
+                return ctx.getResources().getString(R.string.quit);
+            }
+            @Override public String getSummary(Context ctx) {
+                return ctx.getResources().getString(R.string.quit_summary);
+            }
+            @Override public void handleSelection(Apple2MainMenu mainMenu) {
+                mainMenu.mActivity.maybeQuitApp();
+            }
+        },
+        REBOOT_EMULATOR {
+            @Override public String getTitle(Context ctx) {
+                return ctx.getResources().getString(R.string.reboot);
+            }
+            @Override public String getSummary(Context ctx) {
+                return ctx.getResources().getString(R.string.reboot_summary);
+            }
+            @Override public void handleSelection(Apple2MainMenu mainMenu) {
+                mainMenu.mActivity.maybeReboot();
+            }
+        };
+
+        public abstract String getTitle(Context ctx);
+        public abstract String getSummary(Context ctx);
+        public abstract void handleSelection(Apple2MainMenu mainMenu);
+
+        public static String[] titles(Context ctx) {
+            String[] titles = new String[values().length];
+            int i = 0;
+            for (SETTINGS setting : values()) {
+                titles[i++] = setting.getTitle(ctx);
+            }
+            return titles;
+        }
+    }
+
     private void setup() {
 
         LayoutInflater inflater = (LayoutInflater)mActivity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
@@ -48,44 +110,29 @@ public class Apple2MainMenu {
         mainMenuView.setEnabled(true);
         LinearLayout mainPopupContainer = (LinearLayout)listLayout.findViewById(R.id.main_popup_container);
 
-        String[] values = new String[] {
-                mActivity.getResources().getString(R.string.menu_settings),
-                mActivity.getResources().getString(R.string.menu_disks),
-                mActivity.getResources().getString(R.string.spacer),
-                mActivity.getResources().getString(R.string.reboot),
-        };
+        final String[] values = SETTINGS.titles(mActivity);
 
-        ArrayAdapter<?> adapter = new ArrayAdapter<String>(mActivity, android.R.layout.simple_list_item_1, android.R.id.text1, values) {
+        ArrayAdapter<?> adapter = new ArrayAdapter<String>(mActivity, android.R.layout.simple_list_item_2, android.R.id.text1, values) {
             @Override
             public boolean areAllItemsEnabled() {
-                return false;
+                return true;
             }
             @Override
-            public boolean isEnabled(int position) {
-                if (position < 0 || position > 3) {
-                    throw new ArrayIndexOutOfBoundsException();
-                }
-                return position != 2;
+            public View getView(int position, View convertView, ViewGroup parent) {
+                View view = super.getView(position, convertView, parent);
+                TextView tv = (TextView)view.findViewById(android.R.id.text2);
+                SETTINGS setting = SETTINGS.values()[position];
+                tv.setText(setting.getSummary(mActivity));
+                return view;
             }
         };
         mainMenuView.setAdapter(adapter);
         mainMenuView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                switch (position) {
-                    case 0:
-                        Apple2MainMenu.this.showSettings();
-                        break;
-                    case 1:
-                        Apple2MainMenu.this.showDisksMenu();
-                        break;
-                    case 3:
-                        Apple2MainMenu.this.reboot();
-                        break;
-                    default:
-                        Apple2MainMenu.this.dismiss();
-                        break;
-                }
+                Log.d(TAG, "position:"+position+" tapped...");
+                SETTINGS setting = SETTINGS.values()[position];
+                setting.handleSelection(Apple2MainMenu.this);
             }
         });
 
@@ -128,11 +175,6 @@ public class Apple2MainMenu {
     public void showSettings() {
         Apple2SettingsMenu settings = getSettingsMenu();
         settings.show();
-        mMainMenuPopup.dismiss();
-    }
-
-    public void reboot() {
-        mActivity.nativeReboot();
         mMainMenuPopup.dismiss();
     }
 

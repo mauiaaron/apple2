@@ -1,43 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:background="@color/black"
+    android:orientation="vertical"
+    android:baselineAligned="false"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent" >
 
-    <TabHost
+    <TextView
+        android:id="@+id/header_settings"
+        style="?android:attr/listSeparatorTextViewStyle"
         android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
-        android:id="@+id/tabHost_settings">
+        android:layout_height="wrap_content"
+        android:text="@string/settings" />
 
-        <LinearLayout
-            android:layout_width="fill_parent"
-            android:layout_height="fill_parent"
-            android:orientation="vertical">
-
-            <TabWidget
-                android:id="@android:id/tabs"
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content"></TabWidget>
-
-            <FrameLayout
-                android:id="@android:id/tabcontent"
-                android:layout_width="fill_parent"
-                android:layout_height="fill_parent">
-
-                <include
-                    android:id="@+id/tab_general"
-                    android:layout_width="fill_parent"
-                    android:layout_height="match_parent"
-                    layout="@layout/general_settings" >
-                </include>
-
-                <include
-                    android:id="@+id/tab_joystick"
-                    android:layout_width="fill_parent"
-                    android:layout_height="wrap_content"
-                    layout="@layout/joystick_settings" >
-                </include>
-            </FrameLayout>
-        </LinearLayout>
-    </TabHost>
+    <ListView
+        android:layout_width="fill_parent"
+        android:layout_height="0dp"
+        android:id="@+id/listView_settings"
+        android:layout_weight="1" />
 </LinearLayout>
