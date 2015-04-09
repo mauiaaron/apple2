@@ -703,8 +703,10 @@ static inline void _move_button_axis(int x, int y) {
             //LOG("\tbutton neg y threshold (%d)", y);
             if (upButtonAxisButton == TOUCHED_BUTTON0) {
                 joy_button0 = 0x80;
+                joy_button1 = 0;
                 _setup_button_object_with_char(button0Char);
             } else if (upButtonAxisButton == TOUCHED_BUTTON1) {
+                joy_button0 = 0;
                 joy_button1 = 0x80;
                 _setup_button_object_with_char(button1Char);
             } else if (upButtonAxisButton == TOUCHED_BOTH) {
@@ -719,8 +721,10 @@ static inline void _move_button_axis(int x, int y) {
             //LOG("\tbutton pos y threshold (%d)", y);
             if (downButtonAxisButton == TOUCHED_BUTTON0) {
                 joy_button0 = 0x80;
+                joy_button1 = 0;
                 _setup_button_object_with_char(button0Char);
             } else if (downButtonAxisButton == TOUCHED_BUTTON1) {
+                joy_button0 = 0;
                 joy_button1 = 0x80;
                 _setup_button_object_with_char(button1Char);
             } else if (downButtonAxisButton == TOUCHED_BOTH) {
