@@ -78,7 +78,7 @@ static int buttSideYMax = 0;
 
 // touch axis variables
 
-static demoModel *touchAxisObjModel = NULL;
+static GLModel *touchAxisObjModel = NULL;
 static GLuint touchAxisObjVAOName = UNINITIALIZED_GL;
 static GLuint touchAxisObjTextureName = UNINITIALIZED_GL;
 static GLuint touchAxisObjPosBufferName = UNINITIALIZED_GL;
@@ -97,7 +97,7 @@ static struct timespec axisTimingBegin = { 0 };
 
 // button object variables
 
-static demoModel *buttonObjModel = NULL;
+static GLModel *buttonObjModel = NULL;
 static GLuint buttonObjVAOName = UNINITIALIZED_GL;
 static GLuint buttonObjTextureName = UNINITIALIZED_GL;
 static GLuint buttonObjPosBufferName = UNINITIALIZED_GL;
@@ -132,7 +132,7 @@ static uint8_t downChar  = MOUSETEXT_DOWN;
 
 // ----------------------------------------------------------------------------
 
-static demoModel *_create_model(GLfloat skew_x, GLfloat skew_y, GLfloat obj_w, GLfloat obj_h) {
+static GLModel *_create_model(GLfloat skew_x, GLfloat skew_y, GLfloat obj_w, GLfloat obj_h) {
 
     /* 2...3
      *  .
@@ -157,7 +157,7 @@ static demoModel *_create_model(GLfloat skew_x, GLfloat skew_y, GLfloat obj_w, G
         0, 1, 2, 2, 1, 3
     };
 
-    demoModel *obj = calloc(1, sizeof(demoModel));
+    GLModel *obj = calloc(1, sizeof(GLModel));
     obj->numVertices = 4;
     obj->numElements = 6;
 
@@ -186,7 +186,7 @@ static demoModel *_create_model(GLfloat skew_x, GLfloat skew_y, GLfloat obj_w, G
     return obj;
 }
 
-static void _create_VAO_VBOs(const demoModel *model, GLuint *vaoName, GLuint *posBufferName, GLuint *texcoordBufferName, GLuint *elementBufferName) {
+static void _create_VAO_VBOs(const GLModel *model, GLuint *vaoName, GLuint *posBufferName, GLuint *texcoordBufferName, GLuint *elementBufferName) {
 
     // Create a vertex array object (VAO) to cache model parameters
 #if USE_VAO
@@ -366,7 +366,7 @@ static inline void _screen_to_model(float x, float y, float *screenX, float *scr
     *screenY = ((viewportHeight-y)/(viewportHeight>>1))-1.f;
 }
 
-static void _model_to_screen(float screenCoords[4], demoModel *model) {
+static void _model_to_screen(float screenCoords[4], GLModel *model) {
 
     float x0 = 1.0;
     float y0 = 1.0;
@@ -489,7 +489,7 @@ static void gltouchjoy_destroy(void) {
     buttonObjModel = NULL;
 }
 
-static void _render_object(demoModel *model, GLuint vaoName, GLuint posBufferName, GLuint texcoordBufferName, GLuint elementBufferName) {
+static void _render_object(GLModel *model, GLuint vaoName, GLuint posBufferName, GLuint texcoordBufferName, GLuint elementBufferName) {
 
     // Bind our vertex array object
 #if USE_VAO
@@ -640,7 +640,7 @@ static inline bool _is_point_on_button_side(float x, float y) {
     return (x >= buttSideX && x <= buttSideXMax && y >= buttSideY && y <= buttSideYMax);
 }
 
-static inline void _reset_model_position(demoModel *model, float touchX, float touchY, float objHalfW, float objHalfH) {
+static inline void _reset_model_position(GLModel *model, float touchX, float touchY, float objHalfW, float objHalfH) {
 
     float centerX = 0.f;
     float centerY = 0.f;

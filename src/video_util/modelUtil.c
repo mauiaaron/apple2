@@ -16,13 +16,13 @@
 #include <stdlib.h>
 #include <string.h>
 
-typedef struct modelHeaderRec {
+typedef struct modelHeader {
     char fileIdentifier[30];
     unsigned int majorVersion;
     unsigned int minorVersion;
 } modelHeader;
 
-typedef struct modelTOCRec {
+typedef struct modelTOC {
     unsigned int attribHeaderSize;
     unsigned int byteElementOffset;
     unsigned int bytePositionOffset;
@@ -30,7 +30,7 @@ typedef struct modelTOCRec {
     unsigned int byteNormalOffset;
 } modelTOC;
 
-typedef struct modelAttribRec {
+typedef struct modelAttrib {
     unsigned int byteSize;
     GLenum datatype;
     GLenum primType; //If index data
@@ -38,11 +38,11 @@ typedef struct modelAttribRec {
     unsigned int numElements;
 } modelAttrib;
 
-demoModel *mdlLoadModel(const char *filepathname) {
+GLModel *mdlLoadModel(const char *filepathname) {
     if (!filepathname) {
         return NULL;
     }
-    demoModel *model = (demoModel *)calloc(sizeof(demoModel), 1);
+    GLModel *model = (GLModel *)calloc(sizeof(GLModel), 1);
     if (!model) {
         return NULL;
     }
@@ -247,7 +247,7 @@ demoModel *mdlLoadModel(const char *filepathname) {
     return model;
 }
 
-demoModel *mdlLoadQuadModel() {
+GLModel *mdlLoadQuadModel() {
     GLfloat posArray[] = {
         -200.0f, 0.0f, -200.0f,
          200.0f, 0.0f, -200.0f,
@@ -274,7 +274,7 @@ demoModel *mdlLoadQuadModel() {
         0, 3, 2
     };
 
-    demoModel *model = (demoModel *)calloc(sizeof(demoModel), 1);
+    GLModel *model = (GLModel *)calloc(sizeof(GLModel), 1);
 
     if (!model) {
         return NULL;
@@ -311,7 +311,7 @@ demoModel *mdlLoadQuadModel() {
     return model;
 }
 
-void mdlDestroyModel(demoModel *model) {
+void mdlDestroyModel(GLModel *model) {
     if (!model) {
         return;
     }

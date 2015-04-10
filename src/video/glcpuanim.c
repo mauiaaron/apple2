@@ -32,7 +32,7 @@ static struct timespec cputiming_begin = { 0 };
 static bool cputiming_enabled = true;
 static bool texture_dirty = true;
 
-static demoModel *cpuMessageObjModel = NULL;
+static GLModel *cpuMessageObjModel = NULL;
 static GLuint cpuMessageObjVAOName = UNINITIALIZED_GL;
 static GLenum cpuMessageObjElementType = UNINITIALIZED_GL;
 static GLuint cpuMessageObjNumElements = UNINITIALIZED_GL;
@@ -63,7 +63,7 @@ static void _create_message_model(void) {
         0, 1, 2, 2, 1, 3
     };
 
-    demoModel *messageObj = calloc(1, sizeof(demoModel));
+    GLModel *messageObj = calloc(1, sizeof(GLModel));
     messageObj->numVertices = 4;
     messageObj->numElements = 6;
 
@@ -93,7 +93,7 @@ static void _create_message_model(void) {
     cpuMessageObjModel = messageObj;
 }
 
-static void _create_message_VAO_VBOs(const demoModel *messageModel, GLuint *messageVAOName, GLuint *posBufferName, GLuint *texcoordBufferName, GLuint *elementBufferName) {
+static void _create_message_VAO_VBOs(const GLModel *messageModel, GLuint *messageVAOName, GLuint *posBufferName, GLuint *texcoordBufferName, GLuint *elementBufferName) {
 
     // Create a vertex array object (VAO) to cache model parameters
 #if USE_VAO

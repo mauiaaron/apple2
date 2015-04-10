@@ -45,7 +45,7 @@ static GLuint crtVAOName = UNINITIALIZED_GL;
 static GLuint posBufferName = UNINITIALIZED_GL;
 static GLuint texcoordBufferName = UNINITIALIZED_GL;
 static GLuint elementBufferName = UNINITIALIZED_GL;
-static demoModel *crtModel = NULL;
+static GLModel *crtModel = NULL;
 
 static video_backend_s glvideo_backend = { 0 };
 
@@ -86,7 +86,7 @@ static void _create_CRT_model(void) {
 #endif
     };
 
-    demoModel *crt = calloc(1, sizeof(demoModel));
+    GLModel *crt = calloc(1, sizeof(GLModel));
     crt->numVertices = 4;
     crt->numElements = 6;
 

@@ -16,7 +16,9 @@
 
 #include "glUtil.h"
 
-typedef struct demoModelRec {
+#define UNINITIALIZED_GL 31337
+
+typedef struct GLModel {
     GLuint numVertices;
 
     GLvoid *positions;
@@ -41,12 +43,12 @@ typedef struct demoModelRec {
 
     GLenum primType;
 
-} demoModel;
+} GLModel;
 
-demoModel *mdlLoadModel(const char *filepathname);
+GLModel *mdlLoadModel(const char *filepathname);
 
-demoModel *mdlLoadQuadModel();
+GLModel *mdlLoadQuadModel();
 
-void mdlDestroyModel(demoModel *model);
+void mdlDestroyModel(GLModel *model);
 
 #endif //__MODEL_UTIL_H__
