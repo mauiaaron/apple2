@@ -8,6 +8,16 @@
 
 /* Begin PBXBuildFile section */
 		4A2636F919FDEDB700DBFB00 /* Apple2Mac.help in Resources */ = {isa = PBXBuildFile; fileRef = 4A2636F819FDEDB700DBFB00 /* Apple2Mac.help */; };
+		4A5BE6101AD88CAC00496307 /* glcpuanim.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A5BE60D1AD88CAC00496307 /* glcpuanim.c */; };
+		4A5BE6121AD88CAC00496307 /* glanimation.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A5BE60F1AD88CAC00496307 /* glanimation.c */; };
+		4A5BE6131AD88E9E00496307 /* glcpuanim.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A5BE60D1AD88CAC00496307 /* glcpuanim.c */; };
+		4A5BE6141AD88E9E00496307 /* glanimation.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A5BE60F1AD88CAC00496307 /* glanimation.c */; };
+		4A5BE6151AD88E9F00496307 /* glcpuanim.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A5BE60D1AD88CAC00496307 /* glcpuanim.c */; };
+		4A5BE6161AD88E9F00496307 /* glanimation.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A5BE60F1AD88CAC00496307 /* glanimation.c */; };
+		4A5BE6171AD88EA000496307 /* glcpuanim.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A5BE60D1AD88CAC00496307 /* glcpuanim.c */; };
+		4A5BE6181AD88EA000496307 /* glanimation.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A5BE60F1AD88CAC00496307 /* glanimation.c */; };
+		4A5BE6191AD88EA100496307 /* glcpuanim.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A5BE60D1AD88CAC00496307 /* glcpuanim.c */; };
+		4A5BE61A1AD88EA100496307 /* glanimation.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A5BE60F1AD88CAC00496307 /* glanimation.c */; };
 		4A61119C1A6A1DE60035F7DE /* blank.po.gz in Resources */ = {isa = PBXBuildFile; fileRef = 4A61119B1A6A1DE60035F7DE /* blank.po.gz */; };
 		4A61119D1A6A1DE60035F7DE /* blank.po.gz in Resources */ = {isa = PBXBuildFile; fileRef = 4A61119B1A6A1DE60035F7DE /* blank.po.gz */; };
 		4A6111A31A6A1DFC0035F7DE /* flapple140.po.gz in Resources */ = {isa = PBXBuildFile; fileRef = 4A6111A21A6A1DFC0035F7DE /* flapple140.po.gz */; };
@@ -290,6 +300,8 @@
 
 /* Begin PBXFileReference section */
 		4A2636F819FDEDB700DBFB00 /* Apple2Mac.help */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Apple2Mac.help; sourceTree = "<group>"; };
+		4A5BE60D1AD88CAC00496307 /* glcpuanim.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = glcpuanim.c; sourceTree = "<group>"; };
+		4A5BE60F1AD88CAC00496307 /* glanimation.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = glanimation.c; sourceTree = "<group>"; };
 		4A61119B1A6A1DE60035F7DE /* blank.po.gz */ = {isa = PBXFileReference; lastKnownFileType = archive.gzip; path = blank.po.gz; sourceTree = "<group>"; };
 		4A6111A21A6A1DFC0035F7DE /* flapple140.po.gz */ = {isa = PBXFileReference; lastKnownFileType = archive.gzip; path = flapple140.po.gz; sourceTree = "<group>"; };
 		4A69C17F1A33D6D7001579EF /* images */ = {isa = PBXFileReference; lastKnownFileType = folder; name = images; path = ../../images; sourceTree = "<group>"; };
@@ -375,7 +387,6 @@
 		779DD851195BD9F900DF89E5 /* Apple2MacTestCPU-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "Apple2MacTestCPU-Info.plist"; path = "Apple2MacTests/Apple2MacTestCPU-Info.plist"; sourceTree = SOURCE_ROOT; };
 		779DD854195BDB1700DF89E5 /* CPUTestAppDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CPUTestAppDelegate.m; sourceTree = "<group>"; };
 		779DD855195BDB1700DF89E5 /* CPUTestAppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CPUTestAppDelegate.h; sourceTree = "<group>"; };
-		779F561B19D78B8200A6F107 /* renderer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = renderer.h; sourceTree = "<group>"; };
 		779F562719E4FE9E00A6F107 /* Basic.vsh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = Basic.vsh; sourceTree = "<group>"; };
 		779F562819E4FE9E00A6F107 /* Basic.fsh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = Basic.fsh; sourceTree = "<group>"; };
 		779F564719EAF66E00A6F107 /* alhelpers.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = alhelpers.c; sourceTree = "<group>"; };
@@ -692,11 +703,12 @@
 		773B3D8A19568A570085CE5F /* video */ = {
 			isa = PBXGroup;
 			children = (
+				4A5BE60D1AD88CAC00496307 /* glcpuanim.c */,
+				4A5BE60F1AD88CAC00496307 /* glanimation.c */,
 				779F562719E4FE9E00A6F107 /* Basic.vsh */,
 				779F562819E4FE9E00A6F107 /* Basic.fsh */,
 				77E1C0C719D736EB004344E0 /* glvideo.c */,
 				773B3D8B19568A570085CE5F /* video.h */,
-				779F561B19D78B8200A6F107 /* renderer.h */,
 			);
 			path = video;
 			sourceTree = "<group>";
@@ -1196,6 +1208,7 @@
 				4AD4FE9B1A52464F00F958EC /* keys.c in Sources */,
 				4AD4FE9C1A52464F00F958EC /* timing.c in Sources */,
 				4AD4FE9D1A52464F00F958EC /* testcommon.c in Sources */,
+				4A5BE6161AD88E9F00496307 /* glanimation.c in Sources */,
 				4AD4FE9E1A52464F00F958EC /* misc.c in Sources */,
 				4AD4FE9F1A52464F00F958EC /* opcodes.c in Sources */,
 				4AD4FEA01A52464F00F958EC /* glvideo.c in Sources */,
@@ -1206,6 +1219,7 @@
 				4AD4FECB1A52468700F958EC /* testdisk.c in Sources */,
 				4AD4FEA51A52464F00F958EC /* vectorUtil.c in Sources */,
 				4AD4FEA61A52464F00F958EC /* debug.l in Sources */,
+				4A5BE6151AD88E9F00496307 /* glcpuanim.c in Sources */,
 				4AD4FEA71A52464F00F958EC /* CPUTestAppDelegate.m in Sources */,
 				4AD4FEA91A52464F00F958EC /* font.c in Sources */,
 				4AD4FEAA1A52464F00F958EC /* cpu-supp.c in Sources */,
@@ -1231,6 +1245,7 @@
 				4ADC520519E8CA4500186B36 /* keys.c in Sources */,
 				4ADC520619E8CA4500186B36 /* timing.c in Sources */,
 				4ADC520719E8CA4500186B36 /* testcommon.c in Sources */,
+				4A5BE61A1AD88EA100496307 /* glanimation.c in Sources */,
 				4ADC520819E8CA4500186B36 /* misc.c in Sources */,
 				4ADC520919E8CA4500186B36 /* opcodes.c in Sources */,
 				4ADC520A19E8CA4500186B36 /* glvideo.c in Sources */,
@@ -1241,6 +1256,7 @@
 				4ADC520F19E8CA4500186B36 /* vectorUtil.c in Sources */,
 				4ADC521019E8CA4500186B36 /* debug.l in Sources */,
 				4ADC521119E8CA4500186B36 /* CPUTestAppDelegate.m in Sources */,
+				4A5BE6191AD88EA100496307 /* glcpuanim.c in Sources */,
 				4ADC522919E8CEAD00186B36 /* testvm.c in Sources */,
 				4ADC521319E8CA4500186B36 /* font.c in Sources */,
 				4ADC521419E8CA4500186B36 /* cpu-supp.c in Sources */,
@@ -1260,6 +1276,7 @@
 				779F565B19EAF66E00A6F107 /* soundcore-openal.c in Sources */,
 				773B3DA419568A570085CE5F /* display.c in Sources */,
 				773B3DA319568A570085CE5F /* disk.c in Sources */,
+				4A5BE6121AD88CAC00496307 /* glanimation.c in Sources */,
 				773B3DAD19568A570085CE5F /* debugger.c in Sources */,
 				77E1C0B319D72700004344E0 /* vectorUtil.c in Sources */,
 				4AC7A76D19ECC3FB00BCD457 /* EmulatorWindow.m in Sources */,
@@ -1267,6 +1284,7 @@
 				773B3DAB19568A570085CE5F /* keys.c in Sources */,
 				773B3DBC19568A570085CE5F /* timing.c in Sources */,
 				773B3DAF19568A570085CE5F /* misc.c in Sources */,
+				4A5BE6101AD88CAC00496307 /* glcpuanim.c in Sources */,
 				77E1C0C419D7298F004344E0 /* EmulatorWindowController.m in Sources */,
 				773BC91A19F31E7B00996893 /* prefs.c in Sources */,
 				77E1C0B619D72700004344E0 /* matrixUtil.c in Sources */,
@@ -1314,6 +1332,7 @@
 				779DD834195BD9F900DF89E5 /* keys.c in Sources */,
 				779DD835195BD9F900DF89E5 /* timing.c in Sources */,
 				779DD853195BDA3400DF89E5 /* testcommon.c in Sources */,
+				4A5BE6141AD88E9E00496307 /* glanimation.c in Sources */,
 				779DD836195BD9F900DF89E5 /* misc.c in Sources */,
 				779DD837195BD9F900DF89E5 /* opcodes.c in Sources */,
 				4ADC51C619E8BD5200186B36 /* glvideo.c in Sources */,
@@ -1324,6 +1343,7 @@
 				4ADC51C219E8BD3700186B36 /* vectorUtil.c in Sources */,
 				779DD83C195BD9F900DF89E5 /* debug.l in Sources */,
 				779DD856195BDB1700DF89E5 /* CPUTestAppDelegate.m in Sources */,
+				4A5BE6131AD88E9E00496307 /* glcpuanim.c in Sources */,
 				779DD852195BDA3000DF89E5 /* testcpu.c in Sources */,
 				779DD83D195BD9F900DF89E5 /* font.c in Sources */,
 				779DD83E195BD9F900DF89E5 /* cpu-supp.c in Sources */,
@@ -1349,6 +1369,7 @@
 				779F566A19EB0B9100A6F107 /* debugger.c in Sources */,
 				779F566B19EB0B9100A6F107 /* keys.c in Sources */,
 				779F566C19EB0B9100A6F107 /* timing.c in Sources */,
+				4A5BE6181AD88EA000496307 /* glanimation.c in Sources */,
 				779F566D19EB0B9100A6F107 /* testcommon.c in Sources */,
 				779F566E19EB0B9100A6F107 /* misc.c in Sources */,
 				779F566F19EB0B9100A6F107 /* opcodes.c in Sources */,
@@ -1359,6 +1380,7 @@
 				779F567419EB0B9100A6F107 /* main.m in Sources */,
 				779F567519EB0B9100A6F107 /* vectorUtil.c in Sources */,
 				779F567619EB0B9100A6F107 /* debug.l in Sources */,
+				4A5BE6171AD88EA000496307 /* glcpuanim.c in Sources */,
 				779F567719EB0B9100A6F107 /* CPUTestAppDelegate.m in Sources */,
 				779F567919EB0B9100A6F107 /* font.c in Sources */,
 				779F567A19EB0B9100A6F107 /* cpu-supp.c in Sources */,
