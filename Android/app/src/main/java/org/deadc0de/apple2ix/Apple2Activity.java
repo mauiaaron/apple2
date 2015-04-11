@@ -166,6 +166,13 @@ public class Apple2Activity extends Activity {
                 Rect rect = new Rect();
                 mView.getWindowVisibleDisplayFrame(rect);
                 int h = rect.height();
+                int w = rect.width();
+                if (w < h) {
+                    // assure landscape dimensions
+                    final int w_ = w;
+                    w = h;
+                    h = w_;
+                }
                 if (mView.getHeight() - h > SOFTKEYBOARD_THRESHOLD) {
                     Log.d(TAG, "Soft keyboard appears to be occupying screen real estate ...");
                     Apple2Activity.this.mSoftKeyboardShowing = true;
@@ -173,7 +180,7 @@ public class Apple2Activity extends Activity {
                     Log.d(TAG, "Soft keyboard appears to be gone ...");
                     Apple2Activity.this.mSoftKeyboardShowing = false;
                 }
-                nativeGraphicsChanged(rect.width(), h);
+                nativeGraphicsChanged(w, h);
             }
         });
 
@@ -404,10 +411,18 @@ public class Apple2Activity extends Activity {
         }
     }
 
-    public void graphicsInitialized(int width, int height) {
-        mWidth = width;
-        mHeight = height;
-        nativeGraphicsInitialized(width, height);
+    public void graphicsInitialized(int w, int h) {
+        if (w < h) {
+            // assure landscape dimensions
+            final int w_ = w;
+            w = h;
+            h = w_;
+        }
+
+        mWidth = w;
+        mHeight = h;
+
+        nativeGraphicsInitialized(w, h);
     }
 
     public Apple2View getView() {
