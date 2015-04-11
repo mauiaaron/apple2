@@ -96,8 +96,8 @@ static void _create_CRT_model(void) {
     crt->positionSize = 4; // x,y,z coordinates
     crt->positionArraySize = sizeof(crt_positions);
 
-    crt->texcoords = malloc(sizeof(crt_texcoords));
-    memcpy(crt->texcoords, &crt_texcoords[0], sizeof(crt_texcoords));
+    crt->texCoords = malloc(sizeof(crt_texcoords));
+    memcpy(crt->texCoords, &crt_texcoords[0], sizeof(crt_texcoords));
     crt->texcoordType = GL_FLOAT;
     crt->texcoordSize = 2; // s,t coordinates
     crt->texcoordArraySize = sizeof(crt_texcoords);
@@ -112,7 +112,7 @@ static void _create_CRT_model(void) {
     crt->elementType = GL_UNSIGNED_SHORT;
     crt->elementArraySize = sizeof(indices);
 
-    mdlDestroyModel(crtModel);
+    mdlDestroyModel(&crtModel);
     crtModel = crt;
 }
 
@@ -176,13 +176,13 @@ static void _create_VAO_VBOs(void) {
     }
 #endif
 
-    if (crtModel->texcoords) {
+    if (crtModel->texCoords) {
         // Create a VBO to store texcoords
         glGenBuffers(1, &texcoordBufferName);
         glBindBuffer(GL_ARRAY_BUFFER, texcoordBufferName);
 
         // Allocate and load texcoord data into the VBO
-        glBufferData(GL_ARRAY_BUFFER, crtModel->texcoordArraySize, crtModel->texcoords, GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, crtModel->texcoordArraySize, crtModel->texCoords, GL_STATIC_DRAW);
 
 #if USE_VAO
         // Enable the texcoord attribute for this VAO
@@ -564,7 +564,7 @@ static void gldriver_init_common(void) {
 #if USE_VAO
     // We're using VBOs we can destroy all this memory since buffers are
     // loaded into GL and we've saved anything else we need
-    mdlDestroyModel(crtModel);
+    mdlDestroyModel(&crtModel);
     crtModel = NULL;
 #endif
 
@@ -625,7 +625,7 @@ static void gldriver_shutdown(void) {
     a2TextureName = UNINITIALIZED_GL;
     _destroy_VAO(crtVAOName);
     crtVAOName = UNINITIALIZED_GL;
-    mdlDestroyModel(crtModel);
+    mdlDestroyModel(&crtModel);
     crtModel = NULL;
     glDeleteProgram(program);
     program = UNINITIALIZED_GL;

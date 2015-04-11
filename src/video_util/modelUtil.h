@@ -14,9 +14,14 @@
 #ifndef __MODEL_UTIL_H__
 #define __MODEL_UTIL_H__
 
-#include "glUtil.h"
+#include "common.h"
 
 #define UNINITIALIZED_GL 31337
+
+typedef struct GLCustom {
+    void (*dtor)(INOUT struct GLCustom **custom);   // custom data destructor
+    // overridden objects must at least implement interface methods
+} GLCustom;
 
 typedef struct GLModel {
     GLuint numVertices;
@@ -26,7 +31,7 @@ typedef struct GLModel {
     GLuint positionSize;
     GLsizei positionArraySize;
 
-    GLvoid *texcoords;
+    GLvoid *texCoords;
     GLenum texcoordType;
     GLuint texcoordSize;
     GLsizei texcoordArraySize;
@@ -41,14 +46,33 @@ typedef struct GLModel {
     GLuint numElements;
     GLsizei elementArraySize;
 
+    GLsizei texWidth;
+    GLsizei texHeight;
+    GLsizei texFormat;
+    GLvoid *texPixels;
+    bool texDirty;
+
     GLenum primType;
 
+    // GL generated data
+#if USE_VAO
+    GLuint vaoName;
+#endif
+    GLuint textureName;
+    GLuint posBufferName;
+    GLuint texcoordBufferName;
+    GLuint elementBufferName;
+
+    // Custom
+    GLCustom *custom;
 } GLModel;
 
 GLModel *mdlLoadModel(const char *filepathname);
 
 GLModel *mdlLoadQuadModel();
 
-void mdlDestroyModel(GLModel *model);
+GLModel *mdlCreateQuad(GLfloat skew_x, GLfloat skew_y, GLfloat obj_w, GLfloat obj_h, GLfloat z, GLsizei tex_w, GLsizei tex_h, GLenum tex_format);
+
+void mdlDestroyModel(INOUT GLModel **model);
 
 #endif //__MODEL_UTIL_H__

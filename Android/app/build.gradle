@@ -10,6 +10,9 @@ android {
         targetSdkVersion 10
         versionCode 1
         versionName "0.9.1"
+        ndk {
+            moduleName "apple2ix"
+        }
     }
     signingConfigs {
         release {
@@ -27,6 +30,7 @@ android {
         }
         debug {
             debuggable true
+            jniDebuggable true
         }
     }
     productFlavors {

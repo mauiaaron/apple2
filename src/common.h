@@ -59,10 +59,15 @@
 #import <CoreFoundation/CoreFoundation.h>
 #endif
 
+// custom annotations
+#define INPARM
+#define OUTPARM
+#define INOUT
+
 #if VIDEO_OPENGL
 #include "video_util/glUtil.h"
 #define CRASH_APP_ON_LOAD_BECAUSE_YAY_GJ_APPLE 0
-// 2014/11/29 -- Yay GJ Apple! ... you would think that early app lifecycle calls to glGetError() would not segfault on Macs
+// 2015/04/01 ... early calls to glGetError()--before a context exists--causes segfaults on MacOS X
 extern bool safe_to_do_opengl_logging;
 static inline GLenum safeGLGetError(void) {
     if (safe_to_do_opengl_logging) {

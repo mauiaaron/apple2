@@ -73,8 +73,8 @@ static void _create_message_model(void) {
     messageObj->positionSize = 4; // x,y,z coordinates
     messageObj->positionArraySize = sizeof(messageObj_positions);
 
-    messageObj->texcoords = malloc(sizeof(messageObj_texcoords));
-    memcpy(messageObj->texcoords, &messageObj_texcoords[0], sizeof(messageObj_texcoords));
+    messageObj->texCoords = malloc(sizeof(messageObj_texcoords));
+    memcpy(messageObj->texCoords, &messageObj_texcoords[0], sizeof(messageObj_texcoords));
     messageObj->texcoordType = GL_FLOAT;
     messageObj->texcoordSize = 2; // s,t coordinates
     messageObj->texcoordArraySize = sizeof(messageObj_texcoords);
@@ -89,7 +89,7 @@ static void _create_message_model(void) {
     messageObj->elementType = GL_UNSIGNED_SHORT;
     messageObj->elementArraySize = sizeof(indices);
 
-    mdlDestroyModel(cpuMessageObjModel);
+    mdlDestroyModel(&cpuMessageObjModel);
     cpuMessageObjModel = messageObj;
 }
 
@@ -124,13 +124,13 @@ static void _create_message_VAO_VBOs(const GLModel *messageModel, GLuint *messag
                           0);    // What is the offset in the VBO to the position data?
 #endif
 
-    if (messageModel->texcoords) {
+    if (messageModel->texCoords) {
         // Create a VBO to store texcoords
         glGenBuffers(1, texcoordBufferName);
         glBindBuffer(GL_ARRAY_BUFFER, *texcoordBufferName);
 
         // Allocate and load texcoord data into the VBO
-        glBufferData(GL_ARRAY_BUFFER, messageModel->texcoordArraySize, messageModel->texcoords, GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, messageModel->texcoordArraySize, messageModel->texCoords, GL_STATIC_DRAW);
 
 #if USE_VAO
         // Enable the texcoord attribute for this VAO
@@ -269,7 +269,7 @@ static void cpuanim_destroy(void) {
     cpuMessageObjTexcoordBufferName = UNINITIALIZED_GL;
     cpuMessageObjElementBufferName = UNINITIALIZED_GL;
 
-    mdlDestroyModel(cpuMessageObjModel);
+    mdlDestroyModel(&cpuMessageObjModel);
     cpuMessageObjModel = NULL;
 }
 

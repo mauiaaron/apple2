@@ -25,7 +25,8 @@
 // VAO optimization (may not be available on all platforms)
 #ifdef ANDROID
 #include "glanimation.h"
-#warning Certain Android and Android-ish devices (*cough* Kindle *cough*) have buggy OpenGL VAO support ...
+// NOTE : 2015/04/01 ... Certain Android and Android-ish devices (*cough* Kindle *cough*) have buggy OpenGL VAO support,
+// so don't rely on it.  Is it the future yet?
 #define USE_VAO 0
 #elif !defined(USE_VAO)
 #define USE_VAO 1

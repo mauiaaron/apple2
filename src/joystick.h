@@ -64,7 +64,7 @@ extern void (*joydriver_setTouchButtonValues)(char button0Val, char button1Val);
 extern void (*joydriver_setTouchAxisType)(touchjoy_axis_type_t axisType);
 
 // set the axis button parameters (7bit ASCII characters or MOUSETEXT values)
-extern void (*joydriver_setTouchAxisValues)(char up, char left, char right, char down);
+extern void (*joydriver_setTouchAxisValues)(char north, char west, char east, char south);
 
 #endif // TOUCH_JOYSTICK
 
