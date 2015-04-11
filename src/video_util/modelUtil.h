@@ -18,12 +18,20 @@
 
 #define UNINITIALIZED_GL 31337
 
-typedef struct GLCustom {
-    void (*dtor)(INOUT struct GLCustom **custom);   // custom data destructor
-    // overridden objects must at least implement interface methods
-} GLCustom;
+typedef struct GLModel;
+
+#define MODEL_CLASS(CLS, ...) \
+    typedef struct CLS { \
+        void *(*create)(void); \
+        void (*setup)(struct GLModel *parent); \
+        void (*destroy)(struct GLModel *parent); \
+        __VA_ARGS__ \
+    } CLS;
+
+MODEL_CLASS(GLCustom);
 
 typedef struct GLModel {
+
     GLuint numVertices;
 
     GLvoid *positions;
@@ -71,7 +79,7 @@ GLModel *mdlLoadModel(const char *filepathname);
 
 GLModel *mdlLoadQuadModel();
 
-GLModel *mdlCreateQuad(GLfloat skew_x, GLfloat skew_y, GLfloat obj_w, GLfloat obj_h, GLfloat z, GLsizei tex_w, GLsizei tex_h, GLenum tex_format);
+GLModel *mdlCreateQuad(GLfloat skew_x, GLfloat skew_y, GLfloat obj_w, GLfloat obj_h, GLfloat z, GLsizei tex_w, GLsizei tex_h, GLenum tex_format, GLCustom clazz);
 
 void mdlDestroyModel(INOUT GLModel **model);
 

@@ -400,14 +400,14 @@ static GLuint _quadCreateTexture(GLModel *model) {
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
     // register texture with OpenGL
-    glTexImage2D(GL_TEXTURE_2D, /*level*/0, /*internal format*/model->texFormat, model->texWidth, model->texHeight, /*border*/0, /*format*/model->texFormat, GL_UNSIGNED_BYTE, model->texPixels);
+    glTexImage2D(GL_TEXTURE_2D, /*level*/0, /*internal format*/model->texFormat, model->texWidth, model->texHeight, /*border*/0, /*format*/model->texFormat, GL_UNSIGNED_BYTE, NULL);
 
     GL_ERRLOG("quad texture creation");
 
     return texName;
 }
 
-GLModel *mdlCreateQuad(GLfloat skew_x, GLfloat skew_y, GLfloat obj_w, GLfloat obj_h, GLfloat z, GLsizei tex_w, GLsizei tex_h, GLenum tex_format) {
+GLModel *mdlCreateQuad(GLfloat skew_x, GLfloat skew_y, GLfloat obj_w, GLfloat obj_h, GLfloat z, GLsizei tex_w, GLsizei tex_h, GLenum tex_format, GLCustom clazz) {
 
     /* 2...3
      *  .
@@ -479,8 +479,6 @@ GLModel *mdlCreateQuad(GLfloat skew_x, GLfloat skew_y, GLfloat obj_w, GLfloat ob
         model->elementType = GL_UNSIGNED_SHORT;
         model->elementArraySize = sizeof(indices);
 
-        model->custom = NULL;
-
 #if USE_VAO
         model->vaoName = UNINITIALIZED_GL;
 #endif
@@ -510,6 +508,17 @@ GLModel *mdlCreateQuad(GLfloat skew_x, GLfloat skew_y, GLfloat obj_w, GLfloat ob
         if (model->textureName == UNINITIALIZED_GL) {
             LOG("Error creating model texture!");
             break;
+        }
+
+        model->custom = NULL;
+        if (clazz.create) {
+            model->custom = clazz.create();
+            if (model->custom) {
+                model->custom->create = NULL;
+                model->custom->setup = clazz.setup;
+                model->custom->destroy = clazz.destroy;
+                model->custom->setup(model);
+            }
         }
 
         GL_ERRLOG("quad creation");
@@ -590,7 +599,7 @@ void mdlDestroyModel(INOUT GLModel **model) {
 #endif
 
     if (m->custom) {
-        m->custom->dtor(&(m->custom));
+        m->custom->destroy(m);
     }
 
     FREE(*model);
