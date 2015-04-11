@@ -49,9 +49,10 @@ enum {
 
 // general configurations
 
-static bool isAvailable = false;
-static bool isEnabled = true;
-static bool isVisible = true;
+static bool isAvailable = false; // Were there any OpenGL/memory errors on initialization?
+static bool isEnabled = true;    // Does player want touchjoy enabled?
+static bool isVisible = true;    // Does player want touchjoy to have some form of visibility?
+static float minAlpha = 0.0;     // Minimum alpha value of touchjoy components (at zero, will not draw)
 
 static char axisTemplate[AXIS_TEMPLATE_ROWS][AXIS_TEMPLATE_COLS+1] = {
     "  @  ",
@@ -121,7 +122,6 @@ static uint8_t buttonBothChar = '+';
 
 static uint8_t buttonActiveChar = MOUSETEXT_OPENAPPLE;
 static int buttonSwitchThreshold = BUTTON_SWITCH_THRESHOLD_DEFAULT;
-
 
 // ----------------------------------------------------------------------------
 
@@ -298,73 +298,77 @@ static void gltouchjoy_render(void) {
         return;
     }
 
-    // NOTE : show these HUD elements beyond the framebuffer dimensions
-    glViewport(0, 0, viewportWidth, viewportHeight);
-
     struct timespec now = { 0 };
-    const float min_alpha = 0.0625;
-    float alpha = min_alpha;
     struct timespec deltat = { 0 };
+    float alpha = minAlpha;
 
     // draw axis
 
     clock_gettime(CLOCK_MONOTONIC, &now);
-    alpha = min_alpha;
+    alpha = minAlpha;
     deltat = timespec_diff(axisTimingBegin, now, NULL);
     if (deltat.tv_sec == 0) {
         alpha = 1.0;
         if (deltat.tv_nsec >= NANOSECONDS_PER_SECOND/2) {
             alpha -= ((float)deltat.tv_nsec-(NANOSECONDS_PER_SECOND/2)) / (float)(NANOSECONDS_PER_SECOND/2);
-            if (alpha < min_alpha) {
-                alpha = min_alpha;
+            if (alpha < minAlpha) {
+                alpha = minAlpha;
             }
         }
     }
-    glUniform1f(alphaValue, alpha);
 
-    glActiveTexture(TEXTURE_ACTIVE_TOUCHJOY_AXIS);
-    glBindTexture(GL_TEXTURE_2D, touchAxisObjModel->textureName);
-    if (touchAxisObjModel->texDirty) {
-        touchAxisObjModel->texDirty = false;
-        glTexImage2D(GL_TEXTURE_2D, /*level*/0, /*internal format*/GL_RGBA, AXIS_FB_WIDTH, AXIS_FB_HEIGHT, /*border*/0, /*format*/GL_RGBA, GL_UNSIGNED_BYTE, touchAxisObjModel->texPixels);
+    if (alpha > 0.0) {
+        glViewport(0, 0, viewportWidth, viewportHeight); // NOTE : show these HUD elements beyond the framebuffer dimensions
+        glUniform1f(alphaValue, alpha);
+
+        glActiveTexture(TEXTURE_ACTIVE_TOUCHJOY_AXIS);
+        glBindTexture(GL_TEXTURE_2D, touchAxisObjModel->textureName);
+        if (touchAxisObjModel->texDirty) {
+            touchAxisObjModel->texDirty = false;
+            glTexImage2D(GL_TEXTURE_2D, /*level*/0, /*internal format*/GL_RGBA, AXIS_FB_WIDTH, AXIS_FB_HEIGHT, /*border*/0, /*format*/GL_RGBA, GL_UNSIGNED_BYTE, touchAxisObjModel->texPixels);
+        }
+        if (axisModelDirty) {
+            axisModelDirty = false;
+            glBindBuffer(GL_ARRAY_BUFFER, touchAxisObjModel->posBufferName);
+            glBufferData(GL_ARRAY_BUFFER, touchAxisObjModel->positionArraySize, touchAxisObjModel->positions, GL_DYNAMIC_DRAW);
+        }
+        glUniform1i(uniformTex2Use, TEXTURE_ID_TOUCHJOY_AXIS);
+        _render_object(touchAxisObjModel);
     }
-    if (axisModelDirty) {
-        axisModelDirty = false;
-        glBindBuffer(GL_ARRAY_BUFFER, touchAxisObjModel->posBufferName);
-        glBufferData(GL_ARRAY_BUFFER, touchAxisObjModel->positionArraySize, touchAxisObjModel->positions, GL_DYNAMIC_DRAW);
-    }
-    glUniform1i(uniformTex2Use, TEXTURE_ID_TOUCHJOY_AXIS);
-    _render_object(touchAxisObjModel);
 
     // draw button(s)
 
     clock_gettime(CLOCK_MONOTONIC, &now);
-    alpha = min_alpha;
+    alpha = minAlpha;
     deltat = timespec_diff(buttonTimingBegin, now, NULL);
     if (deltat.tv_sec == 0) {
         alpha = 1.0;
         if (deltat.tv_nsec >= NANOSECONDS_PER_SECOND/2) {
             alpha -= ((float)deltat.tv_nsec-(NANOSECONDS_PER_SECOND/2)) / (float)(NANOSECONDS_PER_SECOND/2);
-            if (alpha < min_alpha) {
-                alpha = min_alpha;
+            if (alpha < minAlpha) {
+                alpha = minAlpha;
             }
         }
     }
-    glUniform1f(alphaValue, alpha);
 
-    glActiveTexture(TEXTURE_ACTIVE_TOUCHJOY_BUTTON);
-    glBindTexture(GL_TEXTURE_2D, buttonObjModel->textureName);
-    if (buttonObjModel->texDirty) {
-        buttonObjModel->texDirty = false;
-        glTexImage2D(GL_TEXTURE_2D, /*level*/0, /*internal format*/GL_RGBA, BUTTON_FB_WIDTH, BUTTON_FB_HEIGHT, /*border*/0, /*format*/GL_RGBA, GL_UNSIGNED_BYTE, buttonObjModel->texPixels);
+    if (alpha > 0.0) {
+        glViewport(0, 0, viewportWidth, viewportHeight); // NOTE : show these HUD elements beyond the framebuffer dimensions
+        glUniform1f(alphaValue, alpha);
+
+        glActiveTexture(TEXTURE_ACTIVE_TOUCHJOY_BUTTON);
+        glBindTexture(GL_TEXTURE_2D, buttonObjModel->textureName);
+        if (buttonObjModel->texDirty) {
+            buttonObjModel->texDirty = false;
+            glTexImage2D(GL_TEXTURE_2D, /*level*/0, /*internal format*/GL_RGBA, BUTTON_FB_WIDTH, BUTTON_FB_HEIGHT, /*border*/0, /*format*/GL_RGBA, GL_UNSIGNED_BYTE, buttonObjModel->texPixels);
+        }
+        if (buttonModelDirty) {
+            buttonModelDirty = false;
+            glBindBuffer(GL_ARRAY_BUFFER, buttonObjModel->posBufferName);
+            glBufferData(GL_ARRAY_BUFFER, buttonObjModel->positionArraySize, buttonObjModel->positions, GL_DYNAMIC_DRAW);
+        }
+        glUniform1i(uniformTex2Use, TEXTURE_ID_TOUCHJOY_BUTTON);
+        _render_object(buttonObjModel);
     }
-    if (buttonModelDirty) {
-        buttonModelDirty = false;
-        glBindBuffer(GL_ARRAY_BUFFER, buttonObjModel->posBufferName);
-        glBufferData(GL_ARRAY_BUFFER, buttonObjModel->positionArraySize, buttonObjModel->positions, GL_DYNAMIC_DRAW);
-    }
-    glUniform1i(uniformTex2Use, TEXTURE_ID_TOUCHJOY_BUTTON);
-    _render_object(buttonObjModel);
 }
 
 static void gltouchjoy_reshape(int w, int h) {
