@@ -18,7 +18,18 @@ Project Goals
 * Portability and code resilience across a wide range of modern platforms including MacOSX, desktop Linux/BSD, iOS, Android -- *But not Windows, just use the excellent [AppleWin](https://github.com/AppleWin/AppleWin) emulator if you're on Windows!*
 * Reasonable emulation fidelity to the original Apple //e machine (timing, video, audio, etc...)
 * Binary Mac App/DMG, iOS App (unlikely to be available in iTunes store due to Apple's short-sighted prohibition of emulator software *... but possibly it will be available as an app in the Cydia alternate store or similar*)
-* Binary Android App (Play Store and elsewhere)
+* Maintain binary Android App (Play Store and elsewhere)
+
+Android
+-------
+
+Currently pre-alpha testing the Google Play Store version...PM me if you would like to be on the Android VIP testers invite =D
+
+Running at 30FPS on a Gingerbread (Android 2.3.3):
+![Apple2ix on HTC running Gingerbread](https://raw.github.com/mauiaaron/apple2/master/docs/android-htc.png "Apple //ix")
+
+Running at 60FPS on 2013 Nexus 7 running KitKat (Android 4.4.x):
+![Apple2ix on Nexus 7 running KitKat](https://raw.github.com/mauiaaron/apple2/master/docs/android-nexus7.png "Apple //ix")
 
 Mac Package
 -----------
