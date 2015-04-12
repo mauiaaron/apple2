@@ -677,11 +677,11 @@ static void _init_gltouchjoy(void) {
     joydriver_setTouchAxisValues = &gltouchjoy_setTouchAxisValues;
 
     glnode_registerNode(RENDER_LOW, (GLNode){
-        .setup = &gltouchjoy_setup;
-        .shutdown = &gltouchjoy_shutdown;
-        .render = &gltouchjoy_render;
-        .reshape = &gltouchjoy_reshape;
-        .onTouchEvent = &gltouchjoy_onTouchEvent;
+        .setup = &gltouchjoy_setup,
+        .shutdown = &gltouchjoy_shutdown,
+        .render = &gltouchjoy_render,
+        .reshape = &gltouchjoy_reshape,
+        .onTouchEvent = &gltouchjoy_onTouchEvent,
     });
 }
 
