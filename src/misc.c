@@ -593,7 +593,6 @@ void reinitialize(void) {
 }
 
 void c_initialize_firsttime(void) {
-    video_load_interface_fonts();
 
     video_init();
 

@@ -39,6 +39,7 @@ VIDEO_SRC = \
 	src/video/glvideo.c \
 	src/video/glanimation.c \
 	src/video/glcpuanim.c \
+	src/video/glhudmodel.c \
 	src/video/glutinput.c \
 	src/video_util/matrixUtil.c \
 	src/video_util/modelUtil.c \

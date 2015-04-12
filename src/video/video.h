@@ -98,11 +98,6 @@ void video_set(int flags);
 void video_loadfont(int first, int qty, const uint8_t *data, int mode);
 
 /*
- * Loads the interface/messages to a seperate character table for system menus/messages
- */
-void video_load_interface_fonts(void);
-
-/*
  * Redraw the display. This is called after exiting an interface display,
  * when changes have been made to the Apple's emulated framebuffer that
  * bypass the driver's hooks, or when the video mode has changed.
@@ -127,35 +122,6 @@ const uint8_t * const video_current_framebuffer();
 bool video_dirty(void);
 
 // ----------------------------------------------------------------------------
-
-/*
- * Plot a character to the text mode screen, *not* writing to apple
- * memory. This is used by the interface screens.
- *
- * ROW, COL, and CODE are self-expanatory. COLOR gives the color scheme
- * to use:
- *
- *  0 - Green text on Black background
- *  1 - Green text on Blue background
- *  2 - Red text on Black background
- */
-void video_plotchar(int row, int col, int color, uint8_t code);
-
-/*
- * Same as video_plotchar(), but allows plotting to a separate buffer
- */
-void video_plotchar_fb(uint8_t *fb, int fb_width, int row, int col, int color, uint8_t code);
-
-void video_interface_print(int x, int y, const int cs, const char *s);
-
-void video_interface_print_fb(uint8_t *fb, int fb_width, int x, int y, const int cs, const char *s);
-
-void video_interface_print_submenu_centered(char *submenu, const int xlen, const int ylen);
-
-void video_interface_print_submenu_centered_fb(uint8_t *fb, int screen_char_width, int screen_char_height, char *submenu, const int xlen, const int ylen);
-
-// ----------------------------------------------------------------------------
-
 
 /*
  * Show CPU speed animation
@@ -184,7 +150,9 @@ uint8_t floating_bus_hibit(const bool hibit);
  * machines) for a standard resolution.
  */
 #define _SCANWIDTH 560
-#define INTERPOLATED_PIXEL_ADJUSTMENT (4+4)
+#define _INTERPOLATED_PIXEL_ADJUSTMENT_PRE 4
+#define _INTERPOLATED_PIXEL_ADJUSTMENT_POST 4
+#define INTERPOLATED_PIXEL_ADJUSTMENT (_INTERPOLATED_PIXEL_ADJUSTMENT_PRE+_INTERPOLATED_PIXEL_ADJUSTMENT_POST)
 #define SCANWIDTH (_SCANWIDTH+INTERPOLATED_PIXEL_ADJUSTMENT)
 #define SCANHEIGHT 384
 
@@ -193,7 +161,8 @@ uint8_t floating_bus_hibit(const bool hibit);
 #define TEXT_COLS 40
 #define TEXT80_COLS 80
 
-#define INTERFACE_SCREEN_X TEXT80_COLS
+#define FONT_GLYPH_X 8
+#define FONT_GLYPH_Y FONT_GLYPH_X
 
 #define FONT_HEIGHT_PIXELS 16
 #define FONT_WIDTH_PIXELS  14

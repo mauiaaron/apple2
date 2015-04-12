@@ -15,7 +15,9 @@
 #define __GL_UTIL_H__
 
 #if defined(__APPLE__)
-#   include <TargetConditionals.h>
+#   define USE_VAO 1
+#   import <CoreFoundation/CoreFoundation.h>
+#   import <TargetConditionals.h>
 #   if TARGET_OS_IPHONE
 #       import <OpenGLES/ES2/gl.h>
 #       import <OpenGLES/ES2/glext.h>
@@ -27,6 +29,9 @@
 #   include <GL3/gl3.h>
 #   include <GL3/gl3w.h>
 #elif defined(ANDROID)
+// NOTE : 2015/04/01 ... Certain Android and Android-ish devices (*cough* Kindle *cough*) have buggy OpenGL VAO support,
+// so don't rely on it.  Is it the future yet?
+#   define USE_VAO 0
 #   include <GLES2/gl2.h>
 #   include <GLES2/gl2ext.h>
 #else
@@ -34,6 +39,10 @@
 #   include <GL/glew.h>
 #   define FREEGLUT_STATIC
 #   include <GL/freeglut.h>
+#endif
+
+#if !defined(USE_VAO)
+#define USE_VAO 1
 #endif
 
 static inline const char * GetGLErrorString(GLenum error) {

@@ -16,10 +16,138 @@
 
 #include "common.h"
 
+// 2015/04/12 : This was legacy code for rendering the menu interfaces on desktop Linux. Portions here are resurrected
+// to render HUD messages on desktop and mobile.  Nothing special or pretty here, but has "just worked" for 20+ years ;-)
+
+#define IsGraphic(c) ((c) == '|' || (((unsigned char)c) >= 0x80 && ((unsigned char)c) <= 0x8A))
+#define IsInside(x,y) ((x) >= 0 && (x) <= xlen-1 && (y) >= 0 && (y) <= ylen-1)
+
+// Draws special interface menu "characters" 
+static void _convert_screen_graphics(char *screen, const int x, const int y, const int xlen, const int ylen) {
+    static char map[11][3][4] ={ { "...",
+                                   ".||",
+                                   ".|." },
+
+                                 { "...",
+                                   "||.",
+                                   ".|." },
+
+                                 { ".|.",
+                                   ".||",
+                                   "..." },
+
+                                 { ".|.",
+                                   "||.",
+                                   "..." },
+
+                                 { "~|~",
+                                   ".|.",
+                                   "~|~" },
+
+                                 { "~.~",
+                                   "|||",
+                                   "~.~" },
+
+                                 { ".|.",
+                                   ".||",
+                                   ".|." },
+
+                                 { ".|.",
+                                   "||.",
+                                   ".|." },
+
+                                 { "...",
+                                   "|||",
+                                   ".|." },
+
+                                 { ".|.",
+                                   "|||",
+                                   "..." },
+
+                                 { ".|.",
+                                   "|||",
+                                   ".|." } };
+
+    bool found_glyph = false;
+    int k = 10;
+    for (; k >= 0; k--) {
+        found_glyph = true;
+
+        for (int yy = y - 1; found_glyph && yy <= y + 1; yy++) {
+            int idx = yy*(xlen+1);
+            for (int xx = x - 1; xx <= x + 1; xx++) {
+                char map_ch = map[k][ yy - y + 1 ][ xx - x + 1 ];
+
+                if (IsInside(xx, yy)) {
+                    char c = *(screen + idx + xx);
+                    if (!IsGraphic( c ) && (map_ch == '|')) {
+                        found_glyph = false;
+                        break;
+                    } else if (IsGraphic( c ) && (map_ch == '.')) {
+                        found_glyph = false;
+                        break;
+                    }
+                } else if (map_ch == '|') {
+                    found_glyph = false;
+                    break;
+                }
+            }
+            idx += xlen+1;
+        }
+
+        if (found_glyph) {
+            break;
+        }
+    }
+
+    if (found_glyph) {
+        *(screen + y*(xlen+1) + x) = 0x80 + k;
+    }
+}
+
+static void _translate_screen_x_y(char *screen, const int xlen, const int ylen) {
+    for (int idx=0, y=0; y < ylen; y++, idx+=xlen+1) {
+        for (int x = 0; x < xlen; x++) {
+            if (*(screen + idx + x) == '|') {
+                _convert_screen_graphics(screen, x, y, xlen, ylen);
+            }
+        }
+    }
+}
+
+// ----------------------------------------------------------------------------
+// Menu/HUD message printing
+
+void interface_printMessage(uint8_t *fb, int fb_pix_width, int col, int row, interface_colorscheme_t cs, const char *message) {
+    for (; *message; col++, message++) {
+        char c = *message;
+        interface_plotChar(fb, fb_pix_width, col, row, cs, c);
+    }
+}
+
+void interface_printMessageCentered(uint8_t *fb, int fb_cols, int fb_rows, interface_colorscheme_t cs, char *message, const int message_cols, const int message_rows) {
+    _translate_screen_x_y(message, message_cols, message_rows);
+    int col = (fb_cols - message_cols) >> 1;
+    int row = (fb_rows - message_rows) >> 1;
+    int fb_pix_width = (fb_cols*FONT80_WIDTH_PIXELS) + INTERPOLATED_PIXEL_ADJUSTMENT; // HACK NOTE : interpolated pixel adjustment still necessary ...
+    int row_max = row + message_rows;
+    for (int idx=0; row<row_max; row++, idx+=message_cols+1) {
+        interface_printMessage(fb, fb_pix_width, col, row, cs, &message[ idx ]);
+    }
+}
+
+// ----------------------------------------------------------------------------
+// Desktop Legacy Menu Interface
+
+#ifdef INTERFACE_CLASSIC
+
 static struct stat statbuf = { 0 };
 static int altdrive = 0;
-
 bool in_interface = false;
+
+void video_plotchar(const int col, const int row, const interface_colorscheme_t cs, const uint8_t c) {
+    interface_plotChar(video__fb1, SCANWIDTH, col, row, cs, c);
+}
 
 void copy_and_pad_string(char *dest, const char* src, const char c, const int len, const char cap) {
     const char* p = src;
@@ -50,8 +178,8 @@ static void pad_string(char *s, const char c, const int len) {
     *p = '\0';
 }
 
-void c_interface_print( int x, int y, int cs, const char *s ) {
-    video_interface_print(x, y, cs, s);
+void c_interface_print( int x, int y, const interface_colorscheme_t cs, const char *s ) {
+    interface_printMessage(video__fb1, SCANWIDTH, x, y, cs, s);
 }
 
 /* -------------------------------------------------------------------------
@@ -64,15 +192,15 @@ void c_interface_print_screen( char screen[24][INTERFACE_SCREEN_X+1] ) {
 }
 
 static void c_interface_translate_screen_x_y(char *screen, const int xlen, const int ylen) {
-    video_interface_translate_screen_x_y(screen, xlen, ylen);
+    _translate_screen_x_y(screen, xlen, ylen);
 }
 
 void c_interface_translate_screen( char screen[24][INTERFACE_SCREEN_X+1] ) {
     c_interface_translate_screen_x_y(screen[0], INTERFACE_SCREEN_X, 24);
 }
 
-void c_interface_print_submenu_centered( char *submenu, const int xlen, const int ylen ) {
-    video_interface_print_submenu_centered(submenu, xlen, ylen);
+void c_interface_print_submenu_centered( char *submenu, const int message_cols, const int message_rows ) {
+    interface_printMessageCentered(video__fb1, INTERFACE_SCREEN_X, TEXT_ROWS, RED_ON_BLACK, submenu, message_cols, message_rows);
 }
 
 /* ------------------------------------------------------------------------- */
@@ -1440,4 +1568,6 @@ void c_interface_begin(int current_key)
     pthread_t t = 0;
     pthread_create(&t, NULL, (void *)&interface_thread, (void *)((__SWORD_TYPE)current_key));
 }
+
+#endif
 

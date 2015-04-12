@@ -719,9 +719,9 @@ GLUE_C_WRITE(video__write_2e_text1_mixed)
 }
 
 // ----------------------------------------------------------------------------
-// interface/messages plotting
+// Classic interface and printing HUD messages
 
-void video_load_interface_fonts(void) {
+static void _load_interface_fonts(void) {
     video_loadfont_int(0x00,0x40,ucase_glyphs);
     video_loadfont_int(0x40,0x20,ucase_glyphs);
     video_loadfont_int(0x60,0x20,lcase_glyphs);
@@ -732,146 +732,21 @@ void video_load_interface_fonts(void) {
     video_loadfont_int(MOUSETEXT_BEGIN,0x20,mousetext_glyphs);
 }
 
-// Classic interface and messages
-void video_plotchar_fb(uint8_t *fb, int fb_width, int x, int y, int scheme, uint8_t c) {
+void interface_plotChar(uint8_t *fb, int fb_pix_width, int col, int row, interface_colorscheme_t cs, uint8_t c) {
     _vid_dirty = true;
 
-    unsigned int off = y * fb_width * 16 + x * 7 + 4;
+    unsigned int off = row * fb_pix_width * FONT_HEIGHT_PIXELS + col * FONT80_WIDTH_PIXELS + _INTERPOLATED_PIXEL_ADJUSTMENT_PRE;
     uint8_t *dst = fb + off;
-    uint8_t *src = video__int_font[scheme] + c * 64;
+    uint8_t *src = video__int_font[cs] + c * (FONT_GLYPH_X*FONT_GLYPH_Y);
 
-    _plot_char80(&dst, &src, fb_width);
-    _plot_char80(&dst, &src, fb_width);
-    _plot_char80(&dst, &src, fb_width);
-    _plot_char80(&dst, &src, fb_width);
-    _plot_char80(&dst, &src, fb_width);
-    _plot_char80(&dst, &src, fb_width);
-    _plot_char80(&dst, &src, fb_width);
-    _plot_char80(&dst, &src, fb_width);
-}
-
-void video_plotchar(int x, int y, int scheme, uint8_t c) {
-    video_plotchar_fb(video__fb1, SCANWIDTH, x, y, scheme, c);
-}
-
-void video_interface_print_fb(uint8_t *fb, int fb_width, int x, int y, int cs, const char *s) {
-    for (; *s; x++, s++) {
-        video_plotchar_fb(fb, fb_width, x, y, cs, *s);
-    }
-}
-
-void video_interface_print(int x, int y, int cs, const char *s) {
-    video_interface_print_fb(video__fb1, SCANWIDTH, x, y, cs, s);
-}
-
-#define IsGraphic(c) ((c) == '|' || (((unsigned char)c) >= 0x80 && ((unsigned char)c) <= 0x8A))
-#define IsInside(x,y) ((x) >= 0 && (x) <= xlen-1 && (y) >= 0 && (y) <= ylen-1)
-
-static void _convert_screen_graphics(char *screen, const int x, const int y, const int xlen, const int ylen) {
-    static char map[11][3][4] ={ { "...",
-                                   ".||",
-                                   ".|." },
-
-                                 { "...",
-                                   "||.",
-                                   ".|." },
-
-                                 { ".|.",
-                                   ".||",
-                                   "..." },
-
-                                 { ".|.",
-                                   "||.",
-                                   "..." },
-
-                                 { "~|~",
-                                   ".|.",
-                                   "~|~" },
-
-                                 { "~.~",
-                                   "|||",
-                                   "~.~" },
-
-                                 { ".|.",
-                                   ".||",
-                                   ".|." },
-
-                                 { ".|.",
-                                   "||.",
-                                   ".|." },
-
-                                 { "...",
-                                   "|||",
-                                   ".|." },
-
-                                 { ".|.",
-                                   "|||",
-                                   "..." },
-
-                                 { ".|.",
-                                   "|||",
-                                   ".|." } };
-
-    bool found_glyph = false;
-    int k = 10;
-    for (; k >= 0; k--) {
-        found_glyph = true;
-
-        for (int yy = y - 1; found_glyph && yy <= y + 1; yy++) {
-            int idx = yy*(xlen+1);
-            for (int xx = x - 1; xx <= x + 1; xx++) {
-                char map_ch = map[k][ yy - y + 1 ][ xx - x + 1 ];
-
-                if (IsInside(xx, yy)) {
-                    char c = *(screen + idx + xx);
-                    if (!IsGraphic( c ) && (map_ch == '|')) {
-                        found_glyph = false;
-                        break;
-                    } else if (IsGraphic( c ) && (map_ch == '.')) {
-                        found_glyph = false;
-                        break;
-                    }
-                } else if (map_ch == '|') {
-                    found_glyph = false;
-                    break;
-                }
-            }
-            idx += xlen+1;
-        }
-
-        if (found_glyph) {
-            break;
-        }
-    }
-
-    if (found_glyph) {
-        *(screen + y*(xlen+1) + x) = 0x80 + k;
-    }
-}
-
-void video_interface_translate_screen_x_y(char *screen, const int xlen, const int ylen) {
-    for (int idx=0, y=0; y < ylen; y++, idx+=xlen+1) {
-        for (int x = 0; x < xlen; x++) {
-            if (*(screen + idx + x) == '|') {
-                _convert_screen_graphics(screen, x, y, xlen, ylen);
-            }
-        }
-    }
-}
-
-void video_interface_print_submenu_centered_fb(uint8_t *fb, int submenu_width, int submenu_height, char *submenu, const int xlen, const int ylen) {
-    video_interface_translate_screen_x_y(submenu, xlen, ylen);
-    int x = (submenu_width - xlen) >> 1;
-    int y = (submenu_height - ylen) >> 1;
-    int fb_width = (submenu_width*7) + INTERPOLATED_PIXEL_ADJUSTMENT; // HACK NOTE : interpolated pixel adjustment still necessary ...
-    int ymax = y+ylen;
-    for (int idx=0; y < ymax; y++, idx+=xlen+1) {
-        video_interface_print_fb(fb, fb_width, x, y, 2, &submenu[ idx ]);
-    }
-}
-
-void video_interface_print_submenu_centered(char *submenu, const int xlen, const int ylen) {
-    video_interface_print_submenu_centered_fb(video__fb1, INTERFACE_SCREEN_X, TEXT_ROWS, submenu, xlen, ylen);
+    _plot_char80(&dst, &src, fb_pix_width);
+    _plot_char80(&dst, &src, fb_pix_width);
+    _plot_char80(&dst, &src, fb_pix_width);
+    _plot_char80(&dst, &src, fb_pix_width);
+    _plot_char80(&dst, &src, fb_pix_width);
+    _plot_char80(&dst, &src, fb_pix_width);
+    _plot_char80(&dst, &src, fb_pix_width);
+    _plot_char80(&dst, &src, fb_pix_width);
 }
 
 // ----------------------------------------------------------------------------
@@ -1396,5 +1271,11 @@ uint8_t floating_bus_hibit(const bool hibit) {
     uint16_t scanner_addr = video_scanner_get_address(NULL);
     uint8_t b = apple_ii_64k[0][scanner_addr];
     return (b & ~0x80) | (hibit ? 0x80 : 0);
+}
+
+__attribute__((constructor))
+static void _init_interface(void) {
+    LOG("display subsystem startup");
+    _load_interface_fonts();
 }
 

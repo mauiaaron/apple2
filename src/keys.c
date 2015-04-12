@@ -236,7 +236,8 @@ void c_keys_handle_input(int scancode, int pressed, int is_cooked)
 #ifdef INTERFACE_CLASSIC
             && !in_interface
 #endif
-       ) {
+       )
+    {
         do {
             int current_key = next_key;
             next_key = -1;
@@ -252,10 +253,11 @@ void c_keys_handle_input(int scancode, int pressed, int is_cooked)
             if (current_key == kF9)
             {
                 timing_toggle_cpu_speed();
+                if (video_animation_show_cpuspeed) {
+                    video_animation_show_cpuspeed();
+                }
                 break;
             }
-//#define CPUSCALE_ANIMATIONS_KEYS 1
-#if CPUSCALE_ANIMATIONS_KEYS
             if (current_key == kF3) {
 
                 double scale = (alt_speed_enabled ? cpu_altscale_factor : cpu_scale_factor);
@@ -319,7 +321,6 @@ void c_keys_handle_input(int scancode, int pressed, int is_cooked)
                 timing_toggle_cpu_speed();
                 break;
             }
-#endif
 #endif
 
             if (current_key == kEND)

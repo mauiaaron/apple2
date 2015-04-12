@@ -329,7 +329,7 @@ static void _quadCreateVAOAndVBOs(GLModel *model) {
     glEnableVertexAttribArray(POS_ATTRIB_IDX);
 
     // Get the size of the position type so we can set the stride properly
-    GLsizei posTypeSize = _get_gl_type_size(model->positionType);
+    GLsizei posTypeSize = getGLTypeSize(model->positionType);
 
     // Set up parmeters for position attribute in the VAO including,
     //  size, type, stride, and offset in the currenly bound VAO
@@ -355,7 +355,7 @@ static void _quadCreateVAOAndVBOs(GLModel *model) {
         glEnableVertexAttribArray(TEXCOORD_ATTRIB_IDX);
 
         // Get the size of the texcoord type so we can set the stride properly
-        GLsizei texcoordTypeSize = _get_gl_type_size(model->texcoordType);
+        GLsizei texcoordTypeSize = getGLTypeSize(model->texcoordType);
 
         // Set up parmeters for texcoord attribute in the VAO including,
         //   size, type, stride, and offset in the currenly bound VAO

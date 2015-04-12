@@ -16,7 +16,6 @@
 #include "video_util/modelUtil.h"
 
 MODEL_CLASS(GLModelHUDElement,
-    void *(*render)(GLModel *parent);
 
     char *tpl;                  // ASCII template
     unsigned int tplWidth;      // template width

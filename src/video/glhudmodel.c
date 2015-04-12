@@ -27,15 +27,13 @@ void glhud_setupDefault(GLModel *parent) {
     const unsigned int cols = hudElement->tplWidth;
     const unsigned int rows = hudElement->tplHeight;
     uint8_t *fb = hudElement->pixels;
-    const unsigned int fb_w = hudElement->pixWidth;
-    const unsigned int fb_h = hudElement->pixHeight;
 
     // render template into indexed fb
-    const unsigned int submenu_width = cols;
-    const unsigned int submenu_height = rows;
-    video_interface_print_submenu_centered_fb(fb, submenu_width, submenu_height, submenu, submenu_width, submenu_height);
+    interface_printMessageCentered(fb, cols, rows, RED_ON_BLACK, submenu, cols, rows);
 
     // generate RGBA_8888 from indexed color
+    const unsigned int fb_w = hudElement->pixWidth;
+    const unsigned int fb_h = hudElement->pixHeight;
     const unsigned int count = fb_w * fb_h;
     for (unsigned int i=0, j=0; i<count; i++, j+=4) {
         uint8_t index = *(fb + i);
