@@ -12,6 +12,11 @@
 #include "common.h"
 #include "video/glvideo.h"
 #include "video/glhudmodel.h"
+#include "video/glnode.h"
+
+#if !INTERFACE_TOUCH
+#error this is a touch interface module, possibly you mean to not compile this at all?
+#endif
 
 #define MODEL_DEPTH -0.03125
 
@@ -52,8 +57,6 @@ static bool isAvailable = false; // Were there any OpenGL/memory errors on gltou
 static bool isEnabled = true;    // Does player want touchjoy enabled?
 static bool isVisible = true;    // Does player want touchjoy to have some form of visibility?
 static float minAlpha = 0.0;     // Minimum alpha value of touchjoy components (at zero, will not draw)
-
-static glanim_t touchjoyAnimation = { 0 };
 
 // viewport touch
 static struct {
@@ -230,8 +233,8 @@ static void _model_to_screen(float screenCoords[4], GLModel *model) {
     screenCoords[3] = yFlip1;
 }
 
-static void gltouchjoy_init(void) {
-    LOG("gltouchjoy_init ...");
+static void gltouchjoy_setup(void) {
+    LOG("gltouchjoy_setup ...");
 
     mdlDestroyModel(&axes.model);
     mdlDestroyModel(&buttons.model);
@@ -264,8 +267,8 @@ static void gltouchjoy_init(void) {
     isAvailable = true;
 }
 
-static void gltouchjoy_destroy(void) {
-    LOG("gltouchjoy_destroy ...");
+static void gltouchjoy_shutdown(void) {
+    LOG("gltouchjoy_shutdown ...");
     if (!isAvailable) {
         return;
     }
@@ -491,7 +494,7 @@ static inline void _move_button_axis(int x, int y) {
     }
 }
 
-static bool gltouchjoy_onTouchEvent(joystick_touch_event_t action, int pointer_count, int pointer_idx, float *x_coords, float *y_coords) {
+static bool gltouchjoy_onTouchEvent(interface_touch_event_t action, int pointer_count, int pointer_idx, float *x_coords, float *y_coords) {
 
     if (!isAvailable) {
         return false;
@@ -667,18 +670,19 @@ static void _init_gltouchjoy(void) {
     buttons.activeChar = MOUSETEXT_OPENAPPLE;
     buttons.switchThreshold = BUTTON_SWITCH_THRESHOLD_DEFAULT;
 
-    joydriver_onTouchEvent  = &gltouchjoy_onTouchEvent;
     joydriver_isTouchJoystickAvailable = &gltouchjoy_isTouchJoystickAvailable;
     joydriver_setTouchJoyEnabled = &gltouchjoy_setTouchJoyEnabled;
     joydriver_setTouchButtonValues = &gltouchjoy_setTouchButtonValues;
     joydriver_setTouchAxisType = &gltouchjoy_setTouchAxisType;
     joydriver_setTouchAxisValues = &gltouchjoy_setTouchAxisValues;
 
-    touchjoyAnimation.ctor = &gltouchjoy_init;
-    touchjoyAnimation.dtor = &gltouchjoy_destroy;
-    touchjoyAnimation.render = &gltouchjoy_render;
-    touchjoyAnimation.reshape = &gltouchjoy_reshape;
-    gldriver_register_animation(&touchjoyAnimation);
+    glnode_registerNode(RENDER_LOW, (GLNode){
+        .setup = &gltouchjoy_setup;
+        .shutdown = &gltouchjoy_shutdown;
+        .render = &gltouchjoy_render;
+        .reshape = &gltouchjoy_reshape;
+        .onTouchEvent = &gltouchjoy_onTouchEvent;
+    });
 }
 
 void gldriver_joystick_reset(void) {

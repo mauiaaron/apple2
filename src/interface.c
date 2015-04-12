@@ -16,6 +16,11 @@
 
 #include "common.h"
 
+#if INTERFACE_TOUCH
+// touch interface managed elsewhere
+bool (*interface_onTouchEvent)(interface_touch_event_t action, int pointer_count, int pointer_idx, float *x_coords, float *y_coords) = NULL;
+#endif
+
 // 2015/04/12 : This was legacy code for rendering the menu interfaces on desktop Linux. Portions here are resurrected
 // to render HUD messages on desktop and mobile.  Nothing special or pretty here, but has "just worked" for 20+ years ;-)
 

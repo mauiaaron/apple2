@@ -12,6 +12,7 @@
 #include "common.h"
 #include "video/glvideo.h"
 #include "video/glhudmodel.h"
+#include "video/glnode.h"
 
 #define MODEL_DEPTH -0.0625
 
@@ -28,8 +29,6 @@ static bool isEnabled = true;
 static struct timespec cputiming_begin = { 0 };
 
 static GLModel *cpuMessageObjModel = NULL;
-
-static glanim_t cpuMessageAnimation = { 0 };
 
 // ----------------------------------------------------------------------------
 
@@ -98,8 +97,8 @@ static void cpuanim_init(void) {
     isAvailable = true;
 }
 
-static void cpuanim_destroy(void) {
-    LOG("gldriver_animation_destroy ...");
+static void cpuanim_shutdown(void) {
+    LOG("cpuanim_shutdown ...");
     if (!isAvailable) {
         return;
     }
@@ -154,14 +153,24 @@ static void cpuanim_show(void) {
     isEnabled = true;
 }
 
+#if INTERFACE_TOUCH
+static bool cpuanim_onTouchEvent(interface_touch_event_t action, int pointer_count, int pointer_idx, float *x_coords, float *y_coords) {
+    return false; // non-interactive element ...
+}
+#endif
+
 __attribute__((constructor))
 static void _init_glcpuanim(void) {
     LOG("Registering CPU speed animations");
-    video_animation_show_cpuspeed = &cpuanim_show;
-    cpuMessageAnimation.ctor = &cpuanim_init;
-    cpuMessageAnimation.dtor = &cpuanim_destroy;
-    cpuMessageAnimation.render = &cpuanim_render;
-    cpuMessageAnimation.reshape = &cpuanim_reshape;
-    gldriver_register_animation(&cpuMessageAnimation);
+    video_backend->video_animation_show_cpuspeed = &cpuanim_show;
+    glnode_registerNode(RENDER_MIDDLE, (GLNode){
+        .setup = &cpuanim_init,
+        .shutdown = &cpuanim_shutdown,
+        .render = &cpuanim_render,
+        .reshape = &cpuanim_reshape,
+#if INTERFACE_TOUCH
+        .onTouchEvent = &cpuanim_onTouchEvent,
+#endif
+    });
 }
 

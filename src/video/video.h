@@ -18,12 +18,23 @@
 #define A2_VIDEO_H
 
 typedef struct video_backend_s {
+
+    // mandatory video backend functions
     void (*init)(void *context);
     void (*main_loop)(void);
     void (*reshape)(int width, int height);
     void (*render)(void);
     void (*shutdown)(void);
+
+    // optional functions
+    void (*video_animation_show_cpuspeed)(void);
+    void (*video_animation_show_track_sector)(int drive, int track, int sect);
 } video_backend_s;
+
+/*
+ * The registered video backend (renderer).
+ */
+extern video_backend_s *video_backend;
 
 /*
  * Color structure
@@ -38,11 +49,6 @@ typedef struct A2Color_s {
  * Reference to the internal 8bit-indexed color format
  */
 extern A2Color_s colormap[];
-
-/*
- * The registered video backend (renderer).
- */
-extern video_backend_s *video_backend;
 
 /*
  * Prepare the video system, converting console to graphics mode, or
@@ -120,18 +126,6 @@ const uint8_t * const video_current_framebuffer();
  * True if anything changed in framebuffer and not yet drawn
  */
 bool video_dirty(void);
-
-// ----------------------------------------------------------------------------
-
-/*
- * Show CPU speed animation
- */
-extern void (*video_animation_show_cpuspeed)(void);
-
-/*
- * Show track/sector animation
- */
-extern void (*video_animation_show_track_sector)(int drive, int track, int sect);
 
 // ----------------------------------------------------------------------------
 

@@ -14,7 +14,7 @@
 #include "common.h"
 #include "video/glvideo.h"
 #include "video/glinput.h"
-#include "video/glanimation.h"
+#include "video/glnode.h"
 
 bool safe_to_do_opengl_logging = false;
 
@@ -476,7 +476,7 @@ static GLuint _build_program(demoSource *vertexSource, demoSource *fragmentSourc
         glUniform1i(messageSamplerLoc, TEXTURE_ID_MESSAGE);
     }
 
-#if TOUCH_JOYSTICK
+#if INTERFACE_TOUCH
     GLint axisSamplerLoc = glGetUniformLocation(prgName, "axisTexture");
     if (axisSamplerLoc < 0) {
         LOG("OOPS, no axisSamplerLoc shader : %d", axisSamplerLoc);
@@ -629,7 +629,7 @@ static void gldriver_shutdown(void) {
     crtModel = NULL;
     glDeleteProgram(program);
     program = UNINITIALIZED_GL;
-    gldriver_animation_destroy();
+    glnode_shutdownNodes();
 }
 
 //----------------------------------------------------------------------------
@@ -761,8 +761,8 @@ static void gldriver_render(void) {
     // Draw the CRT object and others
     glDrawElements(GL_TRIANGLES, crtNumElements, crtElementType, 0);
 
-    // Prep any other objects/animations
-    gldriver_animation_render();
+    // Render HUD nodes
+    glnode_renderNodes();
 
     _vid_dirty = false;
 
@@ -816,8 +816,8 @@ static void gldriver_reshape(int w, int h) {
 
     glViewport(viewportX, viewportY, viewportWidth, viewportHeight);
 
-    // Prep any other objects/animations
-    gldriver_animation_reshape(w, h);
+    // Reshape HUD nodes
+    glnode_reshapeNodes(w, h);
 }
 
 #if USE_GLUT
@@ -869,7 +869,7 @@ static void gldriver_init(void *fbo) {
 #else
 #error no working codepaths
 #endif
-    gldriver_animation_init();
+    glnode_setupNodes();
 }
 
 static void gldriver_main_loop(void) {

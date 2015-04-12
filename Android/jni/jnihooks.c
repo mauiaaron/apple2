@@ -94,14 +94,14 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeGraphicsChanged(JNIEnv *env
 }
 
 void Java_org_deadc0de_apple2ix_Apple2Activity_nativeGraphicsInitialized(JNIEnv *env, jobject obj, jint width, jint height) {
-    LOG("%s", "native graphicsInitialized...");
-    video_backend->reshape(width, height);
-
+    LOG("native graphicsInitialized width:%d height:%d", width, height);
     static bool graphicsPreviouslyInitialized = false;
     if (graphicsPreviouslyInitialized) {
         video_backend->shutdown();
     }
     graphicsPreviouslyInitialized = true;
+
+    video_backend->reshape(width, height);
     video_backend->init((void *)0);
 }
 
@@ -196,7 +196,7 @@ jboolean Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnTouch(JNIEnv *env, jo
     //  LOG("\t[%f,%f]", x_coords[i], y_coords[i]);
     //}
 
-    bool consumed = joydriver_onTouchEvent(joyaction, pointerCount, pointerIndex, x_coords, y_coords);
+    bool consumed = interface_onTouchEvent(joyaction, pointerCount, pointerIndex, x_coords, y_coords);
 
     (*env)->ReleaseFloatArrayElements(env, xCoords, x_coords, 0);
     (*env)->ReleaseFloatArrayElements(env, yCoords, y_coords, 0);
@@ -220,8 +220,8 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeIncreaseCPUSpeed(JNIEnv *en
 
     LOG("native set emulation percentage to %f", cpu_scale_factor);
 
-    if (video_animation_show_cpuspeed) {
-        video_animation_show_cpuspeed();
+    if (video_backend->video_animation_show_cpuspeed) {
+        video_backend->video_animation_show_cpuspeed();
     }
 
 #warning HACK TODO FIXME ... refactor timing stuff
@@ -253,8 +253,8 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeDecreaseCPUSpeed(JNIEnv *en
 
     LOG("native set emulation percentage to %f", cpu_scale_factor);
 
-    if (video_animation_show_cpuspeed) {
-        video_animation_show_cpuspeed();
+    if (video_backend->video_animation_show_cpuspeed) {
+        video_backend->video_animation_show_cpuspeed();
     }
 
 #warning HACK TODO FIXME ... refactor timing stuff

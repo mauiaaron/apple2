@@ -48,4 +48,19 @@ void interface_printMessage(uint8_t *fb, int fb_pix_width, int col, int row, int
 // Plots a string/template into the specified framebuffer
 void interface_printMessageCentered(uint8_t *fb, int fb_cols, int fb_rows, interface_colorscheme_t cs, char *message, int message_cols, int message_rows);
 
+#if INTERFACE_TOUCH
+typedef enum interface_touch_event_t {
+    TOUCH_CANCEL = 0,
+    TOUCH_DOWN,
+    TOUCH_MOVE,
+    TOUCH_UP,
+    TOUCH_POINTER_DOWN,
+    TOUCH_POINTER_UP,
+} interface_touch_event_t;
+
+// handle touch event
+extern bool (*interface_onTouchEvent)(interface_touch_event_t action, int pointer_count, int pointer_idx, float *x_coords, float *y_coords);
+#endif
+
+
 #endif
