@@ -57,7 +57,7 @@ static void _cpuanim_show(GLModel *parent) {
 
     const unsigned int row = (CPUTIMING_TEMPLATE_COLS+1);
 
-    char buf[8];
+    char buf[8] = { 0 };
     double scale = (alt_speed_enabled ? cpu_altscale_factor : cpu_scale_factor);
     int percentScale = scale * 100;
     if (percentScale < 100.0) {
@@ -76,9 +76,8 @@ static void _cpuanim_show(GLModel *parent) {
         ((hudElement->tpl)+(row*1))[4] = buf[2];
     }
 
-    setupDefaultGLModelHUDElement(parent);
+    glhud_setupDefault(parent);
 
-    isEnabled = true;
     clock_gettime(CLOCK_MONOTONIC, &cputiming_begin);
 }
 
@@ -87,9 +86,9 @@ static void cpuanim_init(void) {
 
     mdlDestroyModel(&cpuMessageObjModel);
     cpuMessageObjModel = mdlCreateQuad(-0.3, -0.3, 0.6, 0.6, MODEL_DEPTH, MESSAGE_FB_WIDTH, MESSAGE_FB_HEIGHT, GL_RGBA/*RGBA_8888*/, (GLCustom){
-            .create = createDefaultGLModelHUDElement,
+            .create = &glhud_createDefault,
             .setup = &_cpuanim_show,
-            .destroy = destroyDefaultGLModelHUDElement,
+            .destroy = &glhud_destroyDefault,
             });
     if (!cpuMessageObjModel) {
         LOG("not initializing CPU speed animations");
@@ -106,46 +105,6 @@ static void cpuanim_destroy(void) {
     }
     isAvailable = false;
     mdlDestroyModel(&cpuMessageObjModel);
-}
-
-static void _render_message_object(GLModel *model) {
-
-    // Bind our vertex array object
-#if USE_VAO
-    glBindVertexArray(model->vaoName);
-#else
-    glBindBuffer(GL_ARRAY_BUFFER, model->posBufferName);
-
-    GLsizei posTypeSize      = _get_gl_type_size(model->positionType);
-    GLsizei texcoordTypeSize = _get_gl_type_size(model->texcoordType);
-
-    // Set up parmeters for position attribute in the VAO including, size, type, stride, and offset in the currenly
-    // bound VAO This also attaches the position VBO to the VAO
-    glVertexAttribPointer(POS_ATTRIB_IDX,                                   // What attibute index will this array feed in the vertex shader (see buildProgram)
-                          model->positionSize,                 // How many elements are there per position?
-                          model->positionType,                 // What is the type of this data?
-                          GL_FALSE,                                         // Do we want to normalize this data (0-1 range for fixed-pont types)
-                          model->positionSize*posTypeSize,     // What is the stride (i.e. bytes between positions)?
-                          0);                                               // What is the offset in the VBO to the position data?
-    glEnableVertexAttribArray(POS_ATTRIB_IDX);
-
-    // Set up parmeters for texcoord attribute in the VAO including, size, type, stride, and offset in the currenly
-    // bound VAO This also attaches the texcoord VBO to VAO
-    glBindBuffer(GL_ARRAY_BUFFER, model->texcoordBufferName);
-    glVertexAttribPointer(TEXCOORD_ATTRIB_IDX,                              // What attibute index will this array feed in the vertex shader (see buildProgram)
-                          model->texcoordSize,                 // How many elements are there per texture coord?
-                          model->texcoordType,                 // What is the type of this data in the array?
-                          GL_TRUE,                                          // Do we want to normalize this data (0-1 range for fixed-point types)
-                          model->texcoordSize*texcoordTypeSize,// What is the stride (i.e. bytes between texcoords)?
-                          0);                                               // What is the offset in the VBO to the texcoord data?
-    glEnableVertexAttribArray(TEXCOORD_ATTRIB_IDX);
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, model->elementBufferName);
-#endif
-
-    // Draw the message object
-    glDrawElements(model->primType, model->numElements, model->elementType, 0);
-    GL_ERRLOG("CPU message render");
 }
 
 static void cpuanim_render(void) {
@@ -180,7 +139,7 @@ static void cpuanim_render(void) {
         glTexImage2D(GL_TEXTURE_2D, /*level*/0, /*internal format*/GL_RGBA, MESSAGE_FB_WIDTH, MESSAGE_FB_HEIGHT, /*border*/0, /*format*/GL_RGBA, GL_UNSIGNED_BYTE, cpuMessageObjModel->texPixels);
     }
     glUniform1i(uniformTex2Use, TEXTURE_ID_MESSAGE);
-    _render_message_object(cpuMessageObjModel);
+    glhud_renderDefault(cpuMessageObjModel);
 }
 
 static void cpuanim_reshape(int w, int h) {
@@ -192,6 +151,7 @@ static void cpuanim_show(void) {
         return;
     }
     _cpuanim_show(cpuMessageObjModel);
+    isEnabled = true;
 }
 
 __attribute__((constructor))

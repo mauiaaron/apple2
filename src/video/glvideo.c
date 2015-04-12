@@ -134,7 +134,7 @@ static void _create_VAO_VBOs(void) {
     glEnableVertexAttribArray(POS_ATTRIB_IDX);
 
     // Get the size of the position type so we can set the stride properly
-    GLsizei posTypeSize = _get_gl_type_size(crtModel->positionType);
+    GLsizei posTypeSize = getGLTypeSize(crtModel->positionType);
 
     // Set up parmeters for position attribute in the VAO including,
     //  size, type, stride, and offset in the currenly bound VAO
@@ -162,7 +162,7 @@ static void _create_VAO_VBOs(void) {
         glEnableVertexAttribArray(NORMAL_ATTRIB_IDX);
 
         // Get the size of the normal type so we can set the stride properly
-        GLsizei normalTypeSize = _get_gl_type_size(crtModel->normalType);
+        GLsizei normalTypeSize = getGLTypeSize(crtModel->normalType);
 
         // Set up parmeters for position attribute in the VAO including,
         //   size, type, stride, and offset in the currenly bound VAO
@@ -189,7 +189,7 @@ static void _create_VAO_VBOs(void) {
         glEnableVertexAttribArray(TEXCOORD_ATTRIB_IDX);
 
         // Get the size of the texcoord type so we can set the stride properly
-        GLsizei texcoordTypeSize = _get_gl_type_size(crtModel->texcoordType);
+        GLsizei texcoordTypeSize = getGLTypeSize(crtModel->texcoordType);
 
         // Set up parmeters for texcoord attribute in the VAO including,
         //   size, type, stride, and offset in the currenly bound VAO
@@ -725,8 +725,8 @@ static void gldriver_render(void) {
 #else
     glBindBuffer(GL_ARRAY_BUFFER, posBufferName);
 
-    GLsizei posTypeSize      = _get_gl_type_size(crtModel->positionType);
-    GLsizei texcoordTypeSize = _get_gl_type_size(crtModel->texcoordType);
+    GLsizei posTypeSize      = getGLTypeSize(crtModel->positionType);
+    GLsizei texcoordTypeSize = getGLTypeSize(crtModel->texcoordType);
 
     // Set up parmeters for position attribute in the VAO including, size, type, stride, and offset in the currenly
     // bound VAO This also attaches the position VBO to the VAO

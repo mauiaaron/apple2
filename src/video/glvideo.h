@@ -60,7 +60,7 @@ enum {
 #endif
 };
 
-static inline GLsizei _get_gl_type_size(GLenum type) {
+static inline GLsizei getGLTypeSize(GLenum type) {
     switch (type) {
         case GL_BYTE:
             return sizeof(GLbyte);

@@ -151,11 +151,11 @@ static void _setup_axis_object(GLModel *parent) {
     ((hudElement->tpl)+(row*2))[4] = axes.eastChar;
     ((hudElement->tpl)+(row*4))[2] = axes.southChar;
 
-    setupDefaultGLModelHUDElement(parent);
+    glhud_setupDefault(parent);
 }
 
 static void *_create_touchjoy_hud(void) {
-    GLModelHUDElement *hudElement = (GLModelHUDElement *)createDefaultGLModelHUDElement();
+    GLModelHUDElement *hudElement = (GLModelHUDElement *)glhud_createDefault();
     hudElement->blackIsTransparent = true;
     return hudElement;
 }
@@ -183,7 +183,7 @@ static void _setup_button_object(GLModel *parent) {
     const unsigned int row = (BUTTON_TEMPLATE_COLS+1);
     ((hudElement->tpl)+(row*0))[0] = buttons.activeChar;
 
-    setupDefaultGLModelHUDElement(parent);
+    glhud_setupDefault(parent);
 }
 
 static inline void _screen_to_model(float x, float y, float *screenX, float *screenY) {
@@ -201,7 +201,7 @@ static void _model_to_screen(float screenCoords[4], GLModel *model) {
 #warning NOTE: we possibly should use matrix calculations (but assuming HUD elements are identity/orthographic for now)
     GLfloat *positions = (GLfloat *)(model->positions);
     unsigned int stride = model->positionSize;
-    unsigned int len = model->positionArraySize/_get_gl_type_size(model->positionType);
+    unsigned int len = model->positionArraySize/getGLTypeSize(model->positionType);
     for (unsigned int i=0; i < len; i += stride) {
         float x = (positions[i] + 1.f) / 2.f;
         if (x < x0) {
@@ -239,7 +239,7 @@ static void gltouchjoy_init(void) {
     axes.model = mdlCreateQuad(-1.05, -1.0, AXIS_OBJ_W, AXIS_OBJ_H, MODEL_DEPTH, AXIS_FB_WIDTH, AXIS_FB_HEIGHT, GL_RGBA/*RGBA_8888*/, (GLCustom){
             .create = &_create_touchjoy_hud,
             .setup = &_setup_axis_object,
-            .destroy = destroyDefaultGLModelHUDElement,
+            .destroy = &glhud_destroyDefault,
             });
     if (!axes.model) {
         LOG("gltouchjoy not initializing axis");
@@ -251,7 +251,7 @@ static void gltouchjoy_init(void) {
     buttons.model = mdlCreateQuad(1.05-BUTTON_OBJ_W, -1.0, BUTTON_OBJ_W, BUTTON_OBJ_H, MODEL_DEPTH, BUTTON_FB_WIDTH, BUTTON_FB_HEIGHT, GL_RGBA/*RGBA_8888*/, (GLCustom){
             .create = &_create_touchjoy_hud,
             .setup = &_setup_button_object,
-            .destroy = destroyDefaultGLModelHUDElement,
+            .destroy = &glhud_destroyDefault,
             });
     if (!buttons.model) {
         LOG("gltouchjoy not initializing buttons");
@@ -274,46 +274,6 @@ static void gltouchjoy_destroy(void) {
 
     mdlDestroyModel(&axes.model);
     mdlDestroyModel(&buttons.model);
-}
-
-static void _render_object(GLModel *model) {
-
-    // Bind our vertex array object
-#if USE_VAO
-    glBindVertexArray(model->vaoName);
-#else
-    glBindBuffer(GL_ARRAY_BUFFER, model->posBufferName);
-
-    GLsizei posTypeSize      = _get_gl_type_size(model->positionType);
-    GLsizei texcoordTypeSize = _get_gl_type_size(model->texcoordType);
-
-    // Set up parmeters for position attribute in the VAO including, size, type, stride, and offset in the currenly
-    // bound VAO This also attaches the position VBO to the VAO
-    glVertexAttribPointer(POS_ATTRIB_IDX,                                   // What attibute index will this array feed in the vertex shader (see buildProgram)
-                          model->positionSize,                 // How many elements are there per position?
-                          model->positionType,                 // What is the type of this data?
-                          GL_FALSE,                                         // Do we want to normalize this data (0-1 range for fixed-pont types)
-                          model->positionSize*posTypeSize,     // What is the stride (i.e. bytes between positions)?
-                          0);                                               // What is the offset in the VBO to the position data?
-    glEnableVertexAttribArray(POS_ATTRIB_IDX);
-
-    // Set up parmeters for texcoord attribute in the VAO including, size, type, stride, and offset in the currenly
-    // bound VAO This also attaches the texcoord VBO to VAO
-    glBindBuffer(GL_ARRAY_BUFFER, model->texcoordBufferName);
-    glVertexAttribPointer(TEXCOORD_ATTRIB_IDX,                              // What attibute index will this array feed in the vertex shader (see buildProgram)
-                          model->texcoordSize,                 // How many elements are there per texture coord?
-                          model->texcoordType,                 // What is the type of this data in the array?
-                          GL_TRUE,                                          // Do we want to normalize this data (0-1 range for fixed-point types)
-                          model->texcoordSize*texcoordTypeSize,// What is the stride (i.e. bytes between texcoords)?
-                          0);                                               // What is the offset in the VBO to the texcoord data?
-    glEnableVertexAttribArray(TEXCOORD_ATTRIB_IDX);
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, model->elementBufferName);
-#endif
-
-    // Draw the object
-    glDrawElements(model->primType, model->numElements, model->elementType, 0);
-    GL_ERRLOG("gltouchjoy render");
 }
 
 static void gltouchjoy_render(void) {
@@ -362,7 +322,7 @@ static void gltouchjoy_render(void) {
             glBufferData(GL_ARRAY_BUFFER, axes.model->positionArraySize, axes.model->positions, GL_DYNAMIC_DRAW);
         }
         glUniform1i(uniformTex2Use, TEXTURE_ID_TOUCHJOY_AXIS);
-        _render_object(axes.model);
+        glhud_renderDefault(axes.model);
     }
 
     // draw button(s)
@@ -396,7 +356,7 @@ static void gltouchjoy_render(void) {
             glBufferData(GL_ARRAY_BUFFER, buttons.model->positionArraySize, buttons.model->positions, GL_DYNAMIC_DRAW);
         }
         glUniform1i(uniformTex2Use, TEXTURE_ID_TOUCHJOY_BUTTON);
-        _render_object(buttons.model);
+        glhud_renderDefault(buttons.model);
     }
 }
 

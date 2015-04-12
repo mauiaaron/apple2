@@ -30,12 +30,15 @@ MODEL_CLASS(GLModelHUDElement,
 );
 
 // default model creation
-extern void *(*createDefaultGLModelHUDElement)(void);
+void *glhud_createDefault(void);
 
 // default model setup
-extern void (*setupDefaultGLModelHUDElement)(GLModel *parent);
+void glhud_setupDefault(GLModel *parent);
+
+// render default
+void glhud_renderDefault(GLModel *parent);
 
 // default model destruction
-extern void (*destroyDefaultGLModelHUDElement)(GLModel *parent);
+void glhud_destroyDefault(GLModel *parent);
 
 #endif
