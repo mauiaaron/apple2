@@ -190,55 +190,45 @@ public class Apple2Activity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
+        Log.d(TAG, "onResume()");
         mView.onResume();
-
-        Apple2MainMenu mainMenu = mView.getMainMenu();
-
-        boolean noMenusShowing = !(
-                (mainMenu != null && mainMenu.isShowing()) ||
-                (mQuitDialog != null && mQuitDialog.isShowing()) ||
-                (mRebootDialog != null && mRebootDialog.isShowing())
-        );
-
-        if (noMenusShowing) {
-            nativeOnResume();
-        }
+        nativeOnResume();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
+        Log.d(TAG, "onPause()");
         mView.onPause();
-
-        Apple2MainMenu mainMenu = mView.getMainMenu();
-        if (mainMenu == null) {
-            // wow, early onPause, just quit and restart later
-            nativeOnQuit();
-            return;
-        }
-
-        nativeOnPause();
 
         if (isSoftKeyboardShowing()) {
             mView.toggleKeyboard();
         }
 
+        // Apparently not good to leave popup/dialog windows showing when backgrounding.
+        // Dismiss these popups to avoid android.view.WindowLeaked issues
+        Apple2MainMenu mainMenu = mView.getMainMenu();
+        if (mainMenu != null) {
+            mainMenu.dismiss();
+        }
+        if (mQuitDialog != null  && mQuitDialog.isShowing()) {
+            mQuitDialog.dismiss();
+        }
+        if (mRebootDialog != null && mRebootDialog.isShowing()) {
+            mRebootDialog.dismiss();
+        }
+
+        // For good measure, get rid of other menus too
         Apple2SettingsMenu settingsMenu = mView.getSettingsMenu();
-        Apple2DisksMenu disksMenu = mView.getDisksMenu();
         if (settingsMenu != null) {
             settingsMenu.dismissWithoutResume();
         }
+        Apple2DisksMenu disksMenu = mView.getDisksMenu();
         if (disksMenu != null) {
             disksMenu.dismissWithoutResume();
         }
 
-        boolean someMenuShowing = mainMenu.isShowing() ||
-                (mQuitDialog != null && mQuitDialog.isShowing()) ||
-                (mRebootDialog != null && mRebootDialog.isShowing());
-        if (!someMenuShowing) {
-            // show main menu on pause
-            mView.showMainMenu();
-        }
+        nativeOnPause();
     }
 
     @Override
