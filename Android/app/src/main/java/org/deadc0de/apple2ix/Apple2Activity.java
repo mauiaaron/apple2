@@ -68,7 +68,7 @@ public class Apple2Activity extends Activity {
     private native void nativeIncreaseCPUSpeed();
     private native void nativeDecreaseCPUSpeed();
 
-    public native void nativeOnResume();
+    public native void nativeOnResume(boolean isSystemResume);
     public native void nativeOnPause();
     public native void nativeOnQuit();
 
@@ -192,7 +192,7 @@ public class Apple2Activity extends Activity {
         super.onResume();
         Log.d(TAG, "onResume()");
         mView.onResume();
-        nativeOnResume();
+        nativeOnResume(/*isSystemResume:*/true);
     }
 
     @Override
@@ -447,13 +447,13 @@ public class Apple2Activity extends Activity {
             /*mQuitDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
                 @Override
                 public void onCancel(DialogInterface dialog) {
-                    nativeOnResume();
+                    nativeOnResume(false);
                 }
             });
             mQuitDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
                 @Override
                 public void onDismiss(DialogInterface dialog) {
-                    nativeOnResume();
+                    nativeOnResume(false);
                 }
             });*/
         }
@@ -473,13 +473,13 @@ public class Apple2Activity extends Activity {
             /*mRebootDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
                 @Override
                 public void onCancel(DialogInterface dialog) {
-                    nativeOnResume();
+                    nativeOnResume(false);
                 }
             });
             mRebootDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
                 @Override
                 public void onDismiss(DialogInterface dialog) {
-                    nativeOnResume();
+                    nativeOnResume(false);
                 }
             });*/
         }

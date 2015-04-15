@@ -138,7 +138,7 @@ public class Apple2DisksMenu {
     public void dismiss() {
         if (isShowing()) {
             dismissWithoutResume();
-            mActivity.nativeOnResume();
+            mActivity.nativeOnResume(/*isSystemResume:*/false);
         }
     }
 

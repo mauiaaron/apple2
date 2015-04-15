@@ -112,13 +112,17 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeGraphicsInitialized(JNIEnv 
     video_backend->init((void *)0);
 }
 
-void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnResume(JNIEnv *env, jobject obj) {
+void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnResume(JNIEnv *env, jobject obj, jboolean isSystemResume) {
     if (!nativePaused) {
         return;
     }
-    nativePaused = false;
     LOG("%s", "native onResume...");
-    pthread_mutex_unlock(&interface_mutex);
+    if (isSystemResume) {
+        // TODO POSSIBLY : message showing paused state
+    } else {
+        nativePaused = false;
+        pthread_mutex_unlock(&interface_mutex);
+    }
 }
 
 void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnPause(JNIEnv *env, jobject obj) {
@@ -193,6 +197,13 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnKeyUp(JNIEnv *env, jobjec
 
 jboolean Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnTouch(JNIEnv *env, jobject obj, jint action, jint pointerCount, jint pointerIndex, jfloatArray xCoords, jfloatArray yCoords) {
     //LOG("nativeOnTouch : %d/%d/%d :", action, pointerCount, pointerIndex);
+
+    if (nativePaused) {
+        LOG("UNPAUSING NATIVE CPU THREAD");
+        nativePaused = false;
+        pthread_mutex_unlock(&interface_mutex);
+        return true;
+    }
 
     jfloat *x_coords = (*env)->GetFloatArrayElements(env, xCoords, 0);
     jfloat *y_coords = (*env)->GetFloatArrayElements(env, yCoords, 0);

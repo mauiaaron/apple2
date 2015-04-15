@@ -244,7 +244,7 @@ public class Apple2SettingsMenu {
     public void dismiss() {
         if (isShowing()) {
             dismissWithoutResume();
-            mActivity.nativeOnResume();
+            mActivity.nativeOnResume(/*isSystemResume:*/false);
         }
     }
 
