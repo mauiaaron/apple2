@@ -76,6 +76,13 @@ static inline int _androidTouchEvent2JoystickEvent(jint action) {
 
 void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnCreate(JNIEnv *env, jobject obj, jstring j_dataDir) {
     const char *dataDir = (*env)->GetStringUTFChars(env, j_dataDir, 0);
+
+    // Android lifecycle can call onCreate() multiple times...
+    if (data_dir) {
+        LOG("IGNORING multiple calls to nativeOnCreate ...");
+        return;
+    }
+
     data_dir = strdup(dataDir);
     (*env)->ReleaseStringUTFChars(env, j_dataDir, dataDir);
     LOG("nativeOnCreate(%s)...", data_dir);
@@ -158,7 +165,7 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeReboot(JNIEnv *env, jobject
 }
 
 void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnQuit(JNIEnv *env, jobject obj) {
-    LOG("%s", "native quit...");
+    LOG("%s", "nativeOnQuit...");
 
     c_eject_6(0);
     c_eject_6(1);
