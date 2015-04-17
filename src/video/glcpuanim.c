@@ -161,8 +161,7 @@ static bool cpuanim_onTouchEvent(interface_touch_event_t action, int pointer_cou
 
 __attribute__((constructor))
 static void _init_glcpuanim(void) {
-    LOG("Registering CPU speed animations");
-    video_backend->video_animation_show_cpuspeed = &cpuanim_show;
+    video_backendInstance()->video_animation_show_cpuspeed = &cpuanim_show;
     glnode_registerNode(RENDER_MIDDLE, (GLNode){
         .setup = &cpuanim_init,
         .shutdown = &cpuanim_shutdown,

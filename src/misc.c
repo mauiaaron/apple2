@@ -31,7 +31,7 @@ color_mode_t color_mode = COLOR;
 const char *data_dir = NULL;
 
 __attribute__((constructor))
-static void _init_common() {
+static void _init_common(void) {
     error_log = stderr;
 #if defined(CONFIG_DATADIR)
     data_dir = strdup(CONFIG_DATADIR "/" PACKAGE_NAME);
@@ -599,6 +599,8 @@ void c_initialize_firsttime(void) {
 #ifdef DEBUGGER
     c_debugger_init();
 #endif
+
+    video_loadfonts_interface();
 }
 
 #if !TESTING && !defined(__APPLE__) && !defined(ANDROID)

@@ -25,7 +25,6 @@ static uint8_t vga_mem_page_0[SCANWIDTH*SCANHEIGHT];
 static uint8_t vga_mem_page_1[SCANWIDTH*SCANHEIGHT];
 
 A2Color_s colormap[256] = { { 0 } };
-video_backend_s *video_backend = NULL;
 
 static uint8_t video__wider_font[0x8000];
 static uint8_t video__font[0x4000];
@@ -491,7 +490,7 @@ void video_loadfont(int first, int quantity, const uint8_t *data, int mode) {
     }
 }
 
-static void video_loadfont_int(int first, int quantity, const uint8_t *data) {
+static void video_loadfont_interface(int first, int quantity, const uint8_t *data) {
     unsigned int i = quantity * 8;
     while (i--) {
         unsigned int j = 8;
@@ -721,15 +720,15 @@ GLUE_C_WRITE(video__write_2e_text1_mixed)
 // ----------------------------------------------------------------------------
 // Classic interface and printing HUD messages
 
-static void _load_interface_fonts(void) {
-    video_loadfont_int(0x00,0x40,ucase_glyphs);
-    video_loadfont_int(0x40,0x20,ucase_glyphs);
-    video_loadfont_int(0x60,0x20,lcase_glyphs);
-    video_loadfont_int(0x80,0x40,ucase_glyphs);
-    video_loadfont_int(0xC0,0x20,ucase_glyphs);
-    video_loadfont_int(0xE0,0x20,lcase_glyphs);
-    video_loadfont_int(0x80,11,interface_glyphs);
-    video_loadfont_int(MOUSETEXT_BEGIN,0x20,mousetext_glyphs);
+void video_loadfonts_interface(void) {
+    video_loadfont_interface(0x00,0x40,ucase_glyphs);
+    video_loadfont_interface(0x40,0x20,ucase_glyphs);
+    video_loadfont_interface(0x60,0x20,lcase_glyphs);
+    video_loadfont_interface(0x80,0x40,ucase_glyphs);
+    video_loadfont_interface(0xC0,0x20,ucase_glyphs);
+    video_loadfont_interface(0xE0,0x20,lcase_glyphs);
+    video_loadfont_interface(0x80,11,interface_glyphs);
+    video_loadfont_interface(MOUSETEXT_BEGIN,0x20,mousetext_glyphs);
 }
 
 void interface_plotChar(uint8_t *fb, int fb_pix_width, int col, int row, interface_colorscheme_t cs, uint8_t c) {
@@ -1058,7 +1057,7 @@ void video_init(void) {
 #if !defined(__APPLE__)
 #if !defined(ANDROID)
     if (!is_headless) {
-        video_backend->init((void*)0);
+        video_backendInstance()->init((void*)0);
     }
 #endif
 #endif
@@ -1068,7 +1067,7 @@ void video_init(void) {
 void video_shutdown(void) {
 #if !HEADLESS
     if (!is_headless) {
-        video_backend->shutdown();
+        video_backendInstance()->shutdown();
     }
 #if !defined(__APPLE__)
     exit(0);
@@ -1078,7 +1077,7 @@ void video_shutdown(void) {
 
 void video_main_loop(void) {
 #if !HEADLESS
-    video_backend->main_loop();
+    video_backendInstance()->main_loop();
 #endif
 }
 
@@ -1272,10 +1271,3 @@ uint8_t floating_bus_hibit(const bool hibit) {
     uint8_t b = apple_ii_64k[0][scanner_addr];
     return (b & ~0x80) | (hibit ? 0x80 : 0);
 }
-
-__attribute__((constructor))
-static void _init_interface(void) {
-    LOG("display subsystem startup");
-    _load_interface_fonts();
-}
-

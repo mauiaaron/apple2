@@ -34,7 +34,7 @@ typedef struct video_backend_s {
 /*
  * The registered video backend (renderer).
  */
-extern video_backend_s *video_backend;
+extern video_backend_s *video_backendInstance(void);
 
 /*
  * Color structure
@@ -102,6 +102,11 @@ void video_set(int flags);
  * once for a //c.
  */
 void video_loadfont(int first, int qty, const uint8_t *data, int mode);
+
+/*
+ * Load interface fonts.
+ */
+void video_loadfonts_interface(void);
 
 /*
  * Redraw the display. This is called after exiting an interface display,

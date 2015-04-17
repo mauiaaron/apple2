@@ -47,8 +47,6 @@ static GLuint texcoordBufferName = UNINITIALIZED_GL;
 static GLuint elementBufferName = UNINITIALIZED_GL;
 static GLModel *crtModel = NULL;
 
-static video_backend_s glvideo_backend = { 0 };
-
 #if USE_GLUT
 static int glutWindow = -1;
 #endif
@@ -879,16 +877,19 @@ static void gldriver_main_loop(void) {
     // fall through if not GLUT
 }
 
-__attribute__((constructor))
-static void _init_glvideo(void) {
-    LOG("Initializing OpenGL renderer");
-
-    glvideo_backend.init      = &gldriver_init;
-    glvideo_backend.main_loop = &gldriver_main_loop;
-    glvideo_backend.reshape   = &gldriver_reshape;
-    glvideo_backend.render    = &gldriver_render;
-    glvideo_backend.shutdown  = &gldriver_shutdown;
-
-    video_backend = &glvideo_backend;
+video_backend_s *video_backendInstance(void) {
+    static video_backend_s *glvideo_backend = NULL;
+    spin_lock_t lock = 0L;
+    spin_lock_lock(&lock);
+    if (glvideo_backend == NULL) {
+        glvideo_backend = malloc(sizeof(video_backend_s));
+        glvideo_backend->init      = &gldriver_init;
+        glvideo_backend->main_loop = &gldriver_main_loop;
+        glvideo_backend->reshape   = &gldriver_reshape;
+        glvideo_backend->render    = &gldriver_render;
+        glvideo_backend->shutdown  = &gldriver_shutdown;
+    }
+    spin_lock_unlock(&lock);
+    return glvideo_backend;
 }
 

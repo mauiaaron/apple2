@@ -16,6 +16,12 @@
 
 #ifdef __APPLE__
 
+#import <libkern/OSAtomic.h>
+
+#define spin_lock_t         OSSpinLock
+#define spin_lock_lock      OSSpinLockLock
+#define spin_lock_unlock    OSSpinLockUnlock
+
 #define CLOCK_MONOTONIC 1
 
 int clock_gettime(int, struct timespec *);
