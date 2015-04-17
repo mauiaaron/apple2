@@ -145,35 +145,6 @@ static void _create_VAO_VBOs(void) {
                           0);    // What is the offset in the VBO to the position data?
 #endif
 
-#if 0
-    if (crtModel->normals) {
-        GLuint normalBufferName;
-
-        // Create a vertex buffer object (VBO) to store positions
-        glGenBuffers(1, &normalBufferName);
-        glBindBuffer(GL_ARRAY_BUFFER, normalBufferName);
-
-        // Allocate and load normal data into the VBO
-        glBufferData(GL_ARRAY_BUFFER, crtModel->normalArraySize, crtModel->normals, GL_STATIC_DRAW);
-
-        // Enable the normal attribute for this VAO
-        glEnableVertexAttribArray(NORMAL_ATTRIB_IDX);
-
-        // Get the size of the normal type so we can set the stride properly
-        GLsizei normalTypeSize = getGLTypeSize(crtModel->normalType);
-
-        // Set up parmeters for position attribute in the VAO including,
-        //   size, type, stride, and offset in the currenly bound VAO
-        // This also attaches the position VBO to the VAO
-        glVertexAttribPointer(NORMAL_ATTRIB_IDX,    // What attibute index will this array feed in the vertex shader (see buildProgram)
-                              crtModel->normalSize,    // How many elements are there per normal?
-                              crtModel->normalType,    // What is the type of this data?
-                              GL_FALSE,                // Do we want to normalize this data (0-1 range for fixed-pont types)
-                              crtModel->normalSize*normalTypeSize, // What is the stride (i.e. bytes between normals)?
-                              0);    // What is the offset in the VBO to the normal data?
-    }
-#endif
-
     if (crtModel->texCoords) {
         // Create a VBO to store texcoords
         glGenBuffers(1, &texcoordBufferName);
@@ -560,10 +531,12 @@ static void gldriver_init_common(void) {
     crtElementType = crtModel->elementType;
 
 #if USE_VAO
-    // We're using VBOs we can destroy all this memory since buffers are
+    // We're using VAOs we can destroy certain buffers since they are already
     // loaded into GL and we've saved anything else we need
-    mdlDestroyModel(&crtModel);
-    crtModel = NULL;
+    FREE(crtModel->elements);
+    FREE(crtModel->positions);
+    FREE(crtModel->normals);
+    FREE(crtModel->texCoords);
 #endif
 
     // Build a default texture object with our image data
@@ -624,7 +597,6 @@ static void gldriver_shutdown(void) {
     _destroy_VAO(crtVAOName);
     crtVAOName = UNINITIALIZED_GL;
     mdlDestroyModel(&crtModel);
-    crtModel = NULL;
     glDeleteProgram(program);
     program = UNINITIALIZED_GL;
     glnode_shutdownNodes();
