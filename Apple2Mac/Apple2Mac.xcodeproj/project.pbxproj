@@ -9,20 +9,30 @@
 /* Begin PBXBuildFile section */
 		4A2636F919FDEDB700DBFB00 /* Apple2Mac.help in Resources */ = {isa = PBXBuildFile; fileRef = 4A2636F819FDEDB700DBFB00 /* Apple2Mac.help */; };
 		4A5BE6101AD88CAC00496307 /* glcpuanim.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A5BE60D1AD88CAC00496307 /* glcpuanim.c */; };
-		4A5BE6121AD88CAC00496307 /* glanimation.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A5BE60F1AD88CAC00496307 /* glanimation.c */; };
 		4A5BE6131AD88E9E00496307 /* glcpuanim.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A5BE60D1AD88CAC00496307 /* glcpuanim.c */; };
-		4A5BE6141AD88E9E00496307 /* glanimation.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A5BE60F1AD88CAC00496307 /* glanimation.c */; };
 		4A5BE6151AD88E9F00496307 /* glcpuanim.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A5BE60D1AD88CAC00496307 /* glcpuanim.c */; };
-		4A5BE6161AD88E9F00496307 /* glanimation.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A5BE60F1AD88CAC00496307 /* glanimation.c */; };
 		4A5BE6171AD88EA000496307 /* glcpuanim.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A5BE60D1AD88CAC00496307 /* glcpuanim.c */; };
-		4A5BE6181AD88EA000496307 /* glanimation.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A5BE60F1AD88CAC00496307 /* glanimation.c */; };
 		4A5BE6191AD88EA100496307 /* glcpuanim.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A5BE60D1AD88CAC00496307 /* glcpuanim.c */; };
-		4A5BE61A1AD88EA100496307 /* glanimation.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A5BE60F1AD88CAC00496307 /* glanimation.c */; };
 		4A61119C1A6A1DE60035F7DE /* blank.po.gz in Resources */ = {isa = PBXBuildFile; fileRef = 4A61119B1A6A1DE60035F7DE /* blank.po.gz */; };
 		4A61119D1A6A1DE60035F7DE /* blank.po.gz in Resources */ = {isa = PBXBuildFile; fileRef = 4A61119B1A6A1DE60035F7DE /* blank.po.gz */; };
 		4A6111A31A6A1DFC0035F7DE /* flapple140.po.gz in Resources */ = {isa = PBXBuildFile; fileRef = 4A6111A21A6A1DFC0035F7DE /* flapple140.po.gz */; };
 		4A69C1801A33D6D7001579EF /* images in Resources */ = {isa = PBXBuildFile; fileRef = 4A69C17F1A33D6D7001579EF /* images */; };
 		4A69C1921A33DB90001579EF /* DDHidLib.framework in Copy Files (1 item) */ = {isa = PBXBuildFile; fileRef = 77C2796F1A1047AF000FE33F /* DDHidLib.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		4A7EDC931AE092680072E98A /* glhudmodel.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A7EDC911AE092680072E98A /* glhudmodel.c */; };
+		4A7EDC941AE092680072E98A /* glhudmodel.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A7EDC911AE092680072E98A /* glhudmodel.c */; };
+		4A7EDC951AE092680072E98A /* glhudmodel.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A7EDC911AE092680072E98A /* glhudmodel.c */; };
+		4A7EDC961AE092680072E98A /* glhudmodel.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A7EDC911AE092680072E98A /* glhudmodel.c */; };
+		4A7EDC971AE092680072E98A /* glhudmodel.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A7EDC911AE092680072E98A /* glhudmodel.c */; };
+		4A7EDC981AE092680072E98A /* glnode.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A7EDC921AE092680072E98A /* glnode.c */; };
+		4A7EDC991AE092680072E98A /* glnode.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A7EDC921AE092680072E98A /* glnode.c */; };
+		4A7EDC9A1AE092680072E98A /* glnode.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A7EDC921AE092680072E98A /* glnode.c */; };
+		4A7EDC9B1AE092680072E98A /* glnode.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A7EDC921AE092680072E98A /* glnode.c */; };
+		4A7EDC9C1AE092680072E98A /* glnode.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A7EDC921AE092680072E98A /* glnode.c */; };
+		4A7EDC9E1AE092B80072E98A /* interface.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A7EDC9D1AE092B80072E98A /* interface.c */; };
+		4A7EDC9F1AE092B80072E98A /* interface.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A7EDC9D1AE092B80072E98A /* interface.c */; };
+		4A7EDCA01AE092B80072E98A /* interface.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A7EDC9D1AE092B80072E98A /* interface.c */; };
+		4A7EDCA11AE092B80072E98A /* interface.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A7EDC9D1AE092B80072E98A /* interface.c */; };
+		4A7EDCA21AE092B80072E98A /* interface.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A7EDC9D1AE092B80072E98A /* interface.c */; };
 		4AC7A76D19ECC3FB00BCD457 /* EmulatorWindow.m in Sources */ = {isa = PBXBuildFile; fileRef = 4AC7A76C19ECC3FB00BCD457 /* EmulatorWindow.m */; };
 		4AD4FE941A52464F00F958EC /* cpu.S in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D9019568A570085CE5F /* cpu.S */; };
 		4AD4FE951A52464F00F958EC /* prefs.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D7719568A570085CE5F /* prefs.c */; };
@@ -301,10 +311,12 @@
 /* Begin PBXFileReference section */
 		4A2636F819FDEDB700DBFB00 /* Apple2Mac.help */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Apple2Mac.help; sourceTree = "<group>"; };
 		4A5BE60D1AD88CAC00496307 /* glcpuanim.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = glcpuanim.c; sourceTree = "<group>"; };
-		4A5BE60F1AD88CAC00496307 /* glanimation.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = glanimation.c; sourceTree = "<group>"; };
 		4A61119B1A6A1DE60035F7DE /* blank.po.gz */ = {isa = PBXFileReference; lastKnownFileType = archive.gzip; path = blank.po.gz; sourceTree = "<group>"; };
 		4A6111A21A6A1DFC0035F7DE /* flapple140.po.gz */ = {isa = PBXFileReference; lastKnownFileType = archive.gzip; path = flapple140.po.gz; sourceTree = "<group>"; };
 		4A69C17F1A33D6D7001579EF /* images */ = {isa = PBXFileReference; lastKnownFileType = folder; name = images; path = ../../images; sourceTree = "<group>"; };
+		4A7EDC911AE092680072E98A /* glhudmodel.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = glhudmodel.c; sourceTree = "<group>"; };
+		4A7EDC921AE092680072E98A /* glnode.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = glnode.c; sourceTree = "<group>"; };
+		4A7EDC9D1AE092B80072E98A /* interface.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = interface.c; sourceTree = "<group>"; };
 		4AC7A76B19ECC3FB00BCD457 /* EmulatorWindow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = EmulatorWindow.h; path = Classes/OSX/EmulatorWindow.h; sourceTree = "<group>"; };
 		4AC7A76C19ECC3FB00BCD457 /* EmulatorWindow.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = EmulatorWindow.m; path = Classes/OSX/EmulatorWindow.m; sourceTree = "<group>"; };
 		4AD4FEC31A52464F00F958EC /* Apple2MacTestDisk.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Apple2MacTestDisk.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -559,7 +571,6 @@
 				4ADC522F19E8D3F600186B36 /* disks */,
 				773B3D4519568A570085CE5F /* src */,
 				773B3D431956897D0085CE5F /* Classes */,
-				77E1C09E19D726B8004344E0 /* Shaders */,
 				773B3D44195689910085CE5F /* Resources */,
 				773B3D161956885A0085CE5F /* Supporting Files */,
 			);
@@ -649,6 +660,7 @@
 				773B3D6419568A570085CE5F /* display.c */,
 				773B3D6519568A570085CE5F /* font.c */,
 				773B3D6919568A570085CE5F /* glue.h */,
+				4A7EDC9D1AE092B80072E98A /* interface.c */,
 				773B3D6C19568A570085CE5F /* joystick.c */,
 				773B3D6D19568A570085CE5F /* joystick.h */,
 				773B3D6E19568A570085CE5F /* keys.c */,
@@ -703,10 +715,11 @@
 		773B3D8A19568A570085CE5F /* video */ = {
 			isa = PBXGroup;
 			children = (
-				4A5BE60D1AD88CAC00496307 /* glcpuanim.c */,
-				4A5BE60F1AD88CAC00496307 /* glanimation.c */,
-				779F562719E4FE9E00A6F107 /* Basic.vsh */,
 				779F562819E4FE9E00A6F107 /* Basic.fsh */,
+				779F562719E4FE9E00A6F107 /* Basic.vsh */,
+				4A5BE60D1AD88CAC00496307 /* glcpuanim.c */,
+				4A7EDC911AE092680072E98A /* glhudmodel.c */,
+				4A7EDC921AE092680072E98A /* glnode.c */,
 				77E1C0C719D736EB004344E0 /* glvideo.c */,
 				773B3D8B19568A570085CE5F /* video.h */,
 			);
@@ -759,27 +772,20 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		77E1C09E19D726B8004344E0 /* Shaders */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			name = Shaders;
-			sourceTree = "<group>";
-		};
 		77E1C0A719D726E8004344E0 /* video_util */ = {
 			isa = PBXGroup;
 			children = (
-				77E1C0A819D72700004344E0 /* vectorUtil.h */,
-				77E1C0A919D72700004344E0 /* vectorUtil.c */,
-				77E1C0AA19D72700004344E0 /* sourceUtil.h */,
-				77E1C0AB19D72700004344E0 /* sourceUtil.c */,
-				77E1C0AC19D72700004344E0 /* modelUtil.h */,
-				77E1C0AD19D72700004344E0 /* modelUtil.c */,
-				77E1C0AE19D72700004344E0 /* matrixUtil.h */,
-				77E1C0AF19D72700004344E0 /* matrixUtil.c */,
+				77E1C0B219D72700004344E0 /* glUtil.h */,
 				77E1C0B019D72700004344E0 /* imageUtil.m */,
 				77E1C0B119D72700004344E0 /* imageUtil.h */,
-				77E1C0B219D72700004344E0 /* glUtil.h */,
+				77E1C0AE19D72700004344E0 /* matrixUtil.h */,
+				77E1C0AF19D72700004344E0 /* matrixUtil.c */,
+				77E1C0AC19D72700004344E0 /* modelUtil.h */,
+				77E1C0AD19D72700004344E0 /* modelUtil.c */,
+				77E1C0AA19D72700004344E0 /* sourceUtil.h */,
+				77E1C0AB19D72700004344E0 /* sourceUtil.c */,
+				77E1C0A819D72700004344E0 /* vectorUtil.h */,
+				77E1C0A919D72700004344E0 /* vectorUtil.c */,
 			);
 			name = video_util;
 			sourceTree = "<group>";
@@ -1208,13 +1214,14 @@
 				4AD4FE9B1A52464F00F958EC /* keys.c in Sources */,
 				4AD4FE9C1A52464F00F958EC /* timing.c in Sources */,
 				4AD4FE9D1A52464F00F958EC /* testcommon.c in Sources */,
-				4A5BE6161AD88E9F00496307 /* glanimation.c in Sources */,
 				4AD4FE9E1A52464F00F958EC /* misc.c in Sources */,
 				4AD4FE9F1A52464F00F958EC /* opcodes.c in Sources */,
+				4A7EDCA01AE092B80072E98A /* interface.c in Sources */,
 				4AD4FEA01A52464F00F958EC /* glvideo.c in Sources */,
 				4AD4FEA11A52464F00F958EC /* rom-shim.c in Sources */,
 				4AD4FEA21A52464F00F958EC /* zlib-helpers.c in Sources */,
 				4AD4FEA31A52464F00F958EC /* darwin-shim.c in Sources */,
+				4A7EDC9A1AE092680072E98A /* glnode.c in Sources */,
 				4AD4FEA41A52464F00F958EC /* main.m in Sources */,
 				4AD4FECB1A52468700F958EC /* testdisk.c in Sources */,
 				4AD4FEA51A52464F00F958EC /* vectorUtil.c in Sources */,
@@ -1226,6 +1233,7 @@
 				4AD4FEAB1A52464F00F958EC /* vm.c in Sources */,
 				4AD4FEAC1A52464F00F958EC /* darwin-glue.S in Sources */,
 				4AD4FEAD1A52464F00F958EC /* matrixUtil.c in Sources */,
+				4A7EDC951AE092680072E98A /* glhudmodel.c in Sources */,
 				4AD4FEAE1A52464F00F958EC /* joystick.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1245,13 +1253,14 @@
 				4ADC520519E8CA4500186B36 /* keys.c in Sources */,
 				4ADC520619E8CA4500186B36 /* timing.c in Sources */,
 				4ADC520719E8CA4500186B36 /* testcommon.c in Sources */,
-				4A5BE61A1AD88EA100496307 /* glanimation.c in Sources */,
 				4ADC520819E8CA4500186B36 /* misc.c in Sources */,
 				4ADC520919E8CA4500186B36 /* opcodes.c in Sources */,
+				4A7EDCA21AE092B80072E98A /* interface.c in Sources */,
 				4ADC520A19E8CA4500186B36 /* glvideo.c in Sources */,
 				4ADC520B19E8CA4500186B36 /* rom-shim.c in Sources */,
 				4ADC520C19E8CA4500186B36 /* zlib-helpers.c in Sources */,
 				4ADC520D19E8CA4500186B36 /* darwin-shim.c in Sources */,
+				4A7EDC9C1AE092680072E98A /* glnode.c in Sources */,
 				4ADC520E19E8CA4500186B36 /* main.m in Sources */,
 				4ADC520F19E8CA4500186B36 /* vectorUtil.c in Sources */,
 				4ADC521019E8CA4500186B36 /* debug.l in Sources */,
@@ -1263,6 +1272,7 @@
 				4ADC521519E8CA4500186B36 /* vm.c in Sources */,
 				4ADC521619E8CA4500186B36 /* darwin-glue.S in Sources */,
 				4ADC521719E8CA4500186B36 /* matrixUtil.c in Sources */,
+				4A7EDC971AE092680072E98A /* glhudmodel.c in Sources */,
 				4ADC521819E8CA4500186B36 /* joystick.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1272,15 +1282,16 @@
 			buildActionMask = 2147483647;
 			files = (
 				773B3DBF19568A570085CE5F /* cpu.S in Sources */,
+				4A7EDC931AE092680072E98A /* glhudmodel.c in Sources */,
 				779F565D19EAF66E00A6F107 /* speaker.c in Sources */,
 				779F565B19EAF66E00A6F107 /* soundcore-openal.c in Sources */,
 				773B3DA419568A570085CE5F /* display.c in Sources */,
 				773B3DA319568A570085CE5F /* disk.c in Sources */,
-				4A5BE6121AD88CAC00496307 /* glanimation.c in Sources */,
 				773B3DAD19568A570085CE5F /* debugger.c in Sources */,
 				77E1C0B319D72700004344E0 /* vectorUtil.c in Sources */,
 				4AC7A76D19ECC3FB00BCD457 /* EmulatorWindow.m in Sources */,
 				77F80B441A2D95E300D45030 /* EmulatorJoystickCalibrationView.m in Sources */,
+				4A7EDC9E1AE092B80072E98A /* interface.c in Sources */,
 				773B3DAB19568A570085CE5F /* keys.c in Sources */,
 				773B3DBC19568A570085CE5F /* timing.c in Sources */,
 				773B3DAF19568A570085CE5F /* misc.c in Sources */,
@@ -1293,6 +1304,7 @@
 				773BC91619F2E6A900996893 /* EmulatorDiskController.m in Sources */,
 				779F565C19EAF66E00A6F107 /* soundcore.c in Sources */,
 				779DD827195764E200DF89E5 /* rom-shim.c in Sources */,
+				4A7EDC981AE092680072E98A /* glnode.c in Sources */,
 				773B3DC319568A570085CE5F /* zlib-helpers.c in Sources */,
 				77E1C0B719D72700004344E0 /* imageUtil.m in Sources */,
 				773B3DA219568A570085CE5F /* darwin-shim.c in Sources */,
@@ -1332,13 +1344,14 @@
 				779DD834195BD9F900DF89E5 /* keys.c in Sources */,
 				779DD835195BD9F900DF89E5 /* timing.c in Sources */,
 				779DD853195BDA3400DF89E5 /* testcommon.c in Sources */,
-				4A5BE6141AD88E9E00496307 /* glanimation.c in Sources */,
 				779DD836195BD9F900DF89E5 /* misc.c in Sources */,
 				779DD837195BD9F900DF89E5 /* opcodes.c in Sources */,
+				4A7EDC9F1AE092B80072E98A /* interface.c in Sources */,
 				4ADC51C619E8BD5200186B36 /* glvideo.c in Sources */,
 				779DD838195BD9F900DF89E5 /* rom-shim.c in Sources */,
 				779DD839195BD9F900DF89E5 /* zlib-helpers.c in Sources */,
 				779DD83A195BD9F900DF89E5 /* darwin-shim.c in Sources */,
+				4A7EDC991AE092680072E98A /* glnode.c in Sources */,
 				4ADC51FA19E8C6EF00186B36 /* main.m in Sources */,
 				4ADC51C219E8BD3700186B36 /* vectorUtil.c in Sources */,
 				779DD83C195BD9F900DF89E5 /* debug.l in Sources */,
@@ -1350,6 +1363,7 @@
 				779DD83F195BD9F900DF89E5 /* vm.c in Sources */,
 				779DD840195BD9F900DF89E5 /* darwin-glue.S in Sources */,
 				4ADC51C519E8BD4000186B36 /* matrixUtil.c in Sources */,
+				4A7EDC941AE092680072E98A /* glhudmodel.c in Sources */,
 				779DD843195BD9F900DF89E5 /* joystick.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1369,13 +1383,14 @@
 				779F566A19EB0B9100A6F107 /* debugger.c in Sources */,
 				779F566B19EB0B9100A6F107 /* keys.c in Sources */,
 				779F566C19EB0B9100A6F107 /* timing.c in Sources */,
-				4A5BE6181AD88EA000496307 /* glanimation.c in Sources */,
 				779F566D19EB0B9100A6F107 /* testcommon.c in Sources */,
 				779F566E19EB0B9100A6F107 /* misc.c in Sources */,
+				4A7EDCA11AE092B80072E98A /* interface.c in Sources */,
 				779F566F19EB0B9100A6F107 /* opcodes.c in Sources */,
 				779F567019EB0B9100A6F107 /* glvideo.c in Sources */,
 				779F567119EB0B9100A6F107 /* rom-shim.c in Sources */,
 				779F567219EB0B9100A6F107 /* zlib-helpers.c in Sources */,
+				4A7EDC9B1AE092680072E98A /* glnode.c in Sources */,
 				779F567319EB0B9100A6F107 /* darwin-shim.c in Sources */,
 				779F567419EB0B9100A6F107 /* main.m in Sources */,
 				779F567519EB0B9100A6F107 /* vectorUtil.c in Sources */,
@@ -1387,6 +1402,7 @@
 				779F567B19EB0B9100A6F107 /* vm.c in Sources */,
 				779F567C19EB0B9100A6F107 /* darwin-glue.S in Sources */,
 				779F567D19EB0B9100A6F107 /* matrixUtil.c in Sources */,
+				4A7EDC961AE092680072E98A /* glhudmodel.c in Sources */,
 				779F567E19EB0B9100A6F107 /* joystick.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
