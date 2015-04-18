@@ -24,7 +24,7 @@ bool (*interface_onTouchEvent)(interface_touch_event_t action, int pointer_count
 // 2015/04/12 : This was legacy code for rendering the menu interfaces on desktop Linux. Portions here are resurrected
 // to render HUD messages on desktop and mobile.  Nothing special or pretty here, but has "just worked" for 20+ years ;-)
 
-#define IsGraphic(c) ((c) == '|' || (((unsigned char)c) >= 0x80 && ((unsigned char)c) <= 0x8A))
+#define IsGraphic(c) ((c) == '|' || (((unsigned char)c) >= ICONTEXT_BEGIN && ((unsigned char)c) <= ICONTEXT_MENU_END))
 #define IsInside(x,y) ((x) >= 0 && (x) <= xlen-1 && (y) >= 0 && (y) <= ylen-1)
 
 // Draws special interface menu "characters" 
@@ -106,7 +106,7 @@ static void _convert_screen_graphics(char *screen, const int x, const int y, con
     }
 
     if (found_glyph) {
-        *(screen + y*(xlen+1) + x) = 0x80 + k;
+        *(screen + y*(xlen+1) + x) = ICONTEXT_BEGIN + k;
     }
 }
 

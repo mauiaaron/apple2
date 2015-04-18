@@ -728,8 +728,8 @@ static void _load_interface_fonts(void) {
     video_loadfont_int(0x80,0x40,ucase_glyphs);
     video_loadfont_int(0xC0,0x20,ucase_glyphs);
     video_loadfont_int(0xE0,0x20,lcase_glyphs);
-    video_loadfont_int(0x80,11,interface_glyphs);
     video_loadfont_int(MOUSETEXT_BEGIN,0x20,mousetext_glyphs);
+    video_loadfont_int(ICONTEXT_BEGIN,0x20,interface_glyphs);
 }
 
 void interface_plotChar(uint8_t *fb, int fb_pix_width, int col, int row, interface_colorscheme_t cs, uint8_t c) {
