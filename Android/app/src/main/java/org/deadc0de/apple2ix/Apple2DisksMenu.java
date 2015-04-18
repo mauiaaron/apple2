@@ -118,9 +118,8 @@ public class Apple2DisksMenu {
                 } else {
                     RadioButton diskA = (RadioButton)mDisksView.findViewById(R.id.radioButton_diskA);
                     CheckBox readWrite = (CheckBox)mDisksView.findViewById(R.id.checkBox_readWrite);
+                    Apple2DisksMenu.this.dismiss();
                     mActivity.nativeChooseDisk(files[position].getAbsolutePath(), diskA.isChecked(), !readWrite.isChecked());
-                    Apple2DisksMenu.this.dismissWithoutResume();
-                    Apple2DisksMenu.this.mActivity.getView().showMainMenu();
                 }
             }
         });
