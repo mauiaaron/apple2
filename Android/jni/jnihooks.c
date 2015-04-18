@@ -90,19 +90,19 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnCreate(JNIEnv *env, jobje
 
 void Java_org_deadc0de_apple2ix_Apple2Activity_nativeGraphicsChanged(JNIEnv *env, jobject obj, jint width, jint height) {
     LOG("%s", "native graphicsChanged...");
-    video_backendInstance()->reshape(width, height);
+    video_backend->reshape(width, height);
 }
 
 void Java_org_deadc0de_apple2ix_Apple2Activity_nativeGraphicsInitialized(JNIEnv *env, jobject obj, jint width, jint height) {
     LOG("native graphicsInitialized width:%d height:%d", width, height);
     static bool graphicsPreviouslyInitialized = false;
     if (graphicsPreviouslyInitialized) {
-        video_backendInstance()->shutdown();
+        video_backend->shutdown();
     }
     graphicsPreviouslyInitialized = true;
 
-    video_backendInstance()->reshape(width, height);
-    video_backendInstance()->init((void *)0);
+    video_backend->reshape(width, height);
+    video_backend->init((void *)0);
 }
 
 void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnResume(JNIEnv *env, jobject obj) {
@@ -149,7 +149,7 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeRender(JNIEnv *env, jobject
     if (!nativePaused) {
         _vid_dirty = true;// HACK HACK HACK FIXME TODO : efficiency and battery life gains if we can fix this ...
     }
-    video_backendInstance()->render();
+    video_backend->render();
 }
 
 void Java_org_deadc0de_apple2ix_Apple2Activity_nativeReboot(JNIEnv *env, jobject obj) {
@@ -220,8 +220,8 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeIncreaseCPUSpeed(JNIEnv *en
 
     LOG("native set emulation percentage to %f", cpu_scale_factor);
 
-    if (video_backendInstance()->video_animation_show_cpuspeed) {
-        video_backendInstance()->video_animation_show_cpuspeed();
+    if (video_backend->video_animation_show_cpuspeed) {
+        video_backend->video_animation_show_cpuspeed();
     }
 
 #warning HACK TODO FIXME ... refactor timing stuff
@@ -253,8 +253,8 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeDecreaseCPUSpeed(JNIEnv *en
 
     LOG("native set emulation percentage to %f", cpu_scale_factor);
 
-    if (video_backendInstance()->video_animation_show_cpuspeed) {
-        video_backendInstance()->video_animation_show_cpuspeed();
+    if (video_backend->video_animation_show_cpuspeed) {
+        video_backend->video_animation_show_cpuspeed();
     }
 
 #warning HACK TODO FIXME ... refactor timing stuff

@@ -60,6 +60,7 @@ static int xshmeventtype;
 // pad pixels to uint32_t boundaries
 static int bitmap_pad = sizeof(uint32_t);
 
+static video_backend_s xvideo_backend = { 0 };
 static bool request_set_mode = false;
 static int request_mode = 0;
 
@@ -937,19 +938,16 @@ static void xdriver_render(void) {
     // no-op
 }
 
-video_backend_s *video_backendInstance(void) {
-    static video_backend_s *xvideo_backend = NULL;
-    spin_lock_t lock = 0L;
-    spin_lock_lock(&lock);
-    if (xvideo_backend == NULL) {
-        xvideo_backend = malloc(sizeof(video_backend_s));
-        xvideo_backend->init      = &xdriver_init;
-        xvideo_backend->main_loop = &xdriver_main_loop;
-        xvideo_backend->reshape   = &xdriver_reshape;
-        xvideo_backend->render    = &xdriver_render;
-        xvideo_backend->shutdown  = &xdriver_shutdown;
-    }
-    spin_lock_unlock(&lock);
-    return xvideo_backend;
+__attribute__((constructor))
+static void _init_xvideo(void) {
+    LOG("Initializing X11 renderer");
+
+    xvideo_backend.init      = &xdriver_init;
+    xvideo_backend.main_loop = &xdriver_main_loop;
+    xvideo_backend.reshape   = &xdriver_reshape;
+    xvideo_backend.render    = &xdriver_render;
+    xvideo_backend.shutdown  = &xdriver_shutdown;
+
+    video_backend = &xvideo_backend;
 }
 
