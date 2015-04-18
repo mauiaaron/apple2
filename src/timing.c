@@ -79,7 +79,7 @@ pthread_cond_t cpu_thread_cond = PTHREAD_COND_INITIALIZER;
 
 // -----------------------------------------------------------------------------
 
-__attribute__((constructor))
+__attribute__((constructor(CTOR_PRIORITY_LATE)))
 static void _init_timing(void) {
     pthread_mutexattr_t attr;
     pthread_mutexattr_init(&attr);

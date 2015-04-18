@@ -100,9 +100,9 @@ bool glnode_onTouchEvent(interface_touch_event_t action, int pointer_count, int 
 }
 #endif
 
-__attribute__((constructor))
+__attribute__((constructor(CTOR_PRIORITY_LATE)))
 static void _init_glnode_manager(void) {
-    LOG("Initializing GLNode manager routines");
+    LOG("Initializing GLNode manager subsystem");
 #if INTERFACE_TOUCH
     interface_onTouchEvent = &glnode_onTouchEvent;
 #endif

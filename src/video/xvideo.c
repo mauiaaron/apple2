@@ -938,7 +938,7 @@ static void xdriver_render(void) {
     // no-op
 }
 
-__attribute__((constructor))
+__attribute__((constructor(CTOR_PRIORITY_EARLY)))
 static void _init_xvideo(void) {
     LOG("Initializing X11 renderer");
 

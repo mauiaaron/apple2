@@ -1273,9 +1273,9 @@ uint8_t floating_bus_hibit(const bool hibit) {
     return (b & ~0x80) | (hibit ? 0x80 : 0);
 }
 
-__attribute__((constructor))
+__attribute__((constructor(CTOR_PRIORITY_LATE)))
 static void _init_interface(void) {
-    LOG("display subsystem startup");
+    LOG("Initializing display subsystem");
     _load_interface_fonts();
 }
 

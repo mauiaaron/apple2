@@ -645,7 +645,7 @@ static void gltouchjoy_setTouchAxisValues(char north, char west, char east, char
     }
 }
 
-__attribute__((constructor))
+__attribute__((constructor(CTOR_PRIORITY_LATE)))
 static void _init_gltouchjoy(void) {
     LOG("Registering OpenGL software touch joystick");
 

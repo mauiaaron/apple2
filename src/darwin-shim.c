@@ -21,7 +21,7 @@
 static double orwl_timebase = 0.0;
 static uint64_t orwl_timestart = 0;
 
-__attribute__((constructor))
+__attribute__((constructor(CTOR_PRIORITY_LATE)))
 static void __init_darwin_shim() {
     mach_timebase_info_data_t tb = { 0 };
     mach_timebase_info(&tb);

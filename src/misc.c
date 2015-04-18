@@ -30,7 +30,7 @@ bool is_headless = false;
 color_mode_t color_mode = COLOR;
 const char *data_dir = NULL;
 
-__attribute__((constructor))
+__attribute__((constructor(CTOR_PRIORITY_FIRST)))
 static void _init_common() {
     error_log = stderr;
 #if defined(CONFIG_DATADIR)

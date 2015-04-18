@@ -64,9 +64,12 @@
 #define OUTPARM
 #define INOUT
 
+#define CTOR_PRIORITY_FIRST  101
+#define CTOR_PRIORITY_EARLY  111
+#define CTOR_PRIORITY_LATE   201
+
 #if VIDEO_OPENGL
 #include "video_util/glUtil.h"
-#define CRASH_APP_ON_LOAD_BECAUSE_YAY_GJ_APPLE 0
 // 2015/04/01 ... early calls to glGetError()--before a context exists--causes segfaults on MacOS X
 extern bool safe_to_do_opengl_logging;
 static inline GLenum safeGLGetError(void) {

@@ -851,7 +851,7 @@ static void gldriver_main_loop(void) {
     // fall through if not GLUT
 }
 
-__attribute__((constructor))
+__attribute__((constructor(CTOR_PRIORITY_EARLY)))
 static void _init_glvideo(void) {
     LOG("Initializing OpenGL renderer");
 
