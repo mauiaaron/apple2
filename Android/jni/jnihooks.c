@@ -238,8 +238,8 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeIncreaseCPUSpeed(JNIEnv *en
 
     LOG("native set emulation percentage to %f", cpu_scale_factor);
 
-    if (video_backend->video_animation_show_cpuspeed) {
-        video_backend->video_animation_show_cpuspeed();
+    if (video_backend->animation_showCPUSpeed) {
+        video_backend->animation_showCPUSpeed();
     }
 
 #warning HACK TODO FIXME ... refactor timing stuff
@@ -271,8 +271,8 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeDecreaseCPUSpeed(JNIEnv *en
 
     LOG("native set emulation percentage to %f", cpu_scale_factor);
 
-    if (video_backend->video_animation_show_cpuspeed) {
-        video_backend->video_animation_show_cpuspeed();
+    if (video_backend->animation_showCPUSpeed) {
+        video_backend->animation_showCPUSpeed();
     }
 
 #warning HACK TODO FIXME ... refactor timing stuff
@@ -299,18 +299,21 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeChooseDisk(JNIEnv *env, job
     const char *path = (*env)->GetStringUTFChars(env, jPath, 0);
     int drive = driveA ? 0 : 1;
     int ro = readOnly ? 1 : 0;
+
     LOG("nativeChooseDisk(%s, %s, %s)", path, driveA ? "drive A" : "drive B", readOnly ? "read only" : "read/write");
     if (c_new_diskette_6(drive, path, ro)) {
         char *gzPath = NULL;
         asprintf(&gzPath, "%s.gz", path);
         if (c_new_diskette_6(drive, gzPath, ro)) {
-            // TODO FIXME : show error message disk was unreadable ...
+            char *diskImageUnreadable = "Disk Image Unreadable";
+            unsigned int cols = strlen(diskImageUnreadable);
+            video_backend->animation_showMessage(diskImageUnreadable, cols, 1);
         } else {
-            // TODO FIXME : show an OpenGL message that the disk was chosen ...
+            video_backend->animation_showDiskChosen(drive);
         }
         FREE(gzPath);
     } else {
-        // TODO FIXME : show an OpenGL message that the disk was chosen ...
+        video_backend->animation_showDiskChosen(drive);
     }
     (*env)->ReleaseStringUTFChars(env, jPath, path);
 }

@@ -578,6 +578,12 @@ void c_interface_select_diskette( int drive )
                             c_interface_print_screen( screen );
                             continue;
                         }
+                        else
+                        {
+                            if (video_backend->animation_showDiskChosen) {
+                                video_backend->animation_showDiskChosen(drive);
+                            }
+                        }
 
                         break;
                     }
@@ -635,6 +641,12 @@ void c_interface_select_diskette( int drive )
                     }
                     c_interface_print_screen( screen );
                     continue;
+                }
+                else
+                {
+                    if (video_backend->animation_showDiskChosen) {
+                        video_backend->animation_showDiskChosen(drive);
+                    }
                 }
 
                 break;

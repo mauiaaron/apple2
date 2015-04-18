@@ -40,7 +40,7 @@ VIDEO_SRC = \
 	src/video/glutinput.c \
 	src/video/glnode.c \
 	src/video/glhudmodel.c \
-	src/video/glcpuanim.c \
+	src/video/glalert.c \
 	src/video_util/matrixUtil.c \
 	src/video_util/modelUtil.c \
 	src/video_util/sourceUtil.c \

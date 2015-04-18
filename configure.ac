@@ -170,7 +170,7 @@ AC_ARG_ENABLE([opengl], AS_HELP_STRING([--disable-opengl], [Disable OpenGL video
                         opengl_supported='yes'
                         AC_DEFINE(VIDEO_OPENGL, 1, [Use OpenGL])
                         AC_DEFINE(USE_GLUT, 1, [Use GLUT library])
-                        VIDEO_O="src/video/glvideo.o src/video/glnode.o src/video/glcpuanim.o src/video/glhudmodel.o src/video/glutinput.o src/video_util/matrixUtil.o src/video_util/modelUtil.o src/video_util/sourceUtil.o src/video_util/vectorUtil.o"
+                        VIDEO_O="src/video/glvideo.o src/video/glnode.o src/video/glalert.o src/video/glhudmodel.o src/video/glutinput.o src/video_util/matrixUtil.o src/video_util/modelUtil.o src/video_util/sourceUtil.o src/video_util/vectorUtil.o"
                         AC_MSG_RESULT([Building emulator with OpenGL support, w00t!])
                     ], [
                         AC_MSG_WARN([Did not find OpenGL GLEW library...])

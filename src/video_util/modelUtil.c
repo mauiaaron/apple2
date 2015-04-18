@@ -517,7 +517,9 @@ GLModel *mdlCreateQuad(GLfloat skew_x, GLfloat skew_y, GLfloat obj_w, GLfloat ob
                 model->custom->create = NULL;
                 model->custom->setup = clazz.setup;
                 model->custom->destroy = clazz.destroy;
-                model->custom->setup(model);
+                if (model->custom->setup) {
+                    model->custom->setup(model);
+                }
             }
         }
 

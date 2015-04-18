@@ -253,8 +253,8 @@ void c_keys_handle_input(int scancode, int pressed, int is_cooked)
             if (current_key == kF9)
             {
                 timing_toggle_cpu_speed();
-                if (video_backend->video_animation_show_cpuspeed) {
-                    video_backend->video_animation_show_cpuspeed();
+                if (video_backend->animation_showCPUSpeed) {
+                    video_backend->animation_showCPUSpeed();
                 }
                 break;
             }
@@ -284,8 +284,8 @@ void c_keys_handle_input(int scancode, int pressed, int is_cooked)
                     cpu_scale_factor = scale;
                 }
 
-                if (video_backend->video_animation_show_cpuspeed) {
-                    video_backend->video_animation_show_cpuspeed();
+                if (video_backend->animation_showCPUSpeed) {
+                    video_backend->animation_showCPUSpeed();
                 }
 #warning HACK TODO FIXME ... refactor timing stuff
                 timing_toggle_cpu_speed();
@@ -313,8 +313,8 @@ void c_keys_handle_input(int scancode, int pressed, int is_cooked)
                     cpu_scale_factor = scale;
                 }
 
-                if (video_backend->video_animation_show_cpuspeed) {
-                    video_backend->video_animation_show_cpuspeed();
+                if (video_backend->animation_showCPUSpeed) {
+                    video_backend->animation_showCPUSpeed();
                 }
 #warning HACK TODO FIXME ... refactor timing stuff
                 timing_toggle_cpu_speed();

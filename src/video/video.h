@@ -27,8 +27,10 @@ typedef struct video_backend_s {
     void (*shutdown)(void);
 
     // optional functions
-    void (*video_animation_show_cpuspeed)(void);
-    void (*video_animation_show_track_sector)(int drive, int track, int sect);
+    void (*animation_showMessage)(char *message, unsigned int cols, unsigned int rows);
+    void (*animation_showCPUSpeed)(void);
+    void (*animation_showDiskChosen)(int drive);
+    void (*animation_showTrackSector)(int drive, int track, int sect);
 } video_backend_s;
 
 /*
