@@ -55,7 +55,6 @@ enum {
 
 static bool isAvailable = false; // Were there any OpenGL/memory errors on gltouchjoy initialization?
 static bool isEnabled = true;    // Does player want touchjoy enabled?
-static bool isVisible = true;    // Does player want touchjoy to have some form of visibility?
 static float minAlpha = 0.0;     // Minimum alpha value of touchjoy components (at zero, will not draw)
 
 // viewport touch
@@ -189,50 +188,6 @@ static void _setup_button_object(GLModel *parent) {
     glhud_setupDefault(parent);
 }
 
-static inline void _screen_to_model(float x, float y, float *screenX, float *screenY) {
-    *screenX = (x/(touchport.width>>1))-1.f;
-    *screenY = ((touchport.height-y)/(touchport.height>>1))-1.f;
-}
-
-static void _model_to_screen(float screenCoords[4], GLModel *model) {
-
-    float x0 = 1.0;
-    float y0 = 1.0;
-    float x1 = -1.0;
-    float y1 = -1.0;
-
-#warning NOTE: we possibly should use matrix calculations (but assuming HUD elements are identity/orthographic for now)
-    GLfloat *positions = (GLfloat *)(model->positions);
-    unsigned int stride = model->positionSize;
-    unsigned int len = model->positionArraySize/getGLTypeSize(model->positionType);
-    for (unsigned int i=0; i < len; i += stride) {
-        float x = (positions[i] + 1.f) / 2.f;
-        if (x < x0) {
-            x0 = x;
-        }
-        if (x > x1) {
-            x1 = x;
-        }
-        float y = (positions[i+1] + 1.f) / 2.f;
-        LOG("\tmodel x:%f, y:%f", x, y);
-        if (y < y0) {
-            y0 = y;
-        }
-        if (y > y1) {
-            y1 = y;
-        }
-    }
-
-    // OpenGL screen origin is bottom-left (Android is top-left)
-    float yFlip0 = touchport.height - (y1 * touchport.height);
-    float yFlip1 = touchport.height - (y0 * touchport.height);
-
-    screenCoords[0] = x0 * touchport.width;
-    screenCoords[1] = yFlip0;
-    screenCoords[2] = x1 * touchport.width;
-    screenCoords[3] = yFlip1;
-}
-
 static void gltouchjoy_setup(void) {
     LOG("gltouchjoy_setup ...");
 
@@ -286,9 +241,6 @@ static void gltouchjoy_render(void) {
     if (!isEnabled) {
         return;
     }
-    if (!isVisible) {
-        return;
-    }
 
     struct timespec now = { 0 };
     struct timespec deltat = { 0 };
@@ -310,7 +262,7 @@ static void gltouchjoy_render(void) {
     }
 
     if (alpha > 0.0) {
-        glViewport(0, 0, touchport.width, touchport.height); // NOTE : show these HUD elements beyond the framebuffer dimensions
+        glViewport(0, 0, touchport.width, touchport.height); // NOTE : show these HUD elements beyond the A2 framebuffer dimensions
         glUniform1f(alphaValue, alpha);
 
         glActiveTexture(TEXTURE_ACTIVE_TOUCHJOY_AXIS);
@@ -401,7 +353,7 @@ static inline void _reset_model_position(GLModel *model, float touchX, float tou
 
     float centerX = 0.f;
     float centerY = 0.f;
-    _screen_to_model(touchX, touchY, &centerX, &centerY);
+    glhud_screenToModel(touchX, touchY, touchport.width, touchport.height, &centerX, &centerY);
 
     /* 2...3
      *  .

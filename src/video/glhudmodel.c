@@ -28,6 +28,7 @@ void glhud_setupDefault(GLModel *parent) {
     const unsigned int rows = hudElement->tplHeight;
     uint8_t *fb = hudElement->pixels;
 
+#warning FIXME I AM HERE : verify this does not overwrite memory
     // render template into indexed fb
     interface_printMessageCentered(fb, cols, rows, RED_ON_BLACK, submenu, cols, rows);
 
@@ -105,5 +106,48 @@ void glhud_destroyDefault(GLModel *parent) {
     }
 
     FREE(parent->custom);
+}
+
+void glhud_screenToModel(const float x, const float y, const int screenW, const int screenH, float *centerX, float *centerY) {
+    *centerX = (x/(screenW>>1))-1.f;
+    *centerY = ((screenH-y)/(screenH>>1))-1.f;
+}
+
+void glhud_quadModelToScreen(const GLModel *model, const int screenW, const int screenH, float screenCoords[4]) {
+    float x0 = 1.0;
+    float y0 = 1.0;
+    float x1 = -1.0;
+    float y1 = -1.0;
+
+#warning NOTE: we possibly should use matrix calculations (but assuming HUD elements are identity/orthographic for now)
+    GLfloat *positions = (GLfloat *)(model->positions);
+    unsigned int stride = model->positionSize;
+    unsigned int len = model->positionArraySize/getGLTypeSize(model->positionType);
+    for (unsigned int i=0; i < len; i += stride) {
+        float x = (positions[i] + 1.f) / 2.f;
+        if (x < x0) {
+            x0 = x;
+        }
+        if (x > x1) {
+            x1 = x;
+        }
+        float y = (positions[i+1] + 1.f) / 2.f;
+        LOG("\tmodel x:%f, y:%f", x, y);
+        if (y < y0) {
+            y0 = y;
+        }
+        if (y > y1) {
+            y1 = y;
+        }
+    }
+
+    // OpenGL screen origin is bottom-left (Android is top-left)
+    float yFlip0 = screenH - (y1 * screenH);
+    float yFlip1 = screenH - (y0 * screenH);
+
+    screenCoords[0] = x0 * screenW;
+    screenCoords[1] = yFlip0;
+    screenCoords[2] = x1 * screenW;
+    screenCoords[3] = yFlip1;
 }
 

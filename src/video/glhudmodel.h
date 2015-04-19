@@ -40,4 +40,10 @@ void glhud_renderDefault(GLModel *parent);
 // default model destruction
 void glhud_destroyDefault(GLModel *parent);
 
+// translate screen coordinates to model
+void glhud_screenToModel(const float x, const float y, const int screenW, const int screenH, float *centerX, float *centerY);
+
+// orthographic translation of model coordinates to screen coordinates
+void glhud_quadModelToScreen(const GLModel *model, const int screenW, const int screenH, float screenCoords[4]);
+
 #endif
