@@ -21,30 +21,27 @@
 #define DYNAMIC_SZ 11 // 7 pixels (as bytes) + 2pre + 2post
 
 // framebuffers
-static uint8_t vga_mem_page_0[SCANWIDTH*SCANHEIGHT];
-static uint8_t vga_mem_page_1[SCANWIDTH*SCANHEIGHT];
+static uint8_t vga_mem_page_0[SCANWIDTH*SCANHEIGHT] = { 0 };
+static uint8_t vga_mem_page_1[SCANWIDTH*SCANHEIGHT] = { 0 };
 
 A2Color_s colormap[256] = { { 0 } };
 video_backend_s *video_backend = NULL;
 
-static uint8_t video__wider_font[0x8000];
-static uint8_t video__font[0x4000];
-static uint8_t video__int_font[3][0x4000]; // interface font
+static uint8_t video__wider_font[0x8000] = { 0 };
+static uint8_t video__font[0x4000] = { 0 };
+static uint8_t video__int_font[3][0x4000] = { { 0 } }; // interface font
 
 // Precalculated framebuffer offsets given VM addr
-unsigned int video__screen_addresses[8192];
-uint8_t video__columns[8192];
+unsigned int video__screen_addresses[8192] = { 0 };
+uint8_t video__columns[8192] = { 0 };
 
 uint8_t *video__fb1 = NULL;
 uint8_t *video__fb2 = NULL;
 
-uint8_t video__hires_even[0x800];
-uint8_t video__hires_odd[0x800];
+uint8_t video__hires_even[0x800] = { 0 };
+uint8_t video__hires_odd[0x800] = { 0 };
 
-uint8_t video__dhires1[256];
-uint8_t video__dhires2[256];
-
-int video__current_page; // current visual page
+int video__current_page = 0; // current visual page
 int video__strictcolors = 1;// refactor : should be static
 
 extern volatile bool _vid_dirty;
@@ -728,6 +725,7 @@ static void _load_interface_fonts(void) {
     video_loadfont_int(0x80,0x40,ucase_glyphs);
     video_loadfont_int(0xC0,0x20,ucase_glyphs);
     video_loadfont_int(0xE0,0x20,lcase_glyphs);
+
     video_loadfont_int(MOUSETEXT_BEGIN,0x20,mousetext_glyphs);
     video_loadfont_int(ICONTEXT_BEGIN,0x20,interface_glyphs);
 }
