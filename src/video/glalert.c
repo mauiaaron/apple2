@@ -174,6 +174,16 @@ static void _animation_showMessage(char *messageTemplate, unsigned int cols, uns
     pthread_mutex_unlock(&messageMutex);
 }
 
+static void _animation_showPaused(void) {
+#define PAUSED_ANIMATION_ROWS 1
+#define PAUSED_ANIMATION_COLS 3
+    static char pausedTemplate[PAUSED_ANIMATION_ROWS][PAUSED_ANIMATION_COLS+1] = {
+        " @ ",
+    };
+    pausedTemplate[0][1] = MOUSETEXT_HOURGLASS;
+    _animation_showMessage(pausedTemplate[0], PAUSED_ANIMATION_COLS, PAUSED_ANIMATION_ROWS);
+}
+
 static void _animation_showCPUSpeed(void) {
 
 #define CPU_ANIMATION_ROWS 1
@@ -245,9 +255,10 @@ __attribute__((constructor(CTOR_PRIORITY_LATE)))
 static void _init_glalert(void) {
     LOG("Initializing message animation subsystem");
 
+    video_backend->animation_showMessage = &_animation_showMessage;
+    video_backend->animation_showPaused = &_animation_showPaused;
     video_backend->animation_showCPUSpeed = &_animation_showCPUSpeed;
     video_backend->animation_showDiskChosen = &_animation_showDiskChosen;
-    video_backend->animation_showMessage = &_animation_showMessage;
 
     glnode_registerNode(RENDER_MIDDLE, (GLNode){
         .setup = &alert_init,

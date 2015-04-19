@@ -28,6 +28,7 @@ typedef struct video_backend_s {
 
     // optional functions
     void (*animation_showMessage)(char *message, unsigned int cols, unsigned int rows);
+    void (*animation_showPaused)(void);
     void (*animation_showCPUSpeed)(void);
     void (*animation_showDiskChosen)(int drive);
     void (*animation_showTrackSector)(int drive, int track, int sect);
