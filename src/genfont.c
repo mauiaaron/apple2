@@ -82,6 +82,11 @@ int main(void)
         if (line[0] == ':')
         {
             int j = 8;
+            {
+                int len = strlen(line);
+                line[len-1] = '\0'; // kill newline
+                printf("/* %s */\n", line);
+            }
 
             while (j--)
             {
@@ -97,7 +102,7 @@ int main(void)
                 while (k--)
                 {
                     byte <<= 1;
-                    byte += (line[k] == '#');
+                    byte += (line[k] == '#') ? 1 : 0;
                 }
 
                 if (j)
