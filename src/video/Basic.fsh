@@ -36,6 +36,9 @@ uniform sampler2D axisTexture;
 // Joystick buttons
 uniform sampler2D buttonTexture;
 
+// Keyboard
+uniform sampler2D kbdTexture;
+
 #if __VERSION__ >= 140
 #define OUTPUT_TEXTURE(TEX) \
         vec4 tex = texture(TEX, varTexcoord.st, 0.0); \
@@ -57,6 +60,8 @@ void main(void)
         OUTPUT_TEXTURE(axisTexture);
     } else if (tex2Use == 3) {
         OUTPUT_TEXTURE(buttonTexture);
+    } else if (tex2Use == 4) {
+        OUTPUT_TEXTURE(kbdTexture);
     } else {
         //OUTPUT_RED(); -- WTF is this failing?
     }

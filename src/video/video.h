@@ -27,6 +27,8 @@ typedef struct video_backend_s {
     void (*shutdown)(void);
 
     // optional functions
+    void (*animation_showTouchKeyboard)(void);
+    void (*animation_hideTouchKeyboard)(void);
     void (*animation_showMessage)(char *message, unsigned int cols, unsigned int rows);
     void (*animation_showPaused)(void);
     void (*animation_showCPUSpeed)(void);

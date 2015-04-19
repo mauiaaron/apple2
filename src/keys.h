@@ -148,4 +148,12 @@ int c_keys_is_shifted();
 int c_keys_ascii_to_scancode(int ch);
 void c_keys_handle_input(int scancode, int pressed, int is_cooked);
 
+#if INTERFACE_TOUCH
+// is the touch keyboard module itself available?
+extern bool (*keydriver_isTouchKeyboardAvailable)(void);
+
+// enable/disable touch keyboard HUD element
+extern void (*keydriver_setTouchKeyboardEnabled)(bool enabled);
+#endif
+
 #endif

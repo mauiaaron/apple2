@@ -461,6 +461,13 @@ static GLuint _build_program(demoSource *vertexSource, demoSource *fragmentSourc
     } else {
         glUniform1i(buttonSamplerLoc, TEXTURE_ID_TOUCHJOY_BUTTON);
     }
+
+    GLint kbdSamplerLoc = glGetUniformLocation(prgName, "kbdTexture");
+    if (kbdSamplerLoc < 0) {
+        LOG("OOPS, no kbdSamplerLoc shader : %d", kbdSamplerLoc);
+    } else {
+        glUniform1i(kbdSamplerLoc, TEXTURE_ID_TOUCHKBD);
+    }
 #endif
 
     uniformMVPIdx = glGetUniformLocation(prgName, "modelViewProjectionMatrix");

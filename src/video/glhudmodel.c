@@ -13,11 +13,11 @@
 #include "glvideo.h"
 
 void *glhud_createDefault(void) {
-    GLModelHUDElement *custom = (GLModelHUDElement *)calloc(sizeof(GLModelHUDElement), 1);
-    if (!custom) {
-        return NULL;
+    GLModelHUDElement *hudElement = (GLModelHUDElement *)calloc(sizeof(GLModelHUDElement), 1);
+    if (hudElement) {
+        hudElement->colorScheme = RED_ON_BLACK;
     }
-    return custom;
+    return hudElement;
 }
 
 void glhud_setupDefault(GLModel *parent) {
@@ -28,9 +28,8 @@ void glhud_setupDefault(GLModel *parent) {
     const unsigned int rows = hudElement->tplHeight;
     uint8_t *fb = hudElement->pixels;
 
-#warning FIXME I AM HERE : verify this does not overwrite memory
     // render template into indexed fb
-    interface_printMessageCentered(fb, cols, rows, RED_ON_BLACK, submenu, cols, rows);
+    interface_printMessageCentered(fb, cols, rows, hudElement->colorScheme, submenu, cols, rows);
 
     // generate RGBA_8888 from indexed color
     const unsigned int fb_w = hudElement->pixWidth;

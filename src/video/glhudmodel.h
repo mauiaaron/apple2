@@ -15,18 +15,23 @@
 #include "common.h"
 #include "video_util/modelUtil.h"
 
-MODEL_CLASS(GLModelHUDElement,
+#define HUD_CLASS(CLS, ...) \
+    MODEL_CLASS(CLS, \
+        char *tpl;                  /* ASCII template */ \
+        unsigned int tplWidth;      /* template width */ \
+        unsigned int tplHeight;     /* template height */ \
+        \
+        uint8_t *pixels;            /* raw texture/FB data */ \
+        unsigned int pixWidth;      /* FB width */ \
+        unsigned int pixHeight;     /* FB height */ \
+        \
+        interface_colorscheme_t colorScheme; \
+        bool blackIsTransparent; \
+        \
+        __VA_ARGS__ \
+    )
 
-    char *tpl;                  // ASCII template
-    unsigned int tplWidth;      // template width
-    unsigned int tplHeight;     // template height
-
-    uint8_t *pixels;            // raw texture/FB data
-    unsigned int pixWidth;      // FB width
-    unsigned int pixHeight;     // FB height
-
-    bool blackIsTransparent;
-);
+HUD_CLASS(GLModelHUDElement);
 
 // default model creation
 void *glhud_createDefault(void);
