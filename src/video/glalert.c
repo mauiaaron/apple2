@@ -75,6 +75,9 @@ static void _alertToModel(char *message, unsigned int messageCols, unsigned int 
     mdlDestroyModel(&messageModel);
 }
 
+// ----------------------------------------------------------------------------
+// GLNode functions
+
 static void alert_init(void) {
     // no-op
 }
@@ -96,6 +99,10 @@ static void alert_render(void) {
     }
 
     if (!isEnabled) {
+        return;
+    }
+
+    if (!messageModel) {
         return;
     }
 
@@ -138,6 +145,7 @@ static bool alert_onTouchEvent(interface_touch_event_t action, int pointer_count
 #endif
 
 // ----------------------------------------------------------------------------
+// Various animations
 
 static void _animation_showMessage(char *messageTemplate, unsigned int cols, unsigned int rows) {
     // frame the message with interface border characters
