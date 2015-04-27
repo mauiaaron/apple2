@@ -18,7 +18,7 @@
 #error this is a touch interface module, possibly you mean to not compile this at all?
 #endif
 
-#define MODEL_DEPTH -0.03125
+#define MODEL_DEPTH -1/32.f
 
 #define AXIS_TEMPLATE_COLS 5
 #define AXIS_TEMPLATE_ROWS 5
@@ -55,7 +55,9 @@ enum {
 
 static bool isAvailable = false; // Were there any OpenGL/memory errors on gltouchjoy initialization?
 static bool isEnabled = true;    // Does player want touchjoy enabled?
-static float minAlpha = 0.0;     // Minimum alpha value of touchjoy components (at zero, will not draw)
+static bool ownsScreen = false;  // Does the touchjoy currently own the screen?
+static float minAlphaWhenOwnsScreen = 0;
+static float minAlpha = 0;
 
 // viewport touch
 static struct {
@@ -123,6 +125,27 @@ static struct {
 
 // ----------------------------------------------------------------------------
 
+#warning FIXME TODO ... this can become a common helper function ...
+static inline float _get_component_visibility(struct timespec timingBegin) {
+    struct timespec now = { 0 };
+    struct timespec deltat = { 0 };
+
+    clock_gettime(CLOCK_MONOTONIC, &now);
+    float alpha = minAlpha;
+    deltat = timespec_diff(timingBegin, now, NULL);
+    if (deltat.tv_sec == 0) {
+        alpha = 1.0;
+        if (deltat.tv_nsec >= NANOSECONDS_PER_SECOND/2) {
+            alpha -= ((float)deltat.tv_nsec-(NANOSECONDS_PER_SECOND/2)) / (float)(NANOSECONDS_PER_SECOND/2);
+            if (alpha < minAlpha) {
+                alpha = minAlpha;
+            }
+        }
+    }
+
+    return alpha;
+}
+
 static void _setup_axis_object(GLModel *parent) {
     GLModelHUDElement *hudElement = (GLModelHUDElement *)parent->custom;
 
@@ -158,7 +181,9 @@ static void _setup_axis_object(GLModel *parent) {
 
 static void *_create_touchjoy_hud(void) {
     GLModelHUDElement *hudElement = (GLModelHUDElement *)glhud_createDefault();
-    hudElement->blackIsTransparent = true;
+    if (hudElement) {
+        hudElement->blackIsTransparent = true;
+    }
     return hudElement;
 }
 
@@ -242,35 +267,19 @@ static void gltouchjoy_render(void) {
         return;
     }
 
-    struct timespec now = { 0 };
-    struct timespec deltat = { 0 };
-    float alpha = minAlpha;
+    glViewport(0, 0, touchport.width, touchport.height); // NOTE : show these HUD elements beyond the A2 framebuffer dimensions
 
     // draw axis
 
-    clock_gettime(CLOCK_MONOTONIC, &now);
-    alpha = minAlpha;
-    deltat = timespec_diff(axes.timingBegin, now, NULL);
-    if (deltat.tv_sec == 0) {
-        alpha = 1.0;
-        if (deltat.tv_nsec >= NANOSECONDS_PER_SECOND/2) {
-            alpha -= ((float)deltat.tv_nsec-(NANOSECONDS_PER_SECOND/2)) / (float)(NANOSECONDS_PER_SECOND/2);
-            if (alpha < minAlpha) {
-                alpha = minAlpha;
-            }
-        }
-    }
-
+    float alpha = _get_component_visibility(axes.timingBegin);
     if (alpha > 0.0) {
-        glViewport(0, 0, touchport.width, touchport.height); // NOTE : show these HUD elements beyond the A2 framebuffer dimensions
         glUniform1f(alphaValue, alpha);
 
         glActiveTexture(TEXTURE_ACTIVE_TOUCHJOY_AXIS);
         glBindTexture(GL_TEXTURE_2D, axes.model->textureName);
         if (axes.model->texDirty) {
             axes.model->texDirty = false;
-            GLModelHUDElement *hudElement = (GLModelHUDElement *)(axes.model->custom);
-            glTexImage2D(GL_TEXTURE_2D, /*level*/0, /*internal format*/GL_RGBA, hudElement->pixWidth, hudElement->pixHeight, /*border*/0, /*format*/GL_RGBA, GL_UNSIGNED_BYTE, axes.model->texPixels);
+            glTexImage2D(GL_TEXTURE_2D, /*level*/0, /*internal format*/GL_RGBA, axes.model->texWidth, axes.model->texHeight, /*border*/0, /*format*/GL_RGBA, GL_UNSIGNED_BYTE, axes.model->texPixels);
         }
         if (axes.modelDirty) {
             axes.modelDirty = false;
@@ -283,29 +292,15 @@ static void gltouchjoy_render(void) {
 
     // draw button(s)
 
-    clock_gettime(CLOCK_MONOTONIC, &now);
-    alpha = minAlpha;
-    deltat = timespec_diff(buttons.timingBegin, now, NULL);
-    if (deltat.tv_sec == 0) {
-        alpha = 1.0;
-        if (deltat.tv_nsec >= NANOSECONDS_PER_SECOND/2) {
-            alpha -= ((float)deltat.tv_nsec-(NANOSECONDS_PER_SECOND/2)) / (float)(NANOSECONDS_PER_SECOND/2);
-            if (alpha < minAlpha) {
-                alpha = minAlpha;
-            }
-        }
-    }
-
+    alpha = _get_component_visibility(buttons.timingBegin);
     if (alpha > 0.0) {
-        glViewport(0, 0, touchport.width, touchport.height); // NOTE : show these HUD elements beyond the framebuffer dimensions
         glUniform1f(alphaValue, alpha);
 
         glActiveTexture(TEXTURE_ACTIVE_TOUCHJOY_BUTTON);
         glBindTexture(GL_TEXTURE_2D, buttons.model->textureName);
         if (buttons.model->texDirty) {
             buttons.model->texDirty = false;
-            GLModelHUDElement *hudElement = (GLModelHUDElement *)(buttons.model->custom);
-            glTexImage2D(GL_TEXTURE_2D, /*level*/0, /*internal format*/GL_RGBA, hudElement->pixWidth, hudElement->pixHeight, /*border*/0, /*format*/GL_RGBA, GL_UNSIGNED_BYTE, buttons.model->texPixels);
+            glTexImage2D(GL_TEXTURE_2D, /*level*/0, /*internal format*/GL_RGBA, buttons.model->texWidth, buttons.model->texHeight, /*border*/0, /*format*/GL_RGBA, GL_UNSIGNED_BYTE, buttons.model->texPixels);
         }
         if (buttons.modelDirty) {
             buttons.modelDirty = false;
@@ -321,6 +316,8 @@ static void gltouchjoy_reshape(int w, int h) {
     LOG("gltouchjoy_reshape(%d, %d)", w, h);
 
     touchport.axisX = 0;
+    touchport.axisY = 0;
+    touchport.buttonY = 0;
 
     if (w > touchport.width) {
         touchport.width = w;
@@ -330,9 +327,7 @@ static void gltouchjoy_reshape(int w, int h) {
     }
     if (h > touchport.height) {
         touchport.height = h;
-        touchport.axisY = h>>1;
         touchport.axisYMax = h;
-        touchport.buttonY = h>>1;
         touchport.buttonYMax = h;
     }
 }
@@ -456,6 +451,9 @@ static bool gltouchjoy_onTouchEvent(interface_touch_event_t action, int pointer_
     if (!isEnabled) {
         return false;
     }
+    if (!ownsScreen) {
+        return false;
+    }
 
     bool axisConsumed = false;
     bool buttonConsumed = false;
@@ -575,8 +573,33 @@ static bool gltouchjoy_isTouchJoystickAvailable(void) {
     return isAvailable;
 }
 
-static void gltouchjoy_setTouchJoyEnabled(bool enabled) {
+static void gltouchjoy_setTouchJoystickEnabled(bool enabled) {
     isEnabled = enabled;
+}
+
+static void gltouchjoy_setTouchJoystickOwnsScreen(bool pwnd) {
+    ownsScreen = pwnd;
+    if (ownsScreen) {
+        minAlpha = minAlphaWhenOwnsScreen;
+    } else {
+        minAlpha = 0.0;
+    }
+}
+
+static void _animation_showTouchJoystick(void) {
+    if (!isAvailable) {
+        return;
+    }
+    clock_gettime(CLOCK_MONOTONIC, &axes.timingBegin);
+    clock_gettime(CLOCK_MONOTONIC, &buttons.timingBegin);
+}
+
+static void _animation_hideTouchJoystick(void) {
+    if (!isAvailable) {
+        return;
+    }
+    axes.timingBegin = (struct timespec){ 0 };
+    buttons.timingBegin = (struct timespec){ 0 };
 }
 
 static void gltouchjoy_setTouchButtonValues(char char0, char char1) {
@@ -624,8 +647,12 @@ static void _init_gltouchjoy(void) {
     buttons.activeChar = MOUSETEXT_OPENAPPLE;
     buttons.switchThreshold = BUTTON_SWITCH_THRESHOLD_DEFAULT;
 
+    video_backend->animation_showTouchJoystick = &_animation_showTouchJoystick;
+    video_backend->animation_hideTouchJoystick = &_animation_hideTouchJoystick;
+
     joydriver_isTouchJoystickAvailable = &gltouchjoy_isTouchJoystickAvailable;
-    joydriver_setTouchJoyEnabled = &gltouchjoy_setTouchJoyEnabled;
+    joydriver_setTouchJoystickEnabled = &gltouchjoy_setTouchJoystickEnabled;
+    joydriver_setTouchJoystickOwnsScreen = &gltouchjoy_setTouchJoystickOwnsScreen;
     joydriver_setTouchButtonValues = &gltouchjoy_setTouchButtonValues;
     joydriver_setTouchAxisType = &gltouchjoy_setTouchAxisType;
     joydriver_setTouchAxisValues = &gltouchjoy_setTouchAxisValues;

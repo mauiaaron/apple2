@@ -127,8 +127,7 @@ static void alert_render(void) {
     glBindTexture(GL_TEXTURE_2D, messageModel->textureName);
     if (messageModel->texDirty) {
         messageModel->texDirty = false;
-        GLModelHUDElement *hudElement = (GLModelHUDElement *)(messageModel->custom);
-        glTexImage2D(GL_TEXTURE_2D, /*level*/0, /*internal format*/GL_RGBA, hudElement->pixWidth, hudElement->pixHeight, /*border*/0, /*format*/GL_RGBA, GL_UNSIGNED_BYTE, messageModel->texPixels);
+        glTexImage2D(GL_TEXTURE_2D, /*level*/0, /*internal format*/GL_RGBA, messageModel->texWidth, messageModel->texHeight, /*border*/0, /*format*/GL_RGBA, GL_UNSIGNED_BYTE, messageModel->texPixels);
     }
     glUniform1i(uniformTex2Use, TEXTURE_ID_MESSAGE);
     glhud_renderDefault(messageModel);

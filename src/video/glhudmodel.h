@@ -22,8 +22,8 @@
         unsigned int tplHeight;     /* template height */ \
         \
         uint8_t *pixels;            /* raw texture/FB data */ \
-        unsigned int pixWidth;      /* FB width */ \
-        unsigned int pixHeight;     /* FB height */ \
+        unsigned int pixWidth;      /* FB width -- FIXME TODO : this is really the same as GLModel.texWidth */ \
+        unsigned int pixHeight;     /* FB height -- FIXME TODO : this is really the same as GLModel.texHeight */ \
         \
         interface_colorscheme_t colorScheme; \
         bool blackIsTransparent; \

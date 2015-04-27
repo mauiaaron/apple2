@@ -497,7 +497,7 @@ GLModel *mdlCreateQuad(GLfloat skew_x, GLfloat skew_y, GLfloat obj_w, GLfloat ob
         model->texHeight = tex_h;
         model->texFormat = tex_format;
         if (tex_format == GL_RGBA) {
-            model->texPixels = (GLvoid *)calloc(tex_w*tex_h*4, 1);
+            model->texPixels = (GLvoid *)calloc(tex_w * tex_h * /*RGBA_8888*/4, 1);
         } else {
             ERRQUIT("non-GL_RBGA format textures untested ... FIXME!");
         }

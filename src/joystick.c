@@ -257,21 +257,11 @@ void c_joystick_reset(void)
 }
 
 #if INTERFACE_TOUCH
-
-// is the touch joystick available
 bool (*joydriver_isTouchJoystickAvailable)(void) = NULL;
-
-// enable/disable touch joystick
-void (*joydriver_setTouchJoyEnabled)(bool enabled) = NULL;
-
-// set the joystick button parameters (7bit ASCII characters or MOUSETEXT values)
+void (*joydriver_setTouchJoystickEnabled)(bool enabled) = NULL;
+void (*joydriver_setTouchJoystickOwnsScreen)(bool pwnd) = NULL;
 void (*joydriver_setTouchButtonValues)(char button0Val, char button1Val) = NULL;
-
-// set the axis type
 void (*joydriver_setTouchAxisType)(touchjoy_axis_type_t axisType) = NULL;
-
-// set the axis button parameters (7bit ASCII characters or MOUSETEXT values)
 void (*joydriver_setTouchAxisValues)(char up, char left, char right, char down) = NULL;
-
 #endif
 

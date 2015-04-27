@@ -43,7 +43,10 @@ typedef enum touchjoy_axis_type_t {
 extern bool (*joydriver_isTouchJoystickAvailable)(void);
 
 // enable/disable touch joystick
-extern void (*joydriver_setTouchJoyEnabled)(bool enabled);
+extern void (*joydriver_setTouchJoystickEnabled)(bool enabled);
+
+// grant/remove ownership of touch screeen
+extern void (*joydriver_setTouchJoystickOwnsScreen)(bool pwnd);
 
 // set the joystick button parameters (7bit ASCII characters or MOUSETEXT values)
 extern void (*joydriver_setTouchButtonValues)(char button0Val, char button1Val);

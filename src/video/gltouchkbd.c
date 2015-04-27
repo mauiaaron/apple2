@@ -18,7 +18,7 @@
 #error this is a touch interface module, possibly you mean to not compile this at all?
 #endif
 
-#define MODEL_DEPTH -0.03125
+#define MODEL_DEPTH -1/32.f
 
 #define KBD_TEMPLATE_COLS 10
 #define KBD_TEMPLATE_ROWS 4
@@ -36,7 +36,9 @@ HUD_CLASS(GLModelHUDKeyboard,
 
 static bool isAvailable = false; // Were there any OpenGL/memory errors on gltouchkbd initialization?
 static bool isEnabled = true;    // Does player want touchkbd enabled?
-static float minAlpha = 0.25;  // Minimum alpha value of touchkbd components (at zero, will not render)
+static bool ownsScreen = true;   // Does the touchkbd currently own the screen to the exclusion?
+static float minAlphaWhenOwnsScreen = 1/4.f;
+static float minAlpha = 1/4.f;
 
 static char kbdTemplateUCase[KBD_TEMPLATE_ROWS][KBD_TEMPLATE_COLS+1] = {
     "QWERTYUIOP",
@@ -80,8 +82,6 @@ static struct {
 
     int kbdW;
     int kbdH;
-
-    // TODO FIXME : support 2-players!
 } touchport = { 0 };
 
 // keyboard variables
@@ -135,13 +135,13 @@ static inline void _switch_to_alpha_keyboard(void) {
     }
 }
 
-static float _get_keyboard_visibility(void) {
+#warning FIXME TODO ... this can become a common helper function ...
+static inline float _get_keyboard_visibility(void) {
     struct timespec now = { 0 };
     struct timespec deltat = { 0 };
-    float alpha = minAlpha;
 
     clock_gettime(CLOCK_MONOTONIC, &now);
-    alpha = minAlpha;
+    float alpha = minAlpha;
     deltat = timespec_diff(kbd.timingBegin, now, NULL);
     if (deltat.tv_sec == 0) {
         alpha = 1.0;
@@ -477,8 +477,7 @@ static void gltouchkbd_render(void) {
         glBindTexture(GL_TEXTURE_2D, kbd.model->textureName);
         if (kbd.model->texDirty) {
             kbd.model->texDirty = false;
-            GLModelHUDKeyboard *hudKeyboard = (GLModelHUDKeyboard *)(kbd.model->custom);
-            glTexImage2D(GL_TEXTURE_2D, /*level*/0, /*internal format*/GL_RGBA, hudKeyboard->pixWidth, hudKeyboard->pixHeight, /*border*/0, /*format*/GL_RGBA, GL_UNSIGNED_BYTE, kbd.model->texPixels);
+            glTexImage2D(GL_TEXTURE_2D, /*level*/0, /*internal format*/GL_RGBA, kbd.model->texWidth, kbd.model->texHeight, /*border*/0, /*format*/GL_RGBA, GL_UNSIGNED_BYTE, kbd.model->texPixels);
         }
         if (kbd.modelDirty) {
             kbd.modelDirty = false;
@@ -517,33 +516,33 @@ static bool gltouchkbd_onTouchEvent(interface_touch_event_t action, int pointer_
     if (!isEnabled) {
         return false;
     }
+    if (!ownsScreen) {
+        return false;
+    }
 
-    float alpha = _get_keyboard_visibility();
-    if (alpha > 0.f) {
-        float x = x_coords[pointer_idx];
-        float y = y_coords[pointer_idx];
+    float x = x_coords[pointer_idx];
+    float y = y_coords[pointer_idx];
 
-        switch (action) {
-            case TOUCH_DOWN:
-            case TOUCH_POINTER_DOWN:
-                break;
+    switch (action) {
+        case TOUCH_DOWN:
+        case TOUCH_POINTER_DOWN:
+            break;
 
-            case TOUCH_MOVE:
-                break;
+        case TOUCH_MOVE:
+            break;
 
-            case TOUCH_UP:
-            case TOUCH_POINTER_UP:
-                _tap_key_at_point(x, y);
-                break;
+        case TOUCH_UP:
+        case TOUCH_POINTER_UP:
+            _tap_key_at_point(x, y);
+            break;
 
-            case TOUCH_CANCEL:
-                LOG("---KBD TOUCH CANCEL");
-                return false;
+        case TOUCH_CANCEL:
+            LOG("---KBD TOUCH CANCEL");
+            return false;
 
-            default:
-                LOG("!!!KBD UNKNOWN TOUCH EVENT : %d", action);
-                return false;
-        }
+        default:
+            LOG("!!!KBD UNKNOWN TOUCH EVENT : %d", action);
+            return false;
     }
 
     clock_gettime(CLOCK_MONOTONIC, &kbd.timingBegin);
@@ -562,11 +561,26 @@ static void gltouchkbd_setTouchKeyboardEnabled(bool enabled) {
     isEnabled = enabled;
 }
 
+static void gltouchkbd_setTouchKeyboardOwnsScreen(bool pwnd) {
+    ownsScreen = pwnd;
+    if (ownsScreen) {
+        minAlpha = minAlphaWhenOwnsScreen;
+    } else {
+        minAlpha = 0.0;
+    }
+}
+
 static void _animation_showTouchKeyboard(void) {
+    if (!isAvailable) {
+        return;
+    }
     clock_gettime(CLOCK_MONOTONIC, &kbd.timingBegin);
 }
 
 static void _animation_hideTouchKeyboard(void) {
+    if (!isAvailable) {
+        return;
+    }
     kbd.timingBegin = (struct timespec){ 0 };
 }
 
@@ -582,6 +596,7 @@ static void _init_gltouchkbd(void) {
 
     keydriver_isTouchKeyboardAvailable = &gltouchkbd_isTouchKeyboardAvailable;
     keydriver_setTouchKeyboardEnabled = &gltouchkbd_setTouchKeyboardEnabled;
+    keydriver_setTouchKeyboardOwnsScreen = &gltouchkbd_setTouchKeyboardOwnsScreen;
 
     kbd.selectedCol = -1;
     kbd.selectedRow = -1;

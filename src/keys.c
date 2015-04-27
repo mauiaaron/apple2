@@ -485,10 +485,8 @@ bool c_keys_is_interface_key(int key)
 #endif
 
 #if INTERFACE_TOUCH
-// is the touch keyboard module itself available?
 bool (*keydriver_isTouchKeyboardAvailable)(void) = NULL;
-
-// enable/disable touch keyboard HUD element
 void (*keydriver_setTouchKeyboardEnabled)(bool enabled) = NULL;
+void (*keydriver_setTouchKeyboardOwnsScreen)(bool pwnd) = NULL;
 #endif
 
