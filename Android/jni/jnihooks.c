@@ -13,7 +13,6 @@
 #include "androidkeys.h"
 
 #include <jni.h>
-#include <math.h>
 
 enum {
     ANDROID_ACTION_DOWN = 0x0,
@@ -25,6 +24,7 @@ enum {
 };
 
 static bool nativePaused = false;
+static bool nativeRequestsShowMainMenu = false;
 
 #if TESTING
 static bool _run_tests(void) {
@@ -74,6 +74,13 @@ static inline int _androidTouchEvent2JoystickEvent(jint action) {
     }
 }
 
+static void _nativeRequestsShowMainMenu(void) {
+    nativeRequestsShowMainMenu = true;
+}
+
+// ----------------------------------------------------------------------------
+// JNI functions
+
 void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnCreate(JNIEnv *env, jobject obj, jstring j_dataDir) {
     const char *dataDir = (*env)->GetStringUTFChars(env, j_dataDir, 0);
 
@@ -118,7 +125,9 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnResume(JNIEnv *env, jobje
     }
     LOG("%s", "native onResume...");
     if (isSystemResume) {
-        // TODO POSSIBLY : message showing paused state
+        if (video_backend->animation_showPaused) {
+            video_backend->animation_showPaused();
+        }
     } else {
         nativePaused = false;
         pthread_mutex_unlock(&interface_mutex);
@@ -215,71 +224,14 @@ jboolean Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnTouch(JNIEnv *env, jo
     //}
 
     bool consumed = interface_onTouchEvent(joyaction, pointerCount, pointerIndex, x_coords, y_coords);
+    if (nativeRequestsShowMainMenu) {
+        nativeRequestsShowMainMenu = false;
+        consumed = false;
+    }
 
     (*env)->ReleaseFloatArrayElements(env, xCoords, x_coords, 0);
     (*env)->ReleaseFloatArrayElements(env, yCoords, y_coords, 0);
     return consumed;
-}
-
-void Java_org_deadc0de_apple2ix_Apple2Activity_nativeIncreaseCPUSpeed(JNIEnv *env, jobject obj) {
-    pthread_mutex_lock(&interface_mutex);
-
-    int percent_scale = (int)round(cpu_scale_factor * 100.0);
-    if (percent_scale >= 100) {
-        percent_scale += 25;
-    } else {
-        percent_scale += 5;
-    }
-    cpu_scale_factor = percent_scale/100.0;
-
-    if (cpu_scale_factor > CPU_SCALE_FASTEST) {
-        cpu_scale_factor = CPU_SCALE_FASTEST;
-    }
-
-    LOG("native set emulation percentage to %f", cpu_scale_factor);
-
-    if (video_backend->animation_showCPUSpeed) {
-        video_backend->animation_showCPUSpeed();
-    }
-
-#warning HACK TODO FIXME ... refactor timing stuff
-    timing_toggle_cpu_speed();
-    timing_toggle_cpu_speed();
-
-    pthread_mutex_unlock(&interface_mutex);
-}
-
-void Java_org_deadc0de_apple2ix_Apple2Activity_nativeDecreaseCPUSpeed(JNIEnv *env, jobject obj) {
-    pthread_mutex_lock(&interface_mutex);
-
-    int percent_scale = (int)round(cpu_scale_factor * 100.0);
-    if (cpu_scale_factor == CPU_SCALE_FASTEST) {
-        cpu_scale_factor = CPU_SCALE_FASTEST0;
-        percent_scale = (int)round(cpu_scale_factor * 100);
-    } else {
-        if (percent_scale > 100) {
-            percent_scale -= 25;
-        } else {
-            percent_scale -= 5;
-        }
-    }
-    cpu_scale_factor = percent_scale/100.0;
-
-    if (cpu_scale_factor < CPU_SCALE_SLOWEST) {
-        cpu_scale_factor = CPU_SCALE_SLOWEST;
-    }
-
-    LOG("native set emulation percentage to %f", cpu_scale_factor);
-
-    if (video_backend->animation_showCPUSpeed) {
-        video_backend->animation_showCPUSpeed();
-    }
-
-#warning HACK TODO FIXME ... refactor timing stuff
-    timing_toggle_cpu_speed();
-    timing_toggle_cpu_speed();
-
-    pthread_mutex_unlock(&interface_mutex);
 }
 
 void Java_org_deadc0de_apple2ix_Apple2Activity_nativeSetColor(JNIEnv *env, jobject obj, jint color) {
@@ -316,5 +268,13 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeChooseDisk(JNIEnv *env, job
         video_backend->animation_showDiskChosen(drive);
     }
     (*env)->ReleaseStringUTFChars(env, jPath, path);
+}
+
+// ----------------------------------------------------------------------------
+// Constructor
+
+__attribute__((constructor(CTOR_PRIORITY_LATE)))
+static void _init_jnihooks(void) {
+    video_backend->hostenv_showMainMenu = &_nativeRequestsShowMainMenu;
 }
 

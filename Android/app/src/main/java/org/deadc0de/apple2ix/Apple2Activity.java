@@ -44,14 +44,9 @@ public class Apple2Activity extends Activity {
     private Apple2View mView = null;
     private AlertDialog mQuitDialog = null;
     private AlertDialog mRebootDialog = null;
-    private GestureDetector mDetector = null;
-    private boolean mSwipeTogglesSpeed = true;
-    private boolean mDoubleTapShowsKeyboard = true;
-    private boolean mSingleTapShowsMainMenu = true;
 
     private int mWidth = 0;
     private int mHeight = 0;
-    private boolean mSoftKeyboardShowing = false;
 
     private float[] mXCoords = new float[MAX_FINGERS];
     private float[] mYCoords = new float[MAX_FINGERS];
@@ -65,8 +60,6 @@ public class Apple2Activity extends Activity {
     private native void nativeGraphicsChanged(int width, int height);
     private native void nativeOnKeyDown(int keyCode, int metaState);
     private native void nativeOnKeyUp(int keyCode, int metaState);
-    private native void nativeIncreaseCPUSpeed();
-    private native void nativeDecreaseCPUSpeed();
 
     public native void nativeOnResume(boolean isSystemResume);
     public native void nativeOnPause();
@@ -173,18 +166,10 @@ public class Apple2Activity extends Activity {
                     w = h;
                     h = w_;
                 }
-                if (mView.getHeight() - h > SOFTKEYBOARD_THRESHOLD) {
-                    Log.d(TAG, "Soft keyboard appears to be occupying screen real estate ...");
-                    Apple2Activity.this.mSoftKeyboardShowing = true;
-                } else {
-                    Log.d(TAG, "Soft keyboard appears to be gone ...");
-                    Apple2Activity.this.mSoftKeyboardShowing = false;
-                }
+                // I actually think this whole observer is now spurious ... but it's triggering SEGFAULT ... should investigate ...
                 nativeGraphicsChanged(w, h);
             }
         });
-
-        mDetector = new GestureDetector(this, new Apple2GestureListener());
     }
 
     @Override
@@ -200,10 +185,6 @@ public class Apple2Activity extends Activity {
         super.onPause();
         Log.d(TAG, "onPause()");
         mView.onPause();
-
-        if (isSoftKeyboardShowing()) {
-            mView.toggleKeyboard();
-        }
 
         // Apparently not good to leave popup/dialog windows showing when backgrounding.
         // Dismiss these popups to avoid android.view.WindowLeaked issues
@@ -333,72 +314,10 @@ public class Apple2Activity extends Activity {
                 break;
             }
 
-            this.mDetector.onTouchEvent(event);
+            mainMenu.show();
         } while (false);
 
         return super.onTouchEvent(event);
-    }
-
-    private class Apple2GestureListener extends GestureDetector.SimpleOnGestureListener {
-        private static final String TAG = "Gestures";
-
-        @Override
-        public boolean onDown(MotionEvent event) {
-            Log.d(TAG,"onDown: " + event.toString());
-            return true;
-        }
-
-        @Override
-        public boolean onFling(MotionEvent event1, MotionEvent event2, float velocityX, float velocityY) {
-            if ((event1 == null) || (event2 == null)) {
-                return false;
-            }
-            if (mSwipeTogglesSpeed) {
-                float ev1X = event1.getX();
-                float ev2X = event2.getX();
-                if (ev1X < ev2X) {
-                    nativeIncreaseCPUSpeed();
-                } else {
-                    nativeDecreaseCPUSpeed();
-                }
-            }
-            return true;
-        }
-
-        @Override
-        public boolean onSingleTapConfirmed(MotionEvent event) {
-            if (event == null) {
-                return false;
-            }
-            Log.d(TAG, "onSingleTapConfirmed: " + event.toString());
-            Apple2MainMenu mainMenu = Apple2Activity.this.mView.getMainMenu();
-            if (mainMenu.isShowing()) {
-                Log.d(TAG, "dismissing main menu");
-                mainMenu.dismiss();
-            } else if (Apple2Activity.this.isSoftKeyboardShowing()) {
-                Log.d(TAG, "hiding keyboard");
-                Apple2Activity.this.mView.toggleKeyboard();
-            } else if (mSingleTapShowsMainMenu) {
-                Log.d(TAG, "showing main menu");
-                Apple2Activity.this.mView.showMainMenu();
-            }
-            return true;
-        }
-
-        @Override
-        public boolean onDoubleTap(MotionEvent event) {
-            if (event == null) {
-                return false;
-            }
-            if (mDoubleTapShowsKeyboard) {
-                Log.d(TAG, "onDoubleTap: " + event.toString());
-                if (!Apple2Activity.this.isSoftKeyboardShowing()) {
-                    Log.d(TAG, "showing keyboard");
-                    Apple2Activity.this.mView.toggleKeyboard();
-                }
-            }
-            return true;
-        }
     }
 
     public void graphicsInitialized(int w, int h) {
@@ -429,10 +348,6 @@ public class Apple2Activity extends Activity {
 
     public int getHeight() {
         return mHeight;
-    }
-
-    public boolean isSoftKeyboardShowing() {
-        return mSoftKeyboardShowing;
     }
 
     public void maybeQuitApp() {
@@ -487,14 +402,14 @@ public class Apple2Activity extends Activity {
     }
 
     public void setSwipeTogglesSpeed(boolean swipeTogglesSpeed) {
-        mSwipeTogglesSpeed = swipeTogglesSpeed;
+        //mSwipeTogglesSpeed = swipeTogglesSpeed;
     }
 
     public void setSingleTapShowsMainMenu(boolean singleTapShowsMainMenu) {
-        mSingleTapShowsMainMenu = singleTapShowsMainMenu;
+        //mSingleTapShowsMainMenu = singleTapShowsMainMenu;
     }
 
     public void setDoubleTapShowsKeyboard(boolean doubleTapShowsKeyboard) {
-        mDoubleTapShowsKeyboard = doubleTapShowsKeyboard;
+        //mDoubleTapShowsKeyboard = doubleTapShowsKeyboard;
     }
 }

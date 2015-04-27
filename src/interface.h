@@ -60,6 +60,12 @@ typedef enum interface_touch_event_t {
 
 // handle touch event
 extern bool (*interface_onTouchEvent)(interface_touch_event_t action, int pointer_count, int pointer_idx, float *x_coords, float *y_coords);
+
+// is the touch menu module itself available?
+extern bool (*interface_isTouchMenuAvailable)(void);
+
+// enable/disable touch menu HUD element
+extern void (*interface_setTouchMenuEnabled)(bool enabled);
 #endif
 
 

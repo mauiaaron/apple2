@@ -39,6 +39,10 @@ uniform sampler2D buttonTexture;
 // Keyboard
 uniform sampler2D kbdTexture;
 
+// HUD Sprouting Menus
+uniform sampler2D menuLeftTexture;
+uniform sampler2D menuRightTexture;
+
 #if __VERSION__ >= 140
 #define OUTPUT_TEXTURE(TEX) \
         vec4 tex = texture(TEX, varTexcoord.st, 0.0); \
@@ -62,6 +66,10 @@ void main(void)
         OUTPUT_TEXTURE(buttonTexture);
     } else if (tex2Use == 4) {
         OUTPUT_TEXTURE(kbdTexture);
+    } else if (tex2Use == 5) {
+        OUTPUT_TEXTURE(menuLeftTexture);
+    } else if (tex2Use == 6) {
+        OUTPUT_TEXTURE(menuRightTexture);
     } else {
         //OUTPUT_RED(); -- WTF is this failing?
     }

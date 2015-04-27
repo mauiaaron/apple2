@@ -26,14 +26,22 @@ typedef struct video_backend_s {
     void (*render)(void);
     void (*shutdown)(void);
 
-    // optional functions
+    // touch HUD functions
+    void (*hostenv_showMainMenu)(void);
     void (*animation_showTouchKeyboard)(void);
     void (*animation_hideTouchKeyboard)(void);
+    void (*animation_showTouchJoystick)(void);
+    void (*animation_hideTouchJoystick)(void);
+    void (*animation_showTouchMenu)(void);
+    void (*animation_hideTouchMenu)(void);
+
+    // misc animations
     void (*animation_showMessage)(char *message, unsigned int cols, unsigned int rows);
     void (*animation_showPaused)(void);
     void (*animation_showCPUSpeed)(void);
     void (*animation_showDiskChosen)(int drive);
     void (*animation_showTrackSector)(int drive, int track, int sect);
+
 } video_backend_s;
 
 /*
@@ -175,6 +183,7 @@ uint8_t floating_bus_hibit(const bool hibit);
 #define MOUSETEXT_OPENAPPLE     (MOUSETEXT_BEGIN+0x01)
 #define MOUSETEXT_CLOSEDAPPLE   (MOUSETEXT_BEGIN+0x00)
 #define MOUSETEXT_HOURGLASS     (MOUSETEXT_BEGIN+0x03)
+#define MOUSETEXT_CHECKMARK     (MOUSETEXT_BEGIN+0x04)
 
 #define ICONTEXT_BEGIN          0xA0 // offset + 0x20 length
 #define ICONTEXT_MENU_BEGIN     ICONTEXT_BEGIN
@@ -186,6 +195,9 @@ uint8_t floating_bus_hibit(const bool hibit);
 #define ICONTEXT_DISK_LR        (ICONTEXT_BEGIN+0x0E)
 #define ICONTEXT_UNLOCK         (ICONTEXT_BEGIN+0x0F)
 #define ICONTEXT_GOTO           (ICONTEXT_BEGIN+0x10)
+
+#define ICONTEXT_MENU_SPROUT    (ICONTEXT_BEGIN+0x11)
+#define ICONTEXT_MENU_TOUCHJOY  (ICONTEXT_BEGIN+0x12)
 
 #define ICONTEXT_KBD_BEGIN      (ICONTEXT_BEGIN+0x14)
 #define ICONTEXT_LOWERCASE      (ICONTEXT_KBD_BEGIN+0x00)

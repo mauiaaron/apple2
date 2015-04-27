@@ -447,6 +447,16 @@ static GLuint _build_program(demoSource *vertexSource, demoSource *fragmentSourc
         glUniform1i(messageSamplerLoc, TEXTURE_ID_MESSAGE);
     }
 
+    GLint maxTextureUnits = -1;
+    glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &maxTextureUnits);
+
+    if (maxTextureUnits < TEXTURE_ID_MAX) {
+#warning FIXME TODO ... gracefully handle devices with low max texture units?
+        ERRLOG("OOPS ... MAX TEXTURE UNITS : %d (<%d)", maxTextureUnits, TEXTURE_ID_MAX);
+    } else {
+        LOG("GL_MAX_TEXTURE_IMAGE_UNITS : %d", maxTextureUnits);
+    }
+
 #if INTERFACE_TOUCH
     GLint axisSamplerLoc = glGetUniformLocation(prgName, "axisTexture");
     if (axisSamplerLoc < 0) {
@@ -467,6 +477,20 @@ static GLuint _build_program(demoSource *vertexSource, demoSource *fragmentSourc
         LOG("OOPS, no kbdSamplerLoc shader : %d", kbdSamplerLoc);
     } else {
         glUniform1i(kbdSamplerLoc, TEXTURE_ID_TOUCHKBD);
+    }
+
+    GLint menuLeftSamplerLoc = glGetUniformLocation(prgName, "menuLeftTexture");
+    if (menuLeftSamplerLoc < 0) {
+        LOG("OOPS, no menuLeftSamplerLoc shader : %d", menuLeftSamplerLoc);
+    } else {
+        glUniform1i(menuLeftSamplerLoc, TEXTURE_ID_TOUCHMENU_LEFT);
+    }
+
+    GLint menuRightSamplerLoc = glGetUniformLocation(prgName, "menuRightTexture");
+    if (menuRightSamplerLoc < 0) {
+        LOG("OOPS, no menuRightSamplerLoc shader : %d", menuRightSamplerLoc);
+    } else {
+        glUniform1i(menuRightSamplerLoc, TEXTURE_ID_TOUCHMENU_RIGHT);
     }
 #endif
 
