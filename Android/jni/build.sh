@@ -90,18 +90,19 @@ else
     ln -s apple2ix.mk Android.mk
 fi
 
-ndk-build V=1 NDK_DEBUG=1 && \
-    ant -f ../build.xml debug
+ndk-build V=1 NDK_DEBUG=1
+#ndk-build V=1 NDK_DEBUG=1 && \
+#    ant -f ../build.xml debug
 
-if test "x$do_load" = "x1" ; then
-    ant -f ../build.xml debug install
-fi
-
-if test "x$do_debug" = "x1" ; then
-    ( cd .. && ndk-gdb.py --force --start )
-elif test "x$do_load" = "x1" ; then
-    adb shell am start -a android.intent.action.MAIN -n $package_id/.Apple2Activity
-fi
+#if test "x$do_load" = "x1" ; then
+#    ant -f ../build.xml debug install
+#fi
+#
+#if test "x$do_debug" = "x1" ; then
+#    ( cd .. && ndk-gdb.py --force --start )
+#elif test "x$do_load" = "x1" ; then
+#    adb shell am start -a android.intent.action.MAIN -n $package_id/.Apple2Activity
+#fi
 
 set +x
 
