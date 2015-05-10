@@ -43,39 +43,6 @@ public class Apple2SettingsMenu {
     }
 
     enum SETTINGS {
-        SINGLE_TAP {
-            @Override public String getTitle(Context ctx) {
-                return ctx.getResources().getString(R.string.keyboard_singletap);
-            }
-            @Override public String getSummary(Context ctx) {
-                return ctx.getResources().getString(R.string.keyboard_singletap_summary);
-            }
-            @Override public void handleSelection(Apple2SettingsMenu settingsMenu, boolean selected) {
-                settingsMenu.mActivity.setSingleTapShowsMainMenu(selected);
-            }
-        },
-        DOUBLE_TAP {
-            @Override public String getTitle(Context ctx) {
-                return ctx.getResources().getString(R.string.keyboard_doubletap);
-            }
-            @Override public String getSummary(Context ctx) {
-                return ctx.getResources().getString(R.string.keyboard_doubletap_summary);
-            }
-            @Override public void handleSelection(Apple2SettingsMenu settingsMenu, boolean selected) {
-                settingsMenu.mActivity.setDoubleTapShowsKeyboard(selected);
-            }
-        },
-        SPEED_SWIPE {
-            @Override public String getTitle(Context ctx) {
-                return ctx.getResources().getString(R.string.speed_swipe);
-            }
-            @Override public String getSummary(Context ctx) {
-                return ctx.getResources().getString(R.string.speed_swipe_summary);
-            }
-            @Override public void handleSelection(Apple2SettingsMenu settingsMenu, boolean selected) {
-                settingsMenu.mActivity.setSwipeTogglesSpeed(selected);
-            }
-        },
         JOYSTICK_CONFIGURE {
             @Override public String getTitle(Context ctx) {
                 return ctx.getResources().getString(R.string.configure_joystick);

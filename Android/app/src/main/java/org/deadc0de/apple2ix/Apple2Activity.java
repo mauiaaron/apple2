@@ -400,16 +400,4 @@ public class Apple2Activity extends Activity {
         }
         mRebootDialog.show();
     }
-
-    public void setSwipeTogglesSpeed(boolean swipeTogglesSpeed) {
-        //mSwipeTogglesSpeed = swipeTogglesSpeed;
-    }
-
-    public void setSingleTapShowsMainMenu(boolean singleTapShowsMainMenu) {
-        //mSingleTapShowsMainMenu = singleTapShowsMainMenu;
-    }
-
-    public void setDoubleTapShowsKeyboard(boolean doubleTapShowsKeyboard) {
-        //mDoubleTapShowsKeyboard = doubleTapShowsKeyboard;
-    }
 }
