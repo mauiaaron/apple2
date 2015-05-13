@@ -21,17 +21,17 @@
 #define MODEL_DEPTH -1/32.f
 
 #define KBD_TEMPLATE_COLS 10
-#define KBD_TEMPLATE_ROWS 7
+#define KBD_TEMPLATE_ROWS 6
 
 #define ROW_WITH_ADJACENTS (KBD_TEMPLATE_ROWS-1)
-#define _ROWOFF 3 // actual keyboard row offset
+#define _ROWOFF 2 // main keyboard row offset
 
 // HACK NOTE FIXME TODO : interpolated pixel adjustment still necessary ...
 #define KBD_FB_WIDTH ((KBD_TEMPLATE_COLS * FONT80_WIDTH_PIXELS) + INTERPOLATED_PIXEL_ADJUSTMENT)
 #define KBD_FB_HEIGHT (KBD_TEMPLATE_ROWS * FONT_HEIGHT_PIXELS)
 
 #define KBD_OBJ_W 2.0
-#define KBD_OBJ_H 1.75
+#define KBD_OBJ_H 1.5
 
 HUD_CLASS(GLModelHUDKeyboard,
     char *pixelsAlt; // alternate color pixels
@@ -40,48 +40,44 @@ HUD_CLASS(GLModelHUDKeyboard,
 static bool isAvailable = false; // Were there any OpenGL/memory errors on gltouchkbd initialization?
 static bool isEnabled = true;    // Does player want touchkbd enabled?
 static bool ownsScreen = true;   // Does the touchkbd currently own the screen to the exclusion?
-static bool allowLowercase = true; // show lowercase keyboard
+static bool allowLowercase = false; // show lowercase keyboard
 static float minAlphaWhenOwnsScreen = 1/4.f;
 static float minAlpha = 1/4.f;
 
 static char kbdTemplateUCase[KBD_TEMPLATE_ROWS][KBD_TEMPLATE_COLS+1] = {
-    "    .     ",
-    "@  . .  @ ",
-    "    .     ",
+    "@ @ @ @ @ ",
+    "1234567890",
     "QWERTYUIOP",
-    " ASDFGHJKL",
-    "@ ZXCVBNM@",
-    "@@ spa. @@",
+    "ASDFG@HJKL",
+    " ZXCVBNM @",
+    "   spa. @@",
 };
 
 static char kbdTemplateLCase[KBD_TEMPLATE_ROWS][KBD_TEMPLATE_COLS+1] = {
-    "    .     ",
-    "@  . .  @ ",
-    "    .     ",
+    "@ @ @ @ @ ",
+    "1234567890",
     "qwertyuiop",
-    " asdfghjkl",
-    "@ zxcvbnm@",
-    "@@ SPA. @@",
+    "asdfg@hjkl",
+    " zxcvbnm @",
+    "   SPA. @@",
 };
 
-static char kbdTemplateAlt1[KBD_TEMPLATE_ROWS][KBD_TEMPLATE_COLS+1] = {
-    "    .     ",
-    "@  . .  @ ",
-    "    .     ",
+static char kbdTemplateAlt[KBD_TEMPLATE_ROWS][KBD_TEMPLATE_COLS+1] = {
+    "@ @ @ @ @ ",
     "1234567890",
     "@#%&*/-+()",
-    "$?!\"'`:;,X",
-    "XX\\XXX.^XX",
+    "~=_<>X{}[]",
+    "?!\"'`:;, X",
+    "$|\\XXX.^XX",
 };
 
-static char kbdTemplateAlt2[KBD_TEMPLATE_ROWS][KBD_TEMPLATE_COLS+1] = {
-    "    .     ",
-    "@  . .  @ ",
-    "    .     ",
-    "~=_<>{}[]|",
-    "@#%&*/-+()",
-    "$?!\"'`:;,X",
-    "XX\\XXX.^XX",
+static char kbdTemplateArrow[KBD_TEMPLATE_ROWS][KBD_TEMPLATE_COLS+1] = {
+    "@ @ @ @ @ ",
+    "          ",
+    "    t@    ",
+    "a   @@@   ",
+    "    c@    ",
+    "          ",
 };
 
 // touch viewport
@@ -135,13 +131,21 @@ static inline void _switch_to_next_keyboard(void) {
     if (c == 'q') {
         _switch_keyboard(kbd.model, kbdTemplateUCase[0]);
     } else if (c == 'Q') {
-        _switch_keyboard(kbd.model, kbdTemplateAlt1[0]);
-    } else if (c == '1') {
-        _switch_keyboard(kbd.model, kbdTemplateAlt2[0]);
+        _switch_keyboard(kbd.model, kbdTemplateAlt  [0]);
     } else if (allowLowercase) {
         _switch_keyboard(kbd.model, kbdTemplateLCase[0]);
     } else {
         _switch_keyboard(kbd.model, kbdTemplateUCase[0]);
+    }
+}
+
+static inline void _toggle_arrows(void) {
+    GLModelHUDKeyboard *hudKeyboard = (GLModelHUDKeyboard *)kbd.model->custom;
+    char c = hudKeyboard->tpl[_ROWOFF*(KBD_TEMPLATE_COLS+1)];
+    if (c == ICONTEXT_NONACTIONABLE) {
+        _switch_keyboard(kbd.model, kbdTemplateUCase[0]);
+    } else {
+        _switch_keyboard(kbd.model, kbdTemplateArrow[0]);
     }
 }
 
@@ -285,7 +289,6 @@ static inline void _tap_key_at_point(float x, float y) {
         case ICONTEXT_LOWERCASE:
         case ICONTEXT_UPPERCASE:
         case ICONTEXT_SHOWALT1:
-        case ICONTEXT_SHOWALT2:
             key = -1;
             _switch_to_next_keyboard();
             break;
@@ -294,13 +297,17 @@ static inline void _tap_key_at_point(float x, float y) {
             key = -1;
             break;
 
+        case ICONTEXT_CTRL:
+            key = SCODE_L_CTRL;
+            break;
+
         case ICONTEXT_RETURN_L:
         case ICONTEXT_RETURN_R:
             key = SCODE_RET;
             break;
 
-        case ICONTEXT_TAB:
-            key = SCODE_TAB;
+        case ICONTEXT_ESC:
+            key = SCODE_ESC;
             break;
 
         case MOUSETEXT_LEFT:
@@ -330,6 +337,11 @@ static inline void _tap_key_at_point(float x, float y) {
             key = -1;
             break;
 
+        case ICONTEXT_MENU_SPROUT:
+            key = -1;
+            _toggle_arrows();
+            break;
+
         case ICONTEXT_LEFTSPACE:
         case ICONTEXT_MIDSPACE:
         case ICONTEXT_RIGHTSPACE:
@@ -355,101 +367,98 @@ static inline void _tap_key_at_point(float x, float y) {
 static void _setup_touchkbd_hud(GLModel *parent) {
     GLModelHUDKeyboard *hudKeyboard = (GLModelHUDKeyboard *)parent->custom;
 
-    for (unsigned int i=0; i<_ROWOFF; i++) {
+    for (unsigned int i=0; i<(_ROWOFF-1); i++) {
         for (unsigned int j=0; j<KBD_TEMPLATE_COLS; j++) {
             kbdTemplateUCase[i][j] = ICONTEXT_NONACTIONABLE;
             kbdTemplateLCase[i][j] = ICONTEXT_NONACTIONABLE;
-            kbdTemplateAlt1 [i][j] = ICONTEXT_NONACTIONABLE;
-            kbdTemplateAlt2 [i][j] = ICONTEXT_NONACTIONABLE;
+            kbdTemplateAlt  [i][j] = ICONTEXT_NONACTIONABLE;
+        }
+    }
+    for (unsigned int i=0; i<KBD_TEMPLATE_ROWS; i++) {
+        for (unsigned int j=0; j<KBD_TEMPLATE_COLS; j++) {
+            if (kbdTemplateArrow[i][j] == ' ') {
+                kbdTemplateArrow[i][j] = ICONTEXT_NONACTIONABLE;
+            }
         }
     }
 
-    kbdTemplateUCase[0][4] = MOUSETEXT_UP;
-    kbdTemplateLCase[0][4] = MOUSETEXT_UP;
-    kbdTemplateAlt1 [0][4] = MOUSETEXT_UP;
-    kbdTemplateAlt2 [0][4] = MOUSETEXT_UP;
+    kbdTemplateLCase[0][0] = ICONTEXT_UPPERCASE;
+    kbdTemplateUCase[0][0] = ICONTEXT_SHOWALT1;
+    kbdTemplateAlt  [0][0] = ICONTEXT_UPPERCASE;
+    kbdTemplateArrow[0][0] = ICONTEXT_UPPERCASE;
 
-    kbdTemplateUCase[1][3] = MOUSETEXT_LEFT;
-    kbdTemplateLCase[1][3] = MOUSETEXT_LEFT;
-    kbdTemplateAlt1 [1][3] = MOUSETEXT_LEFT;
-    kbdTemplateAlt2 [1][3] = MOUSETEXT_LEFT;
-    kbdTemplateUCase[1][5] = MOUSETEXT_RIGHT;
-    kbdTemplateLCase[1][5] = MOUSETEXT_RIGHT;
-    kbdTemplateAlt1 [1][5] = MOUSETEXT_RIGHT;
-    kbdTemplateAlt2 [1][5] = MOUSETEXT_RIGHT;
+    kbdTemplateUCase[0][2] = ICONTEXT_CTRL;
+    kbdTemplateLCase[0][2] = ICONTEXT_CTRL;
+    kbdTemplateAlt  [0][2] = ICONTEXT_CTRL;
+    kbdTemplateArrow[0][2] = ICONTEXT_CTRL;
 
-    kbdTemplateUCase[1][0] = MOUSETEXT_OPENAPPLE;
-    kbdTemplateLCase[1][0] = MOUSETEXT_OPENAPPLE;
-    kbdTemplateAlt1 [1][0] = MOUSETEXT_OPENAPPLE;
-    kbdTemplateAlt2 [1][0] = MOUSETEXT_OPENAPPLE;
-    kbdTemplateUCase[1][8] = MOUSETEXT_CLOSEDAPPLE;
-    kbdTemplateLCase[1][8] = MOUSETEXT_CLOSEDAPPLE;
-    kbdTemplateAlt1 [1][8] = MOUSETEXT_CLOSEDAPPLE;
-    kbdTemplateAlt2 [1][8] = MOUSETEXT_CLOSEDAPPLE;
+    kbdTemplateUCase[0][4] = ICONTEXT_ESC;
+    kbdTemplateLCase[0][4] = ICONTEXT_ESC;
+    kbdTemplateAlt  [0][4] = ICONTEXT_ESC;
+    kbdTemplateArrow[0][4] = ICONTEXT_ESC;
 
-    kbdTemplateUCase[2][4] = MOUSETEXT_DOWN;
-    kbdTemplateLCase[2][4] = MOUSETEXT_DOWN;
-    kbdTemplateAlt1 [2][4] = MOUSETEXT_DOWN;
-    kbdTemplateAlt2 [2][4] = MOUSETEXT_DOWN;
+    kbdTemplateUCase[0][6] = MOUSETEXT_OPENAPPLE;
+    kbdTemplateLCase[0][6] = MOUSETEXT_OPENAPPLE;
+    kbdTemplateAlt  [0][6] = MOUSETEXT_OPENAPPLE;
+    kbdTemplateArrow[0][6] = MOUSETEXT_OPENAPPLE;
 
-    // 2nd row specials
+    kbdTemplateUCase[0][8] = MOUSETEXT_CLOSEDAPPLE;
+    kbdTemplateLCase[0][8] = MOUSETEXT_CLOSEDAPPLE;
+    kbdTemplateAlt  [0][8] = MOUSETEXT_CLOSEDAPPLE;
+    kbdTemplateArrow[0][8] = MOUSETEXT_CLOSEDAPPLE;
 
-    kbdTemplateUCase[_ROWOFF+1][0] = ICONTEXT_NONACTIONABLE;
-    kbdTemplateLCase[_ROWOFF+1][0] = ICONTEXT_NONACTIONABLE;
+    kbdTemplateArrow[2][5] = MOUSETEXT_UP;
+    kbdTemplateArrow[3][4] = MOUSETEXT_LEFT;
+    kbdTemplateArrow[3][6] = MOUSETEXT_RIGHT;
+    kbdTemplateArrow[4][5] = MOUSETEXT_DOWN;
 
-    // 3rd row specials
+    kbdTemplateUCase[3][5] = ICONTEXT_MENU_SPROUT;
+    kbdTemplateLCase[3][5] = ICONTEXT_MENU_SPROUT;
+    kbdTemplateAlt  [3][5] = ICONTEXT_MENU_SPROUT;
+    kbdTemplateArrow[3][5] = ICONTEXT_MENU_SPROUT;
 
-    kbdTemplateUCase[_ROWOFF+2][0] = ICONTEXT_LOWERCASE;
-    kbdTemplateLCase[_ROWOFF+2][0] = ICONTEXT_UPPERCASE;
+    kbdTemplateUCase[_ROWOFF+2][0] = ICONTEXT_NONACTIONABLE;
+    kbdTemplateLCase[_ROWOFF+2][0] = ICONTEXT_NONACTIONABLE;
 
-    kbdTemplateUCase[_ROWOFF+2][1] = ICONTEXT_NONACTIONABLE;
-    kbdTemplateLCase[_ROWOFF+2][1] = ICONTEXT_NONACTIONABLE;
+    kbdTemplateUCase[_ROWOFF+2][8] = ICONTEXT_NONACTIONABLE;
+    kbdTemplateLCase[_ROWOFF+2][8] = ICONTEXT_NONACTIONABLE;
+    kbdTemplateAlt  [_ROWOFF+2][8] = ICONTEXT_NONACTIONABLE;
 
     kbdTemplateUCase[_ROWOFF+2][9] = ICONTEXT_BACKSPACE;
     kbdTemplateLCase[_ROWOFF+2][9] = ICONTEXT_BACKSPACE;
-    kbdTemplateAlt1 [_ROWOFF+2][9] = ICONTEXT_BACKSPACE;
-    kbdTemplateAlt2 [_ROWOFF+2][9] = ICONTEXT_BACKSPACE;
+    kbdTemplateAlt  [_ROWOFF+2][9] = ICONTEXT_BACKSPACE;
 
-    // 4th row specials
+    // last row specials
 
-    kbdTemplateUCase[_ROWOFF+3][0] = ICONTEXT_SHOWALT1;
-    kbdTemplateLCase[_ROWOFF+3][0] = ICONTEXT_SHOWALT1;
-    kbdTemplateAlt1 [_ROWOFF+3][0] = ICONTEXT_SHOWALT1;
-    kbdTemplateAlt2 [_ROWOFF+3][0] = ICONTEXT_UPPERCASE;
+    kbdTemplateLCase[_ROWOFF+3][0] = ICONTEXT_NONACTIONABLE;
+    kbdTemplateUCase[_ROWOFF+3][0] = ICONTEXT_NONACTIONABLE;
 
-    kbdTemplateUCase[_ROWOFF+3][1] = ICONTEXT_SHOWALT2;
-    kbdTemplateLCase[_ROWOFF+3][1] = ICONTEXT_SHOWALT2;
-    kbdTemplateAlt1 [_ROWOFF+3][1] = ICONTEXT_SHOWALT2;
-    kbdTemplateAlt2 [_ROWOFF+3][1] = ICONTEXT_LOWERCASE;
+    kbdTemplateUCase[_ROWOFF+3][1] = ICONTEXT_NONACTIONABLE;
+    kbdTemplateLCase[_ROWOFF+3][1] = ICONTEXT_NONACTIONABLE;
 
     kbdTemplateUCase[_ROWOFF+3][2] = ICONTEXT_NONACTIONABLE;
     kbdTemplateLCase[_ROWOFF+3][2] = ICONTEXT_NONACTIONABLE;
 
     kbdTemplateUCase[_ROWOFF+3][3] = ICONTEXT_LEFTSPACE;
     kbdTemplateLCase[_ROWOFF+3][3] = ICONTEXT_LEFTSPACE;
-    kbdTemplateAlt1 [_ROWOFF+3][3] = ICONTEXT_LEFTSPACE;
-    kbdTemplateAlt2 [_ROWOFF+3][3] = ICONTEXT_LEFTSPACE;
+    kbdTemplateAlt  [_ROWOFF+3][3] = ICONTEXT_LEFTSPACE;
     kbdTemplateUCase[_ROWOFF+3][4] = ICONTEXT_MIDSPACE;
     kbdTemplateLCase[_ROWOFF+3][4] = ICONTEXT_MIDSPACE;
-    kbdTemplateAlt1 [_ROWOFF+3][4] = ICONTEXT_MIDSPACE;
-    kbdTemplateAlt2 [_ROWOFF+3][4] = ICONTEXT_MIDSPACE;
+    kbdTemplateAlt  [_ROWOFF+3][4] = ICONTEXT_MIDSPACE;
     kbdTemplateUCase[_ROWOFF+3][5] = ICONTEXT_RIGHTSPACE;
     kbdTemplateLCase[_ROWOFF+3][5] = ICONTEXT_RIGHTSPACE;
-    kbdTemplateAlt1 [_ROWOFF+3][5] = ICONTEXT_RIGHTSPACE;
-    kbdTemplateAlt2 [_ROWOFF+3][5] = ICONTEXT_RIGHTSPACE;
+    kbdTemplateAlt  [_ROWOFF+3][5] = ICONTEXT_RIGHTSPACE;
 
     kbdTemplateUCase[_ROWOFF+3][7] = ICONTEXT_NONACTIONABLE;
     kbdTemplateLCase[_ROWOFF+3][7] = ICONTEXT_NONACTIONABLE;
 
     kbdTemplateUCase[_ROWOFF+3][8] = ICONTEXT_RETURN_L;
     kbdTemplateLCase[_ROWOFF+3][8] = ICONTEXT_RETURN_L;
-    kbdTemplateAlt1 [_ROWOFF+3][8] = ICONTEXT_RETURN_L;
-    kbdTemplateAlt2 [_ROWOFF+3][8] = ICONTEXT_RETURN_L;
+    kbdTemplateAlt  [_ROWOFF+3][8] = ICONTEXT_RETURN_L;
 
     kbdTemplateUCase[_ROWOFF+3][9] = ICONTEXT_RETURN_R;
     kbdTemplateLCase[_ROWOFF+3][9] = ICONTEXT_RETURN_R;
-    kbdTemplateAlt1 [_ROWOFF+3][9] = ICONTEXT_RETURN_R;
-    kbdTemplateAlt2 [_ROWOFF+3][9] = ICONTEXT_RETURN_R;
+    kbdTemplateAlt  [_ROWOFF+3][9] = ICONTEXT_RETURN_R;
 
     hudKeyboard->tplWidth  = KBD_TEMPLATE_COLS;
     hudKeyboard->tplHeight = KBD_TEMPLATE_ROWS;
