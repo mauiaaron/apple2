@@ -228,6 +228,10 @@ static void gltouchjoy_setup(void) {
         LOG("gltouchjoy not initializing axis");
         return;
     }
+    if (!axes.model->custom) {
+        LOG("gltouchjoy axes initialization problem");
+        return;
+    }
 
     // button object
 
@@ -238,6 +242,10 @@ static void gltouchjoy_setup(void) {
             });
     if (!buttons.model) {
         LOG("gltouchjoy not initializing buttons");
+        return;
+    }
+    if (!buttons.model->custom) {
+        LOG("gltouchjoy buttons initialization problem");
         return;
     }
 
