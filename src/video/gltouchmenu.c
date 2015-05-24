@@ -354,6 +354,7 @@ static inline bool _tap_menu_item(float x, float y) {
             if (video_backend->animation_showTouchJoystick) {
                 video_backend->animation_showTouchJoystick();
             }
+            topLeftTemplateShowing[1][0] = ICONTEXT_UPPERCASE;
             _hide_top_left();
             break;
 
@@ -367,6 +368,7 @@ static inline bool _tap_menu_item(float x, float y) {
             if (video_backend->animation_showTouchKeyboard) {
                 video_backend->animation_showTouchKeyboard();
             }
+            topLeftTemplateShowing[1][0] = ICONTEXT_MENU_TOUCHJOY;
             _hide_top_left();
             break;
 
@@ -403,8 +405,8 @@ static void _setup_touchmenu_top_left(GLModel *parent) {
 
     topLeftTemplateShowing[0][0] = ICONTEXT_MENU_SPROUT;
     topLeftTemplateShowing[0][1] = MOUSETEXT_RIGHT;
-    topLeftTemplateShowing[1][1] = ICONTEXT_UPPERCASE;
-    topLeftTemplateShowing[1][0] = ICONTEXT_MENU_TOUCHJOY;
+    topLeftTemplateShowing[1][0] = ICONTEXT_UPPERCASE;
+    topLeftTemplateShowing[1][1] = ICONTEXT_NONACTIONABLE;
 
     const unsigned int size = sizeof(topLeftTemplateHidden);
     hudMenu->tpl = calloc(size, 1);
