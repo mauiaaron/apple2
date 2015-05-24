@@ -223,7 +223,9 @@ jboolean Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnTouch(JNIEnv *env, jo
     //  LOG("\t[%f,%f]", x_coords[i], y_coords[i]);
     //}
 
-    bool consumed = interface_onTouchEvent(joyaction, pointerCount, pointerIndex, x_coords, y_coords);
+    interface_onTouchEvent(joyaction, pointerCount, pointerIndex, x_coords, y_coords);
+
+    bool consumed = true; // default assume that native can handle touch event (except for explicit request to show main menu)
     if (nativeRequestsShowMainMenu) {
         nativeRequestsShowMainMenu = false;
         consumed = false;
