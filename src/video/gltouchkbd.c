@@ -39,10 +39,10 @@ HUD_CLASS(GLModelHUDKeyboard,
 
 static bool isAvailable = false; // Were there any OpenGL/memory errors on gltouchkbd initialization?
 static bool isEnabled = true;    // Does player want touchkbd enabled?
-static bool ownsScreen = true;   // Does the touchkbd currently own the screen to the exclusion?
+static bool ownsScreen = false;  // Does the touchkbd currently own the screen to the exclusion?
 static bool allowLowercase = false; // show lowercase keyboard
 static float minAlphaWhenOwnsScreen = 1/4.f;
-static float minAlpha = 1/4.f;
+static float minAlpha = 0.f;
 
 static char kbdTemplateUCase[KBD_TEMPLATE_ROWS][KBD_TEMPLATE_COLS+1] = {
     "@ @ @ @ @ ",

@@ -55,7 +55,7 @@ enum {
 
 static bool isAvailable = false; // Were there any OpenGL/memory errors on gltouchjoy initialization?
 static bool isEnabled = true;    // Does player want touchjoy enabled?
-static bool ownsScreen = false;  // Does the touchjoy currently own the screen?
+static bool ownsScreen = true;   // Does the touchjoy currently own the screen?
 static float minAlphaWhenOwnsScreen = 0;
 static float minAlpha = 0;
 
