@@ -543,6 +543,52 @@ TEST test_boot_disk() {
     PASS();
 }
 
+#define ASM_INIT() \
+    test_type_input( \
+            "CALL-151\r" \
+            "!\r" \
+            "1E00: NOP\r" \
+            )
+
+#define ASM_TRIGGER_WATCHPT() \
+    test_type_input( \
+            " LDA #FF\r" \
+            " STA $1F33\r" \
+            )
+
+#define ASM_TEST_DISK_READ_NULL() \
+    test_type_input( \
+            " LDA $C0E9\r" /* drive on */ \
+            " LDA $C0EB\r" /* switch to drive 2 */ \
+            " LDA #00\r" \
+            " LDA $C0EC\r" /* read byte */ \
+            " STA $1F43\r" /* save to testout addr */ \
+            )
+
+#define ASM_DONE() test_type_input("\r")
+
+#define ASM_GO() test_type_input("1E00G\r")
+
+TEST test_read_null_bytes() {
+    BOOT_TO_DOS();
+
+    apple_ii_64k[0][WATCHPOINT_ADDR] = 0x00;
+    apple_ii_64k[0][TESTOUT_ADDR] = 0x00;
+
+    ASM_INIT();
+    ASM_TEST_DISK_READ_NULL();
+    ASM_TRIGGER_WATCHPT();
+    ASM_DONE();
+    ASM_GO();
+
+    c_debugger_go();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+    ASSERT(apple_ii_64k[0][TESTOUT_ADDR]    == 0xFF);
+
+    PASS();
+}
+
 #define SAVE_SHA1 "B721C61BD10E28F9B833C5F661AA60C73B2D9F74"
 TEST test_savehello_dsk() {
 
@@ -1018,6 +1064,8 @@ GREATEST_SUITE(test_suite_disk) {
 #endif
 
     RUN_TESTp(test_boot_disk);
+
+    RUN_TESTp(test_read_null_bytes);
 
     RUN_TESTp(test_savehello_dsk);
     RUN_TESTp(test_savehello_nib);

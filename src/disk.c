@@ -486,7 +486,6 @@ GLUE_C_READ(disk_read_write_byte)
     uint8_t value = 0xFF;
     do {
         if (disk6.disk[disk6.drive].fp == NULL) {
-            value = 0x00;
             break;
         }
 
