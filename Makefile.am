@@ -31,9 +31,6 @@ bin_PROGRAMS = apple2ix
 ASM_SRC_x86 = \
 	src/x86/glue.S src/x86/cpu.S
 
-INTERFACE_CLASSIC_SRC = \
-	src/interface.c
-
 VIDEO_SRC = \
 	src/video/xvideo.c \
 	src/video/glvideo.c \
@@ -59,8 +56,6 @@ META_SRC = \
 EXTRA_apple2ix_SOURCES = \
 	$(ASM_SRC_x86) \
 	\
-	$(INTERFACE_CLASSIC_SRC) \
-	\
 	$(VIDEO_SRC) \
 	\
 	$(AUDIO_SRC) \
@@ -69,7 +64,7 @@ EXTRA_apple2ix_SOURCES = \
 
 apple2ix_SOURCES = src/font.c src/rom.c src/misc.c src/display.c src/vm.c \
 	src/timing.c src/zlib-helpers.c src/joystick.c src/keys.c src/prefs.c \
-	src/disk.c src/cpu-supp.c
+	src/interface.c src/disk.c src/cpu-supp.c
 
 apple2ix_CFLAGS = @AM_CFLAGS@ @X_CFLAGS@
 apple2ix_CCASFLAGS = $(apple2ix_CFLAGS)
