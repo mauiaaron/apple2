@@ -16,7 +16,7 @@
 
 #include "common.h"
 
-#define SCANSTEP SCANWIDTH-12
+#define SCANSTEP (SCANWIDTH-12)
 
 #define DYNAMIC_SZ 11 // 7 pixels (as bytes) + 2pre + 2post
 
@@ -558,7 +558,7 @@ static inline void _plot_lores(uint8_t **d, const uint32_t val) {
     *((uint32_t *)(*d)) = val;
     *d += 4;
     *((uint16_t *)(*d)) = (uint16_t)(val & 0xffff);
-    *d += (SCANWIDTH-12);
+    *d += SCANSTEP;
     *((uint32_t *)(*d)) = val;
     *d += 4;
     *((uint32_t *)(*d)) = val;
