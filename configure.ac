@@ -260,8 +260,6 @@ AC_ARG_ENABLE([debugger], AS_HELP_STRING([--disable-debugger], [Disable 6502 deb
 ])
 AC_SUBST(META_O)
 
-INTERFACE_O="src/interface.o"
-AC_SUBST(INTERFACE_O)
 AC_DEFINE(INTERFACE_CLASSIC, 1, [Use the classic menu interface])
 
 dnl ---------------------------------------------------------------------------
