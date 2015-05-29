@@ -300,10 +300,10 @@ static void _initialize_hires_values(void) {
 
 static void _initialize_row_col_tables(void) {
     for (unsigned int y = 0; y < TEXT_ROWS; y++) {
-        for (unsigned int off = 0; off < 8; off++) {
+        for (unsigned int y2 = 0; y2 < FONT_GLYPH_Y; y2++) {
             for (unsigned int x = 0; x < 40; x++) {
-                video__screen_addresses[video__line_offset[y] + (0x400*off) + x] = (y*16 + 2*off /* + 8*/) * SCANWIDTH + x*14 + 4;
-                video__columns         [video__line_offset[y] + (0x400*off) + x] = (uint8_t)x;
+                video__screen_addresses[video__line_offset[y] + (0x400*y2) + x] = ((y*FONT_HEIGHT_PIXELS + 2*y2) * SCANWIDTH) + (x*FONT_WIDTH_PIXELS) + _INTERPOLATED_PIXEL_ADJUSTMENT_PRE;
+                video__columns         [video__line_offset[y] + (0x400*y2) + x] = (uint8_t)x;
             }
         }
     }
@@ -945,6 +945,8 @@ static inline void _plot_hires(uint16_t ea, uint8_t b, bool is_even, uint8_t *fb
             }
 
             // calculate interpolated/bleed colors
+            // NOTE that this doesn't check under/overflow of ea (for example at 0x2000, 0x4000, 0x3FFF, 0x5FFF)
+            // ... but don't think this really matters much here =P
             _calculate_interp_color(color_buf, 1, interp_altbase, ea-1);
             _calculate_interp_color(color_buf, 2, interp_base, ea);
             _calculate_interp_color(color_buf, 8, interp_base, ea);

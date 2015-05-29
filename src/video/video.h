@@ -144,31 +144,26 @@ uint16_t video_scanner_get_address(bool *vblBarOut);
 uint8_t floating_bus(void);
 uint8_t floating_bus_hibit(const bool hibit);
 
+#define TEXT_ROWS 24
+#define BEGIN_MIX 20
+#define TEXT_COLS 40
+#define TEXT80_COLS (TEXT_COLS*2)
 
-/*
- * 640x400 mode really isn't what it advertises.  It's really 560x384 with 4
- * extra bytes on each side for color interpolation hack.  This is yet another
- * area where I've traded the optimization gain (especially on older slower
- * machines) for a standard resolution.
- */
-#define _SCANWIDTH 560
+#define FONT_HEIGHT_PIXELS 16
+#define FONT_WIDTH_PIXELS  14
+#define FONT80_WIDTH_PIXELS (FONT_WIDTH_PIXELS>>1)
+
+#define _SCANWIDTH (TEXT_COLS * FONT_WIDTH_PIXELS)  // 560
+#define SCANHEIGHT (TEXT_ROWS * FONT_HEIGHT_PIXELS) // 384
+
+// Extra bytes on each side of internal framebuffers for color interpolation hack
 #define _INTERPOLATED_PIXEL_ADJUSTMENT_PRE 4
 #define _INTERPOLATED_PIXEL_ADJUSTMENT_POST 4
 #define INTERPOLATED_PIXEL_ADJUSTMENT (_INTERPOLATED_PIXEL_ADJUSTMENT_PRE+_INTERPOLATED_PIXEL_ADJUSTMENT_POST)
 #define SCANWIDTH (_SCANWIDTH+INTERPOLATED_PIXEL_ADJUSTMENT)
-#define SCANHEIGHT 384
 
-#define TEXT_ROWS 24
-#define BEGIN_MIX 20
-#define TEXT_COLS 40
-#define TEXT80_COLS 80
-
-#define FONT_GLYPH_X 8
-#define FONT_GLYPH_Y FONT_GLYPH_X
-
-#define FONT_HEIGHT_PIXELS 16
-#define FONT_WIDTH_PIXELS  14
-#define FONT80_WIDTH_PIXELS 7
+#define FONT_GLYPH_X (7+/*unused*/1)            // generated font.c uses a single byte (8bits) per font glyph line
+#define FONT_GLYPH_Y (FONT_HEIGHT_PIXELS>>1)    // ... 8 bytes total for whole glyph
 
 #define MOUSETEXT_BEGIN         0x80 // offset + 0x20 length
 #define MOUSETEXT_UP            (MOUSETEXT_BEGIN+0x0b)
