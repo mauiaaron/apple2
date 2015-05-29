@@ -1135,7 +1135,7 @@ void c_interface_parameters()
         else if ((ch == kESC) || c_keys_is_interface_key(ch))
         {
             timing_initialize();
-            video_set(0);                       /* redo colors */
+            video_reset();
             c_initialize_sound_hooks();
             c_joystick_reset();
             c_interface_exit(ch);

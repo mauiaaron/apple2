@@ -178,7 +178,7 @@ void c_initialize_tables() {
 
     /* initialize first text & hires page, which are specially bank switched
      *
-     * video_set() substitutes it's own hooks for all visible write locations
+     * video_reset() substitutes it's own hooks for all visible write locations
      * affect the display, leaving our write-functions in place only at the
      * `screen holes', hence the name.
      */
@@ -433,7 +433,7 @@ void c_initialize_tables() {
     }
     cpu65_vmem_w[0xCFFF] = iie_read_slot_expansion;
 
-    video_set(0);
+    video_reset();
 
     // Peripheral card slot initializations ...
 

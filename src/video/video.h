@@ -83,19 +83,14 @@ void video_shutdown(void);
 
 /*
  * Setup the display. This may be called multiple times in a run, and is
- * used when graphics parameters (II+ vs //e, hires color representation) may
- * have changed.
- *
- * In future, all relevant information will be communicated through
- * FLAGS. For now, however, it is ignored and global variables are used
- * instead.
+ * used when graphics parameters may have changed.
  *
  * This function is responsible for inserting any needed video-specific hooks
  * into the 6502 memory indirection table.  It should *not* hook the
  * soft-switches.
  *
  */
-void video_set(int flags);
+void video_reset(void);
 
 /*
  * Set the font used by the display.  QTY characters are loaded starting

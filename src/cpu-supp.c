@@ -650,7 +650,7 @@ void cpu65_uninterrupt(int reason)
 
 void cpu65_reboot(void) {
     timing_initialize();
-    video_set(0);
+    video_reset();
     joy_button0 = 0xff; // OpenApple
     cpu65_interrupt(ResetSig);
     c_initialize_sound_hooks();

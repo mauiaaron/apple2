@@ -447,11 +447,9 @@ static void _initialize_color() {
     colormap[0x0f].blue = 255; /* White */
 }
 
-void video_set(int flags) {
+void video_reset(void) {
     _initialize_hires_values();
-    _initialize_row_col_tables();
     _initialize_tables_video();
-    _initialize_dhires_values();
 }
 
 void video_loadfont(int first, int quantity, const uint8_t *data, int mode) {
@@ -1272,7 +1270,6 @@ static void _init_interface(void) {
     _initialize_interface_fonts();
     _initialize_hires_values();
     _initialize_row_col_tables();
-    _initialize_tables_video();
     _initialize_dhires_values();
     _initialize_color();
 }
