@@ -32,7 +32,7 @@ static uint8_t video__font[0x4000] = { 0 };
 static uint8_t video__int_font[3][0x4000] = { { 0 } }; // interface font
 
 // Precalculated framebuffer offsets given VM addr
-unsigned int video__screen_addresses[8192] = { 0 };
+unsigned int video__screen_addresses[8192] = { INT_MIN };
 uint8_t video__columns[8192] = { 0 };
 
 uint8_t *video__fb1 = NULL;
@@ -42,7 +42,6 @@ uint8_t video__hires_even[0x800] = { 0 };
 uint8_t video__hires_odd[0x800] = { 0 };
 
 int video__current_page = 0; // current visual page
-int video__strictcolors = 1;// refactor : should be static
 
 extern volatile bool _vid_dirty;
 
@@ -99,14 +98,14 @@ uint8_t video__dhires2[256] = {
 // ----------------------------------------------------------------------------
 // Initialization routines
 
-static void video_initialize_dhires_values(void) {
+static void _initialize_dhires_values(void) {
     for (unsigned int i = 0; i < 0x80; i++) {
         video__dhires1[i+0x80] = video__dhires1[i];
         video__dhires2[i+0x80] = video__dhires2[i];
     }
 }
 
-static void video_initialize_hires_values(void) {
+static void _initialize_hires_values(void) {
     // precalculate colors for all the 256*8 bit combinations. */
     for (unsigned int value = 0x00; value <= 0xFF; value++) {
         for (unsigned int e = value*8, last_not_black=0, v=value, b=0; b < 7; b++, v >>= 1, e++) {
@@ -299,11 +298,7 @@ static void video_initialize_hires_values(void) {
     }
 }
 
-static void video_initialize_row_col_tables(void) {
-    for (unsigned int i = 0; i < 8192; i++) {
-        video__screen_addresses[i] = -1;
-    }
-
+static void _initialize_row_col_tables(void) {
     for (unsigned int y = 0; y < TEXT_ROWS; y++) {
         for (unsigned int off = 0; off < 8; off++) {
             for (unsigned int x = 0; x < 40; x++) {
@@ -312,9 +307,12 @@ static void video_initialize_row_col_tables(void) {
             }
         }
     }
+    for (unsigned int i = 0; i < 8192; i++) {
+        assert(video__screen_addresses[i] != INT_MIN);
+    }
 }
 
-static void video_initialize_tables_video(void) {
+static void _initialize_tables_video(void) {
     // initialize text/lores & hires graphics routines
     for (unsigned int y = 0; y < TEXT_ROWS; y++) {
         for (unsigned int x = 0; x < TEXT_COLS; x++) {
@@ -353,7 +351,7 @@ static void video_initialize_tables_video(void) {
     }
 }
 
-static void video_initialize_color() {
+static void _initialize_color() {
     unsigned char col2[ 3 ] = { 255,255,255 };
 
     /* align the palette for hires graphics */
@@ -450,11 +448,10 @@ static void video_initialize_color() {
 }
 
 void video_set(int flags) {
-    video__strictcolors = (color_mode == COLOR_INTERP) ? 2 : 1;
-    video_initialize_hires_values();
-    video_initialize_row_col_tables();
-    video_initialize_tables_video();
-    video_initialize_dhires_values();
+    _initialize_hires_values();
+    _initialize_row_col_tables();
+    _initialize_tables_video();
+    _initialize_dhires_values();
 }
 
 void video_loadfont(int first, int quantity, const uint8_t *data, int mode) {
@@ -488,7 +485,7 @@ void video_loadfont(int first, int quantity, const uint8_t *data, int mode) {
     }
 }
 
-static void video_loadfont_int(int first, int quantity, const uint8_t *data) {
+static void _loadfont_int(int first, int quantity, const uint8_t *data) {
     unsigned int i = quantity * 8;
     while (i--) {
         unsigned int j = 8;
@@ -505,6 +502,17 @@ static void video_loadfont_int(int first, int quantity, const uint8_t *data) {
             x <<= 1;
         }
     }
+}
+
+static void _initialize_interface_fonts(void) {
+    _loadfont_int(0x00,0x40,ucase_glyphs);
+    _loadfont_int(0x40,0x20,ucase_glyphs);
+    _loadfont_int(0x60,0x20,lcase_glyphs);
+    _loadfont_int(0x80,0x40,ucase_glyphs);
+    _loadfont_int(0xC0,0x20,ucase_glyphs);
+    _loadfont_int(0xE0,0x20,lcase_glyphs);
+    _loadfont_int(MOUSETEXT_BEGIN,0x20,mousetext_glyphs);
+    _loadfont_int(ICONTEXT_BEGIN,0x20,interface_glyphs);
 }
 
 // ----------------------------------------------------------------------------
@@ -717,18 +725,6 @@ GLUE_C_WRITE(video__write_2e_text1_mixed)
 
 // ----------------------------------------------------------------------------
 // Classic interface and printing HUD messages
-
-static void _load_interface_fonts(void) {
-    video_loadfont_int(0x00,0x40,ucase_glyphs);
-    video_loadfont_int(0x40,0x20,ucase_glyphs);
-    video_loadfont_int(0x60,0x20,lcase_glyphs);
-    video_loadfont_int(0x80,0x40,ucase_glyphs);
-    video_loadfont_int(0xC0,0x20,ucase_glyphs);
-    video_loadfont_int(0xE0,0x20,lcase_glyphs);
-
-    video_loadfont_int(MOUSETEXT_BEGIN,0x20,mousetext_glyphs);
-    video_loadfont_int(ICONTEXT_BEGIN,0x20,interface_glyphs);
-}
 
 void interface_plotChar(uint8_t *fb, int fb_pix_width, int col, int row, interface_colorscheme_t cs, uint8_t c) {
     _vid_dirty = true;
@@ -1051,7 +1047,6 @@ void video_init(void) {
     memset(video__fb1,0,SCANWIDTH*SCANHEIGHT);
     memset(video__fb2,0,SCANWIDTH*SCANHEIGHT);
 
-    video_initialize_color();
 #if !HEADLESS
 #if !defined(__APPLE__)
 #if !defined(ANDROID)
@@ -1274,6 +1269,11 @@ uint8_t floating_bus_hibit(const bool hibit) {
 __attribute__((constructor(CTOR_PRIORITY_LATE)))
 static void _init_interface(void) {
     LOG("Initializing display subsystem");
-    _load_interface_fonts();
+    _initialize_interface_fonts();
+    _initialize_hires_values();
+    _initialize_row_col_tables();
+    _initialize_tables_video();
+    _initialize_dhires_values();
+    _initialize_color();
 }
 

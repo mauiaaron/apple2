@@ -267,8 +267,6 @@ extern uint8_t video__dhires2[256];
 
 extern int video__current_page; /* Current visual page */
 
-extern int video__strictcolors;
-
 /* --- Precalculated hi-res page offsets given addr --- */
 extern unsigned int video__screen_addresses[8192];
 extern uint8_t video__columns[8192];
