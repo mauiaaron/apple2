@@ -26,8 +26,7 @@
 #define ROW_WITH_ADJACENTS (KBD_TEMPLATE_ROWS-1)
 #define _ROWOFF 2 // main keyboard row offset
 
-// HACK NOTE FIXME TODO : interpolated pixel adjustment still necessary ...
-#define KBD_FB_WIDTH ((KBD_TEMPLATE_COLS * FONT80_WIDTH_PIXELS) + INTERPOLATED_PIXEL_ADJUSTMENT)
+#define KBD_FB_WIDTH (KBD_TEMPLATE_COLS * FONT80_WIDTH_PIXELS)
 #define KBD_FB_HEIGHT (KBD_TEMPLATE_ROWS * FONT_HEIGHT_PIXELS)
 
 #define KBD_OBJ_W 2.0
@@ -177,7 +176,7 @@ static void _rerender_character(int col, int row, uint8_t *fb) {
     const unsigned int colCount = 1;
     const unsigned int pixCharsWidth = (FONT80_WIDTH_PIXELS+1)*colCount;
     const unsigned int rowStride = hudKeyboard->pixWidth - pixCharsWidth;
-    unsigned int srcIndex = (row * hudKeyboard->pixWidth * FONT_HEIGHT_PIXELS) + ((col * FONT80_WIDTH_PIXELS) + /*HACK FIXME:*/_INTERPOLATED_PIXEL_ADJUSTMENT_PRE);
+    unsigned int srcIndex = (row * hudKeyboard->pixWidth * FONT_HEIGHT_PIXELS) + (col * FONT80_WIDTH_PIXELS);
     unsigned int dstIndex = srcIndex * 4;
 
     for (unsigned int i=0; i<FONT_HEIGHT_PIXELS; i++) {
@@ -228,14 +227,13 @@ static inline bool _is_point_on_keyboard(float x, float y) {
 
 static inline void _screen_to_keyboard(float x, float y, OUTPARM int *col, OUTPARM int *row) {
     GLModelHUDKeyboard *hudKeyboard = (GLModelHUDKeyboard *)(kbd.model->custom);
-    const unsigned int keyW = touchport.kbdW / (hudKeyboard->tplWidth+1/* interpolated adjustment HACK NOTE FIXME TODO */);
-    const unsigned int keyH = touchport.kbdH / (hudKeyboard->tplHeight);
-    const int xOff = (keyW * 0.5); // HACK NOTE FIXME TODO : interpolated pixel adjustment still necessary ...
+    const unsigned int keyW = touchport.kbdW / hudKeyboard->tplWidth;
+    const unsigned int keyH = touchport.kbdH / hudKeyboard->tplHeight;
 
-    *col = (x - (touchport.kbdX+xOff)) / keyW;
+    *col = (x - touchport.kbdX) / keyW;
     if (*col < 0) {
         *col = 0;
-    } /* interpolated adjustment HACK NOTE FIXME TODO */ else if (*col >= hudKeyboard->tplWidth) {
+    } else if (*col >= hudKeyboard->tplWidth) {
         *col = hudKeyboard->tplWidth-1;
     }
     *row = (y - touchport.kbdY) / keyH;
@@ -243,7 +241,7 @@ static inline void _screen_to_keyboard(float x, float y, OUTPARM int *col, OUTPA
         *row = 0;
     }
 
-    LOG("SCREEN TO KEYBOARD : xOff:%d kbdX:%d kbdXMax:%d kbdW:%d keyW:%d ... scrn:(%f,%f)->kybd:(%d,%d)", xOff, touchport.kbdX, touchport.kbdXMax, touchport.kbdW, keyW, x, y, *col, *row);
+    LOG("SCREEN TO KEYBOARD : kbdX:%d kbdXMax:%d kbdW:%d keyW:%d ... scrn:(%f,%f)->kybd:(%d,%d)", touchport.kbdX, touchport.kbdXMax, touchport.kbdW, keyW, x, y, *col, *row);
 }
 
 static inline void _tap_key_at_point(float x, float y) {

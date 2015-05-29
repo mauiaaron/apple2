@@ -724,21 +724,17 @@ GLUE_C_WRITE(video__write_2e_text1_mixed)
 // ----------------------------------------------------------------------------
 // Classic interface and printing HUD messages
 
-void interface_plotChar(uint8_t *fb, int fb_pix_width, int col, int row, interface_colorscheme_t cs, uint8_t c) {
+void interface_plotChar(uint8_t *fboff, int fb_pix_width, interface_colorscheme_t cs, uint8_t c) {
     _vid_dirty = true;
-
-    unsigned int off = row * fb_pix_width * FONT_HEIGHT_PIXELS + col * FONT80_WIDTH_PIXELS + _INTERPOLATED_PIXEL_ADJUSTMENT_PRE;
-    uint8_t *dst = fb + off;
     uint8_t *src = video__int_font[cs] + c * (FONT_GLYPH_X*FONT_GLYPH_Y);
-
-    _plot_char80(&dst, &src, fb_pix_width);
-    _plot_char80(&dst, &src, fb_pix_width);
-    _plot_char80(&dst, &src, fb_pix_width);
-    _plot_char80(&dst, &src, fb_pix_width);
-    _plot_char80(&dst, &src, fb_pix_width);
-    _plot_char80(&dst, &src, fb_pix_width);
-    _plot_char80(&dst, &src, fb_pix_width);
-    _plot_char80(&dst, &src, fb_pix_width);
+    _plot_char80(&fboff, &src, fb_pix_width);
+    _plot_char80(&fboff, &src, fb_pix_width);
+    _plot_char80(&fboff, &src, fb_pix_width);
+    _plot_char80(&fboff, &src, fb_pix_width);
+    _plot_char80(&fboff, &src, fb_pix_width);
+    _plot_char80(&fboff, &src, fb_pix_width);
+    _plot_char80(&fboff, &src, fb_pix_width);
+    _plot_char80(&fboff, &src, fb_pix_width);
 }
 
 // ----------------------------------------------------------------------------

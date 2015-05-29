@@ -39,14 +39,11 @@ void c_interface_translate_screen(char screen[24][INTERFACE_SCREEN_X+1]);
 void c_interface_select_diskette(int);
 #endif
 
-// Plots a character into the specified framebuffer
-void interface_plotChar(uint8_t *fb, int fb_pix_width, int col, int row, interface_colorscheme_t cs, uint8_t c);
+// Plot character at pixel buffer offset
+void interface_plotChar(uint8_t *fboff, int fb_pix_width, interface_colorscheme_t cs, uint8_t c);
 
-// Plots a string/template into the specified framebuffer
-void interface_printMessage(uint8_t *fb, int fb_pix_width, int col, int row, interface_colorscheme_t cs, const char *message);
-
-// Plots a string/template into the specified framebuffer
-void interface_printMessageCentered(uint8_t *fb, int fb_cols, int fb_rows, interface_colorscheme_t cs, char *message, int message_cols, int message_rows);
+// Plot message into pixel buffer
+void interface_plotMessage(uint8_t *fb, interface_colorscheme_t cs, char *message, int message_cols, int message_rows);
 
 #if INTERFACE_TOUCH
 typedef enum interface_touch_event_t {

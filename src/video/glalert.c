@@ -38,7 +38,7 @@ static void _alertToModel(char *message, unsigned int messageCols, unsigned int 
 
         mdlDestroyModel(&messageModel);
 
-        const unsigned int fbWidth = ((messageCols * FONT80_WIDTH_PIXELS) + INTERPOLATED_PIXEL_ADJUSTMENT);
+        const unsigned int fbWidth = (messageCols * FONT80_WIDTH_PIXELS);
         const unsigned int fbHeight = (messageRows * FONT_HEIGHT_PIXELS);
 
         messageModel = mdlCreateQuad(-0.3, -0.3, 0.7, 0.7, MODEL_DEPTH, fbWidth, fbHeight, GL_RGBA/*RGBA_8888*/, (GLCustom){

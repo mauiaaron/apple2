@@ -125,21 +125,19 @@ static void _translate_screen_x_y(char *screen, const int xlen, const int ylen) 
 // ----------------------------------------------------------------------------
 // Menu/HUD message printing
 
-void interface_printMessage(uint8_t *fb, int fb_pix_width, int col, int row, interface_colorscheme_t cs, const char *message) {
+static void _interface_plotLine(uint8_t *fb, int fb_pix_width, int fb_pix_x_adjust, int col, int row, interface_colorscheme_t cs, const char *message) {
     for (; *message; col++, message++) {
         char c = *message;
-        interface_plotChar(fb, fb_pix_width, col, row, cs, c);
+        unsigned int off = row * fb_pix_width * FONT_HEIGHT_PIXELS + col * FONT80_WIDTH_PIXELS + fb_pix_x_adjust;
+        interface_plotChar(fb+off, fb_pix_width, cs, c);
     }
 }
 
-void interface_printMessageCentered(uint8_t *fb, int fb_cols, int fb_rows, interface_colorscheme_t cs, char *message, const int message_cols, const int message_rows) {
+void interface_plotMessage(uint8_t *fb, interface_colorscheme_t cs, char *message, int message_cols, int message_rows) {
     _translate_screen_x_y(message, message_cols, message_rows);
-    int col = (fb_cols - message_cols) >> 1;
-    int row = (fb_rows - message_rows) >> 1;
-    int fb_pix_width = (fb_cols*FONT80_WIDTH_PIXELS) + INTERPOLATED_PIXEL_ADJUSTMENT; // HACK NOTE : interpolated pixel adjustment still necessary ...
-    int row_max = row + message_rows;
-    for (int idx=0; row<row_max; row++, idx+=message_cols+1) {
-        interface_printMessage(fb, fb_pix_width, col, row, cs, &message[ idx ]);
+    int fb_pix_width = (message_cols*FONT80_WIDTH_PIXELS);
+    for (int row=0, idx=0; row<message_rows; row++, idx+=message_cols+1) {
+        _interface_plotLine(fb, fb_pix_width, 0, 0, row, cs, &message[ idx ]);
     }
 }
 
@@ -148,12 +146,25 @@ void interface_printMessageCentered(uint8_t *fb, int fb_cols, int fb_rows, inter
 
 #ifdef INTERFACE_CLASSIC
 
+static void _interface_plotMessageCentered(uint8_t *fb, int fb_cols, int fb_rows, interface_colorscheme_t cs, char *message, const int message_cols, const int message_rows) {
+    _translate_screen_x_y(message, message_cols, message_rows);
+    int col = (fb_cols - message_cols) >> 1;
+    int row = (fb_rows - message_rows) >> 1;
+    int fb_pix_width = (fb_cols*FONT80_WIDTH_PIXELS)+INTERPOLATED_PIXEL_ADJUSTMENT;
+    assert(fb_pix_width == SCANWIDTH);
+    int row_max = row + message_rows;
+    for (int idx=0; row<row_max; row++, idx+=message_cols+1) {
+        _interface_plotLine(fb, fb_pix_width, _INTERPOLATED_PIXEL_ADJUSTMENT_PRE, col, row, cs, &message[ idx ]);
+    }
+}
+
 static struct stat statbuf = { 0 };
 static int altdrive = 0;
 bool in_interface = false;
 
 void video_plotchar(const int col, const int row, const interface_colorscheme_t cs, const uint8_t c) {
-    interface_plotChar(video__fb1, SCANWIDTH, col, row, cs, c);
+    unsigned int off = row * SCANWIDTH * FONT_HEIGHT_PIXELS + col * FONT80_WIDTH_PIXELS + _INTERPOLATED_PIXEL_ADJUSTMENT_PRE;
+    interface_plotChar(video__fb1+off, SCANWIDTH, cs, c);
 }
 
 void copy_and_pad_string(char *dest, const char* src, const char c, const int len, const char cap) {
@@ -186,7 +197,7 @@ static void pad_string(char *s, const char c, const int len) {
 }
 
 void c_interface_print( int x, int y, const interface_colorscheme_t cs, const char *s ) {
-    interface_printMessage(video__fb1, SCANWIDTH, x, y, cs, s);
+    _interface_plotLine(video__fb1, SCANWIDTH, _INTERPOLATED_PIXEL_ADJUSTMENT_PRE, x, y, cs, s);
 }
 
 /* -------------------------------------------------------------------------
@@ -207,7 +218,7 @@ void c_interface_translate_screen( char screen[24][INTERFACE_SCREEN_X+1] ) {
 }
 
 void c_interface_print_submenu_centered( char *submenu, const int message_cols, const int message_rows ) {
-    interface_printMessageCentered(video__fb1, INTERFACE_SCREEN_X, TEXT_ROWS, RED_ON_BLACK, submenu, message_cols, message_rows);
+    _interface_plotMessageCentered(video__fb1, INTERFACE_SCREEN_X, TEXT_ROWS, RED_ON_BLACK, submenu, message_cols, message_rows);
 }
 
 /* ------------------------------------------------------------------------- */

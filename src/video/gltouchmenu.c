@@ -23,8 +23,7 @@
 #define MENU_TEMPLATE_COLS 2
 #define MENU_TEMPLATE_ROWS 2
 
-// HACK NOTE FIXME TODO : interpolated pixel adjustment still necessary ...
-#define MENU_FB_WIDTH ((MENU_TEMPLATE_COLS * FONT80_WIDTH_PIXELS) + INTERPOLATED_PIXEL_ADJUSTMENT)
+#define MENU_FB_WIDTH (MENU_TEMPLATE_COLS * FONT80_WIDTH_PIXELS)
 #define MENU_FB_HEIGHT (MENU_TEMPLATE_ROWS * FONT_HEIGHT_PIXELS)
 
 #define MENU_OBJ_W 1/2.f
@@ -176,28 +175,27 @@ static inline void _screen_to_menu(float x, float y, OUTPARM int *col, OUTPARM i
 
     GLModelHUDMenu *hudMenu = (GLModelHUDMenu *)(/* assuming both have same width/height */hudTopLeft.model->custom);
 
-    unsigned int keyW = (touchport.topLeftXMax - touchport.topLeftX) / (hudMenu->tplWidth+1/* interpolated adjustment HACK NOTE FIXME TODO */);
-    unsigned int keyH = (touchport.topLeftYMax - touchport.topLeftY) / (hudMenu->tplHeight);
-    const int xOff = (keyW * 0.5); // HACK NOTE FIXME TODO : interpolated pixel adjustment still necessary ...
+    unsigned int keyW = (touchport.topLeftXMax - touchport.topLeftX) / hudMenu->tplWidth;
+    unsigned int keyH = (touchport.topLeftYMax - touchport.topLeftY) / hudMenu->tplHeight;
 
     hudMenu = NULL;
     if (x < touchport.width/2) {
         *isTopLeft = true;
         hudMenu = (GLModelHUDMenu *)hudTopLeft.model->custom;
-        *col = (x - (touchport.topLeftX+xOff)) / keyW;
+        *col = (x - touchport.topLeftX) / keyW;
         *row = (y - touchport.topLeftY) / keyH;
-        LOG("SCREEN TO MENU : xOff:%d topLeftX:%d topLeftXMax:%d keyW:%d ... scrn:(%d,%d)->menu:(%d,%d)", xOff, touchport.topLeftX, touchport.topLeftXMax, keyW, (int)x, (int)y, *col, *row);
+        LOG("SCREEN TO MENU : topLeftX:%d topLeftXMax:%d keyW:%d ... scrn:(%d,%d)->menu:(%d,%d)", touchport.topLeftX, touchport.topLeftXMax, keyW, (int)x, (int)y, *col, *row);
     } else {
         *isTopLeft = false;
         hudMenu = (GLModelHUDMenu *)hudTopRight.model->custom;
-        *col = (x - (touchport.topRightX+xOff)) / keyW;
+        *col = (x - touchport.topRightX) / keyW;
         *row = (y - touchport.topRightY) / keyH;
-        LOG("SCREEN TO MENU : xOff:%d topRightX:%d topRightXMax:%d keyW:%d ... scrn:(%d,%d)->menu:(%d,%d)", xOff, touchport.topRightX, touchport.topRightXMax,  keyW, (int)x, (int)y, *col, *row);
+        LOG("SCREEN TO MENU : topRightX:%d topRightXMax:%d keyW:%d ... scrn:(%d,%d)->menu:(%d,%d)", touchport.topRightX, touchport.topRightXMax,  keyW, (int)x, (int)y, *col, *row);
     }
 
     if (*col < 0) {
         *col = 0;
-    } /* interpolated adjustment HACK NOTE FIXME TODO */ else if (*col >= hudMenu->tplWidth) {
+    } else if (*col >= hudMenu->tplWidth) {
         *col = hudMenu->tplWidth-1;
     }
     if (*row < 0) {

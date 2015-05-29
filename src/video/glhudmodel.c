@@ -29,7 +29,7 @@ void glhud_setupDefault(GLModel *parent) {
     uint8_t *fb = hudElement->pixels;
 
     // render template into indexed fb
-    interface_printMessageCentered(fb, cols, rows, hudElement->colorScheme, submenu, cols, rows);
+    interface_plotMessage(fb, hudElement->colorScheme, submenu, cols, rows);
 
     // generate RGBA_8888 from indexed color
     const unsigned int fb_w = hudElement->pixWidth;
