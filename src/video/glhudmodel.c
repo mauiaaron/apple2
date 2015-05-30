@@ -35,8 +35,9 @@ void glhud_setupDefault(GLModel *parent) {
     const unsigned int fb_w = hudElement->pixWidth;
     const unsigned int fb_h = hudElement->pixHeight;
     const unsigned int count = fb_w * fb_h;
-    for (unsigned int i=0, j=0; i<count; i++, j+=4) {
-        uint8_t index = *(fb + i);
+    const unsigned int count8888 = count * 4;
+    for (unsigned int srcIdx=0, dstIdx=0; srcIdx<count; srcIdx++, dstIdx+=4) {
+        uint8_t index = *(fb + srcIdx);
         uint32_t rgb = (((uint32_t)(colormap[index].red)   << 0 ) |
                         ((uint32_t)(colormap[index].green) << 8 ) |
                         ((uint32_t)(colormap[index].blue)  << 16));
@@ -45,8 +46,57 @@ void glhud_setupDefault(GLModel *parent) {
         } else {
             rgb |=      ((uint32_t)0xff                    << 24);
         }
-        *( (uint32_t*)(parent->texPixels + j) ) = rgb;
+        *( (uint32_t*)(parent->texPixels + dstIdx) ) = rgb;
     }
+
+    // RGBA_8888 second pass to generate halo effect
+    if (hudElement->opaquePixelHalo) {
+        for (unsigned int
+                srcIdx=0, dstPre=-((fb_w+1)*4), dstIdx=0, dstPost=((fb_w-1)*4);
+                srcIdx<count;
+                srcIdx++, dstPre+=4, dstIdx+=4, dstPost+=4)
+        {
+            uint8_t index = *(fb + srcIdx);
+            uint32_t rgb = (((uint32_t)(colormap[index].red)   << 0 ) |
+                            ((uint32_t)(colormap[index].green) << 8 ) |
+                            ((uint32_t)(colormap[index].blue)  << 16));
+            if (!rgb) {
+                continue;
+            }
+
+#define RGB_MASK 0xC0000000
+            const unsigned int col = (srcIdx % fb_w);
+
+            if (dstPre >= 0) {          // north pixels
+                if (col != 0) {
+                    *((uint32_t*)(parent->texPixels + dstPre)) |= RGB_MASK;
+                }
+                *((uint32_t*)(parent->texPixels + dstPre + 4)) |= RGB_MASK;
+                if (col < fb_w-1) {
+                    *((uint32_t*)(parent->texPixels + dstPre + 8)) |= RGB_MASK;
+                }
+            }
+
+            if (col != 0) {             // west pixel
+                *((uint32_t*)(parent->texPixels + dstIdx - 4)) |= RGB_MASK;
+            }
+
+            if (col < fb_w-1) {         // east pixel
+                *((uint32_t*)(parent->texPixels + dstIdx + 4)) |= RGB_MASK;
+            }
+
+            if (dstPost < count8888) {  // south pixels
+                if (col != 0) {
+                    *((uint32_t*)(parent->texPixels + dstPost)) |= RGB_MASK;
+                }
+                *((uint32_t*)(parent->texPixels + dstPost + 4)) |= RGB_MASK;
+                if (col < fb_w-1) {
+                    *((uint32_t*)(parent->texPixels + dstPost + 8)) |= RGB_MASK;
+                }
+            }
+        }
+    }
+
     parent->texDirty = true;
 }
 

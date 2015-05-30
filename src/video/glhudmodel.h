@@ -27,6 +27,7 @@
         \
         interface_colorscheme_t colorScheme; \
         bool blackIsTransparent; \
+        bool opaquePixelHalo; \
         \
         __VA_ARGS__ \
     )
