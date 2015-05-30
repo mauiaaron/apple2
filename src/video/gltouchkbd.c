@@ -174,7 +174,7 @@ static void _rerender_character(int col, int row, uint8_t *fb) {
 
     // re-generate texture RGBA_8888 from indexed color
     const unsigned int colCount = 1;
-    const unsigned int pixCharsWidth = (FONT80_WIDTH_PIXELS+1)*colCount;
+    const unsigned int pixCharsWidth = FONT80_WIDTH_PIXELS*colCount;
     const unsigned int rowStride = hudKeyboard->pixWidth - pixCharsWidth;
     unsigned int srcIndex = (row * hudKeyboard->pixWidth * FONT_HEIGHT_PIXELS) + (col * FONT80_WIDTH_PIXELS);
     unsigned int dstIndex = srcIndex * 4;
