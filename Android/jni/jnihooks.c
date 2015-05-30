@@ -243,8 +243,7 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeSetColor(JNIEnv *env, jobje
     }
     color_mode = color;
 
-#warning HACK TODO FIXME need to refactor video resetting procedure
-    video_set(0);
+    video_reset();
     video_setpage(!!(softswitches & SS_SCREEN));
     video_redraw();
 }
