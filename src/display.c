@@ -445,6 +445,14 @@ static void _initialize_color() {
     colormap[0x07].blue = 130; /* Aqua */
     colormap[0x0f].red = 255; colormap[0x0f].green = 255;
     colormap[0x0f].blue = 255; /* White */
+
+#if USE_RGBA4444
+    for (unsigned int i=0; i<256; i++) {
+        colormap[i].red   = (colormap[i].red   >>4);
+        colormap[i].green = (colormap[i].green >>4);
+        colormap[i].blue  = (colormap[i].blue  >>4);
+    }
+#endif
 }
 
 void video_reset(void) {
@@ -491,11 +499,13 @@ static void _loadfont_int(int first, int quantity, const uint8_t *data) {
         while (j--) {
             unsigned int y = (first << 6) + (i << 3) + j;
             if (x & 128) {
-                video__int_font[0][y] = video__int_font[1][y] = COLOR_LIGHT_GREEN;
+                video__int_font[0][y] = COLOR_LIGHT_GREEN;
+                video__int_font[1][y] = COLOR_LIGHT_GREEN;
                 video__int_font[2][y] = COLOR_LIGHT_RED;
             } else {
-                video__int_font[0][y] = video__int_font[2][y] = COLOR_BLACK;
+                video__int_font[0][y] = COLOR_BLACK;
                 video__int_font[1][y] = COLOR_MEDIUM_BLUE;
+                video__int_font[2][y] = COLOR_BLACK;
             }
             x <<= 1;
         }

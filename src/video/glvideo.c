@@ -53,6 +53,26 @@ static video_backend_s glvideo_backend = { 0 };
 static int glutWindow = -1;
 #endif
 
+#if USE_RGBA4444
+#define PIXEL_TYPE uint16_t
+#define SHIFT_R 12
+#define SHIFT_G 8
+#define SHIFT_B 4
+#define SHIFT_A 0
+static const GLint texInternalFormat = GL_RGBA4;
+static const GLint texFormat = GL_RGBA;
+static const GLenum texType = GL_UNSIGNED_SHORT_4_4_4_4;
+#else
+#define PIXEL_TYPE uint32_t
+#define SHIFT_R 0
+#define SHIFT_G 8
+#define SHIFT_B 16
+#define SHIFT_A 24
+static const GLint texInternalFormat = GL_RGBA;
+static const GLint texFormat = GL_RGBA;
+static const GLenum texType = GL_UNSIGNED_BYTE;
+#endif
+
 //----------------------------------------------------------------------------
 //
 // OpenGL helper routines
@@ -244,13 +264,12 @@ static GLuint _create_CRT_texture(void) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
-    // Indicate that pixel rows are tightly packed
-    //  (defaults to stride of 4 which is kind of only good for
-    //  RGBA or FLOAT data types)
+    // Indicate that pixel rows are tightly packed (defaults to a stride of sizeof(PIXEL_TYPE) which is good for RGBA or
+    // FLOAT data types)
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
     // Allocate and load image data into texture
-    glTexImage2D(GL_TEXTURE_2D, /*level*/0, /*internal format*/GL_RGBA, SCANWIDTH, SCANHEIGHT, /*border*/0, /*format*/GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    glTexImage2D(GL_TEXTURE_2D, /*level*/0, texInternalFormat, SCANWIDTH, SCANHEIGHT, /*border*/0, texFormat, texType, NULL);
 
     GL_ERRLOG("finished creating CRT texture");
 
@@ -700,17 +719,17 @@ static void gldriver_render(void) {
     // that we calculated above
     glUniformMatrix4fv(uniformMVPIdx, 1, GL_FALSE, mvp);
 
-    char pixels[SCANWIDTH * SCANHEIGHT * 4];
+    char pixels[SCANWIDTH * SCANHEIGHT * sizeof(PIXEL_TYPE)];
     if (_vid_dirty) {
         // Update texture from indexed-color Apple //e internal framebuffer
         unsigned int count = SCANWIDTH * SCANHEIGHT;
-        for (unsigned int i=0, j=0; i<count; i++, j+=4) {
+        for (unsigned int i=0, j=0; i<count; i++, j+=sizeof(PIXEL_TYPE)) {
             uint8_t index = *(fb + i);
-            *( (uint32_t*)(pixels + j) ) = (uint32_t)(
-                                                      ((uint32_t)(colormap[index].red)   << 0 ) |
-                                                      ((uint32_t)(colormap[index].green) << 8 ) |
-                                                      ((uint32_t)(colormap[index].blue)  << 16) |
-                                                      ((uint32_t)0xff                    << 24)
+            *( (PIXEL_TYPE*)(pixels + j) ) = (PIXEL_TYPE)(
+                                                      ((PIXEL_TYPE)(colormap[index].red)   << SHIFT_R) |
+                                                      ((PIXEL_TYPE)(colormap[index].green) << SHIFT_G) |
+                                                      ((PIXEL_TYPE)(colormap[index].blue)  << SHIFT_B) |
+                                                      ((PIXEL_TYPE)0xff                    << SHIFT_A)
                                                       );
         }
     }
@@ -719,7 +738,7 @@ static void gldriver_render(void) {
     glBindTexture(GL_TEXTURE_2D, a2TextureName);
     glUniform1i(uniformTex2Use, TEXTURE_ID_FRAMEBUFFER);
     if (_vid_dirty) {
-        glTexImage2D(GL_TEXTURE_2D, /*level*/0, /*internal format*/GL_RGBA, SCANWIDTH, SCANHEIGHT, /*border*/0, /*format*/GL_RGBA, GL_UNSIGNED_BYTE, (GLvoid *)&pixels[0]);
+        glTexImage2D(GL_TEXTURE_2D, /*level*/0, texInternalFormat, SCANWIDTH, SCANHEIGHT, /*border*/0, texFormat, texType, (GLvoid *)&pixels[0]);
     }
 
     // Bind our vertex array object
