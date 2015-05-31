@@ -51,7 +51,7 @@ void glhud_setupDefault(GLModel *parent) {
 
     // Second pass to generate a semi-opaque halo effect around each glyph
     if (hudElement->opaquePixelHalo) {
-        for (unsigned int
+        for (int // -negative index values allowed here ...
                 srcIdx=0, dstPre=-((fb_w+1)*sizeof(PIXEL_TYPE)), dstIdx=0, dstPost=((fb_w-1)*sizeof(PIXEL_TYPE));
                 srcIdx<count;
                 srcIdx++, dstPre+=sizeof(PIXEL_TYPE), dstIdx+=sizeof(PIXEL_TYPE), dstPost+=sizeof(PIXEL_TYPE))
