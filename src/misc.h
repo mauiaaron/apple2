@@ -98,6 +98,8 @@ extern uint32_t softswitches;
     misc.c functions
    ------------------------------------------------------------------------- */
 
+extern bool emulator_shutting_down;
+
 void c_initialize_firsttime();
 void c_initialize_sound_hooks();
 void c_disable_sound_hooks();

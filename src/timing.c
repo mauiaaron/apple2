@@ -390,10 +390,28 @@ void *cpu_thread(void *dummyptr) {
                     }
                 }
             }
-        } while (!emul_reinitialize);
+
+            if (UNLIKELY(emul_reinitialize)) {
+                break;
+            }
+
+            if (UNLIKELY(emulator_shutting_down)) {
+                break;
+            }
+        } while (1);
+
+        if (UNLIKELY(emulator_shutting_down)) {
+            break;
+        }
 
         reinitialize();
     } while (1);
+
+#ifdef AUDIO_ENABLED
+    speaker_destroy();
+    MB_Destroy();
+    DSUninit();
+#endif
 
     return NULL;
 }

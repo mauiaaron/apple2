@@ -619,11 +619,9 @@ static void gldriver_init_common(void) {
     }
 }
 
-static void gldriver_shutdown(void) {
-#if USE_GLUT
-    glutDestroyWindow(glutWindow);
-#endif
+static void _gldriver_shutdown(void) {
     // Cleanup all OpenGL objects
+    emulator_shutting_down = true;
     glDeleteTextures(1, &a2TextureName);
     a2TextureName = UNINITIALIZED_GL;
     _destroy_VAO(crtVAOName);
@@ -632,6 +630,15 @@ static void gldriver_shutdown(void) {
     glDeleteProgram(program);
     program = UNINITIALIZED_GL;
     glnode_shutdownNodes();
+    LOG("Completed GLDriver shutdown ...");
+}
+
+static void gldriver_shutdown(void) {
+#if USE_GLUT
+    glutLeaveMainLoop();
+#else
+    _gldriver_shutdown();
+#endif
 }
 
 //----------------------------------------------------------------------------
@@ -876,7 +883,10 @@ static void gldriver_init(void *fbo) {
 
 static void gldriver_main_loop(void) {
 #if USE_GLUT
+    glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_GLUTMAINLOOP_RETURNS);
     glutMainLoop();
+    LOG("GLUT main loop finished...");
+    _gldriver_shutdown();
 #endif
     // fall through if not GLUT
 }

@@ -1,0 +1,14 @@
+{
+   IGNORE glutCreateWindow allocation
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   obj:/usr/lib/x86_64-linux-gnu/dri/i965_dri.so
+   obj:/usr/lib/x86_64-linux-gnu/libGL.so.1.2.0
+   obj:/usr/lib/x86_64-linux-gnu/libGL.so.1.2.0
+   obj:/usr/lib/x86_64-linux-gnu/libGL.so.1.2.0
+   fun:glXMakeContextCurrent
+   fun:fgOpenWindow
+   fun:fgCreateWindow
+   fun:glutCreateWindow
+}

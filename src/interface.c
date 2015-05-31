@@ -1270,7 +1270,6 @@ void c_interface_parameters()
                     if (ch == 'Y')
                     {
                         save_settings();
-
                         c_eject_6( 0 );
                         c_interface_print_screen( screen );
                         c_eject_6( 1 );
@@ -1278,13 +1277,9 @@ void c_interface_parameters()
 #ifdef __linux__
                         LOG("Back to Linux, w00t!\n");
 #endif
-#ifdef AUDIO_ENABLED
-                        speaker_destroy();
-                        MB_Destroy();
-#endif
-
                         video_shutdown();
-                        exit( 0 );
+                        c_interface_exit(ch);
+                        return;
                     }
                 }
 

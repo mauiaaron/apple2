@@ -444,13 +444,14 @@ int c_mygetch(int block)
 {
     int retval;
 
-    if (block)
+    if (emulator_shutting_down) {
+        next_key = kESC;
+    }
+
+    while (next_key == -1 && block)
     {
-        while (next_key == -1)
-        {
-            static struct timespec ts = { .tv_sec=0, .tv_nsec=33333333 };
-            nanosleep(&ts, NULL); // 30Hz framerate
-        }
+        static struct timespec ts = { .tv_sec=0, .tv_nsec=33333333 };
+        nanosleep(&ts, NULL); // 30Hz framerate
     }
 
     retval = next_key;

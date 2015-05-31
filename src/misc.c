@@ -22,6 +22,7 @@
 
 extern uint8_t apple_iie_rom[32768];
 
+bool emulator_shutting_down = false;
 bool do_logging = true; // also controlled by NDEBUG
 FILE *error_log = NULL;
 
@@ -604,6 +605,44 @@ void c_initialize_firsttime(void) {
 #if !TESTING && !defined(__APPLE__) && !defined(ANDROID)
 extern void *cpu_thread(void *dummyptr);
 
+static void _shutdown_threads(void) {
+    LOG("Emulator waiting for other threads to clean up...");
+#if !__linux__
+#warning FIXME TODO ideally we have a more deterministic thread waiting routine ...
+    sleep(2); // =P
+#else
+    do {
+        DIR *dir = opendir("/proc/self/task");
+        if (!dir) {
+            ERRLOG("Cannot open /proc/self/task !");
+            break;
+        }
+
+        int thread_count = 0;
+        struct dirent *d = NULL;
+        while ((d = readdir(dir)) != NULL) {
+            if (strncmp(".", d->d_name, 2) == 0) {
+                // ignore
+            } else if (strncmp("..", d->d_name, 3) == 0) {
+                // ignore
+            } else {
+                ++thread_count;
+            }
+        }
+
+        closedir(dir);
+
+        assert(thread_count >= 1 && "there must at least be one thread =P");
+        if (thread_count == 1) {
+            break;
+        }
+
+        static struct timespec ts = { .tv_sec=0, .tv_nsec=33333333 };
+        nanosleep(&ts, NULL); // 30Hz framerate
+    } while (1);
+#endif
+}
+
 int main(int _argc, char **_argv) {
     argc = _argc;
     argv = _argv;
@@ -618,6 +657,17 @@ int main(int _argc, char **_argv) {
     pthread_create(&cpu_thread_id, NULL, (void *)&cpu_thread, (void *)NULL);
 
     video_main_loop();
+
+    assert(emulator_shutting_down && "emulator is properly shutting down");
+
+    LOG("Emulator waiting for CPU thread clean up...");
+    if (pthread_join(cpu_thread_id, NULL)) {
+        ERRLOG("OOPS: pthread_join of CPU thread ...");
+    }
+
+    _shutdown_threads();
+
+    return 0;
 }
 #endif
 
