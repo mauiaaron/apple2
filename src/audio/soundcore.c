@@ -245,6 +245,19 @@ bool DSZeroVoiceWritableBuffer(PVOICE Voice, char* pszDevName, DWORD dwBufferSiz
 
 static UINT g_uDSInitRefCount = 0;
 
+static void _destroy_enumerated_sound_devices(void) {
+    if (sound_devices) {
+        LOG("Destroying old device names...");
+        char **ptr = sound_devices;
+        while (*ptr) {
+            FREE(*ptr);
+            ++ptr;
+        }
+        FREE(sound_devices);
+        sound_devices = NULL;
+    }
+}
+
 bool DSInit()
 {
     if(g_bDSAvailable)
@@ -253,18 +266,7 @@ bool DSInit()
         return true;        // Already initialised successfully
     }
 
-        if (sound_devices)
-        {
-            LOG("Destroying old device names...");
-            char **ptr = sound_devices;
-            while (*ptr)
-            {
-                FREE(*ptr);
-                ++ptr;
-            }
-            FREE(sound_devices);
-            sound_devices = NULL;
-        }
+    _destroy_enumerated_sound_devices();
     num_sound_devices = SoundSystemEnumerate(&sound_devices, MAX_SOUND_DEVICES);
         HRESULT hr = (num_sound_devices <= 0);
     if(FAILED(hr))
@@ -308,6 +310,8 @@ bool DSInit()
 
 void DSUninit()
 {
+    _destroy_enumerated_sound_devices();
+
     if(!g_bDSAvailable)
         return;
 

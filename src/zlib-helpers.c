@@ -182,7 +182,7 @@ const char *inf(const char* const src, int *rawcount)
         }
         dst[len-3] = '\0';
 
-        FILE *dest = fopen(dst, "w+");
+        dest = fopen(dst, "w+");
         if (dest == NULL) {
             ERRLOG("Cannot open file '%s' for writing", dst);
             break;

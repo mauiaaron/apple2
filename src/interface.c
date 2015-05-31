@@ -1592,6 +1592,7 @@ void c_interface_begin(int current_key)
 {
     pthread_t t = 0;
     pthread_create(&t, NULL, (void *)&interface_thread, (void *)((__SWORD_TYPE)current_key));
+    pthread_detach(t);
 }
 
 #endif
