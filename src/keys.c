@@ -439,6 +439,7 @@ int c_rawkey()
     return last_scancode;
 }
 
+#ifdef INTERFACE_CLASSIC
 int c_mygetch(int block)
 {
     int retval;
@@ -458,7 +459,6 @@ int c_mygetch(int block)
     return retval;
 }
 
-#ifdef INTERFACE_CLASSIC
 void c_keys_set_key(int key)
 {
     next_key = key;

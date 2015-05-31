@@ -1115,9 +1115,11 @@ void fb_sha1() {
     LOG("SHA1 : %s", buf);
 
     int ch = -1;
+#ifdef INTERFACE_CLASSIC
     while ((ch = c_mygetch(1)) == -1) {
         // ...
     }
+#endif
     clear_debugger_screen();
 
     sprintf(second_buf[num_buffer_lines++], "%s", buf);
@@ -1172,7 +1174,7 @@ static int begin_cpu_stepping() {
 #warning FIXME TODO : this is mis-named now ... GLVideo pushes sync state so we do not need to force poll ... but we need this to type the testing strings ... should refactor to leverage a common codepath, preferablly using the 'typing' mechanism here...
         extern void testing_video_sync();
         testing_video_sync();
-#else
+#elif defined(INTERFACE_CLASSIC)
         if ((ch = c_mygetch(0)) != -1) {
             break;
         }
