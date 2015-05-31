@@ -1069,9 +1069,6 @@ void video_shutdown(void) {
     if (!is_headless) {
         video_backend->shutdown();
     }
-#if !defined(__APPLE__)
-    exit(0);
-#endif
 #endif
 }
 
