@@ -16,6 +16,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#if 0
+#error untested codepaths after changing/iterating GLModel structure ...
 typedef struct modelHeader {
     char fileIdentifier[30];
     unsigned int majorVersion;
@@ -310,6 +312,7 @@ GLModel *mdlLoadQuadModel(void) {
 
     return model;
 }
+#endif
 
 static void _quadCreateVAOAndVBOs(GLModel *model) {
 
