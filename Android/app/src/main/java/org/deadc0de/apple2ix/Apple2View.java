@@ -15,11 +15,9 @@
 
 package org.deadc0de.apple2ix;
 
-import android.content.Context;
 import android.graphics.PixelFormat;
 import android.opengl.GLSurfaceView;
 import android.util.Log;
-import android.view.inputmethod.InputMethodManager;
 
 import javax.microedition.khronos.egl.EGL10;
 import javax.microedition.khronos.egl.EGLConfig;
@@ -52,25 +50,20 @@ class Apple2View extends GLSurfaceView {
     private Apple2Activity mActivity = null;
     private Apple2MainMenu mMainMenu = null;
 
-
-    private boolean inefficient8888 = true; // HACK FIXME TODO : rewrite GL code to accommodate 565 rendering ...
-
     public Apple2View(Apple2Activity activity) {
         super(activity.getApplication());
         mActivity = activity;
-        setup(inefficient8888, 0, 0);
+        setup(0, 0);
     }
 
-    private void setup(boolean translucent, int depth, int stencil) {
+    private void setup(int depth, int stencil) {
 
         /* By default, GLSurfaceView() creates a RGB_565 opaque surface.
          * If we want a translucent one, we should change the surface's
          * format here, using PixelFormat.TRANSLUCENT for GL Surfaces
          * is interpreted as any 32-bit surface with alpha by SurfaceFlinger.
          */
-        if (translucent) {
-            this.getHolder().setFormat(PixelFormat.TRANSLUCENT);
-        }
+        this.getHolder().setFormat(PixelFormat.TRANSLUCENT);
 
         /* Setup the context factory for 2.0 rendering.
          * See ContextFactory class definition below
@@ -82,9 +75,7 @@ class Apple2View extends GLSurfaceView {
          * custom config chooser. See ConfigChooser class definition
          * below.
          */
-        setEGLConfigChooser( translucent ?
-                             new ConfigChooser(8, 8, 8, 8, depth, stencil) :
-                             new ConfigChooser(5, 6, 5, 0, depth, stencil) );
+        setEGLConfigChooser(new ConfigChooser(8, 8, 8, 8, depth, stencil));
 
         /* Set the renderer responsible for frame rendering */
         setRenderer(new Renderer());
@@ -155,6 +146,7 @@ class Apple2View extends GLSurfaceView {
             EGL10.EGL_RED_SIZE, 4,
             EGL10.EGL_GREEN_SIZE, 4,
             EGL10.EGL_BLUE_SIZE, 4,
+            EGL10.EGL_ALPHA_SIZE, 4,
             EGL10.EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
             EGL10.EGL_NONE
         };
@@ -181,8 +173,12 @@ class Apple2View extends GLSurfaceView {
 
             // Now return the "best" one
             EGLConfig best = chooseConfig(egl, display, configs);
-            Log.w(TAG, "Using EGL CONFIG : ");
-            printConfig(egl, display, best);
+            if (best == null) {
+                Log.e(TAG, "OOPS! Did not pick an EGLConfig.  What device are you using?!  Android will now crash this app...");
+            } else {
+                Log.w(TAG, "Using EGL CONFIG : ");
+                printConfig(egl, display, best);
+            }
             return best;
         }
 
