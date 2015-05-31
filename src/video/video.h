@@ -71,13 +71,13 @@ extern A2Color_s colormap[];
 void video_init(void);
 
 /*
- * Begin main video loop (does not return)
+ * Enters main video loop (returns on emulator shutdown request).
  */
 void video_main_loop(void);
 
 /*
- * Undo anything done by video_init() and video_start(). Called before exiting the
- * emulator.
+ * Begins video subsystem shutdown.  Because this process is multithreaded, this really just gives notice that a
+ * shutdown has been requested, and so various threads should begin their own shutdown process.
  */
 void video_shutdown(void);
 
