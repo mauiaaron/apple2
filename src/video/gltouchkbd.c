@@ -172,32 +172,32 @@ static inline float _get_keyboard_visibility(void) {
 static void _rerender_character(int col, int row, uint8_t *fb) {
     GLModelHUDKeyboard *hudKeyboard = (GLModelHUDKeyboard *)(kbd.model->custom);
 
-    // re-generate texture RGBA_8888 from indexed color
+    // re-generate texture from indexed color
     const unsigned int colCount = 1;
     const unsigned int pixCharsWidth = FONT80_WIDTH_PIXELS*colCount;
     const unsigned int rowStride = hudKeyboard->pixWidth - pixCharsWidth;
     unsigned int srcIndex = (row * hudKeyboard->pixWidth * FONT_HEIGHT_PIXELS) + (col * FONT80_WIDTH_PIXELS);
-    unsigned int dstIndex = srcIndex * 4;
+    unsigned int dstIndex = srcIndex * sizeof(PIXEL_TYPE);
 
     for (unsigned int i=0; i<FONT_HEIGHT_PIXELS; i++) {
         for (unsigned int j=0; j<pixCharsWidth; j++) {
 
             uint8_t colorIndex = fb[srcIndex];
-            uint32_t rgb = (((uint32_t)(colormap[colorIndex].red)   << 0 ) |
-                            ((uint32_t)(colormap[colorIndex].green) << 8 ) |
-                            ((uint32_t)(colormap[colorIndex].blue)  << 16));
+            uint32_t rgb = (((uint32_t)(colormap[colorIndex].red)   << SHIFT_R) |
+                            ((uint32_t)(colormap[colorIndex].green) << SHIFT_G) |
+                            ((uint32_t)(colormap[colorIndex].blue)  << SHIFT_B));
             if (rgb == 0 && hudKeyboard->blackIsTransparent) {
                 // make black transparent
             } else {
-                rgb |=      ((uint32_t)0xff                    << 24);
+                rgb |=      ((uint32_t)MAX_SATURATION               << SHIFT_A);
             }
             *( (uint32_t*)(kbd.model->texPixels + dstIndex) ) = rgb;
 
             srcIndex += 1;
-            dstIndex += 4;
+            dstIndex += sizeof(PIXEL_TYPE);
         }
         srcIndex += rowStride;
-        dstIndex = srcIndex *4;
+        dstIndex = srcIndex * sizeof(PIXEL_TYPE);
     }
 
     kbd.model->texDirty = true;
@@ -497,7 +497,7 @@ static void gltouchkbd_setup(void) {
 
     mdlDestroyModel(&kbd.model);
 
-    kbd.model = mdlCreateQuad(-1.0, -1.0, KBD_OBJ_W, KBD_OBJ_H, MODEL_DEPTH, KBD_FB_WIDTH, KBD_FB_HEIGHT, GL_RGBA/*RGBA_8888*/, (GLCustom){
+    kbd.model = mdlCreateQuad(-1.0, -1.0, KBD_OBJ_W, KBD_OBJ_H, MODEL_DEPTH, KBD_FB_WIDTH, KBD_FB_HEIGHT, (GLCustom){
             .create = &_create_touchkbd_hud,
             .setup = &_setup_touchkbd_hud,
             .destroy = &_destroy_touchkbd_hud,
@@ -547,7 +547,7 @@ static void gltouchkbd_render(void) {
         glBindTexture(GL_TEXTURE_2D, kbd.model->textureName);
         if (kbd.model->texDirty) {
             kbd.model->texDirty = false;
-            glTexImage2D(GL_TEXTURE_2D, /*level*/0, /*internal format*/GL_RGBA, kbd.model->texWidth, kbd.model->texHeight, /*border*/0, /*format*/GL_RGBA, GL_UNSIGNED_BYTE, kbd.model->texPixels);
+            glTexImage2D(GL_TEXTURE_2D, /*level*/0, TEX_FORMAT_INTERNAL, kbd.model->texWidth, kbd.model->texHeight, /*border*/0, TEX_FORMAT, TEX_TYPE, kbd.model->texPixels);
         }
         if (kbd.modelDirty) {
             kbd.modelDirty = false;

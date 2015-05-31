@@ -45,6 +45,31 @@
 #define USE_VAO 1
 #endif
 
+// Global unified texture format constants ...
+
+#define TEX_FORMAT GL_RGBA
+
+#if USE_RGBA4444
+#   define PIXEL_TYPE uint16_t
+#   define MAX_SATURATION 0xf
+#   define SHIFT_R 12
+#   define SHIFT_G 8
+#   define SHIFT_B 4
+#   define SHIFT_A 0
+#   define TEX_FORMAT_INTERNAL GL_RGBA4
+#   define TEX_TYPE GL_UNSIGNED_SHORT_4_4_4_4
+#else
+// assuming RGBA8888 ...
+#   define PIXEL_TYPE uint32_t
+#   define MAX_SATURATION 0xff
+#   define SHIFT_R 0
+#   define SHIFT_G 8
+#   define SHIFT_B 16
+#   define SHIFT_A 24
+#   define TEX_FORMAT_INTERNAL TEX_FORMAT
+#   define TEX_TYPE GL_UNSIGNED_BYTE
+#endif
+
 static inline const char * GetGLErrorString(GLenum error) {
     const char *str;
     switch (error) {

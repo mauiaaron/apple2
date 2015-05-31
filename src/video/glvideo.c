@@ -53,26 +53,6 @@ static video_backend_s glvideo_backend = { 0 };
 static int glutWindow = -1;
 #endif
 
-#if USE_RGBA4444
-#define PIXEL_TYPE uint16_t
-#define SHIFT_R 12
-#define SHIFT_G 8
-#define SHIFT_B 4
-#define SHIFT_A 0
-static const GLint texInternalFormat = GL_RGBA4;
-static const GLint texFormat = GL_RGBA;
-static const GLenum texType = GL_UNSIGNED_SHORT_4_4_4_4;
-#else
-#define PIXEL_TYPE uint32_t
-#define SHIFT_R 0
-#define SHIFT_G 8
-#define SHIFT_B 16
-#define SHIFT_A 24
-static const GLint texInternalFormat = GL_RGBA;
-static const GLint texFormat = GL_RGBA;
-static const GLenum texType = GL_UNSIGNED_BYTE;
-#endif
-
 //----------------------------------------------------------------------------
 //
 // OpenGL helper routines
@@ -269,7 +249,7 @@ static GLuint _create_CRT_texture(void) {
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
     // Allocate and load image data into texture
-    glTexImage2D(GL_TEXTURE_2D, /*level*/0, texInternalFormat, SCANWIDTH, SCANHEIGHT, /*border*/0, texFormat, texType, NULL);
+    glTexImage2D(GL_TEXTURE_2D, /*level*/0, TEX_FORMAT_INTERNAL, SCANWIDTH, SCANHEIGHT, /*border*/0, TEX_FORMAT, TEX_TYPE, NULL);
 
     GL_ERRLOG("finished creating CRT texture");
 
@@ -729,7 +709,7 @@ static void gldriver_render(void) {
                                                       ((PIXEL_TYPE)(colormap[index].red)   << SHIFT_R) |
                                                       ((PIXEL_TYPE)(colormap[index].green) << SHIFT_G) |
                                                       ((PIXEL_TYPE)(colormap[index].blue)  << SHIFT_B) |
-                                                      ((PIXEL_TYPE)0xff                    << SHIFT_A)
+                                                      ((PIXEL_TYPE)MAX_SATURATION          << SHIFT_A)
                                                       );
         }
     }
@@ -738,7 +718,7 @@ static void gldriver_render(void) {
     glBindTexture(GL_TEXTURE_2D, a2TextureName);
     glUniform1i(uniformTex2Use, TEXTURE_ID_FRAMEBUFFER);
     if (_vid_dirty) {
-        glTexImage2D(GL_TEXTURE_2D, /*level*/0, texInternalFormat, SCANWIDTH, SCANHEIGHT, /*border*/0, texFormat, texType, (GLvoid *)&pixels[0]);
+        glTexImage2D(GL_TEXTURE_2D, /*level*/0, TEX_FORMAT_INTERNAL, SCANWIDTH, SCANHEIGHT, /*border*/0, TEX_FORMAT, TEX_TYPE, (GLvoid *)&pixels[0]);
     }
 
     // Bind our vertex array object

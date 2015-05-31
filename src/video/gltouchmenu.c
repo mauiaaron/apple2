@@ -465,7 +465,7 @@ static void gltouchmenu_setup(void) {
     LOG("gltouchmenu_setup ...");
 
     mdlDestroyModel(&hudTopLeft.model);
-    hudTopLeft.model = mdlCreateQuad(-1.0, 1.0-MENU_OBJ_H, MENU_OBJ_W, MENU_OBJ_H, MODEL_DEPTH, MENU_FB_WIDTH, MENU_FB_HEIGHT, GL_RGBA/*RGBA_8888*/, (GLCustom){
+    hudTopLeft.model = mdlCreateQuad(-1.0, 1.0-MENU_OBJ_H, MENU_OBJ_W, MENU_OBJ_H, MODEL_DEPTH, MENU_FB_WIDTH, MENU_FB_HEIGHT, (GLCustom){
             .create = &_create_touchmenu,
             .setup = &_setup_touchmenu_top_left,
             .destroy = &_destroy_touchmenu,
@@ -480,7 +480,7 @@ static void gltouchmenu_setup(void) {
     }
 
     mdlDestroyModel(&hudTopRight.model);
-    hudTopRight.model = mdlCreateQuad(1.0-MENU_OBJ_W, 1.0-MENU_OBJ_H, MENU_OBJ_W, MENU_OBJ_H, MODEL_DEPTH, MENU_FB_WIDTH, MENU_FB_HEIGHT, GL_RGBA/*RGBA_8888*/, (GLCustom){
+    hudTopRight.model = mdlCreateQuad(1.0-MENU_OBJ_W, 1.0-MENU_OBJ_H, MENU_OBJ_W, MENU_OBJ_H, MODEL_DEPTH, MENU_FB_WIDTH, MENU_FB_HEIGHT, (GLCustom){
             .create = &_create_touchmenu,
             .setup = &_setup_touchmenu_top_right,
             .destroy = &_destroy_touchmenu,
@@ -535,7 +535,7 @@ static void gltouchmenu_render(void) {
     glBindTexture(GL_TEXTURE_2D, hudTopLeft.model->textureName);
     if (hudTopLeft.model->texDirty) {
         hudTopLeft.model->texDirty = false;
-        glTexImage2D(GL_TEXTURE_2D, /*level*/0, /*internal format*/GL_RGBA, hudTopLeft.model->texWidth, hudTopLeft.model->texHeight, /*border*/0, /*format*/GL_RGBA, GL_UNSIGNED_BYTE, hudTopLeft.model->texPixels);
+        glTexImage2D(GL_TEXTURE_2D, /*level*/0, TEX_FORMAT_INTERNAL, hudTopLeft.model->texWidth, hudTopLeft.model->texHeight, /*border*/0, TEX_FORMAT, TEX_TYPE, hudTopLeft.model->texPixels);
     }
     if (hudTopLeft.modelDirty) {
         hudTopLeft.modelDirty = false;
@@ -551,7 +551,7 @@ static void gltouchmenu_render(void) {
     glBindTexture(GL_TEXTURE_2D, hudTopRight.model->textureName);
     if (hudTopRight.model->texDirty) {
         hudTopRight.model->texDirty = false;
-        glTexImage2D(GL_TEXTURE_2D, /*level*/0, /*internal format*/GL_RGBA, hudTopRight.model->texWidth, hudTopRight.model->texHeight, /*border*/0, /*format*/GL_RGBA, GL_UNSIGNED_BYTE, hudTopRight.model->texPixels);
+        glTexImage2D(GL_TEXTURE_2D, /*level*/0, TEX_FORMAT_INTERNAL, hudTopRight.model->texWidth, hudTopRight.model->texHeight, /*border*/0, TEX_FORMAT, TEX_TYPE, hudTopRight.model->texPixels);
     }
     if (hudTopRight.modelDirty) {
         hudTopRight.modelDirty = false;

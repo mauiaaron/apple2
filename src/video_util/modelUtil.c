@@ -394,20 +394,19 @@ static GLuint _quadCreateTexture(GLModel *model) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
-    // Indicate that pixel rows are tightly packed
-    //  (defaults to stride of 4 which is kind of only good for
-    //  RGBA or FLOAT data types)
+    // Indicate that pixel rows are tightly packed (defaults to a stride of sizeof(PIXEL_TYPE) which is good for RGBA or
+    // FLOAT data types)
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
     // register texture with OpenGL
-    glTexImage2D(GL_TEXTURE_2D, /*level*/0, /*internal format*/model->texFormat, model->texWidth, model->texHeight, /*border*/0, /*format*/model->texFormat, GL_UNSIGNED_BYTE, NULL);
+    glTexImage2D(GL_TEXTURE_2D, /*level*/0, /*internal format*/TEX_FORMAT_INTERNAL, model->texWidth, model->texHeight, /*border*/0, TEX_FORMAT, TEX_TYPE, NULL);
 
     GL_ERRLOG("quad texture creation");
 
     return texName;
 }
 
-GLModel *mdlCreateQuad(GLfloat skew_x, GLfloat skew_y, GLfloat obj_w, GLfloat obj_h, GLfloat z, GLsizei tex_w, GLsizei tex_h, GLenum tex_format, GLCustom clazz) {
+GLModel *mdlCreateQuad(GLfloat skew_x, GLfloat skew_y, GLfloat obj_w, GLfloat obj_h, GLfloat z, GLsizei tex_w, GLsizei tex_h, GLCustom clazz) {
 
     /* 2...3
      *  .
@@ -495,12 +494,8 @@ GLModel *mdlCreateQuad(GLfloat skew_x, GLfloat skew_y, GLfloat obj_w, GLfloat ob
         model->texDirty = true;
         model->texWidth = tex_w;
         model->texHeight = tex_h;
-        model->texFormat = tex_format;
-        if (tex_format == GL_RGBA) {
-            model->texPixels = (GLvoid *)calloc(tex_w * tex_h * /*RGBA_8888*/4, 1);
-        } else {
-            ERRQUIT("non-GL_RBGA format textures untested ... FIXME!");
-        }
+        model->texFormat = TEX_FORMAT;
+        model->texPixels = (GLvoid *)calloc(tex_w * tex_h * sizeof(PIXEL_TYPE), 1);
         if (model->texPixels == NULL) {
             break;
         }

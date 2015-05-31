@@ -31,67 +31,71 @@ void glhud_setupDefault(GLModel *parent) {
     // render template into indexed fb
     interface_plotMessage(fb, hudElement->colorScheme, submenu, cols, rows);
 
-    // generate RGBA_8888 from indexed color
+    // Generate OpenGL color from indexed color
     const unsigned int fb_w = hudElement->pixWidth;
     const unsigned int fb_h = hudElement->pixHeight;
     const unsigned int count = fb_w * fb_h;
-    const unsigned int count8888 = count * 4;
-    for (unsigned int srcIdx=0, dstIdx=0; srcIdx<count; srcIdx++, dstIdx+=4) {
+    const unsigned int countOut = count * sizeof(PIXEL_TYPE);
+    for (unsigned int srcIdx=0, dstIdx=0; srcIdx<count; srcIdx++, dstIdx+=sizeof(PIXEL_TYPE)) {
         uint8_t index = *(fb + srcIdx);
-        uint32_t rgb = (((uint32_t)(colormap[index].red)   << 0 ) |
-                        ((uint32_t)(colormap[index].green) << 8 ) |
-                        ((uint32_t)(colormap[index].blue)  << 16));
+        PIXEL_TYPE rgb = (((PIXEL_TYPE)(colormap[index].red)   << SHIFT_R) |
+                          ((PIXEL_TYPE)(colormap[index].green) << SHIFT_G) |
+                          ((PIXEL_TYPE)(colormap[index].blue)  << SHIFT_B));
         if (rgb == 0 && hudElement->blackIsTransparent) {
             // make black transparent
         } else {
-            rgb |=      ((uint32_t)0xff                    << 24);
+            rgb |=        ((PIXEL_TYPE)MAX_SATURATION          << SHIFT_A);
         }
-        *( (uint32_t*)(parent->texPixels + dstIdx) ) = rgb;
+        *( (PIXEL_TYPE*)(parent->texPixels + dstIdx) ) = rgb;
     }
 
-    // RGBA_8888 second pass to generate halo effect
+    // Second pass to generate a semi-opaque halo effect around each glyph
     if (hudElement->opaquePixelHalo) {
         for (unsigned int
-                srcIdx=0, dstPre=-((fb_w+1)*4), dstIdx=0, dstPost=((fb_w-1)*4);
+                srcIdx=0, dstPre=-((fb_w+1)*sizeof(PIXEL_TYPE)), dstIdx=0, dstPost=((fb_w-1)*sizeof(PIXEL_TYPE));
                 srcIdx<count;
-                srcIdx++, dstPre+=4, dstIdx+=4, dstPost+=4)
+                srcIdx++, dstPre+=sizeof(PIXEL_TYPE), dstIdx+=sizeof(PIXEL_TYPE), dstPost+=sizeof(PIXEL_TYPE))
         {
             uint8_t index = *(fb + srcIdx);
-            uint32_t rgb = (((uint32_t)(colormap[index].red)   << 0 ) |
-                            ((uint32_t)(colormap[index].green) << 8 ) |
-                            ((uint32_t)(colormap[index].blue)  << 16));
+            PIXEL_TYPE rgb = (((PIXEL_TYPE)(colormap[index].red)   << SHIFT_R) |
+                              ((PIXEL_TYPE)(colormap[index].green) << SHIFT_G) |
+                              ((PIXEL_TYPE)(colormap[index].blue)  << SHIFT_B));
             if (!rgb) {
                 continue;
             }
 
-#define RGB_MASK 0xC0000000
+#if USE_RGBA4444
+#define SEMI_OPAQUE (0x0C << SHIFT_A)
+#else
+#define SEMI_OPAQUE (0xC0 << SHIFT_A)
+#endif
             const unsigned int col = (srcIdx % fb_w);
 
             if (dstPre >= 0) {          // north pixels
                 if (col != 0) {
-                    *((uint32_t*)(parent->texPixels + dstPre)) |= RGB_MASK;
+                    *((PIXEL_TYPE*)(parent->texPixels + dstPre)) |= SEMI_OPAQUE;
                 }
-                *((uint32_t*)(parent->texPixels + dstPre + 4)) |= RGB_MASK;
+                *((PIXEL_TYPE*)(parent->texPixels + dstPre + sizeof(PIXEL_TYPE) )) |= SEMI_OPAQUE;
                 if (col < fb_w-1) {
-                    *((uint32_t*)(parent->texPixels + dstPre + 8)) |= RGB_MASK;
+                    *((PIXEL_TYPE*)(parent->texPixels + dstPre + (2*sizeof(PIXEL_TYPE)) )) |= SEMI_OPAQUE;
                 }
             }
 
             if (col != 0) {             // west pixel
-                *((uint32_t*)(parent->texPixels + dstIdx - 4)) |= RGB_MASK;
+                *((PIXEL_TYPE*)(parent->texPixels + dstIdx - sizeof(PIXEL_TYPE) )) |= SEMI_OPAQUE;
             }
 
             if (col < fb_w-1) {         // east pixel
-                *((uint32_t*)(parent->texPixels + dstIdx + 4)) |= RGB_MASK;
+                *((PIXEL_TYPE*)(parent->texPixels + dstIdx + sizeof(PIXEL_TYPE) )) |= SEMI_OPAQUE;
             }
 
-            if (dstPost < count8888) {  // south pixels
+            if (dstPost < countOut) {   // south pixels
                 if (col != 0) {
-                    *((uint32_t*)(parent->texPixels + dstPost)) |= RGB_MASK;
+                    *((PIXEL_TYPE*)(parent->texPixels + dstPost)) |= SEMI_OPAQUE;
                 }
-                *((uint32_t*)(parent->texPixels + dstPost + 4)) |= RGB_MASK;
+                *((PIXEL_TYPE*)(parent->texPixels + dstPost + sizeof(PIXEL_TYPE) )) |= SEMI_OPAQUE;
                 if (col < fb_w-1) {
-                    *((uint32_t*)(parent->texPixels + dstPost + 8)) |= RGB_MASK;
+                    *((PIXEL_TYPE*)(parent->texPixels + dstPost + (2*sizeof(PIXEL_TYPE)) )) |= SEMI_OPAQUE;
                 }
             }
         }

@@ -26,6 +26,16 @@ static GLModel *messageModel = NULL;
 
 // ----------------------------------------------------------------------------
 
+static void *_create_alert(void) {
+    GLModelHUDElement *hudElement = (GLModelHUDElement *)calloc(sizeof(GLModelHUDElement), 1);
+    if (hudElement) {
+        hudElement->colorScheme = RED_ON_BLACK;
+        hudElement->blackIsTransparent = true;
+        hudElement->opaquePixelHalo = true;
+    }
+    return hudElement;
+}
+
 static void _alertToModel(char *message, unsigned int messageCols, unsigned int messageRows) {
     if (!message) {
         return;
@@ -41,10 +51,10 @@ static void _alertToModel(char *message, unsigned int messageCols, unsigned int 
         const unsigned int fbWidth = (messageCols * FONT80_WIDTH_PIXELS);
         const unsigned int fbHeight = (messageRows * FONT_HEIGHT_PIXELS);
 
-        messageModel = mdlCreateQuad(-0.3, -0.3, 0.7, 0.7, MODEL_DEPTH, fbWidth, fbHeight, GL_RGBA/*RGBA_8888*/, (GLCustom){
-                .create = &glhud_createDefault,
+        messageModel = mdlCreateQuad(-0.3, -0.3, 0.7, 0.7, MODEL_DEPTH, fbWidth, fbHeight, (GLCustom){
+                .create = &_create_alert,
                 .destroy = &glhud_destroyDefault,
-                });
+        });
         if (!messageModel) {
             LOG("OOPS cannot create animation message HUD model!");
             break;
@@ -127,7 +137,7 @@ static void alert_render(void) {
     glBindTexture(GL_TEXTURE_2D, messageModel->textureName);
     if (messageModel->texDirty) {
         messageModel->texDirty = false;
-        glTexImage2D(GL_TEXTURE_2D, /*level*/0, /*internal format*/GL_RGBA, messageModel->texWidth, messageModel->texHeight, /*border*/0, /*format*/GL_RGBA, GL_UNSIGNED_BYTE, messageModel->texPixels);
+        glTexImage2D(GL_TEXTURE_2D, /*level*/0, TEX_FORMAT_INTERNAL, messageModel->texWidth, messageModel->texHeight, /*border*/0, TEX_FORMAT, TEX_TYPE, messageModel->texPixels);
     }
     glUniform1i(uniformTex2Use, TEXTURE_ID_MESSAGE);
     glhud_renderDefault(messageModel);

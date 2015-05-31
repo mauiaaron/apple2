@@ -217,7 +217,7 @@ static void gltouchjoy_setup(void) {
     mdlDestroyModel(&axes.model);
     mdlDestroyModel(&buttons.model);
 
-    axes.model = mdlCreateQuad(-1.05, -1.0, AXIS_OBJ_W, AXIS_OBJ_H, MODEL_DEPTH, AXIS_FB_WIDTH, AXIS_FB_HEIGHT, GL_RGBA/*RGBA_8888*/, (GLCustom){
+    axes.model = mdlCreateQuad(-1.05, -1.0, AXIS_OBJ_W, AXIS_OBJ_H, MODEL_DEPTH, AXIS_FB_WIDTH, AXIS_FB_HEIGHT, (GLCustom){
             .create = &_create_touchjoy_hud,
             .setup = &_setup_axis_object,
             .destroy = &glhud_destroyDefault,
@@ -233,7 +233,7 @@ static void gltouchjoy_setup(void) {
 
     // button object
 
-    buttons.model = mdlCreateQuad(1.05-BUTTON_OBJ_W, -1.0, BUTTON_OBJ_W, BUTTON_OBJ_H, MODEL_DEPTH, BUTTON_FB_WIDTH, BUTTON_FB_HEIGHT, GL_RGBA/*RGBA_8888*/, (GLCustom){
+    buttons.model = mdlCreateQuad(1.05-BUTTON_OBJ_W, -1.0, BUTTON_OBJ_W, BUTTON_OBJ_H, MODEL_DEPTH, BUTTON_FB_WIDTH, BUTTON_FB_HEIGHT, (GLCustom){
             .create = &_create_touchjoy_hud,
             .setup = &_setup_button_object,
             .destroy = &glhud_destroyDefault,
@@ -285,7 +285,7 @@ static void gltouchjoy_render(void) {
         glBindTexture(GL_TEXTURE_2D, axes.model->textureName);
         if (axes.model->texDirty) {
             axes.model->texDirty = false;
-            glTexImage2D(GL_TEXTURE_2D, /*level*/0, /*internal format*/GL_RGBA, axes.model->texWidth, axes.model->texHeight, /*border*/0, /*format*/GL_RGBA, GL_UNSIGNED_BYTE, axes.model->texPixels);
+            glTexImage2D(GL_TEXTURE_2D, /*level*/0, TEX_FORMAT_INTERNAL, axes.model->texWidth, axes.model->texHeight, /*border*/0, TEX_FORMAT, TEX_TYPE, axes.model->texPixels);
         }
         if (axes.modelDirty) {
             axes.modelDirty = false;
@@ -306,7 +306,7 @@ static void gltouchjoy_render(void) {
         glBindTexture(GL_TEXTURE_2D, buttons.model->textureName);
         if (buttons.model->texDirty) {
             buttons.model->texDirty = false;
-            glTexImage2D(GL_TEXTURE_2D, /*level*/0, /*internal format*/GL_RGBA, buttons.model->texWidth, buttons.model->texHeight, /*border*/0, /*format*/GL_RGBA, GL_UNSIGNED_BYTE, buttons.model->texPixels);
+            glTexImage2D(GL_TEXTURE_2D, /*level*/0, TEX_FORMAT_INTERNAL, buttons.model->texWidth, buttons.model->texHeight, /*border*/0, TEX_FORMAT, TEX_TYPE, buttons.model->texPixels);
         }
         if (buttons.modelDirty) {
             buttons.modelDirty = false;

@@ -85,7 +85,7 @@ GLModel *mdlLoadModel(const char *filepathname);
 
 GLModel *mdlLoadQuadModel();
 
-GLModel *mdlCreateQuad(GLfloat skew_x, GLfloat skew_y, GLfloat obj_w, GLfloat obj_h, GLfloat z, GLsizei tex_w, GLsizei tex_h, GLenum tex_format, GLCustom clazz);
+GLModel *mdlCreateQuad(GLfloat skew_x, GLfloat skew_y, GLfloat obj_w, GLfloat obj_h, GLfloat z, GLsizei tex_w, GLsizei tex_h, GLCustom clazz);
 
 void mdlDestroyModel(INOUT GLModel **model);
 
