@@ -256,7 +256,8 @@ void load_settings(void)
             }
 
             case PRM_DISK_PATH:
-                strncpy(disk_path, argument, DISKSIZE);
+                strncpy(disk_path, argument, DISKSIZE-1);
+                disk_path[DISKSIZE-1] = '\0';
                 break;
 
             case PRM_HIRES_COLOR:
@@ -297,7 +298,8 @@ void load_settings(void)
 #endif
 
             case PRM_ROM_PATH:
-                strncpy(system_path, argument, SYSSIZE);
+                strncpy(system_path, argument, SYSSIZE-1);
+                system_path[SYSSIZE-1] = '\0';
                 break;
             }
         }
@@ -351,42 +353,26 @@ bool save_settings(void)
         return false;
     }
 
-    bool anErr = false;
-    int err = fprintf(config_file,
-            "speed = %0.2lf\n"
-            "altspeed = %0.2lf\n"
-            "disk path = %s\n"
-            "color = %s\n"
-            "video = %s\n"
-            "volume = %s\n"
-            "caps lock = %s\n"
-            "joystick = %s\n"
-            "system path = %s\n",
-            cpu_scale_factor,
-            cpu_altscale_factor,
-            disk_path,
-            reverse_match(color_table, color_mode),
-            reverse_match(video_table, a2_video_mode),
-            reverse_match(volume_table, sound_volume),
-            reverse_match(capslock_table, (int)caps_lock),
-            reverse_match(joy_input_table, joy_mode),
-            system_path);
-    anErr = anErr || (err < 0);
+    int err = 0;
+    err |= fprintf(config_file, "speed = %0.2lf\n", cpu_scale_factor);
+    err |= fprintf(config_file, "altspeed = %0.2lf\n", cpu_altscale_factor);
+    err |= fprintf(config_file, "disk path = %s\n", disk_path);
+    err |= fprintf(config_file, "color = %s\n", reverse_match(color_table, color_mode));
+    err |= fprintf(config_file, "video = %s\n", reverse_match(video_table, a2_video_mode));
+    err |= fprintf(config_file, "volume = %s\n", reverse_match(volume_table, sound_volume));
+    err |= fprintf(config_file, "caps lock = %s\n", reverse_match(capslock_table, (int)caps_lock));
+    err |= fprintf(config_file, "joystick = %s\n", reverse_match(joy_input_table, joy_mode));
+    err |= fprintf(config_file, "system path = %s\n", system_path);
 
 #ifdef KEYPAD_JOYSTICK
-    err = fprintf(config_file,
-            "keypad joystick parms = %d %u\n", joy_step, joy_auto_recenter ? 1 : 0);
+    err |= fprintf(config_file, "keypad joystick parms = %d %u\n", joy_step, (joy_auto_recenter ? 1 : 0));
 #endif
-    anErr = anErr || (err < 0);
 
-    if (anErr)
-    {
+    if (err < 0) {
         PREFS_ERRPRINT();
 #ifdef INTERFACE_CLASSIC
         c_interface_print_submenu_centered(submenu[0], ERROR_SUBMENU_W, ERROR_SUBMENU_H);
-        while ((ch = c_mygetch(1)) == -1)
-        {
-        }
+        while ((ch = c_mygetch(1)) == -1) {  }
 #endif
         return false;
     }
