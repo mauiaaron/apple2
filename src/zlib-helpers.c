@@ -29,6 +29,7 @@
 #include "common.h"
 
 #ifdef ANDROID
+#warning do newer androids dream of gzbuffer() ?
 // Ugh, why is gzbuffer() symbol not part of zlib.h on Android?  I guess maybe we should just go with the published
 // default buffer size?  Yay, GJ Goog!
 #define CHUNK 8192
@@ -190,7 +191,7 @@ const char *inf(const char* const src, int *rawcount)
 
         // inflate ...
         do {
-            int buflen = gzread(gzsource, buf, CHUNK);
+            int buflen = gzread(gzsource, buf, CHUNK-1); // hmmm ... valgrind complains of a buffer read overflow in zlib inffast()?
             if (buflen < 0) {
                 ERRLOG("OOPS, gzip read ...");
                 break;
