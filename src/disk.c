@@ -765,7 +765,8 @@ const char *c_new_diskette_6(int drive, const char * const raw_file_name, int fo
         cut_gz(file_name);
     }
 
-    strncpy(disk6.disk[drive].file_name, file_name, 1023);
+    strncpy(disk6.disk[drive].file_name, file_name, FILE_NAME_SZ-1);
+    disk6.disk[drive].file_name[FILE_NAME_SZ-1] = '\0';
     disk6.disk[drive].nibblized = is_nib(file_name);
     disk6.disk[drive].skew_table = skew_table_6_do;
     if (is_po(file_name)) {

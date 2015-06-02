@@ -34,10 +34,11 @@
 #define NIB_SEC_SIZE (NIB_TRACK_SIZE/NUM_SECTORS)
 
 #define DSK_VOLUME 254
+#define FILE_NAME_SZ (PATH_MAX>>2)
 
 typedef struct diskette_t {
     uint8_t track_image[NIB_TRACK_SIZE];
-    char file_name[1024];
+    char file_name[FILE_NAME_SZ];
     bool nibblized;
     bool is_protected;
     bool track_valid;
