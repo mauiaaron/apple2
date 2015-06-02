@@ -43,10 +43,8 @@ typedef enum a2_video_mode_t {
     NUM_VIDOPTS
 } a2_video_mode_t;
 
-#define SYSSIZE         4096
-extern char system_path[SYSSIZE];
-#define DISKSIZE        4096
-extern char disk_path[DISKSIZE];
+extern char system_path[PATH_MAX];
+extern char disk_path[PATH_MAX];
 
 extern int apple_mode; /* undocumented instructions or //e mode */
 extern int sound_volume;

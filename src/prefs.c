@@ -32,8 +32,8 @@
 #define         PRM_CAPSLOCK                    102
 
 
-char system_path[SYSSIZE];
-char disk_path[DISKSIZE];
+char system_path[PATH_MAX] = { 0 };
+char disk_path[PATH_MAX] = { 0 };
 
 #warning FIXME TODO : completely excise deprecated apple_mode stuff
 int apple_mode = 2/*IIE_MODE*/;
@@ -256,8 +256,8 @@ void load_settings(void)
             }
 
             case PRM_DISK_PATH:
-                strncpy(disk_path, argument, DISKSIZE-1);
-                disk_path[DISKSIZE-1] = '\0';
+                strncpy(disk_path, argument, PATH_MAX-1);
+                disk_path[PATH_MAX-1] = '\0';
                 break;
 
             case PRM_HIRES_COLOR:
@@ -298,8 +298,8 @@ void load_settings(void)
 #endif
 
             case PRM_ROM_PATH:
-                strncpy(system_path, argument, SYSSIZE-1);
-                system_path[SYSSIZE-1] = '\0';
+                strncpy(system_path, argument, PATH_MAX-1);
+                system_path[PATH_MAX-1] = '\0';
                 break;
             }
         }

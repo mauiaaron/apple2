@@ -95,6 +95,8 @@ static inline GLenum safeGLGetError(void) {
 #include "audio/mockingboard.h"
 #endif
 
+#define PATH_SEPARATOR "/" // =P
+
 #if !defined(MIN)
 #define MIN(a,b) (((a) <= (b)) ? (a) : (b))
 #endif

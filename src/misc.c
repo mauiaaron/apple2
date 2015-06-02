@@ -35,7 +35,7 @@ __attribute__((constructor(CTOR_PRIORITY_FIRST)))
 static void _init_common() {
     error_log = stderr;
 #if defined(CONFIG_DATADIR)
-    data_dir = strdup(CONFIG_DATADIR "/" PACKAGE_NAME);
+    data_dir = strdup(CONFIG_DATADIR PATH_SEPARATOR PACKAGE_NAME);
 #elif defined(ANDROID)
     // data_dir is set up in JNI nativeOnCreate()
 #elif !defined(__APPLE__)

@@ -245,55 +245,66 @@ static int c_interface_cut_name(char *name)
     return is_gz;
 }
 
-static int disk_select(const struct dirent *e)
-{
-    static char cmp[ DISKSIZE ];
-    size_t len;
-    const char *p;
+static int disk_select(const struct dirent *e) {
+    char cmp[PATH_MAX] = { 0 };
 
-    strncpy( cmp, disk_path, DISKSIZE );
-    strncat( cmp, "/", DISKSIZE-1 );
-    strncat( cmp, e->d_name, DISKSIZE-1 );
+    const size_t pathSepSize = strlen(PATH_SEPARATOR);
+    const size_t diskNameSize = MIN(PATH_MAX, strlen(disk_path)) + pathSepSize + MIN(PATH_MAX, strlen(e->d_name));
+
+    if (diskNameSize >= PATH_MAX) {
+        RELEASE_ERRLOG("OOPS computed path size >= PATH_MAX!");
+        return 0;
+    }
+
+    strncpy(cmp, disk_path, PATH_MAX-1);
+    strncat(cmp, PATH_SEPARATOR, pathSepSize);
+    strncat(cmp, e->d_name, PATH_MAX-1);
 
     /* don't show disk in alternate drive */
-    if (!strcmp(cmp, disk6.disk[altdrive].file_name))
-    {
+    if (!strcmp(cmp, disk6.disk[altdrive].file_name)) {
         return 0;
     }
 
     /* show directories except '.' and '..' at toplevel. */
     stat(cmp, &statbuf);
     if (S_ISDIR(statbuf.st_mode) && strcmp(".", e->d_name) &&
-        !(!strcmp("..", e->d_name) && !strcmp(disk_path, "/")))
+        !(!strcmp("..", e->d_name) && !strcmp(disk_path, PATH_SEPARATOR)))
     {
         return 1;
     }
 
-    p = e->d_name;
-    len = strlen(p);
+    const char *p = e->d_name;
+    size_t len = strlen(p);
 
-    if (len > 3 && (!strcmp(p + len - 3, ".gz")))
-    {
+    if (len < 4) {
+        return 0;
+    }
+
+    if (!strncmp(p + len - 3, ".gz", 3)) {
         len -= 3;
     }
 
-    if (!strncmp(p + len - 4, ".dsk", 4))
-    {
+    if (len < 4) {
+        return 0;
+    }
+
+    if (!strncmp(p + len - 3, ".do", 3)) {
         return 1;
     }
 
-    if (!strncmp(p + len - 4, ".nib", 4))
-    {
+    if (!strncmp(p + len - 3, ".po", 3)) {
         return 1;
     }
 
-    if (!strncmp(p + len - 3, ".do", 3))
-    {
+    if (len < 5) {
+        return 0;
+    }
+
+    if (!strncmp(p + len - 4, ".dsk", 4)) {
         return 1;
     }
 
-    if (!strncmp(p + len - 3, ".po", 3))
-    {
+    if (!strncmp(p + len - 4, ".nib", 4)) {
         return 1;
     }
 
@@ -394,7 +405,7 @@ void c_interface_select_diskette( int drive )
         altdrive = (drive == 0) ? 1 : 0;
         if (!strcmp("", disk_path))
         {
-            sprintf(disk_path, "/");
+            sprintf(disk_path, PATH_SEPARATOR);
         }
 
 #define DISKERR_PAD 35
@@ -419,7 +430,7 @@ void c_interface_select_diskette( int drive )
         if (entries <= 0)
         {
             DISKERR_SHOWERR("Problem reading directory");
-            snprintf(disk_path, DISKSIZE, "%s", getenv("HOME"));
+            snprintf(disk_path, PATH_MAX, "%s", getenv("HOME"));
             nextdir = true;
             continue;
         }
@@ -567,11 +578,9 @@ void c_interface_select_diskette( int drive )
             }
             else if ((ch == 13) || (toupper(ch) == 'W'))
             {
-                int len;
-
                 snprintf(temp, PATH_MAX, "%s/%s",
                          disk_path, namelist[ curpos ]->d_name );
-                len = strlen(disk_path);
+                size_t len = strlen(disk_path);
 
                 /* handle disk currently in the drive */
                 if (!strcmp(temp, disk6.disk[drive].file_name))
@@ -618,21 +627,25 @@ void c_interface_select_diskette( int drive )
                         continue;
                     }
 
-                    if ((disk_path[len-1]) == '/')
+                    if (len && (disk_path[len-1]) == '/')
                     {
                         disk_path[--len] = '\0';
                     }
 
                     if (!strcmp("..", namelist[curpos]->d_name))
                     {
-                        while (--len && (disk_path[len] != '/'))
+                        while (disk_path[len] != '/')
                         {
+                            if (!len) {
+                                break;
+                            }
                             disk_path[len] = '\0';
+                            --len;
                         }
                     }
                     else if (strcmp(".", namelist[curpos]->d_name))
                     {
-                        snprintf(disk_path + len, DISKSIZE-len, "/%s",
+                        snprintf(disk_path + len, MIN(0, PATH_MAX-len), "/%s",
                                  namelist[curpos]->d_name);
                     }
 
@@ -1201,7 +1214,7 @@ void c_interface_parameters()
                 }
 
                 temp[ cur_pos + cur_x ] = ch;
-                strncpy(disk_path, temp, DISKSIZE);
+                strncpy(disk_path, temp, PATH_MAX);
                 if (cur_x < INTERFACE_PATH_MAX-1)
                 {
                     cur_x++;
