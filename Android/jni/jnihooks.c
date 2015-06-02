@@ -183,13 +183,13 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnQuit(JNIEnv *env, jobject
     c_eject_6(0);
     c_eject_6(1);
 
-#ifdef AUDIO_ENABLED
-    speaker_destroy();
-    MB_Destroy();
-#endif
-
+    emulator_shutting_down = true;
     video_shutdown();
-    exit(0);
+
+    pthread_mutex_unlock(&interface_mutex);
+    if (pthread_join(cpu_thread_id, NULL)) {
+        ERRLOG("OOPS: pthread_join of CPU thread ...");
+    }
 }
 
 void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnKeyDown(JNIEnv *env, jobject obj, jint keyCode, jint metaState) {

@@ -621,7 +621,6 @@ static void gldriver_init_common(void) {
 
 static void _gldriver_shutdown(void) {
     // Cleanup all OpenGL objects
-    emulator_shutting_down = true;
     glDeleteTextures(1, &a2TextureName);
     a2TextureName = UNINITIALIZED_GL;
     _destroy_VAO(crtVAOName);
@@ -637,7 +636,11 @@ static void gldriver_shutdown(void) {
 #if USE_GLUT
     glutLeaveMainLoop();
 #else
-    _gldriver_shutdown();
+#   if MOBILE_DEVICE
+    // it could be a temporary backgrounding do nothing here ...
+#   else
+    emulator_shutting_down = true;
+#   endif
 #endif
 }
 
@@ -886,6 +889,7 @@ static void gldriver_main_loop(void) {
     glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_GLUTMAINLOOP_RETURNS);
     glutMainLoop();
     LOG("GLUT main loop finished...");
+    emulator_shutting_down = true;
     _gldriver_shutdown();
 #endif
     // fall through if not GLUT
