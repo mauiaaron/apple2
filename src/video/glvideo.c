@@ -478,18 +478,11 @@ static GLuint _build_program(demoSource *vertexSource, demoSource *fragmentSourc
         glUniform1i(kbdSamplerLoc, TEXTURE_ID_TOUCHKBD);
     }
 
-    GLint menuLeftSamplerLoc = glGetUniformLocation(prgName, "menuLeftTexture");
-    if (menuLeftSamplerLoc < 0) {
-        LOG("OOPS, no menuLeftSamplerLoc shader : %d", menuLeftSamplerLoc);
+    GLint topMenuSamplerLoc = glGetUniformLocation(prgName, "topMenuTexture");
+    if (topMenuSamplerLoc < 0) {
+        LOG("OOPS, no topMenuSamplerLoc shader : %d", topMenuSamplerLoc);
     } else {
-        glUniform1i(menuLeftSamplerLoc, TEXTURE_ID_TOUCHMENU_LEFT);
-    }
-
-    GLint menuRightSamplerLoc = glGetUniformLocation(prgName, "menuRightTexture");
-    if (menuRightSamplerLoc < 0) {
-        LOG("OOPS, no menuRightSamplerLoc shader : %d", menuRightSamplerLoc);
-    } else {
-        glUniform1i(menuRightSamplerLoc, TEXTURE_ID_TOUCHMENU_RIGHT);
+        glUniform1i(topMenuSamplerLoc, TEXTURE_ID_TOUCHMENU);
     }
 #endif
 
