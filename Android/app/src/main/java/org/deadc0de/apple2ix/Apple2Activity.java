@@ -19,6 +19,7 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Rect;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.GestureDetector;
@@ -60,6 +61,7 @@ public class Apple2Activity extends Activity {
     private native void nativeGraphicsChanged(int width, int height);
     private native void nativeOnKeyDown(int keyCode, int metaState);
     private native void nativeOnKeyUp(int keyCode, int metaState);
+    private native void nativeOnUncaughtException(String home, String trace);
 
     public native void nativeOnResume(boolean isSystemResume);
     public native void nativeOnPause();
@@ -146,6 +148,49 @@ public class Apple2Activity extends Activity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // Immediately set up exception handler ...
+        final String homeDir = "/data/data/"+this.getPackageName();
+        final Thread.UncaughtExceptionHandler defaultExceptionHandler = Thread.getDefaultUncaughtExceptionHandler();
+        Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
+            @Override
+            public void uncaughtException(Thread thread, Throwable t) {
+                try {
+                    StackTraceElement[] stackTraceElements = t.getStackTrace();
+                    StringBuffer traceBuffer = new StringBuffer();
+
+                    // prepend information about this device
+                    traceBuffer.append(Build.BRAND);
+                    traceBuffer.append("\n");
+                    traceBuffer.append(Build.MODEL);
+                    traceBuffer.append("\n");
+                    traceBuffer.append(Build.MANUFACTURER);
+                    traceBuffer.append("\n");
+                    traceBuffer.append(Build.DEVICE);
+                    traceBuffer.append("\n");
+
+                    // now append the actual stack trace
+                    traceBuffer.append(t.getClass().getName());
+                    traceBuffer.append("\n");
+                    final int maxTraceSize = 2048+1024+512; // probably should keep this less than a standard Linux PAGE_SIZE
+                    for (StackTraceElement elt : stackTraceElements) {
+                        traceBuffer.append(elt.toString());
+                        traceBuffer.append("\n");
+                        if (traceBuffer.length() >= maxTraceSize) {
+                            break;
+                        }
+                    }
+                    traceBuffer.append("\n");
+
+                    nativeOnUncaughtException(homeDir, traceBuffer.toString());
+                } catch (Throwable terminator2) {
+                    // Yo dawg, I hear you like exceptions in your exception handler! ...
+                }
+
+                defaultExceptionHandler.uncaughtException(thread, t);
+            }
+        });
+
         Log.e(TAG, "onCreate()");
 
         mDataDir = firstTimeInitialization();
