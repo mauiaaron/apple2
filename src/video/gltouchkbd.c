@@ -23,6 +23,8 @@
 #define KBD_TEMPLATE_COLS 10
 #define KBD_TEMPLATE_ROWS 6
 
+#define DEFAULT_CTRL_COL 2
+
 #define ROW_WITH_ADJACENTS (KBD_TEMPLATE_ROWS-1)
 #define _ROWOFF 2 // main keyboard row offset
 
@@ -103,6 +105,11 @@ static struct {
 
     int selectedCol;
     int selectedRow;
+
+    int ctrlCol;
+    int ctrlRow;
+
+    bool ctrlPressed;
 
     struct timespec timingBegin;
 } kbd = { 0 };
@@ -244,45 +251,51 @@ static inline void _screen_to_keyboard(float x, float y, OUTPARM int *col, OUTPA
     LOG("SCREEN TO KEYBOARD : kbdX:%d kbdXMax:%d kbdW:%d keyW:%d ... scrn:(%f,%f)->kybd:(%d,%d)", touchport.kbdX, touchport.kbdXMax, touchport.kbdW, keyW, x, y, *col, *row);
 }
 
-static inline void _tap_key_at_point(float x, float y) {
+static inline void _redraw_unselected(int col, int row) {
     GLModelHUDKeyboard *hudKeyboard = (GLModelHUDKeyboard *)kbd.model->custom;
-
-    // redraw previous selected key
-
-    int col = kbd.selectedCol;
-    int row = kbd.selectedRow;
     if ((col >= 0) && (row >= 0)) {
         _rerender_character(col, row, hudKeyboard->pixels);
         if (row == ROW_WITH_ADJACENTS) {
             _rerender_adjacents(col, row, hudKeyboard->pixels);
         }
     }
+}
 
-    // get current key, col, row
-
-    if (!_is_point_on_keyboard(x, y)) {
-        return;
-    }
-    _screen_to_keyboard(x, y, &col, &row);
-    const unsigned int indexRow = (hudKeyboard->tplWidth+1) * row;
-    int key = (hudKeyboard->tpl+indexRow)[col];
-
-    // draw current selected key
-
+static inline void _redraw_selected(int col, int row) {
+    GLModelHUDKeyboard *hudKeyboard = (GLModelHUDKeyboard *)kbd.model->custom;
     if ((col >= 0) && (row >= 0)) {
         _rerender_character(col, row, hudKeyboard->pixelsAlt);
         if (row == ROW_WITH_ADJACENTS) {
             _rerender_adjacents(col, row, hudKeyboard->pixelsAlt);
         }
     }
-    kbd.selectedCol = col;
-    kbd.selectedRow = row;
+}
+
+static inline void _tap_key_at_point(float x, float y) {
+    GLModelHUDKeyboard *hudKeyboard = (GLModelHUDKeyboard *)kbd.model->custom;
+
+    if (!_is_point_on_keyboard(x, y)) {
+        joy_button0 = 0x0;
+        joy_button1 = 0x0;
+        // CTRL key is "sticky"
+        _redraw_unselected(kbd.selectedCol, kbd.selectedRow);
+        kbd.selectedCol = -1;
+        kbd.selectedRow = -1;
+        return;
+    }
+
+    // get current key, col, row
+
+    int col = -1;
+    int row = -1;
+    _screen_to_keyboard(x, y, &col, &row);
+    const unsigned int indexRow = (hudKeyboard->tplWidth+1) * row;
+    int key = (hudKeyboard->tpl+indexRow)[col];
 
     // handle key
-    joy_button0 = 0x0;
-    joy_button1 = 0x0;
 
     bool isASCII = false;
+    bool isCTRL = false;
     switch (key) {
         case ICONTEXT_LOWERCASE:
         case ICONTEXT_UPPERCASE:
@@ -296,6 +309,11 @@ static inline void _tap_key_at_point(float x, float y) {
             break;
 
         case ICONTEXT_CTRL:
+            isCTRL = true;
+            kbd.ctrlPressed = !kbd.ctrlPressed;
+            _rerender_character(kbd.ctrlCol, kbd.ctrlRow, kbd.ctrlPressed ? hudKeyboard->pixelsAlt : hudKeyboard->pixels);
+            col = -1;
+            row = -1;
             key = SCODE_L_CTRL;
             break;
 
@@ -326,12 +344,12 @@ static inline void _tap_key_at_point(float x, float y) {
             break;
 
         case MOUSETEXT_OPENAPPLE:
-            joy_button0 = 0x80;
+            joy_button0 = joy_button0 ? 0x0 : 0x80;
             key = -1;
             break;
 
         case MOUSETEXT_CLOSEDAPPLE:
-            joy_button1 = 0x80;
+            joy_button1 = joy_button1 ? 0x0 : 0x80;
             key = -1;
             break;
 
@@ -351,12 +369,29 @@ static inline void _tap_key_at_point(float x, float y) {
 
     assert(key < 0x80);
     if (isASCII) {
-        c_keys_handle_input(key, /*pressed:*/true,  /*ASCII:*/true);
-    } else {
-#warning HACK FIXME TODO : handle CTRL/ALT combos
+        if (kbd.ctrlPressed) {
+            key = c_keys_ascii_to_scancode(key);
+            c_keys_handle_input(key, /*pressed*/true, /*ASCII:*/false);
+            c_keys_handle_input(key, /*pressed*/false, /*ASCII:*/false);
+        } else {
+            c_keys_handle_input(key, /*pressed:*/true,  /*ASCII:*/true);
+        }
+    } else if (isCTRL) {
+        c_keys_handle_input(key, /*pressed:*/kbd.ctrlPressed,  /*ASCII:*/false);
+    } else if (key != -1) {
+        // perform a press of other keys (ESC, Arrows, etc)
         c_keys_handle_input(key, /*pressed:*/true,  /*ASCII:*/false);
         c_keys_handle_input(key, /*pressed:*/false, /*ASCII:*/false);
     }
+
+    // redraw previous selected key
+    _redraw_unselected(kbd.selectedCol, kbd.selectedRow);
+
+    kbd.selectedCol = col;
+    kbd.selectedRow = row;
+
+    // draw current selected key
+    _redraw_selected(kbd.selectedCol, kbd.selectedRow);
 }
 
 // ----------------------------------------------------------------------------
@@ -670,6 +705,9 @@ static void _init_gltouchkbd(void) {
 
     kbd.selectedCol = -1;
     kbd.selectedRow = -1;
+
+    kbd.ctrlCol = DEFAULT_CTRL_COL;
+    kbd.ctrlRow = 0;
 
     glnode_registerNode(RENDER_LOW, (GLNode){
         .setup = &gltouchkbd_setup,
