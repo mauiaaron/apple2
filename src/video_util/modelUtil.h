@@ -78,6 +78,7 @@ typedef struct GLModel {
     GLuint elementBufferName;
 
     // Custom
+#warning FIXME TODO : investigate whether we can just MACRO-inherit from GLModel rather than use custom pointer
     GLCustom *custom;
 } GLModel;
 
