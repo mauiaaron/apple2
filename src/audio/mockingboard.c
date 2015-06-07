@@ -1918,7 +1918,7 @@ static void RegisterIoHandler(UINT uSlot, iofunction IOReadC0, iofunction IOWrit
 }
 #endif
 
-void MB_InitializeIO(LPBYTE unused_pCxRomPeripheral, UINT uSlot4, UINT uSlot5)
+void MB_InitializeIO(char *unused_pCxRomPeripheral, UINT uSlot4, UINT uSlot5)
 {
 	// Mockingboard: Slot 4 & 5
 	// Phasor      : Slot 4

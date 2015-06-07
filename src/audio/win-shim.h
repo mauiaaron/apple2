@@ -27,10 +27,8 @@
 
 typedef unsigned int UINT;
 
-typedef long *LPLONG;
 typedef void *LPVOID;
 typedef void *LPDVOID;
-typedef char *LPBYTE;
 typedef unsigned long *LPDWORD;
 
 #if !defined(TRUE)

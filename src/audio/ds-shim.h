@@ -22,7 +22,7 @@ typedef struct IDirectSoundBuffer {
 
     int (*SetVolume)(void* _this, long lVolume);
 
-    int (*GetVolume)(void* _this, LPLONG lplVolume);
+    int (*GetVolume)(void* _this, long *lplVolume);
 
     int (*GetCurrentPosition)(void* _this, LPDWORD lpdwCurrentPlayCursor, LPDWORD lpdwCurrentWriteCursor);
 
