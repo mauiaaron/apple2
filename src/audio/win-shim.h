@@ -25,13 +25,6 @@
 
 // 2013/09/19 - http://msdn.microsoft.com/en-us/library/windows/desktop/aa383751(v=vs.85).aspx
 
-#if !defined(TRUE)
-#define TRUE true
-#endif
-#if !defined(FALSE)
-#define FALSE false
-#endif
-
 typedef void *IUnknown;
 
 typedef void *(*LPTHREAD_START_ROUTINE)(void *unused);

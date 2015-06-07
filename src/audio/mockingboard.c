@@ -1095,7 +1095,7 @@ static unsigned long SSI263Thread(void *lpParameter)
 		unsigned long dwWaitResult = WaitForMultipleObjects( 
 								g_nNumEvents,		// number of handles in array
 								g_hSSI263Event,		// array of event handles
-								FALSE,				// wait until any one is signaled
+								false,				// wait until any one is signaled
 								0);
 
 		if((dwWaitResult < 0x0L) || (dwWaitResult > 0x0L+g_nNumEvents-1))
@@ -1350,14 +1350,14 @@ static bool MB_DSInit()
         }
 #else
 	g_hSSI263Event[0] = CreateEvent(NULL,	// lpEventAttributes
-									FALSE,	// bManualReset (FALSE = auto-reset)
-									FALSE,	// bInitialState (FALSE = non-signaled)
+									false,	// bManualReset (false = auto-reset)
+									false,	// bInitialState (false = non-signaled)
 									NULL);	// lpName
 	LOG("MB_DSInit: CreateEvent(), g_hSSI263Event[0]=0x%08X\n", (uint32_t)g_hSSI263Event[0]);
 
 	g_hSSI263Event[1] = CreateEvent(NULL,	// lpEventAttributes
-									FALSE,	// bManualReset (FALSE = auto-reset)
-									FALSE,	// bInitialState (FALSE = non-signaled)
+									false,	// bManualReset (false = auto-reset)
+									false,	// bInitialState (false = non-signaled)
 									NULL);	// lpName
 	LOG("MB_DSInit: CreateEvent(), g_hSSI263Event[1]=0x%08X\n", (uint32_t)g_hSSI263Event[1]);
 
