@@ -27,7 +27,7 @@ typedef struct
             BYTE l;
             BYTE h;
         };
-        USHORT w;
+        uint16_t w;
     };
 } IWORD;
 

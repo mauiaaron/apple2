@@ -519,7 +519,7 @@ static void sound_ay_overlay(CAY8910 *_this)
 //  cpufreq = machine_current->timings.processor_speed / HZ_COMMON_DENOMINATOR;
   cpufreq = (libspectrum_dword) (m_fCurrentCLK_AY8910 / HZ_COMMON_DENOMINATOR);	// [TC]
   for( f = 0; f < _this->ay_change_count; f++ )
-    _this->ay_change[f].ofs = (USHORT) (( _this->ay_change[f].tstates * sfreq ) / cpufreq);	// [TC] Added cast
+    _this->ay_change[f].ofs = (uint16_t) (( _this->ay_change[f].tstates * sfreq ) / cpufreq);	// [TC] Added cast
 
   libspectrum_signed_word* pBuf1 = g_ppSoundBuffers[0];
   libspectrum_signed_word* pBuf2 = g_ppSoundBuffers[1];

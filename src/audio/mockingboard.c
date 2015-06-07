@@ -166,7 +166,7 @@ static UINT g_nMBTimerDevice = TIMERDEVICE_INVALID;	// SY6522 device# which is g
 static uint64_t g_uLastCumulativeCycles = 0;
 
 // SSI263 vars:
-static USHORT g_nSSI263Device = 0;	// SSI263 device# which is generating phoneme-complete IRQ
+static uint16_t g_nSSI263Device = 0;	// SSI263 device# which is generating phoneme-complete IRQ
 static int g_nCurrentActivePhoneme = -1;
 static bool g_bStopPhoneme = false;
 static bool g_bVotraxPhoneme = false;
@@ -279,7 +279,7 @@ static void StartTimer(SY6522_AY8910* pMB)
 	if((pMB->sy6522.IER & IxR_TIMER1) == 0x00)
 		return;
 
-	USHORT nPeriod = pMB->sy6522.TIMER1_LATCH.w;
+	uint16_t nPeriod = pMB->sy6522.TIMER1_LATCH.w;
 
 //	if(nPeriod <= 0xff)		// Timer1L value has been written (but TIMER1H hasn't)
 //		return;
@@ -2030,15 +2030,15 @@ void MB_UpdateCycles(void)
             printf("OOPS!!! Mockingboard failed assert!\n");
             return;
         }
-	USHORT nClocks = (USHORT) uCycles;
+	uint16_t nClocks = (uint16_t) uCycles;
 
 	for(unsigned int i=0; i<NUM_SY6522; i++)
 	{
 		SY6522_AY8910* pMB = &g_MB[i];
 
-		USHORT OldTimer1 = pMB->sy6522.TIMER1_COUNTER.w;
+		uint16_t OldTimer1 = pMB->sy6522.TIMER1_COUNTER.w;
 #ifndef APPLE2IX
-		USHORT OldTimer2 = pMB->sy6522.TIMER2_COUNTER.w;
+		uint16_t OldTimer2 = pMB->sy6522.TIMER2_COUNTER.w;
 #endif
 
 		pMB->sy6522.TIMER1_COUNTER.w -= nClocks;
