@@ -1697,7 +1697,7 @@ void MB_Reset()
 #define nAddr ea
 GLUE_C_READ(MB_Read)
 #else
-static BYTE MB_Read(WORD PC, WORD nAddr, BYTE bWrite, BYTE nValue, ULONG nCyclesLeft)
+static BYTE MB_Read(uint16_t PC, uint16_t nAddr, BYTE bWrite, BYTE nValue, ULONG nCyclesLeft)
 #endif
 {
 	MB_UpdateCycles();
@@ -1775,7 +1775,7 @@ static BYTE MB_Read(WORD PC, WORD nAddr, BYTE bWrite, BYTE nValue, ULONG nCycles
 #define nValue b
 GLUE_C_WRITE(MB_Write)
 #else
-static BYTE MB_Write(WORD PC, WORD nAddr, BYTE bWrite, BYTE nValue, ULONG nCyclesLeft)
+static BYTE MB_Write(uint16_t PC, uint16_t nAddr, BYTE bWrite, BYTE nValue, ULONG nCyclesLeft)
 #endif
 {
 	MB_UpdateCycles();
@@ -1858,7 +1858,7 @@ static BYTE MB_Write(WORD PC, WORD nAddr, BYTE bWrite, BYTE nValue, ULONG nCycle
 #ifdef APPLE2IX
 GLUE_C_READ(PhasorIO)
 #else
-static BYTE PhasorIO(WORD PC, WORD nAddr, BYTE bWrite, BYTE nValue, ULONG nCyclesLeft)
+static BYTE PhasorIO(uint16_t PC, uint16_t nAddr, BYTE bWrite, BYTE nValue, ULONG nCyclesLeft)
 #endif
 {
 	if(!g_bPhasorEnable)
@@ -1891,7 +1891,7 @@ void mb_io_initialize(unsigned int slot4, unsigned int slot5)
     MB_InitializeIO(NULL, slot4, slot5);
 }
 
-//typedef BYTE (*iofunction)(WORD nPC, WORD nAddr, BYTE nWriteFlag, BYTE nWriteValue, ULONG nCyclesLeft);
+//typedef BYTE (*iofunction)(uint16_t nPC, uint16_t nAddr, BYTE nWriteFlag, BYTE nWriteValue, ULONG nCyclesLeft);
 typedef void (*iofunction)();
 static void RegisterIoHandler(UINT uSlot, iofunction IOReadC0, iofunction IOWriteC0, iofunction IOReadCx, iofunction IOWriteCx, LPVOID unused_lpSlotParameter, BYTE* unused_pExpansionRom)
 {

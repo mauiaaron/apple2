@@ -151,13 +151,13 @@ static inline bool SUCCEEDED(int x) { return x == DS_OK; }
 
 
 typedef struct {
-    WORD  wFormatTag;
-    WORD  nChannels;
+    uint16_t  wFormatTag;
+    uint16_t  nChannels;
     DWORD nSamplesPerSec;
     DWORD nAvgBytesPerSec;
-    WORD  nBlockAlign;
-    WORD  wBitsPerSample;
-    WORD  cbSize;
+    uint16_t  nBlockAlign;
+    uint16_t  wBitsPerSample;
+    uint16_t  cbSize;
 } WAVEFORMATEX, *LPWAVEFORMATEX;
 
 typedef struct DSBUFFERDESC { 
