@@ -163,7 +163,7 @@ static ULONG g_n6522TimerPeriod = 0;
 static const UINT TIMERDEVICE_INVALID = -1;
 #endif
 static UINT g_nMBTimerDevice = TIMERDEVICE_INVALID;	// SY6522 device# which is generating timer IRQ
-static UINT64 g_uLastCumulativeCycles = 0;
+static uint64_t g_uLastCumulativeCycles = 0;
 
 // SSI263 vars:
 static USHORT g_nSSI263Device = 0;	// SSI263 device# which is generating phoneme-complete IRQ
@@ -181,9 +181,9 @@ static short* ppAYVoiceBuffer[NUM_VOICES] = {0};
 
 #ifdef APPLE2IX
 bool g_bDisableDirectSoundMockingboard = false;
-static int64_t	g_nMB_InActiveCycleCount = 0;
+static uint64_t	g_nMB_InActiveCycleCount = 0;
 #else
-static unsigned __int64	g_nMB_InActiveCycleCount = 0;
+static uint64_t	g_nMB_InActiveCycleCount = 0;
 #endif
 static bool g_bMB_RegAccessedFlag = false;
 static bool g_bMB_Active = false;
@@ -256,7 +256,7 @@ static const double g_f6522TimerPeriod_NoIRQ = CLK_6502 / 60.0;		// Constant wha
 // External global vars:
 bool g_bMBTimerIrqActive = false;
 #ifdef _DEBUG
-UINT32 g_uTimer1IrqCount = 0;	// DEBUG
+uint32_t g_uTimer1IrqCount = 0;	// DEBUG
 #endif
 
 //---------------------------------------------------------------------------
@@ -849,7 +849,7 @@ static void MB_Update()
 #ifdef APPLE2IX
 		else if(cycles_count_total - g_nMB_InActiveCycleCount > (uint64_t)cycles_persec_target/10)
 #else
-		else if(cycles_count_total - g_nMB_InActiveCycleCount > (unsigned __int64)cycles_persec_target/10)
+		else if(cycles_count_total - g_nMB_InActiveCycleCount > (uint64_t)cycles_persec_target/10)
 #endif
 		{
 			// After 0.1 sec of Apple time, assume MB is not active
@@ -1353,13 +1353,13 @@ static bool MB_DSInit()
 									FALSE,	// bManualReset (FALSE = auto-reset)
 									FALSE,	// bInitialState (FALSE = non-signaled)
 									NULL);	// lpName
-	LogFileOutput("MB_DSInit: CreateEvent(), g_hSSI263Event[0]=0x%08X\n", (UINT32)g_hSSI263Event[0]);
+	LogFileOutput("MB_DSInit: CreateEvent(), g_hSSI263Event[0]=0x%08X\n", (uint32_t)g_hSSI263Event[0]);
 
 	g_hSSI263Event[1] = CreateEvent(NULL,	// lpEventAttributes
 									FALSE,	// bManualReset (FALSE = auto-reset)
 									FALSE,	// bInitialState (FALSE = non-signaled)
 									NULL);	// lpName
-	LogFileOutput("MB_DSInit: CreateEvent(), g_hSSI263Event[1]=0x%08X\n", (UINT32)g_hSSI263Event[1]);
+	LogFileOutput("MB_DSInit: CreateEvent(), g_hSSI263Event[1]=0x%08X\n", (uint32_t)g_hSSI263Event[1]);
 
 	if((g_hSSI263Event[0] == NULL) || (g_hSSI263Event[1] == NULL))
 	{
@@ -1486,7 +1486,7 @@ static bool MB_DSInit()
 								NULL,			// lpParameter
 								0,				// dwCreationFlags : 0 = Run immediately
 								&dwThreadId);	// lpThreadId
-	LogFileOutput("MB_DSInit: CreateThread(), g_hThread=0x%08X\n", (UINT32)g_hThread);
+	LogFileOutput("MB_DSInit: CreateThread(), g_hThread=0x%08X\n", (uint32_t)g_hThread);
 
 	bool bRes2 = SetThreadPriority(g_hThread, THREAD_PRIORITY_TIME_CRITICAL);
 	LogFileOutput("MB_DSInit: SetThreadPriority(), bRes=%d\n", bRes2 ? 1 : 0);
@@ -2023,7 +2023,7 @@ void MB_UpdateCycles(void)
 		return;
 
 	timing_checkpoint_cycles();
-	UINT64 uCycles = cycles_count_total - g_uLastCumulativeCycles;
+	uint64_t uCycles = cycles_count_total - g_uLastCumulativeCycles;
 	g_uLastCumulativeCycles = cycles_count_total;
 	//_ASSERT(uCycles < 0x10000);
         if (uCycles >= 0x10000) {

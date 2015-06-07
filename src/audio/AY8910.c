@@ -988,9 +988,9 @@ void SetCLK(double CLK)
 
 static CAY8910 g_AY8910[MAX_8910];
 #ifdef APPLE2IX
-static int64_t g_uLastCumulativeCycles = 0;
+static uint64_t g_uLastCumulativeCycles = 0;
 #else
-static unsigned __int64 g_uLastCumulativeCycles = 0;
+static uint64_t g_uLastCumulativeCycles = 0;
 #endif
 
 
@@ -1011,7 +1011,7 @@ void AY8910UpdateSetCycles()
 	g_uLastCumulativeCycles = cycles_count_total;
 }
 
-void AY8910Update(int chip, INT16** buffer, int nNumSamples)
+void AY8910Update(int chip, int16_t** buffer, int nNumSamples)
 {
 	AY8910UpdateSetCycles();
 

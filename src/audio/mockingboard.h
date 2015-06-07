@@ -93,7 +93,7 @@ typedef struct
 
 extern bool       g_bMBTimerIrqActive;
 #ifdef _DEBUG
-extern UINT32	g_uTimer1IrqCount;	// DEBUG
+extern uint32_t	g_uTimer1IrqCount;	// DEBUG
 #endif
 
 void	MB_Initialize();

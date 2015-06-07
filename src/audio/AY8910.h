@@ -20,7 +20,7 @@
 void _AYWriteReg(int chip, int r, int v);
 //void AY8910_write_ym(int chip, int addr, int data);
 void AY8910_reset(int chip);
-void AY8910Update(int chip, INT16** buffer, int nNumSamples);
+void AY8910Update(int chip, int16_t** buffer, int nNumSamples);
 
 void AY8910_InitAll(int nClock, int nSampleRate);
 void AY8910_InitClock(int nClock);
@@ -32,7 +32,7 @@ void AY8910UpdateSetCycles();
 // FUSE stuff
 
 typedef ULONG libspectrum_dword;
-typedef UCHAR libspectrum_byte;
+typedef uint8_t libspectrum_byte;
 typedef SHORT libspectrum_signed_word;
 
 struct CAY8910;

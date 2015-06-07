@@ -32,11 +32,7 @@ typedef UInt32 ULONG;
 typedef unsigned long ULONG;
 typedef long LONG;
 typedef unsigned int UINT;
-typedef uint32_t UINT32;
-typedef uint64_t UINT64;
 typedef char TCHAR;
-typedef uint8_t UCHAR;
-typedef int16_t INT16;
 typedef short SHORT;
 typedef unsigned short USHORT;
 typedef unsigned short WORD;
@@ -61,8 +57,6 @@ typedef LPCSTR LPCTSTR;
 typedef unsigned int UINT_PTR;
 
 typedef void *HWND; // HACK
-
-typedef int64_t __int64;
 
 typedef void* HANDLE;
 
