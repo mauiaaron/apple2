@@ -12,7 +12,7 @@
 #include "common.h"
 #include "audio/win-shim.h"
 
-pthread_t CreateThread(void* unused_lpThreadAttributes, int unused_dwStackSize, LPTHREAD_START_ROUTINE lpStartRoutine, void *lpParameter, unsigned long unused_dwCreationFlags, LPDWORD lpThreadId)
+pthread_t CreateThread(void* unused_lpThreadAttributes, int unused_dwStackSize, LPTHREAD_START_ROUTINE lpStartRoutine, void *lpParameter, unsigned long unused_dwCreationFlags, unsigned long *lpThreadId)
 {
     pthread_t a_thread = 0;
     int err = 0;

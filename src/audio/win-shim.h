@@ -25,8 +25,6 @@
 
 // 2013/09/19 - http://msdn.microsoft.com/en-us/library/windows/desktop/aa383751(v=vs.85).aspx
 
-typedef unsigned long *LPDWORD;
-
 #if !defined(TRUE)
 #define TRUE true
 #endif
@@ -46,7 +44,7 @@ typedef void *IUnknown;
 
 typedef void *(*LPTHREAD_START_ROUTINE)(void *unused);
 
-pthread_t CreateThread(void* unused_lpThreadAttributes, int unused_dwStackSize, LPTHREAD_START_ROUTINE lpStartAddress, void *lpParameter, unsigned long unused_dwCreationFlags, LPDWORD lpThreadId);
+pthread_t CreateThread(void* unused_lpThreadAttributes, int unused_dwStackSize, LPTHREAD_START_ROUTINE lpStartAddress, void *lpParameter, unsigned long unused_dwCreationFlags, unsigned long *lpThreadId);
 
 #define THREAD_PRIORITY_NORMAL 0
 #define THREAD_PRIORITY_TIME_CRITICAL 15
