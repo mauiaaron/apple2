@@ -318,7 +318,7 @@ static GLuint _build_program(demoSource *vertexSource, demoSource *fragmentSourc
     if (version) {
         sprintf(sourceString, "#version %d\n%s", version, vertexSource->string);
     } else {
-        RELEASE_LOG("YAY, you have an awesome OpenGL vendor for this device ... no GLSL version specified ... so NOT adding a #version directive to shader sources =P");
+        RELEASE_LOG("No GLSL version specified ... so NOT adding a #version directive to shader sources =P");
         sprintf(sourceString, "%s", vertexSource->string);
     }
 
@@ -631,6 +631,7 @@ static void gldriver_shutdown(void) {
 #else
 #   if MOBILE_DEVICE
     // it could be a temporary backgrounding do nothing here ...
+    _gldriver_shutdown();
 #   else
     emulator_shutting_down = true;
 #   endif

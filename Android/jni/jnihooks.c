@@ -111,6 +111,7 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeGraphicsInitialized(JNIEnv 
     LOG("native graphicsInitialized width:%d height:%d", width, height);
     static bool graphicsPreviouslyInitialized = false;
     if (graphicsPreviouslyInitialized) {
+        LOG("shutting down previous context");
         video_backend->shutdown();
     }
     graphicsPreviouslyInitialized = true;
@@ -144,6 +145,10 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnPause(JNIEnv *env, jobjec
 }
 
 void Java_org_deadc0de_apple2ix_Apple2Activity_nativeRender(JNIEnv *env, jobject obj) {
+    if (UNLIKELY(emulator_shutting_down)) {
+        return;
+    }
+
     if (!nativePaused) {
         c_keys_handle_input(-1, 0, 0);
     }
@@ -242,6 +247,9 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnKeyUp(JNIEnv *env, jobjec
 
 jboolean Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnTouch(JNIEnv *env, jobject obj, jint action, jint pointerCount, jint pointerIndex, jfloatArray xCoords, jfloatArray yCoords) {
     //LOG("nativeOnTouch : %d/%d/%d :", action, pointerCount, pointerIndex);
+    if (UNLIKELY(emulator_shutting_down)) {
+        return true;
+    }
 
     if (nativePaused) {
         LOG("UNPAUSING NATIVE CPU THREAD");
