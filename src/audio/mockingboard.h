@@ -110,10 +110,10 @@ SS_CARDTYPE MB_GetSoundcardType();
 void    MB_SetSoundcardType(SS_CARDTYPE NewSoundcardType);
 double  MB_GetFramePeriod();
 bool    MB_IsActive();
-DWORD   MB_GetVolume();
-void    MB_SetVolume(DWORD dwVolume, DWORD dwVolumeMax);
-DWORD   MB_GetSnapshot(SS_CARD_MOCKINGBOARD* pSS, DWORD dwSlot);
-DWORD   MB_SetSnapshot(SS_CARD_MOCKINGBOARD* pSS, DWORD dwSlot);
+unsigned long   MB_GetVolume();
+void    MB_SetVolume(unsigned long dwVolume, unsigned long dwVolumeMax);
+unsigned long   MB_GetSnapshot(SS_CARD_MOCKINGBOARD* pSS, unsigned long dwSlot);
+unsigned long   MB_SetSnapshot(SS_CARD_MOCKINGBOARD* pSS, unsigned long dwSlot);
 #ifdef APPLE2IX
 void mb_io_initialize(unsigned int slot4, unsigned int slot5);
 #endif

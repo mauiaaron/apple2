@@ -35,21 +35,21 @@ typedef struct
     bool bMute;
     LONG nVolume;            // Current volume (as used by DirectSound)
     LONG nFadeVolume;        // Current fade volume (as used by DirectSound)
-    DWORD dwUserVolume;        // Volume from slider on Property Sheet (0=Max)
+    unsigned long dwUserVolume;        // Volume from slider on Property Sheet (0=Max)
     bool bIsSpeaker;
     bool bRecentlyActive;    // (Speaker only) false after 0.2s of speaker inactivity
 } VOICE, *PVOICE;
 
 
-bool DSGetLock(LPDIRECTSOUNDBUFFER pVoice, DWORD dwOffset, DWORD dwBytes,
-                      int16_t** ppDSLockedBuffer0, DWORD* pdwDSLockedBufferSize0,
-                      int16_t** ppDSLockedBuffer1, DWORD* pdwDSLockedBufferSize1);
+bool DSGetLock(LPDIRECTSOUNDBUFFER pVoice, unsigned long dwOffset, unsigned long dwBytes,
+                      int16_t** ppDSLockedBuffer0, unsigned long* pdwDSLockedBufferSize0,
+                      int16_t** ppDSLockedBuffer1, unsigned long* pdwDSLockedBufferSize1);
 
-int DSGetSoundBuffer(VOICE* pVoice, DWORD dwFlags, DWORD dwBufferSize, DWORD nSampleRate, int nChannels);
+int DSGetSoundBuffer(VOICE* pVoice, unsigned long dwFlags, unsigned long dwBufferSize, unsigned long nSampleRate, int nChannels);
 void DSReleaseSoundBuffer(VOICE* pVoice);
 
-bool DSZeroVoiceBuffer(PVOICE Voice, char* pszDevName, DWORD dwBufferSize);
-bool DSZeroVoiceWritableBuffer(PVOICE Voice, char* pszDevName, DWORD dwBufferSize);
+bool DSZeroVoiceBuffer(PVOICE Voice, char* pszDevName, unsigned long dwBufferSize);
+bool DSZeroVoiceWritableBuffer(PVOICE Voice, char* pszDevName, unsigned long dwBufferSize);
 
 typedef enum eFADE {FADE_NONE, FADE_IN, FADE_OUT} eFADE;
 void SoundCore_SetFade(eFADE FadeType);
@@ -62,12 +62,12 @@ void SoundCore_SetErrorMax(const int nErrorMax);
 bool DSInit();
 void DSUninit();
 
-LONG NewVolume(DWORD dwVolume, DWORD dwVolumeMax);
+LONG NewVolume(unsigned long dwVolume, unsigned long dwVolumeMax);
 
 void SysClk_WaitTimer();
 bool SysClk_InitTimer();
 void SysClk_UninitTimer();
-void SysClk_StartTimerUsec(DWORD dwUsecPeriod);
+void SysClk_StartTimerUsec(unsigned long dwUsecPeriod);
 void SysClk_StopTimer();
 
 //

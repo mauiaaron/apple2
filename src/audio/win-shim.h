@@ -25,7 +25,6 @@
 
 // 2013/09/19 - http://msdn.microsoft.com/en-us/library/windows/desktop/aa383751(v=vs.85).aspx
 
-typedef unsigned long DWORD;
 #ifdef __APPLE__
 typedef UInt32 ULONG;
 #endif
@@ -38,7 +37,7 @@ typedef long *LPLONG;
 typedef void *LPVOID;
 typedef void *LPDVOID;
 typedef char *LPBYTE;
-typedef DWORD *LPDWORD;
+typedef unsigned long *LPDWORD;
 
 typedef char *GUID; // HACK
 typedef GUID IID;
@@ -85,7 +84,7 @@ typedef void *IUnknown;
 
 typedef LPVOID (*LPTHREAD_START_ROUTINE)(LPVOID unused);
 
-pthread_t CreateThread(void* unused_lpThreadAttributes, int unused_dwStackSize, LPTHREAD_START_ROUTINE lpStartAddress, LPVOID lpParameter, DWORD unused_dwCreationFlags, LPDWORD lpThreadId);
+pthread_t CreateThread(void* unused_lpThreadAttributes, int unused_dwStackSize, LPTHREAD_START_ROUTINE lpStartAddress, LPVOID lpParameter, unsigned long unused_dwCreationFlags, LPDWORD lpThreadId);
 
 #define THREAD_PRIORITY_NORMAL 0
 #define THREAD_PRIORITY_TIME_CRITICAL 15

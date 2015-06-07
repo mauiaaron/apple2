@@ -40,15 +40,15 @@ typedef enum SS_CARDTYPE
 
 typedef struct
 {
-    DWORD dwLength;     // Byte length of this unit struct
-    DWORD dwVersion;
+    unsigned long dwLength;     // Byte length of this unit struct
+    unsigned long dwVersion;
 } SS_UNIT_HDR;
 
 typedef struct
 {
     SS_UNIT_HDR UnitHdr;
-    DWORD dwType;        // SS_CARDTYPE
-    DWORD dwSlot;        // [1..7]
+    unsigned long dwType;        // SS_CARDTYPE
+    unsigned long dwSlot;        // [1..7]
 } SS_CARD_HDR;
 
 void CpuIrqAssert(eIRQSRC irq_source);

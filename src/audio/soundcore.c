@@ -57,11 +57,11 @@ bool g_bDisableDirectSound = false;
 
 //-----------------------------------------------------------------------------
 
-bool DSGetLock(LPDIRECTSOUNDBUFFER pVoice, DWORD dwOffset, DWORD dwBytes,
-                      int16_t** ppDSLockedBuffer0, DWORD* pdwDSLockedBufferSize0,
-                      int16_t** ppDSLockedBuffer1, DWORD* pdwDSLockedBufferSize1)
+bool DSGetLock(LPDIRECTSOUNDBUFFER pVoice, unsigned long dwOffset, unsigned long dwBytes,
+                      int16_t** ppDSLockedBuffer0, unsigned long* pdwDSLockedBufferSize0,
+                      int16_t** ppDSLockedBuffer1, unsigned long* pdwDSLockedBufferSize1)
 {
-    DWORD nStatus = 0;
+    unsigned long nStatus = 0;
     int hr = pVoice->GetStatus(pVoice->_this, &nStatus);
     if(hr != DS_OK)
         return false;
@@ -100,7 +100,7 @@ bool DSGetLock(LPDIRECTSOUNDBUFFER pVoice, DWORD dwOffset, DWORD dwBytes,
 
 //-----------------------------------------------------------------------------
 
-int DSGetSoundBuffer(VOICE* pVoice, DWORD dwFlags, DWORD dwBufferSize, DWORD nSampleRate, int nChannels)
+int DSGetSoundBuffer(VOICE* pVoice, unsigned long dwFlags, unsigned long dwBufferSize, unsigned long nSampleRate, int nChannels)
 {
     WAVEFORMATEX wavfmt;
     DSBUFFERDESC dsbdesc;
@@ -167,13 +167,13 @@ void DSReleaseSoundBuffer(VOICE* pVoice)
 
 //-----------------------------------------------------------------------------
 
-bool DSZeroVoiceBuffer(PVOICE Voice, char* pszDevName, DWORD dwBufferSize)
+bool DSZeroVoiceBuffer(PVOICE Voice, char* pszDevName, unsigned long dwBufferSize)
 {
-    DWORD dwDSLockedBufferSize = 0;    // Size of the locked DirectSound buffer
+    unsigned long dwDSLockedBufferSize = 0;    // Size of the locked DirectSound buffer
     int16_t* pDSLockedBuffer;
 
 
-        DWORD argX = 0;
+        unsigned long argX = 0;
     int hr = Voice->lpDSBvoice->Stop(Voice->lpDSBvoice->_this);
     if(FAILED(hr))
     {
@@ -209,9 +209,9 @@ bool DSZeroVoiceBuffer(PVOICE Voice, char* pszDevName, DWORD dwBufferSize)
 
 //-----------------------------------------------------------------------------
 
-bool DSZeroVoiceWritableBuffer(PVOICE Voice, char* pszDevName, DWORD dwBufferSize)
+bool DSZeroVoiceWritableBuffer(PVOICE Voice, char* pszDevName, unsigned long dwBufferSize)
 {
-    DWORD dwDSLockedBufferSize0=0, dwDSLockedBufferSize1=0;
+    unsigned long dwDSLockedBufferSize0=0, dwDSLockedBufferSize1=0;
     int16_t *pDSLockedBuffer0, *pDSLockedBuffer1;
 
 
@@ -335,7 +335,7 @@ void DSUninit()
 
 //-----------------------------------------------------------------------------
 
-LONG NewVolume(DWORD dwVolume, DWORD dwVolumeMax)
+LONG NewVolume(unsigned long dwVolume, unsigned long dwVolumeMax)
 {
     float fVol = (float) dwVolume / (float) dwVolumeMax;    // 0.0=Max, 1.0=Min
 

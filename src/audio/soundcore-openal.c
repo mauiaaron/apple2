@@ -729,13 +729,13 @@ static long OpenALCreateSoundBuffer(ALBufferParamsStruct *params, ALSoundBufferS
         (*soundbuf_struct)->GetCurrentPosition = (int (*)(void *, LPDWORD, LPDWORD))ALGetPosition;
         (*soundbuf_struct)->Stop               = (int (*)(void *))ALStop;
         (*soundbuf_struct)->Restore            = (int (*)(void *))ALRestore;
-        (*soundbuf_struct)->Play               = (int (*)(void *, DWORD, DWORD, DWORD))ALPlay;
-        (*soundbuf_struct)->Lock               = (int (*)(void *, DWORD, DWORD, LPVOID *, LPDWORD, LPVOID *, LPDWORD, DWORD))ALBegin;
-        (*soundbuf_struct)->Unlock             = (int (*)(void *, LPVOID, DWORD, LPVOID, DWORD))ALCommit;
+        (*soundbuf_struct)->Play               = (int (*)(void *, unsigned long, unsigned long, unsigned long))ALPlay;
+        (*soundbuf_struct)->Lock               = (int (*)(void *, unsigned long, unsigned long, LPVOID *, LPDWORD, LPVOID *, LPDWORD, unsigned long))ALBegin;
+        (*soundbuf_struct)->Unlock             = (int (*)(void *, LPVOID, unsigned long, LPVOID, unsigned long))ALCommit;
         (*soundbuf_struct)->GetStatus          = (int (*)(void *, LPDWORD))ALGetStatus;
 
         // mockingboard-specific hacks
-        (*soundbuf_struct)->UnlockStaticBuffer = (int (*)(void *, DWORD))ALCommitStaticBuffer;
+        (*soundbuf_struct)->UnlockStaticBuffer = (int (*)(void *, unsigned long))ALCommitStaticBuffer;
         (*soundbuf_struct)->Replay             = (int (*)(void *))ALReplay;
 
         return 0;

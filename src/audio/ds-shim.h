@@ -31,17 +31,17 @@ typedef struct IDirectSoundBuffer {
     // This method restores the memory allocation for a lost sound buffer for the specified DirectSoundBuffer object.
     int (*Restore)(void *_this);
 
-    int (*Play)(void* _this, DWORD dwReserved1, DWORD dwReserved2, DWORD dwFlags);
+    int (*Play)(void* _this, unsigned long dwReserved1, unsigned long dwReserved2, unsigned long dwFlags);
 
     // This method obtains a valid write pointer to the sound buffer's audio data
-    int (*Lock)(void* _this, DWORD dwWriteCursor, DWORD dwWriteBytes, LPVOID* lplpvAudioPtr1, LPDWORD lpdwAudioBytes1, LPVOID* lplpvAudioPtr2, LPDWORD lpdwAudioBytes2, DWORD dwFlags);
+    int (*Lock)(void* _this, unsigned long dwWriteCursor, unsigned long dwWriteBytes, LPVOID* lplpvAudioPtr1, LPDWORD lpdwAudioBytes1, LPVOID* lplpvAudioPtr2, LPDWORD lpdwAudioBytes2, unsigned long dwFlags);
 
     // This method releases a locked sound buffer.
-    int (*Unlock)(void* _this, LPVOID lpvAudioPtr1, DWORD dwAudioBytes1, LPVOID lpvAudioPtr2, DWORD dwAudioBytes2);
+    int (*Unlock)(void* _this, LPVOID lpvAudioPtr1, unsigned long dwAudioBytes1, LPVOID lpvAudioPtr2, unsigned long dwAudioBytes2);
 
     int (*GetStatus)(void* _this, LPDWORD lpdwStatus);
 
-    int (*UnlockStaticBuffer)(void* _this, DWORD dwAudioBytes);
+    int (*UnlockStaticBuffer)(void* _this, unsigned long dwAudioBytes);
 
     int (*Replay)(void* _this);
 
@@ -153,48 +153,48 @@ static inline bool SUCCEEDED(int x) { return x == DS_OK; }
 typedef struct {
     uint16_t  wFormatTag;
     uint16_t  nChannels;
-    DWORD nSamplesPerSec;
-    DWORD nAvgBytesPerSec;
+    unsigned long nSamplesPerSec;
+    unsigned long nAvgBytesPerSec;
     uint16_t  nBlockAlign;
     uint16_t  wBitsPerSample;
     uint16_t  cbSize;
 } WAVEFORMATEX, *LPWAVEFORMATEX;
 
 typedef struct DSBUFFERDESC { 
-    DWORD dwSize; 
-    DWORD dwFlags; 
-    DWORD dwBufferBytes; 
-    DWORD dwReserved; 
+    unsigned long dwSize; 
+    unsigned long dwFlags; 
+    unsigned long dwBufferBytes; 
+    unsigned long dwReserved; 
     LPWAVEFORMATEX lpwfxFormat; 
 } DSBUFFERDESC; 
 
-typedef DWORD DSCAPS_MASK;
+typedef unsigned long DSCAPS_MASK;
 typedef struct _DSCAPS
 {
-    DWORD           dwSize;
+    unsigned long           dwSize;
     DSCAPS_MASK     dwFlags;
-    DWORD           dwMinSecondarySampleRate;
-    DWORD           dwMaxSecondarySampleRate;
-    DWORD           dwPrimaryBuffers;
-    DWORD           dwMaxHwMixingAllBuffers;
-    DWORD           dwMaxHwMixingStaticBuffers;
-    DWORD           dwMaxHwMixingStreamingBuffers;
-    DWORD           dwFreeHwMixingAllBuffers;
-    DWORD           dwFreeHwMixingStaticBuffers;
-    DWORD           dwFreeHwMixingStreamingBuffers;
-    DWORD           dwMaxHw3DAllBuffers;
-    DWORD           dwMaxHw3DStaticBuffers;
-    DWORD           dwMaxHw3DStreamingBuffers;
-    DWORD           dwFreeHw3DAllBuffers;
-    DWORD           dwFreeHw3DStaticBuffers;
-    DWORD           dwFreeHw3DStreamingBuffers;
-    DWORD           dwTotalHwMemBytes;
-    DWORD           dwFreeHwMemBytes;
-    DWORD           dwMaxContigFreeHwMemBytes;
-    DWORD           dwUnlockTransferRateHwBuffers;
-    DWORD           dwPlayCpuOverheadSwBuffers;
-    DWORD           dwReserved1;
-    DWORD           dwReserved2;
+    unsigned long           dwMinSecondarySampleRate;
+    unsigned long           dwMaxSecondarySampleRate;
+    unsigned long           dwPrimaryBuffers;
+    unsigned long           dwMaxHwMixingAllBuffers;
+    unsigned long           dwMaxHwMixingStaticBuffers;
+    unsigned long           dwMaxHwMixingStreamingBuffers;
+    unsigned long           dwFreeHwMixingAllBuffers;
+    unsigned long           dwFreeHwMixingStaticBuffers;
+    unsigned long           dwFreeHwMixingStreamingBuffers;
+    unsigned long           dwMaxHw3DAllBuffers;
+    unsigned long           dwMaxHw3DStaticBuffers;
+    unsigned long           dwMaxHw3DStreamingBuffers;
+    unsigned long           dwFreeHw3DAllBuffers;
+    unsigned long           dwFreeHw3DStaticBuffers;
+    unsigned long           dwFreeHw3DStreamingBuffers;
+    unsigned long           dwTotalHwMemBytes;
+    unsigned long           dwFreeHwMemBytes;
+    unsigned long           dwMaxContigFreeHwMemBytes;
+    unsigned long           dwUnlockTransferRateHwBuffers;
+    unsigned long           dwPlayCpuOverheadSwBuffers;
+    unsigned long           dwReserved1;
+    unsigned long           dwReserved2;
 } DSCAPS, *LPDSCAPS;
 typedef DSCAPS *LPCDSCAPS;
 

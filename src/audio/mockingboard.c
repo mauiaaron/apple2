@@ -172,9 +172,9 @@ static bool g_bStopPhoneme = false;
 static bool g_bVotraxPhoneme = false;
 
 #ifdef APPLE2IX
-static const DWORD SAMPLE_RATE = SPKR_SAMPLE_RATE;
+static const unsigned long SAMPLE_RATE = SPKR_SAMPLE_RATE;
 #else
-static const DWORD SAMPLE_RATE = 44100;	// Use a base freq so that DirectX (or sound h/w) doesn't have to up/down-sample
+static const unsigned long SAMPLE_RATE = 44100;	// Use a base freq so that DirectX (or sound h/w) doesn't have to up/down-sample
 #endif
 
 static short* ppAYVoiceBuffer[NUM_VOICES] = {0};
@@ -211,11 +211,11 @@ static uint8_t g_nPhasorMode = 0;	// 0=Mockingboard emulation, 1=Phasor native
 #define MB_BUF_SIZE MAX_SAMPLES * 2 * MB_CHANNELS
 static const unsigned short g_nMB_NumChannels = MB_CHANNELS;
 
-static const DWORD g_dwDSBufferSize = MB_BUF_SIZE;
+static const unsigned long g_dwDSBufferSize = MB_BUF_SIZE;
 #else
 static const unsigned short g_nMB_NumChannels = 2;
 
-static const DWORD g_dwDSBufferSize = MAX_SAMPLES * sizeof(short) * g_nMB_NumChannels;
+static const unsigned long g_dwDSBufferSize = MAX_SAMPLES * sizeof(short) * g_nMB_NumChannels;
 #endif
 
 static const int16_t nWaveDataMin = (int16_t)0x8000;
@@ -245,7 +245,7 @@ static uint8_t quit_event = false;
 #else
 static const int g_nNumEvents = 2;
 static HANDLE g_hSSI263Event[g_nNumEvents] = {NULL};	// 1: Phoneme finished playing, 2: Exit thread
-static DWORD g_dwMaxPhonemeLen = 0;
+static unsigned long g_dwMaxPhonemeLen = 0;
 #endif
 
 // When 6522 IRQ is *not* active use 60Hz update freq for MB voices
@@ -265,7 +265,7 @@ uint32_t g_uTimer1IrqCount = 0;	// DEBUG
 #ifdef APPLE2IX
 static void* SSI263Thread(LPVOID);
 #else
-static DWORD SSI263Thread(LPVOID);
+static unsigned long SSI263Thread(LPVOID);
 #endif
 static void Votrax_Write(uint8_t nDevice, uint8_t nValue);
 
@@ -866,7 +866,7 @@ static void MB_Update()
 	//
 
 #ifndef APPLE2IX
-	static DWORD dwByteOffset = (DWORD)-1;
+	static unsigned long dwByteOffset = (unsigned long)-1;
 	static int nNumSamplesError = 0;
 #endif
 
@@ -886,10 +886,10 @@ static void MB_Update()
 
 	//
 
-	DWORD dwDSLockedBufferSize0, dwDSLockedBufferSize1;
+	unsigned long dwDSLockedBufferSize0, dwDSLockedBufferSize1;
 	int16_t *pDSLockedBuffer0, *pDSLockedBuffer1;
 
-	DWORD dwCurrentPlayCursor, dwCurrentWriteCursor;
+	unsigned long dwCurrentPlayCursor, dwCurrentWriteCursor;
 #ifdef APPLE2IX
 	int hr = MockingboardVoice.lpDSBvoice->GetCurrentPosition(MockingboardVoice.lpDSBvoice->_this, &dwCurrentPlayCursor, &dwCurrentWriteCursor);
 #else
@@ -899,7 +899,7 @@ static void MB_Update()
 		return;
 
 #if 0
-	if(dwByteOffset == (DWORD)-1)
+	if(dwByteOffset == (unsigned long)-1)
 	{
 		// First time in this func
 
@@ -1010,10 +1010,10 @@ static void MB_Update()
 
 #ifdef APPLE2IX
 	if(!DSGetLock(MockingboardVoice.lpDSBvoice,
-						/*unused*/0, (DWORD)nNumSamples*sizeof(short)*g_nMB_NumChannels,
+						/*unused*/0, (unsigned long)nNumSamples*sizeof(short)*g_nMB_NumChannels,
 #else
 	if(DSGetLock(MockingboardVoice.lpDSBvoice,
-						dwByteOffset, (DWORD)nNumSamples*sizeof(short)*g_nMB_NumChannels,
+						dwByteOffset, (unsigned long)nNumSamples*sizeof(short)*g_nMB_NumChannels,
 #endif
 						&pDSLockedBuffer0, &dwDSLockedBufferSize0,
 						&pDSLockedBuffer1, &dwDSLockedBufferSize1))
@@ -1036,7 +1036,7 @@ static void MB_Update()
 											  (void*)pDSLockedBuffer1, dwDSLockedBufferSize1);
 
 #ifndef APPLE2IX
-	dwByteOffset = (dwByteOffset + (DWORD)nNumSamples*sizeof(short)*g_nMB_NumChannels) % g_dwDSBufferSize;
+	dwByteOffset = (dwByteOffset + (unsigned long)nNumSamples*sizeof(short)*g_nMB_NumChannels) % g_dwDSBufferSize;
 #endif
 
 #ifdef RIFF_MB
@@ -1049,7 +1049,7 @@ static void MB_Update()
 #ifdef APPLE2IX
 static void* SSI263Thread(LPVOID lpParameter)
 #else
-static DWORD SSI263Thread(LPVOID lpParameter)
+static unsigned long SSI263Thread(LPVOID lpParameter)
 #endif
 {
 	while(1)
@@ -1092,7 +1092,7 @@ static DWORD SSI263Thread(LPVOID lpParameter)
                 continue;
             }
 #else
-		DWORD dwWaitResult = WaitForMultipleObjects( 
+		unsigned long dwWaitResult = WaitForMultipleObjects( 
 								g_nNumEvents,		// number of handles in array
 								g_hSSI263Event,		// array of event handles
 								FALSE,				// wait until any one is signaled
@@ -1216,7 +1216,7 @@ static void SSI263_Play(unsigned int nPhoneme)
 		bPause = false;
 	}
 
-	DWORD dwDSLockedBufferSize = 0;    // Size of the locked DirectSound buffer
+	unsigned long dwDSLockedBufferSize = 0;    // Size of the locked DirectSound buffer
 	int16_t* pDSLockedBuffer;
 
 	hr = SSI263Voice.lpDSBvoice->Stop();
@@ -1287,7 +1287,7 @@ static bool MB_DSInit()
 	// Create single Mockingboard voice
 	//
 
-	DWORD dwDSLockedBufferSize = 0;    // Size of the locked DirectSound buffer
+	unsigned long dwDSLockedBufferSize = 0;    // Size of the locked DirectSound buffer
 	int16_t* pDSLockedBuffer;
 
 	if(!g_bDSAvailable)
@@ -1478,7 +1478,7 @@ static bool MB_DSInit()
 
 	//
 
-	DWORD dwThreadId;
+	unsigned long dwThreadId;
 
 	g_hThread = CreateThread(NULL,				// lpThreadAttributes
 								0,				// dwStackSize
@@ -1500,7 +1500,7 @@ static void MB_DSUninit()
 {
 	if(g_hThread)
 	{
-		DWORD dwExitCode;
+		unsigned long dwExitCode;
 #ifdef APPLE2IX
                 quit_event = true;
                 pthread_cond_signal(&mockingboard_cond);
@@ -2129,12 +2129,12 @@ bool MB_IsActive()
 
 //-----------------------------------------------------------------------------
 
-DWORD MB_GetVolume()
+unsigned long MB_GetVolume()
 {
 	return MockingboardVoice.dwUserVolume;
 }
 
-void MB_SetVolume(DWORD dwVolume, DWORD dwVolumeMax)
+void MB_SetVolume(unsigned long dwVolume, unsigned long dwVolumeMax)
 {
 #ifdef APPLE2IX
 #warning TODO FIXME ... why is OpenAL on my Linux box so damn loud?!
@@ -2155,7 +2155,7 @@ void MB_SetVolume(DWORD dwVolume, DWORD dwVolumeMax)
 
 //===========================================================================
 
-DWORD MB_GetSnapshot(SS_CARD_MOCKINGBOARD* pSS, DWORD dwSlot)
+unsigned long MB_GetSnapshot(SS_CARD_MOCKINGBOARD* pSS, unsigned long dwSlot)
 {
 #ifdef APPLE2IX
     // Saving and loading state currently unimplemented
@@ -2186,7 +2186,7 @@ DWORD MB_GetSnapshot(SS_CARD_MOCKINGBOARD* pSS, DWORD dwSlot)
 #endif
 }
 
-DWORD MB_SetSnapshot(SS_CARD_MOCKINGBOARD* pSS, DWORD dwSlot_unused)
+unsigned long MB_SetSnapshot(SS_CARD_MOCKINGBOARD* pSS, unsigned long dwSlot_unused)
 {
 #ifdef APPLE2IX
     // Saving and loading state currently unimplemented
