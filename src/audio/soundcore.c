@@ -72,7 +72,7 @@ bool DSGetLock(LPDIRECTSOUNDBUFFER pVoice, unsigned long dwOffset, unsigned long
         {
             hr = pVoice->Restore(pVoice->_this);
             if(hr == DSERR_BUFFERLOST)
-                Sleep(10);
+                usleep(10);
         }
         while(hr != DS_OK);
     }
@@ -133,7 +133,7 @@ int DSGetSoundBuffer(VOICE* pVoice, unsigned long dwFlags, unsigned long dwBuffe
 
     //
 
-    _ASSERT(g_uNumVoices < uMAX_VOICES);
+    assert(g_uNumVoices < uMAX_VOICES);
     if(g_uNumVoices < uMAX_VOICES)
         g_pVoices[g_uNumVoices++] = pVoice;
 
@@ -187,7 +187,7 @@ bool DSZeroVoiceBuffer(PVOICE Voice, char* pszDevName, unsigned long dwBufferSiz
         return false;
     }
 
-    _ASSERT(dwDSLockedBufferSize == dwBufferSize);
+    assert(dwDSLockedBufferSize == dwBufferSize);
     memset(pDSLockedBuffer, 0x00, dwDSLockedBufferSize);
 
     hr = Voice->lpDSBvoice->Unlock(Voice->lpDSBvoice->_this, (void*)pDSLockedBuffer, dwDSLockedBufferSize, NULL, argX);
@@ -315,7 +315,7 @@ void DSUninit()
     if(!g_bDSAvailable)
         return;
 
-    _ASSERT(g_uDSInitRefCount);
+    assert(g_uDSInitRefCount);
 
     if(g_uDSInitRefCount == 0)
         return;
@@ -327,7 +327,7 @@ void DSUninit()
 
     //
 
-    _ASSERT(g_uNumVoices == 0);
+    assert(g_uNumVoices == 0);
 
         SoundSystemDestroy((SoundSystemStruct**)&g_lpDS);
     g_bDSAvailable = false;

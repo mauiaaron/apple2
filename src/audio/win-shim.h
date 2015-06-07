@@ -32,15 +32,7 @@
 #define FALSE false
 #endif
 
-#define _ASSERT assert
-#define Sleep(x) usleep(x)
-
 typedef void *IUnknown;
-
-#define INFINITE 0
-#define WAIT_OBJECT_0 0x00000000L
-
-#define LogFileOutput(...) LOG(__VA_ARGS__)
 
 typedef void *(*LPTHREAD_START_ROUTINE)(void *unused);
 

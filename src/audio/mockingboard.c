@@ -1096,12 +1096,12 @@ static unsigned long SSI263Thread(void *lpParameter)
 								g_nNumEvents,		// number of handles in array
 								g_hSSI263Event,		// array of event handles
 								FALSE,				// wait until any one is signaled
-								INFINITE);
+								0);
 
-		if((dwWaitResult < WAIT_OBJECT_0) || (dwWaitResult > WAIT_OBJECT_0+g_nNumEvents-1))
+		if((dwWaitResult < 0x0L) || (dwWaitResult > 0x0L+g_nNumEvents-1))
 			continue;
 
-		dwWaitResult -= WAIT_OBJECT_0;			// Determine event # that signaled
+		dwWaitResult -= 0x0L;			// Determine event # that signaled
 
 		if(dwWaitResult == (g_nNumEvents-1))	// Termination event
 			break;
@@ -1273,9 +1273,9 @@ static void SSI263_Play(unsigned int nPhoneme)
 static bool MB_DSInit()
 {
 #ifdef APPLE2IX
-	LogFileOutput("MB_DSInit : %d\n", g_bMBAvailable);
+	LOG("MB_DSInit : %d\n", g_bMBAvailable);
 #else
-	LogFileOutput("MB_DSInit\n", g_bMBAvailable);
+	LOG("MB_DSInit\n", g_bMBAvailable);
 #endif
 #ifdef NO_DIRECT_X
 
@@ -1294,7 +1294,7 @@ static bool MB_DSInit()
 		return false;
 
 	int hr = DSGetSoundBuffer(&MockingboardVoice, DSBCAPS_CTRLVOLUME, g_dwDSBufferSize, SAMPLE_RATE, 2);
-	LogFileOutput("MB_DSInit: DSGetSoundBuffer(), hr=0x%08X\n", (unsigned int)hr);
+	LOG("MB_DSInit: DSGetSoundBuffer(), hr=0x%08X\n", (unsigned int)hr);
 	if(FAILED(hr))
 	{
 		LOG("MB: DSGetSoundBuffer failed (%08X)\n",(unsigned int)hr);
@@ -1303,7 +1303,7 @@ static bool MB_DSInit()
 
 #ifndef APPLE2IX
 	bool bRes = DSZeroVoiceBuffer(&MockingboardVoice, (char*)"MB", g_dwDSBufferSize);
-	LogFileOutput("MB_DSInit: DSZeroVoiceBuffer(), res=%d\n", bRes ? 1 : 0);
+	LOG("MB_DSInit: DSZeroVoiceBuffer(), res=%d\n", bRes ? 1 : 0);
 	if (!bRes)
 		return false;
 #endif
@@ -1319,7 +1319,7 @@ static bool MB_DSInit()
 #else
 	hr = MockingboardVoice.lpDSBvoice->SetVolume(MockingboardVoice.nVolume);
 #endif
-	LogFileOutput("MB_DSInit: SetVolume(), hr=0x%08X\n", (unsigned int)hr);
+	LOG("MB_DSInit: SetVolume(), hr=0x%08X\n", (unsigned int)hr);
 
 	//---------------------------------
 
@@ -1353,13 +1353,13 @@ static bool MB_DSInit()
 									FALSE,	// bManualReset (FALSE = auto-reset)
 									FALSE,	// bInitialState (FALSE = non-signaled)
 									NULL);	// lpName
-	LogFileOutput("MB_DSInit: CreateEvent(), g_hSSI263Event[0]=0x%08X\n", (uint32_t)g_hSSI263Event[0]);
+	LOG("MB_DSInit: CreateEvent(), g_hSSI263Event[0]=0x%08X\n", (uint32_t)g_hSSI263Event[0]);
 
 	g_hSSI263Event[1] = CreateEvent(NULL,	// lpEventAttributes
 									FALSE,	// bManualReset (FALSE = auto-reset)
 									FALSE,	// bInitialState (FALSE = non-signaled)
 									NULL);	// lpName
-	LogFileOutput("MB_DSInit: CreateEvent(), g_hSSI263Event[1]=0x%08X\n", (uint32_t)g_hSSI263Event[1]);
+	LOG("MB_DSInit: CreateEvent(), g_hSSI263Event[1]=0x%08X\n", (uint32_t)g_hSSI263Event[1]);
 
 	if((g_hSSI263Event[0] == NULL) || (g_hSSI263Event[1] == NULL))
 	{
@@ -1391,7 +1391,7 @@ static bool MB_DSInit()
 
 		// NB. DSBCAPS_LOCSOFTWARE required for
 		hr = DSGetSoundBuffer(&SSI263Voice[i], DSBCAPS_CTRLVOLUME+DSBCAPS_CTRLPOSITIONNOTIFY+DSBCAPS_LOCSOFTWARE, nPhonemeByteLength, 22050, 1);
-		LogFileOutput("MB_DSInit: (%02d) DSGetSoundBuffer(), hr=0x%08X\n", i, (unsigned int)hr);
+		LOG("MB_DSInit: (%02d) DSGetSoundBuffer(), hr=0x%08X\n", i, (unsigned int)hr);
 		if(FAILED(hr))
 		{
 			LOG("SSI263: DSGetSoundBuffer failed (%08X)\n",(unsigned int)hr);
@@ -1403,7 +1403,7 @@ static bool MB_DSInit()
 #else
 		hr = DSGetLock(SSI263Voice[i].lpDSBvoice, 0, 0, &pDSLockedBuffer, &dwDSLockedBufferSize, NULL, 0);
 #endif
-		//LogFileOutput("MB_DSInit: (%02d) DSGetLock(), res=%d\n", i, hr ? 1 : 0);	// WARNING: Lock acquired && doing heavy-weight logging
+		//LOG("MB_DSInit: (%02d) DSGetLock(), res=%d\n", i, hr ? 1 : 0);	// WARNING: Lock acquired && doing heavy-weight logging
 		if(FAILED(hr))
 		{
 			LOG("SSI263: DSGetLock failed (%08X)\n",(unsigned int)hr);
@@ -1432,7 +1432,7 @@ static bool MB_DSInit()
                 // Assume no way to get notification of sound finished, instead we will poll from mockingboard thread ...
 #else
  		hr = SSI263Voice[i].lpDSBvoice->QueryInterface(IID_IDirectSoundNotify, (void **)&SSI263Voice[i].lpDSNotify);
-		//LogFileOutput("MB_DSInit: (%02d) QueryInterface(), hr=0x%08X\n", i, hr);	// WARNING: Lock acquired && doing heavy-weight logging
+		//LOG("MB_DSInit: (%02d) QueryInterface(), hr=0x%08X\n", i, hr);	// WARNING: Lock acquired && doing heavy-weight logging
 		if(FAILED(hr))
 		{
 			LOG("SSI263: QueryInterface failed (%08X)\n",hr);
@@ -1446,7 +1446,7 @@ static bool MB_DSInit()
 		PositionNotify.hEventNotify = g_hSSI263Event[0];
 
 		hr = SSI263Voice[i].lpDSNotify->SetNotificationPositions(1, &PositionNotify);
-		//LogFileOutput("MB_DSInit: (%02d) SetNotificationPositions(), hr=0x%08X\n", i, hr);	// WARNING: Lock acquired && doing heavy-weight logging
+		//LOG("MB_DSInit: (%02d) SetNotificationPositions(), hr=0x%08X\n", i, hr);	// WARNING: Lock acquired && doing heavy-weight logging
 		if(FAILED(hr))
 		{
 			LOG("SSI263: SetNotifyPos failed (%08X)\n",hr);
@@ -1459,7 +1459,7 @@ static bool MB_DSInit()
 #else
 		hr = SSI263Voice[i].lpDSBvoice->Unlock((void*)pDSLockedBuffer, dwDSLockedBufferSize, NULL, 0);
 #endif
-		LogFileOutput("MB_DSInit: (%02d) Unlock(),hr=0x%08X\n", i, (unsigned int)hr);
+		LOG("MB_DSInit: (%02d) Unlock(),hr=0x%08X\n", i, (unsigned int)hr);
 		if(FAILED(hr))
 		{
 			LOG("SSI263: DSUnlock failed (%08X)\n",(unsigned int)hr);
@@ -1473,7 +1473,7 @@ static bool MB_DSInit()
 #else
 		hr = SSI263Voice[i].lpDSBvoice->SetVolume(SSI263Voice[i].nVolume);
 #endif
-		LogFileOutput("MB_DSInit: (%02d) SetVolume(), hr=0x%08X\n", i, (unsigned int)hr);
+		LOG("MB_DSInit: (%02d) SetVolume(), hr=0x%08X\n", i, (unsigned int)hr);
 	}
 
 	//
@@ -1486,10 +1486,10 @@ static bool MB_DSInit()
 								NULL,			// lpParameter
 								0,				// dwCreationFlags : 0 = Run immediately
 								&dwThreadId);	// lpThreadId
-	LogFileOutput("MB_DSInit: CreateThread(), g_hThread=0x%08X\n", (uint32_t)g_hThread);
+	LOG("MB_DSInit: CreateThread(), g_hThread=0x%08X\n", (uint32_t)g_hThread);
 
 	bool bRes2 = SetThreadPriority(g_hThread, THREAD_PRIORITY_TIME_CRITICAL);
-	LogFileOutput("MB_DSInit: SetThreadPriority(), bRes=%d\n", bRes2 ? 1 : 0);
+	LOG("MB_DSInit: SetThreadPriority(), bRes=%d\n", bRes2 ? 1 : 0);
 
 	return true;
 
@@ -1513,7 +1513,7 @@ static void MB_DSUninit()
 			if(GetExitCodeThread(g_hThread, &dwExitCode))
 			{
 				if(dwExitCode == STILL_ACTIVE)
-					Sleep(10);
+					usleep(10);
 				else
 					break;
 			}
@@ -1591,7 +1591,7 @@ void MB_Initialize()
 #ifdef APPLE2IX
     memset(SSI263Voice, 0x0, sizeof(VOICE)*MAX_VOICES);
 #endif
-	LogFileOutput("MB_Initialize: g_bDisableDirectSound=%d, g_bDisableDirectSoundMockingboard=%d\n", g_bDisableDirectSound, g_bDisableDirectSoundMockingboard);
+	LOG("MB_Initialize: g_bDisableDirectSound=%d, g_bDisableDirectSoundMockingboard=%d\n", g_bDisableDirectSound, g_bDisableDirectSoundMockingboard);
 	if (g_bDisableDirectSound || g_bDisableDirectSoundMockingboard)
 	{
 		MockingboardVoice.bMute = true;
@@ -1612,7 +1612,7 @@ void MB_Initialize()
                 }
 
 		AY8910_InitAll((int)cycles_persec_target, SAMPLE_RATE);
-		LogFileOutput("MB_Initialize: AY8910_InitAll()\n");
+		LOG("MB_Initialize: AY8910_InitAll()\n");
 
 		for(i=0; i<NUM_AY8910; i++)
 			g_MB[i].nAY8910Number = i;
@@ -1620,10 +1620,10 @@ void MB_Initialize()
 		//
 
 		g_bMBAvailable = MB_DSInit();
-		LogFileOutput("MB_Initialize: MB_DSInit(), g_bMBAvailable=%d\n", g_bMBAvailable);
+		LOG("MB_Initialize: MB_DSInit(), g_bMBAvailable=%d\n", g_bMBAvailable);
 
 		MB_Reset();
-		LogFileOutput("MB_Initialize: MB_Reset()\n");
+		LOG("MB_Initialize: MB_Reset()\n");
 	}
 }
 
@@ -1705,13 +1705,13 @@ static uint8_t MB_Read(uint16_t PC, uint16_t nAddr, uint8_t bWrite, uint8_t nVal
 #ifdef _DEBUG
 	if(!IS_APPLE2 && !MemCheckSLOTCXROM())
 	{
-		_ASSERT(0);	// Card ROM disabled, so IORead_Cxxx() returns the internal ROM
+		assert(0);	// Card ROM disabled, so IORead_Cxxx() returns the internal ROM
 		return mem[nAddr];
 	}
 
 	if(g_SoundcardType == CT_Empty)
 	{
-		_ASSERT(0);	// Card unplugged, so IORead_Cxxx() returns the floating bus
+		assert(0);	// Card unplugged, so IORead_Cxxx() returns the floating bus
 		return MemReadFloatingBus();
 	}
 #endif
@@ -1783,7 +1783,7 @@ static uint8_t MB_Write(uint16_t PC, uint16_t nAddr, uint8_t bWrite, uint8_t nVa
 #ifdef _DEBUG
 	if(!IS_APPLE2 && !MemCheckSLOTCXROM())
 	{
-		_ASSERT(0);	// Card ROM disabled, so IORead_Cxxx() returns the internal ROM
+		assert(0);	// Card ROM disabled, so IORead_Cxxx() returns the internal ROM
 #ifdef APPLE2IX
                 return;
 #else
@@ -1793,7 +1793,7 @@ static uint8_t MB_Write(uint16_t PC, uint16_t nAddr, uint8_t bWrite, uint8_t nVa
 
 	if(g_SoundcardType == CT_Empty)
 	{
-		_ASSERT(0);	// Card unplugged, so IORead_Cxxx() returns the floating bus
+		assert(0);	// Card unplugged, so IORead_Cxxx() returns the floating bus
 #ifdef APPLE2IX
                 return;
 #else
@@ -2025,7 +2025,7 @@ void MB_UpdateCycles(void)
 	timing_checkpoint_cycles();
 	uint64_t uCycles = cycles_count_total - g_uLastCumulativeCycles;
 	g_uLastCumulativeCycles = cycles_count_total;
-	//_ASSERT(uCycles < 0x10000);
+	//assert(uCycles < 0x10000);
         if (uCycles >= 0x10000) {
             printf("OOPS!!! Mockingboard failed assert!\n");
             return;
