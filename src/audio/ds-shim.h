@@ -20,7 +20,7 @@ typedef struct IDirectSoundBuffer {
 
     void *_this;
 
-    int (*SetVolume)(void* _this, LONG lVolume);
+    int (*SetVolume)(void* _this, long lVolume);
 
     int (*GetVolume)(void* _this, LPLONG lplVolume);
 

@@ -33,8 +33,8 @@ typedef struct
     LPDIRECTSOUNDNOTIFY lpDSNotify;
     bool bActive;            // Playback is active
     bool bMute;
-    LONG nVolume;            // Current volume (as used by DirectSound)
-    LONG nFadeVolume;        // Current fade volume (as used by DirectSound)
+    long nVolume;            // Current volume (as used by DirectSound)
+    long nFadeVolume;        // Current fade volume (as used by DirectSound)
     unsigned long dwUserVolume;        // Volume from slider on Property Sheet (0=Max)
     bool bIsSpeaker;
     bool bRecentlyActive;    // (Speaker only) false after 0.2s of speaker inactivity
@@ -62,7 +62,7 @@ void SoundCore_SetErrorMax(const int nErrorMax);
 bool DSInit();
 void DSUninit();
 
-LONG NewVolume(unsigned long dwVolume, unsigned long dwVolumeMax);
+long NewVolume(unsigned long dwVolume, unsigned long dwVolumeMax);
 
 void SysClk_WaitTimer();
 bool SysClk_InitTimer();

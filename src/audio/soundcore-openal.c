@@ -724,7 +724,7 @@ static long OpenALCreateSoundBuffer(ALBufferParamsStruct *params, ALSoundBufferS
         }
 
         (*soundbuf_struct)->_this = voice;
-        (*soundbuf_struct)->SetVolume          = (int (*)(void *, LONG))ALSetVolume;
+        (*soundbuf_struct)->SetVolume          = (int (*)(void *, long))ALSetVolume;
         (*soundbuf_struct)->GetVolume          = (int (*)(void *, LPLONG))ALGetVolume;
         (*soundbuf_struct)->GetCurrentPosition = (int (*)(void *, LPDWORD, LPDWORD))ALGetPosition;
         (*soundbuf_struct)->Stop               = (int (*)(void *))ALStop;

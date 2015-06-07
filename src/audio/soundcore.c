@@ -335,11 +335,11 @@ void DSUninit()
 
 //-----------------------------------------------------------------------------
 
-LONG NewVolume(unsigned long dwVolume, unsigned long dwVolumeMax)
+long NewVolume(unsigned long dwVolume, unsigned long dwVolumeMax)
 {
     float fVol = (float) dwVolume / (float) dwVolumeMax;    // 0.0=Max, 1.0=Min
 
-    return (LONG) ((float) DSBVOLUME_MIN * fVol);
+    return (long) ((float) DSBVOLUME_MIN * fVol);
 }
 
 //=============================================================================
