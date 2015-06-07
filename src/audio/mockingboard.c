@@ -156,7 +156,7 @@ typedef struct
 static SY6522_AY8910 g_MB[NUM_AY8910];
 
 // Timer vars
-static ULONG g_n6522TimerPeriod = 0;
+static unsigned long g_n6522TimerPeriod = 0;
 #ifdef APPLE2IX
 #define TIMERDEVICE_INVALID -1
 #else
@@ -1697,7 +1697,7 @@ void MB_Reset()
 #define nAddr ea
 GLUE_C_READ(MB_Read)
 #else
-static uint8_t MB_Read(uint16_t PC, uint16_t nAddr, uint8_t bWrite, uint8_t nValue, ULONG nCyclesLeft)
+static uint8_t MB_Read(uint16_t PC, uint16_t nAddr, uint8_t bWrite, uint8_t nValue, unsigned long nCyclesLeft)
 #endif
 {
 	MB_UpdateCycles();
@@ -1775,7 +1775,7 @@ static uint8_t MB_Read(uint16_t PC, uint16_t nAddr, uint8_t bWrite, uint8_t nVal
 #define nValue b
 GLUE_C_WRITE(MB_Write)
 #else
-static uint8_t MB_Write(uint16_t PC, uint16_t nAddr, uint8_t bWrite, uint8_t nValue, ULONG nCyclesLeft)
+static uint8_t MB_Write(uint16_t PC, uint16_t nAddr, uint8_t bWrite, uint8_t nValue, unsigned long nCyclesLeft)
 #endif
 {
 	MB_UpdateCycles();
@@ -1858,7 +1858,7 @@ static uint8_t MB_Write(uint16_t PC, uint16_t nAddr, uint8_t bWrite, uint8_t nVa
 #ifdef APPLE2IX
 GLUE_C_READ(PhasorIO)
 #else
-static uint8_t PhasorIO(uint16_t PC, uint16_t nAddr, uint8_t bWrite, uint8_t nValue, ULONG nCyclesLeft)
+static uint8_t PhasorIO(uint16_t PC, uint16_t nAddr, uint8_t bWrite, uint8_t nValue, unsigned long nCyclesLeft)
 #endif
 {
 	if(!g_bPhasorEnable)
@@ -1891,7 +1891,7 @@ void mb_io_initialize(unsigned int slot4, unsigned int slot5)
     MB_InitializeIO(NULL, slot4, slot5);
 }
 
-//typedef uint8_t (*iofunction)(uint16_t nPC, uint16_t nAddr, uint8_t nWriteFlag, uint8_t nWriteValue, ULONG nCyclesLeft);
+//typedef uint8_t (*iofunction)(uint16_t nPC, uint16_t nAddr, uint8_t nWriteFlag, uint8_t nWriteValue, unsigned long nCyclesLeft);
 typedef void (*iofunction)();
 static void RegisterIoHandler(UINT uSlot, iofunction IOReadC0, iofunction IOWriteC0, iofunction IOReadCx, iofunction IOWriteCx, LPVOID unused_lpSlotParameter, uint8_t* unused_pExpansionRom)
 {

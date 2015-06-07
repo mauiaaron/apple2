@@ -31,7 +31,7 @@ void AY8910UpdateSetCycles();
 //-------------------------------------
 // FUSE stuff
 
-typedef ULONG libspectrum_dword;
+typedef unsigned long libspectrum_dword;
 typedef uint8_t libspectrum_byte;
 typedef int16_t libspectrum_signed_word;
 

@@ -25,10 +25,6 @@
 
 // 2013/09/19 - http://msdn.microsoft.com/en-us/library/windows/desktop/aa383751(v=vs.85).aspx
 
-#ifdef __APPLE__
-typedef UInt32 ULONG;
-#endif
-typedef unsigned long ULONG;
 typedef long LONG;
 typedef unsigned int UINT;
 typedef char TCHAR;
