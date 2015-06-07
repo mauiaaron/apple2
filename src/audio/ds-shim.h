@@ -34,10 +34,10 @@ typedef struct IDirectSoundBuffer {
     int (*Play)(void* _this, unsigned long dwReserved1, unsigned long dwReserved2, unsigned long dwFlags);
 
     // This method obtains a valid write pointer to the sound buffer's audio data
-    int (*Lock)(void* _this, unsigned long dwWriteCursor, unsigned long dwWriteBytes, LPVOID* lplpvAudioPtr1, LPDWORD lpdwAudioBytes1, LPVOID* lplpvAudioPtr2, LPDWORD lpdwAudioBytes2, unsigned long dwFlags);
+    int (*Lock)(void* _this, unsigned long dwWriteCursor, unsigned long dwWriteBytes, void **lplpvAudioPtr1, LPDWORD lpdwAudioBytes1, void **lplpvAudioPtr2, LPDWORD lpdwAudioBytes2, unsigned long dwFlags);
 
     // This method releases a locked sound buffer.
-    int (*Unlock)(void* _this, LPVOID lpvAudioPtr1, unsigned long dwAudioBytes1, LPVOID lpvAudioPtr2, unsigned long dwAudioBytes2);
+    int (*Unlock)(void* _this, void *lpvAudioPtr1, unsigned long dwAudioBytes1, void *lpvAudioPtr2, unsigned long dwAudioBytes2);
 
     int (*GetStatus)(void* _this, LPDWORD lpdwStatus);
 

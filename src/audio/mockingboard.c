@@ -263,9 +263,9 @@ uint32_t g_uTimer1IrqCount = 0;	// DEBUG
 
 // Forward refs:
 #ifdef APPLE2IX
-static void* SSI263Thread(LPVOID);
+static void* SSI263Thread(void *);
 #else
-static unsigned long SSI263Thread(LPVOID);
+static unsigned long SSI263Thread(void *);
 #endif
 static void Votrax_Write(uint8_t nDevice, uint8_t nValue);
 
@@ -1047,9 +1047,9 @@ static void MB_Update()
 //-----------------------------------------------------------------------------
 
 #ifdef APPLE2IX
-static void* SSI263Thread(LPVOID lpParameter)
+static void* SSI263Thread(void *lpParameter)
 #else
-static unsigned long SSI263Thread(LPVOID lpParameter)
+static unsigned long SSI263Thread(void *lpParameter)
 #endif
 {
 	while(1)
@@ -1431,7 +1431,7 @@ static bool MB_DSInit()
 #ifdef APPLE2IX
                 // Assume no way to get notification of sound finished, instead we will poll from mockingboard thread ...
 #else
- 		hr = SSI263Voice[i].lpDSBvoice->QueryInterface(IID_IDirectSoundNotify, (LPVOID *)&SSI263Voice[i].lpDSNotify);
+ 		hr = SSI263Voice[i].lpDSBvoice->QueryInterface(IID_IDirectSoundNotify, (void **)&SSI263Voice[i].lpDSNotify);
 		//LogFileOutput("MB_DSInit: (%02d) QueryInterface(), hr=0x%08X\n", i, hr);	// WARNING: Lock acquired && doing heavy-weight logging
 		if(FAILED(hr))
 		{
@@ -1893,7 +1893,7 @@ void mb_io_initialize(unsigned int slot4, unsigned int slot5)
 
 //typedef uint8_t (*iofunction)(uint16_t nPC, uint16_t nAddr, uint8_t nWriteFlag, uint8_t nWriteValue, unsigned long nCyclesLeft);
 typedef void (*iofunction)();
-static void RegisterIoHandler(UINT uSlot, iofunction IOReadC0, iofunction IOWriteC0, iofunction IOReadCx, iofunction IOWriteCx, LPVOID unused_lpSlotParameter, uint8_t* unused_pExpansionRom)
+static void RegisterIoHandler(UINT uSlot, iofunction IOReadC0, iofunction IOWriteC0, iofunction IOReadCx, iofunction IOWriteCx, void *unused_lpSlotParameter, uint8_t* unused_pExpansionRom)
 {
 
     // card softswitches

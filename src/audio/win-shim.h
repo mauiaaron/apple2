@@ -27,8 +27,6 @@
 
 typedef unsigned int UINT;
 
-typedef void *LPVOID;
-typedef void *LPDVOID;
 typedef unsigned long *LPDWORD;
 
 #if !defined(TRUE)
@@ -48,9 +46,9 @@ typedef void *IUnknown;
 
 #define LogFileOutput(...) LOG(__VA_ARGS__)
 
-typedef LPVOID (*LPTHREAD_START_ROUTINE)(LPVOID unused);
+typedef void *(*LPTHREAD_START_ROUTINE)(void *unused);
 
-pthread_t CreateThread(void* unused_lpThreadAttributes, int unused_dwStackSize, LPTHREAD_START_ROUTINE lpStartAddress, LPVOID lpParameter, unsigned long unused_dwCreationFlags, LPDWORD lpThreadId);
+pthread_t CreateThread(void* unused_lpThreadAttributes, int unused_dwStackSize, LPTHREAD_START_ROUTINE lpStartAddress, void *lpParameter, unsigned long unused_dwCreationFlags, LPDWORD lpThreadId);
 
 #define THREAD_PRIORITY_NORMAL 0
 #define THREAD_PRIORITY_TIME_CRITICAL 15
