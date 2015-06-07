@@ -524,7 +524,7 @@ static bool gltouchmenu_onTouchEvent(interface_touch_event_t action, int pointer
         return false;
     }
 
-    LOG("gltouchmenu_onTouchEvent ...");
+    //LOG("gltouchmenu_onTouchEvent ...");
 
     float x = x_coords[pointer_idx];
     float y = y_coords[pointer_idx];
