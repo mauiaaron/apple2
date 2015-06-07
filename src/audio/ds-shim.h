@@ -12,8 +12,6 @@
 #ifndef _DS_SHIM_H_
 #define _DS_SHIM_H_
 
-#include "audio/win-shim.h"
-
 // 2013/09/19 - http://msdn.microsoft.com/en-us/library/ms897820.aspx
 
 typedef struct IDirectSoundBuffer {

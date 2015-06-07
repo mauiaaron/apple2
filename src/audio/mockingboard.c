@@ -80,14 +80,20 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include "common.h"
 #ifdef APPLE2IX
-#include "audio/win-shim.h"
 #       ifdef  __linux
 #       include <sys/io.h>
 #       endif
 
+#define THREAD_PRIORITY_NORMAL 0
+#define THREAD_PRIORITY_TIME_CRITICAL 15
+#define STILL_ACTIVE 259
+extern bool GetExitCodeThread(pthread_t hThread, unsigned long *lpExitCode);
+extern pthread_t CreateThread(void* unused_lpThreadAttributes, int unused_dwStackSize, void *(*lpStartAddress)(void *unused), void *lpParameter, unsigned long unused_dwCreationFlags, unsigned long *lpThreadId);
+extern bool SetThreadPriority(pthread_t hThread, int nPriority);
 #else
 #include "StdAfx.h"
 #endif
+
 
 
 #define LOG_SSI263 0
@@ -268,6 +274,75 @@ static void* SSI263Thread(void *);
 static unsigned long SSI263Thread(void *);
 #endif
 static void Votrax_Write(uint8_t nDevice, uint8_t nValue);
+
+#ifdef APPLE2IX
+//---------------------------------------------------------------------------
+// Windows Shim Code ...
+
+pthread_t CreateThread(void* unused_lpThreadAttributes, int unused_dwStackSize, void *(*lpStartRoutine)(void *stuff), void *lpParameter, unsigned long unused_dwCreationFlags, unsigned long *lpThreadId)
+{
+    pthread_t a_thread = 0;
+    int err = 0;
+    if ((err = pthread_create(&a_thread, NULL, lpStartRoutine, lpParameter)))
+    {
+        ERRLOG("pthread_create");
+    }
+
+    return a_thread; 
+}
+
+bool SetThreadPriority(pthread_t thread, int unused_nPriority)
+{
+    // assuming time critical ...
+#if defined(__APPLE__)
+#warning possible FIXME possible TODO : set thread priority in Darwin/Mach ?
+#else
+    int policy = sched_getscheduler(getpid());
+
+    int prio = 0;
+    if ((prio = sched_get_priority_max(policy)) < 0)
+    {
+        ERRLOG("OOPS sched_get_priority_max");
+        return 0;
+    }
+
+    int err = 0;
+    if ((err = pthread_setschedprio(thread, prio)))
+    {
+        ERRLOG("OOPS pthread_setschedprio");
+        return 0;
+    }
+#endif
+
+    return 1;
+}
+
+bool GetExitCodeThread(pthread_t thread, unsigned long *lpExitCode)
+{
+#if defined(__APPLE__)
+    int err = 0;
+    if ( (err = pthread_join(thread, NULL)) ) {
+        ERRLOG("OOPS pthread_join");
+    }
+    if (lpExitCode) {
+        *lpExitCode = err;
+    }
+#else
+    if (pthread_tryjoin_np(thread, NULL))
+    {
+        if (lpExitCode)
+        {
+            *lpExitCode = STILL_ACTIVE;
+        }
+    }
+    else if (lpExitCode)
+    {
+        *lpExitCode = 0;
+    }
+#endif
+    return 1;
+}
+#endif
 
 //---------------------------------------------------------------------------
 

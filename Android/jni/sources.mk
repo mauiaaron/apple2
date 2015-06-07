@@ -24,8 +24,7 @@ APPLE2_VIDEO_SRC = \
 
 APPLE2_AUDIO_SRC = \
     $(APPLE2_SRC_PATH)/audio/soundcore.c $(APPLE2_SRC_PATH)/audio/soundcore-openal.c $(APPLE2_SRC_PATH)/audio/speaker.c \
-    $(APPLE2_SRC_PATH)/audio/win-shim.c $(APPLE2_SRC_PATH)/audio/alhelpers.c $(APPLE2_SRC_PATH)/audio/mockingboard.c \
-    $(APPLE2_SRC_PATH)/audio/AY8910.c
+    $(APPLE2_SRC_PATH)/audio/alhelpers.c $(APPLE2_SRC_PATH)/audio/mockingboard.c $(APPLE2_SRC_PATH)/audio/AY8910.c
 
 APPLE2_META_SRC = \
     $(APPLE2_SRC_PATH)/meta/debug.c $(APPLE2_SRC_PATH)/meta/debugger.c $(APPLE2_SRC_PATH)/meta/opcodes.c \

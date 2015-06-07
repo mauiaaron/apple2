@@ -19,7 +19,7 @@ noinst_HEADERS = src/common.h src/cpu.h src/disk.h src/glue.h \
 	src/audio/alhelpers.h src/audio/AY8910.h src/audio/ds-shim.h \
 	src/audio/mockingboard.h src/audio/peripherals.h src/audio/soundcore.h \
 	src/audio/soundcore-openal.h src/audio/speaker.h \
-	src/audio/SSI263Phonemes.h src/audio/win-shim.h
+	src/audio/SSI263Phonemes.h
 
 noinst_PROGRAMS = genfont genrom
 
@@ -45,8 +45,7 @@ VIDEO_SRC = \
 
 AUDIO_SRC = \
 	src/audio/soundcore.c src/audio/soundcore-openal.c src/audio/speaker.c \
-	src/audio/win-shim.c src/audio/alhelpers.c src/audio/mockingboard.c \
-	src/audio/AY8910.c
+	src/audio/alhelpers.c src/audio/mockingboard.c src/audio/AY8910.c
 
 META_SRC = \
 	src/meta/debug.l src/meta/debugger.c src/meta/opcodes.c \

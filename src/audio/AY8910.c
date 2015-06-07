@@ -25,9 +25,7 @@
 // [AppleWin-TC] From FUSE's sound.c module
 
 #include "common.h"
-#ifdef APPLE2IX
-#include "audio/win-shim.h"
-#else
+#if !defined(APPLE2IX)
 #include "StdAfx.h"
 #include <windows.h>
 #include <stdio.h>
