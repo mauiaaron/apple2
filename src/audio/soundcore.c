@@ -62,7 +62,7 @@ bool DSGetLock(LPDIRECTSOUNDBUFFER pVoice, DWORD dwOffset, DWORD dwBytes,
                       SHORT** ppDSLockedBuffer1, DWORD* pdwDSLockedBufferSize1)
 {
     DWORD nStatus = 0;
-    HRESULT hr = pVoice->GetStatus(pVoice->_this, &nStatus);
+    int hr = pVoice->GetStatus(pVoice->_this, &nStatus);
     if(hr != DS_OK)
         return false;
 
@@ -100,7 +100,7 @@ bool DSGetLock(LPDIRECTSOUNDBUFFER pVoice, DWORD dwOffset, DWORD dwBytes,
 
 //-----------------------------------------------------------------------------
 
-HRESULT DSGetSoundBuffer(VOICE* pVoice, DWORD dwFlags, DWORD dwBufferSize, DWORD nSampleRate, int nChannels)
+int DSGetSoundBuffer(VOICE* pVoice, DWORD dwFlags, DWORD dwBufferSize, DWORD nSampleRate, int nChannels)
 {
     WAVEFORMATEX wavfmt;
     DSBUFFERDESC dsbdesc;
@@ -127,7 +127,7 @@ HRESULT DSGetSoundBuffer(VOICE* pVoice, DWORD dwFlags, DWORD dwBufferSize, DWORD
             g_lpDS->DestroySoundBuffer(&pVoice->lpDSBvoice);
             //DSReleaseSoundBuffer(pVoice);
         }
-    HRESULT hr = g_lpDS->CreateSoundBuffer(&dsbdesc, &pVoice->lpDSBvoice, g_lpDS);
+    int hr = g_lpDS->CreateSoundBuffer(&dsbdesc, &pVoice->lpDSBvoice, g_lpDS);
     if(FAILED(hr))
         return hr;
 
@@ -174,7 +174,7 @@ bool DSZeroVoiceBuffer(PVOICE Voice, char* pszDevName, DWORD dwBufferSize)
 
 
         DWORD argX = 0;
-    HRESULT hr = Voice->lpDSBvoice->Stop(Voice->lpDSBvoice->_this);
+    int hr = Voice->lpDSBvoice->Stop(Voice->lpDSBvoice->_this);
     if(FAILED(hr))
     {
         LOG("%s: DSStop failed (%08X)\n",pszDevName,(unsigned int)hr);
@@ -215,7 +215,7 @@ bool DSZeroVoiceWritableBuffer(PVOICE Voice, char* pszDevName, DWORD dwBufferSiz
     SHORT *pDSLockedBuffer0, *pDSLockedBuffer1;
 
 
-    HRESULT hr = DSGetLock(Voice->lpDSBvoice,
+    int hr = DSGetLock(Voice->lpDSBvoice,
                             0, dwBufferSize,
                             &pDSLockedBuffer0, &dwDSLockedBufferSize0,
                             &pDSLockedBuffer1, &dwDSLockedBufferSize1);
@@ -268,7 +268,7 @@ bool DSInit()
 
     _destroy_enumerated_sound_devices();
     num_sound_devices = SoundSystemEnumerate(&sound_devices, MAX_SOUND_DEVICES);
-        HRESULT hr = (num_sound_devices <= 0);
+        int hr = (num_sound_devices <= 0);
     if(FAILED(hr))
     {
         LOG("DSEnumerate failed (%08X)\n",(unsigned int)hr);

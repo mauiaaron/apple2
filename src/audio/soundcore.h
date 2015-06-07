@@ -45,7 +45,7 @@ bool DSGetLock(LPDIRECTSOUNDBUFFER pVoice, DWORD dwOffset, DWORD dwBytes,
                       SHORT** ppDSLockedBuffer0, DWORD* pdwDSLockedBufferSize0,
                       SHORT** ppDSLockedBuffer1, DWORD* pdwDSLockedBufferSize1);
 
-HRESULT DSGetSoundBuffer(VOICE* pVoice, DWORD dwFlags, DWORD dwBufferSize, DWORD nSampleRate, int nChannels);
+int DSGetSoundBuffer(VOICE* pVoice, DWORD dwFlags, DWORD dwBufferSize, DWORD nSampleRate, int nChannels);
 void DSReleaseSoundBuffer(VOICE* pVoice);
 
 bool DSZeroVoiceBuffer(PVOICE Voice, char* pszDevName, DWORD dwBufferSize);

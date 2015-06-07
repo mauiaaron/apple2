@@ -891,9 +891,9 @@ static void MB_Update()
 
 	DWORD dwCurrentPlayCursor, dwCurrentWriteCursor;
 #ifdef APPLE2IX
-	HRESULT hr = MockingboardVoice.lpDSBvoice->GetCurrentPosition(MockingboardVoice.lpDSBvoice->_this, &dwCurrentPlayCursor, &dwCurrentWriteCursor);
+	int hr = MockingboardVoice.lpDSBvoice->GetCurrentPosition(MockingboardVoice.lpDSBvoice->_this, &dwCurrentPlayCursor, &dwCurrentWriteCursor);
 #else
-	HRESULT hr = MockingboardVoice.lpDSBvoice->GetCurrentPosition(&dwCurrentPlayCursor, &dwCurrentWriteCursor);
+	int hr = MockingboardVoice.lpDSBvoice->GetCurrentPosition(&dwCurrentPlayCursor, &dwCurrentWriteCursor);
 #endif
 	if(FAILED(hr))
 		return;
@@ -1170,7 +1170,7 @@ static void SSI263_Play(unsigned int nPhoneme)
 {
     return; // SSI263 voices are currently deadc0de
 #if 1
-	HRESULT hr;
+	int hr;
 
 	if(g_nCurrentActivePhoneme >= 0)
 	{
@@ -1199,7 +1199,7 @@ static void SSI263_Play(unsigned int nPhoneme)
 
 	SSI263Voice[g_nCurrentActivePhoneme].bActive = true;
 #else
-	HRESULT hr;
+	int hr;
 	bool bPause;
 
 	if(nPhoneme == 1)
@@ -1293,7 +1293,7 @@ static bool MB_DSInit()
 	if(!g_bDSAvailable)
 		return false;
 
-	HRESULT hr = DSGetSoundBuffer(&MockingboardVoice, DSBCAPS_CTRLVOLUME, g_dwDSBufferSize, SAMPLE_RATE, 2);
+	int hr = DSGetSoundBuffer(&MockingboardVoice, DSBCAPS_CTRLVOLUME, g_dwDSBufferSize, SAMPLE_RATE, 2);
 	LogFileOutput("MB_DSInit: DSGetSoundBuffer(), hr=0x%08X\n", (unsigned int)hr);
 	if(FAILED(hr))
 	{

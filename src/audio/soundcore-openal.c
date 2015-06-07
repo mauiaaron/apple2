@@ -138,8 +138,8 @@ long SoundSystemCreate(const char *sound_device, SoundSystemStruct **sound_struc
         }
 
         (*sound_struct)->implementation_specific = ctx;
-        (*sound_struct)->CreateSoundBuffer = (HRESULT (*)(DSBUFFERDESC *, LPDIRECTSOUNDBUFFER *, void *))OpenALCreateSoundBuffer;
-        (*sound_struct)->DestroySoundBuffer = (HRESULT (*)(LPDIRECTSOUNDBUFFER *))OpenALDestroySoundBuffer;
+        (*sound_struct)->CreateSoundBuffer = (int (*)(DSBUFFERDESC *, LPDIRECTSOUNDBUFFER *, void *))OpenALCreateSoundBuffer;
+        (*sound_struct)->DestroySoundBuffer = (int (*)(LPDIRECTSOUNDBUFFER *))OpenALDestroySoundBuffer;
 
         return 0;
     } while(0);
@@ -724,19 +724,19 @@ static long OpenALCreateSoundBuffer(ALBufferParamsStruct *params, ALSoundBufferS
         }
 
         (*soundbuf_struct)->_this = voice;
-        (*soundbuf_struct)->SetVolume          = (HRESULT (*)(void *, LONG))ALSetVolume;
-        (*soundbuf_struct)->GetVolume          = (HRESULT (*)(void *, LPLONG))ALGetVolume;
-        (*soundbuf_struct)->GetCurrentPosition = (HRESULT (*)(void *, LPDWORD, LPDWORD))ALGetPosition;
-        (*soundbuf_struct)->Stop               = (HRESULT (*)(void *))ALStop;
-        (*soundbuf_struct)->Restore            = (HRESULT (*)(void *))ALRestore;
-        (*soundbuf_struct)->Play               = (HRESULT (*)(void *, DWORD, DWORD, DWORD))ALPlay;
-        (*soundbuf_struct)->Lock               = (HRESULT (*)(void *, DWORD, DWORD, LPVOID *, LPDWORD, LPVOID *, LPDWORD, DWORD))ALBegin;
-        (*soundbuf_struct)->Unlock             = (HRESULT (*)(void *, LPVOID, DWORD, LPVOID, DWORD))ALCommit;
-        (*soundbuf_struct)->GetStatus          = (HRESULT (*)(void *, LPDWORD))ALGetStatus;
+        (*soundbuf_struct)->SetVolume          = (int (*)(void *, LONG))ALSetVolume;
+        (*soundbuf_struct)->GetVolume          = (int (*)(void *, LPLONG))ALGetVolume;
+        (*soundbuf_struct)->GetCurrentPosition = (int (*)(void *, LPDWORD, LPDWORD))ALGetPosition;
+        (*soundbuf_struct)->Stop               = (int (*)(void *))ALStop;
+        (*soundbuf_struct)->Restore            = (int (*)(void *))ALRestore;
+        (*soundbuf_struct)->Play               = (int (*)(void *, DWORD, DWORD, DWORD))ALPlay;
+        (*soundbuf_struct)->Lock               = (int (*)(void *, DWORD, DWORD, LPVOID *, LPDWORD, LPVOID *, LPDWORD, DWORD))ALBegin;
+        (*soundbuf_struct)->Unlock             = (int (*)(void *, LPVOID, DWORD, LPVOID, DWORD))ALCommit;
+        (*soundbuf_struct)->GetStatus          = (int (*)(void *, LPDWORD))ALGetStatus;
 
         // mockingboard-specific hacks
-        (*soundbuf_struct)->UnlockStaticBuffer = (HRESULT (*)(void *, DWORD))ALCommitStaticBuffer;
-        (*soundbuf_struct)->Replay             = (HRESULT (*)(void *))ALReplay;
+        (*soundbuf_struct)->UnlockStaticBuffer = (int (*)(void *, DWORD))ALCommitStaticBuffer;
+        (*soundbuf_struct)->Replay             = (int (*)(void *))ALReplay;
 
         return 0;
     } while(0);

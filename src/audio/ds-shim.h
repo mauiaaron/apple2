@@ -20,30 +20,30 @@ typedef struct IDirectSoundBuffer {
 
     void *_this;
 
-    HRESULT (*SetVolume)(void* _this, LONG lVolume);
+    int (*SetVolume)(void* _this, LONG lVolume);
 
-    HRESULT (*GetVolume)(void* _this, LPLONG lplVolume);
+    int (*GetVolume)(void* _this, LPLONG lplVolume);
 
-    HRESULT (*GetCurrentPosition)(void* _this, LPDWORD lpdwCurrentPlayCursor, LPDWORD lpdwCurrentWriteCursor);
+    int (*GetCurrentPosition)(void* _this, LPDWORD lpdwCurrentPlayCursor, LPDWORD lpdwCurrentWriteCursor);
 
-    HRESULT (*Stop)(void* _this);
+    int (*Stop)(void* _this);
 
     // This method restores the memory allocation for a lost sound buffer for the specified DirectSoundBuffer object.
-    HRESULT (*Restore)(void *_this);
+    int (*Restore)(void *_this);
 
-    HRESULT (*Play)(void* _this, DWORD dwReserved1, DWORD dwReserved2, DWORD dwFlags);
+    int (*Play)(void* _this, DWORD dwReserved1, DWORD dwReserved2, DWORD dwFlags);
 
     // This method obtains a valid write pointer to the sound buffer's audio data
-    HRESULT (*Lock)(void* _this, DWORD dwWriteCursor, DWORD dwWriteBytes, LPVOID* lplpvAudioPtr1, LPDWORD lpdwAudioBytes1, LPVOID* lplpvAudioPtr2, LPDWORD lpdwAudioBytes2, DWORD dwFlags);
+    int (*Lock)(void* _this, DWORD dwWriteCursor, DWORD dwWriteBytes, LPVOID* lplpvAudioPtr1, LPDWORD lpdwAudioBytes1, LPVOID* lplpvAudioPtr2, LPDWORD lpdwAudioBytes2, DWORD dwFlags);
 
     // This method releases a locked sound buffer.
-    HRESULT (*Unlock)(void* _this, LPVOID lpvAudioPtr1, DWORD dwAudioBytes1, LPVOID lpvAudioPtr2, DWORD dwAudioBytes2);
+    int (*Unlock)(void* _this, LPVOID lpvAudioPtr1, DWORD dwAudioBytes1, LPVOID lpvAudioPtr2, DWORD dwAudioBytes2);
 
-    HRESULT (*GetStatus)(void* _this, LPDWORD lpdwStatus);
+    int (*GetStatus)(void* _this, LPDWORD lpdwStatus);
 
-    HRESULT (*UnlockStaticBuffer)(void* _this, DWORD dwAudioBytes);
+    int (*UnlockStaticBuffer)(void* _this, DWORD dwAudioBytes);
 
-    HRESULT (*Replay)(void* _this);
+    int (*Replay)(void* _this);
 
 } IDirectSoundBuffer, *LPDIRECTSOUNDBUFFER, **LPLPDIRECTSOUNDBUFFER;
 
@@ -139,8 +139,8 @@ typedef struct IDirectSoundBuffer {
 #if defined(SUCCEEDED)
 #undef SUCCEEDED
 #endif
-static inline bool FAILED(HRESULT x) { return x != DS_OK; }
-static inline bool SUCCEEDED(HRESULT x) { return x == DS_OK; }
+static inline bool FAILED(int x) { return x != DS_OK; }
+static inline bool SUCCEEDED(int x) { return x == DS_OK; }
 
 #define WAVE_FORMAT_PCM 0x0001
 #define DSBCAPS_GETCURRENTPOSITION2 0x00010000
@@ -203,8 +203,8 @@ typedef struct IDirectSound {
     void *implementation_specific;
 
 #define LPUNKNOWN void*
-    HRESULT (*CreateSoundBuffer)(DSBUFFERDESC *pcDSBufferDesc, LPDIRECTSOUNDBUFFER * ppDSBuffer, LPUNKNOWN pUnkOuter);
-    HRESULT (*DestroySoundBuffer)(LPDIRECTSOUNDBUFFER * ppDSBuffer);
+    int (*CreateSoundBuffer)(DSBUFFERDESC *pcDSBufferDesc, LPDIRECTSOUNDBUFFER * ppDSBuffer, LPUNKNOWN pUnkOuter);
+    int (*DestroySoundBuffer)(LPDIRECTSOUNDBUFFER * ppDSBuffer);
 
 } IDirectSound, *LPDIRECTSOUND;
 

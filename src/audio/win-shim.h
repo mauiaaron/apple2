@@ -28,13 +28,10 @@
 typedef unsigned long DWORD;
 #ifdef __APPLE__
 typedef UInt32 ULONG;
-typedef SInt32 HRESULT;
 typedef signed char BOOL;
-#else
-typedef unsigned long ULONG;
-typedef long HRESULT;
-typedef bool BOOL;
 #endif
+typedef unsigned long ULONG;
+typedef bool BOOL;
 typedef long LONG;
 typedef unsigned int UINT;
 typedef uint32_t UINT32;
