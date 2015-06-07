@@ -58,8 +58,8 @@ bool g_bDisableDirectSound = false;
 //-----------------------------------------------------------------------------
 
 bool DSGetLock(LPDIRECTSOUNDBUFFER pVoice, DWORD dwOffset, DWORD dwBytes,
-                      SHORT** ppDSLockedBuffer0, DWORD* pdwDSLockedBufferSize0,
-                      SHORT** ppDSLockedBuffer1, DWORD* pdwDSLockedBufferSize1)
+                      int16_t** ppDSLockedBuffer0, DWORD* pdwDSLockedBufferSize0,
+                      int16_t** ppDSLockedBuffer1, DWORD* pdwDSLockedBufferSize1)
 {
     DWORD nStatus = 0;
     int hr = pVoice->GetStatus(pVoice->_this, &nStatus);
@@ -170,7 +170,7 @@ void DSReleaseSoundBuffer(VOICE* pVoice)
 bool DSZeroVoiceBuffer(PVOICE Voice, char* pszDevName, DWORD dwBufferSize)
 {
     DWORD dwDSLockedBufferSize = 0;    // Size of the locked DirectSound buffer
-    SHORT* pDSLockedBuffer;
+    int16_t* pDSLockedBuffer;
 
 
         DWORD argX = 0;
@@ -212,7 +212,7 @@ bool DSZeroVoiceBuffer(PVOICE Voice, char* pszDevName, DWORD dwBufferSize)
 bool DSZeroVoiceWritableBuffer(PVOICE Voice, char* pszDevName, DWORD dwBufferSize)
 {
     DWORD dwDSLockedBufferSize0=0, dwDSLockedBufferSize1=0;
-    SHORT *pDSLockedBuffer0, *pDSLockedBuffer1;
+    int16_t *pDSLockedBuffer0, *pDSLockedBuffer1;
 
 
     int hr = DSGetLock(Voice->lpDSBvoice,

@@ -33,7 +33,7 @@ void AY8910UpdateSetCycles();
 
 typedef ULONG libspectrum_dword;
 typedef uint8_t libspectrum_byte;
-typedef SHORT libspectrum_signed_word;
+typedef int16_t libspectrum_signed_word;
 
 struct CAY8910;
 

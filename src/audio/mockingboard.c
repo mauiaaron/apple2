@@ -218,8 +218,8 @@ static const unsigned short g_nMB_NumChannels = 2;
 static const DWORD g_dwDSBufferSize = MAX_SAMPLES * sizeof(short) * g_nMB_NumChannels;
 #endif
 
-static const SHORT nWaveDataMin = (SHORT)0x8000;
-static const SHORT nWaveDataMax = (SHORT)0x7FFF;
+static const int16_t nWaveDataMin = (int16_t)0x8000;
+static const int16_t nWaveDataMax = (int16_t)0x7FFF;
 
 #ifdef APPLE2IX
 static short g_nMixBuffer[MB_BUF_SIZE / sizeof(short)];
@@ -887,7 +887,7 @@ static void MB_Update()
 	//
 
 	DWORD dwDSLockedBufferSize0, dwDSLockedBufferSize1;
-	SHORT *pDSLockedBuffer0, *pDSLockedBuffer1;
+	int16_t *pDSLockedBuffer0, *pDSLockedBuffer1;
 
 	DWORD dwCurrentPlayCursor, dwCurrentWriteCursor;
 #ifdef APPLE2IX
@@ -1217,7 +1217,7 @@ static void SSI263_Play(unsigned int nPhoneme)
 	}
 
 	DWORD dwDSLockedBufferSize = 0;    // Size of the locked DirectSound buffer
-	SHORT* pDSLockedBuffer;
+	int16_t* pDSLockedBuffer;
 
 	hr = SSI263Voice.lpDSBvoice->Stop();
 
@@ -1225,7 +1225,7 @@ static void SSI263_Play(unsigned int nPhoneme)
 		return;
 
 	unsigned int nPhonemeShortLength = g_nPhonemeInfo[nPhoneme].nLength;
-	unsigned int nPhonemeByteLength = g_nPhonemeInfo[nPhoneme].nLength * sizeof(SHORT);
+	unsigned int nPhonemeByteLength = g_nPhonemeInfo[nPhoneme].nLength * sizeof(int16_t);
 
 	if(bPause)
 	{
@@ -1288,7 +1288,7 @@ static bool MB_DSInit()
 	//
 
 	DWORD dwDSLockedBufferSize = 0;    // Size of the locked DirectSound buffer
-	SHORT* pDSLockedBuffer;
+	int16_t* pDSLockedBuffer;
 
 	if(!g_bDSAvailable)
 		return false;
@@ -1332,7 +1332,7 @@ static bool MB_DSInit()
 	for(int i=0; i<sizeof(g_nPhonemeInfo) / sizeof(PHONEME_INFO); i++)
 		if(g_dwMaxPhonemeLen < g_nPhonemeInfo[i].nLength)
 			g_dwMaxPhonemeLen = g_nPhonemeInfo[i].nLength;
-	g_dwMaxPhonemeLen *= sizeof(SHORT);
+	g_dwMaxPhonemeLen *= sizeof(int16_t);
 #endif
 
         return true;
@@ -1387,7 +1387,7 @@ static bool MB_DSInit()
 			bPause = false;
 		}
 
-		unsigned int nPhonemeByteLength = g_nPhonemeInfo[nPhoneme].nLength * sizeof(SHORT);
+		unsigned int nPhonemeByteLength = g_nPhonemeInfo[nPhoneme].nLength * sizeof(int16_t);
 
 		// NB. DSBCAPS_LOCSOFTWARE required for
 		hr = DSGetSoundBuffer(&SSI263Voice[i], DSBCAPS_CTRLVOLUME+DSBCAPS_CTRLPOSITIONNOTIFY+DSBCAPS_LOCSOFTWARE, nPhonemeByteLength, 22050, 1);

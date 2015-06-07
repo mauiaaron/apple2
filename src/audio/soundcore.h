@@ -42,8 +42,8 @@ typedef struct
 
 
 bool DSGetLock(LPDIRECTSOUNDBUFFER pVoice, DWORD dwOffset, DWORD dwBytes,
-                      SHORT** ppDSLockedBuffer0, DWORD* pdwDSLockedBufferSize0,
-                      SHORT** ppDSLockedBuffer1, DWORD* pdwDSLockedBufferSize1);
+                      int16_t** ppDSLockedBuffer0, DWORD* pdwDSLockedBufferSize0,
+                      int16_t** ppDSLockedBuffer1, DWORD* pdwDSLockedBufferSize1);
 
 int DSGetSoundBuffer(VOICE* pVoice, DWORD dwFlags, DWORD dwBufferSize, DWORD nSampleRate, int nChannels);
 void DSReleaseSoundBuffer(VOICE* pVoice);

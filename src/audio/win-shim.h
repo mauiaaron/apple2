@@ -33,7 +33,6 @@ typedef unsigned long ULONG;
 typedef long LONG;
 typedef unsigned int UINT;
 typedef char TCHAR;
-typedef short SHORT;
 
 typedef long *LPLONG;
 typedef void *LPVOID;
