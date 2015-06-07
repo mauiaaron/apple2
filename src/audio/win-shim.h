@@ -62,12 +62,6 @@ typedef void* HANDLE;
 
 #define VOID void
 
-// unneeded ???
-#define __stdcall
-#define WINAPI
-#define CALLBACK
-#define FAR
-
 #if !defined(TRUE)
 #define TRUE true
 #endif

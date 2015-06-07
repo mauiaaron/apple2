@@ -265,7 +265,7 @@ uint32_t g_uTimer1IrqCount = 0;	// DEBUG
 #ifdef APPLE2IX
 static void* SSI263Thread(LPVOID);
 #else
-static DWORD WINAPI SSI263Thread(LPVOID);
+static DWORD SSI263Thread(LPVOID);
 #endif
 static void Votrax_Write(BYTE nDevice, BYTE nValue);
 
@@ -1049,7 +1049,7 @@ static void MB_Update()
 #ifdef APPLE2IX
 static void* SSI263Thread(LPVOID lpParameter)
 #else
-static DWORD WINAPI SSI263Thread(LPVOID lpParameter)
+static DWORD SSI263Thread(LPVOID lpParameter)
 #endif
 {
 	while(1)
@@ -1697,7 +1697,7 @@ void MB_Reset()
 #define nAddr ea
 GLUE_C_READ(MB_Read)
 #else
-static BYTE __stdcall MB_Read(WORD PC, WORD nAddr, BYTE bWrite, BYTE nValue, ULONG nCyclesLeft)
+static BYTE MB_Read(WORD PC, WORD nAddr, BYTE bWrite, BYTE nValue, ULONG nCyclesLeft)
 #endif
 {
 	MB_UpdateCycles();
@@ -1775,7 +1775,7 @@ static BYTE __stdcall MB_Read(WORD PC, WORD nAddr, BYTE bWrite, BYTE nValue, ULO
 #define nValue b
 GLUE_C_WRITE(MB_Write)
 #else
-static BYTE __stdcall MB_Write(WORD PC, WORD nAddr, BYTE bWrite, BYTE nValue, ULONG nCyclesLeft)
+static BYTE MB_Write(WORD PC, WORD nAddr, BYTE bWrite, BYTE nValue, ULONG nCyclesLeft)
 #endif
 {
 	MB_UpdateCycles();
@@ -1858,7 +1858,7 @@ static BYTE __stdcall MB_Write(WORD PC, WORD nAddr, BYTE bWrite, BYTE nValue, UL
 #ifdef APPLE2IX
 GLUE_C_READ(PhasorIO)
 #else
-static BYTE __stdcall PhasorIO(WORD PC, WORD nAddr, BYTE bWrite, BYTE nValue, ULONG nCyclesLeft)
+static BYTE PhasorIO(WORD PC, WORD nAddr, BYTE bWrite, BYTE nValue, ULONG nCyclesLeft)
 #endif
 {
 	if(!g_bPhasorEnable)
@@ -1891,7 +1891,7 @@ void mb_io_initialize(unsigned int slot4, unsigned int slot5)
     MB_InitializeIO(NULL, slot4, slot5);
 }
 
-//typedef BYTE (__stdcall *iofunction)(WORD nPC, WORD nAddr, BYTE nWriteFlag, BYTE nWriteValue, ULONG nCyclesLeft);
+//typedef BYTE (*iofunction)(WORD nPC, WORD nAddr, BYTE nWriteFlag, BYTE nWriteValue, ULONG nCyclesLeft);
 typedef void (*iofunction)();
 static void RegisterIoHandler(UINT uSlot, iofunction IOReadC0, iofunction IOWriteC0, iofunction IOReadCx, iofunction IOWriteCx, LPVOID unused_lpSlotParameter, BYTE* unused_pExpansionRom)
 {
