@@ -25,8 +25,6 @@
 
 // 2013/09/19 - http://msdn.microsoft.com/en-us/library/windows/desktop/aa383751(v=vs.85).aspx
 
-typedef unsigned int UINT;
-
 typedef unsigned long *LPDWORD;
 
 #if !defined(TRUE)

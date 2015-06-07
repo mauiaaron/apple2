@@ -24,7 +24,7 @@ void AY8910Update(int chip, int16_t** buffer, int nNumSamples);
 
 void AY8910_InitAll(int nClock, int nSampleRate);
 void AY8910_InitClock(int nClock);
-uint8_t* AY8910_GetRegsPtr(UINT uChip);
+uint8_t* AY8910_GetRegsPtr(unsigned int uChip);
 
 void AY8910UpdateSetCycles();
 

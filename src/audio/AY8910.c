@@ -1022,7 +1022,7 @@ void AY8910Update(int chip, int16_t** buffer, int nNumSamples)
 
 void AY8910_InitAll(int nClock, int nSampleRate)
 {
-	for (UINT i=0; i<MAX_8910; i++)
+	for (unsigned int i=0; i<MAX_8910; i++)
 	{
 		sound_init(&g_AY8910[i], NULL);	// Inits mainly static members (except ay_tick_incr)
 		sound_ay_init(&g_AY8910[i]);
@@ -1032,13 +1032,13 @@ void AY8910_InitAll(int nClock, int nSampleRate)
 void AY8910_InitClock(int nClock)
 {
 	SetCLK( (double)nClock );
-	for (UINT i=0; i<MAX_8910; i++)
+	for (unsigned int i=0; i<MAX_8910; i++)
 	{
 		sound_init(&g_AY8910[i], NULL);	// ay_tick_incr is dependent on AY_CLK
 	}
 }
 
-uint8_t* AY8910_GetRegsPtr(UINT uChip)
+uint8_t* AY8910_GetRegsPtr(unsigned int uChip)
 {
 	if(uChip >= MAX_8910)
 		return NULL;

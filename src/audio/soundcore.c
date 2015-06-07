@@ -44,7 +44,7 @@ LPDIRECTSOUND g_lpDS = NULL;
 // Used for muting & fading:
 
 #define uMAX_VOICES 66
-static UINT g_uNumVoices = 0;
+static unsigned int g_uNumVoices = 0;
 static VOICE* g_pVoices[uMAX_VOICES] = {NULL};
 
 static VOICE* g_pSpeakerVoice = NULL;
@@ -148,7 +148,7 @@ void DSReleaseSoundBuffer(VOICE* pVoice)
     if(pVoice->bIsSpeaker)
         g_pSpeakerVoice = NULL;
 
-    for(UINT i=0; i<g_uNumVoices; i++)
+    for(unsigned int i=0; i<g_uNumVoices; i++)
     {
         if(g_pVoices[i] == pVoice)
         {
@@ -243,7 +243,7 @@ bool DSZeroVoiceWritableBuffer(PVOICE Voice, char* pszDevName, unsigned long dwB
 
 //-----------------------------------------------------------------------------
 
-static UINT g_uDSInitRefCount = 0;
+static unsigned int g_uDSInitRefCount = 0;
 
 static void _destroy_enumerated_sound_devices(void) {
     if (sound_devices) {

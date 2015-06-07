@@ -160,9 +160,9 @@ static unsigned long g_n6522TimerPeriod = 0;
 #ifdef APPLE2IX
 #define TIMERDEVICE_INVALID -1
 #else
-static const UINT TIMERDEVICE_INVALID = -1;
+static const unsigned int TIMERDEVICE_INVALID = -1;
 #endif
-static UINT g_nMBTimerDevice = TIMERDEVICE_INVALID;	// SY6522 device# which is generating timer IRQ
+static unsigned int g_nMBTimerDevice = TIMERDEVICE_INVALID;	// SY6522 device# which is generating timer IRQ
 static uint64_t g_uLastCumulativeCycles = 0;
 
 // SSI263 vars:
@@ -370,8 +370,8 @@ static void UpdateIFR(SY6522_AY8910* pMB)
 
 	// Now update the IRQ signal from all 6522s
 	// . OR-sum of all active TIMER1, TIMER2 & SPEECH sources (from all 6522s)
-	UINT bIRQ = 0;
-	for(UINT i=0; i<NUM_SY6522; i++)
+	unsigned int bIRQ = 0;
+	for(unsigned int i=0; i<NUM_SY6522; i++)
 		bIRQ |= g_MB[i].sy6522.IFR & 0x80;
 
 	// NB. Mockingboard generates IRQ on both 6522s:
@@ -980,7 +980,7 @@ static void MB_Update()
 		// L = Address.b7=0, R = Address.b7=1
 		int nDataL = 0, nDataR = 0;
 
-		for(UINT j=0; j<NUM_VOICES_PER_AY8910; j++)
+		for(unsigned int j=0; j<NUM_VOICES_PER_AY8910; j++)
 		{
 			// Slot4
 			nDataL += (int) ((double)ppAYVoiceBuffer[0*NUM_VOICES_PER_AY8910+j][i] * fAttenuation);
@@ -1893,7 +1893,7 @@ void mb_io_initialize(unsigned int slot4, unsigned int slot5)
 
 //typedef uint8_t (*iofunction)(uint16_t nPC, uint16_t nAddr, uint8_t nWriteFlag, uint8_t nWriteValue, unsigned long nCyclesLeft);
 typedef void (*iofunction)();
-static void RegisterIoHandler(UINT uSlot, iofunction IOReadC0, iofunction IOWriteC0, iofunction IOReadCx, iofunction IOWriteCx, void *unused_lpSlotParameter, uint8_t* unused_pExpansionRom)
+static void RegisterIoHandler(unsigned int uSlot, iofunction IOReadC0, iofunction IOWriteC0, iofunction IOReadCx, iofunction IOWriteCx, void *unused_lpSlotParameter, uint8_t* unused_pExpansionRom)
 {
 
     // card softswitches
@@ -1918,7 +1918,7 @@ static void RegisterIoHandler(UINT uSlot, iofunction IOReadC0, iofunction IOWrit
 }
 #endif
 
-void MB_InitializeIO(char *unused_pCxRomPeripheral, UINT uSlot4, UINT uSlot5)
+void MB_InitializeIO(char *unused_pCxRomPeripheral, unsigned int uSlot4, unsigned int uSlot5)
 {
 	// Mockingboard: Slot 4 & 5
 	// Phasor      : Slot 4
@@ -2167,11 +2167,11 @@ unsigned long MB_GetSnapshot(SS_CARD_MOCKINGBOARD* pSS, unsigned long dwSlot)
 	pSS->Hdr.dwSlot = dwSlot;
 	pSS->Hdr.dwType = CT_MockingboardC;
 
-	UINT nMbCardNum = dwSlot - SLOT4;
-	UINT nDeviceNum = nMbCardNum*2;
+	unsigned int nMbCardNum = dwSlot - SLOT4;
+	unsigned int nDeviceNum = nMbCardNum*2;
 	SY6522_AY8910* pMB = &g_MB[nDeviceNum];
 
-	for(UINT i=0; i<MB_UNITS_PER_CARD; i++)
+	for(unsigned int i=0; i<MB_UNITS_PER_CARD; i++)
 	{
 		memcpy(&pSS->Unit[i].RegsSY6522, &pMB->sy6522, sizeof(SY6522));
 		memcpy(&pSS->Unit[i].RegsAY8910, AY8910_GetRegsPtr(nDeviceNum), 16);
@@ -2195,14 +2195,14 @@ unsigned long MB_SetSnapshot(SS_CARD_MOCKINGBOARD* pSS, unsigned long dwSlot_unu
 	if(pSS->Hdr.UnitHdr.dwVersion != MAKE_VERSION(1,0,0,0))
 		return -1;
 
-	UINT nMbCardNum = pSS->Hdr.dwSlot - SLOT4;
-	UINT nDeviceNum = nMbCardNum*2;
+	unsigned int nMbCardNum = pSS->Hdr.dwSlot - SLOT4;
+	unsigned int nDeviceNum = nMbCardNum*2;
 	SY6522_AY8910* pMB = &g_MB[nDeviceNum];
 
 	g_nSSI263Device = 0;
 	g_nCurrentActivePhoneme = -1;
 
-	for(UINT i=0; i<MB_UNITS_PER_CARD; i++)
+	for(unsigned int i=0; i<MB_UNITS_PER_CARD; i++)
 	{
 		memcpy(&pMB->sy6522, &pSS->Unit[i].RegsSY6522, sizeof(SY6522));
 		memcpy(AY8910_GetRegsPtr(nDeviceNum), &pSS->Unit[i].RegsAY8910, 16);
