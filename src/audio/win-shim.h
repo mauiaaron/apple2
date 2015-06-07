@@ -34,7 +34,6 @@ typedef long LONG;
 typedef unsigned int UINT;
 typedef char TCHAR;
 typedef short SHORT;
-typedef unsigned char BYTE;
 
 typedef long *LPLONG;
 typedef void *LPVOID;

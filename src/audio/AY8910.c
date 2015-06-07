@@ -968,7 +968,7 @@ sound_beeper( int is_tape, int on )
 }
 #endif
 
-BYTE* GetAYRegsPtr(struct CAY8910 *_this)
+uint8_t* GetAYRegsPtr(struct CAY8910 *_this)
 {
     return &(_this->sound_ay_registers[0]);
 }
@@ -1038,7 +1038,7 @@ void AY8910_InitClock(int nClock)
 	}
 }
 
-BYTE* AY8910_GetRegsPtr(UINT uChip)
+uint8_t* AY8910_GetRegsPtr(UINT uChip)
 {
 	if(uChip >= MAX_8910)
 		return NULL;

@@ -125,9 +125,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 typedef struct
 {
 	SY6522 sy6522;
-	BYTE nAY8910Number;
-	BYTE nAYCurrentRegister;
-	BYTE nTimerStatus;
+	uint8_t nAY8910Number;
+	uint8_t nAYCurrentRegister;
+	uint8_t nTimerStatus;
 	SSI263A SpeechChip;
 } SY6522_AY8910;
 
@@ -201,7 +201,7 @@ static bool g_bMBAvailable = false;
 
 static SS_CARDTYPE g_SoundcardType = CT_Empty;	// Use CT_Empty to mean: no soundcard
 static bool g_bPhasorEnable = false;
-static BYTE g_nPhasorMode = 0;	// 0=Mockingboard emulation, 1=Phasor native
+static uint8_t g_nPhasorMode = 0;	// 0=Mockingboard emulation, 1=Phasor native
 
 //-------------------------------------
 
@@ -267,7 +267,7 @@ static void* SSI263Thread(LPVOID);
 #else
 static DWORD SSI263Thread(LPVOID);
 #endif
-static void Votrax_Write(BYTE nDevice, BYTE nValue);
+static void Votrax_Write(uint8_t nDevice, uint8_t nValue);
 
 //---------------------------------------------------------------------------
 
@@ -316,7 +316,7 @@ static void ResetSY6522(SY6522_AY8910* pMB)
 
 //-----------------------------------------------------------------------------
 
-static void AY8910_Write(BYTE nDevice, BYTE nReg, BYTE nValue, BYTE nAYDevice)
+static void AY8910_Write(uint8_t nDevice, uint8_t nReg, uint8_t nValue, uint8_t nAYDevice)
 {
 	g_bMB_RegAccessedFlag = true;
 	SY6522_AY8910* pMB = &g_MB[nDevice];
@@ -398,7 +398,7 @@ static void UpdateIFR(SY6522_AY8910* pMB)
 	}
 }
 
-static void SY6522_Write(BYTE nDevice, BYTE nReg, BYTE nValue)
+static void SY6522_Write(uint8_t nDevice, uint8_t nReg, uint8_t nValue)
 {
 	g_bMB_Active = true;
 
@@ -527,13 +527,13 @@ static void SY6522_Write(BYTE nDevice, BYTE nReg, BYTE nValue)
 
 //-----------------------------------------------------------------------------
 
-static BYTE SY6522_Read(BYTE nDevice, BYTE nReg)
+static uint8_t SY6522_Read(uint8_t nDevice, uint8_t nReg)
 {
 //	g_bMB_RegAccessedFlag = true;
 	g_bMB_Active = true;
 
 	SY6522_AY8910* pMB = &g_MB[nDevice];
-	BYTE nValue = 0x00;
+	uint8_t nValue = 0x00;
 
 	switch (nReg)
 	{
@@ -604,38 +604,38 @@ void SSI263_Play(unsigned int nPhoneme);
 #if 0
 typedef struct
 {
-	BYTE DurationPhonome;
-	BYTE Inflection;		// I10..I3
-	BYTE RateInflection;
-	BYTE CtrlArtAmp;
-	BYTE FilterFreq;
+	uint8_t DurationPhonome;
+	uint8_t Inflection;		// I10..I3
+	uint8_t RateInflection;
+	uint8_t CtrlArtAmp;
+	uint8_t FilterFreq;
 	//
-	BYTE CurrentMode;
+	uint8_t CurrentMode;
 } SSI263A;
 #endif
 
 //static SSI263A nSpeechChip;
 
 // Duration/Phonome
-const BYTE DURATION_MODE_MASK = 0xC0;
-const BYTE PHONEME_MASK = 0x3F;
+const uint8_t DURATION_MODE_MASK = 0xC0;
+const uint8_t PHONEME_MASK = 0x3F;
 
-const BYTE MODE_PHONEME_TRANSITIONED_INFLECTION = 0xC0;	// IRQ active
-const BYTE MODE_PHONEME_IMMEDIATE_INFLECTION = 0x80;	// IRQ active
-const BYTE MODE_FRAME_IMMEDIATE_INFLECTION = 0x40;		// IRQ active
-const BYTE MODE_IRQ_DISABLED = 0x00;
+const uint8_t MODE_PHONEME_TRANSITIONED_INFLECTION = 0xC0;	// IRQ active
+const uint8_t MODE_PHONEME_IMMEDIATE_INFLECTION = 0x80;	// IRQ active
+const uint8_t MODE_FRAME_IMMEDIATE_INFLECTION = 0x40;		// IRQ active
+const uint8_t MODE_IRQ_DISABLED = 0x00;
 
 // Rate/Inflection
-const BYTE RATE_MASK = 0xF0;
-const BYTE INFLECTION_MASK_H = 0x08;	// I11
-const BYTE INFLECTION_MASK_L = 0x07;	// I2..I0
+const uint8_t RATE_MASK = 0xF0;
+const uint8_t INFLECTION_MASK_H = 0x08;	// I11
+const uint8_t INFLECTION_MASK_L = 0x07;	// I2..I0
 
 // Ctrl/Art/Amp
-const BYTE CONTROL_MASK = 0x80;
-const BYTE ARTICULATION_MASK = 0x70;
-const BYTE AMPLITUDE_MASK = 0x0F;
+const uint8_t CONTROL_MASK = 0x80;
+const uint8_t ARTICULATION_MASK = 0x70;
+const uint8_t AMPLITUDE_MASK = 0x0F;
 
-static BYTE SSI263_Read(BYTE nDevice, BYTE nReg)
+static uint8_t SSI263_Read(uint8_t nDevice, uint8_t nReg)
 {
 	SY6522_AY8910* pMB = &g_MB[nDevice];
 
@@ -645,7 +645,7 @@ static BYTE SSI263_Read(BYTE nDevice, BYTE nReg)
 	return pMB->SpeechChip.CurrentMode << 7;
 }
 
-static void SSI263_Write(BYTE nDevice, BYTE nReg, BYTE nValue)
+static void SSI263_Write(uint8_t nDevice, uint8_t nReg, uint8_t nValue)
 {
 	SY6522_AY8910* pMB = &g_MB[nDevice];
 
@@ -720,7 +720,7 @@ static void SSI263_Write(BYTE nDevice, BYTE nReg, BYTE nValue)
 
 //-------------------------------------
 
-static BYTE Votrax2SSI263[MAX_VOICES] = 
+static uint8_t Votrax2SSI263[MAX_VOICES] = 
 {
 	0x02,	// 00: EH3 jackEt -> E1 bEnt
 	0x0A,	// 01: EH2 Enlist -> EH nEst
@@ -791,7 +791,7 @@ static BYTE Votrax2SSI263[MAX_VOICES] =
 	0x00,	// 3F: STOP no sound -> PA
 };
 
-static void Votrax_Write(BYTE nDevice, BYTE nValue)
+static void Votrax_Write(uint8_t nDevice, uint8_t nValue)
 {
 	g_bVotraxPhoneme = true;
 
@@ -1697,7 +1697,7 @@ void MB_Reset()
 #define nAddr ea
 GLUE_C_READ(MB_Read)
 #else
-static BYTE MB_Read(uint16_t PC, uint16_t nAddr, BYTE bWrite, BYTE nValue, ULONG nCyclesLeft)
+static uint8_t MB_Read(uint16_t PC, uint16_t nAddr, uint8_t bWrite, uint8_t nValue, ULONG nCyclesLeft)
 #endif
 {
 	MB_UpdateCycles();
@@ -1716,8 +1716,8 @@ static BYTE MB_Read(uint16_t PC, uint16_t nAddr, BYTE bWrite, BYTE nValue, ULONG
 	}
 #endif
 
-	BYTE nMB = ((nAddr>>8)&0xf) - SLOT4;
-	BYTE nOffset = nAddr&0xff;
+	uint8_t nMB = ((nAddr>>8)&0xf) - SLOT4;
+	uint8_t nOffset = nAddr&0xff;
 
 	if(g_bPhasorEnable)
 	{
@@ -1732,7 +1732,7 @@ static BYTE MB_Read(uint16_t PC, uint16_t nAddr, BYTE bWrite, BYTE nValue, ULONG
 		else															// Mockingboard Mode
 			CS = ( ( nAddr & 0x80 ) >> 7 ) + 1;							// 1 or 2
 
-		BYTE nRes = 0;
+		uint8_t nRes = 0;
 
 		if(CS & 1)
 			nRes |= SY6522_Read(nMB*NUM_DEVS_PER_MB + SY6522_DEVICE_A, nAddr&0xf);
@@ -1775,7 +1775,7 @@ static BYTE MB_Read(uint16_t PC, uint16_t nAddr, BYTE bWrite, BYTE nValue, ULONG
 #define nValue b
 GLUE_C_WRITE(MB_Write)
 #else
-static BYTE MB_Write(uint16_t PC, uint16_t nAddr, BYTE bWrite, BYTE nValue, ULONG nCyclesLeft)
+static uint8_t MB_Write(uint16_t PC, uint16_t nAddr, uint8_t bWrite, uint8_t nValue, ULONG nCyclesLeft)
 #endif
 {
 	MB_UpdateCycles();
@@ -1802,8 +1802,8 @@ static BYTE MB_Write(uint16_t PC, uint16_t nAddr, BYTE bWrite, BYTE nValue, ULON
 	}
 #endif
 
-	BYTE nMB = ((nAddr>>8)&0xf) - SLOT4;
-	BYTE nOffset = nAddr&0xff;
+	uint8_t nMB = ((nAddr>>8)&0xf) - SLOT4;
+	uint8_t nOffset = nAddr&0xff;
 
 	if(g_bPhasorEnable)
 	{
@@ -1858,7 +1858,7 @@ static BYTE MB_Write(uint16_t PC, uint16_t nAddr, BYTE bWrite, BYTE nValue, ULON
 #ifdef APPLE2IX
 GLUE_C_READ(PhasorIO)
 #else
-static BYTE PhasorIO(uint16_t PC, uint16_t nAddr, BYTE bWrite, BYTE nValue, ULONG nCyclesLeft)
+static uint8_t PhasorIO(uint16_t PC, uint16_t nAddr, uint8_t bWrite, uint8_t nValue, ULONG nCyclesLeft)
 #endif
 {
 	if(!g_bPhasorEnable)
@@ -1891,9 +1891,9 @@ void mb_io_initialize(unsigned int slot4, unsigned int slot5)
     MB_InitializeIO(NULL, slot4, slot5);
 }
 
-//typedef BYTE (*iofunction)(uint16_t nPC, uint16_t nAddr, BYTE nWriteFlag, BYTE nWriteValue, ULONG nCyclesLeft);
+//typedef uint8_t (*iofunction)(uint16_t nPC, uint16_t nAddr, uint8_t nWriteFlag, uint8_t nWriteValue, ULONG nCyclesLeft);
 typedef void (*iofunction)();
-static void RegisterIoHandler(UINT uSlot, iofunction IOReadC0, iofunction IOWriteC0, iofunction IOReadCx, iofunction IOWriteCx, LPVOID unused_lpSlotParameter, BYTE* unused_pExpansionRom)
+static void RegisterIoHandler(UINT uSlot, iofunction IOReadC0, iofunction IOWriteC0, iofunction IOReadCx, iofunction IOWriteCx, LPVOID unused_lpSlotParameter, uint8_t* unused_pExpansionRom)
 {
 
     // card softswitches

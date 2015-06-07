@@ -24,7 +24,7 @@ void AY8910Update(int chip, int16_t** buffer, int nNumSamples);
 
 void AY8910_InitAll(int nClock, int nSampleRate);
 void AY8910_InitClock(int nClock);
-BYTE* AY8910_GetRegsPtr(UINT uChip);
+uint8_t* AY8910_GetRegsPtr(UINT uChip);
 
 void AY8910UpdateSetCycles();
 
@@ -53,7 +53,7 @@ struct CAY8910;
 	void sound_ay_write(struct CAY8910 *_this, int reg, int val, libspectrum_dword now);
 	void sound_ay_reset(struct CAY8910 *_this);
 	void sound_frame(struct CAY8910 *_this);
-	BYTE* GetAYRegsPtr(struct CAY8910 *_this);
+	uint8_t* GetAYRegsPtr(struct CAY8910 *_this);
 	void SetCLK(double CLK);
 
 //private:
