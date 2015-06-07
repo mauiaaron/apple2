@@ -26,31 +26,12 @@
 // 2013/09/19 - http://msdn.microsoft.com/en-us/library/windows/desktop/aa383751(v=vs.85).aspx
 
 typedef unsigned int UINT;
-typedef char TCHAR;
 
 typedef long *LPLONG;
 typedef void *LPVOID;
 typedef void *LPDVOID;
 typedef char *LPBYTE;
 typedef unsigned long *LPDWORD;
-
-typedef char *GUID; // HACK
-typedef GUID IID;
-#if !defined(__APPLE__)
-typedef IID* REFIID;
-#endif
-
-typedef GUID *LPGUID;
-typedef char *LPCSTR;
-typedef LPCSTR LPCTSTR;
-
-typedef unsigned int UINT_PTR;
-
-typedef void *HWND; // HACK
-
-typedef void* HANDLE;
-
-#define VOID void
 
 #if !defined(TRUE)
 #define TRUE true
@@ -59,18 +40,10 @@ typedef void* HANDLE;
 #define FALSE false
 #endif
 
-#define _strdup strdup
 #define _ASSERT assert
 #define Sleep(x) usleep(x)
 
 typedef void *IUnknown;
-
-#define TEXT(X) X
-
-#define MB_ICONEXCLAMATION 0x00000030L
-#define MB_SETFOREGROUND 0x00010000L
-
-#define MessageBox(window, message, group, flags) LOG("%s", message)
 
 #define INFINITE 0
 #define WAIT_OBJECT_0 0x00000000L

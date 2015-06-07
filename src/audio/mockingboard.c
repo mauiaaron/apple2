@@ -192,7 +192,7 @@ static bool g_bMB_Active = false;
 //static pthread_t mockingboard_thread = (pthread_t)-1;
 static pthread_t g_hThread = 0;
 #else
-static HANDLE g_hThread = NULL;
+static void *g_hThread = NULL;
 #endif
 
 static bool g_bMBAvailable = false;
@@ -244,7 +244,7 @@ static pthread_mutex_t mockingboard_mutex = PTHREAD_MUTEX_INITIALIZER;
 static uint8_t quit_event = false;
 #else
 static const int g_nNumEvents = 2;
-static HANDLE g_hSSI263Event[g_nNumEvents] = {NULL};	// 1: Phoneme finished playing, 2: Exit thread
+static void *g_hSSI263Event[g_nNumEvents] = {NULL};	// 1: Phoneme finished playing, 2: Exit thread
 static unsigned long g_dwMaxPhonemeLen = 0;
 #endif
 
