@@ -12,8 +12,15 @@
 #include "common.h"
 #include "androidkeys.h"
 
+// Codepaths for Bluetooth or other HID keyboards attached to an Android device.
+// For OpenGL emulated touchscreen keyboard, see gltouchkbd.c
+
 static inline bool _is_shifted(int metaState) {
     return (metaState & META_SHIFT_MASK);
+}
+
+static inline bool _is_ctrl(int metaState) {
+    return (metaState & META_CTRL_LEFT_ON) || (metaState & META_CTRL_RIGHT_ON);
 }
 
 void android_keycode_to_emulator(int keyCode, int metaState, bool pressed) {
@@ -224,6 +231,13 @@ void android_keycode_to_emulator(int keyCode, int metaState, bool pressed) {
     } while (0);
 
     LOG("keyCode:%08x -> key:%02x ('%c') metaState:%08x", keyCode, key, key, metaState);
+
+    if (isASCII && _is_ctrl(metaState)) {
+        key = c_keys_ascii_to_scancode(key);
+        c_keys_handle_input(key, true, false);
+        isASCII = false;
+        pressed = false;
+    }
 
     assert(key < 0x80);
     c_keys_handle_input(key, pressed, isASCII);
