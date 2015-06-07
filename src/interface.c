@@ -645,8 +645,8 @@ void c_interface_select_diskette( int drive )
                     }
                     else if (strcmp(".", namelist[curpos]->d_name))
                     {
-                        snprintf(disk_path + len, MIN(0, PATH_MAX-len), "/%s",
-                                 namelist[curpos]->d_name);
+                        size_t ent_len = strlen(namelist[curpos]->d_name)+1+1; // +1 for dir sep +1 for \0
+                        snprintf(disk_path + len, MIN(ent_len, PATH_MAX-(len+ent_len)), "/%s", namelist[curpos]->d_name);
                     }
 
                     nextdir = true;
