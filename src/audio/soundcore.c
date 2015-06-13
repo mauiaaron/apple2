@@ -65,24 +65,13 @@ bool DSGetLock(LPDIRECTSOUNDBUFFER pVoice, unsigned long dwOffset, unsigned long
     if(hr != DS_OK)
         return false;
 
-    if(nStatus & DSBSTATUS_BUFFERLOST)
-    {
-        do
-        {
-            hr = pVoice->Restore(pVoice->_this);
-            if(hr == DSERR_BUFFERLOST)
-                usleep(10);
-        }
-        while(hr != DS_OK);
-    }
-
     // Get write only pointer(s) to sound buffer
     if(dwBytes == 0)
     {
         if(FAILED(hr = pVoice->Lock(pVoice->_this, 0, 0,
                                 (void**)ppDSLockedBuffer0, pdwDSLockedBufferSize0,
                                 (void**)ppDSLockedBuffer1, pdwDSLockedBufferSize1,
-                                DSBLOCK_ENTIREBUFFER)))
+                                0)))
             return false;
     }
     else

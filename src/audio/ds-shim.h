@@ -47,89 +47,12 @@ typedef struct IDirectSoundBuffer {
 
 #define DS_OK                           0
 
-// The call failed because resources (such as a priority level)
-// were already being used by another caller.
-#define DSERR_ALLOCATED                 0x8878000A
-
-// The control (vol,pan,etc.) requested by the caller is not available.
-#define DSERR_CONTROLUNAVAIL            0x8878001E
-
-// An invalid parameter was passed to the returning function
-#define DSERR_INVALIDPARAM              0x80070057
-
-// This call is not valid for the current state of this object
-#define DSERR_INVALIDCALL               0x88780032
-
-// An undetermined error occured inside the DirectSound subsystem
-#define DSERR_GENERIC                   0x80004005
-
-// The caller does not have the priority level required for the function to
-// succeed.
-#define DSERR_PRIOLEVELNEEDED           0x88780046
-
-// Not enough free memory is available to complete the operation
-#define DSERR_OUTOFMEMORY               0x8007000E
-
-// The specified WAVE format is not supported
-#define DSERR_BADFORMAT                 0x88780064
-
-// The function called is not supported at this time
-#define DSERR_UNSUPPORTED               0x80004001
-
-// No sound driver is available for use
-#define DSERR_NODRIVER                  0x88780078
-
-// This object is already initialized
-#define DSERR_ALREADYINITIALIZED        0x88780082
-
-// This object does not support aggregation
-#define DSERR_NOAGGREGATION             0x80040110
-
-// The buffer memory has been lost, and must be restored.
-#define DSERR_BUFFERLOST                0x88780096
-
-// Another app has a higher priority level, preventing this call from
-// succeeding.
-#define DSERR_OTHERAPPHASPRIO           0x887800A0
-
-// This object has not been initialized
-#define DSERR_UNINITIALIZED             0x887800AA
-
-// The requested COM interface is not available
-#define DSERR_NOINTERFACE               0x80000004
-
-// Access is denied
-#define DSERR_ACCESSDENIED              0x80070005
-
-// Tried to create a DSBCAPS_CTRLFX buffer shorter than DSBSIZE_FX_MIN milliseconds
-#define DSERR_BUFFERTOOSMALL            0x887800B4
-
-// Attempt to use DirectSound 8 functionality on an older DirectSound object
-#define DSERR_DS8_REQUIRED              0x887800BE
-
-// A circular loop of send effects was detected
-#define DSERR_SENDLOOP                  0x887800C8
-
-// The GUID specified in an audiopath file does not match a valid MIXIN buffer
-#define DSERR_BADSENDBUFFERGUID         0x887800D2
-
-// The object requested was not found (numerically equal to DMUS_E_NOT_FOUND)
-#define DSERR_OBJECTNOTFOUND            0x88781193
-
-
-#define DSBLOCK_FROMWRITECURSOR 0x1 // Locks from the current write position, making a call to IDirectSoundBuffer::GetCurrentPosition unnecessary. If this flag is specified, the dwWriteCursor parameter is ignored.
-#define DSBLOCK_ENTIREBUFFER    0x2 // Locks the entire buffer. The dwWriteBytes parameter is ignored.
-
-
-#define     DSBSTATUS_BUFFERLOST   0x00000002
 #define     DSBSTATUS_LOOPING   0x00000004
 #define     DSBSTATUS_PLAYING   0x00000001
 #define     _DSBSTATUS_NOTPLAYING 0x08000000
 #define DSBPLAY_LOOPING             0x00000001
 #define DSBVOLUME_MIN               -10000
 #define DSBVOLUME_MAX               0
-
-#define DSSCL_NORMAL                0x00000001
 
 #if defined(FAILED)
 #undef FAILED
@@ -139,13 +62,6 @@ typedef struct IDirectSoundBuffer {
 #endif
 static inline bool FAILED(int x) { return x != DS_OK; }
 static inline bool SUCCEEDED(int x) { return x == DS_OK; }
-
-#define WAVE_FORMAT_PCM 0x0001
-#define DSBCAPS_GETCURRENTPOSITION2 0x00010000
-#define DSBCAPS_STICKYFOCUS         0x00004000
-#define DSBCAPS_LOCSOFTWARE         0x00000008
-#define DSBCAPS_CTRLVOLUME          0x00000080
-#define DSBCAPS_CTRLPOSITIONNOTIFY  0x00000100
 
 typedef struct AudioParams_s {
     uint16_t nChannels;
@@ -157,13 +73,9 @@ typedef struct AudioParams_s {
 } AudioParams_s;
 
 typedef struct IDirectSound {
-
     void *implementation_specific;
-
-#define LPUNKNOWN void*
-    int (*CreateSoundBuffer)(AudioParams_s *pcDSBufferDesc, LPDIRECTSOUNDBUFFER * ppDSBuffer, LPUNKNOWN pUnkOuter);
+    int (*CreateSoundBuffer)(AudioParams_s *pcDSBufferDesc, LPDIRECTSOUNDBUFFER * ppDSBuffer, void *pUnkOuter);
     int (*DestroySoundBuffer)(LPDIRECTSOUNDBUFFER * ppDSBuffer);
-
 } IDirectSound, *LPDIRECTSOUND;
 
 #endif /* whole file */
