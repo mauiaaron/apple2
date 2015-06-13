@@ -17,8 +17,8 @@ noinst_HEADERS = src/common.h src/cpu.h src/disk.h src/glue.h \
 	src/meta/debug.h \
 	\
 	src/audio/alhelpers.h src/audio/AY8910.h src/audio/mockingboard.h \
-	src/audio/peripherals.h src/audio/soundcore.h src/audio/soundcore-openal.h \
-	src/audio/speaker.h src/audio/SSI263Phonemes.h
+	src/audio/peripherals.h src/audio/soundcore.h src/audio/speaker.h \
+	src/audio/SSI263Phonemes.h
 
 noinst_PROGRAMS = genfont genrom
 

@@ -15,11 +15,52 @@
 // there is a need to track any changes/fixes implemented in AppleWin...
 
 #include "common.h"
-#include "audio/soundcore-openal.h"
+
+#ifdef __APPLE__
+#   import <OpenAL/al.h>
+#   import <OpenAL/alc.h>
+#else
+#   include <AL/al.h>
+#   include <AL/alc.h>
+#   include <AL/alext.h>
+#endif
+
 #include "audio/alhelpers.h"
 
-static long OpenALCreateSoundBuffer(AudioParams_s *params, ALSoundBufferStruct **soundbuf_struct, void *extra_data);
-static long OpenALDestroySoundBuffer(ALSoundBufferStruct **soundbuf_struct);
+#define OPENAL_NUM_BUFFERS 4
+
+typedef struct IDirectSoundBuffer ALSoundBufferStruct;
+
+typedef struct ALPlayBuf {
+    const ALuint bufid; // the hash id
+    ALuint bytes;       // bytes to play
+    UT_hash_handle hh;  // make this struct hashable
+    struct ALPlayBuf *_avail_next;
+} ALPlayBuf;
+
+typedef struct ALVoice {
+    ALuint source;
+
+    // playing data
+    ALPlayBuf *queued_buffers;
+    ALint _queued_total_bytes; // a maximum estimate -- actual value depends on OpenAL query
+
+    // working data buffer
+    ALbyte *data;
+    ALsizei index;      // working buffer byte index
+    ALsizei buffersize; // working buffer size (and OpenAL buffersize)
+
+    // available buffers
+    ALPlayBuf *avail_buffers;
+
+    ALsizei replay_index;
+
+    // sample parameters
+    ALenum format;
+    ALenum channels;
+    ALenum type;
+    ALuint rate;
+} ALVoice;
 
 typedef struct ALVoices {
     const ALuint source;
@@ -28,6 +69,9 @@ typedef struct ALVoices {
 } ALVoices;
 
 static ALVoices *voices = NULL;
+
+static long OpenALCreateSoundBuffer(AudioParams_s *params, ALSoundBufferStruct **soundbuf_struct, void *extra_data);
+static long OpenALDestroySoundBuffer(ALSoundBufferStruct **soundbuf_struct);
 
 // ----------------------------------------------------------------------------
 // uthash of OpenAL buffers
