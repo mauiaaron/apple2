@@ -10,12 +10,16 @@
  */
 
 /*
- * Sources derived from AppleWin emulator
- * Ported by Aaron Culliney
+ * Apple //e core sound system support. Source inspired/derived from AppleWin.
+ *
  */
 
 #ifndef _SOUNDCORE_H_
 #define _SOUNDCORE_H_
+
+#define MAX_SAMPLES (8*1024)
+#define AUDIO_STATUS_PLAYING    0x00000001
+#define AUDIO_STATUS_NOTPLAYING 0x08000000
 
 
 typedef struct IDirectSoundBuffer {
@@ -43,17 +47,14 @@ typedef struct IDirectSoundBuffer {
 
     int (*GetStatus)(void* _this, unsigned long *lpdwStatus);
 
+    // Mockingboard-specific HACKS
     int (*UnlockStaticBuffer)(void* _this, unsigned long dwAudioBytes);
-
     int (*Replay)(void* _this);
 
 } IDirectSoundBuffer, *LPDIRECTSOUNDBUFFER, **LPLPDIRECTSOUNDBUFFER;
 
 #define DS_OK                           0
 
-#define     DSBSTATUS_LOOPING   0x00000004
-#define     DSBSTATUS_PLAYING   0x00000001
-#define     _DSBSTATUS_NOTPLAYING 0x08000000
 #define DSBPLAY_LOOPING             0x00000001
 #define DSBVOLUME_MIN               -10000
 #define DSBVOLUME_MAX               0
@@ -82,16 +83,9 @@ typedef struct IDirectSound {
     int (*DestroySoundBuffer)(LPDIRECTSOUNDBUFFER * ppDSBuffer);
 } IDirectSound, *LPDIRECTSOUND;
 
-#define MAX_SAMPLES (8*1024)
-
 typedef struct
 {
     LPDIRECTSOUNDBUFFER lpDSBvoice;
-#ifdef APPLE2IX
-        // apparently lpDSNotify isn't used...
-#define LPDIRECTSOUNDNOTIFY void*
-#endif
-    LPDIRECTSOUNDNOTIFY lpDSNotify;
     bool bActive;            // Playback is active
     bool bMute;
     long nVolume;            // Current volume (as used by DirectSound)
@@ -125,13 +119,11 @@ void DSUninit();
 
 extern bool soundcore_isAvailable;
 
-#ifdef APPLE2IX
 typedef struct IDirectSound SoundSystemStruct;
 long SoundSystemCreate(const char *sound_device, SoundSystemStruct **sound_struct);
 long SoundSystemDestroy(SoundSystemStruct **sound_struct);
 long SoundSystemPause();
 long SoundSystemUnpause();
 long SoundSystemEnumerate(char ***sound_devices, const int maxcount);
-#endif
 
 #endif /* whole file */

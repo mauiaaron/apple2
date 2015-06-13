@@ -677,11 +677,11 @@ static long ALGetStatus(void *_this, unsigned long *status)
 
     if ((state == AL_PLAYING) || (state == AL_PAUSED))
     {
-        *status = DSBSTATUS_PLAYING;
+        *status = AUDIO_STATUS_PLAYING;
     }
     else
     {
-        *status = _DSBSTATUS_NOTPLAYING;
+        *status = AUDIO_STATUS_NOTPLAYING;
     }
 
     return 0;

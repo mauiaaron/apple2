@@ -1161,7 +1161,7 @@ static unsigned long SSI263Thread(void *lpParameter)
                     unsigned long status = 0;
                     SSI263Voice[i].lpDSBvoice->GetStatus(SSI263Voice[i].lpDSBvoice, &status);
 
-                    if (status & _DSBSTATUS_NOTPLAYING)
+                    if (status & AUDIO_STATUS_NOTPLAYING)
                     {
                         sample_finished = true;
                         break;
