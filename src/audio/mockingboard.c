@@ -2215,6 +2215,15 @@ unsigned long MB_GetVolume()
 	return MockingboardVoice.dwUserVolume;
 }
 
+//-----------------------------------------------------------------------------
+
+static long NewVolume(unsigned long dwVolume, unsigned long dwVolumeMax)
+{
+    float fVol = (float) dwVolume / (float) dwVolumeMax;    // 0.0=Max, 1.0=Min
+
+    return (long) ((float) DSBVOLUME_MIN * fVol);
+}
+
 void MB_SetVolume(unsigned long dwVolume, unsigned long dwVolumeMax)
 {
 #ifdef APPLE2IX

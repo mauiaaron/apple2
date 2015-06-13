@@ -62,14 +62,6 @@ void SoundCore_SetErrorMax(const int nErrorMax);
 bool DSInit();
 void DSUninit();
 
-long NewVolume(unsigned long dwVolume, unsigned long dwVolumeMax);
-
-void SysClk_WaitTimer();
-bool SysClk_InitTimer();
-void SysClk_UninitTimer();
-void SysClk_StartTimerUsec(unsigned long dwUsecPeriod);
-void SysClk_StopTimer();
-
 //
 
 extern bool g_bDSAvailable;

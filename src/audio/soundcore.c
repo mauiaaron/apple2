@@ -314,15 +314,6 @@ void DSUninit()
     g_bDSAvailable = false;
 }
 
-//-----------------------------------------------------------------------------
-
-long NewVolume(unsigned long dwVolume, unsigned long dwVolumeMax)
-{
-    float fVol = (float) dwVolume / (float) dwVolumeMax;    // 0.0=Max, 1.0=Min
-
-    return (long) ((float) DSBVOLUME_MIN * fVol);
-}
-
 //=============================================================================
 
 static int g_nErrorInc = 20;    // Old: 1
