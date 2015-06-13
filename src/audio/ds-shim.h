@@ -166,36 +166,6 @@ typedef struct DSBUFFERDESC {
     LPWAVEFORMATEX lpwfxFormat; 
 } DSBUFFERDESC; 
 
-typedef unsigned long DSCAPS_MASK;
-typedef struct _DSCAPS
-{
-    unsigned long           dwSize;
-    DSCAPS_MASK     dwFlags;
-    unsigned long           dwMinSecondarySampleRate;
-    unsigned long           dwMaxSecondarySampleRate;
-    unsigned long           dwPrimaryBuffers;
-    unsigned long           dwMaxHwMixingAllBuffers;
-    unsigned long           dwMaxHwMixingStaticBuffers;
-    unsigned long           dwMaxHwMixingStreamingBuffers;
-    unsigned long           dwFreeHwMixingAllBuffers;
-    unsigned long           dwFreeHwMixingStaticBuffers;
-    unsigned long           dwFreeHwMixingStreamingBuffers;
-    unsigned long           dwMaxHw3DAllBuffers;
-    unsigned long           dwMaxHw3DStaticBuffers;
-    unsigned long           dwMaxHw3DStreamingBuffers;
-    unsigned long           dwFreeHw3DAllBuffers;
-    unsigned long           dwFreeHw3DStaticBuffers;
-    unsigned long           dwFreeHw3DStreamingBuffers;
-    unsigned long           dwTotalHwMemBytes;
-    unsigned long           dwFreeHwMemBytes;
-    unsigned long           dwMaxContigFreeHwMemBytes;
-    unsigned long           dwUnlockTransferRateHwBuffers;
-    unsigned long           dwPlayCpuOverheadSwBuffers;
-    unsigned long           dwReserved1;
-    unsigned long           dwReserved2;
-} DSCAPS, *LPDSCAPS;
-typedef DSCAPS *LPCDSCAPS;
-
 typedef struct IDirectSound {
 
     void *implementation_specific;

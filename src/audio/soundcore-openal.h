@@ -32,22 +32,6 @@
 typedef struct IDirectSoundBuffer ALSoundBufferStruct;
 
 typedef struct DSBUFFERDESC ALBufferParamsStruct;
-/*
-    unsigned long dwSize; 
-    unsigned long dwFlags; 
-    unsigned long dwBufferBytes; 
-    unsigned long dwReserved; 
-    LPWAVEFORMATEX lpwfxFormat
-    {
-        uint16_t  wFormatTag;
-        uint16_t  nChannels;
-        unsigned long nSamplesPerSec;
-        unsigned long nAvgBytesPerSec;
-        uint16_t  nBlockAlign;
-        uint16_t  wBitsPerSample;
-        uint16_t  cbSize;
-    }
-*/
 
 struct ALPlayBuf;
 typedef struct ALPlayBuf {
