@@ -18,7 +18,7 @@
 #include "audio/soundcore-openal.h"
 #include "audio/alhelpers.h"
 
-static long OpenALCreateSoundBuffer(ALBufferParamsStruct *params, ALSoundBufferStruct **soundbuf_struct, void *extra_data);
+static long OpenALCreateSoundBuffer(AudioParams_s *params, ALSoundBufferStruct **soundbuf_struct, void *extra_data);
 static long OpenALDestroySoundBuffer(ALSoundBufferStruct **soundbuf_struct);
 
 typedef struct ALVoices {
@@ -138,7 +138,7 @@ long SoundSystemCreate(const char *sound_device, SoundSystemStruct **sound_struc
         }
 
         (*sound_struct)->implementation_specific = ctx;
-        (*sound_struct)->CreateSoundBuffer = (int (*)(DSBUFFERDESC *, LPDIRECTSOUNDBUFFER *, void *))OpenALCreateSoundBuffer;
+        (*sound_struct)->CreateSoundBuffer = (int (*)(AudioParams_s *, LPDIRECTSOUNDBUFFER *, void *))OpenALCreateSoundBuffer;
         (*sound_struct)->DestroySoundBuffer = (int (*)(LPDIRECTSOUNDBUFFER *))OpenALDestroySoundBuffer;
 
         return 0;
@@ -257,7 +257,7 @@ static void DeleteVoice(ALVoice *voice)
 /* Creates a new voice object, and allocates the needed OpenAL source and
  * buffer objects. Error checking is simplified for the purposes of this
  * example, and will cause an abort if needed. */
-static ALVoice *NewVoice(ALBufferParamsStruct *params)
+static ALVoice *NewVoice(AudioParams_s *params)
 {
     ALVoice *voice = NULL;
 
@@ -328,10 +328,10 @@ static ALVoice *NewVoice(ALBufferParamsStruct *params)
             voice->avail_buffers = node;
         }
 
-        voice->rate = (ALuint)params->lpwfxFormat->nSamplesPerSec;
+        voice->rate = (ALuint)params->nSamplesPerSec;
 
         // Emulator supports only mono and stereo 
-        if (params->lpwfxFormat->nChannels == 2)
+        if (params->nChannels == 2)
         {
             voice->format = AL_FORMAT_STEREO16;
         }
@@ -687,7 +687,7 @@ static long ALGetStatus(void *_this, unsigned long *status)
     return 0;
 }
 
-static long OpenALCreateSoundBuffer(ALBufferParamsStruct *params, ALSoundBufferStruct **soundbuf_struct, void *extra_data)
+static long OpenALCreateSoundBuffer(AudioParams_s *params, ALSoundBufferStruct **soundbuf_struct, void *extra_data)
 {
     LOG("OpenALCreateSoundBuffer ...");
     assert(*soundbuf_struct == NULL);

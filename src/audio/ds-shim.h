@@ -147,31 +147,21 @@ static inline bool SUCCEEDED(int x) { return x == DS_OK; }
 #define DSBCAPS_CTRLVOLUME          0x00000080
 #define DSBCAPS_CTRLPOSITIONNOTIFY  0x00000100
 
-
-typedef struct {
-    uint16_t  wFormatTag;
-    uint16_t  nChannels;
+typedef struct AudioParams_s {
+    uint16_t nChannels;
     unsigned long nSamplesPerSec;
     unsigned long nAvgBytesPerSec;
-    uint16_t  nBlockAlign;
-    uint16_t  wBitsPerSample;
-    uint16_t  cbSize;
-} WAVEFORMATEX, *LPWAVEFORMATEX;
-
-typedef struct DSBUFFERDESC { 
-    unsigned long dwSize; 
-    unsigned long dwFlags; 
+    uint16_t nBlockAlign;
+    uint16_t wBitsPerSample;
     unsigned long dwBufferBytes; 
-    unsigned long dwReserved; 
-    LPWAVEFORMATEX lpwfxFormat; 
-} DSBUFFERDESC; 
+} AudioParams_s;
 
 typedef struct IDirectSound {
 
     void *implementation_specific;
 
 #define LPUNKNOWN void*
-    int (*CreateSoundBuffer)(DSBUFFERDESC *pcDSBufferDesc, LPDIRECTSOUNDBUFFER * ppDSBuffer, LPUNKNOWN pUnkOuter);
+    int (*CreateSoundBuffer)(AudioParams_s *pcDSBufferDesc, LPDIRECTSOUNDBUFFER * ppDSBuffer, LPUNKNOWN pUnkOuter);
     int (*DestroySoundBuffer)(LPDIRECTSOUNDBUFFER * ppDSBuffer);
 
 } IDirectSound, *LPDIRECTSOUND;

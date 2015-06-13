@@ -101,21 +101,14 @@ bool DSGetLock(LPDIRECTSOUNDBUFFER pVoice, unsigned long dwOffset, unsigned long
 
 int DSGetSoundBuffer(VOICE* pVoice, unsigned long dwFlags, unsigned long dwBufferSize, unsigned long nSampleRate, int nChannels)
 {
-    WAVEFORMATEX wavfmt;
-    DSBUFFERDESC dsbdesc;
+    AudioParams_s params = { 0 };
 
-    wavfmt.wFormatTag = WAVE_FORMAT_PCM;
-    wavfmt.nChannels = nChannels;
-    wavfmt.nSamplesPerSec = nSampleRate;
-    wavfmt.wBitsPerSample = 16;
-    wavfmt.nBlockAlign = wavfmt.nChannels==1 ? 2 : 4;
-    wavfmt.nAvgBytesPerSec = wavfmt.nBlockAlign * wavfmt.nSamplesPerSec;
-
-    memset (&dsbdesc, 0, sizeof (dsbdesc));
-    dsbdesc.dwSize = sizeof (dsbdesc);
-    dsbdesc.dwBufferBytes = dwBufferSize;
-    dsbdesc.lpwfxFormat = &wavfmt;
-    dsbdesc.dwFlags = dwFlags | DSBCAPS_GETCURRENTPOSITION2 | DSBCAPS_STICKYFOCUS;
+    params.nChannels = nChannels;
+    params.nSamplesPerSec = nSampleRate;
+    params.wBitsPerSample = 16;
+    params.nBlockAlign = (params.nChannels == 1) ? 2 : 4;
+    params.nAvgBytesPerSec = params.nBlockAlign * params.nSamplesPerSec;
+    params.dwBufferBytes = dwBufferSize;
 
     // Are buffers released when g_lpDS OR pVoice->lpDSBvoice is released?
     // . From DirectX doc:
@@ -126,7 +119,7 @@ int DSGetSoundBuffer(VOICE* pVoice, unsigned long dwFlags, unsigned long dwBuffe
             g_lpDS->DestroySoundBuffer(&pVoice->lpDSBvoice);
             //DSReleaseSoundBuffer(pVoice);
         }
-    int hr = g_lpDS->CreateSoundBuffer(&dsbdesc, &pVoice->lpDSBvoice, g_lpDS);
+    int hr = g_lpDS->CreateSoundBuffer(&params, &pVoice->lpDSBvoice, g_lpDS);
     if(FAILED(hr))
         return hr;
 

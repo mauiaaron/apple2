@@ -31,8 +31,6 @@
 
 typedef struct IDirectSoundBuffer ALSoundBufferStruct;
 
-typedef struct DSBUFFERDESC ALBufferParamsStruct;
-
 struct ALPlayBuf;
 typedef struct ALPlayBuf {
     const ALuint bufid; // the hash id
