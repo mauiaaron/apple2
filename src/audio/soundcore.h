@@ -52,10 +52,6 @@ typedef struct IDirectSoundBuffer {
 
 } IDirectSoundBuffer, *LPDIRECTSOUNDBUFFER, **LPLPDIRECTSOUNDBUFFER;
 
-#define DSBPLAY_LOOPING             0x00000001
-#define DSBVOLUME_MIN               -10000
-#define DSBVOLUME_MAX               0
-
 typedef struct AudioParams_s {
     uint16_t nChannels;
     unsigned long nSamplesPerSec;

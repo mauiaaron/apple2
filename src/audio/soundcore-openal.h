@@ -23,12 +23,6 @@
 #include <AL/alext.h>
 #endif
 
-#undef DSBVOLUME_MIN
-#define DSBVOLUME_MIN 0
-
-#undef DSBVOLUME_MAX
-#define DSBVOLUME_MAX 100
-
 typedef struct IDirectSoundBuffer ALSoundBufferStruct;
 
 struct ALPlayBuf;

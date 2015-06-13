@@ -26,11 +26,12 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * Author: Copyright (c) 2002-2006, Tom Charlesworth
  */
 
-#define DSBCAPS_GETCURRENTPOSITION2 0x00010000
-#define DSBCAPS_STICKYFOCUS         0x00004000
 #define DSBCAPS_LOCSOFTWARE         0x00000008
 #define DSBCAPS_CTRLVOLUME          0x00000080
 #define DSBCAPS_CTRLPOSITIONNOTIFY  0x00000100
+
+#define DSBVOLUME_MIN               -10000
+#define DSBVOLUME_MAX               0
 
 
 // Linux port by Aaron Culliney, 2013
