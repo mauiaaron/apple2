@@ -90,6 +90,11 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #       include <sys/io.h>
 #       endif
 
+#if defined(FAILED)
+#undef FAILED
+#endif
+static inline bool FAILED(int x) { return x != 0; }
+
 #define THREAD_PRIORITY_NORMAL 0
 #define THREAD_PRIORITY_TIME_CRITICAL 15
 #define STILL_ACTIVE 259

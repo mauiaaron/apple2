@@ -60,13 +60,13 @@ bool DSGetLock(LPDIRECTSOUNDBUFFER pVoice, unsigned long dwOffset, unsigned long
 {
     unsigned long nStatus = 0;
     int hr = pVoice->GetStatus(pVoice->_this, &nStatus);
-    if(hr != DS_OK)
+    if(hr)
         return false;
 
     // Get write only pointer(s) to sound buffer
     if(dwBytes == 0)
     {
-        if(FAILED(hr = pVoice->Lock(pVoice->_this, 0, 0,
+        if( (hr = pVoice->Lock(pVoice->_this, 0, 0,
                                 (void**)ppDSLockedBuffer0, pdwDSLockedBufferSize0,
                                 (void**)ppDSLockedBuffer1, pdwDSLockedBufferSize1,
                                 0)))
@@ -74,7 +74,7 @@ bool DSGetLock(LPDIRECTSOUNDBUFFER pVoice, unsigned long dwOffset, unsigned long
     }
     else
     {
-        if(FAILED(hr = pVoice->Lock(pVoice->_this, dwOffset, dwBytes,
+        if( (hr = pVoice->Lock(pVoice->_this, dwOffset, dwBytes,
                                 (void**)ppDSLockedBuffer0, pdwDSLockedBufferSize0,
                                 (void**)ppDSLockedBuffer1, pdwDSLockedBufferSize1,
                                 0)))
@@ -107,7 +107,7 @@ int DSGetSoundBuffer(VOICE* pVoice, unsigned long dwFlags, unsigned long dwBuffe
             //DSReleaseSoundBuffer(pVoice);
         }
     int hr = g_lpDS->CreateSoundBuffer(&params, &pVoice->lpDSBvoice, g_lpDS);
-    if(FAILED(hr))
+    if(hr)
         return hr;
 
     //
@@ -154,13 +154,13 @@ bool DSZeroVoiceBuffer(PVOICE Voice, char* pszDevName, unsigned long dwBufferSiz
 
         unsigned long argX = 0;
     int hr = Voice->lpDSBvoice->Stop(Voice->lpDSBvoice->_this);
-    if(FAILED(hr))
+    if(hr)
     {
         LOG("%s: DSStop failed (%08X)\n",pszDevName,(unsigned int)hr);
         return false;
     }
     hr = !DSGetLock(Voice->lpDSBvoice, 0, 0, &pDSLockedBuffer, &dwDSLockedBufferSize, NULL, &argX);
-    if(FAILED(hr))
+    if(hr)
     {
         LOG("%s: DSGetLock failed (%08X)\n",pszDevName,(unsigned int)hr);
         return false;
@@ -170,14 +170,14 @@ bool DSZeroVoiceBuffer(PVOICE Voice, char* pszDevName, unsigned long dwBufferSiz
     memset(pDSLockedBuffer, 0x00, dwDSLockedBufferSize);
 
     hr = Voice->lpDSBvoice->Unlock(Voice->lpDSBvoice->_this, (void*)pDSLockedBuffer, dwDSLockedBufferSize, NULL, argX);
-    if(FAILED(hr))
+    if(hr)
     {
         LOG("%s: DSUnlock failed (%08X)\n",pszDevName,(unsigned int)hr);
         return false;
     }
 
     hr = Voice->lpDSBvoice->Play(Voice->lpDSBvoice->_this,0,0,0);
-    if(FAILED(hr))
+    if(hr)
     {
         LOG("%s: DSPlay failed (%08X)\n",pszDevName,(unsigned int)hr);
         return false;
@@ -199,7 +199,7 @@ bool DSZeroVoiceWritableBuffer(PVOICE Voice, char* pszDevName, unsigned long dwB
                             &pDSLockedBuffer0, &dwDSLockedBufferSize0,
                             &pDSLockedBuffer1, &dwDSLockedBufferSize1);
         hr = !hr;
-    if(FAILED(hr))
+    if(hr)
     {
         LOG("%s: DSGetLock failed (%08X)\n",pszDevName,(unsigned int)hr);
         return false;
@@ -211,7 +211,7 @@ bool DSZeroVoiceWritableBuffer(PVOICE Voice, char* pszDevName, unsigned long dwB
 
     hr = Voice->lpDSBvoice->Unlock(Voice->lpDSBvoice->_this, (void*)pDSLockedBuffer0, dwDSLockedBufferSize0,
                                     (void*)pDSLockedBuffer1, dwDSLockedBufferSize1);
-    if(FAILED(hr))
+    if(hr)
     {
         LOG("%s: DSUnlock failed (%08X)\n",pszDevName,(unsigned int)hr);
         return false;
@@ -248,7 +248,7 @@ bool DSInit()
     _destroy_enumerated_sound_devices();
     num_sound_devices = SoundSystemEnumerate(&sound_devices, MAX_SOUND_DEVICES);
         int hr = (num_sound_devices <= 0);
-    if(FAILED(hr))
+    if(hr)
     {
         LOG("DSEnumerate failed (%08X)\n",(unsigned int)hr);
         return false;
@@ -264,7 +264,7 @@ bool DSInit()
                     SoundSystemDestroy((SoundSystemStruct**)&g_lpDS);
                 }
                 hr = (int)SoundSystemCreate(sound_devices[x], (SoundSystemStruct**)&g_lpDS);
-        if(SUCCEEDED(hr))
+        if(hr == 0)
         {
             bCreatedOK = true;
             break;

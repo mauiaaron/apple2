@@ -21,7 +21,6 @@
 #define AUDIO_STATUS_PLAYING    0x00000001
 #define AUDIO_STATUS_NOTPLAYING 0x08000000
 
-
 typedef struct IDirectSoundBuffer {
 
     void *_this;
@@ -53,20 +52,9 @@ typedef struct IDirectSoundBuffer {
 
 } IDirectSoundBuffer, *LPDIRECTSOUNDBUFFER, **LPLPDIRECTSOUNDBUFFER;
 
-#define DS_OK                           0
-
 #define DSBPLAY_LOOPING             0x00000001
 #define DSBVOLUME_MIN               -10000
 #define DSBVOLUME_MAX               0
-
-#if defined(FAILED)
-#undef FAILED
-#endif
-#if defined(SUCCEEDED)
-#undef SUCCEEDED
-#endif
-static inline bool FAILED(int x) { return x != DS_OK; }
-static inline bool SUCCEEDED(int x) { return x == DS_OK; }
 
 typedef struct AudioParams_s {
     uint16_t nChannels;
