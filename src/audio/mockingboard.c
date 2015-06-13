@@ -1371,7 +1371,7 @@ static bool MB_DSInit()
 	unsigned long dwDSLockedBufferSize = 0;    // Size of the locked DirectSound buffer
 	int16_t* pDSLockedBuffer;
 
-	if(!g_bDSAvailable)
+	if(!soundcore_isAvailable)
 		return false;
 
 	int hr = DSGetSoundBuffer(&MockingboardVoice, DSBCAPS_CTRLVOLUME, g_dwDSBufferSize, SAMPLE_RATE, 2);
@@ -1672,8 +1672,7 @@ void MB_Initialize()
 #ifdef APPLE2IX
     memset(SSI263Voice, 0x0, sizeof(VOICE)*MAX_VOICES);
 #endif
-	LOG("MB_Initialize: g_bDisableDirectSound=%d, g_bDisableDirectSoundMockingboard=%d\n", g_bDisableDirectSound, g_bDisableDirectSoundMockingboard);
-	if (g_bDisableDirectSound || g_bDisableDirectSoundMockingboard)
+	if (g_bDisableDirectSoundMockingboard)
 	{
 		MockingboardVoice.bMute = true;
 		g_SoundcardType = CT_Empty;
@@ -1758,7 +1757,7 @@ static void ResetState()
 
 void MB_Reset()
 {
-	if(!g_bDSAvailable)
+	if(!soundcore_isAvailable)
 		return;
 
 	for(int i=0; i<NUM_AY8910; i++)

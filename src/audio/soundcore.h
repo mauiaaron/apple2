@@ -21,8 +21,6 @@
 
 #define MAX_SAMPLES (8*1024)
 
-extern bool g_bDisableDirectSound;
-
 typedef struct
 {
     LPDIRECTSOUNDBUFFER lpDSBvoice;
@@ -62,9 +60,7 @@ void SoundCore_SetErrorMax(const int nErrorMax);
 bool DSInit();
 void DSUninit();
 
-//
-
-extern bool g_bDSAvailable;
+extern bool soundcore_isAvailable;
 
 #ifdef APPLE2IX
 typedef struct IDirectSound SoundSystemStruct;

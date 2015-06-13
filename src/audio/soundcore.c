@@ -50,9 +50,7 @@ static VOICE* g_pSpeakerVoice = NULL;
 
 //-------------------------------------
 
-bool g_bDSAvailable = false;
-
-bool g_bDisableDirectSound = false;
+bool soundcore_isAvailable = false;
 
 //-----------------------------------------------------------------------------
 
@@ -241,7 +239,7 @@ static void _destroy_enumerated_sound_devices(void) {
 
 bool DSInit()
 {
-    if(g_bDSAvailable)
+    if(soundcore_isAvailable)
     {
         g_uDSInitRefCount++;
         return true;        // Already initialised successfully
@@ -280,7 +278,7 @@ bool DSInit()
         return false;
     }
 
-    g_bDSAvailable = true;
+    soundcore_isAvailable = true;
 
     g_uDSInitRefCount = 1;
 
@@ -293,7 +291,7 @@ void DSUninit()
 {
     _destroy_enumerated_sound_devices();
 
-    if(!g_bDSAvailable)
+    if(!soundcore_isAvailable)
         return;
 
     assert(g_uDSInitRefCount);
@@ -311,7 +309,7 @@ void DSUninit()
     assert(g_uNumVoices == 0);
 
         SoundSystemDestroy((SoundSystemStruct**)&g_lpDS);
-    g_bDSAvailable = false;
+    soundcore_isAvailable = false;
 }
 
 //=============================================================================
