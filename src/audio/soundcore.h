@@ -99,8 +99,15 @@ void SoundCore_SetErrorInc(const int nErrorInc);
 int SoundCore_GetErrorMax(void);
 void SoundCore_SetErrorMax(const int nErrorMax);
 
-bool DSInit(void);
-void DSUninit(void);
+/*
+ * Prepare the audio subsystem, including the backend renderer.
+ */
+bool audio_init(void);
+
+/*
+ * Shutdown the audio subsystem and backend renderer.
+ */
+void audio_shutdown(void);
 
 extern bool audio_isAvailable;
 

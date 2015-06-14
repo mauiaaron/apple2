@@ -239,7 +239,7 @@ static void _destroy_enumerated_sound_devices(void) {
     }
 }
 
-bool DSInit(void)
+bool audio_init(void)
 {
     if(audio_isAvailable)
     {
@@ -289,7 +289,7 @@ bool DSInit(void)
 
 //-----------------------------------------------------------------------------
 
-void DSUninit(void)
+void audio_shutdown(void)
 {
     _destroy_enumerated_sound_devices();
 

@@ -136,7 +136,7 @@ void test_common_init(bool do_cputhread) {
         }
     } else {
 #ifdef AUDIO_ENABLED
-        DSInit();
+        audio_init();
         speaker_init();
         MB_Initialize();
 #endif

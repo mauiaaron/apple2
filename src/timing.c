@@ -189,7 +189,7 @@ void *cpu_thread(void *dummyptr) {
     assert(pthread_self() == cpu_thread_id);
 
 #ifdef AUDIO_ENABLED
-    DSInit();
+    audio_init();
     speaker_init();
     MB_Initialize();
 #endif
@@ -410,7 +410,7 @@ void *cpu_thread(void *dummyptr) {
 #ifdef AUDIO_ENABLED
     speaker_destroy();
     MB_Destroy();
-    DSUninit();
+    audio_shutdown();
 #endif
 
     return NULL;
