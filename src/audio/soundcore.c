@@ -50,7 +50,9 @@ static VOICE* g_pSpeakerVoice = NULL;
 
 //-------------------------------------
 
-bool soundcore_isAvailable = false;
+bool audio_isAvailable = false;
+
+audio_backend_s *audio_backend = NULL;
 
 //-----------------------------------------------------------------------------
 
@@ -239,14 +241,14 @@ static void _destroy_enumerated_sound_devices(void) {
 
 bool DSInit()
 {
-    if(soundcore_isAvailable)
+    if(audio_isAvailable)
     {
         g_uDSInitRefCount++;
         return true;        // Already initialised successfully
     }
 
     _destroy_enumerated_sound_devices();
-    num_sound_devices = SoundSystemEnumerate(&sound_devices, MAX_SOUND_DEVICES);
+    num_sound_devices = audio_backend->enumerateDevices(&sound_devices, MAX_SOUND_DEVICES);
         int hr = (num_sound_devices <= 0);
     if(hr)
     {
@@ -261,9 +263,9 @@ bool DSInit()
     {
                 if (g_lpDS)
                 {
-                    SoundSystemDestroy((SoundSystemStruct**)&g_lpDS);
+                    audio_backend->shutdown((SoundSystemStruct**)&g_lpDS);
                 }
-                hr = (int)SoundSystemCreate(sound_devices[x], (SoundSystemStruct**)&g_lpDS);
+                hr = (int)audio_backend->init(sound_devices[x], (SoundSystemStruct**)&g_lpDS);
         if(hr == 0)
         {
             bCreatedOK = true;
@@ -278,7 +280,7 @@ bool DSInit()
         return false;
     }
 
-    soundcore_isAvailable = true;
+    audio_isAvailable = true;
 
     g_uDSInitRefCount = 1;
 
@@ -291,7 +293,7 @@ void DSUninit()
 {
     _destroy_enumerated_sound_devices();
 
-    if(!soundcore_isAvailable)
+    if(!audio_isAvailable)
         return;
 
     assert(g_uDSInitRefCount);
@@ -308,8 +310,8 @@ void DSUninit()
 
     assert(g_uNumVoices == 0);
 
-        SoundSystemDestroy((SoundSystemStruct**)&g_lpDS);
-    soundcore_isAvailable = false;
+        audio_backend->shutdown((SoundSystemStruct**)&g_lpDS);
+    audio_isAvailable = false;
 }
 
 //=============================================================================

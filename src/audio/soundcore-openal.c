@@ -70,6 +70,8 @@ typedef struct ALVoices {
 
 static ALVoices *voices = NULL;
 
+static audio_backend_s openal_audio_backend = { 0 };
+
 static long OpenALCreateSoundBuffer(AudioParams_s *params, ALSoundBufferStruct **soundbuf_struct, void *extra_data);
 static long OpenALDestroySoundBuffer(ALSoundBufferStruct **soundbuf_struct);
 
@@ -151,7 +153,7 @@ static void PlaylistDequeue(ALVoice *voice, ALPlayBuf *node)
 
 // ----------------------------------------------------------------------------
 
-long SoundSystemCreate(const char *sound_device, SoundSystemStruct **sound_struct)
+static long openal_systemInit(const char *sound_device, SoundSystemStruct **sound_struct)
 {
     assert(*sound_struct == NULL);
     assert(voices == NULL);
@@ -197,9 +199,8 @@ long SoundSystemCreate(const char *sound_device, SoundSystemStruct **sound_struc
     return -1;
 }
 
-long SoundSystemDestroy(SoundSystemStruct **sound_struct)
+static long openal_systemShutdown(SoundSystemStruct **sound_struct)
 {
-    // ugly assumption : this sets the extern g_lpDS ...
     assert(*sound_struct != NULL);
 
     ALCcontext *ctx = (ALCcontext*) (*sound_struct)->implementation_specific;
@@ -212,7 +213,7 @@ long SoundSystemDestroy(SoundSystemStruct **sound_struct)
     return 0;
 }
 
-long SoundSystemEnumerate(char ***device_list, const int limit)
+static long openal_systemEnumerate(char ***device_list, const int limit)
 {
     assert(*device_list == NULL);
     *device_list = malloc(sizeof(char*)*2);
@@ -223,7 +224,7 @@ long SoundSystemEnumerate(char ***device_list, const int limit)
 }
 
 // pause all audio
-long SoundSystemPause()
+static long openal_systemPause(void)
 {
     ALVoices *vnode = NULL;
     ALVoices *tmp = NULL;
@@ -241,7 +242,7 @@ long SoundSystemPause()
     return 0;
 }
 
-long SoundSystemUnpause()
+static long openal_systemResume(void)
 {
     ALVoices *vnode = NULL;
     ALVoices *tmp = NULL;
@@ -818,5 +819,18 @@ static long OpenALDestroySoundBuffer(ALSoundBufferStruct **soundbuf_struct)
 
     FREE(*soundbuf_struct);
     return 0;
+}
+
+__attribute__((constructor(CTOR_PRIORITY_EARLY)))
+static void _init_openal(void) {
+    LOG("Initializing OpenAL sound system");
+
+    openal_audio_backend.init             = &openal_systemInit;
+    openal_audio_backend.shutdown         = &openal_systemShutdown;
+    openal_audio_backend.pause            = &openal_systemPause;
+    openal_audio_backend.resume           = &openal_systemResume;
+    openal_audio_backend.enumerateDevices = &openal_systemEnumerate;
+
+    audio_backend = &openal_audio_backend;
 }
 

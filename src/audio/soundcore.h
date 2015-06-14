@@ -66,6 +66,7 @@ typedef struct IDirectSound {
     int (*CreateSoundBuffer)(AudioParams_s *pcDSBufferDesc, LPDIRECTSOUNDBUFFER * ppDSBuffer, void *pUnkOuter);
     int (*DestroySoundBuffer)(LPDIRECTSOUNDBUFFER * ppDSBuffer);
 } IDirectSound, *LPDIRECTSOUND;
+typedef struct IDirectSound SoundSystemStruct;
 
 typedef struct
 {
@@ -101,13 +102,22 @@ void SoundCore_SetErrorMax(const int nErrorMax);
 bool DSInit();
 void DSUninit();
 
-extern bool soundcore_isAvailable;
+extern bool audio_isAvailable;
 
-typedef struct IDirectSound SoundSystemStruct;
-long SoundSystemCreate(const char *sound_device, SoundSystemStruct **sound_struct);
-long SoundSystemDestroy(SoundSystemStruct **sound_struct);
-long SoundSystemPause();
-long SoundSystemUnpause();
-long SoundSystemEnumerate(char ***sound_devices, const int maxcount);
+typedef struct audio_backend_s {
+
+    // mandatory audio backend functions
+    long (*init)(const char *sound_device, SoundSystemStruct **sound_struct);
+    long (*shutdown)(SoundSystemStruct **sound_struct);
+    long (*pause)(void);
+    long (*resume)(void);
+    long (*enumerateDevices)(char ***sound_devices, const int maxcount);
+
+} audio_backend_s;
+
+/*
+ * The registered audio backend (renderer).
+ */
+extern audio_backend_s *audio_backend;
 
 #endif /* whole file */

@@ -1377,7 +1377,7 @@ static bool MB_DSInit()
 	unsigned long dwDSLockedBufferSize = 0;    // Size of the locked DirectSound buffer
 	int16_t* pDSLockedBuffer;
 
-	if(!soundcore_isAvailable)
+	if(!audio_isAvailable)
 		return false;
 
 	int hr = DSGetSoundBuffer(&MockingboardVoice, DSBCAPS_CTRLVOLUME, g_dwDSBufferSize, SAMPLE_RATE, 2);
@@ -1763,7 +1763,7 @@ static void ResetState()
 
 void MB_Reset()
 {
-	if(!soundcore_isAvailable)
+	if(!audio_isAvailable)
 		return;
 
 	for(int i=0; i<NUM_AY8910; i++)
