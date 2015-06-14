@@ -233,44 +233,63 @@ static inline void _setup_button_object_with_char(char newChar) {
 
 // Tap Delay Thread : delays processing of touch-down so that a different joystick button/key can be fired
 
-static inline void _schedule_button_tap(void) {
+static inline void _signal_tap_delay(void) {
+    pthread_mutex_lock(&buttons.tapDelayMutex);
     pthread_cond_signal(&buttons.tapDelayCond);
+    pthread_mutex_unlock(&buttons.tapDelayMutex);
 }
 
 static void *_button_tap_delayed_thread(void *dummyptr) {
+    LOG(">>> [DELAYEDTAP] thread start ...");
+
+    pthread_mutex_lock(&buttons.tapDelayMutex);
+
     do {
-        LOG(">>> [DELAYEDTAP] sleeping ...");
         pthread_cond_wait(&buttons.tapDelayCond, &buttons.tapDelayMutex);
+        LOG(">>> [DELAYEDTAP] begin ...");
 
         if (UNLIKELY(isShuttingDown)) {
             break;
         }
 
         struct timespec ts = { .tv_sec=0, .tv_nsec=buttons.tapDelayNanos };
-        nanosleep(&ts, NULL);
 
+        // sleep for the configured delay time
+        pthread_mutex_unlock(&buttons.tapDelayMutex);
+        nanosleep(&ts, NULL);
+        pthread_mutex_lock(&buttons.tapDelayMutex);
+
+        // set the emulator's joystick button values until touch up
         do {
-            LOG(">>> [DELAYEDTAP] waking up ...");
             joy_button0 = buttons.currButtonValue0;
             joy_button1 = buttons.currButtonValue1;
             _setup_button_object_with_char(buttons.currButtonChar);
 
-            struct timespec ts = { .tv_sec=0, .tv_nsec=buttons.tapDelayNanos };
-            nanosleep(&ts, NULL);
-
-            if (UNLIKELY(isShuttingDown)) {
+            if ( (buttons.trackingIndex == TOUCHED_NONE) || isShuttingDown) {
                 break;
             }
+            pthread_cond_wait(&buttons.tapDelayCond, &buttons.tapDelayMutex);
 
-        } while (buttons.trackingIndex != TOUCHED_NONE);
-
-        joy_button0 = 0x0;
-        joy_button1 = 0x0;
+            LOG(">>> [DELAYEDTAP] looping ...");
+        } while (1);
 
         if (UNLIKELY(isShuttingDown)) {
             break;
         }
+
+        // delay the ending of button tap or touch/move event by the configured delay time
+        pthread_mutex_unlock(&buttons.tapDelayMutex);
+        nanosleep(&ts, NULL);
+        pthread_mutex_lock(&buttons.tapDelayMutex);
+
+        joy_button0 = 0x0;
+        joy_button1 = 0x0;
+        LOG(">>> [DELAYEDTAP] end ...");
     } while (1);
+
+    pthread_mutex_unlock(&buttons.tapDelayMutex);
+
+    LOG(">>> [DELAYEDTAP] thread exit ...");
 
     return NULL;
 }
@@ -492,6 +511,7 @@ static inline void _set_current_joy_button_values(int theButton) {
         buttons.currButtonValue0 = 0;
         buttons.currButtonValue1 = 0;
     }
+    _signal_tap_delay();
 }
 
 static inline void _move_button_axis(int x, int y) {
@@ -545,7 +565,6 @@ static bool gltouchjoy_onTouchEvent(interface_touch_event_t action, int pointer_
                 buttonConsumed = true;
                 buttons.trackingIndex = pointer_idx;
                 _set_current_joy_button_values(buttons.touchDownButton);
-                _schedule_button_tap();
                 buttons.centerX = (int)x;
                 buttons.centerY = (int)y;
                 _reset_model_position(buttons.model, x, y, BUTTON_OBJ_HALF_W, BUTTON_OBJ_HALF_H);
@@ -595,6 +614,7 @@ static bool gltouchjoy_onTouchEvent(interface_touch_event_t action, int pointer_
                     --axes.trackingIndex;
                 }
                 buttons.trackingIndex = TOUCHED_NONE;
+                _signal_tap_delay();
                 LOG("---TOUCH %sUP (buttons went up)%s", (action == TOUCH_UP ? "" : "POINTER "), (resetIndex ? " (reset axis index!)" : ""));
             } else {
                 // not tracking tap/gestures originating from control-gesture portion of screen
