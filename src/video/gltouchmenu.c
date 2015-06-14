@@ -69,14 +69,14 @@ static struct {
 
 // touch menu variables
 
-struct {
+static struct {
     GLModel *model;
     bool topLeftShowing;
     bool topRightShowing;
     char kbdOrJoy;
 } menu = { 0 };
 
-struct timespec timingBegin = { 0 };
+static struct timespec timingBegin = { 0 };
 
 // ----------------------------------------------------------------------------
 
