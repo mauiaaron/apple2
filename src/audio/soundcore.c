@@ -239,7 +239,7 @@ static void _destroy_enumerated_sound_devices(void) {
     }
 }
 
-bool DSInit()
+bool DSInit(void)
 {
     if(audio_isAvailable)
     {
@@ -289,7 +289,7 @@ bool DSInit()
 
 //-----------------------------------------------------------------------------
 
-void DSUninit()
+void DSUninit(void)
 {
     _destroy_enumerated_sound_devices();
 
@@ -319,7 +319,7 @@ void DSUninit()
 static int g_nErrorInc = 20;    // Old: 1
 static int g_nErrorMax = 200;    // Old: 50
 
-int SoundCore_GetErrorInc()
+int SoundCore_GetErrorInc(void)
 {
     return g_nErrorInc;
 }
@@ -330,7 +330,7 @@ void SoundCore_SetErrorInc(const int nErrorInc)
     LOG("Speaker/MB Error Inc = %d\n", g_nErrorInc);
 }
 
-int SoundCore_GetErrorMax()
+int SoundCore_GetErrorMax(void)
 {
     return g_nErrorMax;
 }

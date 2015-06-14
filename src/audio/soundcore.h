@@ -94,24 +94,25 @@ bool DSZeroVoiceWritableBuffer(PVOICE Voice, char* pszDevName, unsigned long dwB
 typedef enum eFADE {FADE_NONE, FADE_IN, FADE_OUT} eFADE;
 void SoundCore_SetFade(eFADE FadeType);
 
-int SoundCore_GetErrorInc();
+int SoundCore_GetErrorInc(void);
 void SoundCore_SetErrorInc(const int nErrorInc);
-int SoundCore_GetErrorMax();
+int SoundCore_GetErrorMax(void);
 void SoundCore_SetErrorMax(const int nErrorMax);
 
-bool DSInit();
-void DSUninit();
+bool DSInit(void);
+void DSUninit(void);
 
 extern bool audio_isAvailable;
 
 typedef struct audio_backend_s {
 
-    // mandatory audio backend functions
-    long (*init)(const char *sound_device, SoundSystemStruct **sound_struct);
-    long (*shutdown)(SoundSystemStruct **sound_struct);
-    long (*pause)(void);
-    long (*resume)(void);
-    long (*enumerateDevices)(char ***sound_devices, const int maxcount);
+    // basic backend functionality controlled by soundcore
+    PRIVATE long (*init)(const char *sound_device, SoundSystemStruct **sound_struct);
+    PRIVATE long (*shutdown)(SoundSystemStruct **sound_struct);
+    PRIVATE long (*enumerateDevices)(char ***sound_devices, const int maxcount);
+
+    PUBLIC long (*pause)(void);
+    PUBLIC long (*resume)(void);
 
 } audio_backend_s;
 

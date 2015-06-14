@@ -64,6 +64,8 @@
 #define INPARM
 #define OUTPARM
 #define INOUT
+#define PRIVATE
+#define PUBLIC
 
 #define CTOR_PRIORITY_FIRST  101
 #define CTOR_PRIORITY_EARLY  111
