@@ -766,19 +766,18 @@ static long OpenALCreateSoundBuffer(const AudioParams_s *params, INOUT AudioBuff
         }
 
         (*soundbuf_struct)->_this = voice;
-        (*soundbuf_struct)->SetVolume          = (int (*)(void *, long))ALSetVolume;
-        (*soundbuf_struct)->GetVolume          = (int (*)(void *, long *))ALGetVolume;
-        (*soundbuf_struct)->GetCurrentPosition = (int (*)(void *, unsigned long *, unsigned long *))ALGetPosition;
-        (*soundbuf_struct)->Stop               = (int (*)(void *))ALStop;
-        (*soundbuf_struct)->Restore            = (int (*)(void *))ALRestore;
-        (*soundbuf_struct)->Play               = (int (*)(void *, unsigned long, unsigned long, unsigned long))ALPlay;
-        (*soundbuf_struct)->Lock               = (int (*)(void *, unsigned long, unsigned long, void **, unsigned long *, void **, unsigned long *, unsigned long))ALBegin;
-        (*soundbuf_struct)->Unlock             = (int (*)(void *, void *, unsigned long, void *, unsigned long))ALCommit;
-        (*soundbuf_struct)->GetStatus          = (int (*)(void *, unsigned long *))ALGetStatus;
-
+        (*soundbuf_struct)->SetVolume          = &ALSetVolume;
+        (*soundbuf_struct)->GetVolume          = &ALGetVolume;
+        (*soundbuf_struct)->GetCurrentPosition = &ALGetPosition;
+        (*soundbuf_struct)->Stop               = &ALStop;
+        (*soundbuf_struct)->Restore            = &ALRestore;
+        (*soundbuf_struct)->Play               = &ALPlay;
+        (*soundbuf_struct)->Lock               = &ALBegin;
+        (*soundbuf_struct)->Unlock             = &ALCommit;
+        (*soundbuf_struct)->GetStatus          = &ALGetStatus;
         // mockingboard-specific hacks
-        (*soundbuf_struct)->UnlockStaticBuffer = (int (*)(void *, unsigned long))ALCommitStaticBuffer;
-        (*soundbuf_struct)->Replay             = (int (*)(void *))ALReplay;
+        (*soundbuf_struct)->UnlockStaticBuffer = &ALCommitStaticBuffer;
+        (*soundbuf_struct)->Replay             = &ALReplay;
 
         return 0;
     } while(0);

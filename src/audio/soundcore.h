@@ -25,30 +25,30 @@ typedef struct AudioBuffer_s {
 
     void *_this;
 
-    int (*SetVolume)(void* _this, long lVolume);
+    long (*SetVolume)(void* _this, long lVolume);
 
-    int (*GetVolume)(void* _this, long *lplVolume);
+    long (*GetVolume)(void* _this, long *lplVolume);
 
-    int (*GetCurrentPosition)(void* _this, unsigned long *lpdwCurrentPlayCursor, unsigned long *lpdwCurrentWriteCursor);
+    long (*GetCurrentPosition)(void* _this, unsigned long *lpdwCurrentPlayCursor, unsigned long *lpdwCurrentWriteCursor);
 
-    int (*Stop)(void* _this);
+    long (*Stop)(void* _this);
 
     // This method restores the memory allocation for a lost sound buffer for the specified DirectSoundBuffer object.
-    int (*Restore)(void *_this);
+    long (*Restore)(void *_this);
 
-    int (*Play)(void* _this, unsigned long dwReserved1, unsigned long dwReserved2, unsigned long dwFlags);
+    long (*Play)(void* _this, unsigned long dwReserved1, unsigned long dwReserved2, unsigned long dwFlags);
 
     // This method obtains a valid write pointer to the sound buffer's audio data
-    int (*Lock)(void* _this, unsigned long dwWriteCursor, unsigned long dwWriteBytes, void **lplpvAudioPtr1, unsigned long *lpdwAudioBytes1, void **lplpvAudioPtr2, unsigned long *lpdwAudioBytes2, unsigned long dwFlags);
+    long (*Lock)(void* _this, unsigned long dwWriteCursor, unsigned long dwWriteBytes, void **lplpvAudioPtr1, unsigned long *lpdwAudioBytes1, void **lplpvAudioPtr2, unsigned long *lpdwAudioBytes2, unsigned long dwFlags);
 
     // This method releases a locked sound buffer.
-    int (*Unlock)(void* _this, void *lpvAudioPtr1, unsigned long dwAudioBytes1, void *lpvAudioPtr2, unsigned long dwAudioBytes2);
+    long (*Unlock)(void* _this, void *lpvAudioPtr1, unsigned long dwAudioBytes1, void *lpvAudioPtr2, unsigned long dwAudioBytes2);
 
-    int (*GetStatus)(void* _this, unsigned long *lpdwStatus);
+    long (*GetStatus)(void* _this, unsigned long *lpdwStatus);
 
     // Mockingboard-specific HACKS
-    int (*UnlockStaticBuffer)(void* _this, unsigned long dwAudioBytes);
-    int (*Replay)(void* _this);
+    long (*UnlockStaticBuffer)(void* _this, unsigned long dwAudioBytes);
+    long (*Replay)(void* _this);
 
 } AudioBuffer_s;
 
