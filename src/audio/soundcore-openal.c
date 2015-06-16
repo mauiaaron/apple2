@@ -29,8 +29,6 @@
 
 #define OPENAL_NUM_BUFFERS 4
 
-typedef struct IDirectSoundBuffer ALSoundBufferStruct;
-
 typedef struct ALPlayBuf {
     const ALuint bufid; // the hash id
     ALuint bytes;       // bytes to play
@@ -72,8 +70,8 @@ static ALVoices *voices = NULL;
 
 static audio_backend_s openal_audio_backend = { 0 };
 
-static long OpenALCreateSoundBuffer(AudioParams_s *params, ALSoundBufferStruct **soundbuf_struct, void *extra_data);
-static long OpenALDestroySoundBuffer(ALSoundBufferStruct **soundbuf_struct);
+static long OpenALCreateSoundBuffer(const AudioParams_s *params, INOUT AudioBuffer_s **soundbuf_struct, const SoundSystem_s *sound_struct);
+static long OpenALDestroySoundBuffer(INOUT AudioBuffer_s **soundbuf_struct);
 
 // ----------------------------------------------------------------------------
 // uthash of OpenAL buffers
@@ -153,7 +151,7 @@ static void PlaylistDequeue(ALVoice *voice, ALPlayBuf *node)
 
 // ----------------------------------------------------------------------------
 
-static long openal_systemInit(const char *sound_device, SoundSystemStruct **sound_struct)
+static long openal_systemInit(const char *sound_device, SoundSystem_s **sound_struct)
 {
     assert(*sound_struct == NULL);
     assert(voices == NULL);
@@ -177,15 +175,15 @@ static long openal_systemInit(const char *sound_device, SoundSystemStruct **soun
             LOG("WARNING - AL_SOFT_buffer_samples extension not supported... Proceeding anyway...");
         }
 
-        if ((*sound_struct = malloc(sizeof(SoundSystemStruct))) == NULL)
+        if ((*sound_struct = malloc(sizeof(SoundSystem_s))) == NULL)
         {
             ERRLOG("OOPS, Not enough memory");
             break;
         }
 
         (*sound_struct)->implementation_specific = ctx;
-        (*sound_struct)->CreateSoundBuffer = (int (*)(AudioParams_s *, LPDIRECTSOUNDBUFFER *, void *))OpenALCreateSoundBuffer;
-        (*sound_struct)->DestroySoundBuffer = (int (*)(LPDIRECTSOUNDBUFFER *))OpenALDestroySoundBuffer;
+        (*sound_struct)->CreateSoundBuffer = &OpenALCreateSoundBuffer;
+        (*sound_struct)->DestroySoundBuffer = &OpenALDestroySoundBuffer;
 
         return 0;
     } while(0);
@@ -199,7 +197,7 @@ static long openal_systemInit(const char *sound_device, SoundSystemStruct **soun
     return -1;
 }
 
-static long openal_systemShutdown(SoundSystemStruct **sound_struct)
+static long openal_systemShutdown(SoundSystem_s **sound_struct)
 {
     assert(*sound_struct != NULL);
 
@@ -302,7 +300,7 @@ static void DeleteVoice(ALVoice *voice)
 /* Creates a new voice object, and allocates the needed OpenAL source and
  * buffer objects. Error checking is simplified for the purposes of this
  * example, and will cause an abort if needed. */
-static ALVoice *NewVoice(AudioParams_s *params)
+static ALVoice *NewVoice(const AudioParams_s *params)
 {
     ALVoice *voice = NULL;
 
@@ -732,12 +730,11 @@ static long ALGetStatus(void *_this, unsigned long *status)
     return 0;
 }
 
-static long OpenALCreateSoundBuffer(AudioParams_s *params, ALSoundBufferStruct **soundbuf_struct, void *extra_data)
+static long OpenALCreateSoundBuffer(const AudioParams_s *params, INOUT AudioBuffer_s **soundbuf_struct, const SoundSystem_s *sound_struct)
 {
     LOG("OpenALCreateSoundBuffer ...");
     assert(*soundbuf_struct == NULL);
 
-    const SoundSystemStruct *sound_struct = (SoundSystemStruct*)extra_data;
     ALCcontext *ctx = (ALCcontext*)(sound_struct->implementation_specific);
     assert(ctx != NULL);
 
@@ -762,7 +759,7 @@ static long OpenALCreateSoundBuffer(AudioParams_s *params, ALSoundBufferStruct *
         vnode->voice = voice;
         HASH_ADD_INT(voices, source, vnode);
 
-        if ((*soundbuf_struct = malloc(sizeof(ALSoundBufferStruct))) == NULL)
+        if ((*soundbuf_struct = malloc(sizeof(AudioBuffer_s))) == NULL)
         {
             ERRLOG("OOPS, Not enough memory");
             break;
@@ -798,7 +795,7 @@ static long OpenALCreateSoundBuffer(AudioParams_s *params, ALSoundBufferStruct *
     return -1;
 }
 
-static long OpenALDestroySoundBuffer(ALSoundBufferStruct **soundbuf_struct)
+static long OpenALDestroySoundBuffer(INOUT AudioBuffer_s **soundbuf_struct)
 {
     if (!*soundbuf_struct) {
         // already dealloced

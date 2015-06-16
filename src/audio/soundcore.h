@@ -21,7 +21,7 @@
 #define AUDIO_STATUS_PLAYING    0x00000001
 #define AUDIO_STATUS_NOTPLAYING 0x08000000
 
-typedef struct IDirectSoundBuffer {
+typedef struct AudioBuffer_s {
 
     void *_this;
 
@@ -50,7 +50,7 @@ typedef struct IDirectSoundBuffer {
     int (*UnlockStaticBuffer)(void* _this, unsigned long dwAudioBytes);
     int (*Replay)(void* _this);
 
-} IDirectSoundBuffer, *LPDIRECTSOUNDBUFFER, **LPLPDIRECTSOUNDBUFFER;
+} AudioBuffer_s;
 
 typedef struct AudioParams_s {
     uint16_t nChannels;
@@ -61,16 +61,15 @@ typedef struct AudioParams_s {
     unsigned long dwBufferBytes;
 } AudioParams_s;
 
-typedef struct IDirectSound {
+typedef struct SoundSystem_s {
     void *implementation_specific;
-    int (*CreateSoundBuffer)(AudioParams_s *pcDSBufferDesc, LPDIRECTSOUNDBUFFER * ppDSBuffer, void *pUnkOuter);
-    int (*DestroySoundBuffer)(LPDIRECTSOUNDBUFFER * ppDSBuffer);
-} IDirectSound, *LPDIRECTSOUND;
-typedef struct IDirectSound SoundSystemStruct;
+    long (*CreateSoundBuffer)(const AudioParams_s *params, INOUT AudioBuffer_s **buffer, const struct SoundSystem_s *sound_system);
+    long (*DestroySoundBuffer)(INOUT AudioBuffer_s **buffer);
+} SoundSystem_s;
 
 typedef struct
 {
-    LPDIRECTSOUNDBUFFER lpDSBvoice;
+    AudioBuffer_s *lpDSBvoice;
     bool bActive;            // Playback is active
     bool bMute;
     long nVolume;            // Current volume (as used by DirectSound)
@@ -81,7 +80,7 @@ typedef struct
 } VOICE, *PVOICE;
 
 
-bool DSGetLock(LPDIRECTSOUNDBUFFER pVoice, unsigned long dwOffset, unsigned long dwBytes,
+bool DSGetLock(AudioBuffer_s *pVoice, unsigned long dwOffset, unsigned long dwBytes,
                       int16_t** ppDSLockedBuffer0, unsigned long* pdwDSLockedBufferSize0,
                       int16_t** ppDSLockedBuffer1, unsigned long* pdwDSLockedBufferSize1);
 
@@ -114,9 +113,9 @@ extern bool audio_isAvailable;
 typedef struct audio_backend_s {
 
     // basic backend functionality controlled by soundcore
-    PRIVATE long (*init)(const char *sound_device, SoundSystemStruct **sound_struct);
-    PRIVATE long (*shutdown)(SoundSystemStruct **sound_struct);
-    PRIVATE long (*enumerateDevices)(char ***sound_devices, const int maxcount);
+    PRIVATE long (*init)(const char *sound_device, INOUT SoundSystem_s **sound_struct);
+    PRIVATE long (*shutdown)(INOUT SoundSystem_s **sound_struct);
+    PRIVATE long (*enumerateDevices)(INOUT char ***sound_devices, const int maxcount);
 
     PUBLIC long (*pause)(void);
     PUBLIC long (*resume)(void);

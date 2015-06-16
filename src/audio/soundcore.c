@@ -35,8 +35,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 static char **sound_devices = NULL;
 static long num_sound_devices = 0;
-
-LPDIRECTSOUND g_lpDS = NULL;
+static SoundSystem_s *g_lpDS = NULL;
 
 //-------------------------------------
 
@@ -56,7 +55,7 @@ audio_backend_s *audio_backend = NULL;
 
 //-----------------------------------------------------------------------------
 
-bool DSGetLock(LPDIRECTSOUNDBUFFER pVoice, unsigned long dwOffset, unsigned long dwBytes,
+bool DSGetLock(AudioBuffer_s *pVoice, unsigned long dwOffset, unsigned long dwBytes,
                       int16_t** ppDSLockedBuffer0, unsigned long* pdwDSLockedBufferSize0,
                       int16_t** ppDSLockedBuffer1, unsigned long* pdwDSLockedBufferSize1)
 {
@@ -263,9 +262,9 @@ bool audio_init(void)
     {
                 if (g_lpDS)
                 {
-                    audio_backend->shutdown((SoundSystemStruct**)&g_lpDS);
+                    audio_backend->shutdown((SoundSystem_s**)&g_lpDS);
                 }
-                hr = (int)audio_backend->init(sound_devices[x], (SoundSystemStruct**)&g_lpDS);
+                hr = (int)audio_backend->init(sound_devices[x], (SoundSystem_s**)&g_lpDS);
         if(hr == 0)
         {
             bCreatedOK = true;
@@ -310,7 +309,7 @@ void audio_shutdown(void)
 
     assert(g_uNumVoices == 0);
 
-        audio_backend->shutdown((SoundSystemStruct**)&g_lpDS);
+        audio_backend->shutdown((SoundSystem_s**)&g_lpDS);
     audio_isAvailable = false;
 }
 
