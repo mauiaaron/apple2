@@ -35,7 +35,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 static char **sound_devices = NULL;
 static long num_sound_devices = 0;
-static SoundSystem_s *g_lpDS = NULL;
+static AudioContext_s *g_lpDS = NULL;
 
 //-------------------------------------
 
@@ -49,7 +49,7 @@ static VOICE* g_pVoices[uMAX_VOICES] = {NULL};
 
 bool audio_isAvailable = false;
 
-audio_backend_s *audio_backend = NULL;
+AudioBackend_s *audio_backend = NULL;
 
 //-----------------------------------------------------------------------------
 
@@ -255,9 +255,9 @@ bool audio_init(void)
     {
                 if (g_lpDS)
                 {
-                    audio_backend->shutdown((SoundSystem_s**)&g_lpDS);
+                    audio_backend->shutdown((AudioContext_s**)&g_lpDS);
                 }
-                hr = (int)audio_backend->init(sound_devices[x], (SoundSystem_s**)&g_lpDS);
+                hr = (int)audio_backend->init(sound_devices[x], (AudioContext_s**)&g_lpDS);
         if(hr == 0)
         {
             bCreatedOK = true;
@@ -302,7 +302,7 @@ void audio_shutdown(void)
 
     assert(g_uNumVoices == 0);
 
-        audio_backend->shutdown((SoundSystem_s**)&g_lpDS);
+        audio_backend->shutdown((AudioContext_s**)&g_lpDS);
     audio_isAvailable = false;
 }
 

@@ -61,11 +61,11 @@ typedef struct AudioParams_s {
     unsigned long dwBufferBytes;
 } AudioParams_s;
 
-typedef struct SoundSystem_s {
+typedef struct AudioContext_s {
     void *implementation_specific;
-    long (*CreateSoundBuffer)(const AudioParams_s *params, INOUT AudioBuffer_s **buffer, const struct SoundSystem_s *sound_system);
+    long (*CreateSoundBuffer)(const AudioParams_s *params, INOUT AudioBuffer_s **buffer, const struct AudioContext_s *sound_system);
     long (*DestroySoundBuffer)(INOUT AudioBuffer_s **buffer);
-} SoundSystem_s;
+} AudioContext_s;
 
 typedef struct
 {
@@ -106,21 +106,21 @@ void audio_shutdown(void);
 
 extern bool audio_isAvailable;
 
-typedef struct audio_backend_s {
+typedef struct AudioBackend_s {
 
     // basic backend functionality controlled by soundcore
-    PRIVATE long (*init)(const char *sound_device, INOUT SoundSystem_s **sound_struct);
-    PRIVATE long (*shutdown)(INOUT SoundSystem_s **sound_struct);
+    PRIVATE long (*init)(const char *sound_device, INOUT AudioContext_s **audio_context);
+    PRIVATE long (*shutdown)(INOUT AudioContext_s **audio_context);
     PRIVATE long (*enumerateDevices)(INOUT char ***sound_devices, const int maxcount);
 
     PUBLIC long (*pause)(void);
     PUBLIC long (*resume)(void);
 
-} audio_backend_s;
+} AudioBackend_s;
 
 /*
  * The registered audio backend (renderer).
  */
-extern audio_backend_s *audio_backend;
+extern AudioBackend_s *audio_backend;
 
 #endif /* whole file */

@@ -68,9 +68,9 @@ typedef struct ALVoices {
 
 static ALVoices *voices = NULL;
 
-static audio_backend_s openal_audio_backend = { 0 };
+static AudioBackend_s openal_audio_backend = { 0 };
 
-static long OpenALCreateSoundBuffer(const AudioParams_s *params, INOUT AudioBuffer_s **soundbuf_struct, const SoundSystem_s *sound_struct);
+static long OpenALCreateSoundBuffer(const AudioParams_s *params, INOUT AudioBuffer_s **soundbuf_struct, const AudioContext_s *sound_struct);
 static long OpenALDestroySoundBuffer(INOUT AudioBuffer_s **soundbuf_struct);
 
 // ----------------------------------------------------------------------------
@@ -151,7 +151,7 @@ static void PlaylistDequeue(ALVoice *voice, ALPlayBuf *node)
 
 // ----------------------------------------------------------------------------
 
-static long openal_systemInit(const char *sound_device, SoundSystem_s **sound_struct)
+static long openal_systemInit(const char *sound_device, AudioContext_s **sound_struct)
 {
     assert(*sound_struct == NULL);
     assert(voices == NULL);
@@ -175,7 +175,7 @@ static long openal_systemInit(const char *sound_device, SoundSystem_s **sound_st
             LOG("WARNING - AL_SOFT_buffer_samples extension not supported... Proceeding anyway...");
         }
 
-        if ((*sound_struct = malloc(sizeof(SoundSystem_s))) == NULL)
+        if ((*sound_struct = malloc(sizeof(AudioContext_s))) == NULL)
         {
             ERRLOG("OOPS, Not enough memory");
             break;
@@ -197,7 +197,7 @@ static long openal_systemInit(const char *sound_device, SoundSystem_s **sound_st
     return -1;
 }
 
-static long openal_systemShutdown(SoundSystem_s **sound_struct)
+static long openal_systemShutdown(AudioContext_s **sound_struct)
 {
     assert(*sound_struct != NULL);
 
@@ -730,7 +730,7 @@ static long ALGetStatus(void *_this, unsigned long *status)
     return 0;
 }
 
-static long OpenALCreateSoundBuffer(const AudioParams_s *params, INOUT AudioBuffer_s **soundbuf_struct, const SoundSystem_s *sound_struct)
+static long OpenALCreateSoundBuffer(const AudioParams_s *params, INOUT AudioBuffer_s **soundbuf_struct, const AudioContext_s *sound_struct)
 {
     LOG("OpenALCreateSoundBuffer ...");
     assert(*soundbuf_struct == NULL);
