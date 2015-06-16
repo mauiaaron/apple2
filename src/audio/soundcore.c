@@ -45,8 +45,6 @@ static SoundSystem_s *g_lpDS = NULL;
 static unsigned int g_uNumVoices = 0;
 static VOICE* g_pVoices[uMAX_VOICES] = {NULL};
 
-static VOICE* g_pSpeakerVoice = NULL;
-
 //-------------------------------------
 
 bool audio_isAvailable = false;
@@ -117,16 +115,11 @@ int DSGetSoundBuffer(VOICE* pVoice, unsigned long dwFlags, unsigned long dwBuffe
     if(g_uNumVoices < uMAX_VOICES)
         g_pVoices[g_uNumVoices++] = pVoice;
 
-    if(pVoice->bIsSpeaker)
-        g_pSpeakerVoice = pVoice;
-
     return hr;
 }
 
 void DSReleaseSoundBuffer(VOICE* pVoice)
 {
-    if(pVoice->bIsSpeaker)
-        g_pSpeakerVoice = NULL;
 
     for(unsigned int i=0; i<g_uNumVoices; i++)
     {

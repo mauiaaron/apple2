@@ -2215,13 +2215,6 @@ bool MB_IsActive()
 
 //-----------------------------------------------------------------------------
 
-unsigned long MB_GetVolume()
-{
-	return MockingboardVoice.dwUserVolume;
-}
-
-//-----------------------------------------------------------------------------
-
 static long NewVolume(unsigned long dwVolume, unsigned long dwVolumeMax)
 {
     float fVol = (float) dwVolume / (float) dwVolumeMax;    // 0.0=Max, 1.0=Min
@@ -2236,7 +2229,6 @@ void MB_SetVolume(unsigned long dwVolume, unsigned long dwVolumeMax)
     dwVolume >>= 2;
     dwVolumeMax >>= 2;
 #endif
-	MockingboardVoice.dwUserVolume = dwVolume;
 
 	MockingboardVoice.nVolume = NewVolume(dwVolume, dwVolumeMax);
 

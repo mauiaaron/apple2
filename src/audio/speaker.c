@@ -322,7 +322,6 @@ void speaker_destroy(void) {
 }
 
 void speaker_init(void) {
-    SpeakerVoice.bIsSpeaker = true;
     SpeakerVoice.bActive = true;
     long err = DSGetSoundBuffer(&SpeakerVoice, 0, SOUNDCORE_BUFFER_SIZE, SPKR_SAMPLE_RATE, 1);
     assert(!err);

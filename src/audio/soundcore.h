@@ -73,10 +73,6 @@ typedef struct
     bool bActive;            // Playback is active
     bool bMute;
     long nVolume;            // Current volume (as used by DirectSound)
-    long nFadeVolume;        // Current fade volume (as used by DirectSound)
-    unsigned long dwUserVolume;        // Volume from slider on Property Sheet (0=Max)
-    bool bIsSpeaker;
-    bool bRecentlyActive;    // (Speaker only) false after 0.2s of speaker inactivity
 } VOICE, *PVOICE;
 
 
