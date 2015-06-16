@@ -70,7 +70,7 @@ static ALVoices *voices = NULL;
 
 static AudioBackend_s openal_audio_backend = { 0 };
 
-static long OpenALCreateSoundBuffer(const AudioParams_s *params, INOUT AudioBuffer_s **soundbuf_struct, const AudioContext_s *sound_struct);
+static long OpenALCreateSoundBuffer(const AudioParams_s *params, INOUT AudioBuffer_s **soundbuf_struct, const AudioContext_s *audio_context);
 static long OpenALDestroySoundBuffer(INOUT AudioBuffer_s **soundbuf_struct);
 
 // ----------------------------------------------------------------------------
@@ -151,9 +151,9 @@ static void PlaylistDequeue(ALVoice *voice, ALPlayBuf *node)
 
 // ----------------------------------------------------------------------------
 
-static long openal_systemInit(const char *sound_device, AudioContext_s **sound_struct)
+static long openal_systemInit(const char *sound_device, AudioContext_s **audio_context)
 {
-    assert(*sound_struct == NULL);
+    assert(*audio_context == NULL);
     assert(voices == NULL);
 
     ALCcontext *ctx = NULL;
@@ -175,36 +175,36 @@ static long openal_systemInit(const char *sound_device, AudioContext_s **sound_s
             LOG("WARNING - AL_SOFT_buffer_samples extension not supported... Proceeding anyway...");
         }
 
-        if ((*sound_struct = malloc(sizeof(AudioContext_s))) == NULL)
+        if ((*audio_context = malloc(sizeof(AudioContext_s))) == NULL)
         {
             ERRLOG("OOPS, Not enough memory");
             break;
         }
 
-        (*sound_struct)->implementation_specific = ctx;
-        (*sound_struct)->CreateSoundBuffer = &OpenALCreateSoundBuffer;
-        (*sound_struct)->DestroySoundBuffer = &OpenALDestroySoundBuffer;
+        (*audio_context)->implementation_specific = ctx;
+        (*audio_context)->CreateSoundBuffer = &OpenALCreateSoundBuffer;
+        (*audio_context)->DestroySoundBuffer = &OpenALDestroySoundBuffer;
 
         return 0;
     } while(0);
 
     // ERRQUIT
-    if (*sound_struct)
+    if (*audio_context)
     {
-        FREE(*sound_struct);
+        FREE(*audio_context);
     }
 
     return -1;
 }
 
-static long openal_systemShutdown(AudioContext_s **sound_struct)
+static long openal_systemShutdown(AudioContext_s **audio_context)
 {
-    assert(*sound_struct != NULL);
+    assert(*audio_context != NULL);
 
-    ALCcontext *ctx = (ALCcontext*) (*sound_struct)->implementation_specific;
+    ALCcontext *ctx = (ALCcontext*) (*audio_context)->implementation_specific;
     assert(ctx != NULL);
-    (*sound_struct)->implementation_specific = NULL;
-    FREE(*sound_struct);
+    (*audio_context)->implementation_specific = NULL;
+    FREE(*audio_context);
 
     CloseAL();
 
@@ -730,12 +730,12 @@ static long ALGetStatus(void *_this, unsigned long *status)
     return 0;
 }
 
-static long OpenALCreateSoundBuffer(const AudioParams_s *params, INOUT AudioBuffer_s **soundbuf_struct, const AudioContext_s *sound_struct)
+static long OpenALCreateSoundBuffer(const AudioParams_s *params, INOUT AudioBuffer_s **soundbuf_struct, const AudioContext_s *audio_context)
 {
     LOG("OpenALCreateSoundBuffer ...");
     assert(*soundbuf_struct == NULL);
 
-    ALCcontext *ctx = (ALCcontext*)(sound_struct->implementation_specific);
+    ALCcontext *ctx = (ALCcontext*)(audio_context->implementation_specific);
     assert(ctx != NULL);
 
     ALVoice *voice = NULL;
