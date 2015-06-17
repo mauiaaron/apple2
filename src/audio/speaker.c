@@ -251,21 +251,18 @@ static unsigned int _submit_samples_buffer(const unsigned int num_samples) {
     // calculate CPU cycles feedback adjustment to prevent system audio buffer under/overflow
     //
 
-    const int error_increment = SoundCore_GetErrorInc();
-
     if (bytes_queued < IDEAL_MIN) {
-        samples_adjustment_counter += error_increment; // need moar data
+        samples_adjustment_counter += SOUNDCORE_ERROR_INC; // need moar data
     } else if (bytes_queued > IDEAL_MAX) {
-        samples_adjustment_counter -= error_increment; // need less data
+        samples_adjustment_counter -= SOUNDCORE_ERROR_INC; // need less data
     } else {
         samples_adjustment_counter = 0; // Acceptable amount of data in buffer
     }
 
-    const int samples_adjustment_max = SoundCore_GetErrorMax(); // capped to a max/min
-    if (samples_adjustment_counter < -samples_adjustment_max) {
-        samples_adjustment_counter = -samples_adjustment_max;
-    } else if (samples_adjustment_counter > samples_adjustment_max) {
-        samples_adjustment_counter =  samples_adjustment_max;
+    if (samples_adjustment_counter < -SOUNDCORE_ERROR_MAX) {
+        samples_adjustment_counter = -SOUNDCORE_ERROR_MAX;
+    } else if (samples_adjustment_counter > SOUNDCORE_ERROR_MAX) {
+        samples_adjustment_counter =  SOUNDCORE_ERROR_MAX;
     }
 
     cycles_speaker_feedback = (int)(samples_adjustment_counter * cycles_per_sample);

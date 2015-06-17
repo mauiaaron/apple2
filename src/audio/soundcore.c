@@ -51,8 +51,6 @@ bool DSGetLock(AudioBuffer_s *pVoice, unsigned long dwOffset, unsigned long dwBy
 #warning   ^^^^ FIXME TODO ... this is opposite the other API methods ...
 }
 
-//-----------------------------------------------------------------------------
-
 long DSGetSoundBuffer(INOUT AudioBuffer_s **pVoice, unsigned long dwFlags, unsigned long dwBufferSize, unsigned long nSampleRate, int nChannels) {
     AudioParams_s params = { 0 };
 
@@ -122,7 +120,7 @@ bool audio_init(void) {
         audio_isAvailable = true;
     } while (0);
 
-    if (num_sound_devices) {
+    if (num_sound_devices > 0) {
         char **p = sound_devices;
         while (*p) {
             FREE(*p);
@@ -141,32 +139,5 @@ void audio_shutdown(void) {
     }
     audio_backend->shutdown(&audioContext);
     audio_isAvailable = false;
-}
-
-//=============================================================================
-
-static int g_nErrorInc = 20;    // Old: 1
-static int g_nErrorMax = 200;    // Old: 50
-
-int SoundCore_GetErrorInc(void)
-{
-    return g_nErrorInc;
-}
-
-void SoundCore_SetErrorInc(const int nErrorInc)
-{
-    g_nErrorInc = nErrorInc < g_nErrorMax ? nErrorInc : g_nErrorMax;
-    LOG("Speaker/MB Error Inc = %d", g_nErrorInc);
-}
-
-int SoundCore_GetErrorMax(void)
-{
-    return g_nErrorMax;
-}
-
-void SoundCore_SetErrorMax(const int nErrorMax)
-{
-    g_nErrorMax = nErrorMax < MAX_SAMPLES ? nErrorMax : MAX_SAMPLES;
-    LOG("Speaker/MB Error Max = %d", g_nErrorMax);
 }
 

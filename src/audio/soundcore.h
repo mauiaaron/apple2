@@ -21,6 +21,10 @@
 #define AUDIO_STATUS_PLAYING    0x00000001
 #define AUDIO_STATUS_NOTPLAYING 0x08000000
 
+// AppleWin-sourced default error increment and max adjustment values ...
+#define SOUNDCORE_ERROR_INC 20
+#define SOUNDCORE_ERROR_MAX 200
+
 typedef struct AudioBuffer_s {
     bool bActive;            // Playback is active
     bool bMute;
@@ -75,11 +79,6 @@ bool DSGetLock(AudioBuffer_s *bufferObj, unsigned long dwOffset, unsigned long d
 
 long DSGetSoundBuffer(INOUT AudioBuffer_s **pVoice, unsigned long dwFlags, unsigned long dwBufferSize, unsigned long nSampleRate, int nChannels);
 void DSReleaseSoundBuffer(INOUT AudioBuffer_s **pVoice);
-
-int SoundCore_GetErrorInc(void);
-void SoundCore_SetErrorInc(const int nErrorInc);
-int SoundCore_GetErrorMax(void);
-void SoundCore_SetErrorMax(const int nErrorMax);
 
 /*
  * Prepare the audio subsystem, including the backend renderer.

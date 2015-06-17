@@ -1033,18 +1033,16 @@ static void MB_Update()
 		nBytesRemaining += g_dwDSBufferSize;
 
 	// Calc correction factor so that play-buffer doesn't under/overflow
-	const int nErrorInc = SoundCore_GetErrorInc();
 	if((unsigned int)nBytesRemaining < g_dwDSBufferSize / 4)
-		nNumSamplesError += nErrorInc;				// < 0.25 of buffer remaining
+		nNumSamplesError += SOUNDCORE_ERROR_INC;				// < 0.25 of buffer remaining
 	else if((unsigned int)nBytesRemaining > g_dwDSBufferSize / 2)
-		nNumSamplesError -= nErrorInc;				// > 0.50 of buffer remaining
+		nNumSamplesError -= SOUNDCORE_ERROR_INC;				// > 0.50 of buffer remaining
 	else
 		nNumSamplesError = 0;						// Acceptable amount of data in buffer
 
 #ifdef APPLE2IX
-	const int nErrorMax = SoundCore_GetErrorMax();				// Cap feedback to +/-nMaxError units
-	if(nNumSamplesError < -nErrorMax) nNumSamplesError = -nErrorMax;
-	if(nNumSamplesError >  nErrorMax) nNumSamplesError =  nErrorMax;
+	if(nNumSamplesError < -SOUNDCORE_ERROR_MAX) nNumSamplesError = -SOUNDCORE_ERROR_MAX;
+	if(nNumSamplesError >  SOUNDCORE_ERROR_MAX) nNumSamplesError =  SOUNDCORE_ERROR_MAX;
 
         static time_t dbg_print = 0;
         time_t now = time(NULL);
