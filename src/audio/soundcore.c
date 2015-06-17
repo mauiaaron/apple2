@@ -24,7 +24,7 @@ AudioBackend_s *audio_backend = NULL;
 
 //-----------------------------------------------------------------------------
 
-long DSGetSoundBuffer(INOUT AudioBuffer_s **pVoice, unsigned long dwFlags, unsigned long dwBufferSize, unsigned long nSampleRate, int nChannels) {
+long audio_createSoundBuffer(INOUT AudioBuffer_s **pVoice, unsigned long dwBufferSize, unsigned long nSampleRate, int nChannels) {
     AudioParams_s params = { 0 };
 
     params.nChannels = nChannels;
@@ -35,7 +35,7 @@ long DSGetSoundBuffer(INOUT AudioBuffer_s **pVoice, unsigned long dwFlags, unsig
     params.dwBufferBytes = dwBufferSize;
 
     if (*pVoice) {
-        DSReleaseSoundBuffer(pVoice);
+        audio_destroySoundBuffer(pVoice);
     }
 
     long err = 0;
@@ -49,8 +49,8 @@ long DSGetSoundBuffer(INOUT AudioBuffer_s **pVoice, unsigned long dwFlags, unsig
     return err;
 }
 
-void DSReleaseSoundBuffer(INOUT AudioBuffer_s **pVoice) {
-    audioContext->DestroySoundBuffer(pVoice);
+void audio_destroySoundBuffer(INOUT AudioBuffer_s **audioBuffer) {
+    audioContext->DestroySoundBuffer(audioBuffer);
 }
 
 bool audio_init(void) {

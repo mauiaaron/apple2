@@ -59,9 +59,15 @@ typedef struct AudioBuffer_s {
 
 } AudioBuffer_s;
 
+/*
+ * Creates a sound buffer object.
+ */
+long audio_createSoundBuffer(INOUT AudioBuffer_s **audioBuffer, unsigned long bufferSize, unsigned long sampleRate, int numChannels);
 
-long DSGetSoundBuffer(INOUT AudioBuffer_s **pVoice, unsigned long dwFlags, unsigned long dwBufferSize, unsigned long nSampleRate, int nChannels);
-void DSReleaseSoundBuffer(INOUT AudioBuffer_s **pVoice);
+/*
+ * Destroy and nullify sound buffer object.
+ */
+void audio_destroySoundBuffer(INOUT AudioBuffer_s **pVoice);
 
 /*
  * Prepare the audio subsystem, including the backend renderer.
@@ -109,7 +115,7 @@ typedef struct AudioContext_s {
 typedef struct AudioBackend_s {
 
     // basic backend functionality controlled by soundcore
-    PRIVATE long (*init)(const char *sound_device, INOUT AudioContext_s **audio_context);
+    PRIVATE long (*setup)(const char *sound_device, INOUT AudioContext_s **audio_context);
     PRIVATE long (*shutdown)(INOUT AudioContext_s **audio_context);
     PRIVATE long (*enumerateDevices)(INOUT char ***sound_devices, const int maxcount);
 

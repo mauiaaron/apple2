@@ -1369,7 +1369,7 @@ static bool MB_DSInit()
 	if(!audio_isAvailable)
 		return false;
 
-	int hr = DSGetSoundBuffer(&MockingboardVoice, DSBCAPS_CTRLVOLUME, g_dwDSBufferSize, SAMPLE_RATE, 2);
+	int hr = audio_createSoundBuffer(&MockingboardVoice, g_dwDSBufferSize, SAMPLE_RATE, 2);
 	LOG("MB_DSInit: DSGetSoundBuffer(), hr=0x%08X\n", (unsigned int)hr);
 	if(FAILED(hr))
 	{
@@ -1466,7 +1466,7 @@ static bool MB_DSInit()
 		unsigned int nPhonemeByteLength = g_nPhonemeInfo[nPhoneme].nLength * sizeof(int16_t);
 
 		// NB. DSBCAPS_LOCSOFTWARE required for
-		hr = DSGetSoundBuffer(&SSI263Voice[i], DSBCAPS_CTRLVOLUME+DSBCAPS_CTRLPOSITIONNOTIFY+DSBCAPS_LOCSOFTWARE, nPhonemeByteLength, 22050, 1);
+		hr = audio_createSoundBuffer(&SSI263Voice[i], nPhonemeByteLength, 22050, 1);
 		LOG("MB_DSInit: (%02d) DSGetSoundBuffer(), hr=0x%08X\n", i, (unsigned int)hr);
 		if(FAILED(hr))
 		{
@@ -1614,7 +1614,7 @@ static void MB_DSUninit()
 		MockingboardVoice->bActive = false;
 	}
 
-	DSReleaseSoundBuffer(&MockingboardVoice);
+	audio_destroySoundBuffer(&MockingboardVoice);
 
 	//
 
@@ -1630,7 +1630,7 @@ static void MB_DSUninit()
 			SSI263Voice[i]->bActive = false;
 		}
 
-		DSReleaseSoundBuffer(&SSI263Voice[i]);
+		audio_destroySoundBuffer(&SSI263Voice[i]);
 	}
 
 	//

@@ -306,11 +306,11 @@ void speaker_destroy(void) {
     if (speakerBuffer) {
         speakerBuffer->Stop(speakerBuffer->_this);
     }
-    DSReleaseSoundBuffer(&speakerBuffer);
+    audio_destroySoundBuffer(&speakerBuffer);
 }
 
 void speaker_init(void) {
-    long err = DSGetSoundBuffer(&speakerBuffer, 0, SOUNDCORE_BUFFER_SIZE, SPKR_SAMPLE_RATE, 1);
+    long err = audio_createSoundBuffer(&speakerBuffer, SOUNDCORE_BUFFER_SIZE, SPKR_SAMPLE_RATE, 1);
     assert(!err);
     _speaker_init_timing();
 }
