@@ -1089,15 +1089,10 @@ static void MB_Update()
 
 	//
 
-#ifdef APPLE2IX
-	if(DSGetLock(MockingboardVoice,
+	if(MockingboardVoice->Lock(MockingboardVoice->_this,
 						/*unused*/0, (unsigned long)nNumSamples*sizeof(short)*g_nMB_NumChannels,
-#else
-	if(DSGetLock(MockingboardVoice,
-						dwByteOffset, (unsigned long)nNumSamples*sizeof(short)*g_nMB_NumChannels,
-#endif
 						&pDSLockedBuffer0, &dwDSLockedBufferSize0,
-						&pDSLockedBuffer1, &dwDSLockedBufferSize1))
+						&pDSLockedBuffer1, &dwDSLockedBufferSize1, 0))
 		return;
 
 #ifdef APPLE2IX
@@ -1479,11 +1474,7 @@ static bool MB_DSInit()
 			return false;
 		}
 
-#ifdef APPLE2IX
-		hr = DSGetLock(SSI263Voice[i], 0, 0, &pDSLockedBuffer, &dwDSLockedBufferSize, NULL, 0);
-#else
-		hr = DSGetLock(SSI263Voice[i], 0, 0, &pDSLockedBuffer, &dwDSLockedBufferSize, NULL, 0);
-#endif
+		hr = SSI263Voice[i]->Lock(SSI263Voice[i]->_this, 0, 0, &pDSLockedBuffer, &dwDSLockedBufferSize, NULL, 0, 0);
 		//LOG("MB_DSInit: (%02d) DSGetLock(), res=%d\n", i, hr ? 1 : 0);	// WARNING: Lock acquired && doing heavy-weight logging
 		if(FAILED(hr))
 		{

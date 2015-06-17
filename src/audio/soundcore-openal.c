@@ -540,7 +540,7 @@ static long ALGetPosition(void *_this, unsigned long *bytes_queued, unsigned lon
 }
 
 // DS->Lock()
-static long ALBegin(void *_this, unsigned long unused, unsigned long write_bytes, void **audio_ptr1, unsigned long *audio_bytes1, void **unused_audio_ptr2, unsigned long *unused_audio_bytes2, unsigned long flags_unused)
+static long ALBegin(void *_this, unsigned long unused, unsigned long write_bytes, INOUT int16_t **audio_ptr1, INOUT unsigned long *audio_bytes1, void **unused_audio_ptr2, unsigned long *unused_audio_bytes2, unsigned long flags_unused)
 {
     ALVoice *voice = (ALVoice*)_this;
 

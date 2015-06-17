@@ -46,10 +46,10 @@ typedef struct AudioBuffer_s {
     long (*Play)(void* _this, unsigned long dwReserved1, unsigned long dwReserved2, unsigned long dwFlags);
 
     // This method obtains a valid write pointer to the sound buffer's audio data
-    long (*Lock)(void* _this, unsigned long dwWriteCursor, unsigned long dwWriteBytes, void **lplpvAudioPtr1, unsigned long *lpdwAudioBytes1, void **lplpvAudioPtr2, unsigned long *lpdwAudioBytes2, unsigned long dwFlags);
+    long (*Lock)(void* _this, unsigned long dwWriteCursor, unsigned long dwWriteBytes, INOUT int16_t **lplpvAudioPtr1, INOUT unsigned long *lpdwAudioBytes1, void **lplpvAudioPtr2, unsigned long *lpdwAudioBytes2, unsigned long dwFlags);
 
     // This method releases a locked sound buffer.
-    long (*Unlock)(void* _this, void *lpvAudioPtr1, unsigned long dwAudioBytes1, void *lpvAudioPtr2, unsigned long dwAudioBytes2);
+    long (*Unlock)(void* _this, int16_t *lpvAudioPtr1, unsigned long dwAudioBytes1, void *lpvAudioPtr2, unsigned long dwAudioBytes2);
 
     long (*GetStatus)(void* _this, unsigned long *lpdwStatus);
 
@@ -60,7 +60,6 @@ typedef struct AudioBuffer_s {
 } AudioBuffer_s;
 
 
-long DSGetLock(AudioBuffer_s *bufferObj, unsigned long dwOffset, unsigned long dwBytes, INOUT int16_t **samplesBuf, INOUT unsigned long *samplesBufSz, INOUT int16_t **samplesBufAlt, INOUT unsigned long *samplesBufAltSz);
 long DSGetSoundBuffer(INOUT AudioBuffer_s **pVoice, unsigned long dwFlags, unsigned long dwBufferSize, unsigned long nSampleRate, int nChannels);
 void DSReleaseSoundBuffer(INOUT AudioBuffer_s **pVoice);
 
