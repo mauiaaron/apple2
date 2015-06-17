@@ -140,7 +140,7 @@ void DSReleaseSoundBuffer(VOICE* pVoice)
 
 //-----------------------------------------------------------------------------
 
-bool DSZeroVoiceBuffer(PVOICE Voice, char* pszDevName, unsigned long dwBufferSize)
+bool DSZeroVoiceBuffer(VOICE *Voice, char* pszDevName, unsigned long dwBufferSize)
 {
     unsigned long dwDSLockedBufferSize = 0;    // Size of the locked DirectSound buffer
     int16_t* pDSLockedBuffer;
@@ -182,7 +182,7 @@ bool DSZeroVoiceBuffer(PVOICE Voice, char* pszDevName, unsigned long dwBufferSiz
 
 //-----------------------------------------------------------------------------
 
-bool DSZeroVoiceWritableBuffer(PVOICE Voice, char* pszDevName, unsigned long dwBufferSize)
+bool DSZeroVoiceWritableBuffer(VOICE *Voice, char* pszDevName, unsigned long dwBufferSize)
 {
     unsigned long dwDSLockedBufferSize0=0, dwDSLockedBufferSize1=0;
     int16_t *pDSLockedBuffer0, *pDSLockedBuffer1;

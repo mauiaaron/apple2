@@ -73,7 +73,7 @@ typedef struct
     bool bActive;            // Playback is active
     bool bMute;
     long nVolume;            // Current volume (as used by DirectSound)
-} VOICE, *PVOICE;
+} VOICE;
 
 
 bool DSGetLock(AudioBuffer_s *pVoice, unsigned long dwOffset, unsigned long dwBytes,
@@ -83,8 +83,8 @@ bool DSGetLock(AudioBuffer_s *pVoice, unsigned long dwOffset, unsigned long dwBy
 int DSGetSoundBuffer(VOICE* pVoice, unsigned long dwFlags, unsigned long dwBufferSize, unsigned long nSampleRate, int nChannels);
 void DSReleaseSoundBuffer(VOICE* pVoice);
 
-bool DSZeroVoiceBuffer(PVOICE Voice, char* pszDevName, unsigned long dwBufferSize);
-bool DSZeroVoiceWritableBuffer(PVOICE Voice, char* pszDevName, unsigned long dwBufferSize);
+bool DSZeroVoiceBuffer(VOICE *Voice, char* pszDevName, unsigned long dwBufferSize);
+bool DSZeroVoiceWritableBuffer(VOICE *Voice, char* pszDevName, unsigned long dwBufferSize);
 
 typedef enum eFADE {FADE_NONE, FADE_IN, FADE_OUT} eFADE;
 void SoundCore_SetFade(eFADE FadeType);
