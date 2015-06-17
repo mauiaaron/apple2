@@ -26,14 +26,8 @@ AudioBackend_s *audio_backend = NULL;
 
 long DSGetLock(AudioBuffer_s *pVoice, unsigned long dwOffset, unsigned long dwBytes, INOUT int16_t **ppDSLockedBuffer0, INOUT unsigned long *pdwDSLockedBufferSize0, INOUT int16_t **ppDSLockedBuffer1, INOUT unsigned long *pdwDSLockedBufferSize1) {
 
-    unsigned long nStatus = 0;
-    long err = pVoice->GetStatus(pVoice->_this, &nStatus);
-
+    long err = 0;
     do {
-        if (err) {
-            break;
-        }
-
         if (dwBytes == 0) {
             err = pVoice->Lock(pVoice->_this, 0, 0, (void**)ppDSLockedBuffer0, pdwDSLockedBufferSize0, (void**)ppDSLockedBuffer1, pdwDSLockedBufferSize1, 0);
             if (err) {
