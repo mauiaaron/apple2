@@ -71,18 +71,10 @@ typedef struct AudioContext_s {
 } AudioContext_s;
 
 
-bool DSGetLock(AudioBuffer_s *pVoice, unsigned long dwOffset, unsigned long dwBytes,
-                      int16_t** ppDSLockedBuffer0, unsigned long* pdwDSLockedBufferSize0,
-                      int16_t** ppDSLockedBuffer1, unsigned long* pdwDSLockedBufferSize1);
+bool DSGetLock(AudioBuffer_s *bufferObj, unsigned long dwOffset, unsigned long dwBytes, INOUT int16_t **samplesBuf, INOUT unsigned long *samplesBufSz, INOUT int16_t **samplesBufAlt, INOUT unsigned long *samplesBufAltSz);
 
 long DSGetSoundBuffer(INOUT AudioBuffer_s **pVoice, unsigned long dwFlags, unsigned long dwBufferSize, unsigned long nSampleRate, int nChannels);
 void DSReleaseSoundBuffer(INOUT AudioBuffer_s **pVoice);
-
-bool DSZeroVoiceBuffer(AudioBuffer_s *pVoice, char *pszDevName, unsigned long dwBufferSize);
-bool DSZeroVoiceWritableBuffer(AudioBuffer_s *pVoice, char *pszDevName, unsigned long dwBufferSize);
-
-typedef enum eFADE {FADE_NONE, FADE_IN, FADE_OUT} eFADE;
-void SoundCore_SetFade(eFADE FadeType);
 
 int SoundCore_GetErrorInc(void);
 void SoundCore_SetErrorInc(const int nErrorInc);

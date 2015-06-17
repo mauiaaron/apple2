@@ -1,35 +1,19 @@
 /*
-AppleWin : An Apple //e emulator for Windows
-
-Copyright (C) 1994-1996, Michael O'Brien
-Copyright (C) 1999-2001, Oliver Schmidt
-Copyright (C) 2002-2005, Tom Charlesworth
-Copyright (C) 2006-2007, Tom Charlesworth, Michael Pohoreski
-
-AppleWin is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
-
-AppleWin is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with AppleWin; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-*/
-
-/* Description: Core sound related functionality
+ * Apple // emulator for *nix
  *
- * Author: Tom Charlesworth
- * Linux ALSA/OpenAL Port : Aaron Culliney
+ * This software package is subject to the GNU General Public License
+ * version 2 or later (your choice) as published by the Free Software
+ * Foundation.
+ *
+ * THERE ARE NO WARRANTIES WHATSOEVER.
+ *
+ */
+
+/*
+ * Apple //e core sound system support. Source inspired/derived from AppleWin.
  */
 
 #include "common.h"
-
-//-----------------------------------------------------------------------------
 
 #define MAX_SOUND_DEVICES 100
 
@@ -100,84 +84,6 @@ long DSGetSoundBuffer(INOUT AudioBuffer_s **pVoice, unsigned long dwFlags, unsig
 void DSReleaseSoundBuffer(INOUT AudioBuffer_s **pVoice) {
     audioContext->DestroySoundBuffer(pVoice);
 }
-
-//-----------------------------------------------------------------------------
-
-bool DSZeroVoiceBuffer(AudioBuffer_s *pVoice, char* pszDevName, unsigned long dwBufferSize)
-{
-    unsigned long dwDSLockedBufferSize = 0;    // Size of the locked DirectSound buffer
-    int16_t* pDSLockedBuffer;
-
-
-        unsigned long argX = 0;
-    int hr = pVoice->Stop(pVoice->_this);
-    if(hr)
-    {
-        LOG("%s: DSStop failed (%08X)",pszDevName,(unsigned int)hr);
-        return false;
-    }
-    hr = !DSGetLock(pVoice, 0, 0, &pDSLockedBuffer, &dwDSLockedBufferSize, NULL, &argX);
-    if(hr)
-    {
-        LOG("%s: DSGetLock failed (%08X)",pszDevName,(unsigned int)hr);
-        return false;
-    }
-
-    assert(dwDSLockedBufferSize == dwBufferSize);
-    memset(pDSLockedBuffer, 0x00, dwDSLockedBufferSize);
-
-    hr = pVoice->Unlock(pVoice->_this, (void*)pDSLockedBuffer, dwDSLockedBufferSize, NULL, argX);
-    if(hr)
-    {
-        LOG("%s: DSUnlock failed (%08X)",pszDevName,(unsigned int)hr);
-        return false;
-    }
-
-    hr = pVoice->Play(pVoice->_this,0,0,0);
-    if(hr)
-    {
-        LOG("%s: DSPlay failed (%08X)",pszDevName,(unsigned int)hr);
-        return false;
-    }
-
-    return true;
-}
-
-//-----------------------------------------------------------------------------
-
-bool DSZeroVoiceWritableBuffer(AudioBuffer_s *pVoice, char* pszDevName, unsigned long dwBufferSize)
-{
-    unsigned long dwDSLockedBufferSize0=0, dwDSLockedBufferSize1=0;
-    int16_t *pDSLockedBuffer0, *pDSLockedBuffer1;
-
-
-    int hr = DSGetLock(pVoice,
-                            0, dwBufferSize,
-                            &pDSLockedBuffer0, &dwDSLockedBufferSize0,
-                            &pDSLockedBuffer1, &dwDSLockedBufferSize1);
-        hr = !hr;
-    if(hr)
-    {
-        LOG("%s: DSGetLock failed (%08X)",pszDevName,(unsigned int)hr);
-        return false;
-    }
-
-    memset(pDSLockedBuffer0, 0x00, dwDSLockedBufferSize0);
-    if(pDSLockedBuffer1)
-        memset(pDSLockedBuffer1, 0x00, dwDSLockedBufferSize1);
-
-    hr = pVoice->Unlock(pVoice->_this, (void*)pDSLockedBuffer0, dwDSLockedBufferSize0,
-                                    (void*)pDSLockedBuffer1, dwDSLockedBufferSize1);
-    if(hr)
-    {
-        LOG("%s: DSUnlock failed (%08X)",pszDevName,(unsigned int)hr);
-        return false;
-    }
-
-    return true;
-}
-
-//-----------------------------------------------------------------------------
 
 bool audio_init(void) {
     if (audio_isAvailable) {
