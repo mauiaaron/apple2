@@ -59,24 +59,8 @@ typedef struct AudioBuffer_s {
 
 } AudioBuffer_s;
 
-typedef struct AudioParams_s {
-    uint16_t nChannels;
-    unsigned long nSamplesPerSec;
-    unsigned long nAvgBytesPerSec;
-    uint16_t nBlockAlign;
-    uint16_t wBitsPerSample;
-    unsigned long dwBufferBytes;
-} AudioParams_s;
-
-typedef struct AudioContext_s {
-    void *implementation_specific;
-    long (*CreateSoundBuffer)(const AudioParams_s *params, INOUT AudioBuffer_s **buffer, const struct AudioContext_s *sound_system);
-    long (*DestroySoundBuffer)(INOUT AudioBuffer_s **buffer);
-} AudioContext_s;
-
 
 long DSGetLock(AudioBuffer_s *bufferObj, unsigned long dwOffset, unsigned long dwBytes, INOUT int16_t **samplesBuf, INOUT unsigned long *samplesBufSz, INOUT int16_t **samplesBufAlt, INOUT unsigned long *samplesBufAltSz);
-
 long DSGetSoundBuffer(INOUT AudioBuffer_s **pVoice, unsigned long dwFlags, unsigned long dwBufferSize, unsigned long nSampleRate, int nChannels);
 void DSReleaseSoundBuffer(INOUT AudioBuffer_s **pVoice);
 
@@ -90,7 +74,38 @@ bool audio_init(void);
  */
 void audio_shutdown(void);
 
+/*
+ * Pause the audio subsystem.
+ */
+void audio_pause(void);
+
+/*
+ * Resume the audio subsystem.
+ */
+void audio_resume(void);
+
+/*
+ * Is the audio subsystem available?
+ */
 extern bool audio_isAvailable;
+
+// ----------------------------------------------------------------------------
+// Private audio backend APIs
+
+typedef struct AudioParams_s {
+    uint16_t nChannels;
+    unsigned long nSamplesPerSec;
+    unsigned long nAvgBytesPerSec;
+    uint16_t nBlockAlign;
+    uint16_t wBitsPerSample;
+    unsigned long dwBufferBytes;
+} AudioParams_s;
+
+typedef struct AudioContext_s {
+    void *implementation_specific;
+    PRIVATE long (*CreateSoundBuffer)(const AudioParams_s *params, INOUT AudioBuffer_s **buffer, const struct AudioContext_s *sound_system);
+    PRIVATE long (*DestroySoundBuffer)(INOUT AudioBuffer_s **buffer);
+} AudioContext_s;
 
 typedef struct AudioBackend_s {
 
@@ -99,14 +114,12 @@ typedef struct AudioBackend_s {
     PRIVATE long (*shutdown)(INOUT AudioContext_s **audio_context);
     PRIVATE long (*enumerateDevices)(INOUT char ***sound_devices, const int maxcount);
 
-    PUBLIC long (*pause)(void);
-    PUBLIC long (*resume)(void);
+    PRIVATE long (*pause)(void);
+    PRIVATE long (*resume)(void);
 
 } AudioBackend_s;
 
-/*
- * The registered audio backend (renderer).
- */
-extern AudioBackend_s *audio_backend;
+// Audio backend registered at CTOR time
+PRIVATE extern AudioBackend_s *audio_backend;
 
 #endif /* whole file */

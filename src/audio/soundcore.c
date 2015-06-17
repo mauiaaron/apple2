@@ -134,3 +134,11 @@ void audio_shutdown(void) {
     audio_isAvailable = false;
 }
 
+void audio_pause(void) {
+    audio_backend->pause();
+}
+
+void audio_resume(void) {
+    audio_backend->resume();
+}
+

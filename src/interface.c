@@ -1549,7 +1549,7 @@ static void *interface_thread(void *current_key)
 {
     pthread_mutex_lock(&interface_mutex);
 #ifdef AUDIO_ENABLED
-    audio_backend->pause();
+    audio_pause();
 #endif
     in_interface = true;
 
@@ -1593,7 +1593,7 @@ static void *interface_thread(void *current_key)
     }
 
 #ifdef AUDIO_ENABLED
-    audio_backend->resume();
+    audio_resume();
 #endif
     pthread_mutex_unlock(&interface_mutex);
     in_interface = false;
