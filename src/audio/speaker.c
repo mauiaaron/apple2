@@ -220,7 +220,7 @@ static void _submit_samples_buffer_fullspeed(void) {
 
     unsigned long system_buffer_size = 0;
     int16_t *system_samples_buffer = NULL;
-    if (!DSGetLock(speakerBuffer, /*unused*/ 0, num_samples_pad*sizeof(int16_t), &system_samples_buffer, &system_buffer_size, NULL, NULL)) {
+    if (DSGetLock(speakerBuffer, /*unused*/ 0, num_samples_pad*sizeof(int16_t), &system_samples_buffer, &system_buffer_size, NULL, NULL)) {
         return;
     }
     assert(num_samples_pad*sizeof(int16_t) <= system_buffer_size);
@@ -284,7 +284,7 @@ static unsigned int _submit_samples_buffer(const unsigned int num_samples) {
         unsigned long system_buffer_size = 0;
         int16_t *system_samples_buffer = NULL;
 
-        if (!DSGetLock(speakerBuffer, /*unused*/0, (unsigned long)num_samples_to_use*sizeof(int16_t), &system_samples_buffer, &system_buffer_size, NULL, NULL)) {
+        if (DSGetLock(speakerBuffer, /*unused*/0, (unsigned long)num_samples_to_use*sizeof(int16_t), &system_samples_buffer, &system_buffer_size, NULL, NULL)) {
             return num_samples;
         }
 

@@ -75,7 +75,7 @@ typedef struct AudioContext_s {
 } AudioContext_s;
 
 
-bool DSGetLock(AudioBuffer_s *bufferObj, unsigned long dwOffset, unsigned long dwBytes, INOUT int16_t **samplesBuf, INOUT unsigned long *samplesBufSz, INOUT int16_t **samplesBufAlt, INOUT unsigned long *samplesBufAltSz);
+long DSGetLock(AudioBuffer_s *bufferObj, unsigned long dwOffset, unsigned long dwBytes, INOUT int16_t **samplesBuf, INOUT unsigned long *samplesBufSz, INOUT int16_t **samplesBufAlt, INOUT unsigned long *samplesBufAltSz);
 
 long DSGetSoundBuffer(INOUT AudioBuffer_s **pVoice, unsigned long dwFlags, unsigned long dwBufferSize, unsigned long nSampleRate, int nChannels);
 void DSReleaseSoundBuffer(INOUT AudioBuffer_s **pVoice);

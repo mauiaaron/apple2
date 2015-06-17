@@ -1090,7 +1090,7 @@ static void MB_Update()
 	//
 
 #ifdef APPLE2IX
-	if(!DSGetLock(MockingboardVoice,
+	if(DSGetLock(MockingboardVoice,
 						/*unused*/0, (unsigned long)nNumSamples*sizeof(short)*g_nMB_NumChannels,
 #else
 	if(DSGetLock(MockingboardVoice,
@@ -1302,7 +1302,7 @@ static void SSI263_Play(unsigned int nPhoneme)
 
 	hr = SSI263Voice->Stop();
 
-	if(!DSGetLock(SSI263Voice, 0, 0, &pDSLockedBuffer, &dwDSLockedBufferSize, NULL, 0))
+	if(DSGetLock(SSI263Voice, 0, 0, &pDSLockedBuffer, &dwDSLockedBufferSize, NULL, 0))
 		return;
 
 	unsigned int nPhonemeShortLength = g_nPhonemeInfo[nPhoneme].nLength;
@@ -1480,7 +1480,7 @@ static bool MB_DSInit()
 		}
 
 #ifdef APPLE2IX
-		hr = !DSGetLock(SSI263Voice[i], 0, 0, &pDSLockedBuffer, &dwDSLockedBufferSize, NULL, 0);
+		hr = DSGetLock(SSI263Voice[i], 0, 0, &pDSLockedBuffer, &dwDSLockedBufferSize, NULL, 0);
 #else
 		hr = DSGetLock(SSI263Voice[i], 0, 0, &pDSLockedBuffer, &dwDSLockedBufferSize, NULL, 0);
 #endif

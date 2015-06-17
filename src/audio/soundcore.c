@@ -24,7 +24,7 @@ AudioBackend_s *audio_backend = NULL;
 
 //-----------------------------------------------------------------------------
 
-bool DSGetLock(AudioBuffer_s *pVoice, unsigned long dwOffset, unsigned long dwBytes, INOUT int16_t **ppDSLockedBuffer0, INOUT unsigned long *pdwDSLockedBufferSize0, INOUT int16_t **ppDSLockedBuffer1, INOUT unsigned long *pdwDSLockedBufferSize1) {
+long DSGetLock(AudioBuffer_s *pVoice, unsigned long dwOffset, unsigned long dwBytes, INOUT int16_t **ppDSLockedBuffer0, INOUT unsigned long *pdwDSLockedBufferSize0, INOUT int16_t **ppDSLockedBuffer1, INOUT unsigned long *pdwDSLockedBufferSize1) {
 
     unsigned long nStatus = 0;
     long err = pVoice->GetStatus(pVoice->_this, &nStatus);
@@ -47,8 +47,7 @@ bool DSGetLock(AudioBuffer_s *pVoice, unsigned long dwOffset, unsigned long dwBy
         }
     } while (0);
 
-    return !err;
-#warning   ^^^^ FIXME TODO ... this is opposite the other API methods ...
+    return err;
 }
 
 long DSGetSoundBuffer(INOUT AudioBuffer_s **pVoice, unsigned long dwFlags, unsigned long dwBufferSize, unsigned long nSampleRate, int nChannels) {
