@@ -33,8 +33,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #define MAX_SOUND_DEVICES 100
 
-static char **sound_devices = NULL;
-static long num_sound_devices = 0;
 static AudioContext_s *audioContext = NULL;
 
 bool audio_isAvailable = false;
@@ -115,13 +113,13 @@ bool DSZeroVoiceBuffer(AudioBuffer_s *pVoice, char* pszDevName, unsigned long dw
     int hr = pVoice->Stop(pVoice->_this);
     if(hr)
     {
-        LOG("%s: DSStop failed (%08X)\n",pszDevName,(unsigned int)hr);
+        LOG("%s: DSStop failed (%08X)",pszDevName,(unsigned int)hr);
         return false;
     }
     hr = !DSGetLock(pVoice, 0, 0, &pDSLockedBuffer, &dwDSLockedBufferSize, NULL, &argX);
     if(hr)
     {
-        LOG("%s: DSGetLock failed (%08X)\n",pszDevName,(unsigned int)hr);
+        LOG("%s: DSGetLock failed (%08X)",pszDevName,(unsigned int)hr);
         return false;
     }
 
@@ -131,14 +129,14 @@ bool DSZeroVoiceBuffer(AudioBuffer_s *pVoice, char* pszDevName, unsigned long dw
     hr = pVoice->Unlock(pVoice->_this, (void*)pDSLockedBuffer, dwDSLockedBufferSize, NULL, argX);
     if(hr)
     {
-        LOG("%s: DSUnlock failed (%08X)\n",pszDevName,(unsigned int)hr);
+        LOG("%s: DSUnlock failed (%08X)",pszDevName,(unsigned int)hr);
         return false;
     }
 
     hr = pVoice->Play(pVoice->_this,0,0,0);
     if(hr)
     {
-        LOG("%s: DSPlay failed (%08X)\n",pszDevName,(unsigned int)hr);
+        LOG("%s: DSPlay failed (%08X)",pszDevName,(unsigned int)hr);
         return false;
     }
 
@@ -160,7 +158,7 @@ bool DSZeroVoiceWritableBuffer(AudioBuffer_s *pVoice, char* pszDevName, unsigned
         hr = !hr;
     if(hr)
     {
-        LOG("%s: DSGetLock failed (%08X)\n",pszDevName,(unsigned int)hr);
+        LOG("%s: DSGetLock failed (%08X)",pszDevName,(unsigned int)hr);
         return false;
     }
 
@@ -172,7 +170,7 @@ bool DSZeroVoiceWritableBuffer(AudioBuffer_s *pVoice, char* pszDevName, unsigned
                                     (void*)pDSLockedBuffer1, dwDSLockedBufferSize1);
     if(hr)
     {
-        LOG("%s: DSUnlock failed (%08X)\n",pszDevName,(unsigned int)hr);
+        LOG("%s: DSUnlock failed (%08X)",pszDevName,(unsigned int)hr);
         return false;
     }
 
@@ -181,39 +179,26 @@ bool DSZeroVoiceWritableBuffer(AudioBuffer_s *pVoice, char* pszDevName, unsigned
 
 //-----------------------------------------------------------------------------
 
-static void _destroy_enumerated_sound_devices(void) {
-    if (sound_devices) {
-        LOG("Destroying old device names...");
-        char **ptr = sound_devices;
-        while (*ptr) {
-            FREE(*ptr);
-            ++ptr;
-        }
-        FREE(sound_devices);
-        sound_devices = NULL;
-    }
-}
-
 bool audio_init(void) {
     if (audio_isAvailable) {
         return true;
     }
 
-    _destroy_enumerated_sound_devices();
-    num_sound_devices = audio_backend->enumerateDevices(&sound_devices, MAX_SOUND_DEVICES);
+    char **sound_devices = NULL;
+    long num_sound_devices = audio_backend->enumerateDevices(&sound_devices, MAX_SOUND_DEVICES);
     long err = (num_sound_devices <= 0);
 
     do {
         if (err) {
-            LOG("enumerate sound devices failed : %d\n", err);
+            LOG("enumerate sound devices failed to find any devices : %ld", err);
             break;
         }
 
-        LOG("Number of sound devices = %ld\n", num_sound_devices);
+        LOG("Number of sound devices = %ld", num_sound_devices);
         bool createdAudioContext = false;
         for (int i=0; i<num_sound_devices; i++) {
             if (audioContext) {
-                audio_backend->shutdown(audioContext);
+                audio_backend->shutdown(&audioContext);
             }
             err = audio_backend->init(sound_devices[i], (AudioContext_s**)&audioContext);
             if (!err) {
@@ -221,28 +206,36 @@ bool audio_init(void) {
                 break;
             }
 
-            LOG("warning : failed to create sound device:%d err:%d\n", i, err);
+            LOG("warning : failed to create sound device:%d err:%ld", i, err);
         }
 
         if (!createdAudioContext) {
-            LOG("Failed to create an audio context!\n");
+            LOG("Failed to create an audio context!");
             err = true;
             break;
         }
 
+        LOG("Created an audio context!");
         audio_isAvailable = true;
     } while (0);
+
+    if (num_sound_devices) {
+        char **p = sound_devices;
+        while (*p) {
+            FREE(*p);
+            ++p;
+        }
+        FREE(sound_devices);
+        sound_devices = NULL;
+    }
 
     return err;
 }
 
 void audio_shutdown(void) {
-    _destroy_enumerated_sound_devices();
-
     if (!audio_isAvailable) {
         return;
     }
-
     audio_backend->shutdown(&audioContext);
     audio_isAvailable = false;
 }
@@ -260,7 +253,7 @@ int SoundCore_GetErrorInc(void)
 void SoundCore_SetErrorInc(const int nErrorInc)
 {
     g_nErrorInc = nErrorInc < g_nErrorMax ? nErrorInc : g_nErrorMax;
-    LOG("Speaker/MB Error Inc = %d\n", g_nErrorInc);
+    LOG("Speaker/MB Error Inc = %d", g_nErrorInc);
 }
 
 int SoundCore_GetErrorMax(void)
@@ -271,6 +264,6 @@ int SoundCore_GetErrorMax(void)
 void SoundCore_SetErrorMax(const int nErrorMax)
 {
     g_nErrorMax = nErrorMax < MAX_SAMPLES ? nErrorMax : MAX_SAMPLES;
-    LOG("Speaker/MB Error Max = %d\n", g_nErrorMax);
+    LOG("Speaker/MB Error Max = %d", g_nErrorMax);
 }
 
