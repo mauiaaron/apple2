@@ -24,34 +24,31 @@ AudioBackend_s *audio_backend = NULL;
 
 //-----------------------------------------------------------------------------
 
-bool DSGetLock(AudioBuffer_s *pVoice, unsigned long dwOffset, unsigned long dwBytes,
-                      int16_t** ppDSLockedBuffer0, unsigned long* pdwDSLockedBufferSize0,
-                      int16_t** ppDSLockedBuffer1, unsigned long* pdwDSLockedBufferSize1)
-{
+bool DSGetLock(AudioBuffer_s *pVoice, unsigned long dwOffset, unsigned long dwBytes, INOUT int16_t **ppDSLockedBuffer0, INOUT unsigned long *pdwDSLockedBufferSize0, INOUT int16_t **ppDSLockedBuffer1, INOUT unsigned long *pdwDSLockedBufferSize1) {
+
     unsigned long nStatus = 0;
-    int hr = pVoice->GetStatus(pVoice->_this, &nStatus);
-    if(hr)
-        return false;
+    long err = pVoice->GetStatus(pVoice->_this, &nStatus);
 
-    // Get write only pointer(s) to sound buffer
-    if(dwBytes == 0)
-    {
-        if( (hr = pVoice->Lock(pVoice->_this, 0, 0,
-                                (void**)ppDSLockedBuffer0, pdwDSLockedBufferSize0,
-                                (void**)ppDSLockedBuffer1, pdwDSLockedBufferSize1,
-                                0)))
-            return false;
-    }
-    else
-    {
-        if( (hr = pVoice->Lock(pVoice->_this, dwOffset, dwBytes,
-                                (void**)ppDSLockedBuffer0, pdwDSLockedBufferSize0,
-                                (void**)ppDSLockedBuffer1, pdwDSLockedBufferSize1,
-                                0)))
-            return false;
-    }
+    do {
+        if (err) {
+            break;
+        }
 
-    return true;
+        if (dwBytes == 0) {
+            err = pVoice->Lock(pVoice->_this, 0, 0, (void**)ppDSLockedBuffer0, pdwDSLockedBufferSize0, (void**)ppDSLockedBuffer1, pdwDSLockedBufferSize1, 0);
+            if (err) {
+                break;
+            }
+        } else {
+            err = pVoice->Lock(pVoice->_this, dwOffset, dwBytes, (void**)ppDSLockedBuffer0, pdwDSLockedBufferSize0, (void**)ppDSLockedBuffer1, pdwDSLockedBufferSize1, 0);
+            if (err) {
+                break;
+            }
+        }
+    } while (0);
+
+    return !err;
+#warning   ^^^^ FIXME TODO ... this is opposite the other API methods ...
 }
 
 //-----------------------------------------------------------------------------
