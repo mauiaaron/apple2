@@ -35,15 +35,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 static char **sound_devices = NULL;
 static long num_sound_devices = 0;
-static AudioContext_s *g_lpDS = NULL;
-
-//-------------------------------------
-
-// Used for muting & fading:
-
-#define uMAX_VOICES 66
-static unsigned int g_uNumVoices = 0;
-static AudioBuffer_s* g_pVoices[uMAX_VOICES] = {NULL};
+static AudioContext_s *audioContext = NULL;
 
 //-------------------------------------
 
@@ -85,8 +77,7 @@ bool DSGetLock(AudioBuffer_s *pVoice, unsigned long dwOffset, unsigned long dwBy
 
 //-----------------------------------------------------------------------------
 
-long DSGetSoundBuffer(INOUT AudioBuffer_s **pVoice, unsigned long dwFlags, unsigned long dwBufferSize, unsigned long nSampleRate, int nChannels)
-{
+long DSGetSoundBuffer(INOUT AudioBuffer_s **pVoice, unsigned long dwFlags, unsigned long dwBufferSize, unsigned long nSampleRate, int nChannels) {
     AudioParams_s params = { 0 };
 
     params.nChannels = nChannels;
@@ -96,39 +87,23 @@ long DSGetSoundBuffer(INOUT AudioBuffer_s **pVoice, unsigned long dwFlags, unsig
     params.nAvgBytesPerSec = params.nBlockAlign * params.nSamplesPerSec;
     params.dwBufferBytes = dwBufferSize;
 
-        if (*pVoice)
-        {
-            DSReleaseSoundBuffer(pVoice);
-        }
-    int hr = g_lpDS->CreateSoundBuffer(&params, pVoice, g_lpDS);
-    if(hr)
-        return hr;
-
-    assert(g_uNumVoices < uMAX_VOICES);
-    if(g_uNumVoices < uMAX_VOICES)
-        g_pVoices[g_uNumVoices++] = *pVoice;
-
-    return hr;
-}
-
-void DSReleaseSoundBuffer(INOUT AudioBuffer_s **pVoice)
-{
-
-    for(unsigned int i=0; i<g_uNumVoices; i++)
-    {
-        if(g_pVoices[i] == *pVoice)
-        {
-            g_pVoices[i] = g_pVoices[g_uNumVoices-1];
-            g_pVoices[g_uNumVoices-1] = NULL;
-            g_uNumVoices--;
-            break;
-        }
+    if (*pVoice) {
+        DSReleaseSoundBuffer(pVoice);
     }
 
-        if (g_lpDS)
-        {
-            g_lpDS->DestroySoundBuffer(pVoice);
+    long err = 0;
+    do {
+        err = audioContext->CreateSoundBuffer(&params, pVoice, audioContext);
+        if (err) {
+            break;
         }
+    } while (0);
+
+    return err;
+}
+
+void DSReleaseSoundBuffer(INOUT AudioBuffer_s **pVoice) {
+    audioContext->DestroySoundBuffer(pVoice);
 }
 
 //-----------------------------------------------------------------------------
@@ -246,11 +221,11 @@ bool audio_init(void)
     bool bCreatedOK = false;
     for(int x=0; x<num_sound_devices; x++)
     {
-                if (g_lpDS)
+                if (audioContext)
                 {
-                    audio_backend->shutdown((AudioContext_s**)&g_lpDS);
+                    audio_backend->shutdown((AudioContext_s**)&audioContext);
                 }
-                hr = (int)audio_backend->init(sound_devices[x], (AudioContext_s**)&g_lpDS);
+                hr = (int)audio_backend->init(sound_devices[x], (AudioContext_s**)&audioContext);
         if(hr == 0)
         {
             bCreatedOK = true;
@@ -291,11 +266,7 @@ void audio_shutdown(void)
     if(g_uDSInitRefCount)
         return;
 
-    //
-
-    assert(g_uNumVoices == 0);
-
-        audio_backend->shutdown((AudioContext_s**)&g_lpDS);
+    audio_backend->shutdown(&audioContext);
     audio_isAvailable = false;
 }
 
