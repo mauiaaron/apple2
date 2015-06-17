@@ -37,10 +37,7 @@ static char **sound_devices = NULL;
 static long num_sound_devices = 0;
 static AudioContext_s *audioContext = NULL;
 
-//-------------------------------------
-
 bool audio_isAvailable = false;
-
 AudioBackend_s *audio_backend = NULL;
 
 //-----------------------------------------------------------------------------
@@ -184,8 +181,6 @@ bool DSZeroVoiceWritableBuffer(AudioBuffer_s *pVoice, char* pszDevName, unsigned
 
 //-----------------------------------------------------------------------------
 
-static unsigned int g_uDSInitRefCount = 0;
-
 static void _destroy_enumerated_sound_devices(void) {
     if (sound_devices) {
         LOG("Destroying old device names...");
@@ -199,72 +194,54 @@ static void _destroy_enumerated_sound_devices(void) {
     }
 }
 
-bool audio_init(void)
-{
-    if(audio_isAvailable)
-    {
-        g_uDSInitRefCount++;
-        return true;        // Already initialised successfully
+bool audio_init(void) {
+    if (audio_isAvailable) {
+        return true;
     }
 
     _destroy_enumerated_sound_devices();
     num_sound_devices = audio_backend->enumerateDevices(&sound_devices, MAX_SOUND_DEVICES);
-        int hr = (num_sound_devices <= 0);
-    if(hr)
-    {
-        LOG("DSEnumerate failed (%08X)\n",(unsigned int)hr);
-        return false;
-    }
+    long err = (num_sound_devices <= 0);
 
-    LOG("Number of sound devices = %ld\n",num_sound_devices);
-
-    bool bCreatedOK = false;
-    for(int x=0; x<num_sound_devices; x++)
-    {
-                if (audioContext)
-                {
-                    audio_backend->shutdown((AudioContext_s**)&audioContext);
-                }
-                hr = (int)audio_backend->init(sound_devices[x], (AudioContext_s**)&audioContext);
-        if(hr == 0)
-        {
-            bCreatedOK = true;
+    do {
+        if (err) {
+            LOG("enumerate sound devices failed : %d\n", err);
             break;
         }
 
-        LOG("DSCreate failed for sound device #%d (%08X)\n",x,(unsigned int)hr);
-    }
-    if(!bCreatedOK)
-    {
-        LOG("DSCreate failed for all sound devices\n");
-        return false;
-    }
+        LOG("Number of sound devices = %ld\n", num_sound_devices);
+        bool createdAudioContext = false;
+        for (int i=0; i<num_sound_devices; i++) {
+            if (audioContext) {
+                audio_backend->shutdown(audioContext);
+            }
+            err = audio_backend->init(sound_devices[i], (AudioContext_s**)&audioContext);
+            if (!err) {
+                createdAudioContext = true;
+                break;
+            }
 
-    audio_isAvailable = true;
+            LOG("warning : failed to create sound device:%d err:%d\n", i, err);
+        }
 
-    g_uDSInitRefCount = 1;
+        if (!createdAudioContext) {
+            LOG("Failed to create an audio context!\n");
+            err = true;
+            break;
+        }
 
-    return true;
+        audio_isAvailable = true;
+    } while (0);
+
+    return err;
 }
 
-//-----------------------------------------------------------------------------
-
-void audio_shutdown(void)
-{
+void audio_shutdown(void) {
     _destroy_enumerated_sound_devices();
 
-    if(!audio_isAvailable)
+    if (!audio_isAvailable) {
         return;
-
-    assert(g_uDSInitRefCount);
-
-    if(g_uDSInitRefCount == 0)
-        return;
-
-    g_uDSInitRefCount--;
-
-    if(g_uDSInitRefCount)
-        return;
+    }
 
     audio_backend->shutdown(&audioContext);
     audio_isAvailable = false;
