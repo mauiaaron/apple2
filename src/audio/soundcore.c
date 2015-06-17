@@ -43,7 +43,7 @@ static AudioContext_s *g_lpDS = NULL;
 
 #define uMAX_VOICES 66
 static unsigned int g_uNumVoices = 0;
-static VOICE* g_pVoices[uMAX_VOICES] = {NULL};
+static AudioBuffer_s* g_pVoices[uMAX_VOICES] = {NULL};
 
 //-------------------------------------
 
@@ -85,7 +85,7 @@ bool DSGetLock(AudioBuffer_s *pVoice, unsigned long dwOffset, unsigned long dwBy
 
 //-----------------------------------------------------------------------------
 
-int DSGetSoundBuffer(VOICE* pVoice, unsigned long dwFlags, unsigned long dwBufferSize, unsigned long nSampleRate, int nChannels)
+long DSGetSoundBuffer(INOUT AudioBuffer_s **pVoice, unsigned long dwFlags, unsigned long dwBufferSize, unsigned long nSampleRate, int nChannels)
 {
     AudioParams_s params = { 0 };
 
@@ -96,34 +96,27 @@ int DSGetSoundBuffer(VOICE* pVoice, unsigned long dwFlags, unsigned long dwBuffe
     params.nAvgBytesPerSec = params.nBlockAlign * params.nSamplesPerSec;
     params.dwBufferBytes = dwBufferSize;
 
-    // Are buffers released when g_lpDS OR pVoice->lpDSBvoice is released?
-    // . From DirectX doc:
-    //   "Buffer objects are owned by the device object that created them. When the
-    //    device object is released, all buffers created by that object are also released..."
-        if (pVoice->lpDSBvoice)
+        if (*pVoice)
         {
-            g_lpDS->DestroySoundBuffer(&pVoice->lpDSBvoice);
-            //DSReleaseSoundBuffer(pVoice);
+            DSReleaseSoundBuffer(pVoice);
         }
-    int hr = g_lpDS->CreateSoundBuffer(&params, &pVoice->lpDSBvoice, g_lpDS);
+    int hr = g_lpDS->CreateSoundBuffer(&params, pVoice, g_lpDS);
     if(hr)
         return hr;
 
-    //
-
     assert(g_uNumVoices < uMAX_VOICES);
     if(g_uNumVoices < uMAX_VOICES)
-        g_pVoices[g_uNumVoices++] = pVoice;
+        g_pVoices[g_uNumVoices++] = *pVoice;
 
     return hr;
 }
 
-void DSReleaseSoundBuffer(VOICE* pVoice)
+void DSReleaseSoundBuffer(INOUT AudioBuffer_s **pVoice)
 {
 
     for(unsigned int i=0; i<g_uNumVoices; i++)
     {
-        if(g_pVoices[i] == pVoice)
+        if(g_pVoices[i] == *pVoice)
         {
             g_pVoices[i] = g_pVoices[g_uNumVoices-1];
             g_pVoices[g_uNumVoices-1] = NULL;
@@ -134,26 +127,26 @@ void DSReleaseSoundBuffer(VOICE* pVoice)
 
         if (g_lpDS)
         {
-            g_lpDS->DestroySoundBuffer(&pVoice->lpDSBvoice);
+            g_lpDS->DestroySoundBuffer(pVoice);
         }
 }
 
 //-----------------------------------------------------------------------------
 
-bool DSZeroVoiceBuffer(VOICE *Voice, char* pszDevName, unsigned long dwBufferSize)
+bool DSZeroVoiceBuffer(AudioBuffer_s *pVoice, char* pszDevName, unsigned long dwBufferSize)
 {
     unsigned long dwDSLockedBufferSize = 0;    // Size of the locked DirectSound buffer
     int16_t* pDSLockedBuffer;
 
 
         unsigned long argX = 0;
-    int hr = Voice->lpDSBvoice->Stop(Voice->lpDSBvoice->_this);
+    int hr = pVoice->Stop(pVoice->_this);
     if(hr)
     {
         LOG("%s: DSStop failed (%08X)\n",pszDevName,(unsigned int)hr);
         return false;
     }
-    hr = !DSGetLock(Voice->lpDSBvoice, 0, 0, &pDSLockedBuffer, &dwDSLockedBufferSize, NULL, &argX);
+    hr = !DSGetLock(pVoice, 0, 0, &pDSLockedBuffer, &dwDSLockedBufferSize, NULL, &argX);
     if(hr)
     {
         LOG("%s: DSGetLock failed (%08X)\n",pszDevName,(unsigned int)hr);
@@ -163,14 +156,14 @@ bool DSZeroVoiceBuffer(VOICE *Voice, char* pszDevName, unsigned long dwBufferSiz
     assert(dwDSLockedBufferSize == dwBufferSize);
     memset(pDSLockedBuffer, 0x00, dwDSLockedBufferSize);
 
-    hr = Voice->lpDSBvoice->Unlock(Voice->lpDSBvoice->_this, (void*)pDSLockedBuffer, dwDSLockedBufferSize, NULL, argX);
+    hr = pVoice->Unlock(pVoice->_this, (void*)pDSLockedBuffer, dwDSLockedBufferSize, NULL, argX);
     if(hr)
     {
         LOG("%s: DSUnlock failed (%08X)\n",pszDevName,(unsigned int)hr);
         return false;
     }
 
-    hr = Voice->lpDSBvoice->Play(Voice->lpDSBvoice->_this,0,0,0);
+    hr = pVoice->Play(pVoice->_this,0,0,0);
     if(hr)
     {
         LOG("%s: DSPlay failed (%08X)\n",pszDevName,(unsigned int)hr);
@@ -182,13 +175,13 @@ bool DSZeroVoiceBuffer(VOICE *Voice, char* pszDevName, unsigned long dwBufferSiz
 
 //-----------------------------------------------------------------------------
 
-bool DSZeroVoiceWritableBuffer(VOICE *Voice, char* pszDevName, unsigned long dwBufferSize)
+bool DSZeroVoiceWritableBuffer(AudioBuffer_s *pVoice, char* pszDevName, unsigned long dwBufferSize)
 {
     unsigned long dwDSLockedBufferSize0=0, dwDSLockedBufferSize1=0;
     int16_t *pDSLockedBuffer0, *pDSLockedBuffer1;
 
 
-    int hr = DSGetLock(Voice->lpDSBvoice,
+    int hr = DSGetLock(pVoice,
                             0, dwBufferSize,
                             &pDSLockedBuffer0, &dwDSLockedBufferSize0,
                             &pDSLockedBuffer1, &dwDSLockedBufferSize1);
@@ -203,7 +196,7 @@ bool DSZeroVoiceWritableBuffer(VOICE *Voice, char* pszDevName, unsigned long dwB
     if(pDSLockedBuffer1)
         memset(pDSLockedBuffer1, 0x00, dwDSLockedBufferSize1);
 
-    hr = Voice->lpDSBvoice->Unlock(Voice->lpDSBvoice->_this, (void*)pDSLockedBuffer0, dwDSLockedBufferSize0,
+    hr = pVoice->Unlock(pVoice->_this, (void*)pDSLockedBuffer0, dwDSLockedBufferSize0,
                                     (void*)pDSLockedBuffer1, dwDSLockedBufferSize1);
     if(hr)
     {

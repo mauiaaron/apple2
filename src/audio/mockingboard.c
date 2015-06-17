@@ -246,15 +246,11 @@ static short g_nMixBuffer[g_dwDSBufferSize / sizeof(short)];
 #endif
 
 
-static VOICE MockingboardVoice = {0};
+static AudioBuffer_s *MockingboardVoice = NULL;
 
 // HACK FIXME TODO : why 64?  do we really need this much?!
 #define MAX_VOICES 64
-#ifdef APPLE2IX
-static VOICE SSI263Voice[MAX_VOICES];
-#else
-static VOICE SSI263Voice[MAX_VOICES] = {0};
-#endif
+static AudioBuffer_s *SSI263Voice[MAX_VOICES] = { 0 };
 
 #ifdef APPLE2IX
 static pthread_cond_t mockingboard_cond = PTHREAD_COND_INITIALIZER;
@@ -898,14 +894,14 @@ static void MB_Update()
 {
 #ifdef APPLE2IX
         static int nNumSamplesError = 0;
-        if (!MockingboardVoice.bActive || !g_bMB_Active)
+        if (!MockingboardVoice->bActive || !g_bMB_Active)
         {
             nNumSamplesError = 0;
             return;
         }
 #else
 	char szDbg[200];
-	if (!MockingboardVoice.bActive)
+	if (!MockingboardVoice->bActive)
 		return;
 #endif
 
@@ -978,9 +974,9 @@ static void MB_Update()
 
 	unsigned long dwCurrentPlayCursor, dwCurrentWriteCursor;
 #ifdef APPLE2IX
-	int hr = MockingboardVoice.lpDSBvoice->GetCurrentPosition(MockingboardVoice.lpDSBvoice->_this, &dwCurrentPlayCursor, &dwCurrentWriteCursor);
+	int hr = MockingboardVoice->GetCurrentPosition(MockingboardVoice->_this, &dwCurrentPlayCursor, &dwCurrentWriteCursor);
 #else
-	int hr = MockingboardVoice.lpDSBvoice->GetCurrentPosition(&dwCurrentPlayCursor, &dwCurrentWriteCursor);
+	int hr = MockingboardVoice->GetCurrentPosition(&dwCurrentPlayCursor, &dwCurrentWriteCursor);
 #endif
 	if(FAILED(hr))
 		return;
@@ -1096,10 +1092,10 @@ static void MB_Update()
 	//
 
 #ifdef APPLE2IX
-	if(!DSGetLock(MockingboardVoice.lpDSBvoice,
+	if(!DSGetLock(MockingboardVoice,
 						/*unused*/0, (unsigned long)nNumSamples*sizeof(short)*g_nMB_NumChannels,
 #else
-	if(DSGetLock(MockingboardVoice.lpDSBvoice,
+	if(DSGetLock(MockingboardVoice,
 						dwByteOffset, (unsigned long)nNumSamples*sizeof(short)*g_nMB_NumChannels,
 #endif
 						&pDSLockedBuffer0, &dwDSLockedBufferSize0,
@@ -1116,9 +1112,9 @@ static void MB_Update()
 
 	// Commit sound buffer
 #ifdef APPLE2IX
-	MockingboardVoice.lpDSBvoice->Unlock(MockingboardVoice.lpDSBvoice->_this, (void*)pDSLockedBuffer0, dwDSLockedBufferSize0,
+	MockingboardVoice->Unlock(MockingboardVoice->_this, (void*)pDSLockedBuffer0, dwDSLockedBufferSize0,
 #else
-	hr = MockingboardVoice.lpDSBvoice->Unlock((void*)pDSLockedBuffer0, dwDSLockedBufferSize0,
+	hr = MockingboardVoice->Unlock((void*)pDSLockedBuffer0, dwDSLockedBufferSize0,
 #endif
 											  (void*)pDSLockedBuffer1, dwDSLockedBufferSize1);
 
@@ -1162,10 +1158,10 @@ static unsigned long SSI263Thread(void *lpParameter)
             bool sample_finished = false;
             for (unsigned int i=0; i<MAX_VOICES; i++)
             {
-		if (SSI263Voice[i].lpDSBvoice && SSI263Voice[i].bActive)
+		if (SSI263Voice[i] && SSI263Voice[i]->bActive)
                 {
                     unsigned long status = 0;
-                    SSI263Voice[i].lpDSBvoice->GetStatus(SSI263Voice[i].lpDSBvoice, &status);
+                    SSI263Voice[i]->GetStatus(SSI263Voice[i], &status);
 
                     if (status & AUDIO_STATUS_NOTPLAYING)
                     {
@@ -1205,7 +1201,7 @@ static unsigned long SSI263Thread(void *lpParameter)
 		//if(g_fh) fprintf(g_fh, "IRQ: Phoneme complete (0x%02X)\n\n", g_nCurrentActivePhoneme);
 #endif
 
-		SSI263Voice[g_nCurrentActivePhoneme].bActive = false;
+		SSI263Voice[g_nCurrentActivePhoneme]->bActive = false;
 		g_nCurrentActivePhoneme = -1;
 
 		// Phoneme complete, so generate IRQ if necessary
@@ -1264,27 +1260,27 @@ static void SSI263_Play(unsigned int nPhoneme)
 		// A write to DURPHON before previous phoneme has completed
 		g_bStopPhoneme = true;
 #ifdef APPLE2IX
-		hr = SSI263Voice[g_nCurrentActivePhoneme].lpDSBvoice->Stop(SSI263Voice[g_nCurrentActivePhoneme].lpDSBvoice->_this);
+		hr = SSI263Voice[g_nCurrentActivePhoneme]->Stop(SSI263Voice[g_nCurrentActivePhoneme]->_this);
 #else
-		hr = SSI263Voice[g_nCurrentActivePhoneme].lpDSBvoice->Stop();
+		hr = SSI263Voice[g_nCurrentActivePhoneme]->Stop();
 #endif
 	}
 
 	g_nCurrentActivePhoneme = nPhoneme;
 
 #ifdef APPLE2IX
-	hr = SSI263Voice[g_nCurrentActivePhoneme].lpDSBvoice->Replay(SSI263Voice[g_nCurrentActivePhoneme].lpDSBvoice->_this);
+	hr = SSI263Voice[g_nCurrentActivePhoneme]->Replay(SSI263Voice[g_nCurrentActivePhoneme]->_this);
 #else
-	hr = SSI263Voice[g_nCurrentActivePhoneme].lpDSBvoice->SetCurrentPosition(0);
+	hr = SSI263Voice[g_nCurrentActivePhoneme]->SetCurrentPosition(0);
 	if(FAILED(hr))
 		return;
 
-	hr = SSI263Voice[g_nCurrentActivePhoneme].lpDSBvoice->Play(0,0,0);	// Not looping
+	hr = SSI263Voice[g_nCurrentActivePhoneme]->Play(0,0,0);	// Not looping
 #endif
 	if(FAILED(hr))
 		return;
 
-	SSI263Voice[g_nCurrentActivePhoneme].bActive = true;
+	SSI263Voice[g_nCurrentActivePhoneme]->bActive = true;
 #else
 	int hr;
 	bool bPause;
@@ -1306,9 +1302,9 @@ static void SSI263_Play(unsigned int nPhoneme)
 	unsigned long dwDSLockedBufferSize = 0;    // Size of the locked DirectSound buffer
 	int16_t* pDSLockedBuffer;
 
-	hr = SSI263Voice.lpDSBvoice->Stop();
+	hr = SSI263Voice->Stop();
 
-	if(!DSGetLock(SSI263Voice.lpDSBvoice, 0, 0, &pDSLockedBuffer, &dwDSLockedBufferSize, NULL, 0))
+	if(!DSGetLock(SSI263Voice, 0, 0, &pDSLockedBuffer, &dwDSLockedBufferSize, NULL, 0))
 		return;
 
 	unsigned int nPhonemeShortLength = g_nPhonemeInfo[nPhoneme].nLength;
@@ -1340,14 +1336,14 @@ static void SSI263_Play(unsigned int nPhoneme)
 #endif
 
 #ifdef APPLE2IX
-	hr = SSI263Voice.lpDSBvoice->Unlock(SSI263Voice.lpDSBvoice->_this, (void*)pDSLockedBuffer, dwDSLockedBufferSize, NULL, 0);
+	hr = SSI263Voice->Unlock(SSI263Voice->_this, (void*)pDSLockedBuffer, dwDSLockedBufferSize, NULL, 0);
 #else
-	hr = SSI263Voice.lpDSBvoice->Unlock((void*)pDSLockedBuffer, dwDSLockedBufferSize, NULL, 0);
+	hr = SSI263Voice->Unlock((void*)pDSLockedBuffer, dwDSLockedBufferSize, NULL, 0);
 #endif
 	if(FAILED(hr))
 		return;
 
-	hr = SSI263Voice.lpDSBvoice->Play(0,0,0);	// Not looping
+	hr = SSI263Voice->Play(0,0,0);	// Not looping
 	if(FAILED(hr))
 		return;
 
@@ -1395,16 +1391,16 @@ static bool MB_DSInit()
 		return false;
 #endif
 
-	MockingboardVoice.bActive = true;
+	MockingboardVoice->bActive = true;
 
 	// Volume might've been setup from value in Registry
-	if(!MockingboardVoice.nVolume)
-		MockingboardVoice.nVolume = DSBVOLUME_MAX;
+	if(!MockingboardVoice->nVolume)
+		MockingboardVoice->nVolume = DSBVOLUME_MAX;
 
 #ifdef APPLE2IX
-	hr = MockingboardVoice.lpDSBvoice->SetVolume(MockingboardVoice.lpDSBvoice, MockingboardVoice.nVolume);
+	hr = MockingboardVoice->SetVolume(MockingboardVoice, MockingboardVoice->nVolume);
 #else
-	hr = MockingboardVoice.lpDSBvoice->SetVolume(MockingboardVoice.nVolume);
+	hr = MockingboardVoice->SetVolume(MockingboardVoice->nVolume);
 #endif
 	LOG("MB_DSInit: SetVolume(), hr=0x%08X\n", (unsigned int)hr);
 
@@ -1486,9 +1482,9 @@ static bool MB_DSInit()
 		}
 
 #ifdef APPLE2IX
-		hr = !DSGetLock(SSI263Voice[i].lpDSBvoice, 0, 0, &pDSLockedBuffer, &dwDSLockedBufferSize, NULL, 0);
+		hr = !DSGetLock(SSI263Voice[i], 0, 0, &pDSLockedBuffer, &dwDSLockedBufferSize, NULL, 0);
 #else
-		hr = DSGetLock(SSI263Voice[i].lpDSBvoice, 0, 0, &pDSLockedBuffer, &dwDSLockedBufferSize, NULL, 0);
+		hr = DSGetLock(SSI263Voice[i], 0, 0, &pDSLockedBuffer, &dwDSLockedBufferSize, NULL, 0);
 #endif
 		//LOG("MB_DSInit: (%02d) DSGetLock(), res=%d\n", i, hr ? 1 : 0);	// WARNING: Lock acquired && doing heavy-weight logging
 		if(FAILED(hr))
@@ -1518,7 +1514,7 @@ static bool MB_DSInit()
 #ifdef APPLE2IX
                 // Assume no way to get notification of sound finished, instead we will poll from mockingboard thread ...
 #else
- 		hr = SSI263Voice[i].lpDSBvoice->QueryInterface(IID_IDirectSoundNotify, (void **)&SSI263Voice[i].lpDSNotify);
+ 		hr = SSI263Voice[i]->QueryInterface(IID_IDirectSoundNotify, (void **)&SSI263Voice[i]->lpDSNotify);
 		//LOG("MB_DSInit: (%02d) QueryInterface(), hr=0x%08X\n", i, hr);	// WARNING: Lock acquired && doing heavy-weight logging
 		if(FAILED(hr))
 		{
@@ -1532,7 +1528,7 @@ static bool MB_DSInit()
 		PositionNotify.dwOffset = DSBPN_OFFSETSTOP;			// End of buffer
 		PositionNotify.hEventNotify = g_hSSI263Event[0];
 
-		hr = SSI263Voice[i].lpDSNotify->SetNotificationPositions(1, &PositionNotify);
+		hr = SSI263Voice[i]->lpDSNotify->SetNotificationPositions(1, &PositionNotify);
 		//LOG("MB_DSInit: (%02d) SetNotificationPositions(), hr=0x%08X\n", i, hr);	// WARNING: Lock acquired && doing heavy-weight logging
 		if(FAILED(hr))
 		{
@@ -1542,9 +1538,9 @@ static bool MB_DSInit()
 #endif
 
 #ifdef APPLE2IX
-		hr = SSI263Voice[i].lpDSBvoice->UnlockStaticBuffer(SSI263Voice[i].lpDSBvoice->_this, dwDSLockedBufferSize);
+		hr = SSI263Voice[i]->UnlockStaticBuffer(SSI263Voice[i]->_this, dwDSLockedBufferSize);
 #else
-		hr = SSI263Voice[i].lpDSBvoice->Unlock((void*)pDSLockedBuffer, dwDSLockedBufferSize, NULL, 0);
+		hr = SSI263Voice[i]->Unlock((void*)pDSLockedBuffer, dwDSLockedBufferSize, NULL, 0);
 #endif
 		LOG("MB_DSInit: (%02d) Unlock(),hr=0x%08X\n", i, (unsigned int)hr);
 		if(FAILED(hr))
@@ -1553,12 +1549,12 @@ static bool MB_DSInit()
 			return false;
 		}
 
-		SSI263Voice[i].bActive = false;
-		SSI263Voice[i].nVolume = MockingboardVoice.nVolume;		// Use same volume as MB
+		SSI263Voice[i]->bActive = false;
+		SSI263Voice[i]->nVolume = MockingboardVoice->nVolume;		// Use same volume as MB
 #ifdef APPLE2IX
-		hr = SSI263Voice[i].lpDSBvoice->SetVolume(SSI263Voice[i].lpDSBvoice, SSI263Voice[i].nVolume);
+		hr = SSI263Voice[i]->SetVolume(SSI263Voice[i], SSI263Voice[i]->nVolume);
 #else
-		hr = SSI263Voice[i].lpDSBvoice->SetVolume(SSI263Voice[i].nVolume);
+		hr = SSI263Voice[i]->SetVolume(SSI263Voice[i]->nVolume);
 #endif
 		LOG("MB_DSInit: (%02d) SetVolume(), hr=0x%08X\n", i, (unsigned int)hr);
 	}
@@ -1619,14 +1615,14 @@ static void MB_DSUninit()
 
 	//
 
-	if(MockingboardVoice.lpDSBvoice && MockingboardVoice.bActive)
+	if(MockingboardVoice && MockingboardVoice->bActive)
 	{
 #ifdef APPLE2IX
-		MockingboardVoice.lpDSBvoice->Stop(MockingboardVoice.lpDSBvoice->_this);
+		MockingboardVoice->Stop(MockingboardVoice->_this);
 #else
-		MockingboardVoice.lpDSBvoice->Stop();
+		MockingboardVoice->Stop();
 #endif
-		MockingboardVoice.bActive = false;
+		MockingboardVoice->bActive = false;
 	}
 
 	DSReleaseSoundBuffer(&MockingboardVoice);
@@ -1635,14 +1631,14 @@ static void MB_DSUninit()
 
 	for(int i=0; i<MAX_VOICES; i++)
 	{
-		if(SSI263Voice[i].lpDSBvoice && SSI263Voice[i].bActive)
+		if(SSI263Voice[i] && SSI263Voice[i]->bActive)
 		{
 #ifdef APPLE2IX
-			SSI263Voice[i].lpDSBvoice->Stop(SSI263Voice[i].lpDSBvoice->_this);
+			SSI263Voice[i]->Stop(SSI263Voice[i]->_this);
 #else
-			SSI263Voice[i].lpDSBvoice->Stop();
+			SSI263Voice[i]->Stop();
 #endif
-			SSI263Voice[i].bActive = false;
+			SSI263Voice[i]->bActive = false;
 		}
 
 		DSReleaseSoundBuffer(&SSI263Voice[i]);
@@ -1676,11 +1672,11 @@ static void MB_DSUninit()
 void MB_Initialize()
 {
 #ifdef APPLE2IX
-    memset(SSI263Voice, 0x0, sizeof(VOICE)*MAX_VOICES);
+    memset(SSI263Voice, 0x0, sizeof(AudioBuffer_s)*MAX_VOICES);
 #endif
 	if (g_bDisableDirectSoundMockingboard)
 	{
-		MockingboardVoice.bMute = true;
+		MockingboardVoice->bMute = true;
 		g_SoundcardType = CT_Empty;
 	}
 	else
@@ -2039,21 +2035,21 @@ void MB_Mute()
 	if(g_SoundcardType == CT_Empty)
 		return;
 
-	if(MockingboardVoice.bActive && !MockingboardVoice.bMute)
+	if(MockingboardVoice->bActive && !MockingboardVoice->bMute)
 	{
 #ifdef APPLE2IX
-		MockingboardVoice.lpDSBvoice->SetVolume(MockingboardVoice.lpDSBvoice, DSBVOLUME_MIN);
+		MockingboardVoice->SetVolume(MockingboardVoice, DSBVOLUME_MIN);
 #else
-		MockingboardVoice.lpDSBvoice->SetVolume(DSBVOLUME_MIN);
+		MockingboardVoice->SetVolume(DSBVOLUME_MIN);
 #endif
-		MockingboardVoice.bMute = true;
+		MockingboardVoice->bMute = true;
 	}
 
 	if(g_nCurrentActivePhoneme >= 0)
 #ifdef APPLE2IX
-		SSI263Voice[g_nCurrentActivePhoneme].lpDSBvoice->SetVolume(SSI263Voice[g_nCurrentActivePhoneme].lpDSBvoice, DSBVOLUME_MIN);
+		SSI263Voice[g_nCurrentActivePhoneme]->SetVolume(SSI263Voice[g_nCurrentActivePhoneme], DSBVOLUME_MIN);
 #else
-		SSI263Voice[g_nCurrentActivePhoneme].lpDSBvoice->SetVolume(DSBVOLUME_MIN);
+		SSI263Voice[g_nCurrentActivePhoneme]->SetVolume(DSBVOLUME_MIN);
 #endif
 }
 
@@ -2064,21 +2060,21 @@ void MB_Demute()
 	if(g_SoundcardType == CT_Empty)
 		return;
 
-	if(MockingboardVoice.bActive && MockingboardVoice.bMute)
+	if(MockingboardVoice->bActive && MockingboardVoice->bMute)
 	{
 #ifdef APPLE2IX
-		MockingboardVoice.lpDSBvoice->SetVolume(MockingboardVoice.lpDSBvoice, MockingboardVoice.nVolume);
+		MockingboardVoice->SetVolume(MockingboardVoice, MockingboardVoice->nVolume);
 #else
-		MockingboardVoice.lpDSBvoice->SetVolume(MockingboardVoice.nVolume);
+		MockingboardVoice->SetVolume(MockingboardVoice->nVolume);
 #endif
-		MockingboardVoice.bMute = false;
+		MockingboardVoice->bMute = false;
 	}
 
 	if(g_nCurrentActivePhoneme >= 0)
 #ifdef APPLE2IX
-		SSI263Voice[g_nCurrentActivePhoneme].lpDSBvoice->SetVolume(SSI263Voice[g_nCurrentActivePhoneme].lpDSBvoice, SSI263Voice[g_nCurrentActivePhoneme].nVolume);
+		SSI263Voice[g_nCurrentActivePhoneme]->SetVolume(SSI263Voice[g_nCurrentActivePhoneme], SSI263Voice[g_nCurrentActivePhoneme]->nVolume);
 #else
-		SSI263Voice[g_nCurrentActivePhoneme].lpDSBvoice->SetVolume(SSI263Voice[g_nCurrentActivePhoneme].nVolume);
+		SSI263Voice[g_nCurrentActivePhoneme]->SetVolume(SSI263Voice[g_nCurrentActivePhoneme]->nVolume);
 #endif
 }
 
@@ -2205,7 +2201,7 @@ double MB_GetFramePeriod()
 
 bool MB_IsActive()
 {
-	if(!MockingboardVoice.bActive)
+	if(!MockingboardVoice->bActive)
 		return false;
 
 	// Ignore /g_bMBTimerIrqActive/ as timer's irq handler will access 6522 regs affecting /g_bMB_Active/
@@ -2230,13 +2226,13 @@ void MB_SetVolume(unsigned long dwVolume, unsigned long dwVolumeMax)
     dwVolumeMax >>= 2;
 #endif
 
-	MockingboardVoice.nVolume = NewVolume(dwVolume, dwVolumeMax);
+	MockingboardVoice->nVolume = NewVolume(dwVolume, dwVolumeMax);
 
-	if(MockingboardVoice.bActive)
+	if(MockingboardVoice->bActive)
 #ifdef APPLE2IX
-		MockingboardVoice.lpDSBvoice->SetVolume(MockingboardVoice.lpDSBvoice, MockingboardVoice.nVolume);
+		MockingboardVoice->SetVolume(MockingboardVoice, MockingboardVoice->nVolume);
 #else
-		MockingboardVoice.lpDSBvoice->SetVolume(MockingboardVoice.nVolume);
+		MockingboardVoice->SetVolume(MockingboardVoice->nVolume);
 #endif
 }
 

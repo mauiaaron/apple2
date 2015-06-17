@@ -22,8 +22,11 @@
 #define AUDIO_STATUS_NOTPLAYING 0x08000000
 
 typedef struct AudioBuffer_s {
-
+    bool bActive;            // Playback is active
+    bool bMute;
+    long nVolume;            // Current volume (as used by DirectSound)
     void *_this;
+#warning TODO rename _this variable to indicate that it is implementation_specific
 
     long (*SetVolume)(void* _this, long lVolume);
 
@@ -67,24 +70,16 @@ typedef struct AudioContext_s {
     long (*DestroySoundBuffer)(INOUT AudioBuffer_s **buffer);
 } AudioContext_s;
 
-typedef struct
-{
-    AudioBuffer_s *lpDSBvoice;
-    bool bActive;            // Playback is active
-    bool bMute;
-    long nVolume;            // Current volume (as used by DirectSound)
-} VOICE;
-
 
 bool DSGetLock(AudioBuffer_s *pVoice, unsigned long dwOffset, unsigned long dwBytes,
                       int16_t** ppDSLockedBuffer0, unsigned long* pdwDSLockedBufferSize0,
                       int16_t** ppDSLockedBuffer1, unsigned long* pdwDSLockedBufferSize1);
 
-int DSGetSoundBuffer(VOICE* pVoice, unsigned long dwFlags, unsigned long dwBufferSize, unsigned long nSampleRate, int nChannels);
-void DSReleaseSoundBuffer(VOICE* pVoice);
+long DSGetSoundBuffer(INOUT AudioBuffer_s **pVoice, unsigned long dwFlags, unsigned long dwBufferSize, unsigned long nSampleRate, int nChannels);
+void DSReleaseSoundBuffer(INOUT AudioBuffer_s **pVoice);
 
-bool DSZeroVoiceBuffer(VOICE *Voice, char* pszDevName, unsigned long dwBufferSize);
-bool DSZeroVoiceWritableBuffer(VOICE *Voice, char* pszDevName, unsigned long dwBufferSize);
+bool DSZeroVoiceBuffer(AudioBuffer_s *pVoice, char *pszDevName, unsigned long dwBufferSize);
+bool DSZeroVoiceWritableBuffer(AudioBuffer_s *pVoice, char *pszDevName, unsigned long dwBufferSize);
 
 typedef enum eFADE {FADE_NONE, FADE_IN, FADE_OUT} eFADE;
 void SoundCore_SetFade(eFADE FadeType);

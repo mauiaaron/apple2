@@ -57,7 +57,7 @@ static unsigned int speaker_silent_step = 0;
 
 static int samples_adjustment_counter = 0;
 
-static VOICE SpeakerVoice = { 0 };
+static AudioBuffer_s *speakerBuffer = NULL;
 
 // --------------------------------------------------------------------------------------------------------------------
 
@@ -202,12 +202,8 @@ static void _speaker_update(/*bool toggled*/) {
 static void _submit_samples_buffer_fullspeed(void) {
     samples_adjustment_counter = 0;
 
-    if (!SpeakerVoice.bActive) {
-        return;
-    }
-
     unsigned long bytes_queued = 0;
-    long err = SpeakerVoice.lpDSBvoice->GetCurrentPosition(SpeakerVoice.lpDSBvoice->_this, &bytes_queued, NULL);
+    long err = speakerBuffer->GetCurrentPosition(speakerBuffer->_this, &bytes_queued, NULL);
     if (err) {
         return;
     }
@@ -224,7 +220,7 @@ static void _submit_samples_buffer_fullspeed(void) {
 
     unsigned long system_buffer_size = 0;
     int16_t *system_samples_buffer = NULL;
-    if (!DSGetLock(SpeakerVoice.lpDSBvoice, /*unused*/ 0, num_samples_pad*sizeof(int16_t), &system_samples_buffer, &system_buffer_size, NULL, NULL)) {
+    if (!DSGetLock(speakerBuffer, /*unused*/ 0, num_samples_pad*sizeof(int16_t), &system_samples_buffer, &system_buffer_size, NULL, NULL)) {
         return;
     }
     assert(num_samples_pad*sizeof(int16_t) <= system_buffer_size);
@@ -234,7 +230,7 @@ static void _submit_samples_buffer_fullspeed(void) {
         system_samples_buffer[i] = speaker_data;
     }
 
-    SpeakerVoice.lpDSBvoice->Unlock(SpeakerVoice.lpDSBvoice->_this, (void*)system_samples_buffer, system_buffer_size, NULL, 0);
+    speakerBuffer->Unlock(speakerBuffer->_this, (void*)system_samples_buffer, system_buffer_size, NULL, 0);
 }
 
 // Submits samples from the samples_buffer to the audio system backend when running at a normal scaled-speed.  This also
@@ -244,12 +240,8 @@ static unsigned int _submit_samples_buffer(const unsigned int num_samples) {
 
     assert(num_samples);
 
-    if (!SpeakerVoice.bActive) {
-        return num_samples;
-    }
-
     unsigned long bytes_queued = 0;
-    long err = SpeakerVoice.lpDSBvoice->GetCurrentPosition(SpeakerVoice.lpDSBvoice->_this, &bytes_queued, NULL);
+    long err = speakerBuffer->GetCurrentPosition(speakerBuffer->_this, &bytes_queued, NULL);
     if (err) {
         return num_samples;
     }
@@ -295,13 +287,13 @@ static unsigned int _submit_samples_buffer(const unsigned int num_samples) {
         unsigned long system_buffer_size = 0;
         int16_t *system_samples_buffer = NULL;
 
-        if (!DSGetLock(SpeakerVoice.lpDSBvoice, /*unused*/0, (unsigned long)num_samples_to_use*sizeof(int16_t), &system_samples_buffer, &system_buffer_size, NULL, NULL)) {
+        if (!DSGetLock(speakerBuffer, /*unused*/0, (unsigned long)num_samples_to_use*sizeof(int16_t), &system_samples_buffer, &system_buffer_size, NULL, NULL)) {
             return num_samples;
         }
 
         memcpy(system_samples_buffer, &samples_buffer[0], system_buffer_size);
 
-        err = SpeakerVoice.lpDSBvoice->Unlock(SpeakerVoice.lpDSBvoice->_this, (void*)system_samples_buffer, system_buffer_size, NULL, 0);
+        err = speakerBuffer->Unlock(speakerBuffer->_this, (void*)system_samples_buffer, system_buffer_size, NULL, 0);
         if (err) {
             return num_samples;
         }
@@ -314,16 +306,14 @@ static unsigned int _submit_samples_buffer(const unsigned int num_samples) {
 // speaker public API functions
 
 void speaker_destroy(void) {
-    if (SpeakerVoice.lpDSBvoice && SpeakerVoice.bActive) {
-        SpeakerVoice.lpDSBvoice->Stop(SpeakerVoice.lpDSBvoice->_this);
-        SpeakerVoice.bActive = false;
+    if (speakerBuffer) {
+        speakerBuffer->Stop(speakerBuffer->_this);
     }
-    DSReleaseSoundBuffer(&SpeakerVoice);
+    DSReleaseSoundBuffer(&speakerBuffer);
 }
 
 void speaker_init(void) {
-    SpeakerVoice.bActive = true;
-    long err = DSGetSoundBuffer(&SpeakerVoice, 0, SOUNDCORE_BUFFER_SIZE, SPKR_SAMPLE_RATE, 1);
+    long err = DSGetSoundBuffer(&speakerBuffer, 0, SOUNDCORE_BUFFER_SIZE, SPKR_SAMPLE_RATE, 1);
     assert(!err);
     _speaker_init_timing();
 }
@@ -382,7 +372,7 @@ void speaker_flush(void) {
 }
 
 bool speaker_is_active(void) {
-    return SpeakerVoice.bActive && speaker_recently_active;
+    return speaker_recently_active;
 }
 
 void speaker_set_volume(int16_t amplitude) {
