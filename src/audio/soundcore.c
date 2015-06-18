@@ -74,7 +74,7 @@ bool audio_init(void) {
             if (audioContext) {
                 audio_backend->shutdown(&audioContext);
             }
-            err = audio_backend->init(sound_devices[i], (AudioContext_s**)&audioContext);
+            err = audio_backend->setup(sound_devices[i], (AudioContext_s**)&audioContext);
             if (!err) {
                 createdAudioContext = true;
                 break;
