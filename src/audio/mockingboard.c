@@ -974,7 +974,7 @@ static void MB_Update()
 
 	unsigned long dwCurrentPlayCursor, dwCurrentWriteCursor;
 #ifdef APPLE2IX
-	int hr = MockingboardVoice->GetCurrentPosition(MockingboardVoice->_this, &dwCurrentPlayCursor, &dwCurrentWriteCursor);
+	int hr = MockingboardVoice->GetCurrentPosition(MockingboardVoice, &dwCurrentPlayCursor, &dwCurrentWriteCursor);
 #else
 	int hr = MockingboardVoice->GetCurrentPosition(&dwCurrentPlayCursor, &dwCurrentWriteCursor);
 #endif
@@ -1089,7 +1089,7 @@ static void MB_Update()
 
 	//
 
-	if(MockingboardVoice->Lock(MockingboardVoice->_this,
+	if(MockingboardVoice->Lock(MockingboardVoice,
 						/*unused*/0, (unsigned long)nNumSamples*sizeof(short)*g_nMB_NumChannels,
 						&pDSLockedBuffer0, &dwDSLockedBufferSize0,
 						&pDSLockedBuffer1, &dwDSLockedBufferSize1, 0))
@@ -1105,7 +1105,7 @@ static void MB_Update()
 
 	// Commit sound buffer
 #ifdef APPLE2IX
-	MockingboardVoice->Unlock(MockingboardVoice->_this, (void*)pDSLockedBuffer0, dwDSLockedBufferSize0,
+	MockingboardVoice->Unlock(MockingboardVoice, (void*)pDSLockedBuffer0, dwDSLockedBufferSize0,
 #else
 	hr = MockingboardVoice->Unlock((void*)pDSLockedBuffer0, dwDSLockedBufferSize0,
 #endif
@@ -1253,7 +1253,7 @@ static void SSI263_Play(unsigned int nPhoneme)
 		// A write to DURPHON before previous phoneme has completed
 		g_bStopPhoneme = true;
 #ifdef APPLE2IX
-		hr = SSI263Voice[g_nCurrentActivePhoneme]->Stop(SSI263Voice[g_nCurrentActivePhoneme]->_this);
+		hr = SSI263Voice[g_nCurrentActivePhoneme]->Stop(SSI263Voice[g_nCurrentActivePhoneme]);
 #else
 		hr = SSI263Voice[g_nCurrentActivePhoneme]->Stop();
 #endif
@@ -1262,7 +1262,7 @@ static void SSI263_Play(unsigned int nPhoneme)
 	g_nCurrentActivePhoneme = nPhoneme;
 
 #ifdef APPLE2IX
-	hr = SSI263Voice[g_nCurrentActivePhoneme]->Replay(SSI263Voice[g_nCurrentActivePhoneme]->_this);
+	hr = SSI263Voice[g_nCurrentActivePhoneme]->Replay(SSI263Voice[g_nCurrentActivePhoneme]);
 #else
 	hr = SSI263Voice[g_nCurrentActivePhoneme]->SetCurrentPosition(0);
 	if(FAILED(hr))
@@ -1329,7 +1329,7 @@ static void SSI263_Play(unsigned int nPhoneme)
 #endif
 
 #ifdef APPLE2IX
-	hr = SSI263Voice->Unlock(SSI263Voice->_this, (void*)pDSLockedBuffer, dwDSLockedBufferSize, NULL, 0);
+	hr = SSI263Voice->Unlock(SSI263Voice, (void*)pDSLockedBuffer, dwDSLockedBufferSize, NULL, 0);
 #else
 	hr = SSI263Voice->Unlock((void*)pDSLockedBuffer, dwDSLockedBufferSize, NULL, 0);
 #endif
@@ -1474,7 +1474,7 @@ static bool MB_DSInit()
 			return false;
 		}
 
-		hr = SSI263Voice[i]->Lock(SSI263Voice[i]->_this, 0, 0, &pDSLockedBuffer, &dwDSLockedBufferSize, NULL, 0, 0);
+		hr = SSI263Voice[i]->Lock(SSI263Voice[i], 0, 0, &pDSLockedBuffer, &dwDSLockedBufferSize, NULL, 0, 0);
 		//LOG("MB_DSInit: (%02d) DSGetLock(), res=%d\n", i, hr ? 1 : 0);	// WARNING: Lock acquired && doing heavy-weight logging
 		if(FAILED(hr))
 		{
@@ -1527,7 +1527,7 @@ static bool MB_DSInit()
 #endif
 
 #ifdef APPLE2IX
-		hr = SSI263Voice[i]->UnlockStaticBuffer(SSI263Voice[i]->_this, dwDSLockedBufferSize);
+		hr = SSI263Voice[i]->UnlockStaticBuffer(SSI263Voice[i], dwDSLockedBufferSize);
 #else
 		hr = SSI263Voice[i]->Unlock((void*)pDSLockedBuffer, dwDSLockedBufferSize, NULL, 0);
 #endif
@@ -1607,7 +1607,7 @@ static void MB_DSUninit()
 	if(MockingboardVoice && MockingboardVoice->bActive)
 	{
 #ifdef APPLE2IX
-		MockingboardVoice->Stop(MockingboardVoice->_this);
+		MockingboardVoice->Stop(MockingboardVoice);
 #else
 		MockingboardVoice->Stop();
 #endif
@@ -1623,7 +1623,7 @@ static void MB_DSUninit()
 		if(SSI263Voice[i] && SSI263Voice[i]->bActive)
 		{
 #ifdef APPLE2IX
-			SSI263Voice[i]->Stop(SSI263Voice[i]->_this);
+			SSI263Voice[i]->Stop(SSI263Voice[i]);
 #else
 			SSI263Voice[i]->Stop();
 #endif

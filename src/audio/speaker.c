@@ -203,7 +203,7 @@ static void _submit_samples_buffer_fullspeed(void) {
     samples_adjustment_counter = 0;
 
     unsigned long bytes_queued = 0;
-    long err = speakerBuffer->GetCurrentPosition(speakerBuffer->_this, &bytes_queued, NULL);
+    long err = speakerBuffer->GetCurrentPosition(speakerBuffer, &bytes_queued, NULL);
     if (err) {
         return;
     }
@@ -220,7 +220,7 @@ static void _submit_samples_buffer_fullspeed(void) {
 
     unsigned long system_buffer_size = 0;
     int16_t *system_samples_buffer = NULL;
-    if (speakerBuffer->Lock(speakerBuffer->_this, /*unused*/ 0, num_samples_pad*sizeof(int16_t), &system_samples_buffer, &system_buffer_size, NULL, NULL, 0)) {
+    if (speakerBuffer->Lock(speakerBuffer, /*unused*/ 0, num_samples_pad*sizeof(int16_t), &system_samples_buffer, &system_buffer_size, NULL, NULL, 0)) {
         return;
     }
     assert(num_samples_pad*sizeof(int16_t) <= system_buffer_size);
@@ -230,7 +230,7 @@ static void _submit_samples_buffer_fullspeed(void) {
         system_samples_buffer[i] = speaker_data;
     }
 
-    speakerBuffer->Unlock(speakerBuffer->_this, system_samples_buffer, system_buffer_size, NULL, 0);
+    speakerBuffer->Unlock(speakerBuffer, system_samples_buffer, system_buffer_size, NULL, 0);
 }
 
 // Submits samples from the samples_buffer to the audio system backend when running at a normal scaled-speed.  This also
@@ -241,7 +241,7 @@ static unsigned int _submit_samples_buffer(const unsigned int num_samples) {
     assert(num_samples);
 
     unsigned long bytes_queued = 0;
-    long err = speakerBuffer->GetCurrentPosition(speakerBuffer->_this, &bytes_queued, NULL);
+    long err = speakerBuffer->GetCurrentPosition(speakerBuffer, &bytes_queued, NULL);
     if (err) {
         return num_samples;
     }
@@ -284,13 +284,13 @@ static unsigned int _submit_samples_buffer(const unsigned int num_samples) {
         unsigned long system_buffer_size = 0;
         int16_t *system_samples_buffer = NULL;
 
-        if (speakerBuffer->Lock(speakerBuffer->_this, /*unused*/0, (unsigned long)num_samples_to_use*sizeof(int16_t), &system_samples_buffer, &system_buffer_size, NULL, NULL, 0)) {
+        if (speakerBuffer->Lock(speakerBuffer, /*unused*/0, (unsigned long)num_samples_to_use*sizeof(int16_t), &system_samples_buffer, &system_buffer_size, NULL, NULL, 0)) {
             return num_samples;
         }
 
         memcpy(system_samples_buffer, &samples_buffer[0], system_buffer_size);
 
-        err = speakerBuffer->Unlock(speakerBuffer->_this, (void*)system_samples_buffer, system_buffer_size, NULL, 0);
+        err = speakerBuffer->Unlock(speakerBuffer, (void*)system_samples_buffer, system_buffer_size, NULL, 0);
         if (err) {
             return num_samples;
         }
@@ -304,7 +304,7 @@ static unsigned int _submit_samples_buffer(const unsigned int num_samples) {
 
 void speaker_destroy(void) {
     if (speakerBuffer) {
-        speakerBuffer->Stop(speakerBuffer->_this);
+        speakerBuffer->Stop(speakerBuffer);
     }
     audio_destroySoundBuffer(&speakerBuffer);
 }

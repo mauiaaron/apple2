@@ -181,7 +181,7 @@ static long openal_systemSetup(const char *sound_device, AudioContext_s **audio_
             break;
         }
 
-        (*audio_context)->implementation_specific = ctx;
+        (*audio_context)->_internal = ctx;
         (*audio_context)->CreateSoundBuffer = &OpenALCreateSoundBuffer;
         (*audio_context)->DestroySoundBuffer = &OpenALDestroySoundBuffer;
 
@@ -201,9 +201,9 @@ static long openal_systemShutdown(AudioContext_s **audio_context)
 {
     assert(*audio_context != NULL);
 
-    ALCcontext *ctx = (ALCcontext*) (*audio_context)->implementation_specific;
+    ALCcontext *ctx = (ALCcontext*) (*audio_context)->_internal;
     assert(ctx != NULL);
-    (*audio_context)->implementation_specific = NULL;
+    (*audio_context)->_internal = NULL;
     FREE(*audio_context);
 
     CloseAL();
@@ -411,7 +411,7 @@ static ALVoice *NewVoice(const AudioParams_s *params)
 
 // ----------------------------------------------------------------------------
 
-static long ALGetVolume(void *_this, long *volume)
+static long ALGetVolume(AudioBuffer_s *_this, long *volume)
 {
     LOG("ALGetVolume ...");
     if (volume)
@@ -421,25 +421,25 @@ static long ALGetVolume(void *_this, long *volume)
     return 0;
 }
 
-static long ALSetVolume(void *_this, long volume)
+static long ALSetVolume(AudioBuffer_s *_this, long volume)
 {
     LOG("ALSetVolume ...");
     return 0;
 }
 
-static long ALStop(void *_this)
+static long ALStop(AudioBuffer_s *_this)
 {
     LOG("ALStop ...");
     return 0;
 }
 
-static long ALRestore(void *_this)
+static long ALRestore(AudioBuffer_s *_this)
 {
     LOG("ALRestore ...");
     return 0;
 }
 
-static long ALPlay(void *_this, unsigned long reserved1, unsigned long reserved2, unsigned long flags)
+static long ALPlay(AudioBuffer_s *_this, unsigned long reserved1, unsigned long reserved2, unsigned long flags)
 {
     LOG("ALPlay ...");
 
@@ -512,9 +512,9 @@ static int _ALProcessPlayBuffers(ALVoice *voice, ALuint *bytes_queued)
 }
 
 // returns queued+working sound buffer size in bytes 
-static long ALGetPosition(void *_this, unsigned long *bytes_queued, unsigned long *unused_write_cursor)
+static long ALGetPosition(AudioBuffer_s *_this, unsigned long *bytes_queued, unsigned long *unused_write_cursor)
 {
-    ALVoice *voice = (ALVoice*)_this;
+    ALVoice *voice = (ALVoice*)_this->_internal;
     *bytes_queued = 0;
     if (unused_write_cursor)
     {
@@ -540,9 +540,9 @@ static long ALGetPosition(void *_this, unsigned long *bytes_queued, unsigned lon
 }
 
 // DS->Lock()
-static long ALBegin(void *_this, unsigned long unused, unsigned long write_bytes, INOUT int16_t **audio_ptr1, INOUT unsigned long *audio_bytes1, void **unused_audio_ptr2, unsigned long *unused_audio_bytes2, unsigned long flags_unused)
+static long ALBegin(AudioBuffer_s *_this, unsigned long unused, unsigned long write_bytes, INOUT int16_t **audio_ptr1, INOUT unsigned long *audio_bytes1, void **unused_audio_ptr2, unsigned long *unused_audio_bytes2, unsigned long flags_unused)
 {
-    ALVoice *voice = (ALVoice*)_this;
+    ALVoice *voice = (ALVoice*)_this->_internal;
 
     if (unused_audio_ptr2)
     {
@@ -635,9 +635,9 @@ static int _ALSubmitBufferToOpenAL(ALVoice *voice)
 }
 
 // DS->Unlock()
-static long ALCommit(void *_this, void *unused_audio_ptr1, unsigned long audio_bytes1, void *unused_audio_ptr2, unsigned long unused_audio_bytes2)
+static long ALCommit(AudioBuffer_s *_this, void *unused_audio_ptr1, unsigned long audio_bytes1, void *unused_audio_ptr2, unsigned long unused_audio_bytes2)
 {
-    ALVoice *voice = (ALVoice*)_this;
+    ALVoice *voice = (ALVoice*)_this->_internal;
     int err = 0;
 
     ALuint bytes_queued = 0;
@@ -681,17 +681,17 @@ static long ALCommit(void *_this, void *unused_audio_ptr1, unsigned long audio_b
 }
 
 // HACK Part I : done once for mockingboard that has semiauto repeating phonemes ...
-static long ALCommitStaticBuffer(void *_this, unsigned long audio_bytes1)
+static long ALCommitStaticBuffer(AudioBuffer_s *_this, unsigned long audio_bytes1)
 {
-    ALVoice *voice = (ALVoice*)_this;
+    ALVoice *voice = (ALVoice*)_this->_internal;
     voice->replay_index = (ALsizei)audio_bytes1;
     return 0;
 }
 
 // HACK Part II : replay mockingboard phoneme ...
-static long ALReplay(void *_this)
+static long ALReplay(AudioBuffer_s *_this)
 {
-    ALVoice *voice = (ALVoice*)_this;
+    ALVoice *voice = (ALVoice*)_this->_internal;
     voice->index = voice->replay_index;
 
     int err = 0;
@@ -705,9 +705,9 @@ static long ALReplay(void *_this)
     return 0;
 }
 
-static long ALGetStatus(void *_this, unsigned long *status)
+static long ALGetStatus(AudioBuffer_s *_this, unsigned long *status)
 {
-    ALVoice* voice = (ALVoice*)_this;
+    ALVoice* voice = (ALVoice*)_this->_internal;
 
     int err = 0;
     ALint state = 0;
@@ -735,7 +735,7 @@ static long OpenALCreateSoundBuffer(const AudioParams_s *params, INOUT AudioBuff
     LOG("OpenALCreateSoundBuffer ...");
     assert(*soundbuf_struct == NULL);
 
-    ALCcontext *ctx = (ALCcontext*)(audio_context->implementation_specific);
+    ALCcontext *ctx = (ALCcontext*)(audio_context->_internal);
     assert(ctx != NULL);
 
     ALVoice *voice = NULL;
@@ -765,7 +765,7 @@ static long OpenALCreateSoundBuffer(const AudioParams_s *params, INOUT AudioBuff
             break;
         }
 
-        (*soundbuf_struct)->_this = voice;
+        (*soundbuf_struct)->_internal          = voice;
         (*soundbuf_struct)->SetVolume          = &ALSetVolume;
         (*soundbuf_struct)->GetVolume          = &ALGetVolume;
         (*soundbuf_struct)->GetCurrentPosition = &ALGetPosition;
@@ -801,7 +801,7 @@ static long OpenALDestroySoundBuffer(INOUT AudioBuffer_s **soundbuf_struct)
         return 0;
     }
     LOG("OpenALDestroySoundBuffer ...");
-    ALVoice *voice = (*soundbuf_struct)->_this;
+    ALVoice *voice = (ALVoice *)((*soundbuf_struct)->_internal);
     ALint source = voice->source;
 
     DeleteVoice(voice);

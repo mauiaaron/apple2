@@ -26,36 +26,35 @@
 #define SOUNDCORE_ERROR_MAX 200
 
 typedef struct AudioBuffer_s {
-    bool bActive;            // Playback is active
-    bool bMute;
-    long nVolume;            // Current volume (as used by DirectSound)
-    void *_this;
-#warning TODO rename _this variable to indicate that it is implementation_specific
+    bool bActive;       // Mockingboard ... refactor?
+    bool bMute;         // Mockingboard ... refactor?
+    long nVolume;       // Mockingboard ... refactor?
+    PRIVATE void *_internal;
 
-    long (*SetVolume)(void* _this, long lVolume);
+    long (*SetVolume)(struct AudioBuffer_s *_this, long lVolume);
 
-    long (*GetVolume)(void* _this, long *lplVolume);
+    long (*GetVolume)(struct AudioBuffer_s *_this, long *lplVolume);
 
-    long (*GetCurrentPosition)(void* _this, unsigned long *lpdwCurrentPlayCursor, unsigned long *lpdwCurrentWriteCursor);
+    long (*GetCurrentPosition)(struct AudioBuffer_s *_this, unsigned long *lpdwCurrentPlayCursor, unsigned long *lpdwCurrentWriteCursor);
 
-    long (*Stop)(void* _this);
+    long (*Stop)(struct AudioBuffer_s *_this);
 
     // This method restores the memory allocation for a lost sound buffer for the specified DirectSoundBuffer object.
-    long (*Restore)(void *_this);
+    long (*Restore)(struct AudioBuffer_s *_this);
 
-    long (*Play)(void* _this, unsigned long dwReserved1, unsigned long dwReserved2, unsigned long dwFlags);
+    long (*Play)(struct AudioBuffer_s *_this, unsigned long dwReserved1, unsigned long dwReserved2, unsigned long dwFlags);
 
     // This method obtains a valid write pointer to the sound buffer's audio data
-    long (*Lock)(void* _this, unsigned long dwWriteCursor, unsigned long dwWriteBytes, INOUT int16_t **lplpvAudioPtr1, INOUT unsigned long *lpdwAudioBytes1, void **lplpvAudioPtr2, unsigned long *lpdwAudioBytes2, unsigned long dwFlags);
+    long (*Lock)(struct AudioBuffer_s *_this, unsigned long dwWriteCursor, unsigned long dwWriteBytes, INOUT int16_t **lplpvAudioPtr1, INOUT unsigned long *lpdwAudioBytes1, void **lplpvAudioPtr2, unsigned long *lpdwAudioBytes2, unsigned long dwFlags);
 
     // This method releases a locked sound buffer.
-    long (*Unlock)(void* _this, int16_t *lpvAudioPtr1, unsigned long dwAudioBytes1, void *lpvAudioPtr2, unsigned long dwAudioBytes2);
+    long (*Unlock)(struct AudioBuffer_s *_this, int16_t *lpvAudioPtr1, unsigned long dwAudioBytes1, void *lpvAudioPtr2, unsigned long dwAudioBytes2);
 
-    long (*GetStatus)(void* _this, unsigned long *lpdwStatus);
+    long (*GetStatus)(struct AudioBuffer_s *_this, unsigned long *lpdwStatus);
 
     // Mockingboard-specific HACKS
-    long (*UnlockStaticBuffer)(void* _this, unsigned long dwAudioBytes);
-    long (*Replay)(void* _this);
+    long (*UnlockStaticBuffer)(struct AudioBuffer_s *_this, unsigned long dwAudioBytes);
+    long (*Replay)(struct AudioBuffer_s *_this);
 
 } AudioBuffer_s;
 
@@ -107,7 +106,7 @@ typedef struct AudioParams_s {
 } AudioParams_s;
 
 typedef struct AudioContext_s {
-    void *implementation_specific;
+    PRIVATE void *_internal;
     PRIVATE long (*CreateSoundBuffer)(const AudioParams_s *params, INOUT AudioBuffer_s **buffer, const struct AudioContext_s *sound_system);
     PRIVATE long (*DestroySoundBuffer)(INOUT AudioBuffer_s **buffer);
 } AudioContext_s;
