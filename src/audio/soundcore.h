@@ -48,7 +48,7 @@ typedef struct AudioBuffer_s {
     long (*Lock)(struct AudioBuffer_s *_this, unsigned long dwWriteCursor, unsigned long dwWriteBytes, INOUT int16_t **lplpvAudioPtr1, INOUT unsigned long *lpdwAudioBytes1, void **lplpvAudioPtr2, unsigned long *lpdwAudioBytes2, unsigned long dwFlags);
 
     // This method releases a locked sound buffer.
-    long (*Unlock)(struct AudioBuffer_s *_this, int16_t *lpvAudioPtr1, unsigned long dwAudioBytes1, void *lpvAudioPtr2, unsigned long dwAudioBytes2);
+    long (*Unlock)(struct AudioBuffer_s *_this, void *lpvAudioPtr1, unsigned long dwAudioBytes1, void *lpvAudioPtr2, unsigned long dwAudioBytes2);
 
     long (*GetStatus)(struct AudioBuffer_s *_this, unsigned long *lpdwStatus);
 
@@ -114,9 +114,8 @@ typedef struct AudioContext_s {
 typedef struct AudioBackend_s {
 
     // basic backend functionality controlled by soundcore
-    PRIVATE long (*setup)(const char *sound_device, INOUT AudioContext_s **audio_context);
+    PRIVATE long (*setup)(INOUT AudioContext_s **audio_context);
     PRIVATE long (*shutdown)(INOUT AudioContext_s **audio_context);
-    PRIVATE long (*enumerateDevices)(INOUT char ***sound_devices, const int maxcount);
 
     PRIVATE long (*pause)(void);
     PRIVATE long (*resume)(void);

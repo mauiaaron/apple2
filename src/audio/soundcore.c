@@ -58,49 +58,15 @@ bool audio_init(void) {
         return true;
     }
 
-    char **sound_devices = NULL;
-    long num_sound_devices = audio_backend->enumerateDevices(&sound_devices, MAX_SOUND_DEVICES);
-    long err = (num_sound_devices <= 0);
+    if (audioContext) {
+        audio_backend->shutdown(&audioContext);
+    }
 
-    do {
-        if (err) {
-            LOG("enumerate sound devices failed to find any devices : %ld", err);
-            break;
-        }
-
-        LOG("Number of sound devices = %ld", num_sound_devices);
-        bool createdAudioContext = false;
-        for (int i=0; i<num_sound_devices; i++) {
-            if (audioContext) {
-                audio_backend->shutdown(&audioContext);
-            }
-            err = audio_backend->setup(sound_devices[i], (AudioContext_s**)&audioContext);
-            if (!err) {
-                createdAudioContext = true;
-                break;
-            }
-
-            LOG("warning : failed to create sound device:%d err:%ld", i, err);
-        }
-
-        if (!createdAudioContext) {
-            LOG("Failed to create an audio context!");
-            err = true;
-            break;
-        }
-
-        LOG("Created an audio context!");
+    long err = audio_backend->setup((AudioContext_s**)&audioContext);
+    if (err) {
+        LOG("Failed to create an audio context!");
+    } else {
         audio_isAvailable = true;
-    } while (0);
-
-    if (num_sound_devices > 0) {
-        char **p = sound_devices;
-        while (*p) {
-            FREE(*p);
-            ++p;
-        }
-        FREE(sound_devices);
-        sound_devices = NULL;
     }
 
     return err;

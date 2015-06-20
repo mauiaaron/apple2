@@ -9,10 +9,7 @@
  *
  */
 
-// HACK NOTE: DO NOT REFACTOR (yet) ...
-// OK this is more hackish than it needs to be because it's attempting to mimic a DirectSound backend ...Oh God, Why?...
-// Here I must confess that because of general ignorance of the mockingboard and other soundcard code at this time,
-// there is a need to track any changes/fixes implemented in AppleWin...
+// soundcore OpenAL backend -- streaming audio
 
 #include "common.h"
 
@@ -151,7 +148,7 @@ static void PlaylistDequeue(ALVoice *voice, ALPlayBuf *node)
 
 // ----------------------------------------------------------------------------
 
-static long openal_systemSetup(const char *sound_device, AudioContext_s **audio_context)
+static long openal_systemSetup(INOUT AudioContext_s **audio_context)
 {
     assert(*audio_context == NULL);
     assert(voices == NULL);
@@ -197,7 +194,7 @@ static long openal_systemSetup(const char *sound_device, AudioContext_s **audio_
     return -1;
 }
 
-static long openal_systemShutdown(AudioContext_s **audio_context)
+static long openal_systemShutdown(INOUT AudioContext_s **audio_context)
 {
     assert(*audio_context != NULL);
 
@@ -209,16 +206,6 @@ static long openal_systemShutdown(AudioContext_s **audio_context)
     CloseAL();
 
     return 0;
-}
-
-static long openal_systemEnumerate(char ***device_list, const int limit)
-{
-    assert(*device_list == NULL);
-    *device_list = malloc(sizeof(char*)*2);
-    (*device_list)[0] = strdup("unused-by-OpenAL");
-    unsigned int num_devices = 1;
-    (*device_list)[num_devices] = NULL; // sentinel
-    return num_devices;
 }
 
 // pause all audio
@@ -821,11 +808,12 @@ __attribute__((constructor(CTOR_PRIORITY_EARLY)))
 static void _init_openal(void) {
     LOG("Initializing OpenAL sound system");
 
+    assert(audio_backend == NULL && "there can only be one!");
+
     openal_audio_backend.setup            = &openal_systemSetup;
     openal_audio_backend.shutdown         = &openal_systemShutdown;
     openal_audio_backend.pause            = &openal_systemPause;
     openal_audio_backend.resume           = &openal_systemResume;
-    openal_audio_backend.enumerateDevices = &openal_systemEnumerate;
 
     audio_backend = &openal_audio_backend;
 }
