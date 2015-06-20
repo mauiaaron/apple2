@@ -209,36 +209,32 @@ static long openal_systemShutdown(INOUT AudioContext_s **audio_context)
 }
 
 // pause all audio
-static long openal_systemPause(void)
-{
+static long openal_systemPause(void) {
     ALVoices *vnode = NULL;
     ALVoices *tmp = NULL;
-    int err = 0;
+    long err = 0;
 
     HASH_ITER(hh, voices, vnode, tmp) {
         alSourcePause(vnode->source);
         err = alGetError();
-        if (err != AL_NO_ERROR)
-        {
-            ERRLOG("OOPS, Failed to pause source : 0x%08x", err);
+        if (err != AL_NO_ERROR) {
+            ERRLOG("OOPS, Failed to pause source : 0x%08lx", err);
         }
     }
 
     return 0;
 }
 
-static long openal_systemResume(void)
-{
+static long openal_systemResume(void) {
     ALVoices *vnode = NULL;
     ALVoices *tmp = NULL;
-    int err = 0;
+    long err = 0;
 
     HASH_ITER(hh, voices, vnode, tmp) {
         alSourcePlay(vnode->source);
         err = alGetError();
-        if (err != AL_NO_ERROR)
-        {
-            ERRLOG("OOPS, Failed to pause source : 0x%08x", err);
+        if (err != AL_NO_ERROR) {
+            ERRLOG("OOPS, Failed to pause source : 0x%08lx", err);
         }
     }
 
@@ -360,7 +356,7 @@ static ALVoice *NewVoice(const AudioParams_s *params)
 
         voice->rate = (ALuint)params->nSamplesPerSec;
 
-        // Emulator supports only mono and stereo 
+        // Emulator supports only mono and stereo
         if (params->nChannels == 2)
         {
             voice->format = AL_FORMAT_STEREO16;
@@ -398,280 +394,253 @@ static ALVoice *NewVoice(const AudioParams_s *params)
 
 // ----------------------------------------------------------------------------
 
-static int _ALProcessPlayBuffers(ALVoice *voice, ALuint *bytes_queued)
-{
+static long _ALProcessPlayBuffers(ALVoice *voice, ALuint *bytes_queued) {
     ALint processed = 0;
-    int err = 0;
+    long err = 0;
     *bytes_queued = 0;
 
-    alGetSourcei(voice->source, AL_BUFFERS_PROCESSED, &processed);
-    if ((err = alGetError()) != AL_NO_ERROR)
-    {
-        ERRLOG("OOPS, error in checking processed buffers : 0x%08x", err);
-        return err;
-    }
-
-    if ((processed == 0) && (HASH_COUNT(voice->queued_buffers) >= OPENAL_NUM_BUFFERS))
-    {
-        //LOG("All audio buffers processing...");
-    }
-
-    while (processed > 0)
-    {
-        --processed;
-        ALuint bufid = 0;
-        alSourceUnqueueBuffers(voice->source, 1, &bufid);
-        if ((err = alGetError()) != AL_NO_ERROR)
-        {
-            ERRLOG("OOPS, OpenAL error dequeuing buffer : 0x%08x", err);
-            return err;
+    do {
+        alGetSourcei(voice->source, AL_BUFFERS_PROCESSED, &processed);
+        if ((err = alGetError()) != AL_NO_ERROR) {
+            ERRLOG("OOPS, error in checking processed buffers : 0x%08lx", err);
+            break;
         }
 
-        //LOG("Attempting to dequeue %u ...", bufid);
-        ALPlayBuf *node = PlaylistGet(voice, bufid);
-        if (!node)
-        {
-            ERRLOG("OOPS, OpenAL bufid %u not found in playlist...", bufid);
-            ALPlayBuf *tmp = voice->queued_buffers;
-            unsigned int count = HASH_COUNT(voice->queued_buffers);
-            LOG("\t(numqueued: %d)", count);
-            for (unsigned int i = 0; i < count; i++, tmp = tmp->hh.next)
-            {
-                LOG("\t(bufid : %u)", tmp->bufid);
+#if 0
+        if ((processed == 0) && (HASH_COUNT(voice->queued_buffers) >= OPENAL_NUM_BUFFERS)) {
+            LOG("All audio buffers processing...");
+        }
+#endif
+
+        while (processed > 0) {
+            --processed;
+            ALuint bufid = 0;
+            alSourceUnqueueBuffers(voice->source, 1, &bufid);
+            if ((err = alGetError()) != AL_NO_ERROR) {
+                ERRLOG("OOPS, OpenAL error dequeuing buffer : 0x%08lx", err);
+                break;
             }
-            continue;
+
+            //LOG("Attempting to dequeue %u ...", bufid);
+            ALPlayBuf *node = PlaylistGet(voice, bufid);
+            if (node) {
+                PlaylistDequeue(voice, node);
+            } else {
+                ERRLOG("OOPS, OpenAL bufid %u not found in playlist...", bufid);
+#if 0
+                ALPlayBuf *tmp = voice->queued_buffers;
+                unsigned int count = HASH_COUNT(voice->queued_buffers);
+                LOG("\t(numqueued: %d)", count);
+                for (unsigned int i = 0; i < count; i++, tmp = tmp->hh.next) {
+                    LOG("\t(bufid : %u)", tmp->bufid);
+                }
+#endif
+            }
         }
 
-        PlaylistDequeue(voice, node);
-    }
+        ALint play_offset = 0;
+        alGetSourcei(voice->source, AL_BYTE_OFFSET, &play_offset);
+        if ((err = alGetError()) != AL_NO_ERROR) {
+            ERRLOG("OOPS, alGetSourcei AL_BYTE_OFFSET : 0x%08lx", err);
+            break;
+        }
+        assert((play_offset >= 0)/* && (play_offset < voice->buffersize)*/);
 
-    ALint play_offset = 0;
-    alGetSourcei(voice->source, AL_BYTE_OFFSET, &play_offset);
-    if ((err = alGetError()) != AL_NO_ERROR)
-    {
-        ERRLOG("OOPS, alGetSourcei AL_BYTE_OFFSET : 0x%08x", err);
-        return err;
-    }
-    assert((play_offset >= 0)/* && (play_offset < voice->buffersize)*/);
+        long q = voice->_queued_total_bytes/* + voice->index*/ - play_offset;
 
-    long q = voice->_queued_total_bytes/* + voice->index*/ - play_offset;
+        if (q >= 0) {
+            *bytes_queued = (ALuint)q;
+        }
+    } while (0);
 
-    if (q >= 0) {
-        *bytes_queued = (ALuint)q;
-    }
-
-    return 0;
+    return err;
 }
 
-// returns queued+working sound buffer size in bytes 
-static long ALGetPosition(AudioBuffer_s *_this, unsigned long *bytes_queued)
-{
-    ALVoice *voice = (ALVoice*)_this->_internal;
-    *bytes_queued = 0;
+// returns queued+working sound buffer size in bytes
+static long ALGetPosition(AudioBuffer_s *_this, unsigned long *bytes_queued) {
+    long err = 0;
 
-    ALuint queued = 0;
-    int err = _ALProcessPlayBuffers(voice, &queued);
-    if (err)
-    {
-        return err;
-    }
-    static int last_queued = 0;
-    if (queued != last_queued)
-    {
-        last_queued = queued;
-        //LOG("OpenAL bytes queued : %u", queued);
-    }
+    do {
+        ALVoice *voice = (ALVoice*)_this->_internal;
+        *bytes_queued = 0;
 
-    *bytes_queued = queued + voice->index;
+        ALuint queued = 0;
+        long err = _ALProcessPlayBuffers(voice, &queued);
+        if (err) {
+            break;
+        }
+        static int last_queued = 0;
+        if (queued != last_queued) {
+            last_queued = queued;
+            //LOG("OpenAL bytes queued : %u", queued);
+        }
 
-    return 0;
+        *bytes_queued = queued + voice->index;
+    } while (0);
+
+    return err;
 }
 
-// DS->Lock()
-static long ALBegin(AudioBuffer_s *_this, unsigned long write_bytes, INOUT int16_t **audio_ptr, INOUT unsigned long *audio_bytes)
-{
-    ALVoice *voice = (ALVoice*)_this->_internal;
+static long ALLockBuffer(AudioBuffer_s *_this, unsigned long write_bytes, INOUT int16_t **audio_ptr, INOUT unsigned long *audio_bytes) {
+    long err = 0;
 
-    if (write_bytes == 0)
-    {
-        write_bytes = voice->buffersize;
-    }
+    do {
+        ALVoice *voice = (ALVoice*)_this->_internal;
 
-    ALuint bytes_queued = 0;
-    int err = _ALProcessPlayBuffers(voice, &bytes_queued);
-    if (err)
-    {
-        return err;
-    }
+        if (write_bytes == 0) {
+            write_bytes = voice->buffersize;
+        }
 
-    if ((bytes_queued == 0) && (voice->index == 0))
-    {
-        LOG("Buffer underrun ... queuing quiet samples ...");
-        int quiet_size = voice->buffersize>>2/* 1/4 buffer */;
-        memset(voice->data, 0x0, quiet_size);
-        voice->index += quiet_size;
-    }
-    else if (bytes_queued + voice->index < (voice->buffersize>>3)/* 1/8 buffer */)
-    {
-        LOG("Potential underrun ...");
-    }
+        ALuint bytes_queued = 0;
+        err = _ALProcessPlayBuffers(voice, &bytes_queued);
+        if (err) {
+            break;
+        }
 
-    ALsizei remaining = voice->buffersize - voice->index;
-    if (write_bytes > remaining)
-    {
-        write_bytes = remaining;
-    }
-
-    *audio_ptr = (int16_t *)(voice->data+voice->index);
-    *audio_bytes = write_bytes;
-
-    return 0;
-}
-
-static int _ALSubmitBufferToOpenAL(ALVoice *voice)
-{
-    int err = 0;
-
-    ALPlayBuf *node = PlaylistEnqueue(voice, voice->index);
-    if (!node)
-    {
-        return -1;
-    }
-    //LOG("Enqueing OpenAL buffer %u (%u bytes)", node->bufid, node->bytes);
-    alBufferData(node->bufid, voice->format, voice->data, node->bytes, voice->rate);
-
-    if ((err = alGetError()) != AL_NO_ERROR)
-    {
-        PlaylistDequeue(voice, node);
-        ERRLOG("OOPS, Error alBufferData : 0x%08x", err);
-        return err;
-    }
-
-    alSourceQueueBuffers(voice->source, 1, &node->bufid);
-    if ((err = alGetError()) != AL_NO_ERROR)
-    {
-        PlaylistDequeue(voice, node);
-        ERRLOG("OOPS, Error buffering data : 0x%08x", err);
-        return err;
-    }
-
-    ALint state = 0;
-    alGetSourcei(voice->source, AL_SOURCE_STATE, &state);
-    if ((err = alGetError()) != AL_NO_ERROR)
-    {
-        ERRLOG("OOPS, Error checking source state : 0x%08x", err);
-        return err;
-    }
-    if ((state != AL_PLAYING) && (state != AL_PAUSED))
-    {
-        // 2013/11/17 NOTE : alSourcePlay() is expensive and causes audio artifacts, only invoke if needed
-        LOG("Restarting playback (was 0x%08x) ...", state);
-        alSourcePlay(voice->source);
-        if ((err = alGetError()) != AL_NO_ERROR)
+        if ((bytes_queued == 0) && (voice->index == 0)) {
+            LOG("Buffer underrun ... queuing quiet samples ...");
+            int quiet_size = voice->buffersize>>2/* 1/4 buffer */;
+            memset(voice->data, 0x0, quiet_size);
+            voice->index += quiet_size;
+        }
+#if 0
+        else if (bytes_queued + voice->index < (voice->buffersize>>3)/* 1/8 buffer */)
         {
-            LOG("Error starting playback : 0x%08x", err);
-            return err;
+            LOG("Potential underrun ...");
         }
-    }
+#endif
 
-    return 0;
+        ALsizei remaining = voice->buffersize - voice->index;
+        if (write_bytes > remaining) {
+            write_bytes = remaining;
+        }
+
+        *audio_ptr = (int16_t *)(voice->data+voice->index);
+        *audio_bytes = write_bytes;
+    } while (0);
+
+    return err;
 }
 
-// DS->Unlock()
-static long ALCommit(AudioBuffer_s *_this, unsigned long audio_bytes)
-{
-    ALVoice *voice = (ALVoice*)_this->_internal;
-    int err = 0;
+static long _ALSubmitBufferToOpenAL(ALVoice *voice) {
+    long err = 0;
 
-    ALuint bytes_queued = 0;
-    err = _ALProcessPlayBuffers(voice, &bytes_queued);
-    if (err)
-    {
-        return err;
-    }
+    do {
+        ALPlayBuf *node = PlaylistEnqueue(voice, voice->index);
+        if (!node) {
+            err = -1;
+            break;
+        }
+        //LOG("Enqueing OpenAL buffer %u (%u bytes)", node->bufid, node->bytes);
+        alBufferData(node->bufid, voice->format, voice->data, node->bytes, voice->rate);
 
-    voice->index += audio_bytes;
+        if ((err = alGetError()) != AL_NO_ERROR) {
+            PlaylistDequeue(voice, node);
+            ERRLOG("OOPS, Error alBufferData : 0x%08lx", err);
+            break;
+        }
 
-    while (voice->index > voice->buffersize)
-    {
-        // hopefully this is DEADC0DE or we've overwritten voice->data buffer ...
-        ERRLOG("OOPS, overflow in queued sound data");
-        assert(false);
-    }
+        alSourceQueueBuffers(voice->source, 1, &node->bufid);
+        if ((err = alGetError()) != AL_NO_ERROR) {
+            PlaylistDequeue(voice, node);
+            ERRLOG("OOPS, Error buffering data : 0x%08lx", err);
+            break;
+        }
 
-    if (bytes_queued >= (voice->buffersize>>2)/*quarter buffersize*/)
-    {
-        // keep accumulating data into working buffer
-        return 0;
-    }
+        ALint state = 0;
+        alGetSourcei(voice->source, AL_SOURCE_STATE, &state);
+        if ((err = alGetError()) != AL_NO_ERROR) {
+            ERRLOG("OOPS, Error checking source state : 0x%08lx", err);
+            break;
+        }
+        if ((state != AL_PLAYING) && (state != AL_PAUSED)) {
+            // 2013/11/17 NOTE : alSourcePlay() is expensive and causes audio artifacts, only invoke if needed
+            LOG("Restarting playback (was 0x%08x) ...", state);
+            alSourcePlay(voice->source);
+            if ((err = alGetError()) != AL_NO_ERROR) {
+                LOG("Error starting playback : 0x%08lx", err);
+                break;
+            }
+        }
+    } while (0);
 
-    if (HASH_COUNT(voice->queued_buffers) >= (OPENAL_NUM_BUFFERS))
-    {
-        //LOG("no free audio buffers"); // keep accumulating ...
-        return 0;
-    }
+    return err;
+}
 
-    // ---------------------------
-    // Submit working buffer to OpenAL
+static long ALUnlockBuffer(AudioBuffer_s *_this, unsigned long audio_bytes) {
+    long err = 0;
 
-    err = _ALSubmitBufferToOpenAL(voice);
-    if (err)
-    {
-        return err;
-    }
+    do {
+        ALVoice *voice = (ALVoice*)_this->_internal;
+        ALuint bytes_queued = 0;
+        err = _ALProcessPlayBuffers(voice, &bytes_queued);
+        if (err) {
+            break;
+        }
 
-    return 0;
+        voice->index += audio_bytes;
+
+        assert((voice->index < voice->buffersize) && "OOPS, overflow in queued sound data");
+
+        if (bytes_queued >= (voice->buffersize>>2)/*quarter buffersize*/) {
+            // keep accumulating data into working buffer
+            break;
+        }
+
+        if (HASH_COUNT(voice->queued_buffers) >= (OPENAL_NUM_BUFFERS)) {
+            //LOG("no free audio buffers"); // keep accumulating ...
+            break;
+        }
+
+        // Submit working buffer to OpenAL
+
+        err = _ALSubmitBufferToOpenAL(voice);
+        if (err) {
+            break;
+        }
+    } while (0);
+
+    return err;
 }
 
 // HACK Part I : done once for mockingboard that has semiauto repeating phonemes ...
-static long ALCommitStaticBuffer(AudioBuffer_s *_this, unsigned long audio_bytes)
-{
+static long ALUnlockStaticBuffer(AudioBuffer_s *_this, unsigned long audio_bytes) {
     ALVoice *voice = (ALVoice*)_this->_internal;
     voice->replay_index = (ALsizei)audio_bytes;
     return 0;
 }
 
 // HACK Part II : replay mockingboard phoneme ...
-static long ALReplay(AudioBuffer_s *_this)
-{
+static long ALReplay(AudioBuffer_s *_this) {
     ALVoice *voice = (ALVoice*)_this->_internal;
     voice->index = voice->replay_index;
-
-    int err = 0;
-
-    err = _ALSubmitBufferToOpenAL(voice);
-    if (err)
-    {
-        return err;
-    }
-
-    return 0;
+    long err = _ALSubmitBufferToOpenAL(voice);
+    return err;
 }
 
-static long ALGetStatus(AudioBuffer_s *_this, unsigned long *status)
-{
-    ALVoice* voice = (ALVoice*)_this->_internal;
+static long ALGetStatus(AudioBuffer_s *_this, unsigned long *status) {
+    long err = 0;
 
-    int err = 0;
-    ALint state = 0;
-    alGetSourcei(voice->source, AL_SOURCE_STATE, &state);
-    if ((err = alGetError()) != AL_NO_ERROR)
-    {
-        ERRLOG("OOPS, Error checking source state : 0x%08x", err);
-        return err;
-    }
+    do {
+        ALVoice* voice = (ALVoice*)_this->_internal;
+        ALint state = 0;
+        alGetSourcei(voice->source, AL_SOURCE_STATE, &state);
+        if ((err = alGetError()) != AL_NO_ERROR) {
+            ERRLOG("OOPS, Error checking source state : 0x%08lx", err);
+            break;
+        }
 
-    if ((state == AL_PLAYING) || (state == AL_PAUSED))
-    {
-        *status = AUDIO_STATUS_PLAYING;
-    }
-    else
-    {
-        *status = AUDIO_STATUS_NOTPLAYING;
-    }
+        if ((state == AL_PLAYING) || (state == AL_PAUSED)) {
+            *status = AUDIO_STATUS_PLAYING;
+        } else {
+            *status = AUDIO_STATUS_NOTPLAYING;
+        }
+    } while (0);
 
-    return 0;
+    return err;
 }
+
+// ----------------------------------------------------------------------------
 
 static long OpenALCreateSoundBuffer(const AudioParams_s *params, INOUT AudioBuffer_s **soundbuf_struct, const AudioContext_s *audio_context)
 {
@@ -710,11 +679,11 @@ static long OpenALCreateSoundBuffer(const AudioParams_s *params, INOUT AudioBuff
 
         (*soundbuf_struct)->_internal          = voice;
         (*soundbuf_struct)->GetCurrentPosition = &ALGetPosition;
-        (*soundbuf_struct)->Lock               = &ALBegin;
-        (*soundbuf_struct)->Unlock             = &ALCommit;
+        (*soundbuf_struct)->Lock               = &ALLockBuffer;
+        (*soundbuf_struct)->Unlock             = &ALUnlockBuffer;
         (*soundbuf_struct)->GetStatus          = &ALGetStatus;
         // mockingboard-specific hacks
-        (*soundbuf_struct)->UnlockStaticBuffer = &ALCommitStaticBuffer;
+        (*soundbuf_struct)->UnlockStaticBuffer = &ALUnlockStaticBuffer;
         (*soundbuf_struct)->Replay             = &ALReplay;
 
         return 0;
