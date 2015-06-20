@@ -398,41 +398,6 @@ static ALVoice *NewVoice(const AudioParams_s *params)
 
 // ----------------------------------------------------------------------------
 
-static long ALGetVolume(AudioBuffer_s *_this, long *volume)
-{
-    LOG("ALGetVolume ...");
-    if (volume)
-    {
-        *volume = 0;
-    }
-    return 0;
-}
-
-static long ALSetVolume(AudioBuffer_s *_this, long volume)
-{
-    LOG("ALSetVolume ...");
-    return 0;
-}
-
-static long ALStop(AudioBuffer_s *_this)
-{
-    LOG("ALStop ...");
-    return 0;
-}
-
-static long ALRestore(AudioBuffer_s *_this)
-{
-    LOG("ALRestore ...");
-    return 0;
-}
-
-static long ALPlay(AudioBuffer_s *_this, unsigned long reserved1, unsigned long reserved2, unsigned long flags)
-{
-    LOG("ALPlay ...");
-
-    return 0;
-}
-
 static int _ALProcessPlayBuffers(ALVoice *voice, ALuint *bytes_queued)
 {
     ALint processed = 0;
@@ -499,14 +464,10 @@ static int _ALProcessPlayBuffers(ALVoice *voice, ALuint *bytes_queued)
 }
 
 // returns queued+working sound buffer size in bytes 
-static long ALGetPosition(AudioBuffer_s *_this, unsigned long *bytes_queued, unsigned long *unused_write_cursor)
+static long ALGetPosition(AudioBuffer_s *_this, unsigned long *bytes_queued)
 {
     ALVoice *voice = (ALVoice*)_this->_internal;
     *bytes_queued = 0;
-    if (unused_write_cursor)
-    {
-        *unused_write_cursor = 0;
-    }
 
     ALuint queued = 0;
     int err = _ALProcessPlayBuffers(voice, &queued);
@@ -527,14 +488,9 @@ static long ALGetPosition(AudioBuffer_s *_this, unsigned long *bytes_queued, uns
 }
 
 // DS->Lock()
-static long ALBegin(AudioBuffer_s *_this, unsigned long unused, unsigned long write_bytes, INOUT int16_t **audio_ptr1, INOUT unsigned long *audio_bytes1, void **unused_audio_ptr2, unsigned long *unused_audio_bytes2, unsigned long flags_unused)
+static long ALBegin(AudioBuffer_s *_this, unsigned long write_bytes, INOUT int16_t **audio_ptr, INOUT unsigned long *audio_bytes)
 {
     ALVoice *voice = (ALVoice*)_this->_internal;
-
-    if (unused_audio_ptr2)
-    {
-        *unused_audio_ptr2 = NULL;
-    }
 
     if (write_bytes == 0)
     {
@@ -566,8 +522,8 @@ static long ALBegin(AudioBuffer_s *_this, unsigned long unused, unsigned long wr
         write_bytes = remaining;
     }
 
-    *audio_ptr1 = voice->data+voice->index;
-    *audio_bytes1 = write_bytes;
+    *audio_ptr = (int16_t *)(voice->data+voice->index);
+    *audio_bytes = write_bytes;
 
     return 0;
 }
@@ -622,7 +578,7 @@ static int _ALSubmitBufferToOpenAL(ALVoice *voice)
 }
 
 // DS->Unlock()
-static long ALCommit(AudioBuffer_s *_this, void *unused_audio_ptr1, unsigned long audio_bytes1, void *unused_audio_ptr2, unsigned long unused_audio_bytes2)
+static long ALCommit(AudioBuffer_s *_this, unsigned long audio_bytes)
 {
     ALVoice *voice = (ALVoice*)_this->_internal;
     int err = 0;
@@ -634,7 +590,7 @@ static long ALCommit(AudioBuffer_s *_this, void *unused_audio_ptr1, unsigned lon
         return err;
     }
 
-    voice->index += audio_bytes1;
+    voice->index += audio_bytes;
 
     while (voice->index > voice->buffersize)
     {
@@ -668,10 +624,10 @@ static long ALCommit(AudioBuffer_s *_this, void *unused_audio_ptr1, unsigned lon
 }
 
 // HACK Part I : done once for mockingboard that has semiauto repeating phonemes ...
-static long ALCommitStaticBuffer(AudioBuffer_s *_this, unsigned long audio_bytes1)
+static long ALCommitStaticBuffer(AudioBuffer_s *_this, unsigned long audio_bytes)
 {
     ALVoice *voice = (ALVoice*)_this->_internal;
-    voice->replay_index = (ALsizei)audio_bytes1;
+    voice->replay_index = (ALsizei)audio_bytes;
     return 0;
 }
 
@@ -753,12 +709,7 @@ static long OpenALCreateSoundBuffer(const AudioParams_s *params, INOUT AudioBuff
         }
 
         (*soundbuf_struct)->_internal          = voice;
-        (*soundbuf_struct)->SetVolume          = &ALSetVolume;
-        (*soundbuf_struct)->GetVolume          = &ALGetVolume;
         (*soundbuf_struct)->GetCurrentPosition = &ALGetPosition;
-        (*soundbuf_struct)->Stop               = &ALStop;
-        (*soundbuf_struct)->Restore            = &ALRestore;
-        (*soundbuf_struct)->Play               = &ALPlay;
         (*soundbuf_struct)->Lock               = &ALBegin;
         (*soundbuf_struct)->Unlock             = &ALCommit;
         (*soundbuf_struct)->GetStatus          = &ALGetStatus;

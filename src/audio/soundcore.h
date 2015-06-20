@@ -31,29 +31,20 @@ typedef struct AudioBuffer_s {
     long nVolume;       // Mockingboard ... refactor?
     PRIVATE void *_internal;
 
-    long (*SetVolume)(struct AudioBuffer_s *_this, long lVolume);
-
-    long (*GetVolume)(struct AudioBuffer_s *_this, long *lplVolume);
-
-    long (*GetCurrentPosition)(struct AudioBuffer_s *_this, unsigned long *lpdwCurrentPlayCursor, unsigned long *lpdwCurrentWriteCursor);
-
-    long (*Stop)(struct AudioBuffer_s *_this);
-
-    // This method restores the memory allocation for a lost sound buffer for the specified DirectSoundBuffer object.
-    long (*Restore)(struct AudioBuffer_s *_this);
-
-    long (*Play)(struct AudioBuffer_s *_this, unsigned long dwReserved1, unsigned long dwReserved2, unsigned long dwFlags);
+    // Get current number of queued bytes
+    long (*GetCurrentPosition)(struct AudioBuffer_s *_this, unsigned long *bytes_queued);
 
     // This method obtains a valid write pointer to the sound buffer's audio data
-    long (*Lock)(struct AudioBuffer_s *_this, unsigned long dwWriteCursor, unsigned long dwWriteBytes, INOUT int16_t **lplpvAudioPtr1, INOUT unsigned long *lpdwAudioBytes1, void **lplpvAudioPtr2, unsigned long *lpdwAudioBytes2, unsigned long dwFlags);
+    long (*Lock)(struct AudioBuffer_s *_this, unsigned long write_bytes, INOUT int16_t **audio_ptr, INOUT unsigned long *audio_bytes);
 
     // This method releases a locked sound buffer.
-    long (*Unlock)(struct AudioBuffer_s *_this, void *lpvAudioPtr1, unsigned long dwAudioBytes1, void *lpvAudioPtr2, unsigned long dwAudioBytes2);
+    long (*Unlock)(struct AudioBuffer_s *_this, unsigned long audio_bytes);
 
-    long (*GetStatus)(struct AudioBuffer_s *_this, unsigned long *lpdwStatus);
+    // Get status (playing or not)
+    long (*GetStatus)(struct AudioBuffer_s *_this, unsigned long *status);
 
-    // Mockingboard-specific HACKS
-    long (*UnlockStaticBuffer)(struct AudioBuffer_s *_this, unsigned long dwAudioBytes);
+    // Mockingboard-specific buffer replay
+    long (*UnlockStaticBuffer)(struct AudioBuffer_s *_this, unsigned long audio_bytes);
     long (*Replay)(struct AudioBuffer_s *_this);
 
 } AudioBuffer_s;
