@@ -29,7 +29,7 @@
 
 typedef struct ALPlayBuf {
     const ALuint bufid; // the hash id
-    ALuint bytes;       // bytes to play
+    ALuint bytes_count; // num bytes to play
     UT_hash_handle hh;  // make this struct hashable
     struct ALPlayBuf *_avail_next;
 } ALPlayBuf;
@@ -71,7 +71,7 @@ static AudioBackend_s openal_audio_backend = { 0 };
 // ----------------------------------------------------------------------------
 // Buffer play list management (uthash of OpenAL buffers)
 
-static ALPlayBuf *PlaylistEnqueue(ALVoice *voice, ALuint bytes) {
+static ALPlayBuf *PlaylistEnqueue(ALVoice *voice, ALuint bytes_count) {
     ALPlayBuf *node = voice->avail_buffers;
     if (node == NULL) {
         ERRLOG("OOPS, sound playback overflow!");
@@ -91,9 +91,9 @@ static ALPlayBuf *PlaylistEnqueue(ALVoice *voice, ALuint bytes) {
     node->_avail_next = NULL;
     HASH_ADD_INT(voice->queued_buffers, bufid, node);
 
-    node->bytes = bytes;
+    node->bytes_count = bytes_count;
 
-    voice->_queued_total_bytes += node->bytes;
+    voice->_queued_total_bytes += node->bytes_count;
     voice->index = 0;
     assert(voice->_queued_total_bytes > 0);
 
@@ -123,9 +123,9 @@ static void PlaylistDequeue(ALVoice *voice, ALPlayBuf *node) {
     node->_avail_next = voice->avail_buffers;
     voice->avail_buffers = node;
 
-    voice->_queued_total_bytes -= node->bytes;
+    voice->_queued_total_bytes -= node->bytes_count;
     assert(voice->_queued_total_bytes >= 0);
-    node->bytes = 0;
+    node->bytes_count = 0;
 
 #if 0
     ALPlayBuf *tmp = voice->queued_buffers;
@@ -279,8 +279,8 @@ static long _ALSubmitBufferToOpenAL(ALVoice *voice) {
             err = -1;
             break;
         }
-        //LOG("Enqueing OpenAL buffer %u (%u bytes)", node->bufid, node->bytes);
-        alBufferData(node->bufid, voice->format, voice->data, node->bytes, voice->rate);
+        //LOG("Enqueing OpenAL buffer %u (%u bytes)", node->bufid, node->bytes_count);
+        alBufferData(node->bufid, voice->format, voice->data, node->bytes_count, voice->rate);
 
         if ((err = alGetError()) != AL_NO_ERROR) {
             PlaylistDequeue(voice, node);
