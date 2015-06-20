@@ -28,7 +28,7 @@
 #define OPENAL_NUM_BUFFERS 4
 
 typedef struct ALPlayBuf {
-    const ALuint bufid; // the hash id
+    const ALuint bufid;
     ALuint bytes_count; // num bytes to play
     struct ALPlayBuf *next;
 } ALPlayBuf;
@@ -64,42 +64,44 @@ typedef struct ALVoices {
 } ALVoices;
 
 static ALVoices *voices = NULL;
-
 static AudioBackend_s openal_audio_backend = { 0 };
 
 // ----------------------------------------------------------------------------
-// Buffer play list management (uthash of OpenAL buffers)
+// Buffer play list management
 
 static ALPlayBuf *PlaylistEnqueue(ALVoice *voice, ALuint bytes_count) {
-    // assert buffer is available
-    ALPlayBuf *node = voice->avail_buffers;
-    if (node == NULL) {
-        ERRLOG("OOPS, sound playback overflow!");
-        return NULL;
-    }
-    //LOG("Really enqueing OpenAL buffer %u", node->bufid);
-
-    // assert bufid is not already queued
-    {
-        ALPlayBuf *n = voice->queued_buffers;
-        while (n) {
-            if (node->bufid == n->bufid) {
-                ERRLOG("OOPS, confused ... ALPlayBuf already added!");
-                return NULL;
-            }
-            n = n->next;
+    ALPlayBuf *node = NULL;
+    do {
+        // assert buffer is available
+        node = voice->avail_buffers;
+        if (node == NULL) {
+            ERRLOG("OOPS, sound playback overflow!");
+            break;
         }
-    }
+        //LOG("Really enqueing OpenAL buffer %u", node->bufid);
 
-    // move to queued_buffers
-    voice->avail_buffers = node->next;
-    node->next = voice->queued_buffers;
-    voice->queued_buffers = node;
+        // assert bufid is not already queued
+        {
+            ALPlayBuf *n = voice->queued_buffers;
+            while (n) {
+                if (node->bufid == n->bufid) {
+                    ERRLOG("OOPS, confused ... ALPlayBuf already added!");
+                    break;
+                }
+                n = n->next;
+            }
+        }
 
-    node->bytes_count = bytes_count;
-    voice->_queued_total_bytes += node->bytes_count;
-    voice->index = 0;
-    assert(voice->_queued_total_bytes > 0);
+        // move to queued_buffers
+        voice->avail_buffers = node->next;
+        node->next = voice->queued_buffers;
+        voice->queued_buffers = node;
+
+        node->bytes_count = bytes_count;
+        voice->_queued_total_bytes += node->bytes_count;
+        voice->index = 0;
+        assert(voice->_queued_total_bytes > 0);
+    } while (0);
 
     return node;
 }
