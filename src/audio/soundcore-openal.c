@@ -30,8 +30,7 @@
 typedef struct ALPlayBuf {
     const ALuint bufid; // the hash id
     ALuint bytes_count; // num bytes to play
-    UT_hash_handle hh;  // make this struct hashable
-    struct ALPlayBuf *_avail_next;
+    struct ALPlayBuf *next;
 } ALPlayBuf;
 
 typedef struct ALVoice {
@@ -72,6 +71,7 @@ static AudioBackend_s openal_audio_backend = { 0 };
 // Buffer play list management (uthash of OpenAL buffers)
 
 static ALPlayBuf *PlaylistEnqueue(ALVoice *voice, ALuint bytes_count) {
+    // assert buffer is available
     ALPlayBuf *node = voice->avail_buffers;
     if (node == NULL) {
         ERRLOG("OOPS, sound playback overflow!");
@@ -79,62 +79,66 @@ static ALPlayBuf *PlaylistEnqueue(ALVoice *voice, ALuint bytes_count) {
     }
     //LOG("Really enqueing OpenAL buffer %u", node->bufid);
 
-    ALPlayBuf *node2 = NULL;
-    HASH_FIND_INT(voice->queued_buffers, &node->bufid, node2);
-    if (node2 != NULL) {
-        ERRLOG("OOPS, confused ... ALPlayBuf already added!");
-        return NULL;
+    // assert bufid is not already queued
+    {
+        ALPlayBuf *n = voice->queued_buffers;
+        while (n) {
+            if (node->bufid == n->bufid) {
+                ERRLOG("OOPS, confused ... ALPlayBuf already added!");
+                return NULL;
+            }
+            n = n->next;
+        }
     }
 
-    // remove from list / place on hash
-    voice->avail_buffers = node->_avail_next;
-    node->_avail_next = NULL;
-    HASH_ADD_INT(voice->queued_buffers, bufid, node);
+    // move to queued_buffers
+    voice->avail_buffers = node->next;
+    node->next = voice->queued_buffers;
+    voice->queued_buffers = node;
 
     node->bytes_count = bytes_count;
-
     voice->_queued_total_bytes += node->bytes_count;
     voice->index = 0;
     assert(voice->_queued_total_bytes > 0);
-
-#if 0
-    ALPlayBuf *tmp = voice->queued_buffers;
-    unsigned int count = HASH_COUNT(voice->queued_buffers);
-    LOG("\t(numqueued: %d)", count);
-    for (unsigned int i = 0; i < count; i++, tmp = tmp->hh.next) {
-        LOG("\t(bufid : %u)", tmp->bufid);
-    }
-#endif
 
     return node;
 }
 
 static ALPlayBuf *PlaylistGet(ALVoice *voice, ALuint bufid) {
-    ALPlayBuf *node = NULL;
-    HASH_FIND_INT(voice->queued_buffers, &bufid, node);
+    ALPlayBuf *node = voice->queued_buffers;
+    while (node) {
+        if (node->bufid == bufid) {
+            break;
+        }
+        node = node->next;
+    }
     return node;
 }
 
 static void PlaylistDequeue(ALVoice *voice, ALPlayBuf *node) {
     //LOG("Dequeing OpenAL buffer %u", node->bufid);
 
-    // remove from hash / place on list
-    HASH_DEL(voice->queued_buffers, node);              // remove from hash
-    node->_avail_next = voice->avail_buffers;
+    ALPlayBuf *prev = NULL;
+    ALPlayBuf *curr = voice->queued_buffers;
+    while (curr) {
+        if (curr == node) {
+            if (prev) {
+                prev->next = curr->next;
+            } else {
+                voice->queued_buffers = curr->next;
+            }
+            break;
+        }
+        prev = curr;
+        curr = curr->next;
+    }
+
+    node->next = voice->avail_buffers;
     voice->avail_buffers = node;
 
     voice->_queued_total_bytes -= node->bytes_count;
     assert(voice->_queued_total_bytes >= 0);
     node->bytes_count = 0;
-
-#if 0
-    ALPlayBuf *tmp = voice->queued_buffers;
-    unsigned int count = HASH_COUNT(voice->queued_buffers);
-    LOG("\t(numqueued: %d)", count);
-    for (unsigned int i = 0; i < count; i++, tmp = tmp->hh.next) {
-        LOG("\t(bufid : %u)", tmp->bufid);
-    }
-#endif
 }
 
 // ----------------------------------------------------------------------------
@@ -152,12 +156,6 @@ static long _ALProcessPlayBuffers(ALVoice *voice, ALuint *bytes_queued) {
             break;
         }
 
-#if 0
-        if ((processed == 0) && (HASH_COUNT(voice->queued_buffers) >= OPENAL_NUM_BUFFERS)) {
-            LOG("All audio buffers processing...");
-        }
-#endif
-
         while (processed > 0) {
             --processed;
             ALuint bufid = 0;
@@ -173,14 +171,6 @@ static long _ALProcessPlayBuffers(ALVoice *voice, ALuint *bytes_queued) {
                 PlaylistDequeue(voice, node);
             } else {
                 ERRLOG("OOPS, OpenAL bufid %u not found in playlist...", bufid);
-#if 0
-                ALPlayBuf *tmp = voice->queued_buffers;
-                unsigned int count = HASH_COUNT(voice->queued_buffers);
-                LOG("\t(numqueued: %d)", count);
-                for (unsigned int i = 0; i < count; i++, tmp = tmp->hh.next) {
-                    LOG("\t(bufid : %u)", tmp->bufid);
-                }
-#endif
             }
         }
 
@@ -279,6 +269,7 @@ static long _ALSubmitBufferToOpenAL(ALVoice *voice) {
             err = -1;
             break;
         }
+
         //LOG("Enqueing OpenAL buffer %u (%u bytes)", node->bufid, node->bytes_count);
         alBufferData(node->bufid, voice->format, voice->data, node->bytes_count, voice->rate);
 
@@ -335,9 +326,17 @@ static long ALUnlockBuffer(AudioBuffer_s *_this, unsigned long audio_bytes) {
             break;
         }
 
-        if (HASH_COUNT(voice->queued_buffers) >= (OPENAL_NUM_BUFFERS)) {
-            //LOG("no free audio buffers"); // keep accumulating ...
-            break;
+        {
+            bool queued_buffers_count = 0;
+            ALPlayBuf *node = voice->queued_buffers;
+            while (node) {
+                ++queued_buffers_count;
+                node = node->next;
+            }
+            if (queued_buffers_count >= OPENAL_NUM_BUFFERS) {
+                //LOG("no free audio buffers"); // keep accumulating ...
+                break;
+            }
         }
 
         // Submit working buffer to OpenAL
@@ -406,19 +405,17 @@ static void _openal_destroyVoice(ALVoice *voice) {
         FREE(voice->data);
     }
 
-    ALPlayBuf *node = NULL;
-    ALPlayBuf *tmp = NULL;
-    HASH_ITER(hh, voice->queued_buffers, node, tmp) {
-        PlaylistDequeue(voice, node);
+    while (voice->queued_buffers) {
+        PlaylistDequeue(voice, voice->queued_buffers);
     }
 
     while (voice->avail_buffers) {
-        node = voice->avail_buffers;
+        ALPlayBuf *node = voice->avail_buffers;
         alDeleteBuffers(1, &node->bufid);
         if (alGetError() != AL_NO_ERROR) {
             ERRLOG("OOPS, Failed to delete object IDs");
         }
-        voice->avail_buffers = node->_avail_next;
+        voice->avail_buffers = node->next;
         FREE(node);
     }
 
@@ -488,7 +485,7 @@ static ALVoice *_openal_createVoice(const AudioParams_s *params) {
                 break;
             }
             memcpy(node, &immutableNode, sizeof(ALPlayBuf));
-            node->_avail_next = voice->avail_buffers;
+            node->next = voice->avail_buffers;
             voice->avail_buffers = node;
         }
 
