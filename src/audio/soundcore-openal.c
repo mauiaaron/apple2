@@ -23,6 +23,7 @@
 #endif
 
 #include "audio/alhelpers.h"
+#include "uthash.h"
 
 #define OPENAL_NUM_BUFFERS 4
 
@@ -68,7 +69,7 @@ static ALVoices *voices = NULL;
 static AudioBackend_s openal_audio_backend = { 0 };
 
 // ----------------------------------------------------------------------------
-// uthash of OpenAL buffers
+// Buffer play list management (uthash of OpenAL buffers)
 
 static ALPlayBuf *PlaylistEnqueue(ALVoice *voice, ALuint bytes) {
     ALPlayBuf *node = voice->avail_buffers;
@@ -137,141 +138,7 @@ static void PlaylistDequeue(ALVoice *voice, ALPlayBuf *node) {
 }
 
 // ----------------------------------------------------------------------------
-
-/*
- * Destroys a voice object, deleting the source and buffers. Minimal error
- * handling since these calls shouldn't fail with a properly-made voice object.
- */
-static void DeleteVoice(ALVoice *voice) {
-    alDeleteSources(1, &voice->source);
-    if (alGetError() != AL_NO_ERROR) {
-        ERRLOG("OOPS, Failed to delete source");
-    }
-
-    if (voice->data) {
-        FREE(voice->data);
-    }
-
-    ALPlayBuf *node = NULL;
-    ALPlayBuf *tmp = NULL;
-    HASH_ITER(hh, voice->queued_buffers, node, tmp) {
-        PlaylistDequeue(voice, node);
-    }
-
-    while (voice->avail_buffers) {
-        node = voice->avail_buffers;
-        alDeleteBuffers(1, &node->bufid);
-        if (alGetError() != AL_NO_ERROR) {
-            ERRLOG("OOPS, Failed to delete object IDs");
-        }
-        voice->avail_buffers = node->_avail_next;
-        FREE(node);
-    }
-
-    memset(voice, 0, sizeof(*voice));
-    FREE(voice);
-}
-
-/*
- * Creates a new voice object, and allocates the needed OpenAL source and
- * buffer objects. Error checking is simplified for the purposes of this
- * example, and will cause an abort if needed.
- */
-static ALVoice *NewVoice(const AudioParams_s *params) {
-    ALVoice *voice = NULL;
-
-    do {
-        voice = calloc(1, sizeof(*voice));
-        if (voice == NULL) {
-            ERRLOG("OOPS, Out of memory!");
-            break;
-        }
-
-        ALuint buffers[OPENAL_NUM_BUFFERS];
-        alGenBuffers(OPENAL_NUM_BUFFERS, buffers);
-        if (alGetError() != AL_NO_ERROR) {
-            ERRLOG("OOPS, Could not create buffers");
-            break;
-        }
-
-        alGenSources(1, &voice->source);
-        if (alGetError() != AL_NO_ERROR) {
-            ERRLOG("OOPS, Could not create source");
-            break;
-        }
-
-        // Set parameters so mono sources play out the front-center speaker and won't distance attenuate.
-        alSource3i(voice->source, AL_POSITION, 0, 0, -1);
-        if (alGetError() != AL_NO_ERROR) {
-            ERRLOG("OOPS, Could not set AL_POSITION source parameter");
-            break;
-        }
-        alSourcei(voice->source, AL_SOURCE_RELATIVE, AL_TRUE);
-        if (alGetError() != AL_NO_ERROR) {
-            ERRLOG("OOPS, Could not set AL_SOURCE_RELATIVE source parameter");
-            break;
-        }
-        alSourcei(voice->source, AL_ROLLOFF_FACTOR, 0);
-        if (alGetError() != AL_NO_ERROR) {
-            ERRLOG("OOPS, Could not set AL_ROLLOFF_FACTOR source parameter");
-            break;
-        }
-
-#if 0
-        alSourcei(voice->source, AL_STREAMING, AL_TRUE);
-        if (alGetError() != AL_NO_ERROR) {
-            ERRLOG("OOPS, Could not set AL_STREAMING source parameter");
-            break;
-        }
-#endif
-
-        voice->avail_buffers = NULL;
-        for (unsigned int i=0; i<OPENAL_NUM_BUFFERS; i++) {
-            ALPlayBuf immutableNode = { /*const*/.bufid = buffers[i] };
-            ALPlayBuf *node = calloc(1, sizeof(ALPlayBuf));
-            if (!node) {
-                ERRLOG("OOPS, Not enough memory");
-                break;
-            }
-            memcpy(node, &immutableNode, sizeof(ALPlayBuf));
-            node->_avail_next = voice->avail_buffers;
-            voice->avail_buffers = node;
-        }
-
-        voice->rate = (ALuint)params->nSamplesPerSec;
-
-        // Emulator supports only mono and stereo
-        if (params->nChannels == 2) {
-            voice->format = AL_FORMAT_STEREO16;
-        } else {
-            voice->format = AL_FORMAT_MONO16;
-        }
-
-        /* Allocate enough space for the temp buffer, given the format */
-        voice->buffersize = (ALsizei)params->dwBufferBytes;
-        voice->data = malloc(voice->buffersize);
-        if (voice->data == NULL) {
-            ERRLOG("OOPS, Error allocating %d bytes", voice->buffersize);
-            break;
-        }
-
-        LOG("\tRate     : 0x%08x", voice->rate);
-        LOG("\tFormat   : 0x%08x", voice->format);
-        LOG("\tbuffersize : %d", voice->buffersize);
-
-        return voice;
-
-    } while(0);
-
-    // ERR
-    if (voice) {
-        DeleteVoice(voice);
-    }
-
-    return NULL;
-}
-
-// ----------------------------------------------------------------------------
+// AudioBuffer_s processing routines
 
 static long _ALProcessPlayBuffers(ALVoice *voice, ALuint *bytes_queued) {
     long err = 0;
@@ -523,18 +390,154 @@ static long ALGetStatus(AudioBuffer_s *_this, OUTPARM unsigned long *status) {
 }
 
 // ----------------------------------------------------------------------------
+// ALVoice is the AudioBuffer_s->_internal
 
-static long OpenALDestroySoundBuffer(INOUT AudioBuffer_s **soundbuf_struct) {
+/*
+ * Destroys a voice object, deleting the source and buffers. Minimal error
+ * handling since these calls shouldn't fail with a properly-made voice object.
+ */
+static void _openal_destroyVoice(ALVoice *voice) {
+    alDeleteSources(1, &voice->source);
+    if (alGetError() != AL_NO_ERROR) {
+        ERRLOG("OOPS, Failed to delete source");
+    }
+
+    if (voice->data) {
+        FREE(voice->data);
+    }
+
+    ALPlayBuf *node = NULL;
+    ALPlayBuf *tmp = NULL;
+    HASH_ITER(hh, voice->queued_buffers, node, tmp) {
+        PlaylistDequeue(voice, node);
+    }
+
+    while (voice->avail_buffers) {
+        node = voice->avail_buffers;
+        alDeleteBuffers(1, &node->bufid);
+        if (alGetError() != AL_NO_ERROR) {
+            ERRLOG("OOPS, Failed to delete object IDs");
+        }
+        voice->avail_buffers = node->_avail_next;
+        FREE(node);
+    }
+
+    memset(voice, 0, sizeof(*voice));
+    FREE(voice);
+}
+
+/*
+ * Creates a new voice object, and allocates the needed OpenAL source and
+ * buffer objects. Error checking is simplified for the purposes of this
+ * example, and will cause an abort if needed.
+ */
+static ALVoice *_openal_createVoice(const AudioParams_s *params) {
+    ALVoice *voice = NULL;
+
+    do {
+        voice = calloc(1, sizeof(*voice));
+        if (voice == NULL) {
+            ERRLOG("OOPS, Out of memory!");
+            break;
+        }
+
+        ALuint buffers[OPENAL_NUM_BUFFERS];
+        alGenBuffers(OPENAL_NUM_BUFFERS, buffers);
+        if (alGetError() != AL_NO_ERROR) {
+            ERRLOG("OOPS, Could not create buffers");
+            break;
+        }
+
+        alGenSources(1, &voice->source);
+        if (alGetError() != AL_NO_ERROR) {
+            ERRLOG("OOPS, Could not create source");
+            break;
+        }
+
+        // Set parameters so mono sources play out the front-center speaker and won't distance attenuate.
+        alSource3i(voice->source, AL_POSITION, 0, 0, -1);
+        if (alGetError() != AL_NO_ERROR) {
+            ERRLOG("OOPS, Could not set AL_POSITION source parameter");
+            break;
+        }
+        alSourcei(voice->source, AL_SOURCE_RELATIVE, AL_TRUE);
+        if (alGetError() != AL_NO_ERROR) {
+            ERRLOG("OOPS, Could not set AL_SOURCE_RELATIVE source parameter");
+            break;
+        }
+        alSourcei(voice->source, AL_ROLLOFF_FACTOR, 0);
+        if (alGetError() != AL_NO_ERROR) {
+            ERRLOG("OOPS, Could not set AL_ROLLOFF_FACTOR source parameter");
+            break;
+        }
+
+#if 0
+        alSourcei(voice->source, AL_STREAMING, AL_TRUE);
+        if (alGetError() != AL_NO_ERROR) {
+            ERRLOG("OOPS, Could not set AL_STREAMING source parameter");
+            break;
+        }
+#endif
+
+        voice->avail_buffers = NULL;
+        for (unsigned int i=0; i<OPENAL_NUM_BUFFERS; i++) {
+            ALPlayBuf immutableNode = { /*const*/.bufid = buffers[i] };
+            ALPlayBuf *node = calloc(1, sizeof(ALPlayBuf));
+            if (!node) {
+                ERRLOG("OOPS, Not enough memory");
+                break;
+            }
+            memcpy(node, &immutableNode, sizeof(ALPlayBuf));
+            node->_avail_next = voice->avail_buffers;
+            voice->avail_buffers = node;
+        }
+
+        voice->rate = (ALuint)params->nSamplesPerSec;
+
+        // Emulator supports only mono and stereo
+        if (params->nChannels == 2) {
+            voice->format = AL_FORMAT_STEREO16;
+        } else {
+            voice->format = AL_FORMAT_MONO16;
+        }
+
+        /* Allocate enough space for the temp buffer, given the format */
+        voice->buffersize = (ALsizei)params->dwBufferBytes;
+        voice->data = malloc(voice->buffersize);
+        if (voice->data == NULL) {
+            ERRLOG("OOPS, Error allocating %d bytes", voice->buffersize);
+            break;
+        }
+
+        LOG("\tRate     : 0x%08x", voice->rate);
+        LOG("\tFormat   : 0x%08x", voice->format);
+        LOG("\tbuffersize : %d", voice->buffersize);
+
+        return voice;
+
+    } while(0);
+
+    // ERR
+    if (voice) {
+        _openal_destroyVoice(voice);
+    }
+
+    return NULL;
+}
+
+// ----------------------------------------------------------------------------
+
+static long openal_destroySoundBuffer(INOUT AudioBuffer_s **soundbuf_struct) {
     if (!*soundbuf_struct) {
         // already dealloced
         return 0;
     }
 
-    LOG("OpenALDestroySoundBuffer ...");
+    LOG("openal_destroySoundBuffer ...");
     ALVoice *voice = (ALVoice *)((*soundbuf_struct)->_internal);
     ALint source = voice->source;
 
-    DeleteVoice(voice);
+    _openal_destroyVoice(voice);
 
     ALVoices *vnode = NULL;
     HASH_FIND_INT(voices, &source, vnode);
@@ -547,8 +550,8 @@ static long OpenALDestroySoundBuffer(INOUT AudioBuffer_s **soundbuf_struct) {
     return 0;
 }
 
-static long OpenALCreateSoundBuffer(const AudioParams_s *params, INOUT AudioBuffer_s **soundbuf_struct, const AudioContext_s *audio_context) {
-    LOG("OpenALCreateSoundBuffer ...");
+static long openal_createSoundBuffer(const AudioParams_s *params, INOUT AudioBuffer_s **soundbuf_struct, const AudioContext_s *audio_context) {
+    LOG("openal_createSoundBuffer ...");
     assert(*soundbuf_struct == NULL);
 
     ALCcontext *ctx = (ALCcontext*)(audio_context->_internal);
@@ -558,7 +561,7 @@ static long OpenALCreateSoundBuffer(const AudioParams_s *params, INOUT AudioBuff
 
     do {
 
-        if ((voice = NewVoice(params)) == NULL) {
+        if ((voice = _openal_createVoice(params)) == NULL) {
             ERRLOG("OOPS, Cannot create new voice");
             break;
         }
@@ -591,9 +594,9 @@ static long OpenALCreateSoundBuffer(const AudioParams_s *params, INOUT AudioBuff
     } while(0);
 
     if (*soundbuf_struct) {
-        OpenALDestroySoundBuffer(soundbuf_struct);
+        openal_destroySoundBuffer(soundbuf_struct);
     } else if (voice) {
-        DeleteVoice(voice);
+        _openal_destroyVoice(voice);
     }
 
     return -1;
@@ -626,8 +629,8 @@ static long openal_systemSetup(INOUT AudioContext_s **audio_context) {
         }
 
         (*audio_context)->_internal = ctx;
-        (*audio_context)->CreateSoundBuffer = &OpenALCreateSoundBuffer;
-        (*audio_context)->DestroySoundBuffer = &OpenALDestroySoundBuffer;
+        (*audio_context)->CreateSoundBuffer = &openal_createSoundBuffer;
+        (*audio_context)->DestroySoundBuffer = &openal_destroySoundBuffer;
 
         return 0;
     } while(0);

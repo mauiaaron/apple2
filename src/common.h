@@ -52,7 +52,6 @@
 #include "joystick.h"
 #include "glue.h"
 #include "prefs.h"
-#include "uthash.h"
 #include "zlib-helpers.h"
 
 #ifdef __APPLE__
