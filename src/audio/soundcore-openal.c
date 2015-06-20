@@ -385,10 +385,6 @@ static long ALGetStatus(AudioBuffer_s *_this, OUTPARM unsigned long *status) {
 // ----------------------------------------------------------------------------
 // ALVoice is the AudioBuffer_s->_internal
 
-/*
- * Destroys a voice object, deleting the source and buffers. Minimal error
- * handling since these calls shouldn't fail with a properly-made voice object.
- */
 static void _openal_destroyVoice(ALVoice *voice) {
     alDeleteSources(1, &voice->source);
     if (alGetError() != AL_NO_ERROR) {
@@ -417,11 +413,6 @@ static void _openal_destroyVoice(ALVoice *voice) {
     FREE(voice);
 }
 
-/*
- * Creates a new voice object, and allocates the needed OpenAL source and
- * buffer objects. Error checking is simplified for the purposes of this
- * example, and will cause an abort if needed.
- */
 static ALVoice *_openal_createVoice(const AudioParams_s *params) {
     ALVoice *voice = NULL;
 
@@ -545,12 +536,12 @@ static long openal_createSoundBuffer(const AudioParams_s *params, INOUT AudioBuf
     LOG("openal_createSoundBuffer ...");
     assert(*soundbuf_struct == NULL);
 
-    ALCcontext *ctx = (ALCcontext*)(audio_context->_internal);
-    assert(ctx != NULL);
-
     ALVoice *voice = NULL;
 
     do {
+
+        ALCcontext *ctx = (ALCcontext*)(audio_context->_internal);
+        assert(ctx != NULL);
 
         if ((voice = _openal_createVoice(params)) == NULL) {
             ERRLOG("OOPS, Cannot create new voice");
@@ -595,15 +586,31 @@ static long openal_createSoundBuffer(const AudioParams_s *params, INOUT AudioBuf
 
 // ----------------------------------------------------------------------------
 
+static long openal_systemShutdown(INOUT AudioContext_s **audio_context) {
+    assert(*audio_context != NULL);
+
+    ALCcontext *ctx = (ALCcontext*) (*audio_context)->_internal;
+    assert(ctx != NULL);
+    (*audio_context)->_internal = NULL;
+    FREE(*audio_context);
+
+    // NOTE : currently assuming just one OpenAL global context
+    CloseAL();
+
+    return 0;
+}
+
 static long openal_systemSetup(INOUT AudioContext_s **audio_context) {
     assert(*audio_context == NULL);
     assert(voices == NULL);
 
+    long result = -1;
     ALCcontext *ctx = NULL;
 
     do {
 
         if ((ctx = InitAL()) == NULL) {
+            // NOTE : currently assuming just one OpenAL global context
             ERRLOG("OOPS, OpenAL initialize failed");
             break;
         }
@@ -623,28 +630,20 @@ static long openal_systemSetup(INOUT AudioContext_s **audio_context) {
         (*audio_context)->CreateSoundBuffer = &openal_createSoundBuffer;
         (*audio_context)->DestroySoundBuffer = &openal_destroySoundBuffer;
 
-        return 0;
+        result = 0;
     } while(0);
 
-    // ERRQUIT
-    if (*audio_context) {
-        FREE(*audio_context);
+    if (result) {
+        if (ctx) {
+            AudioContext_s *ctxPtr = malloc(sizeof(AudioContext_s));
+            ctxPtr->_internal = ctx;
+            openal_systemShutdown(&ctxPtr);
+        }
+        assert (*audio_context == NULL);
+        LOG("OpenAL sound output disabled");
     }
 
-    return -1;
-}
-
-static long openal_systemShutdown(INOUT AudioContext_s **audio_context) {
-    assert(*audio_context != NULL);
-
-    ALCcontext *ctx = (ALCcontext*) (*audio_context)->_internal;
-    assert(ctx != NULL);
-    (*audio_context)->_internal = NULL;
-    FREE(*audio_context);
-
-    CloseAL();
-
-    return 0;
+    return result;
 }
 
 static long openal_systemPause(void) {
