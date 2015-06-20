@@ -326,17 +326,9 @@ static long ALUnlockBuffer(AudioBuffer_s *_this, unsigned long audio_bytes) {
             break;
         }
 
-        {
-            bool queued_buffers_count = 0;
-            ALPlayBuf *node = voice->queued_buffers;
-            while (node) {
-                ++queued_buffers_count;
-                node = node->next;
-            }
-            if (queued_buffers_count >= OPENAL_NUM_BUFFERS) {
-                //LOG("no free audio buffers"); // keep accumulating ...
-                break;
-            }
+        if (voice->avail_buffers == NULL) {
+            LOG("no free audio buffers"); // keep accumulating ...
+            break;
         }
 
         // Submit working buffer to OpenAL
