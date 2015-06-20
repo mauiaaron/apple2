@@ -67,9 +67,6 @@ static ALVoices *voices = NULL;
 
 static AudioBackend_s openal_audio_backend = { 0 };
 
-static long OpenALCreateSoundBuffer(const AudioParams_s *params, INOUT AudioBuffer_s **soundbuf_struct, const AudioContext_s *audio_context);
-static long OpenALDestroySoundBuffer(INOUT AudioBuffer_s **soundbuf_struct);
-
 // ----------------------------------------------------------------------------
 // uthash of OpenAL buffers
 
@@ -137,93 +134,6 @@ static void PlaylistDequeue(ALVoice *voice, ALPlayBuf *node) {
         LOG("\t(bufid : %u)", tmp->bufid);
     }
 #endif
-}
-
-// ----------------------------------------------------------------------------
-
-static long openal_systemSetup(INOUT AudioContext_s **audio_context) {
-    assert(*audio_context == NULL);
-    assert(voices == NULL);
-
-    ALCcontext *ctx = NULL;
-
-    do {
-
-        if ((ctx = InitAL()) == NULL) {
-            ERRLOG("OOPS, OpenAL initialize failed");
-            break;
-        }
-
-        if (alIsExtensionPresent("AL_SOFT_buffer_samples")) {
-            LOG("AL_SOFT_buffer_samples supported, good!");
-        } else {
-            LOG("WARNING - AL_SOFT_buffer_samples extension not supported... Proceeding anyway...");
-        }
-
-        if ((*audio_context = malloc(sizeof(AudioContext_s))) == NULL) {
-            ERRLOG("OOPS, Not enough memory");
-            break;
-        }
-
-        (*audio_context)->_internal = ctx;
-        (*audio_context)->CreateSoundBuffer = &OpenALCreateSoundBuffer;
-        (*audio_context)->DestroySoundBuffer = &OpenALDestroySoundBuffer;
-
-        return 0;
-    } while(0);
-
-    // ERRQUIT
-    if (*audio_context) {
-        FREE(*audio_context);
-    }
-
-    return -1;
-}
-
-static long openal_systemShutdown(INOUT AudioContext_s **audio_context) {
-    assert(*audio_context != NULL);
-
-    ALCcontext *ctx = (ALCcontext*) (*audio_context)->_internal;
-    assert(ctx != NULL);
-    (*audio_context)->_internal = NULL;
-    FREE(*audio_context);
-
-    CloseAL();
-
-    return 0;
-}
-
-// pause all audio
-static long openal_systemPause(void) {
-    ALVoices *vnode = NULL;
-    ALVoices *tmp = NULL;
-    long err = 0;
-
-    HASH_ITER(hh, voices, vnode, tmp) {
-        alSourcePause(vnode->source);
-        err = alGetError();
-        if (err != AL_NO_ERROR) {
-            ERRLOG("OOPS, Failed to pause source : 0x%08lx", err);
-        }
-    }
-
-    return 0;
-}
-
-static long openal_systemResume(void) {
-    ALVoices *vnode = NULL;
-    ALVoices *tmp = NULL;
-    long err = 0;
-
-    HASH_ITER(hh, voices, vnode, tmp) {
-        alSourcePlay(vnode->source);
-        err = alGetError();
-        if (err != AL_NO_ERROR) {
-            ERRLOG("OOPS, Failed to pause source : 0x%08lx", err);
-        }
-    }
-
-    return 0;
 }
 
 // ----------------------------------------------------------------------------
@@ -614,6 +524,29 @@ static long ALGetStatus(AudioBuffer_s *_this, OUTPARM unsigned long *status) {
 
 // ----------------------------------------------------------------------------
 
+static long OpenALDestroySoundBuffer(INOUT AudioBuffer_s **soundbuf_struct) {
+    if (!*soundbuf_struct) {
+        // already dealloced
+        return 0;
+    }
+
+    LOG("OpenALDestroySoundBuffer ...");
+    ALVoice *voice = (ALVoice *)((*soundbuf_struct)->_internal);
+    ALint source = voice->source;
+
+    DeleteVoice(voice);
+
+    ALVoices *vnode = NULL;
+    HASH_FIND_INT(voices, &source, vnode);
+    if (vnode) {
+        HASH_DEL(voices, vnode);
+        FREE(vnode);
+    }
+
+    FREE(*soundbuf_struct);
+    return 0;
+}
+
 static long OpenALCreateSoundBuffer(const AudioParams_s *params, INOUT AudioBuffer_s **soundbuf_struct, const AudioContext_s *audio_context) {
     LOG("OpenALCreateSoundBuffer ...");
     assert(*soundbuf_struct == NULL);
@@ -666,26 +599,89 @@ static long OpenALCreateSoundBuffer(const AudioParams_s *params, INOUT AudioBuff
     return -1;
 }
 
-static long OpenALDestroySoundBuffer(INOUT AudioBuffer_s **soundbuf_struct) {
-    if (!*soundbuf_struct) {
-        // already dealloced
+// ----------------------------------------------------------------------------
+
+static long openal_systemSetup(INOUT AudioContext_s **audio_context) {
+    assert(*audio_context == NULL);
+    assert(voices == NULL);
+
+    ALCcontext *ctx = NULL;
+
+    do {
+
+        if ((ctx = InitAL()) == NULL) {
+            ERRLOG("OOPS, OpenAL initialize failed");
+            break;
+        }
+
+        if (alIsExtensionPresent("AL_SOFT_buffer_samples")) {
+            LOG("AL_SOFT_buffer_samples supported, good!");
+        } else {
+            LOG("WARNING - AL_SOFT_buffer_samples extension not supported... Proceeding anyway...");
+        }
+
+        if ((*audio_context = malloc(sizeof(AudioContext_s))) == NULL) {
+            ERRLOG("OOPS, Not enough memory");
+            break;
+        }
+
+        (*audio_context)->_internal = ctx;
+        (*audio_context)->CreateSoundBuffer = &OpenALCreateSoundBuffer;
+        (*audio_context)->DestroySoundBuffer = &OpenALDestroySoundBuffer;
+
         return 0;
+    } while(0);
+
+    // ERRQUIT
+    if (*audio_context) {
+        FREE(*audio_context);
     }
 
-    LOG("OpenALDestroySoundBuffer ...");
-    ALVoice *voice = (ALVoice *)((*soundbuf_struct)->_internal);
-    ALint source = voice->source;
+    return -1;
+}
 
-    DeleteVoice(voice);
+static long openal_systemShutdown(INOUT AudioContext_s **audio_context) {
+    assert(*audio_context != NULL);
 
+    ALCcontext *ctx = (ALCcontext*) (*audio_context)->_internal;
+    assert(ctx != NULL);
+    (*audio_context)->_internal = NULL;
+    FREE(*audio_context);
+
+    CloseAL();
+
+    return 0;
+}
+
+static long openal_systemPause(void) {
     ALVoices *vnode = NULL;
-    HASH_FIND_INT(voices, &source, vnode);
-    if (vnode) {
-        HASH_DEL(voices, vnode);
-        FREE(vnode);
+    ALVoices *tmp = NULL;
+    long err = 0;
+
+    HASH_ITER(hh, voices, vnode, tmp) {
+        alSourcePause(vnode->source);
+        err = alGetError();
+        if (err != AL_NO_ERROR) {
+            ERRLOG("OOPS, Failed to pause source : 0x%08lx", err);
+        }
     }
 
-    FREE(*soundbuf_struct);
+    return 0;
+}
+
+static long openal_systemResume(void) {
+    ALVoices *vnode = NULL;
+    ALVoices *tmp = NULL;
+    long err = 0;
+
+    HASH_ITER(hh, voices, vnode, tmp) {
+        alSourcePlay(vnode->source);
+        err = alGetError();
+        if (err != AL_NO_ERROR) {
+            ERRLOG("OOPS, Failed to pause source : 0x%08lx", err);
+        }
+    }
+
     return 0;
 }
 
