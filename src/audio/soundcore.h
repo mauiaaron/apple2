@@ -32,16 +32,16 @@ typedef struct AudioBuffer_s {
     PRIVATE void *_internal;
 
     // Get current number of queued bytes
-    long (*GetCurrentPosition)(struct AudioBuffer_s *_this, unsigned long *bytes_queued);
+    long (*GetCurrentPosition)(struct AudioBuffer_s *_this, OUTPARM unsigned long *bytes_queued);
 
     // This method obtains a valid write pointer to the sound buffer's audio data
-    long (*Lock)(struct AudioBuffer_s *_this, unsigned long write_bytes, INOUT int16_t **audio_ptr, INOUT unsigned long *audio_bytes);
+    long (*Lock)(struct AudioBuffer_s *_this, unsigned long write_bytes, INOUT int16_t **audio_ptr, OUTPARM unsigned long *audio_bytes);
 
     // This method releases a locked sound buffer.
     long (*Unlock)(struct AudioBuffer_s *_this, unsigned long audio_bytes);
 
     // Get status (playing or not)
-    long (*GetStatus)(struct AudioBuffer_s *_this, unsigned long *status);
+    long (*GetStatus)(struct AudioBuffer_s *_this, OUTPARM unsigned long *status);
 
     // Mockingboard-specific buffer replay
     long (*UnlockStaticBuffer)(struct AudioBuffer_s *_this, unsigned long audio_bytes);
