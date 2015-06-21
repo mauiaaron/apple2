@@ -44,7 +44,8 @@ VIDEO_SRC = \
 
 AUDIO_SRC = \
 	src/audio/soundcore.c src/audio/soundcore-openal.c src/audio/speaker.c \
-	src/audio/alhelpers.c src/audio/mockingboard.c src/audio/AY8910.c
+	src/audio/playqueue.c src/audio/alhelpers.c src/audio/mockingboard.c \
+	src/audio/AY8910.c
 
 META_SRC = \
 	src/meta/debug.l src/meta/debugger.c src/meta/opcodes.c \
