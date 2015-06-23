@@ -942,6 +942,8 @@ __attribute__((constructor(CTOR_PRIORITY_EARLY)))
 static void _init_xvideo(void) {
     LOG("Initializing X11 renderer");
 
+    assert((video_backend == NULL) && "there can only be one!");
+
     xvideo_backend.init      = &xdriver_init;
     xvideo_backend.main_loop = &xdriver_main_loop;
     xvideo_backend.reshape   = &xdriver_reshape;

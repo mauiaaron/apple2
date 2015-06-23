@@ -893,6 +893,8 @@ __attribute__((constructor(CTOR_PRIORITY_EARLY)))
 static void _init_glvideo(void) {
     LOG("Initializing OpenGL renderer");
 
+    assert((video_backend == NULL) && "there can only be one!");
+
     glvideo_backend.init      = &gldriver_init;
     glvideo_backend.main_loop = &gldriver_main_loop;
     glvideo_backend.reshape   = &gldriver_reshape;
