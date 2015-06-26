@@ -308,15 +308,22 @@ void speaker_destroy(void) {
 
 void speaker_init(void) {
     long err = audio_createSoundBuffer(&speakerBuffer, SOUNDCORE_BUFFER_SIZE, SPKR_SAMPLE_RATE, 1);
-    assert(!err);
-    _speaker_init_timing();
+    if (!err) {
+        _speaker_init_timing();
+    }
 }
 
 void speaker_reset(void) {
-    _speaker_init_timing();
+    if (audio_isAvailable) {
+        _speaker_init_timing();
+    }
 }
 
 void speaker_flush(void) {
+    if (!audio_isAvailable) {
+        return;
+    }
+
     assert(pthread_self() == cpu_thread_id);
 
     if (is_fullspeed) {
@@ -398,7 +405,9 @@ GLUE_C_READ(speaker_toggle)
         is_fullspeed = false;
     }
 
-    _speaker_update(/*toggled:true*/);
+    if (audio_isAvailable) {
+        _speaker_update(/*toggled:true*/);
+    }
 
     if (!is_fullspeed) {
         if (speaker_data) {

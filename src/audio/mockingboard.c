@@ -87,7 +87,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include "common.h"
 #ifdef APPLE2IX
-#       ifdef  __linux
+#       if defined(__linux) && !defined(ANDROID)
 #       include <sys/io.h>
 #       endif
 
@@ -302,7 +302,7 @@ pthread_t CreateThread(void* unused_lpThreadAttributes, int unused_dwStackSize, 
 bool SetThreadPriority(pthread_t thread, int unused_nPriority)
 {
     // assuming time critical ...
-#if defined(__APPLE__)
+#if defined(__APPLE__) || defined(ANDROID)
 #warning possible FIXME possible TODO : set thread priority in Darwin/Mach ?
 #else
     int policy = sched_getscheduler(getpid());
@@ -327,7 +327,7 @@ bool SetThreadPriority(pthread_t thread, int unused_nPriority)
 
 bool GetExitCodeThread(pthread_t thread, unsigned long *lpExitCode)
 {
-#if defined(__APPLE__)
+#if defined(__APPLE__) || defined(ANDROID)
     int err = 0;
     if ( (err = pthread_join(thread, NULL)) ) {
         ERRLOG("OOPS pthread_join");
@@ -893,6 +893,10 @@ static void Votrax_Write(uint8_t nDevice, uint8_t nValue)
 static void MB_Update()
 {
 #ifdef APPLE2IX
+    if (!audio_isAvailable) {
+        return;
+    }
+
         static int nNumSamplesError = 0;
         if (!MockingboardVoice->bActive || !g_bMB_Active)
         {

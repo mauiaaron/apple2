@@ -2,7 +2,7 @@
 
 package_id="org.deadc0de.apple2ix"
 apple2_src_path=apple2ix-src
-glue_srcs="$apple2_src_path/disk.c $apple2_src_path/misc.c $apple2_src_path/display.c $apple2_src_path/vm.c $apple2_src_path/cpu-supp.c"
+glue_srcs="$apple2_src_path/disk.c $apple2_src_path/misc.c $apple2_src_path/display.c $apple2_src_path/vm.c $apple2_src_path/cpu-supp.c $apple2_src_path/audio/speaker.c $apple2_src_path/audio/mockingboard.c"
 do_load=0
 do_debug=0
 
@@ -90,7 +90,7 @@ else
     ln -s apple2ix.mk Android.mk
 fi
 
-ndk-build V=1 NDK_DEBUG=1
+ndk-build V=1 NDK_DEBUG=1 #NDK_TOOLCHAIN_VERSION=clang
 #ndk-build V=1 NDK_DEBUG=1 && \
 #    ant -f ../build.xml debug
 

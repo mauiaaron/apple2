@@ -40,6 +40,11 @@ long audio_createSoundBuffer(INOUT AudioBuffer_s **pVoice, unsigned long dwBuffe
 
     long err = 0;
     do {
+        if (!audioContext) {
+            ERRLOG("Cannot create sound buffer, no context");
+            err = -1;
+            break;
+        }
         err = audioContext->CreateSoundBuffer(&params, pVoice, audioContext);
         if (err) {
             break;
@@ -50,7 +55,9 @@ long audio_createSoundBuffer(INOUT AudioBuffer_s **pVoice, unsigned long dwBuffe
 }
 
 void audio_destroySoundBuffer(INOUT AudioBuffer_s **audioBuffer) {
-    audioContext->DestroySoundBuffer(audioBuffer);
+    if (audioContext) {
+        audioContext->DestroySoundBuffer(audioBuffer);
+    }
 }
 
 bool audio_init(void) {
