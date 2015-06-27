@@ -35,7 +35,7 @@
 #define KBD_OBJ_H 1.5
 
 HUD_CLASS(GLModelHUDKeyboard,
-    char *pixelsAlt; // alternate color pixels
+    uint8_t *pixelsAlt; // alternate color pixels
 );
 
 static bool isAvailable = false; // Were there any OpenGL/memory errors on gltouchkbd initialization?
