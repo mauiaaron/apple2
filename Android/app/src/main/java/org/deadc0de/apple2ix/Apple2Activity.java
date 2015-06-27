@@ -157,7 +157,7 @@ public class Apple2Activity extends Activity {
                     .build());
             StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder()
                     .detectLeakedSqlLiteObjects()
-                    .detectLeakedClosableObjects()
+                    /*.detectLeakedClosableObjects()*/
                     .penaltyLog()
                     .penaltyDeath()
                     .build());
