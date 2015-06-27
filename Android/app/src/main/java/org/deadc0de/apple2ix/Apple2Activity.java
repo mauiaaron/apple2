@@ -274,6 +274,9 @@ public class Apple2Activity extends Activity {
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if ((keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) || (keyCode == KeyEvent.KEYCODE_VOLUME_MUTE) || (keyCode == KeyEvent.KEYCODE_VOLUME_UP)) {
+            return false;
+        }
         nativeOnKeyDown(keyCode, event.getMetaState());
         return true;
     }
@@ -297,7 +300,7 @@ public class Apple2Activity extends Activity {
             mView.showMainMenu();
             return true;
         } else if ((keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) || (keyCode == KeyEvent.KEYCODE_VOLUME_MUTE) || (keyCode == KeyEvent.KEYCODE_VOLUME_UP)) {
-            return super.onKeyUp(keyCode, event);
+            return false;
         } else {
             nativeOnKeyUp(keyCode, event.getMetaState());
             return true;
