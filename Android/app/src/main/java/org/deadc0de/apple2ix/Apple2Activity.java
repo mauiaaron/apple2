@@ -49,6 +49,10 @@ public class Apple2Activity extends Activity {
     private int mWidth = 0;
     private int mHeight = 0;
 
+    private int mSampleRate = 0;
+    private int mMonoBufferSize = 0;
+    private int mStereoBufferSize = 0;
+
     private float[] mXCoords = new float[MAX_FINGERS];
     private float[] mYCoords = new float[MAX_FINGERS];
 
@@ -56,7 +60,7 @@ public class Apple2Activity extends Activity {
         System.loadLibrary("apple2ix");
     }
 
-    private native void nativeOnCreate(String dataDir);
+    private native void nativeOnCreate(String dataDir, int sampleRate, int monoBufferSize, int stereoBufferSize);
     private native void nativeGraphicsInitialized(int width, int height);
     private native void nativeGraphicsChanged(int width, int height);
     private native void nativeOnKeyDown(int keyCode, int metaState);
@@ -182,6 +186,15 @@ public class Apple2Activity extends Activity {
                     traceBuffer.append("\n");
                     traceBuffer.append(Build.DEVICE);
                     traceBuffer.append("\n");
+                    traceBuffer.append("Device sample rate:");
+                    traceBuffer.append(mSampleRate);
+                    traceBuffer.append("\n");
+                    traceBuffer.append("Device mono buffer size:");
+                    traceBuffer.append(mMonoBufferSize);
+                    traceBuffer.append("\n");
+                    traceBuffer.append("Device stereo buffer size:");
+                    traceBuffer.append(mStereoBufferSize);
+                    traceBuffer.append("\n");
 
                     // now append the actual stack trace
                     traceBuffer.append(t.getClass().getName());
@@ -208,11 +221,22 @@ public class Apple2Activity extends Activity {
         Log.e(TAG, "onCreate()");
 
         mDataDir = firstTimeInitialization();
-        nativeOnCreate(mDataDir);
+
+        // get device audio parameters for native OpenSLES
+        mSampleRate = DevicePropertyCalculator.getRecommendedSampleRate(this);
+        mMonoBufferSize = DevicePropertyCalculator.getRecommendedBufferSize(this, /*isStereo:*/false);
+        mStereoBufferSize = DevicePropertyCalculator.getRecommendedBufferSize(this, /*isStereo:*/true);
+        Log.d(TAG, "Device sampleRate:"+mSampleRate+" mono bufferSize:"+mMonoBufferSize+" stereo bufferSize:"+mStereoBufferSize);
+
+        nativeOnCreate(mDataDir, mSampleRate, mMonoBufferSize, mStereoBufferSize);
 
         mView = new Apple2View(this);
         setContentView(mView);
 
+        // Another Android Annoyance ...
+        // Even though we no longer use the system soft keyboard (which would definitely trigger width/height changes to our OpenGL canvas),
+        // we still need to listen to dimension changes, because it seems on some janky devices you have an incorrect width/height set when
+        // the initial OpenGL onSurfaceChanged() callback occurs.  For now, include this defensive coding...
         mView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
             public void onGlobalLayout() {
                 Rect rect = new Rect();
@@ -225,7 +249,6 @@ public class Apple2Activity extends Activity {
                     w = h;
                     h = w_;
                 }
-                // I actually think this whole observer is now spurious ... but it's triggering SEGFAULT ... should investigate ...
                 nativeGraphicsChanged(w, h);
             }
         });

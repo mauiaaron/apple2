@@ -14,6 +14,10 @@
 
 #include <jni.h>
 
+unsigned long android_deviceSampleRateHz = 0;
+unsigned long android_monoBufferSize = 0;
+unsigned long android_stereoBufferSize = 0;
+
 enum {
     ANDROID_ACTION_DOWN = 0x0,
     ANDROID_ACTION_UP = 0x1,
@@ -81,7 +85,7 @@ static void _nativeRequestsShowMainMenu(void) {
 // ----------------------------------------------------------------------------
 // JNI functions
 
-void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnCreate(JNIEnv *env, jobject obj, jstring j_dataDir) {
+void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnCreate(JNIEnv *env, jobject obj, jstring j_dataDir, jint sampleRate, jint monoBufferSize, jint stereoBufferSize) {
     const char *dataDir = (*env)->GetStringUTFChars(env, j_dataDir, 0);
 
     // Android lifecycle can call onCreate() multiple times...
@@ -93,6 +97,10 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnCreate(JNIEnv *env, jobje
     data_dir = strdup(dataDir);
     (*env)->ReleaseStringUTFChars(env, j_dataDir, dataDir);
     LOG("nativeOnCreate(%s)...", data_dir);
+
+    android_deviceSampleRateHz = (unsigned long)sampleRate;
+    android_monoBufferSize = (unsigned long)monoBufferSize;
+    android_stereoBufferSize = (unsigned long)stereoBufferSize;
 
 #if TESTING
     _run_tests();

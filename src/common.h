@@ -96,6 +96,10 @@ static inline GLenum safeGLGetError(void) {
 #include "audio/mockingboard.h"
 #endif
 
+#ifdef ANDROID
+#include "../Android/jni/android_globals.h"
+#endif
+
 #define PATH_SEPARATOR "/" // =P
 
 #if !defined(MIN)

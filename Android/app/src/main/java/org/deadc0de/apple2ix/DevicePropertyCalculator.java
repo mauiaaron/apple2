@@ -108,7 +108,7 @@ public final class DevicePropertyCalculator
      * @param aContext {Context}
      * @return {int}
      */
-    public static int getRecommendedBufferSize( Context aContext )
+    public static int getRecommendedBufferSize( Context aContext, boolean isStereo)
     {
         // prepare Native Audio engine
         String BS_CHECK = null;
@@ -121,14 +121,14 @@ public final class DevicePropertyCalculator
             BS_CHECK = am.getProperty( AudioManager.PROPERTY_OUTPUT_FRAMES_PER_BUFFER );
         }
         return ( BS_CHECK != null ) ? Integer.parseInt( BS_CHECK ) : AudioTrack.getMinBufferSize( getRecommendedSampleRate( aContext ),
-                                                                                                  AudioFormat.CHANNEL_OUT_MONO,
+                                                                                                  isStereo ? AudioFormat.CHANNEL_OUT_STEREO : AudioFormat.CHANNEL_OUT_MONO,
                                                                                                   AudioFormat.ENCODING_PCM_16BIT );
     }
 
-    public static int getMinimumBufferSize( Context aContext )
+    public static int getMinimumBufferSize( Context aContext, boolean isStereo )
     {
         // minimum buffer size we allow is the recommendation divided by four
-        int min = DevicePropertyCalculator.getRecommendedBufferSize( aContext ) / 4;
+        int min = DevicePropertyCalculator.getRecommendedBufferSize( aContext, isStereo ) / 4;
 
         // however, we'd like to supply tha rea of 64 samples per buffer as an option
         while ( min > 128 ) min /= 2;   // 128 as we do a greater than check
@@ -140,9 +140,9 @@ public final class DevicePropertyCalculator
         return min;
     }
 
-    public static int getMaximumBufferSize( Context aContext )
+    public static int getMaximumBufferSize( Context aContext, boolean isStereo )
     {
-        int max = DevicePropertyCalculator.getRecommendedBufferSize( aContext ) * 8;
+        int max = DevicePropertyCalculator.getRecommendedBufferSize( aContext, isStereo ) * 8;
 
         // nothing TOO extravagant... 8192 should be enough...
         while ( max > 10000 )
