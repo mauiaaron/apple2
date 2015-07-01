@@ -279,9 +279,6 @@ static long ALUnlockBuffer(AudioBuffer_s *_this, unsigned long audio_bytes) {
         // Submit working buffer to OpenAL
 
         err = _ALSubmitBufferToOpenAL(voice);
-        if (err) {
-            break;
-        }
     } while (0);
 
     return err;

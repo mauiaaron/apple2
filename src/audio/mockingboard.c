@@ -225,8 +225,7 @@ static uint8_t g_nPhasorMode = 0;	// 0=Mockingboard emulation, 1=Phasor native
 
 #ifdef APPLE2IX
 #define MB_CHANNELS 2
-// NOTE - SAMPLE SIZE CHANGED : /2 for SPEAKER -- *2 here
-#define MB_BUF_SIZE MAX_SAMPLES * 2 * MB_CHANNELS
+#define MB_BUF_SIZE MAX_SAMPLES * sizeof(int16_t) * MB_CHANNELS
 static const unsigned short g_nMB_NumChannels = MB_CHANNELS;
 
 static const unsigned long g_dwDSBufferSize = MB_BUF_SIZE;
