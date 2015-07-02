@@ -171,7 +171,7 @@ typedef struct
 
 
 // Support 2 MB's, each with 2x SY6522/AY8910 pairs.
-static SY6522_AY8910 g_MB[NUM_AY8910];
+static SY6522_AY8910 g_MB[NUM_AY8910] = { 0 };
 
 // Timer vars
 static unsigned long g_n6522TimerPeriod = 0;
@@ -190,7 +190,7 @@ static bool g_bStopPhoneme = false;
 static bool g_bVotraxPhoneme = false;
 
 #ifdef APPLE2IX
-static const unsigned long SAMPLE_RATE = SPKR_SAMPLE_RATE;
+static unsigned long SAMPLE_RATE = 0;
 #else
 static const unsigned long SAMPLE_RATE = 44100;	// Use a base freq so that DirectX (or sound h/w) doesn't have to up/down-sample
 #endif
@@ -225,10 +225,9 @@ static uint8_t g_nPhasorMode = 0;	// 0=Mockingboard emulation, 1=Phasor native
 
 #ifdef APPLE2IX
 #define MB_CHANNELS 2
-#define MB_BUF_SIZE MAX_SAMPLES * sizeof(int16_t) * MB_CHANNELS
-static const unsigned short g_nMB_NumChannels = MB_CHANNELS;
-
-static const unsigned long g_dwDSBufferSize = MB_BUF_SIZE;
+static unsigned long MB_BUF_SIZE = 0;
+static unsigned short g_nMB_NumChannels = MB_CHANNELS;
+static unsigned long g_dwDSBufferSize = 0;
 #else
 static const unsigned short g_nMB_NumChannels = 2;
 
@@ -239,7 +238,7 @@ static const int16_t nWaveDataMin = (int16_t)0x8000;
 static const int16_t nWaveDataMax = (int16_t)0x7FFF;
 
 #ifdef APPLE2IX
-static short g_nMixBuffer[MB_BUF_SIZE / sizeof(short)];
+static short *g_nMixBuffer = NULL;
 #else
 static short g_nMixBuffer[g_dwDSBufferSize / sizeof(short)];
 #endif
@@ -1132,12 +1131,14 @@ static void* SSI263Thread(void *lpParameter)
 static unsigned long SSI263Thread(void *lpParameter)
 #endif
 {
+        const unsigned long nsecWait = NANOSECONDS_PER_SECOND / audio_backend->systemSettings.sampleRateHz;
+        const struct timespec wait = { .tv_sec=0, .tv_nsec=nsecWait };
+
 	while(1)
 	{
 #ifdef APPLE2IX
             int err =0;
 
-            static struct timespec wait = { .tv_sec = 0, .tv_nsec=45351 }; // 22050Hz
             pthread_mutex_lock(&mockingboard_mutex);
             err = pthread_cond_timedwait(&mockingboard_cond, &mockingboard_mutex, &wait);
             if (err && (err != ETIMEDOUT))
@@ -1371,13 +1372,18 @@ static bool MB_DSInit()
 	if(!audio_isAvailable)
 		return false;
 
-	int hr = audio_createSoundBuffer(&MockingboardVoice, g_dwDSBufferSize, SAMPLE_RATE, 2);
+	int hr = audio_createSoundBuffer(&MockingboardVoice, 2);
 	LOG("MB_DSInit: DSGetSoundBuffer(), hr=0x%08X\n", (unsigned int)hr);
 	if(FAILED(hr))
 	{
 		LOG("MB: DSGetSoundBuffer failed (%08X)\n",(unsigned int)hr);
 		return false;
 	}
+
+        SAMPLE_RATE = audio_backend->systemSettings.sampleRateHz;
+        MB_BUF_SIZE = audio_backend->systemSettings.stereoBufferSizeSamples * audio_backend->systemSettings.bytesPerSample * MB_CHANNELS;
+        g_dwDSBufferSize = MB_BUF_SIZE;
+        g_nMixBuffer = malloc(MB_BUF_SIZE / audio_backend->systemSettings.bytesPerSample);
 
 #ifndef APPLE2IX
 	bool bRes = DSZeroVoiceBuffer(&MockingboardVoice, (char*)"MB", g_dwDSBufferSize);
@@ -1463,10 +1469,14 @@ static bool MB_DSInit()
 			bPause = false;
 		}
 
-		unsigned int nPhonemeByteLength = g_nPhonemeInfo[nPhoneme].nLength * sizeof(int16_t);
+		unsigned int nPhonemeByteLength = g_nPhonemeInfo[nPhoneme].nLength * audio_backend->systemSettings.bytesPerSample;
+                if (nPhonemeByteLength > audio_backend->systemSettings.monoBufferSizeSamples) {
+                    RELEASE_ERRLOG("!!!!!!!!!!!!!!!!!!!!! phoneme length > buffer size !!!!!!!!!!!!!!!!!!!!!");
+#warning ^^^^^^^^^^ require vigilence here around this change ... we used to be able to specify the exact buffer size ...
+                }
 
 		// NB. DSBCAPS_LOCSOFTWARE required for
-		hr = audio_createSoundBuffer(&SSI263Voice[i], nPhonemeByteLength, 22050, 1);
+		hr = audio_createSoundBuffer(&SSI263Voice[i], 1);
 		LOG("MB_DSInit: (%02d) DSGetSoundBuffer(), hr=0x%08X\n", i, (unsigned int)hr);
 		if(FAILED(hr))
 		{
@@ -1628,6 +1638,7 @@ static void MB_DSUninit()
 	}
 
 	//
+        FREE(g_nMixBuffer);
 
 #ifndef APPLE2IX
 	if(g_hSSI263Event[0])
@@ -1666,6 +1677,14 @@ void MB_Initialize()
 	{
 		memset(&g_MB,0,sizeof(g_MB));
 
+		g_bMBAvailable = MB_DSInit();
+                if (!g_bMBAvailable) {
+                    MockingboardVoice->bMute = true;
+                    g_SoundcardType = CT_Empty;
+                    return;
+                }
+
+
 		int i;
 		for(i=0; i<NUM_VOICES; i++)
                 {
@@ -1684,7 +1703,6 @@ void MB_Initialize()
 
 		//
 
-		g_bMBAvailable = MB_DSInit();
 		LOG("MB_Initialize: MB_DSInit(), g_bMBAvailable=%d\n", g_bMBAvailable);
 
 		MB_Reset();
@@ -1697,7 +1715,7 @@ void MB_Initialize()
 // NB. Called when /cycles_persec_target/ changes
 void MB_Reinitialize()
 {
-	AY8910_InitClock((int)cycles_persec_target);
+	AY8910_InitClock((int)cycles_persec_target, SAMPLE_RATE);
 }
 
 //-----------------------------------------------------------------------------
@@ -1936,7 +1954,7 @@ static uint8_t PhasorIO(uint16_t PC, uint16_t nAddr, uint8_t bWrite, uint8_t nVa
 
 	double fCLK = (nAddr & 4) ? CLK_6502*2 : CLK_6502;
 
-	AY8910_InitClock((int)fCLK);
+	AY8910_InitClock((int)fCLK, SAMPLE_RATE);
 
 	return MemReadFloatingBus();
 }

@@ -24,18 +24,12 @@ AudioBackend_s *audio_backend = NULL;
 
 //-----------------------------------------------------------------------------
 
-long audio_createSoundBuffer(INOUT AudioBuffer_s **pVoice, unsigned long dwBufferSize, unsigned long nSampleRate, int nChannels) {
-    AudioParams_s params = { 0 };
+long audio_createSoundBuffer(INOUT AudioBuffer_s **audioBuffer, unsigned long numChannels) {
 
-    params.nChannels = nChannels;
-    params.nSamplesPerSec = nSampleRate;
-    params.wBitsPerSample = 16;
-    params.nBlockAlign = (params.nChannels == 1) ? 2 : 4;
-    params.nAvgBytesPerSec = params.nBlockAlign * params.nSamplesPerSec;
-    params.dwBufferBytes = dwBufferSize;
+    AudioSettings_s *settings = &audio_backend->systemSettings;
 
-    if (*pVoice) {
-        audio_destroySoundBuffer(pVoice);
+    if (*audioBuffer) {
+        audio_destroySoundBuffer(audioBuffer);
     }
 
     long err = 0;
@@ -45,7 +39,7 @@ long audio_createSoundBuffer(INOUT AudioBuffer_s **pVoice, unsigned long dwBuffe
             err = -1;
             break;
         }
-        err = audioContext->CreateSoundBuffer(&params, pVoice, audioContext);
+        err = audioContext->CreateSoundBuffer(audioContext, numChannels, audioBuffer);
         if (err) {
             break;
         }
@@ -56,7 +50,7 @@ long audio_createSoundBuffer(INOUT AudioBuffer_s **pVoice, unsigned long dwBuffe
 
 void audio_destroySoundBuffer(INOUT AudioBuffer_s **audioBuffer) {
     if (audioContext) {
-        audioContext->DestroySoundBuffer(audioBuffer);
+        audioContext->DestroySoundBuffer(audioContext, audioBuffer);
     }
 }
 

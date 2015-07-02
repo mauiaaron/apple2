@@ -173,7 +173,7 @@ void sound_ay_init( CAY8910 *_this )
 #define HZ_COMMON_DENOMINATOR 25
 #endif
 
-void sound_init( CAY8910 *_this, const char *device )
+static void sound_init( CAY8910 *_this, const char *device, unsigned long nSampleRate )
 {
 //  static int first_init = 1;
 //  int f, ret;
@@ -228,7 +228,7 @@ void sound_init( CAY8910 *_this, const char *device )
 
 //  sound_generator_freq =
 //    settings_current.sound_hifi ? HIFI_FREQ : settings_current.sound_freq;
-  sound_generator_freq = SPKR_SAMPLE_RATE;
+  sound_generator_freq = nSampleRate;
   sound_generator_framesiz = sound_generator_freq / (int)hz;
 
 #if 0
@@ -1018,21 +1018,21 @@ void AY8910Update(int chip, int16_t** buffer, int nNumSamples)
 	sound_frame(&g_AY8910[chip]);
 }
 
-void AY8910_InitAll(int nClock, int nSampleRate)
+void AY8910_InitAll(int nClock, unsigned long nSampleRate)
 {
 	for (unsigned int i=0; i<MAX_8910; i++)
 	{
-		sound_init(&g_AY8910[i], NULL);	// Inits mainly static members (except ay_tick_incr)
+		sound_init(&g_AY8910[i], NULL, nSampleRate);	// Inits mainly static members (except ay_tick_incr)
 		sound_ay_init(&g_AY8910[i]);
 	}
 }
 
-void AY8910_InitClock(int nClock)
+void AY8910_InitClock(int nClock, unsigned long nSampleRate)
 {
 	SetCLK( (double)nClock );
 	for (unsigned int i=0; i<MAX_8910; i++)
 	{
-		sound_init(&g_AY8910[i], NULL);	// ay_tick_incr is dependent on AY_CLK
+		sound_init(&g_AY8910[i], NULL, nSampleRate);	// ay_tick_incr is dependent on AY_CLK
 	}
 }
 

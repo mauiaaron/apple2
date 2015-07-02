@@ -17,7 +17,6 @@
 #ifndef _SOUNDCORE_H_
 #define _SOUNDCORE_H_
 
-#define MAX_SAMPLES (8*1024)
 #define AUDIO_STATUS_PLAYING    0x00000001
 #define AUDIO_STATUS_NOTPLAYING 0x08000000
 
@@ -52,7 +51,7 @@ typedef struct AudioBuffer_s {
 /*
  * Creates a sound buffer object.
  */
-long audio_createSoundBuffer(INOUT AudioBuffer_s **audioBuffer, unsigned long bufferSize, unsigned long sampleRate, int numChannels);
+long audio_createSoundBuffer(INOUT AudioBuffer_s **audioBuffer, unsigned long numChannels);
 
 /*
  * Destroy and nullify sound buffer object.
@@ -82,27 +81,43 @@ void audio_resume(void);
 /*
  * Is the audio subsystem available?
  */
-extern bool audio_isAvailable;
+extern READONLY bool audio_isAvailable;
+
+typedef struct AudioSettings_s {
+
+    /*
+     * Native device sample rate
+     */
+    READONLY unsigned long sampleRateHz;
+
+    /*
+     * Native device bytes-per-sample (currently assuming 16bit == 2bytes)
+     */
+    READONLY unsigned long bytesPerSample;
+
+    /*
+     * Native mono min/ideal buffer size in samples
+     */
+    READONLY unsigned long monoBufferSizeSamples;
+
+    /*
+     * Native stereo min/ideal buffer size in samples
+     */
+    READONLY unsigned long stereoBufferSizeSamples;
+} AudioSettings_s;
 
 // ----------------------------------------------------------------------------
 // Private audio backend APIs
 
-typedef struct AudioParams_s {
-    uint16_t nChannels;
-    unsigned long nSamplesPerSec;
-    unsigned long nAvgBytesPerSec;
-    uint16_t nBlockAlign;
-    uint16_t wBitsPerSample;
-    unsigned long dwBufferBytes;
-} AudioParams_s;
-
 typedef struct AudioContext_s {
     PRIVATE void *_internal;
-    PRIVATE long (*CreateSoundBuffer)(const AudioParams_s *params, INOUT AudioBuffer_s **buffer, const struct AudioContext_s *sound_system);
-    PRIVATE long (*DestroySoundBuffer)(INOUT AudioBuffer_s **buffer);
+    PRIVATE long (*CreateSoundBuffer)(const struct AudioContext_s *sound_system, unsigned long numChannels, INOUT AudioBuffer_s **buffer);
+    PRIVATE long (*DestroySoundBuffer)(const struct AudioContext_s *sound_system, INOUT AudioBuffer_s **buffer);
 } AudioContext_s;
 
 typedef struct AudioBackend_s {
+
+    AudioSettings_s systemSettings;
 
     // basic backend functionality controlled by soundcore
     PRIVATE long (*setup)(INOUT AudioContext_s **audio_context);
@@ -114,6 +129,6 @@ typedef struct AudioBackend_s {
 } AudioBackend_s;
 
 // Audio backend registered at CTOR time
-PRIVATE extern AudioBackend_s *audio_backend;
+extern AudioBackend_s *audio_backend;
 
 #endif /* whole file */

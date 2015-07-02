@@ -64,7 +64,7 @@ typedef struct ALVoices {
 } ALVoices;
 
 static ALVoices *voices = NULL;
-static AudioBackend_s openal_audio_backend = { 0 };
+static AudioBackend_s openal_audio_backend = { { 0 } };
 
 // ----------------------------------------------------------------------------
 // AudioBuffer_s processing routines
@@ -348,7 +348,7 @@ static void _openal_destroyVoice(ALVoice *voice) {
     FREE(voice);
 }
 
-static ALVoice *_openal_createVoice(const AudioParams_s *params) {
+static ALVoice *_openal_createVoice(unsigned long numChannels) {
     ALVoice *voice = NULL;
 
     do {
@@ -405,17 +405,20 @@ static ALVoice *_openal_createVoice(const AudioParams_s *params) {
             break;
         }
 
-        voice->rate = (ALuint)params->nSamplesPerSec;
+        voice->rate = openal_audio_backend.systemSettings.sampleRateHz;
 
         // Emulator supports only mono and stereo
-        if (params->nChannels == 2) {
+        if (numChannels == 2) {
             voice->format = AL_FORMAT_STEREO16;
         } else {
             voice->format = AL_FORMAT_MONO16;
         }
 
         /* Allocate enough space for the temp buffer, given the format */
-        voice->buffersize = (ALsizei)params->dwBufferBytes;
+        assert(numChannels == 1 || numChannels == 2);
+        unsigned long maxSamples = openal_audio_backend.systemSettings.monoBufferSizeSamples * numChannels;
+        voice->buffersize = maxSamples * openal_audio_backend.systemSettings.bytesPerSample;
+
         voice->data = malloc(voice->buffersize);
         if (voice->data == NULL) {
             ERRLOG("OOPS, Error allocating %d bytes", voice->buffersize);
@@ -440,7 +443,7 @@ static ALVoice *_openal_createVoice(const AudioParams_s *params) {
 
 // ----------------------------------------------------------------------------
 
-static long openal_destroySoundBuffer(INOUT AudioBuffer_s **soundbuf_struct) {
+static long openal_destroySoundBuffer(const struct AudioContext_s *sound_system, INOUT AudioBuffer_s **soundbuf_struct) {
     if (!*soundbuf_struct) {
         // already dealloced
         return 0;
@@ -463,7 +466,7 @@ static long openal_destroySoundBuffer(INOUT AudioBuffer_s **soundbuf_struct) {
     return 0;
 }
 
-static long openal_createSoundBuffer(const AudioParams_s *params, INOUT AudioBuffer_s **soundbuf_struct, const AudioContext_s *audio_context) {
+static long openal_createSoundBuffer(const AudioContext_s *audio_context, unsigned long numChannels, INOUT AudioBuffer_s **soundbuf_struct) {
     LOG("openal_createSoundBuffer ...");
     assert(*soundbuf_struct == NULL);
 
@@ -474,7 +477,7 @@ static long openal_createSoundBuffer(const AudioParams_s *params, INOUT AudioBuf
         ALCcontext *ctx = (ALCcontext*)(audio_context->_internal);
         assert(ctx != NULL);
 
-        if ((voice = _openal_createVoice(params)) == NULL) {
+        if ((voice = _openal_createVoice(numChannels)) == NULL) {
             ERRLOG("OOPS, Cannot create new voice");
             break;
         }
@@ -507,7 +510,7 @@ static long openal_createSoundBuffer(const AudioParams_s *params, INOUT AudioBuf
     } while(0);
 
     if (*soundbuf_struct) {
-        openal_destroySoundBuffer(soundbuf_struct);
+        openal_destroySoundBuffer(audio_context, soundbuf_struct);
     } else if (voice) {
         _openal_destroyVoice(voice);
     }
@@ -537,6 +540,12 @@ static long openal_systemSetup(INOUT AudioContext_s **audio_context) {
 
     long result = -1;
     ALCcontext *ctx = NULL;
+
+    // 2015/06/29 these values seem to work well on Linux desktop ... no other OpenAL platform has been tested
+    openal_audio_backend.systemSettings.sampleRateHz = 22050;
+    openal_audio_backend.systemSettings.bytesPerSample = 2;
+    openal_audio_backend.systemSettings.monoBufferSizeSamples = (8*1024);
+    openal_audio_backend.systemSettings.stereoBufferSizeSamples = openal_audio_backend.systemSettings.monoBufferSizeSamples;
 
     do {
 

@@ -11,7 +11,7 @@
 
 /* Apple //e speaker support. Source inspired/derived from AppleWin.
  *
- *  - ~46 //e cycles per PC sample (played back at 22.050kHz) -- (CLK_6502/SPKR_SAMPLE_RATE)
+ *  - ~23 //e cycles per PC sample (played back at 44.100kHz)
  *
  * The soundcard output drives how much 6502 emulation is done in real-time.  If the soundcard buffer is running out of
  * sample-data, then more 6502 cycles need to be executed to top-up the buffer, and vice-versa.
@@ -22,24 +22,26 @@
 
 #include "common.h"
 
-#define DEBUG_SPEAKER (!defined(NDEBUG) && 0) // enable to print timing stats
+#define DEBUG_SPEAKER 0
 #if DEBUG_SPEAKER
 #   define SPEAKER_LOG(...) LOG(__VA_ARGS__)
 #else
 #   define SPEAKER_LOG(...)
 #endif
 
-#define MAX_REMAINDER_BUFFER (((CLK_6502_INT*(unsigned int)CPU_SCALE_FASTEST)/SPKR_SAMPLE_RATE)+1)
+static unsigned long bufferTotalSize = 0;
+static unsigned long bufferSizeIdealMin = 0;
+static unsigned long bufferSizeIdealMax = 0;
+static unsigned long sampleRateHz = 0;
 
-#define SOUNDCORE_BUFFER_SIZE (MAX_SAMPLES*sizeof(int16_t)*1/*mono*/)
-#define QUARTER_SIZE (SOUNDCORE_BUFFER_SIZE/4)
-#define IDEAL_MIN (SOUNDCORE_BUFFER_SIZE/4) // minimum goldilocks zone for samples-in-play
-#define IDEAL_MAX (SOUNDCORE_BUFFER_SIZE/2) // maximum goldilocks-zone for samples-in-play
 
-static int16_t samples_buffer[SPKR_SAMPLE_RATE * sizeof(int16_t)] = { 0 }; // holds max 1 second of samples
-static int16_t remainder_buffer[MAX_REMAINDER_BUFFER * sizeof(int16_t)] = { 0 }; // holds enough to create one sample (averaged)
+static bool speaker_isAvailable = false;
+
+static int16_t *samples_buffer = NULL; // holds max 1 second of samples
+static int16_t *remainder_buffer = NULL; // holds enough to create one sample (averaged)
 static unsigned int samples_buffer_idx = 0;
 static unsigned int remainder_buffer_size = 0;
+static unsigned long remainder_buffer_size_max = 0;
 static unsigned int remainder_buffer_idx = 0;
 
 static int16_t speaker_amplitude = SPKR_DATA_INIT;
@@ -77,14 +79,14 @@ static void _speaker_init_timing(void) {
     // 46.28 //e cycles for 22.05kHz sample rate
 
     // AppleWin NOTE : use integer value: Better for MJ Mahon's RT.SYNTH.DSK (integer multiples of 1.023MHz Clk)
-    cycles_per_sample = (unsigned int)(cycles_persec_target / (double)SPKR_SAMPLE_RATE);
+    cycles_per_sample = (unsigned int)(cycles_persec_target / (double)sampleRateHz);
 
     unsigned int last_remainder_buffer_size = remainder_buffer_size;
     remainder_buffer_size = (unsigned int)cycles_per_sample;
     if ((double)remainder_buffer_size != cycles_per_sample) {
         ++remainder_buffer_size;
     }
-    assert(remainder_buffer_size <= MAX_REMAINDER_BUFFER);
+    assert(remainder_buffer_size <= remainder_buffer_size_max);
 
     if (last_remainder_buffer_size == remainder_buffer_size) {
         // no change ... insure seamless remainder_buffer
@@ -148,7 +150,7 @@ static void _speaker_update(/*bool toggled*/) {
 
                 sample_mean /= (int)remainder_buffer_size;
 
-                if (samples_buffer_idx < SPKR_SAMPLE_RATE) {
+                if (samples_buffer_idx < sampleRateHz) {
                     samples_buffer[samples_buffer_idx++] = (int16_t)sample_mean;
                 }
             }
@@ -159,7 +161,7 @@ static void _speaker_update(/*bool toggled*/) {
         const unsigned long long cycles_remainder = (unsigned long long)((double)cycles_diff - (double)num_samples * cycles_per_sample);
 
         // populate samples_buffer with whole samples
-        while (num_samples && (samples_buffer_idx < SPKR_SAMPLE_RATE)) {
+        while (num_samples && (samples_buffer_idx < sampleRateHz)) {
             samples_buffer[samples_buffer_idx++] = speaker_data;
             if (speaker_going_silent && speaker_data) {
                 speaker_data -= speaker_silent_step;
@@ -182,8 +184,8 @@ static void _speaker_update(/*bool toggled*/) {
 #endif
         }
 
-        if (UNLIKELY(samples_buffer_idx >= SPKR_SAMPLE_RATE)) {
-            assert(samples_buffer_idx == SPKR_SAMPLE_RATE && "should be at exactly the end, no further");
+        if (UNLIKELY(samples_buffer_idx >= sampleRateHz)) {
+            assert(samples_buffer_idx == sampleRateHz && "should be at exactly the end, no further");
             ERRLOG("OOPS, overflow in speaker samples buffer");
         }
     }
@@ -207,13 +209,13 @@ static void _submit_samples_buffer_fullspeed(void) {
     if (err) {
         return;
     }
-    assert(bytes_queued <= SOUNDCORE_BUFFER_SIZE);
+    assert(bytes_queued <= bufferTotalSize);
 
-    if (bytes_queued >= IDEAL_MAX) {
+    if (bytes_queued >= bufferSizeIdealMax) {
         return;
     }
 
-    unsigned int num_samples_pad = (IDEAL_MAX - bytes_queued) / sizeof(int16_t);
+    unsigned int num_samples_pad = (bufferSizeIdealMax - bytes_queued) / sizeof(int16_t);
     if (num_samples_pad == 0) {
         return;
     }
@@ -245,15 +247,15 @@ static unsigned int _submit_samples_buffer(const unsigned int num_samples) {
     if (err) {
         return num_samples;
     }
-    assert(bytes_queued <= SOUNDCORE_BUFFER_SIZE);
+    assert(bytes_queued <= bufferTotalSize);
 
     //
     // calculate CPU cycles feedback adjustment to prevent system audio buffer under/overflow
     //
 
-    if (bytes_queued < IDEAL_MIN) {
+    if (bytes_queued < bufferSizeIdealMin) {
         samples_adjustment_counter += SOUNDCORE_ERROR_INC; // need moar data
-    } else if (bytes_queued > IDEAL_MAX) {
+    } else if (bytes_queued > bufferSizeIdealMax) {
         samples_adjustment_counter -= SOUNDCORE_ERROR_INC; // need less data
     } else {
         samples_adjustment_counter = 0; // Acceptable amount of data in buffer
@@ -267,13 +269,13 @@ static unsigned int _submit_samples_buffer(const unsigned int num_samples) {
 
     cycles_speaker_feedback = (int)(samples_adjustment_counter * cycles_per_sample);
 
-    //SPEAKER_LOG("feedback:%d samples_adjustment_counter:%d", cycles_speaker_feedback, samples_adjustment_counter);
+    //SPEAKER_LOG("feedback:%d samples_adjustment_counter:%d bytes_queued:%lu", cycles_speaker_feedback, samples_adjustment_counter, bytes_queued);
 
     //
     // copy samples to audio system backend
     //
 
-    const unsigned int bytes_free = SOUNDCORE_BUFFER_SIZE - bytes_queued;
+    const unsigned int bytes_free = bufferTotalSize - bytes_queued;
     unsigned int num_samples_to_use = num_samples;
 
     if (num_samples_to_use * sizeof(int16_t) > bytes_free) {
@@ -303,24 +305,64 @@ static unsigned int _submit_samples_buffer(const unsigned int num_samples) {
 // speaker public API functions
 
 void speaker_destroy(void) {
+    speaker_isAvailable = false;
     audio_destroySoundBuffer(&speakerBuffer);
+    FREE(samples_buffer);
+    FREE(remainder_buffer);
 }
 
 void speaker_init(void) {
-    long err = audio_createSoundBuffer(&speakerBuffer, SOUNDCORE_BUFFER_SIZE, SPKR_SAMPLE_RATE, 1);
-    if (!err) {
+    long err = 0;
+    speaker_isAvailable = false;
+    do {
+        err = audio_createSoundBuffer(&speakerBuffer, 1);
+        if (err) {
+            break;
+        }
+
+        bufferTotalSize = audio_backend->systemSettings.monoBufferSizeSamples * audio_backend->systemSettings.bytesPerSample;
+        bufferSizeIdealMin = bufferTotalSize/4;
+        bufferSizeIdealMax = bufferTotalSize/2;
+        sampleRateHz = audio_backend->systemSettings.sampleRateHz;
+
+        remainder_buffer_size_max = ((CLK_6502_INT*(unsigned long)CPU_SCALE_FASTEST)/sampleRateHz)+1;
+
+        samples_buffer = malloc(sampleRateHz * sizeof(int16_t));
+        if (!samples_buffer) {
+            err = -1;
+            break;
+        }
+
+        remainder_buffer = malloc(remainder_buffer_size_max * sizeof(int16_t));
+        if (!remainder_buffer) {
+            err = -1;
+            break;
+        }
+
         _speaker_init_timing();
+
+        speaker_isAvailable = true;
+    } while (0);
+
+    if (err) {
+        LOG("Error creating speaker subsystem, regular sound will be disabled!");
+        if (samples_buffer) {
+            FREE(samples_buffer);
+        }
+        if (remainder_buffer) {
+            FREE(remainder_buffer);
+        }
     }
 }
 
 void speaker_reset(void) {
-    if (audio_isAvailable) {
+    if (speaker_isAvailable) {
         _speaker_init_timing();
     }
 }
 
 void speaker_flush(void) {
-    if (!audio_isAvailable) {
+    if (!speaker_isAvailable) {
         return;
     }
 
@@ -345,7 +387,7 @@ void speaker_flush(void) {
                 speaker_recently_active = false;
                 speaker_going_silent = false;
                 speaker_data = 0;
-            } else if ((speaker_data == speaker_amplitude) && (cycles_count_total - cycles_quiet_time > cycles_diff)) {
+            } else if ((speaker_data != 0) && (cycles_count_total - cycles_quiet_time > cycles_diff)) {
                 // After 0.1sec of //e cycles time start reducing samples to zero (if they aren't there already).  This
                 // process attempts to mask the extraneous clicks when freezing/restarting emulation (GUI access) and
                 // glitching from the audio system backend
@@ -377,7 +419,7 @@ bool speaker_is_active(void) {
 }
 
 void speaker_set_volume(int16_t amplitude) {
-    speaker_amplitude = (amplitude/4);
+    speaker_amplitude = (amplitude/2);
 }
 
 double speaker_cycles_per_sample(void) {
@@ -405,7 +447,7 @@ GLUE_C_READ(speaker_toggle)
         is_fullspeed = false;
     }
 
-    if (audio_isAvailable) {
+    if (speaker_isAvailable) {
         _speaker_update(/*toggled:true*/);
     }
 

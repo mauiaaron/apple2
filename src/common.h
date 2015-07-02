@@ -65,6 +65,7 @@
 #define INOUT
 #define PRIVATE
 #define PUBLIC
+#define READONLY
 
 #define CTOR_PRIORITY_FIRST  101
 #define CTOR_PRIORITY_EARLY  111

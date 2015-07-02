@@ -22,7 +22,7 @@
 #include "common.h"
 
 #if !defined(NANOSECONDS_PER_SECOND)
-#define NANOSECONDS_PER_SECOND 1000000000
+#define NANOSECONDS_PER_SECOND 1000000000UL
 #endif
 
 // timing values cribbed from AppleWin ... reference: Sather's _Understanding the Apple IIe_
