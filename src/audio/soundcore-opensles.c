@@ -20,7 +20,6 @@
 #   error FIXME TODO this currently uses Android BufferQueue extensions...
 #endif
 
-#include "playqueue.h"
 #include "uthash.h"
 
 #define DEBUG_OPENSL 0
@@ -33,37 +32,33 @@
 #define OPENSL_NUM_BUFFERS 4
 
 typedef struct SLVoice {
-    unsigned int voiceId;
+    unsigned long voiceId;
+
     SLObjectItf bqPlayerObject;
     SLPlayItf bqPlayerPlay;
     SLAndroidSimpleBufferQueueItf bqPlayerBufferQueue;
     SLMuteSoloItf bqPlayerMuteSolo;
     SLVolumeItf bqPlayerVolume;
 
-    // OpenSLES buffer queue management
-    PlayQueue_s *playq;
-    pthread_mutex_t bqThreadLock;
-    long currentNodeId;
-    unsigned long currentNumBytes;
-    SLmillisecond startingPosition;
-    SLmillisecond currentBufferDuration;
-    long queuedTotalBytes; // a maximum estimate -- actual value depends on query
-    bool bufferIsPlaying;
-
     // working data buffer
-    uint8_t *data;
-    size_t index;      // working buffer byte index
-    size_t buffersize; // working buffer size
+    uint8_t *ringBuffer;            // ringBuffer of total size : bufferSize+idealBufSize
+    unsigned long bufferSize;       // ringBuffer non-overflow size
+    unsigned long submitSize;       // buffer size OpenSLES expects/wants
+    unsigned long writeHead;        // head of the writer of ringBuffer (speaker, mockingboard)
+    unsigned long writeWrapCount;   // count of buffer wraps for the writer
 
-    size_t replay_index;
+    unsigned long spinLock;         // spinlock around reader variables
+    unsigned long readHead;         // head of the reader of ringBuffer (OpenSLES callback)
+    unsigned long readWrapCount;    // count of buffer wraps for the reader
+
+    unsigned long replay_index;
 
     // misc
-    uint16_t nChannels;
-    unsigned long nSamplesPerSec;
+    unsigned long numChannels;
 } SLVoice;
 
 typedef struct SLVoices {
-    unsigned int voiceId;
+    unsigned long voiceId;
     SLVoice *voice;
     UT_hash_handle hh;
 } SLVoices;
@@ -78,60 +73,99 @@ static SLVoices *voices = NULL;
 static AudioBackend_s opensles_audio_backend = { 0 };
 
 // ----------------------------------------------------------------------------
-// AudioBuffer_s processing routines
+// AudioBuffer_s internal processing routines
 
-static long _SLGetCurrentQueuedBytes(SLVoice *voice, unsigned int *bytes_queued) {
+// Check and resets underrun condition (readHead has advanced beyond writeHead)
+static inline bool _underrun_check_and_manage(SLVoice *voice, OUTPARM unsigned long *workingBytes) {
 
-    *bytes_queued = 0;
-    long err = 0;
-    do {
+    SPINLOCK_ACQUIRE(&voice->spinLock);
+    unsigned long readHead = voice->readHead;
+    unsigned long readWrapCount = voice->readWrapCount;
+    SPINLOCK_RELINQUISH(&voice->spinLock);
 
-        SLmillisecond position = 0;
-        long play_offset = 0;
+    assert(readHead < voice->bufferSize);
+    assert(voice->writeHead < voice->bufferSize);
 
-        // ------------------------------ LOCK
-        pthread_mutex_lock(&(voice->bqThreadLock));
+    bool isUnder = false;
+    if ( (readWrapCount > voice->writeWrapCount) ||
+            ((readHead >= voice->writeHead) && (readWrapCount == voice->writeWrapCount)) )
+    {
+        isUnder = true;
+        LOG("Buffer underrun ... queuing quiet samples ...");
 
-        SLresult result = (*(voice->bqPlayerPlay))->GetPosition(voice->bqPlayerPlay, &position);
-        if (result != SL_RESULT_SUCCESS) {
-            ERRLOG("Could not get position of current sample");
+        voice->writeHead = readHead;
+        voice->writeWrapCount = readWrapCount;
+        memset(voice->ringBuffer+voice->writeHead, 0x0, voice->submitSize);
+        voice->writeHead += voice->submitSize;
+
+        if (voice->writeHead >= voice->bufferSize) {
+            voice->writeHead = voice->writeHead - voice->bufferSize;
+            memset(voice->ringBuffer+voice->bufferSize, 0x0, voice->submitSize);
+            memset(voice->ringBuffer, 0x0, voice->writeHead);
+            ++voice->writeWrapCount;
         }
+    }
 
-        assert(position >= 0);
-        assert(voice->startingPosition >= 0);
+    if (readHead <= voice->writeHead) {
+        *workingBytes = voice->writeHead - readHead;
+    } else {
+        *workingBytes = voice->writeHead + (voice->bufferSize - readHead);
+    }
 
-        SLmillisecond positionInCurrentBuffer = 0;
-        if (position < voice->startingPosition) {
-            OPENSL_LOG("OpenSLES wrapping position!");
-        } else {
-            positionInCurrentBuffer = position - voice->startingPosition;
-        }
-
-        if (voice->currentBufferDuration) {
-            float scale = positionInCurrentBuffer/(float)(voice->currentBufferDuration);
-            if (scale > 1.f) {
-                //OPENSL_LOG("OOPS scale > 1.f!");
-                play_offset = voice->currentNumBytes;
-            } else {
-                play_offset = (long)(voice->currentNumBytes * scale);
-            }
-
-            //OPENSL_LOG("totalQueuedBytes:%ld currentNumBytes:%ld startingPosition:%ld position:%ld inCurrentBuff:%ld scale:%f (play_offset:%ld)", voice->queuedTotalBytes, voice->currentNumBytes, voice->startingPosition, position, positionInCurrentBuffer, scale, play_offset);
-        } else {
-            //OPENSL_LOG("totalQueuedBytes:%ld currentNumBytes:%ld startingPosition:%ld position:%ld inCurrentBuff:%ld (play_offset:%ld)", voice->queuedTotalBytes, voice->currentNumBytes, voice->startingPosition, position, positionInCurrentBuffer, play_offset);
-        }
-        long q = voice->queuedTotalBytes - play_offset;
-
-        pthread_mutex_unlock(&(voice->bqThreadLock));
-        // ---------------------------- UNLOCK
-
-        if (q > 0) {
-            *bytes_queued = q;
-        }
-    } while (0);
-
-    return err;
+    return isUnder;
 }
+
+// This callback handler is called presumably every time (or just prior to when) a buffer finishes playing and the
+// system needs moar data (of the correct buffer size)
+static void bqPlayerCallback(SLAndroidSimpleBufferQueueItf bq, void *context) {
+
+    SLVoice *voice = (SLVoice *)context;
+
+    // enqueue next buffer of correct size to OpenSLES
+    // invariant : we can always read submitSize amount from the position of readHead
+
+    SLresult result = (*bq)->Enqueue(bq, voice->ringBuffer+voice->readHead, voice->submitSize);
+
+    // now manage overflow/wrapping ... (it's easier to ask for buffer overflow forgiveness than permission ;-)
+
+    unsigned long newReadHead = voice->readHead + voice->submitSize;
+    unsigned long newReadWrapCount = voice->readWrapCount;
+
+    if (newReadHead >= voice->bufferSize) {
+        newReadHead = newReadHead - voice->bufferSize;
+        ++newReadWrapCount;
+    }
+
+    SPINLOCK_ACQUIRE(&voice->spinLock);
+    voice->readHead = newReadHead;
+    voice->readWrapCount = newReadWrapCount;
+    SPINLOCK_RELINQUISH(&voice->spinLock);
+
+    if (result != SL_RESULT_SUCCESS) {
+        LOG("WARNING: could not enqueue data to OpenSLES!");
+        (*(voice->bqPlayerPlay))->SetPlayState(voice->bqPlayerPlay, SL_PLAYSTATE_STOPPED);
+        return;
+    }
+}
+
+static long _SLMaybeSubmitAndStart(SLVoice *voice) {
+
+    SLuint32 state = 0;
+    SLresult result = (*(voice->bqPlayerPlay))->GetPlayState(voice->bqPlayerPlay, &state);
+    if (result != SL_RESULT_SUCCESS) {
+        ERRLOG("OOPS, could not get source state : %lu", result);
+    } else {
+        if ((state != SL_PLAYSTATE_PLAYING) && (state != SL_PLAYSTATE_PAUSED)) {
+            LOG("FORCING restart audio buffer queue playback ...");
+            result = (*(voice->bqPlayerPlay))->SetPlayState(voice->bqPlayerPlay, SL_PLAYSTATE_PLAYING);
+            bqPlayerCallback(voice->bqPlayerBufferQueue, voice);
+        }
+    }
+    return result;
+}
+
+// ----------------------------------------------------------------------------
+// AudioBuffer_s public API handlers
 
 // returns queued+working sound buffer size in bytes
 static long SLGetPosition(AudioBuffer_s *_this, OUTPARM unsigned long *bytes_queued) {
@@ -141,13 +175,22 @@ static long SLGetPosition(AudioBuffer_s *_this, OUTPARM unsigned long *bytes_que
     do {
         SLVoice *voice = (SLVoice*)_this->_internal;
 
-        unsigned int queued = 0;
-        long err = _SLGetCurrentQueuedBytes(voice, &queued);
-        if (err) {
-            break;
+        unsigned long workingBytes = 0;
+        bool underrun = _underrun_check_and_manage(voice, &workingBytes);
+        //bool overrun = _overrun_check_and_manage(voice);
+
+        unsigned long queuedBytes = 0;
+        if (!underrun) {
+            //queuedBytes = voice->submitSize; // assume that there are always about this much actually queued
         }
 
-        *bytes_queued = queued + voice->index;
+        assert(workingBytes <= voice->bufferSize);
+
+        if (workingBytes > voice->submitSize) {
+            *bytes_queued = workingBytes - voice->submitSize;
+        } else {
+            *bytes_queued = 0;
+        }
     } while (0);
 
     return err;
@@ -164,128 +207,28 @@ static long SLLockBuffer(AudioBuffer_s *_this, unsigned long write_bytes, INOUT 
         SLVoice *voice = (SLVoice*)_this->_internal;
 
         if (write_bytes == 0) {
-            write_bytes = voice->buffersize;
+            LOG("HMMM ... writing full buffer!");
+            write_bytes = voice->bufferSize;
         }
 
-        unsigned int bytes_queued = 0;
-        err = _SLGetCurrentQueuedBytes(voice, &bytes_queued);
-        if (err) {
-            break;
+        unsigned long workingBytes = 0;
+        _underrun_check_and_manage(voice, &workingBytes);
+        unsigned long availableBytes = voice->bufferSize - workingBytes;
+
+        assert(workingBytes <= voice->bufferSize);
+        assert(voice->writeHead < voice->bufferSize);
+
+        // TODO FIXME : maybe need to resurrect the 2 inner pointers and foist the responsibility onto the
+        // speaker/mockingboard modules so we can actually write moar here?
+        unsigned long writableBytes = MIN( availableBytes, ((voice->bufferSize+voice->submitSize) - voice->writeHead) );
+
+        if (write_bytes > writableBytes) {
+            LOG("WARNING!!! truncating audio buffer");
+            write_bytes = writableBytes;
         }
 
-        if ((bytes_queued == 0) && (voice->index == 0)) {
-            LOG("Buffer underrun ... queuing quiet samples ...");
-            int quiet_size = voice->buffersize>>2/* 1/4 buffer */;
-            memset(voice->data, 0x0, quiet_size);
-            voice->index += quiet_size;
-        }
-#if 0
-        else if (bytes_queued + voice->index < (voice->buffersize>>3)/* 1/8 buffer */)
-        {
-            LOG("Potential underrun ...");
-        }
-#endif
-
-        unsigned int remaining = voice->buffersize - voice->index;
-        if (write_bytes > remaining) {
-            write_bytes = remaining;
-        }
-
-        *audio_ptr = (int16_t *)(voice->data+voice->index);
+        *audio_ptr = (int16_t *)(voice->ringBuffer+voice->writeHead);
         *audio_bytes = write_bytes;
-    } while (0);
-
-    return err;
-}
-
-static SLresult _send_buffer_to_opensles(SLVoice *voice, PlayNode_s *node) {
-
-    voice->currentNodeId = node->nodeId;
-    voice->currentNumBytes = node->numBytes;
-
-    // calculate the new buffer duration
-    unsigned long numSamples = (node->numBytes>>1);
-    if (voice->nChannels == 2) {
-        unsigned long numSamplesStereo = numSamples;
-        numSamples = (numSamplesStereo>>1);
-    } else if (voice->nChannels !=1) {
-        assert(false && "only mono or stereo supported");
-    }
-    voice->currentBufferDuration = ( numSamples / (voice->nSamplesPerSec/1000.f) );
-
-    OPENSL_LOG("Enqueing OpenSL buffer %ld (%lu bytes, %lu millis)", node->nodeId, node->numBytes, voice->currentBufferDuration, node->bytes);
-
-    // enqueue buffer to OpenSLES
-    SLresult result = (*(voice->bqPlayerBufferQueue))->Enqueue(voice->bqPlayerBufferQueue, node->bytes, node->numBytes);
-    if (result != SL_RESULT_SUCCESS) {
-        ERRLOG("OOPS ... buffer queue callback enqueue reports %ld", result); // the most likely other result is SL_RESULT_BUFFER_INSUFFICIENT
-    }
-
-    return result;
-}
-
-static long _SLSubmitBuffer(SLVoice *voice) {
-    SLresult err = 0;
-
-    do {
-        // Micro-manage play queue locally to understand the total bytes-in-play
-        PlayNode_s playNode = {
-            .nodeId = INVALID_NODE_ID,
-            .numBytes = voice->index,
-            .bytes = (uint8_t *)(voice->data),
-        };
-
-        //OPENSL_LOG("_SLSubmitBuffer : %ld bytes", voice->index);
-
-        bool isCurrentlyPlaying = false;
-
-        // ------------------------------ LOCK
-        pthread_mutex_lock(&(voice->bqThreadLock));
-
-        err = voice->playq->Enqueue(voice->playq, &playNode);
-        if (err) {
-            pthread_mutex_unlock(&(voice->bqThreadLock));
-            break;
-        }
-
-        voice->queuedTotalBytes += voice->index;
-        voice->index = 0;
-        assert(voice->queuedTotalBytes > 0);
-
-        isCurrentlyPlaying = voice->bufferIsPlaying;
-
-        err = SL_RESULT_UNKNOWN_ERROR;
-        if (!isCurrentlyPlaying) {
-            err = _send_buffer_to_opensles(voice, &playNode);
-            if (err != SL_RESULT_SUCCESS) {
-                ERRLOG("OOPS ... buffer queue callback enqueue reports %ld", err); // the most likely other result is SL_RESULT_BUFFER_INSUFFICIENT
-                pthread_mutex_unlock(&(voice->bqThreadLock));
-                break;
-            }
-        }
-
-        voice->bufferIsPlaying = true;
-
-        pthread_mutex_unlock(&(voice->bqThreadLock));
-        // ---------------------------- UNLOCK
-
-        SLuint32 state = 0;
-        err = (*(voice->bqPlayerPlay))->GetPlayState(voice->bqPlayerPlay, &state);
-        if (err != SL_RESULT_SUCCESS) {
-            ERRLOG("OOPS, could not get source state : %lu", err);
-            break;
-        }
-
-        if ((state != SL_PLAYSTATE_PLAYING) && (state != SL_PLAYSTATE_PAUSED)) {
-            LOG("Restarting playback (was %lu) ...", state);
-
-            err = (*(voice->bqPlayerPlay))->SetPlayState(voice->bqPlayerPlay, SL_PLAYSTATE_PLAYING);
-            if (err != SL_RESULT_SUCCESS) {
-                ERRLOG("OOPS, Failed to pause source : %lu", err);
-                break;
-            }
-        }
-
     } while (0);
 
     return err;
@@ -297,32 +240,24 @@ static long SLUnlockBuffer(AudioBuffer_s *_this, unsigned long audio_bytes) {
     do {
         SLVoice *voice = (SLVoice*)_this->_internal;
 
-        unsigned int bytes_queued = 0;
-        err = _SLGetCurrentQueuedBytes(voice, &bytes_queued);
-        if (err) {
-            break;
+        unsigned long previousWriteHead = voice->writeHead;
+
+        voice->writeHead += audio_bytes;
+
+        assert((voice->writeHead <= (voice->bufferSize + voice->submitSize)) && "OOPS, real overflow in queued sound data!");
+
+        if (voice->writeHead >= voice->bufferSize) {
+            // copy data from overflow into beginning of buffer
+            voice->writeHead = voice->writeHead - voice->bufferSize;
+            ++voice->writeWrapCount;
+            memcpy(voice->ringBuffer, voice->ringBuffer+voice->bufferSize, voice->writeHead);
+        } else if (previousWriteHead < voice->submitSize) {
+            // copy data in beginning of buffer into overflow position
+            unsigned long copyNumBytes = MIN(audio_bytes, voice->submitSize-previousWriteHead);
+            memcpy(voice->ringBuffer+voice->bufferSize+previousWriteHead, voice->ringBuffer+previousWriteHead, copyNumBytes);
         }
 
-        voice->index += audio_bytes;
-
-        assert((voice->index < voice->buffersize) && "OOPS, overflow in queued sound data");
-
-        if (bytes_queued >= (voice->buffersize>>2)/*quarter buffersize*/) {
-            // keep accumulating data into working buffer
-            //OPENSL_LOG("accumulating more data %lu -> (queued:%u/buffersize:%u) prequeued:%u", audio_bytes, bytes_queued, voice->buffersize, bytes_queued+voice->index);
-            break;
-        } else {
-            //OPENSL_LOG("possibly submit %lu -> (queued:%u/buffersize:%u)", audio_bytes, bytes_queued, voice->buffersize);
-        }
-
-        if (! (voice->playq->CanEnqueue(voice->playq)) ) {
-            //LOG("no free audio buffers"); // keep accumulating ...
-            break;
-        }
-
-        // Submit working buffer
-
-        err = _SLSubmitBuffer(voice);
+        err = _SLMaybeSubmitAndStart(voice);
     } while (0);
 
     return err;
@@ -338,8 +273,14 @@ static long SLUnlockStaticBuffer(AudioBuffer_s *_this, unsigned long audio_bytes
 // HACK Part II : replay mockingboard phoneme ...
 static long SLReplay(AudioBuffer_s *_this) {
     SLVoice *voice = (SLVoice*)_this->_internal;
-    voice->index = voice->replay_index;
-    long err = _SLSubmitBuffer(voice);
+
+    SPINLOCK_ACQUIRE(&voice->spinLock);
+    voice->readHead = 0;
+    voice->writeHead = voice->replay_index;
+    SPINLOCK_RELINQUISH(&voice->spinLock);
+
+    long err = _SLMaybeSubmitAndStart(voice);
+#warning FIXME TODO ... how do we handle mockingboard for new OpenSLES buffer queue codepath?
     return err;
 }
 
@@ -370,57 +311,6 @@ static long SLGetStatus(AudioBuffer_s *_this, OUTPARM unsigned long *status) {
 // ----------------------------------------------------------------------------
 // SLVoice is the AudioBuffer_s->_internal
 
-// this callback handler is called every time a buffer finishes playing
-static void bqPlayerCallback(SLAndroidSimpleBufferQueueItf bq, void *context) {
-    SLVoice *voice = (SLVoice *)context;
-
-    SLresult result = SL_RESULT_UNKNOWN_ERROR;
-
-    assert(voice != NULL);
-    assert(bq == voice->bqPlayerBufferQueue);
-    assert(pthread_self() != cpu_thread_id);
-
-    // ------------------------------ LOCK
-    pthread_mutex_lock(&(voice->bqThreadLock));
-
-    do {
-        // reset starting position to current best estimate
-        result = (*(voice->bqPlayerPlay))->GetPosition(voice->bqPlayerPlay, &(voice->startingPosition));
-        if (result != SL_RESULT_SUCCESS) {
-            ERRLOG("Could not get position of current sample");
-            voice->startingPosition = 0;
-        }
-
-        // dequeue finished buffer and reset in-play stats
-        PlayNode_s head = { 0 };
-        voice->playq->Dequeue(voice->playq, &head);
-        assert(voice->currentNodeId == head.nodeId);
-
-        voice->queuedTotalBytes -= head.numBytes;
-        voice->currentNodeId = -1;
-        voice->currentNumBytes = 0;
-        voice->currentBufferDuration = 0;
-
-        // get current queue head
-        long err = voice->playq->GetHead(voice->playq, &head);
-        if (err) {
-            RELEASE_ERRLOG("Could not get head and size of queue!");
-            voice->bufferIsPlaying = false;
-            break;
-        }
-
-        result = _send_buffer_to_opensles(voice, &head);
-        if (result != SL_RESULT_SUCCESS) {
-            RELEASE_ERRLOG("Could not submit buffer to OpenSLES!");
-            voice->bufferIsPlaying = false;
-            break;
-        }
-    } while (0);
-
-    pthread_mutex_unlock(&(voice->bqThreadLock));
-    // ---------------------------- UNLOCK
-}
-
 static void _opensl_destroyVoice(SLVoice *voice) {
 
     // destroy buffer queue audio player object, and invalidate all associated interfaces
@@ -433,17 +323,15 @@ static void _opensl_destroyVoice(SLVoice *voice) {
         voice->bqPlayerVolume = NULL;
     }
 
-    if (voice->data) {
-        FREE(voice->data);
+    if (voice->ringBuffer) {
+        FREE(voice->ringBuffer);
     }
-
-    playq_destroyPlayQueue(&(voice->playq));
 
     memset(voice, 0, sizeof(*voice));
     FREE(voice);
 }
 
-static SLVoice *_opensl_createVoice(const AudioParams_s *params, const EngineContext_s *ctx) {
+static SLVoice *_opensl_createVoice(unsigned long numChannels, const EngineContext_s *ctx) {
     SLVoice *voice = NULL;
 
     do {
@@ -458,33 +346,30 @@ static SLVoice *_opensl_createVoice(const AudioParams_s *params, const EngineCon
             break;
         }
 
-        long longBuffers[OPENSL_NUM_BUFFERS];
-        for (unsigned int i=0; i<OPENSL_NUM_BUFFERS; i++) {
-            longBuffers[i] = i+1;
-        }
-        voice->playq = playq_createPlayQueue(longBuffers, OPENSL_NUM_BUFFERS);
-        if (!voice->playq) {
-            ERRLOG("OOPS, Not enough memory for PlayQueue");
-            break;
-        }
+        assert(numChannels == 1 || numChannels == 2);
+        voice->numChannels = numChannels;
 
-        assert(params->nSamplesPerSec == SPKR_SAMPLE_RATE);
-        assert(params->nChannels == 1 || params->nChannels == 2);
-
-        voice->nChannels = params->nChannels;
-        voice->nSamplesPerSec = params->nSamplesPerSec;
         SLuint32 channelMask = 0;
-        if (voice->nChannels == 2) {
+        unsigned long maxSamples = 0;
+        if (numChannels == 2) {
             channelMask = SL_SPEAKER_FRONT_LEFT | SL_SPEAKER_FRONT_RIGHT;
+            maxSamples = opensles_audio_backend.systemSettings.stereoBufferSizeSamples;
+            voice->submitSize = android_stereoBufferSubmitSizeSamples * opensles_audio_backend.systemSettings.bytesPerSample * 2;
+            LOG("ideal stereo submission bufsize is %lu (bytes:%lu)", (unsigned long)android_stereoBufferSubmitSizeSamples, (unsigned long)voice->submitSize);
         } else {
             channelMask = SL_SPEAKER_FRONT_CENTER;
+            maxSamples = opensles_audio_backend.systemSettings.monoBufferSizeSamples;
+            voice->submitSize = android_monoBufferSubmitSizeSamples * opensles_audio_backend.systemSettings.bytesPerSample;
+            LOG("ideal mono submission bufsize is %lu (bytes:%lu)", (unsigned long)android_monoBufferSubmitSizeSamples, (unsigned long)voice->submitSize);
         }
 
-        // Allocate enough space for the temp buffer
-        voice->buffersize = params->dwBufferBytes;
-        voice->data = malloc(voice->buffersize);
-        if (voice->data == NULL) {
-            ERRLOG("OOPS, Error allocating %d bytes", voice->buffersize);
+        maxSamples *= numChannels;
+
+        // Allocate enough space for the temp buffer (including a maximum allowed overflow)
+        voice->bufferSize = maxSamples * opensles_audio_backend.systemSettings.bytesPerSample;
+        voice->ringBuffer = malloc(voice->bufferSize + voice->submitSize/*max overflow*/);
+        if (voice->ringBuffer == NULL) {
+            ERRLOG("OOPS, Error allocating %d bytes", voice->bufferSize);
             break;
         }
 
@@ -502,8 +387,8 @@ static SLVoice *_opensl_createVoice(const AudioParams_s *params, const EngineCon
         };
         SLDataFormat_PCM format_pcm = {
             .formatType = SL_DATAFORMAT_PCM,
-            .numChannels = params->nChannels,
-            .samplesPerSec = SL_SAMPLINGRATE_22_05,
+            .numChannels = numChannels,
+            .samplesPerSec = opensles_audio_backend.systemSettings.sampleRateHz * 1000,
             .bitsPerSample = SL_PCMSAMPLEFORMAT_FIXED_16,
             .containerSize = SL_PCMSAMPLEFORMAT_FIXED_16,
             .channelMask = channelMask,
@@ -535,7 +420,7 @@ static SLVoice *_opensl_createVoice(const AudioParams_s *params, const EngineCon
         const SLboolean req[_NUM_INTERFACES] = {
             SL_BOOLEAN_TRUE,
             SL_BOOLEAN_TRUE,
-            //params->nChannels == 1 ? SL_BOOLEAN_FALSE : SL_BOOLEAN_TRUE,
+            //numChannels == 1 ? SL_BOOLEAN_FALSE : SL_BOOLEAN_TRUE,
             SL_BOOLEAN_TRUE,
         };
 
@@ -601,14 +486,14 @@ static SLVoice *_opensl_createVoice(const AudioParams_s *params, const EngineCon
 
 // ----------------------------------------------------------------------------
 
-static long opensl_destroySoundBuffer(INOUT AudioBuffer_s **soundbuf_struct) {
+static long opensl_destroySoundBuffer(const struct AudioContext_s *sound_system, INOUT AudioBuffer_s **soundbuf_struct) {
     if (!*soundbuf_struct) {
         return 0;
     }
 
     LOG("opensl_destroySoundBuffer ...");
     SLVoice *voice = (SLVoice *)((*soundbuf_struct)->_internal);
-    unsigned int voiceId = voice->voiceId;
+    unsigned long voiceId = voice->voiceId;
 
     _opensl_destroyVoice(voice);
 
@@ -623,7 +508,7 @@ static long opensl_destroySoundBuffer(INOUT AudioBuffer_s **soundbuf_struct) {
     return 0;
 }
 
-static long opensl_createSoundBuffer(const AudioParams_s *params, INOUT AudioBuffer_s **soundbuf_struct, const AudioContext_s *audio_context) {
+static long opensl_createSoundBuffer(const AudioContext_s *audio_context, unsigned long numChannels, INOUT AudioBuffer_s **soundbuf_struct) {
     LOG("opensl_createSoundBuffer ...");
     assert(*soundbuf_struct == NULL);
 
@@ -634,7 +519,7 @@ static long opensl_createSoundBuffer(const AudioParams_s *params, INOUT AudioBuf
         EngineContext_s *ctx = (EngineContext_s *)(audio_context->_internal);
         assert(ctx != NULL);
 
-        if ((voice = _opensl_createVoice(params, ctx)) == NULL)
+        if ((voice = _opensl_createVoice(numChannels, ctx)) == NULL)
         {
             ERRLOG("OOPS, Cannot create new voice");
             break;
@@ -646,7 +531,7 @@ static long opensl_createSoundBuffer(const AudioParams_s *params, INOUT AudioBuf
             break;
         }
 
-        static unsigned int counter = 0;
+        static unsigned long counter = 0;
         vnode->voiceId = __sync_add_and_fetch(&counter, 1);
         voice->voiceId = vnode->voiceId;
 
@@ -671,7 +556,7 @@ static long opensl_createSoundBuffer(const AudioParams_s *params, INOUT AudioBuf
     } while(0);
 
     if (*soundbuf_struct) {
-        opensl_destroySoundBuffer(soundbuf_struct);
+        opensl_destroySoundBuffer(audio_context, soundbuf_struct);
     } else if (voice) {
         _opensl_destroyVoice(voice);
     }
@@ -712,6 +597,35 @@ static long opensles_systemSetup(INOUT AudioContext_s **audio_context) {
 
     EngineContext_s *ctx = NULL;
     SLresult result = -1;
+
+    opensles_audio_backend.systemSettings.sampleRateHz = android_deviceSampleRateHz;
+    opensles_audio_backend.systemSettings.bytesPerSample = 2;
+
+    if (android_deviceSampleRateHz <= 22050/*sentinel in DevicePropertyCalculator.java*/) {
+        // HACK NOTE : assuming this is a low-end Gingerbread device ... try to push for a lower submit size to improve
+        // latency ... this is less aggressive than calculations made in DevicePropertyCalculator.java
+        android_monoBufferSubmitSizeSamples >>= 1;
+        android_stereoBufferSubmitSizeSamples >>= 1;
+    }
+
+    // TODO FIXME ... the *4 is a leaky abstraction from speaker.c ...
+    // The "goldilocks zone" is between 1/4 to 1/2 of the total buffer size.
+
+    // Also with fast sample rates and smaller buffer sizes ... the speaker feedback to the CPU appears not to be fast
+    // enough and so we get frequent underruns and glitching ... TODO FIXME investigate this ...
+    unsigned long idealMonoBufferSizeSamples = 4 * android_monoBufferSubmitSizeSamples;
+    if (idealMonoBufferSizeSamples < 8192) {
+        // clamp to a larger minimum buffer size to avoid underflows
+        idealMonoBufferSizeSamples = 8192;
+    }
+    unsigned long idealStereoBufferSizeSamples = 4 * android_stereoBufferSubmitSizeSamples;
+    if (idealStereoBufferSizeSamples < 16384) {
+        // clamp to a larger minimum buffer size to avoid underflows
+        idealStereoBufferSizeSamples = 16384;
+    }
+
+    opensles_audio_backend.systemSettings.monoBufferSizeSamples = idealMonoBufferSizeSamples;
+    opensles_audio_backend.systemSettings.stereoBufferSizeSamples = idealStereoBufferSizeSamples;
 
     do {
         //

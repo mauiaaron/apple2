@@ -111,6 +111,21 @@ static inline GLenum safeGLGetError(void) {
 #define MAX(a,b) (((a) >= (b)) ? (a) : (b))
 #endif
 
+#define SPINLOCK_INIT 0
+#define SPINLOCK_ACQUIRED -1
+#define SPINLOCK_ACQUIRE(x) \
+    do { \
+        long val = __sync_sub_and_fetch((x), 1); \
+        if (val == SPINLOCK_ACQUIRED) { \
+            break; \
+        } \
+        __sync_add_and_fetch((x), 1); \
+    } while (1);
+
+#define SPINLOCK_RELINQUISH(x) \
+    __sync_add_and_fetch((x), 1);
+
+
 extern bool do_logging;
 
 #ifdef ANDROID

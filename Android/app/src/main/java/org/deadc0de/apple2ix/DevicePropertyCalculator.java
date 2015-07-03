@@ -84,7 +84,7 @@ public final class DevicePropertyCalculator
 
             SR_CHECK = am.getProperty( AudioManager.PROPERTY_OUTPUT_SAMPLE_RATE );
         }
-        final int defaultSampleRate = 44100;
+        final int defaultSampleRate = 22050;
 
         return ( SR_CHECK != null ) ? Integer.parseInt( SR_CHECK ) : defaultSampleRate;
     }
