@@ -29,11 +29,12 @@
 #   define SPEAKER_LOG(...)
 #endif
 
+#define SPKR_SILENT_STEP 1
+
 static unsigned long bufferTotalSize = 0;
 static unsigned long bufferSizeIdealMin = 0;
 static unsigned long bufferSizeIdealMax = 0;
 static unsigned long sampleRateHz = 0;
-
 
 static bool speaker_isAvailable = false;
 
@@ -55,7 +56,6 @@ static bool speaker_accessed_since_last_flush = false;
 static bool speaker_recently_active = false;
 
 static bool speaker_going_silent = false;
-static unsigned int speaker_silent_step = 0;
 
 static int samples_adjustment_counter = 0;
 
@@ -164,7 +164,7 @@ static void _speaker_update(/*bool toggled*/) {
         while (num_samples && (samples_buffer_idx < sampleRateHz)) {
             samples_buffer[samples_buffer_idx++] = speaker_data;
             if (speaker_going_silent && speaker_data) {
-                speaker_data -= speaker_silent_step;
+                speaker_data -= SPKR_SILENT_STEP;
             }
             --num_samples;
         }
@@ -385,14 +385,11 @@ void speaker_flush(void) {
             if ((cycles_count_total - cycles_quiet_time) > cycles_diff*2) {
                 // After 0.2sec of //e cycles time set inactive flag (allows auto-switch to full speed for fast disk access)
                 speaker_recently_active = false;
-                speaker_going_silent = false;
-                speaker_data = 0;
             } else if ((speaker_data != 0) && (cycles_count_total - cycles_quiet_time > cycles_diff)) {
                 // After 0.1sec of //e cycles time start reducing samples to zero (if they aren't there already).  This
                 // process attempts to mask the extraneous clicks when freezing/restarting emulation (GUI access) and
                 // glitching from the audio system backend
                 speaker_going_silent = true;
-                speaker_silent_step = 1;
                 SPEAKER_LOG("speaker going silent");
             }
         }
@@ -452,7 +449,7 @@ GLUE_C_READ(speaker_toggle)
     }
 
     if (!is_fullspeed) {
-        if (speaker_data) {
+        if (speaker_data == speaker_amplitude) {
             speaker_data = 0;
         } else {
             speaker_data = speaker_amplitude;
