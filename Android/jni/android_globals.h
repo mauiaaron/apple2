@@ -10,6 +10,6 @@
  */
 
 extern unsigned long android_deviceSampleRateHz;
-extern unsigned long android_monoBufferSize;
-extern unsigned long android_stereoBufferSize;
+extern unsigned long android_monoBufferSubmitSizeSamples;
+extern unsigned long android_stereoBufferSubmitSizeSamples;
 

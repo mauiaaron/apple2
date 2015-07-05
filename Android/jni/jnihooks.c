@@ -15,8 +15,8 @@
 #include <jni.h>
 
 unsigned long android_deviceSampleRateHz = 0;
-unsigned long android_monoBufferSize = 0;
-unsigned long android_stereoBufferSize = 0;
+unsigned long android_monoBufferSubmitSizeSamples = 0;
+unsigned long android_stereoBufferSubmitSizeSamples = 0;
 
 enum {
     ANDROID_ACTION_DOWN = 0x0,
@@ -99,8 +99,8 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnCreate(JNIEnv *env, jobje
     LOG("nativeOnCreate(%s)...", data_dir);
 
     android_deviceSampleRateHz = (unsigned long)sampleRate;
-    android_monoBufferSize = (unsigned long)monoBufferSize;
-    android_stereoBufferSize = (unsigned long)stereoBufferSize;
+    android_monoBufferSubmitSizeSamples = (unsigned long)monoBufferSize;
+    android_stereoBufferSubmitSizeSamples = (unsigned long)stereoBufferSize;
 
 #if TESTING
     _run_tests();
