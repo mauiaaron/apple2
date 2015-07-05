@@ -179,6 +179,16 @@ void timing_set_auto_adjust_speed(bool auto_adjust) {
     _unlock_gui_thread();
 }
 
+void cpu_pause(void) {
+    _lock_gui_thread();
+    audio_pause();
+}
+
+void cpu_resume(void) {
+    audio_resume();
+    _unlock_gui_thread();
+}
+
 bool timing_should_auto_adjust_speed(void) {
     double speed = alt_speed_enabled ? cpu_altscale_factor : cpu_scale_factor;
     return auto_adjust_speed && (speed < CPU_SCALE_FASTEST);

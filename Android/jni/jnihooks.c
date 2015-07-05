@@ -139,7 +139,7 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnResume(JNIEnv *env, jobje
         }
     } else {
         nativePaused = false;
-        pthread_mutex_unlock(&interface_mutex);
+        cpu_resume();
     }
 }
 
@@ -149,7 +149,8 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnPause(JNIEnv *env, jobjec
     }
     nativePaused = true;
     LOG("%s", "native onPause...");
-    pthread_mutex_lock(&interface_mutex);
+
+    cpu_pause();
 }
 
 void Java_org_deadc0de_apple2ix_Apple2Activity_nativeRender(JNIEnv *env, jobject obj) {
@@ -199,7 +200,7 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnQuit(JNIEnv *env, jobject
     emulator_shutting_down = true;
     video_shutdown();
 
-    pthread_mutex_unlock(&interface_mutex);
+    cpu_resume();
     if (pthread_join(cpu_thread_id, NULL)) {
         ERRLOG("OOPS: pthread_join of CPU thread ...");
     }
@@ -262,7 +263,7 @@ jboolean Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnTouch(JNIEnv *env, jo
     if (nativePaused) {
         LOG("UNPAUSING NATIVE CPU THREAD");
         nativePaused = false;
-        pthread_mutex_unlock(&interface_mutex);
+        cpu_resume();
         return true;
     }
 

@@ -89,6 +89,16 @@ void timing_initialize(void);
 void *cpu_thread(void *ignored);
 
 /*
+ * Pause timing/CPU thread
+ */
+void cpu_pause(void);
+
+/*
+ * Resume timing/CPU thread
+ */
+void cpu_resume(void);
+
+/*
  * checkpoints current cycle count and updates total (for timing-dependent I/O)
  */
 void timing_checkpoint_cycles(void);
