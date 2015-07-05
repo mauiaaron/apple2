@@ -185,12 +185,7 @@ static long SLGetPosition(AudioBuffer_s *_this, OUTPARM unsigned long *bytes_que
         }
 
         assert(workingBytes <= voice->bufferSize);
-
-        if (workingBytes > voice->submitSize) {
-            *bytes_queued = workingBytes - voice->submitSize;
-        } else {
-            *bytes_queued = 0;
-        }
+        *bytes_queued = workingBytes;
     } while (0);
 
     return err;
