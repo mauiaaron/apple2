@@ -597,26 +597,13 @@ static long opensles_systemSetup(INOUT AudioContext_s **audio_context) {
         // latency ... this is less aggressive than calculations made in DevicePropertyCalculator.java
         android_monoBufferSubmitSizeSamples >>= 1;
         android_stereoBufferSubmitSizeSamples >>= 1;
+        opensles_audio_backend.systemSettings.monoBufferSizeSamples = android_deviceSampleRateHz * 0.3/*sec*/;
+        opensles_audio_backend.systemSettings.stereoBufferSizeSamples = android_deviceSampleRateHz * 0.3/*sec*/;
+    } else {
+        opensles_audio_backend.systemSettings.monoBufferSizeSamples = android_deviceSampleRateHz * 0.125/*sec*/;
+        opensles_audio_backend.systemSettings.stereoBufferSizeSamples = android_deviceSampleRateHz * 0.125/*sec*/;
     }
-
-    // TODO FIXME ... the *4 is a leaky abstraction from speaker.c ...
-    // The "goldilocks zone" is between 1/4 to 1/2 of the total buffer size.
-
-    // Also with fast sample rates and smaller buffer sizes ... the speaker feedback to the CPU appears not to be fast
-    // enough and so we get frequent underruns and glitching ... TODO FIXME investigate this ...
-    unsigned long idealMonoBufferSizeSamples = 4 * android_monoBufferSubmitSizeSamples;
-    if (idealMonoBufferSizeSamples < 8192) {
-        // clamp to a larger minimum buffer size to avoid underflows
-        idealMonoBufferSizeSamples = 8192;
-    }
-    unsigned long idealStereoBufferSizeSamples = 4 * android_stereoBufferSubmitSizeSamples;
-    if (idealStereoBufferSizeSamples < 16384) {
-        // clamp to a larger minimum buffer size to avoid underflows
-        idealStereoBufferSizeSamples = 16384;
-    }
-
-    opensles_audio_backend.systemSettings.monoBufferSizeSamples = idealMonoBufferSizeSamples;
-    opensles_audio_backend.systemSettings.stereoBufferSizeSamples = idealStereoBufferSizeSamples;
+#warning TODO FIXME ^^^^^ need a dynamic bufferSize calculation/calibration routine to determine optimal buffer size for device ... may also need a user-initiated calibration too
 
     do {
         //
