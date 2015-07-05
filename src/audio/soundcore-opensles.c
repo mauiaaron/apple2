@@ -345,23 +345,19 @@ static SLVoice *_opensl_createVoice(unsigned long numChannels, const EngineConte
         voice->numChannels = numChannels;
 
         SLuint32 channelMask = 0;
-        unsigned long maxSamples = 0;
         if (numChannels == 2) {
             channelMask = SL_SPEAKER_FRONT_LEFT | SL_SPEAKER_FRONT_RIGHT;
-            maxSamples = opensles_audio_backend.systemSettings.stereoBufferSizeSamples;
-            voice->submitSize = android_stereoBufferSubmitSizeSamples * opensles_audio_backend.systemSettings.bytesPerSample * 2;
+            voice->submitSize = android_stereoBufferSubmitSizeSamples * opensles_audio_backend.systemSettings.bytesPerSample * numChannels;
+            voice->bufferSize = opensles_audio_backend.systemSettings.stereoBufferSizeSamples * opensles_audio_backend.systemSettings.bytesPerSample * numChannels;
             LOG("ideal stereo submission bufsize is %lu (bytes:%lu)", (unsigned long)android_stereoBufferSubmitSizeSamples, (unsigned long)voice->submitSize);
         } else {
             channelMask = SL_SPEAKER_FRONT_CENTER;
-            maxSamples = opensles_audio_backend.systemSettings.monoBufferSizeSamples;
             voice->submitSize = android_monoBufferSubmitSizeSamples * opensles_audio_backend.systemSettings.bytesPerSample;
+            voice->bufferSize = opensles_audio_backend.systemSettings.monoBufferSizeSamples * opensles_audio_backend.systemSettings.bytesPerSample;
             LOG("ideal mono submission bufsize is %lu (bytes:%lu)", (unsigned long)android_monoBufferSubmitSizeSamples, (unsigned long)voice->submitSize);
         }
 
-        maxSamples *= numChannels;
-
         // Allocate enough space for the temp buffer (including a maximum allowed overflow)
-        voice->bufferSize = maxSamples * opensles_audio_backend.systemSettings.bytesPerSample;
         voice->ringBuffer = malloc(voice->bufferSize + voice->submitSize/*max overflow*/);
         if (voice->ringBuffer == NULL) {
             ERRLOG("OOPS, Error allocating %d bytes", voice->bufferSize);
