@@ -25,6 +25,11 @@ AudioBackend_s *audio_backend = NULL;
 //-----------------------------------------------------------------------------
 
 long audio_createSoundBuffer(INOUT AudioBuffer_s **audioBuffer, unsigned long numChannels) {
+    *audioBuffer = NULL;
+
+    if (!audio_isAvailable) {
+        return -1;
+    }
 
     AudioSettings_s *settings = &audio_backend->systemSettings;
 
@@ -59,18 +64,26 @@ bool audio_init(void) {
         return true;
     }
 
-    if (audioContext) {
-        audio_backend->shutdown(&audioContext);
-    }
+    do {
+        if (!audio_backend) {
+            LOG("No backend audio available, cannot initialize soundcore");
+            break;
+        }
 
-    long err = audio_backend->setup((AudioContext_s**)&audioContext);
-    if (err) {
-        LOG("Failed to create an audio context!");
-    } else {
+        if (audioContext) {
+            audio_backend->shutdown(&audioContext);
+        }
+
+        long err = audio_backend->setup((AudioContext_s**)&audioContext);
+        if (err) {
+            LOG("Failed to create an audio context!");
+            break;
+        }
+
         audio_isAvailable = true;
-    }
+    } while (0);
 
-    return err;
+    return audio_isAvailable;
 }
 
 void audio_shutdown(void) {
@@ -82,10 +95,16 @@ void audio_shutdown(void) {
 }
 
 void audio_pause(void) {
+    if (!audio_isAvailable) {
+        return;
+    }
     audio_backend->pause();
 }
 
 void audio_resume(void) {
+    if (!audio_isAvailable) {
+        return;
+    }
     audio_backend->resume();
 }
 
