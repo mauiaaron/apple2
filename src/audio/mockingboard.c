@@ -1679,7 +1679,7 @@ void MB_Initialize()
 
 		g_bMBAvailable = MB_DSInit();
                 if (!g_bMBAvailable) {
-                    MockingboardVoice->bMute = true;
+                    //MockingboardVoice->bMute = true;
                     g_SoundcardType = CT_Empty;
                     return;
                 }
@@ -2084,6 +2084,10 @@ void MB_EndOfVideoFrame()
 {
 	if(g_SoundcardType == CT_Empty)
 		return;
+
+        if (!g_bMBAvailable) {
+            return;
+        }
 
 	if(!g_bMBTimerIrqActive)
 		MB_Update();
