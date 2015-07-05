@@ -174,6 +174,22 @@ static const char *log_end = "\n";
 
 #ifndef NDEBUG
 
+#ifdef ANDROID
+// Apparently some non-conformant Android devices (ahem, Spamsung, ahem) do not actually let me see what the assert
+// actually was before aborting/segfaulting ...
+#   undef assert
+#   define assert(e) \
+    do { \
+        if ((e)) { \
+            /* ... */ \
+        } else { \
+            LOG( "!!! ASSERT !!! : " #e ); \
+            sleep(1); \
+            __assert2(__FILE__, __LINE__, __func__, #e); \
+        } \
+    } while (0)
+#endif
+
 #define LOG(...) \
     if (do_logging) { \
         errno = 0; \
