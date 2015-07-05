@@ -324,6 +324,7 @@ void speaker_init(void) {
         bufferSizeIdealMin = bufferTotalSize/4;
         bufferSizeIdealMax = bufferTotalSize/2;
         sampleRateHz = audio_backend->systemSettings.sampleRateHz;
+        LOG("Speaker initializing with %lu buffer size (bytes), sample rate of %lu", (unsigned long)bufferTotalSize, (unsigned long)sampleRateHz);
 
         remainder_buffer_size_max = ((CLK_6502_INT*(unsigned long)CPU_SCALE_FASTEST)/sampleRateHz)+1;
 
@@ -386,11 +387,17 @@ void speaker_flush(void) {
                 // After 0.2sec of //e cycles time set inactive flag (allows auto-switch to full speed for fast disk access)
                 speaker_recently_active = false;
             } else if ((speaker_data != 0) && (cycles_count_total - cycles_quiet_time > cycles_diff)) {
+#if defined(ANDROID)
+                // OpenSLES seems to be able to pause output without the nasty pops that I hear with OpenAL on Linux
+                // desktop.  So this speaker_going_silent hack is not needed.  There is also a noticeable glitch in
+                // OpenSLES when this codepath is enabled.
+#else
                 // After 0.1sec of //e cycles time start reducing samples to zero (if they aren't there already).  This
                 // process attempts to mask the extraneous clicks when freezing/restarting emulation (GUI access) and
                 // glitching from the audio system backend
                 speaker_going_silent = true;
                 SPEAKER_LOG("speaker going silent");
+#endif
             }
         }
     }
