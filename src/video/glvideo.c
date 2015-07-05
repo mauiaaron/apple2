@@ -17,6 +17,7 @@
 #include "video/glnode.h"
 
 bool safe_to_do_opengl_logging = false;
+bool renderer_shutting_down = false;
 
 volatile bool _vid_dirty = true;
 
@@ -535,6 +536,8 @@ static void gldriver_render(void);
 static void gldriver_init_common(void) {
     LOG("%s %s", glGetString(GL_RENDERER), glGetString(GL_VERSION));
 
+    renderer_shutting_down = false;
+
     if (!viewportWidth) {
         viewportWidth = 400;
     }
@@ -630,9 +633,10 @@ static void gldriver_shutdown(void) {
     glutLeaveMainLoop();
 #else
 #   if MOBILE_DEVICE
-    // it could be a temporary backgrounding do nothing here ...
+    renderer_shutting_down = true;
     _gldriver_shutdown();
 #   else
+#   error this codepath untested ...
     emulator_shutting_down = true;
 #   endif
 #endif
@@ -672,6 +676,12 @@ static void gldriver_render(void) {
     if (UNLIKELY(!fb)) {
         return;
     }
+
+#if MOBILE_DEVICE
+    if (UNLIKELY(renderer_shutting_down)) {
+        return;
+    }
+#endif
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 #if MOBILE_DEVICE
