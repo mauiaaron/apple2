@@ -33,8 +33,6 @@
 
 #include "common.h"
 
-#define EXECUTION_PERIOD_NSECS 1000000  // AppleWin: nExecutionPeriodUsec
-
 #define DEBUG_TIMING (!defined(NDEBUG) && 0) // enable to print timing stats
 #if DEBUG_TIMING
 #   define TIMING_LOG(...) LOG(__VA_ARGS__)
@@ -352,7 +350,7 @@ void *cpu_thread(void *dummyptr) {
                     static time_t throttle_warning = 0;
                     if (t0.tv_sec - throttle_warning > 0)
                     {
-                        TIMING_LOG("lagging... %ld . %ld", deltat.tv_sec, deltat.tv_nsec);
+                        TIMING_LOG("not sleeping to catch up ... %ld . %ld", deltat.tv_sec, deltat.tv_nsec);
                         throttle_warning = t0.tv_sec;
                     }
                 }

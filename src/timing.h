@@ -25,6 +25,15 @@
 #define NANOSECONDS_PER_SECOND 1000000000UL
 #endif
 
+// At a rate of ~1000x/sec, the emulator will (1) determine the number X of 65c02 instructions to execute and then
+// executes them, (2) perform post-instruction-churn bookkeeping, and (3) sleep for a calculated interval.
+//
+// * The actual wall clock time to perform the emulated churn and bookkeeping is used to determine the sleep interval
+//
+// * The speaker provides feedback to the calculation of X (the number of instructions to churn)
+#define EXECUTION_CHURN_RATE   1000UL
+#define EXECUTION_PERIOD_NSECS 1000000UL // NANOSECONDS_PER_SECOND / EXECUTION_CHURN_RATE
+
 // timing values cribbed from AppleWin ... reference: Sather's _Understanding the Apple IIe_
 // TODO: revisit this if/when attempting to actually sync up VBL/VSYNC to actual device vsync
 
@@ -32,7 +41,7 @@
 #define _M14     (157500000.0 / 11.0)
 #define _M14_INT (157500000   / 11)
 
-// 65 cycles per 912 14M clocks = 1020484.45...
+// 65 cycles per 912 14M clocks = 1020484.45 ...
 #define CLK_6502     ((_M14     * 65.0) / 912.0)
 #define CLK_6502_INT ((_M14_INT * 65)   / 912)
 
