@@ -628,8 +628,14 @@ static void _gldriver_shutdown(void) {
 static void gldriver_shutdown(void) {
 #if USE_GLUT
     glutLeaveMainLoop();
-#endif
+#else
+#   if MOBILE_DEVICE
+    // it could be a temporary backgrounding do nothing here ...
+    _gldriver_shutdown();
+#   else
     emulator_shutting_down = true;
+#   endif
+#endif
 }
 
 //----------------------------------------------------------------------------
@@ -666,13 +672,6 @@ static void gldriver_render(void) {
     if (UNLIKELY(!fb)) {
         return;
     }
-
-#if MOBILE_DEVICE
-    if (UNLIKELY(emulator_shutting_down)) {
-        _gldriver_shutdown();
-        return;
-    }
-#endif
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 #if MOBILE_DEVICE
@@ -884,6 +883,7 @@ static void gldriver_main_loop(void) {
     glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_GLUTMAINLOOP_RETURNS);
     glutMainLoop();
     LOG("GLUT main loop finished...");
+    emulator_shutting_down = true;
     _gldriver_shutdown();
 #endif
     // fall through if not GLUT
