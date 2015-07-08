@@ -971,8 +971,8 @@ static void MB_Update()
 
 	//
 
-	unsigned long dwDSLockedBufferSize0, dwDSLockedBufferSize1;
-	int16_t *pDSLockedBuffer0, *pDSLockedBuffer1;
+	unsigned long dwDSLockedBufferSize0 = 0;
+	int16_t *pDSLockedBuffer0 = NULL;
 
 	unsigned long dwCurrentPlayCursor, dwCurrentWriteCursor;
 #ifdef APPLE2IX
@@ -1092,27 +1092,30 @@ static void MB_Update()
 
 	//
 
-        pDSLockedBuffer1 = NULL;
-        dwDSLockedBufferSize1 = 0;
-	if(MockingboardVoice->Lock(MockingboardVoice,
-						(unsigned long)nNumSamples*sizeof(short)*g_nMB_NumChannels,
-						&pDSLockedBuffer0, &dwDSLockedBufferSize0))
-		return;
+        const unsigned long originalRequestedBufSize = (unsigned long)nNumSamples*sizeof(short)*g_nMB_NumChannels;
+        unsigned long requestedBufSize = originalRequestedBufSize;
+        unsigned long bufIdx = 0;
+        unsigned long counter = 0;
 
-#ifdef APPLE2IX
-        // only memcpy if there are samples!
-        if (nNumSamples)
-#endif
-	memcpy(pDSLockedBuffer0, &g_nMixBuffer[0], dwDSLockedBufferSize0);
-	if(pDSLockedBuffer1)
-		memcpy(pDSLockedBuffer1, &g_nMixBuffer[dwDSLockedBufferSize0/sizeof(short)], dwDSLockedBufferSize1);
+        if (!nNumSamples) {
+            return;
+        }
 
-	// Commit sound buffer
-#ifdef APPLE2IX
-	MockingboardVoice->Unlock(MockingboardVoice, dwDSLockedBufferSize0);
-#else
-	hr = MockingboardVoice->Unlock((void*)pDSLockedBuffer0, dwDSLockedBufferSize0, (void*)pDSLockedBuffer1, dwDSLockedBufferSize1);
-#endif
+        // make at least 2 attempts to submit data (could be at a ringBuffer boundary)
+        do {
+            if (MockingboardVoice->Lock(MockingboardVoice, requestedBufSize, &pDSLockedBuffer0, &dwDSLockedBufferSize0)) {
+                return;
+            }
+            assert(dwDSLockedBufferSize0 % 2 == 0);
+            memcpy(pDSLockedBuffer0, &g_nMixBuffer[bufIdx/sizeof(short)], dwDSLockedBufferSize0);
+            MockingboardVoice->Unlock(MockingboardVoice, dwDSLockedBufferSize0);
+            bufIdx += dwDSLockedBufferSize0;
+            requestedBufSize -= dwDSLockedBufferSize0;
+            assert(requestedBufSize <= originalRequestedBufSize);
+            ++counter;
+        } while (bufIdx < originalRequestedBufSize && counter < 2);
+
+        assert(bufIdx == originalRequestedBufSize);
 
 #ifndef APPLE2IX
 	dwByteOffset = (dwByteOffset + (unsigned long)nNumSamples*sizeof(short)*g_nMB_NumChannels) % g_dwDSBufferSize;
