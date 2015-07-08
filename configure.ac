@@ -224,7 +224,6 @@ AC_ARG_ENABLE([audio], AS_HELP_STRING([--disable-audio], [Disable emulator audio
             AC_CHECK_HEADER(AL/alext.h, [
                 AC_SEARCH_LIBS(alcOpenDevice, openal, [
                     dnl found OpenAL ...
-                    AC_DEFINE(AUDIO_OPENAL, 1, [Enable OpenAL audio output])
                     AC_DEFINE(AUDIO_ENABLED, 1, [Enable sound module])
                     AUDIO_GLUE_C="src/audio/speaker.c src/audio/mockingboard.c src/audio/playqueue.c"
                     AUDIO_O="src/audio/soundcore.o src/audio/soundcore-openal.o src/audio/speaker.o src/audio/playqueue.o src/audio/alhelpers.o src/audio/mockingboard.o src/audio/AY8910.o"
