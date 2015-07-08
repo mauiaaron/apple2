@@ -144,12 +144,10 @@ static void bqPlayerCallback(SLAndroidSimpleBufferQueueItf bq, void *context) {
     if (result != SL_RESULT_SUCCESS) {
         LOG("WARNING: could not enqueue data to OpenSLES!");
         (*(voice->bqPlayerPlay))->SetPlayState(voice->bqPlayerPlay, SL_PLAYSTATE_STOPPED);
-        return;
     }
 }
 
 static long _SLMaybeSubmitAndStart(SLVoice *voice) {
-
     SLuint32 state = 0;
     SLresult result = (*(voice->bqPlayerPlay))->GetPlayState(voice->bqPlayerPlay, &state);
     if (result != SL_RESULT_SUCCESS) {
@@ -218,7 +216,7 @@ static long SLLockBuffer(AudioBuffer_s *_this, unsigned long write_bytes, INOUT 
         unsigned long writableBytes = MIN( availableBytes, ((voice->bufferSize+voice->submitSize) - voice->writeHead) );
 
         if (write_bytes > writableBytes) {
-            LOG("WARNING!!! truncating audio buffer");
+            OPENSL_LOG("NOTE truncating audio buffer (call again to write complete requested buffer) ...");
             write_bytes = writableBytes;
         }
 
@@ -463,6 +461,11 @@ static SLVoice *_opensl_createVoice(unsigned long numChannels, const EngineConte
             break;
         }
 
+        // Force OpenSLES to start playback
+        unsigned long workingBytes;
+        _underrun_check_and_manage(voice, &workingBytes);
+        _SLMaybeSubmitAndStart(voice);
+
         return voice;
 
     } while(0);
@@ -681,6 +684,7 @@ static long opensles_systemSetup(INOUT AudioContext_s **audio_context) {
 
 // pause all audio
 static long opensles_systemPause(void) {
+    LOG("OpenSLES pausing play");
 
     SLVoices *vnode = NULL;
     SLVoices *tmp = NULL;
@@ -697,6 +701,8 @@ static long opensles_systemPause(void) {
 }
 
 static long opensles_systemResume(void) {
+    LOG("OpenSLES resuming play");
+
     SLVoices *vnode = NULL;
     SLVoices *tmp = NULL;
     int err = 0;
