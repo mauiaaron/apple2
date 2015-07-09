@@ -41,7 +41,8 @@ typedef struct SLVoice {
     SLVolumeItf bqPlayerVolume;
 
     // working data buffer
-    uint8_t *ringBuffer;            // ringBuffer of total size : bufferSize+idealBufSize
+    uint8_t *ringBuffer;            // ringBuffer of total size : bufferSize+submitSize
+    uint8_t *submitBuf;             // submitBuffer
     unsigned long bufferSize;       // ringBuffer non-overflow size
     unsigned long submitSize;       // buffer size OpenSLES expects/wants
     unsigned long writeHead;        // head of the writer of ringBuffer (speaker, mockingboard)
@@ -55,6 +56,7 @@ typedef struct SLVoice {
 
     // misc
     unsigned long numChannels;
+    bool backfillQuiet
 } SLVoice;
 
 typedef struct SLVoices {
@@ -124,7 +126,14 @@ static void bqPlayerCallback(SLAndroidSimpleBufferQueueItf bq, void *context) {
     // enqueue next buffer of correct size to OpenSLES
     // invariant : we can always read submitSize amount from the position of readHead
 
-    SLresult result = (*bq)->Enqueue(bq, voice->ringBuffer+voice->readHead, voice->submitSize);
+    SLresult result = SL_RESULT_SUCCESS;
+    if (voice->backfillQuiet) {
+        memcpy(voice->submitBuf, voice->ringBuffer+voice->readHead, voice->submitSize);
+        result = (*bq)->Enqueue(bq, voice->submitBuf, voice->submitSize);
+        memset(voice->ringBuffer+voice->readHead, 0x0, voice->submitSize);
+    } else {
+        result = (*bq)->Enqueue(bq, voice->ringBuffer+voice->readHead, voice->submitSize);
+    }
 
     // now manage overflow/wrapping ... (it's easier to ask for buffer overflow forgiveness than permission ;-)
 
@@ -133,6 +142,10 @@ static void bqPlayerCallback(SLAndroidSimpleBufferQueueItf bq, void *context) {
 
     if (newReadHead >= voice->bufferSize) {
         newReadHead = newReadHead - voice->bufferSize;
+        if (voice->backfillQuiet) {
+            memset(voice->ringBuffer+voice->bufferSize, 0x0, voice->submitSize);
+            memset(voice->ringBuffer, 0x0, newReadHead);
+        }
         ++newReadWrapCount;
     }
 
@@ -347,6 +360,7 @@ static SLVoice *_opensl_createVoice(unsigned long numChannels, const EngineConte
             channelMask = SL_SPEAKER_FRONT_LEFT | SL_SPEAKER_FRONT_RIGHT;
             voice->submitSize = android_stereoBufferSubmitSizeSamples * opensles_audio_backend.systemSettings.bytesPerSample * numChannels;
             voice->bufferSize = opensles_audio_backend.systemSettings.stereoBufferSizeSamples * opensles_audio_backend.systemSettings.bytesPerSample * numChannels;
+            voice->backfillQuiet = true;
             LOG("ideal stereo submission bufsize is %lu (bytes:%lu)", (unsigned long)android_stereoBufferSubmitSizeSamples, (unsigned long)voice->submitSize);
         } else {
             channelMask = SL_SPEAKER_FRONT_CENTER;
@@ -358,7 +372,13 @@ static SLVoice *_opensl_createVoice(unsigned long numChannels, const EngineConte
         // Allocate enough space for the temp buffer (including a maximum allowed overflow)
         voice->ringBuffer = malloc(voice->bufferSize + voice->submitSize/*max overflow*/);
         if (voice->ringBuffer == NULL) {
-            ERRLOG("OOPS, Error allocating %d bytes", voice->bufferSize);
+            ERRLOG("OOPS, Error allocating %lu bytes", (unsigned long)voice->bufferSize+voice->submitSize);
+            break;
+        }
+
+        voice->submitBuf = malloc(voice->submitSize);
+        if (voice->submitBuf == NULL) {
+            ERRLOG("OOPS, Error allocating %lu bytes", (unsigned long)voice->submitSize);
             break;
         }
 
