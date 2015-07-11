@@ -31,10 +31,18 @@
 
 #define SPKR_SILENT_STEP 1
 
-#if defined(NUM_CHANNELS)
-#error FIXME
+#if defined(ANDROID)
+// Note to future self:
+//
+// This is a leaky backend implementation detail : we are optimizing to use only one OpenSLES buffer queue callback that
+// mixes samples from both mockingboard and speaker (thus the speaker needs to be stereo to match mockingboard).
+//
+// This is different than the OpenAL backend implementation for desktop (Linux/Mac/...) which is a push-based local
+// queue.
+#   define NUM_CHANNELS 2
 #else
-#define NUM_CHANNELS 2
+// this can still be mono for other systems ...
+#   define NUM_CHANNELS 1
 #endif
 
 static unsigned long bufferTotalSize = 0;
@@ -342,7 +350,7 @@ void speaker_init(void) {
     long err = 0;
     speaker_isAvailable = false;
     do {
-        err = audio_createSoundBuffer(&speakerBuffer, NUM_CHANNELS);
+        err = audio_createSoundBuffer(&speakerBuffer);
         if (err) {
             break;
         }
@@ -425,6 +433,8 @@ void speaker_flush(void) {
                 // OpenSLES seems to be able to pause output without the nasty pops that I hear with OpenAL on Linux
                 // desktop.  So this speaker_going_silent hack is not needed.  There is also a noticeable glitch in
                 // OpenSLES when this codepath is enabled.
+                //
+                // Furthermore, the simple mixer in soundcore-opensles.c now requires signed 16bit samples
 #else
                 // After 0.1sec of //e cycles time start reducing samples to zero (if they aren't there already).  This
                 // process attempts to mask the extraneous clicks when freezing/restarting emulation (GUI access) and
@@ -460,7 +470,7 @@ bool speaker_is_active(void) {
 }
 
 void speaker_set_volume(int16_t amplitude) {
-    speaker_amplitude = (amplitude/2);
+    speaker_amplitude = amplitude;
 }
 
 double speaker_cycles_per_sample(void) {
@@ -494,7 +504,11 @@ GLUE_C_READ(speaker_toggle)
 
     if (!is_fullspeed) {
         if (speaker_data == speaker_amplitude) {
+#ifdef ANDROID
+            speaker_data = -speaker_amplitude;
+#else
             speaker_data = 0;
+#endif
         } else {
             speaker_data = speaker_amplitude;
         }

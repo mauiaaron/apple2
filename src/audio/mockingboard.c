@@ -191,6 +191,7 @@ static bool g_bVotraxPhoneme = false;
 
 #ifdef APPLE2IX
 static unsigned long SAMPLE_RATE = 0;
+static float samplesScale = 1.f;
 #else
 static const unsigned long SAMPLE_RATE = 44100;	// Use a base freq so that DirectX (or sound h/w) doesn't have to up/down-sample
 #endif
@@ -896,6 +897,12 @@ static void MB_Update()
     }
 
         static int nNumSamplesError = 0;
+        if (!MockingboardVoice)
+        {
+            nNumSamplesError = 0;
+            return;
+        }
+
         if (!MockingboardVoice->bActive || !g_bMB_Active)
         {
             nNumSamplesError = 0;
@@ -1086,8 +1093,13 @@ static void MB_Update()
 		else if(nDataR > nWaveDataMax)
 			nDataR = nWaveDataMax;
 
+#ifdef APPLE2IX
+		g_nMixBuffer[i*g_nMB_NumChannels+0] = (short)nDataL * samplesScale;
+		g_nMixBuffer[i*g_nMB_NumChannels+1] = (short)nDataR * samplesScale;
+#else
 		g_nMixBuffer[i*g_nMB_NumChannels+0] = (short)nDataL;	// L
 		g_nMixBuffer[i*g_nMB_NumChannels+1] = (short)nDataR;	// R
+#endif
 	}
 
 	//
@@ -1106,7 +1118,11 @@ static void MB_Update()
             if (MockingboardVoice->Lock(MockingboardVoice, requestedBufSize, &pDSLockedBuffer0, &dwDSLockedBufferSize0)) {
                 return;
             }
-            assert(dwDSLockedBufferSize0 % 2 == 0);
+
+            {
+                unsigned long modTwo = (dwDSLockedBufferSize0 % 2);
+                assert(modTwo == 0);
+            }
             memcpy(pDSLockedBuffer0, &g_nMixBuffer[bufIdx/sizeof(short)], dwDSLockedBufferSize0);
             MockingboardVoice->Unlock(MockingboardVoice, dwDSLockedBufferSize0);
             bufIdx += dwDSLockedBufferSize0;
@@ -1253,6 +1269,7 @@ static unsigned long SSI263Thread(void *lpParameter)
 static void SSI263_Play(unsigned int nPhoneme)
 {
     return; // SSI263 voices are currently deadc0de
+#if 0
 #if 1
 	int hr;
 
@@ -1348,6 +1365,7 @@ static void SSI263_Play(unsigned int nPhoneme)
 
 	SSI263Voice.bActive = true;
 #endif
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -1375,7 +1393,7 @@ static bool MB_DSInit()
 	if(!audio_isAvailable)
 		return false;
 
-	int hr = audio_createSoundBuffer(&MockingboardVoice, 2);
+	int hr = audio_createSoundBuffer(&MockingboardVoice);
 	LOG("MB_DSInit: DSGetSoundBuffer(), hr=0x%08X\n", (unsigned int)hr);
 	if(FAILED(hr))
 	{
@@ -1421,6 +1439,7 @@ static bool MB_DSInit()
 #endif
 
         return true;
+#if 0
 
 #ifdef APPLE2IX
         int err = 0;
@@ -1576,6 +1595,7 @@ static bool MB_DSInit()
 
 	return true;
 
+#endif
 #endif // NO_DIRECT_X
 }
 
@@ -2210,7 +2230,11 @@ bool MB_IsActive()
 }
 
 //-----------------------------------------------------------------------------
-
+#if defined(APPLE2IX)
+void MB_SetVolumeZeroToTen(unsigned long goesToTen) {
+    samplesScale = goesToTen/10.f;
+}
+#else
 static long NewVolume(unsigned long dwVolume, unsigned long dwVolumeMax)
 {
     float fVol = (float) dwVolume / (float) dwVolumeMax;    // 0.0=Max, 1.0=Min
@@ -2220,12 +2244,6 @@ static long NewVolume(unsigned long dwVolume, unsigned long dwVolumeMax)
 
 void MB_SetVolume(unsigned long dwVolume, unsigned long dwVolumeMax)
 {
-#ifdef APPLE2IX
-#warning TODO FIXME ... why is OpenAL on my Linux box so damn loud?!
-    dwVolume >>= 2;
-    dwVolumeMax >>= 2;
-#endif
-
 	MockingboardVoice->nVolume = NewVolume(dwVolume, dwVolumeMax);
 
 #if !defined(APPLE2IX)
@@ -2233,6 +2251,7 @@ void MB_SetVolume(unsigned long dwVolume, unsigned long dwVolumeMax)
 		MockingboardVoice->SetVolume(MockingboardVoice->nVolume);
 #endif
 }
+#endif
 
 //===========================================================================
 

@@ -12,13 +12,15 @@
 #ifndef _SPEAKER_H_
 #define _SPEAKER_H_
 
-#define SPKR_DATA_INIT 0x4000
+// leaky detail : max amplitude should be <= SHRT_MAX/2 to not overflow/clip 16bit samples when simple additive mixing
+// between speaker and mockingboard
+#define SPKR_DATA_INIT (SHRT_MAX>>3) // 0x0FFF
 
 void speaker_init(void);
 void speaker_destroy(void);
 void speaker_reset(void);
 void speaker_flush(void);
-void speaker_set_volume(int16_t amplitude);
+void speaker_setVolumeZeroToTen(unsigned long goesToTen);
 bool speaker_is_active(void);
 
 /*

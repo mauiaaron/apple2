@@ -24,7 +24,7 @@ AudioBackend_s *audio_backend = NULL;
 
 //-----------------------------------------------------------------------------
 
-long audio_createSoundBuffer(INOUT AudioBuffer_s **audioBuffer, unsigned long numChannels) {
+long audio_createSoundBuffer(INOUT AudioBuffer_s **audioBuffer) {
     *audioBuffer = NULL;
 
     if (!audio_isAvailable) {
@@ -44,7 +44,7 @@ long audio_createSoundBuffer(INOUT AudioBuffer_s **audioBuffer, unsigned long nu
             err = -1;
             break;
         }
-        err = audioContext->CreateSoundBuffer(audioContext, numChannels, audioBuffer);
+        err = audioContext->CreateSoundBuffer(audioContext, audioBuffer);
         if (err) {
             break;
         }
@@ -98,13 +98,13 @@ void audio_pause(void) {
     if (!audio_isAvailable) {
         return;
     }
-    audio_backend->pause();
+    audio_backend->pause(audioContext);
 }
 
 void audio_resume(void) {
     if (!audio_isAvailable) {
         return;
     }
-    audio_backend->resume();
+    audio_backend->resume(audioContext);
 }
 

@@ -98,7 +98,11 @@ static inline GLenum safeGLGetError(void) {
 #endif
 
 #ifdef ANDROID
-#include "../Android/jni/android_globals.h"
+#   include "../Android/jni/android_globals.h"
+#   define USE_SIMD 1
+#   define SIMD_IS_AVAILABLE() (android_armNeonEnabled/* || android_x86SSSE3Enabled*/)
+#else
+#   define SIMD_IS_AVAILABLE()
 #endif
 
 #define PATH_SEPARATOR "/" // =P

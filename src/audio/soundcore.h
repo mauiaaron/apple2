@@ -43,15 +43,15 @@ typedef struct AudioBuffer_s {
     long (*GetStatus)(struct AudioBuffer_s *_this, OUTPARM unsigned long *status);
 
     // Mockingboard-specific buffer replay
-    long (*UnlockStaticBuffer)(struct AudioBuffer_s *_this, unsigned long audio_bytes);
-    long (*Replay)(struct AudioBuffer_s *_this);
+    //long (*UnlockStaticBuffer)(struct AudioBuffer_s *_this, unsigned long audio_bytes);
+    //long (*Replay)(struct AudioBuffer_s *_this);
 
 } AudioBuffer_s;
 
 /*
  * Creates a sound buffer object.
  */
-long audio_createSoundBuffer(INOUT AudioBuffer_s **audioBuffer, unsigned long numChannels);
+long audio_createSoundBuffer(INOUT AudioBuffer_s **audioBuffer);
 
 /*
  * Destroy and nullify sound buffer object.
@@ -111,7 +111,7 @@ typedef struct AudioSettings_s {
 
 typedef struct AudioContext_s {
     PRIVATE void *_internal;
-    PRIVATE long (*CreateSoundBuffer)(const struct AudioContext_s *sound_system, unsigned long numChannels, INOUT AudioBuffer_s **buffer);
+    PRIVATE long (*CreateSoundBuffer)(const struct AudioContext_s *sound_system, INOUT AudioBuffer_s **buffer);
     PRIVATE long (*DestroySoundBuffer)(const struct AudioContext_s *sound_system, INOUT AudioBuffer_s **buffer);
 } AudioContext_s;
 
@@ -123,8 +123,8 @@ typedef struct AudioBackend_s {
     PRIVATE long (*setup)(INOUT AudioContext_s **audio_context);
     PRIVATE long (*shutdown)(INOUT AudioContext_s **audio_context);
 
-    PRIVATE long (*pause)(void);
-    PRIVATE long (*resume)(void);
+    PRIVATE long (*pause)(AudioContext_s *audio_context);
+    PRIVATE long (*resume)(AudioContext_s *audio_context);
 
 } AudioBackend_s;
 

@@ -12,11 +12,14 @@
 #include "common.h"
 #include "androidkeys.h"
 
+#include <cpu-features.h>
 #include <jni.h>
 
 unsigned long android_deviceSampleRateHz = 0;
 unsigned long android_monoBufferSubmitSizeSamples = 0;
 unsigned long android_stereoBufferSubmitSizeSamples = 0;
+bool android_armNeonEnabled = false;
+bool android_x86SSSE3Enabled = false;
 
 enum {
     ANDROID_ACTION_DOWN = 0x0,
@@ -92,6 +95,35 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnCreate(JNIEnv *env, jobje
     if (data_dir) {
         LOG("IGNORING multiple calls to nativeOnCreate ...");
         return;
+    }
+
+    AndroidCpuFamily family = android_getCpuFamily();
+    uint64_t features = android_getCpuFeatures();
+    if (family == ANDROID_CPU_FAMILY_X86) {
+        if (features & ANDROID_CPU_X86_FEATURE_SSSE3) {
+            LOG("nANDROID_CPU_X86_FEATURE_SSSE3");
+            android_x86SSSE3Enabled = true;
+        }
+        if (features & ANDROID_CPU_X86_FEATURE_MOVBE) {
+            LOG("ANDROID_CPU_X86_FEATURE_MOVBE");
+        }
+        if (features & ANDROID_CPU_X86_FEATURE_POPCNT) {
+            LOG("ANDROID_CPU_X86_FEATURE_POPCNT");
+        }
+    } else if (family == ANDROID_CPU_FAMILY_ARM) {
+        if (features & ANDROID_CPU_ARM_FEATURE_ARMv7) {
+            LOG("ANDROID_CPU_ARM_FEATURE_ARMv7");
+        }
+        if (features & ANDROID_CPU_ARM_FEATURE_VFPv3) {
+            LOG("ANDROID_CPU_ARM_FEATURE_VFPv3");
+        }
+        if (features & ANDROID_CPU_ARM_FEATURE_NEON) {
+            LOG("ANDROID_CPU_ARM_FEATURE_NEON");
+            android_armNeonEnabled = true;
+        }
+        if (features & ANDROID_CPU_ARM_FEATURE_LDREX_STREX) {
+            LOG("ANDROID_CPU_ARM_FEATURE_LDREX_STREX");
+        }
     }
 
     data_dir = strdup(dataDir);

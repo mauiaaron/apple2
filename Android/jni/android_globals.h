@@ -12,4 +12,6 @@
 extern unsigned long android_deviceSampleRateHz;
 extern unsigned long android_monoBufferSubmitSizeSamples;
 extern unsigned long android_stereoBufferSubmitSizeSamples;
+extern bool android_armNeonEnabled;
+extern bool android_x86SSSE3Enabled;
 

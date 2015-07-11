@@ -508,7 +508,8 @@ void c_initialize_apple_ii_memory()
 void c_initialize_sound_hooks()
 {
 #ifdef AUDIO_ENABLED
-    speaker_set_volume(sound_volume * (SPKR_DATA_INIT/10));
+    speaker_setVolumeZeroToTen(sound_volume);
+    MB_SetVolumeZeroToTen(sound_volume);
 #endif
     for (int i = 0xC030; i < 0xC040; i++)
     {

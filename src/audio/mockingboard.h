@@ -110,6 +110,7 @@ void    MB_SetSoundcardType(SS_CARDTYPE NewSoundcardType);
 double  MB_GetFramePeriod();
 bool    MB_IsActive();
 unsigned long   MB_GetVolume();
+void    MB_SetVolumeZeroToTen(unsigned long goesToTen);
 void    MB_SetVolume(unsigned long dwVolume, unsigned long dwVolumeMax);
 unsigned long   MB_GetSnapshot(SS_CARD_MOCKINGBOARD* pSS, unsigned long dwSlot);
 unsigned long   MB_SetSnapshot(SS_CARD_MOCKINGBOARD* pSS, unsigned long dwSlot);
