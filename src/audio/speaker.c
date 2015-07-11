@@ -31,10 +31,16 @@
 
 #define SPKR_SILENT_STEP 1
 
+#if defined(NUM_CHANNELS)
+#error FIXME
+#else
+#define NUM_CHANNELS 2
+#endif
+
 static unsigned long bufferTotalSize = 0;
 static unsigned long bufferSizeIdealMin = 0;
 static unsigned long bufferSizeIdealMax = 0;
-static unsigned long sampleRateHz = 0;
+static unsigned long channelsSampleRateHz = 0;
 
 static bool speaker_isAvailable = false;
 
@@ -79,7 +85,7 @@ static void _speaker_init_timing(void) {
     // 46.28 //e cycles for 22.05kHz sample rate
 
     // AppleWin NOTE : use integer value: Better for MJ Mahon's RT.SYNTH.DSK (integer multiples of 1.023MHz Clk)
-    cycles_per_sample = (unsigned int)(cycles_persec_target / (double)sampleRateHz);
+    cycles_per_sample = (unsigned int)(cycles_persec_target / (double)audio_backend->systemSettings.sampleRateHz);
 
     unsigned int last_remainder_buffer_size = remainder_buffer_size;
     remainder_buffer_size = (unsigned int)cycles_per_sample;
@@ -98,6 +104,8 @@ static void _speaker_init_timing(void) {
         SPEAKER_LOG("resetting speaker cycles counter");
         cycles_last_update = 0;
     }
+
+    LOG("Speaker initialize timing ... cycles_persec_target:%f cycles_per_sample:%f speaker sampleRateHz:%lu", cycles_persec_target, cycles_per_sample, audio_backend->systemSettings.sampleRateHz);
 
     if (is_fullspeed) {
         remainder_buffer_idx = 0;
@@ -150,8 +158,11 @@ static void _speaker_update(/*bool toggled*/) {
 
                 sample_mean /= (int)remainder_buffer_size;
 
-                if (samples_buffer_idx < sampleRateHz) {
+                if (samples_buffer_idx < channelsSampleRateHz) {
                     samples_buffer[samples_buffer_idx++] = (int16_t)sample_mean;
+                    if (NUM_CHANNELS == 2) {
+                        samples_buffer[samples_buffer_idx++] = (int16_t)sample_mean;
+                    }
                 }
             }
         }
@@ -161,8 +172,11 @@ static void _speaker_update(/*bool toggled*/) {
         const unsigned long long cycles_remainder = (unsigned long long)((double)cycles_diff - (double)num_samples * cycles_per_sample);
 
         // populate samples_buffer with whole samples
-        while (num_samples && (samples_buffer_idx < sampleRateHz)) {
+        while (num_samples && (samples_buffer_idx < channelsSampleRateHz)) {
             samples_buffer[samples_buffer_idx++] = speaker_data;
+            if (NUM_CHANNELS == 2) {
+                samples_buffer[samples_buffer_idx++] = speaker_data;
+            }
             if (speaker_going_silent && speaker_data) {
                 speaker_data -= SPKR_SILENT_STEP;
             }
@@ -184,8 +198,8 @@ static void _speaker_update(/*bool toggled*/) {
 #endif
         }
 
-        if (UNLIKELY(samples_buffer_idx >= sampleRateHz)) {
-            assert(samples_buffer_idx == sampleRateHz && "should be at exactly the end, no further");
+        if (UNLIKELY(samples_buffer_idx >= channelsSampleRateHz)) {
+            assert(samples_buffer_idx == channelsSampleRateHz && "should be at exactly the end, no further");
             ERRLOG("OOPS, overflow in speaker samples buffer");
         }
     }
@@ -238,14 +252,14 @@ static void _submit_samples_buffer_fullspeed(void) {
 // Submits samples from the samples_buffer to the audio system backend when running at a normal scaled-speed.  This also
 // generates cycles feedback to the main CPU timing routine depending on the needs of the streaming audio (more or less
 // data).
-static unsigned int _submit_samples_buffer(const unsigned int num_samples) {
+static unsigned int _submit_samples_buffer(const unsigned long num_channel_samples) {
 
-    assert(num_samples);
+    assert(num_channel_samples);
 
     unsigned long bytes_queued = 0;
     long err = speakerBuffer->GetCurrentPosition(speakerBuffer, &bytes_queued);
     if (err) {
-        return num_samples;
+        return num_channel_samples;
     }
     assert(bytes_queued <= bufferTotalSize);
 
@@ -276,29 +290,42 @@ static unsigned int _submit_samples_buffer(const unsigned int num_samples) {
     //
 
     const unsigned int bytes_free = bufferTotalSize - bytes_queued;
-    unsigned int num_samples_to_use = num_samples;
+    unsigned long requested_samples = num_channel_samples;
+    unsigned long requested_buffer_size = num_channel_samples * sizeof(int16_t);
 
-    if (num_samples_to_use * sizeof(int16_t) > bytes_free) {
-        num_samples_to_use = bytes_free / sizeof(int16_t);
+    if (requested_buffer_size > bytes_free) {
+        requested_samples = bytes_free / sizeof(int16_t);
+        requested_buffer_size = bytes_free;
     }
 
-    if (num_samples_to_use) {
+    if (requested_buffer_size) {
         unsigned long system_buffer_size = 0;
         int16_t *system_samples_buffer = NULL;
 
-        if (speakerBuffer->Lock(speakerBuffer, (unsigned long)num_samples_to_use*sizeof(int16_t), &system_samples_buffer, &system_buffer_size)) {
-            return num_samples;
-        }
+        unsigned long curr_buffer_size = requested_buffer_size;
+        unsigned long samples_idx = 0;
+        unsigned long counter = 0;
+        do {
+            if (speakerBuffer->Lock(speakerBuffer, curr_buffer_size, &system_samples_buffer, &system_buffer_size)) {
+                ERRLOG("Problem locking speaker buffer");
+                break;
+            }
 
-        memcpy(system_samples_buffer, &samples_buffer[0], system_buffer_size);
+            memcpy(system_samples_buffer, &samples_buffer[samples_idx], system_buffer_size);
 
-        err = speakerBuffer->Unlock(speakerBuffer, system_buffer_size);
-        if (err) {
-            return num_samples;
-        }
+            err = speakerBuffer->Unlock(speakerBuffer, system_buffer_size);
+            if (err) {
+                ERRLOG("Problem unlocking speaker buffer");
+                break;
+            }
+
+            curr_buffer_size -= system_buffer_size;
+            samples_idx += system_buffer_size;
+            ++counter;
+        } while (samples_idx < requested_buffer_size && counter < 2);
     }
 
-    return num_samples_to_use;
+    return requested_samples;
 }
 
 // --------------------------------------------------------------------------------------------------------------------
@@ -315,20 +342,27 @@ void speaker_init(void) {
     long err = 0;
     speaker_isAvailable = false;
     do {
-        err = audio_createSoundBuffer(&speakerBuffer, 1);
+        err = audio_createSoundBuffer(&speakerBuffer, NUM_CHANNELS);
         if (err) {
             break;
         }
 
-        bufferTotalSize = audio_backend->systemSettings.monoBufferSizeSamples * audio_backend->systemSettings.bytesPerSample;
+        assert(audio_backend->systemSettings.bytesPerSample == sizeof(int16_t));
+        assert(NUM_CHANNELS == 2 || NUM_CHANNELS == 1);
+
+        if (NUM_CHANNELS == 2) {
+            bufferTotalSize = audio_backend->systemSettings.stereoBufferSizeSamples * audio_backend->systemSettings.bytesPerSample * NUM_CHANNELS;
+        } else {
+            bufferTotalSize = audio_backend->systemSettings.monoBufferSizeSamples * audio_backend->systemSettings.bytesPerSample;
+        }
         bufferSizeIdealMin = bufferTotalSize/4;
         bufferSizeIdealMax = bufferTotalSize/2;
-        sampleRateHz = audio_backend->systemSettings.sampleRateHz;
-        LOG("Speaker initializing with %lu buffer size (bytes), sample rate of %lu", (unsigned long)bufferTotalSize, (unsigned long)sampleRateHz);
+        channelsSampleRateHz = audio_backend->systemSettings.sampleRateHz * NUM_CHANNELS;
+        LOG("Speaker initializing with %lu buffer size (bytes), sample rate of %lu", bufferTotalSize, audio_backend->systemSettings.sampleRateHz);
 
-        remainder_buffer_size_max = ((CLK_6502_INT*(unsigned long)CPU_SCALE_FASTEST)/sampleRateHz)+1;
+        remainder_buffer_size_max = ((CLK_6502_INT*(unsigned long)CPU_SCALE_FASTEST)/audio_backend->systemSettings.sampleRateHz)+1;
 
-        samples_buffer = malloc(sampleRateHz * sizeof(int16_t));
+        samples_buffer = malloc(channelsSampleRateHz * sizeof(int16_t));
         if (!samples_buffer) {
             err = -1;
             break;
@@ -413,7 +447,10 @@ void speaker_flush(void) {
     assert(samples_used <= samples_buffer_idx);
 
     if (samples_used) {
-        memmove(samples_buffer, &samples_buffer[samples_used], samples_buffer_idx-samples_used);
+        size_t unsubmitted_size = samples_buffer_idx-samples_used;
+        if (unsubmitted_size) {
+            memmove(samples_buffer, &samples_buffer[samples_used], unsubmitted_size);
+        }
         samples_buffer_idx -= samples_used;
     }
 }
