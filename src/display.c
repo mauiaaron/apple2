@@ -43,8 +43,6 @@ uint8_t video__hires_odd[0x800] = { 0 };
 
 int video__current_page = 0; // current visual page
 
-extern volatile bool _vid_dirty;
-
 // Video constants -- sourced from AppleWin
 static const bool bVideoScannerNTSC = true;
 static const int kHBurstClock   =    53; // clock when Color Burst starts
@@ -94,6 +92,22 @@ uint8_t video__dhires2[256] = {
     0x6,0x6,0x6,0x2,0xe,0x6,0x6,0x6,0xe,0xe,0xa,0xa,0xe,0x6,0xe,0x6,
     0x7,0x7,0x7,0x7,0x7,0x7,0x7,0x7,0xf,0xf,0xb,0xb,0xf,0xf,0xf,0xf,
 };
+
+
+// forward decls of VM entry points
+
+void video__write_2e_text0(void);
+void video__write_2e_text0_mixed(void);
+void video__write_2e_text1(void);
+void video__write_2e_text1_mixed(void);
+void video__write_2e_odd0(void);
+void video__write_2e_even0(void);
+void video__write_2e_odd0_mixed(void);
+void video__write_2e_even0_mixed(void);
+void video__write_2e_odd1(void);
+void video__write_2e_even1(void);
+void video__write_2e_odd1_mixed(void);
+void video__write_2e_even1_mixed(void);
 
 // ----------------------------------------------------------------------------
 // Initialization routines
@@ -579,7 +593,7 @@ static inline void _plot_lores(uint8_t **d, const uint32_t val) {
 }
 
 static inline void _plot_character(const unsigned int font_off, uint8_t *fb_ptr) {
-    _vid_dirty = true;
+    video_setDirty();
     uint8_t *font_ptr = video__wider_font+font_off;
     _plot_char40(/*dst*/&fb_ptr, /*src*/&font_ptr);
     _plot_char40(/*dst*/&fb_ptr, /*src*/&font_ptr);
@@ -602,7 +616,7 @@ static inline void _plot_character1(uint16_t ea, uint8_t b)
 }
 
 static inline void _plot_80character(const unsigned int font_off, uint8_t *fb_ptr) {
-    _vid_dirty = true;
+    video_setDirty();
     uint8_t *font_ptr = video__font+font_off;
     _plot_char80(/*dst*/&fb_ptr, /*src*/&font_ptr, SCANWIDTH);
     _plot_char80(/*dst*/&fb_ptr, /*src*/&font_ptr, SCANWIDTH);
@@ -632,7 +646,7 @@ static inline void _plot_80character1(uint16_t ea, uint8_t b)
 }
 
 static inline void _plot_block(const uint32_t val, uint8_t *fb_ptr) {
-    _vid_dirty = true;
+    video_setDirty();
     uint8_t color = (val & 0x0F) << 4;
     uint32_t val32 = (color << 24) | (color << 16) | (color << 8) | color;
 
@@ -735,7 +749,7 @@ GLUE_C_WRITE(video__write_2e_text1_mixed)
 // Classic interface and printing HUD messages
 
 void interface_plotChar(uint8_t *fboff, int fb_pix_width, interface_colorscheme_t cs, uint8_t c) {
-    _vid_dirty = true;
+    video_setDirty();
     uint8_t *src = video__int_font[cs] + c * (FONT_GLYPH_X*FONT_GLYPH_Y);
     _plot_char80(&fboff, &src, fb_pix_width);
     _plot_char80(&fboff, &src, fb_pix_width);
@@ -761,7 +775,7 @@ static inline void _plot_dhires_pixels(uint8_t idx, uint8_t *fb_ptr) {
 
 // PlotDHires
 static inline void _plot_dhires(uint16_t base, uint16_t ea, uint8_t *fb_base) {
-    _vid_dirty = true;
+    video_setDirty();
     ea &= ~0x1;
 
     uint16_t memoff = ea - base;
@@ -983,7 +997,7 @@ static inline void _draw_hires_graphics(uint16_t ea, uint8_t b, bool is_even, ui
         return;
     }
 
-    _vid_dirty = true;
+    video_setDirty();
     uint16_t off = ea - 0x2000;
     uint8_t *fb_base = NULL;
     if (page) {
@@ -1079,16 +1093,12 @@ void video_main_loop(void) {
 }
 
 void video_setpage(int p) {
-    _vid_dirty = true;
+    video_setDirty();
     video__current_page = p;
 }
 
 const uint8_t * const video_current_framebuffer() {
     return !video__current_page ? video__fb1 : video__fb2;
-}
-
-bool video_dirty(void) {
-    return _vid_dirty;
 }
 
 void video_redraw(void) {

@@ -130,10 +130,29 @@ void video_setpage(int page);
  */
 const uint8_t * const video_current_framebuffer();
 
+// do not access directly, but through inline accessor methods
+extern volatile unsigned long _backend_vid_dirty;
+
 /*
  * True if anything changed in framebuffer and not yet drawn
  */
-bool video_dirty(void);
+static inline bool video_isDirty(void) {
+    return _backend_vid_dirty;
+}
+
+/*
+ * Atomically set dirty bit, return previous value
+ */
+static inline unsigned long video_setDirty(void) {
+    return __sync_fetch_and_or(&_backend_vid_dirty, 1UL);
+}
+
+/*
+ * Atomically clear dirty bit, return previous value
+ */
+static inline unsigned long video_clearDirty(void) {
+    return __sync_fetch_and_and(&_backend_vid_dirty, 0UL);
+}
 
 // ----------------------------------------------------------------------------
 
@@ -247,37 +266,13 @@ uint8_t floating_bus_hibit(const bool hibit);
 /*
  * Pointers to framebuffer (can be VGA memory or host buffer)
  */
-extern uint8_t *video__fb1,*video__fb2;
+extern uint8_t *video__fb1;
+extern uint8_t *video__fb2;
 
-extern uint8_t video__hires_even[0x800];
-extern uint8_t video__hires_odd[0x800];
-
-extern uint8_t video__dhires1[256];
-extern uint8_t video__dhires2[256];
-
-extern int video__current_page; /* Current visual page */
-
-/* --- Precalculated hi-res page offsets given addr --- */
-extern unsigned int video__screen_addresses[8192];
-extern uint8_t video__columns[8192];
-
-extern uint8_t video__odd_colors[2];
-extern uint8_t video__even_colors[2];
-
-/* Hooks */
-
-void            video__write_2e_text0(),
-video__write_2e_text0_mixed(),
-video__write_2e_text1(),
-video__write_2e_text1_mixed(),
-video__write_2e_odd0(),
-video__write_2e_even0(),
-video__write_2e_odd0_mixed(),
-video__write_2e_even0_mixed(),
-video__write_2e_odd1(),
-video__write_2e_even1(),
-video__write_2e_odd1_mixed(),
-video__write_2e_even1_mixed();
+/*
+ * Current visual page
+ */
+extern READONLY int video__current_page;
 
 #endif /* !A2_VIDEO_H */
 

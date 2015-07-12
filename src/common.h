@@ -16,6 +16,14 @@
 #   define _GNU_SOURCE
 #endif
 
+// custom annotations
+#define INPARM
+#define OUTPARM
+#define INOUT
+#define PRIVATE
+#define PUBLIC
+#define READONLY
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -58,14 +66,6 @@
 #include "darwin-shim.h"
 #import <CoreFoundation/CoreFoundation.h>
 #endif
-
-// custom annotations
-#define INPARM
-#define OUTPARM
-#define INOUT
-#define PRIVATE
-#define PUBLIC
-#define READONLY
 
 #define CTOR_PRIORITY_FIRST  101
 #define CTOR_PRIORITY_EARLY  111

@@ -211,10 +211,6 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeRender(JNIEnv *env, jobject
     }
 #endif
 
-    extern volatile bool _vid_dirty;
-    if (!nativePaused) {
-        _vid_dirty = true;// HACK HACK HACK FIXME TODO : efficiency and battery life gains if we can fix this ...
-    }
     video_backend->render();
 }
 

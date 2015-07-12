@@ -64,7 +64,7 @@ static video_backend_s xvideo_backend = { 0 };
 static bool request_set_mode = false;
 static int request_mode = 0;
 
-volatile bool _vid_dirty = true;
+volatile unsigned long _backend_vid_dirty = 0;
 
 typedef struct {
     unsigned long flags;

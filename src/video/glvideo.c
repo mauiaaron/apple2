@@ -19,7 +19,7 @@
 bool safe_to_do_opengl_logging = false;
 bool renderer_shutting_down = false;
 
-volatile bool _vid_dirty = true;
+volatile unsigned long _backend_vid_dirty = 0;
 
 static int windowWidth = SCANWIDTH*1.5;
 static int windowHeight = SCANHEIGHT*1.5;
@@ -713,8 +713,10 @@ static void gldriver_render(void) {
     // that we calculated above
     glUniformMatrix4fv(uniformMVPIdx, 1, GL_FALSE, mvp);
 
-    char pixels[SCANWIDTH * SCANHEIGHT * sizeof(PIXEL_TYPE)];
-    if (_vid_dirty) {
+    unsigned long wasDirty = video_clearDirty();
+
+    char pixels[SCANWIDTH * SCANHEIGHT * sizeof(PIXEL_TYPE)]; // HACK FIXME TODO ... are we sure this does not overflow max stack buffer size?
+    if (wasDirty) {
         // Update texture from indexed-color Apple //e internal framebuffer
         unsigned int count = SCANWIDTH * SCANHEIGHT;
         for (unsigned int i=0, j=0; i<count; i++, j+=sizeof(PIXEL_TYPE)) {
@@ -731,7 +733,7 @@ static void gldriver_render(void) {
     glActiveTexture(TEXTURE_ACTIVE_FRAMEBUFFER);
     glBindTexture(GL_TEXTURE_2D, a2TextureName);
     glUniform1i(uniformTex2Use, TEXTURE_ID_FRAMEBUFFER);
-    if (_vid_dirty) {
+    if (wasDirty) {
         glTexImage2D(GL_TEXTURE_2D, /*level*/0, TEX_FORMAT_INTERNAL, SCANWIDTH, SCANHEIGHT, /*border*/0, TEX_FORMAT, TEX_TYPE, (GLvoid *)&pixels[0]);
     }
 
@@ -779,8 +781,6 @@ static void gldriver_render(void) {
 
     // Render HUD nodes
     glnode_renderNodes();
-
-    _vid_dirty = false;
 
 #if USE_GLUT
     glutSwapBuffers();
