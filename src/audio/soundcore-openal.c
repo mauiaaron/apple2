@@ -264,7 +264,10 @@ static long ALUnlockBuffer(AudioBuffer_s *_this, unsigned long audio_bytes) {
 
         voice->index += audio_bytes;
 
-        assert((voice->index < voice->buffersize) && "OOPS, overflow in queued sound data");
+
+        if (voice->index >= voice->buffersize) {
+            assert((voice->index == voice->buffersize) && "OOPS, detected an actual overflow in queued sound data");
+        }
 
         if (bytes_queued >= (voice->buffersize>>2)/*quarter buffersize*/) {
             // keep accumulating data into working buffer
@@ -284,6 +287,7 @@ static long ALUnlockBuffer(AudioBuffer_s *_this, unsigned long audio_bytes) {
     return err;
 }
 
+#if 0
 // HACK Part I : done once for mockingboard that has semiauto repeating phonemes ...
 static long ALUnlockStaticBuffer(AudioBuffer_s *_this, unsigned long audio_bytes) {
     ALVoice *voice = (ALVoice*)_this->_internal;
@@ -298,6 +302,7 @@ static long ALReplay(AudioBuffer_s *_this) {
     long err = _ALSubmitBufferToOpenAL(voice);
     return err;
 }
+#endif
 
 static long ALGetStatus(AudioBuffer_s *_this, OUTPARM unsigned long *status) {
     *status = -1;
@@ -466,7 +471,7 @@ static long openal_destroySoundBuffer(const struct AudioContext_s *sound_system,
     return 0;
 }
 
-static long openal_createSoundBuffer(const AudioContext_s *audio_context, unsigned long numChannels, INOUT AudioBuffer_s **soundbuf_struct) {
+static long openal_createSoundBuffer(const AudioContext_s *audio_context, INOUT AudioBuffer_s **soundbuf_struct) {
     LOG("openal_createSoundBuffer ...");
     assert(*soundbuf_struct == NULL);
 
@@ -477,7 +482,7 @@ static long openal_createSoundBuffer(const AudioContext_s *audio_context, unsign
         ALCcontext *ctx = (ALCcontext*)(audio_context->_internal);
         assert(ctx != NULL);
 
-        if ((voice = _openal_createVoice(numChannels)) == NULL) {
+        if ((voice = _openal_createVoice(NUM_CHANNELS)) == NULL) {
             ERRLOG("OOPS, Cannot create new voice");
             break;
         }
@@ -503,8 +508,8 @@ static long openal_createSoundBuffer(const AudioContext_s *audio_context, unsign
         (*soundbuf_struct)->Unlock             = &ALUnlockBuffer;
         (*soundbuf_struct)->GetStatus          = &ALGetStatus;
         // mockingboard-specific hacks
-        (*soundbuf_struct)->UnlockStaticBuffer = &ALUnlockStaticBuffer;
-        (*soundbuf_struct)->Replay             = &ALReplay;
+        //(*soundbuf_struct)->UnlockStaticBuffer = &ALUnlockStaticBuffer;
+        //(*soundbuf_struct)->Replay             = &ALReplay;
 
         return 0;
     } while(0);
@@ -586,7 +591,7 @@ static long openal_systemSetup(INOUT AudioContext_s **audio_context) {
     return result;
 }
 
-static long openal_systemPause(void) {
+static long openal_systemPause(AudioContext_s *audio_context) {
     ALVoices *vnode = NULL;
     ALVoices *tmp = NULL;
     long err = 0;
@@ -602,7 +607,7 @@ static long openal_systemPause(void) {
     return 0;
 }
 
-static long openal_systemResume(void) {
+static long openal_systemResume(AudioContext_s *audio_context) {
     ALVoices *vnode = NULL;
     ALVoices *tmp = NULL;
     long err = 0;

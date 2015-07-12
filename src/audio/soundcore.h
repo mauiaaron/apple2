@@ -24,6 +24,14 @@
 #define SOUNDCORE_ERROR_INC 20
 #define SOUNDCORE_ERROR_MAX 200
 
+// Note to future self:
+//
+// Although output for the speaker could be MONO (and was at one point in time) ... we optimize the OpenSLES backend on
+// Android to have just one buffer queue callback, where we need to mix both mockingboard and speaker samples.
+//
+// For now, just make everything use stereo for simplicity (including OpenAL backend).
+#define NUM_CHANNELS 2
+
 typedef struct AudioBuffer_s {
     bool bActive;       // Mockingboard ... refactor?
     bool bMute;         // Mockingboard ... refactor?

@@ -31,20 +31,6 @@
 
 #define SPKR_SILENT_STEP 1
 
-#if defined(ANDROID)
-// Note to future self:
-//
-// This is a leaky backend implementation detail : we are optimizing to use only one OpenSLES buffer queue callback that
-// mixes samples from both mockingboard and speaker (thus the speaker needs to be stereo to match mockingboard).
-//
-// This is different than the OpenAL backend implementation for desktop (Linux/Mac/...) which is a push-based local
-// queue.
-#   define NUM_CHANNELS 2
-#else
-// this can still be mono for other systems ...
-#   define NUM_CHANNELS 1
-#endif
-
 static unsigned long bufferTotalSize = 0;
 static unsigned long bufferSizeIdealMin = 0;
 static unsigned long bufferSizeIdealMax = 0;
