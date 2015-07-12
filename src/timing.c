@@ -141,7 +141,7 @@ static void _timing_initialize(double scale) {
     }
 #ifdef AUDIO_ENABLED
     speaker_reset();
-    //TIMING_LOG("ClockRate:%0.2lf  ClockCyclesPerSpeakerSample:%0.2lf", cycles_persec_target, speaker_cycles_per_sample());
+    //TIMING_LOG("ClockRate:%0.2lf  ClockCyclesPerSpeakerSample:%0.2lf", cycles_persec_target, speaker_cyclesPerSample());
 #endif
 }
 
@@ -326,7 +326,7 @@ void *cpu_thread(void *dummyptr) {
                 assert(!negative);
                 if (!is_fullspeed &&
 #ifdef AUDIO_ENABLED
-                        !speaker_is_active() &&
+                        !speaker_isActive() &&
 #endif
                         !video_dirty() && (!disk6.motor_off && (disk_motor_time.tv_sec || disk_motor_time.tv_nsec > DISK_MOTOR_QUIET_NSECS)) )
                 {
@@ -387,7 +387,7 @@ void *cpu_thread(void *dummyptr) {
             if (timing_should_auto_adjust_speed()) {
                 if (is_fullspeed && (
 #ifdef AUDIO_ENABLED
-                            speaker_is_active() ||
+                            speaker_isActive() ||
 #endif
                             video_dirty() || (disk6.motor_off && (disk_motor_time.tv_sec || disk_motor_time.tv_nsec > DISK_MOTOR_QUIET_NSECS))) )
                 {

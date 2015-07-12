@@ -465,15 +465,16 @@ void speaker_flush(void) {
     }
 }
 
-bool speaker_is_active(void) {
+bool speaker_isActive(void) {
     return speaker_recently_active;
 }
 
-void speaker_set_volume(int16_t amplitude) {
-    speaker_amplitude = amplitude;
+void speaker_setVolumeZeroToTen(unsigned long goesToTen) {
+    float samplesScale = goesToTen/10.f;
+    speaker_data = (int16_t)(SPKR_DATA_INIT * samplesScale);
 }
 
-double speaker_cycles_per_sample(void) {
+double speaker_cyclesPerSample(void) {
     return cycles_per_sample;
 }
 

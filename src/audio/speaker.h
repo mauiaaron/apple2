@@ -21,13 +21,13 @@ void speaker_destroy(void);
 void speaker_reset(void);
 void speaker_flush(void);
 void speaker_setVolumeZeroToTen(unsigned long goesToTen);
-bool speaker_is_active(void);
+bool speaker_isActive(void);
 
 /*
  * returns the machine cycles per sample
  *  - for example, emulator running at normal speed: CLK_6502 / 44.1kHz == ~23
  */
-double speaker_cycles_per_sample(void);
+double speaker_cyclesPerSample(void);
 
 #endif /* whole file */
 
