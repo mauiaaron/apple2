@@ -185,9 +185,11 @@ static void _speaker_update(/*bool toggled*/) {
             if (NUM_CHANNELS == 2) {
                 samples_buffer[samples_buffer_idx++] = speaker_data;
             }
+#if !defined(ANDROID)
             if (speaker_going_silent && speaker_data) {
                 speaker_data -= SPKR_SILENT_STEP;
             }
+#endif
             --num_samples;
         }
 
@@ -200,10 +202,6 @@ static void _speaker_update(/*bool toggled*/) {
                 remainder_buffer[remainder_buffer_idx] = speaker_data;
                 ++remainder_buffer_idx;
             }
-#if 0
-        } else if (toggled && samples_count) {
-            samples_buffer[samples_buffer_idx-1] = 0;
-#endif
         }
 
         if (UNLIKELY(samples_buffer_idx >= channelsSampleRateHz)) {
