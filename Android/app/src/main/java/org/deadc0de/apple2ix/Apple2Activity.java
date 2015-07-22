@@ -36,7 +36,6 @@ public class Apple2Activity extends Activity {
 
     private final static String TAG = "Apple2Activity";
     private final static int BUF_SZ = 4096;
-    private final static String PREFS_CONFIGURED = "prefs_configured";
     private final static int SOFTKEYBOARD_THRESHOLD = 50;
     private final static int MAX_FINGERS = 32;// HACK ...
 
@@ -76,8 +75,6 @@ public class Apple2Activity extends Activity {
     public native void nativeReboot();
     public native void nativeRender();
 
-    public native void nativeEnableTouchJoystick(boolean visibility);
-    public native void nativeSetColor(int color);
     public native void nativeChooseDisk(String path, boolean driveA, boolean readOnly);
 
 
@@ -96,8 +93,7 @@ public class Apple2Activity extends Activity {
             System.exit(1);
         }
 
-        SharedPreferences settings = getPreferences(Context.MODE_PRIVATE);
-        if (settings.getBoolean(PREFS_CONFIGURED, false)) {
+        if (Apple2Preferences.PREFS_CONFIGURED.booleanValue(this)) {
             return dataDir;
         }
 
@@ -118,9 +114,7 @@ public class Apple2Activity extends Activity {
         }
 
         Log.d(TAG, "Saving default preferences");
-        SharedPreferences.Editor editor = settings.edit();
-        editor.putBoolean(PREFS_CONFIGURED, true);
-        editor.apply();
+        Apple2Preferences.PREFS_CONFIGURED.saveBoolean(this, true);
 
         return dataDir;
     }
@@ -199,7 +193,7 @@ public class Apple2Activity extends Activity {
                     // now append the actual stack trace
                     traceBuffer.append(t.getClass().getName());
                     traceBuffer.append("\n");
-                    final int maxTraceSize = 2048+1024+512; // probably should keep this less than a standard Linux PAGE_SIZE
+                    final int maxTraceSize = 2048 + 1024 + 512; // probably should keep this less than a standard Linux PAGE_SIZE
                     for (StackTraceElement elt : stackTraceElements) {
                         traceBuffer.append(elt.toString());
                         traceBuffer.append("\n");
@@ -229,6 +223,9 @@ public class Apple2Activity extends Activity {
         Log.d(TAG, "Device sampleRate:"+mSampleRate+" mono bufferSize:"+mMonoBufferSize+" stereo bufferSize:"+mStereoBufferSize);
 
         nativeOnCreate(mDataDir, mSampleRate, mMonoBufferSize, mStereoBufferSize);
+
+        // NOTE: load preferences after nativeOnCreate
+        Apple2Preferences.loadPreferences(this);
 
         mView = new Apple2View(this);
         setContentView(mView);

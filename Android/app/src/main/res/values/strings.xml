@@ -33,6 +33,8 @@
     <string name="menu_disks_summary">Insert a Disk ][ image file</string>
     <string name="menu_settings">Emulator settings…</string>
     <string name="menu_settings_summary">General, CPU, Joystick</string>
+    <string name="mockingboard_disabled_title">Mockingboard disabled</string>
+    <string name="mockingboard_disabled_mesg">Mockingboard could not be enabled</string>
     <string name="no">No</string>
     <string name="ok">OK</string>
     <string name="quit">Quit emulator…</string>
@@ -43,6 +45,8 @@
     <string name="reboot_warning">You will lose unsaved progress</string>
     <string name="reboot_summary"></string>
     <string name="spacer"></string>
+    <string name="speaker_disabled_title">Speaker disabled</string>
+    <string name="speaker_disabled_mesg">Speaker could not be enabled</string>
     <string name="speed_alt">Alternate CPU Speed</string>
     <string name="speed_cpu">CPU Speed</string>
     <string name="speed_swipe">Swipe changes emulation speed</string>

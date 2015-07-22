@@ -56,7 +56,7 @@ public class Apple2SettingsMenu {
             @Override public void handleSelection(Apple2SettingsMenu settingsMenu, boolean selected) {
             }
         },
-        AUDIO_ENABLE {
+        AUDIO_CONFIGURE {
             @Override public String getTitle(Context ctx) {
                 return ctx.getResources().getString(R.string.audio_enabled);
             }
@@ -99,7 +99,7 @@ public class Apple2SettingsMenu {
                 builder.setAdapter(adapter, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int color) {
-                        settingsMenu.mActivity.nativeSetColor(color);
+                        Apple2Preferences.HIRES_COLOR.saveHiresColor(settingsMenu.mActivity, Apple2Preferences.HiresColor.values()[color]);
                         dialog.dismiss();
                     }
                 });

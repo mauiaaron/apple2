@@ -11,8 +11,8 @@ include $(COMMON_SOURCES_MK)
 # Android build config
 
 LOCAL_MODULE    := libapple2ix
-LOCAL_SRC_FILES := jnihooks.c androidkeys.c
-LOCAL_ARM_MODE  := arm
+LOCAL_SRC_FILES := jniprefs.c androidkeys.c
+#LOCAL_ARM_MODE  := arm
 LOCAL_CFLAGS    := $(APPLE2_BASE_CFLAGS) -DHEADLESS=0
 LOCAL_LDLIBS    := -llog -landroid -lGLESv2 -lz -lOpenSLES
 

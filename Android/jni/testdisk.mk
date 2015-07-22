@@ -11,7 +11,7 @@ include $(COMMON_SOURCES_MK)
 # Android build config
 
 LOCAL_MODULE    := libapple2ix
-LOCAL_SRC_FILES := jnihooks.c $(APPLE2_SRC_PATH)/test/testcommon.c $(APPLE2_SRC_PATH)/test/testdisk.c
+LOCAL_SRC_FILES := $(APPLE2_SRC_PATH)/test/testcommon.c $(APPLE2_SRC_PATH)/test/testdisk.c
 LOCAL_CFLAGS    := $(APPLE2_BASE_CFLAGS) -DTEST_DISK -DTESTING=1 -DCPU_TRACING=1 -DDISK_TRACING=1 -DVM_TRACING=1
 LOCAL_LDLIBS    := -llog -landroid -lGLESv2 -lz
 

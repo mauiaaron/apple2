@@ -140,6 +140,9 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnCreate(JNIEnv *env, jobje
     c_initialize_firsttime();
     pthread_create(&cpu_thread_id, NULL, (void *) &cpu_thread, (void *)NULL);
 #endif
+
+    sleep(1);
+#warning FIXME TODO instead of problematic sleep ... need to preempt CPU thread by holding interface lock and displaying a splash screen and setting preferences/settings defaults before starting CPU
 }
 
 void Java_org_deadc0de_apple2ix_Apple2Activity_nativeGraphicsChanged(JNIEnv *env, jobject obj, jint width, jint height) {
@@ -162,6 +165,7 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeGraphicsInitialized(JNIEnv 
 
 void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnResume(JNIEnv *env, jobject obj, jboolean isSystemResume) {
     if (!nativePaused) {
+#warning FIXME ... replace nativePaused check with cpu_isPaused()
         return;
     }
     LOG("%s", "native onResume...");
@@ -315,18 +319,6 @@ jboolean Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnTouch(JNIEnv *env, jo
     (*env)->ReleaseFloatArrayElements(env, xCoords, x_coords, 0);
     (*env)->ReleaseFloatArrayElements(env, yCoords, y_coords, 0);
     return consumed;
-}
-
-void Java_org_deadc0de_apple2ix_Apple2Activity_nativeSetColor(JNIEnv *env, jobject obj, jint color) {
-    LOG("native set color : %d", color);
-    if (color < COLOR_NONE || color > COLOR_INTERP) {
-        return;
-    }
-    color_mode = color;
-
-    video_reset();
-    video_setpage(!!(softswitches & SS_SCREEN));
-    video_redraw();
 }
 
 void Java_org_deadc0de_apple2ix_Apple2Activity_nativeChooseDisk(JNIEnv *env, jobject obj, jstring jPath, jboolean driveA, jboolean readOnly) {
