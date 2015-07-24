@@ -98,6 +98,7 @@ extern uint32_t	g_uTimer1IrqCount;	// DEBUG
 void	MB_Initialize();
 void	MB_Reinitialize();
 void	MB_Destroy();
+bool    MB_ISEnabled(void);
 void    MB_Reset();
 void    MB_InitializeIO(char *pCxRomPeripheral, unsigned int uSlot4, unsigned int uSlot5);
 void    MB_Mute();

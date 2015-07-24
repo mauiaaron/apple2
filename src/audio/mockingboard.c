@@ -1757,6 +1757,10 @@ void MB_Destroy()
         }
 }
 
+bool MB_ISEnabled(void) {
+    return (MockingboardVoice != NULL);
+}
+
 //-----------------------------------------------------------------------------
 
 static void ResetState()
