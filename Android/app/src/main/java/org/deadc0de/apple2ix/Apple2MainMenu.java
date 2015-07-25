@@ -184,14 +184,14 @@ public class Apple2MainMenu {
 
     public synchronized Apple2DisksMenu getDisksMenu() {
         if (mDisksMenu == null) {
-            mDisksMenu = new Apple2DisksMenu(mActivity, mParentView);
+            mDisksMenu = new Apple2DisksMenu(mActivity);
         }
         return mDisksMenu;
     }
 
     public synchronized Apple2SettingsMenu getSettingsMenu() {
         if (mSettingsMenu == null) {
-            mSettingsMenu = new Apple2SettingsMenu(mActivity, mParentView);
+            mSettingsMenu = new Apple2SettingsMenu(mActivity);
         }
         return mSettingsMenu;
     }

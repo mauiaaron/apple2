@@ -35,12 +35,10 @@ public class Apple2DisksMenu {
     private final static String TAG = "Apple2DisksMenu";
 
     private Apple2Activity mActivity = null;
-    private Apple2View mParentView = null;
     private View mDisksView = null;
 
-    public Apple2DisksMenu(Apple2Activity activity, Apple2View parent) {
+    public Apple2DisksMenu(Apple2Activity activity) {
         mActivity = activity;
-        mParentView = parent;
         setup();
     }
 
@@ -144,11 +142,6 @@ public class Apple2DisksMenu {
     public void dismissWithoutResume() {
         if (isShowing()) {
             ((ViewGroup)mDisksView.getParent()).removeView(mDisksView);
-            // HACK FIXME TODO ... we seem to lose ability to toggle/show soft keyboard upon dismissal of mDisksView after use.
-            // This hack appears to get the Android UI unwedged ... =P
-            Apple2MainMenu androidUIFTW = mParentView.getMainMenu();
-            androidUIFTW.show();
-            androidUIFTW.dismiss();
         }
     }
 

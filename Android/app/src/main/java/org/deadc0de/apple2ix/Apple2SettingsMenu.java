@@ -33,12 +33,10 @@ public class Apple2SettingsMenu {
     private final static String TAG = "Apple2SettingsMenu";
 
     private Apple2Activity mActivity = null;
-    private Apple2View mParentView = null;
     private View mSettingsView = null;
 
-    public Apple2SettingsMenu(Apple2Activity activity, Apple2View parent) {
+    public Apple2SettingsMenu(Apple2Activity activity) {
         mActivity = activity;
-        mParentView = parent;
         setup();
     }
 
@@ -218,11 +216,6 @@ public class Apple2SettingsMenu {
     public void dismissWithoutResume() {
         if (isShowing()) {
             ((ViewGroup)mSettingsView.getParent()).removeView(mSettingsView);
-            // HACK FIXME TODO ... we seem to lose ability to toggle/show soft keyboard upon dismissal of mSettingsView after use.
-            // This hack appears to get the Android UI unwedged ... =P
-            Apple2MainMenu androidUIFTW = mParentView.getMainMenu();
-            androidUIFTW.show();
-            androidUIFTW.dismiss();
         }
     }
 
