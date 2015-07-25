@@ -87,6 +87,16 @@ void audio_pause(void);
 void audio_resume(void);
 
 /*
+ * Set audio buffer latency
+ */
+void audio_setLatency(float latencySecs);
+
+/*
+ * Get audio buffer latency
+ */
+float audio_getLatency(void);
+
+/*
  * Is the audio subsystem available?
  */
 extern READONLY bool audio_isAvailable;
@@ -99,7 +109,7 @@ typedef struct AudioSettings_s {
     READONLY unsigned long sampleRateHz;
 
     /*
-     * Native device bytes-per-sample (currently assuming 16bit == 2bytes)
+     * Native device bytes-per-sample (currently assuming 16bit/2byte samples)
      */
     READONLY unsigned long bytesPerSample;
 

@@ -46,6 +46,11 @@ void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetSpeakerVolume(JNIEnv 
     speaker_setVolumeZeroToTen(goesToTen);
 }
 
+void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetAudioLatency(JNIEnv *env, jclass cls, jfloat latencySecs) {
+    //assert(cpu_isPaused());
+    audio_setLatency(latencySecs);
+}
+
 jboolean Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetMockingboardEnabled(JNIEnv *env, jclass cls, jboolean enabled) {
     LOG("native set set mockingboard enabled : %d", enabled);
     //assert(cpu_isPaused());

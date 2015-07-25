@@ -536,14 +536,11 @@ static long opensles_systemSetup(INOUT AudioContext_s **audio_context) {
     opensles_audio_backend.systemSettings.bytesPerSample = 2;
 
     if (android_deviceSampleRateHz <= 22050/*sentinel in DevicePropertyCalculator.java*/) {
-        android_monoBufferSubmitSizeSamples;
-        android_stereoBufferSubmitSizeSamples >>= 1; // value from Android/Java seems to be pre-multiplied by channel size?
-        opensles_audio_backend.systemSettings.monoBufferSizeSamples = android_deviceSampleRateHz * 0.3/*sec*/;
-        opensles_audio_backend.systemSettings.stereoBufferSizeSamples = android_deviceSampleRateHz * 0.3/*sec*/;
-    } else {
-        opensles_audio_backend.systemSettings.monoBufferSizeSamples = android_deviceSampleRateHz * 0.125/*sec*/;
-        opensles_audio_backend.systemSettings.stereoBufferSizeSamples = android_deviceSampleRateHz * 0.125/*sec*/;
+        android_stereoBufferSubmitSizeSamples >>= 1; // value from Android/Java DevicePropertyCalculator.java seems to be pre-multiplied by channel size?
     }
+
+    opensles_audio_backend.systemSettings.monoBufferSizeSamples = android_deviceSampleRateHz * audio_getLatency();
+    opensles_audio_backend.systemSettings.stereoBufferSizeSamples = android_deviceSampleRateHz * audio_getLatency();
 
     if (android_stereoBufferSubmitSizeSamples<<2 > opensles_audio_backend.systemSettings.stereoBufferSizeSamples) {
         opensles_audio_backend.systemSettings.stereoBufferSizeSamples = android_stereoBufferSubmitSizeSamples<<2;
@@ -734,10 +731,30 @@ static long opensles_systemPause(AudioContext_s *audio_context) {
 static long opensles_systemResume(AudioContext_s *audio_context) {
     LOG("OpenSLES resuming play");
 
+    SLuint32 state = 0;
     EngineContext_s *ctx = (EngineContext_s *)(audio_context->_internal);
-    SLresult result = (*(ctx->bqPlayerPlay))->SetPlayState(ctx->bqPlayerPlay, SL_PLAYSTATE_PLAYING);
+    SLresult result = (*(ctx->bqPlayerPlay))->GetPlayState(ctx->bqPlayerPlay, &state);
 
-    return 0;
+    do {
+        if (result != SL_RESULT_SUCCESS) {
+            ERRLOG("OOPS, could not get source state when attempting to resume : %lu", result);
+            break;
+        }
+
+        assert(state != SL_PLAYSTATE_PLAYING && "mismatch between systemPause/systemResume");
+
+        if (state == SL_PLAYSTATE_PAUSED) {
+            // Balanced resume OK here
+            SLresult result = (*(ctx->bqPlayerPlay))->SetPlayState(ctx->bqPlayerPlay, SL_PLAYSTATE_PLAYING);
+        } else {
+            // Do not resume for stopped state, let this get forced from CPU/speaker thread otherwise we starve. (The
+            // stopped state happens if user dynamically changed buffer parameters in menu settings which triggered an
+            // OpenSLES destroy/re-initialization ... e.g. audio_setLatency() was invoked)
+            assert(state == SL_PLAYSTATE_STOPPED);
+        }
+    } while (0);
+
+    return result;
 }
 
 __attribute__((constructor(CTOR_PRIORITY_EARLY)))

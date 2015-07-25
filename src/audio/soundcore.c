@@ -20,6 +20,7 @@
 static AudioContext_s *audioContext = NULL;
 
 bool audio_isAvailable = false;
+float audio_latencySecs = 0.25f;
 AudioBackend_s *audio_backend = NULL;
 
 //-----------------------------------------------------------------------------
@@ -106,5 +107,23 @@ void audio_resume(void) {
         return;
     }
     audio_backend->resume(audioContext);
+}
+
+void audio_setLatency(float latencySecs) {
+#warning FIXME TODO ... dynamically changing buffer size is really heavyweight since this buffer size percolates up to speaker/mockingboard allocations ... ugh we will live with this for now ... pumping this will be a great test for Valgrind heap profiling =P
+    speaker_destroy();
+    MB_Destroy();
+    audio_shutdown();
+
+    audio_latencySecs = latencySecs;
+
+    audio_init();
+    speaker_init();
+    MB_Initialize();
+#warning FIXME TODO ... also ugh we should have a registration mechanism of audio devices so we don't need to explicitly list them here, suggest something similar to the glnode registration stuff in video
+}
+
+float audio_getLatency(void) {
+    return audio_latencySecs;
 }
 
