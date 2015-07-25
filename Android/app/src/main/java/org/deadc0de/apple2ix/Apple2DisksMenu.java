@@ -13,14 +13,12 @@ package org.deadc0de.apple2ix;
 
 import android.content.Context;
 import android.graphics.drawable.Drawable;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
-import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -30,7 +28,7 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.util.Arrays;
 
-public class Apple2DisksMenu {
+public class Apple2DisksMenu implements Apple2MenuView {
 
     private final static String TAG = "Apple2DisksMenu";
 
@@ -114,8 +112,8 @@ public class Apple2DisksMenu {
                 if (isDirectory[position]) {
                     // TODO FIXME ...
                 } else {
-                    RadioButton diskA = (RadioButton)mDisksView.findViewById(R.id.radioButton_diskA);
-                    CheckBox readWrite = (CheckBox)mDisksView.findViewById(R.id.checkBox_readWrite);
+                    RadioButton diskA = (RadioButton) mDisksView.findViewById(R.id.radioButton_diskA);
+                    CheckBox readWrite = (CheckBox) mDisksView.findViewById(R.id.checkBox_readWrite);
                     Apple2DisksMenu.this.dismiss();
                     mActivity.nativeChooseDisk(files[position].getAbsolutePath(), diskA.isChecked(), !readWrite.isChecked());
                 }
@@ -128,24 +126,18 @@ public class Apple2DisksMenu {
             return;
         }
         dynamicSetup();
-        mActivity.nativeOnPause();
-        mActivity.addContentView(mDisksView, new FrameLayout.LayoutParams(mActivity.getWidth(), mActivity.getHeight()));
+        mActivity.pushApple2View(this);
     }
 
     public void dismiss() {
-        if (isShowing()) {
-            dismissWithoutResume();
-            mActivity.nativeOnResume(/*isSystemResume:*/false);
-        }
-    }
-
-    public void dismissWithoutResume() {
-        if (isShowing()) {
-            ((ViewGroup)mDisksView.getParent()).removeView(mDisksView);
-        }
+        mActivity.popApple2View(this);
     }
 
     public boolean isShowing() {
         return mDisksView.isShown();
+    }
+
+    public View getView() {
+        return mDisksView;
     }
 }

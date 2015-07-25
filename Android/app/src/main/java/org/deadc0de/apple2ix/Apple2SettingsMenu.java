@@ -22,13 +22,12 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
-import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 
-public class Apple2SettingsMenu {
+public class Apple2SettingsMenu implements Apple2MenuView {
 
     private final static String TAG = "Apple2SettingsMenu";
 
@@ -210,28 +209,18 @@ public class Apple2SettingsMenu {
         if (isShowing()) {
             return;
         }
-        mActivity.nativeOnPause();
-        mActivity.addContentView(mSettingsView, new FrameLayout.LayoutParams(mActivity.getWidth(), mActivity.getHeight()));
+        mActivity.pushApple2View(this);
     }
 
     public void dismiss() {
-        if (isShowing()) {
-            dismissWithoutResume();
-            mActivity.nativeOnResume(/*isSystemResume:*/false);
-        }
-    }
-
-    public void dismissWithoutResume() {
-        if (isShowing()) {
-            ((ViewGroup)mSettingsView.getParent()).removeView(mSettingsView);
-        }
+        mActivity.popApple2View(this);
     }
 
     public boolean isShowing() {
         return mSettingsView.isShown();
     }
 
-    public Apple2AudioSettingsMenu getAudioSubmenu() {
-        return mAudioSettings;
+    public View getView() {
+        return mSettingsView;
     }
 }

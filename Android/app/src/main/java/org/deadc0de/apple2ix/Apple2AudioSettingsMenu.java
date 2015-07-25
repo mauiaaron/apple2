@@ -13,7 +13,6 @@ package org.deadc0de.apple2ix;
 
 import android.content.Context;
 import android.graphics.drawable.Drawable;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -28,7 +27,7 @@ import android.widget.ListView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
-public class Apple2AudioSettingsMenu {
+public class Apple2AudioSettingsMenu implements Apple2MenuView {
 
     private final static String TAG = "Apple2AudioSettingsMenu";
 
@@ -284,24 +283,18 @@ public class Apple2AudioSettingsMenu {
         if (isShowing()) {
             return;
         }
-        mActivity.nativeOnPause();
-        mActivity.addContentView(mSettingsView, new FrameLayout.LayoutParams(mActivity.getWidth(), mActivity.getHeight()));
+        mActivity.pushApple2View(this);
     }
 
     public void dismiss() {
-        if (isShowing()) {
-            dismissWithoutResume();
-            //mActivity.nativeOnResume(/*isSystemResume:*/false);
-        }
-    }
-
-    public void dismissWithoutResume() {
-        if (isShowing()) {
-            ((ViewGroup)mSettingsView.getParent()).removeView(mSettingsView);
-        }
+        mActivity.popApple2View(this);
     }
 
     public boolean isShowing() {
         return mSettingsView.isShown();
+    }
+
+    public View getView() {
+        return mSettingsView;
     }
 }

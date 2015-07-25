@@ -13,9 +13,7 @@ package org.deadc0de.apple2ix;
 
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.content.Context;
 import android.content.DialogInterface;
-import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Rect;
@@ -25,23 +23,27 @@ import android.os.StrictMode;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
+import android.view.View;
+import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
+import android.widget.FrameLayout;
 
 import java.io.File;
 import java.io.InputStream;
 import java.io.IOException;
 import java.io.FileOutputStream;
+import java.util.ArrayList;
 
 public class Apple2Activity extends Activity {
 
     private final static String TAG = "Apple2Activity";
     private final static int BUF_SZ = 4096;
-    private final static int SOFTKEYBOARD_THRESHOLD = 50;
     private final static int MAX_FINGERS = 32;// HACK ...
 
     private String mDataDir = null;
 
     private Apple2View mView = null;
+    private ArrayList<Apple2MenuView> mMenuStack = new ArrayList<Apple2MenuView>();
     private AlertDialog mQuitDialog = null;
     private AlertDialog mRebootDialog = null;
 
@@ -278,15 +280,14 @@ public class Apple2Activity extends Activity {
             mRebootDialog.dismiss();
         }
 
-        // For good measure, get rid of other menus too
-        Apple2SettingsMenu settingsMenu = mView.getSettingsMenu();
-        if (settingsMenu != null) {
-            settingsMenu.dismissWithoutResume();
-        }
-        Apple2DisksMenu disksMenu = mView.getDisksMenu();
-        if (disksMenu != null) {
-            disksMenu.dismissWithoutResume();
-        }
+        // Get rid of the menu hierarchy
+        Apple2MenuView apple2MenuView = null;
+        do {
+            apple2MenuView = popApple2View();
+            if (apple2MenuView != null) {
+                apple2MenuView.dismiss();
+            }
+        } while (apple2MenuView != null);
 
         nativeOnPause();
     }
@@ -303,21 +304,11 @@ public class Apple2Activity extends Activity {
     @Override
     public boolean onKeyUp(int keyCode, KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_BACK) {
-            Apple2SettingsMenu settingsMenu = mView.getSettingsMenu();
-            Apple2DisksMenu disksMenu = mView.getDisksMenu();
-            if (settingsMenu != null) {
-                if (settingsMenu.isShowing()) {
-                    Apple2AudioSettingsMenu audioSubmenu = settingsMenu.getAudioSubmenu();
-                    if (audioSubmenu.isShowing()) {
-                        audioSubmenu.dismiss();
-                    } else {
-                        settingsMenu.dismiss();
-                    }
-                } else if (disksMenu.isShowing()) {
-                    disksMenu.dismiss();
-                } else {
-                    mView.showMainMenu();
-                }
+            Apple2MenuView apple2MenuView = popApple2View();
+            if (apple2MenuView == null) {
+                mView.showMainMenu();
+            } else {
+                apple2MenuView.dismiss();
             }
             return true;
         } else if (keyCode == KeyEvent.KEYCODE_MENU) {
@@ -419,6 +410,46 @@ public class Apple2Activity extends Activity {
         mHeight = h;
 
         nativeGraphicsInitialized(w, h);
+    }
+
+    public synchronized void pushApple2View(Apple2MenuView apple2MenuView) {
+        mMenuStack.add(apple2MenuView);
+        View menuView = apple2MenuView.getView();
+        nativeOnPause();
+        addContentView(menuView, new FrameLayout.LayoutParams(getWidth(), getHeight()));
+    }
+
+    public synchronized Apple2MenuView popApple2View() {
+        int lastIndex = mMenuStack.size()-1;
+        if (lastIndex < 0) {
+            return null;
+        }
+
+        Apple2MenuView apple2MenuView = mMenuStack.remove(lastIndex);
+        _disposeApple2View(apple2MenuView);
+        return apple2MenuView;
+    }
+
+    public synchronized Apple2MenuView popApple2View(Apple2MenuView apple2MenuView) {
+        boolean wasRemoved = mMenuStack.remove(apple2MenuView);
+        _disposeApple2View(apple2MenuView);
+        return wasRemoved ? apple2MenuView : null;
+    }
+
+    private void _disposeApple2View(Apple2MenuView apple2MenuView) {
+
+        // Actually remove View from view hierarchy
+        {
+            View menuView = apple2MenuView.getView();
+            if (menuView.isShown()) {
+                ((ViewGroup) menuView.getParent()).removeView(menuView);
+            }
+        }
+
+        // if no more views on menu stack, resume emulation
+        if (mMenuStack.size() == 0) {
+            nativeOnResume(/*isSystemResume:*/false);
+        }
     }
 
     public Apple2View getView() {
