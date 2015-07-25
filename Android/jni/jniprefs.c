@@ -41,6 +41,8 @@ jboolean Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetSpeakerEnabled(JN
 void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetSpeakerVolume(JNIEnv *env, jclass cls, jint goesToTen) {
     LOG("native set speaker volume : %d", goesToTen);
     assert(goesToTen >= 0);
+    sound_volume = goesToTen;
+#warning FIXME TODO refactor/remove sound_volume ?
     speaker_setVolumeZeroToTen(goesToTen);
 }
 
@@ -52,6 +54,7 @@ jboolean Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetMockingboardEnabl
     if (enabled) {
         MB_Initialize();
     }
+    return MB_ISEnabled();
 }
 
 void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetMockingboardVolume(JNIEnv *env, jclass cls, jint goesToTen) {

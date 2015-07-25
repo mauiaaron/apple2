@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:minHeight="?android:attr/listPreferredItemHeight"
+    android:gravity="center_vertical"
+    android:paddingRight="?android:attr/scrollbarSize">
+
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="@dimen/preference_margin_left"
+        android:layout_marginStart="@dimen/preference_margin_left"
+        android:layout_marginRight="@dimen/preference_margin_right"
+        android:layout_marginEnd="@dimen/preference_margin_right"
+        android:layout_marginTop="@dimen/preference_margin_top"
+        android:layout_marginBottom="@dimen/preference_margin_bottom"
+        android:layout_weight="1">
+
+        <TextView android:id="@+id/a2preference_slider_summary"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:text="Lorem ipsum dolor sit amet"
+            android:maxLines="4" />
+
+        <LinearLayout android:id="@+id/a2preference_slider_widgets"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/a2preference_slider_summary"
+            android:layout_alignLeft="@id/a2preference_slider_summary"
+            android:layout_alignStart="@id/a2preference_slider_summary"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:descendantFocusability="blocksDescendants">
+
+            <SeekBar
+                android:id="@+id/a2preference_slider_seekBar"
+                android:layout_weight="1"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content" />
+
+            <TextView
+                android:id="@+id/a2preference_slider_seekBarValue"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="@dimen/preference_margin"
+                android:layout_marginStart="@dimen/preference_margin"
+                android:gravity="center"
+                android:text="0" />
+        </LinearLayout>
+
+    </RelativeLayout>
+
+</LinearLayout>
