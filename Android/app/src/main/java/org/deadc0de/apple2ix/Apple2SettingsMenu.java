@@ -14,7 +14,9 @@ package org.deadc0de.apple2ix;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -42,10 +44,10 @@ public class Apple2SettingsMenu implements Apple2MenuView {
     enum SETTINGS {
         JOYSTICK_CONFIGURE {
             @Override public String getTitle(Apple2Activity activity) {
-                return activity.getResources().getString(R.string.configure_joystick);
+                return activity.getResources().getString(R.string.joystick_configure);
             }
             @Override public String getSummary(Apple2Activity activity) {
-                return activity.getResources().getString(R.string.configure_joystick_summary);
+                return activity.getResources().getString(R.string.joystick_configure_summary);
             }
             @Override public void handleSelection(Apple2Activity activity, Apple2SettingsMenu settingsMenu, boolean isChecked) {
                 //settingsMenu.mJoystickSettings.show();
@@ -64,10 +66,10 @@ public class Apple2SettingsMenu implements Apple2MenuView {
         },
         VIDEO_CONFIGURE {
             @Override public String getTitle(Apple2Activity activity) {
-                return activity.getResources().getString(R.string.configure_video);
+                return activity.getResources().getString(R.string.video_configure);
             }
             @Override public String getSummary(Apple2Activity activity) {
-                return activity.getResources().getString(R.string.configure_video_summary);
+                return activity.getResources().getString(R.string.video_configure_summary);
             }
             @Override public View getView(Apple2Activity activity, View convertView) {
                 convertView = _basicView(activity, this, convertView);
@@ -76,7 +78,7 @@ public class Apple2SettingsMenu implements Apple2MenuView {
             }
             @Override
             public void handleSelection(Apple2Activity activity, final Apple2SettingsMenu settingsMenu, boolean isChecked) {
-                AlertDialog.Builder builder = new AlertDialog.Builder(settingsMenu.mActivity).setIcon(R.drawable.ic_launcher).setCancelable(true).setTitle(R.string.configure_video);
+                AlertDialog.Builder builder = new AlertDialog.Builder(settingsMenu.mActivity).setIcon(R.drawable.ic_launcher).setCancelable(true).setTitle(R.string.video_configure);
                 builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
@@ -100,6 +102,20 @@ public class Apple2SettingsMenu implements Apple2MenuView {
                 });
                 builder.show();
             }
+        },
+        ABOUT {
+            @Override public String getTitle(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.about_title);
+            }
+            @Override public String getSummary(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.about_summary);
+            }
+            @Override
+            public void handleSelection(Apple2Activity activity, final Apple2SettingsMenu settingsMenu, boolean isChecked) {
+                String url = "http://github.com/mauiaaron/apple2";
+                Intent i = new Intent(Intent.ACTION_VIEW);
+                i.setData(Uri.parse(url));
+                activity.startActivity(i);            }
         };
 
         private static View _basicView(Apple2Activity activity, SETTINGS setting,  View convertView) {

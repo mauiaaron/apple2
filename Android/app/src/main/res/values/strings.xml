@@ -4,6 +4,8 @@
     <color name="black">#000000</color>
     <color name="white">#ffffff</color>
 
+    <string name="about_title">About Apple2ix…</string>
+    <string name="about_summary">Various shout-outs and acknowledgements</string>
     <string name="action_settings">Settings</string>
     <string name="app_name">Apple2ix</string>
     <string name="audio_configure">Configure audio…</string>
@@ -12,18 +14,16 @@
     <string name="color_bw">Black/white</string>
     <string name="color_color">Color</string>
     <string name="color_interpolated">Interpolated color</string>
-    <string name="configure_joystick">Configure emulated joysticks…</string>
-    <string name="configure_joystick_summary">Touch/tilt, axis and buttons, etc</string>
-    <string name="configure_video">Configure video…</string>
-    <string name="configure_video_summary">Color settings</string>
     <string name="diskA">Drive 1</string>
     <string name="diskB">Drive 2</string>
     <string name="disk_read_write">Read/write</string>
     <string name="header_disks">Insert disk:</string>
     <string name="joystick">Joystick</string>
+    <string name="joystick_configure">Configure emulated joysticks…</string>
+    <string name="joystick_configure_summary">Touch/tilt, axis and buttons, etc</string>
+    <string name="joystick_enable">Enable emulated joystick</string>
     <string name="joystick_keyA">Key Joystick 1</string>
     <string name="joystick_keyB">Key Joystick 2</string>
-    <string name="joystick_enable">Enable emulated joystick</string>
     <string name="keyboard">Keyboard</string>
     <string name="keyboard_doubletap">Double-tap shows keyboard</string>
     <string name="keyboard_doubletap_summary">Uncheck to disable keyboard input</string>
@@ -66,5 +66,7 @@
     <string name="tab_general">General</string>
     <string name="tab_joystick">Joystick</string>
     <string name="title_activity_second">SecondActivity</string>
+    <string name="video_configure">Configure video…</string>
+    <string name="video_configure_summary">Color settings</string>
 
 </resources>
