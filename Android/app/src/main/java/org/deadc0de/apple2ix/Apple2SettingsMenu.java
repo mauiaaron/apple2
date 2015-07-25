@@ -35,50 +35,51 @@ public class Apple2SettingsMenu {
     private Apple2Activity mActivity = null;
     private View mSettingsView = null;
 
+    private Apple2AudioSettingsMenu mAudioSettings = null;
+
     public Apple2SettingsMenu(Apple2Activity activity) {
         mActivity = activity;
         setup();
+        mAudioSettings = new Apple2AudioSettingsMenu(mActivity);
     }
 
     enum SETTINGS {
         JOYSTICK_CONFIGURE {
-            @Override public String getTitle(Context ctx) {
-                return ctx.getResources().getString(R.string.configure_joystick);
+            @Override public String getTitle(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.configure_joystick);
             }
-            @Override public String getSummary(Context ctx) {
-                return ctx.getResources().getString(R.string.configure_joystick_summary);
+            @Override public String getSummary(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.configure_joystick_summary);
             }
-            @Override public boolean wantsCheckbox() {
-                return false;
-            }
-            @Override public void handleSelection(Apple2SettingsMenu settingsMenu, boolean selected) {
+            @Override public void handleSelection(Apple2SettingsMenu settingsMenu, boolean isChecked) {
+                //settingsMenu.mJoystickSettings.show();
             }
         },
         AUDIO_CONFIGURE {
-            @Override public String getTitle(Context ctx) {
-                return ctx.getResources().getString(R.string.audio_enabled);
+            @Override public String getTitle(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.audio_configure);
             }
-            @Override public String getSummary(Context ctx) {
-                return ctx.getResources().getString(R.string.audio_enabled_summary);
+            @Override public String getSummary(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.audio_configure_summary);
             }
-            @Override public void handleSelection(Apple2SettingsMenu settingsMenu, boolean selected) {
+            @Override public void handleSelection(Apple2SettingsMenu settingsMenu, boolean isChecked) {
+                settingsMenu.mAudioSettings.show();
             }
         },
         VIDEO_CONFIGURE {
-            @Override public String getTitle(Context ctx) {
-                return ctx.getResources().getString(R.string.configure_video);
+            @Override public String getTitle(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.configure_video);
             }
-            @Override public String getSummary(Context ctx) {
-                return ctx.getResources().getString(R.string.configure_video_summary);
+            @Override public String getSummary(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.configure_video_summary);
             }
-            @Override public boolean wantsCheckbox() {
-                return false;
-            }
-            @Override public boolean wantsPopup() {
-                return true;
+            @Override public View getView(Apple2Activity activity, View convertView) {
+                convertView = _basicView(activity, this, convertView);
+                _addPopupIcon(activity, this, convertView);
+                return convertView;
             }
             @Override
-            public void handleSelection(final Apple2SettingsMenu settingsMenu, boolean selected) {
+            public void handleSelection(final Apple2SettingsMenu settingsMenu, boolean isChecked) {
                 AlertDialog.Builder builder = new AlertDialog.Builder(settingsMenu.mActivity).setIcon(R.drawable.ic_launcher).setCancelable(true).setTitle(R.string.configure_video);
                 builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
                     @Override
@@ -105,21 +106,52 @@ public class Apple2SettingsMenu {
             }
         };
 
-        public abstract String getTitle(Context ctx);
-        public abstract String getSummary(Context ctx);
-        public abstract void handleSelection(Apple2SettingsMenu settingsMenu, boolean selected);
-        public boolean wantsCheckbox() {
-            return true;
+        private static View _basicView(Apple2Activity activity, SETTINGS setting,  View convertView) {
+            TextView tv = (TextView)convertView.findViewById(R.id.a2preference_title);
+            tv.setText(setting.getTitle(activity));
+
+            tv = (TextView)convertView.findViewById(R.id.a2preference_summary);
+            tv.setText(setting.getSummary(activity));
+
+            LinearLayout layout = (LinearLayout)convertView.findViewById(R.id.a2preference_widget_frame);
+            if (layout.getChildCount() > 0) {
+                // layout cells appear to be reused when scrolling into view ... make sure we start with clear hierarchy
+                layout.removeAllViews();
+            }
+
+            return convertView;
         }
-        public boolean wantsPopup() {
-            return false;
+        private static ImageView _addPopupIcon(Apple2Activity activity, SETTINGS setting, View convertView) {
+            ImageView imageView = new ImageView(activity);
+            Drawable drawable = activity.getResources().getDrawable(android.R.drawable.ic_menu_edit);
+            imageView.setImageDrawable(drawable);
+            LinearLayout layout = (LinearLayout)convertView.findViewById(R.id.a2preference_widget_frame);
+            layout.addView(imageView);
+            return imageView;
+        }
+        private static CheckBox _addCheckbox(Apple2Activity activity, SETTINGS setting, View convertView, boolean isChecked) {
+            CheckBox checkBox = new CheckBox(activity);
+            checkBox.setChecked(isChecked);
+            LinearLayout layout = (LinearLayout)convertView.findViewById(R.id.a2preference_widget_frame);
+            layout.addView(checkBox);
+            return checkBox;
         }
 
-        public static String[] titles(Context ctx) {
-            String[] titles = new String[values().length];
+        public static final int size = SETTINGS.values().length;
+
+        public abstract String getTitle(Apple2Activity activity);
+        public abstract String getSummary(Apple2Activity activity);
+        public abstract void handleSelection(Apple2SettingsMenu settingsMenu, boolean isChecked);
+
+        public View getView(Apple2Activity activity, View convertView) {
+            return _basicView(activity, this, convertView);
+        }
+
+        public static String[] titles(Apple2Activity activity) {
+            String[] titles = new String[size];
             int i = 0;
             for (SETTINGS setting : values()) {
-                titles[i++] = setting.getTitle(ctx);
+                titles[i++] = setting.getTitle(activity);
             }
             return titles;
         }
@@ -133,45 +165,22 @@ public class Apple2SettingsMenu {
         ListView settingsList = (ListView)mSettingsView.findViewById(R.id.listView_settings);
         settingsList.setEnabled(true);
 
-        final String[] titles = SETTINGS.titles(mActivity);
-
-        ArrayAdapter<?> adapter = new ArrayAdapter<String>(mActivity, R.layout.a2preference, R.id.a2preference_title, titles) {
+        ArrayAdapter<?> adapter = new ArrayAdapter<String>(mActivity, R.layout.a2preference, R.id.a2preference_title, SETTINGS.titles(mActivity)) {
             @Override
             public boolean areAllItemsEnabled() {
                 return true;
             }
-            /*@Override
+
+            @Override
             public boolean isEnabled(int position) {
-                if (position < 0 || position > 3) {
-                    throw new ArrayIndexOutOfBoundsException();
-                }
-                return position != 2;
-            }*/
+                return super.isEnabled(position);
+            }
+
             @Override
             public View getView(int position, View convertView, ViewGroup parent) {
                 View view = super.getView(position, convertView, parent);
-                TextView tv = (TextView)view.findViewById(R.id.a2preference_summary);
-
                 SETTINGS setting = SETTINGS.values()[position];
-                tv.setText(setting.getSummary(mActivity));
-
-                LinearLayout layout = (LinearLayout)view.findViewById(R.id.a2preference_widget_frame);
-                if (layout.getChildCount() > 0) {
-                    // layout cells appear to be reused when scrolling into view ... make sure we start with clear hierarchy
-                    layout.removeAllViews();
-                }
-
-                if (setting.wantsPopup()) {
-                    ImageView imageView = new ImageView(mActivity);
-                    Drawable drawable = mActivity.getResources().getDrawable(android.R.drawable.ic_menu_edit);
-                    imageView.setImageDrawable(drawable);
-                    layout.addView(imageView);
-                }
-                if (setting.wantsCheckbox()) {
-                    CheckBox checkBox = new CheckBox(mActivity);
-                    layout.addView(checkBox);
-                }
-                return view;
+                return setting.getView(mActivity, view);
             }
         };
 
@@ -180,12 +189,11 @@ public class Apple2SettingsMenu {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 SETTINGS setting = SETTINGS.values()[position];
-
-                LinearLayout layout = (LinearLayout)view.findViewById(R.id.a2preference_widget_frame);
+                LinearLayout layout = (LinearLayout) view.findViewById(R.id.a2preference_widget_frame);
                 View childView = layout.getChildAt(0);
                 boolean selected = false;
                 if (childView != null && childView instanceof CheckBox) {
-                    CheckBox checkBox = (CheckBox)childView;
+                    CheckBox checkBox = (CheckBox) childView;
                     checkBox.setChecked(!checkBox.isChecked());
                     selected = checkBox.isChecked();
                 }
@@ -221,5 +229,9 @@ public class Apple2SettingsMenu {
 
     public boolean isShowing() {
         return mSettingsView.isShown();
+    }
+
+    public Apple2AudioSettingsMenu getAudioSubmenu() {
+        return mAudioSettings;
     }
 }

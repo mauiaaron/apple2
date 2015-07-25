@@ -14,6 +14,7 @@ package org.deadc0de.apple2ix;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.util.Log;
 
 public enum Apple2Preferences {
     PREFS_CONFIGURED {
@@ -109,6 +110,8 @@ public enum Apple2Preferences {
         }).create();
         dialog.show();
     }
+
+    public final static String TAG = "Apple2Preferences";
 
     // set and apply
 

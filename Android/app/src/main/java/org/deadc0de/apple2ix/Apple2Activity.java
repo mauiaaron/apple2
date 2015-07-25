@@ -307,7 +307,12 @@ public class Apple2Activity extends Activity {
             Apple2DisksMenu disksMenu = mView.getDisksMenu();
             if (settingsMenu != null) {
                 if (settingsMenu.isShowing()) {
-                    settingsMenu.dismiss();
+                    Apple2AudioSettingsMenu audioSubmenu = settingsMenu.getAudioSubmenu();
+                    if (audioSubmenu.isShowing()) {
+                        audioSubmenu.dismiss();
+                    } else {
+                        settingsMenu.dismiss();
+                    }
                 } else if (disksMenu.isShowing()) {
                     disksMenu.dismiss();
                 } else {
@@ -435,7 +440,7 @@ public class Apple2Activity extends Activity {
     public void maybeQuitApp() {
         nativeOnPause();
         if (mQuitDialog == null) {
-            mQuitDialog = new AlertDialog.Builder(this).setIcon(R.drawable.ic_launcher).setCancelable(true).setTitle(R.string.quit_really).setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+            mQuitDialog = new AlertDialog.Builder(this).setIcon(R.drawable.ic_launcher).setCancelable(true).setTitle(R.string.quit_really).setMessage(R.string.quit_warning).setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
                     nativeOnQuit();
