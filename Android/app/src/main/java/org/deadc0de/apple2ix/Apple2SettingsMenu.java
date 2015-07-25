@@ -34,12 +34,9 @@ public class Apple2SettingsMenu implements Apple2MenuView {
     private Apple2Activity mActivity = null;
     private View mSettingsView = null;
 
-    private Apple2AudioSettingsMenu mAudioSettings = null;
-
     public Apple2SettingsMenu(Apple2Activity activity) {
         mActivity = activity;
         setup();
-        mAudioSettings = new Apple2AudioSettingsMenu(mActivity);
     }
 
     enum SETTINGS {
@@ -50,7 +47,7 @@ public class Apple2SettingsMenu implements Apple2MenuView {
             @Override public String getSummary(Apple2Activity activity) {
                 return activity.getResources().getString(R.string.configure_joystick_summary);
             }
-            @Override public void handleSelection(Apple2SettingsMenu settingsMenu, boolean isChecked) {
+            @Override public void handleSelection(Apple2Activity activity, Apple2SettingsMenu settingsMenu, boolean isChecked) {
                 //settingsMenu.mJoystickSettings.show();
             }
         },
@@ -61,8 +58,8 @@ public class Apple2SettingsMenu implements Apple2MenuView {
             @Override public String getSummary(Apple2Activity activity) {
                 return activity.getResources().getString(R.string.audio_configure_summary);
             }
-            @Override public void handleSelection(Apple2SettingsMenu settingsMenu, boolean isChecked) {
-                settingsMenu.mAudioSettings.show();
+            @Override public void handleSelection(Apple2Activity activity, Apple2SettingsMenu settingsMenu, boolean isChecked) {
+                new Apple2AudioSettingsMenu(activity).show();
             }
         },
         VIDEO_CONFIGURE {
@@ -78,7 +75,7 @@ public class Apple2SettingsMenu implements Apple2MenuView {
                 return convertView;
             }
             @Override
-            public void handleSelection(final Apple2SettingsMenu settingsMenu, boolean isChecked) {
+            public void handleSelection(Apple2Activity activity, final Apple2SettingsMenu settingsMenu, boolean isChecked) {
                 AlertDialog.Builder builder = new AlertDialog.Builder(settingsMenu.mActivity).setIcon(R.drawable.ic_launcher).setCancelable(true).setTitle(R.string.configure_video);
                 builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
                     @Override
@@ -140,7 +137,7 @@ public class Apple2SettingsMenu implements Apple2MenuView {
 
         public abstract String getTitle(Apple2Activity activity);
         public abstract String getSummary(Apple2Activity activity);
-        public abstract void handleSelection(Apple2SettingsMenu settingsMenu, boolean isChecked);
+        public abstract void handleSelection(Apple2Activity activity, Apple2SettingsMenu settingsMenu, boolean isChecked);
 
         public View getView(Apple2Activity activity, View convertView) {
             return _basicView(activity, this, convertView);
@@ -196,7 +193,7 @@ public class Apple2SettingsMenu implements Apple2MenuView {
                     checkBox.setChecked(!checkBox.isChecked());
                     selected = checkBox.isChecked();
                 }
-                setting.handleSelection(Apple2SettingsMenu.this, selected);
+                setting.handleSelection(mActivity, Apple2SettingsMenu.this, selected);
             }
         });
     }
