@@ -13,6 +13,14 @@
 
 #include <jni.h>
 
+typedef enum AndroidTouchDevice_t {
+    // Maps to values in Apple2Preferences.java
+    ANDROID_TOUCH_NONE = 0,
+    ANDROID_TOUCH_JOYSTICK,
+    ANDROID_TOUCH_KEYBOARD,
+    ANDROID_TOUCH_DEVICE_MAX,
+} AndroidTouchDevice_t;
+
 void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeEnableTouchJoystick(JNIEnv *env, jclass cls, jboolean enabled) {
     LOG("native enable touch joystick : %d", enabled);
 }
@@ -34,6 +42,7 @@ void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetColor(JNIEnv *env, jc
 }
 
 jboolean Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetSpeakerEnabled(JNIEnv *env, jclass cls, jboolean enabled) {
+    LOG("native set speaker enabled : %d", true);
     // NO-OP ... speaker should always be enabled (but volume could be zero)
     return true;
 }
@@ -47,6 +56,7 @@ void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetSpeakerVolume(JNIEnv 
 }
 
 void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetAudioLatency(JNIEnv *env, jclass cls, jfloat latencySecs) {
+    LOG("native set audio latency : %f", latencySecs);
     //assert(cpu_isPaused());
     audio_setLatency(latencySecs);
 }
@@ -66,5 +76,25 @@ void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetMockingboardVolume(JN
     LOG("native set mockingboard volume : %d", goesToTen);
     assert(goesToTen >= 0);
     MB_SetVolumeZeroToTen(goesToTen);
+}
+
+void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetDefaultTouchDevice(JNIEnv *env, jclass cls, jint touchDevice) {
+    LOG("native set default touch device : %d", touchDevice);
+    assert(touchDevice >= 0 && touchDevice < ANDROID_TOUCH_DEVICE_MAX);
+    switch (touchDevice) {
+        case ANDROID_TOUCH_JOYSTICK:
+            keydriver_setTouchKeyboardOwnsScreen(false);
+            joydriver_setTouchJoystickOwnsScreen(true);
+            break;
+
+        case ANDROID_TOUCH_KEYBOARD:
+            joydriver_setTouchJoystickOwnsScreen(false);
+            keydriver_setTouchKeyboardOwnsScreen(true);
+            break;
+
+        case ANDROID_TOUCH_NONE:
+        default:
+            break;
+    }
 }
 

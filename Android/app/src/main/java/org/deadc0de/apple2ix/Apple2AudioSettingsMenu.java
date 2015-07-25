@@ -41,13 +41,18 @@ public class Apple2AudioSettingsMenu implements Apple2MenuView {
 
     enum SETTINGS {
         SPEAKER_ENABLED {
-            @Override public String getTitle(Apple2Activity activity) {
+            @Override
+            public String getTitle(Apple2Activity activity) {
                 return activity.getResources().getString(R.string.speaker_enable);
             }
-            @Override public String getSummary(Apple2Activity activity) {
+
+            @Override
+            public String getSummary(Apple2Activity activity) {
                 return activity.getResources().getString(R.string.speaker_enable_summary);
             }
-            @Override public View getView(final Apple2Activity activity, View convertView) {
+
+            @Override
+            public View getView(final Apple2Activity activity, View convertView) {
                 convertView = _basicView(activity, this, convertView);
                 CheckBox cb = _addCheckbox(activity, this, convertView, true);
                 cb.setEnabled(false);
@@ -55,22 +60,27 @@ public class Apple2AudioSettingsMenu implements Apple2MenuView {
             }
         },
         SPEAKER_VOLUME {
-            @Override public String getTitle(Apple2Activity activity) {
+            @Override
+            public String getTitle(Apple2Activity activity) {
                 return activity.getResources().getString(R.string.speaker_volume);
             }
-            @Override public String getSummary(Apple2Activity activity) {
+
+            @Override
+            public String getSummary(Apple2Activity activity) {
                 return activity.getResources().getString(R.string.speaker_volume_summary);
             }
-            @Override public View getView(final Apple2Activity activity, View convertView) {
-                LayoutInflater inflater = (LayoutInflater)activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+
+            @Override
+            public View getView(final Apple2Activity activity, View convertView) {
+                LayoutInflater inflater = (LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
                 convertView = inflater.inflate(R.layout.a2preference_slider, null, false);
 
-                TextView tv = (TextView)convertView.findViewById(R.id.a2preference_slider_summary);
+                TextView tv = (TextView) convertView.findViewById(R.id.a2preference_slider_summary);
                 tv.setText(getSummary(activity));
 
-                final TextView seekBarValue = (TextView)convertView.findViewById(R.id.a2preference_slider_seekBarValue);
+                final TextView seekBarValue = (TextView) convertView.findViewById(R.id.a2preference_slider_seekBarValue);
 
-                SeekBar sb = (SeekBar)convertView.findViewById(R.id.a2preference_slider_seekBar);
+                SeekBar sb = (SeekBar) convertView.findViewById(R.id.a2preference_slider_seekBar);
                 sb.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
                     @Override
                     public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
@@ -123,22 +133,27 @@ public class Apple2AudioSettingsMenu implements Apple2MenuView {
             }
         },
         MOCKINGBOARD_VOLUME {
-            @Override public String getTitle(Apple2Activity activity) {
+            @Override
+            public String getTitle(Apple2Activity activity) {
                 return activity.getResources().getString(R.string.mockingboard_volume);
             }
-            @Override public String getSummary(Apple2Activity activity) {
+
+            @Override
+            public String getSummary(Apple2Activity activity) {
                 return activity.getResources().getString(R.string.mockingboard_volume_summary);
             }
-            @Override public View getView(final Apple2Activity activity, View convertView) {
-                LayoutInflater inflater = (LayoutInflater)activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+
+            @Override
+            public View getView(final Apple2Activity activity, View convertView) {
+                LayoutInflater inflater = (LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
                 convertView = inflater.inflate(R.layout.a2preference_slider, null, false);
 
-                TextView tv = (TextView)convertView.findViewById(R.id.a2preference_slider_summary);
+                TextView tv = (TextView) convertView.findViewById(R.id.a2preference_slider_summary);
                 tv.setText(getSummary(activity));
 
-                final TextView seekBarValue = (TextView)convertView.findViewById(R.id.a2preference_slider_seekBarValue);
+                final TextView seekBarValue = (TextView) convertView.findViewById(R.id.a2preference_slider_seekBarValue);
 
-                SeekBar sb = (SeekBar)convertView.findViewById(R.id.a2preference_slider_seekBar);
+                SeekBar sb = (SeekBar) convertView.findViewById(R.id.a2preference_slider_seekBar);
                 sb.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
                     @Override
                     public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
@@ -167,30 +182,38 @@ public class Apple2AudioSettingsMenu implements Apple2MenuView {
             }
         },
         ADVANCED_SEPARATOR {
-            @Override public String getTitle(Apple2Activity activity) {
+            @Override
+            public String getTitle(Apple2Activity activity) {
                 return activity.getResources().getString(R.string.settings_advanced);
             }
-            @Override public String getSummary(Apple2Activity activity) {
+
+            @Override
+            public String getSummary(Apple2Activity activity) {
                 return activity.getResources().getString(R.string.settings_advanced_summary);
             }
         },
         AUDIO_LATENCY {
-            @Override public String getTitle(Apple2Activity activity) {
+            @Override
+            public String getTitle(Apple2Activity activity) {
                 return activity.getResources().getString(R.string.audio_latency);
             }
-            @Override public String getSummary(Apple2Activity activity) {
+
+            @Override
+            public String getSummary(Apple2Activity activity) {
                 return activity.getResources().getString(R.string.audio_latency_summary);
             }
-            @Override public View getView(final Apple2Activity activity, View convertView) {
-                LayoutInflater inflater = (LayoutInflater)activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+
+            @Override
+            public View getView(final Apple2Activity activity, View convertView) {
+                LayoutInflater inflater = (LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
                 convertView = inflater.inflate(R.layout.a2preference_slider, null, false);
 
-                TextView tv = (TextView)convertView.findViewById(R.id.a2preference_slider_summary);
+                TextView tv = (TextView) convertView.findViewById(R.id.a2preference_slider_summary);
                 tv.setText(getSummary(activity));
 
-                final TextView seekBarValue = (TextView)convertView.findViewById(R.id.a2preference_slider_seekBarValue);
+                final TextView seekBarValue = (TextView) convertView.findViewById(R.id.a2preference_slider_seekBarValue);
 
-                final SeekBar sb = (SeekBar)convertView.findViewById(R.id.a2preference_slider_seekBar);
+                final SeekBar sb = (SeekBar) convertView.findViewById(R.id.a2preference_slider_seekBar);
                 sb.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
                     @Override
                     public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
@@ -202,7 +225,7 @@ public class Apple2AudioSettingsMenu implements Apple2MenuView {
                             progress = 1;
                             sb.setProgress(progress);
                         }
-                        float latencySecs = (float)progress / Apple2Preferences.AUDIO_LATENCY_NUM_CHOICES;
+                        float latencySecs = (float) progress / Apple2Preferences.AUDIO_LATENCY_NUM_CHOICES;
                         seekBarValue.setText("" + latencySecs);
                         Apple2Preferences.AUDIO_LATENCY.saveFloat(activity, latencySecs);
                     }
@@ -226,14 +249,14 @@ public class Apple2AudioSettingsMenu implements Apple2MenuView {
             }
         };
 
-        private static View _basicView(Apple2Activity activity, SETTINGS setting,  View convertView) {
-            TextView tv = (TextView)convertView.findViewById(R.id.a2preference_title);
+        private static View _basicView(Apple2Activity activity, SETTINGS setting, View convertView) {
+            TextView tv = (TextView) convertView.findViewById(R.id.a2preference_title);
             tv.setText(setting.getTitle(activity));
 
-            tv = (TextView)convertView.findViewById(R.id.a2preference_summary);
+            tv = (TextView) convertView.findViewById(R.id.a2preference_summary);
             tv.setText(setting.getSummary(activity));
 
-            LinearLayout layout = (LinearLayout)convertView.findViewById(R.id.a2preference_widget_frame);
+            LinearLayout layout = (LinearLayout) convertView.findViewById(R.id.a2preference_widget_frame);
             if (layout.getChildCount() > 0) {
                 // layout cells appear to be reused when scrolling into view ... make sure we start with clear hierarchy
                 layout.removeAllViews();
@@ -241,18 +264,20 @@ public class Apple2AudioSettingsMenu implements Apple2MenuView {
 
             return convertView;
         }
+
         private static ImageView _addPopupIcon(Apple2Activity activity, SETTINGS setting, View convertView) {
             ImageView imageView = new ImageView(activity);
             Drawable drawable = activity.getResources().getDrawable(android.R.drawable.ic_menu_edit);
             imageView.setImageDrawable(drawable);
-            LinearLayout layout = (LinearLayout)convertView.findViewById(R.id.a2preference_widget_frame);
+            LinearLayout layout = (LinearLayout) convertView.findViewById(R.id.a2preference_widget_frame);
             layout.addView(imageView);
             return imageView;
         }
+
         private static CheckBox _addCheckbox(Apple2Activity activity, SETTINGS setting, View convertView, boolean isChecked) {
             CheckBox checkBox = new CheckBox(activity);
             checkBox.setChecked(isChecked);
-            LinearLayout layout = (LinearLayout)convertView.findViewById(R.id.a2preference_widget_frame);
+            LinearLayout layout = (LinearLayout) convertView.findViewById(R.id.a2preference_widget_frame);
             layout.addView(checkBox);
             return checkBox;
         }
@@ -260,6 +285,7 @@ public class Apple2AudioSettingsMenu implements Apple2MenuView {
         public static final int size = SETTINGS.values().length;
 
         public abstract String getTitle(Apple2Activity activity);
+
         public abstract String getSummary(Apple2Activity activity);
 
         public void handleSelection(Apple2AudioSettingsMenu settingsMenu, boolean isChecked) {
@@ -281,13 +307,13 @@ public class Apple2AudioSettingsMenu implements Apple2MenuView {
     }
 
     private void setup() {
-        LayoutInflater inflater = (LayoutInflater)mActivity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        LayoutInflater inflater = (LayoutInflater) mActivity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         mSettingsView = inflater.inflate(R.layout.activity_settings, null, false);
 
-        TextView title = (TextView)mSettingsView.findViewById(R.id.header_settings);
+        TextView title = (TextView) mSettingsView.findViewById(R.id.header_settings);
         title.setText(R.string.settings_audio);
 
-        ListView settingsList = (ListView)mSettingsView.findViewById(R.id.listView_settings);
+        ListView settingsList = (ListView) mSettingsView.findViewById(R.id.listView_settings);
         settingsList.setEnabled(true);
 
         // This is a bit of a hack ... we're not using the ArrayAdapter as intended here, simply piggy-backing off its call to getView() to supply a completely custom view.  The arguably better way would be to create a custom Apple2SettingsAdapter or something akin to that...

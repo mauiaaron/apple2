@@ -18,23 +18,30 @@ import android.util.Log;
 
 public enum Apple2Preferences {
     PREFS_CONFIGURED {
-        @Override public void load(Apple2Activity activity) {
+        @Override
+        public void load(Apple2Activity activity) {
             // ...
         }
-        @Override public void saveBoolean(Apple2Activity activity, boolean ignored) {
+
+        @Override
+        public void saveBoolean(Apple2Activity activity, boolean ignored) {
             activity.getPreferences(Context.MODE_PRIVATE).edit().putBoolean(toString(), true).apply();
         }
     },
     HIRES_COLOR {
-        @Override public void load(Apple2Activity activity) {
+        @Override
+        public void load(Apple2Activity activity) {
             nativeSetColor(intValue(activity));
         }
-        @Override public int intValue(Apple2Activity activity) {
+
+        @Override
+        public int intValue(Apple2Activity activity) {
             return activity.getPreferences(Context.MODE_PRIVATE).getInt(toString(), HiresColor.INTERPOLATED.ordinal());
         }
     },
     SPEAKER_ENABLED {
-        @Override public void load(Apple2Activity activity) {
+        @Override
+        public void load(Apple2Activity activity) {
             boolean enabled = booleanValue(activity);
             boolean result = nativeSetSpeakerEnabled(enabled);
             if (enabled && !result) {
@@ -42,20 +49,26 @@ public enum Apple2Preferences {
                 activity.getPreferences(Context.MODE_PRIVATE).edit().putBoolean(toString(), false).apply();
             }
         }
-        @Override public boolean booleanValue(Apple2Activity activity) {
+
+        @Override
+        public boolean booleanValue(Apple2Activity activity) {
             return activity.getPreferences(Context.MODE_PRIVATE).getBoolean(toString(), true);
         }
     },
     SPEAKER_VOLUME {
-        @Override public void load(Apple2Activity activity) {
+        @Override
+        public void load(Apple2Activity activity) {
             nativeSetSpeakerVolume(intValue(activity));
         }
-        @Override public int intValue(Apple2Activity activity) {
+
+        @Override
+        public int intValue(Apple2Activity activity) {
             return activity.getPreferences(Context.MODE_PRIVATE).getInt(toString(), Volume.MEDIUM.ordinal());
         }
     },
     MOCKINGBOARD_ENABLED {
-        @Override public void load(Apple2Activity activity) {
+        @Override
+        public void load(Apple2Activity activity) {
             boolean enabled = booleanValue(activity);
             boolean result = nativeSetMockingboardEnabled(enabled);
             if (enabled && !result) {
@@ -65,18 +78,24 @@ public enum Apple2Preferences {
         }
     },
     MOCKINGBOARD_VOLUME {
-        @Override public void load(Apple2Activity activity) {
+        @Override
+        public void load(Apple2Activity activity) {
             nativeSetMockingboardVolume(intValue(activity));
         }
-        @Override public int intValue(Apple2Activity activity) {
+
+        @Override
+        public int intValue(Apple2Activity activity) {
             return activity.getPreferences(Context.MODE_PRIVATE).getInt(toString(), Volume.MEDIUM.ordinal());
         }
     },
     AUDIO_LATENCY {
-        @Override public void load(Apple2Activity activity) {
+        @Override
+        public void load(Apple2Activity activity) {
             nativeSetAudioLatency(floatValue(activity));
         }
-        @Override public float floatValue(Apple2Activity activity) {
+
+        @Override
+        public float floatValue(Apple2Activity activity) {
 
             float defaultLatency = 0.f;
             if (defaultLatency == 0.f) {
@@ -91,6 +110,17 @@ public enum Apple2Preferences {
             }
 
             return activity.getPreferences(Context.MODE_PRIVATE).getFloat(toString(), defaultLatency);
+        }
+    },
+    FIRST_TOUCH_DEVICE {
+        @Override
+        public void load(Apple2Activity activity) {
+            nativeSetDefaultTouchDevice(intValue(activity));
+        }
+
+        @Override
+        public int intValue(Apple2Activity activity) {
+            return activity.getPreferences(Context.MODE_PRIVATE).getInt(toString(), TouchDevice.KEYBOARD.ordinal());
         }
     };
 
@@ -115,8 +145,20 @@ public enum Apple2Preferences {
         MAX(10),
         ELEVEN(11);
         private int vol;
+
         Volume(int vol) {
             this.vol = vol;
+        }
+    }
+
+    public enum TouchDevice {
+        NONE(0),
+        JOYSTICK(1),
+        KEYBOARD(2);
+        private int dev;
+
+        TouchDevice(int dev) {
+            this.dev = dev;
         }
     }
 
@@ -141,19 +183,28 @@ public enum Apple2Preferences {
         activity.getPreferences(Context.MODE_PRIVATE).edit().putBoolean(toString(), value).apply();
         load(activity);
     }
+
     public void saveInt(Apple2Activity activity, int value) {
         activity.getPreferences(Context.MODE_PRIVATE).edit().putInt(toString(), value).apply();
         load(activity);
     }
+
     public void saveFloat(Apple2Activity activity, float value) {
         activity.getPreferences(Context.MODE_PRIVATE).edit().putFloat(toString(), value).apply();
         load(activity);
     }
+
     public void saveHiresColor(Apple2Activity activity, HiresColor value) {
         activity.getPreferences(Context.MODE_PRIVATE).edit().putInt(toString(), value.ordinal()).apply();
         load(activity);
     }
+
     public void saveVolume(Apple2Activity activity, Volume value) {
+        activity.getPreferences(Context.MODE_PRIVATE).edit().putInt(toString(), value.ordinal()).apply();
+        load(activity);
+    }
+
+    public void saveTouchDevice(Apple2Activity activity, TouchDevice value) {
         activity.getPreferences(Context.MODE_PRIVATE).edit().putInt(toString(), value.ordinal()).apply();
         load(activity);
     }
@@ -184,11 +235,20 @@ public enum Apple2Preferences {
     }
 
     private static native void nativeEnableTouchJoystick(boolean enabled);
+
     private static native void nativeEnableTiltJoystick(boolean enabled);
+
     private static native void nativeSetColor(int color);
+
     private static native boolean nativeSetSpeakerEnabled(boolean enabled);
+
     private static native void nativeSetSpeakerVolume(int volume);
+
     private static native boolean nativeSetMockingboardEnabled(boolean enabled);
+
     private static native void nativeSetMockingboardVolume(int volume);
+
     private static native void nativeSetAudioLatency(float latencySecs);
+
+    private static native void nativeSetDefaultTouchDevice(int device);
 }
