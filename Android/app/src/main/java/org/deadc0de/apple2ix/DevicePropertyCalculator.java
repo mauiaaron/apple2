@@ -38,6 +38,8 @@ import android.os.Build;
  */
 public final class DevicePropertyCalculator
 {
+    public final static int defaultSampleRate = 22050;
+
     public static boolean detectLowLatency( Context aContext )
     {
         // check for low latency audio
@@ -84,7 +86,6 @@ public final class DevicePropertyCalculator
 
             SR_CHECK = am.getProperty( AudioManager.PROPERTY_OUTPUT_SAMPLE_RATE );
         }
-        final int defaultSampleRate = 22050;
 
         return ( SR_CHECK != null ) ? Integer.parseInt( SR_CHECK ) : defaultSampleRate;
     }

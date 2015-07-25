@@ -165,6 +165,65 @@ public class Apple2AudioSettingsMenu implements Apple2MenuView {
                 seekBarValue.setText("" + vol);
                 return convertView;
             }
+        },
+        ADVANCED_SEPARATOR {
+            @Override public String getTitle(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.settings_advanced);
+            }
+            @Override public String getSummary(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.settings_advanced_summary);
+            }
+        },
+        AUDIO_LATENCY {
+            @Override public String getTitle(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.audio_latency);
+            }
+            @Override public String getSummary(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.audio_latency_summary);
+            }
+            @Override public View getView(final Apple2Activity activity, View convertView) {
+                LayoutInflater inflater = (LayoutInflater)activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+                convertView = inflater.inflate(R.layout.a2preference_slider, null, false);
+
+                TextView tv = (TextView)convertView.findViewById(R.id.a2preference_slider_summary);
+                tv.setText(getSummary(activity));
+
+                final TextView seekBarValue = (TextView)convertView.findViewById(R.id.a2preference_slider_seekBarValue);
+
+                final SeekBar sb = (SeekBar)convertView.findViewById(R.id.a2preference_slider_seekBar);
+                sb.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+                    @Override
+                    public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                        if (!fromUser) {
+                            return;
+                        }
+                        if (progress <= 0) {
+                            // buffer size cannot be zero
+                            progress = 1;
+                            sb.setProgress(progress);
+                        }
+                        float latencySecs = (float)progress / Apple2Preferences.AUDIO_LATENCY_NUM_CHOICES;
+                        seekBarValue.setText("" + latencySecs);
+                        Apple2Preferences.AUDIO_LATENCY.saveFloat(activity, latencySecs);
+                    }
+
+                    @Override
+                    public void onStartTrackingTouch(SeekBar seekBar) {
+                    }
+
+                    @Override
+                    public void onStopTrackingTouch(SeekBar seekBar) {
+                    }
+                });
+
+                sb.setMax(0); // http://stackoverflow.com/questions/10278467/seekbar-not-setting-actual-progress-setprogress-not-working-on-early-android
+                sb.setMax(Apple2Preferences.AUDIO_LATENCY_NUM_CHOICES);
+                float latencySecs = Apple2Preferences.AUDIO_LATENCY.floatValue(activity);
+                seekBarValue.setText("" + latencySecs);
+                int tick = (int) (latencySecs * (float) Apple2Preferences.AUDIO_LATENCY_NUM_CHOICES);
+                sb.setProgress(tick);
+                return convertView;
+            }
         };
 
         private static View _basicView(Apple2Activity activity, SETTINGS setting,  View convertView) {

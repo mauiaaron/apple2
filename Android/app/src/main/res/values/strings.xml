@@ -9,7 +9,9 @@
     <string name="action_settings">Settings</string>
     <string name="app_name">Apple2ix</string>
     <string name="audio_configure">Configure audio…</string>
-    <string name="audio_configure_summary">Volume, mockingboard, etc</string>
+    <string name="audio_configure_summary">Speaker volume, Mockingboard, etc</string>
+    <string name="audio_latency">Audio latency</string>
+    <string name="audio_latency_summary">Audio latency in secs</string>
     <string name="cancel">Cancel</string>
     <string name="color_bw">Black/white</string>
     <string name="color_color">Color</string>
@@ -63,6 +65,8 @@
     <string name="speed_swipe_summary">Left/right swiping decreases/increases emulation speed</string>
     <string name="settings">Apple2ix emulator settings</string>
     <string name="settings_audio">Apple2ix audio settings</string>
+    <string name="settings_advanced">Advanced settings</string>
+    <string name="settings_advanced_summary">Warning: these settings may potentially degrade emulation performance</string>
     <string name="tab_general">General</string>
     <string name="tab_joystick">Joystick</string>
     <string name="title_activity_second">SecondActivity</string>

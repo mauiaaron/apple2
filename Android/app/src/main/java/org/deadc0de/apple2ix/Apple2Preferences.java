@@ -71,6 +71,27 @@ public enum Apple2Preferences {
         @Override public int intValue(Apple2Activity activity) {
             return activity.getPreferences(Context.MODE_PRIVATE).getInt(toString(), Volume.MEDIUM.ordinal());
         }
+    },
+    AUDIO_LATENCY {
+        @Override public void load(Apple2Activity activity) {
+            nativeSetAudioLatency(floatValue(activity));
+        }
+        @Override public float floatValue(Apple2Activity activity) {
+
+            float defaultLatency = 0.f;
+            if (defaultLatency == 0.f) {
+                int sampleRateCanary = DevicePropertyCalculator.getRecommendedSampleRate(activity);
+                if (sampleRateCanary == DevicePropertyCalculator.defaultSampleRate) {
+                    // quite possibly an audio-challenged device
+                    defaultLatency = 0.4f;
+                } else {
+                    // reasonable default for high-end devices
+                    defaultLatency = 0.25f;
+                }
+            }
+
+            return activity.getPreferences(Context.MODE_PRIVATE).getFloat(toString(), defaultLatency);
+        }
     };
 
     public enum HiresColor {
@@ -111,16 +132,21 @@ public enum Apple2Preferences {
         dialog.show();
     }
 
+    public final static int AUDIO_LATENCY_NUM_CHOICES = 20;
     public final static String TAG = "Apple2Preferences";
 
     // set and apply
 
+    public void saveBoolean(Apple2Activity activity, boolean value) {
+        activity.getPreferences(Context.MODE_PRIVATE).edit().putBoolean(toString(), value).apply();
+        load(activity);
+    }
     public void saveInt(Apple2Activity activity, int value) {
         activity.getPreferences(Context.MODE_PRIVATE).edit().putInt(toString(), value).apply();
         load(activity);
     }
-    public void saveBoolean(Apple2Activity activity, boolean value) {
-        activity.getPreferences(Context.MODE_PRIVATE).edit().putBoolean(toString(), value).apply();
+    public void saveFloat(Apple2Activity activity, float value) {
+        activity.getPreferences(Context.MODE_PRIVATE).edit().putFloat(toString(), value).apply();
         load(activity);
     }
     public void saveHiresColor(Apple2Activity activity, HiresColor value) {
@@ -142,10 +168,19 @@ public enum Apple2Preferences {
         return activity.getPreferences(Context.MODE_PRIVATE).getInt(toString(), 0);
     }
 
+    public float floatValue(Apple2Activity activity) {
+        return activity.getPreferences(Context.MODE_PRIVATE).getFloat(toString(), 0.0f);
+    }
+
     public static void loadPreferences(Apple2Activity activity) {
         for (Apple2Preferences pref : Apple2Preferences.values()) {
             pref.load(activity);
         }
+    }
+
+    public static void resetPreferences(Apple2Activity activity) {
+        activity.getPreferences(Context.MODE_PRIVATE).edit().clear().commit();
+        loadPreferences(activity);
     }
 
     private static native void nativeEnableTouchJoystick(boolean enabled);
@@ -155,4 +190,5 @@ public enum Apple2Preferences {
     private static native void nativeSetSpeakerVolume(int volume);
     private static native boolean nativeSetMockingboardEnabled(boolean enabled);
     private static native void nativeSetMockingboardVolume(int volume);
+    private static native void nativeSetAudioLatency(float latencySecs);
 }
