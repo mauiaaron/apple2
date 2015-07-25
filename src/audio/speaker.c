@@ -455,7 +455,7 @@ bool speaker_isActive(void) {
 
 void speaker_setVolumeZeroToTen(unsigned long goesToTen) {
     float samplesScale = goesToTen/10.f;
-    speaker_data = (int16_t)(SPKR_DATA_INIT * samplesScale);
+    speaker_amplitude = (int16_t)(SPKR_DATA_INIT * samplesScale);
 }
 
 double speaker_cyclesPerSample(void) {
