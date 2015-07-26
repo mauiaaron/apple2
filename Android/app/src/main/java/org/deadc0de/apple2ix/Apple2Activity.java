@@ -46,6 +46,7 @@ public class Apple2Activity extends Activity {
     private ArrayList<Apple2MenuView> mMenuStack = new ArrayList<Apple2MenuView>();
     private AlertDialog mQuitDialog = null;
     private AlertDialog mRebootDialog = null;
+    private Apple2SplashScreen mSplashScreen = null;
 
     private int mWidth = 0;
     private int mHeight = 0;
@@ -62,19 +63,27 @@ public class Apple2Activity extends Activity {
     }
 
     private native void nativeOnCreate(String dataDir, int sampleRate, int monoBufferSize, int stereoBufferSize);
+
     private native void nativeGraphicsInitialized(int width, int height);
+
     private native void nativeGraphicsChanged(int width, int height);
+
     private native void nativeOnKeyDown(int keyCode, int metaState);
+
     private native void nativeOnKeyUp(int keyCode, int metaState);
+
     private native void nativeOnUncaughtException(String home, String trace);
 
     public native void nativeOnResume(boolean isSystemResume);
+
     public native void nativeOnPause();
+
     public native void nativeOnQuit();
 
     public native boolean nativeOnTouch(int action, int pointerCount, int pointerIndex, float[] xCoords, float[] yCoords);
 
     public native void nativeReboot();
+
     public native void nativeRender();
 
     public native void nativeChooseDisk(String path, boolean driveA, boolean readOnly);
@@ -91,7 +100,7 @@ public class Apple2Activity extends Activity {
             PackageInfo pi = pm.getPackageInfo(getPackageName(), 0);
             dataDir = pi.applicationInfo.dataDir;
         } catch (PackageManager.NameNotFoundException e) {
-            Log.e(TAG, ""+e);
+            Log.e(TAG, "" + e);
             System.exit(1);
         }
 
@@ -111,7 +120,7 @@ public class Apple2Activity extends Activity {
                 _copyFile(dataDir, "disks", disk);
             }
         } catch (IOException e) {
-            Log.e(TAG, "problem copying resources : "+e);
+            Log.e(TAG, "problem copying resources : " + e);
             System.exit(1);
         }
 
@@ -122,14 +131,13 @@ public class Apple2Activity extends Activity {
     }
 
     private void _copyFile(String dataDir, String subdir, String assetName)
-        throws IOException
-    {
-        String outputPath = dataDir+File.separator+subdir;
-        Log.d(TAG, "Copying "+subdir+File.separator+assetName+" to "+outputPath+File.separator+assetName+" ...");
+            throws IOException {
+        String outputPath = dataDir + File.separator + subdir;
+        Log.d(TAG, "Copying " + subdir + File.separator + assetName + " to " + outputPath + File.separator + assetName + " ...");
         new File(outputPath).mkdirs();
 
-        InputStream is = getAssets().open(subdir+File.separator+assetName);
-        File file = new File(outputPath+File.separator+assetName);
+        InputStream is = getAssets().open(subdir + File.separator + assetName);
+        File file = new File(outputPath + File.separator + assetName);
         file.setWritable(true);
         FileOutputStream os = new FileOutputStream(file);
 
@@ -164,7 +172,7 @@ public class Apple2Activity extends Activity {
         super.onCreate(savedInstanceState);
 
         // Immediately set up exception handler ...
-        final String homeDir = "/data/data/"+this.getPackageName();
+        final String homeDir = "/data/data/" + this.getPackageName();
         final Thread.UncaughtExceptionHandler defaultExceptionHandler = Thread.getDefaultUncaughtExceptionHandler();
         Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
             @Override
@@ -222,11 +230,11 @@ public class Apple2Activity extends Activity {
         mSampleRate = DevicePropertyCalculator.getRecommendedSampleRate(this);
         mMonoBufferSize = DevicePropertyCalculator.getRecommendedBufferSize(this, /*isStereo:*/false);
         mStereoBufferSize = DevicePropertyCalculator.getRecommendedBufferSize(this, /*isStereo:*/true);
-        Log.d(TAG, "Device sampleRate:"+mSampleRate+" mono bufferSize:"+mMonoBufferSize+" stereo bufferSize:"+mStereoBufferSize);
+        Log.d(TAG, "Device sampleRate:" + mSampleRate + " mono bufferSize:" + mMonoBufferSize + " stereo bufferSize:" + mStereoBufferSize);
 
         nativeOnCreate(mDataDir, mSampleRate, mMonoBufferSize, mStereoBufferSize);
 
-        // NOTE: load preferences after nativeOnCreate
+        // NOTE: load preferences after nativeOnCreate ... native CPU thread should still be paused
         Apple2Preferences.loadPreferences(this);
 
         mView = new Apple2View(this);
@@ -273,7 +281,7 @@ public class Apple2Activity extends Activity {
         if (mainMenu != null) {
             mainMenu.dismiss();
         }
-        if (mQuitDialog != null  && mQuitDialog.isShowing()) {
+        if (mQuitDialog != null && mQuitDialog.isShowing()) {
             mQuitDialog.dismiss();
         }
         if (mRebootDialog != null && mRebootDialog.isShowing()) {
@@ -325,19 +333,19 @@ public class Apple2Activity extends Activity {
     private String actionToString(int action) {
         switch (action) {
             case MotionEvent.ACTION_CANCEL:
-                return "CANCEL:"+action;
+                return "CANCEL:" + action;
             case MotionEvent.ACTION_DOWN:
-                return "DOWN:"+action;
+                return "DOWN:" + action;
             case MotionEvent.ACTION_MOVE:
-                return "MOVE:"+action;
+                return "MOVE:" + action;
             case MotionEvent.ACTION_UP:
-                return "UP:"+action;
+                return "UP:" + action;
             case MotionEvent.ACTION_POINTER_DOWN:
-                return "PDOWN:"+action;
+                return "PDOWN:" + action;
             case MotionEvent.ACTION_POINTER_UP:
-                return "PUP:"+action;
+                return "PUP:" + action;
             default:
-                return "UNK:"+action;
+                return "UNK:" + action;
         }
     }
 
@@ -355,9 +363,9 @@ public class Apple2Activity extends Activity {
         */
         int pointerIndex = ev.getActionIndex();
 
-        Log.d(TAG, "Event "+actionToString(ev.getActionMasked())+" for "+pointerIndex+" at time "+ev.getEventTime()+" :");
-        for (int p=0; p<pointerCount; p++) {
-            Log.d(TAG, "  pointer "+ev.getPointerId(p)+": ("+ev.getX(p)+","+ev.getY(p)+")");
+        Log.d(TAG, "Event " + actionToString(ev.getActionMasked()) + " for " + pointerIndex + " at time " + ev.getEventTime() + " :");
+        for (int p = 0; p < pointerCount; p++) {
+            Log.d(TAG, "  pointer " + ev.getPointerId(p) + ": (" + ev.getX(p) + "," + ev.getY(p) + ")");
         }
     }
 
@@ -382,7 +390,7 @@ public class Apple2Activity extends Activity {
             int action = event.getActionMasked();
             int pointerIndex = event.getActionIndex();
             int pointerCount = event.getPointerCount();
-            for (int i=0; i<pointerCount/* && i < MAX_FINGERS */; i++) {
+            for (int i = 0; i < pointerCount/* && i < MAX_FINGERS */; i++) {
                 mXCoords[i] = event.getX(i);
                 mYCoords[i] = event.getY(i);
             }
@@ -409,7 +417,25 @@ public class Apple2Activity extends Activity {
         mWidth = w;
         mHeight = h;
 
+        // tell native about this...
         nativeGraphicsInitialized(w, h);
+
+        showSplashScreen();
+    }
+
+    public synchronized void showSplashScreen() {
+        if (mSplashScreen != null && mSplashScreen.isShowing()) {
+            return;
+        }
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if (mSplashScreen == null) {
+                    mSplashScreen = new Apple2SplashScreen(Apple2Activity.this);
+                }
+                mSplashScreen.show();
+            }
+        });
     }
 
     public synchronized void pushApple2View(Apple2MenuView apple2MenuView) {
@@ -420,7 +446,7 @@ public class Apple2Activity extends Activity {
     }
 
     public synchronized Apple2MenuView popApple2View() {
-        int lastIndex = mMenuStack.size()-1;
+        int lastIndex = mMenuStack.size() - 1;
         if (lastIndex < 0) {
             return null;
         }

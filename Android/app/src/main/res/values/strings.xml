@@ -19,6 +19,8 @@
     <string name="diskA">Drive 1</string>
     <string name="diskB">Drive 2</string>
     <string name="disk_read_write">Read/write</string>
+    <string name="emulation_continue">Continue…</string>
+    <string name="emulation_welcome">Party like it\'s 1987!</string>
     <string name="header_disks">Insert disk:</string>
     <string name="joystick">Joystick</string>
     <string name="input_configure">Configure input devices…</string>
@@ -69,8 +71,6 @@
     <string name="speaker_volume_summary">Set the speaker volume</string>
     <string name="speed_alt">Alternate CPU Speed</string>
     <string name="speed_cpu">CPU Speed</string>
-    <string name="speed_swipe">Swipe changes emulation speed</string>
-    <string name="speed_swipe_summary">Left/right swiping decreases/increases emulation speed</string>
     <string name="settings">Apple2ix emulator settings</string>
     <string name="settings_audio">Apple2ix audio settings</string>
     <string name="settings_advanced">Advanced settings</string>
