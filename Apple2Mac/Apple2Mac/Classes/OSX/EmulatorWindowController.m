@@ -97,7 +97,9 @@
 
 - (IBAction)toggleCPUSpeed:(id)sender
 {
-    timing_toggle_cpu_speed();
+    cpu_pause();
+    timing_toggleCPUSpeed();
+    cpu_resume();
 }
 
 - (IBAction)togglePause:(id)sender
@@ -117,7 +119,7 @@
     if (paused)
     {
         [[self pauseMenuItem] setTitle:@"Resume Emulation"];
-        pthread_mutex_lock(&interface_mutex);
+        cpu_pause();
 #ifdef AUDIO_ENABLED
         SoundSystemPause();
 #endif
@@ -128,7 +130,7 @@
 #ifdef AUDIO_ENABLED
         SoundSystemUnpause();
 #endif
-        pthread_mutex_unlock(&interface_mutex);
+        cpu_resume();
     }
 }
 

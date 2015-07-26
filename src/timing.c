@@ -42,6 +42,16 @@
 
 #define DISK_MOTOR_QUIET_NSECS 2000000
 
+#define _LOCK_CPU_THREAD() \
+    if (pthread_self() != cpu_thread_id) { \
+        pthread_mutex_lock(&interface_mutex); \
+    }
+
+#define _UNLOCK_CPU_THREAD() \
+    if (pthread_self() != cpu_thread_id) { \
+        pthread_mutex_unlock(&interface_mutex); \
+    }
+
 // VBL constants?
 #define uCyclesPerLine 65 // 25 cycles of HBL & 40 cycles of HBL'
 #define uVisibleLinesPerFrame (64*3) // 192
@@ -59,8 +69,9 @@ static unsigned int g_dwCyclesThisFrame = 0;
 
 // scaling and speed adjustments
 #if MOBILE_DEVICE
-static bool auto_adjust_speed = false;
+static bool is_paused = true;
 #else
+static bool is_paused = false;
 static bool auto_adjust_speed = true;
 #endif
 double cpu_scale_factor = 1.0;
@@ -69,7 +80,8 @@ bool is_fullspeed = false;
 bool alt_speed_enabled = false;
 
 // misc
-volatile uint8_t emul_reinitialize = 0;
+volatile uint8_t emul_reinitialize = 1;
+unsigned long emul_reinitialize_audio = 1UL;
 pthread_t cpu_thread_id = 0;
 pthread_mutex_t interface_mutex = { 0 };
 pthread_cond_t dbg_thread_cond = PTHREAD_COND_INITIALIZER;
@@ -145,67 +157,77 @@ static void _timing_initialize(double scale) {
 #endif
 }
 
-static inline void _lock_gui_thread(void) {
-    if (pthread_self() != cpu_thread_id) {
-        pthread_mutex_lock(&interface_mutex);
-    }
-}
-
-static inline void _unlock_gui_thread(void) {
-    if (pthread_self() != cpu_thread_id) {
-        pthread_mutex_unlock(&interface_mutex);
-    }
-}
-
 void timing_initialize(void) {
-    _lock_gui_thread();
+    assert(cpu_isPaused() || (pthread_self() == cpu_thread_id));
     _timing_initialize(alt_speed_enabled ? cpu_altscale_factor : cpu_scale_factor);
-    _unlock_gui_thread();
 }
 
-void timing_toggle_cpu_speed(void) {
-    _lock_gui_thread();
+void timing_toggleCPUSpeed(void) {
+    assert(cpu_isPaused() || (pthread_self() == cpu_thread_id));
     alt_speed_enabled = !alt_speed_enabled;
     timing_initialize();
-    _unlock_gui_thread();
 }
 
-void timing_set_auto_adjust_speed(bool auto_adjust) {
-    _lock_gui_thread();
-    auto_adjust_speed = auto_adjust;
-    timing_initialize();
-    _unlock_gui_thread();
+void timing_reinitializeAudio(void) {
+    assert(cpu_isPaused() || (pthread_self() == cpu_thread_id));
+    __sync_fetch_and_or(&emul_reinitialize_audio, 1UL);
 }
 
 void cpu_pause(void) {
-    _lock_gui_thread();
+    _LOCK_CPU_THREAD();
+#ifdef AUDIO_ENABLED
     audio_pause();
+#endif
+    is_paused = true;
+}
+
+static void _cpu_thread_really_start(void) {
+    int err = 0;
+    if ( (err = pthread_cond_signal(&cpu_thread_cond)) ) {
+        ERRLOG("pthread_cond_signal : %d", err);
+    }
 }
 
 void cpu_resume(void) {
+    assert(cpu_isPaused());
+    is_paused = false;
+
+    static pthread_once_t onceToken = PTHREAD_ONCE_INIT;
+    if (onceToken == PTHREAD_ONCE_INIT) {
+        int err = 0;
+        if ( (err = pthread_once(&onceToken, _cpu_thread_really_start)) ) {
+            ERRLOG("pthread_once : %d", err);
+        }
+    }
+
+#ifdef AUDIO_ENABLED
     audio_resume();
-    _unlock_gui_thread();
+#endif
+
+    _UNLOCK_CPU_THREAD();
 }
 
-bool timing_should_auto_adjust_speed(void) {
+bool cpu_isPaused(void) {
+    return is_paused;
+}
+
+#if !MOBILE_DEVICE
+bool timing_shouldAutoAdjustSpeed(void) {
     double speed = alt_speed_enabled ? cpu_altscale_factor : cpu_scale_factor;
     return auto_adjust_speed && (speed < CPU_SCALE_FASTEST);
 }
+#endif
 
 void *cpu_thread(void *dummyptr) {
 
     assert(pthread_self() == cpu_thread_id);
 
-#ifdef AUDIO_ENABLED
-    audio_init();
-    speaker_init();
-    MB_Initialize();
-#endif
-
-    reinitialize();
+    LOG("cpu_thread : initialized...");
 
     struct timespec deltat;
+#if !MOBILE_DEVICE
     struct timespec disk_motor_time;
+#endif
     struct timespec t0;         // the target timer
     struct timespec ti, tj;     // actual time samples
     bool negative = false;
@@ -221,13 +243,37 @@ void *cpu_thread(void *dummyptr) {
     unsigned int dbg_cycles_executed = 0;
 #endif
 
+#if !TESTING
+    pthread_mutex_lock(&interface_mutex);
+    int err = 0;
+    LOG("cpu_thread : waiting for splash screen completion...");
+    pthread_cond_wait(&cpu_thread_cond, &interface_mutex);
+    pthread_mutex_unlock(&interface_mutex);
+    LOG("cpu_thread : starting...");
+#endif
+
     do
     {
+#ifdef AUDIO_ENABLED
+        bool reinit_audio = __sync_fetch_and_and(&emul_reinitialize_audio, 0UL);
+        if (reinit_audio) {
+            speaker_destroy();
+            MB_Destroy();
+            audio_shutdown();
+
+            audio_init();
+            speaker_init();
+            MB_Initialize();
+        }
+#endif
+        if (emul_reinitialize) {
+            reinitialize();
+        }
+
         LOG("cpu_thread : begin main loop ...");
 
         clock_gettime(CLOCK_MONOTONIC, &t0);
 
-        emul_reinitialize = 1;
         do {
             // -LOCK----------------------------------------------------------------------------------------- SAMPLE ti
             pthread_mutex_lock(&interface_mutex);
@@ -321,7 +367,8 @@ void *cpu_thread(void *dummyptr) {
             pthread_mutex_unlock(&interface_mutex);
             // -UNLOCK--------------------------------------------------------------------------------------- SAMPLE tj
 
-            if (timing_should_auto_adjust_speed()) {
+#if !MOBILE_DEVICE
+            if (timing_shouldAutoAdjustSpeed()) {
                 disk_motor_time = timespec_diff(disk6.motor_time, tj, &negative);
                 assert(!negative);
                 if (!is_fullspeed &&
@@ -334,6 +381,7 @@ void *cpu_thread(void *dummyptr) {
                     _timing_initialize(CPU_SCALE_FASTEST);
                 }
             }
+#endif
 
             if (!is_fullspeed) {
                 deltat = timespec_diff(ti, tj, &negative);
@@ -384,7 +432,8 @@ void *cpu_thread(void *dummyptr) {
 #endif
             }
 
-            if (timing_should_auto_adjust_speed()) {
+#if !MOBILE_DEVICE
+            if (timing_shouldAutoAdjustSpeed()) {
                 if (is_fullspeed && (
 #ifdef AUDIO_ENABLED
                             speaker_isActive() ||
@@ -398,8 +447,13 @@ void *cpu_thread(void *dummyptr) {
                     }
                 }
             }
+#endif
 
             if (UNLIKELY(emul_reinitialize)) {
+                break;
+            }
+
+            if (UNLIKELY(emul_reinitialize_audio)) {
                 break;
             }
 
@@ -411,8 +465,6 @@ void *cpu_thread(void *dummyptr) {
         if (UNLIKELY(emulator_shutting_down)) {
             break;
         }
-
-        reinitialize();
     } while (1);
 
 #ifdef AUDIO_ENABLED

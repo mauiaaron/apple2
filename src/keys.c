@@ -234,7 +234,7 @@ void c_keys_handle_input(int scancode, int pressed, int is_cooked)
 
     if ((next_key >= 0)
 #ifdef INTERFACE_CLASSIC
-            && !in_interface
+            && !cpu_isPaused()
 #endif
        )
     {
@@ -252,7 +252,9 @@ void c_keys_handle_input(int scancode, int pressed, int is_cooked)
 #ifdef INTERFACE_CLASSIC
             if (current_key == kF9)
             {
-                timing_toggle_cpu_speed();
+                cpu_pause();
+                timing_toggleCPUSpeed();
+                cpu_resume();
                 if (video_backend->animation_showCPUSpeed) {
                     video_backend->animation_showCPUSpeed();
                 }
@@ -287,9 +289,10 @@ void c_keys_handle_input(int scancode, int pressed, int is_cooked)
                 if (video_backend->animation_showCPUSpeed) {
                     video_backend->animation_showCPUSpeed();
                 }
-#warning HACK TODO FIXME ... refactor timing stuff
-                timing_toggle_cpu_speed();
-                timing_toggle_cpu_speed();
+
+                cpu_pause();
+                timing_initialize();
+                cpu_resume();
                 break;
             }
             if (current_key == kF4) {
@@ -316,9 +319,10 @@ void c_keys_handle_input(int scancode, int pressed, int is_cooked)
                 if (video_backend->animation_showCPUSpeed) {
                     video_backend->animation_showCPUSpeed();
                 }
-#warning HACK TODO FIXME ... refactor timing stuff
-                timing_toggle_cpu_speed();
-                timing_toggle_cpu_speed();
+
+                cpu_pause();
+                timing_initialize();
+                cpu_resume();
                 break;
             }
 #endif

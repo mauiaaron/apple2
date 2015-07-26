@@ -26,7 +26,6 @@ typedef enum interface_colorscheme_t {
 } interface_colorscheme_t;
 
 #ifdef INTERFACE_CLASSIC
-extern bool in_interface;
 void video_plotchar(int col, int row, interface_colorscheme_t cs, uint8_t c);
 void c_interface_begin(int current_key);
 void c_interface_print(int x, int y, const interface_colorscheme_t cs, const char *s);

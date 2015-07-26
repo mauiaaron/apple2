@@ -185,11 +185,11 @@ static inline void _screen_to_menu(float x, float y, OUTPARM int *col, OUTPARM i
         *row = 0;
     }
 
-    LOG("SCREEN TO MENU : menuX:%d menuXMax:%d menuW:%d keyW:%d ... scrn:(%f,%f)->kybd:(%d,%d)", touchport.topLeftX, touchport.topLeftXMax, touchport.width, keyW, x, y, *col, *row);
+    //LOG("SCREEN TO MENU : menuX:%d menuXMax:%d menuW:%d keyW:%d ... scrn:(%f,%f)->kybd:(%d,%d)", touchport.topLeftX, touchport.topLeftXMax, touchport.width, keyW, x, y, *col, *row);
 }
 
 static void _increase_cpu_speed(void) {
-    pthread_mutex_lock(&interface_mutex);
+    cpu_pause();
 
     int percent_scale = (int)round(cpu_scale_factor * 100.0);
     if (percent_scale >= 100) {
@@ -209,15 +209,13 @@ static void _increase_cpu_speed(void) {
         video_backend->animation_showCPUSpeed();
     }
 
-#warning HACK TODO FIXME ... refactor timing stuff
-    timing_toggle_cpu_speed();
-    timing_toggle_cpu_speed();
+    timing_initialize();
 
-    pthread_mutex_unlock(&interface_mutex);
+    cpu_resume();
 }
 
 void _decrease_cpu_speed(void) {
-    pthread_mutex_lock(&interface_mutex);
+    cpu_pause();
 
     int percent_scale = (int)round(cpu_scale_factor * 100.0);
     if (cpu_scale_factor == CPU_SCALE_FASTEST) {
@@ -242,11 +240,9 @@ void _decrease_cpu_speed(void) {
         video_backend->animation_showCPUSpeed();
     }
 
-#warning HACK TODO FIXME ... refactor timing stuff
-    timing_toggle_cpu_speed();
-    timing_toggle_cpu_speed();
+    timing_initialize();
 
-    pthread_mutex_unlock(&interface_mutex);
+    cpu_resume();
 }
 
 static inline bool _sprout_menu(float x, float y) {

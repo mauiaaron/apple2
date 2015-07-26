@@ -177,9 +177,7 @@
         [self.altSliderLabel setStringValue:[NSString stringWithFormat:@"%.0f%%", value*100]];
     }
     
-#warning HACK TODO FIXME ... refactor timing stuff
-    timing_toggle_cpu_speed();
-    timing_toggle_cpu_speed();
+    timing_initialize();
     
     [self _savePrefs];
 }
@@ -198,9 +196,7 @@
         cpu_altscale_factor = ([maxButton state] == NSOnState) ? CPU_SCALE_FASTEST : [self.altSlider doubleValue];
     }
     
-#warning HACK TODO FIXME ... refactor timing stuff
-    timing_toggle_cpu_speed();
-    timing_toggle_cpu_speed();
+    timing_initialize();
 
     [self _savePrefs];
 }

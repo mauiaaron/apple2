@@ -1689,11 +1689,12 @@ static void MB_DSUninit()
 void MB_Initialize()
 {
 #ifdef APPLE2IX
+    assert(pthread_self() == cpu_thread_id);
     memset(SSI263Voice, 0x0, sizeof(AudioBuffer_s)*MAX_VOICES);
 #endif
 	if (g_bDisableDirectSoundMockingboard)
 	{
-		MockingboardVoice->bMute = true;
+		//MockingboardVoice->bMute = true;
 		g_SoundcardType = CT_Empty;
 	}
 	else
@@ -1745,6 +1746,7 @@ void MB_Reinitialize()
 
 void MB_Destroy()
 {
+    assert(pthread_self() == cpu_thread_id);
 	MB_DSUninit();
 
 	for(int i=0; i<NUM_VOICES; i++)
@@ -1755,6 +1757,10 @@ void MB_Destroy()
 		delete [] ppAYVoiceBuffer[i];
 #endif
         }
+}
+
+void MB_SetEnabled(bool enabled) {
+    g_bDisableDirectSoundMockingboard = true;
 }
 
 bool MB_ISEnabled(void) {

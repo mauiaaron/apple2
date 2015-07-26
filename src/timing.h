@@ -62,10 +62,7 @@ extern double cpu_altscale_factor;          // scale factor #2
 extern bool is_fullspeed;                   // emulation in full native speed?
 extern bool alt_speed_enabled;
 
-extern pthread_t cpu_thread_id;
-extern pthread_mutex_t interface_mutex;
-extern pthread_cond_t cpu_thread_cond;
-extern pthread_cond_t dbg_thread_cond;
+extern READONLY pthread_t cpu_thread_id;
 
 /*
  * calculate the difference between two timespec structures
@@ -75,22 +72,24 @@ struct timespec timespec_diff(struct timespec start, struct timespec end, bool *
 /*
  * toggles CPU speed between configured values
  */
-void timing_toggle_cpu_speed(void);
+void timing_toggleCPUSpeed(void);
 
-/*
- * (dis)allow automatic adjusting of CPU speed between presently configured and max (when loading disk images).
- */
-void timing_set_auto_adjust_speed(bool auto_adjust);
-
+#if !defined(MOBILE_DEVICE)
 /*
  * check whether automatic adjusting of CPU speed is configured.
  */
-bool timing_should_auto_adjust_speed(void);
+bool timing_shouldAutoAdjustSpeed(void);
+#endif
 
 /*
  * initialize timing
  */
 void timing_initialize(void);
+
+/*
+ * force audio reinitialization
+ */
+void timing_reinitializeAudio(void);
 
 /*
  * timing/CPU thread entry point
@@ -106,6 +105,11 @@ void cpu_pause(void);
  * Resume timing/CPU thread
  */
 void cpu_resume(void);
+
+/*
+ * Is the CPU paused?
+ */
+bool cpu_isPaused(void);
 
 /*
  * checkpoints current cycle count and updates total (for timing-dependent I/O)

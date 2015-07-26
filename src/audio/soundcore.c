@@ -61,6 +61,7 @@ void audio_destroySoundBuffer(INOUT AudioBuffer_s **audioBuffer) {
 }
 
 bool audio_init(void) {
+    assert(pthread_self() == cpu_thread_id);
     if (audio_isAvailable) {
         return true;
     }
@@ -88,6 +89,7 @@ bool audio_init(void) {
 }
 
 void audio_shutdown(void) {
+    assert(pthread_self() == cpu_thread_id);
     if (!audio_isAvailable) {
         return;
     }
@@ -110,17 +112,7 @@ void audio_resume(void) {
 }
 
 void audio_setLatency(float latencySecs) {
-#warning FIXME TODO ... dynamically changing buffer size is really heavyweight since this buffer size percolates up to speaker/mockingboard allocations ... ugh we will live with this for now ... pumping this will be a great test for Valgrind heap profiling =P
-    speaker_destroy();
-    MB_Destroy();
-    audio_shutdown();
-
     audio_latencySecs = latencySecs;
-
-    audio_init();
-    speaker_init();
-    MB_Initialize();
-#warning FIXME TODO ... also ugh we should have a registration mechanism of audio devices so we don't need to explicitly list them here, suggest something similar to the glnode registration stuff in video
 }
 
 float audio_getLatency(void) {

@@ -140,9 +140,6 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnCreate(JNIEnv *env, jobje
     c_initialize_firsttime();
     pthread_create(&cpu_thread_id, NULL, (void *) &cpu_thread, (void *)NULL);
 #endif
-
-    sleep(1);
-#warning FIXME TODO instead of problematic sleep ... need to preempt CPU thread by holding interface lock and displaying a splash screen and setting preferences/settings defaults before starting CPU
 }
 
 void Java_org_deadc0de_apple2ix_Apple2Activity_nativeGraphicsChanged(JNIEnv *env, jobject obj, jint width, jint height) {

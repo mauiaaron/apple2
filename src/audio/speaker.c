@@ -324,6 +324,7 @@ static unsigned int _submit_samples_buffer(const unsigned long num_channel_sampl
 // speaker public API functions
 
 void speaker_destroy(void) {
+    assert(pthread_self() == cpu_thread_id);
     speaker_isAvailable = false;
     audio_destroySoundBuffer(&speakerBuffer);
     FREE(samples_buffer);
@@ -331,6 +332,8 @@ void speaker_destroy(void) {
 }
 
 void speaker_init(void) {
+    assert(pthread_self() == cpu_thread_id);
+
     long err = 0;
     speaker_isAvailable = false;
     do {
@@ -479,9 +482,11 @@ GLUE_C_READ(speaker_toggle)
     speaker_accessed_since_last_flush = true;
     speaker_recently_active = true;
 
-    if (timing_should_auto_adjust_speed()) {
+#if !defined(MOBILE_DEVICE)
+    if (timing_shouldAutoAdjustSpeed()) {
         is_fullspeed = false;
     }
+#endif
 
     if (speaker_isAvailable) {
         _speaker_update(/*toggled:true*/);

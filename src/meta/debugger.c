@@ -40,6 +40,11 @@ static unsigned int stepping_timeout = 0;
 
 volatile bool is_debugging = false;
 
+extern pthread_mutex_t interface_mutex;
+extern pthread_cond_t cpu_thread_cond;
+extern pthread_cond_t dbg_thread_cond;
+#warning ^^^ HACK FIXME TODO ... debugger should not have raw access to mutex variables
+
 #define BUF_X           DEBUGGER_BUF_X
 #define BUF_Y           DEBUGGER_BUF_Y
 #define SCREEN_X        81 // 80col + 1

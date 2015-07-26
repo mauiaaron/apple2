@@ -160,7 +160,6 @@ static void _interface_plotMessageCentered(uint8_t *fb, int fb_cols, int fb_rows
 
 static struct stat statbuf = { 0 };
 static int altdrive = 0;
-bool in_interface = false;
 
 void video_plotchar(const int col, const int row, const interface_colorscheme_t cs, const uint8_t c) {
     unsigned int off = row * SCANWIDTH * FONT_HEIGHT_PIXELS + col * FONT80_WIDTH_PIXELS + _INTERPOLATED_PIXEL_ADJUSTMENT_PRE;
@@ -1547,11 +1546,7 @@ void c_interface_keyboard_layout()
 
 static void *interface_thread(void *current_key)
 {
-    pthread_mutex_lock(&interface_mutex);
-#ifdef AUDIO_ENABLED
-    audio_pause();
-#endif
-    in_interface = true;
+    cpu_pause();
 
     switch ((__SWORD_TYPE)current_key) {
     case kF1:
@@ -1592,11 +1587,7 @@ static void *interface_thread(void *current_key)
         break;
     }
 
-#ifdef AUDIO_ENABLED
-    audio_resume();
-#endif
-    pthread_mutex_unlock(&interface_mutex);
-    in_interface = false;
+    cpu_resume();
 
     return NULL;
 }
