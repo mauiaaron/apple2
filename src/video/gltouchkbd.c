@@ -18,6 +18,13 @@
 #error this is a touch interface module, possibly you mean to not compile this at all?
 #endif
 
+#define DEBUG_TOUCH_KBD 0
+#if DEBUG_TOUCH_KBD
+#   define TOUCH_KBD_LOG(...) LOG(__VA_ARGS__)
+#else
+#   define TOUCH_KBD_LOG(...)
+#endif
+
 #define MODEL_DEPTH -1/32.f
 
 #define KBD_TEMPLATE_COLS 10
@@ -248,7 +255,7 @@ static inline void _screen_to_keyboard(float x, float y, OUTPARM int *col, OUTPA
         *row = 0;
     }
 
-    LOG("SCREEN TO KEYBOARD : kbdX:%d kbdXMax:%d kbdW:%d keyW:%d ... scrn:(%f,%f)->kybd:(%d,%d)", touchport.kbdX, touchport.kbdXMax, touchport.kbdW, keyW, x, y, *col, *row);
+    TOUCH_KBD_LOG("SCREEN TO KEYBOARD : kbdX:%d kbdXMax:%d kbdW:%d keyW:%d ... scrn:(%f,%f)->kybd:(%d,%d)", touchport.kbdX, touchport.kbdXMax, touchport.kbdW, keyW, x, y, *col, *row);
 }
 
 static inline void _redraw_unselected(int col, int row) {

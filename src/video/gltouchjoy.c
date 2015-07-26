@@ -18,6 +18,13 @@
 #error this is a touch interface module, possibly you mean to not compile this at all?
 #endif
 
+#define DEBUG_TOUCH_JOY 0
+#if DEBUG_TOUCH_JOY
+#   define TOUCH_JOY_LOG(...) LOG(__VA_ARGS__)
+#else
+#   define TOUCH_JOY_LOG(...)
+#endif
+
 #define MODEL_DEPTH -1/32.f
 
 #define AXIS_TEMPLATE_COLS 5
@@ -246,7 +253,7 @@ static void *_button_tap_delayed_thread(void *dummyptr) {
 
     do {
         pthread_cond_wait(&buttons.tapDelayCond, &buttons.tapDelayMutex);
-        LOG(">>> [DELAYEDTAP] begin ...");
+        TOUCH_JOY_LOG(">>> [DELAYEDTAP] begin ...");
 
         if (UNLIKELY(isShuttingDown)) {
             break;
@@ -270,7 +277,7 @@ static void *_button_tap_delayed_thread(void *dummyptr) {
             }
             pthread_cond_wait(&buttons.tapDelayCond, &buttons.tapDelayMutex);
 
-            LOG(">>> [DELAYEDTAP] looping ...");
+            TOUCH_JOY_LOG(">>> [DELAYEDTAP] looping ...");
         } while (1);
 
         if (UNLIKELY(isShuttingDown)) {
@@ -284,7 +291,7 @@ static void *_button_tap_delayed_thread(void *dummyptr) {
 
         joy_button0 = 0x0;
         joy_button1 = 0x0;
-        LOG(">>> [DELAYEDTAP] end ...");
+        TOUCH_JOY_LOG(">>> [DELAYEDTAP] end ...");
     } while (1);
 
     pthread_mutex_unlock(&buttons.tapDelayMutex);
@@ -559,7 +566,7 @@ static bool gltouchjoy_onTouchEvent(interface_touch_event_t action, int pointer_
                 axes.centerY = (int)y;
                 _reset_model_position(axes.model, x, y, AXIS_OBJ_HALF_W, AXIS_OBJ_HALF_H);
                 axes.modelDirty = true;
-                LOG("---TOUCH %sDOWN (axis index %d) center:(%d,%d) -> joy(0x%02X,0x%02X)", (action == TOUCH_DOWN ? "" : "POINTER "),
+                TOUCH_JOY_LOG("---TOUCH %sDOWN (axis index %d) center:(%d,%d) -> joy(0x%02X,0x%02X)", (action == TOUCH_DOWN ? "" : "POINTER "),
                         axes.trackingIndex, axes.centerX, axes.centerY, joy_x, joy_y);
             } else if (_is_point_on_button_side(x, y)) {
                 buttonConsumed = true;
@@ -569,7 +576,7 @@ static bool gltouchjoy_onTouchEvent(interface_touch_event_t action, int pointer_
                 buttons.centerY = (int)y;
                 _reset_model_position(buttons.model, x, y, BUTTON_OBJ_HALF_W, BUTTON_OBJ_HALF_H);
                 buttons.modelDirty = true;
-                LOG("---TOUCH %sDOWN (buttons index %d) center:(%d,%d) -> buttons(0x%02X,0x%02X)", (action == TOUCH_DOWN ? "" : "POINTER "),
+                TOUCH_JOY_LOG("---TOUCH %sDOWN (buttons index %d) center:(%d,%d) -> buttons(0x%02X,0x%02X)", (action == TOUCH_DOWN ? "" : "POINTER "),
                         buttons.trackingIndex, buttons.centerX, buttons.centerY, joy_button0, joy_button1);
             } else {
                 // ...
@@ -580,13 +587,13 @@ static bool gltouchjoy_onTouchEvent(interface_touch_event_t action, int pointer_
             if (axes.trackingIndex >= 0) {
                 axisConsumed = true;
                 _move_joystick_axis((int)x_coords[axes.trackingIndex], (int)y_coords[axes.trackingIndex]);
-                LOG("---TOUCH MOVE ...tracking axis:%d (%d,%d) -> joy(0x%02X,0x%02X)", axes.trackingIndex,
+                TOUCH_JOY_LOG("---TOUCH MOVE ...tracking axis:%d (%d,%d) -> joy(0x%02X,0x%02X)", axes.trackingIndex,
                         (int)x_coords[axes.trackingIndex], (int)y_coords[axes.trackingIndex], joy_x, joy_y);
             }
             if (buttons.trackingIndex >= 0) {
                 buttonConsumed = true;
                 _move_button_axis((int)x_coords[buttons.trackingIndex], (int)y_coords[buttons.trackingIndex]);
-                LOG("+++TOUCH MOVE ...tracking button:%d (%d,%d) -> buttons(0x%02X,0x%02X)", buttons.trackingIndex,
+                TOUCH_JOY_LOG("+++TOUCH MOVE ...tracking button:%d (%d,%d) -> buttons(0x%02X,0x%02X)", buttons.trackingIndex,
                         (int)x_coords[buttons.trackingIndex], (int)y_coords[buttons.trackingIndex], joy_button0, joy_button1);
             }
             break;
@@ -604,7 +611,7 @@ static bool gltouchjoy_onTouchEvent(interface_touch_event_t action, int pointer_
                 axes.trackingIndex = TOUCHED_NONE;
                 joy_x = HALF_JOY_RANGE;
                 joy_y = HALF_JOY_RANGE;
-                LOG("---TOUCH %sUP (axis went up)%s", (action == TOUCH_UP ? "" : "POINTER "), (resetIndex ? " (reset buttons index!)" : ""));
+                TOUCH_JOY_LOG("---TOUCH %sUP (axis went up)%s", (action == TOUCH_UP ? "" : "POINTER "), (resetIndex ? " (reset buttons index!)" : ""));
             } else if (pointer_idx == buttons.trackingIndex) {
                 buttonConsumed = true;
                 bool resetIndex = false;
@@ -615,7 +622,7 @@ static bool gltouchjoy_onTouchEvent(interface_touch_event_t action, int pointer_
                 }
                 buttons.trackingIndex = TOUCHED_NONE;
                 _signal_tap_delay();
-                LOG("---TOUCH %sUP (buttons went up)%s", (action == TOUCH_UP ? "" : "POINTER "), (resetIndex ? " (reset axis index!)" : ""));
+                TOUCH_JOY_LOG("---TOUCH %sUP (buttons went up)%s", (action == TOUCH_UP ? "" : "POINTER "), (resetIndex ? " (reset axis index!)" : ""));
             } else {
                 // not tracking tap/gestures originating from control-gesture portion of screen
             }
