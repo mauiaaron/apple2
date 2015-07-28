@@ -81,7 +81,10 @@ bool alt_speed_enabled = false;
 
 // misc
 volatile uint8_t emul_reinitialize = 1;
-unsigned long emul_reinitialize_audio = 1UL;
+bool emul_reinitialize_audio = 1UL;
+#if MOBILE_DEVICE
+static bool emul_reinitialize_background = true;
+#endif
 pthread_t cpu_thread_id = 0;
 pthread_mutex_t interface_mutex = { 0 };
 pthread_cond_t dbg_thread_cond = PTHREAD_COND_INITIALIZER;
@@ -170,35 +173,48 @@ void timing_toggleCPUSpeed(void) {
 
 void timing_reinitializeAudio(void) {
     assert(cpu_isPaused() || (pthread_self() == cpu_thread_id));
-    __sync_fetch_and_or(&emul_reinitialize_audio, 1UL);
+    emul_reinitialize_audio = true;
 }
 
 void cpu_pause(void) {
+
+    assert(pthread_self() != cpu_thread_id);
     _LOCK_CPU_THREAD();
+#if MOBILE_DEVICE
+    if (emul_reinitialize_background) {
+        RELEASE_LOG("CPU thread already paused ...");
+        _UNLOCK_CPU_THREAD();
+        return;
+    }
+#endif
+
 #ifdef AUDIO_ENABLED
     audio_pause();
 #endif
     is_paused = true;
 }
 
-static void _cpu_thread_really_start(void) {
-    int err = 0;
-    if ( (err = pthread_cond_signal(&cpu_thread_cond)) ) {
-        ERRLOG("pthread_cond_signal : %d", err);
-    }
+#if MOBILE_DEVICE
+void cpu_pauseBackground(void) {
+    assert(pthread_self() != cpu_thread_id);
+    _LOCK_CPU_THREAD();
+    emul_reinitialize_background = true;
+    _UNLOCK_CPU_THREAD();
 }
+#endif
 
 void cpu_resume(void) {
+    assert(pthread_self() != cpu_thread_id);
     assert(cpu_isPaused());
     is_paused = false;
 
-    static pthread_once_t onceToken = PTHREAD_ONCE_INIT;
-    if (onceToken == PTHREAD_ONCE_INIT) {
-        int err = 0;
-        if ( (err = pthread_once(&onceToken, _cpu_thread_really_start)) ) {
-            ERRLOG("pthread_once : %d", err);
-        }
+#if MOBILE_DEVICE
+    int err = pthread_cond_signal(&cpu_thread_cond);
+    if (err) {
+        RELEASE_ERRLOG("pthread_cond_signal : %d", err);
+        RELEASE_BREAK();
     }
+#endif
 
 #ifdef AUDIO_ENABLED
     audio_resume();
@@ -243,20 +259,46 @@ void *cpu_thread(void *dummyptr) {
     unsigned int dbg_cycles_executed = 0;
 #endif
 
-#if !TESTING
-    pthread_mutex_lock(&interface_mutex);
-    int err = 0;
-    LOG("cpu_thread : waiting for splash screen completion...");
-    pthread_cond_wait(&cpu_thread_cond, &interface_mutex);
-    pthread_mutex_unlock(&interface_mutex);
-    LOG("cpu_thread : starting...");
-#endif
-
     do
     {
+#if MOBILE_DEVICE && !TESTING
+        if (emul_reinitialize_background) {
+
+            speaker_destroy();
+            MB_Destroy();
+            audio_shutdown();
+
+            int err = TEMP_FAILURE_RETRY(pthread_mutex_lock(&interface_mutex));
+            if (err) {
+                RELEASE_LOG("Error locking CPU mutex : %d", err);
+                RELEASE_BREAK();
+            }
+
+            is_paused = true;
+            emul_reinitialize_background = false;
+
+            LOG("cpu_thread : waiting for splash screen completion...");
+            err = pthread_cond_wait(&cpu_thread_cond, &interface_mutex);
+            if (err) {
+                RELEASE_LOG("Error waiting for CPU condition : %d", err);
+                RELEASE_BREAK();
+            }
+
+            err = TEMP_FAILURE_RETRY(pthread_mutex_unlock(&interface_mutex));
+            if (err) {
+                RELEASE_LOG("Error unlocking CPU mutex : %d", err);
+                RELEASE_BREAK();
+            }
+
+            LOG("cpu_thread : starting...");
+            emul_reinitialize_audio = true;
+        }
+#endif
+
 #ifdef AUDIO_ENABLED
-        bool reinit_audio = __sync_fetch_and_and(&emul_reinitialize_audio, 0UL);
-        if (reinit_audio) {
+        if (emul_reinitialize_audio) {
+            emul_reinitialize_audio = false;
+
             speaker_destroy();
             MB_Destroy();
             audio_shutdown();
@@ -266,6 +308,7 @@ void *cpu_thread(void *dummyptr) {
             MB_Initialize();
         }
 #endif
+
         if (emul_reinitialize) {
             reinitialize();
         }
@@ -456,6 +499,12 @@ void *cpu_thread(void *dummyptr) {
             if (UNLIKELY(emul_reinitialize_audio)) {
                 break;
             }
+
+#if MOBILE_DEVICE
+            if (UNLIKELY(emul_reinitialize_background)) {
+                break;
+            }
+#endif
 
             if (UNLIKELY(emulator_shutting_down)) {
                 break;

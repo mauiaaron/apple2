@@ -30,7 +30,6 @@ enum {
     ANDROID_ACTION_POINTER_UP = 0x6,
 };
 
-static bool nativePaused = false;
 static bool nativeRequestsShowMainMenu = false;
 
 #if TESTING
@@ -161,29 +160,28 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeGraphicsInitialized(JNIEnv 
 }
 
 void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnResume(JNIEnv *env, jobject obj, jboolean isSystemResume) {
-    if (!nativePaused) {
-#warning FIXME ... replace nativePaused check with cpu_isPaused()
+    if (!cpu_isPaused()) {
         return;
     }
     LOG("%s", "native onResume...");
-    if (isSystemResume) {
-        if (video_backend->animation_showPaused) {
-            video_backend->animation_showPaused();
-        }
-    } else {
-        nativePaused = false;
+    if (!isSystemResume) {
         cpu_resume();
     }
 }
 
-void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnPause(JNIEnv *env, jobject obj) {
-    if (nativePaused) {
+void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnPause(JNIEnv *env, jobject obj, jboolean isSystemPause) {
+    if (cpu_isPaused()) {
         return;
     }
-    nativePaused = true;
     LOG("%s", "native onPause...");
 
-    cpu_pause();
+    if (isSystemPause) {
+        // going to background
+        cpu_pauseBackground();
+    } else {
+        // going to menu
+        cpu_pause();
+    }
 }
 
 void Java_org_deadc0de_apple2ix_Apple2Activity_nativeRender(JNIEnv *env, jobject obj) {
@@ -191,7 +189,7 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeRender(JNIEnv *env, jobject
         return;
     }
 
-    if (!nativePaused) {
+    if (!cpu_isPaused()) {
         c_keys_handle_input(-1, 0, 0);
     }
 
@@ -289,9 +287,8 @@ jboolean Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnTouch(JNIEnv *env, jo
         return true;
     }
 
-    if (nativePaused) {
+    if (cpu_isPaused()) {
         LOG("UNPAUSING NATIVE CPU THREAD");
-        nativePaused = false;
         cpu_resume();
         return true;
     }

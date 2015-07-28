@@ -41,6 +41,7 @@ public class Apple2Activity extends Activity {
     private final static int MAX_FINGERS = 32;// HACK ...
 
     private String mDataDir = null;
+    private boolean mSetUncaughtExceptionHandler = false;
 
     private Apple2View mView = null;
     private ArrayList<Apple2MenuView> mMenuStack = new ArrayList<Apple2MenuView>();
@@ -76,7 +77,7 @@ public class Apple2Activity extends Activity {
 
     public native void nativeOnResume(boolean isSystemResume);
 
-    public native void nativeOnPause();
+    public native void nativeOnPause(boolean isSystemPause);
 
     public native void nativeOnQuit();
 
@@ -92,7 +93,7 @@ public class Apple2Activity extends Activity {
     // HACK NOTE 2015/02/22 : Apparently native code cannot easily access stuff in the APK ... so copy various resources
     // out of the APK and into the /data/data/... for ease of access.  Because this is FOSS software we don't care about
     // security or DRM for these assets =)
-    private String firstTimeInitialization() {
+    private String _firstTimeInitialization() {
 
         String dataDir = null;
         try {
@@ -153,25 +154,12 @@ public class Apple2Activity extends Activity {
         os.close();
     }
 
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        if (BuildConfig.DEBUG) {
-            StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder()
-                    .detectDiskReads()
-                    .detectDiskWrites()
-                    .detectAll()
-                    .penaltyLog()
-                    .build());
-            StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder()
-                    .detectLeakedSqlLiteObjects()
-                    /*.detectLeakedClosableObjects()*/
-                    .penaltyLog()
-                    .penaltyDeath()
-                    .build());
+    private void _setCustomExceptionHandler() {
+        if (mSetUncaughtExceptionHandler) {
+            return;
         }
-        super.onCreate(savedInstanceState);
+        mSetUncaughtExceptionHandler = true;
 
-        // Immediately set up exception handler ...
         final String homeDir = "/data/data/" + this.getPackageName();
         final Thread.UncaughtExceptionHandler defaultExceptionHandler = Thread.getDefaultUncaughtExceptionHandler();
         Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
@@ -221,10 +209,30 @@ public class Apple2Activity extends Activity {
                 defaultExceptionHandler.uncaughtException(thread, t);
             }
         });
+    }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        if (BuildConfig.DEBUG) {
+            StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder()
+                    .detectDiskReads()
+                    .detectDiskWrites()
+                    .detectAll()
+                    .penaltyLog()
+                    .build());
+            StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder()
+                    .detectLeakedSqlLiteObjects()
+                    /*.detectLeakedClosableObjects()*/
+                    .penaltyLog()
+                    .penaltyDeath()
+                    .build());
+        }
+        super.onCreate(savedInstanceState);
 
         Log.e(TAG, "onCreate()");
 
-        mDataDir = firstTimeInitialization();
+        _setCustomExceptionHandler();
+        mDataDir = _firstTimeInitialization();
 
         // get device audio parameters for native OpenSLES
         mSampleRate = DevicePropertyCalculator.getRecommendedSampleRate(this);
@@ -297,7 +305,7 @@ public class Apple2Activity extends Activity {
             }
         } while (apple2MenuView != null);
 
-        nativeOnPause();
+        nativeOnPause(true);
     }
 
     @Override
@@ -372,17 +380,14 @@ public class Apple2Activity extends Activity {
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         do {
+
             Apple2MainMenu mainMenu = mView.getMainMenu();
             if (mainMenu == null) {
                 break;
             }
 
-            Apple2SettingsMenu settingsMenu = mainMenu.getSettingsMenu();
-            Apple2DisksMenu disksMenu = mView.getDisksMenu();
-            if (settingsMenu != null && settingsMenu.isShowing()) {
-                break;
-            }
-            if (disksMenu != null && disksMenu.isShowing()) {
+            Apple2MenuView apple2MenuView = peekApple2View();
+            if (apple2MenuView != null) {
                 break;
             }
 
@@ -441,7 +446,7 @@ public class Apple2Activity extends Activity {
     public synchronized void pushApple2View(Apple2MenuView apple2MenuView) {
         mMenuStack.add(apple2MenuView);
         View menuView = apple2MenuView.getView();
-        nativeOnPause();
+        nativeOnPause(false);
         addContentView(menuView, new FrameLayout.LayoutParams(getWidth(), getHeight()));
     }
 
@@ -454,6 +459,15 @@ public class Apple2Activity extends Activity {
         Apple2MenuView apple2MenuView = mMenuStack.remove(lastIndex);
         _disposeApple2View(apple2MenuView);
         return apple2MenuView;
+    }
+
+    public synchronized Apple2MenuView peekApple2View() {
+        int lastIndex = mMenuStack.size() - 1;
+        if (lastIndex < 0) {
+            return null;
+        }
+
+        return mMenuStack.get(lastIndex);
     }
 
     public synchronized Apple2MenuView popApple2View(Apple2MenuView apple2MenuView) {
@@ -495,7 +509,7 @@ public class Apple2Activity extends Activity {
     }
 
     public void maybeQuitApp() {
-        nativeOnPause();
+        nativeOnPause(false);
         if (mQuitDialog == null) {
             mQuitDialog = new AlertDialog.Builder(this).setIcon(R.drawable.ic_launcher).setCancelable(true).setTitle(R.string.quit_really).setMessage(R.string.quit_warning).setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
                 @Override
@@ -527,7 +541,7 @@ public class Apple2Activity extends Activity {
     }
 
     public void maybeReboot() {
-        nativeOnPause();
+        nativeOnPause(false);
         if (mRebootDialog == null) {
             mRebootDialog = new AlertDialog.Builder(this).setIcon(R.drawable.ic_launcher).setCancelable(true).setTitle(R.string.reboot_really).setMessage(R.string.reboot_warning).setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
                 @Override

@@ -269,6 +269,16 @@ static const char *log_end = "\n";
         _LOG(__VA_ARGS__); \
     } while (0)
 
+#define RELEASE_BREAK() \
+    do { \
+        /* BOOM */ \
+        char *ptr = (char *)0xABADF000; \
+        *ptr = '\0';\
+        /* or if that worked, just deref NULL */ \
+        ptr = (char *)0x0; \
+        *ptr = '\0'; \
+    } while (0);
+
 #define FREE(x) \
     do { \
         free((x)); \

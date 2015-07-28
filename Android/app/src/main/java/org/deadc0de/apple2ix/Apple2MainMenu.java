@@ -201,7 +201,7 @@ public class Apple2MainMenu {
             return;
         }
 
-        mActivity.nativeOnPause();
+        mActivity.nativeOnPause(false);
 
         mMainMenuPopup.showAtLocation(mParentView, Gravity.CENTER, 0, 0);
     }

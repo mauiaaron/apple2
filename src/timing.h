@@ -74,7 +74,7 @@ struct timespec timespec_diff(struct timespec start, struct timespec end, bool *
  */
 void timing_toggleCPUSpeed(void);
 
-#if !defined(MOBILE_DEVICE)
+#if !MOBILE_DEVICE
 /*
  * check whether automatic adjusting of CPU speed is configured.
  */
@@ -97,9 +97,25 @@ void timing_reinitializeAudio(void);
 void *cpu_thread(void *ignored);
 
 /*
- * Pause timing/CPU thread
+ * Pause timing/CPU thread.
+ *
+ * This may block for a short amount of time to grab the appropriate mutex.  CPU thread is blocked upon function return,
+ * until call to cpu_resume() is made.
  */
 void cpu_pause(void);
+
+#if MOBILE_DEVICE
+/*
+ * Pause timing/CPU thread because of a system backgrounding event.
+ *
+ * This may block for a short amount of time to grab the appropriate mutex, toggle a dirty bit, and release the mutex.
+ * NOTE: CPU thread is not likely to actually be paused upon function return, (but will be shortly thereafter).
+ *
+ * This should also destroy/free any audio resources (speaker, mockingboard) managed by the CPU thread back to system.
+ * Audio resources will be automatically recreated upon call to cpu_resume()
+ */
+void cpu_pauseBackground(void);
+#endif
 
 /*
  * Resume timing/CPU thread
