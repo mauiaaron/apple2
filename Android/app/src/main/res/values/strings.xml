@@ -20,7 +20,6 @@
     <string name="diskB">Drive 2</string>
     <string name="disk_read_write">Read/write</string>
     <string name="emulation_continue">Continue…</string>
-    <string name="emulation_welcome">Party like it\'s 1987!</string>
     <string name="header_disks">Insert disk:</string>
     <string name="joystick">Joystick</string>
     <string name="input_configure">Configure input devices…</string>
@@ -65,11 +64,11 @@
     <string name="spacer"></string>
     <string name="speaker_disabled_title">Speaker disabled</string>
     <string name="speaker_disabled_mesg">Speaker could not be enabled</string>
-    <string name="speaker_enable">Enable Speaker</string>
+    <string name="speaker_enable">Enable speaker</string>
     <string name="speaker_enable_summary">(Speaker cannot be disabled)</string>
     <string name="speaker_volume">Speaker volume</string>
     <string name="speaker_volume_summary">Set the speaker volume</string>
-    <string name="speed_alt">Alternate CPU Speed</string>
+    <string name="speed_alt">Alternate CPU speed</string>
     <string name="speed_cpu">CPU Speed</string>
     <string name="settings">Apple2ix emulator settings</string>
     <string name="settings_audio">Apple2ix audio settings</string>
@@ -78,6 +77,10 @@
     <string name="tab_general">General</string>
     <string name="tab_joystick">Joystick</string>
     <string name="title_activity_second">SecondActivity</string>
+    <string name="touch_menu_enable">Enable touch menus</string>
+    <string name="touch_menu_enable_summary">Enables menu buttons in top screen corners</string>
+    <string name="touch_menu_visibility">Touch menu visibility</string>
+    <string name="touch_menu_visibility_summary">Touch menu visibility when inactive</string>
     <string name="video_configure">Configure video…</string>
     <string name="video_configure_summary">Color settings</string>
 

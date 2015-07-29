@@ -43,6 +43,80 @@ public class Apple2InputSettingsMenu implements Apple2MenuView {
     }
 
     enum SETTINGS {
+        TOUCH_MENU_ENABLED {
+            @Override
+            public String getTitle(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.touch_menu_enable);
+            }
+
+            @Override
+            public String getSummary(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.touch_menu_enable_summary);
+            }
+
+            @Override
+            public View getView(final Apple2Activity activity, View convertView) {
+                convertView = _basicView(activity, this, convertView);
+                CheckBox cb = _addCheckbox(activity, this, convertView, Apple2Preferences.TOUCH_MENU_ENABLED.booleanValue(activity));
+                cb.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                    @Override
+                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                        Apple2Preferences.TOUCH_MENU_ENABLED.saveBoolean(activity, isChecked);
+                    }
+                });
+                return convertView;
+            }
+        },
+        TOUCH_MENU_VISIBILITY {
+            @Override
+            public String getTitle(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.touch_menu_visibility);
+            }
+
+            @Override
+            public String getSummary(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.touch_menu_visibility_summary);
+            }
+
+            @Override
+            public View getView(final Apple2Activity activity, View convertView) {
+                LayoutInflater inflater = (LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+                convertView = inflater.inflate(R.layout.a2preference_slider, null, false);
+
+                TextView tv = (TextView) convertView.findViewById(R.id.a2preference_slider_summary);
+                tv.setText(getSummary(activity));
+
+                final TextView seekBarValue = (TextView) convertView.findViewById(R.id.a2preference_slider_seekBarValue);
+
+                SeekBar sb = (SeekBar) convertView.findViewById(R.id.a2preference_slider_seekBar);
+                sb.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+                    @Override
+                    public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                        if (!fromUser) {
+                            return;
+                        }
+                        float alpha = (float) progress / Apple2Preferences.ALPHA_SLIDER_NUM_CHOICES;
+                        seekBarValue.setText("" + alpha);
+                        Apple2Preferences.TOUCH_MENU_VISIBILITY.saveInt(activity, progress);
+                    }
+
+                    @Override
+                    public void onStartTrackingTouch(SeekBar seekBar) {
+                    }
+
+                    @Override
+                    public void onStopTrackingTouch(SeekBar seekBar) {
+                    }
+                });
+
+                sb.setMax(0); // http://stackoverflow.com/questions/10278467/seekbar-not-setting-actual-progress-setprogress-not-working-on-early-android
+                sb.setMax(Apple2Preferences.ALPHA_SLIDER_NUM_CHOICES);
+                int progress = Apple2Preferences.TOUCH_MENU_VISIBILITY.intValue(activity);
+                sb.setProgress(progress);
+                seekBarValue.setText("" + ((float) progress / Apple2Preferences.ALPHA_SLIDER_NUM_CHOICES));
+                return convertView;
+            }
+        },
         FIRST_INPUT {
             @Override
             public String getTitle(Apple2Activity activity) {

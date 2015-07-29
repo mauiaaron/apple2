@@ -62,6 +62,9 @@ extern bool (*interface_isTouchMenuAvailable)(void);
 
 // enable/disable touch menu HUD element
 extern void (*interface_setTouchMenuEnabled)(bool enabled);
+
+// set minimum alpha visibility of touch menu HUD element
+extern void (*interface_setTouchMenuVisibility)(float alpha);
 #endif
 
 

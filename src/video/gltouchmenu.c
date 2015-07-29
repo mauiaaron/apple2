@@ -136,7 +136,6 @@ static float _get_menu_visibility(void) {
     float alpha = minAlpha;
 
     clock_gettime(CLOCK_MONOTONIC, &now);
-    alpha = minAlpha;
     deltat = timespec_diff(timingBegin, now, NULL);
     if (deltat.tv_sec == 0) {
         alpha = 1.0;
@@ -576,6 +575,14 @@ static void _animation_hideTouchMenu(void) {
     timingBegin = (struct timespec){ 0 };
 }
 
+static void gltouchmenu_set(void) {
+    timingBegin = (struct timespec){ 0 };
+}
+
+static void gltouchmenu_setTouchMenuVisibility(float alpha) {
+    minAlpha = alpha;
+}
+
 // ----------------------------------------------------------------------------
 // Constructor
 
@@ -588,6 +595,7 @@ static void _init_gltouchmenu(void) {
 
     interface_isTouchMenuAvailable = &gltouchmenu_isTouchMenuAvailable;
     interface_setTouchMenuEnabled = &gltouchmenu_setTouchMenuEnabled;
+    interface_setTouchMenuVisibility = &gltouchmenu_setTouchMenuVisibility;
 
     menu.kbdOrJoy = ICONTEXT_UPPERCASE;
 

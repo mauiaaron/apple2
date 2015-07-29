@@ -96,3 +96,13 @@ void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetDefaultTouchDevice(JN
     }
 }
 
+void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetTouchMenuEnabled(JNIEnv *env, jclass cls, jboolean enabled) {
+    LOG("native set touch menu enabled : %d", enabled);
+    interface_setTouchMenuEnabled(enabled);
+}
+
+void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetTouchMenuVisibility(JNIEnv *env, jclass cls, jfloat alpha) {
+    LOG("native set touch menu visibility : %f", alpha);
+    interface_setTouchMenuVisibility(alpha);
+}
+

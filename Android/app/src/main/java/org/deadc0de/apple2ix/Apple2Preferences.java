@@ -122,6 +122,31 @@ public enum Apple2Preferences {
         public int intValue(Apple2Activity activity) {
             return activity.getPreferences(Context.MODE_PRIVATE).getInt(toString(), TouchDevice.KEYBOARD.ordinal());
         }
+    },
+    TOUCH_MENU_ENABLED {
+        @Override
+        public void load(Apple2Activity activity) {
+            boolean enabled = booleanValue(activity);
+            nativeSetTouchMenuEnabled(enabled);
+        }
+
+        @Override
+        public boolean booleanValue(Apple2Activity activity) {
+            return activity.getPreferences(Context.MODE_PRIVATE).getBoolean(toString(), true);
+        }
+    },
+    TOUCH_MENU_VISIBILITY {
+        @Override
+        public void load(Apple2Activity activity) {
+            int setting = intValue(activity);
+            float alpha = (float) setting / AUDIO_LATENCY_NUM_CHOICES;
+            nativeSetTouchMenuVisibility(alpha);
+        }
+
+        @Override
+        public int intValue(Apple2Activity activity) {
+            return activity.getPreferences(Context.MODE_PRIVATE).getInt(toString(), 5);
+        }
     };
 
     public enum HiresColor {
@@ -175,6 +200,7 @@ public enum Apple2Preferences {
     }
 
     public final static int AUDIO_LATENCY_NUM_CHOICES = 20;
+    public final static int ALPHA_SLIDER_NUM_CHOICES = 20;
     public final static String TAG = "Apple2Preferences";
 
     // set and apply
@@ -234,10 +260,6 @@ public enum Apple2Preferences {
         loadPreferences(activity);
     }
 
-    private static native void nativeEnableTouchJoystick(boolean enabled);
-
-    private static native void nativeEnableTiltJoystick(boolean enabled);
-
     private static native void nativeSetColor(int color);
 
     private static native boolean nativeSetSpeakerEnabled(boolean enabled);
@@ -251,4 +273,8 @@ public enum Apple2Preferences {
     private static native void nativeSetAudioLatency(float latencySecs);
 
     private static native void nativeSetDefaultTouchDevice(int device);
+
+    private static native void nativeSetTouchMenuEnabled(boolean enabled);
+
+    private static native void nativeSetTouchMenuVisibility(float alpha);
 }
