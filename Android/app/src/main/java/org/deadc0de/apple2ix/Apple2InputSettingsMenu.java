@@ -43,6 +43,38 @@ public class Apple2InputSettingsMenu implements Apple2MenuView {
     }
 
     enum SETTINGS {
+        KEYBOARD_CONFIGURE {
+            @Override
+            public String getTitle(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.keyboard_configure);
+            }
+
+            @Override
+            public String getSummary(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.keyboard_configure_summary);
+            }
+
+            @Override
+            public void handleSelection(final Apple2Activity activity, final Apple2InputSettingsMenu settingsMenu, boolean isChecked) {
+                //new Apple2KeyboardSettingsMenu().show();
+            }
+        },
+        JOYSTICK_CONFIGURE {
+            @Override
+            public String getTitle(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.joystick_configure);
+            }
+
+            @Override
+            public String getSummary(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.joystick_configure_summary);
+            }
+
+            @Override
+            public void handleSelection(final Apple2Activity activity, final Apple2InputSettingsMenu settingsMenu, boolean isChecked) {
+                //new Apple2JoystickSettingsMenu().show();
+            }
+        },
         TOUCH_MENU_ENABLED {
             @Override
             public String getTitle(Apple2Activity activity) {
@@ -168,38 +200,6 @@ public class Apple2InputSettingsMenu implements Apple2MenuView {
                     }
                 });
                 builder.show();
-            }
-        },
-        JOYSTICK_CONFIGURE {
-            @Override
-            public String getTitle(Apple2Activity activity) {
-                return activity.getResources().getString(R.string.joystick_configure);
-            }
-
-            @Override
-            public String getSummary(Apple2Activity activity) {
-                return activity.getResources().getString(R.string.joystick_configure_summary);
-            }
-
-            @Override
-            public void handleSelection(final Apple2Activity activity, final Apple2InputSettingsMenu settingsMenu, boolean isChecked) {
-                //new Apple2JoystickSettingsMenu().show();
-            }
-        },
-        KEYBOARD_CONFIGURE {
-            @Override
-            public String getTitle(Apple2Activity activity) {
-                return activity.getResources().getString(R.string.keyboard_configure);
-            }
-
-            @Override
-            public String getSummary(Apple2Activity activity) {
-                return activity.getResources().getString(R.string.keyboard_configure_summary);
-            }
-
-            @Override
-            public void handleSelection(final Apple2Activity activity, final Apple2InputSettingsMenu settingsMenu, boolean isChecked) {
-                //new Apple2KeyboardSettingsMenu().show();
             }
         };
 
