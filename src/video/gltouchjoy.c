@@ -668,6 +668,10 @@ static void gltouchjoy_setTouchJoystickOwnsScreen(bool pwnd) {
     }
 }
 
+static bool gltouchjoy_ownsScreen(void) {
+    return ownsScreen;
+}
+
 static void _animation_showTouchJoystick(void) {
     if (!isAvailable) {
         return;
@@ -740,6 +744,7 @@ static void _init_gltouchjoy(void) {
     joydriver_isTouchJoystickAvailable = &gltouchjoy_isTouchJoystickAvailable;
     joydriver_setTouchJoystickEnabled = &gltouchjoy_setTouchJoystickEnabled;
     joydriver_setTouchJoystickOwnsScreen = &gltouchjoy_setTouchJoystickOwnsScreen;
+    joydriver_ownsScreen = &gltouchjoy_ownsScreen;
     joydriver_setTouchButtonValues = &gltouchjoy_setTouchButtonValues;
     joydriver_setTouchAxisType = &gltouchjoy_setTouchAxisType;
     joydriver_setTouchAxisValues = &gltouchjoy_setTouchAxisValues;

@@ -73,7 +73,6 @@ static struct {
     GLModel *model;
     bool topLeftShowing;
     bool topRightShowing;
-    char kbdOrJoy;
 } menu = { 0 };
 
 static struct timespec timingBegin = { 0 };
@@ -97,7 +96,7 @@ static inline void _present_menu(GLModel *parent) {
 static inline void _show_top_left(void) {
     topMenuTemplate[0][0]  = ICONTEXT_MENU_SPROUT;
     topMenuTemplate[0][1]  = MOUSETEXT_RIGHT;
-    topMenuTemplate[1][0]  = menu.kbdOrJoy;
+    topMenuTemplate[1][0]  = joydriver_ownsScreen() ? ICONTEXT_UPPERCASE : ICONTEXT_MENU_TOUCHJOY;
     topMenuTemplate[1][1]  = ICONTEXT_NONACTIONABLE;
     menu.topLeftShowing = true;
     _present_menu(menu.model);
@@ -329,7 +328,6 @@ static inline bool _tap_menu_item(float x, float y) {
             if (video_backend->animation_showTouchJoystick) {
                 video_backend->animation_showTouchJoystick();
             }
-            menu.kbdOrJoy = ICONTEXT_UPPERCASE;
             _hide_top_left();
             break;
 
@@ -343,7 +341,6 @@ static inline bool _tap_menu_item(float x, float y) {
             if (video_backend->animation_showTouchKeyboard) {
                 video_backend->animation_showTouchKeyboard();
             }
-            menu.kbdOrJoy = ICONTEXT_MENU_TOUCHJOY;
             _hide_top_left();
             break;
 
@@ -596,8 +593,6 @@ static void _init_gltouchmenu(void) {
     interface_isTouchMenuAvailable = &gltouchmenu_isTouchMenuAvailable;
     interface_setTouchMenuEnabled = &gltouchmenu_setTouchMenuEnabled;
     interface_setTouchMenuVisibility = &gltouchmenu_setTouchMenuVisibility;
-
-    menu.kbdOrJoy = ICONTEXT_UPPERCASE;
 
     glnode_registerNode(RENDER_TOP, (GLNode){
         .setup = &gltouchmenu_setup,

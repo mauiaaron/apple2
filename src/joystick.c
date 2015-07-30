@@ -260,6 +260,7 @@ void c_joystick_reset(void)
 bool (*joydriver_isTouchJoystickAvailable)(void) = NULL;
 void (*joydriver_setTouchJoystickEnabled)(bool enabled) = NULL;
 void (*joydriver_setTouchJoystickOwnsScreen)(bool pwnd) = NULL;
+bool (*joydriver_ownsScreen)(void) = NULL;
 void (*joydriver_setTouchButtonValues)(char button0Val, char button1Val) = NULL;
 void (*joydriver_setTouchAxisType)(touchjoy_axis_type_t axisType) = NULL;
 void (*joydriver_setTouchAxisValues)(char up, char left, char right, char down) = NULL;

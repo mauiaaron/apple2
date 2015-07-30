@@ -45,8 +45,11 @@ extern bool (*joydriver_isTouchJoystickAvailable)(void);
 // enable/disable touch joystick
 extern void (*joydriver_setTouchJoystickEnabled)(bool enabled);
 
-// grant/remove ownership of touch screeen
+// grant/remove ownership of touch screen
 extern void (*joydriver_setTouchJoystickOwnsScreen)(bool pwnd);
+
+// query touch screen ownership
+extern bool (*joydriver_ownsScreen)(void);
 
 // set the joystick button parameters (7bit ASCII characters or MOUSETEXT values)
 extern void (*joydriver_setTouchButtonValues)(char button0Val, char button1Val);

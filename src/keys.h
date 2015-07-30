@@ -155,8 +155,11 @@ extern bool (*keydriver_isTouchKeyboardAvailable)(void);
 // enable/disable touch keyboard HUD element
 extern void (*keydriver_setTouchKeyboardEnabled)(bool enabled);
 
-// grant/remove ownership of touch screeen
+// grant/remove ownership of touch screen
 extern void (*keydriver_setTouchKeyboardOwnsScreen)(bool pwnd);
+
+// query touch screen ownership
+extern bool (*keydriver_ownsScreen)(void);
 #endif
 
 #endif

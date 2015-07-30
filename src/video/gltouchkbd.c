@@ -682,6 +682,10 @@ static void gltouchkbd_setTouchKeyboardOwnsScreen(bool pwnd) {
     }
 }
 
+static bool gltouchkbd_ownsScreen(void) {
+    return ownsScreen;
+}
+
 static void _animation_showTouchKeyboard(void) {
     if (!isAvailable) {
         return;
@@ -709,6 +713,7 @@ static void _init_gltouchkbd(void) {
     keydriver_isTouchKeyboardAvailable = &gltouchkbd_isTouchKeyboardAvailable;
     keydriver_setTouchKeyboardEnabled = &gltouchkbd_setTouchKeyboardEnabled;
     keydriver_setTouchKeyboardOwnsScreen = &gltouchkbd_setTouchKeyboardOwnsScreen;
+    keydriver_ownsScreen = &gltouchkbd_ownsScreen;
 
     kbd.selectedCol = -1;
     kbd.selectedRow = -1;

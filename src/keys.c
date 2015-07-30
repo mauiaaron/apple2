@@ -493,5 +493,6 @@ bool c_keys_is_interface_key(int key)
 bool (*keydriver_isTouchKeyboardAvailable)(void) = NULL;
 void (*keydriver_setTouchKeyboardEnabled)(bool enabled) = NULL;
 void (*keydriver_setTouchKeyboardOwnsScreen)(bool pwnd) = NULL;
+bool (*keydriver_ownsScreen)(void) = NULL;
 #endif
 
