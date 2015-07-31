@@ -186,63 +186,6 @@ static inline void _screen_to_menu(float x, float y, OUTPARM int *col, OUTPARM i
     //LOG("SCREEN TO MENU : menuX:%d menuXMax:%d menuW:%d keyW:%d ... scrn:(%f,%f)->kybd:(%d,%d)", touchport.topLeftX, touchport.topLeftXMax, touchport.width, keyW, x, y, *col, *row);
 }
 
-static void _increase_cpu_speed(void) {
-    cpu_pause();
-
-    int percent_scale = (int)round(cpu_scale_factor * 100.0);
-    if (percent_scale >= 100) {
-        percent_scale += 25;
-    } else {
-        percent_scale += 5;
-    }
-    cpu_scale_factor = percent_scale/100.0;
-
-    if (cpu_scale_factor > CPU_SCALE_FASTEST) {
-        cpu_scale_factor = CPU_SCALE_FASTEST;
-    }
-
-    LOG("native set emulation percentage to %f", cpu_scale_factor);
-
-    if (video_backend->animation_showCPUSpeed) {
-        video_backend->animation_showCPUSpeed();
-    }
-
-    timing_initialize();
-
-    cpu_resume();
-}
-
-void _decrease_cpu_speed(void) {
-    cpu_pause();
-
-    int percent_scale = (int)round(cpu_scale_factor * 100.0);
-    if (cpu_scale_factor == CPU_SCALE_FASTEST) {
-        cpu_scale_factor = CPU_SCALE_FASTEST0;
-        percent_scale = (int)round(cpu_scale_factor * 100);
-    } else {
-        if (percent_scale > 100) {
-            percent_scale -= 25;
-        } else {
-            percent_scale -= 5;
-        }
-    }
-    cpu_scale_factor = percent_scale/100.0;
-
-    if (cpu_scale_factor < CPU_SCALE_SLOWEST) {
-        cpu_scale_factor = CPU_SCALE_SLOWEST;
-    }
-
-    LOG("native set emulation percentage to %f", cpu_scale_factor);
-
-    if (video_backend->animation_showCPUSpeed) {
-        video_backend->animation_showCPUSpeed();
-    }
-
-    timing_initialize();
-
-    cpu_resume();
-}
-
 static inline bool _sprout_menu(float x, float y) {
 
     if (! (_is_point_on_left_menu(x, y) || _is_point_on_right_menu(x, y)) ) {
@@ -303,12 +246,12 @@ static inline int64_t _tap_menu_item(float x, float y) {
 
         case MOUSETEXT_LEFT:
             LOG("decreasing cpu speed...");
-            _decrease_cpu_speed();
+            flags |= TOUCH_FLAGS_CPU_SPEED_DEC;
             break;
 
         case MOUSETEXT_RIGHT:
             LOG("increasing cpu speed...");
-            _increase_cpu_speed();
+            flags |= TOUCH_FLAGS_CPU_SPEED_INC;
             break;
 
         case MOUSETEXT_CHECKMARK:
@@ -327,6 +270,7 @@ static inline int64_t _tap_menu_item(float x, float y) {
             if (video_backend->animation_showTouchJoystick) {
                 video_backend->animation_showTouchJoystick();
             }
+            flags |= TOUCH_FLAGS_INPUT_DEVICE_CHANGE;
             _hide_top_left();
             break;
 
@@ -340,6 +284,7 @@ static inline int64_t _tap_menu_item(float x, float y) {
             if (video_backend->animation_showTouchKeyboard) {
                 video_backend->animation_showTouchKeyboard();
             }
+            flags |= TOUCH_FLAGS_INPUT_DEVICE_CHANGE;
             _hide_top_left();
             break;
 

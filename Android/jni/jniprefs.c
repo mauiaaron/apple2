@@ -21,14 +21,6 @@ typedef enum AndroidTouchDevice_t {
     ANDROID_TOUCH_DEVICE_MAX,
 } AndroidTouchDevice_t;
 
-void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeEnableTouchJoystick(JNIEnv *env, jclass cls, jboolean enabled) {
-    LOG("native enable touch joystick : %d", enabled);
-}
-
-void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeEnableTiltJoystick(JNIEnv *env, jclass cls, jboolean enabled) {
-    LOG("native enable tilt joystick : %d", enabled);
-}
-
 void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetColor(JNIEnv *env, jclass cls, jint color) {
     LOG("native set hires color : %d", color);
     if (color < COLOR_NONE || color > COLOR_INTERP) {
@@ -76,7 +68,7 @@ void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetMockingboardVolume(JN
     MB_SetVolumeZeroToTen(goesToTen);
 }
 
-void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetDefaultTouchDevice(JNIEnv *env, jclass cls, jint touchDevice) {
+void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetCurrentTouchDevice(JNIEnv *env, jclass cls, jint touchDevice) {
     LOG("native set default touch device : %d", touchDevice);
     assert(touchDevice >= 0 && touchDevice < ANDROID_TOUCH_DEVICE_MAX);
     switch (touchDevice) {
@@ -104,5 +96,45 @@ void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetTouchMenuEnabled(JNIE
 void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetTouchMenuVisibility(JNIEnv *env, jclass cls, jfloat alpha) {
     LOG("native set touch menu visibility : %f", alpha);
     interface_setTouchMenuVisibility(alpha);
+}
+
+jboolean Java_org_deadc0de_apple2ix_Apple2Preferences_nativeIsTouchKeyboardScreenOwner(JNIEnv *env, jclass cls) {
+    LOG("nativeIsTouchKeyboardScreenOwner() ...");
+    return keydriver_ownsScreen();
+}
+
+jboolean Java_org_deadc0de_apple2ix_Apple2Preferences_nativeIsTouchJoystickScreenOwner(JNIEnv *env, jclass cls) {
+    LOG("nativeIsTouchJoystickScreenOwner() ...");
+    return joydriver_ownsScreen();
+}
+
+jint Java_org_deadc0de_apple2ix_Apple2Preferences_nativeGetCPUSpeed(JNIEnv *env, jclass cls) {
+    LOG("nativeGetCPUSpeed() ...");
+    return (jint)round(cpu_scale_factor * 100.0);
+}
+
+void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetCPUSpeed(JNIEnv *env, jclass cls, jint percentSpeed) {
+    LOG("nativeSetCPUSpeed() : %d%%", percentSpeed);
+    bool wasPaused = cpu_isPaused();
+
+    if (!wasPaused) {
+        cpu_pause();
+    }
+
+    cpu_scale_factor = percentSpeed/100.0;
+    if (cpu_scale_factor > CPU_SCALE_FASTEST) {
+        cpu_scale_factor = CPU_SCALE_FASTEST;
+    }
+    if (cpu_scale_factor < CPU_SCALE_SLOWEST) {
+        cpu_scale_factor = CPU_SCALE_SLOWEST;
+    }
+
+    if (video_backend->animation_showCPUSpeed) {
+        video_backend->animation_showCPUSpeed();
+    }
+
+    if (!wasPaused) {
+        cpu_resume();
+    }
 }
 

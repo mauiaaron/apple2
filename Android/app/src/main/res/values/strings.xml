@@ -24,8 +24,8 @@
     <string name="joystick">Joystick</string>
     <string name="input_configure">Configure input devices…</string>
     <string name="input_configure_summary">Keyboard, joystick, etc</string>
-    <string name="input_configure_first_title">First touch device</string>
-    <string name="input_configure_first_summary">Touch device enabled on launch</string>
+    <string name="input_current">Current touch device</string>
+    <string name="input_current_summary">Choose current touch device</string>
     <string name="input_first_joystick">Touch joystick</string>
     <string name="input_first_keyboard">Touch keyboard</string>
     <string name="joystick_configure">Configure joysticks…</string>

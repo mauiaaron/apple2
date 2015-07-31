@@ -28,6 +28,17 @@ public enum Apple2Preferences {
             activity.getPreferences(Context.MODE_PRIVATE).edit().putBoolean(toString(), true).apply();
         }
     },
+    CPU_SPEED_PERCENT {
+        @Override
+        public void load(Apple2Activity activity) {
+            nativeSetCPUSpeed(intValue(activity));
+        }
+
+        @Override
+        public int intValue(Apple2Activity activity) {
+            return activity.getPreferences(Context.MODE_PRIVATE).getInt(toString(), 100);
+        }
+    },
     HIRES_COLOR {
         @Override
         public void load(Apple2Activity activity) {
@@ -112,10 +123,10 @@ public enum Apple2Preferences {
             return activity.getPreferences(Context.MODE_PRIVATE).getFloat(toString(), defaultLatency);
         }
     },
-    FIRST_TOUCH_DEVICE {
+    CURRENT_TOUCH_DEVICE {
         @Override
         public void load(Apple2Activity activity) {
-            nativeSetDefaultTouchDevice(intValue(activity));
+            nativeSetCurrentTouchDevice(intValue(activity));
         }
 
         @Override
@@ -260,6 +271,8 @@ public enum Apple2Preferences {
         loadPreferences(activity);
     }
 
+    // native hooks
+
     private static native void nativeSetColor(int color);
 
     private static native boolean nativeSetSpeakerEnabled(boolean enabled);
@@ -272,9 +285,17 @@ public enum Apple2Preferences {
 
     private static native void nativeSetAudioLatency(float latencySecs);
 
-    private static native void nativeSetDefaultTouchDevice(int device);
+    private static native void nativeSetCurrentTouchDevice(int device);
 
     private static native void nativeSetTouchMenuEnabled(boolean enabled);
 
     private static native void nativeSetTouchMenuVisibility(float alpha);
+
+    public static native boolean nativeIsTouchKeyboardScreenOwner();
+
+    public static native boolean nativeIsTouchJoystickScreenOwner();
+
+    public static native int nativeGetCPUSpeed();
+
+    public static native void nativeSetCPUSpeed(int percentSpeed);
 }

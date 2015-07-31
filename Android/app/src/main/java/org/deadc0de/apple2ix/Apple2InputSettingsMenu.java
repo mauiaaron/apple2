@@ -23,7 +23,6 @@ import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
 import android.widget.CheckedTextView;
 import android.widget.CompoundButton;
-import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -149,15 +148,15 @@ public class Apple2InputSettingsMenu implements Apple2MenuView {
                 return convertView;
             }
         },
-        FIRST_INPUT {
+        CURRENT_INPUT {
             @Override
             public String getTitle(Apple2Activity activity) {
-                return activity.getResources().getString(R.string.input_configure_first_title);
+                return activity.getResources().getString(R.string.input_current);
             }
 
             @Override
             public String getSummary(Apple2Activity activity) {
-                return activity.getResources().getString(R.string.input_configure_first_summary);
+                return activity.getResources().getString(R.string.input_current_summary);
             }
 
             @Override
@@ -169,7 +168,7 @@ public class Apple2InputSettingsMenu implements Apple2MenuView {
 
             @Override
             public void handleSelection(final Apple2Activity activity, final Apple2InputSettingsMenu settingsMenu, boolean isChecked) {
-                AlertDialog.Builder builder = new AlertDialog.Builder(activity).setIcon(R.drawable.ic_launcher).setCancelable(true).setTitle(R.string.input_configure_first_title);
+                AlertDialog.Builder builder = new AlertDialog.Builder(activity).setIcon(R.drawable.ic_launcher).setCancelable(true).setTitle(R.string.input_current);
                 builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
@@ -181,7 +180,7 @@ public class Apple2InputSettingsMenu implements Apple2MenuView {
                         activity.getResources().getString(R.string.joystick),
                         activity.getResources().getString(R.string.keyboard),
                 };
-                final int checkedPosition = Apple2Preferences.FIRST_TOUCH_DEVICE.intValue(activity) - 1;
+                final int checkedPosition = Apple2Preferences.CURRENT_TOUCH_DEVICE.intValue(activity) - 1;
                 final ArrayAdapter<String> adapter = new ArrayAdapter<String>(activity, android.R.layout.select_dialog_singlechoice, touch_choices) {
                     @Override
                     public View getView(int position, View convertView, ViewGroup parent) {
@@ -195,7 +194,7 @@ public class Apple2InputSettingsMenu implements Apple2MenuView {
                 builder.setAdapter(adapter, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int color) {
-                        Apple2Preferences.FIRST_TOUCH_DEVICE.saveTouchDevice(activity, Apple2Preferences.TouchDevice.values()[color + 1]);
+                        Apple2Preferences.CURRENT_TOUCH_DEVICE.saveTouchDevice(activity, Apple2Preferences.TouchDevice.values()[color + 1]);
                         dialog.dismiss();
                     }
                 });
