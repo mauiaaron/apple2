@@ -278,7 +278,7 @@ static inline void _redraw_selected(int col, int row) {
     }
 }
 
-static inline void _tap_key_at_point(float x, float y) {
+static inline bool _tap_key_at_point(float x, float y) {
     GLModelHUDKeyboard *hudKeyboard = (GLModelHUDKeyboard *)kbd.model->custom;
 
     if (!_is_point_on_keyboard(x, y)) {
@@ -288,7 +288,7 @@ static inline void _tap_key_at_point(float x, float y) {
         _redraw_unselected(kbd.selectedCol, kbd.selectedRow);
         kbd.selectedCol = -1;
         kbd.selectedRow = -1;
-        return;
+        return false;
     }
 
     // get current key, col, row
@@ -301,6 +301,7 @@ static inline void _tap_key_at_point(float x, float y) {
 
     // handle key
 
+    bool handled = true;
     bool isASCII = false;
     bool isCTRL = false;
     switch (key) {
@@ -313,6 +314,7 @@ static inline void _tap_key_at_point(float x, float y) {
 
         case ICONTEXT_NONACTIONABLE:
             key = -1;
+            handled = false;
             break;
 
         case ICONTEXT_CTRL:
@@ -399,6 +401,7 @@ static inline void _tap_key_at_point(float x, float y) {
 
     // draw current selected key
     _redraw_selected(kbd.selectedCol, kbd.selectedRow);
+    return handled;
 }
 
 // ----------------------------------------------------------------------------
@@ -620,20 +623,22 @@ static void gltouchkbd_reshape(int w, int h) {
     touchport.kbdH = touchport.kbdYMax - touchport.kbdY;
 }
 
-static bool gltouchkbd_onTouchEvent(interface_touch_event_t action, int pointer_count, int pointer_idx, float *x_coords, float *y_coords) {
+static int64_t gltouchkbd_onTouchEvent(interface_touch_event_t action, int pointer_count, int pointer_idx, float *x_coords, float *y_coords) {
 
     if (!isAvailable) {
-        return false;
+        return 0x0LL;
     }
     if (!isEnabled) {
-        return false;
+        return 0x0LL;
     }
     if (!ownsScreen) {
-        return false;
+        return 0x0LL;
     }
 
     float x = x_coords[pointer_idx];
     float y = y_coords[pointer_idx];
+
+    int64_t flags = TOUCH_FLAGS_KBD | TOUCH_FLAGS_HANDLED;
 
     switch (action) {
         case TOUCH_DOWN:
@@ -645,21 +650,21 @@ static bool gltouchkbd_onTouchEvent(interface_touch_event_t action, int pointer_
 
         case TOUCH_UP:
         case TOUCH_POINTER_UP:
-            _tap_key_at_point(x, y);
+            flags |= _tap_key_at_point(x, y) ? TOUCH_FLAGS_KEY_TAP : 0x0LL;
             break;
 
         case TOUCH_CANCEL:
             LOG("---KBD TOUCH CANCEL");
-            return false;
+            return 0x0LL;
 
         default:
             LOG("!!!KBD UNKNOWN TOUCH EVENT : %d", action);
-            return false;
+            return 0x0LL;
     }
 
     clock_gettime(CLOCK_MONOTONIC, &kbd.timingBegin);
 
-    return true;
+    return flags;
 }
 
 // ----------------------------------------------------------------------------

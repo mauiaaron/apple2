@@ -17,6 +17,7 @@ import android.content.DialogInterface;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Rect;
+import android.media.AudioManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.StrictMode;
@@ -63,6 +64,13 @@ public class Apple2Activity extends Activity {
         System.loadLibrary("apple2ix");
     }
 
+    public final static int NATIVE_TOUCH_HANDLED = (1 << 0);
+    public final static int NATIVE_TOUCH_REQUEST_SHOW_MENU = (1 << 1);
+    public final static int NATIVE_TOUCH_KEY_TAP = (1 << 4);
+    public final static int NATIVE_TOUCH_KBD = (1 << 5);
+    public final static int NATIVE_TOUCH_JOY = (1 << 6);
+    public final static int NATIVE_TOUCH_MENU = (1 << 7);
+
     private native void nativeOnCreate(String dataDir, int sampleRate, int monoBufferSize, int stereoBufferSize);
 
     private native void nativeGraphicsInitialized(int width, int height);
@@ -81,7 +89,7 @@ public class Apple2Activity extends Activity {
 
     public native void nativeOnQuit();
 
-    public native boolean nativeOnTouch(int action, int pointerCount, int pointerIndex, float[] xCoords, float[] yCoords);
+    public native long nativeOnTouch(int action, int pointerCount, int pointerIndex, float[] xCoords, float[] yCoords);
 
     public native void nativeReboot();
 
@@ -400,12 +408,23 @@ public class Apple2Activity extends Activity {
                 mYCoords[i] = event.getY(i);
             }
 
-            boolean nativeHandled = nativeOnTouch(action, pointerCount, pointerIndex, mXCoords, mYCoords);
-            if (nativeHandled) {
+            long nativeFlags = nativeOnTouch(action, pointerCount, pointerIndex, mXCoords, mYCoords);
+
+            if ((nativeFlags & NATIVE_TOUCH_HANDLED) == 0) {
                 break;
             }
 
-            mainMenu.show();
+            if ((nativeFlags & NATIVE_TOUCH_REQUEST_SHOW_MENU) != 0) {
+                mainMenu.show();
+            }
+
+            if ((nativeFlags & NATIVE_TOUCH_KEY_TAP) != 0) {
+                AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
+                if (am != null) {
+                    am.playSoundEffect(AudioManager.FX_KEY_CLICK);
+                }
+            }
+
         } while (false);
 
         return super.onTouchEvent(event);

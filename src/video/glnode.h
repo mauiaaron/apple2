@@ -29,7 +29,7 @@ typedef struct GLNode {
     void (*shutdown)(void);
     void (*render)(void);
 #if INTERFACE_TOUCH
-    bool (*onTouchEvent)(interface_touch_event_t action, int pointer_count, int pointer_idx, float *x_coords, float *y_coords);
+    int (*onTouchEvent)(interface_touch_event_t action, int pointer_count, int pointer_idx, float *x_coords, float *y_coords);
 #endif
     void (*reshape)(int w, int h);
 } GLNode;
@@ -51,7 +51,7 @@ void glnode_reshapeNodes(int w, int h);
 
 #if INTERFACE_TOUCH
 // distribute touch event to node which can handle it (in render order)
-bool glnode_onTouchEvent(interface_touch_event_t action, int pointer_count, int pointer_idx, float *x_coords, float *y_coords);
+int64_t glnode_onTouchEvent(interface_touch_event_t action, int pointer_count, int pointer_idx, float *x_coords, float *y_coords);
 #endif
 
 #endif

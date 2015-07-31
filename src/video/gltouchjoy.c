@@ -538,16 +538,16 @@ static inline void _move_button_axis(int x, int y) {
     }
 }
 
-static bool gltouchjoy_onTouchEvent(interface_touch_event_t action, int pointer_count, int pointer_idx, float *x_coords, float *y_coords) {
+static int64_t gltouchjoy_onTouchEvent(interface_touch_event_t action, int pointer_count, int pointer_idx, float *x_coords, float *y_coords) {
 
     if (!isAvailable) {
-        return false;
+        return 0x0LL;
     }
     if (!isEnabled) {
-        return false;
+        return 0x0LL;
     }
     if (!ownsScreen) {
-        return false;
+        return 0x0LL;
     }
 
     bool axisConsumed = false;
@@ -648,7 +648,8 @@ static bool gltouchjoy_onTouchEvent(interface_touch_event_t action, int pointer_
         clock_gettime(CLOCK_MONOTONIC, &buttons.timingBegin);
     }
 
-    return (axisConsumed || buttonConsumed);
+    return TOUCH_FLAGS_HANDLED | TOUCH_FLAGS_JOY;
+#warning FIXME TODO ... do we care about (axisConsumed || buttonConsumed)?
 }
 
 static bool gltouchjoy_isTouchJoystickAvailable(void) {

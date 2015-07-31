@@ -86,17 +86,17 @@ void glnode_reshapeNodes(int w, int h) {
 }
 
 #if INTERFACE_TOUCH
-bool glnode_onTouchEvent(interface_touch_event_t action, int pointer_count, int pointer_idx, float *x_coords, float *y_coords) {
+int64_t glnode_onTouchEvent(interface_touch_event_t action, int pointer_count, int pointer_idx, float *x_coords, float *y_coords) {
     glnode_array_node_s *p = glNodes;
-    bool handled = false;
+    int64_t flags = 0x0;
     while (p) {
-        handled = p->node.onTouchEvent(action, pointer_count, pointer_idx, x_coords, y_coords);
-        if (handled) {
+        flags = p->node.onTouchEvent(action, pointer_count, pointer_idx, x_coords, y_coords);
+        if (flags & TOUCH_FLAGS_HANDLED) {
             break;
         }
         p = p->next;
     }
-    return handled;
+    return flags;
 }
 #endif
 

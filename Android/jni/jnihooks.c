@@ -30,8 +30,6 @@ enum {
     ANDROID_ACTION_POINTER_UP = 0x6,
 };
 
-static bool nativeRequestsShowMainMenu = false;
-
 #if TESTING
 static bool _run_tests(void) {
     char *local_argv[] = {
@@ -78,10 +76,6 @@ static inline int _androidTouchEvent2JoystickEvent(jint action) {
             LOG("Unknown Android event : %d", action);
             return TOUCH_CANCEL;
     }
-}
-
-static void _nativeRequestsShowMainMenu(void) {
-    nativeRequestsShowMainMenu = true;
 }
 
 // ----------------------------------------------------------------------------
@@ -281,16 +275,16 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnKeyUp(JNIEnv *env, jobjec
 #endif
 }
 
-jboolean Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnTouch(JNIEnv *env, jobject obj, jint action, jint pointerCount, jint pointerIndex, jfloatArray xCoords, jfloatArray yCoords) {
+jlong Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnTouch(JNIEnv *env, jobject obj, jint action, jint pointerCount, jint pointerIndex, jfloatArray xCoords, jfloatArray yCoords) {
     //LOG("nativeOnTouch : %d/%d/%d :", action, pointerCount, pointerIndex);
     if (UNLIKELY(emulator_shutting_down)) {
-        return true;
+        return 0x0LL;
     }
 
     if (cpu_isPaused()) {
         LOG("UNPAUSING NATIVE CPU THREAD");
         cpu_resume();
-        return true;
+        return 0x0LL;
     }
 
     jfloat *x_coords = (*env)->GetFloatArrayElements(env, xCoords, 0);
@@ -302,17 +296,11 @@ jboolean Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnTouch(JNIEnv *env, jo
     //  LOG("\t[%f,%f]", x_coords[i], y_coords[i]);
     //}
 
-    interface_onTouchEvent(joyaction, pointerCount, pointerIndex, x_coords, y_coords);
-
-    bool consumed = true; // default assume that native can handle touch event (except for explicit request to show main menu)
-    if (nativeRequestsShowMainMenu) {
-        nativeRequestsShowMainMenu = false;
-        consumed = false;
-    }
+    int64_t flags = interface_onTouchEvent(joyaction, pointerCount, pointerIndex, x_coords, y_coords);
 
     (*env)->ReleaseFloatArrayElements(env, xCoords, x_coords, 0);
     (*env)->ReleaseFloatArrayElements(env, yCoords, y_coords, 0);
-    return consumed;
+    return flags;
 }
 
 void Java_org_deadc0de_apple2ix_Apple2Activity_nativeChooseDisk(JNIEnv *env, jobject obj, jstring jPath, jboolean driveA, jboolean readOnly) {
@@ -343,6 +331,6 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeChooseDisk(JNIEnv *env, job
 
 __attribute__((constructor(CTOR_PRIORITY_LATE)))
 static void _init_jnihooks(void) {
-    video_backend->hostenv_showMainMenu = &_nativeRequestsShowMainMenu;
+    // ...
 }
 

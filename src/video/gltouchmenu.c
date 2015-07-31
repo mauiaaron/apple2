@@ -286,9 +286,9 @@ static inline bool _sprout_menu(float x, float y) {
     }
 }
 
-static inline bool _tap_menu_item(float x, float y) {
+static inline int64_t _tap_menu_item(float x, float y) {
     if (! (_is_point_on_left_menu(x, y) || _is_point_on_right_menu(x, y)) ) {
-        return false;
+        return 0x0LL;
     }
 
     int col = -1;
@@ -298,6 +298,7 @@ static inline bool _tap_menu_item(float x, float y) {
 
     int selectedItem = topMenuTemplate[row][col];
 
+    int64_t flags = TOUCH_FLAGS_KEY_TAP;
     switch (selectedItem) {
 
         case MOUSETEXT_LEFT:
@@ -312,9 +313,7 @@ static inline bool _tap_menu_item(float x, float y) {
 
         case MOUSETEXT_CHECKMARK:
             LOG("showing main menu...");
-            if (video_backend->hostenv_showMainMenu) {
-                video_backend->hostenv_showMainMenu();
-            }
+            flags |= TOUCH_FLAGS_REQUEST_HOST_MENU;
             _hide_top_right();
             break;
 
@@ -351,12 +350,13 @@ static inline bool _tap_menu_item(float x, float y) {
         case ICONTEXT_NONACTIONABLE:
         default:
             LOG("nonactionable ...");
+            flags = 0x0LL;
             _hide_top_left();
             _hide_top_right();
             break;
     }
 
-    return true;
+    return flags;
 }
 
 // ----------------------------------------------------------------------------
@@ -507,13 +507,13 @@ static void gltouchmenu_reshape(int w, int h) {
     }
 }
 
-static bool gltouchmenu_onTouchEvent(interface_touch_event_t action, int pointer_count, int pointer_idx, float *x_coords, float *y_coords) {
+static int gltouchmenu_onTouchEvent(interface_touch_event_t action, int pointer_count, int pointer_idx, float *x_coords, float *y_coords) {
 
     if (!isAvailable) {
-        return false;
+        return 0x0;
     }
     if (!isEnabled) {
-        return false;
+        return 0x0;
     }
 
     //LOG("gltouchmenu_onTouchEvent ...");
@@ -522,6 +522,7 @@ static bool gltouchmenu_onTouchEvent(interface_touch_event_t action, int pointer
     float y = y_coords[pointer_idx];
 
     bool handled = (_is_point_on_left_menu(x, y) || _is_point_on_right_menu(x, y));
+    int flags = TOUCH_FLAGS_MENU;
 
     switch (action) {
         case TOUCH_DOWN:
@@ -534,23 +535,24 @@ static bool gltouchmenu_onTouchEvent(interface_touch_event_t action, int pointer
 
         case TOUCH_UP:
         case TOUCH_POINTER_UP:
-            _tap_menu_item(x, y);
+            flags |= _tap_menu_item(x, y);
             break;
 
         case TOUCH_CANCEL:
             LOG("---MENU TOUCH CANCEL");
-            break;
+            return 0x0;
 
         default:
             LOG("!!!MENU UNKNOWN TOUCH EVENT : %d", action);
-            break;
+            return 0x0;
     }
 
     if (handled) {
         clock_gettime(CLOCK_MONOTONIC, &timingBegin);
+        flags |= TOUCH_FLAGS_HANDLED;
     }
 
-    return handled;
+    return flags;
 }
 
 // ----------------------------------------------------------------------------

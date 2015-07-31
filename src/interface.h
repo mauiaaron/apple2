@@ -54,8 +54,17 @@ typedef enum interface_touch_event_t {
     TOUCH_POINTER_UP,
 } interface_touch_event_t;
 
+typedef enum interface_touch_event_flags {
+    TOUCH_FLAGS_HANDLED           = (1<<0),
+    TOUCH_FLAGS_REQUEST_HOST_MENU = (1<<1),
+    TOUCH_FLAGS_KEY_TAP           = (1<<4),
+    TOUCH_FLAGS_KBD               = (1<<5),
+    TOUCH_FLAGS_JOY               = (1<<6),
+    TOUCH_FLAGS_MENU              = (1<<7),
+} interface_touch_event_flags;
+
 // handle touch event
-extern bool (*interface_onTouchEvent)(interface_touch_event_t action, int pointer_count, int pointer_idx, float *x_coords, float *y_coords);
+extern int64_t (*interface_onTouchEvent)(interface_touch_event_t action, int pointer_count, int pointer_idx, float *x_coords, float *y_coords);
 
 // is the touch menu module itself available?
 extern bool (*interface_isTouchMenuAvailable)(void);

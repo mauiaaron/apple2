@@ -27,7 +27,6 @@ typedef struct video_backend_s {
     void (*shutdown)(void);
 
     // touch HUD functions
-    void (*hostenv_showMainMenu)(void);
     void (*animation_showTouchKeyboard)(void);
     void (*animation_hideTouchKeyboard)(void);
     void (*animation_showTouchJoystick)(void);
