@@ -133,6 +133,8 @@ void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetCPUSpeed(JNIEnv *env,
         video_backend->animation_showCPUSpeed();
     }
 
+    timing_initialize();
+
     if (!wasPaused) {
         cpu_resume();
     }
