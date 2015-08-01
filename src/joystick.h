@@ -34,10 +34,17 @@ void c_calibrate_joystick(void);
 
 #if INTERFACE_TOUCH
 
-typedef enum touchjoy_axis_type_t {
-    AXIS_EMULATED_DEVICE = 0,   // touch joystick axis emulate a physical joystick device
-    AXIS_EMULATED_KEYBOARD,     // touch joystick axis send single key events
-} touchjoy_axis_type_t;
+typedef enum touchjoy_variant_t {
+    EMULATED_JOYSTICK = 0, // touch interface emulates a physical joystick device
+    EMULATED_KEYPAD,       // touch interface generates key presses
+} touchjoy_variant_t;
+
+typedef enum touchjoy_button_type_t {
+    TOUCH_NONE = -1,
+    TOUCH_BUTTON0 = 0,
+    TOUCH_BUTTON1,
+    TOUCH_BOTH,
+} touchjoy_button_type_t;
 
 // is the touch joystick available
 extern bool (*joydriver_isTouchJoystickAvailable)(void);
@@ -51,13 +58,25 @@ extern void (*joydriver_setTouchJoystickOwnsScreen)(bool pwnd);
 // query touch screen ownership
 extern bool (*joydriver_ownsScreen)(void);
 
-// set the joystick button parameters (7bit ASCII characters or MOUSETEXT values)
-extern void (*joydriver_setTouchButtonValues)(char button0Val, char button1Val);
+// set the joystick button visuals (these values are also fired for keyboard variant)
+extern void (*joydriver_setTouchButtonValues)(char button0Val, char button1Val, char buttonBothVal);
 
-// set the axis type
-extern void (*joydriver_setTouchAxisType)(touchjoy_axis_type_t axisType);
+// set the joystick button types (for joystick variant)
+extern void (*joydriver_setTouchButtonTypes)(touchjoy_button_type_t down, touchjoy_button_type_t north, touchjoy_button_type_t south);
 
-// set the axis button parameters (7bit ASCII characters or MOUSETEXT values)
+// set the tap delay (to differentiate between single tap and north/south/etc swipe)
+extern void (*joydriver_setTapDelay)(float secs);
+
+// set the touch axis sensitivity multiplier
+extern void (*joydriver_setTouchAxisSensitivity)(float multiplier);
+
+// set the joystick variant
+extern void (*joydriver_setTouchVariant)(touchjoy_variant_t variant);
+
+// get the joystick variant
+extern touchjoy_variant_t (*joydriver_getTouchVariant)(void);
+
+// set the axis visuals (these key values are also fired for keyboard variant)
 extern void (*joydriver_setTouchAxisValues)(char north, char west, char east, char south);
 
 #endif // INTERFACE_TOUCH

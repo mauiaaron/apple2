@@ -152,8 +152,8 @@ public abstract class Apple2AbstractMenu implements Apple2MenuView {
         return view;
     }
 
-    protected static void _alertDialogHandleSelection(final Apple2Activity activity, final String[] choices, final IPreferenceLoadSave iLoadSave) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(activity).setIcon(R.drawable.ic_launcher).setCancelable(true).setTitle(R.string.input_current);
+    protected static void _alertDialogHandleSelection(final Apple2Activity activity, final int titleId, final String[] choices, final IPreferenceLoadSave iLoadSave) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(activity).setIcon(R.drawable.ic_launcher).setCancelable(true).setTitle(titleId);
         builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {

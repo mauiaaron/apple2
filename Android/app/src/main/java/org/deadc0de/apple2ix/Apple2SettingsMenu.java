@@ -126,8 +126,9 @@ public class Apple2SettingsMenu extends Apple2AbstractMenu {
 
             @Override
             public void handleSelection(final Apple2Activity activity, final Apple2AbstractMenu settingsMenu, boolean isChecked) {
-                _alertDialogHandleSelection(activity, new String[]{
+                _alertDialogHandleSelection(activity, R.string.input_current, new String[]{
                         activity.getResources().getString(R.string.joystick),
+                        activity.getResources().getString(R.string.keypad),
                         activity.getResources().getString(R.string.keyboard),
                 }, new IPreferenceLoadSave() {
                     @Override
@@ -155,7 +156,7 @@ public class Apple2SettingsMenu extends Apple2AbstractMenu {
 
             @Override
             public void handleSelection(final Apple2Activity activity, final Apple2AbstractMenu settingsMenu, boolean isChecked) {
-                //new Apple2KeyboardSettingsMenu().show();
+                new Apple2JoystickSettingsMenu(activity).show();
             }
         },
         KEYPAD_CONFIGURE {
@@ -226,7 +227,7 @@ public class Apple2SettingsMenu extends Apple2AbstractMenu {
 
             @Override
             public void handleSelection(final Apple2Activity activity, final Apple2AbstractMenu settingsMenu, boolean isChecked) {
-                _alertDialogHandleSelection(activity, new String[]{
+                _alertDialogHandleSelection(activity, R.string.video_configure, new String[]{
                         settingsMenu.mActivity.getResources().getString(R.string.color_bw),
                         settingsMenu.mActivity.getResources().getString(R.string.color_color),
                         settingsMenu.mActivity.getResources().getString(R.string.color_interpolated),

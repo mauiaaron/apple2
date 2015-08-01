@@ -32,7 +32,7 @@
     <string name="input_first_keyboard">Touch keyboard</string>
     <string name="joystick">Joystick</string>
     <string name="joystickA">Touch Joystick</string>
-    <string name="joystick_axis_sensitivity_summary">Tune sensitivity scale</string>
+    <string name="joystick_axis_sensitivity_summary">Tune joystick axis sensitivity (decelerate or accelerate)</string>
     <string name="joystick_button_axis_enable">Enable button axis</string>
     <string name="joystick_button_axis_enable_summary">Enable button axis</string>
     <string name="joystick_button_button1">Button1 (Open Apple)</string>

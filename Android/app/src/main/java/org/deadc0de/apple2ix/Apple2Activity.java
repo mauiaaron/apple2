@@ -437,10 +437,13 @@ public class Apple2Activity extends Activity {
             // handle menu-specific actions
 
             if ((nativeFlags & NATIVE_TOUCH_INPUT_DEVICE_CHANGED) != 0) {
-                if (Apple2Preferences.nativeIsTouchJoystickScreenOwner()) {
-                    Apple2Preferences.CURRENT_TOUCH_DEVICE.saveTouchDevice(this, Apple2Preferences.TouchDevice.JOYSTICK);
+                int touchDevice = Apple2Preferences.nativeGetCurrentTouchDevice();
+                if (touchDevice == Apple2Preferences.TouchDeviceVariant.JOYSTICK.ordinal()) {
+                    Apple2Preferences.CURRENT_TOUCH_DEVICE.saveTouchDevice(this, Apple2Preferences.TouchDeviceVariant.JOYSTICK);
+                } else if (touchDevice == Apple2Preferences.TouchDeviceVariant.JOYSTICK_KEYPAD.ordinal()) {
+                    Apple2Preferences.CURRENT_TOUCH_DEVICE.saveTouchDevice(this, Apple2Preferences.TouchDeviceVariant.JOYSTICK_KEYPAD);
                 } else {
-                    Apple2Preferences.CURRENT_TOUCH_DEVICE.saveTouchDevice(this, Apple2Preferences.TouchDevice.KEYBOARD);
+                    Apple2Preferences.CURRENT_TOUCH_DEVICE.saveTouchDevice(this, Apple2Preferences.TouchDeviceVariant.KEYBOARD);
                 }
             }
             if ((nativeFlags & NATIVE_TOUCH_CPU_SPEED_DEC) != 0) {

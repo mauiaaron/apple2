@@ -129,7 +129,7 @@ public enum Apple2Preferences {
 
         @Override
         public int intValue(Apple2Activity activity) {
-            return activity.getPreferences(Context.MODE_PRIVATE).getInt(toString(), TouchDevice.KEYBOARD.ordinal());
+            return activity.getPreferences(Context.MODE_PRIVATE).getInt(toString(), TouchDeviceVariant.KEYBOARD.ordinal());
         }
     },
     TOUCH_MENU_ENABLED {
@@ -155,6 +155,80 @@ public enum Apple2Preferences {
         @Override
         public int intValue(Apple2Activity activity) {
             return activity.getPreferences(Context.MODE_PRIVATE).getInt(toString(), 5);
+        }
+    },
+    AXIS_SENSITIVIY {
+        @Override
+        public void load(Apple2Activity activity) {
+            float sensitivity = floatValue(activity);
+            nativeSetTouchJoystickAxisSensitivity(sensitivity);
+        }
+
+        @Override
+        public int intValue(Apple2Activity activity) {
+            final int pivot = AXIS_SENSITIVITY_DEC_NUMCHOICES;
+            return activity.getPreferences(Context.MODE_PRIVATE).getInt(toString(), pivot);
+        }
+
+        @Override
+        public float floatValue(Apple2Activity activity) {
+            int tick = intValue(activity);
+            final int pivot = AXIS_SENSITIVITY_DEC_NUMCHOICES;
+            float sensitivity = 1.f;
+            if (tick < pivot) {
+                int decAmount = (pivot - tick);
+                sensitivity -= (AXIS_SENSITIVITY_DEC * decAmount);
+            } else if (tick > pivot) {
+                int incAmount = (tick - pivot);
+                sensitivity += (AXIS_SENSITIVITY_INC * incAmount);
+            }
+            return sensitivity;
+        }
+    },
+    JOYSTICK_TAP_BUTTON {
+        @Override
+        public void load(Apple2Activity activity) {
+            nativeSetTouchJoystickButtonTypes(JOYSTICK_TAP_BUTTON.intValue(activity), JOYSTICK_SWIPEUP_BUTTON.intValue(activity), JOYSTICK_SWIPEDOWN_BUTTON.intValue(activity));
+        }
+
+        @Override
+        public int intValue(Apple2Activity activity) {
+            return activity.getPreferences(Context.MODE_PRIVATE).getInt(toString(), TouchJoystickButtons.BUTTON1.ordinal());
+        }
+    },
+    JOYSTICK_TAPDELAY {
+        @Override
+        public void load(Apple2Activity activity) {
+            int tick = intValue(activity);
+            nativeSetTouchJoystickTapDelay(((float) tick / TAPDELAY_NUM_CHOICES) * TAPDELAY_SCALE);
+        }
+
+        @Override
+        public int intValue(Apple2Activity activity) {
+            int defaultLatency = 2; // /TAPDELAY_NUM_CHOICES * TAPDELAY_SCALE -> 0.05f
+            return activity.getPreferences(Context.MODE_PRIVATE).getInt(toString(), defaultLatency);
+        }
+    },
+    JOYSTICK_SWIPEUP_BUTTON {
+        @Override
+        public void load(Apple2Activity activity) {
+            nativeSetTouchJoystickButtonTypes(JOYSTICK_TAP_BUTTON.intValue(activity), JOYSTICK_SWIPEUP_BUTTON.intValue(activity), JOYSTICK_SWIPEDOWN_BUTTON.intValue(activity));
+        }
+
+        @Override
+        public int intValue(Apple2Activity activity) {
+            return activity.getPreferences(Context.MODE_PRIVATE).getInt(toString(), TouchJoystickButtons.BOTH.ordinal());
+        }
+    },
+    JOYSTICK_SWIPEDOWN_BUTTON {
+        @Override
+        public void load(Apple2Activity activity) {
+            nativeSetTouchJoystickButtonTypes(JOYSTICK_TAP_BUTTON.intValue(activity), JOYSTICK_SWIPEUP_BUTTON.intValue(activity), JOYSTICK_SWIPEDOWN_BUTTON.intValue(activity));
+        }
+
+        @Override
+        public int intValue(Apple2Activity activity) {
+            return activity.getPreferences(Context.MODE_PRIVATE).getInt(toString(), TouchJoystickButtons.BUTTON2.ordinal());
         }
     };
 
@@ -185,14 +259,27 @@ public enum Apple2Preferences {
         }
     }
 
-    public enum TouchDevice {
+    public enum TouchDeviceVariant {
         NONE(0),
         JOYSTICK(1),
-        KEYBOARD(2);
+        JOYSTICK_KEYPAD(2),
+        KEYBOARD(3);
         private int dev;
 
-        TouchDevice(int dev) {
+        TouchDeviceVariant(int dev) {
             this.dev = dev;
+        }
+    }
+
+    public enum TouchJoystickButtons {
+        NONE(0),
+        BUTTON1(1),
+        BUTTON2(2),
+        BOTH(3);
+        private int butt;
+
+        TouchJoystickButtons(int butt) {
+            this.butt = butt;
         }
     }
 
@@ -208,9 +295,22 @@ public enum Apple2Preferences {
         dialog.show();
     }
 
-    public final static int AUDIO_LATENCY_NUM_CHOICES = 20;
-    public final static int ALPHA_SLIDER_NUM_CHOICES = 20;
+    public final static int DECENT_AMOUNT_OF_CHOICES = 20;
+    public final static int AUDIO_LATENCY_NUM_CHOICES = DECENT_AMOUNT_OF_CHOICES;
+    public final static int ALPHA_SLIDER_NUM_CHOICES = DECENT_AMOUNT_OF_CHOICES;
+    public final static int TAPDELAY_NUM_CHOICES = DECENT_AMOUNT_OF_CHOICES;
+    public final static float TAPDELAY_SCALE = 0.5f;
     public final static String TAG = "Apple2Preferences";
+
+    public final static float AXIS_SENSITIVITY_MIN = 0.25f;
+    public final static float AXIS_SENSITIVITY_DEFAULT = 1.f;
+    public final static float AXIS_SENSITIVITY_MAX = 4.f;
+    public final static float AXIS_SENSITIVITY_DEC = 0.05f;
+    public final static float AXIS_SENSITIVITY_INC = 0.25f;
+    public final static int AXIS_SENSITIVITY_DEC_NUMCHOICES = (int) ((AXIS_SENSITIVITY_DEFAULT - AXIS_SENSITIVITY_MIN) / AXIS_SENSITIVITY_DEC); // 15
+    public final static int AXIS_SENSITIVITY_INC_NUMCHOICES = (int) ((AXIS_SENSITIVITY_MAX - AXIS_SENSITIVITY_DEFAULT) / AXIS_SENSITIVITY_INC); // 12
+    public final static int AXIS_SENSITIVITY_NUM_CHOICES = AXIS_SENSITIVITY_DEC_NUMCHOICES + AXIS_SENSITIVITY_INC_NUMCHOICES; // 15 + 12
+
 
     // set and apply
 
@@ -224,6 +324,10 @@ public enum Apple2Preferences {
         load(activity);
     }
 
+    public void saveFloat(Apple2Activity activity, float value) {
+        throw new RuntimeException("DENIED! You're doing it wrong! =P");
+    }
+
     public void saveHiresColor(Apple2Activity activity, HiresColor value) {
         activity.getPreferences(Context.MODE_PRIVATE).edit().putInt(toString(), value.ordinal()).apply();
         load(activity);
@@ -234,7 +338,12 @@ public enum Apple2Preferences {
         load(activity);
     }
 
-    public void saveTouchDevice(Apple2Activity activity, TouchDevice value) {
+    public void saveTouchDevice(Apple2Activity activity, TouchDeviceVariant value) {
+        activity.getPreferences(Context.MODE_PRIVATE).edit().putInt(toString(), value.ordinal()).apply();
+        load(activity);
+    }
+
+    public void saveTouchJoystickButtons(Apple2Activity activity, TouchJoystickButtons value) {
         activity.getPreferences(Context.MODE_PRIVATE).edit().putInt(toString(), value.ordinal()).apply();
         load(activity);
     }
@@ -247,6 +356,10 @@ public enum Apple2Preferences {
 
     public int intValue(Apple2Activity activity) {
         return activity.getPreferences(Context.MODE_PRIVATE).getInt(toString(), 0);
+    }
+
+    public float floatValue(Apple2Activity activity) {
+        return (float) activity.getPreferences(Context.MODE_PRIVATE).getInt(toString(), 0);
     }
 
     public static void loadPreferences(Apple2Activity activity) {
@@ -276,13 +389,17 @@ public enum Apple2Preferences {
 
     private static native void nativeSetCurrentTouchDevice(int device);
 
+    private static native void nativeSetTouchJoystickButtonTypes(int down, int north, int south);
+
+    private static native void nativeSetTouchJoystickTapDelay(float secs);
+
+    private static native void nativeSetTouchJoystickAxisSensitivity(float multiplier);
+
     private static native void nativeSetTouchMenuEnabled(boolean enabled);
 
     private static native void nativeSetTouchMenuVisibility(float alpha);
 
-    public static native boolean nativeIsTouchKeyboardScreenOwner();
-
-    public static native boolean nativeIsTouchJoystickScreenOwner();
+    public static native int nativeGetCurrentTouchDevice();
 
     public static native int nativeGetCPUSpeed();
 
