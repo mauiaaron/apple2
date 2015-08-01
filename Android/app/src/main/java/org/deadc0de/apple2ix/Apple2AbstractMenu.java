@@ -110,7 +110,11 @@ public abstract class Apple2AbstractMenu implements Apple2MenuView {
         public void saveInt(int value);
     }
 
-    protected static View _sliderView(final Apple2Activity activity, final IMenuEnum setting, final int numChoices, final boolean showFloatValue, final IPreferenceLoadSave iLoadSave) {
+    public interface IPreferenceSlider extends IPreferenceLoadSave {
+        public void showValue(int value, final TextView seekBarValue);
+    }
+
+    protected static View _sliderView(final Apple2Activity activity, final IMenuEnum setting, final int numChoices, final IPreferenceSlider iLoadSave) {
 
         LayoutInflater inflater = (LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         View view = inflater.inflate(R.layout.a2preference_slider, null, false);
@@ -127,11 +131,7 @@ public abstract class Apple2AbstractMenu implements Apple2MenuView {
                 if (!fromUser) {
                     return;
                 }
-                if (showFloatValue) {
-                    seekBarValue.setText("" + ((float) progress / numChoices));
-                } else {
-                    seekBarValue.setText("" + progress);
-                }
+                iLoadSave.showValue(progress, seekBarValue);
                 iLoadSave.saveInt(progress);
             }
 
@@ -148,11 +148,7 @@ public abstract class Apple2AbstractMenu implements Apple2MenuView {
         sb.setMax(numChoices);
         int progress = iLoadSave.intValue();
         sb.setProgress(progress);
-        if (showFloatValue) {
-            seekBarValue.setText("" + ((float) progress / numChoices));
-        } else {
-            seekBarValue.setText("" + progress);
-        }
+        iLoadSave.showValue(progress, seekBarValue);
         return view;
     }
 

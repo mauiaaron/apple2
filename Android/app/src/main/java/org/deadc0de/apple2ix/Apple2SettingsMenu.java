@@ -18,6 +18,7 @@ import android.net.Uri;
 import android.view.View;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
+import android.widget.TextView;
 
 public class Apple2SettingsMenu extends Apple2AbstractMenu {
 
@@ -53,12 +54,12 @@ public class Apple2SettingsMenu extends Apple2AbstractMenu {
     enum SETTINGS implements Apple2AbstractMenu.IMenuEnum {
         TOUCH_MENU_ENABLED {
             @Override
-            public String getTitle(Apple2Activity activity) {
+            public final String getTitle(Apple2Activity activity) {
                 return activity.getResources().getString(R.string.touch_menu_enable);
             }
 
             @Override
-            public String getSummary(Apple2Activity activity) {
+            public final String getSummary(Apple2Activity activity) {
                 return activity.getResources().getString(R.string.touch_menu_enable_summary);
             }
 
@@ -77,18 +78,18 @@ public class Apple2SettingsMenu extends Apple2AbstractMenu {
         },
         TOUCH_MENU_VISIBILITY {
             @Override
-            public String getTitle(Apple2Activity activity) {
+            public final String getTitle(Apple2Activity activity) {
                 return activity.getResources().getString(R.string.touch_menu_visibility);
             }
 
             @Override
-            public String getSummary(Apple2Activity activity) {
+            public final String getSummary(Apple2Activity activity) {
                 return activity.getResources().getString(R.string.touch_menu_visibility_summary);
             }
 
             @Override
             public View getView(final Apple2Activity activity, View convertView) {
-                return _sliderView(activity, this, Apple2Preferences.ALPHA_SLIDER_NUM_CHOICES, /*showFloatValue:*/true, new IPreferenceLoadSave() {
+                return _sliderView(activity, this, Apple2Preferences.ALPHA_SLIDER_NUM_CHOICES, new IPreferenceSlider() {
                     @Override
                     public void saveInt(int progress) {
                         Apple2Preferences.TOUCH_MENU_VISIBILITY.saveInt(activity, progress);
@@ -97,22 +98,27 @@ public class Apple2SettingsMenu extends Apple2AbstractMenu {
                     public int intValue() {
                         return Apple2Preferences.TOUCH_MENU_VISIBILITY.intValue(activity);
                     }
+
+                    @Override
+                    public void showValue(int progress, final TextView seekBarValue) {
+                        seekBarValue.setText("" + ((float) progress / Apple2Preferences.ALPHA_SLIDER_NUM_CHOICES));
+                    }
                 });
             }
         },
         CURRENT_INPUT {
             @Override
-            public String getTitle(Apple2Activity activity) {
+            public final String getTitle(Apple2Activity activity) {
                 return activity.getResources().getString(R.string.input_current);
             }
 
             @Override
-            public String getSummary(Apple2Activity activity) {
+            public final String getSummary(Apple2Activity activity) {
                 return activity.getResources().getString(R.string.input_current_summary);
             }
 
             @Override
-            public View getView(final Apple2Activity activity, View convertView) {
+            public final View getView(final Apple2Activity activity, View convertView) {
                 convertView = _basicView(activity, this, convertView);
                 _addPopupIcon(activity, this, convertView);
                 return convertView;
@@ -131,19 +137,51 @@ public class Apple2SettingsMenu extends Apple2AbstractMenu {
 
                     @Override
                     public void saveInt(int value) {
-                        Apple2Preferences.CURRENT_TOUCH_DEVICE.saveTouchDevice(activity, Apple2Preferences.TouchDevice.values()[value + 1]);
+                        Apple2Preferences.CURRENT_TOUCH_DEVICE.saveTouchDevice(activity, Apple2Preferences.TouchDeviceVariant.values()[value + 1]);
                     }
                 });
             }
         },
+        JOYSTICK_CONFIGURE {
+            @Override
+            public final String getTitle(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.joystick_configure);
+            }
+
+            @Override
+            public final String getSummary(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.joystick_configure_summary);
+            }
+
+            @Override
+            public void handleSelection(final Apple2Activity activity, final Apple2AbstractMenu settingsMenu, boolean isChecked) {
+                //new Apple2KeyboardSettingsMenu().show();
+            }
+        },
+        KEYPAD_CONFIGURE {
+            @Override
+            public final String getTitle(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.keypad_configure);
+            }
+
+            @Override
+            public final String getSummary(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.keypad_configure_summary);
+            }
+
+            @Override
+            public void handleSelection(final Apple2Activity activity, final Apple2AbstractMenu settingsMenu, boolean isChecked) {
+                //new Apple2JoystickSettingsMenu(activity).show();
+            }
+        },
         KEYBOARD_CONFIGURE {
             @Override
-            public String getTitle(Apple2Activity activity) {
+            public final String getTitle(Apple2Activity activity) {
                 return activity.getResources().getString(R.string.keyboard_configure);
             }
 
             @Override
-            public String getSummary(Apple2Activity activity) {
+            public final String getSummary(Apple2Activity activity) {
                 return activity.getResources().getString(R.string.keyboard_configure_summary);
             }
 
@@ -152,30 +190,14 @@ public class Apple2SettingsMenu extends Apple2AbstractMenu {
                 //new Apple2KeyboardSettingsMenu().show();
             }
         },
-        JOYSTICK_CONFIGURE {
-            @Override
-            public String getTitle(Apple2Activity activity) {
-                return activity.getResources().getString(R.string.joystick_configure);
-            }
-
-            @Override
-            public String getSummary(Apple2Activity activity) {
-                return activity.getResources().getString(R.string.joystick_configure_summary);
-            }
-
-            @Override
-            public void handleSelection(final Apple2Activity activity, final Apple2AbstractMenu settingsMenu, boolean isChecked) {
-                //new Apple2JoystickSettingsMenu(activity).show();
-            }
-        },
         AUDIO_CONFIGURE {
             @Override
-            public String getTitle(Apple2Activity activity) {
+            public final String getTitle(Apple2Activity activity) {
                 return activity.getResources().getString(R.string.audio_configure);
             }
 
             @Override
-            public String getSummary(Apple2Activity activity) {
+            public final String getSummary(Apple2Activity activity) {
                 return activity.getResources().getString(R.string.audio_configure_summary);
             }
 
@@ -186,12 +208,12 @@ public class Apple2SettingsMenu extends Apple2AbstractMenu {
         },
         VIDEO_CONFIGURE {
             @Override
-            public String getTitle(Apple2Activity activity) {
+            public final String getTitle(Apple2Activity activity) {
                 return activity.getResources().getString(R.string.video_configure);
             }
 
             @Override
-            public String getSummary(Apple2Activity activity) {
+            public final String getSummary(Apple2Activity activity) {
                 return activity.getResources().getString(R.string.video_configure_summary);
             }
 
@@ -223,12 +245,12 @@ public class Apple2SettingsMenu extends Apple2AbstractMenu {
         },
         ABOUT {
             @Override
-            public String getTitle(Apple2Activity activity) {
+            public final String getTitle(Apple2Activity activity) {
                 return activity.getResources().getString(R.string.about_apple2ix);
             }
 
             @Override
-            public String getSummary(Apple2Activity activity) {
+            public final String getSummary(Apple2Activity activity) {
                 return activity.getResources().getString(R.string.about_apple2ix_summary);
             }
 
@@ -242,12 +264,12 @@ public class Apple2SettingsMenu extends Apple2AbstractMenu {
         },
         ABOUT_APPLE2 {
             @Override
-            public String getTitle(Apple2Activity activity) {
+            public final String getTitle(Apple2Activity activity) {
                 return activity.getResources().getString(R.string.about_apple2);
             }
 
             @Override
-            public String getSummary(Apple2Activity activity) {
+            public final String getSummary(Apple2Activity activity) {
                 return activity.getResources().getString(R.string.about_apple2_summary);
             }
 
@@ -261,12 +283,12 @@ public class Apple2SettingsMenu extends Apple2AbstractMenu {
         },
         RESET_PREFERENCES {
             @Override
-            public String getTitle(Apple2Activity activity) {
+            public final String getTitle(Apple2Activity activity) {
                 return activity.getResources().getString(R.string.preferences_reset_title);
             }
 
             @Override
-            public String getSummary(Apple2Activity activity) {
+            public final String getSummary(Apple2Activity activity) {
                 return activity.getResources().getString(R.string.preferences_reset_summary);
             }
 

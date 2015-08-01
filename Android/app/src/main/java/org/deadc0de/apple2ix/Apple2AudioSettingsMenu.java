@@ -14,6 +14,7 @@ package org.deadc0de.apple2ix;
 import android.view.View;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
+import android.widget.TextView;
 
 public class Apple2AudioSettingsMenu extends Apple2AbstractMenu {
 
@@ -49,12 +50,12 @@ public class Apple2AudioSettingsMenu extends Apple2AbstractMenu {
     enum SETTINGS implements Apple2AbstractMenu.IMenuEnum {
         SPEAKER_ENABLED {
             @Override
-            public String getTitle(Apple2Activity activity) {
+            public final String getTitle(Apple2Activity activity) {
                 return activity.getResources().getString(R.string.speaker_enable);
             }
 
             @Override
-            public String getSummary(Apple2Activity activity) {
+            public final String getSummary(Apple2Activity activity) {
                 return activity.getResources().getString(R.string.speaker_enable_summary);
             }
 
@@ -68,37 +69,43 @@ public class Apple2AudioSettingsMenu extends Apple2AbstractMenu {
         },
         SPEAKER_VOLUME {
             @Override
-            public String getTitle(Apple2Activity activity) {
+            public final String getTitle(Apple2Activity activity) {
                 return activity.getResources().getString(R.string.speaker_volume);
             }
 
             @Override
-            public String getSummary(Apple2Activity activity) {
+            public final String getSummary(Apple2Activity activity) {
                 return activity.getResources().getString(R.string.speaker_volume_summary);
             }
 
             @Override
             public View getView(final Apple2Activity activity, View convertView) {
-                return _sliderView(activity, this, Apple2Preferences.Volume.MAX.ordinal() - 1, /*showFloatValue:*/false, new IPreferenceLoadSave() {
+                return _sliderView(activity, this, Apple2Preferences.Volume.MAX.ordinal() - 1, new IPreferenceSlider() {
                     @Override
                     public void saveInt(int progress) {
                         Apple2Preferences.SPEAKER_VOLUME.saveVolume(activity, Apple2Preferences.Volume.values()[progress]);
                     }
+
                     @Override
                     public int intValue() {
                         return Apple2Preferences.SPEAKER_VOLUME.intValue(activity);
+                    }
+
+                    @Override
+                    public void showValue(int progress, final TextView seekBarValue) {
+                        seekBarValue.setText("" + progress);
                     }
                 });
             }
         },
         MOCKINGBOARD_ENABLED {
             @Override
-            public String getTitle(Apple2Activity activity) {
+            public final String getTitle(Apple2Activity activity) {
                 return activity.getResources().getString(R.string.mockingboard_enable);
             }
 
             @Override
-            public String getSummary(Apple2Activity activity) {
+            public final String getSummary(Apple2Activity activity) {
                 return activity.getResources().getString(R.string.mockingboard_enable_summary);
             }
 
@@ -117,54 +124,60 @@ public class Apple2AudioSettingsMenu extends Apple2AbstractMenu {
         },
         MOCKINGBOARD_VOLUME {
             @Override
-            public String getTitle(Apple2Activity activity) {
+            public final String getTitle(Apple2Activity activity) {
                 return activity.getResources().getString(R.string.mockingboard_volume);
             }
 
             @Override
-            public String getSummary(Apple2Activity activity) {
+            public final String getSummary(Apple2Activity activity) {
                 return activity.getResources().getString(R.string.mockingboard_volume_summary);
             }
 
             @Override
             public View getView(final Apple2Activity activity, View convertView) {
-                return _sliderView(activity, this, Apple2Preferences.Volume.MAX.ordinal() - 1, /*showFloatValue:*/false, new IPreferenceLoadSave() {
+                return _sliderView(activity, this, Apple2Preferences.Volume.MAX.ordinal() - 1, new IPreferenceSlider() {
                     @Override
                     public void saveInt(int progress) {
                         Apple2Preferences.MOCKINGBOARD_VOLUME.saveVolume(activity, Apple2Preferences.Volume.values()[progress]);
                     }
+
                     @Override
                     public int intValue() {
                         return Apple2Preferences.MOCKINGBOARD_VOLUME.intValue(activity);
+                    }
+
+                    @Override
+                    public void showValue(int progress, final TextView seekBarValue) {
+                        seekBarValue.setText("" + progress);
                     }
                 });
             }
         },
         ADVANCED_SEPARATOR {
             @Override
-            public String getTitle(Apple2Activity activity) {
+            public final String getTitle(Apple2Activity activity) {
                 return activity.getResources().getString(R.string.settings_advanced);
             }
 
             @Override
-            public String getSummary(Apple2Activity activity) {
+            public final String getSummary(Apple2Activity activity) {
                 return activity.getResources().getString(R.string.settings_advanced_summary);
             }
         },
         AUDIO_LATENCY {
             @Override
-            public String getTitle(Apple2Activity activity) {
+            public final String getTitle(Apple2Activity activity) {
                 return activity.getResources().getString(R.string.audio_latency);
             }
 
             @Override
-            public String getSummary(Apple2Activity activity) {
+            public final String getSummary(Apple2Activity activity) {
                 return activity.getResources().getString(R.string.audio_latency_summary);
             }
 
             @Override
             public View getView(final Apple2Activity activity, View convertView) {
-                return _sliderView(activity, this, Apple2Preferences.AUDIO_LATENCY_NUM_CHOICES, /*showFloatValue:*/true, new IPreferenceLoadSave() {
+                return _sliderView(activity, this, Apple2Preferences.AUDIO_LATENCY_NUM_CHOICES, new IPreferenceSlider() {
                     @Override
                     public void saveInt(int progress) {
                         if (progress == 0) {
@@ -173,9 +186,15 @@ public class Apple2AudioSettingsMenu extends Apple2AbstractMenu {
                         }
                         Apple2Preferences.AUDIO_LATENCY.saveInt(activity, progress);
                     }
+
                     @Override
                     public int intValue() {
                         return Apple2Preferences.AUDIO_LATENCY.intValue(activity);
+                    }
+
+                    @Override
+                    public void showValue(int progress, final TextView seekBarValue) {
+                        seekBarValue.setText("" + ((float) progress / Apple2Preferences.AUDIO_LATENCY_NUM_CHOICES));
                     }
                 });
             }
