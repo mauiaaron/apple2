@@ -34,14 +34,20 @@ public class Apple2SplashScreen implements Apple2MenuView {
         LayoutInflater inflater = (LayoutInflater) mActivity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         mSettingsView = inflater.inflate(R.layout.activity_splash_screen, null, false);
 
-        Drawable d = mActivity.getResources().getDrawable(R.drawable.apple_iie);
-        ImageView imageView = (ImageView)mSettingsView.findViewById(R.id.splashView);
-        imageView.setImageDrawable(d);
-
-        Button startButton = (Button)mSettingsView.findViewById(R.id.startButton);
+        Button startButton = (Button) mSettingsView.findViewById(R.id.startButton);
         startButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                Apple2SplashScreen.this.dismiss();
+            }
+        });
+
+        Button prefsButton = (Button) mSettingsView.findViewById(R.id.prefsButton);
+        prefsButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Apple2SettingsMenu settingsMenu = mActivity.getView().getMainMenu().getSettingsMenu();
+                settingsMenu.show();
                 Apple2SplashScreen.this.dismiss();
             }
         });

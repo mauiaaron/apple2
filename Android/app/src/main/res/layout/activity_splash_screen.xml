@@ -15,6 +15,7 @@
         android:layout_height="fill_parent"
         android:adjustViewBounds="true"
         android:scaleType="centerCrop"
+        android:src="@drawable/apple_iie"
         android:id="@+id/splashView" />
 
     <Button
@@ -25,8 +26,29 @@
         android:layout_alignParentTop="true"
         android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true"
-        android:layout_marginRight="20dp"
-        android:layout_marginEnd="20dp"
+        android:layout_marginRight="18dp"
+        android:layout_marginEnd="18dp"
         android:layout_marginTop="18dp" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/emulation_preferences"
+        android:id="@+id/prefsButton"
+        android:layout_marginTop="18dp"
+        android:layout_below="@+id/startButton"
+        android:layout_alignRight="@+id/startButton"
+        android:layout_alignEnd="@+id/startButton" />
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/imageView"
+        android:src="@drawable/ic_launcher"
+        android:layout_alignTop="@+id/startButton"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_marginLeft="18dp"
+        android:layout_marginStart="18dp" />
 
 </RelativeLayout>
