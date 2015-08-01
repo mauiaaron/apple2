@@ -12,51 +12,160 @@
 package org.deadc0de.apple2ix;
 
 import android.app.AlertDialog;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.graphics.drawable.Drawable;
 import android.net.Uri;
-import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
-import android.widget.CheckedTextView;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.ListView;
-import android.widget.TextView;
+import android.widget.CompoundButton;
 
-public class Apple2SettingsMenu implements Apple2MenuView {
+public class Apple2SettingsMenu extends Apple2AbstractMenu {
 
     private final static String TAG = "Apple2SettingsMenu";
 
-    private Apple2Activity mActivity = null;
-    private View mSettingsView = null;
-
     public Apple2SettingsMenu(Apple2Activity activity) {
-        mActivity = activity;
-        setup();
+        super(activity);
     }
 
-    enum SETTINGS {
-        INPUT_CONFIGURE {
+    @Override
+    public final String[] allTitles() {
+        return SETTINGS.titles(mActivity);
+    }
+
+    @Override
+    public final IMenuEnum[] allValues() {
+        return SETTINGS.values();
+    }
+
+    @Override
+    public final boolean areAllItemsEnabled() {
+        return true;
+    }
+
+    @Override
+    public final boolean isEnabled(int position) {
+        if (position < 0 || position >= SETTINGS.size) {
+            throw new ArrayIndexOutOfBoundsException();
+        }
+        return true;
+    }
+
+    enum SETTINGS implements Apple2AbstractMenu.IMenuEnum {
+        TOUCH_MENU_ENABLED {
             @Override
             public String getTitle(Apple2Activity activity) {
-                return activity.getResources().getString(R.string.input_configure);
+                return activity.getResources().getString(R.string.touch_menu_enable);
             }
 
             @Override
             public String getSummary(Apple2Activity activity) {
-                return activity.getResources().getString(R.string.input_configure_summary);
+                return activity.getResources().getString(R.string.touch_menu_enable_summary);
             }
 
             @Override
-            public void handleSelection(Apple2Activity activity, Apple2SettingsMenu settingsMenu, boolean isChecked) {
-                new Apple2InputSettingsMenu(activity).show();
+            public View getView(final Apple2Activity activity, View convertView) {
+                convertView = _basicView(activity, this, convertView);
+                CheckBox cb = _addCheckbox(activity, this, convertView, Apple2Preferences.TOUCH_MENU_ENABLED.booleanValue(activity));
+                cb.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                    @Override
+                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                        Apple2Preferences.TOUCH_MENU_ENABLED.saveBoolean(activity, isChecked);
+                    }
+                });
+                return convertView;
+            }
+        },
+        TOUCH_MENU_VISIBILITY {
+            @Override
+            public String getTitle(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.touch_menu_visibility);
+            }
+
+            @Override
+            public String getSummary(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.touch_menu_visibility_summary);
+            }
+
+            @Override
+            public View getView(final Apple2Activity activity, View convertView) {
+                return _sliderView(activity, this, Apple2Preferences.ALPHA_SLIDER_NUM_CHOICES, /*showFloatValue:*/true, new IPreferenceLoadSave() {
+                    @Override
+                    public void saveInt(int progress) {
+                        Apple2Preferences.TOUCH_MENU_VISIBILITY.saveInt(activity, progress);
+                    }
+                    @Override
+                    public int intValue() {
+                        return Apple2Preferences.TOUCH_MENU_VISIBILITY.intValue(activity);
+                    }
+                });
+            }
+        },
+        CURRENT_INPUT {
+            @Override
+            public String getTitle(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.input_current);
+            }
+
+            @Override
+            public String getSummary(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.input_current_summary);
+            }
+
+            @Override
+            public View getView(final Apple2Activity activity, View convertView) {
+                convertView = _basicView(activity, this, convertView);
+                _addPopupIcon(activity, this, convertView);
+                return convertView;
+            }
+
+            @Override
+            public void handleSelection(final Apple2Activity activity, final Apple2AbstractMenu settingsMenu, boolean isChecked) {
+                _alertDialogHandleSelection(activity, new String[]{
+                        activity.getResources().getString(R.string.joystick),
+                        activity.getResources().getString(R.string.keyboard),
+                }, new IPreferenceLoadSave() {
+                    @Override
+                    public int intValue() {
+                        return Apple2Preferences.CURRENT_TOUCH_DEVICE.intValue(activity) - 1;
+                    }
+
+                    @Override
+                    public void saveInt(int value) {
+                        Apple2Preferences.CURRENT_TOUCH_DEVICE.saveTouchDevice(activity, Apple2Preferences.TouchDevice.values()[value + 1]);
+                    }
+                });
+            }
+        },
+        KEYBOARD_CONFIGURE {
+            @Override
+            public String getTitle(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.keyboard_configure);
+            }
+
+            @Override
+            public String getSummary(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.keyboard_configure_summary);
+            }
+
+            @Override
+            public void handleSelection(final Apple2Activity activity, final Apple2AbstractMenu settingsMenu, boolean isChecked) {
+                //new Apple2KeyboardSettingsMenu().show();
+            }
+        },
+        JOYSTICK_CONFIGURE {
+            @Override
+            public String getTitle(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.joystick_configure);
+            }
+
+            @Override
+            public String getSummary(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.joystick_configure_summary);
+            }
+
+            @Override
+            public void handleSelection(final Apple2Activity activity, final Apple2AbstractMenu settingsMenu, boolean isChecked) {
+                //new Apple2JoystickSettingsMenu(activity).show();
             }
         },
         AUDIO_CONFIGURE {
@@ -71,7 +180,7 @@ public class Apple2SettingsMenu implements Apple2MenuView {
             }
 
             @Override
-            public void handleSelection(Apple2Activity activity, Apple2SettingsMenu settingsMenu, boolean isChecked) {
+            public void handleSelection(Apple2Activity activity, Apple2AbstractMenu settingsMenu, boolean isChecked) {
                 new Apple2AudioSettingsMenu(activity).show();
             }
         },
@@ -94,55 +203,57 @@ public class Apple2SettingsMenu implements Apple2MenuView {
             }
 
             @Override
-            public void handleSelection(Apple2Activity activity, final Apple2SettingsMenu settingsMenu, boolean isChecked) {
-                AlertDialog.Builder builder = new AlertDialog.Builder(settingsMenu.mActivity).setIcon(R.drawable.ic_launcher).setCancelable(true).setTitle(R.string.video_configure);
-                builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.dismiss();
-                    }
-                });
-
-                String[] color_choices = new String[]{
+            public void handleSelection(final Apple2Activity activity, final Apple2AbstractMenu settingsMenu, boolean isChecked) {
+                _alertDialogHandleSelection(activity, new String[]{
                         settingsMenu.mActivity.getResources().getString(R.string.color_bw),
                         settingsMenu.mActivity.getResources().getString(R.string.color_color),
                         settingsMenu.mActivity.getResources().getString(R.string.color_interpolated),
-                };
-                final int checkedPosition = Apple2Preferences.HIRES_COLOR.intValue(activity);
-                final ArrayAdapter<String> adapter = new ArrayAdapter<String>(settingsMenu.mActivity, android.R.layout.select_dialog_singlechoice, color_choices) {
+                }, new IPreferenceLoadSave() {
                     @Override
-                    public View getView(int position, View convertView, ViewGroup parent) {
-                        View view = super.getView(position, convertView, parent);
-                        CheckedTextView ctv = (CheckedTextView) view.findViewById(android.R.id.text1);
-                        ctv.setChecked(position == checkedPosition);
-                        return view;
+                    public int intValue() {
+                        return Apple2Preferences.HIRES_COLOR.intValue(activity);
                     }
-                };
 
-                builder.setAdapter(adapter, new DialogInterface.OnClickListener() {
                     @Override
-                    public void onClick(DialogInterface dialog, int color) {
-                        Apple2Preferences.HIRES_COLOR.saveHiresColor(settingsMenu.mActivity, Apple2Preferences.HiresColor.values()[color]);
-                        dialog.dismiss();
+                    public void saveInt(int value) {
+                        Apple2Preferences.HIRES_COLOR.saveHiresColor(settingsMenu.mActivity, Apple2Preferences.HiresColor.values()[value]);
                     }
                 });
-                builder.show();
             }
         },
         ABOUT {
             @Override
             public String getTitle(Apple2Activity activity) {
-                return activity.getResources().getString(R.string.about_title);
+                return activity.getResources().getString(R.string.about_apple2ix);
             }
 
             @Override
             public String getSummary(Apple2Activity activity) {
-                return activity.getResources().getString(R.string.about_summary);
+                return activity.getResources().getString(R.string.about_apple2ix_summary);
             }
 
             @Override
-            public void handleSelection(Apple2Activity activity, final Apple2SettingsMenu settingsMenu, boolean isChecked) {
+            public void handleSelection(Apple2Activity activity, final Apple2AbstractMenu settingsMenu, boolean isChecked) {
                 String url = "http://github.com/mauiaaron/apple2";
+                Intent i = new Intent(Intent.ACTION_VIEW);
+                i.setData(Uri.parse(url));
+                activity.startActivity(i);
+            }
+        },
+        ABOUT_APPLE2 {
+            @Override
+            public String getTitle(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.about_apple2);
+            }
+
+            @Override
+            public String getSummary(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.about_apple2_summary);
+            }
+
+            @Override
+            public void handleSelection(Apple2Activity activity, final Apple2AbstractMenu settingsMenu, boolean isChecked) {
+                String url = "http://wikipedia.org/wiki/Apple_II";
                 Intent i = new Intent(Intent.ACTION_VIEW);
                 i.setData(Uri.parse(url));
                 activity.startActivity(i);
@@ -160,7 +271,7 @@ public class Apple2SettingsMenu implements Apple2MenuView {
             }
 
             @Override
-            public void handleSelection(final Apple2Activity activity, final Apple2SettingsMenu settingsMenu, boolean isChecked) {
+            public void handleSelection(final Apple2Activity activity, final Apple2AbstractMenu settingsMenu, boolean isChecked) {
                 AlertDialog.Builder builder = new AlertDialog.Builder(activity).setIcon(R.drawable.ic_launcher).setCancelable(true).setTitle(R.string.preferences_reset_really).setMessage(R.string.preferences_reset_warning).setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
@@ -172,47 +283,14 @@ public class Apple2SettingsMenu implements Apple2MenuView {
             }
         };
 
-        private static View _basicView(Apple2Activity activity, SETTINGS setting, View convertView) {
-            TextView tv = (TextView) convertView.findViewById(R.id.a2preference_title);
-            tv.setText(setting.getTitle(activity));
-
-            tv = (TextView) convertView.findViewById(R.id.a2preference_summary);
-            tv.setText(setting.getSummary(activity));
-
-            LinearLayout layout = (LinearLayout) convertView.findViewById(R.id.a2preference_widget_frame);
-            if (layout.getChildCount() > 0) {
-                // layout cells appear to be reused when scrolling into view ... make sure we start with clear hierarchy
-                layout.removeAllViews();
-            }
-
-            return convertView;
-        }
-
-        private static ImageView _addPopupIcon(Apple2Activity activity, SETTINGS setting, View convertView) {
-            ImageView imageView = new ImageView(activity);
-            Drawable drawable = activity.getResources().getDrawable(android.R.drawable.ic_menu_edit);
-            imageView.setImageDrawable(drawable);
-            LinearLayout layout = (LinearLayout) convertView.findViewById(R.id.a2preference_widget_frame);
-            layout.addView(imageView);
-            return imageView;
-        }
-
-        private static CheckBox _addCheckbox(Apple2Activity activity, SETTINGS setting, View convertView, boolean isChecked) {
-            CheckBox checkBox = new CheckBox(activity);
-            checkBox.setChecked(isChecked);
-            LinearLayout layout = (LinearLayout) convertView.findViewById(R.id.a2preference_widget_frame);
-            layout.addView(checkBox);
-            return checkBox;
-        }
-
         public static final int size = SETTINGS.values().length;
 
-        public abstract String getTitle(Apple2Activity activity);
+        @Override
+        public void handleSelection(Apple2Activity activity, Apple2AbstractMenu settingsMenu, boolean isChecked) {
+            /* ... */
+        }
 
-        public abstract String getSummary(Apple2Activity activity);
-
-        public abstract void handleSelection(Apple2Activity activity, Apple2SettingsMenu settingsMenu, boolean isChecked);
-
+        @Override
         public View getView(Apple2Activity activity, View convertView) {
             return _basicView(activity, this, convertView);
         }
@@ -225,73 +303,5 @@ public class Apple2SettingsMenu implements Apple2MenuView {
             }
             return titles;
         }
-    }
-
-    private void setup() {
-
-        LayoutInflater inflater = (LayoutInflater) mActivity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        mSettingsView = inflater.inflate(R.layout.activity_settings, null, false);
-
-        ListView settingsList = (ListView) mSettingsView.findViewById(R.id.listView_settings);
-        settingsList.setEnabled(true);
-
-        ArrayAdapter<?> adapter = new ArrayAdapter<String>(mActivity, R.layout.a2preference, R.id.a2preference_title, SETTINGS.titles(mActivity)) {
-            @Override
-            public boolean areAllItemsEnabled() {
-                return true;
-            }
-
-            @Override
-            public boolean isEnabled(int position) {
-                return super.isEnabled(position);
-            }
-
-            @Override
-            public View getView(int position, View convertView, ViewGroup parent) {
-                View view = super.getView(position, convertView, parent);
-                SETTINGS setting = SETTINGS.values()[position];
-                return setting.getView(mActivity, view);
-            }
-        };
-
-        settingsList.setAdapter(adapter);
-        settingsList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                SETTINGS setting = SETTINGS.values()[position];
-                LinearLayout layout = (LinearLayout) view.findViewById(R.id.a2preference_widget_frame);
-                View childView = layout.getChildAt(0);
-                boolean selected = false;
-                if (childView != null && childView instanceof CheckBox) {
-                    CheckBox checkBox = (CheckBox) childView;
-                    checkBox.setChecked(!checkBox.isChecked());
-                    selected = checkBox.isChecked();
-                }
-                setting.handleSelection(mActivity, Apple2SettingsMenu.this, selected);
-            }
-        });
-    }
-
-    public void showJoystickConfiguration() {
-        Log.d(TAG, "showJoystickConfiguration...");
-    }
-
-    public void show() {
-        if (isShowing()) {
-            return;
-        }
-        mActivity.pushApple2View(this);
-    }
-
-    public void dismiss() {
-        mActivity.popApple2View(this);
-    }
-
-    public boolean isShowing() {
-        return mSettingsView.isShown();
-    }
-
-    public View getView() {
-        return mSettingsView;
     }
 }

@@ -14,7 +14,6 @@ package org.deadc0de.apple2ix;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.util.Log;
 
 public enum Apple2Preferences {
     PREFS_CONFIGURED {
@@ -102,25 +101,24 @@ public enum Apple2Preferences {
     AUDIO_LATENCY {
         @Override
         public void load(Apple2Activity activity) {
-            nativeSetAudioLatency(floatValue(activity));
+            int tick = intValue(activity);
+            nativeSetAudioLatency(((float) tick / AUDIO_LATENCY_NUM_CHOICES));
         }
 
         @Override
-        public float floatValue(Apple2Activity activity) {
+        public int intValue(Apple2Activity activity) {
 
-            float defaultLatency = 0.f;
-            if (defaultLatency == 0.f) {
-                int sampleRateCanary = DevicePropertyCalculator.getRecommendedSampleRate(activity);
-                if (sampleRateCanary == DevicePropertyCalculator.defaultSampleRate) {
-                    // quite possibly an audio-challenged device
-                    defaultLatency = 0.4f;
-                } else {
-                    // reasonable default for high-end devices
-                    defaultLatency = 0.25f;
-                }
+            int defaultLatency = 0;
+            int sampleRateCanary = DevicePropertyCalculator.getRecommendedSampleRate(activity);
+            if (sampleRateCanary == DevicePropertyCalculator.defaultSampleRate) {
+                // quite possibly an audio-challenged device
+                defaultLatency = 8; // /AUDIO_LATENCY_NUM_CHOICES ->  0.4f
+            } else {
+                // reasonable default for high-end devices
+                defaultLatency = 5; // /AUDIO_LATENCY_NUM_CHOICES -> 0.25f
             }
 
-            return activity.getPreferences(Context.MODE_PRIVATE).getFloat(toString(), defaultLatency);
+            return activity.getPreferences(Context.MODE_PRIVATE).getInt(toString(), defaultLatency);
         }
     },
     CURRENT_TOUCH_DEVICE {
@@ -226,11 +224,6 @@ public enum Apple2Preferences {
         load(activity);
     }
 
-    public void saveFloat(Apple2Activity activity, float value) {
-        activity.getPreferences(Context.MODE_PRIVATE).edit().putFloat(toString(), value).apply();
-        load(activity);
-    }
-
     public void saveHiresColor(Apple2Activity activity, HiresColor value) {
         activity.getPreferences(Context.MODE_PRIVATE).edit().putInt(toString(), value.ordinal()).apply();
         load(activity);
@@ -254,10 +247,6 @@ public enum Apple2Preferences {
 
     public int intValue(Apple2Activity activity) {
         return activity.getPreferences(Context.MODE_PRIVATE).getInt(toString(), 0);
-    }
-
-    public float floatValue(Apple2Activity activity) {
-        return activity.getPreferences(Context.MODE_PRIVATE).getFloat(toString(), 0.0f);
     }
 
     public static void loadPreferences(Apple2Activity activity) {

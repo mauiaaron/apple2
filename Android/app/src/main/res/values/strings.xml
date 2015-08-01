@@ -4,8 +4,10 @@
     <color name="black">#000000</color>
     <color name="white">#ffffff</color>
 
-    <string name="about_title">About Apple2ix…</string>
-    <string name="about_summary">Various shout-outs and acknowledgements</string>
+    <string name="about_apple2ix">About Apple2ix…</string>
+    <string name="about_apple2ix_summary">About this software</string>
+    <string name="about_apple2">About Apple //e…</string>
+    <string name="about_apple2_summary">More information about the Apple //e computer</string>
     <string name="action_settings">Settings</string>
     <string name="app_name">Apple2ix</string>
     <string name="audio_configure">Configure audio…</string>
@@ -20,6 +22,7 @@
     <string name="diskB">Drive 2</string>
     <string name="disk_read_write">Read/write</string>
     <string name="emulation_continue">Continue…</string>
+    <string name="emulation_preferences">Preferences…</string>
     <string name="header_disks">Insert disk:</string>
     <string name="joystick">Joystick</string>
     <string name="input_configure">Configure input devices…</string>
@@ -30,9 +33,10 @@
     <string name="input_first_keyboard">Touch keyboard</string>
     <string name="joystick_configure">Configure joysticks…</string>
     <string name="joystick_configure_summary">Touch/tilt, axis and buttons, etc</string>
-    <string name="joystick_enable">Enable emulated joystick</string>
-    <string name="joystick_keyA">Key Joystick 1</string>
-    <string name="joystick_keyB">Key Joystick 2</string>
+    <string name="joystick_current_variant">Choose joystick type</string>
+    <string name="joystick_current_variant_summary">Choose from emulated joystick or keypad devices</string>
+    <string name="joystickA">Touch Joystick</string>
+    <string name="keypadA">Touch Keypad</string>
     <string name="keyboard">Keyboard</string>
     <string name="keyboard_configure">Configure keyboard…</string>
     <string name="keyboard_configure_summary">Transparency, fading, custom keys</string>
@@ -78,7 +82,7 @@
     <string name="tab_joystick">Joystick</string>
     <string name="title_activity_second">SecondActivity</string>
     <string name="touch_menu_enable">Enable touch menus</string>
-    <string name="touch_menu_enable_summary">Enables menu buttons in top screen corners</string>
+    <string name="touch_menu_enable_summary">Enables soft menu buttons in top screen corners</string>
     <string name="touch_menu_visibility">Touch menu visibility</string>
     <string name="touch_menu_visibility_summary">Touch menu visibility when inactive</string>
     <string name="video_configure">Configure video…</string>
