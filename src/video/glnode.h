@@ -29,7 +29,7 @@ typedef struct GLNode {
     void (*shutdown)(void);
     void (*render)(void);
 #if INTERFACE_TOUCH
-    int (*onTouchEvent)(interface_touch_event_t action, int pointer_count, int pointer_idx, float *x_coords, float *y_coords);
+    int64_t (*onTouchEvent)(interface_touch_event_t action, int pointer_count, int pointer_idx, float *x_coords, float *y_coords);
 #endif
     void (*reshape)(int w, int h);
 } GLNode;

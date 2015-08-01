@@ -452,7 +452,7 @@ static void gltouchmenu_reshape(int w, int h) {
     }
 }
 
-static int gltouchmenu_onTouchEvent(interface_touch_event_t action, int pointer_count, int pointer_idx, float *x_coords, float *y_coords) {
+static int64_t gltouchmenu_onTouchEvent(interface_touch_event_t action, int pointer_count, int pointer_idx, float *x_coords, float *y_coords) {
 
     if (!isAvailable) {
         return 0x0;
