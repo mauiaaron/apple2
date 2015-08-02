@@ -52,12 +52,18 @@
 #define BUTTON_SWITCH_THRESHOLD_DEFAULT 22
 #define BUTTON_TAP_DELAY_NANOS_DEFAULT 50000000
 
-static bool isAvailable = false; // Were there any OpenGL/memory errors on gltouchjoy initialization?
-static bool isShuttingDown = false;
-static bool isEnabled = true;    // Does player want touchjoy enabled?
-static bool ownsScreen = true;   // Does the touchjoy currently own the screen?
-static float minAlphaWhenOwnsScreen = 0;
-static float minAlpha = 0;
+// module globals
+static struct {
+    bool isAvailable;       // Were there any OpenGL/memory errors on gltouchjoy initialization?
+    bool isShuttingDown;
+    bool isCalibrating;     // Are we running in calibration mode?
+    bool isEnabled;         // Does player want touchjoy enabled?
+    bool ownsScreen;        // Does the touchjoy currently own the screen?
+    float minAlphaWhenOwnsScreen;
+    float minAlpha;
+    float screenDivider;
+    bool axisIsOnLeft;
+} joyglobals = { 0 };
 
 // viewport touch
 static struct {
@@ -141,14 +147,14 @@ static inline float _get_component_visibility(struct timespec timingBegin) {
     struct timespec deltat = { 0 };
 
     clock_gettime(CLOCK_MONOTONIC, &now);
-    float alpha = minAlpha;
+    float alpha = joyglobals.minAlpha;
     deltat = timespec_diff(timingBegin, now, NULL);
     if (deltat.tv_sec == 0) {
         alpha = 1.0;
         if (deltat.tv_nsec >= NANOSECONDS_PER_SECOND/2) {
             alpha -= ((float)deltat.tv_nsec-(NANOSECONDS_PER_SECOND/2)) / (float)(NANOSECONDS_PER_SECOND/2);
-            if (alpha < minAlpha) {
-                alpha = minAlpha;
+            if (alpha < joyglobals.minAlpha) {
+                alpha = joyglobals.minAlpha;
             }
         }
     }
@@ -259,7 +265,7 @@ static void *_button_tap_delayed_thread(void *dummyptr) {
         pthread_cond_wait(&buttons.tapDelayCond, &buttons.tapDelayMutex);
         TOUCH_JOY_LOG(">>> [DELAYEDTAP] begin ...");
 
-        if (UNLIKELY(isShuttingDown)) {
+        if (UNLIKELY(joyglobals.isShuttingDown)) {
             break;
         }
 
@@ -276,7 +282,7 @@ static void *_button_tap_delayed_thread(void *dummyptr) {
             joy_button1 = buttons.currButtonValue1;
             _setup_button_object_with_char(buttons.currButtonChar);
 
-            if ( (buttons.trackingIndex == TOUCH_NONE) || isShuttingDown) {
+            if ( (buttons.trackingIndex == TOUCH_NONE) || joyglobals.isShuttingDown) {
                 break;
             }
             pthread_cond_wait(&buttons.tapDelayCond, &buttons.tapDelayMutex);
@@ -284,7 +290,7 @@ static void *_button_tap_delayed_thread(void *dummyptr) {
             TOUCH_JOY_LOG(">>> [DELAYEDTAP] looping ...");
         } while (1);
 
-        if (UNLIKELY(isShuttingDown)) {
+        if (UNLIKELY(joyglobals.isShuttingDown)) {
             break;
         }
 
@@ -313,7 +319,7 @@ static void gltouchjoy_setup(void) {
     mdlDestroyModel(&axes.model);
     mdlDestroyModel(&buttons.model);
 
-    isShuttingDown = false;
+    joyglobals.isShuttingDown = false;
     assert((buttons.tapDelayThreadId == 0) && "setup called multiple times!");
     pthread_create(&buttons.tapDelayThreadId, NULL, (void *)&_button_tap_delayed_thread, (void *)NULL);
 
@@ -350,18 +356,18 @@ static void gltouchjoy_setup(void) {
     clock_gettime(CLOCK_MONOTONIC, &axes.timingBegin);
     clock_gettime(CLOCK_MONOTONIC, &buttons.timingBegin);
 
-    isAvailable = true;
+    joyglobals.isAvailable = true;
 }
 
 static void gltouchjoy_shutdown(void) {
     LOG("gltouchjoy_shutdown ...");
-    if (!isAvailable) {
+    if (!joyglobals.isAvailable) {
         return;
     }
 
-    isAvailable = false;
+    joyglobals.isAvailable = false;
 
-    isShuttingDown = true;
+    joyglobals.isShuttingDown = true;
     pthread_cond_signal(&buttons.tapDelayCond);
     if (pthread_join(buttons.tapDelayThreadId, NULL)) {
         ERRLOG("OOPS: pthread_join tap delay thread ...");
@@ -375,10 +381,10 @@ static void gltouchjoy_shutdown(void) {
 }
 
 static void gltouchjoy_render(void) {
-    if (!isAvailable) {
+    if (!joyglobals.isAvailable) {
         return;
     }
-    if (!isEnabled) {
+    if (!joyglobals.isEnabled) {
         return;
     }
 
@@ -552,13 +558,13 @@ static inline void _move_button_axis(int x, int y) {
 
 static int64_t gltouchjoy_onTouchEvent(interface_touch_event_t action, int pointer_count, int pointer_idx, float *x_coords, float *y_coords) {
 
-    if (!isAvailable) {
+    if (!joyglobals.isAvailable) {
         return 0x0LL;
     }
-    if (!isEnabled) {
+    if (!joyglobals.isEnabled) {
         return 0x0LL;
     }
-    if (!ownsScreen) {
+    if (!joyglobals.ownsScreen) {
         return 0x0LL;
     }
 
@@ -664,28 +670,28 @@ static int64_t gltouchjoy_onTouchEvent(interface_touch_event_t action, int point
 }
 
 static bool gltouchjoy_isTouchJoystickAvailable(void) {
-    return isAvailable;
+    return joyglobals.isAvailable;
 }
 
 static void gltouchjoy_setTouchJoystickEnabled(bool enabled) {
-    isEnabled = enabled;
+    joyglobals.isEnabled = enabled;
 }
 
 static void gltouchjoy_setTouchJoystickOwnsScreen(bool pwnd) {
-    ownsScreen = pwnd;
-    if (ownsScreen) {
-        minAlpha = minAlphaWhenOwnsScreen;
+    joyglobals.ownsScreen = pwnd;
+    if (joyglobals.ownsScreen) {
+        joyglobals.minAlpha = joyglobals.minAlphaWhenOwnsScreen;
     } else {
-        minAlpha = 0.0;
+        joyglobals.minAlpha = 0.0;
     }
 }
 
 static bool gltouchjoy_ownsScreen(void) {
-    return ownsScreen;
+    return joyglobals.ownsScreen;
 }
 
 static void _animation_showTouchJoystick(void) {
-    if (!isAvailable) {
+    if (!joyglobals.isAvailable) {
         return;
     }
     clock_gettime(CLOCK_MONOTONIC, &axes.timingBegin);
@@ -693,7 +699,7 @@ static void _animation_showTouchJoystick(void) {
 }
 
 static void _animation_hideTouchJoystick(void) {
-    if (!isAvailable) {
+    if (!joyglobals.isAvailable) {
         return;
     }
     axes.timingBegin = (struct timespec){ 0 };
@@ -775,6 +781,11 @@ static void _init_gltouchjoy(void) {
     buttons.tapDelayMutex = (pthread_mutex_t){ 0 };
     buttons.tapDelayCond = (pthread_cond_t)PTHREAD_COND_INITIALIZER;
     buttons.tapDelayNanos = BUTTON_TAP_DELAY_NANOS_DEFAULT;
+
+    joyglobals.isEnabled = true;
+    joyglobals.ownsScreen = true;
+    joyglobals.screenDivider = 0.5f;
+    joyglobals.axisIsOnLeft = true;
 
     video_backend->animation_showTouchJoystick = &_animation_showTouchJoystick;
     video_backend->animation_hideTouchJoystick = &_animation_hideTouchJoystick;
