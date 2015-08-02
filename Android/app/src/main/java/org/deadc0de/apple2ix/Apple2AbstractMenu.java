@@ -59,6 +59,10 @@ public abstract class Apple2AbstractMenu implements Apple2MenuView {
         return mSettingsView;
     }
 
+    public boolean isCalibrating() {
+        return false;
+    }
+
     // ------------------------------------------------------------------------
     // required overrides ...
 

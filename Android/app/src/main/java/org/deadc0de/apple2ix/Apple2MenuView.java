@@ -22,4 +22,6 @@ public interface Apple2MenuView {
     public void dismiss();
 
     public View getView();
+
+    public boolean isCalibrating();
 }

@@ -160,6 +160,31 @@ void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetTouchJoystickAxisSens
     joydriver_setTouchAxisSensitivity(multiplier);
 }
 
+void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetTouchJoystickButtonSwitchThreshold(JNIEnv *env, jclass cls, jint delta) {
+    LOG("nativeSetTouchJoystickButtonSwitchThreshold() : %d", delta);
+    joydriver_setButtonSwitchThreshold(delta);
+}
+
+void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeTouchJoystickSetScreenDivision(JNIEnv *env, jclass cls, jfloat division) {
+    LOG("nativeTouchJoystickSetScreenDivision() : %f", division);
+    joydriver_setScreenDivision(division);
+}
+
+void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeTouchJoystickSetAxisOnLeft(JNIEnv *env, jclass cls, jboolean axisIsOnLeft) {
+    LOG("nativeTouchJoystickSetAxisOnLeft() : %d", axisIsOnLeft);
+    joydriver_setAxisOnLeft(axisIsOnLeft);
+}
+
+void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeTouchJoystickBeginCalibrationMode(JNIEnv *env, jclass cls) {
+    LOG("nativeTouchJoystickBeginCalibrationMode() ...");
+    joydriver_beginCalibration();
+}
+
+void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeTouchJoystickEndCalibrationMode(JNIEnv *env, jclass cls) {
+    LOG("nativeTouchJoystickEndCalibrationMode() ...");
+    joydriver_endCalibration();
+}
+
 jint Java_org_deadc0de_apple2ix_Apple2Preferences_nativeGetCPUSpeed(JNIEnv *env, jclass cls) {
     LOG("nativeGetCPUSpeed() ...");
     return (jint)round(cpu_scale_factor * 100.0);

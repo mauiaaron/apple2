@@ -70,6 +70,9 @@ extern void (*joydriver_setTapDelay)(float secs);
 // set the touch axis sensitivity multiplier
 extern void (*joydriver_setTouchAxisSensitivity)(float multiplier);
 
+// set the touch button switch threshold
+extern void (*joydriver_setButtonSwitchThreshold)(int delta);
+
 // set the joystick variant
 extern void (*joydriver_setTouchVariant)(touchjoy_variant_t variant);
 
@@ -78,6 +81,18 @@ extern touchjoy_variant_t (*joydriver_getTouchVariant)(void);
 
 // set the axis visuals (these key values are also fired for keyboard variant)
 extern void (*joydriver_setTouchAxisValues)(char north, char west, char east, char south);
+
+// set screen divide between axis and buttons
+extern void (*joydriver_setScreenDivision)(float division);
+
+// swap axis and buttons sides
+extern void (*joydriver_setAxisOnLeft)(bool axisIsOnLeft);
+
+// begin calibration mode
+extern void (*joydriver_beginCalibration)(void);
+
+// end calibration mode
+extern void (*joydriver_endCalibration)(void);
 
 #endif // INTERFACE_TOUCH
 

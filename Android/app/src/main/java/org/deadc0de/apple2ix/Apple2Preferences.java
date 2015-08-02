@@ -157,7 +157,7 @@ public enum Apple2Preferences {
             return activity.getPreferences(Context.MODE_PRIVATE).getInt(toString(), 5);
         }
     },
-    AXIS_SENSITIVIY {
+    JOYSTICK_AXIS_SENSITIVIY {
         @Override
         public void load(Apple2Activity activity) {
             float sensitivity = floatValue(activity);
@@ -166,23 +166,35 @@ public enum Apple2Preferences {
 
         @Override
         public int intValue(Apple2Activity activity) {
-            final int pivot = AXIS_SENSITIVITY_DEC_NUMCHOICES;
+            final int pivot = JOYSTICK_AXIS_SENSITIVITY_DEC_NUMCHOICES;
             return activity.getPreferences(Context.MODE_PRIVATE).getInt(toString(), pivot);
         }
 
         @Override
         public float floatValue(Apple2Activity activity) {
             int tick = intValue(activity);
-            final int pivot = AXIS_SENSITIVITY_DEC_NUMCHOICES;
+            final int pivot = JOYSTICK_AXIS_SENSITIVITY_DEC_NUMCHOICES;
             float sensitivity = 1.f;
             if (tick < pivot) {
                 int decAmount = (pivot - tick);
-                sensitivity -= (AXIS_SENSITIVITY_DEC * decAmount);
+                sensitivity -= (JOYSTICK_AXIS_SENSITIVITY_DEC_STEP * decAmount);
             } else if (tick > pivot) {
                 int incAmount = (tick - pivot);
-                sensitivity += (AXIS_SENSITIVITY_INC * incAmount);
+                sensitivity += (JOYSTICK_AXIS_SENSITIVITY_INC_STEP * incAmount);
             }
             return sensitivity;
+        }
+    },
+    JOYSTICK_BUTTON_THRESHOLD {
+        @Override
+        public void load(Apple2Activity activity) {
+            int tick = intValue(activity);
+            nativeSetTouchJoystickButtonSwitchThreshold(tick * JOYSTICK_BUTTON_THRESHOLD_STEP);
+        }
+
+        @Override
+        public int intValue(Apple2Activity activity) {
+            return activity.getPreferences(Context.MODE_PRIVATE).getInt(toString(), 5);
         }
     },
     JOYSTICK_TAP_BUTTON {
@@ -229,6 +241,29 @@ public enum Apple2Preferences {
         @Override
         public int intValue(Apple2Activity activity) {
             return activity.getPreferences(Context.MODE_PRIVATE).getInt(toString(), TouchJoystickButtons.BUTTON2.ordinal());
+        }
+    },
+    JOYSTICK_AXIS_ON_LEFT {
+        @Override
+        public void load(Apple2Activity activity) {
+            nativeTouchJoystickSetAxisOnLeft(booleanValue(activity));
+        }
+
+        @Override
+        public boolean booleanValue(Apple2Activity activity) {
+            return activity.getPreferences(Context.MODE_PRIVATE).getBoolean(toString(), true);
+        }
+    },
+    JOYSTICK_DIVIDER {
+        @Override
+        public void load(Apple2Activity activity) {
+            int tick = intValue(activity);
+            nativeTouchJoystickSetScreenDivision(((float) tick / JOYSTICK_DIVIDER_NUM_CHOICES));
+        }
+
+        @Override
+        public int intValue(Apple2Activity activity) {
+            return activity.getPreferences(Context.MODE_PRIVATE).getInt(toString(), JOYSTICK_DIVIDER_NUM_CHOICES>>1);
         }
     };
 
@@ -298,19 +333,24 @@ public enum Apple2Preferences {
     public final static int DECENT_AMOUNT_OF_CHOICES = 20;
     public final static int AUDIO_LATENCY_NUM_CHOICES = DECENT_AMOUNT_OF_CHOICES;
     public final static int ALPHA_SLIDER_NUM_CHOICES = DECENT_AMOUNT_OF_CHOICES;
+    public final static int JOYSTICK_DIVIDER_NUM_CHOICES = DECENT_AMOUNT_OF_CHOICES;
+
     public final static int TAPDELAY_NUM_CHOICES = DECENT_AMOUNT_OF_CHOICES;
     public final static float TAPDELAY_SCALE = 0.5f;
+
     public final static String TAG = "Apple2Preferences";
 
-    public final static float AXIS_SENSITIVITY_MIN = 0.25f;
-    public final static float AXIS_SENSITIVITY_DEFAULT = 1.f;
-    public final static float AXIS_SENSITIVITY_MAX = 4.f;
-    public final static float AXIS_SENSITIVITY_DEC = 0.05f;
-    public final static float AXIS_SENSITIVITY_INC = 0.25f;
-    public final static int AXIS_SENSITIVITY_DEC_NUMCHOICES = (int) ((AXIS_SENSITIVITY_DEFAULT - AXIS_SENSITIVITY_MIN) / AXIS_SENSITIVITY_DEC); // 15
-    public final static int AXIS_SENSITIVITY_INC_NUMCHOICES = (int) ((AXIS_SENSITIVITY_MAX - AXIS_SENSITIVITY_DEFAULT) / AXIS_SENSITIVITY_INC); // 12
-    public final static int AXIS_SENSITIVITY_NUM_CHOICES = AXIS_SENSITIVITY_DEC_NUMCHOICES + AXIS_SENSITIVITY_INC_NUMCHOICES; // 15 + 12
+    public final static int JOYSTICK_BUTTON_THRESHOLD_NUM_CHOICES = DECENT_AMOUNT_OF_CHOICES;
+    public final static int JOYSTICK_BUTTON_THRESHOLD_STEP = 5;
 
+    public final static float JOYSTICK_AXIS_SENSITIVITY_MIN = 0.25f;
+    public final static float JOYSTICK_AXIS_SENSITIVITY_DEFAULT = 1.f;
+    public final static float JOYSTICK_AXIS_SENSITIVITY_MAX = 4.f;
+    public final static float JOYSTICK_AXIS_SENSITIVITY_DEC_STEP = 0.05f;
+    public final static float JOYSTICK_AXIS_SENSITIVITY_INC_STEP = 0.25f;
+    public final static int JOYSTICK_AXIS_SENSITIVITY_DEC_NUMCHOICES = (int) ((JOYSTICK_AXIS_SENSITIVITY_DEFAULT - JOYSTICK_AXIS_SENSITIVITY_MIN) / JOYSTICK_AXIS_SENSITIVITY_DEC_STEP); // 15
+    public final static int JOYSTICK_AXIS_SENSITIVITY_INC_NUMCHOICES = (int) ((JOYSTICK_AXIS_SENSITIVITY_MAX - JOYSTICK_AXIS_SENSITIVITY_DEFAULT) / JOYSTICK_AXIS_SENSITIVITY_INC_STEP); // 12
+    public final static int JOYSTICK_AXIS_SENSITIVITY_NUM_CHOICES = JOYSTICK_AXIS_SENSITIVITY_DEC_NUMCHOICES + JOYSTICK_AXIS_SENSITIVITY_INC_NUMCHOICES; // 15 + 12
 
     // set and apply
 
@@ -387,7 +427,7 @@ public enum Apple2Preferences {
 
     private static native void nativeSetAudioLatency(float latencySecs);
 
-    private static native void nativeSetCurrentTouchDevice(int device);
+    public static native void nativeSetCurrentTouchDevice(int device);
 
     private static native void nativeSetTouchJoystickButtonTypes(int down, int north, int south);
 
@@ -395,7 +435,9 @@ public enum Apple2Preferences {
 
     private static native void nativeSetTouchJoystickAxisSensitivity(float multiplier);
 
-    private static native void nativeSetTouchMenuEnabled(boolean enabled);
+    private static native void nativeSetTouchJoystickButtonSwitchThreshold(int delta);
+
+    public static native void nativeSetTouchMenuEnabled(boolean enabled);
 
     private static native void nativeSetTouchMenuVisibility(float alpha);
 
@@ -404,4 +446,12 @@ public enum Apple2Preferences {
     public static native int nativeGetCPUSpeed();
 
     public static native void nativeSetCPUSpeed(int percentSpeed);
+
+    public static native void nativeTouchJoystickSetScreenDivision(float division);
+
+    public static native void nativeTouchJoystickSetAxisOnLeft(boolean axisIsOnLeft);
+
+    public static native void nativeTouchJoystickBeginCalibrationMode();
+
+    public static native void nativeTouchJoystickEndCalibrationMode();
 }

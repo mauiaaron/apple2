@@ -265,8 +265,13 @@ void (*joydriver_setTouchButtonValues)(char button0Val, char button1Val, char bu
 void (*joydriver_setTouchButtonTypes)(touchjoy_button_type_t down, touchjoy_button_type_t north, touchjoy_button_type_t south) = NULL;
 void (*joydriver_setTapDelay)(float secs) = NULL;
 void (*joydriver_setTouchAxisSensitivity)(float multiplier) = NULL;
+void (*joydriver_setButtonSwitchThreshold)(int delta) = NULL;
 void (*joydriver_setTouchVariant)(touchjoy_variant_t variant) = NULL;
 touchjoy_variant_t (*joydriver_getTouchVariant)(void) = NULL;
 void (*joydriver_setTouchAxisValues)(char up, char left, char right, char down) = NULL;
+void (*joydriver_setScreenDivision)(float division) = NULL;
+void (*joydriver_setAxisOnLeft)(bool axisIsOnLeft) = NULL;
+void (*joydriver_beginCalibration)(void) = NULL;
+void (*joydriver_endCalibration)(void) = NULL;
 #endif
 

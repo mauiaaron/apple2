@@ -40,7 +40,7 @@ public class Apple2SettingsMenu extends Apple2AbstractMenu {
 
     @Override
     public final boolean areAllItemsEnabled() {
-        return true;
+        return false;
     }
 
     @Override
@@ -48,7 +48,7 @@ public class Apple2SettingsMenu extends Apple2AbstractMenu {
         if (position < 0 || position >= SETTINGS.size) {
             throw new ArrayIndexOutOfBoundsException();
         }
-        return true;
+        return position != SETTINGS.JOYSTICK_TAPDELAY.ordinal() && position != SETTINGS.JOYSTICK_BUTTON_THRESHOLD.ordinal();
     }
 
     enum SETTINGS implements Apple2AbstractMenu.IMenuEnum {
@@ -94,6 +94,7 @@ public class Apple2SettingsMenu extends Apple2AbstractMenu {
                     public void saveInt(int progress) {
                         Apple2Preferences.TOUCH_MENU_VISIBILITY.saveInt(activity, progress);
                     }
+
                     @Override
                     public int intValue() {
                         return Apple2Preferences.TOUCH_MENU_VISIBILITY.intValue(activity);
@@ -172,7 +173,97 @@ public class Apple2SettingsMenu extends Apple2AbstractMenu {
 
             @Override
             public void handleSelection(final Apple2Activity activity, final Apple2AbstractMenu settingsMenu, boolean isChecked) {
-                //new Apple2JoystickSettingsMenu(activity).show();
+                new Apple2KeypadSettingsMenu(activity).show();
+            }
+        },
+        JOYSTICK_TAPDELAY {
+            @Override
+            public final String getTitle(Apple2Activity activity) {
+                return "";
+            }
+
+            @Override
+            public final String getSummary(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.joystick_button_tapdelay_summary);
+            }
+
+            @Override
+            public View getView(final Apple2Activity activity, View convertView) {
+                return _sliderView(activity, this, Apple2Preferences.TAPDELAY_NUM_CHOICES, new IPreferenceSlider() {
+                    @Override
+                    public void saveInt(int progress) {
+                        Apple2Preferences.JOYSTICK_TAPDELAY.saveInt(activity, progress);
+                    }
+
+                    @Override
+                    public int intValue() {
+                        return Apple2Preferences.JOYSTICK_TAPDELAY.intValue(activity);
+                    }
+
+                    @Override
+                    public void showValue(int progress, final TextView seekBarValue) {
+                        seekBarValue.setText("" + (((float) progress / Apple2Preferences.TAPDELAY_NUM_CHOICES) * Apple2Preferences.TAPDELAY_SCALE));
+                    }
+                });
+            }
+        },
+        JOYSTICK_AXIS_ON_LEFT {
+            @Override
+            public final String getTitle(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.joystick_axisleft);
+            }
+
+            @Override
+            public final String getSummary(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.joystick_axisleft_summary);
+            }
+
+            @Override
+            public View getView(final Apple2Activity activity, View convertView) {
+                convertView = _basicView(activity, this, convertView);
+                CheckBox cb = _addCheckbox(activity, this, convertView, Apple2Preferences.JOYSTICK_AXIS_ON_LEFT.booleanValue(activity));
+                cb.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                    @Override
+                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                        Apple2Preferences.JOYSTICK_AXIS_ON_LEFT.saveBoolean(activity, isChecked);
+                    }
+                });
+                return convertView;
+            }
+        },
+        JOYSTICK_BUTTON_THRESHOLD {
+            @Override
+            public final String getTitle(Apple2Activity activity) {
+                return "";
+            }
+
+            @Override
+            public final String getSummary(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.joystick_button_threshold_summary);
+            }
+
+            @Override
+            public View getView(final Apple2Activity activity, View convertView) {
+                return _sliderView(activity, this, Apple2Preferences.JOYSTICK_BUTTON_THRESHOLD_NUM_CHOICES, new IPreferenceSlider() {
+                    @Override
+                    public void saveInt(int progress) {
+                        if (progress == 0) {
+                            progress = 1;
+                        }
+                        Apple2Preferences.JOYSTICK_BUTTON_THRESHOLD.saveInt(activity, progress);
+                    }
+
+                    @Override
+                    public int intValue() {
+                        return Apple2Preferences.JOYSTICK_BUTTON_THRESHOLD.intValue(activity);
+                    }
+
+                    @Override
+                    public void showValue(int progress, final TextView seekBarValue) {
+                        int threshold = progress * Apple2Preferences.JOYSTICK_BUTTON_THRESHOLD_STEP;
+                        seekBarValue.setText("" + threshold + " pts");
+                    }
+                });
             }
         },
         KEYBOARD_CONFIGURE {

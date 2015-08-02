@@ -400,7 +400,7 @@ public class Apple2Activity extends Activity {
             }
 
             Apple2MenuView apple2MenuView = peekApple2View();
-            if (apple2MenuView != null) {
+            if ((apple2MenuView != null) && (!apple2MenuView.isCalibrating())) {
                 break;
             }
 
@@ -526,6 +526,19 @@ public class Apple2Activity extends Activity {
         }
 
         return mMenuStack.get(lastIndex);
+    }
+
+    public synchronized Apple2MenuView peekApple2View(int index) {
+        int lastIndex = mMenuStack.size() - 1;
+        if (lastIndex < 0) {
+            return null;
+        }
+
+        try {
+            return mMenuStack.get(index);
+        } catch (IndexOutOfBoundsException e) {
+            return null;
+        }
     }
 
     public synchronized Apple2MenuView popApple2View(Apple2MenuView apple2MenuView) {

@@ -436,20 +436,38 @@ static void gltouchjoy_render(void) {
 static void gltouchjoy_reshape(int w, int h) {
     LOG("gltouchjoy_reshape(%d, %d)", w, h);
 
-    touchport.axisX = 0;
-    touchport.axisY = 0;
-    touchport.buttonY = 0;
+    if (joyglobals.axisIsOnLeft) {
+        touchport.axisX = 0;
+        touchport.axisY = 0;
+        touchport.buttonY = 0;
 
-    if (w > touchport.width) {
-        touchport.width = w;
-        touchport.axisXMax = w>>1;
-        touchport.buttonX = w>>1;
-        touchport.buttonXMax = w;
-    }
-    if (h > touchport.height) {
-        touchport.height = h;
-        touchport.axisYMax = h;
-        touchport.buttonYMax = h;
+        if (w >= touchport.width) {
+            touchport.width = w;
+            touchport.axisXMax = (w * joyglobals.screenDivider);
+            touchport.buttonX = (w * joyglobals.screenDivider);
+            touchport.buttonXMax = w;
+        }
+        if (h >= touchport.height) {
+            touchport.height = h;
+            touchport.axisYMax = h;
+            touchport.buttonYMax = h;
+        }
+    } else {
+        touchport.buttonX = 0;
+        touchport.buttonY = 0;
+        touchport.axisY = 0;
+
+        if (w >= touchport.width) {
+            touchport.width = w;
+            touchport.buttonXMax = (w * joyglobals.screenDivider);
+            touchport.axisX = (w * joyglobals.screenDivider);
+            touchport.axisXMax = w;
+        }
+        if (h >= touchport.height) {
+            touchport.height = h;
+            touchport.buttonYMax = h;
+            touchport.axisYMax = h;
+        }
     }
 }
 
@@ -732,6 +750,10 @@ static void gltouchjoy_setTouchAxisSensitivity(float multiplier) {
     axes.multiplier = multiplier;
 }
 
+static void gltouchjoy_setButtonSwitchThreshold(int delta) {
+    buttons.switchThreshold = delta;
+}
+
 static void gltouchjoy_setTouchVariant(touchjoy_variant_t axisType) {
     axes.type = axisType;
     _setup_axis_object(axes.model);
@@ -747,6 +769,26 @@ static void gltouchjoy_setTouchAxisValues(char north, char west, char east, char
     axes.eastChar  = east;
     axes.southChar = south;
     _setup_axis_object(axes.model);
+}
+
+static void gltouchjoy_setScreenDivision(float screenDivider) {
+    joyglobals.screenDivider = screenDivider;
+    // force reshape here to apply changes ...
+    gltouchjoy_reshape(touchport.width, touchport.height);
+}
+
+static void gltouchjoy_setAxisOnLeft(bool axisIsOnLeft) {
+    joyglobals.axisIsOnLeft = axisIsOnLeft;
+    // force reshape here to apply changes ...
+    gltouchjoy_reshape(touchport.width, touchport.height);
+}
+
+static void gltouchjoy_beginCalibration(void) {
+    joyglobals.isCalibrating = true;
+}
+
+static void gltouchjoy_endCalibration(void) {
+    joyglobals.isCalibrating = false;
 }
 
 __attribute__((constructor(CTOR_PRIORITY_LATE)))
@@ -798,9 +840,14 @@ static void _init_gltouchjoy(void) {
     joydriver_setTouchButtonTypes = &gltouchjoy_setTouchButtonTypes;
     joydriver_setTapDelay = &gltouchjoy_setTapDelay;
     joydriver_setTouchAxisSensitivity = &gltouchjoy_setTouchAxisSensitivity;
+    joydriver_setButtonSwitchThreshold = &gltouchjoy_setButtonSwitchThreshold;
     joydriver_setTouchVariant = &gltouchjoy_setTouchVariant;
     joydriver_getTouchVariant = &gltouchjoy_getTouchVariant;
     joydriver_setTouchAxisValues = &gltouchjoy_setTouchAxisValues;
+    joydriver_setScreenDivision = &gltouchjoy_setScreenDivision;
+    joydriver_setAxisOnLeft = &gltouchjoy_setAxisOnLeft;
+    joydriver_beginCalibration = &gltouchjoy_beginCalibration;
+    joydriver_endCalibration = &gltouchjoy_endCalibration;
 
     glnode_registerNode(RENDER_LOW, (GLNode){
         .setup = &gltouchjoy_setup,

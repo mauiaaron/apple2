@@ -281,12 +281,6 @@ jlong Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnTouch(JNIEnv *env, jobje
         return 0x0LL;
     }
 
-    if (cpu_isPaused()) {
-        LOG("UNPAUSING NATIVE CPU THREAD");
-        cpu_resume();
-        return 0x0LL;
-    }
-
     jfloat *x_coords = (*env)->GetFloatArrayElements(env, xCoords, 0);
     jfloat *y_coords = (*env)->GetFloatArrayElements(env, yCoords, 0);
 

@@ -53,6 +53,10 @@ public class Apple2SplashScreen implements Apple2MenuView {
         });
     }
 
+    public final boolean isCalibrating() {
+        return false;
+    }
+
     public void show() {
         if (isShowing()) {
             return;
