@@ -48,7 +48,6 @@ class Apple2View extends GLSurfaceView {
     private final static boolean DEBUG = false;
 
     private Apple2Activity mActivity = null;
-    private Apple2MainMenu mMainMenu = null;
 
     public Apple2View(Apple2Activity activity) {
         super(activity.getApplication());
@@ -79,28 +78,6 @@ class Apple2View extends GLSurfaceView {
 
         /* Set the renderer responsible for frame rendering */
         setRenderer(new Renderer());
-    }
-
-    public void showMainMenu() {
-        if (mMainMenu != null) {
-            Apple2SettingsMenu settingsMenu = mMainMenu.getSettingsMenu();
-            Apple2DisksMenu disksMenu = mMainMenu.getDisksMenu();
-            if (! (settingsMenu.isShowing() || disksMenu.isShowing()) ) {
-                mMainMenu.show();
-            }
-        }
-    }
-
-    public Apple2MainMenu getMainMenu() {
-        return mMainMenu;
-    }
-
-    public Apple2SettingsMenu getSettingsMenu() {
-        return (mMainMenu == null) ? null : mMainMenu.getSettingsMenu();
-    }
-
-    public Apple2DisksMenu getDisksMenu() {
-        return (mMainMenu == null) ? null : mMainMenu.getDisksMenu();
     }
 
     private static class ContextFactory implements GLSurfaceView.EGLContextFactory {
@@ -323,9 +300,6 @@ class Apple2View extends GLSurfaceView {
 
         public void onSurfaceChanged(GL10 gl, int width, int height) {
             Apple2View.this.mActivity.graphicsInitialized(width, height);
-            if (Apple2View.this.mMainMenu == null) {
-                Apple2View.this.mMainMenu = new Apple2MainMenu(Apple2View.this.mActivity, Apple2View.this);
-            }
         }
 
         public void onSurfaceCreated(GL10 gl, EGLConfig config) {

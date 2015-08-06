@@ -45,10 +45,11 @@ public class Apple2Activity extends Activity {
     private boolean mSetUncaughtExceptionHandler = false;
 
     private Apple2View mView = null;
+    private Apple2SplashScreen mSplashScreen = null;
+    private Apple2MainMenu mMainMenu = null;
     private ArrayList<Apple2MenuView> mMenuStack = new ArrayList<Apple2MenuView>();
     private AlertDialog mQuitDialog = null;
     private AlertDialog mRebootDialog = null;
-    private Apple2SplashScreen mSplashScreen = null;
 
     private int mWidth = 0;
     private int mHeight = 0;
@@ -298,25 +299,8 @@ public class Apple2Activity extends Activity {
 
         // Apparently not good to leave popup/dialog windows showing when backgrounding.
         // Dismiss these popups to avoid android.view.WindowLeaked issues
-        Apple2MainMenu mainMenu = mView.getMainMenu();
-        if (mainMenu != null) {
-            mainMenu.dismiss();
-        }
-        if (mQuitDialog != null && mQuitDialog.isShowing()) {
-            mQuitDialog.dismiss();
-        }
-        if (mRebootDialog != null && mRebootDialog.isShowing()) {
-            mRebootDialog.dismiss();
-        }
-
-        // Get rid of the menu hierarchy
-        Apple2MenuView apple2MenuView = null;
-        do {
-            apple2MenuView = popApple2View();
-            if (apple2MenuView != null) {
-                apple2MenuView.dismiss();
-            }
-        } while (apple2MenuView != null);
+        // TODO FIXME : need to test/fix other popups generated in other menus ...
+        dismissAllMenus();
 
         nativeOnPause(true);
     }
@@ -333,15 +317,15 @@ public class Apple2Activity extends Activity {
     @Override
     public boolean onKeyUp(int keyCode, KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_BACK) {
-            Apple2MenuView apple2MenuView = popApple2View();
+            Apple2MenuView apple2MenuView = peekApple2View();
             if (apple2MenuView == null) {
-                mView.showMainMenu();
+                showMainMenu();
             } else {
                 apple2MenuView.dismiss();
             }
             return true;
         } else if (keyCode == KeyEvent.KEYCODE_MENU) {
-            mView.showMainMenu();
+            showMainMenu();
             return true;
         } else if ((keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) || (keyCode == KeyEvent.KEYCODE_VOLUME_MUTE) || (keyCode == KeyEvent.KEYCODE_VOLUME_UP)) {
             return false;
@@ -394,8 +378,7 @@ public class Apple2Activity extends Activity {
     public boolean onTouchEvent(MotionEvent event) {
         do {
 
-            Apple2MainMenu mainMenu = mView.getMainMenu();
-            if (mainMenu == null) {
+            if (mMainMenu == null) {
                 break;
             }
 
@@ -420,7 +403,7 @@ public class Apple2Activity extends Activity {
             }
 
             if ((nativeFlags & NATIVE_TOUCH_REQUEST_SHOW_MENU) != 0) {
-                mainMenu.show();
+                mMainMenu.show();
             }
 
             if ((nativeFlags & NATIVE_TOUCH_KEY_TAP) != 0) {
@@ -470,6 +453,10 @@ public class Apple2Activity extends Activity {
     }
 
     public void graphicsInitialized(int w, int h) {
+        if (mMainMenu == null) {
+            mMainMenu = new Apple2MainMenu(this, mView);
+        }
+
         if (w < h) {
             // assure landscape dimensions
             final int w_ = w;
@@ -484,6 +471,20 @@ public class Apple2Activity extends Activity {
         nativeGraphicsInitialized(w, h);
 
         showSplashScreen();
+    }
+
+    public void showMainMenu() {
+        if (mMainMenu != null) {
+            Apple2SettingsMenu settingsMenu = mMainMenu.getSettingsMenu();
+            Apple2DisksMenu disksMenu = mMainMenu.getDisksMenu();
+            if (! (settingsMenu.isShowing() || disksMenu.isShowing()) ) {
+                mMainMenu.show();
+            }
+        }
+    }
+
+    public Apple2MainMenu getMainMenu() {
+        return mMainMenu;
     }
 
     public synchronized void showSplashScreen() {
@@ -528,17 +529,25 @@ public class Apple2Activity extends Activity {
         return mMenuStack.get(lastIndex);
     }
 
-    public synchronized Apple2MenuView peekApple2View(int index) {
-        int lastIndex = mMenuStack.size() - 1;
-        if (lastIndex < 0) {
-            return null;
+    public void dismissAllMenus() {
+        if (mMainMenu != null) {
+            mMainMenu.dismiss();
+        }
+        if (mQuitDialog != null && mQuitDialog.isShowing()) {
+            mQuitDialog.dismiss();
+        }
+        if (mRebootDialog != null && mRebootDialog.isShowing()) {
+            mRebootDialog.dismiss();
         }
 
-        try {
-            return mMenuStack.get(index);
-        } catch (IndexOutOfBoundsException e) {
-            return null;
-        }
+        // Get rid of the menu hierarchy
+        Apple2MenuView apple2MenuView;
+        do {
+            apple2MenuView = popApple2View();
+            if (apple2MenuView != null) {
+                apple2MenuView.dismissAll();
+            }
+        } while (apple2MenuView != null);
     }
 
     public synchronized Apple2MenuView popApple2View(Apple2MenuView apple2MenuView) {
@@ -565,10 +574,6 @@ public class Apple2Activity extends Activity {
 
     public Apple2View getView() {
         return mView;
-    }
-
-    public String getDataDir() {
-        return mDataDir;
     }
 
     public int getWidth() {
@@ -618,7 +623,7 @@ public class Apple2Activity extends Activity {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
                     nativeReboot();
-                    Apple2Activity.this.mView.getMainMenu().dismiss();
+                    Apple2Activity.this.mMainMenu.dismiss();
                 }
             }).setNegativeButton(R.string.no, null).create();
             /*mRebootDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {

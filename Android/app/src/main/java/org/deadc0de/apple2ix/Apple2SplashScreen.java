@@ -46,7 +46,7 @@ public class Apple2SplashScreen implements Apple2MenuView {
         prefsButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Apple2SettingsMenu settingsMenu = mActivity.getView().getMainMenu().getSettingsMenu();
+                Apple2SettingsMenu settingsMenu = mActivity.getMainMenu().getSettingsMenu();
                 settingsMenu.show();
                 Apple2SplashScreen.this.dismiss();
             }
