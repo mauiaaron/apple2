@@ -3,6 +3,7 @@
     package="org.deadc0de.apple2ix" >
 
     <uses-feature android:glEsVersion="0x00020000" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
 
     <supports-screens
         android:largeScreens="true"
