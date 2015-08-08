@@ -20,6 +20,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CheckedTextView;
 import android.widget.ImageView;
@@ -211,6 +212,14 @@ public abstract class Apple2AbstractMenu implements Apple2MenuView {
 
         LayoutInflater inflater = (LayoutInflater) mActivity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         mSettingsView = inflater.inflate(R.layout.activity_settings, null, false);
+
+        final Button cancelButton = (Button) mSettingsView.findViewById(R.id.cancelButton);
+        cancelButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mActivity.dismissAllMenus();
+            }
+        });
 
         ListView settingsList = (ListView) mSettingsView.findViewById(R.id.listView_settings);
         settingsList.setEnabled(true);
