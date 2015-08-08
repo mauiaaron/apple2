@@ -14,9 +14,12 @@ package org.deadc0de.apple2ix;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.util.Log;
+
+import java.io.File;
 
 public enum Apple2Preferences {
-    PREFS_CONFIGURED {
+    ASSETS_CONFIGURED {
         @Override
         public void load(Apple2Activity activity) {
             // ...
@@ -25,6 +28,60 @@ public enum Apple2Preferences {
         @Override
         public void saveBoolean(Apple2Activity activity, boolean ignored) {
             activity.getPreferences(Context.MODE_PRIVATE).edit().putBoolean(toString(), true).apply();
+        }
+    },
+    CURRENT_DISK_PATH {
+        @Override
+        public void load(final Apple2Activity activity) {
+            Apple2MainMenu mainMenu = activity.getMainMenu();
+            if (mainMenu != null) {
+                mainMenu.getDisksMenu().setPathStackJSON(stringValue(activity));
+            }
+        }
+
+        @Override
+        public String stringValue(Apple2Activity activity) {
+            return activity.getPreferences(Context.MODE_PRIVATE).getString(toString(), "[]");
+        }
+
+        @Override
+        public void saveString(Apple2Activity activity, String value) {
+            activity.getPreferences(Context.MODE_PRIVATE).edit().putString(toString(), value).apply();
+            //load(activity);
+        }
+    },
+    CURRENT_DISK_A {
+        @Override
+        public void load(final Apple2Activity activity) {
+            /* ... */
+        }
+
+        @Override
+        public boolean booleanValue(Apple2Activity activity) {
+            return activity.getPreferences(Context.MODE_PRIVATE).getBoolean(toString(), true);
+        }
+
+        @Override
+        public void saveBoolean(Apple2Activity activity, boolean value) {
+            activity.getPreferences(Context.MODE_PRIVATE).edit().putBoolean(toString(), value).apply();
+            //load(activity);
+        }
+    },
+    CURRENT_DISK_RO {
+        @Override
+        public void load(final Apple2Activity activity) {
+            /* ... */
+        }
+
+        @Override
+        public boolean booleanValue(Apple2Activity activity) {
+            return activity.getPreferences(Context.MODE_PRIVATE).getBoolean(toString(), true);
+        }
+
+        @Override
+        public void saveBoolean(Apple2Activity activity, boolean value) {
+            activity.getPreferences(Context.MODE_PRIVATE).edit().putBoolean(toString(), value).apply();
+            //load(activity);
         }
     },
     CPU_SPEED_PERCENT {
@@ -368,6 +425,11 @@ public enum Apple2Preferences {
         throw new RuntimeException("DENIED! You're doing it wrong! =P");
     }
 
+    public void saveString(Apple2Activity activity, String value) {
+        activity.getPreferences(Context.MODE_PRIVATE).edit().putString(toString(), value).apply();
+        load(activity);
+    }
+
     public void saveHiresColor(Apple2Activity activity, HiresColor value) {
         activity.getPreferences(Context.MODE_PRIVATE).edit().putInt(toString(), value.ordinal()).apply();
         load(activity);
@@ -400,6 +462,10 @@ public enum Apple2Preferences {
 
     public float floatValue(Apple2Activity activity) {
         return (float) activity.getPreferences(Context.MODE_PRIVATE).getInt(toString(), 0);
+    }
+
+    public String stringValue(Apple2Activity activity) {
+        return activity.getPreferences(Context.MODE_PRIVATE).getString(toString(), null);
     }
 
     public static void loadPreferences(Apple2Activity activity) {

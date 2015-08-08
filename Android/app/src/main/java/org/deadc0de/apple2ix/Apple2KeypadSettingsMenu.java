@@ -63,7 +63,28 @@ public class Apple2KeypadSettingsMenu extends Apple2AbstractMenu {
 
             @Override
             public void handleSelection(final Apple2Activity activity, final Apple2AbstractMenu settingsMenu, boolean isChecked) {
-                //new Apple2KeypadChooser(activity).show();
+                ArrayList<Apple2MenuView> viewStack = new ArrayList<>();
+                {
+                    int idx = 0;
+                    while (true) {
+                        Apple2MenuView apple2MenuView = activity.peekApple2View(idx);
+                        if (apple2MenuView == null) {
+                            break;
+                        }
+                        viewStack.add(apple2MenuView);
+                        ++idx;
+                    }
+                }
+
+                Apple2KeypadChooser chooser = new Apple2KeypadChooser(activity, viewStack);
+
+                // show this new view...
+                chooser.show();
+
+                // ...with nothing else underneath 'cept the emulator OpenGL layer
+                for (Apple2MenuView apple2MenuView : viewStack) {
+                    activity.popApple2View(apple2MenuView);
+                }
             }
         },
         KEYPAD_CALIBRATE {
@@ -79,7 +100,7 @@ public class Apple2KeypadSettingsMenu extends Apple2AbstractMenu {
 
             @Override
             public void handleSelection(Apple2Activity activity, Apple2AbstractMenu settingsMenu, boolean isChecked) {
-                ArrayList<Apple2MenuView> viewStack = new ArrayList<Apple2MenuView>();
+                ArrayList<Apple2MenuView> viewStack = new ArrayList<>();
                 {
                     int idx = 0;
                     while (true) {

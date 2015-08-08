@@ -14,8 +14,6 @@ package org.deadc0de.apple2ix;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
 import android.graphics.Rect;
 import android.media.AudioManager;
 import android.os.Build;
@@ -29,19 +27,13 @@ import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.widget.FrameLayout;
 
-import java.io.File;
-import java.io.InputStream;
-import java.io.IOException;
-import java.io.FileOutputStream;
 import java.util.ArrayList;
 
 public class Apple2Activity extends Activity {
 
     private final static String TAG = "Apple2Activity";
-    private final static int BUF_SZ = 4096;
     private final static int MAX_FINGERS = 32;// HACK ...
 
-    private String mDataDir = null;
     private boolean mSetUncaughtExceptionHandler = false;
 
     private Apple2View mView = null;
@@ -103,70 +95,6 @@ public class Apple2Activity extends Activity {
 
     public native void nativeChooseDisk(String path, boolean driveA, boolean readOnly);
 
-
-    // HACK NOTE 2015/02/22 : Apparently native code cannot easily access stuff in the APK ... so copy various resources
-    // out of the APK and into the /data/data/... for ease of access.  Because this is FOSS software we don't care about
-    // security or DRM for these assets =)
-    private String _firstTimeInitialization() {
-
-        String dataDir = null;
-        try {
-            PackageManager pm = getPackageManager();
-            PackageInfo pi = pm.getPackageInfo(getPackageName(), 0);
-            dataDir = pi.applicationInfo.dataDir;
-        } catch (PackageManager.NameNotFoundException e) {
-            Log.e(TAG, "" + e);
-            System.exit(1);
-        }
-
-        if (Apple2Preferences.PREFS_CONFIGURED.booleanValue(this)) {
-            return dataDir;
-        }
-
-        Log.d(TAG, "First time copying stuff-n-things out of APK for ease-of-NDK access...");
-
-        try {
-            String[] shaders = getAssets().list("shaders");
-            for (String shader : shaders) {
-                _copyFile(dataDir, "shaders", shader);
-            }
-            String[] disks = getAssets().list("disks");
-            for (String disk : disks) {
-                _copyFile(dataDir, "disks", disk);
-            }
-        } catch (IOException e) {
-            Log.e(TAG, "problem copying resources : " + e);
-            System.exit(1);
-        }
-
-        Log.d(TAG, "Saving default preferences");
-        Apple2Preferences.PREFS_CONFIGURED.saveBoolean(this, true);
-
-        return dataDir;
-    }
-
-    private void _copyFile(String dataDir, String subdir, String assetName)
-            throws IOException {
-        String outputPath = dataDir + File.separator + subdir;
-        Log.d(TAG, "Copying " + subdir + File.separator + assetName + " to " + outputPath + File.separator + assetName + " ...");
-        new File(outputPath).mkdirs();
-
-        InputStream is = getAssets().open(subdir + File.separator + assetName);
-        File file = new File(outputPath + File.separator + assetName);
-        file.setWritable(true);
-        FileOutputStream os = new FileOutputStream(file);
-
-        byte[] buf = new byte[BUF_SZ];
-        while (true) {
-            int len = is.read(buf, 0, BUF_SZ);
-            if (len < 0) {
-                break;
-            }
-            os.write(buf, 0, len);
-        }
-        os.flush();
-        os.close();
-    }
 
     private void _setCustomExceptionHandler() {
         if (mSetUncaughtExceptionHandler) {
@@ -246,7 +174,7 @@ public class Apple2Activity extends Activity {
         Log.e(TAG, "onCreate()");
 
         _setCustomExceptionHandler();
-        mDataDir = _firstTimeInitialization();
+        String dataDir = Apple2DisksMenu.firstTimeAssetsInitialization(this);
 
         // get device audio parameters for native OpenSLES
         mSampleRate = DevicePropertyCalculator.getRecommendedSampleRate(this);
@@ -254,7 +182,7 @@ public class Apple2Activity extends Activity {
         mStereoBufferSize = DevicePropertyCalculator.getRecommendedBufferSize(this, /*isStereo:*/true);
         Log.d(TAG, "Device sampleRate:" + mSampleRate + " mono bufferSize:" + mMonoBufferSize + " stereo bufferSize:" + mStereoBufferSize);
 
-        nativeOnCreate(mDataDir, mSampleRate, mMonoBufferSize, mStereoBufferSize);
+        nativeOnCreate(dataDir, mSampleRate, mMonoBufferSize, mStereoBufferSize);
 
         // NOTE: load preferences after nativeOnCreate ... native CPU thread should still be paused
         Apple2Preferences.loadPreferences(this);
@@ -527,6 +455,19 @@ public class Apple2Activity extends Activity {
         }
 
         return mMenuStack.get(lastIndex);
+    }
+
+    public synchronized Apple2MenuView peekApple2View(int index) {
+        int lastIndex = mMenuStack.size() - 1;
+        if (lastIndex < 0) {
+            return null;
+        }
+
+        try {
+            return mMenuStack.get(index);
+        } catch (IndexOutOfBoundsException e) {
+            return null;
+        }
     }
 
     public void dismissAllMenus() {

@@ -68,6 +68,10 @@ public class Apple2SplashScreen implements Apple2MenuView {
         mActivity.popApple2View(this);
     }
 
+    public void dismissAll() {
+        dismiss();
+    }
+
     public boolean isShowing() {
         return mSettingsView.isShown();
     }

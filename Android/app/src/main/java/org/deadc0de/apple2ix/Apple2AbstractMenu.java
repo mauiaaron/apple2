@@ -51,6 +51,10 @@ public abstract class Apple2AbstractMenu implements Apple2MenuView {
         mActivity.popApple2View(this);
     }
 
+    public void dismissAll() {
+        this.dismiss();
+    }
+
     public boolean isShowing() {
         return mSettingsView.isShown();
     }

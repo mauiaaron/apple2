@@ -87,7 +87,9 @@ public class Apple2JoystickCalibration implements Apple2MenuView {
 
     public void dismiss() {
         for (Apple2MenuView apple2MenuView : mViewStack) {
-            mActivity.pushApple2View(apple2MenuView);
+            if (apple2MenuView != this) {
+                mActivity.pushApple2View(apple2MenuView);
+            }
         }
 
         Apple2Preferences.nativeSetTouchMenuEnabled(mTouchMenuEnabled);
@@ -95,6 +97,10 @@ public class Apple2JoystickCalibration implements Apple2MenuView {
         Apple2Preferences.nativeTouchJoystickEndCalibrationMode();
 
         mActivity.popApple2View(this);
+    }
+
+    public void dismissAll() {
+        dismiss();
     }
 
     public boolean isShowing() {
