@@ -278,7 +278,7 @@ static inline void _redraw_selected(int col, int row) {
     }
 }
 
-static inline bool _tap_key_at_point(float x, float y) {
+static inline int64_t _tap_key_at_point(float x, float y) {
     GLModelHUDKeyboard *hudKeyboard = (GLModelHUDKeyboard *)kbd.model->custom;
 
     if (!_is_point_on_keyboard(x, y)) {
@@ -297,7 +297,9 @@ static inline bool _tap_key_at_point(float x, float y) {
     int row = -1;
     _screen_to_keyboard(x, y, &col, &row);
     const unsigned int indexRow = (hudKeyboard->tplWidth+1) * row;
+
     int key = (hudKeyboard->tpl+indexRow)[col];
+    int scancode = -1;
 
     // handle key
 
@@ -323,43 +325,45 @@ static inline bool _tap_key_at_point(float x, float y) {
             _rerender_character(kbd.ctrlCol, kbd.ctrlRow, kbd.ctrlPressed ? hudKeyboard->pixelsAlt : hudKeyboard->pixels);
             col = -1;
             row = -1;
-            key = SCODE_L_CTRL;
+            scancode = SCODE_L_CTRL;
             break;
 
         case ICONTEXT_RETURN_L:
         case ICONTEXT_RETURN_R:
-            key = SCODE_RET;
+            key = ICONTEXT_RETURN_L;
+            scancode = SCODE_RET;
             break;
 
         case ICONTEXT_ESC:
-            key = SCODE_ESC;
+            scancode = SCODE_ESC;
             break;
 
         case MOUSETEXT_LEFT:
         case ICONTEXT_BACKSPACE:
-            key = SCODE_L;
+            key = MOUSETEXT_LEFT;
+            scancode = SCODE_L;
             break;
 
         case MOUSETEXT_RIGHT:
-            key = SCODE_R;
+            scancode = SCODE_R;
             break;
 
         case MOUSETEXT_UP:
-            key = SCODE_U;
+            scancode = SCODE_U;
             break;
 
         case MOUSETEXT_DOWN:
-            key = SCODE_D;
+            scancode = SCODE_D;
             break;
 
         case MOUSETEXT_OPENAPPLE:
             joy_button0 = joy_button0 ? 0x0 : 0x80;
-            key = -1;
+            scancode = SCODE_L_ALT;
             break;
 
         case MOUSETEXT_CLOSEDAPPLE:
             joy_button1 = joy_button1 ? 0x0 : 0x80;
-            key = -1;
+            scancode = SCODE_R_ALT;
             break;
 
         case ICONTEXT_MENU_SPROUT:
@@ -370,27 +374,31 @@ static inline bool _tap_key_at_point(float x, float y) {
         case ICONTEXT_LEFTSPACE:
         case ICONTEXT_MIDSPACE:
         case ICONTEXT_RIGHTSPACE:
+            isASCII = true;
             key = ' ';
+            break;
+
         default: // ASCII
             isASCII = true;
             break;
     }
 
-    assert(key < 0x80);
+    assert(scancode < 0x80);
     if (isASCII) {
+        assert(key < 0x80);
+        scancode = c_keys_ascii_to_scancode(key);
         if (kbd.ctrlPressed) {
-            key = c_keys_ascii_to_scancode(key);
-            c_keys_handle_input(key, /*pressed*/true, /*ASCII:*/false);
-            c_keys_handle_input(key, /*pressed*/false, /*ASCII:*/false);
+            c_keys_handle_input(scancode, /*pressed*/true, /*ASCII:*/false);
+            c_keys_handle_input(scancode, /*pressed*/false, /*ASCII:*/false);
         } else {
             c_keys_handle_input(key, /*pressed:*/true,  /*ASCII:*/true);
         }
     } else if (isCTRL) {
-        c_keys_handle_input(key, /*pressed:*/kbd.ctrlPressed,  /*ASCII:*/false);
-    } else if (key != -1) {
+        c_keys_handle_input(scancode, /*pressed:*/kbd.ctrlPressed,  /*ASCII:*/false);
+    } else if (scancode != -1) {
         // perform a press of other keys (ESC, Arrows, etc)
-        c_keys_handle_input(key, /*pressed:*/true,  /*ASCII:*/false);
-        c_keys_handle_input(key, /*pressed:*/false, /*ASCII:*/false);
+        c_keys_handle_input(scancode, /*pressed:*/true,  /*ASCII:*/false);
+        c_keys_handle_input(scancode, /*pressed:*/false, /*ASCII:*/false);
     }
 
     // redraw previous selected key
@@ -401,7 +409,21 @@ static inline bool _tap_key_at_point(float x, float y) {
 
     // draw current selected key
     _redraw_selected(kbd.selectedCol, kbd.selectedRow);
-    return handled;
+
+    // return the key+scancode+handled
+    int64_t flags = (handled ? 0x1LL : 0x0LL);
+    if (key < 0 ) {
+        key = 0;
+    }
+    if (scancode < 0) {
+        scancode = 0;
+    }
+
+    key = key & 0xff;
+    scancode = scancode & 0xff;
+
+    flags |= ( (int64_t)((key << 8) | scancode) << TOUCH_FLAGS_ASCII_AND_SCANCODE_SHIFT);
+    return flags;
 }
 
 // ----------------------------------------------------------------------------
@@ -650,7 +672,11 @@ static int64_t gltouchkbd_onTouchEvent(interface_touch_event_t action, int point
 
         case TOUCH_UP:
         case TOUCH_POINTER_UP:
-            flags |= _tap_key_at_point(x, y) ? TOUCH_FLAGS_KEY_TAP : 0x0LL;
+            {
+                int64_t handledAndData = _tap_key_at_point(x, y);
+                flags |= ((handledAndData & 0x01) ? TOUCH_FLAGS_KEY_TAP : 0x0LL);
+                flags |= (handledAndData & TOUCH_FLAGS_ASCII_AND_SCANCODE_MASK);
+            }
             break;
 
         case TOUCH_CANCEL:

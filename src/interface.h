@@ -64,6 +64,8 @@ typedef enum interface_touch_event_flags {
     TOUCH_FLAGS_INPUT_DEVICE_CHANGE = (1<<16),
     TOUCH_FLAGS_CPU_SPEED_DEC       = (1<<17),
     TOUCH_FLAGS_CPU_SPEED_INC       = (1<<18),
+#define TOUCH_FLAGS_ASCII_AND_SCANCODE_SHIFT 32
+#define TOUCH_FLAGS_ASCII_AND_SCANCODE_MASK  (0xFFFFLL << TOUCH_FLAGS_ASCII_AND_SCANCODE_SHIFT)
 } interface_touch_event_flags;
 
 // handle touch event
