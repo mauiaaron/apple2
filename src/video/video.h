@@ -203,6 +203,7 @@ uint8_t floating_bus_hibit(const bool hibit);
 #define ICONTEXT_DISK_LR        (ICONTEXT_BEGIN+0x0E)
 #define ICONTEXT_UNLOCK         (ICONTEXT_BEGIN+0x0F)
 #define ICONTEXT_GOTO           (ICONTEXT_BEGIN+0x10)
+#define ICONTEXT_SPACE_VISUAL   (ICONTEXT_BEGIN+0x11)
 
 #define ICONTEXT_MENU_SPROUT    (MOUSETEXT_BEGIN+0x1B)
 #define ICONTEXT_MENU_TOUCHJOY  (ICONTEXT_BEGIN+0x12)
@@ -221,6 +222,9 @@ uint8_t floating_bus_hibit(const bool hibit);
 #define ICONTEXT_RETURN_L       (ICONTEXT_KBD_BEGIN+0x0A)
 #define ICONTEXT_RETURN_R       (ICONTEXT_KBD_BEGIN+0x0B)
 #define ICONTEXT_NONACTIONABLE  (ICONTEXT_KBD_BEGIN+0x0C)
+
+#define ICONTEXT_LEFT_TAB       (ICONTEXT_KBD_BEGIN+0x..)
+#define ICONTEXT_RIGHT_TAB      (ICONTEXT_KBD_BEGIN+0x..)
 
 #define COLOR_BLACK             0
 

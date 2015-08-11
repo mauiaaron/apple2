@@ -58,7 +58,7 @@ static char kbdTemplateUCase[KBD_TEMPLATE_ROWS][KBD_TEMPLATE_COLS+1] = {
     "QWERTYUIOP",
     "ASDFG@HJKL",
     " ZXCVBNM @",
-    "   spa. @@",
+    "@@ spa. @@",
 };
 
 static char kbdTemplateLCase[KBD_TEMPLATE_ROWS][KBD_TEMPLATE_COLS+1] = {
@@ -67,7 +67,7 @@ static char kbdTemplateLCase[KBD_TEMPLATE_ROWS][KBD_TEMPLATE_COLS+1] = {
     "qwertyuiop",
     "asdfg@hjkl",
     " zxcvbnm @",
-    "   SPA. @@",
+    "@@ SPA. @@",
 };
 
 static char kbdTemplateAlt[KBD_TEMPLATE_ROWS][KBD_TEMPLATE_COLS+1] = {
@@ -315,8 +315,8 @@ static inline int64_t _tap_key_at_point(float x, float y) {
             break;
 
         case ICONTEXT_NONACTIONABLE:
-            key = -1;
-            handled = false;
+            scancode = 0;
+            handled = joydriver_isCalibrating()/* || keydriver_isCalibrating()*/;
             break;
 
         case ICONTEXT_CTRL:
@@ -371,6 +371,11 @@ static inline int64_t _tap_key_at_point(float x, float y) {
             _toggle_arrows();
             break;
 
+        case ICONTEXT_GOTO:
+            isASCII = true;
+            key = '\t';
+            break;
+
         case ICONTEXT_LEFTSPACE:
         case ICONTEXT_MIDSPACE:
         case ICONTEXT_RIGHTSPACE:
@@ -392,6 +397,9 @@ static inline int64_t _tap_key_at_point(float x, float y) {
             c_keys_handle_input(scancode, /*pressed*/false, /*ASCII:*/false);
         } else {
             c_keys_handle_input(key, /*pressed:*/true,  /*ASCII:*/true);
+        }
+        if (key == ' ' && (joydriver_isCalibrating()/* || keydriver_isCalibrating()*/)) {
+            key = ICONTEXT_SPACE_VISUAL;
         }
     } else if (isCTRL) {
         c_keys_handle_input(scancode, /*pressed:*/kbd.ctrlPressed,  /*ASCII:*/false);
@@ -504,6 +512,9 @@ static void _setup_touchkbd_hud(GLModel *parent) {
     kbdTemplateUCase[_ROWOFF+3][2] = ICONTEXT_NONACTIONABLE;
     kbdTemplateLCase[_ROWOFF+3][2] = ICONTEXT_NONACTIONABLE;
 
+    kbdTemplateUCase[_ROWOFF+3][0] = ICONTEXT_GOTO;
+    kbdTemplateLCase[_ROWOFF+3][0] = ICONTEXT_GOTO;
+
     kbdTemplateUCase[_ROWOFF+3][3] = ICONTEXT_LEFTSPACE;
     kbdTemplateLCase[_ROWOFF+3][3] = ICONTEXT_LEFTSPACE;
     kbdTemplateAlt  [_ROWOFF+3][3] = ICONTEXT_LEFTSPACE;
@@ -599,6 +610,9 @@ static void gltouchkbd_render(void) {
         return;
     }
     if (!isEnabled) {
+        return;
+    }
+    if (!ownsScreen) {
         return;
     }
 
