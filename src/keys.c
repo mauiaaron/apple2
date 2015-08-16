@@ -494,5 +494,6 @@ bool (*keydriver_isTouchKeyboardAvailable)(void) = NULL;
 void (*keydriver_setTouchKeyboardEnabled)(bool enabled) = NULL;
 void (*keydriver_setTouchKeyboardOwnsScreen)(bool pwnd) = NULL;
 bool (*keydriver_ownsScreen)(void) = NULL;
+void (*keydriver_keyboardReadCallback)(void) = NULL;
 #endif
 

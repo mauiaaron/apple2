@@ -9,10 +9,7 @@
  *
  */
 
-#include "common.h"
-#include "video/glvideo.h"
-#include "video/glhudmodel.h"
-#include "video/glnode.h"
+#include "video/gltouchjoy.h"
 
 #if !INTERFACE_TOUCH
 #error this is a touch interface module, possibly you mean to not compile this at all?
@@ -52,18 +49,15 @@
 #define BUTTON_SWITCH_THRESHOLD_DEFAULT 22
 #define BUTTON_TAP_DELAY_NANOS_DEFAULT 50000000
 
-// module globals
+GLTouchJoyGlobals joyglobals = { 0 };
+GLTouchJoyAxes axes = { 0 };
+GLTouchJoyButtons buttons = { 0 };
+
 static struct {
-    bool isAvailable;       // Were there any OpenGL/memory errors on gltouchjoy initialization?
-    bool isShuttingDown;
-    bool isCalibrating;     // Are we running in calibration mode?
-    bool isEnabled;         // Does player want touchjoy enabled?
-    bool ownsScreen;        // Does the touchjoy currently own the screen?
-    float minAlphaWhenOwnsScreen;
-    float minAlpha;
-    float screenDivider;
-    bool axisIsOnLeft;
-} joyglobals = { 0 };
+    GLTouchJoyVariant *joys;
+    GLTouchJoyVariant *kpad;
+    GLTouchJoyVariant *curr;
+} variant = { 0 };
 
 // viewport touch
 static struct {
@@ -84,60 +78,6 @@ static struct {
 
     // TODO FIXME : support 2-players!
 } touchport = { 0 };
-
-// touch axis variables
-
-static struct {
-
-    GLModel *model;
-    uint8_t northChar;
-    uint8_t westChar;
-    uint8_t eastChar;
-    uint8_t southChar;
-    bool modelDirty;
-
-    touchjoy_variant_t type;
-
-    int centerX;
-    int centerY;
-    float multiplier;
-    int trackingIndex;
-    struct timespec timingBegin;
-
-} axes = { 0 };
-
-// button object variables
-
-static struct {
-    GLModel *model;
-    uint8_t activeChar;
-    bool modelDirty;
-
-    touchjoy_button_type_t touchDownButton;
-    touchjoy_button_type_t northButton;
-    touchjoy_button_type_t southButton;
-
-    uint8_t char0;
-    uint8_t char1;
-    uint8_t charBoth;
-
-    int switchThreshold;
-
-    int centerX;
-    int centerY;
-    int trackingIndex;
-    struct timespec timingBegin;
-
-    pthread_t tapDelayThreadId;
-    pthread_mutex_t tapDelayMutex;
-    pthread_cond_t tapDelayCond;
-    unsigned int tapDelayNanos;
-
-    volatile uint8_t currButtonValue0;
-    volatile uint8_t currButtonValue1;
-    volatile uint8_t currButtonChar;
-
-} buttons = { 0 };
 
 // ----------------------------------------------------------------------------
 
@@ -192,10 +132,12 @@ static void _setup_axis_object(GLModel *parent) {
     }
 
     const unsigned int row = (AXIS_TEMPLATE_COLS+1);
-    ((hudElement->tpl)+(row*0))[2] = axes.northChar;
-    ((hudElement->tpl)+(row*2))[0] = axes.westChar;
-    ((hudElement->tpl)+(row*2))[4] = axes.eastChar;
-    ((hudElement->tpl)+(row*4))[2] = axes.southChar;
+
+    for (unsigned int i=0; i<ROSETTE_ROWS; i++) {
+        for (unsigned int j=0; j<ROSETTE_COLS; j++) {
+            ((hudElement->tpl)+(row*i*2))[j*2] = axes.rosetteChars[(i*ROSETTE_ROWS)+j];
+        }
+    }
 
     glhud_setupDefault(parent);
 }
@@ -276,17 +218,22 @@ static void *_button_tap_delayed_thread(void *dummyptr) {
         nanosleep(&ts, NULL);
         pthread_mutex_lock(&buttons.tapDelayMutex);
 
-        // set the emulator's joystick button values until touch up
+        // wait until touch up/cancel
         do {
-            joy_button0 = buttons.currButtonValue0;
-            joy_button1 = buttons.currButtonValue1;
-            _setup_button_object_with_char(buttons.currButtonChar);
+
+            // now set the emulator's joystick button values (or keypad value)
+            uint8_t displayChar = variant.curr->buttonPress();
+            _setup_button_object_with_char(displayChar);
 
             if ( (buttons.trackingIndex == TOUCH_NONE) || joyglobals.isShuttingDown) {
                 break;
             }
+
             pthread_cond_wait(&buttons.tapDelayCond, &buttons.tapDelayMutex);
 
+            if ( (buttons.trackingIndex == TOUCH_NONE) || joyglobals.isShuttingDown) {
+                break;
+            }
             TOUCH_JOY_LOG(">>> [DELAYEDTAP] looping ...");
         } while (1);
 
@@ -299,8 +246,8 @@ static void *_button_tap_delayed_thread(void *dummyptr) {
         nanosleep(&ts, NULL);
         pthread_mutex_lock(&buttons.tapDelayMutex);
 
-        joy_button0 = 0x0;
-        joy_button1 = 0x0;
+        variant.curr->buttonRelease();
+
         TOUCH_JOY_LOG(">>> [DELAYEDTAP] end ...");
     } while (1);
 
@@ -315,6 +262,9 @@ static void *_button_tap_delayed_thread(void *dummyptr) {
 
 static void gltouchjoy_setup(void) {
     LOG("gltouchjoy_setup ...");
+
+    variant.kpad->resetState();
+    variant.joys->resetState();
 
     mdlDestroyModel(&axes.model);
     mdlDestroyModel(&buttons.model);
@@ -365,6 +315,9 @@ static void gltouchjoy_shutdown(void) {
         return;
     }
 
+    variant.kpad->resetState();
+    variant.joys->resetState();
+
     joyglobals.isAvailable = false;
 
     joyglobals.isShuttingDown = true;
@@ -385,6 +338,9 @@ static void gltouchjoy_render(void) {
         return;
     }
     if (!joyglobals.isEnabled) {
+        return;
+    }
+    if (!joyglobals.ownsScreen) {
         return;
     }
 
@@ -475,11 +431,11 @@ static void gltouchjoy_resetJoystick(void) {
     // no-op
 }
 
-static inline bool _is_point_on_axis_side(float x, float y) {
+static inline bool _is_point_on_axis_side(int x, int y) {
     return (x >= touchport.axisX && x <= touchport.axisXMax && y >= touchport.axisY && y <= touchport.axisYMax);
 }
 
-static inline bool _is_point_on_button_side(float x, float y) {
+static inline bool _is_point_on_button_side(int x, int y) {
     return (x >= touchport.buttonX && x <= touchport.buttonXMax && y >= touchport.buttonY && y <= touchport.buttonYMax);
 }
 
@@ -507,72 +463,91 @@ static inline void _reset_model_position(GLModel *model, float touchX, float tou
     quad[12+1] = centerY+objHalfH;
 }
 
-static inline void _move_joystick_axis(int x, int y) {
+static inline void _axis_touch_down(int x, int y) {
+    axes.centerX = x;
+    axes.centerY = y;
 
-    x = (x - axes.centerX);
-    y = (y - axes.centerY);
+    _reset_model_position(axes.model, x, y, AXIS_OBJ_HALF_W, AXIS_OBJ_HALF_H);
+    axes.modelDirty = true;
 
-    if (axes.multiplier != 1.f) {
-        x = (int) ((float)x * axes.multiplier);
-        y = (int) ((float)y * axes.multiplier);
-    }
-
-    x += 0x80;
-    y += 0x80;
-
-    if (x < 0) {
-        x = 0;
-    }
-    if (x > 0xff) {
-        x = 0xff;
-    }
-    if (y < 0) {
-        y = 0;
-    }
-    if (y > 0xff) {
-        y = 0xff;
-    }
-
-    joy_x = x;
-    joy_y = y;
+    TOUCH_JOY_LOG("---TOUCH %sDOWN (axis index %d) center:(%d,%d) -> joy(0x%02X,0x%02X)", (action == TOUCH_DOWN ? "" : "POINTER "), axes.trackingIndex, axes.centerX, axes.centerY, joy_x, joy_y);
+    variant.curr->axisDown();
 }
 
-static inline void _set_current_joy_button_values(int theButton) {
-    if (theButton == TOUCH_BUTTON0) {
-        buttons.currButtonValue0 = 0x80;
-        buttons.currButtonValue1 = 0;
-        buttons.currButtonChar = buttons.char0;
-    } else if (theButton == TOUCH_BUTTON1) {
-        buttons.currButtonValue0 = 0;
-        buttons.currButtonValue1 = 0x80;
-        buttons.currButtonChar = buttons.char1;
-    } else if (theButton == TOUCH_BOTH) {
-        buttons.currButtonValue0 = 0x80;
-        buttons.currButtonValue1 = 0x80;
-        buttons.currButtonChar = buttons.charBoth;
-    } else {
-        buttons.currButtonValue0 = 0;
-        buttons.currButtonValue1 = 0;
+static inline void _button_touch_down(int x, int y) {
+    variant.curr->setCurrButtonValue(buttons.touchDownChar, buttons.touchDownScancode);
+    _signal_tap_delay();
+
+    buttons.centerX = x;
+    buttons.centerY = y;
+
+    _reset_model_position(buttons.model, x, y, BUTTON_OBJ_HALF_W, BUTTON_OBJ_HALF_H);
+    buttons.modelDirty = true;
+
+    TOUCH_JOY_LOG("---TOUCH %sDOWN (buttons index %d) center:(%d,%d) -> buttons(0x%02X,0x%02X)", (action == TOUCH_DOWN ? "" : "POINTER "), buttons.trackingIndex, buttons.centerX, buttons.centerY, joy_button0, joy_button1);
+}
+
+static inline void _axis_move(int x, int y) {
+    x = (x - axes.centerX);
+    y = (y - axes.centerY);
+    TOUCH_JOY_LOG("---TOUCH MOVE ...tracking axis:%d (%d,%d) -> joy(0x%02X,0x%02X)", axes.trackingIndex, x, y, joy_x, joy_y);
+    variant.curr->axisMove(x, y);
+}
+
+static inline void _button_move(int x, int y) {
+    x -= buttons.centerX;
+    y -= buttons.centerY;
+    if ((y < -joyglobals.switchThreshold) || (y > joyglobals.switchThreshold)) {
+        touchjoy_button_type_t theButtonChar = -1;
+        int theButtonScancode = -1;
+        if (y < 0) {
+            theButtonChar = buttons.northChar;
+            theButtonScancode = buttons.northScancode;
+        } else {
+            theButtonChar = buttons.southChar;
+            theButtonScancode = buttons.southScancode;
+        }
+
+        variant.curr->setCurrButtonValue(theButtonChar, theButtonScancode);
+        _signal_tap_delay();
+        TOUCH_JOY_LOG("+++TOUCH MOVE ...tracking button:%d (%d,%d) -> buttons(0x%02X,0x%02X)", buttons.trackingIndex, x, y, joy_button0, joy_button1);
     }
+}
+
+static inline void _axis_touch_up(int x, int y) {
+    x = (x - axes.centerX);
+    y = (y - axes.centerY);
+    if (buttons.trackingIndex > axes.trackingIndex) {
+        --buttons.trackingIndex;
+    }
+    variant.curr->axisUp(x, y);
+#if DEBUG_TOUCH_JOY
+    bool resetIndex = false;
+    if (buttons.trackingIndex > axes.trackingIndex) {
+        // TODO FIXME : is resetting the pointer index just an Android-ism?
+        resetIndex = true;
+    }
+    TOUCH_JOY_LOG("---TOUCH %sUP (axis went up)%s", (action == TOUCH_UP ? "" : "POINTER "), (resetIndex ? " (reset buttons index!)" : ""));
+#endif
+    axes.trackingIndex = TOUCH_NONE;
+}
+
+static inline void _button_touch_up(void) {
+#if DEBUG_TOUCH_JOY
+    bool resetIndex = false;
+    if (axes.trackingIndex > buttons.trackingIndex) {
+        // TODO FIXME : is resetting the pointer index just an Android-ism?
+        resetIndex = true;
+    }
+    TOUCH_JOY_LOG("---TOUCH %sUP (buttons went up)%s", (action == TOUCH_UP ? "" : "POINTER "), (resetIndex ? " (reset axis index!)" : ""));
+#endif
+    if (axes.trackingIndex > buttons.trackingIndex) {
+        --axes.trackingIndex;
+    }
+    buttons.trackingIndex = TOUCH_NONE;
     _signal_tap_delay();
 }
 
-static inline void _move_button_axis(int x, int y) {
-
-    x -= buttons.centerX;
-    y -= buttons.centerY;
-
-    if ((y < -buttons.switchThreshold) || (y > buttons.switchThreshold)) {
-        int theButton = -1;
-        if (y < 0) {
-            theButton = buttons.northButton;
-        } else {
-            theButton = buttons.southButton;
-        }
-
-        _set_current_joy_button_values(theButton);
-    }
-}
 
 static int64_t gltouchjoy_onTouchEvent(interface_touch_event_t action, int pointer_count, int pointer_idx, float *x_coords, float *y_coords) {
 
@@ -589,87 +564,63 @@ static int64_t gltouchjoy_onTouchEvent(interface_touch_event_t action, int point
     bool axisConsumed = false;
     bool buttonConsumed = false;
 
-    float x = x_coords[pointer_idx];
-    float y = y_coords[pointer_idx];
-
     switch (action) {
         case TOUCH_DOWN:
         case TOUCH_POINTER_DOWN:
-            if (_is_point_on_axis_side(x, y)) {
-                axisConsumed = true;
-                axes.trackingIndex = pointer_idx;
-                axes.centerX = (int)x;
-                axes.centerY = (int)y;
-                _reset_model_position(axes.model, x, y, AXIS_OBJ_HALF_W, AXIS_OBJ_HALF_H);
-                axes.modelDirty = true;
-                TOUCH_JOY_LOG("---TOUCH %sDOWN (axis index %d) center:(%d,%d) -> joy(0x%02X,0x%02X)", (action == TOUCH_DOWN ? "" : "POINTER "),
-                        axes.trackingIndex, axes.centerX, axes.centerY, joy_x, joy_y);
-            } else if (_is_point_on_button_side(x, y)) {
-                buttonConsumed = true;
-                buttons.trackingIndex = pointer_idx;
-                _set_current_joy_button_values(buttons.touchDownButton);
-                buttons.centerX = (int)x;
-                buttons.centerY = (int)y;
-                _reset_model_position(buttons.model, x, y, BUTTON_OBJ_HALF_W, BUTTON_OBJ_HALF_H);
-                buttons.modelDirty = true;
-                TOUCH_JOY_LOG("---TOUCH %sDOWN (buttons index %d) center:(%d,%d) -> buttons(0x%02X,0x%02X)", (action == TOUCH_DOWN ? "" : "POINTER "),
-                        buttons.trackingIndex, buttons.centerX, buttons.centerY, joy_button0, joy_button1);
-            } else {
-                // ...
+            {
+                int x = (int)x_coords[pointer_idx];
+                int y = (int)y_coords[pointer_idx];
+                if (_is_point_on_axis_side(x, y)) {
+                    axisConsumed = true;
+                    axes.trackingIndex = pointer_idx;
+                    _axis_touch_down(x, y);
+                } else if (_is_point_on_button_side(x, y)) {
+                    buttonConsumed = true;
+                    buttons.trackingIndex = pointer_idx;
+                    _button_touch_down(x, y);
+                } else {
+                    assert(false && "should either be on axis or button side");
+                }
             }
             break;
 
         case TOUCH_MOVE:
             if (axes.trackingIndex >= 0) {
                 axisConsumed = true;
-                _move_joystick_axis((int)x_coords[axes.trackingIndex], (int)y_coords[axes.trackingIndex]);
-                TOUCH_JOY_LOG("---TOUCH MOVE ...tracking axis:%d (%d,%d) -> joy(0x%02X,0x%02X)", axes.trackingIndex,
-                        (int)x_coords[axes.trackingIndex], (int)y_coords[axes.trackingIndex], joy_x, joy_y);
+                int x = (int)x_coords[axes.trackingIndex];
+                int y = (int)y_coords[axes.trackingIndex];
+                _axis_move(x, y);
             }
             if (buttons.trackingIndex >= 0) {
                 buttonConsumed = true;
-                _move_button_axis((int)x_coords[buttons.trackingIndex], (int)y_coords[buttons.trackingIndex]);
-                TOUCH_JOY_LOG("+++TOUCH MOVE ...tracking button:%d (%d,%d) -> buttons(0x%02X,0x%02X)", buttons.trackingIndex,
-                        (int)x_coords[buttons.trackingIndex], (int)y_coords[buttons.trackingIndex], joy_button0, joy_button1);
+                int x = (int)x_coords[buttons.trackingIndex];
+                int y = (int)y_coords[buttons.trackingIndex];
+                _button_move(x, y);
             }
             break;
 
         case TOUCH_UP:
         case TOUCH_POINTER_UP:
             if (pointer_idx == axes.trackingIndex) {
-                axisConsumed = true;
-                bool resetIndex = false;
-                if (buttons.trackingIndex > axes.trackingIndex) {
-                    // TODO FIXME : is resetting the pointer index just an Android-ism?
-                    resetIndex = true;
-                    --buttons.trackingIndex;
-                }
-                axes.trackingIndex = TOUCH_NONE;
-                joy_x = HALF_JOY_RANGE;
-                joy_y = HALF_JOY_RANGE;
-                TOUCH_JOY_LOG("---TOUCH %sUP (axis went up)%s", (action == TOUCH_UP ? "" : "POINTER "), (resetIndex ? " (reset buttons index!)" : ""));
+                int x = (int)x_coords[axes.trackingIndex];
+                int y = (int)y_coords[axes.trackingIndex];
+                _axis_touch_up(x, y);
             } else if (pointer_idx == buttons.trackingIndex) {
-                buttonConsumed = true;
-                bool resetIndex = false;
-                if (axes.trackingIndex > buttons.trackingIndex) {
-                    // TODO FIXME : is resetting the pointer index just an Android-ism?
-                    resetIndex = true;
-                    --axes.trackingIndex;
-                }
-                buttons.trackingIndex = TOUCH_NONE;
-                _signal_tap_delay();
-                TOUCH_JOY_LOG("---TOUCH %sUP (buttons went up)%s", (action == TOUCH_UP ? "" : "POINTER "), (resetIndex ? " (reset axis index!)" : ""));
+                _button_touch_up();
             } else {
-                // not tracking tap/gestures originating from control-gesture portion of screen
+                if (pointer_count == 1) {
+                    // last pointer up completely resets state
+                    LOG("!!!! ... RESETTING TOUCH JOYSTICK STATE MACHINE");
+                    variant.joys->resetState();
+                    variant.kpad->resetState();
+                }
             }
             break;
 
         case TOUCH_CANCEL:
             LOG("---TOUCH CANCEL");
-            axes.trackingIndex = TOUCH_NONE;
-            buttons.trackingIndex = TOUCH_NONE;
-            joy_x = HALF_JOY_RANGE;
-            joy_y = HALF_JOY_RANGE;
+            variant.joys->resetState();
+            variant.kpad->resetState();
             break;
 
         default:
@@ -724,16 +675,19 @@ static void _animation_hideTouchJoystick(void) {
     buttons.timingBegin = (struct timespec){ 0 };
 }
 
-static void gltouchjoy_setTouchButtonValues(char char0, char char1, char charBoth) {
-    buttons.char0 = char0;
-    buttons.char1 = char1;
-    buttons.charBoth = charBoth;
-}
+static void gltouchjoy_setTouchButtonTypes(
+        touchjoy_button_type_t touchDownChar, int touchDownScancode,
+        touchjoy_button_type_t northChar, int northScancode,
+        touchjoy_button_type_t southChar, int southScancode)
+{
+    buttons.touchDownChar     = touchDownChar;
+    buttons.touchDownScancode = touchDownScancode;
 
-static void gltouchjoy_setTouchButtonTypes(touchjoy_button_type_t touchDownButton, touchjoy_button_type_t northButton, touchjoy_button_type_t southButton) {
-    buttons.touchDownButton = touchDownButton;
-    buttons.southButton = southButton;
-    buttons.northButton = northButton;
+    buttons.southChar     = southChar;
+    buttons.southScancode = southScancode;
+
+    buttons.northChar     = northChar;
+    buttons.northScancode = northScancode;
 }
 
 static void gltouchjoy_setTapDelay(float secs) {
@@ -751,23 +705,36 @@ static void gltouchjoy_setTouchAxisSensitivity(float multiplier) {
 }
 
 static void gltouchjoy_setButtonSwitchThreshold(int delta) {
-    buttons.switchThreshold = delta;
+    joyglobals.switchThreshold = delta;
 }
 
-static void gltouchjoy_setTouchVariant(touchjoy_variant_t axisType) {
-    axes.type = axisType;
-    _setup_axis_object(axes.model);
+static void gltouchjoy_setTouchVariant(touchjoy_variant_t variantType) {
+    variant.curr->resetState();
+
+    switch (variantType) {
+        case EMULATED_JOYSTICK:
+            variant.curr = variant.joys;
+            break;
+
+        case EMULATED_KEYPAD:
+            variant.curr = variant.kpad;
+            break;
+
+        default:
+            assert(false && "touch variant set to invalid");
+            break;
+    }
+
+    variant.curr->resetState();
 }
 
 static touchjoy_variant_t gltouchjoy_getTouchVariant(void) {
-    return axes.type;
+    return variant.curr->variant();
 }
 
-static void gltouchjoy_setTouchAxisValues(char north, char west, char east, char south) {
-    axes.northChar = north;
-    axes.westChar  = west;
-    axes.eastChar  = east;
-    axes.southChar = south;
+static void gltouchjoy_setTouchAxisTypes(uint8_t rosetteChars[(ROSETTE_ROWS * ROSETTE_COLS)], int rosetteScancodes[(ROSETTE_ROWS * ROSETTE_COLS)]) {
+    memcpy(axes.rosetteChars,     rosetteChars,     sizeof(uint8_t)*(ROSETTE_ROWS * ROSETTE_COLS));
+    memcpy(axes.rosetteScancodes, rosetteScancodes, sizeof(int)    *(ROSETTE_ROWS * ROSETTE_COLS));
     _setup_axis_object(axes.model);
 }
 
@@ -791,6 +758,10 @@ static void gltouchjoy_endCalibration(void) {
     joyglobals.isCalibrating = false;
 }
 
+static bool gltouchjoy_isCalibrating(void) {
+    return joyglobals.isCalibrating;
+}
+
 __attribute__((constructor(CTOR_PRIORITY_LATE)))
 static void _init_gltouchjoy(void) {
     LOG("Registering OpenGL software touch joystick");
@@ -799,25 +770,42 @@ static void _init_gltouchjoy(void) {
     axes.centerY = 160;
     axes.multiplier = 1.f;
     axes.trackingIndex = TOUCH_NONE;
-    axes.type = EMULATED_JOYSTICK;
-    axes.northChar = MOUSETEXT_UP;
-    axes.westChar  = MOUSETEXT_LEFT;
-    axes.eastChar  = MOUSETEXT_RIGHT;
-    axes.southChar = MOUSETEXT_DOWN;
+
+    axes.rosetteChars[0]     = ' ';
+    axes.rosetteScancodes[0] = -1;
+    axes.rosetteChars[1]     = MOUSETEXT_UP;
+    axes.rosetteScancodes[1] = -1;
+    axes.rosetteChars[2]     = ' ';
+    axes.rosetteScancodes[2] = -1;
+
+    axes.rosetteChars[3]     = MOUSETEXT_LEFT;
+    axes.rosetteScancodes[3] = -1;
+    axes.rosetteChars[4]     = '+';
+    axes.rosetteScancodes[4] = -1;
+    axes.rosetteChars[5]     = MOUSETEXT_RIGHT;
+    axes.rosetteScancodes[5] = -1;
+
+    axes.rosetteChars[6]     = ' ';
+    axes.rosetteScancodes[6] = -1;
+    axes.rosetteChars[7]     = MOUSETEXT_DOWN;
+    axes.rosetteScancodes[7] = -1;
+    axes.rosetteChars[8]     = ' ';
+    axes.rosetteScancodes[8] = -1;
 
     buttons.centerX = 240;
     buttons.centerY = 160;
     buttons.trackingIndex = TOUCH_NONE;
 
-    buttons.touchDownButton = TOUCH_BUTTON0;
-    buttons.southButton = TOUCH_BUTTON1;
-    buttons.northButton = TOUCH_BOTH;
-    buttons.char0 = MOUSETEXT_OPENAPPLE;
-    buttons.char1 = MOUSETEXT_CLOSEDAPPLE;
-    buttons.charBoth = '+';
+    buttons.touchDownChar = TOUCH_BUTTON0;
+    buttons.touchDownScancode = -1;
+
+    buttons.southChar = TOUCH_BUTTON1;
+    buttons.southScancode = -1;
+
+    buttons.northChar = TOUCH_BOTH;
+    buttons.northScancode = -1;
 
     buttons.activeChar = MOUSETEXT_OPENAPPLE;
-    buttons.switchThreshold = BUTTON_SWITCH_THRESHOLD_DEFAULT;
 
     buttons.tapDelayThreadId = 0;
     buttons.tapDelayMutex = (pthread_mutex_t){ 0 };
@@ -828,6 +816,7 @@ static void _init_gltouchjoy(void) {
     joyglobals.ownsScreen = true;
     joyglobals.screenDivider = 0.5f;
     joyglobals.axisIsOnLeft = true;
+    joyglobals.switchThreshold = BUTTON_SWITCH_THRESHOLD_DEFAULT;
 
     video_backend->animation_showTouchJoystick = &_animation_showTouchJoystick;
     video_backend->animation_hideTouchJoystick = &_animation_hideTouchJoystick;
@@ -836,18 +825,18 @@ static void _init_gltouchjoy(void) {
     joydriver_setTouchJoystickEnabled = &gltouchjoy_setTouchJoystickEnabled;
     joydriver_setTouchJoystickOwnsScreen = &gltouchjoy_setTouchJoystickOwnsScreen;
     joydriver_ownsScreen = &gltouchjoy_ownsScreen;
-    joydriver_setTouchButtonValues = &gltouchjoy_setTouchButtonValues;
     joydriver_setTouchButtonTypes = &gltouchjoy_setTouchButtonTypes;
     joydriver_setTapDelay = &gltouchjoy_setTapDelay;
     joydriver_setTouchAxisSensitivity = &gltouchjoy_setTouchAxisSensitivity;
     joydriver_setButtonSwitchThreshold = &gltouchjoy_setButtonSwitchThreshold;
     joydriver_setTouchVariant = &gltouchjoy_setTouchVariant;
     joydriver_getTouchVariant = &gltouchjoy_getTouchVariant;
-    joydriver_setTouchAxisValues = &gltouchjoy_setTouchAxisValues;
+    joydriver_setTouchAxisTypes = &gltouchjoy_setTouchAxisTypes;
     joydriver_setScreenDivision = &gltouchjoy_setScreenDivision;
     joydriver_setAxisOnLeft = &gltouchjoy_setAxisOnLeft;
     joydriver_beginCalibration = &gltouchjoy_beginCalibration;
     joydriver_endCalibration = &gltouchjoy_endCalibration;
+    joydriver_isCalibrating = &gltouchjoy_isCalibrating;
 
     glnode_registerNode(RENDER_LOW, (GLNode){
         .setup = &gltouchjoy_setup,
@@ -857,6 +846,25 @@ static void _init_gltouchjoy(void) {
         .onTouchEvent = &gltouchjoy_onTouchEvent,
     });
 }
+
+void gltouchjoy_registerVariant(touchjoy_variant_t variantType, GLTouchJoyVariant *touchJoyVariant) {
+    switch (variantType) {
+        case EMULATED_JOYSTICK:
+            variant.joys = touchJoyVariant;
+            variant.curr = variant.kpad;
+            break;
+
+        case EMULATED_KEYPAD:
+            variant.kpad = touchJoyVariant;
+            variant.curr = variant.kpad;
+            break;
+
+        default:
+            assert(false && "invalid touch variant registration");
+            break;
+    }
+}
+
 
 void gldriver_joystick_reset(void) {
 #warning FIXME TODO expunge this olde API ...

@@ -109,7 +109,7 @@ jint Java_org_deadc0de_apple2ix_Apple2Preferences_nativeGetCurrentTouchDevice(JN
         touchjoy_variant_t variant = joydriver_getTouchVariant();
         if (variant == EMULATED_JOYSTICK) {
             return ANDROID_TOUCH_JOYSTICK;
-        } else if (variant == EMULATED_JOYSTICK) {
+        } else if (variant == EMULATED_KEYPAD) {
             return ANDROID_TOUCH_JOYSTICK_KEYPAD;
         }
     } else if (keydriver_ownsScreen()) {
@@ -147,7 +147,19 @@ void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetTouchJoystickButtonTy
         return;
     }
 
-    joydriver_setTouchButtonTypes((touchjoy_button_type_t)touchDownButton, (touchjoy_button_type_t)northButton, (touchjoy_button_type_t)southButton);
+    uint8_t rosetteChars[ROSETTE_COLS * ROSETTE_ROWS];
+    int rosetteScancodes[ROSETTE_COLS * ROSETTE_ROWS];
+    rosetteChars[ROSETTE_NORTHWEST] = ' ';                      rosetteScancodes[ROSETTE_NORTHWEST] = -1;
+    rosetteChars[ROSETTE_NORTH]     = (uint8_t)MOUSETEXT_UP;    rosetteScancodes[ROSETTE_NORTH]     = -1;
+    rosetteChars[ROSETTE_NORTHEAST] = ' ';                      rosetteScancodes[ROSETTE_NORTHEAST] = -1;
+    rosetteChars[ROSETTE_WEST]      = (uint8_t)MOUSETEXT_LEFT;  rosetteScancodes[ROSETTE_WEST]      = -1;
+    rosetteChars[ROSETTE_CENTER]    = '+';                      rosetteScancodes[ROSETTE_CENTER]    = -1;
+    rosetteChars[ROSETTE_EAST]      = (uint8_t)MOUSETEXT_RIGHT; rosetteScancodes[ROSETTE_EAST]      = -1;
+    rosetteChars[ROSETTE_SOUTHWEST] = ' ';                      rosetteScancodes[ROSETTE_SOUTHWEST] = -1;
+    rosetteChars[ROSETTE_SOUTH]     = (uint8_t)MOUSETEXT_DOWN;  rosetteScancodes[ROSETTE_SOUTH]     = -1;
+    rosetteChars[ROSETTE_SOUTHEAST] = ' ';                      rosetteScancodes[ROSETTE_SOUTHEAST] = -1;
+    joydriver_setTouchAxisTypes(rosetteChars, rosetteScancodes);
+    joydriver_setTouchButtonTypes((touchjoy_button_type_t)touchDownButton, -1, (touchjoy_button_type_t)northButton, -1, (touchjoy_button_type_t)southButton, -1);
 }
 
 void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetTouchJoystickTapDelay(JNIEnv *env, jclass cls, jfloat secs) {
@@ -173,6 +185,41 @@ void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeTouchJoystickSetScreenDi
 void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeTouchJoystickSetAxisOnLeft(JNIEnv *env, jclass cls, jboolean axisIsOnLeft) {
     LOG("nativeTouchJoystickSetAxisOnLeft() : %d", axisIsOnLeft);
     joydriver_setAxisOnLeft(axisIsOnLeft);
+}
+
+void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeTouchJoystickSetKeypadTypes(JNIEnv *env, jclass cls,
+        jintArray jRosetteChars, jintArray jRosetteScans, jintArray jButtonsChars, jintArray jButtonsScans)
+{
+    jint *rosetteChars = (*env)->GetIntArrayElements(env, jRosetteChars, 0);
+    jint *rosetteScans = (*env)->GetIntArrayElements(env, jRosetteScans, 0);
+    jint *buttonsChars = (*env)->GetIntArrayElements(env, jButtonsChars, 0);
+    jint *buttonsScans = (*env)->GetIntArrayElements(env, jButtonsScans, 0);
+
+    LOG("nativeTouchJoystickSetKeypadValues() : NW:%c/%d, N:%c/%d, NE:%c/%d, ... SWIPEUP:%c/%d",
+            (char)rosetteChars[0], rosetteScans[0], (char)rosetteChars[1], rosetteScans[1], (char)rosetteChars[2], rosetteScans[2],
+            (char)buttonsChars[1], buttonsScans[1]);
+    LOG("nativeTouchJoystickSetKeypadValues() :  W:%c/%d, C:%c/%d,  E:%c/%d, ...     TAP:%c/%d",
+            (char)rosetteChars[3], rosetteScans[3], (char)rosetteChars[4], rosetteScans[4], (char)rosetteChars[5], rosetteScans[5],
+            (char)buttonsChars[0], buttonsScans[0]);
+    LOG("nativeTouchJoystickSetKeypadValues() : SW:%c/%d, S:%c/%d, SE:%c/%d, ... SWIPEDN:%c/%d",
+            (char)rosetteChars[6], rosetteScans[6], (char)rosetteChars[7], rosetteScans[7], (char)rosetteChars[8], rosetteScans[8],
+            (char)buttonsChars[2], buttonsScans[2]);
+
+    // we could just pass these as jcharArray ... but this isn't a tight loop =P
+    uint8_t actualChars[ROSETTE_ROWS * ROSETTE_COLS];
+    for (unsigned int i=0; i<(ROSETTE_ROWS * ROSETTE_COLS); i++) {
+        actualChars[i] = (uint8_t)rosetteChars[i];
+    }
+    joydriver_setTouchAxisTypes(actualChars, rosetteScans);
+    joydriver_setTouchButtonTypes(
+            (touchjoy_button_type_t)buttonsChars[0], buttonsScans[0],
+            (touchjoy_button_type_t)buttonsChars[1], buttonsScans[1],
+            (touchjoy_button_type_t)buttonsChars[2], buttonsScans[2]);
+
+    (*env)->ReleaseIntArrayElements(env, jRosetteChars, rosetteChars, 0);
+    (*env)->ReleaseIntArrayElements(env, jRosetteScans, rosetteScans, 0);
+    (*env)->ReleaseIntArrayElements(env, jButtonsChars, buttonsChars, 0);
+    (*env)->ReleaseIntArrayElements(env, jButtonsScans, buttonsScans, 0);
 }
 
 void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeTouchJoystickBeginCalibrationMode(JNIEnv *env, jclass cls) {

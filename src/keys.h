@@ -160,6 +160,9 @@ extern void (*keydriver_setTouchKeyboardOwnsScreen)(bool pwnd);
 
 // query touch screen ownership
 extern bool (*keydriver_ownsScreen)(void);
+
+// keyboard read callback
+extern void (*keydriver_keyboardReadCallback)(void);
 #endif
 
 #endif

@@ -44,7 +44,23 @@ typedef enum touchjoy_button_type_t {
     TOUCH_BUTTON0 = 0,
     TOUCH_BUTTON1,
     TOUCH_BOTH,
+    // --or-- an ASCII/fonttext value ...
 } touchjoy_button_type_t;
+
+#define ROSETTE_ROWS 3
+#define ROSETTE_COLS 3
+
+enum {
+    ROSETTE_NORTHWEST=0,
+    ROSETTE_NORTH,
+    ROSETTE_NORTHEAST,
+    ROSETTE_WEST,
+    ROSETTE_CENTER,
+    ROSETTE_EAST,
+    ROSETTE_SOUTHWEST,
+    ROSETTE_SOUTH,
+    ROSETTE_SOUTHEAST,
+};
 
 // is the touch joystick available
 extern bool (*joydriver_isTouchJoystickAvailable)(void);
@@ -58,16 +74,24 @@ extern void (*joydriver_setTouchJoystickOwnsScreen)(bool pwnd);
 // query touch screen ownership
 extern bool (*joydriver_ownsScreen)(void);
 
-// set the joystick button visuals (these values are also fired for keyboard variant)
-extern void (*joydriver_setTouchButtonValues)(char button0Val, char button1Val, char buttonBothVal);
+/*
+ * set the joystick button types/visuals (scancodes are fired for EMULATED_KEYPAD variant)
+ *
+ *  - for EMULATED_JOYSTICK, there is an implicit extra layer-of-indirection for the touchjoy_button_type_t, which maps
+ *  to the open apple, closed apple, or "both" visual keys
+ *
+ *  - for EMULATED_KEYPAD, the touchjoy_button_type_t is the displayed visual (as ASCII value and lookup into font
+ *  table)
+ */
+extern void (*joydriver_setTouchButtonTypes)(
+        touchjoy_button_type_t touchDownChar, int downScancode,
+        touchjoy_button_type_t northChar, int northScancode,
+        touchjoy_button_type_t southChar, int southScancode);
 
-// set the joystick button types (for joystick variant)
-extern void (*joydriver_setTouchButtonTypes)(touchjoy_button_type_t down, touchjoy_button_type_t north, touchjoy_button_type_t south);
-
-// set the tap delay (to differentiate between single tap and north/south/etc swipe)
+// set the button tap delay (to differentiate between single tap and north/south/etc swipe)
 extern void (*joydriver_setTapDelay)(float secs);
 
-// set the touch axis sensitivity multiplier
+// set the sensitivity multiplier
 extern void (*joydriver_setTouchAxisSensitivity)(float multiplier);
 
 // set the touch button switch threshold
@@ -79,8 +103,8 @@ extern void (*joydriver_setTouchVariant)(touchjoy_variant_t variant);
 // get the joystick variant
 extern touchjoy_variant_t (*joydriver_getTouchVariant)(void);
 
-// set the axis visuals (these key values are also fired for keyboard variant)
-extern void (*joydriver_setTouchAxisValues)(char north, char west, char east, char south);
+// set the axis visuals (scancodes are fired for EMULATED_KEYPAD variant)
+extern void (*joydriver_setTouchAxisTypes)(uint8_t rosetteChars[(ROSETTE_ROWS * ROSETTE_COLS)], int rosetteScancodes[(ROSETTE_ROWS * ROSETTE_COLS)]);
 
 // set screen divide between axis and buttons
 extern void (*joydriver_setScreenDivision)(float division);
@@ -93,6 +117,9 @@ extern void (*joydriver_beginCalibration)(void);
 
 // end calibration mode
 extern void (*joydriver_endCalibration)(void);
+
+// end calibration mode
+extern bool (*joydriver_isCalibrating)(void);
 
 #endif // INTERFACE_TOUCH
 

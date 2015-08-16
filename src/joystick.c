@@ -261,17 +261,20 @@ bool (*joydriver_isTouchJoystickAvailable)(void) = NULL;
 void (*joydriver_setTouchJoystickEnabled)(bool enabled) = NULL;
 void (*joydriver_setTouchJoystickOwnsScreen)(bool pwnd) = NULL;
 bool (*joydriver_ownsScreen)(void) = NULL;
-void (*joydriver_setTouchButtonValues)(char button0Val, char button1Val, char buttonBothVal) = NULL;
-void (*joydriver_setTouchButtonTypes)(touchjoy_button_type_t down, touchjoy_button_type_t north, touchjoy_button_type_t south) = NULL;
+void (*joydriver_setTouchButtonTypes)(
+        touchjoy_button_type_t touchDownChar, int downScancode,
+        touchjoy_button_type_t northChar, int northScancode,
+        touchjoy_button_type_t southChar, int southScancode) = NULL;
 void (*joydriver_setTapDelay)(float secs) = NULL;
 void (*joydriver_setTouchAxisSensitivity)(float multiplier) = NULL;
 void (*joydriver_setButtonSwitchThreshold)(int delta) = NULL;
 void (*joydriver_setTouchVariant)(touchjoy_variant_t variant) = NULL;
 touchjoy_variant_t (*joydriver_getTouchVariant)(void) = NULL;
-void (*joydriver_setTouchAxisValues)(char up, char left, char right, char down) = NULL;
+void (*joydriver_setTouchAxisTypes)(uint8_t rosetteChars[(ROSETTE_ROWS * ROSETTE_COLS)], int rosetteScancodes[(ROSETTE_ROWS * ROSETTE_COLS)]) = NULL;
 void (*joydriver_setScreenDivision)(float division) = NULL;
 void (*joydriver_setAxisOnLeft)(bool axisIsOnLeft) = NULL;
 void (*joydriver_beginCalibration)(void) = NULL;
 void (*joydriver_endCalibration)(void) = NULL;
+bool (*joydriver_isCalibrating)(void) = NULL;
 #endif
 

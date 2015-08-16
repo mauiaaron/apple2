@@ -143,7 +143,15 @@ GLUE_C_WRITE(write_unmapped_softswitch)
 
 GLUE_C_READ(read_keyboard)
 {
-    return apple_ii_64k[0][0xC000];
+    uint8_t b = apple_ii_64k[0][0xC000];
+#if INTERFACE_TOUCH
+    // touch interface is expected to rate limit this callback by unregistering/NULLifying
+    void (*readCallback)(void) = keydriver_keyboardReadCallback;
+    if (readCallback) {
+        readCallback();
+    }
+#endif
+    return b;
 }
 
 GLUE_C_READ(read_keyboard_strobe)
