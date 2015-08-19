@@ -57,17 +57,22 @@ public class Apple2Activity extends Activity {
         System.loadLibrary("apple2ix");
     }
 
-    public final static int NATIVE_TOUCH_HANDLED = (1 << 0);
-    public final static int NATIVE_TOUCH_REQUEST_SHOW_MENU = (1 << 1);
+    public final static long NATIVE_TOUCH_HANDLED = (1 << 0);
+    public final static long NATIVE_TOUCH_REQUEST_SHOW_MENU = (1 << 1);
 
-    public final static int NATIVE_TOUCH_KEY_TAP = (1 << 4);
-    public final static int NATIVE_TOUCH_KBD = (1 << 5);
-    public final static int NATIVE_TOUCH_JOY = (1 << 6);
-    public final static int NATIVE_TOUCH_MENU = (1 << 7);
+    public final static long NATIVE_TOUCH_KEY_TAP = (1 << 4);
+    public final static long NATIVE_TOUCH_KBD = (1 << 5);
+    public final static long NATIVE_TOUCH_JOY = (1 << 6);
+    public final static long NATIVE_TOUCH_MENU = (1 << 7);
 
-    public final static int NATIVE_TOUCH_INPUT_DEVICE_CHANGED = (1 << 16);
-    public final static int NATIVE_TOUCH_CPU_SPEED_DEC = (1 << 17);
-    public final static int NATIVE_TOUCH_CPU_SPEED_INC = (1 << 18);
+    public final static long NATIVE_TOUCH_INPUT_DEVICE_CHANGED = (1 << 16);
+    public final static long NATIVE_TOUCH_CPU_SPEED_DEC = (1 << 17);
+    public final static long NATIVE_TOUCH_CPU_SPEED_INC = (1 << 18);
+
+    public final static long NATIVE_TOUCH_ASCII_SCANCODE_SHIFT = 32;
+    public final static long NATIVE_TOUCH_ASCII_SCANCODE_MASK = 0xFFFFL;
+    public final static long NATIVE_TOUCH_ASCII_MASK = 0xFF00L;
+    public final static long NATIVE_TOUCH_SCANCODE_MASK = 0x00FFL;
 
     private native void nativeOnCreate(String dataDir, int sampleRate, int monoBufferSize, int stereoBufferSize);
 
@@ -339,6 +344,14 @@ public class Apple2Activity extends Activity {
                 if (am != null) {
                     am.playSoundEffect(AudioManager.FX_KEY_CLICK);
                 }
+
+                if ((apple2MenuView != null) && apple2MenuView.isCalibrating()) {
+                    long asciiScancodeLong = nativeFlags & (NATIVE_TOUCH_ASCII_SCANCODE_MASK << NATIVE_TOUCH_ASCII_SCANCODE_SHIFT);
+                    int asciiInt = (int) (asciiScancodeLong >> (NATIVE_TOUCH_ASCII_SCANCODE_SHIFT + 8));
+                    int scancode = (int) ((asciiScancodeLong >> NATIVE_TOUCH_ASCII_SCANCODE_SHIFT) & 0xFFL);
+                    char ascii = (char) asciiInt;
+                    apple2MenuView.onKeyTapCalibrationEvent(ascii, scancode);
+                }
             }
 
             if ((nativeFlags & NATIVE_TOUCH_MENU) == 0) {
@@ -405,7 +418,7 @@ public class Apple2Activity extends Activity {
         if (mMainMenu != null) {
             Apple2SettingsMenu settingsMenu = mMainMenu.getSettingsMenu();
             Apple2DisksMenu disksMenu = mMainMenu.getDisksMenu();
-            if (! (settingsMenu.isShowing() || disksMenu.isShowing()) ) {
+            if (!(settingsMenu.isShowing() || disksMenu.isShowing())) {
                 mMainMenu.show();
             }
         }

@@ -26,4 +26,6 @@ public interface Apple2MenuView {
     public View getView();
 
     public boolean isCalibrating();
+
+    public void onKeyTapCalibrationEvent(char ascii, int scancode);
 }

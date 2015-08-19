@@ -68,6 +68,10 @@ public abstract class Apple2AbstractMenu implements Apple2MenuView {
         return false;
     }
 
+    public void onKeyTapCalibrationEvent(char ascii, int scancode) {
+        /* ... */
+    }
+
     // ------------------------------------------------------------------------
     // required overrides ...
 

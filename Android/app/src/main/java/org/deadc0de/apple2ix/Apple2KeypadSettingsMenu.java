@@ -12,9 +12,6 @@
 package org.deadc0de.apple2ix;
 
 import android.view.View;
-import android.widget.CheckBox;
-import android.widget.CompoundButton;
-import android.widget.TextView;
 
 import java.util.ArrayList;
 
@@ -50,7 +47,7 @@ public class Apple2KeypadSettingsMenu extends Apple2AbstractMenu {
     }
 
     enum SETTINGS implements Apple2AbstractMenu.IMenuEnum {
-        KEYPAD_CHOOSE_BUTTONS {
+        KEYPAD_CHOOSE_KEYS {
             @Override
             public final String getTitle(Apple2Activity activity) {
                 return activity.getResources().getString(R.string.keypad_choose);
@@ -62,29 +59,34 @@ public class Apple2KeypadSettingsMenu extends Apple2AbstractMenu {
             }
 
             @Override
+            public final View getView(final Apple2Activity activity, View convertView) {
+                convertView = _basicView(activity, this, convertView);
+                _addPopupIcon(activity, this, convertView);
+                return convertView;
+            }
+
+            @Override
             public void handleSelection(final Apple2Activity activity, final Apple2AbstractMenu settingsMenu, boolean isChecked) {
-                ArrayList<Apple2MenuView> viewStack = new ArrayList<>();
-                {
-                    int idx = 0;
-                    while (true) {
-                        Apple2MenuView apple2MenuView = activity.peekApple2View(idx);
-                        if (apple2MenuView == null) {
-                            break;
-                        }
-                        viewStack.add(apple2MenuView);
-                        ++idx;
+                String[] titles = new String[Apple2Preferences.KeypadPreset.size + 1];
+                titles[0] = activity.getResources().getString(R.string.keypad_preset_custom);
+                System.arraycopy(Apple2Preferences.KeypadPreset.titles(activity), 0, titles, 1, Apple2Preferences.KeypadPreset.size);
+
+                _alertDialogHandleSelection(activity, R.string.keypad_choose_title, titles, new IPreferenceLoadSave() {
+                    @Override
+                    public int intValue() {
+                        return -1;
                     }
-                }
 
-                Apple2KeypadChooser chooser = new Apple2KeypadChooser(activity, viewStack);
-
-                // show this new view...
-                chooser.show();
-
-                // ...with nothing else underneath 'cept the emulator OpenGL layer
-                for (Apple2MenuView apple2MenuView : viewStack) {
-                    activity.popApple2View(apple2MenuView);
-                }
+                    @Override
+                    public void saveInt(int value) {
+                        if (value == 0) {
+                            Apple2KeypadSettingsMenu keypadSettingsMenu = (Apple2KeypadSettingsMenu) settingsMenu;
+                            keypadSettingsMenu.chooseKeys(activity);
+                        } else {
+                            Apple2Preferences.KeypadPreset.values()[value - 1].apply(activity);
+                        }
+                    }
+                });
             }
         },
         KEYPAD_CALIBRATE {
@@ -144,6 +146,34 @@ public class Apple2KeypadSettingsMenu extends Apple2AbstractMenu {
                 titles[i++] = setting.getTitle(activity);
             }
             return titles;
+        }
+    }
+
+    // ------------------------------------------------------------------------
+    // internals
+
+    private void chooseKeys(Apple2Activity activity) {
+        ArrayList<Apple2MenuView> viewStack = new ArrayList<>();
+        {
+            int idx = 0;
+            while (true) {
+                Apple2MenuView apple2MenuView = activity.peekApple2View(idx);
+                if (apple2MenuView == null) {
+                    break;
+                }
+                viewStack.add(apple2MenuView);
+                ++idx;
+            }
+        }
+
+        Apple2KeypadChooser chooser = new Apple2KeypadChooser(activity, viewStack);
+
+        // show this new view...
+        chooser.show();
+
+        // ...with nothing else underneath 'cept the emulator OpenGL layer
+        for (Apple2MenuView apple2MenuView : viewStack) {
+            activity.popApple2View(apple2MenuView);
         }
     }
 }

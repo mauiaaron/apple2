@@ -78,6 +78,10 @@ public class Apple2JoystickCalibration implements Apple2MenuView {
         return true;
     }
 
+    public void onKeyTapCalibrationEvent(char ascii, int scancode) {
+        /* ... */
+    }
+
     public void show() {
         if (isShowing()) {
             return;

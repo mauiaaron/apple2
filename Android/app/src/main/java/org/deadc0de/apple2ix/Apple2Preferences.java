@@ -14,9 +14,6 @@ package org.deadc0de.apple2ix;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.util.Log;
-
-import java.io.File;
 
 public enum Apple2Preferences {
     ASSETS_CONFIGURED {
@@ -181,7 +178,21 @@ public enum Apple2Preferences {
     CURRENT_TOUCH_DEVICE {
         @Override
         public void load(Apple2Activity activity) {
-            nativeSetCurrentTouchDevice(intValue(activity));
+            int intVariant = intValue(activity);
+            nativeSetCurrentTouchDevice(intVariant);
+            TouchDeviceVariant variant = TouchDeviceVariant.values()[intVariant];
+            switch (variant) {
+                case JOYSTICK:
+                    loadAllJoystickButtons(activity);
+                    break;
+                case JOYSTICK_KEYPAD:
+                    loadAllKeypadKeys(activity);
+                    break;
+                case KEYBOARD:
+                    break;
+                default:
+                    break;
+            }
         }
 
         @Override
@@ -257,7 +268,7 @@ public enum Apple2Preferences {
     JOYSTICK_TAP_BUTTON {
         @Override
         public void load(Apple2Activity activity) {
-            nativeSetTouchJoystickButtonTypes(JOYSTICK_TAP_BUTTON.intValue(activity), JOYSTICK_SWIPEUP_BUTTON.intValue(activity), JOYSTICK_SWIPEDOWN_BUTTON.intValue(activity));
+            loadAllJoystickButtons(activity);
         }
 
         @Override
@@ -274,14 +285,14 @@ public enum Apple2Preferences {
 
         @Override
         public int intValue(Apple2Activity activity) {
-            int defaultLatency = 2; // /TAPDELAY_NUM_CHOICES * TAPDELAY_SCALE -> 0.05f
+            int defaultLatency = 3; // /TAPDELAY_NUM_CHOICES * TAPDELAY_SCALE -> 0.075f
             return activity.getPreferences(Context.MODE_PRIVATE).getInt(toString(), defaultLatency);
         }
     },
     JOYSTICK_SWIPEUP_BUTTON {
         @Override
         public void load(Apple2Activity activity) {
-            nativeSetTouchJoystickButtonTypes(JOYSTICK_TAP_BUTTON.intValue(activity), JOYSTICK_SWIPEUP_BUTTON.intValue(activity), JOYSTICK_SWIPEDOWN_BUTTON.intValue(activity));
+            loadAllJoystickButtons(activity);
         }
 
         @Override
@@ -292,7 +303,7 @@ public enum Apple2Preferences {
     JOYSTICK_SWIPEDOWN_BUTTON {
         @Override
         public void load(Apple2Activity activity) {
-            nativeSetTouchJoystickButtonTypes(JOYSTICK_TAP_BUTTON.intValue(activity), JOYSTICK_SWIPEUP_BUTTON.intValue(activity), JOYSTICK_SWIPEDOWN_BUTTON.intValue(activity));
+            loadAllJoystickButtons(activity);
         }
 
         @Override
@@ -320,7 +331,79 @@ public enum Apple2Preferences {
 
         @Override
         public int intValue(Apple2Activity activity) {
-            return activity.getPreferences(Context.MODE_PRIVATE).getInt(toString(), JOYSTICK_DIVIDER_NUM_CHOICES>>1);
+            return activity.getPreferences(Context.MODE_PRIVATE).getInt(toString(), JOYSTICK_DIVIDER_NUM_CHOICES >> 1);
+        }
+    },
+    KEYPAD_NORTHWEST_KEY {
+        @Override
+        public void load(Apple2Activity activity) {
+            loadAllKeypadKeys(activity);
+        }
+    },
+    KEYPAD_NORTH_KEY {
+        @Override
+        public void load(Apple2Activity activity) {
+            loadAllKeypadKeys(activity);
+        }
+    },
+    KEYPAD_NORTHEAST_KEY {
+        @Override
+        public void load(Apple2Activity activity) {
+            loadAllKeypadKeys(activity);
+        }
+    },
+    KEYPAD_WEST_KEY {
+        @Override
+        public void load(Apple2Activity activity) {
+            loadAllKeypadKeys(activity);
+        }
+    },
+    KEYPAD_CENTER_KEY {
+        @Override
+        public void load(Apple2Activity activity) {
+            loadAllKeypadKeys(activity);
+        }
+    },
+    KEYPAD_EAST_KEY {
+        @Override
+        public void load(Apple2Activity activity) {
+            loadAllKeypadKeys(activity);
+        }
+    },
+    KEYPAD_SOUTHWEST_KEY {
+        @Override
+        public void load(Apple2Activity activity) {
+            loadAllKeypadKeys(activity);
+        }
+    },
+    KEYPAD_SOUTH_KEY {
+        @Override
+        public void load(Apple2Activity activity) {
+            loadAllKeypadKeys(activity);
+        }
+    },
+    KEYPAD_SOUTHEAST_KEY {
+        @Override
+        public void load(Apple2Activity activity) {
+            loadAllKeypadKeys(activity);
+        }
+    },
+    KEYPAD_TAP_KEY {
+        @Override
+        public void load(Apple2Activity activity) {
+            loadAllKeypadKeys(activity);
+        }
+    },
+    KEYPAD_SWIPEUP_KEY {
+        @Override
+        public void load(Apple2Activity activity) {
+            loadAllKeypadKeys(activity);
+        }
+    },
+    KEYPAD_SWIPEDOWN_KEY {
+        @Override
+        public void load(Apple2Activity activity) {
+            loadAllKeypadKeys(activity);
         }
     };
 
@@ -375,16 +458,155 @@ public enum Apple2Preferences {
         }
     }
 
-    protected abstract void load(Apple2Activity activity);
-
-    protected void warnError(Apple2Activity activity, int titleId, int mesgId) {
-        AlertDialog dialog = new AlertDialog.Builder(activity).setIcon(R.drawable.ic_launcher).setCancelable(true).setTitle(titleId).setMessage(mesgId).setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+    public enum KeypadPreset {
+        ARROWS_SPACE {
             @Override
-            public void onClick(DialogInterface dialog, int which) {
-                dialog.dismiss();
+            public String getTitle(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.keypad_preset_arrows_space);
             }
-        }).create();
-        dialog.show();
+
+            @Override
+            public void apply(Apple2Activity activity) {
+                Apple2Preferences.KEYPAD_NORTHWEST_KEY.saveChosenKey(activity, (char) Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+                Apple2Preferences.KEYPAD_NORTH_KEY.saveChosenKey(activity, (char) Apple2KeyboardSettingsMenu.MOUSETEXT_UP, Apple2KeyboardSettingsMenu.SCANCODE_UP);
+                Apple2Preferences.KEYPAD_NORTHEAST_KEY.saveChosenKey(activity, (char) Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+                Apple2Preferences.KEYPAD_WEST_KEY.saveChosenKey(activity, (char) Apple2KeyboardSettingsMenu.MOUSETEXT_LEFT, Apple2KeyboardSettingsMenu.SCANCODE_LEFT);
+                Apple2Preferences.KEYPAD_CENTER_KEY.saveChosenKey(activity, (char) Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+                Apple2Preferences.KEYPAD_EAST_KEY.saveChosenKey(activity, (char) Apple2KeyboardSettingsMenu.MOUSETEXT_RIGHT, Apple2KeyboardSettingsMenu.SCANCODE_RIGHT);
+                Apple2Preferences.KEYPAD_SOUTHWEST_KEY.saveChosenKey(activity, (char) Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+                Apple2Preferences.KEYPAD_SOUTH_KEY.saveChosenKey(activity, (char) Apple2KeyboardSettingsMenu.MOUSETEXT_DOWN, Apple2KeyboardSettingsMenu.SCANCODE_DOWN);
+                Apple2Preferences.KEYPAD_SOUTHEAST_KEY.saveChosenKey(activity, (char) Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+                Apple2Preferences.KEYPAD_TAP_KEY.saveChosenKey(activity, (char) Apple2KeyboardSettingsMenu.ICONTEXT_VISUAL_SPACE, Apple2KeyboardSettingsMenu.SCANCODE_SPACE);
+                Apple2Preferences.KEYPAD_SWIPEDOWN_KEY.saveChosenKey(activity, (char) Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+                Apple2Preferences.KEYPAD_SWIPEUP_KEY.saveChosenKey(activity, (char) Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+            }
+        },
+        AZ_LEFT_RIGHT_SPACE {
+            @Override
+            public String getTitle(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.keypad_preset_az_left_right_space);
+            }
+
+            @Override
+            public void apply(Apple2Activity activity) {
+                Apple2Preferences.KEYPAD_NORTHWEST_KEY.saveChosenKey(activity, (char) Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+                Apple2Preferences.KEYPAD_NORTH_KEY.saveChosenKey(activity, (char) 'A', Apple2KeyboardSettingsMenu.SCANCODE_A);
+                Apple2Preferences.KEYPAD_NORTHEAST_KEY.saveChosenKey(activity, (char) Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+                Apple2Preferences.KEYPAD_WEST_KEY.saveChosenKey(activity, (char) Apple2KeyboardSettingsMenu.MOUSETEXT_LEFT, Apple2KeyboardSettingsMenu.SCANCODE_LEFT);
+                Apple2Preferences.KEYPAD_CENTER_KEY.saveChosenKey(activity, (char) Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+                Apple2Preferences.KEYPAD_EAST_KEY.saveChosenKey(activity, (char) Apple2KeyboardSettingsMenu.MOUSETEXT_RIGHT, Apple2KeyboardSettingsMenu.SCANCODE_RIGHT);
+                Apple2Preferences.KEYPAD_SOUTHWEST_KEY.saveChosenKey(activity, (char) Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+                Apple2Preferences.KEYPAD_SOUTH_KEY.saveChosenKey(activity, (char) 'Z', Apple2KeyboardSettingsMenu.SCANCODE_Z);
+                Apple2Preferences.KEYPAD_SOUTHEAST_KEY.saveChosenKey(activity, (char) Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+                Apple2Preferences.KEYPAD_TAP_KEY.saveChosenKey(activity, (char) Apple2KeyboardSettingsMenu.ICONTEXT_VISUAL_SPACE, Apple2KeyboardSettingsMenu.SCANCODE_SPACE);
+                Apple2Preferences.KEYPAD_SWIPEDOWN_KEY.saveChosenKey(activity, (char) Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+                Apple2Preferences.KEYPAD_SWIPEUP_KEY.saveChosenKey(activity, (char) Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+            }
+        },
+        LEFT_RIGHT_SPACE {
+            @Override
+            public String getTitle(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.keypad_preset_left_right_space);
+            }
+
+            @Override
+            public void apply(Apple2Activity activity) {
+                Apple2Preferences.KEYPAD_NORTHWEST_KEY.saveChosenKey(activity, (char) Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+                Apple2Preferences.KEYPAD_NORTH_KEY.saveChosenKey(activity, (char) Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+                Apple2Preferences.KEYPAD_NORTHEAST_KEY.saveChosenKey(activity, (char) Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+                Apple2Preferences.KEYPAD_WEST_KEY.saveChosenKey(activity, (char) Apple2KeyboardSettingsMenu.MOUSETEXT_LEFT, Apple2KeyboardSettingsMenu.SCANCODE_LEFT);
+                Apple2Preferences.KEYPAD_CENTER_KEY.saveChosenKey(activity, (char) Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+                Apple2Preferences.KEYPAD_EAST_KEY.saveChosenKey(activity, (char) Apple2KeyboardSettingsMenu.MOUSETEXT_RIGHT, Apple2KeyboardSettingsMenu.SCANCODE_RIGHT);
+                Apple2Preferences.KEYPAD_SOUTHWEST_KEY.saveChosenKey(activity, (char) Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+                Apple2Preferences.KEYPAD_SOUTH_KEY.saveChosenKey(activity, (char) Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+                Apple2Preferences.KEYPAD_SOUTHEAST_KEY.saveChosenKey(activity, (char) Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+                Apple2Preferences.KEYPAD_TAP_KEY.saveChosenKey(activity, (char) Apple2KeyboardSettingsMenu.ICONTEXT_VISUAL_SPACE, Apple2KeyboardSettingsMenu.SCANCODE_SPACE);
+                Apple2Preferences.KEYPAD_SWIPEDOWN_KEY.saveChosenKey(activity, (char) Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+                Apple2Preferences.KEYPAD_SWIPEUP_KEY.saveChosenKey(activity, (char) Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+            }
+        },
+        IJKM_SPACE {
+            @Override
+            public String getTitle(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.keypad_preset_ijkm_space);
+            }
+
+            @Override
+            public void apply(Apple2Activity activity) {
+                Apple2Preferences.KEYPAD_NORTHWEST_KEY.saveChosenKey(activity, (char) Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+                Apple2Preferences.KEYPAD_NORTH_KEY.saveChosenKey(activity, (char) 'I', Apple2KeyboardSettingsMenu.SCANCODE_I);
+                Apple2Preferences.KEYPAD_NORTHEAST_KEY.saveChosenKey(activity, (char) Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+                Apple2Preferences.KEYPAD_WEST_KEY.saveChosenKey(activity, (char) 'J', Apple2KeyboardSettingsMenu.SCANCODE_J);
+                Apple2Preferences.KEYPAD_CENTER_KEY.saveChosenKey(activity, (char) Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+                Apple2Preferences.KEYPAD_EAST_KEY.saveChosenKey(activity, (char) 'K', Apple2KeyboardSettingsMenu.SCANCODE_K);
+                Apple2Preferences.KEYPAD_SOUTHWEST_KEY.saveChosenKey(activity, (char) Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+                Apple2Preferences.KEYPAD_SOUTH_KEY.saveChosenKey(activity, (char) 'M', Apple2KeyboardSettingsMenu.SCANCODE_M);
+                Apple2Preferences.KEYPAD_SOUTHEAST_KEY.saveChosenKey(activity, (char) Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+                Apple2Preferences.KEYPAD_TAP_KEY.saveChosenKey(activity, (char) Apple2KeyboardSettingsMenu.ICONTEXT_VISUAL_SPACE, Apple2KeyboardSettingsMenu.SCANCODE_SPACE);
+                Apple2Preferences.KEYPAD_SWIPEDOWN_KEY.saveChosenKey(activity, (char) Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+                Apple2Preferences.KEYPAD_SWIPEUP_KEY.saveChosenKey(activity, (char) Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+            }
+        },
+        WADX_SPACE {
+            @Override
+            public String getTitle(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.keypad_preset_wadx_space);
+            }
+
+            @Override
+            public void apply(Apple2Activity activity) {
+                Apple2Preferences.KEYPAD_NORTHWEST_KEY.saveChosenKey(activity, (char) Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+                Apple2Preferences.KEYPAD_NORTH_KEY.saveChosenKey(activity, (char) 'W', Apple2KeyboardSettingsMenu.SCANCODE_W);
+                Apple2Preferences.KEYPAD_NORTHEAST_KEY.saveChosenKey(activity, (char) Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+                Apple2Preferences.KEYPAD_WEST_KEY.saveChosenKey(activity, (char) 'A', Apple2KeyboardSettingsMenu.SCANCODE_A);
+                Apple2Preferences.KEYPAD_CENTER_KEY.saveChosenKey(activity, (char) Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+                Apple2Preferences.KEYPAD_EAST_KEY.saveChosenKey(activity, (char) 'D', Apple2KeyboardSettingsMenu.SCANCODE_D);
+                Apple2Preferences.KEYPAD_SOUTHWEST_KEY.saveChosenKey(activity, (char) Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+                Apple2Preferences.KEYPAD_SOUTH_KEY.saveChosenKey(activity, (char) 'X', Apple2KeyboardSettingsMenu.SCANCODE_X);
+                Apple2Preferences.KEYPAD_SOUTHEAST_KEY.saveChosenKey(activity, (char) Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+                Apple2Preferences.KEYPAD_TAP_KEY.saveChosenKey(activity, (char) Apple2KeyboardSettingsMenu.ICONTEXT_VISUAL_SPACE, Apple2KeyboardSettingsMenu.SCANCODE_SPACE);
+                Apple2Preferences.KEYPAD_SWIPEDOWN_KEY.saveChosenKey(activity, (char) Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+                Apple2Preferences.KEYPAD_SWIPEUP_KEY.saveChosenKey(activity, (char) Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+            }
+        },
+        CRAZY_SEAFOX_KEYS {
+            @Override
+            public String getTitle(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.keypad_preset_crazy_seafox);
+            }
+
+            @Override
+            public void apply(Apple2Activity activity) {
+                // Heh, the entire purpose of the keypad-variant touch joystick is to make this possible ;-)
+                Apple2Preferences.KEYPAD_NORTHWEST_KEY.saveChosenKey(activity, (char) 'Y', Apple2KeyboardSettingsMenu.SCANCODE_Y);
+                Apple2Preferences.KEYPAD_NORTH_KEY.saveChosenKey(activity, (char) 'U', Apple2KeyboardSettingsMenu.SCANCODE_U);
+                Apple2Preferences.KEYPAD_NORTHEAST_KEY.saveChosenKey(activity, (char) 'I', Apple2KeyboardSettingsMenu.SCANCODE_I);
+                Apple2Preferences.KEYPAD_WEST_KEY.saveChosenKey(activity, (char) 'H', Apple2KeyboardSettingsMenu.SCANCODE_H);
+                Apple2Preferences.KEYPAD_CENTER_KEY.saveChosenKey(activity, (char) 'J', Apple2KeyboardSettingsMenu.SCANCODE_J);
+                Apple2Preferences.KEYPAD_EAST_KEY.saveChosenKey(activity, (char) 'K', Apple2KeyboardSettingsMenu.SCANCODE_K);
+                Apple2Preferences.KEYPAD_SOUTHWEST_KEY.saveChosenKey(activity, (char) 'N', Apple2KeyboardSettingsMenu.SCANCODE_N);
+                Apple2Preferences.KEYPAD_SOUTH_KEY.saveChosenKey(activity, (char) 'M', Apple2KeyboardSettingsMenu.SCANCODE_M);
+                Apple2Preferences.KEYPAD_SOUTHEAST_KEY.saveChosenKey(activity, (char) ',', Apple2KeyboardSettingsMenu.SCANCODE_COMMA);
+                Apple2Preferences.KEYPAD_TAP_KEY.saveChosenKey(activity, (char) 'D', Apple2KeyboardSettingsMenu.SCANCODE_D);
+                Apple2Preferences.KEYPAD_SWIPEDOWN_KEY.saveChosenKey(activity, (char) 'F', Apple2KeyboardSettingsMenu.SCANCODE_F);
+                Apple2Preferences.KEYPAD_SWIPEUP_KEY.saveChosenKey(activity, (char) Apple2KeyboardSettingsMenu.ICONTEXT_VISUAL_SPACE, Apple2KeyboardSettingsMenu.SCANCODE_SPACE);
+            }
+        };
+
+        public abstract String getTitle(Apple2Activity activity);
+
+        public abstract void apply(Apple2Activity activity);
+
+        public static final int size = KeypadPreset.values().length;
+
+        public static String[] titles(Apple2Activity activity) {
+            String[] titles = new String[size];
+            int i = 0;
+            for (KeypadPreset preset : values()) {
+                titles[i++] = preset.getTitle(activity);
+            }
+            return titles;
+        }
     }
 
     public final static int DECENT_AMOUNT_OF_CHOICES = 20;
@@ -450,6 +672,12 @@ public enum Apple2Preferences {
         load(activity);
     }
 
+    public void saveChosenKey(Apple2Activity activity, char ascii, int scancode) {
+        activity.getPreferences(Context.MODE_PRIVATE).edit().putInt(asciiString(), ascii).apply();
+        activity.getPreferences(Context.MODE_PRIVATE).edit().putInt(scancodeString(), scancode).apply();
+        load(activity);
+    }
+
     // accessors
 
     public boolean booleanValue(Apple2Activity activity) {
@@ -468,6 +696,14 @@ public enum Apple2Preferences {
         return activity.getPreferences(Context.MODE_PRIVATE).getString(toString(), null);
     }
 
+    public char asciiValue(Apple2Activity activity) {
+        return (char) activity.getPreferences(Context.MODE_PRIVATE).getInt(asciiString(), ' ');
+    }
+
+    public int scancodeValue(Apple2Activity activity) {
+        return activity.getPreferences(Context.MODE_PRIVATE).getInt(scancodeString(), Apple2KeyboardSettingsMenu.SCANCODE_SPACE);
+    }
+
     public static void loadPreferences(Apple2Activity activity) {
         for (Apple2Preferences pref : Apple2Preferences.values()) {
             pref.load(activity);
@@ -477,6 +713,72 @@ public enum Apple2Preferences {
     public static void resetPreferences(Apple2Activity activity) {
         activity.getPreferences(Context.MODE_PRIVATE).edit().clear().commit();
         loadPreferences(activity);
+    }
+
+    public String asciiString() {
+        return toString() + "_ASCII";
+    }
+
+    public String scancodeString() {
+        return toString() + "_SCAN";
+    }
+
+    // ------------------------------------------------------------------------
+    // internals ...
+
+    protected abstract void load(Apple2Activity activity);
+
+    protected static void warnError(Apple2Activity activity, int titleId, int mesgId) {
+        AlertDialog dialog = new AlertDialog.Builder(activity).setIcon(R.drawable.ic_launcher).setCancelable(true).setTitle(titleId).setMessage(mesgId).setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+            }
+        }).create();
+        dialog.show();
+    }
+
+    protected static void loadAllKeypadKeys(Apple2Activity activity) {
+        int[] rosetteChars = new int[]{
+                KEYPAD_NORTHWEST_KEY.asciiValue(activity),
+                KEYPAD_NORTH_KEY.asciiValue(activity),
+                KEYPAD_NORTHEAST_KEY.asciiValue(activity),
+                KEYPAD_WEST_KEY.asciiValue(activity),
+                KEYPAD_CENTER_KEY.asciiValue(activity),
+                KEYPAD_EAST_KEY.asciiValue(activity),
+                KEYPAD_SOUTHWEST_KEY.asciiValue(activity),
+                KEYPAD_SOUTH_KEY.asciiValue(activity),
+                KEYPAD_SOUTHEAST_KEY.asciiValue(activity),
+        };
+        int[] rosetteScancodes = new int[]{
+                KEYPAD_NORTHWEST_KEY.scancodeValue(activity),
+                KEYPAD_NORTH_KEY.scancodeValue(activity),
+                KEYPAD_NORTHEAST_KEY.scancodeValue(activity),
+                KEYPAD_WEST_KEY.scancodeValue(activity),
+                KEYPAD_CENTER_KEY.scancodeValue(activity),
+                KEYPAD_EAST_KEY.scancodeValue(activity),
+                KEYPAD_SOUTHWEST_KEY.scancodeValue(activity),
+                KEYPAD_SOUTH_KEY.scancodeValue(activity),
+                KEYPAD_SOUTHEAST_KEY.scancodeValue(activity),
+        };
+        int[] buttonsChars = new int[]{
+                KEYPAD_TAP_KEY.asciiValue(activity),
+                KEYPAD_SWIPEUP_KEY.asciiValue(activity),
+                KEYPAD_SWIPEDOWN_KEY.asciiValue(activity),
+        };
+        int[] buttonsScancodes = new int[]{
+                KEYPAD_TAP_KEY.scancodeValue(activity),
+                KEYPAD_SWIPEUP_KEY.scancodeValue(activity),
+                KEYPAD_SWIPEDOWN_KEY.scancodeValue(activity),
+        };
+        nativeTouchJoystickSetKeypadTypes(rosetteChars, rosetteScancodes, buttonsChars, buttonsScancodes);
+    }
+
+    protected static void loadAllJoystickButtons(Apple2Activity activity) {
+        nativeSetTouchJoystickButtonTypes(
+                JOYSTICK_TAP_BUTTON.intValue(activity),
+                JOYSTICK_SWIPEUP_BUTTON.intValue(activity),
+                JOYSTICK_SWIPEDOWN_BUTTON.intValue(activity));
     }
 
     // native hooks
@@ -520,4 +822,7 @@ public enum Apple2Preferences {
     public static native void nativeTouchJoystickBeginCalibrationMode();
 
     public static native void nativeTouchJoystickEndCalibrationMode();
+
+    private static native void nativeTouchJoystickSetKeypadTypes(int[] rosetteChars, int[] rosetteScancodes, int[] buttonsChars, int[] buttonsScancodes);
+
 }

@@ -141,6 +141,10 @@ public class Apple2DisksMenu implements Apple2MenuView {
         return false;
     }
 
+    public void onKeyTapCalibrationEvent(char ascii, int scancode) {
+        /* ... */
+    }
+
     public void show() {
         if (isShowing()) {
             return;
