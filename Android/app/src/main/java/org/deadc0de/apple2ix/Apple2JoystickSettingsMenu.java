@@ -240,7 +240,7 @@ public class Apple2JoystickSettingsMenu extends Apple2AbstractMenu {
         }
     }
 
-    protected static class JoystickAdvanced extends Apple2AbstractMenu {
+    public static class JoystickAdvanced extends Apple2AbstractMenu {
 
         private final static String TAG = "JoystickAdvanced";
 
@@ -268,7 +268,7 @@ public class Apple2JoystickSettingsMenu extends Apple2AbstractMenu {
             if (position < 0 || position >= SETTINGS.size) {
                 throw new ArrayIndexOutOfBoundsException();
             }
-            return position != SETTINGS.JOYSTICK_AXIS_SENSITIVIY.ordinal();
+            return position == SETTINGS.JOYSTICK_AXIS_ON_LEFT.ordinal();
         }
 
         protected enum SETTINGS implements Apple2AbstractMenu.IMenuEnum {

@@ -163,6 +163,12 @@ extern bool (*keydriver_ownsScreen)(void);
 
 // keyboard read callback
 extern void (*keydriver_keyboardReadCallback)(void);
+
+// begin calibration mode
+extern void (*keydriver_beginCalibration)(void);
+
+// end calibration mode
+extern void (*keydriver_endCalibration)(void);
 #endif
 
 #endif

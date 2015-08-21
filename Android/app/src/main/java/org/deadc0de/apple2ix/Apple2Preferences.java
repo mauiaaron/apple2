@@ -334,6 +334,17 @@ public enum Apple2Preferences {
             return activity.getPreferences(Context.MODE_PRIVATE).getInt(toString(), JOYSTICK_DIVIDER_NUM_CHOICES >> 1);
         }
     },
+    KEYPAD_KEYS {
+        @Override
+        public void load(Apple2Activity activity) {
+            /* ... */
+        }
+
+        @Override
+        public int intValue(Apple2Activity activity) {
+            return activity.getPreferences(Context.MODE_PRIVATE).getInt(toString(), -1);
+        }
+    },
     KEYPAD_NORTHWEST_KEY {
         @Override
         public void load(Apple2Activity activity) {
@@ -404,6 +415,19 @@ public enum Apple2Preferences {
         @Override
         public void load(Apple2Activity activity) {
             loadAllKeypadKeys(activity);
+        }
+    },
+    KEYREPEAT_THRESHOLD {
+        @Override
+        public void load(Apple2Activity activity) {
+            int tick = intValue(activity);
+            nativeSetTouchDeviceKeyRepeatThreshold((float) tick / KEYREPEAT_NUM_CHOICES);
+        }
+
+        @Override
+        public int intValue(Apple2Activity activity) {
+            int defaultLatency = KEYREPEAT_NUM_CHOICES / 4;
+            return activity.getPreferences(Context.MODE_PRIVATE).getInt(toString(), defaultLatency);
         }
     };
 
@@ -617,6 +641,8 @@ public enum Apple2Preferences {
     public final static int TAPDELAY_NUM_CHOICES = DECENT_AMOUNT_OF_CHOICES;
     public final static float TAPDELAY_SCALE = 0.5f;
 
+    public final static int KEYREPEAT_NUM_CHOICES = DECENT_AMOUNT_OF_CHOICES;
+
     public final static String TAG = "Apple2Preferences";
 
     public final static int JOYSTICK_BUTTON_THRESHOLD_NUM_CHOICES = DECENT_AMOUNT_OF_CHOICES;
@@ -738,7 +764,7 @@ public enum Apple2Preferences {
         dialog.show();
     }
 
-    protected static void loadAllKeypadKeys(Apple2Activity activity) {
+    public static void loadAllKeypadKeys(Apple2Activity activity) {
         int[] rosetteChars = new int[]{
                 KEYPAD_NORTHWEST_KEY.asciiValue(activity),
                 KEYPAD_NORTH_KEY.asciiValue(activity),
@@ -774,7 +800,7 @@ public enum Apple2Preferences {
         nativeTouchJoystickSetKeypadTypes(rosetteChars, rosetteScancodes, buttonsChars, buttonsScancodes);
     }
 
-    protected static void loadAllJoystickButtons(Apple2Activity activity) {
+    public static void loadAllJoystickButtons(Apple2Activity activity) {
         nativeSetTouchJoystickButtonTypes(
                 JOYSTICK_TAP_BUTTON.intValue(activity),
                 JOYSTICK_SWIPEUP_BUTTON.intValue(activity),
@@ -819,10 +845,12 @@ public enum Apple2Preferences {
 
     public static native void nativeTouchJoystickSetAxisOnLeft(boolean axisIsOnLeft);
 
-    public static native void nativeTouchJoystickBeginCalibrationMode();
+    public static native void nativeTouchDeviceBeginCalibrationMode();
 
-    public static native void nativeTouchJoystickEndCalibrationMode();
+    public static native void nativeTouchDeviceEndCalibrationMode();
 
     private static native void nativeTouchJoystickSetKeypadTypes(int[] rosetteChars, int[] rosetteScancodes, int[] buttonsChars, int[] buttonsScancodes);
+
+    private static native void nativeSetTouchDeviceKeyRepeatThreshold(float threshold);
 
 }

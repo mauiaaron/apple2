@@ -84,17 +84,20 @@ void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetCurrentTouchDevice(JN
             keydriver_setTouchKeyboardOwnsScreen(false);
             joydriver_setTouchJoystickOwnsScreen(true);
             joydriver_setTouchVariant(EMULATED_JOYSTICK);
+            video_backend->animation_showTouchJoystick();
             break;
 
         case ANDROID_TOUCH_JOYSTICK_KEYPAD:
             keydriver_setTouchKeyboardOwnsScreen(false);
             joydriver_setTouchJoystickOwnsScreen(true);
             joydriver_setTouchVariant(EMULATED_KEYPAD);
+            video_backend->animation_showTouchJoystick();
             break;
 
         case ANDROID_TOUCH_KEYBOARD:
             keydriver_setTouchKeyboardOwnsScreen(true);
             joydriver_setTouchJoystickOwnsScreen(false);
+            video_backend->animation_showTouchKeyboard();
             break;
 
         case ANDROID_TOUCH_NONE:
@@ -222,14 +225,27 @@ void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeTouchJoystickSetKeypadTy
     (*env)->ReleaseIntArrayElements(env, jButtonsScans, buttonsScans, 0);
 }
 
-void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeTouchJoystickBeginCalibrationMode(JNIEnv *env, jclass cls) {
-    LOG("nativeTouchJoystickBeginCalibrationMode() ...");
-    joydriver_beginCalibration();
+void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeTouchDeviceBeginCalibrationMode(JNIEnv *env, jclass cls) {
+    LOG("nativeTouchDeviceBeginCalibrationMode() ...");
+    if (joydriver_ownsScreen()) {
+        joydriver_beginCalibration();
+    } else if (keydriver_ownsScreen()) {
+        keydriver_beginCalibration();
+    }
 }
 
-void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeTouchJoystickEndCalibrationMode(JNIEnv *env, jclass cls) {
-    LOG("nativeTouchJoystickEndCalibrationMode() ...");
-    joydriver_endCalibration();
+void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeTouchDeviceEndCalibrationMode(JNIEnv *env, jclass cls) {
+    LOG("nativeTouchDeviceEndCalibrationMode() ...");
+    if (joydriver_ownsScreen()) {
+        joydriver_endCalibration();
+    } else if (keydriver_ownsScreen()) {
+        keydriver_endCalibration();
+    }
+}
+
+void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetTouchDeviceKeyRepeatThreshold(JNIEnv *env, jclass cls, jfloat threshold) {
+    LOG("...");
+    joydriver_setKeyRepeatThreshold(threshold);
 }
 
 jint Java_org_deadc0de_apple2ix_Apple2Preferences_nativeGetCPUSpeed(JNIEnv *env, jclass cls) {

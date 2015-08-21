@@ -303,8 +303,10 @@ static void gltouchjoy_setup(void) {
         return;
     }
 
-    clock_gettime(CLOCK_MONOTONIC, &axes.timingBegin);
-    clock_gettime(CLOCK_MONOTONIC, &buttons.timingBegin);
+    struct timespec now;
+    clock_gettime(CLOCK_MONOTONIC, &now);
+    axes.timingBegin = now;
+    buttons.timingBegin = now;
 
     joyglobals.isAvailable = true;
 }
@@ -628,11 +630,13 @@ static int64_t gltouchjoy_onTouchEvent(interface_touch_event_t action, int point
             break;
     }
 
+    struct timespec now;
+    clock_gettime(CLOCK_MONOTONIC, &now);
     if (axisConsumed) {
-        clock_gettime(CLOCK_MONOTONIC, &axes.timingBegin);
+        axes.timingBegin = now;
     }
     if (buttonConsumed) {
-        clock_gettime(CLOCK_MONOTONIC, &buttons.timingBegin);
+        buttons.timingBegin = now;
     }
 
     return TOUCH_FLAGS_HANDLED | TOUCH_FLAGS_JOY;
@@ -663,8 +667,21 @@ static void _animation_showTouchJoystick(void) {
     if (!joyglobals.isAvailable) {
         return;
     }
-    clock_gettime(CLOCK_MONOTONIC, &axes.timingBegin);
-    clock_gettime(CLOCK_MONOTONIC, &buttons.timingBegin);
+
+    int x = touchport.axisX + ((touchport.axisXMax - touchport.axisX)/2);
+    int y = touchport.axisY + ((touchport.axisYMax - touchport.axisY)/2);
+    _reset_model_position(axes.model, x, y, AXIS_OBJ_HALF_W, AXIS_OBJ_HALF_H);
+    axes.modelDirty = true;
+
+    x = touchport.buttonX + ((touchport.buttonXMax - touchport.buttonX)/2);
+    y = touchport.buttonY + ((touchport.buttonYMax - touchport.buttonY)/2);
+    _reset_model_position(buttons.model, x, y, BUTTON_OBJ_HALF_W, BUTTON_OBJ_HALF_H);
+    buttons.modelDirty = true;
+
+    struct timespec now;
+    clock_gettime(CLOCK_MONOTONIC, &now);
+    axes.timingBegin = now;
+    buttons.timingBegin = now;
 }
 
 static void _animation_hideTouchJoystick(void) {
@@ -751,10 +768,12 @@ static void gltouchjoy_setAxisOnLeft(bool axisIsOnLeft) {
 }
 
 static void gltouchjoy_beginCalibration(void) {
+    video_clear();
     joyglobals.isCalibrating = true;
 }
 
 static void gltouchjoy_endCalibration(void) {
+    video_redraw();
     joyglobals.isCalibrating = false;
 }
 

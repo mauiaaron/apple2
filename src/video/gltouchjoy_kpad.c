@@ -58,6 +58,8 @@ static struct {
     bool axisTiming;
     bool buttonTiming;
 
+    float repeatThresholdNanos;
+
 } kpad = { 0 };
 
 static GLTouchJoyVariant kpadJoy = { 0 };
@@ -77,7 +79,7 @@ static void touchkpad_keyboardReadCallback(void) {
         int scancode = kpad.scancodes[kpad.fireIdx];
         if (scancode >= 0) {
             struct timespec deltat = timespec_diff(kpad.timingBegins[kpad.fireIdx], now, NULL);
-            if (deltat.tv_sec || deltat.tv_nsec > KEY_REPEAT_THRESHOLD_NANOS) {
+            if (deltat.tv_sec || deltat.tv_nsec > kpad.repeatThresholdNanos) {
                 LOG("REPEAT #%d/%lu/%lu: %d", kpad.fireIdx, deltat.tv_sec, deltat.tv_nsec, scancode);
                 c_keys_handle_input(scancode, /*pressed:*/true, /*ASCII:*/false);
                 fired = true;
@@ -393,6 +395,10 @@ static void touchkpad_buttonRelease(void) {
     c_keys_handle_input(kpad.scancodes[REPEAT_BUTTON], /*pressed:*/false, /*ASCII:*/false);
 }
 
+static void touchkpad_setKeyRepeatThreshold(float repeatThresholdSecs) {
+    kpad.repeatThresholdNanos = repeatThresholdSecs * NANOSECONDS_PER_SECOND;
+}
+
 // ----------------------------------------------------------------------------
 
 __attribute__((constructor(CTOR_PRIORITY_EARLY)))
@@ -405,6 +411,8 @@ static void _init_gltouchjoy_kpad(void) {
 
     kpad.currButtonDisplayChar = ' ';
 
+    kpad.repeatThresholdNanos = KEY_REPEAT_THRESHOLD_NANOS;
+
     kpadJoy.variant = &touchkpad_variant,
     kpadJoy.resetState = &touchkpad_resetState,
 
@@ -415,6 +423,8 @@ static void _init_gltouchjoy_kpad(void) {
     kpadJoy.axisDown = &touchkpad_axisDown,
     kpadJoy.axisMove = &touchkpad_axisMove,
     kpadJoy.axisUp = &touchkpad_axisUp,
+
+    joydriver_setKeyRepeatThreshold = &touchkpad_setKeyRepeatThreshold;
 
     gltouchjoy_registerVariant(EMULATED_KEYPAD, &kpadJoy);
 }

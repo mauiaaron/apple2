@@ -70,8 +70,13 @@ public class Apple2JoystickCalibration implements Apple2MenuView {
         Apple2Preferences.nativeSetTouchMenuEnabled(false);
         mSavedTouchDevice = Apple2Preferences.CURRENT_TOUCH_DEVICE.intValue(mActivity);
         Apple2Preferences.nativeSetCurrentTouchDevice(variant.ordinal());
+        if (variant == Apple2Preferences.TouchDeviceVariant.JOYSTICK) {
+            Apple2Preferences.loadAllJoystickButtons(mActivity);
+        } else {
+            Apple2Preferences.loadAllKeypadKeys(mActivity);
+        }
 
-        Apple2Preferences.nativeTouchJoystickBeginCalibrationMode();
+        Apple2Preferences.nativeTouchDeviceBeginCalibrationMode();
     }
 
     public final boolean isCalibrating() {
@@ -96,9 +101,9 @@ public class Apple2JoystickCalibration implements Apple2MenuView {
             }
         }
 
+        Apple2Preferences.nativeTouchDeviceEndCalibrationMode();
         Apple2Preferences.nativeSetTouchMenuEnabled(mTouchMenuEnabled);
         Apple2Preferences.nativeSetCurrentTouchDevice(mSavedTouchDevice);
-        Apple2Preferences.nativeTouchJoystickEndCalibrationMode();
 
         mActivity.popApple2View(this);
     }

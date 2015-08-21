@@ -48,6 +48,7 @@ HUD_CLASS(GLModelHUDKeyboard,
 static bool isAvailable = false; // Were there any OpenGL/memory errors on gltouchkbd initialization?
 static bool isEnabled = true;    // Does player want touchkbd enabled?
 static bool ownsScreen = false;  // Does the touchkbd currently own the screen to the exclusion?
+static bool isCalibrating = false;  // Are we in calibration mode?
 static bool allowLowercase = false; // show lowercase keyboard
 static float minAlphaWhenOwnsScreen = 1/4.f;
 static float minAlpha = 0.f;
@@ -316,7 +317,7 @@ static inline int64_t _tap_key_at_point(float x, float y) {
 
         case ICONTEXT_NONACTIONABLE:
             scancode = 0;
-            handled = joydriver_isCalibrating()/* || keydriver_isCalibrating()*/;
+            handled = isCalibrating;
             break;
 
         case ICONTEXT_CTRL:
@@ -398,7 +399,7 @@ static inline int64_t _tap_key_at_point(float x, float y) {
         } else {
             c_keys_handle_input(key, /*pressed:*/true,  /*ASCII:*/true);
         }
-        if (key == ' ' && (joydriver_isCalibrating()/* || keydriver_isCalibrating()*/)) {
+        if (key == ' ' && isCalibrating) {
             key = ICONTEXT_SPACE_VISUAL;
         }
     } else if (isCTRL) {
@@ -731,6 +732,16 @@ static bool gltouchkbd_ownsScreen(void) {
     return ownsScreen;
 }
 
+static void gltouchkbd_beginCalibration(void) {
+    video_clear();
+    isCalibrating = true;
+}
+
+static void gltouchkbd_endCalibration(void) {
+    video_redraw();
+    isCalibrating = false;
+}
+
 static void _animation_showTouchKeyboard(void) {
     if (!isAvailable) {
         return;
@@ -759,6 +770,8 @@ static void _init_gltouchkbd(void) {
     keydriver_setTouchKeyboardEnabled = &gltouchkbd_setTouchKeyboardEnabled;
     keydriver_setTouchKeyboardOwnsScreen = &gltouchkbd_setTouchKeyboardOwnsScreen;
     keydriver_ownsScreen = &gltouchkbd_ownsScreen;
+    keydriver_beginCalibration = &gltouchkbd_beginCalibration;
+    keydriver_endCalibration = &gltouchkbd_endCalibration;
 
     kbd.selectedCol = -1;
     kbd.selectedRow = -1;

@@ -495,5 +495,7 @@ void (*keydriver_setTouchKeyboardEnabled)(bool enabled) = NULL;
 void (*keydriver_setTouchKeyboardOwnsScreen)(bool pwnd) = NULL;
 bool (*keydriver_ownsScreen)(void) = NULL;
 void (*keydriver_keyboardReadCallback)(void) = NULL;
+void (*keydriver_beginCalibration)(void) = NULL;
+void (*keydriver_endCalibration)(void) = NULL;
 #endif
 
