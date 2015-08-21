@@ -1097,8 +1097,14 @@ void video_setpage(int p) {
     video__current_page = p;
 }
 
-const uint8_t * const video_current_framebuffer() {
+const uint8_t * const video_current_framebuffer(void) {
     return !video__current_page ? video__fb1 : video__fb2;
+}
+
+void video_clear(void) {
+    uint8_t *current_fb = video_current_framebuffer();
+    memset(current_fb, 0x0, sizeof(uint8_t)*SCANWIDTH*SCANHEIGHT);
+    video_setDirty();
 }
 
 void video_redraw(void) {
@@ -1153,6 +1159,7 @@ void video_redraw(void) {
     }
 
     softswitches = softswitches_save;
+    video_setDirty();
 }
 
 // ----------------------------------------------------------------------------

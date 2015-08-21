@@ -118,6 +118,11 @@ void video_loadfont(int first, int qty, const uint8_t *data, int mode);
 void video_redraw(void);
 
 /*
+ * Clear the current display.
+ */
+void video_clear(void);
+
+/*
  * Change the displayed video page to PAGE
  *   0 - Page 1: $400-$7ff/$2000-$3fff
  *   1 - Page 2: $800-$bff/$4000-$5fff
