@@ -61,7 +61,7 @@ public class Apple2SplashScreen implements Apple2MenuView {
         /* ... */
     }
 
-    public void show() {
+    public synchronized void show() {
         if (isShowing()) {
             return;
         }

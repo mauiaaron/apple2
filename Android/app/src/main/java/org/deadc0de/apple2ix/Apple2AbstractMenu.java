@@ -41,7 +41,7 @@ public abstract class Apple2AbstractMenu implements Apple2MenuView {
         setup();
     }
 
-    public void show() {
+    public synchronized void show() {
         if (isShowing()) {
             return;
         }

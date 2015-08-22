@@ -424,15 +424,12 @@ public class Apple2Activity extends Activity {
     }
 
     public synchronized void showSplashScreen() {
-        if (mSplashScreen != null && mSplashScreen.isShowing()) {
-            return;
+        if (mSplashScreen == null) {
+            mSplashScreen = new Apple2SplashScreen(Apple2Activity.this);
         }
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                if (mSplashScreen == null) {
-                    mSplashScreen = new Apple2SplashScreen(Apple2Activity.this);
-                }
                 mSplashScreen.show();
             }
         });
