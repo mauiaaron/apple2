@@ -108,6 +108,10 @@ static void _setup_axis_object(GLModel *parent) {
         return;
     }
 
+    if (!joyglobals.showControls) {
+        return;
+    }
+
     GLModelHUDElement *hudElement = (GLModelHUDElement *)parent->custom;
 
     if (hudElement->tpl == NULL) {
@@ -153,6 +157,10 @@ static void *_create_touchjoy_hud(void) {
 static void _setup_button_object(GLModel *parent) {
     if (UNLIKELY(!parent)) {
         LOG("gltouchjoy WARN : cannot setup button object without parent");
+        return;
+    }
+
+    if (!joyglobals.showControls) {
         return;
     }
 
@@ -343,6 +351,9 @@ static void gltouchjoy_render(void) {
         return;
     }
     if (!joyglobals.ownsScreen) {
+        return;
+    }
+    if (!joyglobals.showControls) {
         return;
     }
 
@@ -663,6 +674,10 @@ static bool gltouchjoy_ownsScreen(void) {
     return joyglobals.ownsScreen;
 }
 
+static void gltouchjoy_setShowControls(bool showControls) {
+    joyglobals.showControls = showControls;
+}
+
 static void _animation_showTouchJoystick(void) {
     if (!joyglobals.isAvailable) {
         return;
@@ -845,6 +860,7 @@ static void _init_gltouchjoy(void) {
 
     joyglobals.isEnabled = true;
     joyglobals.ownsScreen = true;
+    joyglobals.showControls = true;
     joyglobals.screenDivider = 0.5f;
     joyglobals.axisIsOnLeft = true;
     joyglobals.switchThreshold = BUTTON_SWITCH_THRESHOLD_DEFAULT;
@@ -856,6 +872,7 @@ static void _init_gltouchjoy(void) {
     joydriver_setTouchJoystickEnabled = &gltouchjoy_setTouchJoystickEnabled;
     joydriver_setTouchJoystickOwnsScreen = &gltouchjoy_setTouchJoystickOwnsScreen;
     joydriver_ownsScreen = &gltouchjoy_ownsScreen;
+    joydriver_setShowControls = &gltouchjoy_setShowControls;
     joydriver_setTouchButtonTypes = &gltouchjoy_setTouchButtonTypes;
     joydriver_setTapDelay = &gltouchjoy_setTapDelay;
     joydriver_setTouchAxisSensitivity = &gltouchjoy_setTouchAxisSensitivity;

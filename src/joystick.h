@@ -122,6 +122,9 @@ extern void (*joydriver_endCalibration)(void);
 // end calibration mode
 extern bool (*joydriver_isCalibrating)(void);
 
+// set controls visibility
+extern void (*joydriver_setShowControls)(bool showControls);
+
 // set key repeat threshold (keypad joystick)
 extern void (*joydriver_setKeyRepeatThreshold)(float repeatThresholdSecs);
 

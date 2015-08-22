@@ -97,6 +97,11 @@ void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetCurrentTouchDevice(JN
     }
 }
 
+void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetTouchJoystickVisibility(JNIEnv *env, jclass cls, jboolean visibility) {
+    LOG("visibility: %d", visibility);
+    joydriver_setShowControls(visibility);
+}
+
 jint Java_org_deadc0de_apple2ix_Apple2Preferences_nativeGetCurrentTouchDevice(JNIEnv *env, jclass cls) {
     LOG("%s", "");
     if (joydriver_ownsScreen()) {

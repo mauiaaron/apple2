@@ -133,12 +133,12 @@ public class Apple2KeypadSettingsMenu extends Apple2AbstractMenu {
         KEYPAD_ADVANCED {
             @Override
             public final String getTitle(Apple2Activity activity) {
-                return activity.getResources().getString(R.string.joystick_advanced);
+                return activity.getResources().getString(R.string.settings_advanced);
             }
 
             @Override
             public final String getSummary(Apple2Activity activity) {
-                return activity.getResources().getString(R.string.joystick_advanced_summary);
+                return activity.getResources().getString(R.string.settings_advanced_joystick_summary);
             }
 
             @Override
@@ -263,12 +263,12 @@ public class Apple2KeypadSettingsMenu extends Apple2AbstractMenu {
             JOYSTICK_ADVANCED {
                 @Override
                 public final String getTitle(Apple2Activity activity) {
-                    return activity.getResources().getString(R.string.joystick_advanced);
+                    return activity.getResources().getString(R.string.settings_advanced_joystick);
                 }
 
                 @Override
                 public final String getSummary(Apple2Activity activity) {
-                    return activity.getResources().getString(R.string.joystick_advanced_summary);
+                    return activity.getResources().getString(R.string.settings_advanced_joystick_summary);
                 }
 
                 @Override

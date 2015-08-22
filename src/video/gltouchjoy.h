@@ -26,6 +26,7 @@ typedef struct GLTouchJoyGlobals {
     bool isCalibrating;     // Are we running in calibration mode?
     bool isEnabled;         // Does player want touchjoy enabled?
     bool ownsScreen;        // Does the touchjoy currently own the screen?
+    bool showControls;      // Are controls visible
     float minAlphaWhenOwnsScreen;
     float minAlpha;
     float screenDivider;

@@ -334,6 +334,17 @@ public enum Apple2Preferences {
             return activity.getPreferences(Context.MODE_PRIVATE).getInt(toString(), JOYSTICK_DIVIDER_NUM_CHOICES >> 1);
         }
     },
+    JOYSTICK_VISIBILITY {
+        @Override
+        public void load(Apple2Activity activity) {
+            nativeSetTouchJoystickVisibility(booleanValue(activity));
+        }
+
+        @Override
+        public boolean booleanValue(Apple2Activity activity) {
+            return activity.getPreferences(Context.MODE_PRIVATE).getBoolean(toString(), true);
+        }
+    },
     KEYPAD_KEYS {
         @Override
         public void load(Apple2Activity activity) {
@@ -840,6 +851,8 @@ public enum Apple2Preferences {
     private static native void nativeSetTouchJoystickAxisSensitivity(float multiplier);
 
     private static native void nativeSetTouchJoystickButtonSwitchThreshold(int delta);
+
+    private static native void nativeSetTouchJoystickVisibility(boolean visibility);
 
     public static native void nativeSetTouchMenuEnabled(boolean enabled);
 

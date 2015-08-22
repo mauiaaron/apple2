@@ -204,12 +204,12 @@ public class Apple2JoystickSettingsMenu extends Apple2AbstractMenu {
         JOYSTICK_ADVANCED {
             @Override
             public final String getTitle(Apple2Activity activity) {
-                return activity.getResources().getString(R.string.joystick_advanced);
+                return activity.getResources().getString(R.string.settings_advanced);
             }
 
             @Override
             public final String getSummary(Apple2Activity activity) {
-                return activity.getResources().getString(R.string.joystick_advanced_summary);
+                return activity.getResources().getString(R.string.settings_advanced_joystick_summary);
             }
 
             @Override
@@ -272,6 +272,30 @@ public class Apple2JoystickSettingsMenu extends Apple2AbstractMenu {
         }
 
         protected enum SETTINGS implements Apple2AbstractMenu.IMenuEnum {
+            JOYSTICK_VISIBILITY {
+                @Override
+                public final String getTitle(Apple2Activity activity) {
+                    return activity.getResources().getString(R.string.joystick_visible);
+                }
+
+                @Override
+                public final String getSummary(Apple2Activity activity) {
+                    return activity.getResources().getString(R.string.joystick_visible_summary);
+                }
+
+                @Override
+                public View getView(final Apple2Activity activity, View convertView) {
+                    convertView = _basicView(activity, this, convertView);
+                    CheckBox cb = _addCheckbox(activity, this, convertView, Apple2Preferences.JOYSTICK_VISIBILITY.booleanValue(activity));
+                    cb.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                        @Override
+                        public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                            Apple2Preferences.JOYSTICK_VISIBILITY.saveBoolean(activity, isChecked);
+                        }
+                    });
+                    return convertView;
+                }
+            },
             JOYSTICK_AXIS_ON_LEFT {
                 @Override
                 public final String getTitle(Apple2Activity activity) {

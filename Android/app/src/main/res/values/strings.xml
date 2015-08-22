@@ -33,8 +33,6 @@
     <string name="input_first_keyboard">Touch keyboard</string>
     <string name="joystick">Joystick</string>
     <string name="joystickA">Touch Joystick</string>
-    <string name="joystick_advanced">Advanced tuning…</string>
-    <string name="joystick_advanced_summary">Various joystick/keypad configuration parameters</string>
     <string name="joystick_axis_sensitivity_summary">Tune joystick axis sensitivity (decelerate or accelerate)</string>
     <string name="joystick_button_axis_enable">Enable button axis</string>
     <string name="joystick_button_axis_enable_summary">Enable button axis</string>
@@ -53,11 +51,13 @@
     <string name="joystick_calibrate">Calibrate…</string>
     <string name="joystick_calibrate_summary">Configure and test current settings</string>
     <string name="joystick_configure">Configure joystick…</string>
-    <string name="joystick_configure_summary">Axis touch/tilt, buttons, etc</string>
+    <string name="joystick_configure_summary">Axis touch, buttons, etc</string>
     <string name="joystick_current">Current joystick flavor</string>
     <string name="joystick_current_summary">Emulated physical joystick or keypad</string>
     <string name="joystick_axisleft">Joystick/keypad axis on left</string>
     <string name="joystick_axisleft_summary">Joystick/keypad axis on left (buttons on right)</string>
+    <string name="joystick_visible">Joystick/keypad visibility</string>
+    <string name="joystick_visible_summary">Show controls overlay when engaged</string>
     <string name="key_closed_apple">[ClosedApple]</string>
     <string name="key_ctrl">[Ctrl]</string>
     <string name="key_down">&#8595;</string>
@@ -69,6 +69,9 @@
     <string name="key_right">&#8594;</string>
     <string name="key_space">[Space]</string>
     <string name="key_up">&#8593;</string>
+    <string name="keyboard">Keyboard</string>
+    <string name="keyboard_configure">Configure keyboard…</string>
+    <string name="keyboard_configure_summary">Transparency, fading, custom keys</string>
     <string name="keyboard_visibility">Keyboard visibility</string>
     <string name="keyboard_visibility_summary">Keyboard visibility when inactive</string>
     <string name="keypad">Keypad Joystick</string>
@@ -84,7 +87,7 @@
     <string name="keypad_choose_current">Choose XXX Key: </string>
     <string name="keypad_chosen_keys">I,J,K,M [Space]</string>
     <string name="keypad_configure">Configure keypad joystick…</string>
-    <string name="keypad_configure_summary">Axis touch/tilt, buttons, etc</string>
+    <string name="keypad_configure_summary">@string/joystick_configure_summary</string>
     <string name="keypad_key_axis_c">Center</string>
     <string name="keypad_key_axis_dn">Down</string>
     <string name="keypad_key_axis_dl">Down and Left</string>
@@ -106,9 +109,6 @@
     <string name="keypad_preset_left_right_space">&#8592;,&#8594;, tap spacebar</string>
     <string name="keypad_preset_wadx_space">W,A,D,X, tap spacebar</string>
     <string name="keypad_repeat_summary">Key repeat threshold in secs</string>
-    <string name="keyboard">Keyboard</string>
-    <string name="keyboard_configure">Configure keyboard…</string>
-    <string name="keyboard_configure_summary">Transparency, fading, custom keys</string>
     <string name="max">Max</string>
     <string name="menu_disks">Load disk image…</string>
     <string name="menu_disks_summary">Insert a Disk ][ image file</string>
@@ -147,6 +147,8 @@
     <string name="settings_audio">Apple2ix audio settings</string>
     <string name="settings_advanced">Advanced settings</string>
     <string name="settings_advanced_summary">Warning: these settings may potentially degrade emulation performance</string>
+    <string name="settings_advanced_joystick">Advanced joystick/keypad settings</string>
+    <string name="settings_advanced_joystick_summary">Advanced settings and performance tuning</string>
     <string name="tab_general">General</string>
     <string name="tab_joystick">Joystick</string>
     <string name="title_activity_second">SecondActivity</string>
