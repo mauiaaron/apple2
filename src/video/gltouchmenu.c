@@ -205,7 +205,11 @@ static inline bool _sprout_menu(float x, float y) {
         _hide_top_right();
 
         // maybe show this one
-        if (!menu.topLeftShowing) {
+        if (menu.topLeftShowing) {
+            if (col == 0 && row == 0) {
+                _hide_top_left();
+            }
+        } else {
             if (col == 0 && row == 0) {
                 _show_top_left();
             }
@@ -218,7 +222,11 @@ static inline bool _sprout_menu(float x, float y) {
         _hide_top_left();
 
         // maybe show this one
-        if (!menu.topRightShowing) {
+        if (menu.topRightShowing) {
+            if (col == MENU_TEMPLATE_COLS-1 && row == 0) {
+                _hide_top_right();
+            }
+        } else {
             if (col == MENU_TEMPLATE_COLS-1 && row == 0) {
                 _show_top_right();
             }
