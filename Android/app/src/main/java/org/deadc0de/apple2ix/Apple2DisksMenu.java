@@ -60,11 +60,6 @@ public class Apple2DisksMenu implements Apple2MenuView {
     public Apple2DisksMenu(Apple2Activity activity) {
         mActivity = activity;
 
-        if (!sInitializedPath) {
-            sInitializedPath = true;
-            Apple2Preferences.CURRENT_DISK_PATH.load(mActivity);
-        }
-
         LayoutInflater inflater = (LayoutInflater) mActivity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         mDisksView = inflater.inflate(R.layout.activity_disks, null, false);
 
@@ -150,6 +145,10 @@ public class Apple2DisksMenu implements Apple2MenuView {
         if (isShowing()) {
             return;
         }
+        if (!sInitializedPath) {
+            sInitializedPath = true;
+            Apple2Preferences.CURRENT_DISK_PATH.load(mActivity);
+        }
         dynamicSetup();
         mActivity.pushApple2View(this);
     }
@@ -190,8 +189,8 @@ public class Apple2DisksMenu implements Apple2MenuView {
         try {
             JSONArray jsonArray = new JSONArray(pathStackJSON);
             for (int i = 0, count = jsonArray.length(); i < count; i++) {
-                JSONObject jsonObject = jsonArray.getJSONObject(i);
-                mPathStack.add(jsonObject.toString());
+                String pathComponent = jsonArray.getString(i);
+                mPathStack.add(pathComponent);
             }
         } catch (JSONException e) {
             e.printStackTrace();
