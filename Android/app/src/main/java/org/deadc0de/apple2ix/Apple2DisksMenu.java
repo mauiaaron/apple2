@@ -273,19 +273,54 @@ public class Apple2DisksMenu implements Apple2MenuView {
         final File[] files = dir.listFiles(new FilenameFilter() {
             public boolean accept(File dir, String name) {
                 name = name.toLowerCase();
-                if (name.equalsIgnoreCase(".")) {
+                if (name.equals(".")) {
                     return false;
                 }
-                if (name.equalsIgnoreCase("..")) {
+                if (name.equals("..")) {
                     return false;
                 }
-
-                if (name.endsWith(".dsk") || name.endsWith(".do") || name.endsWith(".po") || name.endsWith(".nib") || name.endsWith(".dsk.gz") || name.endsWith(".do.gz") || name.endsWith(".po.gz") || name.endsWith(".nib.gz")) {
+                File file = new File(dir, name);
+                if (file.isDirectory()) {
                     return true;
                 }
 
-                File file = new File(dir, name);
-                return file.isDirectory();
+                // check file extensions ... sigh ... no String.endsWithIgnoreCase() ?
+
+                final int len = name.length();
+                if (len <= 3) {
+                    return false;
+                }
+
+                String suffix;
+                suffix = name.substring(len - 3, len);
+                if (suffix.equalsIgnoreCase(".do") || suffix.equalsIgnoreCase(".po")) {
+                    return true;
+                }
+
+                if (len <= 4) {
+                    return false;
+                }
+
+                suffix = name.substring(len - 4, len);
+                if (suffix.equalsIgnoreCase(".dsk") || suffix.equalsIgnoreCase(".nib")) {
+                    return true;
+                }
+
+                if (len <= 6) {
+                    return false;
+                }
+
+                suffix = name.substring(len - 6, len);
+                if (suffix.equalsIgnoreCase(".do.gz") || suffix.equalsIgnoreCase(".po.gz")) {
+                    return true;
+                }
+
+                if (len <= 7) {
+                    return false;
+                }
+
+                suffix = name.substring(len - 7, len);
+                return (suffix.equalsIgnoreCase(".dsk.gz") || suffix.equalsIgnoreCase(".nib.gz"));
             }
         });
 
