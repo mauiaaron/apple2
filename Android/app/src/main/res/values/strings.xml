@@ -23,7 +23,7 @@
     <string name="disk_read_only">Read only</string>
     <string name="disk_read_write">Read/write</string>
     <string name="emulation_continue">Continue…</string>
-    <string name="emulation_preferences">Preferences…</string>
+    <string name="emulation_settings">Settings…</string>
     <string name="header_disks">Insert disk:</string>
     <string name="input_configure">Configure input devices…</string>
     <string name="input_configure_summary">Keyboard, joystick, etc</string>

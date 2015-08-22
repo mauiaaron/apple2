@@ -31,14 +31,16 @@
         android:layout_marginTop="18dp" />
 
     <Button
-        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/emulation_preferences"
+        android:layout_width="0dp"
+        android:text="@string/emulation_settings"
         android:id="@+id/prefsButton"
         android:layout_marginTop="18dp"
         android:layout_below="@+id/startButton"
         android:layout_alignRight="@+id/startButton"
-        android:layout_alignEnd="@+id/startButton" />
+        android:layout_alignEnd="@+id/startButton"
+        android:layout_alignLeft="@+id/startButton"
+        android:layout_alignStart="@+id/startButton" />
 
     <ImageView
         android:layout_width="wrap_content"
