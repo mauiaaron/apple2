@@ -179,7 +179,13 @@ public class Apple2Activity extends Activity {
         Log.e(TAG, "onCreate()");
 
         _setCustomExceptionHandler();
-        String dataDir = Apple2DisksMenu.firstTimeAssetsInitialization(this);
+
+        // run first-time initializations
+        if (!Apple2Preferences.FIRST_TIME_CONFIGURED.booleanValue(this)) {
+            Apple2DisksMenu.firstTime(this);
+            Apple2Preferences.KeypadPreset.IJKM_SPACE.apply(this);
+        }
+        Apple2Preferences.FIRST_TIME_CONFIGURED.saveBoolean(this, true);
 
         // get device audio parameters for native OpenSLES
         mSampleRate = DevicePropertyCalculator.getRecommendedSampleRate(this);
@@ -187,6 +193,7 @@ public class Apple2Activity extends Activity {
         mStereoBufferSize = DevicePropertyCalculator.getRecommendedBufferSize(this, /*isStereo:*/true);
         Log.d(TAG, "Device sampleRate:" + mSampleRate + " mono bufferSize:" + mMonoBufferSize + " stereo bufferSize:" + mStereoBufferSize);
 
+        String dataDir = Apple2DisksMenu.getDataDir(this);
         nativeOnCreate(dataDir, mSampleRate, mMonoBufferSize, mStereoBufferSize);
 
         // NOTE: load preferences after nativeOnCreate ... native CPU thread should still be paused

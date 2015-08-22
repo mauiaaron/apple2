@@ -16,10 +16,10 @@ import android.content.Context;
 import android.content.DialogInterface;
 
 public enum Apple2Preferences {
-    ASSETS_CONFIGURED {
+    FIRST_TIME_CONFIGURED {
         @Override
         public void load(Apple2Activity activity) {
-            // ...
+            /* ... */
         }
 
         @Override
@@ -353,7 +353,7 @@ public enum Apple2Preferences {
 
         @Override
         public int intValue(Apple2Activity activity) {
-            return activity.getPreferences(Context.MODE_PRIVATE).getInt(toString(), -1);
+            return activity.getPreferences(Context.MODE_PRIVATE).getInt(toString(), KeypadPreset.IJKM_SPACE.ordinal() + 1);
         }
     },
     KEYPAD_NORTHWEST_KEY {
@@ -759,6 +759,8 @@ public enum Apple2Preferences {
 
     public static void resetPreferences(Apple2Activity activity) {
         activity.getPreferences(Context.MODE_PRIVATE).edit().clear().commit();
+        FIRST_TIME_CONFIGURED.saveBoolean(activity, true);
+        KeypadPreset.IJKM_SPACE.apply(activity);
         loadPreferences(activity);
     }
 

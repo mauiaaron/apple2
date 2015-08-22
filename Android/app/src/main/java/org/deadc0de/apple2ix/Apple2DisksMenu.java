@@ -97,7 +97,11 @@ public class Apple2DisksMenu implements Apple2MenuView {
     // HACK NOTE 2015/02/22 : Apparently native code cannot easily access stuff in the APK ... so copy various resources
     // out of the APK and into the /data/data/... for ease of access.  Because this is FOSS software we don't care about
     // security or DRM for these assets =)
-    public static String firstTimeAssetsInitialization(Apple2Activity activity) {
+    public static String getDataDir(Apple2Activity activity) {
+
+        if (sDataDir != null) {
+            return sDataDir;
+        }
 
         try {
             PackageManager pm = activity.getPackageManager();
@@ -108,9 +112,11 @@ public class Apple2DisksMenu implements Apple2MenuView {
             System.exit(1);
         }
 
-        if (Apple2Preferences.ASSETS_CONFIGURED.booleanValue(activity)) {
-            return sDataDir;
-        }
+        return sDataDir;
+    }
+
+    public static void firstTime(Apple2Activity activity) {
+        getDataDir(activity);
 
         Log.d(TAG, "First time copying stuff-n-things out of APK for ease-of-NDK access...");
 
@@ -127,11 +133,6 @@ public class Apple2DisksMenu implements Apple2MenuView {
             Log.e(TAG, "problem copying resources : " + e);
             System.exit(1);
         }
-
-        Log.d(TAG, "Saving default preferences");
-        Apple2Preferences.ASSETS_CONFIGURED.saveBoolean(activity, true);
-
-        return sDataDir;
     }
 
     // ------------------------------------------------------------------------
