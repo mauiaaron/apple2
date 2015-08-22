@@ -20,6 +20,7 @@
     <string name="color_interpolated">Interpolated color</string>
     <string name="diskA">Drive 1</string>
     <string name="diskB">Drive 2</string>
+    <string name="disk_eject">Eject</string>
     <string name="disk_read_only">Read only</string>
     <string name="disk_read_write">Read/write</string>
     <string name="emulation_continue">Continue…</string>

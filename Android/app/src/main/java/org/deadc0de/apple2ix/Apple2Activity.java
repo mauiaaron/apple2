@@ -100,6 +100,8 @@ public class Apple2Activity extends Activity {
 
     public native void nativeChooseDisk(String path, boolean driveA, boolean readOnly);
 
+    public native void nativeEjectDisk(boolean driveA);
+
 
     private void _setCustomExceptionHandler() {
         if (mSetUncaughtExceptionHandler) {

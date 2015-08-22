@@ -322,6 +322,11 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeChooseDisk(JNIEnv *env, job
     (*env)->ReleaseStringUTFChars(env, jPath, path);
 }
 
+void Java_org_deadc0de_apple2ix_Apple2Activity_nativeEjectDisk(JNIEnv *env, jobject obj, jboolean driveA) {
+    LOG("%s", "");
+    c_eject_6(!driveA);
+}
+
 // ----------------------------------------------------------------------------
 // Constructor
 

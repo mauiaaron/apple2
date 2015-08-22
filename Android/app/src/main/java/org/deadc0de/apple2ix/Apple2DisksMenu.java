@@ -33,7 +33,6 @@ import android.widget.RadioButton;
 
 import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -327,15 +326,16 @@ public class Apple2DisksMenu implements Apple2MenuView {
         Arrays.sort(files);
 
         final boolean includeExternalStoragePath = (sExternalStorageAvailable && isRootPath);
-        int idx = includeExternalStoragePath ? 1 : 0;
-        final String[] fileNames = new String[files.length + idx];
-        final boolean[] isDirectory = new boolean[files.length + idx];
+        final int offset = includeExternalStoragePath ? 1 : 0;
+        final String[] fileNames = new String[files.length + offset];
+        final boolean[] isDirectory = new boolean[files.length + offset];
 
         if (includeExternalStoragePath) {
             fileNames[0] = sExternalFilesDir.toString();
             isDirectory[0] = true;
         }
 
+        int idx = offset;
         for (File file : files) {
             isDirectory[idx] = file.isDirectory();
             fileNames[idx] = file.getName();
@@ -366,12 +366,47 @@ public class Apple2DisksMenu implements Apple2MenuView {
                     Drawable drawable = mActivity.getResources().getDrawable(android.R.drawable.ic_menu_more);
                     imageView.setImageDrawable(drawable);
                     layout.addView(imageView);
+                } else {
+
+                    String imageName = files[position - offset].getAbsolutePath();
+                    final int len = imageName.length();
+                    final String suffix = imageName.substring(len - 3, len);
+                    if (suffix.equalsIgnoreCase(".gz")) {
+                        imageName = files[position - offset].getAbsolutePath().substring(0, len - 3);
+                    }
+
+                    String eject = mActivity.getResources().getString(R.string.disk_eject);
+                    if (imageName.equals(Apple2Preferences.CURRENT_DISK_A.stringValue(mActivity))) {
+                        Button ejectButton = new Button(mActivity);
+                        ejectButton.setText(eject + " 1");
+                        ejectButton.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                mActivity.nativeEjectDisk(/*driveA:*/true);
+                                Apple2Preferences.CURRENT_DISK_A.saveString(mActivity, "");
+                                dynamicSetup();
+                            }
+                        });
+                        layout.addView(ejectButton);
+                    } else if (imageName.equals(Apple2Preferences.CURRENT_DISK_B.stringValue(mActivity))) {
+                        Button ejectButton = new Button(mActivity);
+                        ejectButton.setText(eject + " 2");
+                        ejectButton.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                mActivity.nativeEjectDisk(/*driveA:*/false);
+                                Apple2Preferences.CURRENT_DISK_B.saveString(mActivity, "");
+                                dynamicSetup();
+                            }
+                        });
+                        layout.addView(ejectButton);
+                    }
+
                 }
                 return view;
             }
         };
 
-        final int offset = includeExternalStoragePath ? 1 : 0;
         disksList.setAdapter(adapter);
         disksList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -382,56 +417,89 @@ public class Apple2DisksMenu implements Apple2MenuView {
                     dynamicSetup();
                     ListView disksList = (ListView) mDisksView.findViewById(R.id.listView_settings);
                     disksList.postInvalidate();
-                } else {
-                    String title = mActivity.getResources().getString(R.string.header_disks);
-                    title = title + " " + fileNames[position];
-
-                    AlertDialog.Builder builder = new AlertDialog.Builder(mActivity).setCancelable(true).setMessage(title);
-                    LayoutInflater inflater = (LayoutInflater) mActivity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-                    final View diskConfirmationView = inflater.inflate(R.layout.a2disk_confirmation, null, false);
-                    builder.setView(diskConfirmationView);
-
-                    final RadioButton diskA = (RadioButton) diskConfirmationView.findViewById(R.id.radioButton_diskA);
-                    diskA.setChecked(Apple2Preferences.CURRENT_DISK_A.booleanValue(mActivity));
-                    diskA.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                        @Override
-                        public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                            Apple2Preferences.CURRENT_DISK_A.saveBoolean(mActivity, isChecked);
-                        }
-                    });
-                    final RadioButton diskB = (RadioButton) diskConfirmationView.findViewById(R.id.radioButton_diskB);
-                    diskB.setChecked(!Apple2Preferences.CURRENT_DISK_A.booleanValue(mActivity));
-
-
-                    final RadioButton readOnly = (RadioButton) diskConfirmationView.findViewById(R.id.radioButton_readOnly);
-                    readOnly.setChecked(Apple2Preferences.CURRENT_DISK_RO.booleanValue(mActivity));
-                    readOnly.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                        @Override
-                        public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                            Apple2Preferences.CURRENT_DISK_RO.saveBoolean(mActivity, isChecked);
-                        }
-                    });
-
-                    final RadioButton readWrite = (RadioButton) diskConfirmationView.findViewById(R.id.radioButton_readWrite);
-                    readWrite.setChecked(!Apple2Preferences.CURRENT_DISK_RO.booleanValue(mActivity));
-
-                    builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            dialog.dismiss();
-                        }
-                    });
-                    builder.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            dialog.dismiss();
-                            mActivity.dismissAllMenus();
-                            mActivity.nativeChooseDisk(files[position - offset].getAbsolutePath(), diskA.isChecked(), readOnly.isChecked());
-                        }
-                    });
-
-                    builder.show();
+                    return;
                 }
+
+                String str = files[position - offset].getAbsolutePath();
+                final int len = str.length();
+                final String suffix = str.substring(len - 3, len);
+                if (suffix.equalsIgnoreCase(".gz")) {
+                    str = files[position - offset].getAbsolutePath().substring(0, len - 3);
+                }
+                final String imageName = str;
+
+                if (imageName.equals(Apple2Preferences.CURRENT_DISK_A.stringValue(mActivity))) {
+                    mActivity.nativeEjectDisk(/*driveA:*/true);
+                    Apple2Preferences.CURRENT_DISK_A.saveString(mActivity, "");
+                    dynamicSetup();
+                    return;
+                }
+                if (imageName.equals(Apple2Preferences.CURRENT_DISK_B.stringValue(mActivity))) {
+                    mActivity.nativeEjectDisk(/*driveA:*/false);
+                    Apple2Preferences.CURRENT_DISK_B.saveString(mActivity, "");
+                    dynamicSetup();
+                    return;
+
+                }
+
+                String title = mActivity.getResources().getString(R.string.header_disks);
+                title = title + " " + fileNames[position];
+
+                AlertDialog.Builder builder = new AlertDialog.Builder(mActivity).setCancelable(true).setMessage(title);
+                LayoutInflater inflater = (LayoutInflater) mActivity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+                final View diskConfirmationView = inflater.inflate(R.layout.a2disk_confirmation, null, false);
+                builder.setView(diskConfirmationView);
+
+                final RadioButton diskA = (RadioButton) diskConfirmationView.findViewById(R.id.radioButton_diskA);
+                diskA.setChecked(Apple2Preferences.CURRENT_DRIVE_A_BUTTON.booleanValue(mActivity));
+                diskA.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                    @Override
+                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                        Apple2Preferences.CURRENT_DRIVE_A_BUTTON.saveBoolean(mActivity, isChecked);
+                    }
+                });
+                final RadioButton diskB = (RadioButton) diskConfirmationView.findViewById(R.id.radioButton_diskB);
+                diskB.setChecked(!Apple2Preferences.CURRENT_DRIVE_A_BUTTON.booleanValue(mActivity));
+
+
+                final RadioButton readOnly = (RadioButton) diskConfirmationView.findViewById(R.id.radioButton_readOnly);
+                readOnly.setChecked(Apple2Preferences.CURRENT_DISK_RO_BUTTON.booleanValue(mActivity));
+                readOnly.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                    @Override
+                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                        Apple2Preferences.CURRENT_DISK_RO_BUTTON.saveBoolean(mActivity, isChecked);
+                    }
+                });
+
+                final RadioButton readWrite = (RadioButton) diskConfirmationView.findViewById(R.id.radioButton_readWrite);
+                readWrite.setChecked(!Apple2Preferences.CURRENT_DISK_RO_BUTTON.booleanValue(mActivity));
+
+                builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                });
+                builder.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                        mActivity.dismissAllMenus();
+                        boolean isDriveA = diskA.isChecked();
+                        boolean diskReadOnly = readOnly.isChecked();
+                        if (isDriveA) {
+                            Apple2Preferences.CURRENT_DISK_A.saveString(mActivity, imageName);
+                            Apple2Preferences.CURRENT_DISK_A_RO.saveBoolean(mActivity, diskReadOnly);
+                        } else {
+                            Apple2Preferences.CURRENT_DISK_B.saveString(mActivity, imageName);
+                            Apple2Preferences.CURRENT_DISK_B_RO.saveBoolean(mActivity, diskReadOnly);
+                        }
+
+                        mActivity.nativeChooseDisk(imageName, isDriveA, diskReadOnly);
+                    }
+                });
+
+                builder.show();
             }
         });
     }

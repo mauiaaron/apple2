@@ -14,6 +14,9 @@ package org.deadc0de.apple2ix;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.util.Log;
+
+import java.io.File;
 
 public enum Apple2Preferences {
     FIRST_TIME_CONFIGURED {
@@ -47,7 +50,7 @@ public enum Apple2Preferences {
             //load(activity);
         }
     },
-    CURRENT_DISK_A {
+    CURRENT_DRIVE_A_BUTTON {
         @Override
         public void load(final Apple2Activity activity) {
             /* ... */
@@ -64,7 +67,75 @@ public enum Apple2Preferences {
             //load(activity);
         }
     },
-    CURRENT_DISK_RO {
+    CURRENT_DISK_RO_BUTTON {
+        @Override
+        public void load(final Apple2Activity activity) {
+            /* ... */
+        }
+
+        @Override
+        public boolean booleanValue(Apple2Activity activity) {
+            return activity.getPreferences(Context.MODE_PRIVATE).getBoolean(toString(), true);
+        }
+
+        @Override
+        public void saveBoolean(Apple2Activity activity, boolean value) {
+            activity.getPreferences(Context.MODE_PRIVATE).edit().putBoolean(toString(), value).apply();
+            //load(activity);
+        }
+    },
+    CURRENT_DISK_A {
+        @Override
+        public void load(final Apple2Activity activity) {
+            insertDisk(activity, stringValue(activity), /*driveA:*/true, /*readOnly:*/CURRENT_DISK_A_RO.booleanValue(activity));
+        }
+
+        @Override
+        public String stringValue(Apple2Activity activity) {
+            return activity.getPreferences(Context.MODE_PRIVATE).getString(toString(), "");
+        }
+
+        @Override
+        public void saveString(Apple2Activity activity, String str) {
+            activity.getPreferences(Context.MODE_PRIVATE).edit().putString(toString(), str).apply();
+            load(activity);
+        }
+    },
+    CURRENT_DISK_A_RO {
+        @Override
+        public void load(final Apple2Activity activity) {
+            /* ... */
+        }
+
+        @Override
+        public boolean booleanValue(Apple2Activity activity) {
+            return activity.getPreferences(Context.MODE_PRIVATE).getBoolean(toString(), true);
+        }
+
+        @Override
+        public void saveBoolean(Apple2Activity activity, boolean value) {
+            activity.getPreferences(Context.MODE_PRIVATE).edit().putBoolean(toString(), value).apply();
+            //load(activity);
+        }
+    },
+    CURRENT_DISK_B {
+        @Override
+        public void load(final Apple2Activity activity) {
+            insertDisk(activity, stringValue(activity), /*driveA:*/false, /*readOnly:*/CURRENT_DISK_B_RO.booleanValue(activity));
+        }
+
+        @Override
+        public String stringValue(Apple2Activity activity) {
+            return activity.getPreferences(Context.MODE_PRIVATE).getString(toString(), "");
+        }
+
+        @Override
+        public void saveString(Apple2Activity activity, String str) {
+            activity.getPreferences(Context.MODE_PRIVATE).edit().putString(toString(), str).apply();
+            load(activity);
+        }
+    },
+    CURRENT_DISK_B_RO {
         @Override
         public void load(final Apple2Activity activity) {
             /* ... */
@@ -828,6 +899,19 @@ public enum Apple2Preferences {
                 JOYSTICK_TAP_BUTTON.intValue(activity),
                 JOYSTICK_SWIPEUP_BUTTON.intValue(activity),
                 JOYSTICK_SWIPEDOWN_BUTTON.intValue(activity));
+    }
+
+    public static void insertDisk(Apple2Activity activity, String fullPath, boolean isDriveA, boolean isReadOnly) {
+        File file = new File(fullPath);
+        if (!file.exists()) {
+            fullPath = fullPath + ".gz";
+            file = new File(fullPath);
+        }
+        if (file.exists()) {
+            activity.nativeChooseDisk(fullPath, isDriveA, isReadOnly);
+        } else {
+            Log.d(TAG, "Cannot insert: " + fullPath);
+        }
     }
 
     // native hooks
