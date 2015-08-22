@@ -121,7 +121,7 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnCreate(JNIEnv *env, jobje
 
     data_dir = strdup(dataDir);
     (*env)->ReleaseStringUTFChars(env, j_dataDir, dataDir);
-    LOG("nativeOnCreate(%s)...", data_dir);
+    LOG("data_dir : %s", data_dir);
 
     android_deviceSampleRateHz = (unsigned long)sampleRate;
     android_monoBufferSubmitSizeSamples = (unsigned long)monoBufferSize;
@@ -136,12 +136,12 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnCreate(JNIEnv *env, jobje
 }
 
 void Java_org_deadc0de_apple2ix_Apple2Activity_nativeGraphicsChanged(JNIEnv *env, jobject obj, jint width, jint height) {
-    LOG("%s", "native graphicsChanged...");
+    LOG("%s", "");
     video_backend->reshape(width, height);
 }
 
 void Java_org_deadc0de_apple2ix_Apple2Activity_nativeGraphicsInitialized(JNIEnv *env, jobject obj, jint width, jint height) {
-    LOG("native graphicsInitialized width:%d height:%d", width, height);
+    LOG("width:%d height:%d", width, height);
     static bool graphicsPreviouslyInitialized = false;
     if (graphicsPreviouslyInitialized) {
         LOG("shutting down previous context");
@@ -157,7 +157,7 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnResume(JNIEnv *env, jobje
     if (!cpu_isPaused()) {
         return;
     }
-    LOG("%s", "native onResume...");
+    LOG("%s", "");
     if (!isSystemResume) {
         cpu_resume();
     }
@@ -167,7 +167,7 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnPause(JNIEnv *env, jobjec
     if (cpu_isPaused()) {
         return;
     }
-    LOG("%s", "native onPause...");
+    LOG("%s", "");
 
     video_backend->animation_hideTouchMenu();
 
@@ -200,7 +200,7 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeRender(JNIEnv *env, jobject
     clock_gettime(CLOCK_MONOTONIC, &now);
 
     if (now.tv_sec != prev.tv_sec) {
-        LOG("native render() : %u", idleCount-prevCount);
+        LOG("FPS : %u", idleCount-prevCount);
         prevCount = idleCount;
         prev = now;
     }
@@ -210,12 +210,12 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeRender(JNIEnv *env, jobject
 }
 
 void Java_org_deadc0de_apple2ix_Apple2Activity_nativeReboot(JNIEnv *env, jobject obj) {
-    LOG("%s", "native reboot...");
+    LOG("%s", "");
     cpu65_reboot();
 }
 
 void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnQuit(JNIEnv *env, jobject obj) {
-    LOG("%s", "nativeOnQuit...");
+    LOG("%s", "");
 
     c_eject_6(0);
     c_eject_6(1);
@@ -278,7 +278,7 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnKeyUp(JNIEnv *env, jobjec
 }
 
 jlong Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnTouch(JNIEnv *env, jobject obj, jint action, jint pointerCount, jint pointerIndex, jfloatArray xCoords, jfloatArray yCoords) {
-    //LOG("nativeOnTouch : %d/%d/%d :", action, pointerCount, pointerIndex);
+    //LOG(": %d/%d/%d :", action, pointerCount, pointerIndex);
     if (UNLIKELY(emulator_shutting_down)) {
         return 0x0LL;
     }
@@ -304,7 +304,7 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeChooseDisk(JNIEnv *env, job
     int drive = driveA ? 0 : 1;
     int ro = readOnly ? 1 : 0;
 
-    LOG("nativeChooseDisk(%s, %s, %s)", path, driveA ? "drive A" : "drive B", readOnly ? "read only" : "read/write");
+    LOG(": (%s, %s, %s)", path, driveA ? "drive A" : "drive B", readOnly ? "read only" : "read/write");
     if (c_new_diskette_6(drive, path, ro)) {
         char *gzPath = NULL;
         asprintf(&gzPath, "%s.gz", path);

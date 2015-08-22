@@ -21,7 +21,7 @@ typedef enum AndroidTouchJoystickButtonValues {
 } AndroidTouchJoystickButtonValues;
 
 void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetColor(JNIEnv *env, jclass cls, jint color) {
-    LOG("native set hires color : %d", color);
+    LOG("color : %d", color);
     if (color < COLOR_NONE || color > COLOR_INTERP) {
         return;
     }
@@ -33,13 +33,13 @@ void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetColor(JNIEnv *env, jc
 }
 
 jboolean Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetSpeakerEnabled(JNIEnv *env, jclass cls, jboolean enabled) {
-    LOG("native set speaker enabled : %d", true);
+    LOG("enabled : %d", true);
     // NO-OP ... speaker should always be enabled (but volume could be zero)
     return true;
 }
 
 void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetSpeakerVolume(JNIEnv *env, jclass cls, jint goesToTen) {
-    LOG("native set speaker volume : %d", goesToTen);
+    LOG("volume : %d", goesToTen);
     assert(goesToTen >= 0);
     sound_volume = goesToTen;
 #warning FIXME TODO refactor/remove sound_volume ?
@@ -47,14 +47,14 @@ void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetSpeakerVolume(JNIEnv 
 }
 
 void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetAudioLatency(JNIEnv *env, jclass cls, jfloat latencySecs) {
-    LOG("native set audio latency : %f", latencySecs);
+    LOG("audio latency : %fsecs", latencySecs);
     assert(cpu_isPaused());
     audio_setLatency(latencySecs);
     timing_reinitializeAudio();
 }
 
 jboolean Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetMockingboardEnabled(JNIEnv *env, jclass cls, jboolean enabled) {
-    LOG("native set set mockingboard enabled : %d", enabled);
+    LOG("mockingboard enabled : %d", enabled);
     assert(cpu_isPaused());
     MB_SetEnabled(enabled);
     timing_reinitializeAudio();
@@ -62,13 +62,13 @@ jboolean Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetMockingboardEnabl
 }
 
 void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetMockingboardVolume(JNIEnv *env, jclass cls, jint goesToTen) {
-    LOG("native set mockingboard volume : %d", goesToTen);
+    LOG("mockingboard volume : %d", goesToTen);
     assert(goesToTen >= 0);
     MB_SetVolumeZeroToTen(goesToTen);
 }
 
 void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetCurrentTouchDevice(JNIEnv *env, jclass cls, jint touchDevice) {
-    LOG("native set default touch device : %d", touchDevice);
+    LOG("current touch device : %d", touchDevice);
     assert(touchDevice >= 0 && touchDevice < TOUCH_DEVICE_DEVICE_MAX);
     switch (touchDevice) {
         case TOUCH_DEVICE_JOYSTICK:
@@ -98,7 +98,7 @@ void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetCurrentTouchDevice(JN
 }
 
 jint Java_org_deadc0de_apple2ix_Apple2Preferences_nativeGetCurrentTouchDevice(JNIEnv *env, jclass cls) {
-    LOG("nativeGetCurrentTouchDevice() ...");
+    LOG("%s", "");
     if (joydriver_ownsScreen()) {
         touchjoy_variant_t variant = joydriver_getTouchVariant();
         if (variant == EMULATED_JOYSTICK) {
@@ -113,17 +113,17 @@ jint Java_org_deadc0de_apple2ix_Apple2Preferences_nativeGetCurrentTouchDevice(JN
 }
 
 void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetTouchMenuEnabled(JNIEnv *env, jclass cls, jboolean enabled) {
-    LOG("native set touch menu enabled : %d", enabled);
+    LOG("touch menu enabled : %d", enabled);
     interface_setTouchMenuEnabled(enabled);
 }
 
 void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetTouchMenuVisibility(JNIEnv *env, jclass cls, jfloat alpha) {
-    LOG("native set touch menu visibility : %f", alpha);
+    LOG("touch menu visibility : %f", alpha);
     interface_setTouchMenuVisibility(alpha);
 }
 
 void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetTouchJoystickButtonTypes(JNIEnv *env, jclass cls, jint touchDownButton, jint northButton, jint southButton) {
-    LOG("nativeSetTouchJoystickButtonTypes() : %d,%d,%d", touchDownButton, northButton, southButton);
+    LOG(": %d,%d,%d", touchDownButton, northButton, southButton);
 
     touchDownButton -= 1;
     northButton -= 1;
@@ -157,27 +157,27 @@ void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetTouchJoystickButtonTy
 }
 
 void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetTouchJoystickTapDelay(JNIEnv *env, jclass cls, jfloat secs) {
-    LOG("nativeSetTouchJoystickTapDelay() : %f", secs);
+    LOG("tap delay : %f", secs);
     joydriver_setTapDelay(secs);
 }
 
 void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetTouchJoystickAxisSensitivity(JNIEnv *env, jclass cls, jfloat multiplier) {
-    LOG("nativeSetTouchJoystickAxisSensitivity() : %f", multiplier);
+    LOG("axis sensitivity : %f", multiplier);
     joydriver_setTouchAxisSensitivity(multiplier);
 }
 
 void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetTouchJoystickButtonSwitchThreshold(JNIEnv *env, jclass cls, jint delta) {
-    LOG("nativeSetTouchJoystickButtonSwitchThreshold() : %d", delta);
+    LOG("delta : %d", delta);
     joydriver_setButtonSwitchThreshold(delta);
 }
 
 void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeTouchJoystickSetScreenDivision(JNIEnv *env, jclass cls, jfloat division) {
-    LOG("nativeTouchJoystickSetScreenDivision() : %f", division);
+    LOG("division : %f", division);
     joydriver_setScreenDivision(division);
 }
 
 void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeTouchJoystickSetAxisOnLeft(JNIEnv *env, jclass cls, jboolean axisIsOnLeft) {
-    LOG("nativeTouchJoystickSetAxisOnLeft() : %d", axisIsOnLeft);
+    LOG("axis on left : %d", axisIsOnLeft);
     joydriver_setAxisOnLeft(axisIsOnLeft);
 }
 
@@ -189,13 +189,13 @@ void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeTouchJoystickSetKeypadTy
     jint *buttonsChars = (*env)->GetIntArrayElements(env, jButtonsChars, 0);
     jint *buttonsScans = (*env)->GetIntArrayElements(env, jButtonsScans, 0);
 
-    LOG("nativeTouchJoystickSetKeypadValues() : NW:%c/%d, N:%c/%d, NE:%c/%d, ... SWIPEUP:%c/%d",
+    LOG("NW:%c/%d, N:%c/%d, NE:%c/%d, ... SWIPEUP:%c/%d",
             (char)rosetteChars[0], rosetteScans[0], (char)rosetteChars[1], rosetteScans[1], (char)rosetteChars[2], rosetteScans[2],
             (char)buttonsChars[1], buttonsScans[1]);
-    LOG("nativeTouchJoystickSetKeypadValues() :  W:%c/%d, C:%c/%d,  E:%c/%d, ...     TAP:%c/%d",
+    LOG(" W:%c/%d, C:%c/%d,  E:%c/%d, ...     TAP:%c/%d",
             (char)rosetteChars[3], rosetteScans[3], (char)rosetteChars[4], rosetteScans[4], (char)rosetteChars[5], rosetteScans[5],
             (char)buttonsChars[0], buttonsScans[0]);
-    LOG("nativeTouchJoystickSetKeypadValues() : SW:%c/%d, S:%c/%d, SE:%c/%d, ... SWIPEDN:%c/%d",
+    LOG("SW:%c/%d, S:%c/%d, SE:%c/%d, ... SWIPEDN:%c/%d",
             (char)rosetteChars[6], rosetteScans[6], (char)rosetteChars[7], rosetteScans[7], (char)rosetteChars[8], rosetteScans[8],
             (char)buttonsChars[2], buttonsScans[2]);
 
@@ -217,7 +217,7 @@ void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeTouchJoystickSetKeypadTy
 }
 
 void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeTouchDeviceBeginCalibrationMode(JNIEnv *env, jclass cls) {
-    LOG("nativeTouchDeviceBeginCalibrationMode() ...");
+    LOG("%s", "");
     if (joydriver_ownsScreen()) {
         joydriver_beginCalibration();
     } else if (keydriver_ownsScreen()) {
@@ -226,7 +226,7 @@ void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeTouchDeviceBeginCalibrat
 }
 
 void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeTouchDeviceEndCalibrationMode(JNIEnv *env, jclass cls) {
-    LOG("nativeTouchDeviceEndCalibrationMode() ...");
+    LOG("%s", "");
     if (joydriver_ownsScreen()) {
         joydriver_endCalibration();
     } else if (keydriver_ownsScreen()) {
@@ -235,17 +235,17 @@ void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeTouchDeviceEndCalibratio
 }
 
 void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetTouchDeviceKeyRepeatThreshold(JNIEnv *env, jclass cls, jfloat threshold) {
-    LOG("...");
+    LOG("threshold : %f", threshold);
     joydriver_setKeyRepeatThreshold(threshold);
 }
 
 jint Java_org_deadc0de_apple2ix_Apple2Preferences_nativeGetCPUSpeed(JNIEnv *env, jclass cls) {
-    LOG("nativeGetCPUSpeed() ...");
+    LOG("%s", "");
     return (jint)round(cpu_scale_factor * 100.0);
 }
 
 void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetCPUSpeed(JNIEnv *env, jclass cls, jint percentSpeed) {
-    LOG("nativeSetCPUSpeed() : %d%%", percentSpeed);
+    LOG("percentSpeed : %d%%", percentSpeed);
     bool wasPaused = cpu_isPaused();
 
     if (!wasPaused) {

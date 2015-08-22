@@ -144,6 +144,8 @@ static const char *log_end = "\n";
 #   define _LOG_CMD(str) fprintf(error_log, "%s", str)
 #endif
 
+#define _MYFILE_ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
+
 #define _LOG(...) \
     do { \
         int _err = errno; \
@@ -162,7 +164,7 @@ static const char *log_end = "\n";
         asprintf(&buf0, __VA_ARGS__); \
         \
         char *buf = NULL; \
-        asprintf(&buf, "%s:%d -%s%s %s%s", __FILE__, __LINE__, syserr_str ? : "", glerr_str ? : "", buf0, log_end); \
+        asprintf(&buf, "%s:%d (%s) -%s%s %s%s", _MYFILE_, __LINE__, __func__, syserr_str ? : "", glerr_str ? : "", buf0, log_end); \
         \
         _LOG_CMD(buf); \
         \
@@ -189,7 +191,7 @@ static const char *log_end = "\n";
         } else { \
             LOG( "!!! ASSERT !!! : " #e ); \
             sleep(1); \
-            __assert2(__FILE__, __LINE__, __func__, #e); \
+            __assert2(_MYFILE_, __LINE__, __func__, #e); \
         } \
     } while (0)
 #endif
