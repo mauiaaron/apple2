@@ -96,7 +96,17 @@ static inline void _present_menu(GLModel *parent) {
 static inline void _show_top_left(void) {
     topMenuTemplate[0][0]  = ICONTEXT_MENU_SPROUT;
     topMenuTemplate[0][1]  = MOUSETEXT_RIGHT;
-    topMenuTemplate[1][0]  = joydriver_ownsScreen() ? ICONTEXT_UPPERCASE : ICONTEXT_MENU_TOUCHJOY;
+
+    if (joydriver_ownsScreen()) {
+        if (joydriver_getTouchVariant() == EMULATED_JOYSTICK) {
+            topMenuTemplate[1][0] = ICONTEXT_MENU_TOUCHJOY_KPAD;
+        } else {
+            topMenuTemplate[1][0] = ICONTEXT_UPPERCASE;
+        }
+    } else {
+        topMenuTemplate[1][0] = ICONTEXT_MENU_TOUCHJOY;
+    }
+
     topMenuTemplate[1][1]  = ICONTEXT_NONACTIONABLE;
     menu.topLeftShowing = true;
     _present_menu(menu.model);
@@ -269,29 +279,9 @@ static inline int64_t _tap_menu_item(float x, float y) {
             break;
 
         case ICONTEXT_MENU_TOUCHJOY:
-            LOG("showing touch joystick ...");
-            keydriver_setTouchKeyboardOwnsScreen(false);
-            if (video_backend->animation_hideTouchKeyboard) {
-                video_backend->animation_hideTouchKeyboard();
-            }
-            joydriver_setTouchJoystickOwnsScreen(true);
-            if (video_backend->animation_showTouchJoystick) {
-                video_backend->animation_showTouchJoystick();
-            }
-            flags |= TOUCH_FLAGS_INPUT_DEVICE_CHANGE;
-            _hide_top_left();
-            break;
-
+        case ICONTEXT_MENU_TOUCHJOY_KPAD:
         case ICONTEXT_UPPERCASE:
-            LOG("showing touch keyboard ...");
-            joydriver_setTouchJoystickOwnsScreen(false);
-            if (video_backend->animation_hideTouchJoystick) {
-                video_backend->animation_hideTouchJoystick();
-            }
-            keydriver_setTouchKeyboardOwnsScreen(true);
-            if (video_backend->animation_showTouchKeyboard) {
-                video_backend->animation_showTouchKeyboard();
-            }
+            LOG("switching input device  ...");
             flags |= TOUCH_FLAGS_INPUT_DEVICE_CHANGE;
             _hide_top_left();
             break;
@@ -524,10 +514,8 @@ static void _animation_showTouchMenu(void) {
 }
 
 static void _animation_hideTouchMenu(void) {
-    timingBegin = (struct timespec){ 0 };
-}
-
-static void gltouchmenu_set(void) {
+    _hide_top_left();
+    _hide_top_right();
     timingBegin = (struct timespec){ 0 };
 }
 

@@ -705,6 +705,18 @@ static void gltouchjoy_setTouchButtonTypes(
 
     buttons.northChar     = northChar;
     buttons.northScancode = northScancode;
+
+    buttons.activeChar = ICONTEXT_NONACTIONABLE;
+
+    char currButtonDisplayChar = touchDownChar;
+    if (touchDownChar == TOUCH_BUTTON0) {
+        currButtonDisplayChar = MOUSETEXT_OPENAPPLE;
+    } else if (touchDownChar == TOUCH_BUTTON1) {
+        currButtonDisplayChar = MOUSETEXT_CLOSEDAPPLE;
+    } else if (touchDownChar == TOUCH_BOTH) {
+        currButtonDisplayChar = '+';
+    }
+    _setup_button_object_with_char(currButtonDisplayChar);
 }
 
 static void gltouchjoy_setTapDelay(float secs) {

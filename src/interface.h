@@ -45,6 +45,14 @@ void interface_plotChar(uint8_t *fboff, int fb_pix_width, interface_colorscheme_
 void interface_plotMessage(uint8_t *fb, interface_colorscheme_t cs, char *message, int message_cols, int message_rows);
 
 #if INTERFACE_TOUCH
+typedef enum interface_device_t {
+    TOUCH_DEVICE_NONE = 0,
+    TOUCH_DEVICE_JOYSTICK,
+    TOUCH_DEVICE_JOYSTICK_KEYPAD,
+    TOUCH_DEVICE_KEYBOARD,
+    TOUCH_DEVICE_DEVICE_MAX,
+} interface_device_t;
+
 typedef enum interface_touch_event_t {
     TOUCH_CANCEL = 0,
     TOUCH_DOWN,

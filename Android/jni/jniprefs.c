@@ -13,17 +13,8 @@
 
 #include <jni.h>
 
-typedef enum AndroidTouchDevice {
-    // Maps to values in Apple2Preferences.java
-    ANDROID_TOUCH_NONE = 0,
-    ANDROID_TOUCH_JOYSTICK,
-    ANDROID_TOUCH_JOYSTICK_KEYPAD,
-    ANDROID_TOUCH_KEYBOARD,
-    ANDROID_TOUCH_DEVICE_MAX,
-} AndroidTouchDevice;
-
 typedef enum AndroidTouchJoystickButtonValues {
-    //ANDROID_TOUCH_NONE = 0,
+    //ANDROID_TOUCHJOY_NONE = 0,
     ANDROID_TOUCHJOY_BUTTON0 = 1,
     ANDROID_TOUCHJOY_BUTTON1,
     ANDROID_TOUCHJOY_BUTTON_BOTH,
@@ -78,29 +69,29 @@ void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetMockingboardVolume(JN
 
 void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetCurrentTouchDevice(JNIEnv *env, jclass cls, jint touchDevice) {
     LOG("native set default touch device : %d", touchDevice);
-    assert(touchDevice >= 0 && touchDevice < ANDROID_TOUCH_DEVICE_MAX);
+    assert(touchDevice >= 0 && touchDevice < TOUCH_DEVICE_DEVICE_MAX);
     switch (touchDevice) {
-        case ANDROID_TOUCH_JOYSTICK:
+        case TOUCH_DEVICE_JOYSTICK:
             keydriver_setTouchKeyboardOwnsScreen(false);
             joydriver_setTouchJoystickOwnsScreen(true);
             joydriver_setTouchVariant(EMULATED_JOYSTICK);
             video_backend->animation_showTouchJoystick();
             break;
 
-        case ANDROID_TOUCH_JOYSTICK_KEYPAD:
+        case TOUCH_DEVICE_JOYSTICK_KEYPAD:
             keydriver_setTouchKeyboardOwnsScreen(false);
             joydriver_setTouchJoystickOwnsScreen(true);
             joydriver_setTouchVariant(EMULATED_KEYPAD);
             video_backend->animation_showTouchJoystick();
             break;
 
-        case ANDROID_TOUCH_KEYBOARD:
+        case TOUCH_DEVICE_KEYBOARD:
             keydriver_setTouchKeyboardOwnsScreen(true);
             joydriver_setTouchJoystickOwnsScreen(false);
             video_backend->animation_showTouchKeyboard();
             break;
 
-        case ANDROID_TOUCH_NONE:
+        case TOUCH_DEVICE_NONE:
         default:
             break;
     }
@@ -111,14 +102,14 @@ jint Java_org_deadc0de_apple2ix_Apple2Preferences_nativeGetCurrentTouchDevice(JN
     if (joydriver_ownsScreen()) {
         touchjoy_variant_t variant = joydriver_getTouchVariant();
         if (variant == EMULATED_JOYSTICK) {
-            return ANDROID_TOUCH_JOYSTICK;
+            return TOUCH_DEVICE_JOYSTICK;
         } else if (variant == EMULATED_KEYPAD) {
-            return ANDROID_TOUCH_JOYSTICK_KEYPAD;
+            return TOUCH_DEVICE_JOYSTICK_KEYPAD;
         }
     } else if (keydriver_ownsScreen()) {
-        return ANDROID_TOUCH_KEYBOARD;
+        return TOUCH_DEVICE_KEYBOARD;
     }
-    return ANDROID_TOUCH_NONE;
+    return TOUCH_DEVICE_NONE;
 }
 
 void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetTouchMenuEnabled(JNIEnv *env, jclass cls, jboolean enabled) {

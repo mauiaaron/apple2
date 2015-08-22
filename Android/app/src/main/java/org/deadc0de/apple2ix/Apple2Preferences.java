@@ -465,8 +465,18 @@ public enum Apple2Preferences {
         KEYBOARD(3);
         private int dev;
 
+        public static final int size = TouchDeviceVariant.values().length;
+
         TouchDeviceVariant(int dev) {
             this.dev = dev;
+        }
+
+        static TouchDeviceVariant next(int ord) {
+            ++ord;
+            if (ord >= size) {
+                ord = 1;
+            }
+            return TouchDeviceVariant.values()[ord];
         }
     }
 

@@ -362,13 +362,8 @@ public class Apple2Activity extends Activity {
 
             if ((nativeFlags & NATIVE_TOUCH_INPUT_DEVICE_CHANGED) != 0) {
                 int touchDevice = Apple2Preferences.nativeGetCurrentTouchDevice();
-                if (touchDevice == Apple2Preferences.TouchDeviceVariant.JOYSTICK.ordinal()) {
-                    Apple2Preferences.CURRENT_TOUCH_DEVICE.saveTouchDevice(this, Apple2Preferences.TouchDeviceVariant.JOYSTICK);
-                } else if (touchDevice == Apple2Preferences.TouchDeviceVariant.JOYSTICK_KEYPAD.ordinal()) {
-                    Apple2Preferences.CURRENT_TOUCH_DEVICE.saveTouchDevice(this, Apple2Preferences.TouchDeviceVariant.JOYSTICK_KEYPAD);
-                } else {
-                    Apple2Preferences.CURRENT_TOUCH_DEVICE.saveTouchDevice(this, Apple2Preferences.TouchDeviceVariant.KEYBOARD);
-                }
+                Apple2Preferences.TouchDeviceVariant nextVariant = Apple2Preferences.TouchDeviceVariant.next(touchDevice);
+                Apple2Preferences.CURRENT_TOUCH_DEVICE.saveTouchDevice(this, nextVariant);
             }
             if ((nativeFlags & NATIVE_TOUCH_CPU_SPEED_DEC) != 0) {
                 int percentSpeed = Apple2Preferences.nativeGetCPUSpeed();

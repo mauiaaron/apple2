@@ -169,6 +169,8 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnPause(JNIEnv *env, jobjec
     }
     LOG("%s", "native onPause...");
 
+    video_backend->animation_hideTouchMenu();
+
     if (isSystemPause) {
         // going to background
         cpu_pauseBackground();

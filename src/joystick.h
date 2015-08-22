@@ -35,8 +35,9 @@ void c_calibrate_joystick(void);
 #if INTERFACE_TOUCH
 
 typedef enum touchjoy_variant_t {
-    EMULATED_JOYSTICK = 0, // touch interface emulates a physical joystick device
-    EMULATED_KEYPAD,       // touch interface generates key presses
+    EMULATED_NONE = 0,
+    EMULATED_JOYSTICK, // touch interface emulates a physical joystick device
+    EMULATED_KEYPAD,   // touch interface generates key presses
 } touchjoy_variant_t;
 
 typedef enum touchjoy_button_type_t {
