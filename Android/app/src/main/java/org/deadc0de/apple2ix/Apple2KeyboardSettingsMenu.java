@@ -173,6 +173,49 @@ public class Apple2KeyboardSettingsMenu extends Apple2AbstractMenu {
                 });
                 return convertView;
             }
+        },
+        KEYBOARD_CHOOSE_ALT {
+            @Override
+            public final String getTitle(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.keyboard_choose_alt);
+            }
+
+            @Override
+            public final String getSummary(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.keyboard_choose_alt_summary);
+            }
+
+            @Override
+            public final View getView(final Apple2Activity activity, View convertView) {
+                convertView = _basicView(activity, this, convertView);
+                _addPopupIcon(activity, this, convertView);
+                return convertView;
+            }
+
+            @Override
+            public void handleSelection(final Apple2Activity activity, final Apple2AbstractMenu settingsMenu, boolean isChecked) {
+                String[] titles = new String[Apple2Preferences.KeyboardAltPreset.size + 1];
+                titles[0] = activity.getResources().getString(R.string.keyboard_preset_custom);
+                System.arraycopy(Apple2Preferences.KeyboardAltPreset.titles(activity), 0, titles, 1, Apple2Preferences.KeyboardAltPreset.size);
+
+                _alertDialogHandleSelection(activity, R.string.keyboard_choose_alt_title, titles, new IPreferenceLoadSave() {
+                    @Override
+                    public int intValue() {
+                        return Apple2Preferences.KEYBOARD_ALT.intValue(activity);
+                    }
+
+                    @Override
+                    public void saveInt(int value) {
+                        Apple2Preferences.KEYBOARD_ALT.saveInt(activity, value);
+                        if (value == 0) {
+                            Apple2KeyboardSettingsMenu keyboardSettingsMenu = (Apple2KeyboardSettingsMenu) settingsMenu;
+                            ////TODO FIXME ... keyboardSettingsMenu.chooseAltKeyboard(activity);
+                        } else {
+                            Apple2Preferences.KeyboardAltPreset.values()[value - 1].apply(activity);
+                        }
+                    }
+                });
+            }
         };
 
         public static final int size = SETTINGS.values().length;

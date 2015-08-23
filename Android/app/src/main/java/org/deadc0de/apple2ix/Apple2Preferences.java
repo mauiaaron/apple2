@@ -512,6 +512,17 @@ public enum Apple2Preferences {
             return activity.getPreferences(Context.MODE_PRIVATE).getInt(toString(), defaultLatency);
         }
     },
+    KEYBOARD_ALT {
+        @Override
+        public void load(Apple2Activity activity) {
+            /* ... */
+        }
+
+        @Override
+        public int intValue(Apple2Activity activity) {
+            return activity.getPreferences(Context.MODE_PRIVATE).getInt(toString(), 1);
+        }
+    },
     KEYBOARD_VISIBILITY_ACTIVE {
         @Override
         public void load(Apple2Activity activity) {
@@ -757,6 +768,46 @@ public enum Apple2Preferences {
             String[] titles = new String[size];
             int i = 0;
             for (KeypadPreset preset : values()) {
+                titles[i++] = preset.getTitle(activity);
+            }
+            return titles;
+        }
+    }
+
+    public enum KeyboardAltPreset {
+        DEFAULT {
+            @Override
+            public String getTitle(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.keyboard_preset_default);
+            }
+
+            @Override
+            public void apply(Apple2Activity activity) {
+                // TODO FIXME ...
+            }
+        },
+        U4 {
+            @Override
+            public String getTitle(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.keyboard_preset_u4);
+            }
+
+            @Override
+            public void apply(Apple2Activity activity) {
+                // TODO FIXME ...
+            }
+        };
+
+        public abstract String getTitle(Apple2Activity activity);
+
+        public abstract void apply(Apple2Activity activity);
+
+        public static final int size = KeyboardAltPreset.values().length;
+
+        public static String[] titles(Apple2Activity activity) {
+            String[] titles = new String[size];
+            int i = 0;
+            for (KeyboardAltPreset preset : values()) {
                 titles[i++] = preset.getTitle(activity);
             }
             return titles;

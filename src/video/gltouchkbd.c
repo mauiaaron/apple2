@@ -84,9 +84,9 @@ static char kbdTemplateAlt[KBD_TEMPLATE_ROWS][KBD_TEMPLATE_COLS+1] = {
 static char kbdTemplateArrow[KBD_TEMPLATE_ROWS][KBD_TEMPLATE_COLS+1] = {
     "@ @ @ @ @ ",
     "          ",
-    "    T@    ",
-    "A   @@@   ",
-    "    C@    ",
+    "     @    ",
+    "    @@@   ",
+    "     @    ",
     "          ",
 };
 
