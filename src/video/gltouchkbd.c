@@ -52,6 +52,7 @@ static bool isCalibrating = false;  // Are we in calibration mode?
 static bool allowLowercase = false; // show lowercase keyboard
 static float minAlphaWhenOwnsScreen = 1/4.f;
 static float minAlpha = 0.f;
+static float maxAlpha = 1.f;
 
 static char kbdTemplateUCase[KBD_TEMPLATE_ROWS][KBD_TEMPLATE_COLS+1] = {
     "@ @ @ @ @ ",
@@ -172,7 +173,7 @@ static inline float _get_keyboard_visibility(void) {
     float alpha = minAlpha;
     deltat = timespec_diff(kbd.timingBegin, now, NULL);
     if (deltat.tv_sec == 0) {
-        alpha = 1.0;
+        alpha = maxAlpha;
         if (deltat.tv_nsec >= NANOSECONDS_PER_SECOND/2) {
             alpha -= ((float)deltat.tv_nsec-(NANOSECONDS_PER_SECOND/2)) / (float)(NANOSECONDS_PER_SECOND/2);
             if (alpha < minAlpha) {
@@ -732,6 +733,23 @@ static bool gltouchkbd_ownsScreen(void) {
     return ownsScreen;
 }
 
+static void gltouchkbd_setVisibilityWhenOwnsScreen(float inactiveAlpha, float activeAlpha) {
+    minAlphaWhenOwnsScreen = inactiveAlpha;
+    maxAlpha = activeAlpha;
+    if (ownsScreen) {
+        minAlpha = minAlphaWhenOwnsScreen;
+    }
+}
+
+static void gltouchkbd_setLowercaseEnabled(bool enabled) {
+    allowLowercase = enabled;
+    if (allowLowercase) {
+        caps_lock = false;
+    } else {
+        caps_lock = true;
+    }
+}
+
 static void gltouchkbd_beginCalibration(void) {
     video_clear();
     isCalibrating = true;
@@ -770,6 +788,8 @@ static void _init_gltouchkbd(void) {
     keydriver_setTouchKeyboardEnabled = &gltouchkbd_setTouchKeyboardEnabled;
     keydriver_setTouchKeyboardOwnsScreen = &gltouchkbd_setTouchKeyboardOwnsScreen;
     keydriver_ownsScreen = &gltouchkbd_ownsScreen;
+    keydriver_setVisibilityWhenOwnsScreen = &gltouchkbd_setVisibilityWhenOwnsScreen;
+    keydriver_setLowercaseEnabled = &gltouchkbd_setLowercaseEnabled;
     keydriver_beginCalibration = &gltouchkbd_beginCalibration;
     keydriver_endCalibration = &gltouchkbd_endCalibration;
 

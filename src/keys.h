@@ -161,6 +161,12 @@ extern void (*keydriver_setTouchKeyboardOwnsScreen)(bool pwnd);
 // query touch screen ownership
 extern bool (*keydriver_ownsScreen)(void);
 
+// set visibility
+extern void (*keydriver_setVisibilityWhenOwnsScreen)(float inactiveAlpha, float activeAlpha);
+
+// set visibility
+extern void (*keydriver_setLowercaseEnabled)(bool enabled);
+
 // keyboard read callback
 extern void (*keydriver_keyboardReadCallback)(void);
 

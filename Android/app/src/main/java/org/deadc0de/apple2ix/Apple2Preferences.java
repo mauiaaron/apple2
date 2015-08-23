@@ -511,6 +511,44 @@ public enum Apple2Preferences {
             int defaultLatency = KEYREPEAT_NUM_CHOICES / 4;
             return activity.getPreferences(Context.MODE_PRIVATE).getInt(toString(), defaultLatency);
         }
+    },
+    KEYBOARD_VISIBILITY_ACTIVE {
+        @Override
+        public void load(Apple2Activity activity) {
+            int inactiveTick = KEYBOARD_VISIBILITY_INACTIVE.intValue(activity);
+            int activeTick = intValue(activity);
+            nativeSetTouchKeyboardVisibility((float) inactiveTick / ALPHA_SLIDER_NUM_CHOICES, (float) activeTick / ALPHA_SLIDER_NUM_CHOICES);
+        }
+
+        @Override
+        public int intValue(Apple2Activity activity) {
+            return activity.getPreferences(Context.MODE_PRIVATE).getInt(toString(), ALPHA_SLIDER_NUM_CHOICES);
+        }
+    },
+    KEYBOARD_VISIBILITY_INACTIVE {
+        @Override
+        public void load(Apple2Activity activity) {
+            int inactiveTick = intValue(activity);
+            int activeTick = KEYBOARD_VISIBILITY_ACTIVE.intValue(activity);
+            nativeSetTouchKeyboardVisibility((float) inactiveTick / ALPHA_SLIDER_NUM_CHOICES, (float) activeTick / ALPHA_SLIDER_NUM_CHOICES);
+        }
+
+        @Override
+        public int intValue(Apple2Activity activity) {
+            return activity.getPreferences(Context.MODE_PRIVATE).getInt(toString(), 5);
+        }
+    },
+    KEYBOARD_LOWERCASE_ENABLED {
+        @Override
+        public void load(Apple2Activity activity) {
+            boolean enabled = booleanValue(activity);
+            nativeSetTouchKeyboardLowercaseEnabled(enabled);
+        }
+
+        @Override
+        public boolean booleanValue(Apple2Activity activity) {
+            return activity.getPreferences(Context.MODE_PRIVATE).getBoolean(toString(), true);
+        }
     };
 
     public enum HiresColor {
@@ -943,6 +981,10 @@ public enum Apple2Preferences {
     public static native void nativeSetTouchMenuEnabled(boolean enabled);
 
     private static native void nativeSetTouchMenuVisibility(float alpha);
+
+    private static native void nativeSetTouchKeyboardVisibility(float inactiveAlpha, float activeAlpha);
+
+    private static native void nativeSetTouchKeyboardLowercaseEnabled(boolean enabled);
 
     public static native int nativeGetCurrentTouchDevice();
 

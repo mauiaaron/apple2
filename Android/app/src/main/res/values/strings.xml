@@ -72,9 +72,13 @@
     <string name="key_up">&#8593;</string>
     <string name="keyboard">Keyboard</string>
     <string name="keyboard_configure">Configure keyboard…</string>
-    <string name="keyboard_configure_summary">Transparency, fading, custom keys</string>
-    <string name="keyboard_visibility">Keyboard visibility</string>
-    <string name="keyboard_visibility_summary">Keyboard visibility when inactive</string>
+    <string name="keyboard_configure_summary">Transparency, lowercase, custom keys</string>
+    <string name="keyboard_lowercase_enabled">Enable lowercase</string>
+    <string name="keyboard_lowercase_enabled_summary">Enable lowercase keys</string>
+    <string name="keyboard_visibility_active">Visibility when active</string>
+    <string name="keyboard_visibility_active_summary">Keyboard visibility when active</string>
+    <string name="keyboard_visibility_inactive">Visibility when inactive</string>
+    <string name="keyboard_visibility_inactive_summary">Keyboard visibility when inactive</string>
     <string name="keypad">Keypad Joystick</string>
     <string name="keypadA">Touch Keypad Joystick</string>
     <string name="keypad_button_tap_button">Tap key:</string>

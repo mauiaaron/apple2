@@ -134,7 +134,7 @@ public class Apple2SettingsMenu extends Apple2AbstractMenu {
 
             @Override
             public void handleSelection(final Apple2Activity activity, final Apple2AbstractMenu settingsMenu, boolean isChecked) {
-                //new Apple2KeyboardSettingsMenu().show();
+                new Apple2KeyboardSettingsMenu(activity).show();
             }
         },
         AUDIO_CONFIGURE {

@@ -12,6 +12,9 @@
 package org.deadc0de.apple2ix;
 
 import android.view.View;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
+import android.widget.TextView;
 
 public class Apple2KeyboardSettingsMenu extends Apple2AbstractMenu {
 
@@ -85,19 +88,90 @@ public class Apple2KeyboardSettingsMenu extends Apple2AbstractMenu {
     }
 
     protected enum SETTINGS implements Apple2AbstractMenu.IMenuEnum {
-        KEYBOARD_VISIBILITY {
+        KEYBOARD_VISIBILITY_INACTIVE {
             @Override
             public final String getTitle(Apple2Activity activity) {
-                return activity.getResources().getString(R.string.keyboard_visibility);
+                return activity.getResources().getString(R.string.keyboard_visibility_inactive);
             }
 
             @Override
             public final String getSummary(Apple2Activity activity) {
-                return activity.getResources().getString(R.string.keyboard_visibility_summary);
+                return activity.getResources().getString(R.string.keyboard_visibility_inactive_summary);
             }
 
             @Override
-            public void handleSelection(final Apple2Activity activity, final Apple2AbstractMenu settingsMenu, boolean isChecked) {
+            public View getView(final Apple2Activity activity, View convertView) {
+                return _sliderView(activity, this, Apple2Preferences.ALPHA_SLIDER_NUM_CHOICES, new IPreferenceSlider() {
+                    @Override
+                    public void saveInt(int progress) {
+                        Apple2Preferences.KEYBOARD_VISIBILITY_INACTIVE.saveInt(activity, progress);
+                    }
+
+                    @Override
+                    public int intValue() {
+                        return Apple2Preferences.KEYBOARD_VISIBILITY_INACTIVE.intValue(activity);
+                    }
+
+                    @Override
+                    public void showValue(int progress, final TextView seekBarValue) {
+                        seekBarValue.setText("" + ((float) progress / Apple2Preferences.ALPHA_SLIDER_NUM_CHOICES));
+                    }
+                });
+            }
+        },
+        KEYBOARD_VISIBILITY_ACTIVE {
+            @Override
+            public final String getTitle(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.keyboard_visibility_active);
+            }
+
+            @Override
+            public final String getSummary(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.keyboard_visibility_active_summary);
+            }
+
+            @Override
+            public View getView(final Apple2Activity activity, View convertView) {
+                return _sliderView(activity, this, Apple2Preferences.ALPHA_SLIDER_NUM_CHOICES, new IPreferenceSlider() {
+                    @Override
+                    public void saveInt(int progress) {
+                        Apple2Preferences.KEYBOARD_VISIBILITY_ACTIVE.saveInt(activity, progress);
+                    }
+
+                    @Override
+                    public int intValue() {
+                        return Apple2Preferences.KEYBOARD_VISIBILITY_ACTIVE.intValue(activity);
+                    }
+
+                    @Override
+                    public void showValue(int progress, final TextView seekBarValue) {
+                        seekBarValue.setText("" + ((float) progress / Apple2Preferences.ALPHA_SLIDER_NUM_CHOICES));
+                    }
+                });
+            }
+        },
+        KEYBOARD_ENABLE_LOWERCASE {
+            @Override
+            public final String getTitle(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.keyboard_lowercase_enabled);
+            }
+
+            @Override
+            public final String getSummary(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.keyboard_lowercase_enabled_summary);
+            }
+
+            @Override
+            public View getView(final Apple2Activity activity, View convertView) {
+                convertView = _basicView(activity, this, convertView);
+                CheckBox cb = _addCheckbox(activity, this, convertView, Apple2Preferences.KEYBOARD_LOWERCASE_ENABLED.booleanValue(activity));
+                cb.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                    @Override
+                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                        Apple2Preferences.KEYBOARD_LOWERCASE_ENABLED.saveBoolean(activity, isChecked);
+                    }
+                });
+                return convertView;
             }
         };
 

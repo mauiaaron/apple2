@@ -118,13 +118,23 @@ jint Java_org_deadc0de_apple2ix_Apple2Preferences_nativeGetCurrentTouchDevice(JN
 }
 
 void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetTouchMenuEnabled(JNIEnv *env, jclass cls, jboolean enabled) {
-    LOG("touch menu enabled : %d", enabled);
+    LOG("enabled : %d", enabled);
     interface_setTouchMenuEnabled(enabled);
 }
 
+void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetTouchKeyboardLowercaseEnabled(JNIEnv *env, jclass cls, jboolean enabled) {
+    LOG("enabled : %d", enabled);
+    keydriver_setLowercaseEnabled(enabled);
+}
+
 void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetTouchMenuVisibility(JNIEnv *env, jclass cls, jfloat alpha) {
-    LOG("touch menu visibility : %f", alpha);
+    LOG("visibility : %f", alpha);
     interface_setTouchMenuVisibility(alpha);
+}
+
+void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetTouchKeyboardVisibility(JNIEnv *env, jclass cls, jfloat inactiveAlpha, jfloat activeAlpha) {
+    LOG("inactive:%f active:%f", inactiveAlpha, activeAlpha);
+    keydriver_setVisibilityWhenOwnsScreen(inactiveAlpha, activeAlpha);
 }
 
 void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetTouchJoystickButtonTypes(JNIEnv *env, jclass cls, jint touchDownButton, jint northButton, jint southButton) {
