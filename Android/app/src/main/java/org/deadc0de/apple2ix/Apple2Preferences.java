@@ -569,7 +569,7 @@ public enum Apple2Preferences {
 
         @Override
         public boolean booleanValue(Apple2Activity activity) {
-            return activity.getPreferences(Context.MODE_PRIVATE).getBoolean(toString(), true);
+            return activity.getPreferences(Context.MODE_PRIVATE).getBoolean(toString(), false);
         }
     };
 
