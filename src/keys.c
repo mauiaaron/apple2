@@ -499,5 +499,6 @@ void (*keydriver_setLowercaseEnabled)(bool enabled) = NULL;
 void (*keydriver_keyboardReadCallback)(void) = NULL;
 void (*keydriver_beginCalibration)(void) = NULL;
 void (*keydriver_endCalibration)(void) = NULL;
+void (*keydriver_loadAltKbd)(const char *kbdPath) = NULL;
 #endif
 

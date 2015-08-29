@@ -175,6 +175,9 @@ extern void (*keydriver_beginCalibration)(void);
 
 // end calibration mode
 extern void (*keydriver_endCalibration)(void);
+
+// load an alternate keyboard variant
+extern void (*keydriver_loadAltKbd)(const char *kbdPath);
 #endif
 
 #endif

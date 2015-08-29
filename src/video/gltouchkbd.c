@@ -13,6 +13,7 @@
 #include "video/glvideo.h"
 #include "video/glhudmodel.h"
 #include "video/glnode.h"
+#include "json_parse.h"
 
 #if !INTERFACE_TOUCH
 #error this is a touch interface module, possibly you mean to not compile this at all?
@@ -760,6 +761,150 @@ static void gltouchkbd_endCalibration(void) {
     isCalibrating = false;
 }
 
+static void gltouchkbd_loadAltKbd(const char *kbdPath) {
+    JSON_s parsedData = { 0 };
+    int tokCount = json_createFromFile(kbdPath, &parsedData);
+
+    do {
+        if (tokCount < 0) {
+            break;
+        }
+
+        // we are expecting a very specific layout ... abort if anything is not correct
+        int idx=0;
+
+        // begin with array
+        if (parsedData.jsonTokens[idx].type != JSMN_ARRAY) {
+            ERRLOG("Keyboard JSON must start with array");
+            break;
+        }
+        ++idx;
+
+        // next is a global comment string
+        if (parsedData.jsonTokens[idx].type != JSMN_STRING) {
+            ERRLOG("Expecting a comment string at JSON token position 1");
+            break;
+        }
+        ++idx;
+
+        // next is the dictionary of special strings
+        if (parsedData.jsonTokens[idx].type != JSMN_OBJECT) {
+            ERRLOG("Expecting a dictionary at JSON token position 2");
+            break;
+        }
+        const int dictCount = parsedData.jsonTokens[idx].size;
+        ++idx;
+        const int dictBegin = idx;
+
+        // verify all dictionary keys/vals are strings
+        bool allStrings = true;
+        const int dictEnd = dictBegin + (dictCount*2);
+        for (; idx<dictEnd; idx+=2) {
+            if (parsedData.jsonTokens[idx].type != JSMN_STRING) {
+                allStrings = false;
+                break;
+            }
+            if (parsedData.jsonTokens[idx+1].type != JSMN_STRING) {
+                allStrings = false;
+                break;
+            }
+        }
+        if (!allStrings) {
+            ERRLOG("Specials dictionary should only contain strings");
+            break;
+        }
+
+        // next is reserved0 array
+        if (parsedData.jsonTokens[idx].type != JSMN_ARRAY) {
+            ERRLOG("Expecting a reserved array at JSON token position 3");
+            break;
+        }
+        ++idx;
+        idx += parsedData.jsonTokens[idx-1].size;
+
+        // next is reserved1 array
+        if (parsedData.jsonTokens[idx].type != JSMN_ARRAY) {
+            ERRLOG("Expecting a reserved array at JSON token position 4");
+            break;
+        }
+        ++idx;
+        idx += parsedData.jsonTokens[idx-1].size;
+
+        // next are the character rows
+        int row = 0;
+        while (idx < tokCount) {
+            if ( !((parsedData.jsonTokens[idx].type == JSMN_ARRAY) && (parsedData.jsonTokens[idx].size == KBD_TEMPLATE_COLS) && (parsedData.jsonTokens[idx].parent == 0)) ) {
+                ERRLOG("Expecting an array of ten items at keyboard row %d", row+1);
+                break;
+            }
+
+            ++idx;
+            const int count = idx+KBD_TEMPLATE_COLS;
+            for (int col=0; idx<count; col++, idx++) {
+
+                if (parsedData.jsonTokens[idx].type != JSMN_STRING) {
+                    ERRLOG("Unexpected non-string at keyboard row %d", row+1);
+                    break;
+                }
+
+                int start = parsedData.jsonTokens[idx].start;
+                int end   = parsedData.jsonTokens[idx].end;
+                assert(end >= start && "bug");
+                const int size  = end - start;
+
+                if (size == 1) {
+                    kbdTemplateArrow[row][col] = parsedData.jsonString[start];
+                    continue;
+                } else if (size == 0) {
+                    kbdTemplateArrow[row][col] = ICONTEXT_NONACTIONABLE;
+                    continue;
+                } else if (size < 0) {
+                    assert(false && "negative size coming from jsmn!");
+                    continue;
+                }
+
+                // assign special interface/mousetext visuals
+                char *key = &parsedData.jsonString[start];
+
+                bool foundMatch = false;
+                for (int i=dictBegin; i<dictEnd; i+=2) {
+                    start = parsedData.jsonTokens[i].start;
+                    end   = parsedData.jsonTokens[i].end;
+
+                    assert(end >= start && "bug");
+
+                    if (end - start != size) {
+                        continue;
+                    }
+
+                    foundMatch = (strncmp(key, &parsedData.jsonString[start], size) == 0);
+
+                    if (foundMatch) {
+                        start = parsedData.jsonTokens[i+1].start;
+                        uint8_t ch = (uint8_t)strtol(&parsedData.jsonString[start], NULL, /*base:*/16);
+                        kbdTemplateArrow[row][col] = ch;
+                        break;
+                    }
+                }
+                if (!foundMatch) {
+                    ERRLOG("no match for found multichar value in keyboard row %d", row+1);
+                }
+            }
+
+            ++row;
+        }
+
+        if (row != KBD_TEMPLATE_ROWS) {
+            ERRLOG("Did not find expected number of keyboard rows");
+        } else {
+            LOG("Parsed keyboard at %s", kbdPath);
+        }
+
+    } while (0);
+
+    json_destroy(&parsedData);
+}
+
 static void _animation_showTouchKeyboard(void) {
     if (!isAvailable) {
         return;
@@ -792,6 +937,7 @@ static void _init_gltouchkbd(void) {
     keydriver_setLowercaseEnabled = &gltouchkbd_setLowercaseEnabled;
     keydriver_beginCalibration = &gltouchkbd_beginCalibration;
     keydriver_endCalibration = &gltouchkbd_endCalibration;
+    keydriver_loadAltKbd = &gltouchkbd_loadAltKbd;
 
     kbd.selectedCol = -1;
     kbd.selectedRow = -1;
