@@ -141,20 +141,6 @@ static inline void _switch_keyboard(GLModel *parent, char *template) {
     glhud_setupDefault(parent);
 }
 
-static inline void _switch_to_next_keyboard(void) {
-    GLModelHUDKeyboard *hudKeyboard = (GLModelHUDKeyboard *)kbd.model->custom;
-    char c = hudKeyboard->tpl[_ROWOFF*(KBD_TEMPLATE_COLS+1)];
-    if (c == 'q') {
-        _switch_keyboard(kbd.model, kbdTemplateUCase[0]);
-    } else if (c == 'Q') {
-        _switch_keyboard(kbd.model, kbdTemplateAlt  [0]);
-    } else if (allowLowercase) {
-        _switch_keyboard(kbd.model, kbdTemplateLCase[0]);
-    } else {
-        _switch_keyboard(kbd.model, kbdTemplateUCase[0]);
-    }
-}
-
 static inline void _toggle_arrows(void) {
     GLModelHUDKeyboard *hudKeyboard = (GLModelHUDKeyboard *)kbd.model->custom;
     char c = hudKeyboard->tpl[_ROWOFF*(KBD_TEMPLATE_COLS+1)];
@@ -311,10 +297,23 @@ static inline int64_t _tap_key_at_point(float x, float y) {
     bool isCTRL = false;
     switch (key) {
         case ICONTEXT_LOWERCASE:
+            key = -1;
+            _switch_keyboard(kbd.model, kbdTemplateLCase[0]);
+            break;
+
         case ICONTEXT_UPPERCASE:
+            key = -1;
+            _switch_keyboard(kbd.model, kbdTemplateUCase[0]);
+            break;
+
         case ICONTEXT_SHOWALT1:
             key = -1;
-            _switch_to_next_keyboard();
+            if (allowLowercase && !isCalibrating) {
+                kbdTemplateAlt[0][0] = ICONTEXT_LOWERCASE;
+            } else {
+                kbdTemplateAlt[0][0] = ICONTEXT_UPPERCASE;
+            }
+            _switch_keyboard(kbd.model, kbdTemplateAlt[0]);
             break;
 
         case ICONTEXT_NONACTIONABLE:
