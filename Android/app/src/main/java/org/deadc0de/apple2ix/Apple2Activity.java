@@ -64,6 +64,7 @@ public class Apple2Activity extends Activity {
     public final static long NATIVE_TOUCH_KBD = (1 << 5);
     public final static long NATIVE_TOUCH_JOY = (1 << 6);
     public final static long NATIVE_TOUCH_MENU = (1 << 7);
+    public final static long NATIVE_TOUCH_JOY_KPAD = (1 << 8);
 
     public final static long NATIVE_TOUCH_INPUT_DEVICE_CHANGED = (1 << 16);
     public final static long NATIVE_TOUCH_CPU_SPEED_DEC = (1 << 17);
@@ -370,11 +371,19 @@ public class Apple2Activity extends Activity {
             // handle menu-specific actions
 
             if ((nativeFlags & NATIVE_TOUCH_INPUT_DEVICE_CHANGED) != 0) {
-                int touchDevice = Apple2Preferences.nativeGetCurrentTouchDevice();
-                Apple2Preferences.TouchDeviceVariant nextVariant = Apple2Preferences.TouchDeviceVariant.next(touchDevice);
+                Apple2Preferences.TouchDeviceVariant nextVariant;
+                if ((nativeFlags & NATIVE_TOUCH_KBD) != 0) {
+                    nextVariant = Apple2Preferences.TouchDeviceVariant.KEYBOARD;
+                } else if ((nativeFlags & NATIVE_TOUCH_JOY) != 0) {
+                    nextVariant = Apple2Preferences.TouchDeviceVariant.JOYSTICK;
+                } else if ((nativeFlags & NATIVE_TOUCH_JOY_KPAD) != 0) {
+                    nextVariant = Apple2Preferences.TouchDeviceVariant.JOYSTICK_KEYPAD;
+                } else {
+                    int touchDevice = Apple2Preferences.nativeGetCurrentTouchDevice();
+                    nextVariant = Apple2Preferences.TouchDeviceVariant.next(touchDevice);
+                }
                 Apple2Preferences.CURRENT_TOUCH_DEVICE.saveTouchDevice(this, nextVariant);
-            }
-            if ((nativeFlags & NATIVE_TOUCH_CPU_SPEED_DEC) != 0) {
+            } else if ((nativeFlags & NATIVE_TOUCH_CPU_SPEED_DEC) != 0) {
                 int percentSpeed = Apple2Preferences.nativeGetCPUSpeed();
                 if (percentSpeed > 100) {
                     percentSpeed -= 25;
@@ -382,8 +391,7 @@ public class Apple2Activity extends Activity {
                     percentSpeed -= 5;
                 }
                 Apple2Preferences.CPU_SPEED_PERCENT.saveInt(this, percentSpeed);
-            }
-            if ((nativeFlags & NATIVE_TOUCH_CPU_SPEED_INC) != 0) {
+            } else if ((nativeFlags & NATIVE_TOUCH_CPU_SPEED_INC) != 0) {
                 int percentSpeed = Apple2Preferences.nativeGetCPUSpeed();
                 if (percentSpeed >= 100) {
                     percentSpeed += 25;

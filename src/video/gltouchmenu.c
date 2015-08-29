@@ -98,16 +98,17 @@ static inline void _show_top_left(void) {
     topMenuTemplate[0][1]  = MOUSETEXT_RIGHT;
 
     if (joydriver_ownsScreen()) {
+        topMenuTemplate[1][0] = ICONTEXT_UPPERCASE;
         if (joydriver_getTouchVariant() == EMULATED_JOYSTICK) {
-            topMenuTemplate[1][0] = ICONTEXT_MENU_TOUCHJOY_KPAD;
+            topMenuTemplate[1][1] = ICONTEXT_MENU_TOUCHJOY_KPAD;
         } else {
-            topMenuTemplate[1][0] = ICONTEXT_UPPERCASE;
+            topMenuTemplate[1][1] = ICONTEXT_MENU_TOUCHJOY;
         }
     } else {
         topMenuTemplate[1][0] = ICONTEXT_MENU_TOUCHJOY;
+        topMenuTemplate[1][1] = ICONTEXT_MENU_TOUCHJOY_KPAD;
     }
 
-    topMenuTemplate[1][1]  = ICONTEXT_NONACTIONABLE;
     menu.topLeftShowing = true;
     _present_menu(menu.model);
 }
@@ -279,10 +280,23 @@ static inline int64_t _tap_menu_item(float x, float y) {
             break;
 
         case ICONTEXT_MENU_TOUCHJOY:
-        case ICONTEXT_MENU_TOUCHJOY_KPAD:
-        case ICONTEXT_UPPERCASE:
-            LOG("switching input device  ...");
+            LOG("switching to joystick  ...");
             flags |= TOUCH_FLAGS_INPUT_DEVICE_CHANGE;
+            flags |= TOUCH_FLAGS_JOY;
+            _hide_top_left();
+            break;
+
+        case ICONTEXT_MENU_TOUCHJOY_KPAD:
+            LOG("switching to keypad joystick  ...");
+            flags |= TOUCH_FLAGS_INPUT_DEVICE_CHANGE;
+            flags |= TOUCH_FLAGS_JOY_KPAD;
+            _hide_top_left();
+            break;
+
+        case ICONTEXT_UPPERCASE:
+            LOG("switching to keyboard  ...");
+            flags |= TOUCH_FLAGS_INPUT_DEVICE_CHANGE;
+            flags |= TOUCH_FLAGS_KBD;
             _hide_top_left();
             break;
 

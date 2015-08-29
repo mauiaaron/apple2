@@ -69,6 +69,7 @@ typedef enum interface_touch_event_flags {
     TOUCH_FLAGS_KBD                 = (1<<5),
     TOUCH_FLAGS_JOY                 = (1<<6),
     TOUCH_FLAGS_MENU                = (1<<7),
+    TOUCH_FLAGS_JOY_KPAD            = (1<<8),
     TOUCH_FLAGS_INPUT_DEVICE_CHANGE = (1<<16),
     TOUCH_FLAGS_CPU_SPEED_DEC       = (1<<17),
     TOUCH_FLAGS_CPU_SPEED_INC       = (1<<18),
