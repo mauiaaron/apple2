@@ -127,51 +127,6 @@ static struct {
 // ----------------------------------------------------------------------------
 // Misc internal methods
 
-static inline void _switch_keyboard(GLModel *parent, char *template) {
-    GLModelHUDKeyboard *hudKeyboard = (GLModelHUDKeyboard *)parent->custom;
-    memcpy(hudKeyboard->tpl, template, sizeof(kbdTemplateUCase/* assuming all the same size */));
-
-    // setup the alternate color (AKA selected) pixels
-    hudKeyboard->colorScheme = GREEN_ON_BLACK;
-    glhud_setupDefault(parent);
-    memcpy(hudKeyboard->pixelsAlt, hudKeyboard->pixels, (hudKeyboard->pixWidth * hudKeyboard->pixHeight));
-
-    // setup normal color pixels
-    hudKeyboard->colorScheme = RED_ON_BLACK;
-    glhud_setupDefault(parent);
-}
-
-static inline void _toggle_arrows(void) {
-    GLModelHUDKeyboard *hudKeyboard = (GLModelHUDKeyboard *)kbd.model->custom;
-    char c = hudKeyboard->tpl[_ROWOFF*(KBD_TEMPLATE_COLS+1)];
-    if (c == ICONTEXT_NONACTIONABLE) {
-        _switch_keyboard(kbd.model, kbdTemplateUCase[0]);
-    } else {
-        _switch_keyboard(kbd.model, kbdTemplateArrow[0]);
-    }
-}
-
-#warning FIXME TODO ... this can become a common helper function ...
-static inline float _get_keyboard_visibility(void) {
-    struct timespec now = { 0 };
-    struct timespec deltat = { 0 };
-
-    clock_gettime(CLOCK_MONOTONIC, &now);
-    float alpha = minAlpha;
-    deltat = timespec_diff(kbd.timingBegin, now, NULL);
-    if (deltat.tv_sec == 0) {
-        alpha = maxAlpha;
-        if (deltat.tv_nsec >= NANOSECONDS_PER_SECOND/2) {
-            alpha -= ((float)deltat.tv_nsec-(NANOSECONDS_PER_SECOND/2)) / (float)(NANOSECONDS_PER_SECOND/2);
-            if (alpha < minAlpha) {
-                alpha = minAlpha;
-            }
-        }
-    }
-
-    return alpha;
-}
-
 static void _rerender_character(int col, int row, uint8_t *fb) {
     GLModelHUDKeyboard *hudKeyboard = (GLModelHUDKeyboard *)(kbd.model->custom);
 
@@ -204,6 +159,64 @@ static void _rerender_character(int col, int row, uint8_t *fb) {
     }
 
     kbd.model->texDirty = true;
+}
+
+static inline void _switch_keyboard(GLModel *parent, char *template) {
+    GLModelHUDKeyboard *hudKeyboard = (GLModelHUDKeyboard *)parent->custom;
+    memcpy(hudKeyboard->tpl, template, sizeof(kbdTemplateUCase/* assuming all the same size */));
+
+    // setup the alternate color (AKA selected) pixels
+    hudKeyboard->colorScheme = GREEN_ON_BLACK;
+    glhud_setupDefault(parent);
+    memcpy(hudKeyboard->pixelsAlt, hudKeyboard->pixels, (hudKeyboard->pixWidth * hudKeyboard->pixHeight));
+
+    // setup normal color pixels
+    hudKeyboard->colorScheme = RED_ON_BLACK;
+    glhud_setupDefault(parent);
+
+    // find the CTRL visual(s) and render them engaged
+    if (kbd.ctrlPressed) {
+        for (unsigned int i=0, row=0; row<KBD_TEMPLATE_ROWS; row++, i++) {
+            for (unsigned int col=0; col<KBD_TEMPLATE_COLS; col++, i++) {
+                uint8_t ch = template[i];
+                if (ch == ICONTEXT_CTRL) {
+                    _rerender_character(col, row, hudKeyboard->pixelsAlt);
+                }
+            }
+            ++i;
+        }
+    }
+}
+
+static inline void _toggle_arrows(void) {
+    GLModelHUDKeyboard *hudKeyboard = (GLModelHUDKeyboard *)kbd.model->custom;
+    char c = hudKeyboard->tpl[_ROWOFF*(KBD_TEMPLATE_COLS+1)];
+    if (c == ICONTEXT_NONACTIONABLE) {
+        _switch_keyboard(kbd.model, kbdTemplateUCase[0]);
+    } else {
+        _switch_keyboard(kbd.model, kbdTemplateArrow[0]);
+    }
+}
+
+#warning FIXME TODO ... this can become a common helper function ...
+static inline float _get_keyboard_visibility(void) {
+    struct timespec now = { 0 };
+    struct timespec deltat = { 0 };
+
+    clock_gettime(CLOCK_MONOTONIC, &now);
+    float alpha = minAlpha;
+    deltat = timespec_diff(kbd.timingBegin, now, NULL);
+    if (deltat.tv_sec == 0) {
+        alpha = maxAlpha;
+        if (deltat.tv_nsec >= NANOSECONDS_PER_SECOND/2) {
+            alpha -= ((float)deltat.tv_nsec-(NANOSECONDS_PER_SECOND/2)) / (float)(NANOSECONDS_PER_SECOND/2);
+            if (alpha < minAlpha) {
+                alpha = minAlpha;
+            }
+        }
+    }
+
+    return alpha;
 }
 
 static inline void _rerender_adjacents(int col, int row, uint8_t *fb) {
@@ -634,7 +647,17 @@ static void gltouchkbd_setTouchKeyboardOwnsScreen(bool pwnd) {
             caps_lock = true;
         }
     } else {
+        // reset visuals
         minAlpha = 0.0;
+        if (kbd.model) {
+            GLModelHUDKeyboard *hudKeyboard = (GLModelHUDKeyboard *)kbd.model->custom;
+            hudKeyboard->colorScheme = RED_ON_BLACK;
+            glhud_setupDefault(kbd.model);
+        }
+
+        // reset CTRL state upon leaving this touch device
+        kbd.ctrlPressed = false;
+        c_keys_handle_input(SCODE_L_CTRL, /*pressed:*/false, /*ASCII:*/false);
     }
 }
 
