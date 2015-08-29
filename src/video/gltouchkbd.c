@@ -629,6 +629,11 @@ static void gltouchkbd_setTouchKeyboardOwnsScreen(bool pwnd) {
     ownsScreen = pwnd;
     if (ownsScreen) {
         minAlpha = minAlphaWhenOwnsScreen;
+        if (allowLowercase) {
+            caps_lock = false;
+        } else {
+            caps_lock = true;
+        }
     } else {
         minAlpha = 0.0;
     }
