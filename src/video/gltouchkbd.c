@@ -443,102 +443,6 @@ static inline int64_t _tap_key_at_point(float x, float y) {
 static void _setup_touchkbd_hud(GLModel *parent) {
     GLModelHUDKeyboard *hudKeyboard = (GLModelHUDKeyboard *)parent->custom;
 
-    for (unsigned int i=0; i<(_ROWOFF-1); i++) {
-        for (unsigned int j=0; j<KBD_TEMPLATE_COLS; j++) {
-            kbdTemplateUCase[i][j] = ICONTEXT_NONACTIONABLE;
-            kbdTemplateLCase[i][j] = ICONTEXT_NONACTIONABLE;
-            kbdTemplateAlt  [i][j] = ICONTEXT_NONACTIONABLE;
-        }
-    }
-    for (unsigned int i=0; i<KBD_TEMPLATE_ROWS; i++) {
-        for (unsigned int j=0; j<KBD_TEMPLATE_COLS; j++) {
-            if (kbdTemplateArrow[i][j] == ' ') {
-                kbdTemplateArrow[i][j] = ICONTEXT_NONACTIONABLE;
-            }
-        }
-    }
-
-    kbdTemplateLCase[0][0] = ICONTEXT_UPPERCASE;
-    kbdTemplateUCase[0][0] = ICONTEXT_SHOWALT1;
-    kbdTemplateAlt  [0][0] = ICONTEXT_UPPERCASE;
-    kbdTemplateArrow[0][0] = ICONTEXT_UPPERCASE;
-
-    kbdTemplateUCase[0][2] = ICONTEXT_CTRL;
-    kbdTemplateLCase[0][2] = ICONTEXT_CTRL;
-    kbdTemplateAlt  [0][2] = ICONTEXT_CTRL;
-    kbdTemplateArrow[0][2] = ICONTEXT_CTRL;
-
-    kbdTemplateUCase[0][4] = ICONTEXT_ESC;
-    kbdTemplateLCase[0][4] = ICONTEXT_ESC;
-    kbdTemplateAlt  [0][4] = ICONTEXT_ESC;
-    kbdTemplateArrow[0][4] = ICONTEXT_ESC;
-
-    kbdTemplateUCase[0][6] = MOUSETEXT_OPENAPPLE;
-    kbdTemplateLCase[0][6] = MOUSETEXT_OPENAPPLE;
-    kbdTemplateAlt  [0][6] = MOUSETEXT_OPENAPPLE;
-    kbdTemplateArrow[0][6] = MOUSETEXT_OPENAPPLE;
-
-    kbdTemplateUCase[0][8] = MOUSETEXT_CLOSEDAPPLE;
-    kbdTemplateLCase[0][8] = MOUSETEXT_CLOSEDAPPLE;
-    kbdTemplateAlt  [0][8] = MOUSETEXT_CLOSEDAPPLE;
-    kbdTemplateArrow[0][8] = MOUSETEXT_CLOSEDAPPLE;
-
-    kbdTemplateArrow[2][5] = MOUSETEXT_UP;
-    kbdTemplateArrow[3][4] = MOUSETEXT_LEFT;
-    kbdTemplateArrow[3][6] = MOUSETEXT_RIGHT;
-    kbdTemplateArrow[4][5] = MOUSETEXT_DOWN;
-
-    kbdTemplateUCase[3][5] = ICONTEXT_MENU_SPROUT;
-    kbdTemplateLCase[3][5] = ICONTEXT_MENU_SPROUT;
-    kbdTemplateAlt  [3][5] = ICONTEXT_MENU_SPROUT;
-    kbdTemplateArrow[3][5] = ICONTEXT_MENU_SPROUT;
-
-    kbdTemplateUCase[_ROWOFF+2][0] = ICONTEXT_NONACTIONABLE;
-    kbdTemplateLCase[_ROWOFF+2][0] = ICONTEXT_NONACTIONABLE;
-
-    kbdTemplateUCase[_ROWOFF+2][8] = ICONTEXT_NONACTIONABLE;
-    kbdTemplateLCase[_ROWOFF+2][8] = ICONTEXT_NONACTIONABLE;
-    kbdTemplateAlt  [_ROWOFF+2][8] = ICONTEXT_NONACTIONABLE;
-
-    kbdTemplateUCase[_ROWOFF+2][9] = ICONTEXT_BACKSPACE;
-    kbdTemplateLCase[_ROWOFF+2][9] = ICONTEXT_BACKSPACE;
-    kbdTemplateAlt  [_ROWOFF+2][9] = ICONTEXT_BACKSPACE;
-
-    // last row specials
-
-    kbdTemplateLCase[_ROWOFF+3][0] = ICONTEXT_NONACTIONABLE;
-    kbdTemplateUCase[_ROWOFF+3][0] = ICONTEXT_NONACTIONABLE;
-
-    kbdTemplateUCase[_ROWOFF+3][1] = ICONTEXT_NONACTIONABLE;
-    kbdTemplateLCase[_ROWOFF+3][1] = ICONTEXT_NONACTIONABLE;
-
-    kbdTemplateUCase[_ROWOFF+3][2] = ICONTEXT_NONACTIONABLE;
-    kbdTemplateLCase[_ROWOFF+3][2] = ICONTEXT_NONACTIONABLE;
-
-    kbdTemplateUCase[_ROWOFF+3][0] = ICONTEXT_GOTO;
-    kbdTemplateLCase[_ROWOFF+3][0] = ICONTEXT_GOTO;
-
-    kbdTemplateUCase[_ROWOFF+3][3] = ICONTEXT_LEFTSPACE;
-    kbdTemplateLCase[_ROWOFF+3][3] = ICONTEXT_LEFTSPACE;
-    kbdTemplateAlt  [_ROWOFF+3][3] = ICONTEXT_LEFTSPACE;
-    kbdTemplateUCase[_ROWOFF+3][4] = ICONTEXT_MIDSPACE;
-    kbdTemplateLCase[_ROWOFF+3][4] = ICONTEXT_MIDSPACE;
-    kbdTemplateAlt  [_ROWOFF+3][4] = ICONTEXT_MIDSPACE;
-    kbdTemplateUCase[_ROWOFF+3][5] = ICONTEXT_RIGHTSPACE;
-    kbdTemplateLCase[_ROWOFF+3][5] = ICONTEXT_RIGHTSPACE;
-    kbdTemplateAlt  [_ROWOFF+3][5] = ICONTEXT_RIGHTSPACE;
-
-    kbdTemplateUCase[_ROWOFF+3][7] = ICONTEXT_NONACTIONABLE;
-    kbdTemplateLCase[_ROWOFF+3][7] = ICONTEXT_NONACTIONABLE;
-
-    kbdTemplateUCase[_ROWOFF+3][8] = ICONTEXT_RETURN_L;
-    kbdTemplateLCase[_ROWOFF+3][8] = ICONTEXT_RETURN_L;
-    kbdTemplateAlt  [_ROWOFF+3][8] = ICONTEXT_RETURN_L;
-
-    kbdTemplateUCase[_ROWOFF+3][9] = ICONTEXT_RETURN_R;
-    kbdTemplateLCase[_ROWOFF+3][9] = ICONTEXT_RETURN_R;
-    kbdTemplateAlt  [_ROWOFF+3][9] = ICONTEXT_RETURN_R;
-
     hudKeyboard->tplWidth  = KBD_TEMPLATE_COLS;
     hudKeyboard->tplHeight = KBD_TEMPLATE_ROWS;
     hudKeyboard->pixWidth  = KBD_FB_WIDTH;
@@ -920,11 +824,112 @@ static void _animation_hideTouchKeyboard(void) {
 }
 
 // ----------------------------------------------------------------------------
-// Constructor
+// Constructors
+
+static void _initialize_keyboard_templates(void) {
+
+    for (unsigned int i=0; i<(_ROWOFF-1); i++) {
+        for (unsigned int j=0; j<KBD_TEMPLATE_COLS; j++) {
+            kbdTemplateUCase[i][j] = ICONTEXT_NONACTIONABLE;
+            kbdTemplateLCase[i][j] = ICONTEXT_NONACTIONABLE;
+            kbdTemplateAlt  [i][j] = ICONTEXT_NONACTIONABLE;
+        }
+    }
+    for (unsigned int i=0; i<KBD_TEMPLATE_ROWS; i++) {
+        for (unsigned int j=0; j<KBD_TEMPLATE_COLS; j++) {
+            if (kbdTemplateArrow[i][j] == ' ') {
+                kbdTemplateArrow[i][j] = ICONTEXT_NONACTIONABLE;
+            }
+        }
+    }
+
+    kbdTemplateLCase[0][0] = ICONTEXT_UPPERCASE;
+    kbdTemplateUCase[0][0] = ICONTEXT_SHOWALT1;
+    kbdTemplateAlt  [0][0] = ICONTEXT_UPPERCASE;
+    kbdTemplateArrow[0][0] = ICONTEXT_UPPERCASE;
+
+    kbdTemplateUCase[0][2] = ICONTEXT_CTRL;
+    kbdTemplateLCase[0][2] = ICONTEXT_CTRL;
+    kbdTemplateAlt  [0][2] = ICONTEXT_CTRL;
+    kbdTemplateArrow[0][2] = ICONTEXT_CTRL;
+
+    kbdTemplateUCase[0][4] = ICONTEXT_ESC;
+    kbdTemplateLCase[0][4] = ICONTEXT_ESC;
+    kbdTemplateAlt  [0][4] = ICONTEXT_ESC;
+    kbdTemplateArrow[0][4] = ICONTEXT_ESC;
+
+    kbdTemplateUCase[0][6] = MOUSETEXT_OPENAPPLE;
+    kbdTemplateLCase[0][6] = MOUSETEXT_OPENAPPLE;
+    kbdTemplateAlt  [0][6] = MOUSETEXT_OPENAPPLE;
+    kbdTemplateArrow[0][6] = MOUSETEXT_OPENAPPLE;
+
+    kbdTemplateUCase[0][8] = MOUSETEXT_CLOSEDAPPLE;
+    kbdTemplateLCase[0][8] = MOUSETEXT_CLOSEDAPPLE;
+    kbdTemplateAlt  [0][8] = MOUSETEXT_CLOSEDAPPLE;
+    kbdTemplateArrow[0][8] = MOUSETEXT_CLOSEDAPPLE;
+
+    kbdTemplateArrow[2][5] = MOUSETEXT_UP;
+    kbdTemplateArrow[3][4] = MOUSETEXT_LEFT;
+    kbdTemplateArrow[3][6] = MOUSETEXT_RIGHT;
+    kbdTemplateArrow[4][5] = MOUSETEXT_DOWN;
+
+    kbdTemplateUCase[3][5] = ICONTEXT_MENU_SPROUT;
+    kbdTemplateLCase[3][5] = ICONTEXT_MENU_SPROUT;
+    kbdTemplateAlt  [3][5] = ICONTEXT_MENU_SPROUT;
+    kbdTemplateArrow[3][5] = ICONTEXT_MENU_SPROUT;
+
+    kbdTemplateUCase[_ROWOFF+2][0] = ICONTEXT_NONACTIONABLE;
+    kbdTemplateLCase[_ROWOFF+2][0] = ICONTEXT_NONACTIONABLE;
+
+    kbdTemplateUCase[_ROWOFF+2][8] = ICONTEXT_NONACTIONABLE;
+    kbdTemplateLCase[_ROWOFF+2][8] = ICONTEXT_NONACTIONABLE;
+    kbdTemplateAlt  [_ROWOFF+2][8] = ICONTEXT_NONACTIONABLE;
+
+    kbdTemplateUCase[_ROWOFF+2][9] = ICONTEXT_BACKSPACE;
+    kbdTemplateLCase[_ROWOFF+2][9] = ICONTEXT_BACKSPACE;
+    kbdTemplateAlt  [_ROWOFF+2][9] = ICONTEXT_BACKSPACE;
+
+    // last row specials
+
+    kbdTemplateLCase[_ROWOFF+3][0] = ICONTEXT_NONACTIONABLE;
+    kbdTemplateUCase[_ROWOFF+3][0] = ICONTEXT_NONACTIONABLE;
+
+    kbdTemplateUCase[_ROWOFF+3][1] = ICONTEXT_NONACTIONABLE;
+    kbdTemplateLCase[_ROWOFF+3][1] = ICONTEXT_NONACTIONABLE;
+
+    kbdTemplateUCase[_ROWOFF+3][2] = ICONTEXT_NONACTIONABLE;
+    kbdTemplateLCase[_ROWOFF+3][2] = ICONTEXT_NONACTIONABLE;
+
+    kbdTemplateUCase[_ROWOFF+3][0] = ICONTEXT_GOTO;
+    kbdTemplateLCase[_ROWOFF+3][0] = ICONTEXT_GOTO;
+
+    kbdTemplateUCase[_ROWOFF+3][3] = ICONTEXT_LEFTSPACE;
+    kbdTemplateLCase[_ROWOFF+3][3] = ICONTEXT_LEFTSPACE;
+    kbdTemplateAlt  [_ROWOFF+3][3] = ICONTEXT_LEFTSPACE;
+    kbdTemplateUCase[_ROWOFF+3][4] = ICONTEXT_MIDSPACE;
+    kbdTemplateLCase[_ROWOFF+3][4] = ICONTEXT_MIDSPACE;
+    kbdTemplateAlt  [_ROWOFF+3][4] = ICONTEXT_MIDSPACE;
+    kbdTemplateUCase[_ROWOFF+3][5] = ICONTEXT_RIGHTSPACE;
+    kbdTemplateLCase[_ROWOFF+3][5] = ICONTEXT_RIGHTSPACE;
+    kbdTemplateAlt  [_ROWOFF+3][5] = ICONTEXT_RIGHTSPACE;
+
+    kbdTemplateUCase[_ROWOFF+3][7] = ICONTEXT_NONACTIONABLE;
+    kbdTemplateLCase[_ROWOFF+3][7] = ICONTEXT_NONACTIONABLE;
+
+    kbdTemplateUCase[_ROWOFF+3][8] = ICONTEXT_RETURN_L;
+    kbdTemplateLCase[_ROWOFF+3][8] = ICONTEXT_RETURN_L;
+    kbdTemplateAlt  [_ROWOFF+3][8] = ICONTEXT_RETURN_L;
+
+    kbdTemplateUCase[_ROWOFF+3][9] = ICONTEXT_RETURN_R;
+    kbdTemplateLCase[_ROWOFF+3][9] = ICONTEXT_RETURN_R;
+    kbdTemplateAlt  [_ROWOFF+3][9] = ICONTEXT_RETURN_R;
+}
 
 __attribute__((constructor(CTOR_PRIORITY_LATE)))
 static void _init_gltouchkbd(void) {
     LOG("Registering OpenGL software touch keyboard");
+
+    _initialize_keyboard_templates();
 
     video_backend->animation_showTouchKeyboard = &_animation_showTouchKeyboard;
     video_backend->animation_hideTouchKeyboard = &_animation_hideTouchKeyboard;
