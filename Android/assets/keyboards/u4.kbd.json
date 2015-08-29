@@ -1,0 +1,23 @@
+[
+    "Alt keyboard optimized for Ultima(tm) 4",
+
+    {
+        "_comment" : "hex code for special glyphs",
+        "_AA"  : "b5",
+        "_XX"  : "9b",
+        "_ESC" : "bc",
+        "_UP"  : "8b",
+        "_LT"  : "88",
+        "_RT"  : "95",
+        "_DN"  : "8a"
+    },
+
+    ["reserved for future use"],
+    ["reserved for future use"],
+    ["_AA", "", "", "", "", "", "",   "",    "",   "_ESC"],
+    [ "",    "", "", "", "", "", "1",  "2",   "3",   "4"],
+    [ "",    "", "", "", "", "", "5",  "6",   "7",   "8"],
+    [ "S",   "", "", "", "", "", "",   "T",  "_UP",  "G"],
+    [ "A",   "", "", "", "", "", "",  "_LT", "_XX", "_RT"],
+    [ "Z",   "", "", "", "", "", "",   "C",  "_DN",  "O"]
+]

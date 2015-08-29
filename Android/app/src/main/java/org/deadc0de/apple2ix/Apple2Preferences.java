@@ -520,7 +520,18 @@ public enum Apple2Preferences {
 
         @Override
         public int intValue(Apple2Activity activity) {
-            return activity.getPreferences(Context.MODE_PRIVATE).getInt(toString(), 1);
+            return activity.getPreferences(Context.MODE_PRIVATE).getInt(toString(), 0);
+        }
+    },
+    KEYBOARD_ALT_PATH {
+        @Override
+        public void load(Apple2Activity activity) {
+            nativeLoadTouchKeyboardJSON(stringValue(activity));
+        }
+
+        @Override
+        public String stringValue(Apple2Activity activity) {
+            return activity.getPreferences(Context.MODE_PRIVATE).getString(toString(), "");
         }
     },
     KEYBOARD_VISIBILITY_ACTIVE {
@@ -774,46 +785,6 @@ public enum Apple2Preferences {
         }
     }
 
-    public enum KeyboardAltPreset {
-        DEFAULT {
-            @Override
-            public String getTitle(Apple2Activity activity) {
-                return activity.getResources().getString(R.string.keyboard_preset_default);
-            }
-
-            @Override
-            public void apply(Apple2Activity activity) {
-                // TODO FIXME ...
-            }
-        },
-        U4 {
-            @Override
-            public String getTitle(Apple2Activity activity) {
-                return activity.getResources().getString(R.string.keyboard_preset_u4);
-            }
-
-            @Override
-            public void apply(Apple2Activity activity) {
-                // TODO FIXME ...
-            }
-        };
-
-        public abstract String getTitle(Apple2Activity activity);
-
-        public abstract void apply(Apple2Activity activity);
-
-        public static final int size = KeyboardAltPreset.values().length;
-
-        public static String[] titles(Apple2Activity activity) {
-            String[] titles = new String[size];
-            int i = 0;
-            for (KeyboardAltPreset preset : values()) {
-                titles[i++] = preset.getTitle(activity);
-            }
-            return titles;
-        }
-    }
-
     public final static int DECENT_AMOUNT_OF_CHOICES = 20;
     public final static int AUDIO_LATENCY_NUM_CHOICES = DECENT_AMOUNT_OF_CHOICES;
     public final static int ALPHA_SLIDER_NUM_CHOICES = DECENT_AMOUNT_OF_CHOICES;
@@ -1054,5 +1025,7 @@ public enum Apple2Preferences {
     private static native void nativeTouchJoystickSetKeypadTypes(int[] rosetteChars, int[] rosetteScancodes, int[] buttonsChars, int[] buttonsScancodes);
 
     private static native void nativeSetTouchDeviceKeyRepeatThreshold(float threshold);
+
+    private static native void nativeLoadTouchKeyboardJSON(String path);
 
 }

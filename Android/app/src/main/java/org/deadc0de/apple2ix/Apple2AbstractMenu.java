@@ -120,6 +120,7 @@ public abstract class Apple2AbstractMenu implements Apple2MenuView {
 
     public interface IPreferenceLoadSave {
         public int intValue();
+
         public void saveInt(int value);
     }
 
@@ -166,6 +167,10 @@ public abstract class Apple2AbstractMenu implements Apple2MenuView {
     }
 
     protected static void _alertDialogHandleSelection(final Apple2Activity activity, final int titleId, final String[] choices, final IPreferenceLoadSave iLoadSave) {
+        _alertDialogHandleSelection(activity, activity.getResources().getString(titleId), choices, iLoadSave);
+    }
+
+    protected static void _alertDialogHandleSelection(final Apple2Activity activity, final String titleId, final String[] choices, final IPreferenceLoadSave iLoadSave) {
         AlertDialog.Builder builder = new AlertDialog.Builder(activity).setIcon(R.drawable.ic_launcher).setCancelable(true).setTitle(titleId);
         builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
             @Override

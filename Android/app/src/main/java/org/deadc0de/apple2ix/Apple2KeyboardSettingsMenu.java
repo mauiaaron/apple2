@@ -16,6 +16,10 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.TextView;
 
+import java.io.File;
+import java.io.FilenameFilter;
+import java.util.Arrays;
+
 public class Apple2KeyboardSettingsMenu extends Apple2AbstractMenu {
 
     private final static String TAG = "Apple2KeyboardSettingsMenu";
@@ -23,11 +27,11 @@ public class Apple2KeyboardSettingsMenu extends Apple2AbstractMenu {
     // These settings must match native side
     public final static int MOUSETEXT_BEGIN = 0x80;
     public final static int MOUSETEXT_CLOSEDAPPLE = MOUSETEXT_BEGIN/*+0x00*/;
-    public final static int MOUSETEXT_OPENAPPLE = MOUSETEXT_BEGIN+0x01;
-    public final static int MOUSETEXT_LEFT = MOUSETEXT_BEGIN+0x08;
-    public final static int MOUSETEXT_UP = MOUSETEXT_BEGIN+0x0b;
-    public final static int MOUSETEXT_DOWN = MOUSETEXT_BEGIN+0x0a;
-    public final static int MOUSETEXT_RIGHT = MOUSETEXT_BEGIN+0x15;
+    public final static int MOUSETEXT_OPENAPPLE = MOUSETEXT_BEGIN + 0x01;
+    public final static int MOUSETEXT_LEFT = MOUSETEXT_BEGIN + 0x08;
+    public final static int MOUSETEXT_UP = MOUSETEXT_BEGIN + 0x0b;
+    public final static int MOUSETEXT_DOWN = MOUSETEXT_BEGIN + 0x0a;
+    public final static int MOUSETEXT_RIGHT = MOUSETEXT_BEGIN + 0x15;
 
     public final static int ICONTEXT_BEGIN = 0xA0;
     public final static int ICONTEXT_VISUAL_SPACE = ICONTEXT_BEGIN + 0x11;
@@ -194,11 +198,45 @@ public class Apple2KeyboardSettingsMenu extends Apple2AbstractMenu {
 
             @Override
             public void handleSelection(final Apple2Activity activity, final Apple2AbstractMenu settingsMenu, boolean isChecked) {
-                String[] titles = new String[Apple2Preferences.KeyboardAltPreset.size + 1];
-                titles[0] = activity.getResources().getString(R.string.keyboard_preset_custom);
-                System.arraycopy(Apple2Preferences.KeyboardAltPreset.titles(activity), 0, titles, 1, Apple2Preferences.KeyboardAltPreset.size);
 
-                _alertDialogHandleSelection(activity, R.string.keyboard_choose_alt_title, titles, new IPreferenceLoadSave() {
+                File keyboardDir = Apple2DisksMenu.getExternalStorageDirectory();
+                if (keyboardDir == null) {
+                    keyboardDir = new File(Apple2DisksMenu.getDataDir(activity) + File.separator + "keyboards");
+                }
+
+                final File[] files = keyboardDir.listFiles(new FilenameFilter() {
+                    public boolean accept(File dir, String name) {
+                        File file = new File(dir, name);
+                        if (file.isDirectory()) {
+                            return false;
+                        }
+
+                        // check file extensions ... sigh ... no String.endsWithIgnoreCase() ?
+
+                        final String extension = ".kbd.json";
+                        final int nameLen = name.length();
+                        final int extLen = extension.length();
+                        if (nameLen <= extLen) {
+                            return false;
+                        }
+
+                        String suffix = name.substring(nameLen - extLen, nameLen);
+                        return (suffix.equalsIgnoreCase(extension));
+                    }
+                });
+
+                Arrays.sort(files);
+
+                String[] titles = new String[files.length];
+                int idx = 0;
+                for (File file : files) {
+                    titles[idx] = file.getName();
+                    ++idx;
+                }
+
+                final String keyboardDirName = keyboardDir.getPath();
+
+                _alertDialogHandleSelection(activity, keyboardDirName, titles, new IPreferenceLoadSave() {
                     @Override
                     public int intValue() {
                         return Apple2Preferences.KEYBOARD_ALT.intValue(activity);
@@ -207,12 +245,8 @@ public class Apple2KeyboardSettingsMenu extends Apple2AbstractMenu {
                     @Override
                     public void saveInt(int value) {
                         Apple2Preferences.KEYBOARD_ALT.saveInt(activity, value);
-                        if (value == 0) {
-                            Apple2KeyboardSettingsMenu keyboardSettingsMenu = (Apple2KeyboardSettingsMenu) settingsMenu;
-                            ////TODO FIXME ... keyboardSettingsMenu.chooseAltKeyboard(activity);
-                        } else {
-                            Apple2Preferences.KeyboardAltPreset.values()[value - 1].apply(activity);
-                        }
+                        String path = files[value].getPath();
+                        Apple2Preferences.KEYBOARD_ALT_PATH.saveString(activity, path);
                     }
                 });
             }

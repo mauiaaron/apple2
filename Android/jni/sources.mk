@@ -35,7 +35,8 @@ APPLE2_META_SRC = \
 APPLE2_MAIN_SRC = \
     $(APPLE2_SRC_PATH)/font.c $(APPLE2_SRC_PATH)/rom.c $(APPLE2_SRC_PATH)/misc.c $(APPLE2_SRC_PATH)/display.c $(APPLE2_SRC_PATH)/vm.c \
     $(APPLE2_SRC_PATH)/timing.c $(APPLE2_SRC_PATH)/zlib-helpers.c $(APPLE2_SRC_PATH)/joystick.c $(APPLE2_SRC_PATH)/keys.c \
-    $(APPLE2_SRC_PATH)/interface.c $(APPLE2_SRC_PATH)/disk.c $(APPLE2_SRC_PATH)/cpu-supp.c jnihooks.c
+    $(APPLE2_SRC_PATH)/interface.c $(APPLE2_SRC_PATH)/disk.c $(APPLE2_SRC_PATH)/cpu-supp.c jnihooks.c \
+    $(APPLE2_SRC_PATH)/json_parse.c $(APPLE2_SRC_PATH)/../externals/jsmn/jsmn.c
 
 APPLE2_OPTIM_CFLAGS := -g -O2
 APPLE2_BASE_CFLAGS := -DAPPLE2IX=1 -DINTERFACE_TOUCH=1 -DMOBILE_DEVICE=1 -DVIDEO_OPENGL=1 -DDEBUGGER=1 -DAUDIO_ENABLED=1 -std=gnu11 $(APPLE2_OPTIM_CFLAGS) -I$(APPLE2_SRC_PATH)

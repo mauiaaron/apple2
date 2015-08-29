@@ -73,14 +73,11 @@
     <string name="keyboard">Keyboard</string>
     <string name="keyboard_choose_alt">Choose alt keyboard…</string>
     <string name="keyboard_choose_alt_summary">Choose alternative customized layout</string>
-    <string name="keyboard_choose_alt_title">Alt keyboard layout</string>
     <string name="keyboard_configure">Configure keyboard…</string>
     <string name="keyboard_configure_summary">Transparency, lowercase, custom keys</string>
     <string name="keyboard_lowercase_enabled">Enable lowercase</string>
     <string name="keyboard_lowercase_enabled_summary">Enable lowercase keys</string>
-    <string name="keyboard_preset_custom">Load custom…</string>
     <string name="keyboard_preset_default">Default</string>
-    <string name="keyboard_preset_u4">U4 optimized</string>
     <string name="keyboard_visibility_active">Visibility when active</string>
     <string name="keyboard_visibility_active_summary">Keyboard visibility when active</string>
     <string name="keyboard_visibility_inactive">Visibility when inactive</string>

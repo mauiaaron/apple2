@@ -286,3 +286,10 @@ void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetCPUSpeed(JNIEnv *env,
     }
 }
 
+void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeLoadTouchKeyboardJSON(JNIEnv *env, jclass cls, jstring j_jsonPath) {
+    const char *jsonPath = (*env)->GetStringUTFChars(env, j_jsonPath, 0);
+    LOG("jsonPath: %s", jsonPath);
+    keydriver_loadAltKbd(jsonPath);
+    (*env)->ReleaseStringUTFChars(env, j_jsonPath, jsonPath);
+}
+

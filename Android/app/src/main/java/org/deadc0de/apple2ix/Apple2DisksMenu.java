@@ -53,7 +53,6 @@ public class Apple2DisksMenu implements Apple2MenuView {
     private final ArrayList<String> mPathStack = new ArrayList<>();
 
     private static File sExternalFilesDir = null;
-    private static boolean sExternalStorageAvailable = false;
     private static boolean sInitializedPath = false;
 
     public Apple2DisksMenu(Apple2Activity activity) {
@@ -70,22 +69,26 @@ public class Apple2DisksMenu implements Apple2MenuView {
             }
         });
 
-        if (!sExternalStorageAvailable) {
+        getExternalStorageDirectory();
+    }
+
+    public static File getExternalStorageDirectory() {
+        if (sExternalFilesDir == null) {
             String storageState = Environment.getExternalStorageState();
             File externalDir = new File(Environment.getExternalStorageDirectory().getPath() + File.separator + "apple2ix"); // /sdcard/apple2ix
             sExternalFilesDir = null;
-            sExternalStorageAvailable = storageState.equals(Environment.MEDIA_MOUNTED);
-            if (sExternalStorageAvailable) {
+            boolean externalStorageAvailable = storageState.equals(Environment.MEDIA_MOUNTED);
+            if (externalStorageAvailable) {
                 sExternalFilesDir = externalDir;
                 boolean made = sExternalFilesDir.mkdirs();
                 if (!made) {
                     Log.d(TAG, "WARNING: could not make directory : " + sExternalFilesDir);
                 }
             } else {
-                sExternalStorageAvailable = storageState.equals(Environment.MEDIA_MOUNTED_READ_ONLY) && externalDir.exists();
                 sExternalFilesDir = externalDir;
             }
         }
+        return sExternalFilesDir;
     }
 
     // HACK NOTE 2015/02/22 : Apparently native code cannot easily access stuff in the APK ... so copy various resources
@@ -114,14 +117,25 @@ public class Apple2DisksMenu implements Apple2MenuView {
 
         Log.d(TAG, "First time copying stuff-n-things out of APK for ease-of-NDK access...");
 
+        getExternalStorageDirectory();
+
         try {
             String[] shaders = activity.getAssets().list("shaders");
             for (String shader : shaders) {
-                Apple2DisksMenu.copyFile(activity, "shaders", shader);
+                Apple2DisksMenu.copyFile(activity, "shaders", shader, sDataDir + File.separator + "shaders");
             }
+
+            String[] keyboards = activity.getAssets().list("keyboards");
+            for (String kbd : keyboards) {
+                Apple2DisksMenu.copyFile(activity, "keyboards", kbd, sDataDir + File.separator + "keyboards");
+                if (sExternalFilesDir != null) {
+                    Apple2DisksMenu.copyFile(activity, "keyboards", kbd, sExternalFilesDir.getPath());
+                }
+            }
+
             String[] disks = activity.getAssets().list("disks");
             for (String disk : disks) {
-                Apple2DisksMenu.copyFile(activity, "disks", disk);
+                Apple2DisksMenu.copyFile(activity, "disks", disk, sDataDir + File.separator + "disks");
             }
         } catch (IOException e) {
             Log.e(TAG, "problem copying resources : " + e);
@@ -225,9 +239,8 @@ public class Apple2DisksMenu implements Apple2MenuView {
         return pathBuffer.toString();
     }
 
-    private static void copyFile(Apple2Activity activity, String subdir, String assetName)
+    private static void copyFile(Apple2Activity activity, String subdir, String assetName, String outputPath)
             throws IOException {
-        String outputPath = sDataDir + File.separator + subdir;
         Log.d(TAG, "Copying " + subdir + File.separator + assetName + " to " + outputPath + File.separator + assetName + " ...");
         boolean made = new File(outputPath).mkdirs();
         if (!made) {
@@ -325,13 +338,14 @@ public class Apple2DisksMenu implements Apple2MenuView {
 
         Arrays.sort(files);
 
-        final boolean includeExternalStoragePath = (sExternalStorageAvailable && isRootPath);
+        getExternalStorageDirectory();
+        final boolean includeExternalStoragePath = (sExternalFilesDir != null && isRootPath);
         final int offset = includeExternalStoragePath ? 1 : 0;
         final String[] fileNames = new String[files.length + offset];
         final boolean[] isDirectory = new boolean[files.length + offset];
 
         if (includeExternalStoragePath) {
-            fileNames[0] = sExternalFilesDir.toString();
+            fileNames[0] = sExternalFilesDir.getPath();
             isDirectory[0] = true;
         }
 
