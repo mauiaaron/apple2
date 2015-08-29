@@ -18,30 +18,6 @@
         android:src="@drawable/apple_iie"
         android:id="@+id/splashView" />
 
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/emulation_continue"
-        android:id="@+id/startButton"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true"
-        android:layout_marginRight="18dp"
-        android:layout_marginEnd="18dp"
-        android:layout_marginTop="18dp" />
-
-    <Button
-        android:layout_height="wrap_content"
-        android:layout_width="0dp"
-        android:text="@string/emulation_settings"
-        android:id="@+id/prefsButton"
-        android:layout_marginTop="18dp"
-        android:layout_below="@+id/startButton"
-        android:layout_alignRight="@+id/startButton"
-        android:layout_alignEnd="@+id/startButton"
-        android:layout_alignLeft="@+id/startButton"
-        android:layout_alignStart="@+id/startButton" />
-
     <ImageView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -50,7 +26,43 @@
         android:layout_alignTop="@+id/startButton"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
-        android:layout_marginLeft="18dp"
-        android:layout_marginStart="18dp" />
+        android:layout_marginLeft="10dp"
+        android:layout_marginStart="10dp" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/emulation_continue"
+        android:id="@+id/startButton"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginRight="10dp"
+        android:layout_marginEnd="10dp"
+        android:layout_marginTop="10dp" />
+
+    <Button
+        android:layout_height="wrap_content"
+        android:layout_width="0dp"
+        android:text="@string/emulation_settings"
+        android:id="@+id/prefsButton"
+        android:layout_marginTop="10dp"
+        android:layout_below="@+id/startButton"
+        android:layout_alignRight="@+id/startButton"
+        android:layout_alignEnd="@+id/startButton"
+        android:layout_alignLeft="@+id/startButton"
+        android:layout_alignStart="@+id/startButton" />
+
+    <Button
+        android:layout_height="wrap_content"
+        android:layout_width="0dp"
+        android:text="@string/emulation_disks"
+        android:id="@+id/disksButton"
+        android:layout_marginTop="10dp"
+        android:layout_below="@+id/prefsButton"
+        android:layout_alignRight="@+id/startButton"
+        android:layout_alignEnd="@+id/startButton"
+        android:layout_alignLeft="@+id/startButton"
+        android:layout_alignStart="@+id/startButton" />
 
 </RelativeLayout>

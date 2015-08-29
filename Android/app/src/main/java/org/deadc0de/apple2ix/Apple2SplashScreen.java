@@ -51,6 +51,16 @@ public class Apple2SplashScreen implements Apple2MenuView {
                 Apple2SplashScreen.this.dismiss();
             }
         });
+
+        Button disksButton = (Button) mSettingsView.findViewById(R.id.disksButton);
+        disksButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Apple2DisksMenu disksMenu = mActivity.getMainMenu().getDisksMenu();
+                disksMenu.show();
+                Apple2SplashScreen.this.dismiss();
+            }
+        });
     }
 
     public final boolean isCalibrating() {
