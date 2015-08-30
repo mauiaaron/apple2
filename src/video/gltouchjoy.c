@@ -23,6 +23,7 @@
 #endif
 
 #define MODEL_DEPTH -1/32.f
+#define TRACKING_NONE (-1)
 
 #define AXIS_TEMPLATE_COLS 5
 #define AXIS_TEMPLATE_ROWS 5
@@ -233,13 +234,13 @@ static void *_button_tap_delayed_thread(void *dummyptr) {
             uint8_t displayChar = variant.curr->buttonPress();
             _setup_button_object_with_char(displayChar);
 
-            if ( (buttons.trackingIndex == TOUCH_NONE) || joyglobals.isShuttingDown) {
+            if ( (buttons.trackingIndex == TRACKING_NONE) || joyglobals.isShuttingDown) {
                 break;
             }
 
             pthread_cond_wait(&buttons.tapDelayCond, &buttons.tapDelayMutex);
 
-            if ( (buttons.trackingIndex == TOUCH_NONE) || joyglobals.isShuttingDown) {
+            if ( (buttons.trackingIndex == TRACKING_NONE) || joyglobals.isShuttingDown) {
                 break;
             }
             TOUCH_JOY_LOG(">>> [DELAYEDTAP] looping ...");
@@ -268,11 +269,18 @@ static void *_button_tap_delayed_thread(void *dummyptr) {
 
 // ----------------------------------------------------------------------------
 
+static inline void resetState() {
+    LOG("%s", "");
+    axes.trackingIndex = TRACKING_NONE;
+    buttons.trackingIndex = TRACKING_NONE;
+    variant.joys->resetState();
+    variant.kpad->resetState();
+}
+
 static void gltouchjoy_setup(void) {
     LOG("gltouchjoy_setup ...");
 
-    variant.kpad->resetState();
-    variant.joys->resetState();
+    resetState();
 
     mdlDestroyModel(&axes.model);
     mdlDestroyModel(&buttons.model);
@@ -325,8 +333,7 @@ static void gltouchjoy_shutdown(void) {
         return;
     }
 
-    variant.kpad->resetState();
-    variant.joys->resetState();
+    resetState();
 
     joyglobals.isAvailable = false;
 
@@ -528,12 +535,6 @@ static inline void _button_move(int x, int y) {
 }
 
 static inline void _axis_touch_up(int x, int y) {
-    x = (x - axes.centerX);
-    y = (y - axes.centerY);
-    if (buttons.trackingIndex > axes.trackingIndex) {
-        --buttons.trackingIndex;
-    }
-    variant.curr->axisUp(x, y);
 #if DEBUG_TOUCH_JOY
     bool resetIndex = false;
     if (buttons.trackingIndex > axes.trackingIndex) {
@@ -542,7 +543,15 @@ static inline void _axis_touch_up(int x, int y) {
     }
     TOUCH_JOY_LOG("---TOUCH %sUP (axis went up)%s", (action == TOUCH_UP ? "" : "POINTER "), (resetIndex ? " (reset buttons index!)" : ""));
 #endif
-    axes.trackingIndex = TOUCH_NONE;
+    LOG("%s", "");
+    x = (x - axes.centerX);
+    y = (y - axes.centerY);
+    if (buttons.trackingIndex > axes.trackingIndex) {
+        LOG("resetting buttons.trackingIndex");
+        --buttons.trackingIndex;
+    }
+    variant.curr->axisUp(x, y);
+    axes.trackingIndex = TRACKING_NONE;
 }
 
 static inline void _button_touch_up(void) {
@@ -554,16 +563,17 @@ static inline void _button_touch_up(void) {
     }
     TOUCH_JOY_LOG("---TOUCH %sUP (buttons went up)%s", (action == TOUCH_UP ? "" : "POINTER "), (resetIndex ? " (reset axis index!)" : ""));
 #endif
+    LOG("%s", "");
     if (axes.trackingIndex > buttons.trackingIndex) {
+        LOG("resetting axes.trackingIndex");
         --axes.trackingIndex;
     }
-    buttons.trackingIndex = TOUCH_NONE;
+    buttons.trackingIndex = TRACKING_NONE;
     _signal_tap_delay();
 }
 
 
 static int64_t gltouchjoy_onTouchEvent(interface_touch_event_t action, int pointer_count, int pointer_idx, float *x_coords, float *y_coords) {
-
     if (!joyglobals.isAvailable) {
         return 0x0LL;
     }
@@ -580,17 +590,26 @@ static int64_t gltouchjoy_onTouchEvent(interface_touch_event_t action, int point
     switch (action) {
         case TOUCH_DOWN:
         case TOUCH_POINTER_DOWN:
+            LOG("------DOWN:");
             {
                 int x = (int)x_coords[pointer_idx];
                 int y = (int)y_coords[pointer_idx];
                 if (_is_point_on_axis_side(x, y)) {
-                    axisConsumed = true;
-                    axes.trackingIndex = pointer_idx;
-                    _axis_touch_down(x, y);
+                    if (axes.trackingIndex != TRACKING_NONE) {
+                        LOG("!!! : IGNORING OTHER AXIS TOUCH DOWN %d", pointer_idx);
+                    } else {
+                        axisConsumed = true;
+                        axes.trackingIndex = pointer_idx;
+                        _axis_touch_down(x, y);
+                    }
                 } else if (_is_point_on_button_side(x, y)) {
-                    buttonConsumed = true;
-                    buttons.trackingIndex = pointer_idx;
-                    _button_touch_down(x, y);
+                    if (buttons.trackingIndex != TRACKING_NONE) {
+                        LOG("!!! : IGNORING OTHER BUTTON TOUCH DOWN %d", pointer_idx);
+                    } else {
+                        buttonConsumed = true;
+                        buttons.trackingIndex = pointer_idx;
+                        _button_touch_down(x, y);
+                    }
                 } else {
                     assert(false && "should either be on axis or button side");
                 }
@@ -598,6 +617,7 @@ static int64_t gltouchjoy_onTouchEvent(interface_touch_event_t action, int point
             break;
 
         case TOUCH_MOVE:
+            LOG("------MOVE:");
             if (axes.trackingIndex >= 0) {
                 axisConsumed = true;
                 int x = (int)x_coords[axes.trackingIndex];
@@ -614,6 +634,7 @@ static int64_t gltouchjoy_onTouchEvent(interface_touch_event_t action, int point
 
         case TOUCH_UP:
         case TOUCH_POINTER_UP:
+            LOG("------UP:");
             if (pointer_idx == axes.trackingIndex) {
                 int x = (int)x_coords[axes.trackingIndex];
                 int y = (int)y_coords[axes.trackingIndex];
@@ -622,18 +643,17 @@ static int64_t gltouchjoy_onTouchEvent(interface_touch_event_t action, int point
                 _button_touch_up();
             } else {
                 if (pointer_count == 1) {
-                    // last pointer up completely resets state
-                    LOG("!!!! ... RESETTING TOUCH JOYSTICK STATE MACHINE");
-                    variant.joys->resetState();
-                    variant.kpad->resetState();
+                    LOG("!!! : RESETTING TOUCH JOYSTICK STATE MACHINE");
+                    resetState();
+                } else {
+                    LOG("!!! : IGNORING OTHER TOUCH UP %d", pointer_idx);
                 }
             }
             break;
 
         case TOUCH_CANCEL:
             LOG("---TOUCH CANCEL");
-            variant.joys->resetState();
-            variant.kpad->resetState();
+            resetState();
             break;
 
         default:
@@ -663,8 +683,7 @@ static void gltouchjoy_setTouchJoystickEnabled(bool enabled) {
 
 static void gltouchjoy_setTouchJoystickOwnsScreen(bool pwnd) {
     joyglobals.ownsScreen = pwnd;
-    variant.joys->resetState();
-    variant.kpad->resetState();
+    resetState();
     if (joyglobals.ownsScreen) {
         caps_lock = true; // HACK FOR NOW : force uppercase scancodes for touchjoy_kpad variant
         joyglobals.minAlpha = joyglobals.minAlphaWhenOwnsScreen;
@@ -756,7 +775,7 @@ static void gltouchjoy_setButtonSwitchThreshold(int delta) {
 }
 
 static void gltouchjoy_setTouchVariant(touchjoy_variant_t variantType) {
-    variant.curr->resetState();
+    resetState();
 
     switch (variantType) {
         case EMULATED_JOYSTICK:
@@ -772,7 +791,7 @@ static void gltouchjoy_setTouchVariant(touchjoy_variant_t variantType) {
             break;
     }
 
-    variant.curr->resetState();
+    resetState();
 }
 
 static touchjoy_variant_t gltouchjoy_getTouchVariant(void) {
@@ -818,7 +837,7 @@ static void _init_gltouchjoy(void) {
     axes.centerX = 240;
     axes.centerY = 160;
     axes.multiplier = 1.f;
-    axes.trackingIndex = TOUCH_NONE;
+    axes.trackingIndex = TRACKING_NONE;
 
     axes.rosetteChars[0]     = ' ';
     axes.rosetteScancodes[0] = -1;
@@ -843,7 +862,7 @@ static void _init_gltouchjoy(void) {
 
     buttons.centerX = 240;
     buttons.centerY = 160;
-    buttons.trackingIndex = TOUCH_NONE;
+    buttons.trackingIndex = TRACKING_NONE;
 
     buttons.touchDownChar = TOUCH_BUTTON0;
     buttons.touchDownScancode = -1;
