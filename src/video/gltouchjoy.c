@@ -663,6 +663,8 @@ static void gltouchjoy_setTouchJoystickEnabled(bool enabled) {
 
 static void gltouchjoy_setTouchJoystickOwnsScreen(bool pwnd) {
     joyglobals.ownsScreen = pwnd;
+    variant.joys->resetState();
+    variant.kpad->resetState();
     if (joyglobals.ownsScreen) {
         caps_lock = true; // HACK FOR NOW : force uppercase scancodes for touchjoy_kpad variant
         joyglobals.minAlpha = joyglobals.minAlphaWhenOwnsScreen;

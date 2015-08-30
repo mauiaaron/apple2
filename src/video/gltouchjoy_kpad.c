@@ -16,6 +16,7 @@
 #endif
 
 #define KEY_REPEAT_THRESHOLD_NANOS (NANOSECONDS_PER_SECOND / 4)
+#define CALLBACK_LOCK_VALUE (1000)
 
 // WARNING : this does not match the rosette left-right-down layout, but what is returned by atan2f()
 typedef enum keypad_octant_t {
@@ -50,13 +51,18 @@ static struct {
 
     uint8_t currButtonDisplayChar;
 
-    // scancodes to fire upon axisUp, buttonPress, or as key-repeat
+    // index of repeating scancodes to fire
     keypad_fire_t fireIdx;
+
+    volatile int touchSourcesActive; // modified by both CPU thread and touch handling thread
+
     int scancodes[MAX_REPEATING];
     struct timespec timingBegins[MAX_REPEATING];
+    bool buttonBegan;
+    bool axisBegan;
 
-    bool axisTiming;
-    bool buttonTiming;
+    ////int callbackIgnoreThreshold;
+    int lastScancode;
 
     float repeatThresholdNanos;
 
@@ -65,37 +71,107 @@ static struct {
 static GLTouchJoyVariant kpadJoy = { 0 };
 
 // ----------------------------------------------------------------------------
-// repeat key callback
+// repeat key callback scheduling and unscheduling
+//
+// Assumptions :
+//  - All touch sources run on a single thread
+//  - callback itself runs on CPU thread
+
+// unlock callback section
+static inline void _callback_sourcesUnlock(void) {
+    int val = __sync_add_and_fetch(&kpad.touchSourcesActive, (int)(CALLBACK_LOCK_VALUE));
+    assert(val >= 0 && "inconsistent lock state for callback detected");
+}
+
+// attempt to lock the critical section where we unschedule the function pointer callback
+// there should be no outstanding touch sources being tracked
+static inline bool _callback_sourcesTryLock(void) {
+    int val = __sync_sub_and_fetch(&kpad.touchSourcesActive, (int)(CALLBACK_LOCK_VALUE));
+    if (val == -CALLBACK_LOCK_VALUE) {
+        return true;
+    } else {
+        _callback_sourcesUnlock();
+        return false;
+    }
+}
+
+// touch source has ended
+static inline void _touch_sourceEnd(void) {
+    __sync_sub_and_fetch(&kpad.touchSourcesActive, 1);
+}
+
+// touch source has begun
+static inline bool _touch_sourceBegin(void) {
+    do {
+        int val = __sync_add_and_fetch(&kpad.touchSourcesActive, 1);
+        if (val >= 0) {
+            assert(val > 0 && "inconsistent lock state for touch source detected");
+            return true;
+        }
+        // spin waiting on callback critical
+        _touch_sourceEnd();
+    } while (1);
+}
 
 static void touchkpad_keyboardReadCallback(void) {
-
     assert(pthread_self() == cpu_thread_id);
+
+    // HACK: filter out a certain number of callbacks to be assured that emulated software is actually ready for a new
+    // key.
+    //      * J---- appears to work best everytime
+    //      * S---B----- works better every other time (otherwise it misses flip-flop values)
+    //      * DOS3.3 AppleSoft BASIC shell appears to need a much larger value ...
+    ////static unsigned int callbackCounter = 0;
+    ////++callbackCounter;
+    ////if ((callbackCounter % kpad.callbackIgnoreThreshold) != 0) {
+    ////    return;
+    ////}
+    //
+    // Arguably the proper fix HERE to understand the Apple //e keyboard hardware itself and what the maximum rate allowed
+    // for changing keys. Then this callback would be called by the underlying VM at that rate (by perform the
+    // appropriate machine cycle counting -- same as for joystick handling)
+#warning FIXME TODO : implement proper keyboard repeat callback timing
+
+    if (kpad.lastScancode >= 0) {
+        c_keys_handle_input(kpad.lastScancode, /*pressed:*/false, /*ASCII:*/false);
+        kpad.lastScancode = -1;
+    }
 
     struct timespec now = { 0 };
     clock_gettime(CLOCK_MONOTONIC, &now);
 
+    int fired = -1;
     for (unsigned int i=0; i<MAX_REPEATING; i++) {
-        bool fired = false;
         int scancode = kpad.scancodes[kpad.fireIdx];
         if (scancode >= 0) {
             struct timespec deltat = timespec_diff(kpad.timingBegins[kpad.fireIdx], now, NULL);
             if (deltat.tv_sec || deltat.tv_nsec > kpad.repeatThresholdNanos) {
-                LOG("REPEAT #%d/%lu/%lu: %d", kpad.fireIdx, deltat.tv_sec, deltat.tv_nsec, scancode);
+                LOG("ACTIVE(%d) REPEAT #%d/%lu/%lu: %d", kpad.touchSourcesActive, kpad.fireIdx, deltat.tv_sec, deltat.tv_nsec, scancode);
                 c_keys_handle_input(scancode, /*pressed:*/true, /*ASCII:*/false);
-                fired = true;
+                kpad.lastScancode = scancode;
+                fired = kpad.fireIdx;
             }
         }
         ++kpad.fireIdx;
         if (kpad.fireIdx >= MAX_REPEATING) {
             kpad.fireIdx = 0;
         }
-        if (fired) {
+        if (fired >= 0) {
             break;
         }
     }
 
-    if (!kpad.axisTiming && !kpad.buttonTiming) {
-        keydriver_keyboardReadCallback = NULL;// unschedule callback
+    bool lockedAndNoTouchSourcesActive = _callback_sourcesTryLock();
+    if (lockedAndNoTouchSourcesActive) {
+        if (fired < 0) {
+            LOG("REPEAT KEY CALLBACK DONE ...");
+            keydriver_keyboardReadCallback = NULL;
+            ////callbackCounter = 0;
+        } else {
+            LOG("RESETTING REPEAT INDEX %d ...", fired);
+            kpad.scancodes[fired] = -1;
+        }
+        _callback_sourcesUnlock();
     }
 }
 
@@ -106,16 +182,20 @@ static touchjoy_variant_t touchkpad_variant(void) {
 }
 
 static void touchkpad_resetState(void) {
+    kpad.touchSourcesActive = 0;
+    keydriver_keyboardReadCallback = NULL;
+
     kpad.axisCurrentOctant = ORIGIN;
+    kpad.lastScancode = -1;
 
     for (unsigned int i=0; i<MAX_REPEATING; i++) {
         kpad.scancodes[i] = -1;
+        kpad.timingBegins[i] = (struct timespec){ 0 };
     }
 
-    kpad.axisTiming = false;
-    kpad.buttonTiming = false;
-
     kpad.currButtonDisplayChar = ' ';
+    kpad.axisBegan = false;
+    kpad.buttonBegan = false;
 
     for (unsigned int i=0; i<ROSETTE_COLS; i++) {
         for (unsigned int j=0; j<ROSETTE_ROWS; j++) {
@@ -132,17 +212,23 @@ static void touchkpad_resetState(void) {
 // axis key(s) state
 
 static void touchkpad_axisDown(void) {
+    LOG("%s", "");
+    if (!kpad.axisBegan) {
+        // avoid multiple locks on extra axisDown()
+        kpad.axisBegan = true;
+        _touch_sourceBegin();
+    }
+    keydriver_keyboardReadCallback = &touchkpad_keyboardReadCallback;
     kpad.axisCurrentOctant = ORIGIN;
     if (axes.rosetteScancodes[ROSETTE_CENTER] >= 0) {
         kpad.scancodes[REPEAT_AXIS] = axes.rosetteScancodes[ROSETTE_CENTER];
         kpad.scancodes[REPEAT_AXIS_ALT] = -1;
         clock_gettime(CLOCK_MONOTONIC, &kpad.timingBegins[REPEAT_AXIS]);
-        kpad.axisTiming = true;
-        keydriver_keyboardReadCallback = &touchkpad_keyboardReadCallback;
     }
 }
 
 static void touchkpad_axisMove(int dx, int dy) {
+    LOG("%s", "");
 
     if ((dx > -joyglobals.switchThreshold) && (dx < joyglobals.switchThreshold) && (dy > -joyglobals.switchThreshold) && (dy < joyglobals.switchThreshold)) {
         kpad.scancodes[REPEAT_AXIS] = axes.rosetteScancodes[ROSETTE_CENTER];
@@ -181,7 +267,6 @@ static void touchkpad_axisMove(int dx, int dy) {
         clock_gettime(CLOCK_MONOTONIC, &now);
         kpad.timingBegins[REPEAT_AXIS] = now;
         kpad.timingBegins[REPEAT_AXIS_ALT] = now;
-        keydriver_keyboardReadCallback = &touchkpad_keyboardReadCallback;
 
         kpad.scancodes[REPEAT_AXIS_ALT] = -1;
         switch (kpad.axisCurrentOctant) {
@@ -343,32 +428,25 @@ static void touchkpad_axisMove(int dx, int dy) {
         }
 
     } while (0);
-
-    kpad.axisTiming = true;
 }
 
 static void touchkpad_axisUp(int dx, int dy) {
+    LOG("%s", "");
     touchkpad_axisMove(dx, dy);
     kpad.axisCurrentOctant = ORIGIN;
-
-    int scancode = kpad.scancodes[REPEAT_AXIS];
-    kpad.scancodes[REPEAT_AXIS] = -1;
-    if (scancode < 0) {
-        scancode = kpad.scancodes[REPEAT_AXIS_ALT];
-        kpad.scancodes[REPEAT_AXIS_ALT] = -1;
+    kpad.timingBegins[REPEAT_AXIS] = (struct timespec){ 0 };
+    kpad.timingBegins[REPEAT_AXIS_ALT] = (struct timespec){ 0 };
+    if (kpad.axisBegan) {
+        kpad.axisBegan = false;
+        _touch_sourceEnd();
     }
-
-    c_keys_handle_input(scancode, /*pressed:*/true,  /*ASCII:*/false);
-    c_keys_handle_input(scancode, /*pressed:*/false, /*ASCII:*/false);
-    kpad.axisTiming = false;
-
-    // if no other scancodes, REPEAT_AXIS_ALT (if non-negative) will be fired once remaining in callback
 }
 
 // ----------------------------------------------------------------------------
 // button key state
 
 static void touchkpad_setCurrButtonValue(touchjoy_button_type_t theButtonChar, int theButtonScancode) {
+    LOG("%s", "");
     if (theButtonChar >= 0) {
         kpad.currButtonDisplayChar = theButtonChar;
         kpad.scancodes[REPEAT_BUTTON] = theButtonScancode;
@@ -379,20 +457,27 @@ static void touchkpad_setCurrButtonValue(touchjoy_button_type_t theButtonChar, i
 }
 
 static uint8_t touchkpad_buttonPress(void) {
+    LOG("%s", "");
+    if (!kpad.buttonBegan) {
+        // avoid multiple locks on extra buttonPress()
+        kpad.buttonBegan = true;
+        _touch_sourceBegin();
+    }
     if (kpad.scancodes[REPEAT_BUTTON] >= 0) {
         LOG("->BUTT : %d/'%c'", kpad.scancodes[REPEAT_BUTTON], kpad.currButtonDisplayChar);
         clock_gettime(CLOCK_MONOTONIC, &kpad.timingBegins[REPEAT_BUTTON]);
-        c_keys_handle_input(kpad.scancodes[REPEAT_BUTTON], /*pressed:*/true, /*ASCII:*/false);
-        kpad.buttonTiming = true;
         keydriver_keyboardReadCallback = &touchkpad_keyboardReadCallback;
     }
     return kpad.currButtonDisplayChar;
 }
 
 static void touchkpad_buttonRelease(void) {
-    kpad.scancodes[REPEAT_BUTTON] = -1;
-    kpad.buttonTiming = false;
-    c_keys_handle_input(kpad.scancodes[REPEAT_BUTTON], /*pressed:*/false, /*ASCII:*/false);
+    LOG("%s", "");
+    kpad.timingBegins[REPEAT_BUTTON] = (struct timespec){ 0 };
+    if (kpad.buttonBegan) {
+        kpad.buttonBegan = false;
+        _touch_sourceEnd();
+    }
 }
 
 static void touchkpad_setKeyRepeatThreshold(float repeatThresholdSecs) {
@@ -410,6 +495,7 @@ static void _init_gltouchjoy_kpad(void) {
     }
 
     kpad.currButtonDisplayChar = ' ';
+    ////kpad.callbackIgnoreThreshold = 1;
 
     kpad.repeatThresholdNanos = KEY_REPEAT_THRESHOLD_NANOS;
 
