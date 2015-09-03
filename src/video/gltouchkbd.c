@@ -675,7 +675,7 @@ static void gltouchkbd_setVisibilityWhenOwnsScreen(float inactiveAlpha, float ac
 
 static void gltouchkbd_setLowercaseEnabled(bool enabled) {
     allowLowercase = enabled;
-    if (allowLowercase) {
+    if (allowLowercase && ownsScreen) {
         caps_lock = false;
     } else {
         caps_lock = true;
