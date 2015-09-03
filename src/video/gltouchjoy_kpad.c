@@ -54,7 +54,8 @@ static struct {
     // index of repeating scancodes to fire
     keypad_fire_t fireIdx;
 
-    volatile int touchSourcesActive; // modified by both CPU thread and touch handling thread
+    volatile int axisLock; // modified by both CPU thread and touch handling thread
+    volatile int buttonLock; // modified by both CPU thread and touch handling thread
 
     int scancodes[MAX_REPEATING];
     struct timespec timingBegins[MAX_REPEATING];
@@ -78,38 +79,38 @@ static GLTouchJoyVariant kpadJoy = { 0 };
 //  - callback itself runs on CPU thread
 
 // unlock callback section
-static inline void _callback_sourcesUnlock(void) {
-    int val = __sync_add_and_fetch(&kpad.touchSourcesActive, (int)(CALLBACK_LOCK_VALUE));
+static inline void _callback_sourceUnlock(volatile int *source) {
+    int val = __sync_add_and_fetch(source, (int)(CALLBACK_LOCK_VALUE));
     assert(val >= 0 && "inconsistent lock state for callback detected");
 }
 
 // attempt to lock the critical section where we unschedule the function pointer callback
 // there should be no outstanding touch sources being tracked
-static inline bool _callback_sourcesTryLock(void) {
-    int val = __sync_sub_and_fetch(&kpad.touchSourcesActive, (int)(CALLBACK_LOCK_VALUE));
+static inline bool _callback_sourceTryLock(volatile int *source) {
+    int val = __sync_sub_and_fetch(source, (int)(CALLBACK_LOCK_VALUE));
     if (val == -CALLBACK_LOCK_VALUE) {
         return true;
     } else {
-        _callback_sourcesUnlock();
+        _callback_sourceUnlock(source);
         return false;
     }
 }
 
 // touch source has ended
-static inline void _touch_sourceEnd(void) {
-    __sync_sub_and_fetch(&kpad.touchSourcesActive, 1);
+static inline void _touch_sourceEnd(volatile int *source) {
+    __sync_sub_and_fetch(source, 1);
 }
 
 // touch source has begun
-static inline bool _touch_sourceBegin(void) {
+static inline void _touch_sourceBegin(volatile int *source) {
     do {
-        int val = __sync_add_and_fetch(&kpad.touchSourcesActive, 1);
+        int val = __sync_add_and_fetch(source, 1);
         if (val >= 0) {
             assert(val > 0 && "inconsistent lock state for touch source detected");
-            return true;
+            return;
         }
         // spin waiting on callback critical
-        _touch_sourceEnd();
+        _touch_sourceEnd(source);
     } while (1);
 }
 
@@ -146,7 +147,7 @@ static void touchkpad_keyboardReadCallback(void) {
         if (scancode >= 0) {
             struct timespec deltat = timespec_diff(kpad.timingBegins[kpad.fireIdx], now, NULL);
             if (deltat.tv_sec || deltat.tv_nsec > kpad.repeatThresholdNanos) {
-                LOG("ACTIVE(%d) REPEAT #%d/%lu/%lu: %d", kpad.touchSourcesActive, kpad.fireIdx, deltat.tv_sec, deltat.tv_nsec, scancode);
+                LOG("ACTIVE(%d,%d) REPEAT #%d/%lu/%lu: %d", kpad.axisLock, kpad.buttonLock, kpad.fireIdx, deltat.tv_sec, deltat.tv_nsec, scancode);
                 c_keys_handle_input(scancode, /*pressed:*/true, /*ASCII:*/false);
                 kpad.lastScancode = scancode;
                 fired = kpad.fireIdx;
@@ -161,17 +162,33 @@ static void touchkpad_keyboardReadCallback(void) {
         }
     }
 
-    bool lockedAndNoTouchSourcesActive = _callback_sourcesTryLock();
-    if (lockedAndNoTouchSourcesActive) {
-        if (fired < 0) {
-            LOG("REPEAT KEY CALLBACK DONE ...");
-            keydriver_keyboardReadCallback = NULL;
-            ////callbackCounter = 0;
-        } else {
-            LOG("RESETTING REPEAT INDEX %d ...", fired);
+    bool lockedAxis = _callback_sourceTryLock(&kpad.axisLock);
+    if (lockedAxis) {
+        if (fired == REPEAT_AXIS || fired == REPEAT_AXIS_ALT) {
+            LOG("RESETTING AXIS INDEX %d ...", fired);
             kpad.scancodes[fired] = -1;
         }
-        _callback_sourcesUnlock();
+    }
+
+    bool lockedButton = _callback_sourceTryLock(&kpad.buttonLock);
+    if (lockedButton) {
+        if (fired == REPEAT_BUTTON) {
+            LOG("RESETTING BUTTON INDEX %d ...", fired);
+            kpad.scancodes[fired] = -1;
+        }
+    }
+
+    if (lockedButton && lockedAxis && fired < 0) {
+        LOG("REPEAT KEY CALLBACK DONE ...");
+        keydriver_keyboardReadCallback = NULL;
+        ////callbackCounter = 0;
+    }
+
+    if (lockedAxis) {
+        _callback_sourceUnlock(&kpad.axisLock);
+    }
+    if (lockedButton) {
+        _callback_sourceUnlock(&kpad.buttonLock);
     }
 }
 
@@ -182,7 +199,9 @@ static touchjoy_variant_t touchkpad_variant(void) {
 }
 
 static void touchkpad_resetState(void) {
-    kpad.touchSourcesActive = 0;
+    LOG("RESET STATE ..........................................");
+    kpad.axisLock = 0;
+    kpad.buttonLock = 0;
     keydriver_keyboardReadCallback = NULL;
 
     kpad.axisCurrentOctant = ORIGIN;
@@ -216,11 +235,11 @@ static void touchkpad_axisDown(void) {
     if (!kpad.axisBegan) {
         // avoid multiple locks on extra axisDown()
         kpad.axisBegan = true;
-        _touch_sourceBegin();
+        _touch_sourceBegin(&kpad.axisLock);
     }
-    keydriver_keyboardReadCallback = &touchkpad_keyboardReadCallback;
     kpad.axisCurrentOctant = ORIGIN;
     if (axes.rosetteScancodes[ROSETTE_CENTER] >= 0) {
+        keydriver_keyboardReadCallback = &touchkpad_keyboardReadCallback;
         kpad.scancodes[REPEAT_AXIS] = axes.rosetteScancodes[ROSETTE_CENTER];
         kpad.scancodes[REPEAT_AXIS_ALT] = -1;
         clock_gettime(CLOCK_MONOTONIC, &kpad.timingBegins[REPEAT_AXIS]);
@@ -263,6 +282,7 @@ static void touchkpad_axisMove(int dx, int dy) {
 
         // handle a new octant
 
+        keydriver_keyboardReadCallback = &touchkpad_keyboardReadCallback;
         struct timespec now = { 0 };
         clock_gettime(CLOCK_MONOTONIC, &now);
         kpad.timingBegins[REPEAT_AXIS] = now;
@@ -438,7 +458,7 @@ static void touchkpad_axisUp(int dx, int dy) {
     kpad.timingBegins[REPEAT_AXIS_ALT] = (struct timespec){ 0 };
     if (kpad.axisBegan) {
         kpad.axisBegan = false;
-        _touch_sourceEnd();
+        _touch_sourceEnd(&kpad.axisLock);
     }
 }
 
@@ -461,7 +481,7 @@ static uint8_t touchkpad_buttonPress(void) {
     if (!kpad.buttonBegan) {
         // avoid multiple locks on extra buttonPress()
         kpad.buttonBegan = true;
-        _touch_sourceBegin();
+        _touch_sourceBegin(&kpad.buttonLock);
     }
     if (kpad.scancodes[REPEAT_BUTTON] >= 0) {
         LOG("->BUTT : %d/'%c'", kpad.scancodes[REPEAT_BUTTON], kpad.currButtonDisplayChar);
@@ -476,7 +496,7 @@ static void touchkpad_buttonRelease(void) {
     kpad.timingBegins[REPEAT_BUTTON] = (struct timespec){ 0 };
     if (kpad.buttonBegan) {
         kpad.buttonBegan = false;
-        _touch_sourceEnd();
+        _touch_sourceEnd(&kpad.buttonLock);
     }
 }
 
