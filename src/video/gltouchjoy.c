@@ -547,7 +547,7 @@ static inline void _axis_touch_up(int x, int y) {
     x = (x - axes.centerX);
     y = (y - axes.centerY);
     if (buttons.trackingIndex > axes.trackingIndex) {
-        LOG("resetting buttons.trackingIndex");
+        LOG("!!! : DECREMENTING buttons.trackingIndex");
         --buttons.trackingIndex;
     }
     variant.curr->axisUp(x, y);
@@ -565,7 +565,7 @@ static inline void _button_touch_up(void) {
 #endif
     LOG("%s", "");
     if (axes.trackingIndex > buttons.trackingIndex) {
-        LOG("resetting axes.trackingIndex");
+        LOG("!!! : DECREMENTING axes.trackingIndex");
         --axes.trackingIndex;
     }
     buttons.trackingIndex = TRACKING_NONE;
@@ -595,6 +595,10 @@ static int64_t gltouchjoy_onTouchEvent(interface_touch_event_t action, int point
                 int x = (int)x_coords[pointer_idx];
                 int y = (int)y_coords[pointer_idx];
                 if (_is_point_on_axis_side(x, y)) {
+                    if (pointer_idx == buttons.trackingIndex) {
+                        LOG("!!! : INCREMENTING buttons.trackingIndex");
+                        ++buttons.trackingIndex;
+                    }
                     if (axes.trackingIndex != TRACKING_NONE) {
                         LOG("!!! : IGNORING OTHER AXIS TOUCH DOWN %d", pointer_idx);
                     } else {
@@ -603,6 +607,10 @@ static int64_t gltouchjoy_onTouchEvent(interface_touch_event_t action, int point
                         _axis_touch_down(x, y);
                     }
                 } else if (_is_point_on_button_side(x, y)) {
+                    if (pointer_idx == axes.trackingIndex) {
+                        LOG("!!! : INCREMENTING axes.trackingIndex");
+                        ++axes.trackingIndex;
+                    }
                     if (buttons.trackingIndex != TRACKING_NONE) {
                         LOG("!!! : IGNORING OTHER BUTTON TOUCH DOWN %d", pointer_idx);
                     } else {
