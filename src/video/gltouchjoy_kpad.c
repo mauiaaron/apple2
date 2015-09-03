@@ -50,6 +50,7 @@ static struct {
     keypad_octant_t axisCurrentOctant;
 
     uint8_t currButtonDisplayChar;
+    void (*buttonDrawCallback)(char newChar);
 
     // index of repeating scancodes to fire
     keypad_fire_t fireIdx;
@@ -162,6 +163,10 @@ static void touchkpad_keyboardReadCallback(void) {
         }
     }
 
+    if (fired == REPEAT_BUTTON) {
+        kpad.buttonDrawCallback(kpad.currButtonDisplayChar);
+    }
+
     bool lockedAxis = _callback_sourceTryLock(&kpad.axisLock);
     if (lockedAxis) {
         if (fired == REPEAT_AXIS || fired == REPEAT_AXIS_ALT) {
@@ -225,6 +230,14 @@ static void touchkpad_resetState(void) {
     c_keys_handle_input(buttons.touchDownScancode, /*pressed:*/false, /*ASCII:*/false);
     c_keys_handle_input(buttons.northScancode,     /*pressed:*/false, /*ASCII:*/false);
     c_keys_handle_input(buttons.southScancode,     /*pressed:*/false, /*ASCII:*/false);
+}
+
+static void touchkpad_setup(void (*buttonDrawCallback)(char newChar)) {
+    kpad.buttonDrawCallback = buttonDrawCallback;
+}
+
+static void touchkpad_shutdown(void) {
+    // ...
 }
 
 // ----------------------------------------------------------------------------
@@ -465,7 +478,7 @@ static void touchkpad_axisUp(int dx, int dy) {
 // ----------------------------------------------------------------------------
 // button key state
 
-static void touchkpad_setCurrButtonValue(touchjoy_button_type_t theButtonChar, int theButtonScancode) {
+static void _set_current_button_state(touchjoy_button_type_t theButtonChar, int theButtonScancode) {
     LOG("%s", "");
     if (theButtonChar >= 0) {
         kpad.currButtonDisplayChar = theButtonChar;
@@ -476,23 +489,40 @@ static void touchkpad_setCurrButtonValue(touchjoy_button_type_t theButtonChar, i
     }
 }
 
-static uint8_t touchkpad_buttonPress(void) {
-    LOG("%s", "");
+static void touchkpad_buttonDown(void) {
     if (!kpad.buttonBegan) {
-        // avoid multiple locks on extra buttonPress()
         kpad.buttonBegan = true;
         _touch_sourceBegin(&kpad.buttonLock);
     }
+    _set_current_button_state(buttons.touchDownChar, buttons.touchDownScancode);
     if (kpad.scancodes[REPEAT_BUTTON] >= 0) {
         LOG("->BUTT : %d/'%c'", kpad.scancodes[REPEAT_BUTTON], kpad.currButtonDisplayChar);
         clock_gettime(CLOCK_MONOTONIC, &kpad.timingBegins[REPEAT_BUTTON]);
         keydriver_keyboardReadCallback = &touchkpad_keyboardReadCallback;
     }
-    return kpad.currButtonDisplayChar;
 }
 
-static void touchkpad_buttonRelease(void) {
+static void touchkpad_buttonMove(int dx, int dy) {
+    // Currently this is the same logic as the "regular" joystick variant ... but we could likely be more creative here
+    // in a future revision, like having a full octant of key possibilities ... (for example, playing Bolo with a friend
+    // on the same tablet, one driving, the other shooting and controlling the turret)
+    if ((dy < -joyglobals.switchThreshold) || (dy > joyglobals.switchThreshold)) {
+        touchjoy_button_type_t theButtonChar = -1;
+        int theButtonScancode = -1;
+        if (dy < 0) {
+            theButtonChar = buttons.northChar;
+            theButtonScancode = buttons.northScancode;
+        } else {
+            theButtonChar = buttons.southChar;
+            theButtonScancode = buttons.southScancode;
+        }
+        _set_current_button_state(theButtonChar, theButtonScancode);
+    }
+}
+
+static void touchkpad_buttonUp(int dx, int dy) {
     LOG("%s", "");
+    touchkpad_buttonMove(dx, dy);
     kpad.timingBegins[REPEAT_BUTTON] = (struct timespec){ 0 };
     if (kpad.buttonBegan) {
         kpad.buttonBegan = false;
@@ -521,10 +551,12 @@ static void _init_gltouchjoy_kpad(void) {
 
     kpadJoy.variant = &touchkpad_variant,
     kpadJoy.resetState = &touchkpad_resetState,
+    kpadJoy.setup = &touchkpad_setup,
+    kpadJoy.shutdown = &touchkpad_shutdown,
 
-    kpadJoy.setCurrButtonValue = &touchkpad_setCurrButtonValue,
-    kpadJoy.buttonPress = &touchkpad_buttonPress,
-    kpadJoy.buttonRelease = &touchkpad_buttonRelease,
+    kpadJoy.buttonDown = &touchkpad_buttonDown,
+    kpadJoy.buttonMove = &touchkpad_buttonMove,
+    kpadJoy.buttonUp = &touchkpad_buttonUp,
 
     kpadJoy.axisDown = &touchkpad_axisDown,
     kpadJoy.axisMove = &touchkpad_axisMove,

@@ -15,13 +15,6 @@
 #error this is a touch interface module, possibly you mean to not compile this at all?
 #endif
 
-#define DEBUG_TOUCH_JOY 0
-#if DEBUG_TOUCH_JOY
-#   define TOUCH_JOY_LOG(...) LOG(__VA_ARGS__)
-#else
-#   define TOUCH_JOY_LOG(...)
-#endif
-
 #define MODEL_DEPTH -1/32.f
 #define TRACKING_NONE (-1)
 
@@ -48,7 +41,6 @@
 #define BUTTON_OBJ_HALF_H   (BUTTON_OBJ_H/2.f)
 
 #define BUTTON_SWITCH_THRESHOLD_DEFAULT 22
-#define BUTTON_TAP_DELAY_NANOS_DEFAULT 50000000
 
 GLTouchJoyGlobals joyglobals = { 0 };
 GLTouchJoyAxes axes = { 0 };
@@ -199,76 +191,6 @@ static inline void _setup_button_object_with_char(char newChar) {
 
 // ----------------------------------------------------------------------------
 
-// Tap Delay Thread : delays processing of touch-down so that a different joystick button/key can be fired
-
-static inline void _signal_tap_delay(void) {
-    pthread_mutex_lock(&buttons.tapDelayMutex);
-    pthread_cond_signal(&buttons.tapDelayCond);
-    pthread_mutex_unlock(&buttons.tapDelayMutex);
-}
-
-static void *_button_tap_delayed_thread(void *dummyptr) {
-    LOG(">>> [DELAYEDTAP] thread start ...");
-
-    pthread_mutex_lock(&buttons.tapDelayMutex);
-
-    do {
-        pthread_cond_wait(&buttons.tapDelayCond, &buttons.tapDelayMutex);
-        TOUCH_JOY_LOG(">>> [DELAYEDTAP] begin ...");
-
-        if (UNLIKELY(joyglobals.isShuttingDown)) {
-            break;
-        }
-
-        struct timespec ts = { .tv_sec=0, .tv_nsec=buttons.tapDelayNanos };
-
-        // sleep for the configured delay time
-        pthread_mutex_unlock(&buttons.tapDelayMutex);
-        nanosleep(&ts, NULL);
-        pthread_mutex_lock(&buttons.tapDelayMutex);
-
-        // wait until touch up/cancel
-        do {
-
-            // now set the emulator's joystick button values (or keypad value)
-            uint8_t displayChar = variant.curr->buttonPress();
-            _setup_button_object_with_char(displayChar);
-
-            if ( (buttons.trackingIndex == TRACKING_NONE) || joyglobals.isShuttingDown) {
-                break;
-            }
-
-            pthread_cond_wait(&buttons.tapDelayCond, &buttons.tapDelayMutex);
-
-            if ( (buttons.trackingIndex == TRACKING_NONE) || joyglobals.isShuttingDown) {
-                break;
-            }
-            TOUCH_JOY_LOG(">>> [DELAYEDTAP] looping ...");
-        } while (1);
-
-        if (UNLIKELY(joyglobals.isShuttingDown)) {
-            break;
-        }
-
-        // delay the ending of button tap or touch/move event by the configured delay time
-        pthread_mutex_unlock(&buttons.tapDelayMutex);
-        nanosleep(&ts, NULL);
-        pthread_mutex_lock(&buttons.tapDelayMutex);
-
-        variant.curr->buttonRelease();
-
-        TOUCH_JOY_LOG(">>> [DELAYEDTAP] end ...");
-    } while (1);
-
-    pthread_mutex_unlock(&buttons.tapDelayMutex);
-
-    LOG(">>> [DELAYEDTAP] thread exit ...");
-
-    return NULL;
-}
-
-// ----------------------------------------------------------------------------
-
 static inline void resetState() {
     LOG("%s", "");
     axes.trackingIndex = TRACKING_NONE;
@@ -286,8 +208,6 @@ static void gltouchjoy_setup(void) {
     mdlDestroyModel(&buttons.model);
 
     joyglobals.isShuttingDown = false;
-    assert((buttons.tapDelayThreadId == 0) && "setup called multiple times!");
-    pthread_create(&buttons.tapDelayThreadId, NULL, (void *)&_button_tap_delayed_thread, (void *)NULL);
 
     axes.model = mdlCreateQuad(-1.05, -1.0, AXIS_OBJ_W, AXIS_OBJ_H, MODEL_DEPTH, AXIS_FB_WIDTH, AXIS_FB_HEIGHT, (GLCustom){
             .create = &_create_touchjoy_hud,
@@ -319,6 +239,9 @@ static void gltouchjoy_setup(void) {
         return;
     }
 
+    variant.joys->setup(&_setup_button_object_with_char);
+    variant.kpad->setup(&_setup_button_object_with_char);
+
     struct timespec now;
     clock_gettime(CLOCK_MONOTONIC, &now);
     axes.timingBegin = now;
@@ -336,15 +259,10 @@ static void gltouchjoy_shutdown(void) {
     resetState();
 
     joyglobals.isAvailable = false;
-
     joyglobals.isShuttingDown = true;
-    pthread_cond_signal(&buttons.tapDelayCond);
-    if (pthread_join(buttons.tapDelayThreadId, NULL)) {
-        ERRLOG("OOPS: pthread_join tap delay thread ...");
-    }
-    buttons.tapDelayThreadId = 0;
-    buttons.tapDelayMutex = (pthread_mutex_t){ 0 };
-    buttons.tapDelayCond = (pthread_cond_t)PTHREAD_COND_INITIALIZER;
+
+    variant.joys->shutdown();
+    variant.kpad->shutdown();
 
     mdlDestroyModel(&axes.model);
     mdlDestroyModel(&buttons.model);
@@ -495,9 +413,6 @@ static inline void _axis_touch_down(int x, int y) {
 }
 
 static inline void _button_touch_down(int x, int y) {
-    variant.curr->setCurrButtonValue(buttons.touchDownChar, buttons.touchDownScancode);
-    _signal_tap_delay();
-
     buttons.centerX = x;
     buttons.centerY = y;
 
@@ -505,11 +420,12 @@ static inline void _button_touch_down(int x, int y) {
     buttons.modelDirty = true;
 
     TOUCH_JOY_LOG("---TOUCH %sDOWN (buttons index %d) center:(%d,%d) -> buttons(0x%02X,0x%02X)", (action == TOUCH_DOWN ? "" : "POINTER "), buttons.trackingIndex, buttons.centerX, buttons.centerY, joy_button0, joy_button1);
+    variant.curr->buttonDown();
 }
 
 static inline void _axis_move(int x, int y) {
-    x = (x - axes.centerX);
-    y = (y - axes.centerY);
+    x -= axes.centerX;
+    y -= axes.centerY;
     TOUCH_JOY_LOG("---TOUCH MOVE ...tracking axis:%d (%d,%d) -> joy(0x%02X,0x%02X)", axes.trackingIndex, x, y, joy_x, joy_y);
     variant.curr->axisMove(x, y);
 }
@@ -517,21 +433,8 @@ static inline void _axis_move(int x, int y) {
 static inline void _button_move(int x, int y) {
     x -= buttons.centerX;
     y -= buttons.centerY;
-    if ((y < -joyglobals.switchThreshold) || (y > joyglobals.switchThreshold)) {
-        touchjoy_button_type_t theButtonChar = -1;
-        int theButtonScancode = -1;
-        if (y < 0) {
-            theButtonChar = buttons.northChar;
-            theButtonScancode = buttons.northScancode;
-        } else {
-            theButtonChar = buttons.southChar;
-            theButtonScancode = buttons.southScancode;
-        }
-
-        variant.curr->setCurrButtonValue(theButtonChar, theButtonScancode);
-        _signal_tap_delay();
-        TOUCH_JOY_LOG("+++TOUCH MOVE ...tracking button:%d (%d,%d) -> buttons(0x%02X,0x%02X)", buttons.trackingIndex, x, y, joy_button0, joy_button1);
-    }
+    TOUCH_JOY_LOG("+++TOUCH MOVE ...tracking button:%d (%d,%d) -> buttons(0x%02X,0x%02X)", buttons.trackingIndex, x, y, joy_button0, joy_button1);
+    variant.curr->buttonMove(x, y);
 }
 
 static inline void _axis_touch_up(int x, int y) {
@@ -544,8 +447,8 @@ static inline void _axis_touch_up(int x, int y) {
     TOUCH_JOY_LOG("---TOUCH %sUP (axis went up)%s", (action == TOUCH_UP ? "" : "POINTER "), (resetIndex ? " (reset buttons index!)" : ""));
 #endif
     LOG("%s", "");
-    x = (x - axes.centerX);
-    y = (y - axes.centerY);
+    x -= axes.centerX;
+    y -= axes.centerY;
     if (buttons.trackingIndex > axes.trackingIndex) {
         LOG("!!! : DECREMENTING buttons.trackingIndex");
         --buttons.trackingIndex;
@@ -554,7 +457,7 @@ static inline void _axis_touch_up(int x, int y) {
     axes.trackingIndex = TRACKING_NONE;
 }
 
-static inline void _button_touch_up(void) {
+static inline void _button_touch_up(int x, int y) {
 #if DEBUG_TOUCH_JOY
     bool resetIndex = false;
     if (axes.trackingIndex > buttons.trackingIndex) {
@@ -564,12 +467,14 @@ static inline void _button_touch_up(void) {
     TOUCH_JOY_LOG("---TOUCH %sUP (buttons went up)%s", (action == TOUCH_UP ? "" : "POINTER "), (resetIndex ? " (reset axis index!)" : ""));
 #endif
     LOG("%s", "");
+    x -= buttons.centerX;
+    y -= buttons.centerY;
     if (axes.trackingIndex > buttons.trackingIndex) {
         LOG("!!! : DECREMENTING axes.trackingIndex");
         --axes.trackingIndex;
     }
+    variant.curr->buttonUp(x, y);
     buttons.trackingIndex = TRACKING_NONE;
-    _signal_tap_delay();
 }
 
 
@@ -648,7 +553,9 @@ static int64_t gltouchjoy_onTouchEvent(interface_touch_event_t action, int point
                 int y = (int)y_coords[axes.trackingIndex];
                 _axis_touch_up(x, y);
             } else if (pointer_idx == buttons.trackingIndex) {
-                _button_touch_up();
+                int x = (int)x_coords[buttons.trackingIndex];
+                int y = (int)y_coords[buttons.trackingIndex];
+                _button_touch_up(x, y);
             } else {
                 if (pointer_count == 1) {
                     LOG("!!! : RESETTING TOUCH JOYSTICK STATE MACHINE");
@@ -764,16 +671,6 @@ static void gltouchjoy_setTouchButtonTypes(
     _setup_button_object_with_char(currButtonDisplayChar);
 }
 
-static void gltouchjoy_setTapDelay(float secs) {
-    if (UNLIKELY(secs < 0.f)) {
-        ERRLOG("Clamping tap delay to 0.0 secs");
-    }
-    if (UNLIKELY(secs > 1.f)) {
-        ERRLOG("Clamping tap delay to 1.0 secs");
-    }
-    buttons.tapDelayNanos = (unsigned int)((float)NANOSECONDS_PER_SECOND * secs);
-}
-
 static void gltouchjoy_setTouchAxisSensitivity(float multiplier) {
     axes.multiplier = multiplier;
 }
@@ -883,11 +780,6 @@ static void _init_gltouchjoy(void) {
 
     buttons.activeChar = MOUSETEXT_OPENAPPLE;
 
-    buttons.tapDelayThreadId = 0;
-    buttons.tapDelayMutex = (pthread_mutex_t){ 0 };
-    buttons.tapDelayCond = (pthread_cond_t)PTHREAD_COND_INITIALIZER;
-    buttons.tapDelayNanos = BUTTON_TAP_DELAY_NANOS_DEFAULT;
-
     joyglobals.isEnabled = true;
     joyglobals.ownsScreen = true;
     joyglobals.showControls = true;
@@ -904,7 +796,6 @@ static void _init_gltouchjoy(void) {
     joydriver_ownsScreen = &gltouchjoy_ownsScreen;
     joydriver_setShowControls = &gltouchjoy_setShowControls;
     joydriver_setTouchButtonTypes = &gltouchjoy_setTouchButtonTypes;
-    joydriver_setTapDelay = &gltouchjoy_setTapDelay;
     joydriver_setTouchAxisSensitivity = &gltouchjoy_setTouchAxisSensitivity;
     joydriver_setButtonSwitchThreshold = &gltouchjoy_setButtonSwitchThreshold;
     joydriver_setTouchVariant = &gltouchjoy_setTouchVariant;

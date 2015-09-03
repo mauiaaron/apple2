@@ -17,6 +17,13 @@
 #include "video/glhudmodel.h"
 #include "video/glnode.h"
 
+#define DEBUG_TOUCH_JOY 0
+#if DEBUG_TOUCH_JOY
+#   define TOUCH_JOY_LOG(...) LOG(__VA_ARGS__)
+#else
+#   define TOUCH_JOY_LOG(...)
+#endif
+
 // globals
 
 typedef struct GLTouchJoyGlobals {
@@ -75,23 +82,23 @@ typedef struct GLTouchJoyButtons {
     int trackingIndex;
     struct timespec timingBegin;
 
-    pthread_t tapDelayThreadId;
-    pthread_mutex_t tapDelayMutex;
-    pthread_cond_t tapDelayCond;
-    unsigned int tapDelayNanos;
-
 } GLTouchJoyButtons;
 extern GLTouchJoyButtons buttons;
 
 typedef struct GLTouchJoyVariant {
     touchjoy_variant_t (*variant)(void);
-    void               (*resetState)(void);
-    void               (*setCurrButtonValue)(touchjoy_button_type_t theButtonChar, int theButtonScancode);
-    uint8_t            (*buttonPress)(void);
-    void               (*buttonRelease)(void);
-    void               (*axisDown)(void);
-    void               (*axisMove)(int dx, int dy);
-    void               (*axisUp)(int dx, int dy);
+    void (*resetState)(void);
+    void (*setup)(void (*buttonDrawCallback)(char newChar));
+    void (*shutdown)(void);
+
+    void (*buttonDown)(void);
+    void (*buttonMove)(int dx, int dy);
+    void (*buttonUp)(int dx, int dy);
+
+    void (*axisDown)(void);
+    void (*axisMove)(int dx, int dy);
+    void (*axisUp)(int dx, int dy);
+
 } GLTouchJoyVariant;
 
 // registers a touch joystick variant with manager
