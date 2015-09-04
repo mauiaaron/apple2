@@ -571,6 +571,17 @@ public enum Apple2Preferences {
         public boolean booleanValue(Apple2Activity activity) {
             return activity.getPreferences(Context.MODE_PRIVATE).getBoolean(toString(), false);
         }
+    },
+    KEYBOARD_CLICK_ENABLED {
+        @Override
+        public void load(Apple2Activity activity) {
+            boolean enabled = booleanValue(activity);
+        }
+
+        @Override
+        public boolean booleanValue(Apple2Activity activity) {
+            return activity.getPreferences(Context.MODE_PRIVATE).getBoolean(toString(), true);
+        }
     };
 
     public enum HiresColor {

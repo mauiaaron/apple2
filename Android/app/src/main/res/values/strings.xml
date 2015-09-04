@@ -74,6 +74,8 @@
     <string name="keyboard">Keyboard</string>
     <string name="keyboard_choose_alt">Choose alt keyboard…</string>
     <string name="keyboard_choose_alt_summary">Choose alternative customized layout</string>
+    <string name="keyboard_click_enabled">Enable key click</string>
+    <string name="keyboard_click_enabled_summary">Enables key click sound if available</string>
     <string name="keyboard_configure">Configure keyboard…</string>
     <string name="keyboard_configure_summary">Transparency, lowercase, custom keys</string>
     <string name="keyboard_lowercase_enabled">Enable lowercase</string>

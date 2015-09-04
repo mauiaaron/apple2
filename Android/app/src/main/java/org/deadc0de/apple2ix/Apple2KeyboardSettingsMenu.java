@@ -154,6 +154,30 @@ public class Apple2KeyboardSettingsMenu extends Apple2AbstractMenu {
                 });
             }
         },
+        KEYBOARD_ENABLE_CLICK {
+            @Override
+            public final String getTitle(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.keyboard_click_enabled);
+            }
+
+            @Override
+            public final String getSummary(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.keyboard_click_enabled_summary);
+            }
+
+            @Override
+            public View getView(final Apple2Activity activity, View convertView) {
+                convertView = _basicView(activity, this, convertView);
+                CheckBox cb = _addCheckbox(activity, this, convertView, Apple2Preferences.KEYBOARD_CLICK_ENABLED.booleanValue(activity));
+                cb.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                    @Override
+                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                        Apple2Preferences.KEYBOARD_CLICK_ENABLED.saveBoolean(activity, isChecked);
+                    }
+                });
+                return convertView;
+            }
+        },
         KEYBOARD_ENABLE_LOWERCASE {
             @Override
             public final String getTitle(Apple2Activity activity) {

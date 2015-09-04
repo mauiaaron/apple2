@@ -350,9 +350,11 @@ public class Apple2Activity extends Activity {
             }
 
             if ((nativeFlags & NATIVE_TOUCH_KEY_TAP) != 0) {
-                AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
-                if (am != null) {
-                    am.playSoundEffect(AudioManager.FX_KEY_CLICK);
+                if (Apple2Preferences.KEYBOARD_CLICK_ENABLED.booleanValue(this)) {
+                    AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
+                    if (am != null) {
+                        am.playSoundEffect(AudioManager.FX_KEY_CLICK);
+                    }
                 }
 
                 if ((apple2MenuView != null) && apple2MenuView.isCalibrating()) {
