@@ -62,8 +62,6 @@ static struct {
     struct timespec timingBegins[MAX_REPEATING];
     bool buttonBegan;
     bool axisBegan;
-
-    ////int callbackIgnoreThreshold;
     int lastScancode;
 
     float repeatThresholdNanos;
@@ -186,7 +184,6 @@ static void touchkpad_keyboardReadCallback(void) {
     if (lockedButton && lockedAxis && fired < 0) {
         LOG("REPEAT KEY CALLBACK DONE ...");
         keydriver_keyboardReadCallback = NULL;
-        ////callbackCounter = 0;
     }
 
     if (lockedAxis) {
@@ -250,12 +247,17 @@ static void touchkpad_axisDown(void) {
         kpad.axisBegan = true;
         _touch_sourceBegin(&kpad.axisLock);
     }
+
+    keydriver_keyboardReadCallback = &touchkpad_keyboardReadCallback;
+    struct timespec now = { 0 };
+    clock_gettime(CLOCK_MONOTONIC, &now);
+    kpad.timingBegins[REPEAT_AXIS] = now;
+    kpad.timingBegins[REPEAT_AXIS_ALT] = now;
+
     kpad.axisCurrentOctant = ORIGIN;
     if (axes.rosetteScancodes[ROSETTE_CENTER] >= 0) {
-        keydriver_keyboardReadCallback = &touchkpad_keyboardReadCallback;
         kpad.scancodes[REPEAT_AXIS] = axes.rosetteScancodes[ROSETTE_CENTER];
         kpad.scancodes[REPEAT_AXIS_ALT] = -1;
-        clock_gettime(CLOCK_MONOTONIC, &kpad.timingBegins[REPEAT_AXIS]);
     }
 }
 
@@ -292,14 +294,6 @@ static void touchkpad_axisMove(int dx, int dy) {
         }
 
         LOG("radians:%f radnorm:%f octant:%f, currOctant:%d", radians, radnorm, octant, kpad.axisCurrentOctant);
-
-        // handle a new octant
-
-        keydriver_keyboardReadCallback = &touchkpad_keyboardReadCallback;
-        struct timespec now = { 0 };
-        clock_gettime(CLOCK_MONOTONIC, &now);
-        kpad.timingBegins[REPEAT_AXIS] = now;
-        kpad.timingBegins[REPEAT_AXIS_ALT] = now;
 
         kpad.scancodes[REPEAT_AXIS_ALT] = -1;
         switch (kpad.axisCurrentOctant) {
@@ -545,7 +539,6 @@ static void _init_gltouchjoy_kpad(void) {
     }
 
     kpad.currButtonDisplayChar = ' ';
-    ////kpad.callbackIgnoreThreshold = 1;
 
     kpad.repeatThresholdNanos = KEY_REPEAT_THRESHOLD_NANOS;
 
