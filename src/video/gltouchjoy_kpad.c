@@ -116,20 +116,14 @@ static inline void _touch_sourceBegin(volatile int *source) {
 static void touchkpad_keyboardReadCallback(void) {
     assert(pthread_self() == cpu_thread_id);
 
-    // HACK: filter out a certain number of callbacks to be assured that emulated software is actually ready for a new
-    // key.
-    //      * J---- appears to work best everytime
-    //      * S---B----- works better every other time (otherwise it misses flip-flop values)
-    //      * DOS3.3 AppleSoft BASIC shell appears to need a much larger value ...
-    ////static unsigned int callbackCounter = 0;
-    ////++callbackCounter;
-    ////if ((callbackCounter % kpad.callbackIgnoreThreshold) != 0) {
-    ////    return;
-    ////}
+    // HACK FIXME TODO :
     //
-    // Arguably the proper fix HERE to understand the Apple //e keyboard hardware itself and what the maximum rate allowed
-    // for changing keys. Then this callback would be called by the underlying VM at that rate (by perform the
-    // appropriate machine cycle counting -- same as for joystick handling)
+    // There are a number of cases where the emulated software is reading the keyboard state but not using the value.
+    // This is quite noticeable in a number of games that take keyboard input.
+    //
+    // This indicates that we are incorrectly emulating the keyboard hardware.  The proper fix for this touch keypad
+    // joystick will be to properly emulate the original hardware timing, using the existing facility to count 65c02 CPU
+    // machine cyles.
 #warning FIXME TODO : implement proper keyboard repeat callback timing
 
     if (kpad.lastScancode >= 0) {
