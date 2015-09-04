@@ -35,6 +35,8 @@ typedef enum keypad_octant_t {
 #define RADIANS_NORTHWEST ((-3.f * M_PI) / 4.f)
 #define RADIANS_NORTH     ((-1.f * M_PI) / 2.f)
 #define RADIANS_NORTHEAST ((-1.f * M_PI) / 4.f)
+#define RADIANS_WEST_NEG  (-M_PI)
+#define RADIANS_EAST      (0.f)
 #define RADIANS_SOUTHWEST (( 3.f * M_PI) / 4.f)
 #define RADIANS_SOUTH     (( 1.f * M_PI) / 2.f)
 #define RADIANS_SOUTHEAST (( 1.f * M_PI) / 4.f)
@@ -289,157 +291,107 @@ static void touchkpad_axisMove(int dx, int dy) {
 
         LOG("radians:%f radnorm:%f octant:%f, currOctant:%d", radians, radnorm, octant, kpad.axisCurrentOctant);
 
+        // Current implementation NOTE : four cardinal directions are handled slightly different than the intercardinal
+        // ones.
+        //  - The intercardinals might generate 2 scanscodes (for example north and west scancodes for a northwest axis)
+        //    if there is not a specific scancode to handle it (e.g., the northwest scancode).
+        //  - The cardinals will only ever generate one scancode (the cardinal in question if it's set, or the scancode
+        //    of the adjacent intercardinal where the point lies).
         kpad.scancodes[REPEAT_AXIS_ALT] = -1;
         switch (kpad.axisCurrentOctant) {
             case OCTANT_NORTHWEST:
                 if (axes.rosetteScancodes[ROSETTE_NORTHWEST] >= 0) {
                     kpad.scancodes[REPEAT_AXIS] = axes.rosetteScancodes[ROSETTE_NORTHWEST];
                     LOG("XY : NORTHWEST, (%d)", axes.rosetteScancodes[ROSETTE_WEST]);
-                } else if (axes.rosetteScancodes[ROSETTE_NORTH] < 0) {
-                    if (radians > RADIANS_NORTHWEST) {
-                        LOG("IGNORING Y (NORTH) ...");
-                        kpad.scancodes[REPEAT_AXIS] = -1;
-                    } else {
-                        LOG("X : WEST (%d)", axes.rosetteScancodes[ROSETTE_WEST]);
-                        kpad.scancodes[REPEAT_AXIS] = axes.rosetteScancodes[ROSETTE_WEST];
-                    }
-                } else if (axes.rosetteScancodes[ROSETTE_WEST] < 0) {
-                    if (radians < RADIANS_NORTHWEST) {
-                        LOG("IGNORING X (WEST) ...");
-                        kpad.scancodes[REPEAT_AXIS] = -1;
-                    } else {
-                        LOG("Y : NORTH (%d)", axes.rosetteScancodes[ROSETTE_NORTH]);
-                        kpad.scancodes[REPEAT_AXIS] = axes.rosetteScancodes[ROSETTE_NORTH];
-                    }
                 } else {
-                    if (radians > RADIANS_NORTHWEST) {
-                        LOG("XY : NORTH (%d) & WEST (%d)", axes.rosetteScancodes[ROSETTE_NORTH], axes.rosetteScancodes[ROSETTE_WEST]);
-                        kpad.scancodes[REPEAT_AXIS]     = axes.rosetteScancodes[ROSETTE_NORTH];
-                        kpad.scancodes[REPEAT_AXIS_ALT] = axes.rosetteScancodes[ROSETTE_WEST];
-                    } else {
-                        LOG("XY : WEST (%d) & NORTH (%d)", axes.rosetteScancodes[ROSETTE_WEST], axes.rosetteScancodes[ROSETTE_NORTH]);
-                        kpad.scancodes[REPEAT_AXIS]     = axes.rosetteScancodes[ROSETTE_WEST];
-                        kpad.scancodes[REPEAT_AXIS_ALT] = axes.rosetteScancodes[ROSETTE_NORTH];
-                    }
+                    LOG("XY : WEST (%d) & NORTH (%d)", axes.rosetteScancodes[ROSETTE_WEST], axes.rosetteScancodes[ROSETTE_NORTH]);
+                    kpad.scancodes[REPEAT_AXIS] = axes.rosetteScancodes[ROSETTE_WEST];
+                    kpad.scancodes[REPEAT_AXIS_ALT] = axes.rosetteScancodes[ROSETTE_NORTH];
                 }
                 break;
 
             case OCTANT_NORTH:
-                LOG("Y : NORTH (%d)", axes.rosetteScancodes[ROSETTE_NORTH]);
-                kpad.scancodes[REPEAT_AXIS] = axes.rosetteScancodes[ROSETTE_NORTH];
+                if (axes.rosetteScancodes[ROSETTE_NORTH] >= 0) {
+                    LOG("Y : NORTH (%d)", axes.rosetteScancodes[ROSETTE_NORTH]);
+                    kpad.scancodes[REPEAT_AXIS] = axes.rosetteScancodes[ROSETTE_NORTH];
+                } else if (radians < RADIANS_NORTH) {
+                    LOG("XY : NORTHWEST (%d)", axes.rosetteScancodes[ROSETTE_NORTHWEST]);
+                    kpad.scancodes[REPEAT_AXIS] = axes.rosetteScancodes[ROSETTE_NORTHWEST];
+                } else {
+                    LOG("XY : NORTHEAST (%d)", axes.rosetteScancodes[ROSETTE_NORTHEAST]);
+                    kpad.scancodes[REPEAT_AXIS] = axes.rosetteScancodes[ROSETTE_NORTHEAST];
+                }
                 break;
 
             case OCTANT_NORTHEAST:
                 if (axes.rosetteScancodes[ROSETTE_NORTHEAST] >= 0) {
                     LOG("XY : NORTHEAST (%d)", axes.rosetteScancodes[ROSETTE_NORTHEAST]);
                     kpad.scancodes[REPEAT_AXIS] = axes.rosetteScancodes[ROSETTE_NORTHEAST];
-                } else if (axes.rosetteScancodes[ROSETTE_NORTH] < 0) {
-                    if (radians < RADIANS_NORTHEAST) {
-                        LOG("IGNORING Y (NORTH) ...");
-                        kpad.scancodes[REPEAT_AXIS] = -1;
-                    } else {
-                        LOG("X : EAST (%d)", axes.rosetteScancodes[ROSETTE_EAST]);
-                        kpad.scancodes[REPEAT_AXIS] = axes.rosetteScancodes[ROSETTE_EAST];
-                    }
-                } else if (axes.rosetteScancodes[ROSETTE_EAST] < 0) {
-                    if (radians > RADIANS_NORTHEAST) {
-                        LOG("IGNORING X (EAST) ...");
-                        kpad.scancodes[REPEAT_AXIS] = -1;
-                    } else {
-                        LOG("Y : NORTH (%d)", axes.rosetteScancodes[ROSETTE_NORTH]);
-                        kpad.scancodes[REPEAT_AXIS] = axes.rosetteScancodes[ROSETTE_NORTH];
-                    }
                 } else {
-                    if (radians < RADIANS_NORTHEAST) {
-                        LOG("XY : NORTH (%d) & EAST (%d)", axes.rosetteScancodes[ROSETTE_NORTH], axes.rosetteScancodes[ROSETTE_EAST]);
-                        kpad.scancodes[REPEAT_AXIS]     = axes.rosetteScancodes[ROSETTE_NORTH];
-                        kpad.scancodes[REPEAT_AXIS_ALT] = axes.rosetteScancodes[ROSETTE_EAST];
-                    } else {
-                        LOG("XY : EAST (%d) & NORTH (%d)", axes.rosetteScancodes[ROSETTE_EAST], axes.rosetteScancodes[ROSETTE_NORTH]);
-                        kpad.scancodes[REPEAT_AXIS]     = axes.rosetteScancodes[ROSETTE_EAST];
-                        kpad.scancodes[REPEAT_AXIS_ALT] = axes.rosetteScancodes[ROSETTE_NORTH];
-                    }
+                    LOG("XY : EAST (%d) & NORTH (%d)", axes.rosetteScancodes[ROSETTE_EAST], axes.rosetteScancodes[ROSETTE_NORTH]);
+                    kpad.scancodes[REPEAT_AXIS] = axes.rosetteScancodes[ROSETTE_EAST];
+                    kpad.scancodes[REPEAT_AXIS_ALT] = axes.rosetteScancodes[ROSETTE_NORTH];
                 }
                 break;
 
             case OCTANT_WEST:
-                LOG("Y : WEST (%d)", axes.rosetteScancodes[ROSETTE_WEST]);
-                kpad.scancodes[REPEAT_AXIS] = axes.rosetteScancodes[ROSETTE_WEST];
+                if (axes.rosetteScancodes[ROSETTE_WEST] >= 0) {
+                    LOG("Y : WEST (%d)", axes.rosetteScancodes[ROSETTE_WEST]);
+                    kpad.scancodes[REPEAT_AXIS] = axes.rosetteScancodes[ROSETTE_WEST];
+                } else if (radians > RADIANS_WEST_NEG && radians < 0) {
+                    LOG("XY : NORTHWEST (%d)", axes.rosetteScancodes[ROSETTE_NORTHWEST]);
+                    kpad.scancodes[REPEAT_AXIS] = axes.rosetteScancodes[ROSETTE_NORTHWEST];
+                } else {
+                    LOG("XY : SOUTHWEST (%d)", axes.rosetteScancodes[ROSETTE_SOUTHWEST]);
+                    kpad.scancodes[REPEAT_AXIS] = axes.rosetteScancodes[ROSETTE_SOUTHWEST];
+                }
                 break;
 
             case OCTANT_EAST:
-                LOG("Y : EAST (%d)", axes.rosetteScancodes[ROSETTE_EAST]);
-                kpad.scancodes[REPEAT_AXIS] = axes.rosetteScancodes[ROSETTE_EAST];
+                if (axes.rosetteScancodes[ROSETTE_EAST] >= 0) {
+                    LOG("Y : EAST (%d)", axes.rosetteScancodes[ROSETTE_EAST]);
+                    kpad.scancodes[REPEAT_AXIS] = axes.rosetteScancodes[ROSETTE_EAST];
+                } else if (radians < RADIANS_EAST) {
+                    LOG("XY : NORTHEAST (%d)", axes.rosetteScancodes[ROSETTE_NORTHEAST]);
+                    kpad.scancodes[REPEAT_AXIS] = axes.rosetteScancodes[ROSETTE_NORTHEAST];
+                } else {
+                    LOG("XY : SOUTHEAST (%d)", axes.rosetteScancodes[ROSETTE_SOUTHEAST]);
+                    kpad.scancodes[REPEAT_AXIS] = axes.rosetteScancodes[ROSETTE_SOUTHEAST];
+                }
                 break;
 
             case OCTANT_SOUTHWEST:
                 if (axes.rosetteScancodes[ROSETTE_SOUTHWEST] >= 0) {
                     LOG("XY : SOUTHWEST (%d)", axes.rosetteScancodes[ROSETTE_SOUTHWEST]);
                     kpad.scancodes[REPEAT_AXIS] = axes.rosetteScancodes[ROSETTE_SOUTHWEST];
-                } else if (axes.rosetteScancodes[ROSETTE_SOUTH] < 0) {
-                    if (radians < RADIANS_SOUTHWEST) {
-                        kpad.scancodes[REPEAT_AXIS] = -1;
-                        LOG("IGNORING Y (SOUTH) ...");
-                    } else {
-                        LOG("X : WEST (%d)", axes.rosetteScancodes[ROSETTE_WEST]);
-                        kpad.scancodes[REPEAT_AXIS] = axes.rosetteScancodes[ROSETTE_WEST];
-                    }
-                } else if (axes.rosetteScancodes[ROSETTE_WEST] < 0) {
-                    if (radians > RADIANS_SOUTHWEST) {
-                        kpad.scancodes[REPEAT_AXIS] = -1;
-                        LOG("IGNORING X (WEST) ...");
-                    } else {
-                        LOG("Y : SOUTH (%d)", axes.rosetteScancodes[ROSETTE_SOUTH]);
-                        kpad.scancodes[REPEAT_AXIS] = axes.rosetteScancodes[ROSETTE_SOUTH];
-                    }
                 } else {
-                    if (radians < RADIANS_SOUTHWEST) {
-                        LOG("XY : SOUTH (%d) & WEST (%d)", axes.rosetteScancodes[ROSETTE_SOUTH], axes.rosetteScancodes[ROSETTE_WEST]);
-                        kpad.scancodes[REPEAT_AXIS]     = axes.rosetteScancodes[ROSETTE_SOUTH];
-                        kpad.scancodes[REPEAT_AXIS_ALT] = axes.rosetteScancodes[ROSETTE_WEST];
-                    } else {
-                        LOG("XY : WEST (%d) & SOUTH (%d)", axes.rosetteScancodes[ROSETTE_WEST], axes.rosetteScancodes[ROSETTE_SOUTH]);
-                        kpad.scancodes[REPEAT_AXIS]     = axes.rosetteScancodes[ROSETTE_WEST];
-                        kpad.scancodes[REPEAT_AXIS_ALT] = axes.rosetteScancodes[ROSETTE_SOUTH];
-                    }
+                    LOG("XY : WEST (%d) & SOUTH (%d)", axes.rosetteScancodes[ROSETTE_WEST], axes.rosetteScancodes[ROSETTE_SOUTH]);
+                    kpad.scancodes[REPEAT_AXIS] = axes.rosetteScancodes[ROSETTE_WEST];
+                    kpad.scancodes[REPEAT_AXIS_ALT] = axes.rosetteScancodes[ROSETTE_SOUTH];
                 }
                 break;
 
             case OCTANT_SOUTH:
-                LOG("Y : SOUTH (%d)", axes.rosetteScancodes[ROSETTE_SOUTH]);
-                kpad.scancodes[REPEAT_AXIS] = axes.rosetteScancodes[ROSETTE_SOUTH];
+                if (axes.rosetteScancodes[ROSETTE_SOUTH] >= 0) {
+                    LOG("Y : SOUTH (%d)", axes.rosetteScancodes[ROSETTE_SOUTH]);
+                    kpad.scancodes[REPEAT_AXIS] = axes.rosetteScancodes[ROSETTE_SOUTH];
+                } else if (radians > RADIANS_SOUTH) {
+                    LOG("XY : SOUTHWEST (%d)", axes.rosetteScancodes[ROSETTE_SOUTHWEST]);
+                    kpad.scancodes[REPEAT_AXIS] = axes.rosetteScancodes[ROSETTE_SOUTHWEST];
+                } else {
+                    LOG("XY : SOUTHEAST (%d)", axes.rosetteScancodes[ROSETTE_SOUTHEAST]);
+                    kpad.scancodes[REPEAT_AXIS] = axes.rosetteScancodes[ROSETTE_SOUTHEAST];
+                }
                 break;
 
             case OCTANT_SOUTHEAST:
                 if (axes.rosetteScancodes[ROSETTE_SOUTHEAST] >= 0) {
                     LOG("XY : SOUTHEAST (%d)", axes.rosetteScancodes[ROSETTE_SOUTHEAST]);
                     kpad.scancodes[REPEAT_AXIS] = axes.rosetteScancodes[ROSETTE_SOUTHEAST];
-                } else if (axes.rosetteScancodes[ROSETTE_SOUTH] < 0) {
-                    if (radians > RADIANS_SOUTHEAST) {
-                        LOG("IGNORING Y (SOUTH) ...");
-                        kpad.scancodes[REPEAT_AXIS] = -1;
-                    } else {
-                        LOG("X : EAST (%d)", axes.rosetteScancodes[ROSETTE_EAST]);
-                        kpad.scancodes[REPEAT_AXIS] = axes.rosetteScancodes[ROSETTE_EAST];
-                    }
-                } else if (axes.rosetteScancodes[ROSETTE_EAST] < 0) {
-                    if (radians < RADIANS_SOUTHEAST) {
-                        LOG("IGNORING X (EAST) ...");
-                        kpad.scancodes[REPEAT_AXIS] = -1;
-                    } else {
-                        LOG("Y : SOUTH (%d)", axes.rosetteScancodes[ROSETTE_SOUTH]);
-                        kpad.scancodes[REPEAT_AXIS] = axes.rosetteScancodes[ROSETTE_SOUTH];
-                    }
                 } else {
-                    if (radians > RADIANS_SOUTHEAST) {
-                        LOG("XY : SOUTH (%d) & EAST (%d)", axes.rosetteScancodes[ROSETTE_SOUTH], axes.rosetteScancodes[ROSETTE_EAST]);
-                        kpad.scancodes[REPEAT_AXIS]     = axes.rosetteScancodes[ROSETTE_SOUTH];
-                        kpad.scancodes[REPEAT_AXIS_ALT] = axes.rosetteScancodes[ROSETTE_EAST];
-                    } else {
-                        LOG("XY : EAST (%d) & SOUTH (%d)", axes.rosetteScancodes[ROSETTE_EAST], axes.rosetteScancodes[ROSETTE_SOUTH]);
-                        kpad.scancodes[REPEAT_AXIS]     = axes.rosetteScancodes[ROSETTE_EAST];
-                        kpad.scancodes[REPEAT_AXIS_ALT] = axes.rosetteScancodes[ROSETTE_SOUTH];
-                    }
+                    LOG("XY : EAST (%d) & SOUTH (%d)", axes.rosetteScancodes[ROSETTE_EAST], axes.rosetteScancodes[ROSETTE_SOUTH]);
+                    kpad.scancodes[REPEAT_AXIS] = axes.rosetteScancodes[ROSETTE_EAST];
+                    kpad.scancodes[REPEAT_AXIS_ALT] = axes.rosetteScancodes[ROSETTE_SOUTH];
                 }
                 break;
 
