@@ -36,6 +36,16 @@ static void *_create_alert(void) {
     return hudElement;
 }
 
+static inline void _set_alpha(unsigned int dstIdx) {
+#if USE_RGBA4444
+#error fixme verify ...
+#else
+    PIXEL_TYPE rgba = *((PIXEL_TYPE *)(messageModel->texPixels + dstIdx));
+    rgba &= (~(0xFF << SHIFT_A));
+    *( (PIXEL_TYPE *)(messageModel->texPixels + dstIdx) ) = rgba;
+#endif
+}
+
 static void _alertToModel(char *message, unsigned int messageCols, unsigned int messageRows) {
     if (!message) {
         return;
@@ -74,6 +84,41 @@ static void _alertToModel(char *message, unsigned int messageCols, unsigned int 
             break;
         }
         glhud_setupDefault(messageModel);
+
+        if (1) {
+            // HACK : removing opaque borders is based on well-known glyph bitmaps in font.txt
+            const unsigned int glyphTopBorder = 4;
+            const unsigned int glyphXBorder = 3;
+            const unsigned int heightMultiplier = 2; // each bitmap pixel is scaled 2x
+            const unsigned int pixStride = sizeof(PIXEL_TYPE);
+            unsigned int dstIdx=0;
+
+            // clean up top border
+            const unsigned int topBorderCount = (fbWidth * pixStride * ((glyphTopBorder*heightMultiplier)-1));
+            for (; dstIdx < topBorderCount; dstIdx+=pixStride) {
+                _set_alpha(dstIdx);
+            }
+
+            // clean up left and right edges
+            const unsigned int innerHeight = (fbHeight - /* 1/2 top and 1/2 bottom border: */FONT_HEIGHT_PIXELS) + (2*heightMultiplier);
+            const unsigned int lrBorderWidth = ((glyphXBorder-1) * pixStride);
+            for (unsigned int pixRow=0; pixRow<innerHeight; pixRow++) {
+                for (unsigned int ltIdx=0; ltIdx < (glyphXBorder-1); ltIdx++, dstIdx+=pixStride) {
+                    _set_alpha(dstIdx);
+                }
+                dstIdx += (fbWidth * pixStride) - (lrBorderWidth*2);
+                for (unsigned int rtIdx=0; rtIdx < (glyphXBorder-1); rtIdx++, dstIdx+=pixStride) {
+                    _set_alpha(dstIdx);
+                }
+            }
+
+            assert(dstIdx < (fbHeight * fbWidth * pixStride) && "overflow detected");
+
+            // clean up bottom border
+            for (; dstIdx<(fbHeight * fbWidth * pixStride); dstIdx+=pixStride) {
+                _set_alpha(dstIdx);
+            }
+        }
 
         clock_gettime(CLOCK_MONOTONIC, &messageTimingBegin);
         isEnabled = true;
