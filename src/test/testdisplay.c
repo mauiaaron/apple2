@@ -11,6 +11,8 @@
 
 #include "testcommon.h"
 
+extern pthread_mutex_t interface_mutex; // TODO FIXME : raw access to CPU mutex because stepping debugger ...
+
 static void testdisplay_setup(void *arg) {
     test_common_setup();
     apple_ii_64k[0][MIXSWITCH_ADDR] = 0x00;

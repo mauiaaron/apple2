@@ -140,7 +140,13 @@ void test_common_init(bool do_cputhread) {
         speaker_init();
         MB_Initialize();
 #endif
+
+        cpu_pause();
         reinitialize();
+        cpu_resume();
+
+        extern volatile uint8_t emul_reinitialize;
+        emul_reinitialize = 0;
     }
 }
 

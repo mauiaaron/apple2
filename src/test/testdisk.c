@@ -37,6 +37,8 @@
 #define TYPE_TRIGGER_WATCHPT() \
     test_type_input("POKE7987,255:REM TRIGGER DEBUGGER\r")
 
+extern pthread_mutex_t interface_mutex; // TODO FIXME : raw access to CPU mutex because stepping debugger ...
+
 static void testdisk_setup(void *arg) {
     RESET_INPUT();
     apple_ii_64k[0][MIXSWITCH_ADDR] = 0x00;

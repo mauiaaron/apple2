@@ -14,6 +14,7 @@
 //
 
 #include "testcommon.h"
+#include "uthash.h"
 
 #define MSG_SIZE 256
 
