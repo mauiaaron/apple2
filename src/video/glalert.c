@@ -30,8 +30,8 @@ static void *_create_alert(void) {
     GLModelHUDElement *hudElement = (GLModelHUDElement *)calloc(sizeof(GLModelHUDElement), 1);
     if (hudElement) {
         hudElement->colorScheme = RED_ON_BLACK;
-        hudElement->blackIsTransparent = true;
-        hudElement->opaquePixelHalo = true;
+        hudElement->blackIsTransparent = false;
+        hudElement->opaquePixelHalo = false;
     }
     return hudElement;
 }
@@ -148,7 +148,7 @@ static void alert_reshape(int w, int h) {
 }
 
 #if INTERFACE_TOUCH
-static bool alert_onTouchEvent(interface_touch_event_t action, int pointer_count, int pointer_idx, float *x_coords, float *y_coords) {
+static int64_t alert_onTouchEvent(interface_touch_event_t action, int pointer_count, int pointer_idx, float *x_coords, float *y_coords) {
     return false; // non-interactive element ...
 }
 #endif
