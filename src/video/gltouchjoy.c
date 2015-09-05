@@ -667,6 +667,8 @@ static void gltouchjoy_setTouchButtonTypes(
         currButtonDisplayChar = MOUSETEXT_CLOSEDAPPLE;
     } else if (touchDownChar == TOUCH_BOTH) {
         currButtonDisplayChar = '+';
+    } else if (touchDownScancode < 0) {
+        currButtonDisplayChar = ' ';
     }
     _setup_button_object_with_char(currButtonDisplayChar);
 }

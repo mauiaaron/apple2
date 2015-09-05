@@ -157,10 +157,6 @@ static void touchkpad_keyboardReadCallback(void) {
         }
     }
 
-    if (fired == REPEAT_BUTTON) {
-        kpad.buttonDrawCallback(kpad.currButtonDisplayChar);
-    }
-
     bool lockedAxis = _callback_sourceTryLock(&kpad.axisLock);
     if (lockedAxis) {
         if (fired == REPEAT_AXIS || fired == REPEAT_AXIS_ALT) {
@@ -427,6 +423,7 @@ static void _set_current_button_state(touchjoy_button_type_t theButtonChar, int 
         kpad.currButtonDisplayChar = ' ';
         kpad.scancodes[REPEAT_BUTTON] = -1;
     }
+    kpad.buttonDrawCallback(kpad.currButtonDisplayChar);
 }
 
 static void touchkpad_buttonDown(void) {
