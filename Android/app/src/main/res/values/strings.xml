@@ -162,7 +162,6 @@
     <string name="settings_advanced_joystick_summary">Advanced settings and performance tuning</string>
     <string name="tab_general">General</string>
     <string name="tab_joystick">Joystick</string>
-    <string name="title_activity_second">SecondActivity</string>
     <string name="touch_menu_enable">Enable touch menus</string>
     <string name="touch_menu_enable_summary">Enables soft menu buttons in top screen corners</string>
     <string name="touch_menu_visibility">Touch menu visibility</string>

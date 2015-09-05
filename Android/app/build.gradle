@@ -24,23 +24,13 @@ android {
     }
 
     defaultConfig {
-        applicationId "org.deadc0de.apple2ix"
+        applicationId "org.deadc0de.apple2ix.basic"
         minSdkVersion 10
         targetSdkVersion 23
         versionCode 1
-        versionName "0.9.1"
+        versionName "0.9.2"
         ndk {
             moduleName "apple2ix"
-        }
-    }
-    productFlavors {
-        demo {
-            applicationId "org.deadc0de.apple2ix.demo"
-            versionName "0.9.1-demo"
-        }
-        full {
-            applicationId "org.deadc0de.apple2ix.full"
-            versionName "0.9.1-full"
         }
     }
 }

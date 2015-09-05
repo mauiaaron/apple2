@@ -235,7 +235,7 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnQuit(JNIEnv *env, jobject
 void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnUncaughtException(JNIEnv *env, jobject obj, jstring jhome, jstring jstr) {
     RELEASE_ERRLOG("Uncaught Java Exception ...");
 
-    // Write to /data/data/org.deadc0de.apple2ix.demo/jcrash.txt
+    // Write to /data/data/org.deadc0de.apple2ix.basic/jcrash.txt
     const char *home = (*env)->GetStringUTFChars(env, jhome, NULL);
     char *q = (char *)home;
     char buf[_HALF_PAGE_SIZE] = { 0 };
