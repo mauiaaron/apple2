@@ -26,6 +26,8 @@ import android.widget.ListView;
 import android.widget.PopupWindow;
 import android.widget.TextView;
 
+import org.deadc0de.apple2ix.basic.R;
+
 public class Apple2MainMenu {
 
     private final static int MENU_INSET = 20;

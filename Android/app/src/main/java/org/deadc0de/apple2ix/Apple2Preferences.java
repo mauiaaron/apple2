@@ -18,6 +18,8 @@ import android.util.Log;
 
 import java.io.File;
 
+import org.deadc0de.apple2ix.basic.R;
+
 public enum Apple2Preferences {
     FIRST_TIME_CONFIGURED {
         @Override

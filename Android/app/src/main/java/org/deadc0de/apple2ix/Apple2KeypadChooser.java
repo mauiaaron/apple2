@@ -13,7 +13,6 @@ package org.deadc0de.apple2ix;
 
 import android.content.Context;
 import android.os.Handler;
-import android.os.Looper;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -21,6 +20,8 @@ import android.view.View;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+
+import org.deadc0de.apple2ix.basic.R;
 
 public class Apple2KeypadChooser implements Apple2MenuView {
 

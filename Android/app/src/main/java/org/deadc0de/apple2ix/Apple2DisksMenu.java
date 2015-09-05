@@ -42,6 +42,8 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import org.deadc0de.apple2ix.basic.R;
+
 public class Apple2DisksMenu implements Apple2MenuView {
 
     private final static String TAG = "Apple2DisksMenu";

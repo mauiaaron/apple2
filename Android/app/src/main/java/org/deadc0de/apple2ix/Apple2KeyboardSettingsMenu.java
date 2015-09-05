@@ -20,6 +20,8 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.util.Arrays;
 
+import org.deadc0de.apple2ix.basic.R;
+
 public class Apple2KeyboardSettingsMenu extends Apple2AbstractMenu {
 
     private final static String TAG = "Apple2KeyboardSettingsMenu";

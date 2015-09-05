@@ -12,11 +12,11 @@
 package org.deadc0de.apple2ix;
 
 import android.content.Context;
-import android.graphics.drawable.Drawable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
-import android.widget.ImageView;
+
+import org.deadc0de.apple2ix.basic.R;
 
 public class Apple2SplashScreen implements Apple2MenuView {
 

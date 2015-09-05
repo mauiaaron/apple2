@@ -16,6 +16,8 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 
+import org.deadc0de.apple2ix.basic.R;
+
 public class Apple2KeypadSettingsMenu extends Apple2AbstractMenu {
 
     private final static String TAG = "Apple2KeypadSettingsMenu";

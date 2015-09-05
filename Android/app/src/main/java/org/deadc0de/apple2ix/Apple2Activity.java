@@ -29,6 +29,9 @@ import android.widget.FrameLayout;
 
 import java.util.ArrayList;
 
+import org.deadc0de.apple2ix.basic.BuildConfig;
+import org.deadc0de.apple2ix.basic.R;
+
 public class Apple2Activity extends Activity {
 
     private final static String TAG = "Apple2Activity";

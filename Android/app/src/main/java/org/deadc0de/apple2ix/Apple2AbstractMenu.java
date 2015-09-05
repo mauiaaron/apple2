@@ -29,6 +29,8 @@ import android.widget.ListView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
+import org.deadc0de.apple2ix.basic.R;
+
 public abstract class Apple2AbstractMenu implements Apple2MenuView {
 
     private final static String TAG = "Apple2AbstractMenu";

@@ -12,10 +12,11 @@
 package org.deadc0de.apple2ix;
 
 import android.content.Context;
-import android.support.annotation.NonNull;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.SeekBar;
+
+import org.deadc0de.apple2ix.basic.R;
 
 import java.util.ArrayList;
 
