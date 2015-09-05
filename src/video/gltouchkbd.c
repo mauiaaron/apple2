@@ -372,12 +372,17 @@ static inline int64_t _tap_key_at_point(float x, float y) {
         case ICONTEXT_LEFTSPACE:
         case ICONTEXT_MIDSPACE:
         case ICONTEXT_RIGHTSPACE:
+        case ICONTEXT_SPACE_VISUAL:
             isASCII = true;
             key = ' ';
             break;
 
         default: // ASCII
             isASCII = true;
+            if (key >= 0x80) {
+                RELEASE_LOG("unhandled key code...");
+                key = -1;
+            }
             break;
     }
 
