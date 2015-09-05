@@ -239,7 +239,7 @@ static void _animation_showDiskChosen(int drive) {
     unsigned int shownCols = DISK_ANIMATION_COLS;
 
     if (disk6.disk[drive].is_protected) {
-        char diskInsertedTemplate[DISK_ANIMATION_ROWS][DISK_ANIMATION_COLS+1] = {
+        static char diskInsertedTemplate[DISK_ANIMATION_ROWS][DISK_ANIMATION_COLS+1] = {
             "DD ",
             "DD ",
             " >1",
@@ -247,7 +247,7 @@ static void _animation_showDiskChosen(int drive) {
         template = diskInsertedTemplate[0];
     } else {
         shownCols = DISK_ANIMATION_COLS+1;
-        char diskInsertedTemplate[DISK_ANIMATION_ROWS][DISK_ANIMATION_COLS+2] = {
+        static char diskInsertedTemplate[DISK_ANIMATION_ROWS][DISK_ANIMATION_COLS+2] = {
             "DD  ",
             "DD  ",
             " >1L",
