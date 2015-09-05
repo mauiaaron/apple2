@@ -12,8 +12,6 @@
 package org.deadc0de.apple2ix;
 
 import android.view.View;
-import android.widget.CheckBox;
-import android.widget.CompoundButton;
 import android.widget.TextView;
 
 import java.util.ArrayList;
@@ -106,7 +104,7 @@ public class Apple2KeypadSettingsMenu extends Apple2AbstractMenu {
 
             @Override
             public void handleSelection(Apple2Activity activity, Apple2AbstractMenu settingsMenu, boolean isChecked) {
-                ArrayList<Apple2MenuView> viewStack = new ArrayList<>();
+                ArrayList<Apple2MenuView> viewStack = new ArrayList<Apple2MenuView>();
                 {
                     int idx = 0;
                     while (true) {
@@ -173,7 +171,7 @@ public class Apple2KeypadSettingsMenu extends Apple2AbstractMenu {
     // internals
 
     private void chooseKeys(Apple2Activity activity) {
-        ArrayList<Apple2MenuView> viewStack = new ArrayList<>();
+        ArrayList<Apple2MenuView> viewStack = new ArrayList<Apple2MenuView>();
         {
             int idx = 0;
             while (true) {

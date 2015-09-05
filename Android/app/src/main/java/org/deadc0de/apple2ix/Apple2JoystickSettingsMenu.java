@@ -177,7 +177,7 @@ public class Apple2JoystickSettingsMenu extends Apple2AbstractMenu {
 
             @Override
             public void handleSelection(Apple2Activity activity, Apple2AbstractMenu settingsMenu, boolean isChecked) {
-                ArrayList<Apple2MenuView> viewStack = new ArrayList<>();
+                ArrayList<Apple2MenuView> viewStack = new ArrayList<Apple2MenuView>();
                 {
                     int idx = 0;
                     while (true) {

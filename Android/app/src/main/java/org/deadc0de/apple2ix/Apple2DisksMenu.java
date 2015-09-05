@@ -50,7 +50,7 @@ public class Apple2DisksMenu implements Apple2MenuView {
     private Apple2Activity mActivity = null;
     private View mDisksView = null;
 
-    private final ArrayList<String> mPathStack = new ArrayList<>();
+    private final ArrayList<String> mPathStack = new ArrayList<String>();
 
     private static File sExternalFilesDir = null;
     private static boolean sInitializedPath = false;
