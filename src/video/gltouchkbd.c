@@ -141,15 +141,15 @@ static void _rerender_character(int col, int row) {
         for (unsigned int j=0; j<pixCharsWidth; j++) {
 
             // HACK : red <-> green swap
-            uint32_t rgba = *((uint32_t *)(kbd.model->texPixels + dstIdx));
-            uint32_t r = (rgba >> SHIFT_R) & MAX_SATURATION;
-            uint32_t g = (rgba >> SHIFT_G) & MAX_SATURATION;
+            PIXEL_TYPE rgba = *((PIXEL_TYPE *)(kbd.model->texPixels + dstIdx));
+            PIXEL_TYPE r = (rgba >> SHIFT_R) & MAX_SATURATION;
+            PIXEL_TYPE g = (rgba >> SHIFT_G) & MAX_SATURATION;
 #if USE_RGBA4444
 #error fixme
 #else
             rgba = ( ((rgba>>SHIFT_B)<<SHIFT_B) | (r << SHIFT_G) | (g << SHIFT_R) );
 #endif
-            *( (uint32_t*)(kbd.model->texPixels + dstIdx) ) = rgba;
+            *( (PIXEL_TYPE *)(kbd.model->texPixels + dstIdx) ) = rgba;
 
             srcIdx += 1;
             dstIdx += sizeof(PIXEL_TYPE);
