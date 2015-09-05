@@ -43,7 +43,7 @@
 #define KBD_OBJ_H 1.5
 
 HUD_CLASS(GLModelHUDKeyboard,
-    uint8_t *pixelsAlt; // alternate color pixels
+    // ...
 );
 
 static bool isAvailable = false; // Were there any OpenGL/memory errors on gltouchkbd initialization?
@@ -127,48 +127,63 @@ static struct {
 // ----------------------------------------------------------------------------
 // Misc internal methods
 
-static void _rerender_character(int col, int row, uint8_t *fb) {
+static void _rerender_character(int col, int row) {
     GLModelHUDKeyboard *hudKeyboard = (GLModelHUDKeyboard *)(kbd.model->custom);
 
     // re-generate texture from indexed color
     const unsigned int colCount = 1;
     const unsigned int pixCharsWidth = FONT80_WIDTH_PIXELS*colCount;
     const unsigned int rowStride = hudKeyboard->pixWidth - pixCharsWidth;
-    unsigned int srcIndex = (row * hudKeyboard->pixWidth * FONT_HEIGHT_PIXELS) + (col * FONT80_WIDTH_PIXELS);
-    unsigned int dstIndex = srcIndex * sizeof(PIXEL_TYPE);
+    unsigned int srcIdx = (row * hudKeyboard->pixWidth * FONT_HEIGHT_PIXELS) + (col * FONT80_WIDTH_PIXELS);
+    unsigned int dstIdx = srcIdx * sizeof(PIXEL_TYPE);
 
     for (unsigned int i=0; i<FONT_HEIGHT_PIXELS; i++) {
         for (unsigned int j=0; j<pixCharsWidth; j++) {
 
-            uint8_t colorIndex = fb[srcIndex];
-            uint32_t rgb = (((uint32_t)(colormap[colorIndex].red)   << SHIFT_R) |
-                            ((uint32_t)(colormap[colorIndex].green) << SHIFT_G) |
-                            ((uint32_t)(colormap[colorIndex].blue)  << SHIFT_B));
-            if (rgb == 0 && hudKeyboard->blackIsTransparent) {
-                // make black transparent
-            } else {
-                rgb |=      ((uint32_t)MAX_SATURATION               << SHIFT_A);
-            }
-            *( (uint32_t*)(kbd.model->texPixels + dstIndex) ) = rgb;
+            // HACK : red <-> green swap
+            uint32_t rgba = *((uint32_t *)(kbd.model->texPixels + dstIdx));
+            uint32_t r = (rgba >> SHIFT_R) & MAX_SATURATION;
+            uint32_t g = (rgba >> SHIFT_G) & MAX_SATURATION;
+#if USE_RGBA4444
+#error fixme
+#else
+            rgba = ( ((rgba>>SHIFT_B)<<SHIFT_B) | (r << SHIFT_G) | (g << SHIFT_R) );
+#endif
+            *( (uint32_t*)(kbd.model->texPixels + dstIdx) ) = rgba;
 
-            srcIndex += 1;
-            dstIndex += sizeof(PIXEL_TYPE);
+            srcIdx += 1;
+            dstIdx += sizeof(PIXEL_TYPE);
         }
-        srcIndex += rowStride;
-        dstIndex = srcIndex * sizeof(PIXEL_TYPE);
+        srcIdx += rowStride;
+        dstIdx = srcIdx * sizeof(PIXEL_TYPE);
     }
 
     kbd.model->texDirty = true;
 }
 
+static inline void _rerender_selected(int col, int row) {
+    if ((col >= 0) && (row >= 0)) {
+        _rerender_character(col, row);
+        if (row == ROW_WITH_ADJACENTS) {
+            if ((col == 3) || (col == 4) || (col == 8)) {
+                _rerender_character(col+1, row);
+            }
+            if ((col == 4) || (col == 5) || (col == 9)) {
+                _rerender_character(col-1, row);
+            }
+            if (col == 3) {
+                _rerender_character(col+2, row);
+            }
+            if (col == 5) {
+                _rerender_character(col-2, row);
+            }
+        }
+    }
+}
+
 static inline void _switch_keyboard(GLModel *parent, char *template) {
     GLModelHUDKeyboard *hudKeyboard = (GLModelHUDKeyboard *)parent->custom;
     memcpy(hudKeyboard->tpl, template, sizeof(kbdTemplateUCase/* assuming all the same size */));
-
-    // setup the alternate color (AKA selected) pixels
-    hudKeyboard->colorScheme = GREEN_ON_BLACK;
-    glhud_setupDefault(parent);
-    memcpy(hudKeyboard->pixelsAlt, hudKeyboard->pixels, (hudKeyboard->pixWidth * hudKeyboard->pixHeight));
 
     // setup normal color pixels
     hudKeyboard->colorScheme = RED_ON_BLACK;
@@ -180,7 +195,7 @@ static inline void _switch_keyboard(GLModel *parent, char *template) {
             for (unsigned int col=0; col<KBD_TEMPLATE_COLS; col++, i++) {
                 uint8_t ch = template[i];
                 if (ch == ICONTEXT_CTRL) {
-                    _rerender_character(col, row, hudKeyboard->pixelsAlt);
+                    _rerender_character(col, row);
                 }
             }
             ++i;
@@ -219,24 +234,6 @@ static inline float _get_keyboard_visibility(void) {
     return alpha;
 }
 
-static inline void _rerender_adjacents(int col, int row, uint8_t *fb) {
-    if (row != ROW_WITH_ADJACENTS) {
-        return;
-    }
-    if ((col == 0) || (col == 3) || (col == 4) || (col == 8)) {
-        _rerender_character(col+1, row, fb);
-    }
-    if ((col == 1) || (col == 4) || (col == 5) || (col == 9)) {
-        _rerender_character(col-1, row, fb);
-    }
-    if (col == 3) {
-        _rerender_character(col+2, row, fb);
-    }
-    if (col == 5) {
-        _rerender_character(col-2, row, fb);
-    }
-}
-
 static inline bool _is_point_on_keyboard(float x, float y) {
     return (x >= touchport.kbdX && x <= touchport.kbdXMax && y >= touchport.kbdY && y <= touchport.kbdYMax);
 }
@@ -260,34 +257,15 @@ static inline void _screen_to_keyboard(float x, float y, OUTPARM int *col, OUTPA
     TOUCH_KBD_LOG("SCREEN TO KEYBOARD : kbdX:%d kbdXMax:%d kbdW:%d keyW:%d ... scrn:(%f,%f)->kybd:(%d,%d)", touchport.kbdX, touchport.kbdXMax, touchport.kbdW, keyW, x, y, *col, *row);
 }
 
-static inline void _redraw_unselected(int col, int row) {
-    GLModelHUDKeyboard *hudKeyboard = (GLModelHUDKeyboard *)kbd.model->custom;
-    if ((col >= 0) && (row >= 0)) {
-        _rerender_character(col, row, hudKeyboard->pixels);
-        if (row == ROW_WITH_ADJACENTS) {
-            _rerender_adjacents(col, row, hudKeyboard->pixels);
-        }
-    }
-}
-
-static inline void _redraw_selected(int col, int row) {
-    GLModelHUDKeyboard *hudKeyboard = (GLModelHUDKeyboard *)kbd.model->custom;
-    if ((col >= 0) && (row >= 0)) {
-        _rerender_character(col, row, hudKeyboard->pixelsAlt);
-        if (row == ROW_WITH_ADJACENTS) {
-            _rerender_adjacents(col, row, hudKeyboard->pixelsAlt);
-        }
-    }
-}
-
 static inline int64_t _tap_key_at_point(float x, float y) {
     GLModelHUDKeyboard *hudKeyboard = (GLModelHUDKeyboard *)kbd.model->custom;
+
+    // redraw previous selected key (if any)
+    _rerender_selected(kbd.selectedCol, kbd.selectedRow);
 
     if (!_is_point_on_keyboard(x, y)) {
         joy_button0 = 0x0;
         joy_button1 = 0x0;
-        // CTRL key is "sticky"
-        _redraw_unselected(kbd.selectedCol, kbd.selectedRow);
         kbd.selectedCol = -1;
         kbd.selectedRow = -1;
         return false;
@@ -337,7 +315,7 @@ static inline int64_t _tap_key_at_point(float x, float y) {
         case ICONTEXT_CTRL:
             isCTRL = true;
             kbd.ctrlPressed = !kbd.ctrlPressed;
-            _rerender_character(kbd.ctrlCol, kbd.ctrlRow, kbd.ctrlPressed ? hudKeyboard->pixelsAlt : hudKeyboard->pixels);
+            _rerender_character(kbd.ctrlCol, kbd.ctrlRow);
             col = -1;
             row = -1;
             scancode = SCODE_L_CTRL;
@@ -424,14 +402,10 @@ static inline int64_t _tap_key_at_point(float x, float y) {
         c_keys_handle_input(scancode, /*pressed:*/false, /*ASCII:*/false);
     }
 
-    // redraw previous selected key
-    _redraw_unselected(kbd.selectedCol, kbd.selectedRow);
-
+    // draw current selected key (if any)
     kbd.selectedCol = col;
     kbd.selectedRow = row;
-
-    // draw current selected key
-    _redraw_selected(kbd.selectedCol, kbd.selectedRow);
+    _rerender_selected(kbd.selectedCol, kbd.selectedRow);
 
     // return the key+scancode+handled
     int64_t flags = (handled ? 0x1LL : 0x0LL);
@@ -463,7 +437,6 @@ static void _setup_touchkbd_hud(GLModel *parent) {
     const unsigned int size = sizeof(kbdTemplateUCase/* assuming all the same */);
     hudKeyboard->tpl = calloc(size, 1);
     hudKeyboard->pixels = calloc(KBD_FB_WIDTH * KBD_FB_HEIGHT, 1);
-    hudKeyboard->pixelsAlt = calloc(KBD_FB_WIDTH * KBD_FB_HEIGHT, 1);
 
     _switch_keyboard(parent, kbdTemplateUCase[0]);
 }
@@ -482,7 +455,6 @@ static void _destroy_touchkbd_hud(GLModel *parent) {
     if (!hudKeyboard) {
         return;
     }
-    FREE(hudKeyboard->pixelsAlt);
     glhud_destroyDefault(parent);
 }
 
@@ -649,6 +621,10 @@ static void gltouchkbd_setTouchKeyboardOwnsScreen(bool pwnd) {
     } else {
         // reset visuals
         minAlpha = 0.0;
+
+        kbd.selectedCol = -1;
+        kbd.selectedRow = -1;
+
         if (kbd.model) {
             GLModelHUDKeyboard *hudKeyboard = (GLModelHUDKeyboard *)kbd.model->custom;
             hudKeyboard->colorScheme = RED_ON_BLACK;
