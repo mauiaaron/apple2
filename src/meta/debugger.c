@@ -1144,7 +1144,7 @@ static int begin_cpu_stepping() {
     bool saved_fullspeed = is_fullspeed;
     cpu_scale_factor = CPU_SCALE_FASTEST;
     cpu_altscale_factor = CPU_SCALE_FASTEST;
-    is_fullspeed = true;
+    timing_initialize();
 
     unsigned int idx = 0;
     size_t textlen = 0;
@@ -1198,7 +1198,7 @@ static int begin_cpu_stepping() {
 
     cpu_scale_factor = saved_scale;
     cpu_altscale_factor = saved_altscale;
-    is_fullspeed = saved_fullspeed;
+    timing_initialize();
 
     return ch;
 }
@@ -1336,8 +1336,11 @@ void display_help() {
     num_buffer_lines = i;
 }
 
-void c_debugger_init() {
-    /* reset the watchpoints and breakpoints */
+__attribute__((constructor(CTOR_PRIORITY_LATE)))
+static void _init_debugger(void) {
+
+    LOG("Initializing virtual machine debugger subsystem");
+
     for (unsigned int i=0; i<MAX_BRKPTS; i++)
     {
         breakpoints[i] = -1;
