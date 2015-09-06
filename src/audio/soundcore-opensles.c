@@ -197,7 +197,7 @@ static long _SLMaybeSubmitAndStart(SLVoice *voice) {
     EngineContext_s *ctx = (EngineContext_s *)voice->ctx;
     SLresult result = (*(ctx->bqPlayerPlay))->GetPlayState(ctx->bqPlayerPlay, &state);
     if (result != SL_RESULT_SUCCESS) {
-        ERRLOG("OOPS, could not get source state : %lu", result);
+        ERRLOG("OOPS, could not get source state : %lu", (unsigned long)result);
     } else {
         if ((state != SL_PLAYSTATE_PLAYING) && (state != SL_PLAYSTATE_PAUSED)) {
             LOG("FORCING restart audio buffer queue playback ...");
@@ -338,7 +338,7 @@ static long SLGetStatus(AudioBuffer_s *_this, OUTPARM unsigned long *status) {
         SLuint32 state = 0;
         result = (*(ctx->bqPlayerPlay))->GetPlayState(ctx->bqPlayerPlay, &state);
         if (result != SL_RESULT_SUCCESS) {
-            ERRLOG("OOPS, could not get source state : %lu", result);
+            ERRLOG("OOPS, could not get source state : %lu", (unsigned long)result);
             break;
         }
 
@@ -544,11 +544,11 @@ static long opensles_systemSetup(INOUT AudioContext_s **audio_context) {
 
     if (android_stereoBufferSubmitSizeSamples<<2 > opensles_audio_backend.systemSettings.stereoBufferSizeSamples) {
         opensles_audio_backend.systemSettings.stereoBufferSizeSamples = android_stereoBufferSubmitSizeSamples<<2;
-        LOG("Changing stereo buffer size to be %lu samples", opensles_audio_backend.systemSettings.stereoBufferSizeSamples);
+        LOG("Changing stereo buffer size to be %lu samples", (unsigned long)opensles_audio_backend.systemSettings.stereoBufferSizeSamples);
     }
     if (android_monoBufferSubmitSizeSamples<<2 > opensles_audio_backend.systemSettings.monoBufferSizeSamples) {
         opensles_audio_backend.systemSettings.monoBufferSizeSamples = android_monoBufferSubmitSizeSamples<<2;
-        LOG("Changing mono buffer size to be %lu samples", opensles_audio_backend.systemSettings.monoBufferSizeSamples);
+        LOG("Changing mono buffer size to be %lu samples", (unsigned long)opensles_audio_backend.systemSettings.monoBufferSizeSamples);
     }
 #warning TODO FIXME ^^^^^ need a dynamic bufferSize calculation/calibration routine to determine optimal buffer size for device ... may also need a user-initiated calibration too
 
@@ -572,21 +572,21 @@ static long opensles_systemSetup(INOUT AudioContext_s **audio_context) {
         // create basic engine
         result = slCreateEngine(&(ctx->engineObject), 0, NULL, /*engineMixIIDCount:*/0, /*engineMixIIDs:*/NULL, /*engineMixReqs:*/NULL);
         if (result != SL_RESULT_SUCCESS) {
-            ERRLOG("Could not create OpenSLES Engine : %lu", result);
+            ERRLOG("Could not create OpenSLES Engine : %lu", (unsigned long)result);
             break;
         }
 
         // realize the engine
         result = (*(ctx->engineObject))->Realize(ctx->engineObject, /*asynchronous_realization:*/SL_BOOLEAN_FALSE);
         if (result != SL_RESULT_SUCCESS) {
-            ERRLOG("Could not realize the OpenSLES Engine : %lu", result);
+            ERRLOG("Could not realize the OpenSLES Engine : %lu", (unsigned long)result);
             break;
         }
 
         // get the actual engine interface
         result = (*(ctx->engineObject))->GetInterface(ctx->engineObject, SL_IID_ENGINE, &(ctx->engineEngine));
         if (result != SL_RESULT_SUCCESS) {
-            ERRLOG("Could not get the OpenSLES Engine : %lu", result);
+            ERRLOG("Could not get the OpenSLES Engine : %lu", (unsigned long)result);
             break;
         }
 
@@ -596,14 +596,14 @@ static long opensles_systemSetup(INOUT AudioContext_s **audio_context) {
 
         result = (*(ctx->engineEngine))->CreateOutputMix(ctx->engineEngine, &(ctx->outputMixObject), 0, NULL, NULL);
         if (result != SL_RESULT_SUCCESS) {
-            ERRLOG("Could not create output mix : %lu", result);
+            ERRLOG("Could not create output mix : %lu", (unsigned long)result);
             break;
         }
 
         // realize the output mix
         result = (*(ctx->outputMixObject))->Realize(ctx->outputMixObject, SL_BOOLEAN_FALSE);
         if (result != SL_RESULT_SUCCESS) {
-            ERRLOG("Could not realize the output mix : %lu", result);
+            ERRLOG("Could not realize the output mix : %lu", (unsigned long)result);
             break;
         }
 
@@ -665,35 +665,35 @@ static long opensles_systemSetup(INOUT AudioContext_s **audio_context) {
 
         result = (*(ctx->engineEngine))->CreateAudioPlayer(ctx->engineEngine, &(ctx->bqPlayerObject), &audioSrc, &audioSnk, _NUM_INTERFACES, ids, req);
         if (result != SL_RESULT_SUCCESS) {
-            ERRLOG("OOPS, could not create the BufferQueue player object : %lu", result);
+            ERRLOG("OOPS, could not create the BufferQueue player object : %lu", (unsigned long)result);
             break;
         }
 
         // realize the player
         result = (*(ctx->bqPlayerObject))->Realize(ctx->bqPlayerObject, /*asynchronous_realization:*/SL_BOOLEAN_FALSE);
         if (result != SL_RESULT_SUCCESS) {
-            ERRLOG("OOPS, could not realize the BufferQueue player object : %lu", result);
+            ERRLOG("OOPS, could not realize the BufferQueue player object : %lu", (unsigned long)result);
             break;
         }
 
         // get the play interface
         result = (*(ctx->bqPlayerObject))->GetInterface(ctx->bqPlayerObject, SL_IID_PLAY, &(ctx->bqPlayerPlay));
         if (result != SL_RESULT_SUCCESS) {
-            ERRLOG("OOPS, could not get the play interface : %lu", result);
+            ERRLOG("OOPS, could not get the play interface : %lu", (unsigned long)result);
             break;
         }
 
         // get the buffer queue interface
         result = (*(ctx->bqPlayerObject))->GetInterface(ctx->bqPlayerObject, SL_IID_BUFFERQUEUE, &(ctx->bqPlayerBufferQueue));
         if (result != SL_RESULT_SUCCESS) {
-            ERRLOG("OOPS, could not get the BufferQueue play interface : %lu", result);
+            ERRLOG("OOPS, could not get the BufferQueue play interface : %lu", (unsigned long)result);
             break;
         }
 
         // register callback on the buffer queue
         result = (*(ctx->bqPlayerBufferQueue))->RegisterCallback(ctx->bqPlayerBufferQueue, bqPlayerCallback, ctx);
         if (result != SL_RESULT_SUCCESS) {
-            ERRLOG("OOPS, could not register BufferQueue callback : %lu", result);
+            ERRLOG("OOPS, could not register BufferQueue callback : %lu", (unsigned long)result);
             break;
         }
 
@@ -737,7 +737,7 @@ static long opensles_systemResume(AudioContext_s *audio_context) {
 
     do {
         if (result != SL_RESULT_SUCCESS) {
-            ERRLOG("OOPS, could not get source state when attempting to resume : %lu", result);
+            ERRLOG("OOPS, could not get source state when attempting to resume : %lu", (unsigned long)result);
             break;
         }
 
