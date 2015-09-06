@@ -27,6 +27,8 @@
 PROGDIR=`dirname $0`
 PROGDIR=`cd $PROGDIR && pwd -P`
 
+set -x
+
 # Check if absolute NDK path contain space
 #
 case $PROGDIR in
@@ -572,9 +574,9 @@ log "Device CPU ABIs: $CPU_ABIS"
 APP_ABIS=$APP_ABIS" "
 
 adb_var_shell BCFILES run-as $PACKAGE_NAME /system/bin/sh -c "ls lib/*.bc"
-if [ $? = 0 ]; then
-    COMPAT_ABI="$UNKNOWN_ABI"
-else
+####if [ $? = 0 ]; then
+####    COMPAT_ABI="$UNKNOWN_ABI"
+####else
     # Assume that compatible ABI is 32-bit
     COMPAT_ABI_BITS=32
     # First look compatible ABI in the list of 64-bit ABIs
@@ -605,7 +607,7 @@ else
             fi
         done
     fi
-fi
+####fi
 
 if [ "$COMPAT_ABI" = none ] ; then
     echo "ERROR: The device does not support the application's targetted CPU ABIs!"
@@ -632,27 +634,27 @@ APP_OUT=`get_build_var_for_abi TARGET_OUT $COMPAT_ABI`
 log "Using app out directory: $APP_OUT"
 
 # Check that the application is debuggable, or nothing will work
-DEBUGGABLE=`run_awk_manifest_script extract-debuggable.awk`
-RET=$?
-log "Found debuggable flag: $DEBUGGABLE"
-if [ "$RET" != 0 -o "$DEBUGGABLE" != "true" ] ; then
-    # If gdb.setup exists, then we built with 'ndk-build NDK_DEBUG=1' and it's
-    # ok to not have android:debuggable set to true in the original manifest.
-    # However, if this is not the case, then complain!!
-    if [ -f $PROJECT/libs/$COMPAT_ABI/gdb.setup ] ; then
-        log "Found gdb.setup under libs/$COMPAT_ABI, assuming app was built with NDK_DEBUG=1"
-    else
-        echo "ERROR: Package $PACKAGE_NAME is not debuggable ! You can fix that in two ways:"
-        echo ""
-        echo "  - Rebuilt with the NDK_DEBUG=1 option when calling 'ndk-build'."
-        echo ""
-        echo "  - Modify your manifest to set android:debuggable attribute to \"true\","
-        echo "    then rebuild normally."
-        echo ""
-        echo "After one of these, re-install to the device!"
-        exit 1
-    fi
-else
+####DEBUGGABLE=`run_awk_manifest_script extract-debuggable.awk`
+####RET=$?
+####log "Found debuggable flag: $DEBUGGABLE"
+####if [ "$RET" != 0 -o "$DEBUGGABLE" != "true" ] ; then
+####    # If gdb.setup exists, then we built with 'ndk-build NDK_DEBUG=1' and it's
+####    # ok to not have android:debuggable set to true in the original manifest.
+####    # However, if this is not the case, then complain!!
+####    if [ -f $PROJECT/libs/$COMPAT_ABI/gdb.setup ] ; then
+####        log "Found gdb.setup under libs/$COMPAT_ABI, assuming app was built with NDK_DEBUG=1"
+####    else
+####        echo "ERROR: Package $PACKAGE_NAME is not debuggable ! You can fix that in two ways:"
+####        echo ""
+####        echo "  - Rebuilt with the NDK_DEBUG=1 option when calling 'ndk-build'."
+####        echo ""
+####        echo "  - Modify your manifest to set android:debuggable attribute to \"true\","
+####        echo "    then rebuild normally."
+####        echo ""
+####        echo "After one of these, re-install to the device!"
+####        exit 1
+####    fi
+####else
     # DEBUGGABLE is true in the manifest. Let's check that the user didn't change the
     # debuggable flag in the manifest without calling ndk-build afterwards.
     if [ ! -f $PROJECT/libs/$COMPAT_ABI/gdb.setup ] ; then
@@ -663,7 +665,7 @@ else
         echo "       *then* re-install to the device!"
         exit 1
     fi
-fi
+####fi
 
 # Find the <dataDir> of the package on the device
 adb_var_shell2 DATA_DIR run-as $PACKAGE_NAME /system/bin/sh -c pwd
@@ -853,3 +855,5 @@ if [ -n "$OPTION_EXEC" ] ; then
     cat $OPTION_EXEC >> $GDBSETUP
 fi
 $GDBCLIENT -x `native_path $GDBSETUP`
+
+set +x
