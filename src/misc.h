@@ -100,14 +100,12 @@ extern uint32_t softswitches;
 
 extern bool emulator_shutting_down;
 
-void c_initialize_firsttime();
 void c_initialize_sound_hooks();
 void c_disable_sound_hooks();
 void c_set_primary_char();
 void c_set_altchar();
 void c_initialize_font();
 void c_initialize_vm();
-void reinitialize();
 
 /* vm hooks */
 

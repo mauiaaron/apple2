@@ -70,6 +70,11 @@ extern READONLY pthread_t cpu_thread_id;
 struct timespec timespec_diff(struct timespec start, struct timespec end, bool *negative);
 
 /*
+ * Start CPU thread
+ */
+void timing_startCPU(void);
+
+/*
  * toggles CPU speed between configured values
  */
 void timing_toggleCPUSpeed(void);
@@ -90,11 +95,6 @@ void timing_initialize(void);
  * force audio reinitialization
  */
 void timing_reinitializeAudio(void);
-
-/*
- * timing/CPU thread entry point
- */
-void *cpu_thread(void *ignored);
 
 /*
  * Pause timing/CPU thread.

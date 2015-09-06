@@ -1068,13 +1068,11 @@ void video_init(void) {
     memset(video__fb2,0,SCANWIDTH*SCANHEIGHT);
 
 #if !HEADLESS
-#if !defined(__APPLE__)
-#if !defined(ANDROID)
+#   if !defined(__APPLE__) && !defined(ANDROID)
     if (!is_headless) {
         video_backend->init((void*)0);
     }
-#endif
-#endif
+#   endif
 #endif
 }
 

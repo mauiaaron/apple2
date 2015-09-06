@@ -186,8 +186,7 @@ static CVReturn displayLinkCallback(CVDisplayLinkRef displayLink, const CVTimeSt
     // to [self openGLContext])
     [[self openGLContext] makeCurrentContext];
     
-    c_initialize_firsttime();
-    pthread_create(&cpu_thread_id, NULL, (void *)&cpu_thread, (void *)NULL);
+    timing_startCPU();
     
     // Synchronize buffer swaps with vertical refresh rate
     GLint swapInt = 1;

@@ -566,43 +566,6 @@ void c_initialize_vm() {
     c_joystick_reset();                 /* reset joystick */
 }
 
-/* -------------------------------------------------------------------------
-    void c_initialize_firsttime()
-   ------------------------------------------------------------------------- */
-
-void reinitialize(void) {
-#if !TESTING
-    assert(pthread_self() == cpu_thread_id);
-#endif
-
-    cycles_count_total = 0;
-
-    c_initialize_vm();
-
-    softswitches = SS_TEXT | SS_IOUDIS | SS_C3ROM | SS_LCWRT | SS_LCSEC;
-
-    video_setpage( 0 );
-
-    video_redraw();
-
-    cpu65_init();
-
-    timing_initialize();
-
-#ifdef AUDIO_ENABLED
-    MB_Reset();
-#endif 
-}
-
-void c_initialize_firsttime(void) {
-
-    video_init();
-
-#ifdef DEBUGGER
-    c_debugger_init();
-#endif
-}
-
 #if !TESTING && !defined(__APPLE__) && !defined(ANDROID)
 extern void *cpu_thread(void *dummyptr);
 
@@ -652,11 +615,8 @@ int main(int _argc, char **_argv) {
 #ifdef INTERFACE_CLASSIC
     c_keys_set_key(kF8); // show credits before emulation start
 #endif
-    c_initialize_firsttime(); // one-time initializations
 
-    // spin off cpu thread
-    pthread_create(&cpu_thread_id, NULL, (void *)&cpu_thread, (void *)NULL);
-
+    timing_startCPU();
     video_main_loop();
 
     assert(emulator_shutting_down && "emulator is properly shutting down");

@@ -1,5 +1,5 @@
 /*
- * Apple // emulator for *nix 
+ * Apple // emulator for *nix
  *
  * This software package is subject to the GNU General Public License
  * version 2 or later (your choice) as published by the Free Software
@@ -16,7 +16,7 @@
  *
  * ..{...+....[....|..................|.........]....^....|....^....^....}......
  *  ti  MBB       CHK                CHK            MBE  CHX  SPK  MBX  tj   ZZZ
- *         
+ *
  *      - ti  : timing sample begin (lock out interface thread)
  *      - tj  : timing sample end   (unlock interface thread)
  *      -  [  : cpu65_run()
@@ -160,6 +160,33 @@ static void _timing_initialize(double scale) {
 #endif
 }
 
+#if !TESTING
+static
+#endif
+void reinitialize(void) {
+#if !TESTING
+    assert(pthread_self() == cpu_thread_id);
+#endif
+
+    cycles_count_total = 0;
+
+    c_initialize_vm();
+
+    softswitches = SS_TEXT | SS_IOUDIS | SS_C3ROM | SS_LCWRT | SS_LCSEC;
+
+    video_setpage( 0 );
+
+    video_redraw();
+
+    cpu65_init();
+
+    timing_initialize();
+
+#ifdef AUDIO_ENABLED
+    MB_Reset();
+#endif
+}
+
 void timing_initialize(void) {
     assert(cpu_isPaused() || (pthread_self() == cpu_thread_id));
     _timing_initialize(alt_speed_enabled ? cpu_altscale_factor : cpu_scale_factor);
@@ -234,7 +261,7 @@ bool timing_shouldAutoAdjustSpeed(void) {
 }
 #endif
 
-void *cpu_thread(void *dummyptr) {
+static void *cpu_thread(void *dummyptr) {
 
     assert(pthread_self() == cpu_thread_id);
 
@@ -523,6 +550,11 @@ void *cpu_thread(void *dummyptr) {
 #endif
 
     return NULL;
+}
+
+void timing_startCPU(void) {
+    video_init();
+    pthread_create(&cpu_thread_id, NULL, (void *)&cpu_thread, (void *)NULL);
 }
 
 unsigned int CpuGetCyclesThisVideoFrame(void) {

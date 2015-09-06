@@ -130,8 +130,7 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnCreate(JNIEnv *env, jobje
 #if TESTING
     _run_tests();
 #else
-    c_initialize_firsttime();
-    pthread_create(&cpu_thread_id, NULL, (void *) &cpu_thread, (void *)NULL);
+    timing_startCPU();
 #endif
 }
 
