@@ -81,7 +81,9 @@ bool alt_speed_enabled = false;
 
 // misc
 volatile uint8_t emul_reinitialize = 1;
-bool emul_reinitialize_audio = 1UL;
+#ifdef AUDIO_ENABLED
+bool emul_reinitialize_audio = true;
+#endif
 #if MOBILE_DEVICE
 static bool emul_reinitialize_background = true;
 #endif
@@ -198,10 +200,12 @@ void timing_toggleCPUSpeed(void) {
     timing_initialize();
 }
 
+#ifdef AUDIO_ENABLED
 void timing_reinitializeAudio(void) {
     assert(cpu_isPaused() || (pthread_self() == cpu_thread_id));
     emul_reinitialize_audio = true;
 }
+#endif
 
 void cpu_pause(void) {
 
@@ -523,9 +527,11 @@ static void *cpu_thread(void *dummyptr) {
                 break;
             }
 
+#ifdef AUDIO_ENABLED
             if (UNLIKELY(emul_reinitialize_audio)) {
                 break;
             }
+#endif
 
 #if MOBILE_DEVICE
             if (UNLIKELY(emul_reinitialize_background)) {

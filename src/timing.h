@@ -91,10 +91,12 @@ bool timing_shouldAutoAdjustSpeed(void);
  */
 void timing_initialize(void);
 
+#ifdef AUDIO_ENABLED
 /*
  * force audio reinitialization
  */
 void timing_reinitializeAudio(void);
+#endif
 
 /*
  * Pause timing/CPU thread.
