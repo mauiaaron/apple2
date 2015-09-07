@@ -98,9 +98,6 @@ __attribute__((constructor(CTOR_PRIORITY_LATE)))
 static void _init_timing(void) {
     pthread_mutexattr_t attr;
     pthread_mutexattr_init(&attr);
-#if !TESTING
-    pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
-#endif
     pthread_mutex_init(&interface_mutex, &attr);
 }
 
