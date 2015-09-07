@@ -421,7 +421,7 @@ static long opensl_createSoundBuffer(const AudioContext_s *audio_context, INOUT 
             voice = ctx->recycledVoices;
             ctx->recycledVoices = voice->next;
             uint8_t *prevBuffer = voice->ringBuffer;
-            memset(voice, 0x0, sizeof(SLVoice *));
+            memset(voice, 0x0, sizeof(*voice));
             voice->bufferSize = bufferSize;
             voice->ringBuffer = prevBuffer;
         } else {
