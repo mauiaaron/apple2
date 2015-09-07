@@ -23,6 +23,12 @@
 #   include "test/sha1.h"
 #endif
 
+#ifdef ANDROID
+#   define HOMEDIR data_dir
+#else
+#   define HOMEDIR getenv("HOME")
+#endif
+
 #define TEST_FINISHED 0xff
 #define MIXSWITCH_ADDR 0x1f32   // PEEK(7986) -- NOTE : value is hardcoded in various places
 #define WATCHPOINT_ADDR 0x1f33  // PEEK(7987) -- NOTE : value is hardcoded in various places

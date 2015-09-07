@@ -92,8 +92,8 @@ LOG_DRIVER = testcpu  ## hack TODO/FIXME ... should be wrapper shell script acce
 A2_TEST_SOURCES = $(apple2ix_SOURCES) src/test/testcommon.c
 A2_TEST_CFLAGS = -DTESTING=1 -DCPU_TRACING=1 -DDISK_TRACING=1 -DVM_TRACING=1 -Isrc/test
 
-TESTS          = testcpu testdisplay testvm testdisk
-check_PROGRAMS = testcpu testdisplay testvm testdisk
+TESTS          = testcpu testdisplay testvm testdisk testtrace
+check_PROGRAMS = testcpu testdisplay testvm testdisk testtrace
 
 testcpu_SOURCES = src/test/testcpu.c $(A2_TEST_SOURCES) $(META_SRC)
 testcpu_CFLAGS = $(apple2ix_CFLAGS) $(A2_TEST_CFLAGS) -UAUDIO_ENABLED -UINTERFACE_CLASSIC
@@ -132,6 +132,16 @@ testdisk_LDADD = @TESTDISK_ASM_O@ @VIDEO_O@
 testdisk_DEPENDENCIES = @TESTDISK_ASM_O@ @META_O@ @VIDEO_O@
 
 EXTRA_testdisk_SOURCES = $(ASM_SRC_x86) $(VIDEO_SRC)
+
+testtrace_SOURCES = src/test/testtrace.c $(A2_TEST_SOURCES) $(META_SRC)
+testtrace_CFLAGS = $(apple2ix_CFLAGS) $(A2_TEST_CFLAGS) -UAUDIO_ENABLED -UINTERFACE_CLASSIC
+testtrace_CCASFLAGS = $(testtrace_CFLAGS)
+testtrace_LDFLAGS = $(apple2ix_LDFLAGS)
+# HACK FIXME TODO NOTE: specify testtrace_ASM_O to force it to rebuild with proper CCASFLAGS ... automake bug?
+testtrace_LDADD = @TESTTRACE_ASM_O@ @VIDEO_O@
+testtrace_DEPENDENCIES = @TESTTRACE_ASM_O@ @META_O@ @VIDEO_O@
+
+EXTRA_testtrace_SOURCES = $(ASM_SRC_x86) $(VIDEO_SRC)
 
 ###############################################################################
 # Misc & Installation
