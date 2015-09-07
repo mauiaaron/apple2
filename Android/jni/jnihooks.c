@@ -196,10 +196,6 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeRender(JNIEnv *env, jobject
         return;
     }
 
-    if (!cpu_isPaused()) {
-        c_keys_handle_input(-1, 0, 0);
-    }
-
 #if FPS_LOG
     static uint32_t prevCount = 0;
     static uint32_t idleCount = 0;
