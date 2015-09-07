@@ -231,7 +231,9 @@ static void _submit_samples_buffer_fullspeed(void) {
     if (speakerBuffer->Lock(speakerBuffer, num_samples_pad*sizeof(int16_t), &system_samples_buffer, &system_buffer_size)) {
         return;
     }
-    assert(num_samples_pad <= system_buffer_size);
+    if (num_samples_pad > system_buffer_size/sizeof(int16_t)) {
+        num_samples_pad = system_buffer_size/sizeof(int16_t);
+    }
 
     //SPEAKER_LOG("bytes_queued:%d enqueueing %d quiet samples", bytes_queued, num_samples_pad);
     for (unsigned int i=0; i<num_samples_pad; i++) {
