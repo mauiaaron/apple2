@@ -213,7 +213,6 @@ AS_IF([test "x$opengl_supported" = "xyes"], [
 ])
 
 AC_SUBST(VIDEO_O)
-AC_DEFINE(HEADLESS, 0, [Set to 1 to disable video output driver])
 
 dnl ---------------------------------------------------------------------------
 dnl Sound ...

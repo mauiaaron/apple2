@@ -1475,7 +1475,6 @@
 					"DEBUGGER=1",
 					"KEYPAD_JOYSTICK=1",
 					"TEST_DISK=1",
-					"HEADLESS=1",
 					"TESTING=1",
 					"CPU_TRACING=1",
 					"DISK_TRACING=1",
@@ -1507,7 +1506,6 @@
 					"DEBUGGER=1",
 					"KEYPAD_JOYSTICK=1",
 					"TEST_VM=1",
-					"HEADLESS=1",
 					"TESTING=1",
 					"CPU_TRACING=1",
 				);
@@ -1536,7 +1534,6 @@
 					"DEBUGGER=1",
 					"KEYPAD_JOYSTICK=1",
 					"TEST_VM=1",
-					"HEADLESS=1",
 					"TESTING=1",
 					"CPU_TRACING=1",
 					"DISK_TRACING=1",
@@ -1568,7 +1565,6 @@
 					"DEBUGGER=1",
 					"KEYPAD_JOYSTICK=1",
 					"TEST_VM=1",
-					"HEADLESS=1",
 					"TESTING=1",
 					"CPU_TRACING=1",
 				);
@@ -1777,7 +1773,6 @@
 					"DEBUGGER=1",
 					"KEYPAD_JOYSTICK=1",
 					"TEST_DISPLAY=1",
-					"HEADLESS=1",
 					"TESTING=1",
 					"CPU_TRACING=1",
 					"DISK_TRACING=1",
@@ -1809,7 +1804,6 @@
 					"DEBUGGER=1",
 					"KEYPAD_JOYSTICK=1",
 					"TEST_DISPLAY=1",
-					"HEADLESS=1",
 					"TESTING=1",
 					"CPU_TRACING=1",
 				);

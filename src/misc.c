@@ -27,7 +27,6 @@ bool do_logging = true; // also controlled by NDEBUG
 FILE *error_log = NULL;
 
 int sound_volume = 2;
-bool is_headless = false;
 color_mode_t color_mode = COLOR;
 const char *data_dir = NULL;
 

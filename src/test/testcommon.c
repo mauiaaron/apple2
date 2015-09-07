@@ -92,17 +92,12 @@ void test_type_input(const char *input) {
 // ----------------------------------------------------------------------------
 
 void test_breakpoint(void *arg) {
-    fprintf(GREATEST_STDOUT, "set breakpoint on test_breakpoint to check for problems...\n");
-#if !HEADLESS
-    if (!is_headless) {
-        fprintf(GREATEST_STDOUT, "DISPLAY NOTE: busy-spinning, needs gdb/lldb intervention to continue...\n");
-        volatile bool debug_continue = false;
-        while (!debug_continue) {
-            struct timespec ts = { .tv_sec=0, .tv_nsec=33333333 };
-            nanosleep(&ts, NULL);
-        }
+    fprintf(GREATEST_STDOUT, "DISPLAY NOTE: busy-spinning in test_breakpoint(), needs gdb/lldb intervention to continue...\n");
+    volatile bool debug_continue = false;
+    while (!debug_continue) {
+        struct timespec ts = { .tv_sec=0, .tv_nsec=33333333 };
+        nanosleep(&ts, NULL);
     }
-#endif
 }
 
 // ----------------------------------------------------------------------------

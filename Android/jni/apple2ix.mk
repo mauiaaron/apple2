@@ -13,7 +13,7 @@ include $(COMMON_SOURCES_MK)
 LOCAL_MODULE    := libapple2ix
 LOCAL_SRC_FILES := jniprefs.c androidkeys.c
 #LOCAL_ARM_MODE  := arm
-LOCAL_CFLAGS    := $(APPLE2_BASE_CFLAGS) -DHEADLESS=0
+LOCAL_CFLAGS    := $(APPLE2_BASE_CFLAGS)
 LOCAL_LDLIBS    := -llog -landroid -lGLESv2 -lz -lOpenSLES
 
 # Add assembly files first ... mostly for the benefit of the ARM assembler ...

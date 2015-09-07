@@ -437,9 +437,6 @@ static void c_flash_cursor(int on) {
 }
 
 void video_driver_sync(void) {
-    if (is_headless) {
-        return;
-    }
 
     static int flash_count = 0;
     // post the image and loop waiting for it to finish and

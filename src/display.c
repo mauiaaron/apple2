@@ -1067,27 +1067,17 @@ void video_init(void) {
     memset(video__fb1,0,SCANWIDTH*SCANHEIGHT);
     memset(video__fb2,0,SCANWIDTH*SCANHEIGHT);
 
-#if !HEADLESS
-#   if !defined(__APPLE__) && !defined(ANDROID)
-    if (!is_headless) {
-        video_backend->init((void*)0);
-    }
-#   endif
+#if !defined(__APPLE__) && !defined(ANDROID)
+    video_backend->init((void*)0);
 #endif
 }
 
 void video_shutdown(void) {
-#if !HEADLESS
-    if (!is_headless) {
-        video_backend->shutdown();
-    }
-#endif
+    video_backend->shutdown();
 }
 
 void video_main_loop(void) {
-#if !HEADLESS
     video_backend->main_loop();
-#endif
 }
 
 void video_setpage(int p) {

@@ -240,9 +240,7 @@ extern void gldriver_joystick_reset(void);
 void c_joystick_reset(void)
 {
 #if VIDEO_OPENGL && !TESTING
-    if (!is_headless) {
-        gldriver_joystick_reset();
-    }
+    gldriver_joystick_reset();
 #endif
     joy_button0 = 0x0;
     joy_button1 = 0x0;

@@ -11,6 +11,8 @@
 
 #include "testcommon.h"
 
+static bool test_thread_running = false;
+
 extern pthread_mutex_t interface_mutex; // TODO FIXME : raw access to CPU mutex because stepping debugger ...
 
 static void testdisplay_setup(void *arg) {
@@ -315,15 +317,13 @@ TEST test_80col_hires() {
 // ----------------------------------------------------------------------------
 // Test Suite
 
-static int begin_video = -1;
-
 GREATEST_SUITE(test_suite_display) {
     GREATEST_SET_SETUP_CB(testdisplay_setup, NULL);
     GREATEST_SET_TEARDOWN_CB(testdisplay_teardown, NULL);
     GREATEST_SET_BREAKPOINT_CB(test_breakpoint, NULL);
 
     // TESTS --------------------------
-    begin_video=!is_headless;
+    test_thread_running = true;
 
     RUN_TESTp(test_boot_disk);
 
@@ -464,13 +464,11 @@ void test_display(int argc, char **argv) {
     pthread_t p;
     pthread_create(&p, NULL, (void *)&test_thread, (void *)NULL);
 
-    while (begin_video < 0) {
+    while (!test_thread_running) {
         struct timespec ts = { .tv_sec=0, .tv_nsec=33333333 };
         nanosleep(&ts, NULL);
     }
-    if (begin_video) {
-        video_main_loop();
-    }
+    video_main_loop();
     //pthread_join(p, NULL);
 }
 

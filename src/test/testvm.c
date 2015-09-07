@@ -14,6 +14,8 @@
 #define RESET_INPUT() test_common_setup()
 
 #define TESTING_DISK "testvm1.nib.gz"
+ 
+static bool test_thread_running = false;
 
 #define TYPE_TRIGGER_WATCHPT() \
     test_type_input("POKE7987,255:REM TRIGGER DEBUGGER\r")
@@ -3259,15 +3261,13 @@ TEST test_check_cxrom(bool flag_cxrom) {
 // ----------------------------------------------------------------------------
 // Test Suite
 
-static int begin_video = -1;
-
 GREATEST_SUITE(test_suite_vm) {
     GREATEST_SET_SETUP_CB(testvm_setup, NULL);
     GREATEST_SET_TEARDOWN_CB(testvm_teardown, NULL);
     GREATEST_SET_BREAKPOINT_CB(test_breakpoint, NULL);
 
     // TESTS --------------------------
-    begin_video=!is_headless;
+    test_thread_running=true;
 
     RUN_TESTp(test_read_keyboard);
 
@@ -3477,13 +3477,11 @@ void test_vm(int argc, char **argv) {
     pthread_t p;
     pthread_create(&p, NULL, (void *)&test_thread, (void *)NULL);
 
-    while (begin_video < 0) {
+    while (!test_thread_running) {
         struct timespec ts = { .tv_sec=0, .tv_nsec=33333333 };
         nanosleep(&ts, NULL);
     }
-    if (begin_video) {
-        video_main_loop();
-    }
+    video_main_loop();
     //pthread_join(p, NULL);
 }
 

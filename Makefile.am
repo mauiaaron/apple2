@@ -96,7 +96,7 @@ TESTS          = testcpu testdisplay testvm testdisk
 check_PROGRAMS = testcpu testdisplay testvm testdisk
 
 testcpu_SOURCES = src/test/testcpu.c $(A2_TEST_SOURCES) $(META_SRC)
-testcpu_CFLAGS = $(apple2ix_CFLAGS) $(A2_TEST_CFLAGS) -UAUDIO_ENABLED -UINTERFACE_CLASSIC -DHEADLESS=1
+testcpu_CFLAGS = $(apple2ix_CFLAGS) $(A2_TEST_CFLAGS) -UAUDIO_ENABLED -UINTERFACE_CLASSIC
 testcpu_CCASFLAGS = $(testcpu_CFLAGS)
 testcpu_LDFLAGS = $(apple2ix_LDFLAGS)
 testcpu_LDADD = @ASM_O@ @VIDEO_O@
@@ -105,7 +105,7 @@ testcpu_DEPENDENCIES = @ASM_O@ @META_O@ @VIDEO_O@
 EXTRA_testcpu_SOURCES = $(ASM_SRC_x86)
 
 testdisplay_SOURCES = src/test/testdisplay.c $(A2_TEST_SOURCES) $(META_SRC)
-testdisplay_CFLAGS = $(apple2ix_CFLAGS) $(A2_TEST_CFLAGS) -UAUDIO_ENABLED -UINTERFACE_CLASSIC -DHEADLESS=0
+testdisplay_CFLAGS = $(apple2ix_CFLAGS) $(A2_TEST_CFLAGS) -UAUDIO_ENABLED -UINTERFACE_CLASSIC
 testdisplay_CCASFLAGS = $(testdisplay_CFLAGS)
 testdisplay_LDFLAGS = $(apple2ix_LDFLAGS)
 testdisplay_LDADD = @ASM_O@ @VIDEO_O@
@@ -114,7 +114,7 @@ testdisplay_DEPENDENCIES = @ASM_O@ @META_O@ @VIDEO_O@
 EXTRA_testdisplay_SOURCES = $(ASM_SRC_x86) $(VIDEO_SRC)
 
 testvm_SOURCES = src/test/testvm.c $(A2_TEST_SOURCES) $(META_SRC)
-testvm_CFLAGS = $(apple2ix_CFLAGS) $(A2_TEST_CFLAGS) -UAUDIO_ENABLED -UINTERFACE_CLASSIC -DHEADLESS=0
+testvm_CFLAGS = $(apple2ix_CFLAGS) $(A2_TEST_CFLAGS) -UAUDIO_ENABLED -UINTERFACE_CLASSIC
 testvm_CCASFLAGS = $(testvm_CFLAGS)
 testvm_LDFLAGS = $(apple2ix_LDFLAGS)
 # HACK FIXME TODO NOTE: specify TESTVM_ASM_O to force it to rebuild with proper CCASFLAGS ... automake bug?
@@ -124,7 +124,7 @@ testvm_DEPENDENCIES = @TESTVM_ASM_O@ @META_O@ @VIDEO_O@
 EXTRA_testvm_SOURCES = $(ASM_SRC_x86) $(VIDEO_SRC)
 
 testdisk_SOURCES = src/test/testdisk.c $(A2_TEST_SOURCES) $(META_SRC)
-testdisk_CFLAGS = $(apple2ix_CFLAGS) $(A2_TEST_CFLAGS) -UAUDIO_ENABLED -UINTERFACE_CLASSIC -DHEADLESS=0
+testdisk_CFLAGS = $(apple2ix_CFLAGS) $(A2_TEST_CFLAGS) -UAUDIO_ENABLED -UINTERFACE_CLASSIC
 testdisk_CCASFLAGS = $(testdisk_CFLAGS)
 testdisk_LDFLAGS = $(apple2ix_LDFLAGS)
 # HACK FIXME TODO NOTE: specify testdisk_ASM_O to force it to rebuild with proper CCASFLAGS ... automake bug?
