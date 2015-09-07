@@ -11,10 +11,10 @@ include $(COMMON_SOURCES_MK)
 # Android build config
 
 LOCAL_MODULE    := libapple2ix
-LOCAL_SRC_FILES := jniprefs.c androidkeys.c
+LOCAL_SRC_FILES := 
 #LOCAL_ARM_MODE  := arm
 LOCAL_CFLAGS    := $(APPLE2_BASE_CFLAGS)
-LOCAL_LDLIBS    := -llog -landroid -lGLESv2 -lz -lOpenSLES
+LOCAL_LDLIBS    := $(APPLE2_BASE_LDLIBS)
 
 # Add assembly files first ... mostly for the benefit of the ARM assembler ...
 ifeq ($(TARGET_ARCH_ABI),x86)

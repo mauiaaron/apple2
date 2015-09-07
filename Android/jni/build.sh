@@ -3,24 +3,31 @@
 package_id="org.deadc0de.apple2ix.basic"
 apple2_src_path=apple2ix-src
 glue_srcs="$apple2_src_path/disk.c $apple2_src_path/misc.c $apple2_src_path/display.c $apple2_src_path/vm.c $apple2_src_path/cpu-supp.c $apple2_src_path/audio/speaker.c $apple2_src_path/audio/mockingboard.c"
-do_load=0
+do_load=1
 do_debug=0
+target_arch=armeabi-v7a
 
 usage() {
-    echo "$0 [--load|--debug]"
+    echo "$0 [--no-load] [--debug] [--armeabi | --armeabi-v7a]"
     exit 0
 }
 
 while test "x$1" != "x"; do
     case "$1" in
         "--debug")
-            do_load=1
             do_debug=1
             ;;
 
-        "--load")
-            do_load=1
-            do_debug=0
+        "--no-load")
+            do_load=0
+            ;;
+
+        "--armeabi")
+            target_arch=armeabi
+            ;;
+
+        "--v7a")
+            target_arch=armeabi-v7a
             ;;
 
         "-h")
@@ -40,9 +47,8 @@ done
 
 set -x
 
-/bin/rm Android.mk
-
 if test "$(basename $0)" = "clean" ; then
+
     /bin/rm $apple2_src_path/rom.c
     /bin/rm $apple2_src_path/font.c
     /bin/rm $apple2_src_path/x86/glue.S
@@ -54,16 +60,22 @@ if test "$(basename $0)" = "clean" ; then
     /bin/rm -rf ../gen
     /bin/rm -rf ../obj
 
+    ndk-build clean
+    ##cd ..
+    ##ant clean
+
     exit 0
 fi
+
+/bin/rm Android.mk
 
 if test "$(basename $0)" = "uninstall" ; then
     adb uninstall $package_id
     exit 0
 fi
 
-#CC=`which clang`
-CC=`which gcc`
+CC=`which clang`
+#CC=`which gcc`
 CFLAGS="-std=gnu11"
 
 # ROMz
@@ -90,19 +102,31 @@ else
     ln -s apple2ix.mk Android.mk
 fi
 
-ndk-build V=1 NDK_DEBUG=1 #NDK_TOOLCHAIN_VERSION=clang
-#ndk-build V=1 NDK_DEBUG=1 && \
-#    ant -f ../build.xml debug
+# build native sources
+ndk-build V=1 NDK_DEBUG=1 NDK_TOOLCHAIN_VERSION=clang
+ret=$?
+if test "x$ret" != "x0" ; then
+    exit $ret
+fi
 
-#if test "x$do_load" = "x1" ; then
-#    ant -f ../build.xml debug install
-#fi
-#
-#if test "x$do_debug" = "x1" ; then
-#    ( cd .. && ndk-gdb.py --force --start )
-#elif test "x$do_load" = "x1" ; then
-#    adb shell am start -a android.intent.action.MAIN -n $package_id/.Apple2Activity
-#fi
+if test "x$do_load" = "x1" ; then
+    ant -f ../build.xml debug install
+    ret=$?
+    if test "x$ret" != "x0" ; then
+        exit $ret
+    fi
+fi
+
+if test "x$do_debug" = "x1" ; then
+    cd ..
+    /bin/rm ./libs/gdbserver
+    /bin/ln -s $target_arch/gdbserver libs/gdbserver
+    ##/bin/rm ./libs/gdb.setup
+    ##/bin/ln -s $target_arch/gdb.setup libs/gdb.setup
+    ndk-gdb --verbose --force --launch=org.deadc0de.apple2ix.Apple2Activity
+elif test "x$do_load" = "x1" ; then
+    adb shell am start -a android.intent.action.MAIN -n org.deadc0de.apple2ix.basic/org.deadc0de.apple2ix.Apple2Activity
+fi
 
 set +x
 

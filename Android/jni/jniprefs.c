@@ -22,6 +22,9 @@ typedef enum AndroidTouchJoystickButtonValues {
 
 void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetColor(JNIEnv *env, jclass cls, jint color) {
     LOG("color : %d", color);
+#if TESTING
+    color_mode = COLOR;
+#else
     if (color < COLOR_NONE || color > COLOR_INTERP) {
         return;
     }
@@ -30,6 +33,7 @@ void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetColor(JNIEnv *env, jc
     video_reset();
     video_setpage(!!(softswitches & SS_SCREEN));
     video_redraw();
+#endif
 }
 
 jboolean Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetSpeakerEnabled(JNIEnv *env, jclass cls, jboolean enabled) {
@@ -261,6 +265,11 @@ jint Java_org_deadc0de_apple2ix_Apple2Preferences_nativeGetCPUSpeed(JNIEnv *env,
 
 void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetCPUSpeed(JNIEnv *env, jclass cls, jint percentSpeed) {
     LOG("percentSpeed : %d%%", percentSpeed);
+#if TESTING
+    cpu_scale_factor = CPU_SCALE_FASTEST;
+    cpu_altscale_factor = CPU_SCALE_FASTEST;
+    timing_initialize();
+#else
     bool wasPaused = cpu_isPaused();
 
     if (!wasPaused) {
@@ -284,6 +293,7 @@ void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetCPUSpeed(JNIEnv *env,
     if (!wasPaused) {
         cpu_resume();
     }
+#endif
 }
 
 void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeLoadTouchKeyboardJSON(JNIEnv *env, jclass cls, jstring j_jsonPath) {

@@ -31,7 +31,7 @@ enum {
 };
 
 #if TESTING
-static bool _run_tests(void) {
+static void _run_tests(void) {
     char *local_argv[] = {
         "-f",
         NULL
@@ -41,8 +41,10 @@ static bool _run_tests(void) {
         ++local_argc;
     }
 #if defined(TEST_CPU)
+    // Currently this test is the only one that runs as a black screen
     extern int test_cpu(int, char *[]);
     test_cpu(local_argc, local_argv);
+    tkill(getpid(), SIGKILL); // and we're done ...
 #elif defined(TEST_VM)
     extern int test_vm(int, char *[]);
     test_vm(local_argc, local_argv);
@@ -128,7 +130,9 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnCreate(JNIEnv *env, jobje
     android_stereoBufferSubmitSizeSamples = (unsigned long)stereoBufferSize;
 
 #if TESTING
+    assert(cpu_thread_id == 0 && "CPU thread must not be initialized yet...");
     _run_tests();
+    // CPU thread is started from testsuite (if needed)
 #else
     timing_startCPU();
 #endif
@@ -158,7 +162,11 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnResume(JNIEnv *env, jobje
     }
     LOG("%s", "");
     if (!isSystemResume) {
+#if TESTING
+        // test driver thread is managing CPU
+#else
         cpu_resume();
+#endif
     }
 }
 
@@ -170,6 +178,9 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnPause(JNIEnv *env, jobjec
 
     video_backend->animation_hideTouchMenu();
 
+#if TESTING
+    // test driver thread is managing CPU
+#else
     if (isSystemPause) {
         // going to background
         cpu_pauseBackground();
@@ -177,6 +188,7 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnPause(JNIEnv *env, jobjec
         // going to menu
         cpu_pause();
     }
+#endif
 }
 
 void Java_org_deadc0de_apple2ix_Apple2Activity_nativeRender(JNIEnv *env, jobject obj) {
@@ -214,6 +226,9 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeReboot(JNIEnv *env, jobject
 }
 
 void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnQuit(JNIEnv *env, jobject obj) {
+#if TESTING
+    // test driver thread is managing CPU
+#else
     LOG("%s", "");
 
     c_eject_6(0);
@@ -226,6 +241,7 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnQuit(JNIEnv *env, jobject
     if (pthread_join(cpu_thread_id, NULL)) {
         ERRLOG("OOPS: pthread_join of CPU thread ...");
     }
+#endif
 }
 
 #define _JAVA_CRASH_NAME "/jcrash.txt"
@@ -265,15 +281,11 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnUncaughtException(JNIEnv 
 }
 
 void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnKeyDown(JNIEnv *env, jobject obj, jint keyCode, jint metaState) {
-#if !TESTING
     android_keycode_to_emulator(keyCode, metaState, true);
-#endif
 }
 
 void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnKeyUp(JNIEnv *env, jobject obj, jint keyCode, jint metaState) {
-#if !TESTING
     android_keycode_to_emulator(keyCode, metaState, false);
-#endif
 }
 
 jlong Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnTouch(JNIEnv *env, jobject obj, jint action, jint pointerCount, jint pointerIndex, jfloatArray xCoords, jfloatArray yCoords) {
