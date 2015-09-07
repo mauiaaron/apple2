@@ -214,6 +214,7 @@ void playq_destroyPlayQueue(INOUT PlayQueue_s **queue) {
         }
     }
 
+    FREE(list);
     FREE(*queue);
 }
 
