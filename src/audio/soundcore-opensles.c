@@ -741,16 +741,20 @@ static long opensles_systemResume(AudioContext_s *audio_context) {
             break;
         }
 
+#if !TESTING
         assert(state != SL_PLAYSTATE_PLAYING && "mismatch between systemPause/systemResume");
+#endif
 
         if (state == SL_PLAYSTATE_PAUSED) {
             // Balanced resume OK here
             SLresult result = (*(ctx->bqPlayerPlay))->SetPlayState(ctx->bqPlayerPlay, SL_PLAYSTATE_PLAYING);
+#if !TESTING
         } else {
             // Do not resume for stopped state, let this get forced from CPU/speaker thread otherwise we starve. (The
             // stopped state happens if user dynamically changed buffer parameters in menu settings which triggered an
             // OpenSLES destroy/re-initialization ... e.g. audio_setLatency() was invoked)
             assert(state == SL_PLAYSTATE_STOPPED);
+#endif
         }
     } while (0);
 

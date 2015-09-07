@@ -35,8 +35,8 @@ extern char mdstr[(SHA_DIGEST_LENGTH*2)+1];
 
 extern bool test_do_reboot;
 void test_breakpoint(void *arg);
-void test_common_init(bool do_cputhread);
-void test_common_setup();
+void test_common_init(void);
+void test_common_setup(void);
 void test_type_input(const char *input);
 int test_setup_boot_disk(const char *fileName, int readonly);
 void sha1_to_str(const uint8_t * const md, char *buf);
@@ -59,6 +59,13 @@ static inline int BOOT_TO_DOS(void) {
         apple_ii_64k[0][WATCHPOINT_ADDR] = 0x00;
     }
     return 0;
+}
+
+static inline void REBOOT_TO_DOS(void) {
+    apple_ii_64k[0][WATCHPOINT_ADDR] = 0x00;
+    apple_ii_64k[0][TESTOUT_ADDR] = 0x00;
+    joy_button0 = 0xff;
+    cpu65_interrupt(ResetSig);
 }
 
 #endif // whole file

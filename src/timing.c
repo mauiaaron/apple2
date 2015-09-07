@@ -190,7 +190,9 @@ void reinitialize(void) {
 }
 
 void timing_initialize(void) {
+#if !TESTING
     assert(cpu_isPaused() || (pthread_self() == cpu_thread_id));
+#endif
     _timing_initialize(alt_speed_enabled ? cpu_altscale_factor : cpu_scale_factor);
 }
 
@@ -292,7 +294,10 @@ static void *cpu_thread(void *dummyptr) {
 
     do
     {
-#if MOBILE_DEVICE && !TESTING
+#if MOBILE_DEVICE
+#if TESTING
+        emul_reinitialize_background = false;
+#else
         if (emul_reinitialize_background) {
 
             speaker_destroy();
@@ -324,6 +329,7 @@ static void *cpu_thread(void *dummyptr) {
             LOG("cpu_thread : starting...");
             emul_reinitialize_audio = true;
         }
+#endif
 #endif
 
 #ifdef AUDIO_ENABLED

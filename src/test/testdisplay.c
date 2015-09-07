@@ -28,6 +28,9 @@ static void testdisplay_setup(void *arg) {
 static void testdisplay_teardown(void *arg) {
 }
 
+// ----------------------------------------------------------------------------
+// Various Display Tests ...
+
 TEST test_boot_disk() {
     test_setup_boot_disk("testdisplay1.nib.gz", 1);
 
@@ -318,6 +321,8 @@ TEST test_80col_hires() {
 // Test Suite
 
 GREATEST_SUITE(test_suite_display) {
+    pthread_mutex_lock(&interface_mutex);
+
     GREATEST_SET_SETUP_CB(testdisplay_setup, NULL);
     GREATEST_SET_TEARDOWN_CB(testdisplay_teardown, NULL);
     GREATEST_SET_BREAKPOINT_CB(test_breakpoint, NULL);
@@ -438,16 +443,12 @@ GREATEST_MAIN_DEFS();
 static char **test_argv = NULL;
 static int test_argc = 0;
 
-static int _test_display(void) {
+static void *test_thread(void *dummyptr) {
     int argc = test_argc;
     char **argv = test_argv;
     GREATEST_MAIN_BEGIN();
     RUN_SUITE(test_suite_display);
     GREATEST_MAIN_END();
-}
-
-static void *test_thread(void *dummyptr) {
-    _test_display();
     return NULL;
 }
 
@@ -457,9 +458,7 @@ void test_display(int argc, char **argv) {
 
     srandom(time(NULL));
 
-    pthread_mutex_lock(&interface_mutex);
-
-    test_common_init(/*cputhread*/true);
+    test_common_init();
 
     pthread_t p;
     pthread_create(&p, NULL, (void *)&test_thread, (void *)NULL);
@@ -468,6 +467,7 @@ void test_display(int argc, char **argv) {
         struct timespec ts = { .tv_sec=0, .tv_nsec=33333333 };
         nanosleep(&ts, NULL);
     }
+    timing_startCPU();
     video_main_loop();
     //pthread_join(p, NULL);
 }

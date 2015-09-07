@@ -11,8 +11,6 @@
 
 #include "testcommon.h"
 
-#define RESET_INPUT() test_common_setup()
-
 #ifdef ANDROID
 #   define HOMEDIR data_dir
 #else
@@ -26,21 +24,13 @@
 #define BLANK_DSK "blank.dsk.gz"
 #define BLANK_NIB "blank.nib.gz"
 #define BLANK_PO  "blank.po.gz"
-#define REBOOT_TO_DOS() \
-    do { \
-        apple_ii_64k[0][WATCHPOINT_ADDR] = 0x00; \
-        apple_ii_64k[0][TESTOUT_ADDR] = 0x00; \
-        joy_button0 = 0xff; \
-        cpu65_interrupt(ResetSig); \
-    } while (0)
 
-#define TYPE_TRIGGER_WATCHPT() \
-    test_type_input("POKE7987,255:REM TRIGGER DEBUGGER\r")
+static bool test_thread_running = false;
 
 extern pthread_mutex_t interface_mutex; // TODO FIXME : raw access to CPU mutex because stepping debugger ...
 
 static void testdisk_setup(void *arg) {
-    RESET_INPUT();
+    test_common_setup();
     apple_ii_64k[0][MIXSWITCH_ADDR] = 0x00;
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x00;
     apple_ii_64k[0][TESTOUT_ADDR] = 0x00;
@@ -602,7 +592,7 @@ TEST test_savehello_dsk() {
 
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x0;
     test_type_input("SAVE HELLO\r");
-    TYPE_TRIGGER_WATCHPT();
+    test_type_input("POKE7987,255:REM TRIGGER DEBUGGER\r");
 
     c_debugger_go();
 
@@ -628,7 +618,7 @@ TEST test_savehello_nib() {
 
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x0;
     test_type_input("SAVE HELLO\r");
-    TYPE_TRIGGER_WATCHPT();
+    test_type_input("POKE7987,255:REM TRIGGER DEBUGGER\r");
 
     c_debugger_go();
 
@@ -654,7 +644,7 @@ TEST test_savehello_po() {
 
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x0;
     test_type_input("SAVE HELLO\r");
-    TYPE_TRIGGER_WATCHPT();
+    test_type_input("POKE7987,255:REM TRIGGER DEBUGGER\r");
 
     c_debugger_go();
 
@@ -691,7 +681,7 @@ TEST test_disk_bytes_savehello_dsk() {
 
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x0;
     test_type_input("SAVE HELLO\r");
-    TYPE_TRIGGER_WATCHPT();
+    test_type_input("POKE7987,255:REM TRIGGER DEBUGGER\r");
 
     c_debugger_go();
 
@@ -756,7 +746,7 @@ TEST test_disk_bytes_savehello_nib() {
 
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x0;
     test_type_input("SAVE HELLO\r");
-    TYPE_TRIGGER_WATCHPT();
+    test_type_input("POKE7987,255:REM TRIGGER DEBUGGER\r");
 
     c_debugger_go();
 
@@ -821,7 +811,7 @@ TEST test_disk_bytes_savehello_po() {
 
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x0;
     test_type_input("SAVE HELLO\r");
-    TYPE_TRIGGER_WATCHPT();
+    test_type_input("POKE7987,255:REM TRIGGER DEBUGGER\r");
 
     c_debugger_go();
 
@@ -889,7 +879,7 @@ TEST test_outofspace_dsk() {
 
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x0;
     EAT_UP_DISK_SPACE();
-    TYPE_TRIGGER_WATCHPT();
+    test_type_input("POKE7987,255:REM TRIGGER DEBUGGER\r");
 
     c_debugger_go();
 
@@ -915,7 +905,7 @@ TEST test_outofspace_nib() {
 
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x0;
     EAT_UP_DISK_SPACE();
-    TYPE_TRIGGER_WATCHPT();
+    test_type_input("POKE7987,255:REM TRIGGER DEBUGGER\r");
 
     c_debugger_go();
 
@@ -941,7 +931,7 @@ TEST test_outofspace_po() {
 
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x0;
     EAT_UP_DISK_SPACE();
-    TYPE_TRIGGER_WATCHPT();
+    test_type_input("POKE7987,255:REM TRIGGER DEBUGGER\r");
 
     c_debugger_go();
 
@@ -968,7 +958,7 @@ TEST test_inithello_dsk() {
     ASSERT(apple_ii_64k[0][TESTOUT_ADDR]    == 0x00);
 
     test_type_input("INIT HELLO\r");
-    TYPE_TRIGGER_WATCHPT();
+    test_type_input("POKE7987,255:REM TRIGGER DEBUGGER\r");
 
     c_debugger_go();
 
@@ -993,7 +983,7 @@ TEST test_inithello_nib() {
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
 
     test_type_input("INIT HELLO\r");
-    TYPE_TRIGGER_WATCHPT();
+    test_type_input("POKE7987,255:REM TRIGGER DEBUGGER\r");
 
     c_debugger_go();
 
@@ -1018,7 +1008,7 @@ TEST test_inithello_po() {
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
 
     test_type_input("INIT HELLO\r");
-    TYPE_TRIGGER_WATCHPT();
+    test_type_input("POKE7987,255:REM TRIGGER DEBUGGER\r");
 
     c_debugger_go();
 
@@ -1038,15 +1028,13 @@ TEST test_inithello_po() {
 // ----------------------------------------------------------------------------
 // Test Suite
 
-static int begin_video = -1;
-
 GREATEST_SUITE(test_suite_disk) {
     GREATEST_SET_SETUP_CB(testdisk_setup, NULL);
     GREATEST_SET_TEARDOWN_CB(testdisk_teardown, NULL);
     GREATEST_SET_BREAKPOINT_CB(test_breakpoint, NULL);
 
     // TESTS --------------------------
-    begin_video=!is_headless;
+    test_thread_running = true;
 
     RUN_TESTp(test_boot_disk_bytes);
     RUN_TESTp(test_boot_disk_bytes_nib);
@@ -1098,16 +1086,12 @@ GREATEST_MAIN_DEFS();
 static char **test_argv = NULL;
 static int test_argc = 0;
 
-static int _test_disk(void) {
+static void *test_thread(void *dummyptr) {
     int argc = test_argc;
     char **argv = test_argv;
     GREATEST_MAIN_BEGIN();
     RUN_SUITE(test_suite_disk);
     GREATEST_MAIN_END();
-}
-
-static void *test_thread(void *dummyptr) {
-    _test_disk();
     return NULL;
 }
 
@@ -1117,18 +1101,17 @@ void test_disk(int argc, char **argv) {
 
     pthread_mutex_lock(&interface_mutex);
 
-    test_common_init(/*cputhread*/true);
+    test_common_init();
 
     pthread_t p;
     pthread_create(&p, NULL, (void *)&test_thread, (void *)NULL);
 
-    while (begin_video < 0) {
+    while (!test_thread_running) {
         struct timespec ts = { .tv_sec=0, .tv_nsec=33333333 };
         nanosleep(&ts, NULL);
     }
-    if (begin_video) {
-        video_main_loop();
-    }
+    timing_startCPU();
+    video_main_loop();
     //pthread_join(p, NULL);
 }
 

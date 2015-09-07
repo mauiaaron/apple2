@@ -51,7 +51,6 @@
 
 static void testcpu_setup(void *arg) {
 
-    //reinitialize();
     cpu65_uninterrupt(0xff);
     extern int32_t cpu65_cycles_to_execute;
     extern int32_t cpu65_cycle_count;
@@ -7310,7 +7309,14 @@ GREATEST_SUITE(test_suite_cpu) {
 
     srandom(time(NULL));
 
-    test_common_init(/*cputhread*/false);
+    video_init();
+    test_common_init();
+    assert(cpu_thread_id == 0 && "This test is not designed to run with alternate CPU thread");
+    extern void reinitialize(void);
+    reinitialize();
+
+    extern volatile uint8_t emul_reinitialize;
+    emul_reinitialize = 0;
 
     test_func_t *func=NULL, *tmp=NULL;
 

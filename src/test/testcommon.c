@@ -23,6 +23,9 @@ static unsigned int input_counter = 0;
 static struct timespec t0 = { 0 };
 static struct timespec ti = { 0 };
 
+#if defined(ANDROID)
+// We basically compile everything including audio into the Android build, even for testing =)
+#else
 // ----------------------------------------------------------------------------
 // Stub functions because I've reached diminishing returns with the build system ...
 //
@@ -46,6 +49,7 @@ void c_speaker_toggle(void) {
 
 void c_interface_print(int x, int y, const int cs, const char *s) {
 }
+#endif
 
 // ----------------------------------------------------------------------------
 
@@ -102,46 +106,24 @@ void test_breakpoint(void *arg) {
 
 // ----------------------------------------------------------------------------
 
-void test_common_init(bool do_cputhread) {
+void test_common_init() {
     GREATEST_SET_BREAKPOINT_CB(test_breakpoint, NULL);
 
-    do_logging = false;// silence regular emulator logging
-    setenv("APPLE2IXCFG", "nosuchconfigfile", 1);
-
-    c_initialize_firsttime();
+    //do_logging = false;// silence regular emulator logging
+    caps_lock = true;
 
     // kludgey set max CPU speed... 
     cpu_scale_factor = CPU_SCALE_FASTEST;
     cpu_altscale_factor = CPU_SCALE_FASTEST;
-    is_fullspeed = true;
+    timing_initialize();
 
-    caps_lock = true;
-
-    if (do_cputhread) {
-        // spin off cpu thread
-        pthread_create(&cpu_thread_id, NULL, (void *) &cpu_thread, (void *)NULL);
-        c_debugger_set_watchpoint(WATCHPOINT_ADDR);
-        if (is_headless) {
-            c_debugger_set_timeout(15);
-        } else {
-            fprintf(stderr, "NOTE : RUNNING WITH DISPLAY\n");
-            fprintf(stderr, "Will spinloop on failed tests for debugger intervention\n");
-            fprintf(stderr, "Pass HEADLESS=1 to environment to run nonstop\n");
-            c_debugger_set_timeout(0);
-        }
+    c_debugger_set_watchpoint(WATCHPOINT_ADDR);
+    if (0) {
+        c_debugger_set_timeout(15);
     } else {
-#ifdef AUDIO_ENABLED
-        audio_init();
-        speaker_init();
-        MB_Initialize();
-#endif
-
-        cpu_pause();
-        reinitialize();
-        cpu_resume();
-
-        extern volatile uint8_t emul_reinitialize;
-        emul_reinitialize = 0;
+        fprintf(stderr, "NOTE : RUNNING WITH DISPLAY\n");
+        fprintf(stderr, "Will spinloop on failed tests for debugger intervention\n");
+        c_debugger_set_timeout(0);
     }
 }
 
@@ -167,7 +149,7 @@ int test_setup_boot_disk(const char *fileName, int readonly) {
 #endif
     if (c_new_diskette_6(0, disk, readonly)) {
         int len = strlen(disk);
-        disk[len-3] = '\0';
+        disk[len-3] = '\0'; // try again without '.gz' extension
         err = (c_new_diskette_6(0, disk, readonly) != NULL);
     }
     FREE(disk);
