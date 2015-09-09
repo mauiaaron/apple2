@@ -148,7 +148,7 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeGraphicsInitialized(JNIEnv 
     static bool graphicsPreviouslyInitialized = false;
     if (graphicsPreviouslyInitialized) {
         LOG("shutting down previous context");
-        video_backend->shutdown();
+        video_shutdown();
     }
     graphicsPreviouslyInitialized = true;
 
@@ -231,7 +231,6 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnQuit(JNIEnv *env, jobject
     c_eject_6(1);
 
     emulator_shutting_down = true;
-    video_shutdown();
 
     cpu_resume();
     if (pthread_join(cpu_thread_id, NULL)) {
@@ -287,6 +286,7 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnKeyUp(JNIEnv *env, jobjec
 jlong Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnTouch(JNIEnv *env, jobject obj, jint action, jint pointerCount, jint pointerIndex, jfloatArray xCoords, jfloatArray yCoords) {
     //LOG(": %d/%d/%d :", action, pointerCount, pointerIndex);
     if (UNLIKELY(emulator_shutting_down)) {
+        video_shutdown();
         return 0x0LL;
     }
 
