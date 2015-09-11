@@ -96,18 +96,18 @@ uint8_t video__dhires2[256] = {
 
 // forward decls of VM entry points
 
-void video__write_2e_text0(void);
-void video__write_2e_text0_mixed(void);
-void video__write_2e_text1(void);
-void video__write_2e_text1_mixed(void);
-void video__write_2e_odd0(void);
-void video__write_2e_even0(void);
-void video__write_2e_odd0_mixed(void);
-void video__write_2e_even0_mixed(void);
-void video__write_2e_odd1(void);
-void video__write_2e_even1(void);
-void video__write_2e_odd1_mixed(void);
-void video__write_2e_even1_mixed(void);
+void video__write_2e_text0(uint16_t, uint8_t);
+void video__write_2e_text0_mixed(uint16_t, uint8_t);
+void video__write_2e_text1(uint16_t, uint8_t);
+void video__write_2e_text1_mixed(uint16_t, uint8_t);
+void video__write_2e_odd0(uint16_t, uint8_t);
+void video__write_2e_even0(uint16_t, uint8_t);
+void video__write_2e_odd0_mixed(uint16_t, uint8_t);
+void video__write_2e_even0_mixed(uint16_t, uint8_t);
+void video__write_2e_odd1(uint16_t, uint8_t);
+void video__write_2e_even1(uint16_t, uint8_t);
+void video__write_2e_odd1_mixed(uint16_t, uint8_t);
+void video__write_2e_even1_mixed(uint16_t, uint8_t);
 
 // ----------------------------------------------------------------------------
 // Initialization routines

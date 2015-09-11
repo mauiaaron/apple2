@@ -295,7 +295,7 @@ static CVReturn displayLinkCallback(CVDisplayLinkRef displayLink, const CVTimeSt
 #endif
 
     // shut down common OpenGL stuff AFTER display link has been released
-    video_backend->shutdown();
+    emulator_shutdown();
     
     [super dealloc];
 }

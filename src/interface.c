@@ -1160,7 +1160,7 @@ void c_interface_parameters()
         {
             timing_initialize();
             video_reset();
-            c_initialize_sound_hooks();
+            vm_reinitializeAudio();
             c_joystick_reset();
             c_interface_exit(ch);
             return;

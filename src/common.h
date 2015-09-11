@@ -51,6 +51,7 @@
 #include <sys/stat.h>
 
 #include "misc.h"
+#include "vm.h"
 #include "timing.h"
 #include "cpu.h"
 #include "video/video.h"

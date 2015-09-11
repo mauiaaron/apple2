@@ -653,7 +653,6 @@ void cpu65_reboot(void) {
     video_reset();
     joy_button0 = 0xff; // OpenApple
     cpu65_interrupt(ResetSig);
-    c_initialize_sound_hooks();
 }
 
 #if CPU_TRACING

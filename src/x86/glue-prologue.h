@@ -14,8 +14,10 @@
  *
  */
 
-#include "misc.h"
+#include "vm.h"
 #include "cpu-regs.h"
+
+#define GLUE_EXTERN_C_READ(func)
 
 #define GLUE_BANK_MAYBEREAD(func,pointer) \
 ENTRY(func)             testLQ  $SS_CXROM, SYM(softswitches); \

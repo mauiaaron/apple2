@@ -87,6 +87,7 @@ bool emul_reinitialize_audio = true;
 #if MOBILE_DEVICE
 static bool emul_reinitialize_background = true;
 #endif
+static bool cpu_shutting_down = false;
 pthread_t cpu_thread_id = 0;
 pthread_mutex_t interface_mutex = { 0 };
 pthread_cond_t dbg_thread_cond = PTHREAD_COND_INITIALIZER;
@@ -169,7 +170,7 @@ void reinitialize(void) {
 
     cycles_count_total = 0;
 
-    c_initialize_vm();
+    vm_initialize();
 
     softswitches = SS_TEXT | SS_IOUDIS | SS_C3ROM | SS_LCWRT | SS_LCSEC;
 
@@ -542,12 +543,12 @@ static void *cpu_thread(void *dummyptr) {
             }
 #endif
 
-            if (UNLIKELY(emulator_shutting_down)) {
+            if (UNLIKELY(cpu_shutting_down)) {
                 break;
             }
         } while (1);
 
-        if (UNLIKELY(emulator_shutting_down)) {
+        if (UNLIKELY(cpu_shutting_down)) {
             break;
         }
     } while (1);
@@ -562,8 +563,18 @@ static void *cpu_thread(void *dummyptr) {
 }
 
 void timing_startCPU(void) {
+    cpu_shutting_down = false;
     video_init();
     pthread_create(&cpu_thread_id, NULL, (void *)&cpu_thread, (void *)NULL);
+}
+
+void timing_stopCPU(void) {
+    cpu_shutting_down = true;
+
+    LOG("Emulator waiting for CPU thread clean up...");
+    if (pthread_join(cpu_thread_id, NULL)) {
+        ERRLOG("OOPS: pthread_join of CPU thread ...");
+    }
 }
 
 unsigned int CpuGetCyclesThisVideoFrame(void) {

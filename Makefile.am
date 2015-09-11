@@ -9,7 +9,7 @@ AM_LFLAGS = -i
 ###############################################################################
 # No install
 
-noinst_HEADERS = src/common.h src/cpu.h src/disk.h src/glue.h \
+noinst_HEADERS = src/common.h src/cpu.h src/disk.h src/glue.h src/vm.h \
 	src/interface.h src/joystick.h src/keys.h src/misc.h src/prefs.h \
 	src/timing.h src/uthash.h src/video/video.h src/zlib-helpers.h \
 	\
@@ -81,7 +81,7 @@ src/font.c: src/font.txt genfont
 src/rom.c: genrom
 	./genrom src/rom/apple_IIe.rom src/rom/slot6.rom > $@
 
-src/x86/glue.S: src/disk.c src/misc.c src/display.c src/vm.c src/cpu-supp.c @AUDIO_GLUE_C@
+src/x86/glue.S: src/disk.c src/vm.c src/display.c src/vm.c src/cpu-supp.c @AUDIO_GLUE_C@
 	./src/x86/genglue $^ > $@
 
 ###############################################################################

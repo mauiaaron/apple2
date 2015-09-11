@@ -15,7 +15,7 @@
  */
 
 #include "cpu-regs.h"
-#include "misc.h"
+#include "vm.h"
 
 #define CommonSaveCPUState \
                 movw    EffectiveAddr, SYM(cpu65_ea); \

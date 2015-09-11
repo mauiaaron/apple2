@@ -2040,11 +2040,6 @@ void MB_InitializeIO(char *unused_pCxRomPeripheral, unsigned int uSlot4, unsigne
 	// Phasor      : Slot 4
 	// <other>     : Slot 4 & 5
 
-#ifdef APPLE2IX
-    extern void MB_Read();
-    extern void MB_Write();
-    extern void PhasorIO();
-#endif
 	if (g_Slot4 != CT_MockingboardC && g_Slot4 != CT_Phasor)
 	{
 		MB_SetSoundcardType(CT_Empty);

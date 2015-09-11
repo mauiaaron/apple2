@@ -283,5 +283,13 @@ extern uint8_t *video__fb2;
  */
 extern READONLY int video__current_page;
 
+/*
+ * font glyph data
+ */
+extern const unsigned char ucase_glyphs[0x200];
+extern const unsigned char lcase_glyphs[0x100];
+extern const unsigned char mousetext_glyphs[0x100];
+extern const unsigned char interface_glyphs[88];
+
 #endif /* !A2_VIDEO_H */
 

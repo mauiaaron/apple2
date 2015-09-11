@@ -448,10 +448,6 @@ int c_mygetch(int block)
 {
     int retval;
 
-    if (emulator_shutting_down) {
-        next_key = kESC;
-    }
-
     while (next_key == -1 && block)
     {
         static struct timespec ts = { .tv_sec=0, .tv_nsec=33333333 };

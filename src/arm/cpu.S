@@ -14,7 +14,7 @@
  */
 
 #include "cpu-regs.h"
-#include "misc.h"
+#include "vm.h"
 
 
 #define DecodeFlags \

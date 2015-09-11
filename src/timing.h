@@ -70,9 +70,14 @@ extern READONLY pthread_t cpu_thread_id;
 struct timespec timespec_diff(struct timespec start, struct timespec end, bool *negative);
 
 /*
- * Start CPU thread
+ * start CPU thread
  */
 void timing_startCPU(void);
+
+/*
+ * stop CPU thread
+ */
+void timing_stopCPU(void);
 
 /*
  * toggles CPU speed between configured values
