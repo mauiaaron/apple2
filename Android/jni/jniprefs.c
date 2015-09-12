@@ -47,7 +47,7 @@ void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetSpeakerVolume(JNIEnv 
     assert(goesToTen >= 0);
     sound_volume = goesToTen;
 #warning FIXME TODO refactor/remove sound_volume ?
-    speaker_setVolumeZeroToTen(goesToTen);
+    vm_reinitializeAudio();
 }
 
 void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetAudioLatency(JNIEnv *env, jclass cls, jfloat latencySecs) {

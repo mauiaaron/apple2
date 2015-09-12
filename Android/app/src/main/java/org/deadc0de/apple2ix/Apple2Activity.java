@@ -560,12 +560,17 @@ public class Apple2Activity extends Activity {
                 public void onClick(DialogInterface dialog, int which) {
                     nativeOnQuit();
                     Apple2Activity.this.finish();
-                    try {
-                        Thread.sleep(1000);
-                    } catch (InterruptedException ex) {
-                        // ...
-                    }
-                    System.exit(0);
+                    new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                Thread.sleep(2000);
+                            } catch (InterruptedException ex) {
+                                // ...
+                            }
+                            System.exit(0);
+                        }
+                    }.run();
                 }
             }).setNegativeButton(R.string.no, null).create();
             /*mQuitDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {

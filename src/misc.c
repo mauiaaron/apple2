@@ -38,10 +38,8 @@ static void _init_common() {
 
 static void _shutdown_threads(void) {
 #if !TESTING
+#   if defined(__linux__) && !defined(ANDROID)
     LOG("Emulator waiting for other threads to clean up...");
-#   if !__linux__
-#       error FIXME TODO on Darwin ...
-#   else
     do {
         DIR *dir = opendir("/proc/self/task");
         if (!dir) {
@@ -71,6 +69,8 @@ static void _shutdown_threads(void) {
         static struct timespec ts = { .tv_sec=0, .tv_nsec=33333333 };
         nanosleep(&ts, NULL); // 30Hz framerate
     } while (1);
+#   elif defined(__APPLE__)
+#       error TODO FIXME ... verify leaks-n-things with instruments on Darwin
 #   endif
 #endif
 }
@@ -96,8 +96,12 @@ int main(int _argc, char **_argv) {
     argv = _argv;
 
     emulator_start();
-    video_main_loop();
+
+    // main loop ...
+
     emulator_shutdown();
+
+    LOG("Emulator exit ...");
 
     return 0;
 }

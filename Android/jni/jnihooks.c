@@ -30,6 +30,8 @@ enum {
     ANDROID_ACTION_POINTER_UP = 0x6,
 };
 
+static bool shuttingDown = false;
+
 #if TESTING
 static void _run_tests(void) {
     char *local_argv[] = {
@@ -134,7 +136,7 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnCreate(JNIEnv *env, jobje
     _run_tests();
     // CPU thread is started from testsuite (if needed)
 #else
-    timing_startCPU();
+    emulator_start();
 #endif
 }
 
@@ -145,13 +147,8 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeGraphicsChanged(JNIEnv *env
 
 void Java_org_deadc0de_apple2ix_Apple2Activity_nativeGraphicsInitialized(JNIEnv *env, jobject obj, jint width, jint height) {
     LOG("width:%d height:%d", width, height);
-    static bool graphicsPreviouslyInitialized = false;
-    if (graphicsPreviouslyInitialized) {
-        LOG("shutting down previous context");
-        video_shutdown();
-    }
-    graphicsPreviouslyInitialized = true;
 
+    video_shutdown();
     video_backend->reshape(width, height);
     video_backend->init((void *)0);
 }
@@ -171,6 +168,9 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnResume(JNIEnv *env, jobje
 }
 
 void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnPause(JNIEnv *env, jobject obj, jboolean isSystemPause) {
+    if (shuttingDown) {
+        return;
+    }
     if (cpu_isPaused()) {
         return;
     }
@@ -192,7 +192,7 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnPause(JNIEnv *env, jobjec
 }
 
 void Java_org_deadc0de_apple2ix_Apple2Activity_nativeRender(JNIEnv *env, jobject obj) {
-    if (UNLIKELY(emulator_shutting_down)) {
+    if (UNLIKELY(shuttingDown)) {
         return;
     }
 
@@ -225,17 +225,16 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnQuit(JNIEnv *env, jobject
 #if TESTING
     // test driver thread is managing CPU
 #else
+    shuttingDown = true;
+
     LOG("%s", "");
 
     c_eject_6(0);
     c_eject_6(1);
 
-    emulator_shutting_down = true;
-
     cpu_resume();
-    if (pthread_join(cpu_thread_id, NULL)) {
-        ERRLOG("OOPS: pthread_join of CPU thread ...");
-    }
+
+    emulator_shutdown();
 #endif
 }
 
@@ -276,17 +275,22 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnUncaughtException(JNIEnv 
 }
 
 void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnKeyDown(JNIEnv *env, jobject obj, jint keyCode, jint metaState) {
+    if (UNLIKELY(shuttingDown)) {
+        return;
+    }
     android_keycode_to_emulator(keyCode, metaState, true);
 }
 
 void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnKeyUp(JNIEnv *env, jobject obj, jint keyCode, jint metaState) {
+    if (UNLIKELY(shuttingDown)) {
+        return;
+    }
     android_keycode_to_emulator(keyCode, metaState, false);
 }
 
 jlong Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnTouch(JNIEnv *env, jobject obj, jint action, jint pointerCount, jint pointerIndex, jfloatArray xCoords, jfloatArray yCoords) {
     //LOG(": %d/%d/%d :", action, pointerCount, pointerIndex);
-    if (UNLIKELY(emulator_shutting_down)) {
-        video_shutdown();
+    if (UNLIKELY(shuttingDown)) {
         return 0x0LL;
     }
 
