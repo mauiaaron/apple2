@@ -547,6 +547,7 @@ void mdlDestroyModel(INOUT GLModel **model) {
     FREE(m->texCoords);
     FREE(m->texPixels);
 
+    glBindTexture(GL_TEXTURE_2D, 0);
     if (m->textureName != UNINITIALIZED_GL) {
         glDeleteTextures(1, &(m->textureName));
         m->textureName = UNINITIALIZED_GL;
@@ -584,6 +585,10 @@ void mdlDestroyModel(INOUT GLModel **model) {
         glDeleteVertexArrays(1, &(m->vaoName));
     }
 #else
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
     if (m->posBufferName != UNINITIALIZED_GL) {
         glDeleteBuffers(1, &(m->posBufferName));
         m->posBufferName = UNINITIALIZED_GL;

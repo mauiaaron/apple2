@@ -347,10 +347,6 @@ static GLuint _build_program(demoSource *vertexSource, demoSource *fragmentSourc
     // Attach the vertex shader to our program
     glAttachShader(prgName, vertexShader);
 
-    // Delete the vertex shader since it is now attached
-    // to the program, which will retain a reference to it
-    glDeleteShader(vertexShader);
-
     /////////////////////////////////////////
     // Specify and compile Fragment Shader //
     /////////////////////////////////////////
@@ -389,10 +385,6 @@ static GLuint _build_program(demoSource *vertexSource, demoSource *fragmentSourc
     // Attach the fragment shader to our program
     glAttachShader(prgName, fragShader);
 
-    // Delete the fragment shader since it is now attached
-    // to the program, which will retain a reference to it
-    glDeleteShader(fragShader);
-
     //////////////////////
     // Link the program //
     //////////////////////
@@ -405,6 +397,17 @@ static GLuint _build_program(demoSource *vertexSource, demoSource *fragmentSourc
         LOG("Program link log:\n%s\n", log);
         free(log);
     }
+
+    glDetachShader(prgName, vertexShader);
+    glDetachShader(prgName, fragShader);
+
+    // Delete the vertex shader since it is now attached and linked
+    // to the program, which will retain a reference to it
+    glDeleteShader(vertexShader);
+
+    // Delete the fragment shader since it is now attached and linked
+    // to the program, which will retain a reference to it
+    glDeleteShader(fragShader);
 
     glGetProgramiv(prgName, GL_LINK_STATUS, &status);
     if (status == 0) {
@@ -616,19 +619,35 @@ static void gldriver_init_common(void) {
 }
 
 static void _gldriver_shutdown(void) {
+    LOG("Beginning GLDriver shutdown ...");
+
     // Cleanup all OpenGL objects
-    glDeleteTextures(1, &a2TextureName);
-    a2TextureName = UNINITIALIZED_GL;
-    _destroy_VAO(crtVAOName);
-    crtVAOName = UNINITIALIZED_GL;
+    if (a2TextureName != UNINITIALIZED_GL) {
+        glDeleteTextures(1, &a2TextureName);
+        a2TextureName = UNINITIALIZED_GL;
+    }
+
+    if (crtVAOName != UNINITIALIZED_GL) {
+        _destroy_VAO(crtVAOName);
+        crtVAOName = UNINITIALIZED_GL;
+    }
+
     mdlDestroyModel(&crtModel);
-    glDeleteProgram(program);
-    program = UNINITIALIZED_GL;
+
+    glUseProgram(0);
+    if (program != UNINITIALIZED_GL) {
+        glDeleteProgram(program);
+        program = UNINITIALIZED_GL;
+    }
+
     glnode_shutdownNodes();
     LOG("Completed GLDriver shutdown ...");
 }
 
 static void gldriver_shutdown(void) {
+    if (renderer_shutting_down) {
+        return;
+    }
 #if USE_GLUT
     glutLeaveMainLoop();
 #endif
@@ -847,6 +866,7 @@ static void gldriver_init_glut(GLuint fbo) {
     glutTimerFunc(16, gldriver_update, 0);
     glutDisplayFunc(gldriver_render);
     glutReshapeFunc(gldriver_reshape);
+    glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_GLUTMAINLOOP_RETURNS);
 
 #if !TESTING
     glutKeyboardFunc(gldriver_on_key_down);
@@ -868,9 +888,7 @@ static void gldriver_init(void *fbo) {
 #pragma GCC diagnostic ignored "-Wpointer-to-int-cast"
     defaultFBO = (GLuint)fbo;
 #pragma GCC diagnostic pop
-#if defined(__APPLE__)
-    gldriver_init_common();
-#elif defined(ANDROID)
+#if defined(__APPLE__) || defined(ANDROID)
     gldriver_init_common();
 #elif USE_GLUT
     gldriver_init_glut(defaultFBO);
@@ -882,7 +900,6 @@ static void gldriver_init(void *fbo) {
 
 static void gldriver_main_loop(void) {
 #if USE_GLUT
-    glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_GLUTMAINLOOP_RETURNS);
     glutMainLoop();
     LOG("GLUT main loop finished...");
 #endif

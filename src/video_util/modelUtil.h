@@ -16,7 +16,8 @@
 
 #include "common.h"
 
-#define UNINITIALIZED_GL 31337
+#define UNINITIALIZED_GL (-31337)
+#warning FIXME TODO : is there an official OpenGL value we can use to signify an uninitialized state?
 
 enum {
     POS_ATTRIB_IDX,
