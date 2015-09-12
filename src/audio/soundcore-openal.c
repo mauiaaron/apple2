@@ -424,7 +424,7 @@ static ALVoice *_openal_createVoice(unsigned long numChannels) {
         unsigned long maxSamples = openal_audio_backend.systemSettings.monoBufferSizeSamples * numChannels;
         voice->buffersize = maxSamples * openal_audio_backend.systemSettings.bytesPerSample;
 
-        voice->data = malloc(voice->buffersize);
+        voice->data = calloc(1, voice->buffersize);
         if (voice->data == NULL) {
             ERRLOG("OOPS, Error allocating %d bytes", voice->buffersize);
             break;
@@ -497,7 +497,7 @@ static long openal_createSoundBuffer(const AudioContext_s *audio_context, INOUT 
         vnode->voice = voice;
         HASH_ADD_INT(voices, source, vnode);
 
-        if ((*soundbuf_struct = malloc(sizeof(AudioBuffer_s))) == NULL) {
+        if ((*soundbuf_struct = calloc(1, sizeof(AudioBuffer_s))) == NULL) {
             ERRLOG("OOPS, Not enough memory");
             break;
         }
@@ -566,7 +566,7 @@ static long openal_systemSetup(INOUT AudioContext_s **audio_context) {
             LOG("WARNING - AL_SOFT_buffer_samples extension not supported... Proceeding anyway...");
         }
 
-        if ((*audio_context = malloc(sizeof(AudioContext_s))) == NULL) {
+        if ((*audio_context = calloc(1, sizeof(AudioContext_s))) == NULL) {
             ERRLOG("OOPS, Not enough memory");
             break;
         }
@@ -580,7 +580,7 @@ static long openal_systemSetup(INOUT AudioContext_s **audio_context) {
 
     if (result) {
         if (ctx) {
-            AudioContext_s *ctxPtr = malloc(sizeof(AudioContext_s));
+            AudioContext_s *ctxPtr = calloc(1, sizeof(AudioContext_s));
             ctxPtr->_internal = ctx;
             openal_systemShutdown(&ctxPtr);
         }

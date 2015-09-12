@@ -26,9 +26,9 @@ AudioBackend_s *audio_backend = NULL;
 //-----------------------------------------------------------------------------
 
 long audio_createSoundBuffer(INOUT AudioBuffer_s **audioBuffer) {
-    *audioBuffer = NULL;
 
     if (!audio_isAvailable) {
+        *audioBuffer = NULL;
         return -1;
     }
 
