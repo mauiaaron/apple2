@@ -249,6 +249,9 @@ public class Apple2Activity extends Activity {
         // TODO FIXME : need to test/fix other popups generated in other menus ...
         dismissAllMenus();
 
+        mSplashScreen = null;
+        mMainMenu = null;
+
         nativeOnPause(true);
     }
 
@@ -447,9 +450,10 @@ public class Apple2Activity extends Activity {
     }
 
     public synchronized void showSplashScreen() {
-        if (mSplashScreen == null) {
-            mSplashScreen = new Apple2SplashScreen(Apple2Activity.this);
+        if (mSplashScreen != null) {
+            return;
         }
+        mSplashScreen = new Apple2SplashScreen(Apple2Activity.this);
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
