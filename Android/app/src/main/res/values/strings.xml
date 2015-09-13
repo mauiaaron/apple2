@@ -44,7 +44,7 @@
     <string name="joystick_button_button_none">None</string>
     <string name="joystick_button_tap_button">Tap fire</string>
     <string name="joystick_button_tap_button_summary">Button to fire on tap down</string>
-    <string name="joystick_button_tapdelay_summary">Joystick/keypad button tap delay in secs</string>
+    <string name="joystick_button_tapdelay_summary">Joystick button tap delay in secs</string>
     <string name="joystick_button_swipe_up_button">Swipe up fire</string>
     <string name="joystick_button_swipe_up_button_summary">Button to fire on swipe up</string>
     <string name="joystick_button_swipe_down_button">Swipe down fire</string>

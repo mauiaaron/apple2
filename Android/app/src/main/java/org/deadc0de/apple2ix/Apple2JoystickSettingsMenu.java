@@ -203,6 +203,37 @@ public class Apple2JoystickSettingsMenu extends Apple2AbstractMenu {
                 }
             }
         },
+        JOYSTICK_TAPDELAY {
+            @Override
+            public final String getTitle(Apple2Activity activity) {
+                return "";
+            }
+
+            @Override
+            public final String getSummary(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.joystick_button_tapdelay_summary);
+            }
+
+            @Override
+            public View getView(final Apple2Activity activity, View convertView) {
+                return _sliderView(activity, this, Apple2Preferences.TAPDELAY_NUM_CHOICES, new IPreferenceSlider() {
+                    @Override
+                    public void saveInt(int progress) {
+                        Apple2Preferences.JOYSTICK_TAPDELAY.saveInt(activity, progress);
+                    }
+
+                    @Override
+                    public int intValue() {
+                        return Apple2Preferences.JOYSTICK_TAPDELAY.intValue(activity);
+                    }
+
+                    @Override
+                    public void showValue(int progress, final TextView seekBarValue) {
+                        seekBarValue.setText("" + (((float) progress / Apple2Preferences.TAPDELAY_NUM_CHOICES) * Apple2Preferences.TAPDELAY_SCALE));
+                    }
+                });
+            }
+        },
         JOYSTICK_ADVANCED {
             @Override
             public final String getTitle(Apple2Activity activity) {
@@ -351,37 +382,6 @@ public class Apple2JoystickSettingsMenu extends Apple2AbstractMenu {
                             saveInt(progress);
                             int percent = (int) (Apple2Preferences.JOYSTICK_AXIS_SENSITIVIY.floatValue(activity) * 100.f);
                             seekBarValue.setText("" + percent + "%");
-                        }
-                    });
-                }
-            },
-            JOYSTICK_TAPDELAY {
-                @Override
-                public final String getTitle(Apple2Activity activity) {
-                    return "";
-                }
-
-                @Override
-                public final String getSummary(Apple2Activity activity) {
-                    return activity.getResources().getString(R.string.joystick_button_tapdelay_summary);
-                }
-
-                @Override
-                public View getView(final Apple2Activity activity, View convertView) {
-                    return _sliderView(activity, this, Apple2Preferences.TAPDELAY_NUM_CHOICES, new IPreferenceSlider() {
-                        @Override
-                        public void saveInt(int progress) {
-                            Apple2Preferences.JOYSTICK_TAPDELAY.saveInt(activity, progress);
-                        }
-
-                        @Override
-                        public int intValue() {
-                            return Apple2Preferences.JOYSTICK_TAPDELAY.intValue(activity);
-                        }
-
-                        @Override
-                        public void showValue(int progress, final TextView seekBarValue) {
-                            seekBarValue.setText("" + (((float) progress / Apple2Preferences.TAPDELAY_NUM_CHOICES) * Apple2Preferences.TAPDELAY_SCALE));
                         }
                     });
                 }
