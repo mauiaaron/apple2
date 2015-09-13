@@ -17,6 +17,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 
 import java.util.ArrayList;
@@ -62,7 +63,7 @@ public class Apple2KeypadChooser implements Apple2MenuView {
         mChooserState.setValues(mActivity, ascii, scancode);
         Apple2Preferences.nativeSetCurrentTouchDevice(Apple2Preferences.TouchDeviceVariant.JOYSTICK_KEYPAD.ordinal());
         mCurrentChoicePrompt.setText(getNextChoiceString() + asciiStr);
-        switch(mChooserState) {
+        switch (mChooserState) {
             case CHOOSE_TAP:
                 mActivity.nativeOnTouch(MotionEvent.ACTION_DOWN, 1, 0, new float[]{400.f}, new float[]{400.f});
                 mActivity.nativeOnTouch(MotionEvent.ACTION_UP, 1, 0, new float[]{400.f}, new float[]{400.f});
@@ -134,6 +135,14 @@ public class Apple2KeypadChooser implements Apple2MenuView {
 
         mCurrentChoicePrompt = (TextView) mSettingsView.findViewById(R.id.currentChoicePrompt);
         mCurrentChoicePrompt.setText(getNextChoiceString());
+
+        Button skipButton = (Button) mSettingsView.findViewById(R.id.skipButton);
+        skipButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Apple2KeypadChooser.this.onKeyTapCalibrationEvent((char)Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+            }
+        });
 
         // temporarily undo these native touch settings while calibrating...
         mTouchMenuEnabled = Apple2Preferences.TOUCH_MENU_ENABLED.booleanValue(mActivity);

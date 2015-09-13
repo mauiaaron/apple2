@@ -145,6 +145,7 @@
     <string name="reboot_really">Reboot emulator?</string>
     <string name="reboot_summary"></string>
     <string name="reboot_warning">You will lose unsaved progress</string>
+    <string name="skip">Skip&#8594;</string>
     <string name="spacer"></string>
     <string name="speaker_disabled_title">Speaker disabled</string>
     <string name="speaker_disabled_mesg">Speaker could not be enabled</string>

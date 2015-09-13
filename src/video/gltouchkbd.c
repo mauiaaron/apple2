@@ -309,7 +309,7 @@ static inline int64_t _tap_key_at_point(float x, float y) {
 
         case ICONTEXT_NONACTIONABLE:
             scancode = 0;
-            handled = isCalibrating;
+            handled = false;
             break;
 
         case ICONTEXT_CTRL:
