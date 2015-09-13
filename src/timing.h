@@ -111,19 +111,6 @@ void timing_reinitializeAudio(void);
  */
 void cpu_pause(void);
 
-#if MOBILE_DEVICE
-/*
- * Pause timing/CPU thread because of a system backgrounding event.
- *
- * This may block for a short amount of time to grab the appropriate mutex, toggle a dirty bit, and release the mutex.
- * NOTE: CPU thread is not likely to actually be paused upon function return, (but will be shortly thereafter).
- *
- * This should also destroy/free any audio resources (speaker, mockingboard) managed by the CPU thread back to system.
- * Audio resources will be automatically recreated upon call to cpu_resume()
- */
-void cpu_pauseBackground(void);
-#endif
-
 /*
  * Resume timing/CPU thread
  */

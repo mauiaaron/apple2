@@ -80,6 +80,7 @@ void emulator_start(void) {
     load_settings(); // user prefs
     c_keys_set_key(kF8); // show credits before emulation start
 #endif
+    video_init();
     timing_startCPU();
     video_main_loop();
 }

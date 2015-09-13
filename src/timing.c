@@ -84,9 +84,6 @@ volatile uint8_t emul_reinitialize = 1;
 #ifdef AUDIO_ENABLED
 bool emul_reinitialize_audio = true;
 #endif
-#if MOBILE_DEVICE
-static bool emul_reinitialize_background = true;
-#endif
 static bool cpu_shutting_down = false;
 pthread_t cpu_thread_id = 0;
 pthread_mutex_t interface_mutex = { 0 };
@@ -211,28 +208,12 @@ void cpu_pause(void) {
 
     assert(pthread_self() != cpu_thread_id);
     _LOCK_CPU_THREAD();
-#if MOBILE_DEVICE
-    if (emul_reinitialize_background) {
-        RELEASE_LOG("CPU thread already paused ...");
-        _UNLOCK_CPU_THREAD();
-        return;
-    }
-#endif
 
 #ifdef AUDIO_ENABLED
     audio_pause();
 #endif
     is_paused = true;
 }
-
-#if MOBILE_DEVICE
-void cpu_pauseBackground(void) {
-    assert(pthread_self() != cpu_thread_id);
-    _LOCK_CPU_THREAD();
-    emul_reinitialize_background = true;
-    _UNLOCK_CPU_THREAD();
-}
-#endif
 
 void cpu_resume(void) {
     assert(pthread_self() != cpu_thread_id);
@@ -292,45 +273,9 @@ static void *cpu_thread(void *dummyptr) {
 
     do
     {
-#if MOBILE_DEVICE
-#if TESTING
-        emul_reinitialize_background = false;
-#else
-        if (emul_reinitialize_background) {
-
-            speaker_destroy();
-            MB_Destroy();
-            audio_shutdown();
-
-            int err = TEMP_FAILURE_RETRY(pthread_mutex_lock(&interface_mutex));
-            if (err) {
-                RELEASE_LOG("Error locking CPU mutex : %d", err);
-                RELEASE_BREAK();
-            }
-
-            is_paused = true;
-            emul_reinitialize_background = false;
-
-            LOG("cpu_thread : waiting for splash screen completion...");
-            err = pthread_cond_wait(&cpu_thread_cond, &interface_mutex);
-            if (err) {
-                RELEASE_LOG("Error waiting for CPU condition : %d", err);
-                RELEASE_BREAK();
-            }
-
-            err = TEMP_FAILURE_RETRY(pthread_mutex_unlock(&interface_mutex));
-            if (err) {
-                RELEASE_LOG("Error unlocking CPU mutex : %d", err);
-                RELEASE_BREAK();
-            }
-
-            LOG("cpu_thread : starting...");
-            emul_reinitialize_audio = true;
-        }
-#endif
-#endif
 
 #ifdef AUDIO_ENABLED
+        pthread_mutex_lock(&interface_mutex);
         if (emul_reinitialize_audio) {
             emul_reinitialize_audio = false;
 
@@ -342,6 +287,7 @@ static void *cpu_thread(void *dummyptr) {
             speaker_init();
             MB_Initialize();
         }
+        pthread_mutex_unlock(&interface_mutex);
 #endif
 
         if (emul_reinitialize) {
@@ -537,12 +483,6 @@ static void *cpu_thread(void *dummyptr) {
             }
 #endif
 
-#if MOBILE_DEVICE
-            if (UNLIKELY(emul_reinitialize_background)) {
-                break;
-            }
-#endif
-
             if (UNLIKELY(cpu_shutting_down)) {
                 break;
             }
@@ -564,8 +504,11 @@ static void *cpu_thread(void *dummyptr) {
 
 void timing_startCPU(void) {
     cpu_shutting_down = false;
-    video_init();
-    pthread_create(&cpu_thread_id, NULL, (void *)&cpu_thread, (void *)NULL);
+    int err = TEMP_FAILURE_RETRY(pthread_create(&cpu_thread_id, NULL, (void *)&cpu_thread, (void *)NULL));
+    if (err) {
+        RELEASE_ERRLOG("pthread_create failed!");
+        RELEASE_BREAK();
+    }
 }
 
 void timing_stopCPU(void) {

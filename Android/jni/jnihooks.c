@@ -136,6 +136,7 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnCreate(JNIEnv *env, jobje
     _run_tests();
     // CPU thread is started from testsuite (if needed)
 #else
+    cpu_pause();
     emulator_start();
 #endif
 }
@@ -176,18 +177,10 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnPause(JNIEnv *env, jobjec
     }
     LOG("%s", "");
 
-    video_backend->animation_hideTouchMenu();
-
 #if TESTING
     // test driver thread is managing CPU
 #else
-    if (isSystemPause) {
-        // going to background
-        cpu_pauseBackground();
-    } else {
-        // going to menu
-        cpu_pause();
-    }
+    cpu_pause();
 #endif
 }
 
