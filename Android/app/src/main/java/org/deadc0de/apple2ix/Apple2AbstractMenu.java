@@ -199,7 +199,8 @@ public abstract class Apple2AbstractMenu implements Apple2MenuView {
                 dialog.dismiss();
             }
         });
-        builder.show();
+        AlertDialog dialog = builder.create();
+        activity.registerAndShowDialog(dialog);
     }
 
     protected static ImageView _addPopupIcon(Apple2Activity activity, IMenuEnum setting, View convertView) {

@@ -44,8 +44,7 @@ public class Apple2Activity extends Activity {
     private Apple2SplashScreen mSplashScreen = null;
     private Apple2MainMenu mMainMenu = null;
     private ArrayList<Apple2MenuView> mMenuStack = new ArrayList<Apple2MenuView>();
-    private AlertDialog mQuitDialog = null;
-    private AlertDialog mRebootDialog = null;
+    private ArrayList<AlertDialog> mAlertDialogs = new ArrayList<AlertDialog>();
 
     private int mWidth = 0;
     private int mHeight = 0;
@@ -246,7 +245,6 @@ public class Apple2Activity extends Activity {
 
         // Apparently not good to leave popup/dialog windows showing when backgrounding.
         // Dismiss these popups to avoid android.view.WindowLeaked issues
-        // TODO FIXME : need to test/fix other popups generated in other menus ...
         dismissAllMenus();
 
         mSplashScreen = null;
@@ -304,18 +302,17 @@ public class Apple2Activity extends Activity {
         }
     }
 
+    /*
     private void printSamples(MotionEvent ev) {
         final int historySize = ev.getHistorySize();
         final int pointerCount = ev.getPointerCount();
 
-        /*
         for (int h = 0; h < historySize; h++) {
             Log.d(TAG, "Event "+ev.getAction().toString()+" at historical time "+ev.getHistoricalEventTime(h)+" :");
             for (int p = 0; p < pointerCount; p++) {
                 Log.d(TAG, "  pointer "+ev.getPointerId(p)+": ("+ev.getHistoricalX(p, h)+","+ev.getHistoricalY(p, h)+")");
             }
         }
-        */
         int pointerIndex = ev.getActionIndex();
 
         Log.d(TAG, "Event " + actionToString(ev.getActionMasked()) + " for " + pointerIndex + " at time " + ev.getEventTime() + " :");
@@ -323,6 +320,7 @@ public class Apple2Activity extends Activity {
             Log.d(TAG, "  pointer " + ev.getPointerId(p) + ": (" + ev.getX(p) + "," + ev.getY(p) + ")");
         }
     }
+    */
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
@@ -462,6 +460,11 @@ public class Apple2Activity extends Activity {
         });
     }
 
+    public void registerAndShowDialog(AlertDialog dialog) {
+        dialog.show();
+        mAlertDialogs.add(dialog);
+    }
+
     public synchronized void pushApple2View(Apple2MenuView apple2MenuView) {
         mMenuStack.add(apple2MenuView);
         View menuView = apple2MenuView.getView();
@@ -506,12 +509,11 @@ public class Apple2Activity extends Activity {
         if (mMainMenu != null) {
             mMainMenu.dismiss();
         }
-        if (mQuitDialog != null && mQuitDialog.isShowing()) {
-            mQuitDialog.dismiss();
+
+        for (AlertDialog dialog : mAlertDialogs) {
+            dialog.dismiss();
         }
-        if (mRebootDialog != null && mRebootDialog.isShowing()) {
-            mRebootDialog.dismiss();
-        }
+        mAlertDialogs.clear();
 
         // Get rid of the menu hierarchy
         Apple2MenuView apple2MenuView;
@@ -541,6 +543,7 @@ public class Apple2Activity extends Activity {
 
         // if no more views on menu stack, resume emulation
         if (mMenuStack.size() == 0) {
+            dismissAllMenus();
             nativeOnResume(/*isSystemResume:*/false);
         }
     }
@@ -559,64 +562,36 @@ public class Apple2Activity extends Activity {
 
     public void maybeQuitApp() {
         nativeOnPause(false);
-        if (mQuitDialog == null) {
-            mQuitDialog = new AlertDialog.Builder(this).setIcon(R.drawable.ic_launcher).setCancelable(true).setTitle(R.string.quit_really).setMessage(R.string.quit_warning).setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    nativeOnQuit();
-                    Apple2Activity.this.finish();
-                    new Runnable() {
-                        @Override
-                        public void run() {
-                            try {
-                                Thread.sleep(2000);
-                            } catch (InterruptedException ex) {
-                                // ...
-                            }
-                            System.exit(0);
+        AlertDialog quitDialog = new AlertDialog.Builder(this).setIcon(R.drawable.ic_launcher).setCancelable(true).setTitle(R.string.quit_really).setMessage(R.string.quit_warning).setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                nativeOnQuit();
+                Apple2Activity.this.finish();
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            Thread.sleep(2000);
+                        } catch (InterruptedException ex) {
+                            // ...
                         }
-                    }.run();
-                }
-            }).setNegativeButton(R.string.no, null).create();
-            /*mQuitDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
-                @Override
-                public void onCancel(DialogInterface dialog) {
-                    nativeOnResume(false);
-                }
-            });
-            mQuitDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
-                @Override
-                public void onDismiss(DialogInterface dialog) {
-                    nativeOnResume(false);
-                }
-            });*/
-        }
-        mQuitDialog.show();
+                        System.exit(0);
+                    }
+                }.run();
+            }
+        }).setNegativeButton(R.string.no, null).create();
+        registerAndShowDialog(quitDialog);
     }
 
     public void maybeReboot() {
         nativeOnPause(false);
-        if (mRebootDialog == null) {
-            mRebootDialog = new AlertDialog.Builder(this).setIcon(R.drawable.ic_launcher).setCancelable(true).setTitle(R.string.reboot_really).setMessage(R.string.reboot_warning).setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    nativeReboot();
-                    Apple2Activity.this.mMainMenu.dismiss();
-                }
-            }).setNegativeButton(R.string.no, null).create();
-            /*mRebootDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
-                @Override
-                public void onCancel(DialogInterface dialog) {
-                    nativeOnResume(false);
-                }
-            });
-            mRebootDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
-                @Override
-                public void onDismiss(DialogInterface dialog) {
-                    nativeOnResume(false);
-                }
-            });*/
-        }
-        mRebootDialog.show();
+        AlertDialog rebootDialog = new AlertDialog.Builder(this).setIcon(R.drawable.ic_launcher).setCancelable(true).setTitle(R.string.reboot_really).setMessage(R.string.reboot_warning).setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                nativeReboot();
+                Apple2Activity.this.mMainMenu.dismiss();
+            }
+        }).setNegativeButton(R.string.no, null).create();
+        registerAndShowDialog(rebootDialog);
     }
 }

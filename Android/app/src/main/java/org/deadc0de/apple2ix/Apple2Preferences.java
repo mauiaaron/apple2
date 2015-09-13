@@ -928,7 +928,7 @@ public enum Apple2Preferences {
                 dialog.dismiss();
             }
         }).create();
-        dialog.show();
+        activity.registerAndShowDialog(dialog);
     }
 
     public static void loadAllKeypadKeys(Apple2Activity activity) {

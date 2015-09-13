@@ -524,7 +524,8 @@ public class Apple2DisksMenu implements Apple2MenuView {
                     }
                 });
 
-                builder.show();
+                AlertDialog dialog = builder.create();
+                mActivity.registerAndShowDialog(dialog);
             }
         });
     }

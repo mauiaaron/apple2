@@ -287,7 +287,8 @@ public class Apple2SettingsMenu extends Apple2AbstractMenu {
                         Apple2Preferences.resetPreferences(activity);
                     }
                 }).setNegativeButton(R.string.no, null);
-                builder.show();
+                AlertDialog dialog = builder.create();
+                activity.registerAndShowDialog(dialog);
             }
         };
 
