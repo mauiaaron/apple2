@@ -108,7 +108,9 @@ public class Apple2DisksMenu implements Apple2MenuView {
             sDataDir = pi.applicationInfo.dataDir;
         } catch (PackageManager.NameNotFoundException e) {
             Log.e(TAG, "" + e);
-            System.exit(1);
+            if (sDataDir == null) {
+                sDataDir = "/data/local/tmp";
+            }
         }
 
         return sDataDir;
@@ -141,7 +143,6 @@ public class Apple2DisksMenu implements Apple2MenuView {
             }
         } catch (IOException e) {
             Log.e(TAG, "problem copying resources : " + e);
-            System.exit(1);
         }
     }
 
@@ -337,6 +338,14 @@ public class Apple2DisksMenu implements Apple2MenuView {
                 return (suffix.equalsIgnoreCase(".dsk.gz") || suffix.equalsIgnoreCase(".nib.gz"));
             }
         });
+
+        // This appears to happen in cases where the external files directory String is valid, but is not actually mounted
+        // We could probably check for more media "states" in the setup above ... but this defensive coding probably should
+        // remain here after any refactoring =)
+        if (files == null) {
+            dismiss();
+            return;
+        }
 
         Arrays.sort(files);
 
