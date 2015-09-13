@@ -36,6 +36,7 @@ public class Apple2Activity extends Activity {
 
     private final static String TAG = "Apple2Activity";
     private final static int MAX_FINGERS = 32;// HACK ...
+    private static volatile boolean DEBUG_STRICT = false;
 
     private boolean mSetUncaughtExceptionHandler = false;
 
@@ -166,7 +167,7 @@ public class Apple2Activity extends Activity {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        if (BuildConfig.DEBUG) {
+        if (Apple2Activity.DEBUG_STRICT && BuildConfig.DEBUG) {
             StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder()
                     .detectDiskReads()
                     .detectDiskWrites()
