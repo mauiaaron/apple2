@@ -373,10 +373,6 @@ static inline bool _is_point_on_axis_side(int x, int y) {
     return (x >= touchport.axisX && x <= touchport.axisXMax && y >= touchport.axisY && y <= touchport.axisYMax);
 }
 
-static inline bool _is_point_on_button_side(int x, int y) {
-    return (x >= touchport.buttonX && x <= touchport.buttonXMax && y >= touchport.buttonY && y <= touchport.buttonYMax);
-}
-
 static inline void _reset_model_position(GLModel *model, float touchX, float touchY, float objHalfW, float objHalfH) {
 
     float centerX = 0.f;
@@ -511,7 +507,7 @@ static int64_t gltouchjoy_onTouchEvent(interface_touch_event_t action, int point
                         axes.trackingIndex = pointer_idx;
                         _axis_touch_down(x, y);
                     }
-                } else if (_is_point_on_button_side(x, y)) {
+                } else {
                     if (pointer_idx == axes.trackingIndex) {
                         LOG("!!! : INCREMENTING axes.trackingIndex");
                         ++axes.trackingIndex;
@@ -523,8 +519,6 @@ static int64_t gltouchjoy_onTouchEvent(interface_touch_event_t action, int point
                         buttons.trackingIndex = pointer_idx;
                         _button_touch_down(x, y);
                     }
-                } else {
-                    assert(false && "should either be on axis or button side");
                 }
             }
             break;
