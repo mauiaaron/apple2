@@ -129,6 +129,16 @@ public class Apple2DisksMenu implements Apple2MenuView {
                 Apple2DisksMenu.copyFile(activity, "shaders", shader, sDataDir + File.separator + "shaders");
             }
 
+            String[] disks = activity.getAssets().list("disks");
+            for (String disk : disks) {
+                Apple2DisksMenu.copyFile(activity, "disks", disk, sDataDir + File.separator + "disks");
+            }
+        } catch (IOException e) {
+            Log.e(TAG, "problem copying resources : " + e);
+            throw new RuntimeException("This should not happen");
+        }
+
+        try {
             String[] keyboards = activity.getAssets().list("keyboards");
             for (String kbd : keyboards) {
                 Apple2DisksMenu.copyFile(activity, "keyboards", kbd, sDataDir + File.separator + "keyboards");
@@ -136,13 +146,9 @@ public class Apple2DisksMenu implements Apple2MenuView {
                     Apple2DisksMenu.copyFile(activity, "keyboards", kbd, sExternalFilesDir.getPath());
                 }
             }
-
-            String[] disks = activity.getAssets().list("disks");
-            for (String disk : disks) {
-                Apple2DisksMenu.copyFile(activity, "disks", disk, sDataDir + File.separator + "disks");
-            }
         } catch (IOException e) {
-            Log.e(TAG, "problem copying resources : " + e);
+            Log.e(TAG, "problem copying keyboards to sdcard : " + e);
+            // non-fatal
         }
     }
 
