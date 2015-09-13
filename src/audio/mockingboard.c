@@ -1760,7 +1760,7 @@ void MB_Destroy()
 }
 
 void MB_SetEnabled(bool enabled) {
-    g_bDisableDirectSoundMockingboard = true;
+    g_bDisableDirectSoundMockingboard = !enabled;
 }
 
 bool MB_ISEnabled(void) {

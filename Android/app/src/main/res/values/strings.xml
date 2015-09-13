@@ -128,7 +128,7 @@
     <string name="mockingboard_disabled_title">Mockingboard disabled</string>
     <string name="mockingboard_disabled_mesg">Mockingboard could not be enabled</string>
     <string name="mockingboard_enable">Enable Mockingboard</string>
-    <string name="mockingboard_enable_summary">Revision C in Slot 4/5</string>
+    <string name="mockingboard_enable_summary">Revision C in Slot 4/5 (may require restart)</string>
     <string name="mockingboard_volume">Mockingboard volume</string>
     <string name="mockingboard_volume_summary">Set the Mockingboard(s) volume</string>
     <string name="no">No</string>

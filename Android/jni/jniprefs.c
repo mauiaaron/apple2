@@ -62,7 +62,7 @@ jboolean Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetMockingboardEnabl
     assert(cpu_isPaused());
     MB_SetEnabled(enabled);
     timing_reinitializeAudio();
-    return MB_ISEnabled();
+    return enabled;
 }
 
 void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetMockingboardVolume(JNIEnv *env, jclass cls, jint goesToTen) {
