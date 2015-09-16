@@ -251,6 +251,13 @@ public class Apple2KeyboardSettingsMenu extends Apple2AbstractMenu {
                     }
                 });
 
+                // This appears to happen in cases where the external files directory String is valid, but is not actually mounted
+                // We could probably check for more media "states" in the setup above ... but this defensive coding probably should
+                // remain here after any refactoring =)
+                if (files == null) {
+                    return;
+                }
+
                 Arrays.sort(files);
 
                 String[] titles = new String[files.length];
