@@ -245,12 +245,14 @@ public class Apple2Activity extends Activity {
 
         // Apparently not good to leave popup/dialog windows showing when backgrounding.
         // Dismiss these popups to avoid android.view.WindowLeaked issues
-        dismissAllMenus();
+        synchronized (this) {
+            dismissAllMenus();
 
-        mSplashScreen = null;
-        mMainMenu = null;
+            mSplashScreen = null;
+            mMainMenu = null;
 
-        nativeOnPause(true);
+            nativeOnPause(true);
+        }
     }
 
     @Override
@@ -455,7 +457,11 @@ public class Apple2Activity extends Activity {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                mSplashScreen.show();
+                synchronized (Apple2Activity.this) {
+                    if (mSplashScreen != null) {
+                        mSplashScreen.show();
+                    }
+                }
             }
         });
     }
