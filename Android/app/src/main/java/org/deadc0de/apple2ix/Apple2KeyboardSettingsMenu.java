@@ -11,6 +11,7 @@
 
 package org.deadc0de.apple2ix;
 
+import android.util.Log;
 import android.view.View;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
@@ -24,7 +25,7 @@ import org.deadc0de.apple2ix.basic.R;
 
 public class Apple2KeyboardSettingsMenu extends Apple2AbstractMenu {
 
-    private final static String TAG = "Apple2KeyboardSettingsMenu";
+    private final static String TAG = "KeyboardSettingsMenu";
 
     // These settings must match native side
     public final static int MOUSETEXT_BEGIN = 0x80;
@@ -225,12 +226,9 @@ public class Apple2KeyboardSettingsMenu extends Apple2AbstractMenu {
             @Override
             public void handleSelection(final Apple2Activity activity, final Apple2AbstractMenu settingsMenu, boolean isChecked) {
 
-                File keyboardDir = Apple2DisksMenu.getExternalStorageDirectory();
-                if (keyboardDir == null) {
-                    keyboardDir = new File(Apple2DisksMenu.getDataDir(activity) + File.separator + "keyboards");
-                }
+                File extKeyboardDir = Apple2DisksMenu.getExternalStorageDirectory();
 
-                final File[] files = keyboardDir.listFiles(new FilenameFilter() {
+                FilenameFilter kbdJsonFilter = new FilenameFilter() {
                     public boolean accept(File dir, String name) {
                         File file = new File(dir, name);
                         if (file.isDirectory()) {
@@ -249,25 +247,30 @@ public class Apple2KeyboardSettingsMenu extends Apple2AbstractMenu {
                         String suffix = name.substring(nameLen - extLen, nameLen);
                         return (suffix.equalsIgnoreCase(extension));
                     }
-                });
+                };
 
-                // This appears to happen in cases where the external files directory String is valid, but is not actually mounted
-                // We could probably check for more media "states" in the setup above ... but this defensive coding probably should
-                // remain here after any refactoring =)
+                File[] files = extKeyboardDir.listFiles(kbdJsonFilter);
                 if (files == null) {
-                    return;
+                    // read keyboard data from /data/data/...
+                    File keyboardDir = new File(Apple2DisksMenu.getDataDir(activity) + File.separator + "keyboards");
+                    files = keyboardDir.listFiles(kbdJsonFilter);
+                    if (files == null) {
+                        Log.e(TAG, "OOPS, could not read keyboard data directory");
+                        return;
+                    }
                 }
 
                 Arrays.sort(files);
 
-                String[] titles = new String[files.length];
+                final File[] allFiles = files;
+                String[] titles = new String[allFiles.length];
                 int idx = 0;
-                for (File file : files) {
+                for (File file : allFiles) {
                     titles[idx] = file.getName();
                     ++idx;
                 }
 
-                final String keyboardDirName = keyboardDir.getPath();
+                final String keyboardDirName = extKeyboardDir.getPath();
 
                 _alertDialogHandleSelection(activity, keyboardDirName, titles, new IPreferenceLoadSave() {
                     @Override
@@ -278,7 +281,7 @@ public class Apple2KeyboardSettingsMenu extends Apple2AbstractMenu {
                     @Override
                     public void saveInt(int value) {
                         Apple2Preferences.KEYBOARD_ALT.saveInt(activity, value);
-                        String path = files[value].getPath();
+                        String path = allFiles[value].getPath();
                         Apple2Preferences.KEYBOARD_ALT_PATH.saveString(activity, path);
                     }
                 });

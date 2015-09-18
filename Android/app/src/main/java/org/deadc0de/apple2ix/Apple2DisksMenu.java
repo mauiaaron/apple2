@@ -133,6 +133,12 @@ public class Apple2DisksMenu implements Apple2MenuView {
             for (String disk : disks) {
                 Apple2DisksMenu.copyFile(activity, "disks", disk, sDataDir + File.separator + "disks");
             }
+
+            String[] keyboards = activity.getAssets().list("keyboards");
+            for (String kbd : keyboards) {
+                Apple2DisksMenu.copyFile(activity, "keyboards", kbd, sDataDir + File.separator + "keyboards");
+            }
+
         } catch (IOException e) {
             Log.e(TAG, "problem copying resources : " + e);
             throw new RuntimeException("This should not happen");
