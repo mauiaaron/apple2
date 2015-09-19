@@ -23,6 +23,7 @@ color_mode_t color_mode = COLOR;
 const char *data_dir = NULL;
 char **argv = NULL;
 int argc = 0;
+void (*initializeCrashHandler)(const char *dumpDir) = NULL;
 
 __attribute__((constructor(CTOR_PRIORITY_FIRST)))
 static void _init_common() {

@@ -30,4 +30,7 @@ void emulator_start(void);
 // shutdown emulator in preparation for app exit
 void emulator_shutdown(void);
 
+// crash handler initialization (if available)
+extern void (*initializeCrashHandler)(const char *dumpDir);
+
 #endif

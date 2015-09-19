@@ -94,6 +94,14 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnCreate(JNIEnv *env, jobje
         return;
     }
 
+    data_dir = strdup(dataDir);
+    if (initializeCrashHandler) {
+        initializeCrashHandler(data_dir);
+    }
+
+    (*env)->ReleaseStringUTFChars(env, j_dataDir, dataDir);
+    LOG("data_dir : %s", data_dir);
+
     AndroidCpuFamily family = android_getCpuFamily();
     uint64_t features = android_getCpuFeatures();
     if (family == ANDROID_CPU_FAMILY_X86) {
@@ -123,10 +131,6 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnCreate(JNIEnv *env, jobje
         }
     }
 
-    data_dir = strdup(dataDir);
-    (*env)->ReleaseStringUTFChars(env, j_dataDir, dataDir);
-    LOG("data_dir : %s", data_dir);
-
     android_deviceSampleRateHz = (unsigned long)sampleRate;
     android_monoBufferSubmitSizeSamples = (unsigned long)monoBufferSize;
     android_stereoBufferSubmitSizeSamples = (unsigned long)stereoBufferSize;
@@ -142,7 +146,7 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnCreate(JNIEnv *env, jobje
 }
 
 void Java_org_deadc0de_apple2ix_Apple2Activity_nativeGraphicsChanged(JNIEnv *env, jobject obj, jint width, jint height) {
-    LOG("%s", "");
+    LOG("...");
     video_backend->reshape(width, height);
 }
 
@@ -158,7 +162,7 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnResume(JNIEnv *env, jobje
     if (!cpu_isPaused()) {
         return;
     }
-    LOG("%s", "");
+    LOG("...");
     if (!isSystemResume) {
 #if TESTING
         // test driver thread is managing CPU
@@ -175,7 +179,7 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnPause(JNIEnv *env, jobjec
     if (cpu_isPaused()) {
         return;
     }
-    LOG("%s", "");
+    LOG("...");
 
 #if TESTING
     // test driver thread is managing CPU
@@ -210,7 +214,7 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeRender(JNIEnv *env, jobject
 }
 
 void Java_org_deadc0de_apple2ix_Apple2Activity_nativeReboot(JNIEnv *env, jobject obj) {
-    LOG("%s", "");
+    LOG("...");
     cpu65_reboot();
 }
 
@@ -220,7 +224,7 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnQuit(JNIEnv *env, jobject
 #else
     shuttingDown = true;
 
-    LOG("%s", "");
+    LOG("...");
 
     c_eject_6(0);
     c_eject_6(1);
@@ -327,7 +331,7 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeChooseDisk(JNIEnv *env, job
 }
 
 void Java_org_deadc0de_apple2ix_Apple2Activity_nativeEjectDisk(JNIEnv *env, jobject obj, jboolean driveA) {
-    LOG("%s", "");
+    LOG("...");
     c_eject_6(!driveA);
 }
 
