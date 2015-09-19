@@ -3,12 +3,10 @@
 package_id="org.deadc0de.apple2ix.basic"
 apple2_src_path=apple2ix-src
 glue_srcs="$apple2_src_path/disk.c $apple2_src_path/misc.c $apple2_src_path/display.c $apple2_src_path/vm.c $apple2_src_path/cpu-supp.c $apple2_src_path/audio/speaker.c $apple2_src_path/audio/mockingboard.c"
-do_load=1
-do_debug=0
 target_arch=armeabi-v7a
 
 usage() {
-    echo "$0 [--no-load] [--debug] [--armeabi | --armeabi-v7a]"
+    echo "$0 [--build-release] [--load] [--debug] [--armeabi | --armeabi-v7a]"
     exit 0
 }
 
@@ -18,8 +16,8 @@ while test "x$1" != "x"; do
             do_debug=1
             ;;
 
-        "--no-load")
-            do_load=0
+        "--load")
+            do_load=1
             ;;
 
         "--armeabi")
@@ -28,6 +26,10 @@ while test "x$1" != "x"; do
 
         "--v7a")
             target_arch=armeabi-v7a
+            ;;
+
+        "--build-release")
+            do_release=1
             ;;
 
         "-h")
@@ -74,8 +76,8 @@ if test "$(basename $0)" = "uninstall" ; then
     exit 0
 fi
 
-CC=`which clang`
-#CC=`which gcc`
+#CC=`which clang`
+CC=`which gcc`
 CFLAGS="-std=gnu11"
 
 # ROMz
@@ -103,12 +105,17 @@ else
 fi
 
 # build native sources
-ndk-build V=1 NDK_DEBUG=1 NDK_TOOLCHAIN_VERSION=clang
+if test "x$do_release" = "x1" ; then
+    ndk-build V=1 # NDK_TOOLCHAIN_VERSION=clang
+else
+    ndk-build V=1 NDK_DEBUG=1 # NDK_TOOLCHAIN_VERSION=clang
+fi
 ret=$?
 if test "x$ret" != "x0" ; then
     exit $ret
 fi
 
+# usually we should build the Java stuff from within Android Studio
 if test "x$do_load" = "x1" ; then
     ant -f ../build.xml debug install
     ret=$?
@@ -123,7 +130,8 @@ if test "x$do_debug" = "x1" ; then
     /bin/ln -s $target_arch/gdbserver libs/gdbserver
     ##/bin/rm ./libs/gdb.setup
     ##/bin/ln -s $target_arch/gdb.setup libs/gdb.setup
-    ndk-gdb --verbose --force --launch=org.deadc0de.apple2ix.Apple2Activity
+    ##ndk-gdb --verbose --force --launch=org.deadc0de.apple2ix.Apple2Activity
+    ndk-gdb --nowait --verbose --force --launch=org.deadc0de.apple2ix.Apple2Activity
 elif test "x$do_load" = "x1" ; then
     adb shell am start -a android.intent.action.MAIN -n org.deadc0de.apple2ix.basic/org.deadc0de.apple2ix.Apple2Activity
 fi
