@@ -62,7 +62,7 @@ static void _run_tests(void) {
 }
 #endif
 
-static inline int _androidTouchEvent2JoystickEvent(jint action) {
+static inline int _androidTouchEvent2InterfaceEvent(jint action) {
     switch (action) {
         case ANDROID_ACTION_DOWN:
             return TOUCH_DOWN;
@@ -290,7 +290,7 @@ jlong Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnTouch(JNIEnv *env, jobje
     jfloat *x_coords = (*env)->GetFloatArrayElements(env, xCoords, 0);
     jfloat *y_coords = (*env)->GetFloatArrayElements(env, yCoords, 0);
 
-    int joyaction = _androidTouchEvent2JoystickEvent(action);
+    int joyaction = _androidTouchEvent2InterfaceEvent(action);
 
     //for (unsigned int i=0; i<pointerCount; i++) {
     //  LOG("\t[%f,%f]", x_coords[i], y_coords[i]);
