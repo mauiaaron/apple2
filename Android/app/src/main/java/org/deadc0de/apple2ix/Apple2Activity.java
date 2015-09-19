@@ -106,6 +106,8 @@ public class Apple2Activity extends Activity {
 
     public native void nativeEjectDisk(boolean driveA);
 
+    public native void nativePerformCrash(int crashType);
+
 
     private void _setCustomExceptionHandler() {
         if (mSetUncaughtExceptionHandler) {

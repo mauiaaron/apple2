@@ -15,11 +15,13 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
+import android.util.Log;
 import android.view.View;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.TextView;
 
+import org.deadc0de.apple2ix.basic.BuildConfig;
 import org.deadc0de.apple2ix.basic.R;
 
 public class Apple2SettingsMenu extends Apple2AbstractMenu {
@@ -289,6 +291,67 @@ public class Apple2SettingsMenu extends Apple2AbstractMenu {
                 }).setNegativeButton(R.string.no, null);
                 AlertDialog dialog = builder.create();
                 activity.registerAndShowDialog(dialog);
+            }
+        },
+        CRASH {
+            @Override
+            public final String getTitle(Apple2Activity activity) {
+                if (BuildConfig.DEBUG) {
+                    // in debug mode we actually exercise the crash reporter ...
+                    return activity.getResources().getString(R.string.crasher_title);
+                } else {
+                    return activity.getResources().getString(R.string.crasher_send_title);
+                }
+            }
+
+            @Override
+            public final String getSummary(Apple2Activity activity) {
+                if (BuildConfig.DEBUG) {
+                    return activity.getResources().getString(R.string.crasher_summary);
+                } else {
+                    return activity.getResources().getString(R.string.crasher_send_summary);
+                }
+            }
+
+            @Override
+            public void handleSelection(final Apple2Activity activity, final Apple2AbstractMenu settingsMenu, boolean isChecked) {
+
+                if (BuildConfig.DEBUG) {
+                    _alertDialogHandleSelection(activity, R.string.crasher, new String[]{
+                            activity.getResources().getString(R.string.crash_java_npe),
+                            activity.getResources().getString(R.string.crash_null),
+                            activity.getResources().getString(R.string.crash_stackcall_overflow),
+                            activity.getResources().getString(R.string.crash_stackbuf_overflow),
+                    }, new IPreferenceLoadSave() {
+                        @Override
+                        public int intValue() {
+                            return -1;
+                        }
+
+                        @Override
+                        public void saveInt(int value) {
+                            switch (value) {
+                                case 0: {
+                                    final String[] str = new String[1];
+                                    str[0] = null;
+                                    activity.runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            Log.d(TAG, "About to NPE : " + str[0].length());
+                                        }
+                                    });
+                                }
+                                break;
+
+                                default:
+                                    activity.nativePerformCrash(value);
+                                    break;
+                            }
+                        }
+                    });
+                } else {
+                    // TODO FIXME : run local crash analysis and open Email Intent to send
+                }
             }
         };
 
