@@ -34,6 +34,16 @@
 #ifndef PROCESSOR_STACKWALK_COMMON_H__
 #define PROCESSOR_STACKWALK_COMMON_H__
 
+#if EMBEDDED_STACKWALKER
+#include <stdio.h>
+extern "C" {
+    /**
+     * Sets output to specified FILE*
+     */
+    void stackwalker_setOutputFile(const FILE* file);
+}
+#endif
+
 namespace google_breakpad {
 
 class ProcessState;
