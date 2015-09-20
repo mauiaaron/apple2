@@ -47,9 +47,11 @@
 #include "google_breakpad/processor/system_info.h"
 #include "processor/linked_ptr.h"
 #include "processor/logging.h"
+#if !defined(__ANDROID__)
 #include "processor/stackwalker_ppc.h"
 #include "processor/stackwalker_ppc64.h"
 #include "processor/stackwalker_sparc.h"
+#endif
 #include "processor/stackwalker_x86.h"
 #include "processor/stackwalker_amd64.h"
 #include "processor/stackwalker_arm.h"
@@ -209,6 +211,7 @@ Stackwalker* Stackwalker::StackwalkerForCPU(
                                            memory, modules, frame_symbolizer);
       break;
 
+#if !defined(__ANDROID__)
     case MD_CONTEXT_PPC:
       cpu_stackwalker = new StackwalkerPPC(system_info,
                                            context->GetContextPPC(),
@@ -220,6 +223,7 @@ Stackwalker* Stackwalker::StackwalkerForCPU(
                                              context->GetContextPPC64(),
                                              memory, modules, frame_symbolizer);
       break;
+#endif
 
     case MD_CONTEXT_AMD64:
       cpu_stackwalker = new StackwalkerAMD64(system_info,
@@ -227,11 +231,13 @@ Stackwalker* Stackwalker::StackwalkerForCPU(
                                              memory, modules, frame_symbolizer);
       break;
 
+#if !defined(__ANDROID__)
     case MD_CONTEXT_SPARC:
       cpu_stackwalker = new StackwalkerSPARC(system_info,
                                              context->GetContextSPARC(),
                                              memory, modules, frame_symbolizer);
       break;
+#endif
  
     case MD_CONTEXT_MIPS:
       cpu_stackwalker = new StackwalkerMIPS(system_info,
