@@ -41,6 +41,11 @@ extern "C" {
      * Sets output to specified FILE*
      */
     void stackwalker_setOutputFile(const FILE* file);
+
+    /**
+     * Run stackwalker to process a minidump and symbols
+     */
+    int stackwalker_main(const char* minidump, const char* symbolsPath, const bool machineReadable);
 }
 #endif
 
