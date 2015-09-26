@@ -39,8 +39,6 @@ public class Apple2Activity extends Activity {
     private final static int MAX_FINGERS = 32;// HACK ...
     private static volatile boolean DEBUG_STRICT = false;
 
-    private boolean mSetUncaughtExceptionHandler = false;
-
     private Apple2View mView = null;
     private Apple2SplashScreen mSplashScreen = null;
     private Apple2MainMenu mMainMenu = null;
@@ -51,10 +49,6 @@ public class Apple2Activity extends Activity {
 
     private int mWidth = 0;
     private int mHeight = 0;
-
-    private int mSampleRate = 0;
-    private int mMonoBufferSize = 0;
-    private int mStereoBufferSize = 0;
 
     private float[] mXCoords = new float[MAX_FINGERS];
     private float[] mYCoords = new float[MAX_FINGERS];
@@ -91,8 +85,6 @@ public class Apple2Activity extends Activity {
 
     private native void nativeOnKeyUp(int keyCode, int metaState);
 
-    private native void nativeOnUncaughtException(String home, String trace);
-
     private native void nativeOnResume(boolean isSystemResume);
 
     public native void nativeOnPause(boolean isSystemPause);
@@ -111,63 +103,6 @@ public class Apple2Activity extends Activity {
 
     public native void nativePerformCrash(int crashType);
 
-
-    private void _setCustomExceptionHandler() {
-        if (mSetUncaughtExceptionHandler) {
-            return;
-        }
-        mSetUncaughtExceptionHandler = true;
-
-        final String homeDir = "/data/data/" + this.getPackageName();
-        final Thread.UncaughtExceptionHandler defaultExceptionHandler = Thread.getDefaultUncaughtExceptionHandler();
-        Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
-            @Override
-            public void uncaughtException(Thread thread, Throwable t) {
-                try {
-                    StackTraceElement[] stackTraceElements = t.getStackTrace();
-                    StringBuffer traceBuffer = new StringBuffer();
-
-                    // prepend information about this device
-                    traceBuffer.append(Build.BRAND);
-                    traceBuffer.append("\n");
-                    traceBuffer.append(Build.MODEL);
-                    traceBuffer.append("\n");
-                    traceBuffer.append(Build.MANUFACTURER);
-                    traceBuffer.append("\n");
-                    traceBuffer.append(Build.DEVICE);
-                    traceBuffer.append("\n");
-                    traceBuffer.append("Device sample rate:");
-                    traceBuffer.append(mSampleRate);
-                    traceBuffer.append("\n");
-                    traceBuffer.append("Device mono buffer size:");
-                    traceBuffer.append(mMonoBufferSize);
-                    traceBuffer.append("\n");
-                    traceBuffer.append("Device stereo buffer size:");
-                    traceBuffer.append(mStereoBufferSize);
-                    traceBuffer.append("\n");
-
-                    // now append the actual stack trace
-                    traceBuffer.append(t.getClass().getName());
-                    traceBuffer.append("\n");
-                    final int maxTraceSize = 2048 + 1024 + 512; // probably should keep this less than a standard Linux PAGE_SIZE
-                    for (StackTraceElement elt : stackTraceElements) {
-                        traceBuffer.append(elt.toString());
-                        traceBuffer.append("\n");
-                        if (traceBuffer.length() >= maxTraceSize) {
-                            break;
-                        }
-                    }
-                    traceBuffer.append("\n");
-
-                    nativeOnUncaughtException(homeDir, traceBuffer.toString());
-                } catch (Throwable terminator2) {
-                    // Yo dawg, I hear you like exceptions in your exception handler! ...
-                }
-
-                defaultExceptionHandler.uncaughtException(thread, t);
-            }
-        });
-    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -189,7 +124,7 @@ public class Apple2Activity extends Activity {
 
         Log.e(TAG, "onCreate()");
 
-        _setCustomExceptionHandler();
+        Apple2CrashHandler.getInstance().setCustomExceptionHandler(this);
 
         // run first-time initializations
         if (!Apple2Preferences.FIRST_TIME_CONFIGURED.booleanValue(this)) {
@@ -199,13 +134,13 @@ public class Apple2Activity extends Activity {
         Apple2Preferences.FIRST_TIME_CONFIGURED.saveBoolean(this, true);
 
         // get device audio parameters for native OpenSLES
-        mSampleRate = DevicePropertyCalculator.getRecommendedSampleRate(this);
-        mMonoBufferSize = DevicePropertyCalculator.getRecommendedBufferSize(this, /*isStereo:*/false);
-        mStereoBufferSize = DevicePropertyCalculator.getRecommendedBufferSize(this, /*isStereo:*/true);
-        Log.d(TAG, "Device sampleRate:" + mSampleRate + " mono bufferSize:" + mMonoBufferSize + " stereo bufferSize:" + mStereoBufferSize);
+        int sampleRate = DevicePropertyCalculator.getRecommendedSampleRate(this);
+        int monoBufferSize = DevicePropertyCalculator.getRecommendedBufferSize(this, /*isStereo:*/false);
+        int stereoBufferSize = DevicePropertyCalculator.getRecommendedBufferSize(this, /*isStereo:*/true);
+        Log.d(TAG, "Device sampleRate:" + sampleRate + " mono bufferSize:" + monoBufferSize + " stereo bufferSize:" + stereoBufferSize);
 
         String dataDir = Apple2DisksMenu.getDataDir(this);
-        nativeOnCreate(dataDir, mSampleRate, mMonoBufferSize, mStereoBufferSize);
+        nativeOnCreate(dataDir, sampleRate, monoBufferSize, stereoBufferSize);
 
         // NOTE: load preferences after nativeOnCreate ... native CPU thread should still be paused
         Apple2Preferences.loadPreferences(this);

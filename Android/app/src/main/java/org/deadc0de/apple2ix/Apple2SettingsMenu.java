@@ -300,7 +300,7 @@ public class Apple2SettingsMenu extends Apple2AbstractMenu {
                     // in debug mode we actually exercise the crash reporter ...
                     return activity.getResources().getString(R.string.crasher_title);
                 } else {
-                    return activity.getResources().getString(R.string.crasher_send_title);
+                    return activity.getResources().getString(R.string.crasher_check_title);
                 }
             }
 
@@ -309,7 +309,7 @@ public class Apple2SettingsMenu extends Apple2AbstractMenu {
                 if (BuildConfig.DEBUG) {
                     return activity.getResources().getString(R.string.crasher_summary);
                 } else {
-                    return activity.getResources().getString(R.string.crasher_send_summary);
+                    return activity.getResources().getString(R.string.crasher_check_summary);
                 }
             }
 
@@ -317,12 +317,7 @@ public class Apple2SettingsMenu extends Apple2AbstractMenu {
             public void handleSelection(final Apple2Activity activity, final Apple2AbstractMenu settingsMenu, boolean isChecked) {
 
                 if (BuildConfig.DEBUG) {
-                    _alertDialogHandleSelection(activity, R.string.crasher, new String[]{
-                            activity.getResources().getString(R.string.crash_java_npe),
-                            activity.getResources().getString(R.string.crash_null),
-                            activity.getResources().getString(R.string.crash_stackcall_overflow),
-                            activity.getResources().getString(R.string.crash_stackbuf_overflow),
-                    }, new IPreferenceLoadSave() {
+                    _alertDialogHandleSelection(activity, R.string.crasher, Apple2CrashHandler.CrashType.titles(activity), new IPreferenceLoadSave() {
                         @Override
                         public int intValue() {
                             return -1;
@@ -344,13 +339,13 @@ public class Apple2SettingsMenu extends Apple2AbstractMenu {
                                 break;
 
                                 default:
-                                    activity.nativePerformCrash(value);
+                                    Apple2CrashHandler.getInstance().performCrash(value);
                                     break;
                             }
                         }
                     });
                 } else {
-                    // TODO FIXME : run local crash analysis and open Email Intent to send
+                    // TODO FIXME : checkbox on whether to enable checking/sending crashes
                 }
             }
         };
