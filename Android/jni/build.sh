@@ -115,6 +115,56 @@ if test "x$ret" != "x0" ; then
     exit $ret
 fi
 
+###############################################################################
+# Symbolicate and move symbols file into location to be deployed on device
+
+SYMFILE=libapple2ix.so.sym
+ARCHES_TO_SYMBOLICATE='armeabi armeabi-v7a'
+
+for arch in $ARCHES_TO_SYMBOLICATE ; do
+    SYMDIR=../assets/symbols/$arch/libapple2ix.so
+
+    # remove old symbols (if any)
+    /bin/rm -rf $SYMDIR
+
+    # Run Breakpad's dump_syms
+    ../../externals/bin/dump_syms ../obj/local/$arch/libapple2ix.so > $SYMFILE
+
+    ret=$?
+    if test "x$ret" != "x0" ; then
+        echo "OOPS, dump_syms failed for $arch"
+        exit $ret
+    fi
+
+    # strip to the just the numeric id in the .sym header and verify it makes sense
+    sym_id=$(head -1 $SYMFILE  | cut -d ' ' -f 4)
+    sym_id_check=$(echo $sym_id | wc -c)
+    if test "x$sym_id_check" != "x34" ; then
+        echo "OOPS symbol header not expected size, meat-space intervention needed =P"
+        exit 1
+    fi
+    sym_id_check=$(echo $sym_id | tr -d 'A-Fa-f0-9' | wc -c)
+    if test "x$sym_id_check" != "x1" ; then
+        echo "OOPS unexpected characters in symbol header, meat-space intervention needed =P"
+        exit 1
+    fi
+
+    mkdir -p $SYMDIR/$sym_id
+    ret=$?
+    if test "x$ret" != "x0" ; then
+        echo "OOPS, could not create symbols directory for arch:$arch and sym_id:$sym_id"
+        exit $ret
+    fi
+
+    /bin/mv $SYMFILE $SYMDIR/$sym_id/
+    ret=$?
+    if test "x$ret" != "x0" ; then
+        echo "OOPS, could not move $SYMFILE to $SYMDIR/$sym_id/"
+        exit $ret
+    fi
+done
+
+###############################################################################
 # usually we should build the Java stuff from within Android Studio
 if test "x$do_load" = "x1" ; then
     ant -f ../build.xml debug install
@@ -124,6 +174,7 @@ if test "x$do_load" = "x1" ; then
     fi
 fi
 
+###############################################################################
 if test "x$do_debug" = "x1" ; then
     cd ..
     /bin/rm ./libs/gdbserver
