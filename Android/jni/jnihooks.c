@@ -103,8 +103,8 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnCreate(JNIEnv *env, jobje
     }
 
     data_dir = strdup(dataDir);
-    if (initializeCrashHandler) {
-        initializeCrashHandler(data_dir);
+    if (crashHandler && crashHandler->init) {
+        crashHandler->init(data_dir);
     }
 
     (*env)->ReleaseStringUTFChars(env, j_dataDir, dataDir);
@@ -249,9 +249,12 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnQuit(JNIEnv *env, jobject
     cpu_resume();
 
     emulator_shutdown();
+
+    if (crashHandler && crashHandler->shutdown) {
+        crashHandler->shutdown();
+    }
 #endif
 }
-
 
 void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnKeyDown(JNIEnv *env, jobject obj, jint keyCode, jint metaState) {
     if (UNLIKELY(shuttingDown)) {

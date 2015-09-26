@@ -135,6 +135,129 @@ public class Apple2CrashHandler {
         return areJavaCrashesPresent(activity) || areNativeCrashesPresent(activity);
     }
 
+    public void checkForCrashes(final Apple2Activity activity) {
+        if (!areCrashesPresent(activity)) {
+            return;
+        }
+
+        boolean previouslyRanCrashCheck = mAlreadyRanCrashCheck.getAndSet(true);
+
+        boolean previouslySentReport = mAlreadySentReport.get();
+        if (previouslySentReport) {
+
+            // here we assume that the crash data was previously sent via email ... if not then we lost it =P
+
+            Log.d(TAG, "Cleaning up crash data ...");
+            int idx = 0;
+            File[] nativeCrashes = _nativeCrashFiles(activity);
+            for (File crash : nativeCrashes) {
+
+                if (!crash.delete()) {
+                    Log.d(TAG, "Could not unlink crash : " + crash);
+                }
+
+                File processed = new File(_dumpPath2ProcessedPath(crash.getAbsolutePath()));
+                if (!processed.delete()) {
+                    Log.d(TAG, "Could not unlink processed : " + processed);
+                }
+            }
+
+            File javaCrashFile = _javaCrashFile(activity);
+            if (!javaCrashFile.delete()) {
+                Log.d(TAG, "Could not unlink java crash : " + javaCrashFile);
+            }
+
+            // remove previous log file
+            _writeTempLogFile(new StringBuilder());
+            return;
+        }
+
+        if (previouslyRanCrashCheck) {
+            // don't keep asking on return from backgrounding
+            return;
+        }
+
+        final AlertDialog crashDialog = new AlertDialog.Builder(activity).setIcon(R.drawable.ic_launcher).setCancelable(true).setTitle(R.string.crasher_send).setMessage(R.string.crasher_send_message).setNegativeButton(R.string.no, null).setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+
+                // assuming that the actual native processing works quickly ...
+
+                final Handler handler = new Handler();
+                handler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+
+                        final int sampleRate = DevicePropertyCalculator.getRecommendedSampleRate(activity);
+                        final int monoBufferSize = DevicePropertyCalculator.getRecommendedBufferSize(activity, /*isStereo:*/false);
+                        final int stereoBufferSize = DevicePropertyCalculator.getRecommendedBufferSize(activity, /*isStereo:*/true);
+
+                        StringBuilder allCrashData = new StringBuilder();
+
+                        // prepend information about this device
+                        allCrashData.append(Build.BRAND);
+                        allCrashData.append("\n");
+                        allCrashData.append(Build.MODEL);
+                        allCrashData.append("\n");
+                        allCrashData.append(Build.MANUFACTURER);
+                        allCrashData.append("\n");
+                        allCrashData.append(Build.DEVICE);
+                        allCrashData.append("\n");
+                        allCrashData.append("Device sample rate:");
+                        allCrashData.append(sampleRate);
+                        allCrashData.append("\n");
+                        allCrashData.append("Device mono buffer size:");
+                        allCrashData.append(monoBufferSize);
+                        allCrashData.append("\n");
+                        allCrashData.append("Device stereo buffer size:");
+                        allCrashData.append(stereoBufferSize);
+                        allCrashData.append("\n");
+
+                        File[] nativeCrashes = _nativeCrashFiles(activity);
+                        if (nativeCrashes == null) {
+                            nativeCrashes = new File[0];
+                        }
+
+                        // iteratively process native crashes
+                        int idx = 0;
+                        for (File crash : nativeCrashes) {
+
+                            String crashPath = crash.getAbsolutePath();
+                            Log.d(TAG, "Processing crash : " + crashPath);
+
+                            String processedPath = _dumpPath2ProcessedPath(crashPath);
+                            nativeProcessCrash(crashPath, processedPath); // Run Breakpad minidump_stackwalk
+
+                            StringBuilder crashData = new StringBuilder();
+                            if (!_readFile(new File(processedPath), crashData)) {
+                                Log.e(TAG, "Error processing crash : " + crashPath);
+                            }
+                            allCrashData.append(">>>>>>> NATIVE CRASH [").append(crashPath).append("]\n");
+                            allCrashData.append(crashData);
+                        }
+
+                        StringBuilder javaCrashData = new StringBuilder();
+                        File javaCrashFile = _javaCrashFile(activity);
+                        if (javaCrashFile.exists()) {
+                            Log.d(TAG, "Reading java crashes file");
+                            if (!_readFile(javaCrashFile, javaCrashData)) {
+                                Log.e(TAG, "Error processing java crash : " + javaCrashFileName);
+                            }
+                        }
+
+                        allCrashData.append(">>>>>>> JAVA CRASH DATA\n");
+                        allCrashData.append(javaCrashData);
+
+                        // send report with all the data
+                        _sendEmailToDeveloperWithCrashData(activity, allCrashData);
+                    }
+                }, 0);
+            }
+        }).create();
+        activity.registerAndShowDialog(crashDialog);
+    }
+
     public void performCrash(int crashType) {
         if (BuildConfig.DEBUG) {
             nativePerformCrash(crashType);
@@ -280,5 +403,7 @@ public class Apple2CrashHandler {
     private static native void nativePerformCrash(int crashType); // testing
 
     private static native void nativeOnUncaughtException(String home, String trace);
+
+    private static native void nativeProcessCrash(String crashFilePath, String crashProcessedPath);
 
 }

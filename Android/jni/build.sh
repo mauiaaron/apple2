@@ -104,11 +104,12 @@ else
     ln -s apple2ix.mk Android.mk
 fi
 
+###############################################################################
 # build native sources
 if test "x$do_release" = "x1" ; then
-    ndk-build V=1 NDK_MODULE_PATH=. # NDK_TOOLCHAIN_VERSION=clang
+    ndk-build V=1 NDK_MODULE_PATH=. EMBEDDED_STACKWALKER=1 # NDK_TOOLCHAIN_VERSION=clang
 else
-    ndk-build V=1 NDK_MODULE_PATH=. NDK_DEBUG=1 # NDK_TOOLCHAIN_VERSION=clang
+    ndk-build V=1 NDK_MODULE_PATH=. NDK_DEBUG=1 EMBEDDED_STACKWALKER=1 # NDK_TOOLCHAIN_VERSION=clang
 fi
 ret=$?
 if test "x$ret" != "x0" ; then

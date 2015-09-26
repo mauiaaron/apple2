@@ -101,8 +101,6 @@ public class Apple2Activity extends Activity {
 
     public native void nativeEjectDisk(boolean driveA);
 
-    public native void nativePerformCrash(int crashType);
-
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -405,6 +403,7 @@ public class Apple2Activity extends Activity {
                 synchronized (Apple2Activity.this) {
                     if (mSplashScreen != null) {
                         mSplashScreen.show();
+                        Apple2CrashHandler.getInstance().checkForCrashes(Apple2Activity.this);
                     }
                 }
             }

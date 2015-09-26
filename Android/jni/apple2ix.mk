@@ -28,11 +28,16 @@ LOCAL_SRC_FILES := $(APPLE2_SRC_PATH)/breakpad.C jnicrash.c
 LOCAL_CFLAGS    := $(APPLE2_BASE_CFLAGS) $(BREAKPAD_CFLAGS)
 LOCAL_LDLIBS    := $(APPLE2_BASE_LDLIBS)
 
-# Add assembly files first ... mostly for the benefit of the ARM assembler ...
 ifeq ($(TARGET_ARCH_ABI),x86)
     LOCAL_SRC_FILES += $(APPLE2_X86_SRC)
 else
     LOCAL_SRC_FILES += $(APPLE2_ARM_SRC)
+endif
+
+ifeq ($(EMBEDDED_STACKWALKER),1)
+    LOCAL_CPPFLAGS += -DEMBEDDED_STACKWALKER=1
+else
+    $(error OOPS, for now you should build with EMBEDDED_STACKWALKER=1)
 endif
 
 LOCAL_SRC_FILES += $(APPLE2_MAIN_SRC) $(APPLE2_META_SRC) $(APPLE2_VIDEO_SRC) $(APPLE2_AUDIO_SRC)

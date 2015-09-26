@@ -22,6 +22,19 @@ enum {
 
 #include <jni.h>
 
+// cribbed from AOSP and modified with usleep() and to also ignore EAGAIN (should this be a different errno than EINTR)
+#define TEMP_FAILURE_RETRY_FOPEN(exp) ({ \
+    typeof (exp) _rc; \
+    do { \
+        _rc = (exp); \
+        if (_rc == NULL && (errno == EINTR || errno == EAGAIN) ) { \
+            usleep(10); \
+        } else { \
+            break; \
+        } \
+    } while (1); \
+    _rc; })
+
 static volatile int __attribute__((noinline)) _crash_null_deref(void) {
     static volatile uintptr_t *ptr = NULL;
     while ((ptr+1)) {
@@ -126,5 +139,49 @@ void Java_org_deadc0de_apple2ix_Apple2CrashHandler_nativeOnUncaughtException(JNI
 
     TEMP_FAILURE_RETRY(fsync(fd));
     TEMP_FAILURE_RETRY(close(fd));
+}
+
+void Java_org_deadc0de_apple2ix_Apple2CrashHandler_nativeProcessCrash(JNIEnv *env, jclass cls, jstring jCrashPath, jstring jOutputPath) {
+    if (!(crashHandler && crashHandler->processCrash)) {
+        return;
+    }
+
+    LOG("...");
+
+    const char *crashPath  = (*env)->GetStringUTFChars(env, jCrashPath,  NULL);
+    const char *outputPath = (*env)->GetStringUTFChars(env, jOutputPath, NULL);
+    FILE *outputFILE = NULL;
+    char *symbolsPath = NULL;
+
+    do {
+        outputFILE = TEMP_FAILURE_RETRY_FOPEN(fopen(outputPath, "w"));
+        if (!outputFILE) {
+            ERRLOG("could not open %s", outputPath);
+            break;
+        }
+
+        if (android_armArchV7A) {
+            asprintf(&symbolsPath, "%s/symbols/armeabi-v7a", data_dir);
+        } else /*if (android_armArch)*/ {
+            asprintf(&symbolsPath, "%s/symbols/armeabi", data_dir);
+        } /*else { moar archs ... } */
+
+        bool success = crashHandler->processCrash(crashPath, symbolsPath, outputFILE);
+        if (!success) {
+            RELEASE_LOG("CRASH REPORT PROCESSING FAILED ...");
+        }
+    } while (0);
+
+    if (outputFILE) {
+        TEMP_FAILURE_RETRY(fflush(outputFILE));
+        TEMP_FAILURE_RETRY(fclose(outputFILE));
+    }
+
+    if (symbolsPath) {
+        FREE(symbolsPath);
+    }
+
+    (*env)->ReleaseStringUTFChars(env, jCrashPath,  crashPath);
+    (*env)->ReleaseStringUTFChars(env, jOutputPath, outputPath);
 }
 
