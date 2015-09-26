@@ -18,6 +18,14 @@
 unsigned long android_deviceSampleRateHz = 0;
 unsigned long android_monoBufferSubmitSizeSamples = 0;
 unsigned long android_stereoBufferSubmitSizeSamples = 0;
+
+bool android_armArch = false;
+bool android_armArchV7A = false;
+bool android_arm64Arch = false;
+
+bool android_x86 = false;
+bool android_x86_64 = false;
+
 bool android_armNeonEnabled = false;
 bool android_x86SSSE3Enabled = false;
 
@@ -118,7 +126,12 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnCreate(JNIEnv *env, jobje
     } else if (family == ANDROID_CPU_FAMILY_ARM) {
         if (features & ANDROID_CPU_ARM_FEATURE_ARMv7) {
             LOG("ANDROID_CPU_ARM_FEATURE_ARMv7");
+            android_armArchV7A = true;
+        } else {
+            LOG("!!! NOT ANDROID_CPU_ARM_FEATURE_ARMv7");
+            android_armArch = true;
         }
+
         if (features & ANDROID_CPU_ARM_FEATURE_VFPv3) {
             LOG("ANDROID_CPU_ARM_FEATURE_VFPv3");
         }
@@ -129,6 +142,10 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnCreate(JNIEnv *env, jobje
         if (features & ANDROID_CPU_ARM_FEATURE_LDREX_STREX) {
             LOG("ANDROID_CPU_ARM_FEATURE_LDREX_STREX");
         }
+    } else if (family == ANDROID_CPU_FAMILY_ARM64) {
+#warning FIXME TODO ...
+        //android_arm64Arch = true;
+        android_armArchV7A = true;
     }
 
     android_deviceSampleRateHz = (unsigned long)sampleRate;
