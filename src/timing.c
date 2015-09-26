@@ -220,14 +220,6 @@ void cpu_resume(void) {
     assert(cpu_isPaused());
     is_paused = false;
 
-#if MOBILE_DEVICE
-    int err = pthread_cond_signal(&cpu_thread_cond);
-    if (err) {
-        RELEASE_ERRLOG("pthread_cond_signal : %d", err);
-        RELEASE_BREAK();
-    }
-#endif
-
 #ifdef AUDIO_ENABLED
     audio_resume();
 #endif
