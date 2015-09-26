@@ -28,6 +28,7 @@ import android.view.ViewTreeObserver;
 import android.widget.FrameLayout;
 
 import java.util.ArrayList;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.deadc0de.apple2ix.basic.BuildConfig;
 import org.deadc0de.apple2ix.basic.R;
@@ -45,6 +46,8 @@ public class Apple2Activity extends Activity {
     private Apple2MainMenu mMainMenu = null;
     private ArrayList<Apple2MenuView> mMenuStack = new ArrayList<Apple2MenuView>();
     private ArrayList<AlertDialog> mAlertDialogs = new ArrayList<AlertDialog>();
+
+    private AtomicBoolean mPausing = new AtomicBoolean(false);
 
     private int mWidth = 0;
     private int mHeight = 0;
@@ -90,7 +93,7 @@ public class Apple2Activity extends Activity {
 
     private native void nativeOnUncaughtException(String home, String trace);
 
-    public native void nativeOnResume(boolean isSystemResume);
+    private native void nativeOnResume(boolean isSystemResume);
 
     public native void nativeOnPause(boolean isSystemPause);
 
@@ -240,8 +243,11 @@ public class Apple2Activity extends Activity {
     }
 
     @Override
-    protected void onPause() {
+    protected synchronized void onPause() {
         super.onPause();
+
+        mPausing.set(true);
+
         Log.d(TAG, "onPause()");
         mView.onPause();
 
@@ -255,6 +261,8 @@ public class Apple2Activity extends Activity {
 
             nativeOnPause(true);
         }
+
+        mPausing.set(false);
     }
 
     @Override
@@ -552,6 +560,14 @@ public class Apple2Activity extends Activity {
         // if no more views on menu stack, resume emulation
         if (mMenuStack.size() == 0) {
             dismissAllMenus();
+        }
+        if (mMenuStack.size() == 0 && !mPausing.get()) {
+            nativeOnResume(/*isSystemResume:*/false);
+        }
+    }
+
+    void _mainMenuDismissed() {
+        if (mMenuStack.size() == 0 && !mPausing.get()) {
             nativeOnResume(/*isSystemResume:*/false);
         }
     }

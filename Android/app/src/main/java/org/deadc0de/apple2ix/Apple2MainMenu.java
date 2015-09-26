@@ -166,7 +166,7 @@ public class Apple2MainMenu {
             public void onDismiss() {
                 boolean otherMenusShowing = (getSettingsMenu().isShowing() || getDisksMenu().isShowing());
                 if (!otherMenusShowing) {
-                    Apple2MainMenu.this.mActivity.nativeOnResume(/*isSystemResume:*/false);
+                    Apple2MainMenu.this.mActivity._mainMenuDismissed();
                 }
             }
         });
