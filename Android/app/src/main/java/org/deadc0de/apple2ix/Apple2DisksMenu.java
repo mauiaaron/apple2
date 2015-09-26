@@ -16,6 +16,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.content.res.AssetManager;
 import android.graphics.drawable.Drawable;
 import android.os.Environment;
 import android.util.Log;
@@ -39,6 +40,7 @@ import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InterruptedIOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -77,7 +79,7 @@ public class Apple2DisksMenu implements Apple2MenuView {
     public static File getExternalStorageDirectory() {
         if (sExternalFilesDir == null) {
             String storageState = Environment.getExternalStorageState();
-            File externalDir = new File(Environment.getExternalStorageDirectory().getPath() + File.separator + "apple2ix"); // /sdcard/apple2ix
+            File externalDir = new File(Environment.getExternalStorageDirectory(), "apple2ix"); // /sdcard/apple2ix
             sExternalFilesDir = null;
             boolean externalStorageAvailable = storageState.equals(Environment.MEDIA_MOUNTED);
             if (externalStorageAvailable) {
@@ -123,39 +125,13 @@ public class Apple2DisksMenu implements Apple2MenuView {
 
         getExternalStorageDirectory();
 
-        try {
-            String[] shaders = activity.getAssets().list("shaders");
-            for (String shader : shaders) {
-                Apple2DisksMenu.copyFile(activity, "shaders", shader, sDataDir + File.separator + "shaders");
-            }
+        recursivelyCopyAPKAssets(activity, /*from APK directory:*/"disks",     /*to location:*/new File(sDataDir, "disks").getAbsolutePath());
+        recursivelyCopyAPKAssets(activity, /*from APK directory:*/"keyboards", /*to location:*/new File(sDataDir, "keyboards").getAbsolutePath());
+        recursivelyCopyAPKAssets(activity, /*from APK directory:*/"shaders",   /*to location:*/new File(sDataDir, "shaders").getAbsolutePath());
+        recursivelyCopyAPKAssets(activity, /*from APK directory:*/"symbols",   /*to location:*/new File(sDataDir, "symbols").getAbsolutePath());
 
-            String[] disks = activity.getAssets().list("disks");
-            for (String disk : disks) {
-                Apple2DisksMenu.copyFile(activity, "disks", disk, sDataDir + File.separator + "disks");
-            }
-
-            String[] keyboards = activity.getAssets().list("keyboards");
-            for (String kbd : keyboards) {
-                Apple2DisksMenu.copyFile(activity, "keyboards", kbd, sDataDir + File.separator + "keyboards");
-            }
-
-        } catch (IOException e) {
-            Log.e(TAG, "problem copying resources : " + e);
-            throw new RuntimeException("This should not happen");
-        }
-
-        try {
-            String[] keyboards = activity.getAssets().list("keyboards");
-            for (String kbd : keyboards) {
-                Apple2DisksMenu.copyFile(activity, "keyboards", kbd, sDataDir + File.separator + "keyboards");
-                if (sExternalFilesDir != null) {
-                    Apple2DisksMenu.copyFile(activity, "keyboards", kbd, sExternalFilesDir.getPath());
-                }
-            }
-        } catch (IOException e) {
-            Log.e(TAG, "problem copying keyboards to sdcard : " + e);
-            // non-fatal
-        }
+        // expose keyboards to modding
+        recursivelyCopyAPKAssets(activity, /*from APK directory:*/"keyboards", /*to location:*/new File(sExternalFilesDir, "keyboards").getAbsolutePath());
     }
 
     // ------------------------------------------------------------------------
@@ -254,22 +230,89 @@ public class Apple2DisksMenu implements Apple2MenuView {
         return pathBuffer.toString();
     }
 
-    private static void copyFile(Apple2Activity activity, String subdir, String assetName, String outputPath)
-            throws IOException {
-        Log.d(TAG, "Copying " + subdir + File.separator + assetName + " to " + outputPath + File.separator + assetName + " ...");
-        boolean made = new File(outputPath).mkdirs();
-        if (!made) {
-            Log.d(TAG, "WARNING, cannot mkdirs on path : " + outputPath);
+    private static void recursivelyCopyAPKAssets(Apple2Activity activity, String srcFileOrDir, String dstFileOrDir) {
+        AssetManager assetManager = activity.getAssets();
+
+        final int maxAttempts = 5;
+        String[] files = null;
+        int attempts = 0;
+        do {
+            try {
+                files = assetManager.list(srcFileOrDir);
+                break;
+            } catch (InterruptedIOException e) {
+                /* EINTR, EAGAIN ... */
+            } catch (IOException e) {
+                Log.d(TAG, "OOPS exception attempting to list APK files at : " + srcFileOrDir + " : " + e);
+            }
+
+            try {
+                Thread.sleep(100, 0);
+            } catch (InterruptedException ie) {
+                /* ... */
+            }
+            ++attempts;
+        } while (attempts < maxAttempts);
+
+        if (files == null) {
+            Log.d(TAG, "OOPS, could not list APK assets at : " + srcFileOrDir);
+            return;
         }
 
-        InputStream is = activity.getAssets().open(subdir + File.separator + assetName);
-        File file = new File(outputPath + File.separator + assetName);
-        boolean madeWriteable = file.setWritable(true);
-        if (!madeWriteable) {
-            Log.d(TAG, "WARNING, cannot make a copied file writeable for asset : " + assetName);
+        if (files.length > 0) {
+            // ensure destination directory exists
+            File dstPath = new File(dstFileOrDir);
+            if (!dstPath.mkdirs()) {
+                Log.d(TAG, "OOPS, could not mkdirs on " + dstPath);
+                return;
+            }
+            for (String filename : files) {
+                // iterate on files and subdirectories
+                recursivelyCopyAPKAssets(activity, srcFileOrDir + File.separator + filename, dstFileOrDir + File.separator + filename);
+            }
+            return;
         }
-        FileOutputStream os = new FileOutputStream(file);
 
+        // presumably this is a file, not a subdirectory
+        InputStream is = null;
+        FileOutputStream os = null;
+        attempts = 0;
+        do {
+            try {
+                is = assetManager.open(srcFileOrDir);
+                os = new FileOutputStream(dstFileOrDir);
+                copyFile(is, os);
+                break;
+            } catch (InterruptedIOException e) {
+                /* EINTR, EAGAIN */
+            } catch (IOException e) {
+                Log.e(TAG, "Failed to copy asset file: " + srcFileOrDir, e);
+            } finally {
+                if (is != null) {
+                    try {
+                        is.close();
+                    } catch (IOException e) {
+                        // NOOP
+                    }
+                }
+                if (os != null) {
+                    try {
+                        os.close();
+                    } catch (IOException e) {
+                        // NOOP
+                    }
+                }
+            }
+            try {
+                Thread.sleep(100, 0);
+            } catch (InterruptedException ie) {
+                /* ... */
+            }
+            ++attempts;
+        } while (attempts < maxAttempts);
+    }
+
+    private static void copyFile(InputStream is, FileOutputStream os) throws IOException {
         final int BUF_SZ = 4096;
         byte[] buf = new byte[BUF_SZ];
         while (true) {
@@ -280,7 +323,6 @@ public class Apple2DisksMenu implements Apple2MenuView {
             os.write(buf, 0, len);
         }
         os.flush();
-        os.close();
     }
 
     private void dynamicSetup() {
