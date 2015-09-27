@@ -45,6 +45,18 @@ enum {
 
 extern GLint texSamplerLoc;
 extern GLint alphaValue;
+extern GLuint mainShaderProgram;
+
+// http://stackoverflow.com/questions/13676070/how-to-properly-mix-drawing-calls-and-changes-of-a-sampler-value-with-a-single-s
+// https://developer.qualcomm.com/forum/qdevnet-forums/mobile-gaming-graphics-optimization-adreno/8896
+extern bool hackAroundBrokenAdreno200;
+#define GL_DRAW_CALL_PRE() \
+    ({ \
+        if (hackAroundBrokenAdreno200) { \
+            glUseProgram(0); \
+            glUseProgram(mainShaderProgram); \
+        } \
+     })
 
 #endif
 

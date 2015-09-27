@@ -140,6 +140,7 @@ void glhud_renderDefault(GLModel *parent) {
 #endif
 
     // Draw the object
+    GL_DRAW_CALL_PRE();
     glDrawElements(parent->primType, parent->numElements, parent->elementType, 0);
     GL_ERRLOG("glhudparent render");
 }

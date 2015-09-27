@@ -34,13 +34,15 @@ static int adjustedHeight = 0;
 
 GLint texSamplerLoc = UNINITIALIZED_GL;
 GLint alphaValue = UNINITIALIZED_GL;
+GLuint mainShaderProgram = UNINITIALIZED_GL;
+bool hackAroundBrokenAdreno200 = false;
+
 static GLint uniformMVPIdx = UNINITIALIZED_GL;
 static GLenum crtElementType = UNINITIALIZED_GL;
 static GLuint crtNumElements = UNINITIALIZED_GL;
 
 static GLuint a2TextureName = UNINITIALIZED_GL;
 static GLuint defaultFBO = UNINITIALIZED_GL;
-static GLuint program = UNINITIALIZED_GL;
 
 static GLuint crtVAOName = UNINITIALIZED_GL;
 static GLuint posBufferName = UNINITIALIZED_GL;
@@ -495,7 +497,19 @@ static demoSource *_create_shader_source(const char *fileName) {
 static void gldriver_render(void);
 
 static void gldriver_init_common(void) {
-    LOG("%s %s", glGetString(GL_RENDERER), glGetString(GL_VERSION));
+    const char *vendor   = (const char *)glGetString(GL_VENDOR);
+    const char *renderer = (const char *)glGetString(GL_RENDERER);
+    const char *version  = (const char *)glGetString(GL_VERSION);
+    LOG("GL_VENDOR:%s GL_RENDERER:%s GL_VERSION:%s", vendor, renderer, version);
+
+    if (vendor && strcasestr(vendor, "qualcomm")) {
+        if (renderer && strcasestr(renderer, "adreno")) {
+            if (strcasestr(renderer, "200")) {
+                LOG("HACKING AROUND BROKEN ADRENO 200");
+                hackAroundBrokenAdreno200 = true;
+            }
+        }
+    }
 
     renderer_shutting_down = false;
 
@@ -538,7 +552,7 @@ static void gldriver_init_common(void) {
     demoSource *frgSource = _create_shader_source("Basic.fsh");
 
     // Build/use Program
-    program = _build_program(vtxSource, frgSource, /*withNormal:*/false, /*withTexcoord:*/true);
+    mainShaderProgram = _build_program(vtxSource, frgSource, /*withNormal:*/false, /*withTexcoord:*/true);
 
     srcDestroySource(vtxSource);
     srcDestroySource(frgSource);
@@ -593,9 +607,9 @@ static void _gldriver_shutdown(void) {
     mdlDestroyModel(&crtModel);
 
     glUseProgram(0);
-    if (program != UNINITIALIZED_GL) {
-        glDeleteProgram(program);
-        program = UNINITIALIZED_GL;
+    if (mainShaderProgram != UNINITIALIZED_GL) {
+        glDeleteProgram(mainShaderProgram);
+        mainShaderProgram = UNINITIALIZED_GL;
     }
 
     glnode_shutdownNodes();
@@ -746,6 +760,7 @@ static void gldriver_render(void) {
     //glCullFace(GL_BACK);
 
     // Draw the CRT object and others
+    GL_DRAW_CALL_PRE();
     glDrawElements(GL_TRIANGLES, crtNumElements, crtElementType, 0);
 
     // Render HUD nodes
