@@ -32,7 +32,7 @@ static int viewportHeight = SCANHEIGHT*1.5;
 static int adjustedHeight = 0;
 #endif
 
-GLint uniformTex2Use = UNINITIALIZED_GL;
+GLint texSamplerLoc = UNINITIALIZED_GL;
 GLint alphaValue = UNINITIALIZED_GL;
 static GLint uniformMVPIdx = UNINITIALIZED_GL;
 static GLenum crtElementType = UNINITIALIZED_GL;
@@ -436,18 +436,11 @@ static GLuint _build_program(demoSource *vertexSource, demoSource *fragmentSourc
     // Setup common program input points //
     ///////////////////////////////////////
 
-    GLint fbSamplerLoc = glGetUniformLocation(prgName, "framebufferTexture");
-    if (fbSamplerLoc < 0) {
-        LOG("OOPS, no framebufferTexture shader : %d", fbSamplerLoc);
+    texSamplerLoc = glGetUniformLocation(prgName, "texture");
+    if (texSamplerLoc < 0) {
+        LOG("OOPS, no framebufferTexture shader : %d", texSamplerLoc);
     } else {
-        glUniform1i(fbSamplerLoc, TEXTURE_ID_FRAMEBUFFER);
-    }
-
-    GLint messageSamplerLoc = glGetUniformLocation(prgName, "messageTexture");
-    if (messageSamplerLoc < 0) {
-        LOG("OOPS, no messageSamplerLoc shader : %d", messageSamplerLoc);
-    } else {
-        glUniform1i(messageSamplerLoc, TEXTURE_ID_MESSAGE);
+        glUniform1i(texSamplerLoc, TEXTURE_ID_FRAMEBUFFER);
     }
 
     GLint maxTextureUnits = -1;
@@ -460,44 +453,9 @@ static GLuint _build_program(demoSource *vertexSource, demoSource *fragmentSourc
         LOG("GL_MAX_TEXTURE_IMAGE_UNITS : %d", maxTextureUnits);
     }
 
-#if INTERFACE_TOUCH
-    GLint axisSamplerLoc = glGetUniformLocation(prgName, "axisTexture");
-    if (axisSamplerLoc < 0) {
-        LOG("OOPS, no axisSamplerLoc shader : %d", axisSamplerLoc);
-    } else {
-        glUniform1i(axisSamplerLoc, TEXTURE_ID_TOUCHJOY_AXIS);
-    }
-
-    GLint buttonSamplerLoc = glGetUniformLocation(prgName, "buttonTexture");
-    if (buttonSamplerLoc < 0) {
-        LOG("OOPS, no buttonSamplerLoc shader : %d", buttonSamplerLoc);
-    } else {
-        glUniform1i(buttonSamplerLoc, TEXTURE_ID_TOUCHJOY_BUTTON);
-    }
-
-    GLint kbdSamplerLoc = glGetUniformLocation(prgName, "kbdTexture");
-    if (kbdSamplerLoc < 0) {
-        LOG("OOPS, no kbdSamplerLoc shader : %d", kbdSamplerLoc);
-    } else {
-        glUniform1i(kbdSamplerLoc, TEXTURE_ID_TOUCHKBD);
-    }
-
-    GLint topMenuSamplerLoc = glGetUniformLocation(prgName, "topMenuTexture");
-    if (topMenuSamplerLoc < 0) {
-        LOG("OOPS, no topMenuSamplerLoc shader : %d", topMenuSamplerLoc);
-    } else {
-        glUniform1i(topMenuSamplerLoc, TEXTURE_ID_TOUCHMENU);
-    }
-#endif
-
     uniformMVPIdx = glGetUniformLocation(prgName, "modelViewProjectionMatrix");
     if (uniformMVPIdx < 0) {
         LOG("OOPS, no modelViewProjectionMatrix in shader : %d", uniformMVPIdx);
-    }
-
-    uniformTex2Use = glGetUniformLocation(prgName, "tex2Use");
-    if (uniformTex2Use < 0) {
-        LOG("OOPS, no texture selector in shader : %d", uniformTex2Use);
     }
 
     alphaValue = glGetUniformLocation(prgName, "aValue");
@@ -743,7 +701,7 @@ static void gldriver_render(void) {
 
     glActiveTexture(TEXTURE_ACTIVE_FRAMEBUFFER);
     glBindTexture(GL_TEXTURE_2D, a2TextureName);
-    glUniform1i(uniformTex2Use, TEXTURE_ID_FRAMEBUFFER);
+    glUniform1i(texSamplerLoc, TEXTURE_ID_FRAMEBUFFER);
     if (wasDirty) {
         glTexImage2D(GL_TEXTURE_2D, /*level*/0, TEX_FORMAT_INTERNAL, SCANWIDTH, SCANHEIGHT, /*border*/0, TEX_FORMAT, TEX_TYPE, (GLvoid *)&pixels[0]);
     }

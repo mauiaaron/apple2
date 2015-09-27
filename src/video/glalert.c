@@ -184,7 +184,7 @@ static void alert_render(void) {
         messageModel->texDirty = false;
         glTexImage2D(GL_TEXTURE_2D, /*level*/0, TEX_FORMAT_INTERNAL, messageModel->texWidth, messageModel->texHeight, /*border*/0, TEX_FORMAT, TEX_TYPE, messageModel->texPixels);
     }
-    glUniform1i(uniformTex2Use, TEXTURE_ID_MESSAGE);
+    glUniform1i(texSamplerLoc, TEXTURE_ID_MESSAGE);
     glhud_renderDefault(messageModel);
 }
 

@@ -531,7 +531,7 @@ static void gltouchkbd_render(void) {
             glBindBuffer(GL_ARRAY_BUFFER, kbd.model->posBufferName);
             glBufferData(GL_ARRAY_BUFFER, kbd.model->positionArraySize, kbd.model->positions, GL_DYNAMIC_DRAW);
         }
-        glUniform1i(uniformTex2Use, TEXTURE_ID_TOUCHKBD);
+        glUniform1i(texSamplerLoc, TEXTURE_ID_TOUCHKBD);
         glhud_renderDefault(kbd.model);
     }
 }

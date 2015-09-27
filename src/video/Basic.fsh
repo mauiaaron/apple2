@@ -21,26 +21,7 @@ varying vec2 varTexcoord;
 // global alpha value
 uniform float aValue;
 
-// texture switch
-uniform int tex2Use;
-
-// Framebuffer
-uniform sampler2D framebufferTexture;
-
-// Floating message
-uniform sampler2D messageTexture;
-
-// Joystick axis
-uniform sampler2D axisTexture;
-
-// Joystick buttons
-uniform sampler2D buttonTexture;
-
-// Keyboard
-uniform sampler2D kbdTexture;
-
-// HUD Sprouting Menus
-uniform sampler2D topMenuTexture;
+uniform sampler2D texture;
 
 #if __VERSION__ >= 140
 #define OUTPUT_TEXTURE(TEX) \
@@ -55,19 +36,6 @@ uniform sampler2D topMenuTexture;
 
 void main(void)
 {
-    if (tex2Use == 0) {
-        OUTPUT_TEXTURE(framebufferTexture);
-    } else if (tex2Use == 1) {
-        OUTPUT_TEXTURE(messageTexture);
-    } else if (tex2Use == 2) {
-        OUTPUT_TEXTURE(axisTexture);
-    } else if (tex2Use == 3) {
-        OUTPUT_TEXTURE(buttonTexture);
-    } else if (tex2Use == 4) {
-        OUTPUT_TEXTURE(kbdTexture);
-    } else if (tex2Use == 5) {
-        OUTPUT_TEXTURE(topMenuTexture);
-    } else {
-        //OUTPUT_RED(); -- WTF is this failing?
-    }
+    OUTPUT_TEXTURE(texture);
+    //OUTPUT_RED(); -- WTF is this failing?
 }

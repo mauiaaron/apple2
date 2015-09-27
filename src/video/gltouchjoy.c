@@ -301,7 +301,7 @@ static void gltouchjoy_render(void) {
             glBindBuffer(GL_ARRAY_BUFFER, axes.model->posBufferName);
             glBufferData(GL_ARRAY_BUFFER, axes.model->positionArraySize, axes.model->positions, GL_DYNAMIC_DRAW);
         }
-        glUniform1i(uniformTex2Use, TEXTURE_ID_TOUCHJOY_AXIS);
+        glUniform1i(texSamplerLoc, TEXTURE_ID_TOUCHJOY_AXIS);
         glhud_renderDefault(axes.model);
     }
 
@@ -322,7 +322,7 @@ static void gltouchjoy_render(void) {
             glBindBuffer(GL_ARRAY_BUFFER, buttons.model->posBufferName);
             glBufferData(GL_ARRAY_BUFFER, buttons.model->positionArraySize, buttons.model->positions, GL_DYNAMIC_DRAW);
         }
-        glUniform1i(uniformTex2Use, TEXTURE_ID_TOUCHJOY_BUTTON);
+        glUniform1i(texSamplerLoc, TEXTURE_ID_TOUCHJOY_BUTTON);
         glhud_renderDefault(buttons.model);
     }
 }

@@ -43,7 +43,7 @@ enum {
     TEXTURE_ACTIVE_MAX,
 };
 
-extern GLint uniformTex2Use;
+extern GLint texSamplerLoc;
 extern GLint alphaValue;
 
 #endif
