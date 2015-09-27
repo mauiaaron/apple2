@@ -176,10 +176,13 @@ public class Apple2Activity extends Activity {
     }
 
     @Override
-    protected synchronized void onPause() {
+    protected void onPause() {
         super.onPause();
 
-        mPausing.set(true);
+        boolean wasPausing = mPausing.getAndSet(true);
+        if (wasPausing) {
+            return;
+        }
 
         Log.d(TAG, "onPause()");
         mView.onPause();
