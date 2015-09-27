@@ -83,39 +83,26 @@ public class Apple2CrashHandler {
     }
 
     public synchronized void setCustomExceptionHandler(Apple2Activity activity) {
+        synchronized (this) {
+            if (homeDir == null) {
+                homeDir = Apple2DisksMenu.getDataDir(activity);
+            }
+        }
         if (mDefaultExceptionHandler != null) {
             return;
         }
         mDefaultExceptionHandler = Thread.getDefaultUncaughtExceptionHandler();
 
-        final String homeDir = "/data/data/" + activity.getPackageName();
         final Thread.UncaughtExceptionHandler defaultExceptionHandler = mDefaultExceptionHandler;
 
         Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
             @Override
             public void uncaughtException(Thread thread, Throwable t) {
                 try {
-                    StackTraceElement[] stackTraceElements = t.getStackTrace();
-                    StringBuffer traceBuffer = new StringBuffer();
-
-                    // append the Java stack trace
-                    traceBuffer.append(t.getClass().getName());
-                    traceBuffer.append("\n");
-                    final int maxTraceSize = 2048 + 1024 + 512; // probably should keep this less than a standard Linux PAGE_SIZE
-                    for (StackTraceElement elt : stackTraceElements) {
-                        traceBuffer.append(elt.toString());
-                        traceBuffer.append("\n");
-                        if (traceBuffer.length() >= maxTraceSize) {
-                            break;
-                        }
-                    }
-                    traceBuffer.append("\n");
-
-                    nativeOnUncaughtException(homeDir, traceBuffer.toString());
+                    Apple2CrashHandler.onUncaughtException(thread, t);
                 } catch (Throwable terminator2) {
                     // Yo dawg, I hear you like exceptions in your exception handler! ...
                 }
-
                 defaultExceptionHandler.uncaughtException(thread, t);
             }
         });
@@ -271,8 +258,49 @@ public class Apple2CrashHandler {
         /* ... */
     }
 
+    private static void onUncaughtException(Thread thread, Throwable t) {
+        StackTraceElement[] stackTraceElements = t.getStackTrace();
+        StringBuffer traceBuffer = new StringBuffer();
+
+        // append the Java stack trace
+        traceBuffer.append("NAME: ").append(t.getClass().getName()).append("\n");
+        traceBuffer.append("MESSAGE: ").append(t.getMessage()).append("\n");
+        final int maxTraceSize = 2048 + 1024 + 512; // probably should keep this less than a standard Linux PAGE_SIZE
+        for (StackTraceElement elt : stackTraceElements) {
+            traceBuffer.append(elt.toString());
+            traceBuffer.append("\n");
+            if (traceBuffer.length() >= maxTraceSize) {
+                break;
+            }
+        }
+        traceBuffer.append("\n");
+
+        final int maxAttempts = 5;
+        int attempts = 0;
+        do {
+            try {
+                BufferedWriter writer = new BufferedWriter(new FileWriter(new File(sCrashHandler.homeDir, javaCrashFileName), /*append:*/true));
+                writer.append(traceBuffer);
+                writer.flush();
+                writer.close();
+                break;
+            } catch (InterruptedIOException ie) {
+                /* EINTR, EAGAIN ... */
+            } catch (IOException e) {
+                Log.e(TAG, "Exception attempting to write data : " + e);
+            }
+
+            try {
+                Thread.sleep(100, 0);
+            } catch (InterruptedException e) {
+                /* ... */
+            }
+            ++attempts;
+        } while (attempts < maxAttempts);
+    }
+
     private File _javaCrashFile(Apple2Activity activity) {
-        return new File(Apple2DisksMenu.getDataDir(activity), javaCrashFileName);
+        return new File(homeDir, javaCrashFileName);
     }
 
     private File[] _nativeCrashFiles(Apple2Activity activity) {
@@ -297,7 +325,7 @@ public class Apple2CrashHandler {
             }
         };
 
-        return new File(Apple2DisksMenu.getDataDir(activity)).listFiles(dmpFilter);
+        return new File(homeDir).listFiles(dmpFilter);
     }
 
     private String _dumpPath2ProcessedPath(String crashPath) {
@@ -329,7 +357,7 @@ public class Apple2CrashHandler {
             } catch (InterruptedException e) {
                 /* ... */
             }
-            ++ attempts;
+            ++attempts;
         } while (attempts < maxAttempts);
 
         return attempts < maxAttempts;
@@ -396,13 +424,12 @@ public class Apple2CrashHandler {
     private final static String TAG = "Apple2CrashHandler";
     private final static Apple2CrashHandler sCrashHandler = new Apple2CrashHandler();
 
+    private String homeDir;
     private Thread.UncaughtExceptionHandler mDefaultExceptionHandler;
     private AtomicBoolean mAlreadyRanCrashCheck = new AtomicBoolean(false);
     private AtomicBoolean mAlreadySentReport = new AtomicBoolean(false);
 
     private static native void nativePerformCrash(int crashType); // testing
-
-    private static native void nativeOnUncaughtException(String home, String trace);
 
     private static native void nativeProcessCrash(String crashFilePath, String crashProcessedPath);
 

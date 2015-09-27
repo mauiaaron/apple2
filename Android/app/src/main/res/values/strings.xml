@@ -24,7 +24,7 @@
     <string name="crasher_processing">Processing…</string>
     <string name="crasher_processing_message">Processing crash reports…</string>
     <string name="crasher_send">Send crash report?</string>
-    <string name="crasher_send_message">Do you want to send a crash report to the developer?</string>
+    <string name="crasher_send_message">Sorry there has been a problem. Do you want to send a crash report to the developer?</string>
     <string name="crasher_summary">Test crash generation</string>
     <string name="crasher_title">Crash emulator</string>
     <string name="crash_null">NULL-deref</string>

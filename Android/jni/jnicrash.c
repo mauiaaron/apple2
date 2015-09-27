@@ -105,42 +105,6 @@ void Java_org_deadc0de_apple2ix_Apple2CrashHandler_nativePerformCrash(JNIEnv *en
     }
 }
 
-#define _JAVA_CRASH_NAME "/jcrash.txt" // this should match the Java side
-#define _HALF_PAGE_SIZE (PAGE_SIZE>>1)
-
-void Java_org_deadc0de_apple2ix_Apple2CrashHandler_nativeOnUncaughtException(JNIEnv *env, jclass cls, jstring jhome, jstring jstr) {
-    RELEASE_ERRLOG("Uncaught Java Exception ...");
-
-    // Write to /data/data/org.deadc0de.apple2ix.basic/jcrash.txt
-    const char *home = (*env)->GetStringUTFChars(env, jhome, NULL);
-    char *q = (char *)home;
-    char buf[_HALF_PAGE_SIZE] = { 0 };
-    const char *p0 = &buf[0];
-    char *p = (char *)p0;
-    while (*q && (p-p0 < _HALF_PAGE_SIZE-1)) {
-        *p++ = *q++;
-    }
-    (*env)->ReleaseStringUTFChars(env, jhome, home);
-    q = &_JAVA_CRASH_NAME[0];
-    while (*q && (p-p0 < _HALF_PAGE_SIZE-1)) {
-        *p++ = *q++;
-    }
-
-    int fd = TEMP_FAILURE_RETRY(open(buf, (O_CREAT|O_APPEND|O_WRONLY), (S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH)));
-    if (fd == -1) {
-        RELEASE_ERRLOG("OOPS, could not create/write to java crash file");
-        return;
-    }
-
-    const char *str = (*env)->GetStringUTFChars(env, jstr, NULL);
-    jsize len = (*env)->GetStringUTFLength(env, jstr);
-    TEMP_FAILURE_RETRY(write(fd, str, len));
-    (*env)->ReleaseStringUTFChars(env, jstr, str);
-
-    TEMP_FAILURE_RETRY(fsync(fd));
-    TEMP_FAILURE_RETRY(close(fd));
-}
-
 void Java_org_deadc0de_apple2ix_Apple2CrashHandler_nativeProcessCrash(JNIEnv *env, jclass cls, jstring jCrashPath, jstring jOutputPath) {
     if (!(crashHandler && crashHandler->processCrash)) {
         return;
