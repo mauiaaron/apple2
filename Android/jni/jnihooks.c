@@ -102,6 +102,8 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnCreate(JNIEnv *env, jobje
         return;
     }
 
+    // Do not remove this deadc0de ... it forces a runtime load-library/link error on Gingerbread devices if we have
+    // incorrectly compiled the app against a later version of the NDK!!!
     int pagesize = getpagesize();
     LOG("PAGESIZE IS : %d", pagesize);
 
