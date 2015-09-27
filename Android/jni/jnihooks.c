@@ -102,6 +102,9 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnCreate(JNIEnv *env, jobje
         return;
     }
 
+    int pagesize = getpagesize();
+    LOG("PAGESIZE IS : %d", pagesize);
+
     data_dir = strdup(dataDir);
     if (crashHandler && crashHandler->init) {
         crashHandler->init(data_dir);
