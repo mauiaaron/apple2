@@ -53,8 +53,17 @@ public class Apple2Activity extends Activity {
     private float[] mXCoords = new float[MAX_FINGERS];
     private float[] mYCoords = new float[MAX_FINGERS];
 
+    // non-null if we failed to load/link the native code ... likely we are running on some bizarre 'droid variant
+    private static Throwable sNativeBarfedThrowable = null;
+    private static boolean sNativeBarfed = false;
+
     static {
-        System.loadLibrary("apple2ix");
+        try {
+            System.loadLibrary("apple2ix");
+        } catch (Throwable barf) {
+            sNativeBarfed = true;
+            sNativeBarfedThrowable = barf;
+        }
     }
 
     public final static long NATIVE_TOUCH_HANDLED = (1 << 0);
@@ -123,6 +132,12 @@ public class Apple2Activity extends Activity {
         Log.e(TAG, "onCreate()");
 
         Apple2CrashHandler.getInstance().setCustomExceptionHandler(this);
+        if (sNativeBarfed) {
+            Log.e(TAG, "NATIVE BARFED...", sNativeBarfedThrowable);
+            View view = new View(this);
+            setContentView(view);
+            return;
+        }
 
         // run first-time initializations
         if (!Apple2Preferences.FIRST_TIME_CONFIGURED.booleanValue(this)) {
@@ -170,6 +185,11 @@ public class Apple2Activity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
+        if (sNativeBarfed) {
+            Apple2CrashHandler.getInstance().abandonAllHope(this, sNativeBarfedThrowable);
+            return;
+        }
+
         Log.d(TAG, "onResume()");
         mView.onResume();
         nativeOnResume(/*isSystemResume:*/true);
@@ -178,6 +198,9 @@ public class Apple2Activity extends Activity {
     @Override
     protected void onPause() {
         super.onPause();
+        if (sNativeBarfed) {
+            return;
+        }
 
         boolean wasPausing = mPausing.getAndSet(true);
         if (wasPausing) {
@@ -203,6 +226,9 @@ public class Apple2Activity extends Activity {
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (sNativeBarfed) {
+            return true;
+        }
         if ((keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) || (keyCode == KeyEvent.KEYCODE_VOLUME_MUTE) || (keyCode == KeyEvent.KEYCODE_VOLUME_UP)) {
             return false;
         }
@@ -212,6 +238,9 @@ public class Apple2Activity extends Activity {
 
     @Override
     public boolean onKeyUp(int keyCode, KeyEvent event) {
+        if (sNativeBarfed) {
+            return true;
+        }
         if (keyCode == KeyEvent.KEYCODE_BACK) {
             Apple2MenuView apple2MenuView = peekApple2View();
             if (apple2MenuView == null) {
@@ -231,6 +260,7 @@ public class Apple2Activity extends Activity {
         }
     }
 
+    /*
     private String actionToString(int action) {
         switch (action) {
             case MotionEvent.ACTION_CANCEL:
@@ -250,7 +280,6 @@ public class Apple2Activity extends Activity {
         }
     }
 
-    /*
     private void printSamples(MotionEvent ev) {
         final int historySize = ev.getHistorySize();
         final int pointerCount = ev.getPointerCount();
@@ -274,6 +303,9 @@ public class Apple2Activity extends Activity {
     public boolean onTouchEvent(MotionEvent event) {
         do {
 
+            if (sNativeBarfed) {
+                break;
+            }
             if (mMainMenu == null) {
                 break;
             }

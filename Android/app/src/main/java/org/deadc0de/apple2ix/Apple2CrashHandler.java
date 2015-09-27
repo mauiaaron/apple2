@@ -108,6 +108,12 @@ public class Apple2CrashHandler {
         });
     }
 
+    public void abandonAllHope(Apple2Activity activity, Throwable nativeBarfed) {
+        // write out the early link crash and send this through the main crash processing code
+        onUncaughtException(Thread.currentThread(), nativeBarfed);
+        checkForCrashes(activity);
+    }
+
     public boolean areJavaCrashesPresent(Apple2Activity activity) {
         File javaCrash = _javaCrashFile(activity);
         return javaCrash.exists();
