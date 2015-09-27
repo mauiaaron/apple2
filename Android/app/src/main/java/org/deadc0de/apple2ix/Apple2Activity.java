@@ -16,7 +16,6 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.graphics.Rect;
 import android.media.AudioManager;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.StrictMode;
 import android.util.Log;
@@ -131,7 +130,7 @@ public class Apple2Activity extends Activity {
 
         Log.e(TAG, "onCreate()");
 
-        Apple2CrashHandler.getInstance().setCustomExceptionHandler(this);
+        Apple2CrashHandler.getInstance().initializeAndSetCustomExceptionHandler(this);
         if (sNativeBarfed) {
             Log.e(TAG, "NATIVE BARFED...", sNativeBarfedThrowable);
             View view = new View(this);

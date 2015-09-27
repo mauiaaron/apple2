@@ -15,6 +15,7 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
+import android.opengl.GLES20;
 import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
@@ -82,7 +83,7 @@ public class Apple2CrashHandler {
         }
     }
 
-    public synchronized void setCustomExceptionHandler(Apple2Activity activity) {
+    public synchronized void initializeAndSetCustomExceptionHandler(Apple2Activity activity) {
         synchronized (this) {
             if (homeDir == null) {
                 homeDir = Apple2DisksMenu.getDataDir(activity);
@@ -189,23 +190,16 @@ public class Apple2CrashHandler {
                         StringBuilder allCrashData = new StringBuilder();
 
                         // prepend information about this device
-                        allCrashData.append(Build.BRAND);
-                        allCrashData.append("\n");
-                        allCrashData.append(Build.MODEL);
-                        allCrashData.append("\n");
-                        allCrashData.append(Build.MANUFACTURER);
-                        allCrashData.append("\n");
-                        allCrashData.append(Build.DEVICE);
-                        allCrashData.append("\n");
-                        allCrashData.append("Device sample rate:");
-                        allCrashData.append(sampleRate);
-                        allCrashData.append("\n");
-                        allCrashData.append("Device mono buffer size:");
-                        allCrashData.append(monoBufferSize);
-                        allCrashData.append("\n");
-                        allCrashData.append("Device stereo buffer size:");
-                        allCrashData.append(stereoBufferSize);
-                        allCrashData.append("\n");
+                        allCrashData.append("BRAND: ").append(Build.BRAND).append("\n");
+                        allCrashData.append("MODEL: ").append(Build.MODEL).append("\n");
+                        allCrashData.append("MANUFACTURER: ").append(Build.MANUFACTURER).append("\n");
+                        allCrashData.append("DEVICE: ").append(Build.DEVICE).append("\n");
+                        allCrashData.append("SAMPLE RATE: ").append(sampleRate).append("\n");
+                        allCrashData.append("MONO BUFSIZE: ").append(monoBufferSize).append("\n");
+                        allCrashData.append("STEREO BUFSIZE: ").append(stereoBufferSize).append("\n");
+                        allCrashData.append("GPU VENDOR: ").append(GLES20.glGetString(GLES20.GL_VENDOR)).append("\n");
+                        allCrashData.append("GPU RENDERER: ").append(GLES20.glGetString(GLES20.GL_RENDERER)).append("\n");
+                        allCrashData.append("GPU VERSION: ").append(GLES20.glGetString(GLES20.GL_VERSION)).append("\n");
 
                         File[] nativeCrashes = _nativeCrashFiles(activity);
                         if (nativeCrashes == null) {
@@ -213,7 +207,6 @@ public class Apple2CrashHandler {
                         }
 
                         // iteratively process native crashes
-                        int idx = 0;
                         for (File crash : nativeCrashes) {
 
                             String crashPath = crash.getAbsolutePath();
