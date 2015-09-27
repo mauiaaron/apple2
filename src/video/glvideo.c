@@ -500,7 +500,11 @@ static void gldriver_init_common(void) {
     const char *vendor   = (const char *)glGetString(GL_VENDOR);
     const char *renderer = (const char *)glGetString(GL_RENDERER);
     const char *version  = (const char *)glGetString(GL_VERSION);
-    LOG("GL_VENDOR:%s GL_RENDERER:%s GL_VERSION:%s", vendor, renderer, version);
+    if (vendor && renderer && version) {
+        LOG("GL_VENDOR:%s GL_RENDERER:%s GL_VERSION:%s", vendor, renderer, version);
+    } else {
+        RELEASE_LOG("One or more of GL_VENDOR, GL_RENDERER, and GL_VERSION is NULL ... possibly about to crash ...");
+    }
 
     if (vendor && strcasestr(vendor, "qualcomm")) {
         if (renderer && strcasestr(renderer, "adreno")) {
