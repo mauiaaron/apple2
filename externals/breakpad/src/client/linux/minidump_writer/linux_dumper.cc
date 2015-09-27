@@ -434,6 +434,9 @@ void LinuxDumper::ParseLoadedElfProgramHeaders(ElfW(Ehdr)* ehdr,
                                                size_t* dyn_count_ptr) {
   uintptr_t phdr_addr = start_addr + ehdr->e_phoff;
 
+#ifndef UINTPTR_MAX
+#   define UINTPTR_MAX UINT_MAX
+#endif
   const uintptr_t max_addr = UINTPTR_MAX;
   uintptr_t min_vaddr = max_addr;
   uintptr_t dyn_vaddr = 0;
