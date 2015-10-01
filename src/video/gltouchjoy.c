@@ -294,6 +294,7 @@ static void gltouchjoy_render(void) {
         glBindTexture(GL_TEXTURE_2D, axes.model->textureName);
         if (axes.model->texDirty) {
             axes.model->texDirty = false;
+            _HACKAROUND_GLTEXIMAGE2D_PRE(TEXTURE_ACTIVE_TOUCHJOY_AXIS, axes.model->textureName);
             glTexImage2D(GL_TEXTURE_2D, /*level*/0, TEX_FORMAT_INTERNAL, axes.model->texWidth, axes.model->texHeight, /*border*/0, TEX_FORMAT, TEX_TYPE, axes.model->texPixels);
         }
         if (axes.modelDirty) {
@@ -315,6 +316,7 @@ static void gltouchjoy_render(void) {
         glBindTexture(GL_TEXTURE_2D, buttons.model->textureName);
         if (buttons.model->texDirty) {
             buttons.model->texDirty = false;
+            _HACKAROUND_GLTEXIMAGE2D_PRE(TEXTURE_ACTIVE_TOUCHJOY_BUTTON, buttons.model->textureName);
             glTexImage2D(GL_TEXTURE_2D, /*level*/0, TEX_FORMAT_INTERNAL, buttons.model->texWidth, buttons.model->texHeight, /*border*/0, TEX_FORMAT, TEX_TYPE, buttons.model->texPixels);
         }
         if (buttons.modelDirty) {

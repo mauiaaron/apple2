@@ -182,6 +182,7 @@ static void alert_render(void) {
     glBindTexture(GL_TEXTURE_2D, messageModel->textureName);
     if (messageModel->texDirty) {
         messageModel->texDirty = false;
+        _HACKAROUND_GLTEXIMAGE2D_PRE(TEXTURE_ACTIVE_MESSAGE, messageModel->textureName);
         glTexImage2D(GL_TEXTURE_2D, /*level*/0, TEX_FORMAT_INTERNAL, messageModel->texWidth, messageModel->texHeight, /*border*/0, TEX_FORMAT, TEX_TYPE, messageModel->texPixels);
     }
     glUniform1i(texSamplerLoc, TEXTURE_ID_MESSAGE);

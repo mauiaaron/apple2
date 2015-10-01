@@ -524,6 +524,7 @@ static void gltouchkbd_render(void) {
         glBindTexture(GL_TEXTURE_2D, kbd.model->textureName);
         if (kbd.model->texDirty) {
             kbd.model->texDirty = false;
+            _HACKAROUND_GLTEXIMAGE2D_PRE(TEXTURE_ACTIVE_TOUCHKBD, kbd.model->textureName);
             glTexImage2D(GL_TEXTURE_2D, /*level*/0, TEX_FORMAT_INTERNAL, kbd.model->texWidth, kbd.model->texHeight, /*border*/0, TEX_FORMAT, TEX_TYPE, kbd.model->texPixels);
         }
         if (kbd.modelDirty) {

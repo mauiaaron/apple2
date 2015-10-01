@@ -16,6 +16,8 @@
 #include "video/glinput.h"
 #include "video/glnode.h"
 
+#include <regex.h>
+
 bool safe_to_do_opengl_logging = false;
 bool renderer_shutting_down = false;
 
@@ -35,7 +37,9 @@ static int adjustedHeight = 0;
 GLint texSamplerLoc = UNINITIALIZED_GL;
 GLint alphaValue = UNINITIALIZED_GL;
 GLuint mainShaderProgram = UNINITIALIZED_GL;
+
 bool hackAroundBrokenAdreno200 = false;
+bool hackAroundBrokenAdreno205 = false;
 
 static GLint uniformMVPIdx = UNINITIALIZED_GL;
 static GLenum crtElementType = UNINITIALIZED_GL;
@@ -496,24 +500,89 @@ static demoSource *_create_shader_source(const char *fileName) {
 
 static void gldriver_render(void);
 
-static void gldriver_init_common(void) {
+static void _gldriver_setup_hackarounds(void) {
+
     const char *vendor   = (const char *)glGetString(GL_VENDOR);
     const char *renderer = (const char *)glGetString(GL_RENDERER);
     const char *version  = (const char *)glGetString(GL_VERSION);
     if (vendor && renderer && version) {
-        LOG("GL_VENDOR:%s GL_RENDERER:%s GL_VERSION:%s", vendor, renderer, version);
+        LOG("GL_VENDOR:[%s] GL_RENDERER:[%s] GL_VERSION:[%s]", vendor, renderer, version);
     } else {
-        RELEASE_LOG("One or more of GL_VENDOR, GL_RENDERER, and GL_VERSION is NULL ... possibly about to crash ...");
+        RELEASE_LOG("One or more of GL_VENDOR, GL_RENDERER, and GL_VERSION is NULL ... this is bad ...");
+        return;
     }
 
-    if (vendor && strcasestr(vendor, "qualcomm")) {
-        if (renderer && strcasestr(renderer, "adreno")) {
-            if (strcasestr(renderer, "200")) {
-                LOG("HACKING AROUND BROKEN ADRENO 200");
-                hackAroundBrokenAdreno200 = true;
-            }
+    regex_t qualcommRegex = { 0 };
+    regex_t adrenoRegex = { 0 };
+    regex_t twoHundredRegex = { 0 };
+    regex_t twoHundredFiveRegex = { 0 };
+
+    do {
+        // As if we didn't have enough problems with Android ... Bionic's POSIX Regex support for android-10 appears
+        // very basic ... we can't match the word-boundary atomics \> \< \b ... sigh ... hopefully  by the time there is
+        // an Adreno 2000 we can remove these hackarounds ;-)
+
+        int err = regcomp(&qualcommRegex, "qualcomm", REG_ICASE|REG_NOSUB|REG_EXTENDED);
+        if (err) {
+            LOG("Cannot compile regex : %d", err);
+            break;
         }
-    }
+        int nomatch = regexec(&qualcommRegex, vendor, /*nmatch:*/0, /*pmatch:*/NULL, /*eflags:*/0);
+        if (nomatch) {
+            LOG("NO MATCH QUALCOMM >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+            break;
+        }
+
+        err = regcomp(&adrenoRegex, "adreno", REG_ICASE|REG_NOSUB|REG_EXTENDED);
+        if (err) {
+            LOG("Cannot compile regex : %d", err);
+            break;
+        }
+        nomatch = regexec(&adrenoRegex, renderer, /*nmatch:*/0, /*pmatch:*/NULL, /*eflags:*/0);
+        if (nomatch) {
+            LOG("NO MATCH ADRENO >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+            break;
+        }
+
+        err = regcomp(&twoHundredRegex, "200", REG_ICASE|REG_NOSUB|REG_EXTENDED);
+        if (err) {
+            LOG("Cannot compile regex : %d", err);
+            break;
+        }
+        err = regcomp(&twoHundredFiveRegex, "205", REG_ICASE|REG_NOSUB|REG_EXTENDED);
+        if (err) {
+            LOG("Cannot compile regex : %d", err);
+            break;
+        }
+
+        int found200 = !regexec(&twoHundredRegex, renderer, /*nmatch:*/0, /*pmatch:*/NULL, /*eflags:*/0);
+        int found205 = !regexec(&twoHundredFiveRegex, renderer, /*nmatch:*/0, /*pmatch:*/NULL, /*eflags:*/0);
+        if (found200) {
+            LOG("HACKING AROUND BROKEN ADRENO 200");
+            hackAroundBrokenAdreno200 = true;
+            break;
+        }
+        if (found205) {
+            LOG("HACKING AROUND BROKEN ADRENO 205");
+            hackAroundBrokenAdreno200 = true;
+            hackAroundBrokenAdreno205 = true;
+            break;
+        }
+    } while (0);
+
+    regfree(&qualcommRegex);
+    regfree(&adrenoRegex);
+    regfree(&twoHundredRegex);
+    regfree(&twoHundredFiveRegex);
+}
+
+static void gldriver_init_common(void) {
+
+    _gldriver_setup_hackarounds();
+
+    GLint value = UNINITIALIZED_GL;
+    glGetIntegerv(GL_MAX_TEXTURE_SIZE, &value);
+    LOG("GL_MAX_TEXTURE_SIZE:%d", value);
 
     renderer_shutting_down = false;
 
@@ -721,6 +790,7 @@ static void gldriver_render(void) {
     glBindTexture(GL_TEXTURE_2D, a2TextureName);
     glUniform1i(texSamplerLoc, TEXTURE_ID_FRAMEBUFFER);
     if (wasDirty) {
+        _HACKAROUND_GLTEXIMAGE2D_PRE(TEXTURE_ACTIVE_FRAMEBUFFER, a2TextureName);
         glTexImage2D(GL_TEXTURE_2D, /*level*/0, TEX_FORMAT_INTERNAL, SCANWIDTH, SCANHEIGHT, /*border*/0, TEX_FORMAT, TEX_TYPE, (GLvoid *)&pixels[0]);
     }
 
@@ -764,7 +834,7 @@ static void gldriver_render(void) {
     //glCullFace(GL_BACK);
 
     // Draw the CRT object and others
-    GL_DRAW_CALL_PRE();
+    _HACKAROUND_GLDRAW_PRE();
     glDrawElements(GL_TRIANGLES, crtNumElements, crtElementType, 0);
 
     // Render HUD nodes

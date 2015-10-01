@@ -430,6 +430,7 @@ static void gltouchmenu_render(void) {
     glBindTexture(GL_TEXTURE_2D, menu.model->textureName);
     if (menu.model->texDirty) {
         menu.model->texDirty = false;
+        _HACKAROUND_GLTEXIMAGE2D_PRE(TEXTURE_ACTIVE_TOUCHMENU, menu.model->textureName);
         glTexImage2D(GL_TEXTURE_2D, /*level*/0, TEX_FORMAT_INTERNAL, menu.model->texWidth, menu.model->texHeight, /*border*/0, TEX_FORMAT, TEX_TYPE, menu.model->texPixels);
     }
     glUniform1i(texSamplerLoc, TEXTURE_ID_TOUCHMENU);

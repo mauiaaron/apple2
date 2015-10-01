@@ -50,11 +50,30 @@ extern GLuint mainShaderProgram;
 // http://stackoverflow.com/questions/13676070/how-to-properly-mix-drawing-calls-and-changes-of-a-sampler-value-with-a-single-s
 // https://developer.qualcomm.com/forum/qdevnet-forums/mobile-gaming-graphics-optimization-adreno/8896
 extern bool hackAroundBrokenAdreno200;
-#define GL_DRAW_CALL_PRE() \
+extern bool hackAroundBrokenAdreno205;
+#define _HACKAROUND_GLDRAW_PRE() \
     ({ \
         if (hackAroundBrokenAdreno200) { \
             glUseProgram(0); \
             glUseProgram(mainShaderProgram); \
+        } \
+     })
+
+#define _HACKAROUND_GLTEXIMAGE2D_PRE(ACTIVE, NAME) \
+    ({ \
+        if (hackAroundBrokenAdreno205) { \
+            /* Adreno 205 driver (HTC Desire) is even more broken than the 200!  It appears that we must delete and recreate textures every time we upload new pixels! */ \
+            glBindTexture(GL_TEXTURE_2D, 0); \
+            glDeleteTextures(1, &(NAME)); \
+            glGenTextures(1, &(NAME)); \
+            glActiveTexture((ACTIVE)); \
+            glBindTexture(GL_TEXTURE_2D, (NAME)); \
+            /* HACK NOTE : these should match what is (currently hardcoded) in modelUtil.c */ \
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); \
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE); \
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); \
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); \
+            glPixelStorei(GL_UNPACK_ALIGNMENT, 1); \
         } \
      })
 
