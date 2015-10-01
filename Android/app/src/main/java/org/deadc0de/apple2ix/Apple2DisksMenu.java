@@ -131,7 +131,7 @@ public class Apple2DisksMenu implements Apple2MenuView {
         recursivelyCopyAPKAssets(activity, /*from APK directory:*/"symbols",   /*to location:*/new File(sDataDir, "symbols").getAbsolutePath());
 
         // expose keyboards to modding
-        recursivelyCopyAPKAssets(activity, /*from APK directory:*/"keyboards", /*to location:*/new File(sExternalFilesDir, "keyboards").getAbsolutePath());
+        recursivelyCopyAPKAssets(activity, /*from APK directory:*/"keyboards", /*to location:*/sExternalFilesDir.getAbsolutePath());
     }
 
     // ------------------------------------------------------------------------
@@ -263,8 +263,10 @@ public class Apple2DisksMenu implements Apple2MenuView {
             // ensure destination directory exists
             File dstPath = new File(dstFileOrDir);
             if (!dstPath.mkdirs()) {
-                Log.d(TAG, "OOPS, could not mkdirs on " + dstPath);
-                return;
+                if (!dstPath.exists()) {
+                    Log.d(TAG, "OOPS, could not mkdirs on " + dstPath);
+                    return;
+                }
             }
             for (String filename : files) {
                 // iterate on files and subdirectories
