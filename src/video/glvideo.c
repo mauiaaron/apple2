@@ -23,16 +23,10 @@ bool renderer_shutting_down = false;
 
 volatile unsigned long _backend_vid_dirty = 0;
 
-static int windowWidth = SCANWIDTH*1.5;
-static int windowHeight = SCANHEIGHT*1.5;
-
 static int viewportX = 0;
 static int viewportY = 0;
 static int viewportWidth = SCANWIDTH*1.5;
 static int viewportHeight = SCANHEIGHT*1.5;
-#if MOBILE_DEVICE
-static int adjustedHeight = 0;
-#endif
 
 GLint texSamplerLoc = UNINITIALIZED_GL;
 GLint alphaValue = UNINITIALIZED_GL;
@@ -57,6 +51,8 @@ static GLModel *crtModel = NULL;
 static video_backend_s glvideo_backend = { 0 };
 
 #if USE_GLUT
+static int windowWidth = SCANWIDTH*1.5;
+static int windowHeight = SCANHEIGHT*1.5;
 static int glutWindow = -1;
 #endif
 
@@ -741,7 +737,7 @@ static void gldriver_render(void) {
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 #if MOBILE_DEVICE
-    glViewport(viewportX, adjustedHeight, viewportWidth, viewportHeight);
+    glViewport(viewportX, viewportY, viewportWidth, viewportHeight);
 #endif
 
 #if PERSPECTIVE
@@ -849,8 +845,10 @@ static void gldriver_render(void) {
 
 static void gldriver_reshape(int w, int h) {
     //LOG("reshape to w:%d h:%d", w, h);
+#if USE_GLUT
     windowWidth = w;
     windowHeight = h;
+#endif
 
 #if MOBILE_DEVICE
     int viewportHeightPrevious = viewportHeight;
@@ -879,14 +877,6 @@ static void gldriver_reshape(int w, int h) {
         viewportHeight = h;
         //LOG("small viewport : x:%d,y:%d w:%d,h:%d", viewportX, viewportY, viewportWidth, viewportHeight);
     }
-
-#if MOBILE_DEVICE
-    if (viewportHeight < viewportHeightPrevious) {
-        adjustedHeight = viewportHeightPrevious - viewportHeight;
-    } else {
-        adjustedHeight = 0;
-    }
-#endif
 
     glViewport(viewportX, viewportY, viewportWidth, viewportHeight);
 
