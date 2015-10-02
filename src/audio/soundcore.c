@@ -11,6 +11,9 @@
 
 /*
  * Apple //e core sound system support. Source inspired/derived from AppleWin.
+ *
+ * 2015/10/01 AUDIO LIFECYCLE WARNING : CPU thread owns all audio, otherwise bad things may happen in system sound layer
+ * (OpenAL/OpenSLES/ALSA/etc)
  */
 
 #include "common.h"
@@ -26,6 +29,8 @@ AudioBackend_s *audio_backend = NULL;
 //-----------------------------------------------------------------------------
 
 long audio_createSoundBuffer(INOUT AudioBuffer_s **audioBuffer) {
+    // CPU thread owns audio lifecycle (see note above)
+    assert(pthread_self() == cpu_thread_id);
 
     if (!audio_isAvailable) {
         *audioBuffer = NULL;
@@ -55,12 +60,15 @@ long audio_createSoundBuffer(INOUT AudioBuffer_s **audioBuffer) {
 }
 
 void audio_destroySoundBuffer(INOUT AudioBuffer_s **audioBuffer) {
+    // CPU thread owns audio lifecycle (see note above)
+    assert(pthread_self() == cpu_thread_id);
     if (audioContext) {
         audioContext->DestroySoundBuffer(audioContext, audioBuffer);
     }
 }
 
 bool audio_init(void) {
+    // CPU thread owns audio lifecycle (see note above)
     assert(pthread_self() == cpu_thread_id);
     if (audio_isAvailable) {
         return true;
@@ -89,6 +97,7 @@ bool audio_init(void) {
 }
 
 void audio_shutdown(void) {
+    // CPU thread owns audio lifecycle (see note above)
     assert(pthread_self() == cpu_thread_id);
     if (!audio_isAvailable) {
         return;
@@ -98,6 +107,9 @@ void audio_shutdown(void) {
 }
 
 void audio_pause(void) {
+    // CPU thread owns audio lifecycle (see note above)
+    // Deadlock on Kindle Fire 1st Gen if audio_pause() and audio_resume() happen off CPU thread ...
+    assert(pthread_self() == cpu_thread_id);
     if (!audio_isAvailable) {
         return;
     }
@@ -105,6 +117,8 @@ void audio_pause(void) {
 }
 
 void audio_resume(void) {
+    // CPU thread owns audio lifecycle (see note above)
+    assert(pthread_self() == cpu_thread_id);
     if (!audio_isAvailable) {
         return;
     }

@@ -42,16 +42,6 @@
 
 #define DISK_MOTOR_QUIET_NSECS 2000000
 
-#define _LOCK_CPU_THREAD() \
-    if (pthread_self() != cpu_thread_id) { \
-        pthread_mutex_lock(&interface_mutex); \
-    }
-
-#define _UNLOCK_CPU_THREAD() \
-    if (pthread_self() != cpu_thread_id) { \
-        pthread_mutex_unlock(&interface_mutex); \
-    }
-
 // VBL constants?
 #define uCyclesPerLine 65 // 25 cycles of HBL & 40 cycles of HBL'
 #define uVisibleLinesPerFrame (64*3) // 192
@@ -68,12 +58,12 @@ static int32_t cycles_checkpoint_count = 0;
 static unsigned int g_dwCyclesThisFrame = 0;
 
 // scaling and speed adjustments
-#if MOBILE_DEVICE
-static bool is_paused = true;
-#else
-static bool is_paused = false;
+#if !MOBILE_DEVICE
 static bool auto_adjust_speed = true;
 #endif
+static bool is_paused = false;
+static unsigned long _pause_spinLock = 0;
+
 double cpu_scale_factor = 1.0;
 double cpu_altscale_factor = 1.0;
 bool is_fullspeed = false;
@@ -82,7 +72,9 @@ bool alt_speed_enabled = false;
 // misc
 volatile uint8_t emul_reinitialize = 1;
 #ifdef AUDIO_ENABLED
-bool emul_reinitialize_audio = true;
+static bool emul_reinitialize_audio = true;
+static bool emul_pause_audio = false;
+static bool emul_resume_audio = false;
 #endif
 static bool cpu_shutting_down = false;
 pthread_t cpu_thread_id = 0;
@@ -199,32 +191,56 @@ void timing_toggleCPUSpeed(void) {
 
 #ifdef AUDIO_ENABLED
 void timing_reinitializeAudio(void) {
-    assert(cpu_isPaused() || (pthread_self() == cpu_thread_id));
+    SPINLOCK_ACQUIRE(&_pause_spinLock);
+    assert(pthread_self() != cpu_thread_id);
+    assert(cpu_isPaused());
     emul_reinitialize_audio = true;
+    emul_pause_audio = false;
+    emul_resume_audio = false;
+    SPINLOCK_RELINQUISH(&_pause_spinLock);
 }
 #endif
 
 void cpu_pause(void) {
-
     assert(pthread_self() != cpu_thread_id);
-    _LOCK_CPU_THREAD();
 
+    SPINLOCK_ACQUIRE(&_pause_spinLock);
+    do {
+        if (is_paused) {
+            break;
+        }
+
+        // CPU thread will be paused when it next tries to acquire interface_mutex
 #ifdef AUDIO_ENABLED
-    audio_pause();
+        if (!emul_reinitialize_audio) {
+            emul_pause_audio = true;
+        }
 #endif
-    is_paused = true;
+        pthread_mutex_lock(&interface_mutex);
+        is_paused = true;
+    } while (0);
+    SPINLOCK_RELINQUISH(&_pause_spinLock);
 }
 
 void cpu_resume(void) {
     assert(pthread_self() != cpu_thread_id);
-    assert(cpu_isPaused());
-    is_paused = false;
 
+    SPINLOCK_ACQUIRE(&_pause_spinLock);
+    do {
+        if (!is_paused) {
+            break;
+        }
+
+        // CPU thread will be unblocked to acquire interface_mutex
 #ifdef AUDIO_ENABLED
-    audio_resume();
+        if (!emul_reinitialize_audio) {
+            emul_resume_audio = true;
+        }
 #endif
-
-    _UNLOCK_CPU_THREAD();
+        pthread_mutex_unlock(&interface_mutex);
+        is_paused = false;
+    } while (0);
+    SPINLOCK_RELINQUISH(&_pause_spinLock);
 }
 
 bool cpu_isPaused(void) {
@@ -292,7 +308,15 @@ static void *cpu_thread(void *dummyptr) {
 
         do {
             // -LOCK----------------------------------------------------------------------------------------- SAMPLE ti
+            if (UNLIKELY(emul_pause_audio)) {
+                emul_pause_audio = false;
+                audio_pause();
+            }
             pthread_mutex_lock(&interface_mutex);
+            if (UNLIKELY(emul_resume_audio)) {
+                emul_resume_audio = false;
+                audio_resume();
+            }
             clock_gettime(CLOCK_MONOTONIC, &ti);
 
             deltat = timespec_diff(t0, ti, &negative);
