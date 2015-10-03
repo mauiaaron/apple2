@@ -262,8 +262,7 @@ public class Apple2SettingsMenu extends Apple2AbstractMenu {
 
             @Override
             public void handleSelection(Apple2Activity activity, final Apple2AbstractMenu settingsMenu, boolean isChecked) {
-                // FIXME TODO : need a "web trampoline" link ... (do not hardcode domains not under our control)
-                String url = "http://github.com/mauiaaron/apple2";
+                String url = "http://deadc0de.org/apple2ix/android/";
                 Intent i = new Intent(Intent.ACTION_VIEW);
                 i.setData(Uri.parse(url));
                 activity.startActivity(i);
