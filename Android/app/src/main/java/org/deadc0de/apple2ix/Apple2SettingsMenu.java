@@ -313,6 +313,21 @@ public class Apple2SettingsMenu extends Apple2AbstractMenu {
             }
 
             @Override
+            public View getView(final Apple2Activity activity, View convertView) {
+                convertView = _basicView(activity, this, convertView);
+                if (!BuildConfig.DEBUG) {
+                    CheckBox cb = _addCheckbox(activity, this, convertView, Apple2Preferences.CRASH_CHECK.booleanValue(activity));
+                    cb.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                        @Override
+                        public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                            Apple2Preferences.CRASH_CHECK.saveBoolean(activity, isChecked);
+                        }
+                    });
+                }
+                return convertView;
+            }
+
+            @Override
             public void handleSelection(final Apple2Activity activity, final Apple2AbstractMenu settingsMenu, boolean isChecked) {
 
                 if (BuildConfig.DEBUG) {
@@ -343,8 +358,6 @@ public class Apple2SettingsMenu extends Apple2AbstractMenu {
                             }
                         }
                     });
-                } else {
-                    // TODO FIXME : checkbox on whether to enable checking/sending crashes
                 }
             }
         };

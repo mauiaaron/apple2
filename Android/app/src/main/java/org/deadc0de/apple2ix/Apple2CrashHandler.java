@@ -134,6 +134,10 @@ public class Apple2CrashHandler {
             return;
         }
 
+        if (!Apple2Preferences.CRASH_CHECK.booleanValue(activity)) {
+            return;
+        }
+
         boolean previouslyRanCrashCheck = mAlreadyRanCrashCheck.getAndSet(true);
 
         boolean previouslySentReport = mAlreadySentReport.get();
