@@ -34,6 +34,21 @@
 #ifndef PROCESSOR_STACKWALK_COMMON_H__
 #define PROCESSOR_STACKWALK_COMMON_H__
 
+#if EMBEDDED_STACKWALKER
+#include <stdio.h>
+extern "C" {
+    /**
+     * Sets output to specified FILE*
+     */
+    void stackwalker_setOutputFile(const FILE* file);
+
+    /**
+     * Run stackwalker to process a minidump and symbols
+     */
+    int stackwalker_main(const char* minidump, const char* symbolsPath, const bool machineReadable);
+}
+#endif
+
 namespace google_breakpad {
 
 class ProcessState;
