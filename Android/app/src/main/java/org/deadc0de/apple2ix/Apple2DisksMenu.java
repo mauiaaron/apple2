@@ -215,6 +215,47 @@ public class Apple2DisksMenu implements Apple2MenuView {
         return path;
     }
 
+    public static boolean hasDiskExtension(String name) {
+
+        // check file extensions ... sigh ... no String.endsWithIgnoreCase() ?
+
+        final int len = name.length();
+        if (len <= 3) {
+            return false;
+        }
+
+        String suffix;
+        suffix = name.substring(len - 3, len);
+        if (suffix.equalsIgnoreCase(".do") || suffix.equalsIgnoreCase(".po")) {
+            return true;
+        }
+
+        if (len <= 4) {
+            return false;
+        }
+
+        suffix = name.substring(len - 4, len);
+        if (suffix.equalsIgnoreCase(".dsk") || suffix.equalsIgnoreCase(".nib")) {
+            return true;
+        }
+
+        if (len <= 6) {
+            return false;
+        }
+
+        suffix = name.substring(len - 6, len);
+        if (suffix.equalsIgnoreCase(".do.gz") || suffix.equalsIgnoreCase(".po.gz")) {
+            return true;
+        }
+
+        if (len <= 7) {
+            return false;
+        }
+
+        suffix = name.substring(len - 7, len);
+        return (suffix.equalsIgnoreCase(".dsk.gz") || suffix.equalsIgnoreCase(".nib.gz"));
+    }
+
     // ------------------------------------------------------------------------
     // internals ...
 
@@ -351,47 +392,7 @@ public class Apple2DisksMenu implements Apple2MenuView {
                     return false;
                 }
                 File file = new File(dir, name);
-                if (file.isDirectory()) {
-                    return true;
-                }
-
-                // check file extensions ... sigh ... no String.endsWithIgnoreCase() ?
-
-                final int len = name.length();
-                if (len <= 3) {
-                    return false;
-                }
-
-                String suffix;
-                suffix = name.substring(len - 3, len);
-                if (suffix.equalsIgnoreCase(".do") || suffix.equalsIgnoreCase(".po")) {
-                    return true;
-                }
-
-                if (len <= 4) {
-                    return false;
-                }
-
-                suffix = name.substring(len - 4, len);
-                if (suffix.equalsIgnoreCase(".dsk") || suffix.equalsIgnoreCase(".nib")) {
-                    return true;
-                }
-
-                if (len <= 6) {
-                    return false;
-                }
-
-                suffix = name.substring(len - 6, len);
-                if (suffix.equalsIgnoreCase(".do.gz") || suffix.equalsIgnoreCase(".po.gz")) {
-                    return true;
-                }
-
-                if (len <= 7) {
-                    return false;
-                }
-
-                suffix = name.substring(len - 7, len);
-                return (suffix.equalsIgnoreCase(".dsk.gz") || suffix.equalsIgnoreCase(".nib.gz"));
+                return file.isDirectory() || hasDiskExtension(name);
             }
         });
 
