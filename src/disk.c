@@ -276,9 +276,9 @@ static unsigned long nibblize_track(uint8_t *buf, int drive) {
         *(output++) = 0xFF;
     }
 #else
-    // NOTE : original apple2emul used 6 sync bytes here and disk loading becomes much faster at a cost of conformance
+    // NOTE : original apple2emul used X sync bytes here and disk loading becomes much faster at a cost of conformance
     // for certain disk images.  For resource-constrained mobile/wearable devices, this is prolly the right path.
-    for (unsigned int i=0; i<6; i++) {
+    for (unsigned int i=0; i<8; i++) {
         *(output++) = 0xFF;
     }
 #endif
@@ -343,8 +343,8 @@ static unsigned long nibblize_track(uint8_t *buf, int drive) {
             *(output++) = 0xFF;
         }
 #else
-        // NOTE : original apple2emul used 5 self-sync bytes here
-        for (unsigned int i=0; i<5; i++) {
+        // NOTE : original apple2emul used X self-sync bytes here
+        for (unsigned int i=0; i<8; i++) {
             *(output++) = 0xFF;
         }
 #endif
