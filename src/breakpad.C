@@ -27,7 +27,7 @@ static google_breakpad::ExceptionHandler *eh = nullptr;
 
 static bool dumpCallback(const google_breakpad::MinidumpDescriptor& descriptor, void* context, bool succeeded) {
     // WARNING : should only do minimal work from within a crashing context ...
-    LOG("Dump path: %s\n", descriptor.path());
+    LOG("Dump path: %s", descriptor.path());
     return succeeded;
 }
 
@@ -38,9 +38,13 @@ extern "C" {
         eh = new google_breakpad::ExceptionHandler(descriptor, NULL, dumpCallback, NULL, true, -1);
     }
 
+    __attribute__((destructor(255)))
     static void shutdownBreakpadHandler(void) {
-        delete eh;
-        eh = nullptr;
+        if (eh) {
+            delete eh;
+            eh = nullptr;
+            LOG("Unregistering Breakpad...");
+        }
     }
 
     static bool processCrashWithBreakpad(const char *crash, const char *symbolsPath, const FILE *outputFile) {

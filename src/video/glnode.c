@@ -116,6 +116,7 @@ int64_t glnode_onTouchEvent(interface_touch_event_t action, int pointer_count, i
 }
 #endif
 
+__attribute__((destructor(255)))
 static void *_destroy_glnodes(void) {
     LOG("...");
 
@@ -133,8 +134,6 @@ static void *_destroy_glnodes(void) {
 __attribute__((constructor(CTOR_PRIORITY_LATE)))
 static void _init_glnode_manager(void) {
     LOG("Initializing GLNode manager subsystem");
-
-    atexit(&_destroy_glnodes);
 
 #if INTERFACE_TOUCH
     interface_onTouchEvent = &glnode_onTouchEvent;
