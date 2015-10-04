@@ -768,12 +768,11 @@ void test_disk(int argc, char **argv) {
         struct timespec ts = { .tv_sec=0, .tv_nsec=33333333 };
         nanosleep(&ts, NULL);
     }
-    timing_startCPU();
-    video_main_loop();
+    emulator_start();
     //pthread_join(p, NULL);
 }
 
-#if !defined(__APPLE__)
+#if !defined(__APPLE__) && !defined(ANDROID)
 int main(int argc, char **argv) {
     test_disk(argc, argv);
 }

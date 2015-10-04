@@ -51,17 +51,21 @@ void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetSpeakerVolume(JNIEnv 
 }
 
 void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetAudioLatency(JNIEnv *env, jclass cls, jfloat latencySecs) {
+#if !TESTING
     LOG("audio latency : %fsecs", latencySecs);
     assert(cpu_isPaused());
     audio_setLatency(latencySecs);
     timing_reinitializeAudio();
+#endif
 }
 
 jboolean Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetMockingboardEnabled(JNIEnv *env, jclass cls, jboolean enabled) {
+#if !TESTING
     LOG("mockingboard enabled : %d", enabled);
     assert(cpu_isPaused());
     MB_SetEnabled(enabled);
     timing_reinitializeAudio();
+#endif
     return enabled;
 }
 

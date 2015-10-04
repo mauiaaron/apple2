@@ -308,15 +308,19 @@ static void *cpu_thread(void *dummyptr) {
 
         do {
             // -LOCK----------------------------------------------------------------------------------------- SAMPLE ti
+#ifdef AUDIO_ENABLED
             if (UNLIKELY(emul_pause_audio)) {
                 emul_pause_audio = false;
                 audio_pause();
             }
+#endif
             pthread_mutex_lock(&interface_mutex);
+#ifdef AUDIO_ENABLED
             if (UNLIKELY(emul_resume_audio)) {
                 emul_resume_audio = false;
                 audio_resume();
             }
+#endif
             clock_gettime(CLOCK_MONOTONIC, &ti);
 
             deltat = timespec_diff(t0, ti, &negative);
