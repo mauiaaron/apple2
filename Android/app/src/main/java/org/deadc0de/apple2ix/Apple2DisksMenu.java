@@ -569,14 +569,12 @@ public class Apple2DisksMenu implements Apple2MenuView {
                         boolean isDriveA = diskA.isChecked();
                         boolean diskReadOnly = readOnly.isChecked();
                         if (isDriveA) {
-                            Apple2Preferences.CURRENT_DISK_A.saveString(mActivity, imageName);
                             Apple2Preferences.CURRENT_DISK_A_RO.saveBoolean(mActivity, diskReadOnly);
+                            Apple2Preferences.CURRENT_DISK_A.saveString(mActivity, imageName);
                         } else {
-                            Apple2Preferences.CURRENT_DISK_B.saveString(mActivity, imageName);
                             Apple2Preferences.CURRENT_DISK_B_RO.saveBoolean(mActivity, diskReadOnly);
+                            Apple2Preferences.CURRENT_DISK_B.saveString(mActivity, imageName);
                         }
-
-                        mActivity.nativeChooseDisk(imageName, isDriveA, diskReadOnly);
                     }
                 });
 
