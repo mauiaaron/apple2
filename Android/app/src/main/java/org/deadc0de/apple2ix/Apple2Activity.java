@@ -213,10 +213,6 @@ public class Apple2Activity extends Activity {
         // Dismiss these popups to avoid android.view.WindowLeaked issues
         synchronized (this) {
             dismissAllMenus();
-
-            mSplashScreen = null;
-            mMainMenu = null;
-
             nativeOnPause(true);
         }
 
@@ -393,7 +389,7 @@ public class Apple2Activity extends Activity {
         return super.onTouchEvent(event);
     }
 
-    public void graphicsInitialized(int w, int h) {
+    void graphicsInitialized(int w, int h) {
         if (mMainMenu == null) {
             mMainMenu = new Apple2MainMenu(this, mView);
         }
@@ -428,19 +424,19 @@ public class Apple2Activity extends Activity {
         return mMainMenu;
     }
 
-    public synchronized void showSplashScreen() {
-        if (mSplashScreen != null) {
-            return;
-        }
-        mSplashScreen = new Apple2SplashScreen(Apple2Activity.this);
+    private void showSplashScreen() {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 synchronized (Apple2Activity.this) {
-                    if (mSplashScreen != null) {
-                        mSplashScreen.show();
-                        Apple2CrashHandler.getInstance().checkForCrashes(Apple2Activity.this);
+                    if (mSplashScreen == null) {
+                        mSplashScreen = new Apple2SplashScreen(Apple2Activity.this);
                     }
+                    if (mSplashScreen.isShowing()) {
+                        return;
+                    }
+                    mSplashScreen.show();
+                    Apple2CrashHandler.getInstance().checkForCrashes(Apple2Activity.this);
                 }
             }
         });
