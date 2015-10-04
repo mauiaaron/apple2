@@ -10,6 +10,8 @@ usage() {
     exit 0
 }
 
+export EMBEDDED_STACKWALKER=1
+
 while test "x$1" != "x"; do
     case "$1" in
         "--debug")
@@ -62,7 +64,7 @@ if test "$(basename $0)" = "clean" ; then
     /bin/rm -rf ../gen
     /bin/rm -rf ../obj
 
-    ndk-build clean
+    ndk-build V=1 NDK_MODULE_PATH=. clean
     ##cd ..
     ##ant clean
 
@@ -107,9 +109,9 @@ fi
 ###############################################################################
 # build native sources
 if test "x$do_release" = "x1" ; then
-    ndk-build V=1 NDK_MODULE_PATH=. EMBEDDED_STACKWALKER=1 # NDK_TOOLCHAIN_VERSION=clang
+    ndk-build V=1 NDK_MODULE_PATH=. # NDK_TOOLCHAIN_VERSION=clang
 else
-    ndk-build V=1 NDK_MODULE_PATH=. NDK_DEBUG=1 EMBEDDED_STACKWALKER=1 # NDK_TOOLCHAIN_VERSION=clang
+    ndk-build V=1 NDK_MODULE_PATH=. NDK_DEBUG=1 # NDK_TOOLCHAIN_VERSION=clang
 fi
 ret=$?
 if test "x$ret" != "x0" ; then
