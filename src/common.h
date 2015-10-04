@@ -63,6 +63,8 @@
 #include "prefs.h"
 #include "zlib-helpers.h"
 
+#include "meta/trace.h"
+
 #ifdef __APPLE__
 #include "darwin-shim.h"
 #import <CoreFoundation/CoreFoundation.h>

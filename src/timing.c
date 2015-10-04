@@ -307,6 +307,7 @@ static void *cpu_thread(void *dummyptr) {
         clock_gettime(CLOCK_MONOTONIC, &t0);
 
         do {
+            SCOPE_TRACE_CPU("CPU mainloop");
             // -LOCK----------------------------------------------------------------------------------------- SAMPLE ti
 #ifdef AUDIO_ENABLED
             if (UNLIKELY(emul_pause_audio)) {
@@ -450,7 +451,9 @@ static void *cpu_thread(void *dummyptr) {
                 {
                     deltat.tv_sec = 0;
                     deltat.tv_nsec = sleepfor;
+                    TRACE_CPU_BEGIN("sleep");
                     nanosleep(&deltat, NULL);
+                    TRACE_CPU_END();
                 }
 
 #if DEBUG_TIMING

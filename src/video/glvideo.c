@@ -726,6 +726,8 @@ static void gldriver_update(int unused) {
 #endif
 
 static void gldriver_render(void) {
+    SCOPE_TRACE_VIDEO("glvideo render");
+
     const uint8_t * const fb = video_current_framebuffer();
     if (UNLIKELY(!fb)) {
         return;
@@ -769,6 +771,7 @@ static void gldriver_render(void) {
 
     char pixels[SCANWIDTH * SCANHEIGHT * sizeof(PIXEL_TYPE)]; // HACK FIXME TODO ... are we sure this does not overflow max stack buffer size?
     if (wasDirty) {
+        SCOPE_TRACE_VIDEO("pixel convert");
         // Update texture from indexed-color Apple //e internal framebuffer
         unsigned int count = SCANWIDTH * SCANHEIGHT;
         for (unsigned int i=0, j=0; i<count; i++, j+=sizeof(PIXEL_TYPE)) {
@@ -786,6 +789,7 @@ static void gldriver_render(void) {
     glBindTexture(GL_TEXTURE_2D, a2TextureName);
     glUniform1i(texSamplerLoc, TEXTURE_ID_FRAMEBUFFER);
     if (wasDirty) {
+        SCOPE_TRACE_VIDEO("glvideo texImage2D");
         _HACKAROUND_GLTEXIMAGE2D_PRE(TEXTURE_ACTIVE_FRAMEBUFFER, a2TextureName);
         glTexImage2D(GL_TEXTURE_2D, /*level*/0, TEX_FORMAT_INTERNAL, SCANWIDTH, SCANHEIGHT, /*border*/0, TEX_FORMAT, TEX_TYPE, (GLvoid *)&pixels[0]);
     }

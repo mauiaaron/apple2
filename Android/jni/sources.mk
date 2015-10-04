@@ -30,7 +30,8 @@ APPLE2_AUDIO_SRC = \
 
 APPLE2_META_SRC = \
     $(APPLE2_SRC_PATH)/meta/debug.c $(APPLE2_SRC_PATH)/meta/debugger.c $(APPLE2_SRC_PATH)/meta/opcodes.c \
-    $(APPLE2_SRC_PATH)/test/sha1.c $(APPLE2_SRC_PATH)/json_parse.c $(APPLE2_SRC_PATH)/../externals/jsmn/jsmn.c
+    $(APPLE2_SRC_PATH)/meta/lintrace.c $(APPLE2_SRC_PATH)/test/sha1.c $(APPLE2_SRC_PATH)/json_parse.c \
+    $(APPLE2_SRC_PATH)/../externals/jsmn/jsmn.c
 
 APPLE2_MAIN_SRC = \
     $(APPLE2_SRC_PATH)/font.c $(APPLE2_SRC_PATH)/rom.c $(APPLE2_SRC_PATH)/misc.c $(APPLE2_SRC_PATH)/display.c $(APPLE2_SRC_PATH)/vm.c \

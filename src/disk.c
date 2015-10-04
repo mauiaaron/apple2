@@ -110,6 +110,7 @@ static bool is_po(const char * const name) {
 #define NUM_SIXBIT_NIBS 342
 
 static void nibblize_sector(const uint8_t *src, uint8_t *out) {
+    SCOPE_TRACE_DISK("nibblize_sector");
 
     uint8_t work_buf[NUM_SIXBIT_NIBS];
     uint8_t *nib = work_buf;
@@ -168,6 +169,7 @@ static void nibblize_sector(const uint8_t *src, uint8_t *out) {
 }
 
 static void denibblize_sector(const uint8_t *src, uint8_t *out) {
+    SCOPE_TRACE_DISK("denibblize_sector");
 
     uint8_t work_buf[NUM_SIXBIT_NIBS+1];
     uint8_t *dsk = work_buf;
@@ -267,6 +269,7 @@ static void denibblize_sector(const uint8_t *src, uint8_t *out) {
 #define CODE44B(b) (((b) & 0x55) | 0xAA)
 
 static unsigned long nibblize_track(uint8_t *buf, int drive) {
+    SCOPE_TRACE_DISK("nibblize_track");
 
     uint8_t *output = disk6.disk[drive].track_image;
     
@@ -356,6 +359,8 @@ static unsigned long nibblize_track(uint8_t *buf, int drive) {
 }
 
 static void denibblize_track(int drive, uint8_t *dst) {
+    SCOPE_TRACE_DISK("denibblize_track");
+
     // Searches through the track data for each sector and decodes it
 #warning TODO FIXME inefficient -- refactor after moar tests =P
 
@@ -415,6 +420,7 @@ static void denibblize_track(int drive, uint8_t *dst) {
 }
 
 static bool load_track_data(void) {
+    SCOPE_TRACE_DISK("load_track_data");
 
     if (disk6.disk[disk6.drive].nibblized) {
         // .nib image
@@ -452,6 +458,7 @@ static bool load_track_data(void) {
 }
 
 static bool save_track_data(void) {
+    SCOPE_TRACE_DISK("save_track_data");
 
     if (disk6.disk[disk6.drive].nibblized) {
         // .nib image

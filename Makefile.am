@@ -14,7 +14,7 @@ noinst_HEADERS = src/common.h src/cpu.h src/disk.h src/glue.h src/vm.h \
 	src/timing.h src/uthash.h src/video/video.h src/zlib-helpers.h \
 	\
 	src/x86/glue-prologue.h \
-	src/meta/debug.h \
+	src/meta/debug.h src/meta/trace.h \
 	\
 	src/audio/alhelpers.h src/audio/AY8910.h src/audio/mockingboard.h \
 	src/audio/peripherals.h src/audio/soundcore.h src/audio/speaker.h \
@@ -48,8 +48,8 @@ AUDIO_SRC = \
 	src/audio/AY8910.c
 
 META_SRC = \
-	src/meta/debug.l src/meta/debugger.c src/meta/opcodes.c \
-	src/test/sha1.c
+	src/meta/debug.l src/meta/debugger.c src/meta/opcodes.c src/test/sha1.c \
+	src/meta/lintrace.c
 
 # NOTE : selectively enabled through configuration process ...
 EXTRA_apple2ix_SOURCES = \

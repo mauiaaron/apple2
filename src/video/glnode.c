@@ -86,6 +86,7 @@ void glnode_shutdownNodes(void) {
 }
 
 void glnode_renderNodes(void) {
+    SCOPE_TRACE_VIDEO("glnode render");
     glnode_array_node_s *p = tail;
     while (p) {
         p->node.render();
@@ -103,6 +104,7 @@ void glnode_reshapeNodes(int w, int h) {
 
 #if INTERFACE_TOUCH
 int64_t glnode_onTouchEvent(interface_touch_event_t action, int pointer_count, int pointer_idx, float *x_coords, float *y_coords) {
+    SCOPE_TRACE_TOUCH("glnode onTouchEvent");
     glnode_array_node_s *p = head;
     int64_t flags = 0x0;
     while (p) {

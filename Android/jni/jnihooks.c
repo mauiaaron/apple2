@@ -217,6 +217,8 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnPause(JNIEnv *env, jobjec
 }
 
 void Java_org_deadc0de_apple2ix_Apple2Activity_nativeRender(JNIEnv *env, jobject obj) {
+    SCOPE_TRACE_VIDEO("nativeRender");
+
     if (UNLIKELY(appState != APP_RUNNING)) {
         if (appState == APP_REQUESTED_SHUTDOWN) {
             appState = APP_FINISHED;
@@ -281,6 +283,9 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnKeyUp(JNIEnv *env, jobjec
 
 jlong Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnTouch(JNIEnv *env, jobject obj, jint action, jint pointerCount, jint pointerIndex, jfloatArray xCoords, jfloatArray yCoords) {
     //LOG(": %d/%d/%d :", action, pointerCount, pointerIndex);
+
+    SCOPE_TRACE_TOUCH("nativeOnTouch");
+
     if (UNLIKELY(appState != APP_RUNNING)) {
         return 0x0LL;
     }

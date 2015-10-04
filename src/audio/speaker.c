@@ -395,6 +395,7 @@ void speaker_reset(void) {
 }
 
 void speaker_flush(void) {
+    SCOPE_TRACE_AUDIO("speaker_flush");
     if (!speaker_isAvailable) {
         return;
     }

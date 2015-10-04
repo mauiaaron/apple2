@@ -2110,6 +2110,7 @@ void MB_StartOfCpuExecute()
 // Called by ContinueExecution() at the end of every video frame
 void MB_EndOfVideoFrame()
 {
+    SCOPE_TRACE_AUDIO("MB_EndOfVideoFrame");
 	if(g_SoundcardType == CT_Empty)
 		return;
 
@@ -2126,6 +2127,7 @@ void MB_EndOfVideoFrame()
 // Called by CpuExecute() after every N opcodes (N = ~1000 @ 1MHz)
 void MB_UpdateCycles(void)
 {
+    SCOPE_TRACE_AUDIO("MB_UpdateCycles");
 	if(g_SoundcardType == CT_Empty)
 		return;
 
