@@ -38,7 +38,13 @@ enum {
     ANDROID_ACTION_POINTER_UP = 0x6,
 };
 
-static bool shuttingDown = false;
+typedef enum lifecycle_seq_t {
+    APP_RUNNING = 0,
+    APP_REQUESTED_SHUTDOWN,
+    APP_FINISHED,
+} lifecycle_seq_t;
+
+static lifecycle_seq_t appState = APP_RUNNING;
 
 #if TESTING
 static void _run_tests(void) {
@@ -195,7 +201,7 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnResume(JNIEnv *env, jobje
 }
 
 void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnPause(JNIEnv *env, jobject obj, jboolean isSystemPause) {
-    if (shuttingDown) {
+    if (appState != APP_RUNNING) {
         return;
     }
     if (cpu_isPaused()) {
@@ -211,7 +217,11 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnPause(JNIEnv *env, jobjec
 }
 
 void Java_org_deadc0de_apple2ix_Apple2Activity_nativeRender(JNIEnv *env, jobject obj) {
-    if (UNLIKELY(shuttingDown)) {
+    if (UNLIKELY(appState != APP_RUNNING)) {
+        if (appState == APP_REQUESTED_SHUTDOWN) {
+            appState = APP_FINISHED;
+            emulator_shutdown();
+        }
         return;
     }
 
@@ -244,7 +254,7 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnQuit(JNIEnv *env, jobject
 #if TESTING
     // test driver thread is managing CPU
 #else
-    shuttingDown = true;
+    appState = APP_REQUESTED_SHUTDOWN;
 
     LOG("...");
 
@@ -252,24 +262,18 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnQuit(JNIEnv *env, jobject
     c_eject_6(1);
 
     cpu_resume();
-
-    emulator_shutdown();
-
-    if (crashHandler && crashHandler->shutdown) {
-        crashHandler->shutdown();
-    }
 #endif
 }
 
 void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnKeyDown(JNIEnv *env, jobject obj, jint keyCode, jint metaState) {
-    if (UNLIKELY(shuttingDown)) {
+    if (UNLIKELY(appState != APP_RUNNING)) {
         return;
     }
     android_keycode_to_emulator(keyCode, metaState, true);
 }
 
 void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnKeyUp(JNIEnv *env, jobject obj, jint keyCode, jint metaState) {
-    if (UNLIKELY(shuttingDown)) {
+    if (UNLIKELY(appState != APP_RUNNING)) {
         return;
     }
     android_keycode_to_emulator(keyCode, metaState, false);
@@ -277,7 +281,7 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnKeyUp(JNIEnv *env, jobjec
 
 jlong Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnTouch(JNIEnv *env, jobject obj, jint action, jint pointerCount, jint pointerIndex, jfloatArray xCoords, jfloatArray yCoords) {
     //LOG(": %d/%d/%d :", action, pointerCount, pointerIndex);
-    if (UNLIKELY(shuttingDown)) {
+    if (UNLIKELY(appState != APP_RUNNING)) {
         return 0x0LL;
     }
 
