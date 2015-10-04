@@ -133,6 +133,20 @@ static inline GLenum safeGLGetError(void) {
     __sync_add_and_fetch((x), 1);
 
 
+// cribbed from AOSP and modified with usleep() and to also ignore EAGAIN (should this be a different errno than EINTR)
+#define TEMP_FAILURE_RETRY_FOPEN(exp) ({ \
+    typeof (exp) _rc; \
+    do { \
+        _rc = (exp); \
+        if (_rc == NULL && (errno == EINTR || errno == EAGAIN) ) { \
+            usleep(10); \
+        } else { \
+            break; \
+        } \
+    } while (1); \
+    _rc; })
+
+
 extern bool do_logging;
 
 #ifdef ANDROID
