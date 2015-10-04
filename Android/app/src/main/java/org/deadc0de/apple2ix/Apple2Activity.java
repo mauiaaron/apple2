@@ -371,7 +371,9 @@ public class Apple2Activity extends Activity {
                 Apple2Preferences.CURRENT_TOUCH_DEVICE.saveTouchDevice(this, nextVariant);
             } else if ((nativeFlags & NATIVE_TOUCH_CPU_SPEED_DEC) != 0) {
                 int percentSpeed = Apple2Preferences.nativeGetCPUSpeed();
-                if (percentSpeed > 100) {
+                if (percentSpeed > 400) { // HACK: max value from native side
+                    percentSpeed = 375;
+                } else if (percentSpeed > 100) {
                     percentSpeed -= 25;
                 } else {
                     percentSpeed -= 5;
