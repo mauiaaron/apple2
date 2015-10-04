@@ -14,8 +14,10 @@ package org.deadc0de.apple2ix;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.graphics.Rect;
 import android.media.AudioManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.StrictMode;
 import android.util.Log;
@@ -25,8 +27,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.widget.FrameLayout;
+import android.widget.Toast;
 
+import java.io.File;
 import java.util.ArrayList;
+import java.util.StringTokenizer;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.deadc0de.apple2ix.basic.BuildConfig;
@@ -408,6 +413,18 @@ public class Apple2Activity extends Activity {
         nativeGraphicsInitialized(w, h);
 
         showSplashScreen();
+
+        Intent intent = getIntent();
+        String path = null;
+        if (intent != null) {
+            Uri data = intent.getData();
+            if (data != null) {
+                path = data.getPath();
+            }
+        }
+        if (path != null && Apple2DisksMenu.hasDiskExtension(path)) {
+            handleInsertDiskIntent(path);
+        }
     }
 
     public void showMainMenu() {
@@ -422,6 +439,57 @@ public class Apple2Activity extends Activity {
 
     public Apple2MainMenu getMainMenu() {
         return mMainMenu;
+    }
+
+    private void handleInsertDiskIntent(final String path) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                synchronized (Apple2Activity.this) {
+                    if (mMainMenu == null) {
+                        return;
+                    }
+                    String diskPath = path;
+                    File diskFile = new File(diskPath);
+                    if (!diskFile.canRead()) {
+                        Toast.makeText(Apple2Activity.this, Apple2Activity.this.getString(R.string.disk_insert_could_not_read), Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
+                    Apple2Preferences.CURRENT_DISK_A_RO.saveBoolean(Apple2Activity.this, true);
+                    final int len = diskPath.length();
+                    final String suffix = diskPath.substring(len - 3, len);
+                    if (suffix.equalsIgnoreCase(".gz")) { // HACK FIXME TODO : small amount of code duplication of Apple2DisksMenu
+                        diskPath = diskPath.substring(0, len - 3);
+                    }
+                    Apple2Preferences.CURRENT_DISK_A.saveString(Apple2Activity.this, diskPath);
+
+                    Apple2DisksMenu disksMenu = mMainMenu.getDisksMenu();
+                    while (disksMenu.popPathStack() != null) {
+                        /* ... */
+                    }
+
+                    String storageDir = Apple2DisksMenu.getExternalStorageDirectory().getAbsolutePath();
+                    if (diskPath.contains(storageDir)) {
+                        diskPath = diskPath.replace(storageDir + File.separator, "");
+                        disksMenu.pushPathStack(storageDir);
+                    }
+                    StringTokenizer tokenizer = new StringTokenizer(diskPath, File.separator);
+                    while (tokenizer.hasMoreTokens()) {
+                        String token = tokenizer.nextToken();
+                        if (token.equals("")) {
+                            continue;
+                        }
+                        if (Apple2DisksMenu.hasDiskExtension(token)) {
+                            continue;
+                        }
+                        disksMenu.pushPathStack(token);
+                    }
+
+                    Toast.makeText(Apple2Activity.this, Apple2Activity.this.getString(R.string.disk_insert_toast), Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
     }
 
     private void showSplashScreen() {

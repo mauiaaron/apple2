@@ -15,6 +15,7 @@
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name" >
+
         <activity
             android:name="org.deadc0de.apple2ix.Apple2Activity"
             android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation"
@@ -23,9 +24,30 @@
             android:windowSoftInputMode="adjustResize" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="file" android:host="*" android:mimeType="application/x-gzip" android:pathPattern="/.*\\.nib\\.gz" />
+                <data android:scheme="file" android:host="*" android:mimeType="application/x-gzip" android:pathPattern="/.*\\.dsk\\.gz" />
+                <data android:scheme="file" android:host="*" android:mimeType="application/x-gzip" android:pathPattern="/.*\\.do\\.gz" />
+                <data android:scheme="file" android:host="*" android:mimeType="application/x-gzip" android:pathPattern="/.*\\.po\\.gz" />
+            </intent-filter>
+
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="file" /> <!-- catch-all since I can't get the following to work because ... Android -->
+                <!--
+                <data android:scheme="file" android:host="*" android:mimeType="application/octet-stream" android:pathPattern="/.*\\.nib" />
+                <data android:scheme="file" android:host="*" android:mimeType="application/octet-stream" android:pathPattern="/.*\\.dsk" />
+                <data android:scheme="file" android:host="*" android:mimeType="application/octet-stream" android:pathPattern="/.*\\.do" />
+                <data android:scheme="file" android:host="*" android:mimeType="application/octet-stream" android:pathPattern="/.*\\.po" />
+                -->
+            </intent-filter>
+
         </activity>
     </application>
 
