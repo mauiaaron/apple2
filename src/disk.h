@@ -36,6 +36,17 @@
 #define DSK_VOLUME 254
 #define FILE_NAME_SZ (PATH_MAX>>2)
 
+#define DISK_EXT_DSK ".dsk"
+#define _DSKLEN (sizeof(DISK_EXT_DSK)-1)
+#define DISK_EXT_DO  ".do"
+#define _DOLEN (sizeof(DISK_EXT_DO)-1)
+#define DISK_EXT_PO  ".po"
+#define _POLEN (sizeof(DISK_EXT_PO)-1)
+#define DISK_EXT_NIB ".nib"
+#define _NIBLEN (sizeof(DISK_EXT_NIB)-1)
+#define DISK_EXT_GZ  ".gz"
+#define _GZLEN (sizeof(DISK_EXT_GZ)-1)
+
 typedef struct diskette_t {
     uint8_t track_image[NIB_TRACK_SIZE];
     char file_name[FILE_NAME_SZ];

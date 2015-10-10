@@ -79,41 +79,48 @@ static void _initialize_reverse_translate(void) {
     }
 }
 
-static void cut_gz(char *name) {
-    char *p = name + strlen(name) - 1;
-    p--;
-    p--;
-    *p = '\0';
-}
-
-static bool is_gz(const char * const name) {
-    size_t len = strlen( name );
-    if (len > 3) {
-        return (strcmp(name+len-3, ".gz") == 0);
+static inline void cut_gz(char *name) {
+    size_t len = strlen(name);
+    if (len <= _GZLEN) {
+        return;
     }
-    return false;
+    *(name+len-_GZLEN) = '\0';
 }
 
-static bool is_nib(const char * const name) {
-    size_t len = strlen( name );
+static inline bool is_gz(const char * const name) {
+    size_t len = strlen(name);
+    if (len <= _GZLEN) {
+        return false;
+    }
+    return strncmp(name+len-_GZLEN, DISK_EXT_GZ, _GZLEN) == 0;
+}
+
+static inline bool is_nib(const char * const name) {
+    size_t len = strlen(name);
+    if (len <= _NIBLEN) {
+        return false;
+    }
     if (is_gz(name)) {
-        len -= 3;
+        if (len <= _NIBLEN+_GZLEN) {
+            return false;
+        }
+        len -= _GZLEN;
     }
-    if (!strncmp(name + len - 4, ".nib", 4)) {
-        return true;
-    }
-    return false;
+    return strncmp(name+len-_NIBLEN, DISK_EXT_NIB, _NIBLEN) == 0;
 }
 
-static bool is_po(const char * const name) {
+static inline bool is_po(const char * const name) {
     size_t len = strlen( name );
+    if (len <= _POLEN) {
+        return false;
+    }
     if (is_gz(name)) {
-        len -= 3;
+        if (len <= _POLEN+_GZLEN) {
+            return false;
+        }
+        len -= _GZLEN;
     }
-    if (!strncmp(name + len - 3, ".po", 3)) {
-        return true;
-    }
-    return false;
+    return strncmp(name+len-_POLEN, DISK_EXT_PO, _POLEN) == 0;
 }
 
 #define SIXBIT_MASK 0x3F // 111111
