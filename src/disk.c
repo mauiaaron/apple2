@@ -401,11 +401,11 @@ static void denibblize_track(int drive, uint8_t *dst) {
             uint8_t *nib = work_buf;
             while (secloop < DATA_BYTES_LEN) {
                 *(nib+secloop) = *(trackimage+tmpoff);
+                ++secloop;
+                ++tmpoff;
                 if (tmpoff >= disk6.disk[drive].track_width) {
                     tmpoff = 0;
                 }
-                ++secloop;
-                ++tmpoff;
             }
 
             if (prologue[2] == 0x96) { // header
