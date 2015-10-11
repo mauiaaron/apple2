@@ -33,7 +33,7 @@ static int stepper_phases = 0; // state bits for stepper magnet phases 0-3
 static int skew_table_6_po[16] = { 0x00,0x08,0x01,0x09,0x02,0x0A,0x03,0x0B, 0x04,0x0C,0x05,0x0D,0x06,0x0E,0x07,0x0F }; // ProDOS order
 static int skew_table_6_do[16] = { 0x00,0x07,0x0E,0x06,0x0D,0x05,0x0C,0x04, 0x0B,0x03,0x0A,0x02,0x09,0x01,0x08,0x0F }; // DOS order
 
-static int translate_table_6[0x40] = {
+static uint8_t translate_table_6[0x40] = {
     0x96, 0x97, 0x9a, 0x9b, 0x9d, 0x9e, 0x9f, 0xa6,
     0xa7, 0xab, 0xac, 0xad, 0xae, 0xaf, 0xb2, 0xb3,
     0xb4, 0xb5, 0xb6, 0xb7, 0xb9, 0xba, 0xbb, 0xbc,
@@ -69,6 +69,17 @@ static int translate_table_6[0x40] = {
     0x80, 0x39, 0x3a, 0x3b, 0x3c, 0x3d, 0x3e, 0x3f
     */
 };
+
+static uint8_t rev_translate_table_6[0x80] = { 0 };
+
+__attribute__((constructor(CTOR_PRIORITY_LATE)))
+static void _initialize_reverse_translate(void) {
+    unsigned int loop = 0;
+    while (loop < 0x40) {
+        rev_translate_table_6[translate_table_6[loop]-0x80] = loop << 2;
+        loop++;
+    }
+}
 
 static void cut_gz(char *name) {
     char *p = name + strlen(name) - 1;
@@ -174,22 +185,11 @@ static void denibblize_sector(const uint8_t *src, uint8_t *out) {
     uint8_t work_buf[NUM_SIXBIT_NIBS+1];
     uint8_t *dsk = work_buf;
 
-    static uint8_t denib[0x80] = { 0 };
-    static bool tablegenerated = false;
-    if (!tablegenerated) {
-        unsigned int loop = 0;
-        while (loop < 0x40) {
-            denib[translate_table_6[loop]-0x80] = loop << 2;
-            loop++;
-        }
-        tablegenerated = true;
-    }
-
     // Convert disk bytes into 6-bit bytes
     {
         unsigned int loop = NUM_SIXBIT_NIBS+1;
         while (loop--) {
-            *(dsk++) = denib[*(src++) & 0x7F];
+            *(dsk++) = rev_translate_table_6[*(src++) & 0x7F];
         }
     }
 
