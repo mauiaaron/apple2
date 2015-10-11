@@ -619,6 +619,372 @@ TEST test_outofspace_po() {
     PASS();
 }
 
+#define JUNK_MEM_SHA1 "10F26F44A736EE68E04C94C416E085E2319B3F9F"
+#define JUNK_MEM_END_SHA1 "C09B5F8668F061AACEA5765943BD4D743061F701"
+#if CONFORMANT_TRACKS
+#   define EXPECTED_BLOAD_TRACE_DSK_FILE_SIZE 1595253
+#   define EXPECTED_BLOAD_TRACE_DSK_SHA "8485095E5ED8CEF5D8A177B78A53E3E6A022366D"
+#else
+#   define EXPECTED_BLOAD_TRACE_DSK_FILE_SIZE 1512000
+#   define EXPECTED_BLOAD_TRACE_DSK_SHA "99B23A0DF5FCAE3ECB494F98ADE938D9FBF9D726"
+#endif
+
+TEST test_bload_trace_dsk() {
+    test_setup_boot_disk(BLANK_DSK, 0);
+    BOOT_TO_DOS();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
+    ASSERT(apple_ii_64k[0][TESTOUT_ADDR]    == 0x00);
+
+    srandom(0);
+    const char *homedir = HOMEDIR;
+    char *disk = NULL;
+    asprintf(&disk, "%s/a2_bload_trace_test_dsk.txt", homedir);
+    if (disk) {
+        unlink(disk);
+        c_begin_disk_trace_6(disk, NULL);
+    }
+
+    test_type_input("CALL-151\r");
+
+    apple_ii_64k[0][WATCHPOINT_ADDR] = 0x0;
+    test_type_input("2000<7000.BFFFM\r");
+    test_type_input("BLOADJUNK0,A$2000\r");
+    test_type_input("1F33:FF\r");
+    c_debugger_go();
+    ASSERT_SHA_MEM(JUNK_MEM_SHA1, 0x2000, 0x4000);
+
+    apple_ii_64k[0][WATCHPOINT_ADDR] = 0x0;
+    test_common_setup();
+    test_type_input("2000<7000.BFFFM\r");
+    test_type_input("BLOADJUNK1,A$2000\r");
+    test_type_input("1F33:FF\r");
+    c_debugger_go();
+    ASSERT_SHA_MEM(JUNK_MEM_SHA1, 0x2000, 0x4000);
+
+    apple_ii_64k[0][WATCHPOINT_ADDR] = 0x0;
+    test_common_setup();
+    test_type_input("2000<7000.BFFFM\r");
+    test_type_input("BLOADJUNK2,A$2000\r");
+    test_type_input("1F33:FF\r");
+    c_debugger_go();
+    ASSERT_SHA_MEM(JUNK_MEM_SHA1, 0x2000, 0x4000);
+
+    apple_ii_64k[0][WATCHPOINT_ADDR] = 0x0;
+    test_common_setup();
+    test_type_input("2000<7000.BFFFM\r");
+    test_type_input("BLOADJUNK3,A$2000\r");
+    test_type_input("1F33:FF\r");
+    c_debugger_go();
+    ASSERT_SHA_MEM(JUNK_MEM_SHA1, 0x2000, 0x4000);
+
+    apple_ii_64k[0][WATCHPOINT_ADDR] = 0x0;
+    test_common_setup();
+    test_type_input("2000<7000.BFFFM\r");
+    test_type_input("BLOADJUNK4,A$2000\r");
+    test_type_input("1F33:FF\r");
+    c_debugger_go();
+    ASSERT_SHA_MEM(JUNK_MEM_SHA1, 0x2000, 0x4000);
+
+    apple_ii_64k[0][WATCHPOINT_ADDR] = 0x0;
+    test_common_setup();
+    test_type_input("2000<7000.BFFFM\r");
+    test_type_input("BLOADJUNK5,A$2000\r");
+    test_type_input("1F33:FF\r");
+    c_debugger_go();
+    ASSERT_SHA_MEM(JUNK_MEM_SHA1, 0x2000, 0x4000);
+
+    apple_ii_64k[0][WATCHPOINT_ADDR] = 0x0;
+    test_common_setup();
+    test_type_input("2000<7000.BFFFM\r");
+    test_type_input("BLOADJUNK6,A$2000\r");
+    test_type_input("1F33:FF\r");
+    c_debugger_go();
+    ASSERT_SHA_MEM(JUNK_MEM_SHA1, 0x2000, 0x4000);
+
+    apple_ii_64k[0][WATCHPOINT_ADDR] = 0x0;
+    test_common_setup();
+    test_type_input("2000<7000.BFFFM\r");
+    test_type_input("BLOADJUNK7,A$2000\r");
+    test_type_input("1F33:FF\r");
+    c_debugger_go();
+    ASSERT_SHA_MEM(JUNK_MEM_END_SHA1, 0x2000, 0x4000);
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+    c_end_disk_trace_6();
+
+    do {
+        uint8_t md[SHA_DIGEST_LENGTH];
+        char mdstr0[(SHA_DIGEST_LENGTH*2)+1];
+
+        FILE *fp = fopen(disk, "r");
+
+        fseek(fp, 0, SEEK_END);
+        long expectedSize = ftell(fp);
+        ASSERT(expectedSize == EXPECTED_BLOAD_TRACE_DSK_FILE_SIZE);
+        fseek(fp, 0, SEEK_SET);
+
+        unsigned char *buf = malloc(EXPECTED_BLOAD_TRACE_DSK_FILE_SIZE);
+        if (fread(buf, 1, EXPECTED_BLOAD_TRACE_DSK_FILE_SIZE, fp) != EXPECTED_BLOAD_TRACE_DSK_FILE_SIZE) {
+            ASSERT(false);
+        }
+        fclose(fp); fp = NULL;
+        SHA1(buf, EXPECTED_BLOAD_TRACE_DSK_FILE_SIZE, md);
+        FREE(buf);
+
+        sha1_to_str(md, mdstr0);
+        ASSERT(strcmp(mdstr0, EXPECTED_BLOAD_TRACE_DSK_SHA) == 0);
+    } while(0);
+
+    unlink(disk);
+    FREE(disk);
+
+    c_eject_6(0);
+
+    PASS();
+}
+
+#define EXPECTED_BLOAD_TRACE_NIB_FILE_SIZE 1664090
+#define EXPECTED_BLOAD_TRACE_NIB_SHA "09C6C94B3B7E0EFE13A4C74F72A899CE68A9524F"
+
+TEST test_bload_trace_nib() {
+    test_setup_boot_disk(BLANK_NIB, 0);
+    BOOT_TO_DOS();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
+    ASSERT(apple_ii_64k[0][TESTOUT_ADDR]    == 0x00);
+
+    srandom(0);
+    const char *homedir = HOMEDIR;
+    char *disk = NULL;
+    asprintf(&disk, "%s/a2_bload_trace_test_nib.txt", homedir);
+    if (disk) {
+        unlink(disk);
+        c_begin_disk_trace_6(disk, NULL);
+    }
+
+    test_type_input("CALL-151\r");
+
+    apple_ii_64k[0][WATCHPOINT_ADDR] = 0x0;
+    test_type_input("2000<7000.BFFFM\r");
+    test_type_input("BLOADJUNK0,A$2000\r");
+    test_type_input("1F33:FF\r");
+    c_debugger_go();
+    ASSERT_SHA_MEM(JUNK_MEM_SHA1, 0x2000, 0x4000);
+
+    apple_ii_64k[0][WATCHPOINT_ADDR] = 0x0;
+    test_common_setup();
+    test_type_input("2000<7000.BFFFM\r");
+    test_type_input("BLOADJUNK1,A$2000\r");
+    test_type_input("1F33:FF\r");
+    c_debugger_go();
+    ASSERT_SHA_MEM(JUNK_MEM_SHA1, 0x2000, 0x4000);
+
+    apple_ii_64k[0][WATCHPOINT_ADDR] = 0x0;
+    test_common_setup();
+    test_type_input("2000<7000.BFFFM\r");
+    test_type_input("BLOADJUNK2,A$2000\r");
+    test_type_input("1F33:FF\r");
+    c_debugger_go();
+    ASSERT_SHA_MEM(JUNK_MEM_SHA1, 0x2000, 0x4000);
+
+    apple_ii_64k[0][WATCHPOINT_ADDR] = 0x0;
+    test_common_setup();
+    test_type_input("2000<7000.BFFFM\r");
+    test_type_input("BLOADJUNK3,A$2000\r");
+    test_type_input("1F33:FF\r");
+    c_debugger_go();
+    ASSERT_SHA_MEM(JUNK_MEM_SHA1, 0x2000, 0x4000);
+
+    apple_ii_64k[0][WATCHPOINT_ADDR] = 0x0;
+    test_common_setup();
+    test_type_input("2000<7000.BFFFM\r");
+    test_type_input("BLOADJUNK4,A$2000\r");
+    test_type_input("1F33:FF\r");
+    c_debugger_go();
+    ASSERT_SHA_MEM(JUNK_MEM_SHA1, 0x2000, 0x4000);
+
+    apple_ii_64k[0][WATCHPOINT_ADDR] = 0x0;
+    test_common_setup();
+    test_type_input("2000<7000.BFFFM\r");
+    test_type_input("BLOADJUNK5,A$2000\r");
+    test_type_input("1F33:FF\r");
+    c_debugger_go();
+    ASSERT_SHA_MEM(JUNK_MEM_SHA1, 0x2000, 0x4000);
+
+    apple_ii_64k[0][WATCHPOINT_ADDR] = 0x0;
+    test_common_setup();
+    test_type_input("2000<7000.BFFFM\r");
+    test_type_input("BLOADJUNK6,A$2000\r");
+    test_type_input("1F33:FF\r");
+    c_debugger_go();
+    ASSERT_SHA_MEM(JUNK_MEM_SHA1, 0x2000, 0x4000);
+
+    apple_ii_64k[0][WATCHPOINT_ADDR] = 0x0;
+    test_common_setup();
+    test_type_input("2000<7000.BFFFM\r");
+    test_type_input("BLOADJUNK7,A$2000\r");
+    test_type_input("1F33:FF\r");
+    c_debugger_go();
+    ASSERT_SHA_MEM(JUNK_MEM_END_SHA1, 0x2000, 0x4000);
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+    c_end_disk_trace_6();
+
+    do {
+        uint8_t md[SHA_DIGEST_LENGTH];
+        char mdstr0[(SHA_DIGEST_LENGTH*2)+1];
+
+        FILE *fp = fopen(disk, "r");
+
+        fseek(fp, 0, SEEK_END);
+        long expectedSize = ftell(fp);
+        ASSERT(expectedSize == EXPECTED_BLOAD_TRACE_NIB_FILE_SIZE);
+        fseek(fp, 0, SEEK_SET);
+
+        unsigned char *buf = malloc(EXPECTED_BLOAD_TRACE_NIB_FILE_SIZE);
+        if (fread(buf, 1, EXPECTED_BLOAD_TRACE_NIB_FILE_SIZE, fp) != EXPECTED_BLOAD_TRACE_NIB_FILE_SIZE) {
+            ASSERT(false);
+        }
+        fclose(fp); fp = NULL;
+        SHA1(buf, EXPECTED_BLOAD_TRACE_NIB_FILE_SIZE, md);
+        FREE(buf);
+
+        sha1_to_str(md, mdstr0);
+        ASSERT(strcmp(mdstr0, EXPECTED_BLOAD_TRACE_NIB_SHA) == 0);
+    } while(0);
+
+    unlink(disk);
+    FREE(disk);
+
+    c_eject_6(0);
+
+    PASS();
+}
+
+#if CONFORMANT_TRACKS
+#   define EXPECTED_BLOAD_TRACE_PO_FILE_SIZE 1595253
+#   define EXPECTED_BLOAD_TRACE_PO_SHA "8485095E5ED8CEF5D8A177B78A53E3E6A022366D"
+#else
+#   define EXPECTED_BLOAD_TRACE_PO_FILE_SIZE 1512000
+#   define EXPECTED_BLOAD_TRACE_PO_SHA "99B23A0DF5FCAE3ECB494F98ADE938D9FBF9D726"
+#endif
+
+TEST test_bload_trace_po() {
+    test_setup_boot_disk(BLANK_PO, 0);
+    BOOT_TO_DOS();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
+    ASSERT(apple_ii_64k[0][TESTOUT_ADDR]    == 0x00);
+
+    srandom(0);
+    const char *homedir = HOMEDIR;
+    char *disk = NULL;
+    asprintf(&disk, "%s/a2_bload_trace_test_po.txt", homedir);
+    if (disk) {
+        unlink(disk);
+        c_begin_disk_trace_6(disk, NULL);
+    }
+
+    test_type_input("CALL-151\r");
+
+    apple_ii_64k[0][WATCHPOINT_ADDR] = 0x0;
+    test_type_input("2000<7000.BFFFM\r");
+    test_type_input("BLOADJUNK0,A$2000\r");
+    test_type_input("1F33:FF\r");
+    c_debugger_go();
+    ASSERT_SHA_MEM(JUNK_MEM_SHA1, 0x2000, 0x4000);
+
+    apple_ii_64k[0][WATCHPOINT_ADDR] = 0x0;
+    test_common_setup();
+    test_type_input("2000<7000.BFFFM\r");
+    test_type_input("BLOADJUNK1,A$2000\r");
+    test_type_input("1F33:FF\r");
+    c_debugger_go();
+    ASSERT_SHA_MEM(JUNK_MEM_SHA1, 0x2000, 0x4000);
+
+    apple_ii_64k[0][WATCHPOINT_ADDR] = 0x0;
+    test_common_setup();
+    test_type_input("2000<7000.BFFFM\r");
+    test_type_input("BLOADJUNK2,A$2000\r");
+    test_type_input("1F33:FF\r");
+    c_debugger_go();
+    ASSERT_SHA_MEM(JUNK_MEM_SHA1, 0x2000, 0x4000);
+
+    apple_ii_64k[0][WATCHPOINT_ADDR] = 0x0;
+    test_common_setup();
+    test_type_input("2000<7000.BFFFM\r");
+    test_type_input("BLOADJUNK3,A$2000\r");
+    test_type_input("1F33:FF\r");
+    c_debugger_go();
+    ASSERT_SHA_MEM(JUNK_MEM_SHA1, 0x2000, 0x4000);
+
+    apple_ii_64k[0][WATCHPOINT_ADDR] = 0x0;
+    test_common_setup();
+    test_type_input("2000<7000.BFFFM\r");
+    test_type_input("BLOADJUNK4,A$2000\r");
+    test_type_input("1F33:FF\r");
+    c_debugger_go();
+    ASSERT_SHA_MEM(JUNK_MEM_SHA1, 0x2000, 0x4000);
+
+    apple_ii_64k[0][WATCHPOINT_ADDR] = 0x0;
+    test_common_setup();
+    test_type_input("2000<7000.BFFFM\r");
+    test_type_input("BLOADJUNK5,A$2000\r");
+    test_type_input("1F33:FF\r");
+    c_debugger_go();
+    ASSERT_SHA_MEM(JUNK_MEM_SHA1, 0x2000, 0x4000);
+
+    apple_ii_64k[0][WATCHPOINT_ADDR] = 0x0;
+    test_common_setup();
+    test_type_input("2000<7000.BFFFM\r");
+    test_type_input("BLOADJUNK6,A$2000\r");
+    test_type_input("1F33:FF\r");
+    c_debugger_go();
+    ASSERT_SHA_MEM(JUNK_MEM_SHA1, 0x2000, 0x4000);
+
+    apple_ii_64k[0][WATCHPOINT_ADDR] = 0x0;
+    test_common_setup();
+    test_type_input("2000<7000.BFFFM\r");
+    test_type_input("BLOADJUNK7,A$2000\r");
+    test_type_input("1F33:FF\r");
+    c_debugger_go();
+    ASSERT_SHA_MEM(JUNK_MEM_END_SHA1, 0x2000, 0x4000);
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+    c_end_disk_trace_6();
+
+    do {
+        uint8_t md[SHA_DIGEST_LENGTH];
+        char mdstr0[(SHA_DIGEST_LENGTH*2)+1];
+
+        FILE *fp = fopen(disk, "r");
+
+        fseek(fp, 0, SEEK_END);
+        long expectedSize = ftell(fp);
+        ASSERT(expectedSize == EXPECTED_BLOAD_TRACE_PO_FILE_SIZE);
+        fseek(fp, 0, SEEK_SET);
+
+        unsigned char *buf = malloc(EXPECTED_BLOAD_TRACE_PO_FILE_SIZE);
+        if (fread(buf, 1, EXPECTED_BLOAD_TRACE_PO_FILE_SIZE, fp) != EXPECTED_BLOAD_TRACE_PO_FILE_SIZE) {
+            ASSERT(false);
+        }
+        fclose(fp); fp = NULL;
+        SHA1(buf, EXPECTED_BLOAD_TRACE_PO_FILE_SIZE, md);
+        FREE(buf);
+
+        sha1_to_str(md, mdstr0);
+        ASSERT(strcmp(mdstr0, EXPECTED_BLOAD_TRACE_PO_SHA) == 0);
+    } while(0);
+
+    unlink(disk);
+    FREE(disk);
+
+    c_eject_6(0);
+
+    PASS();
+}
+
 #define INIT_SHA1 "10F15B516E4CF2FC5B1712951A6F9C3D90BF595C"
 TEST test_inithello_dsk() {
 
@@ -696,6 +1062,111 @@ TEST test_inithello_po() {
     PASS();
 }
 
+#define EXPECTED_STABILITY_DSK_FILE_SIZE 143360
+#define EXPECTED_STABILITY_DSK_SHA "4DC3AEB266692EB5F8C757F36963F8CCC8056AE4"
+
+TEST test_data_stability_dsk() {
+
+    test_setup_boot_disk(BLANK_DSK, 1);
+
+    do {
+        uint8_t md[SHA_DIGEST_LENGTH];
+        char mdstr0[(SHA_DIGEST_LENGTH*2)+1];
+
+        FILE *fp = fopen(disk6.disk[0].file_name, "r");
+
+        fseek(fp, 0, SEEK_END);
+        long expectedSize = ftell(fp);
+        ASSERT(expectedSize == EXPECTED_STABILITY_DSK_FILE_SIZE);
+        fseek(fp, 0, SEEK_SET);
+
+        unsigned char *buf = malloc(EXPECTED_STABILITY_DSK_FILE_SIZE);
+        if (fread(buf, 1, EXPECTED_STABILITY_DSK_FILE_SIZE, fp) != EXPECTED_STABILITY_DSK_FILE_SIZE) {
+            ASSERT(false);
+        }
+        fclose(fp); fp = NULL;
+        SHA1(buf, EXPECTED_STABILITY_DSK_FILE_SIZE, md);
+        FREE(buf);
+
+        sha1_to_str(md, mdstr0);
+        ASSERT(strcmp(mdstr0, EXPECTED_STABILITY_DSK_SHA) == 0);
+    } while(0);
+
+    c_eject_6(0);
+
+    PASS();
+}
+
+#define EXPECTED_STABILITY_NIB_FILE_SIZE 232960
+#define EXPECTED_STABILITY_NIB_SHA "94193718A6B610AE31B5ABE7058416B321968CA1"
+
+TEST test_data_stability_nib() {
+
+    test_setup_boot_disk(BLANK_NIB, 0);
+
+    do {
+        uint8_t md[SHA_DIGEST_LENGTH];
+        char mdstr0[(SHA_DIGEST_LENGTH*2)+1];
+
+        FILE *fp = fopen(disk6.disk[0].file_name, "r");
+
+        fseek(fp, 0, SEEK_END);
+        long expectedSize = ftell(fp);
+        ASSERT(expectedSize == EXPECTED_STABILITY_NIB_FILE_SIZE);
+        fseek(fp, 0, SEEK_SET);
+
+        unsigned char *buf = malloc(EXPECTED_STABILITY_NIB_FILE_SIZE);
+        if (fread(buf, 1, EXPECTED_STABILITY_NIB_FILE_SIZE, fp) != EXPECTED_STABILITY_NIB_FILE_SIZE) {
+            ASSERT(false);
+        }
+        fclose(fp); fp = NULL;
+        SHA1(buf, EXPECTED_STABILITY_NIB_FILE_SIZE, md);
+        FREE(buf);
+
+        sha1_to_str(md, mdstr0);
+        ASSERT(strcmp(mdstr0, EXPECTED_STABILITY_NIB_SHA) == 0);
+    } while(0);
+
+    c_eject_6(0);
+
+    PASS();
+}
+
+#define EXPECTED_STABILITY_PO_FILE_SIZE 143360
+#define EXPECTED_STABILITY_PO_SHA "9B47A4B92F64ACEB2B82B3B870C78E93780F18F3"
+
+TEST test_data_stability_po() {
+
+    test_setup_boot_disk(BLANK_PO, 0);
+
+    do {
+        uint8_t md[SHA_DIGEST_LENGTH];
+        char mdstr0[(SHA_DIGEST_LENGTH*2)+1];
+
+        FILE *fp = fopen(disk6.disk[0].file_name, "r");
+
+        fseek(fp, 0, SEEK_END);
+        long expectedSize = ftell(fp);
+        ASSERT(expectedSize == EXPECTED_STABILITY_PO_FILE_SIZE);
+        fseek(fp, 0, SEEK_SET);
+
+        unsigned char *buf = malloc(EXPECTED_STABILITY_PO_FILE_SIZE);
+        if (fread(buf, 1, EXPECTED_STABILITY_PO_FILE_SIZE, fp) != EXPECTED_STABILITY_PO_FILE_SIZE) {
+            ASSERT(false);
+        }
+        fclose(fp); fp = NULL;
+        SHA1(buf, EXPECTED_STABILITY_PO_FILE_SIZE, md);
+        FREE(buf);
+
+        sha1_to_str(md, mdstr0);
+        ASSERT(strcmp(mdstr0, EXPECTED_STABILITY_PO_SHA) == 0);
+    } while(0);
+
+    c_eject_6(0);
+
+    PASS();
+}
+
 // ----------------------------------------------------------------------------
 // Test Suite
 
@@ -725,13 +1196,26 @@ GREATEST_SUITE(test_suite_disk) {
 
     c_debugger_set_timeout(0);
 
+    // test order from here is important ...
+    //  * load the disks with a buncha junk fiiles
+    //  * verify integrity of the junk files
+    //  * inithello and verify boots
+    //  * check that the disk images are ultimately unchanged
+
     RUN_TESTp(test_outofspace_dsk);
+    RUN_TESTp(test_bload_trace_dsk);
     RUN_TESTp(test_outofspace_nib);
+    RUN_TESTp(test_bload_trace_nib);
     RUN_TESTp(test_outofspace_po);
+    RUN_TESTp(test_bload_trace_po);
 
     RUN_TESTp(test_inithello_dsk);
     RUN_TESTp(test_inithello_nib);
     RUN_TESTp(test_inithello_po);
+
+    RUN_TESTp(test_data_stability_dsk);
+    RUN_TESTp(test_data_stability_nib);
+    RUN_TESTp(test_data_stability_po);
 
     // ...
     c_eject_6(0);
