@@ -45,7 +45,7 @@ typedef struct diskette_t {
     bool track_dirty;
     int *skew_table;
     int sector;
-    long nib_count;
+    long track_width;
     int phase;
     int run_byte;
     FILE *fp;

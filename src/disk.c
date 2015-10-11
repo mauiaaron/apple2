@@ -388,7 +388,7 @@ static void denibblize_track(int drive, uint8_t *dst) {
                 ++count;
             }
             ++offset;
-            if (offset >= disk6.disk[drive].nib_count) {
+            if (offset >= disk6.disk[drive].track_width) {
                 offset = 0;
             }
         }
@@ -401,7 +401,7 @@ static void denibblize_track(int drive, uint8_t *dst) {
             uint8_t *nib = work_buf;
             while (secloop < DATA_BYTES_LEN) {
                 *(nib+secloop) = *(trackimage+tmpoff);
-                if (tmpoff >= disk6.disk[drive].nib_count) {
+                if (tmpoff >= disk6.disk[drive].track_width) {
                     tmpoff = 0;
                 }
                 ++secloop;
@@ -431,7 +431,7 @@ static bool load_track_data(void) {
             ERRLOG("nib image corrupted ...");
             return false;
         }
-        disk6.disk[disk6.drive].nib_count = NIB_TRACK_SIZE;
+        disk6.disk[disk6.drive].track_width = NIB_TRACK_SIZE;
     } else {
         // .dsk, .do, .po images
         int track_pos = DSK_TRACK_SIZE * (disk6.disk[disk6.drive].phase >> 1);
@@ -443,8 +443,8 @@ static bool load_track_data(void) {
             return false;
         }
 
-        disk6.disk[disk6.drive].nib_count = nibblize_track(buf, disk6.drive);
-        if (disk6.disk[disk6.drive].nib_count != NI2_TRACK_SIZE) {
+        disk6.disk[disk6.drive].track_width = nibblize_track(buf, disk6.drive);
+        if (disk6.disk[disk6.drive].track_width != NI2_TRACK_SIZE) {
 #if CONFORMANT_TRACKS
             ERRLOG("Invalid dsk image creation...");
             return false;
@@ -544,7 +544,7 @@ GLUE_C_READ(disk_read_write_byte)
     } while (0);
 
     ++disk6.disk[disk6.drive].run_byte;
-    if (disk6.disk[disk6.drive].run_byte >= disk6.disk[disk6.drive].nib_count) {
+    if (disk6.disk[disk6.drive].run_byte >= disk6.disk[disk6.drive].track_width) {
         disk6.disk[disk6.drive].run_byte = 0;
     }
 #if DISK_TRACING
@@ -736,7 +736,7 @@ const char *c_eject_6(int drive) {
     if (disk6.disk[drive].fp) {
         fclose(disk6.disk[drive].fp);
         disk6.disk[drive].fp = NULL;
-        disk6.disk[drive].nib_count = 0;
+        disk6.disk[drive].track_width = 0;
     }
 
     return err;
@@ -814,7 +814,7 @@ const char *c_new_diskette_6(int drive, const char * const raw_file_name, int fo
 
     disk6.disk[drive].sector = 0;
     disk6.disk[drive].track_valid = false;
-    disk6.disk[drive].nib_count = 0;
+    disk6.disk[drive].track_width = 0;
     disk6.disk[drive].run_byte = 0;
     stepper_phases = 0;
 
