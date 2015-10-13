@@ -393,7 +393,7 @@ static void denibblize_track(int drive, uint8_t *dst) {
             }
         }
 
-        if ((count == 3) && (prologue[1] = 0xAA)) {
+        if ((count == 3) && (prologue[1] == 0xAA)) {
 #define DATA_BYTES_LEN (256+128)
             unsigned int secloop = 0;
             unsigned int tmpoff = offset;
