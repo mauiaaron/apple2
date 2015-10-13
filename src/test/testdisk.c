@@ -628,6 +628,7 @@ TEST test_disk_bytes_savehello_po() {
     } while (0)
 
 #define NOSPACE_SHA1 "2EA4D4B9F1C6797E476CD0FE59970CC243263B16"
+#define EXPECTED_OOS_DSK_SHA "7A77D1CFD9F02A84E0FE39B7A39FBD4ABF1EB78E"
 TEST test_outofspace_dsk() {
     test_setup_boot_disk(BLANK_DSK, 0);
     BOOT_TO_DOS();
@@ -651,9 +652,38 @@ TEST test_outofspace_dsk() {
 
     c_eject_6(0);
 
+    // Now verify actual disk bytes written to disk
+    test_setup_boot_disk(BLANK_DSK, 1);
+
+    do {
+        uint8_t md[SHA_DIGEST_LENGTH];
+        char mdstr0[(SHA_DIGEST_LENGTH*2)+1];
+
+        FILE *fp = fopen(disk6.disk[0].file_name, "r");
+
+        fseek(fp, 0, SEEK_END);
+        long expectedSize = ftell(fp);
+        ASSERT(expectedSize == DSK_SIZE);
+        fseek(fp, 0, SEEK_SET);
+
+        unsigned char *buf = malloc(DSK_SIZE);
+        if (fread(buf, 1, DSK_SIZE, fp) != DSK_SIZE) {
+            ASSERT(false);
+        }
+        fclose(fp); fp = NULL;
+        SHA1(buf, DSK_SIZE, md);
+        FREE(buf);
+
+        sha1_to_str(md, mdstr0);
+        ASSERT(strcmp(mdstr0, EXPECTED_OOS_DSK_SHA) == 0);
+    } while(0);
+
+    c_eject_6(0);
+
     PASS();
 }
 
+#define EXPECTED_OOS_NIB_SHA "07CEA71514751338996B8EAC9212E5D77813F66A"
 TEST test_outofspace_nib() {
     test_setup_boot_disk(BLANK_NIB, 0);
     BOOT_TO_DOS();
@@ -677,9 +707,38 @@ TEST test_outofspace_nib() {
 
     c_eject_6(0);
 
+    // Now verify actual disk bytes written to disk
+    test_setup_boot_disk(BLANK_NIB, 1);
+
+    do {
+        uint8_t md[SHA_DIGEST_LENGTH];
+        char mdstr0[(SHA_DIGEST_LENGTH*2)+1];
+
+        FILE *fp = fopen(disk6.disk[0].file_name, "r");
+
+        fseek(fp, 0, SEEK_END);
+        long expectedSize = ftell(fp);
+        ASSERT(expectedSize == NIB_SIZE);
+        fseek(fp, 0, SEEK_SET);
+
+        unsigned char *buf = malloc(NIB_SIZE);
+        if (fread(buf, 1, NIB_SIZE, fp) != NIB_SIZE) {
+            ASSERT(false);
+        }
+        fclose(fp); fp = NULL;
+        SHA1(buf, NIB_SIZE, md);
+        FREE(buf);
+
+        sha1_to_str(md, mdstr0);
+        ASSERT(strcmp(mdstr0, EXPECTED_OOS_NIB_SHA) == 0);
+    } while(0);
+
+    c_eject_6(0);
+
     PASS();
 }
 
+#define EXPECTED_OOS_PO_SHA "32AF41E922E0186590C651DC501B725EC2C520FE"
 TEST test_outofspace_po() {
     test_setup_boot_disk(BLANK_PO, 0);
     BOOT_TO_DOS();
@@ -700,6 +759,34 @@ TEST test_outofspace_po() {
     c_debugger_go();
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
     ASSERT_SHA(BOOT_SCREEN);
+
+    c_eject_6(0);
+
+    // Now verify actual disk bytes written to disk
+    test_setup_boot_disk(BLANK_PO, 1);
+
+    do {
+        uint8_t md[SHA_DIGEST_LENGTH];
+        char mdstr0[(SHA_DIGEST_LENGTH*2)+1];
+
+        FILE *fp = fopen(disk6.disk[0].file_name, "r");
+
+        fseek(fp, 0, SEEK_END);
+        long expectedSize = ftell(fp);
+        ASSERT(expectedSize == DSK_SIZE);
+        fseek(fp, 0, SEEK_SET);
+
+        unsigned char *buf = malloc(DSK_SIZE);
+        if (fread(buf, 1, DSK_SIZE, fp) != DSK_SIZE) {
+            ASSERT(false);
+        }
+        fclose(fp); fp = NULL;
+        SHA1(buf, DSK_SIZE, md);
+        FREE(buf);
+
+        sha1_to_str(md, mdstr0);
+        ASSERT(strcmp(mdstr0, EXPECTED_OOS_PO_SHA) == 0);
+    } while(0);
 
     c_eject_6(0);
 
