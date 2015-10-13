@@ -142,13 +142,9 @@ static void nibblize_sector(const uint8_t *src, uint8_t *out) {
         }
         *(nib-2) &= 0x3F;
         *(nib-1) &= 0x3F;
-        ++counter;
-        unsigned int loop = 0;
-        while (loop < 0x100) {
-            *(nib++) = *(src+(loop++));
-            ++counter;
-        }
-        assert((counter == NUM_SIXBIT_NIBS+1) && "nibblizing counter overflow");
+
+        assert((counter == NUM_SIXBIT_NIBS-0x100) && "nibblizing counter about to overflow");
+        memcpy(nib, src, 0x100);
     }
 
     src = work_buf;
@@ -372,13 +368,13 @@ static void denibblize_track(int drive, uint8_t *dst) {
 #endif
 
     unsigned int offset = 0;
-    unsigned int partsleft = (NUM_SECTORS<<1) +1;
     int sector = -1;
-    while (partsleft) {
-        --partsleft;
+
+    // iterate over 2x sector count (header and data sections)
+    for (unsigned int sct2=0; sct2<(NUM_SECTORS<<1)+1; sct2++) {
         uint8_t prologue[3] = {0,0,0}; // D5AA..
 
-        // Find prologue
+        // Find a prologue
         unsigned int count = 0;
         unsigned int loop = NIB_TRACK_SIZE;
         while (loop && (count < 3)) {
@@ -395,13 +391,12 @@ static void denibblize_track(int drive, uint8_t *dst) {
 
         if ((count == 3) && (prologue[1] == 0xAA)) {
 #define DATA_BYTES_LEN (256+128)
-            unsigned int secloop = 0;
+#define SCTOFF_HI 0x4
+#define SCTOFF_LO 0x5
             unsigned int tmpoff = offset;
             uint8_t work_buf[DATA_BYTES_LEN] = { 0 };
-            uint8_t *nib = work_buf;
-            while (secloop < DATA_BYTES_LEN) {
-                *(nib+secloop) = *(trackimage+tmpoff);
-                ++secloop;
+            for (unsigned int i=0; i<DATA_BYTES_LEN; i++) {
+                work_buf[i] = *(trackimage+tmpoff);
                 ++tmpoff;
                 if (tmpoff >= disk6.disk[drive].track_width) {
                     tmpoff = 0;
@@ -409,10 +404,10 @@ static void denibblize_track(int drive, uint8_t *dst) {
             }
 
             if (prologue[2] == 0x96) { // header
-                sector = ((*(nib+4) & 0x55) << 1) | (*(nib+5) & 0x55);
+                sector = ((work_buf[SCTOFF_HI] & 0x55) << 1) | (work_buf[SCTOFF_LO] & 0x55);
             } else if (prologue[2] == 0xAD) { // data
                 int sec_off = 256 * disk6.disk[drive].skew_table[ sector ];
-                denibblize_sector(nib, dst+sec_off);
+                denibblize_sector(work_buf, dst+sec_off);
                 sector = -1;
             }
         }
@@ -680,10 +675,6 @@ GLUE_C_WRITE(disk_write_latch)
 // ----------------------------------------------------------------------------
 
 void disk_io_initialize(unsigned int slot) {
-    FILE *f;
-    int i;
-    char temp[PATH_MAX];
-
     assert(slot == 6);
 
     /* load Disk II rom */
@@ -703,7 +694,7 @@ void disk_io_initialize(unsigned int slot) {
     cpu65_vmem_r[0xC0EE] = disk_read_prepare_in;
     cpu65_vmem_r[0xC0EF] = disk_read_prepare_out;
 
-    for (i = 0xC0E0; i < 0xC0F0; i++) {
+    for (unsigned int i = 0xC0E0; i < 0xC0F0; i++) {
         cpu65_vmem_w[i] = cpu65_vmem_r[i];
     }
 
