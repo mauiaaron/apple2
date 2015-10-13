@@ -74,10 +74,8 @@ static uint8_t rev_translate_table_6[0x80] = { 0 };
 
 __attribute__((constructor(CTOR_PRIORITY_LATE)))
 static void _initialize_reverse_translate(void) {
-    unsigned int loop = 0;
-    while (loop < 0x40) {
-        rev_translate_table_6[translate_table_6[loop]-0x80] = loop << 2;
-        loop++;
+    for (unsigned int i=0; i<0x40; i++) {
+        rev_translate_table_6[translate_table_6[i]-0x80] = i << 2;
     }
 }
 
@@ -120,73 +118,54 @@ static bool is_po(const char * const name) {
 
 #define NUM_SIXBIT_NIBS 342
 
-static void nibblize_sector(const uint8_t *src, uint8_t *out) {
+static void nibblize_sector(const uint8_t * const src, uint8_t *out) {
     SCOPE_TRACE_DISK("nibblize_sector");
 
-    uint8_t work_buf[NUM_SIXBIT_NIBS];
+    uint8_t work_buf[NUM_SIXBIT_NIBS+1];
     uint8_t *nib = work_buf;
 
     // Convert 256 8-bit bytes into 342 6-bit bytes
-    {
-        unsigned int counter = 0;
-        uint8_t offset = 0xAC;
-        while (offset != 0x02) {
-            uint8_t value =        (( (*(src+offset)) & 0x01) << 1) | (( (*(src+offset)) & 0x02) >> 1);
-            offset -= 0x56;
-            value = (value << 2) | (( (*(src+offset)) & 0x01) << 1) | (( (*(src+offset)) & 0x02) >> 1);
-            offset -= 0x56;
-            value = (value << 2) | (( (*(src+offset)) & 0x01) << 1) | (( (*(src+offset)) & 0x02) >> 1);
-            offset -= 0x53;
-            *(nib++) = value << 2;
-            ++counter;
-        }
-        *(nib-2) &= 0x3F;
-        *(nib-1) &= 0x3F;
-
-        assert((counter == NUM_SIXBIT_NIBS-0x100) && "nibblizing counter about to overflow");
-        memcpy(nib, src, 0x100);
+    unsigned int counter = 0;
+    uint8_t offset = 0xAC;
+    while (offset != 0x02) {
+        uint8_t value =        (( (*(src+offset)) & 0x01) << 1) | (( (*(src+offset)) & 0x02) >> 1);
+        offset -= 0x56;
+        value = (value << 2) | (( (*(src+offset)) & 0x01) << 1) | (( (*(src+offset)) & 0x02) >> 1);
+        offset -= 0x56;
+        value = (value << 2) | (( (*(src+offset)) & 0x01) << 1) | (( (*(src+offset)) & 0x02) >> 1);
+        offset -= 0x53;
+        *(nib++) = value << 2;
+        ++counter;
     }
-
-    src = work_buf;
-    uint8_t work_buf2[NUM_SIXBIT_NIBS+1];
-    nib = work_buf2;
+    *(nib-2) &= 0x3F;
+    *(nib-1) &= 0x3F;
+    assert((counter == NUM_SIXBIT_NIBS-0x100) && "nibblizing counter about to overflow");
+    memcpy(nib, src, 0x100);
 
     // XOR the entire data block with itself offset by one byte, creating a final checksum byte
-    {
-        uint8_t savedval = 0;
-        int loop = NUM_SIXBIT_NIBS;
-        while (loop--) {
-            *(nib++) = savedval ^ *src;
-            savedval = *(src++);
-        }
-        *nib = savedval;
+    uint8_t savedval = 0;
+    for (unsigned int i=0; i<NUM_SIXBIT_NIBS; i++) {
+        uint8_t prevsaved = savedval ^ work_buf[i];
+        savedval = work_buf[i];
+        work_buf[i] = prevsaved;
     }
-
-    src = work_buf2;
-    nib = NULL;
+    work_buf[NUM_SIXBIT_NIBS] = savedval;
 
     // Convert the 6-bit bytes into disk bytes using a lookup table.  A valid disk byte is a byte that has the high bit
     // set, at least two adjacent bits set (excluding the high bit), and at most one pair of consecutive zero bits.
-    {
-        int loop = NUM_SIXBIT_NIBS+1;
-        while (loop--) {
-            *(out++) = translate_table_6[(*(src++)) >> 2];
-        }
+    for (unsigned int i=0; i<NUM_SIXBIT_NIBS+1; i++) {
+        *(out++) = translate_table_6[work_buf[i] >> 2];
     }
 }
 
-static void denibblize_sector(const uint8_t *src, uint8_t *out) {
+static void denibblize_sector(const uint8_t * const src, uint8_t *out) {
     SCOPE_TRACE_DISK("denibblize_sector");
 
     uint8_t work_buf[NUM_SIXBIT_NIBS+1];
-    uint8_t *dsk = work_buf;
 
     // Convert disk bytes into 6-bit bytes
-    {
-        unsigned int loop = NUM_SIXBIT_NIBS+1;
-        while (loop--) {
-            *(dsk++) = rev_translate_table_6[*(src++) & 0x7F];
-        }
+    for (unsigned int i=0; i<(NUM_SIXBIT_NIBS+1); i++) {
+        work_buf[i] = rev_translate_table_6[src[i] & 0x7F];
     }
 
 #if DISK_TRACING
@@ -199,56 +178,47 @@ static void denibblize_sector(const uint8_t *src, uint8_t *out) {
     }
 #endif
 
-    src = work_buf;
-    uint8_t work_buf2[NUM_SIXBIT_NIBS];
-    dsk = work_buf2;
-
     // XOR the entire data block with itself offset by one byte to undo checksumming
-    {
-        uint8_t savedval  = 0;
-        unsigned int loop = NUM_SIXBIT_NIBS;
-        while (loop--) {
-            *dsk = savedval ^ *(src++);
-            savedval = *(dsk++);
-        }
+    uint8_t savedval = 0;
+    for (unsigned int i=0; i<NUM_SIXBIT_NIBS; i++) {
+        work_buf[i] = savedval ^ work_buf[i];
+        savedval = work_buf[i];
     }
 
 #if DISK_TRACING
     if (test_write_fp) {
         fprintf(test_write_fp, "XORNIBS:\n");
         for (unsigned int i=0; i<NUM_SIXBIT_NIBS; i++) {
-            fprintf(test_write_fp, "%02X", work_buf2[i]);
+            fprintf(test_write_fp, "%02X", work_buf[i]);
         }
         fprintf(test_write_fp, "\n");
     }
 #endif
 
     // Convert 342 6-bit bytes into 256 8-bit bytes
-    {
-        uint8_t *lowbitsptr = work_buf2;
-        uint8_t *sectorbase = work_buf2+0x56;
-        uint8_t offset = 0xAC;
-        unsigned int counter = 0;
-        while (offset != 0x02) {
-            assert(counter < 256 && "denibblizing counter overflow");
-            if (offset >= 0xAC) {
-                *(out+offset) = (*(sectorbase+offset) & 0xFC) | (((*lowbitsptr) & 0x80) >> 7) | (((*lowbitsptr) & 0x40) >> 5);
-                ++counter;
-            }
-            offset -= 0x56;
-
-            *(out+offset) = (*(sectorbase+offset) & 0xFC) | (((*lowbitsptr) & 0x20) >> 5) | (((*lowbitsptr) & 0x10) >> 3);
+    uint8_t *lowbitsptr = work_buf;
+    uint8_t *sectorbase = work_buf+0x56;
+    uint8_t offset = 0xAC;
+    unsigned int counter = 0;
+    while (offset != 0x02) {
+        assert(counter < 256 && "denibblizing counter overflow");
+        if (offset >= 0xAC) {
+            *(out+offset) = (*(sectorbase+offset) & 0xFC) | (((*lowbitsptr) & 0x80) >> 7) | (((*lowbitsptr) & 0x40) >> 5);
             ++counter;
-            offset -= 0x56;
-
-            *(out+offset) = (*(sectorbase+offset) & 0xFC) | (((*lowbitsptr) & 0x08) >> 3) | (((*lowbitsptr) & 0x04) >> 1);
-            ++counter;
-            offset -= 0x53;
-
-            ++lowbitsptr;
         }
-        assert(counter == 256 && "invalid bytes count");
+        offset -= 0x56;
+
+        *(out+offset) = (*(sectorbase+offset) & 0xFC) | (((*lowbitsptr) & 0x20) >> 5) | (((*lowbitsptr) & 0x10) >> 3);
+        ++counter;
+        offset -= 0x56;
+
+        *(out+offset) = (*(sectorbase+offset) & 0xFC) | (((*lowbitsptr) & 0x08) >> 3) | (((*lowbitsptr) & 0x04) >> 1);
+        ++counter;
+        offset -= 0x53;
+
+        ++lowbitsptr;
     }
+    assert(counter == 256 && "invalid bytes count");
 
 #ifdef DISK_TRACING
     if (test_write_fp) {
@@ -370,47 +340,60 @@ static void denibblize_track(int drive, uint8_t *dst) {
     unsigned int offset = 0;
     int sector = -1;
 
-    // iterate over 2x sector count (header and data sections)
+    // iterate over 2x sectors (accounting for header and data sections)
     for (unsigned int sct2=0; sct2<(NUM_SECTORS<<1)+1; sct2++) {
         uint8_t prologue[3] = {0,0,0}; // D5AA..
 
-        // Find a prologue
-        unsigned int count = 0;
-        unsigned int loop = NIB_TRACK_SIZE;
-        while (loop && (count < 3)) {
-            --loop;
-            if (count || (*(trackimage+offset) == 0xD5)) {
-                prologue[count] = *(trackimage+offset);
-                ++count;
+        // Find the beginning of a header or data prologue
+        for (unsigned int i=0, idx=0; i<NIB_TRACK_SIZE; i++) { // FIXME: probably can change this to NIB_SEC_SIZE*2 ...
+            uint8_t byte = trackimage[offset];
+            if (idx || (byte == 0xD5)) {
+                prologue[idx] = byte;
+                ++idx;
             }
             ++offset;
             if (offset >= disk6.disk[drive].track_width) {
                 offset = 0;
             }
-        }
-
-        if ((count == 3) && (prologue[1] == 0xAA)) {
-#define DATA_BYTES_LEN (256+128)
-#define SCTOFF_HI 0x4
-#define SCTOFF_LO 0x5
-            unsigned int tmpoff = offset;
-            uint8_t work_buf[DATA_BYTES_LEN] = { 0 };
-            for (unsigned int i=0; i<DATA_BYTES_LEN; i++) {
-                work_buf[i] = *(trackimage+tmpoff);
-                ++tmpoff;
-                if (tmpoff >= disk6.disk[drive].track_width) {
-                    tmpoff = 0;
-                }
-            }
-
-            if (prologue[2] == 0x96) { // header
-                sector = ((work_buf[SCTOFF_HI] & 0x55) << 1) | (work_buf[SCTOFF_LO] & 0x55);
-            } else if (prologue[2] == 0xAD) { // data
-                int sec_off = 256 * disk6.disk[drive].skew_table[ sector ];
-                denibblize_sector(work_buf, dst+sec_off);
-                sector = -1;
+            if (idx >= 3) {
+                break;
             }
         }
+
+        if (prologue[1] != 0xAA) {
+            continue;
+        }
+
+#define SCTOFF 0x4
+        if (prologue[2] == 0x96) {
+            // found header prologue : extract sector
+            offset += SCTOFF;
+            if (offset >= disk6.disk[drive].track_width) {
+                RELEASE_LOG("WRAPPING PROLOGUE ...");
+                offset -= disk6.disk[drive].track_width;
+            }
+            sector = ((trackimage[offset++] & 0x55) << 1);
+            sector |= (trackimage[offset++] & 0x55);
+            continue;
+        }
+        if (UNLIKELY(prologue[2] != 0xAD)) {
+            RELEASE_LOG("OMG, found mid-track 0xD5 byte...");
+            continue;
+        }
+
+        // found data prologue : copy and write data to sector
+
+        uint8_t work_buf[NUM_SIXBIT_NIBS+1];
+        for (unsigned int idx=0; idx<(NUM_SIXBIT_NIBS+1); idx++) {
+            work_buf[idx] = trackimage[offset];
+            ++offset;
+            if (offset >= disk6.disk[drive].track_width) {
+                offset = 0;
+            }
+        }
+        int sec_off = 256 * disk6.disk[drive].skew_table[ sector ];
+        denibblize_sector(work_buf, dst+sec_off);
+        sector = -1;
     }
 }
 
