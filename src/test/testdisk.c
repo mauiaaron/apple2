@@ -323,12 +323,13 @@ TEST test_savehello_po() {
 }
 
 #if CONFORMANT_TRACKS
-#define EXPECTED_DISKWRITE_TRACE_DSK_FILE_SIZE 63675
-#define EXPECTED_DISKWRITE_TRACE_DSK_SHA "CFA1C3AB2CA4F245D291DFC8C277773C5275946C"
+#   define EXPECTED_DISKWRITE_TRACE_DSK_FILE_SIZE 63675
+#   define EXPECTED_DISKWRITE_TRACE_DSK_SHA "CFA1C3AB2CA4F245D291DFC8C277773C5275946C"
 #else
-#define EXPECTED_DISKWRITE_TRACE_DSK_FILE_SIZE 63676 // orly?
-#define EXPECTED_DISKWRITE_TRACE_DSK_SHA "FA3792F09A5E96B906D3F2362C6701C0DFB2130C"
+#   define EXPECTED_DISKWRITE_TRACE_DSK_FILE_SIZE 63676 // orly?
+#   define EXPECTED_DISKWRITE_TRACE_DSK_SHA "FA3792F09A5E96B906D3F2362C6701C0DFB2130C"
 #endif
+#define EXPECTED_BSAVE_DSK_SHA "4DC3AEB266692EB5F8C757F36963F8CCC8056AE4"
 TEST test_disk_bytes_savehello_dsk() {
     test_setup_boot_disk(BLANK_DSK, 0);
     BOOT_TO_DOS();
@@ -389,11 +390,40 @@ TEST test_disk_bytes_savehello_dsk() {
 
     c_eject_6(0);
 
+    // Now verify actual disk bytes written to disk
+    test_setup_boot_disk(BLANK_DSK, 1);
+
+    do {
+        uint8_t md[SHA_DIGEST_LENGTH];
+        char mdstr0[(SHA_DIGEST_LENGTH*2)+1];
+
+        FILE *fp = fopen(disk6.disk[0].file_name, "r");
+
+        fseek(fp, 0, SEEK_END);
+        long expectedSize = ftell(fp);
+        ASSERT(expectedSize == DSK_SIZE);
+        fseek(fp, 0, SEEK_SET);
+
+        unsigned char *buf = malloc(DSK_SIZE);
+        if (fread(buf, 1, DSK_SIZE, fp) != DSK_SIZE) {
+            ASSERT(false);
+        }
+        fclose(fp); fp = NULL;
+        SHA1(buf, DSK_SIZE, md);
+        FREE(buf);
+
+        sha1_to_str(md, mdstr0);
+        ASSERT(strcmp(mdstr0, EXPECTED_BSAVE_DSK_SHA) == 0);
+    } while(0);
+
+    c_eject_6(0);
+
     PASS();
 }
 
 #define EXPECTED_DISKWRITE_TRACE_NIB_FILE_SIZE 2409
 #define EXPECTED_DISKWRITE_TRACE_NIB_SHA "332EA76D8BCE45ACA6F805B978E6A3327386ABD6"
+#define EXPECTED_BSAVE_NIB_SHA "94193718A6B610AE31B5ABE7058416B321968CA1"
 TEST test_disk_bytes_savehello_nib() {
     test_setup_boot_disk(BLANK_NIB, 0);
     BOOT_TO_DOS();
@@ -454,16 +484,45 @@ TEST test_disk_bytes_savehello_nib() {
 
     c_eject_6(0);
 
+    // Now verify actual disk bytes written to disk
+    test_setup_boot_disk(BLANK_NIB, 1);
+
+    do {
+        uint8_t md[SHA_DIGEST_LENGTH];
+        char mdstr0[(SHA_DIGEST_LENGTH*2)+1];
+
+        FILE *fp = fopen(disk6.disk[0].file_name, "r");
+
+        fseek(fp, 0, SEEK_END);
+        long expectedSize = ftell(fp);
+        ASSERT(expectedSize == NIB_SIZE);
+        fseek(fp, 0, SEEK_SET);
+
+        unsigned char *buf = malloc(NIB_SIZE);
+        if (fread(buf, 1, NIB_SIZE, fp) != NIB_SIZE) {
+            ASSERT(false);
+        }
+        fclose(fp); fp = NULL;
+        SHA1(buf, NIB_SIZE, md);
+        FREE(buf);
+
+        sha1_to_str(md, mdstr0);
+        ASSERT(strcmp(mdstr0, EXPECTED_BSAVE_NIB_SHA) == 0);
+    } while(0);
+
+    c_eject_6(0);
+
     PASS();
 }
 
 #if CONFORMANT_TRACKS
-#define EXPECTED_DISKWRITE_TRACE_PO_FILE_SIZE 63675
-#define EXPECTED_DISKWRITE_TRACE_PO_SHA "CFA1C3AB2CA4F245D291DFC8C277773C5275946C"
+#   define EXPECTED_DISKWRITE_TRACE_PO_FILE_SIZE 63675
+#   define EXPECTED_DISKWRITE_TRACE_PO_SHA "CFA1C3AB2CA4F245D291DFC8C277773C5275946C"
 #else
-#define EXPECTED_DISKWRITE_TRACE_PO_FILE_SIZE 63676 // orly?
-#define EXPECTED_DISKWRITE_TRACE_PO_SHA "FA3792F09A5E96B906D3F2362C6701C0DFB2130C"
+#   define EXPECTED_DISKWRITE_TRACE_PO_FILE_SIZE 63676 // orly?
+#   define EXPECTED_DISKWRITE_TRACE_PO_SHA "FA3792F09A5E96B906D3F2362C6701C0DFB2130C"
 #endif
+#define EXPECTED_BSAVE_PO_SHA "9B47A4B92F64ACEB2B82B3B870C78E93780F18F3"
 TEST test_disk_bytes_savehello_po() {
     test_setup_boot_disk(BLANK_PO, 0);
     BOOT_TO_DOS();
@@ -521,6 +580,34 @@ TEST test_disk_bytes_savehello_po() {
     c_debugger_go();
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
     ASSERT_SHA(BOOT_SCREEN);
+
+    c_eject_6(0);
+
+    // Now verify actual disk bytes written to disk
+    test_setup_boot_disk(BLANK_PO, 1);
+
+    do {
+        uint8_t md[SHA_DIGEST_LENGTH];
+        char mdstr0[(SHA_DIGEST_LENGTH*2)+1];
+
+        FILE *fp = fopen(disk6.disk[0].file_name, "r");
+
+        fseek(fp, 0, SEEK_END);
+        long expectedSize = ftell(fp);
+        ASSERT(expectedSize == DSK_SIZE);
+        fseek(fp, 0, SEEK_SET);
+
+        unsigned char *buf = malloc(DSK_SIZE);
+        if (fread(buf, 1, DSK_SIZE, fp) != DSK_SIZE) {
+            ASSERT(false);
+        }
+        fclose(fp); fp = NULL;
+        SHA1(buf, DSK_SIZE, md);
+        FREE(buf);
+
+        sha1_to_str(md, mdstr0);
+        ASSERT(strcmp(mdstr0, EXPECTED_BSAVE_PO_SHA) == 0);
+    } while(0);
 
     c_eject_6(0);
 
