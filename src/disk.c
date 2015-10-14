@@ -116,31 +116,65 @@ static bool is_po(const char * const name) {
     return false;
 }
 
-#define NUM_SIXBIT_NIBS 342
+#define SIXBIT_MASK 0x3F // 111111
+#define SIXBIT_EXTRA_BYTES 0x56 // 86
+#define SIXBIT_EXTRA_WRAP 0x53 // 86 + 86 + 83 == 255
+#define SIXBIT_OFF_BEGIN (SIXBIT_EXTRA_BYTES<<1) // 0xAC
+#define NUM_SIXBIT_NIBS (0x100 + SIXBIT_EXTRA_BYTES) // 256 + 86 == 342
 
-static void nibblize_sector(const uint8_t * const src, uint8_t *out) {
+#if DISK_TRACING
+#define _DISK_TRACE_SIXBITNIBS() \
+    if (test_write_fp) { \
+        fprintf(test_write_fp, "SIXBITNIBS:\n"); \
+        for (unsigned int i=0; i<NUM_SIXBIT_NIBS+1; i++) { \
+            fprintf(test_write_fp, "%02X", work_buf[i]); \
+        } \
+        fprintf(test_write_fp, "\n"); \
+    }
+#define _DISK_TRACE_XORNIBS() \
+    if (test_write_fp) { \
+        fprintf(test_write_fp, "XORNIBS:\n"); \
+        for (unsigned int i=0; i<NUM_SIXBIT_NIBS; i++) { \
+            fprintf(test_write_fp, "%02X", work_buf[i]); \
+        } \
+        fprintf(test_write_fp, "\n"); \
+    }
+#define _DISK_TRACE_SECDATA() \
+    if (test_write_fp) { \
+        fprintf(test_write_fp, "SECTOR:\n"); \
+        for (unsigned int i = 0; i < 256; i++) { \
+            fprintf(test_write_fp, "%02X", out[i]); \
+        } \
+        fprintf(test_write_fp, "%s", "\n"); \
+    }
+#else
+#define _DISK_TRACE_SIXBITNIBS()
+#define _DISK_TRACE_XORNIBS()
+#define _DISK_TRACE_SECDATA()
+#endif
+
+static void nibblize_sector(const uint8_t * const src, uint8_t * const out) {
     SCOPE_TRACE_DISK("nibblize_sector");
 
     uint8_t work_buf[NUM_SIXBIT_NIBS+1];
-    uint8_t *nib = work_buf;
 
     // Convert 256 8-bit bytes into 342 6-bit bytes
     unsigned int counter = 0;
-    uint8_t offset = 0xAC;
+    uint8_t offset = SIXBIT_OFF_BEGIN;
     while (offset != 0x02) {
-        uint8_t value =        (( (*(src+offset)) & 0x01) << 1) | (( (*(src+offset)) & 0x02) >> 1);
-        offset -= 0x56;
-        value = (value << 2) | (( (*(src+offset)) & 0x01) << 1) | (( (*(src+offset)) & 0x02) >> 1);
-        offset -= 0x56;
-        value = (value << 2) | (( (*(src+offset)) & 0x01) << 1) | (( (*(src+offset)) & 0x02) >> 1);
-        offset -= 0x53;
-        *(nib++) = value << 2;
+        uint8_t value =        ((src[offset] & 0x01) << 1) | ((src[offset] & 0x02) >> 1);
+        offset -= SIXBIT_EXTRA_BYTES;
+        value = (value << 2) | ((src[offset] & 0x01) << 1) | ((src[offset] & 0x02) >> 1);
+        offset -= SIXBIT_EXTRA_BYTES;
+        value = (value << 2) | ((src[offset] & 0x01) << 1) | ((src[offset] & 0x02) >> 1);
+        offset -= SIXBIT_EXTRA_WRAP;
+        work_buf[counter] = value << 2;
         ++counter;
     }
-    *(nib-2) &= 0x3F;
-    *(nib-1) &= 0x3F;
     assert((counter == NUM_SIXBIT_NIBS-0x100) && "nibblizing counter about to overflow");
-    memcpy(nib, src, 0x100);
+    work_buf[counter-2] &= SIXBIT_MASK;
+    work_buf[counter-1] &= SIXBIT_MASK;
+    memcpy(&work_buf[counter], src, 0x100);
 
     // XOR the entire data block with itself offset by one byte, creating a final checksum byte
     uint8_t savedval = 0;
@@ -154,11 +188,11 @@ static void nibblize_sector(const uint8_t * const src, uint8_t *out) {
     // Convert the 6-bit bytes into disk bytes using a lookup table.  A valid disk byte is a byte that has the high bit
     // set, at least two adjacent bits set (excluding the high bit), and at most one pair of consecutive zero bits.
     for (unsigned int i=0; i<NUM_SIXBIT_NIBS+1; i++) {
-        *(out++) = translate_table_6[work_buf[i] >> 2];
+        out[i] = translate_table_6[work_buf[i] >> 2];
     }
 }
 
-static void denibblize_sector(const uint8_t * const src, uint8_t *out) {
+static void denibblize_sector(const uint8_t * const src, uint8_t * const out) {
     SCOPE_TRACE_DISK("denibblize_sector");
 
     uint8_t work_buf[NUM_SIXBIT_NIBS+1];
@@ -167,16 +201,7 @@ static void denibblize_sector(const uint8_t * const src, uint8_t *out) {
     for (unsigned int i=0; i<(NUM_SIXBIT_NIBS+1); i++) {
         work_buf[i] = rev_translate_table_6[src[i] & 0x7F];
     }
-
-#if DISK_TRACING
-    if (test_write_fp) {
-        fprintf(test_write_fp, "SIXBITNIBS:\n");
-        for (unsigned int i=0; i<NUM_SIXBIT_NIBS+1; i++) {
-            fprintf(test_write_fp, "%02X", work_buf[i]);
-        }
-        fprintf(test_write_fp, "\n");
-    }
-#endif
+    _DISK_TRACE_SIXBITNIBS();
 
     // XOR the entire data block with itself offset by one byte to undo checksumming
     uint8_t savedval = 0;
@@ -184,51 +209,30 @@ static void denibblize_sector(const uint8_t * const src, uint8_t *out) {
         work_buf[i] = savedval ^ work_buf[i];
         savedval = work_buf[i];
     }
-
-#if DISK_TRACING
-    if (test_write_fp) {
-        fprintf(test_write_fp, "XORNIBS:\n");
-        for (unsigned int i=0; i<NUM_SIXBIT_NIBS; i++) {
-            fprintf(test_write_fp, "%02X", work_buf[i]);
-        }
-        fprintf(test_write_fp, "\n");
-    }
-#endif
+    _DISK_TRACE_XORNIBS();
 
     // Convert 342 6-bit bytes into 256 8-bit bytes
+
     uint8_t *lowbitsptr = work_buf;
-    uint8_t *sectorbase = work_buf+0x56;
-    uint8_t offset = 0xAC;
+    uint8_t *sectorbase = work_buf+SIXBIT_EXTRA_BYTES;
+    uint8_t offset = SIXBIT_OFF_BEGIN;
     unsigned int counter = 0;
-    while (offset != 0x02) {
-        assert(counter < 256 && "denibblizing counter overflow");
-        if (offset >= 0xAC) {
-            *(out+offset) = (*(sectorbase+offset) & 0xFC) | (((*lowbitsptr) & 0x80) >> 7) | (((*lowbitsptr) & 0x40) >> 5);
+    for (unsigned int i=0; i<SIXBIT_EXTRA_BYTES; i++) {
+        if (offset >= SIXBIT_OFF_BEGIN) {
+            out[offset] = (sectorbase[offset] & 0xFC) | ((lowbitsptr[i] & 0x80) >> 7) | ((lowbitsptr[i] & 0x40) >> 5);
             ++counter;
         }
-        offset -= 0x56;
-
-        *(out+offset) = (*(sectorbase+offset) & 0xFC) | (((*lowbitsptr) & 0x20) >> 5) | (((*lowbitsptr) & 0x10) >> 3);
+        offset -= SIXBIT_EXTRA_BYTES;
+        out[offset]     = (sectorbase[offset] & 0xFC) | ((lowbitsptr[i] & 0x20) >> 5) | ((lowbitsptr[i] & 0x10) >> 3);
         ++counter;
-        offset -= 0x56;
-
-        *(out+offset) = (*(sectorbase+offset) & 0xFC) | (((*lowbitsptr) & 0x08) >> 3) | (((*lowbitsptr) & 0x04) >> 1);
+        offset -= SIXBIT_EXTRA_BYTES;
+        out[offset]     = (sectorbase[offset] & 0xFC) | ((lowbitsptr[i] & 0x08) >> 3) | ((lowbitsptr[i] & 0x04) >> 1);
         ++counter;
-        offset -= 0x53;
-
-        ++lowbitsptr;
+        offset -= SIXBIT_EXTRA_WRAP;
     }
-    assert(counter == 256 && "invalid bytes count");
-
-#ifdef DISK_TRACING
-    if (test_write_fp) {
-        fprintf(test_write_fp, "SECTOR:\n");
-        for (unsigned int i = 0; i < 256; i++) {
-            fprintf(test_write_fp, "%02X", out[i]);
-        }
-        fprintf(test_write_fp, "%s", "\n");
-    }
-#endif
+    assert(counter == 0x100 && "invalid bytes count");
+    assert(offset == 2 && "invalid bytes count");
+    _DISK_TRACE_SECDATA();
 }
 
 #define CODE44A(a) ((((a)>> 1) & 0x55) | 0xAA)
@@ -238,7 +242,7 @@ static unsigned long nibblize_track(uint8_t *buf, int drive) {
     SCOPE_TRACE_DISK("nibblize_track");
 
     uint8_t *output = disk6.disk[drive].track_image;
-    
+
 #if CONFORMANT_TRACKS
     // Write track-beginning gap containing 48 self-sync bytes
     for (unsigned int i=0; i<48; i++) {
@@ -324,7 +328,7 @@ static unsigned long nibblize_track(uint8_t *buf, int drive) {
     return output-disk6.disk[drive].track_image;
 }
 
-static void denibblize_track(int drive, uint8_t *dst) {
+static void denibblize_track(int drive, uint8_t * const dst) {
     SCOPE_TRACE_DISK("denibblize_track");
 
     // Searches through the track data for each sector and decodes it
