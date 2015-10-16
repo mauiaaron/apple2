@@ -70,7 +70,7 @@ static uint8_t translate_table_6[0x40] = {
     */
 };
 
-static uint8_t rev_translate_table_6[0x80] = { 0 };
+static uint8_t rev_translate_table_6[0x80] = { 0x01 };
 
 __attribute__((constructor(CTOR_PRIORITY_LATE)))
 static void _initialize_reverse_translate(void) {
@@ -171,7 +171,7 @@ static void nibblize_sector(const uint8_t * const src, uint8_t * const out) {
         work_buf[counter] = value << 2;
         ++counter;
     }
-    assert((counter == NUM_SIXBIT_NIBS-0x100) && "nibblizing counter about to overflow");
+    assert(counter == SIXBIT_EXTRA_BYTES && "nibblizing counter about to overflow");
     work_buf[counter-2] &= SIXBIT_MASK;
     work_buf[counter-1] &= SIXBIT_MASK;
     memcpy(&work_buf[counter], src, 0x100);
@@ -200,6 +200,7 @@ static void denibblize_sector(const uint8_t * const src, uint8_t * const out) {
     // Convert disk bytes into 6-bit bytes
     for (unsigned int i=0; i<(NUM_SIXBIT_NIBS+1); i++) {
         work_buf[i] = rev_translate_table_6[src[i] & 0x7F];
+        assert(work_buf[i] != 0x1);
     }
     _DISK_TRACE_SIXBITNIBS();
 
@@ -460,8 +461,8 @@ static bool save_track_data(void) {
             ERRLOG("could not write dsk data ...");
             return false;
         }
-        fflush(disk6.disk[disk6.drive].fp);
     }
+    fflush(disk6.disk[disk6.drive].fp);
 
     disk6.disk[disk6.drive].track_dirty = false;
     return true;
@@ -712,6 +713,7 @@ const char *c_eject_6(int drive) {
     disk6.disk[drive].nibblized = 0;
     sprintf(disk6.disk[drive].file_name, "%s", "");
     if (disk6.disk[drive].fp) {
+        fflush(disk6.disk[drive].fp);
         fclose(disk6.disk[drive].fp);
         disk6.disk[drive].fp = NULL;
         disk6.disk[drive].track_width = 0;
