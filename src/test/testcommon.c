@@ -147,10 +147,10 @@ int test_setup_boot_disk(const char *fileName, int readonly) {
 #else
     asprintf(&disk, "%s/disks/%s", data_dir, fileName);
 #endif
-    if (c_new_diskette_6(0, disk, readonly)) {
+    if (disk6_insert(0, disk, readonly)) {
         int len = strlen(disk);
         disk[len-3] = '\0'; // try again without '.gz' extension
-        err = (c_new_diskette_6(0, disk, readonly) != NULL);
+        err = (disk6_insert(0, disk, readonly) != NULL);
     }
     FREE(disk);
     return err;

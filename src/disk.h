@@ -19,9 +19,10 @@
 
 #include "common.h"
 
-#define DSK_SIZE 143360
-#define NIB_SIZE 232960
-#define NI2_SIZE 223440
+#define ERR_IMAGE_NOT_EXPECTED_SIZE "disk image is not expected size"
+#define ERR_STAT_FAILED "disk image unreadable for stat"
+#define ERR_CANNOT_OPEN "could not open disk image"
+#define ERR_MMAP_FAILED "disk image unreadable for mmap"
 
 #define NUM_TRACKS 35
 #define NUM_SECTORS 16
@@ -29,6 +30,10 @@
 #define DSK_TRACK_SIZE 0x1000 // DOS order, ProDOS order
 #define NIB_TRACK_SIZE 0x1A00 // NIB format
 #define NI2_TRACK_SIZE 0x18F0 // NI2 format
+
+#define DSK_SIZE (NUM_TRACKS * DSK_TRACK_SIZE) // 143360
+#define NIB_SIZE (NUM_TRACKS * NIB_TRACK_SIZE) // 232960
+#define NI2_SIZE (NUM_TRACKS * NI2_TRACK_SIZE) // 223440
 
 #define PHASE_BYTES (NIB_TRACK_SIZE/2)
 #define NIB_SEC_SIZE (NIB_TRACK_SIZE/NUM_SECTORS)
@@ -74,10 +79,17 @@ typedef struct drive_t {
 
 extern drive_t disk6;
 
-void c_init_6(void);
-const char *c_new_diskette_6(int drive, const char * const file_name, int force);
-const char *c_eject_6(int drive);
-void disk_io_initialize(unsigned int slot);
+// initialize emulated 5.25 Disk ][ module
+extern void disk6_init(void);
+
+// insert 5.25 disk image file
+extern const char *disk6_insert(int drive, const char * const file_name, int force);
+
+// eject 5.25 disk image file
+extern const char *disk6_eject(int drive);
+
+// flush all I/O
+extern void disk6_flush(int drive);
 
 #if DISK_TRACING
 void c_toggle_disk_trace_6(const char *read_file, const char *write_file);

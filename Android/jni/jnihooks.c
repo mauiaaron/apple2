@@ -260,8 +260,8 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnQuit(JNIEnv *env, jobject
 
     LOG("...");
 
-    c_eject_6(0);
-    c_eject_6(1);
+    disk6_eject(0);
+    disk6_eject(1);
 
     cpu_resume();
 #endif
@@ -312,10 +312,10 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeChooseDisk(JNIEnv *env, job
     int ro = readOnly ? 1 : 0;
 
     LOG(": (%s, %s, %s)", path, driveA ? "drive A" : "drive B", readOnly ? "read only" : "read/write");
-    if (c_new_diskette_6(drive, path, ro)) {
+    if (disk6_insert(drive, path, ro)) {
         char *gzPath = NULL;
         asprintf(&gzPath, "%s.gz", path);
-        if (c_new_diskette_6(drive, gzPath, ro)) {
+        if (disk6_insert(drive, gzPath, ro)) {
             char *diskImageUnreadable = "Disk Image Unreadable";
             unsigned int cols = strlen(diskImageUnreadable);
             video_backend->animation_showMessage(diskImageUnreadable, cols, 1);
@@ -331,7 +331,7 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeChooseDisk(JNIEnv *env, job
 
 void Java_org_deadc0de_apple2ix_Apple2Activity_nativeEjectDisk(JNIEnv *env, jobject obj, jboolean driveA) {
     LOG("...");
-    c_eject_6(!driveA);
+    disk6_eject(!driveA);
 }
 
 // ----------------------------------------------------------------------------

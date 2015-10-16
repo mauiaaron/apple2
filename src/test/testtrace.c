@@ -59,7 +59,7 @@ TEST test_boot_disk_cputrace() {
     BOOT_TO_DOS();
 
     cpu65_trace_end();
-    c_eject_6(0);
+    disk6_eject(0);
 
     do {
         uint8_t md[SHA_DIGEST_LENGTH];
@@ -110,7 +110,7 @@ TEST test_cputrace_hello_dsk() {
     c_debugger_go();
 
     cpu65_trace_end();
-    c_eject_6(0);
+    disk6_eject(0);
 
     do {
         uint8_t md[SHA_DIGEST_LENGTH];
@@ -160,7 +160,7 @@ TEST test_cputrace_hello_nib() {
     c_debugger_go();
 
     cpu65_trace_end();
-    c_eject_6(0);
+    disk6_eject(0);
 
     do {
         uint8_t md[SHA_DIGEST_LENGTH];
@@ -210,7 +210,7 @@ TEST test_cputrace_hello_po() {
     c_debugger_go();
 
     cpu65_trace_end();
-    c_eject_6(0);
+    disk6_eject(0);
 
     do {
         uint8_t md[SHA_DIGEST_LENGTH];
@@ -254,7 +254,7 @@ TEST test_boot_disk_vmtrace() {
     BOOT_TO_DOS();
 
     vm_trace_end();
-    c_eject_6(0);
+    disk6_eject(0);
 
     do {
         uint8_t md[SHA_DIGEST_LENGTH];
@@ -302,7 +302,7 @@ TEST test_boot_disk_vmtrace_nib() {
     BOOT_TO_DOS();
 
     vm_trace_end();
-    c_eject_6(0);
+    disk6_eject(0);
 
     do {
         uint8_t md[SHA_DIGEST_LENGTH];
@@ -350,7 +350,7 @@ TEST test_boot_disk_vmtrace_po() {
     BOOT_TO_DOS();
 
     vm_trace_end();
-    c_eject_6(0);
+    disk6_eject(0);
 
     do {
         uint8_t md[SHA_DIGEST_LENGTH];
@@ -408,7 +408,7 @@ GREATEST_SUITE(test_suite_trace) {
 #endif
 
     // ...
-    c_eject_6(0);
+    disk6_eject(0);
     pthread_mutex_unlock(&interface_mutex);
 }
 

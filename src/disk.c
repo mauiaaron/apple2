@@ -403,6 +403,7 @@ static void denibblize_track(int drive, uint8_t * const dst) {
                 offset = 0;
             }
         }
+        assert(sector >= 0 && sector < 16 && "invalid previous nibblization");
         int sec_off = 256 * disk6.disk[drive].skew_table[ sector ];
         denibblize_sector(work_buf, dst+sec_off);
         sector = -1;
@@ -669,10 +670,9 @@ GLUE_C_WRITE(disk_write_latch)
 
 // ----------------------------------------------------------------------------
 
-void disk_io_initialize(unsigned int slot) {
-    assert(slot == 6);
+void disk6_init(void) {
 
-    /* load Disk II rom */
+    // load Disk II ROM
     memcpy(apple_ii_64k[0] + 0xC600, slot6_rom, 0x100);
 
     // disk softswitches
@@ -694,9 +694,7 @@ void disk_io_initialize(unsigned int slot) {
     }
 
     cpu65_vmem_w[0xC0ED] = disk_write_latch;
-}
 
-void c_init_6(void) {
     disk6.disk[0].phase = disk6.disk[1].phase = 0;
     disk6.disk[0].track_valid = disk6.disk[1].track_valid = 0;
     disk6.motor_time = (struct timespec){ 0 };
@@ -705,7 +703,7 @@ void c_init_6(void) {
     disk6.ddrw = 0;
 }
 
-const char *c_eject_6(int drive) {
+const char *disk6_eject(int drive) {
 
     const char *err = NULL;
 
@@ -729,11 +727,11 @@ const char *c_eject_6(int drive) {
     return err;
 }
 
-const char *c_new_diskette_6(int drive, const char * const raw_file_name, int force) {
+const char *disk6_insert(int drive, const char * const raw_file_name, int readonly) {
     struct stat buf;
 
     if (disk6.disk[drive].fp) {
-        c_eject_6(drive);
+        disk6_eject(drive);
     }
 
     /* uncompress the gziped disk */
@@ -769,22 +767,22 @@ const char *c_new_diskette_6(int drive, const char * const raw_file_name, int fo
 
     if (stat(disk6.disk[drive].file_name, &buf) < 0) {
         disk6.disk[drive].fp = NULL;
-        c_eject_6(drive);
+        disk6_eject(drive);
         return "disk unreadable 1";
     } else {
-        if (!force) {
+        if (!readonly) {
             disk6.disk[drive].fp = fopen(disk6.disk[drive].file_name, "r+");
             disk6.disk[drive].is_protected = false;
         }
 
-        if ((disk6.disk[drive].fp == NULL) || (force)) {
+        if ((disk6.disk[drive].fp == NULL) || readonly) {
             disk6.disk[drive].fp = fopen(disk6.disk[drive].file_name, "r");
             disk6.disk[drive].is_protected = true;    /* disk is write protected! */
         }
 
         if (disk6.disk[drive].fp == NULL) {
             /* Failed to open file. */
-            c_eject_6(drive);
+            disk6_eject(drive);
             return "disk unreadable 2";
         }
 
@@ -801,25 +799,29 @@ const char *c_new_diskette_6(int drive, const char * const raw_file_name, int fo
     return NULL;
 }
 
+void disk6_flush(int drive) {
+    // TODO ...
+}
+
 #if DISK_TRACING
 void c_begin_disk_trace_6(const char *read_file, const char *write_file) {
     if (read_file) {
-        test_read_fp = fopen(read_file, "w");
+        test_read_fp = TEMP_FAILURE_RETRY_FOPEN(fopen(read_file, "w"));
     }
     if (write_file) {
-        test_write_fp = fopen(write_file, "w");
+        test_write_fp = TEMP_FAILURE_RETRY_FOPEN(fopen(write_file, "w"));
     }
 }
 
 void c_end_disk_trace_6(void) {
     if (test_read_fp) {
-        fflush(test_read_fp);
-        fclose(test_read_fp);
+        TEMP_FAILURE_RETRY(fflush(test_read_fp));
+        TEMP_FAILURE_RETRY(fclose(test_read_fp));
         test_read_fp = NULL;
     }
     if (test_write_fp) {
-        fflush(test_write_fp);
-        fclose(test_write_fp);
+        TEMP_FAILURE_RETRY(fflush(test_write_fp));
+        TEMP_FAILURE_RETRY(fclose(test_write_fp));
         test_write_fp = NULL;
     }
 }

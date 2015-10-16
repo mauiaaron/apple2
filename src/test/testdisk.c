@@ -59,7 +59,7 @@ TEST test_boot_disk_bytes() {
     BOOT_TO_DOS();
 
     c_end_disk_trace_6();
-    c_eject_6(0);
+    disk6_eject(0);
 
     do {
         uint8_t md[SHA_DIGEST_LENGTH];
@@ -107,7 +107,7 @@ TEST test_boot_disk_bytes_nib() {
     BOOT_TO_DOS();
 
     c_end_disk_trace_6();
-    c_eject_6(0);
+    disk6_eject(0);
 
     do {
         uint8_t md[SHA_DIGEST_LENGTH];
@@ -160,7 +160,7 @@ TEST test_boot_disk_bytes_po() {
     BOOT_TO_DOS();
 
     c_end_disk_trace_6();
-    c_eject_6(0);
+    disk6_eject(0);
 
     do {
         uint8_t md[SHA_DIGEST_LENGTH];
@@ -265,7 +265,7 @@ TEST test_savehello_dsk() {
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
     ASSERT_SHA(BOOT_SCREEN);
 
-    c_eject_6(0);
+    disk6_eject(0);
 
     PASS();
 }
@@ -291,7 +291,7 @@ TEST test_savehello_nib() {
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
     ASSERT_SHA(BOOT_SCREEN);
 
-    c_eject_6(0);
+    disk6_eject(0);
 
     PASS();
 }
@@ -317,7 +317,7 @@ TEST test_savehello_po() {
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
     ASSERT_SHA(BOOT_SCREEN);
 
-    c_eject_6(0);
+    disk6_eject(0);
 
     PASS();
 }
@@ -388,7 +388,7 @@ TEST test_disk_bytes_savehello_dsk() {
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
     ASSERT_SHA(BOOT_SCREEN);
 
-    c_eject_6(0);
+    disk6_eject(0);
 
     // Now verify actual disk bytes written to disk
     test_setup_boot_disk(BLANK_DSK, 1);
@@ -416,7 +416,7 @@ TEST test_disk_bytes_savehello_dsk() {
         ASSERT(strcmp(mdstr0, EXPECTED_BSAVE_DSK_SHA) == 0);
     } while(0);
 
-    c_eject_6(0);
+    disk6_eject(0);
 
     PASS();
 }
@@ -482,7 +482,7 @@ TEST test_disk_bytes_savehello_nib() {
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
     ASSERT_SHA(BOOT_SCREEN);
 
-    c_eject_6(0);
+    disk6_eject(0);
 
     // Now verify actual disk bytes written to disk
     test_setup_boot_disk(BLANK_NIB, 1);
@@ -510,7 +510,7 @@ TEST test_disk_bytes_savehello_nib() {
         ASSERT(strcmp(mdstr0, EXPECTED_BSAVE_NIB_SHA) == 0);
     } while(0);
 
-    c_eject_6(0);
+    disk6_eject(0);
 
     PASS();
 }
@@ -581,7 +581,7 @@ TEST test_disk_bytes_savehello_po() {
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
     ASSERT_SHA(BOOT_SCREEN);
 
-    c_eject_6(0);
+    disk6_eject(0);
 
     // Now verify actual disk bytes written to disk
     test_setup_boot_disk(BLANK_PO, 1);
@@ -609,7 +609,7 @@ TEST test_disk_bytes_savehello_po() {
         ASSERT(strcmp(mdstr0, EXPECTED_BSAVE_PO_SHA) == 0);
     } while(0);
 
-    c_eject_6(0);
+    disk6_eject(0);
 
     PASS();
 }
@@ -650,7 +650,7 @@ TEST test_outofspace_dsk() {
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
     ASSERT_SHA(BOOT_SCREEN);
 
-    c_eject_6(0);
+    disk6_eject(0);
 
     // Now verify actual disk bytes written to disk
     test_setup_boot_disk(BLANK_DSK, 1);
@@ -678,7 +678,7 @@ TEST test_outofspace_dsk() {
         ASSERT(strcmp(mdstr0, EXPECTED_OOS_DSK_SHA) == 0);
     } while(0);
 
-    c_eject_6(0);
+    disk6_eject(0);
 
     PASS();
 }
@@ -705,7 +705,7 @@ TEST test_outofspace_nib() {
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
     ASSERT_SHA(BOOT_SCREEN);
 
-    c_eject_6(0);
+    disk6_eject(0);
 
     // Now verify actual disk bytes written to disk
     test_setup_boot_disk(BLANK_NIB, 1);
@@ -733,7 +733,7 @@ TEST test_outofspace_nib() {
         ASSERT(strcmp(mdstr0, EXPECTED_OOS_NIB_SHA) == 0);
     } while(0);
 
-    c_eject_6(0);
+    disk6_eject(0);
 
     PASS();
 }
@@ -760,7 +760,7 @@ TEST test_outofspace_po() {
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
     ASSERT_SHA(BOOT_SCREEN);
 
-    c_eject_6(0);
+    disk6_eject(0);
 
     // Now verify actual disk bytes written to disk
     test_setup_boot_disk(BLANK_PO, 1);
@@ -788,7 +788,7 @@ TEST test_outofspace_po() {
         ASSERT(strcmp(mdstr0, EXPECTED_OOS_PO_SHA) == 0);
     } while(0);
 
-    c_eject_6(0);
+    disk6_eject(0);
 
     PASS();
 }
@@ -913,7 +913,7 @@ TEST test_bload_trace_dsk() {
     unlink(disk);
     FREE(disk);
 
-    c_eject_6(0);
+    disk6_eject(0);
 
     PASS();
 }
@@ -1031,7 +1031,7 @@ TEST test_bload_trace_nib() {
     unlink(disk);
     FREE(disk);
 
-    c_eject_6(0);
+    disk6_eject(0);
 
     PASS();
 }
@@ -1154,7 +1154,7 @@ TEST test_bload_trace_po() {
     unlink(disk);
     FREE(disk);
 
-    c_eject_6(0);
+    disk6_eject(0);
 
     PASS();
 }
@@ -1181,7 +1181,7 @@ TEST test_inithello_dsk() {
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
     ASSERT_SHA(BOOT_SCREEN);
 
-    c_eject_6(0);
+    disk6_eject(0);
 
     PASS();
 }
@@ -1206,7 +1206,7 @@ TEST test_inithello_nib() {
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
     ASSERT_SHA(BOOT_SCREEN);
 
-    c_eject_6(0);
+    disk6_eject(0);
 
     PASS();
 }
@@ -1231,7 +1231,7 @@ TEST test_inithello_po() {
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
     ASSERT_SHA(BOOT_SCREEN);
 
-    c_eject_6(0);
+    disk6_eject(0);
 
     PASS();
 }
@@ -1266,7 +1266,7 @@ TEST test_data_stability_dsk() {
         ASSERT(strcmp(mdstr0, EXPECTED_STABILITY_DSK_SHA) == 0);
     } while(0);
 
-    c_eject_6(0);
+    disk6_eject(0);
 
     PASS();
 }
@@ -1301,7 +1301,7 @@ TEST test_data_stability_nib() {
         ASSERT(strcmp(mdstr0, EXPECTED_STABILITY_NIB_SHA) == 0);
     } while(0);
 
-    c_eject_6(0);
+    disk6_eject(0);
 
     PASS();
 }
@@ -1336,7 +1336,7 @@ TEST test_data_stability_po() {
         ASSERT(strcmp(mdstr0, EXPECTED_STABILITY_PO_SHA) == 0);
     } while(0);
 
-    c_eject_6(0);
+    disk6_eject(0);
 
     PASS();
 }
@@ -1392,7 +1392,7 @@ GREATEST_SUITE(test_suite_disk) {
     RUN_TESTp(test_data_stability_po);
 
     // ...
-    c_eject_6(0);
+    disk6_eject(0);
     pthread_mutex_unlock(&interface_mutex);
 }
 

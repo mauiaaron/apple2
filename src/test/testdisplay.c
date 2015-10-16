@@ -433,7 +433,7 @@ GREATEST_SUITE(test_suite_display) {
     RUN_TEST(test_80col_hires);
 
     // ...
-    c_eject_6(0);
+    disk6_eject(0);
     pthread_mutex_unlock(&interface_mutex);
 }
 

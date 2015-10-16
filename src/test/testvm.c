@@ -3452,7 +3452,7 @@ GREATEST_SUITE(test_suite_vm) {
     RUN_TESTp(test_check_cxrom, /*CXROM*/1);
 
     // ...
-    c_eject_6(0);
+    disk6_eject(0);
     pthread_mutex_unlock(&interface_mutex);
 }
 

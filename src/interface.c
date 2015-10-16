@@ -344,7 +344,7 @@ static char zlibmenu[ZLIB_SUBMENU_H][ZLIB_SUBMENU_W+1] =
     "||||||||||||||||||||||||||||||||||||||||" };
 
 static void _eject_disk(int drive) {
-    const char *err_str = c_eject_6(drive);
+    const char *err_str = disk6_eject(drive);
     if (err_str) {
         int ch = -1;
         snprintf(&zlibmenu[4][2], 37, "%s", err_str);
@@ -588,7 +588,7 @@ void c_interface_select_diskette( int drive )
                     /* reopen disk, forcing write enabled */
                     if (toupper(ch) == 'W')
                     {
-                        const char *err_str = c_new_diskette_6(drive, temp, 0);
+                        const char *err_str = disk6_insert(drive, temp, /*readonly:*/0);
                         if (err_str)
                         {
                             int ch = -1;
@@ -656,7 +656,7 @@ void c_interface_select_diskette( int drive )
                 _eject_disk(drive);
                 c_interface_print_screen( screen );
 
-                const char *err_str = c_new_diskette_6(drive, temp, (toupper(ch) != 'W'));
+                const char *err_str = disk6_insert(drive, temp, /*readonly:*/(toupper(ch) != 'W'));
                 if (err_str)
                 {
                     int ch = -1;
@@ -1283,9 +1283,9 @@ void c_interface_parameters()
                     if (ch == 'Y')
                     {
                         save_settings();
-                        c_eject_6( 0 );
+                        disk6_eject(0);
                         c_interface_print_screen( screen );
-                        c_eject_6( 1 );
+                        disk6_eject(1);
                         c_interface_print_screen( screen );
 #ifdef __linux__
                         LOG("Back to Linux, w00t!\n");

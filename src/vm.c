@@ -1195,7 +1195,6 @@ static void _initialize_tables(void) {
 #ifdef AUDIO_ENABLED
     mb_io_initialize(4, 5); /* Mockingboard(s) and/or Phasor in slots 4 & 5 */
 #endif
-    disk_io_initialize(6); /* Put a Disk ][ Controller in slot 6 */
 }
 
 // ----------------------------------------------------------------------------
@@ -1205,7 +1204,7 @@ void vm_initialize(void) {
     _initialize_apple_ii_memory();
     _initialize_tables();
     vm_reinitializeAudio();
-    c_init_6();
+    disk6_init();
     _initialize_iie_switches();
     c_joystick_reset();
 }
