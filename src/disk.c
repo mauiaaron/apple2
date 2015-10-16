@@ -703,7 +703,7 @@ const char *c_eject_6(int drive) {
     const char *err = NULL;
 
     // foo.dsk -> foo.dsk.gz
-    err = def(disk6.disk[drive].file_name, is_nib(disk6.disk[drive].file_name) ? NIB_SIZE : DSK_SIZE);
+    err = zlib_deflate(disk6.disk[drive].file_name, is_nib(disk6.disk[drive].file_name) ? NIB_SIZE : DSK_SIZE);
     if (err) {
         ERRLOG("OOPS: An error occurred when attempting to compress a disk image : %s", err);
     } else {
@@ -732,17 +732,10 @@ const char *c_new_diskette_6(int drive, const char * const raw_file_name, int fo
     /* uncompress the gziped disk */
     char *file_name = strdup(raw_file_name);
     if (is_gz(file_name)) {
-        int rawcount = 0;
-        const char *err = inf(file_name, &rawcount); // foo.dsk.gz -> foo.dsk
-        if (!err) {
-            int expected = is_nib(file_name) ? NIB_SIZE : DSK_SIZE;
-            if (rawcount != expected) {
-                err = "disk image is not expected size!";
-            }
-        }
+        const char *err = zlib_inflate(file_name, is_nib(file_name) ? NIB_SIZE : DSK_SIZE); // foo.dsk.gz -> foo.dsk
         if (err) {
             ERRLOG("OOPS: An error occurred when attempting to inflate/load a disk image : %s", err);
-            free(file_name);
+            FREE(file_name);
             return err;
         }
         if (unlink(file_name)) { // temporarily remove .gz file
@@ -759,7 +752,7 @@ const char *c_new_diskette_6(int drive, const char * const raw_file_name, int fo
     if (is_po(file_name)) {
         disk6.disk[drive].skew_table = skew_table_6_po;
     }
-    free(file_name);
+    FREE(file_name);
     file_name = NULL;
 
     if (disk6.disk[drive].fp) {
