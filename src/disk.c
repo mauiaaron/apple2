@@ -706,17 +706,17 @@ const char *disk6_eject(int drive) {
 
     const char *err = NULL;
 
-    // foo.dsk -> foo.dsk.gz
-    err = zlib_deflate(disk6.disk[drive].file_name, is_nib(disk6.disk[drive].file_name) ? NIB_SIZE : DSK_SIZE);
-    if (err) {
-        ERRLOG("OOPS: An error occurred when attempting to compress a disk image : %s", err);
-    } else {
-        unlink(disk6.disk[drive].file_name);
-    }
-
     disk6.disk[drive].nibblized = 0;
-    sprintf(disk6.disk[drive].file_name, "%s", "");
     if (disk6.disk[drive].fp) {
+        // foo.dsk -> foo.dsk.gz
+        err = zlib_deflate(disk6.disk[drive].file_name, is_nib(disk6.disk[drive].file_name) ? NIB_SIZE : DSK_SIZE);
+        if (err) {
+            ERRLOG("OOPS: An error occurred when attempting to compress a disk image : %s", err);
+        } else {
+            unlink(disk6.disk[drive].file_name);
+        }
+        FREE(disk6.disk[drive].file_name);
+
         fflush(disk6.disk[drive].fp);
         fclose(disk6.disk[drive].fp);
         disk6.disk[drive].fp = NULL;
@@ -745,19 +745,15 @@ const char *disk6_insert(int drive, const char * const raw_file_name, int readon
         if (unlink(file_name)) { // temporarily remove .gz file
             ERRLOG("OOPS, cannot unlink %s", file_name);
         }
-
         cut_gz(file_name);
     }
 
-    strncpy(disk6.disk[drive].file_name, file_name, FILE_NAME_SZ-1);
-    disk6.disk[drive].file_name[FILE_NAME_SZ-1] = '\0';
+    disk6.disk[drive].file_name = file_name;
     disk6.disk[drive].nibblized = is_nib(file_name);
     disk6.disk[drive].skew_table = skew_table_6_do;
     if (is_po(file_name)) {
         disk6.disk[drive].skew_table = skew_table_6_po;
     }
-    FREE(file_name);
-    file_name = NULL;
 
     if (disk6.disk[drive].fp) {
         fclose(disk6.disk[drive].fp);

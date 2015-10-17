@@ -261,7 +261,7 @@ static int disk_select(const struct dirent *e) {
     strncat(cmp, e->d_name, PATH_MAX-1);
 
     /* don't show disk in alternate drive */
-    if (!strcmp(cmp, disk6.disk[altdrive].file_name)) {
+    if (disk6.disk[altdrive].file_name && !strcmp(cmp, disk6.disk[altdrive].file_name)) {
         return 0;
     }
 
@@ -453,7 +453,7 @@ void c_interface_select_diskette( int drive )
                 {
                     snprintf(temp, PATH_MAX, "%s/%s",
                              disk_path, namelist[ent_no]->d_name);
-                    if (!strcmp(temp, disk6.disk[drive].file_name))
+                    if (disk6.disk[drive].file_name && !strcmp(temp, disk6.disk[drive].file_name))
                     {
                         in_drive = 1;
                     }
@@ -578,12 +578,19 @@ void c_interface_select_diskette( int drive )
             }
             else if ((ch == 13) || (toupper(ch) == 'W'))
             {
+                if (disk_path) {
+                    size_t pathlen = strlen(disk_path);
+                    if (pathlen && disk_path[pathlen-1] == '/') {
+                        disk_path[pathlen-1] = '\0';
+                    }
+                }
+
                 snprintf(temp, PATH_MAX, "%s/%s",
                          disk_path, namelist[ curpos ]->d_name );
                 size_t len = strlen(disk_path);
 
                 /* handle disk currently in the drive */
-                if (!strcmp(temp, disk6.disk[drive].file_name))
+                if (disk6.disk[drive].file_name && !strcmp(temp, disk6.disk[drive].file_name))
                 {
                     /* reopen disk, forcing write enabled */
                     if (toupper(ch) == 'W')

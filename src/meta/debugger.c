@@ -1035,7 +1035,7 @@ void show_disk_info() {
 
     /* drive / image specific information */
     memset(second_buf[i], ' ', BUF_X);
-    if ((len = strlen(disk6.disk[0].file_name)))
+    if (disk6.disk[0].file_name && (len = strlen(disk6.disk[0].file_name)))
     {
         while ((--len) && (disk6.disk[0].file_name[len] != '/'))
         {
@@ -1045,7 +1045,7 @@ void show_disk_info() {
         *(second_buf[i] + sprintf(second_buf[i], "%s", tmp)) = ' ';
     }
 
-    if ((len = strlen(disk6.disk[1].file_name)))
+    if (disk6.disk[1].file_name && (len = strlen(disk6.disk[1].file_name)))
     {
         while ((--len) && (disk6.disk[1].file_name[len] != '/'))
         {
