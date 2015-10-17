@@ -249,7 +249,7 @@ static void denibblize_sector(const uint8_t * const src, uint8_t * const out) {
 static unsigned long nibblize_track(const uint8_t * const buf, int drive, uint8_t *output) {
     SCOPE_TRACE_DISK("nibblize_track");
 
-    uint8_t * const begin_track = output; //= disk6.disk[drive].track_image;
+    uint8_t * const begin_track = output;
 
 #if CONFORMANT_TRACKS
     // Write track-beginning gap containing 48 self-sync bytes
@@ -823,7 +823,6 @@ const char *disk6_insert(int drive, const char * const raw_file_name, int readon
             break;
         }
 
-
         // open image file
         TEMP_FAILURE_RETRY_FOPEN(disk6.disk[drive].fp = fopen(disk6.disk[drive].file_name, readonly ? "r" : "r+"));
         if (!disk6.disk[drive].fp && !readonly) {
@@ -837,9 +836,6 @@ const char *disk6_insert(int drive, const char * const raw_file_name, int readon
             err = ERR_CANNOT_OPEN;
             break;
         }
-
-        // seek to current head position
-        TEMP_FAILURE_RETRY(fseek(disk6.disk[drive].fp, PHASE_BYTES * disk6.disk[drive].phase, SEEK_SET));
 
     } while (0);
 

@@ -71,7 +71,6 @@ typedef struct drive_t {
     int drive;
     int ddrw;
     int disk_byte;
-    int exor_value;
     diskette_t disk[2];
 } drive_t;
 
