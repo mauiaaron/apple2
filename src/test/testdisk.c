@@ -226,7 +226,7 @@ TEST test_read_null_bytes() {
     BOOT_TO_DOS();
 
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x00;
-    apple_ii_64k[0][TESTOUT_ADDR] = 0x00;
+    apple_ii_64k[0][TESTOUT_ADDR] = 0xAA;
 
     ASM_INIT();
     ASM_TEST_DISK_READ_NULL();
@@ -237,7 +237,7 @@ TEST test_read_null_bytes() {
     c_debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
-    ASSERT(apple_ii_64k[0][TESTOUT_ADDR]    == 0xFF);
+    ASSERT(apple_ii_64k[0][TESTOUT_ADDR]    == 0x00);
 
     PASS();
 }
