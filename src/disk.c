@@ -246,10 +246,10 @@ static void denibblize_sector(const uint8_t * const src, uint8_t * const out) {
 #define CODE44A(a) ((((a)>> 1) & 0x55) | 0xAA)
 #define CODE44B(b) (((b) & 0x55) | 0xAA)
 
-static unsigned long nibblize_track(uint8_t *buf, int drive) {
+static unsigned long nibblize_track(const uint8_t * const buf, int drive, uint8_t *output) {
     SCOPE_TRACE_DISK("nibblize_track");
 
-    uint8_t *output = disk6.disk[drive].track_image;
+    uint8_t * const begin_track = output; //= disk6.disk[drive].track_image;
 
 #if CONFORMANT_TRACKS
     // Write track-beginning gap containing 48 self-sync bytes
@@ -333,16 +333,15 @@ static unsigned long nibblize_track(uint8_t *buf, int drive) {
         ++sector;
     }
 
-    return output-disk6.disk[drive].track_image;
+    return output - begin_track;
 }
 
-static void denibblize_track(int drive, uint8_t * const dst) {
+static void denibblize_track(const uint8_t * const src, int drive, uint8_t * const dst) {
     SCOPE_TRACE_DISK("denibblize_track");
 
     // Searches through the track data for each sector and decodes it
-#warning TODO FIXME inefficient -- refactor after moar tests =P
 
-    uint8_t *trackimage = disk6.disk[drive].track_image;
+    const uint8_t * const trackimage = src;
 #if DISK_TRACING
     if (test_write_fp) {
         fprintf(test_write_fp, "DSK OUT:\n");
@@ -434,7 +433,7 @@ static bool load_track_data(void) {
             return false;
         }
 
-        disk6.disk[disk6.drive].track_width = nibblize_track(buf, disk6.drive);
+        disk6.disk[disk6.drive].track_width = nibblize_track(buf, disk6.drive, disk6.disk[disk6.drive].track_image);
         if (disk6.disk[disk6.drive].track_width != NI2_TRACK_SIZE) {
 #if CONFORMANT_TRACKS
             ERRLOG("Invalid dsk image creation...");
@@ -462,7 +461,7 @@ static bool save_track_data(void) {
     } else {
         // .dsk, .do, .po images
         uint8_t buf[DSK_TRACK_SIZE];
-        denibblize_track(disk6.drive, buf);
+        denibblize_track(disk6.disk[disk6.drive].track_image, disk6.drive, buf);
         int track_pos = DSK_TRACK_SIZE * (disk6.disk[disk6.drive].phase >> 1);
         fseek(disk6.disk[disk6.drive].fp, track_pos, SEEK_SET);
         if (fwrite(buf, 1, DSK_TRACK_SIZE, disk6.disk[disk6.drive].fp) != DSK_TRACK_SIZE) {
