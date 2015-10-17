@@ -755,6 +755,9 @@ const char *disk6_eject(int drive) {
 
     disk6.disk[drive].nibblized = 0;
     if (disk6.disk[drive].fp) {
+        TEMP_FAILURE_RETRY(fflush(disk6.disk[drive].fp));
+        TEMP_FAILURE_RETRY(fclose(disk6.disk[drive].fp));
+
         // foo.dsk -> foo.dsk.gz
         err = zlib_deflate(disk6.disk[drive].file_name, is_nib(disk6.disk[drive].file_name) ? NIB_SIZE : DSK_SIZE);
         if (err) {
@@ -764,10 +767,7 @@ const char *disk6_eject(int drive) {
         }
         FREE(disk6.disk[drive].file_name);
 
-        TEMP_FAILURE_RETRY(fflush(disk6.disk[drive].fp));
-        TEMP_FAILURE_RETRY(fclose(disk6.disk[drive].fp));
-        disk6.disk[drive].fp = NULL;
-        disk6.disk[drive].track_width = 0;
+        memset(&disk6.disk[drive], 0x0, sizeof(disk6.disk[drive]));
     }
 
     return err;
