@@ -764,8 +764,8 @@ const char *disk6_eject(int drive) {
         }
         FREE(disk6.disk[drive].file_name);
 
-        fflush(disk6.disk[drive].fp);
-        fclose(disk6.disk[drive].fp);
+        TEMP_FAILURE_RETRY(fflush(disk6.disk[drive].fp));
+        TEMP_FAILURE_RETRY(fclose(disk6.disk[drive].fp));
         disk6.disk[drive].fp = NULL;
         disk6.disk[drive].track_width = 0;
     }
@@ -857,10 +857,10 @@ void disk6_flush(int drive) {
 #if DISK_TRACING
 void c_begin_disk_trace_6(const char *read_file, const char *write_file) {
     if (read_file) {
-        test_read_fp = TEMP_FAILURE_RETRY_FOPEN(fopen(read_file, "w"));
+        TEMP_FAILURE_RETRY_FOPEN(test_read_fp = fopen(read_file, "w"));
     }
     if (write_file) {
-        test_write_fp = TEMP_FAILURE_RETRY_FOPEN(fopen(write_file, "w"));
+        TEMP_FAILURE_RETRY_FOPEN(test_write_fp = fopen(write_file, "w"));
     }
 }
 
