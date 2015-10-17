@@ -727,70 +727,80 @@ const char *disk6_eject(int drive) {
 }
 
 const char *disk6_insert(int drive, const char * const raw_file_name, int readonly) {
-    struct stat buf;
 
     if (disk6.disk[drive].fp) {
         disk6_eject(drive);
     }
 
-    /* uncompress the gziped disk */
-    char *file_name = strdup(raw_file_name);
-    if (is_gz(file_name)) {
-        const char *err = zlib_inflate(file_name, is_nib(file_name) ? NIB_SIZE : DSK_SIZE); // foo.dsk.gz -> foo.dsk
-        if (err) {
-            ERRLOG("OOPS: An error occurred when attempting to inflate/load a disk image : %s", err);
-            FREE(file_name);
-            return err;
-        }
-        if (unlink(file_name)) { // temporarily remove .gz file
-            ERRLOG("OOPS, cannot unlink %s", file_name);
-        }
-        cut_gz(file_name);
-    }
-
-    disk6.disk[drive].file_name = file_name;
-    disk6.disk[drive].nibblized = is_nib(file_name);
-    disk6.disk[drive].skew_table = skew_table_6_do;
-    if (is_po(file_name)) {
-        disk6.disk[drive].skew_table = skew_table_6_po;
-    }
-
-    if (disk6.disk[drive].fp) {
-        fclose(disk6.disk[drive].fp);
-        disk6.disk[drive].fp = NULL;
-    }
-
-    if (stat(disk6.disk[drive].file_name, &buf) < 0) {
-        disk6.disk[drive].fp = NULL;
-        disk6_eject(drive);
-        return "disk unreadable 1";
-    } else {
-        if (!readonly) {
-            disk6.disk[drive].fp = fopen(disk6.disk[drive].file_name, "r+");
-            disk6.disk[drive].is_protected = false;
-        }
-
-        if ((disk6.disk[drive].fp == NULL) || readonly) {
-            disk6.disk[drive].fp = fopen(disk6.disk[drive].file_name, "r");
-            disk6.disk[drive].is_protected = true;    /* disk is write protected! */
-        }
-
-        if (disk6.disk[drive].fp == NULL) {
-            /* Failed to open file. */
-            disk6_eject(drive);
-            return "disk unreadable 2";
-        }
-
-        /* seek to current head position. */
-        fseek(disk6.disk[drive].fp, PHASE_BYTES * disk6.disk[drive].phase, SEEK_SET);
-    }
-
+    disk6.disk[drive].file_name = strdup(raw_file_name);
     disk6.disk[drive].track_valid = false;
     disk6.disk[drive].track_width = 0;
     disk6.disk[drive].run_byte = 0;
     stepper_phases = 0;
+    
+    int expected = NIB_SIZE;
+    disk6.disk[drive].nibblized = true;
+    if (!is_nib(disk6.disk[drive].file_name)) {
+        expected = DSK_SIZE;
+        disk6.disk[drive].nibblized = false;
+        disk6.disk[drive].skew_table = skew_table_6_do;
+        if (is_po(disk6.disk[drive].file_name)) {
+            disk6.disk[drive].skew_table = skew_table_6_po;
+        }
+    }
+    
+    char *err = NULL;
+    do {
+        if (is_gz(disk6.disk[drive].file_name)) {
+            err = (char *)zlib_inflate(disk6.disk[drive].file_name, expected); // foo.dsk.gz -> foo.dsk
+            if (err) {
+                ERRLOG("OOPS: An error occurred when attempting to inflate/load a disk image : %s", err);
+                break;
+            }
+            if (unlink(disk6.disk[drive].file_name)) { // temporarily remove .gz file
+                ERRLOG("OOPS, cannot unlink %s", disk6.disk[drive].file_name);
+            }
+            cut_gz(disk6.disk[drive].file_name);
+        }
 
-    return NULL;
+        struct stat stat_buf;
+        if (stat(disk6.disk[drive].file_name, &stat_buf) < 0) {
+            ERRLOG("OOPS, could not stat %s", disk6.disk[drive].file_name);
+            err = ERR_STAT_FAILED;
+            break;
+        }
+
+        if (stat_buf.st_size != expected) {
+            ERRLOG("OOPS, disk image %s does not have expected byte count!", disk6.disk[drive].file_name);
+            err = ERR_IMAGE_NOT_EXPECTED_SIZE;
+            break;
+        }
+
+
+        // open image file
+        TEMP_FAILURE_RETRY_FOPEN(disk6.disk[drive].fp = fopen(disk6.disk[drive].file_name, readonly ? "r" : "r+"));
+        if (!disk6.disk[drive].fp && !readonly) {
+            ERRLOG("OOPS, could not open %s read/write, will attempt to open readonly ...", disk6.disk[drive].file_name);
+            readonly = true;
+            TEMP_FAILURE_RETRY_FOPEN(disk6.disk[drive].fp = fopen(disk6.disk[drive].file_name, "r"));
+        }
+        disk6.disk[drive].is_protected = readonly;
+        if (!disk6.disk[drive].fp) {
+            ERRLOG("OOPS, could not open %s", disk6.disk[drive].file_name);
+            err = ERR_CANNOT_OPEN;
+            break;
+        }
+
+        // seek to current head position
+        TEMP_FAILURE_RETRY(fseek(disk6.disk[drive].fp, PHASE_BYTES * disk6.disk[drive].phase, SEEK_SET));
+
+    } while (0);
+
+    if (err) {
+        disk6_eject(drive);
+    }
+
+    return err;
 }
 
 void disk6_flush(int drive) {
