@@ -409,15 +409,15 @@ static void denibblize_track(const uint8_t * const src, int drive, uint8_t * con
     }
 }
 
-static bool load_track_data(void) {
+static size_t load_track_data(int drive, uint8_t * const out) {
     SCOPE_TRACE_DISK("load_track_data");
 
     size_t expected = 0;
     uint8_t *buf = NULL;
-    if (disk6.disk[disk6.drive].nibblized) {
+    if (disk6.disk[drive].nibblized) {
         // .nib image
         expected = NIB_TRACK_SIZE;
-        buf = disk6.disk[disk6.drive].track_image;
+        buf = out;
         disk6.disk[disk6.drive].track_width = expected;
     } else {
         // .dsk, .do, .po images
@@ -426,24 +426,24 @@ static bool load_track_data(void) {
         buf = _buf; // !!!
     }
 
-    const long track_pos = expected * (disk6.disk[disk6.drive].phase >> 1);
-    TEMP_FAILURE_RETRY(fseek(disk6.disk[disk6.drive].fp, track_pos, SEEK_SET));
+    const long track_pos = expected * (disk6.disk[drive].phase >> 1);
+    TEMP_FAILURE_RETRY(fseek(disk6.disk[drive].fp, track_pos, SEEK_SET));
 
     size_t idx = 0;
     do {
-        size_t ct = fread(buf+idx, 1, expected-idx, disk6.disk[disk6.drive].fp);
+        size_t ct = fread(buf+idx, 1, expected-idx, disk6.disk[drive].fp);
         if (UNLIKELY(ct == 0)) {
-            if (ferror(disk6.disk[disk6.drive].fp)) {
+            if (ferror(disk6.disk[drive].fp)) {
                 // hopefully a transient error ...
                 if (errno == EINTR || errno == EAGAIN || errno == EWOULDBLOCK) {
                     usleep(10);
                     continue;
                 } else {
-                    ERRLOG("OOPS, fatal error reading disk image %s at phase %d", disk6.disk[disk6.drive].file_name,  disk6.disk[disk6.drive].phase);
+                    ERRLOG("OOPS, fatal error reading disk image %s at phase %d", disk6.disk[drive].file_name,  disk6.disk[drive].phase);
                     break;
                 }
             } else {
-                ERRLOG("OOPS, EOF attemping to read disk image %s at phase %d", disk6.disk[disk6.drive].file_name,  disk6.disk[disk6.drive].phase);
+                ERRLOG("OOPS, EOF attemping to read disk image %s at phase %d", disk6.disk[drive].file_name,  disk6.disk[drive].phase);
                 break;
             }
         }
@@ -455,56 +455,55 @@ static bool load_track_data(void) {
         assert(idx < expected && "the world is not sane");
     } while (1);
 
-    if (!disk6.disk[disk6.drive].nibblized) {
-        disk6.disk[disk6.drive].track_width = nibblize_track(buf, disk6.drive, disk6.disk[disk6.drive].track_image);
-        if (disk6.disk[disk6.drive].track_width != NI2_TRACK_SIZE) {
+    if (!disk6.disk[drive].nibblized) {
+        disk6.disk[disk6.drive].track_width = nibblize_track(buf, drive, out);
+        expected = disk6.disk[disk6.drive].track_width;
 #if CONFORMANT_TRACKS
+        if (disk6.disk[drive].track_width != NI2_TRACK_SIZE) {
             ERRLOG("Invalid dsk image creation...");
-            return false;
-#endif
         }
+        expected = 0;
+#endif
     }
 
-    disk6.disk[disk6.drive].track_valid = true;
-    disk6.disk[disk6.drive].run_byte = 0;
-    return true;
+    return expected;
 }
 
-static bool save_track_data(void) {
+static bool save_track_data(const uint8_t * const src, int drive) {
     SCOPE_TRACE_DISK("save_track_data");
 
     size_t expected = 0;
-    uint8_t *buf = NULL;
-    if (disk6.disk[disk6.drive].nibblized) {
+    const uint8_t *buf = NULL;
+    if (disk6.disk[drive].nibblized) {
         // .nib image
         expected = NIB_TRACK_SIZE;
-        buf = disk6.disk[disk6.drive].track_image;
+        buf = src;
     } else {
         // .dsk, .do, .po images
-        uint8_t _buf[DSK_TRACK_SIZE] = { 0 };
-        denibblize_track(disk6.disk[disk6.drive].track_image, disk6.drive, _buf);
         expected = DSK_TRACK_SIZE;
+        uint8_t _buf[DSK_TRACK_SIZE] = { 0 };
+        denibblize_track(src, drive, _buf);
         buf = _buf; // !!!
     }
 
     const long track_pos = expected * (disk6.disk[disk6.drive].phase >> 1);
-    TEMP_FAILURE_RETRY(fseek(disk6.disk[disk6.drive].fp, track_pos, SEEK_SET));
+    TEMP_FAILURE_RETRY(fseek(disk6.disk[drive].fp, track_pos, SEEK_SET));
 
     size_t idx = 0;
     do {
-        size_t ct = fwrite(buf+idx, 1, expected-idx, disk6.disk[disk6.drive].fp);
+        size_t ct = fwrite(buf+idx, 1, expected-idx, disk6.disk[drive].fp);
         if (UNLIKELY(ct == 0)) {
-            if (ferror(disk6.disk[disk6.drive].fp)) {
+            if (ferror(disk6.disk[drive].fp)) {
                 // hopefully a transient error ...
                 if (errno == EINTR || errno == EAGAIN || errno == EWOULDBLOCK) {
                     usleep(10);
                     continue;
                 } else {
-                    ERRLOG("OOPS, fatal error reading disk image %s at phase %d", disk6.disk[disk6.drive].file_name,  disk6.disk[disk6.drive].phase);
+                    ERRLOG("OOPS, fatal error reading disk image %s at phase %d", disk6.disk[drive].file_name,  disk6.disk[drive].phase);
                     break;
                 }
             } else {
-                ERRLOG("OOPS, EOF attemping to read disk image %s at phase %d", disk6.disk[disk6.drive].file_name,  disk6.disk[disk6.drive].phase);
+                ERRLOG("OOPS, EOF attemping to read disk image %s at phase %d", disk6.disk[drive].file_name,  disk6.disk[drive].phase);
                 break;
             }
         }
@@ -516,9 +515,9 @@ static bool save_track_data(void) {
         assert(idx < expected && "the world is not sane");
     } while (1);
 
-    TEMP_FAILURE_RETRY(fflush(disk6.disk[disk6.drive].fp));
+    TEMP_FAILURE_RETRY(fflush(disk6.disk[drive].fp));
 
-    disk6.disk[disk6.drive].track_dirty = false;
+    disk6.disk[drive].track_dirty = false;
     return true;
 }
 
@@ -535,16 +534,18 @@ GLUE_C_READ(disk_read_write_byte)
         }
 
         if (!disk6.disk[disk6.drive].track_valid) {
-            if (!load_track_data()) {
+            if (!load_track_data(disk6.drive, disk6.disk[disk6.drive].track_image)) {
                 ERRLOG("OOPS, problem loading track data");
                 break;
             }
+            disk6.disk[disk6.drive].track_valid = true;
+            disk6.disk[disk6.drive].run_byte = 0;
         }
 
         if (disk6.ddrw) {
             if (disk6.disk[disk6.drive].is_protected) {
                 value = 0x00;
-                break;           /* Do not write if diskette is write protected */
+                break; // Do not write if diskette is write protected
             }
 
             if (disk6.disk_byte < 0x96) {
@@ -640,7 +641,7 @@ GLUE_C_READ(disk_read_phase)
 
     if (direction) {
         if (disk6.disk[disk6.drive].track_dirty) {
-            save_track_data();
+            save_track_data(disk6.disk[disk6.drive].track_image, disk6.drive);
         }
         disk6.disk[disk6.drive].track_valid = false;
         disk6.disk[disk6.drive].phase += direction;
@@ -754,9 +755,8 @@ const char *disk6_eject(int drive) {
 
     const char *err = NULL;
 
-    disk6.disk[drive].nibblized = 0;
     if (disk6.disk[drive].fp) {
-        TEMP_FAILURE_RETRY(fflush(disk6.disk[drive].fp));
+        disk6_flush(drive);
         TEMP_FAILURE_RETRY(fclose(disk6.disk[drive].fp));
 
         // foo.dsk -> foo.dsk.gz
@@ -766,26 +766,21 @@ const char *disk6_eject(int drive) {
         } else {
             unlink(disk6.disk[drive].file_name);
         }
-        FREE(disk6.disk[drive].file_name);
-
-        memset(&disk6.disk[drive], 0x0, sizeof(disk6.disk[drive]));
     }
+
+    FREE(disk6.disk[drive].file_name);
+    memset(&disk6.disk[drive], 0x0, sizeof(disk6.disk[drive]));
 
     return err;
 }
 
 const char *disk6_insert(int drive, const char * const raw_file_name, int readonly) {
 
-    if (disk6.disk[drive].fp) {
-        disk6_eject(drive);
-    }
+    disk6_eject(drive);
 
     disk6.disk[drive].file_name = strdup(raw_file_name);
-    disk6.disk[drive].track_valid = false;
-    disk6.disk[drive].track_width = 0;
-    disk6.disk[drive].run_byte = 0;
     stepper_phases = 0;
-    
+
     int expected = NIB_SIZE;
     disk6.disk[drive].nibblized = true;
     if (!is_nib(disk6.disk[drive].file_name)) {
@@ -796,7 +791,7 @@ const char *disk6_insert(int drive, const char * const raw_file_name, int readon
             disk6.disk[drive].skew_table = skew_table_6_po;
         }
     }
-    
+
     char *err = NULL;
     do {
         if (is_gz(disk6.disk[drive].file_name)) {
@@ -838,6 +833,7 @@ const char *disk6_insert(int drive, const char * const raw_file_name, int readon
             break;
         }
 
+        disk6.disk[drive].phase = 0;
     } while (0);
 
     if (err) {
@@ -848,7 +844,11 @@ const char *disk6_insert(int drive, const char * const raw_file_name, int readon
 }
 
 void disk6_flush(int drive) {
-    // TODO ...
+    if (disk6.disk[drive].track_dirty) {
+        ERRLOG("FLUSING WHEN DIRTY?!");
+    }
+
+    TEMP_FAILURE_RETRY(fflush(disk6.disk[drive].fp));
 }
 
 #if DISK_TRACING
