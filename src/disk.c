@@ -412,27 +412,50 @@ static void denibblize_track(const uint8_t * const src, int drive, uint8_t * con
 static bool load_track_data(void) {
     SCOPE_TRACE_DISK("load_track_data");
 
+    size_t expected = 0;
+    uint8_t *buf = NULL;
     if (disk6.disk[disk6.drive].nibblized) {
         // .nib image
-        int track_pos = NIB_TRACK_SIZE * (disk6.disk[disk6.drive].phase >> 1);
-        fseek(disk6.disk[disk6.drive].fp, track_pos, SEEK_SET);
-
-        if (fread(disk6.disk[disk6.drive].track_image, 1, NIB_TRACK_SIZE, disk6.disk[disk6.drive].fp) != NIB_TRACK_SIZE) {
-            ERRLOG("nib image corrupted ...");
-            return false;
-        }
-        disk6.disk[disk6.drive].track_width = NIB_TRACK_SIZE;
+        expected = NIB_TRACK_SIZE;
+        buf = disk6.disk[disk6.drive].track_image;
+        disk6.disk[disk6.drive].track_width = expected;
     } else {
         // .dsk, .do, .po images
-        int track_pos = DSK_TRACK_SIZE * (disk6.disk[disk6.drive].phase >> 1);
-        fseek(disk6.disk[disk6.drive].fp, track_pos, SEEK_SET);
+        expected = DSK_TRACK_SIZE;
+        uint8_t _buf[DSK_TRACK_SIZE] = { 0 };
+        buf = _buf; // !!!
+    }
 
-        uint8_t buf[DSK_TRACK_SIZE];
-        if (fread(buf, 1, DSK_TRACK_SIZE, disk6.disk[disk6.drive].fp) != DSK_TRACK_SIZE) {
-            ERRLOG("dsk image corrupted ...");
-            return false;
+    const long track_pos = expected * (disk6.disk[disk6.drive].phase >> 1);
+    TEMP_FAILURE_RETRY(fseek(disk6.disk[disk6.drive].fp, track_pos, SEEK_SET));
+
+    size_t idx = 0;
+    do {
+        size_t ct = fread(buf+idx, 1, expected-idx, disk6.disk[disk6.drive].fp);
+        if (UNLIKELY(ct == 0)) {
+            if (ferror(disk6.disk[disk6.drive].fp)) {
+                // hopefully a transient error ...
+                if (errno == EINTR || errno == EAGAIN || errno == EWOULDBLOCK) {
+                    usleep(10);
+                    continue;
+                } else {
+                    ERRLOG("OOPS, fatal error reading disk image %s at phase %d", disk6.disk[disk6.drive].file_name,  disk6.disk[disk6.drive].phase);
+                    break;
+                }
+            } else {
+                ERRLOG("OOPS, EOF attemping to read disk image %s at phase %d", disk6.disk[disk6.drive].file_name,  disk6.disk[disk6.drive].phase);
+                break;
+            }
         }
+        idx += ct;
 
+        if (LIKELY(idx == expected)) {
+            break;
+        }
+        assert(idx < expected && "the world is not sane");
+    } while (1);
+
+    if (!disk6.disk[disk6.drive].nibblized) {
         disk6.disk[disk6.drive].track_width = nibblize_track(buf, disk6.drive, disk6.disk[disk6.drive].track_image);
         if (disk6.disk[disk6.drive].track_width != NI2_TRACK_SIZE) {
 #if CONFORMANT_TRACKS
