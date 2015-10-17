@@ -785,7 +785,6 @@ const char *disk6_insert(int drive, const char * const raw_file_name, int readon
         fseek(disk6.disk[drive].fp, PHASE_BYTES * disk6.disk[drive].phase, SEEK_SET);
     }
 
-    disk6.disk[drive].sector = 0;
     disk6.disk[drive].track_valid = false;
     disk6.disk[drive].track_width = 0;
     disk6.disk[drive].run_byte = 0;

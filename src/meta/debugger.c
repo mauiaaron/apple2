@@ -1068,19 +1068,6 @@ void show_disk_info() {
     sprintf(second_buf[i++]+off, "phase %d", disk6.disk[1].phase);
 
     memset(second_buf[i], ' ', BUF_X);
-    if (!disk6.disk[0].nibblized)
-    {
-        *(second_buf[i] + sprintf(second_buf[i], "sector %d", disk6.disk[0].sector)) = ' ';
-        if (disk6.disk[1].nibblized)
-        {
-            ++i;
-        }
-    }
-
-    if (!disk6.disk[1].nibblized)
-    {
-        sprintf(second_buf[i++]+off, "sector %d", disk6.disk[1].sector);
-    }
 
     num_buffer_lines = i;
 }
