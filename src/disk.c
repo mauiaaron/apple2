@@ -461,8 +461,8 @@ static size_t load_track_data(int drive, uint8_t * const out) {
 #if CONFORMANT_TRACKS
         if (disk6.disk[drive].track_width != NI2_TRACK_SIZE) {
             ERRLOG("Invalid dsk image creation...");
+            expected = 0;
         }
-        expected = 0;
 #endif
     }
 
@@ -534,6 +534,7 @@ GLUE_C_READ(disk_read_write_byte)
         }
 
         if (!disk6.disk[disk6.drive].track_valid) {
+            assert(!disk6.disk[disk6.drive].track_dirty);
             if (!load_track_data(disk6.drive, disk6.disk[disk6.drive].track_image)) {
                 ERRLOG("OOPS, problem loading track data");
                 break;
@@ -720,6 +721,9 @@ GLUE_C_WRITE(disk_write_latch)
 
 void disk6_init(void) {
 
+    disk6_flush(0);
+    disk6_flush(1);
+
     // load Disk II ROM
     memcpy(apple_ii_64k[0] + 0xC600, slot6_rom, 0x100);
 
@@ -844,8 +848,10 @@ const char *disk6_insert(int drive, const char * const raw_file_name, int readon
 }
 
 void disk6_flush(int drive) {
+
     if (disk6.disk[drive].track_dirty) {
-        ERRLOG("FLUSING WHEN DIRTY?!");
+        LOG("WARNING : flushing previous session for drive (%d)...", drive+1);
+        save_track_data(disk6.disk[drive].track_image, drive);
     }
 
     TEMP_FAILURE_RETRY(fflush(disk6.disk[drive].fp));
