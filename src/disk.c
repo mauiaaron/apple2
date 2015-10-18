@@ -29,6 +29,9 @@ extern uint8_t slot6_rom[256];
 
 drive_t disk6;
 
+static uint8_t disk_a[NIB_SIZE] = { 0 };
+static uint8_t disk_b[NIB_SIZE] = { 0 };
+
 static int stepper_phases = 0; // state bits for stepper magnet phases 0-3
 static int skew_table_6_po[16] = { 0x00,0x08,0x01,0x09,0x02,0x0A,0x03,0x0B, 0x04,0x0C,0x05,0x0D,0x06,0x0E,0x07,0x0F }; // ProDOS order
 static int skew_table_6_do[16] = { 0x00,0x07,0x0E,0x06,0x0D,0x05,0x0C,0x04, 0x0B,0x03,0x0A,0x02,0x09,0x01,0x08,0x0F }; // DOS order
@@ -410,6 +413,7 @@ static void denibblize_track(const uint8_t * const src, int drive, uint8_t * con
             ++offset;
             if (offset >= disk6.disk[drive].track_width) {
                 offset = 0;
+                LOG("WARNING : wrapping trackimage ... trk:%d sct:%d [0]:0x%02X", (disk6.disk[drive].phase >> 1), sector, trackimage[offset]);
             }
         }
         assert(sector >= 0 && sector < 16 && "invalid previous nibblization");
@@ -545,14 +549,21 @@ GLUE_C_READ(disk_read_write_byte)
 
         if (!disk6.disk[disk6.drive].track_valid) {
             assert(!disk6.disk[disk6.drive].track_dirty);
-            if (!load_track_data(disk6.drive, disk6.disk[disk6.drive].track_image)) {
-                ERRLOG("OOPS, problem loading track data");
+            // TODO FIXME ... methinks we shouldn't need to reload, but :
+            //  * testing shows different intermediate results (SIXBITNIBS, etc)
+            //  * could be instability between the {de,}nibblize routines
+            const uintptr_t niboff = NIB_TRACK_SIZE * (disk6.disk[disk6.drive].phase >> 1);
+            size_t track_width = load_track_data(disk6.drive, disk6.disk[disk6.drive].whole_image+niboff);
+            if (track_width != disk6.disk[disk6.drive].track_width) {
+                ////ERRLOG_THROTTLE("OOPS, problem loading track data");
                 break;
             }
             disk6.disk[disk6.drive].track_valid = true;
             disk6.disk[disk6.drive].run_byte = 0;
         }
 
+        uintptr_t track_idx = NIB_TRACK_SIZE * (disk6.disk[disk6.drive].phase >> 1);
+        track_idx += disk6.disk[disk6.drive].run_byte;
         if (disk6.ddrw) {
             if (disk6.disk[disk6.drive].is_protected) {
                 value = 0x00;
@@ -570,7 +581,7 @@ GLUE_C_READ(disk_read_write_byte)
                 fprintf(test_write_fp, "%02X", disk6.disk_byte);
             }
 #endif
-            disk6.disk[disk6.drive].track_image[disk6.disk[disk6.drive].run_byte] = disk6.disk_byte;
+            disk6.disk[disk6.drive].whole_image[track_idx] = disk6.disk_byte;
             disk6.disk[disk6.drive].track_dirty = true;
         } else {
 
@@ -584,7 +595,7 @@ GLUE_C_READ(disk_read_write_byte)
                 }
             }
 
-            value = disk6.disk[disk6.drive].track_image[disk6.disk[disk6.drive].run_byte];
+            value = disk6.disk[disk6.drive].whole_image[track_idx];
 #if DISK_TRACING
             if (test_read_fp) {
                 fprintf(test_read_fp, "%02X", value);
@@ -652,7 +663,8 @@ GLUE_C_READ(disk_read_phase)
 
     if (direction) {
         if (disk6.disk[disk6.drive].track_dirty) {
-            save_track_data(disk6.disk[disk6.drive].track_image, disk6.drive);
+            const uintptr_t niboff = NIB_TRACK_SIZE * (disk6.disk[disk6.drive].phase >> 1);
+            save_track_data(disk6.disk[disk6.drive].whole_image+niboff, disk6.drive);
         }
         disk6.disk[disk6.drive].track_valid = false;
         disk6.disk[disk6.drive].phase += direction;
@@ -759,6 +771,7 @@ void disk6_init(void) {
 
     disk6.disk[0].phase = disk6.disk[1].phase = 0;
     disk6.disk[0].track_valid = disk6.disk[1].track_valid = 0;
+    disk6.disk[0].track_dirty = disk6.disk[1].track_dirty = 0;
     disk6.motor_time = (struct timespec){ 0 };
     disk6.motor_off = 1;
     disk6.drive = 0;
@@ -847,6 +860,39 @@ const char *disk6_insert(int drive, const char * const raw_file_name, int readon
             break;
         }
 
+        // read entire disk image into memory
+        disk6.disk[drive].whole_image = (drive==0) ? &disk_a[0] : &disk_b[0];
+        disk6.disk[drive].track_width = 0;
+        if (disk6.disk[drive].nibblized) {
+            disk6.disk[drive].track_width = NIB_TRACK_SIZE;
+        }
+
+        for (unsigned int trk=0, off=0; trk<NUM_TRACKS; trk++, off+=NIB_TRACK_SIZE) {
+            disk6.disk[drive].phase = (trk<<1); // HACK : load_track_data()/nibblize_track() expects this set properly
+            size_t track_width = load_track_data(drive, disk6.disk[drive].whole_image+off);
+            if (disk6.disk[drive].nibblized) {
+                assert(track_width == NIB_TRACK_SIZE);
+            } else {
+                assert(track_width <= NIB_TRACK_SIZE);
+#if CONFORMANT_TRACKS
+                if (track_width != NI2_TRACK_SIZE) {
+                    ERRLOG("Invalid dsk image creation...");
+                }
+#endif
+                if (!disk6.disk[drive].track_width) {
+                    disk6.disk[drive].track_width = track_width;
+                } else {
+                    assert((disk6.disk[drive].track_width == track_width) && "track width should match for all tracks");
+                }
+            }
+        }
+
+        // close disk image file if readonly
+        if (readonly) {
+#warning TODO FIXME : close the disk image file here and refactor to support it (checks for .fp == NULL are invalid) ...
+            // ...
+        }
+
         disk6.disk[drive].phase = 0;
     } while (0);
 
@@ -861,7 +907,8 @@ void disk6_flush(int drive) {
 
     if (disk6.disk[drive].track_dirty) {
         LOG("WARNING : flushing previous session for drive (%d)...", drive+1);
-        save_track_data(disk6.disk[drive].track_image, drive);
+        const uintptr_t niboff = NIB_TRACK_SIZE * (disk6.disk[drive].phase >> 1);
+        save_track_data(disk6.disk[drive].whole_image+niboff, drive);
     }
 
     TEMP_FAILURE_RETRY(fflush(disk6.disk[drive].fp));

@@ -52,8 +52,9 @@
 #define _GZLEN (sizeof(DISK_EXT_GZ)-1)
 
 typedef struct diskette_t {
-    uint8_t track_image[NIB_TRACK_SIZE];
     char *file_name;
+    FILE *fp;
+    uint8_t *whole_image;
     bool nibblized;
     bool is_protected;
     bool track_valid;
@@ -62,7 +63,6 @@ typedef struct diskette_t {
     long track_width;
     int phase;
     int run_byte;
-    FILE *fp;
 } diskette_t;
 
 typedef struct drive_t {

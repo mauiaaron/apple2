@@ -624,12 +624,28 @@ TEST test_disk_bytes_savehello_po() {
 
 #define NOSPACE_SHA1 "2EA4D4B9F1C6797E476CD0FE59970CC243263B16"
 #define EXPECTED_OOS_DSK_SHA "D5C5A3FFB43F3C55E1C9E4ABD8580322415E9CE0"
+#if CONFORMANT_TRACKS
+#   define EXPECTED_OOS_DSK_TRACE_FILE_SIZE 4386397
+#   define EXPECTED_OOS_DSK_TRACE_SHA "2451ED08296637220614B1DE2C5AE11AB97ED173"
+#else
+#   define EXPECTED_OOS_DSK_TRACE_FILE_SIZE 4386354
+#   define EXPECTED_OOS_DSK_TRACE_SHA "FB1BFF7D1535D30810EED9FD1D98CC054FB6FB1A"
+#endif
 TEST test_outofspace_dsk() {
     test_setup_boot_disk(BLANK_DSK, 0);
     BOOT_TO_DOS();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
     ASSERT(apple_ii_64k[0][TESTOUT_ADDR]    == 0x00);
+
+    srandom(0);
+    const char *homedir = HOMEDIR;
+    char *disk = NULL;
+    asprintf(&disk, "%s/a2_oos_dsk_test.txt", homedir);
+    if (disk) {
+        unlink(disk);
+        c_begin_disk_trace_6(NULL, disk);
+    }
 
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x0;
     EAT_UP_DISK_SPACE();
@@ -639,6 +655,34 @@ TEST test_outofspace_dsk() {
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
     ASSERT_SHA(NOSPACE_SHA1);
+
+    c_end_disk_trace_6();
+
+    do {
+        uint8_t md[SHA_DIGEST_LENGTH];
+        char mdstr0[(SHA_DIGEST_LENGTH*2)+1];
+
+        FILE *fp = fopen(disk, "r");
+
+        fseek(fp, 0, SEEK_END);
+        long expectedSize = ftell(fp);
+        ASSERT(expectedSize == EXPECTED_OOS_DSK_TRACE_FILE_SIZE);
+        fseek(fp, 0, SEEK_SET);
+
+        unsigned char *buf = malloc(EXPECTED_OOS_DSK_TRACE_FILE_SIZE);
+        if (fread(buf, 1, EXPECTED_OOS_DSK_TRACE_FILE_SIZE, fp) != EXPECTED_OOS_DSK_TRACE_FILE_SIZE) {
+            ASSERT(false);
+        }
+        fclose(fp); fp = NULL;
+        SHA1(buf, EXPECTED_OOS_DSK_TRACE_FILE_SIZE, md);
+        FREE(buf);
+
+        sha1_to_str(md, mdstr0);
+        ASSERT(strcmp(mdstr0, EXPECTED_OOS_DSK_TRACE_SHA) == 0);
+    } while(0);
+
+    unlink(disk);
+    FREE(disk);
 
     REBOOT_TO_DOS();
     c_debugger_go();
