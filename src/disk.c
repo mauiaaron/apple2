@@ -20,6 +20,8 @@
 
 #include "common.h"
 
+#include <sys/mman.h>
+
 #if DISK_TRACING
 static FILE *test_read_fp = NULL;
 static FILE *test_write_fp = NULL;
@@ -76,7 +78,14 @@ static uint8_t translate_table_6[0x40] = {
 static uint8_t rev_translate_table_6[0x80] = { 0x01 };
 
 __attribute__((constructor(CTOR_PRIORITY_LATE)))
-static void _initialize_reverse_translate(void) {
+static void _init_disk6(void) {
+    LOG("Disk ][ emulation module early setup");
+    memset(&disk6, 0x0, sizeof(disk6));
+    disk6.disk[0].fd = -1;
+    disk6.disk[1].fd = -1;
+    disk6.disk[0].mmap_image = MAP_FAILED;
+    disk6.disk[1].mmap_image = MAP_FAILED;
+
     for (unsigned int i=0; i<0x40; i++) {
         rev_translate_table_6[translate_table_6[i]-0x80] = i << 2;
     }
@@ -423,116 +432,52 @@ static void denibblize_track(const uint8_t * const src, int drive, uint8_t * con
     }
 }
 
-static size_t load_track_data(int drive, uint8_t * const out) {
+static size_t load_track_data(int drive) {
     SCOPE_TRACE_DISK("load_track_data");
 
     size_t expected = 0;
-    uint8_t *buf = NULL;
+
     if (disk6.disk[drive].nibblized) {
-        // .nib image
         expected = NIB_TRACK_SIZE;
-        buf = out;
-        disk6.disk[disk6.drive].track_width = expected;
     } else {
         // .dsk, .do, .po images
-        expected = DSK_TRACK_SIZE;
-        uint8_t _buf[DSK_TRACK_SIZE] = { 0 };
-        buf = _buf; // !!!
-    }
-
-    const long track_pos = expected * (disk6.disk[drive].phase >> 1);
-    TEMP_FAILURE_RETRY(fseek(disk6.disk[drive].fp, track_pos, SEEK_SET));
-
-    size_t idx = 0;
-    do {
-        size_t ct = fread(buf+idx, 1, expected-idx, disk6.disk[drive].fp);
-        if (UNLIKELY(ct == 0)) {
-            if (ferror(disk6.disk[drive].fp)) {
-                // hopefully a transient error ...
-                if (errno == EINTR || errno == EAGAIN || errno == EWOULDBLOCK) {
-                    usleep(10);
-                    continue;
-                } else {
-                    ERRLOG("OOPS, fatal error reading disk image %s at phase %d", disk6.disk[drive].file_name,  disk6.disk[drive].phase);
-                    break;
-                }
-            } else {
-                ERRLOG("OOPS, EOF attemping to read disk image %s at phase %d", disk6.disk[drive].file_name,  disk6.disk[drive].phase);
-                break;
-            }
-        }
-        idx += ct;
-
-        if (LIKELY(idx == expected)) {
-            break;
-        }
-        assert(idx < expected && "the world is not sane");
-    } while (1);
-
-    if (!disk6.disk[drive].nibblized) {
-        disk6.disk[disk6.drive].track_width = nibblize_track(buf, drive, out);
-        expected = disk6.disk[disk6.drive].track_width;
-#if CONFORMANT_TRACKS
-        if (disk6.disk[drive].track_width != NI2_TRACK_SIZE) {
-            ERRLOG("Invalid dsk image creation...");
-            expected = 0;
-        }
-#endif
+        unsigned int trk = (disk6.disk[drive].phase >> 1);
+        uintptr_t dskoff = DSK_TRACK_SIZE * trk;
+        uintptr_t niboff = NIB_TRACK_SIZE * trk;
+        expected = nibblize_track(disk6.disk[drive].mmap_image+dskoff, drive, disk6.disk[drive].whole_image+niboff);
     }
 
     return expected;
 }
 
-static bool save_track_data(const uint8_t * const src, int drive) {
+static bool save_track_data(int drive) {
     SCOPE_TRACE_DISK("save_track_data");
 
-    size_t expected = 0;
-    const uint8_t *buf = NULL;
+    unsigned int trk = (disk6.disk[drive].phase >> 1);
+    uintptr_t niboff = NIB_TRACK_SIZE * trk;
+
     if (disk6.disk[drive].nibblized) {
-        // .nib image
-        expected = NIB_TRACK_SIZE;
-        buf = src;
+        /*
+        int ret = -1;
+        TEMP_FAILURE_RETRY(ret = msync(disk6.disk[drive].mmap_image+niboff, NIB_TRACK_SIZE, MS_SYNC));
+        if (ret) {
+            ERRLOG("Error syncing file %s", disk6.disk[drive].file_name);
+        }
+        */
     } else {
         // .dsk, .do, .po images
-        expected = DSK_TRACK_SIZE;
-        uint8_t _buf[DSK_TRACK_SIZE] = { 0 };
-        denibblize_track(src, drive, _buf);
-        buf = _buf; // !!!
+        uintptr_t dskoff = DSK_TRACK_SIZE * trk;
+        denibblize_track(disk6.disk[drive].whole_image+niboff, drive, disk6.disk[drive].mmap_image+dskoff);
+        /*
+        int ret = -1;
+        TEMP_FAILURE_RETRY(ret = msync(disk6.disk[drive].mmap_image+dskoff, DSK_TRACK_SIZE, MS_SYNC));
+        if (ret) {
+            ERRLOG("Error syncing file %s", disk6.disk[drive].file_name);
+        }
+        */
     }
 
-    const long track_pos = expected * (disk6.disk[disk6.drive].phase >> 1);
-    TEMP_FAILURE_RETRY(fseek(disk6.disk[drive].fp, track_pos, SEEK_SET));
-
-    size_t idx = 0;
-    do {
-        size_t ct = fwrite(buf+idx, 1, expected-idx, disk6.disk[drive].fp);
-        if (UNLIKELY(ct == 0)) {
-            if (ferror(disk6.disk[drive].fp)) {
-                // hopefully a transient error ...
-                if (errno == EINTR || errno == EAGAIN || errno == EWOULDBLOCK) {
-                    usleep(10);
-                    continue;
-                } else {
-                    ERRLOG("OOPS, fatal error reading disk image %s at phase %d", disk6.disk[drive].file_name,  disk6.disk[drive].phase);
-                    break;
-                }
-            } else {
-                ERRLOG("OOPS, EOF attemping to read disk image %s at phase %d", disk6.disk[drive].file_name,  disk6.disk[drive].phase);
-                break;
-            }
-        }
-        idx += ct;
-
-        if (LIKELY(idx == expected)) {
-            break;
-        }
-        assert(idx < expected && "the world is not sane");
-    } while (1);
-
-    TEMP_FAILURE_RETRY(fflush(disk6.disk[drive].fp));
-
     disk6.disk[drive].track_dirty = false;
-    return true;
 }
 
 // ----------------------------------------------------------------------------
@@ -542,7 +487,7 @@ GLUE_C_READ(disk_read_write_byte)
 {
     uint8_t value = 0x00;
     do {
-        if (disk6.disk[disk6.drive].fp == NULL) {
+        if (disk6.disk[disk6.drive].fd < 0) {
             ////ERRLOG_THROTTLE("OOPS, attempt to read byte from NULL image in drive (%d)", disk6.drive+1);
             break;
         }
@@ -553,7 +498,7 @@ GLUE_C_READ(disk_read_write_byte)
             //  * testing shows different intermediate results (SIXBITNIBS, etc)
             //  * could be instability between the {de,}nibblize routines
             const uintptr_t niboff = NIB_TRACK_SIZE * (disk6.disk[disk6.drive].phase >> 1);
-            size_t track_width = load_track_data(disk6.drive, disk6.disk[disk6.drive].whole_image+niboff);
+            size_t track_width = load_track_data(disk6.drive);
             if (track_width != disk6.disk[disk6.drive].track_width) {
                 ////ERRLOG_THROTTLE("OOPS, problem loading track data");
                 break;
@@ -581,6 +526,7 @@ GLUE_C_READ(disk_read_write_byte)
                 fprintf(test_write_fp, "%02X", disk6.disk_byte);
             }
 #endif
+
             disk6.disk[disk6.drive].whole_image[track_idx] = disk6.disk_byte;
             disk6.disk[disk6.drive].track_dirty = true;
         } else {
@@ -663,8 +609,7 @@ GLUE_C_READ(disk_read_phase)
 
     if (direction) {
         if (disk6.disk[disk6.drive].track_dirty) {
-            const uintptr_t niboff = NIB_TRACK_SIZE * (disk6.disk[disk6.drive].phase >> 1);
-            save_track_data(disk6.disk[disk6.drive].whole_image+niboff, disk6.drive);
+            save_track_data(disk6.drive);
         }
         disk6.disk[disk6.drive].track_valid = false;
         disk6.disk[disk6.drive].phase += direction;
@@ -782,9 +727,24 @@ const char *disk6_eject(int drive) {
 
     const char *err = NULL;
 
-    if (disk6.disk[drive].fp) {
+    if (disk6.disk[drive].fd > 0) {
         disk6_flush(drive);
-        TEMP_FAILURE_RETRY(fclose(disk6.disk[drive].fp));
+
+        int ret = -1;
+        TEMP_FAILURE_RETRY(ret = munmap(disk6.disk[drive].mmap_image, disk6.disk[drive].whole_len));
+        if (ret) {
+            ERRLOG("Error munmap()ping file %s", disk6.disk[drive].file_name);
+        }
+
+        TEMP_FAILURE_RETRY(ret = fsync(disk6.disk[drive].fd));
+        if (ret) {
+            ERRLOG("Error fsync()ing file %s", disk6.disk[drive].file_name);
+        }
+
+        TEMP_FAILURE_RETRY(ret = close(disk6.disk[drive].fd));
+        if (ret) {
+            ERRLOG("Error close()ing file %s", disk6.disk[drive].file_name);
+        }
 
         // foo.dsk -> foo.dsk.gz
         err = zlib_deflate(disk6.disk[drive].file_name, is_nib(disk6.disk[drive].file_name) ? NIB_SIZE : DSK_SIZE);
@@ -797,6 +757,10 @@ const char *disk6_eject(int drive) {
 
     FREE(disk6.disk[drive].file_name);
     memset(&disk6.disk[drive], 0x0, sizeof(disk6.disk[drive]));
+
+    disk6.disk[drive].fd = -1;
+    disk6.disk[drive].whole_len = -1;
+    disk6.disk[drive].mmap_image = MAP_FAILED;
 
     return err;
 }
@@ -845,51 +809,65 @@ const char *disk6_insert(int drive, const char * const raw_file_name, int readon
             err = ERR_IMAGE_NOT_EXPECTED_SIZE;
             break;
         }
+        disk6.disk[drive].whole_len = expected;
 
         // open image file
-        TEMP_FAILURE_RETRY_FOPEN(disk6.disk[drive].fp = fopen(disk6.disk[drive].file_name, readonly ? "r" : "r+"));
-        if (!disk6.disk[drive].fp && !readonly) {
+        TEMP_FAILURE_RETRY(disk6.disk[drive].fd = open(disk6.disk[drive].file_name, readonly ? O_RDONLY : O_RDWR));
+        if (disk6.disk[drive].fd < 0 && !readonly) {
             ERRLOG("OOPS, could not open %s read/write, will attempt to open readonly ...", disk6.disk[drive].file_name);
             readonly = true;
-            TEMP_FAILURE_RETRY_FOPEN(disk6.disk[drive].fp = fopen(disk6.disk[drive].file_name, "r"));
+            TEMP_FAILURE_RETRY(disk6.disk[drive].fd = open(disk6.disk[drive].file_name, O_RDONLY));
         }
         disk6.disk[drive].is_protected = readonly;
-        if (!disk6.disk[drive].fp) {
+        if (disk6.disk[drive].fd < 0) {
             ERRLOG("OOPS, could not open %s", disk6.disk[drive].file_name);
             err = ERR_CANNOT_OPEN;
             break;
         }
 
-        // read entire disk image into memory
-        disk6.disk[drive].whole_image = (drive==0) ? &disk_a[0] : &disk_b[0];
-        disk6.disk[drive].track_width = 0;
-        if (disk6.disk[drive].nibblized) {
-            disk6.disk[drive].track_width = NIB_TRACK_SIZE;
+        // mmap image file
+        TEMP_FAILURE_RETRY(disk6.disk[drive].mmap_image = mmap(NULL, disk6.disk[drive].whole_len, (readonly ? PROT_READ : PROT_READ|PROT_WRITE), MAP_SHARED|MAP_FILE, disk6.disk[drive].fd, /*offset:*/0));
+        if (disk6.disk[drive].mmap_image == MAP_FAILED) {
+            ERRLOG("OOPS, could not mmap file %s", disk6.disk[drive].file_name);
+            err = ERR_MMAP_FAILED;
+            break;
         }
 
-        for (unsigned int trk=0, off=0; trk<NUM_TRACKS; trk++, off+=NIB_TRACK_SIZE) {
-            disk6.disk[drive].phase = (trk<<1); // HACK : load_track_data()/nibblize_track() expects this set properly
-            size_t track_width = load_track_data(drive, disk6.disk[drive].whole_image+off);
-            if (disk6.disk[drive].nibblized) {
-                assert(track_width == NIB_TRACK_SIZE);
-            } else {
-                assert(track_width <= NIB_TRACK_SIZE);
-#if CONFORMANT_TRACKS
-                if (track_width != NI2_TRACK_SIZE) {
-                    ERRLOG("Invalid dsk image creation...");
-                }
-#endif
-                if (!disk6.disk[drive].track_width) {
-                    disk6.disk[drive].track_width = track_width;
+        // direct pass-thru to mmap_image (for NIB)
+        disk6.disk[drive].whole_image = disk6.disk[drive].mmap_image;
+        disk6.disk[drive].track_width = NIB_TRACK_SIZE;
+
+        if (!disk6.disk[drive].nibblized) {
+            // DSK/DO/PO require nibblizing on read (and denibblizing on write) ...
+
+            disk6.disk[drive].whole_image = (drive==0) ? &disk_a[0] : &disk_b[0];
+            disk6.disk[drive].track_width = 0;
+
+            for (unsigned int trk=0; trk<NUM_TRACKS; trk++) {
+
+                disk6.disk[drive].phase = (trk<<1); // HACK : load_track_data()/nibblize_track() expects this set properly
+                size_t track_width = load_track_data(drive);
+                if (disk6.disk[drive].nibblized) {
+                    assert(track_width == NIB_TRACK_SIZE);
                 } else {
-                    assert((disk6.disk[drive].track_width == track_width) && "track width should match for all tracks");
+                    assert(track_width <= NIB_TRACK_SIZE);
+#if CONFORMANT_TRACKS
+                    if (track_width != NI2_TRACK_SIZE) {
+                        ERRLOG("Invalid dsk image creation...");
+                    }
+#endif
+                    if (!disk6.disk[drive].track_width) {
+                        disk6.disk[drive].track_width = track_width;
+                    } else {
+                        assert((disk6.disk[drive].track_width == track_width) && "track width should match for all tracks");
+                    }
                 }
             }
         }
 
         // close disk image file if readonly
         if (readonly) {
-#warning TODO FIXME : close the disk image file here and refactor to support it (checks for .fp == NULL are invalid) ...
+#warning TODO FIXME : close the disk image file here and refactor to support it (checks for .fd < 0 are invalid) ...
             // ...
         }
 
@@ -904,14 +882,26 @@ const char *disk6_insert(int drive, const char * const raw_file_name, int readon
 }
 
 void disk6_flush(int drive) {
+    if (disk6.disk[drive].fd < 0) {
+        return;
+    }
+
+    if (disk6.disk[drive].is_protected) {
+        return;
+    }
 
     if (disk6.disk[drive].track_dirty) {
         LOG("WARNING : flushing previous session for drive (%d)...", drive+1);
-        const uintptr_t niboff = NIB_TRACK_SIZE * (disk6.disk[drive].phase >> 1);
-        save_track_data(disk6.disk[drive].whole_image+niboff, drive);
+        save_track_data(drive);
     }
 
-    TEMP_FAILURE_RETRY(fflush(disk6.disk[drive].fp));
+    __sync_synchronize();
+
+    int ret = -1;
+    TEMP_FAILURE_RETRY(ret = msync(disk6.disk[drive].mmap_image, disk6.disk[drive].whole_len, MS_SYNC));
+    if (ret) {
+        ERRLOG("Error syncing file %s", disk6.disk[drive].file_name);
+    }
 }
 
 #if DISK_TRACING

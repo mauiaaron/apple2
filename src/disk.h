@@ -53,7 +53,9 @@
 
 typedef struct diskette_t {
     char *file_name;
-    FILE *fp;
+    int fd;
+    uint8_t *mmap_image;
+    size_t whole_len;
     uint8_t *whole_image;
     bool nibblized;
     bool is_protected;
