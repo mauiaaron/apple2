@@ -130,6 +130,14 @@ static inline bool is_po(const char * const name) {
 #define NUM_SIXBIT_NIBS (0x100 + SIXBIT_EXTRA_BYTES) // 256 + 86 == 342
 
 #if DISK_TRACING
+#define _DISK_TRACE_RAWSRC() \
+    if (test_write_fp) { \
+        fprintf(test_write_fp, "RAWBUF:\n"); \
+        for (unsigned int i=0; i<NUM_SIXBIT_NIBS+1; i++) { \
+            fprintf(test_write_fp, "%02X", src[i]); \
+        } \
+        fprintf(test_write_fp, "\n"); \
+    }
 #define _DISK_TRACE_SIXBITNIBS() \
     if (test_write_fp) { \
         fprintf(test_write_fp, "SIXBITNIBS:\n"); \
@@ -155,6 +163,7 @@ static inline bool is_po(const char * const name) {
         fprintf(test_write_fp, "%s", "\n"); \
     }
 #else
+#define _DISK_TRACE_RAWSRC()
 #define _DISK_TRACE_SIXBITNIBS()
 #define _DISK_TRACE_XORNIBS()
 #define _DISK_TRACE_SECDATA()
@@ -202,6 +211,7 @@ static void nibblize_sector(const uint8_t * const src, uint8_t * const out) {
 static void denibblize_sector(const uint8_t * const src, uint8_t * const out) {
     SCOPE_TRACE_DISK("denibblize_sector");
 
+    _DISK_TRACE_RAWSRC();
     uint8_t work_buf[NUM_SIXBIT_NIBS+1];
 
     // Convert disk bytes into 6-bit bytes
