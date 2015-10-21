@@ -211,6 +211,7 @@ void cpu_pause(void) {
         }
 
         // CPU thread will be paused when it next tries to acquire interface_mutex
+        LOG("PAUSING CPU...");
 #ifdef AUDIO_ENABLED
         if (!emul_reinitialize_audio) {
             emul_pause_audio = true;
@@ -237,6 +238,7 @@ void cpu_resume(void) {
             emul_resume_audio = true;
         }
 #endif
+        LOG("RESUMING CPU...");
         pthread_mutex_unlock(&interface_mutex);
         is_paused = false;
     } while (0);
@@ -281,8 +283,8 @@ static void *cpu_thread(void *dummyptr) {
 
     do
     {
-
 #ifdef AUDIO_ENABLED
+        LOG("CPUTHREAD %d/%d LOCKING FOR MAYBE INITIALIZING AUDIO ...", cpu_thread_id, gettid());
         pthread_mutex_lock(&interface_mutex);
         if (emul_reinitialize_audio) {
             emul_reinitialize_audio = false;
@@ -296,6 +298,7 @@ static void *cpu_thread(void *dummyptr) {
             MB_Initialize();
         }
         pthread_mutex_unlock(&interface_mutex);
+        LOG("UNLOCKING FOR MAYBE INITIALIZING AUDIO ...");
 #endif
 
         if (emul_reinitialize) {

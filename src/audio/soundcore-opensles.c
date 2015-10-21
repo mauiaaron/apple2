@@ -84,7 +84,7 @@ static inline bool _underrun_check_and_manage(SLVoice *voice, OUTPARM unsigned l
             ((readHead >= voice->writeHead) && (readWrapCount == voice->writeWrapCount)) )
     {
         isUnder = true;
-        //LOG("Buffer underrun ...");
+        LOG("Buffer underrun ...");
         voice->writeHead = readHead;
         voice->writeWrapCount = readWrapCount;
     }
