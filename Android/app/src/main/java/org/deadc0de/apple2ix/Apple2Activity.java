@@ -146,9 +146,14 @@ public class Apple2Activity extends Activity {
         // run first-time initializations
         if (!Apple2Preferences.FIRST_TIME_CONFIGURED.booleanValue(this)) {
             Apple2DisksMenu.firstTime(this);
+            Apple2DisksMenu.exposeSymbols(this);
             Apple2Preferences.KeypadPreset.IJKM_SPACE.apply(this);
         }
         Apple2Preferences.FIRST_TIME_CONFIGURED.saveBoolean(this, true);
+        if (BuildConfig.DEBUG) {
+            // always copy new symbols while developing/iterating
+            Apple2DisksMenu.exposeSymbols(this);
+        }
 
         // get device audio parameters for native OpenSLES
         int sampleRate = DevicePropertyCalculator.getRecommendedSampleRate(this);
