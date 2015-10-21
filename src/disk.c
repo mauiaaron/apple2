@@ -516,7 +516,7 @@ GLUE_C_READ(disk_read_write_byte)
             }
 
             if (disk6.disk_byte < 0x96) {
-                ERRLOG("OOPS, attempting to write a non-nibblized byte");
+                ////ERRLOG_THROTTLE("OOPS, attempting to write a non-nibblized byte");
                 value = 0x00;
                 break;
             }
@@ -533,7 +533,7 @@ GLUE_C_READ(disk_read_write_byte)
 
             if (disk6.motor_off) { // ???
                 if (disk6.motor_off > 99) {
-                    ERRLOG("OOPS, potential disk motor issue");
+                    ////ERRLOG_THROTTLE("OOPS, potential disk motor issue");
                     value = 0x00;
                     break;
                 } else {
