@@ -27,7 +27,7 @@
 PROGDIR=`dirname $0`
 PROGDIR=`cd $PROGDIR && pwd -P`
 
-set -x
+#set -x
 
 # Check if absolute NDK path contain space
 #
@@ -610,10 +610,7 @@ adb_var_shell BCFILES run-as $PACKAGE_NAME /system/bin/sh -c "ls lib/*.bc"
 ####fi
 
 if [ "$COMPAT_ABI" = none ] ; then
-    echo "ERROR: The device does not support the application's targetted CPU ABIs!"
-    echo "       Device supports:  $CPU_ABIS"
-    echo "       Package supports: $APP_ABIS"
-    exit 1
+    COMPAT_ABI='armeabi'
 fi
 log "Compatible device ABI: $COMPAT_ABI"
 
