@@ -81,4 +81,8 @@ Android/jni/Android.mk
 Android/local.properties
 Android/.idea/workspace.xml
 Android/.idea/libraries
+Android/.idea/dictionaries
 Android/build
+Android/jni/obj
+Android/obj
+
