@@ -1,16 +1,15 @@
 /*
- * Apple // emulator for Linux: Configuration Interface
+ * Apple // emulator for *ix
+ *
+ * This software package is subject to the GNU General Public License
+ * version 3 or later (your choice) as published by the Free Software
+ * Foundation.
  *
  * Copyright 1994 Alexander Jean-Claude Bottema
  * Copyright 1995 Stephen Lee
  * Copyright 1997, 1998 Aaron Culliney
  * Copyright 1998, 1999, 2000 Michael Deutschmann
- *
- * This software package is subject to the GNU General Public License
- * version 2 or later (your choice) as published by the Free Software
- * Foundation.
- *
- * THERE ARE NO WARRANTIES WHATSOEVER.
+ * Copyright 2013-2015 Aaron Culliney
  *
  */
 
@@ -1406,7 +1405,7 @@ void c_interface_credits()
         "LICENSE                                                                     ",
         "                                                                            ",
         "This Apple //ix emulator source code is subject to the GNU General Public   ",
-        "License version 2 or later (your choice) as published by the Free Software  ",
+        "License version 3 or later (your choice) as published by the Free Software  ",
         "Foundation.  https://fsf.org                                                ",
         "                                                                            ",
         "Emulator source is freely available at https://github.com/mauiaaron/apple2  ",

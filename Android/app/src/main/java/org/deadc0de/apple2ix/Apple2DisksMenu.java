@@ -2,10 +2,10 @@
  * Apple // emulator for *nix
  *
  * This software package is subject to the GNU General Public License
- * version 2 or later (your choice) as published by the Free Software
+ * version 3 or later (your choice) as published by the Free Software
  * Foundation.
  *
- * THERE ARE NO WARRANTIES WHATSOEVER.
+ * Copyright 2015 Aaron Culliney
  *
  */
 

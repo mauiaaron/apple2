@@ -1,3 +1,14 @@
+/*
+ * Apple // emulator for *ix
+ *
+ * This software package is subject to the GNU General Public License
+ * version 3 or later (your choice) as published by the Free Software
+ * Foundation.
+ *
+ * Copyright 2013-2015 Aaron Culliney
+ *
+ */
+
 /* sound.c: Sound support
    Copyright (c) 2000-2007 Russell Marks, Matan Ziv-Av, Philip Kendall,
                            Fredrick Meunier

@@ -1,10 +1,13 @@
-//
-//  EmulatorJoystickCalibrationView.m
-//  Apple2Mac
-//
-//  Created by Aaron Culliney on 11/30/14.
-//  Copyright (c) 2014 deadc0de.org. All rights reserved.
-//
+/*
+ * Apple // emulator for *ix 
+ *
+ * This software package is subject to the GNU General Public License
+ * version 3 or later (your choice) as published by the Free Software
+ * Foundation.
+ *
+ * Copyright 2013-2015 Aaron Culliney
+ *
+ */
 
 #import "EmulatorJoystickCalibrationView.h"
 #import "common.h"

@@ -1,4 +1,15 @@
 /*
+ * Apple // emulator for *ix
+ *
+ * This software package is subject to the GNU General Public License
+ * version 3 or later (your choice) as published by the Free Software
+ * Foundation.
+ *
+ * Copyright 2013-2015 Aaron Culliney
+ *
+ */
+
+/*
 AppleWin : An Apple //e emulator for Windows
 
 Copyright (C) 1994-1996, Michael O'Brien
@@ -33,8 +44,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #define DSBVOLUME_MIN               -10000
 #define DSBVOLUME_MAX               0
 
-
-// Linux port by Aaron Culliney, 2013
 
 // History:
 //

@@ -1,16 +1,13 @@
 /*
- * Apple // emulator for Linux: Main debugger routines
- *
- * Copyright 1997, 1998, 2013 Aaron Culliney
- * Copyright 1998, 1999, 2000 Michael Deutschmann
+ * Apple // emulator for *ix
  *
  * This software package is subject to the GNU General Public License
- * version 2 or later (your choice) as published by the Free Software
+ * version 3 or later (your choice) as published by the Free Software
  * Foundation.
  *
- * THERE ARE NO WARRANTIES WHATSOEVER.
- *
- * Originally added to emulator project in 1997 by Aaron Culliney
+ * Copyright 1997, 1998 Aaron Culliney
+ * Copyright 1998, 1999, 2000 Michael Deutschmann
+ * Copyright 2013-2015 Aaron Culliney
  *
  */
 

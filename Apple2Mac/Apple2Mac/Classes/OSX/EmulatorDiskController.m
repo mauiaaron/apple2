@@ -1,10 +1,13 @@
-//
-//  EmulatorDiskController.m
-//  Apple2Mac
-//
-//  Created by Aaron Culliney on 10/18/14.
-//  Copyright (c) 2014 deadc0de.org. All rights reserved.
-//
+/*
+ * Apple // emulator for *ix
+ *
+ * This software package is subject to the GNU General Public License
+ * version 3 or later (your choice) as published by the Free Software
+ * Foundation.
+ *
+ * Copyright 2014, 2015 Aaron Culliney
+ *
+ */
 
 #import "EmulatorDiskController.h"
 #import "EmulatorPrefsController.h"
