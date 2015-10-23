@@ -137,6 +137,10 @@ public class Apple2DisksMenu implements Apple2MenuView {
         recursivelyCopyAPKAssets(activity, /*from APK directory:*/"symbols",   /*to location:*/new File(sDataDir, "symbols").getAbsolutePath());
     }
 
+    public static void unexposeSymbols(Apple2Activity activity) {
+        recursivelyDelete(new File(sDataDir, "symbols"));
+    }
+
     // ------------------------------------------------------------------------
     // Apple2MenuView interface methods
 
@@ -272,6 +276,17 @@ public class Apple2DisksMenu implements Apple2MenuView {
             pathBuffer.append(File.separator);
         }
         return pathBuffer.toString();
+    }
+
+    private static void recursivelyDelete(File file) {
+        if (file.isDirectory()) {
+            for (File f : file.listFiles()) {
+                recursivelyDelete(f);
+            }
+        }
+        if (!file.delete()) {
+            Log.d(TAG, "Failed to delete file: " + file);
+        }
     }
 
     private static void recursivelyCopyAPKAssets(Apple2Activity activity, String srcFileOrDir, String dstFileOrDir) {

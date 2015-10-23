@@ -187,6 +187,8 @@ public class Apple2CrashHandler {
                     @Override
                     public void run() {
 
+                        Apple2DisksMenu.exposeSymbols(activity);
+
                         final int sampleRate = DevicePropertyCalculator.getRecommendedSampleRate(activity);
                         final int monoBufferSize = DevicePropertyCalculator.getRecommendedBufferSize(activity, /*isStereo:*/false);
                         final int stereoBufferSize = DevicePropertyCalculator.getRecommendedBufferSize(activity, /*isStereo:*/true);
@@ -238,6 +240,8 @@ public class Apple2CrashHandler {
 
                         allCrashData.append(">>>>>>> JAVA CRASH DATA\n");
                         allCrashData.append(javaCrashData);
+
+                        Apple2DisksMenu.unexposeSymbols(activity);
 
                         // send report with all the data
                         _sendEmailToDeveloperWithCrashData(activity, allCrashData);
