@@ -492,13 +492,20 @@ public class Apple2DisksMenu implements Apple2MenuView {
             }
         };
 
+        final String parentDisksDir = disksDir;
+        final boolean parentIsRootPath = isRootPath;
+
         disksList.setAdapter(adapter);
         disksList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, final int position, long id) {
                 if (isDirectory[position]) {
                     Log.d(TAG, "Descending to path : " + fileNames[position]);
-                    pushPathStack(fileNames[position]);
+                    if (parentIsRootPath && !new File(fileNames[position]).isAbsolute()) {
+                        pushPathStack(parentDisksDir + File.separator + fileNames[position]);
+                    } else {
+                        pushPathStack(fileNames[position]);
+                    }
                     dynamicSetup();
                     ListView disksList = (ListView) mDisksView.findViewById(R.id.listView_settings);
                     disksList.postInvalidate();
