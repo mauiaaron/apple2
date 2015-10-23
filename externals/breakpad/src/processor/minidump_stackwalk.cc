@@ -114,9 +114,10 @@ void usage(const char *program_name) {
 
 #if EMBEDDED_STACKWALKER
 extern "C" int stackwalker_main(const char* minidump, const char* symbolsPath, const bool machineReadable) {
-    int argc = 2;
+    int argc = 3;
 
-    const char* args[3] = {
+    const char* args[4] = {
+        "dummy",
         "-m",
         minidump,
         symbolsPath,
