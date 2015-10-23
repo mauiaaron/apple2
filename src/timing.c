@@ -284,7 +284,7 @@ static void *cpu_thread(void *dummyptr) {
     do
     {
 #ifdef AUDIO_ENABLED
-        LOG("CPUTHREAD %d/%d LOCKING FOR MAYBE INITIALIZING AUDIO ...", cpu_thread_id, gettid());
+        LOG("CPUTHREAD %lu LOCKING FOR MAYBE INITIALIZING AUDIO ...", cpu_thread_id);
         pthread_mutex_lock(&interface_mutex);
         if (emul_reinitialize_audio) {
             emul_reinitialize_audio = false;
