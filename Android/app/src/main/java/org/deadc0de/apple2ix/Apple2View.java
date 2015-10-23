@@ -16,6 +16,7 @@
 package org.deadc0de.apple2ix;
 
 import android.graphics.PixelFormat;
+import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.util.Log;
 
@@ -299,6 +300,9 @@ class Apple2View extends GLSurfaceView {
         }
 
         public void onSurfaceChanged(GL10 gl, int width, int height) {
+            Apple2Preferences.GL_VENDOR.saveString(mActivity, GLES20.glGetString(GLES20.GL_VENDOR));
+            Apple2Preferences.GL_RENDERER.saveString(mActivity, GLES20.glGetString(GLES20.GL_RENDERER));
+            Apple2Preferences.GL_VERSION.saveString(mActivity, GLES20.glGetString(GLES20.GL_VERSION));
             Apple2View.this.mActivity.graphicsInitialized(width, height);
         }
 

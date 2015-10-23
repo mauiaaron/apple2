@@ -595,7 +595,41 @@ public enum Apple2Preferences {
         public boolean booleanValue(Apple2Activity activity) {
             return activity.getPreferences(Context.MODE_PRIVATE).getBoolean(toString(), true);
         }
+    },
+    GL_VENDOR {
+        @Override
+        public void load(Apple2Activity activity) {
+            /* ... */
+        }
+
+        @Override
+        public String stringValue(Apple2Activity activity) {
+            return activity.getPreferences(Context.MODE_PRIVATE).getString(toString(), "");
+        }
+    },
+    GL_RENDERER {
+        @Override
+        public void load(Apple2Activity activity) {
+            /* ... */
+        }
+
+        @Override
+        public String stringValue(Apple2Activity activity) {
+            return activity.getPreferences(Context.MODE_PRIVATE).getString(toString(), "");
+        }
+    },
+    GL_VERSION {
+        @Override
+        public void load(Apple2Activity activity) {
+            /* ... */
+        }
+
+        @Override
+        public String stringValue(Apple2Activity activity) {
+            return activity.getPreferences(Context.MODE_PRIVATE).getString(toString(), "");
+        }
     };
+
 
     public enum HiresColor {
         BW,

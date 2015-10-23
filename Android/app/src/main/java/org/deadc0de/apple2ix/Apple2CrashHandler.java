@@ -15,7 +15,6 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
-import android.opengl.GLES20;
 import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
@@ -203,9 +202,9 @@ public class Apple2CrashHandler {
                         allCrashData.append("SAMPLE RATE: ").append(sampleRate).append("\n");
                         allCrashData.append("MONO BUFSIZE: ").append(monoBufferSize).append("\n");
                         allCrashData.append("STEREO BUFSIZE: ").append(stereoBufferSize).append("\n");
-                        allCrashData.append("GPU VENDOR: ").append(GLES20.glGetString(GLES20.GL_VENDOR)).append("\n");
-                        allCrashData.append("GPU RENDERER: ").append(GLES20.glGetString(GLES20.GL_RENDERER)).append("\n");
-                        allCrashData.append("GPU VERSION: ").append(GLES20.glGetString(GLES20.GL_VERSION)).append("\n");
+                        allCrashData.append("GPU VENDOR: ").append(Apple2Preferences.GL_VENDOR.stringValue(activity)).append("\n");
+                        allCrashData.append("GPU RENDERER: ").append(Apple2Preferences.GL_RENDERER.stringValue(activity)).append("\n");
+                        allCrashData.append("GPU VERSION: ").append(Apple2Preferences.GL_VERSION.stringValue(activity)).append("\n");
 
                         File[] nativeCrashes = _nativeCrashFiles(activity);
                         if (nativeCrashes == null) {
