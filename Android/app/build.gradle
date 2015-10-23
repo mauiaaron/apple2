@@ -1,8 +1,8 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 21
-    buildToolsVersion "21.0.0"
+    compileSdkVersion 23
+    buildToolsVersion "21.1.2"
     signingConfigs {
         release {
             storeFile file("release2.keystore")
@@ -26,9 +26,9 @@ android {
     defaultConfig {
         applicationId "org.deadc0de.apple2ix.basic"
         minSdkVersion 10
-        targetSdkVersion 21
+        targetSdkVersion 23
         versionCode 1
-        versionName "0.9.3"
+        versionName "0.9.4"
         ndk {
             moduleName "apple2ix"
         }
@@ -37,5 +37,5 @@ android {
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
-    compile 'com.android.support:appcompat-v7:21.0.0'
+    compile 'com.android.support:appcompat-v7:23.1.0'
 }
