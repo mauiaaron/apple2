@@ -182,14 +182,17 @@ public class Apple2CrashHandler {
                 dialog.dismiss();
 
                 final Button startButton = (Button) activity.findViewById(R.id.startButton);
-                startButton.setEnabled(false);
                 final Button prefsButton = (Button) activity.findViewById(R.id.prefsButton);
-                prefsButton.setEnabled(false);
                 final Button disksButton = (Button) activity.findViewById(R.id.disksButton);
-                disksButton.setEnabled(false);
-
                 final ProgressBar bar = (ProgressBar) activity.findViewById(R.id.crash_progressBar);
-                bar.setVisibility(View.VISIBLE);
+                try {
+                    startButton.setEnabled(false);
+                    prefsButton.setEnabled(false);
+                    disksButton.setEnabled(false);
+                    bar.setVisibility(View.VISIBLE);
+                } catch (NullPointerException npe) {
+                    /* could happen on early lifecycle crashes */
+                }
 
                 new Thread(new Runnable() {
                     @Override
@@ -225,7 +228,9 @@ public class Apple2CrashHandler {
                         activity.runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                bar.setMax(len);
+                                if (bar != null) {
+                                    bar.setMax(len);
+                                }
                             }
                         });
 
@@ -236,7 +241,9 @@ public class Apple2CrashHandler {
                         activity.runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                bar.setProgress(1);
+                                if (bar != null) {
+                                    bar.setProgress(1);
+                                }
                             }
                         });
 
@@ -247,7 +254,11 @@ public class Apple2CrashHandler {
                             Log.d(TAG, "Processing crash : " + crashPath);
 
                             String processedPath = _dumpPath2ProcessedPath(crashPath);
-                            nativeProcessCrash(crashPath, processedPath); // Run Breakpad minidump_stackwalk
+                            try {
+                                nativeProcessCrash(crashPath, processedPath); // Run Breakpad minidump_stackwalk
+                            } catch (UnsatisfiedLinkError ule) {
+                                /* could happen on early lifecycle crashes */
+                            }
 
                             StringBuilder crashData = new StringBuilder();
                             if (!_readFile(new File(processedPath), crashData)) {
@@ -259,7 +270,9 @@ public class Apple2CrashHandler {
                             activity.runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
-                                    bar.setProgress(bar.getProgress()+1);
+                                    if (bar != null) {
+                                        bar.setProgress(bar.getProgress() + 1);
+                                    }
                                 }
                             });
                         }
@@ -278,7 +291,9 @@ public class Apple2CrashHandler {
                         activity.runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                bar.setProgress(bar.getProgress() + 1);
+                                if (bar != null) {
+                                    bar.setProgress(bar.getProgress() + 1);
+                                }
                             }
                         });
 
@@ -286,10 +301,14 @@ public class Apple2CrashHandler {
                         activity.runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                bar.setVisibility(View.INVISIBLE);
-                                startButton.setEnabled(true);
-                                prefsButton.setEnabled(true);
-                                disksButton.setEnabled(true);
+                                try {
+                                    bar.setVisibility(View.INVISIBLE);
+                                    startButton.setEnabled(true);
+                                    prefsButton.setEnabled(true);
+                                    disksButton.setEnabled(true);
+                                } catch (NullPointerException npe) {
+                                    /* could happen on early lifecycle crashes */
+                                }
                             }
                         });
 
