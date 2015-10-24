@@ -17,8 +17,10 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
-import android.os.Handler;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
+import android.widget.ProgressBar;
 
 import org.deadc0de.apple2ix.basic.BuildConfig;
 import org.deadc0de.apple2ix.basic.R;
@@ -165,7 +167,7 @@ public class Apple2CrashHandler {
             }
 
             // remove previous log file
-            _writeTempLogFile(new StringBuilder());
+            _writeTempLogFile(activity, new StringBuilder());
             return;
         }
 
@@ -179,14 +181,21 @@ public class Apple2CrashHandler {
             public void onClick(DialogInterface dialog, int which) {
                 dialog.dismiss();
 
-                // assuming that the actual native processing works quickly ...
+                final Button startButton = (Button) activity.findViewById(R.id.startButton);
+                startButton.setEnabled(false);
+                final Button prefsButton = (Button) activity.findViewById(R.id.prefsButton);
+                prefsButton.setEnabled(false);
+                final Button disksButton = (Button) activity.findViewById(R.id.disksButton);
+                disksButton.setEnabled(false);
 
-                final Handler handler = new Handler();
-                handler.postDelayed(new Runnable() {
+                final ProgressBar bar = (ProgressBar) activity.findViewById(R.id.crash_progressBar);
+                bar.setVisibility(View.VISIBLE);
+
+                new Thread(new Runnable() {
                     @Override
                     public void run() {
 
-                        Apple2DisksMenu.exposeSymbols(activity);
+                        android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_BACKGROUND);
 
                         final int sampleRate = DevicePropertyCalculator.getRecommendedSampleRate(activity);
                         final int monoBufferSize = DevicePropertyCalculator.getRecommendedBufferSize(activity, /*isStereo:*/false);
@@ -211,6 +220,26 @@ public class Apple2CrashHandler {
                             nativeCrashes = new File[0];
                         }
 
+                        final int len = nativeCrashes.length + 1/* maybe Java crash */ + 1/* exposeSymbols */;
+
+                        activity.runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                bar.setMax(len);
+                            }
+                        });
+
+                        if (len > 0) {
+                            Apple2DisksMenu.exposeSymbols(activity);
+                        }
+
+                        activity.runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                bar.setProgress(1);
+                            }
+                        });
+
                         // iteratively process native crashes
                         for (File crash : nativeCrashes) {
 
@@ -226,6 +255,13 @@ public class Apple2CrashHandler {
                             }
                             allCrashData.append(">>>>>>> NATIVE CRASH [").append(crashPath).append("]\n");
                             allCrashData.append(crashData);
+
+                            activity.runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    bar.setProgress(bar.getProgress()+1);
+                                }
+                            });
                         }
 
                         StringBuilder javaCrashData = new StringBuilder();
@@ -239,13 +275,28 @@ public class Apple2CrashHandler {
 
                         allCrashData.append(">>>>>>> JAVA CRASH DATA\n");
                         allCrashData.append(javaCrashData);
+                        activity.runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                bar.setProgress(bar.getProgress() + 1);
+                            }
+                        });
 
                         Apple2DisksMenu.unexposeSymbols(activity);
+                        activity.runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                bar.setVisibility(View.INVISIBLE);
+                                startButton.setEnabled(true);
+                                prefsButton.setEnabled(true);
+                                disksButton.setEnabled(true);
+                            }
+                        });
 
                         // send report with all the data
                         _sendEmailToDeveloperWithCrashData(activity, allCrashData);
                     }
-                }, 0);
+                }).start();
             }
         }).create();
         activity.registerAndShowDialog(crashDialog);
@@ -369,7 +420,7 @@ public class Apple2CrashHandler {
         return attempts < maxAttempts;
     }
 
-    private File _writeTempLogFile(StringBuilder allCrashData) {
+    private File _writeTempLogFile(Apple2Activity activity, StringBuilder allCrashData) {
 
         File allCrashFile = null;
 
@@ -377,10 +428,10 @@ public class Apple2CrashHandler {
         if (storageState.equals(Environment.MEDIA_MOUNTED)) {
             allCrashFile = new File(Environment.getExternalStorageDirectory(), "apple2ix_crash.txt");
         } else {
-            allCrashFile = new File("/data/local/tmp", "apple2ix_crash.txt");
+            allCrashFile = new File(Apple2DisksMenu.getDataDir(activity), "apple2ix_crash.txt");
         }
 
-        Log.d(TAG, "Writing all crashes to temp file : " + allCrashFile);
+        Log.d(TAG, "Writing all crashes to temp file : " + allCrashFile.getAbsolutePath());
         final int maxAttempts = 5;
         int attempts = 0;
         do {
@@ -404,6 +455,10 @@ public class Apple2CrashHandler {
             ++attempts;
         } while (attempts < maxAttempts);
 
+        if (!allCrashFile.setReadable(true, /*ownerOnly:*/false)) {
+            Log.d(TAG, "Oops, could not set all crash data readable!");
+        }
+
         return allCrashFile;
     }
 
@@ -413,7 +468,7 @@ public class Apple2CrashHandler {
         Intent emailIntent = new Intent(Intent.ACTION_SENDTO, Uri.fromParts("mailto", "apple2ix_crash@deadcode.org"/*non-zero variant is correct endpoint at the moment*/, null));
         emailIntent.putExtra(Intent.EXTRA_SUBJECT, "Crasher");
 
-        File allCrashFile = _writeTempLogFile(allCrashData);
+        File allCrashFile = _writeTempLogFile(activity, allCrashData);
         // Putting all the text data into the EXTRA_TEXT appears to trigger android.os.TransactionTooLargeException ...
         //emailIntent.putExtra(Intent.EXTRA_TEXT, allCrashData.toString());
         emailIntent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(allCrashFile));
