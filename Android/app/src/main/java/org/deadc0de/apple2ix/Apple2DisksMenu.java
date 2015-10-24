@@ -57,6 +57,7 @@ public class Apple2DisksMenu implements Apple2MenuView {
     private final ArrayList<String> mPathStack = new ArrayList<String>();
 
     private static File sExternalFilesDir = null;
+    private static File sDownloadFilesDir = null;
     private static boolean sInitializedPath = false;
 
     public Apple2DisksMenu(Apple2Activity activity) {
@@ -91,6 +92,9 @@ public class Apple2DisksMenu implements Apple2MenuView {
             } else {
                 sExternalFilesDir = externalDir;
             }
+        }
+        if (sDownloadFilesDir == null) {
+            sDownloadFilesDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
         }
         return sExternalFilesDir;
     }
@@ -426,16 +430,23 @@ public class Apple2DisksMenu implements Apple2MenuView {
 
         getExternalStorageDirectory();
         final boolean includeExternalStoragePath = (sExternalFilesDir != null && isRootPath);
-        final int offset = includeExternalStoragePath ? 1 : 0;
+        final boolean includeDownloadsPath = (sDownloadFilesDir != null && isRootPath);
+        final int offset = includeExternalStoragePath ? (includeDownloadsPath ? 2 : 1) : (includeDownloadsPath ? 1 : 0);
         final String[] fileNames = new String[files.length + offset];
         final boolean[] isDirectory = new boolean[files.length + offset];
 
+        int idx = 0;
         if (includeExternalStoragePath) {
-            fileNames[0] = sExternalFilesDir.getPath();
-            isDirectory[0] = true;
+            fileNames[idx] = sExternalFilesDir.getPath();
+            isDirectory[idx] = true;
+            ++idx;
+        }
+        if (includeDownloadsPath) {
+            fileNames[idx] = sDownloadFilesDir.getAbsolutePath();
+            isDirectory[idx] = true;
+            ++idx;
         }
 
-        int idx = offset;
         for (File file : files) {
             isDirectory[idx] = file.isDirectory();
             fileNames[idx] = file.getName();
