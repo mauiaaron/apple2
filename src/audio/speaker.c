@@ -191,7 +191,7 @@ static void _speaker_update(/*bool toggled*/) {
         }
 
         if (UNLIKELY(samples_buffer_idx > channelsSampleRateHz)) {
-            //assert(samples_buffer_idx == channelsSampleRateHz && "should be at exactly the end, no further");
+            ////assert(samples_buffer_idx == channelsSampleRateHz && "should be at exactly the end, no further");
             if (UNLIKELY(samples_buffer_idx > channelsSampleRateHz)) {
                 ERRLOG("OOPS, possible overflow in speaker samples buffer ... samples_buffer_idx:%lu channelsSampleRateHz:%lu", samples_buffer_idx, channelsSampleRateHz);
             }
