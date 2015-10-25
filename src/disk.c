@@ -484,7 +484,7 @@ static bool save_track_data(int drive) {
 
 GLUE_C_READ(disk_read_write_byte)
 {
-    uint8_t value = 0x00;
+    uint8_t value = 0xFF; // U5 needs this set to "Journey Onward"
     do {
         if (disk6.disk[disk6.drive].fd < 0) {
             ////ERRLOG_THROTTLE("OOPS, attempt to read byte from NULL image in drive (%d)", disk6.drive+1);
