@@ -26,10 +26,10 @@ Android
 Currently pre-alpha testing the Google Play Store version...PM me if you would like to be on the Android VIP testers invite =D
 
 Running at 30FPS on Gingerbread (Android 2.3.3):
-![Apple2ix on Samsung Galaxy Y running Gingerbread](https://raw.github.com/mauiaaron/apple2/master/docs/android-galaxyY.png "Apple //ix")
+![Apple2ix on Samsung Galaxy Y running Gingerbread](https://raw.github.com/mauiaaron/apple2/develop/docs/android-galaxyY.png "Apple //ix")
 
 Running at 60FPS on Nexus 6 running Lollipop (Android 5.1.1):
-![Apple2ix on Nexus 6](https://raw.github.com/mauiaaron/apple2/master/docs/android-nexus6.png "Apple //ix")
+![Apple2ix on Nexus 6](https://raw.github.com/mauiaaron/apple2/develop/docs/android-nexus6.png "Apple //ix")
 
 Mac Package
 -----------
