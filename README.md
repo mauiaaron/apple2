@@ -10,26 +10,26 @@ Apple2ix derives from the apple2-emul-linux project originally coded by various 
 
 The original software was designed to work from the Linux console rendering via SVGAlib.  It ran on par to the 1MHz Apple //e on an i386 (Pentium 100 class) or better machine.  Later ports added X11 graphics support based on the original X11 DOOM source code drop, ty JC!
 
-As of March 2015, the resurrected Apple2ix runs on MacOSX 10.9+, Debian GNU/Linux, and the ARM Android port is beginning to run =)
+As of November 2015, the resurrected Apple2ix runs on x64 MacOSX 10.9+, x64 Debian GNU/Linux, and ARM Android
 
 Project Goals
 -------------
 
 * Portability and code resilience across a wide range of modern platforms including MacOSX, desktop Linux/BSD, iOS, Android -- *But not Windows, just use the excellent [AppleWin](https://github.com/AppleWin/AppleWin) emulator if you're on Windows!*
 * Reasonable emulation fidelity to the original Apple //e machine (timing, video, audio, etc...)
-* Binary Mac App/DMG, iOS App (unlikely to be available in iTunes store due to Apple's short-sighted prohibition of emulator software *... but possibly it will be available as an app in the Cydia alternate store or similar*)
-* Maintain binary Android App (Play Store and elsewhere)
+* Language minimalism for core emulation modules (prefer coding in POSIX C over all else), except for CPU module which should be in assembly
+* Good platform citizenship for menu system (prefer coding in language-of-choice promoted by platform--e.g.: Objective-C/Swift on Darwin, Java on Android, ...)
 
 Android
 -------
 
 Currently pre-alpha testing the Google Play Store version...PM me if you would like to be on the Android VIP testers invite =D
 
-Running at 30FPS on a Gingerbread (Android 2.3.3):
-![Apple2ix on HTC running Gingerbread](https://raw.github.com/mauiaaron/apple2/master/docs/android-htc.png "Apple //ix")
+Running at 30FPS on Gingerbread (Android 2.3.3):
+![Apple2ix on Samsung Galaxy Y running Gingerbread](https://raw.github.com/mauiaaron/apple2/master/docs/android-galaxyY.png "Apple //ix")
 
-Running at 60FPS on 2013 Nexus 7 running KitKat (Android 4.4.x):
-![Apple2ix on Nexus 7 running KitKat](https://raw.github.com/mauiaaron/apple2/master/docs/android-nexus7.png "Apple //ix")
+Running at 60FPS on Nexus 6 running Lollipop (Android 5.1.1):
+![Apple2ix on Nexus 6](https://raw.github.com/mauiaaron/apple2/master/docs/android-nexus6.png "Apple //ix")
 
 Mac Package
 -----------
@@ -57,9 +57,9 @@ Project Tech
 
 * C language for the majority of the project (still the most portable/reliable language after all these years ;-)
 * x86 and ARM assembly language for 65c02 CPU tightloop
-* Extensive tests for 65c02 CPU, Apple //e VM, and display (expected framebuffer output)
+* Extensive tests for 65c02 CPU, Apple //e VM, disks, and display (expected framebuffer output)
 * OpenGLES 2.x graphics with GLSL shaders
-* OpenAL audio (emulated speaker and emulated Mockingboard/Phasor soundcards)
+* OpenAL and OpenSLES audio (emulated speaker and emulated Mockingboard/Phasor soundcards)
 * Objective-C and Cocoa APIs (Mac/iOS variant)
 * Java and Android APIs (Android app)
 
@@ -68,9 +68,8 @@ Project Tech
 Semi-Ordered TODO
 -----------------
 
-* Android NDK port -- in progress 2015
 * DHIRES graphics are ugly, fix 'em
-* iOS/iWatch (including Apportable) ports
+* iOS/iWatch ports
 * Proper VBL timing and vSync matching to the device (if available)
 * OpenGL shaders/tricks for style (various screen artifacts) and functionality (Disk ][ status overlays, etc)
 * Emulator save/restore and image compatibility with AppleWin
