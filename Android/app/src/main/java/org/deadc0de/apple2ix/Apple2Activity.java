@@ -492,20 +492,16 @@ public class Apple2Activity extends Activity {
         });
     }
 
-    private void showSplashScreen() {
+    private synchronized void showSplashScreen() {
+        if (mSplashScreen != null) {
+            return;
+        }
+        mSplashScreen = new Apple2SplashScreen(Apple2Activity.this);
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                synchronized (Apple2Activity.this) {
-                    if (mSplashScreen == null) {
-                        mSplashScreen = new Apple2SplashScreen(Apple2Activity.this);
-                    }
-                    if (mSplashScreen.isShowing()) {
-                        return;
-                    }
-                    mSplashScreen.show();
-                    Apple2CrashHandler.getInstance().checkForCrashes(Apple2Activity.this);
-                }
+                mSplashScreen.show();
+                Apple2CrashHandler.getInstance().checkForCrashes(Apple2Activity.this);
             }
         });
     }
@@ -588,6 +584,9 @@ public class Apple2Activity extends Activity {
             View menuView = apple2MenuView.getView();
             if (menuView.isShown()) {
                 ((ViewGroup) menuView.getParent()).removeView(menuView);
+            }
+            if (apple2MenuView == mSplashScreen) {
+                mSplashScreen = null;
             }
         }
 
