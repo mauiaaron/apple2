@@ -43,7 +43,7 @@ public abstract class Apple2AbstractMenu implements Apple2MenuView {
         setup();
     }
 
-    public synchronized void show() {
+    public void show() {
         if (isShowing()) {
             return;
         }
@@ -59,7 +59,7 @@ public abstract class Apple2AbstractMenu implements Apple2MenuView {
     }
 
     public boolean isShowing() {
-        return mSettingsView.isShown();
+        return mSettingsView.getParent() != null;
     }
 
     public View getView() {

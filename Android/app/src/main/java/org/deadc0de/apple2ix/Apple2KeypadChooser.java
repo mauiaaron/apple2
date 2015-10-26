@@ -119,7 +119,7 @@ public class Apple2KeypadChooser implements Apple2MenuView {
     }
 
     public boolean isShowing() {
-        return mSettingsView.isShown();
+        return mSettingsView.getParent() != null;
     }
 
     public View getView() {

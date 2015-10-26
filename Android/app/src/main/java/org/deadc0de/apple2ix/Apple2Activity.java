@@ -582,8 +582,9 @@ public class Apple2Activity extends Activity {
         // Actually remove View from view hierarchy
         {
             View menuView = apple2MenuView.getView();
-            if (menuView.isShown()) {
-                ((ViewGroup) menuView.getParent()).removeView(menuView);
+            ViewGroup viewGroup = (ViewGroup) menuView.getParent();
+            if (viewGroup != null) {
+                viewGroup.removeView(menuView);
             }
             if (apple2MenuView == mSplashScreen) {
                 mSplashScreen = null;

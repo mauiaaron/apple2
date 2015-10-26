@@ -184,7 +184,7 @@ public class Apple2DisksMenu implements Apple2MenuView {
     }
 
     public boolean isShowing() {
-        return mDisksView.isShown();
+        return mDisksView.getParent() != null;
     }
 
     public View getView() {

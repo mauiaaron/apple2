@@ -114,7 +114,7 @@ public class Apple2JoystickCalibration implements Apple2MenuView {
     }
 
     public boolean isShowing() {
-        return mSettingsView.isShown();
+        return mSettingsView.getParent() != null;
     }
 
     public View getView() {

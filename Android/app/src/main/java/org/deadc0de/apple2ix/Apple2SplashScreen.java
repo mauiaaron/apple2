@@ -71,7 +71,7 @@ public class Apple2SplashScreen implements Apple2MenuView {
         /* ... */
     }
 
-    public synchronized void show() {
+    public void show() {
         if (isShowing()) {
             return;
         }
@@ -87,7 +87,7 @@ public class Apple2SplashScreen implements Apple2MenuView {
     }
 
     public boolean isShowing() {
-        return mSettingsView.isShown();
+        return mSettingsView.getParent() != null;
     }
 
     public View getView() {
