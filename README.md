@@ -23,7 +23,7 @@ Project Goals
 Android
 -------
 
-Currently pre-alpha testing the Google Play Store version...PM me if you would like to be on the Android VIP testers invite =D
+[Available on Google Play](https://play.google.com/store/apps/details?id=org.deadc0de.apple2ix.basic).
 
 Running at 30FPS on Gingerbread (Android 2.3.3):
 ![Apple2ix on Samsung Galaxy Y running Gingerbread](https://raw.github.com/mauiaaron/apple2/develop/docs/android-galaxyY.png "Apple //ix")
