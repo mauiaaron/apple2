@@ -249,7 +249,10 @@ public class Apple2KeyboardSettingsMenu extends Apple2AbstractMenu {
                     }
                 };
 
-                File[] files = extKeyboardDir.listFiles(kbdJsonFilter);
+                File[] files = null;
+                if (extKeyboardDir != null) {
+                    files = extKeyboardDir.listFiles(kbdJsonFilter);
+                }
                 if (files == null) {
                     // read keyboard data from /data/data/...
                     File keyboardDir = new File(Apple2DisksMenu.getDataDir(activity) + File.separator + "keyboards");
@@ -270,7 +273,7 @@ public class Apple2KeyboardSettingsMenu extends Apple2AbstractMenu {
                     ++idx;
                 }
 
-                final String keyboardDirName = extKeyboardDir.getPath();
+                final String keyboardDirName = extKeyboardDir == null ? "Keyboards" : extKeyboardDir.getPath();
 
                 _alertDialogHandleSelection(activity, keyboardDirName, titles, new IPreferenceLoadSave() {
                     @Override

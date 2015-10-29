@@ -78,24 +78,36 @@ public class Apple2DisksMenu implements Apple2MenuView {
     }
 
     public static File getExternalStorageDirectory() {
-        if (sExternalFilesDir == null) {
+
+        do {
+            if (sExternalFilesDir != null) {
+                break;
+            }
+
             String storageState = Environment.getExternalStorageState();
-            File externalDir = new File(Environment.getExternalStorageDirectory(), "apple2ix"); // /sdcard/apple2ix
-            sExternalFilesDir = null;
-            boolean externalStorageAvailable = storageState.equals(Environment.MEDIA_MOUNTED);
-            if (externalStorageAvailable) {
-                sExternalFilesDir = externalDir;
-                boolean made = sExternalFilesDir.mkdirs();
+            if (!storageState.equals(Environment.MEDIA_MOUNTED)) {
+                // 2015/10/28 : do not expose sExternalFilesDir/sDownloadFilesDir unless they are writable
+                break;
+            }
+
+            File externalStorageDir = Environment.getExternalStorageDirectory();
+            if (externalStorageDir == null) {
+                break;
+            }
+
+            File externalDir = new File(externalStorageDir, "apple2ix"); // /sdcard/apple2ix
+            if (!externalDir.exists()) {
+                boolean made = externalDir.mkdirs();
                 if (!made) {
                     Log.d(TAG, "WARNING: could not make directory : " + sExternalFilesDir);
+                    break;
                 }
-            } else {
-                sExternalFilesDir = externalDir;
             }
-        }
-        if (sDownloadFilesDir == null) {
+
+            sExternalFilesDir = externalDir;
             sDownloadFilesDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
-        }
+        } while (false);
+
         return sExternalFilesDir;
     }
 
@@ -134,7 +146,9 @@ public class Apple2DisksMenu implements Apple2MenuView {
         recursivelyCopyAPKAssets(activity, /*from APK directory:*/"shaders",   /*to location:*/new File(sDataDir, "shaders").getAbsolutePath());
 
         // expose keyboards to modding
-        recursivelyCopyAPKAssets(activity, /*from APK directory:*/"keyboards", /*to location:*/sExternalFilesDir.getAbsolutePath());
+        if (sExternalFilesDir != null) {
+            recursivelyCopyAPKAssets(activity, /*from APK directory:*/"keyboards", /*to location:*/sExternalFilesDir.getAbsolutePath());
+        }
     }
 
     public static void exposeSymbols(Apple2Activity activity) {
@@ -437,7 +451,7 @@ public class Apple2DisksMenu implements Apple2MenuView {
 
         int idx = 0;
         if (includeExternalStoragePath) {
-            fileNames[idx] = sExternalFilesDir.getPath();
+            fileNames[idx] = sExternalFilesDir.getAbsolutePath();
             isDirectory[idx] = true;
             ++idx;
         }

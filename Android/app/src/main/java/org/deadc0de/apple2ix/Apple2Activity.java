@@ -469,10 +469,13 @@ public class Apple2Activity extends Activity {
                         /* ... */
                     }
 
-                    String storageDir = Apple2DisksMenu.getExternalStorageDirectory().getAbsolutePath();
-                    if (diskPath.contains(storageDir)) {
-                        diskPath = diskPath.replace(storageDir + File.separator, "");
-                        disksMenu.pushPathStack(storageDir);
+                    File storageDir = Apple2DisksMenu.getExternalStorageDirectory();
+                    if (storageDir != null) {
+                        String storagePath = storageDir.getAbsolutePath();
+                        if (diskPath.contains(storagePath)) {
+                            diskPath = diskPath.replace(storagePath + File.separator, "");
+                            disksMenu.pushPathStack(storagePath);
+                        }
                     }
                     StringTokenizer tokenizer = new StringTokenizer(diskPath, File.separator);
                     while (tokenizer.hasMoreTokens()) {
