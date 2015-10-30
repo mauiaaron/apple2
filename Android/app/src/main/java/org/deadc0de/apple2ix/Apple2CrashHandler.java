@@ -204,19 +204,22 @@ public class Apple2CrashHandler {
                         final int monoBufferSize = DevicePropertyCalculator.getRecommendedBufferSize(activity, /*isStereo:*/false);
                         final int stereoBufferSize = DevicePropertyCalculator.getRecommendedBufferSize(activity, /*isStereo:*/true);
 
+                        StringBuilder summary = new StringBuilder();
                         StringBuilder allCrashData = new StringBuilder();
 
                         // prepend information about this device
-                        allCrashData.append("BRAND: ").append(Build.BRAND).append("\n");
-                        allCrashData.append("MODEL: ").append(Build.MODEL).append("\n");
-                        allCrashData.append("MANUFACTURER: ").append(Build.MANUFACTURER).append("\n");
-                        allCrashData.append("DEVICE: ").append(Build.DEVICE).append("\n");
-                        allCrashData.append("SAMPLE RATE: ").append(sampleRate).append("\n");
-                        allCrashData.append("MONO BUFSIZE: ").append(monoBufferSize).append("\n");
-                        allCrashData.append("STEREO BUFSIZE: ").append(stereoBufferSize).append("\n");
-                        allCrashData.append("GPU VENDOR: ").append(Apple2Preferences.GL_VENDOR.stringValue(activity)).append("\n");
-                        allCrashData.append("GPU RENDERER: ").append(Apple2Preferences.GL_RENDERER.stringValue(activity)).append("\n");
-                        allCrashData.append("GPU VERSION: ").append(Apple2Preferences.GL_VERSION.stringValue(activity)).append("\n");
+                        summary.append("BRAND: ").append(Build.BRAND).append("\n");
+                        summary.append("MODEL: ").append(Build.MODEL).append("\n");
+                        summary.append("MANUFACTURER: ").append(Build.MANUFACTURER).append("\n");
+                        summary.append("DEVICE: ").append(Build.DEVICE).append("\n");
+                        summary.append("SAMPLE RATE: ").append(sampleRate).append("\n");
+                        summary.append("MONO BUFSIZE: ").append(monoBufferSize).append("\n");
+                        summary.append("STEREO BUFSIZE: ").append(stereoBufferSize).append("\n");
+                        summary.append("GPU VENDOR: ").append(Apple2Preferences.GL_VENDOR.stringValue(activity)).append("\n");
+                        summary.append("GPU RENDERER: ").append(Apple2Preferences.GL_RENDERER.stringValue(activity)).append("\n");
+                        summary.append("GPU VERSION: ").append(Apple2Preferences.GL_VERSION.stringValue(activity)).append("\n");
+
+                        allCrashData.append(summary);
 
                         File[] nativeCrashes = _nativeCrashFiles(activity);
                         if (nativeCrashes == null) {
@@ -247,6 +250,8 @@ public class Apple2CrashHandler {
                             }
                         });
 
+                        boolean summarizedHeader = false;
+
                         // iteratively process native crashes
                         for (File crash : nativeCrashes) {
 
@@ -266,6 +271,48 @@ public class Apple2CrashHandler {
                             }
                             allCrashData.append(">>>>>>> NATIVE CRASH [").append(crashPath).append("]\n");
                             allCrashData.append(crashData);
+                            summary.append("NATIVE CRASH:\n");
+
+                            // append succinct information about crashing thread
+                            String[] lines = crashData.toString().split("[\\n\\r][\\n\\r]*");
+                            for (int i = 0, j = 0; i < lines.length; i++) {
+
+                                // 2 lines of minidump summary
+                                if (i < 2) {
+                                    if (!summarizedHeader) {
+                                        summary.append(lines[i]);
+                                        summary.append("\n");
+                                    }
+                                    continue;
+                                }
+
+                                // 1 line of crashing thread and reason
+                                if (i == 2) {
+                                    summarizedHeader = true;
+                                    summary.append(lines[i]);
+                                    summary.append("\n");
+                                    continue;
+                                }
+
+                                // whole lotta modules
+                                if (lines[i].startsWith("Module")) {
+                                    continue;
+                                }
+
+                                // one apparently empty line
+                                if (lines[i].matches("^[ \\t]*$")) {
+                                    continue;
+                                }
+
+                                // append crashing thread backtrace
+
+                                summary.append(lines[i]);
+                                summary.append("\n");
+                                final int maxSummaryBacktrace = 8;
+                                if (j++ >= maxSummaryBacktrace) {
+                                    break;
+                                }
+                            }
 
                             activity.runOnUiThread(new Runnable() {
                                 @Override
@@ -288,6 +335,10 @@ public class Apple2CrashHandler {
 
                         allCrashData.append(">>>>>>> JAVA CRASH DATA\n");
                         allCrashData.append(javaCrashData);
+
+                        summary.append("JAVA CRASH:\n");
+                        summary.append(javaCrashData);
+
                         activity.runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
@@ -313,7 +364,7 @@ public class Apple2CrashHandler {
                         });
 
                         // send report with all the data
-                        _sendEmailToDeveloperWithCrashData(activity, allCrashData);
+                        _sendEmailToDeveloperWithCrashData(activity, summary, allCrashData);
                     }
                 }).start();
             }
@@ -481,19 +532,25 @@ public class Apple2CrashHandler {
         return allCrashFile;
     }
 
-    private void _sendEmailToDeveloperWithCrashData(Apple2Activity activity, StringBuilder allCrashData) {
+    private void _sendEmailToDeveloperWithCrashData(Apple2Activity activity, StringBuilder summary, StringBuilder allCrashData) {
         mAlreadySentReport.set(true);
+
+        // <sigh> ... the disaster that is early Android ... there does not appear to be a reliable way to start an
+        // email Intent to send both text and an attachment, but we make a valiant (if futile) effort to do so here.
+        // And the reason to send an attachment is that you trigger an android.os.TransactionTooLargeException with too
+        // much text data in the EXTRA_TEXT ... </sigh>
 
         Intent emailIntent = new Intent(Intent.ACTION_SENDTO, Uri.fromParts("mailto", "apple2ix_crash@deadcode.org"/*non-zero variant is correct endpoint at the moment*/, null));
         emailIntent.putExtra(Intent.EXTRA_SUBJECT, "Crasher");
 
-        File allCrashFile = _writeTempLogFile(activity, allCrashData);
-        // Putting all the text data into the EXTRA_TEXT appears to trigger android.os.TransactionTooLargeException ...
-        //emailIntent.putExtra(Intent.EXTRA_TEXT, allCrashData.toString());
-        emailIntent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(allCrashFile));
+        final int maxCharsEmail = 4096;
+        int len = summary.length();
+        len = len < maxCharsEmail ? len : maxCharsEmail;
+        String summaryData = summary.substring(0, len);
+        emailIntent.putExtra(Intent.EXTRA_TEXT, "The app crashed, please help!\n\n"+summaryData);
 
-        // But we can put some text data
-        emailIntent.putExtra(Intent.EXTRA_TEXT, "Greeting Apple2ix developers!  The app crashed, please help!");
+        File allCrashFile = _writeTempLogFile(activity, allCrashData);
+        emailIntent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(allCrashFile));
 
         Log.d(TAG, "STARTING CHOOSER FOR EMAIL ...");
         activity.startActivity(Intent.createChooser(emailIntent, "Send email"));
