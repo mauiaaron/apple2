@@ -479,7 +479,7 @@ public class Apple2Activity extends Activity {
         mMenuStack.add(apple2MenuView);
         View menuView = apple2MenuView.getView();
         nativeEmulationPause();
-        addContentView(menuView, new FrameLayout.LayoutParams(getWidth(), getHeight()));
+        addContentView(menuView, new FrameLayout.LayoutParams(mWidth, mHeight));
     }
 
     public synchronized Apple2MenuView popApple2View() {
@@ -572,14 +572,6 @@ public class Apple2Activity extends Activity {
 
     public Apple2View getView() {
         return mView;
-    }
-
-    public int getWidth() {
-        return mWidth;
-    }
-
-    public int getHeight() {
-        return mHeight;
     }
 
     public void maybeQuitApp() {
