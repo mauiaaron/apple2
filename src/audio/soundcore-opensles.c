@@ -417,7 +417,7 @@ static long opensl_createSoundBuffer(const AudioContext_s *audio_context, INOUT 
         unsigned long bufferSize = opensles_audio_backend.systemSettings.stereoBufferSizeSamples * opensles_audio_backend.systemSettings.bytesPerSample * NUM_CHANNELS;
 
         if (ctx->recycledVoices) {
-            LOG("Recycling previously SLVoice ...");
+            LOG("Recycling previous SLVoice ...");
             voice = ctx->recycledVoices;
             ctx->recycledVoices = voice->next;
             uint8_t *prevBuffer = voice->ringBuffer;

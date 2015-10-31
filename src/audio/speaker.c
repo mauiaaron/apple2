@@ -307,6 +307,13 @@ static unsigned int _submit_samples_buffer(const unsigned long num_channel_sampl
                 break;
             }
 
+            unsigned long maxSpeakerBytes = channelsSampleRateHz * sizeof(int16_t);
+
+            if (system_buffer_size > maxSpeakerBytes) {
+                RELEASE_LOG("AVOIDING BUFOVER...");
+                system_buffer_size = maxSpeakerBytes;
+            }
+
             memcpy(system_samples_buffer, &samples_buffer[samples_idx], system_buffer_size);
 
             err = speakerBuffer->Unlock(speakerBuffer, system_buffer_size);
