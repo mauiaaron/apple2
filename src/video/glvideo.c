@@ -506,43 +506,45 @@ static void _gldriver_setup_hackarounds(void) {
         return;
     }
 
-    regex_t qualcommRegex = { 0 };
-    regex_t adrenoRegex = { 0 };
-    regex_t twoHundredRegex = { 0 };
-    regex_t twoHundredFiveRegex = { 0 };
-
     do {
         // As if we didn't have enough problems with Android ... Bionic's POSIX Regex support for android-10 appears
         // very basic ... we can't match the word-boundary atomics \> \< \b ... sigh ... hopefully  by the time there is
         // an Adreno 2000 we can remove these hackarounds ;-)
 
+        regex_t qualcommRegex = { 0 };
         int err = regcomp(&qualcommRegex, "qualcomm", REG_ICASE|REG_NOSUB|REG_EXTENDED);
         if (err) {
             LOG("Cannot compile regex : %d", err);
             break;
         }
         int nomatch = regexec(&qualcommRegex, vendor, /*nmatch:*/0, /*pmatch:*/NULL, /*eflags:*/0);
+        regfree(&qualcommRegex);
         if (nomatch) {
             LOG("NO MATCH QUALCOMM >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
             break;
         }
 
+        regex_t adrenoRegex = { 0 };
         err = regcomp(&adrenoRegex, "adreno", REG_ICASE|REG_NOSUB|REG_EXTENDED);
         if (err) {
             LOG("Cannot compile regex : %d", err);
             break;
         }
         nomatch = regexec(&adrenoRegex, renderer, /*nmatch:*/0, /*pmatch:*/NULL, /*eflags:*/0);
+        regfree(&adrenoRegex);
         if (nomatch) {
             LOG("NO MATCH ADRENO >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
             break;
         }
 
+        regex_t twoHundredRegex = { 0 };
         err = regcomp(&twoHundredRegex, "200", REG_ICASE|REG_NOSUB|REG_EXTENDED);
         if (err) {
             LOG("Cannot compile regex : %d", err);
             break;
         }
+
+        regex_t twoHundredFiveRegex = { 0 };
         err = regcomp(&twoHundredFiveRegex, "205", REG_ICASE|REG_NOSUB|REG_EXTENDED);
         if (err) {
             LOG("Cannot compile regex : %d", err);
@@ -551,6 +553,9 @@ static void _gldriver_setup_hackarounds(void) {
 
         int found200 = !regexec(&twoHundredRegex, renderer, /*nmatch:*/0, /*pmatch:*/NULL, /*eflags:*/0);
         int found205 = !regexec(&twoHundredFiveRegex, renderer, /*nmatch:*/0, /*pmatch:*/NULL, /*eflags:*/0);
+        regfree(&twoHundredRegex);
+        regfree(&twoHundredFiveRegex);
+
         if (found200) {
             LOG("HACKING AROUND BROKEN ADRENO 200");
             hackAroundBrokenAdreno200 = true;
@@ -563,11 +568,6 @@ static void _gldriver_setup_hackarounds(void) {
             break;
         }
     } while (0);
-
-    regfree(&qualcommRegex);
-    regfree(&adrenoRegex);
-    regfree(&twoHundredRegex);
-    regfree(&twoHundredFiveRegex);
 }
 
 static void gldriver_init_common(void) {
