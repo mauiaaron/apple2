@@ -98,9 +98,9 @@ public class Apple2Activity extends Activity {
 
     private native void nativeOnKeyUp(int keyCode, int metaState);
 
-    private native void nativeOnResume(boolean isSystemResume);
+    private native void nativeEmulationResume();
 
-    public native void nativeOnPause(boolean isSystemPause);
+    public native void nativeEmulationPause();
 
     public native void nativeOnQuit();
 
@@ -196,7 +196,6 @@ public class Apple2Activity extends Activity {
 
         Log.d(TAG, "onResume()");
         mView.onResume();
-        nativeOnResume(/*isSystemResume:*/true);
     }
 
     @Override
@@ -218,7 +217,7 @@ public class Apple2Activity extends Activity {
         // Dismiss these popups to avoid android.view.WindowLeaked issues
         synchronized (this) {
             dismissAllMenus();
-            nativeOnPause(true);
+            nativeEmulationPause();
         }
 
         mPausing.set(false);
@@ -356,6 +355,8 @@ public class Apple2Activity extends Activity {
     }
 
     void graphicsInitialized(int w, int h) {
+        Log.v(TAG, "graphicsInitialized(" + w + ", " + h + ")");
+
         if (mMainMenu == null) {
             mMainMenu = new Apple2MainMenu(this, mView);
         }
@@ -370,7 +371,6 @@ public class Apple2Activity extends Activity {
         mWidth = w;
         mHeight = h;
 
-        // tell native about this...
         nativeGraphicsInitialized(w, h);
 
         showSplashScreen();
@@ -478,7 +478,7 @@ public class Apple2Activity extends Activity {
     public synchronized void pushApple2View(Apple2MenuView apple2MenuView) {
         mMenuStack.add(apple2MenuView);
         View menuView = apple2MenuView.getView();
-        nativeOnPause(false);
+        nativeEmulationPause();
         addContentView(menuView, new FrameLayout.LayoutParams(getWidth(), getHeight()));
     }
 
@@ -560,13 +560,13 @@ public class Apple2Activity extends Activity {
             dismissAllMenus();
         }
         if (mMenuStack.size() == 0 && !mPausing.get()) {
-            nativeOnResume(/*isSystemResume:*/false);
+            nativeEmulationResume();
         }
     }
 
     void _mainMenuDismissed() {
         if (mMenuStack.size() == 0 && !mPausing.get()) {
-            nativeOnResume(/*isSystemResume:*/false);
+            nativeEmulationResume();
         }
     }
 
@@ -583,7 +583,7 @@ public class Apple2Activity extends Activity {
     }
 
     public void maybeQuitApp() {
-        nativeOnPause(false);
+        nativeEmulationPause();
         AlertDialog quitDialog = new AlertDialog.Builder(this).setIcon(R.drawable.ic_launcher).setCancelable(true).setTitle(R.string.quit_really).setMessage(R.string.quit_warning).setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
@@ -606,7 +606,7 @@ public class Apple2Activity extends Activity {
     }
 
     public void maybeReboot() {
-        nativeOnPause(false);
+        nativeEmulationPause();
         AlertDialog rebootDialog = new AlertDialog.Builder(this).setIcon(R.drawable.ic_launcher).setCancelable(true).setTitle(R.string.reboot_really).setMessage(R.string.reboot_warning).setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {

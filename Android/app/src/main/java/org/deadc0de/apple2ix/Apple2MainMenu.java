@@ -203,7 +203,7 @@ public class Apple2MainMenu {
             return;
         }
 
-        mActivity.nativeOnPause(false);
+        mActivity.nativeEmulationPause();
 
         mMainMenuPopup.showAtLocation(mParentView, Gravity.CENTER, 0, 0);
     }

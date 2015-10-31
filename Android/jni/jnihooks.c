@@ -186,21 +186,19 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeGraphicsInitialized(JNIEnv 
     video_backend->init((void *)0);
 }
 
-void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnResume(JNIEnv *env, jobject obj, jboolean isSystemResume) {
+void Java_org_deadc0de_apple2ix_Apple2Activity_nativeEmulationResume(JNIEnv *env, jobject obj) {
     if (!cpu_isPaused()) {
         return;
     }
     LOG("...");
-    if (!isSystemResume) {
 #if TESTING
-        // test driver thread is managing CPU
+    // test driver thread is managing CPU
 #else
-        cpu_resume();
+    cpu_resume();
 #endif
-    }
 }
 
-void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnPause(JNIEnv *env, jobject obj, jboolean isSystemPause) {
+void Java_org_deadc0de_apple2ix_Apple2Activity_nativeEmulationPause(JNIEnv *env, jobject obj) {
     if (appState != APP_RUNNING) {
         return;
     }
