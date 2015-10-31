@@ -311,6 +311,8 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeChooseDisk(JNIEnv *env, job
     int drive = driveA ? 0 : 1;
     int ro = readOnly ? 1 : 0;
 
+    assert(cpu_isPaused() && "considered dangerous to insert disk image when CPU thread is running");
+
     LOG(": (%s, %s, %s)", path, driveA ? "drive A" : "drive B", readOnly ? "read only" : "read/write");
     if (disk6_insert(drive, path, ro)) {
         char *gzPath = NULL;

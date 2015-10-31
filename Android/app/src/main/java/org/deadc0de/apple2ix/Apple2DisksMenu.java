@@ -615,8 +615,6 @@ public class Apple2DisksMenu implements Apple2MenuView {
                 builder.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        dialog.dismiss();
-                        mActivity.dismissAllMenus();
                         boolean isDriveA = diskA.isChecked();
                         boolean diskReadOnly = readOnly.isChecked();
                         if (isDriveA) {
@@ -626,6 +624,8 @@ public class Apple2DisksMenu implements Apple2MenuView {
                             Apple2Preferences.CURRENT_DISK_B_RO.saveBoolean(mActivity, diskReadOnly);
                             Apple2Preferences.CURRENT_DISK_B.saveString(mActivity, imageName);
                         }
+                        dialog.dismiss();
+                        mActivity.dismissAllMenus();
                     }
                 });
 
