@@ -260,45 +260,6 @@ public class Apple2Activity extends Activity {
         }
     }
 
-    /*
-    private String actionToString(int action) {
-        switch (action) {
-            case MotionEvent.ACTION_CANCEL:
-                return "CANCEL:" + action;
-            case MotionEvent.ACTION_DOWN:
-                return "DOWN:" + action;
-            case MotionEvent.ACTION_MOVE:
-                return "MOVE:" + action;
-            case MotionEvent.ACTION_UP:
-                return "UP:" + action;
-            case MotionEvent.ACTION_POINTER_DOWN:
-                return "PDOWN:" + action;
-            case MotionEvent.ACTION_POINTER_UP:
-                return "PUP:" + action;
-            default:
-                return "UNK:" + action;
-        }
-    }
-
-    private void printSamples(MotionEvent ev) {
-        final int historySize = ev.getHistorySize();
-        final int pointerCount = ev.getPointerCount();
-
-        for (int h = 0; h < historySize; h++) {
-            Log.d(TAG, "Event "+ev.getAction().toString()+" at historical time "+ev.getHistoricalEventTime(h)+" :");
-            for (int p = 0; p < pointerCount; p++) {
-                Log.d(TAG, "  pointer "+ev.getPointerId(p)+": ("+ev.getHistoricalX(p, h)+","+ev.getHistoricalY(p, h)+")");
-            }
-        }
-        int pointerIndex = ev.getActionIndex();
-
-        Log.d(TAG, "Event " + actionToString(ev.getActionMasked()) + " for " + pointerIndex + " at time " + ev.getEventTime() + " :");
-        for (int p = 0; p < pointerCount; p++) {
-            Log.d(TAG, "  pointer " + ev.getPointerId(p) + ": (" + ev.getX(p) + "," + ev.getY(p) + ")");
-        }
-    }
-    */
-
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         do {
