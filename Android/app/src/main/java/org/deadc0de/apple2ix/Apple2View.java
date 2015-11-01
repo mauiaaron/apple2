@@ -22,6 +22,8 @@ import android.opengl.GLSurfaceView;
 import android.util.Log;
 import android.view.ViewTreeObserver;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import javax.microedition.khronos.egl.EGL10;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.egl.EGLContext;
@@ -51,6 +53,7 @@ class Apple2View extends GLSurfaceView {
     private final static boolean DEBUG = false;
 
     private Apple2Activity mActivity = null;
+    private AtomicBoolean mInitialLaunch = new AtomicBoolean(true);
 
     private static native void nativeOnCreate(String dataDir, int sampleRate, int monoBufferSize, int stereoBufferSize);
 
@@ -358,7 +361,12 @@ class Apple2View extends GLSurfaceView {
                 Apple2Preferences.KeypadPreset.IJKM_SPACE.apply(Apple2View.this.mActivity);
                 Apple2Preferences.FIRST_TIME_CONFIGURED.saveBoolean(Apple2View.this.mActivity, true);
             }
-            Apple2Preferences.loadPreferences(Apple2View.this.mActivity);
+
+            // load preferences on each new process creation
+            if (mInitialLaunch.get()) {
+                mInitialLaunch.set(false);
+                Apple2Preferences.loadPreferences(Apple2View.this.mActivity);
+            }
 
             Apple2View.this.mActivity.maybeResumeCPU();
         }
