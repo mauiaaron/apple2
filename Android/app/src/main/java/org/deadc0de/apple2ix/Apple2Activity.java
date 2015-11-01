@@ -29,6 +29,7 @@ import android.widget.Toast;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.StringTokenizer;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -44,6 +45,9 @@ public class Apple2Activity extends Activity {
     private Apple2View mView = null;
     private Apple2SplashScreen mSplashScreen = null;
     private Apple2MainMenu mMainMenu = null;
+    private Apple2SettingsMenu mSettingsMenu = null;
+    private Apple2DisksMenu mDisksMenu = null;
+
     private ArrayList<Apple2MenuView> mMenuStack = new ArrayList<Apple2MenuView>();
     private ArrayList<AlertDialog> mAlertDialogs = new ArrayList<AlertDialog>();
 
@@ -140,6 +144,9 @@ public class Apple2Activity extends Activity {
         if (!Apple2Preferences.FIRST_TIME_CONFIGURED.booleanValue(this)) {
             Apple2DisksMenu.firstTime(this);
         }
+
+        mSettingsMenu = new Apple2SettingsMenu(this);
+        mDisksMenu = new Apple2DisksMenu(this);
 
         Intent intent = getIntent();
         String path = null;
@@ -326,9 +333,7 @@ public class Apple2Activity extends Activity {
 
     public void showMainMenu() {
         if (mMainMenu != null) {
-            Apple2SettingsMenu settingsMenu = mMainMenu.getSettingsMenu();
-            Apple2DisksMenu disksMenu = mMainMenu.getDisksMenu();
-            if (!(settingsMenu.isShowing() || disksMenu.isShowing())) {
+            if (!(mSettingsMenu.isShowing() || mDisksMenu.isShowing())) {
                 mMainMenu.show();
             }
         }
@@ -336,6 +341,14 @@ public class Apple2Activity extends Activity {
 
     public Apple2MainMenu getMainMenu() {
         return mMainMenu;
+    }
+
+    public synchronized Apple2DisksMenu getDisksMenu() {
+        return mDisksMenu;
+    }
+
+    public synchronized Apple2SettingsMenu getSettingsMenu() {
+        return mSettingsMenu;
     }
 
     private void handleInsertDiskIntent(final String path) {
@@ -361,8 +374,7 @@ public class Apple2Activity extends Activity {
                     }
                     Apple2Preferences.CURRENT_DISK_A.saveString(Apple2Activity.this, diskPath);
 
-                    Apple2DisksMenu disksMenu = mMainMenu.getDisksMenu();
-                    while (disksMenu.popPathStack() != null) {
+                    while (mDisksMenu.popPathStack() != null) {
                         /* ... */
                     }
 
@@ -371,7 +383,7 @@ public class Apple2Activity extends Activity {
                         String storagePath = storageDir.getAbsolutePath();
                         if (diskPath.contains(storagePath)) {
                             diskPath = diskPath.replace(storagePath + File.separator, "");
-                            disksMenu.pushPathStack(storagePath);
+                            mDisksMenu.pushPathStack(storagePath);
                         }
                     }
                     StringTokenizer tokenizer = new StringTokenizer(diskPath, File.separator);
@@ -383,7 +395,7 @@ public class Apple2Activity extends Activity {
                         if (Apple2DisksMenu.hasDiskExtension(token)) {
                             continue;
                         }
-                        disksMenu.pushPathStack(token);
+                        mDisksMenu.pushPathStack(token);
                     }
 
                     Toast.makeText(Apple2Activity.this, Apple2Activity.this.getString(R.string.disk_insert_toast), Toast.LENGTH_SHORT).show();
@@ -472,13 +484,11 @@ public class Apple2Activity extends Activity {
         mAlertDialogs.clear();
 
         // Get rid of the menu hierarchy
-        Apple2MenuView apple2MenuView;
-        do {
-            apple2MenuView = popApple2View();
-            if (apple2MenuView != null) {
-                apple2MenuView.dismissAll();
-            }
-        } while (apple2MenuView != null);
+        ArrayList<Apple2MenuView> menuHierarchy = new ArrayList<Apple2MenuView>(mMenuStack);
+        Collections.reverse(menuHierarchy);
+        for (Apple2MenuView view : menuHierarchy) {
+            view.dismissAll();
+        }
     }
 
     public synchronized Apple2MenuView popApple2View(Apple2MenuView apple2MenuView) {
@@ -508,26 +518,19 @@ public class Apple2Activity extends Activity {
         if (mMenuStack.size() == 0) {
             dismissAllMenus();
             if (!mPausing.get()) {
-                nativeEmulationResume();
+                if (dismissedSplashScreen) {
+                    setupGLView();
+                } else {
+                    nativeEmulationResume();
+                }
             }
-        }
-        if (!mPausing.get() && dismissedSplashScreen) {
-            setupGLView();
         }
     }
 
-    void _mainMenuDismissed() {
+    public void maybeResumeCPU() {
         if (mMenuStack.size() == 0 && !mPausing.get()) {
             nativeEmulationResume();
         }
-    }
-
-    public boolean isPausing() {
-        return mPausing.get();
-    }
-
-    public int menuStackSize() {
-        return mMenuStack.size();
     }
 
     public void maybeQuitApp() {

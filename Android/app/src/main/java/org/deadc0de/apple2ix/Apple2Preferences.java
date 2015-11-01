@@ -35,10 +35,7 @@ public enum Apple2Preferences {
     CURRENT_DISK_PATH {
         @Override
         public void load(final Apple2Activity activity) {
-            Apple2MainMenu mainMenu = activity.getMainMenu();
-            if (mainMenu != null) {
-                mainMenu.getDisksMenu().setPathStackJSON(stringValue(activity));
-            }
+            activity.getDisksMenu().setPathStackJSON(stringValue(activity));
         }
 
         @Override

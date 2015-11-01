@@ -360,9 +360,7 @@ class Apple2View extends GLSurfaceView {
             }
             Apple2Preferences.loadPreferences(Apple2View.this.mActivity);
 
-            if ((Apple2View.this.mActivity.menuStackSize() == 0) && !Apple2View.this.mActivity.isPausing()) {
-                Apple2View.this.mActivity.nativeEmulationResume();
-            }
+            Apple2View.this.mActivity.maybeResumeCPU();
         }
 
         @Override

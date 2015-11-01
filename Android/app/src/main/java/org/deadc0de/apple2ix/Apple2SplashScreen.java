@@ -46,9 +46,8 @@ public class Apple2SplashScreen implements Apple2MenuView {
         prefsButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Apple2SettingsMenu settingsMenu = mActivity.getMainMenu().getSettingsMenu();
+                Apple2SettingsMenu settingsMenu = mActivity.getSettingsMenu();
                 settingsMenu.show();
-                Apple2SplashScreen.this.dismiss();
             }
         });
 
@@ -56,9 +55,8 @@ public class Apple2SplashScreen implements Apple2MenuView {
         disksButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Apple2DisksMenu disksMenu = mActivity.getMainMenu().getDisksMenu();
+                Apple2DisksMenu disksMenu = mActivity.getDisksMenu();
                 disksMenu.show();
-                Apple2SplashScreen.this.dismiss();
             }
         });
     }
