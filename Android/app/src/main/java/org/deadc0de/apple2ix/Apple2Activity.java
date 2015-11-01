@@ -513,7 +513,7 @@ public class Apple2Activity extends Activity {
             if (viewGroup != null) {
                 viewGroup.removeView(menuView);
             }
-            if (apple2MenuView == mSplashScreen) {
+            if (apple2MenuView instanceof Apple2SplashScreen) { // 20151101 HACK NOTE : use instanceof to avoid edge case where joystick calibration occurred (and thus the splash was already dismissed without proper mView initialization)
                 mSplashScreen = null;
                 dismissedSplashScreen = true;
             }
