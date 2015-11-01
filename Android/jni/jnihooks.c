@@ -99,6 +99,48 @@ static inline int _androidTouchEvent2InterfaceEvent(jint action) {
 // ----------------------------------------------------------------------------
 // JNI functions
 
+void Java_org_deadc0de_apple2ix_Apple2Activity_nativeEarlyLifecycleInit(JNIEnv *env, jobject obj) {
+    LOG("Discovering CPU family...");
+
+    AndroidCpuFamily family = android_getCpuFamily();
+    uint64_t features = android_getCpuFeatures();
+    if (family == ANDROID_CPU_FAMILY_X86) {
+        if (features & ANDROID_CPU_X86_FEATURE_SSSE3) {
+            LOG("nANDROID_CPU_X86_FEATURE_SSSE3");
+            android_x86SSSE3Enabled = true;
+        }
+        if (features & ANDROID_CPU_X86_FEATURE_MOVBE) {
+            LOG("ANDROID_CPU_X86_FEATURE_MOVBE");
+        }
+        if (features & ANDROID_CPU_X86_FEATURE_POPCNT) {
+            LOG("ANDROID_CPU_X86_FEATURE_POPCNT");
+        }
+    } else if (family == ANDROID_CPU_FAMILY_ARM) {
+        if (features & ANDROID_CPU_ARM_FEATURE_ARMv7) {
+            LOG("ANDROID_CPU_ARM_FEATURE_ARMv7");
+            android_armArchV7A = true;
+        } else {
+            LOG("!!! NOT ANDROID_CPU_ARM_FEATURE_ARMv7");
+            android_armArch = true;
+        }
+
+        if (features & ANDROID_CPU_ARM_FEATURE_VFPv3) {
+            LOG("ANDROID_CPU_ARM_FEATURE_VFPv3");
+        }
+        if (features & ANDROID_CPU_ARM_FEATURE_NEON) {
+            LOG("ANDROID_CPU_ARM_FEATURE_NEON");
+            android_armNeonEnabled = true;
+        }
+        if (features & ANDROID_CPU_ARM_FEATURE_LDREX_STREX) {
+            LOG("ANDROID_CPU_ARM_FEATURE_LDREX_STREX");
+        }
+    } else if (family == ANDROID_CPU_FAMILY_ARM64) {
+#warning FIXME TODO ...
+        //android_arm64Arch = true;
+        android_armArchV7A = true;
+    }
+}
+
 void Java_org_deadc0de_apple2ix_Apple2View_nativeOnCreate(JNIEnv *env, jclass cls, jstring j_dataDir, jint sampleRate, jint monoBufferSize, jint stereoBufferSize) {
     const char *dataDir = (*env)->GetStringUTFChars(env, j_dataDir, 0);
 
@@ -302,44 +344,6 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeEjectDisk(JNIEnv *env, jobj
 
 __attribute__((constructor(CTOR_PRIORITY_LATE)))
 static void _init_jnihooks(void) {
-    LOG("Discovering CPU family");
-
-    AndroidCpuFamily family = android_getCpuFamily();
-    uint64_t features = android_getCpuFeatures();
-    if (family == ANDROID_CPU_FAMILY_X86) {
-        if (features & ANDROID_CPU_X86_FEATURE_SSSE3) {
-            LOG("nANDROID_CPU_X86_FEATURE_SSSE3");
-            android_x86SSSE3Enabled = true;
-        }
-        if (features & ANDROID_CPU_X86_FEATURE_MOVBE) {
-            LOG("ANDROID_CPU_X86_FEATURE_MOVBE");
-        }
-        if (features & ANDROID_CPU_X86_FEATURE_POPCNT) {
-            LOG("ANDROID_CPU_X86_FEATURE_POPCNT");
-        }
-    } else if (family == ANDROID_CPU_FAMILY_ARM) {
-        if (features & ANDROID_CPU_ARM_FEATURE_ARMv7) {
-            LOG("ANDROID_CPU_ARM_FEATURE_ARMv7");
-            android_armArchV7A = true;
-        } else {
-            LOG("!!! NOT ANDROID_CPU_ARM_FEATURE_ARMv7");
-            android_armArch = true;
-        }
-
-        if (features & ANDROID_CPU_ARM_FEATURE_VFPv3) {
-            LOG("ANDROID_CPU_ARM_FEATURE_VFPv3");
-        }
-        if (features & ANDROID_CPU_ARM_FEATURE_NEON) {
-            LOG("ANDROID_CPU_ARM_FEATURE_NEON");
-            android_armNeonEnabled = true;
-        }
-        if (features & ANDROID_CPU_ARM_FEATURE_LDREX_STREX) {
-            LOG("ANDROID_CPU_ARM_FEATURE_LDREX_STREX");
-        }
-    } else if (family == ANDROID_CPU_FAMILY_ARM64) {
-#warning FIXME TODO ...
-        //android_arm64Arch = true;
-        android_armArchV7A = true;
-    }
+    // ...
 }
 

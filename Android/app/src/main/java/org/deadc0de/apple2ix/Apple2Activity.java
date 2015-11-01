@@ -91,6 +91,8 @@ public class Apple2Activity extends Activity {
 
     private native void nativeOnKeyUp(int keyCode, int metaState);
 
+    private native void nativeEarlyLifecycleInit();
+
     public native void nativeEmulationResume();
 
     public native void nativeEmulationPause();
@@ -139,6 +141,8 @@ public class Apple2Activity extends Activity {
 
         showSplashScreen();
         Apple2CrashHandler.getInstance().checkForCrashes(Apple2Activity.this);
+
+        nativeEarlyLifecycleInit();
 
         // first-time initializations #1
         if (!Apple2Preferences.FIRST_TIME_CONFIGURED.booleanValue(this)) {
@@ -516,7 +520,7 @@ public class Apple2Activity extends Activity {
 
         // if no more views on menu stack, resume emulation
         if (mMenuStack.size() == 0) {
-            dismissAllMenus();
+            dismissAllMenus(); // NOTE : at this point, this should not be re-entrant into mMenuStack, it should just dismiss lingering popups
             if (!mPausing.get()) {
                 if (dismissedSplashScreen) {
                     setupGLView();
