@@ -425,9 +425,10 @@ public class Apple2Activity extends Activity {
             mMainMenu = new Apple2MainMenu(this, mView);
         }
 
-        setContentView(mView);
-
-        if (!glViewFirstTime) {
+        if (glViewFirstTime) {
+            // HACK NOTE : do not blanket setContentView() ... it appears to wedge Gingerbread
+            setContentView(mView);
+        } else {
             mView.onResume();
         }
     }
