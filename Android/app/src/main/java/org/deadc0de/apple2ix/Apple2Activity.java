@@ -15,7 +15,6 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.graphics.Rect;
 import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Bundle;
@@ -25,7 +24,6 @@ import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewTreeObserver;
 import android.widget.FrameLayout;
 import android.widget.Toast;
 
@@ -50,9 +48,6 @@ public class Apple2Activity extends Activity {
     private ArrayList<AlertDialog> mAlertDialogs = new ArrayList<AlertDialog>();
 
     private AtomicBoolean mPausing = new AtomicBoolean(false);
-
-    private int mWidth = 0;
-    private int mHeight = 0;
 
     private float[] mXCoords = new float[MAX_FINGERS];
     private float[] mYCoords = new float[MAX_FINGERS];
@@ -88,17 +83,11 @@ public class Apple2Activity extends Activity {
     public final static long NATIVE_TOUCH_ASCII_MASK = 0xFF00L;
     public final static long NATIVE_TOUCH_SCANCODE_MASK = 0x00FFL;
 
-    private native void nativeOnCreate(String dataDir, int sampleRate, int monoBufferSize, int stereoBufferSize);
-
-    private native void nativeGraphicsInitialized(int width, int height);
-
-    private native void nativeGraphicsChanged(int width, int height);
-
     private native void nativeOnKeyDown(int keyCode, int metaState);
 
     private native void nativeOnKeyUp(int keyCode, int metaState);
 
-    private native void nativeEmulationResume();
+    public native void nativeEmulationResume();
 
     public native void nativeEmulationPause();
 
@@ -107,8 +96,6 @@ public class Apple2Activity extends Activity {
     public native long nativeOnTouch(int action, int pointerCount, int pointerIndex, float[] xCoords, float[] yCoords);
 
     public native void nativeReboot();
-
-    public native void nativeRender();
 
     public native void nativeChooseDisk(String path, boolean driveA, boolean readOnly);
 
@@ -135,55 +122,36 @@ public class Apple2Activity extends Activity {
 
         Log.e(TAG, "onCreate()");
 
+        // placeholder view on initial launch
+        if (mView == null) {
+            setContentView(new View(this));
+        }
+
         Apple2CrashHandler.getInstance().initializeAndSetCustomExceptionHandler(this);
         if (sNativeBarfed) {
             Log.e(TAG, "NATIVE BARFED...", sNativeBarfedThrowable);
-            View view = new View(this);
-            setContentView(view);
             return;
         }
 
-        // run first-time initializations
+        showSplashScreen();
+        Apple2CrashHandler.getInstance().checkForCrashes(Apple2Activity.this);
+
+        // first-time initializations #1
         if (!Apple2Preferences.FIRST_TIME_CONFIGURED.booleanValue(this)) {
             Apple2DisksMenu.firstTime(this);
-            Apple2Preferences.KeypadPreset.IJKM_SPACE.apply(this);
         }
-        Apple2Preferences.FIRST_TIME_CONFIGURED.saveBoolean(this, true);
 
-        // get device audio parameters for native OpenSLES
-        int sampleRate = DevicePropertyCalculator.getRecommendedSampleRate(this);
-        int monoBufferSize = DevicePropertyCalculator.getRecommendedBufferSize(this, /*isStereo:*/false);
-        int stereoBufferSize = DevicePropertyCalculator.getRecommendedBufferSize(this, /*isStereo:*/true);
-        Log.d(TAG, "Device sampleRate:" + sampleRate + " mono bufferSize:" + monoBufferSize + " stereo bufferSize:" + stereoBufferSize);
-
-        String dataDir = Apple2DisksMenu.getDataDir(this);
-        nativeOnCreate(dataDir, sampleRate, monoBufferSize, stereoBufferSize);
-
-        // NOTE: load preferences after nativeOnCreate ... native CPU thread should still be paused
-        Apple2Preferences.loadPreferences(this);
-
-        mView = new Apple2View(this);
-        setContentView(mView);
-
-        // Another Android Annoyance ...
-        // Even though we no longer use the system soft keyboard (which would definitely trigger width/height changes to our OpenGL canvas),
-        // we still need to listen to dimension changes, because it seems on some janky devices you have an incorrect width/height set when
-        // the initial OpenGL onSurfaceChanged() callback occurs.  For now, include this defensive coding...
-        mView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-            public void onGlobalLayout() {
-                Rect rect = new Rect();
-                mView.getWindowVisibleDisplayFrame(rect);
-                int h = rect.height();
-                int w = rect.width();
-                if (w < h) {
-                    // assure landscape dimensions
-                    final int w_ = w;
-                    w = h;
-                    h = w_;
-                }
-                nativeGraphicsChanged(w, h);
+        Intent intent = getIntent();
+        String path = null;
+        if (intent != null) {
+            Uri data = intent.getData();
+            if (data != null) {
+                path = data.getPath();
             }
-        });
+        }
+        if (path != null && Apple2DisksMenu.hasDiskExtension(path)) {
+            handleInsertDiskIntent(path);
+        }
     }
 
     @Override
@@ -195,7 +163,7 @@ public class Apple2Activity extends Activity {
         }
 
         Log.d(TAG, "onResume()");
-        mView.onResume();
+        showSplashScreen();
     }
 
     @Override
@@ -211,7 +179,9 @@ public class Apple2Activity extends Activity {
         }
 
         Log.d(TAG, "onPause()");
-        mView.onPause();
+        if (mView != null) {
+            mView.onPause();
+        }
 
         // Apparently not good to leave popup/dialog windows showing when backgrounding.
         // Dismiss these popups to avoid android.view.WindowLeaked issues
@@ -354,40 +324,6 @@ public class Apple2Activity extends Activity {
         return super.onTouchEvent(event);
     }
 
-    void graphicsInitialized(int w, int h) {
-        Log.v(TAG, "graphicsInitialized(" + w + ", " + h + ")");
-
-        if (mMainMenu == null) {
-            mMainMenu = new Apple2MainMenu(this, mView);
-        }
-
-        if (w < h) {
-            // assure landscape dimensions
-            final int w_ = w;
-            w = h;
-            h = w_;
-        }
-
-        mWidth = w;
-        mHeight = h;
-
-        nativeGraphicsInitialized(w, h);
-
-        showSplashScreen();
-
-        Intent intent = getIntent();
-        String path = null;
-        if (intent != null) {
-            Uri data = intent.getData();
-            if (data != null) {
-                path = data.getPath();
-            }
-        }
-        if (path != null && Apple2DisksMenu.hasDiskExtension(path)) {
-            handleInsertDiskIntent(path);
-        }
-    }
-
     public void showMainMenu() {
         if (mMainMenu != null) {
             Apple2SettingsMenu settingsMenu = mMainMenu.getSettingsMenu();
@@ -456,18 +392,28 @@ public class Apple2Activity extends Activity {
         });
     }
 
-    private synchronized void showSplashScreen() {
+    private void showSplashScreen() {
         if (mSplashScreen != null) {
             return;
         }
         mSplashScreen = new Apple2SplashScreen(Apple2Activity.this);
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                mSplashScreen.show();
-                Apple2CrashHandler.getInstance().checkForCrashes(Apple2Activity.this);
-            }
-        });
+        mSplashScreen.show();
+    }
+
+    private void setupGLView() {
+
+        boolean glViewFirstTime = false;
+        if (mView == null) {
+            glViewFirstTime = true;
+            mView = new Apple2View(this);
+            mMainMenu = new Apple2MainMenu(this, mView);
+        }
+
+        setContentView(mView);
+
+        if (!glViewFirstTime) {
+            mView.onResume();
+        }
     }
 
     public void registerAndShowDialog(AlertDialog dialog) {
@@ -479,7 +425,7 @@ public class Apple2Activity extends Activity {
         mMenuStack.add(apple2MenuView);
         View menuView = apple2MenuView.getView();
         nativeEmulationPause();
-        addContentView(menuView, new FrameLayout.LayoutParams(mWidth, mHeight));
+        addContentView(menuView, new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
     }
 
     public synchronized Apple2MenuView popApple2View() {
@@ -543,6 +489,8 @@ public class Apple2Activity extends Activity {
 
     private void _disposeApple2View(Apple2MenuView apple2MenuView) {
 
+        boolean dismissedSplashScreen = false;
+
         // Actually remove View from view hierarchy
         {
             View menuView = apple2MenuView.getView();
@@ -552,15 +500,19 @@ public class Apple2Activity extends Activity {
             }
             if (apple2MenuView == mSplashScreen) {
                 mSplashScreen = null;
+                dismissedSplashScreen = true;
             }
         }
 
         // if no more views on menu stack, resume emulation
         if (mMenuStack.size() == 0) {
             dismissAllMenus();
+            if (!mPausing.get()) {
+                nativeEmulationResume();
+            }
         }
-        if (mMenuStack.size() == 0 && !mPausing.get()) {
-            nativeEmulationResume();
+        if (!mPausing.get() && dismissedSplashScreen) {
+            setupGLView();
         }
     }
 
@@ -570,8 +522,12 @@ public class Apple2Activity extends Activity {
         }
     }
 
-    public Apple2View getView() {
-        return mView;
+    public boolean isPausing() {
+        return mPausing.get();
+    }
+
+    public int menuStackSize() {
+        return mMenuStack.size();
     }
 
     public void maybeQuitApp() {

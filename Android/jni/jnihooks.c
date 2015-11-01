@@ -99,7 +99,7 @@ static inline int _androidTouchEvent2InterfaceEvent(jint action) {
 // ----------------------------------------------------------------------------
 // JNI functions
 
-void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnCreate(JNIEnv *env, jobject obj, jstring j_dataDir, jint sampleRate, jint monoBufferSize, jint stereoBufferSize) {
+void Java_org_deadc0de_apple2ix_Apple2View_nativeOnCreate(JNIEnv *env, jclass cls, jstring j_dataDir, jint sampleRate, jint monoBufferSize, jint stereoBufferSize) {
     const char *dataDir = (*env)->GetStringUTFChars(env, j_dataDir, 0);
 
     // Android lifecycle can call onCreate() multiple times...
@@ -135,14 +135,15 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnCreate(JNIEnv *env, jobje
 #endif
 }
 
-void Java_org_deadc0de_apple2ix_Apple2Activity_nativeGraphicsChanged(JNIEnv *env, jobject obj, jint width, jint height) {
+void Java_org_deadc0de_apple2ix_Apple2View_nativeGraphicsChanged(JNIEnv *env, jclass cls, jint width, jint height) {
+    // WARNING : this can happen on non-GL thread
     LOG("...");
     video_backend->reshape(width, height);
 }
 
-void Java_org_deadc0de_apple2ix_Apple2Activity_nativeGraphicsInitialized(JNIEnv *env, jobject obj, jint width, jint height) {
+void Java_org_deadc0de_apple2ix_Apple2View_nativeGraphicsInitialized(JNIEnv *env, jclass cls, jint width, jint height) {
+    // WANRING : this needs to happen on the GL thread only
     LOG("width:%d height:%d", width, height);
-
     video_shutdown();
     video_backend->reshape(width, height);
     video_backend->init((void *)0);
@@ -176,7 +177,7 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeEmulationPause(JNIEnv *env,
 #endif
 }
 
-void Java_org_deadc0de_apple2ix_Apple2Activity_nativeRender(JNIEnv *env, jobject obj) {
+void Java_org_deadc0de_apple2ix_Apple2View_nativeRender(JNIEnv *env, jclass cls) {
     SCOPE_TRACE_VIDEO("nativeRender");
 
     if (UNLIKELY(appState != APP_RUNNING)) {

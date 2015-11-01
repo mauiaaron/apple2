@@ -16,9 +16,11 @@
 package org.deadc0de.apple2ix;
 
 import android.graphics.PixelFormat;
+import android.graphics.Rect;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.util.Log;
+import android.view.ViewTreeObserver;
 
 import javax.microedition.khronos.egl.EGL10;
 import javax.microedition.khronos.egl.EGLConfig;
@@ -50,13 +52,17 @@ class Apple2View extends GLSurfaceView {
 
     private Apple2Activity mActivity = null;
 
+    private static native void nativeOnCreate(String dataDir, int sampleRate, int monoBufferSize, int stereoBufferSize);
+
+    private static native void nativeGraphicsInitialized(int width, int height);
+
+    private static native void nativeGraphicsChanged(int width, int height);
+
+    private static native void nativeRender();
+
     public Apple2View(Apple2Activity activity) {
         super(activity.getApplication());
         mActivity = activity;
-        setup(0, 0);
-    }
-
-    private void setup(int depth, int stencil) {
 
         /* By default, GLSurfaceView() creates a RGB_565 opaque surface.
          * If we want a translucent one, we should change the surface's
@@ -75,14 +81,36 @@ class Apple2View extends GLSurfaceView {
          * custom config chooser. See ConfigChooser class definition
          * below.
          */
-        setEGLConfigChooser(new ConfigChooser(8, 8, 8, 8, depth, stencil));
+        setEGLConfigChooser(new ConfigChooser(8, 8, 8, 8, /*depth:*/0, /*stencil:*/0));
 
         /* Set the renderer responsible for frame rendering */
         setRenderer(new Renderer());
+
+        // Another Android Annoyance ...
+        // Even though we no longer use the system soft keyboard (which would definitely trigger width/height changes to our OpenGL canvas),
+        // we still need to listen to dimension changes, because it seems on some janky devices you have an incorrect width/height set when
+        // the initial OpenGL onSurfaceChanged() callback occurs.  For now, include this defensive coding...
+        getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            public void onGlobalLayout() {
+                Rect rect = new Rect();
+                Apple2View.this.getWindowVisibleDisplayFrame(rect);
+                int h = rect.height();
+                int w = rect.width();
+                if (w < h) {
+                    // assure landscape dimensions
+                    final int w_ = w;
+                    w = h;
+                    h = w_;
+                }
+                nativeGraphicsChanged(w, h);
+            }
+        });
+
     }
 
     private static class ContextFactory implements GLSurfaceView.EGLContextFactory {
         private static int EGL_CONTEXT_CLIENT_VERSION = 0x3098;
+
         public EGLContext createContext(EGL10 egl, EGLDisplay display, EGLConfig eglConfig) {
             Log.w(TAG, "creating OpenGL ES 2.0 context");
             checkEglError("Before eglCreateContext", egl);
@@ -295,17 +323,49 @@ class Apple2View extends GLSurfaceView {
     }
 
     private class Renderer implements GLSurfaceView.Renderer {
+
+        @Override
         public void onDrawFrame(GL10 gl) {
-            Apple2View.this.mActivity.nativeRender();
+            nativeRender();
         }
 
+        @Override
         public void onSurfaceChanged(GL10 gl, int width, int height) {
             Apple2Preferences.GL_VENDOR.saveString(mActivity, GLES20.glGetString(GLES20.GL_VENDOR));
             Apple2Preferences.GL_RENDERER.saveString(mActivity, GLES20.glGetString(GLES20.GL_RENDERER));
             Apple2Preferences.GL_VERSION.saveString(mActivity, GLES20.glGetString(GLES20.GL_VERSION));
-            Apple2View.this.mActivity.graphicsInitialized(width, height);
+
+            Log.v(TAG, "graphicsInitialized(" + width + ", " + height + ")");
+
+            if (width < height) {
+                // assure landscape dimensions
+                final int w_ = width;
+                width = height;
+                height = w_;
+            }
+
+            int sampleRate = DevicePropertyCalculator.getRecommendedSampleRate(Apple2View.this.mActivity);
+            int monoBufferSize = DevicePropertyCalculator.getRecommendedBufferSize(Apple2View.this.mActivity, /*isStereo:*/false);
+            int stereoBufferSize = DevicePropertyCalculator.getRecommendedBufferSize(Apple2View.this.mActivity, /*isStereo:*/true);
+            Log.d(TAG, "Device sampleRate:" + sampleRate + " mono bufferSize:" + monoBufferSize + " stereo bufferSize:" + stereoBufferSize);
+
+            String dataDir = Apple2DisksMenu.getDataDir(Apple2View.this.mActivity);
+            nativeOnCreate(dataDir, sampleRate, monoBufferSize, stereoBufferSize);
+            nativeGraphicsInitialized(width, height);
+
+            // first-time initializations #2
+            if (!Apple2Preferences.FIRST_TIME_CONFIGURED.booleanValue(Apple2View.this.mActivity)) {
+                Apple2Preferences.KeypadPreset.IJKM_SPACE.apply(Apple2View.this.mActivity);
+                Apple2Preferences.FIRST_TIME_CONFIGURED.saveBoolean(Apple2View.this.mActivity, true);
+            }
+            Apple2Preferences.loadPreferences(Apple2View.this.mActivity);
+
+            if ((Apple2View.this.mActivity.menuStackSize() == 0) && !Apple2View.this.mActivity.isPausing()) {
+                Apple2View.this.mActivity.nativeEmulationResume();
+            }
         }
 
+        @Override
         public void onSurfaceCreated(GL10 gl, EGLConfig config) {
             // Do nothing.
         }
