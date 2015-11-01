@@ -121,44 +121,6 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnCreate(JNIEnv *env, jobje
     (*env)->ReleaseStringUTFChars(env, j_dataDir, dataDir);
     LOG("data_dir : %s", data_dir);
 
-    AndroidCpuFamily family = android_getCpuFamily();
-    uint64_t features = android_getCpuFeatures();
-    if (family == ANDROID_CPU_FAMILY_X86) {
-        if (features & ANDROID_CPU_X86_FEATURE_SSSE3) {
-            LOG("nANDROID_CPU_X86_FEATURE_SSSE3");
-            android_x86SSSE3Enabled = true;
-        }
-        if (features & ANDROID_CPU_X86_FEATURE_MOVBE) {
-            LOG("ANDROID_CPU_X86_FEATURE_MOVBE");
-        }
-        if (features & ANDROID_CPU_X86_FEATURE_POPCNT) {
-            LOG("ANDROID_CPU_X86_FEATURE_POPCNT");
-        }
-    } else if (family == ANDROID_CPU_FAMILY_ARM) {
-        if (features & ANDROID_CPU_ARM_FEATURE_ARMv7) {
-            LOG("ANDROID_CPU_ARM_FEATURE_ARMv7");
-            android_armArchV7A = true;
-        } else {
-            LOG("!!! NOT ANDROID_CPU_ARM_FEATURE_ARMv7");
-            android_armArch = true;
-        }
-
-        if (features & ANDROID_CPU_ARM_FEATURE_VFPv3) {
-            LOG("ANDROID_CPU_ARM_FEATURE_VFPv3");
-        }
-        if (features & ANDROID_CPU_ARM_FEATURE_NEON) {
-            LOG("ANDROID_CPU_ARM_FEATURE_NEON");
-            android_armNeonEnabled = true;
-        }
-        if (features & ANDROID_CPU_ARM_FEATURE_LDREX_STREX) {
-            LOG("ANDROID_CPU_ARM_FEATURE_LDREX_STREX");
-        }
-    } else if (family == ANDROID_CPU_FAMILY_ARM64) {
-#warning FIXME TODO ...
-        //android_arm64Arch = true;
-        android_armArchV7A = true;
-    }
-
     android_deviceSampleRateHz = (unsigned long)sampleRate;
     android_monoBufferSubmitSizeSamples = (unsigned long)monoBufferSize;
     android_stereoBufferSubmitSizeSamples = (unsigned long)stereoBufferSize;
@@ -339,6 +301,44 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeEjectDisk(JNIEnv *env, jobj
 
 __attribute__((constructor(CTOR_PRIORITY_LATE)))
 static void _init_jnihooks(void) {
-    // ...
+    LOG("Discovering CPU family");
+
+    AndroidCpuFamily family = android_getCpuFamily();
+    uint64_t features = android_getCpuFeatures();
+    if (family == ANDROID_CPU_FAMILY_X86) {
+        if (features & ANDROID_CPU_X86_FEATURE_SSSE3) {
+            LOG("nANDROID_CPU_X86_FEATURE_SSSE3");
+            android_x86SSSE3Enabled = true;
+        }
+        if (features & ANDROID_CPU_X86_FEATURE_MOVBE) {
+            LOG("ANDROID_CPU_X86_FEATURE_MOVBE");
+        }
+        if (features & ANDROID_CPU_X86_FEATURE_POPCNT) {
+            LOG("ANDROID_CPU_X86_FEATURE_POPCNT");
+        }
+    } else if (family == ANDROID_CPU_FAMILY_ARM) {
+        if (features & ANDROID_CPU_ARM_FEATURE_ARMv7) {
+            LOG("ANDROID_CPU_ARM_FEATURE_ARMv7");
+            android_armArchV7A = true;
+        } else {
+            LOG("!!! NOT ANDROID_CPU_ARM_FEATURE_ARMv7");
+            android_armArch = true;
+        }
+
+        if (features & ANDROID_CPU_ARM_FEATURE_VFPv3) {
+            LOG("ANDROID_CPU_ARM_FEATURE_VFPv3");
+        }
+        if (features & ANDROID_CPU_ARM_FEATURE_NEON) {
+            LOG("ANDROID_CPU_ARM_FEATURE_NEON");
+            android_armNeonEnabled = true;
+        }
+        if (features & ANDROID_CPU_ARM_FEATURE_LDREX_STREX) {
+            LOG("ANDROID_CPU_ARM_FEATURE_LDREX_STREX");
+        }
+    } else if (family == ANDROID_CPU_FAMILY_ARM64) {
+#warning FIXME TODO ...
+        //android_arm64Arch = true;
+        android_armArchV7A = true;
+    }
 }
 
