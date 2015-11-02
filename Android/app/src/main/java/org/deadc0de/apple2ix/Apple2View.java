@@ -55,8 +55,6 @@ class Apple2View extends GLSurfaceView {
     private Apple2Activity mActivity = null;
     private AtomicBoolean mInitialLaunch = new AtomicBoolean(true);
 
-    private static native void nativeOnCreate(String dataDir, int sampleRate, int monoBufferSize, int stereoBufferSize);
-
     private static native void nativeGraphicsInitialized(int width, int height);
 
     private static native void nativeGraphicsChanged(int width, int height);
@@ -347,13 +345,6 @@ class Apple2View extends GLSurfaceView {
                 height = w_;
             }
 
-            int sampleRate = DevicePropertyCalculator.getRecommendedSampleRate(Apple2View.this.mActivity);
-            int monoBufferSize = DevicePropertyCalculator.getRecommendedBufferSize(Apple2View.this.mActivity, /*isStereo:*/false);
-            int stereoBufferSize = DevicePropertyCalculator.getRecommendedBufferSize(Apple2View.this.mActivity, /*isStereo:*/true);
-            Log.d(TAG, "Device sampleRate:" + sampleRate + " mono bufferSize:" + monoBufferSize + " stereo bufferSize:" + stereoBufferSize);
-
-            String dataDir = Apple2DisksMenu.getDataDir(Apple2View.this.mActivity);
-            nativeOnCreate(dataDir, sampleRate, monoBufferSize, stereoBufferSize);
             nativeGraphicsInitialized(width, height);
 
             // first-time initializations #2

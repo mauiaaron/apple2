@@ -96,10 +96,7 @@ static inline int _androidTouchEvent2InterfaceEvent(jint action) {
     }
 }
 
-// ----------------------------------------------------------------------------
-// JNI functions
-
-void Java_org_deadc0de_apple2ix_Apple2Activity_nativeEarlyLifecycleInit(JNIEnv *env, jobject obj) {
+static void discover_cpu_family(void) {
     LOG("Discovering CPU family...");
 
     AndroidCpuFamily family = android_getCpuFamily();
@@ -141,7 +138,10 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeEarlyLifecycleInit(JNIEnv *
     }
 }
 
-void Java_org_deadc0de_apple2ix_Apple2View_nativeOnCreate(JNIEnv *env, jclass cls, jstring j_dataDir, jint sampleRate, jint monoBufferSize, jint stereoBufferSize) {
+// ----------------------------------------------------------------------------
+// JNI functions
+
+void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnCreate(JNIEnv *env, jobject obj, jstring j_dataDir, jint sampleRate, jint monoBufferSize, jint stereoBufferSize) {
     const char *dataDir = (*env)->GetStringUTFChars(env, j_dataDir, 0);
 
     // Android lifecycle can call onCreate() multiple times...
@@ -149,6 +149,8 @@ void Java_org_deadc0de_apple2ix_Apple2View_nativeOnCreate(JNIEnv *env, jclass cl
         LOG("IGNORING multiple calls to nativeOnCreate ...");
         return;
     }
+
+    discover_cpu_family();
 
     // Do not remove this deadc0de ... it forces a runtime load-library/link error on Gingerbread devices if we have
     // incorrectly compiled the app against a later version of the NDK!!!

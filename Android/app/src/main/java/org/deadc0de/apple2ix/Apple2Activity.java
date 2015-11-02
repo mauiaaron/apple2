@@ -87,11 +87,11 @@ public class Apple2Activity extends Activity {
     public final static long NATIVE_TOUCH_ASCII_MASK = 0xFF00L;
     public final static long NATIVE_TOUCH_SCANCODE_MASK = 0x00FFL;
 
+    private native void nativeOnCreate(String dataDir, int sampleRate, int monoBufferSize, int stereoBufferSize);
+
     private native void nativeOnKeyDown(int keyCode, int metaState);
 
     private native void nativeOnKeyUp(int keyCode, int metaState);
-
-    private native void nativeEarlyLifecycleInit();
 
     public native void nativeEmulationResume();
 
@@ -139,10 +139,16 @@ public class Apple2Activity extends Activity {
             return;
         }
 
+        int sampleRate = DevicePropertyCalculator.getRecommendedSampleRate(this);
+        int monoBufferSize = DevicePropertyCalculator.getRecommendedBufferSize(this, /*isStereo:*/false);
+        int stereoBufferSize = DevicePropertyCalculator.getRecommendedBufferSize(this, /*isStereo:*/true);
+        Log.d(TAG, "Device sampleRate:" + sampleRate + " mono bufferSize:" + monoBufferSize + " stereo bufferSize:" + stereoBufferSize);
+
+        String dataDir = Apple2DisksMenu.getDataDir(this);
+        nativeOnCreate(dataDir, sampleRate, monoBufferSize, stereoBufferSize);
+
         showSplashScreen();
         Apple2CrashHandler.getInstance().checkForCrashes(Apple2Activity.this);
-
-        nativeEarlyLifecycleInit();
 
         // first-time initializations #1
         if (!Apple2Preferences.FIRST_TIME_CONFIGURED.booleanValue(this)) {
