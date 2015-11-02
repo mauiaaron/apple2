@@ -181,6 +181,7 @@ public class Apple2Activity extends Activity {
 
         Log.d(TAG, "onResume()");
         showSplashScreen();
+        Apple2CrashHandler.getInstance().checkForCrashes(Apple2Activity.this); // NOTE : needs to be called again to clean-up
     }
 
     @Override
