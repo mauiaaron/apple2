@@ -551,10 +551,19 @@ static void _gldriver_setup_hackarounds(void) {
             break;
         }
 
+        regex_t twoHundredXXRegex = { 0 };
+        err = regcomp(&twoHundredXXRegex, "2[2-9][0-9]", REG_ICASE|REG_NOSUB|REG_EXTENDED);
+        if (err) {
+            LOG("Cannot compile regex : %d", err);
+            break;
+        }
+
         int found200 = !regexec(&twoHundredRegex, renderer, /*nmatch:*/0, /*pmatch:*/NULL, /*eflags:*/0);
         int found205 = !regexec(&twoHundredFiveRegex, renderer, /*nmatch:*/0, /*pmatch:*/NULL, /*eflags:*/0);
+        int found2XX = !regexec(&twoHundredXXRegex, renderer, /*nmatch:*/0, /*pmatch:*/NULL, /*eflags:*/0);
         regfree(&twoHundredRegex);
         regfree(&twoHundredFiveRegex);
+        regfree(&twoHundredXXRegex);
 
         if (found200) {
             LOG("HACKING AROUND BROKEN ADRENO 200");
@@ -565,6 +574,11 @@ static void _gldriver_setup_hackarounds(void) {
             LOG("HACKING AROUND BROKEN ADRENO 205");
             hackAroundBrokenAdreno200 = true;
             hackAroundBrokenAdreno205 = true;
+            break;
+        }
+        if (found2XX) {
+            LOG("HACKING AROUND BROKEN ADRENO 2XX");
+            hackAroundBrokenAdreno200 = true;
             break;
         }
     } while (0);
