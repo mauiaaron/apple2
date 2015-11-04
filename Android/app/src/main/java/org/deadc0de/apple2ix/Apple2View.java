@@ -22,8 +22,6 @@ import android.opengl.GLSurfaceView;
 import android.util.Log;
 import android.view.ViewTreeObserver;
 
-import java.util.concurrent.atomic.AtomicBoolean;
-
 import javax.microedition.khronos.egl.EGL10;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.egl.EGLContext;
@@ -53,7 +51,7 @@ class Apple2View extends GLSurfaceView {
     private final static boolean DEBUG = false;
 
     private Apple2Activity mActivity = null;
-    private AtomicBoolean mInitialLaunch = new AtomicBoolean(true);
+    private Runnable mGraphicsInitializedRunnable = null;
 
     private static native void nativeGraphicsInitialized(int width, int height);
 
@@ -61,9 +59,10 @@ class Apple2View extends GLSurfaceView {
 
     private static native void nativeRender();
 
-    public Apple2View(Apple2Activity activity) {
+    public Apple2View(Apple2Activity activity, Runnable graphicsInitializedRunnable) {
         super(activity.getApplication());
         mActivity = activity;
+        mGraphicsInitializedRunnable = graphicsInitializedRunnable;
 
         /* By default, GLSurfaceView() creates a RGB_565 opaque surface.
          * If we want a translucent one, we should change the surface's
@@ -347,16 +346,9 @@ class Apple2View extends GLSurfaceView {
 
             nativeGraphicsInitialized(width, height);
 
-            // first-time initializations #2
-            if (!Apple2Preferences.FIRST_TIME_CONFIGURED.booleanValue(Apple2View.this.mActivity)) {
-                Apple2Preferences.KeypadPreset.IJKM_SPACE.apply(Apple2View.this.mActivity);
-                Apple2Preferences.FIRST_TIME_CONFIGURED.saveBoolean(Apple2View.this.mActivity, true);
-            }
-
-            // load preferences on each new process creation
-            if (mInitialLaunch.get()) {
-                mInitialLaunch.set(false);
-                Apple2Preferences.loadPreferences(Apple2View.this.mActivity);
+            if (Apple2View.this.mGraphicsInitializedRunnable != null) {
+                Apple2View.this.mGraphicsInitializedRunnable.run();
+                Apple2View.this.mGraphicsInitializedRunnable = null;
             }
 
             Apple2View.this.mActivity.maybeResumeCPU();

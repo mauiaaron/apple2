@@ -43,6 +43,7 @@ public class Apple2Activity extends Activity {
     private static volatile boolean DEBUG_STRICT = false;
 
     private Apple2View mView = null;
+    private Runnable mGraphicsInitializedRunnable = null;
     private Apple2SplashScreen mSplashScreen = null;
     private Apple2MainMenu mMainMenu = null;
     private Apple2SettingsMenu mSettingsMenu = null;
@@ -149,9 +150,21 @@ public class Apple2Activity extends Activity {
 
         showSplashScreen();
         Apple2CrashHandler.getInstance().checkForCrashes(Apple2Activity.this);
+        final boolean firstTime = !Apple2Preferences.FIRST_TIME_CONFIGURED.booleanValue(this);
+        Apple2Preferences.FIRST_TIME_CONFIGURED.saveBoolean(this, true);
 
-        // first-time initializations #1
-        if (!Apple2Preferences.FIRST_TIME_CONFIGURED.booleanValue(this)) {
+        mGraphicsInitializedRunnable = new Runnable() {
+            @Override
+            public void run() {
+                if (firstTime) {
+                    Apple2Preferences.KeypadPreset.IJKM_SPACE.apply(Apple2Activity.this);
+                }
+                Apple2Preferences.loadPreferences(Apple2Activity.this);
+            }
+        };
+
+        // first-time initializations
+        if (firstTime) {
             Apple2DisksMenu.firstTime(this);
         }
 
@@ -428,7 +441,8 @@ public class Apple2Activity extends Activity {
         boolean glViewFirstTime = false;
         if (mView == null) {
             glViewFirstTime = true;
-            mView = new Apple2View(this);
+            mView = new Apple2View(this, mGraphicsInitializedRunnable);
+            mGraphicsInitializedRunnable = null;
             mMainMenu = new Apple2MainMenu(this, mView);
         }
 
