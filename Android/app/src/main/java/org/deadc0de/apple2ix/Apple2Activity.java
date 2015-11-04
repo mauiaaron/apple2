@@ -148,10 +148,11 @@ public class Apple2Activity extends Activity {
         String dataDir = Apple2DisksMenu.getDataDir(this);
         nativeOnCreate(dataDir, sampleRate, monoBufferSize, stereoBufferSize);
 
-        showSplashScreen();
-        Apple2CrashHandler.getInstance().checkForCrashes(Apple2Activity.this);
         final boolean firstTime = !Apple2Preferences.FIRST_TIME_CONFIGURED.booleanValue(this);
         Apple2Preferences.FIRST_TIME_CONFIGURED.saveBoolean(this, true);
+
+        showSplashScreen(!firstTime);
+        Apple2CrashHandler.getInstance().checkForCrashes(this);
 
         mGraphicsInitializedRunnable = new Runnable() {
             @Override
@@ -165,7 +166,14 @@ public class Apple2Activity extends Activity {
 
         // first-time initializations
         if (firstTime) {
-            Apple2DisksMenu.firstTime(this);
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    Apple2DisksMenu.firstTime(Apple2Activity.this);
+                    mSplashScreen.setDismissable(true);
+                    Log.d(TAG, "Finished first time copying...");
+                }
+            }).start();
         }
 
         mSettingsMenu = new Apple2SettingsMenu(this);
@@ -193,8 +201,8 @@ public class Apple2Activity extends Activity {
         }
 
         Log.d(TAG, "onResume()");
-        showSplashScreen();
-        Apple2CrashHandler.getInstance().checkForCrashes(Apple2Activity.this); // NOTE : needs to be called again to clean-up
+        showSplashScreen(/*dismissable:*/true);
+        Apple2CrashHandler.getInstance().checkForCrashes(this); // NOTE : needs to be called again to clean-up
     }
 
     @Override
@@ -428,11 +436,15 @@ public class Apple2Activity extends Activity {
         });
     }
 
-    private void showSplashScreen() {
+    public Apple2SplashScreen getSplashScreen() {
+        return mSplashScreen;
+    }
+
+    private void showSplashScreen(boolean dismissable) {
         if (mSplashScreen != null) {
             return;
         }
-        mSplashScreen = new Apple2SplashScreen(this, /*dismissable:*/true);
+        mSplashScreen = new Apple2SplashScreen(this, dismissable);
         mSplashScreen.show();
     }
 

@@ -181,14 +181,12 @@ public class Apple2CrashHandler {
             public void onClick(DialogInterface dialog, int which) {
                 dialog.dismiss();
 
-                final Button startButton = (Button) activity.findViewById(R.id.startButton);
-                final Button prefsButton = (Button) activity.findViewById(R.id.prefsButton);
-                final Button disksButton = (Button) activity.findViewById(R.id.disksButton);
+                final Apple2SplashScreen splashScreen = activity.getSplashScreen();
+                if (splashScreen != null) {
+                    splashScreen.setDismissable(false);
+                }
                 final ProgressBar bar = (ProgressBar) activity.findViewById(R.id.crash_progressBar);
                 try {
-                    startButton.setEnabled(false);
-                    prefsButton.setEnabled(false);
-                    disksButton.setEnabled(false);
                     bar.setVisibility(View.VISIBLE);
                 } catch (NullPointerException npe) {
                     /* could happen on early lifecycle crashes */
@@ -354,9 +352,7 @@ public class Apple2CrashHandler {
                             public void run() {
                                 try {
                                     bar.setVisibility(View.INVISIBLE);
-                                    startButton.setEnabled(true);
-                                    prefsButton.setEnabled(true);
-                                    disksButton.setEnabled(true);
+                                    splashScreen.setDismissable(true);
                                 } catch (NullPointerException npe) {
                                     /* could happen on early lifecycle crashes */
                                 }

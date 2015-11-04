@@ -30,6 +30,7 @@ import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.RadioButton;
 
 import org.json.JSONArray;
@@ -135,6 +136,14 @@ public class Apple2DisksMenu implements Apple2MenuView {
     }
 
     public static void firstTime(Apple2Activity activity) {
+        final ProgressBar bar = (ProgressBar) activity.findViewById(R.id.crash_progressBar);
+        try {
+            bar.setVisibility(View.VISIBLE);
+            bar.setIndeterminate(true);
+        } catch (NullPointerException npe) {
+            Log.v(TAG, "Whoa, avoided NPE in first time #1");
+        }
+
         getDataDir(activity);
 
         Log.d(TAG, "First time copying stuff-n-things out of APK for ease-of-NDK access...");
@@ -149,6 +158,18 @@ public class Apple2DisksMenu implements Apple2MenuView {
         if (sExternalFilesDir != null) {
             recursivelyCopyAPKAssets(activity, /*from APK directory:*/"keyboards", /*to location:*/sExternalFilesDir.getAbsolutePath());
         }
+
+        activity.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    bar.setVisibility(View.INVISIBLE);
+                    bar.setIndeterminate(false);
+                } catch (NullPointerException npe) {
+                    Log.v(TAG, "Whoa, avoided NPE in first time #2");
+                }
+            }
+        });
     }
 
     public static void exposeSymbols(Apple2Activity activity) {
