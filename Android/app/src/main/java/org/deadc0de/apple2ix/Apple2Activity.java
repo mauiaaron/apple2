@@ -419,7 +419,7 @@ public class Apple2Activity extends Activity {
         if (mSplashScreen != null) {
             return;
         }
-        mSplashScreen = new Apple2SplashScreen(Apple2Activity.this);
+        mSplashScreen = new Apple2SplashScreen(this, /*dismissable:*/true);
         mSplashScreen.show();
     }
 
