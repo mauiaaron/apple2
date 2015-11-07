@@ -1051,21 +1051,22 @@ char *yytext;
 /* 
  * Apple // emulator for *ix
  *
+ * This software package is subject to the GNU General Public License
+ * version 3 or later (your choice) as published by the Free Software 
+ * Foundation.
+ *
  * Copyright 1994 Alexander Jean-Claude Bottema
  * Copyright 1995 Stephen Lee
  * Copyright 1997, 1998 Aaron Culliney
  * Copyright 1998, 1999, 2000 Michael Deutschmann
- *
- * This software package is subject to the GNU General Public License
- * version 3 or later (your choice) as published by the Free Software 
- * Foundation.
+ * Copyright 2013-2015 Aaron Culliney
  *
  */
 /*  ASSUMPTIONS:
  *	flex version 2.5.2 or later
  *
  */
-#line 23 "src/meta/debug.l"
+#line 22 "src/meta/debug.l"
 
 /* process includes only the second time we parse this file. */
 #include "common.h"
@@ -1134,7 +1135,7 @@ extern void fb_sha1();
   (? | h{elp})
 */
 
-#line 1140 "src/meta/debug.c"
+#line 1139 "src/meta/debug.c"
 
 #define INITIAL 0
 
@@ -1351,12 +1352,12 @@ YY_DECL
 		}
 
 	{
-#line 104 "src/meta/debug.l"
+#line 103 "src/meta/debug.l"
 
 
 
 
-#line 1362 "src/meta/debug.c"
+#line 1361 "src/meta/debug.c"
 
 	while ( 1 )		/* loops until end-of-file is reached */
 		{
@@ -1417,7 +1418,7 @@ do_action:	/* This label is used only to access EOF actions. */
 case 1:
 /* rule 1 can match eol */
 YY_RULE_SETUP
-#line 108 "src/meta/debug.l"
+#line 107 "src/meta/debug.l"
 {
     /* mem <addrs> <len> */
     int do_ascii = 0;
@@ -1435,7 +1436,7 @@ YY_RULE_SETUP
 case 2:
 /* rule 2 can match eol */
 YY_RULE_SETUP
-#line 122 "src/meta/debug.l"
+#line 121 "src/meta/debug.l"
 {
     /* mem /<bank>/<addrs> <len> */
     int do_ascii = 0;
@@ -1456,7 +1457,7 @@ YY_RULE_SETUP
 case 3:
 /* rule 3 can match eol */
 YY_RULE_SETUP
-#line 139 "src/meta/debug.l"
+#line 138 "src/meta/debug.l"
 {
     /* mem <addrs> */
     int do_ascii = 0;
@@ -1473,7 +1474,7 @@ YY_RULE_SETUP
 case 4:
 /* rule 4 can match eol */
 YY_RULE_SETUP
-#line 152 "src/meta/debug.l"
+#line 151 "src/meta/debug.l"
 {
     /* mem /<bank>/<addrs> */
     int do_ascii = 0;
@@ -1493,7 +1494,7 @@ YY_RULE_SETUP
 case 5:
 /* rule 5 can match eol */
 YY_RULE_SETUP
-#line 168 "src/meta/debug.l"
+#line 167 "src/meta/debug.l"
 {
     /* mem +<len> */
     int do_ascii = 0;
@@ -1511,7 +1512,7 @@ YY_RULE_SETUP
 case 6:
 /* rule 6 can match eol */
 YY_RULE_SETUP
-#line 182 "src/meta/debug.l"
+#line 181 "src/meta/debug.l"
 {
     /* dump mem from current location */
     int do_ascii = 0;
@@ -1525,7 +1526,7 @@ YY_RULE_SETUP
 case 7:
 /* rule 7 can match eol */
 YY_RULE_SETUP
-#line 192 "src/meta/debug.l"
+#line 191 "src/meta/debug.l"
 {
     /* dump mem from lc<bank> <addrs> <len> */
     int do_ascii = 0;
@@ -1547,7 +1548,7 @@ YY_RULE_SETUP
 case 8:
 /* rule 8 can match eol */
 YY_RULE_SETUP
-#line 210 "src/meta/debug.l"
+#line 209 "src/meta/debug.l"
 {
     /* dump mem from lc<bank> /<bank>/<addrs> <len> */
     int do_ascii = 0;
@@ -1573,7 +1574,7 @@ YY_RULE_SETUP
 case 9:
 /* rule 9 can match eol */
 YY_RULE_SETUP
-#line 232 "src/meta/debug.l"
+#line 231 "src/meta/debug.l"
 {
     /* dump mem from lc<bank> <addrs> */
     int do_ascii = 0;
@@ -1594,7 +1595,7 @@ YY_RULE_SETUP
 case 10:
 /* rule 10 can match eol */
 YY_RULE_SETUP
-#line 249 "src/meta/debug.l"
+#line 248 "src/meta/debug.l"
 {
     /* dump mem from lc<bank> /<bank>/<addrs> */
     int do_ascii = 0;
@@ -1619,7 +1620,7 @@ YY_RULE_SETUP
 case 11:
 /* rule 11 can match eol */
 YY_RULE_SETUP
-#line 270 "src/meta/debug.l"
+#line 269 "src/meta/debug.l"
 {
     /* disassemble at <addrs> <len> */
     while (!isspace(*debugtext)) ++debugtext;
@@ -1634,7 +1635,7 @@ YY_RULE_SETUP
 case 12:
 /* rule 12 can match eol */
 YY_RULE_SETUP
-#line 281 "src/meta/debug.l"
+#line 280 "src/meta/debug.l"
 {
     /* disassemble at /<bank>/<addrs> <len> */
     while (*debugtext != '/') ++debugtext;
@@ -1652,7 +1653,7 @@ YY_RULE_SETUP
 case 13:
 /* rule 13 can match eol */
 YY_RULE_SETUP
-#line 295 "src/meta/debug.l"
+#line 294 "src/meta/debug.l"
 {
     /* disassemble at <addrs> */
     while (!isspace(*debugtext)) ++debugtext;
@@ -1668,7 +1669,7 @@ YY_RULE_SETUP
 case 14:
 /* rule 14 can match eol */
 YY_RULE_SETUP
-#line 307 "src/meta/debug.l"
+#line 306 "src/meta/debug.l"
 {
     /* disassemble at /<bank>/<addrs> */
     while (*debugtext != '/') ++debugtext;
@@ -1687,7 +1688,7 @@ YY_RULE_SETUP
 case 15:
 /* rule 15 can match eol */
 YY_RULE_SETUP
-#line 322 "src/meta/debug.l"
+#line 321 "src/meta/debug.l"
 {
     /* disassemble current location +<len> */
     while (*debugtext != '+') ++debugtext;
@@ -1701,7 +1702,7 @@ YY_RULE_SETUP
 case 16:
 /* rule 16 can match eol */
 YY_RULE_SETUP
-#line 332 "src/meta/debug.l"
+#line 331 "src/meta/debug.l"
 {
     /* disassemble current location */
     disasm(cpu65_pc, 256, 0, -1);
@@ -1711,7 +1712,7 @@ YY_RULE_SETUP
 case 17:
 /* rule 17 can match eol */
 YY_RULE_SETUP
-#line 338 "src/meta/debug.l"
+#line 337 "src/meta/debug.l"
 {
     /* disassemble language<bank> <addr> <len> */
     int lc;
@@ -1730,7 +1731,7 @@ YY_RULE_SETUP
 case 18:
 /* rule 18 can match eol */
 YY_RULE_SETUP
-#line 353 "src/meta/debug.l"
+#line 352 "src/meta/debug.l"
 {
     /* disassemble language<bank> /<bank>/<addr> <len> */
     int lc;
@@ -1754,7 +1755,7 @@ YY_RULE_SETUP
 case 19:
 /* rule 19 can match eol */
 YY_RULE_SETUP
-#line 373 "src/meta/debug.l"
+#line 372 "src/meta/debug.l"
 {
     /* disassemble language<bank> <addr> */
     int lc;
@@ -1772,7 +1773,7 @@ YY_RULE_SETUP
 case 20:
 /* rule 20 can match eol */
 YY_RULE_SETUP
-#line 387 "src/meta/debug.l"
+#line 386 "src/meta/debug.l"
 {
     /* disassemble language<bank> /<bank>/<addr> */
     int lc;
@@ -1795,7 +1796,7 @@ YY_RULE_SETUP
 case 21:
 /* rule 21 can match eol */
 YY_RULE_SETUP
-#line 406 "src/meta/debug.l"
+#line 405 "src/meta/debug.l"
 {
     /* show cpu state */
     show_regs();
@@ -1805,7 +1806,7 @@ YY_RULE_SETUP
 case 22:
 /* rule 22 can match eol */
 YY_RULE_SETUP
-#line 412 "src/meta/debug.l"
+#line 411 "src/meta/debug.l"
 {
     /* set memory <addr> : <hex string> */
     arg1 = (int)strtol(debugtext, &debugtext, 16);
@@ -1820,7 +1821,7 @@ YY_RULE_SETUP
 case 23:
 /* rule 23 can match eol */
 YY_RULE_SETUP
-#line 423 "src/meta/debug.l"
+#line 422 "src/meta/debug.l"
 {
     /* set LC memory <addr> lc1|lc2 : <hex string> */
     int lc;
@@ -1839,7 +1840,7 @@ YY_RULE_SETUP
 case 24:
 /* rule 24 can match eol */
 YY_RULE_SETUP
-#line 438 "src/meta/debug.l"
+#line 437 "src/meta/debug.l"
 {
     /* bload <file> /<bank>/<addr> */
     FILE *fp = NULL;
@@ -1880,7 +1881,7 @@ YY_RULE_SETUP
 case 25:
 /* rule 25 can match eol */
 YY_RULE_SETUP
-#line 475 "src/meta/debug.l"
+#line 474 "src/meta/debug.l"
 {
 
     stepping_struct_t s = {
@@ -1899,7 +1900,7 @@ YY_RULE_SETUP
 case 26:
 /* rule 26 can match eol */
 YY_RULE_SETUP
-#line 490 "src/meta/debug.l"
+#line 489 "src/meta/debug.l"
 {
 
     while (!isspace(*debugtext)) ++debugtext;
@@ -1923,7 +1924,7 @@ YY_RULE_SETUP
 case 27:
 /* rule 27 can match eol */
 YY_RULE_SETUP
-#line 510 "src/meta/debug.l"
+#line 509 "src/meta/debug.l"
 {
 
     stepping_struct_t s = {
@@ -1938,7 +1939,7 @@ YY_RULE_SETUP
 case 28:
 /* rule 28 can match eol */
 YY_RULE_SETUP
-#line 521 "src/meta/debug.l"
+#line 520 "src/meta/debug.l"
 {
     /* step until PC == next instruction.  good for finishing backward
        loops */
@@ -1982,7 +1983,7 @@ YY_RULE_SETUP
 case 29:
 /* rule 29 can match eol */
 YY_RULE_SETUP
-#line 561 "src/meta/debug.l"
+#line 560 "src/meta/debug.l"
 {
     /* jump to addrs and run while remaining in debugger console */
     while (!isspace(*debugtext)) ++debugtext;
@@ -2001,7 +2002,7 @@ YY_RULE_SETUP
 case 30:
 /* rule 30 can match eol */
 YY_RULE_SETUP
-#line 576 "src/meta/debug.l"
+#line 575 "src/meta/debug.l"
 {
     stepping_struct_t s = {
         .step_type = GOING
@@ -2014,7 +2015,7 @@ YY_RULE_SETUP
 case 31:
 /* rule 31 can match eol */
 YY_RULE_SETUP
-#line 585 "src/meta/debug.l"
+#line 584 "src/meta/debug.l"
 {
     /* set watchpoint */
     set_halt(watchpoints, cpu65_pc);
@@ -2024,7 +2025,7 @@ YY_RULE_SETUP
 case 32:
 /* rule 32 can match eol */
 YY_RULE_SETUP
-#line 591 "src/meta/debug.l"
+#line 590 "src/meta/debug.l"
 {
     /* set watchpoint */
     while (!isspace(*debugtext)) ++debugtext;
@@ -2042,7 +2043,7 @@ YY_RULE_SETUP
 case 33:
 /* rule 33 can match eol */
 YY_RULE_SETUP
-#line 606 "src/meta/debug.l"
+#line 605 "src/meta/debug.l"
 {
     /* set breakpoint */
     set_halt(breakpoints, cpu65_pc);
@@ -2052,7 +2053,7 @@ YY_RULE_SETUP
 case 34:
 /* rule 34 can match eol */
 YY_RULE_SETUP
-#line 612 "src/meta/debug.l"
+#line 611 "src/meta/debug.l"
 {
     /* set breakpoint */
     while (!isspace(*debugtext)) ++debugtext;
@@ -2070,7 +2071,7 @@ YY_RULE_SETUP
 case 35:
 /* rule 35 can match eol */
 YY_RULE_SETUP
-#line 626 "src/meta/debug.l"
+#line 625 "src/meta/debug.l"
 {
     /* set breakpoint */
     while (!(*debugtext == 'p')) ++debugtext;
@@ -2089,7 +2090,7 @@ YY_RULE_SETUP
 case 36:
 /* rule 36 can match eol */
 YY_RULE_SETUP
-#line 641 "src/meta/debug.l"
+#line 640 "src/meta/debug.l"
 {
     /* set opcode breakpoints on 65c02 instructions */
     set_halt_65c02();
@@ -2099,7 +2100,7 @@ YY_RULE_SETUP
 case 37:
 /* rule 37 can match eol */
 YY_RULE_SETUP
-#line 647 "src/meta/debug.l"
+#line 646 "src/meta/debug.l"
 {
     /* ignore everything */
     clear_halt(watchpoints, 0);
@@ -2110,7 +2111,7 @@ YY_RULE_SETUP
 case 38:
 /* rule 38 can match eol */
 YY_RULE_SETUP
-#line 654 "src/meta/debug.l"
+#line 653 "src/meta/debug.l"
 {
     /* ignore <watchpt> ... */
 
@@ -2131,7 +2132,7 @@ YY_RULE_SETUP
 case 39:
 /* rule 39 can match eol */
 YY_RULE_SETUP
-#line 672 "src/meta/debug.l"
+#line 671 "src/meta/debug.l"
 {
     /* clear everything */
     clear_halt(breakpoints, 0);
@@ -2142,7 +2143,7 @@ YY_RULE_SETUP
 case 40:
 /* rule 40 can match eol */
 YY_RULE_SETUP
-#line 679 "src/meta/debug.l"
+#line 678 "src/meta/debug.l"
 {
     /* clear <breakpt> ... */
     while (!isspace(*debugtext)) ++debugtext;
@@ -2162,7 +2163,7 @@ YY_RULE_SETUP
 case 41:
 /* rule 41 can match eol */
 YY_RULE_SETUP
-#line 695 "src/meta/debug.l"
+#line 694 "src/meta/debug.l"
 {
     /* clear <opcode breakpt> ... */
     while (!(*debugtext == 'p')) ++debugtext;
@@ -2184,7 +2185,7 @@ YY_RULE_SETUP
 case 42:
 /* rule 42 can match eol */
 YY_RULE_SETUP
-#line 713 "src/meta/debug.l"
+#line 712 "src/meta/debug.l"
 {
     /* clear 65c02 ... */
     clear_halt_65c02();
@@ -2194,7 +2195,7 @@ YY_RULE_SETUP
 case 43:
 /* rule 43 can match eol */
 YY_RULE_SETUP
-#line 719 "src/meta/debug.l"
+#line 718 "src/meta/debug.l"
 {
     /* show breakpoints and watchpoints */
     show_breakpts();
@@ -2204,7 +2205,7 @@ YY_RULE_SETUP
 case 44:
 /* rule 44 can match eol */
 YY_RULE_SETUP
-#line 725 "src/meta/debug.l"
+#line 724 "src/meta/debug.l"
 {
     /* show opcode breakpoints */
     show_opcode_breakpts();
@@ -2214,7 +2215,7 @@ YY_RULE_SETUP
 case 45:
 /* rule 45 can match eol */
 YY_RULE_SETUP
-#line 731 "src/meta/debug.l"
+#line 730 "src/meta/debug.l"
 {
     /* search main memory for <bytes> */
     while (!isspace(*debugtext)) ++debugtext;
@@ -2228,7 +2229,7 @@ YY_RULE_SETUP
 case 46:
 /* rule 46 can match eol */
 YY_RULE_SETUP
-#line 741 "src/meta/debug.l"
+#line 740 "src/meta/debug.l"
 {
     /* search memory<bank> for <bytes> */
     while (*debugtext != '/') ++debugtext;
@@ -2245,7 +2246,7 @@ YY_RULE_SETUP
 case 47:
 /* rule 47 can match eol */
 YY_RULE_SETUP
-#line 754 "src/meta/debug.l"
+#line 753 "src/meta/debug.l"
 {
     /* search LC<bank> for <bytes> */
     int lc;
@@ -2265,7 +2266,7 @@ YY_RULE_SETUP
 case 48:
 /* rule 48 can match eol */
 YY_RULE_SETUP
-#line 770 "src/meta/debug.l"
+#line 769 "src/meta/debug.l"
 {
     /* search LC<bank> memory<bank> for <bytes> */
     int lc;
@@ -2288,7 +2289,7 @@ YY_RULE_SETUP
 case 49:
 /* rule 49 can match eol */
 YY_RULE_SETUP
-#line 789 "src/meta/debug.l"
+#line 788 "src/meta/debug.l"
 {
     /* type ASCII to emulator */
     char buf[DEBUG_BUFSZ];
@@ -2314,7 +2315,7 @@ YY_RULE_SETUP
 case 50:
 /* rule 50 can match eol */
 YY_RULE_SETUP
-#line 811 "src/meta/debug.l"
+#line 810 "src/meta/debug.l"
 {
     /* load/type ASCII <file> */
     FILE *fp = NULL;
@@ -2360,7 +2361,7 @@ YY_RULE_SETUP
 case 51:
 /* rule 51 can match eol */
 YY_RULE_SETUP
-#line 853 "src/meta/debug.l"
+#line 852 "src/meta/debug.l"
 {
 #if CPU_TRACING
     char *buf = NULL;
@@ -2375,7 +2376,7 @@ YY_RULE_SETUP
 case 52:
 /* rule 52 can match eol */
 YY_RULE_SETUP
-#line 864 "src/meta/debug.l"
+#line 863 "src/meta/debug.l"
 {
 #if DISK_TRACING
     char *buf = NULL;
@@ -2390,7 +2391,7 @@ YY_RULE_SETUP
 case 53:
 /* rule 53 can match eol */
 YY_RULE_SETUP
-#line 875 "src/meta/debug.l"
+#line 874 "src/meta/debug.l"
 {
     /* display language card settings */
     show_lc_info();
@@ -2400,7 +2401,7 @@ YY_RULE_SETUP
 case 54:
 /* rule 54 can match eol */
 YY_RULE_SETUP
-#line 881 "src/meta/debug.l"
+#line 880 "src/meta/debug.l"
 {
     /* show disk settings */
     show_disk_info();
@@ -2410,7 +2411,7 @@ YY_RULE_SETUP
 case 55:
 /* rule 55 can match eol */
 YY_RULE_SETUP
-#line 887 "src/meta/debug.l"
+#line 886 "src/meta/debug.l"
 {
     /* show other VM softswitch settings */
     show_misc_info();
@@ -2420,7 +2421,7 @@ YY_RULE_SETUP
 case 56:
 /* rule 56 can match eol */
 YY_RULE_SETUP
-#line 893 "src/meta/debug.l"
+#line 892 "src/meta/debug.l"
 {
     /* refresh the screen */
     clear_debugger_screen();
@@ -2429,7 +2430,7 @@ YY_RULE_SETUP
 case 57:
 /* rule 57 can match eol */
 YY_RULE_SETUP
-#line 898 "src/meta/debug.l"
+#line 897 "src/meta/debug.l"
 {
     fb_sha1();
     return FBSHA1;
@@ -2438,7 +2439,7 @@ YY_RULE_SETUP
 case 58:
 /* rule 58 can match eol */
 YY_RULE_SETUP
-#line 903 "src/meta/debug.l"
+#line 902 "src/meta/debug.l"
 {
     display_help();
     return HELP;
@@ -2447,7 +2448,7 @@ YY_RULE_SETUP
 case 59:
 /* rule 59 can match eol */
 YY_RULE_SETUP
-#line 908 "src/meta/debug.l"
+#line 907 "src/meta/debug.l"
 {
     /* bsave <file> /<bank>/<addr> <len> */
     /* save memory dump to file */
@@ -2502,7 +2503,7 @@ YY_RULE_SETUP
 case 60:
 /* rule 60 can match eol */
 YY_RULE_SETUP
-#line 959 "src/meta/debug.l"
+#line 958 "src/meta/debug.l"
 {
     /* log debugger output to file - not implemented */
     return LOG;
@@ -2511,7 +2512,7 @@ YY_RULE_SETUP
 case 61:
 /* rule 61 can match eol */
 YY_RULE_SETUP
-#line 964 "src/meta/debug.l"
+#line 963 "src/meta/debug.l"
 {
     /* save apple2 state to a .img file - not implemented I'd like to
      * be compatible with the applePC emulator's .img format. anyone
@@ -2523,20 +2524,20 @@ YY_RULE_SETUP
 case 62:
 /* rule 62 can match eol */
 YY_RULE_SETUP
-#line 973 "src/meta/debug.l"
+#line 972 "src/meta/debug.l"
 /* ignore newlines */
 	YY_BREAK
 case 63:
 YY_RULE_SETUP
-#line 975 "src/meta/debug.l"
+#line 974 "src/meta/debug.l"
 /* ignore extraneous characters */
 	YY_BREAK
 case 64:
 YY_RULE_SETUP
-#line 978 "src/meta/debug.l"
+#line 977 "src/meta/debug.l"
 ECHO;
 	YY_BREAK
-#line 2542 "src/meta/debug.c"
+#line 2541 "src/meta/debug.c"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -3534,7 +3535,7 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 977 "src/meta/debug.l"
+#line 976 "src/meta/debug.l"
 
 
 
