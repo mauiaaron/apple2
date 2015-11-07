@@ -633,15 +633,13 @@ static void gldriver_init_common(void) {
     // ----------------------------
     // setup static OpenGL state
 
-    // Depth test will always be enabled
-    glEnable(GL_DEPTH_TEST);
-
-    // We will always cull back faces for better performance
-    glEnable(GL_CULL_FACE);
-
-    // Always use this clear color
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
+    // Set up to do blending of texture quads.  Disabling DEPTH/CULL appears to fix blended quad/texture rendering on
+    // finicky Tegra 2.  This generally appears to be the correct way to do it accoring to NVIDIA forums and:
+    // http://www.learnopengles.com/android-lesson-five-an-introduction-to-blending/
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_CULL_FACE);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -752,7 +750,7 @@ static void gldriver_render(void) {
         return;
     }
 
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT);
 #if MOBILE_DEVICE
     glViewport(viewportX, viewportY, viewportWidth, viewportHeight);
 #endif
@@ -906,7 +904,7 @@ static void gldriver_reshape(int w, int h) {
 #if USE_GLUT
 static void gldriver_init_glut(GLuint fbo) {
     glutInit(&argc, argv);
-    glutInitDisplayMode(/*GLUT_DOUBLE|*/GLUT_RGBA|GLUT_DEPTH);
+    glutInitDisplayMode(/*GLUT_DOUBLE|*/GLUT_RGBA);
     glutInitWindowSize(windowWidth, windowHeight);
     //glutInitContextVersion(4, 0); -- Is this needed?
     glutInitContextProfile(GLUT_CORE_PROFILE);
