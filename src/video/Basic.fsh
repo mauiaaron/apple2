@@ -24,18 +24,12 @@ uniform float aValue;
 uniform sampler2D texture;
 
 #if __VERSION__ >= 140
-#define OUTPUT_TEXTURE(TEX) \
-        vec4 tex = texture(TEX, varTexcoord.st, 0.0); \
-        fragColor = vec4(tex.r, tex.g, tex.b, tex.a*aValue)
-#define OUTPUT_RED() \
-        fragColor = vec4(1.0, 0.0, 0.0, 1.0)
+#define OUTPUT_TEXTURE(TEX) vec4 tex = texture(TEX, varTexcoord.st, 0.0); fragColor = vec4(tex.r, tex.g, tex.b, tex.a*aValue)
 #else
 #define OUTPUT_TEXTURE(TEX) vec4 tex = texture2D(TEX, varTexcoord.st, 0.0); gl_FragColor = vec4(tex.r, tex.g, tex.b, tex.a*aValue)
-#define OUTPUT_RED() gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0)
 #endif
 
 void main(void)
 {
     OUTPUT_TEXTURE(texture);
-    //OUTPUT_RED(); -- WTF is this failing?
 }
