@@ -46,6 +46,9 @@ static GLuint texcoordBufferName = UNINITIALIZED_GL;
 static GLuint elementBufferName = UNINITIALIZED_GL;
 static GLModel *crtModel = NULL;
 
+static GLuint vertexShader = UNINITIALIZED_GL;
+static GLuint fragShader = UNINITIALIZED_GL;
+
 static video_backend_s glvideo_backend = { 0 };
 
 #if USE_GLUT
@@ -323,7 +326,7 @@ static GLuint _build_program(demoSource *vertexSource, demoSource *fragmentSourc
         sprintf(sourceString, "%s", vertexSource->string);
     }
 
-    GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
+    vertexShader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertexShader, 1, (const GLchar **)&(sourceString), NULL);
     glCompileShader(vertexShader);
     glGetShaderiv(vertexShader, GL_INFO_LOG_LENGTH, &logLength);
@@ -362,7 +365,7 @@ static GLuint _build_program(demoSource *vertexSource, demoSource *fragmentSourc
         sprintf(sourceString, "%s", fragmentSource->string);
     }
 
-    GLuint fragShader = glCreateShader(GL_FRAGMENT_SHADER);
+    fragShader = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fragShader, 1, (const GLchar **)&(sourceString), NULL);
     glCompileShader(fragShader);
     glGetShaderiv(fragShader, GL_INFO_LOG_LENGTH, &logLength);
@@ -397,17 +400,6 @@ static GLuint _build_program(demoSource *vertexSource, demoSource *fragmentSourc
         LOG("Program link log:\n%s\n", log);
         free(log);
     }
-
-    glDetachShader(prgName, vertexShader);
-    glDetachShader(prgName, fragShader);
-
-    // Delete the vertex shader since it is now attached and linked
-    // to the program, which will retain a reference to it
-    glDeleteShader(vertexShader);
-
-    // Delete the fragment shader since it is now attached and linked
-    // to the program, which will retain a reference to it
-    glDeleteShader(fragShader);
 
     glGetProgramiv(prgName, GL_LINK_STATUS, &status);
     if (status == 0) {
@@ -686,6 +678,17 @@ static void _gldriver_shutdown(void) {
     }
 
     mdlDestroyModel(&crtModel);
+
+    // detach and delete the main shaders
+    // 2015/11/06 NOTE : Tegra 2 for mobile has a bug whereby you cannot detach/delete shaders immediately after
+    // creating the program.  So we delete them during the shutdown sequence instead.
+    // https://code.google.com/p/android/issues/detail?id=61832
+    glDetachShader(mainShaderProgram, vertexShader);
+    glDetachShader(mainShaderProgram, fragShader);
+    glDeleteShader(vertexShader);
+    glDeleteShader(fragShader);
+    vertexShader = UNINITIALIZED_GL;
+    fragShader = UNINITIALIZED_GL;
 
     glUseProgram(0);
     if (mainShaderProgram != UNINITIALIZED_GL) {
