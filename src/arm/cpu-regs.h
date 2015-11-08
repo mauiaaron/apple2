@@ -44,14 +44,46 @@
 
 
 #define NO_UNDERSCORES 1
-#if NO_UNDERSCORES
-#   define SYM(x)                   =x
-#   define ENTRY(x)                 .globl x; .balign 16; x##:
-#   define CALL(x)                  x
-#else
-#   define SYM(x)                   =_##x
-#   define ENTRY(x)                 .globl _##x; .balign 16; _##x##:
-#   define CALL(x)                  _##x
+
+#define ENTRY(x)            .globl x; .balign 16; .type x, %function; x##:
+#define CALL(x)             x
+
+// 2015/11/08 NOTE : Android requires all apps targeting API 23 (AKA Marshmallow) to use Position Independent Code (PIC)
+// that does not have TEXT segment relocations
+
+#if !defined(__COUNTER__)
+#error __COUNTER__ macro should be available in modern compilers
 #endif
+
+#if PREVENT_TEXTREL
+
+#   define _SYM_ADDR_PRE(reg) \
+                ldr     reg, 5f;
+#   define _SYM_ADDR_OFF_THUMB(reg,ct) \
+4:              add     reg, pc; \
+                ldr     reg, [reg];
+#   define _SYM_ADDR_OFF_ARM(reg,ct) \
+4:              ldr     reg, [pc, reg];
+#   define _SYM_ADDR_POST(var,poff) \
+                b       6f; \
+                .align  2; \
+5:              .word   var(GOT_PREL)+(. - (4b + poff)); \
+6:
+#   if defined(THUMB)
+#       define SYM(reg,var) \
+                _SYM_ADDR_PRE(reg) \
+                _SYM_ADDR_OFF_THUMB(reg, __COUNTER__); \
+                _SYM_ADDR_POST(var,4)
+#   else
+#       define SYM(reg,var) \
+                _SYM_ADDR_PRE(reg) \
+                _SYM_ADDR_OFF_ARM(reg, __COUNTER__); \
+                _SYM_ADDR_POST(var,8)
+#   endif
+#else /* !PREVENT_TEXTREL */
+#   define SYM(reg,var) \
+                ldr     reg, =var
+#endif
+
 
 #endif // whole file

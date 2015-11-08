@@ -18,38 +18,38 @@
 
 
 #define DecodeFlags \
-                ldr     r1, SYM(cpu65_flags_decode); \
+                SYM(r1, cpu65_flags_decode); \
                 ldrb    F_Reg, [r1, r0];
 
 #define EncodeFlags \
-                ldr     r1, SYM(cpu65_flags_encode); \
+                SYM(r1, cpu65_flags_encode); \
                 ldrb    r0, [r1, F_Reg];
 
 #define CommonSaveCPUState \
                 /* save EA */ \
-                ldr     r0, SYM(cpu65_ea); \
+                SYM(r0, cpu65_ea); \
                 strh    EffectiveAddr, [r0]; \
                 /* save stack pointer */ \
-                ldr     r0, SYM(cpu65_sp); \
+                SYM(r0, cpu65_sp); \
                 strb    SP_Reg, [r0]; \
                 /* save X */ \
-                ldr     r0, SYM(cpu65_x); \
+                SYM(r0, cpu65_x); \
                 strb    X_Reg, [r0]; \
                 /* save Y */ \
-                ldr     r0, SYM(cpu65_y); \
+                SYM(r0, cpu65_y); \
                 strb    Y_Reg, [r0]; \
                 /* save A */ \
-                ldr     r0, SYM(cpu65_a); \
+                SYM(r0, cpu65_a); \
                 strb    A_Reg, [r0]; \
                 /* save flags */ \
                 EncodeFlags \
-                ldr     r1, SYM(cpu65_f); \
+                SYM(r1, cpu65_f); \
                 strb    r0, [r1]
 
 // Tracing is necessary for some CPU tests and to verify operation against other emulators
 #if CPU_TRACING
 #   define TRACE_PROLOGUE \
-                ldr     r1, SYM(cpu65_pc); \
+                SYM(r1, cpu65_pc); \
                 strh    PC_Reg, [r1]; \
                 bl      CALL(cpu65_trace_prologue);
 #   define TRACE_ARG \
@@ -71,25 +71,25 @@
 
 
 #define CPUStatsReset \
-                ldr     r1, SYM(cpu65_opcode); \
+                SYM(r1, cpu65_opcode); \
                 strb    r0, [r1]; /* r0 should be next opcode */ \
                 eor     r9, r9, r9; \
-                ldr     r1, SYM(cpu65_opcycles); \
+                SYM(r1, cpu65_opcycles); \
                 strb    r9, [r1]; \
-                ldr     r1, SYM(cpu65_rw); \
+                SYM(r1, cpu65_rw); \
                 strb    r9, [r1];
 #define CPUStatsSetRead \
-                ldr     r1, SYM(cpu65_rw); \
+                SYM(r1, cpu65_rw); \
                 ldrb    r9, [r1]; \
                 orr     r9, r9, #1; \
                 strb    r9, [r1];
 
 #define CPUStatsSetWrite \
-                ldr     r1, SYM(cpu65_rw); \
+                SYM(r1, cpu65_rw); \
                 ldrb    r9, [r1]; \
                 orr     r9, r9, #2; \
                 strb    r9, [r1]; \
-                ldr     r1, SYM(cpu65_d); \
+                SYM(r1, cpu65_d); \
                 strb    r0, [r1];
 
 // ----------------------------------------------------------------------------
@@ -151,7 +151,7 @@
                 TRACE_PROLOGUE \
                 GetFromPC_B \
                 CPUStatsReset \
-                ldr     r1, SYM(cpu65__opcodes); \
+                SYM(r1, cpu65__opcodes); \
                 ldr     r1, [r1, r0, LSL PTR_SHIFT]; \
                 bx      r1;
 
@@ -172,7 +172,7 @@
 
 #define PutToEA_B \
                 CPUStatsSetWrite \
-                ldr     r1, SYM(cpu65_vmem_w); \
+                SYM(r1, cpu65_vmem_w); \
                 ldr     r1, [r1, EffectiveAddr, LSL PTR_SHIFT]; \
                 blx     r1;
 
@@ -194,7 +194,7 @@
                 mov     r0, r0, ASR #24;
 
 #define _IncOpCycles \
-                ldr     mem_cycle_count, SYM(cpu65_opcycles); \
+                SYM(mem_cycle_count, cpu65_opcycles); \
                 ldrb    scratch_count, [mem_cycle_count]; \
                 add     scratch_count, scratch_count, #1;
 
@@ -285,7 +285,7 @@
 #define stack_loc r1
 #ifdef APPLE2_VM
 #define RestoreAltZP \
-                ldr     stack_loc, SYM(base_stackzp); \
+                SYM(stack_loc, base_stackzp); \
                 ldr     stack_loc, [stack_loc]; \
                 add     stack_loc, stack_loc, #0x100; \
                 add     stack_loc, stack_loc, SP_Reg;
@@ -1186,7 +1186,7 @@ ENTRY(op_BRK)
                 EncodeFlags
                 Push(r0)
                 orr     F_Reg, F_Reg, #I_Flag
-                ldr     EffectiveAddr, SYM(interrupt_vector)
+                SYM(EffectiveAddr, interrupt_vector)
                 ldrh    EffectiveAddr, [EffectiveAddr]
                 GetFromEA_W
                 mov     PC_Reg, r0
@@ -2403,39 +2403,39 @@ ENTRY(op_WAI_65c02)
 
 #define cycles_exe r0
 continue:
-                ldr     r1, SYM(cpu65__opcycles)
-                ldr     r0, SYM(cpu65_opcode)
+                SYM(r1, cpu65__opcycles)
+                SYM(r0, cpu65_opcode)
                 ldrb    r0, [r0]
                 ldrb    cycles_exe, [r1, r0]
-                ldr     r1, SYM(cpu65_opcycles)
+                SYM(r1, cpu65_opcycles)
                 ldrb    r9, [r1]
                 add     cycles_exe, cycles_exe, r9
                 strb    cycles_exe, [r1]
                 TRACE_EPILOGUE
 
-                ldr     r1, SYM(gc_cycles_timer_0)
+                SYM(r1, gc_cycles_timer_0)
                 ldr     r9, [r1]
                 sub     r9, r9, cycles_exe
                 str     r9, [r1]
 
-                ldr     r1, SYM(gc_cycles_timer_1)
+                SYM(r1, gc_cycles_timer_1)
                 ldr     r9, [r1]
                 sub     r9, r9, cycles_exe
                 str     r9, [r1]
 
-                ldr     r1, SYM(cpu65_cycle_count)
+                SYM(r1, cpu65_cycle_count)
                 ldr     r9, [r1]
                 add     r9, r9, cycles_exe
                 str     r9, [r1]
 
-                ldr     r1, SYM(cpu65_cycles_to_execute)
+                SYM(r1, cpu65_cycles_to_execute)
                 ldr     r9, [r1]
                 subs    r9, r9, cycles_exe
                 str     r9, [r1]
                 bmi     exit_cpu65_run
                 beq     exit_cpu65_run
 
-continue1:      ldr     r1, SYM(cpu65__signal)
+continue1:      SYM(r1, cpu65__signal)
                 ldrb    r0, [r1]
                 orrs    r0, r0, r0
                 bne     exception
@@ -2447,19 +2447,19 @@ continue1:      ldr     r1, SYM(cpu65__signal)
 
 exception:      tst     r0, #ResetSig
                 beq     ex_irq
-                ldr     r1, SYM(joy_button0)                // OpenApple
+                SYM(r1, joy_button0) // OpenApple
                 ldrb    r0, [r1]
                 tst     r0, #0xFF
                 bne     exit_reinit
-                ldr     r1, SYM(joy_button1)                // ClosedApple
+                SYM(r1, joy_button1) // ClosedApple
                 ldrb    r0, [r1]
                 tst     r0, #0xFF
                 bne     exit_reinit
 
 ex_reset:       eor     r0, r0, r0
-                ldr     r1, SYM(cpu65__signal)
+                SYM(r1, cpu65__signal)
                 strb    r0, [r1]
-                ldr     EffectiveAddr, SYM(reset_vector)
+                SYM(EffectiveAddr, reset_vector)
                 ldrh    EffectiveAddr, [EffectiveAddr]
                 GetFromEA_W
                 mov     PC_Reg, r0
@@ -2478,7 +2478,7 @@ ex_irq:         tst     F_Reg, #I_Flag                      // Already interrupt
                 Push(r0)
                 orr     F_Reg, F_Reg, #BI_Flags
                 //bic   F_Reg, F_Reg, #D_Flag // AppleWin clears Decimal bit?
-                ldr     EffectiveAddr, SYM(interrupt_vector)
+                SYM(EffectiveAddr, interrupt_vector)
                 ldrh    EffectiveAddr, [EffectiveAddr]
                 GetFromEA_W
                 mov     PC_Reg, r0
@@ -2491,23 +2491,23 @@ ex_irq:         tst     F_Reg, #I_Flag                      // Already interrupt
 ENTRY(cpu65_run)
                 push    {r4, r5, r6, r7, r8, r9, r10, r11, lr}
                 // Restore CPU state when being called from C.
-                ldr     reg_vmem_r, SYM(cpu65_vmem_r)
-                ldr     r1, SYM(cpu65_ea)
+                SYM(reg_vmem_r, cpu65_vmem_r)
+                SYM(r1, cpu65_ea)
                 ldrh    EffectiveAddr, [r1]
-                ldr     r1, SYM(cpu65_pc)
+                SYM(r1, cpu65_pc)
                 ldrh    PC_Reg, [r1]
-                ldr     r1, SYM(cpu65_a)
+                SYM(r1, cpu65_a)
                 ldrb    A_Reg, [r1]
-                ldr     r1, SYM(cpu65_f)
+                SYM(r1, cpu65_f)
                 ldrb    r0, [r1]
                 DecodeFlags
-                ldr     r1, SYM(cpu65_x)
+                SYM(r1, cpu65_x)
                 ldrb    X_Reg, [r1]
-                ldr     r1, SYM(cpu65_y)
+                SYM(r1, cpu65_y)
                 ldrb    Y_Reg, [r1]
-                ldr     r1, SYM(cpu65_sp)
+                SYM(r1, cpu65_sp)
                 ldrb    SP_Reg, [r1]
-                ldr     r1, SYM(emul_reinitialize)
+                SYM(r1, emul_reinitialize)
                 ldrb    r0, [r1]
                 teq     r0, #0
                 eorne   r0, r0, r0
@@ -2521,15 +2521,15 @@ ENTRY(cpu65_run)
 
 exit_cpu65_run:
                 // Save CPU state when returning from being called from C
-                ldr     r1, SYM(cpu65_pc)
+                SYM(r1, cpu65_pc)
                 strh    PC_Reg, [r1]
                 CommonSaveCPUState
                 pop     {r4, r5, r6, r7, r8, r9, r10, r11, pc}
 
-exit_reinit:    ldr     r1, SYM(cpu65__signal)
+exit_reinit:    SYM(r1, cpu65__signal)
                 mov     r0, #0
                 strb    r0, [r1]
-                ldr     r1, SYM(emul_reinitialize)
+                SYM(r1, emul_reinitialize)
                 mov     r0, #1
                 strb    r0, [r1]
                 pop     {r4, r5, r6, r7, r8, r9, r10, r11, pc}
@@ -2544,7 +2544,11 @@ ENTRY(cpu65_direct_write)
                 ldr     r0, [r0] // segfault
                 mov     pc, lr
 
+# local data ...
+.global interrupt_vector
+.global reset_vector
 interrupt_vector: .hword 0xFFFE
 reset_vector:     .hword 0xFFFC
+
 .ltorg
 

@@ -15,9 +15,9 @@
 #define GLUE_EXTERN_C_READ(func)
 
 #define GLUE_BANK_MAYBEREAD(func,pointer) \
-ENTRY(func)             ldr     r1, SYM(softswitches); \
+ENTRY(func)             SYM(r1, softswitches); \
                         ldr     r0, [r1]; \
-                        ldr     r1, SYM(pointer); \
+                        SYM(r1, pointer); \
                         tst     r0, $SS_CXROM; \
                         bne     1f; \
                         push    {r0, EffectiveAddr, PC_Reg, /*SP_Reg, F_Reg, Y_Reg, X_Reg, A_Reg,*/ lr}; \
@@ -30,19 +30,19 @@ ENTRY(func)             ldr     r1, SYM(softswitches); \
 
 
 #define GLUE_BANK_READ(func,pointer) \
-ENTRY(func)             ldr     r1, SYM(pointer); \
+ENTRY(func)             SYM(r1, pointer); \
                         ldr     r1, [r1]; \
                         ldrb    r0, [r1, EffectiveAddr]; \
                         mov     pc, lr;
 
 #define GLUE_BANK_WRITE(func,pointer) \
-ENTRY(func)             ldr     r1, SYM(pointer); \
+ENTRY(func)             SYM(r1, pointer); \
                         ldr     r1, [r1]; \
                         strb    r0, [r1, EffectiveAddr]; \
                         mov     pc, lr;
 
 #define GLUE_BANK_MAYBEWRITE(func,pointer) \
-ENTRY(func)             ldr     r1, SYM(pointer); \
+ENTRY(func)             SYM(r1, pointer); \
                         ldr     r1, [r1]; \
                         teq     r1, #0; \
                         strneb  r0, [r1, EffectiveAddr]; \
