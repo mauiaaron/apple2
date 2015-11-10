@@ -122,7 +122,7 @@ fi
 # Symbolicate and move symbols file into location to be deployed on device
 
 SYMFILE=libapple2ix.so.sym
-ARCHES_TO_SYMBOLICATE='armeabi armeabi-v7a'
+ARCHES_TO_SYMBOLICATE='armeabi armeabi-v7a x86'
 
 for arch in $ARCHES_TO_SYMBOLICATE ; do
     SYMDIR=../assets/symbols/$arch/libapple2ix.so

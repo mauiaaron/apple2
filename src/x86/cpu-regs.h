@@ -47,6 +47,8 @@
 // x86_64 registers
 #   define _XBP             %rbp        /* x86_64 base pointer     */
 #   define _XSP             %rsp        /* x86_64 stack pointer    */
+#   define _XDI             %rdi
+#   define _XSI             %rsi
 #   define _XAX             %rax        /* scratch                 */
 #   define _XBX             %rbx        /* scratch2                */
 #   define _X8              %r8
@@ -83,6 +85,8 @@
 // x86 registers
 #   define _XBP             %ebp        /* x86 base pointer        */
 #   define _XSP             %esp        /* x86 stack pointer       */
+#   define _XDI             %edi
+#   define _XSI             %esi
 #   define _XAX             %eax        /* scratch                 */
 #   define _XBX             %ebx        /* scratch2                */
 // full-length Apple ][ registers

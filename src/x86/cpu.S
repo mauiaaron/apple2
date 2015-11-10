@@ -2216,12 +2216,15 @@ ex_irq:         testb   $I_Flag, F_Reg                      // Already interrupt
    ------------------------------------------------------------------------- */
 
 ENTRY(cpu65_run)
-#ifdef __LP64__
-                pushq   %rbx
-                // NOTE: should we be also preserving r12-r15?
-#endif
                 pushLQ  _XBP
                 movLQ   _XSP, _XBP
+                pushLQ  _XDI
+                pushLQ  _XSI
+                pushLQ  _XBX
+#ifdef __LP64__
+                // NOTE: should we be also preserving r12-r15?
+#endif
+
 
                 // Restore CPU state when being called from C.
                 movzwLQ SYM(cpu65_ea), EffectiveAddr_X
@@ -2256,18 +2259,18 @@ exit_cpu65_run:
                 // Save CPU state when returning from being called from C
                 movw    PC_Reg, SYM(cpu65_pc)
                 CommonSaveCPUState
+                popLQ   _XBX
+                popLQ   _XSI
+                popLQ   _XDI
                 popLQ   _XBP
-#ifdef __LP64__
-                popq    %rbx
-#endif
                 ret
 
 exit_reinit:    movb    $0, SYM(cpu65__signal)
                 movb    $1, SYM(emul_reinitialize)
+                popLQ   _XBX
+                popLQ   _XSI
+                popLQ   _XDI
                 popLQ   _XBP
-#ifdef __LP64__
-                popq    %rbx
-#endif
                 ret
 
 /* -------------------------------------------------------------------------
