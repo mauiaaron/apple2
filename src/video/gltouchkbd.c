@@ -55,7 +55,7 @@ static float minAlphaWhenOwnsScreen = 1/4.f;
 static float minAlpha = 0.f;
 static float maxAlpha = 1.f;
 
-static char kbdTemplateUCase[KBD_TEMPLATE_ROWS][KBD_TEMPLATE_COLS+1] = {
+static uint8_t kbdTemplateUCase[KBD_TEMPLATE_ROWS][KBD_TEMPLATE_COLS+1] = {
     "@ @ @ @ @ ",
     "1234567890",
     "QWERTYUIOP",
@@ -64,7 +64,7 @@ static char kbdTemplateUCase[KBD_TEMPLATE_ROWS][KBD_TEMPLATE_COLS+1] = {
     "@@ spa. @@",
 };
 
-static char kbdTemplateLCase[KBD_TEMPLATE_ROWS][KBD_TEMPLATE_COLS+1] = {
+static uint8_t kbdTemplateLCase[KBD_TEMPLATE_ROWS][KBD_TEMPLATE_COLS+1] = {
     "@ @ @ @ @ ",
     "1234567890",
     "qwertyuiop",
@@ -73,7 +73,7 @@ static char kbdTemplateLCase[KBD_TEMPLATE_ROWS][KBD_TEMPLATE_COLS+1] = {
     "@@ SPA. @@",
 };
 
-static char kbdTemplateAlt[KBD_TEMPLATE_ROWS][KBD_TEMPLATE_COLS+1] = {
+static uint8_t kbdTemplateAlt[KBD_TEMPLATE_ROWS][KBD_TEMPLATE_COLS+1] = {
     "@ @ @ @ @ ",
     "1234567890",
     "@#%&*/-+()",
@@ -82,7 +82,7 @@ static char kbdTemplateAlt[KBD_TEMPLATE_ROWS][KBD_TEMPLATE_COLS+1] = {
     "$|\\XXX.^XX",
 };
 
-static char kbdTemplateArrow[KBD_TEMPLATE_ROWS][KBD_TEMPLATE_COLS+1] = {
+static uint8_t kbdTemplateArrow[KBD_TEMPLATE_ROWS][KBD_TEMPLATE_COLS+1] = {
     "@ @ @ @ @ ",
     "          ",
     "     @    ",
@@ -181,7 +181,7 @@ static inline void _rerender_selected(int col, int row) {
     }
 }
 
-static inline void _switch_keyboard(GLModel *parent, char *template) {
+static inline void _switch_keyboard(GLModel *parent, uint8_t *template) {
     GLModelHUDKeyboard *hudKeyboard = (GLModelHUDKeyboard *)parent->custom;
     memcpy(hudKeyboard->tpl, template, sizeof(kbdTemplateUCase/* assuming all the same size */));
 
@@ -205,7 +205,7 @@ static inline void _switch_keyboard(GLModel *parent, char *template) {
 
 static inline void _toggle_arrows(void) {
     GLModelHUDKeyboard *hudKeyboard = (GLModelHUDKeyboard *)kbd.model->custom;
-    char c = hudKeyboard->tpl[_ROWOFF*(KBD_TEMPLATE_COLS+1)];
+    uint8_t c = hudKeyboard->tpl[_ROWOFF*(KBD_TEMPLATE_COLS+1)];
     if (c == ICONTEXT_NONACTIONABLE) {
         _switch_keyboard(kbd.model, kbdTemplateUCase[0]);
     } else {
@@ -278,8 +278,8 @@ static inline int64_t _tap_key_at_point(float x, float y) {
     _screen_to_keyboard(x, y, &col, &row);
     const unsigned int indexRow = (hudKeyboard->tplWidth+1) * row;
 
-    int key = (hudKeyboard->tpl+indexRow)[col];
-    int scancode = -1;
+    uint8_t key = (hudKeyboard->tpl+indexRow)[col];
+    uint8_t scancode = 0;
 
     // handle key
 
@@ -288,17 +288,17 @@ static inline int64_t _tap_key_at_point(float x, float y) {
     bool isCTRL = false;
     switch (key) {
         case ICONTEXT_LOWERCASE:
-            key = -1;
+            key = 0;
             _switch_keyboard(kbd.model, kbdTemplateLCase[0]);
             break;
 
         case ICONTEXT_UPPERCASE:
-            key = -1;
+            key = 0;
             _switch_keyboard(kbd.model, kbdTemplateUCase[0]);
             break;
 
         case ICONTEXT_SHOWALT1:
-            key = -1;
+            key = 0;
             if (allowLowercase && !isCalibrating) {
                 kbdTemplateAlt[0][0] = ICONTEXT_LOWERCASE;
             } else {
@@ -360,7 +360,7 @@ static inline int64_t _tap_key_at_point(float x, float y) {
             break;
 
         case ICONTEXT_MENU_SPROUT:
-            key = -1;
+            key = 0;
             _toggle_arrows();
             break;
 
@@ -381,7 +381,7 @@ static inline int64_t _tap_key_at_point(float x, float y) {
             isASCII = true;
             if (key >= 0x80) {
                 RELEASE_LOG("unhandled key code...");
-                key = -1;
+                key = 0;
             }
             break;
     }
@@ -414,12 +414,6 @@ static inline int64_t _tap_key_at_point(float x, float y) {
 
     // return the key+scancode+handled
     int64_t flags = (handled ? 0x1LL : 0x0LL);
-    if (key < 0 ) {
-        key = 0;
-    }
-    if (scancode < 0) {
-        scancode = 0;
-    }
 
     key = key & 0xff;
     scancode = scancode & 0xff;

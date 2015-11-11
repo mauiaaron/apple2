@@ -30,7 +30,7 @@
 #define MENU_OBJ_H 0.5 // NOTE : intent is to complement touch keyboard height
 
 HUD_CLASS(GLModelHUDMenu,
-    char *pixelsAlt; // alternate color pixels
+    uint8_t *pixelsAlt; // alternate color pixels
 );
 
 static bool isAvailable = false; // Were there any OpenGL/memory errors on initialization?
@@ -38,7 +38,7 @@ static bool isEnabled = true;    // Does player want this enabled?
 static float minAlpha = 1/4.f;   // Minimum alpha value of components (at zero, will not render)
 
 // NOTE : intent is to match touch keyboard width
-static char topMenuTemplate[MENU_TEMPLATE_ROWS][MENU_TEMPLATE_COLS+1] = {
+static uint8_t topMenuTemplate[MENU_TEMPLATE_ROWS][MENU_TEMPLATE_COLS+1] = {
     "++      ++",
     "++      ++",
 };
@@ -258,7 +258,7 @@ static inline int64_t _tap_menu_item(float x, float y) {
 
     _screen_to_menu(x, y, &col, &row);
 
-    int selectedItem = topMenuTemplate[row][col];
+    uint8_t selectedItem = topMenuTemplate[row][col];
 
     int64_t flags = TOUCH_FLAGS_KEY_TAP;
     switch (selectedItem) {
