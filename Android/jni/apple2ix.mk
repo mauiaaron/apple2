@@ -38,7 +38,11 @@ endif
 ifeq ($(EMBEDDED_STACKWALKER),1)
     LOCAL_CPPFLAGS += -DEMBEDDED_STACKWALKER=1
 else
-    $(error OOPS, for now you should build with EMBEDDED_STACKWALKER=1)
+    ifeq ($(RUNNING_GDB),1)
+        # nothing to do
+    else
+        $(error OOPS, for now you should build with EMBEDDED_STACKWALKER=1)
+    endif
 endif
 
 LOCAL_SRC_FILES += $(APPLE2_MAIN_SRC) $(APPLE2_META_SRC) $(APPLE2_VIDEO_SRC) $(APPLE2_AUDIO_SRC)
@@ -49,5 +53,9 @@ include $(BUILD_SHARED_LIBRARY)
 # --OR-- Build an executable so native can drive this show
 #include $(BUILD_EXECUTABLE)
 
-$(call import-module, breakpad/android/google_breakpad)
+ifeq ($(RUNNING_GDB),1)
+    # nothing to do
+else
+    $(call import-module, breakpad/android/google_breakpad)
+endif
 $(call import-module, android/cpufeatures)
