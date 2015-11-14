@@ -68,8 +68,6 @@ static void _shutdown_threads(void) {
         static struct timespec ts = { .tv_sec=0, .tv_nsec=33333333 };
         nanosleep(&ts, NULL); // 30Hz framerate
     } while (1);
-#   elif !defined(__APPLE__)
-#       error TODO FIXME ... verify leaks-n-things with Valgrind on unknown platform
 #   endif
 #endif
 }

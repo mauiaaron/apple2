@@ -16,7 +16,7 @@
 #   define _GNU_SOURCE 1
 #endif
 
-#if !defined(TEMP_FAILURE_RETRY)
+#ifdef __APPLE__
 #   warning DEFINING CUSTOM TEMP_FAILURE_RETRY(x) macro
 #   define TEMP_FAILURE_RETRY(exp) ({ \
         typeof (exp) _rc; \
