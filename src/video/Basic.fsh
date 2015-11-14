@@ -21,7 +21,7 @@ varying vec2 varTexcoord;
 // global alpha value
 uniform float aValue;
 
-uniform sampler2D texture;
+uniform sampler2D aTexture;
 
 #if __VERSION__ >= 140
 #define OUTPUT_TEXTURE(TEX) vec4 tex = texture(TEX, varTexcoord.st, 0.0); fragColor = vec4(tex.r, tex.g, tex.b, tex.a*aValue)
@@ -31,5 +31,5 @@ uniform sampler2D texture;
 
 void main(void)
 {
-    OUTPUT_TEXTURE(texture);
+    OUTPUT_TEXTURE(aTexture);
 }

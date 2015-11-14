@@ -428,7 +428,7 @@ static GLuint _build_program(demoSource *vertexSource, demoSource *fragmentSourc
     // Setup common program input points //
     ///////////////////////////////////////
 
-    texSamplerLoc = glGetUniformLocation(prgName, "texture");
+    texSamplerLoc = glGetUniformLocation(prgName, "aTexture");
     if (texSamplerLoc < 0) {
         LOG("OOPS, no framebufferTexture shader : %d", texSamplerLoc);
     } else {
