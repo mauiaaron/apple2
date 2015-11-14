@@ -8,11 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		4A2636F919FDEDB700DBFB00 /* Apple2Mac.help in Resources */ = {isa = PBXBuildFile; fileRef = 4A2636F819FDEDB700DBFB00 /* Apple2Mac.help */; };
-		4A5BE6101AD88CAC00496307 /* glcpuanim.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A5BE60D1AD88CAC00496307 /* glcpuanim.c */; };
-		4A5BE6131AD88E9E00496307 /* glcpuanim.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A5BE60D1AD88CAC00496307 /* glcpuanim.c */; };
-		4A5BE6151AD88E9F00496307 /* glcpuanim.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A5BE60D1AD88CAC00496307 /* glcpuanim.c */; };
-		4A5BE6171AD88EA000496307 /* glcpuanim.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A5BE60D1AD88CAC00496307 /* glcpuanim.c */; };
-		4A5BE6191AD88EA100496307 /* glcpuanim.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A5BE60D1AD88CAC00496307 /* glcpuanim.c */; };
 		4A61119C1A6A1DE60035F7DE /* blank.po.gz in Resources */ = {isa = PBXBuildFile; fileRef = 4A61119B1A6A1DE60035F7DE /* blank.po.gz */; };
 		4A61119D1A6A1DE60035F7DE /* blank.po.gz in Resources */ = {isa = PBXBuildFile; fileRef = 4A61119B1A6A1DE60035F7DE /* blank.po.gz */; };
 		4A6111A31A6A1DFC0035F7DE /* flapple140.po.gz in Resources */ = {isa = PBXBuildFile; fileRef = 4A6111A21A6A1DFC0035F7DE /* flapple140.po.gz */; };
@@ -200,7 +195,6 @@
 		779F565B19EAF66E00A6F107 /* soundcore-openal.c in Sources */ = {isa = PBXBuildFile; fileRef = 779F564F19EAF66E00A6F107 /* soundcore-openal.c */; };
 		779F565C19EAF66E00A6F107 /* soundcore.c in Sources */ = {isa = PBXBuildFile; fileRef = 779F565119EAF66E00A6F107 /* soundcore.c */; };
 		779F565D19EAF66E00A6F107 /* speaker.c in Sources */ = {isa = PBXBuildFile; fileRef = 779F565319EAF66E00A6F107 /* speaker.c */; };
-		779F565E19EAF66E00A6F107 /* win-shim.c in Sources */ = {isa = PBXBuildFile; fileRef = 779F565619EAF66E00A6F107 /* win-shim.c */; };
 		779F566019EAF6D000A6F107 /* OpenAL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 779F565F19EAF6D000A6F107 /* OpenAL.framework */; };
 		779F566419EB0B9100A6F107 /* cpu.S in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D9019568A570085CE5F /* cpu.S */; };
 		779F566519EB0B9100A6F107 /* prefs.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D7719568A570085CE5F /* prefs.c */; };
@@ -254,6 +248,8 @@
 		77EB316C1A27A9AF00DC5A8A /* blank.dsk.gz in Resources */ = {isa = PBXBuildFile; fileRef = 4ADC523019E8D3F600186B36 /* blank.dsk.gz */; };
 		77EB316D1A27A9AF00DC5A8A /* blank.nib.gz in Resources */ = {isa = PBXBuildFile; fileRef = 4ADC523119E8D3F600186B36 /* blank.nib.gz */; };
 		77F80B441A2D95E300D45030 /* EmulatorJoystickCalibrationView.m in Sources */ = {isa = PBXBuildFile; fileRef = 77F80B421A2D95E300D45030 /* EmulatorJoystickCalibrationView.m */; };
+		93BC72551BF6F8E2005CDFCA /* glalert.c in Sources */ = {isa = PBXBuildFile; fileRef = 93BC72541BF6F8E2005CDFCA /* glalert.c */; settings = {ASSET_TAGS = (); }; };
+		93BC72571BF6FF11005CDFCA /* playqueue.c in Sources */ = {isa = PBXBuildFile; fileRef = 93BC72561BF6FF11005CDFCA /* playqueue.c */; settings = {ASSET_TAGS = (); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -310,7 +306,6 @@
 
 /* Begin PBXFileReference section */
 		4A2636F819FDEDB700DBFB00 /* Apple2Mac.help */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Apple2Mac.help; sourceTree = "<group>"; };
-		4A5BE60D1AD88CAC00496307 /* glcpuanim.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = glcpuanim.c; sourceTree = "<group>"; };
 		4A61119B1A6A1DE60035F7DE /* blank.po.gz */ = {isa = PBXFileReference; lastKnownFileType = archive.gzip; path = blank.po.gz; sourceTree = "<group>"; };
 		4A6111A21A6A1DFC0035F7DE /* flapple140.po.gz */ = {isa = PBXFileReference; lastKnownFileType = archive.gzip; path = flapple140.po.gz; sourceTree = "<group>"; };
 		4A69C17F1A33D6D7001579EF /* images */ = {isa = PBXFileReference; lastKnownFileType = folder; name = images; path = ../../images; sourceTree = "<group>"; };
@@ -405,19 +400,15 @@
 		779F564819EAF66E00A6F107 /* alhelpers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = alhelpers.h; sourceTree = "<group>"; };
 		779F564919EAF66E00A6F107 /* AY8910.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = AY8910.c; sourceTree = "<group>"; };
 		779F564A19EAF66E00A6F107 /* AY8910.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AY8910.h; sourceTree = "<group>"; };
-		779F564B19EAF66E00A6F107 /* ds-shim.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "ds-shim.h"; sourceTree = "<group>"; };
 		779F564C19EAF66E00A6F107 /* mockingboard.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = mockingboard.c; sourceTree = "<group>"; };
 		779F564D19EAF66E00A6F107 /* mockingboard.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = mockingboard.h; sourceTree = "<group>"; };
 		779F564E19EAF66E00A6F107 /* peripherals.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = peripherals.h; sourceTree = "<group>"; };
 		779F564F19EAF66E00A6F107 /* soundcore-openal.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = "soundcore-openal.c"; sourceTree = "<group>"; };
-		779F565019EAF66E00A6F107 /* soundcore-openal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "soundcore-openal.h"; sourceTree = "<group>"; };
 		779F565119EAF66E00A6F107 /* soundcore.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = soundcore.c; sourceTree = "<group>"; };
 		779F565219EAF66E00A6F107 /* soundcore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = soundcore.h; sourceTree = "<group>"; };
 		779F565319EAF66E00A6F107 /* speaker.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = speaker.c; sourceTree = "<group>"; };
 		779F565419EAF66E00A6F107 /* speaker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = speaker.h; sourceTree = "<group>"; };
 		779F565519EAF66E00A6F107 /* SSI263Phonemes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SSI263Phonemes.h; sourceTree = "<group>"; };
-		779F565619EAF66E00A6F107 /* win-shim.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = "win-shim.c"; sourceTree = "<group>"; };
-		779F565719EAF66E00A6F107 /* win-shim.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "win-shim.h"; sourceTree = "<group>"; };
 		779F565F19EAF6D000A6F107 /* OpenAL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenAL.framework; path = System/Library/Frameworks/OpenAL.framework; sourceTree = SDKROOT; };
 		779F569119EB0B9100A6F107 /* Apple2MacTestDisplay.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Apple2MacTestDisplay.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		779F569219EB0B9100A6F107 /* Apple2MacTestDisplay-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "Apple2MacTestDisplay-Info.plist"; path = "Apple2MacTests/Apple2MacTestDisplay-Info.plist"; sourceTree = SOURCE_ROOT; };
@@ -444,6 +435,8 @@
 		77E1C0C719D736EB004344E0 /* glvideo.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = glvideo.c; sourceTree = "<group>"; };
 		77F80B421A2D95E300D45030 /* EmulatorJoystickCalibrationView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = EmulatorJoystickCalibrationView.m; path = Classes/OSX/EmulatorJoystickCalibrationView.m; sourceTree = "<group>"; };
 		77F80B431A2D95E300D45030 /* EmulatorJoystickCalibrationView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = EmulatorJoystickCalibrationView.h; path = Classes/OSX/EmulatorJoystickCalibrationView.h; sourceTree = "<group>"; };
+		93BC72541BF6F8E2005CDFCA /* glalert.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = glalert.c; sourceTree = "<group>"; };
+		93BC72561BF6FF11005CDFCA /* playqueue.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = playqueue.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -717,7 +710,7 @@
 			children = (
 				779F562819E4FE9E00A6F107 /* Basic.fsh */,
 				779F562719E4FE9E00A6F107 /* Basic.vsh */,
-				4A5BE60D1AD88CAC00496307 /* glcpuanim.c */,
+				93BC72541BF6F8E2005CDFCA /* glalert.c */,
 				4A7EDC911AE092680072E98A /* glhudmodel.c */,
 				4A7EDC921AE092680072E98A /* glnode.c */,
 				77E1C0C719D736EB004344E0 /* glvideo.c */,
@@ -744,19 +737,16 @@
 				779F564819EAF66E00A6F107 /* alhelpers.h */,
 				779F564919EAF66E00A6F107 /* AY8910.c */,
 				779F564A19EAF66E00A6F107 /* AY8910.h */,
-				779F564B19EAF66E00A6F107 /* ds-shim.h */,
 				779F564C19EAF66E00A6F107 /* mockingboard.c */,
 				779F564D19EAF66E00A6F107 /* mockingboard.h */,
 				779F564E19EAF66E00A6F107 /* peripherals.h */,
+				93BC72561BF6FF11005CDFCA /* playqueue.c */,
 				779F564F19EAF66E00A6F107 /* soundcore-openal.c */,
-				779F565019EAF66E00A6F107 /* soundcore-openal.h */,
 				779F565119EAF66E00A6F107 /* soundcore.c */,
 				779F565219EAF66E00A6F107 /* soundcore.h */,
 				779F565319EAF66E00A6F107 /* speaker.c */,
 				779F565419EAF66E00A6F107 /* speaker.h */,
 				779F565519EAF66E00A6F107 /* SSI263Phonemes.h */,
-				779F565619EAF66E00A6F107 /* win-shim.c */,
-				779F565719EAF66E00A6F107 /* win-shim.h */,
 			);
 			path = audio;
 			sourceTree = "<group>";
@@ -1226,7 +1216,6 @@
 				4AD4FECB1A52468700F958EC /* testdisk.c in Sources */,
 				4AD4FEA51A52464F00F958EC /* vectorUtil.c in Sources */,
 				4AD4FEA61A52464F00F958EC /* debug.l in Sources */,
-				4A5BE6151AD88E9F00496307 /* glcpuanim.c in Sources */,
 				4AD4FEA71A52464F00F958EC /* CPUTestAppDelegate.m in Sources */,
 				4AD4FEA91A52464F00F958EC /* font.c in Sources */,
 				4AD4FEAA1A52464F00F958EC /* cpu-supp.c in Sources */,
@@ -1265,7 +1254,6 @@
 				4ADC520F19E8CA4500186B36 /* vectorUtil.c in Sources */,
 				4ADC521019E8CA4500186B36 /* debug.l in Sources */,
 				4ADC521119E8CA4500186B36 /* CPUTestAppDelegate.m in Sources */,
-				4A5BE6191AD88EA100496307 /* glcpuanim.c in Sources */,
 				4ADC522919E8CEAD00186B36 /* testvm.c in Sources */,
 				4ADC521319E8CA4500186B36 /* font.c in Sources */,
 				4ADC521419E8CA4500186B36 /* cpu-supp.c in Sources */,
@@ -1295,7 +1283,6 @@
 				773B3DAB19568A570085CE5F /* keys.c in Sources */,
 				773B3DBC19568A570085CE5F /* timing.c in Sources */,
 				773B3DAF19568A570085CE5F /* misc.c in Sources */,
-				4A5BE6101AD88CAC00496307 /* glcpuanim.c in Sources */,
 				77E1C0C419D7298F004344E0 /* EmulatorWindowController.m in Sources */,
 				773BC91A19F31E7B00996893 /* prefs.c in Sources */,
 				77E1C0B619D72700004344E0 /* matrixUtil.c in Sources */,
@@ -1310,9 +1297,9 @@
 				773B3DA219568A570085CE5F /* darwin-shim.c in Sources */,
 				77E1C0B519D72700004344E0 /* modelUtil.c in Sources */,
 				773B3DAC19568A570085CE5F /* debug.l in Sources */,
-				779F565E19EAF66E00A6F107 /* win-shim.c in Sources */,
 				779F565919EAF66E00A6F107 /* AY8910.c in Sources */,
 				77E1C0C619D7298F004344E0 /* EmulatorFullscreenWindow.m in Sources */,
+				93BC72571BF6FF11005CDFCA /* playqueue.c in Sources */,
 				773BC91919F2FD4500996893 /* EmulatorPrefsController.m in Sources */,
 				773B3DA519568A570085CE5F /* font.c in Sources */,
 				773B3DA019568A570085CE5F /* cpu-supp.c in Sources */,
@@ -1321,6 +1308,7 @@
 				779F565A19EAF66E00A6F107 /* mockingboard.c in Sources */,
 				77E1C0B419D72700004344E0 /* sourceUtil.c in Sources */,
 				779F565819EAF66E00A6F107 /* alhelpers.c in Sources */,
+				93BC72551BF6F8E2005CDFCA /* glalert.c in Sources */,
 				4AFC170A1AAE9C3200B215FA /* sha1.c in Sources */,
 				773B3DBE19568A570085CE5F /* vm.c in Sources */,
 				773B3DC019568A570085CE5F /* darwin-glue.S in Sources */,
@@ -1356,7 +1344,6 @@
 				4ADC51C219E8BD3700186B36 /* vectorUtil.c in Sources */,
 				779DD83C195BD9F900DF89E5 /* debug.l in Sources */,
 				779DD856195BDB1700DF89E5 /* CPUTestAppDelegate.m in Sources */,
-				4A5BE6131AD88E9E00496307 /* glcpuanim.c in Sources */,
 				779DD852195BDA3000DF89E5 /* testcpu.c in Sources */,
 				779DD83D195BD9F900DF89E5 /* font.c in Sources */,
 				779DD83E195BD9F900DF89E5 /* cpu-supp.c in Sources */,
@@ -1395,7 +1382,6 @@
 				779F567419EB0B9100A6F107 /* main.m in Sources */,
 				779F567519EB0B9100A6F107 /* vectorUtil.c in Sources */,
 				779F567619EB0B9100A6F107 /* debug.l in Sources */,
-				4A5BE6171AD88EA000496307 /* glcpuanim.c in Sources */,
 				779F567719EB0B9100A6F107 /* CPUTestAppDelegate.m in Sources */,
 				779F567919EB0B9100A6F107 /* font.c in Sources */,
 				779F567A19EB0B9100A6F107 /* cpu-supp.c in Sources */,
