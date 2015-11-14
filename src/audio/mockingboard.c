@@ -1699,7 +1699,7 @@ void MB_Initialize()
 {
 #ifdef APPLE2IX
     assert(pthread_self() == cpu_thread_id);
-    memset(SSI263Voice, 0x0, sizeof(AudioBuffer_s)*MAX_VOICES);
+    memset(SSI263Voice, 0x0, sizeof(AudioBuffer_s *) * MAX_VOICES);
 #endif
 	if (g_bDisableDirectSoundMockingboard)
 	{
