@@ -13,7 +13,22 @@
 #define _COMMON_H_
 
 #if defined(__GNUC__) && !defined(_GNU_SOURCE)
-#   define _GNU_SOURCE
+#   define _GNU_SOURCE 1
+#endif
+
+#if !defined(TEMP_FAILURE_RETRY)
+#   warning DEFINING CUSTOM TEMP_FAILURE_RETRY(x) macro
+#   define TEMP_FAILURE_RETRY(exp) ({ \
+        typeof (exp) _rc; \
+        do { \
+            _rc = (exp); \
+            if (_rc == -1 && (errno == EINTR || errno == EAGAIN) ) { \
+                usleep(10); \
+            } else { \
+                break; \
+            } \
+        } while (1); \
+        _rc; })
 #endif
 
 // custom annotations
@@ -158,7 +173,13 @@ static const char *log_end = "";
 extern FILE *error_log;
 static const char *log_end = "\n";
 #   define QUIT_FUNCTION(x) exit(x)
-#   define _LOG_CMD(str) fprintf(error_log, "%s", str)
+#   define _LOG_CMD(str) \
+        do { \
+            if (UNLIKELY(!error_log)) { \
+                error_log = stderr; \
+            } \
+            fprintf(error_log, "%s", str); \
+        } while (0);
 #endif
 
 #define _MYFILE_ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)

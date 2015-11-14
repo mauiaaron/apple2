@@ -189,7 +189,7 @@ static CVReturn displayLinkCallback(CVDisplayLinkRef displayLink, const CVTimeSt
     // to [self openGLContext])
     [[self openGLContext] makeCurrentContext];
     
-    timing_startCPU();
+    emulator_start();
     
     // Synchronize buffer swaps with vertical refresh rate
     GLint swapInt = 1;
@@ -313,8 +313,8 @@ static CVReturn displayLinkCallback(CVDisplayLinkRef displayLink, const CVTimeSt
 
 - (NSApplicationTerminateReply)applicationShouldTerminate:(NSApplication *)application
 {
-    c_eject_6(0);
-    c_eject_6(1);
+    disk6_eject(0);
+    disk6_eject(1);
     return NSTerminateNow;
 }
 

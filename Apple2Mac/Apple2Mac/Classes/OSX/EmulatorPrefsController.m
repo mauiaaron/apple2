@@ -215,7 +215,7 @@
     [self _savePrefs];
     
 #warning HACK TODO FIXME need to refactor video resetting procedure
-    video_set(0);
+    video_reset();
     video_setpage(!!(softswitches & SS_SCREEN));
     video_redraw();
 }

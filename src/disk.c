@@ -449,7 +449,7 @@ static size_t load_track_data(int drive) {
     return expected;
 }
 
-static bool save_track_data(int drive) {
+static void save_track_data(int drive) {
     SCOPE_TRACE_DISK("save_track_data");
 
     unsigned int trk = (disk6.disk[drive].phase >> 1);

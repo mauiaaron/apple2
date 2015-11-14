@@ -123,16 +123,10 @@
     {
         [[self pauseMenuItem] setTitle:@"Resume Emulation"];
         cpu_pause();
-#ifdef AUDIO_ENABLED
-        SoundSystemPause();
-#endif
     }
     else
     {
         [[self pauseMenuItem] setTitle:@"Pause Emulation"];
-#ifdef AUDIO_ENABLED
-        SoundSystemUnpause();
-#endif
         cpu_resume();
     }
 }

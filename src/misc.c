@@ -25,8 +25,7 @@ int argc = 0;
 CrashHandler_s *crashHandler = NULL;
 
 __attribute__((constructor(CTOR_PRIORITY_FIRST)))
-static void _init_common() {
-    error_log = stderr;
+static void _init_common(void) {
 #if defined(CONFIG_DATADIR)
     data_dir = strdup(CONFIG_DATADIR PATH_SEPARATOR PACKAGE_NAME);
 #elif defined(ANDROID)
@@ -69,8 +68,8 @@ static void _shutdown_threads(void) {
         static struct timespec ts = { .tv_sec=0, .tv_nsec=33333333 };
         nanosleep(&ts, NULL); // 30Hz framerate
     } while (1);
-#   elif defined(__APPLE__)
-#       error TODO FIXME ... verify leaks-n-things with instruments on Darwin
+#   elif !defined(__APPLE__)
+#       error TODO FIXME ... verify leaks-n-things with Valgrind on unknown platform
 #   endif
 #endif
 }

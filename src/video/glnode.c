@@ -119,7 +119,7 @@ int64_t glnode_onTouchEvent(interface_touch_event_t action, int pointer_count, i
 #endif
 
 __attribute__((destructor(255)))
-static void *_destroy_glnodes(void) {
+static void _destroy_glnodes(void) {
     LOG("...");
 
     glnode_array_node_s *p = head;
