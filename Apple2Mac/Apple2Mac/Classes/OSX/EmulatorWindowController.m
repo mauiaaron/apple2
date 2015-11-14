@@ -1,10 +1,13 @@
-//
-//  EmulatorWindowController.m
-//  Apple2Mac
-//
-//  Created by Aaron Culliney on 9/27/14.
-//  Copyright (c) 2014 deadc0de.org. All rights reserved.
-//
+/*
+ * Apple // emulator for *ix 
+ *
+ * This software package is subject to the GNU General Public License
+ * version 3 or later (your choice) as published by the Free Software
+ * Foundation.
+ *
+ * Copyright 2013-2015 Aaron Culliney
+ *
+ */
 
 // Based on sample code from https://developer.apple.com/library/mac/samplecode/GLEssentials/Introduction/Intro.html
 
@@ -97,7 +100,13 @@
 
 - (IBAction)toggleCPUSpeed:(id)sender
 {
-    timing_toggle_cpu_speed();
+    cpu_pause();
+    timing_toggleCPUSpeed();
+    if (video_backend && video_backend->animation_showCPUSpeed)
+    {
+        video_backend->animation_showCPUSpeed();
+    }
+    cpu_resume();
 }
 
 - (IBAction)togglePause:(id)sender
@@ -117,18 +126,12 @@
     if (paused)
     {
         [[self pauseMenuItem] setTitle:@"Resume Emulation"];
-        pthread_mutex_lock(&interface_mutex);
-#ifdef AUDIO_ENABLED
-        SoundSystemPause();
-#endif
+        cpu_pause();
     }
     else
     {
         [[self pauseMenuItem] setTitle:@"Pause Emulation"];
-#ifdef AUDIO_ENABLED
-        SoundSystemUnpause();
-#endif
-        pthread_mutex_unlock(&interface_mutex);
+        cpu_resume();
     }
 }
 

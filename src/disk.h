@@ -1,16 +1,15 @@
 /*
- * Apple // emulator for Linux: Defines for Disk ][ emulation
+ * Apple // emulator for *ix
+ *
+ * This software package is subject to the GNU General Public License
+ * version 3 or later (your choice) as published by the Free Software
+ * Foundation.
  *
  * Copyright 1994 Alexander Jean-Claude Bottema
  * Copyright 1995 Stephen Lee
  * Copyright 1997, 1998 Aaron Culliney
  * Copyright 1998, 1999, 2000 Michael Deutschmann
- *
- * This software package is subject to the GNU General Public License
- * version 2 or later (your choice) as published by the Free Software
- * Foundation.
- *
- * THERE ARE NO WARRANTIES WHATSOEVER.
+ * Copyright 2013-2015 Aaron Culliney
  *
  */
 
@@ -19,50 +18,76 @@
 
 #include "common.h"
 
-struct diskette {
-    char file_name[1024];
-    bool compressed;
+#define ERR_IMAGE_NOT_EXPECTED_SIZE "disk image is not expected size"
+#define ERR_STAT_FAILED "disk image unreadable for stat"
+#define ERR_CANNOT_OPEN "could not open disk image"
+#define ERR_MMAP_FAILED "disk image unreadable for mmap"
+
+#define NUM_TRACKS 35
+#define NUM_SECTORS 16
+
+#define DSK_TRACK_SIZE 0x1000 // DOS order, ProDOS order
+#define NIB_TRACK_SIZE 0x1A00 // NIB format
+#define NI2_TRACK_SIZE 0x18F0 // NI2 format
+
+#define DSK_SIZE (NUM_TRACKS * DSK_TRACK_SIZE) // 143360
+#define NIB_SIZE (NUM_TRACKS * NIB_TRACK_SIZE) // 232960
+#define NI2_SIZE (NUM_TRACKS * NI2_TRACK_SIZE) // 223440
+
+#define PHASE_BYTES (NIB_TRACK_SIZE/2)
+#define NIB_SEC_SIZE (NIB_TRACK_SIZE/NUM_SECTORS)
+
+#define DSK_VOLUME 254
+
+#define DISK_EXT_DSK ".dsk"
+#define _DSKLEN (sizeof(DISK_EXT_DSK)-1)
+#define DISK_EXT_DO  ".do"
+#define _DOLEN (sizeof(DISK_EXT_DO)-1)
+#define DISK_EXT_PO  ".po"
+#define _POLEN (sizeof(DISK_EXT_PO)-1)
+#define DISK_EXT_NIB ".nib"
+#define _NIBLEN (sizeof(DISK_EXT_NIB)-1)
+#define DISK_EXT_GZ  ".gz"
+#define _GZLEN (sizeof(DISK_EXT_GZ)-1)
+
+typedef struct diskette_t {
+    char *file_name;
+    int fd;
+    uint8_t *mmap_image;
+    size_t whole_len;
+    uint8_t *whole_image;
     bool nibblized;
     bool is_protected;
-    bool phase_change;
-    int sector;
-    long file_size;
+    bool track_valid;
+    bool track_dirty;
+    int *skew_table;
+    long track_width;
     int phase;
     int run_byte;
-    FILE *fp;
-    int file_pos;
-};
+} diskette_t;
 
-struct drive {
-    int motor;
+typedef struct drive_t {
+    struct timespec motor_time;
+    int motor_off;
     int drive;
     int ddrw;
     int disk_byte;
-    int volume;
-    int checksum;
-    int exor_value;
-    unsigned char disk_data[258];
-    struct diskette disk[2];
-};
+    diskette_t disk[2];
+} drive_t;
 
-extern struct drive disk6;
+extern drive_t disk6;
 
-void c_init_6(void);
-const char *c_new_diskette_6(int drive, const char * const file_name, int force);
-const char *c_eject_6(int drive);
-void disk_io_initialize(unsigned int slot);
+// initialize emulated 5.25 Disk ][ module
+extern void disk6_init(void);
 
-void disk_read_nop(void),
-disk_read_phase(void),
-disk_read_motor_off(void),
-disk_read_motor_on(void),
-disk_read_select_a(void),
-disk_read_select_b(void),
-disk_read_byte(void),
-disk_read_latch(void),
-disk_write_latch(void),
-disk_read_prepare_in(void),
-disk_read_prepare_out(void);
+// insert 5.25 disk image file
+extern const char *disk6_insert(int drive, const char * const file_name, int force);
+
+// eject 5.25 disk image file
+extern const char *disk6_eject(int drive);
+
+// flush all I/O
+extern void disk6_flush(int drive);
 
 #if DISK_TRACING
 void c_toggle_disk_trace_6(const char *read_file, const char *write_file);

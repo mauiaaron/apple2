@@ -1,16 +1,15 @@
 /*
- * Apple // emulator for Linux: Keyboard handler
+ * Apple // emulator for *ix
+ *
+ * This software package is subject to the GNU General Public License
+ * version 3 or later (your choice) as published by the Free Software
+ * Foundation.
  *
  * Copyright 1994 Alexander Jean-Claude Bottema
  * Copyright 1995 Stephen Lee
  * Copyright 1997, 1998 Aaron Culliney
  * Copyright 1998, 1999, 2000 Michael Deutschmann
- *
- * This software package is subject to the GNU General Public License
- * version 2 or later (your choice) as published by the Free Software
- * Foundation.
- *
- * THERE ARE NO WARRANTIES WHATSOEVER.
+ * Copyright 2013-2015 Aaron Culliney
  *
  */
 
@@ -18,11 +17,6 @@
 
 /* from misc.c */
 extern uid_t user, privileged;
-
-/* mutex used to synchronize between cpu and main threads */
-pthread_mutex_t interface_mutex = PTHREAD_MUTEX_INITIALIZER;
-pthread_cond_t ui_thread_cond = PTHREAD_COND_INITIALIZER;
-pthread_cond_t cpu_thread_cond = PTHREAD_COND_INITIALIZER;
 
 static int next_key = -1;
 static int last_scancode = -1;
@@ -239,9 +233,10 @@ void c_keys_handle_input(int scancode, int pressed, int is_cooked)
 
     if ((next_key >= 0)
 #ifdef INTERFACE_CLASSIC
-            && !in_interface
+            && !cpu_isPaused()
 #endif
-       ) {
+       )
+    {
         do {
             int current_key = next_key;
             next_key = -1;
@@ -256,7 +251,77 @@ void c_keys_handle_input(int scancode, int pressed, int is_cooked)
 #ifdef INTERFACE_CLASSIC
             if (current_key == kF9)
             {
-                timing_toggle_cpu_speed();
+                cpu_pause();
+                timing_toggleCPUSpeed();
+                cpu_resume();
+                if (video_backend->animation_showCPUSpeed) {
+                    video_backend->animation_showCPUSpeed();
+                }
+                break;
+            }
+            if (current_key == kF3) {
+
+                double scale = (alt_speed_enabled ? cpu_altscale_factor : cpu_scale_factor);
+                int percent_scale = (int)round(scale * 100);
+                if (scale == CPU_SCALE_FASTEST) {
+                    scale = CPU_SCALE_FASTEST0;
+                    percent_scale = (int)round(scale * 100);
+                } else {
+                    if (percent_scale > 100) {
+                        percent_scale -= 25;
+                    } else {
+                        percent_scale -= 5;
+                    }
+                }
+                scale = percent_scale/100.0;
+
+                if (scale < CPU_SCALE_SLOWEST) {
+                    scale = CPU_SCALE_SLOWEST;
+                }
+
+                if (alt_speed_enabled) {
+                    cpu_altscale_factor = scale;
+                } else {
+                    cpu_scale_factor = scale;
+                }
+
+                if (video_backend->animation_showCPUSpeed) {
+                    video_backend->animation_showCPUSpeed();
+                }
+
+                cpu_pause();
+                timing_initialize();
+                cpu_resume();
+                break;
+            }
+            if (current_key == kF4) {
+
+                int percent_scale = (int)round((alt_speed_enabled ? cpu_altscale_factor : cpu_scale_factor) * 100);
+                double scale = 0.0;
+                if (percent_scale >= 100) {
+                    percent_scale += 25;
+                } else {
+                    percent_scale += 5;
+                }
+                scale = percent_scale/100.0;
+
+                if (scale > CPU_SCALE_FASTEST) {
+                    scale = CPU_SCALE_FASTEST;
+                }
+
+                if (alt_speed_enabled) {
+                    cpu_altscale_factor = scale;
+                } else {
+                    cpu_scale_factor = scale;
+                }
+
+                if (video_backend->animation_showCPUSpeed) {
+                    video_backend->animation_showCPUSpeed();
+                }
+
+                cpu_pause();
+                timing_initialize();
+                cpu_resume();
                 break;
             }
 #endif
@@ -377,17 +442,15 @@ int c_rawkey()
     return last_scancode;
 }
 
+#ifdef INTERFACE_CLASSIC
 int c_mygetch(int block)
 {
     int retval;
 
-    if (block)
+    while (next_key == -1 && block)
     {
-        while (next_key == -1)
-        {
-            static struct timespec ts = { .tv_sec=0, .tv_nsec=33333333 };
-            nanosleep(&ts, NULL); // 30Hz framerate
-        }
+        static struct timespec ts = { .tv_sec=0, .tv_nsec=33333333 };
+        nanosleep(&ts, NULL); // 30Hz framerate
     }
 
     retval = next_key;
@@ -396,7 +459,6 @@ int c_mygetch(int block)
     return retval;
 }
 
-#ifdef INTERFACE_CLASSIC
 void c_keys_set_key(int key)
 {
     next_key = key;
@@ -420,5 +482,18 @@ bool c_keys_is_interface_key(int key)
     }
     return false;
 }
+#endif
+
+#if INTERFACE_TOUCH
+bool (*keydriver_isTouchKeyboardAvailable)(void) = NULL;
+void (*keydriver_setTouchKeyboardEnabled)(bool enabled) = NULL;
+void (*keydriver_setTouchKeyboardOwnsScreen)(bool pwnd) = NULL;
+bool (*keydriver_ownsScreen)(void) = NULL;
+void (*keydriver_setVisibilityWhenOwnsScreen)(float inactiveAlpha, float activeAlpha) = NULL;
+void (*keydriver_setLowercaseEnabled)(bool enabled) = NULL;
+void (*keydriver_keyboardReadCallback)(void) = NULL;
+void (*keydriver_beginCalibration)(void) = NULL;
+void (*keydriver_endCalibration)(void) = NULL;
+void (*keydriver_loadAltKbd)(const char *kbdPath) = NULL;
 #endif
 

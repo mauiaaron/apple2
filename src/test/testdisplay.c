@@ -1,23 +1,19 @@
 /*
- * Apple // emulator for *nix
+ * Apple // emulator for *ix
  *
  * This software package is subject to the GNU General Public License
- * version 2 or later (your choice) as published by the Free Software
+ * version 3 or later (your choice) as published by the Free Software
  * Foundation.
  *
- * THERE ARE NO WARRANTIES WHATSOEVER.
+ * Copyright 2013-2015 Aaron Culliney
  *
  */
 
 #include "testcommon.h"
 
-#ifdef HAVE_OPENSSL
-#include <openssl/sha.h>
-#elif !defined(__APPLE__)
-#error "these tests require OpenSSL libraries"
-#endif
+static bool test_thread_running = false;
 
-static bool test_do_reboot = true;
+extern pthread_mutex_t interface_mutex; // TODO FIXME : raw access to CPU mutex because stepping debugger ...
 
 static void testdisplay_setup(void *arg) {
     test_common_setup();
@@ -32,16 +28,11 @@ static void testdisplay_setup(void *arg) {
 static void testdisplay_teardown(void *arg) {
 }
 
-static void sha1_to_str(const uint8_t * const md, char *buf) {
-    int i=0;
-    for (int j=0; j<SHA_DIGEST_LENGTH; j++, i+=2) {
-        sprintf(buf+i, "%02X", md[j]);
-    }
-    sprintf(buf+i, "%c", '\0');
-}
+// ----------------------------------------------------------------------------
+// Various Display Tests ...
 
 TEST test_boot_disk() {
-    test_setup_boot_disk("testdisplay1.dsk.gz", 1);
+    test_setup_boot_disk("testdisplay1.nib.gz", 1);
 
     BOOT_TO_DOS();
 
@@ -329,14 +320,15 @@ TEST test_80col_hires() {
 // ----------------------------------------------------------------------------
 // Test Suite
 
-static int begin_video = -1;
-
 GREATEST_SUITE(test_suite_display) {
+    pthread_mutex_lock(&interface_mutex);
+
     GREATEST_SET_SETUP_CB(testdisplay_setup, NULL);
     GREATEST_SET_TEARDOWN_CB(testdisplay_teardown, NULL);
+    GREATEST_SET_BREAKPOINT_CB(test_breakpoint, NULL);
 
     // TESTS --------------------------
-    begin_video=!is_headless;
+    test_thread_running = true;
 
     RUN_TESTp(test_boot_disk);
 
@@ -441,7 +433,7 @@ GREATEST_SUITE(test_suite_display) {
     RUN_TEST(test_80col_hires);
 
     // ...
-    c_eject_6(0);
+    disk6_eject(0);
     pthread_mutex_unlock(&interface_mutex);
 }
 
@@ -451,16 +443,12 @@ GREATEST_MAIN_DEFS();
 static char **test_argv = NULL;
 static int test_argc = 0;
 
-static int _test_display(void) {
+static void *test_thread(void *dummyptr) {
     int argc = test_argc;
     char **argv = test_argv;
     GREATEST_MAIN_BEGIN();
     RUN_SUITE(test_suite_display);
     GREATEST_MAIN_END();
-}
-
-static void *test_thread(void *dummyptr) {
-    _test_display();
     return NULL;
 }
 
@@ -470,24 +458,20 @@ void test_display(int argc, char **argv) {
 
     srandom(time(NULL));
 
-    pthread_mutex_lock(&interface_mutex);
-
-    test_common_init(/*cputhread*/true);
+    test_common_init();
 
     pthread_t p;
     pthread_create(&p, NULL, (void *)&test_thread, (void *)NULL);
 
-    while (begin_video < 0) {
+    while (!test_thread_running) {
         struct timespec ts = { .tv_sec=0, .tv_nsec=33333333 };
         nanosleep(&ts, NULL);
     }
-    if (begin_video) {
-        video_main_loop();
-    }
-    pthread_join(p, NULL);
+    emulator_start();
+    //pthread_join(p, NULL);
 }
 
-#if !defined(__APPLE__)
+#if !defined(__APPLE__) && !defined(ANDROID)
 int main(int argc, char **argv) {
     test_display(argc, argv);
 }

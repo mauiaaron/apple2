@@ -12,19 +12,24 @@ precision highp float;
 //             above.
 
 #if __VERSION__ >= 140
-in vec2      varTexcoord;
-out vec4     fragColor;
+in vec2 varTexcoord;
+out vec4 fragColor;
 #else
 varying vec2 varTexcoord;
 #endif
 
-uniform sampler2D diffuseTexture;
+// global alpha value
+uniform float aValue;
+
+uniform sampler2D aTexture;
+
+#if __VERSION__ >= 140
+#define OUTPUT_TEXTURE(TEX) vec4 tex = texture(TEX, varTexcoord.st, 0.0); fragColor = vec4(tex.r, tex.g, tex.b, tex.a*aValue)
+#else
+#define OUTPUT_TEXTURE(TEX) vec4 tex = texture2D(TEX, varTexcoord.st, 0.0); gl_FragColor = vec4(tex.r, tex.g, tex.b, tex.a*aValue)
+#endif
 
 void main(void)
 {
-   #if __VERSION__ >= 140
-   fragColor = texture(diffuseTexture, varTexcoord.st, 0.0);
-   #else
-   gl_FragColor = texture2D(diffuseTexture, varTexcoord.st, 0.0);
-   #endif
+    OUTPUT_TEXTURE(aTexture);
 }

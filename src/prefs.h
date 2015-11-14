@@ -1,16 +1,15 @@
 /*
- * Apple // emulator for Linux: Configuration defines
+ * Apple // emulator for *ix
+ *
+ * This software package is subject to the GNU General Public License
+ * version 3 or later (your choice) as published by the Free Software
+ * Foundation.
  *
  * Copyright 1994 Alexander Jean-Claude Bottema
  * Copyright 1995 Stephen Lee
  * Copyright 1997, 1998 Aaron Culliney
  * Copyright 1998, 1999, 2000 Michael Deutschmann
- *
- * This software package is subject to the GNU General Public License
- * version 2 or later (your choice) as published by the Free Software
- * Foundation.
- *
- * THERE ARE NO WARRANTIES WHATSOEVER.
+ * Copyright 2013-2015 Aaron Culliney
  *
  */
 
@@ -43,14 +42,11 @@ typedef enum a2_video_mode_t {
     NUM_VIDOPTS
 } a2_video_mode_t;
 
-#define SYSSIZE         4096
-extern char system_path[SYSSIZE];
-#define DISKSIZE        4096
-extern char disk_path[DISKSIZE];
+extern char system_path[PATH_MAX];
+extern char disk_path[PATH_MAX];
 
 extern int apple_mode; /* undocumented instructions or //e mode */
 extern int sound_volume;
-extern bool is_headless;
 extern color_mode_t color_mode;
 extern a2_video_mode_t a2_video_mode;
 

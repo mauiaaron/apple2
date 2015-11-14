@@ -1,16 +1,15 @@
 /*
- * Apple // emulator for Linux: X-Windows graphics support
+ * Apple // emulator for *ix
+ *
+ * This software package is subject to the GNU General Public License
+ * version 3 or later (your choice) as published by the Free Software
+ * Foundation.
  *
  * Copyright 1994 Alexander Jean-Claude Bottema
  * Copyright 1995 Stephen Lee
  * Copyright 1997, 1998 Aaron Culliney
  * Copyright 1998, 1999, 2000 Michael Deutschmann
- *
- * This software package is subject to the GNU General Public License
- * version 2 or later (your choice) as published by the Free Software
- * Foundation.
- *
- * THERE ARE NO WARRANTIES WHATSOEVER.
+ * Copyright 2013-2015 Aaron Culliney
  *
  */
 
@@ -59,6 +58,12 @@ static int xshmeventtype;
 
 // pad pixels to uint32_t boundaries
 static int bitmap_pad = sizeof(uint32_t);
+
+static video_backend_s xvideo_backend = { 0 };
+static bool request_set_mode = false;
+static int request_mode = 0;
+
+volatile unsigned long _backend_vid_dirty = 0;
 
 typedef struct {
     unsigned long flags;
@@ -189,7 +194,7 @@ static void getshm(int size) {
 }
 #endif
 
-#if !defined(TESTING)
+#if !TESTING
 // Map X keysyms into Apple//ix internal-representation scancodes.
 static int keysym_to_scancode(void) {
     int rc = XkbKeycodeToKeysym(display, xevent.xkey.keycode, 0, 0);
@@ -431,16 +436,13 @@ static void c_flash_cursor(int on) {
 }
 
 void video_driver_sync(void) {
-    if (is_headless) {
-        return;
-    }
 
     static int flash_count = 0;
     // post the image and loop waiting for it to finish and
     // also process other input events
     post_image();
 
-#ifdef TESTING
+#if TESTING
     // no input processing if test-driven ...
 #else
     bool keyevent = true;
@@ -492,9 +494,15 @@ void video_driver_sync(void) {
     }
 }
 
-void video_driver_main_loop(void) {
+static void _redo_image(void);
+
+static void xdriver_main_loop(void) {
     struct timespec sleeptime = { .tv_sec=0, .tv_nsec=8333333 }; // 120Hz
     do {
+        if (request_set_mode) {
+            request_set_mode = false;
+            _redo_image();
+        }
         video_driver_sync();
         nanosleep(&sleeptime, NULL);
     } while (1);
@@ -621,8 +629,14 @@ static void _size_hints_set_resize() {
 }
 
 void video_set_mode(a2_video_mode_t mode) {
+    request_mode = mode;
+    request_set_mode = true;
+}
+
+static void _redo_image(void) {
     _destroy_image();
 
+    int mode = request_mode;
     scale = mode;
     if (mode == VIDEO_FULLSCREEN) {
         scale = 1; // HACK FIXME for now ................
@@ -676,7 +690,7 @@ void video_set_mode(a2_video_mode_t mode) {
     _size_hints_set_fixed();
 }
 
-void video_driver_init(void *context) {
+static void xdriver_init(void *context) {
     XSetWindowAttributes attribs;
     unsigned long attribmask;
     int x, y;           /* window position */
@@ -908,7 +922,30 @@ void video_driver_init(void *context) {
 #endif
 }
 
-void video_driver_shutdown(void) {
+static void xdriver_shutdown(void) {
     _destroy_image();
+}
+
+static void xdriver_reshape(int width, int height) {
+    // no-op
+}
+
+static void xdriver_render(void) {
+    // no-op
+}
+
+__attribute__((constructor(CTOR_PRIORITY_EARLY)))
+static void _init_xvideo(void) {
+    LOG("Initializing X11 renderer");
+
+    assert((video_backend == NULL) && "there can only be one!");
+
+    xvideo_backend.init      = &xdriver_init;
+    xvideo_backend.main_loop = &xdriver_main_loop;
+    xvideo_backend.reshape   = &xdriver_reshape;
+    xvideo_backend.render    = &xdriver_render;
+    xvideo_backend.shutdown  = &xdriver_shutdown;
+
+    video_backend = &xvideo_backend;
 }
 

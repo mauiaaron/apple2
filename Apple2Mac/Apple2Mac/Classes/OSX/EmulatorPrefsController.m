@@ -1,10 +1,13 @@
-//
-//  EmulatorPrefsController.m
-//  Apple2Mac
-//
-//  Created by Aaron Culliney on 10/18/14.
-//  Copyright (c) 2014 deadc0de.org. All rights reserved.
-//
+/*
+ * Apple // emulator for *ix 
+ *
+ * This software package is subject to the GNU General Public License
+ * version 3 or later (your choice) as published by the Free Software
+ * Foundation.
+ *
+ * Copyright 2013-2015 Aaron Culliney
+ *
+ */
 
 #import "EmulatorPrefsController.h"
 #import "EmulatorDiskController.h"
@@ -177,9 +180,7 @@
         [self.altSliderLabel setStringValue:[NSString stringWithFormat:@"%.0f%%", value*100]];
     }
     
-#warning HACK TODO FIXME ... refactor timing stuff
-    timing_toggle_cpu_speed();
-    timing_toggle_cpu_speed();
+    timing_initialize();
     
     [self _savePrefs];
 }
@@ -198,9 +199,7 @@
         cpu_altscale_factor = ([maxButton state] == NSOnState) ? CPU_SCALE_FASTEST : [self.altSlider doubleValue];
     }
     
-#warning HACK TODO FIXME ... refactor timing stuff
-    timing_toggle_cpu_speed();
-    timing_toggle_cpu_speed();
+    timing_initialize();
 
     [self _savePrefs];
 }
@@ -216,7 +215,7 @@
     [self _savePrefs];
     
 #warning HACK TODO FIXME need to refactor video resetting procedure
-    video_set(0);
+    video_reset();
     video_setpage(!!(softswitches & SS_SCREEN));
     video_redraw();
 }

@@ -1,11 +1,11 @@
 /*
- * Apple // emulator for *nix
+ * Apple // emulator for *ix
  *
  * This software package is subject to the GNU General Public License
- * version 2 or later (your choice) as published by the Free Software
+ * version 3 or later (your choice) as published by the Free Software
  * Foundation.
  *
- * THERE ARE NO WARRANTIES WHATSOEVER.
+ * Copyright 2013-2015 Aaron Culliney
  *
  */
 
@@ -14,6 +14,7 @@
 //
 
 #include "testcommon.h"
+#include "uthash.h"
 
 #define MSG_SIZE 256
 
@@ -50,8 +51,10 @@
 
 static void testcpu_setup(void *arg) {
 
-    //reinitialize();
     cpu65_uninterrupt(0xff);
+    extern int32_t cpu65_cycles_to_execute;
+    extern int32_t cpu65_cycle_count;
+    cpu65_cycle_count = 0;
     cpu65_cycles_to_execute = 1;
 
     cpu65_pc = TEST_LOC;
@@ -78,10 +81,15 @@ static void testcpu_teardown(void *arg) {
     // ...
 }
 
+static void testcpu_set_opcodeX(uint8_t op, uint8_t val, uint8_t arg1, uint16_t addrs) {
+    cpu65_pc = addrs;
+    apple_ii_64k[0][addrs] = op;
+    apple_ii_64k[0][(uint16_t)(addrs+1)] = val;
+    apple_ii_64k[0][(uint16_t)(addrs+2)] = arg1;
+}
+
 static void testcpu_set_opcode3(uint8_t op, uint8_t val, uint8_t arg1) {
-    apple_ii_64k[0][TEST_LOC+0] = op;
-    apple_ii_64k[0][TEST_LOC+1] = val;
-    apple_ii_64k[0][TEST_LOC+2] = arg1;
+    testcpu_set_opcodeX(op, val, arg1, TEST_LOC);
 }
 
 static void testcpu_set_opcode2(uint8_t op, uint8_t val) {
@@ -180,8 +188,8 @@ static void logic_ADC(/*uint8_t*/int _a, /*uint8_t*/int _b, uint8_t *result, uin
 
     int8_t a = (int8_t)_a;
     int8_t b = (int8_t)_b;
-    bool is_neg = (a < 0);
-    bool is_negb = (b < 0);
+    bool signA = a>>7;
+    bool signB = b>>7;
 
     int8_t carry = (*flags & fC) ? 1 : 0;
     *flags &= ~fC;
@@ -200,13 +208,9 @@ static void logic_ADC(/*uint8_t*/int _a, /*uint8_t*/int _b, uint8_t *result, uin
         *flags |= fC;
     }
 
-    if ( is_neg && is_negb ) {
-        if (a < res) {
-            *flags |= fV;
-        }
-    }
-    if ( !is_neg && !is_negb ) {
-        if (a > res) {
+    if (signA == signB) {
+        uint8_t signResult = (res&0xff)>>7;
+        if (signA != signResult) {
             *flags |= fV;
         }
     }
@@ -1134,20 +1138,19 @@ TEST test_BCC(int8_t off, bool flag, uint16_t addrs) {
     flags |= flag ? fC : 0;
 
     uint8_t cycle_count = 2;
-    uint16_t newpc = 0xffff;
-    if (flag) {
-        newpc = addrs+2;
-    } else {
-        newpc = addrs+2+off;
+    uint16_t newpc = addrs+2;
+    if (!flag) {
+        uint16_t prebranch = newpc;
+        newpc += off;
         ++cycle_count;
-        if ((newpc&0xFF00) != (addrs&0xFF00)) {
+        if ((newpc&0xFF00) != (prebranch&0xFF00)) {
             ++cycle_count;
-        }
+       }
     }
 
-    apple_ii_64k[0][addrs+0] = 0x90;
-    apple_ii_64k[0][addrs+1] = off;
-    apple_ii_64k[0][addrs+2] = (uint8_t)random();
+    apple_ii_64k[0][addrs] = 0x90;
+    apple_ii_64k[0][(uint16_t)(addrs+1)] = off;
+    apple_ii_64k[0][(uint16_t)(addrs+2)] = (uint8_t)random();
 
     cpu65_a  = 0xed;
     cpu65_x  = 0xde;
@@ -1164,7 +1167,7 @@ TEST test_BCC(int8_t off, bool flag, uint16_t addrs) {
     ASSERT(cpu65_sp == 0x81);
     ASSERT(cpu65_f  == flags);
 
-    ASSERT(cpu65_ea        == addrs+1);
+    ASSERT(cpu65_ea        == (uint16_t)(addrs+1));
     ASSERT(cpu65_d         == 0xff);
     ASSERT(cpu65_rw        == RW_NONE);
     ASSERT(cpu65_opcode    == 0x90);
@@ -1180,20 +1183,19 @@ TEST test_BCS(int8_t off, bool flag, uint16_t addrs) {
     flags |= flag ? fC : 0;
 
     uint8_t cycle_count = 2;
-    uint16_t newpc = 0xffff;
-    if (!flag) {
-        newpc = addrs+2;
-    } else {
-        newpc = addrs+2+off;
+    uint16_t newpc = addrs+2;
+    if (flag) {
+        uint16_t prebranch = newpc;
+        newpc += off;
         ++cycle_count;
-        if ((newpc&0xFF00) != (addrs&0xFF00)) {
+        if ((newpc&0xFF00) != (prebranch&0xFF00)) {
             ++cycle_count;
         }
     }
 
-    apple_ii_64k[0][addrs+0] = 0xB0;
-    apple_ii_64k[0][addrs+1] = off;
-    apple_ii_64k[0][addrs+2] = (uint8_t)random();
+    apple_ii_64k[0][addrs] = 0xB0;
+    apple_ii_64k[0][(uint16_t)(addrs+1)] = off;
+    apple_ii_64k[0][(uint16_t)(addrs+2)] = (uint8_t)random();
 
     cpu65_a  = 0xed;
     cpu65_x  = 0xde;
@@ -1210,7 +1212,7 @@ TEST test_BCS(int8_t off, bool flag, uint16_t addrs) {
     ASSERT(cpu65_sp == 0x81);
     ASSERT(cpu65_f  == flags);
 
-    ASSERT(cpu65_ea        == addrs+1);
+    ASSERT(cpu65_ea        == (uint16_t)(addrs+1));
     ASSERT(cpu65_d         == 0xff);
     ASSERT(cpu65_rw        == RW_NONE);
     ASSERT(cpu65_opcode    == 0xB0);
@@ -1226,20 +1228,19 @@ TEST test_BEQ(int8_t off, bool flag, uint16_t addrs) {
     flags |= flag ? fZ : 0;
 
     uint8_t cycle_count = 2;
-    uint16_t newpc = 0xffff;
-    if (!flag) {
-        newpc = addrs+2;
-    } else {
-        newpc = addrs+2+off;
+    uint16_t newpc = addrs+2;
+    if (flag) {
+        uint16_t prebranch = newpc;
+        newpc += off;
         ++cycle_count;
-        if ((newpc&0xFF00) != (addrs&0xFF00)) {
+        if ((newpc&0xFF00) != (prebranch&0xFF00)) {
             ++cycle_count;
         }
     }
 
-    apple_ii_64k[0][addrs+0] = 0xF0;
-    apple_ii_64k[0][addrs+1] = off;
-    apple_ii_64k[0][addrs+2] = (uint8_t)random();
+    apple_ii_64k[0][addrs] = 0xF0;
+    apple_ii_64k[0][(uint16_t)(addrs+1)] = off;
+    apple_ii_64k[0][(uint16_t)(addrs+2)] = (uint8_t)random();
 
     cpu65_a  = 0xed;
     cpu65_x  = 0xde;
@@ -1256,7 +1257,7 @@ TEST test_BEQ(int8_t off, bool flag, uint16_t addrs) {
     ASSERT(cpu65_sp == 0x81);
     ASSERT(cpu65_f  == flags);
 
-    ASSERT(cpu65_ea        == addrs+1);
+    ASSERT(cpu65_ea        == (uint16_t)(addrs+1));
     ASSERT(cpu65_d         == 0xff);
     ASSERT(cpu65_rw        == RW_NONE);
     ASSERT(cpu65_opcode    == 0xF0);
@@ -1272,20 +1273,19 @@ TEST test_BNE(int8_t off, bool flag, uint16_t addrs) {
     flags |= flag ? fZ : 0;
 
     uint8_t cycle_count = 2;
-    uint16_t newpc = 0xffff;
-    if (flag) {
-        newpc = addrs+2;
-    } else {
-        newpc = addrs+2+off;
+    uint16_t newpc = addrs+2;
+    if (!flag) {
+        uint16_t prebranch = newpc;
+        newpc += off;
         ++cycle_count;
-        if ((newpc&0xFF00) != (addrs&0xFF00)) {
+        if ((newpc&0xFF00) != (prebranch&0xFF00)) {
             ++cycle_count;
         }
     }
 
-    apple_ii_64k[0][addrs+0] = 0xD0;
-    apple_ii_64k[0][addrs+1] = off;
-    apple_ii_64k[0][addrs+2] = (uint8_t)random();
+    apple_ii_64k[0][addrs] = 0xD0;
+    apple_ii_64k[0][(uint16_t)(addrs+1)] = off;
+    apple_ii_64k[0][(uint16_t)(addrs+2)] = (uint8_t)random();
 
     cpu65_a  = 0xed;
     cpu65_x  = 0xde;
@@ -1302,7 +1302,7 @@ TEST test_BNE(int8_t off, bool flag, uint16_t addrs) {
     ASSERT(cpu65_sp == 0x81);
     ASSERT(cpu65_f  == flags);
 
-    ASSERT(cpu65_ea        == addrs+1);
+    ASSERT(cpu65_ea        == (uint16_t)(addrs+1));
     ASSERT(cpu65_d         == 0xff);
     ASSERT(cpu65_rw        == RW_NONE);
     ASSERT(cpu65_opcode    == 0xD0);
@@ -1318,20 +1318,19 @@ TEST test_BMI(int8_t off, bool flag, uint16_t addrs) {
     flags |= flag ? fN : 0;
 
     uint8_t cycle_count = 2;
-    uint16_t newpc = 0xffff;
-    if (!flag) {
-        newpc = addrs+2;
-    } else {
-        newpc = addrs+2+off;
+    uint16_t newpc = addrs+2;
+    if (flag) {
+        uint16_t prebranch = newpc;
+        newpc += off;
         ++cycle_count;
-        if ((newpc&0xFF00) != (addrs&0xFF00)) {
+        if ((newpc&0xFF00) != (prebranch&0xFF00)) {
             ++cycle_count;
         }
     }
 
-    apple_ii_64k[0][addrs+0] = 0x30;
-    apple_ii_64k[0][addrs+1] = off;
-    apple_ii_64k[0][addrs+2] = (uint8_t)random();
+    apple_ii_64k[0][addrs] = 0x30;
+    apple_ii_64k[0][(uint16_t)(addrs+1)] = off;
+    apple_ii_64k[0][(uint16_t)(addrs+2)] = (uint8_t)random();
 
     cpu65_a  = 0xed;
     cpu65_x  = 0xde;
@@ -1348,7 +1347,7 @@ TEST test_BMI(int8_t off, bool flag, uint16_t addrs) {
     ASSERT(cpu65_sp == 0x81);
     ASSERT(cpu65_f  == flags);
 
-    ASSERT(cpu65_ea        == addrs+1);
+    ASSERT(cpu65_ea        == (uint16_t)(addrs+1));
     ASSERT(cpu65_d         == 0xff);
     ASSERT(cpu65_rw        == RW_NONE);
     ASSERT(cpu65_opcode    == 0x30);
@@ -1364,20 +1363,19 @@ TEST test_BPL(int8_t off, bool flag, uint16_t addrs) {
     flags |= flag ? fN : 0;
 
     uint8_t cycle_count = 2;
-    uint16_t newpc = 0xffff;
-    if (flag) {
-        newpc = addrs+2;
-    } else {
-        newpc = addrs+2+off;
+    uint16_t newpc = addrs+2;
+    if (!flag) {
+        uint16_t prebranch = newpc;
+        newpc += off;
         ++cycle_count;
-        if ((newpc&0xFF00) != (addrs&0xFF00)) {
+        if ((newpc&0xFF00) != (prebranch&0xFF00)) {
             ++cycle_count;
         }
     }
 
-    apple_ii_64k[0][addrs+0] = 0x10;
-    apple_ii_64k[0][addrs+1] = off;
-    apple_ii_64k[0][addrs+2] = (uint8_t)random();
+    apple_ii_64k[0][addrs] = 0x10;
+    apple_ii_64k[0][(uint16_t)(addrs+1)] = off;
+    apple_ii_64k[0][(uint16_t)(addrs+2)] = (uint8_t)random();
 
     cpu65_a  = 0xed;
     cpu65_x  = 0xde;
@@ -1394,7 +1392,7 @@ TEST test_BPL(int8_t off, bool flag, uint16_t addrs) {
     ASSERT(cpu65_sp == 0x81);
     ASSERT(cpu65_f  == flags);
 
-    ASSERT(cpu65_ea        == addrs+1);
+    ASSERT(cpu65_ea        == (uint16_t)(addrs+1));
     ASSERT(cpu65_d         == 0xff);
     ASSERT(cpu65_rw        == RW_NONE);
     ASSERT(cpu65_opcode    == 0x10);
@@ -1410,14 +1408,16 @@ TEST test_BRA(volatile int8_t off, volatile bool flag, volatile uint16_t addrs) 
     flags |= flag ? fN : 0;
 
     uint8_t cycle_count = 3;
-    uint16_t newpc = addrs+2+off;
-    if ((newpc&0xFF00) != (addrs&0xFF00)) {
+    uint16_t newpc = addrs+2;
+    uint16_t prebranch = newpc;
+    newpc += off;
+    if ((newpc&0xFF00) != (prebranch&0xFF00)) {
         ++cycle_count;
     }
 
-    apple_ii_64k[0][addrs+0] = 0x80;
-    apple_ii_64k[0][addrs+1] = off;
-    apple_ii_64k[0][addrs+2] = (uint8_t)random();
+    apple_ii_64k[0][addrs] = 0x80;
+    apple_ii_64k[0][(uint16_t)(addrs+1)] = off;
+    apple_ii_64k[0][(uint16_t)(addrs+2)] = (uint8_t)random();
 
     cpu65_a  = 0xed;
     cpu65_x  = 0xde;
@@ -1434,7 +1434,7 @@ TEST test_BRA(volatile int8_t off, volatile bool flag, volatile uint16_t addrs) 
     ASSERT(cpu65_sp == 0x81);
     ASSERT(cpu65_f  == flags);
 
-    ASSERT(cpu65_ea        == addrs+1);
+    ASSERT(cpu65_ea        == (uint16_t)(addrs+1));
     ASSERT(cpu65_d         == 0xff);
     ASSERT(cpu65_rw        == RW_NONE);
     ASSERT(cpu65_opcode    == 0x80);
@@ -1450,20 +1450,19 @@ TEST test_BVC(int8_t off, bool flag, uint16_t addrs) {
     flags |= flag ? fV : 0;
 
     uint8_t cycle_count = 2;
-    uint16_t newpc = 0xffff;
-    if (flag) {
-        newpc = addrs+2;
-    } else {
-        newpc = addrs+2+off;
+    uint16_t newpc = addrs+2;
+    if (!flag) {
+        uint16_t prebranch = newpc;
+        newpc += off;
         ++cycle_count;
-        if ((newpc&0xFF00) != (addrs&0xFF00)) {
+        if ((newpc&0xFF00) != (prebranch&0xFF00)) {
             ++cycle_count;
         }
     }
 
-    apple_ii_64k[0][addrs+0] = 0x50;
-    apple_ii_64k[0][addrs+1] = off;
-    apple_ii_64k[0][addrs+2] = (uint8_t)random();
+    apple_ii_64k[0][addrs] = 0x50;
+    apple_ii_64k[0][(uint16_t)(addrs+1)] = off;
+    apple_ii_64k[0][(uint16_t)(addrs+2)] = (uint8_t)random();
 
     cpu65_a  = 0xed;
     cpu65_x  = 0xde;
@@ -1480,7 +1479,7 @@ TEST test_BVC(int8_t off, bool flag, uint16_t addrs) {
     ASSERT(cpu65_sp == 0x81);
     ASSERT(cpu65_f  == flags);
 
-    ASSERT(cpu65_ea        == addrs+1);
+    ASSERT(cpu65_ea        == (uint16_t)(addrs+1));
     ASSERT(cpu65_d         == 0xff);
     ASSERT(cpu65_rw        == RW_NONE);
     ASSERT(cpu65_opcode    == 0x50);
@@ -1496,20 +1495,19 @@ TEST test_BVS(int8_t off, bool flag, uint16_t addrs) {
     flags |= flag ? fV : 0;
 
     uint8_t cycle_count = 2;
-    uint16_t newpc = 0xffff;
-    if (!flag) {
-        newpc = addrs+2;
-    } else {
-        newpc = addrs+2+off;
+    uint16_t newpc = addrs+2;
+    if (flag) {
+        uint16_t prebranch = newpc;
+        newpc += off;
         ++cycle_count;
-        if ((newpc&0xFF00) != (addrs&0xFF00)) {
+        if ((newpc&0xFF00) != (prebranch&0xFF00)) {
             ++cycle_count;
         }
     }
 
-    apple_ii_64k[0][addrs+0] = 0x70;
-    apple_ii_64k[0][addrs+1] = off;
-    apple_ii_64k[0][addrs+2] = (uint8_t)random();
+    apple_ii_64k[0][addrs] = 0x70;
+    apple_ii_64k[0][(uint16_t)(addrs+1)] = off;
+    apple_ii_64k[0][(uint16_t)(addrs+2)] = (uint8_t)random();
 
     cpu65_a  = 0xed;
     cpu65_x  = 0xde;
@@ -1526,7 +1524,7 @@ TEST test_BVS(int8_t off, bool flag, uint16_t addrs) {
     ASSERT(cpu65_sp == 0x81);
     ASSERT(cpu65_f  == flags);
 
-    ASSERT(cpu65_ea        == addrs+1);
+    ASSERT(cpu65_ea        == (uint16_t)(addrs+1));
     ASSERT(cpu65_d         == 0xff);
     ASSERT(cpu65_rw        == RW_NONE);
     ASSERT(cpu65_opcode    == 0x70);
@@ -1754,7 +1752,7 @@ TEST test_BRK() {
     ASSERT(apple_ii_64k[0][0x1fe] == TEST_LOC_LO+2);
     ASSERT(apple_ii_64k[0][0x1fd] == cpu65_flags_encode[B_Flag|X_Flag]);
 
-    ASSERT(cpu65_ea       == 0xfffe);
+    //ASSERT(cpu65_ea       == 0xfffe); -- EA is managed differently on ARM
     ASSERT(cpu65_d        == 0xff);
     ASSERT(cpu65_rw       == RW_NONE);
     ASSERT(cpu65_opcode   == 0x0);
@@ -3391,10 +3389,10 @@ TEST test_INC_abs_x(uint8_t regA, uint8_t val, uint8_t regX, uint8_t lobyte, uin
 // ----------------------------------------------------------------------------
 // JMP instructions
 
-TEST test_JMP_abs(uint8_t lobyte, uint8_t hibyte) {
+TEST test_JMP_abs(uint8_t lobyte, uint8_t hibyte, uint16_t insAddrs) {
     HEADER0();
 
-    testcpu_set_opcode3(0x4c, lobyte, hibyte);
+    testcpu_set_opcodeX(0x4c, lobyte, hibyte, insAddrs);
 
     uint8_t regA = (uint8_t)random();
     uint8_t regX = (uint8_t)random();
@@ -3428,10 +3426,10 @@ TEST test_JMP_abs(uint8_t lobyte, uint8_t hibyte) {
     PASS();
 }
 
-TEST test_JMP_ind(uint8_t _lobyte, uint8_t _hibyte, uint8_t set) {
+TEST test_JMP_ind(uint8_t _lobyte, uint8_t _hibyte, uint16_t insAddrs) {
     HEADER0();
 
-    testcpu_set_opcode3(0x6c, _lobyte, _hibyte);
+    testcpu_set_opcodeX(0x6c, _lobyte, _hibyte, insAddrs);
 
     uint8_t regA = (uint8_t)random();
     uint8_t regX = (uint8_t)random();
@@ -3480,7 +3478,7 @@ TEST test_JMP_ind(uint8_t _lobyte, uint8_t _hibyte, uint8_t set) {
     ASSERT(cpu65_f      == f);
     ASSERT(cpu65_sp     == sp);
 
-    ASSERT(cpu65_ea       == _addrs);
+    //ASSERT(cpu65_ea       == _addrs); -- EA is managed differently on ARM
     ASSERT(cpu65_d        == 0xff);
     ASSERT(cpu65_rw       == RW_NONE);
     ASSERT(cpu65_opcode   == 0x6c);
@@ -3490,13 +3488,13 @@ TEST test_JMP_ind(uint8_t _lobyte, uint8_t _hibyte, uint8_t set) {
 }
 
 // 65c02 : 0x7C
-TEST test_JMP_abs_ind_x(uint8_t _lobyte, uint8_t _hibyte, uint8_t set) {
+TEST test_JMP_abs_ind_x(uint8_t _lobyte, uint8_t _hibyte, uint16_t insAddrs, uint8_t _regX) {
     HEADER0();
 
-    testcpu_set_opcode3(0x7c, _lobyte, _hibyte);
+    testcpu_set_opcodeX(0x7c, _lobyte, _hibyte, insAddrs);
 
     uint8_t regA = (uint8_t)random();
-    uint8_t regX = (set == 0xfe) ? set : (uint8_t)random();
+    uint8_t regX = _regX;
     uint8_t regY = (uint8_t)random();
     uint8_t f    = (uint8_t)random();
     uint8_t sp   = (uint8_t)random();
@@ -3537,7 +3535,7 @@ TEST test_JMP_abs_ind_x(uint8_t _lobyte, uint8_t _hibyte, uint8_t set) {
     ASSERT(cpu65_f      == f);
     ASSERT(cpu65_sp     == sp);
 
-    ASSERT(cpu65_ea       == _addrs);
+    //ASSERT(cpu65_ea       == _addrs); -- EA is managed differently on ARM
     ASSERT(cpu65_d        == 0xff);
     ASSERT(cpu65_rw       == RW_NONE);
     ASSERT(cpu65_opcode   == 0x7c);
@@ -3549,10 +3547,10 @@ TEST test_JMP_abs_ind_x(uint8_t _lobyte, uint8_t _hibyte, uint8_t set) {
 // ----------------------------------------------------------------------------
 // JSR operand
 
-TEST test_JSR_abs(uint8_t lobyte, uint8_t hibyte) {
+TEST test_JSR_abs(uint8_t lobyte, uint8_t hibyte, uint16_t insAddrs) {
     HEADER0();
 
-    testcpu_set_opcode3(0x20, lobyte, hibyte);
+    testcpu_set_opcodeX(0x20, lobyte, hibyte, insAddrs);
 
     uint8_t regA = (uint8_t)random();
     uint8_t regX = (uint8_t)random();
@@ -3560,17 +3558,16 @@ TEST test_JSR_abs(uint8_t lobyte, uint8_t hibyte) {
     uint8_t f    = (uint8_t)random();
 
     uint16_t addrs = (hibyte<<8) | lobyte;
-    uint8_t hi_ret = ((addrs+1) >> 8) & 0xff;
-    uint8_t lo_ret = (addrs+1) & 0xff;
+
+    insAddrs += 2;
+    uint8_t hi_ret = (insAddrs >> 8) & 0xff;
+    uint8_t lo_ret = insAddrs & 0xff;
 
     cpu65_a  = regA;
     cpu65_x  = regX;
     cpu65_y  = regY;
     cpu65_sp = 0xff;
     cpu65_f  = f;
-
-    ASSERT(apple_ii_64k[0][0x1ff] != TEST_LOC);
-    ASSERT(apple_ii_64k[0][0x1fe] != TEST_LOC_LO+2);
 
     cpu65_run();
 
@@ -3581,8 +3578,8 @@ TEST test_JSR_abs(uint8_t lobyte, uint8_t hibyte) {
     ASSERT(cpu65_f      == f);
     ASSERT(cpu65_sp     == 0xfd);
 
-    ASSERT(apple_ii_64k[0][0x1ff] == 0x1f);
-    ASSERT(apple_ii_64k[0][0x1fe] == TEST_LOC_LO+2);
+    ASSERT(apple_ii_64k[0][0x1ff] == hi_ret);
+    ASSERT(apple_ii_64k[0][0x1fe] == lo_ret);
 
     ASSERT(cpu65_ea       == addrs);
     ASSERT(cpu65_d        == 0xff);
@@ -5685,9 +5682,9 @@ TEST test_RTI(uint8_t flags) {
 // ----------------------------------------------------------------------------
 // RTS operand
 
-TEST test_RTS(uint8_t lobyte, uint8_t hibyte) {
+TEST test_RTS(uint8_t lobyte, uint8_t hibyte, uint16_t insAddrs) {
 
-    testcpu_set_opcode1(0x60);
+    testcpu_set_opcodeX(0x60, random(), random(), insAddrs);
 
     cpu65_a  = 0x02;
     cpu65_x  = 0x03;
@@ -5708,7 +5705,7 @@ TEST test_RTS(uint8_t lobyte, uint8_t hibyte) {
     ASSERT(cpu65_f      == 0x00);
     ASSERT(cpu65_sp     == 0x82);
 
-    ASSERT(cpu65_ea       == TEST_LOC);
+    ASSERT(cpu65_ea       == insAddrs);
     ASSERT(cpu65_d        == 0xff);
     ASSERT(cpu65_rw       == RW_NONE);
     ASSERT(cpu65_opcode   == 0x60);
@@ -5772,8 +5769,8 @@ static void logic_SBC(/*uint8_t*/int _a, /*uint8_t*/int _b, uint8_t *result, uin
 
     int8_t a = (int8_t)_a;
     int8_t b = (int8_t)_b;
-    bool is_neg = (a < 0);
-    bool is_negb = (b < 0);
+    bool signA = a>>7;
+    bool signB = b>>7;
 
     int8_t borrow = ((*flags & fC) == 0x0) ? 1 : 0;
     *flags |= fC;
@@ -5786,18 +5783,14 @@ static void logic_SBC(/*uint8_t*/int _a, /*uint8_t*/int _b, uint8_t *result, uin
         *flags |= fN;
     }
 
-    int32_t res32 = (uint8_t)a-(uint8_t)b-(uint8_t)borrow;
-    if (res32 & 0x10000000) {
+    uint32_t res32 = (uint8_t)a-(uint8_t)b-(uint8_t)borrow;
+    if (res32 & 0x80000000) {
         *flags &= ~fC;
     }
 
-    if ( !is_neg && is_negb ) {
-        if (a > res) {
-            *flags |= fV;
-        }
-    }
-    if ( is_neg && !is_negb ) {
-        if (a < res) {
+    if (signA != signB) {
+        uint8_t signResult = (res&0xff)>>7;
+        if (signA != signResult) {
             *flags |= fV;
         }
     }
@@ -7316,7 +7309,14 @@ GREATEST_SUITE(test_suite_cpu) {
 
     srandom(time(NULL));
 
-    test_common_init(/*cputhread*/false);
+    video_init();
+    test_common_init();
+    assert(cpu_thread_id == 0 && "This test is not designed to run with alternate CPU thread");
+    extern void reinitialize(void);
+    reinitialize();
+
+    extern volatile uint8_t emul_reinitialize;
+    emul_reinitialize = 0;
 
     test_func_t *func=NULL, *tmp=NULL;
 
@@ -7357,11 +7357,31 @@ GREATEST_SUITE(test_suite_cpu) {
     HASH_ITER(hh, test_funcs, func, tmp) {
         fprintf(GREATEST_STDOUT, "\n%s (SILENCED OUTPUT) :\n", func->name);
 
-        for (uint16_t addrs = 0x1f02; addrs < 0x2000; addrs+=0x80) {
+        for (uint16_t addrs = 0x1f02; addrs < 0x2000; addrs++) {
             for (uint8_t flag = 0x00; flag < 0x02; flag++) {
                 uint8_t off=0x00;
                 do {
                     A2_RUN_TESTp( func->func, off, flag, addrs);
+                } while (++off);
+            }
+        }
+
+        // 16bit branch overflow tests
+        for (uint16_t addrs = 0xff00; addrs >= 0xff00 || addrs < 0x00fe; addrs++) {
+            for (uint8_t flag = 0x00; flag < 0x02; flag++) {
+                uint8_t off=0x00;
+                do {
+                    A2_RUN_TESTp(func->func, off, flag, addrs);
+                } while (++off);
+            }
+        }
+
+        // 16bit branch underflow tests
+        for (uint16_t addrs = 0x00fe; addrs <= 0x00fe || addrs > 0xff00; addrs--) {
+            for (uint8_t flag = 0x00; flag < 0x02; flag++) {
+                uint8_t off=0x00;
+                do {
+                    A2_RUN_TESTp(func->func, off, flag, addrs);
                 } while (++off);
             }
         }
@@ -7372,7 +7392,7 @@ GREATEST_SUITE(test_suite_cpu) {
     greatest_info.flags = 0x0;
 
     // ------------------------------------------------------------------------
-    // Immediate addressing mode tests :
+    // Immediate addressing mode tests #1 :
     // NOTE : these should be a comprehensive exercise of the instruction logic
 
     greatest_info.flags = GREATEST_FLAG_SILENT_SUCCESS;
@@ -7383,15 +7403,10 @@ GREATEST_SUITE(test_suite_cpu) {
     A2_ADD_TEST(test_CPX_imm);
     A2_ADD_TEST(test_CPY_imm);
     A2_ADD_TEST(test_EOR_imm);
-    A2_ADD_TEST(test_JMP_abs);
-    A2_ADD_TEST(test_JMP_ind);
-    A2_ADD_TEST(test_JMP_abs_ind_x);
-    A2_ADD_TEST(test_JSR_abs);
     A2_ADD_TEST(test_LDA_imm);
     A2_ADD_TEST(test_LDX_imm);
     A2_ADD_TEST(test_LDY_imm);
     A2_ADD_TEST(test_ORA_imm);
-    A2_ADD_TEST(test_RTS);
     A2_ADD_TEST(test_SBC_imm);
     HASH_ITER(hh, test_funcs, func, tmp) {
         fprintf(GREATEST_STDOUT, "\n%s (SILENCED OUTPUT) :\n", func->name);
@@ -7408,9 +7423,47 @@ GREATEST_SUITE(test_suite_cpu) {
             } while (++val);
         } while (++regA);
 
-        if (func->func == (void*)test_JMP_abs_ind_x) {
-            A2_RUN_TESTp( func->func, 0x01, 0xff, /*alt*/0xfe);
-        }
+        fprintf(GREATEST_STDOUT, "...OK\n");
+        A2_REMOVE_TEST(func);
+    }
+    greatest_info.flags = 0x0;
+
+    // ------------------------------------------------------------------------
+    // Immediate/absolute addressing mode tests
+
+    greatest_info.flags = GREATEST_FLAG_SILENT_SUCCESS;
+    A2_ADD_TEST(test_JMP_abs);
+    A2_ADD_TEST(test_JMP_abs_ind_x);
+    A2_ADD_TEST(test_JMP_ind);
+    A2_ADD_TEST(test_JSR_abs);
+    A2_ADD_TEST(test_RTS);
+    HASH_ITER(hh, test_funcs, func, tmp) {
+        fprintf(GREATEST_STDOUT, "\n%s (SILENCED OUTPUT) :\n", func->name);
+
+        // test comprehensive logic in immediate mode (since no addressing to test) ...
+        uint8_t lobyte=0x00;
+        do {
+            uint8_t hibyte=0x00;
+            do {
+                A2_RUN_TESTp( func->func, lobyte, hibyte, TEST_LOC, (uint8_t)random());
+            } while (++hibyte);
+        } while (++lobyte);
+
+        // test 16bit overflow/underflow
+        lobyte=0x00;
+        do {
+            uint8_t regX=0x00;
+            do {
+                A2_RUN_TESTp( func->func, lobyte, (uint8_t)random(), 0xFFFC, regX);
+                A2_RUN_TESTp( func->func, lobyte, (uint8_t)random(), 0xFFFD, regX);
+                A2_RUN_TESTp( func->func, lobyte, (uint8_t)random(), 0xFFFE, regX);
+                A2_RUN_TESTp( func->func, lobyte, (uint8_t)random(), 0xFFFF, regX);
+                A2_RUN_TESTp( func->func, lobyte, (uint8_t)random(), 0x0000, regX);
+                A2_RUN_TESTp( func->func, lobyte, (uint8_t)random(), 0x0001, regX);
+                A2_RUN_TESTp( func->func, lobyte, (uint8_t)random(), 0x0002, regX);
+                A2_RUN_TESTp( func->func, lobyte, (uint8_t)random(), 0x0003, regX);
+            } while (++regX);
+        } while (++lobyte);
 
         fprintf(GREATEST_STDOUT, "...OK\n");
         A2_REMOVE_TEST(func);
@@ -7466,6 +7519,9 @@ GREATEST_SUITE(test_suite_cpu) {
     // including all edge cases 
 
     // --------------------------------
+#ifdef ANDROID
+    greatest_info.flags = GREATEST_FLAG_SILENT_SUCCESS;
+#endif
     A2_ADD_TEST(test_ADC_zpage);
     A2_ADD_TEST(test_AND_zpage);
     A2_ADD_TEST(test_ASL_zpage);
@@ -7507,10 +7563,14 @@ GREATEST_SUITE(test_suite_cpu) {
             ++arg0;
         } while (arg0);
 
+#ifdef ANDROID
+        fprintf(GREATEST_STDOUT, "...OK\n");
+#endif
         A2_REMOVE_TEST(func);
     }
 
     // --------------------------------
+    greatest_info.flags = GREATEST_FLAG_SILENT_SUCCESS;
     A2_ADD_TEST(test_ADC_zpage_x);
     A2_ADD_TEST(test_AND_zpage_x);
     A2_ADD_TEST(test_ASL_zpage_x);
@@ -7535,21 +7595,30 @@ GREATEST_SUITE(test_suite_cpu) {
         fprintf(GREATEST_STDOUT, "\n%s :\n", func->name);
 
         // test addressing is working ...
-        for (uint8_t regX=0x42; regX>0x3F; regX+=0x40) {
-            A2_RUN_TESTp( func->func, /*A*/0x0f, /*val*/0x0f, /*arg0*/0x24, regX, /*carry*/true);
-            A2_RUN_TESTp( func->func, /*A*/0x0f, /*val*/0x0f, /*arg0*/0x24, regX, /*carry*/false);
-            A2_RUN_TESTp( func->func, /*A*/0x7f, /*val*/0x7f, /*arg0*/0x24, regX, /*carry*/true);
-            A2_RUN_TESTp( func->func, /*A*/0x7f, /*val*/0x7f, /*arg0*/0x24, regX, /*carry*/false);
-            A2_RUN_TESTp( func->func, /*A*/0xaa, /*val*/0x55, /*arg0*/0x24, regX, /*carry*/true);
-            A2_RUN_TESTp( func->func, /*A*/0xaa, /*val*/0x55, /*arg0*/0x24, regX, /*carry*/false);
-            A2_RUN_TESTp( func->func, /*A*/0x00, /*val*/0xff, /*arg0*/0x24, regX, /*carry*/true);
-            A2_RUN_TESTp( func->func, /*A*/0x00, /*val*/0xff, /*arg0*/0x24, regX, /*carry*/false);
-        }
+        uint8_t regX = 0x0;
+        do {
+            uint8_t arg0 = 0x0;
+            do {
+                A2_RUN_TESTp( func->func, /*A*/0x0f, /*val*/0x0f, arg0, regX, /*carry*/true);
+                A2_RUN_TESTp( func->func, /*A*/0x0f, /*val*/0x0f, arg0, regX, /*carry*/false);
+                A2_RUN_TESTp( func->func, /*A*/0x7f, /*val*/0x7f, arg0, regX, /*carry*/true);
+                A2_RUN_TESTp( func->func, /*A*/0x7f, /*val*/0x7f, arg0, regX, /*carry*/false);
+                A2_RUN_TESTp( func->func, /*A*/0xaa, /*val*/0x55, arg0, regX, /*carry*/true);
+                A2_RUN_TESTp( func->func, /*A*/0xaa, /*val*/0x55, arg0, regX, /*carry*/false);
+                A2_RUN_TESTp( func->func, /*A*/0x00, /*val*/0xff, arg0, regX, /*carry*/true);
+                A2_RUN_TESTp( func->func, /*A*/0x00, /*val*/0xff, arg0, regX, /*carry*/false);
+            } while (++arg0);
+        } while (++regX);
 
+        fprintf(GREATEST_STDOUT, "...OK\n");
         A2_REMOVE_TEST(func);
     }
+    greatest_info.flags = 0x0;
 
     // --------------------------------
+#ifdef ANDROID
+    greatest_info.flags = GREATEST_FLAG_SILENT_SUCCESS;
+#endif
     A2_ADD_TEST(test_ADC_abs);
     A2_ADD_TEST(test_AND_abs);
     A2_ADD_TEST(test_ASL_abs);
@@ -7590,6 +7659,9 @@ GREATEST_SUITE(test_suite_cpu) {
             A2_RUN_TESTp( func->func, /*A*/0x00, /*val*/0xff, lobyte, hibyte, /*carry*/true);
         }
 
+#ifdef ANDROID
+        fprintf(GREATEST_STDOUT, "...OK\n");
+#endif
         A2_REMOVE_TEST(func);
     }
 
@@ -7631,6 +7703,9 @@ GREATEST_SUITE(test_suite_cpu) {
             A2_RUN_TESTp( func->func, /*A*/0x24, /*val*/0x42, 0x20, 0xfe,   0xff,   /*carry*/false); // wrap to zpage
         }
 
+#ifdef ANDROID
+        fprintf(GREATEST_STDOUT, "...OK\n");
+#endif
         A2_REMOVE_TEST(func);
     }
 
@@ -7658,6 +7733,9 @@ GREATEST_SUITE(test_suite_cpu) {
             A2_RUN_TESTp( func->func, /*A*/0x24, /*val*/0x42, 0x20, 0xfe,   0xff); // wrap to zpage
         }
 
+#ifdef ANDROID
+        fprintf(GREATEST_STDOUT, "...OK\n");
+#endif
         A2_REMOVE_TEST(func);
     }
 
@@ -7684,6 +7762,9 @@ GREATEST_SUITE(test_suite_cpu) {
             }
         }
 
+#ifdef ANDROID
+        fprintf(GREATEST_STDOUT, "...OK\n");
+#endif
         A2_REMOVE_TEST(func);
     }
 
@@ -7705,6 +7786,9 @@ GREATEST_SUITE(test_suite_cpu) {
         A2_RUN_TESTp( func->func, /*A*/0xaa, /*val*/0x55, /*arg0*/0x24, /*regY*/0xAA, /*val_zp0*/0xAA, /*val_zp1*/0x1f);
         A2_RUN_TESTp( func->func, /*A*/0x00, /*val*/0xff, /*arg0*/0x24, /*regY*/0x80, /*val_zp0*/0x90, /*val_zp1*/0xff);
 
+#ifdef ANDROID
+        fprintf(GREATEST_STDOUT, "...OK\n");
+#endif
         A2_REMOVE_TEST(func);
     }
 
@@ -7729,6 +7813,9 @@ GREATEST_SUITE(test_suite_cpu) {
             A2_RUN_TESTp( func->func, /*A*/0x00, /*val*/0xff, /*arg0*/0xff, /*lobyte*/0x33, /*hibyte*/0x1f);
         }
 
+#ifdef ANDROID
+        fprintf(GREATEST_STDOUT, "...OK\n");
+#endif
         A2_REMOVE_TEST(func);
     }
 }
@@ -7742,7 +7829,7 @@ int test_cpu(int argc, char **argv) {
     GREATEST_MAIN_END();
 }
 
-#if !defined(__APPLE__)
+#if !defined(__APPLE__) && !defined(ANDROID)
 int main(int argc, char **argv) {
     test_cpu(argc, argv);
 }

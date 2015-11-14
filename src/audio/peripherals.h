@@ -1,11 +1,11 @@
 /*
- * Apple // emulator for *nix
+ * Apple // emulator for *ix
  *
  * This software package is subject to the GNU General Public License
- * version 2 or later (your choice) as published by the Free Software
+ * version 3 or later (your choice) as published by the Free Software
  * Foundation.
  *
- * THERE ARE NO WARRANTIES WHATSOEVER.
+ * Copyright 2013-2015 Aaron Culliney
  *
  */
 
@@ -13,7 +13,6 @@
 #define _PERIPHERALS_H_
 
 #include "common.h"
-#include "audio/win-shim.h"
 
 typedef enum eIRQSRC {
     IS_6522=0x08, // NOTE : matches IRQ... defines in cpu.h
@@ -40,15 +39,15 @@ typedef enum SS_CARDTYPE
 
 typedef struct
 {
-    DWORD dwLength;     // Byte length of this unit struct
-    DWORD dwVersion;
+    unsigned long dwLength;     // Byte length of this unit struct
+    unsigned long dwVersion;
 } SS_UNIT_HDR;
 
 typedef struct
 {
     SS_UNIT_HDR UnitHdr;
-    DWORD dwType;        // SS_CARDTYPE
-    DWORD dwSlot;        // [1..7]
+    unsigned long dwType;        // SS_CARDTYPE
+    unsigned long dwSlot;        // [1..7]
 } SS_CARD_HDR;
 
 void CpuIrqAssert(eIRQSRC irq_source);

@@ -1,59 +1,33 @@
 /*
- * Apple // emulator for *nix
+ * Apple // emulator for *ix
  *
  * This software package is subject to the GNU General Public License
- * version 2 or later (your choice) as published by the Free Software
+ * version 3 or later (your choice) as published by the Free Software
  * Foundation.
  *
- * THERE ARE NO WARRANTIES WHATSOEVER.
+ * Copyright 2013-2015 Aaron Culliney
  *
  */
 
 #ifndef _SPEAKER_H_
 #define _SPEAKER_H_
 
-#ifdef APPLE2IX
-#include "audio/win-shim.h"
-#endif
+// leaky detail : max amplitude should be <= SHRT_MAX/2 to not overflow/clip 16bit samples when simple additive mixing
+// between speaker and mockingboard
+#define SPKR_DATA_INIT (SHRT_MAX>>3) // 0x0FFF
 
-extern DWORD      soundtype;
-extern double     g_fClksPerSpkrSample;
+void speaker_init(void);
+void speaker_destroy(void);
+void speaker_reset(void);
+void speaker_flush(void);
+void speaker_setVolumeZeroToTen(unsigned long goesToTen);
+bool speaker_isActive(void);
 
-void    SpkrDestroy ();
-void    SpkrInitialize ();
-void    SpkrReinitialize ();
-void    SpkrReset();
-BOOL    SpkrSetEmulationType (HWND,DWORD);
-void    SpkrUpdate (DWORD);
-void    SpkrUpdate_Timer();
-void    Spkr_SetErrorInc(const int nErrorInc);
-void    Spkr_SetErrorMax(const int nErrorMax);
-DWORD   SpkrGetVolume();
-#ifdef APPLE2IX
-#define SPKR_DATA_INIT 0x4000
-void    SpkrSetVolume(short amplitude);
-#else
-void    SpkrSetVolume(DWORD dwVolume, DWORD dwVolumeMax);
-#endif
-void    Spkr_Mute();
-void    Spkr_Demute();
-bool    Spkr_IsActive();
-bool    Spkr_DSInit();
-void    Spkr_DSUninit();
-#ifdef APPLE2IX
-#define __int64
-typedef struct {
-    unsigned __int64 g_nSpkrLastCycle;
-} SS_IO_Speaker;
-#endif
-DWORD   SpkrGetSnapshot(SS_IO_Speaker* pSS);
-DWORD   SpkrSetSnapshot(SS_IO_Speaker* pSS);
-
-#ifdef APPLE2IX
-void SpkrToggle();
-#else
-BYTE __stdcall SpkrToggle (WORD pc, WORD addr, BYTE bWrite, BYTE d, ULONG nCyclesLeft);
-#endif
+/*
+ * returns the machine cycles per sample
+ *  - for example, emulator running at normal speed: CLK_6502 / 44.1kHz == ~23
+ */
+double speaker_cyclesPerSample(void);
 
 #endif /* whole file */
 

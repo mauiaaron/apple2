@@ -1,0 +1,26 @@
+[
+    "Default Alternate Touch Keyboard",
+
+    {
+        "_comment" : "hex code for special glyphs",
+        "_AA"  : "b5",
+        "_CTRL": "b3",
+        "_XX"  : "9b",
+        "_ESC" : "bc",
+        "_OA"  : "81",
+        "_CA"  : "80",
+        "_UP"  : "8b",
+        "_LT"  : "88",
+        "_RT"  : "95",
+        "_DN"  : "8a"
+    },
+
+    ["reserved for future use"],
+    ["reserved for future use"],
+    ["_AA", "", "_CTRL", "", "_ESC", "",    "_OA", "",  "_CA", ""],
+    [ "",   "", "",      "", "",     "",    "",    "",  "",    ""],
+    [ "",   "", "",      "", "",     "_UP", "",    "",  "",    ""],
+    [ "",   "", "",      "", "_LT",  "_XX", "_RT", "",  "",    ""],
+    [ "",   "", "",      "", "",     "_DN", "",    "",  "",    ""],
+    [ "",   "", "",      "", "",     "",    "",    "",  "",    ""]
+]

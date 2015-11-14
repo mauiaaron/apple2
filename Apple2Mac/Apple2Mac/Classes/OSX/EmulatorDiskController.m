@@ -1,10 +1,13 @@
-//
-//  EmulatorDiskController.m
-//  Apple2Mac
-//
-//  Created by Aaron Culliney on 10/18/14.
-//  Copyright (c) 2014 deadc0de.org. All rights reserved.
-//
+/*
+ * Apple // emulator for *ix
+ *
+ * This software package is subject to the GNU General Public License
+ * version 3 or later (your choice) as published by the Free Software
+ * Foundation.
+ *
+ * Copyright 2014, 2015 Aaron Culliney
+ *
+ */
 
 #import "EmulatorDiskController.h"
 #import "EmulatorPrefsController.h"
@@ -56,7 +59,7 @@
     BOOL readOnlyA = [defaults boolForKey:kApple2PrefStartupDiskAProtected];
     if (startupDiskA)
     {
-        const char *err = c_new_diskette_6(0, [[NSString stringWithFormat:@"%@.gz", startupDiskA] UTF8String], readOnlyA);
+        const char *err = disk6_insert(0, [[NSString stringWithFormat:@"%@.gz", startupDiskA] UTF8String], readOnlyA);
         if (!err)
         {
             [self.diskInA setStringValue:[[startupDiskA pathComponents] lastObject]];
@@ -70,7 +73,7 @@
     BOOL readOnlyB = [defaults boolForKey:kApple2PrefStartupDiskBProtected];
     if (startupDiskB)
     {
-        const char *err = c_new_diskette_6(1, [[NSString stringWithFormat:@"%@.gz", startupDiskB] UTF8String], readOnlyB);
+        const char *err = disk6_insert(1, [[NSString stringWithFormat:@"%@.gz", startupDiskB] UTF8String], readOnlyB);
         if (!err)
         {
             [self.diskInB setStringValue:[[startupDiskB pathComponents] lastObject]];
@@ -92,22 +95,22 @@
     
     if ([self.startupLoadDiskA state] == NSOnState)
     {
-        if (disk6.disk[0].fp)
+        if (disk6.disk[0].fd >= 0)
         {
             NSString *diskA = [NSString stringWithUTF8String:disk6.disk[0].file_name];
             [defaults setObject:diskA forKey:kApple2PrefStartupDiskA];
-            NSButtonCell *readOnlyChoice = [[[self diskAProtection] cells] firstObject];
+            NSButtonCell *readOnlyChoice = (NSButtonCell *)[[[self diskAProtection] cells] firstObject];
             [defaults setBool:([readOnlyChoice state] == NSOnState) forKey:kApple2PrefStartupDiskAProtected];
         }
     }
     
     if ([self.startupLoadDiskB state] == NSOnState)
     {
-        if (disk6.disk[1].fp)
+        if (disk6.disk[1].fd >= 0)
         {
             NSString *diskB = [NSString stringWithUTF8String:disk6.disk[1].file_name];
             [defaults setObject:diskB forKey:kApple2PrefStartupDiskB];
-            NSButtonCell *readOnlyChoice = [[[self diskBProtection] cells] firstObject];
+            NSButtonCell *readOnlyChoice = (NSButtonCell *)[[[self diskBProtection] cells] firstObject];
             [defaults setBool:([readOnlyChoice state] == NSOnState) forKey:kApple2PrefStartupDiskBProtected];
         }
     }
@@ -115,13 +118,13 @@
 
 - (void)_protectionChangedForDrive:(int)drive
 {
-    if (disk6.disk[drive].fp == NULL)
+    if (disk6.disk[drive].fd < 0)
     {
         return;
     }
     // HACK NOTE : dispatch so that state of outlet property is set properly
     dispatch_async(dispatch_get_main_queue(), ^{
-        NSButtonCell *readOnlyChoice = [[(drive == 0 ? [self diskAProtection] : [self diskBProtection]) cells] firstObject];
+        NSButtonCell *readOnlyChoice = (NSButtonCell *)[[(drive == 0 ? [self diskAProtection] : [self diskBProtection]) cells] firstObject];
         NSString *path = [NSString stringWithUTF8String:disk6.disk[drive].file_name];
         [self _insertDisketteInDrive:drive path:path type:[EmulatorDiskController extensionForPath:path] readOnly:([readOnlyChoice state] == NSOnState)];
         [self _savePrefs];
@@ -140,13 +143,13 @@
 
 - (BOOL)_insertDisketteInDrive:(int)drive path:(NSString *)path type:(NSString *)type readOnly:(BOOL)readOnly
 {
-    c_eject_6(drive);
+    disk6_eject(drive);
     
-    const char *errMsg = c_new_diskette_6(drive, [path UTF8String], readOnly);
+    const char *errMsg = disk6_insert(drive, [path UTF8String], readOnly);
     if (errMsg)
     {
         path = [NSString stringWithFormat:@"%@.gz", path];
-        errMsg = c_new_diskette_6(drive, [path UTF8String], readOnly);
+        errMsg = disk6_insert(drive, [path UTF8String], readOnly);
         if (errMsg)
         {
             NSAlert *alert = [NSAlert alertWithError:[NSError errorWithDomain:[NSString stringWithUTF8String:errMsg] code:-1 userInfo:nil]];
@@ -293,13 +296,13 @@
 
 - (IBAction)chooseDriveA:(id)sender
 {
-    NSButtonCell *readOnlyChoice = [[[self diskAProtection] cells] firstObject];
+    NSButtonCell *readOnlyChoice = (NSButtonCell *)[[[self diskAProtection] cells] firstObject];
     [self _chooseDisk:0 readOnly:([readOnlyChoice state] == NSOnState)];
 }
 
 - (IBAction)chooseDriveB:(id)sender
 {
-    NSButtonCell *readOnlyChoice = [[[self diskBProtection] cells] firstObject];
+    NSButtonCell *readOnlyChoice = (NSButtonCell *)[[[self diskBProtection] cells] firstObject];
     [self _chooseDisk:1 readOnly:([readOnlyChoice state] == NSOnState)];
 }
 

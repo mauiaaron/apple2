@@ -1,16 +1,15 @@
 /*
- * Apple // emulator for Linux: Joystick calibration routines
+ * Apple // emulator for *ix
+ *
+ * This software package is subject to the GNU General Public License
+ * version 3 or later (your choice) as published by the Free Software
+ * Foundation.
  *
  * Copyright 1994 Alexander Jean-Claude Bottema
  * Copyright 1995 Stephen Lee
  * Copyright 1997, 1998 Aaron Culliney
  * Copyright 1998, 1999, 2000 Michael Deutschmann
- *
- * This software package is subject to the GNU General Public License
- * version 2 or later (your choice) as published by the Free Software
- * Foundation.
- *
- * THERE ARE NO WARRANTIES WHATSOEVER.
+ * Copyright 2013-2015 Aaron Culliney
  *
  */
 
@@ -219,15 +218,7 @@ static void c_calibrate_keypad_joystick()
     }
 }
 #endif // KEYPAD_JOYSTICK
-#endif // INTERFACE_CLASSIC
 
-#ifdef TOUCH_JOYSTICK
-// TBD ...
-#endif
-
-/* ---------------------------------------------------------------------- */
-
-#ifdef INTERFACE_CLASSIC
 void c_calibrate_joystick()
 {
     if (joy_mode == JOY_PCJOY)
@@ -245,12 +236,10 @@ void c_calibrate_joystick()
 #endif // INTERFACE_CLASSIC
 
 extern void gldriver_joystick_reset(void);
-void c_joystick_reset()
+void c_joystick_reset(void)
 {
-#if VIDEO_OPENGL && !defined(TESTING)
-    if (!is_headless) {
-        gldriver_joystick_reset();
-    }
+#if VIDEO_OPENGL && !TESTING
+    gldriver_joystick_reset();
 #endif
     joy_button0 = 0x0;
     joy_button1 = 0x0;
@@ -263,4 +252,28 @@ void c_joystick_reset()
     }
 #endif
 }
+
+#if INTERFACE_TOUCH
+bool (*joydriver_isTouchJoystickAvailable)(void) = NULL;
+void (*joydriver_setTouchJoystickEnabled)(bool enabled) = NULL;
+void (*joydriver_setTouchJoystickOwnsScreen)(bool pwnd) = NULL;
+bool (*joydriver_ownsScreen)(void) = NULL;
+void (*joydriver_setTouchButtonTypes)(
+        touchjoy_button_type_t touchDownChar, int downScancode,
+        touchjoy_button_type_t northChar, int northScancode,
+        touchjoy_button_type_t southChar, int southScancode) = NULL;
+void (*joydriver_setTapDelay)(float secs) = NULL;
+void (*joydriver_setTouchAxisSensitivity)(float multiplier) = NULL;
+void (*joydriver_setButtonSwitchThreshold)(int delta) = NULL;
+void (*joydriver_setTouchVariant)(touchjoy_variant_t variant) = NULL;
+touchjoy_variant_t (*joydriver_getTouchVariant)(void) = NULL;
+void (*joydriver_setTouchAxisTypes)(uint8_t rosetteChars[(ROSETTE_ROWS * ROSETTE_COLS)], int rosetteScancodes[(ROSETTE_ROWS * ROSETTE_COLS)]) = NULL;
+void (*joydriver_setScreenDivision)(float division) = NULL;
+void (*joydriver_setAxisOnLeft)(bool axisIsOnLeft) = NULL;
+void (*joydriver_beginCalibration)(void) = NULL;
+void (*joydriver_endCalibration)(void) = NULL;
+bool (*joydriver_isCalibrating)(void) = NULL;
+void (*joydriver_setShowControls)(bool showControls) = NULL;
+void (*joydriver_setKeyRepeatThreshold)(float repeatThresholdSecs) = NULL;
+#endif
 

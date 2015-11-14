@@ -1,93 +1,76 @@
 /*
- * Apple // emulator for *nix
+ * Apple // emulator for *ix
  *
  * This software package is subject to the GNU General Public License
- * version 2 or later (your choice) as published by the Free Software
+ * version 3 or later (your choice) as published by the Free Software
  * Foundation.
  *
- * THERE ARE NO WARRANTIES WHATSOEVER.
+ * Copyright 2013-2015 Aaron Culliney
  *
  */
 
-// glvideo -- Created by Aaron Culliney
-
 #include "common.h"
+#include "video/glvideo.h"
 #include "video/glinput.h"
-#include "video/renderer.h"
+#include "video/glnode.h"
 
-#include "video_util/modelUtil.h"
-#include "video_util/matrixUtil.h"
-#include "video_util/sourceUtil.h"
-
-#ifdef __APPLE__
-#import <CoreFoundation/CoreFoundation.h>
-#endif
-
-// TODO: implement 3D CRT object, possibly with perspective drawing?
-#define PERSPECTIVE 0
-
-enum {
-    POS_ATTRIB_IDX,
-    NORMAL_ATTRIB_IDX,
-    TEXCOORD_ATTRIB_IDX
-};
+#include <regex.h>
 
 bool safe_to_do_opengl_logging = false;
+bool renderer_shutting_down = false;
 
-static int windowWidth = SCANWIDTH*1.5;
-static int windowHeight = SCANHEIGHT*1.5;
+volatile unsigned long _backend_vid_dirty = 0;
 
 static int viewportX = 0;
 static int viewportY = 0;
 static int viewportWidth = SCANWIDTH*1.5;
 static int viewportHeight = SCANHEIGHT*1.5;
 
-static GLint uniformMVPIdx;
-static GLuint crtVAOName;
-static GLenum crtElementType;
-static GLuint crtNumElements;
+GLint texSamplerLoc = UNINITIALIZED_GL;
+GLint alphaValue = UNINITIALIZED_GL;
+GLuint mainShaderProgram = UNINITIALIZED_GL;
 
-static GLuint a2TextureName = 0;
-static GLuint defaultFBO = 0;
-static GLuint program = 0;
+bool hackAroundBrokenAdreno200 = false;
+bool hackAroundBrokenAdreno205 = false;
+
+static GLint uniformMVPIdx = UNINITIALIZED_GL;
+static GLenum crtElementType = UNINITIALIZED_GL;
+static GLuint crtNumElements = UNINITIALIZED_GL;
+
+static GLuint a2TextureName = UNINITIALIZED_GL;
+static GLuint defaultFBO = UNINITIALIZED_GL;
+
+static GLuint crtVAOName = UNINITIALIZED_GL;
+static GLuint posBufferName = UNINITIALIZED_GL;
+static GLuint texcoordBufferName = UNINITIALIZED_GL;
+static GLuint elementBufferName = UNINITIALIZED_GL;
+static GLModel *crtModel = NULL;
+
+static GLuint vertexShader = UNINITIALIZED_GL;
+static GLuint fragShader = UNINITIALIZED_GL;
+
+static video_backend_s glvideo_backend = { 0 };
+
+#if USE_GLUT
+static int windowWidth = SCANWIDTH*1.5;
+static int windowHeight = SCANHEIGHT*1.5;
+static int glutWindow = -1;
+#endif
 
 //----------------------------------------------------------------------------
 //
 // OpenGL helper routines
 //
 
-static GLsizei _get_gl_type_size(GLenum type) {
-    switch (type) {
-        case GL_BYTE:
-            return sizeof(GLbyte);
-        case GL_UNSIGNED_BYTE:
-            return sizeof(GLubyte);
-        case GL_SHORT:
-            return sizeof(GLshort);
-        case GL_UNSIGNED_SHORT:
-            return sizeof(GLushort);
-        case GL_INT:
-            return sizeof(GLint);
-        case GL_UNSIGNED_INT:
-            return sizeof(GLuint);
-        case GL_FLOAT:
-            return sizeof(GLfloat);
-    }
-    return 0;
-}
-
-static demoModel *_create_CRT_model() {
-#define STRIDE 9*sizeof(GLfloat)
-#define TEST_COLOR_OFF (GLvoid *)(3*sizeof(GLfloat))
-#define TEX_COORD_OFF (GLvoid *)(7*sizeof(GLfloat))
+static void _create_CRT_model(void) {
 
     // NOTE: vertices in Normalized Device Coordinates
     const GLfloat crt_positions[] = {
         // CRT screen quad
         -1.0, -1.0,  0.0, 1.0,
-        1.0, -1.0,  0.0, 1.0,
+         1.0, -1.0,  0.0, 1.0,
         -1.0,  1.0,  0.0, 1.0,
-        1.0,  1.0,  0.0, 1.0,
+         1.0,  1.0,  0.0, 1.0,
 #if PERSPECTIVE
         // CRT back side point
         0.0,  0.0, -1.0, 1.0,
@@ -107,7 +90,7 @@ static demoModel *_create_CRT_model() {
 #endif
     };
 
-    demoModel *crt = calloc(1, sizeof(demoModel));
+    GLModel *crt = calloc(1, sizeof(GLModel));
     crt->numVertices = 4;
     crt->numElements = 6;
 
@@ -117,8 +100,8 @@ static demoModel *_create_CRT_model() {
     crt->positionSize = 4; // x,y,z coordinates
     crt->positionArraySize = sizeof(crt_positions);
 
-    crt->texcoords = malloc(sizeof(crt_texcoords));
-    memcpy(crt->texcoords, &crt_texcoords[0], sizeof(crt_texcoords));
+    crt->texCoords = malloc(sizeof(crt_texcoords));
+    memcpy(crt->texCoords, &crt_texcoords[0], sizeof(crt_texcoords));
     crt->texcoordType = GL_FLOAT;
     crt->texcoordSize = 2; // s,t coordinates
     crt->texcoordArraySize = sizeof(crt_texcoords);
@@ -133,94 +116,67 @@ static demoModel *_create_CRT_model() {
     crt->elementType = GL_UNSIGNED_SHORT;
     crt->elementArraySize = sizeof(indices);
 
-    return crt;
+    mdlDestroyModel(&crtModel);
+    crtModel = crt;
 }
 
-static GLuint _create_VAO(demoModel *model) {
-    GLuint vaoName;
+static void _create_VAO_VBOs(void) {
 
     // Create a vertex array object (VAO) to cache model parameters
-    glGenVertexArrays(1, &vaoName);
-    glBindVertexArray(vaoName);
-
-    GLuint posBufferName;
+#if USE_VAO
+    glGenVertexArrays(1, &crtVAOName);
+    glBindVertexArray(crtVAOName);
+#endif
 
     // Create a vertex buffer object (VBO) to store positions and load data
     glGenBuffers(1, &posBufferName);
     glBindBuffer(GL_ARRAY_BUFFER, posBufferName);
-    glBufferData(GL_ARRAY_BUFFER, model->positionArraySize, model->positions, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, crtModel->positionArraySize, crtModel->positions, GL_STATIC_DRAW);
 
+#if USE_VAO
     // Enable the position attribute for this VAO
     glEnableVertexAttribArray(POS_ATTRIB_IDX);
 
     // Get the size of the position type so we can set the stride properly
-    GLsizei posTypeSize = _get_gl_type_size(model->positionType);
+    GLsizei posTypeSize = getGLTypeSize(crtModel->positionType);
 
     // Set up parmeters for position attribute in the VAO including,
     //  size, type, stride, and offset in the currenly bound VAO
     // This also attaches the position VBO to the VAO
     glVertexAttribPointer(POS_ATTRIB_IDX,        // What attibute index will this array feed in the vertex shader (see buildProgram)
-                          model->positionSize,    // How many elements are there per position?
-                          model->positionType,    // What is the type of this data?
+                          crtModel->positionSize,    // How many elements are there per position?
+                          crtModel->positionType,    // What is the type of this data?
                           GL_FALSE,                // Do we want to normalize this data (0-1 range for fixed-pont types)
-                          model->positionSize*posTypeSize, // What is the stride (i.e. bytes between positions)?
+                          crtModel->positionSize*posTypeSize, // What is the stride (i.e. bytes between positions)?
                           0);    // What is the offset in the VBO to the position data?
+#endif
 
-    if (model->normals) {
-        GLuint normalBufferName;
-
-        // Create a vertex buffer object (VBO) to store positions
-        glGenBuffers(1, &normalBufferName);
-        glBindBuffer(GL_ARRAY_BUFFER, normalBufferName);
-
-        // Allocate and load normal data into the VBO
-        glBufferData(GL_ARRAY_BUFFER, model->normalArraySize, model->normals, GL_STATIC_DRAW);
-
-        // Enable the normal attribute for this VAO
-        glEnableVertexAttribArray(NORMAL_ATTRIB_IDX);
-
-        // Get the size of the normal type so we can set the stride properly
-        GLsizei normalTypeSize = _get_gl_type_size(model->normalType);
-
-        // Set up parmeters for position attribute in the VAO including,
-        //   size, type, stride, and offset in the currenly bound VAO
-        // This also attaches the position VBO to the VAO
-        glVertexAttribPointer(NORMAL_ATTRIB_IDX,    // What attibute index will this array feed in the vertex shader (see buildProgram)
-                              model->normalSize,    // How many elements are there per normal?
-                              model->normalType,    // What is the type of this data?
-                              GL_FALSE,                // Do we want to normalize this data (0-1 range for fixed-pont types)
-                              model->normalSize*normalTypeSize, // What is the stride (i.e. bytes between normals)?
-                              0);    // What is the offset in the VBO to the normal data?
-    }
-
-    if (model->texcoords) {
-        GLuint texcoordBufferName;
-
+    if (crtModel->texCoords) {
         // Create a VBO to store texcoords
         glGenBuffers(1, &texcoordBufferName);
         glBindBuffer(GL_ARRAY_BUFFER, texcoordBufferName);
 
         // Allocate and load texcoord data into the VBO
-        glBufferData(GL_ARRAY_BUFFER, model->texcoordArraySize, model->texcoords, GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, crtModel->texcoordArraySize, crtModel->texCoords, GL_STATIC_DRAW);
 
+#if USE_VAO
         // Enable the texcoord attribute for this VAO
         glEnableVertexAttribArray(TEXCOORD_ATTRIB_IDX);
 
         // Get the size of the texcoord type so we can set the stride properly
-        GLsizei texcoordTypeSize = _get_gl_type_size(model->texcoordType);
+        GLsizei texcoordTypeSize = getGLTypeSize(crtModel->texcoordType);
 
         // Set up parmeters for texcoord attribute in the VAO including,
         //   size, type, stride, and offset in the currenly bound VAO
         // This also attaches the texcoord VBO to VAO
         glVertexAttribPointer(TEXCOORD_ATTRIB_IDX,    // What attibute index will this array feed in the vertex shader (see buildProgram)
-                              model->texcoordSize,    // How many elements are there per texture coord?
-                              model->texcoordType,    // What is the type of this data in the array?
+                              crtModel->texcoordSize,    // How many elements are there per texture coord?
+                              crtModel->texcoordType,    // What is the type of this data in the array?
                               GL_TRUE,                // Do we want to normalize this data (0-1 range for fixed-point types)
-                              model->texcoordSize*texcoordTypeSize,  // What is the stride (i.e. bytes between texcoords)?
+                              crtModel->texcoordSize*texcoordTypeSize,  // What is the stride (i.e. bytes between texcoords)?
                               0);    // What is the offset in the VBO to the texcoord data?
+#endif
     }
-
-    GLuint elementBufferName;
 
     // Create a VBO to vertex array elements
     // This also attaches the element array buffer to the VAO
@@ -228,23 +184,21 @@ static GLuint _create_VAO(demoModel *model) {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBufferName);
 
     // Allocate and load vertex array element data into VBO
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, model->elementArraySize, model->elements, GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, crtModel->elementArraySize, crtModel->elements, GL_STATIC_DRAW);
 
     GL_ERRLOG("finished creating VAO/VBOs");
-
-    return vaoName;
 }
 
 static void _destroy_VAO(GLuint vaoName) {
-    GLuint index;
-    GLuint bufName;
 
     // Bind the VAO so we can get data from it
+#if USE_VAO
     glBindVertexArray(vaoName);
 
     // For every possible attribute set in the VAO
-    for (index = 0; index < 16; index++) {
+    for (GLuint index = 0; index < 16; index++) {
         // Get the VBO set for that attibute
+        GLuint bufName = 0;
         glGetVertexAttribiv(index , GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING, (GLint*)&bufName);
 
         // If there was a VBO set...
@@ -255,16 +209,27 @@ static void _destroy_VAO(GLuint vaoName) {
     }
 
     // Get any element array VBO set in the VAO
-    glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, (GLint*)&bufName);
+    {
+        GLuint bufName = 0;
+        glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, (GLint*)&bufName);
 
-    // If there was a element array VBO set in the VAO
-    if(bufName) {
-        //...delete the VBO
-        glDeleteBuffers(1, &bufName);
+        // If there was a element array VBO set in the VAO
+        if (bufName) {
+            //...delete the VBO
+            glDeleteBuffers(1, &bufName);
+        }
     }
 
     // Finally, delete the VAO
     glDeleteVertexArrays(1, &vaoName);
+#else
+    glDeleteBuffers(1, &posBufferName);
+    posBufferName = UNINITIALIZED_GL;
+    glDeleteBuffers(1, &texcoordBufferName);
+    texcoordBufferName = UNINITIALIZED_GL;
+    glDeleteBuffers(1, &elementBufferName);
+    elementBufferName = UNINITIALIZED_GL;
+#endif
 
     GL_ERRLOG("destroying VAO/VBOs");
 }
@@ -274,6 +239,7 @@ static GLuint _create_CRT_texture(void) {
 
     // Create a texture object to apply to model
     glGenTextures(1, &texName);
+    glActiveTexture(TEXTURE_ACTIVE_FRAMEBUFFER);
     glBindTexture(GL_TEXTURE_2D, texName);
 
     // Set up filter and wrap modes for this texture object
@@ -282,13 +248,12 @@ static GLuint _create_CRT_texture(void) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
-    // Indicate that pixel rows are tightly packed
-    //  (defaults to stride of 4 which is kind of only good for
-    //  RGBA or FLOAT data types)
+    // Indicate that pixel rows are tightly packed (defaults to a stride of sizeof(PIXEL_TYPE) which is good for RGBA or
+    // FLOAT data types)
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
     // Allocate and load image data into texture
-    glTexImage2D(GL_TEXTURE_2D, /*level*/0, /*internal format*/GL_RGBA, SCANWIDTH, SCANHEIGHT, /*border*/0, /*format*/GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    glTexImage2D(GL_TEXTURE_2D, /*level*/0, TEX_FORMAT_INTERNAL, SCANWIDTH, SCANHEIGHT, /*border*/0, TEX_FORMAT, TEX_TYPE, NULL);
 
     GL_ERRLOG("finished creating CRT texture");
 
@@ -306,12 +271,16 @@ static GLuint _build_program(demoSource *vertexSource, demoSource *fragmentSourc
     // Determine if GLSL version 140 is supported by this context.
     //  We'll use this info to generate a GLSL shader source string
     //  with the proper version preprocessor string prepended
-    float  glLanguageVersion;
+    float glLanguageVersion = 0.f;
 
+    char *shaderLangVersion = (char *)glGetString(GL_SHADING_LANGUAGE_VERSION);
+    if (shaderLangVersion == NULL) {
+        ERRQUIT("shader toolchain unavailable");
+    }
 #if TARGET_OS_IPHONE
-    sscanf((char *)glGetString(GL_SHADING_LANGUAGE_VERSION), "OpenGL ES GLSL ES %f", &glLanguageVersion);
+    sscanf(shaderLangVersion, "OpenGL ES GLSL ES %f", &glLanguageVersion);
 #else
-    sscanf((char *)glGetString(GL_SHADING_LANGUAGE_VERSION), "%f", &glLanguageVersion);
+    sscanf(shaderLangVersion, "%f", &glLanguageVersion);
 #endif
 
     // GL_SHADING_LANGUAGE_VERSION returns the version standard version form
@@ -350,9 +319,14 @@ static GLuint _build_program(demoSource *vertexSource, demoSource *fragmentSourc
 
     // Prepend our vertex shader source string with the supported GLSL version so
     //  the shader will work on ES, Legacy, and OpenGL 3.2 Core Profile contexts
-    sprintf(sourceString, "#version %d\n%s", version, vertexSource->string);
+    if (version) {
+        sprintf(sourceString, "#version %d\n%s", version, vertexSource->string);
+    } else {
+        RELEASE_LOG("No GLSL version specified ... so NOT adding a #version directive to shader sources =P");
+        sprintf(sourceString, "%s", vertexSource->string);
+    }
 
-    GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
+    vertexShader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertexShader, 1, (const GLchar **)&(sourceString), NULL);
     glCompileShader(vertexShader);
     glGetShaderiv(vertexShader, GL_INFO_LOG_LENGTH, &logLength);
@@ -376,10 +350,6 @@ static GLuint _build_program(demoSource *vertexSource, demoSource *fragmentSourc
     // Attach the vertex shader to our program
     glAttachShader(prgName, vertexShader);
 
-    // Delete the vertex shader since it is now attached
-    // to the program, which will retain a reference to it
-    glDeleteShader(vertexShader);
-
     /////////////////////////////////////////
     // Specify and compile Fragment Shader //
     /////////////////////////////////////////
@@ -389,9 +359,13 @@ static GLuint _build_program(demoSource *vertexSource, demoSource *fragmentSourc
 
     // Prepend our fragment shader source string with the supported GLSL version so
     //  the shader will work on ES, Legacy, and OpenGL 3.2 Core Profile contexts
-    sprintf(sourceString, "#version %d\n%s", version, fragmentSource->string);
+    if (version) {
+        sprintf(sourceString, "#version %d\n%s", version, fragmentSource->string);
+    } else {
+        sprintf(sourceString, "%s", fragmentSource->string);
+    }
 
-    GLuint fragShader = glCreateShader(GL_FRAGMENT_SHADER);
+    fragShader = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fragShader, 1, (const GLchar **)&(sourceString), NULL);
     glCompileShader(fragShader);
     glGetShaderiv(fragShader, GL_INFO_LOG_LENGTH, &logLength);
@@ -413,10 +387,6 @@ static GLuint _build_program(demoSource *vertexSource, demoSource *fragmentSourc
 
     // Attach the fragment shader to our program
     glAttachShader(prgName, fragShader);
-
-    // Delete the fragment shader since it is now attached
-    // to the program, which will retain a reference to it
-    glDeleteShader(fragShader);
 
     //////////////////////
     // Link the program //
@@ -458,11 +428,32 @@ static GLuint _build_program(demoSource *vertexSource, demoSource *fragmentSourc
     // Setup common program input points //
     ///////////////////////////////////////
 
-    GLint samplerLoc = glGetUniformLocation(prgName, "diffuseTexture");
+    texSamplerLoc = glGetUniformLocation(prgName, "aTexture");
+    if (texSamplerLoc < 0) {
+        LOG("OOPS, no framebufferTexture shader : %d", texSamplerLoc);
+    } else {
+        glUniform1i(texSamplerLoc, TEXTURE_ID_FRAMEBUFFER);
+    }
 
-    // Indicate that the diffuse texture will be bound to texture unit 0
-    GLint unit = 0;
-    glUniform1i(samplerLoc, unit);
+    GLint maxTextureUnits = -1;
+    glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &maxTextureUnits);
+
+    if (maxTextureUnits < TEXTURE_ID_MAX) {
+#warning FIXME TODO ... gracefully handle devices with low max texture units?
+        ERRLOG("OOPS ... MAX TEXTURE UNITS : %d (<%d)", maxTextureUnits, TEXTURE_ID_MAX);
+    } else {
+        LOG("GL_MAX_TEXTURE_IMAGE_UNITS : %d", maxTextureUnits);
+    }
+
+    uniformMVPIdx = glGetUniformLocation(prgName, "modelViewProjectionMatrix");
+    if (uniformMVPIdx < 0) {
+        LOG("OOPS, no modelViewProjectionMatrix in shader : %d", uniformMVPIdx);
+    }
+
+    alphaValue = glGetUniformLocation(prgName, "aValue");
+    if (alphaValue < 0) {
+        LOG("OOPS, no texture selector in shader : %d", alphaValue);
+    }
 
     GL_ERRLOG("build program");
 
@@ -480,44 +471,149 @@ static demoSource *_create_shader_source(const char *fileName) {
     CFRELEASE(fileURL);
     src = srcLoadSource(CFStringGetCStringPtr(filePath, CFStringGetSystemEncoding()));
     CFRELEASE(filePath);
-#elif defined(CONFIG_DATADIR)
+#else
     char *filePath = NULL;
-    asprintf(&filePath, "%s/%s/shaders/%s", CONFIG_DATADIR, PACKAGE_NAME, fileName);
+    asprintf(&filePath, "%s/shaders/%s", data_dir, fileName);
     if (filePath) {
         src = srcLoadSource(filePath);
         free(filePath);
     } else {
         ERRLOG("OOPS Could not load shader from %s (%s)", filePath, fileName);
     }
-#else
-#error need to specify a DATADIR for shader files, etc
 #endif
     return src;
 }
 
-static void gldriver_init_common(void) {
-    LOG("%s %s", glGetString(GL_RENDERER), glGetString(GL_VERSION));
+static void gldriver_render(void);
 
-    viewportWidth = 400;
-    viewportHeight = 400;
+static void _gldriver_setup_hackarounds(void) {
+
+    const char *vendor   = (const char *)glGetString(GL_VENDOR);
+    const char *renderer = (const char *)glGetString(GL_RENDERER);
+    const char *version  = (const char *)glGetString(GL_VERSION);
+    if (vendor && renderer && version) {
+        LOG("GL_VENDOR:[%s] GL_RENDERER:[%s] GL_VERSION:[%s]", vendor, renderer, version);
+    } else {
+        RELEASE_LOG("One or more of GL_VENDOR, GL_RENDERER, and GL_VERSION is NULL ... this is bad ...");
+        return;
+    }
+
+    do {
+        // As if we didn't have enough problems with Android ... Bionic's POSIX Regex support for android-10 appears
+        // very basic ... we can't match the word-boundary atomics \> \< \b ... sigh ... hopefully  by the time there is
+        // an Adreno 2000 we can remove these hackarounds ;-)
+
+        regex_t qualcommRegex = { 0 };
+        int err = regcomp(&qualcommRegex, "qualcomm", REG_ICASE|REG_NOSUB|REG_EXTENDED);
+        if (err) {
+            LOG("Cannot compile regex : %d", err);
+            break;
+        }
+        int nomatch = regexec(&qualcommRegex, vendor, /*nmatch:*/0, /*pmatch:*/NULL, /*eflags:*/0);
+        regfree(&qualcommRegex);
+        if (nomatch) {
+            LOG("NO MATCH QUALCOMM >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+            break;
+        }
+
+        regex_t adrenoRegex = { 0 };
+        err = regcomp(&adrenoRegex, "adreno", REG_ICASE|REG_NOSUB|REG_EXTENDED);
+        if (err) {
+            LOG("Cannot compile regex : %d", err);
+            break;
+        }
+        nomatch = regexec(&adrenoRegex, renderer, /*nmatch:*/0, /*pmatch:*/NULL, /*eflags:*/0);
+        regfree(&adrenoRegex);
+        if (nomatch) {
+            LOG("NO MATCH ADRENO >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+            break;
+        }
+
+        regex_t twoHundredRegex = { 0 };
+        err = regcomp(&twoHundredRegex, "200", REG_ICASE|REG_NOSUB|REG_EXTENDED);
+        if (err) {
+            LOG("Cannot compile regex : %d", err);
+            break;
+        }
+
+        regex_t twoHundredFiveRegex = { 0 };
+        err = regcomp(&twoHundredFiveRegex, "205", REG_ICASE|REG_NOSUB|REG_EXTENDED);
+        if (err) {
+            LOG("Cannot compile regex : %d", err);
+            break;
+        }
+
+        regex_t twoHundredXXRegex = { 0 };
+        err = regcomp(&twoHundredXXRegex, "2[2-9][0-9]", REG_ICASE|REG_NOSUB|REG_EXTENDED);
+        if (err) {
+            LOG("Cannot compile regex : %d", err);
+            break;
+        }
+
+        int found200 = !regexec(&twoHundredRegex, renderer, /*nmatch:*/0, /*pmatch:*/NULL, /*eflags:*/0);
+        int found205 = !regexec(&twoHundredFiveRegex, renderer, /*nmatch:*/0, /*pmatch:*/NULL, /*eflags:*/0);
+        int found2XX = !regexec(&twoHundredXXRegex, renderer, /*nmatch:*/0, /*pmatch:*/NULL, /*eflags:*/0);
+        regfree(&twoHundredRegex);
+        regfree(&twoHundredFiveRegex);
+        regfree(&twoHundredXXRegex);
+
+        if (found200) {
+            LOG("HACKING AROUND BROKEN ADRENO 200");
+            hackAroundBrokenAdreno200 = true;
+            break;
+        }
+        if (found205) {
+            LOG("HACKING AROUND BROKEN ADRENO 205");
+            hackAroundBrokenAdreno200 = true;
+            hackAroundBrokenAdreno205 = true;
+            break;
+        }
+        if (found2XX) {
+            LOG("HACKING AROUND BROKEN ADRENO 2XX");
+            hackAroundBrokenAdreno200 = true;
+            break;
+        }
+    } while (0);
+}
+
+static void gldriver_init_common(void) {
+
+    _gldriver_setup_hackarounds();
+
+    GLint value = UNINITIALIZED_GL;
+    glGetIntegerv(GL_MAX_TEXTURE_SIZE, &value);
+    LOG("GL_MAX_TEXTURE_SIZE:%d", value);
+
+    renderer_shutting_down = false;
+
+    if (!viewportWidth) {
+        viewportWidth = 400;
+    }
+    if (!viewportHeight) {
+        viewportHeight = 400;
+    }
 
     // ----------------------------
     // Create CRT model VAO/VBOs
 
     // create CRT model
-    demoModel *crtModel = _create_CRT_model();
+    _create_CRT_model();
 
     // Build Vertex Buffer Objects (VBOs) and Vertex Array Object (VAOs) with our model data
-    crtVAOName = _create_VAO(crtModel);
+    _create_VAO_VBOs();
 
     // Cache the number of element and primType to use later in our glDrawElements calls
     crtNumElements = crtModel->numElements;
     crtElementType = crtModel->elementType;
 
-    // We're using VBOs we can destroy all this memory since buffers are
+#if USE_VAO
+    // We're using VAOs we can destroy certain buffers since they are already
     // loaded into GL and we've saved anything else we need
-    mdlDestroyModel(crtModel);
-    crtModel = NULL;
+    FREE(crtModel->elements);
+    FREE(crtModel->positions);
+    FREE(crtModel->normals);
+    FREE(crtModel->texCoords);
+#endif
 
     // Build a default texture object with our image data
     a2TextureName = _create_CRT_texture();
@@ -529,33 +625,29 @@ static void gldriver_init_common(void) {
     demoSource *frgSource = _create_shader_source("Basic.fsh");
 
     // Build/use Program
-    program = _build_program(vtxSource, frgSource, /*withNormal:*/false, /*withTexcoord:*/true);
+    mainShaderProgram = _build_program(vtxSource, frgSource, /*withNormal:*/false, /*withTexcoord:*/true);
 
     srcDestroySource(vtxSource);
     srcDestroySource(frgSource);
 
-    uniformMVPIdx = glGetUniformLocation(program, "modelViewProjectionMatrix");
-    if (uniformMVPIdx < 0) {
-        LOG("No modelViewProjectionMatrix in character shader");
-    }
-
     // ----------------------------
     // setup static OpenGL state
 
-    // Depth test will always be enabled
-    glEnable(GL_DEPTH_TEST);
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
-    // We will always cull back faces for better performance
-    glEnable(GL_CULL_FACE);
-
-    // Always use this clear color
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    // Set up to do blending of texture quads.  Disabling DEPTH/CULL appears to fix blended quad/texture rendering on
+    // finicky Tegra 2.  This generally appears to be the correct way to do it accoring to NVIDIA forums and:
+    // http://www.learnopengles.com/android-lesson-five-an-introduction-to-blending/
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_CULL_FACE);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     // Draw our scene once without presenting the rendered image.
     //   This is done in order to pre-warm OpenGL
     // We don't need to present the buffer since we don't actually want the
     //   user to see this, we're only drawing as a pre-warm stage
-    video_driver_render();
+    gldriver_render();
 
     // Check for errors to make sure all of our setup went ok
     GL_ERRLOG("finished initialization");
@@ -569,11 +661,52 @@ static void gldriver_init_common(void) {
     }
 }
 
-static void gldriver_shutdown(void) {
+static void _gldriver_shutdown(void) {
+    LOG("Beginning GLDriver shutdown ...");
+
     // Cleanup all OpenGL objects
-    glDeleteTextures(1, &a2TextureName);
-    _destroy_VAO(crtVAOName);
-    glDeleteProgram(program);
+    if (a2TextureName != UNINITIALIZED_GL) {
+        glDeleteTextures(1, &a2TextureName);
+        a2TextureName = UNINITIALIZED_GL;
+    }
+
+    if (crtVAOName != UNINITIALIZED_GL) {
+        _destroy_VAO(crtVAOName);
+        crtVAOName = UNINITIALIZED_GL;
+    }
+
+    mdlDestroyModel(&crtModel);
+
+    // detach and delete the main shaders
+    // 2015/11/06 NOTE : Tegra 2 for mobile has a bug whereby you cannot detach/delete shaders immediately after
+    // creating the program.  So we delete them during the shutdown sequence instead.
+    // https://code.google.com/p/android/issues/detail?id=61832
+    glDetachShader(mainShaderProgram, vertexShader);
+    glDetachShader(mainShaderProgram, fragShader);
+    glDeleteShader(vertexShader);
+    glDeleteShader(fragShader);
+    vertexShader = UNINITIALIZED_GL;
+    fragShader = UNINITIALIZED_GL;
+
+    glUseProgram(0);
+    if (mainShaderProgram != UNINITIALIZED_GL) {
+        glDeleteProgram(mainShaderProgram);
+        mainShaderProgram = UNINITIALIZED_GL;
+    }
+
+    glnode_shutdownNodes();
+    LOG("Completed GLDriver shutdown ...");
+}
+
+static void gldriver_shutdown(void) {
+    if (renderer_shutting_down) {
+        return;
+    }
+#if USE_GLUT
+    glutLeaveMainLoop();
+#endif
+    renderer_shutting_down = true;
+    _gldriver_shutdown();
 }
 
 //----------------------------------------------------------------------------
@@ -581,14 +714,46 @@ static void gldriver_shutdown(void) {
 // update, render, reshape
 //
 #if USE_GLUT
-static void gldriver_update(void) {
+static void gldriver_update(int unused) {
+#if DEBUG_GL
+    static uint32_t prevCount = 0;
+    static uint32_t idleCount = 0;
+
+    idleCount++;
+
+    static struct timespec prev = { 0 };
+    struct timespec now;
+    clock_gettime(CLOCK_MONOTONIC, &now);
+
+    if (now.tv_sec != prev.tv_sec) {
+        LOG("gldriver_update() : %u", idleCount-prevCount);
+        prevCount = idleCount;
+        prev = now;
+    }
+#endif
+
     c_keys_handle_input(-1, 0, 0);
     glutPostRedisplay();
+    glutTimerFunc(17, gldriver_update, 0);
 }
 #endif
 
 static void gldriver_render(void) {
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    SCOPE_TRACE_VIDEO("glvideo render");
+
+    const uint8_t * const fb = video_current_framebuffer();
+    if (UNLIKELY(!fb)) {
+        return;
+    }
+
+    if (UNLIKELY(renderer_shutting_down)) {
+        return;
+    }
+
+    glClear(GL_COLOR_BUFFER_BIT);
+#if MOBILE_DEVICE
+    glViewport(viewportX, viewportY, viewportWidth, viewportHeight);
+#endif
 
 #if PERSPECTIVE
     // Calculate modelview and projection matrices
@@ -615,47 +780,96 @@ static void gldriver_render(void) {
     // that we calculated above
     glUniformMatrix4fv(uniformMVPIdx, 1, GL_FALSE, mvp);
 
-    // Update texture from Apple //e internal framebuffer
-    const uint8_t * const fb = video_current_framebuffer();
-    uint8_t index;
-#warning FIXME TODO use memcpy ... or don't use indexed color so that we don't need to do this copy?
-    unsigned int count = SCANWIDTH * SCANHEIGHT;
-    char pixels[SCANWIDTH * SCANHEIGHT * 4];
-    if (fb != NULL) {
-        for (unsigned int i=0, j=0; i<count; i++, j+=4) {
-            index = *(fb + i);
-            *( (uint32_t*)(pixels + j) ) = (uint32_t)(
-                                                      ((uint32_t)(colormap[index].red)   << 0 ) |
-                                                      ((uint32_t)(colormap[index].green) << 8 ) |
-                                                      ((uint32_t)(colormap[index].blue)  << 16) |
-                                                      ((uint32_t)0xff                    << 24)
+    unsigned long wasDirty = video_clearDirty();
+
+    char pixels[SCANWIDTH * SCANHEIGHT * sizeof(PIXEL_TYPE)]; // HACK FIXME TODO ... are we sure this does not overflow max stack buffer size?
+    if (wasDirty) {
+        SCOPE_TRACE_VIDEO("pixel convert");
+        // Update texture from indexed-color Apple //e internal framebuffer
+        unsigned int count = SCANWIDTH * SCANHEIGHT;
+        for (unsigned int i=0, j=0; i<count; i++, j+=sizeof(PIXEL_TYPE)) {
+            uint8_t index = *(fb + i);
+            *( (PIXEL_TYPE*)(pixels + j) ) = (PIXEL_TYPE)(
+                                                      ((PIXEL_TYPE)(colormap[index].red)   << SHIFT_R) |
+                                                      ((PIXEL_TYPE)(colormap[index].green) << SHIFT_G) |
+                                                      ((PIXEL_TYPE)(colormap[index].blue)  << SHIFT_B) |
+                                                      ((PIXEL_TYPE)MAX_SATURATION          << SHIFT_A)
                                                       );
         }
     }
 
+    glActiveTexture(TEXTURE_ACTIVE_FRAMEBUFFER);
     glBindTexture(GL_TEXTURE_2D, a2TextureName);
-    glTexImage2D(GL_TEXTURE_2D, /*level*/0, /*internal format*/GL_RGBA, SCANWIDTH, SCANHEIGHT, /*border*/0, /*format*/GL_RGBA, GL_UNSIGNED_BYTE, (GLvoid *)&pixels[0]);
-    glGetError();
+    glUniform1i(texSamplerLoc, TEXTURE_ID_FRAMEBUFFER);
+    if (wasDirty) {
+        SCOPE_TRACE_VIDEO("glvideo texImage2D");
+        _HACKAROUND_GLTEXIMAGE2D_PRE(TEXTURE_ACTIVE_FRAMEBUFFER, a2TextureName);
+        glTexImage2D(GL_TEXTURE_2D, /*level*/0, TEX_FORMAT_INTERNAL, SCANWIDTH, SCANHEIGHT, /*border*/0, TEX_FORMAT, TEX_TYPE, (GLvoid *)&pixels[0]);
+    }
 
     // Bind our vertex array object
+#if USE_VAO
     glBindVertexArray(crtVAOName);
+#else
+    glBindBuffer(GL_ARRAY_BUFFER, posBufferName);
+
+    GLsizei posTypeSize      = getGLTypeSize(crtModel->positionType);
+    GLsizei texcoordTypeSize = getGLTypeSize(crtModel->texcoordType);
+
+    // Set up parmeters for position attribute in the VAO including, size, type, stride, and offset in the currenly
+    // bound VAO This also attaches the position VBO to the VAO
+    glVertexAttribPointer(POS_ATTRIB_IDX,                       // What attibute index will this array feed in the vertex shader (see buildProgram)
+                          crtModel->positionSize,               // How many elements are there per position?
+                          crtModel->positionType,               // What is the type of this data?
+                          GL_FALSE,                             // Do we want to normalize this data (0-1 range for fixed-pont types)
+                          crtModel->positionSize*posTypeSize,   // What is the stride (i.e. bytes between positions)?
+                          0);                                   // What is the offset in the VBO to the position data?
+    glEnableVertexAttribArray(POS_ATTRIB_IDX);
+
+    // Set up parmeters for texcoord attribute in the VAO including, size, type, stride, and offset in the currenly
+    // bound VAO This also attaches the texcoord VBO to VAO
+    glBindBuffer(GL_ARRAY_BUFFER, texcoordBufferName);
+    glVertexAttribPointer(TEXCOORD_ATTRIB_IDX,                      // What attibute index will this array feed in the vertex shader (see buildProgram)
+                          crtModel->texcoordSize,                   // How many elements are there per texture coord?
+                          crtModel->texcoordType,                   // What is the type of this data in the array?
+                          GL_TRUE,                                  // Do we want to normalize this data (0-1 range for fixed-point types)
+                          crtModel->texcoordSize*texcoordTypeSize,  // What is the stride (i.e. bytes between texcoords)?
+                          0);                                       // What is the offset in the VBO to the texcoord data?
+    glEnableVertexAttribArray(TEXCOORD_ATTRIB_IDX);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBufferName);
+#endif
+
+    glUniform1f(alphaValue, 1.0);
 
     // Cull back faces now that we no longer render
     // with an inverted matrix
-    glCullFace(GL_BACK);
+    //glCullFace(GL_BACK);
 
-    // Draw the CRT object
+    // Draw the CRT object and others
+    _HACKAROUND_GLDRAW_PRE();
     glDrawElements(GL_TRIANGLES, crtNumElements, crtElementType, 0);
+
+    // Render HUD nodes
+    glnode_renderNodes();
 
 #if USE_GLUT
     glutSwapBuffers();
 #endif
+
+    GL_ERRLOG("gldriver_render");
 }
 
 static void gldriver_reshape(int w, int h) {
     //LOG("reshape to w:%d h:%d", w, h);
+#if USE_GLUT
     windowWidth = w;
     windowHeight = h;
+#endif
+
+#if MOBILE_DEVICE
+    int viewportHeightPrevious = viewportHeight;
+#endif
 
     int w2 = ((float)h * (SCANWIDTH/(float)SCANHEIGHT));
     int h2 = ((float)w / (SCANWIDTH/(float)SCANHEIGHT));
@@ -682,16 +896,19 @@ static void gldriver_reshape(int w, int h) {
     }
 
     glViewport(viewportX, viewportY, viewportWidth, viewportHeight);
+
+    // Reshape HUD nodes
+    glnode_reshapeNodes(w, h);
 }
 
 #if USE_GLUT
 static void gldriver_init_glut(GLuint fbo) {
     glutInit(&argc, argv);
-    glutInitDisplayMode(/*GLUT_DOUBLE|*/GLUT_RGBA|GLUT_DEPTH);
+    glutInitDisplayMode(/*GLUT_DOUBLE|*/GLUT_RGBA);
     glutInitWindowSize(windowWidth, windowHeight);
     //glutInitContextVersion(4, 0); -- Is this needed?
     glutInitContextProfile(GLUT_CORE_PROFILE);
-    glutCreateWindow(PACKAGE_NAME);
+    glutWindow = glutCreateWindow(PACKAGE_NAME);
     GL_ERRQUIT("GLUT initialization");
 
     if (glewInit()) {
@@ -700,11 +917,12 @@ static void gldriver_init_glut(GLuint fbo) {
 
     gldriver_init_common();
 
-    glutIdleFunc(gldriver_update);
+    glutTimerFunc(16, gldriver_update, 0);
     glutDisplayFunc(gldriver_render);
     glutReshapeFunc(gldriver_reshape);
+    glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_GLUTMAINLOOP_RETURNS);
 
-#if !defined(TESTING)
+#if !TESTING
     glutKeyboardFunc(gldriver_on_key_down);
     glutKeyboardUpFunc(gldriver_on_key_up);
     glutSpecialFunc(gldriver_on_key_special_down);
@@ -716,38 +934,44 @@ static void gldriver_init_glut(GLuint fbo) {
 #endif
 
 //----------------------------------------------------------------------------
-// renderer API
+// backend renderer API
 
-void video_driver_init(void *fbo) {
+static void gldriver_init(void *fbo) {
     safe_to_do_opengl_logging = true;
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpointer-to-int-cast"
     defaultFBO = (GLuint)fbo;
 #pragma GCC diagnostic pop
-#if defined(__APPLE__)
+#if defined(__APPLE__) || defined(ANDROID)
     gldriver_init_common();
 #elif USE_GLUT
     gldriver_init_glut(defaultFBO);
 #else
 #error no working codepaths
 #endif
+    glnode_setupNodes();
 }
 
-void video_driver_main_loop(void) {
+static void gldriver_main_loop(void) {
 #if USE_GLUT
     glutMainLoop();
+    LOG("GLUT main loop finished...");
 #endif
+    // fall through if not GLUT
 }
 
-void video_driver_render(void) {
-    gldriver_render();
-}
+__attribute__((constructor(CTOR_PRIORITY_EARLY)))
+static void _init_glvideo(void) {
+    LOG("Initializing OpenGL renderer");
 
-void video_driver_reshape(int w, int h) {
-    gldriver_reshape(w, h);
-}
+    assert((video_backend == NULL) && "there can only be one!");
 
-void video_driver_shutdown(void) {
-    gldriver_shutdown();
+    glvideo_backend.init      = &gldriver_init;
+    glvideo_backend.main_loop = &gldriver_main_loop;
+    glvideo_backend.reshape   = &gldriver_reshape;
+    glvideo_backend.render    = &gldriver_render;
+    glvideo_backend.shutdown  = &gldriver_shutdown;
+
+    video_backend = &glvideo_backend;
 }
 

@@ -1,111 +1,36 @@
 /*
- * Apple // emulator for Linux: Configuration Interface
+ * Apple // emulator for *ix
+ *
+ * This software package is subject to the GNU General Public License
+ * version 3 or later (your choice) as published by the Free Software
+ * Foundation.
  *
  * Copyright 1994 Alexander Jean-Claude Bottema
  * Copyright 1995 Stephen Lee
  * Copyright 1997, 1998 Aaron Culliney
  * Copyright 1998, 1999, 2000 Michael Deutschmann
- *
- * This software package is subject to the GNU General Public License
- * version 2 or later (your choice) as published by the Free Software
- * Foundation.
- *
- * THERE ARE NO WARRANTIES WHATSOEVER.
+ * Copyright 2013-2015 Aaron Culliney
  *
  */
 
 #include "common.h"
 
-bool in_interface = false;
+#if INTERFACE_TOUCH
+// touch interface managed elsewhere
+int64_t (*interface_onTouchEvent)(interface_touch_event_t action, int pointer_count, int pointer_idx, float *x_coords, float *y_coords) = NULL;
+bool (*interface_isTouchMenuAvailable)(void) = NULL;
+void (*interface_setTouchMenuEnabled)(bool enabled) = NULL;
+void (*interface_setTouchMenuVisibility)(float alpha) = NULL;
+#endif
 
-static struct stat statbuf;
-static int altdrive;
+// 2015/04/12 : This was legacy code for rendering the menu interfaces on desktop Linux. Portions here are resurrected
+// to render HUD messages on desktop and mobile.  Nothing special or pretty here, but has "just worked" for 20+ years ;-)
 
-/*#define undoc_supported 1*/
-/*#else*/
-/*#define undoc_supported 0*/
-
-void copy_and_pad_string(char *dest, const char* src, const char c, const int len, const char cap)
-{
-    const char* p;
-    char* d = dest;
-
-    for (p = src; ((*p != '\0') && (p-src < len-1)); p++)
-    {
-        *d++ = *p;
-    }
-
-    while (d-dest < len-1)
-    {
-        *d++ = c;
-    }
-
-    *d = cap;
-}
-
-static void pad_string(char *s, const char c, const int len) {
-    char *p;
-
-    for (p = s; ((*p != '\0') && (p-s < len-1)); p++)
-    {
-    }
-
-    while (p-s < len-1)
-    {
-        *p++ = c;
-    }
-
-    *p = '\0';
-}
-
-/* -------------------------------------------------------------------------
-    c_load_interface_font()
-   ------------------------------------------------------------------------- */
-
-void c_load_interface_font()
-{
-    video_loadfont_int(0x00,0x40,ucase_glyphs);
-    video_loadfont_int(0x40,0x20,ucase_glyphs);
-    video_loadfont_int(0x60,0x20,lcase_glyphs);
-    video_loadfont_int(0x80,0x40,ucase_glyphs);
-    video_loadfont_int(0xC0,0x20,ucase_glyphs);
-    video_loadfont_int(0xE0,0x20,lcase_glyphs);
-
-    video_loadfont_int(0x80,11,interface_glyphs);
-    video_loadfont_int(MOUSETEXT_BEGIN,0x20,mousetext_glyphs);
-}
-
-/* -------------------------------------------------------------------------
-    c_interface_print()
-   ------------------------------------------------------------------------- */
-void c_interface_print( int x, int y, int cs, const char *s )
-{
-    for (; *s; x++, s++)
-    {
-        video_plotchar( x, y, cs, *s );
-    }
-}
-
-/* -------------------------------------------------------------------------
-    c_interface_print_screen()
-   ------------------------------------------------------------------------- */
-void c_interface_print_screen( char screen[24][INTERFACE_SCREEN_X+1] )
-{
-    for (int y = 0; y < 24; y++)
-    {
-        c_interface_print( 0, y, 2, screen[ y ] );
-    }
-}
-
-/* -------------------------------------------------------------------------
-    c_interface_translate_screen()
-   ------------------------------------------------------------------------- */
-
-#define IsGraphic(c) ((c) == '|' || (((unsigned char)c) >= 0x80 && ((unsigned char)c) <= 0x8A))
+#define IsGraphic(c) ((c) == '|' || (((unsigned char)c) >= ICONTEXT_BEGIN && ((unsigned char)c) <= ICONTEXT_MENU_END))
 #define IsInside(x,y) ((x) >= 0 && (x) <= xlen-1 && (y) >= 0 && (y) <= ylen-1)
 
-static void _convert_screen_graphics( char *screen, const int x, const int y, const int xlen, const int ylen )
-{
+// Draws special interface menu "characters" 
+static void _convert_screen_graphics(char *screen, const int x, const int y, const int xlen, const int ylen) {
     static char map[11][3][4] ={ { "...",
                                    ".||",
                                    ".|." },
@@ -152,33 +77,24 @@ static void _convert_screen_graphics( char *screen, const int x, const int y, co
 
     bool found_glyph = false;
     int k = 10;
-    for (; k >= 0; k--)
-    {
+    for (; k >= 0; k--) {
         found_glyph = true;
 
-        for (int yy = y - 1; found_glyph && yy <= y + 1; yy++)
-        {
+        for (int yy = y - 1; found_glyph && yy <= y + 1; yy++) {
             int idx = yy*(xlen+1);
-            for (int xx = x - 1; xx <= x + 1; xx++)
-            {
+            for (int xx = x - 1; xx <= x + 1; xx++) {
                 char map_ch = map[k][ yy - y + 1 ][ xx - x + 1 ];
 
-                if (IsInside(xx, yy))
-                {
+                if (IsInside(xx, yy)) {
                     char c = *(screen + idx + xx);
-                    if (!IsGraphic( c ) && (map_ch == '|'))
-                    {
+                    if (!IsGraphic( c ) && (map_ch == '|')) {
+                        found_glyph = false;
+                        break;
+                    } else if (IsGraphic( c ) && (map_ch == '.')) {
                         found_glyph = false;
                         break;
                     }
-                    else if (IsGraphic( c ) && (map_ch == '.'))
-                    {
-                        found_glyph = false;
-                        break;
-                    }
-                }
-                else if (map_ch == '|')
-                {
+                } else if (map_ch == '|') {
                     found_glyph = false;
                     break;
                 }
@@ -186,56 +102,125 @@ static void _convert_screen_graphics( char *screen, const int x, const int y, co
             idx += xlen+1;
         }
 
-        if (found_glyph)
-        {
+        if (found_glyph) {
             break;
         }
     }
 
-    if (found_glyph)
-    {
-        *(screen + y*(xlen+1) + x) = 0x80 + k;
+    if (found_glyph) {
+        *(screen + y*(xlen+1) + x) = ICONTEXT_BEGIN + k;
     }
 }
 
-static void c_interface_translate_screen_x_y(char *screen, const int xlen, const int ylen)
-{
-    for (int idx=0, y=0; y < ylen; y++, idx+=xlen+1)
-    {
-        for (int x = 0; x < xlen; x++)
-        {
-            if (*(screen + idx + x) == '|')
-            {
+static void _translate_screen_x_y(char *screen, const int xlen, const int ylen) {
+    for (int idx=0, y=0; y < ylen; y++, idx+=xlen+1) {
+        for (int x = 0; x < xlen; x++) {
+            if (*(screen + idx + x) == '|') {
                 _convert_screen_graphics(screen, x, y, xlen, ylen);
             }
         }
     }
 }
 
-void c_interface_translate_screen( char screen[24][INTERFACE_SCREEN_X+1] )
-{
+// ----------------------------------------------------------------------------
+// Menu/HUD message printing
 
-    c_interface_translate_screen_x_y(screen[0], INTERFACE_SCREEN_X, 24);
-}
-
-/* -------------------------------------------------------------------------
-    c_interface_print_submenu_centered()
-   ------------------------------------------------------------------------- */
-void c_interface_print_submenu_centered( char *submenu, const int xlen, const int ylen )
-{
-    c_interface_translate_screen_x_y(submenu, xlen, ylen);
-    int x = (INTERFACE_SCREEN_X - xlen) >> 1;
-    int y = (24 - ylen) >> 1;
-
-    int ymax = y+ylen;
-    for (int idx=0; y < ymax; y++, idx+=xlen+1)
-    {
-        c_interface_print( x, y, 2, &submenu[ idx ] );
+static void _interface_plotLine(uint8_t *fb, int fb_pix_width, int fb_pix_x_adjust, int col, int row, interface_colorscheme_t cs, const char *message) {
+    for (; *message; col++, message++) {
+        char c = *message;
+        unsigned int off = row * fb_pix_width * FONT_HEIGHT_PIXELS + col * FONT80_WIDTH_PIXELS + fb_pix_x_adjust;
+        interface_plotChar(fb+off, fb_pix_width, cs, c);
     }
 }
 
-/* ------------------------------------------------------------------------- */
+void interface_plotMessage(uint8_t *fb, interface_colorscheme_t cs, char *message, int message_cols, int message_rows) {
+    _translate_screen_x_y(message, message_cols, message_rows);
+    int fb_pix_width = (message_cols*FONT80_WIDTH_PIXELS);
+    for (int row=0, idx=0; row<message_rows; row++, idx+=message_cols+1) {
+        _interface_plotLine(fb, fb_pix_width, 0, 0, row, cs, &message[ idx ]);
+    }
+}
 
+// ----------------------------------------------------------------------------
+// Desktop Legacy Menu Interface
+
+#ifdef INTERFACE_CLASSIC
+
+static void _interface_plotMessageCentered(uint8_t *fb, int fb_cols, int fb_rows, interface_colorscheme_t cs, char *message, const int message_cols, const int message_rows) {
+    _translate_screen_x_y(message, message_cols, message_rows);
+    int col = (fb_cols - message_cols) >> 1;
+    int row = (fb_rows - message_rows) >> 1;
+    int fb_pix_width = (fb_cols*FONT80_WIDTH_PIXELS)+INTERPOLATED_PIXEL_ADJUSTMENT;
+    assert(fb_pix_width == SCANWIDTH);
+    int row_max = row + message_rows;
+    for (int idx=0; row<row_max; row++, idx+=message_cols+1) {
+        _interface_plotLine(fb, fb_pix_width, _INTERPOLATED_PIXEL_ADJUSTMENT_PRE, col, row, cs, &message[ idx ]);
+    }
+}
+
+static struct stat statbuf = { 0 };
+static int altdrive = 0;
+
+void video_plotchar(const int col, const int row, const interface_colorscheme_t cs, const uint8_t c) {
+    unsigned int off = row * SCANWIDTH * FONT_HEIGHT_PIXELS + col * FONT80_WIDTH_PIXELS + _INTERPOLATED_PIXEL_ADJUSTMENT_PRE;
+    interface_plotChar(video__fb1+off, SCANWIDTH, cs, c);
+}
+
+void copy_and_pad_string(char *dest, const char* src, const char c, const int len, const char cap) {
+    const char* p = src;
+    char* d = dest;
+
+    for (; ((*p != '\0') && (p-src < len-1)); p++) {
+        *d++ = *p;
+    }
+
+    while (d-dest < len-1) {
+        *d++ = c;
+    }
+
+    *d = cap;
+}
+
+static void pad_string(char *s, const char c, const int len) {
+    char *p = s;
+
+    for (; ((*p != '\0') && (p-s < len-1)); p++) {
+        // counting ...
+    }
+
+    while (p-s < len-1) {
+        *p++ = c;
+    }
+
+    *p = '\0';
+}
+
+void c_interface_print( int x, int y, const interface_colorscheme_t cs, const char *s ) {
+    _interface_plotLine(video__fb1, SCANWIDTH, _INTERPOLATED_PIXEL_ADJUSTMENT_PRE, x, y, cs, s);
+}
+
+/* -------------------------------------------------------------------------
+    c_interface_print_screen()
+   ------------------------------------------------------------------------- */
+void c_interface_print_screen( char screen[24][INTERFACE_SCREEN_X+1] ) {
+    for (int y = 0; y < 24; y++) {
+        c_interface_print( 0, y, 2, screen[ y ] );
+    }
+}
+
+static void c_interface_translate_screen_x_y(char *screen, const int xlen, const int ylen) {
+    _translate_screen_x_y(screen, xlen, ylen);
+}
+
+void c_interface_translate_screen( char screen[24][INTERFACE_SCREEN_X+1] ) {
+    c_interface_translate_screen_x_y(screen[0], INTERFACE_SCREEN_X, 24);
+}
+
+void c_interface_print_submenu_centered( char *submenu, const int message_cols, const int message_rows ) {
+    _interface_plotMessageCentered(video__fb1, INTERFACE_SCREEN_X, TEXT_ROWS, RED_ON_BLACK, submenu, message_cols, message_rows);
+}
+
+/* ------------------------------------------------------------------------- */
 
 static int c_interface_cut_name(char *name)
 {
@@ -259,50 +244,66 @@ static int c_interface_cut_name(char *name)
     return is_gz;
 }
 
-static int disk_select(const struct dirent *e)
-{
-    static char cmp[ DISKSIZE ];
-    size_t len;
-    const char *p;
+static int disk_select(const struct dirent *e) {
+    char cmp[PATH_MAX] = { 0 };
 
-    strncpy( cmp, disk_path, DISKSIZE );
-    strncat( cmp, "/", DISKSIZE-1 );
-    strncat( cmp, e->d_name, DISKSIZE-1 );
+    const size_t pathSepSize = strlen(PATH_SEPARATOR);
+    const size_t diskNameSize = MIN(PATH_MAX, strlen(disk_path)) + pathSepSize + MIN(PATH_MAX, strlen(e->d_name));
+
+    if (diskNameSize >= PATH_MAX) {
+        RELEASE_ERRLOG("OOPS computed path size >= PATH_MAX!");
+        return 0;
+    }
+
+    strncpy(cmp, disk_path, PATH_MAX-1);
+    strncat(cmp, PATH_SEPARATOR, pathSepSize);
+    strncat(cmp, e->d_name, PATH_MAX-1);
 
     /* don't show disk in alternate drive */
-    if (!strcmp(cmp, disk6.disk[altdrive].file_name))
-    {
+    if (disk6.disk[altdrive].file_name && !strcmp(cmp, disk6.disk[altdrive].file_name)) {
         return 0;
     }
 
     /* show directories except '.' and '..' at toplevel. */
     stat(cmp, &statbuf);
     if (S_ISDIR(statbuf.st_mode) && strcmp(".", e->d_name) &&
-        !(!strcmp("..", e->d_name) && !strcmp(disk_path, "/")))
+        !(!strcmp("..", e->d_name) && !strcmp(disk_path, PATH_SEPARATOR)))
     {
         return 1;
     }
 
-    p = e->d_name;
-    len = strlen(p);
+    const char *p = e->d_name;
+    size_t len = strlen(p);
 
-    if (len > 3 && (!strcmp(p + len - 3, ".gz")))
-    {
+    if (len < 4) {
+        return 0;
+    }
+
+    if (!strncmp(p + len - 3, ".gz", 3)) {
         len -= 3;
     }
 
-    if (!strncmp(p + len - 4, ".dsk", 4))
-    {
+    if (len < 4) {
+        return 0;
+    }
+
+    if (!strncmp(p + len - 3, ".do", 3)) {
         return 1;
     }
 
-    if (!strncmp(p + len - 4, ".nib", 4))
-    {
+    if (!strncmp(p + len - 3, ".po", 3)) {
         return 1;
     }
 
-    if (!strncmp(p + len - 3, ".do", 3))
-    {
+    if (len < 5) {
+        return 0;
+    }
+
+    if (!strncmp(p + len - 4, ".dsk", 4)) {
+        return 1;
+    }
+
+    if (!strncmp(p + len - 4, ".nib", 4)) {
         return 1;
     }
 
@@ -342,7 +343,7 @@ static char zlibmenu[ZLIB_SUBMENU_H][ZLIB_SUBMENU_W+1] =
     "||||||||||||||||||||||||||||||||||||||||" };
 
 static void _eject_disk(int drive) {
-    const char *err_str = c_eject_6(drive);
+    const char *err_str = disk6_eject(drive);
     if (err_str) {
         int ch = -1;
         snprintf(&zlibmenu[4][2], 37, "%s", err_str);
@@ -403,7 +404,7 @@ void c_interface_select_diskette( int drive )
         altdrive = (drive == 0) ? 1 : 0;
         if (!strcmp("", disk_path))
         {
-            sprintf(disk_path, "/");
+            sprintf(disk_path, PATH_SEPARATOR);
         }
 
 #define DISKERR_PAD 35
@@ -428,7 +429,7 @@ void c_interface_select_diskette( int drive )
         if (entries <= 0)
         {
             DISKERR_SHOWERR("Problem reading directory");
-            snprintf(disk_path, DISKSIZE, "%s", getenv("HOME"));
+            snprintf(disk_path, PATH_MAX, "%s", getenv("HOME"));
             nextdir = true;
             continue;
         }
@@ -451,7 +452,7 @@ void c_interface_select_diskette( int drive )
                 {
                     snprintf(temp, PATH_MAX, "%s/%s",
                              disk_path, namelist[ent_no]->d_name);
-                    if (!strcmp(temp, disk6.disk[drive].file_name))
+                    if (disk6.disk[drive].file_name && !strcmp(temp, disk6.disk[drive].file_name))
                     {
                         in_drive = 1;
                     }
@@ -566,8 +567,8 @@ void c_interface_select_diskette( int drive )
                   "|                                      |",
                   "||||||||||||||||||||||||||||||||||||||||" };
 
-                submenu[ 2 ][ 14 ] = MOUSETEXT_BEGIN + 0x0b;
-                submenu[ 2 ][ 20 ] = MOUSETEXT_BEGIN + 0x0a;
+                submenu[ 2 ][ 14 ] = MOUSETEXT_UP;
+                submenu[ 2 ][ 20 ] = MOUSETEXT_DOWN;
                 c_interface_print_submenu_centered(submenu[0], DISKHELP_SUBMENU_W, DISKHELP_SUBMENU_H);
                 while ((ch = c_mygetch(1)) == -1)
                 {
@@ -576,19 +577,24 @@ void c_interface_select_diskette( int drive )
             }
             else if ((ch == 13) || (toupper(ch) == 'W'))
             {
-                int len;
+                if (disk_path) {
+                    size_t pathlen = strlen(disk_path);
+                    if (pathlen && disk_path[pathlen-1] == '/') {
+                        disk_path[pathlen-1] = '\0';
+                    }
+                }
 
                 snprintf(temp, PATH_MAX, "%s/%s",
                          disk_path, namelist[ curpos ]->d_name );
-                len = strlen(disk_path);
+                size_t len = strlen(disk_path);
 
                 /* handle disk currently in the drive */
-                if (!strcmp(temp, disk6.disk[drive].file_name))
+                if (disk6.disk[drive].file_name && !strcmp(temp, disk6.disk[drive].file_name))
                 {
                     /* reopen disk, forcing write enabled */
                     if (toupper(ch) == 'W')
                     {
-                        const char *err_str = c_new_diskette_6(drive, temp, 0);
+                        const char *err_str = disk6_insert(drive, temp, /*readonly:*/0);
                         if (err_str)
                         {
                             int ch = -1;
@@ -599,6 +605,12 @@ void c_interface_select_diskette( int drive )
                             }
                             c_interface_print_screen( screen );
                             continue;
+                        }
+                        else
+                        {
+                            if (video_backend->animation_showDiskChosen) {
+                                video_backend->animation_showDiskChosen(drive);
+                            }
                         }
 
                         break;
@@ -621,22 +633,26 @@ void c_interface_select_diskette( int drive )
                         continue;
                     }
 
-                    if ((disk_path[len-1]) == '/')
+                    if (len && (disk_path[len-1]) == '/')
                     {
                         disk_path[--len] = '\0';
                     }
 
                     if (!strcmp("..", namelist[curpos]->d_name))
                     {
-                        while (--len && (disk_path[len] != '/'))
+                        while (disk_path[len] != '/')
                         {
+                            if (!len) {
+                                break;
+                            }
                             disk_path[len] = '\0';
+                            --len;
                         }
                     }
                     else if (strcmp(".", namelist[curpos]->d_name))
                     {
-                        snprintf(disk_path + len, DISKSIZE-len, "/%s",
-                                 namelist[curpos]->d_name);
+                        size_t ent_len = strlen(namelist[curpos]->d_name)+1+1; // +1 for dir sep +1 for \0
+                        snprintf(disk_path + len, MIN(ent_len, PATH_MAX-(len+ent_len)), "/%s", namelist[curpos]->d_name);
                     }
 
                     nextdir = true;
@@ -646,7 +662,7 @@ void c_interface_select_diskette( int drive )
                 _eject_disk(drive);
                 c_interface_print_screen( screen );
 
-                const char *err_str = c_new_diskette_6(drive, temp, (toupper(ch) != 'W'));
+                const char *err_str = disk6_insert(drive, temp, /*readonly:*/(toupper(ch) != 'W'));
                 if (err_str)
                 {
                     int ch = -1;
@@ -657,6 +673,12 @@ void c_interface_select_diskette( int drive )
                     }
                     c_interface_print_screen( screen );
                     continue;
+                }
+                else
+                {
+                    if (video_backend->animation_showDiskChosen) {
+                        video_backend->animation_showDiskChosen(drive);
+                    }
                 }
 
                 break;
@@ -757,8 +779,8 @@ void c_interface_parameters()
     cur_x = 0;
     video_setpage( 0 );
 
-    screen[ 2 ][ 33 ] = MOUSETEXT_BEGIN + 0x01;
-    screen[ 2 ][ 46 ] = MOUSETEXT_BEGIN + 0x00;
+    screen[ 2 ][ 33 ] = MOUSETEXT_OPENAPPLE;
+    screen[ 2 ][ 46 ] = MOUSETEXT_CLOSEDAPPLE;
 
     c_interface_translate_screen( screen );
     c_interface_print_screen( screen );
@@ -1143,8 +1165,8 @@ void c_interface_parameters()
         else if ((ch == kESC) || c_keys_is_interface_key(ch))
         {
             timing_initialize();
-            video_set(0);                       /* redo colors */
-            c_initialize_sound_hooks();
+            video_reset();
+            vm_reinitializeAudio();
             c_joystick_reset();
             c_interface_exit(ch);
             return;
@@ -1173,10 +1195,10 @@ void c_interface_parameters()
               "| Ctrl-LeftAlt-End Reboots //e         |",
               "| Pause/Brk : Pause Emulator           |",
               "||||||||||||||||||||||||||||||||||||||||" };
-            submenu[ 1 ][ 14 ] = MOUSETEXT_BEGIN + 0x0b;
-            submenu[ 1 ][ 20 ] = MOUSETEXT_BEGIN + 0x0a;
-            submenu[ 3 ][ 14 ] = MOUSETEXT_BEGIN + 0x08;
-            submenu[ 3 ][ 20 ] = MOUSETEXT_BEGIN + 0x15;
+            submenu[ 1 ][ 14 ] = MOUSETEXT_UP;
+            submenu[ 1 ][ 20 ] = MOUSETEXT_DOWN;
+            submenu[ 3 ][ 14 ] = MOUSETEXT_LEFT;
+            submenu[ 3 ][ 20 ] = MOUSETEXT_RIGHT;
 
             c_interface_print_submenu_centered(submenu[0], MAINHELP_SUBMENU_W, MAINHELP_SUBMENU_H);
             while ((ch = c_mygetch(1)) == -1)
@@ -1198,7 +1220,7 @@ void c_interface_parameters()
                 }
 
                 temp[ cur_pos + cur_x ] = ch;
-                strncpy(disk_path, temp, DISKSIZE);
+                strncpy(disk_path, temp, PATH_MAX);
                 if (cur_x < INTERFACE_PATH_MAX-1)
                 {
                     cur_x++;
@@ -1267,17 +1289,16 @@ void c_interface_parameters()
                     if (ch == 'Y')
                     {
                         save_settings();
-
-                        c_eject_6( 0 );
+                        disk6_eject(0);
                         c_interface_print_screen( screen );
-                        c_eject_6( 1 );
+                        disk6_eject(1);
                         c_interface_print_screen( screen );
 #ifdef __linux__
                         LOG("Back to Linux, w00t!\n");
 #endif
                         video_shutdown();
-                        //audio_shutdown(); TODO : fixme ...
-                        exit( 0 );
+                        c_interface_exit(ch);
+                        return;
                     }
                 }
 
@@ -1343,15 +1364,15 @@ void c_interface_credits()
 #define SCROLL_AREA_Y 5
 #define SCROLL_AREA_HEIGHT 16
 
-    screen[ 2 ][ 33 ] = MOUSETEXT_BEGIN + 0x01;
-    screen[ 2 ][ 46 ] = MOUSETEXT_BEGIN + 0x00;
+    screen[ 2 ][ 33 ] = MOUSETEXT_OPENAPPLE;
+    screen[ 2 ][ 46 ] = MOUSETEXT_CLOSEDAPPLE;
 
-    screen[ 22 ][ 18 ] = MOUSETEXT_BEGIN + 0x0b;
-    screen[ 22 ][ 20 ] = MOUSETEXT_BEGIN + 0x0a;
+    screen[ 22 ][ 18 ] = MOUSETEXT_UP;
+    screen[ 22 ][ 20 ] = MOUSETEXT_DOWN;
 
 #define SCROLL_LENGTH 58
 #define SCROLL_WIDTH (INTERFACE_SCREEN_X+1-(SCROLL_AREA_X*2))
-    char credits[SCROLL_LENGTH][SCROLL_WIDTH]=
+    char credits[SCROLL_LENGTH+1][SCROLL_WIDTH]=
     //1.  5.  10.  15.  20.  25.  30.  35.  40.  45.  50.  55.  60.  65.  70.  75.  80.",
       { "                                                                            ",
         "                  An Apple //e Emulator for POSIX Systems!                  ",
@@ -1384,7 +1405,7 @@ void c_interface_credits()
         "LICENSE                                                                     ",
         "                                                                            ",
         "This Apple //ix emulator source code is subject to the GNU General Public   ",
-        "License version 2 or later (your choice) as published by the Free Software  ",
+        "License version 3 or later (your choice) as published by the Free Software  ",
         "Foundation.  https://fsf.org                                                ",
         "                                                                            ",
         "Emulator source is freely available at https://github.com/mauiaaron/apple2  ",
@@ -1410,6 +1431,7 @@ void c_interface_credits()
         " > ROM images used by the emulator are copyright Apple Computer             ",
         "                                                                            ",
         " > Disk images are copyright by various third parties                       ",
+        "                                                                            ",
         "                                                                            " };
 
     video_setpage( 0 );
@@ -1504,15 +1526,15 @@ void c_interface_keyboard_layout()
 
     video_setpage( 0 );
 
-    screen[ 6 ][ 68 ] = MOUSETEXT_BEGIN + 0x0b;
-    screen[ 7 ][ 67 ] = MOUSETEXT_BEGIN + 0x08;
-    screen[ 7 ][ 69 ] = MOUSETEXT_BEGIN + 0x15;
-    screen[ 8 ][ 68 ] = MOUSETEXT_BEGIN + 0x0a;
+    screen[ 6 ][ 68 ] = MOUSETEXT_UP;
+    screen[ 7 ][ 67 ] = MOUSETEXT_LEFT;
+    screen[ 7 ][ 69 ] = MOUSETEXT_RIGHT;
+    screen[ 8 ][ 68 ] = MOUSETEXT_DOWN;
 
-    screen[ 8 ][ 25 ] = MOUSETEXT_BEGIN + 0x01;
-    screen[ 8 ][ 47 ] = MOUSETEXT_BEGIN + 0x00;
-    screen[ 11 ][ 14 ] = MOUSETEXT_BEGIN + 0x01;
-    screen[ 12 ][ 15 ] = MOUSETEXT_BEGIN + 0x00;
+    screen[ 8 ][ 25 ] = MOUSETEXT_OPENAPPLE;
+    screen[ 8 ][ 47 ] = MOUSETEXT_CLOSEDAPPLE;
+    screen[ 11 ][ 14 ] = MOUSETEXT_OPENAPPLE;
+    screen[ 12 ][ 15 ] = MOUSETEXT_CLOSEDAPPLE;
 
     c_interface_translate_screen(screen);
     c_interface_print_screen( screen );
@@ -1531,14 +1553,9 @@ void c_interface_keyboard_layout()
 
 static void *interface_thread(void *current_key)
 {
-    pthread_mutex_lock(&interface_mutex);
-#ifdef AUDIO_ENABLED
-    SoundSystemPause();
-#endif
-    in_interface = true;
+    cpu_pause();
 
     switch ((__SWORD_TYPE)current_key) {
-#ifdef INTERFACE_CLASSIC
     case kF1:
         c_interface_select_diskette( 0 );
         break;
@@ -1546,7 +1563,6 @@ static void *interface_thread(void *current_key)
     case kF2:
         c_interface_select_diskette( 1 );
         break;
-#endif
 
     case kPAUSE:
         while (c_mygetch(1) == -1)
@@ -1556,7 +1572,6 @@ static void *interface_thread(void *current_key)
         }
         break;
 
-#ifdef INTERFACE_CLASSIC
     case kF5:
         c_interface_keyboard_layout();
         break;
@@ -1574,17 +1589,12 @@ static void *interface_thread(void *current_key)
     case kF10:
         c_interface_parameters();
         break;
-#endif
 
     default:
         break;
     }
 
-#ifdef AUDIO_ENABLED
-    SoundSystemUnpause();
-#endif
-    pthread_mutex_unlock(&interface_mutex);
-    in_interface = false;
+    cpu_resume();
 
     return NULL;
 }
@@ -1593,5 +1603,8 @@ void c_interface_begin(int current_key)
 {
     pthread_t t = 0;
     pthread_create(&t, NULL, (void *)&interface_thread, (void *)((__SWORD_TYPE)current_key));
+    pthread_detach(t);
 }
+
+#endif
 

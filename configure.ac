@@ -21,6 +21,8 @@ dnl Arch checks
 
 ASM_O="src/x86/glue.o src/x86/cpu.o"
 TESTVM_ASM_O="src/x86/testvm-glue.o src/x86/testvm-cpu.o"
+TESTDISK_ASM_O="src/x86/testdisk-glue.o src/x86/testdisk-cpu.o"
+TESTTRACE_ASM_O="src/x86/testtrace-glue.o src/x86/testtrace-cpu.o"
 arch=''
 case $target in
     x86_64-*-*)
@@ -75,6 +77,8 @@ fi
 
 AC_SUBST(ASM_O)
 AC_SUBST(TESTVM_ASM_O)
+AC_SUBST(TESTDISK_ASM_O)
+AC_SUBST(TESTTRACE_ASM_O)
 AC_SUBST([AM_CFLAGS])
 
 
@@ -168,7 +172,7 @@ AC_ARG_ENABLE([opengl], AS_HELP_STRING([--disable-opengl], [Disable OpenGL video
                         opengl_supported='yes'
                         AC_DEFINE(VIDEO_OPENGL, 1, [Use OpenGL])
                         AC_DEFINE(USE_GLUT, 1, [Use GLUT library])
-                        VIDEO_O="src/video/glvideo.o src/video/glinput.o src/video_util/matrixUtil.o src/video_util/modelUtil.o src/video_util/sourceUtil.o src/video_util/vectorUtil.o"
+                        VIDEO_O="src/video/glvideo.o src/video/glnode.o src/video/glalert.o src/video/glhudmodel.o src/video/glutinput.o src/video_util/matrixUtil.o src/video_util/modelUtil.o src/video_util/sourceUtil.o src/video_util/vectorUtil.o"
                         AC_MSG_RESULT([Building emulator with OpenGL support, w00t!])
                     ], [
                         AC_MSG_WARN([Did not find OpenGL GLEW library...])
@@ -211,7 +215,6 @@ AS_IF([test "x$opengl_supported" = "xyes"], [
 ])
 
 AC_SUBST(VIDEO_O)
-AC_DEFINE(HEADLESS, 0, [Set to 1 to disable video output driver])
 
 dnl ---------------------------------------------------------------------------
 dnl Sound ...
@@ -222,10 +225,9 @@ AC_ARG_ENABLE([audio], AS_HELP_STRING([--disable-audio], [Disable emulator audio
             AC_CHECK_HEADER(AL/alext.h, [
                 AC_SEARCH_LIBS(alcOpenDevice, openal, [
                     dnl found OpenAL ...
-                    AC_DEFINE(AUDIO_OPENAL, 1, [Enable OpenAL audio output])
                     AC_DEFINE(AUDIO_ENABLED, 1, [Enable sound module])
-                    AUDIO_GLUE_C="src/audio/mockingboard.c"
-                    AUDIO_O="src/audio/soundcore.o src/audio/soundcore-openal.o src/audio/speaker.o src/audio/win-shim.o src/audio/alhelpers.o src/audio/mockingboard.o src/audio/AY8910.o"
+                    AUDIO_GLUE_C="src/audio/speaker.c src/audio/mockingboard.c src/audio/playqueue.c"
+                    AUDIO_O="src/audio/soundcore.o src/audio/soundcore-openal.o src/audio/speaker.o src/audio/playqueue.o src/audio/alhelpers.o src/audio/mockingboard.o src/audio/AY8910.o"
                 ], [
                     AC_MSG_WARN([Could not find OpenAL libraries, sound will be disabled])
                 ], [])
@@ -254,24 +256,10 @@ dnl ---------------------------------------------------------------------------
 dnl Debugger & classic interface ...
 AC_ARG_ENABLE([debugger], AS_HELP_STRING([--disable-debugger], [Disable 6502 debugging console]), [], [
     AC_DEFINE(DEBUGGER, 1, [Enable 6502 debugger module])
-    META_O="src/meta/debug.o src/meta/debugger.o src/meta/opcodes.o"
-
-    AC_CHECK_HEADER(openssl/sha.h, [
-        AC_SEARCH_LIBS(SHA1, crypto, [
-            AC_DEFINE(HAVE_OPENSSL, 1, [Use OpenSSL])
-        ], [
-            AC_MSG_WARN([Could not find OpenSSL libraries, certain functionality will be disabled])
-        ], [])
-    ], [
-        AC_MSG_WARN([Could not find openssl/sha.h header])
-    ], [
-#include <openssl/sha.h>
-    ])
+    META_O="src/meta/debug.o src/meta/debugger.o src/meta/opcodes.o src/test/sha1.o"
 ])
 AC_SUBST(META_O)
 
-INTERFACE_O="src/interface.o"
-AC_SUBST(INTERFACE_O)
 AC_DEFINE(INTERFACE_CLASSIC, 1, [Use the classic menu interface])
 
 dnl ---------------------------------------------------------------------------
@@ -279,6 +267,7 @@ dnl Misc ...
 
 AC_DEFINE(APPLE2IX, 1, [Denotes a section of code as Apple//ix sourced, used with external sources])
 AC_DEFINE(KEYPAD_JOYSTICK, 1, [Joystick emulated on keyboard ... should not be true on mobile devices])
+AC_DEFINE(CONFORMANT_TRACKS, 1, [Conformant to Applewin, and apparently also to the original //e disk timing, but hella-slow on low-end mobile devices])
 
 dnl ---------------------------------------------------------------------------
 

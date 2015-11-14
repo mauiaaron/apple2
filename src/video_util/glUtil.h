@@ -1,11 +1,11 @@
 /*
- * Apple // emulator for *nix
+ * Apple // emulator for *ix
  *
  * This software package is subject to the GNU General Public License
- * version 2 or later (your choice) as published by the Free Software
+ * version 3 or later (your choice) as published by the Free Software
  * Foundation.
  *
- * THERE ARE NO WARRANTIES WHATSOEVER.
+ * Copyright 2013-2015 Aaron Culliney
  *
  */
 
@@ -15,7 +15,9 @@
 #define __GL_UTIL_H__
 
 #if defined(__APPLE__)
-#   include <TargetConditionals.h>
+#   define USE_VAO 1
+#   import <CoreFoundation/CoreFoundation.h>
+#   import <TargetConditionals.h>
 #   if TARGET_OS_IPHONE
 #       import <OpenGLES/ES2/gl.h>
 #       import <OpenGLES/ES2/glext.h>
@@ -26,11 +28,46 @@
 #elif defined(USE_GL3W)
 #   include <GL3/gl3.h>
 #   include <GL3/gl3w.h>
+#elif defined(ANDROID)
+// NOTE : 2015/04/01 ... Certain Android and Android-ish devices (*cough* Kindle *cough*) have buggy OpenGL VAO support,
+// so don't rely on it.  Is it the future yet?
+#   define USE_VAO 0
+#   include <GLES2/gl2.h>
+#   include <GLES2/gl2ext.h>
 #else
 #   define GLEW_STATIC
 #   include <GL/glew.h>
 #   define FREEGLUT_STATIC
 #   include <GL/freeglut.h>
+#endif
+
+#if !defined(USE_VAO)
+#define USE_VAO 1
+#endif
+
+// Global unified texture format constants ...
+
+#define TEX_FORMAT GL_RGBA
+
+#if USE_RGBA4444
+#   define PIXEL_TYPE uint16_t
+#   define MAX_SATURATION 0xf
+#   define SHIFT_R 12
+#   define SHIFT_G 8
+#   define SHIFT_B 4
+#   define SHIFT_A 0
+#   define TEX_FORMAT_INTERNAL GL_RGBA4
+#   define TEX_TYPE GL_UNSIGNED_SHORT_4_4_4_4
+#else
+// assuming RGBA8888 ...
+#   define PIXEL_TYPE uint32_t
+#   define MAX_SATURATION 0xff
+#   define SHIFT_R 0
+#   define SHIFT_G 8
+#   define SHIFT_B 16
+#   define SHIFT_A 24
+#   define TEX_FORMAT_INTERNAL TEX_FORMAT
+#   define TEX_TYPE GL_UNSIGNED_BYTE
 #endif
 
 static inline const char * GetGLErrorString(GLenum error) {

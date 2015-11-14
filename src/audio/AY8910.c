@@ -1,3 +1,14 @@
+/*
+ * Apple // emulator for *ix
+ *
+ * This software package is subject to the GNU General Public License
+ * version 3 or later (your choice) as published by the Free Software
+ * Foundation.
+ *
+ * Copyright 2013-2015 Aaron Culliney
+ *
+ */
+
 /* sound.c: Sound support
    Copyright (c) 2000-2007 Russell Marks, Matan Ziv-Av, Philip Kendall,
                            Fredrick Meunier
@@ -25,9 +36,7 @@
 // [AppleWin-TC] From FUSE's sound.c module
 
 #include "common.h"
-#ifdef APPLE2IX
-#include "audio/win-shim.h"
-#else
+#if !defined(APPLE2IX)
 #include "StdAfx.h"
 #include <windows.h>
 #include <stdio.h>
@@ -137,7 +146,7 @@ void CAY8910_init(CAY8910 *_this)
 	_this->env_first = 1;
         _this->env_rev = 0;
         _this->env_counter = 15;
-	//m_fCurrentCLK_AY8910 = g_fCurrentCLK6502; -- believe this is handled by an initial call to SetCLK()
+	//m_fCurrentCLK_AY8910 = cycles_persec_target; -- believe this is handled by an initial call to SetCLK()
 };
 
 
@@ -175,7 +184,7 @@ void sound_ay_init( CAY8910 *_this )
 #define HZ_COMMON_DENOMINATOR 25
 #endif
 
-void sound_init( CAY8910 *_this, const char *device )
+static void sound_init( CAY8910 *_this, const char *device, unsigned long nSampleRate )
 {
 //  static int first_init = 1;
 //  int f, ret;
@@ -230,7 +239,7 @@ void sound_init( CAY8910 *_this, const char *device )
 
 //  sound_generator_freq =
 //    settings_current.sound_hifi ? HIFI_FREQ : settings_current.sound_freq;
-  sound_generator_freq = SPKR_SAMPLE_RATE;
+  sound_generator_freq = nSampleRate;
   sound_generator_framesiz = sound_generator_freq / (int)hz;
 
 #if 0
@@ -519,7 +528,7 @@ static void sound_ay_overlay(CAY8910 *_this)
 //  cpufreq = machine_current->timings.processor_speed / HZ_COMMON_DENOMINATOR;
   cpufreq = (libspectrum_dword) (m_fCurrentCLK_AY8910 / HZ_COMMON_DENOMINATOR);	// [TC]
   for( f = 0; f < _this->ay_change_count; f++ )
-    _this->ay_change[f].ofs = (USHORT) (( _this->ay_change[f].tstates * sfreq ) / cpufreq);	// [TC] Added cast
+    _this->ay_change[f].ofs = (uint16_t) (( _this->ay_change[f].tstates * sfreq ) / cpufreq);	// [TC] Added cast
 
   libspectrum_signed_word* pBuf1 = g_ppSoundBuffers[0];
   libspectrum_signed_word* pBuf2 = g_ppSoundBuffers[1];
@@ -968,7 +977,7 @@ sound_beeper( int is_tape, int on )
 }
 #endif
 
-BYTE* GetAYRegsPtr(struct CAY8910 *_this)
+uint8_t* GetAYRegsPtr(struct CAY8910 *_this)
 {
     return &(_this->sound_ay_registers[0]);
 }
@@ -983,20 +992,20 @@ void SetCLK(double CLK)
 // AY8910 interface
 
 #ifndef APPLE2IX
-#include "CPU.h"	// For g_nCumulativeCycles
+#include "CPU.h"	// For cycles_count_total
 #endif
 
 static CAY8910 g_AY8910[MAX_8910];
 #ifdef APPLE2IX
-static int64_t g_uLastCumulativeCycles = 0;
+static uint64_t g_uLastCumulativeCycles = 0;
 #else
-static unsigned __int64 g_uLastCumulativeCycles = 0;
+static uint64_t g_uLastCumulativeCycles = 0;
 #endif
 
 
 void _AYWriteReg(int chip, int r, int v)
 {
-	libspectrum_dword uOffset = (libspectrum_dword) (g_nCumulativeCycles - g_uLastCumulativeCycles);
+	libspectrum_dword uOffset = (libspectrum_dword) (cycles_count_total - g_uLastCumulativeCycles);
 	sound_ay_write(&g_AY8910[chip], r, v, uOffset);
 }
 
@@ -1008,10 +1017,10 @@ void AY8910_reset(int chip)
 
 void AY8910UpdateSetCycles()
 {
-	g_uLastCumulativeCycles = g_nCumulativeCycles;
+	g_uLastCumulativeCycles = cycles_count_total;
 }
 
-void AY8910Update(int chip, INT16** buffer, int nNumSamples)
+void AY8910Update(int chip, int16_t** buffer, int nNumSamples)
 {
 	AY8910UpdateSetCycles();
 
@@ -1020,25 +1029,25 @@ void AY8910Update(int chip, INT16** buffer, int nNumSamples)
 	sound_frame(&g_AY8910[chip]);
 }
 
-void AY8910_InitAll(int nClock, int nSampleRate)
+void AY8910_InitAll(int nClock, unsigned long nSampleRate)
 {
-	for (UINT i=0; i<MAX_8910; i++)
+	for (unsigned int i=0; i<MAX_8910; i++)
 	{
-		sound_init(&g_AY8910[i], NULL);	// Inits mainly static members (except ay_tick_incr)
+		sound_init(&g_AY8910[i], NULL, nSampleRate);	// Inits mainly static members (except ay_tick_incr)
 		sound_ay_init(&g_AY8910[i]);
 	}
 }
 
-void AY8910_InitClock(int nClock)
+void AY8910_InitClock(int nClock, unsigned long nSampleRate)
 {
 	SetCLK( (double)nClock );
-	for (UINT i=0; i<MAX_8910; i++)
+	for (unsigned int i=0; i<MAX_8910; i++)
 	{
-		sound_init(&g_AY8910[i], NULL);	// ay_tick_incr is dependent on AY_CLK
+		sound_init(&g_AY8910[i], NULL, nSampleRate);	// ay_tick_incr is dependent on AY_CLK
 	}
 }
 
-BYTE* AY8910_GetRegsPtr(UINT uChip)
+uint8_t* AY8910_GetRegsPtr(unsigned int uChip)
 {
 	if(uChip >= MAX_8910)
 		return NULL;

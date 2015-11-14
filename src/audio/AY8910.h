@@ -1,11 +1,11 @@
 /*
- * Apple // emulator for *nix
+ * Apple // emulator for *ix
  *
  * This software package is subject to the GNU General Public License
- * version 2 or later (your choice) as published by the Free Software
+ * version 3 or later (your choice) as published by the Free Software
  * Foundation.
  *
- * THERE ARE NO WARRANTIES WHATSOEVER.
+ * Copyright 2013-2015 Aaron Culliney
  *
  */
 
@@ -20,20 +20,20 @@
 void _AYWriteReg(int chip, int r, int v);
 //void AY8910_write_ym(int chip, int addr, int data);
 void AY8910_reset(int chip);
-void AY8910Update(int chip, INT16** buffer, int nNumSamples);
+void AY8910Update(int chip, int16_t** buffer, int nNumSamples);
 
-void AY8910_InitAll(int nClock, int nSampleRate);
-void AY8910_InitClock(int nClock);
-BYTE* AY8910_GetRegsPtr(UINT uChip);
+void AY8910_InitAll(int nClock, unsigned long nSampleRate);
+void AY8910_InitClock(int nClock, unsigned long nSampleRate);
+uint8_t* AY8910_GetRegsPtr(unsigned int uChip);
 
 void AY8910UpdateSetCycles();
 
 //-------------------------------------
 // FUSE stuff
 
-typedef ULONG libspectrum_dword;
-typedef UCHAR libspectrum_byte;
-typedef SHORT libspectrum_signed_word;
+typedef unsigned long libspectrum_dword;
+typedef uint8_t libspectrum_byte;
+typedef int16_t libspectrum_signed_word;
 
 struct CAY8910;
 
@@ -49,11 +49,11 @@ struct CAY8910;
 	void CAY8910_init(struct CAY8910 *_this);
 
 	void sound_ay_init(struct CAY8910 *_this);
-	void sound_init(struct CAY8910 *_this, const char *device);
+	//void sound_init(struct CAY8910 *_this, const char *device);
 	void sound_ay_write(struct CAY8910 *_this, int reg, int val, libspectrum_dword now);
 	void sound_ay_reset(struct CAY8910 *_this);
 	void sound_frame(struct CAY8910 *_this);
-	BYTE* GetAYRegsPtr(struct CAY8910 *_this);
+	uint8_t* GetAYRegsPtr(struct CAY8910 *_this);
 	void SetCLK(double CLK);
 
 //private:

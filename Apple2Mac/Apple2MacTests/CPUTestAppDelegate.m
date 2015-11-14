@@ -1,10 +1,13 @@
-//
-//  CPUTestAppDelegate.m
-//  Apple2Mac
-//
-//  Created by Aaron Culliney on 6/21/14.
-//  Copyright (c) 2014 deadc0de.org. All rights reserved.
-//
+/*
+ * Apple // emulator for *ix 
+ *
+ * This software package is subject to the GNU General Public License
+ * version 3 or later (your choice) as published by the Free Software
+ * Foundation.
+ *
+ * Copyright 2013-2015 Aaron Culliney
+ *
+ */
 
 #import "CPUTestAppDelegate.h"
 
@@ -34,6 +37,8 @@ extern int test_display(int argc, char **argv);
         test_vm(local_argc, local_argv);
 #elif defined(TEST_DISPLAY)
         test_display(local_argc, local_argv);
+#elif defined(TEST_DISK)
+        test_disk(local_argc, local_argv);
 #else
 #error "OOPS, no tests specified"
 #endif

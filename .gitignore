@@ -43,16 +43,19 @@ ylwrap
 apple2ix*.tar.gz
 test-driver
 
+# GDB
+.gdb_history
+
 # generated sources
 src/rom.c
 src/x86/glue.S
-src/meta/debug.c
+src/arm/glue.S
 
 # sub{tree,module}
 src/rom
 
 # generated binaries
-apple2ix
+/apple2ix
 genfont
 genrom
 
@@ -64,3 +67,22 @@ man6
 xcuserdata
 .DS_Store
 xcshareddata
+
+# Android CLI builds
+Android/bin
+Android/gen
+Android/libs
+# Android.mk is tEh dynamicz!
+Android/jni/Android.mk
+*.apk
+
+# Android Studio
+.gradle
+Android/local.properties
+Android/.idea/workspace.xml
+Android/.idea/libraries
+Android/.idea/dictionaries
+Android/build
+Android/jni/obj
+Android/obj
+

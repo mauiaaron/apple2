@@ -1,11 +1,11 @@
 /*
- * Apple // emulator for *nix 
+ * Apple // emulator for *ix 
  *
  * This software package is subject to the GNU General Public License
- * version 2 or later (your choice) as published by the Free Software
+ * version 3 or later (your choice) as published by the Free Software
  * Foundation.
  *
- * THERE ARE NO WARRANTIES WHATSOEVER.
+ * Copyright 2013-2015 Aaron Culliney
  *
  */
 
@@ -28,12 +28,20 @@
 
 #include "common.h"
 
+#ifdef ANDROID
+#warning do newer androids dream of gzbuffer() ?
+// Ugh, why is gzbuffer() symbol not part of zlib.h on Android?  I guess maybe we should just go with the published
+// default buffer size?  Yay, GJ Goog!
+#define CHUNK 8192
+#else
 #define CHUNK 16384
-#define UNKNOWN_ERR 42
+#endif
 
 /* report a zlib or i/o error */
-static const char* const _gzerr(gzFile gzf)
-{
+static const char* const _gzerr(gzFile gzf) {
+    if (gzf == NULL) {
+        return NULL;
+    }
     int err_num = 0;
     const char *reason = gzerror(gzf, &err_num);
     if (err_num == Z_ERRNO) {
@@ -48,10 +56,9 @@ static const char* const _gzerr(gzFile gzf)
    for processing, Z_VERSION_ERROR if the version of zlib.h and the version of
    the library linked do not match, or Z_ERRNO if there is an error reading or
    writing the files. */
-const char *def(const char* const src, const int expected_bytecount)
-{
+const char *zlib_deflate(const char* const src, const int expected_bytecount) {
     unsigned char buf[CHUNK];
-    FILE *source = NULL;
+    int fd = -1;
     gzFile gzdest = NULL;
 
     if (src == NULL) {
@@ -59,15 +66,16 @@ const char *def(const char* const src, const int expected_bytecount)
     }
 
     int bytecount = 0;
-    int ret = UNKNOWN_ERR;
+    char *err = NULL;
+    char dst[PATH_MAX] = { 0 };
     do {
-        source = fopen(src, "r");
-        if (source == NULL) {
+        TEMP_FAILURE_RETRY(fd = open(src, O_RDONLY));
+        if (fd == -1) {
             ERRLOG("Cannot open file '%s' for reading", src);
+            err = ZERR_DEFLATE_OPEN_SOURCE;
             break;
         }
 
-        char dst[PATH_MAX];
         snprintf(dst, PATH_MAX-1, "%s%s", src, ".gz");
 
         gzdest = gzopen(dst, "wb");
@@ -76,63 +84,58 @@ const char *def(const char* const src, const int expected_bytecount)
             break;
         }
 
-        int err = gzbuffer(gzdest, CHUNK);
-        if (err != Z_OK) {
+#if !defined(ANDROID)
+        if (gzbuffer(gzdest, CHUNK) != Z_OK) {
             ERRLOG("Cannot set bufsize on gz output");
             break;
         }
+#endif
 
         // deflate ...
         do {
-            size_t buflen = fread(buf, 1, CHUNK, source);
+            ssize_t buflen = 0;
+            TEMP_FAILURE_RETRY(buflen = read(fd, buf, CHUNK));
 
-            if (ferror(source)) {
-                ERRLOG("OOPS fread ...");
+            if (buflen < 0) {
+                ERRLOG("OOPS read ...");
+                err = ZERR_DEFLATE_READ_SOURCE;
+                break;
+            } else if (buflen == 0) {
+                break; // DONE
+            }
+
+            size_t written = gzwrite(gzdest, buf, buflen);
+            if (written < buflen) {
+                ERRLOG("OOPS gzwrite ...");
                 break;
             }
-
-            if (buflen > 0) {
-                unsigned int buflen_ = 0;
-                if (buflen > UINT_MAX) {
-                    ERRLOG("OOPS buffer is huge!");
-                    break;
-                } else {
-                    buflen_ = (unsigned int)buflen;
-                }
-                size_t written = gzwrite(gzdest, buf, buflen_);
-                if (written < buflen) {
-                    ERRLOG("OOPS gzwrite ...");
-                    break;
-                }
-                bytecount += written;
-            }
-
-            if (feof(source)) {
-                if (bytecount != expected_bytecount) {
-                    ERRLOG("OOPS did not write expected_bytecount of %d ... apparently wrote %d", expected_bytecount, bytecount);
-                    ret = UNKNOWN_ERR;
-                } else {
-                    ret = Z_OK;
-                }
-                break; // finished deflating
-            }
+            bytecount += written;
         } while (1);
 
     } while (0);
 
-    const char *err = NULL;
-    if (ret != Z_OK) {
-        err = _gzerr(gzdest);
+    if (bytecount != expected_bytecount) {
+        ERRLOG("OOPS did not write expected_bytecount of %d ... apparently wrote %d", expected_bytecount, bytecount);
+        if (gzdest) {
+            err = (char *)_gzerr(gzdest);
+        }
+        if (!err) {
+            err = ZERR_UNKNOWN;
+        }
     }
 
     // clean up
 
-    if (source) {
-        fclose(source);
+    if (fd) {
+        TEMP_FAILURE_RETRY(close(fd));
     }
 
     if (gzdest) {
         gzclose(gzdest);
+    }
+
+    if (err) {
+        unlink(dst);
     }
 
     return err;
@@ -144,20 +147,17 @@ const char *def(const char* const src, const int expected_bytecount)
    invalid or incomplete, Z_VERSION_ERROR if the version of zlib.h and
    the version of the library linked do not match, or Z_ERRNO if there
    is an error reading or writing the files. */
-const char *inf(const char* const src, int *rawcount)
-{
-    unsigned char buf[CHUNK];
+const char *zlib_inflate(const char* const src, const int expected_bytecount) {
     gzFile gzsource = NULL;
-    FILE *dest = NULL;
+    int fd = -1;
 
     if (src == NULL) {
         return NULL;
     }
 
-    if (rawcount) {
-        *rawcount = 0;
-    }
-    int ret = UNKNOWN_ERR;
+    int bytecount = 0;
+    char *err = NULL;
+    char dst[PATH_MAX] = { 0 };
     do {
         gzsource = gzopen(src, "rb");
         if (gzsource == NULL) {
@@ -166,7 +166,6 @@ const char *inf(const char* const src, int *rawcount)
         }
 
         size_t len = strlen(src);
-        char dst[PATH_MAX];
         snprintf(dst, PATH_MAX-1, "%s", src);
         if (! ( (dst[len-3] == '.') && (dst[len-2] == 'g') && (dst[len-1] == 'z') ) ) {
             ERRLOG("Expected filename ending in .gz");
@@ -174,40 +173,55 @@ const char *inf(const char* const src, int *rawcount)
         }
         dst[len-3] = '\0';
 
-        FILE *dest = fopen(dst, "w+");
-        if (dest == NULL) {
+        TEMP_FAILURE_RETRY(fd = open(dst, O_WRONLY|O_CREAT, S_IRUSR|S_IWUSR));
+        if (fd == -1) {
+            err = ZERR_INFLATE_OPEN_DEST;
             ERRLOG("Cannot open file '%s' for writing", dst);
             break;
         }
 
         // inflate ...
         do {
-            int buflen = gzread(gzsource, buf, CHUNK);
+            unsigned char buf[CHUNK];
+            int buflen = gzread(gzsource, buf, CHUNK-1); // hmmm ... valgrind complains of a buffer read overflow in zlib inffast()?
             if (buflen < 0) {
                 ERRLOG("OOPS, gzip read ...");
                 break;
+            } else if (buflen == 0) {
+                break; // DONE
             }
 
-            if (buflen == 0) {
-                ret = Z_OK;
-                break; // finished inflating
-            }
+            ssize_t idx = 0;
+            size_t chunk = buflen;
+            do {
+                ssize_t outlen = 0;
+                TEMP_FAILURE_RETRY(outlen = write(fd, buf+idx, chunk));
+                if (outlen <= 0) {
+                    break;
+                }
+                idx += outlen;
+                chunk -= outlen;
+            } while (idx < buflen);
 
-            if ( (fwrite(buf, 1, buflen, dest) != buflen) || ferror(dest) ) {
-                ERRLOG("OOPS fwrite ...");
+            if (idx != buflen) {
+                ERRLOG("OOPS, write");
+                err = ZERR_INFLATE_WRITE_DEST;
                 break;
             }
-            if (rawcount) {
-                *rawcount += buflen;
-            }
-            fflush(dest);
+
+            bytecount += buflen;
         } while (1);
 
     } while (0);
 
-    const char *err = NULL;
-    if (ret != Z_OK) {
-        err = _gzerr(gzsource);
+    if (bytecount != expected_bytecount) {
+        ERRLOG("OOPS did not write expected_bytecount of %d ... apparently wrote %d", expected_bytecount, bytecount);
+        if (gzsource) {
+            err = (char *)_gzerr(gzsource);
+        }
+        if (!err) {
+            err = ZERR_UNKNOWN;
+        }
     }
 
     // clean up
@@ -216,9 +230,13 @@ const char *inf(const char* const src, int *rawcount)
         gzclose(gzsource);
     }
 
-    if (dest) {
-        fflush(dest);
-        fclose(dest);
+    if (fd) {
+        TEMP_FAILURE_RETRY(fsync(fd));
+        TEMP_FAILURE_RETRY(close(fd));
+    }
+
+    if (err) {
+        unlink(dst);
     }
 
     return err;

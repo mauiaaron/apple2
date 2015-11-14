@@ -1,16 +1,15 @@
 /*
- * Apple // emulator for *nix
+ * Apple // emulator for *ix
  *
  * This software package is subject to the GNU General Public License
- * version 2 or later (your choice) as published by the Free Software
+ * version 3 or later (your choice) as published by the Free Software
  * Foundation.
  *
- * THERE ARE NO WARRANTIES WHATSOEVER.
+ * Copyright 2013-2015 Aaron Culliney
  *
  */
 
 #include "common.h"
-#include "darwin-shim.h"
 #include <mach/mach_time.h>
 
 // Derived from http://stackoverflow.com/questions/5167269/clock-gettime-alternative-in-mac-os-x
@@ -22,7 +21,7 @@
 static double orwl_timebase = 0.0;
 static uint64_t orwl_timestart = 0;
 
-__attribute__((constructor))
+__attribute__((constructor(CTOR_PRIORITY_LATE)))
 static void __init_darwin_shim() {
     mach_timebase_info_data_t tb = { 0 };
     mach_timebase_info(&tb);

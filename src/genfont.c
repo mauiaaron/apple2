@@ -1,16 +1,15 @@
 /*
- * Apple // emulator for Linux: Font compiler
+ * Apple // emulator for *ix
+ *
+ * This software package is subject to the GNU General Public License
+ * version 3 or later (your choice) as published by the Free Software
+ * Foundation.
  *
  * Copyright 1994 Alexander Jean-Claude Bottema
  * Copyright 1995 Stephen Lee
  * Copyright 1997, 1998 Aaron Culliney
  * Copyright 1998, 1999, 2000 Michael Deutschmann
- *
- * This software package is subject to the GNU General Public License
- * version 2 or later (your choice) as published by the Free Software
- * Foundation.
- *
- * THERE ARE NO WARRANTIES WHATSOEVER.
+ * Copyright 2013-2015 Aaron Culliney
  *
  */
 
@@ -82,6 +81,11 @@ int main(void)
         if (line[0] == ':')
         {
             int j = 8;
+            {
+                int len = strlen(line);
+                line[len-1] = '\0'; // kill newline
+                printf("/* %s */\n", line);
+            }
 
             while (j--)
             {
@@ -97,7 +101,7 @@ int main(void)
                 while (k--)
                 {
                     byte <<= 1;
-                    byte += (line[k] == '#');
+                    byte += (line[k] == '#') ? 1 : 0;
                 }
 
                 if (j)

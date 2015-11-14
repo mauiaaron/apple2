@@ -1,60 +1,51 @@
 /* 
- * Apple // emulator for Linux: Glue file prologue for Intel 386
+ * Apple // emulator for *ix
+ *
+ * This software package is subject to the GNU General Public License
+ * version 3 or later (your choice) as published by the Free Software 
+ * Foundation.
  *
  * Copyright 1994 Alexander Jean-Claude Bottema
  * Copyright 1995 Stephen Lee
  * Copyright 1997, 1998 Aaron Culliney
  * Copyright 1998, 1999, 2000 Michael Deutschmann
- *
- * This software package is subject to the GNU General Public License
- * version 2 or later (your choice) as published by the Free Software 
- * Foundation.
- *
- * THERE ARE NO WARRANTIES WHATSOEVER. 
+ * Copyright 2013-2015 Aaron Culliney
  *
  */
 
-#define __ASSEMBLY__
-#include "apple2.h"
-#include "misc.h"
+#include "vm.h"
 #include "cpu-regs.h"
 
-#define GLUE_FIXED_READ(func,address) \
-E(func)                 movb    SN(address)(EffectiveAddr_X),%al; \
-                        ret;
-
-#define GLUE_FIXED_WRITE(func,address) \
-E(func)                 movb    %al,SN(address)(EffectiveAddr_X); \
-                        ret;
+#define GLUE_EXTERN_C_READ(func)
 
 #define GLUE_BANK_MAYBEREAD(func,pointer) \
-E(func)                 testLQ  $SS_CXROM, SN(softswitches); \
+ENTRY(func)             testLQ  $SS_CXROM, SYM(softswitches); \
                         jnz     1f; \
-                        callLQ  *SN(pointer); \
+                        callLQ  *SYM(pointer); \
                         ret; \
-1:                      addLQ   SN(pointer),EffectiveAddr_X; \
+1:                      addLQ   SYM(pointer),EffectiveAddr_X; \
                         movb    (EffectiveAddr_X),%al; \
-                        subLQ   SN(pointer),EffectiveAddr_X; \
+                        subLQ   SYM(pointer),EffectiveAddr_X; \
                         ret;
 
 #define GLUE_BANK_READ(func,pointer) \
-E(func)                 addLQ   SN(pointer),EffectiveAddr_X; \
+ENTRY(func)             addLQ   SYM(pointer),EffectiveAddr_X; \
                         movb    (EffectiveAddr_X),%al; \
-                        subLQ   SN(pointer),EffectiveAddr_X; \
+                        subLQ   SYM(pointer),EffectiveAddr_X; \
                         ret;
 
 #define GLUE_BANK_WRITE(func,pointer) \
-E(func)                 addLQ   SN(pointer),EffectiveAddr_X; \
+ENTRY(func)             addLQ   SYM(pointer),EffectiveAddr_X; \
                         movb    %al,(EffectiveAddr_X); \
-                        subLQ   SN(pointer),EffectiveAddr_X; \
+                        subLQ   SYM(pointer),EffectiveAddr_X; \
                         ret;
 
 #define GLUE_BANK_MAYBEWRITE(func,pointer) \
-E(func)                 addLQ   SN(pointer),EffectiveAddr_X; \
-                        cmpl    $0,SN(pointer); \
+ENTRY(func)             addLQ   SYM(pointer),EffectiveAddr_X; \
+                        cmpl    $0,SYM(pointer); \
                         jz      1f; \
                         movb    %al,(EffectiveAddr_X); \
-1:                      subLQ   SN(pointer),EffectiveAddr_X; \
+1:                      subLQ   SYM(pointer),EffectiveAddr_X; \
                         ret;
 
 
@@ -70,7 +61,7 @@ E(func)                 addLQ   SN(pointer),EffectiveAddr_X; \
 #endif
 
 #define GLUE_C_WRITE(func) \
-E(func)                 pushLQ  _XAX; \
+ENTRY(func)             pushLQ  _XAX; \
                         pushLQ  XY_Reg_X; \
                         pushLQ  AF_Reg_X; \
                         pushLQ  SP_Reg_X; \
@@ -88,7 +79,7 @@ E(func)                 pushLQ  _XAX; \
 
 // TODO FIXME : implement CDECL prologue/epilogues...
 #define _GLUE_C_READ(func, ...) \
-E(func)                 pushLQ  XY_Reg_X; \
+ENTRY(func)             pushLQ  XY_Reg_X; \
                         pushLQ  AF_Reg_X; \
                         pushLQ  SP_Reg_X; \
                         pushLQ  PC_Reg_X; \

@@ -1,21 +1,20 @@
 /*
- * Apple // emulator for *nix
+ * Apple // emulator for *ix
  *
  * This software package is subject to the GNU General Public License
- * version 2 or later (your choice) as published by the Free Software
+ * version 3 or later (your choice) as published by the Free Software
  * Foundation.
  *
- * THERE ARE NO WARRANTIES WHATSOEVER.
+ * Copyright 2013-2015 Aaron Culliney
  *
  */
 
 #include "testcommon.h"
-#ifdef __APPLE__
-#include "darwin-shim.h"
-#import <CoreFoundation/CoreFoundation.h>
-#endif
 
 #define TESTBUF_SZ 1024
+
+bool test_do_reboot = true;
+char mdstr[(SHA_DIGEST_LENGTH*2)+1];
 
 static char input_str[TESTBUF_SZ]; // ASCII
 static unsigned int input_length = 0;
@@ -24,6 +23,9 @@ static unsigned int input_counter = 0;
 static struct timespec t0 = { 0 };
 static struct timespec ti = { 0 };
 
+#if defined(ANDROID)
+// We basically compile everything including audio into the Android build, even for testing =)
+#else
 // ----------------------------------------------------------------------------
 // Stub functions because I've reached diminishing returns with the build system ...
 //
@@ -42,11 +44,12 @@ uint8_t c_PhasorIO(uint16_t addr) {
     return 0x0;
 }
 
-void SpkrToggle() {
+void c_speaker_toggle(void) {
 }
 
 void c_interface_print(int x, int y, const int cs, const char *s) {
 }
+#endif
 
 // ----------------------------------------------------------------------------
 
@@ -93,47 +96,34 @@ void test_type_input(const char *input) {
 // ----------------------------------------------------------------------------
 
 void test_breakpoint(void *arg) {
-    fprintf(GREATEST_STDOUT, "set breakpoint on test_breakpoint to check for problems...\n");
-#if !HEADLESS
-    if (!is_headless) {
-        fprintf(GREATEST_STDOUT, "DISPLAY NOTE: busy-spinning, needs gdb/lldb intervention to continue...\n");
-        static volatile bool debug_continue = false;
-        while (!debug_continue) {
-            struct timespec ts = { .tv_sec=0, .tv_nsec=33333333 };
-            nanosleep(&ts, NULL);
-        }
+    fprintf(GREATEST_STDOUT, "DISPLAY NOTE: busy-spinning in test_breakpoint(), needs gdb/lldb intervention to continue...\n");
+    volatile bool debug_continue = false;
+    while (!debug_continue) {
+        struct timespec ts = { .tv_sec=0, .tv_nsec=33333333 };
+        nanosleep(&ts, NULL);
     }
-#endif
 }
 
 // ----------------------------------------------------------------------------
 
-void test_common_init(bool do_cputhread) {
+void test_common_init() {
     GREATEST_SET_BREAKPOINT_CB(test_breakpoint, NULL);
 
-    do_logging = false;// silence regular emulator logging
-    setenv("APPLE2IXCFG", "nosuchconfigfile", 1);
-
-    load_settings();
-    c_initialize_firsttime();
+    //do_logging = false;// silence regular emulator logging
+    caps_lock = true;
 
     // kludgey set max CPU speed... 
     cpu_scale_factor = CPU_SCALE_FASTEST;
     cpu_altscale_factor = CPU_SCALE_FASTEST;
-    g_bFullSpeed = true;
+    timing_initialize();
 
-    caps_lock = true;
-
-    if (do_cputhread) {
-        // spin off cpu thread
-        pthread_create(&cpu_thread_id, NULL, (void *) &cpu_thread, (void *)NULL);
-        c_debugger_set_watchpoint(WATCHPOINT_ADDR);
-        if (is_headless) {
-            c_debugger_set_timeout(10);
-        } else {
-            fprintf(stderr, "NOTE : RUNNING WITH DISPLAY ... pass HEADLESS=1 to environment to run test in faster headless mode\n");
-            c_debugger_set_timeout(0);
-        }
+    c_debugger_set_watchpoint(WATCHPOINT_ADDR);
+    if (0) {
+        c_debugger_set_timeout(15);
+    } else {
+        fprintf(stderr, "NOTE : RUNNING WITH DISPLAY\n");
+        fprintf(stderr, "Will spinloop on failed tests for debugger intervention\n");
+        c_debugger_set_timeout(0);
     }
 }
 
@@ -144,8 +134,8 @@ int test_setup_boot_disk(const char *fileName, int readonly) {
     CFBundleRef mainBundle = CFBundleGetMainBundle();
     CFStringRef fileString = CFStringCreateWithCString(/*allocator*/NULL, fileName, CFStringGetSystemEncoding());
     CFURLRef fileURL = CFBundleCopyResourceURL(mainBundle, fileString, NULL, NULL);
-    CFRELEASE(fileString);
     CFStringRef filePath = CFURLCopyFileSystemPath(fileURL, kCFURLPOSIXPathStyle);
+    CFRELEASE(fileString);
     CFRELEASE(fileURL);
     CFIndex length = CFStringGetLength(filePath);
     CFIndex maxSize = CFStringGetMaximumSizeForEncoding(length, kCFStringEncodingUTF8);
@@ -155,13 +145,22 @@ int test_setup_boot_disk(const char *fileName, int readonly) {
     }
     CFRELEASE(filePath);
 #else
-    asprintf(&disk, "./disks/%s", fileName);
+    asprintf(&disk, "%s/disks/%s", data_dir, fileName);
 #endif
-    if (c_new_diskette_6(0, disk, readonly)) {
+    if (disk6_insert(0, disk, readonly)) {
         int len = strlen(disk);
-        disk[len-3] = '\0';
-        err = (c_new_diskette_6(0, disk, readonly) != NULL);
+        disk[len-3] = '\0'; // try again without '.gz' extension
+        err = (disk6_insert(0, disk, readonly) != NULL);
     }
     FREE(disk);
     return err;
 }
+
+void sha1_to_str(const uint8_t * const md, char *buf) {
+    int i=0;
+    for (int j=0; j<SHA_DIGEST_LENGTH; j++, i+=2) {
+        sprintf(buf+i, "%02X", md[j]);
+    }
+    sprintf(buf+i, "%c", '\0');
+}
+

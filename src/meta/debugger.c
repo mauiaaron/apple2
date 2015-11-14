@@ -1,24 +1,34 @@
 /*
- * Apple // emulator for Linux: Main debugger routines
- *
- * Copyright 1997, 1998, 2013 Aaron Culliney
- * Copyright 1998, 1999, 2000 Michael Deutschmann
+ * Apple // emulator for *ix
  *
  * This software package is subject to the GNU General Public License
- * version 2 or later (your choice) as published by the Free Software
+ * version 3 or later (your choice) as published by the Free Software
  * Foundation.
  *
- * THERE ARE NO WARRANTIES WHATSOEVER.
- *
- * Originally added to emulator project in 1997 by Aaron Culliney
+ * Copyright 1997, 1998 Aaron Culliney
+ * Copyright 1998, 1999, 2000 Michael Deutschmann
+ * Copyright 2013-2015 Aaron Culliney
  *
  */
 
 #include "common.h"
 
-#ifdef HAVE_OPENSSL
-#include <openssl/sha.h>
-#endif
+#include <test/sha1.h>
+
+#define SW_TEXT 0xC050
+#define SW_MIXED 0xC052
+#define SW_PAGE2 0xC054
+#define SW_HIRES 0xC056
+#define SW_80STORE 0xC000
+#define SW_RAMRD 0xC002
+#define SW_RAMWRT 0xC004
+#define SW_ALTZP 0xC008
+#define SW_80COL 0xC00C
+#define SW_ALTCHAR 0xC00E
+#define SW_SLOTC3ROM 0xC00B     /* anomaly */
+#define SW_SLOTCXROM 0xC006
+#define SW_DHIRES 0xC05E
+#define SW_IOUDIS 0xC07E
 
 const struct opcode_struct *opcodes;
 
@@ -26,6 +36,11 @@ static stepping_struct_t stepping_struct = { 0 };
 static unsigned int stepping_timeout = 0;
 
 volatile bool is_debugging = false;
+
+extern pthread_mutex_t interface_mutex;
+extern pthread_cond_t cpu_thread_cond;
+extern pthread_cond_t dbg_thread_cond;
+#warning ^^^ HACK FIXME TODO ... debugger should not have raw access to mutex variables
 
 #define BUF_X           DEBUGGER_BUF_X
 #define BUF_Y           DEBUGGER_BUF_Y
@@ -711,7 +726,7 @@ void show_regs() {
     ++num_buffer_lines;
 }
 
-#if !defined(TESTING)
+#if !TESTING
 /* -------------------------------------------------------------------------
     will_branch () = will instruction branch?
                 -1 - n/a
@@ -1004,20 +1019,20 @@ void show_disk_info() {
 
     /* generic information */
     sprintf(second_buf[i++], "drive %s", (disk6.drive) ? "B" : "A");
-    sprintf(second_buf[i++], "motor %s", (disk6.motor) ? "off" : "on");
+    sprintf(second_buf[i++], "motor %s", (disk6.motor_off) ? "off" : "on");
     sprintf(second_buf[i++], "%s", (disk6.ddrw) ? "write" : "read");
     sprintf(second_buf[i++], "byte = %02X", disk6.disk_byte);
     if (!disk6.disk[disk6.drive].nibblized)
     {
-        sprintf(second_buf[i++], "volume = %d", disk6.volume);
-        sprintf(second_buf[i++], "checksum = %d", disk6.checksum);
+        //sprintf(second_buf[i++], "volume = %d", disk6.volume);
+        //sprintf(second_buf[i++], "checksum = %d", disk6.checksum);
     }
 
     sprintf(second_buf[i++], "-------------------------------------");
 
     /* drive / image specific information */
     memset(second_buf[i], ' ', BUF_X);
-    if ((len = strlen(disk6.disk[0].file_name)))
+    if (disk6.disk[0].file_name && (len = strlen(disk6.disk[0].file_name)))
     {
         while ((--len) && (disk6.disk[0].file_name[len] != '/'))
         {
@@ -1027,7 +1042,7 @@ void show_disk_info() {
         *(second_buf[i] + sprintf(second_buf[i], "%s", tmp)) = ' ';
     }
 
-    if ((len = strlen(disk6.disk[1].file_name)))
+    if (disk6.disk[1].file_name && (len = strlen(disk6.disk[1].file_name)))
     {
         while ((--len) && (disk6.disk[1].file_name[len] != '/'))
         {
@@ -1038,31 +1053,18 @@ void show_disk_info() {
     }
 
     memset(second_buf[++i], ' ', BUF_X);
-    *(second_buf[i] + sprintf(second_buf[i], "%s %d bytes", (disk6.disk[0].nibblized) ? ".nib" : ".dsk", (int)disk6.disk[0].file_size)) = ' ';
-    sprintf(second_buf[i++]+off, "%s %d bytes", (disk6.disk[1].nibblized) ? ".nib" : ".dsk", (int)disk6.disk[1].file_size);
+    *(second_buf[i] + sprintf(second_buf[i], "%s", (disk6.disk[0].nibblized) ? ".nib" : ".dsk")) = ' ';
+    sprintf(second_buf[i++]+off, "%s", (disk6.disk[1].nibblized) ? ".nib" : ".dsk");
 
     memset(second_buf[i], ' ', BUF_X);
     *(second_buf[i] + sprintf(second_buf[i], "write %s", (disk6.disk[0].is_protected) ? "protected" : "enabled")) = ' ';
     sprintf(second_buf[i++]+off, "write %s", (disk6.disk[1].is_protected) ? "protected" : "enabled");
 
     memset(second_buf[i], ' ', BUF_X);
-    *(second_buf[i] + sprintf(second_buf[i], "phase %d %s", disk6.disk[0].phase, (disk6.disk[0].phase_change) ? "(new)" : "")) = ' ';
-    sprintf(second_buf[i++]+off, "phase %d %s", disk6.disk[1].phase, (disk6.disk[1].phase_change) ? "(new)" : "");
+    *(second_buf[i] + sprintf(second_buf[i], "phase %d", disk6.disk[0].phase)) = ' ';
+    sprintf(second_buf[i++]+off, "phase %d", disk6.disk[1].phase);
 
     memset(second_buf[i], ' ', BUF_X);
-    if (!disk6.disk[0].nibblized)
-    {
-        *(second_buf[i] + sprintf(second_buf[i], "sector %d", disk6.disk[0].sector)) = ' ';
-        if (disk6.disk[1].nibblized)
-        {
-            ++i;
-        }
-    }
-
-    if (!disk6.disk[1].nibblized)
-    {
-        sprintf(second_buf[i++]+off, "sector %d", disk6.disk[1].sector);
-    }
 
     num_buffer_lines = i;
 }
@@ -1085,7 +1087,6 @@ void clear_debugger_screen() {
     fb_sha1 () -- prints SHA1 of the current Apple // framebuffer
    ------------------------------------------------------------------------- */
 void fb_sha1() {
-#ifdef HAVE_OPENSSL
     uint8_t md[SHA_DIGEST_LENGTH];
     char buf[(SHA_DIGEST_LENGTH*2)+1];
 
@@ -1103,15 +1104,14 @@ void fb_sha1() {
     LOG("SHA1 : %s", buf);
 
     int ch = -1;
+#ifdef INTERFACE_CLASSIC
     while ((ch = c_mygetch(1)) == -1) {
         // ...
     }
+#endif
     clear_debugger_screen();
 
     sprintf(second_buf[num_buffer_lines++], "%s", buf);
-#else
-    sprintf(second_buf[num_buffer_lines++], "SHA1 unavailable, not built with OpenSSL");
-#endif
 }
 
 /* -------------------------------------------------------------------------
@@ -1125,10 +1125,10 @@ static int begin_cpu_stepping() {
     // kludgey set max CPU speed... 
     double saved_scale = cpu_scale_factor;
     double saved_altscale = cpu_altscale_factor;
-    bool saved_fullspeed = g_bFullSpeed;
+    bool saved_fullspeed = is_fullspeed;
     cpu_scale_factor = CPU_SCALE_FASTEST;
     cpu_altscale_factor = CPU_SCALE_FASTEST;
-    g_bFullSpeed = true;
+    timing_initialize();
 
     unsigned int idx = 0;
     size_t textlen = 0;
@@ -1155,15 +1155,15 @@ static int begin_cpu_stepping() {
         if ((err = pthread_cond_signal(&cpu_thread_cond))) {
             ERRLOG("pthread_cond_signal : %d", err);
         }
-        if ((err = pthread_cond_wait(&ui_thread_cond, &interface_mutex))) {
+        if ((err = pthread_cond_wait(&dbg_thread_cond, &interface_mutex))) {
             ERRLOG("pthread_cond_wait : %d", err);
         }
 
-#ifdef TESTING
-#warning FIXME TODO : this is mis-named now ... GLVideo pushes sync state so we don't need to force poll ... but we need this to type the testing strings ... should refactor to leverage a common codepath, preferablly using the 'typing' mechanism here...
+#if TESTING
+#warning FIXME TODO : this is mis-named now ... GLVideo pushes sync state so we do not need to force poll ... but we need this to type the testing strings ... should refactor to leverage a common codepath, preferablly using the 'typing' mechanism here...
         extern void testing_video_sync();
         testing_video_sync();
-#else
+#elif defined(INTERFACE_CLASSIC)
         if ((ch = c_mygetch(0)) != -1) {
             break;
         }
@@ -1182,7 +1182,7 @@ static int begin_cpu_stepping() {
 
     cpu_scale_factor = saved_scale;
     cpu_altscale_factor = saved_altscale;
-    g_bFullSpeed = saved_fullspeed;
+    timing_initialize();
 
     return ch;
 }
@@ -1274,7 +1274,7 @@ int debugger_go(stepping_struct_t s) {
 
     int ch = begin_cpu_stepping();
 
-#if !defined(TESTING)
+#if !TESTING
     if (stepping_struct.step_type != LOADING) {
         clear_debugger_screen();
         disasm(cpu65_pc, 1, 0, -1);
@@ -1320,8 +1320,11 @@ void display_help() {
     num_buffer_lines = i;
 }
 
-void c_debugger_init() {
-    /* reset the watchpoints and breakpoints */
+__attribute__((constructor(CTOR_PRIORITY_LATE)))
+static void _init_debugger(void) {
+
+    LOG("Initializing virtual machine debugger subsystem");
+
     for (unsigned int i=0; i<MAX_BRKPTS; i++)
     {
         breakpoints[i] = -1;

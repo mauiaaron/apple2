@@ -1,1347 +1,523 @@
 /*
-AppleWin : An Apple //e emulator for Windows
-
-Copyright (C) 1994-1996, Michael O'Brien
-Copyright (C) 1999-2001, Oliver Schmidt
-Copyright (C) 2002-2005, Tom Charlesworth
-Copyright (C) 2006-2007, Tom Charlesworth, Michael Pohoreski
-
-AppleWin is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
-
-AppleWin is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with AppleWin; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-*/
-
-/* Description: Speaker emulation
+ * Apple // emulator for *ix
  *
- * Author: Various
- * Linux ALSA/OpenAL Port : Aaron Culliney
+ * This software package is subject to the GNU General Public License
+ * version 3 or later (your choice) as published by the Free Software
+ * Foundation.
+ *
+ * Copyright 2013-2015 Aaron Culliney
+ *
+ */
+
+/* Apple //e speaker support. Source inspired/derived from AppleWin.
+ *
+ *  - ~23 //e cycles per PC sample (played back at 44.100kHz)
+ *
+ * The soundcard output drives how much 6502 emulation is done in real-time.  If the soundcard buffer is running out of
+ * sample-data, then more 6502 cycles need to be executed to top-up the buffer, and vice-versa.
+ *
+ * This is in contrast to the AY8910 voices (mockingboard/phasor), which can simply generate more data if their buffers
+ * are running low.
  */
 
 #include "common.h"
 
-#ifdef APPLE2IX
-
-#include "audio/win-shim.h"
-#       ifdef  __linux
-#       include <sys/io.h>
-#       endif
-
+#define DEBUG_SPEAKER 0
+#if DEBUG_SPEAKER
+#   define SPEAKER_LOG(...) LOG(__VA_ARGS__)
 #else
-#include "StdAfx.h"
-#endif
-#include <wchar.h>
-
-// Notes:
-//
-// [OLD: 23.191 Apple CLKs == 44100Hz (CLK_6502/44100)]
-// 23 Apple CLKS per PC sample (played back at 44.1KHz)
-// 
-//
-// The speaker's wave output drives how much 6502 emulation is done in real-time, eg:
-// If the speaker's wave buffer is running out of sample-data, then more 6502 cycles
-// need to be executed to top-up the wave buffer.
-// This is in contrast to the AY8910 voices, which can simply generate more data if
-// their buffers are running low.
-//
-
-#define  SOUND_NONE    0
-#define  SOUND_DIRECT  1
-#ifndef APPLE2IX
-#define  SOUND_SMART   2
-#endif
-#define  SOUND_WAVE    3
-
-#ifdef APPLE2IX
-#define g_nSPKR_NumChannels 1
-#else
-static const unsigned short g_nSPKR_NumChannels = 1;
-#endif
-static const DWORD g_dwDSSpkrBufferSize = MAX_SAMPLES * sizeof(short) * g_nSPKR_NumChannels;
-
-//-------------------------------------
-
-static short*	g_pSpeakerBuffer = NULL;
-
-// Globals (SOUND_WAVE)
-#ifndef APPLE2IX
-const short		SPKR_DATA_INIT = (short)0x8000;
+#   define SPEAKER_LOG(...)
 #endif
 
-static short	g_nSpeakerData	= SPKR_DATA_INIT;
-static UINT		g_nBufferIdx	= 0;
+#define SPKR_SILENT_STEP 1
 
-static short*	g_pRemainderBuffer = NULL;
-static UINT		g_nRemainderBufferSize;		// Setup in SpkrInitialize()
-static UINT		g_nRemainderBufferIdx;		// Setup in SpkrInitialize()
+static unsigned long bufferTotalSize = 0;
+static unsigned long bufferSizeIdealMin = 0;
+static unsigned long bufferSizeIdealMax = 0;
+static unsigned long channelsSampleRateHz = 0;
 
+static bool speaker_isAvailable = false;
 
-// Application-wide globals:
-DWORD			soundtype		= SOUND_WAVE;
-double		    g_fClksPerSpkrSample;		// Setup in SetClksPerSpkrSample()
+static int16_t *samples_buffer = NULL; // holds max 1 second of samples
+static int16_t *remainder_buffer = NULL; // holds enough to create one sample (averaged)
+static unsigned int samples_buffer_idx = 0;
+static unsigned int remainder_buffer_size = 0;
+static unsigned long remainder_buffer_size_max = 0;
+static unsigned int remainder_buffer_idx = 0;
 
-// Globals
-#ifndef APPLE2IX
-static DWORD	lastcyclenum	= 0;
-static DWORD	toggles			= 0;
-#endif
-static uint64_t	g_nSpkrQuietCycleCount = 0;
-static uint64_t g_nSpkrLastCycle = 0;
-static bool g_bSpkrToggleFlag = false;
-static VOICE SpeakerVoice = {0};
-static bool g_bSpkrAvailable = false;
+static int16_t speaker_amplitude = SPKR_DATA_INIT;
+static int16_t speaker_data = 0;
 
+static double cycles_per_sample = 0.0;
+static unsigned long long cycles_last_update = 0;
+static unsigned long long cycles_quiet_time = 0;
 
-#ifndef APPLE2IX
-// Globals (SOUND_DIRECT/SOUND_SMART)
-static BOOL		directio		= 0;
-static DWORD	lastdelta[2]	= {0,0};
-static DWORD	quietcycles		= 0;
-static DWORD	soundeffect		= 0;
-static DWORD	totaldelta		= 0;
-#endif
+static bool speaker_accessed_since_last_flush = false;
+static bool speaker_recently_active = false;
 
-//-----------------------------------------------------------------------------
+static bool speaker_going_silent = false;
 
-// Forward refs:
-#ifdef APPLE2IX
-static ULONG   Spkr_SubmitWaveBuffer_FullSpeed(short* pSpeakerBuffer, ULONG nNumSamples);
-static ULONG   Spkr_SubmitWaveBuffer(short* pSpeakerBuffer, ULONG nNumSamples);
-#else
-ULONG   Spkr_SubmitWaveBuffer_FullSpeed(short* pSpeakerBuffer, ULONG nNumSamples);
-ULONG   Spkr_SubmitWaveBuffer(short* pSpeakerBuffer, ULONG nNumSamples);
-#endif
-static void    Spkr_SetActive(bool bActive);
+static int samples_adjustment_counter = 0;
 
-//=============================================================================
+static AudioBuffer_s *speakerBuffer = NULL;
 
-#ifndef APPLE2IX
-static void DisplayBenchmarkResults ()
-{
-  DWORD totaltime = GetTickCount()-extbench;
-  VideoRedrawScreen();
-  TCHAR buffer[64];
-  wsprintf(buffer,
-           TEXT("This benchmark took %u.%02u seconds."),
-           (unsigned)(totaltime / 1000),
-           (unsigned)((totaltime / 10) % 100));
-  MessageBox(g_hFrameWindow,
-             buffer,
-             TEXT("Benchmark Results"),
-             MB_ICONINFORMATION | MB_SETFOREGROUND);
-}
-#endif
+// --------------------------------------------------------------------------------------------------------------------
 
-//=============================================================================
+/*
+ * Because disk image loading is slow (AKA close-to-original-//e-speed), we may auto-switch to "fullspeed" for faster
+ * loading when all the following heuristics hold true:
+ *      - Disk motor is on
+ *      - Speaker has not been toggled in some time (is not "active")
+ *      - The graphics state is not "dirty"
+ *
+ * In fullspeed mode we output only quiet samples (zero-amplitude) at such a rate as to prevent the streaming audio from
+ * either underflowing or overflowing.
+ *
+ * We will also auto-switch back to the last configured "scaled" speed when the speaker is toggled.
+ */
+static void _speaker_init_timing(void) {
+    // 46.28 //e cycles for 22.05kHz sample rate
 
-static void InternalBeep (DWORD frequency, DWORD duration)
-{
-#ifdef APPLE2IX
-#   if defined(__i386__)
-    if (duration)
-    {
-        // HACK FIXME TODO : this needs to be properly tested since I don't have a PC with a speaker anymore...
+    // AppleWin NOTE : use integer value: Better for MJ Mahon's RT.SYNTH.DSK (integer multiples of 1.023MHz Clk)
+    cycles_per_sample = (unsigned int)(cycles_persec_target / (double)audio_backend->systemSettings.sampleRateHz);
 
-        // 9/8/2013 -- from http://www.johnath.com/beep/beep.c
-        /* I don't know where this number comes from, I admit that freely.  A
-         * wonderful human named Raine M. Ekman used it in a program that played
-         * a tune at the console, and apparently, it's how the kernel likes its
-         * sound requests to be phrased.  If you see Raine, thank him for me.
-         *
-         * June 28, email from Peter Tirsek (peter at tirsek dot com):
-         *
-         * This number represents the fixed frequency of the original PC XT's
-         * timer chip (the 8254 AFAIR), which is approximately 1.193 MHz. This
-         * number is divided with the desired frequency to obtain a counter value,
-         * that is subsequently fed into the timer chip, tied to the PC speaker.
-         * The chip decreases this counter at every tick (1.193 MHz) and when it
-         * reaches zero, it toggles the state of the speaker (on/off, or in/out),
-         * resets the counter to the original value, and starts over. The end
-         * result of this is a tone at approximately the desired frequency. :)
-         */
-        frequency = 1193180/frequency;
-
-        // http://ibiblio.org/gferg/ldp/GCC-Inline-Assembly-HOWTO.html
-        asm (
-            "pushl %%eax;"
-            "movb  $0x0B6, %%al;"
-            "outb  %%al, $0x43;"
-            "movl  %0, %%eax;"
-            "outb  %%al, $0x42;"
-            "movb  %%ah, %%al;"
-            "outb  %%al, $0x42;"
-            "inb   $0x61, %%al;"
-            "orb   $0x3, %%al;"
-            "outb  %%al, $0x61;"
-            "popl  %%eax;"
-            : : "r" (frequency) /*%0*/ : );
+    unsigned int last_remainder_buffer_size = remainder_buffer_size;
+    remainder_buffer_size = (unsigned int)cycles_per_sample;
+    if ((double)remainder_buffer_size != cycles_per_sample) {
+        ++remainder_buffer_size;
     }
-    else
-    {
-        asm (
-            "pushl   %eax;"
-            "inb     $0x61, %al;"
-            "andb    $0x0FC, %al;"
-            "outb    %al, $0x61;"
-            "popl    %eax;"
-            );
+    assert(remainder_buffer_size <= remainder_buffer_size_max);
+
+    if (last_remainder_buffer_size == remainder_buffer_size) {
+        // no change ... insure seamless remainder_buffer
+    } else {
+        SPEAKER_LOG("changing remainder buffer size");
+        remainder_buffer_idx = 0;
     }
-#   elif defined(__x86_64__)
-    // X64 Direct Access TODO ...
-#   endif
-#else
-#ifdef _X86_
-  if (directio)
-    if (duration) {
-      frequency = 1193180/frequency;
-      __asm {
-        push eax
-        mov  al,0B6h
-        out  43h,al
-        mov  eax,frequency
-        out  42h,al
-        mov  al,ah
-        out  42h,al
-        in   al,61h
-        or   al,3
-        out  61h,al
-        pop  eax
-      }
+    if (cycles_last_update > cycles_count_total) {
+        SPEAKER_LOG("resetting speaker cycles counter");
+        cycles_last_update = 0;
     }
-    else
-      __asm {
-        push eax
-        in   al,61h
-        and  al,0FCh
-        out  61h,al
-        pop  eax
-      }
-  else
-#endif
-    Beep(frequency,duration);
-#endif
-}
 
-//=============================================================================
+    LOG("Speaker initialize timing ... cycles_persec_target:%f cycles_per_sample:%f speaker sampleRateHz:%lu", cycles_persec_target, cycles_per_sample, audio_backend->systemSettings.sampleRateHz);
 
-static void InternalClick ()
-{
-#ifdef APPLE2IX
-    // TODO : I don't have a PC with a physical speaker anymore... can I
-    // test this with a virtual speaker Linux driver?
-#   if defined(__i386__)
-    asm (
-        "pushl %eax;"
-        "inb   $0x61, %al;"
-        "xorb  $0x2, %al;"
-        "outb  %al, $0x61;"
-        "popl  %eax;"
-        );
-#   elif defined(__x86_64__)
-    // X64 Direct Access TODO ...
-#   endif
-#else
-#ifdef _X86_
-  if (directio)
-    __asm {
-      push eax
-      in   al,0x61
-      xor  al,2
-      out  0x61,al
-      pop  eax
+    if (is_fullspeed) {
+        remainder_buffer_idx = 0;
+        samples_buffer_idx = 0;
     }
-  else {
-#endif
-    Beep(37,(DWORD)-1);
-    Beep(0,0);
-#ifdef _X86_
-  }
-#endif
-#endif
 }
 
-//=============================================================================
+/*
+ * Adds to the samples_buffer the number of samples since the last invocation of this function.
+ *
+ * Speaker output square wave example:
+ *        _______             ____      _____________________!        . +speaker_amplitude
+ *                                                    silence _       .
+ *                                                  threshold  _      .
+ *               _ remainder                                    _     .
+ *                 average                                       _    .
+ * _______        ____________    ______                          ___ . 0
+ *
+ *      - When the speaker is accessed by the emulated program, the output (speaker_data) is toggled between the
+ *        positive amplitude or zero
+ *      - Evenly-divisible samples since last function call (cycles_diff/cycles_per_sample) are put directly into the
+ *        samples_buffer for output to audio system backend
+ *      - (+) Fractional samples are put into a remainder_buffer to be averaged and then transfered to the sample_buffer
+ *        when there is enough data for 1 whole sample (possibly on a subsequent invocation of this function)
+ *      - (+) If the speaker has not been toggled with output at +amplitude for a certain number of machine cycles, we
+ *        gradually step the samples down to the zero bound of true quiet.  (This is done to avoid glitching when
+ *        pausing/unpausing emulation for GUI/menus and auto-switching between full and configured speeds)
+ */
+static void _speaker_update(/*bool toggled*/) {
 
-static void SetClksPerSpkrSample()
-{
-//	// 23.191 clks for 44.1Khz (when 6502 CLK=1.0Mhz)
-//	g_fClksPerSpkrSample = g_fCurrentCLK6502 / (double)SPKR_SAMPLE_RATE;
+    if (!is_fullspeed) {
 
-	// Use integer value: Better for MJ Mahon's RT.SYNTH.DSK (integer multiples of 1.023MHz Clk)
-	// . 23 clks @ 1.023MHz
-	g_fClksPerSpkrSample = (double) (UINT) (g_fCurrentCLK6502 / (double)SPKR_SAMPLE_RATE);
-}
+        unsigned long long cycles_diff = cycles_count_total - cycles_last_update;
 
-//=============================================================================
+        if (remainder_buffer_idx) {
+            // top-off previous previous fractional remainder cycles
+            while (cycles_diff && (remainder_buffer_idx < remainder_buffer_size)) {
+                remainder_buffer[remainder_buffer_idx] = speaker_data;
+                ++remainder_buffer_idx;
+                --cycles_diff;
+            }
 
-static void InitRemainderBuffer()
-{
-#ifdef APPLE2IX
-        free(g_pRemainderBuffer);
-#else
-	delete [] g_pRemainderBuffer;
-#endif
+            if (remainder_buffer_idx == remainder_buffer_size) {
+                // now have a complete extra sample from (previous + now) ... calculate mean value
+                remainder_buffer_idx = 0;
+                int sample_mean = 0;
+                for (unsigned int i=0; i<remainder_buffer_size; i++) {
+                    sample_mean += (int)remainder_buffer[i];
+                }
 
-	SetClksPerSpkrSample();
+                sample_mean /= (int)remainder_buffer_size;
 
-	g_nRemainderBufferSize = (UINT) g_fClksPerSpkrSample;
-	if ((double)g_nRemainderBufferSize != g_fClksPerSpkrSample)
-		g_nRemainderBufferSize++;
-
-#ifdef APPLE2IX
-	g_pRemainderBuffer = calloc(g_nRemainderBufferSize, sizeof(short));
-#else
-	g_pRemainderBuffer = new short [g_nRemainderBufferSize];
-	memset(g_pRemainderBuffer, 0, g_nRemainderBufferSize);
-#endif
-
-	g_nRemainderBufferIdx = 0;
-}
-
-//
-// ----- ALL GLOBALLY ACCESSIBLE FUNCTIONS ARE BELOW THIS LINE -----
-//
-
-//=============================================================================
-
-void SpkrDestroy ()
-{
-	Spkr_DSUninit();
-
-	//
-
-	if(soundtype == SOUND_WAVE)
-	{
-#ifdef APPLE2IX
-		free(g_pSpeakerBuffer);
-		free(g_pRemainderBuffer);
-#else
-		delete [] g_pSpeakerBuffer;
-		delete [] g_pRemainderBuffer;
-#endif
-		
-		g_pSpeakerBuffer = NULL;
-		g_pRemainderBuffer = NULL;
-	}
-	else
-	{
-		InternalBeep(0,0);
-	}
-}
-
-//=============================================================================
-
-void SpkrInitialize ()
-{
-#ifdef APPLE2IX
-    if (soundtype == SOUND_DIRECT)
-    {
-#    if defined(__i386__)
-        if (ioperm(0x42, 1, 1) || ioperm(0x61, 1, 1))
-        {
-            ERRLOG("Cannot get direct port access to PC speaker, attempting to use sound card...");
-            soundtype = SOUND_WAVE;
+                if (samples_buffer_idx < channelsSampleRateHz) {
+                    samples_buffer[samples_buffer_idx++] = (int16_t)sample_mean;
+                    if (NUM_CHANNELS == 2) {
+                        samples_buffer[samples_buffer_idx++] = (int16_t)sample_mean;
+                    }
+                }
+            }
         }
-        else
-        {
-            LOG("Audio is direct access to PC speaker...");
-        }
-#    elif defined(__x86_64__)
-        // X64 Direct Access TODO ...
-        soundtype = SOUND_WAVE;
-#    else
-        soundtype = SOUND_WAVE;
-#    endif
-    }
-#else
-	if(g_fh)
-	{
-		fprintf(g_fh, "Spkr Config: soundtype = %d ",soundtype);
-		switch(soundtype)
-		{
-			case SOUND_NONE:   fprintf(g_fh, "(NONE)\n"); break;
-			case SOUND_DIRECT: fprintf(g_fh, "(DIRECT)\n"); break;
-			case SOUND_SMART:  fprintf(g_fh, "(SMART)\n"); break;
-			case SOUND_WAVE:   fprintf(g_fh, "(WAVE)\n"); break;
-			default:           fprintf(g_fh, "(UNDEFINED!)\n"); break;
-		}
-	}
-#endif
 
-	if(g_bDisableDirectSound)
-	{
-		SpeakerVoice.bMute = true;
-	}
-	else
-	{
-		g_bSpkrAvailable = Spkr_DSInit();
-	}
+        const unsigned long long samples_count = (unsigned long long)((double)cycles_diff / cycles_per_sample);
+        unsigned long long num_samples = samples_count;
+        const unsigned long long cycles_remainder = (unsigned long long)((double)cycles_diff - (double)num_samples * cycles_per_sample);
 
-	//
-
-	if (soundtype == SOUND_WAVE)
-	{
-		InitRemainderBuffer();
-
-#ifdef APPLE2IX
-		g_pSpeakerBuffer = calloc(SPKR_SAMPLE_RATE, sizeof(short));	// Buffer can hold a max of 1 seconds worth of samples
-#else
-		g_pSpeakerBuffer = new short [SPKR_SAMPLE_RATE];	// Buffer can hold a max of 1 seconds worth of samples
-#endif
-	}
-
-	//
-
-#ifdef APPLE2IX
-// initialized direct sound above
-#else
-  // IF NONE IS, THEN DETERMINE WHETHER WE HAVE DIRECT ACCESS TO THE PC SPEAKER PORT
-  if (soundtype != SOUND_WAVE)	// *** TO DO: Need way of determining if DirectX init failed ***
-  {
-    if (soundtype == SOUND_WAVE)
-      soundtype = SOUND_SMART;
-#ifdef _X86_
-    _try
-	{
-      __asm {
-        in  al,0x61
-        xor al,2
-        out 0x61,al
-        xor al,2
-        out 0x61,al
-      }
-      directio = 1;
-    }
-    _except (EXCEPTION_EXECUTE_HANDLER)
-	{
-      directio = 0;
-    }
-#else
-    directio = 0;
-#endif
-    if ((!directio) && (soundtype == SOUND_DIRECT))
-      soundtype = SOUND_SMART;
-  }
-
-#endif
-}
-
-//=============================================================================
-
-// NB. Called when /g_fCurrentCLK6502/ changes
-void SpkrReinitialize ()
-{
-	if (soundtype == SOUND_WAVE)
-	{
-		InitRemainderBuffer();
-	}
-}
-
-//=============================================================================
-
-void SpkrReset()
-{
-	g_nBufferIdx = 0;
-	g_nSpkrQuietCycleCount = 0;
-	g_bSpkrToggleFlag = false;
-
-	InitRemainderBuffer();
-	Spkr_SubmitWaveBuffer(NULL, 0);
-	Spkr_SetActive(false);
-	Spkr_Demute();
-}
-
-//=============================================================================
-
-BOOL SpkrSetEmulationType (HWND window, DWORD newtype)
-{
-  if (soundtype != SOUND_NONE)
-    SpkrDestroy();
-  soundtype = newtype;
-  if (soundtype != SOUND_NONE)
-    SpkrInitialize();
-  if (soundtype != newtype)
-    switch (newtype) {
-
-      case SOUND_DIRECT:
-        MessageBox(window,
-                   TEXT("Direct emulation is not available because the ")
-                   TEXT("operating system you are using does not allow ")
-                   TEXT("direct control of the speaker."),
-                   TEXT("Configuration"),
-                   MB_ICONEXCLAMATION | MB_SETFOREGROUND);
-        return 0;
-
-      case SOUND_WAVE:
-        MessageBox(window,
-                   TEXT("The emulator is unable to initialize a waveform ")
-                   TEXT("output device.  Make sure you have a sound card ")
-                   TEXT("and a driver installed and that windows is ")
-                   TEXT("correctly configured to use the driver.  Also ")
-                   TEXT("ensure that no other program is currently using ")
-                   TEXT("the device."),
-                   TEXT("Configuration"),
-                   MB_ICONEXCLAMATION | MB_SETFOREGROUND);
-        return 0;
-
-    }
-  return 1;
-}
-
-//=============================================================================
-
-static void ReinitRemainderBuffer(UINT nCyclesRemaining)
-{
-	if(nCyclesRemaining == 0)
-		return;
-
-	for(g_nRemainderBufferIdx=0; (g_nRemainderBufferIdx<nCyclesRemaining) && (g_nRemainderBufferIdx<g_nRemainderBufferSize); g_nRemainderBufferIdx++)
-		g_pRemainderBuffer[g_nRemainderBufferIdx] = g_nSpeakerData;
-
-#ifdef APPLE2IX
-        // believe this is a erroneous (comparison should be <=) but ultimately spurious assert
-#else
-	_ASSERT(g_nRemainderBufferIdx < g_nRemainderBufferSize);
-#endif
-}
-
-static void UpdateRemainderBuffer(ULONG* pnCycleDiff)
-{
-	if(g_nRemainderBufferIdx)
-	{
-		while((g_nRemainderBufferIdx < g_nRemainderBufferSize) && *pnCycleDiff)
-		{
-			g_pRemainderBuffer[g_nRemainderBufferIdx] = g_nSpeakerData;
-			g_nRemainderBufferIdx++;
-			(*pnCycleDiff)--;
-		}
-
-		if(g_nRemainderBufferIdx == g_nRemainderBufferSize)
-		{
-			g_nRemainderBufferIdx = 0;
-			signed long nSampleMean = 0;
-			for(UINT i=0; i<g_nRemainderBufferSize; i++)
-				nSampleMean += (signed long) g_pRemainderBuffer[i];
-#ifdef APPLE2IX
-            if (!g_nRemainderBufferSize) {
-                RELEASE_ERRLOG("OOPS preventing div-by-zero in UpdateRemainderBuffer ...");
-                g_nRemainderBufferSize = 1;
+        // populate samples_buffer with whole samples
+        while (num_samples && (samples_buffer_idx < channelsSampleRateHz)) {
+            samples_buffer[samples_buffer_idx++] = speaker_data;
+            if (NUM_CHANNELS == 2) {
+                samples_buffer[samples_buffer_idx++] = speaker_data;
+            }
+#if !defined(ANDROID)
+            if (speaker_going_silent && speaker_data) {
+                speaker_data -= SPKR_SILENT_STEP;
             }
 #endif
-			nSampleMean /= (signed long) g_nRemainderBufferSize;
-
-			if(g_nBufferIdx < SPKR_SAMPLE_RATE-1)
-				g_pSpeakerBuffer[g_nBufferIdx++] = (short) nSampleMean;
-		}
-	}
-}
-
-static void UpdateSpkr()
-{
-  if(!g_bFullSpeed || SoundCore_GetTimerState())
-  {
-	  ULONG nCycleDiff = (ULONG) (g_nCumulativeCycles - g_nSpkrLastCycle);
-
-	  UpdateRemainderBuffer(&nCycleDiff);
-
-	  ULONG nNumSamples = (ULONG) ((double)nCycleDiff / g_fClksPerSpkrSample);
-
-	  ULONG nCyclesRemaining = (ULONG) ((double)nCycleDiff - (double)nNumSamples * g_fClksPerSpkrSample);
-
-	  while((nNumSamples--) && (g_nBufferIdx < SPKR_SAMPLE_RATE-1))
-		  g_pSpeakerBuffer[g_nBufferIdx++] = g_nSpeakerData;
-
-	  ReinitRemainderBuffer(nCyclesRemaining);	// Partially fill 1Mhz sample buffer
-  }
-
-  g_nSpkrLastCycle = g_nCumulativeCycles;
-}
-
-//=============================================================================
-
-// Called by emulation code when Speaker I/O reg is accessed
-//
-
-#ifdef APPLE2IX
-#define nCyclesLeft cpu65_cycle_count
-void SpkrToggle()
-#else
-BYTE __stdcall SpkrToggle (WORD, WORD, BYTE, BYTE, ULONG nCyclesLeft)
-#endif
-{
-  g_bSpkrToggleFlag = true;
-
-  if(!g_bFullSpeed)
-	Spkr_SetActive(true);
-
-  //
-
-#ifndef APPLE2IX
-  needsprecision = cumulativecycles;	// ?
-
-  if (extbench)
-  {
-    DisplayBenchmarkResults();
-    extbench = 0;
-  }
-#endif
-
-  if (soundtype == SOUND_WAVE)
-  {
-	  CpuCalcCycles(nCyclesLeft);
-
-	  UpdateSpkr();
-
-#ifdef APPLE2IX
-	  g_nSpeakerData *= -1; // amplitude can less than max/min short
-#else
-	  g_nSpeakerData = ~g_nSpeakerData;
-#endif
-  }
-  else if (soundtype != SOUND_NONE)
-  {
-
-    // IF WE ARE CURRENTLY PLAYING A SOUND EFFECT OR ARE IN DIRECT
-    // EMULATION MODE, TOGGLE THE SPEAKER
-#ifdef APPLE2IX
-            InternalClick();
-#else
-    if ((soundeffect > 2) || (soundtype == SOUND_DIRECT))
-	{
-      if (directio)
-	  {
-        __asm
-		{
-          push eax
-          in   al,0x61
-          xor  al,2
-          out  0x61,al
-          pop  eax
-        }
-	  }
-      else
-	  {
-        Beep(37,(DWORD)-1);
-        Beep(0,0);
-      }
-	}
-
-    // SAVE INFORMATION ABOUT THE FREQUENCY OF SPEAKER TOGGLING FOR POSSIBLE
-    // LATER USE BY SOUND AVERAGING
-    if (lastcyclenum)
-	{
-      toggles++;
-      DWORD delta = cyclenum-lastcyclenum;
-
-      // DETERMINE WHETHER WE ARE PLAYING A SOUND EFFECT
-      if (directio &&
-          ((delta < 250) ||
-           (lastdelta[0] && lastdelta[1] &&
-            (delta-lastdelta[0] > 250) && (lastdelta[0]-delta > 250) &&
-            (delta-lastdelta[1] > 250) && (lastdelta[1]-delta > 250))))
-        soundeffect = MIN(35,soundeffect+2);
-
-      lastdelta[1] = lastdelta[0];
-      lastdelta[0] = delta;
-      totaldelta  += delta;
-    }
-    lastcyclenum = cyclenum;
-
-#endif
-  }
-
-#ifndef APPLE2IX
-  return MemReadFloatingBus(nCyclesLeft);
-#endif
-}
-
-//=============================================================================
-
-// Called by ContinueExecution()
-void SpkrUpdate(DWORD totalcycles)
-{
-  if(!g_bSpkrToggleFlag)
-  {
-	  if(!g_nSpkrQuietCycleCount)
-	  {
-		  g_nSpkrQuietCycleCount = g_nCumulativeCycles;
-	  }
-	  else if(g_nCumulativeCycles - g_nSpkrQuietCycleCount > (unsigned __int64)g_fCurrentCLK6502/5)
-	  {
-		  // After 0.2 sec of Apple time, deactivate spkr voice
-		  // . This allows emulator to auto-switch to full-speed g_nAppMode for fast disk access
-		  Spkr_SetActive(false);
-	  }
-  }
-  else
-  {
-      g_nSpkrQuietCycleCount = 0;
-      g_bSpkrToggleFlag = false;
-  }
-
-  //
-
-  if (soundtype == SOUND_WAVE)
-  {
-	  UpdateSpkr();
-	  ULONG nSamplesUsed;
-
-	  if(g_bFullSpeed)
-		  nSamplesUsed = Spkr_SubmitWaveBuffer_FullSpeed(g_pSpeakerBuffer, g_nBufferIdx);
-	  else
-		  nSamplesUsed = Spkr_SubmitWaveBuffer(g_pSpeakerBuffer, g_nBufferIdx);
-
-	  _ASSERT(nSamplesUsed <= g_nBufferIdx);
-	  memmove(g_pSpeakerBuffer, &g_pSpeakerBuffer[nSamplesUsed], g_nBufferIdx-nSamplesUsed);	// FIXME-TC: _Size * 2
-	  g_nBufferIdx -= nSamplesUsed;
-  }
-#ifndef APPLE2IX
-  else
-  {
-
-    // IF WE ARE NOT PLAYING A SOUND EFFECT, PERFORM FREQUENCY AVERAGING
-    static DWORD currenthertz = 0;
-    static BOOL  lastfull     = 0;
-    static DWORD lasttoggles  = 0;
-    static DWORD lastval      = 0;
-    if ((soundeffect > 2) || (soundtype == SOUND_DIRECT)) {
-      lastval = 0;
-      if (currenthertz && (soundeffect > 4)) {
-        InternalBeep(0,0);
-        currenthertz = 0;
-      }
-    }
-    else if (toggles && totaldelta) {
-      DWORD newval = 1000000*toggles/totaldelta;
-      if (lastval && lastfull &&
-          (newval-currenthertz > 50) &&
-          (currenthertz-newval > 50)) {
-        InternalBeep(newval,(DWORD)-1);
-        currenthertz = newval;
-        lasttoggles  = 0;
-      }
-      lastfull     = (totaldelta+((totaldelta/toggles) << 1) >= totalcycles);
-      lasttoggles += toggles;
-      lastval      = newval;
-    }
-    else if (currenthertz) {
-      InternalBeep(0,0);
-      currenthertz = 0;
-      lastfull     = 0;
-      lasttoggles  = 0;
-      lastval      = 0;
-    }
-    else if (lastval) {
-      currenthertz = (lasttoggles > 4) ? lastval : 0;
-      if (currenthertz)
-        InternalBeep(lastval,(DWORD)-1);
-      else
-        InternalClick();
-      lastfull     = 0;
-      lasttoggles  = 0;
-      lastval      = 0;
-    }
-
-    // RESET THE FREQUENCY GATHERING VARIABLES
-    lastcyclenum = 0;
-    lastdelta[0] = 0;
-    lastdelta[1] = 0;
-    quietcycles  = toggles ? 0 : (quietcycles+totalcycles);
-    toggles      = 0;
-    totaldelta   = 0;
-    if (soundeffect)
-      soundeffect--;
-
-  }
-#endif
-}
-
-#ifndef APPLE2IX
-// Called from SoundCore_TimerFunc() for FADE_OUT
-void SpkrUpdate_Timer()
-{
-	if (soundtype == SOUND_WAVE)
-	{
-		UpdateSpkr();
-		ULONG nSamplesUsed;
-
-		nSamplesUsed = Spkr_SubmitWaveBuffer_FullSpeed(g_pSpeakerBuffer, g_nBufferIdx);
-
-		_ASSERT(nSamplesUsed <=	g_nBufferIdx);
-		memmove(g_pSpeakerBuffer, &g_pSpeakerBuffer[nSamplesUsed], g_nBufferIdx-nSamplesUsed);	// FIXME-TC: _Size * 2
-		g_nBufferIdx -=	nSamplesUsed;
-	}
-}
-
-//=============================================================================
-
-static DWORD dwByteOffset = (DWORD)-1;
-#endif
-static int nNumSamplesError = 0;
-static int nDbgSpkrCnt = 0;
-
-// FullSpeed g_nAppMode, 2 cases:
-// i) Short burst of full-speed, so PlayCursor doesn't complete sound from previous fixed-speed session.
-// ii) Long burst of full-speed, so PlayCursor completes sound from previous fixed-speed session.
-
-// Try to:
-// 1) Output remaining samples from SpeakerBuffer (from previous fixed-speed session)
-// 2) Output pad samples to keep the VoiceBuffer topped-up
-
-// If nNumSamples>0 then these are from previous fixed-speed session.
-// - Output these before outputting zero-pad samples.
-
-static ULONG Spkr_SubmitWaveBuffer_FullSpeed(short* pSpeakerBuffer, ULONG nNumSamples)
-{
-	//char szDbg[200];
-	nDbgSpkrCnt++;
-
-	if(!SpeakerVoice.bActive)
-		return nNumSamples;
-
-	// pSpeakerBuffer can't be NULL, as reset clears g_bFullSpeed, so 1st SpkrUpdate() never calls here
-	_ASSERT(pSpeakerBuffer != NULL);
-
-	//
-
-	DWORD dwDSLockedBufferSize0, dwDSLockedBufferSize1;
-	SHORT *pDSLockedBuffer0, *pDSLockedBuffer1;
-	//bool bBufferError = false;
-
-	DWORD dwCurrentPlayCursor, dwCurrentWriteCursor;
-#ifdef APPLE2IX
-	HRESULT hr = SpeakerVoice.lpDSBvoice->GetCurrentPosition(SpeakerVoice.lpDSBvoice->_this, &dwCurrentPlayCursor, &dwCurrentWriteCursor);
-#else
-	HRESULT hr = SpeakerVoice.lpDSBvoice->GetCurrentPosition(&dwCurrentPlayCursor, &dwCurrentWriteCursor);
-#endif
-	if(FAILED(hr))
-		return nNumSamples;
-
-#if 0
-	if(dwByteOffset == (DWORD)-1)
-	{
-		// First time in this func (probably after re-init (Spkr_SubmitWaveBuffer()))
-
-		dwByteOffset = dwCurrentPlayCursor + (g_dwDSSpkrBufferSize/8)*3;	// Ideal: 0.375 is between 0.25 & 0.50 full
-		dwByteOffset %= g_dwDSSpkrBufferSize;
-		//sprintf(szDbg, "[Submit_FS] PC=%08X, WC=%08X, Diff=%08X, Off=%08X, NS=%08X [REINIT]\n", dwCurrentPlayCursor, dwCurrentWriteCursor, dwCurrentWriteCursor-dwCurrentPlayCursor, dwByteOffset, nNumSamples); OutputDebugString(szDbg);
-	}
-	else
-	{
-		// Check that our offset isn't between Play & Write positions
-
-		if(dwCurrentWriteCursor > dwCurrentPlayCursor)
-		{
-			// |-----PxxxxxW-----|
-			if((dwByteOffset > dwCurrentPlayCursor) && (dwByteOffset < dwCurrentWriteCursor))
-			{
-				//sprintf(szDbg, "[Submit_FS] PC=%08X, WC=%08X, Diff=%08X, Off=%08X, NS=%08X xxx\n", dwCurrentPlayCursor, dwCurrentWriteCursor, dwCurrentWriteCursor-dwCurrentPlayCursor, dwByteOffset, nNumSamples); OutputDebugString(szDbg);
-				dwByteOffset = dwCurrentWriteCursor;
-			}
-		}
-		else
-		{
-			// |xxW----------Pxxx|
-			if((dwByteOffset > dwCurrentPlayCursor) || (dwByteOffset < dwCurrentWriteCursor))
-			{
-				//sprintf(szDbg, "[Submit_FS] PC=%08X, WC=%08X, Diff=%08X, Off=%08X, NS=%08X XXX\n", dwCurrentPlayCursor, dwCurrentWriteCursor, dwCurrentWriteCursor-dwCurrentPlayCursor, dwByteOffset, nNumSamples); OutputDebugString(szDbg);
-				dwByteOffset = dwCurrentWriteCursor;
-			}
-		}
-	}
-
-	// Calc bytes remaining to be played
-	int nBytesRemaining = dwByteOffset - dwCurrentPlayCursor;
-#else
-        int nBytesRemaining = (int)dwCurrentPlayCursor;
-#endif
-	if(nBytesRemaining < 0)
-		nBytesRemaining += g_dwDSSpkrBufferSize;
-	if((nBytesRemaining == 0) && (dwCurrentPlayCursor != dwCurrentWriteCursor))
-		nBytesRemaining = g_dwDSSpkrBufferSize;		// Case when complete buffer is to be played
-
-	//
-
-	UINT nNumPadSamples = 0;
-
-	if(nBytesRemaining < g_dwDSSpkrBufferSize / 4)
-	{
-		// < 1/4 of play-buffer remaining (need *more* data)
-		nNumPadSamples = ((g_dwDSSpkrBufferSize / 4) - nBytesRemaining) / sizeof(short);
-
-		if(nNumPadSamples > nNumSamples)
-			nNumPadSamples -= nNumSamples;
-		else
-			nNumPadSamples = 0;
-
-		// NB. If nNumPadSamples>0 then all nNumSamples are to be used
-	}
-
-	//
-
-	UINT nBytesFree = g_dwDSSpkrBufferSize - nBytesRemaining;	// Calc free buffer space
-	ULONG nNumSamplesToUse = nNumSamples + nNumPadSamples;
-
-	if(nNumSamplesToUse * sizeof(short) > nBytesFree)
-		nNumSamplesToUse = nBytesFree / sizeof(short);
-
-	//
-
-	if(nNumSamplesToUse >= 128)	// Limit the buffer unlock/locking to a minimum
-	{
-		if(!DSGetLock(SpeakerVoice.lpDSBvoice,
-#ifdef APPLE2IX
-							/*unused*/ 0, (DWORD)nNumSamplesToUse*sizeof(short),
-#else
-							dwByteOffset, (DWORD)nNumSamplesToUse*sizeof(short),
-#endif
-							&pDSLockedBuffer0, &dwDSLockedBufferSize0,
-							&pDSLockedBuffer1, &dwDSLockedBufferSize1))
-			return nNumSamples;
-
-		//
-
-		DWORD dwBufferSize0 = 0;
-		DWORD dwBufferSize1 = 0;
-
-		if(nNumSamples)
-		{
-			//sprintf(szDbg, "[Submit_FS] C=%08X, PC=%08X, WC=%08X, Diff=%08X, Off=%08X, NS=%08X ***\n", nDbgSpkrCnt, dwCurrentPlayCursor, dwCurrentWriteCursor, dwCurrentWriteCursor-dwCurrentPlayCursor, dwByteOffset, nNumSamples); OutputDebugString(szDbg);
-
-			if(nNumSamples*sizeof(short) <= dwDSLockedBufferSize0)
-			{
-				dwBufferSize0 = nNumSamples*sizeof(short);
-				dwBufferSize1 = 0;
-			}
-			else
-			{
-				dwBufferSize0 = dwDSLockedBufferSize0;
-				dwBufferSize1 = nNumSamples*sizeof(short) - dwDSLockedBufferSize0;
-
-				if(dwBufferSize1 > dwDSLockedBufferSize1)
-					dwBufferSize1 = dwDSLockedBufferSize1;
-			}
-			
-			memcpy(pDSLockedBuffer0, &pSpeakerBuffer[0], dwBufferSize0);
-#ifdef RIFF_SPKR
-			RiffPutSamples(pDSLockedBuffer0, dwBufferSize0/sizeof(short));
-#endif
-			nNumSamples = (ULONG)(dwBufferSize0/sizeof(short));
-
-			if(pDSLockedBuffer1 && dwBufferSize1)
-			{
-				memcpy(pDSLockedBuffer1, &pSpeakerBuffer[dwDSLockedBufferSize0/sizeof(short)], dwBufferSize1);
-#ifdef RIFF_SPKR
-				RiffPutSamples(pDSLockedBuffer1, dwBufferSize1/sizeof(short));
-#endif
-				nNumSamples += dwBufferSize1/sizeof(short);
-			}
-		}
-
-		if(nNumPadSamples)
-		{
-			//sprintf(szDbg, "[Submit_FS] C=%08X, PC=%08X, WC=%08X, Diff=%08X, Off=%08X, PS=%08X, Data=%04X\n", nDbgSpkrCnt, dwCurrentPlayCursor, dwCurrentWriteCursor, dwCurrentWriteCursor-dwCurrentPlayCursor, dwByteOffset, nNumPadSamples, g_nSpeakerData); OutputDebugString(szDbg);
-
-			dwBufferSize0 = dwDSLockedBufferSize0 - dwBufferSize0;
-			dwBufferSize1 = dwDSLockedBufferSize1 - dwBufferSize1;
-
-			if(dwBufferSize0)
-			{
-				wmemset((wchar_t*)pDSLockedBuffer0, (wchar_t)g_nSpeakerData, dwBufferSize0/sizeof(wchar_t));
-#ifdef RIFF_SPKR
-				RiffPutSamples(pDSLockedBuffer0, dwBufferSize0/sizeof(short));
-#endif
-			}
-
-			if(pDSLockedBuffer1)
-			{
-				wmemset((wchar_t*)pDSLockedBuffer1, (wchar_t)g_nSpeakerData, dwBufferSize1/sizeof(wchar_t));
-#ifdef RIFF_SPKR
-				RiffPutSamples(pDSLockedBuffer1, dwBufferSize1/sizeof(short));
-#endif
-			}
-		}
-
-		// Commit sound buffer
-#ifdef APPLE2IX
-		hr = SpeakerVoice.lpDSBvoice->Unlock(SpeakerVoice.lpDSBvoice->_this, (void*)pDSLockedBuffer0, dwDSLockedBufferSize0,
-#else
-		hr = SpeakerVoice.lpDSBvoice->Unlock((void*)pDSLockedBuffer0, dwDSLockedBufferSize0,
-#endif
-											(void*)pDSLockedBuffer1, dwDSLockedBufferSize1);
-		if(FAILED(hr))
-			return nNumSamples;
-
-#ifndef APPLE2IX
-		dwByteOffset = (dwByteOffset + (DWORD)nNumSamplesToUse*sizeof(short)*g_nSPKR_NumChannels) % g_dwDSSpkrBufferSize;
-#endif
-	}
-
-	return nNumSamples;
-}
-
-//-----------------------------------------------------------------------------
-
-static ULONG Spkr_SubmitWaveBuffer(short* pSpeakerBuffer, ULONG nNumSamples)
-{
-#ifndef APPLE2IX
-	char szDbg[200];
-#endif
-	nDbgSpkrCnt++;
-
-	if(!SpeakerVoice.bActive)
-		return nNumSamples;
-
-	if(pSpeakerBuffer == NULL)
-	{
-		// Re-init from SpkrReset()
-#ifndef APPLE2IX
-            // HACK FIXME TODO : believe this whole if statement is unnecessary?
-		dwByteOffset = (DWORD)-1;
-#endif
-		nNumSamplesError = 0;
-
-		// Don't call DSZeroVoiceBuffer() - get noise with "VIA AC'97 Enhanced Audio Controller"
-		// . I guess SpeakerVoice.Stop() isn't really working and the new zero buffer causes noise corruption when submitted.
-#ifndef APPLE2IX
-		DSZeroVoiceWritableBuffer(&SpeakerVoice, "Spkr", g_dwDSSpkrBufferSize);
-#endif
-
-		return 0;
-	}
-
-	//
-
-	DWORD dwDSLockedBufferSize0, dwDSLockedBufferSize1;
-	SHORT *pDSLockedBuffer0, *pDSLockedBuffer1;
-	bool bBufferError = false;
-
-	DWORD dwCurrentPlayCursor, dwCurrentWriteCursor;
-#ifdef APPLE2IX
-	HRESULT hr = SpeakerVoice.lpDSBvoice->GetCurrentPosition(SpeakerVoice.lpDSBvoice->_this, &dwCurrentPlayCursor, &dwCurrentWriteCursor);
-#else
-	HRESULT hr = SpeakerVoice.lpDSBvoice->GetCurrentPosition(&dwCurrentPlayCursor, &dwCurrentWriteCursor);
-#endif
-	if(FAILED(hr))
-		return nNumSamples;
-
-#if 0
-	if(dwByteOffset == (DWORD)-1)
-	{
-		// First time in this func (probably after re-init (above))
-
-		dwByteOffset = dwCurrentPlayCursor + (g_dwDSSpkrBufferSize/8)*3;	// Ideal: 0.375 is between 0.25 & 0.50 full
-		dwByteOffset %= g_dwDSSpkrBufferSize;
-		//sprintf(szDbg, "[Submit]   PC=%08X, WC=%08X, Diff=%08X, Off=%08X [REINIT]\n", dwCurrentPlayCursor, dwCurrentWriteCursor, dwCurrentWriteCursor-dwCurrentPlayCursor, dwByteOffset); OutputDebugString(szDbg);
-	}
-	else
-	{
-		// Check that our offset isn't between Play & Write positions
-
-		if(dwCurrentWriteCursor > dwCurrentPlayCursor)
-		{
-			// |-----PxxxxxW-----|
-			if((dwByteOffset > dwCurrentPlayCursor) && (dwByteOffset < dwCurrentWriteCursor))
-			{
-				double fTicksSecs = (double)GetTickCount() / 1000.0;
-#ifdef APPLE2IX
-				LOG("%010.3f: [Submit]    PC=%08X, WC=%08X, Diff=%08X, Off=%08X, NS=%08X xxx\n", fTicksSecs, dwCurrentPlayCursor, dwCurrentWriteCursor, dwCurrentWriteCursor-dwCurrentPlayCursor, dwByteOffset, nNumSamples);
-#else
-				sprintf(szDbg, "%010.3f: [Submit]    PC=%08X, WC=%08X, Diff=%08X, Off=%08X, NS=%08X xxx\n", fTicksSecs, dwCurrentPlayCursor, dwCurrentWriteCursor, dwCurrentWriteCursor-dwCurrentPlayCursor, dwByteOffset, nNumSamples);
-				OutputDebugString(szDbg);
-				if (g_fh) fprintf(g_fh, szDbg);
-#endif
-
-				dwByteOffset = dwCurrentWriteCursor;
-				nNumSamplesError = 0;
-				bBufferError = true;
-			}
-		}
-		else
-		{
-			// |xxW----------Pxxx|
-			if((dwByteOffset > dwCurrentPlayCursor) || (dwByteOffset < dwCurrentWriteCursor))
-			{
-				double fTicksSecs = (double)GetTickCount() / 1000.0;
-#ifdef APPLE2IX
-				LOG("%010.3f: [Submit]    PC=%08X, WC=%08X, Diff=%08X, Off=%08X, NS=%08X XXX\n", fTicksSecs, dwCurrentPlayCursor, dwCurrentWriteCursor, dwCurrentWriteCursor-dwCurrentPlayCursor, dwByteOffset, nNumSamples);
-#else
-				sprintf(szDbg, "%010.3f: [Submit]    PC=%08X, WC=%08X, Diff=%08X, Off=%08X, NS=%08X XXX\n", fTicksSecs, dwCurrentPlayCursor, dwCurrentWriteCursor, dwCurrentWriteCursor-dwCurrentPlayCursor, dwByteOffset, nNumSamples);
-				OutputDebugString(szDbg);
-				if (g_fh) fprintf(g_fh, szDbg);
-#endif
-
-				dwByteOffset = dwCurrentWriteCursor;
-				nNumSamplesError = 0;
-				bBufferError = true;
-			}
-		}
-	}
-
-	// Calc bytes remaining to be played
-	int nBytesRemaining = dwByteOffset - dwCurrentPlayCursor;
-#else
-        int nBytesRemaining = (int)dwCurrentPlayCursor;
-#endif
-	if(nBytesRemaining < 0)
-		nBytesRemaining += g_dwDSSpkrBufferSize;
-	if((nBytesRemaining == 0) && (dwCurrentPlayCursor != dwCurrentWriteCursor))
-		nBytesRemaining = g_dwDSSpkrBufferSize;		// Case when complete buffer is to be played
-
-	// Calc correction factor so that play-buffer doesn't under/overflow
-	const int nErrorInc = SoundCore_GetErrorInc();
-	if(nBytesRemaining < g_dwDSSpkrBufferSize / 4)
-        {
-#ifdef APPLE2IX
-            //LOG("execute more cycles due to potential underflow...");
-#endif
-		nNumSamplesError += nErrorInc;				// < 1/4 of play-buffer remaining (need *more* data)
-        }
-	else if(nBytesRemaining > g_dwDSSpkrBufferSize / 2)
-        {
-#ifdef APPLE2IX
-            //LOG("execute less cycles due to potential overflow...");
-#endif
-		nNumSamplesError -= nErrorInc;				// > 1/2 of play-buffer remaining (need *less* data)
-        }
-	else
-        {
-		nNumSamplesError = 0;						// Acceptable amount of data in buffer
+            --num_samples;
         }
 
-	const int nErrorMax = SoundCore_GetErrorMax();				// Cap feedback to +/-nMaxError units
-	if(nNumSamplesError < -nErrorMax) nNumSamplesError = -nErrorMax;
-	if(nNumSamplesError >  nErrorMax) nNumSamplesError =  nErrorMax;
-	g_nCpuCyclesFeedback = (int) ((double)nNumSamplesError * g_fClksPerSpkrSample);
+        if (cycles_remainder > 0) {
+            // populate remainder_buffer with fractional samples
+            assert(remainder_buffer_idx == 0 && "should have already dealt with remainder buffer");
+            assert(cycles_remainder < remainder_buffer_size && "otherwise there should have been another whole sample");
 
-	//
+            while (remainder_buffer_idx<cycles_remainder) {
+                remainder_buffer[remainder_buffer_idx] = speaker_data;
+                ++remainder_buffer_idx;
+            }
+        }
 
-	UINT nBytesFree = g_dwDSSpkrBufferSize - nBytesRemaining;	// Calc free buffer space
-	ULONG nNumSamplesToUse = nNumSamples;
+        if (UNLIKELY(samples_buffer_idx > channelsSampleRateHz)) {
+            ////assert(samples_buffer_idx == channelsSampleRateHz && "should be at exactly the end, no further");
+            if (UNLIKELY(samples_buffer_idx > channelsSampleRateHz)) {
+                ERRLOG("OOPS, possible overflow in speaker samples buffer ... samples_buffer_idx:%lu channelsSampleRateHz:%lu", samples_buffer_idx, channelsSampleRateHz);
+            }
+        }
+    }
 
-	if(nNumSamplesToUse * sizeof(short) > nBytesFree)
-		nNumSamplesToUse = nBytesFree / sizeof(short);
+    cycles_last_update = cycles_count_total;
+}
 
-	if(bBufferError)
-		pSpeakerBuffer = &pSpeakerBuffer[nNumSamples - nNumSamplesToUse];
+/*
+ * Submits "quiet" samples to the audio system backend when CPU thread is running fullspeed, to keep the audio streaming
+ * topped up.
+ *
+ * 20150131 NOTE : it seems that there are still cases where we glitch OpenAL (seemingly on transitioning back to
+ * regular speed sample submissions).  I have not been able to fully isolate the cause, but this has been minimized by
+ * always trending the samples to the zero value when there has been a sufficient amount of speaker silence.
+ */
+static void _submit_samples_buffer_fullspeed(void) {
+    samples_adjustment_counter = 0;
 
-	//
+    unsigned long bytes_queued = 0;
+    long err = speakerBuffer->GetCurrentPosition(speakerBuffer, &bytes_queued);
+    if (err) {
+        return;
+    }
+    ////assert(bytes_queued <= bufferTotalSize); -- wtf failing on Desktop on launch
 
-	if(nNumSamplesToUse)
-	{
-		//sprintf(szDbg, "[Submit]    C=%08X, PC=%08X, WC=%08X, Diff=%08X, Off=%08X, NS=%08X +++\n", nDbgSpkrCnt, dwCurrentPlayCursor, dwCurrentWriteCursor, dwCurrentWriteCursor-dwCurrentPlayCursor, dwByteOffset, nNumSamplesToUse); OutputDebugString(szDbg);
+    if (bytes_queued >= bufferSizeIdealMax) {
+        return;
+    }
 
-		if(!DSGetLock(SpeakerVoice.lpDSBvoice,
-#ifdef APPLE2IX
-							/*unused*/ 0, (DWORD)nNumSamplesToUse*sizeof(short),
+    unsigned int num_samples_pad = (bufferSizeIdealMax - bytes_queued) / sizeof(int16_t);
+    if (num_samples_pad == 0) {
+        return;
+    }
+
+    unsigned long system_buffer_size = 0;
+    int16_t *system_samples_buffer = NULL;
+    if (speakerBuffer->Lock(speakerBuffer, num_samples_pad*sizeof(int16_t), &system_samples_buffer, &system_buffer_size)) {
+        return;
+    }
+    if (num_samples_pad > system_buffer_size/sizeof(int16_t)) {
+        num_samples_pad = system_buffer_size/sizeof(int16_t);
+    }
+
+    //SPEAKER_LOG("bytes_queued:%d enqueueing %d quiet samples", bytes_queued, num_samples_pad);
+    for (unsigned int i=0; i<num_samples_pad; i++) {
+        system_samples_buffer[i] = speaker_data;
+    }
+
+    speakerBuffer->Unlock(speakerBuffer, system_buffer_size);
+}
+
+// Submits samples from the samples_buffer to the audio system backend when running at a normal scaled-speed.  This also
+// generates cycles feedback to the main CPU timing routine depending on the needs of the streaming audio (more or less
+// data).
+static unsigned int _submit_samples_buffer(const unsigned long num_channel_samples) {
+
+    assert(num_channel_samples);
+
+    unsigned long bytes_queued = 0;
+    long err = speakerBuffer->GetCurrentPosition(speakerBuffer, &bytes_queued);
+    if (err) {
+        return num_channel_samples;
+    }
+    ////assert(bytes_queued <= bufferTotalSize);  -- this is failing on desktop FIXME TODO ...
+
+    //
+    // calculate CPU cycles feedback adjustment to prevent system audio buffer under/overflow
+    //
+
+    if (bytes_queued < bufferSizeIdealMin) {
+        samples_adjustment_counter += SOUNDCORE_ERROR_INC; // need moar data
+    } else if (bytes_queued > bufferSizeIdealMax) {
+        samples_adjustment_counter -= SOUNDCORE_ERROR_INC; // need less data
+    } else {
+        samples_adjustment_counter = 0; // Acceptable amount of data in buffer
+    }
+
+    if (samples_adjustment_counter < -SOUNDCORE_ERROR_MAX) {
+        samples_adjustment_counter = -SOUNDCORE_ERROR_MAX;
+    } else if (samples_adjustment_counter > SOUNDCORE_ERROR_MAX) {
+        samples_adjustment_counter =  SOUNDCORE_ERROR_MAX;
+    }
+
+    cycles_speaker_feedback = (int)(samples_adjustment_counter * cycles_per_sample);
+
+    //SPEAKER_LOG("feedback:%d samples_adjustment_counter:%d bytes_queued:%lu", cycles_speaker_feedback, samples_adjustment_counter, bytes_queued);
+
+    //
+    // copy samples to audio system backend
+    //
+
+    const unsigned int bytes_free = bufferTotalSize - bytes_queued;
+    unsigned long requested_samples = num_channel_samples;
+    unsigned long requested_buffer_size = num_channel_samples * sizeof(int16_t);
+
+    if (requested_buffer_size > bytes_free) {
+        requested_samples = bytes_free / sizeof(int16_t);
+        requested_buffer_size = bytes_free;
+    }
+
+    if (requested_buffer_size) {
+        unsigned long system_buffer_size = 0;
+        int16_t *system_samples_buffer = NULL;
+
+        unsigned long curr_buffer_size = requested_buffer_size;
+        unsigned long samples_idx = 0;
+        unsigned long counter = 0;
+        do {
+            if (speakerBuffer->Lock(speakerBuffer, curr_buffer_size, &system_samples_buffer, &system_buffer_size)) {
+                ERRLOG("Problem locking speaker buffer");
+                break;
+            }
+
+            unsigned long maxSpeakerBytes = channelsSampleRateHz * sizeof(int16_t);
+
+            if (system_buffer_size > maxSpeakerBytes) {
+                RELEASE_LOG("AVOIDING BUFOVER...");
+                system_buffer_size = maxSpeakerBytes;
+            }
+
+            memcpy(system_samples_buffer, &samples_buffer[samples_idx], system_buffer_size);
+
+            err = speakerBuffer->Unlock(speakerBuffer, system_buffer_size);
+            if (err) {
+                ERRLOG("Problem unlocking speaker buffer");
+                break;
+            }
+
+            curr_buffer_size -= system_buffer_size;
+            samples_idx += system_buffer_size;
+            ++counter;
+        } while (samples_idx < requested_buffer_size && counter < 2);
+    }
+
+    return requested_samples;
+}
+
+// --------------------------------------------------------------------------------------------------------------------
+// speaker public API functions
+
+void speaker_destroy(void) {
+    assert(pthread_self() == cpu_thread_id);
+    speaker_isAvailable = false;
+    audio_destroySoundBuffer(&speakerBuffer);
+    FREE(samples_buffer);
+    FREE(remainder_buffer);
+}
+
+void speaker_init(void) {
+    assert(pthread_self() == cpu_thread_id);
+
+    long err = 0;
+    speaker_isAvailable = false;
+    do {
+        err = audio_createSoundBuffer(&speakerBuffer);
+        if (err) {
+            break;
+        }
+
+        assert(audio_backend->systemSettings.bytesPerSample == sizeof(int16_t));
+        assert(NUM_CHANNELS == 2 || NUM_CHANNELS == 1);
+
+        if (NUM_CHANNELS == 2) {
+            bufferTotalSize = audio_backend->systemSettings.stereoBufferSizeSamples * audio_backend->systemSettings.bytesPerSample * NUM_CHANNELS;
+        } else {
+            bufferTotalSize = audio_backend->systemSettings.monoBufferSizeSamples * audio_backend->systemSettings.bytesPerSample;
+        }
+        bufferSizeIdealMin = bufferTotalSize/4;
+        bufferSizeIdealMax = bufferTotalSize/2;
+        channelsSampleRateHz = audio_backend->systemSettings.sampleRateHz * NUM_CHANNELS;
+        LOG("Speaker initializing with %lu buffer size (bytes), sample rate of %lu", bufferTotalSize, audio_backend->systemSettings.sampleRateHz);
+
+        remainder_buffer_size_max = ((CLK_6502_INT*(unsigned long)CPU_SCALE_FASTEST)/audio_backend->systemSettings.sampleRateHz)+1;
+
+        samples_buffer = calloc(1, channelsSampleRateHz * sizeof(int16_t));
+        if (!samples_buffer) {
+            err = -1;
+            break;
+        }
+        samples_buffer_idx = bufferSizeIdealMax;
+
+        remainder_buffer = malloc(remainder_buffer_size_max * sizeof(int16_t));
+        if (!remainder_buffer) {
+            err = -1;
+            break;
+        }
+
+        _speaker_init_timing();
+
+        speaker_isAvailable = true;
+    } while (0);
+
+    if (err) {
+        LOG("Error creating speaker subsystem, regular sound will be disabled!");
+        if (samples_buffer) {
+            FREE(samples_buffer);
+        }
+        if (remainder_buffer) {
+            FREE(remainder_buffer);
+        }
+    }
+}
+
+void speaker_reset(void) {
+    if (speaker_isAvailable) {
+        _speaker_init_timing();
+    }
+}
+
+void speaker_flush(void) {
+    SCOPE_TRACE_AUDIO("speaker_flush");
+    if (!speaker_isAvailable) {
+        return;
+    }
+
+    assert(pthread_self() == cpu_thread_id);
+
+    if (is_fullspeed) {
+        cycles_quiet_time = cycles_count_total;
+        speaker_going_silent = false;
+        speaker_accessed_since_last_flush = false;
+    } else {
+        if (speaker_accessed_since_last_flush) {
+            cycles_quiet_time = 0;
+            speaker_going_silent = false;
+            speaker_accessed_since_last_flush = false;
+        } else {
+            if (!cycles_quiet_time) {
+                cycles_quiet_time = cycles_count_total;
+            }
+            const unsigned int cycles_diff = (unsigned int)(cycles_persec_target/10); // 0.1sec of cycles
+            if ((cycles_count_total - cycles_quiet_time) > cycles_diff*2) {
+                // After 0.2sec of //e cycles time set inactive flag (allows auto-switch to full speed for fast disk access)
+                speaker_recently_active = false;
+            } else if ((speaker_data != 0) && (cycles_count_total - cycles_quiet_time > cycles_diff)) {
+#if defined(ANDROID)
+                // OpenSLES seems to be able to pause output without the nasty pops that I hear with OpenAL on Linux
+                // desktop.  So this speaker_going_silent hack is not needed.  There is also a noticeable glitch in
+                // OpenSLES when this codepath is enabled.
+                //
+                // Furthermore, the simple mixer in soundcore-opensles.c now requires signed 16bit samples
 #else
-							dwByteOffset, (DWORD)nNumSamplesToUse*sizeof(short),
+                // After 0.1sec of //e cycles time start reducing samples to zero (if they aren't there already).  This
+                // process attempts to mask the extraneous clicks when freezing/restarting emulation (GUI access) and
+                // glitching from the audio system backend
+                speaker_going_silent = true;
+                SPEAKER_LOG("speaker going silent");
 #endif
-							&pDSLockedBuffer0, &dwDSLockedBufferSize0,
-							&pDSLockedBuffer1, &dwDSLockedBufferSize1))
-			return nNumSamples;
+            }
+        }
+    }
+    _speaker_update(/*toggled:false*/);
 
-		memcpy(pDSLockedBuffer0, &pSpeakerBuffer[0], dwDSLockedBufferSize0);
-#ifdef RIFF_SPKR
-		RiffPutSamples(pDSLockedBuffer0, dwDSLockedBufferSize0/sizeof(short));
-#endif
+    unsigned int samples_used = 0;
+    if (is_fullspeed) {
+        assert(!samples_buffer_idx && "should be all quiet samples");
+        _submit_samples_buffer_fullspeed();
+    } else if (samples_buffer_idx) {
+        samples_used = _submit_samples_buffer(samples_buffer_idx);
+    }
+    assert(samples_used <= samples_buffer_idx);
 
-		if(pDSLockedBuffer1)
-		{
-			memcpy(pDSLockedBuffer1, &pSpeakerBuffer[dwDSLockedBufferSize0/sizeof(short)], dwDSLockedBufferSize1);
-#ifdef RIFF_SPKR
-			RiffPutSamples(pDSLockedBuffer1, dwDSLockedBufferSize1/sizeof(short));
-#endif
-		}
+    if (samples_used) {
+        size_t unsubmitted_size = samples_buffer_idx-samples_used;
+        if (unsubmitted_size) {
+            memmove(samples_buffer, &samples_buffer[samples_used], unsubmitted_size);
+        }
+        samples_buffer_idx -= samples_used;
+    }
+}
 
-		// Commit sound buffer
-#ifdef APPLE2IX
-		hr = SpeakerVoice.lpDSBvoice->Unlock(SpeakerVoice.lpDSBvoice->_this, (void*)pDSLockedBuffer0, dwDSLockedBufferSize0,
+bool speaker_isActive(void) {
+    return speaker_recently_active;
+}
+
+void speaker_setVolumeZeroToTen(unsigned long goesToTen) {
+    float samplesScale = goesToTen/10.f;
+    speaker_amplitude = (int16_t)(SPKR_DATA_INIT * samplesScale);
+}
+
+double speaker_cyclesPerSample(void) {
+    return cycles_per_sample;
+}
+
+// --------------------------------------------------------------------------------------------------------------------
+// VM system entry point
+
+GLUE_C_READ(speaker_toggle)
+{
+    assert(pthread_self() == cpu_thread_id);
+
+    timing_checkpoint_cycles();
+
+#if DIRECT_SPEAKER_ACCESS
+#error this used to be implemented ...
+    // AFAIK ... this requires an actual speaker device and ability to access it (usually requiring this program to be
+    // running setuid-operator or (gasp) setuid-root ... maybe
 #else
-		hr = SpeakerVoice.lpDSBvoice->Unlock((void*)pDSLockedBuffer0, dwDSLockedBufferSize0,
+    speaker_accessed_since_last_flush = true;
+    speaker_recently_active = true;
+
+#if !defined(MOBILE_DEVICE)
+    if (timing_shouldAutoAdjustSpeed()) {
+        is_fullspeed = false;
+    }
 #endif
-											(void*)pDSLockedBuffer1, dwDSLockedBufferSize1);
-		if(FAILED(hr))
-			return nNumSamples;
 
-#ifndef APPLE2IX
-		dwByteOffset = (dwByteOffset + (DWORD)nNumSamplesToUse*sizeof(short)*g_nSPKR_NumChannels) % g_dwDSSpkrBufferSize;
-#endif
-	}
+    if (speaker_isAvailable) {
+        _speaker_update(/*toggled:true*/);
+    }
 
-	return bBufferError ? nNumSamples : nNumSamplesToUse;
-}
-
-//-----------------------------------------------------------------------------
-
-void Spkr_Mute()
-{
-	if(SpeakerVoice.bActive && !SpeakerVoice.bMute)
-	{
-#ifdef APPLE2IX
-		SpeakerVoice.lpDSBvoice->SetVolume(SpeakerVoice.lpDSBvoice->_this, DSBVOLUME_MIN);
+    if (!is_fullspeed) {
+        if (speaker_data == speaker_amplitude) {
+#ifdef ANDROID
+            speaker_data = -speaker_amplitude;
 #else
-		SpeakerVoice.lpDSBvoice->SetVolume(DSBVOLUME_MIN);
+            speaker_data = 0;
 #endif
-		SpeakerVoice.bMute = true;
-	}
-}
-
-void Spkr_Demute()
-{
-	if(SpeakerVoice.bActive && SpeakerVoice.bMute)
-	{
-#ifdef APPLE2IX
-		SpeakerVoice.lpDSBvoice->SetVolume(SpeakerVoice.lpDSBvoice->_this, SpeakerVoice.nVolume);
-#else
-		SpeakerVoice.lpDSBvoice->SetVolume(SpeakerVoice.nVolume);
-#endif
-		SpeakerVoice.bMute = false;
-	}
-}
-
-//-----------------------------------------------------------------------------
-
-static bool g_bSpkrRecentlyActive = false;
-
-static void Spkr_SetActive(bool bActive)
-{
-	if(!SpeakerVoice.bActive)
-		return;
-
-	if(bActive)
-	{
-		// Called by SpkrToggle() or SpkrReset()
-		g_bSpkrRecentlyActive = true;
-		SpeakerVoice.bRecentlyActive = true;
-	}
-	else
-	{
-		// Called by SpkrUpdate() after 0.2s of speaker inactivity
-		g_bSpkrRecentlyActive = false;
-		SpeakerVoice.bRecentlyActive = false;
-	}
-}
-
-bool Spkr_IsActive()
-{
-	return g_bSpkrRecentlyActive;
-}
-
-//-----------------------------------------------------------------------------
-
-DWORD SpkrGetVolume()
-{
-	return SpeakerVoice.dwUserVolume;
-}
-
-#ifdef APPLE2IX
-// volume is square wave min and max samples
-void SpkrSetVolume(short amplitude)
-{
-    g_nSpeakerData = amplitude;
-}
-#else
-void SpkrSetVolume(DWORD dwVolume, DWORD dwVolumeMax)
-{
-	SpeakerVoice.dwUserVolume = dwVolume;
-
-	SpeakerVoice.nVolume = NewVolume(dwVolume, dwVolumeMax);
-
-	if(SpeakerVoice.bActive)
-		SpeakerVoice.lpDSBvoice->SetVolume(SpeakerVoice.nVolume);
-}
+        } else {
+            speaker_data = speaker_amplitude;
+        }
+    }
 #endif
 
-//=============================================================================
-
-bool Spkr_DSInit()
-{
-	//
-	// Create single Apple speaker voice
-	//
-
-	if(!g_bDSAvailable)
-		return false;
-
-	SpeakerVoice.bIsSpeaker = true;
-
-	HRESULT hr = DSGetSoundBuffer(&SpeakerVoice, DSBCAPS_CTRLVOLUME, g_dwDSSpkrBufferSize, SPKR_SAMPLE_RATE, 1);
-	if(FAILED(hr))
-	{
-		if(g_fh) fprintf(g_fh, "Spkr: DSGetSoundBuffer failed (%08X)\n",(unsigned int)hr);
-		return false;
-	}
-
-#ifndef APPLE2IX
-	if(!DSZeroVoiceBuffer(&SpeakerVoice, "Spkr", g_dwDSSpkrBufferSize))
-		return false;
-#endif
-
-	SpeakerVoice.bActive = true;
-
-#ifndef APPLE2IX
-	// Volume might've been setup from value in Registry
-	if(!SpeakerVoice.nVolume)
-		SpeakerVoice.nVolume = DSBVOLUME_MAX;
-
-	SpeakerVoice.lpDSBvoice->SetVolume(SpeakerVoice.nVolume);
-
-	//
-
-	DWORD dwCurrentPlayCursor, dwCurrentWriteCursor;
-	hr = SpeakerVoice.lpDSBvoice->GetCurrentPosition(&dwCurrentPlayCursor, &dwCurrentWriteCursor);
-	if(SUCCEEDED(hr) && (dwCurrentPlayCursor == dwCurrentWriteCursor))
-	{
-		// KLUDGE: For my WinXP PC with "VIA AC'97 Enhanced Audio Controller"
-		// . Not required for my Win98SE/WinXP PC with PCI "Soundblaster Live!"
-		Sleep(200);
-
-		hr = SpeakerVoice.lpDSBvoice->GetCurrentPosition(&dwCurrentPlayCursor, &dwCurrentWriteCursor);
-		char szDbg[100];
-		sprintf(szDbg, "[DSInit] PC=%08X, WC=%08X, Diff=%08X\n", dwCurrentPlayCursor, dwCurrentWriteCursor, dwCurrentWriteCursor-dwCurrentPlayCursor); OutputDebugString(szDbg);
-	}
-#endif
-	return true;
+    return floating_bus();
 }
-
-void Spkr_DSUninit()
-{
-	if(SpeakerVoice.lpDSBvoice && SpeakerVoice.bActive)
-	{
-#ifdef APPLE2IX
-		SpeakerVoice.lpDSBvoice->Stop(SpeakerVoice.lpDSBvoice->_this);
-#else
-		SpeakerVoice.lpDSBvoice->Stop();
-#endif
-		SpeakerVoice.bActive = false;
-	}
-
-	DSReleaseSoundBuffer(&SpeakerVoice);
-}
-
-//=============================================================================
-
-#if !defined(APPLE2IX)
-DWORD SpkrGetSnapshot(SS_IO_Speaker* pSS)
-{
-	pSS->g_nSpkrLastCycle = g_nSpkrLastCycle;
-	return 0;
-}
-
-DWORD SpkrSetSnapshot(SS_IO_Speaker* pSS)
-{
-	g_nSpkrLastCycle = pSS->g_nSpkrLastCycle;
-	return 0;
-}
-#endif
 

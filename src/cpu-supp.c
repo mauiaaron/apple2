@@ -1,16 +1,15 @@
 /*
- * Apple // emulator for Linux: C support for 6502 on i386
+ * Apple // emulator for *ix
+ *
+ * This software package is subject to the GNU General Public License
+ * version 3 or later (your choice) as published by the Free Software
+ * Foundation.
  *
  * Copyright 1994 Alexander Jean-Claude Bottema
  * Copyright 1995 Stephen Lee
  * Copyright 1997, 1998 Aaron Culliney
  * Copyright 1998, 1999, 2000 Michael Deutschmann
- *
- * This software package is subject to the GNU General Public License
- * version 2 or later (your choice) as published by the Free Software
- * Foundation.
- *
- * THERE ARE NO WARRANTIES WHATSOEVER.
+ * Copyright 2013-2015 Aaron Culliney
  *
  */
 
@@ -36,8 +35,6 @@ uint8_t  cpu65_rw;
 uint8_t  cpu65_opcode;
 uint8_t  cpu65_opcycles;
 
-int16_t cpu65_cycle_count = 0;
-int16_t cpu65_cycles_to_execute = 0;
 uint8_t cpu65__signal = 0;
 
 static pthread_mutex_t irq_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -582,61 +579,58 @@ uint8_t cpu65__opcycles[256] = {
 };
 
 // NOTE: currently this is a conversion table between i386 flags <-> 6502 P register
-static void initialize_code_tables()
-{
-    for (unsigned i = 0; i < 256; i++)
-    {
+static void init_flags_conversion_tables(void) {
+    for (unsigned i = 0; i < 256; i++) {
         unsigned char val = 0;
 
-        if (i & C_Flag)
-        {
+        if (i & C_Flag) {
             val |= C_Flag_6502;
         }
 
-        if (i & X_Flag)
-        {
+        if (i & X_Flag) {
             val |= X_Flag_6502;
         }
 
-        if (i & I_Flag)
-        {
+        if (i & I_Flag) {
             val |= I_Flag_6502;
         }
 
-        if (i & V_Flag)
-        {
+        if (i & V_Flag) {
             val |= V_Flag_6502;
         }
 
-        if (i & B_Flag)
-        {
+        if (i & B_Flag) {
             val |= B_Flag_6502;
         }
 
-        if (i & D_Flag)
-        {
+        if (i & D_Flag) {
             val |= D_Flag_6502;
         }
 
-        if (i & Z_Flag)
-        {
+        if (i & Z_Flag) {
             val |= Z_Flag_6502;
         }
 
-        if (i & N_Flag)
-        {
+        if (i & N_Flag) {
             val |= N_Flag_6502;
         }
 
-        cpu65_flags_encode[ i ] = val/* | 0x20 WTF?*/;
+        cpu65_flags_encode[ i ] = val;
         cpu65_flags_decode[ val ] = i;
     }
 }
 
-void cpu65_init()
+void cpu65_init(void)
 {
-    initialize_code_tables();
+    init_flags_conversion_tables();
     cpu65__signal = 0;
+    cpu65_pc = 0x0;
+    cpu65_ea = 0x0;
+    cpu65_a = 0xFF;
+    cpu65_x = 0xFF;
+    cpu65_y = 0xFF;
+    cpu65_f = (C_Flag_6502|X_Flag_6502|I_Flag_6502|V_Flag_6502|B_Flag_6502|Z_Flag_6502|N_Flag_6502);
+    cpu65_sp = 0xFC;
 }
 
 void cpu65_interrupt(int reason)
@@ -655,10 +649,9 @@ void cpu65_uninterrupt(int reason)
 
 void cpu65_reboot(void) {
     timing_initialize();
-    video_set(0);
+    video_reset();
     joy_button0 = 0xff; // OpenApple
     cpu65_interrupt(ResetSig);
-    c_initialize_sound_hooks();
 }
 
 #if CPU_TRACING
@@ -788,7 +781,7 @@ GLUE_C_WRITE(cpu65_trace_epilogue)
     }
     flags_buf[8] = '\0';
 
-    fprintf(cpu_trace_fp, " %s EA:%04X", flags_buf, cpu65_ea);
+    fprintf(cpu_trace_fp, " %s CYC:%u EA:%04X", flags_buf, cpu65_opcycles, cpu65_ea);
 
     char fmt[64];
     sprintf(fmt, " %s %s", opcodes_65c02[cpu65_opcode].mnemonic, disasm_templates[opcodes_65c02[cpu65_opcode].mode]);
@@ -827,6 +820,13 @@ GLUE_C_WRITE(cpu65_trace_epilogue)
 
     fprintf(cpu_trace_fp, "%s", "\n");
     fflush(cpu_trace_fp);
+}
+
+void cpu65_trace_checkpoint(void) {
+    if (cpu_trace_fp) {
+        fprintf(cpu_trace_fp, "---TOTAL CYC:%lu\n",cycles_count_total);
+        fflush(cpu_trace_fp);
+    }
 }
 
 #   if RESET_VM_TRACING

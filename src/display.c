@@ -1,86 +1,64 @@
 /*
- * Apple // emulator for Linux: Video support
+ * Apple // emulator for *ix
+ *
+ * This software package is subject to the GNU General Public License
+ * version 3 or later (your choice) as published by the Free Software
+ * Foundation.
  *
  * Copyright 1994 Alexander Jean-Claude Bottema
  * Copyright 1995 Stephen Lee
  * Copyright 1997, 1998 Aaron Culliney
  * Copyright 1998, 1999, 2000 Michael Deutschmann
- *
- * This software package is subject to the GNU General Public License
- * version 2 or later (your choice) as published by the Free Software
- * Foundation.
- *
- * THERE ARE NO WARRANTIES WHATSOEVER.
+ * Copyright 2013-2015 Aaron Culliney
  *
  */
 
 #include "common.h"
-#include "video/renderer.h"
+
+#define SCANSTEP (SCANWIDTH-12)
 
 #define DYNAMIC_SZ 11 // 7 pixels (as bytes) + 2pre + 2post
 
-#define TEXT_ROWS 24
-#define BEGIN_MIX 20
-#define TEXT_COLS 40
-
 // framebuffers
-static uint8_t vga_mem_page_0[SCANWIDTH*SCANHEIGHT];
-static uint8_t vga_mem_page_1[SCANWIDTH*SCANHEIGHT];
+static uint8_t vga_mem_page_0[SCANWIDTH*SCANHEIGHT] = { 0 };
+static uint8_t vga_mem_page_1[SCANWIDTH*SCANHEIGHT] = { 0 };
 
-A2Color colormap[256] = { { 0 } };
+A2Color_s colormap[256] = { { 0 } };
+video_backend_s *video_backend = NULL;
 
-uint8_t video__wider_font[0x8000];
-uint8_t video__font[0x4000];
+static uint8_t video__wider_font[0x8000] = { 0 };
+static uint8_t video__font[0x4000] = { 0 };
+static uint8_t video__int_font[3][0x4000] = { { 0 } }; // interface font
 
 // Precalculated framebuffer offsets given VM addr
-unsigned int video__screen_addresses[8192];
-uint8_t video__columns[8192];
+unsigned int video__screen_addresses[8192] = { INT_MIN };
+uint8_t video__columns[8192] = { 0 };
 
 uint8_t *video__fb1 = NULL;
 uint8_t *video__fb2 = NULL;
 
-uint8_t video__hires_even[0x800];
-uint8_t video__hires_odd[0x800];
+uint8_t video__hires_even[0x800] = { 0 };
+uint8_t video__hires_odd[0x800] = { 0 };
 
-uint8_t video__dhires1[256];
-uint8_t video__dhires2[256];
+int video__current_page = 0; // current visual page
 
-// Interface font
-static uint8_t video__int_font[3][0x4000];
-
-int video__current_page; // current visual page
-int video__strictcolors = 1;// refactor : should be static
-
-void video_loadfont(int first, int quantity, const uint8_t *data, int mode) {
-    uint8_t fg = 0;
-    uint8_t bg = 0;
-    switch (mode) {
-        case 2:
-            fg = COLOR_BLACK;
-            bg = COLOR_LIGHT_WHITE;
-            break;
-        case 3:
-            fg = COLOR_FLASHING_WHITE;
-            bg = COLOR_FLASHING_BLACK;
-            break;
-        default:
-            fg = COLOR_LIGHT_WHITE;
-            bg = COLOR_BLACK;
-            break;
-    }
-
-    unsigned int i = quantity * 8;
-    while (i--) {
-        unsigned int j = 8;
-        uint8_t x = data[i];
-        while (j--) {
-            uint8_t y = (x & 128) ? fg : bg;
-            video__wider_font[(first << 7) + (i << 4) + (j << 1)] = video__wider_font[(first << 7) + (i << 4) + (j << 1) + 1] =
-            video__font[(first << 6) + (i << 3) + j] = y;
-            x <<= 1;
-        }
-    }
-}
+// Video constants -- sourced from AppleWin
+static const bool bVideoScannerNTSC = true;
+static const int kHBurstClock   =    53; // clock when Color Burst starts
+static const int kHBurstClocks  =     4; // clocks per Color Burst duration
+static const int kHClock0State  =  0x18; // H[543210] = 011000
+static const int kHClocks       =    65; // clocks per horizontal scan (including HBL)
+static const int kHPEClock      =    40; // clock when HPE (horizontal preset enable) goes low
+static const int kHPresetClock  =    41; // clock when H state presets
+static const int kHSyncClock    =    49; // clock when HSync starts
+static const int kHSyncClocks   =     4; // clocks per HSync duration
+static const int kNTSCScanLines =   262; // total scan lines including VBL (NTSC)
+static const int kNTSCVSyncLine =   224; // line when VSync starts (NTSC)
+static const int kPALScanLines  =   312; // total scan lines including VBL (PAL)
+static const int kPALVSyncLine  =   264; // line when VSync starts (PAL)
+static const int kVLine0State   = 0x100; // V[543210CBA] = 100000000
+static const int kVPresetLine   =   256; // line when V state presets
+static const int kVSyncLines    =     4; // lines per VSync duration
 
 uint8_t video__odd_colors[2] = { COLOR_LIGHT_PURPLE, COLOR_LIGHT_BLUE };
 uint8_t video__even_colors[2] = { COLOR_LIGHT_GREEN, COLOR_LIGHT_RED };
@@ -94,34 +72,53 @@ unsigned short video__line_offset[TEXT_ROWS] = {
 
 uint8_t video__dhires1[256] = {
     0x0,0x1,0x2,0x3,0x4,0x5,0x6,0x7,0x8,0x9,0xa,0xb,0xc,0xd,0xe,0xf,
-    0x0,0x1,0x3,0x3,0x5,0x5,0x7,0x7,0x9,0x9,0xb,0xb,0xd,0xd,0xf,0xf,
-    0x0,0x1,0x2,0x3,0x6,0x5,0x6,0x7,0xa,0x9,0xa,0xb,0xe,0xd,0xe,0xf,
-    0x0,0x1,0x3,0x3,0x7,0x5,0x7,0x7,0xb,0x9,0xb,0xb,0xf,0xd,0xf,0xf,
-    0x0,0x1,0x2,0x3,0x4,0x4,0x6,0x7,0x8,0x9,0xa,0xb,0xc,0xd,0xe,0xf,
-    0x0,0x1,0x3,0x3,0x5,0x5,0x7,0x7,0xd,0x9,0xb,0xb,0xd,0xd,0xf,0xf,
-    0x0,0x1,0x2,0x3,0x4,0x5,0x6,0x7,0xe,0x9,0xa,0xb,0xe,0xd,0xe,0xf,
-    0x0,0x1,0x7,0x3,0x7,0x5,0x7,0x7,0xf,0x9,0xb,0xb,0xf,0xd,0xf,0xf,
+    0x0,0x1,0x2,0x3,0x4,0x5,0x6,0x7,0x8,0x9,0xa,0xb,0xc,0xd,0xe,0xf,
+    0x0,0x1,0x2,0x3,0x4,0x5,0x6,0x7,0x8,0x9,0xa,0xb,0xc,0xd,0xe,0xf,
+    0x0,0x1,0x2,0x3,0x4,0x5,0x6,0x7,0x8,0x9,0xa,0xb,0xc,0xd,0xe,0xf,
+    0x0,0x1,0x2,0x3,0x4,0x5,0x6,0x7,0x8,0x9,0xa,0xb,0xc,0xd,0xe,0xf,
+    0x0,0x1,0x2,0x3,0x4,0x5,0x6,0x7,0x8,0x9,0xa,0xb,0xc,0xd,0xe,0xf,
+    0x0,0x1,0x2,0x3,0x4,0x5,0x6,0x7,0x8,0x9,0xa,0xb,0xc,0xd,0xe,0xf,
+    0x0,0x1,0x2,0x3,0x4,0x5,0x6,0x7,0x8,0x9,0xa,0xb,0xc,0xd,0xe,0xf,
 };
 
 uint8_t video__dhires2[256] = {
-    0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x8,0x8,0x0,0xb,0x8,0xd,0x0,0x0,
-    0x1,0x1,0x1,0x1,0x0,0x5,0x1,0x1,0x0,0x9,0xb,0xb,0x0,0xd,0xf,0xf,
-    0x0,0x1,0x2,0x2,0x2,0x5,0x2,0x2,0x0,0xa,0xa,0xa,0xe,0xd,0x2,0x2,
-    0x3,0x3,0x3,0x3,0x7,0x5,0x7,0x7,0x0,0xb,0xb,0xb,0xf,0xd,0xf,0xf,
-    0x0,0x0,0x4,0x0,0x4,0x4,0x4,0x4,0xc,0x8,0x4,0x8,0xc,0xd,0x4,0x4,
-    0x5,0x5,0x5,0x5,0x5,0x5,0x5,0x5,0xd,0x4,0x4,0x4,0xd,0xd,0x4,0x4,
-    0x6,0x6,0x6,0x2,0xe,0x6,0x6,0x6,0xe,0xe,0xa,0xa,0xe,0x6,0xe,0x6,
-    0x7,0x7,0x7,0x7,0x7,0x7,0x7,0x7,0xf,0xf,0xb,0xb,0xf,0xf,0xf,0xf,
+    0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x8,0x8,0x8,0x8,0x8,0x8,0x8,0x8,
+    0x1,0x1,0x1,0x1,0x1,0x1,0x1,0x1,0x9,0x9,0x9,0x9,0x9,0x9,0x9,0x9,
+    0x2,0x2,0x2,0x2,0x2,0x2,0x2,0x2,0xa,0xa,0xa,0xa,0xa,0xa,0xa,0xa,
+    0x3,0x3,0x3,0x3,0x3,0x3,0x3,0x3,0xb,0xb,0xb,0xb,0xb,0xb,0xb,0xb,
+    0x4,0x4,0x4,0x4,0x4,0x4,0x4,0x4,0xc,0xc,0xc,0xc,0xc,0xc,0xc,0xc,
+    0x5,0x5,0x5,0x5,0x5,0x5,0x5,0x5,0xd,0xd,0xd,0xd,0xd,0xd,0xd,0xd,
+    0x6,0x6,0x6,0x6,0x6,0x6,0x6,0x6,0xe,0xe,0xe,0xe,0xe,0xe,0xe,0xe,
+    0x7,0x7,0x7,0x7,0x7,0x7,0x7,0x7,0xf,0xf,0xf,0xf,0xf,0xf,0xf,0xf,
 };
 
-static void video_initialize_dhires_values(void) {
+
+// forward decls of VM entry points
+
+void video__write_2e_text0(uint16_t, uint8_t);
+void video__write_2e_text0_mixed(uint16_t, uint8_t);
+void video__write_2e_text1(uint16_t, uint8_t);
+void video__write_2e_text1_mixed(uint16_t, uint8_t);
+void video__write_2e_odd0(uint16_t, uint8_t);
+void video__write_2e_even0(uint16_t, uint8_t);
+void video__write_2e_odd0_mixed(uint16_t, uint8_t);
+void video__write_2e_even0_mixed(uint16_t, uint8_t);
+void video__write_2e_odd1(uint16_t, uint8_t);
+void video__write_2e_even1(uint16_t, uint8_t);
+void video__write_2e_odd1_mixed(uint16_t, uint8_t);
+void video__write_2e_even1_mixed(uint16_t, uint8_t);
+
+// ----------------------------------------------------------------------------
+// Initialization routines
+
+static void _initialize_dhires_values(void) {
     for (unsigned int i = 0; i < 0x80; i++) {
         video__dhires1[i+0x80] = video__dhires1[i];
         video__dhires2[i+0x80] = video__dhires2[i];
     }
 }
 
-static void video_initialize_hires_values(void) {
+static void _initialize_hires_values(void) {
     // precalculate colors for all the 256*8 bit combinations. */
     for (unsigned int value = 0x00; value <= 0xFF; value++) {
         for (unsigned int e = value*8, last_not_black=0, v=value, b=0; b < 7; b++, v >>= 1, e++) {
@@ -314,22 +311,21 @@ static void video_initialize_hires_values(void) {
     }
 }
 
-static void video_initialize_row_col_tables(void) {
-    for (unsigned int i = 0; i < 8192; i++) {
-        video__screen_addresses[i] = -1;
-    }
-
+static void _initialize_row_col_tables(void) {
     for (unsigned int y = 0; y < TEXT_ROWS; y++) {
-        for (unsigned int off = 0; off < 8; off++) {
+        for (unsigned int y2 = 0; y2 < FONT_GLYPH_Y; y2++) {
             for (unsigned int x = 0; x < 40; x++) {
-                video__screen_addresses[video__line_offset[y] + (0x400*off) + x] = (y*16 + 2*off /* + 8*/) * SCANWIDTH + x*14 + 4;
-                video__columns         [video__line_offset[y] + (0x400*off) + x] = (uint8_t)x;
+                video__screen_addresses[video__line_offset[y] + (0x400*y2) + x] = ((y*FONT_HEIGHT_PIXELS + 2*y2) * SCANWIDTH) + (x*FONT_WIDTH_PIXELS) + _INTERPOLATED_PIXEL_ADJUSTMENT_PRE;
+                video__columns         [video__line_offset[y] + (0x400*y2) + x] = (uint8_t)x;
             }
         }
     }
+    for (unsigned int i = 0; i < 8192; i++) {
+        assert(video__screen_addresses[i] != INT_MIN);
+    }
 }
 
-static void video_initialize_tables_video(void) {
+static void _initialize_tables_video(void) {
     // initialize text/lores & hires graphics routines
     for (unsigned int y = 0; y < TEXT_ROWS; y++) {
         for (unsigned int x = 0; x < TEXT_COLS; x++) {
@@ -368,7 +364,7 @@ static void video_initialize_tables_video(void) {
     }
 }
 
-static void video_initialize_color() {
+static void _initialize_color() {
     unsigned char col2[ 3 ] = { 255,255,255 };
 
     /* align the palette for hires graphics */
@@ -462,17 +458,53 @@ static void video_initialize_color() {
     colormap[0x07].blue = 130; /* Aqua */
     colormap[0x0f].red = 255; colormap[0x0f].green = 255;
     colormap[0x0f].blue = 255; /* White */
+
+#if USE_RGBA4444
+    for (unsigned int i=0; i<256; i++) {
+        colormap[i].red   = (colormap[i].red   >>4);
+        colormap[i].green = (colormap[i].green >>4);
+        colormap[i].blue  = (colormap[i].blue  >>4);
+    }
+#endif
 }
 
-void video_set(int flags) {
-    video__strictcolors = (color_mode == COLOR_INTERP) ? 2 : 1;
-    video_initialize_hires_values();
-    video_initialize_row_col_tables();
-    video_initialize_tables_video();
-    video_initialize_dhires_values();
+void video_reset(void) {
+    _initialize_hires_values();
+    _initialize_tables_video();
 }
 
-void video_loadfont_int(int first, int quantity, const uint8_t *data) {
+void video_loadfont(int first, int quantity, const uint8_t *data, int mode) {
+    uint8_t fg = 0;
+    uint8_t bg = 0;
+    switch (mode) {
+        case 2:
+            fg = COLOR_BLACK;
+            bg = COLOR_LIGHT_WHITE;
+            break;
+        case 3:
+            fg = COLOR_FLASHING_WHITE;
+            bg = COLOR_FLASHING_BLACK;
+            break;
+        default:
+            fg = COLOR_LIGHT_WHITE;
+            bg = COLOR_BLACK;
+            break;
+    }
+
+    unsigned int i = quantity * 8;
+    while (i--) {
+        unsigned int j = 8;
+        uint8_t x = data[i];
+        while (j--) {
+            uint8_t y = (x & 128) ? fg : bg;
+            video__wider_font[(first << 7) + (i << 4) + (j << 1)] = video__wider_font[(first << 7) + (i << 4) + (j << 1) + 1] =
+            video__font[(first << 6) + (i << 3) + j] = y;
+            x <<= 1;
+        }
+    }
+}
+
+static void _loadfont_int(int first, int quantity, const uint8_t *data) {
     unsigned int i = quantity * 8;
     while (i--) {
         unsigned int j = 8;
@@ -480,19 +512,32 @@ void video_loadfont_int(int first, int quantity, const uint8_t *data) {
         while (j--) {
             unsigned int y = (first << 6) + (i << 3) + j;
             if (x & 128) {
-                video__int_font[0][y] = video__int_font[1][y] = COLOR_LIGHT_GREEN;
+                video__int_font[0][y] = COLOR_LIGHT_GREEN;
+                video__int_font[1][y] = COLOR_LIGHT_GREEN;
                 video__int_font[2][y] = COLOR_LIGHT_RED;
             } else {
-                video__int_font[0][y] = video__int_font[2][y] = COLOR_BLACK;
+                video__int_font[0][y] = COLOR_BLACK;
                 video__int_font[1][y] = COLOR_MEDIUM_BLUE;
+                video__int_font[2][y] = COLOR_BLACK;
             }
             x <<= 1;
         }
     }
 }
 
+static void _initialize_interface_fonts(void) {
+    _loadfont_int(0x00,0x40,ucase_glyphs);
+    _loadfont_int(0x40,0x20,ucase_glyphs);
+    _loadfont_int(0x60,0x20,lcase_glyphs);
+    _loadfont_int(0x80,0x40,ucase_glyphs);
+    _loadfont_int(0xC0,0x20,ucase_glyphs);
+    _loadfont_int(0xE0,0x20,lcase_glyphs);
+    _loadfont_int(MOUSETEXT_BEGIN,0x20,mousetext_glyphs);
+    _loadfont_int(ICONTEXT_BEGIN,0x20,interface_glyphs);
+}
+
 // ----------------------------------------------------------------------------
-// Plotting routines
+// lores/char plotting routines
 
 static inline void _plot_char40(uint8_t **d, uint8_t **s) {
     *((uint32_t *)(*d)) = *((uint32_t *)(*s));
@@ -513,19 +558,19 @@ static inline void _plot_char40(uint8_t **d, uint8_t **s) {
     *d += SCANSTEP, *s += 4;
 }
 
-static inline void _plot_char80(uint8_t **d, uint8_t **s) {
+static inline void _plot_char80(uint8_t **d, uint8_t **s, const unsigned int fb_width) {
     *((uint32_t *)(*d)) = *((uint32_t *)(*s));
     *d += 4, *s += 4;
     *((uint16_t *)(*d)) = *((uint16_t *)(*s));
     *d += 2, *s += 2;
     *((uint8_t *)(*d)) = *((uint8_t *)(*s));
-    *d += SCANWIDTH-6, *s -= 6;
+    *d += fb_width-6, *s -= 6;
     *((uint32_t *)(*d)) = *((uint32_t *)(*s));
     *d += 4, *s += 4;
     *((uint16_t *)(*d)) = *((uint16_t *)(*s));
     *d += 2, *s += 2;
     *((uint8_t *)(*d)) = *((uint8_t *)(*s));
-    *d += SCANWIDTH-6, *s += 2;
+    *d += fb_width-6, *s += 2;
 }
 
 static inline void _plot_lores(uint8_t **d, const uint32_t val) {
@@ -536,7 +581,7 @@ static inline void _plot_lores(uint8_t **d, const uint32_t val) {
     *((uint32_t *)(*d)) = val;
     *d += 4;
     *((uint16_t *)(*d)) = (uint16_t)(val & 0xffff);
-    *d += (SCANWIDTH-12);
+    *d += SCANSTEP;
     *((uint32_t *)(*d)) = val;
     *d += 4;
     *((uint32_t *)(*d)) = val;
@@ -546,75 +591,8 @@ static inline void _plot_lores(uint8_t **d, const uint32_t val) {
     *((uint16_t *)(*d)) = (uint16_t)(val & 0xffff);
 }
 
-void video_plotchar( int x, int y, int scheme, uint8_t c ) {
-    uint8_t *d;
-    uint8_t *s;
-
-    unsigned int off = y * SCANWIDTH * 16 + x * 7 + 4;
-    s = video__int_font[scheme] + c * 64;
-    d = video__fb1 + off;
-
-    _plot_char80(&d,&s);
-    _plot_char80(&d,&s);
-    _plot_char80(&d,&s);
-    _plot_char80(&d,&s);
-    _plot_char80(&d,&s);
-    _plot_char80(&d,&s);
-    _plot_char80(&d,&s);
-    _plot_char80(&d,&s);
-}
-
-void video_init(void) {
-
-    video__fb1 = vga_mem_page_0;
-    video__fb2 = vga_mem_page_1;
-
-    // reset Apple2 softframebuffers
-    memset(video__fb1,0,SCANWIDTH*SCANHEIGHT);
-    memset(video__fb2,0,SCANWIDTH*SCANHEIGHT);
-
-    video_initialize_color();
-#if !HEADLESS
-#if !defined(__APPLE__)
-    if (!is_headless) {
-        video_driver_init((void *)0);
-    }
-#endif
-#endif
-}
-
-void video_main_loop(void) {
-#if !HEADLESS
-    video_driver_main_loop();
-#endif
-}
-
-void video_shutdown(void) {
-#if !HEADLESS
-    if (!is_headless) {
-        video_driver_shutdown();
-    }
-#if !defined(__APPLE__)
-    exit(0);
-#endif
-#endif
-}
-
-/* -------------------------------------------------------------------------
-    video_setpage(p):    Switch to screen page p
-   ------------------------------------------------------------------------- */
-void video_setpage(int p)
-{
-    video__current_page = p;
-}
-
-const uint8_t * const video_current_framebuffer() {
-    return !video__current_page ? video__fb1 : video__fb2;
-}
-
-// ----------------------------------------------------------------------------
-
 static inline void _plot_character(const unsigned int font_off, uint8_t *fb_ptr) {
+    video_setDirty();
     uint8_t *font_ptr = video__wider_font+font_off;
     _plot_char40(/*dst*/&fb_ptr, /*src*/&font_ptr);
     _plot_char40(/*dst*/&fb_ptr, /*src*/&font_ptr);
@@ -637,15 +615,16 @@ static inline void _plot_character1(uint16_t ea, uint8_t b)
 }
 
 static inline void _plot_80character(const unsigned int font_off, uint8_t *fb_ptr) {
+    video_setDirty();
     uint8_t *font_ptr = video__font+font_off;
-    _plot_char80(/*dst*/&fb_ptr, /*src*/&font_ptr);
-    _plot_char80(/*dst*/&fb_ptr, /*src*/&font_ptr);
-    _plot_char80(/*dst*/&fb_ptr, /*src*/&font_ptr);
-    _plot_char80(/*dst*/&fb_ptr, /*src*/&font_ptr);
-    _plot_char80(/*dst*/&fb_ptr, /*src*/&font_ptr);
-    _plot_char80(/*dst*/&fb_ptr, /*src*/&font_ptr);
-    _plot_char80(/*dst*/&fb_ptr, /*src*/&font_ptr);
-    _plot_char80(/*dst*/&fb_ptr, /*src*/&font_ptr);
+    _plot_char80(/*dst*/&fb_ptr, /*src*/&font_ptr, SCANWIDTH);
+    _plot_char80(/*dst*/&fb_ptr, /*src*/&font_ptr, SCANWIDTH);
+    _plot_char80(/*dst*/&fb_ptr, /*src*/&font_ptr, SCANWIDTH);
+    _plot_char80(/*dst*/&fb_ptr, /*src*/&font_ptr, SCANWIDTH);
+    _plot_char80(/*dst*/&fb_ptr, /*src*/&font_ptr, SCANWIDTH);
+    _plot_char80(/*dst*/&fb_ptr, /*src*/&font_ptr, SCANWIDTH);
+    _plot_char80(/*dst*/&fb_ptr, /*src*/&font_ptr, SCANWIDTH);
+    _plot_char80(/*dst*/&fb_ptr, /*src*/&font_ptr, SCANWIDTH);
 }
 
 // FIXME TODO NOTE : dup'ing work here?
@@ -666,6 +645,7 @@ static inline void _plot_80character1(uint16_t ea, uint8_t b)
 }
 
 static inline void _plot_block(const uint32_t val, uint8_t *fb_ptr) {
+    video_setDirty();
     uint8_t color = (val & 0x0F) << 4;
     uint32_t val32 = (color << 24) | (color << 16) | (color << 8) | color;
 
@@ -765,6 +745,22 @@ GLUE_C_WRITE(video__write_2e_text1_mixed)
 }
 
 // ----------------------------------------------------------------------------
+// Classic interface and printing HUD messages
+
+void interface_plotChar(uint8_t *fboff, int fb_pix_width, interface_colorscheme_t cs, uint8_t c) {
+    video_setDirty();
+    uint8_t *src = video__int_font[cs] + c * (FONT_GLYPH_X*FONT_GLYPH_Y);
+    _plot_char80(&fboff, &src, fb_pix_width);
+    _plot_char80(&fboff, &src, fb_pix_width);
+    _plot_char80(&fboff, &src, fb_pix_width);
+    _plot_char80(&fboff, &src, fb_pix_width);
+    _plot_char80(&fboff, &src, fb_pix_width);
+    _plot_char80(&fboff, &src, fb_pix_width);
+    _plot_char80(&fboff, &src, fb_pix_width);
+    _plot_char80(&fboff, &src, fb_pix_width);
+}
+
+// ----------------------------------------------------------------------------
 // Double-Hires GRaphics
 
 // PlotDHiresByte
@@ -778,6 +774,7 @@ static inline void _plot_dhires_pixels(uint8_t idx, uint8_t *fb_ptr) {
 
 // PlotDHires
 static inline void _plot_dhires(uint16_t base, uint16_t ea, uint8_t *fb_base) {
+    video_setDirty();
     ea &= ~0x1;
 
     uint16_t memoff = ea - base;
@@ -902,6 +899,7 @@ static inline void _plot_hires_pixels(uint8_t *dst, const uint8_t *src) {
 
 // PlotByte
 static inline void _plot_hires(uint16_t ea, uint8_t b, bool is_even, uint8_t *fb_ptr) {
+
     uint8_t _buf[DYNAMIC_SZ] = { 0 };
     uint8_t *color_buf = (uint8_t *)_buf; // <--- work around for -Wstrict-aliasing
     uint8_t *apple2_vmem = (uint8_t *)apple_ii_64k[0];
@@ -966,6 +964,8 @@ static inline void _plot_hires(uint16_t ea, uint8_t b, bool is_even, uint8_t *fb
             }
 
             // calculate interpolated/bleed colors
+            // NOTE that this doesn't check under/overflow of ea (for example at 0x2000, 0x4000, 0x3FFF, 0x5FFF)
+            // ... but don't think this really matters much here =P
             _calculate_interp_color(color_buf, 1, interp_altbase, ea-1);
             _calculate_interp_color(color_buf, 2, interp_base, ea);
             _calculate_interp_color(color_buf, 8, interp_base, ea);
@@ -996,6 +996,7 @@ static inline void _draw_hires_graphics(uint16_t ea, uint8_t b, bool is_even, ui
         return;
     }
 
+    video_setDirty();
     uint16_t off = ea - 0x2000;
     uint8_t *fb_base = NULL;
     if (page) {
@@ -1055,6 +1056,44 @@ GLUE_C_WRITE(video__write_2e_odd1_mixed)
     _draw_hires_graphics(ea, b, /*even*/false, 1, (SS_TEXT|SS_MIXED));
 }
 
+// ----------------------------------------------------------------------------
+
+void video_init(void) {
+    video__fb1 = vga_mem_page_0;
+    video__fb2 = vga_mem_page_1;
+
+    // reset Apple2 softframebuffers
+    memset(video__fb1,0,SCANWIDTH*SCANHEIGHT);
+    memset(video__fb2,0,SCANWIDTH*SCANHEIGHT);
+
+#if !defined(__APPLE__) && !defined(ANDROID)
+    video_backend->init((void*)0);
+#endif
+}
+
+void video_shutdown(void) {
+    video_backend->shutdown();
+}
+
+void video_main_loop(void) {
+    video_backend->main_loop();
+}
+
+void video_setpage(int p) {
+    video_setDirty();
+    video__current_page = p;
+}
+
+const uint8_t * const video_current_framebuffer(void) {
+    return !video__current_page ? video__fb1 : video__fb2;
+}
+
+void video_clear(void) {
+    uint8_t *current_fb = video_current_framebuffer();
+    memset(current_fb, 0x0, sizeof(uint8_t)*SCANWIDTH*SCANHEIGHT);
+    video_setDirty();
+}
+
 void video_redraw(void) {
 
     // temporarily reset softswitches
@@ -1107,5 +1146,140 @@ void video_redraw(void) {
     }
 
     softswitches = softswitches_save;
+    video_setDirty();
+}
+
+// ----------------------------------------------------------------------------
+// VBL/timing routines
+
+// References to Jim Sather's books are given as eg:
+// UTAIIe:5-7,P3 (Understanding the Apple IIe, chapter 5, page 7, Paragraph 3)
+
+extern unsigned int CpuGetCyclesThisVideoFrame(void);
+uint16_t video_scanner_get_address(bool *vblBarOut) {
+    const bool SW_HIRES   = (softswitches & SS_HIRES);
+    const bool SW_TEXT    = (softswitches & SS_TEXT);
+    const bool SW_PAGE2   = (softswitches & SS_PAGE2);
+    const bool SW_80STORE = (softswitches & SS_80STORE);
+    const bool SW_MIXED   = (softswitches & SS_MIXED);
+
+    // get video scanner position
+    unsigned int nCycles = CpuGetCyclesThisVideoFrame();
+
+    // machine state switches
+    int nHires   = (SW_HIRES && !SW_TEXT) ? 1 : 0;
+    int nPage2   = SW_PAGE2 ? 1 : 0;
+    int n80Store = SW_80STORE ? 1 : 0;
+
+    // calculate video parameters according to display standard
+    int nScanLines  = bVideoScannerNTSC ? kNTSCScanLines : kPALScanLines;
+    int nVSyncLine  = bVideoScannerNTSC ? kNTSCVSyncLine : kPALVSyncLine;
+    int nScanCycles = nScanLines * kHClocks;
+
+    // calculate horizontal scanning state
+    int nHClock = (nCycles + kHPEClock) % kHClocks; // which horizontal scanning clock
+    int nHState = kHClock0State + nHClock; // H state bits
+    if (nHClock >= kHPresetClock) // check for horizontal preset
+    {
+        nHState -= 1; // correct for state preset (two 0 states)
+    }
+    int h_0 = (nHState >> 0) & 1; // get horizontal state bits
+    int h_1 = (nHState >> 1) & 1;
+    int h_2 = (nHState >> 2) & 1;
+    int h_3 = (nHState >> 3) & 1;
+    int h_4 = (nHState >> 4) & 1;
+    int h_5 = (nHState >> 5) & 1;
+
+    // calculate vertical scanning state
+    int nVLine  = nCycles / kHClocks; // which vertical scanning line
+    int nVState = kVLine0State + nVLine; // V state bits
+    if ((nVLine >= kVPresetLine)) // check for previous vertical state preset
+    {
+        nVState -= nScanLines; // compensate for preset
+    }
+    int v_A = (nVState >> 0) & 1; // get vertical state bits
+    int v_B = (nVState >> 1) & 1;
+    int v_C = (nVState >> 2) & 1;
+    int v_0 = (nVState >> 3) & 1;
+    int v_1 = (nVState >> 4) & 1;
+    int v_2 = (nVState >> 5) & 1;
+    int v_3 = (nVState >> 6) & 1;
+    int v_4 = (nVState >> 7) & 1;
+    int v_5 = (nVState >> 8) & 1;
+
+    // calculate scanning memory address
+    if (nHires && SW_MIXED && v_4 && v_2) // HIRES TIME signal (UTAIIe:5-7,P3)
+    {
+        nHires = 0; // address is in text memory for mixed hires
+    }
+
+    int nAddend0 = 0x0D; // 1            1            0            1
+    int nAddend1 =              (h_5 << 2) | (h_4 << 1) | (h_3 << 0);
+    int nAddend2 = (v_4 << 3) | (v_3 << 2) | (v_4 << 1) | (v_3 << 0);
+    int nSum     = (nAddend0 + nAddend1 + nAddend2) & 0x0F; // SUM (UTAIIe:5-9)
+
+    unsigned int nAddress = 0; // build address from video scanner equations (UTAIIe:5-8,T5.1)
+    nAddress |= h_0  << 0; // a0
+    nAddress |= h_1  << 1; // a1
+    nAddress |= h_2  << 2; // a2
+    nAddress |= nSum << 3; // a3 - a6
+    nAddress |= v_0  << 7; // a7
+    nAddress |= v_1  << 8; // a8
+    nAddress |= v_2  << 9; // a9
+
+    int p2a = !(nPage2 && !n80Store);
+    int p2b = nPage2 && !n80Store;
+
+    if (nHires) // hires?
+    {
+        // Y: insert hires-only address bits
+        nAddress |= v_A << 10; // a10
+        nAddress |= v_B << 11; // a11
+        nAddress |= v_C << 12; // a12
+        nAddress |= p2a << 13; // a13
+        nAddress |= p2b << 14; // a14
+    }
+    else
+    {
+        // N: insert text-only address bits
+        nAddress |= p2a << 10; // a10
+        nAddress |= p2b << 11; // a11
+
+        // Apple ][ (not //e) and HBL?
+        if (false/*IS_APPLE2*/ && // Apple II only (UTAIIe:I-4,#5)
+            !h_5 && (!h_4 || !h_3)) // HBL (UTAIIe:8-10,F8.5)
+        {
+            nAddress |= 1 << 12; // Y: a12 (add $1000 to address!)
+        }
+    }
+
+    // update VBL' state
+    if (vblBarOut != NULL)
+    {
+        *vblBarOut = !v_4 || !v_3; // VBL' = (v_4 & v_3)' (UTAIIe:5-10,#3)
+    }
+
+    return (uint16_t)nAddress;
+}
+
+uint8_t floating_bus(void) {
+    uint16_t scanner_addr = video_scanner_get_address(NULL);
+    return apple_ii_64k[0][scanner_addr];
+}
+
+uint8_t floating_bus_hibit(const bool hibit) {
+    uint16_t scanner_addr = video_scanner_get_address(NULL);
+    uint8_t b = apple_ii_64k[0][scanner_addr];
+    return (b & ~0x80) | (hibit ? 0x80 : 0);
+}
+
+__attribute__((constructor(CTOR_PRIORITY_LATE)))
+static void _init_interface(void) {
+    LOG("Initializing display subsystem");
+    _initialize_interface_fonts();
+    _initialize_hires_values();
+    _initialize_row_col_tables();
+    _initialize_dhires_values();
+    _initialize_color();
 }
 
