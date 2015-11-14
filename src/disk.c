@@ -496,7 +496,6 @@ GLUE_C_READ(disk_read_write_byte)
             // TODO FIXME ... methinks we shouldn't need to reload, but :
             //  * testing shows different intermediate results (SIXBITNIBS, etc)
             //  * could be instability between the {de,}nibblize routines
-            const uintptr_t niboff = NIB_TRACK_SIZE * (disk6.disk[disk6.drive].phase >> 1);
             size_t track_width = load_track_data(disk6.drive);
             if (track_width != disk6.disk[disk6.drive].track_width) {
                 ////ERRLOG_THROTTLE("OOPS, problem loading track data");
@@ -576,15 +575,18 @@ GLUE_C_READ(disk_read_phase)
     int phase = (ea>>1)&3;
     int phase_bit = (1 << phase);
 
-    char *phase_str = NULL;
     if (ea & 1) {
-        phase_str = "on ";
         stepper_phases |= phase_bit;
     } else {
-        phase_str = "off";
         stepper_phases &= ~phase_bit;
     }
 #if DISK_TRACING
+    char *phase_str = NULL;
+    if (ea & 1) {
+        phase_str = "on ";
+    } else {
+        phase_str = "off";
+    }
     if (test_read_fp) {
         fprintf(test_read_fp,  "\ntrack %02X phases %X phase %d %s address $C0E%X\n", disk6.disk[disk6.drive].phase, stepper_phases, phase, phase_str, ea&0xF);
     }
@@ -726,7 +728,8 @@ const char *disk6_eject(int drive) {
 
     const char *err = NULL;
 
-    if (disk6.disk[drive].fd > 0) {
+    if (disk6.disk[drive].fd >= 0) {
+        assert(disk6.disk[drive].fd != 0);
         disk6_flush(drive);
 
         int ret = -1;

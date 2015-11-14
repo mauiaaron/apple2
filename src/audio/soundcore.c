@@ -37,8 +37,6 @@ long audio_createSoundBuffer(INOUT AudioBuffer_s **audioBuffer) {
         return -1;
     }
 
-    AudioSettings_s *settings = &audio_backend->systemSettings;
-
     if (*audioBuffer) {
         audio_destroySoundBuffer(audioBuffer);
     }

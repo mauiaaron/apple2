@@ -992,7 +992,7 @@ static void MB_Update()
 
 	unsigned long dwCurrentPlayCursor, dwCurrentWriteCursor;
 #ifdef APPLE2IX
-        dwCurrentWriteCursor = 0;
+        //dwCurrentWriteCursor = 0;
 	int hr = MockingboardVoice->GetCurrentPosition(MockingboardVoice, &dwCurrentPlayCursor);
 #else
 	int hr = MockingboardVoice->GetCurrentPosition(&dwCurrentPlayCursor, &dwCurrentWriteCursor);

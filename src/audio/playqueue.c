@@ -202,7 +202,9 @@ void playq_destroyPlayQueue(INOUT PlayQueue_s **queue) {
         return;
     }
 
-    playq_drain(*queue);
+    if ((*queue)->Drain) {
+        (*queue)->Drain(*queue);
+    }
 
     PQList_s *list = (PQList_s *)((*queue)->_internal);
     if (list) {
@@ -224,7 +226,7 @@ PlayQueue_s *playq_createPlayQueue(const long *nodeIdPtr, unsigned long numBuffe
     assert(numBuffers <= MAX_PLAYQ_BUFFERS);
 
     do {
-        playq = malloc(sizeof(PlayQueue_s));
+        playq = calloc(1, sizeof(PlayQueue_s));
         if (!playq) {
             ERRLOG("no memory");
             break;

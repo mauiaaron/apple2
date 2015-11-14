@@ -108,7 +108,7 @@ static inline GLsizei getGLTypeSize(GLenum type) {
         case GL_FLOAT:
             return sizeof(GLfloat);
     }
-    return 0;
+    return sizeof(GLvoid);
 }
 
 #endif //__MODEL_UTIL_H__
