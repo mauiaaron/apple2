@@ -102,6 +102,10 @@
 {
     cpu_pause();
     timing_toggleCPUSpeed();
+    if (video_backend && video_backend->animation_showCPUSpeed)
+    {
+        video_backend->animation_showCPUSpeed();
+    }
     cpu_resume();
 }
 
