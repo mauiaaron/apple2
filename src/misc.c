@@ -15,6 +15,9 @@
 
 #include "common.h"
 
+#define SAVE_MAGICK "A2VM"
+#define SAVE_MAGICK_LEN sizeof(SAVE_MAGICK)
+
 bool do_logging = true; // also controlled by NDEBUG
 FILE *error_log = NULL;
 int sound_volume = 2;
@@ -33,6 +36,155 @@ static void _init_common(void) {
 #elif !defined(__APPLE__)
 #   error "Specify a CONFIG_DATADIR and PACKAGE_NAME"
 #endif
+}
+
+static bool _save_state(int fd, const uint8_t * outbuf, ssize_t outmax) {
+    ssize_t outlen = 0;
+    do {
+        if (TEMP_FAILURE_RETRY(outlen = write(fd, outbuf, outmax)) == -1) {
+            ERRLOG("error writing emulator save state file");
+            break;
+        }
+        outbuf += outlen;
+        outmax -= outlen;
+    } while (outmax > 0);
+
+    return outmax == 0;
+}
+
+static bool _load_state(int fd, uint8_t * inbuf, ssize_t inmax) {
+    ssize_t inlen = 0;
+    do {
+        if (TEMP_FAILURE_RETRY(inlen = read(fd, inbuf, inmax)) == -1) {
+            ERRLOG("error reading emulator save state file");
+            break;
+        }
+        if (inlen == 0) {
+            ERRLOG("error reading emulator save state file (truncated)");
+            break;
+        }
+        inbuf += inlen;
+        inmax -= inlen;
+    } while (inmax > 0);
+
+    return inmax == 0;
+}
+
+bool emulator_saveState(const char * const path) {
+    int fd = -1;
+    bool saved = false;
+
+    assert(cpu_isPaused() && "should be paused to save state");
+
+    do {
+        TEMP_FAILURE_RETRY(fd = open(path, O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR));
+        if (fd < 0) {
+            break;
+        }
+        assert(fd != 0 && "crazy platform");
+
+        // save header
+        if (!_save_state(fd, SAVE_MAGICK, SAVE_MAGICK_LEN)) {
+            break;
+        }
+
+        StateHelper_s helper = {
+            .fd = fd,
+            .save = &_save_state,
+            .load = &_load_state,
+        };
+
+        if (!disk6_saveState(&helper)) {
+            break;
+        }
+
+        if (!vm_saveState(&helper)) {
+            break;
+        }
+
+        if (!cpu65_saveState(&helper)) {
+            break;
+        }
+
+        if (!video_saveState(&helper)) {
+            break;
+        }
+
+        TEMP_FAILURE_RETRY(fsync(fd));
+        saved = true;
+    } while (0);
+
+    if (fd >= 0) {
+        TEMP_FAILURE_RETRY(close(fd));
+    }
+
+    if (!saved) {
+        ERRLOG("could not write to the emulator save state file");
+        unlink(path);
+    }
+
+    return saved;
+}
+
+bool emulator_loadState(const char * const path) {
+    int fd = -1;
+    bool loaded = false;
+
+    assert(cpu_isPaused() && "should be paused to load state");
+
+    do {
+        TEMP_FAILURE_RETRY(fd = open(path, O_RDONLY));
+        if (fd < 0) {
+            break;
+        }
+        assert(fd != 0 && "crazy platform");
+
+        // load header
+        uint8_t magick[SAVE_MAGICK_LEN] = { 0 };
+        if (!_load_state(fd, magick, SAVE_MAGICK_LEN)) {
+            break;
+        }
+
+        // check header
+        if (memcmp(magick, SAVE_MAGICK, SAVE_MAGICK_LEN) != 0) {
+            ERRLOG("bad header magick in emulator save state file");
+            break;
+        }
+
+        StateHelper_s helper = {
+            .fd = fd,
+            .save = &_save_state,
+            .load = &_load_state,
+        };
+
+        if (!disk6_loadState(&helper)) {
+            break;
+        }
+
+        if (!vm_loadState(&helper)) {
+            break;
+        }
+
+        if (!cpu65_loadState(&helper)) {
+            break;
+        }
+
+        if (!video_loadState(&helper)) {
+            break;
+        }
+
+        loaded = true;
+    } while (0);
+
+    if (fd >= 0) {
+        TEMP_FAILURE_RETRY(close(fd));
+    }
+
+    if (!loaded) {
+        ERRLOG("could not load emulator save state file");
+    }
+
+    return loaded;
 }
 
 static void _shutdown_threads(void) {

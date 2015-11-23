@@ -157,6 +157,9 @@ static inline unsigned long video_clearDirty(void) {
     return __sync_fetch_and_and(&_backend_vid_dirty, 0UL);
 }
 
+extern bool video_saveState(StateHelper_s *helper);
+extern bool video_loadState(StateHelper_s *helper);
+
 // ----------------------------------------------------------------------------
 
 /*

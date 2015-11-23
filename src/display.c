@@ -1094,6 +1094,46 @@ void video_clear(void) {
     video_setDirty();
 }
 
+bool video_saveState(StateHelper_s *helper) {
+    bool saved = false;
+    int fd = helper->fd;
+
+    do {
+        uint8_t state = 0x0;
+
+        state = (uint8_t)video__current_page;
+        if (!helper->save(fd, &state, 1)) {
+            break;
+        }
+        LOG("SAVE video__current_page = %02x", state);
+
+        saved = true;
+    } while (0);
+
+    return saved;
+}
+
+bool video_loadState(StateHelper_s *helper) {
+    bool loaded = false;
+    int fd = helper->fd;
+
+    do {
+        uint8_t state = 0x0;
+
+        if (!helper->load(fd, &state, 1)) {
+            break;
+        }
+        video__current_page = state;
+        LOG("LOAD video__current_page = %02x", video__current_page);
+
+        loaded = true;
+    } while (0);
+
+    video_redraw();
+
+    return loaded;
+}
+
 void video_redraw(void) {
 
     // temporarily reset softswitches

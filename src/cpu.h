@@ -51,6 +51,9 @@ extern void cpu65_uninterrupt(int reason);
 extern void cpu65_run(void);
 extern void cpu65_reboot(void);
 
+extern bool cpu65_saveState(StateHelper_s *helper);
+extern bool cpu65_loadState(StateHelper_s *helper);
+
 extern void cpu65_direct_write(int ea,int data);
 
 extern void *cpu65_vmem_r[65536];

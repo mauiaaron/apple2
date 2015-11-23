@@ -30,6 +30,22 @@ void emulator_start(void);
 void emulator_shutdown(void);
 
 //
+// Emulator state save/restore
+//
+
+typedef struct StateHelper_s {
+    int fd;
+    bool (*save)(int fd, const uint8_t * outbuf, ssize_t outmax);
+    bool (*load)(int fd, uint8_t * inbuf, ssize_t inmax);
+} StateHelper_s;
+
+// save current emulator state
+bool emulator_saveState(const char * const path);
+
+// load emulator state from save path
+bool emulator_loadState(const char * const path);
+
+//
 // Crash handling ...
 //
 

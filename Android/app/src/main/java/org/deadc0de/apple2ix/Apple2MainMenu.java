@@ -66,6 +66,17 @@ public class Apple2MainMenu {
                 mainMenu.showDisksMenu();
             }
         },
+        SAVE_RESTORE {
+            @Override public String getTitle(Context ctx) {
+                return ctx.getResources().getString(R.string.saverestore);
+            }
+            @Override public String getSummary(Context ctx) {
+                return ctx.getResources().getString(R.string.saverestore_summary);
+            }
+            @Override public void handleSelection(Apple2MainMenu mainMenu) {
+                mainMenu.mActivity.maybeSaveRestore();
+            }
+        },
         REBOOT_EMULATOR {
             @Override public String getTitle(Context ctx) {
                 return ctx.getResources().getString(R.string.reboot);

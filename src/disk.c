@@ -906,6 +906,225 @@ void disk6_flush(int drive) {
     }
 }
 
+bool disk6_saveState(StateHelper_s *helper) {
+    bool saved = false;
+    int fd = helper->fd;
+
+    do {
+        uint8_t state = 0x0;
+
+        state = (uint8_t)disk6.motor_off;
+        if (!helper->save(fd, &state, 1)) {
+            break;
+        }
+        LOG("SAVE motor_off = %02x", state);
+
+        state = (uint8_t)disk6.drive;
+        if (!helper->save(fd, &state, 1)) {
+            break;
+        }
+        LOG("SAVE drive = %02x", state);
+
+        state = (uint8_t)disk6.ddrw;
+        if (!helper->save(fd, &state, 1)) {
+            break;
+        }
+        LOG("SAVE ddrw = %02x", state);
+
+        state = (uint8_t)disk6.disk_byte;
+        if (!helper->save(fd, &state, 1)) {
+            break;
+        }
+        LOG("SAVE disk_byte = %02x", state);
+
+        // Drive A/B
+
+        bool saved_drives = false;
+        for (unsigned long i=0; i<3; i++) {
+            if (i >= 2) {
+                saved_drives = true;
+                break;
+            }
+
+            state = (uint8_t)disk6.disk[i].is_protected;
+            if (!helper->save(fd, &state, 1)) {
+                break;
+            }
+            LOG("SAVE is_protected[%lu] = %02x", i, state);
+
+            uint8_t serialized[4] = { 0 };
+
+            if (disk6.disk[i].file_name != NULL) {
+                uint32_t namelen = strlen(disk6.disk[i].file_name);
+                serialized[0] = (uint8_t)((namelen & 0xFF000000) >> 24);
+                serialized[1] = (uint8_t)((namelen & 0xFF0000  ) >> 16);
+                serialized[2] = (uint8_t)((namelen & 0xFF00    ) >>  8);
+                serialized[3] = (uint8_t)((namelen & 0xFF      ) >>  0);
+                if (!helper->save(fd, serialized, 4)) {
+                    break;
+                }
+
+                if (!helper->save(fd, disk6.disk[i].file_name, namelen)) {
+                    break;
+                }
+
+                LOG("SAVE disk[%lu] : (%u) %s", i, namelen, disk6.disk[i].file_name);
+            } else {
+                memset(serialized, 0x0, sizeof(serialized));
+                if (!helper->save(fd, serialized, 4)) {
+                    break;
+                }
+                LOG("SAVE disk[%lu] (0) <NULL>", i);
+            }
+
+            state = (uint8_t)disk6.disk[i].track_valid;
+            if (!helper->save(fd, &state, 1)) {
+                break;
+            }
+            LOG("SAVE track_valid[%lu] = %02x", i, state);
+
+            state = (uint8_t)disk6.disk[i].track_dirty;
+            if (!helper->save(fd, &state, 1)) {
+                break;
+            }
+            LOG("SAVE track_dirty[%lu] = %02x", i, state);
+
+            state = (uint8_t)disk6.disk[i].phase;
+            if (!helper->save(fd, &state, 1)) {
+                break;
+            }
+            LOG("SAVE phase[%lu] = %02x", i, state);
+
+            serialized[0] = (uint8_t)((disk6.disk[i].run_byte & 0xFF00) >>  8);
+            serialized[1] = (uint8_t)((disk6.disk[i].run_byte & 0xFF  ) >>  0);
+            if (!helper->save(fd, serialized, 2)) {
+                break;
+            }
+            LOG("SAVE run_byte[%lu] = %04x", i, disk6.disk[i].run_byte);
+        }
+
+        if (!saved_drives) {
+            break;
+        }
+
+        saved = true;
+    } while (0);
+
+    return saved;
+}
+
+bool disk6_loadState(StateHelper_s *helper) {
+    bool loaded = false;
+    int fd = helper->fd;
+
+    do {
+        uint8_t state = 0x0;
+
+        if (!helper->load(fd, &state, 1)) {
+            break;
+        }
+        disk6.motor_off = state;
+        LOG("LOAD motor_off = %02x", disk6.motor_off);
+
+        if (!helper->load(fd, &state, 1)) {
+            break;
+        }
+        disk6.drive = state;
+        LOG("LOAD drive = %02x", disk6.drive);
+
+        if (!helper->load(fd, &state, 1)) {
+            break;
+        }
+        disk6.ddrw = state;
+        LOG("LOAD ddrw = %02x", disk6.ddrw);
+
+        if (!helper->load(fd, &state, 1)) {
+            break;
+        }
+        disk6.disk_byte = state;
+        LOG("LOAD disk_byte = %02x", disk6.disk_byte);
+
+        // Drive A/B
+
+        bool loaded_drives = false;
+
+        for (unsigned long i=0; i<3; i++) {
+            if (i >= 2) {
+                loaded_drives = true;
+                break;
+            }
+
+            uint8_t serialized[4] = { 0 };
+
+            if (!helper->load(fd, &state, 1)) {
+                break;
+            }
+            disk6.disk[i].is_protected = state;
+            LOG("LOAD is_protected[%lu] = %02x", i, disk6.disk[i].is_protected);
+
+            if (!helper->load(fd, serialized, 4)) {
+                break;
+            }
+            uint32_t namelen = 0x0;
+            namelen  = (uint32_t)(serialized[0] << 24);
+            namelen |= (uint32_t)(serialized[1] << 16);
+            namelen |= (uint32_t)(serialized[2] <<  8);
+            namelen |= (uint32_t)(serialized[3] <<  0);
+
+            disk6_eject(i);
+
+            if (namelen) {
+                unsigned long gzlen = (_GZLEN+1);
+                char *namebuf = malloc(namelen+gzlen+1);
+                if (!helper->load(fd, namebuf, namelen)) {
+                    FREE(namebuf);
+                    break;
+                }
+
+                snprintf(namebuf+namelen, gzlen, "%s", DISK_EXT_GZ);
+                namebuf[namelen+gzlen] = '\0';
+                LOG("LOAD disk[%lu] : (%u) %s", i, namelen, namebuf);
+                disk6_insert(i, namebuf, disk6.disk[i].is_protected);
+
+                FREE(namebuf);
+            }
+
+            if (!helper->load(fd, &state, 1)) {
+                break;
+            }
+            disk6.disk[i].track_valid = state;
+            LOG("LOAD track_valid[%lu] = %02x", i, disk6.disk[i].track_valid);
+
+            if (!helper->load(fd, &state, 1)) {
+                break;
+            }
+            disk6.disk[i].track_dirty = state;
+            LOG("LOAD track_dirty[%lu] = %02x", i, disk6.disk[i].track_dirty);
+
+            if (!helper->load(fd, &state, 1)) {
+                break;
+            }
+            disk6.disk[i].phase = state;
+            LOG("LOAD phase[%lu] = %02x", i, disk6.disk[i].phase);
+
+            if (!helper->load(fd, serialized, 2)) {
+                break;
+            }
+            disk6.disk[i].run_byte  = (uint32_t)(serialized[0] << 8);
+            disk6.disk[i].run_byte |= (uint32_t)(serialized[1] << 0);
+            LOG("LOAD run_byte[%lu] = %04x", i, disk6.disk[i].run_byte);
+        }
+
+        if (!loaded_drives) {
+            break;
+        }
+
+        loaded = true;
+    } while (0);
+
+    return loaded;
+}
+
 #if DISK_TRACING
 void c_begin_disk_trace_6(const char *read_file, const char *write_file) {
     if (read_file) {

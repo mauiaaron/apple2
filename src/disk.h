@@ -81,13 +81,16 @@ extern drive_t disk6;
 extern void disk6_init(void);
 
 // insert 5.25 disk image file
-extern const char *disk6_insert(int drive, const char * const file_name, int force);
+extern const char *disk6_insert(int drive, const char * const file_name, int readonly);
 
 // eject 5.25 disk image file
 extern const char *disk6_eject(int drive);
 
 // flush all I/O
 extern void disk6_flush(int drive);
+
+extern bool disk6_saveState(StateHelper_s *helper);
+extern bool disk6_loadState(StateHelper_s *helper);
 
 #if DISK_TRACING
 void c_toggle_disk_trace_6(const char *read_file, const char *write_file);

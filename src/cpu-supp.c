@@ -654,6 +654,105 @@ void cpu65_reboot(void) {
     cpu65_interrupt(ResetSig);
 }
 
+bool cpu65_saveState(StateHelper_s *helper) {
+    bool saved = false;
+    int fd = helper->fd;
+
+    do {
+        uint8_t serialized[4] = { 0 };
+
+        // save CPU state
+        serialized[0] = ((cpu65_pc & 0xFF00) >> 8);
+        serialized[1] = ((cpu65_pc & 0xFF  ) >> 0);
+        if (!helper->save(fd, serialized, sizeof(cpu65_pc))) {
+            break;
+        }
+        LOG("SAVE cpu65_pc = %04x", cpu65_pc);
+
+        serialized[0] = ((cpu65_ea & 0xFF00) >> 8);
+        serialized[1] = ((cpu65_ea & 0xFF  ) >> 0);
+        if (!helper->save(fd, serialized, sizeof(cpu65_ea))) {
+            break;
+        }
+        LOG("SAVE cpu65_ea = %04x", cpu65_ea);
+
+        if (!helper->save(fd, &cpu65_a, sizeof(cpu65_a))) {
+            break;
+        }
+        LOG("SAVE cpu65_a = %02x", cpu65_a);
+        if (!helper->save(fd, &cpu65_f, sizeof(cpu65_f))) {
+            break;
+        }
+        LOG("SAVE cpu65_f = %02x", cpu65_f);
+        if (!helper->save(fd, &cpu65_x, sizeof(cpu65_x))) {
+            break;
+        }
+        LOG("SAVE cpu65_x = %02x", cpu65_x);
+        if (!helper->save(fd, &cpu65_y, sizeof(cpu65_y))) {
+            break;
+        }
+        LOG("SAVE cpu65_y = %02x", cpu65_y);
+        if (!helper->save(fd, &cpu65_sp, sizeof(cpu65_sp))) {
+            break;
+        }
+        LOG("SAVE cpu65_sp = %02x", cpu65_sp);
+
+        saved = true;
+    } while (0);
+
+    return saved;
+}
+
+bool cpu65_loadState(StateHelper_s *helper) {
+    bool loaded = false;
+    int fd = helper->fd;
+
+    do {
+
+        uint8_t serialized[4] = { 0 };
+
+        // load CPU state
+        if (!helper->load(fd, serialized, sizeof(uint16_t))) {
+            break;
+        }
+        cpu65_pc  = (serialized[0] << 8);
+        cpu65_pc |=  serialized[1];
+        LOG("LOAD cpu65_pc = %04x", cpu65_pc);
+
+        if (!helper->load(fd, serialized, sizeof(uint16_t))) {
+            break;
+        }
+        cpu65_ea  = (serialized[0] << 8);
+        cpu65_ea |=  serialized[1];
+        LOG("LOAD cpu65_ea = %04x", cpu65_ea);
+
+        if (!helper->load(fd, &cpu65_a, sizeof(cpu65_a))) {
+            break;
+        }
+        LOG("LOAD cpu65_a = %02x", cpu65_a);
+        if (!helper->load(fd, &cpu65_f, sizeof(cpu65_f))) {
+            break;
+        }
+        LOG("LOAD cpu65_f = %02x", cpu65_f);
+        if (!helper->load(fd, &cpu65_x, sizeof(cpu65_x))) {
+            break;
+        }
+        LOG("LOAD cpu65_x = %02x", cpu65_x);
+        if (!helper->load(fd, &cpu65_y, sizeof(cpu65_y))) {
+            break;
+        }
+        LOG("LOAD cpu65_y = %02x", cpu65_y);
+        if (!helper->load(fd, &cpu65_sp, sizeof(cpu65_sp))) {
+            break;
+        }
+        LOG("LOAD cpu65_sp = %02x", cpu65_sp);
+
+        loaded = true;
+    } while (0);
+
+    return loaded;
+}
+
 #if CPU_TRACING
 
 /* -------------------------------------------------------------------------

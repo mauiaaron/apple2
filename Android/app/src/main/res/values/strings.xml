@@ -160,6 +160,11 @@
     <string name="reboot_really">Reboot emulator?</string>
     <string name="reboot_summary"></string>
     <string name="reboot_warning">You will lose unsaved progress</string>
+    <string name="restore">Quick restore</string>
+    <string name="save">Quick save</string>
+    <string name="saverestore">Save &amp; restore…</string>
+    <string name="saverestore_choice">Save current state, restore previous, or cancel?</string>
+    <string name="saverestore_summary">Quick save and restore</string>
     <string name="skip">Skip&#8594;</string>
     <string name="spacer"></string>
     <string name="speaker_disabled_title">Speaker disabled</string>

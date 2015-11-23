@@ -341,6 +341,32 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeEjectDisk(JNIEnv *env, jobj
     disk6_eject(!driveA);
 }
 
+void Java_org_deadc0de_apple2ix_Apple2Activity_nativeSaveState(JNIEnv *env, jobject obj, jstring jPath) {
+    const char *path = (*env)->GetStringUTFChars(env, jPath, NULL);
+
+    assert(cpu_isPaused() && "considered dangerous to save state CPU thread is running");
+
+    LOG(": (%s)", path);
+    if (!emulator_saveState(path)) {
+        LOG("OOPS, could not save emulator state");
+    }
+
+    (*env)->ReleaseStringUTFChars(env, jPath, path);
+}
+
+void Java_org_deadc0de_apple2ix_Apple2Activity_nativeLoadState(JNIEnv *env, jobject obj, jstring jPath) {
+    const char *path = (*env)->GetStringUTFChars(env, jPath, NULL);
+
+    assert(cpu_isPaused() && "considered dangerous to save state CPU thread is running");
+
+    LOG(": (%s)", path);
+    if (!emulator_loadState(path)) {
+        LOG("OOPS, could not load emulator state");
+    }
+
+    (*env)->ReleaseStringUTFChars(env, jPath, path);
+}
+
 // ----------------------------------------------------------------------------
 // Constructor
 

@@ -40,6 +40,7 @@ public class Apple2Activity extends Activity {
 
     private final static String TAG = "Apple2Activity";
     private final static int MAX_FINGERS = 32;// HACK ...
+    private final static String SAVE_FILE = "emulator.state";
     private static volatile boolean DEBUG_STRICT = false;
 
     private Apple2View mView = null;
@@ -93,6 +94,10 @@ public class Apple2Activity extends Activity {
     private native void nativeOnKeyDown(int keyCode, int metaState);
 
     private native void nativeOnKeyUp(int keyCode, int metaState);
+
+    private native void nativeSaveState(String path);
+
+    private native void nativeLoadState(String path);
 
     public native void nativeEmulationResume();
 
@@ -604,5 +609,27 @@ public class Apple2Activity extends Activity {
             }
         }).setNegativeButton(R.string.no, null).create();
         registerAndShowDialog(rebootDialog);
+    }
+
+    public void maybeSaveRestore() {
+        nativeEmulationPause();
+
+        final String quickSavePath = Apple2DisksMenu.getDataDir(this) + File.separator + SAVE_FILE;
+
+        AlertDialog saveRestoreDialog = new AlertDialog.Builder(this).setIcon(R.drawable.ic_launcher).setCancelable(true).setTitle(R.string.saverestore).setMessage(R.string.saverestore_choice).setPositiveButton(R.string.save, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                Apple2Activity.this.nativeSaveState(quickSavePath);
+                Apple2Activity.this.mMainMenu.dismiss();
+            }
+        }).setNeutralButton(R.string.restore, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                Apple2Activity.this.nativeLoadState(quickSavePath);
+                Apple2Activity.this.mMainMenu.dismiss();
+            }
+        }).setNegativeButton(R.string.no, null).create();
+
+        registerAndShowDialog(saveRestoreDialog);
     }
 }

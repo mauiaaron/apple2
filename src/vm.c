@@ -1224,6 +1224,387 @@ void vm_reinitializeAudio(void) {
 #warning TODO FIXME ... should unset MB/Phasor hooks if volume is zero ...
 }
 
+bool vm_saveState(StateHelper_s *helper) {
+    bool saved = false;
+    int fd = helper->fd;
+
+    do {
+        uint8_t serialized[8] = { 0 };
+
+        serialized[0] = (uint8_t)((softswitches & 0xFF000000) >> 24);
+        serialized[1] = (uint8_t)((softswitches & 0xFF0000  ) >> 16);
+        serialized[2] = (uint8_t)((softswitches & 0xFF00    ) >>  8);
+        serialized[3] = (uint8_t)((softswitches & 0xFF      ) >>  0);
+        LOG("SAVE softswitches = %08x", softswitches);
+        if (!helper->save(fd, serialized, sizeof(softswitches))) {
+            break;
+        }
+
+        // save main/aux memory state
+        if (!helper->save(fd, apple_ii_64k[0], sizeof(apple_ii_64k))) {
+            break;
+        }
+
+        // save language card
+        if (!helper->save(fd, language_card[0], sizeof(language_card))) {
+            break;
+        }
+
+        // save language banks
+        if (!helper->save(fd, language_banks[0], sizeof(language_banks))) {
+            break;
+        }
+
+        // save offsets
+        serialized[0] = 0x0;
+        serialized[1] = 0x1;
+        serialized[2] = 0x2;
+        serialized[3] = 0x3;
+        serialized[4] = 0x4;
+        serialized[5] = 0x5;
+        LOG("SAVE base_ramrd = %d", (base_ramrd == apple_ii_64k[0]) ? serialized[0] : serialized[1]);
+        if (!helper->save(fd, (base_ramrd == apple_ii_64k[0]) ? &serialized[0] : &serialized[1], 1)) {
+            break;
+        }
+        LOG("SAVE base_ramwrt = %d", (base_ramwrt == apple_ii_64k[0]) ? serialized[0] : serialized[1]);
+        if (!helper->save(fd, (base_ramwrt == apple_ii_64k[0]) ? &serialized[0] : &serialized[1], 1)) {
+            break;
+        }
+        LOG("SAVE base_textrd = %d", (base_textrd == apple_ii_64k[0]) ? serialized[0] : serialized[1]);
+        if (!helper->save(fd, (base_textrd == apple_ii_64k[0]) ? &serialized[0] : &serialized[1], 1)) {
+            break;
+        }
+        LOG("SAVE base_textwrt = %d", (base_textwrt == apple_ii_64k[0]) ? serialized[0] : serialized[1]);
+        if (!helper->save(fd, (base_textwrt == apple_ii_64k[0]) ? &serialized[0] : &serialized[1], 1)) {
+            break;
+        }
+        LOG("SAVE base_hgrrd = %d", (base_hgrrd == apple_ii_64k[0]) ? serialized[0] : serialized[1]);
+        if (!helper->save(fd, (base_hgrrd == apple_ii_64k[0]) ? &serialized[0] : &serialized[1], 1)) {
+            break;
+        }
+        LOG("SAVE base_hgrwrt = %d", (base_hgrwrt == apple_ii_64k[0]) ? serialized[0] : serialized[1]);
+        if (!helper->save(fd, (base_hgrwrt == apple_ii_64k[0]) ? &serialized[0] : &serialized[1], 1)) {
+            break;
+        }
+        LOG("SAVE base_stackzp = %d", (base_stackzp == apple_ii_64k[0]) ? serialized[0] : serialized[1]);
+        if (!helper->save(fd, (base_stackzp == apple_ii_64k[0]) ? &serialized[0] : &serialized[1], 1)) {
+            break;
+        }
+        LOG("SAVE base_c3rom = %d", (base_c3rom == apple_ii_64k[0]) ? serialized[0] : serialized[1]);
+        if (!helper->save(fd, (base_c3rom == apple_ii_64k[0]) ? &serialized[0] : &serialized[1], 1)) {
+            break;
+        }
+        LOG("SAVE base_cxrom = %d", (base_cxrom == apple_ii_64k[0]) ? serialized[0] : serialized[1]);
+        if (!helper->save(fd, (base_cxrom == apple_ii_64k[0]) ? &serialized[0] : &serialized[1], 1)) {
+            break;
+        }
+
+        if (base_d000_rd == apple_ii_64k[0]) {
+            LOG("SAVE base_d000_rd = %d", serialized[0]);
+            if (!helper->save(fd, &serialized[0], 1)) { // base_d000_rd --> //e ROM
+                break;
+            }
+        } else if (base_d000_rd == language_banks[0] - 0xD000) {
+            LOG("SAVE base_d000_rd = %d", serialized[2]);
+            if (!helper->save(fd, &serialized[2], 1)) { // base_d000_rd --> main LC mem
+                break;
+            }
+        } else if (base_d000_rd == language_banks[0] - 0xC000) {
+            LOG("SAVE base_d000_rd = %d", serialized[3]);
+            if (!helper->save(fd, &serialized[3], 1)) { // base_d000_rd --> main LC mem
+                break;
+            }
+        } else if (base_d000_rd == language_banks[1] - 0xD000) {
+            LOG("SAVE base_d000_rd = %d", serialized[4]);
+            if (!helper->save(fd, &serialized[4], 1)) { // base_d000_rd --> aux  LC mem
+                break;
+            }
+        } else if (base_d000_rd == language_banks[1] - 0xC000) {
+            LOG("SAVE base_d000_rd = %d", serialized[5]);
+            if (!helper->save(fd, &serialized[5], 1)) { // base_d000_rd --> aux  LC mem
+                break;
+            }
+        } else {
+            LOG("OOPS ... language_banks[0] == %p base_d000_rd == %p", language_banks[0], base_d000_rd);
+            RELEASE_BREAK();
+        }
+
+        if (base_d000_wrt == 0) {
+            LOG("SAVE base_d000_wrt = %d", serialized[0]);
+            if (!helper->save(fd, &serialized[0], 1)) { // base_d000_wrt --> no write
+                break;
+            }
+        } else if (base_d000_wrt == language_banks[0] - 0xD000) {
+            LOG("SAVE base_d000_wrt = %d", serialized[2]);
+            if (!helper->save(fd, &serialized[2], 1)) { // base_d000_wrt --> main LC mem
+                break;
+            }
+        } else if (base_d000_wrt == language_banks[0] - 0xC000) {
+            LOG("SAVE base_d000_wrt = %d", serialized[3]);
+            if (!helper->save(fd, &serialized[3], 1)) { // base_d000_wrt --> main LC mem
+                break;
+            }
+        } else if (base_d000_wrt == language_banks[1] - 0xD000) {
+            LOG("SAVE base_d000_wrt = %d", serialized[4]);
+            if (!helper->save(fd, &serialized[4], 1)) { // base_d000_wrt --> aux  LC mem
+                break;
+            }
+        } else if (base_d000_wrt == language_banks[1] - 0xC000) {
+            LOG("SAVE base_d000_wrt = %d", serialized[5]);
+            if (!helper->save(fd, &serialized[5], 1)) { // base_d000_wrt --> aux  LC mem
+                break;
+            }
+        } else {
+            LOG("OOPS ... language_banks[0] == %p base_d000_wrt == %p", language_banks[0], base_d000_wrt);
+            RELEASE_BREAK();
+        }
+
+        if (base_e000_rd == apple_ii_64k[0]) {
+            LOG("SAVE base_e000_rd = %d", serialized[0]);
+            if (!helper->save(fd, &serialized[0], 1)) { // base_e000_rd --> //e ROM
+                break;
+            }
+        } else if (base_e000_rd == language_card[0] - 0xE000) {
+            LOG("SAVE base_e000_rd = %d", serialized[2]);
+            if (!helper->save(fd, &serialized[2], 1)) { // base_e000_rd --> main LC mem
+                break;
+            }
+        } else if (base_e000_rd == language_card[0] - 0xC000) {
+            LOG("SAVE base_e000_rd = %d", serialized[3]);
+            if (!helper->save(fd, &serialized[3], 1)) { // base_e000_rd --> aux  LC mem
+                break;
+            }
+        } else {
+            LOG("OOPS ... language_card[0] == %p base_e000_rd == %p", language_card[0], base_e000_rd);
+            RELEASE_BREAK();
+        }
+
+        if (base_e000_wrt == 0) {
+            LOG("SAVE base_e000_wrt = %d", serialized[0]);
+            if (!helper->save(fd, &serialized[0], 1)) { // base_e000_wrt --> no write
+                break;
+            }
+        } else if (base_e000_wrt == language_card[0] - 0xE000) {
+            LOG("SAVE base_e000_wrt = %d", serialized[2]);
+            if (!helper->save(fd, &serialized[2], 1)) { // base_e000_wrt --> main LC mem
+                break;
+            }
+        } else if (base_e000_wrt == language_card[0] - 0xC000) {
+            LOG("SAVE base_e000_wrt = %d", serialized[3]);
+            if (!helper->save(fd, &serialized[3], 1)) { // base_e000_wrt --> aux  LC mem
+                break;
+            }
+        } else {
+            LOG("OOPS ... language_card[0] == %p base_e000_wrt == %p", language_card[0], base_e000_wrt);
+            RELEASE_BREAK();
+        }
+
+        saved = true;
+    } while (0);
+
+    return saved;
+}
+
+bool vm_loadState(StateHelper_s *helper) {
+    bool loaded = false;
+    int fd = helper->fd;
+
+    do {
+
+        uint8_t serialized[4] = { 0 };
+
+        if (!helper->load(fd, serialized, sizeof(uint32_t))) {
+            break;
+        }
+        softswitches  = (uint32_t)(serialized[0] << 24);
+        softswitches |= (uint32_t)(serialized[1] << 16);
+        softswitches |= (uint32_t)(serialized[2] <<  8);
+        softswitches |= (uint32_t)(serialized[3] <<  0);
+        LOG("LOAD softswitches = %08x", softswitches);
+
+        // load main/aux memory state
+        if (!helper->load(fd, apple_ii_64k[0], sizeof(apple_ii_64k))) {
+            break;
+        }
+
+        // load language card
+        if (!helper->load(fd, language_card[0], sizeof(language_card))) {
+            break;
+        }
+
+        // load language banks
+        if (!helper->load(fd, language_banks[0], sizeof(language_banks))) {
+            break;
+        }
+
+        // load offsets
+        uint8_t state = 0x0;
+        if (!helper->load(fd, &state, 1)) {
+            break;
+        }
+        LOG("LOAD base_ramrd = %d", state);
+        base_ramrd = state == 0x0 ? apple_ii_64k[0] : apple_ii_64k[1];
+
+        if (!helper->load(fd, &state, 1)) {
+            break;
+        }
+        LOG("LOAD base_ramwrt = %d", state);
+        base_ramwrt = state == 0x0 ? apple_ii_64k[0] : apple_ii_64k[1];
+
+        if (!helper->load(fd, &state, 1)) {
+            break;
+        }
+        LOG("LOAD base_textrd = %d", state);
+        base_textrd = state == 0x0 ? apple_ii_64k[0] : apple_ii_64k[1];
+
+        if (!helper->load(fd, &state, 1)) {
+            break;
+        }
+        LOG("LOAD base_textwrt = %d", state);
+        base_textwrt = state == 0x0 ? apple_ii_64k[0] : apple_ii_64k[1];
+
+        if (!helper->load(fd, &state, 1)) {
+            break;
+        }
+        LOG("LOAD base_hgrrd = %d", state);
+        base_hgrrd = state == 0x0 ? apple_ii_64k[0] : apple_ii_64k[1];
+
+        if (!helper->load(fd, &state, 1)) {
+            break;
+        }
+        LOG("LOAD base_hgrwrt = %d", state);
+        base_hgrwrt = state == 0x0 ? apple_ii_64k[0] : apple_ii_64k[1];
+
+        if (!helper->load(fd, &state, 1)) {
+            break;
+        }
+        LOG("LOAD base_stackzp = %d", state);
+        base_stackzp = state == 0x0 ? apple_ii_64k[0] : apple_ii_64k[1];
+
+        if (!helper->load(fd, &state, 1)) {
+            break;
+        }
+        LOG("LOAD base_c3rom = %d", state);
+        base_c3rom = state == 0x0 ? apple_ii_64k[0] : apple_ii_64k[1];
+
+        if (!helper->load(fd, &state, 1)) {
+            break;
+        }
+        LOG("LOAD base_cxrom = %d", state);
+        if (state == 0) {
+            base_cxrom = apple_ii_64k[0];
+#ifdef AUDIO_ENABLED
+            extern VMFunc MB_Read;
+            base_c4rom = (void *)MB_Read;
+            base_c5rom = (void *)MB_Read;
+#else
+            base_c4rom = (void *)ram_nop;
+            base_c5rom = (void *)ram_nop;
+#endif
+        } else {
+            base_cxrom = apple_ii_64k[1];
+            base_c4rom = apple_ii_64k[1];
+            base_c5rom = apple_ii_64k[1];
+        }
+
+        if (!helper->load(fd, &state, 1)) {
+            break;
+        }
+        switch (state) {
+            case 0:
+                base_d000_rd = apple_ii_64k[0];
+                break;
+            case 2:
+                base_d000_rd = language_banks[0] - 0xD000;
+                break;
+            case 3:
+                base_d000_rd = language_banks[0] - 0xC000;
+                break;
+            case 4:
+                base_d000_rd = language_banks[1] - 0xD000;
+                break;
+            case 5:
+                base_d000_rd = language_banks[1] - 0xC000;
+                break;
+            default:
+                LOG("Unknown state base_d000_rd %02x", state);
+                RELEASE_BREAK();
+                break;
+        }
+        LOG("LOAD base_d000_rd = %d", state);
+
+        if (!helper->load(fd, &state, 1)) {
+            break;
+        }
+        switch (state) {
+            case 0:
+                base_d000_wrt = 0;
+                break;
+            case 2:
+                base_d000_wrt = language_banks[0] - 0xD000;
+                break;
+            case 3:
+                base_d000_wrt = language_banks[0] - 0xC000;
+                break;
+            case 4:
+                base_d000_wrt = language_banks[1] - 0xD000;
+                break;
+            case 5:
+                base_d000_wrt = language_banks[1] - 0xC000;
+                break;
+            default:
+                LOG("Unknown state base_d000_wrt %02x", state);
+                RELEASE_BREAK();
+                break;
+        }
+        LOG("LOAD base_d000_wrt = %d", state);
+
+        if (!helper->load(fd, &state, 1)) {
+            break;
+        }
+        switch (state) {
+            case 0:
+                base_e000_rd = apple_ii_64k[0];
+                break;
+            case 2:
+                base_e000_rd = language_card[0] - 0xE000;
+                break;
+            case 3:
+                base_e000_rd = language_card[0] - 0xC000;
+                break;
+            default:
+                LOG("Unknown state base_e000_rd %02x", state);
+                RELEASE_BREAK();
+                break;
+        }
+        LOG("LOAD base_e000_rd = %d", state);
+
+        if (!helper->load(fd, &state, 1)) {
+            break;
+        }
+        switch (state) {
+            case 0:
+                base_e000_wrt = 0;
+                break;
+            case 2:
+                base_e000_wrt = language_card[0] - 0xE000;
+                break;
+            case 3:
+                base_e000_wrt = language_card[0] - 0xC000;
+                break;
+            default:
+                LOG("Unknown state base_e000_wrt %02x", state);
+                RELEASE_BREAK();
+                break;
+        }
+        LOG("LOAD base_e000_wrt = %d", state);
+
+        loaded = true;
+    } while (0);
+
+    return loaded;
+}
+
 void debug_print_softwitches(void) {
     // useful from GDB ...
 
