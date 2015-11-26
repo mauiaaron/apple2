@@ -77,26 +77,15 @@ public class Apple2MainMenu {
                 mainMenu.mActivity.maybeSaveRestore();
             }
         },
-        REBOOT_EMULATOR {
+        REBOOT_QUIT_EMULATOR {
             @Override public String getTitle(Context ctx) {
-                return ctx.getResources().getString(R.string.reboot);
+                return ctx.getResources().getString(R.string.quit_reboot);
             }
             @Override public String getSummary(Context ctx) {
-                return ctx.getResources().getString(R.string.reboot_summary);
+                return "";
             }
             @Override public void handleSelection(Apple2MainMenu mainMenu) {
-                mainMenu.mActivity.maybeReboot();
-            }
-        },
-        QUIT_EMULATOR {
-            @Override public String getTitle(Context ctx) {
-                return ctx.getResources().getString(R.string.quit);
-            }
-            @Override public String getSummary(Context ctx) {
-                return ctx.getResources().getString(R.string.quit_summary);
-            }
-            @Override public void handleSelection(Apple2MainMenu mainMenu) {
-                mainMenu.mActivity.maybeQuitApp();
+                mainMenu.mActivity.maybeRebootQuit();
             }
         };
 
@@ -174,7 +163,7 @@ public class Apple2MainMenu {
             @Override
             public void onDismiss() {
                 Apple2MainMenu.this.mActivity.maybeResumeCPU();
-            }
+                }
         });
     }
 

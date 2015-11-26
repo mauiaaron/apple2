@@ -576,9 +576,16 @@ public class Apple2Activity extends Activity {
         }
     }
 
-    public void maybeQuitApp() {
+    public void maybeRebootQuit() {
         nativeEmulationPause();
-        AlertDialog quitDialog = new AlertDialog.Builder(this).setIcon(R.drawable.ic_launcher).setCancelable(true).setTitle(R.string.quit_really).setMessage(R.string.quit_warning).setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+
+        AlertDialog rebootQuitDialog = new AlertDialog.Builder(this).setIcon(R.drawable.ic_launcher).setCancelable(true).setTitle(R.string.quit_reboot).setMessage(R.string.quit_reboot_choice).setPositiveButton(R.string.reboot, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                nativeReboot();
+                Apple2Activity.this.mMainMenu.dismiss();
+            }
+        }).setNeutralButton(R.string.quit, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 nativeOnQuit();
@@ -595,20 +602,9 @@ public class Apple2Activity extends Activity {
                     }
                 }.run();
             }
-        }).setNegativeButton(R.string.no, null).create();
-        registerAndShowDialog(quitDialog);
-    }
+        }).setNegativeButton(R.string.cancel, null).create();
 
-    public void maybeReboot() {
-        nativeEmulationPause();
-        AlertDialog rebootDialog = new AlertDialog.Builder(this).setIcon(R.drawable.ic_launcher).setCancelable(true).setTitle(R.string.reboot_really).setMessage(R.string.reboot_warning).setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                nativeReboot();
-                Apple2Activity.this.mMainMenu.dismiss();
-            }
-        }).setNegativeButton(R.string.no, null).create();
-        registerAndShowDialog(rebootDialog);
+        registerAndShowDialog(rebootQuitDialog);
     }
 
     public void maybeSaveRestore() {
@@ -628,7 +624,7 @@ public class Apple2Activity extends Activity {
                 Apple2Activity.this.nativeLoadState(quickSavePath);
                 Apple2Activity.this.mMainMenu.dismiss();
             }
-        }).setNegativeButton(R.string.no, null).create();
+        }).setNegativeButton(R.string.cancel, null).create();
 
         registerAndShowDialog(saveRestoreDialog);
     }
