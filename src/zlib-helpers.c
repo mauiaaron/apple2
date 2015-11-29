@@ -76,7 +76,7 @@ const char *zlib_deflate(const char* const src, const int expected_bytecount) {
             break;
         }
 
-        snprintf(dst, PATH_MAX-1, "%s%s", src, ".gz");
+        snprintf(dst, PATH_MAX-1, "%s%s", src, EXT_GZ);
 
         gzdest = gzopen(dst, "wb");
         if (gzdest == NULL) {
@@ -167,8 +167,8 @@ const char *zlib_inflate(const char* const src, const int expected_bytecount) {
 
         size_t len = strlen(src);
         snprintf(dst, PATH_MAX-1, "%s", src);
-        if (! ( (dst[len-3] == '.') && (dst[len-2] == 'g') && (dst[len-1] == 'z') ) ) {
-            ERRLOG("Expected filename ending in .gz");
+        if (!is_gz(dst)) {
+            ERRLOG("Expected filename ending in %s", EXT_GZ);
             break;
         }
         dst[len-3] = '\0';

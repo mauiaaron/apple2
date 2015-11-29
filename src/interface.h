@@ -89,5 +89,26 @@ extern void (*interface_setTouchMenuEnabled)(bool enabled);
 extern void (*interface_setTouchMenuVisibility)(float alpha);
 #endif
 
+#define EXT_GZ  ".gz"
+#define _GZLEN (sizeof(EXT_GZ)-1)
+
+// ----------------------------------------------------------------------------
+// file extension handling
+
+static inline bool is_gz(const char * const name) {
+    size_t len = strlen(name);
+    if (len <= _GZLEN) {
+        return false;
+    }
+    return strncmp(name+len-_GZLEN, EXT_GZ, _GZLEN) == 0;
+}
+
+static inline void cut_gz(char *name) {
+    size_t len = strlen(name);
+    if (len <= _GZLEN) {
+        return;
+    }
+    *(name+len-_GZLEN) = '\0';
+}
 
 #endif

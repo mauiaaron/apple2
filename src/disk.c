@@ -90,22 +90,6 @@ static void _init_disk6(void) {
     }
 }
 
-static inline void cut_gz(char *name) {
-    size_t len = strlen(name);
-    if (len <= _GZLEN) {
-        return;
-    }
-    *(name+len-_GZLEN) = '\0';
-}
-
-static inline bool is_gz(const char * const name) {
-    size_t len = strlen(name);
-    if (len <= _GZLEN) {
-        return false;
-    }
-    return strncmp(name+len-_GZLEN, DISK_EXT_GZ, _GZLEN) == 0;
-}
-
 static inline bool is_nib(const char * const name) {
     size_t len = strlen(name);
     if (len <= _NIBLEN) {
@@ -1081,7 +1065,7 @@ bool disk6_loadState(StateHelper_s *helper) {
                     break;
                 }
 
-                snprintf(namebuf+namelen, gzlen, "%s", DISK_EXT_GZ);
+                snprintf(namebuf+namelen, gzlen, "%s", EXT_GZ);
                 namebuf[namelen+gzlen] = '\0';
                 LOG("LOAD disk[%lu] : (%u) %s", i, namelen, namebuf);
                 disk6_insert(i, namebuf, disk6.disk[i].is_protected);

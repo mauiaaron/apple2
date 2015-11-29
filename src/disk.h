@@ -47,8 +47,6 @@
 #define _POLEN (sizeof(DISK_EXT_PO)-1)
 #define DISK_EXT_NIB ".nib"
 #define _NIBLEN (sizeof(DISK_EXT_NIB)-1)
-#define DISK_EXT_GZ  ".gz"
-#define _GZLEN (sizeof(DISK_EXT_GZ)-1)
 
 typedef struct diskette_t {
     char *file_name;
