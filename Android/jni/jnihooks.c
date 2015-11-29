@@ -102,6 +102,7 @@ static void discover_cpu_family(void) {
     AndroidCpuFamily family = android_getCpuFamily();
     uint64_t features = android_getCpuFeatures();
     if (family == ANDROID_CPU_FAMILY_X86) {
+        android_x86 = true;
         if (features & ANDROID_CPU_X86_FEATURE_SSSE3) {
             LOG("nANDROID_CPU_X86_FEATURE_SSSE3");
             android_x86SSSE3Enabled = true;
