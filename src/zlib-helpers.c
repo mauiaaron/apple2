@@ -51,11 +51,12 @@ static const char* const _gzerr(gzFile gzf) {
     }
 }
 
-/* Compress from file source to file dest until EOF on source.
-   def() returns Z_OK on success, Z_MEM_ERROR if memory could not be allocated
-   for processing, Z_VERSION_ERROR if the version of zlib.h and the version of
-   the library linked do not match, or Z_ERRNO if there is an error reading or
-   writing the files. */
+/* Compress some_file to some_file.gz and unlink previous.
+ *
+ * If expected_bytecount > 0, check that byte count written matches expected.
+ *
+ * Return NULL on success, or error string (possibly from zlib) on failure.
+ */
 const char *zlib_deflate(const char* const src, const int expected_bytecount) {
     unsigned char buf[CHUNK];
     int fd = -1;
@@ -114,7 +115,7 @@ const char *zlib_deflate(const char* const src, const int expected_bytecount) {
 
     } while (0);
 
-    if (bytecount != expected_bytecount) {
+    if (expected_bytecount && bytecount != expected_bytecount) {
         ERRLOG("OOPS did not write expected_bytecount of %d ... apparently wrote %d", expected_bytecount, bytecount);
         if (gzdest) {
             err = (char *)_gzerr(gzdest);
@@ -141,12 +142,12 @@ const char *zlib_deflate(const char* const src, const int expected_bytecount) {
     return err;
 }
 
-/* Decompress from file source to file dest until stream ends or EOF.
-   inf() returns Z_OK on success, Z_MEM_ERROR if memory could not be
-   allocated for processing, Z_DATA_ERROR if the deflate data is
-   invalid or incomplete, Z_VERSION_ERROR if the version of zlib.h and
-   the version of the library linked do not match, or Z_ERRNO if there
-   is an error reading or writing the files. */
+/* Decompress some_file.gz to some_file and unlink previous.
+ *
+ * If expected_bytecount > 0, check that byte count read matches expected.
+ *
+ * Return NULL on success, or error string (possibly from zlib) on failure.
+ */
 const char *zlib_inflate(const char* const src, const int expected_bytecount) {
     gzFile gzsource = NULL;
     int fd = -1;
@@ -214,7 +215,7 @@ const char *zlib_inflate(const char* const src, const int expected_bytecount) {
 
     } while (0);
 
-    if (bytecount != expected_bytecount) {
+    if (expected_bytecount && bytecount != expected_bytecount) {
         ERRLOG("OOPS did not write expected_bytecount of %d ... apparently wrote %d", expected_bytecount, bytecount);
         if (gzsource) {
             err = (char *)_gzerr(gzsource);
