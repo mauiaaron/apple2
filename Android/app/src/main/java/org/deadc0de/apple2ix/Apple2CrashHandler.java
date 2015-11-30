@@ -210,6 +210,7 @@ public class Apple2CrashHandler {
                         summary.append("MODEL: ").append(Build.MODEL).append("\n");
                         summary.append("MANUFACTURER: ").append(Build.MANUFACTURER).append("\n");
                         summary.append("DEVICE: ").append(Build.DEVICE).append("\n");
+                        summary.append("SDK: ").append(Build.VERSION.SDK_INT).append("\n");
                         summary.append("SAMPLE RATE: ").append(sampleRate).append("\n");
                         summary.append("MONO BUFSIZE: ").append(monoBufferSize).append("\n");
                         summary.append("STEREO BUFSIZE: ").append(stereoBufferSize).append("\n");
