@@ -298,6 +298,7 @@ static unsigned int _submit_samples_buffer(const unsigned long num_channel_sampl
         unsigned long system_buffer_size = 0;
         int16_t *system_samples_buffer = NULL;
 
+        const unsigned long maxSpeakerBytes = channelsSampleRateHz * sizeof(int16_t);
         unsigned long curr_buffer_size = requested_buffer_size;
         unsigned long samples_idx = 0;
         unsigned long counter = 0;
@@ -307,11 +308,10 @@ static unsigned int _submit_samples_buffer(const unsigned long num_channel_sampl
                 break;
             }
 
-            unsigned long maxSpeakerBytes = channelsSampleRateHz * sizeof(int16_t);
-
             if (system_buffer_size > maxSpeakerBytes) {
                 RELEASE_LOG("AVOIDING BUFOVER...");
                 system_buffer_size = maxSpeakerBytes;
+                requested_buffer_size = maxSpeakerBytes;
             }
 
             memcpy(system_samples_buffer, &samples_buffer[samples_idx], system_buffer_size);
