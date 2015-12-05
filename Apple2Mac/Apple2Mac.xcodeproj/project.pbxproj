@@ -248,8 +248,8 @@
 		77EB316C1A27A9AF00DC5A8A /* blank.dsk.gz in Resources */ = {isa = PBXBuildFile; fileRef = 4ADC523019E8D3F600186B36 /* blank.dsk.gz */; };
 		77EB316D1A27A9AF00DC5A8A /* blank.nib.gz in Resources */ = {isa = PBXBuildFile; fileRef = 4ADC523119E8D3F600186B36 /* blank.nib.gz */; };
 		77F80B441A2D95E300D45030 /* EmulatorJoystickCalibrationView.m in Sources */ = {isa = PBXBuildFile; fileRef = 77F80B421A2D95E300D45030 /* EmulatorJoystickCalibrationView.m */; };
-		93BC72551BF6F8E2005CDFCA /* glalert.c in Sources */ = {isa = PBXBuildFile; fileRef = 93BC72541BF6F8E2005CDFCA /* glalert.c */; settings = {ASSET_TAGS = (); }; };
-		93BC72571BF6FF11005CDFCA /* playqueue.c in Sources */ = {isa = PBXBuildFile; fileRef = 93BC72561BF6FF11005CDFCA /* playqueue.c */; settings = {ASSET_TAGS = (); }; };
+		93BC72551BF6F8E2005CDFCA /* glalert.c in Sources */ = {isa = PBXBuildFile; fileRef = 93BC72541BF6F8E2005CDFCA /* glalert.c */; };
+		93BC72571BF6FF11005CDFCA /* playqueue.c in Sources */ = {isa = PBXBuildFile; fileRef = 93BC72561BF6FF11005CDFCA /* playqueue.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -608,22 +608,9 @@
 		773B3D431956897D0085CE5F /* Classes */ = {
 			isa = PBXGroup;
 			children = (
-				773BC91419F2E6A900996893 /* EmulatorDiskController.h */,
-				773BC91519F2E6A900996893 /* EmulatorDiskController.m */,
-				77E1C0C219D7298F004344E0 /* EmulatorFullscreenWindow.m */,
-				77E1C0C319D7298F004344E0 /* EmulatorFullscreenWindow.h */,
-				77E1C0C019D7298F004344E0 /* EmulatorGLView.m */,
 				77E1C0C119D7298F004344E0 /* EmulatorGLView.h */,
-				77F80B421A2D95E300D45030 /* EmulatorJoystickCalibrationView.m */,
-				77F80B431A2D95E300D45030 /* EmulatorJoystickCalibrationView.h */,
-				77C279731A1048B4000FE33F /* EmulatorJoystickController.h */,
-				77C279741A1048B4000FE33F /* EmulatorJoystickController.m */,
-				773BC91719F2FD4500996893 /* EmulatorPrefsController.h */,
-				773BC91819F2FD4500996893 /* EmulatorPrefsController.m */,
-				77E1C0BE19D7298F004344E0 /* EmulatorWindowController.m */,
-				77E1C0BF19D7298F004344E0 /* EmulatorWindowController.h */,
-				4AC7A76B19ECC3FB00BCD457 /* EmulatorWindow.h */,
-				4AC7A76C19ECC3FB00BCD457 /* EmulatorWindow.m */,
+				77E1C0C019D7298F004344E0 /* EmulatorGLView.m */,
+				935C54741C129C740013166D /* OSX */,
 			);
 			name = Classes;
 			sourceTree = "<group>";
@@ -778,6 +765,27 @@
 				77E1C0A919D72700004344E0 /* vectorUtil.c */,
 			);
 			name = video_util;
+			sourceTree = "<group>";
+		};
+		935C54741C129C740013166D /* OSX */ = {
+			isa = PBXGroup;
+			children = (
+				773BC91419F2E6A900996893 /* EmulatorDiskController.h */,
+				773BC91519F2E6A900996893 /* EmulatorDiskController.m */,
+				77E1C0C319D7298F004344E0 /* EmulatorFullscreenWindow.h */,
+				77E1C0C219D7298F004344E0 /* EmulatorFullscreenWindow.m */,
+				77F80B431A2D95E300D45030 /* EmulatorJoystickCalibrationView.h */,
+				77F80B421A2D95E300D45030 /* EmulatorJoystickCalibrationView.m */,
+				77C279731A1048B4000FE33F /* EmulatorJoystickController.h */,
+				77C279741A1048B4000FE33F /* EmulatorJoystickController.m */,
+				773BC91719F2FD4500996893 /* EmulatorPrefsController.h */,
+				773BC91819F2FD4500996893 /* EmulatorPrefsController.m */,
+				77E1C0BF19D7298F004344E0 /* EmulatorWindowController.h */,
+				77E1C0BE19D7298F004344E0 /* EmulatorWindowController.m */,
+				4AC7A76B19ECC3FB00BCD457 /* EmulatorWindow.h */,
+				4AC7A76C19ECC3FB00BCD457 /* EmulatorWindow.m */,
+			);
+			name = OSX;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
