@@ -56,26 +56,31 @@ static int _convert_crlf_to_lf(void) {
 
         // convert CRLF -> LF
 
-        ssize_t outlen=0;
+        ssize_t outmax=0;
         for (ssize_t i=0; i<inlen; i++) {
             char c = inbuf[i];
 
             if (sawCR && (c != LF)) {
-                outbuf[outlen++] = CR;
+                outbuf[outmax++] = CR;
             }
 
             sawCR = false;
             if (c == CR) {
                 sawCR = true;
             } else {
-                outbuf[outlen++] = c;
+                outbuf[outmax++] = c;
             }
         }
 
-        if (TEMP_FAILURE_RETRY(write(STDOUT_FILENO, outbuf, outlen)) == -1) {
-            errWrt = "error writing to stdout";
-            break;
-        }
+        ssize_t outlen = 0;
+        do {
+            if (TEMP_FAILURE_RETRY(outlen = write(STDOUT_FILENO, outbuf, outmax)) == -1) {
+                errWrt = "error writing to stdout";
+                break;
+            }
+            outbuf += outlen;
+            outmax -= outlen;
+        } while (outmax > 0);
     }
 
     if (sawCR) {
