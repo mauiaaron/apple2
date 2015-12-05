@@ -38,7 +38,6 @@ static GLenum crtElementType = UNINITIALIZED_GL;
 static GLuint crtNumElements = UNINITIALIZED_GL;
 
 static GLuint a2TextureName = UNINITIALIZED_GL;
-static GLuint defaultFBO = UNINITIALIZED_GL;
 
 static GLuint crtVAOName = UNINITIALIZED_GL;
 static GLuint posBufferName = UNINITIALIZED_GL;
@@ -652,9 +651,6 @@ static void gldriver_init_common(void) {
     // Check for errors to make sure all of our setup went ok
     GL_ERRLOG("finished initialization");
 
-#if !defined(__APPLE__)
-    //glBindFramebuffer(GL_FRAMEBUFFER, defaultFBO);
-#endif
     GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     if (status != GL_FRAMEBUFFER_COMPLETE) {
         ERRQUIT("framebuffer status: %04X", status);
@@ -902,7 +898,7 @@ static void gldriver_reshape(int w, int h) {
 }
 
 #if USE_GLUT
-static void gldriver_init_glut(GLuint fbo) {
+static void gldriver_init_glut(void) {
     glutInit(&argc, argv);
     glutInitDisplayMode(/*GLUT_DOUBLE|*/GLUT_RGBA);
     glutInitWindowSize(windowWidth, windowHeight);
@@ -938,14 +934,10 @@ static void gldriver_init_glut(GLuint fbo) {
 
 static void gldriver_init(void *fbo) {
     safe_to_do_opengl_logging = true;
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpointer-to-int-cast"
-    defaultFBO = (GLuint)fbo;
-#pragma GCC diagnostic pop
 #if defined(__APPLE__) || defined(ANDROID)
     gldriver_init_common();
 #elif USE_GLUT
-    gldriver_init_glut(defaultFBO);
+    gldriver_init_glut();
 #else
 #error no working codepaths
 #endif

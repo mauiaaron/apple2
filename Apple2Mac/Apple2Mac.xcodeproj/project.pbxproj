@@ -8,9 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		4A2636F919FDEDB700DBFB00 /* Apple2Mac.help in Resources */ = {isa = PBXBuildFile; fileRef = 4A2636F819FDEDB700DBFB00 /* Apple2Mac.help */; };
-		4A61119C1A6A1DE60035F7DE /* blank.po.gz in Resources */ = {isa = PBXBuildFile; fileRef = 4A61119B1A6A1DE60035F7DE /* blank.po.gz */; };
 		4A61119D1A6A1DE60035F7DE /* blank.po.gz in Resources */ = {isa = PBXBuildFile; fileRef = 4A61119B1A6A1DE60035F7DE /* blank.po.gz */; };
-		4A6111A31A6A1DFC0035F7DE /* flapple140.po.gz in Resources */ = {isa = PBXBuildFile; fileRef = 4A6111A21A6A1DFC0035F7DE /* flapple140.po.gz */; };
 		4A69C1801A33D6D7001579EF /* images in Resources */ = {isa = PBXBuildFile; fileRef = 4A69C17F1A33D6D7001579EF /* images */; };
 		4A69C1921A33DB90001579EF /* DDHidLib.framework in Copy Files (1 item) */ = {isa = PBXBuildFile; fileRef = 77C2796F1A1047AF000FE33F /* DDHidLib.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		4A7EDC931AE092680072E98A /* glhudmodel.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A7EDC911AE092680072E98A /* glhudmodel.c */; };
@@ -121,11 +119,9 @@
 		4AFC170C1AAE9C3200B215FA /* sha1.c in Sources */ = {isa = PBXBuildFile; fileRef = 4AFC17091AAE9C3200B215FA /* sha1.c */; };
 		4AFC170D1AAE9C3200B215FA /* sha1.c in Sources */ = {isa = PBXBuildFile; fileRef = 4AFC17091AAE9C3200B215FA /* sha1.c */; };
 		4AFC170E1AAE9C3200B215FA /* sha1.c in Sources */ = {isa = PBXBuildFile; fileRef = 4AFC17091AAE9C3200B215FA /* sha1.c */; };
-		4AFC17111AAE9CC000B215FA /* testdisplay1.nib.gz in Resources */ = {isa = PBXBuildFile; fileRef = 4AFC170F1AAE9CC000B215FA /* testdisplay1.nib.gz */; };
 		4AFC17121AAE9CC000B215FA /* testdisplay1.nib.gz in Resources */ = {isa = PBXBuildFile; fileRef = 4AFC170F1AAE9CC000B215FA /* testdisplay1.nib.gz */; };
 		4AFC17131AAE9CC000B215FA /* testdisplay1.nib.gz in Resources */ = {isa = PBXBuildFile; fileRef = 4AFC170F1AAE9CC000B215FA /* testdisplay1.nib.gz */; };
 		4AFC17141AAE9CC000B215FA /* testdisplay1.nib.gz in Resources */ = {isa = PBXBuildFile; fileRef = 4AFC170F1AAE9CC000B215FA /* testdisplay1.nib.gz */; };
-		4AFC17151AAE9CC000B215FA /* testvm1.nib.gz in Resources */ = {isa = PBXBuildFile; fileRef = 4AFC17101AAE9CC000B215FA /* testvm1.nib.gz */; };
 		4AFC17161AAE9CC000B215FA /* testvm1.nib.gz in Resources */ = {isa = PBXBuildFile; fileRef = 4AFC17101AAE9CC000B215FA /* testvm1.nib.gz */; };
 		4AFC17171AAE9CC000B215FA /* testvm1.nib.gz in Resources */ = {isa = PBXBuildFile; fileRef = 4AFC17101AAE9CC000B215FA /* testvm1.nib.gz */; };
 		4AFC17181AAE9CC000B215FA /* testvm1.nib.gz in Resources */ = {isa = PBXBuildFile; fileRef = 4AFC17101AAE9CC000B215FA /* testvm1.nib.gz */; };
@@ -248,6 +244,59 @@
 		935C551E1C12B6450013166D /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 935C551B1C12B6400013166D /* main.m */; };
 		935C551F1C12B6460013166D /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 935C551B1C12B6400013166D /* main.m */; };
 		935C55201C12B64A0013166D /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 935C551B1C12B6400013166D /* main.m */; };
+		935C55351C12BA5F0013166D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 935C55331C12BA5F0013166D /* Main.storyboard */; };
+		935C55371C12BA5F0013166D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 935C55361C12BA5F0013166D /* Assets.xcassets */; };
+		935C55431C12BCFD0013166D /* Apple2iOS-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 935C55421C12BCFD0013166D /* Apple2iOS-Info.plist */; };
+		935C55461C12BE110013166D /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = 935C55441C12BE110013166D /* LaunchScreen.xib */; };
+		935C554D1C12BE510013166D /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 935C55481C12BE510013166D /* AppDelegate.m */; };
+		935C554E1C12BE510013166D /* EAGLView.m in Sources */ = {isa = PBXBuildFile; fileRef = 935C554A1C12BE510013166D /* EAGLView.m */; };
+		935C55511C136DF40013166D /* alhelpers.c in Sources */ = {isa = PBXBuildFile; fileRef = 779F564719EAF66E00A6F107 /* alhelpers.c */; };
+		935C55521C136DF40013166D /* AY8910.c in Sources */ = {isa = PBXBuildFile; fileRef = 779F564919EAF66E00A6F107 /* AY8910.c */; };
+		935C55531C136DF40013166D /* mockingboard.c in Sources */ = {isa = PBXBuildFile; fileRef = 779F564C19EAF66E00A6F107 /* mockingboard.c */; };
+		935C55541C136DF40013166D /* playqueue.c in Sources */ = {isa = PBXBuildFile; fileRef = 93BC72561BF6FF11005CDFCA /* playqueue.c */; };
+		935C55551C136DF40013166D /* soundcore-openal.c in Sources */ = {isa = PBXBuildFile; fileRef = 779F564F19EAF66E00A6F107 /* soundcore-openal.c */; };
+		935C55561C136DF40013166D /* soundcore.c in Sources */ = {isa = PBXBuildFile; fileRef = 779F565119EAF66E00A6F107 /* soundcore.c */; };
+		935C55571C136DF40013166D /* speaker.c in Sources */ = {isa = PBXBuildFile; fileRef = 779F565319EAF66E00A6F107 /* speaker.c */; };
+		935C55581C136DF40013166D /* cpu-supp.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D5D19568A570085CE5F /* cpu-supp.c */; };
+		935C55591C136DF40013166D /* darwin-shim.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D6019568A570085CE5F /* darwin-shim.c */; };
+		935C555A1C136DF40013166D /* disk.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D6219568A570085CE5F /* disk.c */; };
+		935C555B1C136DF40013166D /* display.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D6419568A570085CE5F /* display.c */; };
+		935C555C1C136DF40013166D /* font.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D6519568A570085CE5F /* font.c */; };
+		935C555D1C136DF40013166D /* interface.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A7EDC9D1AE092B80072E98A /* interface.c */; };
+		935C555E1C136DF40013166D /* joystick.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D6C19568A570085CE5F /* joystick.c */; };
+		935C555F1C136DF40013166D /* keys.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D6E19568A570085CE5F /* keys.c */; };
+		935C55601C136E070013166D /* debugger.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D7319568A570085CE5F /* debugger.c */; };
+		935C55611C136E070013166D /* opcodes.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D7419568A570085CE5F /* opcodes.c */; };
+		935C55621C136E070013166D /* misc.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D7519568A570085CE5F /* misc.c */; };
+		935C55631C136E070013166D /* prefs.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D7719568A570085CE5F /* prefs.c */; };
+		935C55641C136E070013166D /* rom-shim.c in Sources */ = {isa = PBXBuildFile; fileRef = 779DD826195764E200DF89E5 /* rom-shim.c */; };
+		935C55651C136E070013166D /* timing.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D8719568A570085CE5F /* timing.c */; };
+		935C55661C136E070013166D /* glalert.c in Sources */ = {isa = PBXBuildFile; fileRef = 93BC72541BF6F8E2005CDFCA /* glalert.c */; };
+		935C55671C136E070013166D /* glhudmodel.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A7EDC911AE092680072E98A /* glhudmodel.c */; };
+		935C55681C136E070013166D /* glnode.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A7EDC921AE092680072E98A /* glnode.c */; };
+		935C55691C136E070013166D /* glvideo.c in Sources */ = {isa = PBXBuildFile; fileRef = 77E1C0C719D736EB004344E0 /* glvideo.c */; };
+		935C556A1C136E070013166D /* matrixUtil.c in Sources */ = {isa = PBXBuildFile; fileRef = 77E1C0AF19D72700004344E0 /* matrixUtil.c */; };
+		935C556B1C136E070013166D /* modelUtil.c in Sources */ = {isa = PBXBuildFile; fileRef = 77E1C0AD19D72700004344E0 /* modelUtil.c */; };
+		935C556C1C136E070013166D /* sourceUtil.c in Sources */ = {isa = PBXBuildFile; fileRef = 77E1C0AB19D72700004344E0 /* sourceUtil.c */; };
+		935C556D1C136E070013166D /* vectorUtil.c in Sources */ = {isa = PBXBuildFile; fileRef = 77E1C0A919D72700004344E0 /* vectorUtil.c */; };
+		935C556E1C136E070013166D /* vm.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D8D19568A570085CE5F /* vm.c */; };
+		935C556F1C136E070013166D /* zlib-helpers.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D9519568A570085CE5F /* zlib-helpers.c */; };
+		935C55721C136E6F0013166D /* json_parse.c in Sources */ = {isa = PBXBuildFile; fileRef = 935C55701C136E6F0013166D /* json_parse.c */; };
+		935C55731C136E6F0013166D /* json_parse.c in Sources */ = {isa = PBXBuildFile; fileRef = 935C55701C136E6F0013166D /* json_parse.c */; };
+		935C558A1C1370800013166D /* gltouchjoy_joy.c in Sources */ = {isa = PBXBuildFile; fileRef = 935C55841C1370800013166D /* gltouchjoy_joy.c */; };
+		935C558B1C1370800013166D /* gltouchjoy_kpad.c in Sources */ = {isa = PBXBuildFile; fileRef = 935C55851C1370800013166D /* gltouchjoy_kpad.c */; };
+		935C558C1C1370800013166D /* gltouchjoy.c in Sources */ = {isa = PBXBuildFile; fileRef = 935C55861C1370800013166D /* gltouchjoy.c */; };
+		935C558D1C1370800013166D /* gltouchkbd.c in Sources */ = {isa = PBXBuildFile; fileRef = 935C55881C1370800013166D /* gltouchkbd.c */; };
+		935C558E1C1370800013166D /* gltouchmenu.c in Sources */ = {isa = PBXBuildFile; fileRef = 935C55891C1370800013166D /* gltouchmenu.c */; };
+		935C55911C1371AD0013166D /* Basic.fsh in Resources */ = {isa = PBXBuildFile; fileRef = 779F562819E4FE9E00A6F107 /* Basic.fsh */; };
+		935C55921C1371AD0013166D /* Basic.vsh in Resources */ = {isa = PBXBuildFile; fileRef = 779F562719E4FE9E00A6F107 /* Basic.vsh */; };
+		935C55931C1371C80013166D /* images in Resources */ = {isa = PBXBuildFile; fileRef = 4A69C17F1A33D6D7001579EF /* images */; };
+		935C559F1C1384240013166D /* darwin-cpu-glue.S in Sources */ = {isa = PBXBuildFile; fileRef = 935C559E1C1384240013166D /* darwin-cpu-glue.S */; };
+		935C55A11C13887E0013166D /* sha1.c in Sources */ = {isa = PBXBuildFile; fileRef = 4AFC17091AAE9C3200B215FA /* sha1.c */; };
+		935C55A31C1388CB0013166D /* libz.1.1.3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 935C55A21C1388CB0013166D /* libz.1.1.3.tbd */; };
+		935C55A41C1388E30013166D /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 935C551B1C12B6400013166D /* main.m */; };
+		935C55A91C1389370013166D /* jsmn.c in Sources */ = {isa = PBXBuildFile; fileRef = 935C55A71C1389370013166D /* jsmn.c */; };
+		935C55AA1C138C2F0013166D /* jsmn.c in Sources */ = {isa = PBXBuildFile; fileRef = 935C55A71C1389370013166D /* jsmn.c */; };
 		93BC72551BF6F8E2005CDFCA /* glalert.c in Sources */ = {isa = PBXBuildFile; fileRef = 93BC72541BF6F8E2005CDFCA /* glalert.c */; };
 		93BC72571BF6FF11005CDFCA /* playqueue.c in Sources */ = {isa = PBXBuildFile; fileRef = 93BC72561BF6FF11005CDFCA /* playqueue.c */; };
 /* End PBXBuildFile section */
@@ -308,7 +357,7 @@
 		4A2636F819FDEDB700DBFB00 /* Apple2Mac.help */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Apple2Mac.help; sourceTree = "<group>"; };
 		4A61119B1A6A1DE60035F7DE /* blank.po.gz */ = {isa = PBXFileReference; lastKnownFileType = archive.gzip; path = blank.po.gz; sourceTree = "<group>"; };
 		4A6111A21A6A1DFC0035F7DE /* flapple140.po.gz */ = {isa = PBXFileReference; lastKnownFileType = archive.gzip; path = flapple140.po.gz; sourceTree = "<group>"; };
-		4A69C17F1A33D6D7001579EF /* images */ = {isa = PBXFileReference; lastKnownFileType = folder; name = images; path = ../../images; sourceTree = "<group>"; };
+		4A69C17F1A33D6D7001579EF /* images */ = {isa = PBXFileReference; lastKnownFileType = folder; name = images; path = ../images; sourceTree = "<group>"; };
 		4A7EDC911AE092680072E98A /* glhudmodel.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = glhudmodel.c; sourceTree = "<group>"; };
 		4A7EDC921AE092680072E98A /* glnode.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = glnode.c; sourceTree = "<group>"; };
 		4A7EDC9D1AE092B80072E98A /* interface.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = interface.c; sourceTree = "<group>"; };
@@ -435,6 +484,36 @@
 		935C55121C12B61D0013166D /* EmulatorWindowController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = EmulatorWindowController.m; path = Classes/OSX/EmulatorWindowController.m; sourceTree = SOURCE_ROOT; };
 		935C551B1C12B6400013166D /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		935C55211C12B6650013166D /* Apple2Mac-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Apple2Mac-Prefix.pch"; sourceTree = "<group>"; };
+		935C55281C12BA5F0013166D /* Apple2iOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Apple2iOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		935C55341C12BA5F0013166D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		935C55361C12BA5F0013166D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		935C55421C12BCFD0013166D /* Apple2iOS-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "Apple2iOS-Info.plist"; sourceTree = "<group>"; };
+		935C55451C12BE110013166D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/LaunchScreen.xib; sourceTree = "<group>"; };
+		935C55471C12BE510013166D /* AppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AppDelegate.h; path = Classes/iOS/AppDelegate.h; sourceTree = SOURCE_ROOT; };
+		935C55481C12BE510013166D /* AppDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = AppDelegate.m; path = Classes/iOS/AppDelegate.m; sourceTree = SOURCE_ROOT; };
+		935C55491C12BE510013166D /* EAGLView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = EAGLView.h; path = Classes/iOS/EAGLView.h; sourceTree = SOURCE_ROOT; };
+		935C554A1C12BE510013166D /* EAGLView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = EAGLView.m; path = Classes/iOS/EAGLView.m; sourceTree = SOURCE_ROOT; };
+		935C55701C136E6F0013166D /* json_parse.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = json_parse.c; sourceTree = "<group>"; };
+		935C55711C136E6F0013166D /* json_parse.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = json_parse.h; sourceTree = "<group>"; };
+		935C55741C136ED40013166D /* playqueue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = playqueue.h; sourceTree = "<group>"; };
+		935C55751C136F0D0013166D /* testtrace.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = testtrace.c; sourceTree = "<group>"; };
+		935C55771C136F260013166D /* sha1.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sha1.h; sourceTree = "<group>"; };
+		935C557A1C136F7E0013166D /* cpu-regs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "cpu-regs.h"; path = "arm/cpu-regs.h"; sourceTree = "<group>"; };
+		935C557C1C136FBD0013166D /* glue-prologue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "glue-prologue.h"; path = "arm/glue-prologue.h"; sourceTree = "<group>"; };
+		935C557F1C136FEF0013166D /* glvideo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = glvideo.h; sourceTree = "<group>"; };
+		935C55811C13702A0013166D /* glhudmodel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = glhudmodel.h; sourceTree = "<group>"; };
+		935C55821C13703F0013166D /* glnode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = glnode.h; sourceTree = "<group>"; };
+		935C55841C1370800013166D /* gltouchjoy_joy.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = gltouchjoy_joy.c; sourceTree = "<group>"; };
+		935C55851C1370800013166D /* gltouchjoy_kpad.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = gltouchjoy_kpad.c; sourceTree = "<group>"; };
+		935C55861C1370800013166D /* gltouchjoy.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = gltouchjoy.c; sourceTree = "<group>"; };
+		935C55871C1370800013166D /* gltouchjoy.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = gltouchjoy.h; sourceTree = "<group>"; };
+		935C55881C1370800013166D /* gltouchkbd.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = gltouchkbd.c; sourceTree = "<group>"; };
+		935C55891C1370800013166D /* gltouchmenu.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = gltouchmenu.c; sourceTree = "<group>"; };
+		935C559E1C1384240013166D /* darwin-cpu-glue.S */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.asm; path = "darwin-cpu-glue.S"; sourceTree = "<group>"; };
+		935C55A01C1384400013166D /* cpu.S */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.asm; name = cpu.S; path = arm/cpu.S; sourceTree = "<group>"; };
+		935C55A21C1388CB0013166D /* libz.1.1.3.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.1.1.3.tbd; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS9.1.sdk/usr/lib/libz.1.1.3.tbd; sourceTree = DEVELOPER_DIR; };
+		935C55A71C1389370013166D /* jsmn.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = jsmn.c; path = ../externals/jsmn/jsmn.c; sourceTree = "<group>"; };
+		935C55A81C1389370013166D /* jsmn.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = jsmn.h; path = ../externals/jsmn/jsmn.h; sourceTree = "<group>"; };
 		93BC72541BF6F8E2005CDFCA /* glalert.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = glalert.c; sourceTree = "<group>"; };
 		93BC72561BF6FF11005CDFCA /* playqueue.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = playqueue.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -489,6 +568,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		935C55251C12BA5F0013166D /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				935C55A31C1388CB0013166D /* libz.1.1.3.tbd in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -520,10 +607,12 @@
 				935C55211C12B6650013166D /* Apple2Mac-Prefix.pch */,
 				773B3D331956885A0085CE5F /* Apple2MacTests */,
 				773B3D151956885A0085CE5F /* Apple2Mac */,
-				935C55221C12B9BD0013166D /* Apple2iOS */,
+				935C55291C12BA5F0013166D /* Apple2iOS */,
 				773B3D431956897D0085CE5F /* Classes */,
 				773B3D4519568A570085CE5F /* src */,
+				935C55A51C1389000013166D /* externals */,
 				4ADC522F19E8D3F600186B36 /* disks */,
+				4A69C17F1A33D6D7001579EF /* images */,
 				773B3D0E1956885A0085CE5F /* Frameworks */,
 				773B3D0D1956885A0085CE5F /* Products */,
 			);
@@ -537,6 +626,7 @@
 				4ADC522719E8CA4500186B36 /* Apple2MacTestVM.app */,
 				779F569119EB0B9100A6F107 /* Apple2MacTestDisplay.app */,
 				4AD4FEC31A52464F00F958EC /* Apple2MacTestDisk.app */,
+				935C55281C12BA5F0013166D /* Apple2iOS.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -544,6 +634,7 @@
 		773B3D0E1956885A0085CE5F /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				935C55A21C1388CB0013166D /* libz.1.1.3.tbd */,
 				77C279601A1047AE000FE33F /* DDHidLib.xcodeproj */,
 				779F565F19EAF6D000A6F107 /* OpenAL.framework */,
 				773B3DCA1956903D0085CE5F /* libz.1.1.3.dylib */,
@@ -566,21 +657,15 @@
 		773B3D151956885A0085CE5F /* Apple2Mac */ = {
 			isa = PBXGroup;
 			children = (
-				4A69C17F1A33D6D7001579EF /* images */,
-				773B3D44195689910085CE5F /* Resources */,
-				773B3D161956885A0085CE5F /* Supporting Files */,
+				773B3D171956885A0085CE5F /* Apple2Mac-Info.plist */,
+				4A2636F819FDEDB700DBFB00 /* Apple2Mac.help */,
+				773B3D1E1956885A0085CE5F /* Credits.rtf */,
+				773B3D181956885A0085CE5F /* InfoPlist.strings */,
+				773B3D271956885A0085CE5F /* Images.xcassets */,
+				773B3D241956885A0085CE5F /* MainMenu.xib */,
+				4ADC51C919E8BEB700186B36 /* MainMenu-Test.xib */,
 			);
 			path = Apple2Mac;
-			sourceTree = "<group>";
-		};
-		773B3D161956885A0085CE5F /* Supporting Files */ = {
-			isa = PBXGroup;
-			children = (
-				773B3D171956885A0085CE5F /* Apple2Mac-Info.plist */,
-				773B3D181956885A0085CE5F /* InfoPlist.strings */,
-				773B3D1E1956885A0085CE5F /* Credits.rtf */,
-			);
-			name = "Supporting Files";
 			sourceTree = "<group>";
 		};
 		773B3D331956885A0085CE5F /* Apple2MacTests */ = {
@@ -615,46 +700,39 @@
 			path = Apple2Mac;
 			sourceTree = "<group>";
 		};
-		773B3D44195689910085CE5F /* Resources */ = {
-			isa = PBXGroup;
-			children = (
-				4A2636F819FDEDB700DBFB00 /* Apple2Mac.help */,
-				773B3D271956885A0085CE5F /* Images.xcassets */,
-				773B3D241956885A0085CE5F /* MainMenu.xib */,
-				4ADC51C919E8BEB700186B36 /* MainMenu-Test.xib */,
-			);
-			name = Resources;
-			sourceTree = "<group>";
-		};
 		773B3D4519568A570085CE5F /* src */ = {
 			isa = PBXGroup;
 			children = (
-				773B3D7919568A570085CE5F /* test */,
+				935C55781C136F550013166D /* arm */,
 				779F564619EAF66E00A6F107 /* audio */,
 				773B3D5C19568A570085CE5F /* common.h */,
 				773B3D5D19568A570085CE5F /* cpu-supp.c */,
 				773B3D5E19568A570085CE5F /* cpu.h */,
-				773B3D6019568A570085CE5F /* darwin-shim.c */,
+				935C559E1C1384240013166D /* darwin-cpu-glue.S */,
 				773B3D6119568A570085CE5F /* darwin-shim.h */,
-				773B3D6219568A570085CE5F /* disk.c */,
+				773B3D6019568A570085CE5F /* darwin-shim.c */,
 				773B3D6319568A570085CE5F /* disk.h */,
+				773B3D6219568A570085CE5F /* disk.c */,
 				773B3D6419568A570085CE5F /* display.c */,
 				773B3D6519568A570085CE5F /* font.c */,
 				773B3D6919568A570085CE5F /* glue.h */,
 				4A7EDC9D1AE092B80072E98A /* interface.c */,
-				773B3D6C19568A570085CE5F /* joystick.c */,
 				773B3D6D19568A570085CE5F /* joystick.h */,
-				773B3D6E19568A570085CE5F /* keys.c */,
+				773B3D6C19568A570085CE5F /* joystick.c */,
+				935C55711C136E6F0013166D /* json_parse.h */,
+				935C55701C136E6F0013166D /* json_parse.c */,
 				773B3D6F19568A570085CE5F /* keys.h */,
+				773B3D6E19568A570085CE5F /* keys.c */,
 				773B3D7019568A570085CE5F /* meta */,
-				773B3D7519568A570085CE5F /* misc.c */,
 				773B3D7619568A570085CE5F /* misc.h */,
+				773B3D7519568A570085CE5F /* misc.c */,
 				773B3D7719568A570085CE5F /* prefs.c */,
 				773B3D7819568A570085CE5F /* prefs.h */,
 				779DD826195764E200DF89E5 /* rom-shim.c */,
 				773B3D8719568A570085CE5F /* timing.c */,
 				773B3D8819568A570085CE5F /* timing.h */,
 				773B3D8919568A570085CE5F /* uthash.h */,
+				773B3D7919568A570085CE5F /* test */,
 				773B3D8A19568A570085CE5F /* video */,
 				77E1C0A719D726E8004344E0 /* video_util */,
 				773B3D8D19568A570085CE5F /* vm.c */,
@@ -680,13 +758,15 @@
 		773B3D7919568A570085CE5F /* test */ = {
 			isa = PBXGroup;
 			children = (
-				4AFC17091AAE9C3200B215FA /* sha1.c */,
 				773B3D7A19568A570085CE5F /* greatest.h */,
-				773B3D7C19568A570085CE5F /* testcommon.c */,
+				935C55771C136F260013166D /* sha1.h */,
+				4AFC17091AAE9C3200B215FA /* sha1.c */,
 				773B3D7D19568A570085CE5F /* testcommon.h */,
+				773B3D7C19568A570085CE5F /* testcommon.c */,
 				773B3D7E19568A570085CE5F /* testcpu.c */,
 				4AD4FEC91A52467D00F958EC /* testdisk.c */,
 				773B3D7F19568A570085CE5F /* testdisplay.c */,
+				935C55751C136F0D0013166D /* testtrace.c */,
 				773B3D8619568A570085CE5F /* testvm.c */,
 			);
 			path = test;
@@ -695,11 +775,15 @@
 		773B3D8A19568A570085CE5F /* video */ = {
 			isa = PBXGroup;
 			children = (
+				935C55801C1370160013166D /* gltouch */,
 				779F562819E4FE9E00A6F107 /* Basic.fsh */,
 				779F562719E4FE9E00A6F107 /* Basic.vsh */,
 				93BC72541BF6F8E2005CDFCA /* glalert.c */,
+				935C55811C13702A0013166D /* glhudmodel.h */,
 				4A7EDC911AE092680072E98A /* glhudmodel.c */,
+				935C55821C13703F0013166D /* glnode.h */,
 				4A7EDC921AE092680072E98A /* glnode.c */,
+				935C557F1C136FEF0013166D /* glvideo.h */,
 				77E1C0C719D736EB004344E0 /* glvideo.c */,
 				773B3D8B19568A570085CE5F /* video.h */,
 			);
@@ -720,19 +804,20 @@
 		779F564619EAF66E00A6F107 /* audio */ = {
 			isa = PBXGroup;
 			children = (
-				779F564719EAF66E00A6F107 /* alhelpers.c */,
 				779F564819EAF66E00A6F107 /* alhelpers.h */,
-				779F564919EAF66E00A6F107 /* AY8910.c */,
+				779F564719EAF66E00A6F107 /* alhelpers.c */,
 				779F564A19EAF66E00A6F107 /* AY8910.h */,
-				779F564C19EAF66E00A6F107 /* mockingboard.c */,
+				779F564919EAF66E00A6F107 /* AY8910.c */,
 				779F564D19EAF66E00A6F107 /* mockingboard.h */,
+				779F564C19EAF66E00A6F107 /* mockingboard.c */,
 				779F564E19EAF66E00A6F107 /* peripherals.h */,
+				935C55741C136ED40013166D /* playqueue.h */,
 				93BC72561BF6FF11005CDFCA /* playqueue.c */,
 				779F564F19EAF66E00A6F107 /* soundcore-openal.c */,
-				779F565119EAF66E00A6F107 /* soundcore.c */,
 				779F565219EAF66E00A6F107 /* soundcore.h */,
-				779F565319EAF66E00A6F107 /* speaker.c */,
+				779F565119EAF66E00A6F107 /* soundcore.c */,
 				779F565419EAF66E00A6F107 /* speaker.h */,
+				779F565319EAF66E00A6F107 /* speaker.c */,
 				779F565519EAF66E00A6F107 /* SSI263Phonemes.h */,
 			);
 			path = audio;
@@ -770,12 +855,12 @@
 		935C54741C129C740013166D /* OSX */ = {
 			isa = PBXGroup;
 			children = (
-				935C55031C12B61D0013166D /* EmulatorGLView.h */,
-				935C55041C12B61D0013166D /* EmulatorGLView.m */,
 				935C55051C12B61D0013166D /* EmulatorDiskController.h */,
 				935C55061C12B61D0013166D /* EmulatorDiskController.m */,
 				935C55071C12B61D0013166D /* EmulatorFullscreenWindow.h */,
 				935C55081C12B61D0013166D /* EmulatorFullscreenWindow.m */,
+				935C55031C12B61D0013166D /* EmulatorGLView.h */,
+				935C55041C12B61D0013166D /* EmulatorGLView.m */,
 				935C55091C12B61D0013166D /* EmulatorJoystickCalibrationView.h */,
 				935C550A1C12B61D0013166D /* EmulatorJoystickCalibrationView.m */,
 				935C550B1C12B61D0013166D /* EmulatorJoystickController.h */,
@@ -790,18 +875,66 @@
 			name = OSX;
 			sourceTree = "<group>";
 		};
-		935C55221C12B9BD0013166D /* Apple2iOS */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			name = Apple2iOS;
-			sourceTree = "<group>";
-		};
 		935C55231C12B9CE0013166D /* iOS */ = {
 			isa = PBXGroup;
 			children = (
+				935C55471C12BE510013166D /* AppDelegate.h */,
+				935C55481C12BE510013166D /* AppDelegate.m */,
+				935C55491C12BE510013166D /* EAGLView.h */,
+				935C554A1C12BE510013166D /* EAGLView.m */,
 			);
 			name = iOS;
+			sourceTree = "<group>";
+		};
+		935C55291C12BA5F0013166D /* Apple2iOS */ = {
+			isa = PBXGroup;
+			children = (
+				935C55421C12BCFD0013166D /* Apple2iOS-Info.plist */,
+				935C55361C12BA5F0013166D /* Assets.xcassets */,
+				935C55441C12BE110013166D /* LaunchScreen.xib */,
+				935C55331C12BA5F0013166D /* Main.storyboard */,
+			);
+			path = Apple2iOS;
+			sourceTree = "<group>";
+		};
+		935C55781C136F550013166D /* arm */ = {
+			isa = PBXGroup;
+			children = (
+				935C55A01C1384400013166D /* cpu.S */,
+				935C557C1C136FBD0013166D /* glue-prologue.h */,
+				935C557A1C136F7E0013166D /* cpu-regs.h */,
+			);
+			name = arm;
+			sourceTree = "<group>";
+		};
+		935C55801C1370160013166D /* gltouch */ = {
+			isa = PBXGroup;
+			children = (
+				935C55841C1370800013166D /* gltouchjoy_joy.c */,
+				935C55851C1370800013166D /* gltouchjoy_kpad.c */,
+				935C55861C1370800013166D /* gltouchjoy.c */,
+				935C55871C1370800013166D /* gltouchjoy.h */,
+				935C55881C1370800013166D /* gltouchkbd.c */,
+				935C55891C1370800013166D /* gltouchmenu.c */,
+			);
+			name = gltouch;
+			sourceTree = "<group>";
+		};
+		935C55A51C1389000013166D /* externals */ = {
+			isa = PBXGroup;
+			children = (
+				935C55A61C13890D0013166D /* jsmn */,
+			);
+			name = externals;
+			sourceTree = "<group>";
+		};
+		935C55A61C13890D0013166D /* jsmn */ = {
+			isa = PBXGroup;
+			children = (
+				935C55A71C1389370013166D /* jsmn.c */,
+				935C55A81C1389370013166D /* jsmn.h */,
+			);
+			name = jsmn;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -904,6 +1037,25 @@
 			productReference = 779F569119EB0B9100A6F107 /* Apple2MacTestDisplay.app */;
 			productType = "com.apple.product-type.application";
 		};
+		935C55271C12BA5F0013166D /* Apple2iOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 935C553C1C12BA5F0013166D /* Build configuration list for PBXNativeTarget "Apple2iOS" */;
+			buildPhases = (
+				935C558F1C1371020013166D /* ShellScript */,
+				935C55241C12BA5F0013166D /* Sources */,
+				935C55251C12BA5F0013166D /* Frameworks */,
+				935C55901C13715A0013166D /* ShellScript */,
+				935C55261C12BA5F0013166D /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Apple2iOS;
+			productName = Apple2iOS;
+			productReference = 935C55281C12BA5F0013166D /* Apple2iOS.app */;
+			productType = "com.apple.product-type.application";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -912,6 +1064,11 @@
 			attributes = {
 				LastUpgradeCheck = 0510;
 				ORGANIZATIONNAME = deadc0de.org;
+				TargetAttributes = {
+					935C55271C12BA5F0013166D = {
+						CreatedOnToolsVersion = 7.1.1;
+					};
+				};
 			};
 			buildConfigurationList = 773B3D07195688590085CE5F /* Build configuration list for PBXProject "Apple2Mac" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -937,6 +1094,7 @@
 				4AD4FE911A52464F00F958EC /* Apple2MacTestDisk */,
 				779F566119EB0B9100A6F107 /* Apple2MacTestDisplay */,
 				4ADC51FB19E8CA4500186B36 /* Apple2MacTestVM */,
+				935C55271C12BA5F0013166D /* Apple2iOS */,
 			);
 		};
 /* End PBXProject section */
@@ -1019,18 +1177,14 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4AFC17151AAE9CC000B215FA /* testvm1.nib.gz in Resources */,
 				4A69C1801A33D6D7001579EF /* images in Resources */,
-				773B3D1A1956885A0085CE5F /* InfoPlist.strings in Resources */,
 				773B3D281956885A0085CE5F /* Images.xcassets in Resources */,
-				4A6111A31A6A1DFC0035F7DE /* flapple140.po.gz in Resources */,
+				773B3D1A1956885A0085CE5F /* InfoPlist.strings in Resources */,
 				773B3D201956885A0085CE5F /* Credits.rtf in Resources */,
-				4A61119C1A6A1DE60035F7DE /* blank.po.gz in Resources */,
 				4A2636F919FDEDB700DBFB00 /* Apple2Mac.help in Resources */,
-				4AFC17111AAE9CC000B215FA /* testdisplay1.nib.gz in Resources */,
+				779F562319DA59D600A6F107 /* MainMenu.xib in Resources */,
 				779F562919E4FE9E00A6F107 /* Basic.vsh in Resources */,
 				779F562A19E4FE9E00A6F107 /* Basic.fsh in Resources */,
-				779F562319DA59D600A6F107 /* MainMenu.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1064,6 +1218,20 @@
 				779F568B19EB0B9100A6F107 /* Credits.rtf in Resources */,
 				779F568C19EB0B9100A6F107 /* Basic.vsh in Resources */,
 				779F568D19EB0B9100A6F107 /* Basic.fsh in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		935C55261C12BA5F0013166D /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				935C55931C1371C80013166D /* images in Resources */,
+				935C55371C12BA5F0013166D /* Assets.xcassets in Resources */,
+				935C55431C12BCFD0013166D /* Apple2iOS-Info.plist in Resources */,
+				935C55461C12BE110013166D /* LaunchScreen.xib in Resources */,
+				935C55351C12BA5F0013166D /* Main.storyboard in Resources */,
+				935C55921C1371AD0013166D /* Basic.vsh in Resources */,
+				935C55911C1371AD0013166D /* Basic.fsh in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1210,6 +1378,34 @@
 			shellScript = "/bin/rm -f \"$SRCROOT/../src/x86/glue.S\"";
 			showEnvVarsInLog = 0;
 		};
+		935C558F1C1371020013166D /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"$SRCROOT/../src/arm/genglue\" \"$SRCROOT/../src/disk.c\" \"$SRCROOT/../src/misc.c\" \"$SRCROOT/../src/display.c\" \"$SRCROOT/../src/vm.c\" \"$SRCROOT/../src/audio/speaker.c\" \"$SRCROOT/../src/audio/mockingboard.c\" > \"$SRCROOT/../src/arm/glue.S\"\n\"$SRCROOT/../src/x86/genglue\" \"$SRCROOT/../src/disk.c\" \"$SRCROOT/../src/misc.c\" \"$SRCROOT/../src/display.c\" \"$SRCROOT/../src/vm.c\" \"$SRCROOT/../src/audio/speaker.c\" \"$SRCROOT/../src/audio/mockingboard.c\" > \"$SRCROOT/../src/x86/glue.S\"";
+			showEnvVarsInLog = 0;
+		};
+		935C55901C13715A0013166D /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "/bin/rm -f \"$SRCROOT/../src/arm/glue.S\"";
+			showEnvVarsInLog = 0;
+		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -1294,10 +1490,13 @@
 			buildActionMask = 2147483647;
 			files = (
 				773B3DBF19568A570085CE5F /* cpu.S in Sources */,
+				773B3DAF19568A570085CE5F /* misc.c in Sources */,
+				779F565B19EAF66E00A6F107 /* soundcore-openal.c in Sources */,
+				779F561C19D7929100A6F107 /* glvideo.c in Sources */,
 				935C55151C12B61D0013166D /* EmulatorFullscreenWindow.m in Sources */,
+				935C55AA1C138C2F0013166D /* jsmn.c in Sources */,
 				4A7EDC931AE092680072E98A /* glhudmodel.c in Sources */,
 				779F565D19EAF66E00A6F107 /* speaker.c in Sources */,
-				779F565B19EAF66E00A6F107 /* soundcore-openal.c in Sources */,
 				773B3DA419568A570085CE5F /* display.c in Sources */,
 				935C55171C12B61D0013166D /* EmulatorJoystickController.m in Sources */,
 				773B3DA319568A570085CE5F /* disk.c in Sources */,
@@ -1306,7 +1505,6 @@
 				4A7EDC9E1AE092B80072E98A /* interface.c in Sources */,
 				773B3DAB19568A570085CE5F /* keys.c in Sources */,
 				773B3DBC19568A570085CE5F /* timing.c in Sources */,
-				773B3DAF19568A570085CE5F /* misc.c in Sources */,
 				773BC91A19F31E7B00996893 /* prefs.c in Sources */,
 				77E1C0B619D72700004344E0 /* matrixUtil.c in Sources */,
 				773B3DAE19568A570085CE5F /* opcodes.c in Sources */,
@@ -1327,7 +1525,6 @@
 				93BC72571BF6FF11005CDFCA /* playqueue.c in Sources */,
 				773B3DA519568A570085CE5F /* font.c in Sources */,
 				773B3DA019568A570085CE5F /* cpu-supp.c in Sources */,
-				779F561C19D7929100A6F107 /* glvideo.c in Sources */,
 				779F565A19EAF66E00A6F107 /* mockingboard.c in Sources */,
 				77E1C0B419D72700004344E0 /* sourceUtil.c in Sources */,
 				779F565819EAF66E00A6F107 /* alhelpers.c in Sources */,
@@ -1338,6 +1535,7 @@
 				773B3DBE19568A570085CE5F /* vm.c in Sources */,
 				773B3DC019568A570085CE5F /* darwin-glue.S in Sources */,
 				773B3DAA19568A570085CE5F /* joystick.c in Sources */,
+				935C55721C136E6F0013166D /* json_parse.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1417,6 +1615,56 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		935C55241C12BA5F0013166D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				935C559F1C1384240013166D /* darwin-cpu-glue.S in Sources */,
+				935C55621C136E070013166D /* misc.c in Sources */,
+				935C55691C136E070013166D /* glvideo.c in Sources */,
+				935C558A1C1370800013166D /* gltouchjoy_joy.c in Sources */,
+				935C558B1C1370800013166D /* gltouchjoy_kpad.c in Sources */,
+				935C558C1C1370800013166D /* gltouchjoy.c in Sources */,
+				935C55561C136DF40013166D /* soundcore.c in Sources */,
+				935C55551C136DF40013166D /* soundcore-openal.c in Sources */,
+				935C55611C136E070013166D /* opcodes.c in Sources */,
+				935C55631C136E070013166D /* prefs.c in Sources */,
+				935C55731C136E6F0013166D /* json_parse.c in Sources */,
+				935C55641C136E070013166D /* rom-shim.c in Sources */,
+				935C55651C136E070013166D /* timing.c in Sources */,
+				935C55661C136E070013166D /* glalert.c in Sources */,
+				935C55A91C1389370013166D /* jsmn.c in Sources */,
+				935C55671C136E070013166D /* glhudmodel.c in Sources */,
+				935C55681C136E070013166D /* glnode.c in Sources */,
+				935C556A1C136E070013166D /* matrixUtil.c in Sources */,
+				935C556B1C136E070013166D /* modelUtil.c in Sources */,
+				935C556C1C136E070013166D /* sourceUtil.c in Sources */,
+				935C556D1C136E070013166D /* vectorUtil.c in Sources */,
+				935C556E1C136E070013166D /* vm.c in Sources */,
+				935C556F1C136E070013166D /* zlib-helpers.c in Sources */,
+				935C558D1C1370800013166D /* gltouchkbd.c in Sources */,
+				935C55511C136DF40013166D /* alhelpers.c in Sources */,
+				935C55521C136DF40013166D /* AY8910.c in Sources */,
+				935C55531C136DF40013166D /* mockingboard.c in Sources */,
+				935C55541C136DF40013166D /* playqueue.c in Sources */,
+				935C558E1C1370800013166D /* gltouchmenu.c in Sources */,
+				935C55571C136DF40013166D /* speaker.c in Sources */,
+				935C55581C136DF40013166D /* cpu-supp.c in Sources */,
+				935C55591C136DF40013166D /* darwin-shim.c in Sources */,
+				935C55601C136E070013166D /* debugger.c in Sources */,
+				935C555A1C136DF40013166D /* disk.c in Sources */,
+				935C555B1C136DF40013166D /* display.c in Sources */,
+				935C555C1C136DF40013166D /* font.c in Sources */,
+				935C555D1C136DF40013166D /* interface.c in Sources */,
+				935C555E1C136DF40013166D /* joystick.c in Sources */,
+				935C55A11C13887E0013166D /* sha1.c in Sources */,
+				935C555F1C136DF40013166D /* keys.c in Sources */,
+				935C554D1C12BE510013166D /* AppDelegate.m in Sources */,
+				935C55A41C1388E30013166D /* main.m in Sources */,
+				935C554E1C12BE510013166D /* EAGLView.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -1466,6 +1714,22 @@
 				773B3D371956885A0085CE5F /* en */,
 			);
 			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+		935C55331C12BA5F0013166D /* Main.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				935C55341C12BA5F0013166D /* Base */,
+			);
+			name = Main.storyboard;
+			sourceTree = "<group>";
+		};
+		935C55441C12BE110013166D /* LaunchScreen.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				935C55451C12BE110013166D /* Base */,
+			);
+			name = LaunchScreen.xib;
 			sourceTree = "<group>";
 		};
 /* End PBXVariantGroup section */
@@ -1828,6 +2092,80 @@
 			};
 			name = Release;
 		};
+		935C553D1C12BA5F0013166D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = YES;
+				ARCHS = armv7;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ENABLE_OBJC_ARC = NO;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_PREFIX_HEADER = "Apple2Mac-Prefix.pch";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"APPLE2IX=1",
+					"INTERFACE_TOUCH=1",
+					"MOBILE_DEVICE=1",
+					"DEBUGGER=1",
+					"VIDEO_OPENGL=1",
+					"AUDIO_ENABLED=1",
+				);
+				INFOPLIST_FILE = "$(SRCROOT)/Apple2iOS/Apple2iOS-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 7.1;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				MTL_ENABLE_DEBUG_INFO = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.deadc0de.Apple2iOS;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "";
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/../src";
+				VALID_ARCHS = "armv7 armv7s";
+			};
+			name = Debug;
+		};
+		935C553E1C12BA5F0013166D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = YES;
+				ARCHS = armv7;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ENABLE_OBJC_ARC = NO;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_PREFIX_HEADER = "Apple2Mac-Prefix.pch";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"NDEBUG=1",
+					"APPLE2IX=1",
+					"INTERFACE_TOUCH=1",
+					"MOBILE_DEVICE=1",
+					"DEBUGGER=1",
+					"VIDEO_OPENGL=1",
+					"AUDIO_ENABLED=1",
+				);
+				INFOPLIST_FILE = "$(SRCROOT)/Apple2iOS/Apple2iOS-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 7.1;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				MTL_ENABLE_DEBUG_INFO = NO;
+				PRODUCT_BUNDLE_IDENTIFIER = com.deadc0de.Apple2iOS;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "";
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/../src";
+				VALIDATE_PRODUCT = YES;
+				VALID_ARCHS = "armv7 armv7s";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -1881,6 +2219,15 @@
 			buildConfigurations = (
 				779F568F19EB0B9100A6F107 /* Debug */,
 				779F569019EB0B9100A6F107 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		935C553C1C12BA5F0013166D /* Build configuration list for PBXNativeTarget "Apple2iOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				935C553D1C12BA5F0013166D /* Debug */,
+				935C553E1C12BA5F0013166D /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

@@ -43,10 +43,17 @@
 #endif
 
 
-#define NO_UNDERSCORES 1
+#if !defined(__APPLE__)
+#   define NO_UNDERSCORES 1
+#endif
 
-#define ENTRY(x)            .globl x; .balign 16; .type x, %function; x##:
-#define CALL(x)             x
+#if NO_UNDERSCORES
+#   define ENTRY(x)         .globl x; .arm; .balign 4; x##:
+#   define CALL(x)          x
+#else
+#   define ENTRY(x)         .globl _##x; .arm; .balign 4; _##x##:
+#   define CALL(x)          _##x
+#endif
 
 // 2015/11/08 NOTE : Android requires all apps targeting API 23 (AKA Marshmallow) to use Position Independent Code (PIC)
 // that does not have TEXT segment relocations
@@ -81,8 +88,13 @@
                 _SYM_ADDR_POST(var,8)
 #   endif
 #else /* !PREVENT_TEXTREL */
-#   define SYM(reg,var) \
+#   if NO_UNDERSCORES
+#       define SYM(reg,var) \
                 ldr     reg, =var
+#   else
+#       define SYM(reg,var) \
+                ldr     reg, =_##var
+#   endif
 #endif
 
 

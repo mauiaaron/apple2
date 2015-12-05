@@ -2511,7 +2511,7 @@ ENTRY(cpu65_run)
                 ldrb    r0, [r1]
                 teq     r0, #0
                 eorne   r0, r0, r0
-                strneb  r0, [r1]
+                strbne  r0, [r1]
                 bne     ex_reset
                 b       continue1
 
@@ -2547,8 +2547,13 @@ ENTRY(cpu65_direct_write)
 # local data ...
 .global interrupt_vector
 .global reset_vector
-interrupt_vector: .hword 0xFFFE
-reset_vector:     .hword 0xFFFC
+#if NO_UNDERSCORES
+interrupt_vector:       .hword 0xFFFE
+reset_vector:           .hword 0xFFFC
+#else
+_interrupt_vector:      .hword 0xFFFE
+_reset_vector:          .hword 0xFFFC
+#endif
 
 .ltorg
 
