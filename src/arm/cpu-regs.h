@@ -32,7 +32,6 @@
 // r14 ARM return addr
 // r15 ARM PC
 
-
 #ifdef __aarch64__
 #   error 20150205 ARM 64bit untested!!!
 #   define PTR_SHIFT        #4 // 4<<1 = 8
@@ -45,6 +44,9 @@
 
 #if !defined(__APPLE__)
 #   define NO_UNDERSCORES 1
+#   define STRBNE strneb
+#else
+#   define STRBNE strbne
 #endif
 
 #if NO_UNDERSCORES

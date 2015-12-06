@@ -45,7 +45,7 @@ ENTRY(func)             SYM(r1, pointer); \
 ENTRY(func)             SYM(r1, pointer); \
                         ldr     r1, [r1]; \
                         teq     r1, #0; \
-                        strbne  r0, [r1, EffectiveAddr]; \
+                        STRBNE  r0, [r1, EffectiveAddr]; \
                         mov     pc, lr;
 
 
