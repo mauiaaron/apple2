@@ -2511,7 +2511,7 @@ ENTRY(cpu65_run)
                 ldrb    r0, [r1]
                 teq     r0, #0
                 eorne   r0, r0, r0
-                strbne  r0, [r1]
+                STRBNE  r0, [r1]
                 bne     ex_reset
                 b       continue1
 
