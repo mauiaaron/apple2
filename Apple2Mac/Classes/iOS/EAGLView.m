@@ -13,6 +13,8 @@
 #import "common.h"
 #import "modelUtil.h"
 
+#import "A2IXPopupChoreographer.h"
+
 #import <OpenGLES/ES3/gl.h>
 #import <OpenGLES/ES3/glext.h>
 
@@ -238,6 +240,7 @@ static inline void _handleTouch(EAGLView *self, SEL _cmd, UITouch *touch, interf
         if ((flags & TOUCH_FLAGS_REQUEST_HOST_MENU) != 0)
         {
             // requested host menu
+            [[A2IXPopupChoreographer sharedInstance] showMainMenuFromView:self];
         }
         
         if ((flags & TOUCH_FLAGS_KEY_TAP) != 0)
@@ -247,6 +250,7 @@ static inline void _handleTouch(EAGLView *self, SEL _cmd, UITouch *touch, interf
         
         if ((flags & TOUCH_FLAGS_MENU) == 0)
         {
+            // touch menu was tapped
             break;
         }
         

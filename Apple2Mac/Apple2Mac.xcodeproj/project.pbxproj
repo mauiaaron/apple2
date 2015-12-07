@@ -231,6 +231,8 @@
 		77E1C0B719D72700004344E0 /* imageUtil.m in Sources */ = {isa = PBXBuildFile; fileRef = 77E1C0B019D72700004344E0 /* imageUtil.m */; };
 		77EB316C1A27A9AF00DC5A8A /* blank.dsk.gz in Resources */ = {isa = PBXBuildFile; fileRef = 4ADC523019E8D3F600186B36 /* blank.dsk.gz */; };
 		77EB316D1A27A9AF00DC5A8A /* blank.nib.gz in Resources */ = {isa = PBXBuildFile; fileRef = 4ADC523119E8D3F600186B36 /* blank.nib.gz */; };
+		93206C781C14E14000668153 /* Apple2iOS.strings in Resources */ = {isa = PBXBuildFile; fileRef = 93206C761C14E14000668153 /* Apple2iOS.strings */; };
+		93206C851C156BD300668153 /* A2IXPopupChoreographer.m in Sources */ = {isa = PBXBuildFile; fileRef = 93206C841C156BD300668153 /* A2IXPopupChoreographer.m */; };
 		935C55131C12B61D0013166D /* EmulatorGLView.m in Sources */ = {isa = PBXBuildFile; fileRef = 935C55041C12B61D0013166D /* EmulatorGLView.m */; };
 		935C55141C12B61D0013166D /* EmulatorDiskController.m in Sources */ = {isa = PBXBuildFile; fileRef = 935C55061C12B61D0013166D /* EmulatorDiskController.m */; };
 		935C55151C12B61D0013166D /* EmulatorFullscreenWindow.m in Sources */ = {isa = PBXBuildFile; fileRef = 935C55081C12B61D0013166D /* EmulatorFullscreenWindow.m */; };
@@ -466,6 +468,9 @@
 		77E1C0B119D72700004344E0 /* imageUtil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = imageUtil.h; path = video_util/imageUtil.h; sourceTree = "<group>"; };
 		77E1C0B219D72700004344E0 /* glUtil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = glUtil.h; path = video_util/glUtil.h; sourceTree = "<group>"; };
 		77E1C0C719D736EB004344E0 /* glvideo.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = glvideo.c; sourceTree = "<group>"; };
+		93206C771C14E14000668153 /* Base */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = Base; path = Base.lproj/Apple2iOS.strings; sourceTree = "<group>"; };
+		93206C831C156BD300668153 /* A2IXPopupChoreographer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = A2IXPopupChoreographer.h; path = Classes/iOS/A2IXPopupChoreographer.h; sourceTree = SOURCE_ROOT; };
+		93206C841C156BD300668153 /* A2IXPopupChoreographer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = A2IXPopupChoreographer.m; path = Classes/iOS/A2IXPopupChoreographer.m; sourceTree = SOURCE_ROOT; };
 		935C55031C12B61D0013166D /* EmulatorGLView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = EmulatorGLView.h; path = Classes/OSX/EmulatorGLView.h; sourceTree = SOURCE_ROOT; };
 		935C55041C12B61D0013166D /* EmulatorGLView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = EmulatorGLView.m; path = Classes/OSX/EmulatorGLView.m; sourceTree = SOURCE_ROOT; };
 		935C55051C12B61D0013166D /* EmulatorDiskController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = EmulatorDiskController.h; path = Classes/OSX/EmulatorDiskController.h; sourceTree = SOURCE_ROOT; };
@@ -880,6 +885,8 @@
 			children = (
 				935C55471C12BE510013166D /* AppDelegate.h */,
 				935C55481C12BE510013166D /* AppDelegate.m */,
+				93206C831C156BD300668153 /* A2IXPopupChoreographer.h */,
+				93206C841C156BD300668153 /* A2IXPopupChoreographer.m */,
 				935C55491C12BE510013166D /* EAGLView.h */,
 				935C554A1C12BE510013166D /* EAGLView.m */,
 			);
@@ -889,6 +896,7 @@
 		935C55291C12BA5F0013166D /* Apple2iOS */ = {
 			isa = PBXGroup;
 			children = (
+				93206C761C14E14000668153 /* Apple2iOS.strings */,
 				935C55421C12BCFD0013166D /* Apple2iOS-Info.plist */,
 				935C55361C12BA5F0013166D /* Assets.xcassets */,
 				935C55441C12BE110013166D /* LaunchScreen.xib */,
@@ -1232,6 +1240,7 @@
 				935C55351C12BA5F0013166D /* Main.storyboard in Resources */,
 				935C55921C1371AD0013166D /* Basic.vsh in Resources */,
 				935C55911C1371AD0013166D /* Basic.fsh in Resources */,
+				93206C781C14E14000668153 /* Apple2iOS.strings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1623,6 +1632,7 @@
 				935C55621C136E070013166D /* misc.c in Sources */,
 				935C55691C136E070013166D /* glvideo.c in Sources */,
 				935C558A1C1370800013166D /* gltouchjoy_joy.c in Sources */,
+				93206C851C156BD300668153 /* A2IXPopupChoreographer.m in Sources */,
 				935C558B1C1370800013166D /* gltouchjoy_kpad.c in Sources */,
 				935C558C1C1370800013166D /* gltouchjoy.c in Sources */,
 				935C55561C136DF40013166D /* soundcore.c in Sources */,
@@ -1714,6 +1724,14 @@
 				773B3D371956885A0085CE5F /* en */,
 			);
 			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+		93206C761C14E14000668153 /* Apple2iOS.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				93206C771C14E14000668153 /* Base */,
+			);
+			name = Apple2iOS.strings;
 			sourceTree = "<group>";
 		};
 		935C55331C12BA5F0013166D /* Main.storyboard */ = {
