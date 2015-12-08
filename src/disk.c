@@ -463,6 +463,23 @@ static void save_track_data(int drive) {
     disk6.disk[drive].track_dirty = false;
 }
 
+static inline void animate_disk_track_sector(void) {
+    if (video_backend && video_backend->animation_showTrackSector) {
+        static int previous_sect = 0;
+        int sect_width = disk6.disk[disk6.drive].track_width>>4; // div-by-16
+        do {
+            if (UNLIKELY(sect_width <= 0)) {
+                break;
+            }
+            int sect = disk6.disk[disk6.drive].run_byte/sect_width;
+            if (sect != previous_sect) {
+                previous_sect = sect;
+                video_backend->animation_showTrackSector(disk6.drive, disk6.disk[disk6.drive].phase>>1, sect);
+            }
+        } while (0);
+    }
+}
+
 // ----------------------------------------------------------------------------
 // Emulator hooks
 
@@ -536,6 +553,9 @@ GLUE_C_READ(disk_read_write_byte)
     if (disk6.disk[disk6.drive].run_byte >= disk6.disk[disk6.drive].track_width) {
         disk6.disk[disk6.drive].run_byte = 0;
     }
+
+    animate_disk_track_sector();
+
 #if DISK_TRACING
     if ((disk6.disk[disk6.drive].run_byte % NIB_SEC_SIZE) == 0) {
         if (disk6.ddrw) {
@@ -615,6 +635,8 @@ GLUE_C_READ(disk_read_phase)
             fprintf(test_write_fp, "NEW TRK:%d\n", (disk6.disk[disk6.drive].phase>>1));
         }
 #endif
+
+        animate_disk_track_sector();
     }
 
     return ea == 0xE0 ? 0xFF : floating_bus_hibit(1);

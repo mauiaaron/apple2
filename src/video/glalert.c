@@ -233,7 +233,6 @@ static void _animation_showMessage(char *messageTemplate, unsigned int cols, uns
     nextMessage = message;
     nextMessageCols = framedCols;
     nextMessageRows = framedRows;
-    LOG("New message with %d cols %d rows", nextMessageCols, nextMessageRows);
     pthread_mutex_unlock(&messageMutex);
 }
 
@@ -314,6 +313,41 @@ static void _animation_showDiskChosen(int drive) {
     _animation_showMessage(template, shownCols, DISK_ANIMATION_ROWS);
 }
 
+static void _animation_showTrackSector(int drive, int track, int sect) {
+
+#define DISK_TRACK_SECTOR_ROWS 3
+#define DISK_TRACK_SECTOR_COLS 9
+
+    static char diskTrackSectorTemplate[DISK_TRACK_SECTOR_ROWS][DISK_TRACK_SECTOR_COLS+1] = {
+        "         ",
+        "D / TT/SS",
+        "         ",
+    };
+    char *template = diskTrackSectorTemplate[0];
+
+    char c = diskTrackSectorTemplate[1][2];
+    switch (c) {
+        case '/':
+            c = '-';
+            break;
+        case '-':
+            c = '\\';
+            break;
+        case '\\':
+            c = '|';
+            break;
+        case '|':
+            c = '/';
+            break;
+        default:
+            assert(false && "should not happen");
+            break;
+    }
+    snprintf(&diskTrackSectorTemplate[1][0], DISK_TRACK_SECTOR_COLS+1, "%d %c %02X/%02X", drive+1, c, track, sect);
+
+    _animation_showMessage(template, DISK_TRACK_SECTOR_COLS, DISK_TRACK_SECTOR_ROWS);
+}
+
 __attribute__((constructor(CTOR_PRIORITY_LATE)))
 static void _init_glalert(void) {
     LOG("Initializing message animation subsystem");
@@ -322,6 +356,7 @@ static void _init_glalert(void) {
     video_backend->animation_showPaused = &_animation_showPaused;
     video_backend->animation_showCPUSpeed = &_animation_showCPUSpeed;
     video_backend->animation_showDiskChosen = &_animation_showDiskChosen;
+    video_backend->animation_showTrackSector = &_animation_showTrackSector;
 
     glnode_registerNode(RENDER_MIDDLE, (GLNode){
         .setup = &alert_init,
