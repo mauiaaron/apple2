@@ -50,25 +50,6 @@ public class Apple2AudioSettingsMenu extends Apple2AbstractMenu {
     }
 
     enum SETTINGS implements Apple2AbstractMenu.IMenuEnum {
-        SPEAKER_ENABLED {
-            @Override
-            public final String getTitle(Apple2Activity activity) {
-                return activity.getResources().getString(R.string.speaker_enable);
-            }
-
-            @Override
-            public final String getSummary(Apple2Activity activity) {
-                return activity.getResources().getString(R.string.speaker_enable_summary);
-            }
-
-            @Override
-            public View getView(final Apple2Activity activity, View convertView) {
-                convertView = _basicView(activity, this, convertView);
-                CheckBox cb = _addCheckbox(activity, this, convertView, true);
-                cb.setEnabled(false);
-                return convertView;
-            }
-        },
         SPEAKER_VOLUME {
             @Override
             public final String getTitle(Apple2Activity activity) {

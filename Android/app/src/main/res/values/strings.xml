@@ -4,6 +4,15 @@
     <color name="black">#000000</color>
     <color name="white">#ffffff</color>
 
+    <!-- developer-only options -->
+    <string name="crasher_summary">Test crash generation</string>
+    <string name="crasher_title">Crash emulator</string>
+    <string name="crash_null">NULL-deref</string>
+    <string name="crash_java_npe">Java NPE</string>
+    <string name="crash_stackcall_overflow">stack call overflow</string>
+    <string name="crash_stackbuf_overflow">stack buffer overflow</string>
+
+    <!-- main options -->
     <string name="about_apple2ix">About Apple2ix…</string>
     <string name="about_apple2ix_summary">About this software</string>
     <string name="app_name">Apple2ix</string>
@@ -15,22 +24,16 @@
     <string name="color_bw">Black/white</string>
     <string name="color_color">Color</string>
     <string name="color_interpolated">Interpolated color</string>
-    <string name="crasher">Crasher</string>
+    <string name="crasher">Crashes</string>
     <string name="crasher_check_title">Check for crash reports</string>
-    <string name="crasher_check_summary">Check for crash reports to email developer)</string>
+    <string name="crasher_check_summary">Check for crash reports to email developer</string>
     <string name="crasher_send">Send crash report?</string>
     <string name="crasher_send_message">Sorry there has been a problem. Do you want to send a crash report to the developer?</string>
-    <string name="crasher_summary">Test crash generation</string>
-    <string name="crasher_title">Crash emulator</string>
-    <string name="crash_null">NULL-deref</string>
-    <string name="crash_java_npe">Java NPE</string>
-    <string name="crash_stackcall_overflow">stack call overflow</string>
-    <string name="crash_stackbuf_overflow">stack buffer overflow</string>
     <string name="diskA">Drive 1</string>
     <string name="diskB">Drive 2</string>
     <string name="disk_eject">Eject</string>
     <string name="disk_insert_toast">Inserted disk in drive 1 read-only</string>
-    <string name="disk_insert_could_not_read">OOPS, could not read the disk image!</string>
+    <string name="disk_insert_could_not_read">Sorry, could not read the disk image!</string>
     <string name="disk_read_only">Read only</string>
     <string name="disk_read_write">Read/write</string>
     <string name="emulation_continue">Continue…</string>
@@ -41,8 +44,8 @@
     <string name="input_current_summary">Choose current touch device</string>
     <string name="joystick">Joystick</string>
     <string name="joystick_axis_sensitivity_summary">Tune joystick axis sensitivity (decelerate or accelerate)</string>
-    <string name="joystick_button_button1">Button1 (Open Apple)</string>
-    <string name="joystick_button_button2">Button2 (Closed Apple)</string>
+    <string name="joystick_button_button1">Button 1 (Open Apple)</string>
+    <string name="joystick_button_button2">Button 2 (Closed Apple)</string>
     <string name="joystick_button_button_both">Both</string>
     <string name="joystick_button_button_none">None</string>
     <string name="joystick_button_tap_button">Tap fire</string>
@@ -86,8 +89,8 @@
     <string name="keyboard_visibility_inactive">Visibility when inactive</string>
     <string name="keyboard_visibility_inactive_summary">Keyboard visibility when inactive</string>
     <string name="keypad">Keypad Joystick</string>
-    <string name="keypad_calibrate">Calibrate…</string>
-    <string name="keypad_calibrate_summary">Configure and test current settings</string>
+    <string name="keypad_calibrate">@string/joystick_calibrate</string>
+    <string name="keypad_calibrate_summary">@string/joystick_calibrate</string>
     <string name="keypad_choose">Choose keypad keys…</string>
     <string name="keypad_choose_summary">Choose axis and button keys</string>
     <string name="keypad_choose_title">Axis &amp; buttons</string>
@@ -117,13 +120,13 @@
     <string name="menu_disks">Load disk image…</string>
     <string name="menu_disks_summary">Insert a Disk ][ image file</string>
     <string name="menu_settings">Emulator settings…</string>
-    <string name="menu_settings_summary">General, CPU, Joystick</string>
+    <string name="menu_settings_summary">General settings, joystick, keyboard</string>
     <string name="mockingboard_disabled_title">Mockingboard disabled</string>
     <string name="mockingboard_disabled_mesg">Mockingboard could not be enabled</string>
     <string name="mockingboard_enable">Enable Mockingboard</string>
     <string name="mockingboard_enable_summary">Revision C in Slot 4/5 (may require restart)</string>
     <string name="mockingboard_volume">Mockingboard volume</string>
-    <string name="mockingboard_volume_summary">Set the Mockingboard(s) volume</string>
+    <string name="mockingboard_volume_summary">Set the Mockingboard volume</string>
     <string name="no">No</string>
     <string name="ok">OK</string>
     <string name="preferences_reset_title">Reset preferences</string>
@@ -140,15 +143,11 @@
     <string name="saverestore_choice">Save current state or restore previous?</string>
     <string name="saverestore_summary">Quick save and restore</string>
     <string name="skip">Skip&#8594;</string>
-    <string name="speaker_disabled_title">Speaker disabled</string>
-    <string name="speaker_disabled_mesg">Speaker could not be enabled</string>
-    <string name="speaker_enable">Enable speaker</string>
-    <string name="speaker_enable_summary">(Speaker cannot be disabled)</string>
     <string name="speaker_volume">Speaker volume</string>
     <string name="speaker_volume_summary">Set the speaker volume</string>
     <string name="settings">Apple2ix emulator settings</string>
     <string name="settings_advanced">Advanced settings</string>
-    <string name="settings_advanced_summary">Warning: these settings may potentially degrade emulation performance</string>
+    <string name="settings_advanced_summary">Warning: these settings may degrade performance</string>
     <string name="settings_advanced_joystick">Advanced joystick/keypad settings</string>
     <string name="settings_advanced_joystick_summary">Advanced settings and performance tuning</string>
     <string name="touch_menu_enable">Enable touch menus</string>

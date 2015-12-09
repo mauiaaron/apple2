@@ -173,22 +173,6 @@ public enum Apple2Preferences {
             return activity.getPreferences(Context.MODE_PRIVATE).getInt(toString(), HiresColor.INTERPOLATED.ordinal());
         }
     },
-    SPEAKER_ENABLED {
-        @Override
-        public void load(Apple2Activity activity) {
-            boolean enabled = booleanValue(activity);
-            boolean result = nativeSetSpeakerEnabled(enabled);
-            if (enabled && !result) {
-                warnError(activity, R.string.speaker_disabled_title, R.string.speaker_disabled_mesg);
-                activity.getPreferences(Context.MODE_PRIVATE).edit().putBoolean(toString(), false).apply();
-            }
-        }
-
-        @Override
-        public boolean booleanValue(Apple2Activity activity) {
-            return activity.getPreferences(Context.MODE_PRIVATE).getBoolean(toString(), true);
-        }
-    },
     SPEAKER_VOLUME {
         @Override
         public void load(Apple2Activity activity) {
