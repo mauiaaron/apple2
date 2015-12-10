@@ -111,7 +111,6 @@ static struct {
 
 static struct {
     GLModel *model;
-    bool modelDirty; // TODO : movement animation
 
     int selectedCol;
     int selectedRow;
@@ -460,10 +459,24 @@ static void _destroy_touchkbd_hud(GLModel *parent) {
 // ----------------------------------------------------------------------------
 // GLNode functions
 
-static void gltouchkbd_setup(void) {
-    LOG("gltouchkbd_setup ...");
+static void gltouchkbd_shutdown(void) {
+    LOG("gltouchkbd_shutdown ...");
+    if (!isAvailable) {
+        return;
+    }
+
+    isAvailable = false;
 
     mdlDestroyModel(&kbd.model);
+    kbd.selectedCol = -1;
+    kbd.selectedRow = -1;
+    kbd.ctrlPressed = false;
+}
+
+static void gltouchkbd_setup(void) {
+    LOG("gltouchkbd_setup ... %u", sizeof(kbd));
+
+    gltouchkbd_shutdown();
 
     kbd.model = mdlCreateQuad(-1.0, -1.0, KBD_OBJ_W, KBD_OBJ_H, MODEL_DEPTH, KBD_FB_WIDTH, KBD_FB_HEIGHT, (GLCustom){
             .create = &_create_touchkbd_hud,
@@ -482,17 +495,6 @@ static void gltouchkbd_setup(void) {
     clock_gettime(CLOCK_MONOTONIC, &kbd.timingBegin);
 
     isAvailable = true;
-}
-
-static void gltouchkbd_shutdown(void) {
-    LOG("gltouchkbd_shutdown ...");
-    if (!isAvailable) {
-        return;
-    }
-
-    isAvailable = false;
-
-    mdlDestroyModel(&kbd.model);
 }
 
 static void gltouchkbd_render(void) {
@@ -520,11 +522,6 @@ static void gltouchkbd_render(void) {
             kbd.model->texDirty = false;
             _HACKAROUND_GLTEXIMAGE2D_PRE(TEXTURE_ACTIVE_TOUCHKBD, kbd.model->textureName);
             glTexImage2D(GL_TEXTURE_2D, /*level*/0, TEX_FORMAT_INTERNAL, kbd.model->texWidth, kbd.model->texHeight, /*border*/0, TEX_FORMAT, TEX_TYPE, kbd.model->texPixels);
-        }
-        if (kbd.modelDirty) {
-            kbd.modelDirty = false;
-            glBindBuffer(GL_ARRAY_BUFFER, kbd.model->posBufferName);
-            glBufferData(GL_ARRAY_BUFFER, kbd.model->positionArraySize, kbd.model->positions, GL_DYNAMIC_DRAW);
         }
         glUniform1i(texSamplerLoc, TEXTURE_ID_TOUCHKBD);
         glhud_renderDefault(kbd.model);
