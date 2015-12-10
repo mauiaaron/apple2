@@ -436,7 +436,11 @@ static void _setup_touchkbd_hud(GLModel *parent) {
     hudKeyboard->tpl = calloc(size, 1);
     hudKeyboard->pixels = calloc(KBD_FB_WIDTH * KBD_FB_HEIGHT, 1);
 
-    _switch_keyboard(parent, kbdTemplateUCase[0]);
+    memcpy(hudKeyboard->tpl, kbdTemplateUCase[0], sizeof(kbdTemplateUCase/* assuming all the same size */));
+
+    // setup normal color pixels
+    hudKeyboard->colorScheme = RED_ON_BLACK;
+    glhud_setupDefault(parent);
 }
 
 static void *_create_touchkbd_hud(void) {
