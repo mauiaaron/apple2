@@ -82,7 +82,7 @@ static uint8_t kbdTemplateAlt[KBD_TEMPLATE_ROWS][KBD_TEMPLATE_COLS+1] = {
     "$|\\XXX.^XX",
 };
 
-static uint8_t kbdTemplateArrow[KBD_TEMPLATE_ROWS][KBD_TEMPLATE_COLS+1] = {
+static uint8_t kbdTemplateUserAlt[KBD_TEMPLATE_ROWS][KBD_TEMPLATE_COLS+1] = {
     "@ @ @ @ @ ",
     "          ",
     "     @    ",
@@ -202,13 +202,13 @@ static inline void _switch_keyboard(GLModel *parent, uint8_t *template) {
     }
 }
 
-static inline void _toggle_arrows(void) {
+static inline void _show_useralt_kbd(void) {
     GLModelHUDKeyboard *hudKeyboard = (GLModelHUDKeyboard *)kbd.model->custom;
     uint8_t c = hudKeyboard->tpl[_ROWOFF*(KBD_TEMPLATE_COLS+1)];
     if (c == ICONTEXT_NONACTIONABLE) {
         _switch_keyboard(kbd.model, kbdTemplateUCase[0]);
     } else {
-        _switch_keyboard(kbd.model, kbdTemplateArrow[0]);
+        _switch_keyboard(kbd.model, kbdTemplateUserAlt[0]);
     }
 }
 
@@ -360,7 +360,7 @@ static inline int64_t _tap_key_at_point(float x, float y) {
 
         case ICONTEXT_MENU_SPROUT:
             key = 0;
-            _toggle_arrows();
+            _show_useralt_kbd();
             break;
 
         case ICONTEXT_GOTO:
@@ -761,10 +761,10 @@ static void gltouchkbd_loadAltKbd(const char *kbdPath) {
                 const int size  = end - start;
 
                 if (size == 1) {
-                    kbdTemplateArrow[row][col] = parsedData.jsonString[start];
+                    kbdTemplateUserAlt[row][col] = parsedData.jsonString[start];
                     continue;
                 } else if (size == 0) {
-                    kbdTemplateArrow[row][col] = ICONTEXT_NONACTIONABLE;
+                    kbdTemplateUserAlt[row][col] = ICONTEXT_NONACTIONABLE;
                     continue;
                 } else if (size < 0) {
                     assert(false && "negative size coming from jsmn!");
@@ -790,7 +790,7 @@ static void gltouchkbd_loadAltKbd(const char *kbdPath) {
                     if (foundMatch) {
                         start = parsedData.jsonTokens[i+1].start;
                         uint8_t ch = (uint8_t)strtol(&parsedData.jsonString[start], NULL, /*base:*/16);
-                        kbdTemplateArrow[row][col] = ch;
+                        kbdTemplateUserAlt[row][col] = ch;
                         break;
                     }
                 }
@@ -841,8 +841,8 @@ static void _initialize_keyboard_templates(void) {
     }
     for (unsigned int i=0; i<KBD_TEMPLATE_ROWS; i++) {
         for (unsigned int j=0; j<KBD_TEMPLATE_COLS; j++) {
-            if (kbdTemplateArrow[i][j] == ' ') {
-                kbdTemplateArrow[i][j] = ICONTEXT_NONACTIONABLE;
+            if (kbdTemplateUserAlt[i][j] == ' ') {
+                kbdTemplateUserAlt[i][j] = ICONTEXT_NONACTIONABLE;
             }
         }
     }
@@ -850,37 +850,37 @@ static void _initialize_keyboard_templates(void) {
     kbdTemplateLCase[0][0] = ICONTEXT_UPPERCASE;
     kbdTemplateUCase[0][0] = ICONTEXT_SHOWALT1;
     kbdTemplateAlt  [0][0] = ICONTEXT_UPPERCASE;
-    kbdTemplateArrow[0][0] = ICONTEXT_UPPERCASE;
+    kbdTemplateUserAlt[0][0] = ICONTEXT_UPPERCASE;
 
     kbdTemplateUCase[0][2] = ICONTEXT_CTRL;
     kbdTemplateLCase[0][2] = ICONTEXT_CTRL;
     kbdTemplateAlt  [0][2] = ICONTEXT_CTRL;
-    kbdTemplateArrow[0][2] = ICONTEXT_CTRL;
+    kbdTemplateUserAlt[0][2] = ICONTEXT_CTRL;
 
     kbdTemplateUCase[0][4] = ICONTEXT_ESC;
     kbdTemplateLCase[0][4] = ICONTEXT_ESC;
     kbdTemplateAlt  [0][4] = ICONTEXT_ESC;
-    kbdTemplateArrow[0][4] = ICONTEXT_ESC;
+    kbdTemplateUserAlt[0][4] = ICONTEXT_ESC;
 
     kbdTemplateUCase[0][6] = MOUSETEXT_OPENAPPLE;
     kbdTemplateLCase[0][6] = MOUSETEXT_OPENAPPLE;
     kbdTemplateAlt  [0][6] = MOUSETEXT_OPENAPPLE;
-    kbdTemplateArrow[0][6] = MOUSETEXT_OPENAPPLE;
+    kbdTemplateUserAlt[0][6] = MOUSETEXT_OPENAPPLE;
 
     kbdTemplateUCase[0][8] = MOUSETEXT_CLOSEDAPPLE;
     kbdTemplateLCase[0][8] = MOUSETEXT_CLOSEDAPPLE;
     kbdTemplateAlt  [0][8] = MOUSETEXT_CLOSEDAPPLE;
-    kbdTemplateArrow[0][8] = MOUSETEXT_CLOSEDAPPLE;
+    kbdTemplateUserAlt[0][8] = MOUSETEXT_CLOSEDAPPLE;
 
-    kbdTemplateArrow[2][5] = MOUSETEXT_UP;
-    kbdTemplateArrow[3][4] = MOUSETEXT_LEFT;
-    kbdTemplateArrow[3][6] = MOUSETEXT_RIGHT;
-    kbdTemplateArrow[4][5] = MOUSETEXT_DOWN;
+    kbdTemplateUserAlt[2][5] = MOUSETEXT_UP;
+    kbdTemplateUserAlt[3][4] = MOUSETEXT_LEFT;
+    kbdTemplateUserAlt[3][6] = MOUSETEXT_RIGHT;
+    kbdTemplateUserAlt[4][5] = MOUSETEXT_DOWN;
 
     kbdTemplateUCase[3][5] = ICONTEXT_MENU_SPROUT;
     kbdTemplateLCase[3][5] = ICONTEXT_MENU_SPROUT;
     kbdTemplateAlt  [3][5] = ICONTEXT_MENU_SPROUT;
-    kbdTemplateArrow[3][5] = ICONTEXT_MENU_SPROUT;
+    kbdTemplateUserAlt[3][5] = ICONTEXT_MENU_SPROUT;
 
     kbdTemplateUCase[_ROWOFF+2][0] = ICONTEXT_NONACTIONABLE;
     kbdTemplateLCase[_ROWOFF+2][0] = ICONTEXT_NONACTIONABLE;
