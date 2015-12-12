@@ -945,6 +945,8 @@ bool disk6_saveState(StateHelper_s *helper) {
                 break;
             }
 
+            disk6_flush(i);
+
             state = (uint8_t)disk6.disk[i].is_protected;
             if (!helper->save(fd, &state, 1)) {
                 break;
@@ -976,17 +978,17 @@ bool disk6_saveState(StateHelper_s *helper) {
                 LOG("SAVE disk[%lu] (0) <NULL>", i);
             }
 
-            state = (uint8_t)disk6.disk[i].track_valid;
+            // Save unused placeholder -- backwards compatibility
+            state = 0x0;
             if (!helper->save(fd, &state, 1)) {
                 break;
             }
-            LOG("SAVE track_valid[%lu] = %02x", i, state);
 
-            state = (uint8_t)disk6.disk[i].track_dirty;
+            // Save unused placeholder -- backwards compatibility
+            state = 0x0;
             if (!helper->save(fd, &state, 1)) {
                 break;
             }
-            LOG("SAVE track_dirty[%lu] = %02x", i, state);
 
             state = (uint8_t)disk6.disk[i].phase;
             if (!helper->save(fd, &state, 1)) {
@@ -1080,25 +1082,28 @@ bool disk6_loadState(StateHelper_s *helper) {
                     break;
                 }
 
-                snprintf(namebuf+namelen, gzlen, "%s", EXT_GZ);
-                namebuf[namelen+gzlen] = '\0';
-                LOG("LOAD disk[%lu] : (%u) %s", i, namelen, namebuf);
-                disk6_insert(i, namebuf, disk6.disk[i].is_protected);
+                namebuf[namelen] = '\0';
+                if (disk6_insert(i, namebuf, disk6.disk[i].is_protected)) {
+                    snprintf(namebuf+namelen, gzlen, "%s", EXT_GZ);
+                    namebuf[namelen+gzlen] = '\0';
+                    LOG("LOAD disk[%lu] : (%u) %s", i, namelen, namebuf);
+                    if (disk6_insert(i, namebuf, disk6.disk[i].is_protected)) {
+                        break;
+                    }
+                }
 
                 FREE(namebuf);
             }
 
+            // load placeholder
             if (!helper->load(fd, &state, 1)) {
                 break;
             }
-            disk6.disk[i].track_valid = state;
-            LOG("LOAD track_valid[%lu] = %02x", i, disk6.disk[i].track_valid);
 
+            // load placeholder
             if (!helper->load(fd, &state, 1)) {
                 break;
             }
-            disk6.disk[i].track_dirty = state;
-            LOG("LOAD track_dirty[%lu] = %02x", i, disk6.disk[i].track_dirty);
 
             if (!helper->load(fd, &state, 1)) {
                 break;
@@ -1115,6 +1120,8 @@ bool disk6_loadState(StateHelper_s *helper) {
         }
 
         if (!loaded_drives) {
+            disk6_eject(0);
+            disk6_eject(1);
             break;
         }
 
