@@ -210,6 +210,10 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeEmulationPause(JNIEnv *env,
     if (appState != APP_RUNNING) {
         return;
     }
+
+    disk6_flush(0);
+    disk6_flush(1);
+
     if (cpu_isPaused()) {
         return;
     }
