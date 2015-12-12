@@ -356,6 +356,8 @@ static void denibblize_track(const uint8_t * const src, int drive, uint8_t * con
     unsigned int offset = 0;
     int sector = -1;
 
+    const unsigned int trackwidth = disk6.disk[drive].track_width;
+
     // iterate over 2x sectors (accounting for header and data sections)
     for (unsigned int sct2=0; sct2<(NUM_SECTORS<<1)+1; sct2++) {
         uint8_t prologue[3] = {0,0,0}; // D5AA..
@@ -367,10 +369,7 @@ static void denibblize_track(const uint8_t * const src, int drive, uint8_t * con
                 prologue[idx] = byte;
                 ++idx;
             }
-            ++offset;
-            if (offset >= disk6.disk[drive].track_width) {
-                offset = 0;
-            }
+            offset = (offset+1) % trackwidth;
             if (idx >= 3) {
                 break;
             }
@@ -383,15 +382,11 @@ static void denibblize_track(const uint8_t * const src, int drive, uint8_t * con
 #define SCTOFF 0x4
         if (prologue[2] == 0x96) {
             // found header prologue : extract sector
-            offset += SCTOFF;
-            if (offset >= disk6.disk[drive].track_width) {
-                RELEASE_LOG("WRAPPING PROLOGUE ...");
-                offset -= disk6.disk[drive].track_width;
-            }
+            offset = (offset+SCTOFF) % trackwidth;
             sector = ((trackimage[offset] & 0x55) << 1);
-            offset = (offset+1) % disk6.disk[drive].track_width;
+            offset = (offset+1) % trackwidth;
             sector |= (trackimage[offset] & 0x55);
-            offset = (offset+1) % disk6.disk[drive].track_width;
+            offset = (offset+1) % trackwidth;
             continue;
         }
         if (UNLIKELY(prologue[2] != 0xAD)) {
@@ -404,11 +399,7 @@ static void denibblize_track(const uint8_t * const src, int drive, uint8_t * con
         uint8_t work_buf[NUM_SIXBIT_NIBS+1];
         for (unsigned int idx=0; idx<(NUM_SIXBIT_NIBS+1); idx++) {
             work_buf[idx] = trackimage[offset];
-            ++offset;
-            if (offset >= disk6.disk[drive].track_width) {
-                offset = 0;
-                LOG("WARNING : wrapping trackimage ... trk:%d sct:%d [0]:0x%02X", (disk6.disk[drive].phase >> 1), sector, trackimage[offset]);
-            }
+            offset = (offset+1) % trackwidth;
         }
         assert(sector >= 0 && sector < 16 && "invalid previous nibblization");
         int sec_off = 256 * disk6.disk[drive].skew_table[ sector ];
