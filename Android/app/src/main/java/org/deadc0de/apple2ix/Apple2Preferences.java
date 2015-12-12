@@ -99,6 +99,11 @@ public enum Apple2Preferences {
             activity.getPreferences(Context.MODE_PRIVATE).edit().putString(toString(), str).apply();
             load(activity);
         }
+
+        @Override
+        public void setPath(Apple2Activity activity, String str) {
+            activity.getPreferences(Context.MODE_PRIVATE).edit().putString(toString(), str).apply();
+        }
     },
     CURRENT_DISK_A_RO {
         @Override
@@ -132,6 +137,11 @@ public enum Apple2Preferences {
         public void saveString(Apple2Activity activity, String str) {
             activity.getPreferences(Context.MODE_PRIVATE).edit().putString(toString(), str).apply();
             load(activity);
+        }
+
+        @Override
+        public void setPath(Apple2Activity activity, String str) {
+            activity.getPreferences(Context.MODE_PRIVATE).edit().putString(toString(), str).apply();
         }
     },
     CURRENT_DISK_B_RO {
@@ -893,6 +903,10 @@ public enum Apple2Preferences {
         activity.getPreferences(Context.MODE_PRIVATE).edit().putInt(asciiString(), ascii).apply();
         activity.getPreferences(Context.MODE_PRIVATE).edit().putInt(scancodeString(), scancode).apply();
         load(activity);
+    }
+
+    public void setPath(Apple2Activity activity, String path) {
+        /* ... */
     }
 
     // accessors

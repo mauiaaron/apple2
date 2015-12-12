@@ -35,6 +35,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.deadc0de.apple2ix.basic.BuildConfig;
 import org.deadc0de.apple2ix.basic.R;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public class Apple2Activity extends Activity {
 
@@ -97,7 +99,7 @@ public class Apple2Activity extends Activity {
 
     private native void nativeSaveState(String path);
 
-    private native void nativeLoadState(String path);
+    private native String nativeLoadState(String path);
 
     public native void nativeEmulationResume();
 
@@ -621,7 +623,22 @@ public class Apple2Activity extends Activity {
         }).setNeutralButton(R.string.restore, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                Apple2Activity.this.nativeLoadState(quickSavePath);
+                // loading state can change the disk inserted ... reflect that in
+                String jsonData = Apple2Activity.this.nativeLoadState(quickSavePath);
+                try {
+                    JSONObject map = new JSONObject(jsonData);
+                    String diskPath1 = map.getString("disk1");
+                    boolean readOnly1 = map.getBoolean("readOnly1");
+                    Apple2Preferences.CURRENT_DISK_A.setPath(Apple2Activity.this, diskPath1);
+                    Apple2Preferences.CURRENT_DISK_A_RO.saveBoolean(Apple2Activity.this, readOnly1);
+
+                    String diskPath2 = map.getString("disk2");
+                    boolean readOnly2 = map.getBoolean("readOnly2");
+                    Apple2Preferences.CURRENT_DISK_B.setPath(Apple2Activity.this, diskPath2);
+                    Apple2Preferences.CURRENT_DISK_B_RO.saveBoolean(Apple2Activity.this, readOnly2);
+                } catch (JSONException je) {
+                    Log.v(TAG, "OOPS : "+je);
+                }
                 Apple2Activity.this.mMainMenu.dismiss();
             }
         }).setNegativeButton(R.string.cancel, null).create();

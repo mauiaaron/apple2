@@ -359,7 +359,7 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeSaveState(JNIEnv *env, jobj
     (*env)->ReleaseStringUTFChars(env, jPath, path);
 }
 
-void Java_org_deadc0de_apple2ix_Apple2Activity_nativeLoadState(JNIEnv *env, jobject obj, jstring jPath) {
+jstring Java_org_deadc0de_apple2ix_Apple2Activity_nativeLoadState(JNIEnv *env, jobject obj, jstring jPath) {
     const char *path = (*env)->GetStringUTFChars(env, jPath, NULL);
 
     assert(cpu_isPaused() && "considered dangerous to save state CPU thread is running");
@@ -370,6 +370,22 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeLoadState(JNIEnv *env, jobj
     }
 
     (*env)->ReleaseStringUTFChars(env, jPath, path);
+
+    // restoring state may cause a change in disk paths, so we need to notify the Java/Android menu system of the change
+    // (normally we drive state from the Java/menu side...)
+    char *disk1 = disk6.disk[0].file_name;
+    bool readOnly1 = disk6.disk[0].is_protected;
+    char *disk2 = disk6.disk[1].file_name;
+    bool readOnly2 = disk6.disk[1].is_protected;
+    char *str = NULL;
+    jstring jstr = NULL;
+    asprintf(&str, "{ disk1 = \"%s\"; readOnly1 = %s; disk2 = \"%s\"; readOnly2 = %s }", (disk1 ?: ""), readOnly1 ? "true" : "false", (disk2 ?: ""), readOnly2 ? "true" : "false");
+    if (str) {
+        jstr = (*env)->NewStringUTF(env, str);
+        FREE(str);
+    }
+
+    return jstr;
 }
 
 // ----------------------------------------------------------------------------
