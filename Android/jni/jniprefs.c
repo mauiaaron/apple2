@@ -130,6 +130,13 @@ void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetTouchMenuEnabled(JNIE
     interface_setTouchMenuEnabled(enabled);
 }
 
+void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetShowDiskOperationAnimation(JNIEnv *env, jclass cls, jboolean enabled) {
+    LOG("enabled : %d", enabled);
+    if (video_backend && video_backend->animation_setEnableShowTrackSector) {
+        video_backend->animation_setEnableShowTrackSector(enabled);
+    }
+}
+
 void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetTouchKeyboardLowercaseEnabled(JNIEnv *env, jclass cls, jboolean enabled) {
     LOG("enabled : %d", enabled);
     keydriver_setLowercaseEnabled(enabled);

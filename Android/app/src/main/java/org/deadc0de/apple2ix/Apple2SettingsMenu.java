@@ -249,6 +249,30 @@ public class Apple2SettingsMenu extends Apple2AbstractMenu {
                 });
             }
         },
+        SHOW_DISK_OPERATIONS {
+            @Override
+            public final String getTitle(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.disk_show_operation);
+            }
+
+            @Override
+            public final String getSummary(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.disk_show_operation_summary);
+            }
+
+            @Override
+            public View getView(final Apple2Activity activity, View convertView) {
+                convertView = _basicView(activity, this, convertView);
+                CheckBox cb = _addCheckbox(activity, this, convertView, Apple2Preferences.SHOW_DISK_OPERATIONS.booleanValue(activity));
+                cb.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                    @Override
+                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                        Apple2Preferences.SHOW_DISK_OPERATIONS.saveBoolean(activity, isChecked);
+                    }
+                });
+                return convertView;
+            }
+        },
         ABOUT {
             @Override
             public final String getTitle(Apple2Activity activity) {

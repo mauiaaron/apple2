@@ -39,6 +39,7 @@ typedef struct video_backend_s {
     void (*animation_showCPUSpeed)(void);
     void (*animation_showDiskChosen)(int drive);
     void (*animation_showTrackSector)(int drive, int track, int sect);
+    void (*animation_setEnableShowTrackSector)(bool enabled);
 
 } video_backend_s;
 

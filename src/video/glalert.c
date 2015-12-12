@@ -348,6 +348,14 @@ static void _animation_showTrackSector(int drive, int track, int sect) {
     _animation_showMessage(template, DISK_TRACK_SECTOR_COLS, DISK_TRACK_SECTOR_ROWS);
 }
 
+static void _animation_setEnableShowTrackSector(bool enabled) {
+    if (enabled) {
+        video_backend->animation_showTrackSector = &_animation_showTrackSector;
+    } else {
+        video_backend->animation_showTrackSector = NULL;
+    }
+}
+
 __attribute__((constructor(CTOR_PRIORITY_LATE)))
 static void _init_glalert(void) {
     LOG("Initializing message animation subsystem");
@@ -357,6 +365,7 @@ static void _init_glalert(void) {
     video_backend->animation_showCPUSpeed = &_animation_showCPUSpeed;
     video_backend->animation_showDiskChosen = &_animation_showDiskChosen;
     video_backend->animation_showTrackSector = &_animation_showTrackSector;
+    video_backend->animation_setEnableShowTrackSector = &_animation_setEnableShowTrackSector;
 
     glnode_registerNode(RENDER_MIDDLE, (GLNode){
         .setup = &alert_init,
