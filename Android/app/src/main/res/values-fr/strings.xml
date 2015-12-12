@@ -37,7 +37,7 @@
     <string name="disk_read_only">Lecture seulement</string>
     <string name="disk_read_write">Lecture/Ecriture</string>
     <string name="disk_show_operation">Afficher les opérations (disque) ][</string>
-    <string name="disk_show_operation_summary">Indique lorsque le disque de lecture ou d\'écriture</string>
+    <string name="disk_show_operation_summary">Indique si les disques sont en lecture ou en écriture</string>
     <string name="emulation_continue">Continuer…</string>
     <string name="emulation_settings">Configurations…</string>
     <string name="emulation_disks">Chargement de l\'image disque…</string>
