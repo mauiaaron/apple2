@@ -18,18 +18,19 @@ import android.util.Log;
 
 import java.io.File;
 
+import org.deadc0de.apple2ix.basic.BuildConfig;
 import org.deadc0de.apple2ix.basic.R;
 
 public enum Apple2Preferences {
-    FIRST_TIME_CONFIGURED {
+    EMULATOR_VERSION {
         @Override
         public void load(Apple2Activity activity) {
             /* ... */
         }
 
         @Override
-        public void saveBoolean(Apple2Activity activity, boolean ignored) {
-            activity.getPreferences(Context.MODE_PRIVATE).edit().putBoolean(toString(), true).apply();
+        public void saveInt(Apple2Activity activity, int version) {
+            activity.getPreferences(Context.MODE_PRIVATE).edit().putInt(toString(), version).apply();
         }
     },
     CURRENT_DISK_PATH {
@@ -955,7 +956,7 @@ public enum Apple2Preferences {
 
     public static void resetPreferences(Apple2Activity activity) {
         activity.getPreferences(Context.MODE_PRIVATE).edit().clear().commit();
-        FIRST_TIME_CONFIGURED.saveBoolean(activity, true);
+        EMULATOR_VERSION.saveInt(activity, BuildConfig.VERSION_CODE);
         KeypadPreset.IJKM_SPACE.apply(activity);
         loadPreferences(activity);
     }

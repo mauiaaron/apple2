@@ -17,6 +17,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.media.AudioManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.StrictMode;
 import android.util.Log;
@@ -155,8 +156,12 @@ public class Apple2Activity extends Activity {
         String dataDir = Apple2DisksMenu.getDataDir(this);
         nativeOnCreate(dataDir, sampleRate, monoBufferSize, stereoBufferSize);
 
-        final boolean firstTime = !Apple2Preferences.FIRST_TIME_CONFIGURED.booleanValue(this);
-        Apple2Preferences.FIRST_TIME_CONFIGURED.saveBoolean(this, true);
+        final boolean firstTime = (Apple2Preferences.EMULATOR_VERSION.intValue(this) != BuildConfig.VERSION_CODE);
+        if (firstTime) {
+            // allow for primitive migrations as needed
+            Apple2Preferences.EMULATOR_VERSION.saveInt(this, BuildConfig.VERSION_CODE);
+            Log.v(TAG, "Triggering migration to Apple2ix version : "+BuildConfig.VERSION_NAME);
+        }
 
         showSplashScreen(!firstTime);
         Apple2CrashHandler.getInstance().checkForCrashes(this);
