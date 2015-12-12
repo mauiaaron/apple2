@@ -388,8 +388,10 @@ static void denibblize_track(const uint8_t * const src, int drive, uint8_t * con
                 RELEASE_LOG("WRAPPING PROLOGUE ...");
                 offset -= disk6.disk[drive].track_width;
             }
-            sector = ((trackimage[offset++] & 0x55) << 1);
-            sector |= (trackimage[offset++] & 0x55);
+            sector = ((trackimage[offset] & 0x55) << 1);
+            offset = (offset+1) % disk6.disk[drive].track_width;
+            sector |= (trackimage[offset] & 0x55);
+            offset = (offset+1) % disk6.disk[drive].track_width;
             continue;
         }
         if (UNLIKELY(prologue[2] != 0xAD)) {
