@@ -137,12 +137,17 @@ public class Apple2DisksMenu implements Apple2MenuView {
 
     public static void firstTime(Apple2Activity activity) {
         final ProgressBar bar = (ProgressBar) activity.findViewById(R.id.crash_progressBar);
-        try {
-            bar.setVisibility(View.VISIBLE);
-            bar.setIndeterminate(true);
-        } catch (NullPointerException npe) {
-            Log.v(TAG, "Whoa, avoided NPE in first time #1");
-        }
+        activity.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    bar.setVisibility(View.VISIBLE);
+                    bar.setIndeterminate(true);
+                } catch (NullPointerException npe) {
+                    Log.v(TAG, "Whoa, avoided NPE in first time #1");
+                }
+            }
+        });
 
         getDataDir(activity);
 
