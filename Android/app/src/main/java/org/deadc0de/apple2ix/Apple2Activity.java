@@ -595,23 +595,27 @@ public class Apple2Activity extends Activity {
         }).setNeutralButton(R.string.quit, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                nativeOnQuit();
-                Apple2Activity.this.finish();
-                new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            Thread.sleep(2000);
-                        } catch (InterruptedException ex) {
-                            // ...
-                        }
-                        System.exit(0);
-                    }
-                }.run();
+                quitEmulator();
             }
         }).setNegativeButton(R.string.cancel, null).create();
 
         registerAndShowDialog(rebootQuitDialog);
+    }
+
+    public void quitEmulator() {
+        nativeOnQuit();
+        finish();
+        new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Thread.sleep(2000);
+                } catch (InterruptedException ex) {
+                    // ...
+                }
+                System.exit(0);
+            }
+        }.run();
     }
 
     public void maybeSaveRestore() {

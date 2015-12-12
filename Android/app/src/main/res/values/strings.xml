@@ -132,8 +132,8 @@
     <string name="no">No</string>
     <string name="ok">OK</string>
     <string name="preferences_reset_title">Reset preferences</string>
-    <string name="preferences_reset_summary">Reset preferences to defaults</string>
-    <string name="preferences_reset_really">Really reset?</string>
+    <string name="preferences_reset_summary">Reset preferences to defaults and quit emulator</string>
+    <string name="preferences_reset_really">Really reset and quit?</string>
     <string name="preferences_reset_warning">You will lose your settings</string>
     <string name="quit">Quit</string>
     <string name="quit_reboot">Reboot or quit emulator…</string>

@@ -956,9 +956,7 @@ public enum Apple2Preferences {
 
     public static void resetPreferences(Apple2Activity activity) {
         activity.getPreferences(Context.MODE_PRIVATE).edit().clear().commit();
-        EMULATOR_VERSION.saveInt(activity, BuildConfig.VERSION_CODE);
-        KeypadPreset.IJKM_SPACE.apply(activity);
-        loadPreferences(activity);
+        activity.quitEmulator();
     }
 
     public String asciiString() {

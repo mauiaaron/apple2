@@ -132,7 +132,7 @@
     <string name="no">Non</string>
     <string name="ok">OK</string>
     <string name="preferences_reset_title">Reset des préférences</string>
-    <string name="preferences_reset_summary">Restaurer les préférences par défaut</string>
+    <string name="preferences_reset_summary">Restaurer les préférences par défaut et quitter l\'émulateur</string>
     <string name="preferences_reset_really">Etes-vous sûr de vouloir faire un reset?</string>
     <string name="preferences_reset_warning">Vous perdrez toutes vos options de configuration</string>
     <string name="quit">Quitter</string>
