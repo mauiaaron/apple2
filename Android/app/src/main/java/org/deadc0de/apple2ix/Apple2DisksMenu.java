@@ -75,10 +75,10 @@ public class Apple2DisksMenu implements Apple2MenuView {
             }
         });
 
-        getExternalStorageDirectory();
+        getExternalStorageDirectory(activity);
     }
 
-    public static File getExternalStorageDirectory() {
+    public static File getExternalStorageDirectory(Apple2Activity activity) {
 
         do {
             if (sExternalFilesDir != null) {
@@ -148,7 +148,7 @@ public class Apple2DisksMenu implements Apple2MenuView {
 
         Log.d(TAG, "First time copying stuff-n-things out of APK for ease-of-NDK access...");
 
-        getExternalStorageDirectory();
+        getExternalStorageDirectory(activity);
 
         recursivelyCopyAPKAssets(activity, /*from APK directory:*/"disks",     /*to location:*/new File(sDataDir, "disks").getAbsolutePath());
         recursivelyCopyAPKAssets(activity, /*from APK directory:*/"keyboards", /*to location:*/new File(sDataDir, "keyboards").getAbsolutePath());
@@ -463,7 +463,7 @@ public class Apple2DisksMenu implements Apple2MenuView {
 
         Arrays.sort(files);
 
-        getExternalStorageDirectory();
+        getExternalStorageDirectory(mActivity);
         final boolean includeExternalStoragePath = (sExternalFilesDir != null && isRootPath);
         final boolean includeDownloadsPath = (sDownloadFilesDir != null && isRootPath);
         final int offset = includeExternalStoragePath ? (includeDownloadsPath ? 2 : 1) : (includeDownloadsPath ? 1 : 0);

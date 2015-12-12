@@ -417,7 +417,7 @@ public class Apple2Activity extends Activity {
                         /* ... */
                     }
 
-                    File storageDir = Apple2DisksMenu.getExternalStorageDirectory();
+                    File storageDir = Apple2DisksMenu.getExternalStorageDirectory(Apple2Activity.this);
                     if (storageDir != null) {
                         String storagePath = storageDir.getAbsolutePath();
                         if (diskPath.contains(storagePath)) {

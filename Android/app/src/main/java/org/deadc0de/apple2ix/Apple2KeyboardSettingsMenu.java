@@ -226,7 +226,7 @@ public class Apple2KeyboardSettingsMenu extends Apple2AbstractMenu {
             @Override
             public void handleSelection(final Apple2Activity activity, final Apple2AbstractMenu settingsMenu, boolean isChecked) {
 
-                File extKeyboardDir = Apple2DisksMenu.getExternalStorageDirectory();
+                File extKeyboardDir = Apple2DisksMenu.getExternalStorageDirectory(activity);
 
                 FilenameFilter kbdJsonFilter = new FilenameFilter() {
                     public boolean accept(File dir, String name) {
