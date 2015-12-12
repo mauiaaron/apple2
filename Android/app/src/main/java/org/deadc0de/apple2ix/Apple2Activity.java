@@ -11,10 +11,12 @@
 
 package org.deadc0de.apple2ix;
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Build;
@@ -92,6 +94,8 @@ public class Apple2Activity extends Activity {
     public final static long NATIVE_TOUCH_ASCII_MASK = 0xFF00L;
     public final static long NATIVE_TOUCH_SCANCODE_MASK = 0x00FFL;
 
+    public final static int REQUEST_PERMISSION_RWSTORE = 42;
+
     private native void nativeOnCreate(String dataDir, int sampleRate, int monoBufferSize, int stereoBufferSize);
 
     private native void nativeOnKeyDown(int keyCode, int metaState);
@@ -166,6 +170,27 @@ public class Apple2Activity extends Activity {
         showSplashScreen(!firstTime);
         Apple2CrashHandler.getInstance().checkForCrashes(this);
 
+        boolean extperm = true;
+        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            // On Marshmallow+ specifically ask for permission to read/write storage
+            String readPermission = Manifest.permission.READ_EXTERNAL_STORAGE;
+            String writePermission = Manifest.permission.WRITE_EXTERNAL_STORAGE;
+            int hasReadPermission = checkSelfPermission(readPermission);
+            int hasWritePermission = checkSelfPermission(writePermission);
+            ArrayList<String> permissions = new ArrayList<String>();
+            if (hasReadPermission != PackageManager.PERMISSION_GRANTED) {
+                permissions.add(readPermission);
+            }
+            if (hasWritePermission != PackageManager.PERMISSION_GRANTED) {
+                permissions.add(writePermission);
+            }
+            if (!permissions.isEmpty()) {
+                extperm = false;
+                String[] params = permissions.toArray(new String[permissions.size()]);
+                requestPermissions(params, REQUEST_PERMISSION_RWSTORE);
+            }
+        }
+
         mGraphicsInitializedRunnable = new Runnable() {
             @Override
             public void run() {
@@ -177,11 +202,15 @@ public class Apple2Activity extends Activity {
         };
 
         // first-time initializations
+        final boolean externalStoragePermission = extperm;
         if (firstTime) {
             new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    Apple2DisksMenu.firstTime(Apple2Activity.this);
+                    Apple2DisksMenu.exposeAPKAssets(Apple2Activity.this);
+                    if (externalStoragePermission) {
+                        Apple2DisksMenu.exposeAPKAssetsToExternal(Apple2Activity.this);
+                    }
                     mSplashScreen.setDismissable(true);
                     Log.d(TAG, "Finished first time copying...");
                 }
@@ -201,6 +230,26 @@ public class Apple2Activity extends Activity {
         }
         if (path != null && Apple2DisksMenu.hasDiskExtension(path)) {
             handleInsertDiskIntent(path);
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        // We should already be gracefully handling the case where user denies access.
+        if (requestCode == REQUEST_PERMISSION_RWSTORE) {
+            boolean grantedPermissions = true;
+            for (int grant : grantResults) {
+                if (grant == PackageManager.PERMISSION_DENIED) {
+                    grantedPermissions = false;
+                    break;
+                }
+            }
+            if (grantedPermissions) {
+                // this will force copying APK files (now that we have permission
+                Apple2DisksMenu.exposeAPKAssetsToExternal(Apple2Activity.this);
+            } // else ... we keep nagging on app startup ...
+        } else {
+            super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         }
     }
 

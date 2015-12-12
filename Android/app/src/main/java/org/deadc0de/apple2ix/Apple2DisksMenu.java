@@ -135,7 +135,7 @@ public class Apple2DisksMenu implements Apple2MenuView {
         return sDataDir;
     }
 
-    public static void firstTime(Apple2Activity activity) {
+    public static void exposeAPKAssetsToExternal(Apple2Activity activity) {
         final ProgressBar bar = (ProgressBar) activity.findViewById(R.id.crash_progressBar);
         activity.runOnUiThread(new Runnable() {
             @Override
@@ -144,7 +144,38 @@ public class Apple2DisksMenu implements Apple2MenuView {
                     bar.setVisibility(View.VISIBLE);
                     bar.setIndeterminate(true);
                 } catch (NullPointerException npe) {
-                    Log.v(TAG, "Whoa, avoided NPE in first time #1");
+                    Log.v(TAG, "Avoid NPE in exposeAPKAssetsToExternal #1");
+                }
+            }
+        });
+
+        getExternalStorageDirectory(activity);
+        Log.v(TAG, "Overwriting system files in /sdcard/apple2ix/ (external storage) ...");
+        recursivelyCopyAPKAssets(activity, /*from APK directory:*/"keyboards", /*to location:*/sExternalFilesDir.getAbsolutePath());
+
+        activity.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    bar.setVisibility(View.INVISIBLE);
+                    bar.setIndeterminate(false);
+                } catch (NullPointerException npe) {
+                    Log.v(TAG, "Avoid NPE in exposeAPKAssetsToExternal #2");
+                }
+            }
+        });
+    }
+
+    public static void exposeAPKAssets(Apple2Activity activity) {
+        final ProgressBar bar = (ProgressBar) activity.findViewById(R.id.crash_progressBar);
+        activity.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    bar.setVisibility(View.VISIBLE);
+                    bar.setIndeterminate(true);
+                } catch (NullPointerException npe) {
+                    Log.v(TAG, "Avoid NPE in exposeAPKAssets #1");
                 }
             }
         });
@@ -154,15 +185,9 @@ public class Apple2DisksMenu implements Apple2MenuView {
         Log.d(TAG, "First time copying stuff-n-things out of APK for ease-of-NDK access...");
 
         getExternalStorageDirectory(activity);
-
         recursivelyCopyAPKAssets(activity, /*from APK directory:*/"disks",     /*to location:*/new File(sDataDir, "disks").getAbsolutePath());
         recursivelyCopyAPKAssets(activity, /*from APK directory:*/"keyboards", /*to location:*/new File(sDataDir, "keyboards").getAbsolutePath());
         recursivelyCopyAPKAssets(activity, /*from APK directory:*/"shaders",   /*to location:*/new File(sDataDir, "shaders").getAbsolutePath());
-
-        // expose keyboards to modding
-        if (sExternalFilesDir != null) {
-            recursivelyCopyAPKAssets(activity, /*from APK directory:*/"keyboards", /*to location:*/sExternalFilesDir.getAbsolutePath());
-        }
 
         activity.runOnUiThread(new Runnable() {
             @Override
@@ -171,7 +196,7 @@ public class Apple2DisksMenu implements Apple2MenuView {
                     bar.setVisibility(View.INVISIBLE);
                     bar.setIndeterminate(false);
                 } catch (NullPointerException npe) {
-                    Log.v(TAG, "Whoa, avoided NPE in first time #2");
+                    Log.v(TAG, "Avoid NPE in exposeAPKAssets #1");
                 }
             }
         });
