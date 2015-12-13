@@ -136,6 +136,11 @@ public class Apple2DisksMenu implements Apple2MenuView {
     }
 
     public static void exposeAPKAssetsToExternal(Apple2Activity activity) {
+        getExternalStorageDirectory(activity);
+        if (sExternalFilesDir == null) {
+            return;
+        }
+        
         final ProgressBar bar = (ProgressBar) activity.findViewById(R.id.crash_progressBar);
         activity.runOnUiThread(new Runnable() {
             @Override
@@ -149,7 +154,6 @@ public class Apple2DisksMenu implements Apple2MenuView {
             }
         });
 
-        getExternalStorageDirectory(activity);
         Log.v(TAG, "Overwriting system files in /sdcard/apple2ix/ (external storage) ...");
         recursivelyCopyAPKAssets(activity, /*from APK directory:*/"keyboards", /*to location:*/sExternalFilesDir.getAbsolutePath());
 
