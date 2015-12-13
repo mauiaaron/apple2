@@ -33,7 +33,6 @@
 
 #define DEFAULT_CTRL_COL 2
 
-#define ROW_WITH_ADJACENTS (KBD_TEMPLATE_ROWS-1)
 #define _ROWOFF 2 // main keyboard row offset
 
 #define KBD_FB_WIDTH (KBD_TEMPLATE_COLS * FONT80_WIDTH_PIXELS)
@@ -163,19 +162,32 @@ static void _rerender_character(int col, int row) {
 static inline void _rerender_selected(int col, int row) {
     if ((col >= 0) && (row >= 0)) {
         _rerender_character(col, row);
-        if (row == ROW_WITH_ADJACENTS) {
-            if ((col == 3) || (col == 4) || (col == 8)) {
+
+        // rerender certain adjacent keys ...
+        GLModelHUDKeyboard *hudKeyboard = (GLModelHUDKeyboard *)(kbd.model->custom);
+        const unsigned int indexRow = (hudKeyboard->tplWidth+1) * row;
+        uint8_t key = (hudKeyboard->tpl+indexRow)[col];
+        switch (key) {
+            case ICONTEXT_LEFTSPACE:
                 _rerender_character(col+1, row);
-            }
-            if ((col == 4) || (col == 5) || (col == 9)) {
-                _rerender_character(col-1, row);
-            }
-            if (col == 3) {
                 _rerender_character(col+2, row);
-            }
-            if (col == 5) {
+                break;
+            case ICONTEXT_MIDSPACE:
+                _rerender_character(col-1, row);
+                _rerender_character(col+1, row);
+                break;
+            case ICONTEXT_RIGHTSPACE:
                 _rerender_character(col-2, row);
-            }
+                _rerender_character(col-1, row);
+                break;
+            case ICONTEXT_RETURN_L:
+                _rerender_character(col+1, row);
+                break;
+            case ICONTEXT_RETURN_R:
+                _rerender_character(col-1, row);
+                break;
+            default:
+                break;
         }
     }
 }
