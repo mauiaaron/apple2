@@ -952,6 +952,8 @@ public enum Apple2Preferences {
         for (Apple2Preferences pref : Apple2Preferences.values()) {
             pref.load(activity);
         }
+        // HACK FIXME TODO 2015/12/13 : native GLTouchDevice is conflating various things ... forcefully reset the current touch device here for now
+        Apple2Preferences.CURRENT_TOUCH_DEVICE.load(activity);
     }
 
     public static void resetPreferences(Apple2Activity activity) {
