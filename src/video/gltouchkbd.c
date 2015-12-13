@@ -238,6 +238,9 @@ static inline float _get_keyboard_visibility(void) {
             alpha -= ((float)deltat.tv_nsec-(NANOSECONDS_PER_SECOND/2)) / (float)(NANOSECONDS_PER_SECOND/2);
             if (alpha < minAlpha) {
                 alpha = minAlpha;
+                _rerender_selected(kbd.selectedCol, kbd.selectedRow);
+                kbd.selectedCol = -1;
+                kbd.selectedRow = -1;
             }
         }
     }
@@ -580,6 +583,8 @@ static int64_t gltouchkbd_onTouchEvent(interface_touch_event_t action, int point
 
     int64_t flags = TOUCH_FLAGS_KBD | TOUCH_FLAGS_HANDLED;
 
+    clock_gettime(CLOCK_MONOTONIC, &kbd.timingBegin);
+
     switch (action) {
         case TOUCH_DOWN:
         case TOUCH_POINTER_DOWN:
@@ -605,8 +610,6 @@ static int64_t gltouchkbd_onTouchEvent(interface_touch_event_t action, int point
             LOG("!!!KBD UNKNOWN TOUCH EVENT : %d", action);
             return 0x0LL;
     }
-
-    clock_gettime(CLOCK_MONOTONIC, &kbd.timingBegin);
 
     return flags;
 }
