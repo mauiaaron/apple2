@@ -36,18 +36,16 @@
 
 #define MSG_FLAGS0 "A:%02X op %02X = %02X : %s (emul2ix = %02X : %s)"
 
-#define HEADER0() \
-    uint8_t result = 0x0; \
-    uint8_t flags = 0x0; \
-    char buf0[MSG_SIZE]; \
-    char buf1[MSG_SIZE]; \
-    char msgbuf[MSG_SIZE];
-
 #define VERIFY_FLAGS() \
-    flags_to_string(flags, buf0); \
-    flags_to_string(cpu65_f, buf1); \
-    snprintf(msgbuf, MSG_SIZE, MSG_FLAGS0, regA, val, result, buf0, cpu65_a, buf1); \
-    ASSERTm(msgbuf, cpu65_f == flags);
+    do { \
+        char msgbuf0[MSG_SIZE]; \
+        char bufA[MSG_SIZE]; \
+        char bufB[MSG_SIZE]; \
+        flags_to_string(flags, bufA); \
+        flags_to_string(cpu65_f, bufB); \
+        snprintf(msgbuf0, MSG_SIZE, MSG_FLAGS0, regA, val, result, bufA, cpu65_a, bufB); \
+        ASSERTm(msgbuf0, cpu65_f == flags); \
+    } while (0)
 
 static void testcpu_setup(void *arg) {
 
@@ -219,7 +217,8 @@ static void logic_ADC(/*uint8_t*/int _a, /*uint8_t*/int _b, uint8_t *result, uin
 }
 
 TEST test_ADC_imm(uint8_t regA, uint8_t val, bool decimal, bool carry) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
 
     flags |= decimal ? (fD) : 0x00;
     flags |= carry   ? (fC) : 0x00;
@@ -247,9 +246,14 @@ TEST test_ADC_imm(uint8_t regA, uint8_t val, bool decimal, bool carry) {
     ASSERT(cpu65_y       == 0x04);
     ASSERT(cpu65_sp      == 0x80);
 
-    snprintf(msgbuf, MSG_SIZE, MSG_FLAGS0, regA, val, result, buf0, cpu65_a, buf1);
-    ASSERTm(msgbuf, cpu65_a == result); 
-    VERIFY_FLAGS();
+    do {
+        char msgbuf[MSG_SIZE];
+        char buf0[MSG_SIZE];
+        char buf1[MSG_SIZE];
+        snprintf(msgbuf, MSG_SIZE, MSG_FLAGS0, regA, val, result, buf0, cpu65_a, buf1);
+        ASSERTm(msgbuf, cpu65_a == result);
+        VERIFY_FLAGS();
+    } while (0);
 
     ASSERT(cpu65_ea        == TEST_LOC+1);
     ASSERT(cpu65_d         == 0xff);
@@ -261,7 +265,8 @@ TEST test_ADC_imm(uint8_t regA, uint8_t val, bool decimal, bool carry) {
 }
 
 TEST test_ADC_zpage(uint8_t regA, uint8_t val, uint8_t arg0) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
 
     logic_ADC(regA, val, &result, &flags);
 
@@ -281,7 +286,7 @@ TEST test_ADC_zpage(uint8_t regA, uint8_t val, uint8_t arg0) {
     ASSERT(cpu65_y       == 0x04);
     ASSERT(cpu65_sp      == 0x80);
 
-    ASSERT(cpu65_a == result); 
+    ASSERT(cpu65_a == result);
     VERIFY_FLAGS();
 
     ASSERT(cpu65_ea        == arg0);
@@ -294,7 +299,8 @@ TEST test_ADC_zpage(uint8_t regA, uint8_t val, uint8_t arg0) {
 }
 
 TEST test_ADC_zpage_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
 
     logic_ADC(regA, val, &result, &flags);
 
@@ -316,7 +322,7 @@ TEST test_ADC_zpage_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX) {
     ASSERT(cpu65_y       == 0x05);
     ASSERT(cpu65_sp      == 0x81);
 
-    ASSERT(cpu65_a == result); 
+    ASSERT(cpu65_a == result);
     VERIFY_FLAGS();
 
     ASSERT(cpu65_ea        == idx);
@@ -329,7 +335,8 @@ TEST test_ADC_zpage_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX) {
 }
 
 TEST test_ADC_abs(uint8_t regA, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
 
     logic_ADC(regA, val, &result, &flags);
 
@@ -350,7 +357,7 @@ TEST test_ADC_abs(uint8_t regA, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
     ASSERT(cpu65_y       == 0x05);
     ASSERT(cpu65_sp      == 0x81);
 
-    ASSERT(cpu65_a == result); 
+    ASSERT(cpu65_a == result);
     VERIFY_FLAGS();
 
     ASSERT(cpu65_ea        == addrs);
@@ -363,7 +370,8 @@ TEST test_ADC_abs(uint8_t regA, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
 }
 
 TEST test_ADC_abs_x(uint8_t regA, uint8_t val, uint8_t regX, uint8_t lobyte, uint8_t hibyte) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
 
     logic_ADC(regA, val, &result, &flags);
 
@@ -389,7 +397,7 @@ TEST test_ADC_abs_x(uint8_t regA, uint8_t val, uint8_t regX, uint8_t lobyte, uin
     ASSERT(cpu65_y       == 0x05);
     ASSERT(cpu65_sp      == 0x81);
 
-    ASSERT(cpu65_a == result); 
+    ASSERT(cpu65_a == result);
     VERIFY_FLAGS();
 
     ASSERT(cpu65_ea        == addrs);
@@ -404,7 +412,8 @@ TEST test_ADC_abs_x(uint8_t regA, uint8_t val, uint8_t regX, uint8_t lobyte, uin
 }
 
 TEST test_ADC_abs_y(uint8_t regA, uint8_t val, uint8_t regY, uint8_t lobyte, uint8_t hibyte) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
 
     logic_ADC(regA, val, &result, &flags);
 
@@ -430,7 +439,7 @@ TEST test_ADC_abs_y(uint8_t regA, uint8_t val, uint8_t regY, uint8_t lobyte, uin
     ASSERT(cpu65_y       == regY);
     ASSERT(cpu65_sp      == 0x81);
 
-    ASSERT(cpu65_a == result); 
+    ASSERT(cpu65_a == result);
     VERIFY_FLAGS();
 
     ASSERT(cpu65_ea        == addrs);
@@ -445,7 +454,8 @@ TEST test_ADC_abs_y(uint8_t regA, uint8_t val, uint8_t regY, uint8_t lobyte, uin
 }
 
 TEST test_ADC_ind_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX, uint8_t lobyte, uint8_t hibyte) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
 
     logic_ADC(regA, val, &result, &flags);
 
@@ -471,7 +481,7 @@ TEST test_ADC_ind_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX, uint8
     ASSERT(cpu65_y       == 0x15);
     ASSERT(cpu65_sp      == 0x81);
 
-    ASSERT(cpu65_a == result); 
+    ASSERT(cpu65_a == result);
     VERIFY_FLAGS();
 
     ASSERT(cpu65_ea        == addrs);
@@ -485,7 +495,8 @@ TEST test_ADC_ind_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX, uint8
 }
 
 TEST test_ADC_ind_y(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regY, uint8_t val_zp0, uint8_t val_zp1) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
 
     logic_ADC(regA, val, &result, &flags);
 
@@ -518,7 +529,7 @@ TEST test_ADC_ind_y(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regY, uint8
     ASSERT(cpu65_y       == regY);
     ASSERT(cpu65_sp      == 0x81);
 
-    ASSERT(cpu65_a == result); 
+    ASSERT(cpu65_a == result);
     VERIFY_FLAGS();
 
     ASSERT(cpu65_ea        == addrs);
@@ -532,7 +543,8 @@ TEST test_ADC_ind_y(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regY, uint8
 }
 
 TEST test_ADC_ind_zpage(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t lobyte, uint8_t hibyte) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
 
     logic_ADC(regA, val, &result, &flags);
 
@@ -559,7 +571,7 @@ TEST test_ADC_ind_zpage(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t lobyte,
     ASSERT(cpu65_y       == 0x85);
     ASSERT(cpu65_sp      == 0x81);
 
-    ASSERT(cpu65_a == result); 
+    ASSERT(cpu65_a == result);
     VERIFY_FLAGS();
 
     ASSERT(cpu65_ea        == addrs);
@@ -590,7 +602,8 @@ static void logic_AND(/*uint8_t*/int _a, /*uint8_t*/int _b, uint8_t *result, uin
 }
 
 TEST test_AND_imm(uint8_t regA, uint8_t val) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
 
     logic_AND(regA, val, &result, &flags);
 
@@ -609,9 +622,14 @@ TEST test_AND_imm(uint8_t regA, uint8_t val) {
     ASSERT(cpu65_y       == 0x04);
     ASSERT(cpu65_sp      == 0x80);
 
-    snprintf(msgbuf, MSG_SIZE, MSG_FLAGS0, regA, val, result, buf0, cpu65_a, buf1);
-    ASSERTm(msgbuf, cpu65_a == result); 
-    VERIFY_FLAGS();
+    do {
+        char msgbuf[MSG_SIZE];
+        char buf0[MSG_SIZE];
+        char buf1[MSG_SIZE];
+        snprintf(msgbuf, MSG_SIZE, MSG_FLAGS0, regA, val, result, buf0, cpu65_a, buf1);
+        ASSERTm(msgbuf, cpu65_a == result);
+        VERIFY_FLAGS();
+    } while (0);
 
     ASSERT(cpu65_ea        == TEST_LOC+1);
     ASSERT(cpu65_d         == 0xff);
@@ -623,7 +641,8 @@ TEST test_AND_imm(uint8_t regA, uint8_t val) {
 }
 
 TEST test_AND_zpage(uint8_t regA, uint8_t val, uint8_t arg0) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
     logic_AND(regA, val, &result, &flags);
 
     testcpu_set_opcode2(0x25, arg0);
@@ -643,7 +662,7 @@ TEST test_AND_zpage(uint8_t regA, uint8_t val, uint8_t arg0) {
     ASSERT(cpu65_y       == 0x04);
     ASSERT(cpu65_sp      == 0x80);
 
-    ASSERT(cpu65_a == result); 
+    ASSERT(cpu65_a == result);
     VERIFY_FLAGS();
 
     ASSERT(cpu65_ea        == arg0);
@@ -656,7 +675,8 @@ TEST test_AND_zpage(uint8_t regA, uint8_t val, uint8_t arg0) {
 }
 
 TEST test_AND_zpage_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
     logic_AND(regA, val, &result, &flags);
 
     testcpu_set_opcode2(0x35, arg0);
@@ -678,7 +698,7 @@ TEST test_AND_zpage_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX) {
     ASSERT(cpu65_y       == 0x05);
     ASSERT(cpu65_sp      == 0x81);
 
-    ASSERT(cpu65_a == result); 
+    ASSERT(cpu65_a == result);
     VERIFY_FLAGS();
 
     ASSERT(cpu65_ea        == idx);
@@ -691,7 +711,8 @@ TEST test_AND_zpage_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX) {
 }
 
 TEST test_AND_abs(uint8_t regA, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
     logic_AND(regA, val, &result, &flags);
 
     testcpu_set_opcode3(0x2d, lobyte, hibyte);
@@ -712,7 +733,7 @@ TEST test_AND_abs(uint8_t regA, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
     ASSERT(cpu65_y       == 0x05);
     ASSERT(cpu65_sp      == 0x81);
 
-    ASSERT(cpu65_a == result); 
+    ASSERT(cpu65_a == result);
     VERIFY_FLAGS();
 
     ASSERT(cpu65_ea        == addrs);
@@ -725,7 +746,8 @@ TEST test_AND_abs(uint8_t regA, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
 }
 
 TEST test_AND_abs_x(uint8_t regA, uint8_t val, uint8_t regX, uint8_t lobyte, uint8_t hibyte) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
     logic_AND(regA, val, &result, &flags);
 
     testcpu_set_opcode3(0x3d, lobyte, hibyte);
@@ -751,7 +773,7 @@ TEST test_AND_abs_x(uint8_t regA, uint8_t val, uint8_t regX, uint8_t lobyte, uin
     ASSERT(cpu65_y       == 0x05);
     ASSERT(cpu65_sp      == 0x81);
 
-    ASSERT(cpu65_a == result); 
+    ASSERT(cpu65_a == result);
     VERIFY_FLAGS();
 
     ASSERT(cpu65_ea        == addrs);
@@ -764,7 +786,8 @@ TEST test_AND_abs_x(uint8_t regA, uint8_t val, uint8_t regX, uint8_t lobyte, uin
 }
 
 TEST test_AND_abs_y(uint8_t regA, uint8_t val, uint8_t regY, uint8_t lobyte, uint8_t hibyte) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
     logic_AND(regA, val, &result, &flags);
 
     testcpu_set_opcode3(0x39, lobyte, hibyte);
@@ -790,7 +813,7 @@ TEST test_AND_abs_y(uint8_t regA, uint8_t val, uint8_t regY, uint8_t lobyte, uin
     ASSERT(cpu65_y       == regY);
     ASSERT(cpu65_sp      == 0x81);
 
-    ASSERT(cpu65_a == result); 
+    ASSERT(cpu65_a == result);
     VERIFY_FLAGS();
 
     ASSERT(cpu65_ea        == addrs);
@@ -803,7 +826,8 @@ TEST test_AND_abs_y(uint8_t regA, uint8_t val, uint8_t regY, uint8_t lobyte, uin
 }
 
 TEST test_AND_ind_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX, uint8_t lobyte, uint8_t hibyte) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
     logic_AND(regA, val, &result, &flags);
 
     testcpu_set_opcode2(0x21, arg0);
@@ -829,7 +853,7 @@ TEST test_AND_ind_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX, uint8
     ASSERT(cpu65_y       == 0x15);
     ASSERT(cpu65_sp      == 0x81);
 
-    ASSERT(cpu65_a == result); 
+    ASSERT(cpu65_a == result);
     VERIFY_FLAGS();
 
     ASSERT(cpu65_ea        == addrs);
@@ -843,7 +867,8 @@ TEST test_AND_ind_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX, uint8
 }
 
 TEST test_AND_ind_y(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regY, uint8_t val_zp0, uint8_t val_zp1) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
     logic_AND(regA, val, &result, &flags);
 
     testcpu_set_opcode2(0x31, arg0);
@@ -876,7 +901,7 @@ TEST test_AND_ind_y(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regY, uint8
     ASSERT(cpu65_y       == regY);
     ASSERT(cpu65_sp      == 0x81);
 
-    ASSERT(cpu65_a == result); 
+    ASSERT(cpu65_a == result);
     VERIFY_FLAGS();
 
     ASSERT(cpu65_ea        == addrs);
@@ -889,7 +914,8 @@ TEST test_AND_ind_y(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regY, uint8
 }
 
 TEST test_AND_ind_zpage(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t lobyte, uint8_t hibyte) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
     logic_AND(regA, val, &result, &flags);
 
     testcpu_set_opcode2(0x32, arg0);
@@ -916,7 +942,7 @@ TEST test_AND_ind_zpage(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t lobyte,
     ASSERT(cpu65_y       == 0x85);
     ASSERT(cpu65_sp      == 0x81);
 
-    ASSERT(cpu65_a == result); 
+    ASSERT(cpu65_a == result);
     VERIFY_FLAGS();
 
     ASSERT(cpu65_ea        == addrs);
@@ -949,7 +975,8 @@ static void logic_ASL(/*uint8_t*/int _a, uint8_t *result, uint8_t *flags) {
 
 TEST test_ASL_acc(uint8_t regA) {
     uint8_t val = 0xff;
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
 
     logic_ASL(regA, &result, &flags);
 
@@ -968,7 +995,7 @@ TEST test_ASL_acc(uint8_t regA) {
     ASSERT(cpu65_y       == 0x04);
     ASSERT(cpu65_sp      == 0x80);
 
-    ASSERT(cpu65_a == result); 
+    ASSERT(cpu65_a == result);
     VERIFY_FLAGS();
 
     ASSERT(cpu65_ea        == TEST_LOC);
@@ -981,7 +1008,8 @@ TEST test_ASL_acc(uint8_t regA) {
 }
 
 TEST test_ASL_zpage(uint8_t regA, uint8_t val, uint8_t arg0) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
     logic_ASL(val, &result, &flags);
 
     testcpu_set_opcode2(0x06, arg0);
@@ -1016,7 +1044,8 @@ TEST test_ASL_zpage(uint8_t regA, uint8_t val, uint8_t arg0) {
 }
 
 TEST test_ASL_zpage_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
     logic_ASL(val, &result, &flags);
 
     testcpu_set_opcode2(0x16, arg0);
@@ -1035,7 +1064,7 @@ TEST test_ASL_zpage_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX) {
 
     ASSERT(apple_ii_64k[0][idx] == result);
 
-    ASSERT(cpu65_a   == regA); 
+    ASSERT(cpu65_a   == regA);
     ASSERT(cpu65_pc  == TEST_LOC+2);
     ASSERT(cpu65_x   == regX);
     ASSERT(cpu65_y   == 0x05);
@@ -1052,7 +1081,8 @@ TEST test_ASL_zpage_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX) {
 }
 
 TEST test_ASL_abs(uint8_t regA, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
     logic_ASL(val, &result, &flags);
 
     testcpu_set_opcode3(0x0e, lobyte, hibyte);
@@ -1068,9 +1098,9 @@ TEST test_ASL_abs(uint8_t regA, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
 
     cpu65_run();
 
-    ASSERT(apple_ii_64k[0][addrs] == result); 
+    ASSERT(apple_ii_64k[0][addrs] == result);
 
-    ASSERT(cpu65_a  == regA); 
+    ASSERT(cpu65_a  == regA);
     ASSERT(cpu65_pc == TEST_LOC+3);
     ASSERT(cpu65_x  == 0xf4);
     ASSERT(cpu65_y  == 0x05);
@@ -1088,7 +1118,8 @@ TEST test_ASL_abs(uint8_t regA, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
 }
 
 TEST test_ASL_abs_x(uint8_t regA, uint8_t val, uint8_t regX, uint8_t lobyte, uint8_t hibyte) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
     logic_ASL(val, &result, &flags);
 
     testcpu_set_opcode3(0x1e, lobyte, hibyte);
@@ -1109,9 +1140,9 @@ TEST test_ASL_abs_x(uint8_t regA, uint8_t val, uint8_t regX, uint8_t lobyte, uin
 
     cpu65_run();
 
-    ASSERT(apple_ii_64k[0][addrs] == result); 
+    ASSERT(apple_ii_64k[0][addrs] == result);
 
-    ASSERT(cpu65_a  == regA); 
+    ASSERT(cpu65_a  == regA);
     ASSERT(cpu65_pc == TEST_LOC+3);
     ASSERT(cpu65_x  == regX);
     ASSERT(cpu65_y  == 0x05);
@@ -1132,7 +1163,7 @@ TEST test_ASL_abs_x(uint8_t regA, uint8_t val, uint8_t regX, uint8_t lobyte, uin
 // Branch instructions
 
 TEST test_BCC(int8_t off, bool flag, uint16_t addrs) {
-    HEADER0();
+    uint8_t flags = 0x0;
 
     cpu65_pc = addrs;
     flags |= flag ? fC : 0;
@@ -1161,7 +1192,7 @@ TEST test_BCC(int8_t off, bool flag, uint16_t addrs) {
     cpu65_run();
 
     ASSERT(cpu65_pc == newpc);
-    ASSERT(cpu65_a  == 0xed); 
+    ASSERT(cpu65_a  == 0xed);
     ASSERT(cpu65_x  == 0xde);
     ASSERT(cpu65_y  == 0x05);
     ASSERT(cpu65_sp == 0x81);
@@ -1177,7 +1208,7 @@ TEST test_BCC(int8_t off, bool flag, uint16_t addrs) {
 }
 
 TEST test_BCS(int8_t off, bool flag, uint16_t addrs) {
-    HEADER0();
+    uint8_t flags = 0x0;
 
     cpu65_pc = addrs;
     flags |= flag ? fC : 0;
@@ -1206,7 +1237,7 @@ TEST test_BCS(int8_t off, bool flag, uint16_t addrs) {
     cpu65_run();
 
     ASSERT(cpu65_pc == newpc);
-    ASSERT(cpu65_a  == 0xed); 
+    ASSERT(cpu65_a  == 0xed);
     ASSERT(cpu65_x  == 0xde);
     ASSERT(cpu65_y  == 0x05);
     ASSERT(cpu65_sp == 0x81);
@@ -1222,7 +1253,7 @@ TEST test_BCS(int8_t off, bool flag, uint16_t addrs) {
 }
 
 TEST test_BEQ(int8_t off, bool flag, uint16_t addrs) {
-    HEADER0();
+    uint8_t flags = 0x0;
 
     cpu65_pc = addrs;
     flags |= flag ? fZ : 0;
@@ -1251,7 +1282,7 @@ TEST test_BEQ(int8_t off, bool flag, uint16_t addrs) {
     cpu65_run();
 
     ASSERT(cpu65_pc == newpc);
-    ASSERT(cpu65_a  == 0xed); 
+    ASSERT(cpu65_a  == 0xed);
     ASSERT(cpu65_x  == 0xde);
     ASSERT(cpu65_y  == 0x05);
     ASSERT(cpu65_sp == 0x81);
@@ -1267,7 +1298,7 @@ TEST test_BEQ(int8_t off, bool flag, uint16_t addrs) {
 }
 
 TEST test_BNE(int8_t off, bool flag, uint16_t addrs) {
-    HEADER0();
+    uint8_t flags = 0x0;
 
     cpu65_pc = addrs;
     flags |= flag ? fZ : 0;
@@ -1296,7 +1327,7 @@ TEST test_BNE(int8_t off, bool flag, uint16_t addrs) {
     cpu65_run();
 
     ASSERT(cpu65_pc == newpc);
-    ASSERT(cpu65_a  == 0xed); 
+    ASSERT(cpu65_a  == 0xed);
     ASSERT(cpu65_x  == 0xde);
     ASSERT(cpu65_y  == 0x05);
     ASSERT(cpu65_sp == 0x81);
@@ -1312,7 +1343,7 @@ TEST test_BNE(int8_t off, bool flag, uint16_t addrs) {
 }
 
 TEST test_BMI(int8_t off, bool flag, uint16_t addrs) {
-    HEADER0();
+    uint8_t flags = 0x0;
 
     cpu65_pc = addrs;
     flags |= flag ? fN : 0;
@@ -1341,7 +1372,7 @@ TEST test_BMI(int8_t off, bool flag, uint16_t addrs) {
     cpu65_run();
 
     ASSERT(cpu65_pc == newpc);
-    ASSERT(cpu65_a  == 0xed); 
+    ASSERT(cpu65_a  == 0xed);
     ASSERT(cpu65_x  == 0xde);
     ASSERT(cpu65_y  == 0x05);
     ASSERT(cpu65_sp == 0x81);
@@ -1357,7 +1388,7 @@ TEST test_BMI(int8_t off, bool flag, uint16_t addrs) {
 }
 
 TEST test_BPL(int8_t off, bool flag, uint16_t addrs) {
-    HEADER0();
+    uint8_t flags = 0x0;
 
     cpu65_pc = addrs;
     flags |= flag ? fN : 0;
@@ -1386,7 +1417,7 @@ TEST test_BPL(int8_t off, bool flag, uint16_t addrs) {
     cpu65_run();
 
     ASSERT(cpu65_pc == newpc);
-    ASSERT(cpu65_a  == 0xed); 
+    ASSERT(cpu65_a  == 0xed);
     ASSERT(cpu65_x  == 0xde);
     ASSERT(cpu65_y  == 0x05);
     ASSERT(cpu65_sp == 0x81);
@@ -1402,7 +1433,7 @@ TEST test_BPL(int8_t off, bool flag, uint16_t addrs) {
 }
 
 TEST test_BRA(volatile int8_t off, volatile bool flag, volatile uint16_t addrs) {
-    HEADER0();
+    uint8_t flags = 0x0;
 
     cpu65_pc = addrs;
     flags |= flag ? fN : 0;
@@ -1428,7 +1459,7 @@ TEST test_BRA(volatile int8_t off, volatile bool flag, volatile uint16_t addrs) 
     cpu65_run();
 
     ASSERT(cpu65_pc == newpc);
-    ASSERT(cpu65_a  == 0xed); 
+    ASSERT(cpu65_a  == 0xed);
     ASSERT(cpu65_x  == 0xde);
     ASSERT(cpu65_y  == 0x05);
     ASSERT(cpu65_sp == 0x81);
@@ -1444,7 +1475,7 @@ TEST test_BRA(volatile int8_t off, volatile bool flag, volatile uint16_t addrs) 
 }
 
 TEST test_BVC(int8_t off, bool flag, uint16_t addrs) {
-    HEADER0();
+    uint8_t flags = 0x0;
 
     cpu65_pc = addrs;
     flags |= flag ? fV : 0;
@@ -1473,7 +1504,7 @@ TEST test_BVC(int8_t off, bool flag, uint16_t addrs) {
     cpu65_run();
 
     ASSERT(cpu65_pc == newpc);
-    ASSERT(cpu65_a  == 0xed); 
+    ASSERT(cpu65_a  == 0xed);
     ASSERT(cpu65_x  == 0xde);
     ASSERT(cpu65_y  == 0x05);
     ASSERT(cpu65_sp == 0x81);
@@ -1489,7 +1520,7 @@ TEST test_BVC(int8_t off, bool flag, uint16_t addrs) {
 }
 
 TEST test_BVS(int8_t off, bool flag, uint16_t addrs) {
-    HEADER0();
+    uint8_t flags = 0x0;
 
     cpu65_pc = addrs;
     flags |= flag ? fV : 0;
@@ -1518,7 +1549,7 @@ TEST test_BVS(int8_t off, bool flag, uint16_t addrs) {
     cpu65_run();
 
     ASSERT(cpu65_pc == newpc);
-    ASSERT(cpu65_a  == 0xed); 
+    ASSERT(cpu65_a  == 0xed);
     ASSERT(cpu65_x  == 0xde);
     ASSERT(cpu65_y  == 0x05);
     ASSERT(cpu65_sp == 0x81);
@@ -1537,7 +1568,8 @@ TEST test_BVS(int8_t off, bool flag, uint16_t addrs) {
 // BIT instructions
 
 TEST test_BIT_imm(uint8_t regA, uint8_t val) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
 
     if ((regA & val) == 0x0) {
         flags = fZ;
@@ -1583,7 +1615,8 @@ static void logic_BIT(uint8_t regA, uint8_t val, uint8_t *flags) {
 }
 
 TEST test_BIT_zpage(uint8_t regA, uint8_t val, uint8_t arg0) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
 
     logic_BIT(regA, val, &flags);
 
@@ -1616,7 +1649,8 @@ TEST test_BIT_zpage(uint8_t regA, uint8_t val, uint8_t arg0) {
 }
 
 TEST test_BIT_zpage_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
 
     logic_BIT(regA, val, &flags);
 
@@ -1651,7 +1685,8 @@ TEST test_BIT_zpage_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX) {
 }
 
 TEST test_BIT_abs(uint8_t regA, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
 
     logic_BIT(regA, val, &flags);
 
@@ -1685,7 +1720,8 @@ TEST test_BIT_abs(uint8_t regA, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
 }
 
 TEST test_BIT_abs_x(uint8_t regA, uint8_t val, uint8_t regX, uint8_t lobyte, uint8_t hibyte) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
 
     logic_BIT(regA, val, &flags);
 
@@ -1929,7 +1965,8 @@ static void logic_CMP(/*uint8_t*/int _a, /*uint8_t*/int _b, uint8_t *flags) {
 }
 
 TEST test_CMP_imm(uint8_t regA, uint8_t val) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
 
     logic_CMP(regA, val, &flags);
 
@@ -1961,7 +1998,8 @@ TEST test_CMP_imm(uint8_t regA, uint8_t val) {
 }
 
 TEST test_CMP_zpage(uint8_t regA, uint8_t val, uint8_t arg0) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
 
     logic_CMP(regA, val, &flags);
 
@@ -1995,7 +2033,8 @@ TEST test_CMP_zpage(uint8_t regA, uint8_t val, uint8_t arg0) {
 }
 
 TEST test_CMP_zpage_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
 
     logic_CMP(regA, val, &flags);
 
@@ -2031,7 +2070,8 @@ TEST test_CMP_zpage_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX) {
 }
 
 TEST test_CMP_abs(uint8_t regA, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
 
     logic_CMP(regA, val, &flags);
 
@@ -2066,7 +2106,8 @@ TEST test_CMP_abs(uint8_t regA, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
 }
 
 TEST test_CMP_abs_x(uint8_t regA, uint8_t val, uint8_t regX, uint8_t lobyte, uint8_t hibyte) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
 
     logic_CMP(regA, val, &flags);
 
@@ -2106,7 +2147,8 @@ TEST test_CMP_abs_x(uint8_t regA, uint8_t val, uint8_t regX, uint8_t lobyte, uin
 }
 
 TEST test_CMP_abs_y(uint8_t regA, uint8_t val, uint8_t regY, uint8_t lobyte, uint8_t hibyte) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
 
     logic_CMP(regA, val, &flags);
 
@@ -2146,7 +2188,8 @@ TEST test_CMP_abs_y(uint8_t regA, uint8_t val, uint8_t regY, uint8_t lobyte, uin
 }
 
 TEST test_CMP_ind_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX, uint8_t lobyte, uint8_t hibyte) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
 
     logic_CMP(regA, val, &flags);
 
@@ -2187,7 +2230,8 @@ TEST test_CMP_ind_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX, uint8
 }
 
 TEST test_CMP_ind_y(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regY, uint8_t val_zp0, uint8_t val_zp1) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
 
     logic_CMP(regA, val, &flags);
 
@@ -2235,7 +2279,8 @@ TEST test_CMP_ind_y(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regY, uint8
 
 // 65c02 : 0xD2
 TEST test_CMP_ind_zpage(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t lobyte, uint8_t hibyte) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
 
     logic_CMP(regA, val, &flags);
 
@@ -2279,7 +2324,8 @@ TEST test_CMP_ind_zpage(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t lobyte,
 // CPx CPy instructions
 
 TEST test_CPX_imm(uint8_t regX, uint8_t val) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
     uint8_t regA = 0xaa;
 
     logic_CMP(regX, val, &flags);
@@ -2312,7 +2358,8 @@ TEST test_CPX_imm(uint8_t regX, uint8_t val) {
 }
 
 TEST test_CPX_zpage(uint8_t regX, uint8_t val, uint8_t arg0) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
     uint8_t regA = 0x55;
 
     logic_CMP(regX, val, &flags);
@@ -2347,7 +2394,8 @@ TEST test_CPX_zpage(uint8_t regX, uint8_t val, uint8_t arg0) {
 }
 
 TEST test_CPX_abs(uint8_t regX, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
     uint8_t regA = 0xAA;
 
     logic_CMP(regX, val, &flags);
@@ -2383,7 +2431,8 @@ TEST test_CPX_abs(uint8_t regX, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
 }
 
 TEST test_CPY_imm(uint8_t regY, uint8_t val) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
     uint8_t regA = 0xaa;
 
     logic_CMP(regY, val, &flags);
@@ -2416,7 +2465,8 @@ TEST test_CPY_imm(uint8_t regY, uint8_t val) {
 }
 
 TEST test_CPY_zpage(uint8_t regY, uint8_t val, uint8_t arg0) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
     uint8_t regA = 0x55;
 
     logic_CMP(regY, val, &flags);
@@ -2451,7 +2501,8 @@ TEST test_CPY_zpage(uint8_t regY, uint8_t val, uint8_t arg0) {
 }
 
 TEST test_CPY_abs(uint8_t regY, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
     uint8_t regA = 0xAA;
 
     logic_CMP(regY, val, &flags);
@@ -2504,7 +2555,8 @@ static void logic_DEx(/*uint8_t*/int _a, uint8_t *result, uint8_t *flags) {
 }
 
 TEST test_DEA(uint8_t regA) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
     uint8_t val = regA;
 
     logic_DEx(regA, &result, &flags);
@@ -2525,8 +2577,11 @@ TEST test_DEA(uint8_t regA) {
     ASSERT(cpu65_y       == 0x04);
     ASSERT(cpu65_sp      == 0x80);
 
-    ASSERTm(msgbuf, cpu65_a == result); 
-    VERIFY_FLAGS();
+    do {
+        char msgbuf[MSG_SIZE];
+        ASSERTm(msgbuf, cpu65_a == result);
+        VERIFY_FLAGS();
+    } while (0);
 
     ASSERT(cpu65_ea        == TEST_LOC);
     ASSERT(cpu65_d         == 0xff);
@@ -2538,7 +2593,8 @@ TEST test_DEA(uint8_t regA) {
 }
 
 TEST test_DEX(uint8_t regX) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
     uint8_t regA = 0x12;
     uint8_t val = regX;
 
@@ -2572,7 +2628,8 @@ TEST test_DEX(uint8_t regX) {
 }
 
 TEST test_DEY(uint8_t regY) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
     uint8_t regA = 0x12;
     uint8_t val = regY;
 
@@ -2609,7 +2666,8 @@ TEST test_DEY(uint8_t regY) {
 // DEC instructions
 
 TEST test_DEC_zpage(uint8_t regA, uint8_t val, uint8_t arg0) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
 
     logic_DEx(val, &result, &flags);
 
@@ -2644,7 +2702,8 @@ TEST test_DEC_zpage(uint8_t regA, uint8_t val, uint8_t arg0) {
 }
 
 TEST test_DEC_zpage_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
 
     logic_DEx(val, &result, &flags);
 
@@ -2668,7 +2727,7 @@ TEST test_DEC_zpage_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX) {
     ASSERT(cpu65_y       == 0x05);
     ASSERT(cpu65_sp      == 0x81);
 
-    ASSERT(apple_ii_64k[0][idx]  == result); 
+    ASSERT(apple_ii_64k[0][idx]  == result);
     VERIFY_FLAGS();
 
     ASSERT(cpu65_ea        == idx);
@@ -2681,7 +2740,8 @@ TEST test_DEC_zpage_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX) {
 }
 
 TEST test_DEC_abs(uint8_t regA, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
 
     logic_DEx(val, &result, &flags);
 
@@ -2704,7 +2764,7 @@ TEST test_DEC_abs(uint8_t regA, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
     ASSERT(cpu65_y       == 0x05);
     ASSERT(cpu65_sp      == 0x81);
 
-    ASSERT(apple_ii_64k[0][addrs] == result); 
+    ASSERT(apple_ii_64k[0][addrs] == result);
     VERIFY_FLAGS();
 
     ASSERT(cpu65_ea        == addrs);
@@ -2717,7 +2777,8 @@ TEST test_DEC_abs(uint8_t regA, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
 }
 
 TEST test_DEC_abs_x(uint8_t regA, uint8_t val, uint8_t regX, uint8_t lobyte, uint8_t hibyte) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
 
     logic_DEx(val, &result, &flags);
 
@@ -2776,7 +2837,8 @@ static void logic_EOR(/*uint8_t*/int _a, /*uint8_t*/int _b, uint8_t *result, uin
 }
 
 TEST test_EOR_imm(uint8_t regA, uint8_t val) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
 
     logic_EOR(regA, val, &result, &flags);
 
@@ -2795,9 +2857,14 @@ TEST test_EOR_imm(uint8_t regA, uint8_t val) {
     ASSERT(cpu65_y       == 0x04);
     ASSERT(cpu65_sp      == 0x80);
 
-    snprintf(msgbuf, MSG_SIZE, MSG_FLAGS0, regA, val, result, buf0, cpu65_a, buf1);
-    ASSERTm(msgbuf, cpu65_a == result); 
-    VERIFY_FLAGS();
+    do {
+        char msgbuf[MSG_SIZE];
+        char buf0[MSG_SIZE];
+        char buf1[MSG_SIZE];
+        snprintf(msgbuf, MSG_SIZE, MSG_FLAGS0, regA, val, result, buf0, cpu65_a, buf1);
+        ASSERTm(msgbuf, cpu65_a == result);
+        VERIFY_FLAGS();
+    } while (0);
 
     ASSERT(cpu65_ea        == TEST_LOC+1);
     ASSERT(cpu65_d         == 0xff);
@@ -2809,7 +2876,8 @@ TEST test_EOR_imm(uint8_t regA, uint8_t val) {
 }
 
 TEST test_EOR_zpage(uint8_t regA, uint8_t val, uint8_t arg0) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
     logic_EOR(regA, val, &result, &flags);
 
     testcpu_set_opcode2(0x45, arg0);
@@ -2829,7 +2897,7 @@ TEST test_EOR_zpage(uint8_t regA, uint8_t val, uint8_t arg0) {
     ASSERT(cpu65_y       == 0x04);
     ASSERT(cpu65_sp      == 0x80);
 
-    ASSERT(cpu65_a == result); 
+    ASSERT(cpu65_a == result);
     VERIFY_FLAGS();
 
     ASSERT(cpu65_ea        == arg0);
@@ -2842,7 +2910,8 @@ TEST test_EOR_zpage(uint8_t regA, uint8_t val, uint8_t arg0) {
 }
 
 TEST test_EOR_zpage_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
     logic_EOR(regA, val, &result, &flags);
 
     testcpu_set_opcode2(0x55, arg0);
@@ -2864,7 +2933,7 @@ TEST test_EOR_zpage_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX) {
     ASSERT(cpu65_y       == 0x05);
     ASSERT(cpu65_sp      == 0x81);
 
-    ASSERT(cpu65_a == result); 
+    ASSERT(cpu65_a == result);
     VERIFY_FLAGS();
 
     ASSERT(cpu65_ea        == idx);
@@ -2877,7 +2946,8 @@ TEST test_EOR_zpage_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX) {
 }
 
 TEST test_EOR_abs(uint8_t regA, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
     logic_EOR(regA, val, &result, &flags);
 
     testcpu_set_opcode3(0x4d, lobyte, hibyte);
@@ -2898,7 +2968,7 @@ TEST test_EOR_abs(uint8_t regA, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
     ASSERT(cpu65_y       == 0x05);
     ASSERT(cpu65_sp      == 0x81);
 
-    ASSERT(cpu65_a == result); 
+    ASSERT(cpu65_a == result);
     VERIFY_FLAGS();
 
     ASSERT(cpu65_ea        == addrs);
@@ -2911,7 +2981,8 @@ TEST test_EOR_abs(uint8_t regA, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
 }
 
 TEST test_EOR_abs_x(uint8_t regA, uint8_t val, uint8_t regX, uint8_t lobyte, uint8_t hibyte) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
     logic_EOR(regA, val, &result, &flags);
 
     testcpu_set_opcode3(0x5d, lobyte, hibyte);
@@ -2937,7 +3008,7 @@ TEST test_EOR_abs_x(uint8_t regA, uint8_t val, uint8_t regX, uint8_t lobyte, uin
     ASSERT(cpu65_y       == 0x05);
     ASSERT(cpu65_sp      == 0x81);
 
-    ASSERT(cpu65_a == result); 
+    ASSERT(cpu65_a == result);
     VERIFY_FLAGS();
 
     ASSERT(cpu65_ea        == addrs);
@@ -2950,7 +3021,8 @@ TEST test_EOR_abs_x(uint8_t regA, uint8_t val, uint8_t regX, uint8_t lobyte, uin
 }
 
 TEST test_EOR_abs_y(uint8_t regA, uint8_t val, uint8_t regY, uint8_t lobyte, uint8_t hibyte) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
     logic_EOR(regA, val, &result, &flags);
 
     testcpu_set_opcode3(0x59, lobyte, hibyte);
@@ -2976,7 +3048,7 @@ TEST test_EOR_abs_y(uint8_t regA, uint8_t val, uint8_t regY, uint8_t lobyte, uin
     ASSERT(cpu65_y       == regY);
     ASSERT(cpu65_sp      == 0x81);
 
-    ASSERT(cpu65_a == result); 
+    ASSERT(cpu65_a == result);
     VERIFY_FLAGS();
 
     ASSERT(cpu65_ea        == addrs);
@@ -2989,7 +3061,8 @@ TEST test_EOR_abs_y(uint8_t regA, uint8_t val, uint8_t regY, uint8_t lobyte, uin
 }
 
 TEST test_EOR_ind_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX, uint8_t lobyte, uint8_t hibyte) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
     logic_EOR(regA, val, &result, &flags);
 
     testcpu_set_opcode2(0x41, arg0);
@@ -3015,7 +3088,7 @@ TEST test_EOR_ind_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX, uint8
     ASSERT(cpu65_y       == 0x15);
     ASSERT(cpu65_sp      == 0x81);
 
-    ASSERT(cpu65_a == result); 
+    ASSERT(cpu65_a == result);
     VERIFY_FLAGS();
 
     ASSERT(cpu65_ea        == addrs);
@@ -3029,7 +3102,8 @@ TEST test_EOR_ind_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX, uint8
 }
 
 TEST test_EOR_ind_y(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regY, uint8_t val_zp0, uint8_t val_zp1) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
     logic_EOR(regA, val, &result, &flags);
 
     testcpu_set_opcode2(0x51, arg0);
@@ -3062,7 +3136,7 @@ TEST test_EOR_ind_y(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regY, uint8
     ASSERT(cpu65_y       == regY);
     ASSERT(cpu65_sp      == 0x81);
 
-    ASSERT(cpu65_a == result); 
+    ASSERT(cpu65_a == result);
     VERIFY_FLAGS();
 
     ASSERT(cpu65_ea        == addrs);
@@ -3076,7 +3150,8 @@ TEST test_EOR_ind_y(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regY, uint8
 
 // 65c02 : 0x52
 TEST test_EOR_ind_zpage(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t lobyte, uint8_t hibyte) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
     logic_EOR(regA, val, &result, &flags);
 
     testcpu_set_opcode2(0x52, arg0);
@@ -3103,7 +3178,7 @@ TEST test_EOR_ind_zpage(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t lobyte,
     ASSERT(cpu65_y       == 0x85);
     ASSERT(cpu65_sp      == 0x81);
 
-    ASSERT(cpu65_a == result); 
+    ASSERT(cpu65_a == result);
     VERIFY_FLAGS();
 
     ASSERT(cpu65_ea        == addrs);
@@ -3133,7 +3208,8 @@ static void logic_INx(/*uint8_t*/int _a, uint8_t *result, uint8_t *flags) {
 }
 
 TEST test_INA(uint8_t regA) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
     uint8_t val = regA;
 
     logic_INx(regA, &result, &flags);
@@ -3154,8 +3230,11 @@ TEST test_INA(uint8_t regA) {
     ASSERT(cpu65_y       == 0x04);
     ASSERT(cpu65_sp      == 0x80);
 
-    ASSERTm(msgbuf, cpu65_a == result); 
-    VERIFY_FLAGS();
+    do {
+        char msgbuf[MSG_SIZE];
+        ASSERTm(msgbuf, cpu65_a == result);
+        VERIFY_FLAGS();
+    } while (0);
 
     ASSERT(cpu65_ea        == TEST_LOC);
     ASSERT(cpu65_d         == 0xff);
@@ -3167,7 +3246,8 @@ TEST test_INA(uint8_t regA) {
 }
 
 TEST test_INX(uint8_t regX) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
     uint8_t regA = 0x31;
     uint8_t val = regX;
 
@@ -3201,7 +3281,8 @@ TEST test_INX(uint8_t regX) {
 }
 
 TEST test_INY(uint8_t regY) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
     uint8_t regA = 0x21;
     uint8_t val = regY;
 
@@ -3238,7 +3319,8 @@ TEST test_INY(uint8_t regY) {
 // INC instructions
 
 TEST test_INC_zpage(uint8_t regA, uint8_t val, uint8_t arg0) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
 
     logic_INx(val, &result, &flags);
 
@@ -3273,7 +3355,8 @@ TEST test_INC_zpage(uint8_t regA, uint8_t val, uint8_t arg0) {
 }
 
 TEST test_INC_zpage_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
 
     logic_INx(val, &result, &flags);
 
@@ -3297,7 +3380,7 @@ TEST test_INC_zpage_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX) {
     ASSERT(cpu65_y       == 0x05);
     ASSERT(cpu65_sp      == 0x81);
 
-    ASSERT(apple_ii_64k[0][idx]  == result); 
+    ASSERT(apple_ii_64k[0][idx]  == result);
     VERIFY_FLAGS();
 
     ASSERT(cpu65_ea        == idx);
@@ -3310,7 +3393,8 @@ TEST test_INC_zpage_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX) {
 }
 
 TEST test_INC_abs(uint8_t regA, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
 
     logic_INx(val, &result, &flags);
 
@@ -3333,7 +3417,7 @@ TEST test_INC_abs(uint8_t regA, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
     ASSERT(cpu65_y       == 0x05);
     ASSERT(cpu65_sp      == 0x81);
 
-    ASSERT(apple_ii_64k[0][addrs] == result); 
+    ASSERT(apple_ii_64k[0][addrs] == result);
     VERIFY_FLAGS();
 
     ASSERT(cpu65_ea        == addrs);
@@ -3346,7 +3430,8 @@ TEST test_INC_abs(uint8_t regA, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
 }
 
 TEST test_INC_abs_x(uint8_t regA, uint8_t val, uint8_t regX, uint8_t lobyte, uint8_t hibyte) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
 
     logic_INx(val, &result, &flags);
 
@@ -3390,7 +3475,6 @@ TEST test_INC_abs_x(uint8_t regA, uint8_t val, uint8_t regX, uint8_t lobyte, uin
 // JMP instructions
 
 TEST test_JMP_abs(uint8_t lobyte, uint8_t hibyte, uint16_t insAddrs) {
-    HEADER0();
 
     testcpu_set_opcodeX(0x4c, lobyte, hibyte, insAddrs);
 
@@ -3427,7 +3511,6 @@ TEST test_JMP_abs(uint8_t lobyte, uint8_t hibyte, uint16_t insAddrs) {
 }
 
 TEST test_JMP_ind(uint8_t _lobyte, uint8_t _hibyte, uint16_t insAddrs) {
-    HEADER0();
 
     testcpu_set_opcodeX(0x6c, _lobyte, _hibyte, insAddrs);
 
@@ -3489,7 +3572,6 @@ TEST test_JMP_ind(uint8_t _lobyte, uint8_t _hibyte, uint16_t insAddrs) {
 
 // 65c02 : 0x7C
 TEST test_JMP_abs_ind_x(uint8_t _lobyte, uint8_t _hibyte, uint16_t insAddrs, uint8_t _regX) {
-    HEADER0();
 
     testcpu_set_opcodeX(0x7c, _lobyte, _hibyte, insAddrs);
 
@@ -3548,7 +3630,6 @@ TEST test_JMP_abs_ind_x(uint8_t _lobyte, uint8_t _hibyte, uint16_t insAddrs, uin
 // JSR operand
 
 TEST test_JSR_abs(uint8_t lobyte, uint8_t hibyte, uint16_t insAddrs) {
-    HEADER0();
 
     testcpu_set_opcodeX(0x20, lobyte, hibyte, insAddrs);
 
@@ -3605,7 +3686,8 @@ static void logic_LDx(/*uint8_t*/int _b, uint8_t *flags) {
 }
 
 TEST test_LDA_imm(uint8_t regA, uint8_t val) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
 
     logic_LDx(val, &flags);
 
@@ -3620,7 +3702,7 @@ TEST test_LDA_imm(uint8_t regA, uint8_t val) {
     cpu65_run();
 
     ASSERT(cpu65_pc      == TEST_LOC+2);
-    ASSERT(cpu65_a       == val); 
+    ASSERT(cpu65_a       == val);
     ASSERT(cpu65_x       == 0x03);
     ASSERT(cpu65_y       == 0x04);
     ASSERT(cpu65_sp      == 0x80);
@@ -3637,7 +3719,8 @@ TEST test_LDA_imm(uint8_t regA, uint8_t val) {
 }
 
 TEST test_LDA_zpage(uint8_t regA, uint8_t val, uint8_t arg0) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
 
     logic_LDx(val, &flags);
 
@@ -3654,7 +3737,7 @@ TEST test_LDA_zpage(uint8_t regA, uint8_t val, uint8_t arg0) {
     cpu65_run();
 
     ASSERT(cpu65_pc      == TEST_LOC+2);
-    ASSERT(cpu65_a       == val); 
+    ASSERT(cpu65_a       == val);
     ASSERT(cpu65_x       == 0x03);
     ASSERT(cpu65_y       == 0x04);
     ASSERT(cpu65_sp      == 0x80);
@@ -3671,7 +3754,8 @@ TEST test_LDA_zpage(uint8_t regA, uint8_t val, uint8_t arg0) {
 }
 
 TEST test_LDA_zpage_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
 
     logic_LDx(val, &flags);
 
@@ -3690,7 +3774,7 @@ TEST test_LDA_zpage_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX) {
     cpu65_run();
 
     ASSERT(cpu65_pc      == TEST_LOC+2);
-    ASSERT(cpu65_a       == val); 
+    ASSERT(cpu65_a       == val);
     ASSERT(cpu65_x       == regX);
     ASSERT(cpu65_y       == 0x05);
     ASSERT(cpu65_sp      == 0x81);
@@ -3707,7 +3791,8 @@ TEST test_LDA_zpage_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX) {
 }
 
 TEST test_LDA_abs(uint8_t regA, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
 
     logic_LDx(val, &flags);
 
@@ -3725,7 +3810,7 @@ TEST test_LDA_abs(uint8_t regA, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
     cpu65_run();
 
     ASSERT(cpu65_pc      == TEST_LOC+3);
-    ASSERT(cpu65_a       == val); 
+    ASSERT(cpu65_a       == val);
     ASSERT(cpu65_x       == 0xf4);
     ASSERT(cpu65_y       == 0x05);
     ASSERT(cpu65_sp      == 0x81);
@@ -3742,7 +3827,8 @@ TEST test_LDA_abs(uint8_t regA, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
 }
 
 TEST test_LDA_abs_x(uint8_t regA, uint8_t val, uint8_t regX, uint8_t lobyte, uint8_t hibyte) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
 
     logic_LDx(val, &flags);
 
@@ -3765,7 +3851,7 @@ TEST test_LDA_abs_x(uint8_t regA, uint8_t val, uint8_t regX, uint8_t lobyte, uin
     cpu65_run();
 
     ASSERT(cpu65_pc      == TEST_LOC+3);
-    ASSERT(cpu65_a       == val); 
+    ASSERT(cpu65_a       == val);
     ASSERT(cpu65_x       == regX);
     ASSERT(cpu65_y       == 0x05);
     ASSERT(cpu65_sp      == 0x81);
@@ -3782,7 +3868,8 @@ TEST test_LDA_abs_x(uint8_t regA, uint8_t val, uint8_t regX, uint8_t lobyte, uin
 }
 
 TEST test_LDA_abs_y(uint8_t regA, uint8_t val, uint8_t regY, uint8_t lobyte, uint8_t hibyte) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
 
     logic_LDx(val, &flags);
 
@@ -3805,7 +3892,7 @@ TEST test_LDA_abs_y(uint8_t regA, uint8_t val, uint8_t regY, uint8_t lobyte, uin
     cpu65_run();
 
     ASSERT(cpu65_pc      == TEST_LOC+3);
-    ASSERT(cpu65_a       == val); 
+    ASSERT(cpu65_a       == val);
     ASSERT(cpu65_x       == 0x02);
     ASSERT(cpu65_y       == regY);
     ASSERT(cpu65_sp      == 0x81);
@@ -3822,7 +3909,8 @@ TEST test_LDA_abs_y(uint8_t regA, uint8_t val, uint8_t regY, uint8_t lobyte, uin
 }
 
 TEST test_LDA_ind_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX, uint8_t lobyte, uint8_t hibyte) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
 
     logic_LDx(val, &flags);
 
@@ -3845,7 +3933,7 @@ TEST test_LDA_ind_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX, uint8
     cpu65_run();
 
     ASSERT(cpu65_pc      == TEST_LOC+2);
-    ASSERT(cpu65_a       == val); 
+    ASSERT(cpu65_a       == val);
     ASSERT(cpu65_x       == regX);
     ASSERT(cpu65_y       == 0x15);
     ASSERT(cpu65_sp      == 0x81);
@@ -3863,7 +3951,8 @@ TEST test_LDA_ind_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX, uint8
 }
 
 TEST test_LDA_ind_y(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regY, uint8_t val_zp0, uint8_t val_zp1) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
 
     logic_LDx(val, &flags);
 
@@ -3893,7 +3982,7 @@ TEST test_LDA_ind_y(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regY, uint8
     cpu65_run();
 
     ASSERT(cpu65_pc      == TEST_LOC+2);
-    ASSERT(cpu65_a       == val); 
+    ASSERT(cpu65_a       == val);
     ASSERT(cpu65_x       == 0x84);
     ASSERT(cpu65_y       == regY);
     ASSERT(cpu65_sp      == 0x81);
@@ -3911,7 +4000,8 @@ TEST test_LDA_ind_y(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regY, uint8
 
 // 65c02 : 0xB2
 TEST test_LDA_ind_zpage(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t lobyte, uint8_t hibyte) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
 
     logic_LDx(val, &flags);
 
@@ -3935,7 +4025,7 @@ TEST test_LDA_ind_zpage(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t lobyte,
     cpu65_run();
 
     ASSERT(cpu65_pc      == TEST_LOC+2);
-    ASSERT(cpu65_a       == val); 
+    ASSERT(cpu65_a       == val);
     ASSERT(cpu65_x       == 0x14);
     ASSERT(cpu65_y       == 0x85);
     ASSERT(cpu65_sp      == 0x81);
@@ -3955,7 +4045,8 @@ TEST test_LDA_ind_zpage(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t lobyte,
 // LDX LDY instructions
 
 TEST test_LDX_imm(uint8_t regX, uint8_t val) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
 
     uint8_t regA = 0xaa;
 
@@ -3989,7 +4080,8 @@ TEST test_LDX_imm(uint8_t regX, uint8_t val) {
 }
 
 TEST test_LDX_zpage(uint8_t regX, uint8_t val, uint8_t arg0) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
     uint8_t regA = 0x55;
 
     logic_LDx(val, &flags);
@@ -4024,7 +4116,8 @@ TEST test_LDX_zpage(uint8_t regX, uint8_t val, uint8_t arg0) {
 }
 
 TEST test_LDX_zpage_y(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regY) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
 
     logic_LDx(val, &flags);
 
@@ -4060,7 +4153,8 @@ TEST test_LDX_zpage_y(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regY) {
 }
 
 TEST test_LDX_abs(uint8_t regX, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
     uint8_t regA = 0xab;
 
     logic_LDx(val, &flags);
@@ -4096,7 +4190,8 @@ TEST test_LDX_abs(uint8_t regX, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
 }
 
 TEST test_LDX_abs_y(uint8_t regX, uint8_t val, uint8_t regY, uint8_t lobyte, uint8_t hibyte) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
     uint8_t regA = 0xba;
 
     logic_LDx(val, &flags);
@@ -4137,7 +4232,8 @@ TEST test_LDX_abs_y(uint8_t regX, uint8_t val, uint8_t regY, uint8_t lobyte, uin
 }
 
 TEST test_LDY_imm(uint8_t regY, uint8_t val) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
 
     uint8_t regA = 0xaa;
 
@@ -4171,7 +4267,8 @@ TEST test_LDY_imm(uint8_t regY, uint8_t val) {
 }
 
 TEST test_LDY_zpage(uint8_t regY, uint8_t val, uint8_t arg0) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
     uint8_t regA = 0x55;
 
     logic_LDx(val, &flags);
@@ -4206,7 +4303,8 @@ TEST test_LDY_zpage(uint8_t regY, uint8_t val, uint8_t arg0) {
 }
 
 TEST test_LDY_zpage_x(uint8_t regY, uint8_t val, uint8_t arg0, uint8_t regX) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
     uint8_t regA = 0xa9;
 
     logic_LDx(val, &flags);
@@ -4226,7 +4324,7 @@ TEST test_LDY_zpage_x(uint8_t regY, uint8_t val, uint8_t arg0, uint8_t regX) {
     cpu65_run();
 
     ASSERT(cpu65_pc      == TEST_LOC+2);
-    ASSERT(cpu65_a       == regA); 
+    ASSERT(cpu65_a       == regA);
     ASSERT(cpu65_x       == regX);
     ASSERT(cpu65_y       == val);
     ASSERT(cpu65_sp      == 0x81);
@@ -4243,7 +4341,8 @@ TEST test_LDY_zpage_x(uint8_t regY, uint8_t val, uint8_t arg0, uint8_t regX) {
 }
 
 TEST test_LDY_abs(uint8_t regY, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
     uint8_t regA = 0xab;
 
     logic_LDx(val, &flags);
@@ -4279,7 +4378,8 @@ TEST test_LDY_abs(uint8_t regY, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
 }
 
 TEST test_LDY_abs_x(uint8_t regY, uint8_t val, uint8_t regX, uint8_t lobyte, uint8_t hibyte) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
     uint8_t regA = 0x5a;
 
     logic_LDx(val, &flags);
@@ -4303,7 +4403,7 @@ TEST test_LDY_abs_x(uint8_t regY, uint8_t val, uint8_t regX, uint8_t lobyte, uin
     cpu65_run();
 
     ASSERT(cpu65_pc      == TEST_LOC+3);
-    ASSERT(cpu65_a       == regA); 
+    ASSERT(cpu65_a       == regA);
     ASSERT(cpu65_x       == regX);
     ASSERT(cpu65_y       == val);
     ASSERT(cpu65_sp      == 0x81);
@@ -4340,7 +4440,8 @@ static void logic_LSR(/*uint8_t*/int _a, uint8_t *result, uint8_t *flags) {
 
 TEST test_LSR_acc(uint8_t regA) {
     uint8_t val = 0xff;
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
 
     logic_LSR(regA, &result, &flags);
 
@@ -4359,7 +4460,7 @@ TEST test_LSR_acc(uint8_t regA) {
     ASSERT(cpu65_y       == 0x04);
     ASSERT(cpu65_sp      == 0x80);
 
-    ASSERT(cpu65_a == result); 
+    ASSERT(cpu65_a == result);
     VERIFY_FLAGS();
 
     ASSERT(cpu65_ea        == TEST_LOC);
@@ -4372,7 +4473,8 @@ TEST test_LSR_acc(uint8_t regA) {
 }
 
 TEST test_LSR_zpage(uint8_t regA, uint8_t val, uint8_t arg0) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
 
     logic_LSR(val, &result, &flags);
 
@@ -4408,7 +4510,8 @@ TEST test_LSR_zpage(uint8_t regA, uint8_t val, uint8_t arg0) {
 }
 
 TEST test_LSR_zpage_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
 
     logic_LSR(val, &result, &flags);
 
@@ -4428,7 +4531,7 @@ TEST test_LSR_zpage_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX) {
 
     ASSERT(apple_ii_64k[0][idx] == result);
 
-    ASSERT(cpu65_a   == regA); 
+    ASSERT(cpu65_a   == regA);
     ASSERT(cpu65_pc  == TEST_LOC+2);
     ASSERT(cpu65_x   == regX);
     ASSERT(cpu65_y   == 0x05);
@@ -4445,7 +4548,8 @@ TEST test_LSR_zpage_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX) {
 }
 
 TEST test_LSR_abs(uint8_t regA, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
 
     logic_LSR(val, &result, &flags);
 
@@ -4462,9 +4566,9 @@ TEST test_LSR_abs(uint8_t regA, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
 
     cpu65_run();
 
-    ASSERT(apple_ii_64k[0][addrs] == result); 
+    ASSERT(apple_ii_64k[0][addrs] == result);
 
-    ASSERT(cpu65_a  == regA); 
+    ASSERT(cpu65_a  == regA);
     ASSERT(cpu65_pc == TEST_LOC+3);
     ASSERT(cpu65_x  == 0xf4);
     ASSERT(cpu65_y  == 0x05);
@@ -4482,7 +4586,8 @@ TEST test_LSR_abs(uint8_t regA, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
 }
 
 TEST test_LSR_abs_x(uint8_t regA, uint8_t val, uint8_t regX, uint8_t lobyte, uint8_t hibyte) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
 
     logic_LSR(val, &result, &flags);
 
@@ -4504,9 +4609,9 @@ TEST test_LSR_abs_x(uint8_t regA, uint8_t val, uint8_t regX, uint8_t lobyte, uin
 
     cpu65_run();
 
-    ASSERT(apple_ii_64k[0][addrs] == result); 
+    ASSERT(apple_ii_64k[0][addrs] == result);
 
-    ASSERT(cpu65_a  == regA); 
+    ASSERT(cpu65_a  == regA);
     ASSERT(cpu65_pc == TEST_LOC+3);
     ASSERT(cpu65_x  == regX);
     ASSERT(cpu65_y  == 0x05);
@@ -4572,7 +4677,8 @@ static void logic_ORA(/*uint8_t*/int _a, /*uint8_t*/int _b, uint8_t *result, uin
 }
 
 TEST test_ORA_imm(uint8_t regA, uint8_t val) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
 
     logic_ORA(regA, val, &result, &flags);
 
@@ -4591,9 +4697,14 @@ TEST test_ORA_imm(uint8_t regA, uint8_t val) {
     ASSERT(cpu65_y       == 0x04);
     ASSERT(cpu65_sp      == 0x80);
 
-    snprintf(msgbuf, MSG_SIZE, MSG_FLAGS0, regA, val, result, buf0, cpu65_a, buf1);
-    ASSERTm(msgbuf, cpu65_a == result); 
-    VERIFY_FLAGS();
+    do {
+        char msgbuf[MSG_SIZE];
+        char buf0[MSG_SIZE];
+        char buf1[MSG_SIZE];
+        snprintf(msgbuf, MSG_SIZE, MSG_FLAGS0, regA, val, result, buf0, cpu65_a, buf1);
+        ASSERTm(msgbuf, cpu65_a == result);
+        VERIFY_FLAGS();
+    } while (0);
 
     ASSERT(cpu65_ea        == TEST_LOC+1);
     ASSERT(cpu65_d         == 0xff);
@@ -4605,7 +4716,8 @@ TEST test_ORA_imm(uint8_t regA, uint8_t val) {
 }
 
 TEST test_ORA_zpage(uint8_t regA, uint8_t val, uint8_t arg0) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
     logic_ORA(regA, val, &result, &flags);
 
     testcpu_set_opcode2(0x05, arg0);
@@ -4625,7 +4737,7 @@ TEST test_ORA_zpage(uint8_t regA, uint8_t val, uint8_t arg0) {
     ASSERT(cpu65_y       == 0x04);
     ASSERT(cpu65_sp      == 0x80);
 
-    ASSERT(cpu65_a == result); 
+    ASSERT(cpu65_a == result);
     VERIFY_FLAGS();
 
     ASSERT(cpu65_ea        == arg0);
@@ -4638,7 +4750,8 @@ TEST test_ORA_zpage(uint8_t regA, uint8_t val, uint8_t arg0) {
 }
 
 TEST test_ORA_zpage_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
     logic_ORA(regA, val, &result, &flags);
 
     testcpu_set_opcode2(0x15, arg0);
@@ -4660,7 +4773,7 @@ TEST test_ORA_zpage_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX) {
     ASSERT(cpu65_y       == 0x05);
     ASSERT(cpu65_sp      == 0x81);
 
-    ASSERT(cpu65_a == result); 
+    ASSERT(cpu65_a == result);
     VERIFY_FLAGS();
 
     ASSERT(cpu65_ea        == idx);
@@ -4673,7 +4786,8 @@ TEST test_ORA_zpage_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX) {
 }
 
 TEST test_ORA_abs(uint8_t regA, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
     logic_ORA(regA, val, &result, &flags);
 
     testcpu_set_opcode3(0x0d, lobyte, hibyte);
@@ -4694,7 +4808,7 @@ TEST test_ORA_abs(uint8_t regA, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
     ASSERT(cpu65_y       == 0x05);
     ASSERT(cpu65_sp      == 0x81);
 
-    ASSERT(cpu65_a == result); 
+    ASSERT(cpu65_a == result);
     VERIFY_FLAGS();
 
     ASSERT(cpu65_ea        == addrs);
@@ -4707,7 +4821,8 @@ TEST test_ORA_abs(uint8_t regA, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
 }
 
 TEST test_ORA_abs_x(uint8_t regA, uint8_t val, uint8_t regX, uint8_t lobyte, uint8_t hibyte) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
     logic_ORA(regA, val, &result, &flags);
 
     testcpu_set_opcode3(0x1d, lobyte, hibyte);
@@ -4733,7 +4848,7 @@ TEST test_ORA_abs_x(uint8_t regA, uint8_t val, uint8_t regX, uint8_t lobyte, uin
     ASSERT(cpu65_y       == 0x05);
     ASSERT(cpu65_sp      == 0x81);
 
-    ASSERT(cpu65_a == result); 
+    ASSERT(cpu65_a == result);
     VERIFY_FLAGS();
 
     ASSERT(cpu65_ea        == addrs);
@@ -4746,7 +4861,8 @@ TEST test_ORA_abs_x(uint8_t regA, uint8_t val, uint8_t regX, uint8_t lobyte, uin
 }
 
 TEST test_ORA_abs_y(uint8_t regA, uint8_t val, uint8_t regY, uint8_t lobyte, uint8_t hibyte) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
     logic_ORA(regA, val, &result, &flags);
 
     testcpu_set_opcode3(0x19, lobyte, hibyte);
@@ -4772,7 +4888,7 @@ TEST test_ORA_abs_y(uint8_t regA, uint8_t val, uint8_t regY, uint8_t lobyte, uin
     ASSERT(cpu65_y       == regY);
     ASSERT(cpu65_sp      == 0x81);
 
-    ASSERT(cpu65_a == result); 
+    ASSERT(cpu65_a == result);
     VERIFY_FLAGS();
 
     ASSERT(cpu65_ea        == addrs);
@@ -4785,7 +4901,8 @@ TEST test_ORA_abs_y(uint8_t regA, uint8_t val, uint8_t regY, uint8_t lobyte, uin
 }
 
 TEST test_ORA_ind_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX, uint8_t lobyte, uint8_t hibyte) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
     logic_ORA(regA, val, &result, &flags);
 
     testcpu_set_opcode2(0x01, arg0);
@@ -4811,7 +4928,7 @@ TEST test_ORA_ind_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX, uint8
     ASSERT(cpu65_y       == 0x15);
     ASSERT(cpu65_sp      == 0x81);
 
-    ASSERT(cpu65_a == result); 
+    ASSERT(cpu65_a == result);
     VERIFY_FLAGS();
 
     ASSERT(cpu65_ea        == addrs);
@@ -4825,7 +4942,8 @@ TEST test_ORA_ind_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX, uint8
 }
 
 TEST test_ORA_ind_y(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regY, uint8_t val_zp0, uint8_t val_zp1) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
     logic_ORA(regA, val, &result, &flags);
 
     testcpu_set_opcode2(0x11, arg0);
@@ -4858,7 +4976,7 @@ TEST test_ORA_ind_y(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regY, uint8
     ASSERT(cpu65_y       == regY);
     ASSERT(cpu65_sp      == 0x81);
 
-    ASSERT(cpu65_a == result); 
+    ASSERT(cpu65_a == result);
     VERIFY_FLAGS();
 
     ASSERT(cpu65_ea        == addrs);
@@ -4872,7 +4990,8 @@ TEST test_ORA_ind_y(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regY, uint8
 
 // 65c02 : 0x12
 TEST test_ORA_ind_zpage(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t lobyte, uint8_t hibyte) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
     logic_ORA(regA, val, &result, &flags);
 
     testcpu_set_opcode2(0x12, arg0);
@@ -4899,7 +5018,7 @@ TEST test_ORA_ind_zpage(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t lobyte,
     ASSERT(cpu65_y       == 0x85);
     ASSERT(cpu65_sp      == 0x81);
 
-    ASSERT(cpu65_a == result); 
+    ASSERT(cpu65_a == result);
     VERIFY_FLAGS();
 
     ASSERT(cpu65_ea        == addrs);
@@ -5053,7 +5172,8 @@ static void logic_PLx(/*uint8_t*/int _a, uint8_t *flags) {
 }
 
 TEST test_PLA(uint8_t regA) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
     uint8_t val = regA;
     uint8_t sp = 0x80;
 
@@ -5120,7 +5240,8 @@ TEST test_PLP(uint8_t flags) {
 }
 
 TEST test_PLX(uint8_t regX) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
     uint8_t regA = 0x00;
     uint8_t val = 0x00;
     uint8_t sp = 0x80;
@@ -5156,7 +5277,8 @@ TEST test_PLX(uint8_t regX) {
 }
 
 TEST test_PLY(uint8_t regY) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
     uint8_t regA = 0x00;
     uint8_t val = 0x00;
     uint8_t sp = 0x80;
@@ -5222,7 +5344,8 @@ static void logic_ROL(/*uint8_t*/int _a, uint8_t *result, uint8_t *flags) {
 
 TEST test_ROL_acc(uint8_t regA, bool carry) {
     uint8_t val = 0xff;
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
 
     flags |= carry ? (fC) : 0x00;
 
@@ -5243,7 +5366,7 @@ TEST test_ROL_acc(uint8_t regA, bool carry) {
     ASSERT(cpu65_y       == 0x04);
     ASSERT(cpu65_sp      == 0x80);
 
-    ASSERT(cpu65_a == result); 
+    ASSERT(cpu65_a == result);
     VERIFY_FLAGS();
 
     ASSERT(cpu65_ea        == TEST_LOC);
@@ -5256,7 +5379,8 @@ TEST test_ROL_acc(uint8_t regA, bool carry) {
 }
 
 TEST test_ROL_zpage(bool regA, uint8_t val, uint8_t arg0, bool carry) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
 
     flags |= carry ? (fC) : 0x00;
 
@@ -5294,7 +5418,8 @@ TEST test_ROL_zpage(bool regA, uint8_t val, uint8_t arg0, bool carry) {
 }
 
 TEST test_ROL_zpage_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX, bool carry) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
 
     flags |= carry ? (fC) : 0x00;
 
@@ -5316,7 +5441,7 @@ TEST test_ROL_zpage_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX, boo
 
     ASSERT(apple_ii_64k[0][idx] == result);
 
-    ASSERT(cpu65_a   == regA); 
+    ASSERT(cpu65_a   == regA);
     ASSERT(cpu65_pc  == TEST_LOC+2);
     ASSERT(cpu65_x   == regX);
     ASSERT(cpu65_y   == 0x05);
@@ -5333,7 +5458,8 @@ TEST test_ROL_zpage_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX, boo
 }
 
 TEST test_ROL_abs(uint8_t regA, uint8_t val, uint8_t lobyte, uint8_t hibyte, bool carry) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
 
     flags |= carry ? (fC) : 0x00;
 
@@ -5352,9 +5478,9 @@ TEST test_ROL_abs(uint8_t regA, uint8_t val, uint8_t lobyte, uint8_t hibyte, boo
 
     cpu65_run();
 
-    ASSERT(apple_ii_64k[0][addrs] == result); 
+    ASSERT(apple_ii_64k[0][addrs] == result);
 
-    ASSERT(cpu65_a  == regA); 
+    ASSERT(cpu65_a  == regA);
     ASSERT(cpu65_pc == TEST_LOC+3);
     ASSERT(cpu65_x  == 0xf4);
     ASSERT(cpu65_y  == 0x05);
@@ -5372,7 +5498,8 @@ TEST test_ROL_abs(uint8_t regA, uint8_t val, uint8_t lobyte, uint8_t hibyte, boo
 }
 
 TEST test_ROL_abs_x(uint8_t regA, uint8_t val, uint8_t regX, uint8_t lobyte, uint8_t hibyte, bool carry) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
 
     flags |= carry ? (fC) : 0x00;
 
@@ -5396,9 +5523,9 @@ TEST test_ROL_abs_x(uint8_t regA, uint8_t val, uint8_t regX, uint8_t lobyte, uin
 
     cpu65_run();
 
-    ASSERT(apple_ii_64k[0][addrs] == result); 
+    ASSERT(apple_ii_64k[0][addrs] == result);
 
-    ASSERT(cpu65_a  == regA); 
+    ASSERT(cpu65_a  == regA);
     ASSERT(cpu65_pc == TEST_LOC+3);
     ASSERT(cpu65_x  == regX);
     ASSERT(cpu65_y  == 0x05);
@@ -5448,7 +5575,8 @@ static void logic_ROR(/*uint8_t*/int _a, uint8_t *result, uint8_t *flags) {
 
 TEST test_ROR_acc(uint8_t regA, bool carry) {
     uint8_t val = 0xff;
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
 
     flags |= carry ? (fC) : 0x00;
 
@@ -5469,7 +5597,7 @@ TEST test_ROR_acc(uint8_t regA, bool carry) {
     ASSERT(cpu65_y       == 0x04);
     ASSERT(cpu65_sp      == 0x80);
 
-    ASSERT(cpu65_a == result); 
+    ASSERT(cpu65_a == result);
     VERIFY_FLAGS();
 
     ASSERT(cpu65_ea        == TEST_LOC);
@@ -5482,7 +5610,8 @@ TEST test_ROR_acc(uint8_t regA, bool carry) {
 }
 
 TEST test_ROR_zpage(bool regA, uint8_t val, uint8_t arg0, bool carry) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
 
     flags |= carry ? (fC) : 0x00;
 
@@ -5520,7 +5649,8 @@ TEST test_ROR_zpage(bool regA, uint8_t val, uint8_t arg0, bool carry) {
 }
 
 TEST test_ROR_zpage_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX, bool carry) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
 
     flags |= carry ? (fC) : 0x00;
 
@@ -5542,7 +5672,7 @@ TEST test_ROR_zpage_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX, boo
 
     ASSERT(apple_ii_64k[0][idx] == result);
 
-    ASSERT(cpu65_a   == regA); 
+    ASSERT(cpu65_a   == regA);
     ASSERT(cpu65_pc  == TEST_LOC+2);
     ASSERT(cpu65_x   == regX);
     ASSERT(cpu65_y   == 0x05);
@@ -5559,7 +5689,8 @@ TEST test_ROR_zpage_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX, boo
 }
 
 TEST test_ROR_abs(uint8_t regA, uint8_t val, uint8_t lobyte, uint8_t hibyte, bool carry) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
 
     flags |= carry ? (fC) : 0x00;
 
@@ -5578,9 +5709,9 @@ TEST test_ROR_abs(uint8_t regA, uint8_t val, uint8_t lobyte, uint8_t hibyte, boo
 
     cpu65_run();
 
-    ASSERT(apple_ii_64k[0][addrs] == result); 
+    ASSERT(apple_ii_64k[0][addrs] == result);
 
-    ASSERT(cpu65_a  == regA); 
+    ASSERT(cpu65_a  == regA);
     ASSERT(cpu65_pc == TEST_LOC+3);
     ASSERT(cpu65_x  == 0xf4);
     ASSERT(cpu65_y  == 0x05);
@@ -5598,7 +5729,8 @@ TEST test_ROR_abs(uint8_t regA, uint8_t val, uint8_t lobyte, uint8_t hibyte, boo
 }
 
 TEST test_ROR_abs_x(uint8_t regA, uint8_t val, uint8_t regX, uint8_t lobyte, uint8_t hibyte, bool carry) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
 
     flags |= carry ? (fC) : 0x00;
 
@@ -5622,9 +5754,9 @@ TEST test_ROR_abs_x(uint8_t regA, uint8_t val, uint8_t regX, uint8_t lobyte, uin
 
     cpu65_run();
 
-    ASSERT(apple_ii_64k[0][addrs] == result); 
+    ASSERT(apple_ii_64k[0][addrs] == result);
 
-    ASSERT(cpu65_a  == regA); 
+    ASSERT(cpu65_a  == regA);
     ASSERT(cpu65_pc == TEST_LOC+3);
     ASSERT(cpu65_x  == regX);
     ASSERT(cpu65_y  == 0x05);
@@ -5799,7 +5931,8 @@ static void logic_SBC(/*uint8_t*/int _a, /*uint8_t*/int _b, uint8_t *result, uin
 }
 
 TEST test_SBC_imm(uint8_t regA, uint8_t val, bool decimal, bool carry) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
 
     if (decimal && check_skip_illegal_bcd(regA, val)) {
         // NOTE : FIXME TODO skip undocumented/illegal BCD
@@ -5827,9 +5960,14 @@ TEST test_SBC_imm(uint8_t regA, uint8_t val, bool decimal, bool carry) {
     ASSERT(cpu65_y       == 0x44);
     ASSERT(cpu65_sp      == 0x88);
 
-    snprintf(msgbuf, MSG_SIZE, MSG_FLAGS0, regA, val, result, buf0, cpu65_a, buf1);
-    ASSERTm(msgbuf, cpu65_a == result); 
-    VERIFY_FLAGS();
+    do {
+        char msgbuf[MSG_SIZE];
+        char buf0[MSG_SIZE];
+        char buf1[MSG_SIZE];
+        snprintf(msgbuf, MSG_SIZE, MSG_FLAGS0, regA, val, result, buf0, cpu65_a, buf1);
+        ASSERTm(msgbuf, cpu65_a == result);
+        VERIFY_FLAGS();
+    } while (0);
 
     ASSERT(cpu65_ea        == TEST_LOC+1);
     ASSERT(cpu65_d         == 0xff);
@@ -5841,7 +5979,8 @@ TEST test_SBC_imm(uint8_t regA, uint8_t val, bool decimal, bool carry) {
 }
 
 TEST test_SBC_zpage(uint8_t regA, uint8_t val, uint8_t arg0) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
 
     logic_SBC(regA, val, &result, &flags);
 
@@ -5861,7 +6000,7 @@ TEST test_SBC_zpage(uint8_t regA, uint8_t val, uint8_t arg0) {
     ASSERT(cpu65_y       == 0x04);
     ASSERT(cpu65_sp      == 0x80);
 
-    ASSERT(cpu65_a == result); 
+    ASSERT(cpu65_a == result);
     VERIFY_FLAGS();
 
     ASSERT(cpu65_ea        == arg0);
@@ -5874,7 +6013,8 @@ TEST test_SBC_zpage(uint8_t regA, uint8_t val, uint8_t arg0) {
 }
 
 TEST test_SBC_zpage_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
 
     logic_SBC(regA, val, &result, &flags);
 
@@ -5896,7 +6036,7 @@ TEST test_SBC_zpage_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX) {
     ASSERT(cpu65_y       == 0x05);
     ASSERT(cpu65_sp      == 0x81);
 
-    ASSERT(cpu65_a == result); 
+    ASSERT(cpu65_a == result);
     VERIFY_FLAGS();
 
     ASSERT(cpu65_ea        == idx);
@@ -5909,7 +6049,8 @@ TEST test_SBC_zpage_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX) {
 }
 
 TEST test_SBC_abs(uint8_t regA, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
 
     logic_SBC(regA, val, &result, &flags);
 
@@ -5930,7 +6071,7 @@ TEST test_SBC_abs(uint8_t regA, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
     ASSERT(cpu65_y       == 0x05);
     ASSERT(cpu65_sp      == 0x81);
 
-    ASSERT(cpu65_a == result); 
+    ASSERT(cpu65_a == result);
     VERIFY_FLAGS();
 
     ASSERT(cpu65_ea        == addrs);
@@ -5943,7 +6084,8 @@ TEST test_SBC_abs(uint8_t regA, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
 }
 
 TEST test_SBC_abs_x(uint8_t regA, uint8_t val, uint8_t regX, uint8_t lobyte, uint8_t hibyte) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
 
     logic_SBC(regA, val, &result, &flags);
 
@@ -5969,7 +6111,7 @@ TEST test_SBC_abs_x(uint8_t regA, uint8_t val, uint8_t regX, uint8_t lobyte, uin
     ASSERT(cpu65_y       == 0x05);
     ASSERT(cpu65_sp      == 0x81);
 
-    ASSERT(cpu65_a == result); 
+    ASSERT(cpu65_a == result);
     VERIFY_FLAGS();
 
     ASSERT(cpu65_ea        == addrs);
@@ -5984,7 +6126,8 @@ TEST test_SBC_abs_x(uint8_t regA, uint8_t val, uint8_t regX, uint8_t lobyte, uin
 }
 
 TEST test_SBC_abs_y(uint8_t regA, uint8_t val, uint8_t regY, uint8_t lobyte, uint8_t hibyte) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
 
     logic_SBC(regA, val, &result, &flags);
 
@@ -6010,7 +6153,7 @@ TEST test_SBC_abs_y(uint8_t regA, uint8_t val, uint8_t regY, uint8_t lobyte, uin
     ASSERT(cpu65_y       == regY);
     ASSERT(cpu65_sp      == 0x81);
 
-    ASSERT(cpu65_a == result); 
+    ASSERT(cpu65_a == result);
     VERIFY_FLAGS();
 
     ASSERT(cpu65_ea        == addrs);
@@ -6025,7 +6168,8 @@ TEST test_SBC_abs_y(uint8_t regA, uint8_t val, uint8_t regY, uint8_t lobyte, uin
 }
 
 TEST test_SBC_ind_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX, uint8_t lobyte, uint8_t hibyte) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
 
     logic_SBC(regA, val, &result, &flags);
 
@@ -6051,7 +6195,7 @@ TEST test_SBC_ind_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX, uint8
     ASSERT(cpu65_y       == 0x15);
     ASSERT(cpu65_sp      == 0x81);
 
-    ASSERT(cpu65_a == result); 
+    ASSERT(cpu65_a == result);
     VERIFY_FLAGS();
 
     ASSERT(cpu65_ea        == addrs);
@@ -6065,7 +6209,8 @@ TEST test_SBC_ind_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX, uint8
 }
 
 TEST test_SBC_ind_y(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regY, uint8_t val_zp0, uint8_t val_zp1) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
 
     logic_SBC(regA, val, &result, &flags);
 
@@ -6098,7 +6243,7 @@ TEST test_SBC_ind_y(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regY, uint8
     ASSERT(cpu65_y       == regY);
     ASSERT(cpu65_sp      == 0x81);
 
-    ASSERT(cpu65_a == result); 
+    ASSERT(cpu65_a == result);
     VERIFY_FLAGS();
 
     ASSERT(cpu65_ea        == addrs);
@@ -6112,7 +6257,8 @@ TEST test_SBC_ind_y(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regY, uint8
 }
 
 TEST test_SBC_ind_zpage(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t lobyte, uint8_t hibyte) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
 
     logic_SBC(regA, val, &result, &flags);
 
@@ -6139,7 +6285,7 @@ TEST test_SBC_ind_zpage(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t lobyte,
     ASSERT(cpu65_y       == 0x85);
     ASSERT(cpu65_sp      == 0x81);
 
-    ASSERT(cpu65_a == result); 
+    ASSERT(cpu65_a == result);
     VERIFY_FLAGS();
 
     ASSERT(cpu65_ea        == addrs);
@@ -6239,7 +6385,6 @@ TEST test_SEI(uint8_t regA, uint8_t val) {
 // STA instructions
 
 TEST test_STA_zpage(uint8_t regA, uint8_t val, uint8_t arg0) {
-    HEADER0();
 
     testcpu_set_opcode2(0x85, arg0);
 
@@ -6254,7 +6399,7 @@ TEST test_STA_zpage(uint8_t regA, uint8_t val, uint8_t arg0) {
     ASSERT(apple_ii_64k[0][arg0] == regA);
 
     ASSERT(cpu65_pc      == TEST_LOC+2);
-    ASSERT(cpu65_a       == regA); 
+    ASSERT(cpu65_a       == regA);
     ASSERT(cpu65_x       == 0x03);
     ASSERT(cpu65_y       == 0x04);
     ASSERT(cpu65_sp      == 0x80);
@@ -6270,7 +6415,6 @@ TEST test_STA_zpage(uint8_t regA, uint8_t val, uint8_t arg0) {
 }
 
 TEST test_STA_zpage_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX) {
-    HEADER0();
 
     testcpu_set_opcode2(0x95, arg0);
 
@@ -6286,7 +6430,7 @@ TEST test_STA_zpage_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX) {
 
     ASSERT(apple_ii_64k[0][idx] == regA);
 
-    ASSERT(cpu65_a   == regA); 
+    ASSERT(cpu65_a   == regA);
     ASSERT(cpu65_pc  == TEST_LOC+2);
     ASSERT(cpu65_x   == regX);
     ASSERT(cpu65_y   == 0x05);
@@ -6303,7 +6447,6 @@ TEST test_STA_zpage_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX) {
 }
 
 TEST test_STA_abs(uint8_t regA, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
-    HEADER0();
 
     testcpu_set_opcode3(0x8d, lobyte, hibyte);
 
@@ -6317,9 +6460,9 @@ TEST test_STA_abs(uint8_t regA, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
 
     cpu65_run();
 
-    ASSERT(apple_ii_64k[0][addrs] == regA); 
+    ASSERT(apple_ii_64k[0][addrs] == regA);
 
-    ASSERT(cpu65_a  == regA); 
+    ASSERT(cpu65_a  == regA);
     ASSERT(cpu65_pc == TEST_LOC+3);
     ASSERT(cpu65_x  == 0xf4);
     ASSERT(cpu65_y  == 0x05);
@@ -6336,7 +6479,6 @@ TEST test_STA_abs(uint8_t regA, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
 }
 
 TEST test_STA_abs_x(uint8_t regA, uint8_t val, uint8_t regX, uint8_t lobyte, uint8_t hibyte) {
-    HEADER0();
 
     testcpu_set_opcode3(0x9d, lobyte, hibyte);
 
@@ -6351,9 +6493,9 @@ TEST test_STA_abs_x(uint8_t regA, uint8_t val, uint8_t regX, uint8_t lobyte, uin
 
     cpu65_run();
 
-    ASSERT(apple_ii_64k[0][addrs] == regA); 
+    ASSERT(apple_ii_64k[0][addrs] == regA);
 
-    ASSERT(cpu65_a  == regA); 
+    ASSERT(cpu65_a  == regA);
     ASSERT(cpu65_pc == TEST_LOC+3);
     ASSERT(cpu65_x  == regX);
     ASSERT(cpu65_y  == 0x05);
@@ -6370,7 +6512,6 @@ TEST test_STA_abs_x(uint8_t regA, uint8_t val, uint8_t regX, uint8_t lobyte, uin
 }
 
 TEST test_STA_abs_y(uint8_t regA, uint8_t val, uint8_t regY, uint8_t lobyte, uint8_t hibyte) {
-    HEADER0();
 
     testcpu_set_opcode3(0x99, lobyte, hibyte);
 
@@ -6388,7 +6529,7 @@ TEST test_STA_abs_y(uint8_t regA, uint8_t val, uint8_t regY, uint8_t lobyte, uin
     ASSERT(apple_ii_64k[0][addrs] == regA);
 
     ASSERT(cpu65_pc      == TEST_LOC+3);
-    ASSERT(cpu65_a       == regA); 
+    ASSERT(cpu65_a       == regA);
     ASSERT(cpu65_x       == 0x02);
     ASSERT(cpu65_y       == regY);
     ASSERT(cpu65_sp      == 0x81);
@@ -6404,7 +6545,6 @@ TEST test_STA_abs_y(uint8_t regA, uint8_t val, uint8_t regY, uint8_t lobyte, uin
 }
 
 TEST test_STA_ind_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX, uint8_t lobyte, uint8_t hibyte) {
-    HEADER0();
 
     testcpu_set_opcode2(0x81, arg0);
 
@@ -6426,7 +6566,7 @@ TEST test_STA_ind_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX, uint8
     ASSERT(apple_ii_64k[0][addrs] == regA);
 
     ASSERT(cpu65_pc      == TEST_LOC+2);
-    ASSERT(cpu65_a       == regA); 
+    ASSERT(cpu65_a       == regA);
     ASSERT(cpu65_x       == regX);
     ASSERT(cpu65_y       == 0x15);
     ASSERT(cpu65_sp      == 0x81);
@@ -6443,7 +6583,6 @@ TEST test_STA_ind_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX, uint8
 }
 
 TEST test_STA_ind_y(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regY, uint8_t val_zp0, uint8_t val_zp1) {
-    HEADER0();
 
     testcpu_set_opcode2(0x91, arg0);
 
@@ -6467,7 +6606,7 @@ TEST test_STA_ind_y(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regY, uint8
     ASSERT(apple_ii_64k[0][addrs] == regA);
 
     ASSERT(cpu65_pc      == TEST_LOC+2);
-    ASSERT(cpu65_a       == regA); 
+    ASSERT(cpu65_a       == regA);
     ASSERT(cpu65_x       == 0x84);
     ASSERT(cpu65_y       == regY);
     ASSERT(cpu65_sp      == 0x81);
@@ -6484,7 +6623,6 @@ TEST test_STA_ind_y(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regY, uint8
 
 // 65c02 : 0x92
 TEST test_STA_ind_zpage(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t lobyte, uint8_t hibyte) {
-    HEADER0();
 
     testcpu_set_opcode2(0x92, arg0);
 
@@ -6507,7 +6645,7 @@ TEST test_STA_ind_zpage(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t lobyte,
     ASSERT(apple_ii_64k[0][addrs] == regA);
 
     ASSERT(cpu65_pc      == TEST_LOC+2);
-    ASSERT(cpu65_a       == regA); 
+    ASSERT(cpu65_a       == regA);
     ASSERT(cpu65_x       == 0x14);
     ASSERT(cpu65_y       == 0x85);
     ASSERT(cpu65_sp      == 0x81);
@@ -6526,7 +6664,6 @@ TEST test_STA_ind_zpage(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t lobyte,
 // STx instructions
 
 TEST test_STX_zpage(uint8_t regX, uint8_t val, uint8_t arg0) {
-    HEADER0();
 
     testcpu_set_opcode2(0x86, arg0);
 
@@ -6541,7 +6678,7 @@ TEST test_STX_zpage(uint8_t regX, uint8_t val, uint8_t arg0) {
     ASSERT(apple_ii_64k[0][arg0] == regX);
 
     ASSERT(cpu65_pc      == TEST_LOC+2);
-    ASSERT(cpu65_a       == 0xe3); 
+    ASSERT(cpu65_a       == 0xe3);
     ASSERT(cpu65_x       == regX);
     ASSERT(cpu65_y       == 0x04);
     ASSERT(cpu65_sp      == 0x80);
@@ -6557,7 +6694,6 @@ TEST test_STX_zpage(uint8_t regX, uint8_t val, uint8_t arg0) {
 }
 
 TEST test_STX_zpage_y(uint8_t regX, uint8_t val, uint8_t arg0, uint8_t regY) {
-    HEADER0();
 
     testcpu_set_opcode2(0x96, arg0);
 
@@ -6590,7 +6726,6 @@ TEST test_STX_zpage_y(uint8_t regX, uint8_t val, uint8_t arg0, uint8_t regY) {
 }
 
 TEST test_STX_abs(uint8_t regX, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
-    HEADER0();
 
     testcpu_set_opcode3(0x8e, lobyte, hibyte);
 
@@ -6604,9 +6739,9 @@ TEST test_STX_abs(uint8_t regX, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
 
     cpu65_run();
 
-    ASSERT(apple_ii_64k[0][addrs] == regX); 
+    ASSERT(apple_ii_64k[0][addrs] == regX);
 
-    ASSERT(cpu65_a  == 0xf4); 
+    ASSERT(cpu65_a  == 0xf4);
     ASSERT(cpu65_pc == TEST_LOC+3);
     ASSERT(cpu65_x  == regX);
     ASSERT(cpu65_y  == 0x05);
@@ -6623,7 +6758,6 @@ TEST test_STX_abs(uint8_t regX, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
 }
 
 TEST test_STY_zpage(uint8_t regY, uint8_t val, uint8_t arg0) {
-    HEADER0();
 
     testcpu_set_opcode2(0x84, arg0);
 
@@ -6638,7 +6772,7 @@ TEST test_STY_zpage(uint8_t regY, uint8_t val, uint8_t arg0) {
     ASSERT(apple_ii_64k[0][arg0] == regY);
 
     ASSERT(cpu65_pc      == TEST_LOC+2);
-    ASSERT(cpu65_a       == 0xa8); 
+    ASSERT(cpu65_a       == 0xa8);
     ASSERT(cpu65_x       == 0x03);
     ASSERT(cpu65_y       == regY);
     ASSERT(cpu65_sp      == 0x80);
@@ -6654,7 +6788,6 @@ TEST test_STY_zpage(uint8_t regY, uint8_t val, uint8_t arg0) {
 }
 
 TEST test_STY_zpage_x(uint8_t regY, uint8_t val, uint8_t arg0, uint8_t regX) {
-    HEADER0();
 
     testcpu_set_opcode2(0x94, arg0);
 
@@ -6670,7 +6803,7 @@ TEST test_STY_zpage_x(uint8_t regY, uint8_t val, uint8_t arg0, uint8_t regX) {
 
     ASSERT(apple_ii_64k[0][idx] == regY);
 
-    ASSERT(cpu65_a   == 0x11); 
+    ASSERT(cpu65_a   == 0x11);
     ASSERT(cpu65_pc  == TEST_LOC+2);
     ASSERT(cpu65_x   == regX);
     ASSERT(cpu65_y   == regY);
@@ -6687,7 +6820,6 @@ TEST test_STY_zpage_x(uint8_t regY, uint8_t val, uint8_t arg0, uint8_t regX) {
 }
 
 TEST test_STY_abs(uint8_t regY, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
-    HEADER0();
 
     testcpu_set_opcode3(0x8c, lobyte, hibyte);
 
@@ -6701,9 +6833,9 @@ TEST test_STY_abs(uint8_t regY, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
 
     cpu65_run();
 
-    ASSERT(apple_ii_64k[0][addrs] == regY); 
+    ASSERT(apple_ii_64k[0][addrs] == regY);
 
-    ASSERT(cpu65_a  == 0x4f); 
+    ASSERT(cpu65_a  == 0x4f);
     ASSERT(cpu65_pc == TEST_LOC+3);
     ASSERT(cpu65_x  == 0xf4);
     ASSERT(cpu65_y  == regY);
@@ -6721,7 +6853,6 @@ TEST test_STY_abs(uint8_t regY, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
 
 // 65c02 : 0x64
 TEST test_STZ_zpage(uint8_t regA, uint8_t val, uint8_t arg0) {
-    HEADER0();
 
     testcpu_set_opcode2(0x64, arg0);
 
@@ -6738,7 +6869,7 @@ TEST test_STZ_zpage(uint8_t regA, uint8_t val, uint8_t arg0) {
     ASSERT(apple_ii_64k[0][arg0] == 0x00);
 
     ASSERT(cpu65_pc      == TEST_LOC+2);
-    ASSERT(cpu65_a       == regA); 
+    ASSERT(cpu65_a       == regA);
     ASSERT(cpu65_x       == 0x03);
     ASSERT(cpu65_y       == 0x04);
     ASSERT(cpu65_sp      == 0x80);
@@ -6755,7 +6886,6 @@ TEST test_STZ_zpage(uint8_t regA, uint8_t val, uint8_t arg0) {
 
 // 65c02 : 0x74
 TEST test_STZ_zpage_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX) {
-    HEADER0();
 
     testcpu_set_opcode2(0x74, arg0);
 
@@ -6773,7 +6903,7 @@ TEST test_STZ_zpage_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX) {
 
     ASSERT(apple_ii_64k[0][idx] == 0x00);
 
-    ASSERT(cpu65_a   == regA); 
+    ASSERT(cpu65_a   == regA);
     ASSERT(cpu65_pc  == TEST_LOC+2);
     ASSERT(cpu65_x   == regX);
     ASSERT(cpu65_y   == 0x05);
@@ -6791,7 +6921,6 @@ TEST test_STZ_zpage_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX) {
 
 // 65c02 : 0x9C
 TEST test_STZ_abs(uint8_t regA, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
-    HEADER0();
 
     testcpu_set_opcode3(0x9c, lobyte, hibyte);
 
@@ -6807,9 +6936,9 @@ TEST test_STZ_abs(uint8_t regA, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
 
     cpu65_run();
 
-    ASSERT(apple_ii_64k[0][addrs] == 0x00); 
+    ASSERT(apple_ii_64k[0][addrs] == 0x00);
 
-    ASSERT(cpu65_a  == regA); 
+    ASSERT(cpu65_a  == regA);
     ASSERT(cpu65_pc == TEST_LOC+3);
     ASSERT(cpu65_x  == 0xf4);
     ASSERT(cpu65_y  == 0x05);
@@ -6827,7 +6956,6 @@ TEST test_STZ_abs(uint8_t regA, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
 
 // 65c02 : 0x9E
 TEST test_STZ_abs_x(uint8_t regA, uint8_t val, uint8_t regX, uint8_t lobyte, uint8_t hibyte) {
-    HEADER0();
 
     testcpu_set_opcode3(0x9e, lobyte, hibyte);
 
@@ -6844,9 +6972,9 @@ TEST test_STZ_abs_x(uint8_t regA, uint8_t val, uint8_t regX, uint8_t lobyte, uin
 
     cpu65_run();
 
-    ASSERT(apple_ii_64k[0][addrs] == 0x00); 
+    ASSERT(apple_ii_64k[0][addrs] == 0x00);
 
-    ASSERT(cpu65_a  == regA); 
+    ASSERT(cpu65_a  == regA);
     ASSERT(cpu65_pc == TEST_LOC+3);
     ASSERT(cpu65_x  == regX);
     ASSERT(cpu65_y  == 0x05);
@@ -6877,7 +7005,8 @@ static void logic_TAx(/*uint8_t*/int _a, uint8_t *flags) {
 }
 
 TEST test_TAX(uint8_t regA) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
     uint8_t val = regA;
 
     logic_TAx(regA, &flags);
@@ -6911,7 +7040,8 @@ TEST test_TAX(uint8_t regA) {
 }
 
 TEST test_TAY(uint8_t regA) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
     uint8_t val = regA;
 
     logic_TAx(regA, &flags);
@@ -6945,7 +7075,8 @@ TEST test_TAY(uint8_t regA) {
 }
 
 TEST test_TXA(uint8_t regX) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
     uint8_t val = regX;
 
     logic_TAx(regX, &flags);
@@ -6979,7 +7110,8 @@ TEST test_TXA(uint8_t regX) {
 }
 
 TEST test_TYA(uint8_t regY) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
     uint8_t val = regY;
 
     logic_TAx(regY, &flags);
@@ -7028,7 +7160,8 @@ static void logic_TRB(/*uint8_t*/int _a, /*uint8_t*/int _b, uint8_t *result, uin
 }
 
 TEST test_TRB_abs(uint8_t regA, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
 
     logic_TRB(regA, val, &result, &flags);
 
@@ -7045,7 +7178,7 @@ TEST test_TRB_abs(uint8_t regA, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
 
     cpu65_run();
 
-    ASSERT(apple_ii_64k[0][addrs] == result); 
+    ASSERT(apple_ii_64k[0][addrs] == result);
 
     ASSERT(cpu65_pc      == TEST_LOC+3);
     ASSERT(cpu65_a       == regA);
@@ -7066,7 +7199,8 @@ TEST test_TRB_abs(uint8_t regA, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
 
 // 65c02 : 0x14
 TEST test_TRB_zpage(uint8_t regA, uint8_t val, uint8_t arg0) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
 
     logic_TRB(regA, val, &result, &flags);
 
@@ -7082,7 +7216,7 @@ TEST test_TRB_zpage(uint8_t regA, uint8_t val, uint8_t arg0) {
 
     cpu65_run();
 
-    ASSERT(apple_ii_64k[0][arg0] == result); 
+    ASSERT(apple_ii_64k[0][arg0] == result);
 
     ASSERT(cpu65_pc      == TEST_LOC+2);
     ASSERT(cpu65_a       == regA);
@@ -7115,7 +7249,8 @@ static void logic_TSB(/*uint8_t*/int _a, /*uint8_t*/int _b, uint8_t *result, uin
 
 // 65c02 : 0x0C
 TEST test_TSB_abs(uint8_t regA, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
 
     logic_TSB(regA, val, &result, &flags);
 
@@ -7132,7 +7267,7 @@ TEST test_TSB_abs(uint8_t regA, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
 
     cpu65_run();
 
-    ASSERT(apple_ii_64k[0][addrs] == result); 
+    ASSERT(apple_ii_64k[0][addrs] == result);
 
     ASSERT(cpu65_pc      == TEST_LOC+3);
     ASSERT(cpu65_a       == regA);
@@ -7153,7 +7288,8 @@ TEST test_TSB_abs(uint8_t regA, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
 
 // 65c02 : 0x04
 TEST test_TSB_zpage(uint8_t regA, uint8_t val, uint8_t arg0) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
 
     logic_TSB(regA, val, &result, &flags);
 
@@ -7169,7 +7305,7 @@ TEST test_TSB_zpage(uint8_t regA, uint8_t val, uint8_t arg0) {
 
     cpu65_run();
 
-    ASSERT(apple_ii_64k[0][arg0] == result); 
+    ASSERT(apple_ii_64k[0][arg0] == result);
 
     ASSERT(cpu65_pc      == TEST_LOC+2);
     ASSERT(cpu65_a       == regA);
@@ -7203,7 +7339,8 @@ static void logic_TSX(/*uint8_t*/int _a, uint8_t *flags) {
 }
 
 TEST test_TSX(uint8_t sp) {
-    HEADER0();
+    uint8_t result = 0x0;
+    uint8_t flags = 0x0;
     uint8_t regA = (uint8_t)random();
     uint8_t val = regA;
     uint8_t regX = ~sp;
@@ -7238,7 +7375,6 @@ TEST test_TSX(uint8_t sp) {
 }
 
 TEST test_TXS(uint8_t regX) {
-    HEADER0();
     uint8_t sp = ~regX;
 
     testcpu_set_opcode1(0x9a);
@@ -7516,7 +7652,7 @@ GREATEST_SUITE(test_suite_cpu) {
     // Other addressing modes tests :
     // NOTE : unlike immediate-mode addressing tests above, these tests are not designed to be a comprehensive test of
     // instruction logic.  Rather--for clarity--they are designed to comprehensively test the addressing logic,
-    // including all edge cases 
+    // including all edge cases
 
     // --------------------------------
 #ifdef ANDROID
@@ -7806,7 +7942,6 @@ GREATEST_SUITE(test_suite_cpu) {
 
         // test addressing is working ...
         for (uint8_t lobyte=0xfd; lobyte>0xf0; lobyte++) {
-            uint8_t hibyte = 0x1f;
             A2_RUN_TESTp( func->func, /*A*/0x0f, /*val*/0x0f, /*arg0*/0x00, /*lobyte*/0x33, /*hibyte*/0x1f);
             A2_RUN_TESTp( func->func, /*A*/0x7f, /*val*/0x7f, /*arg0*/0x7f, /*lobyte*/0x33, /*hibyte*/0x1f);
             A2_RUN_TESTp( func->func, /*A*/0xaa, /*val*/0x55, /*arg0*/0xAB, /*lobyte*/0x33, /*hibyte*/0x1f);
