@@ -14,7 +14,6 @@
 //
 
 #include "testcommon.h"
-#include "uthash.h"
 
 #define MSG_SIZE 256
 
@@ -1764,7 +1763,7 @@ TEST test_BIT_abs_x(uint8_t regA, uint8_t val, uint8_t regX, uint8_t lobyte, uin
 // ----------------------------------------------------------------------------
 // BRK operand (and IRQ handling)
 
-TEST test_BRK() {
+TEST test_BRK(void) {
     testcpu_set_opcode1(0x00);
 
     ASSERT(apple_ii_64k[0][0x1ff] != 0x1f);
@@ -1798,7 +1797,7 @@ TEST test_BRK() {
 }
 
 // FIXME TODO : this tests the Apple //e vm, so it prolly should be moved  machine/memory tests ...
-TEST test_IRQ() {
+TEST test_IRQ(void) {
     testcpu_set_opcode1(0xea/*NOP*/); // Implementation NOTE: first an instruction, then reset is handled
 
     cpu65_interrupt(IRQGeneric);
@@ -1836,7 +1835,7 @@ TEST test_IRQ() {
 // ----------------------------------------------------------------------------
 // CLx operands
 
-TEST test_CLC() {
+TEST test_CLC(void) {
     testcpu_set_opcode1(0x18);
 
     cpu65_a  = 0x02;
@@ -1863,7 +1862,7 @@ TEST test_CLC() {
     PASS();
 }
 
-TEST test_CLD(uint8_t regA, uint8_t val) {
+TEST test_CLD(void) {
     testcpu_set_opcode1(0xd8);
 
     cpu65_a  = 0x02;
@@ -1890,7 +1889,7 @@ TEST test_CLD(uint8_t regA, uint8_t val) {
     PASS();
 }
 
-TEST test_CLI(uint8_t regA, uint8_t val) {
+TEST test_CLI(void) {
     testcpu_set_opcode1(0x58);
 
     cpu65_a  = 0x02;
@@ -1917,7 +1916,7 @@ TEST test_CLI(uint8_t regA, uint8_t val) {
     PASS();
 }
 
-TEST test_CLV(uint8_t regA, uint8_t val) {
+TEST test_CLV(void) {
     testcpu_set_opcode1(0xb8);
 
     cpu65_a  = 0x02;
@@ -4631,7 +4630,7 @@ TEST test_LSR_abs_x(uint8_t regA, uint8_t val, uint8_t regX, uint8_t lobyte, uin
 // ----------------------------------------------------------------------------
 // NOP operand
 
-TEST test_NOP() {
+TEST test_NOP(void) {
     testcpu_set_opcode1(0xea);
 
     cpu65_a  = 0x02;
@@ -5033,7 +5032,7 @@ TEST test_ORA_ind_zpage(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t lobyte,
 // ----------------------------------------------------------------------------
 // PHx instructions
 
-TEST test_PHA() {
+TEST test_PHA(void) {
     testcpu_set_opcode1(0x48);
 
     uint8_t regA = (uint8_t)random();
@@ -5096,7 +5095,7 @@ TEST test_PHP(uint8_t flags) {
     PASS();
 }
 
-TEST test_PHX() {
+TEST test_PHX(void) {
     testcpu_set_opcode1(0xda);
 
     uint8_t regX = (uint8_t)random();
@@ -5126,7 +5125,7 @@ TEST test_PHX() {
     PASS();
 }
 
-TEST test_PHY() {
+TEST test_PHY(void) {
     testcpu_set_opcode1(0x5a);
 
     uint8_t regY = (uint8_t)random();
@@ -6300,7 +6299,7 @@ TEST test_SBC_ind_zpage(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t lobyte,
 // ----------------------------------------------------------------------------
 // SEx operands [sic]
 
-TEST test_SEC() {
+TEST test_SEC(void) {
     testcpu_set_opcode1(0x38);
 
     cpu65_a  = 0x02;
@@ -6327,7 +6326,7 @@ TEST test_SEC() {
     PASS();
 }
 
-TEST test_SED(uint8_t regA, uint8_t val) {
+TEST test_SED(void) {
     testcpu_set_opcode1(0xf8);
 
     cpu65_a  = 0x02;
@@ -6354,7 +6353,7 @@ TEST test_SED(uint8_t regA, uint8_t val) {
     PASS();
 }
 
-TEST test_SEI(uint8_t regA, uint8_t val) {
+TEST test_SEI(void) {
     testcpu_set_opcode1(0x78);
 
     cpu65_a  = 0x02;
@@ -7406,37 +7405,10 @@ TEST test_TXS(uint8_t regX) {
 // ----------------------------------------------------------------------------
 // Test Suite
 
-static unsigned int testcounter = 0;
-
-typedef int(*test_func_ptr0)(void);
-typedef int(*test_func_ptr)(uint8_t x, ...);
-
 typedef struct test_func_t {
-    unsigned int id;
     char *name;
-    void *func;
-    UT_hash_handle hh;
+    void (*func)(void);
 } test_func_t;
-static test_func_t *test_funcs = NULL;
-
-#define A2_ADD_TEST(TEST) \
-    do { \
-        test_func_t *test_func = malloc(sizeof(test_func_t)); \
-        test_func->id = testcounter; \
-        test_func->name = strdup(#TEST); \
-        test_func->func = TEST; \
-        HASH_ADD_INT(test_funcs, id, test_func); \
-        ++testcounter; \
-    } while(0);
-
-#define A2_REMOVE_TEST(TEST) \
-    do { \
-        HASH_DEL(test_funcs, TEST); \
-        free(TEST->name); \
-        free(TEST); \
-    } while(0);
-
-#define A2_RUN_TESTp(TEST, ...) RUN_TESTp( ((test_func_ptr)(TEST)), __VA_ARGS__)
 
 GREATEST_SUITE(test_suite_cpu) {
 
@@ -7454,77 +7426,94 @@ GREATEST_SUITE(test_suite_cpu) {
     extern volatile uint8_t emul_reinitialize;
     emul_reinitialize = 0;
 
-    test_func_t *func=NULL, *tmp=NULL;
-
     // --------------------------------
-    A2_ADD_TEST(test_BRK);
-    A2_ADD_TEST(test_IRQ);
-    A2_ADD_TEST(test_CLC);
-    A2_ADD_TEST(test_CLD);
-    A2_ADD_TEST(test_CLI);
-    A2_ADD_TEST(test_CLV);
-    A2_ADD_TEST(test_NOP);
-    A2_ADD_TEST(test_PHA);
-    A2_ADD_TEST(test_PHX);
-    A2_ADD_TEST(test_PHY);
-    A2_ADD_TEST(test_SEC);
-    A2_ADD_TEST(test_SED);
-    A2_ADD_TEST(test_SEI);
-    HASH_ITER(hh, test_funcs, func, tmp) {
-        fprintf(GREATEST_STDOUT, "\n%s :\n", func->name);
-        RUN_TEST(((test_func_ptr0)(func->func)));
-        A2_REMOVE_TEST(func);
-    }
+
+    fprintf(GREATEST_STDOUT, "\ntest_BRK :\n");
+    RUN_TEST(test_BRK);
+    fprintf(GREATEST_STDOUT, "\ntest_IRQ :\n");
+    RUN_TEST(test_IRQ);
+    fprintf(GREATEST_STDOUT, "\ntest_CLC :\n");
+    RUN_TEST(test_CLC);
+    fprintf(GREATEST_STDOUT, "\ntest_CLD :\n");
+    RUN_TEST(test_CLD);
+    fprintf(GREATEST_STDOUT, "\ntest_CLI :\n");
+    RUN_TEST(test_CLI);
+    fprintf(GREATEST_STDOUT, "\ntest_CLV :\n");
+    RUN_TEST(test_CLV);
+    fprintf(GREATEST_STDOUT, "\ntest_NOP :\n");
+    RUN_TEST(test_NOP);
+    fprintf(GREATEST_STDOUT, "\ntest_PHA :\n");
+    RUN_TEST(test_PHA);
+    fprintf(GREATEST_STDOUT, "\ntest_PHX :\n");
+    RUN_TEST(test_PHX);
+    fprintf(GREATEST_STDOUT, "\ntest_PHY :\n");
+    RUN_TEST(test_PHY);
+    fprintf(GREATEST_STDOUT, "\ntest_SEC :\n");
+    RUN_TEST(test_SEC);
+    fprintf(GREATEST_STDOUT, "\ntest_SED :\n");
+    RUN_TEST(test_SED);
+    fprintf(GREATEST_STDOUT, "\ntest_SEI :\n");
+    RUN_TEST(test_SEI);
 
     // ------------------------------------------------------------------------
     // Branch tests :
     // NOTE : these should be a comprehensive exercise of the branching logic
 
     greatest_info.flags = GREATEST_FLAG_SILENT_SUCCESS;
-    A2_ADD_TEST(test_BCC);
-    A2_ADD_TEST(test_BCS);
-    A2_ADD_TEST(test_BEQ);
-    A2_ADD_TEST(test_BNE);
-    A2_ADD_TEST(test_BMI);
-    A2_ADD_TEST(test_BPL);
-    A2_ADD_TEST(test_BRA);
-    A2_ADD_TEST(test_BVC);
-    A2_ADD_TEST(test_BVS);
-    HASH_ITER(hh, test_funcs, func, tmp) {
-        fprintf(GREATEST_STDOUT, "\n%s (SILENCED OUTPUT) :\n", func->name);
 
-        for (uint16_t addrs = 0x1f02; addrs < 0x2000; addrs++) {
-            for (uint8_t flag = 0x00; flag < 0x02; flag++) {
-                uint8_t off=0x00;
-                do {
-                    A2_RUN_TESTp( func->func, off, flag, addrs);
-                } while (++off);
+    do {
+        test_func_t funcs[] = {
+            { "test_BCC", (void(*)(void))test_BCC, },
+            { "test_BCS", (void(*)(void))test_BCS, },
+            { "test_BEQ", (void(*)(void))test_BEQ, },
+            { "test_BNE", (void(*)(void))test_BNE, },
+            { "test_BMI", (void(*)(void))test_BMI, },
+            { "test_BPL", (void(*)(void))test_BPL, },
+            { "test_BRA", (void(*)(void))test_BRA, },
+            { "test_BVC", (void(*)(void))test_BVC, },
+            { "test_BVS", (void(*)(void))test_BVS, },
+        };
+        const unsigned int count = sizeof(funcs) / sizeof(test_func_t);
+
+        for (unsigned int i=0; i<count; i++) {
+            char *name = funcs[i].name;
+            int (*func)(int8_t, bool, uint16_t) = (int (*)(int8_t, bool, uint16_t))funcs[i].func;
+
+            fprintf(GREATEST_STDOUT, "\n%s (SILENCED OUTPUT) :\n", name);
+
+            for (uint16_t addrs = 0x1f02; addrs < 0x2000; addrs++) {
+                for (uint8_t flag = 0x00; flag < 0x02; flag++) {
+                    uint8_t off=0x00;
+                    do {
+                        RUN_TESTp(func, off, flag, addrs);
+                    } while (++off);
+                }
             }
-        }
 
-        // 16bit branch overflow tests
-        for (uint16_t addrs = 0xff00; addrs >= 0xff00 || addrs < 0x00fe; addrs++) {
-            for (uint8_t flag = 0x00; flag < 0x02; flag++) {
-                uint8_t off=0x00;
-                do {
-                    A2_RUN_TESTp(func->func, off, flag, addrs);
-                } while (++off);
+            // 16bit branch overflow tests
+            for (uint16_t addrs = 0xff00; addrs >= 0xff00 || addrs < 0x00fe; addrs++) {
+                for (uint8_t flag = 0x00; flag < 0x02; flag++) {
+                    uint8_t off=0x00;
+                    do {
+                        RUN_TESTp(func, off, flag, addrs);
+                    } while (++off);
+                }
             }
-        }
 
-        // 16bit branch underflow tests
-        for (uint16_t addrs = 0x00fe; addrs <= 0x00fe || addrs > 0xff00; addrs--) {
-            for (uint8_t flag = 0x00; flag < 0x02; flag++) {
-                uint8_t off=0x00;
-                do {
-                    A2_RUN_TESTp(func->func, off, flag, addrs);
-                } while (++off);
+            // 16bit branch underflow tests
+            for (uint16_t addrs = 0x00fe; addrs <= 0x00fe || addrs > 0xff00; addrs--) {
+                for (uint8_t flag = 0x00; flag < 0x02; flag++) {
+                    uint8_t off=0x00;
+                    do {
+                        RUN_TESTp(func, off, flag, addrs);
+                    } while (++off);
+                }
             }
-        }
 
-        fprintf(GREATEST_STDOUT, "...OK\n");
-        A2_REMOVE_TEST(func);
-    }
+            fprintf(GREATEST_STDOUT, "...OK\n");
+        }
+    } while (0);
+
     greatest_info.flags = 0x0;
 
     // ------------------------------------------------------------------------
@@ -7532,78 +7521,99 @@ GREATEST_SUITE(test_suite_cpu) {
     // NOTE : these should be a comprehensive exercise of the instruction logic
 
     greatest_info.flags = GREATEST_FLAG_SILENT_SUCCESS;
-    A2_ADD_TEST(test_ADC_imm);
-    A2_ADD_TEST(test_AND_imm);
-    A2_ADD_TEST(test_BIT_imm);
-    A2_ADD_TEST(test_CMP_imm);
-    A2_ADD_TEST(test_CPX_imm);
-    A2_ADD_TEST(test_CPY_imm);
-    A2_ADD_TEST(test_EOR_imm);
-    A2_ADD_TEST(test_LDA_imm);
-    A2_ADD_TEST(test_LDX_imm);
-    A2_ADD_TEST(test_LDY_imm);
-    A2_ADD_TEST(test_ORA_imm);
-    A2_ADD_TEST(test_SBC_imm);
-    HASH_ITER(hh, test_funcs, func, tmp) {
-        fprintf(GREATEST_STDOUT, "\n%s (SILENCED OUTPUT) :\n", func->name);
 
-        // test comprehensive logic in immediate mode (since no addressing to test) ...
-        uint8_t regA=0x00;
-        do {
-            uint8_t val=0x00;
+    do {
+        test_func_t funcs[] = {
+            { "test_ADC_imm", (void(*)(void))test_ADC_imm, },
+            { "test_AND_imm", (void(*)(void))test_AND_imm, },
+            { "test_BIT_imm", (void(*)(void))test_BIT_imm, },
+            { "test_CMP_imm", (void(*)(void))test_CMP_imm, },
+            { "test_CPX_imm", (void(*)(void))test_CPX_imm, },
+            { "test_CPY_imm", (void(*)(void))test_CPY_imm, },
+            { "test_EOR_imm", (void(*)(void))test_EOR_imm, },
+            { "test_LDA_imm", (void(*)(void))test_LDA_imm, },
+            { "test_LDX_imm", (void(*)(void))test_LDX_imm, },
+            { "test_LDY_imm", (void(*)(void))test_LDY_imm, },
+            { "test_ORA_imm", (void(*)(void))test_ORA_imm, },
+            { "test_SBC_imm", (void(*)(void))test_SBC_imm, },
+        };
+        const unsigned int count = sizeof(funcs) / sizeof(test_func_t);
+
+        for (unsigned int i=0; i<count; i++) {
+            char *name = funcs[i].name;
+            int (*func)(uint8_t, uint8_t, bool, bool) = (int (*)(uint8_t, uint8_t, bool, bool))funcs[i].func;
+
+            fprintf(GREATEST_STDOUT, "\n%s (SILENCED OUTPUT) :\n", name);
+
+            // test comprehensive logic in immediate mode (since no addressing to test) ...
+            uint8_t regA=0x00;
             do {
-                A2_RUN_TESTp( func->func, regA, val, /*decimal*/false, /*carry*/false);
-                A2_RUN_TESTp( func->func, regA, val, /*decimal*/ true, /*carry*/false);
-                A2_RUN_TESTp( func->func, regA, val, /*decimal*/false, /*carry*/true);
-                A2_RUN_TESTp( func->func, regA, val, /*decimal*/ true, /*carry*/true);
-            } while (++val);
-        } while (++regA);
+                uint8_t val=0x00;
+                do {
+                    RUN_TESTp(func, regA, val, /*decimal*/false, /*carry*/false);
+                    RUN_TESTp(func, regA, val, /*decimal*/ true, /*carry*/false);
+                    RUN_TESTp(func, regA, val, /*decimal*/false, /*carry*/true);
+                    RUN_TESTp(func, regA, val, /*decimal*/ true, /*carry*/true);
+                } while (++val);
+            } while (++regA);
 
-        fprintf(GREATEST_STDOUT, "...OK\n");
-        A2_REMOVE_TEST(func);
-    }
+            fprintf(GREATEST_STDOUT, "...OK\n");
+        }
+    } while (0);
+
     greatest_info.flags = 0x0;
 
     // ------------------------------------------------------------------------
     // Immediate/absolute addressing mode tests
 
     greatest_info.flags = GREATEST_FLAG_SILENT_SUCCESS;
-    A2_ADD_TEST(test_JMP_abs);
-    A2_ADD_TEST(test_JMP_abs_ind_x);
-    A2_ADD_TEST(test_JMP_ind);
-    A2_ADD_TEST(test_JSR_abs);
-    A2_ADD_TEST(test_RTS);
-    HASH_ITER(hh, test_funcs, func, tmp) {
-        fprintf(GREATEST_STDOUT, "\n%s (SILENCED OUTPUT) :\n", func->name);
 
-        // test comprehensive logic in immediate mode (since no addressing to test) ...
-        uint8_t lobyte=0x00;
-        do {
-            uint8_t hibyte=0x00;
+    do {
+        test_func_t funcs[] = {
+            { "test_JMP_abs",       (void(*)(void))test_JMP_abs, },
+            { "test_JMP_abs_ind_x", (void(*)(void))test_JMP_abs_ind_x, },
+            { "test_JMP_ind",       (void(*)(void))test_JMP_ind, },
+            { "test_JSR_abs",       (void(*)(void))test_JSR_abs, },
+            { "test_RTS",           (void(*)(void))test_RTS, },
+        };
+        const unsigned int count = sizeof(funcs) / sizeof(test_func_t);
+
+        for (unsigned int i=0; i<count; i++) {
+            char *name = funcs[i].name;
+            int (*func)(uint8_t, uint8_t, uint16_t, uint8_t) = (int (*)(uint8_t, uint8_t, uint16_t, uint8_t))funcs[i].func;
+
+            fprintf(GREATEST_STDOUT, "\n%s (SILENCED OUTPUT) :\n", name);
+
+            // test comprehensive logic in immediate mode (since no addressing to test) ...
+            uint8_t lobyte=0x00;
             do {
-                A2_RUN_TESTp( func->func, lobyte, hibyte, TEST_LOC, (uint8_t)random());
-            } while (++hibyte);
-        } while (++lobyte);
+                uint8_t hibyte=0x00;
+                do {
+                    RUN_TESTp(func, lobyte, hibyte, TEST_LOC, (uint8_t)random());
+                } while (++hibyte);
+            } while (++lobyte);
 
-        // test 16bit overflow/underflow
-        lobyte=0x00;
-        do {
-            uint8_t regX=0x00;
+            // test 16bit overflow/underflow
+            lobyte=0x00;
             do {
-                A2_RUN_TESTp( func->func, lobyte, (uint8_t)random(), 0xFFFC, regX);
-                A2_RUN_TESTp( func->func, lobyte, (uint8_t)random(), 0xFFFD, regX);
-                A2_RUN_TESTp( func->func, lobyte, (uint8_t)random(), 0xFFFE, regX);
-                A2_RUN_TESTp( func->func, lobyte, (uint8_t)random(), 0xFFFF, regX);
-                A2_RUN_TESTp( func->func, lobyte, (uint8_t)random(), 0x0000, regX);
-                A2_RUN_TESTp( func->func, lobyte, (uint8_t)random(), 0x0001, regX);
-                A2_RUN_TESTp( func->func, lobyte, (uint8_t)random(), 0x0002, regX);
-                A2_RUN_TESTp( func->func, lobyte, (uint8_t)random(), 0x0003, regX);
-            } while (++regX);
-        } while (++lobyte);
+                uint8_t regX=0x00;
+                do {
+                    RUN_TESTp(func, lobyte, (uint8_t)random(), 0xFFFC, regX);
+                    RUN_TESTp(func, lobyte, (uint8_t)random(), 0xFFFD, regX);
+                    RUN_TESTp(func, lobyte, (uint8_t)random(), 0xFFFE, regX);
+                    RUN_TESTp(func, lobyte, (uint8_t)random(), 0xFFFF, regX);
+                    RUN_TESTp(func, lobyte, (uint8_t)random(), 0x0000, regX);
+                    RUN_TESTp(func, lobyte, (uint8_t)random(), 0x0001, regX);
+                    RUN_TESTp(func, lobyte, (uint8_t)random(), 0x0002, regX);
+                    RUN_TESTp(func, lobyte, (uint8_t)random(), 0x0003, regX);
+                } while (++regX);
+            } while (++lobyte);
 
-        fprintf(GREATEST_STDOUT, "...OK\n");
-        A2_REMOVE_TEST(func);
-    }
+            fprintf(GREATEST_STDOUT, "...OK\n");
+        }
+
+    } while (0);
+
     greatest_info.flags = 0x0;
 
     // ------------------------------------------------------------------------
@@ -7611,41 +7621,51 @@ GREATEST_SUITE(test_suite_cpu) {
     // NOTE : these should be a comprehensive exercise of the instruction logic
 
     greatest_info.flags = GREATEST_FLAG_SILENT_SUCCESS;
-    A2_ADD_TEST(test_ASL_acc);
-    A2_ADD_TEST(test_DEA);
-    A2_ADD_TEST(test_DEX);
-    A2_ADD_TEST(test_DEY);
-    A2_ADD_TEST(test_INA);
-    A2_ADD_TEST(test_INX);
-    A2_ADD_TEST(test_INY);
-    A2_ADD_TEST(test_LSR_acc);
-    A2_ADD_TEST(test_PHP);
-    A2_ADD_TEST(test_PLA);
-    A2_ADD_TEST(test_PLP);
-    A2_ADD_TEST(test_PLX);
-    A2_ADD_TEST(test_PLY);
-    A2_ADD_TEST(test_ROL_acc);
-    A2_ADD_TEST(test_ROR_acc);
-    A2_ADD_TEST(test_RTI);
-    A2_ADD_TEST(test_TAX);
-    A2_ADD_TEST(test_TAY);
-    A2_ADD_TEST(test_TSX);
-    A2_ADD_TEST(test_TXS);
-    A2_ADD_TEST(test_TXA);
-    A2_ADD_TEST(test_TYA);
-    HASH_ITER(hh, test_funcs, func, tmp) {
-        fprintf(GREATEST_STDOUT, "\n%s (SILENCED OUTPUT) :\n", func->name);
 
-        // test comprehensive logic in immediate mode (since no addressing to test) ...
-        uint8_t regA=0x00;
-        do {
-            A2_RUN_TESTp( func->func, regA, true);
-            A2_RUN_TESTp( func->func, regA, false);
-        } while (++regA);
+    do {
+        test_func_t funcs[] = {
+            { "test_ASL_acc",   (void(*)(void))test_ASL_acc, },
+            { "test_DEA",       (void(*)(void))test_DEA, },
+            { "test_DEX",       (void(*)(void))test_DEX, },
+            { "test_DEY",       (void(*)(void))test_DEY, },
+            { "test_INA",       (void(*)(void))test_INA, },
+            { "test_INX",       (void(*)(void))test_INX, },
+            { "test_INY",       (void(*)(void))test_INY, },
+            { "test_LSR_acc",   (void(*)(void))test_LSR_acc, },
+            { "test_PHP",       (void(*)(void))test_PHP, },
+            { "test_PLA",       (void(*)(void))test_PLA, },
+            { "test_PLP",       (void(*)(void))test_PLP, },
+            { "test_PLX",       (void(*)(void))test_PLX, },
+            { "test_PLY",       (void(*)(void))test_PLY, },
+            { "test_ROL_acc",   (void(*)(void))test_ROL_acc, },
+            { "test_ROR_acc",   (void(*)(void))test_ROR_acc, },
+            { "test_RTI",       (void(*)(void))test_RTI, },
+            { "test_TAX",       (void(*)(void))test_TAX, },
+            { "test_TAY",       (void(*)(void))test_TAY, },
+            { "test_TSX",       (void(*)(void))test_TSX, },
+            { "test_TXS",       (void(*)(void))test_TXS, },
+            { "test_TXA",       (void(*)(void))test_TXA, },
+            { "test_TYA",       (void(*)(void))test_TYA, },
+        };
+        const unsigned int count = sizeof(funcs) / sizeof(test_func_t);
 
-        fprintf(GREATEST_STDOUT, "...OK\n");
-        A2_REMOVE_TEST(func);
-    }
+        for (unsigned int i=0; i<count; i++) {
+            char *name = funcs[i].name;
+            int (*func)(uint8_t, bool) = (int (*)(uint8_t, bool))funcs[i].func;
+
+            fprintf(GREATEST_STDOUT, "\n%s (SILENCED OUTPUT) :\n", name);
+
+            // test comprehensive logic in immediate mode (since no addressing to test) ...
+            uint8_t regA=0x00;
+            do {
+                RUN_TESTp(func, regA, true);
+                RUN_TESTp(func, regA, false);
+            } while (++regA);
+
+            fprintf(GREATEST_STDOUT, "...OK\n");
+        }
+    } while (0);
+
     greatest_info.flags = 0x0;
 
     // ------------------------------------------------------------------------
@@ -7658,301 +7678,374 @@ GREATEST_SUITE(test_suite_cpu) {
 #ifdef ANDROID
     greatest_info.flags = GREATEST_FLAG_SILENT_SUCCESS;
 #endif
-    A2_ADD_TEST(test_ADC_zpage);
-    A2_ADD_TEST(test_AND_zpage);
-    A2_ADD_TEST(test_ASL_zpage);
-    A2_ADD_TEST(test_BIT_zpage);
-    A2_ADD_TEST(test_CMP_zpage);
-    A2_ADD_TEST(test_CPX_zpage);
-    A2_ADD_TEST(test_CPY_zpage);
-    A2_ADD_TEST(test_DEC_zpage);
-    A2_ADD_TEST(test_EOR_zpage);
-    A2_ADD_TEST(test_INC_zpage);
-    A2_ADD_TEST(test_LDA_zpage);
-    A2_ADD_TEST(test_LDX_zpage);
-    A2_ADD_TEST(test_LDY_zpage);
-    A2_ADD_TEST(test_LSR_zpage);
-    A2_ADD_TEST(test_ORA_zpage);
-    A2_ADD_TEST(test_ROL_zpage);
-    A2_ADD_TEST(test_ROR_zpage);
-    A2_ADD_TEST(test_SBC_zpage);
-    A2_ADD_TEST(test_STA_zpage);
-    A2_ADD_TEST(test_STX_zpage);
-    A2_ADD_TEST(test_STY_zpage);
-    A2_ADD_TEST(test_STZ_zpage);
-    A2_ADD_TEST(test_TRB_zpage);
-    A2_ADD_TEST(test_TSB_zpage);
-    HASH_ITER(hh, test_funcs, func, tmp) {
-        fprintf(GREATEST_STDOUT, "\n%s :\n", func->name);
 
-        // test addressing is working ...
-        uint8_t arg0 = 0x00;
-        do {
-            A2_RUN_TESTp( func->func, /*A*/0x0f, /*val*/0x0f, arg0, /*carry*/true);
-            A2_RUN_TESTp( func->func, /*A*/0x0f, /*val*/0x0f, arg0, /*carry*/false);
-            A2_RUN_TESTp( func->func, /*A*/0x7f, /*val*/0x7f, arg0, /*carry*/true);
-            A2_RUN_TESTp( func->func, /*A*/0x7f, /*val*/0x7f, arg0, /*carry*/false);
-            A2_RUN_TESTp( func->func, /*A*/0xaa, /*val*/0x55, arg0, /*carry*/true);
-            A2_RUN_TESTp( func->func, /*A*/0xaa, /*val*/0x55, arg0, /*carry*/false);
-            A2_RUN_TESTp( func->func, /*A*/0x00, /*val*/0xff, arg0, /*carry*/true);
-            A2_RUN_TESTp( func->func, /*A*/0x00, /*val*/0xff, arg0, /*carry*/false);
-            ++arg0;
-        } while (arg0);
+    do {
+        test_func_t funcs[] = {
+            { "test_ADC_zpage", (void(*)(void))test_ADC_zpage, },
+            { "test_AND_zpage", (void(*)(void))test_AND_zpage, },
+            { "test_ASL_zpage", (void(*)(void))test_ASL_zpage, },
+            { "test_BIT_zpage", (void(*)(void))test_BIT_zpage, },
+            { "test_CMP_zpage", (void(*)(void))test_CMP_zpage, },
+            { "test_CPX_zpage", (void(*)(void))test_CPX_zpage, },
+            { "test_CPY_zpage", (void(*)(void))test_CPY_zpage, },
+            { "test_DEC_zpage", (void(*)(void))test_DEC_zpage, },
+            { "test_EOR_zpage", (void(*)(void))test_EOR_zpage, },
+            { "test_INC_zpage", (void(*)(void))test_INC_zpage, },
+            { "test_LDA_zpage", (void(*)(void))test_LDA_zpage, },
+            { "test_LDX_zpage", (void(*)(void))test_LDX_zpage, },
+            { "test_LDY_zpage", (void(*)(void))test_LDY_zpage, },
+            { "test_LSR_zpage", (void(*)(void))test_LSR_zpage, },
+            { "test_ORA_zpage", (void(*)(void))test_ORA_zpage, },
+            { "test_ROL_zpage", (void(*)(void))test_ROL_zpage, },
+            { "test_ROR_zpage", (void(*)(void))test_ROR_zpage, },
+            { "test_SBC_zpage", (void(*)(void))test_SBC_zpage, },
+            { "test_STA_zpage", (void(*)(void))test_STA_zpage, },
+            { "test_STX_zpage", (void(*)(void))test_STX_zpage, },
+            { "test_STY_zpage", (void(*)(void))test_STY_zpage, },
+            { "test_STZ_zpage", (void(*)(void))test_STZ_zpage, },
+            { "test_TRB_zpage", (void(*)(void))test_TRB_zpage, },
+            { "test_TSB_zpage", (void(*)(void))test_TSB_zpage, },
+        };
+        const unsigned int count = sizeof(funcs) / sizeof(test_func_t);
+
+        for (unsigned int i=0; i<count; i++) {
+            char *name = funcs[i].name;
+            int (*func)(uint8_t, uint8_t, uint8_t, bool) = (int (*)(uint8_t, uint8_t, uint8_t, bool))funcs[i].func;
+
+            fprintf(GREATEST_STDOUT, "\n%s :\n", name);
+
+            // test addressing is working ...
+            uint8_t arg0 = 0x00;
+            do {
+                RUN_TESTp(func, /*A*/0x0f, /*val*/0x0f, arg0, /*carry*/true);
+                RUN_TESTp(func, /*A*/0x0f, /*val*/0x0f, arg0, /*carry*/false);
+                RUN_TESTp(func, /*A*/0x7f, /*val*/0x7f, arg0, /*carry*/true);
+                RUN_TESTp(func, /*A*/0x7f, /*val*/0x7f, arg0, /*carry*/false);
+                RUN_TESTp(func, /*A*/0xaa, /*val*/0x55, arg0, /*carry*/true);
+                RUN_TESTp(func, /*A*/0xaa, /*val*/0x55, arg0, /*carry*/false);
+                RUN_TESTp(func, /*A*/0x00, /*val*/0xff, arg0, /*carry*/true);
+                RUN_TESTp(func, /*A*/0x00, /*val*/0xff, arg0, /*carry*/false);
+                ++arg0;
+            } while (arg0);
 
 #ifdef ANDROID
-        fprintf(GREATEST_STDOUT, "...OK\n");
+            fprintf(GREATEST_STDOUT, "...OK\n");
 #endif
-        A2_REMOVE_TEST(func);
-    }
+        }
+    } while (0);
 
     // --------------------------------
     greatest_info.flags = GREATEST_FLAG_SILENT_SUCCESS;
-    A2_ADD_TEST(test_ADC_zpage_x);
-    A2_ADD_TEST(test_AND_zpage_x);
-    A2_ADD_TEST(test_ASL_zpage_x);
-    A2_ADD_TEST(test_BIT_zpage_x);
-    A2_ADD_TEST(test_CMP_zpage_x);
-    A2_ADD_TEST(test_DEC_zpage_x);
-    A2_ADD_TEST(test_EOR_zpage_x);
-    A2_ADD_TEST(test_INC_zpage_x);
-    A2_ADD_TEST(test_LDA_zpage_x);
-    A2_ADD_TEST(test_LDX_zpage_y); // ...y
-    A2_ADD_TEST(test_LDY_zpage_x);
-    A2_ADD_TEST(test_LSR_zpage_x);
-    A2_ADD_TEST(test_ORA_zpage_x);
-    A2_ADD_TEST(test_SBC_zpage_x);
-    A2_ADD_TEST(test_ROL_zpage_x);
-    A2_ADD_TEST(test_ROR_zpage_x);
-    A2_ADD_TEST(test_STA_zpage_x);
-    A2_ADD_TEST(test_STX_zpage_y); // ...y
-    A2_ADD_TEST(test_STY_zpage_x);
-    A2_ADD_TEST(test_STZ_zpage_x);
-    HASH_ITER(hh, test_funcs, func, tmp) {
-        fprintf(GREATEST_STDOUT, "\n%s :\n", func->name);
 
-        // test addressing is working ...
-        uint8_t regX = 0x0;
-        do {
-            uint8_t arg0 = 0x0;
+    do {
+        test_func_t funcs[] = {
+            { "test_ADC_zpage_x", (void(*)(void))test_ADC_zpage_x, },
+            { "test_AND_zpage_x", (void(*)(void))test_AND_zpage_x, },
+            { "test_ASL_zpage_x", (void(*)(void))test_ASL_zpage_x, },
+            { "test_BIT_zpage_x", (void(*)(void))test_BIT_zpage_x, },
+            { "test_CMP_zpage_x", (void(*)(void))test_CMP_zpage_x, },
+            { "test_DEC_zpage_x", (void(*)(void))test_DEC_zpage_x, },
+            { "test_EOR_zpage_x", (void(*)(void))test_EOR_zpage_x, },
+            { "test_INC_zpage_x", (void(*)(void))test_INC_zpage_x, },
+            { "test_LDA_zpage_x", (void(*)(void))test_LDA_zpage_x, },
+            { "test_LDX_zpage_y", (void(*)(void))test_LDX_zpage_y, },
+            { "test_LDY_zpage_x", (void(*)(void))test_LDY_zpage_x, },
+            { "test_LSR_zpage_x", (void(*)(void))test_LSR_zpage_x, },
+            { "test_ORA_zpage_x", (void(*)(void))test_ORA_zpage_x, },
+            { "test_SBC_zpage_x", (void(*)(void))test_SBC_zpage_x, },
+            { "test_ROL_zpage_x", (void(*)(void))test_ROL_zpage_x, },
+            { "test_ROR_zpage_x", (void(*)(void))test_ROR_zpage_x, },
+            { "test_STA_zpage_x", (void(*)(void))test_STA_zpage_x, },
+            { "test_STX_zpage_y", (void(*)(void))test_STX_zpage_y, },
+            { "test_STY_zpage_x", (void(*)(void))test_STY_zpage_x, },
+            { "test_STZ_zpage_x", (void(*)(void))test_STZ_zpage_x, },
+        };
+        const unsigned int count = sizeof(funcs) / sizeof(test_func_t);
+
+        for (unsigned int i=0; i<count; i++) {
+            char *name = funcs[i].name;
+            int (*func)(uint8_t, uint8_t, uint8_t, uint8_t, bool) = (int (*)(uint8_t, uint8_t, uint8_t, uint8_t, bool))funcs[i].func;
+
+            fprintf(GREATEST_STDOUT, "\n%s :\n", name);
+
+            // test addressing is working ...
+            uint8_t regX = 0x0;
             do {
-                A2_RUN_TESTp( func->func, /*A*/0x0f, /*val*/0x0f, arg0, regX, /*carry*/true);
-                A2_RUN_TESTp( func->func, /*A*/0x0f, /*val*/0x0f, arg0, regX, /*carry*/false);
-                A2_RUN_TESTp( func->func, /*A*/0x7f, /*val*/0x7f, arg0, regX, /*carry*/true);
-                A2_RUN_TESTp( func->func, /*A*/0x7f, /*val*/0x7f, arg0, regX, /*carry*/false);
-                A2_RUN_TESTp( func->func, /*A*/0xaa, /*val*/0x55, arg0, regX, /*carry*/true);
-                A2_RUN_TESTp( func->func, /*A*/0xaa, /*val*/0x55, arg0, regX, /*carry*/false);
-                A2_RUN_TESTp( func->func, /*A*/0x00, /*val*/0xff, arg0, regX, /*carry*/true);
-                A2_RUN_TESTp( func->func, /*A*/0x00, /*val*/0xff, arg0, regX, /*carry*/false);
-            } while (++arg0);
-        } while (++regX);
+                uint8_t arg0 = 0x0;
+                do {
+                    RUN_TESTp(func, /*A*/0x0f, /*val*/0x0f, arg0, regX, /*carry*/true);
+                    RUN_TESTp(func, /*A*/0x0f, /*val*/0x0f, arg0, regX, /*carry*/false);
+                    RUN_TESTp(func, /*A*/0x7f, /*val*/0x7f, arg0, regX, /*carry*/true);
+                    RUN_TESTp(func, /*A*/0x7f, /*val*/0x7f, arg0, regX, /*carry*/false);
+                    RUN_TESTp(func, /*A*/0xaa, /*val*/0x55, arg0, regX, /*carry*/true);
+                    RUN_TESTp(func, /*A*/0xaa, /*val*/0x55, arg0, regX, /*carry*/false);
+                    RUN_TESTp(func, /*A*/0x00, /*val*/0xff, arg0, regX, /*carry*/true);
+                    RUN_TESTp(func, /*A*/0x00, /*val*/0xff, arg0, regX, /*carry*/false);
+                } while (++arg0);
+            } while (++regX);
 
-        fprintf(GREATEST_STDOUT, "...OK\n");
-        A2_REMOVE_TEST(func);
-    }
+            fprintf(GREATEST_STDOUT, "...OK\n");
+        }
+    } while (0);
+
     greatest_info.flags = 0x0;
 
     // --------------------------------
 #ifdef ANDROID
     greatest_info.flags = GREATEST_FLAG_SILENT_SUCCESS;
 #endif
-    A2_ADD_TEST(test_ADC_abs);
-    A2_ADD_TEST(test_AND_abs);
-    A2_ADD_TEST(test_ASL_abs);
-    A2_ADD_TEST(test_BIT_abs);
-    A2_ADD_TEST(test_CMP_abs);
-    A2_ADD_TEST(test_CPX_abs);
-    A2_ADD_TEST(test_CPY_abs);
-    A2_ADD_TEST(test_DEC_abs);
-    A2_ADD_TEST(test_EOR_abs);
-    A2_ADD_TEST(test_INC_abs);
-    A2_ADD_TEST(test_LDA_abs);
-    A2_ADD_TEST(test_LDX_abs);
-    A2_ADD_TEST(test_LDY_abs);
-    A2_ADD_TEST(test_LSR_abs);
-    A2_ADD_TEST(test_ORA_abs);
-    A2_ADD_TEST(test_ROL_abs);
-    A2_ADD_TEST(test_ROR_abs);
-    A2_ADD_TEST(test_SBC_abs);
-    A2_ADD_TEST(test_STA_abs);
-    A2_ADD_TEST(test_STX_abs);
-    A2_ADD_TEST(test_STY_abs);
-    A2_ADD_TEST(test_STZ_abs);
-    A2_ADD_TEST(test_TRB_abs);
-    A2_ADD_TEST(test_TSB_abs);
-    HASH_ITER(hh, test_funcs, func, tmp) {
-        fprintf(GREATEST_STDOUT, "\n%s :\n", func->name);
 
-        // test addressing is working ...
-        for (uint8_t lobyte=0xfd; lobyte>0xf0; lobyte++) {
-            uint8_t hibyte = 0x1f;
-            A2_RUN_TESTp( func->func, /*A*/0x0f, /*val*/0x0f, lobyte, hibyte, /*carry*/false);
-            A2_RUN_TESTp( func->func, /*A*/0x0f, /*val*/0x0f, lobyte, hibyte, /*carry*/true);
-            A2_RUN_TESTp( func->func, /*A*/0x7f, /*val*/0x7f, lobyte, hibyte, /*carry*/false);
-            A2_RUN_TESTp( func->func, /*A*/0x7f, /*val*/0x7f, lobyte, hibyte, /*carry*/true);
-            A2_RUN_TESTp( func->func, /*A*/0xaa, /*val*/0x55, lobyte, hibyte, /*carry*/false);
-            A2_RUN_TESTp( func->func, /*A*/0xaa, /*val*/0x55, lobyte, hibyte, /*carry*/true);
-            A2_RUN_TESTp( func->func, /*A*/0x00, /*val*/0xff, lobyte, hibyte, /*carry*/false);
-            A2_RUN_TESTp( func->func, /*A*/0x00, /*val*/0xff, lobyte, hibyte, /*carry*/true);
-        }
+    do {
+        test_func_t funcs[] = {
+            { "test_ADC_abs", (void(*)(void))test_ADC_abs, },
+            { "test_AND_abs", (void(*)(void))test_AND_abs, },
+            { "test_ASL_abs", (void(*)(void))test_ASL_abs, },
+            { "test_BIT_abs", (void(*)(void))test_BIT_abs, },
+            { "test_CMP_abs", (void(*)(void))test_CMP_abs, },
+            { "test_CPX_abs", (void(*)(void))test_CPX_abs, },
+            { "test_CPY_abs", (void(*)(void))test_CPY_abs, },
+            { "test_DEC_abs", (void(*)(void))test_DEC_abs, },
+            { "test_EOR_abs", (void(*)(void))test_EOR_abs, },
+            { "test_INC_abs", (void(*)(void))test_INC_abs, },
+            { "test_LDA_abs", (void(*)(void))test_LDA_abs, },
+            { "test_LDX_abs", (void(*)(void))test_LDX_abs, },
+            { "test_LDY_abs", (void(*)(void))test_LDY_abs, },
+            { "test_LSR_abs", (void(*)(void))test_LSR_abs, },
+            { "test_ORA_abs", (void(*)(void))test_ORA_abs, },
+            { "test_ROL_abs", (void(*)(void))test_ROL_abs, },
+            { "test_ROR_abs", (void(*)(void))test_ROR_abs, },
+            { "test_SBC_abs", (void(*)(void))test_SBC_abs, },
+            { "test_STA_abs", (void(*)(void))test_STA_abs, },
+            { "test_STX_abs", (void(*)(void))test_STX_abs, },
+            { "test_STY_abs", (void(*)(void))test_STY_abs, },
+            { "test_STZ_abs", (void(*)(void))test_STZ_abs, },
+            { "test_TRB_abs", (void(*)(void))test_TRB_abs, },
+            { "test_TSB_abs", (void(*)(void))test_TSB_abs, },
+        };
+        const unsigned int count = sizeof(funcs) / sizeof(test_func_t);
 
-#ifdef ANDROID
-        fprintf(GREATEST_STDOUT, "...OK\n");
-#endif
-        A2_REMOVE_TEST(func);
-    }
+        for (unsigned int i=0; i<count; i++) {
+            char *name = funcs[i].name;
+            int (*func)(uint8_t, uint8_t, uint8_t, uint8_t, bool) = (int (*)(uint8_t, uint8_t, uint8_t, uint8_t, bool))funcs[i].func;
 
-    // --------------------------------
-    A2_ADD_TEST(test_ADC_abs_x);
-    A2_ADD_TEST(test_AND_abs_x);
-    A2_ADD_TEST(test_ASL_abs_x);
-    A2_ADD_TEST(test_BIT_abs_x);
-    A2_ADD_TEST(test_CMP_abs_x);
-    A2_ADD_TEST(test_DEC_abs_x);
-    A2_ADD_TEST(test_EOR_abs_x);
-    A2_ADD_TEST(test_INC_abs_x);
-    A2_ADD_TEST(test_LDA_abs_x);
-    A2_ADD_TEST(test_LDY_abs_x);
-    A2_ADD_TEST(test_LSR_abs_x);
-    A2_ADD_TEST(test_ORA_abs_x);
-    A2_ADD_TEST(test_ROL_abs_x);
-    A2_ADD_TEST(test_ROR_abs_x);
-    A2_ADD_TEST(test_SBC_abs_x);
-    A2_ADD_TEST(test_STA_abs_x);
-    A2_ADD_TEST(test_STZ_abs_x);
-    HASH_ITER(hh, test_funcs, func, tmp) {
-        fprintf(GREATEST_STDOUT, "\n%s :\n", func->name);
+            fprintf(GREATEST_STDOUT, "\n%s :\n", name);
 
-        // test addressing is working ...
-        uint8_t hibyte = 0x1f;
-        uint8_t lobyte = 0x20;
-        for (uint8_t regX=0x50; regX>0x4f; regX+=0x30) {
-            A2_RUN_TESTp( func->func, /*A*/0x0f, /*val*/0x0f, regX, lobyte, hibyte, /*carry*/true);
-            A2_RUN_TESTp( func->func, /*A*/0x0f, /*val*/0x0f, regX, lobyte, hibyte, /*carry*/false);
-            A2_RUN_TESTp( func->func, /*A*/0x7f, /*val*/0x7f, regX, lobyte, hibyte, /*carry*/true);
-            A2_RUN_TESTp( func->func, /*A*/0x7f, /*val*/0x7f, regX, lobyte, hibyte, /*carry*/false);
-            A2_RUN_TESTp( func->func, /*A*/0xaa, /*val*/0x55, regX, lobyte, hibyte, /*carry*/true);
-            A2_RUN_TESTp( func->func, /*A*/0xaa, /*val*/0x55, regX, lobyte, hibyte, /*carry*/false);
-            A2_RUN_TESTp( func->func, /*A*/0x00, /*val*/0xff, regX, lobyte, hibyte, /*carry*/true);
-            A2_RUN_TESTp( func->func, /*A*/0x00, /*val*/0xff, regX, lobyte, hibyte, /*carry*/false);
-
-            A2_RUN_TESTp( func->func, /*A*/0x24, /*val*/0x42, 0x20, 0xfe,   0xff,   /*carry*/true);  // wrap to zpage
-            A2_RUN_TESTp( func->func, /*A*/0x24, /*val*/0x42, 0x20, 0xfe,   0xff,   /*carry*/false); // wrap to zpage
-        }
-
-#ifdef ANDROID
-        fprintf(GREATEST_STDOUT, "...OK\n");
-#endif
-        A2_REMOVE_TEST(func);
-    }
-
-    // --------------------------------
-    A2_ADD_TEST(test_ADC_abs_y);
-    A2_ADD_TEST(test_AND_abs_y);
-    A2_ADD_TEST(test_CMP_abs_y);
-    A2_ADD_TEST(test_EOR_abs_y);
-    A2_ADD_TEST(test_LDA_abs_y);
-    A2_ADD_TEST(test_LDX_abs_y);
-    A2_ADD_TEST(test_ORA_abs_y);
-    A2_ADD_TEST(test_SBC_abs_y);
-    A2_ADD_TEST(test_STA_abs_y);
-    HASH_ITER(hh, test_funcs, func, tmp) {
-        fprintf(GREATEST_STDOUT, "\n%s :\n", func->name);
-
-        // test addressing is working ...
-        uint8_t hibyte = 0x1f;
-        uint8_t lobyte = 0x20;
-        for (uint8_t regY=0x50; regY>0x4f; regY+=0x30) {
-            A2_RUN_TESTp( func->func, /*A*/0x0f, /*val*/0x0f, regY, lobyte, hibyte);
-            A2_RUN_TESTp( func->func, /*A*/0x7f, /*val*/0x7f, regY, lobyte, hibyte);
-            A2_RUN_TESTp( func->func, /*A*/0xaa, /*val*/0x55, regY, lobyte, hibyte);
-            A2_RUN_TESTp( func->func, /*A*/0x00, /*val*/0xff, regY, lobyte, hibyte);
-            A2_RUN_TESTp( func->func, /*A*/0x24, /*val*/0x42, 0x20, 0xfe,   0xff); // wrap to zpage
-        }
-
-#ifdef ANDROID
-        fprintf(GREATEST_STDOUT, "...OK\n");
-#endif
-        A2_REMOVE_TEST(func);
-    }
-
-    // --------------------------------
-    A2_ADD_TEST(test_ADC_ind_x);
-    A2_ADD_TEST(test_AND_ind_x);
-    A2_ADD_TEST(test_CMP_ind_x);
-    A2_ADD_TEST(test_EOR_ind_x);
-    A2_ADD_TEST(test_LDA_ind_x);
-    A2_ADD_TEST(test_ORA_ind_x);
-    A2_ADD_TEST(test_SBC_ind_x);
-    A2_ADD_TEST(test_STA_ind_x);
-    HASH_ITER(hh, test_funcs, func, tmp) {
-        fprintf(GREATEST_STDOUT, "\n%s :\n", func->name);
-
-        // test addressing is working ...
-        uint8_t hibyte = 0x1f;
-        for (uint8_t lobyte=0xfd; lobyte>0xf0; lobyte++) {
-            for (uint8_t regX=0x42; regX>0x3F; regX+=0x40) {
-                A2_RUN_TESTp( func->func, /*A*/0x0f, /*val*/0x0f, /*arg0*/0x24, regX, lobyte, hibyte);
-                A2_RUN_TESTp( func->func, /*A*/0x7f, /*val*/0x7f, /*arg0*/0x24, regX, lobyte, hibyte);
-                A2_RUN_TESTp( func->func, /*A*/0xaa, /*val*/0x55, /*arg0*/0x24, regX, lobyte, hibyte);
-                A2_RUN_TESTp( func->func, /*A*/0x00, /*val*/0xff, /*arg0*/0x24, regX, lobyte, hibyte);
+            // test addressing is working ...
+            for (uint8_t lobyte=0xfd; lobyte>0xf0; lobyte++) {
+                uint8_t hibyte = 0x1f;
+                RUN_TESTp(func, /*A*/0x0f, /*val*/0x0f, lobyte, hibyte, /*carry*/false);
+                RUN_TESTp(func, /*A*/0x0f, /*val*/0x0f, lobyte, hibyte, /*carry*/true);
+                RUN_TESTp(func, /*A*/0x7f, /*val*/0x7f, lobyte, hibyte, /*carry*/false);
+                RUN_TESTp(func, /*A*/0x7f, /*val*/0x7f, lobyte, hibyte, /*carry*/true);
+                RUN_TESTp(func, /*A*/0xaa, /*val*/0x55, lobyte, hibyte, /*carry*/false);
+                RUN_TESTp(func, /*A*/0xaa, /*val*/0x55, lobyte, hibyte, /*carry*/true);
+                RUN_TESTp(func, /*A*/0x00, /*val*/0xff, lobyte, hibyte, /*carry*/false);
+                RUN_TESTp(func, /*A*/0x00, /*val*/0xff, lobyte, hibyte, /*carry*/true);
             }
-        }
 
 #ifdef ANDROID
-        fprintf(GREATEST_STDOUT, "...OK\n");
+            fprintf(GREATEST_STDOUT, "...OK\n");
 #endif
-        A2_REMOVE_TEST(func);
-    }
+        }
+    } while (0);
 
     // --------------------------------
-    A2_ADD_TEST(test_ADC_ind_y);
-    A2_ADD_TEST(test_AND_ind_y);
-    A2_ADD_TEST(test_CMP_ind_y);
-    A2_ADD_TEST(test_EOR_ind_y);
-    A2_ADD_TEST(test_LDA_ind_y);
-    A2_ADD_TEST(test_ORA_ind_y);
-    A2_ADD_TEST(test_SBC_ind_y);
-    A2_ADD_TEST(test_STA_ind_y);
-    HASH_ITER(hh, test_funcs, func, tmp) {
-        fprintf(GREATEST_STDOUT, "\n%s :\n", func->name);
 
-        // test addressing is working ...
-        A2_RUN_TESTp( func->func, /*A*/0x0f, /*val*/0x0f, /*arg0*/0x24, /*regY*/0x10, /*val_zp0*/0x22, /*val_zp1*/0x1f);
-        A2_RUN_TESTp( func->func, /*A*/0x7f, /*val*/0x7f, /*arg0*/0x24, /*regY*/0x80, /*val_zp0*/0x80, /*val_zp1*/0x1f);
-        A2_RUN_TESTp( func->func, /*A*/0xaa, /*val*/0x55, /*arg0*/0x24, /*regY*/0xAA, /*val_zp0*/0xAA, /*val_zp1*/0x1f);
-        A2_RUN_TESTp( func->func, /*A*/0x00, /*val*/0xff, /*arg0*/0x24, /*regY*/0x80, /*val_zp0*/0x90, /*val_zp1*/0xff);
+    do {
+        test_func_t funcs[] = {
+            { "test_ADC_abs_x", (void(*)(void))test_ADC_abs_x, },
+            { "test_AND_abs_x", (void(*)(void))test_AND_abs_x, },
+            { "test_ASL_abs_x", (void(*)(void))test_ASL_abs_x, },
+            { "test_BIT_abs_x", (void(*)(void))test_BIT_abs_x, },
+            { "test_CMP_abs_x", (void(*)(void))test_CMP_abs_x, },
+            { "test_DEC_abs_x", (void(*)(void))test_DEC_abs_x, },
+            { "test_EOR_abs_x", (void(*)(void))test_EOR_abs_x, },
+            { "test_INC_abs_x", (void(*)(void))test_INC_abs_x, },
+            { "test_LDA_abs_x", (void(*)(void))test_LDA_abs_x, },
+            { "test_LDY_abs_x", (void(*)(void))test_LDY_abs_x, },
+            { "test_LSR_abs_x", (void(*)(void))test_LSR_abs_x, },
+            { "test_ORA_abs_x", (void(*)(void))test_ORA_abs_x, },
+            { "test_ROL_abs_x", (void(*)(void))test_ROL_abs_x, },
+            { "test_ROR_abs_x", (void(*)(void))test_ROR_abs_x, },
+            { "test_SBC_abs_x", (void(*)(void))test_SBC_abs_x, },
+            { "test_STA_abs_x", (void(*)(void))test_STA_abs_x, },
+            { "test_STZ_abs_x", (void(*)(void))test_STZ_abs_x, },
+        };
+        const unsigned int count = sizeof(funcs) / sizeof(test_func_t);
+
+        for (unsigned int i=0; i<count; i++) {
+            char *name = funcs[i].name;
+            int (*func)(uint8_t, uint8_t, uint8_t, uint8_t, uint8_t, bool) = (int (*)(uint8_t, uint8_t, uint8_t, uint8_t, uint8_t, bool))funcs[i].func;
+
+            fprintf(GREATEST_STDOUT, "\n%s :\n", name);
+
+            // test that addressing is working ...
+            uint8_t hibyte = 0x1f;
+            uint8_t lobyte = 0x20;
+            for (uint8_t regX=0x50; regX>0x4f; regX+=0x30) {
+                RUN_TESTp(func, /*A*/0x0f, /*val*/0x0f, regX, lobyte, hibyte, /*carry*/true);
+                RUN_TESTp(func, /*A*/0x0f, /*val*/0x0f, regX, lobyte, hibyte, /*carry*/false);
+                RUN_TESTp(func, /*A*/0x7f, /*val*/0x7f, regX, lobyte, hibyte, /*carry*/true);
+                RUN_TESTp(func, /*A*/0x7f, /*val*/0x7f, regX, lobyte, hibyte, /*carry*/false);
+                RUN_TESTp(func, /*A*/0xaa, /*val*/0x55, regX, lobyte, hibyte, /*carry*/true);
+                RUN_TESTp(func, /*A*/0xaa, /*val*/0x55, regX, lobyte, hibyte, /*carry*/false);
+                RUN_TESTp(func, /*A*/0x00, /*val*/0xff, regX, lobyte, hibyte, /*carry*/true);
+                RUN_TESTp(func, /*A*/0x00, /*val*/0xff, regX, lobyte, hibyte, /*carry*/false);
+
+                RUN_TESTp(func, /*A*/0x24, /*val*/0x42, 0x20, 0xfe,   0xff,   /*carry*/true);  // wrap to zpage
+                RUN_TESTp(func, /*A*/0x24, /*val*/0x42, 0x20, 0xfe,   0xff,   /*carry*/false); // wrap to zpage
+            }
 
 #ifdef ANDROID
-        fprintf(GREATEST_STDOUT, "...OK\n");
+            fprintf(GREATEST_STDOUT, "...OK\n");
 #endif
-        A2_REMOVE_TEST(func);
-    }
+        }
+    } while (0);
 
     // --------------------------------
-    A2_ADD_TEST(test_ADC_ind_zpage);
-    A2_ADD_TEST(test_AND_ind_zpage);
-    A2_ADD_TEST(test_CMP_ind_zpage);
-    A2_ADD_TEST(test_EOR_ind_zpage);
-    A2_ADD_TEST(test_LDA_ind_zpage);
-    A2_ADD_TEST(test_ORA_ind_zpage);
-    A2_ADD_TEST(test_SBC_ind_zpage);
-    A2_ADD_TEST(test_STA_ind_zpage);
-    HASH_ITER(hh, test_funcs, func, tmp) {
-        fprintf(GREATEST_STDOUT, "\n%s :\n", func->name);
 
-        // test addressing is working ...
-        for (uint8_t lobyte=0xfd; lobyte>0xf0; lobyte++) {
-            A2_RUN_TESTp( func->func, /*A*/0x0f, /*val*/0x0f, /*arg0*/0x00, /*lobyte*/0x33, /*hibyte*/0x1f);
-            A2_RUN_TESTp( func->func, /*A*/0x7f, /*val*/0x7f, /*arg0*/0x7f, /*lobyte*/0x33, /*hibyte*/0x1f);
-            A2_RUN_TESTp( func->func, /*A*/0xaa, /*val*/0x55, /*arg0*/0xAB, /*lobyte*/0x33, /*hibyte*/0x1f);
-            A2_RUN_TESTp( func->func, /*A*/0x00, /*val*/0xff, /*arg0*/0xff, /*lobyte*/0x33, /*hibyte*/0x1f);
-        }
+    do {
+        test_func_t funcs[] = {
+            { "test_ADC_abs_y", (void(*)(void))test_ADC_abs_y, },
+            { "test_AND_abs_y", (void(*)(void))test_AND_abs_y, },
+            { "test_CMP_abs_y", (void(*)(void))test_CMP_abs_y, },
+            { "test_EOR_abs_y", (void(*)(void))test_EOR_abs_y, },
+            { "test_LDA_abs_y", (void(*)(void))test_LDA_abs_y, },
+            { "test_LDX_abs_y", (void(*)(void))test_LDX_abs_y, },
+            { "test_ORA_abs_y", (void(*)(void))test_ORA_abs_y, },
+            { "test_SBC_abs_y", (void(*)(void))test_SBC_abs_y, },
+            { "test_STA_abs_y", (void(*)(void))test_STA_abs_y, },
+        };
+        const unsigned int count = sizeof(funcs) / sizeof(test_func_t);
+
+        for (unsigned int i=0; i<count; i++) {
+            char *name = funcs[i].name;
+            int (*func)(uint8_t, uint8_t, uint8_t, uint8_t, uint8_t) = (int (*)(uint8_t, uint8_t, uint8_t, uint8_t, uint8_t))funcs[i].func;
+
+            fprintf(GREATEST_STDOUT, "\n%s :\n", name);
+
+            // test addressing is working ...
+            uint8_t hibyte = 0x1f;
+            uint8_t lobyte = 0x20;
+            for (uint8_t regY=0x50; regY>0x4f; regY+=0x30) {
+                RUN_TESTp(func, /*A*/0x0f, /*val*/0x0f, regY, lobyte, hibyte);
+                RUN_TESTp(func, /*A*/0x7f, /*val*/0x7f, regY, lobyte, hibyte);
+                RUN_TESTp(func, /*A*/0xaa, /*val*/0x55, regY, lobyte, hibyte);
+                RUN_TESTp(func, /*A*/0x00, /*val*/0xff, regY, lobyte, hibyte);
+                RUN_TESTp(func, /*A*/0x24, /*val*/0x42, 0x20, 0xfe,   0xff); // wrap to zpage
+            }
 
 #ifdef ANDROID
-        fprintf(GREATEST_STDOUT, "...OK\n");
+            fprintf(GREATEST_STDOUT, "...OK\n");
 #endif
-        A2_REMOVE_TEST(func);
-    }
+        }
+    } while (0);
+
+    // --------------------------------
+
+    do {
+        test_func_t funcs[] = {
+            { "test_ADC_ind_x", (void(*)(void))test_ADC_ind_x, },
+            { "test_AND_ind_x", (void(*)(void))test_AND_ind_x, },
+            { "test_CMP_ind_x", (void(*)(void))test_CMP_ind_x, },
+            { "test_EOR_ind_x", (void(*)(void))test_EOR_ind_x, },
+            { "test_LDA_ind_x", (void(*)(void))test_LDA_ind_x, },
+            { "test_ORA_ind_x", (void(*)(void))test_ORA_ind_x, },
+            { "test_SBC_ind_x", (void(*)(void))test_SBC_ind_x, },
+            { "test_STA_ind_x", (void(*)(void))test_STA_ind_x, },
+        };
+        const unsigned int count = sizeof(funcs) / sizeof(test_func_t);
+
+        for (unsigned int i=0; i<count; i++) {
+            char *name = funcs[i].name;
+            int (*func)(uint8_t, uint8_t, uint8_t, uint8_t, uint8_t, uint8_t) = (int (*)(uint8_t, uint8_t, uint8_t, uint8_t, uint8_t, uint8_t))funcs[i].func;
+
+            fprintf(GREATEST_STDOUT, "\n%s :\n", name);
+
+            // test addressing is working ...
+            uint8_t hibyte = 0x1f;
+            for (uint8_t lobyte=0xfd; lobyte>0xf0; lobyte++) {
+                for (uint8_t regX=0x42; regX>0x3F; regX+=0x40) {
+                    RUN_TESTp(func, /*A*/0x0f, /*val*/0x0f, /*arg0*/0x24, regX, lobyte, hibyte);
+                    RUN_TESTp(func, /*A*/0x7f, /*val*/0x7f, /*arg0*/0x24, regX, lobyte, hibyte);
+                    RUN_TESTp(func, /*A*/0xaa, /*val*/0x55, /*arg0*/0x24, regX, lobyte, hibyte);
+                    RUN_TESTp(func, /*A*/0x00, /*val*/0xff, /*arg0*/0x24, regX, lobyte, hibyte);
+                }
+            }
+
+#ifdef ANDROID
+            fprintf(GREATEST_STDOUT, "...OK\n");
+#endif
+        }
+    } while (0);
+
+    // --------------------------------
+
+    do {
+        test_func_t funcs[] = {
+            { "test_ADC_ind_y", (void(*)(void))test_ADC_ind_y, },
+            { "test_AND_ind_y", (void(*)(void))test_AND_ind_y, },
+            { "test_CMP_ind_y", (void(*)(void))test_CMP_ind_y, },
+            { "test_EOR_ind_y", (void(*)(void))test_EOR_ind_y, },
+            { "test_LDA_ind_y", (void(*)(void))test_LDA_ind_y, },
+            { "test_ORA_ind_y", (void(*)(void))test_ORA_ind_y, },
+            { "test_SBC_ind_y", (void(*)(void))test_SBC_ind_y, },
+            { "test_STA_ind_y", (void(*)(void))test_STA_ind_y, },
+        };
+        const unsigned int count = sizeof(funcs) / sizeof(test_func_t);
+
+        for (unsigned int i=0; i<count; i++) {
+            char *name = funcs[i].name;
+            int (*func)(uint8_t, uint8_t, uint8_t, uint8_t, uint8_t, uint8_t) = (int (*)(uint8_t, uint8_t, uint8_t, uint8_t, uint8_t, uint8_t))funcs[i].func;
+
+            fprintf(GREATEST_STDOUT, "\n%s :\n", name);
+
+            // test addressing is working ...
+            RUN_TESTp(func, /*A*/0x0f, /*val*/0x0f, /*arg0*/0x24, /*regY*/0x10, /*val_zp0*/0x22, /*val_zp1*/0x1f);
+            RUN_TESTp(func, /*A*/0x7f, /*val*/0x7f, /*arg0*/0x24, /*regY*/0x80, /*val_zp0*/0x80, /*val_zp1*/0x1f);
+            RUN_TESTp(func, /*A*/0xaa, /*val*/0x55, /*arg0*/0x24, /*regY*/0xAA, /*val_zp0*/0xAA, /*val_zp1*/0x1f);
+            RUN_TESTp(func, /*A*/0x00, /*val*/0xff, /*arg0*/0x24, /*regY*/0x80, /*val_zp0*/0x90, /*val_zp1*/0xff);
+
+#ifdef ANDROID
+            fprintf(GREATEST_STDOUT, "...OK\n");
+#endif
+        }
+    } while (0);
+
+    // --------------------------------
+
+    do {
+        test_func_t funcs[] = {
+            { "test_ADC_ind_zpage", (void(*)(void))test_ADC_ind_zpage, },
+            { "test_AND_ind_zpage", (void(*)(void))test_AND_ind_zpage, },
+            { "test_CMP_ind_zpage", (void(*)(void))test_CMP_ind_zpage, },
+            { "test_EOR_ind_zpage", (void(*)(void))test_EOR_ind_zpage, },
+            { "test_LDA_ind_zpage", (void(*)(void))test_LDA_ind_zpage, },
+            { "test_ORA_ind_zpage", (void(*)(void))test_ORA_ind_zpage, },
+            { "test_SBC_ind_zpage", (void(*)(void))test_SBC_ind_zpage, },
+            { "test_STA_ind_zpage", (void(*)(void))test_STA_ind_zpage, },
+        };
+        const unsigned int count = sizeof(funcs) / sizeof(test_func_t);
+
+        for (unsigned int i=0; i<count; i++) {
+            char *name = funcs[i].name;
+            int (*func)(uint8_t, uint8_t, uint8_t, uint8_t, uint8_t) = (int (*)(uint8_t, uint8_t, uint8_t, uint8_t, uint8_t))funcs[i].func;
+
+            fprintf(GREATEST_STDOUT, "\n%s :\n", name);
+
+            // test addressing is working ...
+            for (uint8_t lobyte=0xfd; lobyte>0xf0; lobyte++) {
+                RUN_TESTp(func, /*A*/0x0f, /*val*/0x0f, /*arg0*/0x00, /*lobyte*/0x33, /*hibyte*/0x1f);
+                RUN_TESTp(func, /*A*/0x7f, /*val*/0x7f, /*arg0*/0x7f, /*lobyte*/0x33, /*hibyte*/0x1f);
+                RUN_TESTp(func, /*A*/0xaa, /*val*/0x55, /*arg0*/0xAB, /*lobyte*/0x33, /*hibyte*/0x1f);
+                RUN_TESTp(func, /*A*/0x00, /*val*/0xff, /*arg0*/0xff, /*lobyte*/0x33, /*hibyte*/0x1f);
+            }
+
+#ifdef ANDROID
+            fprintf(GREATEST_STDOUT, "...OK\n");
+#endif
+        }
+    } while (0);
 }
 
 SUITE(test_suite_cpu);
