@@ -18,6 +18,7 @@ LOCAL_LDLIBS    := $(APPLE2_BASE_LDLIBS)
 # Add assembly files first ... mostly for the benefit of the ARM assembler ...
 ifeq ($(TARGET_ARCH_ABI),x86)
     LOCAL_SRC_FILES += $(APPLE2_X86_SRC)
+    LOCAL_CFLAGS    += -DNO_UNDERSCORES=1
 else
     LOCAL_SRC_FILES += $(APPLE2_ARM_SRC)
 endif
