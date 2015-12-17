@@ -237,7 +237,7 @@ TEST test_read_null_bytes() {
     c_debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
-    ASSERT(apple_ii_64k[0][TESTOUT_ADDR]    == 0x00);
+    ASSERT(apple_ii_64k[0][TESTOUT_ADDR]    == 0xFF);
 
     PASS();
 }
