@@ -1436,12 +1436,16 @@ GREATEST_MAIN_DEFS();
 static char **test_argv = NULL;
 static int test_argc = 0;
 
-static void *test_thread(void *dummyptr) {
+static int _test_thread(void) {
     int argc = test_argc;
     char **argv = test_argv;
     GREATEST_MAIN_BEGIN();
     RUN_SUITE(test_suite_disk);
     GREATEST_MAIN_END();
+}
+
+static void *test_thread(void *dummyptr) {
+    _test_thread();
     return NULL;
 }
 
