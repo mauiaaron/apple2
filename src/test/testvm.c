@@ -33,7 +33,7 @@ static void testvm_teardown(void *arg) {
 // VM TESTS ...
 
 TEST test_boot_disk() {
-    test_setup_boot_disk("testvm1.nib.gz", 1);
+    test_setup_boot_disk("testvm1.dsk.gz", 1);
 
     BOOT_TO_DOS();
 
