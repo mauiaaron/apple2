@@ -214,16 +214,6 @@ static inline void _switch_keyboard(GLModel *parent, uint8_t *template) {
     }
 }
 
-static inline void _show_useralt_kbd(void) {
-    GLModelHUDKeyboard *hudKeyboard = (GLModelHUDKeyboard *)kbd.model->custom;
-    uint8_t c = hudKeyboard->tpl[_ROWOFF*(KBD_TEMPLATE_COLS+1)];
-    if (c == ICONTEXT_NONACTIONABLE) {
-        _switch_keyboard(kbd.model, kbdTemplateUCase[0]);
-    } else {
-        _switch_keyboard(kbd.model, kbdTemplateUserAlt[0]);
-    }
-}
-
 #warning FIXME TODO ... this can become a common helper function ...
 static inline float _get_keyboard_visibility(void) {
     struct timespec now = { 0 };
@@ -375,7 +365,7 @@ static inline int64_t _tap_key_at_point(float x, float y) {
 
         case ICONTEXT_MENU_SPROUT:
             key = 0;
-            _show_useralt_kbd();
+            _switch_keyboard(kbd.model, kbdTemplateUserAlt[0]);
             break;
 
         case ICONTEXT_GOTO:
@@ -895,7 +885,7 @@ static void _initialize_keyboard_templates(void) {
     kbdTemplateUCase[3][5] = ICONTEXT_MENU_SPROUT;
     kbdTemplateLCase[3][5] = ICONTEXT_MENU_SPROUT;
     kbdTemplateAlt  [3][5] = ICONTEXT_MENU_SPROUT;
-    kbdTemplateUserAlt[3][5] = ICONTEXT_MENU_SPROUT;
+    kbdTemplateUserAlt[3][5] = ICONTEXT_UPPERCASE;
 
     kbdTemplateUCase[_ROWOFF+2][0] = ICONTEXT_NONACTIONABLE;
     kbdTemplateLCase[_ROWOFF+2][0] = ICONTEXT_NONACTIONABLE;
