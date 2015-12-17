@@ -316,12 +316,12 @@ static void _animation_showDiskChosen(int drive) {
 static void _animation_showTrackSector(int drive, int track, int sect) {
 
 #define DISK_TRACK_SECTOR_ROWS 3
-#define DISK_TRACK_SECTOR_COLS 9
+#define DISK_TRACK_SECTOR_COLS 8
 
     static char diskTrackSectorTemplate[DISK_TRACK_SECTOR_ROWS][DISK_TRACK_SECTOR_COLS+1] = {
-        "         ",
-        "D / TT/SS",
-        "         ",
+        "        ",
+        "D / TT/S",
+        "        ",
     };
     char *template = diskTrackSectorTemplate[0];
 
@@ -343,7 +343,7 @@ static void _animation_showTrackSector(int drive, int track, int sect) {
             assert(false && "should not happen");
             break;
     }
-    snprintf(&diskTrackSectorTemplate[1][0], DISK_TRACK_SECTOR_COLS+1, "%d %c %02X/%02X", drive+1, c, track, sect);
+    snprintf(&diskTrackSectorTemplate[1][0], DISK_TRACK_SECTOR_COLS+1, "%d %c %02X/%01X", drive+1, c, track, sect);
 
     _animation_showMessage(template, DISK_TRACK_SECTOR_COLS, DISK_TRACK_SECTOR_ROWS);
 }
