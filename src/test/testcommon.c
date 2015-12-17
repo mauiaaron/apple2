@@ -161,6 +161,5 @@ void sha1_to_str(const uint8_t * const md, char *buf) {
     for (int j=0; j<SHA_DIGEST_LENGTH; j++, i+=2) {
         sprintf(buf+i, "%02X", md[j]);
     }
-    sprintf(buf+i, "%c", '\0');
 }
 
