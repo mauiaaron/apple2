@@ -1713,7 +1713,8 @@ ENTRY(op_SBC_dec)
                 incb    SYM(cpu65_opcycles)         // +1 cycle
                 GetFromEA_B
                 DebugBCDCheck
-                btc     $C_Flag_Bit, AF_Reg_X
+                bt      $C_Flag_Bit, AF_Reg_X
+                cmc
                 xchgb   A_Reg, %al
 #if !defined(__LP64__)
                 sbbb    A_Reg, %al
@@ -1722,7 +1723,6 @@ ENTRY(op_SBC_dec)
                 cmc
                 FlagNVZC
 #else
-                cmc
                 sbbb    A_Reg, %al
                 // DAS algorithm : http://www.ray.masmcode.com/BCDdas.html
                 // CF_old = CF
