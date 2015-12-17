@@ -47,6 +47,7 @@ typedef enum lifecycle_seq_t {
 static lifecycle_seq_t appState = APP_RUNNING;
 
 #if TESTING
+static bool running_tests = false;
 static void _run_tests(void) {
     char *local_argv[] = {
         "-f",
@@ -170,11 +171,7 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnCreate(JNIEnv *env, jobje
     android_monoBufferSubmitSizeSamples = (unsigned long)monoBufferSize;
     android_stereoBufferSubmitSizeSamples = (unsigned long)stereoBufferSize;
 
-#if TESTING
-    assert(cpu_thread_id == 0 && "CPU thread must not be initialized yet...");
-    _run_tests();
-    // CPU thread is started from testsuite (if needed)
-#else
+#if !TESTING
     cpu_pause();
     emulator_start();
 #endif
@@ -187,7 +184,7 @@ void Java_org_deadc0de_apple2ix_Apple2View_nativeGraphicsChanged(JNIEnv *env, jc
 }
 
 void Java_org_deadc0de_apple2ix_Apple2View_nativeGraphicsInitialized(JNIEnv *env, jclass cls, jint width, jint height) {
-    // WANRING : this needs to happen on the GL thread only
+    // WARNING : this needs to happen on the GL thread only
     LOG("width:%d height:%d", width, height);
     video_shutdown();
     video_backend->reshape(width, height);
@@ -195,13 +192,18 @@ void Java_org_deadc0de_apple2ix_Apple2View_nativeGraphicsInitialized(JNIEnv *env
 }
 
 void Java_org_deadc0de_apple2ix_Apple2Activity_nativeEmulationResume(JNIEnv *env, jobject obj) {
+#if TESTING
+    // test driver thread is managing CPU
+    if (!running_tests) {
+        running_tests = true;
+        assert(cpu_thread_id == 0 && "CPU thread must not be initialized yet...");
+        _run_tests();
+    }
+#else
     if (!cpu_isPaused()) {
         return;
     }
     LOG("...");
-#if TESTING
-    // test driver thread is managing CPU
-#else
     cpu_resume();
 #endif
 }
