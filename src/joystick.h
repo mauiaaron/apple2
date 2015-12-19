@@ -13,7 +13,8 @@
 #define _JOYSTICK_H_
 
 #define JOY_RANGE 0x100
-#define HALF_JOY_RANGE 0x80
+#define HALF_JOY_RANGE (JOY_RANGE>>1)
+#define QUARTER_JOY_RANGE (HALF_JOY_RANGE>>1)
 
 extern uint16_t joy_x;
 extern uint16_t joy_y;
@@ -31,6 +32,24 @@ void c_joystick_reset(void);
 #ifdef INTERFACE_CLASSIC
 void c_calibrate_joystick(void);
 #endif
+
+// enable/disable gamepad clamping to joystick corners
+void joydriver_setClampBeyondRadius(bool clamp);
+
+// set joystick axis values
+void joydriver_setAxisValue(uint8_t x, uint8_t y);
+
+// return X axis value
+uint8_t joydriver_getAxisX(void);
+
+// return Y axis value
+uint8_t joydriver_getAxisY(void);
+
+// set button 0 pressed
+void joydriver_setButton0Pressed(bool pressed);
+
+// set button 1 pressed
+void joydriver_setButton1Pressed(bool pressed);
 
 #if INTERFACE_TOUCH
 

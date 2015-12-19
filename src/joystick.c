@@ -253,6 +253,55 @@ void c_joystick_reset(void)
 #endif
 }
 
+// clamps modern gamepad controller axis values to the "corners" of a traditional joystick as used on the Apple //e
+static inline void clampBeyondRadius(uint8_t *x, uint8_t *y) {
+    float half_x = (*x) - HALF_JOY_RANGE;
+    float half_y = (*y) - HALF_JOY_RANGE;
+    float r = sqrtf(half_x*half_x + half_y*half_y);
+    bool shouldClip = (r > HALF_JOY_RANGE);
+    if (joy_clip_to_radius && shouldClip) {
+        if ((*x) < HALF_JOY_RANGE) {
+            (*x) = ((*x) < QUARTER_JOY_RANGE) ? 0.f : (*x);
+        } else {
+            (*x) = ((*x) < HALF_JOY_RANGE+QUARTER_JOY_RANGE) ? (*x) : 0xFF;
+        }
+        if ((*y) < HALF_JOY_RANGE) {
+            (*y) = ((*y) < QUARTER_JOY_RANGE) ? 0.f : (*y);
+        } else {
+            (*y) = ((*y) < HALF_JOY_RANGE+QUARTER_JOY_RANGE) ? (*y) : JOY_RANGE-1;
+        }
+    }
+}
+
+void joydriver_setClampBeyondRadius(bool clamp) {
+    joy_clip_to_radius = clamp;
+}
+
+void joydriver_setAxisValue(uint8_t x, uint8_t y) {
+    clampBeyondRadius(&x, &y);
+    joy_x = x;
+    joy_y = y;
+}
+
+uint8_t joydriver_getAxisX(void) {
+    return joy_x;
+}
+
+// return Y axis value
+uint8_t joydriver_getAxisY(void) {
+    return joy_y;
+}
+
+// set button 0 pressed
+void joydriver_setButton0Pressed(bool pressed) {
+    joy_button0 = (pressed) ? 0x80 : 0x0;
+}
+
+// set button 1 pressed
+void joydriver_setButton1Pressed(bool pressed) {
+    joy_button1 = (pressed) ? 0x80 : 0x0;
+}
+
 #if INTERFACE_TOUCH
 bool (*joydriver_isTouchJoystickAvailable)(void) = NULL;
 void (*joydriver_setTouchJoystickEnabled)(bool enabled) = NULL;
