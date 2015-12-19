@@ -133,7 +133,7 @@ public interface InputManagerCompat {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
                 return new InputManagerV16(context);
             } else {
-                return new InputManagerV9();
+                return null;
             }
         }
     }
