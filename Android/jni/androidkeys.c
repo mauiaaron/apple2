@@ -41,6 +41,17 @@ void android_keycode_to_emulator(int keyCode, int metaState, bool pressed) {
         }
 
         switch (keyCode) {
+            case KEYCODE_BUTTON_A:
+            case KEYCODE_BUTTON_X:
+                joydriver_setButton0Pressed(pressed);
+                return;
+            case KEYCODE_BUTTON_B:
+            case KEYCODE_BUTTON_Y:
+                joydriver_setButton1Pressed(pressed);
+                return;
+        }
+
+        switch (keyCode) {
             case KEYCODE_0:
                 key = _is_shifted(metaState) ? ')' : keyCode + ASCII_0_OFFSET;
                 break;
