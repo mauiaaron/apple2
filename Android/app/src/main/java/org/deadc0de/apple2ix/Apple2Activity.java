@@ -513,15 +513,25 @@ public class Apple2Activity extends Activity {
 
         final String quickSavePath = Apple2DisksMenu.getDataDir(this) + File.separator + SAVE_FILE;
 
+        final AtomicBoolean selectionAlreadyHandled = new AtomicBoolean(false);
+
         AlertDialog saveRestoreDialog = new AlertDialog.Builder(this).setIcon(R.drawable.ic_launcher).setCancelable(true).setTitle(R.string.saverestore).setMessage(R.string.saverestore_choice).setPositiveButton(R.string.save, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
+                if (!selectionAlreadyHandled.compareAndSet(false, true)) {
+                    Log.v(TAG, "OMG, avoiding nasty UI race in save/restore onClick()");
+                    return;
+                }
                 Apple2Activity.this.nativeSaveState(quickSavePath);
                 Apple2Activity.this.mMainMenu.dismiss();
             }
         }).setNeutralButton(R.string.restore, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
+                if (!selectionAlreadyHandled.compareAndSet(false, true)) {
+                    Log.v(TAG, "OMG, avoiding nasty UI race in save/restore onClick()");
+                    return;
+                }
 
                 String jsonData = Apple2Activity.this.nativeLoadState(quickSavePath);
                 try {
