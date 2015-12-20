@@ -1034,7 +1034,7 @@ public enum Apple2Preferences {
             file = new File(fullPath);
         }
         if (file.exists()) {
-            activity.nativeChooseDisk(fullPath, isDriveA, isReadOnly);
+            activity.chooseDisk(fullPath, isDriveA, isReadOnly);
         } else {
             Log.d(TAG, "Cannot insert: " + fullPath);
         }

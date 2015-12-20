@@ -140,7 +140,7 @@ public class Apple2DisksMenu implements Apple2MenuView {
         if (sExternalFilesDir == null) {
             return;
         }
-        
+
         final ProgressBar bar = (ProgressBar) activity.findViewById(R.id.crash_progressBar);
         activity.runOnUiThread(new Runnable() {
             @Override
@@ -562,7 +562,7 @@ public class Apple2DisksMenu implements Apple2MenuView {
                         ejectButton.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
-                                mActivity.nativeEjectDisk(/*driveA:*/true);
+                                mActivity.ejectDisk(/*driveA:*/true);
                                 Apple2Preferences.CURRENT_DISK_A.saveString(mActivity, "");
                                 dynamicSetup();
                             }
@@ -574,7 +574,7 @@ public class Apple2DisksMenu implements Apple2MenuView {
                         ejectButton.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
-                                mActivity.nativeEjectDisk(/*driveA:*/false);
+                                mActivity.ejectDisk(/*driveA:*/false);
                                 Apple2Preferences.CURRENT_DISK_B.saveString(mActivity, "");
                                 dynamicSetup();
                             }
@@ -616,17 +616,16 @@ public class Apple2DisksMenu implements Apple2MenuView {
                 final String imageName = str;
 
                 if (imageName.equals(Apple2Preferences.CURRENT_DISK_A.stringValue(mActivity))) {
-                    mActivity.nativeEjectDisk(/*driveA:*/true);
+                    mActivity.ejectDisk(/*driveA:*/true);
                     Apple2Preferences.CURRENT_DISK_A.saveString(mActivity, "");
                     dynamicSetup();
                     return;
                 }
                 if (imageName.equals(Apple2Preferences.CURRENT_DISK_B.stringValue(mActivity))) {
-                    mActivity.nativeEjectDisk(/*driveA:*/false);
+                    mActivity.ejectDisk(/*driveA:*/false);
                     Apple2Preferences.CURRENT_DISK_B.saveString(mActivity, "");
                     dynamicSetup();
                     return;
-
                 }
 
                 String title = mActivity.getResources().getString(R.string.header_disks);

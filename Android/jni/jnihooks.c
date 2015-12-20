@@ -143,7 +143,7 @@ static void discover_cpu_family(void) {
 // ----------------------------------------------------------------------------
 // JNI functions
 
-void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnCreate(JNIEnv *env, jobject obj, jstring j_dataDir, jint sampleRate, jint monoBufferSize, jint stereoBufferSize) {
+void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnCreate(JNIEnv *env, jclass cls, jstring j_dataDir, jint sampleRate, jint monoBufferSize, jint stereoBufferSize) {
     const char *dataDir = (*env)->GetStringUTFChars(env, j_dataDir, 0);
 
     // Android lifecycle can call onCreate() multiple times...
@@ -193,7 +193,7 @@ void Java_org_deadc0de_apple2ix_Apple2View_nativeGraphicsInitialized(JNIEnv *env
     video_backend->init((void *)0);
 }
 
-void Java_org_deadc0de_apple2ix_Apple2Activity_nativeEmulationResume(JNIEnv *env, jobject obj) {
+void Java_org_deadc0de_apple2ix_Apple2Activity_nativeEmulationResume(JNIEnv *env, jclass cls) {
 #if TESTING
     // test driver thread is managing CPU
     if (!running_tests) {
@@ -210,7 +210,7 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeEmulationResume(JNIEnv *env
 #endif
 }
 
-void Java_org_deadc0de_apple2ix_Apple2Activity_nativeEmulationPause(JNIEnv *env, jobject obj) {
+void Java_org_deadc0de_apple2ix_Apple2Activity_nativeEmulationPause(JNIEnv *env, jclass cls) {
     if (appState != APP_RUNNING) {
         return;
     }
@@ -261,12 +261,12 @@ void Java_org_deadc0de_apple2ix_Apple2View_nativeRender(JNIEnv *env, jclass cls)
     video_backend->render();
 }
 
-void Java_org_deadc0de_apple2ix_Apple2Activity_nativeReboot(JNIEnv *env, jobject obj) {
+void Java_org_deadc0de_apple2ix_Apple2Activity_nativeReboot(JNIEnv *env, jclass cls) {
     LOG("...");
     cpu65_reboot();
 }
 
-void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnQuit(JNIEnv *env, jobject obj) {
+void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnQuit(JNIEnv *env, jclass cls) {
 #if TESTING
     // test driver thread is managing CPU
 #else
@@ -324,7 +324,7 @@ jlong Java_org_deadc0de_apple2ix_Apple2View_nativeOnTouch(JNIEnv *env, jclass cl
     return flags;
 }
 
-void Java_org_deadc0de_apple2ix_Apple2Activity_nativeChooseDisk(JNIEnv *env, jobject obj, jstring jPath, jboolean driveA, jboolean readOnly) {
+void Java_org_deadc0de_apple2ix_Apple2Activity_nativeChooseDisk(JNIEnv *env, jclass cls, jstring jPath, jboolean driveA, jboolean readOnly) {
     const char *path = (*env)->GetStringUTFChars(env, jPath, NULL);
     int drive = driveA ? 0 : 1;
     int ro = readOnly ? 1 : 0;
@@ -349,12 +349,12 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeChooseDisk(JNIEnv *env, job
     (*env)->ReleaseStringUTFChars(env, jPath, path);
 }
 
-void Java_org_deadc0de_apple2ix_Apple2Activity_nativeEjectDisk(JNIEnv *env, jobject obj, jboolean driveA) {
+void Java_org_deadc0de_apple2ix_Apple2Activity_nativeEjectDisk(JNIEnv *env, jclass cls, jboolean driveA) {
     LOG("...");
     disk6_eject(!driveA);
 }
 
-void Java_org_deadc0de_apple2ix_Apple2Activity_nativeSaveState(JNIEnv *env, jobject obj, jstring jPath) {
+void Java_org_deadc0de_apple2ix_Apple2Activity_nativeSaveState(JNIEnv *env, jclass cls, jstring jPath) {
     const char *path = (*env)->GetStringUTFChars(env, jPath, NULL);
 
     assert(cpu_isPaused() && "considered dangerous to save state when CPU thread is running");
@@ -367,7 +367,7 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeSaveState(JNIEnv *env, jobj
     (*env)->ReleaseStringUTFChars(env, jPath, path);
 }
 
-jstring Java_org_deadc0de_apple2ix_Apple2Activity_nativeLoadState(JNIEnv *env, jobject obj, jstring jPath) {
+jstring Java_org_deadc0de_apple2ix_Apple2Activity_nativeLoadState(JNIEnv *env, jclass cls, jstring jPath) {
     const char *path = (*env)->GetStringUTFChars(env, jPath, NULL);
 
     assert(cpu_isPaused() && "considered dangerous to save state when CPU thread is running");

@@ -72,27 +72,27 @@ public class Apple2Activity extends Activity {
 
     public final static int REQUEST_PERMISSION_RWSTORE = 42;
 
-    private native void nativeOnCreate(String dataDir, int sampleRate, int monoBufferSize, int stereoBufferSize);
+    private static native void nativeOnCreate(String dataDir, int sampleRate, int monoBufferSize, int stereoBufferSize);
 
     private static native void nativeOnKeyDown(int keyCode, int metaState);
 
     private static native void nativeOnKeyUp(int keyCode, int metaState);
 
-    private native void nativeSaveState(String path);
+    private static native void nativeSaveState(String path);
 
-    private native String nativeLoadState(String path);
+    private static native String nativeLoadState(String path);
 
-    public native void nativeEmulationResume();
+    private static native void nativeEmulationResume();
 
-    public native void nativeEmulationPause();
+    private static native void nativeEmulationPause();
 
-    private native void nativeOnQuit();
+    private static native void nativeOnQuit();
 
-    private native void nativeReboot();
+    private static native void nativeReboot();
 
-    public native void nativeChooseDisk(String path, boolean driveA, boolean readOnly);
+    private static native void nativeChooseDisk(String path, boolean driveA, boolean readOnly);
 
-    public native void nativeEjectDisk(boolean driveA);
+    private static native void nativeEjectDisk(boolean driveA);
 
     public final static boolean isNativeBarfed() {
         return sNativeBarfed;
@@ -516,10 +516,14 @@ public class Apple2Activity extends Activity {
         return mainMenuShowing || menusShowing;
     }
 
-    public void maybeResumeCPU() {
+    public void maybeResumeEmulation() {
         if (mMenuStack.size() == 0 && !mPausing.get()) {
             nativeEmulationResume();
         }
+    }
+
+    public void pauseEmulation() {
+        nativeEmulationPause();
     }
 
     public void maybeRebootQuit() {
@@ -539,6 +543,14 @@ public class Apple2Activity extends Activity {
         }).setNegativeButton(R.string.cancel, null).create();
 
         registerAndShowDialog(rebootQuitDialog);
+    }
+
+    public void chooseDisk(String path, boolean driveA, boolean readOnly) {
+        nativeChooseDisk(path, driveA, readOnly);
+    }
+
+    public void ejectDisk(boolean driveA) {
+        nativeEjectDisk(driveA);
     }
 
     public void quitEmulator() {

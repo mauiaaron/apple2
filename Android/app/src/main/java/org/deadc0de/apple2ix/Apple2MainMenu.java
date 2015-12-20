@@ -198,7 +198,7 @@ public class Apple2MainMenu {
         mMainMenuPopup.setOnDismissListener(new PopupWindow.OnDismissListener() {
             @Override
             public void onDismiss() {
-                Apple2MainMenu.this.mActivity.maybeResumeCPU();
+                Apple2MainMenu.this.mActivity.maybeResumeEmulation();
             }
         });
     }
@@ -223,7 +223,7 @@ public class Apple2MainMenu {
         mShowingRebootQuit.set(false);
         mShowingSaveRestore.set(false);
 
-        mActivity.nativeEmulationPause();
+        mActivity.pauseEmulation();
 
         mMainMenuPopup.showAtLocation(mParentView, Gravity.CENTER, 0, 0);
     }

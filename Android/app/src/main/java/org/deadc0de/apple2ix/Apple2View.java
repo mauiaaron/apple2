@@ -378,7 +378,7 @@ class Apple2View extends GLSurfaceView implements InputManagerCompat.InputDevice
                 Apple2View.this.mGraphicsInitializedRunnable = null;
             }
 
-            Apple2View.this.mActivity.maybeResumeCPU();
+            Apple2View.this.mActivity.maybeResumeEmulation();
         }
 
         @Override
