@@ -279,21 +279,21 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnQuit(JNIEnv *env, jobject
 #endif
 }
 
-void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnKeyDown(JNIEnv *env, jobject obj, jint keyCode, jint metaState) {
+void Java_org_deadc0de_apple2ix_Apple2View_nativeOnKeyDown(JNIEnv *env, jclass cls, jint keyCode, jint metaState) {
     if (UNLIKELY(appState != APP_RUNNING)) {
         return;
     }
     android_keycode_to_emulator(keyCode, metaState, true);
 }
 
-void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnKeyUp(JNIEnv *env, jobject obj, jint keyCode, jint metaState) {
+void Java_org_deadc0de_apple2ix_Apple2View_nativeOnKeyUp(JNIEnv *env, jclass cls, jint keyCode, jint metaState) {
     if (UNLIKELY(appState != APP_RUNNING)) {
         return;
     }
     android_keycode_to_emulator(keyCode, metaState, false);
 }
 
-jlong Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnTouch(JNIEnv *env, jobject obj, jint action, jint pointerCount, jint pointerIndex, jfloatArray xCoords, jfloatArray yCoords) {
+jlong Java_org_deadc0de_apple2ix_Apple2View_nativeOnTouch(JNIEnv *env, jclass cls, jint action, jint pointerCount, jint pointerIndex, jfloatArray xCoords, jfloatArray yCoords) {
     //LOG(": %d/%d/%d :", action, pointerCount, pointerIndex);
 
     SCOPE_TRACE_TOUCH("nativeOnTouch");
@@ -351,7 +351,7 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeEjectDisk(JNIEnv *env, jobj
 void Java_org_deadc0de_apple2ix_Apple2Activity_nativeSaveState(JNIEnv *env, jobject obj, jstring jPath) {
     const char *path = (*env)->GetStringUTFChars(env, jPath, NULL);
 
-    assert(cpu_isPaused() && "considered dangerous to save state CPU thread is running");
+    assert(cpu_isPaused() && "considered dangerous to save state when CPU thread is running");
 
     LOG(": (%s)", path);
     if (!emulator_saveState(path)) {
@@ -364,7 +364,7 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeSaveState(JNIEnv *env, jobj
 jstring Java_org_deadc0de_apple2ix_Apple2Activity_nativeLoadState(JNIEnv *env, jobject obj, jstring jPath) {
     const char *path = (*env)->GetStringUTFChars(env, jPath, NULL);
 
-    assert(cpu_isPaused() && "considered dangerous to save state CPU thread is running");
+    assert(cpu_isPaused() && "considered dangerous to save state when CPU thread is running");
 
     LOG(": (%s)", path);
     if (!emulator_loadState(path)) {

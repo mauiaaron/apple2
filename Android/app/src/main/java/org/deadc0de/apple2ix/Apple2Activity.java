@@ -17,14 +17,11 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.StrictMode;
 import android.util.Log;
-import android.view.KeyEvent;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
@@ -44,7 +41,6 @@ import org.json.JSONObject;
 public class Apple2Activity extends Activity {
 
     private final static String TAG = "Apple2Activity";
-    private final static int MAX_FINGERS = 32;// HACK ...
     private final static String SAVE_FILE = "emulator.state";
     private static volatile boolean DEBUG_STRICT = false;
 
@@ -60,9 +56,6 @@ public class Apple2Activity extends Activity {
 
     private AtomicBoolean mPausing = new AtomicBoolean(false);
 
-    private float[] mXCoords = new float[MAX_FINGERS];
-    private float[] mYCoords = new float[MAX_FINGERS];
-
     // non-null if we failed to load/link the native code ... likely we are running on some bizarre 'droid variant
     private static Throwable sNativeBarfedThrowable = null;
     private static boolean sNativeBarfed = false;
@@ -76,31 +69,9 @@ public class Apple2Activity extends Activity {
         }
     }
 
-    public final static long NATIVE_TOUCH_HANDLED = (1 << 0);
-    public final static long NATIVE_TOUCH_REQUEST_SHOW_MENU = (1 << 1);
-
-    public final static long NATIVE_TOUCH_KEY_TAP = (1 << 4);
-    public final static long NATIVE_TOUCH_KBD = (1 << 5);
-    public final static long NATIVE_TOUCH_JOY = (1 << 6);
-    public final static long NATIVE_TOUCH_MENU = (1 << 7);
-    public final static long NATIVE_TOUCH_JOY_KPAD = (1 << 8);
-
-    public final static long NATIVE_TOUCH_INPUT_DEVICE_CHANGED = (1 << 16);
-    public final static long NATIVE_TOUCH_CPU_SPEED_DEC = (1 << 17);
-    public final static long NATIVE_TOUCH_CPU_SPEED_INC = (1 << 18);
-
-    public final static long NATIVE_TOUCH_ASCII_SCANCODE_SHIFT = 32;
-    public final static long NATIVE_TOUCH_ASCII_SCANCODE_MASK = 0xFFFFL;
-    public final static long NATIVE_TOUCH_ASCII_MASK = 0xFF00L;
-    public final static long NATIVE_TOUCH_SCANCODE_MASK = 0x00FFL;
-
     public final static int REQUEST_PERMISSION_RWSTORE = 42;
 
     private native void nativeOnCreate(String dataDir, int sampleRate, int monoBufferSize, int stereoBufferSize);
-
-    private native void nativeOnKeyDown(int keyCode, int metaState);
-
-    private native void nativeOnKeyUp(int keyCode, int metaState);
 
     private native void nativeSaveState(String path);
 
@@ -110,16 +81,17 @@ public class Apple2Activity extends Activity {
 
     public native void nativeEmulationPause();
 
-    public native void nativeOnQuit();
+    private native void nativeOnQuit();
 
-    public native long nativeOnTouch(int action, int pointerCount, int pointerIndex, float[] xCoords, float[] yCoords);
-
-    public native void nativeReboot();
+    private native void nativeReboot();
 
     public native void nativeChooseDisk(String path, boolean driveA, boolean readOnly);
 
     public native void nativeEjectDisk(boolean driveA);
 
+    public final static boolean isNativeBarfed() {
+        return sNativeBarfed;
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -291,137 +263,6 @@ public class Apple2Activity extends Activity {
         }
 
         mPausing.set(false);
-    }
-
-    @Override
-    public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if (sNativeBarfed) {
-            return true;
-        }
-        if ((keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) || (keyCode == KeyEvent.KEYCODE_VOLUME_MUTE) || (keyCode == KeyEvent.KEYCODE_VOLUME_UP)) {
-            return false;
-        }
-        nativeOnKeyDown(keyCode, event.getMetaState());
-        return true;
-    }
-
-    @Override
-    public boolean onKeyUp(int keyCode, KeyEvent event) {
-        if (sNativeBarfed) {
-            return true;
-        }
-        if (keyCode == KeyEvent.KEYCODE_BACK) {
-            Apple2MenuView apple2MenuView = peekApple2View();
-            if (apple2MenuView == null) {
-                showMainMenu();
-            } else {
-                apple2MenuView.dismiss();
-            }
-            return true;
-        } else if (keyCode == KeyEvent.KEYCODE_MENU) {
-            showMainMenu();
-            return true;
-        } else if ((keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) || (keyCode == KeyEvent.KEYCODE_VOLUME_MUTE) || (keyCode == KeyEvent.KEYCODE_VOLUME_UP)) {
-            return false;
-        } else {
-            nativeOnKeyUp(keyCode, event.getMetaState());
-            return true;
-        }
-    }
-
-    @Override
-    public boolean onTouchEvent(MotionEvent event) {
-        do {
-
-            if (sNativeBarfed) {
-                break;
-            }
-            if (mMainMenu == null) {
-                break;
-            }
-
-            Apple2MenuView apple2MenuView = peekApple2View();
-            if ((apple2MenuView != null) && (!apple2MenuView.isCalibrating())) {
-                break;
-            }
-
-            //printSamples(event);
-            int action = event.getActionMasked();
-            int pointerIndex = event.getActionIndex();
-            int pointerCount = event.getPointerCount();
-            for (int i = 0; i < pointerCount/* && i < MAX_FINGERS */; i++) {
-                mXCoords[i] = event.getX(i);
-                mYCoords[i] = event.getY(i);
-            }
-
-            long nativeFlags = nativeOnTouch(action, pointerCount, pointerIndex, mXCoords, mYCoords);
-
-            if ((nativeFlags & NATIVE_TOUCH_HANDLED) == 0) {
-                break;
-            }
-
-            if ((nativeFlags & NATIVE_TOUCH_REQUEST_SHOW_MENU) != 0) {
-                mMainMenu.show();
-            }
-
-            if ((nativeFlags & NATIVE_TOUCH_KEY_TAP) != 0) {
-                if (Apple2Preferences.KEYBOARD_CLICK_ENABLED.booleanValue(this)) {
-                    AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
-                    if (am != null) {
-                        am.playSoundEffect(AudioManager.FX_KEY_CLICK);
-                    }
-                }
-
-                if ((apple2MenuView != null) && apple2MenuView.isCalibrating()) {
-                    long asciiScancodeLong = nativeFlags & (NATIVE_TOUCH_ASCII_SCANCODE_MASK << NATIVE_TOUCH_ASCII_SCANCODE_SHIFT);
-                    int asciiInt = (int) (asciiScancodeLong >> (NATIVE_TOUCH_ASCII_SCANCODE_SHIFT + 8));
-                    int scancode = (int) ((asciiScancodeLong >> NATIVE_TOUCH_ASCII_SCANCODE_SHIFT) & 0xFFL);
-                    char ascii = (char) asciiInt;
-                    apple2MenuView.onKeyTapCalibrationEvent(ascii, scancode);
-                }
-            }
-
-            if ((nativeFlags & NATIVE_TOUCH_MENU) == 0) {
-                break;
-            }
-
-            // handle menu-specific actions
-
-            if ((nativeFlags & NATIVE_TOUCH_INPUT_DEVICE_CHANGED) != 0) {
-                Apple2Preferences.TouchDeviceVariant nextVariant;
-                if ((nativeFlags & NATIVE_TOUCH_KBD) != 0) {
-                    nextVariant = Apple2Preferences.TouchDeviceVariant.KEYBOARD;
-                } else if ((nativeFlags & NATIVE_TOUCH_JOY) != 0) {
-                    nextVariant = Apple2Preferences.TouchDeviceVariant.JOYSTICK;
-                } else if ((nativeFlags & NATIVE_TOUCH_JOY_KPAD) != 0) {
-                    nextVariant = Apple2Preferences.TouchDeviceVariant.JOYSTICK_KEYPAD;
-                } else {
-                    int touchDevice = Apple2Preferences.nativeGetCurrentTouchDevice();
-                    nextVariant = Apple2Preferences.TouchDeviceVariant.next(touchDevice);
-                }
-                Apple2Preferences.CURRENT_TOUCH_DEVICE.saveTouchDevice(this, nextVariant);
-            } else if ((nativeFlags & NATIVE_TOUCH_CPU_SPEED_DEC) != 0) {
-                int percentSpeed = Apple2Preferences.nativeGetCPUSpeed();
-                if (percentSpeed > 400) { // HACK: max value from native side
-                    percentSpeed = 375;
-                } else if (percentSpeed > 100) {
-                    percentSpeed -= 25;
-                } else {
-                    percentSpeed -= 5;
-                }
-                Apple2Preferences.CPU_SPEED_PERCENT.saveInt(this, percentSpeed);
-            } else if ((nativeFlags & NATIVE_TOUCH_CPU_SPEED_INC) != 0) {
-                int percentSpeed = Apple2Preferences.nativeGetCPUSpeed();
-                if (percentSpeed >= 100) {
-                    percentSpeed += 25;
-                } else {
-                    percentSpeed += 5;
-                }
-                Apple2Preferences.CPU_SPEED_PERCENT.saveInt(this, percentSpeed);
-            }
-        } while (false);
-
-        return super.onTouchEvent(event);
     }
 
     public void showMainMenu() {
@@ -681,7 +522,7 @@ public class Apple2Activity extends Activity {
         }).setNeutralButton(R.string.restore, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                // loading state can change the disk inserted ... reflect that in
+
                 String jsonData = Apple2Activity.this.nativeLoadState(quickSavePath);
                 try {
                     JSONObject map = new JSONObject(jsonData);
@@ -695,7 +536,7 @@ public class Apple2Activity extends Activity {
                     Apple2Preferences.CURRENT_DISK_B.setPath(Apple2Activity.this, diskPath2);
                     Apple2Preferences.CURRENT_DISK_B_RO.saveBoolean(Apple2Activity.this, readOnly2);
                 } catch (JSONException je) {
-                    Log.v(TAG, "OOPS : "+je);
+                    Log.v(TAG, "OOPS : " + je);
                 }
                 Apple2Activity.this.mMainMenu.dismiss();
             }
