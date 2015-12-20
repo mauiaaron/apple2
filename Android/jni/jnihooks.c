@@ -171,6 +171,8 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnCreate(JNIEnv *env, jobje
     android_monoBufferSubmitSizeSamples = (unsigned long)monoBufferSize;
     android_stereoBufferSubmitSizeSamples = (unsigned long)stereoBufferSize;
 
+    joydriver_setClampBeyondRadius(true);
+
 #if !TESTING
     cpu_pause();
     emulator_start();
@@ -291,6 +293,10 @@ void Java_org_deadc0de_apple2ix_Apple2View_nativeOnKeyUp(JNIEnv *env, jclass cls
         return;
     }
     android_keycode_to_emulator(keyCode, metaState, false);
+}
+
+void Java_org_deadc0de_apple2ix_Apple2View_nativeOnJoystickMove(JNIEnv *env, jclass cls, jint x, jint y) {
+    joydriver_setAxisValue((uint8_t)x, (uint8_t)y);
 }
 
 jlong Java_org_deadc0de_apple2ix_Apple2View_nativeOnTouch(JNIEnv *env, jclass cls, jint action, jint pointerCount, jint pointerIndex, jfloatArray xCoords, jfloatArray yCoords) {

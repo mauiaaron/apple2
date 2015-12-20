@@ -95,7 +95,7 @@ public class Apple2MainMenu {
             @Override
             public void handleSelection(Apple2MainMenu mainMenu) {
                 if (!mainMenu.mShowingSaveRestore.compareAndSet(false, true)) {
-                    Log.d(TAG, "OMG, avoiding nasty UI race around save/restore");
+                    Log.v(TAG, "OMG, avoiding nasty UI race around save/restore");
                     return;
                 }
                 mainMenu.mActivity.maybeSaveRestore();
@@ -115,7 +115,7 @@ public class Apple2MainMenu {
             @Override
             public void handleSelection(Apple2MainMenu mainMenu) {
                 if (!mainMenu.mShowingRebootQuit.compareAndSet(false, true)) {
-                    Log.d(TAG, "OMG, avoiding nasty UI race around quit/reboot");
+                    Log.v(TAG, "OMG, avoiding nasty UI race around quit/reboot");
                     return;
                 }
                 mainMenu.mActivity.maybeRebootQuit();

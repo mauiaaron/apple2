@@ -136,7 +136,7 @@ public class Apple2Activity extends Activity {
         if (firstTime) {
             // allow for primitive migrations as needed
             Apple2Preferences.EMULATOR_VERSION.saveInt(this, BuildConfig.VERSION_CODE);
-            Log.v(TAG, "Triggering migration to Apple2ix version : "+BuildConfig.VERSION_NAME);
+            Log.v(TAG, "Triggering migration to Apple2ix version : " + BuildConfig.VERSION_NAME);
         }
 
         showSplashScreen(!firstTime);
@@ -465,6 +465,12 @@ public class Apple2Activity extends Activity {
                 }
             }
         }
+    }
+
+    public boolean isEmulationPaused() {
+        boolean mainMenuShowing = (mMainMenu != null && mMainMenu.isShowing());
+        boolean menusShowing = (mMenuStack.size() > 0);
+        return mainMenuShowing || menusShowing;
     }
 
     public void maybeResumeCPU() {

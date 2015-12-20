@@ -23,9 +23,13 @@ import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.os.Build;
 import android.util.Log;
+import android.view.InputDevice;
+import android.view.InputEvent;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.ViewTreeObserver;
+
+import com.example.inputmanagercompat.InputManagerCompat;
 
 import javax.microedition.khronos.egl.EGL10;
 import javax.microedition.khronos.egl.EGLConfig;
@@ -33,7 +37,7 @@ import javax.microedition.khronos.egl.EGLContext;
 import javax.microedition.khronos.egl.EGLDisplay;
 import javax.microedition.khronos.opengles.GL10;
 
-class Apple2View extends GLSurfaceView {
+class Apple2View extends GLSurfaceView implements InputManagerCompat.InputDeviceListener {
     private final static String TAG = "Apple2View";
     private final static boolean DEBUG = false;
     private final static int MAX_FINGERS = 32;// HACK ...
@@ -59,6 +63,7 @@ class Apple2View extends GLSurfaceView {
 
     private Apple2Activity mActivity;
     private Runnable mGraphicsInitializedRunnable;
+    private final InputManagerCompat mInputManager;
 
     private float[] mXCoords = new float[MAX_FINGERS];
     private float[] mYCoords = new float[MAX_FINGERS];
@@ -69,6 +74,8 @@ class Apple2View extends GLSurfaceView {
     private static native void nativeGraphicsChanged(int width, int height);
 
     private static native void nativeRender();
+
+    private static native void nativeOnJoystickMove(int x, int y);
 
     private static native void nativeOnKeyDown(int keyCode, int metaState);
 
@@ -84,6 +91,11 @@ class Apple2View extends GLSurfaceView {
 
         setFocusable(true);
         setFocusableInTouchMode(true);
+
+        mInputManager = InputManagerCompat.Factory.getInputManager(this.getContext());
+        if (mInputManager != null) {
+            mInputManager.registerInputDeviceListener(this, null);
+        }
 
         /* By default, GLSurfaceView() creates a RGB_565 opaque surface.
          * If we want a translucent one, we should change the surface's
@@ -383,6 +395,97 @@ class Apple2View extends GLSurfaceView {
 
     // --------------------------------------------------------------------------
     // Event handling, touch, keyboard, gamepad
+
+    @Override
+    public void onInputDeviceAdded(int deviceId) {
+    }
+
+    @Override
+    public void onInputDeviceChanged(int deviceId) {
+    }
+
+    @Override
+    public void onInputDeviceRemoved(int deviceId) {
+    }
+
+    @Override
+    public boolean onGenericMotionEvent(MotionEvent event) {
+        if (android.os.Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR2) {
+            return super.onGenericMotionEvent(event);
+        }
+
+        if (mActivity.isEmulationPaused()) {
+            return super.onGenericMotionEvent(event);
+        }
+
+        // Check that the event came from a joystick or gamepad since a generic
+        // motion event could be almost anything.
+        int eventSource = event.getSource();
+        if ((event.getAction() == MotionEvent.ACTION_MOVE) && (((eventSource & InputDevice.SOURCE_GAMEPAD) == InputDevice.SOURCE_GAMEPAD) || ((eventSource & InputDevice.SOURCE_JOYSTICK) == InputDevice.SOURCE_JOYSTICK))) {
+            int id = event.getDeviceId();
+            if (id != -1) {
+
+                InputDevice device = event.getDevice();
+
+                float x = getCenteredAxis(event, device, MotionEvent.AXIS_X);
+                if (x == 0) {
+                    x = getCenteredAxis(event, device, MotionEvent.AXIS_HAT_X);
+                }
+                if (x == 0) {
+                    x = getCenteredAxis(event, device, MotionEvent.AXIS_Z);
+                }
+
+                float y = getCenteredAxis(event, device, MotionEvent.AXIS_Y);
+                if (y == 0) {
+                    y = getCenteredAxis(event, device, MotionEvent.AXIS_HAT_Y);
+                }
+                if (y == 0) {
+                    y = getCenteredAxis(event, device, MotionEvent.AXIS_RZ);
+                }
+
+                int normal_x = (int) ((x + 1.f) * 128.f);
+                if (normal_x < 0) {
+                    normal_x = 0;
+                }
+                if (normal_x > 255) {
+                    normal_x = 255;
+                }
+                int normal_y = (int) ((y + 1.f) * 128.f);
+                if (normal_y < 0) {
+                    normal_y = 0;
+                }
+                if (normal_y > 255) {
+                    normal_y = 255;
+                }
+
+                nativeOnJoystickMove(normal_x, normal_y);
+
+                return true;
+            }
+        }
+
+        return super.onGenericMotionEvent(event);
+    }
+
+    private static float getCenteredAxis(MotionEvent event, InputDevice device, int axis) {
+        if (android.os.Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR2) {
+            return 0;
+        }
+
+        final InputDevice.MotionRange range = device.getMotionRange(axis, event.getSource());
+        if (range != null) {
+            final float flat = range.getFlat();
+            final float value = event.getAxisValue(axis);
+
+            // Ignore axis values that are within the 'flat' region of the joystick axis center.
+            // A joystick at rest does not always report an absolute position of (0,0).
+            if (Math.abs(value) > flat) {
+                return value;
+            }
+        }
+
+        return 0;
+    }
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
