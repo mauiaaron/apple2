@@ -417,21 +417,11 @@ public class Apple2Activity extends Activity {
     }
 
     public synchronized void pushApple2View(Apple2MenuView apple2MenuView) {
+        //
         mMenuStack.add(apple2MenuView);
         View menuView = apple2MenuView.getView();
         nativeEmulationPause();
         addContentView(menuView, new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
-    }
-
-    public synchronized Apple2MenuView popApple2View() {
-        int lastIndex = mMenuStack.size() - 1;
-        if (lastIndex < 0) {
-            return null;
-        }
-
-        Apple2MenuView apple2MenuView = mMenuStack.remove(lastIndex);
-        _disposeApple2View(apple2MenuView);
-        return apple2MenuView;
     }
 
     public synchronized Apple2MenuView peekApple2View() {
