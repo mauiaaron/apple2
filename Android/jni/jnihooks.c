@@ -281,14 +281,14 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnQuit(JNIEnv *env, jobject
 #endif
 }
 
-void Java_org_deadc0de_apple2ix_Apple2View_nativeOnKeyDown(JNIEnv *env, jclass cls, jint keyCode, jint metaState) {
+void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnKeyDown(JNIEnv *env, jclass cls, jint keyCode, jint metaState) {
     if (UNLIKELY(appState != APP_RUNNING)) {
         return;
     }
     android_keycode_to_emulator(keyCode, metaState, true);
 }
 
-void Java_org_deadc0de_apple2ix_Apple2View_nativeOnKeyUp(JNIEnv *env, jclass cls, jint keyCode, jint metaState) {
+void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnKeyUp(JNIEnv *env, jclass cls, jint keyCode, jint metaState) {
     if (UNLIKELY(appState != APP_RUNNING)) {
         return;
     }

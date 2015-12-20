@@ -22,6 +22,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.StrictMode;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
@@ -72,6 +73,10 @@ public class Apple2Activity extends Activity {
     public final static int REQUEST_PERMISSION_RWSTORE = 42;
 
     private native void nativeOnCreate(String dataDir, int sampleRate, int monoBufferSize, int stereoBufferSize);
+
+    private static native void nativeOnKeyDown(int keyCode, int metaState);
+
+    private static native void nativeOnKeyUp(int keyCode, int metaState);
 
     private native void nativeSaveState(String path);
 
@@ -263,6 +268,44 @@ public class Apple2Activity extends Activity {
         }
 
         mPausing.set(false);
+    }
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (Apple2Activity.isNativeBarfed()) {
+            return super.onKeyDown(keyCode, event);
+        }
+        if ((keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) || (keyCode == KeyEvent.KEYCODE_VOLUME_MUTE) || (keyCode == KeyEvent.KEYCODE_VOLUME_UP)) {
+            return super.onKeyDown(keyCode, event);
+        }
+
+        nativeOnKeyDown(keyCode, event.getMetaState());
+        return true;
+    }
+
+    @Override
+    public boolean onKeyUp(int keyCode, KeyEvent event) {
+        if (Apple2Activity.isNativeBarfed()) {
+            return super.onKeyUp(keyCode, event);
+        }
+
+        if (keyCode == KeyEvent.KEYCODE_BACK) {
+            Apple2MenuView apple2MenuView = peekApple2View();
+            if (apple2MenuView == null) {
+                showMainMenu();
+            } else {
+                apple2MenuView.dismiss();
+            }
+            return true;
+        } else if (keyCode == KeyEvent.KEYCODE_MENU) {
+            showMainMenu();
+            return true;
+        } else if ((keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) || (keyCode == KeyEvent.KEYCODE_VOLUME_MUTE) || (keyCode == KeyEvent.KEYCODE_VOLUME_UP)) {
+            return super.onKeyUp(keyCode, event);
+        }
+
+        nativeOnKeyUp(keyCode, event.getMetaState());
+        return true;
     }
 
     public void showMainMenu() {

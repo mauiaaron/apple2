@@ -24,8 +24,6 @@ import android.opengl.GLSurfaceView;
 import android.os.Build;
 import android.util.Log;
 import android.view.InputDevice;
-import android.view.InputEvent;
-import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.ViewTreeObserver;
 
@@ -76,10 +74,6 @@ class Apple2View extends GLSurfaceView implements InputManagerCompat.InputDevice
     private static native void nativeRender();
 
     private static native void nativeOnJoystickMove(int x, int y);
-
-    private static native void nativeOnKeyDown(int keyCode, int metaState);
-
-    private static native void nativeOnKeyUp(int keyCode, int metaState);
 
     public static native long nativeOnTouch(int action, int pointerCount, int pointerIndex, float[] xCoords, float[] yCoords);
 
@@ -485,44 +479,6 @@ class Apple2View extends GLSurfaceView implements InputManagerCompat.InputDevice
         }
 
         return 0;
-    }
-
-    @Override
-    public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if (Apple2Activity.isNativeBarfed()) {
-            return super.onKeyDown(keyCode, event);
-        }
-        if ((keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) || (keyCode == KeyEvent.KEYCODE_VOLUME_MUTE) || (keyCode == KeyEvent.KEYCODE_VOLUME_UP)) {
-            return super.onKeyDown(keyCode, event);
-        }
-
-        nativeOnKeyDown(keyCode, event.getMetaState());
-        return true;
-    }
-
-    @Override
-    public boolean onKeyUp(int keyCode, KeyEvent event) {
-        if (Apple2Activity.isNativeBarfed()) {
-            return super.onKeyUp(keyCode, event);
-        }
-
-        if (keyCode == KeyEvent.KEYCODE_BACK) {
-            Apple2MenuView apple2MenuView = mActivity.peekApple2View();
-            if (apple2MenuView == null) {
-                mActivity.showMainMenu();
-            } else {
-                apple2MenuView.dismiss();
-            }
-            return true;
-        } else if (keyCode == KeyEvent.KEYCODE_MENU) {
-            mActivity.showMainMenu();
-            return true;
-        } else if ((keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) || (keyCode == KeyEvent.KEYCODE_VOLUME_MUTE) || (keyCode == KeyEvent.KEYCODE_VOLUME_UP)) {
-            return super.onKeyUp(keyCode, event);
-        }
-
-        nativeOnKeyUp(keyCode, event.getMetaState());
-        return true;
     }
 
     @Override
