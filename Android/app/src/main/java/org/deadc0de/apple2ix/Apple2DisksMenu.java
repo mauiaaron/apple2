@@ -42,8 +42,10 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InterruptedIOException;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.zip.GZIPOutputStream;
 
 import org.deadc0de.apple2ix.basic.R;
 
@@ -155,7 +157,7 @@ public class Apple2DisksMenu implements Apple2MenuView {
         });
 
         Log.v(TAG, "Overwriting system files in /sdcard/apple2ix/ (external storage) ...");
-        recursivelyCopyAPKAssets(activity, /*from APK directory:*/"keyboards", /*to location:*/sExternalFilesDir.getAbsolutePath());
+        recursivelyCopyAPKAssets(activity, /*from APK directory:*/"keyboards", /*to location:*/sExternalFilesDir.getAbsolutePath(), false);
 
         activity.runOnUiThread(new Runnable() {
             @Override
@@ -189,9 +191,9 @@ public class Apple2DisksMenu implements Apple2MenuView {
         Log.d(TAG, "First time copying stuff-n-things out of APK for ease-of-NDK access...");
 
         getExternalStorageDirectory(activity);
-        recursivelyCopyAPKAssets(activity, /*from APK directory:*/"disks",     /*to location:*/new File(sDataDir, "disks").getAbsolutePath());
-        recursivelyCopyAPKAssets(activity, /*from APK directory:*/"keyboards", /*to location:*/new File(sDataDir, "keyboards").getAbsolutePath());
-        recursivelyCopyAPKAssets(activity, /*from APK directory:*/"shaders",   /*to location:*/new File(sDataDir, "shaders").getAbsolutePath());
+        recursivelyCopyAPKAssets(activity, /*from APK directory:*/"disks",     /*to location:*/new File(sDataDir, "disks").getAbsolutePath(), true);
+        recursivelyCopyAPKAssets(activity, /*from APK directory:*/"keyboards", /*to location:*/new File(sDataDir, "keyboards").getAbsolutePath(), false);
+        recursivelyCopyAPKAssets(activity, /*from APK directory:*/"shaders",   /*to location:*/new File(sDataDir, "shaders").getAbsolutePath(), false);
 
         activity.runOnUiThread(new Runnable() {
             @Override
@@ -207,7 +209,7 @@ public class Apple2DisksMenu implements Apple2MenuView {
     }
 
     public static void exposeSymbols(Apple2Activity activity) {
-        recursivelyCopyAPKAssets(activity, /*from APK directory:*/"symbols",   /*to location:*/new File(sDataDir, "symbols").getAbsolutePath());
+        recursivelyCopyAPKAssets(activity, /*from APK directory:*/"symbols",   /*to location:*/new File(sDataDir, "symbols").getAbsolutePath(), false);
     }
 
     public static void unexposeSymbols(Apple2Activity activity) {
@@ -362,7 +364,7 @@ public class Apple2DisksMenu implements Apple2MenuView {
         }
     }
 
-    private static void recursivelyCopyAPKAssets(Apple2Activity activity, String srcFileOrDir, String dstFileOrDir) {
+    private static void recursivelyCopyAPKAssets(Apple2Activity activity, String srcFileOrDir, String dstFileOrDir, boolean shouldGzip) {
         AssetManager assetManager = activity.getAssets();
 
         final int maxAttempts = 5;
@@ -402,19 +404,23 @@ public class Apple2DisksMenu implements Apple2MenuView {
             }
             for (String filename : files) {
                 // iterate on files and subdirectories
-                recursivelyCopyAPKAssets(activity, srcFileOrDir + File.separator + filename, dstFileOrDir + File.separator + filename);
+                recursivelyCopyAPKAssets(activity, srcFileOrDir + File.separator + filename, dstFileOrDir + File.separator + filename, shouldGzip);
             }
             return;
         }
 
         // presumably this is a file, not a subdirectory
         InputStream is = null;
-        FileOutputStream os = null;
+        OutputStream os = null;
         attempts = 0;
         do {
             try {
                 is = assetManager.open(srcFileOrDir);
-                os = new FileOutputStream(dstFileOrDir);
+                if (shouldGzip) {
+                    os = new GZIPOutputStream(new FileOutputStream(dstFileOrDir + ".gz"));
+                } else {
+                    os = new FileOutputStream(dstFileOrDir);
+                }
                 copyFile(is, os);
                 break;
             } catch (InterruptedIOException e) {
@@ -446,7 +452,7 @@ public class Apple2DisksMenu implements Apple2MenuView {
         } while (attempts < maxAttempts);
     }
 
-    private static void copyFile(InputStream is, FileOutputStream os) throws IOException {
+    private static void copyFile(InputStream is, OutputStream os) throws IOException {
         final int BUF_SZ = 4096;
         byte[] buf = new byte[BUF_SZ];
         while (true) {
