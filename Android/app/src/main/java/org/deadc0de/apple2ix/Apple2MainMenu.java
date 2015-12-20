@@ -28,6 +28,8 @@ import android.widget.TextView;
 
 import org.deadc0de.apple2ix.basic.R;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 public class Apple2MainMenu {
 
     private final static int MENU_INSET = 20;
@@ -36,6 +38,9 @@ public class Apple2MainMenu {
     private Apple2Activity mActivity = null;
     private Apple2View mParentView = null;
     private PopupWindow mMainMenuPopup = null;
+
+    private AtomicBoolean mShowingRebootQuit = new AtomicBoolean(false);
+    private AtomicBoolean mShowingSaveRestore = new AtomicBoolean(false);
 
     public Apple2MainMenu(Apple2Activity activity, Apple2View parent) {
         mActivity = activity;
@@ -74,6 +79,10 @@ public class Apple2MainMenu {
                 return ctx.getResources().getString(R.string.saverestore_summary);
             }
             @Override public void handleSelection(Apple2MainMenu mainMenu) {
+                if (!mainMenu.mShowingSaveRestore.compareAndSet(false, true)) {
+                    Log.d(TAG, "OMG, avoiding nasty UI race around save/restore");
+                    return;
+                }
                 mainMenu.mActivity.maybeSaveRestore();
             }
         },
@@ -85,6 +94,10 @@ public class Apple2MainMenu {
                 return "";
             }
             @Override public void handleSelection(Apple2MainMenu mainMenu) {
+                if (!mainMenu.mShowingRebootQuit.compareAndSet(false, true)) {
+                    Log.d(TAG, "OMG, avoiding nasty UI race around quit/reboot");
+                    return;
+                }
                 mainMenu.mActivity.maybeRebootQuit();
             }
         };
@@ -163,7 +176,7 @@ public class Apple2MainMenu {
             @Override
             public void onDismiss() {
                 Apple2MainMenu.this.mActivity.maybeResumeCPU();
-                }
+            }
         });
     }
 
@@ -183,6 +196,9 @@ public class Apple2MainMenu {
         if (mMainMenuPopup.isShowing()) {
             return;
         }
+
+        mShowingRebootQuit.set(false);
+        mShowingSaveRestore.set(false);
 
         mActivity.nativeEmulationPause();
 
