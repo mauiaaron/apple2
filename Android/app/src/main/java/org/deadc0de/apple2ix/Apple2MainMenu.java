@@ -50,35 +50,50 @@ public class Apple2MainMenu {
 
     enum SETTINGS {
         SHOW_SETTINGS {
-            @Override public String getTitle(Context ctx) {
+            @Override
+            public String getTitle(Context ctx) {
                 return ctx.getResources().getString(R.string.menu_settings);
             }
-            @Override public String getSummary(Context ctx) {
+
+            @Override
+            public String getSummary(Context ctx) {
                 return ctx.getResources().getString(R.string.menu_settings_summary);
             }
-            @Override public void handleSelection(Apple2MainMenu mainMenu) {
+
+            @Override
+            public void handleSelection(Apple2MainMenu mainMenu) {
                 mainMenu.showSettings();
             }
         },
         LOAD_DISK {
-            @Override public String getTitle(Context ctx) {
+            @Override
+            public String getTitle(Context ctx) {
                 return ctx.getResources().getString(R.string.menu_disks);
             }
-            @Override public String getSummary(Context ctx) {
+
+            @Override
+            public String getSummary(Context ctx) {
                 return ctx.getResources().getString(R.string.menu_disks_summary);
             }
-            @Override public void handleSelection(Apple2MainMenu mainMenu) {
+
+            @Override
+            public void handleSelection(Apple2MainMenu mainMenu) {
                 mainMenu.showDisksMenu();
             }
         },
         SAVE_RESTORE {
-            @Override public String getTitle(Context ctx) {
+            @Override
+            public String getTitle(Context ctx) {
                 return ctx.getResources().getString(R.string.saverestore);
             }
-            @Override public String getSummary(Context ctx) {
+
+            @Override
+            public String getSummary(Context ctx) {
                 return ctx.getResources().getString(R.string.saverestore_summary);
             }
-            @Override public void handleSelection(Apple2MainMenu mainMenu) {
+
+            @Override
+            public void handleSelection(Apple2MainMenu mainMenu) {
                 if (!mainMenu.mShowingSaveRestore.compareAndSet(false, true)) {
                     Log.d(TAG, "OMG, avoiding nasty UI race around save/restore");
                     return;
@@ -87,13 +102,18 @@ public class Apple2MainMenu {
             }
         },
         REBOOT_QUIT_EMULATOR {
-            @Override public String getTitle(Context ctx) {
+            @Override
+            public String getTitle(Context ctx) {
                 return ctx.getResources().getString(R.string.quit_reboot);
             }
-            @Override public String getSummary(Context ctx) {
+
+            @Override
+            public String getSummary(Context ctx) {
                 return "";
             }
-            @Override public void handleSelection(Apple2MainMenu mainMenu) {
+
+            @Override
+            public void handleSelection(Apple2MainMenu mainMenu) {
                 if (!mainMenu.mShowingRebootQuit.compareAndSet(false, true)) {
                     Log.d(TAG, "OMG, avoiding nasty UI race around quit/reboot");
                     return;
@@ -103,7 +123,9 @@ public class Apple2MainMenu {
         };
 
         public abstract String getTitle(Context ctx);
+
         public abstract String getSummary(Context ctx);
+
         public abstract void handleSelection(Apple2MainMenu mainMenu);
 
         public static String[] titles(Context ctx) {
@@ -118,11 +140,11 @@ public class Apple2MainMenu {
 
     private void setup() {
 
-        LayoutInflater inflater = (LayoutInflater)mActivity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        View listLayout=inflater.inflate(R.layout.activity_main_menu, null, false);
-        ListView mainMenuView = (ListView)listLayout.findViewById(R.id.main_popup_menu);
+        LayoutInflater inflater = (LayoutInflater) mActivity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        View listLayout = inflater.inflate(R.layout.activity_main_menu, null, false);
+        ListView mainMenuView = (ListView) listLayout.findViewById(R.id.main_popup_menu);
         mainMenuView.setEnabled(true);
-        LinearLayout mainPopupContainer = (LinearLayout)listLayout.findViewById(R.id.main_popup_container);
+        LinearLayout mainPopupContainer = (LinearLayout) listLayout.findViewById(R.id.main_popup_container);
 
         final String[] values = SETTINGS.titles(mActivity);
 
@@ -131,10 +153,11 @@ public class Apple2MainMenu {
             public boolean areAllItemsEnabled() {
                 return true;
             }
+
             @Override
             public View getView(int position, View convertView, ViewGroup parent) {
                 View view = super.getView(position, convertView, parent);
-                TextView tv = (TextView)view.findViewById(android.R.id.text2);
+                TextView tv = (TextView) view.findViewById(android.R.id.text2);
                 SETTINGS setting = SETTINGS.values()[position];
                 tv.setText(setting.getSummary(mActivity));
                 return view;
@@ -144,7 +167,7 @@ public class Apple2MainMenu {
         mainMenuView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Log.d(TAG, "position:"+position+" tapped...");
+                Log.d(TAG, "position:" + position + " tapped...");
                 SETTINGS setting = SETTINGS.values()[position];
                 setting.handleSelection(Apple2MainMenu.this);
             }
@@ -166,7 +189,7 @@ public class Apple2MainMenu {
                     maxWidth = width;
                 }
             }
-            mMainMenuPopup = new PopupWindow(mainPopupContainer, maxWidth+TOTAL_MARGINS, totalHeight, true);
+            mMainMenuPopup = new PopupWindow(mainPopupContainer, maxWidth + TOTAL_MARGINS, totalHeight, true);
         }
 
         // This kludgery allows touching the outside or back-buttoning to dismiss
