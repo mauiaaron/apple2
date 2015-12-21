@@ -14,7 +14,6 @@ package org.deadc0de.apple2ix;
 import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
@@ -36,13 +35,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.deadc0de.apple2ix.basic.BuildConfig;
 import org.deadc0de.apple2ix.basic.R;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 public class Apple2Activity extends Activity {
 
     private final static String TAG = "Apple2Activity";
-    private final static String SAVE_FILE = "emulator.state";
     private static volatile boolean DEBUG_STRICT = false;
 
     private Apple2View mView = null;
@@ -516,23 +512,16 @@ public class Apple2Activity extends Activity {
         nativeEmulationPause();
     }
 
-    public void maybeRebootQuit() {
-        nativeEmulationPause();
+    public void rebootEmulation() {
+        nativeReboot();
+    }
 
-        AlertDialog rebootQuitDialog = new AlertDialog.Builder(this).setIcon(R.drawable.ic_launcher).setCancelable(true).setTitle(R.string.quit_reboot).setMessage(R.string.quit_reboot_choice).setPositiveButton(R.string.reboot, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                nativeReboot();
-                Apple2Activity.this.mMainMenu.dismiss();
-            }
-        }).setNeutralButton(R.string.quit, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                quitEmulator();
-            }
-        }).setNegativeButton(R.string.cancel, null).create();
+    public void saveState(String stateFile) {
+        nativeSaveState(stateFile);
+    }
 
-        registerAndShowDialog(rebootQuitDialog);
+    public String loadState(String stateFile) {
+        return Apple2Activity.nativeLoadState(stateFile);
     }
 
     public void chooseDisk(String path, boolean driveA, boolean readOnly) {
@@ -557,52 +546,5 @@ public class Apple2Activity extends Activity {
                 System.exit(0);
             }
         }.run();
-    }
-
-    public void maybeSaveRestore() {
-        nativeEmulationPause();
-
-        final String quickSavePath = Apple2DisksMenu.getDataDir(this) + File.separator + SAVE_FILE;
-
-        final AtomicBoolean selectionAlreadyHandled = new AtomicBoolean(false);
-
-        AlertDialog saveRestoreDialog = new AlertDialog.Builder(this).setIcon(R.drawable.ic_launcher).setCancelable(true).setTitle(R.string.saverestore).setMessage(R.string.saverestore_choice).setPositiveButton(R.string.save, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                if (!selectionAlreadyHandled.compareAndSet(false, true)) {
-                    Log.v(TAG, "OMG, avoiding nasty UI race in save/restore onClick()");
-                    return;
-                }
-                Apple2Activity.this.nativeSaveState(quickSavePath);
-                Apple2Activity.this.mMainMenu.dismiss();
-            }
-        }).setNeutralButton(R.string.restore, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                if (!selectionAlreadyHandled.compareAndSet(false, true)) {
-                    Log.v(TAG, "OMG, avoiding nasty UI race in save/restore onClick()");
-                    return;
-                }
-
-                String jsonData = Apple2Activity.this.nativeLoadState(quickSavePath);
-                try {
-                    JSONObject map = new JSONObject(jsonData);
-                    String diskPath1 = map.getString("disk1");
-                    boolean readOnly1 = map.getBoolean("readOnly1");
-                    Apple2Preferences.CURRENT_DISK_A.setPath(Apple2Activity.this, diskPath1);
-                    Apple2Preferences.CURRENT_DISK_A_RO.saveBoolean(Apple2Activity.this, readOnly1);
-
-                    String diskPath2 = map.getString("disk2");
-                    boolean readOnly2 = map.getBoolean("readOnly2");
-                    Apple2Preferences.CURRENT_DISK_B.setPath(Apple2Activity.this, diskPath2);
-                    Apple2Preferences.CURRENT_DISK_B_RO.saveBoolean(Apple2Activity.this, readOnly2);
-                } catch (JSONException je) {
-                    Log.v(TAG, "OOPS : " + je);
-                }
-                Apple2Activity.this.mMainMenu.dismiss();
-            }
-        }).setNegativeButton(R.string.cancel, null).create();
-
-        registerAndShowDialog(saveRestoreDialog);
     }
 }
