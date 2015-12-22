@@ -373,6 +373,14 @@
 		4AFC170F1AAE9CC000B215FA /* testdisplay1.nib.gz */ = {isa = PBXFileReference; lastKnownFileType = archive.gzip; path = testdisplay1.nib.gz; sourceTree = "<group>"; };
 		4AFC17101AAE9CC000B215FA /* testvm1.nib.gz */ = {isa = PBXFileReference; lastKnownFileType = archive.gzip; path = testvm1.nib.gz; sourceTree = "<group>"; };
 		4E4585F91C29F2B9003E74A1 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/MainMenu.xib; sourceTree = "<group>"; };
+		4E4585FF1C29F393003E74A1 /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = "fr.lproj/MainMenu-Test.strings"; sourceTree = "<group>"; };
+		4E4586001C29F399003E74A1 /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = fr; path = fr.lproj/Credits.rtf; sourceTree = "<group>"; };
+		4E4586011C29F399003E74A1 /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		4E4586021C29F399003E74A1 /* fr */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = fr; path = fr.lproj/MainMenu.xib; sourceTree = "<group>"; };
+		4E4586031C29F399003E74A1 /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/LaunchScreen.strings; sourceTree = "<group>"; };
+		4E4586041C29F399003E74A1 /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/Main.strings; sourceTree = "<group>"; };
+		4E4586051C29F399003E74A1 /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		4E4586061C29F39A003E74A1 /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/Apple2iOS.strings; sourceTree = "<group>"; };
 		773B3D0C1956885A0085CE5F /* Apple2Mac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Apple2Mac.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		773B3D0F1956885A0085CE5F /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		773B3D121956885A0085CE5F /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
@@ -1065,6 +1073,7 @@
 			knownRegions = (
 				en,
 				Base,
+				fr,
 			);
 			mainGroup = 773B3D03195688590085CE5F;
 			productRefGroup = 773B3D0D1956885A0085CE5F /* Products */;
@@ -1668,6 +1677,7 @@
 			isa = PBXVariantGroup;
 			children = (
 				4ADC51CA19E8BEB700186B36 /* Base */,
+				4E4585FF1C29F393003E74A1 /* fr */,
 			);
 			name = "MainMenu-Test.xib";
 			sourceTree = "<group>";
@@ -1676,6 +1686,7 @@
 			isa = PBXVariantGroup;
 			children = (
 				773B3D191956885A0085CE5F /* en */,
+				4E4586011C29F399003E74A1 /* fr */,
 			);
 			name = InfoPlist.strings;
 			sourceTree = "<group>";
@@ -1684,6 +1695,7 @@
 			isa = PBXVariantGroup;
 			children = (
 				773B3D1F1956885A0085CE5F /* en */,
+				4E4586001C29F399003E74A1 /* fr */,
 			);
 			name = Credits.rtf;
 			sourceTree = "<group>";
@@ -1692,6 +1704,7 @@
 			isa = PBXVariantGroup;
 			children = (
 				4E4585F91C29F2B9003E74A1 /* en */,
+				4E4586021C29F399003E74A1 /* fr */,
 			);
 			name = MainMenu.xib;
 			sourceTree = "<group>";
@@ -1700,6 +1713,7 @@
 			isa = PBXVariantGroup;
 			children = (
 				773B3D371956885A0085CE5F /* en */,
+				4E4586051C29F399003E74A1 /* fr */,
 			);
 			name = InfoPlist.strings;
 			sourceTree = "<group>";
@@ -1708,6 +1722,7 @@
 			isa = PBXVariantGroup;
 			children = (
 				93206C771C14E14000668153 /* Base */,
+				4E4586061C29F39A003E74A1 /* fr */,
 			);
 			name = Apple2iOS.strings;
 			sourceTree = "<group>";
@@ -1716,6 +1731,7 @@
 			isa = PBXVariantGroup;
 			children = (
 				935C55341C12BA5F0013166D /* Base */,
+				4E4586041C29F399003E74A1 /* fr */,
 			);
 			name = Main.storyboard;
 			sourceTree = "<group>";
@@ -1724,6 +1740,7 @@
 			isa = PBXVariantGroup;
 			children = (
 				935C55451C12BE110013166D /* Base */,
+				4E4586031C29F399003E74A1 /* fr */,
 			);
 			name = LaunchScreen.xib;
 			sourceTree = "<group>";
