@@ -178,7 +178,7 @@ void reinitialize(void) {
 
 void timing_initialize(void) {
 #if !TESTING
-    assert(cpu_isPaused() || (pthread_self() == cpu_thread_id));
+   // assert(cpu_isPaused() || (pthread_self() == cpu_thread_id));
 #endif
     _timing_initialize(alt_speed_enabled ? cpu_altscale_factor : cpu_scale_factor);
 }
