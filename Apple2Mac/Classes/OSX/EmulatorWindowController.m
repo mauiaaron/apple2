@@ -23,7 +23,10 @@
 @property (assign) IBOutlet NSWindow *disksWindow;
 @property (assign) IBOutlet NSWindow *prefsWindow;
 @property (assign) IBOutlet NSMenuItem *pauseMenuItem;
-
+@property (assign) IBOutlet NSToolbar *toolBar;
+@property (assign) IBOutlet NSToolbarItem *pauseItem;
+@property (assign) IBOutlet NSToolbarItem *disk1Item;
+@property (assign) IBOutlet NSToolbarItem *disk2Item;
 @property (nonatomic, retain) EmulatorFullscreenWindow *fullscreenWindow;
 @property (nonatomic, retain) NSWindow *standardWindow;
 
@@ -126,12 +129,20 @@
     if (paused)
     {
         [[self pauseMenuItem] setTitle:@"Resume Emulation"];
+        [[self pauseItem] setImage:[NSImage imageNamed:@"Run"]];
+        [[self pauseItem] setLabel:@"Paused"];
         cpu_pause();
     }
     else
     {
         [[self pauseMenuItem] setTitle:@"Pause Emulation"];
+        [[self pauseItem] setImage:[NSImage imageNamed:@"Stop"]];
+        [[self pauseItem] setLabel:@"Running"];
         cpu_resume();
+    }
+    if (video_backend && video_backend->animation_showPaused)
+    {
+        video_backend->animation_showPaused();
     }
 }
 
