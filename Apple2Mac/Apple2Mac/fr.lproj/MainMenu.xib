@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="9531" systemVersion="15C50" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
-        <deployment version="1060" identifier="macosx"/>
+        <deployment version="1080" identifier="macosx"/>
         <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="9531"/>
     </dependencies>
     <objects>
@@ -971,17 +971,6 @@ DQ
                                                 <action selector="autoRecenterChoiceChanged:" target="mUW-Rh-bL1" id="Ehf-jm-Exs"/>
                                             </connections>
                                         </button>
-                                        <button id="wu9-dx-Rxy" userLabel="Clamp beyond Radius">
-                                            <rect key="frame" x="15" y="245" width="217" height="18"/>
-                                            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                            <buttonCell key="cell" type="check" title="Clamp Beyond Radius" bezelStyle="regularSquare" imagePosition="left" alignment="left" state="on" inset="2" id="AMY-tC-0Yf" userLabel="Clip beyond Radius">
-                                                <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
-                                                <font key="font" metaFont="system"/>
-                                            </buttonCell>
-                                            <connections>
-                                                <action selector="clipToRadiusChoiceChanged:" target="mUW-Rh-bL1" id="I8b-k9-H4g"/>
-                                            </connections>
-                                        </button>
                                         <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" id="e2h-SS-aex">
                                             <rect key="frame" x="69" y="220" width="163" height="17"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
@@ -1009,7 +998,7 @@ DQ
                                             </textFieldCell>
                                         </textField>
                                         <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" setsMaxLayoutWidthAtFirstLayout="YES" id="LUN-A2-S1l">
-                                            <rect key="frame" x="15" y="9" width="246" height="85"/>
+                                            <rect key="frame" x="15" y="73" width="246" height="85"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <textFieldCell key="cell" sendsActionOnEndEditing="YES" id="TEm-S7-9qg">
                                                 <font key="font" metaFont="system"/>
@@ -1019,6 +1008,17 @@ DQ
                                             </textFieldCell>
                                             <string key="userLabel">Clamp Beyond Radius setting is recommended for gamepad devices (not traditional joysticks) which cannot generate values in the extreme corners.</string>
                                         </textField>
+                                        <button id="wu9-dx-Rxy" userLabel="Clamp beyond Radius">
+                                            <rect key="frame" x="15" y="164" width="217" height="18"/>
+                                            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                            <buttonCell key="cell" type="check" title="Clamp Beyond Radius" bezelStyle="regularSquare" imagePosition="left" alignment="left" state="on" inset="2" id="AMY-tC-0Yf" userLabel="Clip beyond Radius">
+                                                <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                                                <font key="font" metaFont="system"/>
+                                            </buttonCell>
+                                            <connections>
+                                                <action selector="clipToRadiusChoiceChanged:" target="mUW-Rh-bL1" id="I8b-k9-H4g"/>
+                                            </connections>
+                                        </button>
                                     </subviews>
                                 </view>
                             </tabViewItem>
@@ -1026,7 +1026,7 @@ DQ
                     </tabView>
                 </subviews>
             </view>
-            <point key="canvasLocation" x="-286" y="-1308"/>
+            <point key="canvasLocation" x="-195" y="-831"/>
         </window>
         <customObject id="mUW-Rh-bL1" customClass="EmulatorPrefsController">
             <connections>
