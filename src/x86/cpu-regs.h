@@ -89,6 +89,7 @@
 #   define _XSI             %esi
 #   define _XAX             %eax        /* scratch                 */
 #   define _XBX             %ebx        /* scratch2                */
+#   define _X8              %eax // WRONG!!! FIXMENOW
 // full-length Apple ][ registers
 #   define XY_Reg_X         %ebx        /* 6502 X&Y flags          */
 #   define AF_Reg_X         %ecx        /* 6502 F&A flags          */
@@ -127,16 +128,18 @@
 #define         CALL(foo) foo
 #else /* !NO_UNDERSCORES */
 #if defined(__APPLE__)
-#   warning "2014/06/22 -- Apple's clang appears to not like certain manipulations of %_h register values (for example %ah, %ch) that are valid on *nix ... and it creates bizarre bytecode
-#   define APPLE_ASSEMBLER_IS_BROKEN 1
-#   define         SYM(foo) _##foo(%rip)
-#   define         SYMX(foo, INDEX, SCALE) (_X8,INDEX,SCALE)
 #   ifdef __LP64__
+#       warning "2014/06/22 -- Mac requires PIC indexing
+#       define APPLE_ASSEMBLER_IS_BROKEN 1
+#       define     SYM(foo) _##foo(%rip)
+#       define     SYMX(foo, INDEX, SCALE) (_X8,INDEX,SCALE)
 #       define     SYMX_PROLOGUE(foo)  leaLQ   _##foo(%rip), _X8;
 #   else
-#       error "Building 32bit Darwin/x86 is not supported (unless you're a go-getter and make it supported)"
+#       define     SYM(foo) _##foo
+#       define     SYMX(foo, INDEX, SCALE) _##foo(,INDEX,SCALE)
+#       define     SYMX_PROLOGUE(foo)
 #   endif
-#   define         ENTRY(foo)          .globl _##foo; .balign 4; _##foo##:
+#   define         ENTRY(foo)          .globl _##foo; .balign 16; _##foo##:
 #else
 #   define         SYM(foo) _##foo
 #   define         SYMX(foo, INDEX, SCALE) _##foo(,INDEX,SCALE)
