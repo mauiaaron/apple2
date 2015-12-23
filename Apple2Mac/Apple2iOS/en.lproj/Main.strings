@@ -1,0 +1,27 @@
+
+/* Class = "UILabel"; text = "Reboot or quit emulator"; ObjectID = "0WI-e2-xoP"; */
+"0WI-e2-xoP.text" = "Reboot or quit emulator";
+
+/* Class = "UILabel"; text = "General, CPU, Joystick"; ObjectID = "HSF-ji-5WS"; */
+"HSF-ji-5WS.text" = "General, CPU, Joystick";
+
+/* Class = "UILabel"; text = "Insert a Disk ][ image file"; ObjectID = "c93-nC-i3L"; */
+"c93-nC-i3L.text" = "Insert a Disk ][ image file";
+
+/* Class = "UIBarButtonItem"; title = "Item"; ObjectID = "d5g-uX-Ssk"; */
+"d5g-uX-Ssk.title" = "Item";
+
+/* Class = "UILabel"; text = "Save & restore"; ObjectID = "fJA-S4-XoG"; */
+"fJA-S4-XoG.text" = "Save & restore";
+
+/* Class = "UILabel"; text = "Load disk image"; ObjectID = "gOe-OR-ycd"; */
+"gOe-OR-ycd.text" = "Load disk image";
+
+/* Class = "UILabel"; text = "Emulator settings"; ObjectID = "mbz-lM-DIP"; */
+"mbz-lM-DIP.text" = "Emulator settings";
+
+/* Class = "UIBarButtonItem"; title = "Reboot"; ObjectID = "pwr-c0-7tW"; */
+"pwr-c0-7tW.title" = "Reboot";
+
+/* Class = "UILabel"; text = "Quick save and restore"; ObjectID = "t5D-5L-z8k"; */
+"t5D-5L-z8k.text" = "Quick save and restore";
