@@ -11,7 +11,9 @@
 
 package org.deadc0de.apple2ix;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Build;
 import android.util.Log;
@@ -27,12 +29,15 @@ import android.widget.PopupWindow;
 import android.widget.TextView;
 
 import org.deadc0de.apple2ix.basic.R;
+import org.json.JSONException;
+import org.json.JSONObject;
 
+import java.io.File;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Apple2MainMenu {
 
-    private final static int MENU_INSET = 20;
+    private final static String SAVE_FILE = "emulator.state";
     private final static String TAG = "Apple2MainMenu";
 
     private Apple2Activity mActivity = null;
@@ -98,7 +103,7 @@ public class Apple2MainMenu {
                     Log.v(TAG, "OMG, avoiding nasty UI race around save/restore");
                     return;
                 }
-                mainMenu.mActivity.maybeSaveRestore();
+                mainMenu.maybeSaveRestore();
             }
         },
         REBOOT_QUIT_EMULATOR {
@@ -118,7 +123,7 @@ public class Apple2MainMenu {
                     Log.v(TAG, "OMG, avoiding nasty UI race around quit/reboot");
                     return;
                 }
-                mainMenu.mActivity.maybeRebootQuit();
+                mainMenu.maybeRebootQuit();
             }
         };
 
@@ -237,5 +242,83 @@ public class Apple2MainMenu {
 
     public boolean isShowing() {
         return mMainMenuPopup.isShowing();
+    }
+
+
+    public void maybeRebootQuit() {
+        mActivity.pauseEmulation();
+
+        final AtomicBoolean selectionAlreadyHandled = new AtomicBoolean(false);
+
+        AlertDialog rebootQuitDialog = new AlertDialog.Builder(mActivity).setIcon(R.drawable.ic_launcher).setCancelable(true).setTitle(R.string.quit_reboot).setMessage(R.string.quit_reboot_choice).setPositiveButton(R.string.reboot, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                if (!selectionAlreadyHandled.compareAndSet(false, true)) {
+                    Log.v(TAG, "OMG, avoiding nasty UI race in reboot/quit onClick()");
+                    return;
+                }
+                mActivity.rebootEmulation();
+                Apple2MainMenu.this.dismiss();
+            }
+        }).setNeutralButton(R.string.quit, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                if (!selectionAlreadyHandled.compareAndSet(false, true)) {
+                    Log.v(TAG, "OMG, avoiding nasty UI race in reboot/quit onClick()");
+                    return;
+                }
+                mActivity.quitEmulator();
+            }
+        }).setNegativeButton(R.string.cancel, null).create();
+
+        mActivity.registerAndShowDialog(rebootQuitDialog);
+    }
+
+
+    public void maybeSaveRestore() {
+        mActivity.pauseEmulation();
+
+        final String quickSavePath = Apple2DisksMenu.getDataDir(mActivity) + File.separator + SAVE_FILE;
+
+        final AtomicBoolean selectionAlreadyHandled = new AtomicBoolean(false);
+
+        AlertDialog saveRestoreDialog = new AlertDialog.Builder(mActivity).setIcon(R.drawable.ic_launcher).setCancelable(true).setTitle(R.string.saverestore).setMessage(R.string.saverestore_choice).setPositiveButton(R.string.save, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                if (!selectionAlreadyHandled.compareAndSet(false, true)) {
+                    Log.v(TAG, "OMG, avoiding nasty UI race in save/restore onClick()");
+                    return;
+                }
+                mActivity.saveState(quickSavePath);
+                Apple2MainMenu.this.dismiss();
+            }
+        }).setNeutralButton(R.string.restore, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                if (!selectionAlreadyHandled.compareAndSet(false, true)) {
+                    Log.v(TAG, "OMG, avoiding nasty UI race in save/restore onClick()");
+                    return;
+                }
+
+                String jsonData = mActivity.loadState(quickSavePath);
+                try {
+                    JSONObject map = new JSONObject(jsonData);
+                    String diskPath1 = map.getString("disk1");
+                    boolean readOnly1 = map.getBoolean("readOnly1");
+                    Apple2Preferences.CURRENT_DISK_A.setPath(mActivity, diskPath1);
+                    Apple2Preferences.CURRENT_DISK_A_RO.saveBoolean(mActivity, readOnly1);
+
+                    String diskPath2 = map.getString("disk2");
+                    boolean readOnly2 = map.getBoolean("readOnly2");
+                    Apple2Preferences.CURRENT_DISK_B.setPath(mActivity, diskPath2);
+                    Apple2Preferences.CURRENT_DISK_B_RO.saveBoolean(mActivity, readOnly2);
+                } catch (JSONException je) {
+                    Log.v(TAG, "OOPS : " + je);
+                }
+                Apple2MainMenu.this.dismiss();
+            }
+        }).setNegativeButton(R.string.cancel, null).create();
+
+        mActivity.registerAndShowDialog(saveRestoreDialog);
     }
 }
