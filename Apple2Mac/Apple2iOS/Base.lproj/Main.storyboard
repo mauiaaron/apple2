@@ -15,11 +15,29 @@
                     <view key="view" contentMode="scaleToFill" id="8bC-Xf-vdC" customClass="EAGLView">
                         <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <toolbar opaque="NO" clearsContextBeforeDrawing="NO" contentMode="bottom" fixedFrame="YES" barStyle="black" translatesAutoresizingMaskIntoConstraints="NO" id="MKz-35-wcI">
+                                <rect key="frame" x="0.0" y="556" width="600" height="44"/>
+                                <items>
+                                    <barButtonItem title="Reboot" id="pwr-c0-7tW">
+                                        <connections>
+                                            <action selector="reboot:" destination="dkx-z0-nzr" id="J5h-Ne-PUP"/>
+                                        </connections>
+                                    </barButtonItem>
+                                    <barButtonItem title="Item" id="d5g-uX-Ssk">
+                                        <connections>
+                                            <action selector="chooseDriveA:" destination="dkx-z0-nzr" id="zbL-lp-3IU"/>
+                                        </connections>
+                                    </barButtonItem>
+                                </items>
+                            </toolbar>
+                        </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
                     </view>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
             </objects>
+            <point key="canvasLocation" x="287" y="-60"/>
         </scene>
         <!--View Controller-->
         <scene sceneID="7d6-Zt-X84">
@@ -34,7 +52,7 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <containerView opaque="NO" contentMode="scaleToFill" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Iqo-Ye-Tu9">
-                                <rect key="frame" x="0.0" y="0.0" width="640" height="480"/>
+                                <rect key="frame" x="0.0" y="0.0" width="640" height="298"/>
                                 <connections>
                                     <segue destination="VUl-eb-yCA" kind="embed" id="vqh-we-VEz"/>
                                 </connections>
@@ -52,7 +70,7 @@
             <objects>
                 <tableViewController id="VUl-eb-yCA" sceneMemberID="viewController">
                     <tableView key="view" clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="static" style="plain" separatorStyle="default" rowHeight="44" sectionHeaderHeight="28" sectionFooterHeight="28" id="oOG-fc-WLa">
-                        <rect key="frame" x="0.0" y="0.0" width="640" height="480"/>
+                        <rect key="frame" x="0.0" y="0.0" width="640" height="298"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                         <sections>

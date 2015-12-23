@@ -372,6 +372,7 @@
 		4AFC17091AAE9C3200B215FA /* sha1.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = sha1.c; sourceTree = "<group>"; };
 		4AFC170F1AAE9CC000B215FA /* testdisplay1.nib.gz */ = {isa = PBXFileReference; lastKnownFileType = archive.gzip; path = testdisplay1.nib.gz; sourceTree = "<group>"; };
 		4AFC17101AAE9CC000B215FA /* testvm1.nib.gz */ = {isa = PBXFileReference; lastKnownFileType = archive.gzip; path = testvm1.nib.gz; sourceTree = "<group>"; };
+		4E1ACFE61C2B0F3600C755BB /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Main.strings; sourceTree = "<group>"; };
 		4E4585F91C29F2B9003E74A1 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/MainMenu.xib; sourceTree = "<group>"; };
 		4E4585FF1C29F393003E74A1 /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = "fr.lproj/MainMenu-Test.strings"; sourceTree = "<group>"; };
 		4E4586001C29F399003E74A1 /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = fr; path = fr.lproj/Credits.rtf; sourceTree = "<group>"; };
@@ -1732,6 +1733,7 @@
 			children = (
 				935C55341C12BA5F0013166D /* Base */,
 				4E4586041C29F399003E74A1 /* fr */,
+				4E1ACFE61C2B0F3600C755BB /* en */,
 			);
 			name = Main.storyboard;
 			sourceTree = "<group>";
