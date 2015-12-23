@@ -248,15 +248,25 @@ public class Apple2MainMenu {
     public void maybeRebootQuit() {
         mActivity.pauseEmulation();
 
+        final AtomicBoolean selectionAlreadyHandled = new AtomicBoolean(false);
+
         AlertDialog rebootQuitDialog = new AlertDialog.Builder(mActivity).setIcon(R.drawable.ic_launcher).setCancelable(true).setTitle(R.string.quit_reboot).setMessage(R.string.quit_reboot_choice).setPositiveButton(R.string.reboot, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
+                if (!selectionAlreadyHandled.compareAndSet(false, true)) {
+                    Log.v(TAG, "OMG, avoiding nasty UI race in reboot/quit onClick()");
+                    return;
+                }
                 mActivity.rebootEmulation();
                 Apple2MainMenu.this.dismiss();
             }
         }).setNeutralButton(R.string.quit, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
+                if (!selectionAlreadyHandled.compareAndSet(false, true)) {
+                    Log.v(TAG, "OMG, avoiding nasty UI race in reboot/quit onClick()");
+                    return;
+                }
                 mActivity.quitEmulator();
             }
         }).setNegativeButton(R.string.cancel, null).create();
