@@ -19,3 +19,6 @@
 
 /* Class = "UILabel"; text = "Quick save and restore"; ObjectID = "t5D-5L-z8k"; */
 "t5D-5L-z8k.text" = "Quick save and restore";
+
+/* Class = "UIBarButtonItem"; title = "Item"; ObjectID = "d5g-uX-Ssk"; */
+"d5g-uX-Ssk.title" = "CPU";

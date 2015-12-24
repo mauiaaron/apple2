@@ -9,7 +9,7 @@
 "c93-nC-i3L.text" = "Insert a Disk ][ image file";
 
 /* Class = "UIBarButtonItem"; title = "Item"; ObjectID = "d5g-uX-Ssk"; */
-"d5g-uX-Ssk.title" = "Item";
+"d5g-uX-Ssk.title" = "Togle CPU";
 
 /* Class = "UILabel"; text = "Save & restore"; ObjectID = "fJA-S4-XoG"; */
 "fJA-S4-XoG.text" = "Save & restore";
