@@ -124,6 +124,7 @@
 		4AFC17181AAE9CC000B215FA /* testvm1.nib.gz in Resources */ = {isa = PBXBuildFile; fileRef = 4AFC17101AAE9CC000B215FA /* testvm1.nib.gz */; };
 		4E1733E31C2C5F7600CDF9DF /* iosPrefControllerViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4E4E62A01C2C5B56002E324F /* iosPrefControllerViewController.m */; };
 		4E1733E41C2C5F7A00CDF9DF /* AppleViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4E1733DD1C2C5E5D00CDF9DF /* AppleViewController.m */; };
+		4E1733EA1C2CA71100CDF9DF /* speedtest.dsk.gz in Resources */ = {isa = PBXBuildFile; fileRef = 4ADC523519E8D3F600186B36 /* speedtest.dsk.gz */; };
 		773B3D101956885A0085CE5F /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 773B3D0F1956885A0085CE5F /* Cocoa.framework */; };
 		773B3D1A1956885A0085CE5F /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 773B3D181956885A0085CE5F /* InfoPlist.strings */; };
 		773B3D201956885A0085CE5F /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = 773B3D1E1956885A0085CE5F /* Credits.rtf */; };
@@ -1233,6 +1234,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4E1733EA1C2CA71100CDF9DF /* speedtest.dsk.gz in Resources */,
 				935C55371C12BA5F0013166D /* Assets.xcassets in Resources */,
 				935C55431C12BCFD0013166D /* Apple2iOS-Info.plist in Resources */,
 				935C55461C12BE110013166D /* LaunchScreen.xib in Resources */,
