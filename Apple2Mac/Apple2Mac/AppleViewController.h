@@ -9,6 +9,9 @@
 #import <UIKit/UIKit.h>
 
 @interface AppleViewController : UIViewController
+
+@property (assign) IBOutlet UIToolbar *mainToolBar;
+
 -(IBAction)rebootItem:(id)sender;
 -(IBAction)prefsItem:(id)sender;
 
