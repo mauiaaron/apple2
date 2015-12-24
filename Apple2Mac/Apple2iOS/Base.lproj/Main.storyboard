@@ -4,40 +4,79 @@
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="9529"/>
     </dependencies>
     <scenes>
-        <!--View Controller-->
+        <!--Apple View Controller-->
         <scene sceneID="tne-QT-ifu">
             <objects>
-                <viewController id="BYZ-38-t0r" sceneMemberID="viewController">
+                <viewController autoresizesArchivedViewToFullSize="NO" hidesBottomBarWhenPushed="YES" id="BYZ-38-t0r" customClass="AppleViewController" sceneMemberID="viewController">
                     <layoutGuides>
                         <viewControllerLayoutGuide type="top" id="y3c-jy-aDJ"/>
                         <viewControllerLayoutGuide type="bottom" id="wfy-db-euE"/>
                     </layoutGuides>
-                    <view key="view" contentMode="scaleToFill" id="8bC-Xf-vdC" customClass="EAGLView">
+                    <view key="view" contentMode="center" id="8bC-Xf-vdC" customClass="EAGLView">
                         <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <toolbar opaque="NO" clearsContextBeforeDrawing="NO" contentMode="bottom" fixedFrame="YES" barStyle="black" translatesAutoresizingMaskIntoConstraints="NO" id="MKz-35-wcI">
-                                <rect key="frame" x="0.0" y="556" width="600" height="44"/>
+                            <toolbar opaque="NO" clearsContextBeforeDrawing="NO" contentMode="redraw" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="MKz-35-wcI">
+                                <rect key="frame" x="66" y="278" width="468" height="44"/>
                                 <items>
                                     <barButtonItem title="Reboot" id="pwr-c0-7tW">
                                         <connections>
-                                            <action selector="reboot:" destination="dkx-z0-nzr" id="J5h-Ne-PUP"/>
+                                            <action selector="rebootItem:" destination="dkx-z0-nzr" id="Unl-Y2-Wio"/>
                                         </connections>
                                     </barButtonItem>
-                                    <barButtonItem title="Item" id="d5g-uX-Ssk">
+                                    <barButtonItem title="CPU Togle" id="d5g-uX-Ssk">
                                         <connections>
-                                            <action selector="chooseDriveA:" destination="dkx-z0-nzr" id="zbL-lp-3IU"/>
+                                            <action selector="toggleCPUSpeedItem:" destination="dkx-z0-nzr" id="OmN-nk-Tda"/>
                                         </connections>
                                     </barButtonItem>
+                                    <barButtonItem title="Prefs" id="80q-oc-naJ"/>
                                 </items>
                             </toolbar>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
+                        <gestureRecognizers/>
                     </view>
+                    <simulatedOrientationMetrics key="simulatedOrientationMetrics"/>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="287" y="-60"/>
+        </scene>
+        <!--Preferences-->
+        <scene sceneID="BgJ-VP-f1a">
+            <objects>
+                <viewController title="Preferences" id="Bdv-8H-ns5" customClass="iosPrefControllerViewController" sceneMemberID="viewController">
+                    <layoutGuides>
+                        <viewControllerLayoutGuide type="top" id="Dec-D0-aqO"/>
+                        <viewControllerLayoutGuide type="bottom" id="mhm-yr-MxI"/>
+                    </layoutGuides>
+                    <view key="view" contentMode="scaleToFill" id="RMU-eN-VaS">
+                        <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="Lr7-yF-mb2">
+                                <rect key="frame" x="127" y="113" width="97" height="30"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                                <textInputTraits key="textInputTraits"/>
+                            </textField>
+                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="XxD-w4-jxp">
+                                <rect key="frame" x="143" y="196" width="46" height="30"/>
+                                <state key="normal" title="Button"/>
+                            </button>
+                            <toolbar opaque="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="lfx-xk-tV7">
+                                <rect key="frame" x="0.0" y="556" width="600" height="44"/>
+                                <items>
+                                    <barButtonItem title="OK" id="tk3-AG-KR8"/>
+                                </items>
+                            </toolbar>
+                        </subviews>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                    </view>
+                    <simulatedOrientationMetrics key="simulatedOrientationMetrics"/>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="tqd-Zi-o6N" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="961" y="-60"/>
         </scene>
         <!--View Controller-->
         <scene sceneID="7d6-Zt-X84">
