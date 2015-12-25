@@ -45,7 +45,7 @@
     <string name="input_current">Unidad de entrada actual</string>
     <string name="input_current_summary">Elija unidad de entrada</string>
     <string name="joystick">"Joystick"</string>
-    <string name="joystick_axis_sensitivity_summary">Afinar la sensibilidad del eje del joystick (cesacelerar o acelerar)</string>
+    <string name="joystick_axis_sensitivity_summary">Afinar la sensibilidad del eje del joystick (desacelerar o acelerar)</string>
     <string name="joystick_button_button1">Botón 1</string>
     <string name="joystick_button_button2">Botón 2</string>
     <string name="joystick_button_button_both">Los dos</string>
@@ -81,10 +81,10 @@
     <string name="keyboard_choose_alt">Elija teclado alternativo…</string>
     <string name="keyboard_choose_alt_summary">Elija el diseño de teclado alternativo</string>
     <string name="keyboard_click_enabled">Habilitar la tecla de sonido de clic</string>
-    <string name="keyboard_click_enabled_summary">Enables key click sound if available</string>
+    <string name="keyboard_click_enabled_summary">Haga clic en sonido de clave permite si está disponible</string>
     <string name="keyboard_configure">Configurar el teclado…</string>
     <string name="keyboard_configure_summary">Transparencia, minúsculas, teclado personalizado</string>
-    <string name="keyboard_lowercase_enabled">Enable lowercase</string>
+    <string name="keyboard_lowercase_enabled">Habilitar minúsculas</string>
     <string name="keyboard_lowercase_enabled_summary">Utilice las teclas minúsculas</string>
     <string name="keyboard_visibility_active">Visibilidad cuando está activo</string>
     <string name="keyboard_visibility_active_summary">Visibilidad del teclado cuando está activo</string>
@@ -143,7 +143,7 @@
     <string name="save">Guardar rápido</string>
     <string name="saverestore">Guardar y restaurar…</string>
     <string name="saverestore_choice">¿Guardar el estado actual o anterior de restauración?</string>
-    <string name="saverestore_summary">rápida</string>
+    <string name="saverestore_summary">Guardar y restaurar rápida</string>
     <string name="skip">Saltar&#8594;</string>
     <string name="speaker_volume">El volumen del altavoz</string>
     <string name="speaker_volume_summary">Ajustar el volumen del altavoz</string>
