@@ -188,6 +188,13 @@ public class Apple2DisksMenu implements Apple2MenuView {
 
         getDataDir(activity);
 
+        // FIXME TODO : Heavy-handed migration to 1.1.3 ...
+        recursivelyDelete(new File(new File(sDataDir, "disks").getAbsolutePath(), "blanks"));
+        recursivelyDelete(new File(new File(sDataDir, "disks").getAbsolutePath(), "demo"));
+        recursivelyDelete(new File(new File(sDataDir, "disks").getAbsolutePath(), "eamon"));
+        recursivelyDelete(new File(new File(sDataDir, "disks").getAbsolutePath(), "logo"));
+        recursivelyDelete(new File(new File(sDataDir, "disks").getAbsolutePath(), "miscgame"));
+
         Log.d(TAG, "First time copying stuff-n-things out of APK for ease-of-NDK access...");
 
         getExternalStorageDirectory(activity);
@@ -353,6 +360,7 @@ public class Apple2DisksMenu implements Apple2MenuView {
         return pathBuffer.toString();
     }
 
+    // TODO FIXME : WARNING : this is super dangerous if there are symlinks !!!
     private static void recursivelyDelete(File file) {
         if (file.isDirectory()) {
             for (File f : file.listFiles()) {
