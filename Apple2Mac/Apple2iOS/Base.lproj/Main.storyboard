@@ -24,15 +24,19 @@
                                 <items>
                                     <barButtonItem title="Reboot" id="pwr-c0-7tW">
                                         <connections>
-                                            <action selector="rebootItem:" destination="dkx-z0-nzr" id="Unl-Y2-Wio"/>
+                                            <action selector="rebootItemSelected:" destination="dkx-z0-nzr" id="O17-ef-Kc9"/>
                                         </connections>
                                     </barButtonItem>
                                     <barButtonItem title="CPU Togle" id="d5g-uX-Ssk">
                                         <connections>
-                                            <action selector="toggleCPUSpeedItem:" destination="dkx-z0-nzr" id="OmN-nk-Tda"/>
+                                            <action selector="toggleCPUSpeedItem:" destination="dkx-z0-nzr" id="TRp-OQ-bk2"/>
                                         </connections>
                                     </barButtonItem>
-                                    <barButtonItem title="Prefs" id="80q-oc-naJ"/>
+                                    <barButtonItem title="Prefs" id="80q-oc-naJ">
+                                        <connections>
+                                            <action selector="prefsItemSelected:" destination="dkx-z0-nzr" id="dWF-4y-caU"/>
+                                        </connections>
+                                    </barButtonItem>
                                 </items>
                                 <variation key="heightClass=compact-widthClass=regular" ambiguous="YES" misplaced="YES">
                                     <rect key="frame" x="0.0" y="356" width="600" height="44"/>
@@ -88,7 +92,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="tqd-Zi-o6N" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="961" y="-60"/>
+            <point key="canvasLocation" x="954" y="-60"/>
         </scene>
         <!--View Controller-->
         <scene sceneID="7d6-Zt-X84">

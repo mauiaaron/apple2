@@ -36,13 +36,15 @@
     // Pass the selected object to the new view controller.
 }
 */
--(IBAction)rebootItem:(id)sender{
+-(IBAction)rebootItemSelected:(id)sender{
     cpu65_reboot();
 }
 
--(IBAction)prefsItem:(id)sender{
+-(IBAction)prefsItemSelected:(id)sender{
+    cpu_pause();
     //pause
     //show pref windows
+    cpu_resume();
 }
 
 - (IBAction)toggleCPUSpeedItem:(id)sender

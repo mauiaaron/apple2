@@ -7,12 +7,15 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "iosPrefControllerViewController.h"
 
 @interface AppleViewController : UIViewController
 
 @property (assign) IBOutlet UIToolbar *mainToolBar;
+@property (assign) IBOutlet iosPrefControllerViewController *viewPrefs;
 
--(IBAction)rebootItem:(id)sender;
--(IBAction)prefsItem:(id)sender;
+-(IBAction)rebootItemSelected:(id)sender;
+-(IBAction)prefsItemSelected:(id)sender;
+-(IBAction)toggleCPUSpeedItemSelected:(id)sender;
 
 @end
