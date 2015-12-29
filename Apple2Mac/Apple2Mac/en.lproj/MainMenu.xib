@@ -800,12 +800,12 @@ DQ
                                         <popUpButton verticalHuggingPriority="750" id="1sF-py-jCs">
                                             <rect key="frame" x="115" y="271" width="158" height="26"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                            <popUpButtonCell key="cell" type="push" title="Black/white" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" selectedItem="PX0-X3-MxY" id="eVj-ax-48A">
+                                            <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" id="eVj-ax-48A">
                                                 <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
                                                 <font key="font" metaFont="menu"/>
                                                 <menu key="menu" id="gbp-xU-CmX">
                                                     <items>
-                                                        <menuItem title="Black/white" state="on" id="PX0-X3-MxY">
+                                                        <menuItem title="Black/white" id="PX0-X3-MxY">
                                                             <modifierMask key="keyEquivalentModifierMask"/>
                                                         </menuItem>
                                                         <menuItem title="Color" id="TRN-Jh-rFc">

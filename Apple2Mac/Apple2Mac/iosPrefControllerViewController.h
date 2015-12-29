@@ -8,6 +8,17 @@
 
 #import <UIKit/UIKit.h>
 
-@interface iosPrefControllerViewController : UIViewController
+@interface iosPrefControllerViewController : UIViewController<UIPickerViewDataSource, UIPickerViewDelegate>
+{
+    NSArray *_pickerData;
+}
+@property (weak, nonatomic) IBOutlet UIPickerView *videoModePicker;
+@property (retain, nonatomic) IBOutlet UISlider *CPUSpeed;
+@property (retain, nonatomic) IBOutlet UISwitch *CPUMax;
+
 
 @end
+
+
+
+
