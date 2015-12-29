@@ -10,12 +10,13 @@
 #import "iosPrefControllerViewController.h"
 
 @interface AppleViewController : UIViewController
-
+@property (nonatomic, assign) BOOL paused;
 @property (assign) IBOutlet UIToolbar *mainToolBar;
 @property (assign) IBOutlet iosPrefControllerViewController *viewPrefs;
 
 -(IBAction)rebootItemSelected:(id)sender;
 -(IBAction)prefsItemSelected:(id)sender;
 -(IBAction)toggleCPUSpeedItemSelected:(id)sender;
+-(IBAction)togglePauseItemSelected:(id)sender;
 
 @end

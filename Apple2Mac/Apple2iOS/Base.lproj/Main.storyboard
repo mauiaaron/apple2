@@ -17,7 +17,7 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <toolbar opaque="NO" clearsContextBeforeDrawing="NO" contentMode="center" ambiguous="YES" misplaced="YES" translatesAutoresizingMaskIntoConstraints="NO" id="MKz-35-wcI">
-                                <rect key="frame" x="0.0" y="568" width="600" height="32"/>
+                                <rect key="frame" x="-13" y="568" width="600" height="32"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="32" id="FMY-Nk-ouC"/>
                                 </constraints>
@@ -34,7 +34,12 @@
                                     </barButtonItem>
                                     <barButtonItem title="Prefs" id="80q-oc-naJ">
                                         <connections>
-                                            <action selector="prefsItemSelected:" destination="dkx-z0-nzr" id="dWF-4y-caU"/>
+                                            <action selector="prefsItemSelected:" destination="dkx-z0-nzr" id="L1Z-h1-i72"/>
+                                        </connections>
+                                    </barButtonItem>
+                                    <barButtonItem title="Pause" id="XF9-t2-IEl">
+                                        <connections>
+                                            <action selector="togglePauseItemSelected:" destination="dkx-z0-nzr" id="qVs-rI-2r2"/>
                                         </connections>
                                     </barButtonItem>
                                 </items>
@@ -79,12 +84,18 @@
                                 <rect key="frame" x="143" y="196" width="46" height="30"/>
                                 <state key="normal" title="Button"/>
                             </button>
-                            <toolbar opaque="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="lfx-xk-tV7">
-                                <rect key="frame" x="0.0" y="556" width="600" height="44"/>
+                            <navigationBar contentMode="scaleToFill" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="xl4-DT-0Un">
+                                <rect key="frame" x="0.0" y="0.0" width="600" height="44"/>
                                 <items>
-                                    <barButtonItem title="OK" id="tk3-AG-KR8"/>
+                                    <navigationItem title="Preferences" id="4Dl-i2-erE">
+                                        <barButtonItem key="leftBarButtonItem" title="Back" id="LNc-VH-VvX">
+                                            <connections>
+                                                <segue destination="BYZ-38-t0r" kind="show" id="Qgp-u4-61g"/>
+                                            </connections>
+                                        </barButtonItem>
+                                    </navigationItem>
                                 </items>
-                            </toolbar>
+                            </navigationBar>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                     </view>
@@ -97,6 +108,7 @@
         <!--View Controller-->
         <scene sceneID="7d6-Zt-X84">
             <objects>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="3aI-5Q-HSv" userLabel="First Responder" sceneMemberID="firstResponder"/>
                 <viewController storyboardIdentifier="MainMenu" id="jav-c9-0Cp" sceneMemberID="viewController">
                     <layoutGuides>
                         <viewControllerLayoutGuide type="top" id="rug-Qe-ZFP"/>
@@ -116,7 +128,6 @@
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                     </view>
                 </viewController>
-                <placeholder placeholderIdentifier="IBFirstResponder" id="3aI-5Q-HSv" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="1058" y="605"/>
         </scene>
