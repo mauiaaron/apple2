@@ -48,7 +48,7 @@
 
 -(IBAction)prefsItemSelected:(id)sender{
     cpu_pause();
-    [self.viewPrefs ];
+    //[self.viewPrefs ];
     //pause
     //show pref windows
     cpu_resume();
