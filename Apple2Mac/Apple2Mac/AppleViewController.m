@@ -42,6 +42,21 @@
 - (IBAction)unwindToMainViewController:(UIStoryboardSegue*)sender
 { }
 
+- (IBAction)diskInsert:(id)sender
+{
+    NSLog(@"LISTING ALL FILES FOUND");
+    
+    int Count;
+    NSString *path;
+    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+    path = [[paths objectAtIndex:0] stringByAppendingPathComponent:@"Disks"];
+    NSArray *directoryContent = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:path error:NULL];
+    for (Count = 0; Count < (int)[directoryContent count]; Count++)
+    {
+        NSLog(@"File %d: %@", (Count + 1), [directoryContent objectAtIndex:Count]);
+    }
+}
+
 -(IBAction)rebootItemSelected:(id)sender{
     cpu65_reboot();
 }
