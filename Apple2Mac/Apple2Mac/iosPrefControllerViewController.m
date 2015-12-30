@@ -140,6 +140,58 @@
     NSLog(@"Selected Row %d", row);
 }
 
+- (void)_savePrefs
+{
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    [defaults setBool:YES forKey:kApple2SavedPrefs];
+    [defaults setDouble:cpu_scale_factor forKey:kApple2CPUSpeed];
+    [defaults setDouble:cpu_altscale_factor forKey:kApple2AltSpeed];
+   // [defaults setBool:([self.cpuMaxChoice state] == NSOnState) forKey:kApple2CPUSpeedIsMax];
+   // [defaults setBool:([self.altMaxChoice state] == NSOnState) forKey:kApple2AltSpeedIsMax];
+    [defaults setInteger:color_mode forKey:kApple2ColorConfig];
+    [defaults setInteger:joy_mode forKey:kApple2JoystickConfig];
+   // [defaults setInteger:joy_step forKey:kApple2JoystickStep];
+   // [defaults setBool:joy_auto_recenter forKey:kApple2JoystickAutoRecenter];
+    [defaults setBool:joy_clip_to_radius forKey:kApple2JoystickClipToRadius];
+}
+- (IBAction)sliderDidMove:(id)sender
+{
+    UISlider *slider = (UISlider *)sender;
+    double value = slider.value;
+    if (slider == self.cpuSlider)
+    {
+        cpu_scale_factor = value;
+        self.cpuSliderLabel.text=[NSString stringWithFormat:@"%.0f%%", value*100];
+    }
+    else
+    {
+        cpu_altscale_factor = value;
+        self.altSliderLabel.text=[NSString stringWithFormat:@"%.0f%%", value*100];
+    }
+    
+    timing_initialize();
+    
+    [self _savePrefs];
+}
+
+- (IBAction)peggedChoiceChanged:(id)sender
+{
+    UISwitch *maxButton = (UISwitch *)sender;
+    if (maxButton == self.cpuMaxChoice)
+    {
+        [self.cpuSlider setEnabled:([maxButton state] != YES)];
+        cpu_scale_factor = ([maxButton state] == NO) ? CPU_SCALE_FASTEST : self.cpuSlider.value;
+    }
+    else
+    {
+        [self.altSlider setEnabled:([maxButton state] != YES)];
+        cpu_altscale_factor = ([maxButton state] == YES) ? CPU_SCALE_FASTEST : self.altSlider.value;
+    }
+    
+    timing_initialize();
+    
+    [self _savePrefs];
+}
 /*
  #pragma mark - Navigation
  

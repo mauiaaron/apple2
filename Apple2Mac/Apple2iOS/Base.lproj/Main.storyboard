@@ -96,6 +96,9 @@
                             </navigationBar>
                             <slider opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" value="0.5" minValue="0.0" maxValue="1" translatesAutoresizingMaskIntoConstraints="NO" id="oBP-0d-AK1" userLabel="cpuSpeedSlide">
                                 <rect key="frame" x="18" y="90" width="233" height="31"/>
+                                <connections>
+                                    <action selector="sliderDidMove:" destination="Bdv-8H-ns5" eventType="valueChanged" id="pp6-hb-eUx"/>
+                                </connections>
                             </slider>
                             <pickerView contentMode="center" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="WGm-hY-OEW">
                                 <rect key="frame" x="0.0" y="257" width="359" height="123"/>
@@ -114,6 +117,9 @@
                             </label>
                             <slider opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" value="0.5" minValue="0.0" maxValue="1" translatesAutoresizingMaskIntoConstraints="NO" id="6mP-Ec-f93" userLabel="cpuSpeedSlide">
                                 <rect key="frame" x="23" y="181" width="228" height="31"/>
+                                <connections>
+                                    <action selector="sliderDidMove:" destination="Bdv-8H-ns5" eventType="valueChanged" id="JBu-EB-QzS"/>
+                                </connections>
                             </slider>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="%" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="N7I-7S-5tU">
                                 <rect key="frame" x="125" y="151" width="54" height="21"/>
@@ -129,6 +135,9 @@
                             </label>
                             <switch opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" on="YES" translatesAutoresizingMaskIntoConstraints="NO" id="SUp-G2-zVO">
                                 <rect key="frame" x="273" y="90" width="51" height="31"/>
+                                <connections>
+                                    <action selector="peggedChoiceChanged:" destination="Bdv-8H-ns5" eventType="valueChanged" id="UYy-Wm-jwi"/>
+                                </connections>
                             </switch>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Max" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="z2P-aE-OU0">
                                 <rect key="frame" x="281" y="61" width="32" height="21"/>
@@ -138,6 +147,9 @@
                             </label>
                             <switch opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" on="YES" translatesAutoresizingMaskIntoConstraints="NO" id="PXo-sH-Lgu">
                                 <rect key="frame" x="278" y="180" width="51" height="31"/>
+                                <connections>
+                                    <action selector="peggedChoiceChanged:" destination="Bdv-8H-ns5" eventType="valueChanged" id="nDr-IN-iOl"/>
+                                </connections>
                             </switch>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Max" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="qOR-C1-4kH">
                                 <rect key="frame" x="286" y="151" width="32" height="21"/>
