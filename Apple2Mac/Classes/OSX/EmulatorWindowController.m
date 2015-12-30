@@ -65,6 +65,7 @@
 {
     [[self disksWindow] close];
     cpu65_reboot();
+    
 }
 
 - (IBAction)showDisksWindow:(id)sender

@@ -18,5 +18,6 @@
 -(IBAction)prefsItemSelected:(id)sender;
 -(IBAction)toggleCPUSpeedItemSelected:(id)sender;
 -(IBAction)togglePauseItemSelected:(id)sender;
+-(IBAction)diskInsert:(id)sender;
 
 @end
