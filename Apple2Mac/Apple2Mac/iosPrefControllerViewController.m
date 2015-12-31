@@ -202,6 +202,7 @@
  }
  */
 
+
 - (void)dealloc {
   /*  [_videoModePicker release];
     [_cpuSlider release];
