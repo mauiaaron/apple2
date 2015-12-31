@@ -30,7 +30,7 @@ static void *_create_alert(void) {
     GLModelHUDElement *hudElement = (GLModelHUDElement *)calloc(sizeof(GLModelHUDElement), 1);
     if (hudElement) {
         hudElement->colorScheme = RED_ON_BLACK;
-        hudElement->blackIsTransparent = false;
+        hudElement->blackIsTransparent = true; //false;
         hudElement->opaquePixelHalo = false;
     }
     return hudElement;

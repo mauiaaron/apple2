@@ -215,6 +215,15 @@
     [super dealloc];
 }
 
+-(IBAction)goodbye:(id)sender
+{
+    [self dismissViewControllerAnimated:YES completion:nil];
+}
+- (IBAction)unwindToMainViewController:(UIStoryboardSegue*)sender
+{
+
+}
+
 @end
 
 
