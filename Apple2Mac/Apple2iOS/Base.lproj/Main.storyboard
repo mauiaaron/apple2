@@ -2,6 +2,7 @@
 <document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="9531" systemVersion="15C50" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" initialViewController="BYZ-38-t0r">
     <dependencies>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="9529"/>
+        <capability name="Constraints to layout margins" minToolsVersion="6.0"/>
     </dependencies>
     <scenes>
         <!--Apple View Controller-->
@@ -16,8 +17,8 @@
                         <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <toolbar opaque="NO" clearsContextBeforeDrawing="NO" contentMode="center" ambiguous="YES" misplaced="YES" translatesAutoresizingMaskIntoConstraints="NO" id="MKz-35-wcI">
-                                <rect key="frame" x="-13" y="568" width="613" height="32"/>
+                            <toolbar opaque="NO" clearsContextBeforeDrawing="NO" contentMode="center" translatesAutoresizingMaskIntoConstraints="NO" id="MKz-35-wcI">
+                                <rect key="frame" x="0.0" y="568" width="600" height="32"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="32" id="FMY-Nk-ouC"/>
                                 </constraints>
@@ -41,29 +42,24 @@
                                     <barButtonItem title="Prefs" id="80q-oc-naJ">
                                         <connections>
                                             <action selector="prefsItemSelected:" destination="dkx-z0-nzr" id="L1Z-h1-i72"/>
-                                            <segue destination="Bdv-8H-ns5" kind="popoverPresentation" popoverAnchorBarButtonItem="80q-oc-naJ" id="Fti-ut-1yg">
-                                                <popoverArrowDirection key="popoverArrowDirection" up="YES" down="YES" left="YES" right="YES"/>
-                                            </segue>
+                                            <segue destination="fYd-cd-QfE" kind="presentation" id="Yi8-iq-9a7"/>
                                         </connections>
                                     </barButtonItem>
                                     <barButtonItem title="Disks" id="g21-de-0Ou">
                                         <connections>
-                                            <segue destination="0hZ-GM-FUh" kind="popoverPresentation" popoverAnchorBarButtonItem="g21-de-0Ou" id="ic4-KT-dB8">
-                                                <popoverArrowDirection key="popoverArrowDirection" up="YES" down="YES" left="YES" right="YES"/>
-                                            </segue>
+                                            <segue destination="KHo-XT-99s" kind="presentation" id="1L7-E3-ayP"/>
                                         </connections>
                                     </barButtonItem>
                                     <barButtonItem style="plain" systemItem="flexibleSpace" id="Bdl-CH-WiZ"/>
-                                    <barButtonItem title="Keyboard" id="OIk-OW-fXv"/>
                                 </items>
-                                <variation key="heightClass=compact-widthClass=regular" ambiguous="YES" misplaced="YES">
-                                    <rect key="frame" x="0.0" y="356" width="600" height="44"/>
-                                </variation>
                             </toolbar>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
                         <gestureRecognizers/>
                         <constraints>
+                            <constraint firstAttribute="trailingMargin" secondItem="MKz-35-wcI" secondAttribute="trailing" constant="-20" id="E0x-gB-jq8"/>
+                            <constraint firstItem="MKz-35-wcI" firstAttribute="leading" secondItem="8bC-Xf-vdC" secondAttribute="leadingMargin" constant="-20" id="MVx-MV-gyT"/>
+                            <constraint firstAttribute="trailingMargin" secondItem="MKz-35-wcI" secondAttribute="trailing" constant="-20" id="mF6-JX-rad"/>
                             <constraint firstItem="wfy-db-euE" firstAttribute="top" secondItem="MKz-35-wcI" secondAttribute="bottom" id="tkd-uI-DwA"/>
                         </constraints>
                     </view>
@@ -74,7 +70,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="287" y="-60"/>
+            <point key="canvasLocation" x="60" y="-290.49295774647885"/>
         </scene>
         <!--Preferences-->
         <scene sceneID="BgJ-VP-f1a">
@@ -88,71 +84,65 @@
                         <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <navigationBar contentMode="scaleToFill" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="xl4-DT-0Un">
-                                <rect key="frame" x="0.0" y="0.0" width="600" height="44"/>
-                                <items>
-                                    <navigationItem title="Preferences" id="4Dl-i2-erE"/>
-                                </items>
-                            </navigationBar>
-                            <slider opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" value="0.5" minValue="0.0" maxValue="1" translatesAutoresizingMaskIntoConstraints="NO" id="oBP-0d-AK1" userLabel="cpuSpeedSlide">
-                                <rect key="frame" x="18" y="90" width="233" height="31"/>
+                            <slider opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" value="1" minValue="0.5" maxValue="4" continuous="NO" translatesAutoresizingMaskIntoConstraints="NO" id="oBP-0d-AK1" userLabel="cpuSpeedSlide">
+                                <rect key="frame" x="18" y="176" width="233" height="31"/>
                                 <connections>
                                     <action selector="sliderDidMove:" destination="Bdv-8H-ns5" eventType="valueChanged" id="pp6-hb-eUx"/>
                                 </connections>
                             </slider>
+                            <slider opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" value="2" minValue="0.5" maxValue="4" continuous="NO" translatesAutoresizingMaskIntoConstraints="NO" id="6mP-Ec-f93" userLabel="altSpeedSlide">
+                                <rect key="frame" x="23" y="267" width="228" height="31"/>
+                                <connections>
+                                    <action selector="sliderDidMove:" destination="Bdv-8H-ns5" eventType="valueChanged" id="JBu-EB-QzS"/>
+                                </connections>
+                            </slider>
                             <pickerView contentMode="center" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="WGm-hY-OEW">
-                                <rect key="frame" x="0.0" y="257" width="359" height="123"/>
+                                <rect key="frame" x="0.0" y="343" width="359" height="123"/>
                             </pickerView>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="%" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="jIk-gU-h7b">
-                                <rect key="frame" x="125" y="61" width="49" height="21"/>
+                                <rect key="frame" x="125" y="147" width="49" height="21"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                 <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
                                 <nil key="highlightedColor"/>
                             </label>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="CPU Speed:" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Iq0-cg-cM9">
-                                <rect key="frame" x="15" y="61" width="93" height="21"/>
+                                <rect key="frame" x="15" y="147" width="93" height="21"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                 <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
                                 <nil key="highlightedColor"/>
                             </label>
-                            <slider opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" value="0.5" minValue="0.0" maxValue="1" translatesAutoresizingMaskIntoConstraints="NO" id="6mP-Ec-f93" userLabel="cpuSpeedSlide">
-                                <rect key="frame" x="23" y="181" width="228" height="31"/>
-                                <connections>
-                                    <action selector="sliderDidMove:" destination="Bdv-8H-ns5" eventType="valueChanged" id="JBu-EB-QzS"/>
-                                </connections>
-                            </slider>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="%" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="N7I-7S-5tU">
-                                <rect key="frame" x="125" y="151" width="54" height="21"/>
+                                <rect key="frame" x="125" y="237" width="54" height="21"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                 <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
                                 <nil key="highlightedColor"/>
                             </label>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Alt Speed:" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="h92-qb-Rzn">
-                                <rect key="frame" x="34" y="151" width="79" height="21"/>
+                                <rect key="frame" x="34" y="237" width="79" height="21"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                 <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
                                 <nil key="highlightedColor"/>
                             </label>
                             <switch opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" on="YES" translatesAutoresizingMaskIntoConstraints="NO" id="SUp-G2-zVO">
-                                <rect key="frame" x="273" y="90" width="51" height="31"/>
+                                <rect key="frame" x="257" y="176" width="51" height="31"/>
                                 <connections>
                                     <action selector="peggedChoiceChanged:" destination="Bdv-8H-ns5" eventType="valueChanged" id="UYy-Wm-jwi"/>
                                 </connections>
                             </switch>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Max" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="z2P-aE-OU0">
-                                <rect key="frame" x="281" y="61" width="32" height="21"/>
+                                <rect key="frame" x="265" y="147" width="32" height="21"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                 <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
                                 <nil key="highlightedColor"/>
                             </label>
                             <switch opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" on="YES" translatesAutoresizingMaskIntoConstraints="NO" id="PXo-sH-Lgu">
-                                <rect key="frame" x="278" y="180" width="51" height="31"/>
+                                <rect key="frame" x="262" y="266" width="51" height="31"/>
                                 <connections>
                                     <action selector="peggedChoiceChanged:" destination="Bdv-8H-ns5" eventType="valueChanged" id="nDr-IN-iOl"/>
                                 </connections>
                             </switch>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Max" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="qOR-C1-4kH">
-                                <rect key="frame" x="286" y="151" width="32" height="21"/>
+                                <rect key="frame" x="270" y="237" width="32" height="21"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                 <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
                                 <nil key="highlightedColor"/>
@@ -160,6 +150,14 @@
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                     </view>
+                    <navigationItem key="navigationItem" title="Preferences" id="9q5-Lx-gUn" userLabel="Preferences">
+                        <barButtonItem key="leftBarButtonItem" title="Back" id="9ng-ES-puf">
+                            <connections>
+                                <action selector="goodbye:" destination="tqd-Zi-o6N" id="8Bb-2b-KEk"/>
+                                <segue destination="JAm-8l-9Rz" kind="unwind" unwindAction="unwindToMainViewController:" id="CL2-0r-7P4"/>
+                            </connections>
+                        </barButtonItem>
+                    </navigationItem>
                     <simulatedOrientationMetrics key="simulatedOrientationMetrics"/>
                     <connections>
                         <outlet property="altMaxChoice" destination="PXo-sH-Lgu" id="Csi-GX-duY"/>
@@ -172,8 +170,25 @@
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="tqd-Zi-o6N" userLabel="First Responder" sceneMemberID="firstResponder"/>
+                <exit id="JAm-8l-9Rz" userLabel="Exit" sceneMemberID="exit"/>
             </objects>
-            <point key="canvasLocation" x="1092" y="-223"/>
+            <point key="canvasLocation" x="1567.5" y="-865.14084507042253"/>
+        </scene>
+        <!--Navigation Controller-->
+        <scene sceneID="qIj-Na-8nw">
+            <objects>
+                <navigationController id="KHo-XT-99s" sceneMemberID="viewController">
+                    <navigationBar key="navigationBar" contentMode="scaleToFill" id="E8k-gl-1ef">
+                        <rect key="frame" x="0.0" y="0.0" width="320" height="44"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                    </navigationBar>
+                    <connections>
+                        <segue destination="0hZ-GM-FUh" kind="relationship" relationship="rootViewController" id="fKz-tE-QxL"/>
+                    </connections>
+                </navigationController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="wET-Nt-Xim" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="873.75" y="-64.436619718309856"/>
         </scene>
         <!--Disks-->
         <scene sceneID="vaV-Cl-Zto">
@@ -187,27 +202,34 @@
                         <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Disk 1" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="TRZ-1C-cfv">
-                                <rect key="frame" x="31" y="20" width="46" height="21"/>
-                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
-                                <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
-                                <nil key="highlightedColor"/>
-                            </label>
-                            <pickerView contentMode="scaleToFill" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="e8v-O0-bvT">
-                                <rect key="frame" x="0.0" y="49" width="600" height="216"/>
-                            </pickerView>
-                            <pickerView contentMode="scaleToFill" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="fEc-OG-ExC">
-                                <rect key="frame" x="0.0" y="353" width="600" height="216"/>
+                            <pickerView contentMode="center" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="e8v-O0-bvT">
+                                <rect key="frame" x="0.0" y="174" width="320" height="70"/>
                             </pickerView>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Disk 2" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="cPG-e3-f3L">
-                                <rect key="frame" x="46" y="311" width="48" height="29"/>
+                                <rect key="frame" x="20" y="269" width="48" height="29"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
-                                <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
+                                <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
                                 <nil key="highlightedColor"/>
                             </label>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Disk 1" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="TRZ-1C-cfv">
+                                <rect key="frame" x="19" y="102" width="75" height="31"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <pickerView contentMode="center" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="fEc-OG-ExC">
+                                <rect key="frame" x="0.0" y="306" width="320" height="150"/>
+                            </pickerView>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                     </view>
+                    <navigationItem key="navigationItem" title="Disks" prompt="Choose Disks" id="PHz-oi-44l">
+                        <barButtonItem key="leftBarButtonItem" title="Back" id="IIm-Ae-hIr">
+                            <connections>
+                                <action selector="goodbye:" destination="0hZ-GM-FUh" id="SPE-yU-lXb"/>
+                            </connections>
+                        </barButtonItem>
+                    </navigationItem>
                     <connections>
                         <outlet property="disk1Picker" destination="e8v-O0-bvT" id="a8d-yH-zeq"/>
                         <outlet property="disk2Picker" destination="fEc-OG-ExC" id="9NO-Ew-hPj"/>
@@ -215,7 +237,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="IYj-oP-tHf" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1718" y="-470"/>
+            <point key="canvasLocation" x="1685.625" y="-160.56338028169012"/>
         </scene>
         <!--View Controller-->
         <scene sceneID="7d6-Zt-X84">
@@ -346,7 +368,7 @@
                 </tableViewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="zT7-oi-1y7" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1058" y="1349"/>
+            <point key="canvasLocation" x="1058" y="1348.9999999999998"/>
         </scene>
         <!--LoadDisks-->
         <scene sceneID="C1L-T0-as8">
@@ -375,6 +397,22 @@
                 <placeholder placeholderIdentifier="IBFirstResponder" id="xOY-gq-JMj" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="2395" y="311"/>
+        </scene>
+        <!--Navigation Controller-->
+        <scene sceneID="US7-cG-rYt">
+            <objects>
+                <navigationController id="fYd-cd-QfE" sceneMemberID="viewController">
+                    <navigationBar key="navigationBar" contentMode="scaleToFill" id="FS0-G3-U5y">
+                        <rect key="frame" x="0.0" y="0.0" width="320" height="44"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                    </navigationBar>
+                    <connections>
+                        <segue destination="Bdv-8H-ns5" kind="relationship" relationship="rootViewController" id="Zaf-9P-W4z"/>
+                    </connections>
+                </navigationController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="qRr-dT-9eo" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="849.375" y="-784.85915492957736"/>
         </scene>
     </scenes>
 </document>

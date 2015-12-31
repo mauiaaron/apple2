@@ -59,6 +59,13 @@
     const char *errMsg = disk6_insert(0, [[self.path stringByAppendingPathComponent:[self._disks objectAtIndex:row]] UTF8String], YES);
 }
 
+- (IBAction)unwindToMainViewController:(UIStoryboardSegue*)sender
+{ }
+
+-(IBAction)goodbye:(id)sender
+{
+    [self dismissViewControllerAnimated:YES completion:nil];
+}
 
 @end
 
