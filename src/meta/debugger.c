@@ -1195,8 +1195,7 @@ bool c_debugger_should_break() {
     if (pthread_self() != cpu_thread_id) {
         // OOPS ...
         ERRLOG("should only call this from cpu thread, bailing...");
-        void *ptr = NULL;
-        free(ptr);
+        RELEASE_BREAK();
     }
 
     if (at_haltpt()) {

@@ -12,13 +12,14 @@
 // Based on sample code from https://developer.apple.com/library/mac/samplecode/GLEssentials/Introduction/Intro.html
 
 #include "sourceUtil.h"
+#include "common.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 demoSource *srcLoadSource(const char *filepathname) {
-    demoSource *source = (demoSource *)calloc(sizeof(demoSource), 1);
+    demoSource *source = (demoSource *)CALLOC(sizeof(demoSource), 1);
 
     // Check the file name suffix to determine what type of shader this is
     const char *suffixBegin = filepathname + strlen(filepathname) - 4;
@@ -42,7 +43,7 @@ demoSource *srcLoadSource(const char *filepathname) {
     source->byteSize = fileSize + 1;
 
     // Alloc memory for the string
-    source->string = malloc(source->byteSize);
+    source->string = MALLOC(source->byteSize);
 
     // Read entire file into the string from beginning of the file
     fseek(curFile, 0, SEEK_SET);
@@ -57,7 +58,7 @@ demoSource *srcLoadSource(const char *filepathname) {
 }
 
 void srcDestroySource(demoSource *source) {
-    free(source->string);
-    free(source);
+    FREE(source->string);
+    FREE(source);
 }
 

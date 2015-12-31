@@ -344,15 +344,15 @@ static void _setup_touchmenu(GLModel *parent) {
     }
 
     const unsigned int size = sizeof(topMenuTemplate);
-    hudMenu->tpl = calloc(size, 1);
-    hudMenu->pixels = calloc(MENU_FB_WIDTH * MENU_FB_HEIGHT, 1);
-    hudMenu->pixelsAlt = calloc(MENU_FB_WIDTH * MENU_FB_HEIGHT, 1);
+    hudMenu->tpl = CALLOC(size, 1);
+    hudMenu->pixels = CALLOC(MENU_FB_WIDTH * MENU_FB_HEIGHT, 1);
+    hudMenu->pixelsAlt = CALLOC(MENU_FB_WIDTH * MENU_FB_HEIGHT, 1);
 
     _present_menu(parent);
 }
 
 static void *_create_touchmenu(void) {
-    GLModelHUDMenu *hudMenu = (GLModelHUDMenu *)calloc(sizeof(GLModelHUDMenu), 1);
+    GLModelHUDMenu *hudMenu = (GLModelHUDMenu *)CALLOC(sizeof(GLModelHUDMenu), 1);
     if (hudMenu) {
         hudMenu->blackIsTransparent = true;
         hudMenu->opaquePixelHalo = true;

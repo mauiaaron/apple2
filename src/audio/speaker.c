@@ -368,14 +368,14 @@ void speaker_init(void) {
 
         remainder_buffer_size_max = ((CLK_6502_INT*(unsigned long)CPU_SCALE_FASTEST)/audio_backend->systemSettings.sampleRateHz)+1;
 
-        samples_buffer = calloc(1, channelsSampleRateHz * sizeof(int16_t));
+        samples_buffer = CALLOC(1, channelsSampleRateHz * sizeof(int16_t));
         if (!samples_buffer) {
             err = -1;
             break;
         }
         samples_buffer_idx = bufferSizeIdealMax;
 
-        remainder_buffer = malloc(remainder_buffer_size_max * sizeof(int16_t));
+        remainder_buffer = MALLOC(remainder_buffer_size_max * sizeof(int16_t));
         if (!remainder_buffer) {
             err = -1;
             break;

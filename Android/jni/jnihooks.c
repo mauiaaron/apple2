@@ -342,7 +342,7 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeChooseDisk(JNIEnv *env, jcl
         } else {
             video_backend->animation_showDiskChosen(drive);
         }
-        FREE(gzPath);
+        ASPRINTF_FREE(gzPath);
     } else {
         video_backend->animation_showDiskChosen(drive);
     }
@@ -390,7 +390,7 @@ jstring Java_org_deadc0de_apple2ix_Apple2Activity_nativeLoadState(JNIEnv *env, j
     asprintf(&str, "{ disk1 = \"%s\"; readOnly1 = %s; disk2 = \"%s\"; readOnly2 = %s }", (disk1 ?: ""), readOnly1 ? "true" : "false", (disk2 ?: ""), readOnly2 ? "true" : "false");
     if (str) {
         jstr = (*env)->NewStringUTF(env, str);
-        FREE(str);
+        ASPRINTF_FREE(str);
     }
 
     return jstr;

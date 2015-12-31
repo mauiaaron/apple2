@@ -140,7 +140,7 @@ int test_setup_boot_disk(const char *fileName, int readonly) {
     CFRELEASE(fileURL);
     CFIndex length = CFStringGetLength(filePath);
     CFIndex maxSize = CFStringGetMaximumSizeForEncoding(length, kCFStringEncodingUTF8);
-    disk = (char *)malloc(maxSize);
+    disk = (char *)MALLOC(maxSize);
     if (!CFStringGetCString(filePath, disk, maxSize, kCFStringEncodingUTF8)) {
         FREE(disk);
     }
@@ -184,7 +184,7 @@ int test_setup_boot_disk(const char *fileName, int readonly) {
     while (*path) {
         char *disk = *path;
         ++path;
-        FREE(disk);
+        ASPRINTF_FREE(disk);
     }
 
     return err;

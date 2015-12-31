@@ -118,12 +118,12 @@ static void _setup_axis_object(GLModel *parent) {
         };
 
         const unsigned int size = sizeof(axisTemplate);
-        hudElement->tpl = calloc(size, 1);
+        hudElement->tpl = CALLOC(size, 1);
         hudElement->tplWidth = AXIS_TEMPLATE_COLS;
         hudElement->tplHeight = AXIS_TEMPLATE_ROWS;
         memcpy(hudElement->tpl, axisTemplate, size);
 
-        hudElement->pixels = calloc(AXIS_FB_WIDTH * AXIS_FB_HEIGHT, 1);
+        hudElement->pixels = CALLOC(AXIS_FB_WIDTH * AXIS_FB_HEIGHT, 1);
         hudElement->pixWidth = AXIS_FB_WIDTH;
         hudElement->pixHeight = AXIS_FB_HEIGHT;
     }
@@ -166,12 +166,12 @@ static void _setup_button_object(GLModel *parent) {
         };
 
         const unsigned int size = sizeof(buttonTemplate);
-        hudElement->tpl = calloc(size, 1);
+        hudElement->tpl = CALLOC(size, 1);
         hudElement->tplWidth = BUTTON_TEMPLATE_COLS;
         hudElement->tplHeight = BUTTON_TEMPLATE_ROWS;
         memcpy(hudElement->tpl, buttonTemplate, size);
 
-        hudElement->pixels = calloc(BUTTON_FB_WIDTH * BUTTON_FB_HEIGHT, 1);
+        hudElement->pixels = CALLOC(BUTTON_FB_WIDTH * BUTTON_FB_HEIGHT, 1);
         hudElement->pixWidth = BUTTON_FB_WIDTH;
         hudElement->pixHeight = BUTTON_FB_HEIGHT;
     }

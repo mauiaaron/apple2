@@ -319,19 +319,8 @@ static const char *log_end = "\n";
         *ptr = '\0'; \
     } while (0);
 
-#define FREE(x) \
-    do { \
-        free((x)); \
-        (x) = NULL; \
-    } while (0)
-
-#ifdef __APPLE__
-#define CFRELEASE(x) \
-    do { \
-        CFRelease((x)); \
-        (x) = NULL; \
-    } while (0)
-#endif
+// memory management
+#include "memmngt.h"
 
 // branch prediction
 #define LIKELY(x)   __builtin_expect((x), true)

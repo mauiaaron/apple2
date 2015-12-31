@@ -131,7 +131,7 @@ void Java_org_deadc0de_apple2ix_Apple2CrashHandler_nativeProcessCrash(JNIEnv *en
     }
 
     if (symbolsPath) {
-        FREE(symbolsPath);
+        ASPRINTF_FREE(symbolsPath);
     }
 
     (*env)->ReleaseStringUTFChars(env, jCrashPath,  crashPath);

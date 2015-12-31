@@ -426,14 +426,14 @@ static long opensl_createSoundBuffer(const AudioContext_s *audio_context, INOUT 
             voice->ringBuffer = prevBuffer;
         } else {
             LOG("Creating new SLVoice ...");
-            voice = calloc(1, sizeof(*voice));
+            voice = CALLOC(1, sizeof(*voice));
             if (voice == NULL) {
                 ERRLOG("OOPS, Out of memory!");
                 break;
             }
             voice->bufferSize = bufferSize;
             // Allocate enough space for the temp buffer (including a maximum allowed overflow)
-            voice->ringBuffer = calloc(1, voice->bufferSize + ctx->submitSize/*max overflow*/);
+            voice->ringBuffer = CALLOC(1, voice->bufferSize + ctx->submitSize/*max overflow*/);
             if (voice->ringBuffer == NULL) {
                 ERRLOG("OOPS, Error allocating %lu bytes", (unsigned long)voice->bufferSize+ctx->submitSize);
                 break;
@@ -444,7 +444,7 @@ static long opensl_createSoundBuffer(const AudioContext_s *audio_context, INOUT 
 
         voice->ctx = ctx;
 
-        if ((*soundbuf_struct = calloc(1, sizeof(AudioBuffer_s))) == NULL) {
+        if ((*soundbuf_struct = CALLOC(1, sizeof(AudioBuffer_s))) == NULL) {
             ERRLOG("OOPS, Not enough memory");
             break;
         }
@@ -556,14 +556,14 @@ static long opensles_systemSetup(INOUT AudioContext_s **audio_context) {
         //
         // Engine creation ...
         //
-        ctx = calloc(1, sizeof(EngineContext_s));
+        ctx = CALLOC(1, sizeof(EngineContext_s));
         if (!ctx) {
             result = -1;
             break;
         }
 
         ctx->submitSize = android_stereoBufferSubmitSizeSamples * opensles_audio_backend.systemSettings.bytesPerSample * NUM_CHANNELS;
-        ctx->mixBuf = calloc(1, ctx->submitSize);
+        ctx->mixBuf = CALLOC(1, ctx->submitSize);
         if (ctx->mixBuf == NULL) {
             ERRLOG("OOPS, Error allocating %lu bytes", (unsigned long)ctx->submitSize);
             break;
@@ -608,7 +608,7 @@ static long opensles_systemSetup(INOUT AudioContext_s **audio_context) {
         }
 
         // create soundcore API wrapper
-        if ((*audio_context = calloc(1, sizeof(AudioContext_s))) == NULL) {
+        if ((*audio_context = CALLOC(1, sizeof(AudioContext_s))) == NULL) {
             result = -1;
             ERRLOG("OOPS, Not enough memory");
             break;
@@ -707,7 +707,7 @@ static long opensles_systemSetup(INOUT AudioContext_s **audio_context) {
 
     if (result != SL_RESULT_SUCCESS) {
         if (ctx) {
-            AudioContext_s *ctxPtr = calloc(1, sizeof(AudioContext_s));
+            AudioContext_s *ctxPtr = CALLOC(1, sizeof(AudioContext_s));
             ctxPtr->_internal = ctx;
             opensles_systemShutdown(&ctxPtr);
         }

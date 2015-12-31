@@ -27,7 +27,7 @@ static GLModel *messageModel = NULL;
 // ----------------------------------------------------------------------------
 
 static void *_create_alert(void) {
-    GLModelHUDElement *hudElement = (GLModelHUDElement *)calloc(sizeof(GLModelHUDElement), 1);
+    GLModelHUDElement *hudElement = (GLModelHUDElement *)CALLOC(sizeof(GLModelHUDElement), 1);
     if (hudElement) {
         hudElement->colorScheme = RED_ON_BLACK;
         hudElement->blackIsTransparent = false;
@@ -47,9 +47,7 @@ static inline void _set_alpha(unsigned int dstIdx) {
 }
 
 static void _alertToModel(char *message, unsigned int messageCols, unsigned int messageRows) {
-    if (!message) {
-        return;
-    }
+    assert(message);
 
     isEnabled = false;
 
@@ -78,7 +76,7 @@ static void _alertToModel(char *message, unsigned int messageCols, unsigned int 
         hudElement->tpl = message;
         hudElement->pixWidth = fbWidth;
         hudElement->pixHeight = fbHeight;
-        hudElement->pixels = calloc(fbWidth * fbHeight, 1);
+        hudElement->pixels = MALLOC(fbWidth * fbHeight);
         if (!hudElement->pixels) {
             LOG("OOPS cannot create animation message intermediate framebuffer!");
             break;
@@ -209,7 +207,7 @@ static void _animation_showMessage(char *messageTemplate, unsigned int cols, uns
     const unsigned int framedStride = framedCols+1/*\0*/;
     const unsigned int sourceStride = cols+1/*\0*/;
 
-    char *message = calloc(framedStride*framedRows, 1);
+    char *message = CALLOC(framedStride*framedRows, 1);
     if (!message) {
         LOG("OOPS cannot create memory for animation message!");
         return;

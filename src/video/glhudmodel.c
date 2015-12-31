@@ -13,7 +13,7 @@
 #include "glvideo.h"
 
 void *glhud_createDefault(void) {
-    GLModelHUDElement *hudElement = (GLModelHUDElement *)calloc(sizeof(GLModelHUDElement), 1);
+    GLModelHUDElement *hudElement = (GLModelHUDElement *)CALLOC(sizeof(GLModelHUDElement), 1);
     if (hudElement) {
         hudElement->colorScheme = RED_ON_BLACK;
     }

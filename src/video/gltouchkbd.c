@@ -448,11 +448,11 @@ static void _setup_touchkbd_hud(GLModel *parent) {
     hudKeyboard->pixWidth  = KBD_FB_WIDTH;
     hudKeyboard->pixHeight = KBD_FB_HEIGHT;
 
-    const unsigned int size = sizeof(kbdTemplateUCase/* assuming all the same */);
-    hudKeyboard->tpl = calloc(size, 1);
-    hudKeyboard->pixels = calloc(KBD_FB_WIDTH * KBD_FB_HEIGHT, 1);
+    const unsigned int size = sizeof(kbdTemplateUCase/* assuming all the same dimensions */);
+    hudKeyboard->tpl = MALLOC(size);
+    hudKeyboard->pixels = MALLOC(KBD_FB_WIDTH * KBD_FB_HEIGHT);
 
-    memcpy(hudKeyboard->tpl, kbdTemplateUCase[0], sizeof(kbdTemplateUCase/* assuming all the same size */));
+    memcpy(hudKeyboard->tpl, kbdTemplateUCase[0], sizeof(kbdTemplateUCase/* assuming all the same dimensions */));
 
     // setup normal color pixels
     hudKeyboard->colorScheme = RED_ON_BLACK;
@@ -460,7 +460,7 @@ static void _setup_touchkbd_hud(GLModel *parent) {
 }
 
 static void *_create_touchkbd_hud(void) {
-    GLModelHUDKeyboard *hudKeyboard = (GLModelHUDKeyboard *)calloc(sizeof(GLModelHUDKeyboard), 1);
+    GLModelHUDKeyboard *hudKeyboard = (GLModelHUDKeyboard *)CALLOC(sizeof(GLModelHUDKeyboard), 1);
     if (hudKeyboard) {
         hudKeyboard->blackIsTransparent = true;
         hudKeyboard->opaquePixelHalo = true;

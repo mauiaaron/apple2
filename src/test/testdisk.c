@@ -72,7 +72,7 @@ TEST test_boot_disk_bytes() {
         ASSERT(expectedSize == EXPECTED_DISK_TRACE_FILE_SIZE);
         fseek(fp, 0, SEEK_SET);
 
-        unsigned char *buf = malloc(EXPECTED_DISK_TRACE_FILE_SIZE);
+        unsigned char *buf = MALLOC(EXPECTED_DISK_TRACE_FILE_SIZE);
         if (fread(buf, 1, EXPECTED_DISK_TRACE_FILE_SIZE, fp) != EXPECTED_DISK_TRACE_FILE_SIZE) {
             ASSERT(false);
         }
@@ -120,7 +120,7 @@ TEST test_boot_disk_bytes_nib() {
         ASSERT(expectedSize == EXPECTED_DISK_TRACE_NIB_FILE_SIZE);
         fseek(fp, 0, SEEK_SET);
 
-        unsigned char *buf = malloc(EXPECTED_DISK_TRACE_NIB_FILE_SIZE);
+        unsigned char *buf = MALLOC(EXPECTED_DISK_TRACE_NIB_FILE_SIZE);
         if (fread(buf, 1, EXPECTED_DISK_TRACE_NIB_FILE_SIZE, fp) != EXPECTED_DISK_TRACE_NIB_FILE_SIZE) {
             ASSERT(false);
         }
@@ -173,7 +173,7 @@ TEST test_boot_disk_bytes_po() {
         ASSERT(expectedSize == EXPECTED_DISK_TRACE_PO_FILE_SIZE);
         fseek(fp, 0, SEEK_SET);
 
-        unsigned char *buf = malloc(EXPECTED_DISK_TRACE_PO_FILE_SIZE);
+        unsigned char *buf = MALLOC(EXPECTED_DISK_TRACE_PO_FILE_SIZE);
         if (fread(buf, 1, EXPECTED_DISK_TRACE_PO_FILE_SIZE, fp) != EXPECTED_DISK_TRACE_PO_FILE_SIZE) {
             ASSERT(false);
         }
@@ -368,7 +368,7 @@ TEST test_disk_bytes_savehello_dsk() {
         ASSERT(expectedSize == EXPECTED_DISKWRITE_TRACE_DSK_FILE_SIZE);
         fseek(fp, 0, SEEK_SET);
 
-        unsigned char *buf = malloc(EXPECTED_DISKWRITE_TRACE_DSK_FILE_SIZE);
+        unsigned char *buf = MALLOC(EXPECTED_DISKWRITE_TRACE_DSK_FILE_SIZE);
         if (fread(buf, 1, EXPECTED_DISKWRITE_TRACE_DSK_FILE_SIZE, fp) != EXPECTED_DISKWRITE_TRACE_DSK_FILE_SIZE) {
             ASSERT(false);
         }
@@ -404,7 +404,7 @@ TEST test_disk_bytes_savehello_dsk() {
         ASSERT(expectedSize == DSK_SIZE);
         fseek(fp, 0, SEEK_SET);
 
-        unsigned char *buf = malloc(DSK_SIZE);
+        unsigned char *buf = MALLOC(DSK_SIZE);
         if (fread(buf, 1, DSK_SIZE, fp) != DSK_SIZE) {
             ASSERT(false);
         }
@@ -462,7 +462,7 @@ TEST test_disk_bytes_savehello_nib() {
         ASSERT(expectedSize == EXPECTED_DISKWRITE_TRACE_NIB_FILE_SIZE);
         fseek(fp, 0, SEEK_SET);
 
-        unsigned char *buf = malloc(EXPECTED_DISKWRITE_TRACE_NIB_FILE_SIZE);
+        unsigned char *buf = MALLOC(EXPECTED_DISKWRITE_TRACE_NIB_FILE_SIZE);
         if (fread(buf, 1, EXPECTED_DISKWRITE_TRACE_NIB_FILE_SIZE, fp) != EXPECTED_DISKWRITE_TRACE_NIB_FILE_SIZE) {
             ASSERT(false);
         }
@@ -498,7 +498,7 @@ TEST test_disk_bytes_savehello_nib() {
         ASSERT(expectedSize == NIB_SIZE);
         fseek(fp, 0, SEEK_SET);
 
-        unsigned char *buf = malloc(NIB_SIZE);
+        unsigned char *buf = MALLOC(NIB_SIZE);
         if (fread(buf, 1, NIB_SIZE, fp) != NIB_SIZE) {
             ASSERT(false);
         }
@@ -556,7 +556,7 @@ TEST test_disk_bytes_savehello_po() {
         ASSERT(expectedSize == EXPECTED_DISKWRITE_TRACE_PO_FILE_SIZE);
         fseek(fp, 0, SEEK_SET);
 
-        unsigned char *buf = malloc(EXPECTED_DISKWRITE_TRACE_PO_FILE_SIZE);
+        unsigned char *buf = MALLOC(EXPECTED_DISKWRITE_TRACE_PO_FILE_SIZE);
         if (fread(buf, 1, EXPECTED_DISKWRITE_TRACE_PO_FILE_SIZE, fp) != EXPECTED_DISKWRITE_TRACE_PO_FILE_SIZE) {
             ASSERT(false);
         }
@@ -592,7 +592,7 @@ TEST test_disk_bytes_savehello_po() {
         ASSERT(expectedSize == DSK_SIZE);
         fseek(fp, 0, SEEK_SET);
 
-        unsigned char *buf = malloc(DSK_SIZE);
+        unsigned char *buf = MALLOC(DSK_SIZE);
         if (fread(buf, 1, DSK_SIZE, fp) != DSK_SIZE) {
             ASSERT(false);
         }
@@ -669,7 +669,7 @@ TEST test_outofspace_dsk() {
         ASSERT(expectedSize == EXPECTED_OOS_DSK_TRACE_FILE_SIZE);
         fseek(fp, 0, SEEK_SET);
 
-        unsigned char *buf = malloc(EXPECTED_OOS_DSK_TRACE_FILE_SIZE);
+        unsigned char *buf = MALLOC(EXPECTED_OOS_DSK_TRACE_FILE_SIZE);
         if (fread(buf, 1, EXPECTED_OOS_DSK_TRACE_FILE_SIZE, fp) != EXPECTED_OOS_DSK_TRACE_FILE_SIZE) {
             ASSERT(false);
         }
@@ -705,7 +705,7 @@ TEST test_outofspace_dsk() {
         ASSERT(expectedSize == DSK_SIZE);
         fseek(fp, 0, SEEK_SET);
 
-        unsigned char *buf = malloc(DSK_SIZE);
+        unsigned char *buf = MALLOC(DSK_SIZE);
         if (fread(buf, 1, DSK_SIZE, fp) != DSK_SIZE) {
             ASSERT(false);
         }
@@ -760,7 +760,7 @@ TEST test_outofspace_nib() {
         ASSERT(expectedSize == NIB_SIZE);
         fseek(fp, 0, SEEK_SET);
 
-        unsigned char *buf = malloc(NIB_SIZE);
+        unsigned char *buf = MALLOC(NIB_SIZE);
         if (fread(buf, 1, NIB_SIZE, fp) != NIB_SIZE) {
             ASSERT(false);
         }
@@ -815,7 +815,7 @@ TEST test_outofspace_po() {
         ASSERT(expectedSize == DSK_SIZE);
         fseek(fp, 0, SEEK_SET);
 
-        unsigned char *buf = malloc(DSK_SIZE);
+        unsigned char *buf = MALLOC(DSK_SIZE);
         if (fread(buf, 1, DSK_SIZE, fp) != DSK_SIZE) {
             ASSERT(false);
         }
@@ -937,7 +937,7 @@ TEST test_bload_trace_dsk() {
         ASSERT(expectedSize == EXPECTED_BLOAD_TRACE_DSK_FILE_SIZE);
         fseek(fp, 0, SEEK_SET);
 
-        unsigned char *buf = malloc(EXPECTED_BLOAD_TRACE_DSK_FILE_SIZE);
+        unsigned char *buf = MALLOC(EXPECTED_BLOAD_TRACE_DSK_FILE_SIZE);
         if (fread(buf, 1, EXPECTED_BLOAD_TRACE_DSK_FILE_SIZE, fp) != EXPECTED_BLOAD_TRACE_DSK_FILE_SIZE) {
             ASSERT(false);
         }
@@ -1055,7 +1055,7 @@ TEST test_bload_trace_nib() {
         ASSERT(expectedSize == EXPECTED_BLOAD_TRACE_NIB_FILE_SIZE);
         fseek(fp, 0, SEEK_SET);
 
-        unsigned char *buf = malloc(EXPECTED_BLOAD_TRACE_NIB_FILE_SIZE);
+        unsigned char *buf = MALLOC(EXPECTED_BLOAD_TRACE_NIB_FILE_SIZE);
         if (fread(buf, 1, EXPECTED_BLOAD_TRACE_NIB_FILE_SIZE, fp) != EXPECTED_BLOAD_TRACE_NIB_FILE_SIZE) {
             ASSERT(false);
         }
@@ -1173,7 +1173,7 @@ TEST test_bload_trace_po() {
         ASSERT(expectedSize == EXPECTED_BLOAD_TRACE_PO_FILE_SIZE);
         fseek(fp, 0, SEEK_SET);
 
-        unsigned char *buf = malloc(EXPECTED_BLOAD_TRACE_PO_FILE_SIZE);
+        unsigned char *buf = MALLOC(EXPECTED_BLOAD_TRACE_PO_FILE_SIZE);
         if (fread(buf, 1, EXPECTED_BLOAD_TRACE_PO_FILE_SIZE, fp) != EXPECTED_BLOAD_TRACE_PO_FILE_SIZE) {
             ASSERT(false);
         }
@@ -1288,7 +1288,7 @@ TEST test_data_stability_dsk() {
         ASSERT(expectedSize == EXPECTED_STABILITY_DSK_FILE_SIZE);
         fseek(fp, 0, SEEK_SET);
 
-        unsigned char *buf = malloc(EXPECTED_STABILITY_DSK_FILE_SIZE);
+        unsigned char *buf = MALLOC(EXPECTED_STABILITY_DSK_FILE_SIZE);
         if (fread(buf, 1, EXPECTED_STABILITY_DSK_FILE_SIZE, fp) != EXPECTED_STABILITY_DSK_FILE_SIZE) {
             ASSERT(false);
         }
@@ -1323,7 +1323,7 @@ TEST test_data_stability_nib() {
         ASSERT(expectedSize == EXPECTED_STABILITY_NIB_FILE_SIZE);
         fseek(fp, 0, SEEK_SET);
 
-        unsigned char *buf = malloc(EXPECTED_STABILITY_NIB_FILE_SIZE);
+        unsigned char *buf = MALLOC(EXPECTED_STABILITY_NIB_FILE_SIZE);
         if (fread(buf, 1, EXPECTED_STABILITY_NIB_FILE_SIZE, fp) != EXPECTED_STABILITY_NIB_FILE_SIZE) {
             ASSERT(false);
         }
@@ -1358,7 +1358,7 @@ TEST test_data_stability_po() {
         ASSERT(expectedSize == EXPECTED_STABILITY_PO_FILE_SIZE);
         fseek(fp, 0, SEEK_SET);
 
-        unsigned char *buf = malloc(EXPECTED_STABILITY_PO_FILE_SIZE);
+        unsigned char *buf = MALLOC(EXPECTED_STABILITY_PO_FILE_SIZE);
         if (fread(buf, 1, EXPECTED_STABILITY_PO_FILE_SIZE, fp) != EXPECTED_STABILITY_PO_FILE_SIZE) {
             ASSERT(false);
         }
