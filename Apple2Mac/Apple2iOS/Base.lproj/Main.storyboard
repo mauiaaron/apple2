@@ -48,7 +48,7 @@
                                     </barButtonItem>
                                     <barButtonItem title="Disks" id="g21-de-0Ou">
                                         <connections>
-                                            <segue destination="980-JU-ntO" kind="popoverPresentation" popoverAnchorBarButtonItem="g21-de-0Ou" id="q1r-MR-nbM">
+                                            <segue destination="0hZ-GM-FUh" kind="popoverPresentation" popoverAnchorBarButtonItem="g21-de-0Ou" id="ic4-KT-dB8">
                                                 <popoverArrowDirection key="popoverArrowDirection" up="YES" down="YES" left="YES" right="YES"/>
                                             </segue>
                                         </connections>
@@ -174,6 +174,48 @@
                 <placeholder placeholderIdentifier="IBFirstResponder" id="tqd-Zi-o6N" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="1092" y="-223"/>
+        </scene>
+        <!--Disks-->
+        <scene sceneID="vaV-Cl-Zto">
+            <objects>
+                <viewController id="0hZ-GM-FUh" userLabel="Disks" customClass="disksViewController" sceneMemberID="viewController">
+                    <layoutGuides>
+                        <viewControllerLayoutGuide type="top" id="2FO-2b-fJK"/>
+                        <viewControllerLayoutGuide type="bottom" id="a8M-qc-lNk"/>
+                    </layoutGuides>
+                    <view key="view" contentMode="scaleToFill" id="ah2-22-5Cs">
+                        <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Disk 1" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="TRZ-1C-cfv">
+                                <rect key="frame" x="31" y="20" width="46" height="21"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <pickerView contentMode="scaleToFill" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="e8v-O0-bvT">
+                                <rect key="frame" x="0.0" y="49" width="600" height="216"/>
+                            </pickerView>
+                            <pickerView contentMode="scaleToFill" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="fEc-OG-ExC">
+                                <rect key="frame" x="0.0" y="353" width="600" height="216"/>
+                            </pickerView>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Disk 2" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="cPG-e3-f3L">
+                                <rect key="frame" x="46" y="311" width="48" height="29"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                        </subviews>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                    </view>
+                    <connections>
+                        <outlet property="disk1Picker" destination="e8v-O0-bvT" id="a8d-yH-zeq"/>
+                        <outlet property="disk2Picker" destination="fEc-OG-ExC" id="9NO-Ew-hPj"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="IYj-oP-tHf" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="1718" y="-470"/>
         </scene>
         <!--View Controller-->
         <scene sceneID="7d6-Zt-X84">
@@ -305,70 +347,6 @@
                 <placeholder placeholderIdentifier="IBFirstResponder" id="zT7-oi-1y7" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="1058" y="1349"/>
-        </scene>
-        <!--Disk-->
-        <scene sceneID="kmp-p5-5uY">
-            <objects>
-                <tableViewController id="980-JU-ntO" userLabel="Disk" sceneMemberID="viewController">
-                    <tableView key="view" clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="44" sectionHeaderHeight="28" sectionFooterHeight="28" id="BTP-a5-mnq">
-                        <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
-                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                        <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
-                        <prototypes>
-                            <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" selectionStyle="default" indentationWidth="10" rowHeight="87" id="x3K-si-dgt">
-                                <rect key="frame" x="0.0" y="28" width="600" height="87"/>
-                                <autoresizingMask key="autoresizingMask"/>
-                                <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="x3K-si-dgt" id="6YL-HV-FVV">
-                                    <rect key="frame" x="0.0" y="0.0" width="600" height="86"/>
-                                    <autoresizingMask key="autoresizingMask"/>
-                                    <subviews>
-                                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="No Disk" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="nFV-GW-A8d">
-                                            <rect key="frame" x="159" y="46" width="359" height="21"/>
-                                            <fontDescription key="fontDescription" type="system" pointSize="14"/>
-                                            <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
-                                            <nil key="highlightedColor"/>
-                                        </label>
-                                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Load/Unload Disk A" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="dhV-Qu-eN0">
-                                            <rect key="frame" x="59" y="8" width="359" height="21"/>
-                                            <fontDescription key="fontDescription" type="system" pointSize="23"/>
-                                            <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
-                                            <nil key="highlightedColor"/>
-                                        </label>
-                                    </subviews>
-                                </tableViewCellContentView>
-                            </tableViewCell>
-                            <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" selectionStyle="default" indentationWidth="10" rowHeight="110" id="ceu-H4-qtw">
-                                <rect key="frame" x="0.0" y="115" width="600" height="110"/>
-                                <autoresizingMask key="autoresizingMask"/>
-                                <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="ceu-H4-qtw" id="qmX-ik-xRp">
-                                    <rect key="frame" x="0.0" y="0.0" width="600" height="109"/>
-                                    <autoresizingMask key="autoresizingMask"/>
-                                    <subviews>
-                                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="No Disk" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="8BF-Vq-y8h">
-                                            <rect key="frame" x="158" y="53" width="359" height="21"/>
-                                            <fontDescription key="fontDescription" type="system" pointSize="14"/>
-                                            <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
-                                            <nil key="highlightedColor"/>
-                                        </label>
-                                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Load/Unload Disk A" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="6gn-21-pmx" userLabel="Load/Unload Disk B">
-                                            <rect key="frame" x="59" y="24" width="379" height="21"/>
-                                            <fontDescription key="fontDescription" type="system" pointSize="23"/>
-                                            <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
-                                            <nil key="highlightedColor"/>
-                                        </label>
-                                    </subviews>
-                                </tableViewCellContentView>
-                            </tableViewCell>
-                        </prototypes>
-                        <connections>
-                            <outlet property="dataSource" destination="980-JU-ntO" id="Dqz-xg-zqk"/>
-                            <outlet property="delegate" destination="980-JU-ntO" id="Aul-0c-avM"/>
-                        </connections>
-                    </tableView>
-                </tableViewController>
-                <placeholder placeholderIdentifier="IBFirstResponder" id="cTY-sc-1Fe" userLabel="First Responder" sceneMemberID="firstResponder"/>
-            </objects>
-            <point key="canvasLocation" x="1722" y="245"/>
         </scene>
         <!--LoadDisks-->
         <scene sceneID="C1L-T0-as8">

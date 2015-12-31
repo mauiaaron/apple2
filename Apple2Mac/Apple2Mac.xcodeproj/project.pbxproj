@@ -126,6 +126,7 @@
 		4E1733E41C2C5F7A00CDF9DF /* AppleViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4E1733DD1C2C5E5D00CDF9DF /* AppleViewController.m */; };
 		4ECBEADF1C3432010046F537 /* speedtest.dsk in Resources */ = {isa = PBXBuildFile; fileRef = 4ECBEADD1C3432010046F537 /* speedtest.dsk */; };
 		4ECBEAE01C3432010046F537 /* testvm1.dsk in Resources */ = {isa = PBXBuildFile; fileRef = 4ECBEADE1C3432010046F537 /* testvm1.dsk */; };
+		4EEF0E8A1C3536A3001BEB67 /* disksViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4EEF0E891C3536A3001BEB67 /* disksViewController.m */; };
 		773B3D101956885A0085CE5F /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 773B3D0F1956885A0085CE5F /* Cocoa.framework */; };
 		773B3D1A1956885A0085CE5F /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 773B3D181956885A0085CE5F /* InfoPlist.strings */; };
 		773B3D201956885A0085CE5F /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = 773B3D1E1956885A0085CE5F /* Credits.rtf */; };
@@ -401,6 +402,8 @@
 		4E4E62A01C2C5B56002E324F /* iosPrefControllerViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = iosPrefControllerViewController.m; sourceTree = "<group>"; };
 		4ECBEADD1C3432010046F537 /* speedtest.dsk */ = {isa = PBXFileReference; lastKnownFileType = file; path = speedtest.dsk; sourceTree = "<group>"; };
 		4ECBEADE1C3432010046F537 /* testvm1.dsk */ = {isa = PBXFileReference; lastKnownFileType = file; path = testvm1.dsk; sourceTree = "<group>"; };
+		4EEF0E881C3536A3001BEB67 /* disksViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = disksViewController.h; sourceTree = "<group>"; };
+		4EEF0E891C3536A3001BEB67 /* disksViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = disksViewController.m; sourceTree = "<group>"; };
 		773B3D0C1956885A0085CE5F /* Apple2Mac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Apple2Mac.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		773B3D0F1956885A0085CE5F /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		773B3D121956885A0085CE5F /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
@@ -892,6 +895,8 @@
 		935C55231C12B9CE0013166D /* iOS */ = {
 			isa = PBXGroup;
 			children = (
+				4EEF0E881C3536A3001BEB67 /* disksViewController.h */,
+				4EEF0E891C3536A3001BEB67 /* disksViewController.m */,
 				935C55471C12BE510013166D /* AppDelegate.h */,
 				935C55481C12BE510013166D /* AppDelegate.m */,
 				93206C831C156BD300668153 /* A2IXPopupChoreographer.h */,
@@ -1663,6 +1668,7 @@
 				935C55671C136E070013166D /* glhudmodel.c in Sources */,
 				935C55681C136E070013166D /* glnode.c in Sources */,
 				935C556A1C136E070013166D /* matrixUtil.c in Sources */,
+				4EEF0E8A1C3536A3001BEB67 /* disksViewController.m in Sources */,
 				935C556B1C136E070013166D /* modelUtil.c in Sources */,
 				935C556C1C136E070013166D /* sourceUtil.c in Sources */,
 				935C556D1C136E070013166D /* vectorUtil.c in Sources */,
