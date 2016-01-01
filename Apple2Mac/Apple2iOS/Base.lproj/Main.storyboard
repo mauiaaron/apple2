@@ -41,7 +41,6 @@
                                     <barButtonItem width="42" style="plain" systemItem="fixedSpace" id="c1a-uF-Awt"/>
                                     <barButtonItem title="Prefs" id="80q-oc-naJ">
                                         <connections>
-                                            <action selector="prefsItemSelected:" destination="dkx-z0-nzr" id="L1Z-h1-i72"/>
                                             <segue destination="fYd-cd-QfE" kind="presentation" id="Yi8-iq-9a7"/>
                                         </connections>
                                     </barButtonItem>
@@ -153,8 +152,7 @@
                     <navigationItem key="navigationItem" title="Preferences" id="9q5-Lx-gUn" userLabel="Preferences">
                         <barButtonItem key="leftBarButtonItem" title="Back" id="9ng-ES-puf">
                             <connections>
-                                <action selector="goodbye:" destination="tqd-Zi-o6N" id="8Bb-2b-KEk"/>
-                                <segue destination="JAm-8l-9Rz" kind="unwind" unwindAction="unwindToMainViewController:" id="CL2-0r-7P4"/>
+                                <action selector="goodbye:" destination="Bdv-8H-ns5" id="lwk-Ua-aCf"/>
                             </connections>
                         </barButtonItem>
                     </navigationItem>
@@ -170,7 +168,6 @@
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="tqd-Zi-o6N" userLabel="First Responder" sceneMemberID="firstResponder"/>
-                <exit id="JAm-8l-9Rz" userLabel="Exit" sceneMemberID="exit"/>
             </objects>
             <point key="canvasLocation" x="1567.5" y="-865.14084507042253"/>
         </scene>
@@ -226,7 +223,7 @@
                     <navigationItem key="navigationItem" title="Disks" prompt="Choose Disks" id="PHz-oi-44l">
                         <barButtonItem key="leftBarButtonItem" title="Back" id="IIm-Ae-hIr">
                             <connections>
-                                <action selector="goodbye:" destination="0hZ-GM-FUh" id="SPE-yU-lXb"/>
+                                <action selector="goodbye:" destination="0hZ-GM-FUh" id="TZh-NX-sKe"/>
                             </connections>
                         </barButtonItem>
                     </navigationItem>

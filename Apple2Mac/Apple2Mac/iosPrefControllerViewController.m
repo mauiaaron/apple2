@@ -218,6 +218,7 @@
 -(IBAction)goodbye:(id)sender
 {
     [self dismissViewControllerAnimated:YES completion:nil];
+    cpu_resume();
 }
 - (IBAction)unwindToMainViewController:(UIStoryboardSegue*)sender
 {
