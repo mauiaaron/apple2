@@ -40,7 +40,7 @@
 }
 
 
-- (IBAction)unwindToMainViewController:(UIStoryboardSegue*)sender
+- (IBAction)unwindForSegue:(UIStoryboardSegue*)sender
 {
  cpu_resume();
 }

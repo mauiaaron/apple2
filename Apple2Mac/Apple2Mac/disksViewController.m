@@ -65,6 +65,7 @@
 -(IBAction)goodbye:(id)sender
 {
     [self dismissViewControllerAnimated:YES completion:nil];
+    cpu_resume();
 }
 
 @end
