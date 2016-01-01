@@ -134,6 +134,12 @@
 		4ECFC3A31C368647008E2633 /* mystery.dsk in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4ECFC39C1C368620008E2633 /* mystery.dsk */; };
 		4ECFC3A41C368649008E2633 /* speedtest.dsk in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4ECBEADD1C3432010046F537 /* speedtest.dsk */; };
 		4ECFC3A51C36864B008E2633 /* testvm1.dsk in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4ECBEADE1C3432010046F537 /* testvm1.dsk */; };
+		4ECFC3AE1C368EAB008E2633 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 4ECFC3AD1C368EAB008E2633 /* main.m */; };
+		4ECFC3B11C368EAB008E2633 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 4ECFC3B01C368EAB008E2633 /* AppDelegate.m */; };
+		4ECFC3B41C368EAB008E2633 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4ECFC3B31C368EAB008E2633 /* ViewController.m */; };
+		4ECFC3B71C368EAB008E2633 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 4ECFC3B51C368EAB008E2633 /* Main.storyboard */; };
+		4ECFC3B91C368EAC008E2633 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4ECFC3B81C368EAC008E2633 /* Assets.xcassets */; };
+		4ECFC3BF1C368ED3008E2633 /* GameController.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4ECFC3BE1C368ED3008E2633 /* GameController.framework */; };
 		4EEF0E8A1C3536A3001BEB67 /* disksViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4EEF0E891C3536A3001BEB67 /* disksViewController.m */; };
 		773B3D101956885A0085CE5F /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 773B3D0F1956885A0085CE5F /* Cocoa.framework */; };
 		773B3D1A1956885A0085CE5F /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 773B3D181956885A0085CE5F /* InfoPlist.strings */; };
@@ -416,6 +422,16 @@
 		4ECFC39B1C368620008E2633 /* flapple140.po */ = {isa = PBXFileReference; lastKnownFileType = file; path = flapple140.po; sourceTree = "<group>"; };
 		4ECFC39C1C368620008E2633 /* mystery.dsk */ = {isa = PBXFileReference; lastKnownFileType = file; path = mystery.dsk; sourceTree = "<group>"; };
 		4ECFC39D1C368620008E2633 /* NSCT.dsk */ = {isa = PBXFileReference; lastKnownFileType = file; path = NSCT.dsk; sourceTree = "<group>"; };
+		4ECFC3AA1C368EAB008E2633 /* Apple2etvOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Apple2etvOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		4ECFC3AD1C368EAB008E2633 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		4ECFC3AF1C368EAB008E2633 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
+		4ECFC3B01C368EAB008E2633 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
+		4ECFC3B21C368EAB008E2633 /* ViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ViewController.h; sourceTree = "<group>"; };
+		4ECFC3B31C368EAB008E2633 /* ViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ViewController.m; sourceTree = "<group>"; };
+		4ECFC3B61C368EAB008E2633 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		4ECFC3B81C368EAC008E2633 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		4ECFC3BA1C368EAC008E2633 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		4ECFC3BE1C368ED3008E2633 /* GameController.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GameController.framework; path = Platforms/AppleTVOS.platform/Developer/SDKs/AppleTVOS9.1.sdk/System/Library/Frameworks/GameController.framework; sourceTree = DEVELOPER_DIR; };
 		4EEF0E881C3536A3001BEB67 /* disksViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = disksViewController.h; sourceTree = "<group>"; };
 		4EEF0E891C3536A3001BEB67 /* disksViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = disksViewController.m; sourceTree = "<group>"; };
 		773B3D0C1956885A0085CE5F /* Apple2Mac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Apple2Mac.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -576,6 +592,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		4ECFC3A71C368EAB008E2633 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4ECFC3BF1C368ED3008E2633 /* GameController.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		773B3D09195688590085CE5F /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -635,6 +659,29 @@
 			path = ../disks;
 			sourceTree = "<group>";
 		};
+		4ECFC3AB1C368EAB008E2633 /* Apple2etvOS */ = {
+			isa = PBXGroup;
+			children = (
+				4ECFC3AF1C368EAB008E2633 /* AppDelegate.h */,
+				4ECFC3B01C368EAB008E2633 /* AppDelegate.m */,
+				4ECFC3B21C368EAB008E2633 /* ViewController.h */,
+				4ECFC3B31C368EAB008E2633 /* ViewController.m */,
+				4ECFC3B51C368EAB008E2633 /* Main.storyboard */,
+				4ECFC3B81C368EAC008E2633 /* Assets.xcassets */,
+				4ECFC3BA1C368EAC008E2633 /* Info.plist */,
+				4ECFC3AC1C368EAB008E2633 /* Supporting Files */,
+			);
+			path = Apple2etvOS;
+			sourceTree = "<group>";
+		};
+		4ECFC3AC1C368EAB008E2633 /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				4ECFC3AD1C368EAB008E2633 /* main.m */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
 		773B3D03195688590085CE5F = {
 			isa = PBXGroup;
 			children = (
@@ -643,6 +690,7 @@
 				773B3D331956885A0085CE5F /* Apple2MacTests */,
 				773B3D151956885A0085CE5F /* Apple2Mac */,
 				935C55291C12BA5F0013166D /* Apple2iOS */,
+				4ECFC3AB1C368EAB008E2633 /* Apple2etvOS */,
 				773B3D431956897D0085CE5F /* Classes */,
 				773B3D4519568A570085CE5F /* src */,
 				935C55A51C1389000013166D /* externals */,
@@ -661,6 +709,7 @@
 				779F569119EB0B9100A6F107 /* Apple2MacTestDisplay.app */,
 				4AD4FEC31A52464F00F958EC /* Apple2MacTestDisk.app */,
 				935C55281C12BA5F0013166D /* Apple2iOS.app */,
+				4ECFC3AA1C368EAB008E2633 /* Apple2etvOS.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -668,6 +717,7 @@
 		773B3D0E1956885A0085CE5F /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				4ECFC3BE1C368ED3008E2633 /* GameController.framework */,
 				77C279601A1047AE000FE33F /* DDHidLib.xcodeproj */,
 				779F565F19EAF6D000A6F107 /* OpenAL.framework */,
 				773B3D0F1956885A0085CE5F /* Cocoa.framework */,
@@ -1019,6 +1069,23 @@
 			productReference = 4ADC522719E8CA4500186B36 /* Apple2MacTestVM.app */;
 			productType = "com.apple.product-type.application";
 		};
+		4ECFC3A91C368EAB008E2633 /* Apple2etvOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 4ECFC3BB1C368EAC008E2633 /* Build configuration list for PBXNativeTarget "Apple2etvOS" */;
+			buildPhases = (
+				4ECFC3A61C368EAB008E2633 /* Sources */,
+				4ECFC3A71C368EAB008E2633 /* Frameworks */,
+				4ECFC3A81C368EAB008E2633 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Apple2etvOS;
+			productName = Apple2etvOS;
+			productReference = 4ECFC3AA1C368EAB008E2633 /* Apple2etvOS.app */;
+			productType = "com.apple.product-type.application";
+		};
 		773B3D0B195688590085CE5F /* Apple2Mac */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 773B3D3D1956885A0085CE5F /* Build configuration list for PBXNativeTarget "Apple2Mac" */;
@@ -1107,6 +1174,15 @@
 				LastUpgradeCheck = 0510;
 				ORGANIZATIONNAME = deadc0de.org;
 				TargetAttributes = {
+					4ECFC3A91C368EAB008E2633 = {
+						CreatedOnToolsVersion = 7.2;
+						DevelopmentTeam = 774X2MBDTH;
+						SystemCapabilities = {
+							com.apple.GameControllers.appletvos = {
+								enabled = 1;
+							};
+						};
+					};
 					935C55271C12BA5F0013166D = {
 						CreatedOnToolsVersion = 7.1.1;
 						DevelopmentTeam = 774X2MBDTH;
@@ -1139,6 +1215,7 @@
 				779F566119EB0B9100A6F107 /* Apple2MacTestDisplay */,
 				4ADC51FB19E8CA4500186B36 /* Apple2MacTestVM */,
 				935C55271C12BA5F0013166D /* Apple2iOS */,
+				4ECFC3A91C368EAB008E2633 /* Apple2etvOS */,
 			);
 		};
 /* End PBXProject section */
@@ -1214,6 +1291,15 @@
 				4ADC522219E8CA4500186B36 /* Basic.vsh in Resources */,
 				4AFC17181AAE9CC000B215FA /* testvm1.nib.gz in Resources */,
 				4ADC522319E8CA4500186B36 /* Basic.fsh in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		4ECFC3A81C368EAB008E2633 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4ECFC3B91C368EAC008E2633 /* Assets.xcassets in Resources */,
+				4ECFC3B71C368EAB008E2633 /* Main.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1533,6 +1619,16 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		4ECFC3A61C368EAB008E2633 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4ECFC3B41C368EAB008E2633 /* ViewController.m in Sources */,
+				4ECFC3B11C368EAB008E2633 /* AppDelegate.m in Sources */,
+				4ECFC3AE1C368EAB008E2633 /* main.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		773B3D08195688590085CE5F /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -1737,6 +1833,14 @@
 			name = "MainMenu-Test.xib";
 			sourceTree = "<group>";
 		};
+		4ECFC3B51C368EAB008E2633 /* Main.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				4ECFC3B61C368EAB008E2633 /* Base */,
+			);
+			name = Main.storyboard;
+			sourceTree = "<group>";
+		};
 		773B3D181956885A0085CE5F /* InfoPlist.strings */ = {
 			isa = PBXVariantGroup;
 			children = (
@@ -1920,6 +2024,47 @@
 				PRODUCT_NAME = Apple2MacTestVM;
 				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/../src";
 				WRAPPER_EXTENSION = app;
+			};
+			name = Release;
+		};
+		4ECFC3BC1C368EAC008E2633 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = "App Icon & Top Shelf Image";
+				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_NO_COMMON_BLOCKS = YES;
+				INFOPLIST_FILE = Apple2etvOS/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				MTL_ENABLE_DEBUG_INFO = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = bxo.Apple2etvOS;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = appletvos;
+				TARGETED_DEVICE_FAMILY = 3;
+				TVOS_DEPLOYMENT_TARGET = 9.1;
+			};
+			name = Debug;
+		};
+		4ECFC3BD1C368EAC008E2633 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = "App Icon & Top Shelf Image";
+				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_NO_COMMON_BLOCKS = YES;
+				INFOPLIST_FILE = Apple2etvOS/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				MTL_ENABLE_DEBUG_INFO = NO;
+				PRODUCT_BUNDLE_IDENTIFIER = bxo.Apple2etvOS;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = appletvos;
+				TARGETED_DEVICE_FAMILY = 3;
+				TVOS_DEPLOYMENT_TARGET = 9.1;
+				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
 		};
@@ -2261,6 +2406,15 @@
 			buildConfigurations = (
 				4ADC522519E8CA4500186B36 /* Debug */,
 				4ADC522619E8CA4500186B36 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		4ECFC3BB1C368EAC008E2633 /* Build configuration list for PBXNativeTarget "Apple2etvOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4ECFC3BC1C368EAC008E2633 /* Debug */,
+				4ECFC3BD1C368EAC008E2633 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
