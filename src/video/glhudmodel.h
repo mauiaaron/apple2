@@ -24,8 +24,9 @@
         unsigned int tplHeight;     /* template height */ \
         \
         uint8_t *pixels;            /* raw indexed data */ \
-        unsigned int pixWidth;      /* FB width -- FIXME TODO : this is really the same as GLModel.texWidth */ \
-        unsigned int pixHeight;     /* FB height -- FIXME TODO : this is really the same as GLModel.texHeight */ \
+        unsigned int pixWidth;      /* FB width -- this is the same as GLModel.texWidth if glyphMultiplier is 1 */ \
+        unsigned int pixHeight;     /* FB height -- this is the same as GLModel.texHeight if glyphMultiplier is 1 */ \
+        unsigned int glyphMultiplier; \
         \
         interface_colorscheme_t colorScheme; \
         bool blackIsTransparent; \

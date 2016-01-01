@@ -71,6 +71,7 @@ static struct {
 
 static struct {
     GLModel *model;
+    unsigned int glyphMultiplier;
     bool topLeftShowing;
     bool topRightShowing;
 } menu = { 0 };
@@ -356,6 +357,7 @@ static void *_create_touchmenu(void) {
     if (hudMenu) {
         hudMenu->blackIsTransparent = true;
         hudMenu->opaquePixelHalo = true;
+        hudMenu->glyphMultiplier = menu.glyphMultiplier;
     }
     return hudMenu;
 }
@@ -376,7 +378,10 @@ static void gltouchmenu_setup(void) {
     LOG("gltouchmenu_setup ...");
 
     mdlDestroyModel(&menu.model);
-    menu.model = mdlCreateQuad(-1.0, 1.0-MENU_OBJ_H, MENU_OBJ_W, MENU_OBJ_H, MODEL_DEPTH, MENU_FB_WIDTH, MENU_FB_HEIGHT, (GLCustom){
+
+    GLsizei texW = MENU_FB_WIDTH * menu.glyphMultiplier;
+    GLsizei texH = MENU_FB_HEIGHT * menu.glyphMultiplier;
+    menu.model = mdlCreateQuad(-1.0, 1.0-MENU_OBJ_H, MENU_OBJ_W, MENU_OBJ_H, MODEL_DEPTH, texW, texH, (GLCustom){
             .create = &_create_touchmenu,
             .setup = &_setup_touchmenu,
             .destroy = &_destroy_touchmenu,
@@ -551,6 +556,8 @@ static void _init_gltouchmenu(void) {
     interface_isTouchMenuAvailable = &gltouchmenu_isTouchMenuAvailable;
     interface_setTouchMenuEnabled = &gltouchmenu_setTouchMenuEnabled;
     interface_setTouchMenuVisibility = &gltouchmenu_setTouchMenuVisibility;
+
+    menu.glyphMultiplier = 1;
 
     glnode_registerNode(RENDER_TOP, (GLNode){
         .setup = &gltouchmenu_setup,
