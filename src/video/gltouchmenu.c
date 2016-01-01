@@ -352,7 +352,7 @@ static void _setup_touchmenu(GLModel *parent) {
 }
 
 static void *_create_touchmenu(void) {
-    GLModelHUDMenu *hudMenu = (GLModelHUDMenu *)CALLOC(sizeof(GLModelHUDMenu), 1);
+    GLModelHUDMenu *hudMenu = (GLModelHUDMenu *)glhud_createCustom(sizeof(GLModelHUDMenu));
     if (hudMenu) {
         hudMenu->blackIsTransparent = true;
         hudMenu->opaquePixelHalo = true;

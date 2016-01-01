@@ -15,13 +15,15 @@
 #include "common.h"
 #include "video_util/modelUtil.h"
 
+// HUD GLModel is basically just a quad/texture generated from the Apple //e bitmap font
+
 #define HUD_CLASS(CLS, ...) \
     MODEL_CLASS(CLS, \
         char *tpl;                  /* ASCII template */ \
         unsigned int tplWidth;      /* template width */ \
         unsigned int tplHeight;     /* template height */ \
         \
-        uint8_t *pixels;            /* raw texture/FB data */ \
+        uint8_t *pixels;            /* raw indexed data */ \
         unsigned int pixWidth;      /* FB width -- FIXME TODO : this is really the same as GLModel.texWidth */ \
         unsigned int pixHeight;     /* FB height -- FIXME TODO : this is really the same as GLModel.texHeight */ \
         \
@@ -36,6 +38,9 @@ HUD_CLASS(GLModelHUDElement);
 
 // default model creation
 void *glhud_createDefault(void);
+
+// create custom HUD model
+void *glhud_createCustom(unsigned int sizeofModel);
 
 // default model setup
 void glhud_setupDefault(GLModel *parent);

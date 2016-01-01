@@ -27,7 +27,7 @@ static GLModel *messageModel = NULL;
 // ----------------------------------------------------------------------------
 
 static void *_create_alert(void) {
-    GLModelHUDElement *hudElement = (GLModelHUDElement *)CALLOC(sizeof(GLModelHUDElement), 1);
+    GLModelHUDElement *hudElement = (GLModelHUDElement *)glhud_createDefault();
     if (hudElement) {
         hudElement->colorScheme = RED_ON_BLACK;
         hudElement->blackIsTransparent = false;

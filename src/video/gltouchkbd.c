@@ -460,7 +460,7 @@ static void _setup_touchkbd_hud(GLModel *parent) {
 }
 
 static void *_create_touchkbd_hud(void) {
-    GLModelHUDKeyboard *hudKeyboard = (GLModelHUDKeyboard *)CALLOC(sizeof(GLModelHUDKeyboard), 1);
+    GLModelHUDKeyboard *hudKeyboard = (GLModelHUDKeyboard *)glhud_createCustom(sizeof(GLModelHUDKeyboard));
     if (hudKeyboard) {
         hudKeyboard->blackIsTransparent = true;
         hudKeyboard->opaquePixelHalo = true;
