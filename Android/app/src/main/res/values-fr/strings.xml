@@ -84,6 +84,8 @@
     <string name="keyboard_click_enabled_summary">Si disponible, son du click sur une touche</string>
     <string name="keyboard_configure">Configuration clavier…</string>
     <string name="keyboard_configure_summary">Transparence, minuscules, touches customisées</string>
+    <string name="keyboard_glyph_scale">Keyboard glyphs scaled 2x</string>
+    <string name="keyboard_glyph_scale_summary">(Makes keyboard appear less pixelated on large screens)</string>
     <string name="keyboard_lowercase_enabled">Permettre les minuscules</string>
     <string name="keyboard_lowercase_enabled_summary">Permettre les touches en minuscules</string>
     <string name="keyboard_visibility_active">Visibilité quand actif</string>

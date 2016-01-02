@@ -148,6 +148,12 @@ void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetTouchKeyboardVisibili
     interface_setTouchMenuVisibility(inactiveAlpha, activeAlpha);
 }
 
+void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetTouchKeyboardGlyphScale(JNIEnv *env, jclass cls, jint glyphScale) {
+    LOG("glyphScale:%d", glyphScale);
+    keydriver_setGlyphScale(glyphScale);
+    interface_setGlyphScale(glyphScale);
+}
+
 void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetTouchJoystickButtonTypes(JNIEnv *env, jclass cls, jint touchDownButton, jint northButton, jint southButton) {
     LOG(": %d,%d,%d", touchDownButton, northButton, southButton);
 

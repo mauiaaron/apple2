@@ -75,6 +75,9 @@ static struct {
     unsigned int glyphMultiplier;
     bool topLeftShowing;
     bool topRightShowing;
+
+    // pending changes requiring reinitialization
+    unsigned int nextGlyphMultiplier;
 } menu = { 0 };
 
 static struct timespec timingBegin = { 0 };
@@ -375,10 +378,25 @@ static void _destroy_touchmenu(GLModel *parent) {
 // ----------------------------------------------------------------------------
 // GLNode functions
 
+static void gltouchmenu_shutdown(void) {
+    LOG("gltouchmenu_shutdown ...");
+    if (!isAvailable) {
+        return;
+    }
+
+    isAvailable = false;
+
+    menu.topLeftShowing = false;
+    menu.topRightShowing = false;
+    menu.nextGlyphMultiplier = 0;
+
+    mdlDestroyModel(&menu.model);
+}
+
 static void gltouchmenu_setup(void) {
     LOG("gltouchmenu_setup ...");
 
-    mdlDestroyModel(&menu.model);
+    gltouchmenu_shutdown();
 
     GLsizei texW = MENU_FB_WIDTH * menu.glyphMultiplier;
     GLsizei texH = MENU_FB_HEIGHT * menu.glyphMultiplier;
@@ -403,23 +421,18 @@ static void gltouchmenu_setup(void) {
     GL_ERRLOG("gltouchmenu_setup");
 }
 
-static void gltouchmenu_shutdown(void) {
-    LOG("gltouchmenu_shutdown ...");
-    if (!isAvailable) {
-        return;
-    }
-
-    isAvailable = false;
-
-    mdlDestroyModel(&menu.model);
-}
-
 static void gltouchmenu_render(void) {
     if (!isAvailable) {
         return;
     }
     if (!isEnabled) {
         return;
+    }
+
+    if (menu.nextGlyphMultiplier) {
+        menu.glyphMultiplier = menu.nextGlyphMultiplier;
+        menu.nextGlyphMultiplier = 0;
+        gltouchmenu_setup();
     }
 
     float alpha = _get_menu_visibility();
@@ -545,6 +558,13 @@ static void gltouchmenu_setTouchMenuVisibility(float inactiveAlpha, float active
     maxAlpha = activeAlpha;
 }
 
+static void gltouchmenu_setGlyphScale(int glyphScale) {
+    if (glyphScale == 0) {
+        glyphScale = 1;
+    }
+    menu.nextGlyphMultiplier = glyphScale;
+}
+
 // ----------------------------------------------------------------------------
 // Constructor
 
@@ -558,6 +578,7 @@ static void _init_gltouchmenu(void) {
     interface_isTouchMenuAvailable = &gltouchmenu_isTouchMenuAvailable;
     interface_setTouchMenuEnabled = &gltouchmenu_setTouchMenuEnabled;
     interface_setTouchMenuVisibility = &gltouchmenu_setTouchMenuVisibility;
+    interface_setGlyphScale = &gltouchmenu_setGlyphScale;
 
     menu.glyphMultiplier = 1;
 

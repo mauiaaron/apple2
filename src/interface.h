@@ -87,6 +87,9 @@ extern void (*interface_setTouchMenuEnabled)(bool enabled);
 
 // set min/max alpha visibility of touch menu HUD element
 extern void (*interface_setTouchMenuVisibility)(float inactiveAlpha, float activeAlpha);
+
+// set a finer-grained font size (if glyphScale > 1)
+extern void (*interface_setGlyphScale)(int glyphScale);
 #endif
 
 #define EXT_GZ  ".gz"

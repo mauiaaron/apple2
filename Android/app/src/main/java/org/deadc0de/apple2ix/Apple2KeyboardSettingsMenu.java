@@ -313,6 +313,31 @@ public class Apple2KeyboardSettingsMenu extends Apple2AbstractMenu {
                     }
                 });
             }
+        },
+        KEYBOARD_GLYPH_SCALE {
+            @Override
+            public final String getTitle(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.keyboard_glyph_scale);
+            }
+
+            @Override
+            public final String getSummary(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.keyboard_glyph_scale_summary);
+            }
+
+            @Override
+            public View getView(final Apple2Activity activity, View convertView) {
+                convertView = _basicView(activity, this, convertView);
+                int glyphScale = Apple2Preferences.KEYBOARD_GLYPH_SCALE.intValue(activity);
+                CheckBox cb = _addCheckbox(activity, this, convertView, glyphScale > 1);
+                cb.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                    @Override
+                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                        Apple2Preferences.KEYBOARD_GLYPH_SCALE.saveInt(activity, isChecked ? 2 : 1);
+                    }
+                });
+                return convertView;
+            }
         };
 
         public static final int size = SETTINGS.values().length;

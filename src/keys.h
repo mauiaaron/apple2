@@ -160,10 +160,13 @@ extern void (*keydriver_setTouchKeyboardOwnsScreen)(bool pwnd);
 // query touch screen ownership
 extern bool (*keydriver_ownsScreen)(void);
 
+// set a finer-grained font size (if glyphScale > 1)
+extern void (*keydriver_setGlyphScale)(int glyphScale);
+
 // set visibility
 extern void (*keydriver_setVisibilityWhenOwnsScreen)(float inactiveAlpha, float activeAlpha);
 
-// set visibility
+// set lowercase enabled
 extern void (*keydriver_setLowercaseEnabled)(bool enabled);
 
 // keyboard read callback

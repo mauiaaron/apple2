@@ -84,6 +84,8 @@
     <string name="keyboard_click_enabled_summary">Haga clic en sonido de clave permite si está disponible</string>
     <string name="keyboard_configure">Configurar el teclado…</string>
     <string name="keyboard_configure_summary">Transparencia, minúsculas, teclado personalizado</string>
+    <string name="keyboard_glyph_scale">Keyboard glyphs scaled 2x</string>
+    <string name="keyboard_glyph_scale_summary">(Makes keyboard appear less pixelated on large screens)</string>
     <string name="keyboard_lowercase_enabled">Habilitar minúsculas</string>
     <string name="keyboard_lowercase_enabled_summary">Utilice las teclas minúsculas</string>
     <string name="keyboard_visibility_active">Visibilidad cuando está activo</string>

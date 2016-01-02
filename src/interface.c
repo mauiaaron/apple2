@@ -21,6 +21,7 @@ int64_t (*interface_onTouchEvent)(interface_touch_event_t action, int pointer_co
 bool (*interface_isTouchMenuAvailable)(void) = NULL;
 void (*interface_setTouchMenuEnabled)(bool enabled) = NULL;
 void (*interface_setTouchMenuVisibility)(float inactiveAlpha, float activeAlpha) = NULL;
+void (*interface_setGlyphScale)(int glyphScale) = NULL;
 #endif
 
 // 2015/04/12 : This was legacy code for rendering the menu interfaces on desktop Linux. Portions here are resurrected
