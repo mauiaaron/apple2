@@ -18,8 +18,8 @@
 #define MODEL_DEPTH -1/32.f
 #define TRACKING_NONE (-1)
 
-#define AXIS_TEMPLATE_COLS 5
-#define AXIS_TEMPLATE_ROWS 5
+#define AXIS_TEMPLATE_COLS 3
+#define AXIS_TEMPLATE_ROWS 3
 
 #define BUTTON_TEMPLATE_COLS 1
 #define BUTTON_TEMPLATE_ROWS 1
@@ -30,13 +30,13 @@
 #define BUTTON_FB_WIDTH (BUTTON_TEMPLATE_COLS * FONT80_WIDTH_PIXELS)
 #define BUTTON_FB_HEIGHT (BUTTON_TEMPLATE_ROWS * FONT_HEIGHT_PIXELS)
 
-#define AXIS_OBJ_W        0.4
-#define AXIS_OBJ_H        0.5
+#define AXIS_OBJ_W        0.3
+#define AXIS_OBJ_H        0.4
 #define AXIS_OBJ_HALF_W   (AXIS_OBJ_W/2.f)
 #define AXIS_OBJ_HALF_H   (AXIS_OBJ_H/2.f)
 
-#define BUTTON_OBJ_W        0.2
-#define BUTTON_OBJ_H        0.25
+#define BUTTON_OBJ_W        0.15
+#define BUTTON_OBJ_H        0.2
 #define BUTTON_OBJ_HALF_W   (BUTTON_OBJ_W/2.f)
 #define BUTTON_OBJ_HALF_H   (BUTTON_OBJ_H/2.f)
 
@@ -89,11 +89,9 @@ static void _setup_axis_object(GLModel *parent) {
     if (hudElement->tpl == NULL) {
         // deferred construction ...
         const char axisTemplate[AXIS_TEMPLATE_ROWS][AXIS_TEMPLATE_COLS+1] = {
-            "  @  ",
-            "  |  ",
-            "@-+-@",
-            "  |  ",
-            "  @  ",
+            " @ ",
+            "@+@",
+            " @ ",
         };
 
         const unsigned int size = sizeof(axisTemplate);
@@ -111,7 +109,7 @@ static void _setup_axis_object(GLModel *parent) {
 
     for (unsigned int i=0; i<ROSETTE_ROWS; i++) {
         for (unsigned int j=0; j<ROSETTE_COLS; j++) {
-            ((hudElement->tpl)+(row*i*2))[j*2] = axes.rosetteChars[(i*ROSETTE_ROWS)+j];
+            ((hudElement->tpl)+(row*i))[j] = axes.rosetteChars[(i*ROSETTE_ROWS)+j];
         }
     }
 
@@ -667,7 +665,7 @@ static void gltouchjoy_setTouchButtonTypes(
     } else if (touchDownChar == TOUCH_BUTTON1) {
         currButtonDisplayChar = MOUSETEXT_CLOSEDAPPLE;
     } else if (touchDownChar == TOUCH_BOTH) {
-        currButtonDisplayChar = '+';
+        currButtonDisplayChar = ICONTEXT_MENU_TOUCHJOY;
     } else if (touchDownScancode < 0) {
         currButtonDisplayChar = ' ';
     }
@@ -756,7 +754,7 @@ static void _init_gltouchjoy(void) {
 
     axes.rosetteChars[3]     = MOUSETEXT_LEFT;
     axes.rosetteScancodes[3] = -1;
-    axes.rosetteChars[4]     = '+';
+    axes.rosetteChars[4]     = ICONTEXT_MENU_TOUCHJOY;
     axes.rosetteScancodes[4] = -1;
     axes.rosetteChars[5]     = MOUSETEXT_RIGHT;
     axes.rosetteScancodes[5] = -1;

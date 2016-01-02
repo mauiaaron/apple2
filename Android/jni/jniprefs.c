@@ -179,7 +179,7 @@ void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetTouchJoystickButtonTy
     rosetteChars[ROSETTE_NORTH]     = (uint8_t)MOUSETEXT_UP;    rosetteScancodes[ROSETTE_NORTH]     = -1;
     rosetteChars[ROSETTE_NORTHEAST] = ' ';                      rosetteScancodes[ROSETTE_NORTHEAST] = -1;
     rosetteChars[ROSETTE_WEST]      = (uint8_t)MOUSETEXT_LEFT;  rosetteScancodes[ROSETTE_WEST]      = -1;
-    rosetteChars[ROSETTE_CENTER]    = '+';                      rosetteScancodes[ROSETTE_CENTER]    = -1;
+    rosetteChars[ROSETTE_CENTER]    = ICONTEXT_MENU_TOUCHJOY;   rosetteScancodes[ROSETTE_CENTER]    = -1;
     rosetteChars[ROSETTE_EAST]      = (uint8_t)MOUSETEXT_RIGHT; rosetteScancodes[ROSETTE_EAST]      = -1;
     rosetteChars[ROSETTE_SOUTHWEST] = ' ';                      rosetteScancodes[ROSETTE_SOUTHWEST] = -1;
     rosetteChars[ROSETTE_SOUTH]     = (uint8_t)MOUSETEXT_DOWN;  rosetteScancodes[ROSETTE_SOUTH]     = -1;
@@ -235,6 +235,9 @@ void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeTouchJoystickSetKeypadTy
     uint8_t actualChars[ROSETTE_ROWS * ROSETTE_COLS];
     for (unsigned int i=0; i<(ROSETTE_ROWS * ROSETTE_COLS); i++) {
         actualChars[i] = (uint8_t)rosetteChars[i];
+    }
+    if (actualChars[4] == ICONTEXT_NONACTIONABLE) {
+        actualChars[4] = ICONTEXT_MENU_TOUCHJOY;
     }
     joydriver_setTouchAxisTypes(actualChars, rosetteScans);
     joydriver_setTouchButtonTypes(
