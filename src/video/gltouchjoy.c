@@ -74,27 +74,6 @@ static struct {
 
 // ----------------------------------------------------------------------------
 
-#warning FIXME TODO ... this can become a common helper function ...
-static inline float _get_component_visibility(struct timespec timingBegin) {
-    struct timespec now = { 0 };
-    struct timespec deltat = { 0 };
-
-    clock_gettime(CLOCK_MONOTONIC, &now);
-    float alpha = joyglobals.minAlpha;
-    deltat = timespec_diff(timingBegin, now, NULL);
-    if (deltat.tv_sec == 0) {
-        alpha = 1.0;
-        if (deltat.tv_nsec >= NANOSECONDS_PER_SECOND/2) {
-            alpha -= ((float)deltat.tv_nsec-(NANOSECONDS_PER_SECOND/2)) / (float)(NANOSECONDS_PER_SECOND/2);
-            if (alpha < joyglobals.minAlpha) {
-                alpha = joyglobals.minAlpha;
-            }
-        }
-    }
-
-    return alpha;
-}
-
 static void _setup_axis_object(GLModel *parent) {
     if (UNLIKELY(!parent)) {
         LOG("gltouchjoy WARN : cannot setup axis object without parent");
@@ -308,7 +287,10 @@ static void gltouchjoy_render(void) {
 
     // draw axis
 
-    float alpha = _get_component_visibility(axes.timingBegin);
+    float alpha = glhud_getTimedVisibility(axes.timingBegin, joyglobals.minAlpha, 1.0);
+    if (alpha < joyglobals.minAlpha) {
+        alpha = joyglobals.minAlpha;
+    }
     if (alpha > 0.0) {
         glUniform1f(alphaValue, alpha);
 
@@ -330,7 +312,10 @@ static void gltouchjoy_render(void) {
 
     // draw button(s)
 
-    alpha = _get_component_visibility(buttons.timingBegin);
+    alpha = glhud_getTimedVisibility(buttons.timingBegin, joyglobals.minAlpha, 1.0);
+    if (alpha < joyglobals.minAlpha) {
+        alpha = joyglobals.minAlpha;
+    }
     if (alpha > 0.0) {
         glUniform1f(alphaValue, alpha);
 

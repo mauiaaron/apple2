@@ -308,3 +308,24 @@ void glhud_quadModelToScreen(const GLModel *model, const int screenW, const int 
     screenCoords[3] = yFlip1;
 }
 
+float glhud_getTimedVisibility(struct timespec timingBegin, float minAlpha, float maxAlpha) {
+
+    struct timespec now = { 0 };
+    struct timespec deltat = { 0 };
+
+    clock_gettime(CLOCK_MONOTONIC, &now);
+    float alpha = minAlpha;
+    deltat = timespec_diff(timingBegin, now, NULL);
+    if (deltat.tv_sec == 0) {
+        alpha = maxAlpha;
+        if (deltat.tv_nsec >= NANOSECONDS_PER_SECOND/2) {
+            alpha -= ((float)deltat.tv_nsec-(NANOSECONDS_PER_SECOND/2)) / (float)(NANOSECONDS_PER_SECOND/2);
+            if (alpha < 0) {
+                alpha = 0;
+            }
+        }
+    }
+
+    return alpha;
+}
+

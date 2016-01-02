@@ -237,30 +237,6 @@ static inline void _switch_keyboard(GLModel *parent, uint8_t *template) {
     }
 }
 
-#warning FIXME TODO ... this can become a common helper function ...
-static inline float _get_keyboard_visibility(void) {
-    struct timespec now = { 0 };
-    struct timespec deltat = { 0 };
-
-    clock_gettime(CLOCK_MONOTONIC, &now);
-    float alpha = minAlpha;
-    deltat = timespec_diff(kbd.timingBegin, now, NULL);
-    if (deltat.tv_sec == 0) {
-        alpha = maxAlpha;
-        if (deltat.tv_nsec >= NANOSECONDS_PER_SECOND/2) {
-            alpha -= ((float)deltat.tv_nsec-(NANOSECONDS_PER_SECOND/2)) / (float)(NANOSECONDS_PER_SECOND/2);
-            if (alpha < minAlpha) {
-                alpha = minAlpha;
-                _rerender_selected(kbd.selectedCol, kbd.selectedRow);
-                kbd.selectedCol = -1;
-                kbd.selectedRow = -1;
-            }
-        }
-    }
-
-    return alpha;
-}
-
 static inline bool _is_point_on_keyboard(float x, float y) {
     return (x >= touchport.kbdX && x <= touchport.kbdXMax && y >= touchport.kbdY && y <= touchport.kbdYMax);
 }
@@ -560,7 +536,13 @@ static void gltouchkbd_render(void) {
         gltouchkbd_setup();
     }
 
-    float alpha = _get_keyboard_visibility();
+    float alpha = glhud_getTimedVisibility(kbd.timingBegin, minAlpha, maxAlpha);
+    if (alpha < minAlpha) {
+        alpha = minAlpha;
+        _rerender_selected(kbd.selectedCol, kbd.selectedRow);
+        kbd.selectedCol = -1;
+        kbd.selectedRow = -1;
+    }
 
     if (alpha > 0.0) {
         // draw touch keyboard

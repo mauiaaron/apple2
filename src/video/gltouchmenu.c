@@ -35,8 +35,6 @@ HUD_CLASS(GLModelHUDMenu,
 
 static bool isAvailable = false; // Were there any OpenGL/memory errors on initialization?
 static bool isEnabled = true;    // Does player want this enabled?
-static float minAlpha = 1/4.f;   // Minimum alpha value of components (at zero, will not render)
-static float maxAlpha = 1.f;
 
 // NOTE : intent is to match touch keyboard width
 static uint8_t topMenuTemplate[MENU_TEMPLATE_ROWS][MENU_TEMPLATE_COLS+1] = {
@@ -76,11 +74,13 @@ static struct {
     bool topLeftShowing;
     bool topRightShowing;
 
+    struct timespec timingBegin;
+    float minAlpha; // Minimum alpha value of components (at zero, will not render)
+    float maxAlpha;
+
     // pending changes requiring reinitialization
     unsigned int nextGlyphMultiplier;
 } menu = { 0 };
-
-static struct timespec timingBegin = { 0 };
 
 // ----------------------------------------------------------------------------
 
@@ -143,26 +143,6 @@ static inline void _hide_top_right(void) {
     topMenuTemplate[1][MENU_TEMPLATE_COLS-1] = ICONTEXT_NONACTIONABLE;
     menu.topRightShowing = false;
     _present_menu(menu.model);
-}
-
-static float _get_menu_visibility(void) {
-    struct timespec now = { 0 };
-    struct timespec deltat = { 0 };
-    float alpha = minAlpha;
-
-    clock_gettime(CLOCK_MONOTONIC, &now);
-    deltat = timespec_diff(timingBegin, now, NULL);
-    if (deltat.tv_sec == 0) {
-        alpha = maxAlpha;
-        if (deltat.tv_nsec >= NANOSECONDS_PER_SECOND/2) {
-            alpha -= ((float)deltat.tv_nsec-(NANOSECONDS_PER_SECOND/2)) / (float)(NANOSECONDS_PER_SECOND/2);
-            if (alpha < minAlpha) {
-                alpha = minAlpha;
-            }
-        }
-    }
-
-    return alpha;
 }
 
 static inline bool _is_point_on_left_menu(float x, float y) {
@@ -422,7 +402,7 @@ static void gltouchmenu_setup(void) {
         return;
     }
 
-    clock_gettime(CLOCK_MONOTONIC, &timingBegin);
+    clock_gettime(CLOCK_MONOTONIC, &menu.timingBegin);
 
     isAvailable = true;
 
@@ -443,7 +423,10 @@ static void gltouchmenu_render(void) {
         gltouchmenu_setup();
     }
 
-    float alpha = _get_menu_visibility();
+    float alpha = glhud_getTimedVisibility(menu.timingBegin, menu.minAlpha, menu.maxAlpha);
+    if (alpha < menu.minAlpha) {
+        alpha = menu.minAlpha;
+    }
     if (alpha <= 0.0) {
         return;
     }
@@ -533,7 +516,7 @@ static int64_t gltouchmenu_onTouchEvent(interface_touch_event_t action, int poin
     }
 
     if (handled) {
-        clock_gettime(CLOCK_MONOTONIC, &timingBegin);
+        clock_gettime(CLOCK_MONOTONIC, &menu.timingBegin);
         flags |= TOUCH_FLAGS_HANDLED;
     }
 
@@ -552,18 +535,18 @@ static void gltouchmenu_setTouchMenuEnabled(bool enabled) {
 }
 
 static void _animation_showTouchMenu(void) {
-    clock_gettime(CLOCK_MONOTONIC, &timingBegin);
+    clock_gettime(CLOCK_MONOTONIC, &menu.timingBegin);
 }
 
 static void _animation_hideTouchMenu(void) {
     _hide_top_left();
     _hide_top_right();
-    timingBegin = (struct timespec){ 0 };
+    menu.timingBegin = (struct timespec){ 0 };
 }
 
 static void gltouchmenu_setTouchMenuVisibility(float inactiveAlpha, float activeAlpha) {
-    minAlpha = inactiveAlpha;
-    maxAlpha = activeAlpha;
+    menu.minAlpha = inactiveAlpha;
+    menu.maxAlpha = activeAlpha;
 }
 
 static void gltouchmenu_setGlyphScale(int glyphScale) {
@@ -589,6 +572,8 @@ static void _init_gltouchmenu(void) {
     interface_setGlyphScale = &gltouchmenu_setGlyphScale;
 
     menu.glyphMultiplier = 1;
+    menu.minAlpha = 1/4.f;   // Minimum alpha value of components (at zero, will not render)
+    menu.maxAlpha = 1.f;
 
     glnode_registerNode(RENDER_TOP, (GLNode){
         .setup = &gltouchmenu_setup,
