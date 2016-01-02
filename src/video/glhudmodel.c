@@ -148,8 +148,6 @@ void glhud_setupDefault(GLModel *parent) {
     const unsigned int dstRowStride = fb_w * dstPointStride;
     const unsigned int texSubRowStride = dstRowStride * (glyphScale-1);
 
-    LOG("fb_h:%u, fb_w:%u -- texH:%u texW:%u", fb_h, fb_w, parent->texHeight, parent->texWidth);
-
     do {
         unsigned int srcIdx = 0;
         unsigned int texIdx = 0;

@@ -132,6 +132,9 @@ static struct {
     unsigned int glyphMultiplier;
 
     struct timespec timingBegin;
+
+    // pending changes requiring reinitialization
+    unsigned int nextGlyphMultiplier;
 } kbd = { 0 };
 
 // ----------------------------------------------------------------------------
@@ -502,6 +505,8 @@ static void gltouchkbd_shutdown(void) {
     kbd.selectedCol = -1;
     kbd.selectedRow = -1;
     kbd.ctrlPressed = false;
+
+    kbd.nextGlyphMultiplier = 0;
 }
 
 static void gltouchkbd_setup(void) {
@@ -539,6 +544,12 @@ static void gltouchkbd_render(void) {
     }
     if (!ownsScreen) {
         return;
+    }
+
+    if (kbd.nextGlyphMultiplier) {
+        kbd.glyphMultiplier = kbd.nextGlyphMultiplier;
+        kbd.nextGlyphMultiplier = 0;
+        gltouchkbd_setup();
     }
 
     float alpha = _get_keyboard_visibility();
@@ -669,6 +680,13 @@ static void gltouchkbd_setTouchKeyboardOwnsScreen(bool pwnd) {
 
 static bool gltouchkbd_ownsScreen(void) {
     return ownsScreen;
+}
+
+static void gltouchkbd_setGlyphScale(int glyphScale) {
+    if (glyphScale == 0) {
+        glyphScale = 1;
+    }
+    kbd.nextGlyphMultiplier = glyphScale;
 }
 
 static void gltouchkbd_setVisibilityWhenOwnsScreen(float inactiveAlpha, float activeAlpha) {
@@ -980,6 +998,7 @@ static void _init_gltouchkbd(void) {
     keydriver_beginCalibration = &gltouchkbd_beginCalibration;
     keydriver_endCalibration = &gltouchkbd_endCalibration;
     keydriver_loadAltKbd = &gltouchkbd_loadAltKbd;
+    keydriver_setGlyphScale = &gltouchkbd_setGlyphScale;
 
     kbd.selectedCol = -1;
     kbd.selectedRow = -1;

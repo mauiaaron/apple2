@@ -14,11 +14,11 @@ package org.deadc0de.apple2ix;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.util.DisplayMetrics;
 import android.util.Log;
 
 import java.io.File;
 
-import org.deadc0de.apple2ix.basic.BuildConfig;
 import org.deadc0de.apple2ix.basic.R;
 
 public enum Apple2Preferences {
@@ -576,6 +576,41 @@ public enum Apple2Preferences {
             return activity.getPreferences(Context.MODE_PRIVATE).getBoolean(toString(), true);
         }
     },
+    KEYBOARD_GLYPH_SCALE {
+        @Override
+        public void load(Apple2Activity activity) {
+            int scale = intValue(activity);
+            if (scale == 0) {
+                scale = 1;
+            }
+            nativeSetTouchKeyboardGlyphScale(scale);
+        }
+
+        @Override
+        public int intValue(Apple2Activity activity) {
+            int scale = activity.getPreferences(Context.MODE_PRIVATE).getInt(toString(), 0);
+
+            if (scale == 0) {
+                scale = 2;
+                DisplayMetrics dm = new DisplayMetrics();
+                activity.getWindowManager().getDefaultDisplay().getMetrics(dm);
+
+                /* calculating actual physical diagonal size appears to be problematic -- Samsung Galaxy Y reports 15" with this method
+                double x = Math.pow(dm.widthPixels / dm.xdpi, 2);
+                double y = Math.pow(dm.heightPixels / dm.ydpi, 2);
+                double screenInches = Math.sqrt(x + y);
+                Log.d(TAG, "Screen inches:" + screenInches + " w:" + dm.widthPixels + " h:" + dm.heightPixels);
+                */
+                if (dm.widthPixels < 1280 || dm.heightPixels < 1280) {
+                    scale = 1;
+                }
+
+                saveInt(activity, scale);
+            }
+
+            return scale;
+        }
+    },
     CRASH_CHECK {
         @Override
         public void load(Apple2Activity activity) {
@@ -1060,6 +1095,8 @@ public enum Apple2Preferences {
     private static native void nativeSetTouchKeyboardVisibility(float inactiveAlpha, float activeAlpha);
 
     private static native void nativeSetTouchKeyboardLowercaseEnabled(boolean enabled);
+
+    private static native void nativeSetTouchKeyboardGlyphScale(int scale);
 
     public static native int nativeGetCurrentTouchDevice();
 

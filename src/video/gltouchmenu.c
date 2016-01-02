@@ -36,6 +36,7 @@ HUD_CLASS(GLModelHUDMenu,
 static bool isAvailable = false; // Were there any OpenGL/memory errors on initialization?
 static bool isEnabled = true;    // Does player want this enabled?
 static float minAlpha = 1/4.f;   // Minimum alpha value of components (at zero, will not render)
+static float maxAlpha = 1.f;
 
 // NOTE : intent is to match touch keyboard width
 static uint8_t topMenuTemplate[MENU_TEMPLATE_ROWS][MENU_TEMPLATE_COLS+1] = {
@@ -74,6 +75,9 @@ static struct {
     unsigned int glyphMultiplier;
     bool topLeftShowing;
     bool topRightShowing;
+
+    // pending changes requiring reinitialization
+    unsigned int nextGlyphMultiplier;
 } menu = { 0 };
 
 static struct timespec timingBegin = { 0 };
@@ -149,7 +153,7 @@ static float _get_menu_visibility(void) {
     clock_gettime(CLOCK_MONOTONIC, &now);
     deltat = timespec_diff(timingBegin, now, NULL);
     if (deltat.tv_sec == 0) {
-        alpha = 1.0;
+        alpha = maxAlpha;
         if (deltat.tv_nsec >= NANOSECONDS_PER_SECOND/2) {
             alpha -= ((float)deltat.tv_nsec-(NANOSECONDS_PER_SECOND/2)) / (float)(NANOSECONDS_PER_SECOND/2);
             if (alpha < minAlpha) {
@@ -375,10 +379,25 @@ static void _destroy_touchmenu(GLModel *parent) {
 // ----------------------------------------------------------------------------
 // GLNode functions
 
+static void gltouchmenu_shutdown(void) {
+    LOG("gltouchmenu_shutdown ...");
+    if (!isAvailable) {
+        return;
+    }
+
+    isAvailable = false;
+
+    menu.topLeftShowing = false;
+    menu.topRightShowing = false;
+    menu.nextGlyphMultiplier = 0;
+
+    mdlDestroyModel(&menu.model);
+}
+
 static void gltouchmenu_setup(void) {
     LOG("gltouchmenu_setup ...");
 
-    mdlDestroyModel(&menu.model);
+    gltouchmenu_shutdown();
 
     GLsizei texW = MENU_FB_WIDTH * menu.glyphMultiplier;
     GLsizei texH = MENU_FB_HEIGHT * menu.glyphMultiplier;
@@ -403,23 +422,18 @@ static void gltouchmenu_setup(void) {
     GL_ERRLOG("gltouchmenu_setup");
 }
 
-static void gltouchmenu_shutdown(void) {
-    LOG("gltouchmenu_shutdown ...");
-    if (!isAvailable) {
-        return;
-    }
-
-    isAvailable = false;
-
-    mdlDestroyModel(&menu.model);
-}
-
 static void gltouchmenu_render(void) {
     if (!isAvailable) {
         return;
     }
     if (!isEnabled) {
         return;
+    }
+
+    if (menu.nextGlyphMultiplier) {
+        menu.glyphMultiplier = menu.nextGlyphMultiplier;
+        menu.nextGlyphMultiplier = 0;
+        gltouchmenu_setup();
     }
 
     float alpha = _get_menu_visibility();
@@ -540,8 +554,16 @@ static void _animation_hideTouchMenu(void) {
     timingBegin = (struct timespec){ 0 };
 }
 
-static void gltouchmenu_setTouchMenuVisibility(float alpha) {
-    minAlpha = alpha;
+static void gltouchmenu_setTouchMenuVisibility(float inactiveAlpha, float activeAlpha) {
+    minAlpha = inactiveAlpha;
+    maxAlpha = activeAlpha;
+}
+
+static void gltouchmenu_setGlyphScale(int glyphScale) {
+    if (glyphScale == 0) {
+        glyphScale = 1;
+    }
+    menu.nextGlyphMultiplier = glyphScale;
 }
 
 // ----------------------------------------------------------------------------
@@ -557,6 +579,7 @@ static void _init_gltouchmenu(void) {
     interface_isTouchMenuAvailable = &gltouchmenu_isTouchMenuAvailable;
     interface_setTouchMenuEnabled = &gltouchmenu_setTouchMenuEnabled;
     interface_setTouchMenuVisibility = &gltouchmenu_setTouchMenuVisibility;
+    interface_setGlyphScale = &gltouchmenu_setGlyphScale;
 
     menu.glyphMultiplier = 1;
 

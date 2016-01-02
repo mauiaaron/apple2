@@ -489,6 +489,7 @@ bool (*keydriver_isTouchKeyboardAvailable)(void) = NULL;
 void (*keydriver_setTouchKeyboardEnabled)(bool enabled) = NULL;
 void (*keydriver_setTouchKeyboardOwnsScreen)(bool pwnd) = NULL;
 bool (*keydriver_ownsScreen)(void) = NULL;
+void (*keydriver_setGlyphScale)(int glyphScale) = NULL;
 void (*keydriver_setVisibilityWhenOwnsScreen)(float inactiveAlpha, float activeAlpha) = NULL;
 void (*keydriver_setLowercaseEnabled)(bool enabled) = NULL;
 void (*keydriver_keyboardReadCallback)(void) = NULL;

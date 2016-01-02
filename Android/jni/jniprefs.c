@@ -142,14 +142,16 @@ void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetTouchKeyboardLowercas
     keydriver_setLowercaseEnabled(enabled);
 }
 
-void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetTouchMenuVisibility(JNIEnv *env, jclass cls, jfloat alpha) {
-    LOG("visibility : %f", alpha);
-    interface_setTouchMenuVisibility(alpha);
-}
-
 void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetTouchKeyboardVisibility(JNIEnv *env, jclass cls, jfloat inactiveAlpha, jfloat activeAlpha) {
     LOG("inactive:%f active:%f", inactiveAlpha, activeAlpha);
     keydriver_setVisibilityWhenOwnsScreen(inactiveAlpha, activeAlpha);
+    interface_setTouchMenuVisibility(inactiveAlpha, activeAlpha);
+}
+
+void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetTouchKeyboardGlyphScale(JNIEnv *env, jclass cls, jint glyphScale) {
+    LOG("glyphScale:%d", glyphScale);
+    keydriver_setGlyphScale(glyphScale);
+    interface_setGlyphScale(glyphScale);
 }
 
 void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetTouchJoystickButtonTypes(JNIEnv *env, jclass cls, jint touchDownButton, jint northButton, jint southButton) {
