@@ -141,6 +141,8 @@
 		4ECFC3B91C368EAC008E2633 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4ECFC3B81C368EAC008E2633 /* Assets.xcassets */; };
 		4ECFC3BF1C368ED3008E2633 /* GameController.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4ECFC3BE1C368ED3008E2633 /* GameController.framework */; };
 		4EEF0E8A1C3536A3001BEB67 /* disksViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4EEF0E891C3536A3001BEB67 /* disksViewController.m */; };
+		4EF7D04D1C38204C007E0ADD /* floppy.png in Resources */ = {isa = PBXBuildFile; fileRef = 4EF7D04C1C38204C007E0ADD /* floppy.png */; };
+		4EF7D04E1C38204C007E0ADD /* floppy.png in Resources */ = {isa = PBXBuildFile; fileRef = 4EF7D04C1C38204C007E0ADD /* floppy.png */; };
 		773B3D101956885A0085CE5F /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 773B3D0F1956885A0085CE5F /* Cocoa.framework */; };
 		773B3D1A1956885A0085CE5F /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 773B3D181956885A0085CE5F /* InfoPlist.strings */; };
 		773B3D201956885A0085CE5F /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = 773B3D1E1956885A0085CE5F /* Credits.rtf */; };
@@ -434,6 +436,7 @@
 		4ECFC3BE1C368ED3008E2633 /* GameController.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GameController.framework; path = Platforms/AppleTVOS.platform/Developer/SDKs/AppleTVOS9.1.sdk/System/Library/Frameworks/GameController.framework; sourceTree = DEVELOPER_DIR; };
 		4EEF0E881C3536A3001BEB67 /* disksViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = disksViewController.h; sourceTree = "<group>"; };
 		4EEF0E891C3536A3001BEB67 /* disksViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = disksViewController.m; sourceTree = "<group>"; };
+		4EF7D04C1C38204C007E0ADD /* floppy.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = floppy.png; path = ../floppy.png; sourceTree = "<group>"; };
 		773B3D0C1956885A0085CE5F /* Apple2Mac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Apple2Mac.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		773B3D0F1956885A0085CE5F /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		773B3D121956885A0085CE5F /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
@@ -979,6 +982,7 @@
 		935C55291C12BA5F0013166D /* Apple2iOS */ = {
 			isa = PBXGroup;
 			children = (
+				4EF7D04C1C38204C007E0ADD /* floppy.png */,
 				93206C761C14E14000668153 /* Apple2iOS.strings */,
 				935C55421C12BCFD0013166D /* Apple2iOS-Info.plist */,
 				935C55361C12BA5F0013166D /* Assets.xcassets */,
@@ -1314,6 +1318,7 @@
 				779F562319DA59D600A6F107 /* MainMenu.xib in Resources */,
 				779F562919E4FE9E00A6F107 /* Basic.vsh in Resources */,
 				779F562A19E4FE9E00A6F107 /* Basic.fsh in Resources */,
+				4EF7D04D1C38204C007E0ADD /* floppy.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1364,6 +1369,7 @@
 				935C55911C1371AD0013166D /* Basic.fsh in Resources */,
 				4ECFC39E1C368620008E2633 /* flapple140.po in Resources */,
 				4ECBEADF1C3432010046F537 /* speedtest.dsk in Resources */,
+				4EF7D04E1C38204C007E0ADD /* floppy.png in Resources */,
 				93206C781C14E14000668153 /* Apple2iOS.strings in Resources */,
 				4ECFC39F1C368620008E2633 /* mystery.dsk in Resources */,
 			);
