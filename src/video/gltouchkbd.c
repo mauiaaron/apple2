@@ -514,13 +514,21 @@ static void gltouchkbd_setup(void) {
 
     gltouchkbd_shutdown();
 
-    GLsizei texW = KBD_FB_WIDTH * kbd.glyphMultiplier;
-    GLsizei texH = KBD_FB_HEIGHT * kbd.glyphMultiplier;
-    kbd.model = mdlCreateQuad(-1.0, -1.0, KBD_OBJ_W, KBD_OBJ_H, MODEL_DEPTH, texW, texH, (GLCustom){
+    kbd.model = mdlCreateQuad((GLModelParams_s){
+            .skew_x = -1.0,
+            .skew_y = -1.0,
+            .z = MODEL_DEPTH,
+            .obj_w = KBD_OBJ_W,
+            .obj_h = KBD_OBJ_H,
+            .positionUsageHint = GL_STATIC_DRAW, // positions don't change
+            .tex_w = KBD_FB_WIDTH * kbd.glyphMultiplier,
+            .tex_h = KBD_FB_HEIGHT * kbd.glyphMultiplier,
+            .texcoordUsageHint = GL_DYNAMIC_DRAW, // but key texture does
+        }, (GLCustom){
             .create = &_create_touchkbd_hud,
             .setup = &_setup_touchkbd_hud,
             .destroy = &_destroy_touchkbd_hud,
-            });
+        });
     if (!kbd.model) {
         LOG("gltouchkbd initialization problem");
         return;

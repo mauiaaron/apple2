@@ -82,7 +82,7 @@ void glshader_destroySource(demoSource *source) {
     FREE(source);
 }
 
-GLuint glshader_buildProgram(demoSource *vertexSource, demoSource *fragmentSource, bool hasNormal, bool hasTexcoord, OUTPARM GLuint *vertexShader, OUTPARM GLuint *fragShader) {
+GLuint glshader_buildProgram(demoSource *vertexSource, demoSource *fragmentSource, /*bool hasNormal, */bool hasTexcoord, OUTPARM GLuint *vertexShader, OUTPARM GLuint *fragShader) {
     GLuint prgName = UNINITIALIZED_GL;
     GLint logLength = UNINITIALIZED_GL;
     GLint status = UNINITIALIZED_GL;
@@ -124,9 +124,11 @@ GLuint glshader_buildProgram(demoSource *vertexSource, demoSource *fragmentSourc
     //  See buildVAO to see where vertex arrays are actually set
     glBindAttribLocation(prgName, POS_ATTRIB_IDX, "inPosition");
 
+#if 0
     if (hasNormal) {
         glBindAttribLocation(prgName, NORMAL_ATTRIB_IDX, "inNormal");
     }
+#endif
 
     if (hasTexcoord) {
         glBindAttribLocation(prgName, TEXCOORD_ATTRIB_IDX, "inTexcoord");

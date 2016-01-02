@@ -29,6 +29,6 @@ extern demoSource *glshader_createSource(const char *filepathname);
 extern void glshader_destroySource(demoSource *source);
 
 // Builds a GL program from shader sources
-extern GLuint glshader_buildProgram(demoSource *vertexSource, demoSource *fragmentSource, bool hasNormal, bool hasTexcoord, OUTPARM GLuint *vertexShader, OUTPARM GLuint *fragShader);
+extern GLuint glshader_buildProgram(demoSource *vertexSource, demoSource *fragmentSource, /*bool hasNormal, */bool hasTexcoord, OUTPARM GLuint *vertexShader, OUTPARM GLuint *fragShader);
 
 #endif // __SOURCE_UTIL_H__

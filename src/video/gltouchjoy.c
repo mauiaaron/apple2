@@ -209,11 +209,23 @@ static void gltouchjoy_setup(void) {
 
     joyglobals.isShuttingDown = false;
 
-    axes.model = mdlCreateQuad(-1.05, -1.0, AXIS_OBJ_W, AXIS_OBJ_H, MODEL_DEPTH, AXIS_FB_WIDTH, AXIS_FB_HEIGHT, (GLCustom){
+    // axis object
+
+    axes.model = mdlCreateQuad((GLModelParams_s){
+            .skew_x = -1.05,
+            .skew_y = -1.0,
+            .z = MODEL_DEPTH,
+            .obj_w = AXIS_OBJ_W,
+            .obj_h = AXIS_OBJ_H,
+            .positionUsageHint = GL_DYNAMIC_DRAW, // positions can change
+            .tex_w = AXIS_FB_WIDTH,
+            .tex_h = AXIS_FB_HEIGHT,
+            .texcoordUsageHint = GL_DYNAMIC_DRAW, // so can texture
+        }, (GLCustom){
             .create = &_create_touchjoy_hud,
             .setup = &_setup_axis_object,
             .destroy = &glhud_destroyDefault,
-            });
+        });
     if (!axes.model) {
         LOG("gltouchjoy not initializing axis");
         return;
@@ -225,11 +237,21 @@ static void gltouchjoy_setup(void) {
 
     // button object
 
-    buttons.model = mdlCreateQuad(1.05-BUTTON_OBJ_W, -1.0, BUTTON_OBJ_W, BUTTON_OBJ_H, MODEL_DEPTH, BUTTON_FB_WIDTH, BUTTON_FB_HEIGHT, (GLCustom){
+    buttons.model = mdlCreateQuad((GLModelParams_s){
+            .skew_x = 1.05-BUTTON_OBJ_W,
+            .skew_y = -1.0,
+            .z = MODEL_DEPTH,
+            .obj_w = BUTTON_OBJ_W,
+            .obj_h = BUTTON_OBJ_H,
+            .positionUsageHint = GL_DYNAMIC_DRAW, // positions can change
+            .tex_w = BUTTON_FB_WIDTH,
+            .tex_h = BUTTON_FB_HEIGHT,
+            .texcoordUsageHint = GL_DYNAMIC_DRAW, // so can texture
+        }, (GLCustom){
             .create = &_create_touchjoy_hud,
             .setup = &_setup_button_object,
             .destroy = &glhud_destroyDefault,
-            });
+        });
     if (!buttons.model) {
         LOG("gltouchjoy not initializing buttons");
         return;

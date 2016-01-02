@@ -398,13 +398,21 @@ static void gltouchmenu_setup(void) {
 
     gltouchmenu_shutdown();
 
-    GLsizei texW = MENU_FB_WIDTH * menu.glyphMultiplier;
-    GLsizei texH = MENU_FB_HEIGHT * menu.glyphMultiplier;
-    menu.model = mdlCreateQuad(-1.0, 1.0-MENU_OBJ_H, MENU_OBJ_W, MENU_OBJ_H, MODEL_DEPTH, texW, texH, (GLCustom){
+    menu.model = mdlCreateQuad((GLModelParams_s){
+            .skew_x = -1.0,
+            .skew_y = 1.0-MENU_OBJ_H,
+            .z = MODEL_DEPTH,
+            .obj_w = MENU_OBJ_W,
+            .obj_h = MENU_OBJ_H,
+            .positionUsageHint = GL_STATIC_DRAW, // positions don't change
+            .tex_w = MENU_FB_WIDTH * menu.glyphMultiplier,
+            .tex_h = MENU_FB_HEIGHT * menu.glyphMultiplier,
+            .texcoordUsageHint = GL_DYNAMIC_DRAW, // but menu texture does
+        }, (GLCustom){
             .create = &_create_touchmenu,
             .setup = &_setup_touchmenu,
             .destroy = &_destroy_touchmenu,
-            });
+        });
     if (!menu.model) {
         LOG("gltouchmenu initialization problem");
         return;

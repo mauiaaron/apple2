@@ -312,7 +312,7 @@ GLModel *mdlLoadQuadModel(void) {
 
     return model;
 }
-#endif
+#endif // 0
 
 static void _quadCreateVAOAndVBOs(GLModel *model) {
 
@@ -325,7 +325,7 @@ static void _quadCreateVAOAndVBOs(GLModel *model) {
     // Create a vertex buffer object (VBO) to store positions and load data
     glGenBuffers(1, &(model->posBufferName));
     glBindBuffer(GL_ARRAY_BUFFER, model->posBufferName);
-    glBufferData(GL_ARRAY_BUFFER, model->positionArraySize, model->positions, GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, model->positionArraySize, model->positions, model->positionUsageHint);
 
 #if USE_VAO
     // Enable the position attribute for this VAO
@@ -351,7 +351,7 @@ static void _quadCreateVAOAndVBOs(GLModel *model) {
         glBindBuffer(GL_ARRAY_BUFFER, model->texcoordBufferName);
 
         // Allocate and load texcoord data into the VBO
-        glBufferData(GL_ARRAY_BUFFER, model->texcoordArraySize, model->texCoords, GL_DYNAMIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, model->texcoordArraySize, model->texCoords, model->texcoordUsageHint);
 
 #if USE_VAO
         // Enable the texcoord attribute for this VAO
@@ -378,7 +378,16 @@ static void _quadCreateVAOAndVBOs(GLModel *model) {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, model->elementBufferName);
 
     // Allocate and load vertex array element data into VBO
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, model->elementArraySize, model->elements, GL_DYNAMIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, model->elementArraySize, model->elements, GL_STATIC_DRAW/* HACK TODO FIXME: investigate*/);
+
+#if USE_VAO
+    // We're using VAOs we can destroy certain buffers since they are already
+    // loaded into GL and we've saved anything else we need
+    FREE(model->elements);
+    FREE(model->positions);
+    //FREE(model->normals);
+    FREE(model->texCoords);
+#endif
 
     GL_ERRLOG("quad creation of VAO/VBOs");
 }
@@ -409,7 +418,15 @@ static GLuint _quadCreateTexture(GLModel *model) {
     return texName;
 }
 
-GLModel *mdlCreateQuad(GLfloat skew_x, GLfloat skew_y, GLfloat obj_w, GLfloat obj_h, GLfloat z, GLsizei tex_w, GLsizei tex_h, GLCustom clazz) {
+GLModel *mdlCreateQuad(GLModelParams_s parms, GLCustom clazz) {
+
+    const GLfloat skew_x = parms.skew_x;
+    const GLfloat skew_y = parms.skew_y;
+    const GLfloat obj_w = parms.obj_w;
+    const GLfloat obj_h = parms.obj_h;
+    const GLfloat z = parms.z;
+    const GLsizei tex_w = parms.tex_w;
+    const GLsizei tex_h = parms.tex_h;
 
     /* 2...3
      *  .
@@ -444,6 +461,8 @@ GLModel *mdlCreateQuad(GLfloat skew_x, GLfloat skew_y, GLfloat obj_w, GLfloat ob
         model->numVertices = 4;
         model->numElements = 6;
         model->primType = GL_TRIANGLES;
+        model->positionUsageHint = parms.positionUsageHint;
+        model->texcoordUsageHint = parms.texcoordUsageHint;
 
         model->positions = MALLOC(sizeof(obj_positions));
         if (!(model->positions)) {
@@ -465,6 +484,7 @@ GLModel *mdlCreateQuad(GLfloat skew_x, GLfloat skew_y, GLfloat obj_w, GLfloat ob
             model->texcoordArraySize = sizeof(obj_texcoords);
         }
 
+#if 0
         {
             // NO NORMALS for now
             model->normals = NULL;
@@ -472,6 +492,7 @@ GLModel *mdlCreateQuad(GLfloat skew_x, GLfloat skew_y, GLfloat obj_w, GLfloat ob
             model->normalSize = GL_NONE;
             model->normalArraySize = 0;
         }
+#endif
 
         model->elements = MALLOC(sizeof(indices));
         if (!(model->elements)) {
@@ -543,7 +564,7 @@ void mdlDestroyModel(INOUT GLModel **model) {
 
     FREE(m->elements);
     FREE(m->positions);
-    FREE(m->normals);
+    //FREE(m->normals);
     FREE(m->texCoords);
     FREE(m->texPixels);
 
@@ -558,6 +579,7 @@ void mdlDestroyModel(INOUT GLModel **model) {
 
         // For every possible attribute set in the VAO
         for (GLuint index = 0; index < 16; index++) {
+#warning FIXME TODO ... why magick hardcoded 16? ...
             // Get the VBO set for that attibute
             GLuint bufName = 0;
             glGetVertexAttribiv(index , GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING, (GLint*)&bufName);
@@ -603,7 +625,7 @@ void mdlDestroyModel(INOUT GLModel **model) {
     }
 #endif
 
-    if (m->custom) {
+    if (m->custom && m->custom->destroy) {
         m->custom->destroy(m);
     }
 
