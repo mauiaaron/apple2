@@ -52,7 +52,7 @@ public class Apple2SettingsMenu extends Apple2AbstractMenu {
         if (position < 0 || position >= SETTINGS.size) {
             throw new ArrayIndexOutOfBoundsException();
         }
-        return position != SETTINGS.TOUCH_MENU_VISIBILITY.ordinal();
+        return true;
     }
 
     enum SETTINGS implements Apple2AbstractMenu.IMenuEnum {
@@ -190,61 +190,6 @@ public class Apple2SettingsMenu extends Apple2AbstractMenu {
                     @Override
                     public void saveInt(int value) {
                         Apple2Preferences.HIRES_COLOR.saveHiresColor(settingsMenu.mActivity, Apple2Preferences.HiresColor.values()[value]);
-                    }
-                });
-            }
-        },
-        TOUCH_MENU_ENABLED {
-            @Override
-            public final String getTitle(Apple2Activity activity) {
-                return activity.getResources().getString(R.string.touch_menu_enable);
-            }
-
-            @Override
-            public final String getSummary(Apple2Activity activity) {
-                return activity.getResources().getString(R.string.touch_menu_enable_summary);
-            }
-
-            @Override
-            public View getView(final Apple2Activity activity, View convertView) {
-                convertView = _basicView(activity, this, convertView);
-                CheckBox cb = _addCheckbox(activity, this, convertView, Apple2Preferences.TOUCH_MENU_ENABLED.booleanValue(activity));
-                cb.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                    @Override
-                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                        Apple2Preferences.TOUCH_MENU_ENABLED.saveBoolean(activity, isChecked);
-                    }
-                });
-                return convertView;
-            }
-        },
-        TOUCH_MENU_VISIBILITY {
-            @Override
-            public final String getTitle(Apple2Activity activity) {
-                return activity.getResources().getString(R.string.touch_menu_visibility);
-            }
-
-            @Override
-            public final String getSummary(Apple2Activity activity) {
-                return activity.getResources().getString(R.string.touch_menu_visibility_summary);
-            }
-
-            @Override
-            public View getView(final Apple2Activity activity, View convertView) {
-                return _sliderView(activity, this, Apple2Preferences.ALPHA_SLIDER_NUM_CHOICES, new IPreferenceSlider() {
-                    @Override
-                    public void saveInt(int progress) {
-                        Apple2Preferences.TOUCH_MENU_VISIBILITY.saveInt(activity, progress);
-                    }
-
-                    @Override
-                    public int intValue() {
-                        return Apple2Preferences.TOUCH_MENU_VISIBILITY.intValue(activity);
-                    }
-
-                    @Override
-                    public void showValue(int progress, final TextView seekBarValue) {
-                        seekBarValue.setText("" + ((float) progress / Apple2Preferences.ALPHA_SLIDER_NUM_CHOICES));
                     }
                 });
             }

@@ -87,9 +87,9 @@
     <string name="keyboard_lowercase_enabled">Enable lowercase</string>
     <string name="keyboard_lowercase_enabled_summary">Enable lowercase keys</string>
     <string name="keyboard_visibility_active">Visibility when active</string>
-    <string name="keyboard_visibility_active_summary">Keyboard visibility when active</string>
+    <string name="keyboard_visibility_active_summary">Keyboard and touch menu visibility when active</string>
     <string name="keyboard_visibility_inactive">Visibility when inactive</string>
-    <string name="keyboard_visibility_inactive_summary">Keyboard visibility when inactive</string>
+    <string name="keyboard_visibility_inactive_summary">Keyboard and touch menu visibility when inactive</string>
     <string name="keypad">Keypad Joystick</string>
     <string name="keypad_calibrate">@string/joystick_calibrate</string>
     <string name="keypad_calibrate_summary">@string/joystick_calibrate</string>
@@ -154,8 +154,6 @@
     <string name="settings_advanced_joystick_summary">Advanced settings and performance tuning</string>
     <string name="touch_menu_enable">Enable touch menus</string>
     <string name="touch_menu_enable_summary">Enables soft menu buttons in top screen corners</string>
-    <string name="touch_menu_visibility">Touch menu visibility</string>
-    <string name="touch_menu_visibility_summary">Touch menu visibility when inactive</string>
     <string name="video_configure">Configure video…</string>
     <string name="video_configure_summary">Color settings</string>
 

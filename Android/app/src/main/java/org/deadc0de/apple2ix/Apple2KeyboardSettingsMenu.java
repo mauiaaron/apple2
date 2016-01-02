@@ -91,10 +91,34 @@ public class Apple2KeyboardSettingsMenu extends Apple2AbstractMenu {
         if (position < 0 || position >= SETTINGS.size) {
             throw new ArrayIndexOutOfBoundsException();
         }
-        return true;
+        return (position != SETTINGS.KEYBOARD_VISIBILITY_INACTIVE.ordinal() && position != SETTINGS.KEYBOARD_VISIBILITY_ACTIVE.ordinal());
     }
 
     protected enum SETTINGS implements Apple2AbstractMenu.IMenuEnum {
+        TOUCH_MENU_ENABLED {
+            @Override
+            public final String getTitle(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.touch_menu_enable);
+            }
+
+            @Override
+            public final String getSummary(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.touch_menu_enable_summary);
+            }
+
+            @Override
+            public View getView(final Apple2Activity activity, View convertView) {
+                convertView = _basicView(activity, this, convertView);
+                CheckBox cb = _addCheckbox(activity, this, convertView, Apple2Preferences.TOUCH_MENU_ENABLED.booleanValue(activity));
+                cb.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                    @Override
+                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                        Apple2Preferences.TOUCH_MENU_ENABLED.saveBoolean(activity, isChecked);
+                    }
+                });
+                return convertView;
+            }
+        },
         KEYBOARD_VISIBILITY_INACTIVE {
             @Override
             public final String getTitle(Apple2Activity activity) {
