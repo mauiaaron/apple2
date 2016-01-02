@@ -18,9 +18,9 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <toolbar opaque="NO" clearsContextBeforeDrawing="NO" contentMode="center" translatesAutoresizingMaskIntoConstraints="NO" id="MKz-35-wcI">
-                                <rect key="frame" x="0.0" y="568" width="600" height="32"/>
+                                <rect key="frame" x="0.0" y="564" width="600" height="36"/>
                                 <constraints>
-                                    <constraint firstAttribute="height" constant="32" id="FMY-Nk-ouC"/>
+                                    <constraint firstAttribute="height" constant="36" id="FMY-Nk-ouC"/>
                                 </constraints>
                                 <items>
                                     <barButtonItem title="Reboot" id="pwr-c0-7tW">
@@ -39,12 +39,12 @@
                                         </connections>
                                     </barButtonItem>
                                     <barButtonItem width="42" style="plain" systemItem="fixedSpace" id="c1a-uF-Awt"/>
-                                    <barButtonItem title="Prefs" id="80q-oc-naJ">
+                                    <barButtonItem image="Prefs" id="80q-oc-naJ">
                                         <connections>
                                             <segue destination="fYd-cd-QfE" kind="presentation" id="Yi8-iq-9a7"/>
                                         </connections>
                                     </barButtonItem>
-                                    <barButtonItem title="Disks" id="g21-de-0Ou">
+                                    <barButtonItem image="Disk" id="g21-de-0Ou">
                                         <connections>
                                             <segue destination="KHo-XT-99s" kind="presentation" id="1L7-E3-ayP"/>
                                         </connections>
@@ -412,4 +412,8 @@
             <point key="canvasLocation" x="849.375" y="-784.85915492957736"/>
         </scene>
     </scenes>
+    <resources>
+        <image name="Disk" width="32" height="32"/>
+        <image name="Prefs" width="32" height="32"/>
+    </resources>
 </document>
