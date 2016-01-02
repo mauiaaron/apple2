@@ -85,8 +85,8 @@ extern bool (*interface_isTouchMenuAvailable)(void);
 // enable/disable touch menu HUD element
 extern void (*interface_setTouchMenuEnabled)(bool enabled);
 
-// set minimum alpha visibility of touch menu HUD element
-extern void (*interface_setTouchMenuVisibility)(float alpha);
+// set min/max alpha visibility of touch menu HUD element
+extern void (*interface_setTouchMenuVisibility)(float inactiveAlpha, float activeAlpha);
 #endif
 
 #define EXT_GZ  ".gz"

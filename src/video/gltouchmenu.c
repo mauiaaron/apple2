@@ -36,6 +36,7 @@ HUD_CLASS(GLModelHUDMenu,
 static bool isAvailable = false; // Were there any OpenGL/memory errors on initialization?
 static bool isEnabled = true;    // Does player want this enabled?
 static float minAlpha = 1/4.f;   // Minimum alpha value of components (at zero, will not render)
+static float maxAlpha = 1.f;
 
 // NOTE : intent is to match touch keyboard width
 static uint8_t topMenuTemplate[MENU_TEMPLATE_ROWS][MENU_TEMPLATE_COLS+1] = {
@@ -149,7 +150,7 @@ static float _get_menu_visibility(void) {
     clock_gettime(CLOCK_MONOTONIC, &now);
     deltat = timespec_diff(timingBegin, now, NULL);
     if (deltat.tv_sec == 0) {
-        alpha = 1.0;
+        alpha = maxAlpha;
         if (deltat.tv_nsec >= NANOSECONDS_PER_SECOND/2) {
             alpha -= ((float)deltat.tv_nsec-(NANOSECONDS_PER_SECOND/2)) / (float)(NANOSECONDS_PER_SECOND/2);
             if (alpha < minAlpha) {
@@ -539,8 +540,9 @@ static void _animation_hideTouchMenu(void) {
     timingBegin = (struct timespec){ 0 };
 }
 
-static void gltouchmenu_setTouchMenuVisibility(float alpha) {
-    minAlpha = alpha;
+static void gltouchmenu_setTouchMenuVisibility(float inactiveAlpha, float activeAlpha) {
+    minAlpha = inactiveAlpha;
+    maxAlpha = activeAlpha;
 }
 
 // ----------------------------------------------------------------------------
