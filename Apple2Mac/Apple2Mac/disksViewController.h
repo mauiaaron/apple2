@@ -11,6 +11,8 @@
 @interface disksViewController : UIViewController<UIPickerViewDataSource, UIPickerViewDelegate>
 @property (retain, nonatomic) IBOutlet UIPickerView *disk1Picker;
 @property (retain, nonatomic) IBOutlet UIPickerView *disk2Picker;
+@property (retain, nonatomic) IBOutlet UISwitch *diskAProtection;
+@property (retain, nonatomic) IBOutlet UISwitch *diskBProtection;
 
 @property (strong,nonatomic) NSArray *_disks;
 @property (retain,nonatomic) NSString *path;

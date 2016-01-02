@@ -20,7 +20,9 @@
     
    
     NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
-    self.path = [[paths objectAtIndex:0] stringByAppendingPathComponent:@"Disks"];
+    //self.path = [[paths objectAtIndex:0] stringByAppendingPathComponent:@"Disks"];
+    self.path = [paths objectAtIndex:0];
+    NSLog(@"Path:%@",self.path);
     self._disks=[[NSFileManager defaultManager] contentsOfDirectoryAtPath:self.path error:NULL];
     
     // Connect data
@@ -54,9 +56,23 @@
 {
     // This method is triggered whenever the user makes a change to the picker selection.
     // The parameter named row and component represents what was selected.
-    NSLog(@"Selected Row %d %@", row,(NSString*)[self._disks objectAtIndex:row]);
-    disk6_eject(0);
-    const char *errMsg = disk6_insert(0, [[self.path stringByAppendingPathComponent:[self._disks objectAtIndex:row]] UTF8String], YES);
+    int drive=0;
+    BOOL ro=YES;
+    
+    if(pickerView==self.disk1Picker)
+    {
+        drive=0;
+        ro=self.diskAProtection.on;
+    }
+    if(pickerView==self.disk2Picker)
+    {
+     drive=1;
+        ro=self.diskBProtection.on;
+    }
+    
+    NSLog(@"Selected Row %d %@ %c", row,(NSString*)[self._disks objectAtIndex:row],ro);
+    disk6_eject(drive);
+    const char *errMsg = disk6_insert(drive, [[self.path stringByAppendingPathComponent:[self._disks objectAtIndex:row]] UTF8String], ro);
 }
 
 - (IBAction)unwindToMainViewController:(UIStoryboardSegue*)sender
@@ -68,5 +84,10 @@
     cpu_resume();
 }
 
+- (void)dealloc {
+    [_diskAProtection release];
+    [_diskBProtection release];
+    [super dealloc];
+}
 @end
 
