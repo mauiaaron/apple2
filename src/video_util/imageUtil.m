@@ -12,6 +12,7 @@
 // Modified sample code from https://developer.apple.com/library/mac/samplecode/GLEssentials/Introduction/Intro.html
 
 #include "imageUtil.h"
+#include "common.h"
 
 #if TARGET_OS_IPHONE
 #import <UIKit/UIKit.h>
