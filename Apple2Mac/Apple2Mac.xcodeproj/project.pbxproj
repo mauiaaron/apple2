@@ -408,6 +408,8 @@
 		4E1733DD1C2C5E5D00CDF9DF /* AppleViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AppleViewController.m; sourceTree = "<group>"; };
 		4E1ACFE61C2B0F3600C755BB /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Main.strings; sourceTree = "<group>"; };
 		4E1ACFE71C2B12F900C755BB /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/MainMenu.xib; sourceTree = "<group>"; };
+		4E4356E31C386AC500B71328 /* interface.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = interface.h; sourceTree = "<group>"; };
+		4E4356E41C386AC500B71328 /* memmngt.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = memmngt.h; sourceTree = "<group>"; };
 		4E4585F91C29F2B9003E74A1 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/MainMenu.xib; sourceTree = "<group>"; };
 		4E4585FF1C29F393003E74A1 /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = "fr.lproj/MainMenu-Test.strings"; sourceTree = "<group>"; };
 		4E4586001C29F399003E74A1 /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = fr; path = fr.lproj/Credits.rtf; sourceTree = "<group>"; };
@@ -788,6 +790,8 @@
 		773B3D4519568A570085CE5F /* src */ = {
 			isa = PBXGroup;
 			children = (
+				4E4356E31C386AC500B71328 /* interface.h */,
+				4E4356E41C386AC500B71328 /* memmngt.h */,
 				935C55781C136F550013166D /* arm */,
 				779F564619EAF66E00A6F107 /* audio */,
 				773B3D5C19568A570085CE5F /* common.h */,
