@@ -758,7 +758,7 @@ const char *disk6_eject(int drive) {
          */
     }
 
-    FREE(disk6.disk[drive].file_name);
+    STRDUP_FREE(disk6.disk[drive].file_name);
     memset(&disk6.disk[drive], 0x0, sizeof(disk6.disk[drive]));
 
     disk6.disk[drive].fd = -1;
@@ -1078,7 +1078,7 @@ bool disk6_loadState(StateHelper_s *helper) {
 
             if (namelen) {
                 unsigned long gzlen = (_GZLEN+1);
-                char *namebuf = malloc(namelen+gzlen+1);
+                char *namebuf = MALLOC(namelen+gzlen+1);
                 if (!helper->load(fd, namebuf, namelen)) {
                     FREE(namebuf);
                     break;
@@ -1090,6 +1090,7 @@ bool disk6_loadState(StateHelper_s *helper) {
                     namebuf[namelen+gzlen] = '\0';
                     LOG("LOAD disk[%lu] : (%u) %s", i, namelen, namebuf);
                     if (disk6_insert(i, namebuf, disk6.disk[i].is_protected)) {
+                        FREE(namebuf);
                         break;
                     }
                 }

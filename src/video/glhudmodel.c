@@ -12,9 +12,115 @@
 #include "glhudmodel.h"
 #include "glvideo.h"
 
+// . . .
+// . x .
+// . . .
+typedef struct EightPatchArgs_s {
+    GLModel *parent;
+    unsigned int pixelSize;
+    unsigned int glyphScale;
+    unsigned int fb_h;
+    unsigned int fb_w;
+    unsigned int srcIdx;
+    unsigned int dstIdx;
+} EightPatchArgs_s;
+
+// Generates a semi-opaque halo effect around each glyph
+static void _eightpatch_opaquePixelHaloFilter(const EightPatchArgs_s args) {
+
+#if USE_RGBA4444
+#   define SEMI_OPAQUE (0x0C << SHIFT_A)
+#else
+#   define SEMI_OPAQUE (0xC0 << SHIFT_A)
+#endif
+
+    const unsigned int pixelSize = args.pixelSize;
+    const unsigned int glyphScale = args.glyphScale;
+    const unsigned int fb_w = args.fb_w;
+    const unsigned int fb_h = args.fb_h;
+    const unsigned int srcIdx = args.srcIdx;
+    const unsigned int srcCol = (srcIdx % fb_w);
+    const unsigned int lastCol = (fb_w-1);
+    const unsigned int dstPointStride = pixelSize * glyphScale;
+    const unsigned int dstRowStride = fb_w * dstPointStride;
+    const unsigned int texRowStride = ((fb_w * glyphScale) * (glyphScale/*1 row*/ * glyphScale) * pixelSize);
+    const unsigned int lastPoint = ((fb_w * glyphScale) * (fb_h * glyphScale) * pixelSize);
+
+    uint8_t *texPixels = args.parent->texPixels;
+    const int dstIdx0 = (int)args.dstIdx;
+    const int dstPre0 = dstIdx0 - texRowStride; // negative is okay
+    const int dstPost0 = dstIdx0 + texRowStride;
+
+    // scale glyph data 1x, 2x, ...
+
+    // north pixels
+    if (dstPre0 >= 0) {
+        int dstPre = dstPre0;
+        for (unsigned int k=0; k<glyphScale; k++, dstPre+=dstRowStride) {
+            for (unsigned int l=0; l<glyphScale; l++, dstPre+=pixelSize) {
+                if (srcCol != 0) {
+                    *((PIXEL_TYPE*)(texPixels + dstPre - dstPointStride)) |= SEMI_OPAQUE;
+                }
+                *((PIXEL_TYPE*)(texPixels + dstPre)) |= SEMI_OPAQUE;
+                if (srcCol < lastCol) {
+                    *((PIXEL_TYPE*)(texPixels + dstPre + dstPointStride)) |= SEMI_OPAQUE;
+                }
+            }
+            dstPre -= dstPointStride;
+        }
+    }
+
+    // west pixel
+    if (srcCol != 0) {
+        int dstIdx = dstIdx0;
+        for (unsigned int k=0; k<glyphScale; k++, dstIdx+=dstRowStride) {
+            for (unsigned int l=0; l<glyphScale; l++, dstIdx+=pixelSize) {
+                *((PIXEL_TYPE*)(texPixels + dstIdx - dstPointStride)) |= SEMI_OPAQUE;
+            }
+            dstIdx -= dstPointStride;
+        }
+    }
+
+    // east pixel
+    if (srcCol < lastCol) {
+        int dstIdx = dstIdx0;
+        for (unsigned int k=0; k<glyphScale; k++, dstIdx+=dstRowStride) {
+            for (unsigned int l=0; l<glyphScale; l++, dstIdx+=pixelSize) {
+                *((PIXEL_TYPE*)(texPixels + dstIdx + dstPointStride)) |= SEMI_OPAQUE;
+            }
+            dstIdx -= dstPointStride;
+        }
+    }
+
+    // south pixels
+    if (dstPost0 < lastPoint) {
+        int dstPost = dstPost0;
+        for (unsigned int k=0; k<glyphScale; k++, dstPost+=dstRowStride) {
+            for (unsigned int l=0; l<glyphScale; l++, dstPost+=pixelSize) {
+                if (srcCol != 0) {
+                    *((PIXEL_TYPE*)(texPixels + dstPost - dstPointStride)) |= SEMI_OPAQUE;
+                }
+                *((PIXEL_TYPE*)(texPixels + dstPost)) |= SEMI_OPAQUE;
+                if (srcCol < lastCol) {
+                    *((PIXEL_TYPE*)(texPixels + dstPost + dstPointStride)) |= SEMI_OPAQUE;
+                }
+            }
+            dstPost -= dstPointStride;
+        }
+    }
+}
+
+// ----------------------------------------------------------------------------
+
 void *glhud_createDefault(void) {
-    GLModelHUDElement *hudElement = (GLModelHUDElement *)calloc(sizeof(GLModelHUDElement), 1);
+    return glhud_createCustom(sizeof(GLModelHUDElement));
+}
+
+void *glhud_createCustom(unsigned int sizeofModel) {
+    assert(sizeof(GLModelHUDElement) <= sizeofModel);
+    GLModelHUDElement *hudElement = (GLModelHUDElement *)CALLOC(sizeofModel, 1);
     if (hudElement) {
+        hudElement->glyphMultiplier = 1;
         hudElement->colorScheme = RED_ON_BLACK;
     }
     return hudElement;
@@ -23,6 +129,8 @@ void *glhud_createDefault(void) {
 void glhud_setupDefault(GLModel *parent) {
 
     GLModelHUDElement *hudElement = (GLModelHUDElement *)parent->custom;
+    assert(hudElement->glyphMultiplier > 0);
+
     char *submenu = (char *)(hudElement->tpl);
     const unsigned int cols = hudElement->tplWidth;
     const unsigned int rows = hudElement->tplHeight;
@@ -31,71 +139,68 @@ void glhud_setupDefault(GLModel *parent) {
     // render template into indexed fb
     interface_plotMessage(fb, hudElement->colorScheme, submenu, cols, rows);
 
-    // Generate OpenGL color from indexed color
+    // generate OpenGL texture/color from indexed color
     const unsigned int fb_w = hudElement->pixWidth;
     const unsigned int fb_h = hudElement->pixHeight;
-    const unsigned int count = fb_w * fb_h;
-    const unsigned int countOut = count * sizeof(PIXEL_TYPE);
-    for (unsigned int srcIdx=0, dstIdx=0; srcIdx<count; srcIdx++, dstIdx+=sizeof(PIXEL_TYPE)) {
-        uint8_t index = *(fb + srcIdx);
-        PIXEL_TYPE rgb = (((PIXEL_TYPE)(colormap[index].red)   << SHIFT_R) |
-                          ((PIXEL_TYPE)(colormap[index].green) << SHIFT_G) |
-                          ((PIXEL_TYPE)(colormap[index].blue)  << SHIFT_B));
-        if (rgb == 0 && hudElement->blackIsTransparent) {
-            // make black transparent
-        } else {
-            rgb |=        ((PIXEL_TYPE)MAX_SATURATION          << SHIFT_A);
+    const unsigned int pixelSize = sizeof(PIXEL_TYPE);
+    const unsigned int glyphScale = hudElement->glyphMultiplier;
+    const unsigned int dstPointStride = pixelSize * glyphScale;
+    const unsigned int dstRowStride = fb_w * dstPointStride;
+    const unsigned int texSubRowStride = dstRowStride * (glyphScale-1);
+
+    LOG("fb_h:%u, fb_w:%u -- texH:%u texW:%u", fb_h, fb_w, parent->texHeight, parent->texWidth);
+
+    do {
+        unsigned int srcIdx = 0;
+        unsigned int texIdx = 0;
+        for (unsigned int i=0; i<fb_h; i++, texIdx+=texSubRowStride) {
+            for (unsigned int j=0; j<fb_w; j++, srcIdx++, texIdx+=dstPointStride) {
+                uint8_t value = *(fb + srcIdx);
+                PIXEL_TYPE rgba = (((PIXEL_TYPE)(colormap[value].red)   << SHIFT_R) |
+                                   ((PIXEL_TYPE)(colormap[value].green) << SHIFT_G) |
+                                   ((PIXEL_TYPE)(colormap[value].blue)  << SHIFT_B));
+                if (rgba == 0 && hudElement->blackIsTransparent) {
+                    // black remains transparent
+                } else {
+                    rgba |=        ((PIXEL_TYPE)MAX_SATURATION          << SHIFT_A);
+                }
+
+                // scale glyph data 1x, 2x, ...
+                unsigned int dstIdx = texIdx;
+                for (unsigned int k=0; k<glyphScale; k++, dstIdx+=dstRowStride) {
+                    for (unsigned int l=0; l<glyphScale; l++, dstIdx+=pixelSize) {
+                        *( (PIXEL_TYPE *)(parent->texPixels + dstIdx) ) = rgba;
+                    }
+                    dstIdx -= dstPointStride;
+                }
+            }
         }
-        *( (PIXEL_TYPE*)(parent->texPixels + dstIdx) ) = rgb;
-    }
+    } while (0);
 
-    // Second pass to generate a semi-opaque halo effect around each glyph
     if (hudElement->opaquePixelHalo) {
-        for (int // -negative index values allowed here ...
-                srcIdx=0, dstPre=-((fb_w+1)*sizeof(PIXEL_TYPE)), dstIdx=0, dstPost=((fb_w-1)*sizeof(PIXEL_TYPE));
-                srcIdx<count;
-                srcIdx++, dstPre+=sizeof(PIXEL_TYPE), dstIdx+=sizeof(PIXEL_TYPE), dstPost+=sizeof(PIXEL_TYPE))
-        {
-            uint8_t index = *(fb + srcIdx);
-            PIXEL_TYPE rgb = (((PIXEL_TYPE)(colormap[index].red)   << SHIFT_R) |
-                              ((PIXEL_TYPE)(colormap[index].green) << SHIFT_G) |
-                              ((PIXEL_TYPE)(colormap[index].blue)  << SHIFT_B));
-            if (!rgb) {
-                continue;
-            }
+        unsigned int srcIdx = 0;
+        unsigned int texIdx = 0;
+        for (unsigned int i=0; i<fb_h; i++, texIdx+=texSubRowStride) {
+            for (unsigned int j=0; j<fb_w; j++, srcIdx++, texIdx+=dstPointStride) {
+                uint8_t value = *(fb + srcIdx);
+                PIXEL_TYPE rgb = (((PIXEL_TYPE)(colormap[value].red)   << SHIFT_R) |
+                                  ((PIXEL_TYPE)(colormap[value].green) << SHIFT_G) |
+                                  ((PIXEL_TYPE)(colormap[value].blue)  << SHIFT_B));
 
-#if USE_RGBA4444
-#define SEMI_OPAQUE (0x0C << SHIFT_A)
-#else
-#define SEMI_OPAQUE (0xC0 << SHIFT_A)
-#endif
-            const unsigned int col = (srcIdx % fb_w);
+                unsigned int dstIdx = texIdx;
 
-            if (dstPre >= 0) {          // north pixels
-                if (col != 0) {
-                    *((PIXEL_TYPE*)(parent->texPixels + dstPre)) |= SEMI_OPAQUE;
-                }
-                *((PIXEL_TYPE*)(parent->texPixels + dstPre + sizeof(PIXEL_TYPE) )) |= SEMI_OPAQUE;
-                if (col < fb_w-1) {
-                    *((PIXEL_TYPE*)(parent->texPixels + dstPre + (2*sizeof(PIXEL_TYPE)) )) |= SEMI_OPAQUE;
-                }
-            }
-
-            if (col != 0) {             // west pixel
-                *((PIXEL_TYPE*)(parent->texPixels + dstIdx - sizeof(PIXEL_TYPE) )) |= SEMI_OPAQUE;
-            }
-
-            if (col < fb_w-1) {         // east pixel
-                *((PIXEL_TYPE*)(parent->texPixels + dstIdx + sizeof(PIXEL_TYPE) )) |= SEMI_OPAQUE;
-            }
-
-            if (dstPost < countOut) {   // south pixels
-                if (col != 0) {
-                    *((PIXEL_TYPE*)(parent->texPixels + dstPost)) |= SEMI_OPAQUE;
-                }
-                *((PIXEL_TYPE*)(parent->texPixels + dstPost + sizeof(PIXEL_TYPE) )) |= SEMI_OPAQUE;
-                if (col < fb_w-1) {
-                    *((PIXEL_TYPE*)(parent->texPixels + dstPost + (2*sizeof(PIXEL_TYPE)) )) |= SEMI_OPAQUE;
+                // perform "eight patch" on adjacent pixels
+                if (rgb) {
+                    EightPatchArgs_s args = {
+                        .parent = parent,
+                        .pixelSize = pixelSize,
+                        .glyphScale = glyphScale,
+                        .fb_h = fb_h,
+                        .fb_w = fb_w,
+                        .srcIdx = srcIdx,
+                        .dstIdx = dstIdx,
+                    };
+                    _eightpatch_opaquePixelHaloFilter(args);
                 }
             }
         }

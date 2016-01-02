@@ -37,8 +37,8 @@
 #define MAINROW 4 // main keyboard row offset
 #define SWITCHCOL 0
 
-#define KBD_FB_WIDTH (KBD_TEMPLATE_COLS * FONT80_WIDTH_PIXELS)
-#define KBD_FB_HEIGHT (KBD_TEMPLATE_ROWS * FONT_HEIGHT_PIXELS)
+#define KBD_FB_WIDTH (KBD_TEMPLATE_COLS * FONT80_WIDTH_PIXELS) // 10 * 7 == 70
+#define KBD_FB_HEIGHT (KBD_TEMPLATE_ROWS * FONT_HEIGHT_PIXELS) // 8 * 16 == 128
 
 #define KBD_OBJ_W 2.0
 #define KBD_OBJ_H 2.0
@@ -129,27 +129,34 @@ static struct {
 
     bool ctrlPressed;
 
+    unsigned int glyphMultiplier;
+
     struct timespec timingBegin;
 } kbd = { 0 };
 
 // ----------------------------------------------------------------------------
 // Misc internal methods
 
+#warning FIXME TODO ... make this a generic GLModelHUDElement function
 static void _rerender_character(int col, int row) {
     GLModelHUDKeyboard *hudKeyboard = (GLModelHUDKeyboard *)(kbd.model->custom);
 
-    // re-generate texture from indexed color
-    const unsigned int colCount = 1;
-    const unsigned int pixCharsWidth = FONT80_WIDTH_PIXELS*colCount;
-    const unsigned int rowStride = hudKeyboard->pixWidth - pixCharsWidth;
-    unsigned int srcIdx = (row * hudKeyboard->pixWidth * FONT_HEIGHT_PIXELS) + (col * FONT80_WIDTH_PIXELS);
-    unsigned int dstIdx = srcIdx * sizeof(PIXEL_TYPE);
+    // In English, this changes one glyph within the keyboard texture data to be the (un)selected color.  It handles
+    // scaling from indexed color to RGBA8888 (4x) and then possibly scaling to 2x or greater.
 
-    for (unsigned int i=0; i<FONT_HEIGHT_PIXELS; i++) {
-        for (unsigned int j=0; j<pixCharsWidth; j++) {
+    const unsigned int fb_w = hudKeyboard->pixWidth;
+    const unsigned int pixelSize = sizeof(PIXEL_TYPE);
+    const unsigned int glyphScale = hudKeyboard->glyphMultiplier;
+    const unsigned int dstPointStride = pixelSize * glyphScale;
+    const unsigned int dstRowStride = fb_w * dstPointStride;
+    const unsigned int texSubRowStride = dstRowStride + (dstRowStride * (glyphScale-1));
+    const unsigned int indexedIdx = (row * fb_w * FONT_HEIGHT_PIXELS) + (col * FONT80_WIDTH_PIXELS);
+    unsigned int texIdx = ((row * fb_w * FONT_HEIGHT_PIXELS * /*1 row:*/glyphScale) + (col * FONT80_WIDTH_PIXELS)) * dstPointStride;
 
-            // HACK : red <-> green swap
-            PIXEL_TYPE rgba = *((PIXEL_TYPE *)(kbd.model->texPixels + dstIdx));
+    for (unsigned int i=0; i<FONT_HEIGHT_PIXELS; i++, texIdx+=texSubRowStride) {
+        for (unsigned int j=0; j<FONT80_WIDTH_PIXELS; j++, texIdx+=dstPointStride) {
+            // HACK : red <-> green swap of texture data
+            PIXEL_TYPE rgba = *((PIXEL_TYPE *)(kbd.model->texPixels + texIdx));
             PIXEL_TYPE r = (rgba >> SHIFT_R) & MAX_SATURATION;
             PIXEL_TYPE g = (rgba >> SHIFT_G) & MAX_SATURATION;
 #if USE_RGBA4444
@@ -157,13 +164,16 @@ static void _rerender_character(int col, int row) {
 #else
             rgba = ( ((rgba>>SHIFT_B)<<SHIFT_B) | (r << SHIFT_G) | (g << SHIFT_R) );
 #endif
-            *( (PIXEL_TYPE *)(kbd.model->texPixels + dstIdx) ) = rgba;
-
-            srcIdx += 1;
-            dstIdx += sizeof(PIXEL_TYPE);
+            // scale texture data 1x, 2x, ...
+            unsigned int dstIdx = texIdx;
+            for (unsigned int k=0; k<glyphScale; k++, dstIdx+=dstRowStride) {
+                for (unsigned int l=0; l<glyphScale; l++, dstIdx+=pixelSize) {
+                    *( (PIXEL_TYPE *)(kbd.model->texPixels + dstIdx) ) = rgba;
+                }
+                dstIdx -= dstPointStride;
+            }
         }
-        srcIdx += rowStride;
-        dstIdx = srcIdx * sizeof(PIXEL_TYPE);
+        texIdx -= (FONT80_WIDTH_PIXELS * dstPointStride);
     }
 
     kbd.model->texDirty = true;
@@ -448,11 +458,11 @@ static void _setup_touchkbd_hud(GLModel *parent) {
     hudKeyboard->pixWidth  = KBD_FB_WIDTH;
     hudKeyboard->pixHeight = KBD_FB_HEIGHT;
 
-    const unsigned int size = sizeof(kbdTemplateUCase/* assuming all the same */);
-    hudKeyboard->tpl = calloc(size, 1);
-    hudKeyboard->pixels = calloc(KBD_FB_WIDTH * KBD_FB_HEIGHT, 1);
+    const unsigned int size = sizeof(kbdTemplateUCase/* assuming all the same dimensions */);
+    hudKeyboard->tpl = MALLOC(size);
+    hudKeyboard->pixels = MALLOC(KBD_FB_WIDTH * KBD_FB_HEIGHT);
 
-    memcpy(hudKeyboard->tpl, kbdTemplateUCase[0], sizeof(kbdTemplateUCase/* assuming all the same size */));
+    memcpy(hudKeyboard->tpl, kbdTemplateUCase[0], sizeof(kbdTemplateUCase/* assuming all the same dimensions */));
 
     // setup normal color pixels
     hudKeyboard->colorScheme = RED_ON_BLACK;
@@ -460,10 +470,11 @@ static void _setup_touchkbd_hud(GLModel *parent) {
 }
 
 static void *_create_touchkbd_hud(void) {
-    GLModelHUDKeyboard *hudKeyboard = (GLModelHUDKeyboard *)calloc(sizeof(GLModelHUDKeyboard), 1);
+    GLModelHUDKeyboard *hudKeyboard = (GLModelHUDKeyboard *)glhud_createCustom(sizeof(GLModelHUDKeyboard));
     if (hudKeyboard) {
         hudKeyboard->blackIsTransparent = true;
         hudKeyboard->opaquePixelHalo = true;
+        hudKeyboard->glyphMultiplier = kbd.glyphMultiplier;
     }
     return hudKeyboard;
 }
@@ -498,7 +509,9 @@ static void gltouchkbd_setup(void) {
 
     gltouchkbd_shutdown();
 
-    kbd.model = mdlCreateQuad(-1.0, -1.0, KBD_OBJ_W, KBD_OBJ_H, MODEL_DEPTH, KBD_FB_WIDTH, KBD_FB_HEIGHT, (GLCustom){
+    GLsizei texW = KBD_FB_WIDTH * kbd.glyphMultiplier;
+    GLsizei texH = KBD_FB_HEIGHT * kbd.glyphMultiplier;
+    kbd.model = mdlCreateQuad(-1.0, -1.0, KBD_OBJ_W, KBD_OBJ_H, MODEL_DEPTH, texW, texH, (GLCustom){
             .create = &_create_touchkbd_hud,
             .setup = &_setup_touchkbd_hud,
             .destroy = &_destroy_touchkbd_hud,
@@ -973,6 +986,8 @@ static void _init_gltouchkbd(void) {
 
     kbd.ctrlCol = DEFAULT_CTRL_COL;
     kbd.ctrlRow = CTRLROW;
+
+    kbd.glyphMultiplier = 1;
 
     glnode_registerNode(RENDER_LOW, (GLNode){
         .setup = &gltouchkbd_setup,

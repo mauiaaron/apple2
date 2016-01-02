@@ -87,9 +87,9 @@
     <string name="keyboard_lowercase_enabled">Permettre les minuscules</string>
     <string name="keyboard_lowercase_enabled_summary">Permettre les touches en minuscules</string>
     <string name="keyboard_visibility_active">Visibilité quand actif</string>
-    <string name="keyboard_visibility_active_summary">Voir le clavier quand actif</string>
+    <string name="keyboard_visibility_active_summary">Clavier et menu tactile visible quand actif</string>
     <string name="keyboard_visibility_inactive">Visibilité quand inactif</string>
-    <string name="keyboard_visibility_inactive_summary">Clavier visible quand inactif</string>
+    <string name="keyboard_visibility_inactive_summary">Clavier et menu tactile visible quand inactif</string>
     <string name="keypad">Keypad Joystick</string>
     <string name="keypad_calibrate">@string/joystick_calibrate</string>
     <string name="keypad_calibrate_summary">@string/joystick_calibrate</string>
@@ -154,8 +154,6 @@
     <string name="settings_advanced_joystick_summary">Configuration avancée et tuning de performance</string>
     <string name="touch_menu_enable">Activation des menus tactiles</string>
     <string name="touch_menu_enable_summary">Activation soft des bouton du menu dans les coins en haut de l\'écran</string>
-    <string name="touch_menu_visibility">Visibilité du menu tactile</string>
-    <string name="touch_menu_visibility_summary">Menu tactile visible quand inactif</string>
     <string name="video_configure">Configuration de la vidéo…</string>
     <string name="video_configure_summary">Configuration des couleurs</string>
 

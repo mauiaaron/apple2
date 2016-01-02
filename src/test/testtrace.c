@@ -70,7 +70,7 @@ TEST test_boot_disk_cputrace() {
         long expectedSize = ftell(fp);
         ASSERT(expectedSize == EXPECTED_CPU_TRACE_FILE_SIZE);
         fseek(fp, 0, SEEK_SET);
-        unsigned char *buf = malloc(EXPECTED_CPU_TRACE_FILE_SIZE);
+        unsigned char *buf = MALLOC(EXPECTED_CPU_TRACE_FILE_SIZE);
         if (fread(buf, 1, EXPECTED_CPU_TRACE_FILE_SIZE, fp) != EXPECTED_CPU_TRACE_FILE_SIZE) {
             ASSERT(false);
         }
@@ -121,7 +121,7 @@ TEST test_cputrace_hello_dsk() {
         long expectedSize = ftell(fp);
         ASSERT(expectedSize == EXPECTED_CPUTRACE_HELLO_FILE_SIZE);
         fseek(fp, 0, SEEK_SET);
-        unsigned char *buf = malloc(EXPECTED_CPUTRACE_HELLO_FILE_SIZE);
+        unsigned char *buf = MALLOC(EXPECTED_CPUTRACE_HELLO_FILE_SIZE);
         if (fread(buf, 1, EXPECTED_CPUTRACE_HELLO_FILE_SIZE, fp) != EXPECTED_CPUTRACE_HELLO_FILE_SIZE) {
             ASSERT(false);
         }
@@ -171,7 +171,7 @@ TEST test_cputrace_hello_nib() {
         long expectedSize = ftell(fp);
         ASSERT(expectedSize == EXPECTED_CPUTRACE_HELLO_NIB_FILE_SIZE);
         fseek(fp, 0, SEEK_SET);
-        unsigned char *buf = malloc(EXPECTED_CPUTRACE_HELLO_NIB_FILE_SIZE);
+        unsigned char *buf = MALLOC(EXPECTED_CPUTRACE_HELLO_NIB_FILE_SIZE);
         if (fread(buf, 1, EXPECTED_CPUTRACE_HELLO_NIB_FILE_SIZE, fp) != EXPECTED_CPUTRACE_HELLO_NIB_FILE_SIZE) {
             ASSERT(false);
         }
@@ -221,7 +221,7 @@ TEST test_cputrace_hello_po() {
         long expectedSize = ftell(fp);
         ASSERT(expectedSize == EXPECTED_CPUTRACE_HELLO_PO_FILE_SIZE);
         fseek(fp, 0, SEEK_SET);
-        unsigned char *buf = malloc(EXPECTED_CPUTRACE_HELLO_PO_FILE_SIZE);
+        unsigned char *buf = MALLOC(EXPECTED_CPUTRACE_HELLO_PO_FILE_SIZE);
         if (fread(buf, 1, EXPECTED_CPUTRACE_HELLO_PO_FILE_SIZE, fp) != EXPECTED_CPUTRACE_HELLO_PO_FILE_SIZE) {
             ASSERT(false);
         }
@@ -267,7 +267,7 @@ TEST test_boot_disk_vmtrace() {
         ASSERT(expectedSize == EXPECTED_VM_TRACE_FILE_SIZE);
         fseek(fp, 0, SEEK_SET);
 
-        unsigned char *buf = malloc(EXPECTED_VM_TRACE_FILE_SIZE);
+        unsigned char *buf = MALLOC(EXPECTED_VM_TRACE_FILE_SIZE);
         if (fread(buf, 1, EXPECTED_VM_TRACE_FILE_SIZE, fp) != EXPECTED_VM_TRACE_FILE_SIZE) {
             ASSERT(false);
         }
@@ -315,7 +315,7 @@ TEST test_boot_disk_vmtrace_nib() {
         ASSERT(expectedSize == EXPECTED_VM_TRACE_NIB_FILE_SIZE);
         fseek(fp, 0, SEEK_SET);
 
-        unsigned char *buf = malloc(EXPECTED_VM_TRACE_NIB_FILE_SIZE);
+        unsigned char *buf = MALLOC(EXPECTED_VM_TRACE_NIB_FILE_SIZE);
         if (fread(buf, 1, EXPECTED_VM_TRACE_NIB_FILE_SIZE, fp) != EXPECTED_VM_TRACE_NIB_FILE_SIZE) {
             ASSERT(false);
         }
@@ -363,7 +363,7 @@ TEST test_boot_disk_vmtrace_po() {
         ASSERT(expectedSize == EXPECTED_VM_TRACE_PO_FILE_SIZE);
         fseek(fp, 0, SEEK_SET);
 
-        unsigned char *buf = malloc(EXPECTED_VM_TRACE_PO_FILE_SIZE);
+        unsigned char *buf = MALLOC(EXPECTED_VM_TRACE_PO_FILE_SIZE);
         if (fread(buf, 1, EXPECTED_VM_TRACE_PO_FILE_SIZE, fp) != EXPECTED_VM_TRACE_PO_FILE_SIZE) {
             ASSERT(false);
         }

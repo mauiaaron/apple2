@@ -277,19 +277,6 @@ public enum Apple2Preferences {
             return activity.getPreferences(Context.MODE_PRIVATE).getBoolean(toString(), true);
         }
     },
-    TOUCH_MENU_VISIBILITY {
-        @Override
-        public void load(Apple2Activity activity) {
-            int setting = intValue(activity);
-            float alpha = (float) setting / AUDIO_LATENCY_NUM_CHOICES;
-            nativeSetTouchMenuVisibility(alpha);
-        }
-
-        @Override
-        public int intValue(Apple2Activity activity) {
-            return activity.getPreferences(Context.MODE_PRIVATE).getInt(toString(), 5);
-        }
-    },
     SHOW_DISK_OPERATIONS {
         @Override
         public void load(Apple2Activity activity) {
@@ -1067,8 +1054,6 @@ public enum Apple2Preferences {
     private static native void nativeSetTouchJoystickVisibility(boolean visibility);
 
     public static native void nativeSetTouchMenuEnabled(boolean enabled);
-
-    private static native void nativeSetTouchMenuVisibility(float alpha);
 
     public static native void nativeSetShowDiskOperationAnimation(boolean enabled);
 

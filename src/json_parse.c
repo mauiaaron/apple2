@@ -38,7 +38,7 @@ int json_createFromFile(const char *filePath, INOUT JSON_s *parsedData) {
         }
 
         jsonLen = JSON_LENGTH*2;
-        jsonString = malloc(jsonLen);
+        jsonString = MALLOC(jsonLen);
         if (jsonString == NULL) {
             ERRLOG("WHOA : %s", strerror(errno));
             break;
@@ -56,7 +56,7 @@ int json_createFromFile(const char *filePath, INOUT JSON_s *parsedData) {
                 if (jsonLen - jsonIdx < JSON_LENGTH) {
                     //LOG("reallocating json string ...");
                     jsonLen <<= 1;
-                    char *newString = realloc(jsonString, jsonLen);
+                    char *newString = REALLOC(jsonString, jsonLen);
                     if (!newString) {
                         ERRLOG("WHOA2 : %s", strerror(errno));
                         bytesRead = -1;
@@ -83,7 +83,7 @@ int json_createFromFile(const char *filePath, INOUT JSON_s *parsedData) {
         unsigned int numTokens = DEFAULT_NUMTOK;
         do {
             if (!jsonTokens) {
-                jsonTokens = calloc(numTokens, sizeof(jsmntok_t));
+                jsonTokens = CALLOC(numTokens, sizeof(jsmntok_t));
                 if (!jsonTokens) {
                     ERRLOG("WHOA3 : %s", strerror(errno));
                     break;
@@ -91,12 +91,12 @@ int json_createFromFile(const char *filePath, INOUT JSON_s *parsedData) {
             } else {
                 //LOG("reallocating json tokens ...");
                 numTokens <<= 1;
-                jsmntok_t *newTokens = realloc(jsonTokens, numTokens * sizeof(jsmntok_t));
-                memset(newTokens, '\0', numTokens * sizeof(jsmntok_t));
+                jsmntok_t *newTokens = REALLOC(jsonTokens, numTokens * sizeof(jsmntok_t));
                 if (!newTokens) {
                     ERRLOG("WHOA4 : %s", strerror(errno));
                     break;
                 }
+                memset(newTokens, '\0', numTokens * sizeof(jsmntok_t));
                 jsonTokens = newTokens;
             }
             jsmn_init(&parser);

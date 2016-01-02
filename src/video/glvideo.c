@@ -89,17 +89,17 @@ static void _create_CRT_model(void) {
 #endif
     };
 
-    GLModel *crt = calloc(1, sizeof(GLModel));
+    GLModel *crt = CALLOC(1, sizeof(GLModel));
     crt->numVertices = 4;
     crt->numElements = 6;
 
-    crt->positions = malloc(sizeof(crt_positions));
+    crt->positions = MALLOC(sizeof(crt_positions));
     memcpy(crt->positions, &crt_positions[0], sizeof(crt_positions));
     crt->positionType = GL_FLOAT;
     crt->positionSize = 4; // x,y,z coordinates
     crt->positionArraySize = sizeof(crt_positions);
 
-    crt->texCoords = malloc(sizeof(crt_texcoords));
+    crt->texCoords = MALLOC(sizeof(crt_texcoords));
     memcpy(crt->texCoords, &crt_texcoords[0], sizeof(crt_texcoords));
     crt->texcoordType = GL_FLOAT;
     crt->texcoordSize = 2; // s,t coordinates
@@ -110,7 +110,7 @@ static void _create_CRT_model(void) {
     crt->normalSize = GL_NONE;
     crt->normalArraySize = 0;
 
-    crt->elements = malloc(sizeof(indices));
+    crt->elements = MALLOC(sizeof(indices));
     memcpy(crt->elements, &indices[0], sizeof(indices));
     crt->elementType = GL_UNSIGNED_SHORT;
     crt->elementArraySize = sizeof(indices);
@@ -314,7 +314,7 @@ static GLuint _build_program(demoSource *vertexSource, demoSource *fragmentSourc
     //////////////////////////////////////
 
     // Allocate memory for the source string including the version preprocessor information
-    sourceString = malloc(vertexSource->byteSize + versionStringSize);
+    sourceString = MALLOC(vertexSource->byteSize + versionStringSize);
 
     // Prepend our vertex shader source string with the supported GLSL version so
     //  the shader will work on ES, Legacy, and OpenGL 3.2 Core Profile contexts
@@ -331,10 +331,10 @@ static GLuint _build_program(demoSource *vertexSource, demoSource *fragmentSourc
     glGetShaderiv(vertexShader, GL_INFO_LOG_LENGTH, &logLength);
 
     if (logLength > 0) {
-        GLchar *log = (GLchar *)malloc(logLength);
+        GLchar *log = (GLchar *)MALLOC(logLength);
         glGetShaderInfoLog(vertexShader, logLength, &logLength, log);
         LOG("Vtx Shader compile log:%s\n", log);
-        free(log);
+        FREE(log);
     }
 
     glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &status);
@@ -343,8 +343,7 @@ static GLuint _build_program(demoSource *vertexSource, demoSource *fragmentSourc
         return 0;
     }
 
-    free(sourceString);
-    sourceString = NULL;
+    FREE(sourceString);
 
     // Attach the vertex shader to our program
     glAttachShader(prgName, vertexShader);
@@ -354,7 +353,7 @@ static GLuint _build_program(demoSource *vertexSource, demoSource *fragmentSourc
     /////////////////////////////////////////
 
     // Allocate memory for the source string including the version preprocessor     information
-    sourceString = malloc(fragmentSource->byteSize + versionStringSize);
+    sourceString = MALLOC(fragmentSource->byteSize + versionStringSize);
 
     // Prepend our fragment shader source string with the supported GLSL version so
     //  the shader will work on ES, Legacy, and OpenGL 3.2 Core Profile contexts
@@ -369,10 +368,10 @@ static GLuint _build_program(demoSource *vertexSource, demoSource *fragmentSourc
     glCompileShader(fragShader);
     glGetShaderiv(fragShader, GL_INFO_LOG_LENGTH, &logLength);
     if (logLength > 0) {
-        GLchar *log = (GLchar *)malloc(logLength);
+        GLchar *log = (GLchar *)MALLOC(logLength);
         glGetShaderInfoLog(fragShader, logLength, &logLength, log);
         LOG("Frag Shader compile log:\n%s\n", log);
-        free(log);
+        FREE(log);
     }
 
     glGetShaderiv(fragShader, GL_COMPILE_STATUS, &status);
@@ -381,8 +380,7 @@ static GLuint _build_program(demoSource *vertexSource, demoSource *fragmentSourc
         return 0;
     }
 
-    free(sourceString);
-    sourceString = NULL;
+    FREE(sourceString);
 
     // Attach the fragment shader to our program
     glAttachShader(prgName, fragShader);
@@ -394,10 +392,10 @@ static GLuint _build_program(demoSource *vertexSource, demoSource *fragmentSourc
     glLinkProgram(prgName);
     glGetProgramiv(prgName, GL_INFO_LOG_LENGTH, &logLength);
     if (logLength > 0) {
-        GLchar *log = (GLchar*)malloc(logLength);
+        GLchar *log = (GLchar*)MALLOC(logLength);
         glGetProgramInfoLog(prgName, logLength, &logLength, log);
         LOG("Program link log:\n%s\n", log);
-        free(log);
+        FREE(log);
     }
 
     glGetProgramiv(prgName, GL_LINK_STATUS, &status);
@@ -409,10 +407,10 @@ static GLuint _build_program(demoSource *vertexSource, demoSource *fragmentSourc
     glValidateProgram(prgName);
     glGetProgramiv(prgName, GL_INFO_LOG_LENGTH, &logLength);
     if (logLength > 0) {
-        GLchar *log = (GLchar*)malloc(logLength);
+        GLchar *log = (GLchar*)MALLOC(logLength);
         glGetProgramInfoLog(prgName, logLength, &logLength, log);
         LOG("Program validate log:\n%s\n", log);
-        free(log);
+        FREE(log);
     }
 
     glGetProgramiv(prgName, GL_VALIDATE_STATUS, &status);
@@ -475,7 +473,7 @@ static demoSource *_create_shader_source(const char *fileName) {
     asprintf(&filePath, "%s/shaders/%s", data_dir, fileName);
     if (filePath) {
         src = srcLoadSource(filePath);
-        free(filePath);
+        ASPRINTF_FREE(filePath);
     } else {
         ERRLOG("OOPS Could not load shader from %s (%s)", filePath, fileName);
     }

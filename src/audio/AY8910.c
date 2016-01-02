@@ -243,14 +243,14 @@ static void sound_init( CAY8910 *_this, const char *device, unsigned long nSampl
   sound_generator_framesiz = sound_generator_freq / (int)hz;
 
 #if 0
-  if( ( sound_buf = (libspectrum_signed_word*) malloc( sizeof( libspectrum_signed_word ) *
+  if( ( sound_buf = (libspectrum_signed_word*) MALLOC( sizeof( libspectrum_signed_word ) *
 			    sound_generator_framesiz * sound_channels ) ) ==
       NULL
       || ( tape_buf =
-	   malloc( sizeof( libspectrum_signed_word ) *
+	   MALLOC( sizeof( libspectrum_signed_word ) *
 		   sound_generator_framesiz ) ) == NULL ) {
     if( sound_buf ) {
-      free( sound_buf );
+      FREE( sound_buf );
       sound_buf = NULL;
     }
     sound_end(_this);
@@ -263,14 +263,14 @@ static void sound_init( CAY8910 *_this, const char *device, unsigned long nSampl
 
 #ifdef HAVE_SAMPLERATE
   if( settings_current.sound_hifi ) {
-    if( ( convert_input_buffer = malloc( sizeof( float ) *
+    if( ( convert_input_buffer = MALLOC( sizeof( float ) *
 					 sound_generator_framesiz *
 					 sound_channels ) ) == NULL
 	|| ( convert_output_buffer =
-	     malloc( sizeof( float ) * sound_framesiz * sound_channels ) ) ==
+	     MALLOC( sizeof( float ) * sound_framesiz * sound_channels ) ) ==
 	NULL ) {
       if( convert_input_buffer ) {
-	free( convert_input_buffer );
+	FREE( convert_input_buffer );
 	convert_input_buffer = NULL;
       }
       sound_end(_this);
@@ -373,17 +373,17 @@ static void sound_end( CAY8910 *_this )
 #if 0
   if( sound_enabled ) {
     if( sound_buf ) {
-      free( sound_buf );
+      FREE( sound_buf );
       sound_buf = NULL;
-      free( tape_buf );
+      FREE( tape_buf );
       tape_buf = NULL;
     }
     if( convert_input_buffer ) {
-      free( convert_input_buffer );
+      FREE( convert_input_buffer );
       convert_input_buffer = NULL;
     }
     if( convert_output_buffer ) {
-      free( convert_output_buffer );
+      FREE( convert_output_buffer );
       convert_output_buffer = NULL;
     }
 #ifdef HAVE_SAMPLERATE
@@ -397,7 +397,7 @@ static void sound_end( CAY8910 *_this )
 
 #if 0
     if( sound_buf ) {
-      free( sound_buf );
+      FREE( sound_buf );
       sound_buf = NULL;
     }
 #endif
