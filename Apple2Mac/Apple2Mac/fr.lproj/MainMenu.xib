@@ -399,7 +399,7 @@ CA
                         </connections>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="NSToolbarFlexibleSpaceItem" id="Jsz-X5-TdN"/>
-                    <toolbarItem implicitItemIdentifier="ED8F052E-C9AE-42F6-BA6D-2A675E8390E5" label="Disques" paletteLabel="Disques" tag="-1" image="NSFolderSmart" id="2Pg-gE-5pH">
+                    <toolbarItem implicitItemIdentifier="ED8F052E-C9AE-42F6-BA6D-2A675E8390E5" label="Disques" paletteLabel="Disques" tag="-1" image="Disks" id="2Pg-gE-5pH">
                         <connections>
                             <action selector="showDisksWindow:" target="M8b-ga-iOS" id="4fH-mu-VmS"/>
                         </connections>
@@ -1054,8 +1054,8 @@ DQ
         </customObject>
     </objects>
     <resources>
+        <image name="Disks" width="32" height="32"/>
         <image name="NSExitFullScreenTemplate" width="15" height="15"/>
-        <image name="NSFolderSmart" width="32" height="32"/>
         <image name="NSPreferencesGeneral" width="32" height="32"/>
         <image name="NSRefreshTemplate" width="11" height="15"/>
         <image name="NSStatusNone" width="16" height="16"/>

@@ -1,16 +1,14 @@
 {
   "images" : [
     {
-      "idiom" : "universal",
+      "idiom" : "mac",
+      "filename" : "floppy32.png",
       "scale" : "1x"
     },
     {
-      "idiom" : "universal",
+      "idiom" : "mac",
+      "filename" : "floppy64.png",
       "scale" : "2x"
-    },
-    {
-      "idiom" : "universal",
-      "scale" : "3x"
     }
   ],
   "info" : {

@@ -391,7 +391,7 @@ CA
                     <toolbarItem implicitItemIdentifier="CBD2C3ED-B0AA-40F1-818F-B61B04F93E7F" label="Preferences" paletteLabel="Preferences" tag="-1" image="NSPreferencesGeneral" id="85b-WO-tks"/>
                     <toolbarItem implicitItemIdentifier="1AF00BE2-1806-4F36-AA9B-EDCD8587D441" label="Reboot" paletteLabel="Reboot" tag="-1" image="NSRefreshTemplate" id="hOg-ec-Okz"/>
                     <toolbarItem implicitItemIdentifier="NSToolbarFlexibleSpaceItem" id="372-hX-Xt1"/>
-                    <toolbarItem implicitItemIdentifier="ED8F052E-C9AE-42F6-BA6D-2A675E8390E5" label="Disks" paletteLabel="Disks" tag="-1" image="NSFolderSmart" id="jHk-qj-bmw"/>
+                    <toolbarItem implicitItemIdentifier="ED8F052E-C9AE-42F6-BA6D-2A675E8390E5" label="Disks" paletteLabel="Disks" tag="-1" image="Disks" id="jHk-qj-bmw"/>
                     <toolbarItem implicitItemIdentifier="F7BDADA8-832A-4E26-8BA2-01F9393AB115" label="CPU" paletteLabel="CPU" id="Oc9-Aa-A6p">
                         <nil key="toolTip"/>
                         <size key="minSize" width="28" height="30"/>
@@ -811,7 +811,7 @@ DQ
                                                         <menuItem title="Color" id="TRN-Jh-rFc">
                                                             <modifierMask key="keyEquivalentModifierMask"/>
                                                         </menuItem>
-                                                        <menuItem title="Interpolated" state="on" id="RgR-Oe-oo5">
+                                                        <menuItem title="Interpolated" id="RgR-Oe-oo5">
                                                             <modifierMask key="keyEquivalentModifierMask"/>
                                                         </menuItem>
                                                     </items>
@@ -1023,8 +1023,8 @@ DQ
         </customObject>
     </objects>
     <resources>
+        <image name="Disks" width="32" height="32"/>
         <image name="NSExitFullScreenTemplate" width="15" height="15"/>
-        <image name="NSFolderSmart" width="32" height="32"/>
         <image name="NSPreferencesGeneral" width="32" height="32"/>
         <image name="NSRefreshTemplate" width="11" height="15"/>
         <image name="NSUser" width="32" height="32"/>
