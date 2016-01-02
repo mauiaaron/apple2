@@ -23,17 +23,19 @@
                                     <constraint firstAttribute="height" constant="36" id="FMY-Nk-ouC"/>
                                 </constraints>
                                 <items>
-                                    <barButtonItem title="Reboot" id="pwr-c0-7tW">
+                                    <barButtonItem image="Reboot" id="pwr-c0-7tW">
                                         <connections>
                                             <action selector="rebootItemSelected:" destination="dkx-z0-nzr" id="O17-ef-Kc9"/>
                                         </connections>
                                     </barButtonItem>
-                                    <barButtonItem title="Pause" id="XF9-t2-IEl">
+                                    <barButtonItem width="42" style="plain" systemItem="fixedSpace" id="Ad7-qe-EkZ"/>
+                                    <barButtonItem image="Pause" id="XF9-t2-IEl">
                                         <connections>
                                             <action selector="togglePauseItemSelected:" destination="dkx-z0-nzr" id="qVs-rI-2r2"/>
                                         </connections>
                                     </barButtonItem>
-                                    <barButtonItem title="CPU Togle" id="d5g-uX-Ssk">
+                                    <barButtonItem width="42" style="plain" systemItem="fixedSpace" id="Z5Y-ui-n58"/>
+                                    <barButtonItem image="CPU" id="d5g-uX-Ssk">
                                         <connections>
                                             <action selector="toggleCPUSpeedItem:" destination="dkx-z0-nzr" id="TRp-OQ-bk2"/>
                                         </connections>
@@ -413,7 +415,10 @@
         </scene>
     </scenes>
     <resources>
+        <image name="CPU" width="32" height="32"/>
         <image name="Disk" width="32" height="32"/>
+        <image name="Pause" width="32" height="32"/>
         <image name="Prefs" width="32" height="32"/>
+        <image name="Reboot" width="32" height="32"/>
     </resources>
 </document>
