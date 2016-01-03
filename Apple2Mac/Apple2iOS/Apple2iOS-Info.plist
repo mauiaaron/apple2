@@ -13,7 +13,7 @@
 			<string>Dsk Images</string>
 			<key>LSItemContentTypes</key>
 			<array>
-				<string>.dsk</string>
+				<string>com.apple2ios.dskinfo</string>
 			</array>
 		</dict>
 	</array>
@@ -61,9 +61,14 @@
 			<key>UTTypeDescription</key>
 			<string>dsk</string>
 			<key>UTTypeIdentifier</key>
-			<string>.dsk</string>
+			<string>com.apple2ios.dskinfo</string>
 			<key>UTTypeSize64IconFile</key>
 			<string>floppy</string>
+			<key>UTTypeTagSpecification</key>
+			<dict>
+				<key>public.filename-extension</key>
+				<string>dsk</string>
+			</dict>
 		</dict>
 	</array>
 </dict>

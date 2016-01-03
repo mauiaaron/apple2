@@ -124,6 +124,7 @@
 		4AFC17181AAE9CC000B215FA /* testvm1.nib.gz in Resources */ = {isa = PBXBuildFile; fileRef = 4AFC17101AAE9CC000B215FA /* testvm1.nib.gz */; };
 		4E1733E31C2C5F7600CDF9DF /* iosPrefControllerViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4E4E62A01C2C5B56002E324F /* iosPrefControllerViewController.m */; };
 		4E1733E41C2C5F7A00CDF9DF /* AppleViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4E1733DD1C2C5E5D00CDF9DF /* AppleViewController.m */; };
+		4EB4F8571C393F0E0072A15C /* OpenAL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4EB4F8561C393F0E0072A15C /* OpenAL.framework */; };
 		4ECBEADF1C3432010046F537 /* speedtest.dsk in Resources */ = {isa = PBXBuildFile; fileRef = 4ECBEADD1C3432010046F537 /* speedtest.dsk */; };
 		4ECBEAE01C3432010046F537 /* testvm1.dsk in Resources */ = {isa = PBXBuildFile; fileRef = 4ECBEADE1C3432010046F537 /* testvm1.dsk */; };
 		4ECFC39E1C368620008E2633 /* flapple140.po in Resources */ = {isa = PBXBuildFile; fileRef = 4ECFC39B1C368620008E2633 /* flapple140.po */; };
@@ -421,6 +422,7 @@
 		4E4586061C29F39A003E74A1 /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/Apple2iOS.strings; sourceTree = "<group>"; };
 		4E4E629F1C2C5B56002E324F /* iosPrefControllerViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = iosPrefControllerViewController.h; sourceTree = "<group>"; };
 		4E4E62A01C2C5B56002E324F /* iosPrefControllerViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = iosPrefControllerViewController.m; sourceTree = "<group>"; };
+		4EB4F8561C393F0E0072A15C /* OpenAL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenAL.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS9.2.sdk/System/Library/Frameworks/OpenAL.framework; sourceTree = DEVELOPER_DIR; };
 		4ECBEADD1C3432010046F537 /* speedtest.dsk */ = {isa = PBXFileReference; lastKnownFileType = file; path = speedtest.dsk; sourceTree = "<group>"; };
 		4ECBEADE1C3432010046F537 /* testvm1.dsk */ = {isa = PBXFileReference; lastKnownFileType = file; path = testvm1.dsk; sourceTree = "<group>"; };
 		4ECFC39B1C368620008E2633 /* flapple140.po */ = {isa = PBXFileReference; lastKnownFileType = file; path = flapple140.po; sourceTree = "<group>"; };
@@ -635,6 +637,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4EB4F8571C393F0E0072A15C /* OpenAL.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -722,6 +725,7 @@
 		773B3D0E1956885A0085CE5F /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				4EB4F8561C393F0E0072A15C /* OpenAL.framework */,
 				4ECFC3BE1C368ED3008E2633 /* GameController.framework */,
 				77C279601A1047AE000FE33F /* DDHidLib.xcodeproj */,
 				779F565F19EAF6D000A6F107 /* OpenAL.framework */,
