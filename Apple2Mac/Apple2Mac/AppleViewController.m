@@ -44,6 +44,10 @@
 {
  cpu_resume();
 }
+- (IBAction)upSwipe:(id)sender
+{
+    self.mainToolBar.hidden=NO;
+}
 
 - (IBAction)diskInsert:(id)sender
 {
@@ -110,4 +114,7 @@
     }
 }
 
+- (void)dealloc {
+    [super dealloc];
+}
 @end
