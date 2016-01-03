@@ -17,7 +17,7 @@
                         <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <toolbar opaque="NO" clearsContextBeforeDrawing="NO" contentMode="center" translatesAutoresizingMaskIntoConstraints="NO" id="MKz-35-wcI">
+                            <toolbar hidden="YES" opaque="NO" clearsContextBeforeDrawing="NO" contentMode="center" translatesAutoresizingMaskIntoConstraints="NO" id="MKz-35-wcI">
                                 <rect key="frame" x="0.0" y="564" width="600" height="36"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="36" id="FMY-Nk-ouC"/>
@@ -70,6 +70,11 @@
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
+                <pongPressGestureRecognizer allowableMovement="10" minimumPressDuration="0.5" id="qLb-uK-fyp">
+                    <connections>
+                        <action selector="upSwipe:" destination="BYZ-38-t0r" id="Cmc-PK-Rhh"/>
+                    </connections>
+                </pongPressGestureRecognizer>
             </objects>
             <point key="canvasLocation" x="60" y="-290.49295774647885"/>
         </scene>
