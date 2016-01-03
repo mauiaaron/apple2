@@ -192,6 +192,7 @@ uint8_t floating_bus_hibit(const bool hibit);
 #define FONT_GLYPH_Y (FONT_HEIGHT_PIXELS>>1)    // ... 8 bytes total for whole glyph
 
 #define MOUSETEXT_BEGIN         0x80 // offset + 0x20 length
+#define MOUSETEXT_RETURN        (MOUSETEXT_BEGIN+0x0d)
 #define MOUSETEXT_UP            (MOUSETEXT_BEGIN+0x0b)
 #define MOUSETEXT_LEFT          (MOUSETEXT_BEGIN+0x08)
 #define MOUSETEXT_RIGHT         (MOUSETEXT_BEGIN+0x15)
