@@ -29,10 +29,6 @@
 #define MENU_OBJ_W 2.0
 #define MENU_OBJ_H 0.5 // NOTE : intent is to complement touch keyboard height
 
-HUD_CLASS(GLModelHUDMenu,
-    uint8_t *pixelsAlt; // alternate color pixels
-);
-
 static bool isAvailable = false; // Were there any OpenGL/memory errors on initialization?
 static bool isEnabled = true;    // Does player want this enabled?
 
@@ -85,15 +81,9 @@ static struct {
 // ----------------------------------------------------------------------------
 
 static inline void _present_menu(GLModel *parent) {
-    GLModelHUDMenu *hudMenu = (GLModelHUDMenu *)parent->custom;
+    GLModelHUDElement *hudMenu = (GLModelHUDElement *)parent->custom;
     memcpy(hudMenu->tpl, topMenuTemplate, sizeof(topMenuTemplate));
 
-    // setup the alternate color (AKA selected) pixels
-    hudMenu->colorScheme = GREEN_ON_BLACK;
-    glhud_setupDefault(parent);
-    memcpy(hudMenu->pixelsAlt, hudMenu->pixels, (hudMenu->pixWidth * hudMenu->pixHeight));
-
-    // setup normal color pixels
     hudMenu->colorScheme = RED_ON_BLACK;
     glhud_setupDefault(parent);
 }
@@ -164,7 +154,7 @@ static inline bool _is_point_on_right_menu(float x, float y) {
 #warning FIXME TODO : make this function generic _screen_to_model() ?
 static inline void _screen_to_menu(float x, float y, OUTPARM int *col, OUTPARM int *row) {
 
-    GLModelHUDMenu *hudMenu = (GLModelHUDMenu *)(menu.model->custom);
+    GLModelHUDElement *hudMenu = (GLModelHUDElement *)(menu.model->custom);
     const unsigned int keyW = touchport.width / hudMenu->tplWidth;
     const unsigned int keyH = touchport.topLeftYMax / hudMenu->tplHeight;
 
@@ -304,8 +294,17 @@ static inline int64_t _tap_menu_item(float x, float y) {
 // ----------------------------------------------------------------------------
 // GLCustom functions
 
-static void _setup_touchmenu(GLModel *parent) {
-    GLModelHUDMenu *hudMenu = (GLModelHUDMenu *)parent->custom;
+static void *_create_touchmenu_hud(GLModel *parent) {
+    parent->custom = glhud_createCustom(sizeof(GLModelHUDElement));
+    GLModelHUDElement *hudMenu = (GLModelHUDElement *)parent->custom;
+
+    if (!hudMenu) {
+        return NULL;
+    }
+
+    hudMenu->blackIsTransparent = true;
+    hudMenu->opaquePixelHalo = true;
+    hudMenu->glyphMultiplier = menu.glyphMultiplier;
 
     hudMenu->tplWidth  = MENU_TEMPLATE_COLS;
     hudMenu->tplHeight = MENU_TEMPLATE_ROWS;
@@ -331,28 +330,10 @@ static void _setup_touchmenu(GLModel *parent) {
     const unsigned int size = sizeof(topMenuTemplate);
     hudMenu->tpl = CALLOC(size, 1);
     hudMenu->pixels = CALLOC(MENU_FB_WIDTH * MENU_FB_HEIGHT, 1);
-    hudMenu->pixelsAlt = CALLOC(MENU_FB_WIDTH * MENU_FB_HEIGHT, 1);
 
     _present_menu(parent);
-}
 
-static void *_create_touchmenu(void) {
-    GLModelHUDMenu *hudMenu = (GLModelHUDMenu *)glhud_createCustom(sizeof(GLModelHUDMenu));
-    if (hudMenu) {
-        hudMenu->blackIsTransparent = true;
-        hudMenu->opaquePixelHalo = true;
-        hudMenu->glyphMultiplier = menu.glyphMultiplier;
-    }
     return hudMenu;
-}
-
-static void _destroy_touchmenu(GLModel *parent) {
-    GLModelHUDMenu *hudMenu = (GLModelHUDMenu *)parent->custom;
-    if (!hudMenu) {
-        return;
-    }
-    FREE(hudMenu->pixelsAlt);
-    glhud_destroyDefault(parent);
 }
 
 // ----------------------------------------------------------------------------
@@ -389,9 +370,8 @@ static void gltouchmenu_setup(void) {
             .tex_h = MENU_FB_HEIGHT * menu.glyphMultiplier,
             .texcoordUsageHint = GL_DYNAMIC_DRAW, // but menu texture does
         }, (GLCustom){
-            .create = &_create_touchmenu,
-            .setup = &_setup_touchmenu,
-            .destroy = &_destroy_touchmenu,
+            .create = &_create_touchmenu_hud,
+            .destroy = &glhud_destroyDefault,
         });
     if (!menu.model) {
         LOG("gltouchmenu initialization problem");

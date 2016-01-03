@@ -74,7 +74,7 @@ static struct {
 
 // ----------------------------------------------------------------------------
 
-static void _setup_axis_object(GLModel *parent) {
+static void _setup_axis_hud(GLModel *parent) {
     if (UNLIKELY(!parent)) {
         LOG("gltouchjoy WARN : cannot setup axis object without parent");
         return;
@@ -116,15 +116,17 @@ static void _setup_axis_object(GLModel *parent) {
     glhud_setupDefault(parent);
 }
 
-static void *_create_touchjoy_hud(void) {
-    GLModelHUDElement *hudElement = (GLModelHUDElement *)glhud_createDefault();
+static void *_create_axis_hud(GLModel *parent) {
+    parent->custom = glhud_createDefault();
+    GLModelHUDElement *hudElement = (GLModelHUDElement *)parent->custom;
     if (hudElement) {
         hudElement->blackIsTransparent = true;
+        _setup_axis_hud(parent);
     }
     return hudElement;
 }
 
-static void _setup_button_object(GLModel *parent) {
+static void _setup_button_hud(GLModel *parent) {
     if (UNLIKELY(!parent)) {
         LOG("gltouchjoy WARN : cannot setup button object without parent");
         return;
@@ -159,10 +161,20 @@ static void _setup_button_object(GLModel *parent) {
     glhud_setupDefault(parent);
 }
 
+static void *_create_button_hud(GLModel *parent) {
+    parent->custom = glhud_createDefault();
+    GLModelHUDElement *hudElement = (GLModelHUDElement *)parent->custom;
+    if (hudElement) {
+        hudElement->blackIsTransparent = true;
+        _setup_button_hud(parent);
+    }
+    return hudElement;
+}
+
 static inline void _setup_button_object_with_char(char newChar) {
     if (buttons.activeChar != newChar) {
         buttons.activeChar = newChar;
-        _setup_button_object(buttons.model);
+        _setup_button_hud(buttons.model);
     }
 }
 
@@ -199,8 +211,7 @@ static void gltouchjoy_setup(void) {
             .tex_h = AXIS_FB_HEIGHT,
             .texcoordUsageHint = GL_DYNAMIC_DRAW, // so can texture
         }, (GLCustom){
-            .create = &_create_touchjoy_hud,
-            .setup = &_setup_axis_object,
+            .create = &_create_axis_hud,
             .destroy = &glhud_destroyDefault,
         });
     if (!axes.model) {
@@ -225,8 +236,7 @@ static void gltouchjoy_setup(void) {
             .tex_h = BUTTON_FB_HEIGHT,
             .texcoordUsageHint = GL_DYNAMIC_DRAW, // so can texture
         }, (GLCustom){
-            .create = &_create_touchjoy_hud,
-            .setup = &_setup_button_object,
+            .create = &_create_button_hud,
             .destroy = &glhud_destroyDefault,
         });
     if (!buttons.model) {
@@ -707,7 +717,7 @@ static touchjoy_variant_t gltouchjoy_getTouchVariant(void) {
 static void gltouchjoy_setTouchAxisTypes(uint8_t rosetteChars[(ROSETTE_ROWS * ROSETTE_COLS)], int rosetteScancodes[(ROSETTE_ROWS * ROSETTE_COLS)]) {
     memcpy(axes.rosetteChars,     rosetteChars,     sizeof(uint8_t)*(ROSETTE_ROWS * ROSETTE_COLS));
     memcpy(axes.rosetteScancodes, rosetteScancodes, sizeof(int)    *(ROSETTE_ROWS * ROSETTE_COLS));
-    _setup_axis_object(axes.model);
+    _setup_axis_hud(axes.model);
 }
 
 static void gltouchjoy_setScreenDivision(float screenDivider) {
