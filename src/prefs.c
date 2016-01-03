@@ -303,7 +303,7 @@ void load_settings(void)
             }
         }
 
-        FREE(buffer);
+        GETLINE_FREE(buffer);
 
         fclose(config_file);
     }
