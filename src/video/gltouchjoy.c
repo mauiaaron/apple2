@@ -30,13 +30,13 @@
 #define BUTTON_FB_WIDTH (BUTTON_TEMPLATE_COLS * FONT80_WIDTH_PIXELS)
 #define BUTTON_FB_HEIGHT (BUTTON_TEMPLATE_ROWS * FONT_HEIGHT_PIXELS)
 
-#define AXIS_OBJ_W        0.3
-#define AXIS_OBJ_H        0.4
+#define AXIS_OBJ_W        0.15
+#define AXIS_OBJ_H        0.2
 #define AXIS_OBJ_HALF_W   (AXIS_OBJ_W/2.f)
 #define AXIS_OBJ_HALF_H   (AXIS_OBJ_H/2.f)
 
-#define BUTTON_OBJ_W        0.15
-#define BUTTON_OBJ_H        0.2
+#define BUTTON_OBJ_W        0.075
+#define BUTTON_OBJ_H        0.1
 #define BUTTON_OBJ_HALF_W   (BUTTON_OBJ_W/2.f)
 #define BUTTON_OBJ_HALF_H   (BUTTON_OBJ_H/2.f)
 
@@ -71,6 +71,162 @@ static struct {
 
     // TODO FIXME : support 2-players!
 } touchport = { 0 };
+
+#define RB_CLASS(CLS, ...) \
+    MODEL_CLASS(CLS, \
+        GLuint vertShader; \
+        GLuint fragShader; \
+        GLuint program; \
+        GLint uniformMVPIdx;);
+
+RB_CLASS(GLModelRBJoystick);
+
+// ----------------------------------------------------------------------------
+// joystick azimuth model
+
+static void _rb_destroy_model(GLModel *parent) {
+
+    GLModelRBJoystick *azimuthJoystick = (GLModelRBJoystick *)parent->custom;
+    if (!azimuthJoystick) {
+        return;
+    }
+
+    // detach and delete the RB shaders
+    // 2015/11/06 NOTE : Tegra 2 for mobile has a bug whereby you cannot detach/delete shaders immediately after
+    // creating the program.  So we delete them during the shutdown sequence instead.
+    // https://code.google.com/p/android/issues/detail?id=61832
+
+    if (azimuthJoystick->program != UNINITIALIZED_GL) {
+        glDetachShader(azimuthJoystick->program, azimuthJoystick->vertShader);
+        glDetachShader(azimuthJoystick->program, azimuthJoystick->fragShader);
+        glDeleteShader(azimuthJoystick->vertShader);
+        glDeleteShader(azimuthJoystick->fragShader);
+
+        azimuthJoystick->vertShader = UNINITIALIZED_GL;
+        azimuthJoystick->fragShader = UNINITIALIZED_GL;
+
+        glDeleteProgram(azimuthJoystick->program);
+        azimuthJoystick->program = UNINITIALIZED_GL;
+    }
+
+    FREE(parent->custom);
+}
+
+static void *_rb_create_model(GLModel *parent) {
+
+    parent->custom = CALLOC(sizeof(GLModelRBJoystick), 1);
+    GLModelRBJoystick *azimuthJoystick = (GLModelRBJoystick *)parent->custom;
+
+    if (!azimuthJoystick) {
+        return NULL;
+    }
+
+    axes.azimuthModelDirty = false;
+
+    // degenerate the quad model into just a single line model ... (should not need to adjust allocated memory size
+    // since we should be using less than what was originally allocated)
+    parent->primType = GL_LINES;
+    parent->numVertices = 2;
+    GLsizei posTypeSize = getGLTypeSize(parent->positionType);
+    parent->positionArraySize = (parent->positionSize * posTypeSize * parent->numVertices);
+    parent->numElements = 2;
+    GLsizei eltTypeSize = getGLTypeSize(parent->elementType);
+    parent->elementArraySize = (eltTypeSize * parent->numElements);
+
+    azimuthJoystick->vertShader = UNINITIALIZED_GL;
+    azimuthJoystick->fragShader = UNINITIALIZED_GL;
+    azimuthJoystick->program = UNINITIALIZED_GL;
+    azimuthJoystick->uniformMVPIdx = UNINITIALIZED_GL;
+
+    bool err = true;
+    demoSource *vtxSource = NULL;
+    demoSource *frgSource = NULL;
+    do {
+        // load/setup specific shaders
+
+        vtxSource = glshader_createSource("SolidColor.vsh");
+        if (!vtxSource) {
+            ERRLOG("Cannot compile vertex shader for joystick azimuth!");
+            break;
+        }
+
+        frgSource = glshader_createSource("SolidColor.fsh");
+        if (!frgSource) {
+            ERRLOG("Cannot compile fragment shader for joystick azimuth!");
+            break;
+        }
+
+        // Build/use Program
+        azimuthJoystick->program = glshader_buildProgram(vtxSource, frgSource, /*withTexcoord:*/false, &azimuthJoystick->vertShader, &azimuthJoystick->fragShader);
+
+        azimuthJoystick->uniformMVPIdx = glGetUniformLocation(azimuthJoystick->program, "modelViewProjectionMatrix");
+        if (azimuthJoystick->uniformMVPIdx < 0) {
+            LOG("OOPS, no modelViewProjectionMatrix in RB shader : %d", azimuthJoystick->uniformMVPIdx);
+            break;
+        }
+
+        err = false;
+    } while (0);
+
+    GL_ERRLOG("build RB joystick");
+
+    if (vtxSource) {
+        glshader_destroySource(vtxSource);
+    }
+    if (frgSource) {
+        glshader_destroySource(frgSource);
+    }
+
+    if (err) {
+        _rb_destroy_model(parent);
+        azimuthJoystick = NULL;
+    }
+
+    return azimuthJoystick;
+}
+
+static void _rb_render(void) {
+
+    GLModelRBJoystick *azimuthJoystick = (GLModelRBJoystick *)axes.azimuthModel->custom;
+
+    // use azimuth (SolidColor) program
+    glUseProgram(azimuthJoystick->program);
+
+    glUniformMatrix4fv(azimuthJoystick->uniformMVPIdx, 1, GL_FALSE, mvpIdentity);
+
+    // NOTE : assuming we should just upload new postion data every time ...
+    glBindBuffer(GL_ARRAY_BUFFER, axes.azimuthModel->posBufferName);
+    glBufferData(GL_ARRAY_BUFFER, axes.azimuthModel->positionArraySize, axes.azimuthModel->positions, GL_DYNAMIC_DRAW);
+
+    // Bind our vertex array object
+#if USE_VAO
+    glBindVertexArray(axes.azimuthModel->vaoName);
+#else
+    glBindBuffer(GL_ARRAY_BUFFER, axes.azimuthModel->posBufferName);
+
+    GLsizei posTypeSize = getGLTypeSize(axes.azimuthModel->positionType);
+
+    // Set up parmeters for position attribute in the VAO including, size, type, stride, and offset in the currenly
+    // bound VAO This also attaches the position VBO to the VAO
+    glVertexAttribPointer(POS_ATTRIB_IDX, // What attibute index will this array feed in the vertex shader (see buildProgram)
+                          axes.azimuthModel->positionSize, // How many elements are there per position?
+                          axes.azimuthModel->positionType, // What is the type of this data?
+                          GL_FALSE, // Do we want to normalize this data (0-1 range for fixed-pont types)
+                          axes.azimuthModel->positionSize*posTypeSize, // What is the stride (i.e. bytes between positions)?
+                          0); // What is the offset in the VBO to the position data?
+    glEnableVertexAttribArray(POS_ATTRIB_IDX);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, axes.azimuthModel->elementBufferName);
+#endif
+
+    // draw it
+    glDrawElements(axes.azimuthModel->primType, axes.azimuthModel->numElements, axes.azimuthModel->elementType, 0);
+
+    // back to main framebuffer/quad program
+    glUseProgram(mainShaderProgram);
+
+    GL_ERRLOG("RB render");
+}
 
 // ----------------------------------------------------------------------------
 
@@ -198,7 +354,7 @@ static void gltouchjoy_setup(void) {
 
     joyglobals.isShuttingDown = false;
 
-    // axis object
+    // axis origin object
 
     axes.model = mdlCreateQuad((GLModelParams_s){
             .skew_x = -1.05,
@@ -221,6 +377,40 @@ static void gltouchjoy_setup(void) {
     if (!axes.model->custom) {
         LOG("gltouchjoy axes initialization problem");
         return;
+    }
+
+    // axis aximuth object
+
+    bool azimuthError = true;
+    do {
+        axes.azimuthModel = mdlCreateQuad((GLModelParams_s){
+                .skew_x = -1.05,
+                .skew_y = -1.0,
+                .z = MODEL_DEPTH,
+                .obj_w = AXIS_OBJ_W,
+                .obj_h = AXIS_OBJ_H,
+                .positionUsageHint = GL_DYNAMIC_DRAW, // positions can change
+                .tex_w = 0,
+                .tex_h = 0,
+                .texcoordUsageHint = UNINITIALIZED_GL, // no texture data
+            }, (GLCustom){
+                .create = &_rb_create_model,
+                .destroy = &_rb_destroy_model,
+            });
+        if (!axes.azimuthModel) {
+            LOG("gltouchjoy azimuth model initialization problem");
+            break;
+        }
+        if (!axes.azimuthModel->custom) {
+            LOG("gltouchjoy azimuth custom model initialization problem");
+            break;
+        }
+
+        azimuthError = false;
+    } while (0);
+
+    if (azimuthError) {
+        mdlDestroyModel(&axes.azimuthModel);
     }
 
     // button object
@@ -318,6 +508,10 @@ static void gltouchjoy_render(void) {
         glhud_renderDefault(axes.model);
     }
 
+    if (joyglobals.showAzimuth && axes.azimuthModelDirty) {
+        _rb_render();
+    }
+
     // draw button(s)
 
     alpha = glhud_getTimedVisibility(buttons.timingBegin, joyglobals.minAlpha, 1.0);
@@ -390,7 +584,7 @@ static inline bool _is_point_on_axis_side(int x, int y) {
     return (x >= touchport.axisX && x <= touchport.axisXMax && y >= touchport.axisY && y <= touchport.axisYMax);
 }
 
-static inline void _reset_model_position(GLModel *model, float touchX, float touchY, float objHalfW, float objHalfH) {
+static inline void _reset_model_position(GLModel *model, float touchX, float touchY, float objHalfW, float objHalfH, GLModel *azimuthModel) {
 
     float centerX = 0.f;
     float centerY = 0.f;
@@ -412,13 +606,21 @@ static inline void _reset_model_position(GLModel *model, float touchX, float tou
     quad[8 +1] = centerY+objHalfH;
     quad[12+0] = centerX+objHalfW;
     quad[12+1] = centerY+objHalfH;
+
+    if (azimuthModel) {
+        GLfloat *quadRB = (GLfloat *)(azimuthModel->positions);
+        quadRB[0 +0] = centerX;
+        quadRB[0 +1] = centerY;
+        quadRB[4 +0] = centerX;
+        quadRB[4 +1] = centerY;
+    }
 }
 
 static inline void _axis_touch_down(int x, int y) {
     axes.centerX = x;
     axes.centerY = y;
 
-    _reset_model_position(axes.model, x, y, AXIS_OBJ_HALF_W, AXIS_OBJ_HALF_H);
+    _reset_model_position(axes.model, x, y, AXIS_OBJ_HALF_W, AXIS_OBJ_HALF_H, axes.azimuthModel);
     axes.modelDirty = true;
 
     TOUCH_JOY_LOG("---TOUCH %sDOWN (axis index %d) center:(%d,%d) -> joy(0x%02X,0x%02X)", (action == TOUCH_DOWN ? "" : "POINTER "), axes.trackingIndex, axes.centerX, axes.centerY, joy_x, joy_y);
@@ -429,7 +631,7 @@ static inline void _button_touch_down(int x, int y) {
     buttons.centerX = x;
     buttons.centerY = y;
 
-    _reset_model_position(buttons.model, x, y, BUTTON_OBJ_HALF_W, BUTTON_OBJ_HALF_H);
+    _reset_model_position(buttons.model, x, y, BUTTON_OBJ_HALF_W, BUTTON_OBJ_HALF_H, NULL);
     buttons.modelDirty = true;
 
     TOUCH_JOY_LOG("---TOUCH %sDOWN (buttons index %d) center:(%d,%d) -> buttons(0x%02X,0x%02X)", (action == TOUCH_DOWN ? "" : "POINTER "), buttons.trackingIndex, buttons.centerX, buttons.centerY, joy_button0, joy_button1);
@@ -437,6 +639,17 @@ static inline void _button_touch_down(int x, int y) {
 }
 
 static inline void _axis_move(int x, int y) {
+
+    if (joyglobals.showAzimuth) {
+        float centerX = 0.f;
+        float centerY = 0.f;
+        glhud_screenToModel(x, y, touchport.width, touchport.height, &centerX, &centerY);
+        GLfloat *quadRB = (GLfloat *)axes.azimuthModel->positions;
+        quadRB[4 +0] = centerX;
+        quadRB[4 +1] = centerY;
+        axes.azimuthModelDirty = true;
+    };
+
     x -= axes.centerX;
     y -= axes.centerY;
     TOUCH_JOY_LOG("---TOUCH MOVE ...tracking axis:%d (%d,%d) -> joy(0x%02X,0x%02X)", axes.trackingIndex, x, y, joy_x, joy_y);
@@ -467,6 +680,7 @@ static inline void _axis_touch_up(int x, int y) {
     }
     variant.curr->axisUp(x, y);
     axes.trackingIndex = TRACKING_NONE;
+    axes.azimuthModelDirty = false;
 }
 
 static inline void _button_touch_up(int x, int y) {
@@ -624,6 +838,10 @@ static void gltouchjoy_setShowControls(bool showControls) {
     joyglobals.showControls = showControls;
 }
 
+static void gltouchjoy_setShowAzimuth(bool showAzimuth) {
+    joyglobals.showAzimuth = showAzimuth;
+}
+
 static void _animation_showTouchJoystick(void) {
     if (!joyglobals.isAvailable) {
         return;
@@ -631,12 +849,12 @@ static void _animation_showTouchJoystick(void) {
 
     int x = touchport.axisX + ((touchport.axisXMax - touchport.axisX)/2);
     int y = touchport.axisY + ((touchport.axisYMax - touchport.axisY)/2);
-    _reset_model_position(axes.model, x, y, AXIS_OBJ_HALF_W, AXIS_OBJ_HALF_H);
+    _reset_model_position(axes.model, x, y, AXIS_OBJ_HALF_W, AXIS_OBJ_HALF_H, NULL);
     axes.modelDirty = true;
 
     x = touchport.buttonX + ((touchport.buttonXMax - touchport.buttonX)/2);
     y = touchport.buttonY + ((touchport.buttonYMax - touchport.buttonY)/2);
-    _reset_model_position(buttons.model, x, y, BUTTON_OBJ_HALF_W, BUTTON_OBJ_HALF_H);
+    _reset_model_position(buttons.model, x, y, BUTTON_OBJ_HALF_W, BUTTON_OBJ_HALF_H, NULL);
     buttons.modelDirty = true;
 
     struct timespec now;
@@ -794,6 +1012,7 @@ static void _init_gltouchjoy(void) {
     joyglobals.isEnabled = true;
     joyglobals.ownsScreen = true;
     joyglobals.showControls = true;
+    joyglobals.showAzimuth = true;
     joyglobals.screenDivider = 0.5f;
     joyglobals.axisIsOnLeft = true;
     joyglobals.switchThreshold = BUTTON_SWITCH_THRESHOLD_DEFAULT;
@@ -806,6 +1025,7 @@ static void _init_gltouchjoy(void) {
     joydriver_setTouchJoystickOwnsScreen = &gltouchjoy_setTouchJoystickOwnsScreen;
     joydriver_ownsScreen = &gltouchjoy_ownsScreen;
     joydriver_setShowControls = &gltouchjoy_setShowControls;
+    joydriver_setShowAzimuth = &gltouchjoy_setShowAzimuth;
     joydriver_setTouchButtonTypes = &gltouchjoy_setTouchButtonTypes;
     joydriver_setTouchAxisSensitivity = &gltouchjoy_setTouchAxisSensitivity;
     joydriver_setButtonSwitchThreshold = &gltouchjoy_setButtonSwitchThreshold;

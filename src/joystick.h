@@ -144,6 +144,9 @@ extern bool (*joydriver_isCalibrating)(void);
 // set controls visibility
 extern void (*joydriver_setShowControls)(bool showControls);
 
+// set azimuth visibility
+extern void (*joydriver_setShowAzimuth)(bool showAzimuth);
+
 // set key repeat threshold (keypad joystick)
 extern void (*joydriver_setKeyRepeatThreshold)(float repeatThresholdSecs);
 
