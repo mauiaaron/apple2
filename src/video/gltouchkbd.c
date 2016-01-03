@@ -237,30 +237,6 @@ static inline void _switch_keyboard(GLModel *parent, uint8_t *template) {
     }
 }
 
-#warning FIXME TODO ... this can become a common helper function ...
-static inline float _get_keyboard_visibility(void) {
-    struct timespec now = { 0 };
-    struct timespec deltat = { 0 };
-
-    clock_gettime(CLOCK_MONOTONIC, &now);
-    float alpha = minAlpha;
-    deltat = timespec_diff(kbd.timingBegin, now, NULL);
-    if (deltat.tv_sec == 0) {
-        alpha = maxAlpha;
-        if (deltat.tv_nsec >= NANOSECONDS_PER_SECOND/2) {
-            alpha -= ((float)deltat.tv_nsec-(NANOSECONDS_PER_SECOND/2)) / (float)(NANOSECONDS_PER_SECOND/2);
-            if (alpha < minAlpha) {
-                alpha = minAlpha;
-                _rerender_selected(kbd.selectedCol, kbd.selectedRow);
-                kbd.selectedCol = -1;
-                kbd.selectedRow = -1;
-            }
-        }
-    }
-
-    return alpha;
-}
-
 static inline bool _is_point_on_keyboard(float x, float y) {
     return (x >= touchport.kbdX && x <= touchport.kbdXMax && y >= touchport.kbdY && y <= touchport.kbdYMax);
 }
@@ -514,13 +490,21 @@ static void gltouchkbd_setup(void) {
 
     gltouchkbd_shutdown();
 
-    GLsizei texW = KBD_FB_WIDTH * kbd.glyphMultiplier;
-    GLsizei texH = KBD_FB_HEIGHT * kbd.glyphMultiplier;
-    kbd.model = mdlCreateQuad(-1.0, -1.0, KBD_OBJ_W, KBD_OBJ_H, MODEL_DEPTH, texW, texH, (GLCustom){
+    kbd.model = mdlCreateQuad((GLModelParams_s){
+            .skew_x = -1.0,
+            .skew_y = -1.0,
+            .z = MODEL_DEPTH,
+            .obj_w = KBD_OBJ_W,
+            .obj_h = KBD_OBJ_H,
+            .positionUsageHint = GL_STATIC_DRAW, // positions don't change
+            .tex_w = KBD_FB_WIDTH * kbd.glyphMultiplier,
+            .tex_h = KBD_FB_HEIGHT * kbd.glyphMultiplier,
+            .texcoordUsageHint = GL_DYNAMIC_DRAW, // but key texture does
+        }, (GLCustom){
             .create = &_create_touchkbd_hud,
             .setup = &_setup_touchkbd_hud,
             .destroy = &_destroy_touchkbd_hud,
-            });
+        });
     if (!kbd.model) {
         LOG("gltouchkbd initialization problem");
         return;
@@ -552,7 +536,13 @@ static void gltouchkbd_render(void) {
         gltouchkbd_setup();
     }
 
-    float alpha = _get_keyboard_visibility();
+    float alpha = glhud_getTimedVisibility(kbd.timingBegin, minAlpha, maxAlpha);
+    if (alpha < minAlpha) {
+        alpha = minAlpha;
+        _rerender_selected(kbd.selectedCol, kbd.selectedRow);
+        kbd.selectedCol = -1;
+        kbd.selectedRow = -1;
+    }
 
     if (alpha > 0.0) {
         // draw touch keyboard

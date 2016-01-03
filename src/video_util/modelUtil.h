@@ -16,13 +16,12 @@
 
 #include "common.h"
 
-#define UNINITIALIZED_GL (-31337)
-#warning FIXME TODO : is there an official OpenGL value we can use to signify an uninitialized state?
-
 enum {
     POS_ATTRIB_IDX,
     TEXCOORD_ATTRIB_IDX,
+#if 0
     NORMAL_ATTRIB_IDX,
+#endif
 };
 
 typedef struct GLModel;
@@ -45,16 +44,21 @@ typedef struct GLModel {
     GLenum positionType;
     GLuint positionSize;
     GLsizei positionArraySize;
+    GLenum positionUsageHint;
 
     GLvoid *texCoords;
     GLenum texcoordType;
     GLuint texcoordSize;
     GLsizei texcoordArraySize;
+    GLenum texcoordUsageHint;
 
+#if 0
     GLvoid *normals;
     GLenum normalType;
     GLuint normalSize;
     GLsizei normalArraySize;
+    GLenum normalUsageHint;
+#endif
 
     GLvoid *elements;
     GLenum elementType;
@@ -83,11 +87,29 @@ typedef struct GLModel {
     GLCustom *custom;
 } GLModel;
 
+#if 0
 GLModel *mdlLoadModel(const char *filepathname);
 
 GLModel *mdlLoadQuadModel();
+#endif
 
-GLModel *mdlCreateQuad(GLfloat skew_x, GLfloat skew_y, GLfloat obj_w, GLfloat obj_h, GLfloat z, GLsizei tex_w, GLsizei tex_h, GLCustom clazz);
+typedef struct GLModelParams_s {
+    // positions
+    GLfloat skew_x;
+    GLfloat skew_y;
+    GLfloat z;
+    GLfloat obj_w;
+    GLfloat obj_h;
+    GLenum positionUsageHint;
+
+    // texture
+    GLsizei tex_w;
+    GLsizei tex_h;
+    GLenum texcoordUsageHint;
+
+} GLModelParams_s;
+
+GLModel *mdlCreateQuad(GLModelParams_s parms, GLCustom clazz);
 
 void mdlDestroyModel(INOUT GLModel **model);
 

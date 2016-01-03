@@ -18,8 +18,8 @@
 #define MODEL_DEPTH -1/32.f
 #define TRACKING_NONE (-1)
 
-#define AXIS_TEMPLATE_COLS 5
-#define AXIS_TEMPLATE_ROWS 5
+#define AXIS_TEMPLATE_COLS 3
+#define AXIS_TEMPLATE_ROWS 3
 
 #define BUTTON_TEMPLATE_COLS 1
 #define BUTTON_TEMPLATE_ROWS 1
@@ -30,13 +30,13 @@
 #define BUTTON_FB_WIDTH (BUTTON_TEMPLATE_COLS * FONT80_WIDTH_PIXELS)
 #define BUTTON_FB_HEIGHT (BUTTON_TEMPLATE_ROWS * FONT_HEIGHT_PIXELS)
 
-#define AXIS_OBJ_W        0.4
-#define AXIS_OBJ_H        0.5
+#define AXIS_OBJ_W        0.3
+#define AXIS_OBJ_H        0.4
 #define AXIS_OBJ_HALF_W   (AXIS_OBJ_W/2.f)
 #define AXIS_OBJ_HALF_H   (AXIS_OBJ_H/2.f)
 
-#define BUTTON_OBJ_W        0.2
-#define BUTTON_OBJ_H        0.25
+#define BUTTON_OBJ_W        0.15
+#define BUTTON_OBJ_H        0.2
 #define BUTTON_OBJ_HALF_W   (BUTTON_OBJ_W/2.f)
 #define BUTTON_OBJ_HALF_H   (BUTTON_OBJ_H/2.f)
 
@@ -74,27 +74,6 @@ static struct {
 
 // ----------------------------------------------------------------------------
 
-#warning FIXME TODO ... this can become a common helper function ...
-static inline float _get_component_visibility(struct timespec timingBegin) {
-    struct timespec now = { 0 };
-    struct timespec deltat = { 0 };
-
-    clock_gettime(CLOCK_MONOTONIC, &now);
-    float alpha = joyglobals.minAlpha;
-    deltat = timespec_diff(timingBegin, now, NULL);
-    if (deltat.tv_sec == 0) {
-        alpha = 1.0;
-        if (deltat.tv_nsec >= NANOSECONDS_PER_SECOND/2) {
-            alpha -= ((float)deltat.tv_nsec-(NANOSECONDS_PER_SECOND/2)) / (float)(NANOSECONDS_PER_SECOND/2);
-            if (alpha < joyglobals.minAlpha) {
-                alpha = joyglobals.minAlpha;
-            }
-        }
-    }
-
-    return alpha;
-}
-
 static void _setup_axis_object(GLModel *parent) {
     if (UNLIKELY(!parent)) {
         LOG("gltouchjoy WARN : cannot setup axis object without parent");
@@ -110,11 +89,9 @@ static void _setup_axis_object(GLModel *parent) {
     if (hudElement->tpl == NULL) {
         // deferred construction ...
         const char axisTemplate[AXIS_TEMPLATE_ROWS][AXIS_TEMPLATE_COLS+1] = {
-            "  @  ",
-            "  |  ",
-            "@-+-@",
-            "  |  ",
-            "  @  ",
+            " @ ",
+            "@+@",
+            " @ ",
         };
 
         const unsigned int size = sizeof(axisTemplate);
@@ -132,7 +109,7 @@ static void _setup_axis_object(GLModel *parent) {
 
     for (unsigned int i=0; i<ROSETTE_ROWS; i++) {
         for (unsigned int j=0; j<ROSETTE_COLS; j++) {
-            ((hudElement->tpl)+(row*i*2))[j*2] = axes.rosetteChars[(i*ROSETTE_ROWS)+j];
+            ((hudElement->tpl)+(row*i))[j] = axes.rosetteChars[(i*ROSETTE_ROWS)+j];
         }
     }
 
@@ -209,11 +186,23 @@ static void gltouchjoy_setup(void) {
 
     joyglobals.isShuttingDown = false;
 
-    axes.model = mdlCreateQuad(-1.05, -1.0, AXIS_OBJ_W, AXIS_OBJ_H, MODEL_DEPTH, AXIS_FB_WIDTH, AXIS_FB_HEIGHT, (GLCustom){
+    // axis object
+
+    axes.model = mdlCreateQuad((GLModelParams_s){
+            .skew_x = -1.05,
+            .skew_y = -1.0,
+            .z = MODEL_DEPTH,
+            .obj_w = AXIS_OBJ_W,
+            .obj_h = AXIS_OBJ_H,
+            .positionUsageHint = GL_DYNAMIC_DRAW, // positions can change
+            .tex_w = AXIS_FB_WIDTH,
+            .tex_h = AXIS_FB_HEIGHT,
+            .texcoordUsageHint = GL_DYNAMIC_DRAW, // so can texture
+        }, (GLCustom){
             .create = &_create_touchjoy_hud,
             .setup = &_setup_axis_object,
             .destroy = &glhud_destroyDefault,
-            });
+        });
     if (!axes.model) {
         LOG("gltouchjoy not initializing axis");
         return;
@@ -225,11 +214,21 @@ static void gltouchjoy_setup(void) {
 
     // button object
 
-    buttons.model = mdlCreateQuad(1.05-BUTTON_OBJ_W, -1.0, BUTTON_OBJ_W, BUTTON_OBJ_H, MODEL_DEPTH, BUTTON_FB_WIDTH, BUTTON_FB_HEIGHT, (GLCustom){
+    buttons.model = mdlCreateQuad((GLModelParams_s){
+            .skew_x = 1.05-BUTTON_OBJ_W,
+            .skew_y = -1.0,
+            .z = MODEL_DEPTH,
+            .obj_w = BUTTON_OBJ_W,
+            .obj_h = BUTTON_OBJ_H,
+            .positionUsageHint = GL_DYNAMIC_DRAW, // positions can change
+            .tex_w = BUTTON_FB_WIDTH,
+            .tex_h = BUTTON_FB_HEIGHT,
+            .texcoordUsageHint = GL_DYNAMIC_DRAW, // so can texture
+        }, (GLCustom){
             .create = &_create_touchjoy_hud,
             .setup = &_setup_button_object,
             .destroy = &glhud_destroyDefault,
-            });
+        });
     if (!buttons.model) {
         LOG("gltouchjoy not initializing buttons");
         return;
@@ -286,7 +285,10 @@ static void gltouchjoy_render(void) {
 
     // draw axis
 
-    float alpha = _get_component_visibility(axes.timingBegin);
+    float alpha = glhud_getTimedVisibility(axes.timingBegin, joyglobals.minAlpha, 1.0);
+    if (alpha < joyglobals.minAlpha) {
+        alpha = joyglobals.minAlpha;
+    }
     if (alpha > 0.0) {
         glUniform1f(alphaValue, alpha);
 
@@ -308,7 +310,10 @@ static void gltouchjoy_render(void) {
 
     // draw button(s)
 
-    alpha = _get_component_visibility(buttons.timingBegin);
+    alpha = glhud_getTimedVisibility(buttons.timingBegin, joyglobals.minAlpha, 1.0);
+    if (alpha < joyglobals.minAlpha) {
+        alpha = joyglobals.minAlpha;
+    }
     if (alpha > 0.0) {
         glUniform1f(alphaValue, alpha);
 
@@ -660,7 +665,7 @@ static void gltouchjoy_setTouchButtonTypes(
     } else if (touchDownChar == TOUCH_BUTTON1) {
         currButtonDisplayChar = MOUSETEXT_CLOSEDAPPLE;
     } else if (touchDownChar == TOUCH_BOTH) {
-        currButtonDisplayChar = '+';
+        currButtonDisplayChar = ICONTEXT_MENU_TOUCHJOY;
     } else if (touchDownScancode < 0) {
         currButtonDisplayChar = ' ';
     }
@@ -749,7 +754,7 @@ static void _init_gltouchjoy(void) {
 
     axes.rosetteChars[3]     = MOUSETEXT_LEFT;
     axes.rosetteScancodes[3] = -1;
-    axes.rosetteChars[4]     = '+';
+    axes.rosetteChars[4]     = ICONTEXT_MENU_TOUCHJOY;
     axes.rosetteScancodes[4] = -1;
     axes.rosetteChars[5]     = MOUSETEXT_RIGHT;
     axes.rosetteScancodes[5] = -1;

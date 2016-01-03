@@ -59,10 +59,21 @@ static void _alertToModel(char *message, unsigned int messageCols, unsigned int 
         const unsigned int fbWidth = (messageCols * FONT80_WIDTH_PIXELS);
         const unsigned int fbHeight = (messageRows * FONT_HEIGHT_PIXELS);
 
-        messageModel = mdlCreateQuad(-0.3, -0.3, 0.7, 0.7, MODEL_DEPTH, fbWidth, fbHeight, (GLCustom){
+        messageModel = mdlCreateQuad((GLModelParams_s){
+                .skew_x = -0.3,
+                .skew_y = -0.3,
+                .z = MODEL_DEPTH,
+                .obj_w = 0.7,
+                .obj_h = 0.7,
+                .positionUsageHint = GL_STATIC_DRAW, // positions don't change
+                .tex_w = fbWidth,
+                .tex_h = fbHeight,
+                .texcoordUsageHint = GL_DYNAMIC_DRAW, // but texture (message pixels) does
+            }, (GLCustom){
                 .create = &_create_alert,
+                .setup = NULL,
                 .destroy = &glhud_destroyDefault,
-        });
+            });
         if (!messageModel) {
             LOG("OOPS cannot create animation message HUD model!");
             break;

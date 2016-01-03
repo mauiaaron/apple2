@@ -32,6 +32,8 @@
         bool blackIsTransparent; \
         bool opaquePixelHalo; \
         \
+        struct timespec timingBegin; \
+        \
         __VA_ARGS__ \
     )
 
@@ -57,5 +59,8 @@ void glhud_screenToModel(const float x, const float y, const int screenW, const 
 
 // orthographic translation of model coordinates to screen coordinates
 void glhud_quadModelToScreen(const GLModel *model, const int screenW, const int screenH, float screenCoords[4]);
+
+// helper method to sync timing of fade out
+float glhud_getTimedVisibility(struct timespec timingBegin, float minAlpha, float maxAlpha);
 
 #endif
