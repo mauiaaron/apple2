@@ -64,6 +64,8 @@
     <string name="joystick_configure_summary">Axis touch, buttons, etc</string>
     <string name="joystick_axisleft">Joystick/keypad axis on left</string>
     <string name="joystick_axisleft_summary">Joystick/keypad axis on left (buttons on right)</string>
+    <string name="joystick_azimuth_visible">Show joystick/keypad heading</string>
+    <string name="joystick_azimuth_visible_summary">Shows current axis direction and magnitude</string>
     <string name="joystick_visible">Joystick/keypad visibility</string>
     <string name="joystick_visible_summary">Show controls overlay when engaged</string>
     <string name="key_closed_apple">[ClosedApple]</string>
