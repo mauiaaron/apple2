@@ -34,7 +34,6 @@ bool hackAroundBrokenAdreno200 = false;
 bool hackAroundBrokenAdreno205 = false;
 
 static GLint uniformMVPIdx = UNINITIALIZED_GL;
-<<<<<<< HEAD
 static GLenum crtElementType = UNINITIALIZED_GL;
 static GLuint crtNumElements = UNINITIALIZED_GL;
 
@@ -44,8 +43,6 @@ static GLuint crtVAOName = UNINITIALIZED_GL;
 static GLuint posBufferName = UNINITIALIZED_GL;
 static GLuint texcoordBufferName = UNINITIALIZED_GL;
 static GLuint elementBufferName = UNINITIALIZED_GL;
-=======
->>>>>>> mauiaaron/develop
 static GLModel *crtModel = NULL;
 
 static GLuint vertexShader = UNINITIALIZED_GL;
