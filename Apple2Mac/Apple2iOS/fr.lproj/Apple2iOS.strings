@@ -1,0 +1,11 @@
+
+// Main Menu titles
+"Emulator settings" = "Emulator settings";
+"Load disk image" = "Load disk image";
+"Save & restore" = "Save & restore";
+"Reboot or quit emulator" = "Reboot or quit emulator";
+
+// Main Menu subtitles
+"General, CPU, Joystick" = "General, CPU, Joystick";
+"Insert a Disk ][ image file" = "Insert a Disk ][ image file";
+"Quick save and restore" = "Quick save and restore";

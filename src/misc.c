@@ -29,6 +29,7 @@ CrashHandler_s *crashHandler = NULL;
 
 __attribute__((constructor(CTOR_PRIORITY_FIRST)))
 static void _init_common(void) {
+    LOG("Initializing common...");
 #if defined(CONFIG_DATADIR)
     data_dir = strdup(CONFIG_DATADIR PATH_SEPARATOR PACKAGE_NAME);
 #elif defined(ANDROID)
@@ -235,6 +236,8 @@ void emulator_start(void) {
 }
 
 void emulator_shutdown(void) {
+    disk6_eject(0);
+    disk6_eject(1);
     video_shutdown();
     timing_stopCPU();
     _shutdown_threads();

@@ -35,6 +35,15 @@ bool hackAroundBrokenAdreno205 = false;
 
 extern GLfloat mvpIdentity[16] = { 0 };
 static GLint uniformMVPIdx = UNINITIALIZED_GL;
+static GLenum crtElementType = UNINITIALIZED_GL;
+static GLuint crtNumElements = UNINITIALIZED_GL;
+
+static GLuint a2TextureName = UNINITIALIZED_GL;
+
+static GLuint crtVAOName = UNINITIALIZED_GL;
+static GLuint posBufferName = UNINITIALIZED_GL;
+static GLuint texcoordBufferName = UNINITIALIZED_GL;
+static GLuint elementBufferName = UNINITIALIZED_GL;
 static GLModel *crtModel = NULL;
 
 static GLuint vertexShader = UNINITIALIZED_GL;

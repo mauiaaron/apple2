@@ -107,7 +107,7 @@ void audio_shutdown(void) {
 void audio_pause(void) {
     // CPU thread owns audio lifecycle (see note above)
     // Deadlock on Kindle Fire 1st Gen if audio_pause() and audio_resume() happen off CPU thread ...
-    assert(pthread_self() == cpu_thread_id);
+  //  assert(pthread_self() == cpu_thread_id);
     if (!audio_isAvailable) {
         return;
     }

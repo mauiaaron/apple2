@@ -747,6 +747,7 @@ const char *disk6_eject(int drive) {
             ERRLOG("Error close()ing file %s", disk6.disk[drive].file_name);
         }
 
+        /*
         // foo.dsk -> foo.dsk.gz
         err = zlib_deflate(disk6.disk[drive].file_name, is_nib(disk6.disk[drive].file_name) ? NIB_SIZE : DSK_SIZE);
         if (err) {
@@ -754,6 +755,7 @@ const char *disk6_eject(int drive) {
         } else {
             unlink(disk6.disk[drive].file_name);
         }
+         */
     }
 
     STRDUP_FREE(disk6.disk[drive].file_name);
