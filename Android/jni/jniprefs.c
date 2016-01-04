@@ -110,6 +110,11 @@ void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetTouchJoystickVisibili
     joydriver_setShowControls(visibility);
 }
 
+void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetTouchJoystickAzimuthVisibility(JNIEnv *env, jclass cls, jboolean visibility) {
+    LOG("visibility: %d", visibility);
+    joydriver_setShowAzimuth(visibility);
+}
+
 jint Java_org_deadc0de_apple2ix_Apple2Preferences_nativeGetCurrentTouchDevice(JNIEnv *env, jclass cls) {
     LOG("%s", "");
     if (joydriver_ownsScreen()) {

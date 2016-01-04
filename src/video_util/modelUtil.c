@@ -473,7 +473,11 @@ GLModel *mdlCreateQuad(GLModelParams_s parms, GLCustom clazz) {
         model->positionSize = 4; // x,y,z coordinates
         model->positionArraySize = sizeof(obj_positions);
 
-        if (tex_w > 0 && tex_h > 0) {
+        model->texcoordType = UNINITIALIZED_GL;
+        model->texcoordSize = 0;
+        model->texcoordArraySize = 0;
+        const bool useTexture = (tex_w > 0 && tex_h > 0);
+        if (useTexture) {
             model->texCoords = MALLOC(sizeof(obj_texcoords));
             if (!(model->texCoords)) {
                 break;
@@ -508,9 +512,10 @@ GLModel *mdlCreateQuad(GLModelParams_s parms, GLCustom clazz) {
         model->posBufferName = UNINITIALIZED_GL;
         model->texcoordBufferName = UNINITIALIZED_GL;
         model->elementBufferName = UNINITIALIZED_GL;
+        model->texFormat = UNINITIALIZED_GL;
 
         _quadCreateVAOAndVBOs(model);
-        if (model->posBufferName == UNINITIALIZED_GL || model->texcoordBufferName == UNINITIALIZED_GL || model->elementBufferName == UNINITIALIZED_GL) {
+        if (model->posBufferName == UNINITIALIZED_GL || (useTexture && model->texcoordBufferName == UNINITIALIZED_GL) || model->elementBufferName == UNINITIALIZED_GL) {
             LOG("Error creating model buffers!");
             break;
         }
@@ -518,28 +523,28 @@ GLModel *mdlCreateQuad(GLModelParams_s parms, GLCustom clazz) {
         model->texDirty = true;
         model->texWidth = tex_w;
         model->texHeight = tex_h;
-        model->texFormat = TEX_FORMAT;
-        model->texPixels = (GLvoid *)MALLOC(tex_w * tex_h * sizeof(PIXEL_TYPE));
-        if (model->texPixels == NULL) {
-            break;
-        }
-        model->textureName = _quadCreateTexture(model);
-        if (model->textureName == UNINITIALIZED_GL) {
-            LOG("Error creating model texture!");
-            break;
+        if (useTexture) {
+            model->texFormat = TEX_FORMAT;
+            model->texPixels = (GLvoid *)MALLOC(tex_w * tex_h * sizeof(PIXEL_TYPE));
+            if (model->texPixels == NULL) {
+                break;
+            }
+            model->textureName = _quadCreateTexture(model);
+            if (model->textureName == UNINITIALIZED_GL) {
+                LOG("Error creating model texture!");
+                break;
+            }
         }
 
         model->custom = NULL;
         if (clazz.create) {
-            model->custom = clazz.create();
-            if (model->custom) {
-                model->custom->create = NULL;
-                model->custom->setup = clazz.setup;
-                model->custom->destroy = clazz.destroy;
-                if (model->custom->setup) {
-                    model->custom->setup(model);
-                }
+            model->custom = clazz.create(model);
+            if (!model->custom) {
+                LOG("Error creating custom model!");
+                break;
             }
+            model->custom->create = NULL;
+            model->custom->destroy = clazz.destroy;
         }
 
         GL_ERRLOG("quad creation");
@@ -627,6 +632,7 @@ void mdlDestroyModel(INOUT GLModel **model) {
 
     if (m->custom && m->custom->destroy) {
         m->custom->destroy(m);
+        m->custom = NULL;
     }
 
     FREE(*model);

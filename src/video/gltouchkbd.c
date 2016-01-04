@@ -43,10 +43,6 @@
 #define KBD_OBJ_W 2.0
 #define KBD_OBJ_H 2.0
 
-HUD_CLASS(GLModelHUDKeyboard,
-    // ...
-);
-
 static bool isAvailable = false; // Were there any OpenGL/memory errors on gltouchkbd initialization?
 static bool isEnabled = true;    // Does player want touchkbd enabled?
 static bool ownsScreen = false;  // Does the touchkbd currently own the screen to the exclusion?
@@ -142,7 +138,7 @@ static struct {
 
 #warning FIXME TODO ... make this a generic GLModelHUDElement function
 static void _rerender_character(int col, int row) {
-    GLModelHUDKeyboard *hudKeyboard = (GLModelHUDKeyboard *)(kbd.model->custom);
+    GLModelHUDElement *hudKeyboard = (GLModelHUDElement *)(kbd.model->custom);
 
     // In English, this changes one glyph within the keyboard texture data to be the (un)selected color.  It handles
     // scaling from indexed color to RGBA8888 (4x) and then possibly scaling to 2x or greater.
@@ -187,7 +183,7 @@ static inline void _rerender_selected(int col, int row) {
         _rerender_character(col, row);
 
         // rerender certain adjacent keys ...
-        GLModelHUDKeyboard *hudKeyboard = (GLModelHUDKeyboard *)(kbd.model->custom);
+        GLModelHUDElement *hudKeyboard = (GLModelHUDElement *)(kbd.model->custom);
         const unsigned int indexRow = (hudKeyboard->tplWidth+1) * row;
         uint8_t key = (hudKeyboard->tpl+indexRow)[col];
         switch (key) {
@@ -216,7 +212,7 @@ static inline void _rerender_selected(int col, int row) {
 }
 
 static inline void _switch_keyboard(GLModel *parent, uint8_t *template) {
-    GLModelHUDKeyboard *hudKeyboard = (GLModelHUDKeyboard *)parent->custom;
+    GLModelHUDElement *hudKeyboard = (GLModelHUDElement *)parent->custom;
     memcpy(hudKeyboard->tpl, template, sizeof(kbdTemplateUCase/* assuming all the same size */));
 
     // setup normal color pixels
@@ -242,7 +238,7 @@ static inline bool _is_point_on_keyboard(float x, float y) {
 }
 
 static inline void _screen_to_keyboard(float x, float y, OUTPARM int *col, OUTPARM int *row) {
-    GLModelHUDKeyboard *hudKeyboard = (GLModelHUDKeyboard *)(kbd.model->custom);
+    GLModelHUDElement *hudKeyboard = (GLModelHUDElement *)(kbd.model->custom);
     const unsigned int keyW = touchport.kbdW / hudKeyboard->tplWidth;
     const unsigned int keyH = touchport.kbdH / hudKeyboard->tplHeight;
 
@@ -261,7 +257,7 @@ static inline void _screen_to_keyboard(float x, float y, OUTPARM int *col, OUTPA
 }
 
 static inline int64_t _tap_key_at_point(float x, float y) {
-    GLModelHUDKeyboard *hudKeyboard = (GLModelHUDKeyboard *)kbd.model->custom;
+    GLModelHUDElement *hudKeyboard = (GLModelHUDElement *)kbd.model->custom;
 
     // redraw previous selected key (if any)
     _rerender_selected(kbd.selectedCol, kbd.selectedRow);
@@ -324,6 +320,7 @@ static inline int64_t _tap_key_at_point(float x, float y) {
             scancode = SCODE_L_CTRL;
             break;
 
+        case MOUSETEXT_RETURN:
         case ICONTEXT_RETURN_L:
         case ICONTEXT_RETURN_R:
             key = ICONTEXT_RETURN_L;
@@ -429,8 +426,18 @@ static inline int64_t _tap_key_at_point(float x, float y) {
 // ----------------------------------------------------------------------------
 // GLCustom functions
 
-static void _setup_touchkbd_hud(GLModel *parent) {
-    GLModelHUDKeyboard *hudKeyboard = (GLModelHUDKeyboard *)parent->custom;
+static void *_create_touchkbd_hud(GLModel *parent) {
+
+    parent->custom = glhud_createCustom(sizeof(GLModelHUDElement));
+    GLModelHUDElement *hudKeyboard = (GLModelHUDElement *)parent->custom;
+
+    if (!hudKeyboard) {
+        return NULL;
+    }
+
+    hudKeyboard->blackIsTransparent = true;
+    hudKeyboard->opaquePixelHalo = true;
+    hudKeyboard->glyphMultiplier = kbd.glyphMultiplier;
 
     hudKeyboard->tplWidth  = KBD_TEMPLATE_COLS;
     hudKeyboard->tplHeight = KBD_TEMPLATE_ROWS;
@@ -445,25 +452,10 @@ static void _setup_touchkbd_hud(GLModel *parent) {
 
     // setup normal color pixels
     hudKeyboard->colorScheme = RED_ON_BLACK;
+
     glhud_setupDefault(parent);
-}
 
-static void *_create_touchkbd_hud(void) {
-    GLModelHUDKeyboard *hudKeyboard = (GLModelHUDKeyboard *)glhud_createCustom(sizeof(GLModelHUDKeyboard));
-    if (hudKeyboard) {
-        hudKeyboard->blackIsTransparent = true;
-        hudKeyboard->opaquePixelHalo = true;
-        hudKeyboard->glyphMultiplier = kbd.glyphMultiplier;
-    }
     return hudKeyboard;
-}
-
-static void _destroy_touchkbd_hud(GLModel *parent) {
-    GLModelHUDKeyboard *hudKeyboard = (GLModelHUDKeyboard *)parent->custom;
-    if (!hudKeyboard) {
-        return;
-    }
-    glhud_destroyDefault(parent);
 }
 
 // ----------------------------------------------------------------------------
@@ -502,8 +494,7 @@ static void gltouchkbd_setup(void) {
             .texcoordUsageHint = GL_DYNAMIC_DRAW, // but key texture does
         }, (GLCustom){
             .create = &_create_touchkbd_hud,
-            .setup = &_setup_touchkbd_hud,
-            .destroy = &_destroy_touchkbd_hud,
+            .destroy = &glhud_destroyDefault,
         });
     if (!kbd.model) {
         LOG("gltouchkbd initialization problem");
@@ -657,7 +648,7 @@ static void gltouchkbd_setTouchKeyboardOwnsScreen(bool pwnd) {
         kbd.selectedRow = -1;
 
         if (kbd.model) {
-            GLModelHUDKeyboard *hudKeyboard = (GLModelHUDKeyboard *)kbd.model->custom;
+            GLModelHUDElement *hudKeyboard = (GLModelHUDElement *)kbd.model->custom;
             hudKeyboard->colorScheme = RED_ON_BLACK;
             glhud_setupDefault(kbd.model);
         }

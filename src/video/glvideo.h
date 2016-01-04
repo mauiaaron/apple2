@@ -46,6 +46,7 @@ enum {
 extern GLint texSamplerLoc;
 extern GLint alphaValue;
 extern GLuint mainShaderProgram;
+extern GLfloat mvpIdentity[16]; // Common Model View Projection matrix
 
 // http://stackoverflow.com/questions/13676070/how-to-properly-mix-drawing-calls-and-changes-of-a-sampler-value-with-a-single-s
 // https://developer.qualcomm.com/forum/qdevnet-forums/mobile-gaming-graphics-optimization-adreno/8896

@@ -28,8 +28,7 @@ typedef struct GLModel;
 
 #define MODEL_CLASS(CLS, ...) \
     typedef struct CLS { \
-        void *(*create)(void); \
-        void (*setup)(struct GLModel *parent); \
+        void *(*create)(struct GLModel *parent); \
         void (*destroy)(struct GLModel *parent); \
         __VA_ARGS__ \
     } CLS;

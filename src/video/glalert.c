@@ -26,8 +26,9 @@ static GLModel *messageModel = NULL;
 
 // ----------------------------------------------------------------------------
 
-static void *_create_alert(void) {
-    GLModelHUDElement *hudElement = (GLModelHUDElement *)glhud_createDefault();
+static void *_create_alert(GLModel *parent) {
+    parent->custom = glhud_createDefault();
+    GLModelHUDElement *hudElement = (GLModelHUDElement *)parent->custom;
     if (hudElement) {
         hudElement->colorScheme = RED_ON_BLACK;
         hudElement->blackIsTransparent = true; //false;
@@ -71,7 +72,6 @@ static void _alertToModel(char *message, unsigned int messageCols, unsigned int 
                 .texcoordUsageHint = GL_DYNAMIC_DRAW, // but texture (message pixels) does
             }, (GLCustom){
                 .create = &_create_alert,
-                .setup = NULL,
                 .destroy = &glhud_destroyDefault,
             });
         if (!messageModel) {

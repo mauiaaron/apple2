@@ -33,6 +33,7 @@ GLuint mainShaderProgram = UNINITIALIZED_GL;
 bool hackAroundBrokenAdreno200 = false;
 bool hackAroundBrokenAdreno205 = false;
 
+extern GLfloat mvpIdentity[16] = { 0 };
 static GLint uniformMVPIdx = UNINITIALIZED_GL;
 static GLenum crtElementType = UNINITIALIZED_GL;
 static GLuint crtNumElements = UNINITIALIZED_GL;
@@ -153,6 +154,10 @@ static void _gldriver_setup_hackarounds(void) {
 static void gldriver_init_common(void) {
 
     _gldriver_setup_hackarounds();
+
+#if !PERSPECTIVE
+    mtxLoadIdentity(mvpIdentity);
+#endif
 
     GLint value = UNINITIALIZED_GL;
     glGetIntegerv(GL_MAX_TEXTURE_SIZE, &value);
@@ -357,21 +362,21 @@ static void gldriver_render(void) {
 
     // Calculate the modelview matrix to render our character
     //  at the proper position and rotation
-    GLfloat mvp[16];
 #if PERSPECTIVE
+    GLfloat mvp[16];
     // Create model-view-projection matrix
     //mtxLoadTranslate(modelView, 0, 150, -450);
     //mtxRotateXApply(modelView, -90.0f);
     //mtxRotateApply(modelView, -45.0f, 0.7, 0.3, 1);
     mtxMultiply(mvp, projection, modelView);
-#else
-    // Just load an identity matrix for a pure orthographic/non-perspective viewing
-    mtxLoadIdentity(mvp);
-#endif
 
     // Have our shader use the modelview projection matrix
     // that we calculated above
     glUniformMatrix4fv(uniformMVPIdx, 1, GL_FALSE, mvp);
+#else
+    // Just load an identity matrix for a pure orthographic/non-perspective viewing
+    glUniformMatrix4fv(uniformMVPIdx, 1, GL_FALSE, mvpIdentity);
+#endif
 
     unsigned long wasDirty = video_clearDirty();
 

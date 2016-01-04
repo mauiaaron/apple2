@@ -323,6 +323,7 @@ void (*joydriver_beginCalibration)(void) = NULL;
 void (*joydriver_endCalibration)(void) = NULL;
 bool (*joydriver_isCalibrating)(void) = NULL;
 void (*joydriver_setShowControls)(bool showControls) = NULL;
+void (*joydriver_setShowAzimuth)(bool showAzimuth) = NULL;
 void (*joydriver_setKeyRepeatThreshold)(float repeatThresholdSecs) = NULL;
 #endif
 

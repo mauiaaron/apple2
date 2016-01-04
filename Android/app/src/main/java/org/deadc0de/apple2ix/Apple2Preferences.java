@@ -409,6 +409,17 @@ public enum Apple2Preferences {
             return activity.getPreferences(Context.MODE_PRIVATE).getBoolean(toString(), true);
         }
     },
+    JOYSTICK_AZIMUTH_VISIBILITY {
+        @Override
+        public void load(Apple2Activity activity) {
+            nativeSetTouchJoystickAzimuthVisibility(booleanValue(activity));
+        }
+
+        @Override
+        public boolean booleanValue(Apple2Activity activity) {
+            return activity.getPreferences(Context.MODE_PRIVATE).getBoolean(toString(), true);
+        }
+    },
     KEYPAD_KEYS {
         @Override
         public void load(Apple2Activity activity) {
@@ -601,7 +612,7 @@ public enum Apple2Preferences {
                 double screenInches = Math.sqrt(x + y);
                 Log.d(TAG, "Screen inches:" + screenInches + " w:" + dm.widthPixels + " h:" + dm.heightPixels);
                 */
-                if (dm.widthPixels < 1280 || dm.heightPixels < 1280) {
+                if (dm.widthPixels <= 480 || dm.heightPixels <= 480) {
                     scale = 1;
                 }
 
@@ -1087,6 +1098,8 @@ public enum Apple2Preferences {
     private static native void nativeSetTouchJoystickButtonSwitchThreshold(int delta);
 
     private static native void nativeSetTouchJoystickVisibility(boolean visibility);
+
+    private static native void nativeSetTouchJoystickAzimuthVisibility(boolean visibility);
 
     public static native void nativeSetTouchMenuEnabled(boolean enabled);
 

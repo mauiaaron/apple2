@@ -23,6 +23,7 @@
 
 #define ASPRINTF_FREE(ptr) _FREE((ptr), free)
 #define STRDUP_FREE(ptr) _FREE((ptr), free)
+#define GETLINE_FREE(ptr) _FREE((ptr), free)
 
 #ifdef NDEBUG
 #   define MALLOC(size)         malloc((size))
