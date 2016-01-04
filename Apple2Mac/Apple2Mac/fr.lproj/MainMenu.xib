@@ -388,12 +388,12 @@ CA
                     <toolbarItem implicitItemIdentifier="NSToolbarShowColorsItem" id="WQK-S9-Cmt"/>
                     <toolbarItem implicitItemIdentifier="NSToolbarPrintItem" id="jiJ-tm-Y6Y"/>
                     <toolbarItem implicitItemIdentifier="NSToolbarSpaceItem" id="ORa-0n-dYH"/>
-                    <toolbarItem implicitItemIdentifier="CBD2C3ED-B0AA-40F1-818F-B61B04F93E7F" label="Préférences" paletteLabel="Préférences" tag="-1" image="NSPreferencesGeneral" id="9mG-gX-hJT">
+                    <toolbarItem implicitItemIdentifier="CBD2C3ED-B0AA-40F1-818F-B61B04F93E7F" label="Préférences" paletteLabel="Préférences" tag="-1" image="Prefs" id="9mG-gX-hJT">
                         <connections>
                             <action selector="showPreferences:" target="M8b-ga-iOS" id="OV2-QT-rhS"/>
                         </connections>
                     </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="1AF00BE2-1806-4F36-AA9B-EDCD8587D441" label="Reboot" paletteLabel="Reboot" tag="-1" image="NSRefreshTemplate" id="eEg-qf-d1N">
+                    <toolbarItem implicitItemIdentifier="1AF00BE2-1806-4F36-AA9B-EDCD8587D441" label="Reboot" paletteLabel="Reboot" tag="-1" image="Reboot" id="eEg-qf-d1N">
                         <connections>
                             <action selector="reboot:" target="M8b-ga-iOS" id="vbp-al-hSV"/>
                         </connections>
@@ -404,17 +404,9 @@ CA
                             <action selector="showDisksWindow:" target="M8b-ga-iOS" id="4fH-mu-VmS"/>
                         </connections>
                     </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="F7BDADA8-832A-4E26-8BA2-01F9393AB115" label="CPU" paletteLabel="CPU" id="oAk-rC-G2P">
-                        <nil key="toolTip"/>
-                        <size key="minSize" width="28" height="30"/>
-                        <size key="maxSize" width="28" height="30"/>
-                        <slider key="view" horizontalHuggingPriority="750" verticalHuggingPriority="750" id="Rti-bC-tx5">
-                            <rect key="frame" x="2" y="14" width="28" height="30"/>
-                            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                            <sliderCell key="cell" alignment="left" maxValue="100" allowsTickMarkValuesOnly="YES" sliderType="circular" id="bhd-aj-IDg"/>
-                        </slider>
+                    <toolbarItem implicitItemIdentifier="F7C87F5E-FAB9-4948-A910-F74EEBEB92E2" label="CPU" paletteLabel="CPU" tag="-1" image="CPU" id="Y51-EF-8bx" userLabel="CPU">
                         <connections>
-                            <action selector="toggleCPUSpeed:" target="M8b-ga-iOS" id="JHd-xz-qDb"/>
+                            <action selector="toggleCPUSpeed:" target="M8b-ga-iOS" id="p7s-Xw-YPg"/>
                         </connections>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="B1B89899-E7C4-4A6A-9B19-B29D3C7FB7CC" label="Pause" paletteLabel="Pause" tag="-1" image="Stop" id="pM9-DT-TXG">
@@ -423,7 +415,7 @@ CA
                         </connections>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="3358D7A0-4F67-4503-ADD8-6E900BB291CC" label="Toolbar Item" paletteLabel="Toolbar Item" tag="-1" image="NSUser" id="g5r-fV-fAj"/>
-                    <toolbarItem implicitItemIdentifier="E796EDE5-7BB6-4CBB-AC6B-17DA3FC696C9" label="Plein Ecran" paletteLabel="Plein Ecran" tag="-1" image="NSExitFullScreenTemplate" id="Sai-Bp-4Pz">
+                    <toolbarItem implicitItemIdentifier="E796EDE5-7BB6-4CBB-AC6B-17DA3FC696C9" label="Plein Ecran" paletteLabel="Plein Ecran" tag="-1" image="Fullscreen" id="Sai-Bp-4Pz">
                         <connections>
                             <action selector="toggleFullScreen:" target="M8b-ga-iOS" id="lM1-WP-9NQ"/>
                         </connections>
@@ -436,7 +428,7 @@ CA
                     <toolbarItem reference="pM9-DT-TXG"/>
                     <toolbarItem reference="Sai-Bp-4Pz"/>
                     <toolbarItem reference="ORa-0n-dYH"/>
-                    <toolbarItem reference="oAk-rC-G2P"/>
+                    <toolbarItem reference="Y51-EF-8bx"/>
                     <toolbarItem reference="ORa-0n-dYH"/>
                     <toolbarItem reference="2Pg-gE-5pH"/>
                     <toolbarItem reference="kdl-bU-lZ0"/>
@@ -456,7 +448,6 @@ CA
                 <outlet property="disksWindow" destination="RAk-at-ZT4" id="64k-qW-zF5"/>
                 <outlet property="pauseItem" destination="pM9-DT-TXG" id="HbF-k7-cqg"/>
                 <outlet property="prefsWindow" destination="Mzv-VG-jce" id="dQt-pf-qdi"/>
-                <outlet property="toolBar" destination="hjF-nn-igp" id="zq5-rQ-a7P"/>
                 <outlet property="view" destination="372" id="pRG-Kn-92X"/>
                 <outlet property="window" destination="371" id="z3B-S9-PsV"/>
             </connections>
@@ -1052,14 +1043,20 @@ DQ
                 <outlet property="window" destination="Mzv-VG-jce" id="86q-Ys-9Mt"/>
             </connections>
         </customObject>
+        <toolbarItem implicitItemIdentifier="ED8F052E-C9AE-42F6-BA6D-2A675E8390E5" label="Disques" paletteLabel="Disques" tag="-1" image="Disks" id="beF-p6-xnB">
+            <connections>
+                <action selector="showDisksWindow:" target="M8b-ga-iOS" id="mnh-6g-fAG"/>
+            </connections>
+        </toolbarItem>
     </objects>
     <resources>
+        <image name="CPU" width="32" height="32"/>
         <image name="Disks" width="32" height="32"/>
-        <image name="NSExitFullScreenTemplate" width="15" height="15"/>
-        <image name="NSPreferencesGeneral" width="32" height="32"/>
-        <image name="NSRefreshTemplate" width="11" height="15"/>
+        <image name="Fullscreen" width="32" height="32"/>
         <image name="NSStatusNone" width="16" height="16"/>
         <image name="NSUser" width="32" height="32"/>
+        <image name="Prefs" width="32" height="32"/>
+        <image name="Reboot" width="32" height="32"/>
         <image name="Stop" width="32" height="32"/>
     </resources>
 </document>
