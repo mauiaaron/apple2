@@ -1207,7 +1207,7 @@
 					};
 					935C55271C12BA5F0013166D = {
 						CreatedOnToolsVersion = 7.1.1;
-						DevelopmentTeam = 774X2MBDTH;
+						DevelopmentTeam = 2SR5BWLATN;
 					};
 				};
 			};
@@ -2369,11 +2369,11 @@
 					"AUDIO_ENABLED=1",
 				);
 				INFOPLIST_FILE = "$(SRCROOT)/Apple2iOS/Apple2iOS-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				MTL_ENABLE_DEBUG_INFO = YES;
 				OTHER_LDFLAGS = "-lz";
-				PRODUCT_BUNDLE_IDENTIFIER = com.jvernet.Apple2iOS;
+				PRODUCT_BUNDLE_IDENTIFIER = com.deadc0de.Apple2iOS;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
 				SDKROOT = iphoneos;
@@ -2406,11 +2406,11 @@
 					"AUDIO_ENABLED=1",
 				);
 				INFOPLIST_FILE = "$(SRCROOT)/Apple2iOS/Apple2iOS-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				MTL_ENABLE_DEBUG_INFO = NO;
 				OTHER_LDFLAGS = "-lz";
-				PRODUCT_BUNDLE_IDENTIFIER = com.jvernet.Apple2iOS;
+				PRODUCT_BUNDLE_IDENTIFIER = com.deadc0de.Apple2iOS;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
 				SDKROOT = iphoneos;
