@@ -178,7 +178,11 @@ void reinitialize(void) {
 
 void timing_initialize(void) {
 #if !TESTING
-   // assert(cpu_isPaused() || (pthread_self() == cpu_thread_id));
+#   ifdef __APPLE__
+#       warning FIXME TODO : this assert is firing on iOS port ... but the assert is valid ... fix soon 
+#   else
+    assert(cpu_isPaused() || (pthread_self() == cpu_thread_id));
+#   endif
 #endif
     _timing_initialize(alt_speed_enabled ? cpu_altscale_factor : cpu_scale_factor);
 }
