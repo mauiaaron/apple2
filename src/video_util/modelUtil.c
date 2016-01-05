@@ -384,7 +384,6 @@ static void _quadCreateVAOAndVBOs(GLModel *model) {
     // We're using VAOs we can destroy certain buffers since they are already
     // loaded into GL and we've saved anything else we need
     FREE(model->elements);
-    FREE(model->positions);
     //FREE(model->normals);
     FREE(model->texCoords);
 #endif
