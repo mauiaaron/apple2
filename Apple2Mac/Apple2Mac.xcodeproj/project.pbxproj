@@ -313,6 +313,12 @@
 		935C55A41C1388E30013166D /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 935C551B1C12B6400013166D /* main.m */; };
 		935C55A91C1389370013166D /* jsmn.c in Sources */ = {isa = PBXBuildFile; fileRef = 935C55A71C1389370013166D /* jsmn.c */; };
 		935C55AA1C138C2F0013166D /* jsmn.c in Sources */ = {isa = PBXBuildFile; fileRef = 935C55A71C1389370013166D /* jsmn.c */; };
+		939C959E1C3B8E2100263E41 /* SolidColor.fsh in Resources */ = {isa = PBXBuildFile; fileRef = 939C959C1C3B8E2100263E41 /* SolidColor.fsh */; };
+		939C959F1C3B8E2100263E41 /* SolidColor.fsh in Resources */ = {isa = PBXBuildFile; fileRef = 939C959C1C3B8E2100263E41 /* SolidColor.fsh */; };
+		939C95A01C3B8E2100263E41 /* SolidColor.fsh in Resources */ = {isa = PBXBuildFile; fileRef = 939C959C1C3B8E2100263E41 /* SolidColor.fsh */; };
+		939C95A11C3B8E2100263E41 /* SolidColor.vsh in Resources */ = {isa = PBXBuildFile; fileRef = 939C959D1C3B8E2100263E41 /* SolidColor.vsh */; };
+		939C95A21C3B8E2100263E41 /* SolidColor.vsh in Resources */ = {isa = PBXBuildFile; fileRef = 939C959D1C3B8E2100263E41 /* SolidColor.vsh */; };
+		939C95A31C3B8E2100263E41 /* SolidColor.vsh in Resources */ = {isa = PBXBuildFile; fileRef = 939C959D1C3B8E2100263E41 /* SolidColor.vsh */; };
 		93BC72551BF6F8E2005CDFCA /* glalert.c in Sources */ = {isa = PBXBuildFile; fileRef = 93BC72541BF6F8E2005CDFCA /* glalert.c */; };
 		93BC72571BF6FF11005CDFCA /* playqueue.c in Sources */ = {isa = PBXBuildFile; fileRef = 93BC72561BF6FF11005CDFCA /* playqueue.c */; };
 /* End PBXBuildFile section */
@@ -576,6 +582,8 @@
 		935C55A01C1384400013166D /* cpu.S */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.asm; name = cpu.S; path = arm/cpu.S; sourceTree = "<group>"; };
 		935C55A71C1389370013166D /* jsmn.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = jsmn.c; path = ../externals/jsmn/jsmn.c; sourceTree = "<group>"; };
 		935C55A81C1389370013166D /* jsmn.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = jsmn.h; path = ../externals/jsmn/jsmn.h; sourceTree = "<group>"; };
+		939C959C1C3B8E2100263E41 /* SolidColor.fsh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = SolidColor.fsh; sourceTree = "<group>"; };
+		939C959D1C3B8E2100263E41 /* SolidColor.vsh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = SolidColor.vsh; sourceTree = "<group>"; };
 		93BC72541BF6F8E2005CDFCA /* glalert.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = glalert.c; sourceTree = "<group>"; };
 		93BC72561BF6FF11005CDFCA /* playqueue.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = playqueue.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -871,6 +879,8 @@
 				935C55801C1370160013166D /* gltouch */,
 				779F562819E4FE9E00A6F107 /* Basic.fsh */,
 				779F562719E4FE9E00A6F107 /* Basic.vsh */,
+				939C959C1C3B8E2100263E41 /* SolidColor.fsh */,
+				939C959D1C3B8E2100263E41 /* SolidColor.vsh */,
 				93BC72541BF6F8E2005CDFCA /* glalert.c */,
 				935C55811C13702A0013166D /* glhudmodel.h */,
 				4A7EDC911AE092680072E98A /* glhudmodel.c */,
@@ -1311,7 +1321,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				4ECFC3B91C368EAC008E2633 /* Assets.xcassets in Resources */,
+				939C95A01C3B8E2100263E41 /* SolidColor.fsh in Resources */,
 				4ECFC3B71C368EAB008E2633 /* Main.storyboard in Resources */,
+				939C95A31C3B8E2100263E41 /* SolidColor.vsh in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1320,9 +1332,11 @@
 			buildActionMask = 2147483647;
 			files = (
 				773B3D281956885A0085CE5F /* Images.xcassets in Resources */,
+				939C959E1C3B8E2100263E41 /* SolidColor.fsh in Resources */,
 				773B3D1A1956885A0085CE5F /* InfoPlist.strings in Resources */,
 				773B3D201956885A0085CE5F /* Credits.rtf in Resources */,
 				4A2636F919FDEDB700DBFB00 /* Apple2Mac.help in Resources */,
+				939C95A11C3B8E2100263E41 /* SolidColor.vsh in Resources */,
 				779F562319DA59D600A6F107 /* MainMenu.xib in Resources */,
 				779F562919E4FE9E00A6F107 /* Basic.vsh in Resources */,
 				779F562A19E4FE9E00A6F107 /* Basic.fsh in Resources */,
@@ -1367,7 +1381,9 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				939C95A21C3B8E2100263E41 /* SolidColor.vsh in Resources */,
 				935C55371C12BA5F0013166D /* Assets.xcassets in Resources */,
+				939C959F1C3B8E2100263E41 /* SolidColor.fsh in Resources */,
 				935C55431C12BCFD0013166D /* Apple2iOS-Info.plist in Resources */,
 				935C55461C12BE110013166D /* LaunchScreen.xib in Resources */,
 				935C55351C12BA5F0013166D /* Main.storyboard in Resources */,
