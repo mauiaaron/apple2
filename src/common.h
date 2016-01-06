@@ -216,7 +216,7 @@ static const char *log_end = "\n";
         } \
     } while (0)
 
-#ifndef NDEBUG
+#if !defined(NDEBUG) || (defined(NDEBUG) && defined(ANDROID))
 
 #ifdef ANDROID
 // Apparently some non-conformant Android devices (ahem, Spamsung, ahem) do not actually let me see what the assert
