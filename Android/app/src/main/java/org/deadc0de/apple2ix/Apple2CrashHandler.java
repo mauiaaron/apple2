@@ -14,6 +14,8 @@ package org.deadc0de.apple2ix;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
@@ -217,6 +219,13 @@ public class Apple2CrashHandler {
                         summary.append("GPU VENDOR: ").append(Apple2Preferences.GL_VENDOR.stringValue(activity)).append("\n");
                         summary.append("GPU RENDERER: ").append(Apple2Preferences.GL_RENDERER.stringValue(activity)).append("\n");
                         summary.append("GPU VERSION: ").append(Apple2Preferences.GL_VERSION.stringValue(activity)).append("\n");
+
+                        try {
+                            PackageInfo pInfo = activity.getPackageManager().getPackageInfo(activity.getPackageName(), 0);
+                            summary.append("APP VERSION: ").append(pInfo.versionName).append("\n");
+                        } catch (PackageManager.NameNotFoundException e) {
+                            // ...
+                        }
 
                         allCrashData.append(summary);
 
