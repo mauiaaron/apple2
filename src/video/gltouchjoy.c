@@ -186,6 +186,9 @@ static void *_rb_create_model(GLModel *parent) {
 }
 
 static void _rb_render(void) {
+    if (!axes.azimuthModel) {
+        return;
+    }
 
     GLModelRBJoystick *azimuthJoystick = (GLModelRBJoystick *)axes.azimuthModel->custom;
 
@@ -640,7 +643,7 @@ static inline void _button_touch_down(int x, int y) {
 
 static inline void _axis_move(int x, int y) {
 
-    if (joyglobals.showAzimuth) {
+    if (joyglobals.showAzimuth && axes.azimuthModel) {
         float centerX = 0.f;
         float centerY = 0.f;
         glhud_screenToModel(x, y, touchport.width, touchport.height, &centerX, &centerY);
