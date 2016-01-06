@@ -25,6 +25,19 @@ typedef struct EightPatchArgs_s {
     unsigned int dstIdx;
 } EightPatchArgs_s;
 
+#ifndef NDEBUG
+#   define SET_TEX_PIXEL(OFF) \
+    do { \
+        assert((OFF) > 0 && (OFF) < lastPoint); \
+        *((PIXEL_TYPE*)(texPixels + (OFF))) |= SEMI_OPAQUE; \
+    } while (0);
+#else
+#   define SET_TEX_PIXEL(OFF) \
+    do { \
+        *((PIXEL_TYPE*)(texPixels + (OFF))) |= SEMI_OPAQUE; \
+    } while (0);
+#endif
+
 // Generates a semi-opaque halo effect around each glyph
 static void _eightpatch_opaquePixelHaloFilter(const EightPatchArgs_s args) {
 
@@ -43,8 +56,8 @@ static void _eightpatch_opaquePixelHaloFilter(const EightPatchArgs_s args) {
     const unsigned int lastCol = (fb_w-1);
     const unsigned int dstPointStride = pixelSize * glyphScale;
     const unsigned int dstRowStride = fb_w * dstPointStride;
-    const unsigned int texRowStride = ((fb_w * glyphScale) * (glyphScale/*1 row*/ * glyphScale) * pixelSize);
-    const unsigned int lastPoint = ((fb_w * glyphScale) * (fb_h * glyphScale) * pixelSize);
+    const unsigned int texRowStride = ((fb_w * glyphScale) * (FONT_GLYPH_SCALE_Y * glyphScale) * pixelSize);
+    const unsigned int lastPoint    = ((fb_w * glyphScale) * (fb_h * glyphScale) * pixelSize);
 
     uint8_t *texPixels = args.parent->texPixels;
     const int dstIdx0 = (int)args.dstIdx;
@@ -59,11 +72,11 @@ static void _eightpatch_opaquePixelHaloFilter(const EightPatchArgs_s args) {
         for (unsigned int k=0; k<glyphScale; k++, dstPre+=dstRowStride) {
             for (unsigned int l=0; l<glyphScale; l++, dstPre+=pixelSize) {
                 if (srcCol != 0) {
-                    *((PIXEL_TYPE*)(texPixels + dstPre - dstPointStride)) |= SEMI_OPAQUE;
+                    SET_TEX_PIXEL(dstPre - dstPointStride);
                 }
-                *((PIXEL_TYPE*)(texPixels + dstPre)) |= SEMI_OPAQUE;
+                SET_TEX_PIXEL(dstPre);
                 if (srcCol < lastCol) {
-                    *((PIXEL_TYPE*)(texPixels + dstPre + dstPointStride)) |= SEMI_OPAQUE;
+                    SET_TEX_PIXEL(dstPre + dstPointStride);
                 }
             }
             dstPre -= dstPointStride;
@@ -75,7 +88,7 @@ static void _eightpatch_opaquePixelHaloFilter(const EightPatchArgs_s args) {
         int dstIdx = dstIdx0;
         for (unsigned int k=0; k<glyphScale; k++, dstIdx+=dstRowStride) {
             for (unsigned int l=0; l<glyphScale; l++, dstIdx+=pixelSize) {
-                *((PIXEL_TYPE*)(texPixels + dstIdx - dstPointStride)) |= SEMI_OPAQUE;
+                SET_TEX_PIXEL(dstIdx - dstPointStride);
             }
             dstIdx -= dstPointStride;
         }
@@ -86,7 +99,7 @@ static void _eightpatch_opaquePixelHaloFilter(const EightPatchArgs_s args) {
         int dstIdx = dstIdx0;
         for (unsigned int k=0; k<glyphScale; k++, dstIdx+=dstRowStride) {
             for (unsigned int l=0; l<glyphScale; l++, dstIdx+=pixelSize) {
-                *((PIXEL_TYPE*)(texPixels + dstIdx + dstPointStride)) |= SEMI_OPAQUE;
+                SET_TEX_PIXEL(dstIdx + dstPointStride);
             }
             dstIdx -= dstPointStride;
         }
@@ -98,11 +111,11 @@ static void _eightpatch_opaquePixelHaloFilter(const EightPatchArgs_s args) {
         for (unsigned int k=0; k<glyphScale; k++, dstPost+=dstRowStride) {
             for (unsigned int l=0; l<glyphScale; l++, dstPost+=pixelSize) {
                 if (srcCol != 0) {
-                    *((PIXEL_TYPE*)(texPixels + dstPost - dstPointStride)) |= SEMI_OPAQUE;
+                    SET_TEX_PIXEL(dstPost - dstPointStride);
                 }
-                *((PIXEL_TYPE*)(texPixels + dstPost)) |= SEMI_OPAQUE;
+                SET_TEX_PIXEL(dstPost);
                 if (srcCol < lastCol) {
-                    *((PIXEL_TYPE*)(texPixels + dstPost + dstPointStride)) |= SEMI_OPAQUE;
+                    SET_TEX_PIXEL(dstPost + dstPointStride);
                 }
             }
             dstPost -= dstPointStride;
@@ -151,6 +164,10 @@ void glhud_setupDefault(GLModel *parent) {
     do {
         unsigned int srcIdx = 0;
         unsigned int texIdx = 0;
+#ifndef NDEBUG
+        const unsigned int srcLastPoint = fb_w * fb_h;
+        const unsigned int texLastPoint = ((fb_w * glyphScale) * (fb_h * glyphScale) * pixelSize);
+#endif
         for (unsigned int i=0; i<fb_h; i++, texIdx+=texSubRowStride) {
             for (unsigned int j=0; j<fb_w; j++, srcIdx++, texIdx+=dstPointStride) {
                 uint8_t value = *(fb + srcIdx);
@@ -173,11 +190,19 @@ void glhud_setupDefault(GLModel *parent) {
                 }
             }
         }
+#ifndef NDEBUG
+        assert(srcIdx == srcLastPoint);
+        assert(texIdx == texLastPoint);
+#endif
     } while (0);
 
     if (hudElement->opaquePixelHalo) {
         unsigned int srcIdx = 0;
         unsigned int texIdx = 0;
+#ifndef NDEBUG
+        const unsigned int srcLastPoint = fb_w * fb_h;
+        const unsigned int texLastPoint = ((fb_w * glyphScale) * (fb_h * glyphScale) * pixelSize);
+#endif
         for (unsigned int i=0; i<fb_h; i++, texIdx+=texSubRowStride) {
             for (unsigned int j=0; j<fb_w; j++, srcIdx++, texIdx+=dstPointStride) {
                 uint8_t value = *(fb + srcIdx);
@@ -202,6 +227,10 @@ void glhud_setupDefault(GLModel *parent) {
                 }
             }
         }
+#ifndef NDEBUG
+        assert(srcIdx == srcLastPoint);
+        assert(texIdx == texLastPoint);
+#endif
     }
 
     parent->texDirty = true;

@@ -559,6 +559,7 @@ static inline void _plot_char40(uint8_t **d, uint8_t **s) {
 }
 
 static inline void _plot_char80(uint8_t **d, uint8_t **s, const unsigned int fb_width) {
+    // FIXME : this is implicitly scaling at FONT_GLYPH_SCALE_Y ... make it explicit
     *((uint32_t *)(*d)) = *((uint32_t *)(*s));
     *d += 4, *s += 4;
     *((uint16_t *)(*d)) = *((uint16_t *)(*s));

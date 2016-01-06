@@ -190,6 +190,7 @@ uint8_t floating_bus_hibit(const bool hibit);
 
 #define FONT_GLYPH_X (7+/*unused*/1)            // generated font.c uses a single byte (8bits) per font glyph line
 #define FONT_GLYPH_Y (FONT_HEIGHT_PIXELS>>1)    // ... 8 bytes total for whole glyph
+#define FONT_GLYPH_SCALE_Y (FONT_HEIGHT_PIXELS/FONT_GLYPH_Y) // FIXME NOTE : implicit 2x scaling in display.c ...
 
 #define MOUSETEXT_BEGIN         0x80 // offset + 0x20 length
 #define MOUSETEXT_RETURN        (MOUSETEXT_BEGIN+0x0d)
