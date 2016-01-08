@@ -350,7 +350,7 @@ public enum Apple2Preferences {
 
         @Override
         public int intValue(Apple2Activity activity) {
-            int defaultLatency = 3; // /TAPDELAY_NUM_CHOICES * TAPDELAY_SCALE -> 0.075f
+            int defaultLatency = 8; // /TAPDELAY_NUM_CHOICES * TAPDELAY_SCALE -> 0.2f
             return activity.getPreferences(Context.MODE_PRIVATE).getInt(toString(), defaultLatency);
         }
     },
