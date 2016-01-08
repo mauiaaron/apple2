@@ -439,7 +439,7 @@ public class Apple2JoystickSettingsMenu extends Apple2AbstractMenu {
 
                         @Override
                         public void showValue(int progress, final TextView seekBarValue) {
-                            int threshold = progress * Apple2Preferences.JOYSTICK_BUTTON_THRESHOLD_STEP;
+                            int threshold = progress * Apple2Preferences.getJoystickButtonSwitchThresholdScale(activity);
                             seekBarValue.setText("" + threshold + " pts");
                         }
                     });

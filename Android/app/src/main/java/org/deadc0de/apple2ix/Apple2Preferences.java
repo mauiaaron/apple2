@@ -321,7 +321,8 @@ public enum Apple2Preferences {
         @Override
         public void load(Apple2Activity activity) {
             int tick = intValue(activity);
-            nativeSetTouchJoystickButtonSwitchThreshold(tick * JOYSTICK_BUTTON_THRESHOLD_STEP);
+            tick *= getJoystickButtonSwitchThresholdScale(activity);
+            nativeSetTouchJoystickButtonSwitchThreshold(tick);
         }
 
         @Override
@@ -893,7 +894,6 @@ public enum Apple2Preferences {
     public final static String TAG = "Apple2Preferences";
 
     public final static int JOYSTICK_BUTTON_THRESHOLD_NUM_CHOICES = DECENT_AMOUNT_OF_CHOICES;
-    public final static int JOYSTICK_BUTTON_THRESHOLD_STEP = 5;
 
     public final static float JOYSTICK_AXIS_SENSITIVITY_MIN = 0.25f;
     public final static float JOYSTICK_AXIS_SENSITIVITY_DEFAULT = 1.f;
@@ -1000,6 +1000,18 @@ public enum Apple2Preferences {
 
     public String scancodeString() {
         return toString() + "_SCAN";
+    }
+
+    public static int getJoystickButtonSwitchThresholdScale(Apple2Activity activity) {
+
+        DisplayMetrics dm = new DisplayMetrics();
+        activity.getWindowManager().getDefaultDisplay().getMetrics(dm);
+
+        int smallScreenAxis = dm.widthPixels < dm.heightPixels ? dm.widthPixels : dm.heightPixels;
+        int oneThirdScreenAxis = smallScreenAxis/3;
+
+        // largest switch threshold value is 1/3 small dimension of screen
+        return oneThirdScreenAxis/JOYSTICK_BUTTON_THRESHOLD_NUM_CHOICES;
     }
 
     // ------------------------------------------------------------------------

@@ -57,7 +57,7 @@
     <string name="joystick_button_swipe_up_button_summary">Button to fire on swipe up</string>
     <string name="joystick_button_swipe_down_button">Swipe down fire</string>
     <string name="joystick_button_swipe_down_button_summary">Button to fire on swipe down</string>
-    <string name="joystick_button_threshold_summary">Joystick/keypad button switch threshold in pts</string>
+    <string name="joystick_button_threshold_summary">Joystick/keypad button switch threshold in pts (max: &#8531; screen height)</string>
     <string name="joystick_calibrate">Calibrate…</string>
     <string name="joystick_calibrate_summary">Configure and test current settings</string>
     <string name="joystick_configure">Configure joystick…</string>
