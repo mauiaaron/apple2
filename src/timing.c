@@ -126,7 +126,7 @@ struct timespec timespec_diff(struct timespec start, struct timespec end, bool *
     return t;
 }
 
-static inline struct timespec timespec_add(struct timespec start, unsigned long nsecs) {
+struct timespec timespec_add(struct timespec start, unsigned long nsecs) {
 
     start.tv_nsec += nsecs;
     if (start.tv_nsec > NANOSECONDS_PER_SECOND)
