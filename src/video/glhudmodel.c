@@ -28,7 +28,7 @@ typedef struct EightPatchArgs_s {
 #ifndef NDEBUG
 #   define SET_TEX_PIXEL(OFF) \
     do { \
-        assert((OFF) > 0 && (OFF) < lastPoint); \
+        assert((OFF) >= 0 && (OFF) < lastPoint); \
         *((PIXEL_TYPE*)(texPixels + (OFF))) |= SEMI_OPAQUE; \
     } while (0);
 #else
