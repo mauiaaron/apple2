@@ -1,7 +1,18 @@
 Apple //ix
 ==========
 
-Apple2ix is an Apple //e emulator implemented primarily in C with x86, x86-64, and ARM assembly language for the 65c02 CPU emulation module.  In addition you will find a smattering of interface code in Objective-C/Cocoa, Java/Android, and GLSL.
+Apple2ix is an Apple //e (8bit 65c02 CPU) emulator designed to work on varios POSIX platforms.
+
+Project Tech
+------------
+
+* C99 dialect of the C programming language for the majority of the project
+* x86 and ARM assembly language for 65c02 CPU emulation loop
+* Extensive tests for 65c02 CPU, Apple //e VM, disks, and display (expected framebuffer output)
+* OpenGLES 2.x graphics with simple portable GLSL shaders
+* OpenAL and OpenSLES audio (emulated speaker and emulated Mockingboard/Phasor soundcards)
+* Objective-C and Cocoa APIs (Mac/iOS variant)
+* Java and Android APIs (Android app)
 
 Lineage
 -------
@@ -17,7 +28,7 @@ Project Goals
 
 * Portability and code resilience across a wide range of modern platforms including MacOSX, desktop Linux/BSD, iOS, Android -- *But not Windows, just use the excellent [AppleWin](https://github.com/AppleWin/AppleWin) emulator if you're on Windows!*
 * Reasonable emulation fidelity to the original Apple //e machine (timing, video, audio, etc...)
-* Language minimalism for core emulation modules (prefer coding in POSIX C over all else), except for CPU module which should be in assembly
+* Language/platform/API minimalism for core emulation modules (prefer coding to POSIX APIs and using C99 over all other choices), except for CPU module which should be in custom assembly or IR ;-)
 * Good platform citizenship for menu system (prefer coding in language-of-choice promoted by platform--e.g.: Objective-C/Swift on Darwin, Java on Android, ...)
 
 Android
@@ -25,10 +36,10 @@ Android
 
 [Available on Google Play](https://play.google.com/store/apps/details?id=org.deadc0de.apple2ix.basic).
 
-Running at 30FPS on Gingerbread (Android 2.3.3):
+Running at 30FPS on ancient Gingerbread (Android 2.3.3) devices:
 ![Apple2ix on Samsung Galaxy Y running Gingerbread](https://raw.github.com/mauiaaron/apple2/develop/docs/android-galaxyY.png "Apple //ix")
 
-Running at 60FPS on Nexus 6 running Lollipop (Android 5.1.1):
+Running at 60FPS on modern Android devices:
 ![Apple2ix on Nexus 6](https://raw.github.com/mauiaaron/apple2/develop/docs/android-nexus6.png "Apple //ix")
 
 Mac Package
@@ -36,12 +47,16 @@ Mac Package
 
 ![Apple2Mac](https://raw.github.com/mauiaaron/apple2/master/docs/Apple2Mac.png "Apple2Mac")
 
-A binary package for Macintosh is available at [deadc0de.org](http://deadc0de.org/Apple2Mac/Apple2Mac-0.9.dmg)  
+A dated binary package for Macintosh is available at [deadc0de.org](http://deadc0de.org/Apple2Mac/Apple2Mac-0.9.dmg)  
 Size : 10240000 (10MB)  
 SHASUM : 81f2d55c2daaa0d3f9b33af9b50f69f6789738bf  
 
 Alt Size : 76820480 (75MB)  
-ALTSUM : 488a40d7f1187bcfd16d0045258f606a95f448cb  
+ALTSUM : 488a40d7f1187bcfd16d0045258f606a95f448cb
+
+Due to Apple's policy about emulators we are unlikely to ship this in the App Store any time soon.
+
+iOS port in progress 2016, check this repo and fork(s) too!
 
 Linux+ Package
 --------------
@@ -52,28 +67,18 @@ You will need GCC or Clang compiler and other tools as determined by the `config
 
 ![Apple //ix](https://raw.github.com/mauiaaron/apple2/master/docs/Apple2ix.png "Apple //ix")
 
-Project Tech
-------------
-
-* C language for the majority of the project (still the most portable/reliable language after all these years ;-)
-* x86 and ARM assembly language for 65c02 CPU tightloop
-* Extensive tests for 65c02 CPU, Apple //e VM, disks, and display (expected framebuffer output)
-* OpenGLES 2.x graphics with GLSL shaders
-* OpenAL and OpenSLES audio (emulated speaker and emulated Mockingboard/Phasor soundcards)
-* Objective-C and Cocoa APIs (Mac/iOS variant)
-* Java and Android APIs (Android app)
-
-![DOS 3.3](https://raw.github.com/mauiaaron/apple2/master/docs/DOS33.png "DOS 3.3 Applesoft BASIC and //e monitor")
-
 Semi-Ordered TODO
 -----------------
 
-* DHIRES graphics are ugly, fix 'em
-* iOS/iWatch ports
+* Double-LORES graphics (used in Dagen Brock's Flappy Bird clone) are ugly/incorrect ... fix 'em
+* Mockingboard is seriously buggy.  Need to research/check upstream for bugfixes and refactor.
+* CPU module ports: aarch64, x86 without textreloc's, Clang IR
+* iOS/iWatch ports.  iOS in progress early 2016.
 * Proper VBL timing and vSync matching to the device (if available)
 * OpenGL shaders/tricks for style (various screen artifacts) and functionality (Disk ][ status overlays, etc)
-* Emulator save/restore and image compatibility with AppleWin
-* Other feature parity with AppleWin
-* Improved debugger routines (CLI/curses debugger?)
-* CPU module variants as-needed in aarch64, plain C, Clang IR, ...
+* Emulator save/restore image compatibility with AppleWin
+* Emulation features ... (3.5" disk, AppleHD, Phasor, printer, ethernet, ...)
+* Debugger rewrite with tests ... improved debugger routines (CLI/curses debugger? GDB/LLDB module?)
 * Emscripten/web frontend?
+
+![DOS 3.3](https://raw.github.com/mauiaaron/apple2/master/docs/DOS33.png "DOS 3.3 Applesoft BASIC and //e monitor")
