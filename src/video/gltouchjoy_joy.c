@@ -26,6 +26,7 @@ static struct {
     void (*buttonDrawCallback)(char newChar);
 
     bool trackingButton;
+    bool trackingButtonMove;
     pthread_t tapDelayThreadId;
     pthread_mutex_t tapDelayMutex;
     pthread_cond_t tapDelayCond;
@@ -71,54 +72,61 @@ static void *_button_tap_delayed_thread(void *dummyptr) {
 
     pthread_mutex_lock(&joys.tapDelayMutex);
 
-    do {
-        pthread_cond_wait(&joys.tapDelayCond, &joys.tapDelayMutex);
-        TOUCH_JOY_LOG(">>> [DELAYEDTAP] begin ...");
-
+    bool deepSleep = false;
+    uint8_t currJoyButtonValue0 = 0x0;
+    uint8_t currJoyButtonValue1 = 0x0;
+    uint8_t currButtonDisplayChar = ' ';
+    for (;;) {
         if (UNLIKELY(joyglobals.isShuttingDown)) {
             break;
         }
 
-        struct timespec ts = { .tv_sec=0, .tv_nsec=joys.tapDelayNanos };
+        struct timespec wait;
+        clock_gettime(CLOCK_REALTIME, &wait); // should use CLOCK_MONOTONIC ?
+        wait = timespec_add(wait, joys.tapDelayNanos);
+        int timedOut = pthread_cond_timedwait(&joys.tapDelayCond, &joys.tapDelayMutex, &wait); // wait and possibly consume event
+        assert((!timedOut || timedOut == ETIMEDOUT) && "should not fail any other way");
 
-        // sleep for the configured delay time
-        pthread_mutex_unlock(&joys.tapDelayMutex);
-        nanosleep(&ts, NULL);
-        pthread_mutex_lock(&joys.tapDelayMutex);
-
-        // wait until touch up/cancel
-        do {
-
-            // now set the joystick button values
-            joy_button0 = joys.currJoyButtonValue0;
-            joy_button1 = joys.currJoyButtonValue1;
-            joys.buttonDrawCallback(joys.currButtonDisplayChar);
-
-            if (!joys.trackingButton || joyglobals.isShuttingDown) {
-                break;
+        if (!timedOut) {
+            if (!deepSleep) {
+                if (joys.trackingButtonMove) {
+                    // dragging
+                    currJoyButtonValue0 = 0x0;
+                    currJoyButtonValue1 = 0x0;
+                    currButtonDisplayChar = joys.currButtonDisplayChar;
+                } else if (joys.trackingButton) {
+                    // touch down -- delay consumption to determine if tap or drag
+                    currJoyButtonValue0 = joys.currJoyButtonValue0;
+                    currJoyButtonValue1 = joys.currJoyButtonValue1;
+                    currButtonDisplayChar = joys.currButtonDisplayChar;
+                    joys.buttonDrawCallback(currButtonDisplayChar);
+                    // zero the buttons before delay
+                    _reset_buttons_state();
+                    continue;
+                } else {
+                    // touch up becomes tap
+                    joys.currJoyButtonValue0 = currJoyButtonValue0;
+                    joys.currJoyButtonValue1 = currJoyButtonValue1;
+                    joys.currButtonDisplayChar = currButtonDisplayChar;
+                }
             }
-
-            pthread_cond_wait(&joys.tapDelayCond, &joys.tapDelayMutex);
-
-            if (!joys.trackingButton || joyglobals.isShuttingDown) {
-                break;
-            }
-            TOUCH_JOY_LOG(">>> [DELAYEDTAP] looping ...");
-        } while (1);
-
-        if (UNLIKELY(joyglobals.isShuttingDown)) {
-            break;
         }
 
-        // delay the ending of button tap or touch/move event by the configured delay time
-        pthread_mutex_unlock(&joys.tapDelayMutex);
-        nanosleep(&ts, NULL);
-        pthread_mutex_lock(&joys.tapDelayMutex);
+        joy_button0 = joys.currJoyButtonValue0;
+        joy_button1 = joys.currJoyButtonValue1;
+        joys.buttonDrawCallback(joys.currButtonDisplayChar);
 
-        _reset_buttons_state();
-
-        TOUCH_JOY_LOG(">>> [DELAYEDTAP] end ...");
-    } while (1);
+        deepSleep = false;
+        if (timedOut && !joys.trackingButton) {
+            deepSleep = true;
+            _reset_buttons_state();
+            TOUCH_JOY_LOG(">>> [DELAYEDTAP] end ...");
+            pthread_cond_wait(&joys.tapDelayCond, &joys.tapDelayMutex); // consume initial touch down
+            TOUCH_JOY_LOG(">>> [DELAYEDTAP] begin ...");
+        } else {
+            TOUCH_JOY_LOG(">>> [DELAYEDTAP] event looping ...");
+        }
+    }
 
     pthread_mutex_unlock(&joys.tapDelayMutex);
 
@@ -183,7 +191,7 @@ static void touchjoy_axisUp(int x, int y) {
 // ----------------------------------------------------------------------------
 // button state
 
-static void _set_current_button_state(touchjoy_button_type_t theButtonChar, int theButtonScancode) {
+static void _set_current_button_state(touchjoy_button_type_t theButtonChar) {
     if (theButtonChar == TOUCH_BUTTON0) {
         joys.currJoyButtonValue0 = 0x80;
         joys.currJoyButtonValue1 = 0;
@@ -204,30 +212,30 @@ static void _set_current_button_state(touchjoy_button_type_t theButtonChar, int 
 }
 
 static void touchjoy_buttonDown(void) {
-    _set_current_button_state(buttons.touchDownChar, buttons.touchDownScancode);
+    _set_current_button_state(buttons.touchDownChar);
     joys.trackingButton = true;
     _signal_tap_delay();
 }
 
 static void touchjoy_buttonMove(int dx, int dy) {
     if ((dy < -joyglobals.switchThreshold) || (dy > joyglobals.switchThreshold)) {
+
         touchjoy_button_type_t theButtonChar = -1;
-        int theButtonScancode = -1;
         if (dy < 0) {
             theButtonChar = buttons.northChar;
-            theButtonScancode = buttons.northScancode;
         } else {
             theButtonChar = buttons.southChar;
-            theButtonScancode = buttons.southScancode;
         }
 
-        _set_current_button_state(theButtonChar, theButtonScancode);
+        _set_current_button_state(theButtonChar);
         _signal_tap_delay();
     }
+    joys.trackingButtonMove = true;
 }
 
 static void touchjoy_buttonUp(int dx, int dy) {
     joys.trackingButton = false;
+    joys.trackingButtonMove = false;
     _signal_tap_delay();
 }
 
@@ -238,7 +246,12 @@ static void gltouchjoy_setTapDelay(float secs) {
     if (UNLIKELY(secs > 1.f)) {
         ERRLOG("Clamping tap delay to 1.0 secs");
     }
-    joys.tapDelayNanos = (unsigned int)((float)NANOSECONDS_PER_SECOND * secs);
+    unsigned int tapDelayNanos = (unsigned int)((float)NANOSECONDS_PER_SECOND * secs);
+#define MIN_WAIT_NANOS 1000000
+    if (tapDelayNanos < MIN_WAIT_NANOS) {
+        tapDelayNanos = MIN_WAIT_NANOS;
+    }
+    joys.tapDelayNanos = tapDelayNanos;
 }
 
 // ----------------------------------------------------------------------------

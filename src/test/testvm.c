@@ -33,7 +33,7 @@ static void testvm_teardown(void *arg) {
 // VM TESTS ...
 
 TEST test_boot_disk() {
-    test_setup_boot_disk("testvm1.nib.gz", 1);
+    test_setup_boot_disk("testvm1.dsk.gz", 1);
 
     BOOT_TO_DOS();
 
@@ -1071,8 +1071,6 @@ TEST test_HIRES_off(bool flag_ramrd, bool flag_ramwrt) {
     uint32_t switch_save = softswitches;
     uint8_t *save_base_textrd = base_textrd;
     uint8_t *save_base_textwrt = base_textwrt;
-    uint8_t *save_base_hgrrd = base_hgrrd;
-    uint8_t *save_base_hgrwrt = base_hgrwrt;
     int save_current_page = video__current_page;
 
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x00;
@@ -1288,8 +1286,6 @@ TEST test_lc_c082() {
     uint8_t *save_base_textwrt = base_textwrt;
     uint8_t *save_base_hgrrd = base_hgrrd;
     uint8_t *save_base_hgrwrt = base_hgrwrt;
-    uint8_t *save_base_d000_wrt = base_d000_wrt;
-    uint8_t *save_base_e000_wrt = base_e000_wrt;
     int save_current_page = video__current_page;
 
     ASM_INIT();
@@ -1541,8 +1537,6 @@ TEST test_lc_c08a() {
     uint8_t *save_base_textwrt = base_textwrt;
     uint8_t *save_base_hgrrd = base_hgrrd;
     uint8_t *save_base_hgrwrt = base_hgrwrt;
-    uint8_t *save_base_d000_wrt = base_d000_wrt;
-    uint8_t *save_base_e000_wrt = base_e000_wrt;
     int save_current_page = video__current_page;
 
     ASM_INIT();
@@ -1755,11 +1749,8 @@ TEST test_80store_on(bool flag_hires, bool flag_page2) {
     ASSERT(flag_page2  ? (softswitches & SS_PAGE2)  : !(softswitches & SS_PAGE2) );
 
     uint32_t switch_save = softswitches;
-    uint8_t *save_base_textrd = base_textrd;
-    uint8_t *save_base_textwrt = base_textwrt;
     uint8_t *save_base_hgrrd = base_hgrrd;
     uint8_t *save_base_hgrwrt = base_hgrwrt;
-    int save_current_page = video__current_page;
 
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x00;
     c_debugger_go();
@@ -1856,11 +1847,6 @@ TEST test_80store_off(bool flag_ramrd, bool flag_ramwrt, bool flag_page2) {
     ASSERT(flag_page2  ? (softswitches & SS_PAGE2)  : !(softswitches & SS_PAGE2) );
 
     uint32_t switch_save = softswitches;
-    uint8_t *save_base_textrd = base_textrd;
-    uint8_t *save_base_textwrt = base_textwrt;
-    uint8_t *save_base_hgrrd = base_hgrrd;
-    uint8_t *save_base_hgrwrt = base_hgrwrt;
-    int save_current_page = video__current_page;
 
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x00;
     apple_ii_64k[1][WATCHPOINT_ADDR] = 0x00;
@@ -1984,7 +1970,6 @@ TEST test_ramrd_main(bool flag_80store, bool flag_hires) {
     ASSERT(flag_hires   ? (softswitches & SS_HIRES)   : !(softswitches & SS_HIRES) );
 
     uint32_t switch_save = softswitches;
-    uint8_t *save_base_ramrd = base_ramrd;
     uint8_t *save_base_ramwrt = base_ramwrt;
     uint8_t *save_base_textrd = base_textrd;
     uint8_t *save_base_textwrt = base_textwrt;
@@ -2066,7 +2051,6 @@ TEST test_ramrd_aux(bool flag_80store, bool flag_hires) {
     ASSERT(flag_hires   ? (softswitches & SS_HIRES)   : !(softswitches & SS_HIRES) );
 
     uint32_t switch_save = softswitches;
-    uint8_t *save_base_ramrd = base_ramrd;
     uint8_t *save_base_ramwrt = base_ramwrt;
     uint8_t *save_base_textrd = base_textrd;
     uint8_t *save_base_textwrt = base_textwrt;
@@ -2184,7 +2168,6 @@ TEST test_ramwrt_main(bool flag_80store, bool flag_hires) {
 
     uint32_t switch_save = softswitches;
     uint8_t *save_base_ramrd = base_ramrd;
-    uint8_t *save_base_ramwrt = base_ramwrt;
     uint8_t *save_base_textrd = base_textrd;
     uint8_t *save_base_textwrt = base_textwrt;
     uint8_t *save_base_hgrrd = base_hgrrd;
@@ -2265,7 +2248,6 @@ TEST test_ramwrt_aux(bool flag_80store, bool flag_hires) {
 
     uint32_t switch_save = softswitches;
     uint8_t *save_base_ramrd = base_ramrd;
-    uint8_t *save_base_ramwrt = base_ramwrt;
     uint8_t *save_base_textrd = base_textrd;
     uint8_t *save_base_textwrt = base_textwrt;
     uint8_t *save_base_hgrrd = base_hgrrd;
@@ -2602,10 +2584,6 @@ TEST test_80col_off() {
     ASSERT((softswitches & SS_80COL));
 
     uint32_t switch_save = softswitches;
-    uint8_t *save_base_d000_rd = base_d000_rd;
-    uint8_t *save_base_d000_wrt = base_d000_wrt;
-    uint8_t *save_base_e000_rd = base_e000_rd;
-    uint8_t *save_base_e000_wrt = base_e000_wrt;
     int save_current_page = video__current_page;
 
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x00;
@@ -2713,10 +2691,6 @@ TEST test_altchar_off() {
     ASSERT((softswitches & SS_ALTCHAR));
 
     uint32_t switch_save = softswitches;
-    uint8_t *save_base_d000_rd = base_d000_rd;
-    uint8_t *save_base_d000_wrt = base_d000_wrt;
-    uint8_t *save_base_e000_rd = base_e000_rd;
-    uint8_t *save_base_e000_wrt = base_e000_wrt;
     int save_current_page = video__current_page;
 
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x00;
@@ -2824,10 +2798,6 @@ TEST test_ioudis_off() {
     ASSERT((softswitches & SS_IOUDIS));
 
     uint32_t switch_save = softswitches;
-    uint8_t *save_base_d000_rd = base_d000_rd;
-    uint8_t *save_base_d000_wrt = base_d000_wrt;
-    uint8_t *save_base_e000_rd = base_e000_rd;
-    uint8_t *save_base_e000_wrt = base_e000_wrt;
     int save_current_page = video__current_page;
 
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x00;
@@ -2943,10 +2913,6 @@ TEST test_dhires_off(bool flag_ioudis/* FIXME TODO : possibly testing a existing
     ASSERT((softswitches & SS_DHIRES));
 
     uint32_t switch_save = softswitches;
-    uint8_t *save_base_d000_rd = base_d000_rd;
-    uint8_t *save_base_d000_wrt = base_d000_wrt;
-    uint8_t *save_base_e000_rd = base_e000_rd;
-    uint8_t *save_base_e000_wrt = base_e000_wrt;
     int save_current_page = video__current_page;
 
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x00;
@@ -3023,7 +2989,6 @@ TEST test_c3rom_internal() {
     ASSERT(!(softswitches & SS_C3ROM));
 
     uint32_t switch_save = softswitches;
-    uint8_t *save_base_c3rom = base_c3rom;
 
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x00;
     c_debugger_go();
@@ -3145,10 +3110,6 @@ TEST test_cxrom_internal() {
     ASSERT(!(softswitches & SS_CXROM));
 
     uint32_t switch_save = softswitches;
-    uint8_t *save_base_cxrom = base_cxrom;
-    uint8_t *save_base_c3rom = base_c3rom;
-    uint8_t *save_base_c4rom = base_c4rom;
-    uint8_t *save_base_c5rom = base_c5rom;
 
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x00;
     c_debugger_go();
@@ -3195,7 +3156,6 @@ TEST test_cxrom_peripheral(bool flag_c3rom) {
     ASSERT((softswitches & SS_CXROM));
 
     uint32_t switch_save = softswitches;
-    uint8_t *save_base_cxrom = base_cxrom;
     uint8_t *save_base_c3rom = base_c3rom;
 
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x00;
@@ -3462,12 +3422,16 @@ GREATEST_MAIN_DEFS();
 static char **test_argv = NULL;
 static int test_argc = 0;
 
-static void *test_thread(void *dummyptr) {
+static int _test_thread(void) {
     int argc = test_argc;
     char **argv = test_argv;
     GREATEST_MAIN_BEGIN();
     RUN_SUITE(test_suite_vm);
     GREATEST_MAIN_END();
+}
+
+static void *test_thread(void *dummyptr) {
+    _test_thread();
     return NULL;
 }
 

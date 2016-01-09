@@ -66,6 +66,7 @@ extern READONLY pthread_t cpu_thread_id;
  * calculate the difference between two timespec structures
  */
 struct timespec timespec_diff(struct timespec start, struct timespec end, bool *negative);
+struct timespec timespec_add(struct timespec start, unsigned long nsecs);
 
 /*
  * start CPU thread

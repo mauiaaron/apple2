@@ -85,9 +85,33 @@ extern bool (*interface_isTouchMenuAvailable)(void);
 // enable/disable touch menu HUD element
 extern void (*interface_setTouchMenuEnabled)(bool enabled);
 
-// set minimum alpha visibility of touch menu HUD element
-extern void (*interface_setTouchMenuVisibility)(float alpha);
+// set min/max alpha visibility of touch menu HUD element
+extern void (*interface_setTouchMenuVisibility)(float inactiveAlpha, float activeAlpha);
+
+// set a finer-grained font size (if glyphScale > 1)
+extern void (*interface_setGlyphScale)(int glyphScale);
 #endif
 
+#define EXT_GZ  ".gz"
+#define _GZLEN (sizeof(EXT_GZ)-1)
+
+// ----------------------------------------------------------------------------
+// file extension handling
+
+static inline bool is_gz(const char * const name) {
+    size_t len = strlen(name);
+    if (len <= _GZLEN) {
+        return false;
+    }
+    return strncmp(name+len-_GZLEN, EXT_GZ, _GZLEN) == 0;
+}
+
+static inline void cut_gz(char *name) {
+    size_t len = strlen(name);
+    if (len <= _GZLEN) {
+        return;
+    }
+    *(name+len-_GZLEN) = '\0';
+}
 
 #endif

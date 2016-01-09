@@ -147,6 +147,9 @@ void vm_initialize(void);
 
 void vm_reinitializeAudio(void);
 
+extern bool vm_saveState(StateHelper_s *helper);
+extern bool vm_loadState(StateHelper_s *helper);
+
 #if VM_TRACING
 void vm_trace_begin(const char *vm_file);
 void vm_trace_end(void);

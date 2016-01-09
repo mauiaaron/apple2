@@ -11,7 +11,9 @@
 
 package org.deadc0de.apple2ix;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Build;
 import android.util.Log;
@@ -27,15 +29,23 @@ import android.widget.PopupWindow;
 import android.widget.TextView;
 
 import org.deadc0de.apple2ix.basic.R;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.File;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Apple2MainMenu {
 
-    private final static int MENU_INSET = 20;
+    private final static String SAVE_FILE = "emulator.state";
     private final static String TAG = "Apple2MainMenu";
 
     private Apple2Activity mActivity = null;
     private Apple2View mParentView = null;
     private PopupWindow mMainMenuPopup = null;
+
+    private AtomicBoolean mShowingRebootQuit = new AtomicBoolean(false);
+    private AtomicBoolean mShowingSaveRestore = new AtomicBoolean(false);
 
     public Apple2MainMenu(Apple2Activity activity, Apple2View parent) {
         mActivity = activity;
@@ -45,52 +55,82 @@ public class Apple2MainMenu {
 
     enum SETTINGS {
         SHOW_SETTINGS {
-            @Override public String getTitle(Context ctx) {
+            @Override
+            public String getTitle(Context ctx) {
                 return ctx.getResources().getString(R.string.menu_settings);
             }
-            @Override public String getSummary(Context ctx) {
+
+            @Override
+            public String getSummary(Context ctx) {
                 return ctx.getResources().getString(R.string.menu_settings_summary);
             }
-            @Override public void handleSelection(Apple2MainMenu mainMenu) {
+
+            @Override
+            public void handleSelection(Apple2MainMenu mainMenu) {
                 mainMenu.showSettings();
             }
         },
         LOAD_DISK {
-            @Override public String getTitle(Context ctx) {
+            @Override
+            public String getTitle(Context ctx) {
                 return ctx.getResources().getString(R.string.menu_disks);
             }
-            @Override public String getSummary(Context ctx) {
+
+            @Override
+            public String getSummary(Context ctx) {
                 return ctx.getResources().getString(R.string.menu_disks_summary);
             }
-            @Override public void handleSelection(Apple2MainMenu mainMenu) {
+
+            @Override
+            public void handleSelection(Apple2MainMenu mainMenu) {
                 mainMenu.showDisksMenu();
             }
         },
-        REBOOT_EMULATOR {
-            @Override public String getTitle(Context ctx) {
-                return ctx.getResources().getString(R.string.reboot);
+        SAVE_RESTORE {
+            @Override
+            public String getTitle(Context ctx) {
+                return ctx.getResources().getString(R.string.saverestore);
             }
-            @Override public String getSummary(Context ctx) {
-                return ctx.getResources().getString(R.string.reboot_summary);
+
+            @Override
+            public String getSummary(Context ctx) {
+                return ctx.getResources().getString(R.string.saverestore_summary);
             }
-            @Override public void handleSelection(Apple2MainMenu mainMenu) {
-                mainMenu.mActivity.maybeReboot();
+
+            @Override
+            public void handleSelection(Apple2MainMenu mainMenu) {
+                if (!mainMenu.mShowingSaveRestore.compareAndSet(false, true)) {
+                    Log.v(TAG, "OMG, avoiding nasty UI race around save/restore");
+                    return;
+                }
+                mainMenu.maybeSaveRestore();
             }
         },
-        QUIT_EMULATOR {
-            @Override public String getTitle(Context ctx) {
-                return ctx.getResources().getString(R.string.quit);
+        REBOOT_QUIT_EMULATOR {
+            @Override
+            public String getTitle(Context ctx) {
+                return ctx.getResources().getString(R.string.quit_reboot);
             }
-            @Override public String getSummary(Context ctx) {
-                return ctx.getResources().getString(R.string.quit_summary);
+
+            @Override
+            public String getSummary(Context ctx) {
+                return "";
             }
-            @Override public void handleSelection(Apple2MainMenu mainMenu) {
-                mainMenu.mActivity.maybeQuitApp();
+
+            @Override
+            public void handleSelection(Apple2MainMenu mainMenu) {
+                if (!mainMenu.mShowingRebootQuit.compareAndSet(false, true)) {
+                    Log.v(TAG, "OMG, avoiding nasty UI race around quit/reboot");
+                    return;
+                }
+                mainMenu.maybeRebootQuit();
             }
         };
 
         public abstract String getTitle(Context ctx);
+
         public abstract String getSummary(Context ctx);
+
         public abstract void handleSelection(Apple2MainMenu mainMenu);
 
         public static String[] titles(Context ctx) {
@@ -105,11 +145,11 @@ public class Apple2MainMenu {
 
     private void setup() {
 
-        LayoutInflater inflater = (LayoutInflater)mActivity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        View listLayout=inflater.inflate(R.layout.activity_main_menu, null, false);
-        ListView mainMenuView = (ListView)listLayout.findViewById(R.id.main_popup_menu);
+        LayoutInflater inflater = (LayoutInflater) mActivity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        View listLayout = inflater.inflate(R.layout.activity_main_menu, null, false);
+        ListView mainMenuView = (ListView) listLayout.findViewById(R.id.main_popup_menu);
         mainMenuView.setEnabled(true);
-        LinearLayout mainPopupContainer = (LinearLayout)listLayout.findViewById(R.id.main_popup_container);
+        LinearLayout mainPopupContainer = (LinearLayout) listLayout.findViewById(R.id.main_popup_container);
 
         final String[] values = SETTINGS.titles(mActivity);
 
@@ -118,10 +158,11 @@ public class Apple2MainMenu {
             public boolean areAllItemsEnabled() {
                 return true;
             }
+
             @Override
             public View getView(int position, View convertView, ViewGroup parent) {
                 View view = super.getView(position, convertView, parent);
-                TextView tv = (TextView)view.findViewById(android.R.id.text2);
+                TextView tv = (TextView) view.findViewById(android.R.id.text2);
                 SETTINGS setting = SETTINGS.values()[position];
                 tv.setText(setting.getSummary(mActivity));
                 return view;
@@ -131,7 +172,7 @@ public class Apple2MainMenu {
         mainMenuView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Log.d(TAG, "position:"+position+" tapped...");
+                Log.d(TAG, "position:" + position + " tapped...");
                 SETTINGS setting = SETTINGS.values()[position];
                 setting.handleSelection(Apple2MainMenu.this);
             }
@@ -153,7 +194,7 @@ public class Apple2MainMenu {
                     maxWidth = width;
                 }
             }
-            mMainMenuPopup = new PopupWindow(mainPopupContainer, maxWidth+TOTAL_MARGINS, totalHeight, true);
+            mMainMenuPopup = new PopupWindow(mainPopupContainer, maxWidth + TOTAL_MARGINS, totalHeight, true);
         }
 
         // This kludgery allows touching the outside or back-buttoning to dismiss
@@ -162,7 +203,7 @@ public class Apple2MainMenu {
         mMainMenuPopup.setOnDismissListener(new PopupWindow.OnDismissListener() {
             @Override
             public void onDismiss() {
-                Apple2MainMenu.this.mActivity.maybeResumeCPU();
+                Apple2MainMenu.this.mActivity.maybeResumeEmulation();
             }
         });
     }
@@ -184,7 +225,10 @@ public class Apple2MainMenu {
             return;
         }
 
-        mActivity.nativeEmulationPause();
+        mShowingRebootQuit.set(false);
+        mShowingSaveRestore.set(false);
+
+        mActivity.pauseEmulation();
 
         mMainMenuPopup.showAtLocation(mParentView, Gravity.CENTER, 0, 0);
     }
@@ -198,5 +242,83 @@ public class Apple2MainMenu {
 
     public boolean isShowing() {
         return mMainMenuPopup.isShowing();
+    }
+
+
+    public void maybeRebootQuit() {
+        mActivity.pauseEmulation();
+
+        final AtomicBoolean selectionAlreadyHandled = new AtomicBoolean(false);
+
+        AlertDialog rebootQuitDialog = new AlertDialog.Builder(mActivity).setIcon(R.drawable.ic_launcher).setCancelable(true).setTitle(R.string.quit_reboot).setMessage(R.string.quit_reboot_choice).setPositiveButton(R.string.reboot, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                if (!selectionAlreadyHandled.compareAndSet(false, true)) {
+                    Log.v(TAG, "OMG, avoiding nasty UI race in reboot/quit onClick()");
+                    return;
+                }
+                mActivity.rebootEmulation();
+                Apple2MainMenu.this.dismiss();
+            }
+        }).setNeutralButton(R.string.quit, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                if (!selectionAlreadyHandled.compareAndSet(false, true)) {
+                    Log.v(TAG, "OMG, avoiding nasty UI race in reboot/quit onClick()");
+                    return;
+                }
+                mActivity.quitEmulator();
+            }
+        }).setNegativeButton(R.string.cancel, null).create();
+
+        mActivity.registerAndShowDialog(rebootQuitDialog);
+    }
+
+
+    public void maybeSaveRestore() {
+        mActivity.pauseEmulation();
+
+        final String quickSavePath = Apple2DisksMenu.getDataDir(mActivity) + File.separator + SAVE_FILE;
+
+        final AtomicBoolean selectionAlreadyHandled = new AtomicBoolean(false);
+
+        AlertDialog saveRestoreDialog = new AlertDialog.Builder(mActivity).setIcon(R.drawable.ic_launcher).setCancelable(true).setTitle(R.string.saverestore).setMessage(R.string.saverestore_choice).setPositiveButton(R.string.save, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                if (!selectionAlreadyHandled.compareAndSet(false, true)) {
+                    Log.v(TAG, "OMG, avoiding nasty UI race in save/restore onClick()");
+                    return;
+                }
+                mActivity.saveState(quickSavePath);
+                Apple2MainMenu.this.dismiss();
+            }
+        }).setNeutralButton(R.string.restore, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                if (!selectionAlreadyHandled.compareAndSet(false, true)) {
+                    Log.v(TAG, "OMG, avoiding nasty UI race in save/restore onClick()");
+                    return;
+                }
+
+                String jsonData = mActivity.loadState(quickSavePath);
+                try {
+                    JSONObject map = new JSONObject(jsonData);
+                    String diskPath1 = map.getString("disk1");
+                    boolean readOnly1 = map.getBoolean("readOnly1");
+                    Apple2Preferences.CURRENT_DISK_A.setPath(mActivity, diskPath1);
+                    Apple2Preferences.CURRENT_DISK_A_RO.saveBoolean(mActivity, readOnly1);
+
+                    String diskPath2 = map.getString("disk2");
+                    boolean readOnly2 = map.getBoolean("readOnly2");
+                    Apple2Preferences.CURRENT_DISK_B.setPath(mActivity, diskPath2);
+                    Apple2Preferences.CURRENT_DISK_B_RO.saveBoolean(mActivity, readOnly2);
+                } catch (JSONException je) {
+                    Log.v(TAG, "OOPS : " + je);
+                }
+                Apple2MainMenu.this.dismiss();
+            }
+        }).setNegativeButton(R.string.cancel, null).create();
+
+        mActivity.registerAndShowDialog(saveRestoreDialog);
     }
 }

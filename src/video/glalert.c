@@ -26,8 +26,9 @@ static GLModel *messageModel = NULL;
 
 // ----------------------------------------------------------------------------
 
-static void *_create_alert(void) {
-    GLModelHUDElement *hudElement = (GLModelHUDElement *)calloc(sizeof(GLModelHUDElement), 1);
+static void *_create_alert(GLModel *parent) {
+    parent->custom = glhud_createDefault();
+    GLModelHUDElement *hudElement = (GLModelHUDElement *)parent->custom;
     if (hudElement) {
         hudElement->colorScheme = RED_ON_BLACK;
         hudElement->blackIsTransparent = false;
@@ -47,9 +48,7 @@ static inline void _set_alpha(unsigned int dstIdx) {
 }
 
 static void _alertToModel(char *message, unsigned int messageCols, unsigned int messageRows) {
-    if (!message) {
-        return;
-    }
+    assert(message);
 
     isEnabled = false;
 
@@ -61,10 +60,20 @@ static void _alertToModel(char *message, unsigned int messageCols, unsigned int 
         const unsigned int fbWidth = (messageCols * FONT80_WIDTH_PIXELS);
         const unsigned int fbHeight = (messageRows * FONT_HEIGHT_PIXELS);
 
-        messageModel = mdlCreateQuad(-0.3, -0.3, 0.7, 0.7, MODEL_DEPTH, fbWidth, fbHeight, (GLCustom){
+        messageModel = mdlCreateQuad((GLModelParams_s){
+                .skew_x = -0.3,
+                .skew_y = -0.3,
+                .z = MODEL_DEPTH,
+                .obj_w = 0.7,
+                .obj_h = 0.7,
+                .positionUsageHint = GL_STATIC_DRAW, // positions don't change
+                .tex_w = fbWidth,
+                .tex_h = fbHeight,
+                .texcoordUsageHint = GL_DYNAMIC_DRAW, // but texture (message pixels) does
+            }, (GLCustom){
                 .create = &_create_alert,
                 .destroy = &glhud_destroyDefault,
-        });
+            });
         if (!messageModel) {
             LOG("OOPS cannot create animation message HUD model!");
             break;
@@ -78,7 +87,7 @@ static void _alertToModel(char *message, unsigned int messageCols, unsigned int 
         hudElement->tpl = message;
         hudElement->pixWidth = fbWidth;
         hudElement->pixHeight = fbHeight;
-        hudElement->pixels = calloc(fbWidth * fbHeight, 1);
+        hudElement->pixels = MALLOC(fbWidth * fbHeight);
         if (!hudElement->pixels) {
             LOG("OOPS cannot create animation message intermediate framebuffer!");
             break;
@@ -209,7 +218,7 @@ static void _animation_showMessage(char *messageTemplate, unsigned int cols, uns
     const unsigned int framedStride = framedCols+1/*\0*/;
     const unsigned int sourceStride = cols+1/*\0*/;
 
-    char *message = calloc(framedStride*framedRows, 1);
+    char *message = CALLOC(framedStride*framedRows, 1);
     if (!message) {
         LOG("OOPS cannot create memory for animation message!");
         return;
@@ -233,7 +242,6 @@ static void _animation_showMessage(char *messageTemplate, unsigned int cols, uns
     nextMessage = message;
     nextMessageCols = framedCols;
     nextMessageRows = framedRows;
-    LOG("New message with %d cols %d rows", nextMessageCols, nextMessageRows);
     pthread_mutex_unlock(&messageMutex);
 }
 
@@ -314,6 +322,49 @@ static void _animation_showDiskChosen(int drive) {
     _animation_showMessage(template, shownCols, DISK_ANIMATION_ROWS);
 }
 
+static void _animation_showTrackSector(int drive, int track, int sect) {
+
+#define DISK_TRACK_SECTOR_ROWS 3
+#define DISK_TRACK_SECTOR_COLS 8
+
+    static char diskTrackSectorTemplate[DISK_TRACK_SECTOR_ROWS][DISK_TRACK_SECTOR_COLS+1] = {
+        "        ",
+        "D / TT/S",
+        "        ",
+    };
+    char *template = diskTrackSectorTemplate[0];
+
+    char c = diskTrackSectorTemplate[1][2];
+    switch (c) {
+        case '/':
+            c = '-';
+            break;
+        case '-':
+            c = '\\';
+            break;
+        case '\\':
+            c = '|';
+            break;
+        case '|':
+            c = '/';
+            break;
+        default:
+            assert(false && "should not happen");
+            break;
+    }
+    snprintf(&diskTrackSectorTemplate[1][0], DISK_TRACK_SECTOR_COLS+1, "%d %c %02X/%01X", drive+1, c, track, sect);
+
+    _animation_showMessage(template, DISK_TRACK_SECTOR_COLS, DISK_TRACK_SECTOR_ROWS);
+}
+
+static void _animation_setEnableShowTrackSector(bool enabled) {
+    if (enabled) {
+        video_backend->animation_showTrackSector = &_animation_showTrackSector;
+    } else {
+        video_backend->animation_showTrackSector = NULL;
+    }
+}
+
 __attribute__((constructor(CTOR_PRIORITY_LATE)))
 static void _init_glalert(void) {
     LOG("Initializing message animation subsystem");
@@ -322,6 +373,8 @@ static void _init_glalert(void) {
     video_backend->animation_showPaused = &_animation_showPaused;
     video_backend->animation_showCPUSpeed = &_animation_showCPUSpeed;
     video_backend->animation_showDiskChosen = &_animation_showDiskChosen;
+    video_backend->animation_showTrackSector = &_animation_showTrackSector;
+    video_backend->animation_setEnableShowTrackSector = &_animation_setEnableShowTrackSector;
 
     glnode_registerNode(RENDER_MIDDLE, (GLNode){
         .setup = &alert_init,

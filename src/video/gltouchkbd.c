@@ -29,22 +29,19 @@
 #define MODEL_DEPTH -1/32.f
 
 #define KBD_TEMPLATE_COLS 10
-#define KBD_TEMPLATE_ROWS 6
+#define KBD_TEMPLATE_ROWS 8
 
 #define DEFAULT_CTRL_COL 2
 
-#define ROW_WITH_ADJACENTS (KBD_TEMPLATE_ROWS-1)
-#define _ROWOFF 2 // main keyboard row offset
+#define CTRLROW 2 // first non-empty default row
+#define MAINROW 4 // main keyboard row offset
+#define SWITCHCOL 0
 
-#define KBD_FB_WIDTH (KBD_TEMPLATE_COLS * FONT80_WIDTH_PIXELS)
-#define KBD_FB_HEIGHT (KBD_TEMPLATE_ROWS * FONT_HEIGHT_PIXELS)
+#define KBD_FB_WIDTH (KBD_TEMPLATE_COLS * FONT80_WIDTH_PIXELS) // 10 * 7 == 70
+#define KBD_FB_HEIGHT (KBD_TEMPLATE_ROWS * FONT_HEIGHT_PIXELS) // 8 * 16 == 128
 
 #define KBD_OBJ_W 2.0
-#define KBD_OBJ_H 1.5
-
-HUD_CLASS(GLModelHUDKeyboard,
-    // ...
-);
+#define KBD_OBJ_H 2.0
 
 static bool isAvailable = false; // Were there any OpenGL/memory errors on gltouchkbd initialization?
 static bool isEnabled = true;    // Does player want touchkbd enabled?
@@ -56,6 +53,8 @@ static float minAlpha = 0.f;
 static float maxAlpha = 1.f;
 
 static uint8_t kbdTemplateUCase[KBD_TEMPLATE_ROWS][KBD_TEMPLATE_COLS+1] = {
+    "          ",
+    "          ",
     "@ @ @ @ @ ",
     "1234567890",
     "QWERTYUIOP",
@@ -65,6 +64,8 @@ static uint8_t kbdTemplateUCase[KBD_TEMPLATE_ROWS][KBD_TEMPLATE_COLS+1] = {
 };
 
 static uint8_t kbdTemplateLCase[KBD_TEMPLATE_ROWS][KBD_TEMPLATE_COLS+1] = {
+    "          ",
+    "          ",
     "@ @ @ @ @ ",
     "1234567890",
     "qwertyuiop",
@@ -74,6 +75,8 @@ static uint8_t kbdTemplateLCase[KBD_TEMPLATE_ROWS][KBD_TEMPLATE_COLS+1] = {
 };
 
 static uint8_t kbdTemplateAlt[KBD_TEMPLATE_ROWS][KBD_TEMPLATE_COLS+1] = {
+    "          ",
+    "          ",
     "@ @ @ @ @ ",
     "1234567890",
     "@#%&*/-+()",
@@ -82,7 +85,9 @@ static uint8_t kbdTemplateAlt[KBD_TEMPLATE_ROWS][KBD_TEMPLATE_COLS+1] = {
     "$|\\XXX.^XX",
 };
 
-static uint8_t kbdTemplateArrow[KBD_TEMPLATE_ROWS][KBD_TEMPLATE_COLS+1] = {
+static uint8_t kbdTemplateUserAlt[KBD_TEMPLATE_ROWS][KBD_TEMPLATE_COLS+1] = {
+    "          ",
+    "          ",
     "@ @ @ @ @ ",
     "          ",
     "     @    ",
@@ -111,7 +116,6 @@ static struct {
 
 static struct {
     GLModel *model;
-    bool modelDirty; // TODO : movement animation
 
     int selectedCol;
     int selectedRow;
@@ -121,27 +125,37 @@ static struct {
 
     bool ctrlPressed;
 
+    unsigned int glyphMultiplier;
+
     struct timespec timingBegin;
+
+    // pending changes requiring reinitialization
+    unsigned int nextGlyphMultiplier;
 } kbd = { 0 };
 
 // ----------------------------------------------------------------------------
 // Misc internal methods
 
+#warning FIXME TODO ... make this a generic GLModelHUDElement function
 static void _rerender_character(int col, int row) {
-    GLModelHUDKeyboard *hudKeyboard = (GLModelHUDKeyboard *)(kbd.model->custom);
+    GLModelHUDElement *hudKeyboard = (GLModelHUDElement *)(kbd.model->custom);
 
-    // re-generate texture from indexed color
-    const unsigned int colCount = 1;
-    const unsigned int pixCharsWidth = FONT80_WIDTH_PIXELS*colCount;
-    const unsigned int rowStride = hudKeyboard->pixWidth - pixCharsWidth;
-    unsigned int srcIdx = (row * hudKeyboard->pixWidth * FONT_HEIGHT_PIXELS) + (col * FONT80_WIDTH_PIXELS);
-    unsigned int dstIdx = srcIdx * sizeof(PIXEL_TYPE);
+    // In English, this changes one glyph within the keyboard texture data to be the (un)selected color.  It handles
+    // scaling from indexed color to RGBA8888 (4x) and then possibly scaling to 2x or greater.
 
-    for (unsigned int i=0; i<FONT_HEIGHT_PIXELS; i++) {
-        for (unsigned int j=0; j<pixCharsWidth; j++) {
+    const unsigned int fb_w = hudKeyboard->pixWidth;
+    const unsigned int pixelSize = sizeof(PIXEL_TYPE);
+    const unsigned int glyphScale = hudKeyboard->glyphMultiplier;
+    const unsigned int dstPointStride = pixelSize * glyphScale;
+    const unsigned int dstRowStride = fb_w * dstPointStride;
+    const unsigned int texSubRowStride = dstRowStride + (dstRowStride * (glyphScale-1));
+    const unsigned int indexedIdx = (row * fb_w * FONT_HEIGHT_PIXELS) + (col * FONT80_WIDTH_PIXELS);
+    unsigned int texIdx = ((row * fb_w * FONT_HEIGHT_PIXELS * /*1 row:*/glyphScale) + (col * FONT80_WIDTH_PIXELS)) * dstPointStride;
 
-            // HACK : red <-> green swap
-            PIXEL_TYPE rgba = *((PIXEL_TYPE *)(kbd.model->texPixels + dstIdx));
+    for (unsigned int i=0; i<FONT_HEIGHT_PIXELS; i++, texIdx+=texSubRowStride) {
+        for (unsigned int j=0; j<FONT80_WIDTH_PIXELS; j++, texIdx+=dstPointStride) {
+            // HACK : red <-> green swap of texture data
+            PIXEL_TYPE rgba = *((PIXEL_TYPE *)(kbd.model->texPixels + texIdx));
             PIXEL_TYPE r = (rgba >> SHIFT_R) & MAX_SATURATION;
             PIXEL_TYPE g = (rgba >> SHIFT_G) & MAX_SATURATION;
 #if USE_RGBA4444
@@ -149,13 +163,16 @@ static void _rerender_character(int col, int row) {
 #else
             rgba = ( ((rgba>>SHIFT_B)<<SHIFT_B) | (r << SHIFT_G) | (g << SHIFT_R) );
 #endif
-            *( (PIXEL_TYPE *)(kbd.model->texPixels + dstIdx) ) = rgba;
-
-            srcIdx += 1;
-            dstIdx += sizeof(PIXEL_TYPE);
+            // scale texture data 1x, 2x, ...
+            unsigned int dstIdx = texIdx;
+            for (unsigned int k=0; k<glyphScale; k++, dstIdx+=dstRowStride) {
+                for (unsigned int l=0; l<glyphScale; l++, dstIdx+=pixelSize) {
+                    *( (PIXEL_TYPE *)(kbd.model->texPixels + dstIdx) ) = rgba;
+                }
+                dstIdx -= dstPointStride;
+            }
         }
-        srcIdx += rowStride;
-        dstIdx = srcIdx * sizeof(PIXEL_TYPE);
+        texIdx -= (FONT80_WIDTH_PIXELS * dstPointStride);
     }
 
     kbd.model->texDirty = true;
@@ -164,25 +181,38 @@ static void _rerender_character(int col, int row) {
 static inline void _rerender_selected(int col, int row) {
     if ((col >= 0) && (row >= 0)) {
         _rerender_character(col, row);
-        if (row == ROW_WITH_ADJACENTS) {
-            if ((col == 3) || (col == 4) || (col == 8)) {
+
+        // rerender certain adjacent keys ...
+        GLModelHUDElement *hudKeyboard = (GLModelHUDElement *)(kbd.model->custom);
+        const unsigned int indexRow = (hudKeyboard->tplWidth+1) * row;
+        uint8_t key = (hudKeyboard->tpl+indexRow)[col];
+        switch (key) {
+            case ICONTEXT_LEFTSPACE:
                 _rerender_character(col+1, row);
-            }
-            if ((col == 4) || (col == 5) || (col == 9)) {
-                _rerender_character(col-1, row);
-            }
-            if (col == 3) {
                 _rerender_character(col+2, row);
-            }
-            if (col == 5) {
+                break;
+            case ICONTEXT_MIDSPACE:
+                _rerender_character(col-1, row);
+                _rerender_character(col+1, row);
+                break;
+            case ICONTEXT_RIGHTSPACE:
                 _rerender_character(col-2, row);
-            }
+                _rerender_character(col-1, row);
+                break;
+            case ICONTEXT_RETURN_L:
+                _rerender_character(col+1, row);
+                break;
+            case ICONTEXT_RETURN_R:
+                _rerender_character(col-1, row);
+                break;
+            default:
+                break;
         }
     }
 }
 
 static inline void _switch_keyboard(GLModel *parent, uint8_t *template) {
-    GLModelHUDKeyboard *hudKeyboard = (GLModelHUDKeyboard *)parent->custom;
+    GLModelHUDElement *hudKeyboard = (GLModelHUDElement *)parent->custom;
     memcpy(hudKeyboard->tpl, template, sizeof(kbdTemplateUCase/* assuming all the same size */));
 
     // setup normal color pixels
@@ -203,43 +233,12 @@ static inline void _switch_keyboard(GLModel *parent, uint8_t *template) {
     }
 }
 
-static inline void _toggle_arrows(void) {
-    GLModelHUDKeyboard *hudKeyboard = (GLModelHUDKeyboard *)kbd.model->custom;
-    uint8_t c = hudKeyboard->tpl[_ROWOFF*(KBD_TEMPLATE_COLS+1)];
-    if (c == ICONTEXT_NONACTIONABLE) {
-        _switch_keyboard(kbd.model, kbdTemplateUCase[0]);
-    } else {
-        _switch_keyboard(kbd.model, kbdTemplateArrow[0]);
-    }
-}
-
-#warning FIXME TODO ... this can become a common helper function ...
-static inline float _get_keyboard_visibility(void) {
-    struct timespec now = { 0 };
-    struct timespec deltat = { 0 };
-
-    clock_gettime(CLOCK_MONOTONIC, &now);
-    float alpha = minAlpha;
-    deltat = timespec_diff(kbd.timingBegin, now, NULL);
-    if (deltat.tv_sec == 0) {
-        alpha = maxAlpha;
-        if (deltat.tv_nsec >= NANOSECONDS_PER_SECOND/2) {
-            alpha -= ((float)deltat.tv_nsec-(NANOSECONDS_PER_SECOND/2)) / (float)(NANOSECONDS_PER_SECOND/2);
-            if (alpha < minAlpha) {
-                alpha = minAlpha;
-            }
-        }
-    }
-
-    return alpha;
-}
-
 static inline bool _is_point_on_keyboard(float x, float y) {
     return (x >= touchport.kbdX && x <= touchport.kbdXMax && y >= touchport.kbdY && y <= touchport.kbdYMax);
 }
 
 static inline void _screen_to_keyboard(float x, float y, OUTPARM int *col, OUTPARM int *row) {
-    GLModelHUDKeyboard *hudKeyboard = (GLModelHUDKeyboard *)(kbd.model->custom);
+    GLModelHUDElement *hudKeyboard = (GLModelHUDElement *)(kbd.model->custom);
     const unsigned int keyW = touchport.kbdW / hudKeyboard->tplWidth;
     const unsigned int keyH = touchport.kbdH / hudKeyboard->tplHeight;
 
@@ -258,7 +257,7 @@ static inline void _screen_to_keyboard(float x, float y, OUTPARM int *col, OUTPA
 }
 
 static inline int64_t _tap_key_at_point(float x, float y) {
-    GLModelHUDKeyboard *hudKeyboard = (GLModelHUDKeyboard *)kbd.model->custom;
+    GLModelHUDElement *hudKeyboard = (GLModelHUDElement *)kbd.model->custom;
 
     // redraw previous selected key (if any)
     _rerender_selected(kbd.selectedCol, kbd.selectedRow);
@@ -300,9 +299,9 @@ static inline int64_t _tap_key_at_point(float x, float y) {
         case ICONTEXT_SHOWALT1:
             key = 0;
             if (allowLowercase && !isCalibrating) {
-                kbdTemplateAlt[0][0] = ICONTEXT_LOWERCASE;
+                kbdTemplateAlt[CTRLROW][SWITCHCOL] = ICONTEXT_LOWERCASE;
             } else {
-                kbdTemplateAlt[0][0] = ICONTEXT_UPPERCASE;
+                kbdTemplateAlt[CTRLROW][SWITCHCOL] = ICONTEXT_UPPERCASE;
             }
             _switch_keyboard(kbd.model, kbdTemplateAlt[0]);
             break;
@@ -321,6 +320,7 @@ static inline int64_t _tap_key_at_point(float x, float y) {
             scancode = SCODE_L_CTRL;
             break;
 
+        case MOUSETEXT_RETURN:
         case ICONTEXT_RETURN_L:
         case ICONTEXT_RETURN_R:
             key = ICONTEXT_RETURN_L;
@@ -361,7 +361,8 @@ static inline int64_t _tap_key_at_point(float x, float y) {
 
         case ICONTEXT_MENU_SPROUT:
             key = 0;
-            _toggle_arrows();
+            kbd.ctrlPressed = false;
+            _switch_keyboard(kbd.model, kbdTemplateUserAlt[0]);
             break;
 
         case ICONTEXT_GOTO:
@@ -425,51 +426,76 @@ static inline int64_t _tap_key_at_point(float x, float y) {
 // ----------------------------------------------------------------------------
 // GLCustom functions
 
-static void _setup_touchkbd_hud(GLModel *parent) {
-    GLModelHUDKeyboard *hudKeyboard = (GLModelHUDKeyboard *)parent->custom;
+static void *_create_touchkbd_hud(GLModel *parent) {
+
+    parent->custom = glhud_createCustom(sizeof(GLModelHUDElement));
+    GLModelHUDElement *hudKeyboard = (GLModelHUDElement *)parent->custom;
+
+    if (!hudKeyboard) {
+        return NULL;
+    }
+
+    hudKeyboard->blackIsTransparent = true;
+    hudKeyboard->opaquePixelHalo = true;
+    hudKeyboard->glyphMultiplier = kbd.glyphMultiplier;
 
     hudKeyboard->tplWidth  = KBD_TEMPLATE_COLS;
     hudKeyboard->tplHeight = KBD_TEMPLATE_ROWS;
     hudKeyboard->pixWidth  = KBD_FB_WIDTH;
     hudKeyboard->pixHeight = KBD_FB_HEIGHT;
 
-    const unsigned int size = sizeof(kbdTemplateUCase/* assuming all the same */);
-    hudKeyboard->tpl = calloc(size, 1);
-    hudKeyboard->pixels = calloc(KBD_FB_WIDTH * KBD_FB_HEIGHT, 1);
+    const unsigned int size = sizeof(kbdTemplateUCase/* assuming all the same dimensions */);
+    hudKeyboard->tpl = MALLOC(size);
+    hudKeyboard->pixels = MALLOC(KBD_FB_WIDTH * KBD_FB_HEIGHT);
 
-    _switch_keyboard(parent, kbdTemplateUCase[0]);
-}
+    memcpy(hudKeyboard->tpl, kbdTemplateUCase[0], sizeof(kbdTemplateUCase/* assuming all the same dimensions */));
 
-static void *_create_touchkbd_hud(void) {
-    GLModelHUDKeyboard *hudKeyboard = (GLModelHUDKeyboard *)calloc(sizeof(GLModelHUDKeyboard), 1);
-    if (hudKeyboard) {
-        hudKeyboard->blackIsTransparent = true;
-        hudKeyboard->opaquePixelHalo = true;
-    }
+    // setup normal color pixels
+    hudKeyboard->colorScheme = RED_ON_BLACK;
+
+    glhud_setupDefault(parent);
+
     return hudKeyboard;
-}
-
-static void _destroy_touchkbd_hud(GLModel *parent) {
-    GLModelHUDKeyboard *hudKeyboard = (GLModelHUDKeyboard *)parent->custom;
-    if (!hudKeyboard) {
-        return;
-    }
-    glhud_destroyDefault(parent);
 }
 
 // ----------------------------------------------------------------------------
 // GLNode functions
 
-static void gltouchkbd_setup(void) {
-    LOG("gltouchkbd_setup ...");
+static void gltouchkbd_shutdown(void) {
+    LOG("gltouchkbd_shutdown ...");
+    if (!isAvailable) {
+        return;
+    }
+
+    isAvailable = false;
 
     mdlDestroyModel(&kbd.model);
+    kbd.selectedCol = -1;
+    kbd.selectedRow = -1;
+    kbd.ctrlPressed = false;
 
-    kbd.model = mdlCreateQuad(-1.0, -1.0, KBD_OBJ_W, KBD_OBJ_H, MODEL_DEPTH, KBD_FB_WIDTH, KBD_FB_HEIGHT, (GLCustom){
+    kbd.nextGlyphMultiplier = 0;
+}
+
+static void gltouchkbd_setup(void) {
+    LOG("gltouchkbd_setup ... %u", sizeof(kbd));
+
+    gltouchkbd_shutdown();
+
+    kbd.model = mdlCreateQuad((GLModelParams_s){
+            .skew_x = -1.0,
+            .skew_y = -1.0,
+            .z = MODEL_DEPTH,
+            .obj_w = KBD_OBJ_W,
+            .obj_h = KBD_OBJ_H,
+            .positionUsageHint = GL_STATIC_DRAW, // positions don't change
+            .tex_w = KBD_FB_WIDTH * kbd.glyphMultiplier,
+            .tex_h = KBD_FB_HEIGHT * kbd.glyphMultiplier,
+            .texcoordUsageHint = GL_DYNAMIC_DRAW, // but key texture does
+        }, (GLCustom){
             .create = &_create_touchkbd_hud,
-            .setup = &_setup_touchkbd_hud,
-            .destroy = &_destroy_touchkbd_hud,
-            });
+            .destroy = &glhud_destroyDefault,
+        });
     if (!kbd.model) {
         LOG("gltouchkbd initialization problem");
         return;
@@ -484,17 +510,6 @@ static void gltouchkbd_setup(void) {
     isAvailable = true;
 }
 
-static void gltouchkbd_shutdown(void) {
-    LOG("gltouchkbd_shutdown ...");
-    if (!isAvailable) {
-        return;
-    }
-
-    isAvailable = false;
-
-    mdlDestroyModel(&kbd.model);
-}
-
 static void gltouchkbd_render(void) {
     if (!isAvailable) {
         return;
@@ -506,7 +521,19 @@ static void gltouchkbd_render(void) {
         return;
     }
 
-    float alpha = _get_keyboard_visibility();
+    if (kbd.nextGlyphMultiplier) {
+        kbd.glyphMultiplier = kbd.nextGlyphMultiplier;
+        kbd.nextGlyphMultiplier = 0;
+        gltouchkbd_setup();
+    }
+
+    float alpha = glhud_getTimedVisibility(kbd.timingBegin, minAlpha, maxAlpha);
+    if (alpha < minAlpha) {
+        alpha = minAlpha;
+        _rerender_selected(kbd.selectedCol, kbd.selectedRow);
+        kbd.selectedCol = -1;
+        kbd.selectedRow = -1;
+    }
 
     if (alpha > 0.0) {
         // draw touch keyboard
@@ -520,11 +547,6 @@ static void gltouchkbd_render(void) {
             kbd.model->texDirty = false;
             _HACKAROUND_GLTEXIMAGE2D_PRE(TEXTURE_ACTIVE_TOUCHKBD, kbd.model->textureName);
             glTexImage2D(GL_TEXTURE_2D, /*level*/0, TEX_FORMAT_INTERNAL, kbd.model->texWidth, kbd.model->texHeight, /*border*/0, TEX_FORMAT, TEX_TYPE, kbd.model->texPixels);
-        }
-        if (kbd.modelDirty) {
-            kbd.modelDirty = false;
-            glBindBuffer(GL_ARRAY_BUFFER, kbd.model->posBufferName);
-            glBufferData(GL_ARRAY_BUFFER, kbd.model->positionArraySize, kbd.model->positions, GL_DYNAMIC_DRAW);
         }
         glUniform1i(texSamplerLoc, TEXTURE_ID_TOUCHKBD);
         glhud_renderDefault(kbd.model);
@@ -567,6 +589,8 @@ static int64_t gltouchkbd_onTouchEvent(interface_touch_event_t action, int point
 
     int64_t flags = TOUCH_FLAGS_KBD | TOUCH_FLAGS_HANDLED;
 
+    clock_gettime(CLOCK_MONOTONIC, &kbd.timingBegin);
+
     switch (action) {
         case TOUCH_DOWN:
         case TOUCH_POINTER_DOWN:
@@ -592,8 +616,6 @@ static int64_t gltouchkbd_onTouchEvent(interface_touch_event_t action, int point
             LOG("!!!KBD UNKNOWN TOUCH EVENT : %d", action);
             return 0x0LL;
     }
-
-    clock_gettime(CLOCK_MONOTONIC, &kbd.timingBegin);
 
     return flags;
 }
@@ -626,7 +648,7 @@ static void gltouchkbd_setTouchKeyboardOwnsScreen(bool pwnd) {
         kbd.selectedRow = -1;
 
         if (kbd.model) {
-            GLModelHUDKeyboard *hudKeyboard = (GLModelHUDKeyboard *)kbd.model->custom;
+            GLModelHUDElement *hudKeyboard = (GLModelHUDElement *)kbd.model->custom;
             hudKeyboard->colorScheme = RED_ON_BLACK;
             glhud_setupDefault(kbd.model);
         }
@@ -639,6 +661,13 @@ static void gltouchkbd_setTouchKeyboardOwnsScreen(bool pwnd) {
 
 static bool gltouchkbd_ownsScreen(void) {
     return ownsScreen;
+}
+
+static void gltouchkbd_setGlyphScale(int glyphScale) {
+    if (glyphScale == 0) {
+        glyphScale = 1;
+    }
+    kbd.nextGlyphMultiplier = glyphScale;
 }
 
 static void gltouchkbd_setVisibilityWhenOwnsScreen(float inactiveAlpha, float activeAlpha) {
@@ -721,26 +750,26 @@ static void gltouchkbd_loadAltKbd(const char *kbdPath) {
             break;
         }
 
-        // next is reserved0 array
-        if (parsedData.jsonTokens[idx].type != JSMN_ARRAY) {
-            ERRLOG("Expecting a reserved array at JSON token position 3");
-            break;
-        }
-        ++idx;
-        idx += parsedData.jsonTokens[idx-1].size;
-
-        // next is reserved1 array
-        if (parsedData.jsonTokens[idx].type != JSMN_ARRAY) {
-            ERRLOG("Expecting a reserved array at JSON token position 4");
-            break;
-        }
-        ++idx;
-        idx += parsedData.jsonTokens[idx-1].size;
-
         // next are the character rows
         int row = 0;
         while (idx < tokCount) {
-            if ( !((parsedData.jsonTokens[idx].type == JSMN_ARRAY) && (parsedData.jsonTokens[idx].size == KBD_TEMPLATE_COLS) && (parsedData.jsonTokens[idx].parent == 0)) ) {
+            if (row < 2) {
+                if ( !((parsedData.jsonTokens[idx].type == JSMN_ARRAY) && (parsedData.jsonTokens[idx].parent == 0)) ) {
+                    ERRLOG("Expecting a reserved array at keyboard row %d", row+1);
+                    break;
+                }
+                if (parsedData.jsonTokens[idx].size != KBD_TEMPLATE_COLS) {
+                    // backwards compatibility when we only had the lower 6 rows for keyboard data ...
+                    LOG("You can now edit %d columns of row %d in your custom keyboard", KBD_TEMPLATE_COLS, row+1);
+                    for (int col=0; col<KBD_TEMPLATE_COLS; col++) {
+                        kbdTemplateUserAlt[row][col] = ICONTEXT_NONACTIONABLE;
+                    }
+                    ++row;
+                    ++idx;
+                    idx += parsedData.jsonTokens[idx-1].size;
+                    continue;
+                }
+            } else if ( !((parsedData.jsonTokens[idx].type == JSMN_ARRAY) && (parsedData.jsonTokens[idx].size == KBD_TEMPLATE_COLS) && (parsedData.jsonTokens[idx].parent == 0)) ) {
                 ERRLOG("Expecting an array of ten items at keyboard row %d", row+1);
                 break;
             }
@@ -760,10 +789,10 @@ static void gltouchkbd_loadAltKbd(const char *kbdPath) {
                 const int size  = end - start;
 
                 if (size == 1) {
-                    kbdTemplateArrow[row][col] = parsedData.jsonString[start];
+                    kbdTemplateUserAlt[row][col] = parsedData.jsonString[start];
                     continue;
                 } else if (size == 0) {
-                    kbdTemplateArrow[row][col] = ICONTEXT_NONACTIONABLE;
+                    kbdTemplateUserAlt[row][col] = ICONTEXT_NONACTIONABLE;
                     continue;
                 } else if (size < 0) {
                     assert(false && "negative size coming from jsmn!");
@@ -789,7 +818,7 @@ static void gltouchkbd_loadAltKbd(const char *kbdPath) {
                     if (foundMatch) {
                         start = parsedData.jsonTokens[i+1].start;
                         uint8_t ch = (uint8_t)strtol(&parsedData.jsonString[start], NULL, /*base:*/16);
-                        kbdTemplateArrow[row][col] = ch;
+                        kbdTemplateUserAlt[row][col] = ch;
                         break;
                     }
                 }
@@ -799,6 +828,10 @@ static void gltouchkbd_loadAltKbd(const char *kbdPath) {
             }
 
             ++row;
+
+            if (row >= KBD_TEMPLATE_ROWS) {
+                break;
+            }
         }
 
         if (row != KBD_TEMPLATE_ROWS) {
@@ -831,7 +864,7 @@ static void _animation_hideTouchKeyboard(void) {
 
 static void _initialize_keyboard_templates(void) {
 
-    for (unsigned int i=0; i<(_ROWOFF-1); i++) {
+    for (unsigned int i=0; i<(MAINROW-1); i++) {
         for (unsigned int j=0; j<KBD_TEMPLATE_COLS; j++) {
             kbdTemplateUCase[i][j] = ICONTEXT_NONACTIONABLE;
             kbdTemplateLCase[i][j] = ICONTEXT_NONACTIONABLE;
@@ -840,92 +873,92 @@ static void _initialize_keyboard_templates(void) {
     }
     for (unsigned int i=0; i<KBD_TEMPLATE_ROWS; i++) {
         for (unsigned int j=0; j<KBD_TEMPLATE_COLS; j++) {
-            if (kbdTemplateArrow[i][j] == ' ') {
-                kbdTemplateArrow[i][j] = ICONTEXT_NONACTIONABLE;
+            if (kbdTemplateUserAlt[i][j] == ' ') {
+                kbdTemplateUserAlt[i][j] = ICONTEXT_NONACTIONABLE;
             }
         }
     }
 
-    kbdTemplateLCase[0][0] = ICONTEXT_UPPERCASE;
-    kbdTemplateUCase[0][0] = ICONTEXT_SHOWALT1;
-    kbdTemplateAlt  [0][0] = ICONTEXT_UPPERCASE;
-    kbdTemplateArrow[0][0] = ICONTEXT_UPPERCASE;
+    kbdTemplateLCase[CTRLROW+0][0] = ICONTEXT_UPPERCASE;
+    kbdTemplateUCase[CTRLROW+0][0] = ICONTEXT_SHOWALT1;
+    kbdTemplateAlt  [CTRLROW+0][0] = ICONTEXT_UPPERCASE;
+    kbdTemplateUserAlt[CTRLROW+0][0] = ICONTEXT_UPPERCASE;
 
-    kbdTemplateUCase[0][2] = ICONTEXT_CTRL;
-    kbdTemplateLCase[0][2] = ICONTEXT_CTRL;
-    kbdTemplateAlt  [0][2] = ICONTEXT_CTRL;
-    kbdTemplateArrow[0][2] = ICONTEXT_CTRL;
+    kbdTemplateUCase[CTRLROW+0][2] = ICONTEXT_CTRL;
+    kbdTemplateLCase[CTRLROW+0][2] = ICONTEXT_CTRL;
+    kbdTemplateAlt  [CTRLROW+0][2] = ICONTEXT_CTRL;
+    kbdTemplateUserAlt[CTRLROW+0][2] = ICONTEXT_CTRL;
 
-    kbdTemplateUCase[0][4] = ICONTEXT_ESC;
-    kbdTemplateLCase[0][4] = ICONTEXT_ESC;
-    kbdTemplateAlt  [0][4] = ICONTEXT_ESC;
-    kbdTemplateArrow[0][4] = ICONTEXT_ESC;
+    kbdTemplateUCase[CTRLROW+0][4] = ICONTEXT_ESC;
+    kbdTemplateLCase[CTRLROW+0][4] = ICONTEXT_ESC;
+    kbdTemplateAlt  [CTRLROW+0][4] = ICONTEXT_ESC;
+    kbdTemplateUserAlt[CTRLROW+0][4] = ICONTEXT_ESC;
 
-    kbdTemplateUCase[0][6] = MOUSETEXT_OPENAPPLE;
-    kbdTemplateLCase[0][6] = MOUSETEXT_OPENAPPLE;
-    kbdTemplateAlt  [0][6] = MOUSETEXT_OPENAPPLE;
-    kbdTemplateArrow[0][6] = MOUSETEXT_OPENAPPLE;
+    kbdTemplateUCase[CTRLROW+0][6] = MOUSETEXT_OPENAPPLE;
+    kbdTemplateLCase[CTRLROW+0][6] = MOUSETEXT_OPENAPPLE;
+    kbdTemplateAlt  [CTRLROW+0][6] = MOUSETEXT_OPENAPPLE;
+    kbdTemplateUserAlt[CTRLROW+0][6] = MOUSETEXT_OPENAPPLE;
 
-    kbdTemplateUCase[0][8] = MOUSETEXT_CLOSEDAPPLE;
-    kbdTemplateLCase[0][8] = MOUSETEXT_CLOSEDAPPLE;
-    kbdTemplateAlt  [0][8] = MOUSETEXT_CLOSEDAPPLE;
-    kbdTemplateArrow[0][8] = MOUSETEXT_CLOSEDAPPLE;
+    kbdTemplateUCase[CTRLROW+0][8] = MOUSETEXT_CLOSEDAPPLE;
+    kbdTemplateLCase[CTRLROW+0][8] = MOUSETEXT_CLOSEDAPPLE;
+    kbdTemplateAlt  [CTRLROW+0][8] = MOUSETEXT_CLOSEDAPPLE;
+    kbdTemplateUserAlt[CTRLROW+0][8] = MOUSETEXT_CLOSEDAPPLE;
 
-    kbdTemplateArrow[2][5] = MOUSETEXT_UP;
-    kbdTemplateArrow[3][4] = MOUSETEXT_LEFT;
-    kbdTemplateArrow[3][6] = MOUSETEXT_RIGHT;
-    kbdTemplateArrow[4][5] = MOUSETEXT_DOWN;
+    kbdTemplateUserAlt[CTRLROW+2][5] = MOUSETEXT_UP;
+    kbdTemplateUserAlt[CTRLROW+3][4] = MOUSETEXT_LEFT;
+    kbdTemplateUserAlt[CTRLROW+3][6] = MOUSETEXT_RIGHT;
+    kbdTemplateUserAlt[CTRLROW+4][5] = MOUSETEXT_DOWN;
 
-    kbdTemplateUCase[3][5] = ICONTEXT_MENU_SPROUT;
-    kbdTemplateLCase[3][5] = ICONTEXT_MENU_SPROUT;
-    kbdTemplateAlt  [3][5] = ICONTEXT_MENU_SPROUT;
-    kbdTemplateArrow[3][5] = ICONTEXT_MENU_SPROUT;
+    kbdTemplateUCase[CTRLROW+3][5] = ICONTEXT_MENU_SPROUT;
+    kbdTemplateLCase[CTRLROW+3][5] = ICONTEXT_MENU_SPROUT;
+    kbdTemplateAlt  [CTRLROW+3][5] = ICONTEXT_MENU_SPROUT;
+    kbdTemplateUserAlt[CTRLROW+3][5] = ICONTEXT_UPPERCASE;
 
-    kbdTemplateUCase[_ROWOFF+2][0] = ICONTEXT_NONACTIONABLE;
-    kbdTemplateLCase[_ROWOFF+2][0] = ICONTEXT_NONACTIONABLE;
+    kbdTemplateUCase[MAINROW+2][0] = ICONTEXT_NONACTIONABLE;
+    kbdTemplateLCase[MAINROW+2][0] = ICONTEXT_NONACTIONABLE;
 
-    kbdTemplateUCase[_ROWOFF+2][8] = ICONTEXT_NONACTIONABLE;
-    kbdTemplateLCase[_ROWOFF+2][8] = ICONTEXT_NONACTIONABLE;
-    kbdTemplateAlt  [_ROWOFF+2][8] = ICONTEXT_NONACTIONABLE;
+    kbdTemplateUCase[MAINROW+2][8] = ICONTEXT_NONACTIONABLE;
+    kbdTemplateLCase[MAINROW+2][8] = ICONTEXT_NONACTIONABLE;
+    kbdTemplateAlt  [MAINROW+2][8] = ICONTEXT_NONACTIONABLE;
 
-    kbdTemplateUCase[_ROWOFF+2][9] = ICONTEXT_BACKSPACE;
-    kbdTemplateLCase[_ROWOFF+2][9] = ICONTEXT_BACKSPACE;
-    kbdTemplateAlt  [_ROWOFF+2][9] = ICONTEXT_BACKSPACE;
+    kbdTemplateUCase[MAINROW+2][9] = ICONTEXT_BACKSPACE;
+    kbdTemplateLCase[MAINROW+2][9] = ICONTEXT_BACKSPACE;
+    kbdTemplateAlt  [MAINROW+2][9] = ICONTEXT_BACKSPACE;
 
     // last row specials
 
-    kbdTemplateLCase[_ROWOFF+3][0] = ICONTEXT_NONACTIONABLE;
-    kbdTemplateUCase[_ROWOFF+3][0] = ICONTEXT_NONACTIONABLE;
+    kbdTemplateLCase[MAINROW+3][0] = ICONTEXT_NONACTIONABLE;
+    kbdTemplateUCase[MAINROW+3][0] = ICONTEXT_NONACTIONABLE;
 
-    kbdTemplateUCase[_ROWOFF+3][1] = ICONTEXT_NONACTIONABLE;
-    kbdTemplateLCase[_ROWOFF+3][1] = ICONTEXT_NONACTIONABLE;
+    kbdTemplateUCase[MAINROW+3][1] = ICONTEXT_NONACTIONABLE;
+    kbdTemplateLCase[MAINROW+3][1] = ICONTEXT_NONACTIONABLE;
 
-    kbdTemplateUCase[_ROWOFF+3][2] = ICONTEXT_NONACTIONABLE;
-    kbdTemplateLCase[_ROWOFF+3][2] = ICONTEXT_NONACTIONABLE;
+    kbdTemplateUCase[MAINROW+3][2] = ICONTEXT_NONACTIONABLE;
+    kbdTemplateLCase[MAINROW+3][2] = ICONTEXT_NONACTIONABLE;
 
-    kbdTemplateUCase[_ROWOFF+3][0] = ICONTEXT_GOTO;
-    kbdTemplateLCase[_ROWOFF+3][0] = ICONTEXT_GOTO;
+    kbdTemplateUCase[MAINROW+3][0] = ICONTEXT_GOTO;
+    kbdTemplateLCase[MAINROW+3][0] = ICONTEXT_GOTO;
 
-    kbdTemplateUCase[_ROWOFF+3][3] = ICONTEXT_LEFTSPACE;
-    kbdTemplateLCase[_ROWOFF+3][3] = ICONTEXT_LEFTSPACE;
-    kbdTemplateAlt  [_ROWOFF+3][3] = ICONTEXT_LEFTSPACE;
-    kbdTemplateUCase[_ROWOFF+3][4] = ICONTEXT_MIDSPACE;
-    kbdTemplateLCase[_ROWOFF+3][4] = ICONTEXT_MIDSPACE;
-    kbdTemplateAlt  [_ROWOFF+3][4] = ICONTEXT_MIDSPACE;
-    kbdTemplateUCase[_ROWOFF+3][5] = ICONTEXT_RIGHTSPACE;
-    kbdTemplateLCase[_ROWOFF+3][5] = ICONTEXT_RIGHTSPACE;
-    kbdTemplateAlt  [_ROWOFF+3][5] = ICONTEXT_RIGHTSPACE;
+    kbdTemplateUCase[MAINROW+3][3] = ICONTEXT_LEFTSPACE;
+    kbdTemplateLCase[MAINROW+3][3] = ICONTEXT_LEFTSPACE;
+    kbdTemplateAlt  [MAINROW+3][3] = ICONTEXT_LEFTSPACE;
+    kbdTemplateUCase[MAINROW+3][4] = ICONTEXT_MIDSPACE;
+    kbdTemplateLCase[MAINROW+3][4] = ICONTEXT_MIDSPACE;
+    kbdTemplateAlt  [MAINROW+3][4] = ICONTEXT_MIDSPACE;
+    kbdTemplateUCase[MAINROW+3][5] = ICONTEXT_RIGHTSPACE;
+    kbdTemplateLCase[MAINROW+3][5] = ICONTEXT_RIGHTSPACE;
+    kbdTemplateAlt  [MAINROW+3][5] = ICONTEXT_RIGHTSPACE;
 
-    kbdTemplateUCase[_ROWOFF+3][7] = ICONTEXT_NONACTIONABLE;
-    kbdTemplateLCase[_ROWOFF+3][7] = ICONTEXT_NONACTIONABLE;
+    kbdTemplateUCase[MAINROW+3][7] = ICONTEXT_NONACTIONABLE;
+    kbdTemplateLCase[MAINROW+3][7] = ICONTEXT_NONACTIONABLE;
 
-    kbdTemplateUCase[_ROWOFF+3][8] = ICONTEXT_RETURN_L;
-    kbdTemplateLCase[_ROWOFF+3][8] = ICONTEXT_RETURN_L;
-    kbdTemplateAlt  [_ROWOFF+3][8] = ICONTEXT_RETURN_L;
+    kbdTemplateUCase[MAINROW+3][8] = ICONTEXT_RETURN_L;
+    kbdTemplateLCase[MAINROW+3][8] = ICONTEXT_RETURN_L;
+    kbdTemplateAlt  [MAINROW+3][8] = ICONTEXT_RETURN_L;
 
-    kbdTemplateUCase[_ROWOFF+3][9] = ICONTEXT_RETURN_R;
-    kbdTemplateLCase[_ROWOFF+3][9] = ICONTEXT_RETURN_R;
-    kbdTemplateAlt  [_ROWOFF+3][9] = ICONTEXT_RETURN_R;
+    kbdTemplateUCase[MAINROW+3][9] = ICONTEXT_RETURN_R;
+    kbdTemplateLCase[MAINROW+3][9] = ICONTEXT_RETURN_R;
+    kbdTemplateAlt  [MAINROW+3][9] = ICONTEXT_RETURN_R;
 }
 
 __attribute__((constructor(CTOR_PRIORITY_LATE)))
@@ -946,12 +979,15 @@ static void _init_gltouchkbd(void) {
     keydriver_beginCalibration = &gltouchkbd_beginCalibration;
     keydriver_endCalibration = &gltouchkbd_endCalibration;
     keydriver_loadAltKbd = &gltouchkbd_loadAltKbd;
+    keydriver_setGlyphScale = &gltouchkbd_setGlyphScale;
 
     kbd.selectedCol = -1;
     kbd.selectedRow = -1;
 
     kbd.ctrlCol = DEFAULT_CTRL_COL;
-    kbd.ctrlRow = 0;
+    kbd.ctrlRow = CTRLROW;
+
+    kbd.glyphMultiplier = 1;
 
     glnode_registerNode(RENDER_LOW, (GLNode){
         .setup = &gltouchkbd_setup,

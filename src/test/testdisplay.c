@@ -32,7 +32,7 @@ static void testdisplay_teardown(void *arg) {
 // Various Display Tests ...
 
 TEST test_boot_disk() {
-    test_setup_boot_disk("testdisplay1.nib.gz", 1);
+    test_setup_boot_disk("testdisplay1.dsk.gz", 1);
 
     BOOT_TO_DOS();
 
@@ -306,13 +306,13 @@ TEST test_80col_hires() {
     c_debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
-    ASSERT_SHA("10F63A7B11EBF5019AE6D1F64AA7BACEA903426D");
+    ASSERT_SHA("126363F103F3A24BB2EB2AEC5B4972F46F7CA24B");
 
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x00;
     c_debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
-    ASSERT_SHA("CC81BD3FE7055126D3FA13231CBD86E7C49590AA");
+    ASSERT_SHA("91F63831B6D1145446F0DBACE8EBD284B5690D81");
 
     PASS();
 }
@@ -443,12 +443,16 @@ GREATEST_MAIN_DEFS();
 static char **test_argv = NULL;
 static int test_argc = 0;
 
-static void *test_thread(void *dummyptr) {
+static int _test_thread(void) {
     int argc = test_argc;
     char **argv = test_argv;
     GREATEST_MAIN_BEGIN();
     RUN_SUITE(test_suite_display);
     GREATEST_MAIN_END();
+}
+
+static void *test_thread(void *dummyptr) {
+    _test_thread();
     return NULL;
 }
 

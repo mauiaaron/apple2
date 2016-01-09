@@ -1413,7 +1413,7 @@ static bool MB_DSInit()
         SAMPLE_RATE = audio_backend->systemSettings.sampleRateHz;
         MB_BUF_SIZE = audio_backend->systemSettings.stereoBufferSizeSamples * audio_backend->systemSettings.bytesPerSample * MB_CHANNELS;
         g_dwDSBufferSize = MB_BUF_SIZE;
-        g_nMixBuffer = malloc(MB_BUF_SIZE / audio_backend->systemSettings.bytesPerSample);
+        g_nMixBuffer = MALLOC(MB_BUF_SIZE / audio_backend->systemSettings.bytesPerSample);
 
 #ifndef APPLE2IX
 	bool bRes = DSZeroVoiceBuffer(&MockingboardVoice, (char*)"MB", g_dwDSBufferSize);
@@ -1722,7 +1722,7 @@ void MB_Initialize()
 		for(i=0; i<NUM_VOICES; i++)
                 {
 #ifdef APPLE2IX
-			ppAYVoiceBuffer[i] = malloc(sizeof(short) * SAMPLE_RATE); // Buffer can hold a max of 1 seconds worth of samples
+			ppAYVoiceBuffer[i] = MALLOC(sizeof(short) * SAMPLE_RATE); // Buffer can hold a max of 1 seconds worth of samples
 #else
 			ppAYVoiceBuffer[i] = new short [SAMPLE_RATE];	// Buffer can hold a max of 1 seconds worth of samples
 #endif

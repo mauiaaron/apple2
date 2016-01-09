@@ -33,7 +33,8 @@ typedef struct GLTouchJoyGlobals {
     bool isCalibrating;     // Are we running in calibration mode?
     bool isEnabled;         // Does player want touchjoy enabled?
     bool ownsScreen;        // Does the touchjoy currently own the screen?
-    bool showControls;      // Are controls visible
+    bool showControls;      // Are controls visible?
+    bool showAzimuth;       // Is joystick azimuth shown?
     float minAlphaWhenOwnsScreen;
     float minAlpha;
     float screenDivider;
@@ -48,8 +49,13 @@ extern GLTouchJoyGlobals joyglobals;
 
 typedef struct GLTouchJoyAxes {
 
+    // origin model/texture
     GLModel *model;
     bool modelDirty;
+
+    // azimuth model
+    GLModel *azimuthModel;
+    bool azimuthModelDirty;
 
     uint8_t rosetteChars[ROSETTE_ROWS * ROSETTE_COLS];
     int rosetteScancodes[ROSETTE_ROWS * ROSETTE_COLS];

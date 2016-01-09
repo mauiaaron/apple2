@@ -128,9 +128,10 @@ void test_common_init() {
 }
 
 int test_setup_boot_disk(const char *fileName, int readonly) {
-    char *disk = NULL;
     int err = 0;
-#ifdef __APPLE__
+    char **path = NULL;
+
+#if defined(__APPLE__)
     CFBundleRef mainBundle = CFBundleGetMainBundle();
     CFStringRef fileString = CFStringCreateWithCString(/*allocator*/NULL, fileName, CFStringGetSystemEncoding());
     CFURLRef fileURL = CFBundleCopyResourceURL(mainBundle, fileString, NULL, NULL);
@@ -139,20 +140,53 @@ int test_setup_boot_disk(const char *fileName, int readonly) {
     CFRELEASE(fileURL);
     CFIndex length = CFStringGetLength(filePath);
     CFIndex maxSize = CFStringGetMaximumSizeForEncoding(length, kCFStringEncodingUTF8);
-    disk = (char *)malloc(maxSize);
+    disk = (char *)MALLOC(maxSize);
     if (!CFStringGetCString(filePath, disk, maxSize, kCFStringEncodingUTF8)) {
         FREE(disk);
     }
     CFRELEASE(filePath);
+
+    char *paths[] = {
+        disk,
+        NULL,
+    };
 #else
-    asprintf(&disk, "%s/disks/%s", data_dir, fileName);
+    char *paths[] = {
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+    };
+    asprintf(&paths[0], "%s/disks/%s", data_dir, fileName);
+    asprintf(&paths[1], "%s/disks/demo/%s", data_dir, fileName);
+    asprintf(&paths[2], "%s/disks/blanks/%s", data_dir, fileName);
 #endif
-    if (disk6_insert(0, disk, readonly)) {
+
+    path = &paths[0];
+    while (*path) {
+        char *disk = *path;
+        ++path;
+
+        err = disk6_insert(0, disk, readonly) != NULL;
+        if (!err) {
+            break;
+        }
+
         int len = strlen(disk);
         disk[len-3] = '\0'; // try again without '.gz' extension
-        err = (disk6_insert(0, disk, readonly) != NULL);
+        err = disk6_insert(0, disk, readonly) != NULL;
+        if (!err) {
+            break;
+        }
     }
-    FREE(disk);
+
+    path = &paths[0];
+    while (*path) {
+        char *disk = *path;
+        ++path;
+        ASPRINTF_FREE(disk);
+    }
+
     return err;
 }
 
@@ -161,6 +195,5 @@ void sha1_to_str(const uint8_t * const md, char *buf) {
     for (int j=0; j<SHA_DIGEST_LENGTH; j++, i+=2) {
         sprintf(buf+i, "%02X", md[j]);
     }
-    sprintf(buf+i, "%c", '\0');
 }
 

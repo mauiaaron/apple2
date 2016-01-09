@@ -91,10 +91,34 @@ public class Apple2KeyboardSettingsMenu extends Apple2AbstractMenu {
         if (position < 0 || position >= SETTINGS.size) {
             throw new ArrayIndexOutOfBoundsException();
         }
-        return true;
+        return (position != SETTINGS.KEYBOARD_VISIBILITY_INACTIVE.ordinal() && position != SETTINGS.KEYBOARD_VISIBILITY_ACTIVE.ordinal());
     }
 
     protected enum SETTINGS implements Apple2AbstractMenu.IMenuEnum {
+        TOUCH_MENU_ENABLED {
+            @Override
+            public final String getTitle(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.touch_menu_enable);
+            }
+
+            @Override
+            public final String getSummary(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.touch_menu_enable_summary);
+            }
+
+            @Override
+            public View getView(final Apple2Activity activity, View convertView) {
+                convertView = _basicView(activity, this, convertView);
+                CheckBox cb = _addCheckbox(activity, this, convertView, Apple2Preferences.TOUCH_MENU_ENABLED.booleanValue(activity));
+                cb.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                    @Override
+                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                        Apple2Preferences.TOUCH_MENU_ENABLED.saveBoolean(activity, isChecked);
+                    }
+                });
+                return convertView;
+            }
+        },
         KEYBOARD_VISIBILITY_INACTIVE {
             @Override
             public final String getTitle(Apple2Activity activity) {
@@ -226,7 +250,7 @@ public class Apple2KeyboardSettingsMenu extends Apple2AbstractMenu {
             @Override
             public void handleSelection(final Apple2Activity activity, final Apple2AbstractMenu settingsMenu, boolean isChecked) {
 
-                File extKeyboardDir = Apple2DisksMenu.getExternalStorageDirectory();
+                File extKeyboardDir = Apple2DisksMenu.getExternalStorageDirectory(activity);
 
                 FilenameFilter kbdJsonFilter = new FilenameFilter() {
                     public boolean accept(File dir, String name) {
@@ -288,6 +312,31 @@ public class Apple2KeyboardSettingsMenu extends Apple2AbstractMenu {
                         Apple2Preferences.KEYBOARD_ALT_PATH.saveString(activity, path);
                     }
                 });
+            }
+        },
+        KEYBOARD_GLYPH_SCALE {
+            @Override
+            public final String getTitle(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.keyboard_glyph_scale);
+            }
+
+            @Override
+            public final String getSummary(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.keyboard_glyph_scale_summary);
+            }
+
+            @Override
+            public View getView(final Apple2Activity activity, View convertView) {
+                convertView = _basicView(activity, this, convertView);
+                int glyphScale = Apple2Preferences.KEYBOARD_GLYPH_SCALE.intValue(activity);
+                CheckBox cb = _addCheckbox(activity, this, convertView, glyphScale > 1);
+                cb.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                    @Override
+                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                        Apple2Preferences.KEYBOARD_GLYPH_SCALE.saveInt(activity, isChecked ? 2 : 1);
+                    }
+                });
+                return convertView;
             }
         };
 

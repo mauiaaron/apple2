@@ -185,6 +185,11 @@
 		29B97324FDCFA39411CA2CEA /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
 		29B97325FDCFA39411CA2CEA /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
 		32CA4F630368D1EE00C91783 /* HIDBrowser_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HIDBrowser_Prefix.pch; sourceTree = "<group>"; };
+		4E4586071C29F39A003E74A1 /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		4E4586081C29F39A003E74A1 /* fr */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = fr; path = fr.lproj/MainMenu.nib; sourceTree = "<group>"; };
+		4E4586091C29F39A003E74A1 /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		4E45860A1C29F39A003E74A1 /* fr */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = fr; path = fr.lproj/MainMenu.nib; sourceTree = "<group>"; };
+		4E45860B1C29F39A003E74A1 /* fr */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = fr; path = fr.lproj/EventWatcher.nib; sourceTree = "<group>"; };
 		55170D340B8EC2CE00C82155 /* DDHidAppleRemote.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DDHidAppleRemote.h; sourceTree = "<group>"; };
 		55170D350B8EC2CE00C82155 /* DDHidAppleRemote.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DDHidAppleRemote.m; sourceTree = "<group>"; };
 		55170E0B0B8ECCAC00C82155 /* AppleRemotePaneController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AppleRemotePaneController.h; sourceTree = "<group>"; };
@@ -627,6 +632,7 @@
 			hasScannedForEncodings = 1;
 			knownRegions = (
 				en,
+				fr,
 			);
 			mainGroup = 29B97314FDCFA39411CA2CEA /* HIDBrowser */;
 			projectDirPath = "";
@@ -778,6 +784,7 @@
 			isa = PBXVariantGroup;
 			children = (
 				089C165DFE840E0CC02AAC07 /* English */,
+				4E4586091C29F39A003E74A1 /* fr */,
 			);
 			name = InfoPlist.strings;
 			sourceTree = "<group>";
@@ -786,6 +793,7 @@
 			isa = PBXVariantGroup;
 			children = (
 				29B97319FDCFA39411CA2CEA /* English */,
+				4E45860A1C29F39A003E74A1 /* fr */,
 			);
 			name = MainMenu.nib;
 			sourceTree = "<group>";
@@ -794,6 +802,7 @@
 			isa = PBXVariantGroup;
 			children = (
 				55D5927C0BAE306E00364849 /* English */,
+				4E4586071C29F39A003E74A1 /* fr */,
 			);
 			name = InfoPlist.strings;
 			sourceTree = "<group>";
@@ -802,6 +811,7 @@
 			isa = PBXVariantGroup;
 			children = (
 				55D592930BAE30B600364849 /* English */,
+				4E4586081C29F39A003E74A1 /* fr */,
 			);
 			name = MainMenu.nib;
 			sourceTree = "<group>";
@@ -810,6 +820,7 @@
 			isa = PBXVariantGroup;
 			children = (
 				55DCD9DF0B55D503000648E5 /* English */,
+				4E45860B1C29F39A003E74A1 /* fr */,
 			);
 			name = EventWatcher.nib;
 			sourceTree = "<group>";

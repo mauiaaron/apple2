@@ -23,6 +23,7 @@ static uint64_t orwl_timestart = 0;
 
 __attribute__((constructor(CTOR_PRIORITY_LATE)))
 static void __init_darwin_shim() {
+    LOG("Initializing Darwin Shim");
     mach_timebase_info_data_t tb = { 0 };
     mach_timebase_info(&tb);
     orwl_timebase = tb.numer;

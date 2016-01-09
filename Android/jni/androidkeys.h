@@ -98,6 +98,8 @@
 #define KEYCODE_BUTTON_L2       0x68
 #define KEYCODE_BUTTON_R1       0x67
 #define KEYCODE_BUTTON_R2       0x69
+#define KEYCODE_BUTTON_X        0x63
+#define KEYCODE_BUTTON_Y        0x64
 
 #define META_ALT_LEFT_ON        0x00000010
 #define META_ALT_RIGHT_ON       0x00000020

@@ -14,6 +14,7 @@ package org.deadc0de.apple2ix;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.util.DisplayMetrics;
 import android.util.Log;
 
 import java.io.File;
@@ -21,15 +22,15 @@ import java.io.File;
 import org.deadc0de.apple2ix.basic.R;
 
 public enum Apple2Preferences {
-    FIRST_TIME_CONFIGURED {
+    EMULATOR_VERSION {
         @Override
         public void load(Apple2Activity activity) {
             /* ... */
         }
 
         @Override
-        public void saveBoolean(Apple2Activity activity, boolean ignored) {
-            activity.getPreferences(Context.MODE_PRIVATE).edit().putBoolean(toString(), true).apply();
+        public void saveInt(Apple2Activity activity, int version) {
+            activity.getPreferences(Context.MODE_PRIVATE).edit().putInt(toString(), version).apply();
         }
     },
     CURRENT_DISK_PATH {
@@ -99,6 +100,11 @@ public enum Apple2Preferences {
             activity.getPreferences(Context.MODE_PRIVATE).edit().putString(toString(), str).apply();
             load(activity);
         }
+
+        @Override
+        public void setPath(Apple2Activity activity, String str) {
+            activity.getPreferences(Context.MODE_PRIVATE).edit().putString(toString(), str).apply();
+        }
     },
     CURRENT_DISK_A_RO {
         @Override
@@ -132,6 +138,11 @@ public enum Apple2Preferences {
         public void saveString(Apple2Activity activity, String str) {
             activity.getPreferences(Context.MODE_PRIVATE).edit().putString(toString(), str).apply();
             load(activity);
+        }
+
+        @Override
+        public void setPath(Apple2Activity activity, String str) {
+            activity.getPreferences(Context.MODE_PRIVATE).edit().putString(toString(), str).apply();
         }
     },
     CURRENT_DISK_B_RO {
@@ -171,22 +182,6 @@ public enum Apple2Preferences {
         @Override
         public int intValue(Apple2Activity activity) {
             return activity.getPreferences(Context.MODE_PRIVATE).getInt(toString(), HiresColor.INTERPOLATED.ordinal());
-        }
-    },
-    SPEAKER_ENABLED {
-        @Override
-        public void load(Apple2Activity activity) {
-            boolean enabled = booleanValue(activity);
-            boolean result = nativeSetSpeakerEnabled(enabled);
-            if (enabled && !result) {
-                warnError(activity, R.string.speaker_disabled_title, R.string.speaker_disabled_mesg);
-                activity.getPreferences(Context.MODE_PRIVATE).edit().putBoolean(toString(), false).apply();
-            }
-        }
-
-        @Override
-        public boolean booleanValue(Apple2Activity activity) {
-            return activity.getPreferences(Context.MODE_PRIVATE).getBoolean(toString(), true);
         }
     },
     SPEAKER_VOLUME {
@@ -282,17 +277,16 @@ public enum Apple2Preferences {
             return activity.getPreferences(Context.MODE_PRIVATE).getBoolean(toString(), true);
         }
     },
-    TOUCH_MENU_VISIBILITY {
+    SHOW_DISK_OPERATIONS {
         @Override
         public void load(Apple2Activity activity) {
-            int setting = intValue(activity);
-            float alpha = (float) setting / AUDIO_LATENCY_NUM_CHOICES;
-            nativeSetTouchMenuVisibility(alpha);
+            boolean enabled = booleanValue(activity);
+            nativeSetShowDiskOperationAnimation(enabled);
         }
 
         @Override
-        public int intValue(Apple2Activity activity) {
-            return activity.getPreferences(Context.MODE_PRIVATE).getInt(toString(), 5);
+        public boolean booleanValue(Apple2Activity activity) {
+            return activity.getPreferences(Context.MODE_PRIVATE).getBoolean(toString(), true);
         }
     },
     JOYSTICK_AXIS_SENSITIVIY {
@@ -327,7 +321,8 @@ public enum Apple2Preferences {
         @Override
         public void load(Apple2Activity activity) {
             int tick = intValue(activity);
-            nativeSetTouchJoystickButtonSwitchThreshold(tick * JOYSTICK_BUTTON_THRESHOLD_STEP);
+            tick *= getJoystickButtonSwitchThresholdScale(activity);
+            nativeSetTouchJoystickButtonSwitchThreshold(tick);
         }
 
         @Override
@@ -355,7 +350,7 @@ public enum Apple2Preferences {
 
         @Override
         public int intValue(Apple2Activity activity) {
-            int defaultLatency = 3; // /TAPDELAY_NUM_CHOICES * TAPDELAY_SCALE -> 0.075f
+            int defaultLatency = 8; // /TAPDELAY_NUM_CHOICES * TAPDELAY_SCALE -> 0.2f
             return activity.getPreferences(Context.MODE_PRIVATE).getInt(toString(), defaultLatency);
         }
     },
@@ -408,6 +403,17 @@ public enum Apple2Preferences {
         @Override
         public void load(Apple2Activity activity) {
             nativeSetTouchJoystickVisibility(booleanValue(activity));
+        }
+
+        @Override
+        public boolean booleanValue(Apple2Activity activity) {
+            return activity.getPreferences(Context.MODE_PRIVATE).getBoolean(toString(), true);
+        }
+    },
+    JOYSTICK_AZIMUTH_VISIBILITY {
+        @Override
+        public void load(Apple2Activity activity) {
+            nativeSetTouchJoystickAzimuthVisibility(booleanValue(activity));
         }
 
         @Override
@@ -580,6 +586,41 @@ public enum Apple2Preferences {
         @Override
         public boolean booleanValue(Apple2Activity activity) {
             return activity.getPreferences(Context.MODE_PRIVATE).getBoolean(toString(), true);
+        }
+    },
+    KEYBOARD_GLYPH_SCALE {
+        @Override
+        public void load(Apple2Activity activity) {
+            int scale = intValue(activity);
+            if (scale == 0) {
+                scale = 1;
+            }
+            nativeSetTouchKeyboardGlyphScale(scale);
+        }
+
+        @Override
+        public int intValue(Apple2Activity activity) {
+            int scale = activity.getPreferences(Context.MODE_PRIVATE).getInt(toString(), 0);
+
+            if (scale == 0) {
+                scale = 2;
+                DisplayMetrics dm = new DisplayMetrics();
+                activity.getWindowManager().getDefaultDisplay().getMetrics(dm);
+
+                /* calculating actual physical diagonal size appears to be problematic -- Samsung Galaxy Y reports 15" with this method
+                double x = Math.pow(dm.widthPixels / dm.xdpi, 2);
+                double y = Math.pow(dm.heightPixels / dm.ydpi, 2);
+                double screenInches = Math.sqrt(x + y);
+                Log.d(TAG, "Screen inches:" + screenInches + " w:" + dm.widthPixels + " h:" + dm.heightPixels);
+                */
+                if (dm.widthPixels <= 480 || dm.heightPixels <= 480) {
+                    scale = 1;
+                }
+
+                saveInt(activity, scale);
+            }
+
+            return scale;
         }
     },
     CRASH_CHECK {
@@ -853,7 +894,6 @@ public enum Apple2Preferences {
     public final static String TAG = "Apple2Preferences";
 
     public final static int JOYSTICK_BUTTON_THRESHOLD_NUM_CHOICES = DECENT_AMOUNT_OF_CHOICES;
-    public final static int JOYSTICK_BUTTON_THRESHOLD_STEP = 5;
 
     public final static float JOYSTICK_AXIS_SENSITIVITY_MIN = 0.25f;
     public final static float JOYSTICK_AXIS_SENSITIVITY_DEFAULT = 1.f;
@@ -911,6 +951,10 @@ public enum Apple2Preferences {
         load(activity);
     }
 
+    public void setPath(Apple2Activity activity, String path) {
+        /* ... */
+    }
+
     // accessors
 
     public boolean booleanValue(Apple2Activity activity) {
@@ -941,13 +985,13 @@ public enum Apple2Preferences {
         for (Apple2Preferences pref : Apple2Preferences.values()) {
             pref.load(activity);
         }
+        // HACK FIXME TODO 2015/12/13 : native GLTouchDevice is conflating various things ... forcefully reset the current touch device here for now
+        Apple2Preferences.CURRENT_TOUCH_DEVICE.load(activity);
     }
 
     public static void resetPreferences(Apple2Activity activity) {
         activity.getPreferences(Context.MODE_PRIVATE).edit().clear().commit();
-        FIRST_TIME_CONFIGURED.saveBoolean(activity, true);
-        KeypadPreset.IJKM_SPACE.apply(activity);
-        loadPreferences(activity);
+        activity.quitEmulator();
     }
 
     public String asciiString() {
@@ -956,6 +1000,18 @@ public enum Apple2Preferences {
 
     public String scancodeString() {
         return toString() + "_SCAN";
+    }
+
+    public static int getJoystickButtonSwitchThresholdScale(Apple2Activity activity) {
+
+        DisplayMetrics dm = new DisplayMetrics();
+        activity.getWindowManager().getDefaultDisplay().getMetrics(dm);
+
+        int smallScreenAxis = dm.widthPixels < dm.heightPixels ? dm.widthPixels : dm.heightPixels;
+        int oneThirdScreenAxis = smallScreenAxis/3;
+
+        // largest switch threshold value is 1/3 small dimension of screen
+        return oneThirdScreenAxis/JOYSTICK_BUTTON_THRESHOLD_NUM_CHOICES;
     }
 
     // ------------------------------------------------------------------------
@@ -1023,7 +1079,7 @@ public enum Apple2Preferences {
             file = new File(fullPath);
         }
         if (file.exists()) {
-            activity.nativeChooseDisk(fullPath, isDriveA, isReadOnly);
+            activity.chooseDisk(fullPath, isDriveA, isReadOnly);
         } else {
             Log.d(TAG, "Cannot insert: " + fullPath);
         }
@@ -1055,13 +1111,17 @@ public enum Apple2Preferences {
 
     private static native void nativeSetTouchJoystickVisibility(boolean visibility);
 
+    private static native void nativeSetTouchJoystickAzimuthVisibility(boolean visibility);
+
     public static native void nativeSetTouchMenuEnabled(boolean enabled);
 
-    private static native void nativeSetTouchMenuVisibility(float alpha);
+    public static native void nativeSetShowDiskOperationAnimation(boolean enabled);
 
     private static native void nativeSetTouchKeyboardVisibility(float inactiveAlpha, float activeAlpha);
 
     private static native void nativeSetTouchKeyboardLowercaseEnabled(boolean enabled);
+
+    private static native void nativeSetTouchKeyboardGlyphScale(int scale);
 
     public static native int nativeGetCurrentTouchDevice();
 

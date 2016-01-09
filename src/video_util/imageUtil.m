@@ -12,6 +12,7 @@
 // Modified sample code from https://developer.apple.com/library/mac/samplecode/GLEssentials/Introduction/Intro.html
 
 #include "imageUtil.h"
+#include "common.h"
 
 #if TARGET_OS_IPHONE
 #import <UIKit/UIKit.h>
@@ -38,11 +39,11 @@ demoImage *imgLoadImage(const char *filepathname, int flipVertical) {
         return NULL;
     }
 
-    demoImage *image = malloc(sizeof(demoImage));
+    demoImage *image = MALLOC(sizeof(demoImage));
     image->width = (GLuint)CGImageGetWidth(cgImage);
     image->height = (GLuint)CGImageGetHeight(cgImage);
     image->rowByteSize = image->width * 4;
-    image->data = malloc(image->height * image->rowByteSize);
+    image->data = MALLOC(image->height * image->rowByteSize);
     image->format = GL_RGBA;
     image->type = GL_UNSIGNED_BYTE;
 
@@ -70,7 +71,7 @@ demoImage *imgLoadImage(const char *filepathname, int flipVertical) {
 }
 
 void imgDestroyImage(demoImage* image) {
-    free(image->data);
-    free(image);
+    FREE(image->data);
+    FREE(image);
 }
 

@@ -12,12 +12,13 @@ include $(COMMON_SOURCES_MK)
 
 LOCAL_MODULE    := libapple2ix
 LOCAL_SRC_FILES := $(APPLE2_SRC_PATH)/test/testcommon.c $(APPLE2_SRC_PATH)/test/testdisk.c
-LOCAL_CFLAGS    := $(APPLE2_BASE_CFLAGS) -DTEST_DISK -DTESTING=1 -DDISK_TRACING=1
+LOCAL_CFLAGS    := $(APPLE2_BASE_CFLAGS) -g -DTEST_DISK -DTESTING=1 -DDISK_TRACING=1
 LOCAL_LDLIBS    := $(APPLE2_BASE_LDLIBS)
 
 # Add assembly files first ... mostly for the benefit of the ARM assembler ...
 ifeq ($(TARGET_ARCH_ABI),x86)
     LOCAL_SRC_FILES += $(APPLE2_X86_SRC)
+    LOCAL_CFLAGS    += -DNO_UNDERSCORES=1
 else
     LOCAL_SRC_FILES += $(APPLE2_ARM_SRC)
 endif

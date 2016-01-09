@@ -157,7 +157,7 @@ shaders_DATA = src/video/Basic.vsh src/video/Basic.fsh
 disksdir = @datadir@/@PACKAGE@/disks
 disks_DATA = \
 	disks/README disks/blank.dsk.gz disks/blank.nib.gz disks/blank.po.gz disks/etc.dsk.gz \
-	disks/mystery.dsk.gz disks/speedtest.dsk.gz disks/speedtest.txt disks/flapple140.po.gz \
+	disks/mystery.dsk disks/speedtest.dsk disks/speedtest.txt disks/flapple140.po \
 	disks/testdisplay1.dsk.gz disks/testdisplay1.nib.gz disks/testvm1.dsk.gz disks/testvm1.nib.gz
 
 

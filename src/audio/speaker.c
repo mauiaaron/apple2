@@ -298,6 +298,7 @@ static unsigned int _submit_samples_buffer(const unsigned long num_channel_sampl
         unsigned long system_buffer_size = 0;
         int16_t *system_samples_buffer = NULL;
 
+        const unsigned long maxSpeakerBytes = channelsSampleRateHz * sizeof(int16_t);
         unsigned long curr_buffer_size = requested_buffer_size;
         unsigned long samples_idx = 0;
         unsigned long counter = 0;
@@ -307,11 +308,10 @@ static unsigned int _submit_samples_buffer(const unsigned long num_channel_sampl
                 break;
             }
 
-            unsigned long maxSpeakerBytes = channelsSampleRateHz * sizeof(int16_t);
-
             if (system_buffer_size > maxSpeakerBytes) {
                 RELEASE_LOG("AVOIDING BUFOVER...");
                 system_buffer_size = maxSpeakerBytes;
+                requested_buffer_size = maxSpeakerBytes;
             }
 
             memcpy(system_samples_buffer, &samples_buffer[samples_idx], system_buffer_size);
@@ -368,14 +368,14 @@ void speaker_init(void) {
 
         remainder_buffer_size_max = ((CLK_6502_INT*(unsigned long)CPU_SCALE_FASTEST)/audio_backend->systemSettings.sampleRateHz)+1;
 
-        samples_buffer = calloc(1, channelsSampleRateHz * sizeof(int16_t));
+        samples_buffer = CALLOC(1, channelsSampleRateHz * sizeof(int16_t));
         if (!samples_buffer) {
             err = -1;
             break;
         }
         samples_buffer_idx = bufferSizeIdealMax;
 
-        remainder_buffer = malloc(remainder_buffer_size_max * sizeof(int16_t));
+        remainder_buffer = MALLOC(remainder_buffer_size_max * sizeof(int16_t));
         if (!remainder_buffer) {
             err = -1;
             break;

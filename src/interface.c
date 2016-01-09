@@ -20,7 +20,8 @@
 int64_t (*interface_onTouchEvent)(interface_touch_event_t action, int pointer_count, int pointer_idx, float *x_coords, float *y_coords) = NULL;
 bool (*interface_isTouchMenuAvailable)(void) = NULL;
 void (*interface_setTouchMenuEnabled)(bool enabled) = NULL;
-void (*interface_setTouchMenuVisibility)(float alpha) = NULL;
+void (*interface_setTouchMenuVisibility)(float inactiveAlpha, float activeAlpha) = NULL;
+void (*interface_setGlyphScale)(int glyphScale) = NULL;
 #endif
 
 // 2015/04/12 : This was legacy code for rendering the menu interfaces on desktop Linux. Portions here are resurrected
@@ -222,28 +223,7 @@ void c_interface_print_submenu_centered( char *submenu, const int message_cols, 
 
 /* ------------------------------------------------------------------------- */
 
-static int c_interface_cut_name(char *name)
-{
-    char *p = name + strlen(name) - 1;
-    int is_gz = 0;
-
-    if (p >= name && *p == 'z')
-    {
-        p--;
-        if (p >= name && *p == 'g')
-        {
-            p--;
-            if (p >= name && *p == '.')
-            {
-                *p-- = '\0';
-                is_gz = 1;
-            }
-        }
-    }
-
-    return is_gz;
-}
-
+#warning TODO FIXME : file selection and extension management should be made generic (merge similar code from disk.[hc] and possible Mac/iOS target) ...
 static int disk_select(const struct dirent *e) {
     char cmp[PATH_MAX] = { 0 };
 
@@ -469,8 +449,9 @@ void c_interface_select_diskette( int drive )
                                  namelist[ ent_no ]->d_name );
                     }
 
-                    if (c_interface_cut_name(temp))
+                    if (is_gz(temp))
                     {
+                        cut_gz(temp);
                         strncat(temp, " <gz>", PATH_MAX-1);
                     }
                     /* write protected disk in drive? */

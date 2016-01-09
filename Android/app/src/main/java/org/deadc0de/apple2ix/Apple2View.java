@@ -15,12 +15,19 @@
 
 package org.deadc0de.apple2ix;
 
+import android.content.Context;
 import android.graphics.PixelFormat;
 import android.graphics.Rect;
+import android.media.AudioManager;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
+import android.os.Build;
 import android.util.Log;
+import android.view.InputDevice;
+import android.view.MotionEvent;
 import android.view.ViewTreeObserver;
+
+import com.example.inputmanagercompat.InputManagerCompat;
 
 import javax.microedition.khronos.egl.EGL10;
 import javax.microedition.khronos.egl.EGLConfig;
@@ -28,30 +35,37 @@ import javax.microedition.khronos.egl.EGLContext;
 import javax.microedition.khronos.egl.EGLDisplay;
 import javax.microedition.khronos.opengles.GL10;
 
-/**
- * A simple GLSurfaceView sub-class that demonstrate how to perform
- * OpenGL ES 2.0 rendering into a GL Surface. Note the following important
- * details:
- *
- * - The class must use a custom context factory to enable 2.0 rendering.
- *   See ContextFactory class definition below.
- *
- * - The class must use a custom EGLConfigChooser to be able to select
- *   an EGLConfig that supports 2.0. This is done by providing a config
- *   specification to eglChooseConfig() that has the attribute
- *   EGL10.ELG_RENDERABLE_TYPE containing the EGL_OPENGL_ES2_BIT flag
- *   set. See ConfigChooser class definition below.
- *
- * - The class must select the surface's format, then choose an EGLConfig
- *   that matches it exactly (with regards to red/green/blue/alpha channels
- *   bit depths). Failure to do so would result in an EGL_BAD_MATCH error.
- */
-class Apple2View extends GLSurfaceView {
+class Apple2View extends GLSurfaceView implements InputManagerCompat.InputDeviceListener {
     private final static String TAG = "Apple2View";
     private final static boolean DEBUG = false;
+    private final static int MAX_FINGERS = 32;// HACK ...
 
-    private Apple2Activity mActivity = null;
-    private Runnable mGraphicsInitializedRunnable = null;
+    public final static long NATIVE_TOUCH_HANDLED = (1 << 0);
+    public final static long NATIVE_TOUCH_REQUEST_SHOW_MENU = (1 << 1);
+
+    public final static long NATIVE_TOUCH_KEY_TAP = (1 << 4);
+    public final static long NATIVE_TOUCH_KBD = (1 << 5);
+    public final static long NATIVE_TOUCH_JOY = (1 << 6);
+    public final static long NATIVE_TOUCH_MENU = (1 << 7);
+    public final static long NATIVE_TOUCH_JOY_KPAD = (1 << 8);
+
+    public final static long NATIVE_TOUCH_INPUT_DEVICE_CHANGED = (1 << 16);
+    public final static long NATIVE_TOUCH_CPU_SPEED_DEC = (1 << 17);
+    public final static long NATIVE_TOUCH_CPU_SPEED_INC = (1 << 18);
+
+    public final static long NATIVE_TOUCH_ASCII_SCANCODE_SHIFT = 32;
+    public final static long NATIVE_TOUCH_ASCII_SCANCODE_MASK = 0xFFFFL;
+    public final static long NATIVE_TOUCH_ASCII_MASK = 0xFF00L;
+    public final static long NATIVE_TOUCH_SCANCODE_MASK = 0x00FFL;
+
+
+    private Apple2Activity mActivity;
+    private Runnable mGraphicsInitializedRunnable;
+    private final InputManagerCompat mInputManager;
+
+    private float[] mXCoords = new float[MAX_FINGERS];
+    private float[] mYCoords = new float[MAX_FINGERS];
+
 
     private static native void nativeGraphicsInitialized(int width, int height);
 
@@ -59,10 +73,23 @@ class Apple2View extends GLSurfaceView {
 
     private static native void nativeRender();
 
+    private static native void nativeOnJoystickMove(int x, int y);
+
+    public static native long nativeOnTouch(int action, int pointerCount, int pointerIndex, float[] xCoords, float[] yCoords);
+
+
     public Apple2View(Apple2Activity activity, Runnable graphicsInitializedRunnable) {
         super(activity.getApplication());
         mActivity = activity;
         mGraphicsInitializedRunnable = graphicsInitializedRunnable;
+
+        setFocusable(true);
+        setFocusableInTouchMode(true);
+
+        mInputManager = InputManagerCompat.Factory.getInputManager(this.getContext());
+        if (mInputManager != null) {
+            mInputManager.registerInputDeviceListener(this, null);
+        }
 
         /* By default, GLSurfaceView() creates a RGB_565 opaque surface.
          * If we want a translucent one, we should change the surface's
@@ -114,7 +141,7 @@ class Apple2View extends GLSurfaceView {
         public EGLContext createContext(EGL10 egl, EGLDisplay display, EGLConfig eglConfig) {
             Log.w(TAG, "creating OpenGL ES 2.0 context");
             checkEglError("Before eglCreateContext", egl);
-            int[] attrib_list = {EGL_CONTEXT_CLIENT_VERSION, 2, EGL10.EGL_NONE };
+            int[] attrib_list = {EGL_CONTEXT_CLIENT_VERSION, 2, EGL10.EGL_NONE};
             EGLContext context = egl.eglCreateContext(display, eglConfig, EGL10.EGL_NO_CONTEXT, attrib_list);
             checkEglError("After eglCreateContext", egl);
             return context;
@@ -149,12 +176,12 @@ class Apple2View extends GLSurfaceView {
          */
         private static int EGL_OPENGL_ES2_BIT = 4;
         private static int[] s_configAttribs2 = {
-            EGL10.EGL_RED_SIZE, 4,
-            EGL10.EGL_GREEN_SIZE, 4,
-            EGL10.EGL_BLUE_SIZE, 4,
-            EGL10.EGL_ALPHA_SIZE, 4,
-            EGL10.EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
-            EGL10.EGL_NONE
+                EGL10.EGL_RED_SIZE, 4,
+                EGL10.EGL_GREEN_SIZE, 4,
+                EGL10.EGL_BLUE_SIZE, 4,
+                EGL10.EGL_ALPHA_SIZE, 4,
+                EGL10.EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+                EGL10.EGL_NONE
         };
 
         public EGLConfig chooseConfig(EGL10 egl, EGLDisplay display) {
@@ -174,7 +201,7 @@ class Apple2View extends GLSurfaceView {
             egl.eglChooseConfig(display, s_configAttribs2, configs, numConfigs, num_config);
 
             if (DEBUG) {
-                 printConfigs(egl, display, configs);
+                printConfigs(egl, display, configs);
             }
 
             // Now return the "best" one
@@ -303,11 +330,11 @@ class Apple2View extends GLSurfaceView {
             for (int i = 0; i < attributes.length; i++) {
                 int attribute = attributes[i];
                 String name = names[i];
-                if ( egl.eglGetConfigAttrib(display, config, attribute, value)) {
+                if (egl.eglGetConfigAttrib(display, config, attribute, value)) {
                     Log.w(TAG, String.format("  %s: %d\n", name, value[0]));
                 } else {
                     // Log.w(TAG, String.format("  %s: failed\n", name));
-                    while (egl.eglGetError() != EGL10.EGL_SUCCESS);
+                    while (egl.eglGetError() != EGL10.EGL_SUCCESS) ;
                 }
             }
         }
@@ -351,12 +378,201 @@ class Apple2View extends GLSurfaceView {
                 Apple2View.this.mGraphicsInitializedRunnable = null;
             }
 
-            Apple2View.this.mActivity.maybeResumeCPU();
+            Apple2View.this.mActivity.maybeResumeEmulation();
         }
 
         @Override
         public void onSurfaceCreated(GL10 gl, EGLConfig config) {
             // Do nothing.
         }
+    }
+
+    // --------------------------------------------------------------------------
+    // Event handling, touch, keyboard, gamepad
+
+    @Override
+    public void onInputDeviceAdded(int deviceId) {
+    }
+
+    @Override
+    public void onInputDeviceChanged(int deviceId) {
+    }
+
+    @Override
+    public void onInputDeviceRemoved(int deviceId) {
+    }
+
+    @Override
+    public boolean onGenericMotionEvent(MotionEvent event) {
+        if (android.os.Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR2) {
+            return super.onGenericMotionEvent(event);
+        }
+
+        if (mActivity.isEmulationPaused()) {
+            return super.onGenericMotionEvent(event);
+        }
+
+        // Check that the event came from a joystick or gamepad since a generic
+        // motion event could be almost anything.
+        int eventSource = event.getSource();
+        if ((event.getAction() == MotionEvent.ACTION_MOVE) && (((eventSource & InputDevice.SOURCE_GAMEPAD) == InputDevice.SOURCE_GAMEPAD) || ((eventSource & InputDevice.SOURCE_JOYSTICK) == InputDevice.SOURCE_JOYSTICK))) {
+            int id = event.getDeviceId();
+            if (id != -1) {
+
+                InputDevice device = event.getDevice();
+
+                float x = getCenteredAxis(event, device, MotionEvent.AXIS_X);
+                if (x == 0) {
+                    x = getCenteredAxis(event, device, MotionEvent.AXIS_HAT_X);
+                }
+                if (x == 0) {
+                    x = getCenteredAxis(event, device, MotionEvent.AXIS_Z);
+                }
+
+                float y = getCenteredAxis(event, device, MotionEvent.AXIS_Y);
+                if (y == 0) {
+                    y = getCenteredAxis(event, device, MotionEvent.AXIS_HAT_Y);
+                }
+                if (y == 0) {
+                    y = getCenteredAxis(event, device, MotionEvent.AXIS_RZ);
+                }
+
+                int normal_x = (int) ((x + 1.f) * 128.f);
+                if (normal_x < 0) {
+                    normal_x = 0;
+                }
+                if (normal_x > 255) {
+                    normal_x = 255;
+                }
+                int normal_y = (int) ((y + 1.f) * 128.f);
+                if (normal_y < 0) {
+                    normal_y = 0;
+                }
+                if (normal_y > 255) {
+                    normal_y = 255;
+                }
+
+                nativeOnJoystickMove(normal_x, normal_y);
+
+                return true;
+            }
+        }
+
+        return super.onGenericMotionEvent(event);
+    }
+
+    private static float getCenteredAxis(MotionEvent event, InputDevice device, int axis) {
+        if (android.os.Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR2) {
+            return 0;
+        }
+
+        final InputDevice.MotionRange range = device.getMotionRange(axis, event.getSource());
+        if (range != null) {
+            final float flat = range.getFlat();
+            final float value = event.getAxisValue(axis);
+
+            // Ignore axis values that are within the 'flat' region of the joystick axis center.
+            // A joystick at rest does not always report an absolute position of (0,0).
+            if (Math.abs(value) > flat) {
+                return value;
+            }
+        }
+
+        return 0;
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        do {
+
+            if (Apple2Activity.isNativeBarfed()) {
+                break;
+            }
+            if (mActivity.getMainMenu() == null) {
+                break;
+            }
+
+            Apple2MenuView apple2MenuView = mActivity.peekApple2View();
+            if ((apple2MenuView != null) && (!apple2MenuView.isCalibrating())) {
+                break;
+            }
+
+            //printSamples(event);
+            int action = event.getActionMasked();
+            int pointerIndex = event.getActionIndex();
+            int pointerCount = event.getPointerCount();
+            for (int i = 0; i < pointerCount/* && i < MAX_FINGERS */; i++) {
+                mXCoords[i] = event.getX(i);
+                mYCoords[i] = event.getY(i);
+            }
+
+            long nativeFlags = nativeOnTouch(action, pointerCount, pointerIndex, mXCoords, mYCoords);
+
+            if ((nativeFlags & NATIVE_TOUCH_HANDLED) == 0) {
+                break;
+            }
+
+            if ((nativeFlags & NATIVE_TOUCH_REQUEST_SHOW_MENU) != 0) {
+                mActivity.getMainMenu().show();
+            }
+
+            if ((nativeFlags & NATIVE_TOUCH_KEY_TAP) != 0) {
+                if (Apple2Preferences.KEYBOARD_CLICK_ENABLED.booleanValue(mActivity)) {
+                    AudioManager am = (AudioManager) mActivity.getSystemService(Context.AUDIO_SERVICE);
+                    if (am != null) {
+                        am.playSoundEffect(AudioManager.FX_KEY_CLICK);
+                    }
+                }
+
+                if ((apple2MenuView != null) && apple2MenuView.isCalibrating()) {
+                    long asciiScancodeLong = nativeFlags & (NATIVE_TOUCH_ASCII_SCANCODE_MASK << NATIVE_TOUCH_ASCII_SCANCODE_SHIFT);
+                    int asciiInt = (int) (asciiScancodeLong >> (NATIVE_TOUCH_ASCII_SCANCODE_SHIFT + 8));
+                    int scancode = (int) ((asciiScancodeLong >> NATIVE_TOUCH_ASCII_SCANCODE_SHIFT) & 0xFFL);
+                    char ascii = (char) asciiInt;
+                    apple2MenuView.onKeyTapCalibrationEvent(ascii, scancode);
+                }
+            }
+
+            if ((nativeFlags & NATIVE_TOUCH_MENU) == 0) {
+                break;
+            }
+
+            // handle menu-specific actions
+
+            if ((nativeFlags & NATIVE_TOUCH_INPUT_DEVICE_CHANGED) != 0) {
+                Apple2Preferences.TouchDeviceVariant nextVariant;
+                if ((nativeFlags & NATIVE_TOUCH_KBD) != 0) {
+                    nextVariant = Apple2Preferences.TouchDeviceVariant.KEYBOARD;
+                } else if ((nativeFlags & NATIVE_TOUCH_JOY) != 0) {
+                    nextVariant = Apple2Preferences.TouchDeviceVariant.JOYSTICK;
+                } else if ((nativeFlags & NATIVE_TOUCH_JOY_KPAD) != 0) {
+                    nextVariant = Apple2Preferences.TouchDeviceVariant.JOYSTICK_KEYPAD;
+                } else {
+                    int touchDevice = Apple2Preferences.nativeGetCurrentTouchDevice();
+                    nextVariant = Apple2Preferences.TouchDeviceVariant.next(touchDevice);
+                }
+                Apple2Preferences.CURRENT_TOUCH_DEVICE.saveTouchDevice(mActivity, nextVariant);
+            } else if ((nativeFlags & NATIVE_TOUCH_CPU_SPEED_DEC) != 0) {
+                int percentSpeed = Apple2Preferences.nativeGetCPUSpeed();
+                if (percentSpeed > 400) { // HACK: max value from native side
+                    percentSpeed = 375;
+                } else if (percentSpeed > 100) {
+                    percentSpeed -= 25;
+                } else {
+                    percentSpeed -= 5;
+                }
+                Apple2Preferences.CPU_SPEED_PERCENT.saveInt(mActivity, percentSpeed);
+            } else if ((nativeFlags & NATIVE_TOUCH_CPU_SPEED_INC) != 0) {
+                int percentSpeed = Apple2Preferences.nativeGetCPUSpeed();
+                if (percentSpeed >= 100) {
+                    percentSpeed += 25;
+                } else {
+                    percentSpeed += 5;
+                }
+                Apple2Preferences.CPU_SPEED_PERCENT.saveInt(mActivity, percentSpeed);
+            }
+        } while (false);
+
+        return true;
     }
 }

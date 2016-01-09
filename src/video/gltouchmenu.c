@@ -29,13 +29,8 @@
 #define MENU_OBJ_W 2.0
 #define MENU_OBJ_H 0.5 // NOTE : intent is to complement touch keyboard height
 
-HUD_CLASS(GLModelHUDMenu,
-    uint8_t *pixelsAlt; // alternate color pixels
-);
-
 static bool isAvailable = false; // Were there any OpenGL/memory errors on initialization?
 static bool isEnabled = true;    // Does player want this enabled?
-static float minAlpha = 1/4.f;   // Minimum alpha value of components (at zero, will not render)
 
 // NOTE : intent is to match touch keyboard width
 static uint8_t topMenuTemplate[MENU_TEMPLATE_ROWS][MENU_TEMPLATE_COLS+1] = {
@@ -71,24 +66,24 @@ static struct {
 
 static struct {
     GLModel *model;
+    unsigned int glyphMultiplier;
     bool topLeftShowing;
     bool topRightShowing;
-} menu = { 0 };
 
-static struct timespec timingBegin = { 0 };
+    struct timespec timingBegin;
+    float minAlpha; // Minimum alpha value of components (at zero, will not render)
+    float maxAlpha;
+
+    // pending changes requiring reinitialization
+    unsigned int nextGlyphMultiplier;
+} menu = { 0 };
 
 // ----------------------------------------------------------------------------
 
 static inline void _present_menu(GLModel *parent) {
-    GLModelHUDMenu *hudMenu = (GLModelHUDMenu *)parent->custom;
+    GLModelHUDElement *hudMenu = (GLModelHUDElement *)parent->custom;
     memcpy(hudMenu->tpl, topMenuTemplate, sizeof(topMenuTemplate));
 
-    // setup the alternate color (AKA selected) pixels
-    hudMenu->colorScheme = GREEN_ON_BLACK;
-    glhud_setupDefault(parent);
-    memcpy(hudMenu->pixelsAlt, hudMenu->pixels, (hudMenu->pixWidth * hudMenu->pixHeight));
-
-    // setup normal color pixels
     hudMenu->colorScheme = RED_ON_BLACK;
     glhud_setupDefault(parent);
 }
@@ -140,26 +135,6 @@ static inline void _hide_top_right(void) {
     _present_menu(menu.model);
 }
 
-static float _get_menu_visibility(void) {
-    struct timespec now = { 0 };
-    struct timespec deltat = { 0 };
-    float alpha = minAlpha;
-
-    clock_gettime(CLOCK_MONOTONIC, &now);
-    deltat = timespec_diff(timingBegin, now, NULL);
-    if (deltat.tv_sec == 0) {
-        alpha = 1.0;
-        if (deltat.tv_nsec >= NANOSECONDS_PER_SECOND/2) {
-            alpha -= ((float)deltat.tv_nsec-(NANOSECONDS_PER_SECOND/2)) / (float)(NANOSECONDS_PER_SECOND/2);
-            if (alpha < minAlpha) {
-                alpha = minAlpha;
-            }
-        }
-    }
-
-    return alpha;
-}
-
 static inline bool _is_point_on_left_menu(float x, float y) {
     if (menu.topLeftShowing) {
         return (x >= touchport.topLeftX && x <= touchport.topLeftXMax && y >= touchport.topLeftY && y <= touchport.topLeftYMax);
@@ -179,7 +154,7 @@ static inline bool _is_point_on_right_menu(float x, float y) {
 #warning FIXME TODO : make this function generic _screen_to_model() ?
 static inline void _screen_to_menu(float x, float y, OUTPARM int *col, OUTPARM int *row) {
 
-    GLModelHUDMenu *hudMenu = (GLModelHUDMenu *)(menu.model->custom);
+    GLModelHUDElement *hudMenu = (GLModelHUDElement *)(menu.model->custom);
     const unsigned int keyW = touchport.width / hudMenu->tplWidth;
     const unsigned int keyH = touchport.topLeftYMax / hudMenu->tplHeight;
 
@@ -245,6 +220,7 @@ static inline bool _sprout_menu(float x, float y) {
         return menu.topRightShowing;
     } else {
         RELEASE_ERRLOG("This should not happen");
+        return false;
     }
 }
 
@@ -319,8 +295,17 @@ static inline int64_t _tap_menu_item(float x, float y) {
 // ----------------------------------------------------------------------------
 // GLCustom functions
 
-static void _setup_touchmenu(GLModel *parent) {
-    GLModelHUDMenu *hudMenu = (GLModelHUDMenu *)parent->custom;
+static void *_create_touchmenu_hud(GLModel *parent) {
+    parent->custom = glhud_createCustom(sizeof(GLModelHUDElement));
+    GLModelHUDElement *hudMenu = (GLModelHUDElement *)parent->custom;
+
+    if (!hudMenu) {
+        return NULL;
+    }
+
+    hudMenu->blackIsTransparent = true;
+    hudMenu->opaquePixelHalo = true;
+    hudMenu->glyphMultiplier = menu.glyphMultiplier;
 
     hudMenu->tplWidth  = MENU_TEMPLATE_COLS;
     hudMenu->tplHeight = MENU_TEMPLATE_ROWS;
@@ -344,58 +329,16 @@ static void _setup_touchmenu(GLModel *parent) {
     }
 
     const unsigned int size = sizeof(topMenuTemplate);
-    hudMenu->tpl = calloc(size, 1);
-    hudMenu->pixels = calloc(MENU_FB_WIDTH * MENU_FB_HEIGHT, 1);
-    hudMenu->pixelsAlt = calloc(MENU_FB_WIDTH * MENU_FB_HEIGHT, 1);
+    hudMenu->tpl = CALLOC(size, 1);
+    hudMenu->pixels = CALLOC(MENU_FB_WIDTH * MENU_FB_HEIGHT, 1);
 
     _present_menu(parent);
-}
 
-static void *_create_touchmenu(void) {
-    GLModelHUDMenu *hudMenu = (GLModelHUDMenu *)calloc(sizeof(GLModelHUDMenu), 1);
-    if (hudMenu) {
-        hudMenu->blackIsTransparent = true;
-        hudMenu->opaquePixelHalo = true;
-    }
     return hudMenu;
-}
-
-static void _destroy_touchmenu(GLModel *parent) {
-    GLModelHUDMenu *hudMenu = (GLModelHUDMenu *)parent->custom;
-    if (!hudMenu) {
-        return;
-    }
-    FREE(hudMenu->pixelsAlt);
-    glhud_destroyDefault(parent);
 }
 
 // ----------------------------------------------------------------------------
 // GLNode functions
-
-static void gltouchmenu_setup(void) {
-    LOG("gltouchmenu_setup ...");
-
-    mdlDestroyModel(&menu.model);
-    menu.model = mdlCreateQuad(-1.0, 1.0-MENU_OBJ_H, MENU_OBJ_W, MENU_OBJ_H, MODEL_DEPTH, MENU_FB_WIDTH, MENU_FB_HEIGHT, (GLCustom){
-            .create = &_create_touchmenu,
-            .setup = &_setup_touchmenu,
-            .destroy = &_destroy_touchmenu,
-            });
-    if (!menu.model) {
-        LOG("gltouchmenu initialization problem");
-        return;
-    }
-    if (!menu.model->custom) {
-        LOG("gltouchmenu HUD initialization problem");
-        return;
-    }
-
-    clock_gettime(CLOCK_MONOTONIC, &timingBegin);
-
-    isAvailable = true;
-
-    GL_ERRLOG("gltouchmenu_setup");
-}
 
 static void gltouchmenu_shutdown(void) {
     LOG("gltouchmenu_shutdown ...");
@@ -405,7 +348,46 @@ static void gltouchmenu_shutdown(void) {
 
     isAvailable = false;
 
+    menu.topLeftShowing = false;
+    menu.topRightShowing = false;
+    menu.nextGlyphMultiplier = 0;
+
     mdlDestroyModel(&menu.model);
+}
+
+static void gltouchmenu_setup(void) {
+    LOG("gltouchmenu_setup ...");
+
+    gltouchmenu_shutdown();
+
+    menu.model = mdlCreateQuad((GLModelParams_s){
+            .skew_x = -1.0,
+            .skew_y = 1.0-MENU_OBJ_H,
+            .z = MODEL_DEPTH,
+            .obj_w = MENU_OBJ_W,
+            .obj_h = MENU_OBJ_H,
+            .positionUsageHint = GL_STATIC_DRAW, // positions don't change
+            .tex_w = MENU_FB_WIDTH * menu.glyphMultiplier,
+            .tex_h = MENU_FB_HEIGHT * menu.glyphMultiplier,
+            .texcoordUsageHint = GL_DYNAMIC_DRAW, // but menu texture does
+        }, (GLCustom){
+            .create = &_create_touchmenu_hud,
+            .destroy = &glhud_destroyDefault,
+        });
+    if (!menu.model) {
+        LOG("gltouchmenu initialization problem");
+        return;
+    }
+    if (!menu.model->custom) {
+        LOG("gltouchmenu HUD initialization problem");
+        return;
+    }
+
+    clock_gettime(CLOCK_MONOTONIC, &menu.timingBegin);
+
+    isAvailable = true;
+
+    GL_ERRLOG("gltouchmenu_setup");
 }
 
 static void gltouchmenu_render(void) {
@@ -416,7 +398,16 @@ static void gltouchmenu_render(void) {
         return;
     }
 
-    float alpha = _get_menu_visibility();
+    if (menu.nextGlyphMultiplier) {
+        menu.glyphMultiplier = menu.nextGlyphMultiplier;
+        menu.nextGlyphMultiplier = 0;
+        gltouchmenu_setup();
+    }
+
+    float alpha = glhud_getTimedVisibility(menu.timingBegin, menu.minAlpha, menu.maxAlpha);
+    if (alpha < menu.minAlpha) {
+        alpha = menu.minAlpha;
+    }
     if (alpha <= 0.0) {
         return;
     }
@@ -506,7 +497,7 @@ static int64_t gltouchmenu_onTouchEvent(interface_touch_event_t action, int poin
     }
 
     if (handled) {
-        clock_gettime(CLOCK_MONOTONIC, &timingBegin);
+        clock_gettime(CLOCK_MONOTONIC, &menu.timingBegin);
         flags |= TOUCH_FLAGS_HANDLED;
     }
 
@@ -525,17 +516,25 @@ static void gltouchmenu_setTouchMenuEnabled(bool enabled) {
 }
 
 static void _animation_showTouchMenu(void) {
-    clock_gettime(CLOCK_MONOTONIC, &timingBegin);
+    clock_gettime(CLOCK_MONOTONIC, &menu.timingBegin);
 }
 
 static void _animation_hideTouchMenu(void) {
     _hide_top_left();
     _hide_top_right();
-    timingBegin = (struct timespec){ 0 };
+    menu.timingBegin = (struct timespec){ 0 };
 }
 
-static void gltouchmenu_setTouchMenuVisibility(float alpha) {
-    minAlpha = alpha;
+static void gltouchmenu_setTouchMenuVisibility(float inactiveAlpha, float activeAlpha) {
+    menu.minAlpha = inactiveAlpha;
+    menu.maxAlpha = activeAlpha;
+}
+
+static void gltouchmenu_setGlyphScale(int glyphScale) {
+    if (glyphScale == 0) {
+        glyphScale = 1;
+    }
+    menu.nextGlyphMultiplier = glyphScale;
 }
 
 // ----------------------------------------------------------------------------
@@ -551,6 +550,11 @@ static void _init_gltouchmenu(void) {
     interface_isTouchMenuAvailable = &gltouchmenu_isTouchMenuAvailable;
     interface_setTouchMenuEnabled = &gltouchmenu_setTouchMenuEnabled;
     interface_setTouchMenuVisibility = &gltouchmenu_setTouchMenuVisibility;
+    interface_setGlyphScale = &gltouchmenu_setGlyphScale;
+
+    menu.glyphMultiplier = 1;
+    menu.minAlpha = 1/4.f;   // Minimum alpha value of components (at zero, will not render)
+    menu.maxAlpha = 1.f;
 
     glnode_registerNode(RENDER_TOP, (GLNode){
         .setup = &gltouchmenu_setup,

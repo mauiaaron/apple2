@@ -39,6 +39,7 @@ typedef struct video_backend_s {
     void (*animation_showCPUSpeed)(void);
     void (*animation_showDiskChosen)(int drive);
     void (*animation_showTrackSector)(int drive, int track, int sect);
+    void (*animation_setEnableShowTrackSector)(bool enabled);
 
 } video_backend_s;
 
@@ -157,6 +158,9 @@ static inline unsigned long video_clearDirty(void) {
     return __sync_fetch_and_and(&_backend_vid_dirty, 0UL);
 }
 
+extern bool video_saveState(StateHelper_s *helper);
+extern bool video_loadState(StateHelper_s *helper);
+
 // ----------------------------------------------------------------------------
 
 /*
@@ -186,8 +190,10 @@ uint8_t floating_bus_hibit(const bool hibit);
 
 #define FONT_GLYPH_X (7+/*unused*/1)            // generated font.c uses a single byte (8bits) per font glyph line
 #define FONT_GLYPH_Y (FONT_HEIGHT_PIXELS>>1)    // ... 8 bytes total for whole glyph
+#define FONT_GLYPH_SCALE_Y (FONT_HEIGHT_PIXELS/FONT_GLYPH_Y) // FIXME NOTE : implicit 2x scaling in display.c ...
 
 #define MOUSETEXT_BEGIN         0x80 // offset + 0x20 length
+#define MOUSETEXT_RETURN        (MOUSETEXT_BEGIN+0x0d)
 #define MOUSETEXT_UP            (MOUSETEXT_BEGIN+0x0b)
 #define MOUSETEXT_LEFT          (MOUSETEXT_BEGIN+0x08)
 #define MOUSETEXT_RIGHT         (MOUSETEXT_BEGIN+0x15)

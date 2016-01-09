@@ -47,6 +47,7 @@ typedef enum lifecycle_seq_t {
 static lifecycle_seq_t appState = APP_RUNNING;
 
 #if TESTING
+static bool running_tests = false;
 static void _run_tests(void) {
     char *local_argv[] = {
         "-f",
@@ -102,6 +103,7 @@ static void discover_cpu_family(void) {
     AndroidCpuFamily family = android_getCpuFamily();
     uint64_t features = android_getCpuFeatures();
     if (family == ANDROID_CPU_FAMILY_X86) {
+        android_x86 = true;
         if (features & ANDROID_CPU_X86_FEATURE_SSSE3) {
             LOG("nANDROID_CPU_X86_FEATURE_SSSE3");
             android_x86SSSE3Enabled = true;
@@ -141,7 +143,7 @@ static void discover_cpu_family(void) {
 // ----------------------------------------------------------------------------
 // JNI functions
 
-void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnCreate(JNIEnv *env, jobject obj, jstring j_dataDir, jint sampleRate, jint monoBufferSize, jint stereoBufferSize) {
+void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnCreate(JNIEnv *env, jclass cls, jstring j_dataDir, jint sampleRate, jint monoBufferSize, jint stereoBufferSize) {
     const char *dataDir = (*env)->GetStringUTFChars(env, j_dataDir, 0);
 
     // Android lifecycle can call onCreate() multiple times...
@@ -169,11 +171,9 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnCreate(JNIEnv *env, jobje
     android_monoBufferSubmitSizeSamples = (unsigned long)monoBufferSize;
     android_stereoBufferSubmitSizeSamples = (unsigned long)stereoBufferSize;
 
-#if TESTING
-    assert(cpu_thread_id == 0 && "CPU thread must not be initialized yet...");
-    _run_tests();
-    // CPU thread is started from testsuite (if needed)
-#else
+    joydriver_setClampBeyondRadius(true);
+
+#if !TESTING
     cpu_pause();
     emulator_start();
 #endif
@@ -186,29 +186,38 @@ void Java_org_deadc0de_apple2ix_Apple2View_nativeGraphicsChanged(JNIEnv *env, jc
 }
 
 void Java_org_deadc0de_apple2ix_Apple2View_nativeGraphicsInitialized(JNIEnv *env, jclass cls, jint width, jint height) {
-    // WANRING : this needs to happen on the GL thread only
+    // WARNING : this needs to happen on the GL thread only
     LOG("width:%d height:%d", width, height);
     video_shutdown();
     video_backend->reshape(width, height);
     video_backend->init((void *)0);
 }
 
-void Java_org_deadc0de_apple2ix_Apple2Activity_nativeEmulationResume(JNIEnv *env, jobject obj) {
+void Java_org_deadc0de_apple2ix_Apple2Activity_nativeEmulationResume(JNIEnv *env, jclass cls) {
+#if TESTING
+    // test driver thread is managing CPU
+    if (!running_tests) {
+        running_tests = true;
+        assert(cpu_thread_id == 0 && "CPU thread must not be initialized yet...");
+        _run_tests();
+    }
+#else
     if (!cpu_isPaused()) {
         return;
     }
     LOG("...");
-#if TESTING
-    // test driver thread is managing CPU
-#else
     cpu_resume();
 #endif
 }
 
-void Java_org_deadc0de_apple2ix_Apple2Activity_nativeEmulationPause(JNIEnv *env, jobject obj) {
+void Java_org_deadc0de_apple2ix_Apple2Activity_nativeEmulationPause(JNIEnv *env, jclass cls) {
     if (appState != APP_RUNNING) {
         return;
     }
+
+    disk6_flush(0);
+    disk6_flush(1);
+
     if (cpu_isPaused()) {
         return;
     }
@@ -252,12 +261,12 @@ void Java_org_deadc0de_apple2ix_Apple2View_nativeRender(JNIEnv *env, jclass cls)
     video_backend->render();
 }
 
-void Java_org_deadc0de_apple2ix_Apple2Activity_nativeReboot(JNIEnv *env, jobject obj) {
+void Java_org_deadc0de_apple2ix_Apple2Activity_nativeReboot(JNIEnv *env, jclass cls) {
     LOG("...");
     cpu65_reboot();
 }
 
-void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnQuit(JNIEnv *env, jobject obj) {
+void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnQuit(JNIEnv *env, jclass cls) {
 #if TESTING
     // test driver thread is managing CPU
 #else
@@ -272,21 +281,25 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnQuit(JNIEnv *env, jobject
 #endif
 }
 
-void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnKeyDown(JNIEnv *env, jobject obj, jint keyCode, jint metaState) {
+void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnKeyDown(JNIEnv *env, jclass cls, jint keyCode, jint metaState) {
     if (UNLIKELY(appState != APP_RUNNING)) {
         return;
     }
     android_keycode_to_emulator(keyCode, metaState, true);
 }
 
-void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnKeyUp(JNIEnv *env, jobject obj, jint keyCode, jint metaState) {
+void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnKeyUp(JNIEnv *env, jclass cls, jint keyCode, jint metaState) {
     if (UNLIKELY(appState != APP_RUNNING)) {
         return;
     }
     android_keycode_to_emulator(keyCode, metaState, false);
 }
 
-jlong Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnTouch(JNIEnv *env, jobject obj, jint action, jint pointerCount, jint pointerIndex, jfloatArray xCoords, jfloatArray yCoords) {
+void Java_org_deadc0de_apple2ix_Apple2View_nativeOnJoystickMove(JNIEnv *env, jclass cls, jint x, jint y) {
+    joydriver_setAxisValue((uint8_t)x, (uint8_t)y);
+}
+
+jlong Java_org_deadc0de_apple2ix_Apple2View_nativeOnTouch(JNIEnv *env, jclass cls, jint action, jint pointerCount, jint pointerIndex, jfloatArray xCoords, jfloatArray yCoords) {
     //LOG(": %d/%d/%d :", action, pointerCount, pointerIndex);
 
     SCOPE_TRACE_TOUCH("nativeOnTouch");
@@ -311,7 +324,7 @@ jlong Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnTouch(JNIEnv *env, jobje
     return flags;
 }
 
-void Java_org_deadc0de_apple2ix_Apple2Activity_nativeChooseDisk(JNIEnv *env, jobject obj, jstring jPath, jboolean driveA, jboolean readOnly) {
+void Java_org_deadc0de_apple2ix_Apple2Activity_nativeChooseDisk(JNIEnv *env, jclass cls, jstring jPath, jboolean driveA, jboolean readOnly) {
     const char *path = (*env)->GetStringUTFChars(env, jPath, NULL);
     int drive = driveA ? 0 : 1;
     int ro = readOnly ? 1 : 0;
@@ -329,16 +342,58 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeChooseDisk(JNIEnv *env, job
         } else {
             video_backend->animation_showDiskChosen(drive);
         }
-        FREE(gzPath);
+        ASPRINTF_FREE(gzPath);
     } else {
         video_backend->animation_showDiskChosen(drive);
     }
     (*env)->ReleaseStringUTFChars(env, jPath, path);
 }
 
-void Java_org_deadc0de_apple2ix_Apple2Activity_nativeEjectDisk(JNIEnv *env, jobject obj, jboolean driveA) {
+void Java_org_deadc0de_apple2ix_Apple2Activity_nativeEjectDisk(JNIEnv *env, jclass cls, jboolean driveA) {
     LOG("...");
     disk6_eject(!driveA);
+}
+
+void Java_org_deadc0de_apple2ix_Apple2Activity_nativeSaveState(JNIEnv *env, jclass cls, jstring jPath) {
+    const char *path = (*env)->GetStringUTFChars(env, jPath, NULL);
+
+    assert(cpu_isPaused() && "considered dangerous to save state when CPU thread is running");
+
+    LOG(": (%s)", path);
+    if (!emulator_saveState(path)) {
+        LOG("OOPS, could not save emulator state");
+    }
+
+    (*env)->ReleaseStringUTFChars(env, jPath, path);
+}
+
+jstring Java_org_deadc0de_apple2ix_Apple2Activity_nativeLoadState(JNIEnv *env, jclass cls, jstring jPath) {
+    const char *path = (*env)->GetStringUTFChars(env, jPath, NULL);
+
+    assert(cpu_isPaused() && "considered dangerous to save state when CPU thread is running");
+
+    LOG(": (%s)", path);
+    if (!emulator_loadState(path)) {
+        LOG("OOPS, could not load emulator state");
+    }
+
+    (*env)->ReleaseStringUTFChars(env, jPath, path);
+
+    // restoring state may cause a change in disk paths, so we need to notify the Java/Android menu system of the change
+    // (normally we drive state from the Java/menu side...)
+    char *disk1 = disk6.disk[0].file_name;
+    bool readOnly1 = disk6.disk[0].is_protected;
+    char *disk2 = disk6.disk[1].file_name;
+    bool readOnly2 = disk6.disk[1].is_protected;
+    char *str = NULL;
+    jstring jstr = NULL;
+    asprintf(&str, "{ disk1 = \"%s\"; readOnly1 = %s; disk2 = \"%s\"; readOnly2 = %s }", (disk1 ?: ""), readOnly1 ? "true" : "false", (disk2 ?: ""), readOnly2 ? "true" : "false");
+    if (str) {
+        jstr = (*env)->NewStringUTF(env, str);
+        ASPRINTF_FREE(str);
+    }
+
+    return jstr;
 }
 
 // ----------------------------------------------------------------------------

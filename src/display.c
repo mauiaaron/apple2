@@ -559,6 +559,7 @@ static inline void _plot_char40(uint8_t **d, uint8_t **s) {
 }
 
 static inline void _plot_char80(uint8_t **d, uint8_t **s, const unsigned int fb_width) {
+    // FIXME : this is implicitly scaling at FONT_GLYPH_SCALE_Y ... make it explicit
     *((uint32_t *)(*d)) = *((uint32_t *)(*s));
     *d += 4, *s += 4;
     *((uint16_t *)(*d)) = *((uint16_t *)(*s));
@@ -1092,6 +1093,46 @@ void video_clear(void) {
     uint8_t *current_fb = video_current_framebuffer();
     memset(current_fb, 0x0, sizeof(uint8_t)*SCANWIDTH*SCANHEIGHT);
     video_setDirty();
+}
+
+bool video_saveState(StateHelper_s *helper) {
+    bool saved = false;
+    int fd = helper->fd;
+
+    do {
+        uint8_t state = 0x0;
+
+        state = (uint8_t)video__current_page;
+        if (!helper->save(fd, &state, 1)) {
+            break;
+        }
+        LOG("SAVE video__current_page = %02x", state);
+
+        saved = true;
+    } while (0);
+
+    return saved;
+}
+
+bool video_loadState(StateHelper_s *helper) {
+    bool loaded = false;
+    int fd = helper->fd;
+
+    do {
+        uint8_t state = 0x0;
+
+        if (!helper->load(fd, &state, 1)) {
+            break;
+        }
+        video__current_page = state;
+        LOG("LOAD video__current_page = %02x", video__current_page);
+
+        loaded = true;
+    } while (0);
+
+    video_redraw();
+
+    return loaded;
 }
 
 void video_redraw(void) {

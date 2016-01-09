@@ -35,6 +35,12 @@ else
     LOCAL_SRC_FILES += $(APPLE2_ARM_SRC)
 endif
 
+ifeq ($(BUILD_MODE),release)
+    LOCAL_CFLAGS += -DNDEBUG=1
+else
+    LOCAL_CFLAGS += -g
+endif
+
 ifeq ($(EMBEDDED_STACKWALKER),1)
     LOCAL_CPPFLAGS += -DEMBEDDED_STACKWALKER=1
 else

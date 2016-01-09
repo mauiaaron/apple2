@@ -44,7 +44,7 @@ GLModel *mdlLoadModel(const char *filepathname) {
     if (!filepathname) {
         return NULL;
     }
-    GLModel *model = (GLModel *)calloc(sizeof(GLModel), 1);
+    GLModel *model = (GLModel *)CALLOC(sizeof(GLModel), 1);
     if (!model) {
         return NULL;
     }
@@ -116,9 +116,9 @@ GLModel *mdlLoadModel(const char *filepathname) {
     if (GL_UNSIGNED_INT == model->elementType) {
         // ...load the UI elements and convert to UNSIGNED_SHORT
 
-        GLubyte *uiElements = (GLubyte *)malloc(model->elementArraySize);
+        GLubyte *uiElements = (GLubyte *)MALLOC(model->elementArraySize);
         size_t ushortElementArraySize = model->numElements * sizeof(GLushort);
-        model->elements = (GLubyte *)malloc(ushortElementArraySize);
+        model->elements = (GLubyte *)MALLOC(ushortElementArraySize);
 
         sizeRead = fread(uiElements, 1, model->elementArraySize, curFile);
         if (sizeRead != model->elementArraySize) {
@@ -138,12 +138,12 @@ GLModel *mdlLoadModel(const char *filepathname) {
 
             ((GLushort *)model->elements)[elemNum] = ((GLuint *)uiElements)[elemNum];
         }
-        free(uiElements);
+        FREE(uiElements);
 
         model->elementType = GL_UNSIGNED_SHORT;
         model->elementArraySize = model->numElements * sizeof(GLushort);
     } else {
-        model->elements = (GLubyte*)malloc(model->elementArraySize);
+        model->elements = (GLubyte*)MALLOC(model->elementArraySize);
 
         sizeRead = fread(model->elements, 1, model->elementArraySize, curFile);
 
@@ -166,7 +166,7 @@ GLModel *mdlLoadModel(const char *filepathname) {
     model->positionType = attrib.datatype;
     model->positionSize = attrib.sizePerElement;
     model->numVertices = attrib.numElements;
-    model->positions = (GLubyte*)malloc(model->positionArraySize);
+    model->positions = (GLubyte*)MALLOC(model->positionArraySize);
 
     sizeRead = fread(model->positions, 1, model->positionArraySize, curFile);
     if (sizeRead != model->positionArraySize) {
@@ -200,7 +200,7 @@ GLModel *mdlLoadModel(const char *filepathname) {
         return NULL;
     }
 
-    model->texCoords = (GLubyte*)malloc(model->texcoordArraySize);
+    model->texCoords = (GLubyte*)MALLOC(model->texcoordArraySize);
 
     sizeRead = fread(model->texCoords, 1, model->texcoordArraySize, curFile);
     if (sizeRead != model->texcoordArraySize) {
@@ -235,7 +235,7 @@ GLModel *mdlLoadModel(const char *filepathname) {
         return NULL;
     }
 
-    model->normals = (GLubyte*)malloc(model->normalArraySize );
+    model->normals = (GLubyte*)MALLOC(model->normalArraySize );
 
     sizeRead =  fread(model->normals, 1, model->normalArraySize , curFile);
     if (sizeRead != model->normalArraySize) {
@@ -276,7 +276,7 @@ GLModel *mdlLoadQuadModel(void) {
         0, 3, 2
     };
 
-    GLModel *model = (GLModel *)calloc(sizeof(GLModel), 1);
+    GLModel *model = (GLModel *)CALLOC(sizeof(GLModel), 1);
 
     if (!model) {
         return NULL;
@@ -285,23 +285,23 @@ GLModel *mdlLoadQuadModel(void) {
     model->positionType = GL_FLOAT;
     model->positionSize = 3;
     model->positionArraySize = sizeof(posArray);
-    model->positions = (GLubyte*)malloc(model->positionArraySize);
+    model->positions = (GLubyte*)MALLOC(model->positionArraySize);
     memcpy(model->positions, posArray, model->positionArraySize);
 
     model->texcoordType = GL_FLOAT;
     model->texcoordSize = 2;
     model->texcoordArraySize = sizeof(texcoordArray);
-    model->texCoords = (GLubyte*)malloc(model->texcoordArraySize);
+    model->texCoords = (GLubyte*)MALLOC(model->texcoordArraySize);
     memcpy(model->texCoords, texcoordArray, model->texcoordArraySize );
 
     model->normalType = GL_FLOAT;
     model->normalSize = 3;
     model->normalArraySize = sizeof(normalArray);
-    model->normals = (GLubyte*)malloc(model->normalArraySize);
+    model->normals = (GLubyte*)MALLOC(model->normalArraySize);
     memcpy(model->normals, normalArray, model->normalArraySize);
 
     model->elementArraySize = sizeof(elementArray);
-    model->elements    = (GLubyte*)malloc(model->elementArraySize);
+    model->elements    = (GLubyte*)MALLOC(model->elementArraySize);
     memcpy(model->elements, elementArray, model->elementArraySize);
 
     model->primType = GL_TRIANGLES;
@@ -312,7 +312,7 @@ GLModel *mdlLoadQuadModel(void) {
 
     return model;
 }
-#endif
+#endif // 0
 
 static void _quadCreateVAOAndVBOs(GLModel *model) {
 
@@ -325,7 +325,7 @@ static void _quadCreateVAOAndVBOs(GLModel *model) {
     // Create a vertex buffer object (VBO) to store positions and load data
     glGenBuffers(1, &(model->posBufferName));
     glBindBuffer(GL_ARRAY_BUFFER, model->posBufferName);
-    glBufferData(GL_ARRAY_BUFFER, model->positionArraySize, model->positions, GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, model->positionArraySize, model->positions, model->positionUsageHint);
 
 #if USE_VAO
     // Enable the position attribute for this VAO
@@ -351,7 +351,7 @@ static void _quadCreateVAOAndVBOs(GLModel *model) {
         glBindBuffer(GL_ARRAY_BUFFER, model->texcoordBufferName);
 
         // Allocate and load texcoord data into the VBO
-        glBufferData(GL_ARRAY_BUFFER, model->texcoordArraySize, model->texCoords, GL_DYNAMIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, model->texcoordArraySize, model->texCoords, model->texcoordUsageHint);
 
 #if USE_VAO
         // Enable the texcoord attribute for this VAO
@@ -378,7 +378,15 @@ static void _quadCreateVAOAndVBOs(GLModel *model) {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, model->elementBufferName);
 
     // Allocate and load vertex array element data into VBO
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, model->elementArraySize, model->elements, GL_DYNAMIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, model->elementArraySize, model->elements, GL_STATIC_DRAW/* HACK TODO FIXME: investigate*/);
+
+#if USE_VAO
+    // We're using VAOs we can destroy certain buffers since they are already
+    // loaded into GL and we've saved anything else we need
+    FREE(model->elements);
+    //FREE(model->normals);
+    FREE(model->texCoords);
+#endif
 
     GL_ERRLOG("quad creation of VAO/VBOs");
 }
@@ -409,7 +417,15 @@ static GLuint _quadCreateTexture(GLModel *model) {
     return texName;
 }
 
-GLModel *mdlCreateQuad(GLfloat skew_x, GLfloat skew_y, GLfloat obj_w, GLfloat obj_h, GLfloat z, GLsizei tex_w, GLsizei tex_h, GLCustom clazz) {
+GLModel *mdlCreateQuad(GLModelParams_s parms, GLCustom clazz) {
+
+    const GLfloat skew_x = parms.skew_x;
+    const GLfloat skew_y = parms.skew_y;
+    const GLfloat obj_w = parms.obj_w;
+    const GLfloat obj_h = parms.obj_h;
+    const GLfloat z = parms.z;
+    const GLsizei tex_w = parms.tex_w;
+    const GLsizei tex_h = parms.tex_h;
 
     /* 2...3
      *  .
@@ -437,15 +453,17 @@ GLModel *mdlCreateQuad(GLfloat skew_x, GLfloat skew_y, GLfloat obj_w, GLfloat ob
     GLModel *model = NULL;
 
     do {
-        model = calloc(1, sizeof(GLModel));
+        model = CALLOC(1, sizeof(GLModel));
         if (!model) {
             break;
         }
         model->numVertices = 4;
         model->numElements = 6;
         model->primType = GL_TRIANGLES;
+        model->positionUsageHint = parms.positionUsageHint;
+        model->texcoordUsageHint = parms.texcoordUsageHint;
 
-        model->positions = malloc(sizeof(obj_positions));
+        model->positions = MALLOC(sizeof(obj_positions));
         if (!(model->positions)) {
             break;
         }
@@ -454,8 +472,12 @@ GLModel *mdlCreateQuad(GLfloat skew_x, GLfloat skew_y, GLfloat obj_w, GLfloat ob
         model->positionSize = 4; // x,y,z coordinates
         model->positionArraySize = sizeof(obj_positions);
 
-        if (tex_w > 0 && tex_h > 0) {
-            model->texCoords = malloc(sizeof(obj_texcoords));
+        model->texcoordType = UNINITIALIZED_GL;
+        model->texcoordSize = 0;
+        model->texcoordArraySize = 0;
+        const bool useTexture = (tex_w > 0 && tex_h > 0);
+        if (useTexture) {
+            model->texCoords = MALLOC(sizeof(obj_texcoords));
             if (!(model->texCoords)) {
                 break;
             }
@@ -465,6 +487,7 @@ GLModel *mdlCreateQuad(GLfloat skew_x, GLfloat skew_y, GLfloat obj_w, GLfloat ob
             model->texcoordArraySize = sizeof(obj_texcoords);
         }
 
+#if 0
         {
             // NO NORMALS for now
             model->normals = NULL;
@@ -472,8 +495,9 @@ GLModel *mdlCreateQuad(GLfloat skew_x, GLfloat skew_y, GLfloat obj_w, GLfloat ob
             model->normalSize = GL_NONE;
             model->normalArraySize = 0;
         }
+#endif
 
-        model->elements = malloc(sizeof(indices));
+        model->elements = MALLOC(sizeof(indices));
         if (!(model->elements)) {
             break;
         }
@@ -487,9 +511,10 @@ GLModel *mdlCreateQuad(GLfloat skew_x, GLfloat skew_y, GLfloat obj_w, GLfloat ob
         model->posBufferName = UNINITIALIZED_GL;
         model->texcoordBufferName = UNINITIALIZED_GL;
         model->elementBufferName = UNINITIALIZED_GL;
+        model->texFormat = UNINITIALIZED_GL;
 
         _quadCreateVAOAndVBOs(model);
-        if (model->posBufferName == UNINITIALIZED_GL || model->texcoordBufferName == UNINITIALIZED_GL || model->elementBufferName == UNINITIALIZED_GL) {
+        if (model->posBufferName == UNINITIALIZED_GL || (useTexture && model->texcoordBufferName == UNINITIALIZED_GL) || model->elementBufferName == UNINITIALIZED_GL) {
             LOG("Error creating model buffers!");
             break;
         }
@@ -497,28 +522,28 @@ GLModel *mdlCreateQuad(GLfloat skew_x, GLfloat skew_y, GLfloat obj_w, GLfloat ob
         model->texDirty = true;
         model->texWidth = tex_w;
         model->texHeight = tex_h;
-        model->texFormat = TEX_FORMAT;
-        model->texPixels = (GLvoid *)calloc(tex_w * tex_h * sizeof(PIXEL_TYPE), 1);
-        if (model->texPixels == NULL) {
-            break;
-        }
-        model->textureName = _quadCreateTexture(model);
-        if (model->textureName == UNINITIALIZED_GL) {
-            LOG("Error creating model texture!");
-            break;
+        if (useTexture) {
+            model->texFormat = TEX_FORMAT;
+            model->texPixels = (GLvoid *)MALLOC(tex_w * tex_h * sizeof(PIXEL_TYPE));
+            if (model->texPixels == NULL) {
+                break;
+            }
+            model->textureName = _quadCreateTexture(model);
+            if (model->textureName == UNINITIALIZED_GL) {
+                LOG("Error creating model texture!");
+                break;
+            }
         }
 
         model->custom = NULL;
         if (clazz.create) {
-            model->custom = clazz.create();
-            if (model->custom) {
-                model->custom->create = NULL;
-                model->custom->setup = clazz.setup;
-                model->custom->destroy = clazz.destroy;
-                if (model->custom->setup) {
-                    model->custom->setup(model);
-                }
+            model->custom = clazz.create(model);
+            if (!model->custom) {
+                LOG("Error creating custom model!");
+                break;
             }
+            model->custom->create = NULL;
+            model->custom->destroy = clazz.destroy;
         }
 
         GL_ERRLOG("quad creation");
@@ -543,7 +568,7 @@ void mdlDestroyModel(INOUT GLModel **model) {
 
     FREE(m->elements);
     FREE(m->positions);
-    FREE(m->normals);
+    //FREE(m->normals);
     FREE(m->texCoords);
     FREE(m->texPixels);
 
@@ -558,6 +583,7 @@ void mdlDestroyModel(INOUT GLModel **model) {
 
         // For every possible attribute set in the VAO
         for (GLuint index = 0; index < 16; index++) {
+#warning FIXME TODO ... why magick hardcoded 16? ...
             // Get the VBO set for that attibute
             GLuint bufName = 0;
             glGetVertexAttribiv(index , GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING, (GLint*)&bufName);
@@ -603,8 +629,9 @@ void mdlDestroyModel(INOUT GLModel **model) {
     }
 #endif
 
-    if (m->custom) {
+    if (m->custom && m->custom->destroy) {
         m->custom->destroy(m);
+        m->custom = NULL;
     }
 
     FREE(*model);

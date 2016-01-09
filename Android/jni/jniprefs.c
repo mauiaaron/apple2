@@ -110,6 +110,11 @@ void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetTouchJoystickVisibili
     joydriver_setShowControls(visibility);
 }
 
+void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetTouchJoystickAzimuthVisibility(JNIEnv *env, jclass cls, jboolean visibility) {
+    LOG("visibility: %d", visibility);
+    joydriver_setShowAzimuth(visibility);
+}
+
 jint Java_org_deadc0de_apple2ix_Apple2Preferences_nativeGetCurrentTouchDevice(JNIEnv *env, jclass cls) {
     LOG("%s", "");
     if (joydriver_ownsScreen()) {
@@ -130,19 +135,28 @@ void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetTouchMenuEnabled(JNIE
     interface_setTouchMenuEnabled(enabled);
 }
 
+void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetShowDiskOperationAnimation(JNIEnv *env, jclass cls, jboolean enabled) {
+    LOG("enabled : %d", enabled);
+    if (video_backend && video_backend->animation_setEnableShowTrackSector) {
+        video_backend->animation_setEnableShowTrackSector(enabled);
+    }
+}
+
 void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetTouchKeyboardLowercaseEnabled(JNIEnv *env, jclass cls, jboolean enabled) {
     LOG("enabled : %d", enabled);
     keydriver_setLowercaseEnabled(enabled);
 }
 
-void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetTouchMenuVisibility(JNIEnv *env, jclass cls, jfloat alpha) {
-    LOG("visibility : %f", alpha);
-    interface_setTouchMenuVisibility(alpha);
-}
-
 void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetTouchKeyboardVisibility(JNIEnv *env, jclass cls, jfloat inactiveAlpha, jfloat activeAlpha) {
     LOG("inactive:%f active:%f", inactiveAlpha, activeAlpha);
     keydriver_setVisibilityWhenOwnsScreen(inactiveAlpha, activeAlpha);
+    interface_setTouchMenuVisibility(inactiveAlpha, activeAlpha);
+}
+
+void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetTouchKeyboardGlyphScale(JNIEnv *env, jclass cls, jint glyphScale) {
+    LOG("glyphScale:%d", glyphScale);
+    keydriver_setGlyphScale(glyphScale);
+    interface_setGlyphScale(glyphScale);
 }
 
 void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetTouchJoystickButtonTypes(JNIEnv *env, jclass cls, jint touchDownButton, jint northButton, jint southButton) {
@@ -170,7 +184,7 @@ void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetTouchJoystickButtonTy
     rosetteChars[ROSETTE_NORTH]     = (uint8_t)MOUSETEXT_UP;    rosetteScancodes[ROSETTE_NORTH]     = -1;
     rosetteChars[ROSETTE_NORTHEAST] = ' ';                      rosetteScancodes[ROSETTE_NORTHEAST] = -1;
     rosetteChars[ROSETTE_WEST]      = (uint8_t)MOUSETEXT_LEFT;  rosetteScancodes[ROSETTE_WEST]      = -1;
-    rosetteChars[ROSETTE_CENTER]    = '+';                      rosetteScancodes[ROSETTE_CENTER]    = -1;
+    rosetteChars[ROSETTE_CENTER]    = ICONTEXT_MENU_TOUCHJOY;   rosetteScancodes[ROSETTE_CENTER]    = -1;
     rosetteChars[ROSETTE_EAST]      = (uint8_t)MOUSETEXT_RIGHT; rosetteScancodes[ROSETTE_EAST]      = -1;
     rosetteChars[ROSETTE_SOUTHWEST] = ' ';                      rosetteScancodes[ROSETTE_SOUTHWEST] = -1;
     rosetteChars[ROSETTE_SOUTH]     = (uint8_t)MOUSETEXT_DOWN;  rosetteScancodes[ROSETTE_SOUTH]     = -1;
@@ -226,6 +240,9 @@ void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeTouchJoystickSetKeypadTy
     uint8_t actualChars[ROSETTE_ROWS * ROSETTE_COLS];
     for (unsigned int i=0; i<(ROSETTE_ROWS * ROSETTE_COLS); i++) {
         actualChars[i] = (uint8_t)rosetteChars[i];
+    }
+    if (actualChars[4] == ICONTEXT_NONACTIONABLE) {
+        actualChars[4] = ICONTEXT_MENU_TOUCHJOY;
     }
     joydriver_setTouchAxisTypes(actualChars, rosetteScans);
     joydriver_setTouchButtonTypes(

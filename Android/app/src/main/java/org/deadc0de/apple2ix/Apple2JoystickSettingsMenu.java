@@ -329,6 +329,30 @@ public class Apple2JoystickSettingsMenu extends Apple2AbstractMenu {
                     return convertView;
                 }
             },
+            JOYSTICK_AZIMUTH_VISIBILITY {
+                @Override
+                public final String getTitle(Apple2Activity activity) {
+                    return activity.getResources().getString(R.string.joystick_azimuth_visible);
+                }
+
+                @Override
+                public final String getSummary(Apple2Activity activity) {
+                    return activity.getResources().getString(R.string.joystick_azimuth_visible_summary);
+                }
+
+                @Override
+                public View getView(final Apple2Activity activity, View convertView) {
+                    convertView = _basicView(activity, this, convertView);
+                    CheckBox cb = _addCheckbox(activity, this, convertView, Apple2Preferences.JOYSTICK_AZIMUTH_VISIBILITY.booleanValue(activity));
+                    cb.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                        @Override
+                        public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                            Apple2Preferences.JOYSTICK_AZIMUTH_VISIBILITY.saveBoolean(activity, isChecked);
+                        }
+                    });
+                    return convertView;
+                }
+            },
             JOYSTICK_AXIS_ON_LEFT {
                 @Override
                 public final String getTitle(Apple2Activity activity) {
@@ -415,7 +439,7 @@ public class Apple2JoystickSettingsMenu extends Apple2AbstractMenu {
 
                         @Override
                         public void showValue(int progress, final TextView seekBarValue) {
-                            int threshold = progress * Apple2Preferences.JOYSTICK_BUTTON_THRESHOLD_STEP;
+                            int threshold = progress * Apple2Preferences.getJoystickButtonSwitchThresholdScale(activity);
                             seekBarValue.setText("" + threshold + " pts");
                         }
                     });

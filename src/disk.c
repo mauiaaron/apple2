@@ -90,22 +90,6 @@ static void _init_disk6(void) {
     }
 }
 
-static inline void cut_gz(char *name) {
-    size_t len = strlen(name);
-    if (len <= _GZLEN) {
-        return;
-    }
-    *(name+len-_GZLEN) = '\0';
-}
-
-static inline bool is_gz(const char * const name) {
-    size_t len = strlen(name);
-    if (len <= _GZLEN) {
-        return false;
-    }
-    return strncmp(name+len-_GZLEN, DISK_EXT_GZ, _GZLEN) == 0;
-}
-
 static inline bool is_nib(const char * const name) {
     size_t len = strlen(name);
     if (len <= _NIBLEN) {
@@ -372,6 +356,8 @@ static void denibblize_track(const uint8_t * const src, int drive, uint8_t * con
     unsigned int offset = 0;
     int sector = -1;
 
+    const unsigned int trackwidth = disk6.disk[drive].track_width;
+
     // iterate over 2x sectors (accounting for header and data sections)
     for (unsigned int sct2=0; sct2<(NUM_SECTORS<<1)+1; sct2++) {
         uint8_t prologue[3] = {0,0,0}; // D5AA..
@@ -383,10 +369,7 @@ static void denibblize_track(const uint8_t * const src, int drive, uint8_t * con
                 prologue[idx] = byte;
                 ++idx;
             }
-            ++offset;
-            if (offset >= disk6.disk[drive].track_width) {
-                offset = 0;
-            }
+            offset = (offset+1) % trackwidth;
             if (idx >= 3) {
                 break;
             }
@@ -399,13 +382,11 @@ static void denibblize_track(const uint8_t * const src, int drive, uint8_t * con
 #define SCTOFF 0x4
         if (prologue[2] == 0x96) {
             // found header prologue : extract sector
-            offset += SCTOFF;
-            if (offset >= disk6.disk[drive].track_width) {
-                RELEASE_LOG("WRAPPING PROLOGUE ...");
-                offset -= disk6.disk[drive].track_width;
-            }
-            sector = ((trackimage[offset++] & 0x55) << 1);
-            sector |= (trackimage[offset++] & 0x55);
+            offset = (offset+SCTOFF) % trackwidth;
+            sector = ((trackimage[offset] & 0x55) << 1);
+            offset = (offset+1) % trackwidth;
+            sector |= (trackimage[offset] & 0x55);
+            offset = (offset+1) % trackwidth;
             continue;
         }
         if (UNLIKELY(prologue[2] != 0xAD)) {
@@ -418,11 +399,7 @@ static void denibblize_track(const uint8_t * const src, int drive, uint8_t * con
         uint8_t work_buf[NUM_SIXBIT_NIBS+1];
         for (unsigned int idx=0; idx<(NUM_SIXBIT_NIBS+1); idx++) {
             work_buf[idx] = trackimage[offset];
-            ++offset;
-            if (offset >= disk6.disk[drive].track_width) {
-                offset = 0;
-                LOG("WARNING : wrapping trackimage ... trk:%d sct:%d [0]:0x%02X", (disk6.disk[drive].phase >> 1), sector, trackimage[offset]);
-            }
+            offset = (offset+1) % trackwidth;
         }
         assert(sector >= 0 && sector < 16 && "invalid previous nibblization");
         int sec_off = 256 * disk6.disk[drive].skew_table[ sector ];
@@ -477,6 +454,23 @@ static void save_track_data(int drive) {
     }
 
     disk6.disk[drive].track_dirty = false;
+}
+
+static inline void animate_disk_track_sector(void) {
+    if (video_backend && video_backend->animation_showTrackSector) {
+        static int previous_sect = 0;
+        int sect_width = disk6.disk[disk6.drive].track_width>>4; // div-by-16
+        do {
+            if (UNLIKELY(sect_width <= 0)) {
+                break;
+            }
+            int sect = disk6.disk[disk6.drive].run_byte/sect_width;
+            if (sect != previous_sect) {
+                previous_sect = sect;
+                video_backend->animation_showTrackSector(disk6.drive, disk6.disk[disk6.drive].phase>>1, sect);
+            }
+        } while (0);
+    }
 }
 
 // ----------------------------------------------------------------------------
@@ -552,6 +546,9 @@ GLUE_C_READ(disk_read_write_byte)
     if (disk6.disk[disk6.drive].run_byte >= disk6.disk[disk6.drive].track_width) {
         disk6.disk[disk6.drive].run_byte = 0;
     }
+
+    animate_disk_track_sector();
+
 #if DISK_TRACING
     if ((disk6.disk[disk6.drive].run_byte % NIB_SEC_SIZE) == 0) {
         if (disk6.ddrw) {
@@ -631,6 +628,8 @@ GLUE_C_READ(disk_read_phase)
             fprintf(test_write_fp, "NEW TRK:%d\n", (disk6.disk[disk6.drive].phase>>1));
         }
 #endif
+
+        animate_disk_track_sector();
     }
 
     return ea == 0xE0 ? 0xFF : floating_bus_hibit(1);
@@ -748,6 +747,9 @@ const char *disk6_eject(int drive) {
             ERRLOG("Error close()ing file %s", disk6.disk[drive].file_name);
         }
 
+#ifdef __APPLE__
+#   warning FIXME TODO : can we not inflate/deflate disk images within the iOS port?  Maybe this is just a permission thing?
+#else
         // foo.dsk -> foo.dsk.gz
         err = zlib_deflate(disk6.disk[drive].file_name, is_nib(disk6.disk[drive].file_name) ? NIB_SIZE : DSK_SIZE);
         if (err) {
@@ -755,9 +757,10 @@ const char *disk6_eject(int drive) {
         } else {
             unlink(disk6.disk[drive].file_name);
         }
+#endif
     }
 
-    FREE(disk6.disk[drive].file_name);
+    STRDUP_FREE(disk6.disk[drive].file_name);
     memset(&disk6.disk[drive], 0x0, sizeof(disk6.disk[drive]));
 
     disk6.disk[drive].fd = -1;
@@ -904,6 +907,233 @@ void disk6_flush(int drive) {
     if (ret) {
         ERRLOG("Error syncing file %s", disk6.disk[drive].file_name);
     }
+}
+
+bool disk6_saveState(StateHelper_s *helper) {
+    bool saved = false;
+    int fd = helper->fd;
+
+    do {
+        uint8_t state = 0x0;
+
+        state = (uint8_t)disk6.motor_off;
+        if (!helper->save(fd, &state, 1)) {
+            break;
+        }
+        LOG("SAVE motor_off = %02x", state);
+
+        state = (uint8_t)disk6.drive;
+        if (!helper->save(fd, &state, 1)) {
+            break;
+        }
+        LOG("SAVE drive = %02x", state);
+
+        state = (uint8_t)disk6.ddrw;
+        if (!helper->save(fd, &state, 1)) {
+            break;
+        }
+        LOG("SAVE ddrw = %02x", state);
+
+        state = (uint8_t)disk6.disk_byte;
+        if (!helper->save(fd, &state, 1)) {
+            break;
+        }
+        LOG("SAVE disk_byte = %02x", state);
+
+        // Drive A/B
+
+        bool saved_drives = false;
+        for (unsigned long i=0; i<3; i++) {
+            if (i >= 2) {
+                saved_drives = true;
+                break;
+            }
+
+            disk6_flush(i);
+
+            state = (uint8_t)disk6.disk[i].is_protected;
+            if (!helper->save(fd, &state, 1)) {
+                break;
+            }
+            LOG("SAVE is_protected[%lu] = %02x", i, state);
+
+            uint8_t serialized[4] = { 0 };
+
+            if (disk6.disk[i].file_name != NULL) {
+                uint32_t namelen = strlen(disk6.disk[i].file_name);
+                serialized[0] = (uint8_t)((namelen & 0xFF000000) >> 24);
+                serialized[1] = (uint8_t)((namelen & 0xFF0000  ) >> 16);
+                serialized[2] = (uint8_t)((namelen & 0xFF00    ) >>  8);
+                serialized[3] = (uint8_t)((namelen & 0xFF      ) >>  0);
+                if (!helper->save(fd, serialized, 4)) {
+                    break;
+                }
+
+                if (!helper->save(fd, disk6.disk[i].file_name, namelen)) {
+                    break;
+                }
+
+                LOG("SAVE disk[%lu] : (%u) %s", i, namelen, disk6.disk[i].file_name);
+            } else {
+                memset(serialized, 0x0, sizeof(serialized));
+                if (!helper->save(fd, serialized, 4)) {
+                    break;
+                }
+                LOG("SAVE disk[%lu] (0) <NULL>", i);
+            }
+
+            // Save unused placeholder -- backwards compatibility
+            state = 0x0;
+            if (!helper->save(fd, &state, 1)) {
+                break;
+            }
+
+            // Save unused placeholder -- backwards compatibility
+            state = 0x0;
+            if (!helper->save(fd, &state, 1)) {
+                break;
+            }
+
+            state = (uint8_t)disk6.disk[i].phase;
+            if (!helper->save(fd, &state, 1)) {
+                break;
+            }
+            LOG("SAVE phase[%lu] = %02x", i, state);
+
+            serialized[0] = (uint8_t)((disk6.disk[i].run_byte & 0xFF00) >>  8);
+            serialized[1] = (uint8_t)((disk6.disk[i].run_byte & 0xFF  ) >>  0);
+            if (!helper->save(fd, serialized, 2)) {
+                break;
+            }
+            LOG("SAVE run_byte[%lu] = %04x", i, disk6.disk[i].run_byte);
+        }
+
+        if (!saved_drives) {
+            break;
+        }
+
+        saved = true;
+    } while (0);
+
+    return saved;
+}
+
+bool disk6_loadState(StateHelper_s *helper) {
+    bool loaded = false;
+    int fd = helper->fd;
+
+    do {
+        uint8_t state = 0x0;
+
+        if (!helper->load(fd, &state, 1)) {
+            break;
+        }
+        disk6.motor_off = state;
+        LOG("LOAD motor_off = %02x", disk6.motor_off);
+
+        if (!helper->load(fd, &state, 1)) {
+            break;
+        }
+        disk6.drive = state;
+        LOG("LOAD drive = %02x", disk6.drive);
+
+        if (!helper->load(fd, &state, 1)) {
+            break;
+        }
+        disk6.ddrw = state;
+        LOG("LOAD ddrw = %02x", disk6.ddrw);
+
+        if (!helper->load(fd, &state, 1)) {
+            break;
+        }
+        disk6.disk_byte = state;
+        LOG("LOAD disk_byte = %02x", disk6.disk_byte);
+
+        // Drive A/B
+
+        bool loaded_drives = false;
+
+        for (unsigned long i=0; i<3; i++) {
+            if (i >= 2) {
+                loaded_drives = true;
+                break;
+            }
+
+            uint8_t serialized[4] = { 0 };
+
+            if (!helper->load(fd, &state, 1)) {
+                break;
+            }
+            disk6.disk[i].is_protected = state;
+            LOG("LOAD is_protected[%lu] = %02x", i, disk6.disk[i].is_protected);
+
+            if (!helper->load(fd, serialized, 4)) {
+                break;
+            }
+            uint32_t namelen = 0x0;
+            namelen  = (uint32_t)(serialized[0] << 24);
+            namelen |= (uint32_t)(serialized[1] << 16);
+            namelen |= (uint32_t)(serialized[2] <<  8);
+            namelen |= (uint32_t)(serialized[3] <<  0);
+
+            disk6_eject(i);
+
+            if (namelen) {
+                unsigned long gzlen = (_GZLEN+1);
+                char *namebuf = MALLOC(namelen+gzlen+1);
+                if (!helper->load(fd, namebuf, namelen)) {
+                    FREE(namebuf);
+                    break;
+                }
+
+                namebuf[namelen] = '\0';
+                if (disk6_insert(i, namebuf, disk6.disk[i].is_protected)) {
+                    snprintf(namebuf+namelen, gzlen, "%s", EXT_GZ);
+                    namebuf[namelen+gzlen] = '\0';
+                    LOG("LOAD disk[%lu] : (%u) %s", i, namelen, namebuf);
+                    if (disk6_insert(i, namebuf, disk6.disk[i].is_protected)) {
+                        FREE(namebuf);
+                        break;
+                    }
+                }
+
+                FREE(namebuf);
+            }
+
+            // load placeholder
+            if (!helper->load(fd, &state, 1)) {
+                break;
+            }
+
+            // load placeholder
+            if (!helper->load(fd, &state, 1)) {
+                break;
+            }
+
+            if (!helper->load(fd, &state, 1)) {
+                break;
+            }
+            disk6.disk[i].phase = state;
+            LOG("LOAD phase[%lu] = %02x", i, disk6.disk[i].phase);
+
+            if (!helper->load(fd, serialized, 2)) {
+                break;
+            }
+            disk6.disk[i].run_byte  = (uint32_t)(serialized[0] << 8);
+            disk6.disk[i].run_byte |= (uint32_t)(serialized[1] << 0);
+            LOG("LOAD run_byte[%lu] = %04x", i, disk6.disk[i].run_byte);
+        }
+
+        if (!loaded_drives) {
+            disk6_eject(0);
+            disk6_eject(1);
+            break;
+        }
+
+        loaded = true;
+    } while (0);
+
+    return loaded;
 }
 
 #if DISK_TRACING
