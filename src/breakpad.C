@@ -27,7 +27,7 @@ static google_breakpad::ExceptionHandler *eh = nullptr;
 
 static bool dumpCallback(const google_breakpad::MinidumpDescriptor& descriptor, void* context, bool succeeded) {
     // WARNING : should only do minimal work from within a crashing context ...
-    LOG("Dump path: %s", descriptor.path());
+    // LOG()ging here has been found to result in ANRs on various Android devices!
     return succeeded;
 }
 
