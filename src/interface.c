@@ -558,11 +558,9 @@ void c_interface_select_diskette( int drive )
             }
             else if ((ch == 13) || (toupper(ch) == 'W'))
             {
-                if (disk_path) {
-                    size_t pathlen = strlen(disk_path);
-                    if (pathlen && disk_path[pathlen-1] == '/') {
-                        disk_path[pathlen-1] = '\0';
-                    }
+                size_t pathlen = strlen(disk_path);
+                if (pathlen && disk_path[pathlen-1] == '/') {
+                    disk_path[pathlen-1] = '\0';
                 }
 
                 snprintf(temp, PATH_MAX, "%s/%s",

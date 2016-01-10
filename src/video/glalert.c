@@ -17,7 +17,7 @@
 #define MODEL_DEPTH -0.0625
 
 static bool isEnabled = true;
-static pthread_mutex_t messageMutex = { 0 };
+static pthread_mutex_t messageMutex = PTHREAD_MUTEX_INITIALIZER;
 static char *nextMessage = NULL;
 static unsigned int nextMessageCols = 0;
 static unsigned int nextMessageRows = 0;

@@ -1090,7 +1090,7 @@ const uint8_t * const video_current_framebuffer(void) {
 }
 
 void video_clear(void) {
-    uint8_t *current_fb = video_current_framebuffer();
+    uint8_t *current_fb = (uint8_t *)video_current_framebuffer();
     memset(current_fb, 0x0, sizeof(uint8_t)*SCANWIDTH*SCANHEIGHT);
     video_setDirty();
 }

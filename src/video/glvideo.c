@@ -33,7 +33,7 @@ GLuint mainShaderProgram = UNINITIALIZED_GL;
 bool hackAroundBrokenAdreno200 = false;
 bool hackAroundBrokenAdreno205 = false;
 
-extern GLfloat mvpIdentity[16] = { 0 };
+GLfloat mvpIdentity[16] = { 0 };
 static GLint uniformMVPIdx = UNINITIALIZED_GL;
 static GLModel *crtModel = NULL;
 

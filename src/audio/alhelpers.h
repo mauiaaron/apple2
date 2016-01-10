@@ -1,6 +1,15 @@
 #ifndef ALHELPERS_H
 #define ALHELPERS_H
 
+#ifdef __APPLE__
+#   import <OpenAL/al.h>
+#   import <OpenAL/alc.h>
+#else
+#   include <AL/al.h>
+#   include <AL/alc.h>
+#   include <AL/alext.h>
+#endif
+
 #ifndef _WIN32
 #include <unistd.h>
 #else

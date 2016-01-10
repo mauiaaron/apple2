@@ -969,7 +969,7 @@ bool disk6_saveState(StateHelper_s *helper) {
                     break;
                 }
 
-                if (!helper->save(fd, disk6.disk[i].file_name, namelen)) {
+                if (!helper->save(fd, (const uint8_t *)disk6.disk[i].file_name, namelen)) {
                     break;
                 }
 
@@ -1081,7 +1081,7 @@ bool disk6_loadState(StateHelper_s *helper) {
             if (namelen) {
                 unsigned long gzlen = (_GZLEN+1);
                 char *namebuf = MALLOC(namelen+gzlen+1);
-                if (!helper->load(fd, namebuf, namelen)) {
+                if (!helper->load(fd, (uint8_t *)namebuf, namelen)) {
                     FREE(namebuf);
                     break;
                 }

@@ -78,7 +78,7 @@ static bool emul_resume_audio = false;
 #endif
 static bool cpu_shutting_down = false;
 pthread_t cpu_thread_id = 0;
-pthread_mutex_t interface_mutex = { 0 };
+pthread_mutex_t interface_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t dbg_thread_cond = PTHREAD_COND_INITIALIZER;
 pthread_cond_t cpu_thread_cond = PTHREAD_COND_INITIALIZER;
 
@@ -266,12 +266,13 @@ static void *cpu_thread(void *dummyptr) {
 
     LOG("cpu_thread : initialized...");
 
-    struct timespec deltat;
+    struct timespec deltat = { 0 };
 #if !MOBILE_DEVICE
-    struct timespec disk_motor_time;
+    struct timespec disk_motor_time = { 0 };
 #endif
-    struct timespec t0;         // the target timer
-    struct timespec ti, tj;     // actual time samples
+    struct timespec t0 = { 0 }; // the target timer
+    struct timespec ti = { 0 }; // actual before time sample
+    struct timespec tj = { 0 }; // actual after time sample
     bool negative = false;
     long drift_adj_nsecs = 0;   // generic drift adjustment between target and actual
 

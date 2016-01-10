@@ -85,7 +85,7 @@ bool emulator_saveState(const char * const path) {
         assert(fd != 0 && "crazy platform");
 
         // save header
-        if (!_save_state(fd, SAVE_MAGICK, SAVE_MAGICK_LEN)) {
+        if (!_save_state(fd, (const uint8_t *)SAVE_MAGICK, SAVE_MAGICK_LEN)) {
             break;
         }
 
