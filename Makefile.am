@@ -1,7 +1,7 @@
 
 AM_CPPFLAGS = -Isrc -DCONFIG_DATADIR=\"@datadir@\"
 AM_CPPFLAGS += -I../src # work around some bug in make distcheck
-AM_LFLAGS = -i
+AM_LFLAGS = -i -D_GNU_SOURCE=1
 #AM_COLOR_TESTS = no
 #LDFLAGS =
 #LDADD =
