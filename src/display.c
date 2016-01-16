@@ -16,6 +16,7 @@
 #include "common.h"
 
 #define SCANSTEP (SCANWIDTH-12)
+#define SCANDSTEP (SCANWIDTH-6)
 
 #define DYNAMIC_SZ 11 // 7 pixels (as bytes) + 2pre + 2post
 
@@ -605,13 +606,11 @@ static inline void _plot_character(const unsigned int font_off, uint8_t *fb_ptr)
     _plot_char40(/*dst*/&fb_ptr, /*src*/&font_ptr);
 }
 
-static inline void _plot_character0(uint16_t ea, uint8_t b)
-{
+static void _plot_character0(uint16_t ea, uint8_t b) {
     _plot_character(b<<7/* *128 */, video__fb1+video__screen_addresses[ea-0x0400]);
 }
 
-static inline void _plot_character1(uint16_t ea, uint8_t b)
-{
+static void _plot_character1(uint16_t ea, uint8_t b) {
     _plot_character(b<<7/* *128 */, video__fb2+video__screen_addresses[ea-0x0800]);
 }
 
@@ -629,23 +628,21 @@ static inline void _plot_80character(const unsigned int font_off, uint8_t *fb_pt
 }
 
 // FIXME TODO NOTE : dup'ing work here?
-static inline void _plot_80character0(uint16_t ea, uint8_t b)
-{
+static void _plot_80character0(uint16_t ea, uint8_t b) {
     b = apple_ii_64k[1][ea];
     _plot_80character(b<<6/* *64 */, video__fb1+video__screen_addresses[ea-0x0400]);
     b = apple_ii_64k[0][ea];
     _plot_80character(b<<6/* *64 */, video__fb1+video__screen_addresses[ea-0x0400]+7);
 }
 
-static inline void _plot_80character1(uint16_t ea, uint8_t b)
-{
+static void _plot_80character1(uint16_t ea, uint8_t b) {
     b = apple_ii_64k[1][ea];
     _plot_80character(b<<6/* *64 */, video__fb2+video__screen_addresses[ea-0x0800]);
     b = apple_ii_64k[0][ea];
     _plot_80character(b<<6/* *64 */, video__fb2+video__screen_addresses[ea-0x0800]+7);
 }
 
-static inline void _plot_block(const uint32_t val, uint8_t *fb_ptr) {
+static inline void _plot_block(const uint8_t val, uint8_t *fb_ptr) {
     video_setDirty();
     uint8_t color = (val & 0x0F) << 4;
     uint32_t val32 = (color << 24) | (color << 16) | (color << 8) | color;
@@ -682,67 +679,49 @@ static inline void _plot_block1(uint16_t ea, uint8_t b)
     _plot_block(b, video__fb2+video__screen_addresses[ea-0x0800]);
 }
 
-#define DRAW_TEXT(PAGE, SW) \
-    do { \
-        if (softswitches & SS_TEXT) { \
-            if (softswitches & SS_80COL) { \
-                _plot_80character##PAGE(ea, b); \
-            } else if (softswitches & SW) { \
-                /* ??? */ \
-            } else { \
-                _plot_character##PAGE(ea, b); \
-            } \
-        } else { \
-            if (softswitches & (SS_HIRES|SW)) { \
-                /* ??? */ \
-            } else { \
-                _plot_block##PAGE(ea, b); \
-            } \
-        } \
-    } while(0)
-
-
-#define DRAW_MIXED(PAGE, SW) \
-    do { \
-        if (softswitches & (SS_TEXT|SS_MIXED)) { \
-            if (softswitches & SS_80COL) { \
-                _plot_80character##PAGE(ea, b); \
-            } else if (softswitches & SW) { \
-                /* ??? */ \
-            } else { \
-                _plot_character##PAGE(ea, b); \
-            } \
-        } else { \
-            if (softswitches & (SS_HIRES|SW)) { \
-                /* ??? */ \
-            } else { \
-                _plot_block##PAGE(ea, b); \
-            } \
-        } \
-    } while(0)
+static inline void _draw_text(uint16_t ea, uint8_t b, int page, uint32_t sw, uint32_t flags) {
+    if (softswitches & flags) {
+        if (softswitches & SS_80COL) {
+            void (*plot80Fn)(uint16_t, uint8_t) = !page ? _plot_80character0 : _plot_80character1;
+            plot80Fn(ea,b);
+        } else if (softswitches & sw) {
+            /* ??? */
+        } else {
+            void (*plotCharFn)(uint16_t, uint8_t) = !page ? _plot_character0 : _plot_character1;
+            plotCharFn(ea, b);
+        }
+    } else {
+        if (softswitches & (SS_HIRES|sw)) {
+            /* ??? */
+        } else {
+            void (*plotBlockFn)(uint16_t, uint8_t) = !page ? _plot_block0 : _plot_block1;
+            plotBlockFn(ea, b);
+        }
+    }
+}
 
 GLUE_C_WRITE(video__write_2e_text0)
 {
     base_textwrt[ea] = b;
-    DRAW_TEXT(0, SS_TEXTWRT);
+    _draw_text(ea, b, 0, SS_TEXTWRT, SS_TEXT);
 }
 
 GLUE_C_WRITE(video__write_2e_text0_mixed)
 {
     base_textwrt[ea] = b;
-    DRAW_MIXED(0, SS_TEXTWRT);
+    _draw_text(ea, b, 0, SS_TEXTWRT, (SS_TEXT|SS_MIXED));
 }
 
 GLUE_C_WRITE(video__write_2e_text1)
 {
     base_ramwrt[ea] = b;
-    DRAW_TEXT(1, SS_RAMWRT);
+    _draw_text(ea, b, 1, SS_RAMWRT, SS_TEXT);
 }
 
 GLUE_C_WRITE(video__write_2e_text1_mixed)
 {
     base_ramwrt[ea] = b;
-    DRAW_MIXED(1, SS_RAMWRT);
+    _draw_text(ea, b, 1, SS_RAMWRT, (SS_TEXT|SS_MIXED));
 }
 
 // ----------------------------------------------------------------------------
@@ -1148,15 +1127,15 @@ void video_redraw(void) {
 
             // text/lores pages
             if (y < 20) {
-                DRAW_TEXT(0, SS_TEXTWRT);
+                _draw_text(ea, b, 0, SS_TEXTWRT, SS_TEXT);
                 ea += 0x400;
                 b = apple_ii_64k[0][ea];
-                DRAW_TEXT(1, SS_RAMWRT);
+                _draw_text(ea, b, 1, SS_RAMWRT, SS_TEXT);
             } else {
-                DRAW_MIXED(0, SS_TEXTWRT);
+                _draw_text(ea, b, 0, SS_TEXTWRT, (SS_TEXT|SS_MIXED));
                 ea += 0x400;
                 b = apple_ii_64k[0][ea];
-                DRAW_MIXED(1, SS_RAMWRT);
+                _draw_text(ea, b, 1, SS_RAMWRT, (SS_TEXT|SS_MIXED));
             }
 
             // hires/dhires pages
