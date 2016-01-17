@@ -593,6 +593,20 @@ static inline void _plot_lores(uint8_t **d, const uint32_t val) {
     *((uint16_t *)(*d)) = (uint16_t)(val & 0xffff);
 }
 
+static inline void _plot_dlores(uint8_t **d, const uint32_t val) {
+    *((uint32_t *)(*d)) = val;
+    *d += 4;
+    *((uint16_t *)(*d)) = (uint16_t)val;
+    *d += 2;
+    *((uint8_t *)(*d))  = (uint8_t)val;
+    *d += SCANDSTEP;
+    *((uint32_t *)(*d)) = val;
+    *d += 4;
+    *((uint16_t *)(*d)) = (uint16_t)val;
+    *d += 2;
+    *((uint8_t *)(*d))  = (uint8_t)val;
+}
+
 static inline void _plot_character(const unsigned int font_off, uint8_t *fb_ptr) {
     video_setDirty();
     uint8_t *font_ptr = video__wider_font+font_off;
@@ -679,6 +693,42 @@ static inline void _plot_block1(uint16_t ea, uint8_t b)
     _plot_block(b, video__fb2+video__screen_addresses[ea-0x0800]);
 }
 
+static inline void _plot_dblock(const uint8_t val, uint8_t *fb_ptr) {
+    uint8_t color = (val & 0x0F) << 4;
+    uint32_t val32 = (color << 24) | (color << 16) | (color << 8) | color;
+
+    _plot_dlores(/*dst*/&fb_ptr, val32);
+    fb_ptr += SCANDSTEP;
+    _plot_dlores(/*dst*/&fb_ptr, val32);
+    fb_ptr += SCANDSTEP;
+    _plot_dlores(/*dst*/&fb_ptr, val32);
+    fb_ptr += SCANDSTEP;
+    _plot_dlores(/*dst*/&fb_ptr, val32);
+
+    fb_ptr += SCANDSTEP;
+    color = val & 0xF0;
+    val32 = (color << 24) | (color << 16) | (color << 8) | color;
+
+    _plot_dlores(/*dst*/&fb_ptr, val32);
+    fb_ptr += SCANDSTEP;
+    _plot_dlores(/*dst*/&fb_ptr, val32);
+    fb_ptr += SCANDSTEP;
+    _plot_dlores(/*dst*/&fb_ptr, val32);
+    fb_ptr += SCANDSTEP;
+    _plot_dlores(/*dst*/&fb_ptr, val32);
+}
+
+/* plot double-lores block first page */
+static inline void _plot_dblock0(uint16_t ea, uint8_t b, bool odd) {
+    uint8_t *fb = video__fb1+video__screen_addresses[ea-0x0400] + (odd ? 7 : 0);
+    _plot_dblock(b, fb);
+}
+
+static inline void _plot_dblock1(uint16_t ea, uint8_t b, bool odd) {
+    uint8_t *fb = video__fb2+video__screen_addresses[ea-0x0800] + (odd ? 7 : 0);
+    _plot_dblock(b, fb);
+}
+
 static inline void _draw_text(uint16_t ea, uint8_t b, int page, uint32_t sw, uint32_t flags) {
     if (softswitches & flags) {
         if (softswitches & SS_80COL) {
@@ -694,8 +744,42 @@ static inline void _draw_text(uint16_t ea, uint8_t b, int page, uint32_t sw, uin
         if (softswitches & (SS_HIRES|sw)) {
             /* ??? */
         } else {
-            void (*plotBlockFn)(uint16_t, uint8_t) = !page ? _plot_block0 : _plot_block1;
-            plotBlockFn(ea, b);
+            if (!(softswitches & SS_80COL)) {
+                void (*plotBlockFn)(uint16_t, uint8_t) = !page ? _plot_block0 : _plot_block1;
+                if (!(softswitches & SS_DHIRES)) {
+                    // LORES40 ...
+                    plotBlockFn(ea, b);
+                } else {
+                    // TODO : abnormal LORES output.  See UTAIIe : 8-28
+                    plotBlockFn(ea, b);
+                }
+            } else {
+                if (softswitches & SS_DHIRES) {
+                    // LORES80 ...
+                    void (*plotBlockFn)(uint16_t, uint8_t, bool) = !page ? _plot_dblock0 : _plot_dblock1;
+
+                    // plot even half-block from auxmem, rotate nybbles to match color (according to UTAIIe)
+                    b = apple_ii_64k[1][ea];
+                    uint8_t b0 = (b & 0x0F);
+                    uint8_t b1 = (b & 0xF0) >> 4;
+                    uint8_t rot0 = ((b0 & 0x8) >> 3);
+                    uint8_t rot1 = ((b1 & 0x8) >> 3);
+                    b0 = (((b0<<5) | (rot0<<4)) >> 4);
+                    b1 =  ((b1<<5) | (rot1<<4));
+                    b = b0 | b1;
+                    plotBlockFn(ea, b, false);
+
+                    // plot odd half-block from main mem
+                    b = apple_ii_64k[0][ea];
+                    plotBlockFn(ea, b, true);
+
+                    video_setDirty();
+                } else {
+                    /* ??? */
+                    void (*plotBlockFn)(uint16_t, uint8_t) = !page ? _plot_block0 : _plot_block1;
+                    plotBlockFn(ea, b);
+                }
+            }
         }
     }
 }
