@@ -190,7 +190,7 @@ static unsigned long g_n6522TimerPeriod = 0;
 static const unsigned int TIMERDEVICE_INVALID = -1;
 #endif
 static unsigned int g_nMBTimerDevice = TIMERDEVICE_INVALID;	// SY6522 device# which is generating timer IRQ
-static uint64_t g_uLastCumulativeCycles = 0;
+static unsigned long g_uLastCumulativeCycles = 0;
 
 // SSI263 vars:
 static uint16_t g_nSSI263Device = 0;	// SSI263 device# which is generating phoneme-complete IRQ
@@ -209,7 +209,7 @@ static short* ppAYVoiceBuffer[NUM_VOICES] = {0};
 
 #ifdef APPLE2IX
 bool g_bDisableDirectSoundMockingboard = false;
-static uint64_t	g_nMB_InActiveCycleCount = 0;
+static unsigned long g_nMB_InActiveCycleCount = 0;
 #else
 static uint64_t	g_nMB_InActiveCycleCount = 0;
 #endif
@@ -948,9 +948,9 @@ static void MB_Update()
 			g_nMB_InActiveCycleCount = cycles_count_total;
 		}
 #ifdef APPLE2IX
-		else if(cycles_count_total - g_nMB_InActiveCycleCount > (uint64_t)cycles_persec_target/10)
+		else if(cycles_count_total - g_nMB_InActiveCycleCount > cycles_persec_target/10)
 #else
-		else if(cycles_count_total - g_nMB_InActiveCycleCount > (uint64_t)cycles_persec_target/10)
+		else if(cycles_count_total - g_nMB_InActiveCycleCount > cycles_persec_target/10)
 #endif
 		{
 			// After 0.1 sec of Apple time, assume MB is not active
@@ -2141,7 +2141,7 @@ void MB_UpdateCycles(void)
 		return;
 
 	timing_checkpoint_cycles();
-	uint64_t uCycles = cycles_count_total - g_uLastCumulativeCycles;
+	unsigned long uCycles = cycles_count_total - g_uLastCumulativeCycles;
 	g_uLastCumulativeCycles = cycles_count_total;
 	//assert(uCycles < 0x10000);
         if (uCycles >= 0x10000) {

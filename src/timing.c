@@ -50,7 +50,7 @@
 
 // cycle counting
 double cycles_persec_target = CLK_6502;
-unsigned long long cycles_count_total = 0;
+unsigned long cycles_count_total = 0;           // Running at spec ~1MHz, this will approach overflow in ~4000secs
 int cycles_speaker_feedback = 0;
 int32_t cpu65_cycles_to_execute = 0;            // cycles-to-execute by cpu65_run()
 int32_t cpu65_cycle_count = 0;                  // cycles currently excuted by cpu65_run()
@@ -312,6 +312,11 @@ static void *cpu_thread(void *dummyptr) {
 
         LOG("cpu_thread : begin main loop ...");
 
+#ifndef NDEBUG
+        extern void timing_testCyclesCountOverflow(void);
+        timing_testCyclesCountOverflow();
+#endif
+
         clock_gettime(CLOCK_MONOTONIC, &t0);
 
         do {
@@ -563,6 +568,19 @@ void timing_checkpoint_cycles(void) {
     const int32_t d = cpu65_cycle_count - cycles_checkpoint_count;
     assert(d >= 0);
     cycles_count_total += d;
+#ifndef NDEBUG
+    if (UNLIKELY(cycles_count_total < cycles_checkpoint_count)) {
+        LOG("OVERFLOWED cycles_count_total...");
+    }
+#endif
     cycles_checkpoint_count = cpu65_cycle_count;
 }
+
+#ifndef NDEBUG
+void timing_testCyclesCountOverflow(void) {
+    // advance cycles count to near overflow
+    LOG("almost overflow ...");
+    cycles_count_total = ULONG_MAX - (CLK_6502_INT*10);
+}
+#endif
 

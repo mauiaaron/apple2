@@ -41,7 +41,7 @@
 
 // 65 cycles per 912 14M clocks = 1020484.45 ...
 #define CLK_6502     ((_M14     * 65.0) / 912.0)
-#define CLK_6502_INT ((_M14_INT * 65)   / 912)
+#define CLK_6502_INT ((unsigned int)CLK_6502)
 
 #define CPU_SCALE_SLOWEST 0.25
 #define CPU_SCALE_FASTEST0 4.0
@@ -51,7 +51,7 @@
 #   define CPU_SCALE_STEP 0.05
 #endif
 
-extern unsigned long long cycles_count_total;// cumulative cycles count from machine reset
+extern unsigned long cycles_count_total;    // cumulative cycles count from machine reset
 extern double cycles_persec_target;         // CLK_6502 * current CPU scale
 extern int cycles_speaker_feedback;         // current -/+ speaker requested feedback
 
