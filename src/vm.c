@@ -136,6 +136,7 @@ GLUE_C_READ(iie_page2_off)
     }
 
     video_setpage(0);
+    video_redraw();
 
     return floating_bus();
 }
@@ -160,6 +161,7 @@ GLUE_C_READ(iie_page2_on)
     } else {
         softswitches |= SS_SCREEN;
         video_setpage(1);
+        video_redraw();
     }
 
     return floating_bus();

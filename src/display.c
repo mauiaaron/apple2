@@ -703,25 +703,33 @@ static inline void _draw_text(uint16_t ea, uint8_t b, int page, uint32_t sw, uin
 GLUE_C_WRITE(video__write_2e_text0)
 {
     base_textwrt[ea] = b;
-    _draw_text(ea, b, 0, SS_TEXTWRT, SS_TEXT);
+    if (!(softswitches & SS_PAGE2)) {
+        _draw_text(ea, b, 0, SS_TEXTWRT, SS_TEXT);
+    }
 }
 
 GLUE_C_WRITE(video__write_2e_text0_mixed)
 {
     base_textwrt[ea] = b;
-    _draw_text(ea, b, 0, SS_TEXTWRT, (SS_TEXT|SS_MIXED));
+    if (!(softswitches & SS_PAGE2)) {
+        _draw_text(ea, b, 0, SS_TEXTWRT, (SS_TEXT|SS_MIXED));
+    }
 }
 
 GLUE_C_WRITE(video__write_2e_text1)
 {
     base_ramwrt[ea] = b;
-    _draw_text(ea, b, 1, SS_RAMWRT, SS_TEXT);
+    if (softswitches & SS_PAGE2) {
+        _draw_text(ea, b, 1, SS_RAMWRT, SS_TEXT);
+    }
 }
 
 GLUE_C_WRITE(video__write_2e_text1_mixed)
 {
     base_ramwrt[ea] = b;
-    _draw_text(ea, b, 1, SS_RAMWRT, (SS_TEXT|SS_MIXED));
+    if (softswitches & SS_PAGE2) {
+        _draw_text(ea, b, 1, SS_RAMWRT, (SS_TEXT|SS_MIXED));
+    }
 }
 
 // ----------------------------------------------------------------------------
@@ -991,49 +999,65 @@ static inline void _draw_hires_graphics(uint16_t ea, uint8_t b, bool is_even, ui
 GLUE_C_WRITE(video__write_2e_even0)
 {
     base_hgrwrt[ea] = b;
-    _draw_hires_graphics(ea, b, /*even*/true, 0, SS_TEXT);
+    if (!(softswitches & SS_PAGE2)) {
+        _draw_hires_graphics(ea, b, /*even*/true, 0, SS_TEXT);
+    }
 }
 
 GLUE_C_WRITE(video__write_2e_even0_mixed)
 {
     base_hgrwrt[ea] = b;
-    _draw_hires_graphics(ea, b, /*even*/true, 0, (SS_TEXT|SS_MIXED));
+    if (!(softswitches & SS_PAGE2)) {
+        _draw_hires_graphics(ea, b, /*even*/true, 0, (SS_TEXT|SS_MIXED));
+    }
 }
 
 GLUE_C_WRITE(video__write_2e_odd0)
 {
     base_hgrwrt[ea] = b;
-    _draw_hires_graphics(ea, b, /*even*/false, 0, SS_TEXT);
+    if (!(softswitches & SS_PAGE2)) {
+        _draw_hires_graphics(ea, b, /*even*/false, 0, SS_TEXT);
+    }
 }
 
 GLUE_C_WRITE(video__write_2e_odd0_mixed)
 {
     base_hgrwrt[ea] = b;
-    _draw_hires_graphics(ea, b, /*even*/false, 0, (SS_TEXT|SS_MIXED));
+    if (!(softswitches & SS_PAGE2)) {
+        _draw_hires_graphics(ea, b, /*even*/false, 0, (SS_TEXT|SS_MIXED));
+    }
 }
 
 GLUE_C_WRITE(video__write_2e_even1)
 {
     base_ramwrt[ea] = b;
-    _draw_hires_graphics(ea, b, /*even*/true, 1, SS_TEXT);
+    if (softswitches & SS_PAGE2) {
+        _draw_hires_graphics(ea, b, /*even*/true, 1, SS_TEXT);
+    }
 }
 
 GLUE_C_WRITE(video__write_2e_even1_mixed)
 {
     base_ramwrt[ea] = b;
-    _draw_hires_graphics(ea, b, /*even*/true, 1, (SS_TEXT|SS_MIXED));
+    if (softswitches & SS_PAGE2) {
+        _draw_hires_graphics(ea, b, /*even*/true, 1, (SS_TEXT|SS_MIXED));
+    }
 }
 
 GLUE_C_WRITE(video__write_2e_odd1)
 {
     base_ramwrt[ea] = b;
-    _draw_hires_graphics(ea, b, /*even*/false, 1, SS_TEXT);
+    if (softswitches & SS_PAGE2) {
+        _draw_hires_graphics(ea, b, /*even*/false, 1, SS_TEXT);
+    }
 }
 
 GLUE_C_WRITE(video__write_2e_odd1_mixed)
 {
     base_ramwrt[ea] = b;
-    _draw_hires_graphics(ea, b, /*even*/false, 1, (SS_TEXT|SS_MIXED));
+    if (softswitches & SS_PAGE2) {
+        _draw_hires_graphics(ea, b, /*even*/false, 1, (SS_TEXT|SS_MIXED));
+    }
 }
 
 // ----------------------------------------------------------------------------
