@@ -408,36 +408,8 @@ static void post_image() {
     }
 }
 
-static void c_flash_cursor(int on) {
-    // flash only if it's text or mixed modes.
-    if (softswitches & (SS_TEXT|SS_MIXED))
-    {
-        if (!on)
-        {
-            colormap[ COLOR_FLASHING_BLACK].red   = 0;
-            colormap[ COLOR_FLASHING_BLACK].green = 0;
-            colormap[ COLOR_FLASHING_BLACK].blue  = 0;
-
-            colormap[ COLOR_FLASHING_WHITE].red   = (uint8_t)0xffff;
-            colormap[ COLOR_FLASHING_WHITE].green = (uint8_t)0xffff;
-            colormap[ COLOR_FLASHING_WHITE].blue  = (uint8_t)0xffff;
-        }
-        else
-        {
-            colormap[ COLOR_FLASHING_WHITE].red   = 0;
-            colormap[ COLOR_FLASHING_WHITE].green = 0;
-            colormap[ COLOR_FLASHING_WHITE].blue  = 0;
-
-            colormap[ COLOR_FLASHING_BLACK].red   = (uint8_t)0xffff;
-            colormap[ COLOR_FLASHING_BLACK].green = (uint8_t)0xffff;
-            colormap[ COLOR_FLASHING_BLACK].blue  = (uint8_t)0xffff;
-        }
-    }
-}
-
 void video_driver_sync(void) {
 
-    static int flash_count = 0;
     // post the image and loop waiting for it to finish and
     // also process other input events
     post_image();
@@ -478,20 +450,6 @@ void video_driver_sync(void) {
 
     } while (keyevent);
 #endif
-
-#warning HACKISH flash count needs refactoring ...
-    switch (++flash_count)
-    {
-    case 6:
-        c_flash_cursor(1);
-        break;
-    case 12:
-        c_flash_cursor(0);
-        flash_count = 0;
-        break;
-    default:
-        break;
-    }
 }
 
 static void _redo_image(void);

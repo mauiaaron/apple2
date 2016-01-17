@@ -118,6 +118,11 @@ void video_loadfont(int first, int qty, const uint8_t *data, int mode);
 void video_redraw(void);
 
 /*
+ * Toggles FLASHing text between NORMAL and INVERSE character sets.
+ */
+void video_flashText(void);
+
+/*
  * Clear the current display.
  */
 void video_clear(void);

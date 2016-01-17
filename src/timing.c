@@ -279,11 +279,11 @@ static void *cpu_thread(void *dummyptr) {
     int debugging_cycles0 = 0;
     int debugging_cycles = 0;
 
-#if DEBUG_TIMING
     unsigned long dbg_ticks = 0;
+#if DEBUG_TIMING
     int speaker_neg_feedback = 0;
     int speaker_pos_feedback = 0;
-    unsigned int dbg_cycles_executed = 0;
+    unsigned long dbg_cycles_executed = 0;
 #endif
 
     do
@@ -469,6 +469,11 @@ static void *cpu_thread(void *dummyptr) {
                     TRACE_CPU_END();
                 }
 
+                dbg_ticks += EXECUTION_PERIOD_NSECS;
+                if ((dbg_ticks % (NANOSECONDS_PER_SECOND>>1)) == 0)
+                {
+                    video_flashText(); // TODO FIXME : proper FLASH timing ...
+                }
 #if DEBUG_TIMING
                 // collect timing statistics
                 if (speaker_neg_feedback > cycles_speaker_feedback)
@@ -480,7 +485,6 @@ static void *cpu_thread(void *dummyptr) {
                     speaker_pos_feedback = cycles_speaker_feedback;
                 }
 
-                dbg_ticks += EXECUTION_PERIOD_NSECS;
                 if ((dbg_ticks % NANOSECONDS_PER_SECOND) == 0)
                 {
                     TIMING_LOG("tick:(%ld.%ld) real:(%ld.%ld) cycles exe: %d ... speaker feedback: %d/%d", t0.tv_sec, t0.tv_nsec, ti.tv_sec, ti.tv_nsec, dbg_cycles_executed, speaker_neg_feedback, speaker_pos_feedback);

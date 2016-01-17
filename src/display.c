@@ -1277,6 +1277,35 @@ void video_redraw(void) {
     video_setDirty();
 }
 
+void video_flashText(void) {
+    static bool normal = false;
+
+    normal = !normal;
+
+    // flash only if it's text or mixed modes.
+    if (softswitches & (SS_TEXT|SS_MIXED)) {
+        if (normal) {
+            colormap[ COLOR_FLASHING_BLACK].red   = 0;
+            colormap[ COLOR_FLASHING_BLACK].green = 0;
+            colormap[ COLOR_FLASHING_BLACK].blue  = 0;
+
+            colormap[ COLOR_FLASHING_WHITE].red   = 0xff;
+            colormap[ COLOR_FLASHING_WHITE].green = 0xff;
+            colormap[ COLOR_FLASHING_WHITE].blue  = 0xff;
+        } else {
+            colormap[ COLOR_FLASHING_BLACK].red   = 0xff;
+            colormap[ COLOR_FLASHING_BLACK].green = 0xff;
+            colormap[ COLOR_FLASHING_BLACK].blue  = 0xff;
+
+            colormap[ COLOR_FLASHING_WHITE].red   = 0;
+            colormap[ COLOR_FLASHING_WHITE].green = 0;
+            colormap[ COLOR_FLASHING_WHITE].blue  = 0;
+        }
+
+        video_setDirty();
+    }
+}
+
 // ----------------------------------------------------------------------------
 // VBL/timing routines
 
