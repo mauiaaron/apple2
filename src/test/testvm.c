@@ -546,7 +546,7 @@ TEST test_PAGE2_on(bool flag_80store, bool flag_hires) {
     switch_save = switch_save | SS_PAGE2;
 
     if (flag_80store) {
-        ASSERT(video__current_page == 0);
+
         switch_save = switch_save & ~SS_SCREEN;
         switch_save = switch_save | SS_80STORE;
         switch_save = switch_save | (SS_TEXTRD|SS_TEXTWRT);
@@ -563,7 +563,7 @@ TEST test_PAGE2_on(bool flag_80store, bool flag_hires) {
     } else {
         switch_save = switch_save | SS_SCREEN;
         switch_save = switch_save & ~SS_80STORE;
-        ASSERT(video__current_page = 1);
+
         ASSERT(base_textrd  == save_base_textrd);  // unchanged
         ASSERT(base_textwrt == save_base_textwrt); // unchanged
         ASSERT(base_hgrrd  == save_base_hgrrd);    // unchanged
@@ -625,7 +625,7 @@ TEST test_PAGE2_off(bool flag_80store, bool flag_hires) {
     ASSERT( (flag_80store ? (softswitches & SS_80STORE) : !(softswitches & SS_80STORE)) );
     ASSERT( (flag_hires   ? (softswitches & SS_HIRES)   : !(softswitches & SS_HIRES)) );
 
-    ASSERT(video__current_page == 0);
+
 
     switch_save = switch_save & ~SS_SCREEN;
     switch_save = switch_save & ~SS_PAGE2;
@@ -713,7 +713,7 @@ TEST test_TEXT_on() {
     uint8_t *save_base_textwrt = base_textwrt;
     uint8_t *save_base_hgrrd = base_hgrrd;
     uint8_t *save_base_hgrwrt = base_hgrwrt;
-    int save_current_page = video__current_page;
+
 
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x00;
     c_debugger_go();
@@ -721,7 +721,7 @@ TEST test_TEXT_on() {
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
 
     ASSERT((softswitches & SS_TEXT));
-    ASSERT(video__current_page == save_current_page);
+
 
     switch_save = (switch_save | SS_TEXT);
 
@@ -763,7 +763,7 @@ TEST test_TEXT_off() {
     uint8_t *save_base_textwrt = base_textwrt;
     uint8_t *save_base_hgrrd = base_hgrrd;
     uint8_t *save_base_hgrwrt = base_hgrwrt;
-    int save_current_page = video__current_page;
+
 
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x00;
     c_debugger_go();
@@ -771,7 +771,7 @@ TEST test_TEXT_off() {
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
 
     ASSERT(!(softswitches & SS_TEXT));
-    ASSERT(video__current_page == save_current_page);
+
 
     switch_save = (switch_save & ~SS_TEXT);
 
@@ -845,7 +845,7 @@ TEST test_MIXED_on() {
     uint8_t *save_base_textwrt = base_textwrt;
     uint8_t *save_base_hgrrd = base_hgrrd;
     uint8_t *save_base_hgrwrt = base_hgrwrt;
-    int save_current_page = video__current_page;
+
 
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x00;
     c_debugger_go();
@@ -853,7 +853,7 @@ TEST test_MIXED_on() {
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
 
     ASSERT((softswitches & SS_MIXED));
-    ASSERT(video__current_page == save_current_page);
+
 
     switch_save = (switch_save | SS_MIXED);
 
@@ -895,7 +895,7 @@ TEST test_MIXED_off() {
     uint8_t *save_base_textwrt = base_textwrt;
     uint8_t *save_base_hgrrd = base_hgrrd;
     uint8_t *save_base_hgrwrt = base_hgrwrt;
-    int save_current_page = video__current_page;
+
 
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x00;
     c_debugger_go();
@@ -903,7 +903,7 @@ TEST test_MIXED_off() {
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
 
     ASSERT(!(softswitches & SS_MIXED));
-    ASSERT(video__current_page == save_current_page);
+
 
     switch_save = (switch_save & ~SS_MIXED);
 
@@ -991,7 +991,7 @@ TEST test_HIRES_on(bool flag_80store, bool flag_page2) {
     uint8_t *save_base_textwrt = base_textwrt;
     uint8_t *save_base_hgrrd = base_hgrrd;
     uint8_t *save_base_hgrwrt = base_hgrwrt;
-    int save_current_page = video__current_page;
+
 
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x00;
     c_debugger_go();
@@ -1018,7 +1018,7 @@ TEST test_HIRES_on(bool flag_80store, bool flag_page2) {
         ASSERT(base_hgrwrt == save_base_hgrwrt);   // unchanged
     }
 
-    ASSERT(video__current_page == save_current_page);
+
     ASSERT(base_textrd  == save_base_textrd);  // unchanged
     ASSERT(base_textwrt == save_base_textwrt); // unchanged
 
@@ -1071,7 +1071,7 @@ TEST test_HIRES_off(bool flag_ramrd, bool flag_ramwrt) {
     uint32_t switch_save = softswitches;
     uint8_t *save_base_textrd = base_textrd;
     uint8_t *save_base_textwrt = base_textwrt;
-    int save_current_page = video__current_page;
+
 
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x00;
     apple_ii_64k[1][WATCHPOINT_ADDR] = 0x00;
@@ -1102,7 +1102,7 @@ TEST test_HIRES_off(bool flag_ramrd, bool flag_ramwrt) {
         ASSERT((void *)base_hgrwrt == (void *)(apple_ii_64k[0]));
     }
 
-    ASSERT(video__current_page == save_current_page);
+
     ASSERT(base_textrd  == save_base_textrd);  // unchanged
     ASSERT(base_textwrt == save_base_textwrt); // unchanged
 
@@ -1169,7 +1169,7 @@ TEST test_iie_c080(bool flag_altzp) {
     uint8_t *save_base_textwrt = base_textwrt;
     uint8_t *save_base_hgrrd = base_hgrrd;
     uint8_t *save_base_hgrwrt = base_hgrwrt;
-    int save_current_page = video__current_page;
+
 
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x00;
     c_debugger_go();
@@ -1179,7 +1179,7 @@ TEST test_iie_c080(bool flag_altzp) {
     switch_save = switch_save | (SS_LCRAM|SS_BANK2);
     switch_save = switch_save & ~(SS_LCSEC|SS_LCWRT);
 
-    ASSERT(video__current_page == save_current_page);
+
 
     ASSERT(base_textrd  == save_base_textrd);
     ASSERT(base_textwrt == save_base_textwrt);
@@ -1238,7 +1238,7 @@ TEST test_iie_c081(bool flag_altzp, bool flag_lcsec) {
     uint8_t *save_base_hgrwrt = base_hgrwrt;
     uint8_t *save_base_d000_wrt = base_d000_wrt;
     uint8_t *save_base_e000_wrt = base_e000_wrt;
-    int save_current_page = video__current_page;
+
 
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x00;
     c_debugger_go();
@@ -1248,7 +1248,7 @@ TEST test_iie_c081(bool flag_altzp, bool flag_lcsec) {
     switch_save = switch_save | (SS_LCSEC|SS_BANK2);
     switch_save = switch_save & ~SS_LCRAM;
 
-    ASSERT(video__current_page == save_current_page);
+
     ASSERT(base_textrd  == save_base_textrd);
     ASSERT(base_textwrt == save_base_textwrt);
     ASSERT(base_hgrrd  == save_base_hgrrd);
@@ -1286,7 +1286,7 @@ TEST test_lc_c082() {
     uint8_t *save_base_textwrt = base_textwrt;
     uint8_t *save_base_hgrrd = base_hgrrd;
     uint8_t *save_base_hgrwrt = base_hgrwrt;
-    int save_current_page = video__current_page;
+
 
     ASM_INIT();
     ASM_LC_C082();
@@ -1300,7 +1300,7 @@ TEST test_lc_c082() {
     switch_save = switch_save | SS_BANK2;
     switch_save = switch_save & ~(SS_LCRAM|SS_LCWRT|SS_LCSEC);
 
-    ASSERT(video__current_page == save_current_page);
+
     ASSERT(base_textrd   == save_base_textrd);
     ASSERT(base_textwrt  == save_base_textwrt);
     ASSERT(base_hgrrd    == save_base_hgrrd);
@@ -1352,7 +1352,7 @@ TEST test_iie_c083(bool flag_altzp, bool flag_lcsec) {
     uint8_t *save_base_hgrwrt = base_hgrwrt;
     uint8_t *save_base_d000_wrt = base_d000_wrt;
     uint8_t *save_base_e000_wrt = base_e000_wrt;
-    int save_current_page = video__current_page;
+
 
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x00;
     c_debugger_go();
@@ -1361,7 +1361,7 @@ TEST test_iie_c083(bool flag_altzp, bool flag_lcsec) {
 
     switch_save = switch_save | (SS_LCSEC|SS_LCRAM|SS_BANK2);
 
-    ASSERT(video__current_page == save_current_page);
+
     ASSERT(base_textrd  == save_base_textrd);
     ASSERT(base_textwrt == save_base_textwrt);
     ASSERT(base_hgrrd  == save_base_hgrrd);
@@ -1421,7 +1421,7 @@ TEST test_iie_c088(bool flag_altzp) {
     uint8_t *save_base_textwrt = base_textwrt;
     uint8_t *save_base_hgrrd = base_hgrrd;
     uint8_t *save_base_hgrwrt = base_hgrwrt;
-    int save_current_page = video__current_page;
+
 
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x00;
     c_debugger_go();
@@ -1431,7 +1431,7 @@ TEST test_iie_c088(bool flag_altzp) {
     switch_save = switch_save | SS_LCRAM;
     switch_save = switch_save & ~(SS_LCWRT|SS_LCSEC|SS_BANK2);
 
-    ASSERT(video__current_page == save_current_page);
+
     ASSERT(base_textrd  == save_base_textrd);
     ASSERT(base_textwrt == save_base_textwrt);
     ASSERT(base_hgrrd  == save_base_hgrrd);
@@ -1489,7 +1489,7 @@ TEST test_iie_c089(bool flag_altzp, bool flag_lcsec) {
     uint8_t *save_base_hgrwrt = base_hgrwrt;
     uint8_t *save_base_d000_wrt = base_d000_wrt;
     uint8_t *save_base_e000_wrt = base_e000_wrt;
-    int save_current_page = video__current_page;
+
 
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x00;
     c_debugger_go();
@@ -1499,7 +1499,7 @@ TEST test_iie_c089(bool flag_altzp, bool flag_lcsec) {
     switch_save = switch_save | SS_LCSEC;
     switch_save = switch_save & ~(SS_LCRAM|SS_BANK2);
 
-    ASSERT(video__current_page == save_current_page);
+
     ASSERT(base_textrd  == save_base_textrd);
     ASSERT(base_textwrt == save_base_textwrt);
     ASSERT(base_hgrrd  == save_base_hgrrd);
@@ -1537,7 +1537,7 @@ TEST test_lc_c08a() {
     uint8_t *save_base_textwrt = base_textwrt;
     uint8_t *save_base_hgrrd = base_hgrrd;
     uint8_t *save_base_hgrwrt = base_hgrwrt;
-    int save_current_page = video__current_page;
+
 
     ASM_INIT();
     ASM_LC_C08A();
@@ -1550,7 +1550,7 @@ TEST test_lc_c08a() {
 
     switch_save = switch_save & ~(SS_LCRAM|SS_LCWRT|SS_LCSEC|SS_BANK2);
 
-    ASSERT(video__current_page == save_current_page);
+
     ASSERT(base_textrd   == save_base_textrd);
     ASSERT(base_textwrt  == save_base_textwrt);
     ASSERT(base_hgrrd    == save_base_hgrrd);
@@ -1602,7 +1602,7 @@ TEST test_iie_c08b(bool flag_altzp, bool flag_lcsec) {
     uint8_t *save_base_hgrwrt = base_hgrwrt;
     uint8_t *save_base_d000_wrt = base_d000_wrt;
     uint8_t *save_base_e000_wrt = base_e000_wrt;
-    int save_current_page = video__current_page;
+
 
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x00;
     c_debugger_go();
@@ -1612,7 +1612,7 @@ TEST test_iie_c08b(bool flag_altzp, bool flag_lcsec) {
     switch_save = switch_save | (SS_LCSEC|SS_LCRAM);
     switch_save = switch_save & ~SS_BANK2;
 
-    ASSERT(video__current_page == save_current_page);
+
     ASSERT(base_textrd  == save_base_textrd);
     ASSERT(base_textwrt == save_base_textwrt);
     ASSERT(base_hgrrd  == save_base_hgrrd);
@@ -1789,7 +1789,7 @@ TEST test_80store_on(bool flag_hires, bool flag_page2) {
         }
     }
 
-    ASSERT(video__current_page == 0);
+
     ASSERT((softswitches ^ switch_save) == 0);
 
     PASS();
@@ -1886,9 +1886,9 @@ TEST test_80store_off(bool flag_ramrd, bool flag_ramwrt, bool flag_page2) {
         switch_save = switch_save | SS_PAGE2;
         switch_save = switch_save | SS_SCREEN;
         switch_save = switch_save & ~SS_80STORE;
-        ASSERT(video__current_page == 1);
+
     } else {
-        ASSERT(video__current_page == 0);
+
     }
 
     ASSERT((softswitches ^ switch_save) == 0);
@@ -1975,7 +1975,7 @@ TEST test_ramrd_main(bool flag_80store, bool flag_hires) {
     uint8_t *save_base_textwrt = base_textwrt;
     uint8_t *save_base_hgrrd = base_hgrrd;
     uint8_t *save_base_hgrwrt = base_hgrwrt;
-    int save_current_page = video__current_page;
+
 
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x00;
     c_debugger_go();
@@ -2006,7 +2006,7 @@ TEST test_ramrd_main(bool flag_80store, bool flag_hires) {
 
     ASSERT(base_textwrt == save_base_textwrt);
     ASSERT(base_hgrwrt  == save_base_hgrwrt);
-    ASSERT(video__current_page == save_current_page);
+
 
     ASSERT((softswitches ^ switch_save) == 0);
 
@@ -2056,7 +2056,7 @@ TEST test_ramrd_aux(bool flag_80store, bool flag_hires) {
     uint8_t *save_base_textwrt = base_textwrt;
     uint8_t *save_base_hgrrd = base_hgrrd;
     uint8_t *save_base_hgrwrt = base_hgrwrt;
-    int save_current_page = video__current_page;
+
 
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x00;
     c_debugger_go();
@@ -2087,7 +2087,7 @@ TEST test_ramrd_aux(bool flag_80store, bool flag_hires) {
 
     ASSERT(base_textwrt == save_base_textwrt);
     ASSERT(base_hgrwrt  == save_base_hgrwrt);
-    ASSERT(video__current_page == save_current_page);
+
 
     ASSERT((softswitches ^ switch_save) == 0);
 
@@ -2172,7 +2172,7 @@ TEST test_ramwrt_main(bool flag_80store, bool flag_hires) {
     uint8_t *save_base_textwrt = base_textwrt;
     uint8_t *save_base_hgrrd = base_hgrrd;
     uint8_t *save_base_hgrwrt = base_hgrwrt;
-    int save_current_page = video__current_page;
+
 
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x00;
     apple_ii_64k[1][WATCHPOINT_ADDR] = 0x00;
@@ -2204,7 +2204,7 @@ TEST test_ramwrt_main(bool flag_80store, bool flag_hires) {
 
     ASSERT(base_textrd == save_base_textrd);
     ASSERT(base_hgrrd  == save_base_hgrrd);
-    ASSERT(video__current_page == save_current_page);
+
 
     ASSERT((softswitches ^ switch_save) == 0);
 
@@ -2252,7 +2252,7 @@ TEST test_ramwrt_aux(bool flag_80store, bool flag_hires) {
     uint8_t *save_base_textwrt = base_textwrt;
     uint8_t *save_base_hgrrd = base_hgrrd;
     uint8_t *save_base_hgrwrt = base_hgrwrt;
-    int save_current_page = video__current_page;
+
 
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x00;
     apple_ii_64k[1][WATCHPOINT_ADDR] = 0x00;
@@ -2284,7 +2284,7 @@ TEST test_ramwrt_aux(bool flag_80store, bool flag_hires) {
 
     ASSERT(base_textrd == save_base_textrd);
     ASSERT(base_hgrrd  == save_base_hgrrd);
-    ASSERT(video__current_page == save_current_page);
+
 
     ASSERT((softswitches ^ switch_save) == 0);
 
@@ -2368,7 +2368,7 @@ TEST test_altzp_main(bool flag_lcram, bool flag_lcwrt) {
     uint8_t *save_base_d000_wrt = base_d000_wrt;
     uint8_t *save_base_e000_rd = base_e000_rd;
     uint8_t *save_base_e000_wrt = base_e000_wrt;
-    int save_current_page = video__current_page;
+
 
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x00;
     c_debugger_go();
@@ -2404,7 +2404,7 @@ TEST test_altzp_main(bool flag_lcram, bool flag_lcwrt) {
         ASSERT(base_e000_wrt == save_base_e000_wrt);
     }
 
-    ASSERT(video__current_page == save_current_page);
+
 
     ASSERT((softswitches ^ switch_save) == 0);
 
@@ -2453,7 +2453,7 @@ TEST test_altzp_aux(bool flag_lcram, bool flag_lcwrt) {
     uint8_t *save_base_d000_wrt = base_d000_wrt;
     uint8_t *save_base_e000_rd = base_e000_rd;
     uint8_t *save_base_e000_wrt = base_e000_wrt;
-    int save_current_page = video__current_page;
+
 
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x00;
     c_debugger_go();
@@ -2489,7 +2489,7 @@ TEST test_altzp_aux(bool flag_lcram, bool flag_lcwrt) {
         ASSERT(base_e000_wrt == save_base_e000_wrt);
     }
 
-    ASSERT(video__current_page == save_current_page);
+
 
     ASSERT((softswitches ^ switch_save) == 0);
 
@@ -2548,7 +2548,7 @@ TEST test_80col_on() {
     ASSERT(!(softswitches & SS_80COL));
 
     uint32_t switch_save = softswitches;
-    int save_current_page = video__current_page;
+
 
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x00;
     c_debugger_go();
@@ -2558,7 +2558,7 @@ TEST test_80col_on() {
 
     switch_save = switch_save | SS_80COL;
 
-    ASSERT(video__current_page == save_current_page);
+
 
     ASSERT((softswitches ^ switch_save) == 0);
 
@@ -2584,7 +2584,7 @@ TEST test_80col_off() {
     ASSERT((softswitches & SS_80COL));
 
     uint32_t switch_save = softswitches;
-    int save_current_page = video__current_page;
+
 
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x00;
     c_debugger_go();
@@ -2594,7 +2594,7 @@ TEST test_80col_off() {
 
     switch_save = switch_save & ~SS_80COL;
 
-    ASSERT(video__current_page == save_current_page);
+
 
     ASSERT((softswitches ^ switch_save) == 0);
 
@@ -2653,7 +2653,7 @@ TEST test_altchar_on() {
     ASSERT(!(softswitches & SS_ALTCHAR));
 
     uint32_t switch_save = softswitches;
-    int save_current_page = video__current_page;
+
 
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x00;
     c_debugger_go();
@@ -2665,7 +2665,7 @@ TEST test_altchar_on() {
 
     switch_save = switch_save | SS_ALTCHAR;
 
-    ASSERT(video__current_page == save_current_page);
+
 
     ASSERT((softswitches ^ switch_save) == 0);
 
@@ -2691,7 +2691,7 @@ TEST test_altchar_off() {
     ASSERT((softswitches & SS_ALTCHAR));
 
     uint32_t switch_save = softswitches;
-    int save_current_page = video__current_page;
+
 
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x00;
     c_debugger_go();
@@ -2703,7 +2703,7 @@ TEST test_altchar_off() {
 
     switch_save = switch_save & ~SS_ALTCHAR;
 
-    ASSERT(video__current_page == save_current_page);
+
 
     ASSERT((softswitches ^ switch_save) == 0);
 
@@ -2762,7 +2762,7 @@ TEST test_ioudis_on() {
     ASSERT(!(softswitches & SS_IOUDIS));
 
     uint32_t switch_save = softswitches;
-    int save_current_page = video__current_page;
+
 
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x00;
     c_debugger_go();
@@ -2772,7 +2772,7 @@ TEST test_ioudis_on() {
 
     switch_save = switch_save | SS_IOUDIS;
 
-    ASSERT(video__current_page == save_current_page);
+
 
     ASSERT((softswitches ^ switch_save) == 0);
 
@@ -2798,7 +2798,7 @@ TEST test_ioudis_off() {
     ASSERT((softswitches & SS_IOUDIS));
 
     uint32_t switch_save = softswitches;
-    int save_current_page = video__current_page;
+
 
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x00;
     c_debugger_go();
@@ -2808,7 +2808,7 @@ TEST test_ioudis_off() {
 
     switch_save = switch_save & ~SS_IOUDIS;
 
-    ASSERT(video__current_page == save_current_page);
+
 
     ASSERT((softswitches ^ switch_save) == 0);
 
@@ -2872,7 +2872,7 @@ TEST test_dhires_on(bool flag_ioudis/* FIXME TODO : possibly testing a existing 
     ASSERT(!(softswitches & SS_DHIRES));
 
     uint32_t switch_save = softswitches;
-    int save_current_page = video__current_page;
+
 
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x00;
     c_debugger_go();
@@ -2882,7 +2882,7 @@ TEST test_dhires_on(bool flag_ioudis/* FIXME TODO : possibly testing a existing 
 
     switch_save = switch_save | SS_DHIRES;
 
-    ASSERT(video__current_page == save_current_page);
+
 
     ASSERT((softswitches ^ switch_save) == 0);
 
@@ -2913,7 +2913,7 @@ TEST test_dhires_off(bool flag_ioudis/* FIXME TODO : possibly testing a existing
     ASSERT((softswitches & SS_DHIRES));
 
     uint32_t switch_save = softswitches;
-    int save_current_page = video__current_page;
+
 
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x00;
     c_debugger_go();
@@ -2923,7 +2923,7 @@ TEST test_dhires_off(bool flag_ioudis/* FIXME TODO : possibly testing a existing
 
     switch_save = switch_save & ~SS_DHIRES;
 
-    ASSERT(video__current_page == save_current_page);
+
 
     ASSERT((softswitches ^ switch_save) == 0);
 
