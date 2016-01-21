@@ -31,8 +31,6 @@ void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetColor(JNIEnv *env, jc
     color_mode = color;
 
     video_reset();
-    video_setpage(!!(softswitches & SS_SCREEN));
-    video_redraw();
 #endif
 }
 

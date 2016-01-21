@@ -978,7 +978,6 @@ void show_opcode_breakpts() {
    ------------------------------------------------------------------------- */
 void show_lc_info() {
     int i = num_buffer_lines;
-#warning FIXME TODO ... investigate/refactor all uses of !! here and elsewhere
     sprintf(second_buf[i++], "lc bank = %d", 1 + !!(softswitches & SS_BANK2));
     (softswitches & SS_LCWRT) ? sprintf(second_buf[i++], "write LC") : sprintf(second_buf[i++], "LC write protected");
     (softswitches & SS_LCRAM) ? sprintf(second_buf[i++], "read LC")  : sprintf(second_buf[i++], "read ROM");
@@ -1075,7 +1074,6 @@ void show_disk_info() {
 void clear_debugger_screen() {
 #ifdef INTERFACE_CLASSIC
     int i;
-    video_setpage( 0 );
     for (i = 0; i < 24; i++)
     {
         c_interface_print(0, i, 2, screen[ i ] );
@@ -1090,10 +1088,7 @@ void fb_sha1() {
     uint8_t md[SHA_DIGEST_LENGTH];
     char buf[(SHA_DIGEST_LENGTH*2)+1];
 
-    video_setpage(!!(softswitches & SS_SCREEN));
-    video_redraw();
-
-    const uint8_t * const fb = video_current_framebuffer();
+    const uint8_t * const fb = video_scan();
     SHA1(fb, SCANWIDTH*SCANHEIGHT, md);
 
     int i=0;
@@ -1440,7 +1435,6 @@ void c_interface_debugging() {
         lex_initted = 1;
     }
 
-    video_setpage( 0 );
     c_interface_translate_screen( screen );
     for (i = 0; i < 24; i++)
     {

@@ -216,8 +216,6 @@
     
 #warning HACK TODO FIXME need to refactor video resetting procedure
     video_reset();
-    video_setpage(!!(softswitches & SS_SCREEN));
-    video_redraw();
 }
 
 - (IBAction)soundCardChoiceChanged:(id)sender

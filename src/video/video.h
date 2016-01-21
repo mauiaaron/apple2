@@ -41,7 +41,7 @@ typedef struct A2Color_s {
 /*
  * Reference to the internal 8bit-indexed color format
  */
-extern A2Color_s colormap[256];
+extern A2Color_s colormap[];
 
 #endif /* !A2_VIDEO_H */
 

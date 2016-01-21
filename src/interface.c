@@ -165,7 +165,8 @@ static int altdrive = 0;
 
 void video_plotchar(const int col, const int row, const interface_colorscheme_t cs, const uint8_t c) {
     unsigned int off = row * SCANWIDTH * FONT_HEIGHT_PIXELS + col * FONT80_WIDTH_PIXELS + _INTERPOLATED_PIXEL_ADJUSTMENT_PRE;
-    interface_plotChar(video__fb1+off, SCANWIDTH, cs, c);
+    interface_plotChar(video_currentFramebuffer()+off, SCANWIDTH, cs, c);
+    video_setDirty(FB_DIRTY_FLAG);
 }
 
 void copy_and_pad_string(char *dest, const char* src, const char c, const int len, const char cap) {
@@ -198,7 +199,8 @@ static void pad_string(char *s, const char c, const int len) {
 }
 
 void c_interface_print( int x, int y, const interface_colorscheme_t cs, const char *s ) {
-    _interface_plotLine(video__fb1, SCANWIDTH, _INTERPOLATED_PIXEL_ADJUSTMENT_PRE, x, y, cs, s);
+    _interface_plotLine(video_currentFramebuffer(), SCANWIDTH, _INTERPOLATED_PIXEL_ADJUSTMENT_PRE, x, y, cs, s);
+    video_setDirty(FB_DIRTY_FLAG);
 }
 
 /* -------------------------------------------------------------------------
@@ -219,7 +221,8 @@ void c_interface_translate_screen( char screen[24][INTERFACE_SCREEN_X+1] ) {
 }
 
 void c_interface_print_submenu_centered( char *submenu, const int message_cols, const int message_rows ) {
-    _interface_plotMessageCentered(video__fb1, INTERFACE_SCREEN_X, TEXT_ROWS, RED_ON_BLACK, submenu, message_cols, message_rows);
+    _interface_plotMessageCentered(video_currentFramebuffer(), INTERFACE_SCREEN_X, TEXT_ROWS, RED_ON_BLACK, submenu, message_cols, message_rows);
+    video_setDirty(FB_DIRTY_FLAG);
 }
 
 /* ------------------------------------------------------------------------- */
@@ -303,8 +306,7 @@ void c_interface_exit(int ch)
     }
     else
     {
-        video_setpage(!!(softswitches & SS_SCREEN));
-        video_redraw();
+        video_setDirty(A2_DIRTY_FLAG);
     }
 }
 
@@ -373,8 +375,6 @@ void c_interface_select_diskette( int drive )
     int ch = -1;
 
     screen[ 1 ][ DRIVE_X ] = (drive == 0) ? 'A' : 'B';
-
-    video_setpage( 0 );
 
     c_interface_translate_screen( screen );
 
@@ -757,7 +757,6 @@ void c_interface_parameters()
 
     /* reset the x position, so we don't lose our cursor if path changes */
     cur_x = 0;
-    video_setpage( 0 );
 
     screen[ 2 ][ 33 ] = MOUSETEXT_OPENAPPLE;
     screen[ 2 ][ 46 ] = MOUSETEXT_CLOSEDAPPLE;
@@ -1416,8 +1415,6 @@ void c_interface_credits()
         "                                                                            ",
         "                                                                            " };
 
-    video_setpage( 0 );
-
     c_interface_translate_screen( screen );
     c_interface_translate_screen_x_y( credits[0], SCROLL_WIDTH, SCROLL_LENGTH);
     c_interface_print_screen( screen );
@@ -1505,8 +1502,6 @@ void c_interface_keyboard_layout()
       "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||",
       "|                           (Press any key to exit)                            |",
       "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||" };
-
-    video_setpage( 0 );
 
     screen[ 6 ][ 68 ] = MOUSETEXT_UP;
     screen[ 7 ][ 67 ] = MOUSETEXT_LEFT;

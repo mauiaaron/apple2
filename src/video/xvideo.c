@@ -62,8 +62,6 @@ static video_backend_s xvideo_backend = { 0 };
 static bool request_set_mode = false;
 static int request_mode = 0;
 
-volatile unsigned long _backend_vid_dirty = 0;
-
 typedef struct {
     unsigned long flags;
     unsigned long functions;
@@ -338,7 +336,7 @@ static int keysym_to_scancode(void) {
 
 static void post_image() {
     // copy Apple //e video memory into XImage uint32_t buffer
-    uint8_t *fb = !video__current_page ? video__fb1 : video__fb2;
+    uint8_t *fb = video_scan();
     uint8_t index;
 
     unsigned int count = SCANWIDTH * SCANHEIGHT;

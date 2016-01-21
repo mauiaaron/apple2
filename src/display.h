@@ -104,11 +104,15 @@ void video_reset(void);
 void video_loadfont(int first, int qty, const uint8_t *data, int mode);
 
 /*
- * Redraw the display. This is called after exiting an interface display,
- * when changes have been made to the Apple's emulated framebuffer that
- * bypass the driver's hooks, or when the video mode has changed.
+ * Flushes currently set Apple //e video memory into staging framebuffer and returns pointer.
+ * This should only really be called from render thread or testsuite.
  */
-void video_redraw(void);
+uint8_t *video_scan(void);
+
+/*
+ * Get a reference to current staging framebuffer
+ */
+uint8_t *video_currentFramebuffer(void);
 
 /*
  * Toggles FLASHing text between NORMAL and INVERSE character sets.
@@ -120,41 +124,23 @@ void video_flashText(void);
  */
 void video_clear(void);
 
-/*
- * Change the displayed video page to PAGE
- *   0 - Page 1: $400-$7ff/$2000-$3fff
- *   1 - Page 2: $800-$bff/$4000-$5fff
- */
-void video_setpage(int page);
+#define A2_DIRTY_FLAG 0x1 // Apple //e video is dirty
+#define FB_DIRTY_FLAG 0x2 // Internal framebuffer is dirty
 
 /*
- * Get a reference to current internal framebuffer
+ * True if dirty bit(s) are set for flag(s)
  */
-const uint8_t * const video_current_framebuffer();
-
-// do not access directly, but through inline accessor methods
-extern volatile unsigned long _backend_vid_dirty;
+bool video_isDirty(int flags);
 
 /*
- * True if anything changed in framebuffer and not yet drawn
+ * Atomically set dirty bit(s), return previous bit(s) value
  */
-static inline bool video_isDirty(void) {
-    return _backend_vid_dirty;
-}
+unsigned long video_setDirty(int flags);
 
 /*
- * Atomically set dirty bit, return previous value
+ * Atomically clear dirty bit(s), return previous bit(s) value
  */
-static inline unsigned long video_setDirty(void) {
-    return __sync_fetch_and_or(&_backend_vid_dirty, 1UL);
-}
-
-/*
- * Atomically clear dirty bit, return previous value
- */
-static inline unsigned long video_clearDirty(void) {
-    return __sync_fetch_and_and(&_backend_vid_dirty, 0UL);
-}
+unsigned long video_clearDirty(int flags);
 
 extern bool video_saveState(StateHelper_s *helper);
 extern bool video_loadState(StateHelper_s *helper);
@@ -274,17 +260,6 @@ uint8_t floating_bus_hibit(const bool hibit);
 /* ----------------------------------
     generic graphics globals
    ---------------------------------- */
-
-/*
- * Pointers to framebuffer (can be VGA memory or host buffer)
- */
-extern uint8_t *video__fb1;
-extern uint8_t *video__fb2;
-
-/*
- * Current visual page
- */
-extern READONLY int video__current_page;
 
 /*
  * font glyph data

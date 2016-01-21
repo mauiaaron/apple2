@@ -163,9 +163,7 @@ void reinitialize(void) {
 
     softswitches = SS_TEXT | SS_IOUDIS | SS_C3ROM | SS_LCWRT | SS_LCSEC;
 
-    video_setpage( 0 );
-
-    video_redraw();
+    video_setDirty(A2_DIRTY_FLAG);
 
     cpu65_init();
 
@@ -438,7 +436,7 @@ static void *cpu_thread(void *dummyptr) {
 #ifdef AUDIO_ENABLED
                         !speaker_isActive() &&
 #endif
-                        !video_isDirty() && (!disk6.motor_off && (disk_motor_time.tv_sec || disk_motor_time.tv_nsec > DISK_MOTOR_QUIET_NSECS)) )
+                        !video_isDirty(A2_DIRTY_FLAG) && (!disk6.motor_off && (disk_motor_time.tv_sec || disk_motor_time.tv_nsec > DISK_MOTOR_QUIET_NSECS)) )
                 {
                     TIMING_LOG("auto switching to full speed");
                     _timing_initialize(CPU_SCALE_FASTEST);
@@ -509,7 +507,7 @@ static void *cpu_thread(void *dummyptr) {
 #ifdef AUDIO_ENABLED
                             speaker_isActive() ||
 #endif
-                            video_isDirty() || (disk6.motor_off && (disk_motor_time.tv_sec || disk_motor_time.tv_nsec > DISK_MOTOR_QUIET_NSECS))) )
+                            video_isDirty(A2_DIRTY_FLAG) || (disk6.motor_off && (disk_motor_time.tv_sec || disk_motor_time.tv_nsec > DISK_MOTOR_QUIET_NSECS))) )
                 {
                     double speed = alt_speed_enabled ? cpu_altscale_factor : cpu_scale_factor;
                     if (speed < CPU_SCALE_FASTEST) {

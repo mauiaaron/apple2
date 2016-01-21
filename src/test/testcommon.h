@@ -49,7 +49,7 @@ void sha1_to_str(const uint8_t * const md, char *buf);
 
 static inline int ASSERT_SHA(const char *SHA_STR) {
     uint8_t md[SHA_DIGEST_LENGTH];
-    const uint8_t * const fb = video_current_framebuffer();
+    const uint8_t * const fb = video_scan();
     SHA1(fb, SCANWIDTH*SCANHEIGHT, md);
     sha1_to_str(md, mdstr);
     ASSERT(strcmp(mdstr, SHA_STR) == 0);
