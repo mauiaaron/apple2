@@ -310,8 +310,6 @@ static void glvideo_render(void) {
     if (!cpu_isPaused()) {
         // check if a2 video memory is dirty
         unsigned long wasDirty = video_clearDirty(A2_DIRTY_FLAG);
-        wasDirty = 1;
-#warning HACK FIXME TODO ... always setting A2 video memory dirty bit for now ...
         if (wasDirty) {
             fb = video_scan();
         }

@@ -159,8 +159,9 @@ GLUE_C_READ(iie_page2_on)
         }
     } else {
         softswitches |= SS_SCREEN;
-        video_setDirty(A2_DIRTY_FLAG);
     }
+
+    video_setDirty(A2_DIRTY_FLAG);
 
     return floating_bus();
 }
@@ -174,6 +175,7 @@ GLUE_C_READ(read_switch_graphics)
 {
     if (softswitches & SS_TEXT) {
         softswitches &= ~SS_TEXT;
+        video_setDirty(A2_DIRTY_FLAG);
     }
     return floating_bus();
 }
@@ -182,6 +184,7 @@ GLUE_C_READ(read_switch_text)
 {
     if (!(softswitches & SS_TEXT)) {
         softswitches |= SS_TEXT;
+        video_setDirty(A2_DIRTY_FLAG);
     }
     return floating_bus();
 }
@@ -195,6 +198,7 @@ GLUE_C_READ(read_switch_no_mixed)
 {
     if (softswitches & SS_MIXED) {
         softswitches &= ~SS_MIXED;
+        video_setDirty(A2_DIRTY_FLAG);
     }
     return floating_bus();
 }
@@ -203,6 +207,7 @@ GLUE_C_READ(read_switch_mixed)
 {
     if (!(softswitches & SS_MIXED)) {
         softswitches |= SS_MIXED;
+        video_setDirty(A2_DIRTY_FLAG);
     }
     return floating_bus();
 }
@@ -240,6 +245,8 @@ GLUE_C_READ(iie_hires_off)
         softswitches |= SS_HGRWRT;
     }
 
+    video_setDirty(A2_DIRTY_FLAG);
+
     return floating_bus();
 }
 
@@ -262,6 +269,8 @@ GLUE_C_READ(iie_hires_on)
             base_hgrwrt = apple_ii_64k[0];
         }
     }
+
+    video_setDirty(A2_DIRTY_FLAG);
 
     return floating_bus();
 }
@@ -536,8 +545,9 @@ GLUE_C_READ(iie_80store_off)
 
     if (softswitches & SS_PAGE2) {
         softswitches |= SS_SCREEN;
-        video_setDirty(A2_DIRTY_FLAG);
     }
+
+    video_setDirty(A2_DIRTY_FLAG);
 
     return floating_bus();
 }
@@ -601,6 +611,8 @@ GLUE_C_READ(iie_ramrd_main)
         base_hgrrd  = apple_ii_64k[0];
     }
 
+    video_setDirty(A2_DIRTY_FLAG);
+
     return floating_bus();
 }
 
@@ -623,6 +635,8 @@ GLUE_C_READ(iie_ramrd_aux)
         base_textrd = apple_ii_64k[1];
         base_hgrrd  = apple_ii_64k[1];
     }
+
+    video_setDirty(A2_DIRTY_FLAG);
 
     return floating_bus();
 }
@@ -733,6 +747,7 @@ GLUE_C_READ(iie_80col_off)
     }
 
     softswitches &= ~SS_80COL;
+    video_setDirty(A2_DIRTY_FLAG);
 
     return floating_bus();
 }
@@ -744,6 +759,7 @@ GLUE_C_READ(iie_80col_on)
     }
 
     softswitches |= SS_80COL;
+    video_setDirty(A2_DIRTY_FLAG);
 
     return floating_bus();
 }
@@ -758,6 +774,7 @@ GLUE_C_READ(iie_altchar_off)
     if (softswitches & SS_ALTCHAR) {
         softswitches &= ~SS_ALTCHAR;
         video_loadfont(0x40,0x40,ucase_glyphs,3);
+        video_setDirty(A2_DIRTY_FLAG);
     }
     return floating_bus();
 }
@@ -768,6 +785,7 @@ GLUE_C_READ(iie_altchar_on)
         softswitches |= SS_ALTCHAR;
         video_loadfont(0x40,0x20,mousetext_glyphs,1);
         video_loadfont(0x60,0x20,lcase_glyphs,2);
+        video_setDirty(A2_DIRTY_FLAG);
     }
     return floating_bus();
 }
@@ -799,6 +817,7 @@ GLUE_C_READ(iie_dhires_on)
 {
     if (!(softswitches & SS_DHIRES)) {
         softswitches |= SS_DHIRES;
+        video_setDirty(A2_DIRTY_FLAG);
     }
     return floating_bus();
 }
@@ -807,6 +826,7 @@ GLUE_C_READ(iie_dhires_off)
 {
     if (softswitches & SS_DHIRES) {
         softswitches &= ~SS_DHIRES;
+        video_setDirty(A2_DIRTY_FLAG);
     }
     return floating_bus();
 }

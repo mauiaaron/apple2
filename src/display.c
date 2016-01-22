@@ -778,28 +778,76 @@ static void (*_textpage_plotter(uint32_t currswitches, uint32_t txtflags))(uint1
     return plotFn;
 }
 
+static inline drawpage_mode_t _currentMainMode(uint32_t currswitches) {
+    if (currswitches & SS_TEXT) {
+        return DRAWPAGE_TEXT;
+    } else  {
+        if (currswitches & SS_HIRES) {
+            return DRAWPAGE_HIRES;
+        } else {
+            return DRAWPAGE_TEXT; // (LORES)
+        }
+    }
+}
+
+static inline drawpage_mode_t _currentMixedMode(uint32_t currswitches) {
+    if (currswitches & (SS_TEXT|SS_MIXED)) {
+        return DRAWPAGE_TEXT;
+    } else {
+        if (currswitches & SS_HIRES) {
+            return DRAWPAGE_HIRES;
+        } else {
+            return DRAWPAGE_TEXT; // (LORES)
+        }
+    }
+}
+
 GLUE_C_WRITE(video__write_2e_text0)
 {
     base_textwrt[ea] = b;
-    video_setDirty(A2_DIRTY_FLAG);
+    drawpage_mode_t mode = _currentMainMode(softswitches);
+    if (mode == DRAWPAGE_HIRES) {
+        return;
+    }
+    if (!(softswitches & SS_PAGE2)) {
+        video_setDirty(A2_DIRTY_FLAG);
+    }
 }
 
 GLUE_C_WRITE(video__write_2e_text0_mixed)
 {
     base_textwrt[ea] = b;
-    video_setDirty(A2_DIRTY_FLAG);
+    drawpage_mode_t mode = _currentMixedMode(softswitches);
+    if (mode == DRAWPAGE_HIRES) {
+        return;
+    }
+    if (!(softswitches & SS_PAGE2)) {
+        video_setDirty(A2_DIRTY_FLAG);
+    }
 }
 
 GLUE_C_WRITE(video__write_2e_text1)
 {
     base_ramwrt[ea] = b;
-    video_setDirty(A2_DIRTY_FLAG);
+    drawpage_mode_t mode = _currentMainMode(softswitches);
+    if (mode == DRAWPAGE_HIRES) {
+        return;
+    }
+    if (softswitches & SS_PAGE2) {
+        video_setDirty(A2_DIRTY_FLAG);
+    }
 }
 
 GLUE_C_WRITE(video__write_2e_text1_mixed)
 {
     base_ramwrt[ea] = b;
-    video_setDirty(A2_DIRTY_FLAG);
+    drawpage_mode_t mode = _currentMixedMode(softswitches);
+    if (mode == DRAWPAGE_HIRES) {
+        return;
+    }
+    if (softswitches & SS_PAGE2) {
+        video_setDirty(A2_DIRTY_FLAG);
+    }
 }
 
 // ----------------------------------------------------------------------------
@@ -1037,49 +1085,97 @@ static void (*_hirespage_plotter(uint32_t currswitches))(uint16_t, int, int, boo
 GLUE_C_WRITE(video__write_2e_even0)
 {
     base_hgrwrt[ea] = b;
-    video_setDirty(A2_DIRTY_FLAG);
+    drawpage_mode_t mode = _currentMainMode(softswitches);
+    if (mode == DRAWPAGE_TEXT) {
+        return;
+    }
+    if (!(softswitches & SS_PAGE2)) {
+        video_setDirty(A2_DIRTY_FLAG);
+    }
 }
 
 GLUE_C_WRITE(video__write_2e_even0_mixed)
 {
     base_hgrwrt[ea] = b;
-    video_setDirty(A2_DIRTY_FLAG);
+    drawpage_mode_t mode = _currentMixedMode(softswitches);
+    if (mode == DRAWPAGE_TEXT) {
+        return;
+    }
+    if (!(softswitches & SS_PAGE2)) {
+        video_setDirty(A2_DIRTY_FLAG);
+    }
 }
 
 GLUE_C_WRITE(video__write_2e_odd0)
 {
     base_hgrwrt[ea] = b;
-    video_setDirty(A2_DIRTY_FLAG);
+    drawpage_mode_t mode = _currentMainMode(softswitches);
+    if (mode == DRAWPAGE_TEXT) {
+        return;
+    }
+    if (!(softswitches & SS_PAGE2)) {
+        video_setDirty(A2_DIRTY_FLAG);
+    }
 }
 
 GLUE_C_WRITE(video__write_2e_odd0_mixed)
 {
     base_hgrwrt[ea] = b;
-    video_setDirty(A2_DIRTY_FLAG);
+    drawpage_mode_t mode = _currentMixedMode(softswitches);
+    if (mode == DRAWPAGE_TEXT) {
+        return;
+    }
+    if (!(softswitches & SS_PAGE2)) {
+        video_setDirty(A2_DIRTY_FLAG);
+    }
 }
 
 GLUE_C_WRITE(video__write_2e_even1)
 {
     base_ramwrt[ea] = b;
-    video_setDirty(A2_DIRTY_FLAG);
+    drawpage_mode_t mode = _currentMainMode(softswitches);
+    if (mode == DRAWPAGE_TEXT) {
+        return;
+    }
+    if (softswitches & SS_PAGE2) {
+        video_setDirty(A2_DIRTY_FLAG);
+    }
 }
 
 GLUE_C_WRITE(video__write_2e_even1_mixed)
 {
     base_ramwrt[ea] = b;
-    video_setDirty(A2_DIRTY_FLAG);
+    drawpage_mode_t mode = _currentMixedMode(softswitches);
+    if (mode == DRAWPAGE_TEXT) {
+        return;
+    }
+    if (softswitches & SS_PAGE2) {
+        video_setDirty(A2_DIRTY_FLAG);
+    }
 }
 
 GLUE_C_WRITE(video__write_2e_odd1)
 {
     base_ramwrt[ea] = b;
-    video_setDirty(A2_DIRTY_FLAG);
+    drawpage_mode_t mode = _currentMainMode(softswitches);
+    if (mode == DRAWPAGE_TEXT) {
+        return;
+    }
+    if (softswitches & SS_PAGE2) {
+        video_setDirty(A2_DIRTY_FLAG);
+    }
 }
 
 GLUE_C_WRITE(video__write_2e_odd1_mixed)
 {
     base_ramwrt[ea] = b;
-    video_setDirty(A2_DIRTY_FLAG);
+    drawpage_mode_t mode = _currentMixedMode(softswitches);
+    if (mode == DRAWPAGE_TEXT) {
+        return;
+    }
+    if (softswitches & SS_PAGE2) {
+        video_setDirty(A2_DIRTY_FLAG);
+    }
 }
 
 // ----------------------------------------------------------------------------
@@ -1168,30 +1264,6 @@ bool video_loadState(StateHelper_s *helper) {
 }
 
 // ----------------------------------------------------------------------------
-
-static inline drawpage_mode_t _currentMainMode(uint32_t currswitches) {
-    if (currswitches & SS_TEXT) {
-        return DRAWPAGE_TEXT;
-    } else  {
-        if (currswitches & SS_HIRES) {
-            return DRAWPAGE_HIRES;
-        } else {
-            return DRAWPAGE_TEXT; // (LORES)
-        }
-    }
-}
-
-static inline drawpage_mode_t _currentMixedMode(uint32_t currswitches) {
-    if (currswitches & (SS_TEXT|SS_MIXED)) {
-        return DRAWPAGE_TEXT;
-    } else {
-        if (currswitches & SS_HIRES) {
-            return DRAWPAGE_HIRES;
-        } else {
-            return DRAWPAGE_TEXT; // (LORES)
-        }
-    }
-}
 
 static inline void _currentPageAndBank(uint32_t currswitches, drawpage_mode_t mode, OUTPARM int *page, OUTPARM int *bank) {
     // UTAIIe : 5-25
