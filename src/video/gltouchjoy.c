@@ -619,7 +619,7 @@ static inline void _reset_model_position(GLModel *model, float touchX, float tou
     }
 }
 
-static inline void _axis_touch_down(int x, int y) {
+static inline void _axis_touch_down(interface_touch_event_t action, int x, int y) {
     axes.centerX = x;
     axes.centerY = y;
 
@@ -630,7 +630,7 @@ static inline void _axis_touch_down(int x, int y) {
     variant.curr->axisDown();
 }
 
-static inline void _button_touch_down(int x, int y) {
+static inline void _button_touch_down(interface_touch_event_t action, int x, int y) {
     buttons.centerX = x;
     buttons.centerY = y;
 
@@ -666,7 +666,7 @@ static inline void _button_move(int x, int y) {
     variant.curr->buttonMove(x, y);
 }
 
-static inline void _axis_touch_up(int x, int y) {
+static inline void _axis_touch_up(interface_touch_event_t action, int x, int y) {
 #if DEBUG_TOUCH_JOY
     bool resetIndex = false;
     if (buttons.trackingIndex > axes.trackingIndex) {
@@ -686,7 +686,7 @@ static inline void _axis_touch_up(int x, int y) {
     axes.azimuthModelDirty = false;
 }
 
-static inline void _button_touch_up(int x, int y) {
+static inline void _button_touch_up(interface_touch_event_t action, int x, int y) {
 #if DEBUG_TOUCH_JOY
     bool resetIndex = false;
     if (axes.trackingIndex > buttons.trackingIndex) {
@@ -737,7 +737,7 @@ static int64_t gltouchjoy_onTouchEvent(interface_touch_event_t action, int point
                     } else {
                         axisConsumed = true;
                         axes.trackingIndex = pointer_idx;
-                        _axis_touch_down(x, y);
+                        _axis_touch_down(action, x, y);
                     }
                 } else {
                     if (pointer_idx == axes.trackingIndex) {
@@ -749,7 +749,7 @@ static int64_t gltouchjoy_onTouchEvent(interface_touch_event_t action, int point
                     } else {
                         buttonConsumed = true;
                         buttons.trackingIndex = pointer_idx;
-                        _button_touch_down(x, y);
+                        _button_touch_down(action, x, y);
                     }
                 }
             }
@@ -777,11 +777,11 @@ static int64_t gltouchjoy_onTouchEvent(interface_touch_event_t action, int point
             if (pointer_idx == axes.trackingIndex) {
                 int x = (int)x_coords[axes.trackingIndex];
                 int y = (int)y_coords[axes.trackingIndex];
-                _axis_touch_up(x, y);
+                _axis_touch_up(action, x, y);
             } else if (pointer_idx == buttons.trackingIndex) {
                 int x = (int)x_coords[buttons.trackingIndex];
                 int y = (int)y_coords[buttons.trackingIndex];
-                _button_touch_up(x, y);
+                _button_touch_up(action, x, y);
             } else {
                 if (pointer_count == 1) {
                     TOUCH_JOY_LOG("!!! : RESETTING TOUCH JOYSTICK STATE MACHINE");
