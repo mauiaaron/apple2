@@ -1743,6 +1743,18 @@ void MB_Initialize()
 	}
 }
 
+#ifdef APPLE2IX
+// HACK functions for "soft" destroying backend audio resource (but keeping current state)
+void MB_SoftDestroy(void) {
+    assert(pthread_self() == cpu_thread_id);
+    MB_DSUninit();
+}
+void MB_SoftInitialize(void) {
+    assert(pthread_self() == cpu_thread_id);
+    MB_DSInit();
+}
+#endif
+
 //-----------------------------------------------------------------------------
 
 // NB. Called when /cycles_persec_target/ changes

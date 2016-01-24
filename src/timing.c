@@ -72,7 +72,7 @@ bool alt_speed_enabled = false;
 // misc
 volatile uint8_t emul_reinitialize = 1;
 #ifdef AUDIO_ENABLED
-static bool emul_reinitialize_audio = true;
+static bool emul_reinitialize_audio = false;
 static bool emul_pause_audio = false;
 static bool emul_resume_audio = false;
 #endif
@@ -286,6 +286,12 @@ static void *cpu_thread(void *dummyptr) {
     unsigned long dbg_cycles_executed = 0;
 #endif
 
+#ifdef AUDIO_ENABLED
+    audio_init();
+    speaker_init();
+    MB_Initialize();
+#endif
+
     do
     {
 #ifdef AUDIO_ENABLED
@@ -295,12 +301,14 @@ static void *cpu_thread(void *dummyptr) {
             emul_reinitialize_audio = false;
 
             speaker_destroy();
-            MB_Destroy();
+            extern void MB_SoftDestroy(void);
+            MB_SoftDestroy();
             audio_shutdown();
 
             audio_init();
             speaker_init();
-            MB_Initialize();
+            extern void MB_SoftInitialize(void);
+            MB_SoftInitialize();
         }
         pthread_mutex_unlock(&interface_mutex);
         LOG("UNLOCKING FOR MAYBE INITIALIZING AUDIO ...");
