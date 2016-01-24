@@ -486,11 +486,13 @@ static void *cpu_thread(void *dummyptr) {
                 {
                     TIMING_LOG("tick:(%ld.%ld) real:(%ld.%ld) cycles exe: %d ... speaker feedback: %d/%d", t0.tv_sec, t0.tv_nsec, ti.tv_sec, ti.tv_nsec, dbg_cycles_executed, speaker_neg_feedback, speaker_pos_feedback);
                     dbg_cycles_executed = 0;
-                    dbg_ticks = 0;
                     speaker_neg_feedback = 0;
                     speaker_pos_feedback = 0;
                 }
 #endif
+                if ((dbg_ticks % NANOSECONDS_PER_SECOND) == 0) {
+                    dbg_ticks = 0;
+                }
             }
 
 #if !MOBILE_DEVICE
