@@ -406,9 +406,6 @@ static void *cpu_thread(void *dummyptr) {
 #endif
 
             timing_checkpoint_cycles();
-#if CPU_TRACING
-            cpu65_trace_checkpoint();
-#endif
 
 #ifdef AUDIO_ENABLED
             speaker_flush(); // play audio

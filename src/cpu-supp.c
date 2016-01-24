@@ -923,7 +923,7 @@ GLUE_C_WRITE(cpu65_trace_epilogue)
 
 void cpu65_trace_checkpoint(void) {
     if (cpu_trace_fp) {
-        fprintf(cpu_trace_fp, "---TOTAL CYC:%lu\n",cycles_count_total);
+        //fprintf(cpu_trace_fp, "---TOTAL CYC:%lu\n",cycles_count_total);
         fflush(cpu_trace_fp);
     }
 }

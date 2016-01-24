@@ -173,6 +173,15 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnCreate(JNIEnv *env, jclas
 
     joydriver_setClampBeyondRadius(true);
 
+//#define DO_CPU65_TRACING 1
+#if DO_CPU65_TRACING
+#   warning !!!!!!!!!! this will quickly eat up disk space !!!!!!!!!!
+    char *trfile = NULL;
+    asprintf(&trfile, "%s/%s", data_dir, "cpu_trace.txt");
+    cpu65_trace_begin(trfile);
+    ASPRINTF_FREE(trfile);
+#endif
+
 #if !TESTING
     cpu_pause();
     emulator_start();
@@ -214,6 +223,10 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeEmulationPause(JNIEnv *env,
     if (appState != APP_RUNNING) {
         return;
     }
+
+#if DO_CPU65_TRACING
+    cpu65_trace_checkpoint();
+#endif
 
     disk6_flush(0);
     disk6_flush(1);
@@ -276,6 +289,10 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnQuit(JNIEnv *env, jclass 
 
     disk6_eject(0);
     disk6_eject(1);
+
+#if DO_CPU65_TRACING
+    cpu65_trace_end();
+#endif
 
     cpu_resume();
 #endif
