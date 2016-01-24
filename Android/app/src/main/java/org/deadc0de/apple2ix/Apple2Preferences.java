@@ -205,6 +205,11 @@ public enum Apple2Preferences {
                 activity.getPreferences(Context.MODE_PRIVATE).edit().putBoolean(toString(), false).apply();
             }
         }
+
+        @Override
+        public boolean booleanValue(Apple2Activity activity) {
+            return activity.getPreferences(Context.MODE_PRIVATE).getBoolean(toString(), true);
+        }
     },
     MOCKINGBOARD_VOLUME {
         @Override

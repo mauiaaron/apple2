@@ -138,6 +138,11 @@ public class Apple2Activity extends Activity {
             // allow for primitive migrations as needed
             Apple2Preferences.EMULATOR_VERSION.saveInt(this, BuildConfig.VERSION_CODE);
             Log.v(TAG, "Triggering migration to Apple2ix version : " + BuildConfig.VERSION_NAME);
+
+            // HACK FIXME TODO 2016/01/24 REMOVE AFTER version 16 ships ... force enables Mockingboard
+            if (BuildConfig.VERSION_CODE == 16) {
+                Apple2Preferences.MOCKINGBOARD_ENABLED.saveBoolean(this, true);
+            }
         }
 
         showSplashScreen(!firstTime);
