@@ -1780,13 +1780,23 @@ void MB_Destroy()
         }
 }
 
+#ifdef APPLE2IX
+// HACK NOTE TODO FIXME : hardcoded for now (until we have dynamic emulation for other cards in these slots) ...
+//SS_CARDTYPE g_Slot4 = CT_Phasor;
+//SS_CARDTYPE g_Slot5 = CT_Empty;
+SS_CARDTYPE g_Slot4 = CT_MockingboardC;
+SS_CARDTYPE g_Slot5 = CT_MockingboardC;
 void MB_SetEnabled(bool enabled) {
     g_bDisableDirectSoundMockingboard = !enabled;
+    g_SoundcardType = enabled ? CT_MockingboardC : CT_Empty;
+    g_Slot4 = enabled ? CT_MockingboardC : CT_Empty;
+    g_Slot5 = enabled ? CT_MockingboardC : CT_Empty;
 }
 
 bool MB_ISEnabled(void) {
     return (MockingboardVoice != NULL);
 }
+#endif
 
 //-----------------------------------------------------------------------------
 
@@ -2015,11 +2025,6 @@ static uint8_t PhasorIO(uint16_t PC, uint16_t nAddr, uint8_t bWrite, uint8_t nVa
 
 //-----------------------------------------------------------------------------
 #ifdef APPLE2IX
-// HACK NOTE TODO FIXME : hardcoded for now (until we have dynamic emulation for other cards in these slots) ...
-//SS_CARDTYPE g_Slot4 = CT_Phasor;
-//SS_CARDTYPE g_Slot5 = CT_Empty;
-SS_CARDTYPE g_Slot4 = CT_MockingboardC;
-SS_CARDTYPE g_Slot5 = CT_MockingboardC;
 
 #define IO_Null NULL
 
