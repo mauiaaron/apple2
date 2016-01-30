@@ -414,7 +414,7 @@ static inline int64_t _tap_key_at_point(float x, float y) {
     _rerender_selected(kbd.selectedCol, kbd.selectedRow);
 
     // return the key+scancode+handled
-    int64_t flags = (handled ? 0x1LL : 0x0LL);
+    int64_t flags = (handled ? TOUCH_FLAGS_HANDLED : 0x0LL);
 
     key = key & 0xff;
     scancode = scancode & 0xff;
@@ -587,32 +587,44 @@ static int64_t gltouchkbd_onTouchEvent(interface_touch_event_t action, int point
     float x = x_coords[pointer_idx];
     float y = y_coords[pointer_idx];
 
-    int64_t flags = TOUCH_FLAGS_KBD | TOUCH_FLAGS_HANDLED;
+    int64_t flags = TOUCH_FLAGS_KBD;
 
     clock_gettime(CLOCK_MONOTONIC, &kbd.timingBegin);
+
+    static int trackingIndex = TRACKING_NONE;
 
     switch (action) {
         case TOUCH_DOWN:
         case TOUCH_POINTER_DOWN:
+            if (/*isOnKeyboardModel:*/true) {// TODO FIXME : nonactionable areas could defer to joystick ...
+                trackingIndex = pointer_idx;
+                flags |= TOUCH_FLAGS_HANDLED;
+            }
             break;
 
         case TOUCH_MOVE:
+            flags |= ((pointer_idx == trackingIndex) ? TOUCH_FLAGS_HANDLED : 0);
             break;
 
         case TOUCH_UP:
         case TOUCH_POINTER_UP:
             {
-                int64_t handledAndData = _tap_key_at_point(x, y);
-                flags |= ((handledAndData & 0x01) ? TOUCH_FLAGS_KEY_TAP : 0x0LL);
-                flags |= (handledAndData & TOUCH_FLAGS_ASCII_AND_SCANCODE_MASK);
+                if (trackingIndex == pointer_idx) {
+                    int64_t handledAndData = _tap_key_at_point(x, y);
+                    flags |= ((handledAndData & TOUCH_FLAGS_HANDLED) ? (TOUCH_FLAGS_HANDLED|TOUCH_FLAGS_KEY_TAP) : 0x0LL);
+                    flags |= (handledAndData & TOUCH_FLAGS_ASCII_AND_SCANCODE_MASK);
+                    trackingIndex = TRACKING_NONE;
+                }
             }
             break;
 
         case TOUCH_CANCEL:
+            trackingIndex = TRACKING_NONE;
             LOG("---KBD TOUCH CANCEL");
             return 0x0LL;
 
         default:
+            trackingIndex = TRACKING_NONE;
             LOG("!!!KBD UNKNOWN TOUCH EVENT : %d", action);
             return 0x0LL;
     }

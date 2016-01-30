@@ -456,10 +456,6 @@ static void gldriver_reshape(int w, int h) {
     windowHeight = h;
 #endif
 
-#if MOBILE_DEVICE
-    int viewportHeightPrevious = viewportHeight;
-#endif
-
     int w2 = ((float)h * (SCANWIDTH/(float)SCANHEIGHT));
     int h2 = ((float)w / (SCANWIDTH/(float)SCANHEIGHT));
 

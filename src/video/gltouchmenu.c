@@ -236,7 +236,7 @@ static inline int64_t _tap_menu_item(float x, float y) {
 
     uint8_t selectedItem = topMenuTemplate[row][col];
 
-    int64_t flags = TOUCH_FLAGS_KEY_TAP;
+    int64_t flags = TOUCH_FLAGS_KEY_TAP | TOUCH_FLAGS_HANDLED;
     switch (selectedItem) {
 
         case MOUSETEXT_LEFT:
@@ -470,35 +470,45 @@ static int64_t gltouchmenu_onTouchEvent(interface_touch_event_t action, int poin
     float x = x_coords[pointer_idx];
     float y = y_coords[pointer_idx];
 
-    bool handled = (_is_point_on_left_menu(x, y) || _is_point_on_right_menu(x, y));
     int flags = TOUCH_FLAGS_MENU;
+
+    static int trackingIndex = TRACKING_NONE;
 
     switch (action) {
         case TOUCH_DOWN:
         case TOUCH_POINTER_DOWN:
-            _sprout_menu(x, y);
+            if (_is_point_on_left_menu(x, y) || _is_point_on_right_menu(x, y)) {
+                trackingIndex = pointer_idx;
+                _sprout_menu(x, y);
+                flags |= TOUCH_FLAGS_HANDLED;
+            }
             break;
 
         case TOUCH_MOVE:
+            flags |= ((pointer_idx == trackingIndex) ? TOUCH_FLAGS_HANDLED : 0);
             break;
 
         case TOUCH_UP:
         case TOUCH_POINTER_UP:
-            flags |= _tap_menu_item(x, y);
+            if (trackingIndex == pointer_idx) {
+                flags |= _tap_menu_item(x, y);
+                trackingIndex = TRACKING_NONE;
+            }
             break;
 
         case TOUCH_CANCEL:
+            trackingIndex = TRACKING_NONE;
             LOG("---MENU TOUCH CANCEL");
             return 0x0;
 
         default:
+            trackingIndex = TRACKING_NONE;
             LOG("!!!MENU UNKNOWN TOUCH EVENT : %d", action);
             return 0x0;
     }
 
-    if (handled) {
+    if (flags & TOUCH_FLAGS_HANDLED) {
         clock_gettime(CLOCK_MONOTONIC, &menu.timingBegin);
-        flags |= TOUCH_FLAGS_HANDLED;
     }
 
     return flags;

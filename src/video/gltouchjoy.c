@@ -16,7 +16,6 @@
 #endif
 
 #define MODEL_DEPTH -1/32.f
-#define TRACKING_NONE (-1)
 
 #define AXIS_TEMPLATE_COLS 3
 #define AXIS_TEMPLATE_ROWS 3

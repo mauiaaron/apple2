@@ -16,6 +16,8 @@
 
 #include "common.h"
 
+#define TRACKING_NONE (-1)
+
 typedef enum glnode_render_order_t {
     RENDER_BOTTOM=0,    // e.g., the //e framebuffer node itself
     RENDER_LOW   =1,    // e.g., the touchjoy and touchkbd
