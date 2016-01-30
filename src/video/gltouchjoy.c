@@ -72,26 +72,26 @@ static struct {
     // TODO FIXME : support 2-players!
 } touchport = { 0 };
 
-#define RB_CLASS(CLS, ...) \
+#define AZIMUTH_CLASS(CLS, ...) \
     MODEL_CLASS(CLS, \
         GLuint vertShader; \
         GLuint fragShader; \
         GLuint program; \
         GLint uniformMVPIdx;);
 
-RB_CLASS(GLModelRBJoystick);
+AZIMUTH_CLASS(GLModelJoystickAzimuth);
 
 // ----------------------------------------------------------------------------
 // joystick azimuth model
 
-static void _rb_destroy_model(GLModel *parent) {
+static void _azimuth_destroy_model(GLModel *parent) {
 
-    GLModelRBJoystick *azimuthJoystick = (GLModelRBJoystick *)parent->custom;
+    GLModelJoystickAzimuth *azimuthJoystick = (GLModelJoystickAzimuth *)parent->custom;
     if (!azimuthJoystick) {
         return;
     }
 
-    // detach and delete the RB shaders
+    // detach and delete the Azimuth shaders
     // 2015/11/06 NOTE : Tegra 2 for mobile has a bug whereby you cannot detach/delete shaders immediately after
     // creating the program.  So we delete them during the shutdown sequence instead.
     // https://code.google.com/p/android/issues/detail?id=61832
@@ -112,10 +112,10 @@ static void _rb_destroy_model(GLModel *parent) {
     FREE(parent->custom);
 }
 
-static void *_rb_create_model(GLModel *parent) {
+static void *_azimuth_create_model(GLModel *parent) {
 
-    parent->custom = CALLOC(sizeof(GLModelRBJoystick), 1);
-    GLModelRBJoystick *azimuthJoystick = (GLModelRBJoystick *)parent->custom;
+    parent->custom = CALLOC(sizeof(GLModelJoystickAzimuth), 1);
+    GLModelJoystickAzimuth *azimuthJoystick = (GLModelJoystickAzimuth *)parent->custom;
 
     if (!azimuthJoystick) {
         return NULL;
@@ -161,14 +161,14 @@ static void *_rb_create_model(GLModel *parent) {
 
         azimuthJoystick->uniformMVPIdx = glGetUniformLocation(azimuthJoystick->program, "modelViewProjectionMatrix");
         if (azimuthJoystick->uniformMVPIdx < 0) {
-            LOG("OOPS, no modelViewProjectionMatrix in RB shader : %d", azimuthJoystick->uniformMVPIdx);
+            LOG("OOPS, no modelViewProjectionMatrix in Azimuth shader : %d", azimuthJoystick->uniformMVPIdx);
             break;
         }
 
         err = false;
     } while (0);
 
-    GL_ERRLOG("build RB joystick");
+    GL_ERRLOG("build Aziumth joystick");
 
     if (vtxSource) {
         glshader_destroySource(vtxSource);
@@ -178,19 +178,19 @@ static void *_rb_create_model(GLModel *parent) {
     }
 
     if (err) {
-        _rb_destroy_model(parent);
+        _azimuth_destroy_model(parent);
         azimuthJoystick = NULL;
     }
 
     return azimuthJoystick;
 }
 
-static void _rb_render(void) {
+static void _azimuth_render(void) {
     if (!axes.azimuthModel) {
         return;
     }
 
-    GLModelRBJoystick *azimuthJoystick = (GLModelRBJoystick *)axes.azimuthModel->custom;
+    GLModelJoystickAzimuth *azimuthJoystick = (GLModelJoystickAzimuth *)axes.azimuthModel->custom;
 
     // use azimuth (SolidColor) program
     glUseProgram(azimuthJoystick->program);
@@ -228,7 +228,7 @@ static void _rb_render(void) {
     // back to main framebuffer/quad program
     glUseProgram(mainShaderProgram);
 
-    GL_ERRLOG("RB render");
+    GL_ERRLOG("Azimuth render");
 }
 
 // ----------------------------------------------------------------------------
@@ -397,8 +397,8 @@ static void gltouchjoy_setup(void) {
                 .tex_h = 0,
                 .texcoordUsageHint = UNINITIALIZED_GL, // no texture data
             }, (GLCustom){
-                .create = &_rb_create_model,
-                .destroy = &_rb_destroy_model,
+                .create = &_azimuth_create_model,
+                .destroy = &_azimuth_destroy_model,
             });
         if (!axes.azimuthModel) {
             LOG("gltouchjoy azimuth model initialization problem");
@@ -512,7 +512,7 @@ static void gltouchjoy_render(void) {
     }
 
     if (joyglobals.showAzimuth && axes.azimuthModelDirty) {
-        _rb_render();
+        _azimuth_render();
     }
 
     // draw button(s)
@@ -611,11 +611,11 @@ static inline void _reset_model_position(GLModel *model, float touchX, float tou
     quad[12+1] = centerY+objHalfH;
 
     if (azimuthModel) {
-        GLfloat *quadRB = (GLfloat *)(azimuthModel->positions);
-        quadRB[0 +0] = centerX;
-        quadRB[0 +1] = centerY;
-        quadRB[4 +0] = centerX;
-        quadRB[4 +1] = centerY;
+        GLfloat *quadAzimuth = (GLfloat *)(azimuthModel->positions);
+        quadAzimuth[0 +0] = centerX;
+        quadAzimuth[0 +1] = centerY;
+        quadAzimuth[4 +0] = centerX;
+        quadAzimuth[4 +1] = centerY;
     }
 }
 
@@ -647,9 +647,9 @@ static inline void _axis_move(int x, int y) {
         float centerX = 0.f;
         float centerY = 0.f;
         glhud_screenToModel(x, y, touchport.width, touchport.height, &centerX, &centerY);
-        GLfloat *quadRB = (GLfloat *)axes.azimuthModel->positions;
-        quadRB[4 +0] = centerX;
-        quadRB[4 +1] = centerY;
+        GLfloat *quadAzimuth = (GLfloat *)axes.azimuthModel->positions;
+        quadAzimuth[4 +0] = centerX;
+        quadAzimuth[4 +1] = centerY;
         axes.azimuthModelDirty = true;
     };
 
