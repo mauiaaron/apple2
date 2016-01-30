@@ -1214,7 +1214,10 @@ void vm_initialize(void) {
 void vm_reinitializeAudio(void) {
 #ifdef AUDIO_ENABLED
     speaker_setVolumeZeroToTen(sound_volume);
+#if !MOBILE_DEVICE
+#warning TODO FIXME : disentangle Mockingboard volume from speaker volume on Desktop ...
     MB_SetVolumeZeroToTen(sound_volume);
+#endif
 #endif
     for (unsigned int i = 0xC030; i < 0xC040; i++) {
         cpu65_vmem_r[i] = cpu65_vmem_w[i] =
