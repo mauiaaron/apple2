@@ -120,8 +120,6 @@ static void *_azimuth_create_model(GLModel *parent) {
         return NULL;
     }
 
-    axes.azimuthModelDirty = false;
-
     // degenerate the quad model into just a single line model ... (should not need to adjust allocated memory size
     // since we should be using less than what was originally allocated)
     parent->primType = GL_LINES;
@@ -486,10 +484,12 @@ static void gltouchjoy_render(void) {
     glViewport(0, 0, touchport.width, touchport.height); // NOTE : show these HUD elements beyond the A2 framebuffer dimensions
 
     // draw axis
-
-    float alpha = glhud_getTimedVisibility(axes.timingBegin, joyglobals.minAlpha, 1.0);
-    if (alpha < joyglobals.minAlpha) {
-        alpha = joyglobals.minAlpha;
+    float alpha = 1.f;
+    if (axes.trackingIndex == TRACKING_NONE) {
+        alpha = glhud_getTimedVisibility(axes.timingBegin, joyglobals.minAlpha, 1.0);
+        if (alpha < joyglobals.minAlpha) {
+            alpha = joyglobals.minAlpha;
+        }
     }
     if (alpha > 0.0) {
         glUniform1f(alphaValue, alpha);
@@ -510,15 +510,18 @@ static void gltouchjoy_render(void) {
         glhud_renderDefault(axes.model);
     }
 
-    if (joyglobals.showAzimuth && axes.azimuthModelDirty) {
+    if (joyglobals.showAzimuth && axes.trackingIndex != TRACKING_NONE) {
         _azimuth_render();
     }
 
     // draw button(s)
 
-    alpha = glhud_getTimedVisibility(buttons.timingBegin, joyglobals.minAlpha, 1.0);
-    if (alpha < joyglobals.minAlpha) {
-        alpha = joyglobals.minAlpha;
+    alpha = 1.f;
+    if (buttons.trackingIndex == TRACKING_NONE) {
+        alpha = glhud_getTimedVisibility(buttons.timingBegin, joyglobals.minAlpha, 1.0);
+        if (alpha < joyglobals.minAlpha) {
+            alpha = joyglobals.minAlpha;
+        }
     }
     if (alpha > 0.0) {
         glUniform1f(alphaValue, alpha);
@@ -649,7 +652,6 @@ static inline void _axis_move(int x, int y) {
         GLfloat *quadAzimuth = (GLfloat *)axes.azimuthModel->positions;
         quadAzimuth[4 +0] = centerX;
         quadAzimuth[4 +1] = centerY;
-        axes.azimuthModelDirty = true;
     };
 
     x -= axes.centerX;
@@ -682,7 +684,6 @@ static inline void _axis_touch_up(interface_touch_event_t action, int x, int y) 
     }
     variant.curr->axisUp(x, y);
     axes.trackingIndex = TRACKING_NONE;
-    axes.azimuthModelDirty = false;
 }
 
 static inline void _button_touch_up(interface_touch_event_t action, int x, int y) {
@@ -772,21 +773,27 @@ static int64_t gltouchjoy_onTouchEvent(interface_touch_event_t action, int point
 
         case TOUCH_UP:
         case TOUCH_POINTER_UP:
-            TOUCH_JOY_LOG("------UP:");
-            if (pointer_idx == axes.trackingIndex) {
-                int x = (int)x_coords[axes.trackingIndex];
-                int y = (int)y_coords[axes.trackingIndex];
-                _axis_touch_up(action, x, y);
-            } else if (pointer_idx == buttons.trackingIndex) {
-                int x = (int)x_coords[buttons.trackingIndex];
-                int y = (int)y_coords[buttons.trackingIndex];
-                _button_touch_up(action, x, y);
-            } else {
-                if (pointer_count == 1) {
-                    TOUCH_JOY_LOG("!!! : RESETTING TOUCH JOYSTICK STATE MACHINE");
-                    resetState();
+            {
+                TOUCH_JOY_LOG("------UP:");
+                struct timespec now;
+                clock_gettime(CLOCK_MONOTONIC, &now);
+                if (pointer_idx == axes.trackingIndex) {
+                    axes.timingBegin = now;
+                    int x = (int)x_coords[axes.trackingIndex];
+                    int y = (int)y_coords[axes.trackingIndex];
+                    _axis_touch_up(action, x, y);
+                } else if (pointer_idx == buttons.trackingIndex) {
+                    buttons.timingBegin = now;
+                    int x = (int)x_coords[buttons.trackingIndex];
+                    int y = (int)y_coords[buttons.trackingIndex];
+                    _button_touch_up(action, x, y);
                 } else {
-                    TOUCH_JOY_LOG("!!! : IGNORING OTHER TOUCH UP %d", pointer_idx);
+                    if (pointer_count == 1) {
+                        TOUCH_JOY_LOG("!!! : RESETTING TOUCH JOYSTICK STATE MACHINE");
+                        resetState();
+                    } else {
+                        TOUCH_JOY_LOG("!!! : IGNORING OTHER TOUCH UP %d", pointer_idx);
+                    }
                 }
             }
             break;
@@ -799,15 +806,6 @@ static int64_t gltouchjoy_onTouchEvent(interface_touch_event_t action, int point
         default:
             LOG("!!! UNKNOWN TOUCH EVENT : %d", action);
             break;
-    }
-
-    struct timespec now;
-    clock_gettime(CLOCK_MONOTONIC, &now);
-    if (axisConsumed) {
-        axes.timingBegin = now;
-    }
-    if (buttonConsumed) {
-        buttons.timingBegin = now;
     }
 
     return TOUCH_FLAGS_HANDLED | TOUCH_FLAGS_JOY;

@@ -55,7 +55,6 @@ typedef struct GLTouchJoyAxes {
 
     // azimuth model
     GLModel *azimuthModel;
-    bool azimuthModelDirty;
 
     uint8_t rosetteChars[ROSETTE_ROWS * ROSETTE_COLS];
     int rosetteScancodes[ROSETTE_ROWS * ROSETTE_COLS];
