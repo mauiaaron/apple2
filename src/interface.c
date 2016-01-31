@@ -1003,6 +1003,7 @@ void c_interface_parameters()
                 {
                     --a2_video_mode;
                 }
+                extern void video_set_mode(a2_video_mode_t);
                 video_set_mode(a2_video_mode);
                 break;
 #endif
@@ -1099,6 +1100,7 @@ void c_interface_parameters()
                 {
                     ++a2_video_mode;
                 }
+                extern void video_set_mode(a2_video_mode_t);
                 video_set_mode(a2_video_mode);
                 break;
 #endif
@@ -1530,8 +1532,13 @@ void c_interface_keyboard_layout()
     c_interface_begin()
    ------------------------------------------------------------------------- */
 
+static pthread_mutex_t classic_interface_lock = PTHREAD_MUTEX_INITIALIZER;
+static pthread_t interface_thread_id = 0;
+
 static void *interface_thread(void *current_key)
 {
+    interface_thread_id = pthread_self();
+
     cpu_pause();
 
     switch ((__SWORD_TYPE)current_key) {
@@ -1575,14 +1582,20 @@ static void *interface_thread(void *current_key)
 
     cpu_resume();
 
+    interface_thread_id = 0;
+    pthread_mutex_unlock(&classic_interface_lock);
     return NULL;
 }
 
 void c_interface_begin(int current_key)
 {
-    pthread_t t = 0;
-    pthread_create(&t, NULL, (void *)&interface_thread, (void *)((__SWORD_TYPE)current_key));
-    pthread_detach(t);
+    if (interface_thread_id) {
+        return;
+    }
+    pthread_mutex_lock(&classic_interface_lock);
+    interface_thread_id=1; // interface thread starting ...
+    pthread_create(&interface_thread_id, NULL, (void *)&interface_thread, (void *)((__SWORD_TYPE)current_key));
+    pthread_detach(interface_thread_id);
 }
 
 #endif
