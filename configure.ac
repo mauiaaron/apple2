@@ -194,7 +194,7 @@ AS_IF([test "x$opengl_supported" = "xyes"], [
 ], [
     dnl OpenGL not supported
     AS_IF([test "x$opengl_selected" = "xyes"], [
-        AC_MSG_WARN([Did not find OpenGL libraries, will attempt to build legacy X11 variant ...])
+        AC_MSG_WARN([!!! DID NOT FIND OPENGL LIBRARIES !!! will attempt to build legacy X11 variant (this is OKAY but LIMITED) ...])
     ], [])
 
     AC_CHECK_HEADER(X11/XKBlib.h, [
@@ -218,12 +218,16 @@ AC_SUBST(VIDEO_O)
 dnl ---------------------------------------------------------------------------
 dnl Sound ...
 
-AC_ARG_ENABLE([audio], AS_HELP_STRING([--disable-audio], [Disable emulator audio output]), [], [
+openal_selected='yes'
+AC_ARG_ENABLE([audio], AS_HELP_STRING([--disable-audio], [Disable emulator audio output]), [
+    openal_selected='no'
+], [
     AC_CHECK_HEADER(AL/al.h, [
         AC_CHECK_HEADER(AL/alc.h, [
             AC_CHECK_HEADER(AL/alext.h, [
                 AC_SEARCH_LIBS(alcOpenDevice, openal, [
                     dnl found OpenAL ...
+                    openal_supported='yes'
                     AC_DEFINE(AUDIO_ENABLED, 1, [Enable sound module])
                     AUDIO_GLUE_C="src/audio/speaker.c src/audio/mockingboard.c src/audio/playqueue.c"
                     AUDIO_O="src/audio/soundcore.o src/audio/soundcore-openal.o src/audio/speaker.o src/audio/playqueue.o src/audio/alhelpers.o src/audio/mockingboard.o src/audio/AY8910.o"
@@ -246,9 +250,13 @@ AC_ARG_ENABLE([audio], AS_HELP_STRING([--disable-audio], [Disable emulator audio
 AC_SUBST(AUDIO_GLUE_C)
 AC_SUBST(AUDIO_O)
 
-dnl AS_IF([test "x$audio_disabled" = "xno"], [
-dnl     ...
-dnl ])
+AS_IF([test "x$openal_supported" = "xyes"], [
+], [
+    dnl OpenAL not supported
+    AS_IF([test "x$openal_selected" = "xyes"], [
+        AC_MSG_WARN([!!! DID NOT FIND OPENAL LIBRARIES !!! audio will be disabled (this is OKAY but LIMITED) ...])
+    ], [])
+])
 
 
 dnl ---------------------------------------------------------------------------
