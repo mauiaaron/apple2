@@ -24,8 +24,6 @@
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #include <X11/extensions/XShm.h> /* MITSHM! */
-#else
-#error non-XShm is buggy ... key autorepeat delay is somehow set too low
 #endif
 
 static Display *display;
@@ -416,46 +414,31 @@ void video_driver_sync(void) {
 
 #if TESTING
     // no input processing if test-driven ...
-#else
-    bool keyevent = true;
-    do {
-#ifdef HAVE_X11_SHM
-        if (doShm)
-        {
+    return;
+#endif
+
+    if (!XPending(display)) {
+        c_keys_handle_input(/*scancode:*/-1, /*pressed:*/0, 0);
+    } else {
+        do {
             XNextEvent(display, &xevent);
-            keyevent = !(xevent.type == xshmeventtype);
-        } else
-#endif
-        {
-            keyevent = XCheckMaskEvent(display, KeyPressMask|KeyReleaseMask, &xevent);
-        }
 
-        int scancode = -1;
-        int pressed = 0;
-        switch (xevent.type)
-        {
-        case KeyPress:
-            scancode = keysym_to_scancode();
-            pressed = 1;
-            break;
-        case KeyRelease:
-            scancode = keysym_to_scancode();
-            pressed = 0;
-            break;
-        default:
-            break;
-        }
+            int scancode = -1;
+            int pressed = 0;
+            if (xevent.type == KeyPress || xevent.type == KeyRelease) {
+                scancode = keysym_to_scancode();
+                pressed = (xevent.type == KeyPress);
+            }
 
-        c_keys_handle_input(scancode, pressed, 0);
-
-    } while (keyevent);
-#endif
+            c_keys_handle_input(scancode, pressed, 0);
+        } while (XPending(display));
+    }
 }
 
 static void _redo_image(void);
 
 static void xdriver_main_loop(void) {
-    struct timespec sleeptime = { .tv_sec=0, .tv_nsec=8333333 }; // 120Hz
+    struct timespec sleeptime = { .tv_sec=0, .tv_nsec=16666667 }; // 60Hz
     do {
         if (request_set_mode) {
             request_set_mode = false;
