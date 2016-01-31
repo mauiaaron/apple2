@@ -123,13 +123,12 @@ AC_TRY_LINK([asm("_glibc_foobar:");], [glibc_foobar()], [
 
 dnl ---------------------------------------------------------------------------
 
+# Sometimes Flex is installed as Lex, e.g., NetBSD.
+AC_CHECK_PROG([FLEX], [flex lex], [flex])
+# Force the use of `missing' to wrap Flex invocations.
+AM_MISSING_PROG([LEX], [$FLEX])
+# Perform all the tests Automake and Autoconf need.
 AM_PROG_LEX
-
-dnl AS_IF([test "x$LEX" = "xno"], [
-dnl     AC_MSG_ERROR([Emulator needs lex/flex to build source...])
-dnl ], [
-dnl     AC_MSG_RESULT([Found lex $LEX])
-dnl ])
 
 dnl POSIX high-precision clock
 AC_SEARCH_LIBS(clock_gettime, rt, [], [
