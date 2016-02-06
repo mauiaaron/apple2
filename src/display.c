@@ -1166,7 +1166,7 @@ void _video_setRenderThread(pthread_t id) {
     render_thread_id = id;
 }
 
-void video_shutdown(void) {
+void video_shutdown(bool emulatorShuttingDown) {
 
 #if MOBILE_DEVICE
     // WARNING : shutdown should occur on the render thread.  Platform code (iOS, Android) should ensure this is called
@@ -1174,7 +1174,7 @@ void video_shutdown(void) {
     assert(pthread_self() == render_thread_id);
 #endif
 
-    video_backend->shutdown();
+    video_backend->shutdown(emulatorShuttingDown);
     render_thread_id = 0;
 }
 

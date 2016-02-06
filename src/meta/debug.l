@@ -987,7 +987,6 @@ void init_lex (char *str, int size) {
     buffer = yy_scan_buffer(str, size);
 
     if (!buffer) {	/* oops */
-	video_shutdown();
 	printf("lex buffer not big enough\n");
 	exit(1);
     }	       

@@ -241,7 +241,7 @@ void emulator_start(void) {
 void emulator_shutdown(void) {
     disk6_eject(0);
     disk6_eject(1);
-    video_shutdown();
+    video_shutdown(/*emulatorShuttingDown:*/true);
     timing_stopCPU();
     _shutdown_threads();
 }

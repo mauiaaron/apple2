@@ -1277,7 +1277,7 @@ void c_interface_parameters()
 #ifdef __linux__
                         LOG("Back to Linux, w00t!\n");
 #endif
-                        video_shutdown();
+                        video_shutdown(false); // soft quit video_main_loop()
                         c_interface_exit(ch);
                         return;
                     }

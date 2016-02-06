@@ -156,14 +156,14 @@ static void glnode_setupNodes(void *ctx) {
     LOG("END glnode_setupNodes ...");
 }
 
-static void glnode_shutdownNodes(void) {
+static void glnode_shutdownNodes(bool emulatorShuttingDown) {
     LOG("BEGIN glnode_shutdownNodes ...");
 
 #if USE_GLUT
-    LOG("Waiting for GLUT mainloop to finish ...");
-    glutLeaveMainLoop();
-    while (glut_in_main_loop) {
-        usleep(40);
+    if (glut_in_main_loop) {
+        assert(!emulatorShuttingDown);
+        glutLeaveMainLoop();
+        return;
     }
 #endif
 
@@ -172,6 +172,19 @@ static void glnode_shutdownNodes(void) {
         p->node.shutdown();
         p = p->last;
     }
+
+    if (emulatorShuttingDown) {
+        // clean up to make Valgrind happy ...
+        p = head;
+        while (p) {
+            glnode_array_node_s *next = p->next;
+            FREE(p);
+            p = next;
+        }
+        head=NULL;
+        tail=NULL;
+    }
+
     LOG("END glnode_shutdownNodes ...");
 }
 
@@ -223,21 +236,6 @@ static void glnode_mainLoop(void) {
 }
 
 //----------------------------------------------------------------------------
-
-__attribute__((destructor(255)))
-static void _destroy_glnodes(void) {
-    LOG("...");
-
-    glnode_array_node_s *p = head;
-    while (p) {
-        glnode_array_node_s *next = p->next;
-        FREE(p);
-        p = next;
-    }
-
-    head=NULL;
-    tail=NULL;
-}
 
 __attribute__((constructor(CTOR_PRIORITY_LATE)))
 static void _init_glnode_manager(void) {

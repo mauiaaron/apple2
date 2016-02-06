@@ -23,7 +23,7 @@ typedef struct video_backend_s {
     void (*main_loop)(void);
     void (*reshape)(int width, int height);
     void (*render)(void);
-    void (*shutdown)(void);
+    void (*shutdown)(bool emulatorShuttingDown);
 
     // touch HUD functions
     void (*animation_showTouchKeyboard)(void);
@@ -79,7 +79,7 @@ void video_main_loop(void);
  * Shutdown video system.  Should only be called on the render thread (unless render thread is in emulator-managed main
  * video loop).
  */
-void video_shutdown(void);
+void video_shutdown(bool emulatorShuttingDown);
 
 /*
  * Begin a render pass (only for non-emulator-managed main video).  This should only be called on the render thread.

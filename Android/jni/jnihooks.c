@@ -198,7 +198,7 @@ void Java_org_deadc0de_apple2ix_Apple2View_nativeGraphicsInitialized(JNIEnv *env
     // WARNING : this needs to happen on the GL thread only
     LOG("width:%d height:%d", width, height);
     _video_setRenderThread(pthread_self()); // Assume Android knows what it's doing ;-P
-    video_shutdown();
+    video_shutdown(false);
     video_reshape(width, height);
     video_init();
 }
