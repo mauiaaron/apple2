@@ -10,7 +10,7 @@
  */
 
 #include "glhudmodel.h"
-#include "glvideo.h"
+#include "glnode.h"
 
 // . . .
 // . x .

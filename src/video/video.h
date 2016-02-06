@@ -70,15 +70,31 @@ extern A2Color_s colormap[];
 void video_init(void);
 
 /*
- * Enters main video loop (returns on emulator shutdown request).
+ * Enters emulator-managed main video loop--if backend rendering system requires it.  Currently only used by desktop X11
+ * and desktop OpenGL/GLUT.
  */
 void video_main_loop(void);
 
 /*
- * Begins video subsystem shutdown.  Because this process is multithreaded, this really just gives notice that a
- * shutdown has been requested, and so various threads should begin their own shutdown process.
+ * Shutdown video system.  Should only be called on the render thread (unless render thread is in emulator-managed main
+ * video loop).
  */
 void video_shutdown(void);
+
+/*
+ * Begin a render pass (only for non-emulator-managed main video).  This should only be called on the render thread.
+ */
+void video_render(void);
+
+/*
+ * Set the render thread ID.  Use with caution.
+ */
+void _video_setRenderThread(pthread_t id);
+
+/*
+ * Reshape the display to particular dimensions.
+ */
+void video_reshape(int w, int h);
 
 /*
  * Setup the display. This may be called multiple times in a run, and is

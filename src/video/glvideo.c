@@ -9,15 +9,9 @@
  *
  */
 
-#include "common.h"
-#include "video/glvideo.h"
-#include "video/glinput.h"
 #include "video/glnode.h"
 
 #include <regex.h>
-
-bool safe_to_do_opengl_logging = false;
-bool renderer_shutting_down = false;
 
 volatile unsigned long _backend_vid_dirty = 0;
 
@@ -40,19 +34,9 @@ static GLModel *crtModel = NULL;
 static GLuint vertexShader = UNINITIALIZED_GL;
 static GLuint fragShader = UNINITIALIZED_GL;
 
-static video_backend_s glvideo_backend = { 0 };
-
-#if USE_GLUT
-static int windowWidth = SCANWIDTH*1.5;
-static int windowHeight = SCANHEIGHT*1.5;
-static int glutWindow = -1;
-#endif
-
 //----------------------------------------------------------------------------
 
-static void gldriver_render(void);
-
-static void _gldriver_setup_hackarounds(void) {
+static void _glvideo_setup_hackarounds(void) {
 
     const char *vendor   = (const char *)glGetString(GL_VENDOR);
     const char *renderer = (const char *)glGetString(GL_RENDERER);
@@ -142,9 +126,9 @@ static void _gldriver_setup_hackarounds(void) {
     } while (0);
 }
 
-static void gldriver_init_common(void) {
+static void glvideo_init(void) {
 
-    _gldriver_setup_hackarounds();
+    _glvideo_setup_hackarounds();
 
 #if !PERSPECTIVE
     mtxLoadIdentity(mvpIdentity);
@@ -153,8 +137,6 @@ static void gldriver_init_common(void) {
     GLint value = UNINITIALIZED_GL;
     glGetIntegerv(GL_MAX_TEXTURE_SIZE, &value);
     LOG("GL_MAX_TEXTURE_SIZE:%d", value);
-
-    renderer_shutting_down = false;
 
     if (!viewportWidth) {
         viewportWidth = 400;
@@ -248,7 +230,7 @@ static void gldriver_init_common(void) {
     //   This is done in order to pre-warm OpenGL
     // We don't need to present the buffer since we don't actually want the
     //   user to see this, we're only drawing as a pre-warm stage
-    gldriver_render();
+    video_render();
 
     // Check for errors to make sure all of our setup went ok
     GL_ERRLOG("finished initialization");
@@ -259,8 +241,8 @@ static void gldriver_init_common(void) {
     }
 }
 
-static void _gldriver_shutdown(void) {
-    LOG("Beginning GLDriver shutdown ...");
+static void glvideo_shutdown(void) {
+    LOG("BEGIN ...");
 
     // Cleanup all OpenGL objects
 
@@ -283,59 +265,14 @@ static void _gldriver_shutdown(void) {
         mainShaderProgram = UNINITIALIZED_GL;
     }
 
-    glnode_shutdownNodes();
-    LOG("Completed GLDriver shutdown ...");
+    LOG("END ...");
 }
 
-static void gldriver_shutdown(void) {
-    if (renderer_shutting_down) {
-        return;
-    }
-#if USE_GLUT
-    glutLeaveMainLoop();
-#endif
-    renderer_shutting_down = true;
-    _gldriver_shutdown();
-}
-
-//----------------------------------------------------------------------------
-//
-// update, render, reshape
-//
-#if USE_GLUT
-static void gldriver_update(int unused) {
-#if FPS_LOG
-    static uint32_t prevCount = 0;
-    static uint32_t idleCount = 0;
-
-    idleCount++;
-
-    static struct timespec prev = { 0 };
-    struct timespec now;
-    clock_gettime(CLOCK_MONOTONIC, &now);
-
-    if (now.tv_sec != prev.tv_sec) {
-        LOG("gldriver_update() : %u", idleCount-prevCount);
-        prevCount = idleCount;
-        prev = now;
-    }
-#endif
-
-    c_keys_handle_input(-1, 0, 0);
-    glutPostRedisplay();
-    glutTimerFunc(17, gldriver_update, 0);
-}
-#endif
-
-static void gldriver_render(void) {
+static void glvideo_render(void) {
     SCOPE_TRACE_VIDEO("glvideo render");
 
     const uint8_t * const fb = video_current_framebuffer();
     if (UNLIKELY(!fb)) {
-        return;
-    }
-
-    if (UNLIKELY(renderer_shutting_down)) {
         return;
     }
 
@@ -439,22 +376,11 @@ static void gldriver_render(void) {
     _HACKAROUND_GLDRAW_PRE();
     glDrawElements(GL_TRIANGLES, crtModel->numElements, crtModel->elementType, 0);
 
-    // Render HUD nodes
-    glnode_renderNodes();
-
-#if USE_GLUT
-    glutSwapBuffers();
-#endif
-
-    GL_ERRLOG("gldriver_render");
+    GL_ERRLOG("glvideo_render");
 }
 
-static void gldriver_reshape(int w, int h) {
+static void glvideo_reshape(int w, int h) {
     //LOG("reshape to w:%d h:%d", w, h);
-#if USE_GLUT
-    windowWidth = w;
-    windowHeight = h;
-#endif
 
     int w2 = ((float)h * (SCANWIDTH/(float)SCANHEIGHT));
     int h2 = ((float)w / (SCANWIDTH/(float)SCANHEIGHT));
@@ -481,78 +407,29 @@ static void gldriver_reshape(int w, int h) {
     }
 
     glViewport(viewportX, viewportY, viewportWidth, viewportHeight);
-
-    // Reshape HUD nodes
-    glnode_reshapeNodes(w, h);
 }
 
-#if USE_GLUT
-static void gldriver_init_glut(void) {
-    glutInit(&argc, argv);
-    glutInitDisplayMode(/*GLUT_DOUBLE|*/GLUT_RGBA);
-    glutInitWindowSize(windowWidth, windowHeight);
-    //glutInitContextVersion(4, 0); -- Is this needed?
-    glutInitContextProfile(GLUT_CORE_PROFILE);
-    glutWindow = glutCreateWindow(PACKAGE_NAME);
-    GL_ERRQUIT("GLUT initialization");
-
-    if (glewInit()) {
-        ERRQUIT("Unable to initialize GLEW");
-    }
-
-    gldriver_init_common();
-
-    glutTimerFunc(16, gldriver_update, 0);
-    glutDisplayFunc(gldriver_render);
-    glutReshapeFunc(gldriver_reshape);
-    glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_GLUTMAINLOOP_RETURNS);
-
-#if !TESTING
-    glutKeyboardFunc(gldriver_on_key_down);
-    glutKeyboardUpFunc(gldriver_on_key_up);
-    glutSpecialFunc(gldriver_on_key_special_down);
-    glutSpecialUpFunc(gldriver_on_key_special_up);
-    //glutMouseFunc(gldriver_mouse);
-    //glutMotionFunc(gldriver_mouse_drag);
-#endif
+#if INTERFACE_TOUCH
+static int64_t glvideo_onTouchEvent(interface_touch_event_t action, int pointer_count, int pointer_idx, float *x_coords, float *y_coords) {
+    // no-op
+    return 0x0;
 }
 #endif
 
 //----------------------------------------------------------------------------
-// backend renderer API
-
-static void gldriver_init(void *unused) {
-    safe_to_do_opengl_logging = true;
-#if defined(__APPLE__) || defined(ANDROID)
-    gldriver_init_common();
-#elif USE_GLUT
-    gldriver_init_glut();
-#else
-#error no working codepaths
-#endif
-    glnode_setupNodes();
-}
-
-static void gldriver_main_loop(void) {
-#if USE_GLUT
-    glutMainLoop();
-    LOG("GLUT main loop finished...");
-#endif
-    // fall through if not GLUT
-}
 
 __attribute__((constructor(CTOR_PRIORITY_EARLY)))
 static void _init_glvideo(void) {
     LOG("Initializing OpenGL renderer");
 
-    assert((video_backend == NULL) && "there can only be one!");
-
-    glvideo_backend.init      = &gldriver_init;
-    glvideo_backend.main_loop = &gldriver_main_loop;
-    glvideo_backend.reshape   = &gldriver_reshape;
-    glvideo_backend.render    = &gldriver_render;
-    glvideo_backend.shutdown  = &gldriver_shutdown;
-
-    video_backend = &glvideo_backend;
+    glnode_registerNode(RENDER_BOTTOM, (GLNode){
+        .setup = &glvideo_init,
+        .shutdown = &glvideo_shutdown,
+        .render = &glvideo_render,
+        .reshape = &glvideo_reshape,
+#if INTERFACE_TOUCH
+        .onTouchEvent = &glvideo_onTouchEvent,
+#endif
+    });
 }
 

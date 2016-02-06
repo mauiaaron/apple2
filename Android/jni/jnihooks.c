@@ -191,15 +191,16 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnCreate(JNIEnv *env, jclas
 void Java_org_deadc0de_apple2ix_Apple2View_nativeGraphicsChanged(JNIEnv *env, jclass cls, jint width, jint height) {
     // WARNING : this can happen on non-GL thread
     LOG("...");
-    video_backend->reshape(width, height);
+    video_reshape(width, height);
 }
 
 void Java_org_deadc0de_apple2ix_Apple2View_nativeGraphicsInitialized(JNIEnv *env, jclass cls, jint width, jint height) {
     // WARNING : this needs to happen on the GL thread only
     LOG("width:%d height:%d", width, height);
+    _video_setRenderThread(pthread_self()); // Assume Android knows what it's doing ;-P
     video_shutdown();
-    video_backend->reshape(width, height);
-    video_backend->init((void *)0);
+    video_reshape(width, height);
+    video_init();
 }
 
 void Java_org_deadc0de_apple2ix_Apple2Activity_nativeEmulationResume(JNIEnv *env, jclass cls) {
@@ -271,7 +272,7 @@ void Java_org_deadc0de_apple2ix_Apple2View_nativeRender(JNIEnv *env, jclass cls)
     }
 #endif
 
-    video_backend->render();
+    video_render();
 }
 
 void Java_org_deadc0de_apple2ix_Apple2Activity_nativeReboot(JNIEnv *env, jclass cls) {

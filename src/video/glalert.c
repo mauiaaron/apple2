@@ -9,8 +9,6 @@
  *
  */
 
-#include "common.h"
-#include "video/glvideo.h"
 #include "video/glhudmodel.h"
 #include "video/glnode.h"
 
@@ -204,7 +202,7 @@ static void alert_reshape(int w, int h) {
 
 #if INTERFACE_TOUCH
 static int64_t alert_onTouchEvent(interface_touch_event_t action, int pointer_count, int pointer_idx, float *x_coords, float *y_coords) {
-    return false; // non-interactive element ...
+    return 0x0; // non-interactive element ...
 }
 #endif
 

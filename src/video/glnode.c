@@ -9,11 +9,10 @@
  *
  */
 
-#include "common.h"
 #include "video/glnode.h"
-#include "video/glvideo.h"
+#include "video/glinput.h"
 
-static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+bool safe_to_do_opengl_logging = false;
 
 // WARNING : linked list designed for convenience and not performance =P ... if the amount of GLNode objects grows
 // wildly, should rethink this ...
@@ -27,9 +26,17 @@ typedef struct glnode_array_node_s {
 static glnode_array_node_s *head = NULL;
 static glnode_array_node_s *tail = NULL;
 
+static video_backend_s glnode_backend = { 0 };
+
+#if USE_GLUT
+static bool glut_in_main_loop = false;
+#endif
+
 // -----------------------------------------------------------------------------
 
 void glnode_registerNode(glnode_render_order_t order, GLNode node) {
+
+    static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
     pthread_mutex_lock(&mutex);
 
     glnode_array_node_s *arrayNode = MALLOC(sizeof(glnode_array_node_s));
@@ -46,7 +53,7 @@ void glnode_registerNode(glnode_render_order_t order, GLNode node) {
     } else {
         glnode_array_node_s *p0 = NULL;
         glnode_array_node_s *p = head;
-        while (p && (order < p->order)) {
+        while (p && (order > p->order)) {
             p0 = p;
             p = p->next;
         }
@@ -67,34 +74,121 @@ void glnode_registerNode(glnode_render_order_t order, GLNode node) {
     pthread_mutex_unlock(&mutex);
 }
 
-void glnode_setupNodes(void) {
-    LOG("glnode_setupNodes ...");
+// -----------------------------------------------------------------------------
+
+#if USE_GLUT
+static void _glnode_updateGLUT(int unused) {
+#if FPS_LOG
+    static uint32_t prevCount = 0;
+    static uint32_t idleCount = 0;
+
+    idleCount++;
+
+    static struct timespec prev = { 0 };
+    struct timespec now;
+    clock_gettime(CLOCK_MONOTONIC, &now);
+
+    if (now.tv_sec != prev.tv_sec) {
+        LOG("%u", idleCount-prevCount);
+        prevCount = idleCount;
+        prev = now;
+    }
+#endif
+
+    c_keys_handle_input(-1, 0, 0);
+    glutPostRedisplay();
+    glutTimerFunc(17, _glnode_updateGLUT, 0);
+}
+
+static void _glnode_initGLUTPre(void) {
+    glutInit(&argc, argv);
+    glutInitDisplayMode(/*GLUT_DOUBLE|*/GLUT_RGBA);
+    glutInitWindowSize(SCANWIDTH*1.5, SCANHEIGHT*1.5);
+    //glutInitContextVersion(4, 0); -- Is this needed?
+    glutInitContextProfile(GLUT_CORE_PROFILE);
+    /*glutWindow = */glutCreateWindow(PACKAGE_NAME);
+    GL_ERRQUIT("GLUT initialization");
+
+    if (glewInit()) {
+        ERRQUIT("Unable to initialize GLEW");
+    }
+}
+
+static void _glnode_reshapeGLUT(int w, int h) {
+    video_reshape(w, h);
+}
+
+static void _glnode_initGLUTPost(void) {
+    glutTimerFunc(16, _glnode_updateGLUT, 0);
+    glutDisplayFunc(video_render);
+    glutReshapeFunc(_glnode_reshapeGLUT);
+    glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_GLUTMAINLOOP_RETURNS);
+
+#if !TESTING
+    glutKeyboardFunc(gldriver_on_key_down);
+    glutKeyboardUpFunc(gldriver_on_key_up);
+    glutSpecialFunc(gldriver_on_key_special_down);
+    glutSpecialUpFunc(gldriver_on_key_special_up);
+    //glutMouseFunc(gldriver_mouse);
+    //glutMotionFunc(gldriver_mouse_drag);
+#endif
+}
+#endif
+
+static void glnode_setupNodes(void *ctx) {
+    LOG("BEGIN glnode_setupNodes ...");
+
+#if USE_GLUT
+    _glnode_initGLUTPre();
+#endif
+
+    safe_to_do_opengl_logging = true;
     glnode_array_node_s *p = head;
     while (p) {
         p->node.setup();
         p = p->next;
     }
+
+#if USE_GLUT
+    _glnode_initGLUTPost();
+#endif
+
+    LOG("END glnode_setupNodes ...");
 }
 
-void glnode_shutdownNodes(void) {
-    LOG("glnode_shutdownNodes ...");
-    glnode_array_node_s *p = head;
-    while (p) {
-        p->node.shutdown();
-        p = p->next;
+static void glnode_shutdownNodes(void) {
+    LOG("BEGIN glnode_shutdownNodes ...");
+
+#if USE_GLUT
+    LOG("Waiting for GLUT mainloop to finish ...");
+    glutLeaveMainLoop();
+    while (glut_in_main_loop) {
+        usleep(40);
     }
-}
+#endif
 
-void glnode_renderNodes(void) {
-    SCOPE_TRACE_VIDEO("glnode render");
     glnode_array_node_s *p = tail;
     while (p) {
-        p->node.render();
+        p->node.shutdown();
         p = p->last;
     }
+    LOG("END glnode_shutdownNodes ...");
 }
 
-void glnode_reshapeNodes(int w, int h) {
+static void glnode_renderNodes(void) {
+    SCOPE_TRACE_VIDEO("glnode render");
+    glnode_array_node_s *p = head;
+    while (p) {
+        p->node.render();
+        p = p->next;
+    }
+
+#if USE_GLUT
+    glutSwapBuffers();
+#endif
+}
+
+static void glnode_reshapeNodes(int w, int h) {
     glnode_array_node_s *p = head;
     while (p) {
         p->node.reshape(w, h);
@@ -103,20 +197,32 @@ void glnode_reshapeNodes(int w, int h) {
 }
 
 #if INTERFACE_TOUCH
-int64_t glnode_onTouchEvent(interface_touch_event_t action, int pointer_count, int pointer_idx, float *x_coords, float *y_coords) {
+static int64_t glnode_onTouchEvent(interface_touch_event_t action, int pointer_count, int pointer_idx, float *x_coords, float *y_coords) {
     SCOPE_TRACE_TOUCH("glnode onTouchEvent");
-    glnode_array_node_s *p = head;
+    glnode_array_node_s *p = tail;
     int64_t flags = 0x0;
     while (p) {
         flags = p->node.onTouchEvent(action, pointer_count, pointer_idx, x_coords, y_coords);
         if (flags & TOUCH_FLAGS_HANDLED) {
             break;
         }
-        p = p->next;
+        p = p->last;
     }
     return flags;
 }
 #endif
+
+static void glnode_mainLoop(void) {
+#if USE_GLUT
+    LOG("BEGIN GLUT main loop...");
+    glut_in_main_loop = true;
+    glutMainLoop();
+    glut_in_main_loop = false;
+    LOG("END GLUT main loop...");
+#endif
+}
+
+//----------------------------------------------------------------------------
 
 __attribute__((destructor(255)))
 static void _destroy_glnodes(void) {
@@ -136,6 +242,14 @@ static void _destroy_glnodes(void) {
 __attribute__((constructor(CTOR_PRIORITY_LATE)))
 static void _init_glnode_manager(void) {
     LOG("Initializing GLNode manager subsystem");
+
+    assert((video_backend == NULL) && "there can only be one!");
+    glnode_backend.init      = &glnode_setupNodes;
+    glnode_backend.main_loop = &glnode_mainLoop;
+    glnode_backend.reshape   = &glnode_reshapeNodes;
+    glnode_backend.render    = &glnode_renderNodes;
+    glnode_backend.shutdown  = &glnode_shutdownNodes;
+    video_backend = &glnode_backend;
 
 #if INTERFACE_TOUCH
     interface_onTouchEvent = &glnode_onTouchEvent;

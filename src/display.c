@@ -26,6 +26,7 @@ static uint8_t vga_mem_page_1[SCANWIDTH*SCANHEIGHT] = { 0 };
 
 A2Color_s colormap[256] = { { 0 } };
 video_backend_s *video_backend = NULL;
+static pthread_t render_thread_id = 0;
 
 static uint8_t video__wider_font[0x8000] = { 0 };
 static uint8_t video__font[0x4000] = { 0 };
@@ -1147,6 +1148,10 @@ GLUE_C_WRITE(video__write_2e_odd1_mixed)
 // ----------------------------------------------------------------------------
 
 void video_init(void) {
+    assert(pthread_self() != cpu_thread_id);
+    LOG("(re)setting render_thread_id : %ld -> %ld", render_thread_id, pthread_self());
+    render_thread_id = pthread_self();
+
     video__fb1 = vga_mem_page_0;
     video__fb2 = vga_mem_page_1;
 
@@ -1154,13 +1159,32 @@ void video_init(void) {
     memset(video__fb1,0,SCANWIDTH*SCANHEIGHT);
     memset(video__fb2,0,SCANWIDTH*SCANHEIGHT);
 
-#if !defined(__APPLE__) && !defined(ANDROID)
     video_backend->init((void*)0);
-#endif
+}
+
+void _video_setRenderThread(pthread_t id) {
+    render_thread_id = id;
 }
 
 void video_shutdown(void) {
+
+#if MOBILE_DEVICE
+    // WARNING : shutdown should occur on the render thread.  Platform code (iOS, Android) should ensure this is called
+    // from within a render pass...
+    assert(pthread_self() == render_thread_id);
+#endif
+
     video_backend->shutdown();
+    render_thread_id = 0;
+}
+
+void video_reshape(int w, int h) {
+    video_backend->reshape(w, h);
+}
+
+void video_render(void) {
+    assert(pthread_self() == render_thread_id);
+    video_backend->render();
 }
 
 void video_main_loop(void) {
