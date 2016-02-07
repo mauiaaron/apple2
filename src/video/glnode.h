@@ -21,6 +21,9 @@
 // TODO: implement 3D CRT object, possibly with perspective drawing?
 #define PERSPECTIVE 0
 
+#define PREF_PORTRAIT_HEIGHT_SCALE "portraitHeightScale"
+#define PREF_PORTRAIT_POSITION_SCALE "portraitPositionScale"
+
 enum {
     TEXTURE_ID_FRAMEBUFFER=0,
     TEXTURE_ID_MESSAGE,
@@ -97,14 +100,25 @@ typedef struct GLNode {
     void (*setup)(void);
     void (*shutdown)(void);
     void (*render)(void);
+    void (*reshape)(int w, int h, bool landscape);
 #if INTERFACE_TOUCH
+    interface_device_t type;
     int64_t (*onTouchEvent)(interface_touch_event_t action, int pointer_count, int pointer_idx, float *x_coords, float *y_coords);
+    void (*setData)(const char *jsonData);
 #endif
-    void (*reshape)(int w, int h);
 } GLNode;
 
 // registers a node with manager
 void glnode_registerNode(glnode_render_order_t order, GLNode node);
+
+// swizzle width/height if they don't match landscape/portrait
+static void inline swizzleDimensions(int *w, int *h, bool landscape) {
+    if ( (landscape && (*w < *h)) || (!landscape && (*w > *h)) ) {
+        int x = *w;
+        *w = *h;
+        *h = x;
+    }
+}
 
 #endif // whole file
 

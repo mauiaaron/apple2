@@ -16,6 +16,9 @@
 
 #include "common.h"
 
+#define GL_MODEL_MAX 2.0 // entire model space (-1.0 to 1.0)
+#define GL_MODEL_HALF 1.0
+
 enum {
     POS_ATTRIB_IDX,
     TEXCOORD_ATTRIB_IDX,

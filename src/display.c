@@ -1180,8 +1180,8 @@ void video_shutdown(bool emulatorShuttingDown) {
     render_thread_id = 0;
 }
 
-void video_reshape(int w, int h) {
-    video_backend->reshape(w, h);
+void video_reshape(int w, int h, bool landscape) {
+    video_backend->reshape(w, h, landscape);
 }
 
 void video_render(void) {

@@ -20,6 +20,11 @@ static int viewportY = 0;
 static int viewportWidth = SCANWIDTH*1.5;
 static int viewportHeight = SCANHEIGHT*1.5;
 
+static int rawWidth = SCANWIDTH*1.5;
+static int rawHeight = SCANHEIGHT*1.5;
+static bool isLandscape = true;
+static float portraitPositionScale = 3/4.f;
+
 GLint texSamplerLoc = UNINITIALIZED_GL;
 GLint alphaValue = UNINITIALIZED_GL;
 GLuint mainShaderProgram = UNINITIALIZED_GL;
@@ -155,8 +160,8 @@ static void glvideo_init(void) {
             .skew_x = -1.0, // model space coords
             .skew_y = -1.0,
             .z = 0.0,
-            .obj_w = 2.0,   // entire model space (-1.0 to 1.0)
-            .obj_h = 2.0,
+            .obj_w = GL_MODEL_MAX,   // entire model space (-1.0 to 1.0)
+            .obj_h = GL_MODEL_MAX,
             .positionUsageHint = GL_STATIC_DRAW, // positions don't change
             .tex_w = SCANWIDTH,
             .tex_h = SCANHEIGHT,
@@ -277,9 +282,7 @@ static void glvideo_render(void) {
     }
 
     glClear(GL_COLOR_BUFFER_BIT);
-#if MOBILE_DEVICE
     glViewport(viewportX, viewportY, viewportWidth, viewportHeight);
-#endif
 
 #if PERSPECTIVE
     // Calculate modelview and projection matrices
@@ -379,8 +382,14 @@ static void glvideo_render(void) {
     GL_ERRLOG("glvideo_render");
 }
 
-static void glvideo_reshape(int w, int h) {
-    //LOG("reshape to w:%d h:%d", w, h);
+static void glvideo_reshape(int w, int h, bool landscape) {
+    LOG("w:%d h:%d landscape:%d", w, h, landscape);
+
+    rawWidth = w;
+    rawHeight = h;
+    isLandscape = landscape;
+
+    swizzleDimensions(&w, &h, landscape);
 
     int w2 = ((float)h * (SCANWIDTH/(float)SCANHEIGHT));
     int h2 = ((float)w / (SCANWIDTH/(float)SCANHEIGHT));
@@ -397,6 +406,9 @@ static void glvideo_reshape(int w, int h) {
         viewportY = (h-h2)/2;
         viewportWidth = w;
         viewportHeight = h2;
+        if (!isLandscape) {
+            viewportY = (h-h2) * portraitPositionScale;
+        }
         //LOG("OK2 : x:%d,y:%d w:%d,h:%d", viewportX, viewportY, viewportWidth, viewportHeight);
     } else {
         viewportX = 0;
@@ -405,11 +417,26 @@ static void glvideo_reshape(int w, int h) {
         viewportHeight = h;
         //LOG("small viewport : x:%d,y:%d w:%d,h:%d", viewportX, viewportY, viewportWidth, viewportHeight);
     }
-
-    glViewport(viewportX, viewportY, viewportWidth, viewportHeight);
 }
 
 #if INTERFACE_TOUCH
+static void glvideo_setData(const char *jsonData) {
+    JSON_s parsedData = { 0 };
+    int tokCount = json_createFromString(jsonData, &parsedData);
+
+    do {
+        if (tokCount < 0) {
+            break;
+        }
+
+        json_mapParseFloatValue(&parsedData, PREF_PORTRAIT_POSITION_SCALE, &portraitPositionScale);
+
+        glvideo_reshape(rawWidth, rawHeight, isLandscape);
+    } while (0);
+
+    json_destroy(&parsedData);
+}
+
 static int64_t glvideo_onTouchEvent(interface_touch_event_t action, int pointer_count, int pointer_idx, float *x_coords, float *y_coords) {
     // no-op
     return 0x0;
@@ -428,7 +455,9 @@ static void _init_glvideo(void) {
         .render = &glvideo_render,
         .reshape = &glvideo_reshape,
 #if INTERFACE_TOUCH
+        .type = TOUCH_DEVICE_FRAMEBUFFER,
         .onTouchEvent = &glvideo_onTouchEvent,
+        .setData = &glvideo_setData,
 #endif
     });
 }

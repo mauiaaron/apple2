@@ -11,7 +11,6 @@
 
 #include "video/glhudmodel.h"
 #include "video/glnode.h"
-#include "json_parse.h"
 
 #if !INTERFACE_TOUCH
 #error this is a touch interface module, possibly you mean to not compile this at all?
@@ -26,7 +25,7 @@
 
 #define MODEL_DEPTH -1/32.f
 
-#define KBD_TEMPLATE_COLS 10
+#define KBD_TEMPLATE_COLS 10 // 10 cols for a mobile keyboard in portrait seems to be a defacto standard across iOS/Android ...
 #define KBD_TEMPLATE_ROWS 8
 
 #define DEFAULT_CTRL_COL 2
@@ -38,8 +37,8 @@
 #define KBD_FB_WIDTH (KBD_TEMPLATE_COLS * FONT80_WIDTH_PIXELS) // 10 * 7 == 70
 #define KBD_FB_HEIGHT (KBD_TEMPLATE_ROWS * FONT_HEIGHT_PIXELS) // 8 * 16 == 128
 
-#define KBD_OBJ_W 2.0
-#define KBD_OBJ_H 2.0
+#define KBD_OBJ_W GL_MODEL_MAX // model width fits screen
+#define KBD_OBJ_H_LANDSCAPE GL_MODEL_MAX
 
 static bool isAvailable = false; // Were there any OpenGL/memory errors on gltouchkbd initialization?
 static bool isEnabled = true;    // Does player want touchkbd enabled?
@@ -108,12 +107,21 @@ static struct {
 
     int kbdW;
     int kbdH;
+
+    // raw device dimensions
+    int rawWidth;
+    int rawHeight;
+    int isLandscape;
 } touchport = { 0 };
 
 // keyboard variables
 
 static struct {
     GLModel *model;
+
+    GLfloat modelHeight;
+    GLfloat modelSkewY;
+    bool modelDirty;
 
     int selectedCol;
     int selectedRow;
@@ -124,6 +132,8 @@ static struct {
     bool ctrlPressed;
 
     unsigned int glyphMultiplier;
+    float portraitHeightScale;
+    float portraitPositionScale;
 
     struct timespec timingBegin;
 
@@ -174,6 +184,29 @@ static void _rerender_character(int col, int row) {
     }
 
     kbd.model->texDirty = true;
+}
+
+// non-destructively adjust model height/position
+static void _reset_model(void) {
+
+    /* 2...3
+     *  .
+     *   .
+     *    .
+     * 0...1
+     */
+    const GLfloat skew_x = -GL_MODEL_HALF;
+    const GLfloat skew_y = kbd.modelSkewY;
+    const GLfloat obj_w = KBD_OBJ_W;
+    const GLfloat obj_h = kbd.modelHeight;
+
+    GLfloat *quad = (GLfloat *)(kbd.model->positions);
+    quad[0 +0] = skew_x;        quad[0 +1] = skew_y;
+    quad[4 +0] = skew_x+obj_w;  quad[4 +1] = skew_y;
+    quad[8 +0] = skew_x;        quad[8 +1] = skew_y+obj_h;
+    quad[12+0] = skew_x+obj_w;  quad[12+1] = skew_y+obj_h;
+
+    kbd.modelDirty = true;
 }
 
 static inline void _rerender_selected(int col, int row) {
@@ -481,12 +514,12 @@ static void gltouchkbd_setup(void) {
     gltouchkbd_shutdown();
 
     kbd.model = mdlCreateQuad((GLModelParams_s){
-            .skew_x = -1.0,
-            .skew_y = -1.0,
+            .skew_x = -GL_MODEL_HALF,
+            .skew_y = kbd.modelSkewY,
             .z = MODEL_DEPTH,
             .obj_w = KBD_OBJ_W,
-            .obj_h = KBD_OBJ_H,
-            .positionUsageHint = GL_STATIC_DRAW, // positions don't change
+            .obj_h = kbd.modelHeight,
+            .positionUsageHint = GL_DYNAMIC_DRAW, // positions might change
             .tex_w = KBD_FB_WIDTH * kbd.glyphMultiplier,
             .tex_h = KBD_FB_HEIGHT * kbd.glyphMultiplier,
             .texcoordUsageHint = GL_DYNAMIC_DRAW, // but key texture does
@@ -546,28 +579,64 @@ static void gltouchkbd_render(void) {
             _HACKAROUND_GLTEXIMAGE2D_PRE(TEXTURE_ACTIVE_TOUCHKBD, kbd.model->textureName);
             glTexImage2D(GL_TEXTURE_2D, /*level*/0, TEX_FORMAT_INTERNAL, kbd.model->texWidth, kbd.model->texHeight, /*border*/0, TEX_FORMAT, TEX_TYPE, kbd.model->texPixels);
         }
+        if (kbd.modelDirty) {
+            kbd.modelDirty = false;
+            glBindBuffer(GL_ARRAY_BUFFER, kbd.model->posBufferName);
+            glBufferData(GL_ARRAY_BUFFER, kbd.model->positionArraySize, kbd.model->positions, GL_DYNAMIC_DRAW);
+        }
         glUniform1i(texSamplerLoc, TEXTURE_ID_TOUCHKBD);
         glhud_renderDefault(kbd.model);
     }
 }
 
-static void gltouchkbd_reshape(int w, int h) {
-    LOG("gltouchkbd_reshape(%d, %d)", w, h);
+static void gltouchkbd_reshape(int w, int h, bool landscape) {
+    LOG("w:%d h:%d landscape:%d", w, h, landscape);
+
+    touchport.rawWidth = w;
+    touchport.rawHeight = h;
+    touchport.isLandscape = landscape;
 
     touchport.kbdX = 0;
 
-    if (w > touchport.width) {
-        touchport.width = w;
-        touchport.kbdXMax = w * (KBD_OBJ_W/2.f);
-    }
-    if (h > touchport.height) {
-        touchport.height = h;
-        touchport.kbdY = h * (1.f - (KBD_OBJ_H/2.f));
-        touchport.kbdYMax = h;
-    }
+    swizzleDimensions(&w, &h, landscape);
+    touchport.width = w;
+    touchport.height = h;
+
+    kbd.modelHeight = landscape ? KBD_OBJ_H_LANDSCAPE : (GL_MODEL_MAX * kbd.portraitHeightScale);
+    kbd.modelSkewY = -GL_MODEL_HALF + ((GL_MODEL_MAX - kbd.modelHeight) * kbd.portraitPositionScale);
+
+    touchport.kbdXMax = w * (KBD_OBJ_W/GL_MODEL_MAX);
+
+    touchport.kbdY = h * (GL_MODEL_HALF - (kbd.modelHeight/GL_MODEL_MAX));
+    touchport.kbdY = h * ((GL_MODEL_MAX - (kbd.modelSkewY + GL_MODEL_HALF + kbd.modelHeight)) / GL_MODEL_MAX);
+    touchport.kbdYMax = h * ((GL_MODEL_MAX - (kbd.modelSkewY + GL_MODEL_HALF)) / GL_MODEL_MAX);
+
+    LOG("modelHeight:%f modelSkewY:%f kbdY:%d kbdYMax:%d", kbd.modelHeight, kbd.modelSkewY, touchport.kbdY, touchport.kbdYMax);
 
     touchport.kbdW = touchport.kbdXMax - touchport.kbdX;
     touchport.kbdH = touchport.kbdYMax - touchport.kbdY;
+
+    if (kbd.model) {
+        _reset_model();
+    }
+}
+
+static void gltouchkbd_setData(const char *jsonData) {
+    JSON_s parsedData = { 0 };
+    int tokCount = json_createFromString(jsonData, &parsedData);
+
+    do {
+        if (tokCount < 0) {
+            break;
+        }
+
+        json_mapParseFloatValue(&parsedData, PREF_PORTRAIT_HEIGHT_SCALE, &kbd.portraitHeightScale);
+        json_mapParseFloatValue(&parsedData, PREF_PORTRAIT_POSITION_SCALE, &kbd.portraitPositionScale);
+
+        gltouchkbd_reshape(touchport.rawWidth, touchport.rawHeight, touchport.isLandscape);
+    } while (0);
+
+    json_destroy(&parsedData);
 }
 
 static int64_t gltouchkbd_onTouchEvent(interface_touch_event_t action, int pointer_count, int pointer_idx, float *x_coords, float *y_coords) {
@@ -698,12 +767,10 @@ static void gltouchkbd_setLowercaseEnabled(bool enabled) {
 }
 
 static void gltouchkbd_beginCalibration(void) {
-    video_clear();
     isCalibrating = true;
 }
 
 static void gltouchkbd_endCalibration(void) {
-    video_redraw();
     isCalibrating = false;
 }
 
@@ -991,6 +1058,9 @@ static void _init_gltouchkbd(void) {
     keydriver_loadAltKbd = &gltouchkbd_loadAltKbd;
     keydriver_setGlyphScale = &gltouchkbd_setGlyphScale;
 
+    kbd.portraitHeightScale = 0.5f;
+    kbd.portraitPositionScale = 0.f;
+
     kbd.selectedCol = -1;
     kbd.selectedRow = -1;
 
@@ -1000,11 +1070,13 @@ static void _init_gltouchkbd(void) {
     kbd.glyphMultiplier = 1;
 
     glnode_registerNode(RENDER_LOW, (GLNode){
+        .type = TOUCH_DEVICE_KEYBOARD,
         .setup = &gltouchkbd_setup,
         .shutdown = &gltouchkbd_shutdown,
         .render = &gltouchkbd_render,
         .reshape = &gltouchkbd_reshape,
         .onTouchEvent = &gltouchkbd_onTouchEvent,
+        .setData = &gltouchkbd_setData,
     });
 }
 

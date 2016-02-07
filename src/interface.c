@@ -22,6 +22,7 @@ bool (*interface_isTouchMenuAvailable)(void) = NULL;
 void (*interface_setTouchMenuEnabled)(bool enabled) = NULL;
 void (*interface_setTouchMenuVisibility)(float inactiveAlpha, float activeAlpha) = NULL;
 void (*interface_setGlyphScale)(int glyphScale) = NULL;
+void (*(*interface_getModelDataSetter)(interface_device_t device))(const char *jsonData) = NULL;
 #endif
 
 // 2015/04/12 : This was legacy code for rendering the menu interfaces on desktop Linux. Portions here are resurrected

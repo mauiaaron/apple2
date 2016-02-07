@@ -46,9 +46,13 @@ void interface_plotMessage(uint8_t *fb, interface_colorscheme_t cs, char *messag
 #if INTERFACE_TOUCH
 typedef enum interface_device_t {
     TOUCH_DEVICE_NONE = 0,
+    TOUCH_DEVICE_FRAMEBUFFER = 0,
     TOUCH_DEVICE_JOYSTICK,
     TOUCH_DEVICE_JOYSTICK_KEYPAD,
     TOUCH_DEVICE_KEYBOARD,
+    TOUCH_DEVICE_TOPMENU,
+    TOUCH_DEVICE_ALERT,
+    // ...
     TOUCH_DEVICE_DEVICE_MAX,
 } interface_device_t;
 
@@ -90,6 +94,9 @@ extern void (*interface_setTouchMenuVisibility)(float inactiveAlpha, float activ
 
 // set a finer-grained font size (if glyphScale > 1)
 extern void (*interface_setGlyphScale)(int glyphScale);
+
+// get model-specific functions
+extern void (*(*interface_getModelDataSetter)(interface_device_t device))(const char *jsonData);
 #endif
 
 #define EXT_GZ  ".gz"

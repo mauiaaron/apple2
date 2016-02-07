@@ -14,6 +14,9 @@
 
 #define MODEL_DEPTH -0.0625
 
+#define ALERT_MODEL_W 0.7
+#define ALERT_MODEL_H 0.7
+
 static bool isEnabled = true;
 static pthread_mutex_t messageMutex = PTHREAD_MUTEX_INITIALIZER;
 static char *nextMessage = NULL;
@@ -21,6 +24,7 @@ static unsigned int nextMessageCols = 0;
 static unsigned int nextMessageRows = 0;
 static struct timespec messageTimingBegin = { 0 };
 static GLModel *messageModel = NULL;
+static GLfloat landscapeScale = 1.f;
 
 // ----------------------------------------------------------------------------
 
@@ -58,12 +62,13 @@ static void _alertToModel(char *message, unsigned int messageCols, unsigned int 
         const unsigned int fbWidth = (messageCols * FONT80_WIDTH_PIXELS);
         const unsigned int fbHeight = (messageRows * FONT_HEIGHT_PIXELS);
 
+        GLfloat modelHeight = (ALERT_MODEL_H * landscapeScale);
         messageModel = mdlCreateQuad((GLModelParams_s){
-                .skew_x = -0.3,
-                .skew_y = -0.3,
+                .skew_x = -1.0 + ALERT_MODEL_W,
+                .skew_y = 1.0 - modelHeight,
                 .z = MODEL_DEPTH,
-                .obj_w = 0.7,
-                .obj_h = 0.7,
+                .obj_w = ALERT_MODEL_W,
+                .obj_h = (ALERT_MODEL_H * landscapeScale),
                 .positionUsageHint = GL_STATIC_DRAW, // positions don't change
                 .tex_w = fbWidth,
                 .tex_h = fbHeight,
@@ -196,8 +201,9 @@ static void alert_render(void) {
     glhud_renderDefault(messageModel);
 }
 
-static void alert_reshape(int w, int h) {
-    // no-op
+static void alert_reshape(int w, int h, bool landscape) {
+    swizzleDimensions(&w, &h, landscape);
+    landscapeScale = landscape ? 1.f : ((GLfloat)w/h);
 }
 
 #if INTERFACE_TOUCH
@@ -380,7 +386,9 @@ static void _init_glalert(void) {
         .render = &alert_render,
         .reshape = &alert_reshape,
 #if INTERFACE_TOUCH
+        .type = TOUCH_DEVICE_ALERT,
         .onTouchEvent = &alert_onTouchEvent,
+        .setData = NULL,
 #endif
     });
 }

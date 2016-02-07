@@ -19,7 +19,7 @@
 typedef struct video_backend_s {
     void (*init)(void *context);
     void (*main_loop)(void);
-    void (*reshape)(int width, int height);
+    void (*reshape)(int width, int height, bool landscape);
     void (*render)(void);
     void (*shutdown)(bool emulatorShuttingDown);
 } video_backend_s;

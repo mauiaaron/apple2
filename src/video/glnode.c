@@ -116,7 +116,7 @@ static void _glnode_initGLUTPre(void) {
 }
 
 static void _glnode_reshapeGLUT(int w, int h) {
-    video_reshape(w, h);
+    video_reshape(w, h, /*landscape:*/true);
 }
 
 static void _glnode_initGLUTPost(void) {
@@ -202,10 +202,10 @@ static void glnode_renderNodes(void) {
 #endif
 }
 
-static void glnode_reshapeNodes(int w, int h) {
+static void glnode_reshapeNodes(int w, int h, bool landscape) {
     glnode_array_node_s *p = head;
     while (p) {
-        p->node.reshape(w, h);
+        p->node.reshape(w, h, landscape);
         p = p->next;
     }
 }
@@ -223,6 +223,17 @@ static int64_t glnode_onTouchEvent(interface_touch_event_t action, int pointer_c
         p = p->last;
     }
     return flags;
+}
+
+void (*glnode_getModelDataSetter(interface_device_t type))(const char *jsonData) {
+    glnode_array_node_s *p = head;
+    while (p) {
+        if (p->node.type == type) {
+            return p->node.setData;
+        }
+        p = p->next;
+    }
+    return NULL;
 }
 #endif
 
@@ -256,5 +267,6 @@ static void _init_glnode_manager(void) {
 
 #if INTERFACE_TOUCH
     interface_onTouchEvent = &glnode_onTouchEvent;
+    interface_getModelDataSetter = &glnode_getModelDataSetter;
 #endif
 }

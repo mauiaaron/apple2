@@ -71,7 +71,7 @@ void _video_setRenderThread(pthread_t id);
 /*
  * Reshape the display to particular dimensions.
  */
-void video_reshape(int w, int h);
+void video_reshape(int w, int h, bool landscape);
 
 /*
  * Setup the display. This may be called multiple times in a run, and is
