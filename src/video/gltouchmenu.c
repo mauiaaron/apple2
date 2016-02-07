@@ -552,8 +552,8 @@ __attribute__((constructor(CTOR_PRIORITY_LATE)))
 static void _init_gltouchmenu(void) {
     LOG("Registering OpenGL software touch menu");
 
-    video_backend->animation_showTouchMenu = &_animation_showTouchMenu;
-    video_backend->animation_hideTouchMenu = &_animation_hideTouchMenu;
+    video_animations->animation_showTouchMenu = &_animation_showTouchMenu;
+    video_animations->animation_hideTouchMenu = &_animation_hideTouchMenu;
 
     interface_isTouchMenuAvailable = &gltouchmenu_isTouchMenuAvailable;
     interface_setTouchMenuEnabled = &gltouchmenu_setTouchMenuEnabled;

@@ -587,8 +587,8 @@ void c_interface_select_diskette( int drive )
                         }
                         else
                         {
-                            if (video_backend->animation_showDiskChosen) {
-                                video_backend->animation_showDiskChosen(drive);
+                            if (video_animations->animation_showDiskChosen) {
+                                video_animations->animation_showDiskChosen(drive);
                             }
                         }
 
@@ -655,8 +655,8 @@ void c_interface_select_diskette( int drive )
                 }
                 else
                 {
-                    if (video_backend->animation_showDiskChosen) {
-                        video_backend->animation_showDiskChosen(drive);
+                    if (video_animations->animation_showDiskChosen) {
+                        video_animations->animation_showDiskChosen(drive);
                     }
                 }
 

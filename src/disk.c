@@ -457,7 +457,7 @@ static void save_track_data(int drive) {
 }
 
 static inline void animate_disk_track_sector(void) {
-    if (video_backend && video_backend->animation_showTrackSector) {
+    if (video_animations && video_animations->animation_showTrackSector) {
         static int previous_sect = 0;
         int sect_width = disk6.disk[disk6.drive].track_width>>4; // div-by-16
         do {
@@ -467,7 +467,7 @@ static inline void animate_disk_track_sector(void) {
             int sect = disk6.disk[disk6.drive].run_byte/sect_width;
             if (sect != previous_sect) {
                 previous_sect = sect;
-                video_backend->animation_showTrackSector(disk6.drive, disk6.disk[disk6.drive].phase>>1, sect);
+                video_animations->animation_showTrackSector(disk6.drive, disk6.disk[disk6.drive].phase>>1, sect);
             }
         } while (0);
     }

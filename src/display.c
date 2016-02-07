@@ -14,6 +14,7 @@
  */
 
 #include "common.h"
+#include "video/video.h"
 
 #define SCANSTEP (SCANWIDTH-12)
 #define SCANDSTEP (SCANWIDTH-6)
@@ -25,6 +26,7 @@ static uint8_t vga_mem_page_0[SCANWIDTH*SCANHEIGHT] = { 0 };
 static uint8_t vga_mem_page_1[SCANWIDTH*SCANHEIGHT] = { 0 };
 
 A2Color_s colormap[256] = { { 0 } };
+video_animation_s *video_animations = NULL;
 video_backend_s *video_backend = NULL;
 static pthread_t render_thread_id = 0;
 

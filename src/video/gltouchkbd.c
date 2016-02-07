@@ -977,8 +977,8 @@ static void _init_gltouchkbd(void) {
 
     _initialize_keyboard_templates();
 
-    video_backend->animation_showTouchKeyboard = &_animation_showTouchKeyboard;
-    video_backend->animation_hideTouchKeyboard = &_animation_hideTouchKeyboard;
+    video_animations->animation_showTouchKeyboard = &_animation_showTouchKeyboard;
+    video_animations->animation_hideTouchKeyboard = &_animation_hideTouchKeyboard;
 
     keydriver_isTouchKeyboardAvailable = &gltouchkbd_isTouchKeyboardAvailable;
     keydriver_setTouchKeyboardEnabled = &gltouchkbd_setTouchKeyboardEnabled;

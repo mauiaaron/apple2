@@ -13,6 +13,7 @@
 #define _GLNODE_H_
 
 #include "common.h"
+#include "video/video.h"
 #include "video_util/modelUtil.h"
 #include "video_util/matrixUtil.h"
 #include "video_util/sourceUtil.h"

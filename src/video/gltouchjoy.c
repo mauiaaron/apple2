@@ -1017,8 +1017,8 @@ static void _init_gltouchjoy(void) {
     joyglobals.axisIsOnLeft = true;
     joyglobals.switchThreshold = BUTTON_SWITCH_THRESHOLD_DEFAULT;
 
-    video_backend->animation_showTouchJoystick = &_animation_showTouchJoystick;
-    video_backend->animation_hideTouchJoystick = &_animation_hideTouchJoystick;
+    video_animations->animation_showTouchJoystick = &_animation_showTouchJoystick;
+    video_animations->animation_hideTouchJoystick = &_animation_hideTouchJoystick;
 
     joydriver_isTouchJoystickAvailable = &gltouchjoy_isTouchJoystickAvailable;
     joydriver_setTouchJoystickEnabled = &gltouchjoy_setTouchJoystickEnabled;

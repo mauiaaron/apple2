@@ -418,7 +418,7 @@ static int64_t glvideo_onTouchEvent(interface_touch_event_t action, int pointer_
 
 //----------------------------------------------------------------------------
 
-__attribute__((constructor(CTOR_PRIORITY_EARLY)))
+__attribute__((constructor(CTOR_PRIORITY_LATE)))
 static void _init_glvideo(void) {
     LOG("Initializing OpenGL renderer");
 

@@ -198,10 +198,9 @@ static CVReturn displayLinkCallback(CVDisplayLinkRef displayLink, const CVTimeSt
     // Init our renderer.  Use 0 for the defaultFBO which is appropriate for
     // OSX (but not iOS since iOS apps must create their own FBO)
 #if TARGET_OS_MAC
-    video_backend->init(0);
+    video_init();
 #elif TARGET_OS_IPHONE
-#   error "FBO FIXME TODO"
-    video_backend->init(otherFBO);
+#   error this is OSX specific
 #else
 #   error "unknown/unsupported Apple platform
 #endif
@@ -248,7 +247,7 @@ static CVReturn displayLinkCallback(CVDisplayLinkRef displayLink, const CVTimeSt
 #endif // !SUPPORT_RETINA_RESOLUTION
     
     // Set the new dimensions in our renderer
-    video_backend->reshape((int)viewRectPixels.size.width, (int)viewRectPixels.size.height);
+    video_reshape((int)viewRectPixels.size.width, (int)viewRectPixels.size.height);
     
     CGLUnlockContext([[self openGLContext] CGLContextObj]);
 }
@@ -278,7 +277,7 @@ static CVReturn displayLinkCallback(CVDisplayLinkRef displayLink, const CVTimeSt
 - (void)drawView
 {
     CGLLockContext([[self openGLContext] CGLContextObj]);
-    video_backend->render();
+    video_render();
     CGLFlushDrawable([[self openGLContext] CGLContextObj]);
     CGLUnlockContext([[self openGLContext] CGLContextObj]);
     [[NSNotificationCenter defaultCenter] postNotificationName:(NSString *)kDrawTimerNotification object:nil];

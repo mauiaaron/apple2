@@ -356,13 +356,13 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeChooseDisk(JNIEnv *env, jcl
         if (disk6_insert(drive, gzPath, ro)) {
             char *diskImageUnreadable = "Disk Image Unreadable";
             unsigned int cols = strlen(diskImageUnreadable);
-            video_backend->animation_showMessage(diskImageUnreadable, cols, 1);
+            video_animations->animation_showMessage(diskImageUnreadable, cols, 1);
         } else {
-            video_backend->animation_showDiskChosen(drive);
+            video_animations->animation_showDiskChosen(drive);
         }
         ASPRINTF_FREE(gzPath);
     } else {
-        video_backend->animation_showDiskChosen(drive);
+        video_animations->animation_showDiskChosen(drive);
     }
     (*env)->ReleaseStringUTFChars(env, jPath, path);
 }
