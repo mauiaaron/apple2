@@ -15,6 +15,7 @@ static jsmntok_t *jsmn_alloc_token(jsmn_parser *parser,
 	tok->start = tok->end = -1;
 	tok->size = 0;
 #ifdef JSMN_PARENT_LINKS
+	tok->skip = 1;
 	tok->parent = -1;
 #endif
 	return tok;
@@ -147,6 +148,22 @@ static jsmnerr_t jsmn_parse_string(jsmn_parser *parser, const char *js,
 	return JSMN_ERROR_PART;
 }
 
+#ifdef JSMN_PARENT_LINKS
+static void jsmn_percolate_skip_counts(jsmntok_t *tokens, int parent) {
+	jsmntok_t *token;
+
+	token = &tokens[parent];
+	token->skip++;
+	for (;;) {
+		if (token->parent == -1) {
+			break;
+		}
+		token = &tokens[token->parent];
+		token->skip++;
+	}
+}
+#endif
+
 /**
  * Parse JSON string and fill tokens.
  */
@@ -175,6 +192,7 @@ jsmnerr_t jsmn_parse(jsmn_parser *parser, const char *js, size_t len,
 					tokens[parser->toksuper].size++;
 #ifdef JSMN_PARENT_LINKS
 					token->parent = parser->toksuper;
+					jsmn_percolate_skip_counts(tokens, parser->toksuper);
 #endif
 				}
 				token->type = (c == '{' ? JSMN_OBJECT : JSMN_ARRAY);
@@ -231,8 +249,12 @@ jsmnerr_t jsmn_parse(jsmn_parser *parser, const char *js, size_t len,
 				r = jsmn_parse_string(parser, js, len, tokens, num_tokens);
 				if (r < 0) return r;
 				count++;
-				if (parser->toksuper != -1 && tokens != NULL)
+				if (parser->toksuper != -1 && tokens != NULL) {
 					tokens[parser->toksuper].size++;
+#ifdef JSMN_PARENT_LINKS
+					jsmn_percolate_skip_counts(tokens, parser->toksuper);
+#endif
+				}
 				break;
 			case '\t' : case '\r' : case '\n' : case ' ':
 				break;
@@ -277,8 +299,12 @@ jsmnerr_t jsmn_parse(jsmn_parser *parser, const char *js, size_t len,
 				r = jsmn_parse_primitive(parser, js, len, tokens, num_tokens);
 				if (r < 0) return r;
 				count++;
-				if (parser->toksuper != -1 && tokens != NULL)
+				if (parser->toksuper != -1 && tokens != NULL) {
 					tokens[parser->toksuper].size++;
+#ifdef JSMN_PARENT_LINKS
+					jsmn_percolate_skip_counts(tokens, parser->toksuper);
+#endif
+				}
 				break;
 
 #ifdef JSMN_STRICT
