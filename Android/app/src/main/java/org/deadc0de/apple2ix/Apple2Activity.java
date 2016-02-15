@@ -119,6 +119,8 @@ public class Apple2Activity extends Activity {
             setContentView(new View(this));
         }
 
+        Apple2Preferences.LANDSCAPE_MODE.load(this);
+
         Apple2CrashHandler.getInstance().initializeAndSetCustomExceptionHandler(this);
         if (sNativeBarfed) {
             Log.e(TAG, "NATIVE BARFED...", sNativeBarfedThrowable);
@@ -265,6 +267,7 @@ public class Apple2Activity extends Activity {
         // Dismiss these popups to avoid android.view.WindowLeaked issues
         synchronized (this) {
             dismissAllMenus();
+            dismissAllMenus(); // 2nd time should full exit calibration mode (if present)
             nativeEmulationPause();
         }
 

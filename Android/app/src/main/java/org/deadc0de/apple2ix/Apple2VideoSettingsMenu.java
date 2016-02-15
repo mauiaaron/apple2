@@ -48,6 +48,11 @@ public class Apple2VideoSettingsMenu extends Apple2AbstractMenu {
         if (position < 0 || position >= SETTINGS.size) {
             throw new ArrayIndexOutOfBoundsException();
         }
+        if (position == SETTINGS.PORTRAIT_CALIBRATE.ordinal()) {
+            if (Apple2Preferences.LANDSCAPE_MODE.booleanValue(mActivity)) {
+                return false;
+            }
+        }
         return true;
     }
 
