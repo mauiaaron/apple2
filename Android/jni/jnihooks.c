@@ -199,7 +199,9 @@ void Java_org_deadc0de_apple2ix_Apple2View_nativeGraphicsInitialized(JNIEnv *env
     LOG("width:%d height:%d landscape:%d", width, height, landscape);
     _video_setRenderThread(pthread_self()); // Assume Android knows what it's doing ;-P
 
+#if !TESTING
     assert(cpu_isPaused());
+#endif
 
     video_shutdown(false);
     video_reshape(width, height, landscape);
