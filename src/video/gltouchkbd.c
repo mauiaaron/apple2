@@ -282,6 +282,8 @@ static inline void _screen_to_keyboard(float x, float y, OUTPARM int *col, OUTPA
     *row = (y - touchport.kbdY) / keyH;
     if (*row < 0) {
         *row = 0;
+    } else if (*row >= hudKeyboard->tplHeight) {
+        *row = hudKeyboard->tplHeight-1;
     }
 
     TOUCH_KBD_LOG("SCREEN TO KEYBOARD : kbdX:%d kbdXMax:%d kbdW:%d keyW:%d ... scrn:(%f,%f)->kybd:(%d,%d)", touchport.kbdX, touchport.kbdXMax, touchport.kbdW, keyW, x, y, *col, *row);

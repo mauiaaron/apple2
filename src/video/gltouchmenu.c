@@ -167,6 +167,8 @@ static inline void _screen_to_menu(float x, float y, OUTPARM int *col, OUTPARM i
     *row = y / keyH;
     if (*row < 0) {
         *row = 0;
+    } else if (*row >= hudMenu->tplHeight) {
+        *row = hudMenu->tplWidth-1;
     }
 
     //LOG("SCREEN TO MENU : menuX:%d menuXMax:%d menuW:%d keyW:%d ... scrn:(%f,%f)->kybd:(%d,%d)", touchport.topLeftX, touchport.topLeftXMax, touchport.width, keyW, x, y, *col, *row);
