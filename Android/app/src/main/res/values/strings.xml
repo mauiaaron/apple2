@@ -21,6 +21,8 @@
     <string name="audio_latency">Audio latency</string>
     <string name="audio_latency_summary">Audio latency in secs</string>
     <string name="cancel">Cancel</string>
+    <string name="color_configure">Configure color</string>
+    <string name="color_configure_summary">Color mode</string>
     <string name="color_bw">Black/white</string>
     <string name="color_color">Color</string>
     <string name="color_interpolated">Interpolated color</string>
@@ -133,8 +135,15 @@
     <string name="mockingboard_enable_summary">Revision C in Slot 4/5 (may require restart)</string>
     <string name="mockingboard_volume">Mockingboard volume</string>
     <string name="mockingboard_volume_summary">Set the Mockingboard volume</string>
+    <string name="mode_landscape">Landscape</string>
+    <string name="mode_landscape_summary">Enable landscape or portrait mode</string>
     <string name="no">No</string>
     <string name="ok">OK</string>
+    <string name="portrait_calibrate">Calibrate portrait mode</string>
+    <string name="portrait_calibrate_framebuffer">Display position</string>
+    <string name="portrait_calibrate_keyboard_height">Keyboard height</string>
+    <string name="portrait_calibrate_keyboard_position">Keyboard position</string>
+    <string name="portrait_calibrate_summary">Adjust keyboard size, framebuffer position, etc</string>
     <string name="preferences_reset_title">Reset preferences</string>
     <string name="preferences_reset_summary">Reset preferences to defaults and quit emulator</string>
     <string name="preferences_reset_really">Really reset and quit?</string>
@@ -159,6 +168,6 @@
     <string name="touch_menu_enable">Enable touch menus</string>
     <string name="touch_menu_enable_summary">Enables soft menu buttons in top screen corners</string>
     <string name="video_configure">Configure video…</string>
-    <string name="video_configure_summary">Color settings</string>
+    <string name="video_configure_summary">Color landscape/portrait, color, etc</string>
 
 </resources>

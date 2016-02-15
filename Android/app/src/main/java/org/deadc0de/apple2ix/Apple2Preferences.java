@@ -14,12 +14,15 @@ package org.deadc0de.apple2ix;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.pm.ActivityInfo;
 import android.util.DisplayMetrics;
 import android.util.Log;
 
 import java.io.File;
 
 import org.deadc0de.apple2ix.basic.R;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public enum Apple2Preferences {
     EMULATOR_VERSION {
@@ -193,6 +196,21 @@ public enum Apple2Preferences {
         @Override
         public int intValue(Apple2Activity activity) {
             return activity.getPreferences(Context.MODE_PRIVATE).getInt(toString(), Volume.MEDIUM.ordinal());
+        }
+    },
+    LANDSCAPE_MODE {
+        @Override
+        public void load(Apple2Activity activity) {
+            if (booleanValue(activity)) {
+                activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
+            } else {
+                activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+            }
+        }
+
+        @Override
+        public boolean booleanValue(Apple2Activity activity) {
+            return activity.getPreferences(Context.MODE_PRIVATE).getBoolean(toString(), true);
         }
     },
     MOCKINGBOARD_ENABLED {
@@ -628,6 +646,60 @@ public enum Apple2Preferences {
             return scale;
         }
     },
+    PORTRAIT_KEYBOARD_HEIGHT_SCALE {
+        @Override
+        public void load(Apple2Activity activity) {
+            int tick = intValue(activity);
+            float portraitKeyboardHeightScale = ((float) tick / PORTRAIT_CALIBRATE_NUM_CHOICES);
+            try {
+                JSONObject prefs = new JSONObject().put(PREFNAME_PORTRAIT_HEIGHT_SCALE, portraitKeyboardHeightScale);
+                nativeSetTouchModelPreferences(TouchDeviceVariant.KEYBOARD.ordinal(), prefs.toString());
+            } catch (JSONException e) {
+                Log.v(TAG, "" + e);
+            }
+        }
+
+        @Override
+        public int intValue(Apple2Activity activity) {
+            return activity.getPreferences(Context.MODE_PRIVATE).getInt(toString(), PORTRAIT_CALIBRATE_NUM_CHOICES >> 1);
+        }
+    },
+    PORTRAIT_FRAMEBUFFER_POSITION_SCALE {
+        @Override
+        public void load(Apple2Activity activity) {
+            int tick = intValue(activity);
+            float portraitFramebufferPositionScale = ((float) tick / PORTRAIT_CALIBRATE_NUM_CHOICES);
+            try {
+                JSONObject prefs = new JSONObject().put(PREFNAME_PORTRAIT_POSITION_SCALE, portraitFramebufferPositionScale);
+                nativeSetTouchModelPreferences(TouchDeviceVariant.FRAMEBUFFER.ordinal(), prefs.toString());
+            } catch (JSONException e) {
+                Log.v(TAG, "" + e);
+            }
+        }
+
+        @Override
+        public int intValue(Apple2Activity activity) {
+            return activity.getPreferences(Context.MODE_PRIVATE).getInt(toString(), (PORTRAIT_CALIBRATE_NUM_CHOICES*3/4));
+        }
+    },
+    PORTRAIT_KEYBOARD_POSITION_SCALE {
+        @Override
+        public void load(Apple2Activity activity) {
+            int tick = intValue(activity);
+            float portraitKeyboardPositionScale = ((float) tick / PORTRAIT_CALIBRATE_NUM_CHOICES);
+            try {
+                JSONObject prefs = new JSONObject().put(PREFNAME_PORTRAIT_POSITION_SCALE, portraitKeyboardPositionScale);
+                nativeSetTouchModelPreferences(TouchDeviceVariant.KEYBOARD.ordinal(), prefs.toString());
+            } catch (JSONException e) {
+                Log.v(TAG, "" + e);
+            }
+        }
+
+        @Override
+        public int intValue(Apple2Activity activity) {
+            return activity.getPreferences(Context.MODE_PRIVATE).getInt(toString(), 0);
+        }
+    },
     CRASH_CHECK {
         @Override
         public void load(Apple2Activity activity) {
@@ -673,7 +745,6 @@ public enum Apple2Preferences {
         }
     };
 
-
     public enum HiresColor {
         BW,
         COLOR,
@@ -705,8 +776,12 @@ public enum Apple2Preferences {
         NONE(0),
         JOYSTICK(1),
         JOYSTICK_KEYPAD(2),
-        KEYBOARD(3);
+        KEYBOARD(3),
+        TOPMENU(4),
+        ALERT(5);
         private int dev;
+
+        public static final TouchDeviceVariant FRAMEBUFFER = NONE;
 
         public static final int size = TouchDeviceVariant.values().length;
 
@@ -715,10 +790,7 @@ public enum Apple2Preferences {
         }
 
         static TouchDeviceVariant next(int ord) {
-            ++ord;
-            if (ord >= size) {
-                ord = 1;
-            }
+            ord = (ord + 1) % size;
             return TouchDeviceVariant.values()[ord];
         }
     }
@@ -886,6 +958,8 @@ public enum Apple2Preferences {
         }
     }
 
+    public final static String TAG = "Apple2Preferences";
+
     public final static int DECENT_AMOUNT_OF_CHOICES = 20;
     public final static int AUDIO_LATENCY_NUM_CHOICES = DECENT_AMOUNT_OF_CHOICES;
     public final static int ALPHA_SLIDER_NUM_CHOICES = DECENT_AMOUNT_OF_CHOICES;
@@ -896,9 +970,8 @@ public enum Apple2Preferences {
 
     public final static int KEYREPEAT_NUM_CHOICES = DECENT_AMOUNT_OF_CHOICES;
 
-    public final static String TAG = "Apple2Preferences";
-
     public final static int JOYSTICK_BUTTON_THRESHOLD_NUM_CHOICES = DECENT_AMOUNT_OF_CHOICES;
+    public final static int PORTRAIT_CALIBRATE_NUM_CHOICES = 100;
 
     public final static float JOYSTICK_AXIS_SENSITIVITY_MIN = 0.25f;
     public final static float JOYSTICK_AXIS_SENSITIVITY_DEFAULT = 1.f;
@@ -908,6 +981,9 @@ public enum Apple2Preferences {
     public final static int JOYSTICK_AXIS_SENSITIVITY_DEC_NUMCHOICES = (int) ((JOYSTICK_AXIS_SENSITIVITY_DEFAULT - JOYSTICK_AXIS_SENSITIVITY_MIN) / JOYSTICK_AXIS_SENSITIVITY_DEC_STEP); // 15
     public final static int JOYSTICK_AXIS_SENSITIVITY_INC_NUMCHOICES = (int) ((JOYSTICK_AXIS_SENSITIVITY_MAX - JOYSTICK_AXIS_SENSITIVITY_DEFAULT) / JOYSTICK_AXIS_SENSITIVITY_INC_STEP); // 12
     public final static int JOYSTICK_AXIS_SENSITIVITY_NUM_CHOICES = JOYSTICK_AXIS_SENSITIVITY_DEC_NUMCHOICES + JOYSTICK_AXIS_SENSITIVITY_INC_NUMCHOICES; // 15 + 12
+
+    public final static String PREFNAME_PORTRAIT_HEIGHT_SCALE = "portraitHeightScale";
+    public final static String PREFNAME_PORTRAIT_POSITION_SCALE = "portraitPositionScale";
 
     // set and apply
 
@@ -1013,10 +1089,10 @@ public enum Apple2Preferences {
         activity.getWindowManager().getDefaultDisplay().getMetrics(dm);
 
         int smallScreenAxis = dm.widthPixels < dm.heightPixels ? dm.widthPixels : dm.heightPixels;
-        int oneThirdScreenAxis = smallScreenAxis/3;
+        int oneThirdScreenAxis = smallScreenAxis / 3;
 
         // largest switch threshold value is 1/3 small dimension of screen
-        return oneThirdScreenAxis/JOYSTICK_BUTTON_THRESHOLD_NUM_CHOICES;
+        return oneThirdScreenAxis / JOYSTICK_BUTTON_THRESHOLD_NUM_CHOICES;
     }
 
     // ------------------------------------------------------------------------
@@ -1147,5 +1223,8 @@ public enum Apple2Preferences {
     private static native void nativeSetTouchDeviceKeyRepeatThreshold(float threshold);
 
     private static native void nativeLoadTouchKeyboardJSON(String path);
+
+    private static native void nativeSetTouchModelPreferences(int modelType, String jsonString);
+
 
 }

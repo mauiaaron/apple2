@@ -67,9 +67,9 @@ class Apple2View extends GLSurfaceView implements InputManagerCompat.InputDevice
     private float[] mYCoords = new float[MAX_FINGERS];
 
 
-    private static native void nativeGraphicsInitialized(int width, int height);
+    private static native void nativeGraphicsInitialized(int width, int height, boolean landscape);
 
-    private static native void nativeGraphicsChanged(int width, int height);
+    private static native void nativeGraphicsChanged(int width, int height, boolean landscape);
 
     private static native void nativeRender();
 
@@ -129,7 +129,7 @@ class Apple2View extends GLSurfaceView implements InputManagerCompat.InputDevice
                     w = h;
                     h = w_;
                 }
-                nativeGraphicsChanged(w, h);
+                nativeGraphicsChanged(w, h, Apple2Preferences.LANDSCAPE_MODE.booleanValue(Apple2View.this.mActivity));
             }
         });
 
@@ -371,7 +371,7 @@ class Apple2View extends GLSurfaceView implements InputManagerCompat.InputDevice
                 height = w_;
             }
 
-            nativeGraphicsInitialized(width, height);
+            nativeGraphicsInitialized(width, height, Apple2Preferences.LANDSCAPE_MODE.booleanValue(Apple2View.this.mActivity));
 
             if (Apple2View.this.mGraphicsInitializedRunnable != null) {
                 Apple2View.this.mGraphicsInitializedRunnable.run();

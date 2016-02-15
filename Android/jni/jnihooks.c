@@ -188,18 +188,21 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnCreate(JNIEnv *env, jclas
 #endif
 }
 
-void Java_org_deadc0de_apple2ix_Apple2View_nativeGraphicsChanged(JNIEnv *env, jclass cls, jint width, jint height) {
+void Java_org_deadc0de_apple2ix_Apple2View_nativeGraphicsChanged(JNIEnv *env, jclass cls, jint width, jint height, jboolean landscape) {
     // WARNING : this can happen on non-GL thread
-    LOG("...");
-    video_reshape(width, height);
+    LOG("width:%d height:%d landscape:%d", width, height, landscape);
+    video_reshape(width, height, landscape);
 }
 
-void Java_org_deadc0de_apple2ix_Apple2View_nativeGraphicsInitialized(JNIEnv *env, jclass cls, jint width, jint height) {
+void Java_org_deadc0de_apple2ix_Apple2View_nativeGraphicsInitialized(JNIEnv *env, jclass cls, jint width, jint height, jboolean landscape) {
     // WARNING : this needs to happen on the GL thread only
-    LOG("width:%d height:%d", width, height);
+    LOG("width:%d height:%d landscape:%d", width, height, landscape);
     _video_setRenderThread(pthread_self()); // Assume Android knows what it's doing ;-P
+
+    assert(cpu_isPaused());
+
     video_shutdown(false);
-    video_reshape(width, height);
+    video_reshape(width, height, landscape);
     video_init();
 }
 
@@ -255,6 +258,7 @@ void Java_org_deadc0de_apple2ix_Apple2View_nativeRender(JNIEnv *env, jclass cls)
         return;
     }
 
+//#define FPS_LOG 1
 #if FPS_LOG
     static uint32_t prevCount = 0;
     static uint32_t idleCount = 0;

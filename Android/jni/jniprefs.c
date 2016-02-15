@@ -324,3 +324,13 @@ void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeLoadTouchKeyboardJSON(JN
     (*env)->ReleaseStringUTFChars(env, j_jsonPath, jsonPath);
 }
 
+void Java_org_deadc0de_apple2ix_Apple2Preferences_nativeSetTouchModelPreferences(JNIEnv *env, jclass cls, jint modelType, jstring j_jsonString) {
+    const char *jsonString = (*env)->GetStringUTFChars(env, j_jsonString, 0);
+    LOG("model: %d", modelType);
+
+    void (*setData)(const char *) = interface_getModelDataSetter((interface_device_t)modelType);
+    setData(jsonString);
+
+    (*env)->ReleaseStringUTFChars(env, j_jsonString, jsonString);
+}
+

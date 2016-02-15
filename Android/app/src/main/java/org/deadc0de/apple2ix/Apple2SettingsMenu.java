@@ -93,6 +93,22 @@ public class Apple2SettingsMenu extends Apple2AbstractMenu {
                 });
             }
         },
+        VIDEO_CONFIGURE {
+            @Override
+            public final String getTitle(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.video_configure);
+            }
+
+            @Override
+            public final String getSummary(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.video_configure_summary);
+            }
+
+            @Override
+            public void handleSelection(final Apple2Activity activity, final Apple2AbstractMenu settingsMenu, boolean isChecked) {
+                new Apple2VideoSettingsMenu(activity).show();
+            }
+        },
         JOYSTICK_CONFIGURE {
             @Override
             public final String getTitle(Apple2Activity activity) {
@@ -155,43 +171,6 @@ public class Apple2SettingsMenu extends Apple2AbstractMenu {
             @Override
             public void handleSelection(Apple2Activity activity, Apple2AbstractMenu settingsMenu, boolean isChecked) {
                 new Apple2AudioSettingsMenu(activity).show();
-            }
-        },
-        VIDEO_CONFIGURE {
-            @Override
-            public final String getTitle(Apple2Activity activity) {
-                return activity.getResources().getString(R.string.video_configure);
-            }
-
-            @Override
-            public final String getSummary(Apple2Activity activity) {
-                return activity.getResources().getString(R.string.video_configure_summary);
-            }
-
-            @Override
-            public View getView(Apple2Activity activity, View convertView) {
-                convertView = _basicView(activity, this, convertView);
-                _addPopupIcon(activity, this, convertView);
-                return convertView;
-            }
-
-            @Override
-            public void handleSelection(final Apple2Activity activity, final Apple2AbstractMenu settingsMenu, boolean isChecked) {
-                _alertDialogHandleSelection(activity, R.string.video_configure, new String[]{
-                        settingsMenu.mActivity.getResources().getString(R.string.color_bw),
-                        settingsMenu.mActivity.getResources().getString(R.string.color_color),
-                        settingsMenu.mActivity.getResources().getString(R.string.color_interpolated),
-                }, new IPreferenceLoadSave() {
-                    @Override
-                    public int intValue() {
-                        return Apple2Preferences.HIRES_COLOR.intValue(activity);
-                    }
-
-                    @Override
-                    public void saveInt(int value) {
-                        Apple2Preferences.HIRES_COLOR.saveHiresColor(settingsMenu.mActivity, Apple2Preferences.HiresColor.values()[value]);
-                    }
-                });
             }
         },
         SHOW_DISK_OPERATIONS {
