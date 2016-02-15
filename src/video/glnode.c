@@ -191,6 +191,9 @@ static void glnode_shutdownNodes(bool emulatorShuttingDown) {
 
 static void glnode_renderNodes(void) {
     SCOPE_TRACE_VIDEO("glnode render");
+
+    glClear(GL_COLOR_BUFFER_BIT);
+
     glnode_array_node_s *p = head;
     while (p) {
         p->node.render();

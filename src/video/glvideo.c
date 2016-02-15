@@ -219,7 +219,7 @@ static void glvideo_init(void) {
     // ----------------------------
     // setup static OpenGL state
 
-    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
     // Set up to do blending of texture quads.  Disabling DEPTH/CULL appears to fix blended quad/texture rendering on
     // finicky Tegra 2.  This generally appears to be the correct way to do it accoring to NVIDIA forums and:
@@ -279,7 +279,6 @@ static void glvideo_render(void) {
         return;
     }
 
-    glClear(GL_COLOR_BUFFER_BIT);
     glViewport(viewportX, viewportY, viewportWidth, viewportHeight);
 
 #if PERSPECTIVE
