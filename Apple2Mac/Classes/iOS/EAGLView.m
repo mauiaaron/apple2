@@ -158,7 +158,7 @@
     glGetRenderbufferParameteriv(GL_RENDERBUFFER, GL_RENDERBUFFER_WIDTH, &backingWidth);
     glGetRenderbufferParameteriv(GL_RENDERBUFFER, GL_RENDERBUFFER_HEIGHT, &backingHeight);
     
-    video_reshape((int)backingWidth, (int)backingHeight);
+    video_reshape((int)backingWidth, (int)backingHeight, /*landscape:*/true); // TODO : portrait is possible
     
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
     {

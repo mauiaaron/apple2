@@ -140,16 +140,18 @@ int test_setup_boot_disk(const char *fileName, int readonly) {
     CFRELEASE(fileURL);
     CFIndex length = CFStringGetLength(filePath);
     CFIndex maxSize = CFStringGetMaximumSizeForEncoding(length, kCFStringEncodingUTF8);
-    disk = (char *)MALLOC(maxSize);
-    if (!CFStringGetCString(filePath, disk, maxSize, kCFStringEncodingUTF8)) {
-        FREE(disk);
+    char *disk0 = (char *)MALLOC(maxSize);
+    if (!CFStringGetCString(filePath, disk0, maxSize, kCFStringEncodingUTF8)) {
+        FREE(disk0);
     }
     CFRELEASE(filePath);
 
     char *paths[] = {
-        disk,
+        NULL,
         NULL,
     };
+    asprintf(&paths[0], "%s", disk0);
+    FREE(disk0);
 #else
     char *paths[] = {
         NULL,
@@ -172,7 +174,7 @@ int test_setup_boot_disk(const char *fileName, int readonly) {
             break;
         }
 
-        int len = strlen(disk);
+        size_t len = strlen(disk);
         disk[len-3] = '\0'; // try again without '.gz' extension
         err = disk6_insert(0, disk, readonly) != NULL;
         if (!err) {

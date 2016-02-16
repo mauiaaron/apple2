@@ -247,7 +247,7 @@ static CVReturn displayLinkCallback(CVDisplayLinkRef displayLink, const CVTimeSt
 #endif // !SUPPORT_RETINA_RESOLUTION
     
     // Set the new dimensions in our renderer
-    video_reshape((int)viewRectPixels.size.width, (int)viewRectPixels.size.height);
+    video_reshape((int)viewRectPixels.size.width, (int)viewRectPixels.size.height, /*landscape:*/true);
     
     CGLUnlockContext([[self openGLContext] CGLContextObj]);
 }

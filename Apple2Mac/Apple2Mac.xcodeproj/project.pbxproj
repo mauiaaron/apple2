@@ -247,6 +247,8 @@
 		77E1C0B719D72700004344E0 /* imageUtil.m in Sources */ = {isa = PBXBuildFile; fileRef = 77E1C0B019D72700004344E0 /* imageUtil.m */; };
 		77EB316C1A27A9AF00DC5A8A /* blank.dsk.gz in Resources */ = {isa = PBXBuildFile; fileRef = 4ADC523019E8D3F600186B36 /* blank.dsk.gz */; };
 		77EB316D1A27A9AF00DC5A8A /* blank.nib.gz in Resources */ = {isa = PBXBuildFile; fileRef = 4ADC523119E8D3F600186B36 /* blank.nib.gz */; };
+		77FA92941C72D93D0090755C /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 77FA92931C72D93D0090755C /* libz.tbd */; };
+		77FA92951C72DA5A0090755C /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 77FA92931C72D93D0090755C /* libz.tbd */; };
 		93206C781C14E14000668153 /* Apple2iOS.strings in Resources */ = {isa = PBXBuildFile; fileRef = 93206C761C14E14000668153 /* Apple2iOS.strings */; };
 		93206C851C156BD300668153 /* A2IXPopupChoreographer.m in Sources */ = {isa = PBXBuildFile; fileRef = 93206C841C156BD300668153 /* A2IXPopupChoreographer.m */; };
 		935C55131C12B61D0013166D /* EmulatorGLView.m in Sources */ = {isa = PBXBuildFile; fileRef = 935C55041C12B61D0013166D /* EmulatorGLView.m */; };
@@ -532,6 +534,7 @@
 		77E1C0B119D72700004344E0 /* imageUtil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = imageUtil.h; path = video_util/imageUtil.h; sourceTree = "<group>"; };
 		77E1C0B219D72700004344E0 /* glUtil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = glUtil.h; path = video_util/glUtil.h; sourceTree = "<group>"; };
 		77E1C0C719D736EB004344E0 /* glvideo.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = glvideo.c; sourceTree = "<group>"; };
+		77FA92931C72D93D0090755C /* libz.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.tbd; path = usr/lib/libz.tbd; sourceTree = SDKROOT; };
 		93206C771C14E14000668153 /* Base */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = Base; path = Base.lproj/Apple2iOS.strings; sourceTree = "<group>"; };
 		93206C831C156BD300668153 /* A2IXPopupChoreographer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = A2IXPopupChoreographer.h; path = Classes/iOS/A2IXPopupChoreographer.h; sourceTree = SOURCE_ROOT; };
 		93206C841C156BD300668153 /* A2IXPopupChoreographer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = A2IXPopupChoreographer.m; path = Classes/iOS/A2IXPopupChoreographer.m; sourceTree = SOURCE_ROOT; };
@@ -602,6 +605,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				77FA92951C72DA5A0090755C /* libz.tbd in Frameworks */,
 				779F566019EAF6D000A6F107 /* OpenAL.framework in Frameworks */,
 				4ADC521B19E8CA4500186B36 /* Cocoa.framework in Frameworks */,
 			);
@@ -628,6 +632,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				77FA92941C72D93D0090755C /* libz.tbd in Frameworks */,
 				779DD846195BD9F900DF89E5 /* Cocoa.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -733,6 +738,7 @@
 		773B3D0E1956885A0085CE5F /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				77FA92931C72D93D0090755C /* libz.tbd */,
 				4EB4F8561C393F0E0072A15C /* OpenAL.framework */,
 				4ECFC3BE1C368ED3008E2633 /* GameController.framework */,
 				77C279601A1047AE000FE33F /* DDHidLib.xcodeproj */,
@@ -1957,6 +1963,7 @@
 					"CPU_TRACING=1",
 					"DISK_TRACING=1",
 					"VM_TRACING=1",
+					"VIDEO_OPENGL=1",
 				);
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1986,6 +1993,7 @@
 					"TEST_VM=1",
 					"TESTING=1",
 					"CPU_TRACING=1",
+					"VIDEO_OPENGL=1",
 				);
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
@@ -2016,6 +2024,7 @@
 					"CPU_TRACING=1",
 					"DISK_TRACING=1",
 					"VM_TRACING=1",
+					"VIDEO_OPENGL=1",
 				);
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
@@ -2045,6 +2054,7 @@
 					"TEST_VM=1",
 					"TESTING=1",
 					"CPU_TRACING=1",
+					"VIDEO_OPENGL=1",
 				);
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
@@ -2246,6 +2256,7 @@
 					"KEYPAD_JOYSTICK=1",
 					"TEST_CPU=1",
 					"TESTING=1",
+					"VIDEO_OPENGL=1",
 				);
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
@@ -2274,6 +2285,7 @@
 					"KEYPAD_JOYSTICK=1",
 					"TEST_CPU=1",
 					"TESTING=1",
+					"VIDEO_OPENGL=1",
 				);
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",

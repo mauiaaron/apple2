@@ -17,6 +17,7 @@
 #ifdef __APPLE__
 
 #define CLOCK_MONOTONIC 1
+#define CLOCK_REALTIME 2
 
 int clock_gettime(int, struct timespec *);
 
