@@ -37,6 +37,8 @@ static int stepper_phases = 0; // state bits for stepper magnet phases 0-3
 static int skew_table_6_po[16] = { 0x00,0x08,0x01,0x09,0x02,0x0A,0x03,0x0B, 0x04,0x0C,0x05,0x0D,0x06,0x0E,0x07,0x0F }; // ProDOS order
 static int skew_table_6_do[16] = { 0x00,0x07,0x0E,0x06,0x0D,0x05,0x0C,0x04, 0x0B,0x03,0x0A,0x02,0x09,0x01,0x08,0x0F }; // DOS order
 
+static pthread_mutex_t unlink_mutex = PTHREAD_MUTEX_INITIALIZER;
+
 static uint8_t translate_table_6[0x40] = {
     0x96, 0x97, 0x9a, 0x9b, 0x9d, 0x9e, 0x9f, 0xa6,
     0xa7, 0xab, 0xac, 0xad, 0xae, 0xaf, 0xb2, 0xb3,
@@ -753,12 +755,14 @@ const char *disk6_eject(int drive) {
 #   warning FIXME TODO : can we not inflate/deflate disk images within the iOS port?  Maybe this is just a permission thing?
 #else
         // foo.dsk -> foo.dsk.gz
+        pthread_mutex_lock(&unlink_mutex);
         err = zlib_deflate(disk6.disk[drive].file_name, is_nib(disk6.disk[drive].file_name) ? NIB_SIZE : DSK_SIZE);
         if (err) {
             ERRLOG("OOPS: An error occurred when attempting to compress a disk image : %s", err);
         } else {
             unlink(disk6.disk[drive].file_name);
         }
+        pthread_mutex_unlock(&unlink_mutex);
 #endif
     }
 
@@ -792,13 +796,18 @@ const char *disk6_insert(int drive, const char * const raw_file_name, int readon
     char *err = NULL;
     do {
         if (is_gz(disk6.disk[drive].file_name)) {
+            pthread_mutex_lock(&unlink_mutex);
             err = (char *)zlib_inflate(disk6.disk[drive].file_name, expected); // foo.dsk.gz -> foo.dsk
+            if (!err) {
+                if (unlink(disk6.disk[drive].file_name)) { // temporarily remove .gz file
+                    ERRLOG("OOPS, cannot unlink %s", disk6.disk[drive].file_name);
+                }
+            }
+            pthread_mutex_unlock(&unlink_mutex);
+
             if (err) {
                 ERRLOG("OOPS: An error occurred when attempting to inflate/load a disk image : %s", err);
                 break;
-            }
-            if (unlink(disk6.disk[drive].file_name)) { // temporarily remove .gz file
-                ERRLOG("OOPS, cannot unlink %s", disk6.disk[drive].file_name);
             }
             cut_gz(disk6.disk[drive].file_name);
         }
