@@ -133,6 +133,8 @@ bool emulator_loadState(const char * const path) {
 
     assert(cpu_isPaused() && "should be paused to load state");
 
+    video_setDirty(A2_DIRTY_FLAG);
+
     do {
         TEMP_FAILURE_RETRY(fd = open(path, O_RDONLY));
         if (fd < 0) {
