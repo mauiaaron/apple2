@@ -719,8 +719,9 @@ void disk6_init(void) {
     stepper_phases = 0;
 
     disk6.disk[0].phase = disk6.disk[1].phase = 0;
-    disk6.disk[0].track_valid = disk6.disk[1].track_valid = 0;
-    disk6.disk[0].track_dirty = disk6.disk[1].track_dirty = 0;
+    disk6.disk[0].run_byte = disk6.disk[1].run_byte = 0;
+    disk6.disk[0].track_valid = disk6.disk[1].track_valid = false;
+    disk6.disk[0].track_dirty = disk6.disk[1].track_dirty = false;
     disk6.motor_time = (struct timespec){ 0 };
     disk6.motor_off = 1;
     disk6.drive = 0;
@@ -767,11 +768,26 @@ const char *disk6_eject(int drive) {
     }
 
     STRDUP_FREE(disk6.disk[drive].file_name);
-    memset(&disk6.disk[drive], 0x0, sizeof(disk6.disk[drive]));
 
     disk6.disk[drive].fd = -1;
-    disk6.disk[drive].whole_len = -1;
     disk6.disk[drive].mmap_image = MAP_FAILED;
+    disk6.disk[drive].whole_len = 0;
+    disk6.disk[drive].whole_image = NULL;
+    disk6.disk[drive].nibblized = false;
+    disk6.disk[drive].is_protected = false;
+    disk6.disk[drive].track_valid = false;
+    disk6.disk[drive].track_dirty = false;
+    disk6.disk[drive].skew_table = NULL;
+    disk6.disk[drive].track_width = 0;
+    // WARNING DO NOT RESET certain disk parameters on simple eject.  We need to retain state in the case where an image
+    // was "re-inserted" ... e.g. Drol load screen)
+    //disk6.disk[drive].phase = 0;
+    //disk6.disk[drive].run_byte = 0;
+
+    //disk6.motor_time = (struct timespec){ 0 };
+    //disk6.motor_off = 1;
+    //disk6.drive = 0;
+    //disk6.ddrw = 0;
 
     return err;
 }
@@ -852,6 +868,8 @@ const char *disk6_insert(int drive, const char * const raw_file_name, int readon
         disk6.disk[drive].whole_image = disk6.disk[drive].mmap_image;
         disk6.disk[drive].track_width = NIB_TRACK_SIZE;
 
+        int lastphase = disk6.disk[drive].phase;
+
         if (!disk6.disk[drive].nibblized) {
             // DSK/DO/PO require nibblizing on read (and denibblizing on write) ...
 
@@ -886,7 +904,7 @@ const char *disk6_insert(int drive, const char * const raw_file_name, int readon
             // ...
         }
 
-        disk6.disk[drive].phase = 0;
+        disk6.disk[drive].phase = lastphase; // needed for some images when "re-inserted" ... e.g. Drol load screen
     } while (0);
 
     if (err) {
@@ -902,6 +920,10 @@ void disk6_flush(int drive) {
     }
 
     if (disk6.disk[drive].is_protected) {
+        return;
+    }
+
+    if (disk6.disk[drive].mmap_image == MAP_FAILED) {
         return;
     }
 
