@@ -1518,3 +1518,7 @@ bool c_debugger_set_watchpoint(const uint16_t addr) {
     return set_halt(watchpoints, addr);
 }
 
+void c_debugger_clear_watchpoints(void) {
+    clear_halt(watchpoints, 0);
+}
+

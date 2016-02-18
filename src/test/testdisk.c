@@ -11,6 +11,7 @@
 
 #include "testcommon.h"
 
+//#define TEST_DISK_EDGE_CASES 1
 #define TESTING_DISK "testvm1.dsk.gz"
 #define BLANK_DSK "blank.dsk.gz"
 #define BLANK_NIB "blank.nib.gz"
@@ -1375,6 +1376,40 @@ TEST test_data_stability_po() {
     PASS();
 }
 
+#if TEST_DISK_EDGE_CASES
+#define DROL_DSK "Drol.dsk.gz"
+#define DROL_CRACK_SCREEN_SHA "FD7332529E117F14DA3880BB36FE8E23C3704799"
+TEST test_reinsert_edgecase() {
+    test_setup_boot_disk(DROL_DSK, 0);
+
+    // TODO FIXME : we need both a timeout and a step-until-framebuffer-is-a-particular-SHA routine ...
+
+    // First verify we hit the crackscreen
+    c_debugger_set_timeout(5);
+    c_debugger_go();
+    ASSERT_SHA(DROL_CRACK_SCREEN_SHA);
+
+    // re-insert
+    disk6_eject(0);
+    test_setup_boot_disk(DROL_DSK, 0);
+
+    // press key to continue and verify we are at a non-blank screen in a short amount of time
+    test_type_input(" ");
+    c_debugger_clear_watchpoints();
+    c_debugger_go();
+    uint8_t md[SHA_DIGEST_LENGTH];
+    const uint8_t * const fb = video_scan();
+    SHA1(fb, SCANWIDTH*SCANHEIGHT, md);
+    sha1_to_str(md, mdstr);
+    ASSERT(strcmp(mdstr, BLANK_SCREEN) != 0);
+
+    c_debugger_set_timeout(0);
+    disk6_eject(0);
+
+    PASS();
+}
+#endif
+
 // ----------------------------------------------------------------------------
 // Test Suite
 
@@ -1424,6 +1459,12 @@ GREATEST_SUITE(test_suite_disk) {
     RUN_TESTp(test_data_stability_dsk);
     RUN_TESTp(test_data_stability_nib);
     RUN_TESTp(test_data_stability_po);
+
+    // edge-case tests may require testing copyrighted images (which I have in my possession by legally owning the
+    // original disk image (yep, I do ;-)
+#if TEST_DISK_EDGE_CASES
+    RUN_TESTp(test_reinsert_edgecase);
+#endif
 
     // ...
     disk6_eject(0);
