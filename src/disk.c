@@ -714,6 +714,8 @@ void disk6_init(void) {
 
     cpu65_vmem_w[0xC0ED] = disk_write_latch;
 
+    stepper_phases = 0;
+
     disk6.disk[0].phase = disk6.disk[1].phase = 0;
     disk6.disk[0].track_valid = disk6.disk[1].track_valid = 0;
     disk6.disk[0].track_dirty = disk6.disk[1].track_dirty = 0;
@@ -775,7 +777,6 @@ const char *disk6_insert(int drive, const char * const raw_file_name, int readon
     disk6_eject(drive);
 
     disk6.disk[drive].file_name = strdup(raw_file_name);
-    stepper_phases = 0;
 
     int expected = NIB_SIZE;
     disk6.disk[drive].nibblized = true;
@@ -982,11 +983,11 @@ bool disk6_saveState(StateHelper_s *helper) {
                 LOG("SAVE disk[%lu] (0) <NULL>", i);
             }
 
-            // Save unused placeholder -- backwards compatibility
-            state = 0x0;
+            state = (uint8_t)stepper_phases;
             if (!helper->save(fd, &state, 1)) {
                 break;
             }
+            LOG("SAVE stepper_phases[%lu] = %02x", i, stepper_phases);
 
             // Save unused placeholder -- backwards compatibility
             state = 0x0;
@@ -1059,14 +1060,13 @@ bool disk6_loadState(StateHelper_s *helper) {
                 break;
             }
 
-            uint8_t serialized[4] = { 0 };
-
             if (!helper->load(fd, &state, 1)) {
                 break;
             }
             disk6.disk[i].is_protected = state;
             LOG("LOAD is_protected[%lu] = %02x", i, disk6.disk[i].is_protected);
 
+            uint8_t serialized[4] = { 0 };
             if (!helper->load(fd, serialized, 4)) {
                 break;
             }
@@ -1100,10 +1100,11 @@ bool disk6_loadState(StateHelper_s *helper) {
                 FREE(namebuf);
             }
 
-            // load placeholder
             if (!helper->load(fd, &state, 1)) {
                 break;
             }
+            stepper_phases = state & 0x3;
+            LOG("LOAD stepper_phases[%lu] : %02x", i, stepper_phases);
 
             // load placeholder
             if (!helper->load(fd, &state, 1)) {
