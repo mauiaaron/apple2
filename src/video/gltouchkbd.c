@@ -252,14 +252,14 @@ static inline void _switch_keyboard(GLModel *parent, uint8_t *template) {
 
     // find the CTRL visual(s) and render them engaged
     if (kbd.ctrlPressed) {
-        for (unsigned int i=0, row=0; row<KBD_TEMPLATE_ROWS; row++, i++) {
-            for (unsigned int col=0; col<KBD_TEMPLATE_COLS; col++, i++) {
-                uint8_t ch = template[i];
+        for (unsigned int row=0; row<KBD_TEMPLATE_ROWS; row++) {
+            for (unsigned int col=0; col<KBD_TEMPLATE_COLS; col++) {
+                unsigned int indexRow = (KBD_TEMPLATE_COLS+1) * row;
+                uint8_t ch = (template+indexRow)[col];
                 if (ch == ICONTEXT_CTRL) {
                     _rerender_character(col, row);
                 }
             }
-            ++i;
         }
     }
 }
@@ -394,7 +394,6 @@ static inline int64_t _tap_key_at_point(float x, float y) {
 
         case ICONTEXT_MENU_SPROUT:
             key = 0;
-            kbd.ctrlPressed = false;
             _switch_keyboard(kbd.model, kbdTemplateUserAlt[0]);
             break;
 
