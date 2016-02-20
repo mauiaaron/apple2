@@ -156,5 +156,18 @@
     <string name="touch_menu_enable_summary">Los botones del menú en la parte superior de la pantalla</string>
     <string name="video_configure">Configurar el video…</string>
     <string name="video_configure_summary">Ajustes de color</string>
+    <string name="color_configure">Configure color</string>
+    <string name="color_configure_summary">Color mode</string>
+    <string name="joystick_azimuth_visible">Show joystick/keypad heading</string>
+    <string name="joystick_azimuth_visible_summary">Shows current axis direction and magnitude</string>
+    <string name="mode_landscape">Landscape</string>
+    <string name="mode_landscape_summary">Enable landscape or portrait mode</string>
+    <string name="portrait_calibrate">Calibrate portrait mode</string>
+    <string name="portrait_calibrate_framebuffer">Display position</string>
+    <string name="portrait_calibrate_keyboard_height">Keyboard height</string>
+    <string name="portrait_calibrate_keyboard_position">Keyboard position</string>
+    <string name="portrait_calibrate_summary">Adjust keyboard size, framebuffer position, etc</string>
+    <string name="keyboard_glyph_scale">Keyboard glyphs scaled 2x</string>
+    <string name="keyboard_glyph_scale_summary">(Makes keyboard appear less pixelated on large screens)</string>
 
 </resources>
