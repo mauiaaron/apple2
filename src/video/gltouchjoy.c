@@ -353,6 +353,7 @@ static void gltouchjoy_setup(void) {
     resetState();
 
     mdlDestroyModel(&axes.model);
+    mdlDestroyModel(&axes.azimuthModel);
     mdlDestroyModel(&buttons.model);
 
     joyglobals.isShuttingDown = false;
@@ -382,7 +383,7 @@ static void gltouchjoy_setup(void) {
         return;
     }
 
-    // axis aximuth object
+    // axis azimuth object
 
     bool azimuthError = true;
     do {
@@ -467,6 +468,7 @@ static void gltouchjoy_shutdown(void) {
     variant.kpad->shutdown();
 
     mdlDestroyModel(&axes.model);
+    mdlDestroyModel(&axes.azimuthModel);
     mdlDestroyModel(&buttons.model);
 }
 
