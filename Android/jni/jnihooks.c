@@ -290,9 +290,6 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnQuit(JNIEnv *env, jclass 
 
     LOG("...");
 
-    disk6_eject(0);
-    disk6_eject(1);
-
 #if DO_CPU65_TRACING
     cpu65_trace_end();
 #endif
