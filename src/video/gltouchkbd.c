@@ -1039,7 +1039,6 @@ static void _initialize_keyboard_templates(void) {
     kbdTemplateAlt  [MAINROW+3][9] = ICONTEXT_RETURN_R;
 }
 
-__attribute__((constructor(CTOR_PRIORITY_LATE)))
 static void _init_gltouchkbd(void) {
     LOG("Registering OpenGL software touch keyboard");
 
@@ -1079,5 +1078,9 @@ static void _init_gltouchkbd(void) {
         .onTouchEvent = &gltouchkbd_onTouchEvent,
         .setData = &gltouchkbd_setData,
     });
+}
+
+static __attribute__((constructor)) void __init_gltouchkbd(void) {
+    emulator_registerStartupCallback(CTOR_PRIORITY_LATE, &_init_gltouchkbd);
 }
 

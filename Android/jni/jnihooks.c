@@ -413,11 +413,3 @@ jstring Java_org_deadc0de_apple2ix_Apple2Activity_nativeLoadState(JNIEnv *env, j
     return jstr;
 }
 
-// ----------------------------------------------------------------------------
-// Constructor
-
-__attribute__((constructor(CTOR_PRIORITY_LATE)))
-static void _init_jnihooks(void) {
-    // ...
-}
-

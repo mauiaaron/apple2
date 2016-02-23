@@ -16,12 +16,23 @@
 #ifndef _MISC_H_
 #define _MISC_H_
 
+enum {
+    CTOR_PRIORITY_FIRST = 101,
+    CTOR_PRIORITY_EARLY = 111,
+    CTOR_PRIORITY_LATE  = 201,
+};
+
+typedef void (*startup_callback_f)(void);
+
 // top installation directory
 extern const char *data_dir;
 
 // global ref to CLI args
 extern char **argv;
 extern int argc;
+
+// register a startup function
+void emulator_registerStartupCallback(long order, startup_callback_f callback);
 
 // start emulator (CPU, audio, and video)
 void emulator_start(void);

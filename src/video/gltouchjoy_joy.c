@@ -256,7 +256,6 @@ static void gltouchjoy_setTapDelay(float secs) {
 
 // ----------------------------------------------------------------------------
 
-__attribute__((constructor(CTOR_PRIORITY_EARLY)))
 static void _init_gltouchjoy_joy(void) {
     LOG("Registering OpenGL software touch joystick (joystick variant)");
 
@@ -280,5 +279,9 @@ static void _init_gltouchjoy_joy(void) {
     joydriver_setTapDelay = &gltouchjoy_setTapDelay;
 
     gltouchjoy_registerVariant(EMULATED_JOYSTICK, &happyHappyJoyJoy);
+}
+
+static __attribute__((constructor)) void __init_gltouchjoy_joy(void) {
+    emulator_registerStartupCallback(CTOR_PRIORITY_EARLY, &_init_gltouchjoy_joy);
 }
 

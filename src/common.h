@@ -86,10 +86,6 @@
 #import <CoreFoundation/CoreFoundation.h>
 #endif
 
-#define CTOR_PRIORITY_FIRST  101
-#define CTOR_PRIORITY_EARLY  111
-#define CTOR_PRIORITY_LATE   201
-
 #if VIDEO_OPENGL
 #include "video_util/glUtil.h"
 // 2015/04/01 ... early calls to glGetError()--before a context exists--causes segfaults on MacOS X

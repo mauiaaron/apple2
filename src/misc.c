@@ -18,6 +18,14 @@
 #define SAVE_MAGICK "A2VM"
 #define SAVE_MAGICK_LEN sizeof(SAVE_MAGICK)
 
+typedef struct module_ctor_node_s {
+    struct module_ctor_node_s *next;
+    long order;
+    startup_callback_f ctor;
+} module_ctor_node_s;
+
+static module_ctor_node_s *head = NULL;
+
 bool do_logging = true; // also controlled by NDEBUG
 FILE *error_log = NULL;
 int sound_volume = 2;
@@ -27,17 +35,20 @@ char **argv = NULL;
 int argc = 0;
 CrashHandler_s *crashHandler = NULL;
 
-__attribute__((constructor(CTOR_PRIORITY_FIRST)))
+#if defined(CONFIG_DATADIR)
 static void _init_common(void) {
     LOG("Initializing common...");
-#if defined(CONFIG_DATADIR)
     data_dir = strdup(CONFIG_DATADIR PATH_SEPARATOR PACKAGE_NAME);
-#elif defined(ANDROID)
-    // data_dir is set up in JNI
-#elif !defined(__APPLE__)
+}
+
+static __attribute__((constructor)) void __init_common(void) {
+    emulator_registerStartupCallback(CTOR_PRIORITY_FIRST, &_init_common);
+}
+#elif defined(ANDROID) || defined(__APPLE__)
+    // data_dir is set up elsewhere
+#else
 #   error "Specify a CONFIG_DATADIR and PACKAGE_NAME"
 #endif
-}
 
 static bool _save_state(int fd, const uint8_t * outbuf, ssize_t outmax) {
     ssize_t outlen = 0;
@@ -227,7 +238,45 @@ static void _shutdown_threads(void) {
 #endif
 }
 
+void emulator_registerStartupCallback(long order, startup_callback_f ctor) {
+
+    static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+    pthread_mutex_lock(&mutex);
+
+    module_ctor_node_s *node = MALLOC(sizeof(module_ctor_node_s));
+    assert(node);
+    node->next = NULL;
+    node->order = order;
+    node->ctor = ctor;
+
+    module_ctor_node_s *p0 = NULL;
+    module_ctor_node_s *p = head;
+    while (p && (order > p->order)) {
+        p0 = p;
+        p = p->next;
+    }
+    if (p0) {
+        p0->next = node;
+    } else {
+        head = node;
+    }
+    node->next = p;
+
+    pthread_mutex_unlock(&mutex);
+}
+
 void emulator_start(void) {
+
+    module_ctor_node_s *p = head;
+    head = NULL;
+    while (p) {
+        p->ctor();
+        module_ctor_node_s *next = p->next;
+        FREE(p);
+        p = next;
+    }
+    head = NULL;
+
 #ifdef INTERFACE_CLASSIC
     load_settings(); // user prefs
     c_keys_set_key(kF8); // show credits before emulation start

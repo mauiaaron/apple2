@@ -874,7 +874,6 @@ static void xdriver_render(void) {
     // no-op
 }
 
-__attribute__((constructor(CTOR_PRIORITY_EARLY)))
 static void _init_xvideo(void) {
     LOG("Initializing X11 renderer");
 
@@ -887,5 +886,9 @@ static void _init_xvideo(void) {
     xvideo_backend.shutdown  = &xdriver_shutdown;
 
     video_backend = &xvideo_backend;
+}
+
+static __attribute__((constructor)) void __init_xvideo(void) {
+    emulator_registerStartupCallback(CTOR_PRIORITY_EARLY, &_init_xvideo);
 }
 

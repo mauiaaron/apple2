@@ -1313,7 +1313,6 @@ void display_help() {
     num_buffer_lines = i;
 }
 
-__attribute__((constructor(CTOR_PRIORITY_LATE)))
 static void _init_debugger(void) {
 
     LOG("Initializing virtual machine debugger subsystem");
@@ -1328,6 +1327,10 @@ static void _init_debugger(void) {
     {
         op_breakpoints[(unsigned char)i] = 0;
     }
+}
+
+static __attribute__((constructor)) void __init_debugger(void) {
+    emulator_registerStartupCallback(CTOR_PRIORITY_LATE, &_init_debugger);
 }
 
 #ifdef INTERFACE_CLASSIC

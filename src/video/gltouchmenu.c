@@ -553,7 +553,6 @@ static void gltouchmenu_setGlyphScale(int glyphScale) {
 // ----------------------------------------------------------------------------
 // Constructor
 
-__attribute__((constructor(CTOR_PRIORITY_LATE)))
 static void _init_gltouchmenu(void) {
     LOG("Registering OpenGL software touch menu");
 
@@ -578,5 +577,9 @@ static void _init_gltouchmenu(void) {
         .onTouchEvent = &gltouchmenu_onTouchEvent,
         .setData = NULL,
     });
+}
+
+static __attribute__((constructor)) void __init_gltouchmenu(void) {
+    emulator_registerStartupCallback(CTOR_PRIORITY_LATE, &_init_gltouchmenu);
 }
 

@@ -758,7 +758,6 @@ static long opensles_systemResume(AudioContext_s *audio_context) {
     return result;
 }
 
-__attribute__((constructor(CTOR_PRIORITY_EARLY)))
 static void _init_opensl(void) {
     LOG("Initializing OpenSLES sound system");
 
@@ -770,5 +769,9 @@ static void _init_opensl(void) {
     opensles_audio_backend.resume           = &opensles_systemResume;
 
     audio_backend = &opensles_audio_backend;
+}
+
+static __attribute__((constructor)) void __init_opensl(void) {
+    emulator_registerStartupCallback(CTOR_PRIORITY_EARLY, &_init_opensl);
 }
 

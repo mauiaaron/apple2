@@ -623,7 +623,6 @@ static long openal_systemResume(AudioContext_s *audio_context) {
     return 0;
 }
 
-__attribute__((constructor(CTOR_PRIORITY_EARLY)))
 static void _init_openal(void) {
     LOG("Initializing OpenAL sound system");
 
@@ -635,5 +634,9 @@ static void _init_openal(void) {
     openal_audio_backend.resume           = &openal_systemResume;
 
     audio_backend = &openal_audio_backend;
+}
+
+static __attribute__((constructor)) void __init_openal(void) {
+    emulator_registerStartupCallback(CTOR_PRIORITY_EARLY, &_init_openal);
 }
 

@@ -252,7 +252,6 @@ static void glnode_mainLoop(void) {
 
 //----------------------------------------------------------------------------
 
-__attribute__((constructor(CTOR_PRIORITY_EARLY)))
 static void _init_glnode_manager(void) {
     LOG("Initializing GLNode manager subsystem");
 
@@ -273,3 +272,8 @@ static void _init_glnode_manager(void) {
     interface_getModelDataSetter = &glnode_getModelDataSetter;
 #endif
 }
+
+static __attribute__((constructor)) void __init_glnode_manager(void) {
+    emulator_registerStartupCallback(CTOR_PRIORITY_EARLY, &_init_glnode_manager);
+}
+

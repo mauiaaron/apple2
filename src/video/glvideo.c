@@ -449,7 +449,6 @@ static int64_t glvideo_onTouchEvent(interface_touch_event_t action, int pointer_
 
 //----------------------------------------------------------------------------
 
-__attribute__((constructor(CTOR_PRIORITY_LATE)))
 static void _init_glvideo(void) {
     LOG("Initializing OpenGL renderer");
 
@@ -464,5 +463,9 @@ static void _init_glvideo(void) {
         .setData = &glvideo_setData,
 #endif
     });
+}
+
+static __attribute__((constructor)) void __init_glvideo(void) {
+    emulator_registerStartupCallback(CTOR_PRIORITY_LATE, &_init_glvideo);
 }
 

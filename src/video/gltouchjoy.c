@@ -955,7 +955,6 @@ static bool gltouchjoy_isCalibrating(void) {
     return joyglobals.isCalibrating;
 }
 
-__attribute__((constructor(CTOR_PRIORITY_LATE)))
 static void _init_gltouchjoy(void) {
     LOG("Registering OpenGL software touch joystick");
 
@@ -1040,6 +1039,10 @@ static void _init_gltouchjoy(void) {
     });
 }
 
+static __attribute__((constructor)) void __init_gltouchjoy(void) {
+    emulator_registerStartupCallback(CTOR_PRIORITY_LATE, &_init_gltouchjoy);
+}
+
 void gltouchjoy_registerVariant(touchjoy_variant_t variantType, GLTouchJoyVariant *touchJoyVariant) {
     switch (variantType) {
         case EMULATED_JOYSTICK:
@@ -1057,7 +1060,6 @@ void gltouchjoy_registerVariant(touchjoy_variant_t variantType, GLTouchJoyVarian
             break;
     }
 }
-
 
 void gldriver_joystick_reset(void) {
 #warning FIXME TODO expunge this olde API ...

@@ -78,7 +78,6 @@ static uint8_t translate_table_6[0x40] = {
 
 static uint8_t rev_translate_table_6[0x80] = { 0x01 };
 
-__attribute__((constructor(CTOR_PRIORITY_LATE)))
 static void _init_disk6(void) {
     LOG("Disk ][ emulation module early setup");
     memset(&disk6, 0x0, sizeof(disk6));
@@ -90,6 +89,10 @@ static void _init_disk6(void) {
     for (unsigned int i=0; i<0x40; i++) {
         rev_translate_table_6[translate_table_6[i]-0x80] = i << 2;
     }
+}
+
+static __attribute__((constructor)) void __init_disk6(void) {
+    emulator_registerStartupCallback(CTOR_PRIORITY_LATE, &_init_disk6);
 }
 
 static inline bool is_nib(const char * const name) {

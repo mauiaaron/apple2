@@ -369,7 +369,6 @@ static void _animation_setEnableShowTrackSector(bool enabled) {
     }
 }
 
-__attribute__((constructor(CTOR_PRIORITY_LATE)))
 static void _init_glalert(void) {
     LOG("Initializing message animation subsystem");
 
@@ -391,5 +390,9 @@ static void _init_glalert(void) {
         .setData = NULL,
 #endif
     });
+}
+
+static __attribute__((constructor)) void __init_glalert(void) {
+    emulator_registerStartupCallback(CTOR_PRIORITY_LATE, &_init_glalert);
 }
 

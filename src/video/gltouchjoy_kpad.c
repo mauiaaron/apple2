@@ -473,7 +473,6 @@ static void touchkpad_setKeyRepeatThreshold(float repeatThresholdSecs) {
 
 // ----------------------------------------------------------------------------
 
-__attribute__((constructor(CTOR_PRIORITY_EARLY)))
 static void _init_gltouchjoy_kpad(void) {
     LOG("Registering OpenGL software touch joystick (keypad variant)");
 
@@ -501,5 +500,9 @@ static void _init_gltouchjoy_kpad(void) {
     joydriver_setKeyRepeatThreshold = &touchkpad_setKeyRepeatThreshold;
 
     gltouchjoy_registerVariant(EMULATED_KEYPAD, &kpadJoy);
+}
+
+static __attribute__((constructor)) void __init_gltouchjoy_kpad(void) {
+    emulator_registerStartupCallback(CTOR_PRIORITY_EARLY, &_init_gltouchjoy_kpad);
 }
 

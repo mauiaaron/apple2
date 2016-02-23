@@ -1524,7 +1524,6 @@ uint8_t floating_bus_hibit(const bool hibit) {
     return (b & ~0x80) | (hibit ? 0x80 : 0);
 }
 
-__attribute__((constructor(CTOR_PRIORITY_LATE)))
 static void _init_interface(void) {
     LOG("Initializing display subsystem");
     _initialize_interface_fonts();
@@ -1532,5 +1531,9 @@ static void _init_interface(void) {
     _initialize_row_col_tables();
     _initialize_dhires_values();
     _initialize_color();
+}
+
+static __attribute__((constructor)) void __init_interface(void) {
+    emulator_registerStartupCallback(CTOR_PRIORITY_LATE, &_init_interface);
 }
 
