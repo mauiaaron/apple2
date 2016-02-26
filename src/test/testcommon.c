@@ -20,9 +20,6 @@ static char input_str[TESTBUF_SZ]; // ASCII
 static unsigned int input_length = 0;
 static unsigned int input_counter = 0;
 
-static struct timespec t0 = { 0 };
-static struct timespec ti = { 0 };
-
 #if defined(ANDROID)
 // We basically compile everything including audio into the Android build, even for testing =)
 #else
@@ -57,7 +54,6 @@ void test_common_setup() {
     input_counter = 0;
     input_length = 0;
     input_str[0] = '\0';
-    clock_gettime(CLOCK_MONOTONIC, &t0);
 }
 
 // ----------------------------------------------------------------------------

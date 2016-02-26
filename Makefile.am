@@ -49,7 +49,7 @@ AUDIO_SRC = \
 
 META_SRC = \
 	src/meta/debug.l src/meta/debugger.c src/meta/opcodes.c src/test/sha1.c \
-	src/meta/lintrace.c
+	src/meta/lintrace.c src/json_parse.c externals/jsmn/jsmn.c
 
 # NOTE : selectively enabled through configuration process ...
 EXTRA_apple2ix_SOURCES = \
@@ -92,9 +92,10 @@ LOG_DRIVER = testcpu  ## hack TODO/FIXME ... should be wrapper shell script acce
 A2_TEST_SOURCES = $(apple2ix_SOURCES) src/test/testcommon.c
 A2_TEST_CFLAGS = -DTESTING=1 -DCPU_TRACING=1 -DDISK_TRACING=1 -DVM_TRACING=1 -Isrc/test
 
-TESTS          = testcpu testdisplay testvm testdisk testtrace
-check_PROGRAMS = testcpu testdisplay testvm testdisk testtrace
+TESTS          = testcpu testdisplay testvm testdisk testprefs testtrace
+check_PROGRAMS = testcpu testdisplay testvm testdisk testprefs testtrace
 
+#######################################
 testcpu_SOURCES = src/test/testcpu.c $(A2_TEST_SOURCES) $(META_SRC)
 testcpu_CFLAGS = $(apple2ix_CFLAGS) $(A2_TEST_CFLAGS) -UAUDIO_ENABLED -UINTERFACE_CLASSIC
 testcpu_CCASFLAGS = $(testcpu_CFLAGS)
@@ -104,6 +105,7 @@ testcpu_DEPENDENCIES = @ASM_O@ @META_O@ @VIDEO_O@
 
 EXTRA_testcpu_SOURCES = $(ASM_SRC_x86)
 
+#######################################
 testdisplay_SOURCES = src/test/testdisplay.c $(A2_TEST_SOURCES) $(META_SRC)
 testdisplay_CFLAGS = $(apple2ix_CFLAGS) $(A2_TEST_CFLAGS) -UAUDIO_ENABLED -UINTERFACE_CLASSIC
 testdisplay_CCASFLAGS = $(testdisplay_CFLAGS)
@@ -113,6 +115,7 @@ testdisplay_DEPENDENCIES = @ASM_O@ @META_O@ @VIDEO_O@
 
 EXTRA_testdisplay_SOURCES = $(ASM_SRC_x86) $(VIDEO_SRC)
 
+#######################################
 testvm_SOURCES = src/test/testvm.c $(A2_TEST_SOURCES) $(META_SRC)
 testvm_CFLAGS = $(apple2ix_CFLAGS) $(A2_TEST_CFLAGS) -UAUDIO_ENABLED -UINTERFACE_CLASSIC
 testvm_CCASFLAGS = $(testvm_CFLAGS)
@@ -123,6 +126,7 @@ testvm_DEPENDENCIES = @TESTVM_ASM_O@ @META_O@ @VIDEO_O@
 
 EXTRA_testvm_SOURCES = $(ASM_SRC_x86) $(VIDEO_SRC)
 
+#######################################
 testdisk_SOURCES = src/test/testdisk.c $(A2_TEST_SOURCES) $(META_SRC)
 testdisk_CFLAGS = $(apple2ix_CFLAGS) $(A2_TEST_CFLAGS) -UAUDIO_ENABLED -UINTERFACE_CLASSIC
 testdisk_CCASFLAGS = $(testdisk_CFLAGS)
@@ -133,6 +137,18 @@ testdisk_DEPENDENCIES = @TESTDISK_ASM_O@ @META_O@ @VIDEO_O@
 
 EXTRA_testdisk_SOURCES = $(ASM_SRC_x86) $(VIDEO_SRC)
 
+#######################################
+testprefs_SOURCES = src/test/testprefs.c $(A2_TEST_SOURCES) $(META_SRC)
+testprefs_CFLAGS = $(apple2ix_CFLAGS) $(A2_TEST_CFLAGS) -UAUDIO_ENABLED -UINTERFACE_CLASSIC
+testprefs_CCASFLAGS = $(testprefs_CFLAGS)
+testprefs_LDFLAGS = $(apple2ix_LDFLAGS)
+# HACK FIXME TODO NOTE: specify testprefs_ASM_O to force it to rebuild with proper CCASFLAGS ... automake bug?
+testprefs_LDADD = @TESTPREFS_ASM_O@ @VIDEO_O@
+testprefs_DEPENDENCIES = @TESTPREFS_ASM_O@ @META_O@ @VIDEO_O@
+
+EXTRA_testprefs_SOURCES = $(ASM_SRC_x86) $(VIDEO_SRC)
+
+#######################################
 testtrace_SOURCES = src/test/testtrace.c $(A2_TEST_SOURCES) $(META_SRC)
 testtrace_CFLAGS = $(apple2ix_CFLAGS) $(A2_TEST_CFLAGS) -UAUDIO_ENABLED -UINTERFACE_CLASSIC
 testtrace_CCASFLAGS = $(testtrace_CFLAGS)
