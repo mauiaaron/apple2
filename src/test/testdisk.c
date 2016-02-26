@@ -86,7 +86,7 @@ TEST test_boot_disk_bytes() {
     } while(0);
 
     unlink(disk);
-    ASPRINTF_FREE(disk);
+    FREE(disk);
 
     PASS();
 }
@@ -134,7 +134,7 @@ TEST test_boot_disk_bytes_nib() {
     } while(0);
 
     unlink(disk);
-    ASPRINTF_FREE(disk);
+    FREE(disk);
 
     PASS();
 }
@@ -187,7 +187,7 @@ TEST test_boot_disk_bytes_po() {
     } while(0);
 
     unlink(disk);
-    ASPRINTF_FREE(disk);
+    FREE(disk);
 
     PASS();
 }
@@ -382,7 +382,7 @@ TEST test_disk_bytes_savehello_dsk() {
     } while(0);
 
     unlink(disk);
-    ASPRINTF_FREE(disk);
+    FREE(disk);
 
     REBOOT_TO_DOS();
     c_debugger_go();
@@ -476,7 +476,7 @@ TEST test_disk_bytes_savehello_nib() {
     } while(0);
 
     unlink(disk);
-    ASPRINTF_FREE(disk);
+    FREE(disk);
 
     REBOOT_TO_DOS();
     c_debugger_go();
@@ -570,7 +570,7 @@ TEST test_disk_bytes_savehello_po() {
     } while(0);
 
     unlink(disk);
-    ASPRINTF_FREE(disk);
+    FREE(disk);
 
     REBOOT_TO_DOS();
     c_debugger_go();
@@ -683,7 +683,7 @@ TEST test_outofspace_dsk() {
     } while(0);
 
     unlink(disk);
-    ASPRINTF_FREE(disk);
+    FREE(disk);
 
     REBOOT_TO_DOS();
     c_debugger_go();
@@ -951,7 +951,7 @@ TEST test_bload_trace_dsk() {
     } while(0);
 
     unlink(disk);
-    ASPRINTF_FREE(disk);
+    FREE(disk);
 
     disk6_eject(0);
 
@@ -1069,7 +1069,7 @@ TEST test_bload_trace_nib() {
     } while(0);
 
     unlink(disk);
-    ASPRINTF_FREE(disk);
+    FREE(disk);
 
     disk6_eject(0);
 
@@ -1187,7 +1187,7 @@ TEST test_bload_trace_po() {
     } while(0);
 
     unlink(disk);
-    ASPRINTF_FREE(disk);
+    FREE(disk);
 
     disk6_eject(0);
 

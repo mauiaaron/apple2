@@ -66,10 +66,10 @@ demoSource *glshader_createSource(const char *fileName) {
     CFRELEASE(filePath);
 #else
     char *filePath = NULL;
-    asprintf(&filePath, "%s/shaders/%s", data_dir, fileName);
+    ASPRINTF(&filePath, "%s/shaders/%s", data_dir, fileName);
     if (filePath) {
         src = srcLoadSource(filePath);
-        ASPRINTF_FREE(filePath);
+        FREE(filePath);
     } else {
         ERRLOG("OOPS Could not load shader from %s (%s)", filePath, fileName);
     }

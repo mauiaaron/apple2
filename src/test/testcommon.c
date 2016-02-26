@@ -182,7 +182,7 @@ int test_setup_boot_disk(const char *fileName, int readonly) {
     while (*path) {
         char *disk = *path;
         ++path;
-        ASPRINTF_FREE(disk);
+        FREE(disk);
     }
 
     return err;

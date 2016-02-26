@@ -23,7 +23,7 @@ static int _json_createFromString(const char *jsonString, INOUT JSON_s *parsedDa
         if (!parsedData) {
             break;
         }
-        parsedData->jsonString = strdup(jsonString);
+        parsedData->jsonString = STRDUP(jsonString);
         parsedData->jsonTokens = NULL;
 
         unsigned int numTokens = DEFAULT_NUMTOK;
@@ -240,7 +240,7 @@ bool json_mapCopyStringValue(const JSON_s *map, const char *key, INOUT char **va
     int len = 0;
     bool foundMatch = _json_mapGetStringValue(map, key, val, &len);
     if (foundMatch) {
-        *val = len>0 ? strndup(*val, len) : strdup("");
+        *val = len>0 ? STRNDUP(*val, len) : STRDUP("");
     }
     return foundMatch;
 }
@@ -290,7 +290,7 @@ bool json_mapParseFloatValue(const JSON_s *map, const char *key, INOUT float *va
 }
 
 void json_destroy(JSON_s *parsedData) {
-    STRDUP_FREE(parsedData->jsonString);
+    FREE(parsedData->jsonString);
     FREE(parsedData->jsonTokens);
 }
 

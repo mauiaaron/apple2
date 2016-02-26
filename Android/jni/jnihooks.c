@@ -159,7 +159,7 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnCreate(JNIEnv *env, jclas
     int pagesize = getpagesize();
     LOG("PAGESIZE IS : %d", pagesize);
 
-    data_dir = strdup(dataDir);
+    data_dir = STRDUP(dataDir);
     if (crashHandler && crashHandler->init) {
         crashHandler->init(data_dir);
     }
@@ -177,9 +177,9 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnCreate(JNIEnv *env, jclas
 #if DO_CPU65_TRACING
 #   warning !!!!!!!!!! this will quickly eat up disk space !!!!!!!!!!
     char *trfile = NULL;
-    asprintf(&trfile, "%s/%s", data_dir, "cpu_trace.txt");
+    ASPRINTF(&trfile, "%s/%s", data_dir, "cpu_trace.txt");
     cpu65_trace_begin(trfile);
-    ASPRINTF_FREE(trfile);
+    FREE(trfile);
 #endif
 
 #if !TESTING
@@ -351,7 +351,7 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeChooseDisk(JNIEnv *env, jcl
     LOG(": (%s, %s, %s)", path, driveA ? "drive A" : "drive B", readOnly ? "read only" : "read/write");
     if (disk6_insert(drive, path, ro)) {
         char *gzPath = NULL;
-        asprintf(&gzPath, "%s.gz", path);
+        ASPRINTF(&gzPath, "%s.gz", path);
         if (disk6_insert(drive, gzPath, ro)) {
             char *diskImageUnreadable = "Disk Image Unreadable";
             unsigned int cols = strlen(diskImageUnreadable);
@@ -359,7 +359,7 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeChooseDisk(JNIEnv *env, jcl
         } else {
             video_animations->animation_showDiskChosen(drive);
         }
-        ASPRINTF_FREE(gzPath);
+        FREE(gzPath);
     } else {
         video_animations->animation_showDiskChosen(drive);
     }
@@ -404,10 +404,10 @@ jstring Java_org_deadc0de_apple2ix_Apple2Activity_nativeLoadState(JNIEnv *env, j
     bool readOnly2 = disk6.disk[1].is_protected;
     char *str = NULL;
     jstring jstr = NULL;
-    asprintf(&str, "{ disk1 = \"%s\"; readOnly1 = %s; disk2 = \"%s\"; readOnly2 = %s }", (disk1 ?: ""), readOnly1 ? "true" : "false", (disk2 ?: ""), readOnly2 ? "true" : "false");
+    ASPRINTF(&str, "{ disk1 = \"%s\"; readOnly1 = %s; disk2 = \"%s\"; readOnly2 = %s }", (disk1 ?: ""), readOnly1 ? "true" : "false", (disk2 ?: ""), readOnly2 ? "true" : "false");
     if (str) {
         jstr = (*env)->NewStringUTF(env, str);
-        ASPRINTF_FREE(str);
+        FREE(str);
     }
 
     return jstr;

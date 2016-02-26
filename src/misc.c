@@ -38,7 +38,7 @@ CrashHandler_s *crashHandler = NULL;
 #if defined(CONFIG_DATADIR)
 static void _init_common(void) {
     LOG("Initializing common...");
-    data_dir = strdup(CONFIG_DATADIR PATH_SEPARATOR PACKAGE_NAME);
+    data_dir = STRDUP(CONFIG_DATADIR PATH_SEPARATOR PACKAGE_NAME);
 }
 
 static __attribute__((constructor)) void __init_common(void) {

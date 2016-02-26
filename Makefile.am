@@ -49,7 +49,7 @@ AUDIO_SRC = \
 
 META_SRC = \
 	src/meta/debug.l src/meta/debugger.c src/meta/opcodes.c src/test/sha1.c \
-	src/meta/lintrace.c src/json_parse.c externals/jsmn/jsmn.c
+	src/meta/lintrace.c
 
 # NOTE : selectively enabled through configuration process ...
 EXTRA_apple2ix_SOURCES = \
@@ -63,7 +63,8 @@ EXTRA_apple2ix_SOURCES = \
 
 apple2ix_SOURCES = src/font.c src/rom.c src/misc.c src/display.c src/vm.c \
 	src/timing.c src/zlib-helpers.c src/joystick.c src/keys.c src/prefs.c \
-	src/interface.c src/disk.c src/cpu-supp.c
+	src/interface.c src/disk.c src/cpu-supp.c src/json_parse.c src/memmngt.c \
+	externals/jsmn/jsmn.c
 
 apple2ix_CFLAGS = @AM_CFLAGS@ @X_CFLAGS@
 apple2ix_CCASFLAGS = $(apple2ix_CFLAGS)

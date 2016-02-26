@@ -5,7 +5,7 @@
  * version 3 or later (your choice) as published by the Free Software
  * Foundation.
  *
- * Copyright 2013-2015 Aaron Culliney
+ * Copyright 2015-2016 Aaron Culliney
  *
  */
 
@@ -21,14 +21,13 @@
         (ptr) = NULL; \
     } while (0)
 
-#define ASPRINTF_FREE(ptr) _FREE((ptr), free)
-#define STRDUP_FREE(ptr) _FREE((ptr), free)
-#define GETLINE_FREE(ptr) _FREE((ptr), free)
-
 #ifdef NDEBUG
 #   define MALLOC(size)         malloc((size))
 #   define CALLOC(nmemb, size)  calloc((nmemb), (size))
 #   define REALLOC(ptr, size)   realloc((ptr), (size))
+#   define STRDUP(str)          strdup((str))
+#   define STRNDUP(str, n)      strndup((str), (n))
+#   define ASPRINTF(s, f, ...)  asprintf((s), (f), __VA_ARGS__)
 #   define FREE(ptr)            _FREE((ptr), free)
 #else
 
@@ -38,78 +37,25 @@
 #   define MALLOC(size)         _a2_malloc((size))
 #   define CALLOC(nmemb, size)  _a2_calloc((nmemb), (size))
 #   define REALLOC(ptr, size)   _a2_realloc((ptr), (size))
+#   define STRDUP(str)          _a2_strndup((str), 0)
+#   define STRNDUP(str, n)      _a2_strndup((str), (n))
+#   define ASPRINTF(s, f, ...)  _a2_asprintf((s), (f), __VA_ARGS__)
 #   define FREE(ptr)            _FREE((ptr), _a2_free)
 
 #   define _BUF_SENTINEL 0xDEADC0DEUL
 #   define _BUF_FENCE_SZ (sizeof(_BUF_SENTINEL))
 
-static inline void *_a2_malloc(size_t size) {
-    const size_t totalSize = sizeof(size_t)+_BUF_FENCE_SZ+size+_BUF_FENCE_SZ;
-    char *p = (char *)malloc(totalSize);
-    if (p) {
-        *((size_t *)p) = totalSize;
-        *((uint32_t *)(p+sizeof(size_t))) = _BUF_SENTINEL;
-        *((uint32_t *)(p+totalSize-_BUF_FENCE_SZ)) = _BUF_SENTINEL;
-        p += sizeof(size_t)+_BUF_FENCE_SZ;
-    }
-    return p;
-}
+void *_a2_malloc(size_t size);
 
-static inline void *_a2_calloc(size_t nmemb, size_t size) {
-    size *= nmemb;
-    const size_t totalSize = sizeof(size_t)+_BUF_FENCE_SZ+size+_BUF_FENCE_SZ;
-    char *p = (char *)calloc(totalSize, 1);
-    if (p) {
-        *((size_t *)p) = totalSize;
-        *((uint32_t *)(p+sizeof(size_t))) = _BUF_SENTINEL;
-        *((uint32_t *)(p+totalSize-_BUF_FENCE_SZ)) = _BUF_SENTINEL;
-        p += sizeof(size_t)+_BUF_FENCE_SZ;
-    }
-    return p;
-}
+void *_a2_calloc(size_t nmemb, size_t size);
 
-static inline void _a2_free(void *ptr) {
-    char *p = (char *)ptr;
-    if (!p) {
-        return;
-    }
-    p = p-_BUF_FENCE_SZ-sizeof(size_t);
-    const size_t totalSize = *((size_t *)p);
-    assert( *((uint32_t *)(p+sizeof(size_t))) == _BUF_SENTINEL && "1st memory sentinel invalid!" );
-    assert( *((uint32_t *)(p+totalSize-_BUF_FENCE_SZ)) == _BUF_SENTINEL && "2nd memory sentinel invalid!" );
-    memset(p, 0xAA, totalSize);
-    free(p);
-}
+void _a2_free(void *ptr);
 
-static inline void *_a2_realloc(void *ptr, size_t size) {
-    char *p = (char *)ptr;
-    if (!p) {
-        return _a2_malloc(size);
-    }
-    if (size == 0) {
-        FREE(ptr);
-        return NULL;
-    }
+void *_a2_realloc(void *ptr, size_t size);
 
-    // verify prior allocation is sane
-    p = p-_BUF_FENCE_SZ-sizeof(size_t);
-    const size_t totalSizeBefore = *((size_t *)p);
-    assert( *((uint32_t *)(p+sizeof(size_t))) == _BUF_SENTINEL && "1st memory sentinel invalid!" );
-    assert( *((uint32_t *)(p+totalSizeBefore-_BUF_FENCE_SZ)) == _BUF_SENTINEL && "2nd memory sentinel invalid!" );
+char *_a2_strndup(const char *s, size_t size);
 
-    const size_t totalSizeAfter = sizeof(size_t)+_BUF_FENCE_SZ+size+_BUF_FENCE_SZ;
-    assert(totalSizeAfter > totalSizeBefore && "FIXME fenced realloc() to smaller sizes not implemented!");
-
-    p = (char *)realloc(p, totalSizeAfter);
-    if (p) {
-        *((size_t *)p) = totalSizeAfter;
-        assert( *((uint32_t *)(p+sizeof(size_t))) == _BUF_SENTINEL && "1st memory sentinel invalid!" );
-        *((uint32_t *)(p+totalSizeAfter-_BUF_FENCE_SZ)) = _BUF_SENTINEL;
-        p += sizeof(size_t)+_BUF_FENCE_SZ;
-    }
-
-    return p;
-}
+int _a2_asprintf(char **strp, const char *fmt, ...);
 
 #endif
 

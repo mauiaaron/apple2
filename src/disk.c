@@ -770,7 +770,7 @@ const char *disk6_eject(int drive) {
 #endif
     }
 
-    STRDUP_FREE(disk6.disk[drive].file_name);
+    FREE(disk6.disk[drive].file_name);
 
     disk6.disk[drive].fd = -1;
     disk6.disk[drive].mmap_image = MAP_FAILED;
@@ -799,7 +799,7 @@ const char *disk6_insert(int drive, const char * const raw_file_name, int readon
 
     disk6_eject(drive);
 
-    disk6.disk[drive].file_name = strdup(raw_file_name);
+    disk6.disk[drive].file_name = STRDUP(raw_file_name);
 
     int expected = NIB_SIZE;
     disk6.disk[drive].nibblized = true;

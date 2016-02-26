@@ -112,11 +112,11 @@ void Java_org_deadc0de_apple2ix_Apple2CrashHandler_nativeProcessCrash(JNIEnv *en
         }
 
         if (android_armArchV7A) {
-            asprintf(&symbolsPath, "%s/symbols/armeabi-v7a", data_dir);
+            ASPRINTF(&symbolsPath, "%s/symbols/armeabi-v7a", data_dir);
         } else if (android_x86) {
-            asprintf(&symbolsPath, "%s/symbols/x86", data_dir);
+            ASPRINTF(&symbolsPath, "%s/symbols/x86", data_dir);
         } else /*if (android_armArch)*/ {
-            asprintf(&symbolsPath, "%s/symbols/armeabi", data_dir);
+            ASPRINTF(&symbolsPath, "%s/symbols/armeabi", data_dir);
         } /*else { moar archs ... } */
 
         bool success = crashHandler->processCrash(crashPath, symbolsPath, outputFILE);
@@ -131,7 +131,7 @@ void Java_org_deadc0de_apple2ix_Apple2CrashHandler_nativeProcessCrash(JNIEnv *en
     }
 
     if (symbolsPath) {
-        ASPRINTF_FREE(symbolsPath);
+        FREE(symbolsPath);
     }
 
     (*env)->ReleaseStringUTFChars(env, jCrashPath,  crashPath);

@@ -98,15 +98,15 @@ TEST test_json_map_1() {
 
     json_mapCopyStringValue(&parsedData, "key0", &val);
     ASSERT(strcmp(val, "a value zero") == 0);
-    STRDUP_FREE(val);
+    FREE(val);
 
     json_mapCopyStringValue(&parsedData, "key1", &val);
     ASSERT(strcmp(val, "  \t ") == 0);
-    STRDUP_FREE(val);
+    FREE(val);
 
     json_mapCopyStringValue(&parsedData, "key2", &val);
     ASSERT(strcmp(val, "{    \t \n}") == 0);
-    STRDUP_FREE(val);
+    FREE(val);
 
     json_mapCopyStringValue(&parsedData, "key3", &val);
     ASSERT(strcmp(val, "{   \t \n  \"subkey0\" : \"subval0\",   \"subkey1\" : { \"moar\" : \"recursion\" }  ,   \"subkey2\" : \"line0      \n   \tline1      \tline2\"  \n}") == 0);
@@ -120,26 +120,26 @@ TEST test_json_map_1() {
         char *subval;
         json_mapCopyStringValue(&parsedSubData, "subkey0", &subval);
         ASSERT(strcmp(subval, "subval0") == 0);
-        STRDUP_FREE(subval);
+        FREE(subval);
 
         json_mapCopyStringValue(&parsedSubData, "subkey1", &subval);
         ASSERT(strcmp(subval, "{ \"moar\" : \"recursion\" }") == 0);
-        STRDUP_FREE(subval);
+        FREE(subval);
 
         json_mapCopyStringValue(&parsedSubData, "subkey2", &subval);
         ASSERT(strcmp(subval, "line0      \n   \tline1      \tline2") == 0);
-        STRDUP_FREE(subval);
+        FREE(subval);
     }
-    STRDUP_FREE(val);
+    FREE(val);
 
     json_mapCopyStringValue(&parsedData, "key4", &val);
     ASSERT(strcmp(val, "[ \"Q\",    \"W\",  \"E\",            \"R\",  \"T\",  \"Y\",  \"U\",   \"I\",           \"O\",   \"P\", { \"x\" : [ 22, 4, \"ab\" ] } ]") == 0);
     // TODO : subarray checks
-    STRDUP_FREE(val);
+    FREE(val);
 
     json_mapCopyStringValue(&parsedData, "key5", &val);
     ASSERT(strcmp(val, "") == 0);
-    STRDUP_FREE(val);
+    FREE(val);
 
     json_mapParseLongValue(&parsedData, "intKey0", &lVal, 10);
     ASSERT(lVal == 42);
