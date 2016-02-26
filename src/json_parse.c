@@ -94,6 +94,10 @@ int json_createFromFile(const char *filePath, INOUT JSON_s *parsedData) {
     char *jsonString = NULL;
 
     do {
+        if (!filePath) {
+            break;
+        }
+
         if (!parsedData) {
             break;
         }
@@ -241,7 +245,7 @@ bool json_mapCopyStringValue(const JSON_s *map, const char *key, INOUT char **va
     return foundMatch;
 }
 
-bool json_mapParseLongValue(const JSON_s *map, const char *key, INOUT long *val, const int base) {
+bool json_mapParseLongValue(const JSON_s *map, const char *key, INOUT long *val, const long base) {
     bool foundMatch = false;
 
     do {
