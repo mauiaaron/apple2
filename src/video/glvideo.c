@@ -425,7 +425,7 @@ static void glvideo_reshape(int w, int h, bool landscape) {
 
 #if INTERFACE_TOUCH
 static void glvideo_setData(const char *jsonData) {
-    JSON_s parsedData = { 0 };
+    JSON_ref parsedData = NULL;
     int tokCount = json_createFromString(jsonData, &parsedData);
 
     do {
@@ -433,7 +433,7 @@ static void glvideo_setData(const char *jsonData) {
             break;
         }
 
-        json_mapParseFloatValue(&parsedData, PREF_PORTRAIT_POSITION_SCALE, &portraitPositionScale);
+        json_mapParseFloatValue(parsedData, PREF_PORTRAIT_POSITION_SCALE, &portraitPositionScale);
 
         glvideo_reshape(rawWidth, rawHeight, isLandscape);
     } while (0);

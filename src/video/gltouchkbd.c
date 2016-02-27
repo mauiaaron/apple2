@@ -11,6 +11,7 @@
 
 #include "video/glhudmodel.h"
 #include "video/glnode.h"
+#include "json_parse_private.h"
 
 #if !INTERFACE_TOUCH
 #error this is a touch interface module, possibly you mean to not compile this at all?
@@ -623,7 +624,7 @@ static void gltouchkbd_reshape(int w, int h, bool landscape) {
 }
 
 static void gltouchkbd_setData(const char *jsonData) {
-    JSON_s parsedData = { 0 };
+    JSON_ref parsedData = NULL;
     int tokCount = json_createFromString(jsonData, &parsedData);
 
     do {
@@ -631,8 +632,8 @@ static void gltouchkbd_setData(const char *jsonData) {
             break;
         }
 
-        json_mapParseFloatValue(&parsedData, PREF_PORTRAIT_HEIGHT_SCALE, &kbd.portraitHeightScale);
-        json_mapParseFloatValue(&parsedData, PREF_PORTRAIT_POSITION_SCALE, &kbd.portraitPositionScale);
+        json_mapParseFloatValue(parsedData, PREF_PORTRAIT_HEIGHT_SCALE, &kbd.portraitHeightScale);
+        json_mapParseFloatValue(parsedData, PREF_PORTRAIT_POSITION_SCALE, &kbd.portraitPositionScale);
 
         gltouchkbd_reshape(touchport.rawWidth, touchport.rawHeight, touchport.isLandscape);
     } while (0);
@@ -776,8 +777,9 @@ static void gltouchkbd_endCalibration(void) {
 }
 
 static void gltouchkbd_loadAltKbd(const char *kbdPath) {
-    JSON_s parsedData = { 0 };
-    int tokCount = json_createFromFile(kbdPath, &parsedData);
+    JSON_ref jsonRef = NULL;
+    int tokCount = json_createFromFile(kbdPath, &jsonRef);
+    JSON_s parsedData = (JSON_s)parsedData;
 
     do {
         if (tokCount < 0) {

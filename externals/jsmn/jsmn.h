@@ -4,8 +4,8 @@
 #include <stddef.h>
 
 // APPLE2IX : define these ...
-#define JSMN_PARENT_LINKS
-#define JSMN_STRICT
+#define JSMN_PARENT_LINKS 1
+#define JSMN_STRICT 1
 
 #ifdef __cplusplus
 extern "C" {

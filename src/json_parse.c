@@ -5,20 +5,173 @@
  * version 3 or later (your choice) as published by the Free Software
  * Foundation.
  *
- * Copyright 2013-2015 Aaron Culliney
+ * Copyright 2015-2016 Aaron Culliney
  *
  */
 
-#include "json_parse.h"
+#include "common.h"
+#include "json_parse_private.h"
 
 #define JSON_LENGTH 16
 #define DEFAULT_NUMTOK 16
+#define MAX_INDENT 16
 
-static int _json_createFromString(const char *jsonString, INOUT JSON_s *parsedData, ssize_t jsonLen) {
+
+static bool _json_write(const char *jsonString, size_t buflen, int fd) {
+    ssize_t idx = 0;
+    size_t chunk = buflen;
+    do {
+        ssize_t outlen = 0;
+        TEMP_FAILURE_RETRY(outlen = write(fd, jsonString+idx, chunk));
+        if (outlen <= 0) {
+            break;
+        }
+        idx += outlen;
+        chunk -= outlen;
+    } while (idx < buflen);
+    return idx == buflen;
+}
+
+// recursive
+static bool _json_prettyPrint(JSON_s *parsedData, int start, int end, const unsigned int indent, int fd) {
+
+    char indentBuf[MAX_INDENT+1];
+    indentBuf[MAX_INDENT] = '\0';
+
+    bool success = false;
+    do {
+        if (indent > MAX_INDENT) {
+            break;
+        }
+        memset(indentBuf, '\t', indent);
+
+        jsmntok_t parent = { -1 };
+        int idx = start;
+        if (idx < end) {
+            jsmntok_t tok = parsedData->jsonTokens[idx];
+            if (tok.parent >= 0) {
+                parent = parsedData->jsonTokens[tok.parent];
+            }
+        }
+
+        bool isKey = true;
+
+        while (idx < end) {
+
+            jsmntok_t tok = parsedData->jsonTokens[idx];
+            bool isFirst = (idx == start);
+
+            // print finishing ", \n" stuff ...
+            if (parent.type == JSMN_OBJECT) {
+                if (!isKey) {
+                    if (!_json_write(" : ", 3, fd)) {
+                        break;
+                    }
+                } else {
+                    if (!isFirst) {
+                        if (!_json_write(",\n", 2, fd)) {
+                            break;
+                        }
+                    }
+                    if (!_json_write(indentBuf, indent, fd)) {
+                        break;
+                    }
+                }
+            } else if (parent.type == JSMN_ARRAY) {
+                if (!isFirst) {
+                    if (!_json_write(", ", 2, fd)) {
+                        break;
+                    }
+                }
+            }
+
+            jsmntype_t type = parsedData->jsonTokens[idx].type;
+
+            if (type == JSMN_PRIMITIVE) {
+                char lastChar = parsedData->jsonString[tok.end];
+                parsedData->jsonString[tok.end] = '\0';
+                if (!_json_write(&parsedData->jsonString[tok.start], tok.end-tok.start, fd)) {
+                    break;
+                }
+                parsedData->jsonString[tok.end] = lastChar;
+                ++idx;
+            } else if (type == JSMN_STRING) {
+                char lastChar = parsedData->jsonString[tok.end];
+                parsedData->jsonString[tok.end] = '\0';
+                if (!_json_write("\"", 1, fd)) {
+                    break;
+                }
+                if (!_json_write(&parsedData->jsonString[tok.start], tok.end-tok.start, fd)) {
+                    break;
+                }
+                if (!_json_write("\"", 1, fd)) {
+                    break;
+                }
+                parsedData->jsonString[tok.end] = lastChar;
+                ++idx;
+            } else if (type == JSMN_OBJECT) {
+                if (!_json_write("{\n", 2, fd)) {
+                    break;
+                }
+                if (!_json_prettyPrint(parsedData, idx+1, idx+tok.skip, indent+1, fd)) {
+                    break;
+                }
+                if (!_json_write(indentBuf, indent, fd)) {
+                    break;
+                }
+                if (!_json_write("}", 1, fd)) {
+                    break;
+                }
+                idx += tok.skip;
+            } else if (type ==  JSMN_ARRAY) {
+                if (!_json_write("[ ", 2, fd)) {
+                    break;
+                }
+                if (!_json_prettyPrint(parsedData, idx+1, idx+tok.skip, indent+1, fd)) {
+                    break;
+                }
+                if (!_json_write(" ]", 2, fd)) {
+                    break;
+                }
+                idx += tok.skip;
+            } else {
+                assert(false);
+            }
+
+            isKey = !isKey;
+        }
+
+        if (idx != end) {
+            break;
+        }
+
+        if (parent.type != JSMN_ARRAY) {
+            if (!_json_write("\n", 1, fd)) {
+                break;
+            }
+        }
+
+        success = true;
+    } while (0);
+
+    return success;
+}
+
+static int _json_createFromString(const char *jsonString, INOUT JSON_ref *jsonRef, ssize_t jsonLen) {
 
     jsmnerr_t errCount = JSMN_ERROR_NOMEM;
     do {
         jsmn_parser parser = { 0 };
+
+        if (!jsonRef) {
+            break;
+        }
+
+        JSON_s *parsedData = MALLOC(sizeof(*parsedData));
+        if (!parsedData) {
+            break;
+        }
+        *jsonRef = parsedData;
 
         if (!parsedData) {
             break;
@@ -73,38 +226,29 @@ static int _json_createFromString(const char *jsonString, INOUT JSON_s *parsedDa
         }
 
         parsedData->numTokens = errCount;
+        parsedData->jsonLen = jsonLen;
 
     } while (0);
 
     if (errCount < 0) {
-        if (parsedData) {
-            json_destroy(parsedData);
+        if (*jsonRef) {
+            json_destroy(jsonRef);
         }
     }
 
     return errCount;
 }
 
-int json_createFromFile(const char *filePath, INOUT JSON_s *parsedData) {
+int json_createFromFD(int fd, INOUT JSON_ref *jsonRef) {
 
-    int fd = -1;
     ssize_t jsonIdx = 0;
     ssize_t jsonLen = 0;
 
     char *jsonString = NULL;
+    jsmnerr_t errCount = JSMN_ERROR_NOMEM;
 
     do {
-        if (!filePath) {
-            break;
-        }
-
-        if (!parsedData) {
-            break;
-        }
-
-        TEMP_FAILURE_RETRY(fd = open(filePath, O_RDONLY));
-        if (fd < 0) {
-            ERRLOG("Error opening file : %s", strerror(errno));
+        if (!jsonRef) {
             break;
         }
 
@@ -136,7 +280,6 @@ int json_createFromFile(const char *filePath, INOUT JSON_s *parsedData) {
                     jsonString = newString;
                 }
             }
-
         } while (bytesRead);
 
         if (bytesRead < 0) {
@@ -144,13 +287,37 @@ int json_createFromFile(const char *filePath, INOUT JSON_s *parsedData) {
         }
 
         jsonLen = jsonIdx;
-        TEMP_FAILURE_RETRY(close(fd));
-        fd = -1;
-
         // now parse the string
-        jsmnerr_t errCount = _json_createFromString(jsonString, parsedData, jsonLen);
+        errCount = _json_createFromString(jsonString, jsonRef, jsonLen);
+
+    } while (0);
+
+    if (jsonString) {
         FREE(jsonString);
-        return errCount;
+    }
+
+    return errCount;
+}
+
+int json_createFromFile(const char *filePath, INOUT JSON_ref *jsonRef) {
+
+    int fd = -1;
+    jsmnerr_t errCount = JSMN_ERROR_NOMEM;
+    do {
+        if (!filePath) {
+            break;
+        }
+        if (!jsonRef) {
+            break;
+        }
+
+        TEMP_FAILURE_RETRY(fd = open(filePath, O_RDONLY));
+        if (fd < 0) {
+            ERRLOG("Error opening file : %s", strerror(errno));
+            break;
+        }
+
+        errCount = json_createFromFD(fd, jsonRef);
 
     } while (0);
 
@@ -159,15 +326,11 @@ int json_createFromFile(const char *filePath, INOUT JSON_s *parsedData) {
         fd = -1;
     }
 
-    if (jsonString) {
-        FREE(jsonString);
-    }
-
-    return JSMN_ERROR_NOMEM;
+    return errCount;
 }
 
-int json_createFromString(const char *jsonString, INOUT JSON_s *parsedData) {
-    return _json_createFromString(jsonString, parsedData, strlen(jsonString));
+int json_createFromString(const char *jsonString, INOUT JSON_ref *jsonRef) {
+    return _json_createFromString(jsonString, jsonRef, strlen(jsonString));
 }
 
 static bool _json_mapGetStringValue(const JSON_s *map, const char *key, INOUT char **val, INOUT int *len) {
@@ -236,7 +399,8 @@ static bool _json_mapGetStringValue(const JSON_s *map, const char *key, INOUT ch
     return foundMatch;
 }
 
-bool json_mapCopyStringValue(const JSON_s *map, const char *key, INOUT char **val) {
+bool json_mapCopyStringValue(const JSON_ref jsonRef, const char *key, INOUT char **val) {
+    JSON_s *map = (JSON_s *)jsonRef;
     int len = 0;
     bool foundMatch = _json_mapGetStringValue(map, key, val, &len);
     if (foundMatch) {
@@ -245,7 +409,8 @@ bool json_mapCopyStringValue(const JSON_s *map, const char *key, INOUT char **va
     return foundMatch;
 }
 
-bool json_mapParseLongValue(const JSON_s *map, const char *key, INOUT long *val, const long base) {
+bool json_mapParseLongValue(const JSON_ref jsonRef, const char *key, INOUT long *val, const long base) {
+    JSON_s *map = (JSON_s *)jsonRef;
     bool foundMatch = false;
 
     do {
@@ -267,7 +432,8 @@ bool json_mapParseLongValue(const JSON_s *map, const char *key, INOUT long *val,
     return foundMatch;
 }
 
-bool json_mapParseFloatValue(const JSON_s *map, const char *key, INOUT float *val) {
+bool json_mapParseFloatValue(const JSON_ref jsonRef, const char *key, INOUT float *val) {
+    JSON_s *map = (JSON_s *)jsonRef;
     bool foundMatch = false;
 
     do {
@@ -289,8 +455,23 @@ bool json_mapParseFloatValue(const JSON_s *map, const char *key, INOUT float *va
     return foundMatch;
 }
 
-void json_destroy(JSON_s *parsedData) {
+bool json_serialize(JSON_ref jsonRef, int fd, bool pretty) {
+    JSON_s *parsedData = (JSON_s *)jsonRef;
+    if (pretty) {
+        return _json_prettyPrint(parsedData, /*start:*/0, /*end:*/parsedData->numTokens, /*indent:*/0, fd);
+    } else {
+        return _json_write(parsedData->jsonString, strlen(parsedData->jsonString), fd);
+    }
+}
+
+void json_destroy(JSON_ref *jsonRef) {
+    if (!jsonRef) {
+        return;
+    }
+
+    JSON_s *parsedData = (JSON_s *)*jsonRef;
     FREE(parsedData->jsonString);
     FREE(parsedData->jsonTokens);
+    FREE(*jsonRef);
 }
 
