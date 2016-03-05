@@ -24,33 +24,34 @@ static void testprefs_teardown(void *unused) {
 
 static const char *get_default_preferences(void) {
     return
-    "{\n"
-    "    \"cpu\" : {\n"
-    "        \"speed\" : 1.0,\n"
-    "        \"altspeed\" : 4.0\n"
-    "    },\n"
-    "    \"disk\" : {\n"
-    "        \"diskPath\" : \"/usr/local/games/apple2/disks\"\n"
-    "    },\n"
-    "    \"video\" : {\n"
-    "        \"color\" : \"interpolated\"\n"
-    "    },\n"
-    "    \"speaker\" : {\n"
-    "        \"volume\" : 5\n"
-    "    },\n"
-    "    \"joystick\" : {\n"
-    "        \"variant\" : \"keypad\",\n"
-    "        \"pcJoystickParms\" : \"128 128 255 1 255 1\",\n"
-    "        \"kpJoystickParms\" : \"8 1\"\n"
-    "    },\n"
-    "    \"keyboard\" : {\n"
-    "        \"caps\" : true\n"
-    "    }\n"
-    "}\n"
+    "{"
+    "    \"audio\" : {"
+    "        \"speakerVolume\" : 4,"
+    "        \"mbVolume\" : 2"
+    "    },"
+    "    \"interface\" : {"
+    "        \"diskPath\" : \"/usr/local/games/apple2/disks\""
+    "    },"
+    "    \"joystick\" : {"
+    "        \"variant\" : \"keypad\","
+    "        \"pcJoystickParms\" : \"128 128 255 1 255 1\","
+    "        \"kpJoystickParms\" : \"8 1\""
+    "    },"
+    "    \"keyboard\" : {"
+    "        \"caps\" : true"
+    "    }",
+    "    \"video\" : {"
+    "        \"color\" : \"interpolated\""
+    "    },"
+    "    \"vm\" : {"
+    "        \"speed\" : 1.0,"
+    "        \"altSpeed\" : 4.0"
+    "    }"
+    "}"
     ;
 }
 
-static const char *get_sample_json_1(void) {
+static const char *get_sample_json_0(void) {
     return
 "    {                                             "
 "        \"key0\"    : \"a value zero\",           "
@@ -170,7 +171,7 @@ TEST test_json_map_0(JSON_ref parsedData) {
 
 TEST test_json_map_1() {
 
-    const char *testMapStr0 = get_sample_json_1();
+    const char *testMapStr0 = get_sample_json_0();
 
     JSON_ref parsedData = NULL;
     int tokCount = json_createFromString(testMapStr0, &parsedData);
@@ -184,7 +185,7 @@ TEST test_json_map_1() {
 
 TEST test_json_serialization() {
 
-    const char *testMapStr0 = get_sample_json_1();
+    const char *testMapStr0 = get_sample_json_0();
 
     JSON_ref parsedData = NULL;
     int tokCount = json_createFromString(testMapStr0, &parsedData);
@@ -198,7 +199,8 @@ TEST test_json_serialization() {
     json_serialize(parsedData, fd, /*pretty:*/false);
     json_destroy(&parsedData);
     lseek(fd, 0, SEEK_SET);
-    json_createFromFD(fd, &parsedData);
+    tokCount = json_createFromFD(fd, &parsedData);
+    ASSERT(tokCount > 0);
 
     test_json_map_0(parsedData);
 
@@ -210,7 +212,7 @@ TEST test_json_serialization() {
 
 TEST test_json_serialization_pretty() {
 
-    const char *testMapStr0 = get_sample_json_1();
+    const char *testMapStr0 = get_sample_json_0();
 
     JSON_ref parsedData = NULL;
     int tokCount = json_createFromString(testMapStr0, &parsedData);
@@ -224,7 +226,8 @@ TEST test_json_serialization_pretty() {
     json_serialize(parsedData, fd, /*pretty:*/true);
     json_destroy(&parsedData);
     lseek(fd, 0, SEEK_SET);
-    json_createFromFD(fd, &parsedData);
+    tokCount = json_createFromFD(fd, &parsedData);
+    ASSERT(tokCount > 0);
 
     do {
         long lVal;
@@ -334,11 +337,259 @@ TEST test_json_serialization_pretty() {
     PASS();
 }
 
+TEST test_json_invalid_bareKey() {
+
+    JSON_ref parsedData = NULL;
+    jsmnerr_t errCount = (jsmnerr_t)json_createFromString("{ aBareKey : \"aNonBareVal\" }", &parsedData);
+    ASSERT(errCount == JSMN_ERROR_INVAL);
+
+    json_destroy(&parsedData);
+
+    PASS();
+}
+
+TEST test_json_invalid_bareVal() {
+
+    JSON_ref parsedData = NULL;
+    jsmnerr_t errCount = (jsmnerr_t)json_createFromString("{ \"aNonBareKey\" : aBareVal }", &parsedData);
+    ASSERT(errCount == JSMN_ERROR_INVAL);
+
+    json_destroy(&parsedData);
+
+    PASS();
+}
+
+TEST test_json_map_invalid_danglingComma() {
+
+    JSON_ref parsedData = NULL;
+    jsmnerr_t errCount = (jsmnerr_t)json_createFromString("{ \"aNonBareKey\" : \"aNonBareVal\", }", &parsedData);
+    ASSERT(errCount == JSMN_ERROR_INVAL);
+
+    json_destroy(&parsedData);
+
+    PASS();
+}
+
+TEST test_json_map_invalid_danglingKey() {
+
+    JSON_ref parsedData = NULL;
+    jsmnerr_t errCount = (jsmnerr_t)json_createFromString("{ \"aNonBareKey\" : \"aNonBareVal\", \"aNoneBareButDanglingKey\" }", &parsedData);
+    ASSERT(errCount == JSMN_ERROR_INVAL);
+
+    json_destroy(&parsedData);
+
+    PASS();
+}
+
+TEST test_json_map_mutation_1() {
+
+    JSON_ref parsedData = NULL;
+    int tokCount = json_createFromString("{}", &parsedData);
+    ASSERT(tokCount == 1);
+
+    bool ok = false;
+    char *val = NULL;
+    long lVal = 0;
+    float fVal = 0.f;
+
+    ok = json_mapSetStringValue(parsedData, "key0", "val0");
+    ASSERT(ok);
+    ok = json_mapCopyStringValue(parsedData, "key0", &val);
+    ASSERT(ok);
+    ASSERT(strcmp(val, "val0") == 0);
+    FREE(val);
+
+    ok = json_mapSetStringValue(parsedData, "key1", "val1");
+    ASSERT(ok);
+    ok = json_mapCopyStringValue(parsedData, "key1", &val);
+    ASSERT(ok);
+    ASSERT(strcmp(val, "val1") == 0);
+    FREE(val);
+
+    ok = json_mapSetLongValue(parsedData, "longKey0", 42);
+    ASSERT(ok);
+    ok = json_mapCopyStringValue(parsedData, "longKey0", &val);
+    ASSERT(ok);
+    ASSERT(strcmp(val, "42") == 0);
+    FREE(val);
+    ok = json_mapParseLongValue(parsedData, "longKey0", &lVal, 10);
+    ASSERT(ok);
+    ASSERT(lVal == 42);
+
+    ok = json_mapSetStringValue(parsedData, "key0", "");
+    ASSERT(ok);
+    ok = json_mapCopyStringValue(parsedData, "key0", &val);
+    ASSERT(ok);
+    ASSERT(strlen(val) == 0);
+    FREE(val);
+
+    ok = json_mapSetStringValue(parsedData, "key1", "hello world");
+    ASSERT(ok);
+    ok = json_mapCopyStringValue(parsedData, "key1", &val);
+    ASSERT(ok);
+    ASSERT(strcmp(val, "hello world") == 0);
+    FREE(val);
+
+    ok = json_mapSetFloatValue(parsedData, "floatKey0", 0.25);
+    ASSERT(ok);
+    ok = json_mapParseFloatValue(parsedData, "floatKey0", &fVal);
+    ASSERT(ok);
+    ASSERT(fVal == 0.25);
+
+    ok = json_mapSetFloatValue(parsedData, "floatKey0", -0.5);
+    ASSERT(ok);
+    ok = json_mapParseFloatValue(parsedData, "floatKey0", &fVal);
+    ASSERT(ok);
+    ASSERT(fVal == -0.5);
+
+    // test sub maps ...
+
+    do {
+        JSON_ref parsedSubData = NULL;
+
+        tokCount = json_createFromString("{}", &parsedSubData);
+        ASSERT(tokCount == 1);
+
+        ok = json_mapSetStringValue(parsedSubData, "foo", "bar");
+        ASSERT(ok);
+
+        do {
+            JSON_ref parsedSubSubData = NULL;
+
+            tokCount = json_createFromString("{}", &parsedSubSubData);
+            ASSERT(tokCount == 1);
+
+            ok = json_mapSetStringValue(parsedSubSubData, "subFoo", "subBar");
+            ASSERT(ok);
+
+            ok = json_mapSetJSONValue(parsedSubData, "subKey0", parsedSubSubData);
+            ASSERT(ok);
+
+            json_destroy(&parsedSubSubData);
+        } while (0);
+
+        ok = json_mapSetJSONValue(parsedData, "key2", parsedSubData);
+        ASSERT(ok);
+
+        json_destroy(&parsedSubData);
+    } while (0);
+
+    ok = json_mapCopyStringValue(parsedData, "key2", &val);
+    ASSERT(ok);
+    ASSERT(strcmp(val, "{\"subKey0\":{\"subFoo\":\"subBar\"},\"foo\":\"bar\"}") == 0); // HACK : testing whitespace implementation details
+    FREE(val);
+
+    do {
+        JSON_ref parsedSubData = NULL;
+
+        ok = json_mapCopyJSON(parsedData, "key2", &parsedSubData);
+        ASSERT(ok);
+        ASSERT(parsedSubData);
+
+        ok = json_mapCopyStringValue(parsedSubData, "foo", &val);
+        ASSERT(ok);
+        ASSERT(strcmp(val, "bar") == 0);
+        FREE(val);
+
+        ok = json_mapCopyStringValue(parsedSubData, "subKey0", &val);
+        ASSERT(ok);
+        ASSERT(strcmp(val, "{\"subFoo\":\"subBar\"}") == 0); // HACK : testing whitespace implementation details
+        FREE(val);
+        do {
+            JSON_ref parsedSubSubData = NULL;
+            ok = json_mapCopyJSON(parsedSubData, "subKey0", &parsedSubSubData);
+            ASSERT(ok);
+            ASSERT(parsedSubSubData);
+
+            ok = json_mapCopyStringValue(parsedSubSubData, "subFoo", &val);
+            ASSERT(ok);
+            ASSERT(strcmp(val, "subBar") == 0);
+            FREE(val);
+
+            json_destroy(&parsedSubSubData);
+        } while (0);
+
+        json_destroy(&parsedSubData);
+    } while (0);
+
+    // setting invalid JSON does not clobber existing data ...
+    ok = json_mapSetRawStringValue(parsedData, "key2", "{ aBareKey : \"this is invalid\" }");
+    ASSERT(!ok);
+
+    ok = json_mapCopyStringValue(parsedData, "key2", &val);
+    ASSERT(ok);
+    ASSERT(strcmp(val, "{\"subKey0\":{\"subFoo\":\"subBar\"},\"foo\":\"bar\"}") == 0); // HACK : testing whitespace implementation details
+    FREE(val);
+
+    ok = json_mapSetRawStringValue(parsedData, "key2", "{ \"aNotBareKey\" : \"this should now be valid\" }");
+    ASSERT(ok);
+
+    ok = json_mapCopyStringValue(parsedData, "key2", &val);
+    ASSERT(ok);
+    ASSERT(strcmp(val, "{ \"aNotBareKey\" : \"this should now be valid\" }") == 0); // HACK : testing whitespace implementation details
+    FREE(val);
+
+    json_destroy(&parsedData);
+    PASS();
+}
+
 #if 0
 TEST test_prefs_loadString_1() {
     const char *prefsJSON = get_default_preferences();
-    bool loaded = prefs_loadString(prefsJSON);
-    ASSERT(loaded);
+    bool ok = prefs_loadString(prefsJSON);
+    ASSERT(ok);
+
+    char *val = NULL;
+    bool bVal = false;
+    long lVal = 0;
+    bool fVal = 0.f;
+
+    ok = prefs_parseLongValue(PREF_DOMAIN_AUDIO, "speakerVolume", &lVal);
+    ASSERT(ok);
+    ASSERT(lVal == 4);
+
+    ok = prefs_parseLongValue(PREF_DOMAIN_AUDIO, "mbVolume", &lVal);
+    ASSERT(ok);
+    ASSERT(lVal == 2);
+
+    ok = prefs_copyStringValue(PREF_DOMAIN_INTERFACE, "diskPath", &val);
+    ASSERT(ok);
+    ASSERT(strcmp(val, "/usr/local/games/apple2/disks") == 0);
+    FREE(val);
+
+    ok = prefs_copyStringValue(PREF_DOMAIN_JOYSTICK, "variant", &val);
+    ASSERT(ok);
+    ASSERT(strcmp(val, "keypad") == 0);
+    FREE(val);
+
+    ok = prefs_copyStringValue(PREF_DOMAIN_JOYSTICK, "pcJoystickParms", &val);
+    ASSERT(ok);
+    ASSERT(strcmp(val, "128 128 255 1 255 1") == 0);
+    FREE(val);
+
+    ok = prefs_copyStringValue(PREF_DOMAIN_JOYSTICK, "kpJoystickParms", &val);
+    ASSERT(ok);
+    ASSERT(strcmp(val, "8 1") == 0);
+    FREE(val);
+
+    ok = prefs_parseBoolValue(PREF_DOMAIN_KEYBOARD, "caps", &bVal);
+    ASSERT(ok);
+    ASSERT(bVal == true);
+
+    ok = prefs_copyStringValue(PREF_DOMAIN_VIDEO, "color", &val);
+    ASSERT(ok);
+    ASSERT(strcmp(val, "interpolated") == 0);
+    FREE(val);
+
+    ok = prefs_parseFloatValue(PREF_DOMAIN_VM, "speed", &fVal);
+    ASSERT(ok);
+    ASSERT(fVal == 1.f);
+
+    ok = prefs_parseFloatValue(PREF_DOMAIN_VM, "altSpeed", &fVal);
+    ASSERT(ok);
+    ASSERT(fVal == 4.f);
+
+    PASS();
 }
 #endif
 
@@ -348,7 +599,7 @@ TEST test_prefs_loadString_1() {
 GREATEST_SUITE(test_suite_prefs) {
     GREATEST_SET_SETUP_CB(testprefs_setup, NULL);
     GREATEST_SET_TEARDOWN_CB(testprefs_teardown, NULL);
-    GREATEST_SET_BREAKPOINT_CB(test_breakpoint, NULL);
+    //GREATEST_SET_BREAKPOINT_CB(test_breakpoint, NULL);
 
     // TESTS --------------------------
     test_thread_running = true;
@@ -357,6 +608,15 @@ GREATEST_SUITE(test_suite_prefs) {
 
     RUN_TESTp(test_json_serialization);
     RUN_TESTp(test_json_serialization_pretty);
+
+    RUN_TESTp(test_json_invalid_bareKey);
+    RUN_TESTp(test_json_invalid_bareVal);
+    RUN_TESTp(test_json_map_invalid_danglingComma);
+    RUN_TESTp(test_json_map_invalid_danglingKey);
+
+    RUN_TESTp(test_json_map_mutation_1);
+
+    //RUN_TESTp(test_prefs_loadString_1);
 
     // --------------------------------
     pthread_mutex_unlock(&interface_mutex);

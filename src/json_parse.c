@@ -15,7 +15,23 @@
 #define JSON_LENGTH 16
 #define DEFAULT_NUMTOK 16
 #define MAX_INDENT 16
+#define STACK_BUFSIZ 256
 
+#define _JSMN_NONSTRING (JSMN_OBJECT)
+
+#define QUOTE "\""
+#define QUOTE_LEN (sizeof(QUOTE)-1)
+#define COLON ":"
+#define COLON_LEN (sizeof(COLON)-1)
+#define COMMA ","
+#define COMMA_LEN (sizeof(COMMA)-1)
+
+#define DEBUG_JSON 1
+#if DEBUG_JSON
+#   define JSON_LOG(...) LOG(__VA_ARGS__)
+#else
+#   define JSON_LOG(...)
+#endif
 
 static bool _json_write(const char *jsonString, size_t buflen, int fd) {
     ssize_t idx = 0;
@@ -30,6 +46,35 @@ static bool _json_write(const char *jsonString, size_t buflen, int fd) {
         chunk -= outlen;
     } while (idx < buflen);
     return idx == buflen;
+}
+
+static char *_json_copyAndQuote(const char *str, size_t *newLen) {
+
+    char *qCopy = NULL;
+    do {
+        if (!str) {
+            break;
+        }
+
+        size_t len = strlen(str);
+
+        qCopy = MALLOC(QUOTE_LEN + len + QUOTE_LEN + 1);
+        if (!qCopy) {
+            break;
+        }
+        *newLen = QUOTE_LEN + len + QUOTE_LEN;
+
+        char *p = qCopy;
+        memcpy(p, QUOTE, QUOTE_LEN);
+        p += QUOTE_LEN;
+        memcpy(p, str, len);
+        p += len;
+        memcpy(p, QUOTE, QUOTE_LEN);
+        p += QUOTE_LEN;
+        *p = '\0';
+    } while (0);
+
+    return qCopy;
 }
 
 // recursive
@@ -167,7 +212,7 @@ static int _json_createFromString(const char *jsonString, INOUT JSON_ref *jsonRe
             break;
         }
 
-        JSON_s *parsedData = MALLOC(sizeof(*parsedData));
+        JSON_s *parsedData = CALLOC(sizeof(*parsedData), 1);
         if (!parsedData) {
             break;
         }
@@ -176,14 +221,13 @@ static int _json_createFromString(const char *jsonString, INOUT JSON_ref *jsonRe
         if (!parsedData) {
             break;
         }
-        parsedData->jsonString = STRDUP(jsonString);
         parsedData->jsonTokens = NULL;
 
         unsigned int numTokens = DEFAULT_NUMTOK;
         do {
             if (!parsedData->jsonTokens) {
                 parsedData->jsonTokens = CALLOC(numTokens, sizeof(jsmntok_t));
-                if (!parsedData->jsonTokens) {
+                if (UNLIKELY(!parsedData->jsonTokens)) {
                     ERRLOG("WHOA3 : %s", strerror(errno));
                     break;
                 }
@@ -191,7 +235,7 @@ static int _json_createFromString(const char *jsonString, INOUT JSON_ref *jsonRe
                 //LOG("reallocating json tokens ...");
                 numTokens <<= 1;
                 jsmntok_t *newTokens = REALLOC(parsedData->jsonTokens, numTokens * sizeof(jsmntok_t));
-                if (!newTokens) {
+                if (UNLIKELY(!newTokens)) {
                     ERRLOG("WHOA4 : %s", strerror(errno));
                     break;
                 }
@@ -199,7 +243,7 @@ static int _json_createFromString(const char *jsonString, INOUT JSON_ref *jsonRe
                 parsedData->jsonTokens = newTokens;
             }
             jsmn_init(&parser);
-            errCount = jsmn_parse(&parser, parsedData->jsonString, jsonLen, parsedData->jsonTokens, numTokens-(numTokens/2));
+            errCount = jsmn_parse(&parser, jsonString, jsonLen, parsedData->jsonTokens, numTokens-(numTokens/2));
         } while (errCount == JSMN_ERROR_NOMEM);
 
         if (errCount == JSMN_ERROR_NOMEM) {
@@ -225,6 +269,7 @@ static int _json_createFromString(const char *jsonString, INOUT JSON_ref *jsonRe
             break;
         }
 
+        parsedData->jsonString = STRDUP(jsonString);
         parsedData->numTokens = errCount;
         parsedData->jsonLen = jsonLen;
 
@@ -254,7 +299,7 @@ int json_createFromFD(int fd, INOUT JSON_ref *jsonRef) {
 
         jsonLen = JSON_LENGTH*2;
         jsonString = MALLOC(jsonLen);
-        if (jsonString == NULL) {
+        if (UNLIKELY(jsonString == NULL)) {
             ERRLOG("WHOA : %s", strerror(errno));
             break;
         }
@@ -272,7 +317,7 @@ int json_createFromFD(int fd, INOUT JSON_ref *jsonRef) {
                     //LOG("reallocating json string ...");
                     jsonLen <<= 1;
                     char *newString = REALLOC(jsonString, jsonLen);
-                    if (!newString) {
+                    if (UNLIKELY(!newString)) {
                         ERRLOG("WHOA2 : %s", strerror(errno));
                         bytesRead = -1;
                         break;
@@ -333,19 +378,15 @@ int json_createFromString(const char *jsonString, INOUT JSON_ref *jsonRef) {
     return _json_createFromString(jsonString, jsonRef, strlen(jsonString));
 }
 
-static bool _json_mapGetStringValue(const JSON_s *map, const char *key, INOUT char **val, INOUT int *len) {
+static bool _json_mapGetStringValue(const JSON_s *map, const char *key, INOUT int *index) {
     bool foundMatch = false;
 
     do {
-        if (!val) {
-            break;
-        }
-        if (!len) {
+        if (!index) {
             break;
         }
 
-        *val = NULL;
-        *len = -1;
+        *index = -1;
 
         int tokCount = map->numTokens;
         if (tokCount < 0) {
@@ -383,11 +424,7 @@ static bool _json_mapGetStringValue(const JSON_s *map, const char *key, INOUT ch
             if (size == keySize) {
                 foundMatch = (strncmp(key, &map->jsonString[start], size) == 0);
                 if (foundMatch) {
-                    start = valTok.start;
-                    end = valTok.end;
-                    assert(end >= start && "bug");
-                    *len = end - start;
-                    *val = &map->jsonString[start];
+                    *index = idx;
                     break;
                 }
             }
@@ -399,13 +436,49 @@ static bool _json_mapGetStringValue(const JSON_s *map, const char *key, INOUT ch
     return foundMatch;
 }
 
+int json_mapCopyJSON(const JSON_ref jsonRef, const char *key, INOUT JSON_ref *val) {
+    JSON_s *map = (JSON_s *)jsonRef;
+
+    int idx = 0;
+    jsmnerr_t errCount = JSMN_ERROR_NOMEM;
+    do {
+        bool foundMatch = _json_mapGetStringValue(map, key, &idx);
+        if (!foundMatch) {
+            break;
+        }
+
+        jsmntok_t tok = map->jsonTokens[idx];
+        assert(tok.end >= tok.start && "bug");
+        int len = tok.end - tok.start;
+        if (len<=0) {
+            break;
+        }
+
+        char *str = STRNDUP(&map->jsonString[tok.start], len);
+        if (!str) {
+            break;
+        }
+
+        errCount = json_createFromString(str, val);
+        FREE(str);
+
+    } while (0);
+
+    return errCount;
+}
+
 bool json_mapCopyStringValue(const JSON_ref jsonRef, const char *key, INOUT char **val) {
     JSON_s *map = (JSON_s *)jsonRef;
-    int len = 0;
-    bool foundMatch = _json_mapGetStringValue(map, key, val, &len);
+
+    int idx = 0;
+    bool foundMatch = _json_mapGetStringValue(map, key, &idx);
     if (foundMatch) {
-        *val = len>0 ? STRNDUP(*val, len) : STRDUP("");
+        jsmntok_t tok = map->jsonTokens[idx];
+        assert(tok.end >= tok.start && "bug");
+        int len = tok.end - tok.start;
+        *val = len>0 ? STRNDUP(&map->jsonString[tok.start], len) : STRDUP("");
     }
+
     return foundMatch;
 }
 
@@ -418,13 +491,42 @@ bool json_mapParseLongValue(const JSON_ref jsonRef, const char *key, INOUT long 
             break;
         }
 
-        int len = 0;
-        char *str = NULL;
-        foundMatch = _json_mapGetStringValue(map, key, &str, &len);
+        int idx = 0;
+        foundMatch = _json_mapGetStringValue(map, key, &idx);
         if (foundMatch) {
+            jsmntok_t tok = map->jsonTokens[idx];
+            assert(tok.end >= tok.start && "bug");
+            int len = tok.end - tok.start;
+            char *str = &map->jsonString[tok.start];
             char ch = str[len];
             str[len] = '\0';
             *val = strtol(str, NULL, base);
+            str[len] = ch;
+        }
+    } while (0);
+
+    return foundMatch;
+}
+
+bool json_mapParseBoolValue(const JSON_ref jsonRef, const char *key, INOUT bool *val) {
+    JSON_s *map = (JSON_s *)jsonRef;
+    bool foundMatch = false;
+
+    do {
+        if (!val) {
+            break;
+        }
+
+        int idx = 0;
+        foundMatch = _json_mapGetStringValue(map, key, &idx);
+        if (foundMatch) {
+            jsmntok_t tok = map->jsonTokens[idx];
+            assert(tok.end >= tok.start && "bug");
+            int len = tok.end - tok.start;
+            char *str = &map->jsonString[tok.start];
+            char ch = str[len];
+            str[len] = '\0';
+            *val = (strncasecmp("false", str, sizeof("false")) != 0);
             str[len] = ch;
         }
     } while (0);
@@ -441,10 +543,13 @@ bool json_mapParseFloatValue(const JSON_ref jsonRef, const char *key, INOUT floa
             break;
         }
 
-        int len = 0;
-        char *str = NULL;
-        foundMatch = _json_mapGetStringValue(map, key, &str, &len);
+        int idx = 0;
+        foundMatch = _json_mapGetStringValue(map, key, &idx);
         if (foundMatch) {
+            jsmntok_t tok = map->jsonTokens[idx];
+            assert(tok.end >= tok.start && "bug");
+            int len = tok.end - tok.start;
+            char *str = &map->jsonString[tok.start];
             char ch = str[len];
             str[len] = '\0';
             *val = strtof(str, NULL);
@@ -453,6 +558,200 @@ bool json_mapParseFloatValue(const JSON_ref jsonRef, const char *key, INOUT floa
     } while (0);
 
     return foundMatch;
+}
+
+// 2016/03/02 : HACK NOTE TODO FIXME : we do nasty string splicing because I haven't settled on a C library to use for
+// collections.  It would be nice to be able to use something like CoreFoundation (CFArray, CFDictionary, etc), but
+// don't believe the APSL license is GPL-compatible.  (Should investigate whether Swift OpenSource drop includes
+// low-level C libs with a compatible FOSS license ;-)
+static bool _json_mapSetValue(const JSON_ref jsonRef, const char *key, const char *val, jsmntype_t valType) {
+    JSON_s *map = (JSON_s *)jsonRef;
+
+    bool didSetValue = false;
+    char *newVal = NULL;
+    do {
+        if (!map) {
+            break;
+        }
+        if (!key) {
+            break;
+        }
+        if (!val) {
+            break;
+        }
+
+        if (map->jsonTokens[0].type != JSMN_OBJECT) {
+            ERRLOG("Map JSON : object not a map!");
+            break;
+        }
+
+        size_t spliceBegin = 0;
+        size_t spliceEnd = 0;
+        size_t valLen = strlen(val);
+
+        int idx = 0;
+        bool foundMatch = _json_mapGetStringValue(map, key, &idx);
+        if (foundMatch) {
+            jsmntok_t tok = map->jsonTokens[idx];
+            assert(tok.end >= tok.start && "bug");
+            spliceBegin = tok.start;
+            spliceEnd = tok.end;
+
+            if (tok.type == JSMN_STRING) {
+                if (valType == JSMN_STRING) {
+                    // string -> string
+                    assert(map->jsonString[spliceBegin-1] == '"');
+                    assert(map->jsonString[spliceEnd] == '"');
+                } else {
+                    // string -> non-string (strip previous quotes)
+                    --spliceBegin;
+                    ++spliceEnd;
+                    assert(map->jsonString[spliceBegin] == '"');
+                    assert(map->jsonString[spliceEnd-1] == '"');
+                }
+            } else {
+                if (valType == JSMN_STRING) {
+                    // non-string -> string
+                    newVal = _json_copyAndQuote(val, &valLen);
+                    if (!newVal) {
+                        break;
+                    }
+                    val = newVal;
+                }
+            }
+
+        } else {
+            jsmntok_t tok = map->jsonTokens[0];
+
+            size_t keyLen = strlen(key);
+            size_t quoLen = (valType == JSMN_STRING) ? QUOTE_LEN : 0;
+            size_t comLen = tok.size ? COMMA_LEN : 0;
+
+            int keyValLen = QUOTE_LEN + keyLen + QUOTE_LEN + COLON_LEN + quoLen + valLen + quoLen + comLen;
+            newVal = MALLOC(keyValLen+1);
+            if (!newVal) {
+                break;
+            }
+
+            char *p = newVal;
+
+            memcpy(p, QUOTE, QUOTE_LEN);
+            p += QUOTE_LEN;
+            memcpy(p, key, keyLen);
+            p += keyLen;
+            memcpy(p, QUOTE, QUOTE_LEN);
+            p += QUOTE_LEN;
+
+            memcpy(p, COLON, COLON_LEN);
+            p += COLON_LEN;
+
+            if (quoLen) {
+                memcpy(p, QUOTE, quoLen);
+                p += quoLen;
+            }
+            memcpy(p, val, valLen);
+            p += valLen;
+            if (quoLen) {
+                memcpy(p, QUOTE, quoLen);
+                p += quoLen;
+            }
+
+            if (comLen) {
+                memcpy(p, COMMA, comLen);
+                p += comLen;
+            }
+            newVal[keyValLen] = '\0';
+
+            spliceBegin = tok.start+1; // insert at beginning
+            spliceEnd = spliceBegin;
+
+            val = newVal;
+            valLen = keyValLen;
+        }
+
+        assert(spliceBegin <= spliceEnd);
+        assert(spliceBegin > 0);            // must always begin with '{'
+        assert(spliceEnd < map->jsonLen);   // must always close with '}'
+
+        int prefixLen = spliceBegin;
+        int suffixLen = (map->jsonLen - spliceEnd);
+
+        int newLen = prefixLen+valLen+suffixLen;
+
+        char *jsonString = MALLOC(newLen + 1);
+        if (!jsonString) {
+            break;
+        }
+        memcpy(jsonString, &map->jsonString[0], prefixLen);
+        memcpy(jsonString+prefixLen, val, valLen);
+        memcpy(jsonString+prefixLen+valLen, &map->jsonString[spliceEnd], suffixLen);
+        jsonString[newLen] = '\0';
+
+        JSON_ref newRef = NULL;
+        int errCount = json_createFromString(jsonString, &newRef);
+        if (errCount < 0) {
+            ERRLOG("Cannot set new JSON value err : %d", errCount);
+        } else {
+            JSON_s *newMap = (JSON_s *)newRef;
+            FREE(map->jsonString);
+            FREE(map->jsonTokens);
+            *map = *newMap;
+            newMap->jsonString = NULL;
+            newMap->jsonTokens = NULL;
+            json_destroy(&newRef);
+            didSetValue = true;
+        }
+
+        FREE(jsonString);
+    } while (0);
+
+    if (newVal) {
+        FREE(newVal);
+    }
+
+    return didSetValue;
+}
+
+bool json_mapSetStringValue(const JSON_ref jsonRef, const char *key, const char *val) {
+    return _json_mapSetValue(jsonRef, key, val, JSMN_STRING);
+}
+
+bool json_mapSetRawStringValue(const JSON_ref jsonRef, const char *key, const char *val) {
+    return _json_mapSetValue(jsonRef, key, val, _JSMN_NONSTRING);
+}
+
+bool json_mapSetJSONValue(const JSON_ref jsonRef, const char *key, const JSON_ref jsonSubRef) {
+    bool didSetValue = false;
+    do {
+        if (!jsonRef) {
+            break;
+        }
+
+        didSetValue = _json_mapSetValue(jsonRef, key, ((JSON_s *)jsonSubRef)->jsonString, _JSMN_NONSTRING);
+    } while (0);
+
+    return didSetValue;
+}
+
+bool json_mapSetLongValue(const JSON_ref jsonRef, const char *key, long val) {
+    char buf[STACK_BUFSIZ];
+    buf[0] = '\0';
+    snprintf(buf, STACK_BUFSIZ, "%ld", val);
+    return _json_mapSetValue(jsonRef, key, buf, JSMN_PRIMITIVE);
+}
+
+bool json_mapSetBoolValue(const JSON_ref jsonRef, const char *key, bool val) {
+    char buf[STACK_BUFSIZ];
+    buf[0] = '\0';
+    snprintf(buf, STACK_BUFSIZ, "%s", val ? "true" : "false");
+    return _json_mapSetValue(jsonRef, key, buf, JSMN_PRIMITIVE);
+}
+
+bool json_mapSetFloatValue(const JSON_ref jsonRef, const char *key, float val) {
+    char buf[STACK_BUFSIZ];
+    buf[0] = '\0';
+    snprintf(buf, STACK_BUFSIZ, "%f", val);
+    return _json_mapSetValue(jsonRef, key, buf, JSMN_PRIMITIVE);
 }
 
 bool json_serialize(JSON_ref jsonRef, int fd, bool pretty) {
@@ -470,8 +769,15 @@ void json_destroy(JSON_ref *jsonRef) {
     }
 
     JSON_s *parsedData = (JSON_s *)*jsonRef;
+    if (!parsedData) {
+        return;
+    }
+
     FREE(parsedData->jsonString);
     FREE(parsedData->jsonTokens);
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wincompatible-pointer-types-discards-qualifiers"
     FREE(*jsonRef);
+#pragma clang diagnostic pop
 }
 
