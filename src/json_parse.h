@@ -21,13 +21,13 @@ typedef const struct JSON_s *JSON_ref;
 // ----------------------------------------------------------------------------
 // constructors
 
-// parses string into tokens.  returns positive token count or negative jsmnerr_t error code.
+// parses string into tokens.  returns positive token count or negative jsmnerr error code.
 int json_createFromString(const char *jsonString, INOUT JSON_ref *jsonRef);
 
-// parses file into string and tokens.  returns positive token count or negative jsmnerr_t error code.
+// parses file into string and tokens.  returns positive token count or negative jsmnerr error code.
 int json_createFromFile(const char *filePath, INOUT JSON_ref *jsonRef);
 
-// parses FD into string and tokens.  returns positive token count or negative jsmnerr_t error code.
+// parses FD into string and tokens.  returns positive token count or negative jsmnerr error code.
 int json_createFromFD(int fd, INOUT JSON_ref *jsonRef);
 
 // ----------------------------------------------------------------------------

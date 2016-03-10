@@ -340,7 +340,7 @@ TEST test_json_serialization_pretty() {
 TEST test_json_invalid_bareKey() {
 
     JSON_ref parsedData = NULL;
-    jsmnerr_t errCount = (jsmnerr_t)json_createFromString("{ aBareKey : \"aNonBareVal\" }", &parsedData);
+    int errCount = json_createFromString("{ aBareKey : \"aNonBareVal\" }", &parsedData);
     ASSERT(errCount == JSMN_ERROR_INVAL);
 
     json_destroy(&parsedData);
@@ -351,7 +351,7 @@ TEST test_json_invalid_bareKey() {
 TEST test_json_invalid_bareVal() {
 
     JSON_ref parsedData = NULL;
-    jsmnerr_t errCount = (jsmnerr_t)json_createFromString("{ \"aNonBareKey\" : aBareVal }", &parsedData);
+    int errCount = json_createFromString("{ \"aNonBareKey\" : aBareVal }", &parsedData);
     ASSERT(errCount == JSMN_ERROR_INVAL);
 
     json_destroy(&parsedData);
@@ -362,7 +362,7 @@ TEST test_json_invalid_bareVal() {
 TEST test_json_map_invalid_danglingComma() {
 
     JSON_ref parsedData = NULL;
-    jsmnerr_t errCount = (jsmnerr_t)json_createFromString("{ \"aNonBareKey\" : \"aNonBareVal\", }", &parsedData);
+    int errCount = json_createFromString("{ \"aNonBareKey\" : \"aNonBareVal\", }", &parsedData); // BUG IN JSMN ...
     ASSERT(errCount == JSMN_ERROR_INVAL);
 
     json_destroy(&parsedData);
@@ -373,7 +373,7 @@ TEST test_json_map_invalid_danglingComma() {
 TEST test_json_map_invalid_danglingKey() {
 
     JSON_ref parsedData = NULL;
-    jsmnerr_t errCount = (jsmnerr_t)json_createFromString("{ \"aNonBareKey\" : \"aNonBareVal\", \"aNoneBareButDanglingKey\" }", &parsedData);
+    int errCount = json_createFromString("{ \"aNonBareKey\" : \"aNonBareVal\", \"aNoneBareButDanglingKey\" }", &parsedData); // BUG IN JSMN ...
     ASSERT(errCount == JSMN_ERROR_INVAL);
 
     json_destroy(&parsedData);

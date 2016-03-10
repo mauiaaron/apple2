@@ -168,7 +168,7 @@ static bool _json_prettyPrint(JSON_s *parsedData, int start, int end, const unsi
                     break;
                 }
                 idx += tok.skip;
-            } else if (type ==  JSMN_ARRAY) {
+            } else if (type == JSMN_ARRAY) {
                 if (!_json_write("[ ", 2, fd)) {
                     break;
                 }
@@ -204,7 +204,7 @@ static bool _json_prettyPrint(JSON_s *parsedData, int start, int end, const unsi
 
 static int _json_createFromString(const char *jsonString, INOUT JSON_ref *jsonRef, ssize_t jsonLen) {
 
-    jsmnerr_t errCount = JSMN_ERROR_NOMEM;
+    int errCount = JSMN_ERROR_NOMEM;
     do {
         jsmn_parser parser = { 0 };
 
@@ -243,7 +243,7 @@ static int _json_createFromString(const char *jsonString, INOUT JSON_ref *jsonRe
                 parsedData->jsonTokens = newTokens;
             }
             jsmn_init(&parser);
-            errCount = jsmn_parse(&parser, jsonString, jsonLen, parsedData->jsonTokens, numTokens-(numTokens/2));
+            errCount = jsmn_parse(&parser, jsonString, jsonLen, parsedData->jsonTokens, numTokens);
         } while (errCount == JSMN_ERROR_NOMEM);
 
         if (errCount == JSMN_ERROR_NOMEM) {
@@ -290,7 +290,7 @@ int json_createFromFD(int fd, INOUT JSON_ref *jsonRef) {
     ssize_t jsonLen = 0;
 
     char *jsonString = NULL;
-    jsmnerr_t errCount = JSMN_ERROR_NOMEM;
+    int errCount = JSMN_ERROR_NOMEM;
 
     do {
         if (!jsonRef) {
@@ -347,7 +347,7 @@ int json_createFromFD(int fd, INOUT JSON_ref *jsonRef) {
 int json_createFromFile(const char *filePath, INOUT JSON_ref *jsonRef) {
 
     int fd = -1;
-    jsmnerr_t errCount = JSMN_ERROR_NOMEM;
+    int errCount = JSMN_ERROR_NOMEM;
     do {
         if (!filePath) {
             break;
@@ -440,7 +440,7 @@ int json_mapCopyJSON(const JSON_ref jsonRef, const char *key, INOUT JSON_ref *va
     JSON_s *map = (JSON_s *)jsonRef;
 
     int idx = 0;
-    jsmnerr_t errCount = JSMN_ERROR_NOMEM;
+    int errCount = JSMN_ERROR_NOMEM;
     do {
         bool foundMatch = _json_mapGetStringValue(map, key, &idx);
         if (!foundMatch) {
