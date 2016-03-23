@@ -3,10 +3,6 @@
 
 #include <stddef.h>
 
-// APPLE2IX : define these ...
-#define JSMN_PARENT_LINKS 1
-#define JSMN_STRICT 1
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -46,10 +42,8 @@ typedef struct {
 	int start;
 	int end;
 	int size;
-#ifdef JSMN_PARENT_LINKS
 	int skip;
 	int parent;
-#endif
 } jsmntok_t;
 
 /**
