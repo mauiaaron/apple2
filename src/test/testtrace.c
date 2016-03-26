@@ -431,17 +431,23 @@ void test_trace(int argc, char **argv) {
     test_argc = argc;
     test_argv = argv;
 
+    emulator_start();
+
     test_common_init();
 
     pthread_t p;
     pthread_create(&p, NULL, (void *)&test_thread, (void *)NULL);
-
     while (!test_thread_running) {
         struct timespec ts = { .tv_sec=0, .tv_nsec=33333333 };
         nanosleep(&ts, NULL);
     }
-    emulator_start();
-    //pthread_join(p, NULL);
+    pthread_detach(p);
+
+    video_main_loop();
+
+#if !defined(__APPLE__) && !defined(ANDROID)
+    emulator_shutdown();
+#endif
 }
 
 #if !defined(__APPLE__) && !defined(ANDROID)

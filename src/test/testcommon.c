@@ -20,34 +20,6 @@ static char input_str[TESTBUF_SZ]; // ASCII
 static unsigned int input_length = 0;
 static unsigned int input_counter = 0;
 
-#if defined(ANDROID)
-// We basically compile everything including audio into the Android build, even for testing =)
-#else
-// ----------------------------------------------------------------------------
-// Stub functions because I've reached diminishing returns with the build system ...
-//
-// NOTE: You'd think the commandline CFLAGS set specifically for this test program would pass down to the sources in
-// subdirectories, but it apparently isn't.  GNU buildsystem bug?  Also see HACK FIXME TODO NOTE in Makefile.am
-//
-
-uint8_t c_MB_Read(uint16_t addr) {
-    return 0x0;
-}
-
-void c_MB_Write(uint16_t addr, uint8_t byte) {
-}
-
-uint8_t c_PhasorIO(uint16_t addr) {
-    return 0x0;
-}
-
-void c_speaker_toggle(void) {
-}
-
-void c_interface_print(int x, int y, const int cs, const char *s) {
-}
-#endif
-
 // ----------------------------------------------------------------------------
 
 void test_common_setup() {
@@ -106,11 +78,13 @@ void test_common_init() {
     GREATEST_SET_BREAKPOINT_CB(test_breakpoint, NULL);
 
     //do_logging = false;// silence regular emulator logging
-    caps_lock = true;
 
-    // kludgey set max CPU speed... 
-    cpu_scale_factor = CPU_SCALE_FASTEST;
-    cpu_altscale_factor = CPU_SCALE_FASTEST;
+    prefs_load();
+    prefs_setBoolValue(PREF_DOMAIN_KEYBOARD, PREF_KEYBOARD_CAPS, true);
+    prefs_setFloatValue(PREF_DOMAIN_VM, PREF_CPU_SCALE, CPU_SCALE_FASTEST);
+    prefs_setFloatValue(PREF_DOMAIN_VM, PREF_CPU_SCALE_ALT, CPU_SCALE_FASTEST);
+    prefs_sync(NULL);
+
     timing_initialize();
 
     c_debugger_set_watchpoint(WATCHPOINT_ADDR);
@@ -146,7 +120,7 @@ int test_setup_boot_disk(const char *fileName, int readonly) {
         NULL,
         NULL,
     };
-    asprintf(&paths[0], "%s", disk0);
+    ASPRINTF(&paths[0], "%s", disk0);
     FREE(disk0);
 #else
     char *paths[] = {
@@ -155,9 +129,9 @@ int test_setup_boot_disk(const char *fileName, int readonly) {
         NULL,
         NULL,
     };
-    asprintf(&paths[0], "%s/disks/%s", data_dir, fileName);
-    asprintf(&paths[1], "%s/disks/demo/%s", data_dir, fileName);
-    asprintf(&paths[2], "%s/disks/blanks/%s", data_dir, fileName);
+    ASPRINTF(&paths[0], "%s/disks/%s", data_dir, fileName);
+    ASPRINTF(&paths[1], "%s/disks/demo/%s", data_dir, fileName);
+    ASPRINTF(&paths[2], "%s/disks/blanks/%s", data_dir, fileName);
 #endif
 
     path = &paths[0];

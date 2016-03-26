@@ -51,7 +51,7 @@ TEST test_boot_disk_bytes() {
 
     const char *homedir = HOMEDIR;
     char *disk = NULL;
-    asprintf(&disk, "%s/a2_read_disk_test.txt", homedir);
+    ASPRINTF(&disk, "%s/a2_read_disk_test.txt", homedir);
     if (disk) {
         unlink(disk);
         c_begin_disk_trace_6(disk, NULL);
@@ -99,7 +99,7 @@ TEST test_boot_disk_bytes_nib() {
 
     const char *homedir = HOMEDIR;
     char *disk = NULL;
-    asprintf(&disk, "%s/a2_read_disk_test_nib.txt", homedir);
+    ASPRINTF(&disk, "%s/a2_read_disk_test_nib.txt", homedir);
     if (disk) {
         unlink(disk);
         c_begin_disk_trace_6(disk, NULL);
@@ -152,7 +152,7 @@ TEST test_boot_disk_bytes_po() {
 
     const char *homedir = HOMEDIR;
     char *disk = NULL;
-    asprintf(&disk, "%s/a2_read_disk_test_po.txt", homedir);
+    ASPRINTF(&disk, "%s/a2_read_disk_test_po.txt", homedir);
     if (disk) {
         unlink(disk);
         c_begin_disk_trace_6(disk, NULL);
@@ -341,7 +341,7 @@ TEST test_disk_bytes_savehello_dsk() {
     srandom(0);
     const char *homedir = HOMEDIR;
     char *disk = NULL;
-    asprintf(&disk, "%s/a2_write_disk_test_dsk.txt", homedir);
+    ASPRINTF(&disk, "%s/a2_write_disk_test_dsk.txt", homedir);
     if (disk) {
         unlink(disk);
         c_begin_disk_trace_6(NULL, disk);
@@ -435,7 +435,7 @@ TEST test_disk_bytes_savehello_nib() {
     srandom(0);
     const char *homedir = HOMEDIR;
     char *disk = NULL;
-    asprintf(&disk, "%s/a2_write_disk_test_nib.txt", homedir);
+    ASPRINTF(&disk, "%s/a2_write_disk_test_nib.txt", homedir);
     if (disk) {
         unlink(disk);
         c_begin_disk_trace_6(NULL, disk);
@@ -529,7 +529,7 @@ TEST test_disk_bytes_savehello_po() {
     srandom(0);
     const char *homedir = HOMEDIR;
     char *disk = NULL;
-    asprintf(&disk, "%s/a2_write_disk_test_po.txt", homedir);
+    ASPRINTF(&disk, "%s/a2_write_disk_test_po.txt", homedir);
     if (disk) {
         unlink(disk);
         c_begin_disk_trace_6(NULL, disk);
@@ -642,7 +642,7 @@ TEST test_outofspace_dsk() {
     srandom(0);
     const char *homedir = HOMEDIR;
     char *disk = NULL;
-    asprintf(&disk, "%s/a2_oos_dsk_test.txt", homedir);
+    ASPRINTF(&disk, "%s/a2_oos_dsk_test.txt", homedir);
     if (disk) {
         unlink(disk);
         c_begin_disk_trace_6(NULL, disk);
@@ -853,7 +853,7 @@ TEST test_bload_trace_dsk() {
     srandom(0);
     const char *homedir = HOMEDIR;
     char *disk = NULL;
-    asprintf(&disk, "%s/a2_bload_trace_test_dsk.txt", homedir);
+    ASPRINTF(&disk, "%s/a2_bload_trace_test_dsk.txt", homedir);
     if (disk) {
         unlink(disk);
         c_begin_disk_trace_6(disk, NULL);
@@ -971,7 +971,7 @@ TEST test_bload_trace_nib() {
     srandom(0);
     const char *homedir = HOMEDIR;
     char *disk = NULL;
-    asprintf(&disk, "%s/a2_bload_trace_test_nib.txt", homedir);
+    ASPRINTF(&disk, "%s/a2_bload_trace_test_nib.txt", homedir);
     if (disk) {
         unlink(disk);
         c_begin_disk_trace_6(disk, NULL);
@@ -1089,7 +1089,7 @@ TEST test_bload_trace_po() {
     srandom(0);
     const char *homedir = HOMEDIR;
     char *disk = NULL;
-    asprintf(&disk, "%s/a2_bload_trace_test_po.txt", homedir);
+    ASPRINTF(&disk, "%s/a2_bload_trace_test_po.txt", homedir);
     if (disk) {
         unlink(disk);
         c_begin_disk_trace_6(disk, NULL);
@@ -1496,17 +1496,23 @@ void test_disk(int argc, char **argv) {
 
     pthread_mutex_lock(&interface_mutex);
 
+    emulator_start();
+
     test_common_init();
 
     pthread_t p;
     pthread_create(&p, NULL, (void *)&test_thread, (void *)NULL);
-
     while (!test_thread_running) {
         struct timespec ts = { .tv_sec=0, .tv_nsec=33333333 };
         nanosleep(&ts, NULL);
     }
-    emulator_start();
-    //pthread_join(p, NULL);
+    pthread_detach(p);
+
+    video_main_loop();
+
+#if !defined(__APPLE__) && !defined(ANDROID)
+    emulator_shutdown();
+#endif
 }
 
 #if !defined(__APPLE__) && !defined(ANDROID)

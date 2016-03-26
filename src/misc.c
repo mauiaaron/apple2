@@ -200,8 +200,7 @@ bool emulator_loadState(const char * const path) {
 }
 
 static void _shutdown_threads(void) {
-#if !TESTING
-#   if defined(__linux__) && !defined(ANDROID)
+#if defined(__linux__) && !defined(ANDROID)
     LOG("Emulator waiting for other threads to clean up...");
     do {
         DIR *dir = opendir("/proc/self/task");
@@ -232,7 +231,6 @@ static void _shutdown_threads(void) {
         static struct timespec ts = { .tv_sec=0, .tv_nsec=33333333 };
         nanosleep(&ts, NULL); // 30Hz framerate
     } while (1);
-#   endif
 #endif
 }
 
@@ -277,14 +275,19 @@ void emulator_start(void) {
 
 #ifdef INTERFACE_CLASSIC
     prefs_load(); // user prefs
+#if !TESTING
     c_keys_set_key(kF8); // show credits before emulation start
+#endif
 #endif
 
 #if !defined(__APPLE__) && !defined(ANDROID)
     video_init();
 #endif
     timing_startCPU();
+
+#if !TESTING
     video_main_loop();
+#endif
 }
 
 void emulator_shutdown(void) {

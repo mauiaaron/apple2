@@ -486,9 +486,6 @@ static void video_prefsChanged(const char *domain) {
         val = NUM_COLOROPTS-1;
     }
     color_mode = (color_mode_t)val;
-#if TESTING
-    color_mode = COLOR;
-#endif
     video_reset();
 }
 
@@ -1225,7 +1222,10 @@ void video_shutdown(bool emulatorShuttingDown) {
 
     video_backend->shutdown(emulatorShuttingDown);
     render_thread_id = 0;
-    FREE(video__fb);
+
+    if (pthread_self() == render_thread_id) {
+        FREE(video__fb);
+    }
 }
 
 void video_reshape(int w, int h, bool landscape) {

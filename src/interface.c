@@ -1146,7 +1146,9 @@ void c_interface_parameters()
             video_reset();
             vm_reinitializeAudio();
             c_joystick_reset();
+#if !TESTING
             prefs_save();
+#endif
             c_interface_exit(ch);
             break;
         }
@@ -1271,7 +1273,9 @@ void c_interface_parameters()
                     ch = toupper(ch);
                     if (ch == 'Y')
                     {
+#if !TESTING
                         prefs_save();
+#endif
                         disk6_eject(0);
                         c_interface_print_screen( screen );
                         disk6_eject(1);
