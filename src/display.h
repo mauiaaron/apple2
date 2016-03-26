@@ -12,6 +12,15 @@
 #ifndef _DISPLAY_H_
 #define _DISPLAY_H_
 
+typedef enum color_mode_t {
+    COLOR_NONE = 0,
+    /*LAZY_COLOR, deprecated*/
+    COLOR,
+    /*LAZY_INTERP, deprecated*/
+    COLOR_INTERP,
+    NUM_COLOROPTS
+} color_mode_t;
+
 typedef struct video_animation_s {
 
 #if INTERFACE_TOUCH

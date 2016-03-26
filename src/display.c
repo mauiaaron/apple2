@@ -39,6 +39,8 @@ static uint8_t video__wider_font[0x8000] = { 0 };
 static uint8_t video__font[0x4000] = { 0 };
 static uint8_t video__int_font[3][0x4000] = { { 0 } }; // interface font
 
+static color_mode_t color_mode = COLOR_NONE;
+
 // Precalculated framebuffer offsets given VM addr
 unsigned int video__screen_addresses[8192] = { INT_MIN };
 uint8_t video__columns[8192] = { 0 };
@@ -472,6 +474,22 @@ static void _initialize_color() {
         colormap[i].blue  = (colormap[i].blue  >>4);
     }
 #endif
+}
+
+static void video_prefsChanged(const char *domain) {
+    long val = 0;
+    prefs_parseLongValue(domain, PREF_COLOR_MODE, &val, /*base:*/10);
+    if (val < 0) {
+        val = 0;
+    }
+    if (val >= NUM_COLOROPTS) {
+        val = NUM_COLOROPTS-1;
+    }
+    color_mode = (color_mode_t)val;
+#if TESTING
+    color_mode = COLOR;
+#endif
+    video_reset();
 }
 
 void video_reset(void) {
@@ -1531,6 +1549,8 @@ static void _init_interface(void) {
     _initialize_row_col_tables();
     _initialize_dhires_values();
     _initialize_color();
+
+    prefs_registerListener(PREF_DOMAIN_VIDEO, &video_prefsChanged);
 }
 
 static __attribute__((constructor)) void __init_interface(void) {

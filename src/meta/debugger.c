@@ -1415,9 +1415,7 @@ void c_interface_debugging() {
     int ch;
     int command_pos = PROMPT_X;
 
-    opcodes = (apple_mode == 0) ? opcodes_6502 :
-              (apple_mode == 1) ? opcodes_undoc :
-              opcodes_65c02;
+    opcodes = opcodes_65c02;
 
     /* initialize the buffers */
     for (i=0; i<BUF_Y; i++)

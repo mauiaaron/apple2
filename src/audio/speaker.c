@@ -45,6 +45,7 @@ static unsigned int remainder_buffer_size = 0;
 static unsigned long remainder_buffer_size_max = 0;
 static unsigned int remainder_buffer_idx = 0;
 
+static long speaker_volume = 0;
 static int16_t speaker_amplitude = SPKR_DATA_INIT;
 static int16_t speaker_data = 0;
 
@@ -62,6 +63,22 @@ static int samples_adjustment_counter = 0;
 static AudioBuffer_s *speakerBuffer = NULL;
 
 // --------------------------------------------------------------------------------------------------------------------
+
+static void speaker_prefsChanged(const char *domain) {
+    prefs_parseLongValue(domain, PREF_SPEAKER_VOLUME, &speaker_volume, /*base:*/10); // expected range 0-10
+    if (speaker_volume < 0) {
+        speaker_volume = 0;
+    }
+    if (speaker_volume > 10) {
+        speaker_volume = 10;
+    }
+    float samplesScale = speaker_volume/10.f;
+    speaker_amplitude = (int16_t)(SPKR_DATA_INIT * samplesScale);
+}
+
+static __attribute__((constructor)) void _init_speaker(void) {
+    prefs_registerListener(PREF_DOMAIN_AUDIO, &speaker_prefsChanged);
+}
 
 /*
  * Because disk image loading is slow (AKA close-to-original-//e-speed), we may auto-switch to "fullspeed" for faster
@@ -478,11 +495,6 @@ void speaker_flush(void) {
 
 bool speaker_isActive(void) {
     return speaker_recently_active;
-}
-
-void speaker_setVolumeZeroToTen(unsigned long goesToTen) {
-    float samplesScale = goesToTen/10.f;
-    speaker_amplitude = (int16_t)(SPKR_DATA_INIT * samplesScale);
 }
 
 double speaker_cyclesPerSample(void) {

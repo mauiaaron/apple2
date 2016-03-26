@@ -16,6 +16,16 @@
 #define HALF_JOY_RANGE (JOY_RANGE>>1)
 #define QUARTER_JOY_RANGE (HALF_JOY_RANGE>>1)
 
+typedef enum joystick_mode_t {
+    JOY_PCJOY = 0,
+#ifdef KEYPAD_JOYSTICK
+    JOY_KPAD,
+#endif
+    NUM_JOYOPTS
+} joystick_mode_t;
+
+extern joystick_mode_t joy_mode;
+
 extern uint16_t joy_x;
 extern uint16_t joy_y;
 extern uint8_t joy_button0;
@@ -24,11 +34,12 @@ extern uint8_t joy_button2;
 extern bool joy_clip_to_radius;
 
 #ifdef KEYPAD_JOYSTICK
-extern uint8_t joy_auto_recenter;
+extern bool joy_auto_recenter;
 extern short joy_step;
 #endif
 
 void c_joystick_reset(void);
+
 #ifdef INTERFACE_CLASSIC
 void c_calibrate_joystick(void);
 #endif

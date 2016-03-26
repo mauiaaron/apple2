@@ -33,7 +33,7 @@ static const char *get_default_preferences(void) {
     "        \"diskPath\" : \"/usr/local/games/apple2/disks\""
     "    },"
     "    \"joystick\" : {"
-    "        \"variant\" : \"keypad\","
+    "        \"joystickMode\" : 1,"
     "        \"pcJoystickParms\" : \"128 128 255 1 255 1\","
     "        \"kpJoystickParms\" : \"8 1\""
     "    },"
@@ -41,11 +41,11 @@ static const char *get_default_preferences(void) {
     "        \"caps\" : true"
     "    },"
     "    \"video\" : {"
-    "        \"color\" : \"interpolated\""
+    "        \"colorMode\" : \"2\""
     "    },"
     "    \"vm\" : {"
-    "        \"speed\" : 1.0,"
-    "        \"altSpeed\" : 4.0"
+    "        \"cpuScale\" : 1.0,"
+    "        \"cpuScaleAlt\" : 4.0"
     "    }"
     "}"
     ;
@@ -1292,7 +1292,6 @@ TEST test_json_map_mutation_1() {
     PASS();
 }
 
-#if 0
 TEST test_prefs_loadString_1() {
     const char *prefsJSON = get_default_preferences();
     prefs_loadString(prefsJSON);
@@ -1302,22 +1301,22 @@ TEST test_prefs_loadString_1() {
     long lVal = 0;
     float fVal = 0.f;
 
-    bool ok = prefs_parseLongValue(PREF_DOMAIN_AUDIO, "speakerVolume", &lVal, /*base:*/10);
+    bool ok = prefs_parseLongValue(PREF_DOMAIN_AUDIO, PREF_SPEAKER_VOLUME, &lVal, /*base:*/10);
     ASSERT(ok);
     ASSERT(lVal == 4);
 
-    ok = prefs_parseLongValue(PREF_DOMAIN_AUDIO, "mbVolume", &lVal, /*base:*/10);
+    ok = prefs_parseLongValue(PREF_DOMAIN_AUDIO, PREF_MOCKINGBOARD_VOLUME, &lVal, /*base:*/10);
     ASSERT(ok);
     ASSERT(lVal == 2);
 
-    ok = prefs_copyStringValue(PREF_DOMAIN_INTERFACE, "diskPath", &val);
+    ok = prefs_copyStringValue(PREF_DOMAIN_INTERFACE, PREF_DISK_PATH, &val);
     ASSERT(ok);
     ASSERT(strcmp(val, "/usr/local/games/apple2/disks") == 0);
     FREE(val);
 
-    ok = prefs_copyStringValue(PREF_DOMAIN_JOYSTICK, "variant", &val);
+    ok = prefs_copyStringValue(PREF_DOMAIN_JOYSTICK, PREF_JOYSTICK_MODE, &val);
     ASSERT(ok);
-    ASSERT(strcmp(val, "keypad") == 0);
+    ASSERT(strcmp(val, "1") == 0);
     FREE(val);
 
     ok = prefs_copyStringValue(PREF_DOMAIN_JOYSTICK, "pcJoystickParms", &val);
@@ -1330,20 +1329,20 @@ TEST test_prefs_loadString_1() {
     ASSERT(strcmp(val, "8 1") == 0);
     FREE(val);
 
-    ok = prefs_parseBoolValue(PREF_DOMAIN_KEYBOARD, "caps", &bVal);
+    ok = prefs_parseBoolValue(PREF_DOMAIN_KEYBOARD, PREF_KEYBOARD_CAPS, &bVal);
     ASSERT(ok);
     ASSERT(bVal == true);
 
-    ok = prefs_copyStringValue(PREF_DOMAIN_VIDEO, "color", &val);
+    ok = prefs_copyStringValue(PREF_DOMAIN_VIDEO, PREF_COLOR_MODE, &val);
     ASSERT(ok);
-    ASSERT(strcmp(val, "interpolated") == 0);
+    ASSERT(strcmp(val, "2") == 0);
     FREE(val);
 
-    ok = prefs_parseFloatValue(PREF_DOMAIN_VM, "speed", &fVal);
+    ok = prefs_parseFloatValue(PREF_DOMAIN_VM, PREF_CPU_SCALE, &fVal);
     ASSERT(ok);
     ASSERT(fVal == 1.f);
 
-    ok = prefs_parseFloatValue(PREF_DOMAIN_VM, "altSpeed", &fVal);
+    ok = prefs_parseFloatValue(PREF_DOMAIN_VM, PREF_CPU_SCALE_ALT, &fVal);
     ASSERT(ok);
     ASSERT(fVal == 4.f);
 
@@ -1359,34 +1358,117 @@ TEST test_prefs_set_props() {
     long lVal = 0;
     float fVal = 0.f;
 
-    bool ok = prefs_setLongValue(PREF_DOMAIN_AUDIO, "speakerVolume", 8);
+    bool ok = prefs_setLongValue(PREF_DOMAIN_AUDIO, PREF_SPEAKER_VOLUME, 8);
     ASSERT(ok);
-    ok = prefs_parseLongValue(PREF_DOMAIN_AUDIO, "speakerVolume", &lVal, /*base:*/10);
+    ok = prefs_parseLongValue(PREF_DOMAIN_AUDIO, PREF_SPEAKER_VOLUME, &lVal, /*base:*/10);
     ASSERT(ok);
     ASSERT(lVal == 8);
 
-    ok = prefs_setStringValue(PREF_DOMAIN_INTERFACE, "diskPath", "/home/apple2ix/disks");
+    ok = prefs_setStringValue(PREF_DOMAIN_INTERFACE, PREF_DISK_PATH, "/home/apple2ix/disks");
     ASSERT(ok);
-    ok = prefs_copyStringValue(PREF_DOMAIN_INTERFACE, "diskPath", &val);
+    ok = prefs_copyStringValue(PREF_DOMAIN_INTERFACE, PREF_DISK_PATH, &val);
     ASSERT(ok);
     ASSERT(strcmp(val, "/home/apple2ix/disks") == 0);
     FREE(val);
 
-    ok = prefs_setBoolValue(PREF_DOMAIN_KEYBOARD, "caps", false);
+    ok = prefs_setBoolValue(PREF_DOMAIN_KEYBOARD, PREF_KEYBOARD_CAPS, false);
     ASSERT(ok);
-    ok = prefs_parseBoolValue(PREF_DOMAIN_KEYBOARD, "caps", &bVal);
+    ok = prefs_parseBoolValue(PREF_DOMAIN_KEYBOARD, PREF_KEYBOARD_CAPS, &bVal);
     ASSERT(ok);
     ASSERT(bVal == false);
 
-    ok = prefs_setFloatValue(PREF_DOMAIN_VM, "altSpeed", 0.25f);
+    ok = prefs_setFloatValue(PREF_DOMAIN_VM, PREF_CPU_SCALE_ALT, 0.25f);
     ASSERT(ok);
-    ok = prefs_parseFloatValue(PREF_DOMAIN_VM, "altSpeed", &fVal);
+    ok = prefs_parseFloatValue(PREF_DOMAIN_VM, PREF_CPU_SCALE_ALT, &fVal);
     ASSERT(ok);
     ASSERT(fVal == 0.25f);
 
     PASS();
 }
-#endif
+
+#define TEST_JSON "test-apple2ix.json"
+#define EXPECTED_TEST_PREFS_FILE_SIZE 178
+#define EXPECTED_TEST_PREFS_SHA "263844f0177a9229eece7907cd9f6f72aef535f5"
+TEST test_prefs_load_and_save() {
+    unlink(TEST_JSON);
+    putenv("APPLE2IX_JSON=" TEST_JSON);
+    prefs_load();
+    prefs_save();
+
+    bool ok = false;
+    char *val = (char *)0xdeadc0de;
+    bool bVal = false;
+    long lVal = 42;
+    float fVal = 0.125;
+
+    ok = prefs_copyStringValue(PREF_DOMAIN_INTERFACE, PREF_DISK_PATH, &val);
+    ASSERT(!ok);
+    ASSERT(val == (char *)0xdeadc0de);
+    //FREE(val);
+    ok = prefs_setStringValue(PREF_DOMAIN_INTERFACE, PREF_DISK_PATH, "/home/apple2ix/disks");
+    ASSERT(ok);
+    ok = prefs_copyStringValue(PREF_DOMAIN_INTERFACE, PREF_DISK_PATH, &val);
+    ASSERT(ok);
+    ASSERT(val);
+    ASSERT(strcmp(val, "/home/apple2ix/disks") == 0);
+    FREE(val);
+
+    ok = prefs_parseLongValue(PREF_DOMAIN_AUDIO, PREF_SPEAKER_VOLUME, &lVal, /*base:*/10);
+    ASSERT(!ok);
+    ASSERT(lVal == 42);
+    ok = prefs_setLongValue(PREF_DOMAIN_AUDIO, PREF_SPEAKER_VOLUME, 8);
+    ASSERT(ok);
+    ok = prefs_parseLongValue(PREF_DOMAIN_AUDIO, PREF_SPEAKER_VOLUME, &lVal, /*base:*/10);
+    ASSERT(ok);
+    ASSERT(lVal == 8);
+
+    ok = prefs_parseBoolValue(PREF_DOMAIN_KEYBOARD, PREF_KEYBOARD_CAPS, &bVal);
+    ASSERT(!ok);
+    ASSERT(bVal == false);
+    ok = prefs_setBoolValue(PREF_DOMAIN_KEYBOARD, PREF_KEYBOARD_CAPS, true);
+    ASSERT(ok);
+    ok = prefs_parseBoolValue(PREF_DOMAIN_KEYBOARD, PREF_KEYBOARD_CAPS, &bVal);
+    ASSERT(ok);
+    ASSERT(bVal == true);
+
+    ok = prefs_parseFloatValue(PREF_DOMAIN_VM, PREF_CPU_SCALE_ALT, &fVal);
+    ASSERT(!ok);
+    ASSERT(fVal == 0.125f);
+    ok = prefs_setFloatValue(PREF_DOMAIN_VM, PREF_CPU_SCALE_ALT, 0.25f);
+    ASSERT(ok);
+    ok = prefs_parseFloatValue(PREF_DOMAIN_VM, PREF_CPU_SCALE_ALT, &fVal);
+    ASSERT(ok);
+    ASSERT(fVal == 0.25f);
+
+    prefs_save();
+
+    do {
+        uint8_t md[SHA_DIGEST_LENGTH];
+        char mdstr0[(SHA_DIGEST_LENGTH*2)+1];
+
+        FILE *fp = fopen(TEST_JSON, "r");
+
+        fseek(fp, 0, SEEK_END);
+        long expectedSize = ftell(fp);
+        ASSERT(expectedSize == EXPECTED_TEST_PREFS_FILE_SIZE);
+        fseek(fp, 0, SEEK_SET);
+
+        unsigned char *buf = MALLOC(EXPECTED_TEST_PREFS_FILE_SIZE);
+        if (fread(buf, 1, EXPECTED_TEST_PREFS_FILE_SIZE, fp) != EXPECTED_TEST_PREFS_FILE_SIZE) {
+            ASSERT(false);
+        }
+        fclose(fp); fp = NULL;
+        SHA1(buf, EXPECTED_TEST_PREFS_FILE_SIZE, md);
+        FREE(buf);
+
+        sha1_to_str(md, mdstr0);
+        ASSERT(strcasecmp(mdstr0, EXPECTED_TEST_PREFS_SHA) == 0);
+    } while(0);
+
+    unlink(TEST_JSON);
+
+    PASS();
+}
 
 // ----------------------------------------------------------------------------
 // Test Suite
@@ -1436,8 +1518,9 @@ GREATEST_SUITE(test_suite_prefs) {
 
     RUN_TESTp(test_json_map_mutation_1);
 
-    //RUN_TESTp(test_prefs_loadString_1);
-    //RUN_TESTp(test_prefs_set_props);
+    RUN_TESTp(test_prefs_loadString_1);
+    RUN_TESTp(test_prefs_set_props);
+    RUN_TESTp(test_prefs_load_and_save);
 
     // --------------------------------
     pthread_mutex_unlock(&interface_mutex);

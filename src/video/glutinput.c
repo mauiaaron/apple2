@@ -23,13 +23,12 @@
 static inline void _capslock_hackaround(void) {
     // NOTE : Unfortunately it appears that we cannot get a raw key down/up notification for CAPSlock, so hack that here
     // ALSO : Emulator initially sets CAPS state based on a user preference, but sync to system state if user changes it
-    static bool modified_caps_lock = false;
     int modifiers = glutGetModifiers();
     if (!c_keys_is_shifted()) {
         if (modifiers & GLUT_ACTIVE_SHIFT) {
-            modified_caps_lock = true;
+            use_system_caps_lock = true;
             caps_lock = true;
-        } else if (modified_caps_lock) {
+        } else if (use_system_caps_lock) {
             caps_lock = false;
         }
     }

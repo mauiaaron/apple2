@@ -20,6 +20,8 @@
 extern void copy_and_pad_string(char *dest, const char* src, const char c, const int len, const char cap);
 #endif
 
+joystick_mode_t joy_mode = JOY_PCJOY;
+
 /* parameters for generic and keyboard-simulated joysticks */
 uint16_t joy_x = HALF_JOY_RANGE;
 uint16_t joy_y = HALF_JOY_RANGE;
@@ -30,10 +32,33 @@ bool joy_clip_to_radius = false;
 
 #ifdef KEYPAD_JOYSTICK
 short joy_step = 1;
-uint8_t joy_auto_recenter = 0;
+bool joy_auto_recenter = false;
 #endif
 
+static void joystick_prefsChanged(const char *domain) {
+    assert(strcmp(domain, PREF_DOMAIN_JOYSTICK) == 0);
+
+#ifdef KEYPAD_JOYSTICK
+    long lVal = 0;
+    prefs_parseLongValue(domain, PREF_JOYSTICK_KPAD_STEP, &lVal, /*base:*/10);
+    joy_step = (short)lVal;
+    if (joy_step < 1) {
+        joy_step = 1;
+    }
+    if (joy_step > 255) {
+        joy_step = 255;
+    }
+
+    prefs_parseBoolValue(domain, PREF_JOYSTICK_KPAD_AUTO_RECENTER, &joy_auto_recenter);
+#endif
+}
+
+static __attribute__((constructor)) void _init_joystick(void) {
+    prefs_registerListener(PREF_DOMAIN_JOYSTICK, &joystick_prefsChanged);
+}
+
 #ifdef INTERFACE_CLASSIC
+
 /* -------------------------------------------------------------------------
     c_calibrate_pc_joystick() - calibrates joystick.  determines extreme
     and center coordinates.  assumes that it can write to the interface
@@ -109,7 +134,7 @@ static void c_calibrate_pc_joystick()
     }
 }
 
-#if defined(KEYPAD_JOYSTICK)
+#ifdef KEYPAD_JOYSTICK
 static void c_calibrate_keypad_joystick()
 {
 
@@ -216,6 +241,9 @@ static void c_calibrate_keypad_joystick()
         static struct timespec ts = { .tv_sec=0, .tv_nsec=33333333 };
         nanosleep(&ts, NULL);
     }
+
+    prefs_setLongValue(PREF_DOMAIN_JOYSTICK, PREF_JOYSTICK_KPAD_STEP, joy_step);
+    prefs_setBoolValue(PREF_DOMAIN_JOYSTICK, PREF_JOYSTICK_KPAD_AUTO_RECENTER, joy_auto_recenter);
 }
 #endif // KEYPAD_JOYSTICK
 
@@ -227,7 +255,7 @@ void c_calibrate_joystick()
     }
 
 #ifdef KEYPAD_JOYSTICK
-    if (joy_mode == JOY_KPAD)
+    else if (joy_mode == JOY_KPAD)
     {
         c_calibrate_keypad_joystick();
     }

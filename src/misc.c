@@ -28,8 +28,6 @@ static module_ctor_node_s *head = NULL;
 
 bool do_logging = true; // also controlled by NDEBUG
 FILE *error_log = NULL;
-int sound_volume = 2;
-color_mode_t color_mode = COLOR;
 const char *data_dir = NULL;
 char **argv = NULL;
 int argc = 0;
@@ -278,7 +276,7 @@ void emulator_start(void) {
     head = NULL;
 
 #ifdef INTERFACE_CLASSIC
-    load_settings(); // user prefs
+    prefs_load(); // user prefs
     c_keys_set_key(kF8); // show credits before emulation start
 #endif
 
@@ -293,6 +291,7 @@ void emulator_shutdown(void) {
     disk6_eject(0);
     disk6_eject(1);
     video_shutdown(/*emulatorShuttingDown:*/true);
+    prefs_shutdown(/*emulatorShuttingDown:*/true);
     timing_stopCPU();
     _shutdown_threads();
 }

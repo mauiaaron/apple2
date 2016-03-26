@@ -586,3 +586,19 @@ void timing_testCyclesCountOverflow(void) {
 }
 #endif
 
+// ----------------------------------------------------------------------------
+
+static void vm_prefsChanged(const char *domain) {
+    assert(strcmp(domain, PREF_DOMAIN_VM) == 0);
+
+    float fVal = 1.0;
+    prefs_parseFloatValue(domain, PREF_CPU_SCALE, &fVal);
+    cpu_scale_factor = fVal;
+    prefs_parseFloatValue(domain, PREF_CPU_SCALE_ALT, &fVal);
+    cpu_altscale_factor = fVal;
+}
+
+static __attribute__((constructor)) void _init_vm(void) {
+    prefs_registerListener(PREF_DOMAIN_VM, &vm_prefsChanged);
+}
+

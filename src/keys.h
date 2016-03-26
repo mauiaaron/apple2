@@ -136,6 +136,7 @@
 // ----------------------------------------------------------------------------
 
 extern bool caps_lock;
+extern bool use_system_caps_lock;
 
 int c_mygetch(int block);
 int c_rawkey();
@@ -183,3 +184,4 @@ extern void (*keydriver_loadAltKbd)(const char *kbdPath);
 #endif
 
 #endif
+

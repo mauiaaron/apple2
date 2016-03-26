@@ -32,9 +32,11 @@
 #endif
 
 // custom annotations
-#define INPARM
-#define OUTPARM
 #define INOUT
+#define INPARM
+#define _NONNULL
+#define _NULLABLE
+#define OUTPARM
 #define PRIVATE
 #define PUBLIC
 #define READONLY
@@ -65,8 +67,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#include "misc.h"
 #include "json_parse.h"
+#include "misc.h"
 #include "vm.h"
 #include "timing.h"
 #include "cpu.h"

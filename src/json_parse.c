@@ -262,6 +262,9 @@ static int _json_createFromString(const char *jsonString, INOUT JSON_ref *jsonRe
                 case JSMN_ERROR_PART:
                     ERRLOG("%s", "String is not a complete JSON packet, moar bytes expected");
                     break;
+                case JSMN_ERROR_PRIMITIVE_INVAL:
+                    ERRLOG("%s", "Invalid character inside JSON primitive");
+                    break;
                 default:
                     ERRLOG("UNKNOWN errCount : %d", errCount);
                     break;
@@ -460,6 +463,7 @@ int json_mapCopyJSON(const JSON_ref jsonRef, const char *key, INOUT JSON_ref *va
         }
 
         errCount = json_createFromString(str, val);
+        assert(errCount >= 0);
         FREE(str);
 
     } while (0);
