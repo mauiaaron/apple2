@@ -25,10 +25,12 @@ typedef enum {
 enum jsmnerr {
 	/* Not enough tokens were provided */
 	JSMN_ERROR_NOMEM = -1,
-	/* Invalid character inside JSON string */
+	/* Generic invalid character JSON string */
 	JSMN_ERROR_INVAL = -2,
 	/* The string is not a full JSON packet, more bytes expected */
-	JSMN_ERROR_PART = -3
+	JSMN_ERROR_PART = -3,
+        /* A JSON primitive is invalid */
+	JSMN_ERROR_PRIMITIVE_INVAL = -202
 };
 
 /**
@@ -44,6 +46,7 @@ typedef struct {
 	int size;
 	int skip;
 	int parent;
+	int privdata[2];
 } jsmntok_t;
 
 /**
