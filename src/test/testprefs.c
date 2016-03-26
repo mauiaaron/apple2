@@ -39,7 +39,7 @@ static const char *get_default_preferences(void) {
     "    },"
     "    \"keyboard\" : {"
     "        \"caps\" : true"
-    "    }",
+    "    },"
     "    \"video\" : {"
     "        \"color\" : \"interpolated\""
     "    },"
@@ -71,11 +71,11 @@ static const char *get_sample_json_0(void) {
 "        \"intKey0\"  : 42     ,                   "
 "        \"key5\"  : \"\"                   ,      "
 "        \"intKey1\"  : -101,                      "
-"        \"intKey2\"  : -000000000,                "
-"        \"intKey3\"  :  0x2400,                   "
+"        \"intKey2\"  : \"-000000000\",                "
+"        \"intKey3\"  :  \"0x2400\",                   "
 "        \"intKey4\"  :  10111111,                 "
 "        \"floatKey0\"      : 0.0   ,              "
-"        \"floatKey1\"      : -.0001220703125     ,"
+"        \"floatKey1\"      : -0.0001220703125     ,"
 "        \"floatKey2\"     :  3.1415928 ,          "
 "        \"floatKey3\"     :  -3.1e2               "
 "    }                                             "
@@ -337,44 +337,803 @@ TEST test_json_serialization_pretty() {
     PASS();
 }
 
-TEST test_json_invalid_bareKey() {
+TEST test_json_raw_bool() {
+
+    JSON_ref parsedData = NULL;
+    int errCount = json_createFromString("true", &parsedData);
+    ASSERT(errCount == 1);
+    ASSERT(parsedData != NULL);
+    json_destroy(&parsedData);
+
+    parsedData = NULL;
+    errCount = json_createFromString(" true ", &parsedData);
+    ASSERT(errCount == 1);
+    ASSERT(parsedData != NULL);
+    json_destroy(&parsedData);
+
+    parsedData = NULL;
+    errCount = json_createFromString("false", &parsedData);
+    ASSERT(errCount == 1);
+    ASSERT(parsedData != NULL);
+    json_destroy(&parsedData);
+
+    parsedData = NULL;
+    errCount = json_createFromString(" false ", &parsedData);
+    ASSERT(errCount == 1);
+    ASSERT(parsedData != NULL);
+    json_destroy(&parsedData);
+
+    PASS();
+}
+
+TEST test_json_invalid_raw_bool() {
+
+    JSON_ref parsedData = NULL;
+    int errCount = json_createFromString("truthiness", &parsedData);
+    ASSERT(errCount == JSMN_ERROR_PRIMITIVE_INVAL);
+    ASSERT(parsedData == NULL);
+    json_destroy(&parsedData);
+
+    parsedData = NULL;
+    errCount = json_createFromString("falsify", &parsedData);
+    ASSERT(errCount == JSMN_ERROR_PRIMITIVE_INVAL);
+    ASSERT(parsedData == NULL);
+    json_destroy(&parsedData);
+
+    parsedData = NULL;
+    errCount = json_createFromString("truez", &parsedData);
+    ASSERT(errCount == JSMN_ERROR_PRIMITIVE_INVAL);
+    ASSERT(parsedData == NULL);
+    json_destroy(&parsedData);
+
+    parsedData = NULL;
+    errCount = json_createFromString("falseX", &parsedData);
+    ASSERT(errCount == JSMN_ERROR_PRIMITIVE_INVAL);
+    ASSERT(parsedData == NULL);
+    json_destroy(&parsedData);
+
+    parsedData = NULL;
+    errCount = json_createFromString("true false", &parsedData); // !!!
+    ASSERT(errCount == JSMN_ERROR_INVAL);
+    ASSERT(parsedData == NULL);
+    json_destroy(&parsedData);
+
+    parsedData = NULL;
+    errCount = json_createFromString("false true", &parsedData);
+    ASSERT(errCount == JSMN_ERROR_INVAL);
+    ASSERT(parsedData == NULL);
+    json_destroy(&parsedData);
+
+    parsedData = NULL;
+    errCount = json_createFromString("true, false", &parsedData);
+    ASSERT(errCount == JSMN_ERROR_INVAL);
+    ASSERT(parsedData == NULL);
+    json_destroy(&parsedData);
+
+    PASS();
+}
+
+TEST test_json_raw_null() {
+
+    JSON_ref parsedData = NULL;
+    int errCount = json_createFromString("null", &parsedData);
+    ASSERT(errCount == 1);
+    ASSERT(parsedData != NULL);
+    json_destroy(&parsedData);
+
+    parsedData = NULL;
+    errCount = json_createFromString(" null ", &parsedData);
+    ASSERT(errCount == 1);
+    ASSERT(parsedData != NULL);
+    json_destroy(&parsedData);
+
+    PASS();
+}
+
+TEST test_json_invalid_raw_null() {
+
+    JSON_ref parsedData = NULL;
+    int errCount = json_createFromString("nullX", &parsedData);
+    ASSERT(errCount == JSMN_ERROR_PRIMITIVE_INVAL);
+    ASSERT(parsedData == NULL);
+    json_destroy(&parsedData);
+
+    parsedData = NULL;
+    errCount = json_createFromString(" null null ", &parsedData); // !!!
+    ASSERT(errCount == JSMN_ERROR_INVAL);
+    ASSERT(parsedData == NULL);
+    json_destroy(&parsedData);
+
+    PASS();
+}
+
+TEST test_json_raw_int() {
+
+    JSON_ref parsedData = NULL;
+    int errCount = json_createFromString("42", &parsedData);
+    ASSERT(errCount == 1);
+    ASSERT(parsedData != NULL);
+    json_destroy(&parsedData);
+
+    parsedData = NULL;
+    errCount = json_createFromString(" 42 ", &parsedData);
+    ASSERT(errCount == 1);
+    ASSERT(parsedData != NULL);
+    json_destroy(&parsedData);
+
+    parsedData = NULL;
+    errCount = json_createFromString(" 0 ", &parsedData);
+    ASSERT(errCount == 1);
+    ASSERT(parsedData != NULL);
+    json_destroy(&parsedData);
+
+    parsedData = NULL;
+    errCount = json_createFromString(" -0 ", &parsedData);
+    ASSERT(errCount == 1);
+    ASSERT(parsedData != NULL);
+    json_destroy(&parsedData);
+
+    PASS();
+}
+
+TEST test_json_invalid_raw_int() {
+
+    JSON_ref parsedData = NULL;
+    int errCount = json_createFromString("42x", &parsedData);
+    ASSERT(errCount == JSMN_ERROR_PRIMITIVE_INVAL);
+    ASSERT(parsedData == NULL);
+    json_destroy(&parsedData);
+
+    parsedData = NULL;
+    errCount = json_createFromString("00", &parsedData);
+    ASSERT(errCount == JSMN_ERROR_PRIMITIVE_INVAL);
+    ASSERT(parsedData == NULL);
+    json_destroy(&parsedData);
+
+    parsedData = NULL;
+    errCount = json_createFromString("-00", &parsedData);
+    ASSERT(errCount == JSMN_ERROR_PRIMITIVE_INVAL);
+    ASSERT(parsedData == NULL);
+    json_destroy(&parsedData);
+
+    parsedData = NULL;
+    errCount = json_createFromString(" 1 2 ", &parsedData); // !!!
+    ASSERT(errCount == JSMN_ERROR_INVAL);
+    ASSERT(parsedData == NULL);
+    json_destroy(&parsedData);
+
+    parsedData = NULL;
+    errCount = json_createFromString(" 1, 2 ", &parsedData);
+    ASSERT(errCount == JSMN_ERROR_INVAL);
+    ASSERT(parsedData == NULL);
+    json_destroy(&parsedData);
+
+    PASS();
+}
+
+TEST test_json_raw_float() {
+
+    JSON_ref parsedData = NULL;
+    int errCount = json_createFromString("-3.14159", &parsedData);
+    ASSERT(errCount == 1);
+    ASSERT(parsedData != NULL);
+    json_destroy(&parsedData);
+
+    parsedData = NULL;
+    errCount = json_createFromString(" -3.14159  ", &parsedData);
+    ASSERT(errCount == 1);
+    ASSERT(parsedData != NULL);
+    json_destroy(&parsedData);
+
+    parsedData = NULL;
+    errCount = json_createFromString(" -3.14e-2 ", &parsedData);
+    ASSERT(errCount == 1);
+    ASSERT(parsedData != NULL);
+    json_destroy(&parsedData);
+
+    parsedData = NULL;
+    errCount = json_createFromString(" -0.000E+000 ", &parsedData);
+    ASSERT(errCount == 1);
+    ASSERT(parsedData != NULL);
+    json_destroy(&parsedData);
+
+    PASS();
+}
+
+TEST test_json_invalid_raw_float() {
+
+    JSON_ref parsedData = NULL;
+    int errCount = json_createFromString("-3.14159z", &parsedData);
+    ASSERT(errCount == JSMN_ERROR_PRIMITIVE_INVAL);
+    ASSERT(parsedData == NULL);
+    json_destroy(&parsedData);
+
+    parsedData = NULL;
+    errCount = json_createFromString("2e1.25 }", &parsedData);
+    ASSERT(errCount == JSMN_ERROR_PRIMITIVE_INVAL);
+    ASSERT(parsedData == NULL);
+    json_destroy(&parsedData);
+
+    parsedData = NULL;
+    errCount = json_createFromString("-3.14159e", &parsedData);
+    ASSERT(errCount == JSMN_ERROR_PRIMITIVE_INVAL);
+    ASSERT(parsedData == NULL);
+    json_destroy(&parsedData);
+
+    parsedData = NULL;
+    errCount = json_createFromString(" -3.14e ", &parsedData);
+    ASSERT(errCount == JSMN_ERROR_PRIMITIVE_INVAL);
+    ASSERT(parsedData == NULL);
+    json_destroy(&parsedData);
+
+    parsedData = NULL;
+    errCount = json_createFromString(" -3.14E- ", &parsedData);
+    ASSERT(errCount == JSMN_ERROR_PRIMITIVE_INVAL);
+    ASSERT(parsedData == NULL);
+    json_destroy(&parsedData);
+
+    parsedData = NULL;
+    errCount = json_createFromString(" -3.14E+ ", &parsedData);
+    ASSERT(errCount == JSMN_ERROR_PRIMITIVE_INVAL);
+    ASSERT(parsedData == NULL);
+    json_destroy(&parsedData);
+
+    parsedData = NULL;
+    errCount = json_createFromString(" 1.0 2.0 ", &parsedData); // !!!
+    ASSERT(errCount == JSMN_ERROR_INVAL);
+    ASSERT(parsedData == NULL);
+    json_destroy(&parsedData);
+
+    parsedData = NULL;
+    errCount = json_createFromString(" 1.0, 2.0 ", &parsedData);
+    ASSERT(errCount == JSMN_ERROR_INVAL);
+    ASSERT(parsedData == NULL);
+    json_destroy(&parsedData);
+
+    parsedData = NULL;
+    errCount = json_createFromString("2.0e2e2", &parsedData);
+    ASSERT(errCount == JSMN_ERROR_PRIMITIVE_INVAL);
+    ASSERT(parsedData == NULL);
+    json_destroy(&parsedData);
+
+    parsedData = NULL;
+    errCount = json_createFromString("314-159", &parsedData);
+    ASSERT(errCount == JSMN_ERROR_PRIMITIVE_INVAL);
+    ASSERT(parsedData == NULL);
+    json_destroy(&parsedData);
+
+    parsedData = NULL;
+    errCount = json_createFromString("314159-", &parsedData);
+    ASSERT(errCount == JSMN_ERROR_PRIMITIVE_INVAL);
+    ASSERT(parsedData == NULL);
+    json_destroy(&parsedData);
+
+    parsedData = NULL;
+    errCount = json_createFromString("--314159", &parsedData);
+    ASSERT(errCount == JSMN_ERROR_PRIMITIVE_INVAL);
+    ASSERT(parsedData == NULL);
+    json_destroy(&parsedData);
+
+    parsedData = NULL;
+    errCount = json_createFromString("0.0123.3", &parsedData);
+    ASSERT(errCount == JSMN_ERROR_PRIMITIVE_INVAL);
+    ASSERT(parsedData == NULL);
+    json_destroy(&parsedData);
+    PASS();
+
+    parsedData = NULL;
+    errCount = json_createFromString(".123", &parsedData);
+    ASSERT(errCount == JSMN_ERROR_PRIMITIVE_INVAL);
+    ASSERT(parsedData == NULL);
+    json_destroy(&parsedData);
+    PASS();
+
+    parsedData = NULL;
+    errCount = json_createFromString("123.", &parsedData);
+    ASSERT(errCount == JSMN_ERROR_PRIMITIVE_INVAL);
+    ASSERT(parsedData == NULL);
+    json_destroy(&parsedData);
+
+    PASS();
+}
+
+TEST test_json_raw_string() {
+
+    JSON_ref parsedData = NULL;
+    int errCount = json_createFromString("\"aString\"", &parsedData);
+    ASSERT(errCount == 1);
+    ASSERT(parsedData != NULL);
+
+    json_destroy(&parsedData);
+
+    PASS();
+}
+
+TEST test_json_invalid_raw_string() {
+
+    JSON_ref parsedData = NULL;
+    int errCount = json_createFromString("aString", &parsedData);
+    ASSERT(errCount == JSMN_ERROR_INVAL);
+    ASSERT(parsedData == NULL);
+    json_destroy(&parsedData);
+
+    parsedData = NULL;
+    errCount = json_createFromString("flagrant", &parsedData);
+    ASSERT(errCount == JSMN_ERROR_PRIMITIVE_INVAL);
+    ASSERT(parsedData == NULL);
+    json_destroy(&parsedData);
+
+    parsedData = NULL;
+    errCount = json_createFromString("nocturnal", &parsedData);
+    ASSERT(errCount == JSMN_ERROR_PRIMITIVE_INVAL);
+    ASSERT(parsedData == NULL);
+    json_destroy(&parsedData);
+
+    parsedData = NULL;
+    errCount = json_createFromString("\"aString", &parsedData);
+    ASSERT(errCount == JSMN_ERROR_PART);
+    ASSERT(parsedData == NULL);
+    json_destroy(&parsedData);
+
+    PASS();
+}
+
+TEST test_json_invalid_raw_comma() {
+
+    JSON_ref parsedData = NULL;
+    int errCount = json_createFromString(",", &parsedData); // !!!
+    ASSERT(errCount == JSMN_ERROR_INVAL);
+    ASSERT(parsedData == NULL);
+    json_destroy(&parsedData);
+
+    parsedData = NULL;
+    errCount = json_createFromString(" , ", &parsedData);
+    ASSERT(errCount == JSMN_ERROR_INVAL);
+    ASSERT(parsedData == NULL);
+    json_destroy(&parsedData);
+
+    PASS();
+}
+
+TEST test_json_invalid_raw_quote() {
+
+    JSON_ref parsedData = NULL;
+    int errCount = json_createFromString("\"", &parsedData); // !!!
+    ASSERT(errCount == JSMN_ERROR_PART);
+    ASSERT(parsedData == NULL);
+    json_destroy(&parsedData);
+
+    parsedData = NULL;
+    errCount = json_createFromString(" \" ", &parsedData);
+    ASSERT(errCount == JSMN_ERROR_PART);
+    ASSERT(parsedData == NULL);
+    json_destroy(&parsedData);
+
+    parsedData = NULL;
+    errCount = json_createFromString(" \" \" \" ", &parsedData);
+    ASSERT(errCount == JSMN_ERROR_INVAL);
+    ASSERT(parsedData == NULL);
+    json_destroy(&parsedData);
+
+    PASS();
+}
+
+TEST test_json_invalid_raw_minus() {
+
+    JSON_ref parsedData = NULL;
+    int errCount = json_createFromString("-", &parsedData);
+    ASSERT(errCount == JSMN_ERROR_PRIMITIVE_INVAL);
+    ASSERT(parsedData == NULL);
+    json_destroy(&parsedData);
+
+    parsedData = NULL;
+    errCount = json_createFromString(" - ", &parsedData);
+    ASSERT(errCount == JSMN_ERROR_PRIMITIVE_INVAL);
+    ASSERT(parsedData == NULL);
+    json_destroy(&parsedData);
+
+    parsedData = NULL;
+    errCount = json_createFromString(" -- ", &parsedData);
+    ASSERT(errCount == JSMN_ERROR_PRIMITIVE_INVAL);
+    ASSERT(parsedData == NULL);
+    json_destroy(&parsedData);
+
+    parsedData = NULL;
+    errCount = json_createFromString(" -e ", &parsedData);
+    ASSERT(errCount == JSMN_ERROR_PRIMITIVE_INVAL);
+    ASSERT(parsedData == NULL);
+    json_destroy(&parsedData);
+
+    parsedData = NULL;
+    errCount = json_createFromString("-0.25e+25-", &parsedData);
+    ASSERT(errCount == JSMN_ERROR_PRIMITIVE_INVAL);
+    ASSERT(parsedData == NULL);
+    json_destroy(&parsedData);
+
+    PASS();
+}
+
+TEST test_json_invalid_raw_e() {
+
+    JSON_ref parsedData = NULL;
+    int errCount = json_createFromString("e", &parsedData);
+    ASSERT(errCount == JSMN_ERROR_INVAL);
+    ASSERT(parsedData == NULL);
+    json_destroy(&parsedData);
+
+    parsedData = NULL;
+    errCount = json_createFromString(" e ", &parsedData);
+    ASSERT(errCount == JSMN_ERROR_INVAL);
+    ASSERT(parsedData == NULL);
+    json_destroy(&parsedData);
+
+    parsedData = NULL;
+    errCount = json_createFromString("-e0", &parsedData);
+    ASSERT(errCount == JSMN_ERROR_PRIMITIVE_INVAL);
+    ASSERT(parsedData == NULL);
+    json_destroy(&parsedData);
+
+    parsedData = NULL;
+    errCount = json_createFromString("-.e0", &parsedData);
+    ASSERT(errCount == JSMN_ERROR_PRIMITIVE_INVAL);
+    ASSERT(parsedData == NULL);
+    json_destroy(&parsedData);
+
+    parsedData = NULL;
+    errCount = json_createFromString("1.e2", &parsedData); // should this be valid?
+    ASSERT(errCount == JSMN_ERROR_PRIMITIVE_INVAL);
+    ASSERT(parsedData == NULL);
+    json_destroy(&parsedData);
+
+    parsedData = NULL;
+    errCount = json_createFromString("2e.02", &parsedData);
+    ASSERT(errCount == JSMN_ERROR_PRIMITIVE_INVAL);
+    ASSERT(parsedData == NULL);
+    json_destroy(&parsedData);
+
+    parsedData = NULL;
+    errCount = json_createFromString("2e.-02", &parsedData);
+    ASSERT(errCount == JSMN_ERROR_PRIMITIVE_INVAL);
+    ASSERT(parsedData == NULL);
+    json_destroy(&parsedData);
+
+    PASS();
+}
+
+TEST test_json_empty() {
+
+    JSON_ref parsedData = NULL;
+    int errCount = json_createFromString("", &parsedData);
+    ASSERT(errCount == 0);
+    ASSERT(parsedData != NULL);
+
+    json_destroy(&parsedData);
+
+    PASS();
+}
+
+TEST test_json_map_null() {
+
+    JSON_ref parsedData = NULL;
+    int errCount = json_createFromString("{ \"aKey\" : null }", &parsedData);
+    ASSERT(errCount == 3);
+    ASSERT(parsedData != NULL);
+
+    char *val = NULL;
+    bool ok = json_mapCopyStringValue(parsedData, "aKey", &val);
+    ASSERT(ok);
+    ASSERT(strcmp(val, "null") == 0);
+    FREE(val);
+
+    json_destroy(&parsedData);
+
+    PASS();
+}
+
+TEST test_json_map_bool() {
+
+    JSON_ref parsedData = NULL;
+    int errCount = json_createFromString("{ \"aKey\" : true }", &parsedData);
+    ASSERT(errCount == 3);
+    ASSERT(parsedData != NULL);
+
+    bool bVal = false;
+    bool ok = json_mapParseBoolValue(parsedData, "aKey", &bVal);
+    ASSERT(ok);
+    ASSERT(bVal == true);
+
+    json_destroy(&parsedData);
+
+    PASS();
+}
+
+TEST test_json_map_float() {
+
+    JSON_ref parsedData = NULL;
+    int errCount = json_createFromString("{ \"aKey\" : 2.5e-2 }", &parsedData);
+    ASSERT(errCount == 3);
+    ASSERT(parsedData != NULL);
+
+    float fVal = 0.0;
+    bool ok = json_mapParseFloatValue(parsedData, "aKey", &fVal);
+    ASSERT(ok);
+    ASSERT((int)(fVal * 1000) == 25);
+    json_destroy(&parsedData);
+
+    parsedData = NULL;
+    errCount = json_createFromString("{ \"aKey\" : -0.25 }", &parsedData);
+    ASSERT(errCount == 3);
+    ASSERT(parsedData != NULL);
+
+    fVal = 0.0;
+    ok = json_mapParseFloatValue(parsedData, "aKey", &fVal);
+    ASSERT(ok);
+    ASSERT(fVal == -0.25);
+    json_destroy(&parsedData);
+
+    parsedData = NULL;
+    errCount = json_createFromString("{ \"aKey\" : 25.5E+002 }", &parsedData);
+    ASSERT(errCount == 3);
+    ASSERT(parsedData != NULL);
+
+    fVal = 0.0;
+    ok = json_mapParseFloatValue(parsedData, "aKey", &fVal);
+    ASSERT(ok);
+    ASSERT(fVal == 2550.0);
+    json_destroy(&parsedData);
+
+    PASS();
+}
+
+TEST test_json_map_invalid_bareKey() {
 
     JSON_ref parsedData = NULL;
     int errCount = json_createFromString("{ aBareKey : \"aNonBareVal\" }", &parsedData);
     ASSERT(errCount == JSMN_ERROR_INVAL);
+    ASSERT(parsedData == NULL);
 
     json_destroy(&parsedData);
 
     PASS();
 }
 
-TEST test_json_invalid_bareVal() {
+TEST test_json_map_invalid_bareVal() {
 
     JSON_ref parsedData = NULL;
     int errCount = json_createFromString("{ \"aNonBareKey\" : aBareVal }", &parsedData);
     ASSERT(errCount == JSMN_ERROR_INVAL);
+    ASSERT(parsedData == NULL);
 
     json_destroy(&parsedData);
 
     PASS();
 }
 
-TEST test_json_map_invalid_danglingComma() {
+TEST test_json_map_invalid_dangling() {
 
     JSON_ref parsedData = NULL;
-    int errCount = json_createFromString("{ \"aNonBareKey\" : \"aNonBareVal\", }", &parsedData); // BUG IN JSMN ...
+    int errCount = json_createFromString("{ \"aNonBareKey\" : \"aNonBareVal\", }", &parsedData);
     ASSERT(errCount == JSMN_ERROR_INVAL);
+    ASSERT(parsedData == NULL);
+    json_destroy(&parsedData);
+
+    parsedData = NULL;
+    errCount = json_createFromString("{ , }", &parsedData);
+    ASSERT(errCount == JSMN_ERROR_INVAL);
+    ASSERT(parsedData == NULL);
+    json_destroy(&parsedData);
+
+    parsedData = NULL;
+    errCount = json_createFromString("{ \"aNonBareKey\" : }", &parsedData);
+    ASSERT(errCount == JSMN_ERROR_INVAL);
+    ASSERT(parsedData == NULL);
+    json_destroy(&parsedData);
+
+    parsedData = NULL;
+    errCount = json_createFromString("{ : \"aNonBareVal\" }", &parsedData);
+    ASSERT(errCount == JSMN_ERROR_INVAL);
+    ASSERT(parsedData == NULL);
+    json_destroy(&parsedData);
+
+    parsedData = NULL;
+    errCount = json_createFromString("{ : }", &parsedData);
+    ASSERT(errCount == JSMN_ERROR_INVAL);
+    ASSERT(parsedData == NULL);
+    json_destroy(&parsedData);
+
+    parsedData = NULL;
+    errCount = json_createFromString("{ : , }", &parsedData);
+    ASSERT(errCount == JSMN_ERROR_INVAL);
+    ASSERT(parsedData == NULL);
+    json_destroy(&parsedData);
+
+    parsedData = NULL;
+    errCount = json_createFromString("{ , : }", &parsedData);
+    ASSERT(errCount == JSMN_ERROR_INVAL);
+    ASSERT(parsedData == NULL);
+    json_destroy(&parsedData);
+
+    parsedData = NULL;
+    errCount = json_createFromString("{ , : , }", &parsedData);
+    ASSERT(errCount == JSMN_ERROR_INVAL);
+    ASSERT(parsedData == NULL);
+    json_destroy(&parsedData);
+
+    parsedData = NULL;
+    errCount = json_createFromString("{ ::: }", &parsedData);
+    ASSERT(errCount == JSMN_ERROR_INVAL);
+    ASSERT(parsedData == NULL);
+    json_destroy(&parsedData);
+
+    parsedData = NULL;
+    errCount = json_createFromString("{ :::: }", &parsedData);
+    ASSERT(errCount == JSMN_ERROR_INVAL);
+    ASSERT(parsedData == NULL);
+    json_destroy(&parsedData);
+
+    parsedData = NULL;
+    errCount = json_createFromString("{ :::1 }", &parsedData);
+    ASSERT(errCount == JSMN_ERROR_INVAL);
+    ASSERT(parsedData == NULL);
+    json_destroy(&parsedData);
+
+    parsedData = NULL;
+    errCount = json_createFromString("{ ::::1 }", &parsedData);
+    ASSERT(errCount == JSMN_ERROR_INVAL);
+    ASSERT(parsedData == NULL);
+    json_destroy(&parsedData);
+
+    parsedData = NULL;
+    errCount = json_createFromString("{ ,,1, }", &parsedData);
+    ASSERT(errCount == JSMN_ERROR_INVAL);
+    ASSERT(parsedData == NULL);
+    json_destroy(&parsedData);
+
+    parsedData = NULL;
+    errCount = json_createFromString("{ ,,,1, }", &parsedData);
+    ASSERT(errCount == JSMN_ERROR_INVAL);
+    ASSERT(parsedData == NULL);
+    json_destroy(&parsedData);
+
+    parsedData = NULL;
+    errCount = json_createFromString("{ \"aNonBareButDanglingKey\" }", &parsedData);
+    ASSERT(errCount == JSMN_ERROR_INVAL);
+    ASSERT(parsedData == NULL);
+    json_destroy(&parsedData);
+
+    parsedData = NULL;
+    errCount = json_createFromString("{ \"aNonBareButDanglingKey\" : }", &parsedData);
+    ASSERT(errCount == JSMN_ERROR_INVAL);
+    ASSERT(parsedData == NULL);
+    json_destroy(&parsedData);
+
+    parsedData = NULL;
+    errCount = json_createFromString("{ \"aNonBareKey\" : \"aNonBareVal\", \"aNonBareButDanglingKey\" }", &parsedData);
+    ASSERT(errCount == JSMN_ERROR_INVAL);
+    ASSERT(parsedData == NULL);
+    json_destroy(&parsedData);
+
+    parsedData = NULL;
+    errCount = json_createFromString("{ \"aNonBareKey\" : \"aNonBareVal\", \"aNonBareButDanglingKey\" : }", &parsedData);
+    ASSERT(errCount == JSMN_ERROR_INVAL);
+    ASSERT(parsedData == NULL);
+    json_destroy(&parsedData);
+
+    parsedData = NULL;
+    errCount = json_createFromString("{ \"aNonBareButDanglingKey\" }", &parsedData);
+    ASSERT(errCount == JSMN_ERROR_INVAL);
+    ASSERT(parsedData == NULL);
+    json_destroy(&parsedData);
+
+    parsedData = NULL;
+    errCount = json_createFromString("{ \"aNonBareButDanglingKey\" \"aNonBareButDanglingKey\" }", &parsedData);
+    ASSERT(errCount == JSMN_ERROR_INVAL);
+    ASSERT(parsedData == NULL);
+    json_destroy(&parsedData);
+
+    PASS();
+}
+
+TEST test_json_array_invalid_dangling() {
+
+    JSON_ref parsedData = NULL;
+    int errCount = json_createFromString("[ \"foo\", \"bar\", ]", &parsedData);
+    ASSERT(errCount == JSMN_ERROR_INVAL);
+    ASSERT(parsedData == NULL);
+    json_destroy(&parsedData);
+
+    parsedData = NULL;
+    errCount = json_createFromString("[ , ]", &parsedData);
+    ASSERT(errCount == JSMN_ERROR_INVAL);
+    ASSERT(parsedData == NULL);
+    json_destroy(&parsedData);
+
+    parsedData = NULL;
+    errCount = json_createFromString("[ ,,,, ]", &parsedData);
+    ASSERT(errCount == JSMN_ERROR_INVAL);
+    ASSERT(parsedData == NULL);
+    json_destroy(&parsedData);
+
+    parsedData = NULL;
+    errCount = json_createFromString("[ ,,,1, ]", &parsedData);
+    ASSERT(errCount == JSMN_ERROR_INVAL);
+    ASSERT(parsedData == NULL);
+    json_destroy(&parsedData);
+
+    PASS();
+}
+
+TEST test_json_map_invalid_intKey() {
+
+    JSON_ref parsedData = NULL;
+    int errCount = json_createFromString("{ 42 : \"aNonBareVal\" }", &parsedData);
+    ASSERT(errCount == JSMN_ERROR_INVAL);
+    ASSERT(parsedData == NULL);
 
     json_destroy(&parsedData);
 
     PASS();
 }
 
-TEST test_json_map_invalid_danglingKey() {
+TEST test_json_map_invalid_floatKey() {
 
     JSON_ref parsedData = NULL;
-    int errCount = json_createFromString("{ \"aNonBareKey\" : \"aNonBareVal\", \"aNoneBareButDanglingKey\" }", &parsedData); // BUG IN JSMN ...
+    int errCount = json_createFromString("{ -1.0 : \"aNonBareVal\" }", &parsedData);
     ASSERT(errCount == JSMN_ERROR_INVAL);
+    ASSERT(parsedData == NULL);
+
+    json_destroy(&parsedData);
+
+    PASS();
+}
+
+TEST test_json_map_invalid_boolKey() {
+
+    JSON_ref parsedData = NULL;
+    int errCount = json_createFromString("{ true : \"aNonBareVal\" }", &parsedData);
+    ASSERT(errCount == JSMN_ERROR_INVAL);
+    ASSERT(parsedData == NULL);
+    json_destroy(&parsedData);
+
+    parsedData = NULL;
+    errCount = json_createFromString("{ false : \"aNonBareVal\" }", &parsedData);
+    ASSERT(errCount == JSMN_ERROR_INVAL);
+    ASSERT(parsedData == NULL);
+    json_destroy(&parsedData);
+
+    PASS();
+}
+
+TEST test_json_map_invalid_nullKey() {
+
+    JSON_ref parsedData = NULL;
+    int errCount = json_createFromString("{ null : \"aNonBareVal\" }", &parsedData);
+    ASSERT(errCount == JSMN_ERROR_INVAL);
+    ASSERT(parsedData == NULL);
+
+    json_destroy(&parsedData);
+
+    PASS();
+}
+
+TEST test_json_map_invalid_mapKey() {
+
+    JSON_ref parsedData = NULL;
+    int errCount = json_createFromString("{ { \"foo\" : \"bar\" } : \"aNonBareVal\" }", &parsedData);
+    ASSERT(errCount == JSMN_ERROR_INVAL);
+    ASSERT(parsedData == NULL);
+
+    json_destroy(&parsedData);
+
+    PASS();
+}
+
+TEST test_json_map_invalid_arrayKey() {
+
+    JSON_ref parsedData = NULL;
+    int errCount = json_createFromString("{ [ \"foo\", \"bar\" ] : \"aNonBareVal\" }", &parsedData);
+    ASSERT(errCount == JSMN_ERROR_INVAL);
+    ASSERT(parsedData == NULL);
 
     json_destroy(&parsedData);
 
@@ -536,19 +1295,18 @@ TEST test_json_map_mutation_1() {
 #if 0
 TEST test_prefs_loadString_1() {
     const char *prefsJSON = get_default_preferences();
-    bool ok = prefs_loadString(prefsJSON);
-    ASSERT(ok);
+    prefs_loadString(prefsJSON);
 
     char *val = NULL;
     bool bVal = false;
     long lVal = 0;
-    bool fVal = 0.f;
+    float fVal = 0.f;
 
-    ok = prefs_parseLongValue(PREF_DOMAIN_AUDIO, "speakerVolume", &lVal);
+    bool ok = prefs_parseLongValue(PREF_DOMAIN_AUDIO, "speakerVolume", &lVal, /*base:*/10);
     ASSERT(ok);
     ASSERT(lVal == 4);
 
-    ok = prefs_parseLongValue(PREF_DOMAIN_AUDIO, "mbVolume", &lVal);
+    ok = prefs_parseLongValue(PREF_DOMAIN_AUDIO, "mbVolume", &lVal, /*base:*/10);
     ASSERT(ok);
     ASSERT(lVal == 2);
 
@@ -591,6 +1349,43 @@ TEST test_prefs_loadString_1() {
 
     PASS();
 }
+
+TEST test_prefs_set_props() {
+    const char *prefsJSON = get_default_preferences();
+    prefs_loadString(prefsJSON);
+
+    char *val = NULL;
+    bool bVal = true;
+    long lVal = 0;
+    float fVal = 0.f;
+
+    bool ok = prefs_setLongValue(PREF_DOMAIN_AUDIO, "speakerVolume", 8);
+    ASSERT(ok);
+    ok = prefs_parseLongValue(PREF_DOMAIN_AUDIO, "speakerVolume", &lVal, /*base:*/10);
+    ASSERT(ok);
+    ASSERT(lVal == 8);
+
+    ok = prefs_setStringValue(PREF_DOMAIN_INTERFACE, "diskPath", "/home/apple2ix/disks");
+    ASSERT(ok);
+    ok = prefs_copyStringValue(PREF_DOMAIN_INTERFACE, "diskPath", &val);
+    ASSERT(ok);
+    ASSERT(strcmp(val, "/home/apple2ix/disks") == 0);
+    FREE(val);
+
+    ok = prefs_setBoolValue(PREF_DOMAIN_KEYBOARD, "caps", false);
+    ASSERT(ok);
+    ok = prefs_parseBoolValue(PREF_DOMAIN_KEYBOARD, "caps", &bVal);
+    ASSERT(ok);
+    ASSERT(bVal == false);
+
+    ok = prefs_setFloatValue(PREF_DOMAIN_VM, "altSpeed", 0.25f);
+    ASSERT(ok);
+    ok = prefs_parseFloatValue(PREF_DOMAIN_VM, "altSpeed", &fVal);
+    ASSERT(ok);
+    ASSERT(fVal == 0.25f);
+
+    PASS();
+}
 #endif
 
 // ----------------------------------------------------------------------------
@@ -609,14 +1404,40 @@ GREATEST_SUITE(test_suite_prefs) {
     RUN_TESTp(test_json_serialization);
     RUN_TESTp(test_json_serialization_pretty);
 
-    RUN_TESTp(test_json_invalid_bareKey);
-    RUN_TESTp(test_json_invalid_bareVal);
-    RUN_TESTp(test_json_map_invalid_danglingComma);
-    RUN_TESTp(test_json_map_invalid_danglingKey);
+    RUN_TESTp(test_json_raw_bool);
+    RUN_TESTp(test_json_invalid_raw_bool);
+    RUN_TESTp(test_json_raw_null);
+    RUN_TESTp(test_json_invalid_raw_null);
+    RUN_TESTp(test_json_raw_int);
+    RUN_TESTp(test_json_invalid_raw_int);
+    RUN_TESTp(test_json_raw_float);
+    RUN_TESTp(test_json_invalid_raw_float);
+    RUN_TESTp(test_json_raw_string);
+    RUN_TESTp(test_json_invalid_raw_string);
+    RUN_TESTp(test_json_invalid_raw_comma);
+    RUN_TESTp(test_json_invalid_raw_quote);
+    RUN_TESTp(test_json_invalid_raw_minus);
+    RUN_TESTp(test_json_invalid_raw_e);
+    RUN_TESTp(test_json_empty);
+
+    RUN_TESTp(test_json_map_null);
+    RUN_TESTp(test_json_map_bool);
+    RUN_TESTp(test_json_map_float);
+    RUN_TESTp(test_json_map_invalid_bareKey);
+    RUN_TESTp(test_json_map_invalid_bareVal);
+    RUN_TESTp(test_json_map_invalid_dangling);
+    RUN_TESTp(test_json_array_invalid_dangling);
+    RUN_TESTp(test_json_map_invalid_intKey);
+    RUN_TESTp(test_json_map_invalid_floatKey);
+    RUN_TESTp(test_json_map_invalid_boolKey);
+    RUN_TESTp(test_json_map_invalid_nullKey);
+    RUN_TESTp(test_json_map_invalid_mapKey);
+    RUN_TESTp(test_json_map_invalid_arrayKey);
 
     RUN_TESTp(test_json_map_mutation_1);
 
     //RUN_TESTp(test_prefs_loadString_1);
+    //RUN_TESTp(test_prefs_set_props);
 
     // --------------------------------
     pthread_mutex_unlock(&interface_mutex);
