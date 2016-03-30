@@ -33,7 +33,10 @@ int json_createFromFD(int fd, INOUT JSON_ref *jsonRef);
 // ----------------------------------------------------------------------------
 // map functions
 
-// get JSON_ref value for key in map JSON, returns true upon success and allocated JSON_ref
+// returns true if JSON_ref is map collection
+bool json_isMap(const JSON_ref array);
+
+// get JSON_ref value for key in map JSON, returns error or tokenCount and allocated JSON_ref
 int json_mapCopyJSON(const JSON_ref map, const char *key, INOUT JSON_ref *val);
 
 // get string value for key in map JSON, returns true upon success and strdup()'d value in *val
@@ -69,9 +72,33 @@ bool json_mapSetFloatValue(const JSON_ref map, const char *key, float val);
 // ----------------------------------------------------------------------------
 // array functions
 
-//bool json_arrayCopyStringValueAtIndex(const JSON_ref array, unsigned long index, INOUT const char **val);
-//bool json_arrayParseLongValueAtIndex(const JSON_ref array, unsigned long index, INOUT const long *val, const long base);
-//bool json_arrayParseFloatValueAtIndex(const JSON_ref array, unsigned long index, INOUT const float *val);
+// returns true if JSON_ref is array collection
+bool json_isArray(const JSON_ref array);
+
+// returns true if JSON_ref is array collection and returns count of array elements in 
+bool json_arrayCount(const JSON_ref array, INOUT long *count);
+
+// get JSON_ref value for index in array JSON, returns error or tokenCount and allocated JSON_ref
+int json_arrayCopyJSONAtIndex(const JSON_ref array, unsigned long index, INOUT JSON_ref *val);
+
+// get string value for index in array JSON, returns true upon success and strdup()'d value in *val
+bool json_arrayCopyStringValueAtIndex(const JSON_ref array, unsigned long index, INOUT char **val);
+
+// get long value for index in array JSON, returns true upon success
+bool json_arrayParseLongValueAtIndex(const JSON_ref array, unsigned long index, INOUT long *val, const long base);
+
+// get bool value for index in array JSON, returns true upon success
+bool json_arrayParseBoolValueAtIndex(const JSON_ref array, unsigned long index, INOUT bool *val);
+
+// get float value for index in array JSON, returns true upon success
+bool json_arrayParseFloatValueAtIndex(const JSON_ref array, unsigned long index, INOUT float *val);
+
+//bool json_arraySetStringValueAtIndex(const JSON_ref array, unsigned long index, const char *val);
+//bool json_arraySetRawStringValue(const JSON_ref array, unsigned long index, const char *val);
+//bool json_arraySetJSONValue(const JSON_ref array, unsigned long index, const JSON_ref val);
+//bool json_arraySetLongValue(const JSON_ref array, unsigned long index, long val);
+//bool json_arraySetBoolValue(const JSON_ref array, unsigned long index, bool val);
+//bool json_arraySetFloatValue(const JSON_ref array, unsigned long index, float val);
 
 // ----------------------------------------------------------------------------
 // serialization

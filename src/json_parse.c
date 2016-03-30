@@ -33,6 +33,13 @@
 #   define JSON_LOG(...)
 #endif
 
+#define ASSERT_TOKEN_VALID(TOK) \
+    do { \
+        assert((TOK).start >= 0 && "bug"); \
+        assert((TOK).end >= 0 && "bug"); \
+        assert((TOK).end >= (TOK).start && "bug"); \
+    } while (0)
+
 static bool _json_write(const char *jsonString, size_t buflen, int fd) {
     ssize_t idx = 0;
     size_t chunk = buflen;
@@ -381,6 +388,8 @@ int json_createFromString(const char *jsonString, INOUT JSON_ref *jsonRef) {
     return _json_createFromString(jsonString, jsonRef, strlen(jsonString));
 }
 
+// ----------------------------------------------------------------------------
+
 static bool _json_mapGetStringValue(const JSON_s *map, const char *key, INOUT int *index) {
     bool foundMatch = false;
 
@@ -391,8 +400,16 @@ static bool _json_mapGetStringValue(const JSON_s *map, const char *key, INOUT in
 
         *index = -1;
 
+        if (!map) {
+            break;
+        }
+
         int tokCount = map->numTokens;
-        if (tokCount < 0) {
+        if (tokCount <= 0) {
+            break;
+        }
+
+        if (!key) {
             break;
         }
 
@@ -417,15 +434,13 @@ static bool _json_mapGetStringValue(const JSON_s *map, const char *key, INOUT in
                 break;
             }
 
-            int start = keyTok.start;
-            int end   = keyTok.end;
-            assert(end >= start && "bug");
-            const int size = end - start;
+            ASSERT_TOKEN_VALID(keyTok);
+            const int size = keyTok.end - keyTok.start;
 
             ++idx;
             jsmntok_t valTok = map->jsonTokens[idx];
             if (size == keySize) {
-                foundMatch = (strncmp(key, &map->jsonString[start], size) == 0);
+                foundMatch = (strncmp(key, &map->jsonString[keyTok.start], size) == 0);
                 if (foundMatch) {
                     *index = idx;
                     break;
@@ -439,19 +454,40 @@ static bool _json_mapGetStringValue(const JSON_s *map, const char *key, INOUT in
     return foundMatch;
 }
 
+bool json_isMap(const JSON_ref jsonRef) {
+    JSON_s *map = (JSON_s *)jsonRef;
+
+    bool ret = false;
+    do {
+        if (!map) {
+            break;
+        }
+        if (map->numTokens <= 0) {
+            break;
+        }
+        ret = map->jsonTokens[0].type == JSMN_OBJECT;
+    } while (0);
+
+    return ret;
+}
+
 int json_mapCopyJSON(const JSON_ref jsonRef, const char *key, INOUT JSON_ref *val) {
     JSON_s *map = (JSON_s *)jsonRef;
 
     int idx = 0;
     int errCount = JSMN_ERROR_NOMEM;
     do {
+        if (!val) {
+            break;
+        }
+
         bool foundMatch = _json_mapGetStringValue(map, key, &idx);
         if (!foundMatch) {
             break;
         }
 
         jsmntok_t tok = map->jsonTokens[idx];
-        assert(tok.end >= tok.start && "bug");
+        ASSERT_TOKEN_VALID(tok);
         int len = tok.end - tok.start;
         if (len<=0) {
             break;
@@ -473,15 +509,26 @@ int json_mapCopyJSON(const JSON_ref jsonRef, const char *key, INOUT JSON_ref *va
 
 bool json_mapCopyStringValue(const JSON_ref jsonRef, const char *key, INOUT char **val) {
     JSON_s *map = (JSON_s *)jsonRef;
+    bool foundMatch = false;
 
-    int idx = 0;
-    bool foundMatch = _json_mapGetStringValue(map, key, &idx);
-    if (foundMatch) {
+    do {
+        if (!val) {
+            break;
+        }
+
+        int idx = 0;
+        if (!_json_mapGetStringValue(map, key, &idx)) {
+            break;
+        }
+
         jsmntok_t tok = map->jsonTokens[idx];
-        assert(tok.end >= tok.start && "bug");
+        ASSERT_TOKEN_VALID(tok);
         int len = tok.end - tok.start;
         *val = len>0 ? STRNDUP(&map->jsonString[tok.start], len) : STRDUP("");
-    }
+
+        foundMatch = true;
+
+    } while (0);
 
     return foundMatch;
 }
@@ -496,17 +543,20 @@ bool json_mapParseLongValue(const JSON_ref jsonRef, const char *key, INOUT long 
         }
 
         int idx = 0;
-        foundMatch = _json_mapGetStringValue(map, key, &idx);
-        if (foundMatch) {
-            jsmntok_t tok = map->jsonTokens[idx];
-            assert(tok.end >= tok.start && "bug");
-            int len = tok.end - tok.start;
-            char *str = &map->jsonString[tok.start];
-            char ch = str[len];
-            str[len] = '\0';
-            *val = strtol(str, NULL, base);
-            str[len] = ch;
+        if (!_json_mapGetStringValue(map, key, &idx)) {
+            break;
         }
+
+        jsmntok_t tok = map->jsonTokens[idx];
+        ASSERT_TOKEN_VALID(tok);
+        int len = tok.end - tok.start;
+        char *str = &map->jsonString[tok.start];
+        char ch = str[len];
+        str[len] = '\0';
+        *val = strtol(str, NULL, base);
+        str[len] = ch;
+
+        foundMatch = true;
     } while (0);
 
     return foundMatch;
@@ -522,17 +572,20 @@ bool json_mapParseBoolValue(const JSON_ref jsonRef, const char *key, INOUT bool 
         }
 
         int idx = 0;
-        foundMatch = _json_mapGetStringValue(map, key, &idx);
-        if (foundMatch) {
-            jsmntok_t tok = map->jsonTokens[idx];
-            assert(tok.end >= tok.start && "bug");
-            int len = tok.end - tok.start;
-            char *str = &map->jsonString[tok.start];
-            char ch = str[len];
-            str[len] = '\0';
-            *val = (strncasecmp("false", str, sizeof("false")) != 0);
-            str[len] = ch;
+        if (!_json_mapGetStringValue(map, key, &idx)) {
+            break;
         }
+
+        jsmntok_t tok = map->jsonTokens[idx];
+        ASSERT_TOKEN_VALID(tok);
+        int len = tok.end - tok.start;
+        char *str = &map->jsonString[tok.start];
+        char ch = str[len];
+        str[len] = '\0';
+        *val = (strncasecmp("false", str, sizeof("false")) != 0);
+        str[len] = ch;
+
+        foundMatch = true;
     } while (0);
 
     return foundMatch;
@@ -548,17 +601,20 @@ bool json_mapParseFloatValue(const JSON_ref jsonRef, const char *key, INOUT floa
         }
 
         int idx = 0;
-        foundMatch = _json_mapGetStringValue(map, key, &idx);
-        if (foundMatch) {
-            jsmntok_t tok = map->jsonTokens[idx];
-            assert(tok.end >= tok.start && "bug");
-            int len = tok.end - tok.start;
-            char *str = &map->jsonString[tok.start];
-            char ch = str[len];
-            str[len] = '\0';
-            *val = strtof(str, NULL);
-            str[len] = ch;
+        if (!_json_mapGetStringValue(map, key, &idx)) {
+            break;
         }
+
+        jsmntok_t tok = map->jsonTokens[idx];
+        ASSERT_TOKEN_VALID(tok);
+        int len = tok.end - tok.start;
+        char *str = &map->jsonString[tok.start];
+        char ch = str[len];
+        str[len] = '\0';
+        *val = strtof(str, NULL);
+        str[len] = ch;
+
+        foundMatch = true;
     } while (0);
 
     return foundMatch;
@@ -597,7 +653,7 @@ static bool _json_mapSetValue(const JSON_ref jsonRef, const char *key, const cha
         bool foundMatch = _json_mapGetStringValue(map, key, &idx);
         if (foundMatch) {
             jsmntok_t tok = map->jsonTokens[idx];
-            assert(tok.end >= tok.start && "bug");
+            ASSERT_TOKEN_VALID(tok);
             spliceBegin = tok.start;
             spliceEnd = tok.end;
 
@@ -727,7 +783,7 @@ bool json_mapSetRawStringValue(const JSON_ref jsonRef, const char *key, const ch
 bool json_mapSetJSONValue(const JSON_ref jsonRef, const char *key, const JSON_ref jsonSubRef) {
     bool didSetValue = false;
     do {
-        if (!jsonRef) {
+        if (!jsonSubRef) {
             break;
         }
 
@@ -757,6 +813,248 @@ bool json_mapSetFloatValue(const JSON_ref jsonRef, const char *key, float val) {
     snprintf(buf, STACK_BUFSIZ, "%f", val);
     return _json_mapSetValue(jsonRef, key, buf, JSMN_PRIMITIVE);
 }
+
+// ----------------------------------------------------------------------------
+
+static bool _json_arrayCalcIndex(const JSON_s *array, INOUT unsigned long *index) {
+    bool valid = false;
+
+    do {
+        if (!array) {
+            break;
+        }
+        if (array->numTokens <= 0) {
+            break;
+        }
+        jsmntok_t tok = array->jsonTokens[0];
+        if (tok.type != JSMN_ARRAY) {
+            break;
+        }
+
+        int count = tok.size;
+        if ((*index) >= count) {
+            break;
+        }
+
+        int idx = 1;
+        for (int i=0; i<(*index); i++) {
+            tok = array->jsonTokens[idx];
+            idx += tok.skip;
+        }
+
+        *index = idx;
+        valid = true;
+
+    } while (0);
+
+    return valid;
+}
+
+bool json_isArray(const JSON_ref jsonRef) {
+    JSON_s *array = (JSON_s *)jsonRef;
+
+    bool ret = false;
+    do {
+        if (!array) {
+            break;
+        }
+        if (array->numTokens <= 0) {
+            break;
+        }
+        ret = array->jsonTokens[0].type == JSMN_ARRAY;
+    } while (0);
+
+    return ret;
+}
+
+bool json_arrayCount(const JSON_ref jsonRef, INOUT long *count) {
+    JSON_s *array = (JSON_s *)jsonRef;
+
+    bool ret = false;
+    do {
+        if (!array) {
+            break;
+        }
+        if (!count) {
+            break;
+        }
+        if (array->numTokens <= 0) {
+            break;
+        }
+        jsmntok_t tok = array->jsonTokens[0];
+        if (tok.type != JSMN_ARRAY) {
+            break;
+        }
+
+        *count = tok.size;
+        ret = true;
+    } while (0);
+
+    return ret;
+}
+
+int json_arrayCopyJSONAtIndex(const JSON_ref jsonRef, unsigned long index, INOUT JSON_ref *val) {
+    JSON_s *array = (JSON_s *)jsonRef;
+
+    int errCount = JSMN_ERROR_NOMEM;
+    do {
+        if (!val) {
+            break;
+        }
+        bool valid = _json_arrayCalcIndex(array, &index);
+        if (!valid) {
+            break;
+        }
+
+        jsmntok_t tok = array->jsonTokens[index];
+        ASSERT_TOKEN_VALID(tok);
+        int len = tok.end - tok.start;
+        if (len <= 0) {
+            break;
+        }
+
+        char *str = STRNDUP(&array->jsonString[tok.start], len);
+        if (!str) {
+            break;
+        }
+
+        errCount = json_createFromString(str, val);
+        assert(errCount >= 0);
+        FREE(str);
+
+    } while (0);
+
+    return errCount;
+}
+
+bool json_arrayCopyStringValueAtIndex(const JSON_ref jsonRef, unsigned long index, INOUT char **val) {
+    JSON_s *array = (JSON_s *)jsonRef;
+
+    bool ret = false;
+    do {
+        if (!val) {
+            break;
+        }
+        bool valid = _json_arrayCalcIndex(array, &index);
+        if (!valid) {
+            break;
+        }
+
+        jsmntok_t tok = array->jsonTokens[index];
+        ASSERT_TOKEN_VALID(tok);
+        int len = tok.end - tok.start;
+        if (len <= 0) {
+            break;
+        }
+
+        *val = STRNDUP(&array->jsonString[tok.start], len);
+        if (!*val) {
+            break;
+        }
+
+        ret = true;
+    } while (0);
+
+    return ret;
+}
+
+bool json_arrayParseLongValueAtIndex(const JSON_ref jsonRef, unsigned long index, INOUT long *val, const long base) {
+    JSON_s *array = (JSON_s *)jsonRef;
+
+    bool ret = false;
+    do {
+        if (!val) {
+            break;
+        }
+        bool valid = _json_arrayCalcIndex(array, &index);
+        if (!valid) {
+            break;
+        }
+
+        jsmntok_t tok = array->jsonTokens[index];
+        ASSERT_TOKEN_VALID(tok);
+        int len = tok.end - tok.start;
+        if (len <= 0) {
+            break;
+        }
+
+        char *str = &array->jsonString[tok.start];
+        char ch = str[len];
+        str[len] = '\0';
+        *val = strtol(str, NULL, base);
+        str[len] = ch;
+
+        ret = true;
+    } while (0);
+
+    return ret;
+}
+
+bool json_arrayParseBoolValueAtIndex(const JSON_ref jsonRef, unsigned long index, INOUT bool *val) {
+    JSON_s *array = (JSON_s *)jsonRef;
+
+    bool ret = false;
+    do {
+        if (!val) {
+            break;
+        }
+        bool valid = _json_arrayCalcIndex(array, &index);
+        if (!valid) {
+            break;
+        }
+
+        jsmntok_t tok = array->jsonTokens[index];
+        ASSERT_TOKEN_VALID(tok);
+        int len = tok.end - tok.start;
+        if (len <= 0) {
+            break;
+        }
+
+        char *str = &array->jsonString[tok.start];
+        char ch = str[len];
+        str[len] = '\0';
+        *val = (strncasecmp("false", str, sizeof("false")) != 0);
+        str[len] = ch;
+
+        ret = true;
+    } while (0);
+
+    return ret;
+}
+
+bool json_arrayParseFloatValueAtIndex(const JSON_ref jsonRef, unsigned long index, INOUT float *val) {
+    JSON_s *array = (JSON_s *)jsonRef;
+
+    bool ret = false;
+    do {
+        if (!val) {
+            break;
+        }
+        bool valid = _json_arrayCalcIndex(array, &index);
+        if (!valid) {
+            break;
+        }
+
+        jsmntok_t tok = array->jsonTokens[index];
+        ASSERT_TOKEN_VALID(tok);
+        int len = tok.end - tok.start;
+        if (len <= 0) {
+            break;
+        }
+
+        char *str = &array->jsonString[tok.start];
+        char ch = str[len];
+        str[len] = '\0';
+        *val = strtof(str, NULL);
+        str[len] = ch;
+
+        ret = true;
+    } while (0);
+
+    return ret;
+}
+
+// ----------------------------------------------------------------------------
 
 bool json_serialize(JSON_ref jsonRef, int fd, bool pretty) {
     JSON_s *parsedData = (JSON_s *)jsonRef;
