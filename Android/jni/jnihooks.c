@@ -182,29 +182,24 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnCreate(JNIEnv *env, jclas
     FREE(trfile);
 #endif
 
-#if !TESTING
+#if TESTING
+    cpu_scale_factor = CPU_SCALE_FASTEST;
+    cpu_altscale_factor = CPU_SCALE_FASTEST;
+    timing_initialize();
+#else
     cpu_pause();
     emulator_start();
 #endif
 }
 
-void Java_org_deadc0de_apple2ix_Apple2View_nativeGraphicsChanged(JNIEnv *env, jclass cls, jint width, jint height, jboolean landscape) {
-    // WARNING : this can happen on non-GL thread
-    LOG("width:%d height:%d landscape:%d", width, height, landscape);
-    video_reshape(width, height, landscape);
-}
-
-void Java_org_deadc0de_apple2ix_Apple2View_nativeGraphicsInitialized(JNIEnv *env, jclass cls, jint width, jint height, jboolean landscape) {
-    // WARNING : this needs to happen on the GL thread only
-    LOG("width:%d height:%d landscape:%d", width, height, landscape);
-    _video_setRenderThread(pthread_self()); // Assume Android knows what it's doing ;-P
-
+void Java_org_deadc0de_apple2ix_Apple2View_nativeGraphicsInitialized(JNIEnv *env, jclass cls) {
+    LOG("...");
+    _video_setRenderThread(pthread_self()); // by definition, this method is called on the render thread ...
     video_shutdown(false);
-    video_reshape(width, height, landscape);
     video_init();
 }
 
-void Java_org_deadc0de_apple2ix_Apple2Activity_nativeEmulationResume(JNIEnv *env, jclass cls) {
+jboolean Java_org_deadc0de_apple2ix_Apple2Activity_nativeEmulationResume(JNIEnv *env, jclass cls) {
 #if TESTING
     // test driver thread is managing CPU
     if (!running_tests) {
@@ -214,16 +209,18 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeEmulationResume(JNIEnv *env
     }
 #else
     if (!cpu_isPaused()) {
-        return;
+        return false;
     }
     LOG("...");
     cpu_resume();
 #endif
+
+    return true;
 }
 
-void Java_org_deadc0de_apple2ix_Apple2Activity_nativeEmulationPause(JNIEnv *env, jclass cls) {
+jboolean Java_org_deadc0de_apple2ix_Apple2Activity_nativeEmulationPause(JNIEnv *env, jclass cls) {
     if (appState != APP_RUNNING) {
-        return;
+        return false;
     }
 
 #if DO_CPU65_TRACING
@@ -234,7 +231,7 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeEmulationPause(JNIEnv *env,
     disk6_flush(1);
 
     if (cpu_isPaused()) {
-        return;
+        return false;
     }
     LOG("...");
 
@@ -242,7 +239,10 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeEmulationPause(JNIEnv *env,
     // test driver thread is managing CPU
 #else
     cpu_pause();
+    prefs_save();
 #endif
+
+    return true;
 }
 
 void Java_org_deadc0de_apple2ix_Apple2View_nativeRender(JNIEnv *env, jclass cls) {
@@ -341,7 +341,7 @@ jlong Java_org_deadc0de_apple2ix_Apple2View_nativeOnTouch(JNIEnv *env, jclass cl
     return flags;
 }
 
-void Java_org_deadc0de_apple2ix_Apple2Activity_nativeChooseDisk(JNIEnv *env, jclass cls, jstring jPath, jboolean driveA, jboolean readOnly) {
+void Java_org_deadc0de_apple2ix_Apple2DisksMenu_nativeChooseDisk(JNIEnv *env, jclass cls, jstring jPath, jboolean driveA, jboolean readOnly) {
     const char *path = (*env)->GetStringUTFChars(env, jPath, NULL);
     int drive = driveA ? 0 : 1;
     int ro = readOnly ? 1 : 0;
@@ -366,7 +366,7 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeChooseDisk(JNIEnv *env, jcl
     (*env)->ReleaseStringUTFChars(env, jPath, path);
 }
 
-void Java_org_deadc0de_apple2ix_Apple2Activity_nativeEjectDisk(JNIEnv *env, jclass cls, jboolean driveA) {
+void Java_org_deadc0de_apple2ix_Apple2DisksMenu_nativeEjectDisk(JNIEnv *env, jclass cls, jboolean driveA) {
     LOG("...");
     disk6_eject(!driveA);
 }
@@ -411,5 +411,21 @@ jstring Java_org_deadc0de_apple2ix_Apple2Activity_nativeLoadState(JNIEnv *env, j
     }
 
     return jstr;
+}
+
+void Java_org_deadc0de_apple2ix_Apple2Preferences_nativePrefsSync(JNIEnv *env, jclass cls, jstring jDomain) {
+    const char *domain = NULL;
+
+    if (jDomain) {
+        domain = (*env)->GetStringUTFChars(env, jDomain, 0);
+    }
+
+    LOG("... domain: %s", domain);
+    prefs_load();
+    prefs_sync(domain);
+
+    if (jDomain) {
+        (*env)->ReleaseStringUTFChars(env, jDomain, domain);
+    }
 }
 

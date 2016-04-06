@@ -35,7 +35,8 @@ static const char *get_default_preferences(void) {
     "    \"joystick\" : {"
     "        \"joystickMode\" : 1,"
     "        \"pcJoystickParms\" : \"128 128 255 1 255 1\","
-    "        \"kpJoystickParms\" : \"8 1\""
+    "        \"kpJoystickParms\" : \"8 1\","
+    "        \"kpAxisRosetteChars\" : [ 121, 255, 122, 255, 123, 255, 124, 255, 125 ]"
     "    },"
     "    \"keyboard\" : {"
     "        \"caps\" : true"
@@ -1729,9 +1730,32 @@ TEST test_json_array() {
     PASS();
 }
 
+TEST test_json_unescaping() {
+    JSON_ref jsonRef = NULL;
+    int errCount = json_createFromString("\"http:\\/\\/deadc0de.org\\/apple2ix\\/android\\/\"", &jsonRef);
+    ASSERT(errCount == 1);
+    ASSERT(jsonRef);
+
+    JSON_s parsedData = *((JSON_s *)jsonRef);
+    ASSERT(strcmp(parsedData.jsonString, "\"http:\\/\\/deadc0de.org\\/apple2ix\\/android\\/\"") == 0);
+    ASSERT(parsedData.jsonLen == strlen(parsedData.jsonString));
+
+    bool ok = json_unescapeSlashes(&parsedData.jsonString);
+    ASSERT(ok);
+    ASSERT(strcmp(parsedData.jsonString, "\"http://deadc0de.org/apple2ix/android/\"") == 0);
+    size_t newLen = strlen(parsedData.jsonString);
+    ASSERT(parsedData.jsonLen != newLen);
+    ASSERT(newLen == 39);
+
+    json_destroy(&jsonRef);
+
+    PASS();
+}
+
 TEST test_prefs_loadString_1() {
     const char *prefsJSON = get_default_preferences();
     prefs_loadString(prefsJSON);
+    prefs_sync(NULL);
 
     char *val = NULL;
     bool bVal = false;
@@ -1766,6 +1790,44 @@ TEST test_prefs_loadString_1() {
     ASSERT(strcmp(val, "8 1") == 0);
     FREE(val);
 
+    JSON_ref jsonVal = NULL;
+    ok = prefs_copyJSONValue(PREF_DOMAIN_JOYSTICK, PREF_KPAD_ROSETTE_CHAR_ARRAY, &jsonVal);
+    ASSERT(ok);
+    ASSERT(json_isArray(jsonVal));
+    ok = json_arrayCount(jsonVal, &lVal);
+    ASSERT(ok);
+    ok = json_arrayParseLongValueAtIndex(jsonVal, 0, &lVal, /*base:*/10);
+    ASSERT(ok);
+    ASSERT(lVal == 121); // 121, 255, 122, 255, 123, 255, 124, 255, 125
+    ok = json_arrayParseLongValueAtIndex(jsonVal, 1, &lVal, /*base:*/10);
+    ASSERT(ok);
+    ASSERT(lVal == 255);
+    ok = json_arrayParseLongValueAtIndex(jsonVal, 2, &lVal, /*base:*/10);
+    ASSERT(ok);
+    ASSERT(lVal == 122);
+    ok = json_arrayParseLongValueAtIndex(jsonVal, 3, &lVal, /*base:*/10);
+    ASSERT(ok);
+    ASSERT(lVal == 255);
+    ok = json_arrayParseLongValueAtIndex(jsonVal, 4, &lVal, /*base:*/10);
+    ASSERT(ok);
+    ASSERT(lVal == 123);
+    ok = json_arrayParseLongValueAtIndex(jsonVal, 5, &lVal, /*base:*/10);
+    ASSERT(ok);
+    ASSERT(lVal == 255);
+    ok = json_arrayParseLongValueAtIndex(jsonVal, 6, &lVal, /*base:*/10);
+    ASSERT(ok);
+    ASSERT(lVal == 124);
+    ok = json_arrayParseLongValueAtIndex(jsonVal, 7, &lVal, /*base:*/10);
+    ASSERT(ok);
+    ASSERT(lVal == 255);
+    ok = json_arrayParseLongValueAtIndex(jsonVal, 8, &lVal, /*base:*/10);
+    ASSERT(ok);
+    ASSERT(lVal == 125);
+    ok = json_arrayParseLongValueAtIndex(jsonVal, 9, &lVal, /*base:*/10);
+    ASSERT(!ok);
+    ASSERT(lVal == 125);
+    json_destroy(&jsonVal);
+
     ok = prefs_parseBoolValue(PREF_DOMAIN_KEYBOARD, PREF_KEYBOARD_CAPS, &bVal);
     ASSERT(ok);
     ASSERT(bVal == true);
@@ -1789,6 +1851,7 @@ TEST test_prefs_loadString_1() {
 TEST test_prefs_set_props() {
     const char *prefsJSON = get_default_preferences();
     prefs_loadString(prefsJSON);
+    prefs_sync(NULL);
 
     char *val = NULL;
     bool bVal = true;
@@ -1830,6 +1893,7 @@ TEST test_prefs_load_and_save() {
     unlink(TEST_JSON);
     putenv("APPLE2IX_JSON=" TEST_JSON);
     prefs_load();
+    prefs_sync(NULL);
     prefs_save();
 
     bool ok = false;
@@ -1957,6 +2021,8 @@ GREATEST_SUITE(test_suite_prefs) {
 
     RUN_TESTp(test_json_map_mutation_1);
     RUN_TESTp(test_json_array);
+
+    RUN_TESTp(test_json_unescaping);
 
     RUN_TESTp(test_prefs_loadString_1);
     RUN_TESTp(test_prefs_set_props);

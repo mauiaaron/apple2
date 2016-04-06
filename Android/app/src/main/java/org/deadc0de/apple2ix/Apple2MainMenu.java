@@ -100,7 +100,7 @@ public class Apple2MainMenu {
             @Override
             public void handleSelection(Apple2MainMenu mainMenu) {
                 if (!mainMenu.mShowingSaveRestore.compareAndSet(false, true)) {
-                    Log.v(TAG, "OMG, avoiding nasty UI race around save/restore");
+                    Log.v(TAG, "OMG, avoiding nasty UI race around sync/restore");
                     return;
                 }
                 mainMenu.maybeSaveRestore();
@@ -278,7 +278,7 @@ public class Apple2MainMenu {
     public void maybeSaveRestore() {
         mActivity.pauseEmulation();
 
-        final String quickSavePath = Apple2DisksMenu.getDataDir(mActivity) + File.separator + SAVE_FILE;
+        final String quickSavePath = Apple2Utils.getDataDir(mActivity) + File.separator + SAVE_FILE;
 
         final AtomicBoolean selectionAlreadyHandled = new AtomicBoolean(false);
 
@@ -286,7 +286,7 @@ public class Apple2MainMenu {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 if (!selectionAlreadyHandled.compareAndSet(false, true)) {
-                    Log.v(TAG, "OMG, avoiding nasty UI race in save/restore onClick()");
+                    Log.v(TAG, "OMG, avoiding nasty UI race in sync/restore onClick()");
                     return;
                 }
                 mActivity.saveState(quickSavePath);
@@ -296,7 +296,7 @@ public class Apple2MainMenu {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 if (!selectionAlreadyHandled.compareAndSet(false, true)) {
-                    Log.v(TAG, "OMG, avoiding nasty UI race in save/restore onClick()");
+                    Log.v(TAG, "OMG, avoiding nasty UI race in sync/restore onClick()");
                     return;
                 }
 
@@ -305,13 +305,13 @@ public class Apple2MainMenu {
                     JSONObject map = new JSONObject(jsonData);
                     String diskPath1 = map.getString("disk1");
                     boolean readOnly1 = map.getBoolean("readOnly1");
-                    Apple2Preferences.CURRENT_DISK_A.setPath(mActivity, diskPath1);
-                    Apple2Preferences.CURRENT_DISK_A_RO.saveBoolean(mActivity, readOnly1);
+                    Apple2Preferences.setJSONPref(Apple2DisksMenu.SETTINGS.CURRENT_DISK_PATH_A, diskPath1);
+                    Apple2Preferences.setJSONPref(Apple2DisksMenu.SETTINGS.CURRENT_DISK_PATH_A_RO, readOnly1);
 
                     String diskPath2 = map.getString("disk2");
                     boolean readOnly2 = map.getBoolean("readOnly2");
-                    Apple2Preferences.CURRENT_DISK_B.setPath(mActivity, diskPath2);
-                    Apple2Preferences.CURRENT_DISK_B_RO.saveBoolean(mActivity, readOnly2);
+                    Apple2Preferences.setJSONPref(Apple2DisksMenu.SETTINGS.CURRENT_DISK_PATH_B, diskPath2);
+                    Apple2Preferences.setJSONPref(Apple2DisksMenu.SETTINGS.CURRENT_DISK_PATH_B_RO, readOnly2);
                 } catch (JSONException je) {
                     Log.v(TAG, "OOPS : " + je);
                 }

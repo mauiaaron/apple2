@@ -30,12 +30,15 @@ typedef struct prefs_domain_s {
 static JSON_ref jsonPrefs = NULL;
 static prefs_domain_s *domains = NULL;
 static char *prefsFile = NULL;
+static unsigned long listenerCount = 0;
 
 static pthread_mutex_t prefsLock = PTHREAD_MUTEX_INITIALIZER;
 
 // ----------------------------------------------------------------------------
 
 void prefs_load(void) {
+    pthread_mutex_lock(&prefsLock);
+
     FREE(prefsFile);
 
     const char *apple2JSON = getenv("APPLE2IX_JSON");
@@ -44,7 +47,11 @@ void prefs_load(void) {
     }
 
     if (!prefsFile) {
+#ifdef ANDROID
+        ASPRINTF(&prefsFile, "%s/.apple2.json", data_dir);
+#else
         ASPRINTF(&prefsFile, "%s/.apple2.json", getenv("HOME"));
+#endif
     }
     assert(prefsFile);
 
@@ -55,21 +62,22 @@ void prefs_load(void) {
         assert(tokCount > 0);
     }
 
-    prefs_sync(NULL);
+    pthread_mutex_unlock(&prefsLock);
 }
 
 void prefs_loadString(const char *jsonString) {
+    pthread_mutex_lock(&prefsLock);
     json_destroy(&jsonPrefs);
     int tokCount = json_createFromString(jsonString, &jsonPrefs);
     if (tokCount < 0) {
         tokCount = json_createFromString("{}", &jsonPrefs);
         assert(tokCount > 0);
     }
-
-    prefs_sync(NULL);
+    pthread_mutex_unlock(&prefsLock);
 }
 
 bool prefs_save(void) {
+    pthread_mutex_lock(&prefsLock);
 
     int fd = -1;
     bool success = false;
@@ -112,7 +120,7 @@ bool prefs_save(void) {
             "||||||||||||||||||||||||||||||||||||||||" };
 #endif
 
-        TEMP_FAILURE_RETRY(fd = open(prefsFile, O_WRONLY|O_CREAT, S_IRUSR|S_IWUSR));
+        TEMP_FAILURE_RETRY(fd = open(prefsFile, O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR));
         if (fd == -1) {
             PREFS_ERRPRINT();
 #if defined(INTERFACE_CLASSIC) && !TESTING
@@ -132,7 +140,29 @@ bool prefs_save(void) {
         TEMP_FAILURE_RETRY(close(fd));
     }
 
+    pthread_mutex_unlock(&prefsLock);
+
     return success;
+}
+
+bool prefs_copyJSONValue(const char * _NONNULL domain, const char * _NONNULL key, INOUT JSON_ref *jsonVal) {
+    pthread_mutex_lock(&prefsLock);
+
+    bool ret = false;
+    JSON_ref jsonRef = NULL;
+    do {
+        int errCount = json_mapCopyJSON(jsonPrefs, domain, &jsonRef);
+        if (errCount < 0) {
+            break;
+        }
+
+        ret = json_mapCopyJSON(jsonRef, key, jsonVal);
+    } while (0);
+
+    pthread_mutex_unlock(&prefsLock);
+    json_destroy(&jsonRef);
+
+    return ret;
 }
 
 bool prefs_copyStringValue(const char *domain, const char *key, INOUT char **val) {
@@ -362,11 +392,13 @@ void prefs_registerListener(const char *domain, prefs_change_callback_f callback
     newL->nextListener = oldL;
     newL->prefsChanged = callback;
 
+    ++listenerCount;
+
     pthread_mutex_unlock(&prefsLock);
 }
 
 void prefs_sync(const char *domain) {
-    static int syncCount = 0;
+    static unsigned long syncCount = 0;
     pthread_mutex_lock(&prefsLock);
     ++syncCount;
     if (syncCount > 1) {
@@ -375,16 +407,34 @@ void prefs_sync(const char *domain) {
     }
     pthread_mutex_unlock(&prefsLock);
 
+    void **alreadySynced = MALLOC(listenerCount * sizeof(void *));
+    unsigned long idx = 0;
+
     prefs_domain_s *dom = domains;
     do {
         while (dom) {
             if (domain && (strcmp(domain, dom->domain) != 0)) {
+                dom = dom->nextDomain;
                 continue;
             }
 
             prefs_listener_s *listener = dom->listeners;
             while (listener) {
-                listener->prefsChanged(dom->domain);
+
+                bool foundAlready = false;
+                for (unsigned long i = 0; i < idx; i++) {
+                    if (alreadySynced[i] == (void *)listener->prefsChanged) {
+                        LOG("ignoring already synced listener %p for domain %s", alreadySynced[i], dom->domain);
+                        foundAlready = true;
+                        break;
+                    }
+                }
+
+                if (!foundAlready) {
+                    alreadySynced[idx++] = (void *)listener->prefsChanged;
+                    assert(idx <= listenerCount);
+                    listener->prefsChanged(dom->domain);
+                }
                 listener = listener->nextListener;
             }
 
@@ -404,6 +454,8 @@ void prefs_sync(const char *domain) {
         pthread_mutex_unlock(&prefsLock);
 
     } while (1);
+
+    FREE(alreadySynced);
 }
 
 void prefs_shutdown(bool emulatorShuttingDown) {
@@ -411,9 +463,9 @@ void prefs_shutdown(bool emulatorShuttingDown) {
         return;
     }
 
-    FREE(prefsFile);
-
     pthread_mutex_lock(&prefsLock);
+
+    FREE(prefsFile);
 
     prefs_domain_s *dom = domains;
     domains = NULL;
@@ -432,6 +484,8 @@ void prefs_shutdown(bool emulatorShuttingDown) {
         FREE(dead->domain);
         FREE(dead);
     }
+
+    listenerCount = 0;
 
     pthread_mutex_unlock(&prefsLock);
 }

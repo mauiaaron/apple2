@@ -101,10 +101,13 @@ bool json_arrayParseFloatValueAtIndex(const JSON_ref array, unsigned long index,
 //bool json_arraySetFloatValue(const JSON_ref array, unsigned long index, float val);
 
 // ----------------------------------------------------------------------------
-// serialization
+// serialization & misc
 
 // serialize to file descriptor
 bool json_serialize(JSON_ref json, int fd, bool pretty);
+
+// unescape all \/ characters (<sigh> a big fhank you to Java org.json.JSONXXX !)
+bool json_unescapeSlashes(char **kbdPath);
 
 // ----------------------------------------------------------------------------
 // destructor

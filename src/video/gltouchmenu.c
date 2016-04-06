@@ -75,8 +75,10 @@ static struct {
     float maxAlpha;
 
     // pending changes requiring reinitialization
-    unsigned int nextGlyphMultiplier;
+    bool prefsChanged;
 } menu = { 0 };
+
+static void gltouchmenu_applyPrefs(void);
 
 // ----------------------------------------------------------------------------
 
@@ -92,9 +94,12 @@ static inline void _show_top_left(void) {
     topMenuTemplate[0][0]  = ICONTEXT_MENU_SPROUT;
     topMenuTemplate[0][1]  = MOUSETEXT_RIGHT;
 
-    if (joydriver_ownsScreen()) {
+    long lVal = 0;
+    interface_device_t screenOwner = prefs_parseLongValue(PREF_DOMAIN_TOUCHSCREEN, PREF_SCREEN_OWNER, &lVal, /*base:*/10) ? (interface_device_t)lVal : TOUCH_DEVICE_NONE;
+
+    if (screenOwner == TOUCH_DEVICE_JOYSTICK || screenOwner == TOUCH_DEVICE_JOYSTICK_KEYPAD) {
         topMenuTemplate[1][0] = ICONTEXT_UPPERCASE;
-        if (joydriver_getTouchVariant() == EMULATED_JOYSTICK) {
+        if (screenOwner == TOUCH_DEVICE_JOYSTICK) {
             topMenuTemplate[1][1] = ICONTEXT_MENU_TOUCHJOY_KPAD;
         } else {
             topMenuTemplate[1][1] = ICONTEXT_MENU_TOUCHJOY;
@@ -174,7 +179,7 @@ static inline void _screen_to_menu(float x, float y, OUTPARM int *col, OUTPARM i
     //LOG("SCREEN TO MENU : menuX:%d menuXMax:%d menuW:%d keyW:%d ... scrn:(%f,%f)->kybd:(%d,%d)", touchport.topLeftX, touchport.topLeftXMax, touchport.width, keyW, x, y, *col, *row);
 }
 
-static inline bool _sprout_menu(float x, float y) {
+static bool _sprout_menu(float x, float y) {
 
     if (! (_is_point_on_left_menu(x, y) || _is_point_on_right_menu(x, y)) ) {
         return false;
@@ -226,7 +231,46 @@ static inline bool _sprout_menu(float x, float y) {
     }
 }
 
-static inline int64_t _tap_menu_item(float x, float y) {
+static inline void _step_cpu_speed(int delta) {
+    bool wasPaused = cpu_isPaused();
+
+    if (!wasPaused) {
+        cpu_pause();
+    }
+
+    // TODO FIXME : consolidate with other CPU stepping code in interface.c/timing.c/glalert.c animation =D
+    float scale = roundf(cpu_scale_factor * 100.f);
+    if (delta < 0) {
+        if (scale > 400.f) {
+            scale = 375.f;
+        } else if (scale > 100.f) {
+            scale -= 25.f;
+        } else {
+            scale -= 5.f;
+        }
+    } else {
+        if (scale >= 100.f) {
+            scale += 25.f;
+        } else {
+            scale += 5.f;
+        }
+    }
+
+    prefs_setFloatValue(PREF_DOMAIN_VM, PREF_CPU_SCALE, scale);
+    prefs_sync(PREF_DOMAIN_VM);
+
+    if (video_animations->animation_showCPUSpeed) {
+        video_animations->animation_showCPUSpeed();
+    }
+
+    timing_initialize();
+
+    if (!wasPaused) {
+        cpu_resume();
+    }
+}
+
+static int64_t _tap_menu_item(float x, float y) {
     if (! (_is_point_on_left_menu(x, y) || _is_point_on_right_menu(x, y)) ) {
         return 0x0LL;
     }
@@ -243,18 +287,19 @@ static inline int64_t _tap_menu_item(float x, float y) {
 
         case MOUSETEXT_LEFT:
             LOG("decreasing cpu speed...");
-            flags |= TOUCH_FLAGS_CPU_SPEED_DEC;
+            _step_cpu_speed(-1);
             break;
 
         case MOUSETEXT_RIGHT:
             LOG("increasing cpu speed...");
-            flags |= TOUCH_FLAGS_CPU_SPEED_INC;
+            _step_cpu_speed(1);
             break;
 
         case MOUSETEXT_CHECKMARK:
             LOG("showing main menu...");
             flags |= TOUCH_FLAGS_REQUEST_HOST_MENU;
             _hide_top_right();
+            prefs_save();
             break;
 
         case ICONTEXT_MENU_TOUCHJOY:
@@ -262,6 +307,8 @@ static inline int64_t _tap_menu_item(float x, float y) {
             flags |= TOUCH_FLAGS_INPUT_DEVICE_CHANGE;
             flags |= TOUCH_FLAGS_JOY;
             _hide_top_left();
+            prefs_setLongValue(PREF_DOMAIN_TOUCHSCREEN, PREF_SCREEN_OWNER, TOUCH_DEVICE_JOYSTICK);
+            prefs_sync(PREF_DOMAIN_TOUCHSCREEN);
             break;
 
         case ICONTEXT_MENU_TOUCHJOY_KPAD:
@@ -269,6 +316,8 @@ static inline int64_t _tap_menu_item(float x, float y) {
             flags |= TOUCH_FLAGS_INPUT_DEVICE_CHANGE;
             flags |= TOUCH_FLAGS_JOY_KPAD;
             _hide_top_left();
+            prefs_setLongValue(PREF_DOMAIN_TOUCHSCREEN, PREF_SCREEN_OWNER, TOUCH_DEVICE_JOYSTICK_KEYPAD);
+            prefs_sync(PREF_DOMAIN_TOUCHSCREEN);
             break;
 
         case ICONTEXT_UPPERCASE:
@@ -276,6 +325,8 @@ static inline int64_t _tap_menu_item(float x, float y) {
             flags |= TOUCH_FLAGS_INPUT_DEVICE_CHANGE;
             flags |= TOUCH_FLAGS_KBD;
             _hide_top_left();
+            prefs_setLongValue(PREF_DOMAIN_TOUCHSCREEN, PREF_SCREEN_OWNER, TOUCH_DEVICE_KEYBOARD);
+            prefs_sync(PREF_DOMAIN_TOUCHSCREEN);
             break;
 
         case ICONTEXT_MENU_SPROUT:
@@ -352,7 +403,6 @@ static void gltouchmenu_shutdown(void) {
 
     menu.topLeftShowing = false;
     menu.topRightShowing = false;
-    menu.nextGlyphMultiplier = 0;
 
     mdlDestroyModel(&menu.model);
 }
@@ -361,6 +411,10 @@ static void gltouchmenu_setup(void) {
     LOG("gltouchmenu_setup ...");
 
     gltouchmenu_shutdown();
+
+    if (menu.prefsChanged) {
+        gltouchmenu_applyPrefs();
+    }
 
     menu.model = mdlCreateQuad((GLModelParams_s){
             .skew_x = -1.0,
@@ -399,11 +453,8 @@ static void gltouchmenu_render(void) {
     if (!isEnabled) {
         return;
     }
-
-    if (menu.nextGlyphMultiplier) {
-        menu.glyphMultiplier = menu.nextGlyphMultiplier;
-        menu.nextGlyphMultiplier = 0;
-        gltouchmenu_setup();
+    if (UNLIKELY(menu.prefsChanged)) {
+        gltouchmenu_setup(); // fully set up again on prefs change
     }
 
     float alpha = glhud_getTimedVisibility(menu.timingBegin, menu.minAlpha, menu.maxAlpha);
@@ -434,6 +485,7 @@ static void gltouchmenu_render(void) {
 
 static void gltouchmenu_reshape(int w, int h, bool landscape) {
     LOG("w:%d h:%d landscape:%d", w, h, landscape);
+    assert(video_isRenderThread());
 
     touchport.topLeftX = 0;
     touchport.topLeftY = 0;
@@ -465,6 +517,9 @@ static int64_t gltouchmenu_onTouchEvent(interface_touch_event_t action, int poin
         return 0x0;
     }
     if (!isEnabled) {
+        return 0x0;
+    }
+    if (UNLIKELY(menu.prefsChanged)) {
         return 0x0;
     }
 
@@ -520,14 +575,6 @@ static int64_t gltouchmenu_onTouchEvent(interface_touch_event_t action, int poin
 // ----------------------------------------------------------------------------
 // Animation and settings handling
 
-static bool gltouchmenu_isTouchMenuAvailable(void) {
-    return isAvailable;
-}
-
-static void gltouchmenu_setTouchMenuEnabled(bool enabled) {
-    isEnabled = enabled;
-}
-
 static void _animation_showTouchMenu(void) {
     clock_gettime(CLOCK_MONOTONIC, &menu.timingBegin);
 }
@@ -538,16 +585,36 @@ static void _animation_hideTouchMenu(void) {
     menu.timingBegin = (struct timespec){ 0 };
 }
 
-static void gltouchmenu_setTouchMenuVisibility(float inactiveAlpha, float activeAlpha) {
-    menu.minAlpha = inactiveAlpha;
-    menu.maxAlpha = activeAlpha;
+static void gltouchmenu_applyPrefs(void) {
+    assert(video_isRenderThread());
+
+    menu.prefsChanged = false;
+
+    bool bVal = false;
+    float fVal = 0.f;
+    long lVal = 0;
+
+    isEnabled            = prefs_parseBoolValue (PREF_DOMAIN_KEYBOARD, PREF_TOUCHMENU_ENABLED, &bVal) ? bVal : true;
+
+    menu.minAlpha        = prefs_parseFloatValue(PREF_DOMAIN_KEYBOARD, PREF_MIN_ALPHA,        &fVal) ? fVal : 1/4.f;
+    menu.maxAlpha        = prefs_parseFloatValue(PREF_DOMAIN_KEYBOARD, PREF_MAX_ALPHA,        &fVal) ? fVal : 1.f;
+    menu.glyphMultiplier = prefs_parseLongValue (PREF_DOMAIN_KEYBOARD, PREF_GLYPH_MULTIPLIER, &lVal, /*base:*/10) ? lVal : 2;
+    if (menu.glyphMultiplier == 0) {
+        menu.glyphMultiplier = 1;
+    }
+    if (menu.glyphMultiplier > 4) {
+        menu.glyphMultiplier = 4;
+    }
+
+    long width            = prefs_parseLongValue (PREF_DOMAIN_INTERFACE, PREF_DEVICE_WIDTH,      &lVal, 10) ? lVal : (long)(SCANWIDTH*1.5);
+    long height           = prefs_parseLongValue (PREF_DOMAIN_INTERFACE, PREF_DEVICE_HEIGHT,     &lVal, 10) ? lVal : (long)(SCANHEIGHT*1.5);
+    bool isLandscape      = prefs_parseBoolValue (PREF_DOMAIN_INTERFACE, PREF_DEVICE_LANDSCAPE,  &bVal)     ? bVal : true;
+
+    gltouchmenu_reshape(width, height, isLandscape);
 }
 
-static void gltouchmenu_setGlyphScale(int glyphScale) {
-    if (glyphScale == 0) {
-        glyphScale = 1;
-    }
-    menu.nextGlyphMultiplier = glyphScale;
+static void gltouchmenu_prefsChanged(const char *domain) {
+    menu.prefsChanged = true;
 }
 
 // ----------------------------------------------------------------------------
@@ -559,24 +626,18 @@ static void _init_gltouchmenu(void) {
     video_animations->animation_showTouchMenu = &_animation_showTouchMenu;
     video_animations->animation_hideTouchMenu = &_animation_hideTouchMenu;
 
-    interface_isTouchMenuAvailable = &gltouchmenu_isTouchMenuAvailable;
-    interface_setTouchMenuEnabled = &gltouchmenu_setTouchMenuEnabled;
-    interface_setTouchMenuVisibility = &gltouchmenu_setTouchMenuVisibility;
-    interface_setGlyphScale = &gltouchmenu_setGlyphScale;
-
-    menu.glyphMultiplier = 1;
-    menu.minAlpha = 1/4.f;   // Minimum alpha value of components (at zero, will not render)
-    menu.maxAlpha = 1.f;
+    menu.prefsChanged = true;
 
     glnode_registerNode(RENDER_TOP, (GLNode){
         .type = TOUCH_DEVICE_TOPMENU,
         .setup = &gltouchmenu_setup,
         .shutdown = &gltouchmenu_shutdown,
         .render = &gltouchmenu_render,
-        .reshape = &gltouchmenu_reshape,
         .onTouchEvent = &gltouchmenu_onTouchEvent,
-        .setData = NULL,
     });
+
+    prefs_registerListener(PREF_DOMAIN_KEYBOARD, &gltouchmenu_prefsChanged);
+    prefs_registerListener(PREF_DOMAIN_INTERFACE, &gltouchmenu_prefsChanged);
 }
 
 static __attribute__((constructor)) void __init_gltouchmenu(void) {

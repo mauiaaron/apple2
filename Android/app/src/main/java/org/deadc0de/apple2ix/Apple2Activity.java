@@ -42,7 +42,6 @@ public class Apple2Activity extends Activity {
     private static volatile boolean DEBUG_STRICT = false;
 
     private Apple2View mView = null;
-    private Runnable mGraphicsInitializedRunnable = null;
     private Apple2SplashScreen mSplashScreen = null;
     private Apple2MainMenu mMainMenu = null;
     private Apple2SettingsMenu mSettingsMenu = null;
@@ -78,17 +77,13 @@ public class Apple2Activity extends Activity {
 
     private static native String nativeLoadState(String path);
 
-    private static native void nativeEmulationResume();
+    private static native boolean nativeEmulationResume();
 
-    private static native void nativeEmulationPause();
+    private static native boolean nativeEmulationPause();
 
     private static native void nativeOnQuit();
 
     private static native void nativeReboot();
-
-    private static native void nativeChooseDisk(String path, boolean driveA, boolean readOnly);
-
-    private static native void nativeEjectDisk(boolean driveA);
 
     public final static boolean isNativeBarfed() {
         return sNativeBarfed;
@@ -119,8 +114,6 @@ public class Apple2Activity extends Activity {
             setContentView(new View(this));
         }
 
-        Apple2Preferences.LANDSCAPE_MODE.load(this);
-
         Apple2CrashHandler.getInstance().initializeAndSetCustomExceptionHandler(this);
         if (sNativeBarfed) {
             Log.e(TAG, "NATIVE BARFED...", sNativeBarfedThrowable);
@@ -132,20 +125,17 @@ public class Apple2Activity extends Activity {
         int stereoBufferSize = DevicePropertyCalculator.getRecommendedBufferSize(this, /*isStereo:*/true);
         Log.d(TAG, "Device sampleRate:" + sampleRate + " mono bufferSize:" + monoBufferSize + " stereo bufferSize:" + stereoBufferSize);
 
-        String dataDir = Apple2DisksMenu.getDataDir(this);
+        String dataDir = Apple2Utils.getDataDir(this);
         nativeOnCreate(dataDir, sampleRate, monoBufferSize, stereoBufferSize);
 
-        final boolean firstTime = (Apple2Preferences.EMULATOR_VERSION.intValue(this) != BuildConfig.VERSION_CODE);
-        if (firstTime) {
-            // allow for primitive migrations as needed
-            Apple2Preferences.EMULATOR_VERSION.saveInt(this, BuildConfig.VERSION_CODE);
-            Log.v(TAG, "Triggering migration to Apple2ix version : " + BuildConfig.VERSION_NAME);
+        // NOTE: ordering here is important!
+        Apple2Preferences.load(this);
+        final boolean firstTime = Apple2Preferences.migrate(this);
+        Apple2VideoSettingsMenu.SETTINGS.applyLandscapeMode(this);
+        Apple2Preferences.sync(this, null);
 
-            // HACK FIXME TODO 2016/01/24 REMOVE AFTER version 16 ships ... force enables Mockingboard
-            if (BuildConfig.VERSION_CODE == 16) {
-                Apple2Preferences.MOCKINGBOARD_ENABLED.saveBoolean(this, true);
-            }
-        }
+        Apple2DisksMenu.insertDisk((String) Apple2Preferences.getJSONPref(Apple2DisksMenu.SETTINGS.CURRENT_DISK_PATH_A), /*driveA:*/true, (boolean) Apple2Preferences.getJSONPref(Apple2DisksMenu.SETTINGS.CURRENT_DISK_PATH_A_RO));
+        Apple2DisksMenu.insertDisk((String) Apple2Preferences.getJSONPref(Apple2DisksMenu.SETTINGS.CURRENT_DISK_PATH_B), /*driveA:*/false, (boolean) Apple2Preferences.getJSONPref(Apple2DisksMenu.SETTINGS.CURRENT_DISK_PATH_B_RO));
 
         showSplashScreen(!firstTime);
         Apple2CrashHandler.getInstance().checkForCrashes(this);
@@ -171,25 +161,15 @@ public class Apple2Activity extends Activity {
             }
         }
 
-        mGraphicsInitializedRunnable = new Runnable() {
-            @Override
-            public void run() {
-                if (firstTime) {
-                    Apple2Preferences.KeypadPreset.IJKM_SPACE.apply(Apple2Activity.this);
-                }
-                Apple2Preferences.loadPreferences(Apple2Activity.this);
-            }
-        };
-
         // first-time initializations
         final boolean externalStoragePermission = extperm;
         if (firstTime) {
             new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    Apple2DisksMenu.exposeAPKAssets(Apple2Activity.this);
+                    Apple2Utils.exposeAPKAssets(Apple2Activity.this);
                     if (externalStoragePermission) {
-                        Apple2DisksMenu.exposeAPKAssetsToExternal(Apple2Activity.this);
+                        Apple2Utils.exposeAPKAssetsToExternal(Apple2Activity.this);
                     }
                     mSplashScreen.setDismissable(true);
                     Log.d(TAG, "Finished first time copying...");
@@ -226,7 +206,7 @@ public class Apple2Activity extends Activity {
             }
             if (grantedPermissions) {
                 // this will force copying APK files (now that we have permission
-                Apple2DisksMenu.exposeAPKAssetsToExternal(Apple2Activity.this);
+                Apple2Utils.exposeAPKAssetsToExternal(Apple2Activity.this);
             } // else ... we keep nagging on app startup ...
         } else {
             super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -256,6 +236,12 @@ public class Apple2Activity extends Activity {
         boolean wasPausing = mPausing.getAndSet(true);
         if (wasPausing) {
             return;
+        }
+
+        if (isEmulationPaused()) {
+            Apple2Preferences.save(this);
+        } else {
+            Log.d(TAG, "Letting native save preferences...");
         }
 
         Log.d(TAG, "onPause()");
@@ -347,19 +333,20 @@ public class Apple2Activity extends Activity {
                         return;
                     }
 
-                    Apple2Preferences.CURRENT_DISK_A_RO.saveBoolean(Apple2Activity.this, true);
+                    Apple2Preferences.setJSONPref(Apple2DisksMenu.SETTINGS.CURRENT_DISK_PATH_A_RO, true);
                     final int len = diskPath.length();
                     final String suffix = diskPath.substring(len - 3, len);
                     if (suffix.equalsIgnoreCase(".gz")) { // HACK FIXME TODO : small amount of code duplication of Apple2DisksMenu
                         diskPath = diskPath.substring(0, len - 3);
                     }
-                    Apple2Preferences.CURRENT_DISK_A.saveString(Apple2Activity.this, diskPath);
+
+                    Apple2DisksMenu.insertDisk(diskPath, /*driveA:*/true, /*readOnly:*/true);
 
                     while (mDisksMenu.popPathStack() != null) {
                         /* ... */
                     }
 
-                    File storageDir = Apple2DisksMenu.getExternalStorageDirectory(Apple2Activity.this);
+                    File storageDir = Apple2Utils.getExternalStorageDirectory(Apple2Activity.this);
                     if (storageDir != null) {
                         String storagePath = storageDir.getAbsolutePath();
                         if (diskPath.contains(storagePath)) {
@@ -402,8 +389,7 @@ public class Apple2Activity extends Activity {
         boolean glViewFirstTime = false;
         if (mView == null) {
             glViewFirstTime = true;
-            mView = new Apple2View(this, mGraphicsInitializedRunnable);
-            mGraphicsInitializedRunnable = null;
+            mView = new Apple2View(this);
             mMainMenu = new Apple2MainMenu(this, mView);
         }
 
@@ -424,7 +410,7 @@ public class Apple2Activity extends Activity {
         //
         mMenuStack.add(apple2MenuView);
         View menuView = apple2MenuView.getView();
-        nativeEmulationPause();
+        pauseEmulation();
         addContentView(menuView, new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
     }
 
@@ -498,7 +484,7 @@ public class Apple2Activity extends Activity {
                 if (dismissedSplashScreen) {
                     setupGLView();
                 } else {
-                    nativeEmulationResume();
+                    maybeResumeEmulation();
                 }
             }
         }
@@ -512,12 +498,19 @@ public class Apple2Activity extends Activity {
 
     public void maybeResumeEmulation() {
         if (mMenuStack.size() == 0 && !mPausing.get()) {
-            nativeEmulationResume();
+            Apple2Preferences.sync(this, null);
+            boolean previouslyPaused = nativeEmulationResume();
+            if (BuildConfig.DEBUG && !previouslyPaused) {
+                throw new RuntimeException("expecting native CPU thread to have been paused");
+            }
         }
     }
 
     public void pauseEmulation() {
-        nativeEmulationPause();
+        boolean previouslyRunning = nativeEmulationPause();
+        if (previouslyRunning) {
+            Apple2Preferences.load(this);
+        }
     }
 
     public void rebootEmulation() {
@@ -530,14 +523,6 @@ public class Apple2Activity extends Activity {
 
     public String loadState(String stateFile) {
         return Apple2Activity.nativeLoadState(stateFile);
-    }
-
-    public void chooseDisk(String path, boolean driveA, boolean readOnly) {
-        nativeChooseDisk(path, driveA, readOnly);
-    }
-
-    public void ejectDisk(boolean driveA) {
-        nativeEjectDisk(driveA);
     }
 
     public void quitEmulator() {

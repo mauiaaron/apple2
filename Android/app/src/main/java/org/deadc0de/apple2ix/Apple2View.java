@@ -50,8 +50,6 @@ class Apple2View extends GLSurfaceView implements InputManagerCompat.InputDevice
     public final static long NATIVE_TOUCH_JOY_KPAD = (1 << 8);
 
     public final static long NATIVE_TOUCH_INPUT_DEVICE_CHANGED = (1 << 16);
-    public final static long NATIVE_TOUCH_CPU_SPEED_DEC = (1 << 17);
-    public final static long NATIVE_TOUCH_CPU_SPEED_INC = (1 << 18);
 
     public final static long NATIVE_TOUCH_ASCII_SCANCODE_SHIFT = 32;
     public final static long NATIVE_TOUCH_ASCII_SCANCODE_MASK = 0xFFFFL;
@@ -60,16 +58,15 @@ class Apple2View extends GLSurfaceView implements InputManagerCompat.InputDevice
 
 
     private Apple2Activity mActivity;
-    private Runnable mGraphicsInitializedRunnable;
     private final InputManagerCompat mInputManager;
 
     private float[] mXCoords = new float[MAX_FINGERS];
     private float[] mYCoords = new float[MAX_FINGERS];
 
+    private int mWidth = 0;
+    private int mHeight = 0;
 
-    private static native void nativeGraphicsInitialized(int width, int height, boolean landscape);
-
-    private static native void nativeGraphicsChanged(int width, int height, boolean landscape);
+    private static native void nativeGraphicsInitialized();
 
     private static native void nativeRender();
 
@@ -78,10 +75,9 @@ class Apple2View extends GLSurfaceView implements InputManagerCompat.InputDevice
     public static native long nativeOnTouch(int action, int pointerCount, int pointerIndex, float[] xCoords, float[] yCoords);
 
 
-    public Apple2View(Apple2Activity activity, Runnable graphicsInitializedRunnable) {
+    public Apple2View(Apple2Activity activity) {
         super(activity.getApplication());
         mActivity = activity;
-        mGraphicsInitializedRunnable = graphicsInitializedRunnable;
 
         setFocusable(true);
         setFocusableInTouchMode(true);
@@ -123,13 +119,12 @@ class Apple2View extends GLSurfaceView implements InputManagerCompat.InputDevice
                 Apple2View.this.getWindowVisibleDisplayFrame(rect);
                 int h = rect.height();
                 int w = rect.width();
-                if (w < h) {
-                    // assure landscape dimensions
-                    final int w_ = w;
-                    w = h;
-                    h = w_;
+                if (w != mWidth || h != mHeight) {
+                    mWidth = w;
+                    mHeight = h;
+                    Apple2Preferences.setJSONPref(Apple2Preferences.PREF_DOMAIN_INTERFACE, Apple2Preferences.PREF_DEVICE_WIDTH, mWidth);
+                    Apple2Preferences.setJSONPref(Apple2Preferences.PREF_DOMAIN_INTERFACE, Apple2Preferences.PREF_DEVICE_HEIGHT, mHeight);
                 }
-                nativeGraphicsChanged(w, h, Apple2Preferences.LANDSCAPE_MODE.booleanValue(Apple2View.this.mActivity));
             }
         });
 
@@ -358,25 +353,17 @@ class Apple2View extends GLSurfaceView implements InputManagerCompat.InputDevice
 
         @Override
         public void onSurfaceChanged(GL10 gl, int width, int height) {
-            Apple2Preferences.GL_VENDOR.saveString(mActivity, GLES20.glGetString(GLES20.GL_VENDOR));
-            Apple2Preferences.GL_RENDERER.saveString(mActivity, GLES20.glGetString(GLES20.GL_RENDERER));
-            Apple2Preferences.GL_VERSION.saveString(mActivity, GLES20.glGetString(GLES20.GL_VERSION));
+            Apple2Preferences.setJSONPref(Apple2CrashHandler.SETTINGS.GL_VENDOR, GLES20.glGetString(GLES20.GL_VENDOR));
+            Apple2Preferences.setJSONPref(Apple2CrashHandler.SETTINGS.GL_RENDERER, GLES20.glGetString(GLES20.GL_RENDERER));
+            Apple2Preferences.setJSONPref(Apple2CrashHandler.SETTINGS.GL_VERSION, GLES20.glGetString(GLES20.GL_VERSION));
 
             Log.v(TAG, "graphicsInitialized(" + width + ", " + height + ")");
 
-            if (width < height) {
-                // assure landscape dimensions
-                final int w_ = width;
-                width = height;
-                height = w_;
-            }
-
-            nativeGraphicsInitialized(width, height, Apple2Preferences.LANDSCAPE_MODE.booleanValue(Apple2View.this.mActivity));
-
-            if (Apple2View.this.mGraphicsInitializedRunnable != null) {
-                Apple2View.this.mGraphicsInitializedRunnable.run();
-                Apple2View.this.mGraphicsInitializedRunnable = null;
-            }
+            Apple2View.this.mWidth = width;
+            Apple2View.this.mHeight = height;
+            Apple2Preferences.setJSONPref(Apple2Preferences.PREF_DOMAIN_INTERFACE, Apple2Preferences.PREF_DEVICE_WIDTH, mWidth);
+            Apple2Preferences.setJSONPref(Apple2Preferences.PREF_DOMAIN_INTERFACE, Apple2Preferences.PREF_DEVICE_HEIGHT, mHeight);
+            nativeGraphicsInitialized();
 
             Apple2View.this.mActivity.maybeResumeEmulation();
         }
@@ -517,7 +504,7 @@ class Apple2View extends GLSurfaceView implements InputManagerCompat.InputDevice
             }
 
             if ((nativeFlags & NATIVE_TOUCH_KEY_TAP) != 0) {
-                if (Apple2Preferences.KEYBOARD_CLICK_ENABLED.booleanValue(mActivity)) {
+                if ((boolean) Apple2Preferences.getJSONPref(Apple2KeyboardSettingsMenu.SETTINGS.KEYBOARD_ENABLE_CLICK)) {
                     AudioManager am = (AudioManager) mActivity.getSystemService(Context.AUDIO_SERVICE);
                     if (am != null) {
                         am.playSoundEffect(AudioManager.FX_KEY_CLICK);
@@ -531,45 +518,6 @@ class Apple2View extends GLSurfaceView implements InputManagerCompat.InputDevice
                     char ascii = (char) asciiInt;
                     apple2MenuView.onKeyTapCalibrationEvent(ascii, scancode);
                 }
-            }
-
-            if ((nativeFlags & NATIVE_TOUCH_MENU) == 0) {
-                break;
-            }
-
-            // handle menu-specific actions
-
-            if ((nativeFlags & NATIVE_TOUCH_INPUT_DEVICE_CHANGED) != 0) {
-                Apple2Preferences.TouchDeviceVariant nextVariant;
-                if ((nativeFlags & NATIVE_TOUCH_KBD) != 0) {
-                    nextVariant = Apple2Preferences.TouchDeviceVariant.KEYBOARD;
-                } else if ((nativeFlags & NATIVE_TOUCH_JOY) != 0) {
-                    nextVariant = Apple2Preferences.TouchDeviceVariant.JOYSTICK;
-                } else if ((nativeFlags & NATIVE_TOUCH_JOY_KPAD) != 0) {
-                    nextVariant = Apple2Preferences.TouchDeviceVariant.JOYSTICK_KEYPAD;
-                } else {
-                    int touchDevice = Apple2Preferences.nativeGetCurrentTouchDevice();
-                    nextVariant = Apple2Preferences.TouchDeviceVariant.next(touchDevice);
-                }
-                Apple2Preferences.CURRENT_TOUCH_DEVICE.saveTouchDevice(mActivity, nextVariant);
-            } else if ((nativeFlags & NATIVE_TOUCH_CPU_SPEED_DEC) != 0) {
-                int percentSpeed = Apple2Preferences.nativeGetCPUSpeed();
-                if (percentSpeed > 400) { // HACK: max value from native side
-                    percentSpeed = 375;
-                } else if (percentSpeed > 100) {
-                    percentSpeed -= 25;
-                } else {
-                    percentSpeed -= 5;
-                }
-                Apple2Preferences.CPU_SPEED_PERCENT.saveInt(mActivity, percentSpeed);
-            } else if ((nativeFlags & NATIVE_TOUCH_CPU_SPEED_INC) != 0) {
-                int percentSpeed = Apple2Preferences.nativeGetCPUSpeed();
-                if (percentSpeed >= 100) {
-                    percentSpeed += 25;
-                } else {
-                    percentSpeed += 5;
-                }
-                Apple2Preferences.CPU_SPEED_PERCENT.saveInt(mActivity, percentSpeed);
             }
         } while (false);
 

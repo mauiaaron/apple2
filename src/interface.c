@@ -18,11 +18,6 @@
 #if INTERFACE_TOUCH
 // touch interface managed elsewhere
 int64_t (*interface_onTouchEvent)(interface_touch_event_t action, int pointer_count, int pointer_idx, float *x_coords, float *y_coords) = NULL;
-bool (*interface_isTouchMenuAvailable)(void) = NULL;
-void (*interface_setTouchMenuEnabled)(bool enabled) = NULL;
-void (*interface_setTouchMenuVisibility)(float inactiveAlpha, float activeAlpha) = NULL;
-void (*interface_setGlyphScale)(int glyphScale) = NULL;
-void (*(*interface_getModelDataSetter)(interface_device_t device))(const char *jsonData) = NULL;
 #endif
 
 static char disk_path[PATH_MAX] = { 0 };
@@ -976,7 +971,7 @@ void c_interface_parameters()
                 {
                     cpu_scale_factor = CPU_SCALE_SLOWEST;
                 }
-                prefs_setFloatValue(PREF_DOMAIN_VM, PREF_CPU_SCALE, cpu_scale_factor);
+                prefs_setFloatValue(PREF_DOMAIN_VM, PREF_CPU_SCALE, roundf(cpu_scale_factor * 100.f));
                 break;
 
             case OPT_ALTCPU:
@@ -985,7 +980,7 @@ void c_interface_parameters()
                 {
                     cpu_altscale_factor = CPU_SCALE_SLOWEST;
                 }
-                prefs_setFloatValue(PREF_DOMAIN_VM, PREF_CPU_SCALE_ALT, cpu_altscale_factor);
+                prefs_setFloatValue(PREF_DOMAIN_VM, PREF_CPU_SCALE_ALT, roundf(cpu_altscale_factor * 100.f));
                 break;
 
             case OPT_PATH:
@@ -1061,7 +1056,7 @@ void c_interface_parameters()
                 {
                     cpu_scale_factor = CPU_SCALE_FASTEST;
                 }
-                prefs_setFloatValue(PREF_DOMAIN_VM, PREF_CPU_SCALE, cpu_scale_factor);
+                prefs_setFloatValue(PREF_DOMAIN_VM, PREF_CPU_SCALE, roundf(cpu_scale_factor * 100.f));
                 break;
 
             case OPT_ALTCPU:
@@ -1070,7 +1065,7 @@ void c_interface_parameters()
                 {
                     cpu_altscale_factor = CPU_SCALE_FASTEST;
                 }
-                prefs_setFloatValue(PREF_DOMAIN_VM, PREF_CPU_SCALE_ALT, cpu_altscale_factor);
+                prefs_setFloatValue(PREF_DOMAIN_VM, PREF_CPU_SCALE_ALT, roundf(cpu_altscale_factor * 100.f));
                 break;
 
             case OPT_PATH:

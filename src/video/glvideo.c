@@ -18,9 +18,6 @@ static int viewportY = 0;
 static int viewportWidth = SCANWIDTH*1.5;
 static int viewportHeight = SCANHEIGHT*1.5;
 
-static int rawWidth = SCANWIDTH*1.5;
-static int rawHeight = SCANHEIGHT*1.5;
-static bool isLandscape = true;
 static float portraitPositionScale = 3/4.f;
 
 GLint texSamplerLoc = UNINITIALIZED_GL;
@@ -36,6 +33,9 @@ static GLModel *crtModel = NULL;
 
 static GLuint vertexShader = UNINITIALIZED_GL;
 static GLuint fragShader = UNINITIALIZED_GL;
+
+static bool prefsChanged = true;
+static void glvideo_applyPrefs(void);
 
 //----------------------------------------------------------------------------
 
@@ -130,6 +130,10 @@ static void _glvideo_setup_hackarounds(void) {
 }
 
 static void glvideo_init(void) {
+
+    if (prefsChanged) {
+        glvideo_applyPrefs();
+    }
 
     _glvideo_setup_hackarounds();
 
@@ -279,6 +283,10 @@ static void glvideo_render(void) {
         return;
     }
 
+    if (UNLIKELY(prefsChanged)) {
+        glvideo_applyPrefs();
+    }
+
     glViewport(viewportX, viewportY, viewportWidth, viewportHeight);
 
 #if PERSPECTIVE
@@ -388,10 +396,7 @@ static void glvideo_render(void) {
 
 static void glvideo_reshape(int w, int h, bool landscape) {
     LOG("w:%d h:%d landscape:%d", w, h, landscape);
-
-    rawWidth = w;
-    rawHeight = h;
-    isLandscape = landscape;
+    assert(video_isRenderThread());
 
     swizzleDimensions(&w, &h, landscape);
 
@@ -410,7 +415,7 @@ static void glvideo_reshape(int w, int h, bool landscape) {
         viewportY = (h-h2)/2;
         viewportWidth = w;
         viewportHeight = h2;
-        if (!isLandscape) {
+        if (!landscape) {
             viewportY = (h-h2) * portraitPositionScale;
         }
         //LOG("OK2 : x:%d,y:%d w:%d,h:%d", viewportX, viewportY, viewportWidth, viewportHeight);
@@ -423,24 +428,29 @@ static void glvideo_reshape(int w, int h, bool landscape) {
     }
 }
 
-#if INTERFACE_TOUCH
-static void glvideo_setData(const char *jsonData) {
-    JSON_ref parsedData = NULL;
-    int tokCount = json_createFromString(jsonData, &parsedData);
+static void glvideo_applyPrefs(void) {
+    assert(video_isRenderThread());
 
-    do {
-        if (tokCount < 0) {
-            break;
-        }
+    prefsChanged = false;
 
-        json_mapParseFloatValue(parsedData, PREF_PORTRAIT_POSITION_SCALE, &portraitPositionScale);
+    float fVal = 0.f;
+    long lVal = 0;
+    bool bVal = false;
 
-        glvideo_reshape(rawWidth, rawHeight, isLandscape);
-    } while (0);
+    portraitPositionScale = prefs_parseFloatValue(PREF_DOMAIN_VIDEO, PREF_PORTRAIT_POSITION_SCALE, &fVal)     ? fVal : 3/4.f;
 
-    json_destroy(&parsedData);
+    long width            = prefs_parseLongValue (PREF_DOMAIN_INTERFACE,   PREF_DEVICE_WIDTH,      &lVal, 10) ? lVal : (long)(SCANWIDTH*1.5);
+    long height           = prefs_parseLongValue (PREF_DOMAIN_INTERFACE,   PREF_DEVICE_HEIGHT,     &lVal, 10) ? lVal : (long)(SCANHEIGHT*1.5);
+    bool isLandscape      = prefs_parseBoolValue (PREF_DOMAIN_INTERFACE,   PREF_DEVICE_LANDSCAPE,  &bVal)     ? bVal : true;
+
+    glvideo_reshape(width, height, isLandscape);
 }
 
+static void glvideo_prefsChanged(const char *domain) {
+    prefsChanged = true;
+}
+
+#if INTERFACE_TOUCH
 static int64_t glvideo_onTouchEvent(interface_touch_event_t action, int pointer_count, int pointer_idx, float *x_coords, float *y_coords) {
     // no-op
     return 0x0;
@@ -456,13 +466,14 @@ static void _init_glvideo(void) {
         .setup = &glvideo_init,
         .shutdown = &glvideo_shutdown,
         .render = &glvideo_render,
-        .reshape = &glvideo_reshape,
 #if INTERFACE_TOUCH
         .type = TOUCH_DEVICE_FRAMEBUFFER,
         .onTouchEvent = &glvideo_onTouchEvent,
-        .setData = &glvideo_setData,
 #endif
     });
+
+    prefs_registerListener(PREF_DOMAIN_VIDEO, &glvideo_prefsChanged);
+    prefs_registerListener(PREF_DOMAIN_INTERFACE, &glvideo_prefsChanged);
 }
 
 static __attribute__((constructor)) void __init_glvideo(void) {

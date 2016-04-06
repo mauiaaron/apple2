@@ -11,10 +11,10 @@
 
 package org.deadc0de.apple2ix;
 
+import android.content.pm.ActivityInfo;
 import android.view.View;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
-import android.widget.TextView;
 
 import java.util.ArrayList;
 
@@ -49,11 +49,17 @@ public class Apple2VideoSettingsMenu extends Apple2AbstractMenu {
             throw new ArrayIndexOutOfBoundsException();
         }
         if (position == SETTINGS.PORTRAIT_CALIBRATE.ordinal()) {
-            if (Apple2Preferences.LANDSCAPE_MODE.booleanValue(mActivity)) {
+            if ((boolean) Apple2Preferences.getJSONPref(SETTINGS.LANDSCAPE_MODE)) {
                 return false;
             }
         }
         return true;
+    }
+
+    public enum HiresColor {
+        BW,
+        COLOR,
+        INTERPOLATED
     }
 
     protected enum SETTINGS implements Apple2AbstractMenu.IMenuEnum {
@@ -69,14 +75,30 @@ public class Apple2VideoSettingsMenu extends Apple2AbstractMenu {
             }
 
             @Override
+            public String getPrefDomain() {
+                return Apple2Preferences.PREF_DOMAIN_INTERFACE;
+            }
+
+            @Override
+            public String getPrefKey() {
+                return "landscapeEnabled";
+            }
+
+            @Override
+            public Object getPrefDefault() {
+                return true;
+            }
+
+            @Override
             public final View getView(final Apple2Activity activity, View convertView) {
+                final Object self = this;
                 convertView = _basicView(activity, this, convertView);
-                CheckBox cb = _addCheckbox(activity, this, convertView, Apple2Preferences.LANDSCAPE_MODE.booleanValue(activity));
+                CheckBox cb = _addCheckbox(activity, this, convertView, (boolean) Apple2Preferences.getJSONPref(this));
                 cb.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                     @Override
                     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                        Apple2Preferences.LANDSCAPE_MODE.saveBoolean(activity, isChecked);
-                        Apple2Preferences.LANDSCAPE_MODE.load(activity);
+                        Apple2Preferences.setJSONPref((IMenuEnum)self, isChecked);
+                        applyLandscapeMode(activity);
                     }
                 });
                 return convertView;
@@ -108,7 +130,9 @@ public class Apple2VideoSettingsMenu extends Apple2AbstractMenu {
                     }
                 }
 
-                Apple2Preferences.LANDSCAPE_MODE.saveBoolean(activity, false);
+                // switch to portrait
+                Apple2Preferences.setJSONPref(SETTINGS.LANDSCAPE_MODE, false);
+                applyLandscapeMode(activity);
                 Apple2PortraitCalibration calibration = new Apple2PortraitCalibration(activity, viewStack);
 
                 // show this new view...
@@ -132,6 +156,21 @@ public class Apple2VideoSettingsMenu extends Apple2AbstractMenu {
             }
 
             @Override
+            public String getPrefDomain() {
+                return Apple2Preferences.PREF_DOMAIN_VIDEO;
+            }
+
+            @Override
+            public String getPrefKey() {
+                return "colorMode";
+            }
+
+            @Override
+            public Object getPrefDefault() {
+                return HiresColor.INTERPOLATED.ordinal();
+            }
+
+            @Override
             public View getView(Apple2Activity activity, View convertView) {
                 convertView = _basicView(activity, this, convertView);
                 _addPopupIcon(activity, this, convertView);
@@ -140,6 +179,7 @@ public class Apple2VideoSettingsMenu extends Apple2AbstractMenu {
 
             @Override
             public void handleSelection(final Apple2Activity activity, final Apple2AbstractMenu settingsMenu, boolean isChecked) {
+                final Apple2AbstractMenu.IMenuEnum self = this;
                 _alertDialogHandleSelection(activity, R.string.video_configure, new String[]{
                         settingsMenu.mActivity.getResources().getString(R.string.color_bw),
                         settingsMenu.mActivity.getResources().getString(R.string.color_color),
@@ -147,12 +187,12 @@ public class Apple2VideoSettingsMenu extends Apple2AbstractMenu {
                 }, new IPreferenceLoadSave() {
                     @Override
                     public int intValue() {
-                        return Apple2Preferences.HIRES_COLOR.intValue(activity);
+                        return (int) Apple2Preferences.getJSONPref(self);
                     }
 
                     @Override
                     public void saveInt(int value) {
-                        Apple2Preferences.HIRES_COLOR.saveHiresColor(settingsMenu.mActivity, Apple2Preferences.HiresColor.values()[value]);
+                        Apple2Preferences.setJSONPref(self, HiresColor.values()[value].ordinal());
                     }
                 });
             }
@@ -161,13 +201,35 @@ public class Apple2VideoSettingsMenu extends Apple2AbstractMenu {
         public static final int size = SETTINGS.values().length;
 
         @Override
+        public String getPrefDomain() {
+            return null;
+        }
+
+        @Override
+        public String getPrefKey() {
+            return null;
+        }
+
+        @Override
+        public Object getPrefDefault() {
+            return null;
+        }
+
+        @Override
         public void handleSelection(Apple2Activity activity, Apple2AbstractMenu settingsMenu, boolean isChecked) {
-            /* ... */
         }
 
         @Override
         public View getView(Apple2Activity activity, View convertView) {
             return _basicView(activity, this, convertView);
+        }
+
+        public static void applyLandscapeMode(final Apple2Activity activity) {
+            if ((boolean) Apple2Preferences.getJSONPref(SETTINGS.LANDSCAPE_MODE)) {
+                activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
+            } else {
+                activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+            }
         }
 
         public static String[] titles(Apple2Activity activity) {

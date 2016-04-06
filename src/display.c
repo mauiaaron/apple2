@@ -477,13 +477,13 @@ static void _initialize_color() {
 }
 
 static void video_prefsChanged(const char *domain) {
-    long val = 0;
+    long val = COLOR_INTERP;
     prefs_parseLongValue(domain, PREF_COLOR_MODE, &val, /*base:*/10);
     if (val < 0) {
-        val = 0;
+        val = COLOR_INTERP;
     }
     if (val >= NUM_COLOROPTS) {
-        val = NUM_COLOROPTS-1;
+        val = COLOR_INTERP;
     }
     color_mode = (color_mode_t)val;
     video_reset();
@@ -1212,24 +1212,23 @@ void _video_setRenderThread(pthread_t id) {
     render_thread_id = id;
 }
 
+bool video_isRenderThread(void) {
+    return (pthread_self() == render_thread_id);
+}
+
 void video_shutdown(bool emulatorShuttingDown) {
 
 #if MOBILE_DEVICE
     // WARNING : shutdown should occur on the render thread.  Platform code (iOS, Android) should ensure this is called
     // from within a render pass...
-    assert(pthread_self() == render_thread_id);
+    assert(!render_thread_id || pthread_self() == render_thread_id);
 #endif
 
     video_backend->shutdown(emulatorShuttingDown);
-    render_thread_id = 0;
 
     if (pthread_self() == render_thread_id) {
         FREE(video__fb);
     }
-}
-
-void video_reshape(int w, int h, bool landscape) {
-    video_backend->reshape(w, h, landscape);
 }
 
 void video_render(void) {

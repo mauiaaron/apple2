@@ -1065,6 +1065,30 @@ bool json_serialize(JSON_ref jsonRef, int fd, bool pretty) {
     }
 }
 
+bool json_unescapeSlashes(char **kbdPath) {
+    // A big "fhank-you" to the Java org.json.JSONStringer API which "helpfully" escapes slash '/' characters
+    if (!kbdPath) {
+        return false;
+    }
+
+    char *str = *kbdPath;
+    size_t len = strlen(str) + 1; // include termination \0
+    char *p0 = NULL;
+    char *p = str;
+    while (*p) {
+        if (*p == '/') {
+            if (p0 && *p0 == '\\') {
+                memmove(p0, p, ((str+len)-p));
+                p = p0;
+            }
+        }
+        p0 = p;
+        ++p;
+    }
+
+    return true;
+}
+
 void json_destroy(JSON_ref *jsonRef) {
     if (!jsonRef) {
         return;

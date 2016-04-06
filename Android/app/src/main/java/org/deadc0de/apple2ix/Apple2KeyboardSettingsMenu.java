@@ -11,6 +11,7 @@
 
 package org.deadc0de.apple2ix;
 
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
 import android.widget.CheckBox;
@@ -107,13 +108,29 @@ public class Apple2KeyboardSettingsMenu extends Apple2AbstractMenu {
             }
 
             @Override
+            public String getPrefDomain() {
+                return Apple2Preferences.PREF_DOMAIN_KEYBOARD;
+            }
+
+            @Override
+            public String getPrefKey() {
+                return "touchMenuEnabled";
+            }
+
+            @Override
+            public Object getPrefDefault() {
+                return true;
+            }
+
+            @Override
             public View getView(final Apple2Activity activity, View convertView) {
+                final IMenuEnum self = this;
                 convertView = _basicView(activity, this, convertView);
-                CheckBox cb = _addCheckbox(activity, this, convertView, Apple2Preferences.TOUCH_MENU_ENABLED.booleanValue(activity));
+                CheckBox cb = _addCheckbox(activity, this, convertView, (boolean) Apple2Preferences.getJSONPref(this));
                 cb.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                     @Override
                     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                        Apple2Preferences.TOUCH_MENU_ENABLED.saveBoolean(activity, isChecked);
+                        Apple2Preferences.setJSONPref(self, isChecked);
                     }
                 });
                 return convertView;
@@ -131,16 +148,27 @@ public class Apple2KeyboardSettingsMenu extends Apple2AbstractMenu {
             }
 
             @Override
+            public String getPrefKey() {
+                return "minAlpha";
+            }
+
+            @Override
+            public Object getPrefDefault() {
+                return (float) 5 / Apple2Preferences.ALPHA_SLIDER_NUM_CHOICES;
+            }
+
+            @Override
             public View getView(final Apple2Activity activity, View convertView) {
+                final IMenuEnum self = this;
                 return _sliderView(activity, this, Apple2Preferences.ALPHA_SLIDER_NUM_CHOICES, new IPreferenceSlider() {
                     @Override
                     public void saveInt(int progress) {
-                        Apple2Preferences.KEYBOARD_VISIBILITY_INACTIVE.saveInt(activity, progress);
+                        Apple2Preferences.setJSONPref(self, progress / Apple2Preferences.ALPHA_SLIDER_NUM_CHOICES);
                     }
 
                     @Override
                     public int intValue() {
-                        return Apple2Preferences.KEYBOARD_VISIBILITY_INACTIVE.intValue(activity);
+                        return Math.round(Apple2Preferences.getFloatJSONPref(self) * (Apple2Preferences.ALPHA_SLIDER_NUM_CHOICES));
                     }
 
                     @Override
@@ -162,16 +190,27 @@ public class Apple2KeyboardSettingsMenu extends Apple2AbstractMenu {
             }
 
             @Override
+            public String getPrefKey() {
+                return "maxAlpha";
+            }
+
+            @Override
+            public Object getPrefDefault() {
+                return 1.f;
+            }
+
+            @Override
             public View getView(final Apple2Activity activity, View convertView) {
+                final IMenuEnum self = this;
                 return _sliderView(activity, this, Apple2Preferences.ALPHA_SLIDER_NUM_CHOICES, new IPreferenceSlider() {
                     @Override
                     public void saveInt(int progress) {
-                        Apple2Preferences.KEYBOARD_VISIBILITY_ACTIVE.saveInt(activity, progress);
+                        Apple2Preferences.setJSONPref(self, (float) progress / Apple2Preferences.ALPHA_SLIDER_NUM_CHOICES);
                     }
 
                     @Override
                     public int intValue() {
-                        return Apple2Preferences.KEYBOARD_VISIBILITY_ACTIVE.intValue(activity);
+                        return Math.round(Apple2Preferences.getFloatJSONPref(self) * (Apple2Preferences.ALPHA_SLIDER_NUM_CHOICES));
                     }
 
                     @Override
@@ -193,13 +232,24 @@ public class Apple2KeyboardSettingsMenu extends Apple2AbstractMenu {
             }
 
             @Override
+            public String getPrefKey() {
+                return "keyClickEnabled";
+            }
+
+            @Override
+            public Object getPrefDefault() {
+                return true;
+            }
+
+            @Override
             public View getView(final Apple2Activity activity, View convertView) {
                 convertView = _basicView(activity, this, convertView);
-                CheckBox cb = _addCheckbox(activity, this, convertView, Apple2Preferences.KEYBOARD_CLICK_ENABLED.booleanValue(activity));
+                CheckBox cb = _addCheckbox(activity, this, convertView, (boolean) Apple2Preferences.getJSONPref(this));
+                final IMenuEnum self = this;
                 cb.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                     @Override
                     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                        Apple2Preferences.KEYBOARD_CLICK_ENABLED.saveBoolean(activity, isChecked);
+                        Apple2Preferences.setJSONPref(self, isChecked);
                     }
                 });
                 return convertView;
@@ -217,13 +267,24 @@ public class Apple2KeyboardSettingsMenu extends Apple2AbstractMenu {
             }
 
             @Override
+            public String getPrefKey() {
+                return "lowercaseEnabled";
+            }
+
+            @Override
+            public Object getPrefDefault() {
+                return false;
+            }
+
+            @Override
             public View getView(final Apple2Activity activity, View convertView) {
                 convertView = _basicView(activity, this, convertView);
-                CheckBox cb = _addCheckbox(activity, this, convertView, Apple2Preferences.KEYBOARD_LOWERCASE_ENABLED.booleanValue(activity));
+                CheckBox cb = _addCheckbox(activity, this, convertView, (boolean) Apple2Preferences.getJSONPref(this));
+                final IMenuEnum self = this;
                 cb.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                     @Override
                     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                        Apple2Preferences.KEYBOARD_LOWERCASE_ENABLED.saveBoolean(activity, isChecked);
+                        Apple2Preferences.setJSONPref(self, isChecked);
                     }
                 });
                 return convertView;
@@ -241,6 +302,16 @@ public class Apple2KeyboardSettingsMenu extends Apple2AbstractMenu {
             }
 
             @Override
+            public String getPrefKey() {
+                return "altPathIndex";
+            }
+
+            @Override
+            public Object getPrefDefault() {
+                return 0;
+            }
+
+            @Override
             public final View getView(final Apple2Activity activity, View convertView) {
                 convertView = _basicView(activity, this, convertView);
                 _addPopupIcon(activity, this, convertView);
@@ -250,7 +321,7 @@ public class Apple2KeyboardSettingsMenu extends Apple2AbstractMenu {
             @Override
             public void handleSelection(final Apple2Activity activity, final Apple2AbstractMenu settingsMenu, boolean isChecked) {
 
-                File extKeyboardDir = Apple2DisksMenu.getExternalStorageDirectory(activity);
+                File extKeyboardDir = Apple2Utils.getExternalStorageDirectory(activity);
 
                 FilenameFilter kbdJsonFilter = new FilenameFilter() {
                     public boolean accept(File dir, String name) {
@@ -279,7 +350,7 @@ public class Apple2KeyboardSettingsMenu extends Apple2AbstractMenu {
                 }
                 if (files == null) {
                     // read keyboard data from /data/data/...
-                    File keyboardDir = new File(Apple2DisksMenu.getDataDir(activity) + File.separator + "keyboards");
+                    File keyboardDir = new File(Apple2Utils.getDataDir(activity) + File.separator + "keyboards");
                     files = keyboardDir.listFiles(kbdJsonFilter);
                     if (files == null) {
                         Log.e(TAG, "OOPS, could not read keyboard data directory");
@@ -299,17 +370,18 @@ public class Apple2KeyboardSettingsMenu extends Apple2AbstractMenu {
 
                 final String keyboardDirName = extKeyboardDir == null ? "Keyboards" : extKeyboardDir.getPath();
 
+                final IMenuEnum self = this;
                 _alertDialogHandleSelection(activity, keyboardDirName, titles, new IPreferenceLoadSave() {
                     @Override
                     public int intValue() {
-                        return Apple2Preferences.KEYBOARD_ALT.intValue(activity);
+                        return (int) Apple2Preferences.getJSONPref(self);
                     }
 
                     @Override
                     public void saveInt(int value) {
-                        Apple2Preferences.KEYBOARD_ALT.saveInt(activity, value);
+                        Apple2Preferences.setJSONPref(self, value);
                         String path = allFiles[value].getPath();
-                        Apple2Preferences.KEYBOARD_ALT_PATH.saveString(activity, path);
+                        Apple2Preferences.setJSONPref(Apple2Preferences.PREF_DOMAIN_KEYBOARD, "altPath", path);
                     }
                 });
             }
@@ -326,14 +398,28 @@ public class Apple2KeyboardSettingsMenu extends Apple2AbstractMenu {
             }
 
             @Override
+            public String getPrefKey() {
+                return "glyphMultiplier";
+            }
+
+            @Override
+            public Object getPrefDefault() {
+                return 2;
+            }
+
+            @Override
             public View getView(final Apple2Activity activity, View convertView) {
                 convertView = _basicView(activity, this, convertView);
-                int glyphScale = Apple2Preferences.KEYBOARD_GLYPH_SCALE.intValue(activity);
+                int glyphScale = (int) Apple2Preferences.getJSONPref(this);
+                if (glyphScale <= 0) {
+                    glyphScale = 1;
+                }
                 CheckBox cb = _addCheckbox(activity, this, convertView, glyphScale > 1);
+                final IMenuEnum self = this;
                 cb.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                     @Override
                     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                        Apple2Preferences.KEYBOARD_GLYPH_SCALE.saveInt(activity, isChecked ? 2 : 1);
+                        Apple2Preferences.setJSONPref(self, isChecked ? 2 : 1);
                     }
                 });
                 return convertView;
@@ -343,8 +429,22 @@ public class Apple2KeyboardSettingsMenu extends Apple2AbstractMenu {
         public static final int size = SETTINGS.values().length;
 
         @Override
+        public String getPrefDomain() {
+            return Apple2Preferences.PREF_DOMAIN_KEYBOARD;
+        }
+
+        @Override
+        public String getPrefKey() {
+            return null;
+        }
+
+        @Override
+        public Object getPrefDefault() {
+            return null;
+        }
+
+        @Override
         public void handleSelection(Apple2Activity activity, Apple2AbstractMenu settingsMenu, boolean isChecked) {
-            /* ... */
         }
 
         @Override

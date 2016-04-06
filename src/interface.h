@@ -82,22 +82,7 @@ typedef enum interface_touch_event_flags {
 
 // handle touch event
 extern int64_t (*interface_onTouchEvent)(interface_touch_event_t action, int pointer_count, int pointer_idx, float *x_coords, float *y_coords);
-
-// is the touch menu module itself available?
-extern bool (*interface_isTouchMenuAvailable)(void);
-
-// enable/disable touch menu HUD element
-extern void (*interface_setTouchMenuEnabled)(bool enabled);
-
-// set min/max alpha visibility of touch menu HUD element
-extern void (*interface_setTouchMenuVisibility)(float inactiveAlpha, float activeAlpha);
-
-// set a finer-grained font size (if glyphScale > 1)
-extern void (*interface_setGlyphScale)(int glyphScale);
-
-// get model-specific functions
-extern void (*(*interface_getModelDataSetter)(interface_device_t device))(const char *jsonData);
-#endif
+#endif // INTERFACE_TOUCH
 
 #define EXT_GZ  ".gz"
 #define _GZLEN (sizeof(EXT_GZ)-1)

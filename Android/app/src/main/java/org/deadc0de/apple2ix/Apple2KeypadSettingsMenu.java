@@ -17,10 +17,22 @@ import android.widget.TextView;
 import java.util.ArrayList;
 
 import org.deadc0de.apple2ix.basic.R;
+import org.json.JSONArray;
 
 public class Apple2KeypadSettingsMenu extends Apple2AbstractMenu {
 
     private final static String TAG = "Apple2KeypadSettingsMenu";
+
+    private final static int KEYREPEAT_NUM_CHOICES = Apple2Preferences.DECENT_AMOUNT_OF_CHOICES;
+
+    public final static String PREF_KPAD_ROSETTE_CHAR_ARRAY = "kpAxisRosetteChars";
+    public final static String PREF_KPAD_ROSETTE_SCAN_ARRAY = "kpAxisRosetteScancodes";
+    public final static String PREF_KPAD_SWIPE_NORTH_CHAR = "kpSwipeNorthChar";
+    public final static String PREF_KPAD_SWIPE_NORTH_SCAN = "kpSwipeNorthScancode";
+    public final static String PREF_KPAD_SWIPE_SOUTH_CHAR = "kpSwipeSouthChar";
+    public final static String PREF_KPAD_SWIPE_SOUTH_SCAN = "kpSwipeSouthScancode";
+    public final static String PREF_KPAD_TOUCHDOWN_CHAR = "kpTouchDownChar";
+    public final static String PREF_KPAD_TOUCHDOWN_SCAN = "kpTouchDownScancode";
 
     public Apple2KeypadSettingsMenu(Apple2Activity activity) {
         super(activity);
@@ -49,6 +61,212 @@ public class Apple2KeypadSettingsMenu extends Apple2AbstractMenu {
         return true;
     }
 
+    public enum KeypadPreset {
+        ARROWS_SPACE {
+            @Override
+            public String getTitle(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.keypad_preset_arrows_space);
+            }
+
+            @Override
+            public void apply(Apple2Activity activity) {
+                ArrayList<String> chars = new ArrayList<String>();
+                ArrayList<String> scans = new ArrayList<String>();
+                addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+                addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.MOUSETEXT_UP, Apple2KeyboardSettingsMenu.SCANCODE_UP);
+                addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+                addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.MOUSETEXT_LEFT, Apple2KeyboardSettingsMenu.SCANCODE_LEFT);
+                addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+                addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.MOUSETEXT_RIGHT, Apple2KeyboardSettingsMenu.SCANCODE_RIGHT);
+                addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+                addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.MOUSETEXT_DOWN, Apple2KeyboardSettingsMenu.SCANCODE_DOWN);
+                addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+                saveRosettes(chars, scans);
+
+                saveTouchDownKey(Apple2KeyboardSettingsMenu.ICONTEXT_VISUAL_SPACE, Apple2KeyboardSettingsMenu.SCANCODE_SPACE);
+                saveSwipeSouthKey(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+                saveSwipeNorthKey(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+            }
+        },
+        AZ_LEFT_RIGHT_SPACE {
+            @Override
+            public String getTitle(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.keypad_preset_az_left_right_space);
+            }
+
+            @Override
+            public void apply(Apple2Activity activity) {
+                ArrayList<String> chars = new ArrayList<String>();
+                ArrayList<String> scans = new ArrayList<String>();
+                addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+                addRosetteKey(chars, scans, 'A', Apple2KeyboardSettingsMenu.SCANCODE_A);
+                addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+                addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.MOUSETEXT_LEFT, Apple2KeyboardSettingsMenu.SCANCODE_LEFT);
+                addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+                addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.MOUSETEXT_RIGHT, Apple2KeyboardSettingsMenu.SCANCODE_RIGHT);
+                addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+                addRosetteKey(chars, scans, 'Z', Apple2KeyboardSettingsMenu.SCANCODE_Z);
+                addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+                saveRosettes(chars, scans);
+
+                saveTouchDownKey(Apple2KeyboardSettingsMenu.ICONTEXT_VISUAL_SPACE, Apple2KeyboardSettingsMenu.SCANCODE_SPACE);
+                saveSwipeSouthKey(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+                saveSwipeNorthKey(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+            }
+        },
+        LEFT_RIGHT_SPACE {
+            @Override
+            public String getTitle(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.keypad_preset_left_right_space);
+            }
+
+            @Override
+            public void apply(Apple2Activity activity) {
+                ArrayList<String> chars = new ArrayList<String>();
+                ArrayList<String> scans = new ArrayList<String>();
+                addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+                addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+                addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+                addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.MOUSETEXT_LEFT, Apple2KeyboardSettingsMenu.SCANCODE_LEFT);
+                addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+                addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.MOUSETEXT_RIGHT, Apple2KeyboardSettingsMenu.SCANCODE_RIGHT);
+                addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+                addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+                addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+                saveRosettes(chars, scans);
+
+                saveTouchDownKey(Apple2KeyboardSettingsMenu.ICONTEXT_VISUAL_SPACE, Apple2KeyboardSettingsMenu.SCANCODE_SPACE);
+                saveSwipeSouthKey(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+                saveSwipeNorthKey(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+            }
+        },
+        IJKM_SPACE {
+            @Override
+            public String getTitle(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.keypad_preset_ijkm_space);
+            }
+
+            @Override
+            public void apply(Apple2Activity activity) {
+                ArrayList<String> chars = new ArrayList<String>();
+                ArrayList<String> scans = new ArrayList<String>();
+                addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+                addRosetteKey(chars, scans, 'I', Apple2KeyboardSettingsMenu.SCANCODE_I);
+                addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+                addRosetteKey(chars, scans, 'J', Apple2KeyboardSettingsMenu.SCANCODE_J);
+                addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+                addRosetteKey(chars, scans, 'K', Apple2KeyboardSettingsMenu.SCANCODE_K);
+                addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+                addRosetteKey(chars, scans, 'M', Apple2KeyboardSettingsMenu.SCANCODE_M);
+                addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+                saveRosettes(chars, scans);
+
+                saveTouchDownKey(Apple2KeyboardSettingsMenu.ICONTEXT_VISUAL_SPACE, Apple2KeyboardSettingsMenu.SCANCODE_SPACE);
+                saveSwipeSouthKey(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+                saveSwipeNorthKey(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+            }
+        },
+        WADX_SPACE {
+            @Override
+            public String getTitle(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.keypad_preset_wadx_space);
+            }
+
+            @Override
+            public void apply(Apple2Activity activity) {
+                ArrayList<String> chars = new ArrayList<String>();
+                ArrayList<String> scans = new ArrayList<String>();
+                addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+                addRosetteKey(chars, scans, 'W', Apple2KeyboardSettingsMenu.SCANCODE_W);
+                addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+                addRosetteKey(chars, scans, 'A', Apple2KeyboardSettingsMenu.SCANCODE_A);
+                addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+                addRosetteKey(chars, scans, 'D', Apple2KeyboardSettingsMenu.SCANCODE_D);
+                addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+                addRosetteKey(chars, scans, 'X', Apple2KeyboardSettingsMenu.SCANCODE_X);
+                addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+                saveRosettes(chars, scans);
+
+                saveTouchDownKey(Apple2KeyboardSettingsMenu.ICONTEXT_VISUAL_SPACE, Apple2KeyboardSettingsMenu.SCANCODE_SPACE);
+                saveSwipeSouthKey(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+                saveSwipeNorthKey(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+            }
+        },
+        CRAZY_SEAFOX_KEYS {
+            @Override
+            public String getTitle(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.keypad_preset_crazy_seafox);
+            }
+
+            @Override
+            public void apply(Apple2Activity activity) {
+                // Heh, the entire purpose of the keypad-variant touch joystick is to make this possible ;-)
+                ArrayList<String> chars = new ArrayList<String>();
+                ArrayList<String> scans = new ArrayList<String>();
+                addRosetteKey(chars, scans, 'Y', Apple2KeyboardSettingsMenu.SCANCODE_Y);
+                addRosetteKey(chars, scans, 'U', Apple2KeyboardSettingsMenu.SCANCODE_U);
+                addRosetteKey(chars, scans, 'I', Apple2KeyboardSettingsMenu.SCANCODE_I);
+                addRosetteKey(chars, scans, 'H', Apple2KeyboardSettingsMenu.SCANCODE_H);
+                addRosetteKey(chars, scans, 'J', Apple2KeyboardSettingsMenu.SCANCODE_J);
+                addRosetteKey(chars, scans, 'K', Apple2KeyboardSettingsMenu.SCANCODE_K);
+                addRosetteKey(chars, scans, 'N', Apple2KeyboardSettingsMenu.SCANCODE_N);
+                addRosetteKey(chars, scans, 'M', Apple2KeyboardSettingsMenu.SCANCODE_M);
+                addRosetteKey(chars, scans, ',', Apple2KeyboardSettingsMenu.SCANCODE_COMMA);
+                saveRosettes(chars, scans);
+
+                saveTouchDownKey('D', Apple2KeyboardSettingsMenu.SCANCODE_D);
+                saveSwipeSouthKey('F', Apple2KeyboardSettingsMenu.SCANCODE_F);
+                saveSwipeNorthKey(Apple2KeyboardSettingsMenu.ICONTEXT_VISUAL_SPACE, Apple2KeyboardSettingsMenu.SCANCODE_SPACE);
+            }
+        };
+
+        public static void addRosetteKey(ArrayList<String> chars, ArrayList<String> scans, int aChar, int aScan) {
+            chars.add("" + aChar);
+            scans.add("" + aScan);
+        }
+
+        public static void saveRosettes(ArrayList<String> chars, ArrayList<String> scans) {
+            if (chars.size() != 9) {
+                throw new RuntimeException("rosette chars is not correct size");
+            }
+            if (scans.size() != 9) {
+                throw new RuntimeException("rosette scans is not correct size");
+            }
+            Apple2Preferences.setJSONPref(Apple2Preferences.PREF_DOMAIN_JOYSTICK, PREF_KPAD_ROSETTE_CHAR_ARRAY, new JSONArray(chars));
+            Apple2Preferences.setJSONPref(Apple2Preferences.PREF_DOMAIN_JOYSTICK, PREF_KPAD_ROSETTE_SCAN_ARRAY, new JSONArray(scans));
+        }
+
+        public static void saveTouchDownKey(int aChar, int aScan) {
+            Apple2Preferences.setJSONPref(Apple2Preferences.PREF_DOMAIN_JOYSTICK, PREF_KPAD_TOUCHDOWN_CHAR, aChar);
+            Apple2Preferences.setJSONPref(Apple2Preferences.PREF_DOMAIN_JOYSTICK, PREF_KPAD_TOUCHDOWN_SCAN, aScan);
+        }
+
+        public static void saveSwipeSouthKey(int aChar, int aScan) {
+            Apple2Preferences.setJSONPref(Apple2Preferences.PREF_DOMAIN_JOYSTICK, PREF_KPAD_SWIPE_SOUTH_CHAR, aChar);
+            Apple2Preferences.setJSONPref(Apple2Preferences.PREF_DOMAIN_JOYSTICK, PREF_KPAD_SWIPE_SOUTH_SCAN, aScan);
+        }
+
+        public static void saveSwipeNorthKey(int aChar, int aScan) {
+            Apple2Preferences.setJSONPref(Apple2Preferences.PREF_DOMAIN_JOYSTICK, PREF_KPAD_SWIPE_NORTH_CHAR, aChar);
+            Apple2Preferences.setJSONPref(Apple2Preferences.PREF_DOMAIN_JOYSTICK, PREF_KPAD_SWIPE_NORTH_SCAN, aScan);
+        }
+
+        public abstract String getTitle(Apple2Activity activity);
+
+        public abstract void apply(Apple2Activity activity);
+
+        public static final int size = KeypadPreset.values().length;
+
+        public static String[] titles(Apple2Activity activity) {
+            String[] titles = new String[size];
+            int i = 0;
+            for (KeypadPreset preset : values()) {
+                titles[i++] = preset.getTitle(activity);
+            }
+            return titles;
+        }
+    }
+
     enum SETTINGS implements Apple2AbstractMenu.IMenuEnum {
         KEYPAD_CHOOSE_KEYS {
             @Override
@@ -62,6 +280,16 @@ public class Apple2KeypadSettingsMenu extends Apple2AbstractMenu {
             }
 
             @Override
+            public String getPrefKey() {
+                return "kpPresetChoice";
+            }
+
+            @Override
+            public Object getPrefDefault() {
+                return KeypadPreset.IJKM_SPACE.ordinal() + 1;
+            }
+
+            @Override
             public final View getView(final Apple2Activity activity, View convertView) {
                 convertView = _basicView(activity, this, convertView);
                 _addPopupIcon(activity, this, convertView);
@@ -70,24 +298,25 @@ public class Apple2KeypadSettingsMenu extends Apple2AbstractMenu {
 
             @Override
             public void handleSelection(final Apple2Activity activity, final Apple2AbstractMenu settingsMenu, boolean isChecked) {
-                String[] titles = new String[Apple2Preferences.KeypadPreset.size + 1];
+                final IMenuEnum self = this;
+                String[] titles = new String[KeypadPreset.size + 1];
                 titles[0] = activity.getResources().getString(R.string.keypad_preset_custom);
-                System.arraycopy(Apple2Preferences.KeypadPreset.titles(activity), 0, titles, 1, Apple2Preferences.KeypadPreset.size);
+                System.arraycopy(KeypadPreset.titles(activity), 0, titles, 1, KeypadPreset.size);
 
                 _alertDialogHandleSelection(activity, R.string.keypad_choose_title, titles, new IPreferenceLoadSave() {
                     @Override
                     public int intValue() {
-                        return Apple2Preferences.KEYPAD_KEYS.intValue(activity);
+                        return (int) Apple2Preferences.getJSONPref(self);
                     }
 
                     @Override
                     public void saveInt(int value) {
-                        Apple2Preferences.KEYPAD_KEYS.saveInt(activity, value);
+                        Apple2Preferences.setJSONPref(self, value);
                         if (value == 0) {
                             Apple2KeypadSettingsMenu keypadSettingsMenu = (Apple2KeypadSettingsMenu) settingsMenu;
                             keypadSettingsMenu.chooseKeys(activity);
                         } else {
-                            Apple2Preferences.KeypadPreset.values()[value - 1].apply(activity);
+                            KeypadPreset.values()[value - 1].apply(activity);
                         }
                     }
                 });
@@ -119,7 +348,7 @@ public class Apple2KeypadSettingsMenu extends Apple2AbstractMenu {
                     }
                 }
 
-                Apple2JoystickCalibration calibration = new Apple2JoystickCalibration(activity, viewStack, Apple2Preferences.TouchDeviceVariant.JOYSTICK_KEYPAD);
+                Apple2JoystickCalibration calibration = new Apple2JoystickCalibration(activity, viewStack, Apple2SettingsMenu.TouchDeviceVariant.JOYSTICK_KEYPAD);
 
                 // show this new view...
                 calibration.show();
@@ -150,8 +379,22 @@ public class Apple2KeypadSettingsMenu extends Apple2AbstractMenu {
         public static final int size = SETTINGS.values().length;
 
         @Override
+        public String getPrefDomain() {
+            return Apple2Preferences.PREF_DOMAIN_JOYSTICK;
+        }
+
+        @Override
+        public String getPrefKey() {
+            return null;
+        }
+
+        @Override
+        public Object getPrefDefault() {
+            return null;
+        }
+
+        @Override
         public void handleSelection(Apple2Activity activity, Apple2AbstractMenu settingsMenu, boolean isChecked) {
-            /* ... */
         }
 
         @Override
@@ -197,7 +440,7 @@ public class Apple2KeypadSettingsMenu extends Apple2AbstractMenu {
         }
     }
 
-    protected static class KeypadAdvanced extends Apple2AbstractMenu {
+    public static class KeypadAdvanced extends Apple2AbstractMenu {
 
         private final static String TAG = "KeypadAdvanced";
 
@@ -241,21 +484,32 @@ public class Apple2KeypadSettingsMenu extends Apple2AbstractMenu {
                 }
 
                 @Override
+                public String getPrefKey() {
+                    return "keyRepeatThresholdSecs";
+                }
+
+                @Override
+                public Object getPrefDefault() {
+                    return (float) 4 / KEYREPEAT_NUM_CHOICES;
+                }
+
+                @Override
                 public View getView(final Apple2Activity activity, View convertView) {
-                    return _sliderView(activity, this, Apple2Preferences.KEYREPEAT_NUM_CHOICES, new IPreferenceSlider() {
+                    final IMenuEnum self = this;
+                    return _sliderView(activity, this, KEYREPEAT_NUM_CHOICES, new IPreferenceSlider() {
                         @Override
                         public void saveInt(int progress) {
-                            Apple2Preferences.KEYREPEAT_THRESHOLD.saveInt(activity, progress);
+                            Apple2Preferences.setJSONPref(self, (float) progress / KEYREPEAT_NUM_CHOICES);
                         }
 
                         @Override
                         public int intValue() {
-                            return Apple2Preferences.KEYREPEAT_THRESHOLD.intValue(activity);
+                            return (int) (Apple2Preferences.getFloatJSONPref(self) * KEYREPEAT_NUM_CHOICES);
                         }
 
                         @Override
                         public void showValue(int progress, final TextView seekBarValue) {
-                            seekBarValue.setText("" + ((float) progress / Apple2Preferences.KEYREPEAT_NUM_CHOICES));
+                            seekBarValue.setText("" + ((float) progress / KEYREPEAT_NUM_CHOICES));
                         }
                     });
                 }
@@ -280,8 +534,22 @@ public class Apple2KeypadSettingsMenu extends Apple2AbstractMenu {
             public static final int size = SETTINGS.values().length;
 
             @Override
+            public String getPrefDomain() {
+                return Apple2Preferences.PREF_DOMAIN_JOYSTICK;
+            }
+
+            @Override
+            public String getPrefKey() {
+                return null;
+            }
+
+            @Override
+            public Object getPrefDefault() {
+                return null;
+            }
+
+            @Override
             public void handleSelection(Apple2Activity activity, Apple2AbstractMenu settingsMenu, boolean isChecked) {
-            /* ... */
             }
 
             @Override

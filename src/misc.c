@@ -273,11 +273,12 @@ void emulator_start(void) {
     }
     head = NULL;
 
-#ifdef INTERFACE_CLASSIC
+#if defined(INTERFACE_CLASSIC) && !TESTING
+    cpu_pause();
     prefs_load(); // user prefs
-#if !TESTING
+    prefs_sync(NULL);
+    cpu_resume();
     c_keys_set_key(kF8); // show credits before emulation start
-#endif
 #endif
 
 #if !defined(__APPLE__) && !defined(ANDROID)

@@ -42,7 +42,6 @@
 #define KBD_OBJ_H_LANDSCAPE GL_MODEL_MAX
 
 static bool isAvailable = false; // Were there any OpenGL/memory errors on gltouchkbd initialization?
-static bool isEnabled = true;    // Does player want touchkbd enabled?
 static bool ownsScreen = false;  // Does the touchkbd currently own the screen to the exclusion?
 static bool isCalibrating = false;  // Are we in calibration mode?
 static bool allowLowercase = false; // show lowercase keyboard
@@ -108,11 +107,6 @@ static struct {
 
     int kbdW;
     int kbdH;
-
-    // raw device dimensions
-    int rawWidth;
-    int rawHeight;
-    int isLandscape;
 } touchport = { 0 };
 
 // keyboard variables
@@ -138,9 +132,10 @@ static struct {
 
     struct timespec timingBegin;
 
-    // pending changes requiring reinitialization
-    unsigned int nextGlyphMultiplier;
+    bool prefsChanged;
 } kbd = { 0 };
+
+static void gltouchkbd_applyPrefs(void);
 
 // ----------------------------------------------------------------------------
 // Misc internal methods
@@ -435,7 +430,7 @@ static inline int64_t _tap_key_at_point(float x, float y) {
         }
     } else if (isCTRL) {
         c_keys_handle_input(scancode, /*pressed:*/kbd.ctrlPressed,  /*ASCII:*/false);
-    } else if (scancode != -1) {
+    } else if (scancode) {
         // perform a press of other keys (ESC, Arrows, etc)
         c_keys_handle_input(scancode, /*pressed:*/true,  /*ASCII:*/false);
         c_keys_handle_input(scancode, /*pressed:*/false, /*ASCII:*/false);
@@ -506,14 +501,16 @@ static void gltouchkbd_shutdown(void) {
     kbd.selectedCol = -1;
     kbd.selectedRow = -1;
     kbd.ctrlPressed = false;
-
-    kbd.nextGlyphMultiplier = 0;
 }
 
 static void gltouchkbd_setup(void) {
     LOG("gltouchkbd_setup ... %u", sizeof(kbd));
 
     gltouchkbd_shutdown();
+
+    if (kbd.prefsChanged) {
+        gltouchkbd_applyPrefs();
+    }
 
     kbd.model = mdlCreateQuad((GLModelParams_s){
             .skew_x = -GL_MODEL_HALF,
@@ -524,7 +521,7 @@ static void gltouchkbd_setup(void) {
             .positionUsageHint = GL_DYNAMIC_DRAW, // positions might change
             .tex_w = KBD_FB_WIDTH * kbd.glyphMultiplier,
             .tex_h = KBD_FB_HEIGHT * kbd.glyphMultiplier,
-            .texcoordUsageHint = GL_DYNAMIC_DRAW, // but key texture does
+            .texcoordUsageHint = GL_DYNAMIC_DRAW, // and key texture does
         }, (GLCustom){
             .create = &_create_touchkbd_hud,
             .destroy = &glhud_destroyDefault,
@@ -541,23 +538,21 @@ static void gltouchkbd_setup(void) {
     clock_gettime(CLOCK_MONOTONIC, &kbd.timingBegin);
 
     isAvailable = true;
+
+    if (ownsScreen) {
+        video_animations->animation_showTouchKeyboard();
+    }
 }
 
 static void gltouchkbd_render(void) {
     if (!isAvailable) {
         return;
     }
-    if (!isEnabled) {
-        return;
+    if (UNLIKELY(kbd.prefsChanged)) {
+        gltouchkbd_setup();
     }
     if (!ownsScreen) {
         return;
-    }
-
-    if (kbd.nextGlyphMultiplier) {
-        kbd.glyphMultiplier = kbd.nextGlyphMultiplier;
-        kbd.nextGlyphMultiplier = 0;
-        gltouchkbd_setup();
     }
 
     float alpha = glhud_getTimedVisibility(kbd.timingBegin, minAlpha, maxAlpha);
@@ -593,10 +588,7 @@ static void gltouchkbd_render(void) {
 
 static void gltouchkbd_reshape(int w, int h, bool landscape) {
     LOG("w:%d h:%d landscape:%d", w, h, landscape);
-
-    touchport.rawWidth = w;
-    touchport.rawHeight = h;
-    touchport.isLandscape = landscape;
+    assert(video_isRenderThread());
 
     touchport.kbdX = 0;
 
@@ -623,31 +615,13 @@ static void gltouchkbd_reshape(int w, int h, bool landscape) {
     }
 }
 
-static void gltouchkbd_setData(const char *jsonData) {
-    JSON_ref parsedData = NULL;
-    int tokCount = json_createFromString(jsonData, &parsedData);
-
-    do {
-        if (tokCount < 0) {
-            break;
-        }
-
-        json_mapParseFloatValue(parsedData, PREF_PORTRAIT_HEIGHT_SCALE, &kbd.portraitHeightScale);
-        json_mapParseFloatValue(parsedData, PREF_PORTRAIT_POSITION_SCALE, &kbd.portraitPositionScale);
-
-        gltouchkbd_reshape(touchport.rawWidth, touchport.rawHeight, touchport.isLandscape);
-    } while (0);
-
-    json_destroy(&parsedData);
-}
-
 static int64_t gltouchkbd_onTouchEvent(interface_touch_event_t action, int pointer_count, int pointer_idx, float *x_coords, float *y_coords) {
 
     if (!isAvailable) {
         return 0x0LL;
     }
-    if (!isEnabled) {
-        return 0x0LL;
+    if (UNLIKELY(kbd.prefsChanged)) {
+        return 0x0;
     }
     if (!ownsScreen) {
         return 0x0LL;
@@ -702,89 +676,20 @@ static int64_t gltouchkbd_onTouchEvent(interface_touch_event_t action, int point
 }
 
 // ----------------------------------------------------------------------------
-// Animation and settings handling
 
-static bool gltouchkbd_isTouchKeyboardAvailable(void) {
-    return isAvailable;
-}
-
-static void gltouchkbd_setTouchKeyboardEnabled(bool enabled) {
-    isEnabled = enabled;
-}
-
-static void gltouchkbd_setTouchKeyboardOwnsScreen(bool pwnd) {
-    ownsScreen = pwnd;
-    if (ownsScreen) {
-        minAlpha = minAlphaWhenOwnsScreen;
-        if (allowLowercase) {
-            caps_lock = false;
-        } else {
-            caps_lock = true;
-        }
-    } else {
-        // reset visuals
-        minAlpha = 0.0;
-
-        kbd.selectedCol = -1;
-        kbd.selectedRow = -1;
-
-        if (kbd.model) {
-            GLModelHUDElement *hudKeyboard = (GLModelHUDElement *)kbd.model->custom;
-            hudKeyboard->colorScheme = RED_ON_BLACK;
-            glhud_setupDefault(kbd.model);
-        }
-
-        // reset CTRL state upon leaving this touch device
-        kbd.ctrlPressed = false;
-        c_keys_handle_input(SCODE_L_CTRL, /*pressed:*/false, /*ASCII:*/false);
-    }
-}
-
-static bool gltouchkbd_ownsScreen(void) {
-    return ownsScreen;
-}
-
-static void gltouchkbd_setGlyphScale(int glyphScale) {
-    if (glyphScale == 0) {
-        glyphScale = 1;
-    }
-    kbd.nextGlyphMultiplier = glyphScale;
-}
-
-static void gltouchkbd_setVisibilityWhenOwnsScreen(float inactiveAlpha, float activeAlpha) {
-    minAlphaWhenOwnsScreen = inactiveAlpha;
-    maxAlpha = activeAlpha;
-    if (ownsScreen) {
-        minAlpha = minAlphaWhenOwnsScreen;
-    }
-}
-
-static void gltouchkbd_setLowercaseEnabled(bool enabled) {
-    allowLowercase = enabled;
-    if (allowLowercase && ownsScreen) {
-        caps_lock = false;
-    } else {
-        caps_lock = true;
-    }
-}
-
-static void gltouchkbd_beginCalibration(void) {
-    isCalibrating = true;
-}
-
-static void gltouchkbd_endCalibration(void) {
-    isCalibrating = false;
-}
-
-static void gltouchkbd_loadAltKbd(const char *kbdPath) {
+static void _loadAltKbd(const char *kbdPath) {
     JSON_ref jsonRef = NULL;
+
+    json_unescapeSlashes(&kbdPath);
     int tokCount = json_createFromFile(kbdPath, &jsonRef);
-    JSON_s parsedData = (JSON_s)parsedData;
+    JSON_s parsedData = { 0 };
 
     do {
         if (tokCount < 0) {
             break;
         }
+
+        parsedData = (JSON_s)(*jsonRef);
 
         // we are expecting a very specific layout ... abort if anything is not correct
         int idx=0;
@@ -922,7 +827,79 @@ static void gltouchkbd_loadAltKbd(const char *kbdPath) {
 
     } while (0);
 
-    json_destroy(&parsedData);
+    json_destroy(&jsonRef);
+}
+
+static void gltouchkbd_applyPrefs(void) {
+    assert(video_isRenderThread());
+
+    kbd.prefsChanged = false;
+
+    bool bVal = false;
+    float fVal = 0.f;
+    long lVal = 0;
+
+    allowLowercase            = prefs_parseBoolValue (PREF_DOMAIN_KEYBOARD, PREF_LOWERCASE_ENABLED,             &bVal) ? bVal : false;
+
+    minAlphaWhenOwnsScreen    = prefs_parseFloatValue(PREF_DOMAIN_KEYBOARD, PREF_MIN_ALPHA,                     &fVal) ? fVal : 1/4.f;
+    maxAlpha                  = prefs_parseFloatValue(PREF_DOMAIN_KEYBOARD, PREF_MAX_ALPHA,                     &fVal) ? fVal : 1.f;
+
+    kbd.glyphMultiplier       = prefs_parseLongValue (PREF_DOMAIN_KEYBOARD, PREF_GLYPH_MULTIPLIER, &lVal, /*base:*/10) ? lVal : 2;
+    if (kbd.glyphMultiplier == 0) {
+        kbd.glyphMultiplier = 1;
+    }
+    if (kbd.glyphMultiplier > 4) {
+        kbd.glyphMultiplier = 4;
+    }
+
+    kbd.portraitHeightScale   = prefs_parseFloatValue(PREF_DOMAIN_KEYBOARD, PREF_PORTRAIT_HEIGHT_SCALE,         &fVal) ? fVal : 0.5f;
+    kbd.portraitPositionScale = prefs_parseFloatValue(PREF_DOMAIN_KEYBOARD, PREF_PORTRAIT_POSITION_SCALE,       &fVal) ? fVal : 0.f;
+
+    isCalibrating             = prefs_parseBoolValue (PREF_DOMAIN_TOUCHSCREEN, PREF_CALIBRATING,                &bVal) ? bVal : false;
+    const interface_device_t screenOwner
+                              = prefs_parseLongValue (PREF_DOMAIN_TOUCHSCREEN, PREF_SCREEN_OWNER, &lVal, /*base:*/10)  ? (interface_device_t)lVal : TOUCH_DEVICE_KEYBOARD;
+    ownsScreen = (screenOwner == TOUCH_DEVICE_KEYBOARD || screenOwner == TOUCH_DEVICE_NONE);
+
+    if (ownsScreen) {
+        minAlpha = minAlphaWhenOwnsScreen;
+        if (allowLowercase) {
+            caps_lock = false;
+        } else {
+            caps_lock = true;
+        }
+    } else {
+        // reset visuals
+        minAlpha = 0.0;
+
+        kbd.selectedCol = -1;
+        kbd.selectedRow = -1;
+
+        if (kbd.model) {
+            GLModelHUDElement *hudKeyboard = (GLModelHUDElement *)kbd.model->custom;
+            hudKeyboard->colorScheme = RED_ON_BLACK;
+            glhud_setupDefault(kbd.model);
+        }
+
+        // reset CTRL state upon leaving this touch device
+        kbd.ctrlPressed = false;
+        c_keys_handle_input(SCODE_L_CTRL, /*pressed:*/false, /*ASCII:*/false);
+    }
+
+    char *kbdPath = NULL;
+    if (prefs_copyStringValue(PREF_DOMAIN_KEYBOARD, PREF_KEYBOARD_ALT_PATH, &kbdPath)) {
+        _loadAltKbd(kbdPath);
+        FREE(kbdPath);
+    }
+
+    long width            = prefs_parseLongValue (PREF_DOMAIN_INTERFACE, PREF_DEVICE_WIDTH,      &lVal, 10) ? lVal : (long)(SCANWIDTH*1.5);
+    long height           = prefs_parseLongValue (PREF_DOMAIN_INTERFACE, PREF_DEVICE_HEIGHT,     &lVal, 10) ? lVal : (long)(SCANHEIGHT*1.5);
+    bool isLandscape      = prefs_parseBoolValue (PREF_DOMAIN_INTERFACE, PREF_DEVICE_LANDSCAPE,  &bVal)     ? bVal : true;
+
+    gltouchkbd_reshape(width, height, isLandscape);
+}
+
+static void gltouchkbd_prefsChanged(const char *domain) {
+    kbd.prefsChanged = true;
 }
 
 static void _animation_showTouchKeyboard(void) {
@@ -1049,37 +1026,24 @@ static void _init_gltouchkbd(void) {
     video_animations->animation_showTouchKeyboard = &_animation_showTouchKeyboard;
     video_animations->animation_hideTouchKeyboard = &_animation_hideTouchKeyboard;
 
-    keydriver_isTouchKeyboardAvailable = &gltouchkbd_isTouchKeyboardAvailable;
-    keydriver_setTouchKeyboardEnabled = &gltouchkbd_setTouchKeyboardEnabled;
-    keydriver_setTouchKeyboardOwnsScreen = &gltouchkbd_setTouchKeyboardOwnsScreen;
-    keydriver_ownsScreen = &gltouchkbd_ownsScreen;
-    keydriver_setVisibilityWhenOwnsScreen = &gltouchkbd_setVisibilityWhenOwnsScreen;
-    keydriver_setLowercaseEnabled = &gltouchkbd_setLowercaseEnabled;
-    keydriver_beginCalibration = &gltouchkbd_beginCalibration;
-    keydriver_endCalibration = &gltouchkbd_endCalibration;
-    keydriver_loadAltKbd = &gltouchkbd_loadAltKbd;
-    keydriver_setGlyphScale = &gltouchkbd_setGlyphScale;
-
-    kbd.portraitHeightScale = 0.5f;
-    kbd.portraitPositionScale = 0.f;
-
+    kbd.prefsChanged = true;
     kbd.selectedCol = -1;
     kbd.selectedRow = -1;
 
     kbd.ctrlCol = DEFAULT_CTRL_COL;
     kbd.ctrlRow = CTRLROW;
 
-    kbd.glyphMultiplier = 1;
-
     glnode_registerNode(RENDER_LOW, (GLNode){
         .type = TOUCH_DEVICE_KEYBOARD,
         .setup = &gltouchkbd_setup,
         .shutdown = &gltouchkbd_shutdown,
         .render = &gltouchkbd_render,
-        .reshape = &gltouchkbd_reshape,
         .onTouchEvent = &gltouchkbd_onTouchEvent,
-        .setData = &gltouchkbd_setData,
     });
+
+    prefs_registerListener(PREF_DOMAIN_KEYBOARD, &gltouchkbd_prefsChanged);
+    prefs_registerListener(PREF_DOMAIN_TOUCHSCREEN, &gltouchkbd_prefsChanged);
+    prefs_registerListener(PREF_DOMAIN_INTERFACE, &gltouchkbd_prefsChanged);
 }
 
 static __attribute__((constructor)) void __init_gltouchkbd(void) {

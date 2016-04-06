@@ -31,12 +31,16 @@ static struct {
     pthread_mutex_t tapDelayMutex;
     pthread_cond_t tapDelayCond;
     unsigned int tapDelayNanos;
+
+    touchjoy_button_type_t touchDownChar;
+    touchjoy_button_type_t northChar;
+    touchjoy_button_type_t southChar;
 } joys;
 
 // ----------------------------------------------------------------------------
 
-static touchjoy_variant_t touchjoy_variant(void) {
-    return EMULATED_JOYSTICK;
+static interface_device_t touchjoy_variant(void) {
+    return TOUCH_DEVICE_JOYSTICK;
 }
 
 static inline void _reset_axis_state(void) {
@@ -77,7 +81,7 @@ static void *_button_tap_delayed_thread(void *dummyptr) {
     uint8_t currJoyButtonValue1 = 0x0;
     uint8_t currButtonDisplayChar = ' ';
     for (;;) {
-        if (UNLIKELY(joyglobals.isShuttingDown)) {
+        if (UNLIKELY(!joyglobals.isAvailable)) {
             break;
         }
 
@@ -130,6 +134,10 @@ static void *_button_tap_delayed_thread(void *dummyptr) {
 
     pthread_mutex_unlock(&joys.tapDelayMutex);
 
+    joys.tapDelayThreadId = 0;
+    joys.tapDelayMutex = (pthread_mutex_t)PTHREAD_MUTEX_INITIALIZER;
+    joys.tapDelayCond = (pthread_cond_t)PTHREAD_COND_INITIALIZER;
+
     LOG(">>> [DELAYEDTAP] thread exit ...");
 
     return NULL;
@@ -146,9 +154,6 @@ static void touchjoy_shutdown(void) {
     if (pthread_join(joys.tapDelayThreadId, NULL)) {
         ERRLOG("OOPS: pthread_join tap delay thread ...");
     }
-    joys.tapDelayThreadId = 0;
-    joys.tapDelayMutex = (pthread_mutex_t){ 0 };
-    joys.tapDelayCond = (pthread_cond_t)PTHREAD_COND_INITIALIZER;
 }
 
 // ----------------------------------------------------------------------------
@@ -192,11 +197,11 @@ static void touchjoy_axisUp(int x, int y) {
 // button state
 
 static void _set_current_button_state(touchjoy_button_type_t theButtonChar) {
-    if (theButtonChar == TOUCH_BUTTON0) {
+    if (theButtonChar == TOUCH_BUTTON1) {
         joys.currJoyButtonValue0 = 0x80;
         joys.currJoyButtonValue1 = 0;
         joys.currButtonDisplayChar = MOUSETEXT_OPENAPPLE;
-    } else if (theButtonChar == TOUCH_BUTTON1) {
+    } else if (theButtonChar == TOUCH_BUTTON2) {
         joys.currJoyButtonValue0 = 0;
         joys.currJoyButtonValue1 = 0x80;
         joys.currButtonDisplayChar = MOUSETEXT_CLOSEDAPPLE;
@@ -212,7 +217,7 @@ static void _set_current_button_state(touchjoy_button_type_t theButtonChar) {
 }
 
 static void touchjoy_buttonDown(void) {
-    _set_current_button_state(buttons.touchDownChar);
+    _set_current_button_state(joys.touchDownChar);
     joys.trackingButton = true;
     _signal_tap_delay();
 }
@@ -222,9 +227,9 @@ static void touchjoy_buttonMove(int dx, int dy) {
 
         touchjoy_button_type_t theButtonChar = -1;
         if (dy < 0) {
-            theButtonChar = buttons.northChar;
+            theButtonChar = joys.northChar;
         } else {
-            theButtonChar = buttons.southChar;
+            theButtonChar = joys.southChar;
         }
 
         _set_current_button_state(theButtonChar);
@@ -239,19 +244,35 @@ static void touchjoy_buttonUp(int dx, int dy) {
     _signal_tap_delay();
 }
 
-static void gltouchjoy_setTapDelay(float secs) {
-    if (UNLIKELY(secs < 0.f)) {
-        ERRLOG("Clamping tap delay to 0.0 secs");
+static void touchjoy_prefsChanged(const char *domain) {
+    assert(video_isRenderThread());
+
+    long lVal = 0;
+
+    joys.touchDownChar = prefs_parseLongValue(domain, PREF_JOY_TOUCHDOWN_CHAR, &lVal, /*base:*/10) ? lVal : TOUCH_BUTTON1;
+    joys.northChar = prefs_parseLongValue(domain, PREF_JOY_SWIPE_NORTH_CHAR, &lVal, /*base:*/10) ? lVal : TOUCH_BOTH;
+    joys.southChar = prefs_parseLongValue(domain, PREF_JOY_SWIPE_SOUTH_CHAR, &lVal, /*base:*/10) ? lVal : TOUCH_BUTTON2;
+
+    float fVal = 0.f;
+    joys.tapDelayNanos = prefs_parseFloatValue(domain, PREF_JOY_TAP_DELAY, &fVal) ? (fVal * NANOSECONDS_PER_SECOND) : BUTTON_TAP_DELAY_NANOS_DEFAULT;
+}
+
+static uint8_t *touchjoy_rosetteChars(void) {
+    static uint8_t rosetteChars[ROSETTE_ROWS * ROSETTE_COLS] = { 0 };
+    if (rosetteChars[0] == 0x0)  {
+        rosetteChars[0]     = ' ';
+        rosetteChars[1]     = MOUSETEXT_UP;
+        rosetteChars[2]     = ' ';
+
+        rosetteChars[3]     = MOUSETEXT_LEFT;
+        rosetteChars[4]     = ICONTEXT_MENU_TOUCHJOY;
+        rosetteChars[5]     = MOUSETEXT_RIGHT;
+
+        rosetteChars[6]     = ' ';
+        rosetteChars[7]     = MOUSETEXT_DOWN;
+        rosetteChars[8]     = ' ';
     }
-    if (UNLIKELY(secs > 1.f)) {
-        ERRLOG("Clamping tap delay to 1.0 secs");
-    }
-    unsigned int tapDelayNanos = (unsigned int)((float)NANOSECONDS_PER_SECOND * secs);
-#define MIN_WAIT_NANOS 1000000
-    if (tapDelayNanos < MIN_WAIT_NANOS) {
-        tapDelayNanos = MIN_WAIT_NANOS;
-    }
-    joys.tapDelayNanos = tapDelayNanos;
+    return rosetteChars;
 }
 
 // ----------------------------------------------------------------------------
@@ -264,6 +285,8 @@ static void _init_gltouchjoy_joy(void) {
     happyHappyJoyJoy.setup = &touchjoy_setup,
     happyHappyJoyJoy.shutdown = &touchjoy_shutdown,
 
+    happyHappyJoyJoy.prefsChanged = &touchjoy_prefsChanged;
+
     happyHappyJoyJoy.buttonDown = &touchjoy_buttonDown,
     happyHappyJoyJoy.buttonMove = &touchjoy_buttonMove,
     happyHappyJoyJoy.buttonUp = &touchjoy_buttonUp,
@@ -272,13 +295,12 @@ static void _init_gltouchjoy_joy(void) {
     happyHappyJoyJoy.axisMove = &touchjoy_axisMove,
     happyHappyJoyJoy.axisUp = &touchjoy_axisUp,
 
-    joys.tapDelayMutex = (pthread_mutex_t){ 0 };
+    happyHappyJoyJoy.rosetteChars = &touchjoy_rosetteChars;
+
+    joys.tapDelayMutex = (pthread_mutex_t)PTHREAD_MUTEX_INITIALIZER;
     joys.tapDelayCond = (pthread_cond_t)PTHREAD_COND_INITIALIZER;
-    joys.tapDelayNanos = BUTTON_TAP_DELAY_NANOS_DEFAULT;
 
-    joydriver_setTapDelay = &gltouchjoy_setTapDelay;
-
-    gltouchjoy_registerVariant(EMULATED_JOYSTICK, &happyHappyJoyJoy);
+    gltouchjoy_registerVariant(TOUCH_DEVICE_JOYSTICK, &happyHappyJoyJoy);
 }
 
 static __attribute__((constructor)) void __init_gltouchjoy_joy(void) {

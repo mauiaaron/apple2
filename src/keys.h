@@ -149,38 +149,8 @@ int c_keys_ascii_to_scancode(int ch);
 void c_keys_handle_input(int scancode, int pressed, int is_cooked);
 
 #if INTERFACE_TOUCH
-// is the touch keyboard module itself available?
-extern bool (*keydriver_isTouchKeyboardAvailable)(void);
-
-// enable/disable touch keyboard HUD element
-extern void (*keydriver_setTouchKeyboardEnabled)(bool enabled);
-
-// grant/remove ownership of touch screen
-extern void (*keydriver_setTouchKeyboardOwnsScreen)(bool pwnd);
-
-// query touch screen ownership
-extern bool (*keydriver_ownsScreen)(void);
-
-// set a finer-grained font size (if glyphScale > 1)
-extern void (*keydriver_setGlyphScale)(int glyphScale);
-
-// set visibility
-extern void (*keydriver_setVisibilityWhenOwnsScreen)(float inactiveAlpha, float activeAlpha);
-
-// set lowercase enabled
-extern void (*keydriver_setLowercaseEnabled)(bool enabled);
-
 // keyboard read callback
 extern void (*keydriver_keyboardReadCallback)(void);
-
-// begin calibration mode
-extern void (*keydriver_beginCalibration)(void);
-
-// end calibration mode
-extern void (*keydriver_endCalibration)(void);
-
-// load an alternate keyboard variant
-extern void (*keydriver_loadAltKbd)(const char *kbdPath);
 #endif
 
 #endif

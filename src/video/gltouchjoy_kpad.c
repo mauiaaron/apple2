@@ -68,6 +68,18 @@ static struct {
 
     float repeatThresholdNanos;
 
+    // axis rosette
+    uint8_t  rosetteChars[ROSETTE_ROWS * ROSETTE_COLS];
+    long rosetteScancodes[ROSETTE_ROWS * ROSETTE_COLS];
+
+    // touch/swipe buttons
+    touchjoy_button_type_t touchDownChar;
+    int                    touchDownScancode;
+    touchjoy_button_type_t northChar;
+    int                    northScancode;
+    touchjoy_button_type_t southChar;
+    int                    southScancode;
+
 } kpad = { 0 };
 
 static GLTouchJoyVariant kpadJoy = { 0 };
@@ -188,8 +200,8 @@ static void touchkpad_keyboardReadCallback(void) {
 
 // ----------------------------------------------------------------------------
 
-static touchjoy_variant_t touchkpad_variant(void) {
-    return EMULATED_KEYPAD;
+static interface_device_t touchkpad_variant(void) {
+    return TOUCH_DEVICE_JOYSTICK_KEYPAD;
 }
 
 static void touchkpad_resetState(void) {
@@ -212,13 +224,13 @@ static void touchkpad_resetState(void) {
 
     for (unsigned int i=0; i<ROSETTE_COLS; i++) {
         for (unsigned int j=0; j<ROSETTE_ROWS; j++) {
-            c_keys_handle_input(axes.rosetteScancodes[i], /*pressed:*/false, /*ASCII:*/false);
+            c_keys_handle_input(kpad.rosetteScancodes[i], /*pressed:*/false, /*ASCII:*/false);
         }
     }
 
-    c_keys_handle_input(buttons.touchDownScancode, /*pressed:*/false, /*ASCII:*/false);
-    c_keys_handle_input(buttons.northScancode,     /*pressed:*/false, /*ASCII:*/false);
-    c_keys_handle_input(buttons.southScancode,     /*pressed:*/false, /*ASCII:*/false);
+    c_keys_handle_input(kpad.touchDownScancode, /*pressed:*/false, /*ASCII:*/false);
+    c_keys_handle_input(kpad.northScancode,     /*pressed:*/false, /*ASCII:*/false);
+    c_keys_handle_input(kpad.southScancode,     /*pressed:*/false, /*ASCII:*/false);
 }
 
 static void touchkpad_setup(void (*buttonDrawCallback)(char newChar)) {
@@ -247,8 +259,8 @@ static void touchkpad_axisDown(void) {
     kpad.timingBegins[REPEAT_AXIS_ALT] = now;
 
     kpad.axisCurrentOctant = ORIGIN;
-    if (axes.rosetteScancodes[ROSETTE_CENTER] >= 0) {
-        kpad.scancodes[REPEAT_AXIS] = axes.rosetteScancodes[ROSETTE_CENTER];
+    if (kpad.rosetteScancodes[ROSETTE_CENTER] >= 0) {
+        kpad.scancodes[REPEAT_AXIS] = kpad.rosetteScancodes[ROSETTE_CENTER];
         kpad.scancodes[REPEAT_AXIS_ALT] = -1;
     }
 }
@@ -257,7 +269,7 @@ static void touchkpad_axisMove(int dx, int dy) {
     TOUCH_JOY_LOG("...");
 
     if ((dx > -joyglobals.switchThreshold) && (dx < joyglobals.switchThreshold) && (dy > -joyglobals.switchThreshold) && (dy < joyglobals.switchThreshold)) {
-        kpad.scancodes[REPEAT_AXIS] = axes.rosetteScancodes[ROSETTE_CENTER];
+        kpad.scancodes[REPEAT_AXIS] = kpad.rosetteScancodes[ROSETTE_CENTER];
         kpad.scancodes[REPEAT_AXIS_ALT] = -1;
         return;
     }
@@ -296,98 +308,98 @@ static void touchkpad_axisMove(int dx, int dy) {
         kpad.scancodes[REPEAT_AXIS_ALT] = -1;
         switch (kpad.axisCurrentOctant) {
             case OCTANT_NORTHWEST:
-                if (axes.rosetteScancodes[ROSETTE_NORTHWEST] >= 0) {
-                    kpad.scancodes[REPEAT_AXIS] = axes.rosetteScancodes[ROSETTE_NORTHWEST];
-                    TOUCH_JOY_LOG("XY : NORTHWEST, (%d)", axes.rosetteScancodes[ROSETTE_WEST]);
+                if (kpad.rosetteScancodes[ROSETTE_NORTHWEST] >= 0) {
+                    kpad.scancodes[REPEAT_AXIS] = kpad.rosetteScancodes[ROSETTE_NORTHWEST];
+                    TOUCH_JOY_LOG("XY : NORTHWEST, (%d)", kpad.rosetteScancodes[ROSETTE_WEST]);
                 } else {
-                    TOUCH_JOY_LOG("XY : WEST (%d) & NORTH (%d)", axes.rosetteScancodes[ROSETTE_WEST], axes.rosetteScancodes[ROSETTE_NORTH]);
-                    kpad.scancodes[REPEAT_AXIS] = axes.rosetteScancodes[ROSETTE_WEST];
-                    kpad.scancodes[REPEAT_AXIS_ALT] = axes.rosetteScancodes[ROSETTE_NORTH];
+                    TOUCH_JOY_LOG("XY : WEST (%d) & NORTH (%d)", kpad.rosetteScancodes[ROSETTE_WEST], kpad.rosetteScancodes[ROSETTE_NORTH]);
+                    kpad.scancodes[REPEAT_AXIS] = kpad.rosetteScancodes[ROSETTE_WEST];
+                    kpad.scancodes[REPEAT_AXIS_ALT] = kpad.rosetteScancodes[ROSETTE_NORTH];
                 }
                 break;
 
             case OCTANT_NORTH:
-                if (axes.rosetteScancodes[ROSETTE_NORTH] >= 0) {
-                    TOUCH_JOY_LOG("Y : NORTH (%d)", axes.rosetteScancodes[ROSETTE_NORTH]);
-                    kpad.scancodes[REPEAT_AXIS] = axes.rosetteScancodes[ROSETTE_NORTH];
+                if (kpad.rosetteScancodes[ROSETTE_NORTH] >= 0) {
+                    TOUCH_JOY_LOG("Y : NORTH (%d)", kpad.rosetteScancodes[ROSETTE_NORTH]);
+                    kpad.scancodes[REPEAT_AXIS] = kpad.rosetteScancodes[ROSETTE_NORTH];
                 } else if (radians < RADIANS_NORTH) {
-                    TOUCH_JOY_LOG("XY : NORTHWEST (%d)", axes.rosetteScancodes[ROSETTE_NORTHWEST]);
-                    kpad.scancodes[REPEAT_AXIS] = axes.rosetteScancodes[ROSETTE_NORTHWEST];
+                    TOUCH_JOY_LOG("XY : NORTHWEST (%d)", kpad.rosetteScancodes[ROSETTE_NORTHWEST]);
+                    kpad.scancodes[REPEAT_AXIS] = kpad.rosetteScancodes[ROSETTE_NORTHWEST];
                 } else {
-                    TOUCH_JOY_LOG("XY : NORTHEAST (%d)", axes.rosetteScancodes[ROSETTE_NORTHEAST]);
-                    kpad.scancodes[REPEAT_AXIS] = axes.rosetteScancodes[ROSETTE_NORTHEAST];
+                    TOUCH_JOY_LOG("XY : NORTHEAST (%d)", kpad.rosetteScancodes[ROSETTE_NORTHEAST]);
+                    kpad.scancodes[REPEAT_AXIS] = kpad.rosetteScancodes[ROSETTE_NORTHEAST];
                 }
                 break;
 
             case OCTANT_NORTHEAST:
-                if (axes.rosetteScancodes[ROSETTE_NORTHEAST] >= 0) {
-                    TOUCH_JOY_LOG("XY : NORTHEAST (%d)", axes.rosetteScancodes[ROSETTE_NORTHEAST]);
-                    kpad.scancodes[REPEAT_AXIS] = axes.rosetteScancodes[ROSETTE_NORTHEAST];
+                if (kpad.rosetteScancodes[ROSETTE_NORTHEAST] >= 0) {
+                    TOUCH_JOY_LOG("XY : NORTHEAST (%d)", kpad.rosetteScancodes[ROSETTE_NORTHEAST]);
+                    kpad.scancodes[REPEAT_AXIS] = kpad.rosetteScancodes[ROSETTE_NORTHEAST];
                 } else {
-                    TOUCH_JOY_LOG("XY : EAST (%d) & NORTH (%d)", axes.rosetteScancodes[ROSETTE_EAST], axes.rosetteScancodes[ROSETTE_NORTH]);
-                    kpad.scancodes[REPEAT_AXIS] = axes.rosetteScancodes[ROSETTE_EAST];
-                    kpad.scancodes[REPEAT_AXIS_ALT] = axes.rosetteScancodes[ROSETTE_NORTH];
+                    TOUCH_JOY_LOG("XY : EAST (%d) & NORTH (%d)", kpad.rosetteScancodes[ROSETTE_EAST], kpad.rosetteScancodes[ROSETTE_NORTH]);
+                    kpad.scancodes[REPEAT_AXIS] = kpad.rosetteScancodes[ROSETTE_EAST];
+                    kpad.scancodes[REPEAT_AXIS_ALT] = kpad.rosetteScancodes[ROSETTE_NORTH];
                 }
                 break;
 
             case OCTANT_WEST:
-                if (axes.rosetteScancodes[ROSETTE_WEST] >= 0) {
-                    TOUCH_JOY_LOG("Y : WEST (%d)", axes.rosetteScancodes[ROSETTE_WEST]);
-                    kpad.scancodes[REPEAT_AXIS] = axes.rosetteScancodes[ROSETTE_WEST];
+                if (kpad.rosetteScancodes[ROSETTE_WEST] >= 0) {
+                    TOUCH_JOY_LOG("Y : WEST (%d)", kpad.rosetteScancodes[ROSETTE_WEST]);
+                    kpad.scancodes[REPEAT_AXIS] = kpad.rosetteScancodes[ROSETTE_WEST];
                 } else if (radians > RADIANS_WEST_NEG && radians < 0) {
-                    TOUCH_JOY_LOG("XY : NORTHWEST (%d)", axes.rosetteScancodes[ROSETTE_NORTHWEST]);
-                    kpad.scancodes[REPEAT_AXIS] = axes.rosetteScancodes[ROSETTE_NORTHWEST];
+                    TOUCH_JOY_LOG("XY : NORTHWEST (%d)", kpad.rosetteScancodes[ROSETTE_NORTHWEST]);
+                    kpad.scancodes[REPEAT_AXIS] = kpad.rosetteScancodes[ROSETTE_NORTHWEST];
                 } else {
-                    TOUCH_JOY_LOG("XY : SOUTHWEST (%d)", axes.rosetteScancodes[ROSETTE_SOUTHWEST]);
-                    kpad.scancodes[REPEAT_AXIS] = axes.rosetteScancodes[ROSETTE_SOUTHWEST];
+                    TOUCH_JOY_LOG("XY : SOUTHWEST (%d)", kpad.rosetteScancodes[ROSETTE_SOUTHWEST]);
+                    kpad.scancodes[REPEAT_AXIS] = kpad.rosetteScancodes[ROSETTE_SOUTHWEST];
                 }
                 break;
 
             case OCTANT_EAST:
-                if (axes.rosetteScancodes[ROSETTE_EAST] >= 0) {
-                    TOUCH_JOY_LOG("Y : EAST (%d)", axes.rosetteScancodes[ROSETTE_EAST]);
-                    kpad.scancodes[REPEAT_AXIS] = axes.rosetteScancodes[ROSETTE_EAST];
+                if (kpad.rosetteScancodes[ROSETTE_EAST] >= 0) {
+                    TOUCH_JOY_LOG("Y : EAST (%d)", kpad.rosetteScancodes[ROSETTE_EAST]);
+                    kpad.scancodes[REPEAT_AXIS] = kpad.rosetteScancodes[ROSETTE_EAST];
                 } else if (radians < RADIANS_EAST) {
-                    TOUCH_JOY_LOG("XY : NORTHEAST (%d)", axes.rosetteScancodes[ROSETTE_NORTHEAST]);
-                    kpad.scancodes[REPEAT_AXIS] = axes.rosetteScancodes[ROSETTE_NORTHEAST];
+                    TOUCH_JOY_LOG("XY : NORTHEAST (%d)", kpad.rosetteScancodes[ROSETTE_NORTHEAST]);
+                    kpad.scancodes[REPEAT_AXIS] = kpad.rosetteScancodes[ROSETTE_NORTHEAST];
                 } else {
-                    TOUCH_JOY_LOG("XY : SOUTHEAST (%d)", axes.rosetteScancodes[ROSETTE_SOUTHEAST]);
-                    kpad.scancodes[REPEAT_AXIS] = axes.rosetteScancodes[ROSETTE_SOUTHEAST];
+                    TOUCH_JOY_LOG("XY : SOUTHEAST (%d)", kpad.rosetteScancodes[ROSETTE_SOUTHEAST]);
+                    kpad.scancodes[REPEAT_AXIS] = kpad.rosetteScancodes[ROSETTE_SOUTHEAST];
                 }
                 break;
 
             case OCTANT_SOUTHWEST:
-                if (axes.rosetteScancodes[ROSETTE_SOUTHWEST] >= 0) {
-                    TOUCH_JOY_LOG("XY : SOUTHWEST (%d)", axes.rosetteScancodes[ROSETTE_SOUTHWEST]);
-                    kpad.scancodes[REPEAT_AXIS] = axes.rosetteScancodes[ROSETTE_SOUTHWEST];
+                if (kpad.rosetteScancodes[ROSETTE_SOUTHWEST] >= 0) {
+                    TOUCH_JOY_LOG("XY : SOUTHWEST (%d)", kpad.rosetteScancodes[ROSETTE_SOUTHWEST]);
+                    kpad.scancodes[REPEAT_AXIS] = kpad.rosetteScancodes[ROSETTE_SOUTHWEST];
                 } else {
-                    TOUCH_JOY_LOG("XY : WEST (%d) & SOUTH (%d)", axes.rosetteScancodes[ROSETTE_WEST], axes.rosetteScancodes[ROSETTE_SOUTH]);
-                    kpad.scancodes[REPEAT_AXIS] = axes.rosetteScancodes[ROSETTE_WEST];
-                    kpad.scancodes[REPEAT_AXIS_ALT] = axes.rosetteScancodes[ROSETTE_SOUTH];
+                    TOUCH_JOY_LOG("XY : WEST (%d) & SOUTH (%d)", kpad.rosetteScancodes[ROSETTE_WEST], kpad.rosetteScancodes[ROSETTE_SOUTH]);
+                    kpad.scancodes[REPEAT_AXIS] = kpad.rosetteScancodes[ROSETTE_WEST];
+                    kpad.scancodes[REPEAT_AXIS_ALT] = kpad.rosetteScancodes[ROSETTE_SOUTH];
                 }
                 break;
 
             case OCTANT_SOUTH:
-                if (axes.rosetteScancodes[ROSETTE_SOUTH] >= 0) {
-                    TOUCH_JOY_LOG("Y : SOUTH (%d)", axes.rosetteScancodes[ROSETTE_SOUTH]);
-                    kpad.scancodes[REPEAT_AXIS] = axes.rosetteScancodes[ROSETTE_SOUTH];
+                if (kpad.rosetteScancodes[ROSETTE_SOUTH] >= 0) {
+                    TOUCH_JOY_LOG("Y : SOUTH (%d)", kpad.rosetteScancodes[ROSETTE_SOUTH]);
+                    kpad.scancodes[REPEAT_AXIS] = kpad.rosetteScancodes[ROSETTE_SOUTH];
                 } else if (radians > RADIANS_SOUTH) {
-                    TOUCH_JOY_LOG("XY : SOUTHWEST (%d)", axes.rosetteScancodes[ROSETTE_SOUTHWEST]);
-                    kpad.scancodes[REPEAT_AXIS] = axes.rosetteScancodes[ROSETTE_SOUTHWEST];
+                    TOUCH_JOY_LOG("XY : SOUTHWEST (%d)", kpad.rosetteScancodes[ROSETTE_SOUTHWEST]);
+                    kpad.scancodes[REPEAT_AXIS] = kpad.rosetteScancodes[ROSETTE_SOUTHWEST];
                 } else {
-                    TOUCH_JOY_LOG("XY : SOUTHEAST (%d)", axes.rosetteScancodes[ROSETTE_SOUTHEAST]);
-                    kpad.scancodes[REPEAT_AXIS] = axes.rosetteScancodes[ROSETTE_SOUTHEAST];
+                    TOUCH_JOY_LOG("XY : SOUTHEAST (%d)", kpad.rosetteScancodes[ROSETTE_SOUTHEAST]);
+                    kpad.scancodes[REPEAT_AXIS] = kpad.rosetteScancodes[ROSETTE_SOUTHEAST];
                 }
                 break;
 
             case OCTANT_SOUTHEAST:
-                if (axes.rosetteScancodes[ROSETTE_SOUTHEAST] >= 0) {
-                    TOUCH_JOY_LOG("XY : SOUTHEAST (%d)", axes.rosetteScancodes[ROSETTE_SOUTHEAST]);
-                    kpad.scancodes[REPEAT_AXIS] = axes.rosetteScancodes[ROSETTE_SOUTHEAST];
+                if (kpad.rosetteScancodes[ROSETTE_SOUTHEAST] >= 0) {
+                    TOUCH_JOY_LOG("XY : SOUTHEAST (%d)", kpad.rosetteScancodes[ROSETTE_SOUTHEAST]);
+                    kpad.scancodes[REPEAT_AXIS] = kpad.rosetteScancodes[ROSETTE_SOUTHEAST];
                 } else {
-                    TOUCH_JOY_LOG("XY : EAST (%d) & SOUTH (%d)", axes.rosetteScancodes[ROSETTE_EAST], axes.rosetteScancodes[ROSETTE_SOUTH]);
-                    kpad.scancodes[REPEAT_AXIS] = axes.rosetteScancodes[ROSETTE_EAST];
-                    kpad.scancodes[REPEAT_AXIS_ALT] = axes.rosetteScancodes[ROSETTE_SOUTH];
+                    TOUCH_JOY_LOG("XY : EAST (%d) & SOUTH (%d)", kpad.rosetteScancodes[ROSETTE_EAST], kpad.rosetteScancodes[ROSETTE_SOUTH]);
+                    kpad.scancodes[REPEAT_AXIS] = kpad.rosetteScancodes[ROSETTE_EAST];
+                    kpad.scancodes[REPEAT_AXIS_ALT] = kpad.rosetteScancodes[ROSETTE_SOUTH];
                 }
                 break;
 
@@ -431,7 +443,7 @@ static void touchkpad_buttonDown(void) {
         kpad.buttonBegan = true;
         _touch_sourceBegin(&kpad.buttonLock);
     }
-    _set_current_button_state(buttons.touchDownChar, buttons.touchDownScancode);
+    _set_current_button_state(kpad.touchDownChar, kpad.touchDownScancode);
     if (kpad.scancodes[REPEAT_BUTTON] >= 0) {
         TOUCH_JOY_LOG("->BUTT : %d/'%c'", kpad.scancodes[REPEAT_BUTTON], kpad.currButtonDisplayChar);
         clock_gettime(CLOCK_MONOTONIC, &kpad.timingBegins[REPEAT_BUTTON]);
@@ -447,11 +459,11 @@ static void touchkpad_buttonMove(int dx, int dy) {
         touchjoy_button_type_t theButtonChar = -1;
         int theButtonScancode = -1;
         if (dy < 0) {
-            theButtonChar = buttons.northChar;
-            theButtonScancode = buttons.northScancode;
+            theButtonChar = kpad.northChar;
+            theButtonScancode = kpad.northScancode;
         } else {
-            theButtonChar = buttons.southChar;
-            theButtonScancode = buttons.southScancode;
+            theButtonChar = kpad.southChar;
+            theButtonScancode = kpad.southScancode;
         }
         _set_current_button_state(theButtonChar, theButtonScancode);
     }
@@ -467,8 +479,91 @@ static void touchkpad_buttonUp(int dx, int dy) {
     }
 }
 
-static void touchkpad_setKeyRepeatThreshold(float repeatThresholdSecs) {
-    kpad.repeatThresholdNanos = repeatThresholdSecs * NANOSECONDS_PER_SECOND;
+static void touchkpad_prefsChanged(const char *domain) {
+    assert(video_isRenderThread());
+
+    bool bVal = false;
+    float fVal = 0.f;
+    long lVal = 0;
+
+    kpad.repeatThresholdNanos = prefs_parseFloatValue(domain, PREF_KPAD_REPEAT_THRESH,    &fVal)              ? fVal*NANOSECONDS_PER_SECOND : NANOSECONDS_PER_SECOND;
+
+    kpad.touchDownChar        = prefs_parseLongValue (domain, PREF_KPAD_TOUCHDOWN_CHAR,   &lVal, /*base:*/10) ? lVal : ICONTEXT_SPACE_VISUAL;
+    kpad.touchDownScancode    = prefs_parseLongValue (domain, PREF_KPAD_TOUCHDOWN_SCAN,   &lVal, /*base:*/10) ? lVal : c_keys_ascii_to_scancode(' ');
+
+    kpad.southChar            = prefs_parseLongValue (domain, PREF_KPAD_SWIPE_SOUTH_CHAR, &lVal, /*base:*/10) ? lVal : ICONTEXT_NONACTIONABLE;
+    kpad.southScancode        = prefs_parseLongValue (domain, PREF_KPAD_SWIPE_SOUTH_SCAN, &lVal, /*base:*/10) ? lVal : -1;
+
+    kpad.northChar            = prefs_parseLongValue (domain, PREF_KPAD_SWIPE_NORTH_CHAR, &lVal, /*base:*/10) ? lVal : ICONTEXT_NONACTIONABLE;
+    kpad.northScancode        = prefs_parseLongValue (domain, PREF_KPAD_SWIPE_NORTH_SCAN, &lVal, /*base:*/10) ? lVal : -1;
+
+    const unsigned long rosetteCount = ROSETTE_ROWS*ROSETTE_COLS;
+
+    do {
+        const int rosetteChars[ROSETTE_ROWS*ROSETTE_COLS] = {
+            ICONTEXT_NONACTIONABLE, 'I', ICONTEXT_NONACTIONABLE,
+            'J', ICONTEXT_NONACTIONABLE, 'K',
+            ICONTEXT_NONACTIONABLE, 'M', ICONTEXT_NONACTIONABLE,
+        };
+        const int rosetteScans[ROSETTE_ROWS*ROSETTE_COLS] = {
+            -1, c_keys_ascii_to_scancode('I'), -1,
+            c_keys_ascii_to_scancode('J'), -1, c_keys_ascii_to_scancode('K'),
+            -1, c_keys_ascii_to_scancode('M'), -1,
+        };
+        for (unsigned long i=0; i<rosetteCount; i++) {
+            kpad.rosetteChars[i] = rosetteChars[i];
+            kpad.rosetteScancodes[i] = rosetteScans[i];
+        }
+    } while (0);
+
+    // ASCII : "rosetteChars" : [ 121, 127, 130,  100, 101, 121,  132, 120, 99 ]
+    JSON_ref array = NULL;
+    do {
+        if (!prefs_copyJSONValue(domain, PREF_KPAD_ROSETTE_CHAR_ARRAY, &array)) {
+            LOG("could not parse touch keypad rosette");
+            break;
+        }
+        long count = 0;
+        if (!json_arrayCount(array, &count)) {
+            LOG("rosette is not an array!");
+            break;
+        }
+        if (count != rosetteCount) {
+            LOG("rosette count unexpected : %lu!", rosetteCount);
+            break;
+        }
+        for (unsigned long i=0; i<rosetteCount; i++) {
+            kpad.rosetteChars[i] = json_arrayParseLongValueAtIndex(array, i, &lVal, /*base:*/10) ? (uint8_t)lVal : ' ';
+        }
+    } while (0);
+
+    json_destroy(&array);
+
+    // long : "rosetteScancodes" : [ -1, 100, -1,  99, -1, 96,  -1, 101, -1 ]
+    do {
+        if (!prefs_copyJSONValue(domain, PREF_KPAD_ROSETTE_SCAN_ARRAY, &array)) {
+            LOG("could not parse touch keypad rosette");
+            break;
+        }
+        long count = 0;
+        if (!json_arrayCount(array, &count)) {
+            LOG("rosette is not an array!");
+            break;
+        }
+        if (count != rosetteCount) {
+            LOG("rosette count unexpected : %lu!", rosetteCount);
+            break;
+        }
+        for (unsigned long i=0; i<rosetteCount; i++) {
+            kpad.rosetteScancodes[i] = json_arrayParseLongValueAtIndex(array, i, &lVal, /*base:*/10) ? lVal : -1;
+        }
+    } while (0);
+
+    json_destroy(&array);
+}
+
+static uint8_t *touchkpad_rosetteChars(void) {
+    return kpad.rosetteChars;
 }
 
 // ----------------------------------------------------------------------------
@@ -482,12 +577,12 @@ static void _init_gltouchjoy_kpad(void) {
 
     kpad.currButtonDisplayChar = ' ';
 
-    kpad.repeatThresholdNanos = KEY_REPEAT_THRESHOLD_NANOS;
-
     kpadJoy.variant = &touchkpad_variant,
     kpadJoy.resetState = &touchkpad_resetState,
     kpadJoy.setup = &touchkpad_setup,
     kpadJoy.shutdown = &touchkpad_shutdown,
+
+    kpadJoy.prefsChanged = &touchkpad_prefsChanged;
 
     kpadJoy.buttonDown = &touchkpad_buttonDown,
     kpadJoy.buttonMove = &touchkpad_buttonMove,
@@ -497,9 +592,9 @@ static void _init_gltouchjoy_kpad(void) {
     kpadJoy.axisMove = &touchkpad_axisMove,
     kpadJoy.axisUp = &touchkpad_axisUp,
 
-    joydriver_setKeyRepeatThreshold = &touchkpad_setKeyRepeatThreshold;
+    kpadJoy.rosetteChars = &touchkpad_rosetteChars;
 
-    gltouchjoy_registerVariant(EMULATED_KEYPAD, &kpadJoy);
+    gltouchjoy_registerVariant(TOUCH_DEVICE_JOYSTICK_KEYPAD, &kpadJoy);
 }
 
 static __attribute__((constructor)) void __init_gltouchjoy_kpad(void) {

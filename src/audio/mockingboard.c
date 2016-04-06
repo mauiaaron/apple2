@@ -2370,3 +2370,20 @@ unsigned long MB_SetSnapshot(SS_CARD_MOCKINGBOARD* pSS, unsigned long dwSlot_unu
 #endif
 }
 
+// ----------------------------------------------------------------------------
+
+static void mb_prefsChanged(const char *domain) {
+    long goesToTen = 0;
+    prefs_parseLongValue(domain, PREF_MOCKINGBOARD_VOLUME, &goesToTen, /*base:*/10); // expected range 0-10
+    if (goesToTen < 0) {
+        goesToTen = 0;
+    }
+    if (goesToTen > 10) {
+        goesToTen = 10;
+    }
+    MB_SetVolumeZeroToTen(goesToTen);
+}
+
+static __attribute__((constructor)) void _init_mockingboard(void) {
+    prefs_registerListener(PREF_DOMAIN_AUDIO, &mb_prefsChanged);
+}

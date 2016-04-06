@@ -68,9 +68,6 @@ static struct {
     int buttonY;
     int buttonYMax;
 
-    // Are we in landscape mode
-    bool landscape;
-
     // TODO FIXME : support 2-players!
 } touchport = { 0 };
 
@@ -82,6 +79,9 @@ static struct {
         GLint uniformMVPIdx;);
 
 AZIMUTH_CLASS(GLModelJoystickAzimuth);
+
+static void gltouchjoy_applyPrefs(void);
+static void gltouchjoy_shutdown(void);
 
 // ----------------------------------------------------------------------------
 // joystick azimuth model
@@ -266,9 +266,10 @@ static void _setup_axis_hud(GLModel *parent) {
 
     const unsigned int row = (AXIS_TEMPLATE_COLS+1);
 
+    uint8_t *rosetteChars = variant.curr->rosetteChars();
     for (unsigned int i=0; i<ROSETTE_ROWS; i++) {
         for (unsigned int j=0; j<ROSETTE_COLS; j++) {
-            ((hudElement->tpl)+(row*i))[j] = axes.rosetteChars[(i*ROSETTE_ROWS)+j];
+            ((hudElement->tpl)+(row*i))[j] = rosetteChars[(i*ROSETTE_ROWS)+j];
         }
     }
 
@@ -350,13 +351,11 @@ static inline void resetState() {
 static void gltouchjoy_setup(void) {
     LOG("...");
 
-    resetState();
+    gltouchjoy_shutdown();
 
-    mdlDestroyModel(&axes.model);
-    mdlDestroyModel(&axes.azimuthModel);
-    mdlDestroyModel(&buttons.model);
-
-    joyglobals.isShuttingDown = false;
+    if (joyglobals.prefsChanged) {
+        gltouchjoy_applyPrefs();
+    }
 
     // axis origin object
 
@@ -418,6 +417,12 @@ static void gltouchjoy_setup(void) {
     }
 
     // button object
+    long lVal = 0;
+    if (variant.curr->variant() == TOUCH_DEVICE_JOYSTICK_KEYPAD) {
+        buttons.activeChar = prefs_parseLongValue(PREF_DOMAIN_JOYSTICK, PREF_KPAD_TOUCHDOWN_CHAR, &lVal, /*base:*/10) ? lVal : ICONTEXT_SPACE_VISUAL;
+    } else {
+        buttons.activeChar = prefs_parseLongValue(PREF_DOMAIN_JOYSTICK, PREF_JOY_TOUCHDOWN_CHAR, &lVal, /*base:*/10) ? lVal : MOUSETEXT_OPENAPPLE;
+    }
 
     buttons.model = mdlCreateQuad((GLModelParams_s){
             .skew_x = 1.05-BUTTON_OBJ_W,
@@ -451,6 +456,10 @@ static void gltouchjoy_setup(void) {
     buttons.timingBegin = now;
 
     joyglobals.isAvailable = true;
+
+    if (joyglobals.ownsScreen) {
+        video_animations->animation_showTouchJoystick();
+    }
 }
 
 static void gltouchjoy_shutdown(void) {
@@ -462,7 +471,6 @@ static void gltouchjoy_shutdown(void) {
     resetState();
 
     joyglobals.isAvailable = false;
-    joyglobals.isShuttingDown = true;
 
     variant.joys->shutdown();
     variant.kpad->shutdown();
@@ -476,8 +484,8 @@ static void gltouchjoy_render(void) {
     if (!joyglobals.isAvailable) {
         return;
     }
-    if (!joyglobals.isEnabled) {
-        return;
+    if (UNLIKELY(joyglobals.prefsChanged)) {
+        gltouchjoy_setup(); // fully set up again on prefs change
     }
     if (!joyglobals.ownsScreen) {
         return;
@@ -550,8 +558,8 @@ static void gltouchjoy_render(void) {
 
 static void gltouchjoy_reshape(int w, int h, bool landscape) {
     LOG("w:%d h:%d landscape:%d", w, h, landscape);
+    assert(video_isRenderThread());
 
-    touchport.landscape = landscape;
     swizzleDimensions(&w, &h, landscape);
     touchport.width = w;
     touchport.height = h;
@@ -703,7 +711,7 @@ static int64_t gltouchjoy_onTouchEvent(interface_touch_event_t action, int point
     if (!joyglobals.isAvailable) {
         return 0x0LL;
     }
-    if (!joyglobals.isEnabled) {
+    if (UNLIKELY(joyglobals.prefsChanged)) {
         return 0x0LL;
     }
     if (!joyglobals.ownsScreen) {
@@ -804,36 +812,7 @@ static int64_t gltouchjoy_onTouchEvent(interface_touch_event_t action, int point
     return TOUCH_FLAGS_HANDLED | TOUCH_FLAGS_JOY;
 }
 
-static bool gltouchjoy_isTouchJoystickAvailable(void) {
-    return joyglobals.isAvailable;
-}
-
-static void gltouchjoy_setTouchJoystickEnabled(bool enabled) {
-    joyglobals.isEnabled = enabled;
-}
-
-static void gltouchjoy_setTouchJoystickOwnsScreen(bool pwnd) {
-    joyglobals.ownsScreen = pwnd;
-    resetState();
-    if (joyglobals.ownsScreen) {
-        caps_lock = true; // HACK FOR NOW : force uppercase scancodes for touchjoy_kpad variant
-        joyglobals.minAlpha = joyglobals.minAlphaWhenOwnsScreen;
-    } else {
-        joyglobals.minAlpha = 0.0;
-    }
-}
-
-static bool gltouchjoy_ownsScreen(void) {
-    return joyglobals.ownsScreen;
-}
-
-static void gltouchjoy_setShowControls(bool showControls) {
-    joyglobals.showControls = showControls;
-}
-
-static void gltouchjoy_setShowAzimuth(bool showAzimuth) {
-    joyglobals.showAzimuth = showAzimuth;
-}
+// ----------------------------------------------------------------------------
 
 static void _animation_showTouchJoystick(void) {
     if (!joyglobals.isAvailable) {
@@ -864,95 +843,48 @@ static void _animation_hideTouchJoystick(void) {
     buttons.timingBegin = (struct timespec){ 0 };
 }
 
-static void gltouchjoy_setTouchButtonTypes(
-        touchjoy_button_type_t touchDownChar, int touchDownScancode,
-        touchjoy_button_type_t northChar, int northScancode,
-        touchjoy_button_type_t southChar, int southScancode)
-{
-    buttons.touchDownChar     = touchDownChar;
-    buttons.touchDownScancode = touchDownScancode;
+static void gltouchjoy_applyPrefs(void) {
+    assert(video_isRenderThread());
 
-    buttons.southChar     = southChar;
-    buttons.southScancode = southScancode;
+    joyglobals.prefsChanged = false;
 
-    buttons.northChar     = northChar;
-    buttons.northScancode = northScancode;
+    bool bVal = false;
+    float fVal = 0.f;
+    long lVal = 0;
 
-    buttons.activeChar = ICONTEXT_NONACTIONABLE;
-
-    char currButtonDisplayChar = touchDownChar;
-    if (touchDownChar == TOUCH_BUTTON0) {
-        currButtonDisplayChar = MOUSETEXT_OPENAPPLE;
-    } else if (touchDownChar == TOUCH_BUTTON1) {
-        currButtonDisplayChar = MOUSETEXT_CLOSEDAPPLE;
-    } else if (touchDownChar == TOUCH_BOTH) {
-        currButtonDisplayChar = ICONTEXT_MENU_TOUCHJOY;
-    } else if (touchDownScancode < 0) {
-        currButtonDisplayChar = ' ';
-    }
-    _setup_button_object_with_char(currButtonDisplayChar);
-}
-
-static void gltouchjoy_setTouchAxisSensitivity(float multiplier) {
-    axes.multiplier = multiplier;
-}
-
-static void gltouchjoy_setButtonSwitchThreshold(int delta) {
-    joyglobals.switchThreshold = delta;
-}
-
-static void gltouchjoy_setTouchVariant(touchjoy_variant_t variantType) {
-    resetState();
-
-    switch (variantType) {
-        case EMULATED_JOYSTICK:
-            variant.curr = variant.joys;
-            break;
-
-        case EMULATED_KEYPAD:
-            variant.curr = variant.kpad;
-            break;
-
-        default:
-            assert(false && "touch variant set to invalid");
-            break;
-    }
+    const interface_device_t screenOwner = prefs_parseLongValue(PREF_DOMAIN_TOUCHSCREEN, PREF_SCREEN_OWNER, &lVal, /*base:*/10) ? lVal : TOUCH_DEVICE_NONE;
+    joyglobals.ownsScreen = (screenOwner == TOUCH_DEVICE_JOYSTICK || screenOwner == TOUCH_DEVICE_JOYSTICK_KEYPAD);
 
     resetState();
+    if (joyglobals.ownsScreen) {
+        caps_lock = true; // HACK FOR NOW : force uppercase scancodes for touchjoy_kpad variant
+        joyglobals.minAlpha = joyglobals.minAlphaWhenOwnsScreen;
+        variant.curr = (screenOwner == TOUCH_DEVICE_JOYSTICK) ? variant.joys : variant.kpad;
+    } else {
+        joyglobals.minAlpha = 0.0;
+    }
+
+    joyglobals.showControls    = prefs_parseBoolValue (PREF_DOMAIN_JOYSTICK, PREF_SHOW_CONTROLS,    &bVal)     ? bVal : true;
+    joyglobals.showAzimuth     = prefs_parseBoolValue (PREF_DOMAIN_JOYSTICK, PREF_SHOW_AZIMUTH,     &bVal)     ? bVal : true;
+    joyglobals.switchThreshold = prefs_parseLongValue (PREF_DOMAIN_JOYSTICK, PREF_SWITCH_THRESHOLD, &lVal, 10) ? lVal : BUTTON_SWITCH_THRESHOLD_DEFAULT;
+    joyglobals.screenDivider   = prefs_parseFloatValue(PREF_DOMAIN_JOYSTICK, PREF_SCREEN_DIVISION,  &fVal)     ? fVal : 0.5f;
+    joyglobals.axisIsOnLeft    = prefs_parseBoolValue (PREF_DOMAIN_JOYSTICK, PREF_AXIS_ON_LEFT,     &bVal)     ? bVal : true;
+    axes.multiplier            = prefs_parseFloatValue(PREF_DOMAIN_JOYSTICK, PREF_AXIS_SENSITIVITY, &fVal)     ? fVal : 1.f;
+
+    joyglobals.isCalibrating   = prefs_parseBoolValue (PREF_DOMAIN_TOUCHSCREEN, PREF_CALIBRATING,   &bVal)     ? bVal : false;
+
+    variant.joys->prefsChanged(PREF_DOMAIN_JOYSTICK);
+    variant.kpad->prefsChanged(PREF_DOMAIN_JOYSTICK);
+
+    long width                 = prefs_parseLongValue (PREF_DOMAIN_INTERFACE, PREF_DEVICE_WIDTH,      &lVal, 10) ? lVal : (long)(SCANWIDTH*1.5);
+    long height                = prefs_parseLongValue (PREF_DOMAIN_INTERFACE, PREF_DEVICE_HEIGHT,     &lVal, 10) ? lVal : (long)(SCANHEIGHT*1.5);
+    bool isLandscape           = prefs_parseBoolValue (PREF_DOMAIN_INTERFACE, PREF_DEVICE_LANDSCAPE,  &bVal)     ? bVal : true;
+
+    gltouchjoy_reshape(width, height, isLandscape);
 }
 
-static touchjoy_variant_t gltouchjoy_getTouchVariant(void) {
-    return variant.curr->variant();
-}
-
-static void gltouchjoy_setTouchAxisTypes(uint8_t rosetteChars[(ROSETTE_ROWS * ROSETTE_COLS)], int rosetteScancodes[(ROSETTE_ROWS * ROSETTE_COLS)]) {
-    memcpy(axes.rosetteChars,     rosetteChars,     sizeof(uint8_t)*(ROSETTE_ROWS * ROSETTE_COLS));
-    memcpy(axes.rosetteScancodes, rosetteScancodes, sizeof(int)    *(ROSETTE_ROWS * ROSETTE_COLS));
-    _setup_axis_hud(axes.model);
-}
-
-static void gltouchjoy_setScreenDivision(float screenDivider) {
-    joyglobals.screenDivider = screenDivider;
-    // force reshape here to apply changes ...
-    gltouchjoy_reshape(touchport.width, touchport.height, touchport.landscape);
-}
-
-static void gltouchjoy_setAxisOnLeft(bool axisIsOnLeft) {
-    joyglobals.axisIsOnLeft = axisIsOnLeft;
-    // force reshape here to apply changes ...
-    gltouchjoy_reshape(touchport.width, touchport.height, touchport.landscape);
-}
-
-static void gltouchjoy_beginCalibration(void) {
-    joyglobals.isCalibrating = true;
-}
-
-static void gltouchjoy_endCalibration(void) {
-    joyglobals.isCalibrating = false;
-}
-
-static bool gltouchjoy_isCalibrating(void) {
-    return joyglobals.isCalibrating;
+static void gltouchjoy_prefsChanged(const char *domain) {
+    joyglobals.prefsChanged = true;
 }
 
 static void _init_gltouchjoy(void) {
@@ -960,97 +892,43 @@ static void _init_gltouchjoy(void) {
 
     axes.centerX = 240;
     axes.centerY = 160;
-    axes.multiplier = 1.f;
     axes.trackingIndex = TRACKING_NONE;
-
-    axes.rosetteChars[0]     = ' ';
-    axes.rosetteScancodes[0] = -1;
-    axes.rosetteChars[1]     = MOUSETEXT_UP;
-    axes.rosetteScancodes[1] = -1;
-    axes.rosetteChars[2]     = ' ';
-    axes.rosetteScancodes[2] = -1;
-
-    axes.rosetteChars[3]     = MOUSETEXT_LEFT;
-    axes.rosetteScancodes[3] = -1;
-    axes.rosetteChars[4]     = ICONTEXT_MENU_TOUCHJOY;
-    axes.rosetteScancodes[4] = -1;
-    axes.rosetteChars[5]     = MOUSETEXT_RIGHT;
-    axes.rosetteScancodes[5] = -1;
-
-    axes.rosetteChars[6]     = ' ';
-    axes.rosetteScancodes[6] = -1;
-    axes.rosetteChars[7]     = MOUSETEXT_DOWN;
-    axes.rosetteScancodes[7] = -1;
-    axes.rosetteChars[8]     = ' ';
-    axes.rosetteScancodes[8] = -1;
 
     buttons.centerX = 240;
     buttons.centerY = 160;
     buttons.trackingIndex = TRACKING_NONE;
-
-    buttons.touchDownChar = TOUCH_BUTTON0;
-    buttons.touchDownScancode = -1;
-
-    buttons.southChar = TOUCH_BUTTON1;
-    buttons.southScancode = -1;
-
-    buttons.northChar = TOUCH_BOTH;
-    buttons.northScancode = -1;
-
     buttons.activeChar = MOUSETEXT_OPENAPPLE;
 
-    joyglobals.isEnabled = true;
-    joyglobals.ownsScreen = true;
-    joyglobals.showControls = true;
-    joyglobals.showAzimuth = true;
-    joyglobals.screenDivider = 0.5f;
-    joyglobals.axisIsOnLeft = true;
-    joyglobals.switchThreshold = BUTTON_SWITCH_THRESHOLD_DEFAULT;
+    joyglobals.prefsChanged = true; // force reload preferences/defaults
 
     video_animations->animation_showTouchJoystick = &_animation_showTouchJoystick;
     video_animations->animation_hideTouchJoystick = &_animation_hideTouchJoystick;
-
-    joydriver_isTouchJoystickAvailable = &gltouchjoy_isTouchJoystickAvailable;
-    joydriver_setTouchJoystickEnabled = &gltouchjoy_setTouchJoystickEnabled;
-    joydriver_setTouchJoystickOwnsScreen = &gltouchjoy_setTouchJoystickOwnsScreen;
-    joydriver_ownsScreen = &gltouchjoy_ownsScreen;
-    joydriver_setShowControls = &gltouchjoy_setShowControls;
-    joydriver_setShowAzimuth = &gltouchjoy_setShowAzimuth;
-    joydriver_setTouchButtonTypes = &gltouchjoy_setTouchButtonTypes;
-    joydriver_setTouchAxisSensitivity = &gltouchjoy_setTouchAxisSensitivity;
-    joydriver_setButtonSwitchThreshold = &gltouchjoy_setButtonSwitchThreshold;
-    joydriver_setTouchVariant = &gltouchjoy_setTouchVariant;
-    joydriver_getTouchVariant = &gltouchjoy_getTouchVariant;
-    joydriver_setTouchAxisTypes = &gltouchjoy_setTouchAxisTypes;
-    joydriver_setScreenDivision = &gltouchjoy_setScreenDivision;
-    joydriver_setAxisOnLeft = &gltouchjoy_setAxisOnLeft;
-    joydriver_beginCalibration = &gltouchjoy_beginCalibration;
-    joydriver_endCalibration = &gltouchjoy_endCalibration;
-    joydriver_isCalibrating = &gltouchjoy_isCalibrating;
 
     glnode_registerNode(RENDER_LOW, (GLNode){
         .type = TOUCH_DEVICE_JOYSTICK,
         .setup = &gltouchjoy_setup,
         .shutdown = &gltouchjoy_shutdown,
         .render = &gltouchjoy_render,
-        .reshape = &gltouchjoy_reshape,
         .onTouchEvent = &gltouchjoy_onTouchEvent,
-        .setData = NULL,
     });
+
+    prefs_registerListener(PREF_DOMAIN_JOYSTICK, &gltouchjoy_prefsChanged);
+    prefs_registerListener(PREF_DOMAIN_TOUCHSCREEN, &gltouchjoy_prefsChanged);
+    prefs_registerListener(PREF_DOMAIN_INTERFACE, &gltouchjoy_prefsChanged);
 }
 
 static __attribute__((constructor)) void __init_gltouchjoy(void) {
     emulator_registerStartupCallback(CTOR_PRIORITY_LATE, &_init_gltouchjoy);
 }
 
-void gltouchjoy_registerVariant(touchjoy_variant_t variantType, GLTouchJoyVariant *touchJoyVariant) {
+void gltouchjoy_registerVariant(interface_device_t variantType, GLTouchJoyVariant *touchJoyVariant) {
     switch (variantType) {
-        case EMULATED_JOYSTICK:
+        case TOUCH_DEVICE_JOYSTICK:
             variant.joys = touchJoyVariant;
-            variant.curr = variant.kpad;
+            variant.curr = variant.joys;
             break;
 
-        case EMULATED_KEYPAD:
+        case TOUCH_DEVICE_JOYSTICK_KEYPAD:
             variant.kpad = touchJoyVariant;
             variant.curr = variant.kpad;
             break;

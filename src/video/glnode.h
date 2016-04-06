@@ -100,11 +100,9 @@ typedef struct GLNode {
     void (*setup)(void);
     void (*shutdown)(void);
     void (*render)(void);
-    void (*reshape)(int w, int h, bool landscape);
 #if INTERFACE_TOUCH
     interface_device_t type;
     int64_t (*onTouchEvent)(interface_touch_event_t action, int pointer_count, int pointer_idx, float *x_coords, float *y_coords);
-    void (*setData)(const char *jsonData);
 #endif
 } GLNode;
 

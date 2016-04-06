@@ -55,6 +55,29 @@ public class Apple2SettingsMenu extends Apple2AbstractMenu {
         return true;
     }
 
+    public enum TouchDeviceVariant {
+        NONE(0),
+        JOYSTICK(1),
+        JOYSTICK_KEYPAD(2),
+        KEYBOARD(3),
+        TOPMENU(4),
+        ALERT(5);
+        private int dev;
+
+        public static final TouchDeviceVariant FRAMEBUFFER = NONE;
+
+        public static final int size = TouchDeviceVariant.values().length;
+
+        TouchDeviceVariant(int dev) {
+            this.dev = dev;
+        }
+
+        static TouchDeviceVariant next(int ord) {
+            ord = (ord + 1) % size;
+            return TouchDeviceVariant.values()[ord];
+        }
+    }
+
     enum SETTINGS implements Apple2AbstractMenu.IMenuEnum {
         CURRENT_INPUT {
             @Override
@@ -68,6 +91,21 @@ public class Apple2SettingsMenu extends Apple2AbstractMenu {
             }
 
             @Override
+            public String getPrefDomain() {
+                return Apple2Preferences.PREF_DOMAIN_TOUCHSCREEN;
+            }
+
+            @Override
+            public String getPrefKey() {
+                return "screenOwner";
+            }
+
+            @Override
+            public Object getPrefDefault() {
+                return TouchDeviceVariant.KEYBOARD.ordinal();
+            }
+
+            @Override
             public final View getView(final Apple2Activity activity, View convertView) {
                 convertView = _basicView(activity, this, convertView);
                 _addPopupIcon(activity, this, convertView);
@@ -76,6 +114,7 @@ public class Apple2SettingsMenu extends Apple2AbstractMenu {
 
             @Override
             public void handleSelection(final Apple2Activity activity, final Apple2AbstractMenu settingsMenu, boolean isChecked) {
+                final IMenuEnum self = this;
                 _alertDialogHandleSelection(activity, R.string.input_current, new String[]{
                         activity.getResources().getString(R.string.joystick),
                         activity.getResources().getString(R.string.keypad),
@@ -83,12 +122,13 @@ public class Apple2SettingsMenu extends Apple2AbstractMenu {
                 }, new IPreferenceLoadSave() {
                     @Override
                     public int intValue() {
-                        return Apple2Preferences.CURRENT_TOUCH_DEVICE.intValue(activity) - 1;
+                        int val = (int) Apple2Preferences.getJSONPref(self);
+                        return val - 1;
                     }
 
                     @Override
                     public void saveInt(int value) {
-                        Apple2Preferences.CURRENT_TOUCH_DEVICE.saveTouchDevice(activity, Apple2Preferences.TouchDeviceVariant.values()[value + 1]);
+                        Apple2Preferences.setJSONPref(self, TouchDeviceVariant.values()[value].ordinal() + 1);
                     }
                 });
             }
@@ -185,13 +225,24 @@ public class Apple2SettingsMenu extends Apple2AbstractMenu {
             }
 
             @Override
+            public String getPrefKey() {
+                return "diskAnimationsEnabled";
+            }
+
+            @Override
+            public Object getPrefDefault() {
+                return true;
+            }
+
+            @Override
             public View getView(final Apple2Activity activity, View convertView) {
+                final IMenuEnum self = this;
                 convertView = _basicView(activity, this, convertView);
-                CheckBox cb = _addCheckbox(activity, this, convertView, Apple2Preferences.SHOW_DISK_OPERATIONS.booleanValue(activity));
+                CheckBox cb = _addCheckbox(activity, this, convertView, (boolean) Apple2Preferences.getJSONPref(this));
                 cb.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                     @Override
                     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                        Apple2Preferences.SHOW_DISK_OPERATIONS.saveBoolean(activity, isChecked);
+                        Apple2Preferences.setJSONPref(self, isChecked);
                     }
                 });
                 return convertView;
@@ -233,7 +284,7 @@ public class Apple2SettingsMenu extends Apple2AbstractMenu {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         dialog.dismiss();
-                        Apple2Preferences.resetPreferences(activity);
+                        Apple2Preferences.reset(activity);
                     }
                 }).setNegativeButton(R.string.no, null);
                 AlertDialog dialog = builder.create();
@@ -261,14 +312,25 @@ public class Apple2SettingsMenu extends Apple2AbstractMenu {
             }
 
             @Override
+            public String getPrefKey() {
+                return "sendCrashReports";
+            }
+
+            @Override
+            public Object getPrefDefault() {
+                return true;
+            }
+
+            @Override
             public View getView(final Apple2Activity activity, View convertView) {
                 convertView = _basicView(activity, this, convertView);
                 if (!BuildConfig.DEBUG) {
-                    CheckBox cb = _addCheckbox(activity, this, convertView, Apple2Preferences.CRASH_CHECK.booleanValue(activity));
+                    CheckBox cb = _addCheckbox(activity, this, convertView, (boolean) Apple2Preferences.getJSONPref(this));
+                    final IMenuEnum self = this;
                     cb.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                         @Override
                         public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                            Apple2Preferences.CRASH_CHECK.saveBoolean(activity, isChecked);
+                            Apple2Preferences.setJSONPref(self, isChecked);
                         }
                     });
                 }
@@ -313,8 +375,22 @@ public class Apple2SettingsMenu extends Apple2AbstractMenu {
         public static final int size = SETTINGS.values().length;
 
         @Override
+        public String getPrefDomain() {
+            return Apple2Preferences.PREF_DOMAIN_INTERFACE;
+        }
+
+        @Override
+        public String getPrefKey() {
+            return null;
+        }
+
+        @Override
+        public Object getPrefDefault() {
+            return null;
+        }
+
+        @Override
         public void handleSelection(Apple2Activity activity, Apple2AbstractMenu settingsMenu, boolean isChecked) {
-            /* ... */
         }
 
         @Override

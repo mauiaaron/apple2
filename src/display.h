@@ -39,7 +39,6 @@ typedef struct video_animation_s {
     void (*animation_showCPUSpeed)(void);
     void (*animation_showDiskChosen)(int drive);
     void (*animation_showTrackSector)(int drive, int track, int sect);
-    void (*animation_setEnableShowTrackSector)(bool enabled);
 
 } video_animation_s;
 
@@ -78,9 +77,9 @@ void video_render(void);
 void _video_setRenderThread(pthread_t id);
 
 /*
- * Reshape the display to particular dimensions.
+ * Check if running on render thread.
  */
-void video_reshape(int w, int h, bool landscape);
+bool video_isRenderThread(void);
 
 /*
  * Setup the display. This may be called multiple times in a run, and is

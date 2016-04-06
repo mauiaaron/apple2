@@ -21,16 +21,13 @@ import android.os.Build;
 import android.os.Environment;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.ProgressBar;
 
 import org.deadc0de.apple2ix.basic.BuildConfig;
 import org.deadc0de.apple2ix.basic.R;
 
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.FilenameFilter;
 import java.io.IOException;
@@ -43,6 +40,67 @@ public class Apple2CrashHandler {
 
     public static Apple2CrashHandler getInstance() {
         return sCrashHandler;
+    }
+
+    public enum SETTINGS implements Apple2AbstractMenu.IMenuEnum {
+        GL_VENDOR {
+            @Override
+            public String getPrefKey() {
+                return "glVendor";
+            }
+
+            @Override
+            public Object getPrefDefault() {
+                return "unknown";
+            }
+        },
+        GL_RENDERER {
+            @Override
+            public String getPrefKey() {
+                return "glRenderer";
+            }
+
+            @Override
+            public Object getPrefDefault() {
+                return "unknown";
+            }
+        },
+        GL_VERSION {
+            @Override
+            public String getPrefKey() {
+                return "glVersion";
+            }
+
+            @Override
+            public Object getPrefDefault() {
+                return "unknown";
+            }
+        };
+
+        @Override
+        public final String getTitle(Apple2Activity activity) {
+            throw new RuntimeException();
+        }
+
+        @Override
+        public final String getSummary(Apple2Activity activity) {
+            throw new RuntimeException();
+        }
+
+        @Override
+        public String getPrefDomain() {
+            return Apple2Preferences.PREF_DOMAIN_INTERFACE;
+        }
+
+        @Override
+        public View getView(final Apple2Activity activity, View convertView) {
+            throw new RuntimeException();
+        }
+
+        @Override
+        public void handleSelection(final Apple2Activity activity, final Apple2AbstractMenu settingsMenu, boolean isChecked) {
+            throw new RuntimeException();
+        }
     }
 
     public enum CrashType {
@@ -89,7 +147,7 @@ public class Apple2CrashHandler {
     public synchronized void initializeAndSetCustomExceptionHandler(Apple2Activity activity) {
         synchronized (this) {
             if (homeDir == null) {
-                homeDir = Apple2DisksMenu.getDataDir(activity);
+                homeDir = Apple2Utils.getDataDir(activity);
             }
         }
         if (mDefaultExceptionHandler != null) {
@@ -137,7 +195,7 @@ public class Apple2CrashHandler {
             return;
         }
 
-        if (!Apple2Preferences.CRASH_CHECK.booleanValue(activity)) {
+        if (!(boolean) Apple2Preferences.getJSONPref(Apple2SettingsMenu.SETTINGS.CRASH)) {
             return;
         }
 
@@ -169,7 +227,9 @@ public class Apple2CrashHandler {
             }
 
             // remove previous log file
-            _writeTempLogFile(activity, new StringBuilder());
+            File allCrashFile = _getCrashFile(activity);
+            Apple2Utils.writeFile(new StringBuilder(), allCrashFile);
+            allCrashFile.delete();
             return;
         }
 
@@ -216,9 +276,9 @@ public class Apple2CrashHandler {
                         summary.append("SAMPLE RATE: ").append(sampleRate).append("\n");
                         summary.append("MONO BUFSIZE: ").append(monoBufferSize).append("\n");
                         summary.append("STEREO BUFSIZE: ").append(stereoBufferSize).append("\n");
-                        summary.append("GPU VENDOR: ").append(Apple2Preferences.GL_VENDOR.stringValue(activity)).append("\n");
-                        summary.append("GPU RENDERER: ").append(Apple2Preferences.GL_RENDERER.stringValue(activity)).append("\n");
-                        summary.append("GPU VERSION: ").append(Apple2Preferences.GL_VERSION.stringValue(activity)).append("\n");
+                        summary.append("GPU VENDOR: ").append(Apple2Preferences.getJSONPref(SETTINGS.GL_VENDOR)).append("\n");
+                        summary.append("GPU RENDERER: ").append(Apple2Preferences.getJSONPref(SETTINGS.GL_RENDERER)).append("\n");
+                        summary.append("GPU VERSION: ").append(Apple2Preferences.getJSONPref(SETTINGS.GL_VERSION)).append("\n");
 
                         try {
                             PackageInfo pInfo = activity.getPackageManager().getPackageInfo(activity.getPackageName(), 0);
@@ -246,7 +306,7 @@ public class Apple2CrashHandler {
                         });
 
                         if (len > 0) {
-                            Apple2DisksMenu.exposeSymbols(activity);
+                            Apple2Utils.exposeSymbols(activity);
                         }
 
                         activity.runOnUiThread(new Runnable() {
@@ -274,7 +334,7 @@ public class Apple2CrashHandler {
                             }
 
                             StringBuilder crashData = new StringBuilder();
-                            if (!_readFile(new File(processedPath), crashData)) {
+                            if (!Apple2Utils.readEntireFile(new File(processedPath), crashData)) {
                                 Log.e(TAG, "Error processing crash : " + crashPath);
                             }
                             allCrashData.append(">>>>>>> NATIVE CRASH [").append(crashPath).append("]\n");
@@ -336,7 +396,7 @@ public class Apple2CrashHandler {
                         File javaCrashFile = _javaCrashFile(activity);
                         if (javaCrashFile.exists()) {
                             Log.d(TAG, "Reading java crashes file");
-                            if (!_readFile(javaCrashFile, javaCrashData)) {
+                            if (!Apple2Utils.readEntireFile(javaCrashFile, javaCrashData)) {
                                 Log.e(TAG, "Error processing java crash : " + javaCrashFileName);
                             }
                         }
@@ -356,7 +416,7 @@ public class Apple2CrashHandler {
                             }
                         });
 
-                        Apple2DisksMenu.unexposeSymbols(activity);
+                        Apple2Utils.unexposeSymbols(activity);
                         activity.runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
@@ -465,76 +525,15 @@ public class Apple2CrashHandler {
         return crashPath.substring(0, crashPath.length() - 4) + ".txt";
     }
 
-    private boolean _readFile(File file, StringBuilder fileData) {
-        final int maxAttempts = 5;
-        int attempts = 0;
-        do {
-            try {
-                BufferedReader reader = new BufferedReader(new FileReader(file));
-                char[] buf = new char[1024];
-                int numRead = 0;
-                while ((numRead = reader.read(buf)) != -1) {
-                    String readData = String.valueOf(buf, 0, numRead);
-                    fileData.append(readData);
-                }
-                reader.close();
-                break;
-            } catch (InterruptedIOException ie) {
-                /* EINTR, EAGAIN ... */
-            } catch (IOException e) {
-                Log.d(TAG, "Error reading file at path : " + file.toString());
-            }
-
-            try {
-                Thread.sleep(100, 0);
-            } catch (InterruptedException e) {
-                /* ... */
-            }
-            ++attempts;
-        } while (attempts < maxAttempts);
-
-        return attempts < maxAttempts;
-    }
-
-    private File _writeTempLogFile(Apple2Activity activity, StringBuilder allCrashData) {
-
-        File allCrashFile = null;
-
+    private File _getCrashFile(Apple2Activity activity) {
+        File allCrashFile;
         String storageState = Environment.getExternalStorageState();
         if (storageState.equals(Environment.MEDIA_MOUNTED)) {
             allCrashFile = new File(Environment.getExternalStorageDirectory(), "apple2ix_crash.txt");
         } else {
-            allCrashFile = new File(Apple2DisksMenu.getDataDir(activity), "apple2ix_crash.txt");
+            allCrashFile = new File(Apple2Utils.getDataDir(activity), "apple2ix_crash.txt");
         }
-
         Log.d(TAG, "Writing all crashes to temp file : " + allCrashFile.getAbsolutePath());
-        final int maxAttempts = 5;
-        int attempts = 0;
-        do {
-            try {
-                BufferedWriter writer = new BufferedWriter(new FileWriter(allCrashFile));
-                writer.append(allCrashData);
-                writer.flush();
-                writer.close();
-                break;
-            } catch (InterruptedIOException ie) {
-                /* EINTR, EAGAIN ... */
-            } catch (IOException e) {
-                Log.e(TAG, "Exception attempting to write data : " + e);
-            }
-
-            try {
-                Thread.sleep(100, 0);
-            } catch (InterruptedException e) {
-                /* ... */
-            }
-            ++attempts;
-        } while (attempts < maxAttempts);
-
-        if (!allCrashFile.setReadable(true, /*ownerOnly:*/false)) {
-            Log.d(TAG, "Oops, could not set all crash data readable!");
-        }
-
         return allCrashFile;
     }
 
@@ -553,9 +552,14 @@ public class Apple2CrashHandler {
         int len = summary.length();
         len = len < maxCharsEmail ? len : maxCharsEmail;
         String summaryData = summary.substring(0, len);
-        emailIntent.putExtra(Intent.EXTRA_TEXT, "The app crashed, please help!\n\n"+summaryData);
+        emailIntent.putExtra(Intent.EXTRA_TEXT, "The app crashed, please help!\n\n" + summaryData);
 
-        File allCrashFile = _writeTempLogFile(activity, allCrashData);
+        File allCrashFile = _getCrashFile(activity);
+        Apple2Utils.writeFile(allCrashData, allCrashFile);
+        if (!allCrashFile.setReadable(true, /*ownerOnly:*/false)) {
+            Log.d(TAG, "Oops, could not set file data readable!");
+        }
+
         emailIntent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(allCrashFile));
 
         Log.d(TAG, "STARTING CHOOSER FOR EMAIL ...");
