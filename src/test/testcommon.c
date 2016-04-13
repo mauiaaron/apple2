@@ -77,15 +77,23 @@ void test_breakpoint(void *arg) {
 void test_common_init() {
     GREATEST_SET_BREAKPOINT_CB(test_breakpoint, NULL);
 
-    //do_logging = false;// silence regular emulator logging
+    do_logging = false;// silence regular emulator logging
+
+    extern void emulator_ctors(void);
+    emulator_ctors();
+
+    char *envvar = NULL;
+    ASPRINTF(&envvar, "APPLE2IX_JSON=%s/.apple2.test.json", getenv("HOME"));
+    assert(envvar);
+    putenv(envvar);
+    LEAK(envvar);
 
     prefs_load();
+    prefs_setLongValue(PREF_DOMAIN_VIDEO, PREF_COLOR_MODE, COLOR);
     prefs_setBoolValue(PREF_DOMAIN_KEYBOARD, PREF_KEYBOARD_CAPS, true);
     prefs_setFloatValue(PREF_DOMAIN_VM, PREF_CPU_SCALE, CPU_SCALE_FASTEST);
     prefs_setFloatValue(PREF_DOMAIN_VM, PREF_CPU_SCALE_ALT, CPU_SCALE_FASTEST);
-    prefs_sync(NULL);
-
-    timing_initialize();
+    prefs_save();
 
     c_debugger_set_watchpoint(WATCHPOINT_ADDR);
     if (0) {

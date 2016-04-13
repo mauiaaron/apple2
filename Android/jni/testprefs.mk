@@ -11,8 +11,8 @@ include $(COMMON_SOURCES_MK)
 # Android build config
 
 LOCAL_MODULE    := libapple2ix
-LOCAL_SRC_FILES := $(APPLE2_SRC_PATH)/test/testcommon.c $(APPLE2_SRC_PATH)/test/testvm.c
-LOCAL_CFLAGS    := $(APPLE2_BASE_CFLAGS) -g -DTEST_VM=1 -DTESTING=1
+LOCAL_SRC_FILES := $(APPLE2_SRC_PATH)/test/testcommon.c $(APPLE2_SRC_PATH)/test/testprefs.c
+LOCAL_CFLAGS    := $(APPLE2_BASE_CFLAGS) -g -DTEST_PREFS=1 -DTESTING=1
 LOCAL_LDLIBS    := $(APPLE2_BASE_LDLIBS)
 
 # Add assembly files first ... mostly for the benefit of the ARM assembler ...

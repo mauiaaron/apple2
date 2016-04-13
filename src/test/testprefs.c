@@ -271,10 +271,12 @@ TEST test_json_serialization() {
     int tokCount = json_createFromString(testMapStr0, &parsedData);
     ASSERT(tokCount > 0);
 
-    char *str = STRDUP("/tmp/json-XXXXXX");
-    int fd = mkstemp(str);
+    char *tmpFile = NULL;
+    ASPRINTF(&tmpFile, "%s/json-XXXXXX", getenv("HOME"));
+    ASSERT(tmpFile);
+    int fd = mkstemp(tmpFile);
     ASSERT(fd > 0);
-    FREE(str);
+    FREE(tmpFile);
 
     json_serialize(parsedData, fd, /*pretty:*/false);
     json_destroy(&parsedData);
@@ -301,10 +303,12 @@ TEST test_json_serialization_pretty() {
     ASSERT(tokCount > 0);
     ASSERT(parsedData);
 
-    char *str = STRDUP("/tmp/json-pretty-XXXXXX");
-    int fd = mkstemp(str);
+    char *tmpFile = NULL;
+    ASPRINTF(&tmpFile, "%s/json-pretty-XXXXXX", getenv("HOME"));
+    ASSERT(tmpFile);
+    int fd = mkstemp(tmpFile);
     ASSERT(fd > 0);
-    FREE(str);
+    FREE(tmpFile);
 
     ok = json_serialize(parsedData, fd, /*pretty:*/true);
     ASSERT(ok);
@@ -1890,8 +1894,18 @@ TEST test_prefs_set_props() {
 #define EXPECTED_TEST_PREFS_FILE_SIZE 178
 #define EXPECTED_TEST_PREFS_SHA "263844f0177a9229eece7907cd9f6f72aef535f5"
 TEST test_prefs_load_and_save() {
-    unlink(TEST_JSON);
-    putenv("APPLE2IX_JSON=" TEST_JSON);
+
+    char *apple2JSON = NULL;
+    ASPRINTF(&apple2JSON, "%s/%s", getenv("HOME"), TEST_JSON);
+    ASSERT(apple2JSON);
+    unlink(apple2JSON);
+
+    char *apple2JSONEnv = NULL;
+    ASPRINTF(&apple2JSONEnv, "APPLE2IX_JSON=%s/%s", getenv("HOME"), TEST_JSON);
+    ASSERT(apple2JSONEnv);
+    putenv(apple2JSONEnv);
+    LEAK(apple2JSONEnv);
+
     prefs_load();
     prefs_sync(NULL);
     prefs_save();
@@ -1947,7 +1961,7 @@ TEST test_prefs_load_and_save() {
         uint8_t md[SHA_DIGEST_LENGTH];
         char mdstr0[(SHA_DIGEST_LENGTH*2)+1];
 
-        FILE *fp = fopen(TEST_JSON, "r");
+        FILE *fp = fopen(apple2JSON, "r");
 
         fseek(fp, 0, SEEK_END);
         long expectedSize = ftell(fp);
@@ -1966,7 +1980,8 @@ TEST test_prefs_load_and_save() {
         ASSERT(strcasecmp(mdstr0, EXPECTED_TEST_PREFS_SHA) == 0);
     } while(0);
 
-    unlink(TEST_JSON);
+    unlink(apple2JSON);
+    FREE(apple2JSON);
 
     PASS();
 }
@@ -1975,12 +1990,15 @@ TEST test_prefs_load_and_save() {
 // Test Suite
 
 GREATEST_SUITE(test_suite_prefs) {
+    test_thread_running = true;
+
+    pthread_mutex_lock(&interface_mutex);
+
     GREATEST_SET_SETUP_CB(testprefs_setup, NULL);
     GREATEST_SET_TEARDOWN_CB(testprefs_teardown, NULL);
     //GREATEST_SET_BREAKPOINT_CB(test_breakpoint, NULL);
 
     // TESTS --------------------------
-    test_thread_running = true;
 
     RUN_TESTp(test_json_map_1);
 
@@ -2051,13 +2069,9 @@ static void *test_thread(void *dummyptr) {
     return NULL;
 }
 
-void test_prefs(int argc, char **argv) {
-    test_argc = argc;
-    test_argv = argv;
-
-    pthread_mutex_lock(&interface_mutex);
-
-    emulator_start();
+void test_prefs(int _argc, char **_argv) {
+    test_argc = _argc;
+    test_argv = _argv;
 
     test_common_init();
 
@@ -2068,16 +2082,5 @@ void test_prefs(int argc, char **argv) {
         nanosleep(&ts, NULL);
     }
     pthread_detach(p);
-
-    video_main_loop();
-
-#if !defined(__APPLE__) && !defined(ANDROID)
-    emulator_shutdown();
-#endif
 }
 
-#if !defined(__APPLE__) && !defined(ANDROID)
-int main(int argc, char **argv) {
-    test_prefs(argc, argv);
-}
-#endif

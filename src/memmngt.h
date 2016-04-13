@@ -21,6 +21,13 @@
         (ptr) = NULL; \
     } while (0)
 
+// A way to formalize intentional leaks
+#define LEAK(ptr) \
+    do { \
+        /* WARNING : code may depend on NULLification, even in release builds */ \
+        (ptr) = NULL; \
+    } while (0)
+
 #ifdef NDEBUG
 #   define MALLOC(size)         malloc((size))
 #   define CALLOC(nmemb, size)  calloc((nmemb), (size))

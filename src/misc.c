@@ -261,8 +261,7 @@ void emulator_registerStartupCallback(long order, startup_callback_f ctor) {
     pthread_mutex_unlock(&mutex);
 }
 
-void emulator_start(void) {
-
+void emulator_ctors(void) {
     module_ctor_node_s *p = head;
     head = NULL;
     while (p) {
@@ -272,23 +271,24 @@ void emulator_start(void) {
         p = next;
     }
     head = NULL;
+}
 
-#if defined(INTERFACE_CLASSIC) && !TESTING
-    cpu_pause();
+void emulator_start(void) {
+
+    emulator_ctors();
+
     prefs_load(); // user prefs
     prefs_sync(NULL);
-    cpu_resume();
+
+#if defined(INTERFACE_CLASSIC) && !TESTING
     c_keys_set_key(kF8); // show credits before emulation start
 #endif
 
 #if !defined(__APPLE__) && !defined(ANDROID)
     video_init();
 #endif
-    timing_startCPU();
 
-#if !TESTING
-    video_main_loop();
-#endif
+    timing_startCPU();
 }
 
 void emulator_shutdown(void) {
@@ -300,14 +300,36 @@ void emulator_shutdown(void) {
     _shutdown_threads();
 }
 
-#if !TESTING && !defined(__APPLE__) && !defined(ANDROID)
+#if !defined(__APPLE__) && !defined(ANDROID)
 int main(int _argc, char **_argv) {
     argc = _argc;
     argv = _argv;
 
+#if TESTING
+#   if TEST_CPU
+    // Currently this test is the only one that blocks current thread and runs as a black screen
+    extern int test_cpu(int, char *[]);
+    test_cpu(argc, argv);
+#   elif TEST_VM
+    extern int test_vm(int, char *[]);
+    test_vm(argc, argv);
+#   elif TEST_DISPLAY
+    extern int test_display(int, char *[]);
+    test_display(argc, argv);
+#   elif TEST_DISK
+    extern int test_disk(int, char *[]);
+    test_disk(argc, argv);
+#elif TEST_PREFS
+    extern void test_prefs(int, char *[]);
+    test_prefs(argc, argv);
+#   else
+#       error "OOPS, no testsuite specified"
+#   endif
+#endif
+
     emulator_start();
 
-    // main loop ...
+    video_main_loop();
 
     emulator_shutdown();
 

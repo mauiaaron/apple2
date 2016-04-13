@@ -3222,6 +3222,8 @@ TEST test_check_cxrom(bool flag_cxrom) {
 // Test Suite
 
 GREATEST_SUITE(test_suite_vm) {
+    test_thread_running=true;
+
     pthread_mutex_lock(&interface_mutex);
 
     GREATEST_SET_SETUP_CB(testvm_setup, NULL);
@@ -3229,7 +3231,6 @@ GREATEST_SUITE(test_suite_vm) {
     GREATEST_SET_BREAKPOINT_CB(test_breakpoint, NULL);
 
     // TESTS --------------------------
-    test_thread_running=true;
 
     RUN_TESTp(test_boot_disk);
 
@@ -3435,11 +3436,9 @@ static void *test_thread(void *dummyptr) {
     return NULL;
 }
 
-void test_vm(int argc, char **argv) {
-    test_argc = argc;
-    test_argv = argv;
-
-    emulator_start();
+void test_vm(int _argc, char **_argv) {
+    test_argc = _argc;
+    test_argv = _argv;
 
     test_common_init();
 
@@ -3450,16 +3449,5 @@ void test_vm(int argc, char **argv) {
         nanosleep(&ts, NULL);
     }
     pthread_detach(p);
-
-    video_main_loop();
-
-#if !defined(__APPLE__) && !defined(ANDROID)
-    emulator_shutdown();
-#endif
 }
 
-#if !defined(__APPLE__) && !defined(ANDROID)
-int main(int argc, char **argv) {
-    test_vm(argc, argv);
-}
-#endif

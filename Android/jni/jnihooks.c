@@ -47,8 +47,7 @@ typedef enum lifecycle_seq_t {
 static lifecycle_seq_t appState = APP_RUNNING;
 
 #if TESTING
-static bool running_tests = false;
-static void _run_tests(void) {
+static void _start_tests(void) {
     char *local_argv[] = {
         "-f",
         NULL
@@ -57,20 +56,23 @@ static void _run_tests(void) {
     for (char **p = &local_argv[0]; *p != NULL; p++) {
         ++local_argc;
     }
-#if defined(TEST_CPU)
+#if TEST_CPU
     // Currently this test is the only one that runs as a black screen
     extern int test_cpu(int, char *[]);
     test_cpu(local_argc, local_argv);
     tkill(getpid(), SIGKILL); // and we're done ...
-#elif defined(TEST_VM)
-    extern int test_vm(int, char *[]);
+#elif TEST_VM
+    extern void test_vm(int, char *[]);
     test_vm(local_argc, local_argv);
-#elif defined(TEST_DISPLAY)
-    extern int test_display(int, char *[]);
+#elif TEST_DISPLAY
+    extern void test_display(int, char *[]);
     test_display(local_argc, local_argv);
-#elif defined(TEST_DISK)
-    extern int test_disk(int, char *[]);
+#elif TEST_DISK
+    extern void test_disk(int, char *[]);
     test_disk(local_argc, local_argv);
+#elif TEST_PREFS
+    extern void test_prefs(int, char *[]);
+    test_prefs(local_argc, local_argv);
 #else
 #   error "OOPS, no tests specified"
 #endif
@@ -167,7 +169,7 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnCreate(JNIEnv *env, jclas
     ASPRINTF(&home, "HOME=%s", data_dir);
     if (home) {
         putenv(home);
-        // leak...
+        LEAK(home);
     }
 
     (*env)->ReleaseStringUTFChars(env, j_dataDir, dataDir);
@@ -188,14 +190,11 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnCreate(JNIEnv *env, jclas
     FREE(trfile);
 #endif
 
-#if TESTING
-    cpu_scale_factor = CPU_SCALE_FASTEST;
-    cpu_altscale_factor = CPU_SCALE_FASTEST;
-    timing_initialize();
-#else
     cpu_pause();
-    emulator_start();
+#if TESTING
+    _start_tests();
 #endif
+    emulator_start();
 }
 
 void Java_org_deadc0de_apple2ix_Apple2View_nativeGraphicsInitialized(JNIEnv *env, jclass cls) {
@@ -206,20 +205,11 @@ void Java_org_deadc0de_apple2ix_Apple2View_nativeGraphicsInitialized(JNIEnv *env
 }
 
 jboolean Java_org_deadc0de_apple2ix_Apple2Activity_nativeEmulationResume(JNIEnv *env, jclass cls) {
-#if TESTING
-    // test driver thread is managing CPU
-    if (!running_tests) {
-        running_tests = true;
-        assert(cpu_thread_id == 0 && "CPU thread must not be initialized yet...");
-        _run_tests();
-    }
-#else
     if (!cpu_isPaused()) {
         return false;
     }
     LOG("...");
     cpu_resume();
-#endif
 
     return true;
 }
@@ -241,12 +231,8 @@ jboolean Java_org_deadc0de_apple2ix_Apple2Activity_nativeEmulationPause(JNIEnv *
     }
     LOG("...");
 
-#if TESTING
-    // test driver thread is managing CPU
-#else
     cpu_pause();
     prefs_save();
-#endif
 
     return true;
 }
@@ -289,9 +275,6 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeReboot(JNIEnv *env, jclass 
 }
 
 void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnQuit(JNIEnv *env, jclass cls) {
-#if TESTING
-    // test driver thread is managing CPU
-#else
     appState = APP_REQUESTED_SHUTDOWN;
 
     LOG("...");
@@ -301,7 +284,6 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnQuit(JNIEnv *env, jclass 
 #endif
 
     cpu_resume();
-#endif
 }
 
 void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnKeyDown(JNIEnv *env, jclass cls, jint keyCode, jint metaState) {
@@ -348,6 +330,10 @@ jlong Java_org_deadc0de_apple2ix_Apple2View_nativeOnTouch(JNIEnv *env, jclass cl
 }
 
 void Java_org_deadc0de_apple2ix_Apple2DisksMenu_nativeChooseDisk(JNIEnv *env, jclass cls, jstring jPath, jboolean driveA, jboolean readOnly) {
+#if TESTING
+    return;
+#endif
+
     const char *path = (*env)->GetStringUTFChars(env, jPath, NULL);
     int drive = driveA ? 0 : 1;
     int ro = readOnly ? 1 : 0;

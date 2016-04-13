@@ -89,12 +89,14 @@ fi
 
 if test "$(basename $0)" = "testcpu" ; then
     ln -s testcpu.mk Android.mk
-elif test "$(basename $0)" = "testvm" ; then
-    ln -s testvm.mk Android.mk
-elif test "$(basename $0)" = "testdisplay" ; then
-    ln -s testdisplay.mk Android.mk
 elif test "$(basename $0)" = "testdisk" ; then
     ln -s testdisk.mk Android.mk
+elif test "$(basename $0)" = "testdisplay" ; then
+    ln -s testdisplay.mk Android.mk
+elif test "$(basename $0)" = "testprefs" ; then
+    ln -s testprefs.mk Android.mk
+elif test "$(basename $0)" = "testvm" ; then
+    ln -s testvm.mk Android.mk
 else
     ln -s apple2ix.mk Android.mk
 fi

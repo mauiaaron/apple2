@@ -8056,8 +8056,3 @@ int test_cpu(int argc, char **argv) {
     GREATEST_MAIN_END();
 }
 
-#if !defined(__APPLE__) && !defined(ANDROID)
-int main(int argc, char **argv) {
-    test_cpu(argc, argv);
-}
-#endif

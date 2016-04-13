@@ -1414,12 +1414,15 @@ TEST test_reinsert_edgecase() {
 // Test Suite
 
 GREATEST_SUITE(test_suite_disk) {
+    test_thread_running = true;
+
+    pthread_mutex_lock(&interface_mutex);
+
     GREATEST_SET_SETUP_CB(testdisk_setup, NULL);
     GREATEST_SET_TEARDOWN_CB(testdisk_teardown, NULL);
     GREATEST_SET_BREAKPOINT_CB(test_breakpoint, NULL);
 
     // TESTS --------------------------
-    test_thread_running = true;
 
     RUN_TESTp(test_boot_disk_bytes);
     RUN_TESTp(test_boot_disk_bytes_nib);
@@ -1490,13 +1493,9 @@ static void *test_thread(void *dummyptr) {
     return NULL;
 }
 
-void test_disk(int argc, char **argv) {
-    test_argc = argc;
-    test_argv = argv;
-
-    pthread_mutex_lock(&interface_mutex);
-
-    emulator_start();
+void test_disk(int _argc, char **_argv) {
+    test_argc = _argc;
+    test_argv = _argv;
 
     test_common_init();
 
@@ -1507,16 +1506,5 @@ void test_disk(int argc, char **argv) {
         nanosleep(&ts, NULL);
     }
     pthread_detach(p);
-
-    video_main_loop();
-
-#if !defined(__APPLE__) && !defined(ANDROID)
-    emulator_shutdown();
-#endif
 }
 
-#if !defined(__APPLE__) && !defined(ANDROID)
-int main(int argc, char **argv) {
-    test_disk(argc, argv);
-}
-#endif
