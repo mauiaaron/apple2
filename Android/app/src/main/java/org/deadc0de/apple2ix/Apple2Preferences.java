@@ -24,7 +24,6 @@ public class Apple2Preferences {
 
     public final static String TAG = "Apple2Preferences";
 
-    public final static String PREFS_JSON_FILE = ".apple2.json";
     public final static int DECENT_AMOUNT_OF_CHOICES = 20;
     public final static int ALPHA_SLIDER_NUM_CHOICES = DECENT_AMOUNT_OF_CHOICES;
 
@@ -188,8 +187,13 @@ public class Apple2Preferences {
         return firstTime;
     }
 
+    public static String getPrefsFile(Apple2Activity activity) {
+        String file = System.getenv("APPLE2IX_JSON");
+        return file == null ? (Apple2Utils.getDataDir(activity) + File.separator + ".apple2.json") : file;
+    }
+
     public static void load(Apple2Activity activity) {
-        File prefsFile = new File(Apple2Utils.getDataDir(activity), PREFS_JSON_FILE);
+        File prefsFile = new File(getPrefsFile(activity));
 
         StringBuilder jsonString = new StringBuilder();
         if (!Apple2Utils.readEntireFile(prefsFile, jsonString)) {
@@ -211,7 +215,7 @@ public class Apple2Preferences {
         // bespoke reset temporary values
         Apple2Preferences.setJSONPref(Apple2Preferences.PREF_DOMAIN_TOUCHSCREEN, Apple2Preferences.PREF_CALIBRATING, false);
 
-        File prefsFile = new File(Apple2Utils.getDataDir(activity), PREFS_JSON_FILE);
+        File prefsFile = new File(getPrefsFile(activity));
         String jsonString = null;
         JSONException ex = null;
         try {

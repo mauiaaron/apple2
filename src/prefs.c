@@ -47,11 +47,7 @@ void prefs_load(void) {
     }
 
     if (!prefsFile) {
-#ifdef ANDROID
-        ASPRINTF(&prefsFile, "%s/.apple2.json", data_dir);
-#else
         ASPRINTF(&prefsFile, "%s/.apple2.json", getenv("HOME"));
-#endif
     }
     assert(prefsFile);
 

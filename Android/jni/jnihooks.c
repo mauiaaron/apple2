@@ -163,6 +163,12 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnCreate(JNIEnv *env, jclas
     if (crashHandler && crashHandler->init) {
         crashHandler->init(data_dir);
     }
+    char *home = NULL;
+    ASPRINTF(&home, "HOME=%s", data_dir);
+    if (home) {
+        putenv(home);
+        // leak...
+    }
 
     (*env)->ReleaseStringUTFChars(env, j_dataDir, dataDir);
     LOG("data_dir : %s", data_dir);
