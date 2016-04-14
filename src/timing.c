@@ -591,43 +591,42 @@ void timing_testCyclesCountOverflow(void) {
 // ----------------------------------------------------------------------------
 
 static void vm_prefsChanged(const char *domain) {
+    (void)domain;
+
     float fVal = 1.0;
 
-    if (strcmp(domain, PREF_DOMAIN_VM) == 0) {
-        cpu_scale_factor = prefs_parseFloatValue(domain, PREF_CPU_SCALE, &fVal) ?  fVal / 100.f : 1.f;
-        if (cpu_scale_factor < CPU_SCALE_SLOWEST) {
-            cpu_scale_factor = CPU_SCALE_SLOWEST;
-        }
-        if (cpu_scale_factor > CPU_SCALE_FASTEST) {
-            cpu_scale_factor = CPU_SCALE_FASTEST;
-        }
-        cpu_altscale_factor = prefs_parseFloatValue(domain, PREF_CPU_SCALE_ALT, &fVal) ?  fVal / 100.f : 1.f;
-        if (cpu_altscale_factor < CPU_SCALE_SLOWEST) {
-            cpu_altscale_factor = CPU_SCALE_SLOWEST;
-        }
-        if (cpu_altscale_factor > CPU_SCALE_FASTEST) {
-            cpu_altscale_factor = CPU_SCALE_FASTEST;
-        }
+    cpu_scale_factor = prefs_parseFloatValue(PREF_DOMAIN_VM, PREF_CPU_SCALE, &fVal) ?  fVal / 100.f : 1.f;
+    if (cpu_scale_factor < CPU_SCALE_SLOWEST) {
+        cpu_scale_factor = CPU_SCALE_SLOWEST;
+    }
+    if (cpu_scale_factor > CPU_SCALE_FASTEST) {
+        cpu_scale_factor = CPU_SCALE_FASTEST;
+    }
+    cpu_altscale_factor = prefs_parseFloatValue(PREF_DOMAIN_VM, PREF_CPU_SCALE_ALT, &fVal) ?  fVal / 100.f : 1.f;
+    if (cpu_altscale_factor < CPU_SCALE_SLOWEST) {
+        cpu_altscale_factor = CPU_SCALE_SLOWEST;
+    }
+    if (cpu_altscale_factor > CPU_SCALE_FASTEST) {
+        cpu_altscale_factor = CPU_SCALE_FASTEST;
+    }
 #ifdef AUDIO_ENABLED
-    } else if (strcmp(domain, PREF_DOMAIN_AUDIO) == 0) {
 
-        static float audioLatency = 0.f;
-        float latency = prefs_parseFloatValue(domain, PREF_AUDIO_LATENCY, &fVal) ? fVal : 0.25f;
+    static float audioLatency = 0.f;
+    float latency = prefs_parseFloatValue(PREF_DOMAIN_AUDIO, PREF_AUDIO_LATENCY, &fVal) ? fVal : 0.25f;
 #define SMALL_EPSILON (1.f/1024.f)
-        if (fabsf(audioLatency - latency) > SMALL_EPSILON) {
-            audioLatency = latency;
-            audio_setLatency(latency);
-            timing_reinitializeAudio();
-        }
+    if (fabsf(audioLatency - latency) > SMALL_EPSILON) {
+        audioLatency = latency;
+        audio_setLatency(latency);
+        timing_reinitializeAudio();
+    }
 
-        static bool mbEnabled = false;
-        bool bVal = false;
-        bool enabled = prefs_parseBoolValue(domain, PREF_MOCKINGBOARD_ENABLED, &bVal) ? bVal : true;
-        if (enabled != mbEnabled) {
-            mbEnabled = enabled;
-            MB_SetEnabled(enabled);
-            timing_reinitializeAudio();
-        }
+    static bool mbEnabled = false;
+    bool bVal = false;
+    bool enabled = prefs_parseBoolValue(PREF_DOMAIN_AUDIO, PREF_MOCKINGBOARD_ENABLED, &bVal) ? bVal : true;
+    if (enabled != mbEnabled) {
+        mbEnabled = enabled;
+        MB_SetEnabled(enabled);
+        timing_reinitializeAudio();
     }
 #endif
 }

@@ -65,7 +65,8 @@ static AudioBuffer_s *speakerBuffer = NULL;
 // --------------------------------------------------------------------------------------------------------------------
 
 static void speaker_prefsChanged(const char *domain) {
-    prefs_parseLongValue(domain, PREF_SPEAKER_VOLUME, &speaker_volume, /*base:*/10); // expected range 0-10
+    long lVal = 0;
+    speaker_volume = prefs_parseLongValue(domain, PREF_SPEAKER_VOLUME, &lVal, /*base:*/10) ? lVal : 5; // expected range 0-10
     if (speaker_volume < 0) {
         speaker_volume = 0;
     }
