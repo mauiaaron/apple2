@@ -450,11 +450,11 @@ static void gltouchmenu_render(void) {
     if (!isAvailable) {
         return;
     }
-    if (!isEnabled) {
-        return;
-    }
     if (UNLIKELY(menu.prefsChanged)) {
         gltouchmenu_setup(); // fully set up again on prefs change
+    }
+    if (!isEnabled) {
+        return;
     }
 
     float alpha = glhud_getTimedVisibility(menu.timingBegin, menu.minAlpha, menu.maxAlpha);
@@ -637,6 +637,7 @@ static void _init_gltouchmenu(void) {
     });
 
     prefs_registerListener(PREF_DOMAIN_KEYBOARD, &gltouchmenu_prefsChanged);
+    prefs_registerListener(PREF_DOMAIN_TOUCHSCREEN, &gltouchmenu_prefsChanged);
     prefs_registerListener(PREF_DOMAIN_INTERFACE, &gltouchmenu_prefsChanged);
 }
 

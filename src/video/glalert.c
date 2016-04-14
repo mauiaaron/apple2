@@ -171,16 +171,16 @@ static void alert_render(void) {
         _alertToModel(message, cols, rows);
     }
 
+    if (prefsChanged) {
+        alert_applyPrefs();
+    }
+
     if (!isEnabled) {
         return;
     }
 
     if (!messageModel) {
         return;
-    }
-
-    if (prefsChanged) {
-        alert_applyPrefs();
     }
 
     struct timespec now = { 0 };
