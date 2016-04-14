@@ -62,7 +62,6 @@
 #define PREF_KPAD_TOUCHDOWN_SCAN "kpTouchDownScancode"
 #define PREF_SCREEN_DIVISION "screenDivider"
 #define PREF_SHOW_CONTROLS "showControls"
-#define PREF_SHOW_AZIMUTH "showAzimuth"
 #define PREF_SWITCH_THRESHOLD "switchThreshold"
 
 // keyboard

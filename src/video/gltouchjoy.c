@@ -865,7 +865,7 @@ static void gltouchjoy_applyPrefs(void) {
     }
 
     joyglobals.showControls    = prefs_parseBoolValue (PREF_DOMAIN_JOYSTICK, PREF_SHOW_CONTROLS,    &bVal)     ? bVal : true;
-    joyglobals.showAzimuth     = prefs_parseBoolValue (PREF_DOMAIN_JOYSTICK, PREF_SHOW_AZIMUTH,     &bVal)     ? bVal : true;
+    joyglobals.showAzimuth     = true;//prefs_parseBoolValue (PREF_DOMAIN_JOYSTICK, PREF_SHOW_AZIMUTH,     &bVal)     ? bVal : true;
     joyglobals.switchThreshold = prefs_parseLongValue (PREF_DOMAIN_JOYSTICK, PREF_SWITCH_THRESHOLD, &lVal, 10) ? lVal : BUTTON_SWITCH_THRESHOLD_DEFAULT;
     joyglobals.screenDivider   = prefs_parseFloatValue(PREF_DOMAIN_JOYSTICK, PREF_SCREEN_DIVISION,  &fVal)     ? fVal : 0.5f;
     joyglobals.axisIsOnLeft    = prefs_parseBoolValue (PREF_DOMAIN_JOYSTICK, PREF_AXIS_ON_LEFT,     &bVal)     ? bVal : true;
