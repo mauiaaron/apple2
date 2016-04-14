@@ -104,7 +104,6 @@ public class Apple2PortraitCalibration implements Apple2MenuView {
     private Apple2Activity mActivity = null;
     private View mSettingsView = null;
     private ArrayList<Apple2MenuView> mViewStack = null;
-    private boolean mTouchMenuEnabled = false;
     private int mSavedTouchDevice = Apple2SettingsMenu.TouchDeviceVariant.NONE.ordinal();
     private States mStateMachine = States.CALIBRATE_KEYBOARD_HEIGHT_SCALE;
 
@@ -170,8 +169,6 @@ public class Apple2PortraitCalibration implements Apple2MenuView {
             }
         });
 
-        mTouchMenuEnabled = (boolean) Apple2Preferences.getJSONPref(Apple2KeyboardSettingsMenu.SETTINGS.TOUCH_MENU_ENABLED);
-        Apple2Preferences.setJSONPref(Apple2KeyboardSettingsMenu.SETTINGS.TOUCH_MENU_ENABLED, false);
         mSavedTouchDevice = (int) Apple2Preferences.getJSONPref(Apple2SettingsMenu.SETTINGS.CURRENT_INPUT);
         Apple2Preferences.setJSONPref(Apple2SettingsMenu.SETTINGS.CURRENT_INPUT, Apple2SettingsMenu.TouchDeviceVariant.KEYBOARD.ordinal());
 
@@ -203,7 +200,6 @@ public class Apple2PortraitCalibration implements Apple2MenuView {
 
         Apple2Preferences.setJSONPref(Apple2Preferences.PREF_DOMAIN_TOUCHSCREEN, Apple2Preferences.PREF_CALIBRATING, false);
 
-        Apple2Preferences.setJSONPref(Apple2KeyboardSettingsMenu.SETTINGS.TOUCH_MENU_ENABLED, mTouchMenuEnabled);
         Apple2Preferences.setJSONPref(Apple2SettingsMenu.SETTINGS.CURRENT_INPUT, mSavedTouchDevice);
 
         Apple2Preferences.sync(mActivity, Apple2Preferences.PREF_DOMAIN_TOUCHSCREEN);
