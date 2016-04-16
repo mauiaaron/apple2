@@ -421,7 +421,17 @@ static void gltouchjoy_setup(void) {
     if (variant.curr->variant() == TOUCH_DEVICE_JOYSTICK_KEYPAD) {
         buttons.activeChar = prefs_parseLongValue(PREF_DOMAIN_JOYSTICK, PREF_KPAD_TOUCHDOWN_CHAR, &lVal, /*base:*/10) ? lVal : ICONTEXT_SPACE_VISUAL;
     } else {
-        buttons.activeChar = prefs_parseLongValue(PREF_DOMAIN_JOYSTICK, PREF_JOY_TOUCHDOWN_CHAR, &lVal, /*base:*/10) ? lVal : MOUSETEXT_OPENAPPLE;
+        if (!prefs_parseLongValue(PREF_DOMAIN_JOYSTICK, PREF_JOY_TOUCHDOWN_CHAR, &lVal, /*base:*/10)) {
+            buttons.activeChar = MOUSETEXT_OPENAPPLE;
+        } else {
+            if (lVal == TOUCH_BUTTON2) {
+                buttons.activeChar = MOUSETEXT_CLOSEDAPPLE;
+            } else if (lVal == TOUCH_BOTH) {
+                buttons.activeChar = '+';
+            } else {
+                buttons.activeChar = MOUSETEXT_OPENAPPLE;
+            }
+        }
     }
 
     buttons.model = mdlCreateQuad((GLModelParams_s){
