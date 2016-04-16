@@ -261,8 +261,8 @@ void c_keys_handle_input(int scancode, int pressed, int is_cooked)
 
                 double scale = (alt_speed_enabled ? cpu_altscale_factor : cpu_scale_factor);
                 int percent_scale = (int)round(scale * 100);
-                if (scale == CPU_SCALE_FASTEST) {
-                    scale = CPU_SCALE_FASTEST0;
+                if (scale > CPU_SCALE_FASTEST_PIVOT) {
+                    scale = CPU_SCALE_FASTEST_PIVOT;
                     percent_scale = (int)round(scale * 100);
                 } else {
                     if (percent_scale > 100) {

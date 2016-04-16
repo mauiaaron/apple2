@@ -132,7 +132,7 @@ struct timespec timespec_add(struct timespec start, unsigned long nsecs) {
 }
 
 static void _timing_initialize(double scale) {
-    is_fullspeed = (scale >= CPU_SCALE_FASTEST);
+    is_fullspeed = (scale > CPU_SCALE_FASTEST_PIVOT);
     if (!is_fullspeed) {
         cycles_persec_target = CLK_6502 * scale;
     }
@@ -249,7 +249,7 @@ bool cpu_isPaused(void) {
 #if !MOBILE_DEVICE
 bool timing_shouldAutoAdjustSpeed(void) {
     double speed = alt_speed_enabled ? cpu_altscale_factor : cpu_scale_factor;
-    return auto_adjust_speed && (speed < CPU_SCALE_FASTEST);
+    return auto_adjust_speed && (speed <= CPU_SCALE_FASTEST_PIVOT);
 }
 #endif
 
@@ -505,7 +505,7 @@ static void *cpu_thread(void *dummyptr) {
                             video_isDirty(A2_DIRTY_FLAG) || (disk6.motor_off && (disk_motor_time.tv_sec || disk_motor_time.tv_nsec > DISK_MOTOR_QUIET_NSECS))) )
                 {
                     double speed = alt_speed_enabled ? cpu_altscale_factor : cpu_scale_factor;
-                    if (speed < CPU_SCALE_FASTEST) {
+                    if (speed <= CPU_SCALE_FASTEST_PIVOT) {
                         TIMING_LOG("auto switching to configured speed");
                         _timing_initialize(speed);
                     }
@@ -599,14 +599,14 @@ static void vm_prefsChanged(const char *domain) {
     if (cpu_scale_factor < CPU_SCALE_SLOWEST) {
         cpu_scale_factor = CPU_SCALE_SLOWEST;
     }
-    if (cpu_scale_factor > CPU_SCALE_FASTEST) {
+    if (cpu_scale_factor > CPU_SCALE_FASTEST_PIVOT) {
         cpu_scale_factor = CPU_SCALE_FASTEST;
     }
     cpu_altscale_factor = prefs_parseFloatValue(PREF_DOMAIN_VM, PREF_CPU_SCALE_ALT, &fVal) ?  fVal / 100.f : 1.f;
     if (cpu_altscale_factor < CPU_SCALE_SLOWEST) {
         cpu_altscale_factor = CPU_SCALE_SLOWEST;
     }
-    if (cpu_altscale_factor > CPU_SCALE_FASTEST) {
+    if (cpu_altscale_factor > CPU_SCALE_FASTEST_PIVOT) {
         cpu_altscale_factor = CPU_SCALE_FASTEST;
     }
 #ifdef AUDIO_ENABLED

@@ -286,7 +286,7 @@ static void _animation_showCPUSpeed(void) {
         cpuTemplate[0][1] = ' ';
         cpuTemplate[0][2] = buf[0];
         cpuTemplate[0][3] = buf[1];
-    } else if (scale >= CPU_SCALE_FASTEST) {
+    } else if (scale > CPU_SCALE_FASTEST_PIVOT) {
         cpuTemplate[0][1] = 'm';
         cpuTemplate[0][2] = 'a';
         cpuTemplate[0][3] = 'x';

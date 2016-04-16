@@ -796,24 +796,18 @@ void c_interface_parameters()
             switch (i + cur_off)
             {
             case OPT_CPU:
-                if (cpu_scale_factor >= CPU_SCALE_FASTEST)
-                {
+                if (cpu_scale_factor > CPU_SCALE_FASTEST_PIVOT) {
                     snprintf(temp, TEMPSIZE, "Fastest");
-                }
-                else
-                {
-                    snprintf(temp, TEMPSIZE, "%d%%", (int)(cpu_scale_factor * 100.0));
+                } else {
+                    snprintf(temp, TEMPSIZE, "%d%%", (int)roundf((cpu_scale_factor * 100.0)));
                 }
                 break;
 
             case OPT_ALTCPU:
-                if (cpu_altscale_factor >= CPU_SCALE_FASTEST)
-                {
+                if (cpu_altscale_factor > CPU_SCALE_FASTEST_PIVOT) {
                     snprintf(temp, TEMPSIZE, "Fastest");
-                }
-                else
-                {
-                    snprintf(temp, TEMPSIZE, "%d%%", (int)(cpu_altscale_factor * 100.0));
+                } else {
+                    snprintf(temp, TEMPSIZE, "%d%%", (int)roundf((cpu_altscale_factor * 100.0)));
                 }
                 break;
 
@@ -966,19 +960,25 @@ void c_interface_parameters()
             switch (option)
             {
             case OPT_CPU:
-                cpu_scale_factor -= (cpu_scale_factor <= 1.0) ? CPU_SCALE_STEP_DIV : CPU_SCALE_STEP;
-                if (cpu_scale_factor < CPU_SCALE_SLOWEST)
-                {
-                    cpu_scale_factor = CPU_SCALE_SLOWEST;
+                if (cpu_scale_factor > CPU_SCALE_FASTEST_PIVOT) {
+                    cpu_scale_factor = CPU_SCALE_FASTEST_PIVOT;
+                } else {
+                    cpu_scale_factor = roundf((cpu_scale_factor - ((cpu_scale_factor <= 1.0) ? CPU_SCALE_STEP_DIV : CPU_SCALE_STEP)) * 100.f) / 100.f;
+                    if (cpu_scale_factor < CPU_SCALE_SLOWEST) {
+                        cpu_scale_factor = CPU_SCALE_SLOWEST;
+                    }
                 }
                 prefs_setFloatValue(PREF_DOMAIN_VM, PREF_CPU_SCALE, roundf(cpu_scale_factor * 100.f));
                 break;
 
             case OPT_ALTCPU:
-                cpu_altscale_factor -= (cpu_altscale_factor <= 1.0) ? CPU_SCALE_STEP_DIV : CPU_SCALE_STEP;
-                if (cpu_altscale_factor < CPU_SCALE_SLOWEST)
-                {
-                    cpu_altscale_factor = CPU_SCALE_SLOWEST;
+                if (cpu_altscale_factor > CPU_SCALE_FASTEST_PIVOT) {
+                    cpu_altscale_factor = CPU_SCALE_FASTEST_PIVOT;
+                } else {
+                    cpu_altscale_factor = roundf((cpu_altscale_factor - ((cpu_altscale_factor <= 1.0) ? CPU_SCALE_STEP_DIV : CPU_SCALE_STEP)) * 100.f) / 100.f;
+                    if (cpu_altscale_factor < CPU_SCALE_SLOWEST) {
+                        cpu_altscale_factor = CPU_SCALE_SLOWEST;
+                    }
                 }
                 prefs_setFloatValue(PREF_DOMAIN_VM, PREF_CPU_SCALE_ALT, roundf(cpu_altscale_factor * 100.f));
                 break;
@@ -1051,18 +1051,16 @@ void c_interface_parameters()
             switch (option)
             {
             case OPT_CPU:
-                cpu_scale_factor += (cpu_scale_factor < 1.0) ? CPU_SCALE_STEP_DIV : CPU_SCALE_STEP;
-                if (cpu_scale_factor >= CPU_SCALE_FASTEST)
-                {
+                cpu_scale_factor = roundf((cpu_scale_factor + ((cpu_scale_factor < 1.0) ? CPU_SCALE_STEP_DIV : CPU_SCALE_STEP)) * 100.f) / 100.f;
+                if (cpu_scale_factor > CPU_SCALE_FASTEST_PIVOT) {
                     cpu_scale_factor = CPU_SCALE_FASTEST;
                 }
                 prefs_setFloatValue(PREF_DOMAIN_VM, PREF_CPU_SCALE, roundf(cpu_scale_factor * 100.f));
                 break;
 
             case OPT_ALTCPU:
-                cpu_altscale_factor += (cpu_altscale_factor < 1.0) ? CPU_SCALE_STEP_DIV : CPU_SCALE_STEP;
-                if (cpu_altscale_factor >= CPU_SCALE_FASTEST)
-                {
+                cpu_altscale_factor = roundf((cpu_altscale_factor + ((cpu_altscale_factor < 1.0) ? CPU_SCALE_STEP_DIV : CPU_SCALE_STEP)) * 100.f) / 100.f;
+                if (cpu_altscale_factor > CPU_SCALE_FASTEST_PIVOT) {
                     cpu_altscale_factor = CPU_SCALE_FASTEST;
                 }
                 prefs_setFloatValue(PREF_DOMAIN_VM, PREF_CPU_SCALE_ALT, roundf(cpu_altscale_factor * 100.f));
