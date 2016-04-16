@@ -22,6 +22,13 @@
 #   define TOUCH_JOY_LOG(...)
 #endif
 
+#define DEBUG_TOUCH_JOY_GESTURE 0
+#if DEBUG_TOUCH_JOY_GESTURE
+#   define TOUCH_JOY_GESTURE_LOG(...) LOG(__VA_ARGS__)
+#else
+#   define TOUCH_JOY_GESTURE_LOG(...)
+#endif
+
 #define ROSETTE_ROWS 3
 #define ROSETTE_COLS 3
 
