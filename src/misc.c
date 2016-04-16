@@ -327,7 +327,11 @@ int main(int _argc, char **_argv) {
 #   endif
 #endif
 
+    cpu_pause();
+
     emulator_start();
+
+    cpu_resume();
 
     video_main_loop();
 
