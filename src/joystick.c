@@ -27,13 +27,14 @@ uint16_t joy_x = HALF_JOY_RANGE;
 uint16_t joy_y = HALF_JOY_RANGE;
 uint8_t joy_button0 = 0;
 uint8_t joy_button1 = 0;
-uint8_t joy_button2 = 0; // unused?
 bool joy_clip_to_radius = false;
 
 #ifdef KEYPAD_JOYSTICK
 short joy_step = 1;
 bool joy_auto_recenter = false;
 #endif
+
+void (*joydriver_resetJoystick)(void) = NULL;
 
 static void joystick_prefsChanged(const char *domain) {
     assert(strcmp(domain, PREF_DOMAIN_JOYSTICK) == 0);
@@ -263,22 +264,17 @@ void c_calibrate_joystick()
 }
 #endif // INTERFACE_CLASSIC
 
-extern void gldriver_joystick_reset(void);
 void c_joystick_reset(void)
 {
-#if VIDEO_OPENGL && !TESTING
-    gldriver_joystick_reset();
-#endif
+    if (joydriver_resetJoystick) {
+        joydriver_resetJoystick();
+    }
+
     joy_button0 = 0x0;
     joy_button1 = 0x0;
-    joy_button2 = 0x0;
-#ifdef KEYPAD_JOYSTICK
-    if (joy_mode == JOY_KPAD)
-    {
-        joy_x = HALF_JOY_RANGE;
-        joy_y = HALF_JOY_RANGE;
-    }
-#endif
+
+    joy_x = HALF_JOY_RANGE;
+    joy_y = HALF_JOY_RANGE;
 }
 
 // clamps modern gamepad controller axis values to the "corners" of a traditional joystick as used on the Apple //e

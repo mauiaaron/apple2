@@ -149,9 +149,12 @@
     <string name="preferences_reset_really">Really reset and quit?</string>
     <string name="preferences_reset_warning">You will lose your settings</string>
     <string name="quit">Quit</string>
-    <string name="quit_reboot">Reboot or quit emulator…</string>
-    <string name="quit_reboot_choice">Reboot or quit?</string>
+    <string name="quit_reboot">Reset or quit emulator…</string>
+    <string name="quit_reboot_choice">Reset/reboot or quit?</string>
     <string name="reboot">Reboot</string>
+    <string name="reset">Reset</string>
+    <string name="reset_self_test">Self Test</string>
+    <string name="reset_soft">Soft</string>
     <string name="restore">Quick restore</string>
     <string name="save">Quick save</string>
     <string name="saverestore">Save &amp; restore…</string>

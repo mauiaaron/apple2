@@ -298,7 +298,7 @@ GLUE_C_READ(read_button1)
 
 GLUE_C_READ(read_button2)
 {
-    return joy_button2;
+    return joy_button0 | joy_button1;
 }
 
 GLUE_C_READ(read_gc_strobe)

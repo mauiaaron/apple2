@@ -30,7 +30,6 @@ extern uint16_t joy_x;
 extern uint16_t joy_y;
 extern uint8_t joy_button0;
 extern uint8_t joy_button1;
-extern uint8_t joy_button2;
 extern bool joy_clip_to_radius;
 
 #ifdef KEYPAD_JOYSTICK
@@ -61,6 +60,9 @@ void joydriver_setButton0Pressed(bool pressed);
 
 // set button 1 pressed
 void joydriver_setButton1Pressed(bool pressed);
+
+// backend joystick driver reset procedure
+extern void (*joydriver_resetJoystick)(void);
 
 #if INTERFACE_TOUCH
 

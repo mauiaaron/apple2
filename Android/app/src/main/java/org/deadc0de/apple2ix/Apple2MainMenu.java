@@ -23,9 +23,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.CompoundButton;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.PopupWindow;
+import android.widget.RadioButton;
 import android.widget.TextView;
 
 import org.deadc0de.apple2ix.basic.R;
@@ -250,14 +252,30 @@ public class Apple2MainMenu {
 
         final AtomicBoolean selectionAlreadyHandled = new AtomicBoolean(false);
 
-        AlertDialog rebootQuitDialog = new AlertDialog.Builder(mActivity).setIcon(R.drawable.ic_launcher).setCancelable(true).setTitle(R.string.quit_reboot).setMessage(R.string.quit_reboot_choice).setPositiveButton(R.string.reboot, new DialogInterface.OnClickListener() {
+        LayoutInflater inflater = (LayoutInflater) mActivity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        final View resetConfirmationView = inflater.inflate(R.layout.a2reset_confirmation, null, false);
+
+        final RadioButton openAppleSelected = (RadioButton) resetConfirmationView.findViewById(R.id.radioButton_openApple);
+        openAppleSelected.setChecked(true);
+        final RadioButton closedAppleSelected = (RadioButton) resetConfirmationView.findViewById(R.id.radioButton_closedApple);
+        closedAppleSelected.setChecked(false);
+        final RadioButton noAppleSelected = (RadioButton) resetConfirmationView.findViewById(R.id.radioButton_noApple);
+        noAppleSelected.setChecked(false);
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(mActivity).setIcon(R.drawable.ic_launcher).setCancelable(true).setTitle(R.string.quit_reboot).setMessage(R.string.quit_reboot_choice).setPositiveButton(R.string.reset, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 if (!selectionAlreadyHandled.compareAndSet(false, true)) {
                     Log.v(TAG, "OMG, avoiding nasty UI race in reboot/quit onClick()");
                     return;
                 }
-                mActivity.rebootEmulation();
+                int resetState = 0;
+                if (openAppleSelected.isChecked()) {
+                    resetState = 1;
+                } else if (closedAppleSelected.isChecked()) {
+                    resetState = 2;
+                }
+                mActivity.rebootEmulation(resetState);
                 Apple2MainMenu.this.dismiss();
             }
         }).setNeutralButton(R.string.quit, new DialogInterface.OnClickListener() {
@@ -269,7 +287,10 @@ public class Apple2MainMenu {
                 }
                 mActivity.quitEmulator();
             }
-        }).setNegativeButton(R.string.cancel, null).create();
+        }).setNegativeButton(R.string.cancel, null);
+
+        builder.setView(resetConfirmationView);
+        AlertDialog rebootQuitDialog = builder.create();
 
         mActivity.registerAndShowDialog(rebootQuitDialog);
     }

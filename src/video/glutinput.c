@@ -227,7 +227,7 @@ void gldriver_mouse(int button, int state, int x, int y) {
 }
 #endif
 
-void gldriver_joystick_reset(void) {
+void _glutJoystickReset(void) {
     glutJoystickFunc(NULL, 0);
     glutJoystickFunc(gldriver_joystick_callback, (int)JOYSTICK_POLL_INTERVAL_MILLIS);
 }

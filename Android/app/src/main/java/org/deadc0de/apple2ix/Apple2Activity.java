@@ -83,7 +83,7 @@ public class Apple2Activity extends Activity {
 
     private static native void nativeOnQuit();
 
-    private static native void nativeReboot();
+    private static native void nativeReboot(int resetState);
 
     public final static boolean isNativeBarfed() {
         return sNativeBarfed;
@@ -513,8 +513,8 @@ public class Apple2Activity extends Activity {
         }
     }
 
-    public void rebootEmulation() {
-        nativeReboot();
+    public void rebootEmulation(int resetState) {
+        nativeReboot(resetState);
     }
 
     public void saveState(String stateFile) {

@@ -949,7 +949,3 @@ void gltouchjoy_registerVariant(interface_device_t variantType, GLTouchJoyVarian
     }
 }
 
-void gldriver_joystick_reset(void) {
-#warning FIXME TODO expunge this olde API ...
-}
-

@@ -135,6 +135,7 @@ static void _glnode_initGLUTPost(void) {
     glutSpecialUpFunc(gldriver_on_key_special_up);
     //glutMouseFunc(gldriver_mouse);
     //glutMotionFunc(gldriver_mouse_drag);
+    c_joystick_reset();
 #endif
 }
 #endif
@@ -252,6 +253,10 @@ static void _init_glnode_manager(void) {
 
 #if INTERFACE_TOUCH
     interface_onTouchEvent = &glnode_onTouchEvent;
+#endif
+
+#if USE_GLUT
+    joydriver_resetJoystick = &_glutJoystickReset;
 #endif
 }
 

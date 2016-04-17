@@ -21,10 +21,6 @@
 - (void)resetJoysticks;
 @end
 
-void gldriver_joystick_reset(void) {
-    [EmulatorJoystickController sharedInstance];
-}
-
 @implementation EmulatorJoystickController
 
 @synthesize allJoysticks = _allJoysticks;
