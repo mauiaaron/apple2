@@ -1308,7 +1308,7 @@ void c_interface_parameters()
     }
 
     if (shutdown) {
-        video_shutdown(/*emulatorShuttingDown:*/false); // soft quit video_main_loop()
+        video_shutdown(); // soft quit video_main_loop()
     } else {
         prefs_sync(NULL);
     }

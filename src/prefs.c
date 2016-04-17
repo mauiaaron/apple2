@@ -454,8 +454,8 @@ void prefs_sync(const char *domain) {
     FREE(alreadySynced);
 }
 
-void prefs_shutdown(bool emulatorShuttingDown) {
-    if (!emulatorShuttingDown) {
+void prefs_shutdown(void) {
+    if (!emulator_isShuttingDown()) {
         return;
     }
 

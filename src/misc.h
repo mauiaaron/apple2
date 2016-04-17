@@ -22,14 +22,18 @@ enum {
     CTOR_PRIORITY_LATE  = 201,
 };
 
-typedef void (*startup_callback_f)(void);
-
 // top installation directory
 extern const char *data_dir;
 
 // global ref to CLI args
 extern char **argv;
 extern int argc;
+
+//
+// Emulator lifecycle
+//
+
+typedef void (*startup_callback_f)(void);
 
 // register a startup function
 void emulator_registerStartupCallback(long order, startup_callback_f callback);
@@ -39,6 +43,9 @@ void emulator_start(void);
 
 // shutdown emulator in preparation for app exit
 void emulator_shutdown(void);
+
+// is emulator shutting down?
+bool emulator_isShuttingDown(void);
 
 //
 // Emulator state save/restore

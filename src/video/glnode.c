@@ -161,12 +161,12 @@ static void glnode_setupNodes(void *ctx) {
     LOG("END glnode_setupNodes ...");
 }
 
-static void glnode_shutdownNodes(bool emulatorShuttingDown) {
+static void glnode_shutdownNodes(void) {
     LOG("BEGIN glnode_shutdownNodes ...");
 
 #if USE_GLUT
     if (glut_in_main_loop) {
-        assert(!emulatorShuttingDown);
+        assert(!emulator_isShuttingDown());
         glutLeaveMainLoop();
         return;
     }
@@ -178,7 +178,7 @@ static void glnode_shutdownNodes(bool emulatorShuttingDown) {
         p = p->last;
     }
 
-    if (emulatorShuttingDown) {
+    if (emulator_isShuttingDown()) {
         // clean up to make Valgrind happy ...
         p = head;
         while (p) {

@@ -200,7 +200,7 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnCreate(JNIEnv *env, jclas
 void Java_org_deadc0de_apple2ix_Apple2View_nativeGraphicsInitialized(JNIEnv *env, jclass cls) {
     LOG("...");
     _video_setRenderThread(pthread_self()); // by definition, this method is called on the render thread ...
-    video_shutdown(false);
+    video_shutdown();
     video_init();
 }
 

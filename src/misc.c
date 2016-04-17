@@ -25,6 +25,7 @@ typedef struct module_ctor_node_s {
 } module_ctor_node_s;
 
 static module_ctor_node_s *head = NULL;
+static bool emulatorShuttingDown = false;
 
 bool do_logging = true; // also controlled by NDEBUG
 FILE *error_log = NULL;
@@ -292,12 +293,17 @@ void emulator_start(void) {
 }
 
 void emulator_shutdown(void) {
+    emulatorShuttingDown = true;
     disk6_eject(0);
     disk6_eject(1);
-    video_shutdown(/*emulatorShuttingDown:*/true);
-    prefs_shutdown(/*emulatorShuttingDown:*/true);
+    video_shutdown();
+    prefs_shutdown();
     timing_stopCPU();
     _shutdown_threads();
+}
+
+bool emulator_isShuttingDown(void) {
+    return emulatorShuttingDown;
 }
 
 #if !defined(__APPLE__) && !defined(ANDROID)

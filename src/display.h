@@ -64,7 +64,7 @@ void video_main_loop(void);
  * Shutdown video system.  Should only be called on the render thread (unless render thread is in emulator-managed main
  * video loop).
  */
-void video_shutdown(bool emulatorShuttingDown);
+void video_shutdown(void);
 
 /*
  * Begin a render pass (only for non-emulator-managed main video).  This should only be called on the render thread.

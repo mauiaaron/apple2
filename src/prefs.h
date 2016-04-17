@@ -131,7 +131,7 @@ extern void prefs_registerListener(const char * _NONNULL domain, _NONNULL prefs_
 extern void prefs_sync(const char * _NULLABLE domain);
 
 // cleans up and removes listener in preparation for app shutdown
-extern void prefs_shutdown(bool emulatorShuttingDown);
+extern void prefs_shutdown(void);
 
 #endif
 
