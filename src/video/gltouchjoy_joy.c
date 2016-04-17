@@ -40,7 +40,7 @@ static struct {
     touchjoy_button_type_t touchDownChar;
     touchjoy_button_type_t northChar;
     touchjoy_button_type_t southChar;
-} joys;
+} joys = { 0 };
 
 // ----------------------------------------------------------------------------
 
@@ -60,7 +60,7 @@ static inline void _reset_buttons_state(void) {
 
 static void touchjoy_resetState(void) {
     _reset_axis_state();
-    _reset_buttons_state();
+    //_reset_buttons_state(); -- do not reset button state here, it may interfere with other code performing reboot/reset
 }
 
 // ----------------------------------------------------------------------------
@@ -87,7 +87,7 @@ static void *_button_tap_delayed_thread(void *dummyptr) {
 
     int timedOut = ETIMEDOUT;
     for (;;) {
-        if (UNLIKELY(!joyglobals.isAvailable)) {
+        if (UNLIKELY(emulator_isShuttingDown())) {
             break;
         }
 
@@ -108,7 +108,7 @@ static void *_button_tap_delayed_thread(void *dummyptr) {
             _reset_buttons_state();
         }
 
-        if (UNLIKELY(!joyglobals.isAvailable)) {
+        if (UNLIKELY(emulator_isShuttingDown())) {
             break;
         }
 
@@ -125,7 +125,7 @@ static void *_button_tap_delayed_thread(void *dummyptr) {
             timedOut = pthread_cond_timedwait(&joys.tapDelayCond, &joys.tapDelayMutex, _tap_wait());
             assert((!timedOut || timedOut == ETIMEDOUT) && "should not fail any other way");
 
-            if (UNLIKELY(!joyglobals.isAvailable)) {
+            if (UNLIKELY(emulator_isShuttingDown())) {
                 break;
             }
 
@@ -186,24 +186,20 @@ static void *_button_tap_delayed_thread(void *dummyptr) {
 }
 
 static void touchjoy_setup(void (*buttonDrawCallback)(char newChar)) {
-    assert((joys.tapDelayThreadId == 0) && "setup called multiple times!");
-
-    long lVal = 0;
-    const interface_device_t screenOwner = prefs_parseLongValue(PREF_DOMAIN_TOUCHSCREEN, PREF_SCREEN_OWNER, &lVal, /*base:*/10) ? lVal : TOUCH_DEVICE_NONE;
-    if (screenOwner == TOUCH_DEVICE_JOYSTICK) {
-        joys.buttonDrawCallback = buttonDrawCallback;
+    joys.buttonDrawCallback = buttonDrawCallback;
+    if (joys.tapDelayThreadId == 0) {
         pthread_create(&joys.tapDelayThreadId, NULL, (void *)&_button_tap_delayed_thread, (void *)NULL);
     }
 }
 
 static void touchjoy_shutdown(void) {
-    pthread_mutex_lock(&joys.tapDelayMutex);
-    pthread_cond_signal(&joys.tapDelayCond);
-    pthread_mutex_unlock(&joys.tapDelayMutex);
-    if (joys.tapDelayThreadId && pthread_join(joys.tapDelayThreadId, NULL)) {
-        ERRLOG("OOPS: pthread_join tap delay thread ...");
+    if (joys.tapDelayThreadId && emulator_isShuttingDown()) {
+        pthread_mutex_lock(&joys.tapDelayMutex);
+        pthread_cond_signal(&joys.tapDelayCond);
+        pthread_mutex_unlock(&joys.tapDelayMutex);
+        pthread_join(joys.tapDelayThreadId, NULL);
+        joys.tapDelayThreadId = 0;
     }
-    joys.tapDelayThreadId = 0;
 }
 
 // ----------------------------------------------------------------------------

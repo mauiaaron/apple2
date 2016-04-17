@@ -264,14 +264,29 @@ void c_calibrate_joystick()
 }
 #endif // INTERFACE_CLASSIC
 
+// HACK : avoid resetting joystick button values too quickly. This should allow for ClosedApple-Reset. (This is still a
+// race, but hopefully much less likely to trigger).
+static void *_joystick_resetDelayed(void *ctx) {
+    (void)ctx;
+
+    // delay
+    sleep(1);
+
+    joy_button0 = 0x0;
+    joy_button1 = 0x0;
+
+    return NULL;
+}
+
 void c_joystick_reset(void)
 {
     if (joydriver_resetJoystick) {
         joydriver_resetJoystick();
     }
 
-    joy_button0 = 0x0;
-    joy_button1 = 0x0;
+    pthread_t pid;
+    pthread_create(&pid, NULL, (void *)&_joystick_resetDelayed, (void *)NULL);
+    pthread_detach(pid);
 
     joy_x = HALF_JOY_RANGE;
     joy_y = HALF_JOY_RANGE;
