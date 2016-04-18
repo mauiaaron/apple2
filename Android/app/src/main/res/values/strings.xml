@@ -41,8 +41,7 @@
     <string name="disk_show_operation">Show Disk ][ operations</string>
     <string name="disk_show_operation_summary">Shows when disk drives are reading or writing</string>
     <string name="emulation_continue">Continue…</string>
-    <string name="emulation_settings">Settings…</string>
-    <string name="emulation_disks">Load disk image…</string>
+    <string name="emulation_disks">Load disk image</string>
     <string name="header_disks">Insert disk:</string>
     <string name="input_current">Current touch device</string>
     <string name="input_current_summary">Choose current touch device</string>
@@ -153,6 +152,7 @@
     <string name="quit_reboot_choice">Reset/reboot or quit?</string>
     <string name="reboot">Reboot</string>
     <string name="reset">Reset</string>
+    <string name="reset_preferences">Reset settings</string>
     <string name="reset_self_test">Self Test</string>
     <string name="reset_soft">Soft</string>
     <string name="restore">Quick restore</string>
