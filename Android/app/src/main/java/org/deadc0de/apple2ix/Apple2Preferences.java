@@ -212,8 +212,10 @@ public class Apple2Preferences {
 
     public static void save(Apple2Activity activity) {
 
-        // bespoke reset temporary values
+        // bespoke reset temporary values...
+        boolean wasDirty = sNativeIsDirty.get();
         Apple2Preferences.setJSONPref(Apple2Preferences.PREF_DOMAIN_TOUCHSCREEN, Apple2Preferences.PREF_CALIBRATING, false);
+        sNativeIsDirty.set(wasDirty);
 
         File prefsFile = new File(getPrefsFile(activity));
         String jsonString = null;
@@ -243,7 +245,10 @@ public class Apple2Preferences {
     public static void sync(Apple2Activity activity, String domain) {
         save(activity);
         if (sNativeIsDirty.getAndSet(false)) {
+            Log.v(TAG, "Syncing prefs to native...");
             nativePrefsSync(domain);
+        } else {
+            Log.v(TAG, "No changes, not syncing prefs...");
         }
     }
 
