@@ -137,9 +137,7 @@ public class Apple2KeypadChooser implements Apple2MenuView {
     // internals
 
     private void setup() {
-        JSONArray jsonChars = (JSONArray) Apple2Preferences.getJSONPref(Apple2Preferences.PREF_DOMAIN_JOYSTICK, Apple2KeypadSettingsMenu.PREF_KPAD_ROSETTE_CHAR_ARRAY, null);
-        JSONArray jsonScans = (JSONArray) Apple2Preferences.getJSONPref(Apple2Preferences.PREF_DOMAIN_JOYSTICK, Apple2KeypadSettingsMenu.PREF_KPAD_ROSETTE_SCAN_ARRAY, null);
-        mChooserState.start(jsonChars, jsonScans);
+        mChooserState.start();
 
         LayoutInflater inflater = (LayoutInflater) mActivity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         mSettingsView = inflater.inflate(R.layout.activity_chooser_keypad, null, false);
@@ -276,8 +274,8 @@ public class Apple2KeypadChooser implements Apple2MenuView {
 
         public static final int size = STATE_MACHINE.values().length;
 
-        private static ArrayList<String> chars = new ArrayList<String>();
-        private static ArrayList<String> scans = new ArrayList<String>();
+        private static ArrayList<String> chars = null;
+        private static ArrayList<String> scans = null;
 
         public void setKey(Apple2Activity activity, int ascii, int scancode) {
             int ord = ordinal();
@@ -299,14 +297,31 @@ public class Apple2KeypadChooser implements Apple2MenuView {
 
         public abstract String getKeyName(Apple2Activity activity);
 
-        public void start(JSONArray jsonChars, JSONArray jsonScans) {
+        public void start() {
+
+            JSONArray jsonChars = (JSONArray) Apple2Preferences.getJSONPref(Apple2Preferences.PREF_DOMAIN_JOYSTICK, Apple2KeypadSettingsMenu.PREF_KPAD_ROSETTE_CHAR_ARRAY, null);
+            JSONArray jsonScans = (JSONArray) Apple2Preferences.getJSONPref(Apple2Preferences.PREF_DOMAIN_JOYSTICK, Apple2KeypadSettingsMenu.PREF_KPAD_ROSETTE_SCAN_ARRAY, null);
+
+            if (jsonChars == null || jsonScans == null) {
+                Log.v(TAG, "Creating new keypad joystick JSON...");
+                jsonChars = new JSONArray();
+                jsonScans = new JSONArray();
+                for (int i = 0; i < Apple2KeypadSettingsMenu.ROSETTE_SIZE; i++) {
+                    jsonChars.put(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION);
+                    jsonScans.put(-1);
+                }
+            }
+
             int len = jsonChars.length();
-            if (len != size) {
+            if (len != Apple2KeypadSettingsMenu.ROSETTE_SIZE) {
                 throw new RuntimeException("jsonChars not expected length");
             }
             if (len != jsonScans.length()) {
                 throw new RuntimeException("jsonScans not expected length");
             }
+
+            chars = new ArrayList<String>();
+            scans = new ArrayList<String>();
             try {
                 for (int i = 0; i < len; i++) {
                     Apple2KeypadSettingsMenu.KeypadPreset.addRosetteKey(chars, scans, jsonChars.getInt(i), jsonScans.getInt(i));

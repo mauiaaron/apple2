@@ -34,6 +34,8 @@ public class Apple2KeypadSettingsMenu extends Apple2AbstractMenu {
     public final static String PREF_KPAD_TOUCHDOWN_CHAR = "kpTouchDownChar";
     public final static String PREF_KPAD_TOUCHDOWN_SCAN = "kpTouchDownScancode";
 
+    public final static int ROSETTE_SIZE = 9;
+
     public Apple2KeypadSettingsMenu(Apple2Activity activity) {
         super(activity);
     }
