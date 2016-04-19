@@ -84,14 +84,22 @@ public class Apple2KeypadChooser implements Apple2MenuView {
                 break;
         }
 
+        calibrationContinue();
+    }
+
+    private void calibrationContinue() {
         final Handler handler = new Handler();
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
                 mChooserState = mChooserState.next();
-                mCurrentChoicePrompt.setText(getNextChoiceString());
-                Apple2Preferences.setJSONPref(Apple2SettingsMenu.SETTINGS.CURRENT_INPUT, Apple2SettingsMenu.TouchDeviceVariant.KEYBOARD.ordinal());
-                Apple2Preferences.sync(mActivity, Apple2Preferences.PREF_DOMAIN_TOUCHSCREEN);
+                if (mChooserState.ordinal() == 0) {
+                    dismiss();
+                } else {
+                    mCurrentChoicePrompt.setText(getNextChoiceString());
+                    Apple2Preferences.setJSONPref(Apple2SettingsMenu.SETTINGS.CURRENT_INPUT, Apple2SettingsMenu.TouchDeviceVariant.KEYBOARD.ordinal());
+                    Apple2Preferences.sync(mActivity, Apple2Preferences.PREF_DOMAIN_TOUCHSCREEN);
+                }
             }
         }, 1000);
     }
@@ -149,7 +157,17 @@ public class Apple2KeypadChooser implements Apple2MenuView {
         skipButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Apple2KeypadChooser.this.onKeyTapCalibrationEvent((char) Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+                Apple2Preferences.setJSONPref(Apple2SettingsMenu.SETTINGS.CURRENT_INPUT, Apple2SettingsMenu.TouchDeviceVariant.JOYSTICK_KEYPAD.ordinal());
+                Apple2Preferences.sync(mActivity, Apple2Preferences.PREF_DOMAIN_TOUCHSCREEN);
+                calibrationContinue();
+            }
+        });
+
+        Button noneButton = (Button) mSettingsView.findViewById(R.id.noneButton);
+        noneButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onKeyTapCalibrationEvent((char) Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
             }
         });
 
