@@ -531,7 +531,7 @@ ENTRY(op_ADC_dec)
                 DebugBCDCheck
                 bt      $C_Flag_Bit, AF_Reg_X
                 adcb    A_Reg, %al
-#if !defined(__LP64__)
+#if !__LP64__
                 daa
                 movb    %al, A_Reg
                 FlagNVZC
@@ -920,7 +920,7 @@ ENTRY(op_UNK) /* make undefined opcodes fault */
 ENTRY(op_BRK)
                 incw    PC_Reg
                 movw    PC_Reg, %ax
-#ifdef APPLE_ASSEMBLER_IS_BROKEN
+#if __PIC__
                 xchgb   %al, %ah
                 Push(%al)
                 shrw    $8, %ax
@@ -1295,7 +1295,7 @@ ENTRY(op_JSR) // 0x20
                 GetAbs
                 movw    PC_Reg, %ax
                 decw    %ax
-#ifdef APPLE_ASSEMBLER_IS_BROKEN
+#if __PIC__
                 xchgb   %al, %ah
                 Push(%al)
                 shrw    $8, %ax
@@ -1542,7 +1542,7 @@ ENTRY(op_PHX)
    ---------------------------------- */
 
 ENTRY(op_PHY)
-#ifdef APPLE_ASSEMBLER_IS_BROKEN
+#if __PIC__
                 movb    Y_Reg, %al
                 Push(%al)
 #else
@@ -1567,7 +1567,7 @@ ENTRY(op_PLA) // 0x68
 ENTRY(op_PLP) // 0x28
                 Pop(%al)
                 SYMX_PROLOGUE(cpu65_flags_decode)
-#ifdef APPLE_ASSEMBLER_IS_BROKEN
+#if __PIC__
                 movb    SYMX(cpu65_flags_decode,_XAX,1), %al
                 movb    %al, F_Reg
 #else
@@ -1593,7 +1593,7 @@ ENTRY(op_PLX)
    ---------------------------------- */
 
 ENTRY(op_PLY)
-#ifdef APPLE_ASSEMBLER_IS_BROKEN
+#if __PIC__
                 Pop(%al)
                 movb    %al, Y_Reg
 #else
@@ -1669,7 +1669,7 @@ ENTRY(op_ROR_abs_x) // 0x7e
 ENTRY(op_RTI) // 0x40
                 Pop(%al)
                 SYMX_PROLOGUE(cpu65_flags_decode)
-#ifdef APPLE_ASSEMBLER_IS_BROKEN
+#if __PIC__
                 movb    SYMX(cpu65_flags_decode,_XAX,1), %al
                 movb    %al, F_Reg
 #else
@@ -1677,7 +1677,7 @@ ENTRY(op_RTI) // 0x40
 #endif
                 orb     $(B_Flag|X_Flag), F_Reg
                 Pop(%al)
-#ifdef APPLE_ASSEMBLER_IS_BROKEN
+#if __PIC__
                 shlw    $8, %ax
                 Pop(%al)
                 xchgb   %al, %ah
@@ -1693,7 +1693,7 @@ ENTRY(op_RTI) // 0x40
 
 ENTRY(op_RTS) // 0x60
                 Pop(%al)
-#ifdef APPLE_ASSEMBLER_IS_BROKEN
+#if __PIC__
                 shlw    $8, %ax
                 Pop(%al)
                 xchgb   %al, %ah
@@ -1716,7 +1716,7 @@ ENTRY(op_SBC_dec)
                 bt      $C_Flag_Bit, AF_Reg_X
                 cmc
                 xchgb   A_Reg, %al
-#if !defined(__LP64__)
+#if !__LP64__
                 sbbb    A_Reg, %al
                 das
                 movb    %al, A_Reg
@@ -2189,7 +2189,7 @@ ex_irq:         testb   $I_Flag, F_Reg                      // Already interrupt
                 jz      1f
                 JumpNextInstruction                         // Yes (ignored) ...
 1:              movw    PC_Reg, %ax                         // No (handle IRQ) ...
-#ifdef APPLE_ASSEMBLER_IS_BROKEN
+#if __PIC__
                 xchgb   %al, %ah
                 Push(%al)
                 shrw    $8, %ax
@@ -2232,7 +2232,7 @@ ENTRY(cpu65_run)
                 movzbLQ SYM(cpu65_a), AF_Reg_X
                 movzbLQ SYM(cpu65_f), _XAX
                 SYMX_PROLOGUE(cpu65_flags_decode)
-#ifdef APPLE_ASSEMBLER_IS_BROKEN
+#if __PIC__
                 movb    SYMX(cpu65_flags_decode,_XAX,1), %al
                 movb    %al, F_Reg
 #else
