@@ -12,6 +12,7 @@
 // Based on sample code from https://developer.apple.com/library/mac/samplecode/GLEssentials/Introduction/Intro.html
 
 #import "EmulatorGLView.h"
+#import "EmulatorJoystickController.h"
 
 // Apple //e common routines
 #import "common.h"
@@ -189,7 +190,10 @@ static CVReturn displayLinkCallback(CVDisplayLinkRef displayLink, const CVTimeSt
     // to [self openGLContext])
     [[self openGLContext] makeCurrentContext];
     
+    [EmulatorJoystickController sharedInstance];
+    cpu_pause();
     emulator_start();
+    cpu_resume();
     
     // Synchronize buffer swaps with vertical refresh rate
     GLint swapInt = 1;
@@ -247,7 +251,10 @@ static CVReturn displayLinkCallback(CVDisplayLinkRef displayLink, const CVTimeSt
 #endif // !SUPPORT_RETINA_RESOLUTION
     
     // Set the new dimensions in our renderer
-    video_reshape((int)viewRectPixels.size.width, (int)viewRectPixels.size.height, /*landscape:*/true);
+    prefs_setLongValue(PREF_DOMAIN_INTERFACE, PREF_DEVICE_WIDTH, (int)viewRectPixels.size.width);
+    prefs_setLongValue(PREF_DOMAIN_INTERFACE, PREF_DEVICE_HEIGHT, (int)viewRectPixels.size.height);
+    prefs_setLongValue(PREF_DOMAIN_INTERFACE, PREF_DEVICE_LANDSCAPE, true);
+    prefs_sync(PREF_DOMAIN_INTERFACE);
     
     CGLUnlockContext([[self openGLContext] CGLContextObj]);
 }

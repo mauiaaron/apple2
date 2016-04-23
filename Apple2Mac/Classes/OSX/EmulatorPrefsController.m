@@ -115,8 +115,9 @@
         mode = COLOR_NONE;
     }
     [self.colorChoice selectItemAtIndex:mode];
-    color_mode = (color_mode_t)mode;
-    
+    prefs_setLongValue(PREF_DOMAIN_VIDEO, PREF_COLOR_MODE, (color_mode_t)mode);
+    prefs_sync(PREF_DOMAIN_VIDEO);
+
     mode = [defaults integerForKey:kApple2JoystickConfig];
     if (! ((mode >= JOY_PCJOY) && (mode < NUM_JOYOPTS)) )
     {
@@ -126,15 +127,20 @@
     [self.joystickChoice selectItemAtIndex:mode];
     
 #ifdef KEYPAD_JOYSTICK
-    joy_auto_recenter = [defaults integerForKey:kApple2JoystickAutoRecenter];
-    [self.joystickRecenter setState:joy_auto_recenter ? NSOnState : NSOffState];
-    joy_step = [defaults integerForKey:kApple2JoystickStep];
-    if (!joy_step)
+    bool autoRecenter = [defaults integerForKey:kApple2JoystickAutoRecenter];
+    [self.joystickRecenter setState:autoRecenter ? NSOnState : NSOffState];
+    prefs_setBoolValue(PREF_DOMAIN_JOYSTICK, PREF_JOYSTICK_KPAD_AUTO_RECENTER, autoRecenter);
+    
+    long joyStep = [defaults integerForKey:kApple2JoystickStep];
+    if (!joyStep)
     {
-        joy_step = 1;
+        joyStep = 1;
     }
-    [self.joystickStepLabel setIntegerValue:joy_step];
-    [self.joystickStepper setIntegerValue:joy_step];
+    [self.joystickStepLabel setIntegerValue:joyStep];
+    [self.joystickStepper setIntegerValue:joyStep];
+    prefs_setLongValue(PREF_DOMAIN_JOYSTICK, PREF_JOYSTICK_KPAD_STEP, joyStep);
+    
+    prefs_sync(PREF_DOMAIN_JOYSTICK);
 #endif
     
     joy_clip_to_radius = [defaults boolForKey:kApple2JoystickClipToRadius];
@@ -158,11 +164,21 @@
     [defaults setDouble:cpu_altscale_factor forKey:kApple2AltSpeed];
     [defaults setBool:([self.cpuMaxChoice state] == NSOnState) forKey:kApple2CPUSpeedIsMax];
     [defaults setBool:([self.altMaxChoice state] == NSOnState) forKey:kApple2AltSpeedIsMax];
-    [defaults setInteger:color_mode forKey:kApple2ColorConfig];
+    
+    long lVal = 0;
+    color_mode_t mode = prefs_parseLongValue(PREF_DOMAIN_VIDEO, PREF_COLOR_MODE, &lVal, /*base:*/10) ? (color_mode_t)lVal : COLOR_INTERP;
+    [defaults setInteger:mode forKey:kApple2ColorConfig];
     [defaults setInteger:joy_mode forKey:kApple2JoystickConfig];
-    [defaults setInteger:joy_step forKey:kApple2JoystickStep];
-    [defaults setBool:joy_auto_recenter forKey:kApple2JoystickAutoRecenter];
+    
+    long joyStep = prefs_parseLongValue(PREF_DOMAIN_JOYSTICK, PREF_JOYSTICK_KPAD_STEP, &lVal, /*base:*/10) ? lVal : 1;
+    [defaults setInteger:joyStep forKey:kApple2JoystickStep];
+    
+    bool bVal = false;
+    bool autoRecenter = prefs_parseBoolValue(PREF_DOMAIN_JOYSTICK, PREF_JOYSTICK_KPAD_AUTO_RECENTER, &bVal) ? bVal : true;
+    [defaults setBool:autoRecenter forKey:kApple2JoystickAutoRecenter];
     [defaults setBool:joy_clip_to_radius forKey:kApple2JoystickClipToRadius];
+    
+    prefs_sync(PREF_DOMAIN_JOYSTICK);
 }
 
 - (IBAction)sliderDidMove:(id)sender
@@ -211,7 +227,8 @@
     {
         mode = COLOR_NONE;
     }
-    color_mode = (color_mode_t)mode;
+    prefs_setLongValue(PREF_DOMAIN_VIDEO, PREF_COLOR_MODE, mode);
+    prefs_sync(PREF_DOMAIN_VIDEO);
     [self _savePrefs];
     
 #warning HACK TODO FIXME need to refactor video resetting procedure
@@ -251,7 +268,8 @@
 
 - (IBAction)autoRecenterChoiceChanged:(id)sender
 {
-    joy_auto_recenter = ([self.joystickRecenter state] == NSOnState);
+    bool autoRecenter = ([self.joystickRecenter state] == NSOnState);
+    prefs_setBoolValue(PREF_DOMAIN_JOYSTICK, PREF_JOYSTICK_KPAD_AUTO_RECENTER, autoRecenter);
     [self _savePrefs];
 }
 
@@ -263,8 +281,9 @@
 
 - (IBAction)stepValueChanged:(id)sender
 {
-    joy_step = [self.joystickStepper intValue];
-    [self.joystickStepLabel setIntegerValue:joy_step];
+    long joyStep = [self.joystickStepper intValue];
+    [self.joystickStepLabel setIntegerValue:joyStep];
+    prefs_setLongValue(PREF_DOMAIN_JOYSTICK, PREF_JOYSTICK_KPAD_AUTO_RECENTER, joyStep);
     [self _savePrefs];
 }
 
