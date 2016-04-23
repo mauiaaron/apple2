@@ -121,30 +121,38 @@
 
 /* Symbol naming issues */
 #if NO_UNDERSCORES
-#   define _UNDER(x) x
+#   define _UNDER(x)                    x
 #else
-#   define _UNDER(x) _##x
+#   define _UNDER(x)                    _##x
 #endif
 
-#define            ENTRY(x) .globl _UNDER(x); .balign 16; _UNDER(x)##:
+#define ENTRY(x)                        .globl _UNDER(x); .balign 16; _UNDER(x)##:
+
+#if __APPLE__
+#   define _AT_PLT()
+#   define _AT_GOTPCREL(x)              (x)
+#else
+#   define _AT_PLT()                    @PLT
+#   define _AT_GOTPCREL(x)              @GOTPCREL(x)
+#endif
 
 #if !__PIC__
-#   define         CALL(x) _UNDER(x)
-#   define         SYM(x) _UNDER(x)
-#   define         SYMX(x, INDEX, SCALE) _UNDER(x)(,INDEX,SCALE)
+#   define         CALL(x)              _UNDER(x)
+#   define         SYM(x)               _UNDER(x)
 #   define         SYMX_PROLOGUE(x)
+#   define         SYMX(x, IDX, SCALE)  _UNDER(x)(,IDX,SCALE)
 #else
 #   if __LP64__
-#       define     CALL(x) _UNDER(x)@PLT
-#       define     SYM(x) _UNDER(x)@GOTPCREL(%rip)
-#       define     SYMX_PROLOGUE(x)  leaLQ  _UNDER(x)@GOTPCREL(%rip), _X8;
-#       define     SYMX(x, INDEX, SCALE) (_X8,INDEX,SCALE)
+#       define     CALL(x)              _UNDER(x)_AT_PLT()
+#       define     SYM(x)               _UNDER(x)_AT_GOTPCREL(%rip)
+#       define     SYMX_PROLOGUE(x)     leaLQ _UNDER(x)_AT_GOTPCREL(%rip), _X8;
+#       define     SYMX(x, IDX, SCALE)  (_X8,IDX,SCALE)
 #   else
 #       warning FIXME ... this is not PIC!
-#       define     CALL(x) _UNDER(x)
-#       define     SYM(x) _UNDER(x)
+#       define     CALL(x)              _UNDER(x)
+#       define     SYM(x)               _UNDER(x)
 #       define     SYMX_PROLOGUE(x)
-#       define     SYMX(x, INDEX, SCALE) _UNDER(x)(,INDEX,SCALE)
+#       define     SYMX(x, IDX, SCALE)  _UNDER(x)(,IDX,SCALE)
 #   endif
 #endif
 
