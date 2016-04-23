@@ -15,7 +15,8 @@
 #error this is a touch interface module, possibly you mean to not compile this at all?
 #endif
 
-#define BUTTON_TAP_DELAY_NANOS_DEFAULT 50000000
+#define BUTTON_TAP_DELAY_NANOS_DEFAULT   (NANOSECONDS_PER_SECOND/20)     // 0.2 secs
+#define BUTTON_TAP_DELAY_NANOS_MIN       (NANOSECONDS_PER_SECOND/10000)  // 0.0001 secs
 
 typedef struct touch_event_s {
     struct touch_event_s *next;
@@ -313,6 +314,9 @@ static void touchjoy_prefsChanged(const char *domain) {
 
     float fVal = 0.f;
     joys.tapDelayNanos = prefs_parseFloatValue(domain, PREF_JOY_TAP_DELAY, &fVal) ? (fVal * NANOSECONDS_PER_SECOND) : BUTTON_TAP_DELAY_NANOS_DEFAULT;
+    if (joys.tapDelayNanos < BUTTON_TAP_DELAY_NANOS_MIN) {
+        joys.tapDelayNanos = BUTTON_TAP_DELAY_NANOS_MIN;
+    }
 }
 
 static uint8_t *touchjoy_rosetteChars(void) {
