@@ -10,6 +10,12 @@
 		4A2636F919FDEDB700DBFB00 /* Apple2Mac.help in Resources */ = {isa = PBXBuildFile; fileRef = 4A2636F819FDEDB700DBFB00 /* Apple2Mac.help */; };
 		4A61119D1A6A1DE60035F7DE /* blank.po.gz in Resources */ = {isa = PBXBuildFile; fileRef = 4A61119B1A6A1DE60035F7DE /* blank.po.gz */; };
 		4A69C1921A33DB90001579EF /* DDHidLib.framework in Copy Files (1 item) */ = {isa = PBXBuildFile; fileRef = 77C2796F1A1047AF000FE33F /* DDHidLib.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		4A73BE2F1CCBE21B0041C573 /* memmngt.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A73BE2E1CCBE21A0041C573 /* memmngt.c */; };
+		4A73BE301CCBE22A0041C573 /* memmngt.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A73BE2E1CCBE21A0041C573 /* memmngt.c */; };
+		4A73BE311CCBE22B0041C573 /* memmngt.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A73BE2E1CCBE21A0041C573 /* memmngt.c */; };
+		4A73BE321CCBE22C0041C573 /* memmngt.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A73BE2E1CCBE21A0041C573 /* memmngt.c */; };
+		4A73BE331CCBE22C0041C573 /* memmngt.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A73BE2E1CCBE21A0041C573 /* memmngt.c */; };
+		4A73BE341CCBE22E0041C573 /* memmngt.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A73BE2E1CCBE21A0041C573 /* memmngt.c */; };
 		4A7EDC931AE092680072E98A /* glhudmodel.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A7EDC911AE092680072E98A /* glhudmodel.c */; };
 		4A7EDC941AE092680072E98A /* glhudmodel.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A7EDC911AE092680072E98A /* glhudmodel.c */; };
 		4A7EDC951AE092680072E98A /* glhudmodel.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A7EDC911AE092680072E98A /* glhudmodel.c */; };
@@ -394,6 +400,7 @@
 /* Begin PBXFileReference section */
 		4A2636F819FDEDB700DBFB00 /* Apple2Mac.help */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Apple2Mac.help; sourceTree = "<group>"; };
 		4A61119B1A6A1DE60035F7DE /* blank.po.gz */ = {isa = PBXFileReference; lastKnownFileType = archive.gzip; path = blank.po.gz; sourceTree = "<group>"; };
+		4A73BE2E1CCBE21A0041C573 /* memmngt.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = memmngt.c; sourceTree = "<group>"; };
 		4A7EDC911AE092680072E98A /* glhudmodel.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = glhudmodel.c; sourceTree = "<group>"; };
 		4A7EDC921AE092680072E98A /* glnode.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = glnode.c; sourceTree = "<group>"; };
 		4A7EDC9D1AE092B80072E98A /* interface.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = interface.c; sourceTree = "<group>"; };
@@ -808,8 +815,6 @@
 		773B3D4519568A570085CE5F /* src */ = {
 			isa = PBXGroup;
 			children = (
-				4E4356E31C386AC500B71328 /* interface.h */,
-				4E4356E41C386AC500B71328 /* memmngt.h */,
 				935C55781C136F550013166D /* arm */,
 				779F564619EAF66E00A6F107 /* audio */,
 				773B3D5C19568A570085CE5F /* common.h */,
@@ -823,6 +828,7 @@
 				773B3D6419568A570085CE5F /* display.c */,
 				773B3D6519568A570085CE5F /* font.c */,
 				773B3D6919568A570085CE5F /* glue.h */,
+				4E4356E31C386AC500B71328 /* interface.h */,
 				4A7EDC9D1AE092B80072E98A /* interface.c */,
 				773B3D6D19568A570085CE5F /* joystick.h */,
 				773B3D6C19568A570085CE5F /* joystick.c */,
@@ -830,6 +836,8 @@
 				935C55701C136E6F0013166D /* json_parse.c */,
 				773B3D6F19568A570085CE5F /* keys.h */,
 				773B3D6E19568A570085CE5F /* keys.c */,
+				4E4356E41C386AC500B71328 /* memmngt.h */,
+				4A73BE2E1CCBE21A0041C573 /* memmngt.c */,
 				773B3D7019568A570085CE5F /* meta */,
 				773B3D7619568A570085CE5F /* misc.h */,
 				773B3D7519568A570085CE5F /* misc.c */,
@@ -1598,6 +1606,7 @@
 				4AD4FE9F1A52464F00F958EC /* opcodes.c in Sources */,
 				935C551F1C12B6460013166D /* main.m in Sources */,
 				4A7EDCA01AE092B80072E98A /* interface.c in Sources */,
+				4A73BE311CCBE22B0041C573 /* memmngt.c in Sources */,
 				4AD4FEA01A52464F00F958EC /* glvideo.c in Sources */,
 				4AD4FEA11A52464F00F958EC /* rom-shim.c in Sources */,
 				4AD4FEA21A52464F00F958EC /* zlib-helpers.c in Sources */,
@@ -1636,6 +1645,7 @@
 				4ADC520919E8CA4500186B36 /* opcodes.c in Sources */,
 				935C551D1C12B6450013166D /* main.m in Sources */,
 				4A7EDCA21AE092B80072E98A /* interface.c in Sources */,
+				4A73BE331CCBE22C0041C573 /* memmngt.c in Sources */,
 				4ADC520A19E8CA4500186B36 /* glvideo.c in Sources */,
 				4ADC520B19E8CA4500186B36 /* rom-shim.c in Sources */,
 				4ADC520C19E8CA4500186B36 /* zlib-helpers.c in Sources */,
@@ -1684,6 +1694,7 @@
 				77E1C0B319D72700004344E0 /* vectorUtil.c in Sources */,
 				4A7EDC9E1AE092B80072E98A /* interface.c in Sources */,
 				773B3DAB19568A570085CE5F /* keys.c in Sources */,
+				4A73BE2F1CCBE21B0041C573 /* memmngt.c in Sources */,
 				773B3DBC19568A570085CE5F /* timing.c in Sources */,
 				773BC91A19F31E7B00996893 /* prefs.c in Sources */,
 				77E1C0B619D72700004344E0 /* matrixUtil.c in Sources */,
@@ -1738,6 +1749,7 @@
 				779DD837195BD9F900DF89E5 /* opcodes.c in Sources */,
 				935C55201C12B64A0013166D /* main.m in Sources */,
 				4A7EDC9F1AE092B80072E98A /* interface.c in Sources */,
+				4A73BE301CCBE22A0041C573 /* memmngt.c in Sources */,
 				4ADC51C619E8BD5200186B36 /* glvideo.c in Sources */,
 				779DD838195BD9F900DF89E5 /* rom-shim.c in Sources */,
 				779DD839195BD9F900DF89E5 /* zlib-helpers.c in Sources */,
@@ -1776,6 +1788,7 @@
 				779F566E19EB0B9100A6F107 /* misc.c in Sources */,
 				935C551E1C12B6450013166D /* main.m in Sources */,
 				4A7EDCA11AE092B80072E98A /* interface.c in Sources */,
+				4A73BE321CCBE22C0041C573 /* memmngt.c in Sources */,
 				779F566F19EB0B9100A6F107 /* opcodes.c in Sources */,
 				779F567019EB0B9100A6F107 /* glvideo.c in Sources */,
 				779F567119EB0B9100A6F107 /* rom-shim.c in Sources */,
@@ -1814,6 +1827,7 @@
 				935C55641C136E070013166D /* rom-shim.c in Sources */,
 				935C55651C136E070013166D /* timing.c in Sources */,
 				935C55661C136E070013166D /* glalert.c in Sources */,
+				4A73BE341CCBE22E0041C573 /* memmngt.c in Sources */,
 				935C55A91C1389370013166D /* jsmn.c in Sources */,
 				935C55671C136E070013166D /* glhudmodel.c in Sources */,
 				935C55681C136E070013166D /* glnode.c in Sources */,
