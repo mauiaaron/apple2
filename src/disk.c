@@ -735,8 +735,7 @@ const char *disk6_eject(int drive) {
 
     const char *err = NULL;
 
-    if (disk6.disk[drive].fd >= 0) {
-        assert(disk6.disk[drive].fd != 0);
+    if (disk6.disk[drive].fd > 0) {
         disk6_flush(drive);
 
         int ret = -1;
@@ -858,6 +857,7 @@ const char *disk6_insert(int drive, const char * const raw_file_name, int readon
             err = ERR_CANNOT_OPEN;
             break;
         }
+        assert(disk6.disk[drive].fd > 0);
 
         // mmap image file
         TEMP_FAILURE_RETRY(disk6.disk[drive].mmap_image = mmap(NULL, disk6.disk[drive].whole_len, (readonly ? PROT_READ : PROT_READ|PROT_WRITE), MAP_SHARED|MAP_FILE, disk6.disk[drive].fd, /*offset:*/0));
