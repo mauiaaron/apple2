@@ -93,7 +93,7 @@
 // 2015/04/01 ... early calls to glGetError()--before a context exists--causes segfaults on MacOS X
 extern bool safe_to_do_opengl_logging;
 static inline GLenum safeGLGetError(void) {
-    if (safe_to_do_opengl_logging) {
+    if (safe_to_do_opengl_logging && video_isRenderThread()) {
         return glGetError();
     }
     return (GLenum)0;
