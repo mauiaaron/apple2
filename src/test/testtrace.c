@@ -385,6 +385,8 @@ TEST test_boot_disk_vmtrace_po() {
 // Test Suite
 
 GREATEST_SUITE(test_suite_trace) {
+    test_thread_running = true;
+
     pthread_mutex_lock(&interface_mutex);
 
     GREATEST_SET_SETUP_CB(testtrace_setup, NULL);
@@ -392,7 +394,6 @@ GREATEST_SUITE(test_suite_trace) {
     GREATEST_SET_BREAKPOINT_CB(test_breakpoint, NULL);
 
     // TESTS --------------------------
-    test_thread_running = true;
 
 #if ABUSIVE_TESTS
     RUN_TESTp(test_boot_disk_cputrace);
@@ -418,20 +419,22 @@ GREATEST_MAIN_DEFS();
 static char **test_argv = NULL;
 static int test_argc = 0;
 
-static void *test_thread(void *dummyptr) {
+static void *_test_thread(void) {
     int argc = test_argc;
     char **argv = test_argv;
     GREATEST_MAIN_BEGIN();
     RUN_SUITE(test_suite_trace);
     GREATEST_MAIN_END();
+}
+
+static void *test_thread(void *dummyptr) {
+    _test_thread();
     return NULL;
 }
 
-void test_trace(int argc, char **argv) {
-    test_argc = argc;
-    test_argv = argv;
-
-    emulator_start();
+void test_trace(int _argc, char **_argv) {
+    test_argc = _argc;
+    test_argv = _argv;
 
     test_common_init();
 
@@ -442,16 +445,5 @@ void test_trace(int argc, char **argv) {
         nanosleep(&ts, NULL);
     }
     pthread_detach(p);
-
-    video_main_loop();
-
-#if !defined(__APPLE__) && !defined(ANDROID)
-    emulator_shutdown();
-#endif
 }
 
-#if !defined(__APPLE__) && !defined(ANDROID)
-int main(int argc, char **argv) {
-    test_trace(argc, argv);
-}
-#endif

@@ -325,9 +325,12 @@ int main(int _argc, char **_argv) {
 #   elif TEST_DISK
     extern int test_disk(int, char *[]);
     test_disk(argc, argv);
-#elif TEST_PREFS
+#   elif TEST_PREFS
     extern void test_prefs(int, char *[]);
     test_prefs(argc, argv);
+#   elif TEST_TRACE
+    extern void test_trace(int, char *[]);
+    test_trace(argc, argv);
 #   else
 #       error "OOPS, no testsuite specified"
 #   endif
