@@ -16,33 +16,48 @@
 #include "cpu-regs.h"
 #include "vm.h"
 
+#if !__PIC__
+#   define SAVE_Y_REG() \
+                REG2MEM(movb, Y_Reg, cpu65_y)
+#   define _POP_PICREG()
+#else
+#   define SAVE_Y_REG() \
+                movb    Y_Reg, %al; \
+                REG2MEM(movb, %al, cpu65_y)
+#   if __i386__
+#       define _A2_PIC_GOT(reg) 0x0(reg) // Assumes GOT pointer is at head of stack
+#       define _POP_PICREG() popl _PICREG
+#   else
+#       define _POP_PICREG()
+#   endif
+#endif
+
 #define CommonSaveCPUState \
-                movw    EffectiveAddr, SYM(cpu65_ea); \
-                movb    A_Reg, SYM(cpu65_a); \
+                REG2MEM(movw, EffectiveAddr, cpu65_ea); \
+                REG2MEM(movb, A_Reg, cpu65_a); \
                 xorw    %ax, %ax; \
                 movb    F_Reg, %al; \
-                SYMX_PROLOGUE(cpu65_flags_encode); \
-                movb    SYMX(cpu65_flags_encode,_XAX,1), %al; \
-                movb    %al, SYM(cpu65_f); \
-                movb    X_Reg, SYM(cpu65_x); \
-                movb    Y_Reg, SYM(cpu65_y); \
-                movb    SP_Reg_L, SYM(cpu65_sp)
+                MEM2REG_IND(movb,cpu65_flags_encode,_XAX,1,%al); \
+                REG2MEM(movb, %al, cpu65_f); \
+                REG2MEM(movb, X_Reg, cpu65_x); \
+                SAVE_Y_REG(); \
+                REG2MEM(movb, SP_Reg_L, cpu65_sp)
 
 #if CPU_TRACING
 #   define TRACE_PROLOGUE \
-                movw    PC_Reg, SYM(cpu65_pc); \
-                callLQ  CALL(cpu65_trace_prologue);
+                REG2MEM(movw, PC_Reg, cpu65_pc); \
+                CALL_FN(callLQ, cpu65_trace_prologue, 0x4);
 #   define TRACE_ARG \
-                callLQ  CALL(cpu65_trace_arg);
+                CALL_FN(callLQ, cpu65_trace_arg, 0x4);
 #   define TRACE_ARG1 \
-                callLQ  CALL(cpu65_trace_arg1);
+                CALL_FN(callLQ, cpu65_trace_arg1, 0x4);
 #   define TRACE_ARG2 \
-                callLQ  CALL(cpu65_trace_arg2);
+                CALL_FN(callLQ, cpu65_trace_arg2, 0x4);
 #   define TRACE_EPILOGUE \
                 pushLQ _XAX; \
                 CommonSaveCPUState; \
                 popLQ _XAX; \
-                callLQ  CALL(cpu65_trace_epilogue);
+                CALL_FN(callLQ, cpu65_trace_epilogue, 0x4);
 #else
 #   define TRACE_PROLOGUE
 #   define TRACE_ARG
@@ -58,56 +73,47 @@
 #define GetFromPC_B \
                 movLQ   PC_Reg_X, EffectiveAddr_X; \
                 incw    PC_Reg; \
-                SYMX_PROLOGUE(cpu65_vmem_r); \
-                callLQ  *SYMX(cpu65_vmem_r,EffectiveAddr_X,SZ_PTR); \
+                CALL_IND(cpu65_vmem_r,EffectiveAddr_X,SZ_PTR); \
                 TRACE_ARG;
 
 #define GetFromPC_W \
                 movLQ   PC_Reg_X, EffectiveAddr_X; \
                 incw    EffectiveAddr; \
                 addw    $2, PC_Reg; \
-                SYMX_PROLOGUE(cpu65_vmem_r); \
-                callLQ  *SYMX(cpu65_vmem_r,EffectiveAddr_X,SZ_PTR); \
+                CALL_IND(cpu65_vmem_r,EffectiveAddr_X,SZ_PTR); \
                 decw    EffectiveAddr; \
                 TRACE_ARG2; \
                 movb    %al, %ah; \
-                SYMX_PROLOGUE(cpu65_vmem_r); \
-                callLQ  *SYMX(cpu65_vmem_r,EffectiveAddr_X,SZ_PTR); \
+                CALL_IND(cpu65_vmem_r,EffectiveAddr_X,SZ_PTR); \
                 TRACE_ARG1;
 
 #define JumpNextInstruction \
                 TRACE_PROLOGUE; \
                 GetFromPC_B \
-                movb    %al, SYM(cpu65_opcode); \
-                movb    $0, SYM(cpu65_opcycles); \
-                movb    $0, SYM(cpu65_rw); \
-                SYMX_PROLOGUE(cpu65__opcodes); \
-                jmp     *SYMX(cpu65__opcodes,_XAX,SZ_PTR);
+                REG2MEM(movb, %al, cpu65_opcode); \
+                REG2MEM(movb, $0, cpu65_opcycles); \
+                REG2MEM(movb, $0, cpu65_rw); \
+                JUMP_IND(cpu65__opcodes,_XAX,SZ_PTR);
 
 #define GetFromEA_B \
-                orb     $1, SYM(cpu65_rw); \
-                SYMX_PROLOGUE(cpu65_vmem_r); \
-                callLQ  *SYMX(cpu65_vmem_r,EffectiveAddr_X,SZ_PTR);
+                REG2MEM(orb, $1, cpu65_rw); \
+                CALL_IND(cpu65_vmem_r,EffectiveAddr_X,SZ_PTR);
 
 #define GetFromEA_W \
                 incw    EffectiveAddr; \
-                SYMX_PROLOGUE(cpu65_vmem_r); \
-                callLQ  *SYMX(cpu65_vmem_r,EffectiveAddr_X,SZ_PTR); \
+                CALL_IND(cpu65_vmem_r,EffectiveAddr_X,SZ_PTR); \
                 decw    EffectiveAddr; \
                 movb    %al, %ah; \
-                SYMX_PROLOGUE(cpu65_vmem_r); \
-                callLQ  *SYMX(cpu65_vmem_r,EffectiveAddr_X,SZ_PTR);
+                CALL_IND(cpu65_vmem_r,EffectiveAddr_X,SZ_PTR);
 
 #define PutToEA_B \
-                orb     $2, SYM(cpu65_rw); \
-                movb    %al, SYM(cpu65_d); \
-                SYMX_PROLOGUE(cpu65_vmem_w); \
-                callLQ  *SYMX(cpu65_vmem_w,EffectiveAddr_X,SZ_PTR);
+                REG2MEM(orb, $2, cpu65_rw); \
+                REG2MEM(movb, %al, cpu65_d); \
+                CALL_IND(cpu65_vmem_w,EffectiveAddr_X,SZ_PTR);
 
 #define GetFromMem_B(x) \
                 movLQ   x, EffectiveAddr_X; \
-                SYMX_PROLOGUE(cpu65_vmem_r); \
-                callLQ  *SYMX(cpu65_vmem_r,EffectiveAddr_X,SZ_PTR);
+                CALL_IND(cpu65_vmem_r,EffectiveAddr_X,SZ_PTR);
 
 #define GetFromMem_W(x) \
                 movLQ   x, EffectiveAddr_X; \
@@ -117,7 +123,7 @@
                 jmp     continue;
 
 #define BranchXCycles \
-                incb    SYM(cpu65_opcycles); /* +1 branch taken */ \
+                _2MEM(incb, cpu65_opcycles); /* +1 branch taken */ \
                 shlLQ   $16, _XBX; \
                 movw    PC_Reg, %bx; \
                 cbw; \
@@ -125,7 +131,7 @@
                 movw    %ax, PC_Reg; \
                 cmpb    %ah, %bh; \
                 je      9f; \
-                incb    SYM(cpu65_opcycles); /* +1 branch new page */ \
+                _2MEM(incb, cpu65_opcycles); /* +1 branch new page */ \
 9:              shrLQ   $16, _XBX;
 
 #define FlagC \
@@ -174,14 +180,12 @@
                 orb     %al, F_Reg;
 
 #define Push(x) \
-                SYMX_PROLOGUE(apple_ii_64k); \
-                movb    x, SYMX(apple_ii_64k,SP_Reg_X,1); \
+                REG2MEM_IND(movb,x,apple_ii_64k,SP_Reg_X,1); \
                 decb    SP_Reg_L;
 
 #define Pop(x) \
                 incb    SP_Reg_L; \
-                SYMX_PROLOGUE(apple_ii_64k); \
-                movb    SYMX(apple_ii_64k,SP_Reg_X,1), x;
+                MEM2REG_IND(movb,apple_ii_64k,SP_Reg_X,1,x);
 
 /* Immediate Addressing - the operand is contained in the second byte of the
    instruction. */
@@ -191,8 +195,7 @@
 #if CPU_TRACING
 #define GetImm \
                 _GetImm \
-                SYMX_PROLOGUE(cpu65_vmem_r); \
-                callLQ  *SYMX(cpu65_vmem_r,EffectiveAddr_X,SZ_PTR); \
+                CALL_IND(cpu65_vmem_r,EffectiveAddr_X,SZ_PTR); \
                 TRACE_ARG;
 #else
 #define GetImm \
@@ -237,7 +240,7 @@
 
 #define GetAbs_X \
                 _GetAbs_X \
-                incb    SYM(cpu65_opcycles); /* +1 cycle on page boundary */ \
+                _2MEM(incb, cpu65_opcycles); /* +1 cycle on page boundary */ \
 9:              movLQ   _XAX, EffectiveAddr_X;
 
 #define GetAbs_X_STx \
@@ -252,7 +255,7 @@
 
 #define GetAbs_Y \
                 _GetAbs_Y \
-                incb    SYM(cpu65_opcycles); /* +1 cycle on page boundary */ \
+                _2MEM(incb, cpu65_opcycles); /* +1 cycle on page boundary */ \
 9:              movLQ   _XAX, EffectiveAddr_X;
 
 #define GetAbs_Y_STA \
@@ -315,7 +318,7 @@
 #define GetIndZPage_Y \
                 _GetIndZPage_Y \
                 adcb    $0, %ah; \
-                incb    SYM(cpu65_opcycles); /* +1 cycle on page boundary */ \
+                _2MEM(incb, cpu65_opcycles); /* +1 cycle on page boundary */ \
 9:              movLQ   _XAX, EffectiveAddr_X;
 
 #define GetIndZPage_Y_STA \
@@ -334,22 +337,22 @@
                 jz      6f; \
                 testb   $0x60, A_Reg; \
                 jz      6f; \
-                callLQ  CALL(debug_illegal_bcd); \
+                CALL_FN(callLQ, debug_illegal_bcd, 0x4); \
 6:              testb   $0x08, A_Reg; \
                 jz      7f; \
                 testb   $0x06, A_Reg; \
                 jz      7f; \
-                callLQ  CALL(debug_illegal_bcd); \
+                CALL_FN(callLQ, debug_illegal_bcd, 0x4); \
 7:              testb   $0x80, %al; \
                 jz      8f; \
                 testb   $0x60, %al; \
                 jz      8f; \
-                callLQ  CALL(debug_illegal_bcd); \
+                CALL_FN(callLQ, debug_illegal_bcd, 0x4); \
 8:              testb   $0x08, %al; \
                 jz      9f; \
                 testb   $0x06, %al; \
                 jz      9f; \
-                callLQ  CALL(debug_illegal_bcd); \
+                CALL_FN(callLQ, debug_illegal_bcd, 0x4); \
 9:
 #else
 #define DebugBCDCheck
@@ -526,7 +529,7 @@
 
 // Decimal mode
 ENTRY(op_ADC_dec)
-                incb    SYM(cpu65_opcycles)         // +1 cycle
+                _2MEM(incb, cpu65_opcycles)         // +1 cycle
                 GetFromEA_B
                 DebugBCDCheck
                 bt      $C_Flag_Bit, AF_Reg_X
@@ -579,7 +582,7 @@ _daa_finish:    popq    _XBX
 
 #define maybe_DoADC_d \
                 testb   $D_Flag, F_Reg;  /* Decimal mode? */ \
-                jnz     CALL(op_ADC_dec) /* Yes, jump to decimal version */
+                JUMP_FN(jnz, op_ADC_dec) /* Yes, jump to decimal version */
 
 ENTRY(op_ADC_imm) // 0x69
                 GetImm
@@ -601,7 +604,7 @@ ENTRY(op_ADC_zpage_x) // 0x75
 
 // UNIMPLEMENTED : W65C02S datasheet
 ENTRY(op_ADC_zpage_y)
-                jmp CALL(op_NOP)
+                JUMP_FN(jmp, op_NOP)
 
 ENTRY(op_ADC_abs) // 0x6d
                 GetAbs
@@ -662,7 +665,7 @@ ENTRY(op_AND_zpage_x) // 0x35
 
 // UNIMPLEMENTED : W65C02S datasheet
 ENTRY(op_AND_zpage_y)
-                jmp CALL(op_NOP)
+                JUMP_FN(jmp, op_NOP)
 
 ENTRY(op_AND_abs) // 0x2d
                 GetAbs
@@ -931,8 +934,7 @@ ENTRY(op_BRK)
                 orb     $(B_Flag|X_Flag), F_Reg
                 xorw    %ax, %ax
                 movb    F_Reg, %al
-                SYMX_PROLOGUE(cpu65_flags_encode)
-                movb    SYMX(cpu65_flags_encode,_XAX,1), %al
+                MEM2REG_IND(movb,cpu65_flags_encode,_XAX,1,%al)
                 Push(%al)
                 orb     $I_Flag, F_Reg
                 movw    $0xFFFE, EffectiveAddr              // ROM interrupt vector
@@ -1020,7 +1022,7 @@ ENTRY(op_CMP_zpage_x) // 0xd5
 
 // UNIMPLEMENTED : W65C02S datasheet
 ENTRY(op_CMP_zpage_y)
-                jmp CALL(op_NOP)
+                JUMP_FN(jmp, op_NOP)
 
 ENTRY(op_CMP_abs) // 0xcd
                 GetAbs
@@ -1165,7 +1167,7 @@ ENTRY(op_EOR_zpage_x) // 0x55
 
 // UNIMPLEMENTED : W65C02S datasheet
 ENTRY(op_EOR_zpage_y)
-                jmp CALL(op_NOP)
+                JUMP_FN(jmp, op_NOP)
 
 ENTRY(op_EOR_abs) // 0x4d
                 GetAbs
@@ -1328,7 +1330,7 @@ ENTRY(op_LDA_zpage_x) // 0xb5
 
 // UNIMPLEMENTED : W65C02S datasheet
 ENTRY(op_LDA_zpage_y)
-                jmp CALL(op_NOP)
+                JUMP_FN(jmp, op_NOP)
 
 ENTRY(op_LDA_abs) // 0xad
                 GetAbs
@@ -1475,7 +1477,7 @@ ENTRY(op_ORA_zpage_x) // 0x15
 
 // UNIMPLEMENTED : W65C02S datasheet
 ENTRY(op_ORA_zpage_y)
-                jmp CALL(op_NOP)
+                JUMP_FN(jmp, op_NOP)
 
 ENTRY(op_ORA_abs) // 0x0d
                 GetAbs
@@ -1522,8 +1524,7 @@ ENTRY(op_PHA) // 0x48
 
 ENTRY(op_PHP) // 0x08
                 movb    F_Reg, %al
-                SYMX_PROLOGUE(cpu65_flags_encode)
-                movb    SYMX(cpu65_flags_encode,_XAX,1), %al
+                MEM2REG_IND(movb,cpu65_flags_encode,_XAX,1,%al)
                 Push(%al)
                 Continue
 
@@ -1566,12 +1567,11 @@ ENTRY(op_PLA) // 0x68
 
 ENTRY(op_PLP) // 0x28
                 Pop(%al)
-                SYMX_PROLOGUE(cpu65_flags_decode)
 #if __PIC__
-                movb    SYMX(cpu65_flags_decode,_XAX,1), %al
+                MEM2REG_IND(movb,cpu65_flags_decode,_XAX,1,%al)
                 movb    %al, F_Reg
 #else
-                movb    SYMX(cpu65_flags_decode,_XAX,1), F_Reg
+                MEM2REG_IND(movb,cpu65_flags_decode,_XAX,1,F_Reg)
 #endif
                 orb     $(B_Flag|X_Flag), F_Reg
                 Continue
@@ -1668,12 +1668,11 @@ ENTRY(op_ROR_abs_x) // 0x7e
 
 ENTRY(op_RTI) // 0x40
                 Pop(%al)
-                SYMX_PROLOGUE(cpu65_flags_decode)
 #if __PIC__
-                movb    SYMX(cpu65_flags_decode,_XAX,1), %al
+                MEM2REG_IND(movb,cpu65_flags_decode,_XAX,1,%al)
                 movb    %al, F_Reg
 #else
-                movb    SYMX(cpu65_flags_decode,_XAX,1), F_Reg
+                MEM2REG_IND(movb,cpu65_flags_decode,_XAX,1,F_Reg)
 #endif
                 orb     $(B_Flag|X_Flag), F_Reg
                 Pop(%al)
@@ -1710,7 +1709,7 @@ ENTRY(op_RTS) // 0x60
    ---------------------------------- */
 
 ENTRY(op_SBC_dec)
-                incb    SYM(cpu65_opcycles)         // +1 cycle
+                _2MEM(incb, cpu65_opcycles)         // +1 cycle
                 GetFromEA_B
                 DebugBCDCheck
                 bt      $C_Flag_Bit, AF_Reg_X
@@ -1768,7 +1767,7 @@ _das_finish:    popq    _XBX
 
 #define maybe_DoSBC_d \
                 testb   $D_Flag, F_Reg;  /* Decimal mode? */ \
-                jnz     CALL(op_SBC_dec) /* Yes, jump to decimal version */
+                JUMP_FN(jnz, op_SBC_dec) /* Yes, jump to decimal version */
 
 ENTRY(op_SBC_imm) // 0xe9
                 GetImm
@@ -1790,7 +1789,7 @@ ENTRY(op_SBC_zpage_x) // 0xf5
 
 // UNIMPLEMENTED : W65C02S datasheet
 ENTRY(op_SBC_zpage_y)
-                jmp CALL(op_NOP)
+                JUMP_FN(jmp, op_NOP)
 
 ENTRY(op_SBC_abs) // 0xed
                 GetAbs
@@ -1898,7 +1897,7 @@ ENTRY(op_STA_zpage_x) // 0x95
 
 // UNIMPLEMENTED : W65C02S datasheet
 ENTRY(op_STA_zpage_y)
-                jmp CALL(op_NOP)
+                JUMP_FN(jmp, op_NOP)
 
 ENTRY(op_STA_abs) // 0x8d
                 GetAbs
@@ -2150,20 +2149,19 @@ ENTRY(op_WAI_65c02)
    ------------------------------------------------------------------------- */
 
 continue:
-                movzbLQ SYM(cpu65_opcode), _XAX
-                SYMX_PROLOGUE(cpu65__opcycles)
-                movb    SYMX(cpu65__opcycles,_XAX,1), %al
-                addb    SYM(cpu65_opcycles), %al
-                movb    %al, SYM(cpu65_opcycles)
+                MEM2REG(movzbLQ, cpu65_opcode, _XAX)
+                MEM2REG_IND(movb,cpu65__opcycles,_XAX,1,%al)
+                MEM2REG(addb, cpu65_opcycles, %al)
+                REG2MEM(movb, %al, cpu65_opcycles)
                 TRACE_EPILOGUE
-                addl    %eax, SYM(cpu65_cycle_count)
-                subl    %eax, SYM(gc_cycles_timer_0)
-                subl    %eax, SYM(gc_cycles_timer_1)
-                subl    %eax, SYM(cpu65_cycles_to_execute)
+                REG2MEM(addl, %eax, cpu65_cycle_count)
+                REG2MEM(subl, %eax, gc_cycles_timer_0)
+                REG2MEM(subl, %eax, gc_cycles_timer_1)
+                REG2MEM(subl, %eax, cpu65_cycles_to_execute)
                 jle     exit_cpu65_run
 
 continue1:      xorLQ   _XAX, _XAX
-                orb     SYM(cpu65__signal), %al
+                MEM2REG(orb, cpu65__signal, %al)
                 jnz     exception
                 JumpNextInstruction
 
@@ -2173,12 +2171,12 @@ continue1:      xorLQ   _XAX, _XAX
 
 exception:      testb   $ResetSig, %al
                 jz      ex_irq
-                testb   $0xff, SYM(joy_button0)             // OpenApple
+                REG2MEM(testb, $0xff, joy_button0)             // OpenApple
                 jnz     exit_reinit
-                testb   $0xff, SYM(joy_button1)             // ClosedApple
+                REG2MEM(testb, $0xff, joy_button1)             // ClosedApple
                 jnz     exit_reinit
 
-ex_reset:       movb    $0, SYM(cpu65__signal)
+ex_reset:       REG2MEM(movb, $0, cpu65__signal)
                 movw    $0xFFFC, EffectiveAddr              // ROM reset vector
                 GetFromEA_W
                 movw    %ax, PC_Reg
@@ -2200,8 +2198,7 @@ ex_irq:         testb   $I_Flag, F_Reg                      // Already interrupt
                 orb     $X_Flag, F_Reg
                 xorw    %ax, %ax
                 movb    F_Reg, %al
-                SYMX_PROLOGUE(cpu65_flags_encode)
-                movb    SYMX(cpu65_flags_encode,_XAX,1), %al
+                MEM2REG_IND(movb,cpu65_flags_encode,_XAX,1,%al)
                 Push(%al)
                 orb     $(B_Flag | I_Flag), F_Reg
                 //andb    $~D_Flag, F_Reg // AppleWin clears Decimal bit?
@@ -2221,34 +2218,43 @@ ENTRY(cpu65_run)
                 pushLQ  _XDI
                 pushLQ  _XSI
                 pushLQ  _XBX
-#ifdef __LP64__
+#if __LP64__
                 // NOTE: should we be also preserving r12-r15?
 #endif
 
+#if __PIC__ && __i386__
+                calll   .Lget_pc_thunk0
+.Lget_pc_thunk0:
+                _POP_PICREG()
+.Lget_pc_thunk1:
+                addl    $_GLOBAL_OFFSET_TABLE_+(.Lget_pc_thunk1 - .Lget_pc_thunk0), _PICREG
+                pushl   _PICREG
+#endif
 
                 // Restore CPU state when being called from C.
-                movzwLQ SYM(cpu65_ea), EffectiveAddr_X
-                movzwLQ SYM(cpu65_pc), PC_Reg_X
-                movzbLQ SYM(cpu65_a), AF_Reg_X
-                movzbLQ SYM(cpu65_f), _XAX
-                SYMX_PROLOGUE(cpu65_flags_decode)
+                MEM2REG(movzwLQ, cpu65_ea, EffectiveAddr_X)
+                MEM2REG(movzwLQ, cpu65_pc, PC_Reg_X)
+                MEM2REG(movzbLQ, cpu65_a, AF_Reg_X)
+                MEM2REG(movzbLQ, cpu65_x, XY_Reg_X)
+                MEM2REG(movzbLQ, cpu65_f, _XAX)
 #if __PIC__
-                movb    SYMX(cpu65_flags_decode,_XAX,1), %al
+                MEM2REG_IND(movb,cpu65_flags_decode,_XAX,1,%al)
                 movb    %al, F_Reg
+                MEM2REG(movb, cpu65_y, %al)
+                movb    %al, Y_Reg
 #else
-                movb    SYMX(cpu65_flags_decode,_XAX,1), F_Reg
+                MEM2REG_IND(movb,cpu65_flags_decode,_XAX,1,F_Reg)
+                MEM2REG(movb, cpu65_y, Y_Reg)
 #endif
-                movzbLQ SYM(cpu65_x), XY_Reg_X
-                movb    SYM(cpu65_y), Y_Reg
-                movzbLQ SYM(cpu65_sp), SP_Reg_X
+                MEM2REG(movzbLQ, cpu65_sp, SP_Reg_X)
 #ifdef APPLE2_VM
                 RestoreAltZP
 #endif
-                cmpb    $0, SYM(emul_reinitialize)
+                REG2MEM(cmpb, $0, emul_reinitialize)
                 jnz     enter_reinit
                 jmp     continue1
 
-enter_reinit:   movb    $0, SYM(emul_reinitialize)
+enter_reinit:   REG2MEM(movb, $0, emul_reinitialize)
                 jmp     ex_reset
 
 /* -------------------------------------------------------------------------
@@ -2257,16 +2263,18 @@ enter_reinit:   movb    $0, SYM(emul_reinitialize)
 
 exit_cpu65_run:
                 // Save CPU state when returning from being called from C
-                movw    PC_Reg, SYM(cpu65_pc)
+                REG2MEM(movw, PC_Reg, cpu65_pc)
                 CommonSaveCPUState
+                _POP_PICREG()
                 popLQ   _XBX
                 popLQ   _XSI
                 popLQ   _XDI
                 popLQ   _XBP
                 ret
 
-exit_reinit:    movb    $0, SYM(cpu65__signal)
-                movb    $1, SYM(emul_reinitialize)
+exit_reinit:    REG2MEM(movb, $0, cpu65__signal)
+                REG2MEM(movb, $1, emul_reinitialize)
+                _POP_PICREG()
                 popLQ   _XBX
                 popLQ   _XSI
                 popLQ   _XDI
@@ -2281,8 +2289,7 @@ ENTRY(cpu65_direct_write)
                 pushLQ  EffectiveAddr_X
                 movLQ   8(_XSP),EffectiveAddr_X
                 movLQ   12(_XSP),_XAX
-                SYMX_PROLOGUE(cpu65_vmem_w)
-                callLQ  *SYMX(cpu65_vmem_w,EffectiveAddr_X,SZ_PTR)
+                CALL_IND(cpu65_vmem_w,EffectiveAddr_X,SZ_PTR)
                 popLQ   EffectiveAddr_X
                 ret
 

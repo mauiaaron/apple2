@@ -68,7 +68,7 @@ apple2ix_SOURCES = src/font.c src/rom.c src/misc.c src/display.c src/vm.c \
 
 apple2ix_CFLAGS = @AM_CFLAGS@ @X_CFLAGS@
 apple2ix_CCASFLAGS = $(apple2ix_CFLAGS)
-apple2ix_LDFLAGS =
+apple2ix_LDFLAGS = -Wl,-z,noexecstack
 apple2ix_LDADD = @ASM_O@ @VIDEO_O@ @AUDIO_O@ @META_O@ @X_LIBS@
 apple2ix_DEPENDENCIES = @ASM_O@ @VIDEO_O@ @AUDIO_O@ @META_O@
 
