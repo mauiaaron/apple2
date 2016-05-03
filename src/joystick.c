@@ -284,9 +284,15 @@ void c_joystick_reset(void)
         joydriver_resetJoystick();
     }
 
+#if TESTING
+    // For "testdisk" determinism, these need to be reset immediately
+    joy_button0 = 0x0;
+    joy_button1 = 0x0;
+#else
     pthread_t pid;
     pthread_create(&pid, NULL, (void *)&_joystick_resetDelayed, (void *)NULL);
     pthread_detach(pid);
+#endif
 
     joy_x = HALF_JOY_RANGE;
     joy_y = HALF_JOY_RANGE;
