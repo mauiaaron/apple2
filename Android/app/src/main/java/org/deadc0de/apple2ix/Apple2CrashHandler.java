@@ -127,6 +127,18 @@ public class Apple2CrashHandler {
             public final String getTitle(Apple2Activity activity) {
                 return activity.getResources().getString(R.string.crash_stackbuf_overflow);
             }
+        },
+        SIGABRT {
+            @Override
+            public final String getTitle(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.crash_sigabrt);
+            }
+        },
+        SIGFPE {
+            @Override
+            public final String getTitle(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.crash_sigfpe);
+            }
         };
 
 

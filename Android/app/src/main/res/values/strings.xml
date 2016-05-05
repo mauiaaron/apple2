@@ -9,6 +9,8 @@
     <string name="crasher_title">Crash emulator</string>
     <string name="crash_null">NULL-deref</string>
     <string name="crash_java_npe">Java NPE</string>
+    <string name="crash_sigabrt">SIGABRT</string>
+    <string name="crash_sigfpe">SIGFPE</string>
     <string name="crash_stackcall_overflow">stack call overflow</string>
     <string name="crash_stackbuf_overflow">stack buffer overflow</string>
 
