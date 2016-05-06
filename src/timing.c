@@ -441,9 +441,13 @@ static void *cpu_thread(void *dummyptr) {
 
             if (!is_fullspeed) {
                 deltat = timespec_diff(ti, tj, &negative);
-                assert(!negative);
+                if (negative) {
+                    // 2016/05/05 : crash report from the wild on Android if we assert(!negative)
+                    LOG("WHOA... time went backwards! Did you just cross a timezone?");
+                    deltat.tv_sec = 1;
+                }
                 long sleepfor = 0;
-                if (!deltat.tv_sec)
+                if (LIKELY(!deltat.tv_sec))
                 {
                     sleepfor = EXECUTION_PERIOD_NSECS - drift_adj_nsecs - deltat.tv_nsec;
                 }
