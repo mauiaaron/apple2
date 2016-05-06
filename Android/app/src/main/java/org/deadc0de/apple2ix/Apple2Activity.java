@@ -254,7 +254,7 @@ public class Apple2Activity extends Activity {
         synchronized (this) {
             dismissAllMenus();
             dismissAllMenus(); // 2nd time should full exit calibration mode (if present)
-            nativeEmulationPause();
+            pauseEmulation();
         }
 
         mPausing.set(false);
