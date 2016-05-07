@@ -163,7 +163,7 @@ public class Apple2KeyboardSettingsMenu extends Apple2AbstractMenu {
                 return _sliderView(activity, this, Apple2Preferences.ALPHA_SLIDER_NUM_CHOICES, new IPreferenceSlider() {
                     @Override
                     public void saveInt(int progress) {
-                        Apple2Preferences.setJSONPref(self, progress / Apple2Preferences.ALPHA_SLIDER_NUM_CHOICES);
+                        Apple2Preferences.setJSONPref(self, (float) progress / Apple2Preferences.ALPHA_SLIDER_NUM_CHOICES);
                     }
 
                     @Override
