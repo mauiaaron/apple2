@@ -68,6 +68,7 @@
 #define PREF_GLYPH_MULTIPLIER "glyphMultiplier"
 #define PREF_KEYBOARD_CAPS "caps"
 #define PREF_KEYBOARD_ALT_PATH "altPath"
+#define PREF_KEYBOARD_VARIANT "variant"
 #define PREF_LOWERCASE_ENABLED "lowercaseEnabled"
 #define PREF_PORTRAIT_HEIGHT_SCALE "portraitHeightScale"
 #define PREF_PORTRAIT_POSITION_SCALE "portraitPositionScale"

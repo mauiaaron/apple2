@@ -41,6 +41,14 @@
 #define KBD_OBJ_W GL_MODEL_MAX // model width fits screen
 #define KBD_OBJ_H_LANDSCAPE GL_MODEL_MAX
 
+typedef enum keyboard_variant_t {
+    KBD_VARIANT_DEFAULT=0,
+    KBD_VARIANT_LOWERCASE,
+    KBD_VARIANT_SYMBOLS,
+    KBD_VARIANT_USERALT,
+} keyboard_variant_t;
+#define KBD_VARIANT_UPPERCASE KBD_VARIANT_DEFAULT
+
 static bool isAvailable = false; // Were there any OpenGL/memory errors on gltouchkbd initialization?
 static bool ownsScreen = false;  // Does the touchkbd currently own the screen to the exclusion?
 static bool isCalibrating = false;  // Are we in calibration mode?
@@ -317,11 +325,13 @@ static inline int64_t _tap_key_at_point(float x, float y) {
     switch (key) {
         case ICONTEXT_LOWERCASE:
             key = 0;
+            prefs_setLongValue(PREF_DOMAIN_KEYBOARD, PREF_KEYBOARD_VARIANT, KBD_VARIANT_LOWERCASE);
             _switch_keyboard(kbd.model, kbdTemplateLCase[0]);
             break;
 
         case ICONTEXT_UPPERCASE:
             key = 0;
+            prefs_setLongValue(PREF_DOMAIN_KEYBOARD, PREF_KEYBOARD_VARIANT, KBD_VARIANT_UPPERCASE);
             _switch_keyboard(kbd.model, kbdTemplateUCase[0]);
             break;
 
@@ -332,6 +342,7 @@ static inline int64_t _tap_key_at_point(float x, float y) {
             } else {
                 kbdTemplateAlt[CTRLROW][SWITCHCOL] = ICONTEXT_UPPERCASE;
             }
+            prefs_setLongValue(PREF_DOMAIN_KEYBOARD, PREF_KEYBOARD_VARIANT, KBD_VARIANT_SYMBOLS);
             _switch_keyboard(kbd.model, kbdTemplateAlt[0]);
             break;
 
@@ -390,6 +401,7 @@ static inline int64_t _tap_key_at_point(float x, float y) {
 
         case ICONTEXT_MENU_SPROUT:
             key = 0;
+            prefs_setLongValue(PREF_DOMAIN_KEYBOARD, PREF_KEYBOARD_VARIANT, KBD_VARIANT_USERALT);
             _switch_keyboard(kbd.model, kbdTemplateUserAlt[0]);
             break;
 
@@ -476,7 +488,26 @@ static void *_create_touchkbd_hud(GLModel *parent) {
     hudKeyboard->tpl = MALLOC(size);
     hudKeyboard->pixels = MALLOC(KBD_FB_WIDTH * KBD_FB_HEIGHT);
 
-    memcpy(hudKeyboard->tpl, kbdTemplateUCase[0], sizeof(kbdTemplateUCase/* assuming all the same dimensions */));
+    uint8_t *template = NULL;
+    long lVal = 0;
+    keyboard_variant_t variant = prefs_parseLongValue(PREF_DOMAIN_KEYBOARD, PREF_KEYBOARD_VARIANT, &lVal, /*base:*/10) ? lVal : KBD_VARIANT_DEFAULT;
+    switch (variant) {
+        case KBD_VARIANT_DEFAULT:
+        default:
+            template = kbdTemplateUCase[0];
+            break;
+        case KBD_VARIANT_SYMBOLS:
+            template = kbdTemplateAlt[0];
+            break;
+        case KBD_VARIANT_USERALT:
+            template = kbdTemplateUserAlt[0];
+            break;
+        case KBD_VARIANT_LOWERCASE:
+            template = allowLowercase ? kbdTemplateLCase[0] : kbdTemplateUCase[0];
+            break;
+    }
+
+    memcpy(hudKeyboard->tpl, template, sizeof(kbdTemplateUCase/* assuming all the same dimensions */));
 
     // setup normal color pixels
     hudKeyboard->colorScheme = RED_ON_BLACK;
