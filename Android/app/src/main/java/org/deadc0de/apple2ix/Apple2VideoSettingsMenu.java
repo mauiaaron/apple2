@@ -224,11 +224,14 @@ public class Apple2VideoSettingsMenu extends Apple2AbstractMenu {
             return _basicView(activity, this, convertView);
         }
 
-        public static void applyLandscapeMode(final Apple2Activity activity) {
+        public static boolean applyLandscapeMode(final Apple2Activity activity) {
             if ((boolean) Apple2Preferences.getJSONPref(SETTINGS.LANDSCAPE_MODE)) {
                 activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
+                return false;
             } else {
+                int orientation = activity.getRequestedOrientation();
                 activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+                return orientation != ActivityInfo.SCREEN_ORIENTATION_PORTRAIT;
             }
         }
 

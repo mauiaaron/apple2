@@ -51,6 +51,7 @@ public class Apple2Activity extends Activity {
     private ArrayList<AlertDialog> mAlertDialogs = new ArrayList<AlertDialog>();
 
     private AtomicBoolean mPausing = new AtomicBoolean(false);
+    private AtomicBoolean mSwitchingToPortrait = new AtomicBoolean(false);
 
     // non-null if we failed to load/link the native code ... likely we are running on some bizarre 'droid variant
     private static Throwable sNativeBarfedThrowable = null;
@@ -131,14 +132,20 @@ public class Apple2Activity extends Activity {
         // NOTE: ordering here is important!
         Apple2Preferences.load(this);
         final boolean firstTime = Apple2Preferences.migrate(this);
-        Apple2VideoSettingsMenu.SETTINGS.applyLandscapeMode(this);
+        mSwitchingToPortrait.set(false);
+        boolean switchingToPortrait = Apple2VideoSettingsMenu.SETTINGS.applyLandscapeMode(this);
         Apple2Preferences.sync(this, null);
 
         Apple2DisksMenu.insertDisk((String) Apple2Preferences.getJSONPref(Apple2DisksMenu.SETTINGS.CURRENT_DISK_PATH_A), /*driveA:*/true, (boolean) Apple2Preferences.getJSONPref(Apple2DisksMenu.SETTINGS.CURRENT_DISK_PATH_A_RO));
         Apple2DisksMenu.insertDisk((String) Apple2Preferences.getJSONPref(Apple2DisksMenu.SETTINGS.CURRENT_DISK_PATH_B), /*driveA:*/false, (boolean) Apple2Preferences.getJSONPref(Apple2DisksMenu.SETTINGS.CURRENT_DISK_PATH_B_RO));
 
         showSplashScreen(!firstTime);
-        Apple2CrashHandler.getInstance().checkForCrashes(this);
+
+        // Is there a way to persist the user orientation setting such that we launch in the previously set orientation and avoid  get multiple onCreate() onResume()?! ... Android lifecycle edge cases are so damn kludgishly annoying ...
+        mSwitchingToPortrait.set(switchingToPortrait);
+        if (!switchingToPortrait) {
+            Apple2CrashHandler.getInstance().checkForCrashes(this);
+        }
 
         boolean extperm = true;
         if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -223,7 +230,9 @@ public class Apple2Activity extends Activity {
 
         Log.d(TAG, "onResume()");
         showSplashScreen(/*dismissable:*/true);
-        Apple2CrashHandler.getInstance().checkForCrashes(this); // NOTE : needs to be called again to clean-up
+        if (!mSwitchingToPortrait.get()) {
+            Apple2CrashHandler.getInstance().checkForCrashes(this); // NOTE : needs to be called again to clean-up
+        }
     }
 
     @Override
