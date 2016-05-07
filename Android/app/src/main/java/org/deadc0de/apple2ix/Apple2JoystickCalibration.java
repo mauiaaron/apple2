@@ -24,7 +24,7 @@ public class Apple2JoystickCalibration implements Apple2MenuView {
 
     private final static String TAG = "Apple2JoystickCalibration";
 
-    private final static int JOYSTICK_DIVIDER_NUM_CHOICES = Apple2Preferences.DECENT_AMOUNT_OF_CHOICES;
+    public final static int JOYSTICK_DIVIDER_NUM_CHOICES = Apple2Preferences.DECENT_AMOUNT_OF_CHOICES;
     public final static String PREF_SCREEN_DIVISION = "screenDivider";
 
     private Apple2Activity mActivity = null;

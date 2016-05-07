@@ -23,7 +23,7 @@ public class Apple2KeypadSettingsMenu extends Apple2AbstractMenu {
 
     private final static String TAG = "Apple2KeypadSettingsMenu";
 
-    private final static int KEYREPEAT_NUM_CHOICES = Apple2Preferences.DECENT_AMOUNT_OF_CHOICES;
+    public final static int KEYREPEAT_NUM_CHOICES = Apple2Preferences.DECENT_AMOUNT_OF_CHOICES;
 
     public final static String PREF_KPAD_ROSETTE_CHAR_ARRAY = "kpAxisRosetteChars";
     public final static String PREF_KPAD_ROSETTE_SCAN_ARRAY = "kpAxisRosetteScancodes";

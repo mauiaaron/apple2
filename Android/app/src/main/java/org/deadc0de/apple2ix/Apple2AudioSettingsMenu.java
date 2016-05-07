@@ -23,7 +23,7 @@ public class Apple2AudioSettingsMenu extends Apple2AbstractMenu {
 
     private final static String TAG = "Apple2AudioSettingsMenu";
 
-    private final static int AUDIO_LATENCY_NUM_CHOICES = Apple2Preferences.DECENT_AMOUNT_OF_CHOICES;
+    public final static int AUDIO_LATENCY_NUM_CHOICES = Apple2Preferences.DECENT_AMOUNT_OF_CHOICES;
 
     private static int sSampleRateCanary = 0;
 
