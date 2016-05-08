@@ -60,7 +60,7 @@ static void _start_tests(void) {
     // Currently this test is the only one that runs as a black screen
     extern int test_cpu(int, char *[]);
     test_cpu(local_argc, local_argv);
-    tkill(getpid(), SIGKILL); // and we're done ...
+    kill(getpid(), SIGKILL); // and we're done ...
 #elif TEST_VM
     extern void test_vm(int, char *[]);
     test_vm(local_argc, local_argv);
