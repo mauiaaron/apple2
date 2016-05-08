@@ -39,7 +39,6 @@
     <string name="disk_show_operation">Zeige Disk ][ Aktivität</string>
     <string name="disk_show_operation_summary">Zeigt wenn die Laufwerke lesen oder schreiben</string>
     <string name="emulation_continue">Fortsetzen…</string>
-    <string name="emulation_settings">Einstellungen…</string>
     <string name="emulation_disks">Lade Disk-Image…</string>
     <string name="header_disks">Diskette einlegen:</string>
     <string name="input_current">Aktuelles Touch Device</string>
@@ -169,5 +168,11 @@
     <string name="portrait_calibrate_keyboard_height">Keyboard height</string>
     <string name="portrait_calibrate_keyboard_position">Keyboard position</string>
     <string name="portrait_calibrate_summary">Adjust keyboard size, framebuffer position, etc</string>
+    <string name="crash_sigabrt">SIGABRT</string>
+    <string name="crash_sigfpe">SIGFPE</string>
+    <string name="reset">Reset</string>
+    <string name="reset_preferences">Reset settings</string>
+    <string name="reset_self_test">Self Test</string>
+    <string name="reset_soft">Soft</string>
 
 </resources>

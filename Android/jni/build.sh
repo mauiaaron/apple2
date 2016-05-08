@@ -131,7 +131,7 @@ if test "x$do_build" = "x1" -o "x$do_release" = "x1" ; then
         fi
     else
         export BUILD_MODE=release
-        ndk-build V=1 NDK_MODULE_PATH=. NDK_TOOLCHAIN_VERSION=4.9
+        ndk-build V=1 NDK_MODULE_PATH=. NDK_DEBUG=0 NDK_TOOLCHAIN_VERSION=4.9
         ret=$?
         if test "x$ret" != "x0" ; then
             exit $ret
