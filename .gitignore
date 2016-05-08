@@ -78,7 +78,6 @@ Android/jni/Android.mk
 
 # Android Studio
 .gradle
-Android/app/app.iml
 Android/local.properties
 Android/.idea/workspace.xml
 Android/.idea/libraries
