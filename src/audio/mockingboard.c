@@ -2373,8 +2373,8 @@ unsigned long MB_SetSnapshot(SS_CARD_MOCKINGBOARD* pSS, unsigned long dwSlot_unu
 // ----------------------------------------------------------------------------
 
 static void mb_prefsChanged(const char *domain) {
-    long goesToTen = 0;
-    prefs_parseLongValue(domain, PREF_MOCKINGBOARD_VOLUME, &goesToTen, /*base:*/10); // expected range 0-10
+    long lVal = 0;
+    long goesToTen = prefs_parseLongValue(domain, PREF_MOCKINGBOARD_VOLUME, &lVal, /*base:*/10) ? lVal : 5; // expected range 0-10
     if (goesToTen < 0) {
         goesToTen = 0;
     }
