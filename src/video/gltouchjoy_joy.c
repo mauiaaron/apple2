@@ -158,9 +158,13 @@ static void *_button_tap_delayed_thread(void *dummyptr) {
                 joys.buttonDrawCallback(touchPrevEvent->currButtonDisplayChar);
                 timedOut = 0;
                 break;
+            } else if (touchCurrEvent->event == TOUCH_DOWN) {
+                LOG("WHOA : unexpected touch down, are you spamming the touchscreen?!");
+                FREE(touchPrevEvent);
+                touchPrevEvent = touchCurrEvent;
+                continue;
             } else {
-                LOG("OOPS : unexpected touch event : %d", touchCurrEvent->event);
-                assert(false);
+                __builtin_unreachable();
             }
         }
 
