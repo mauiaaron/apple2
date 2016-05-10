@@ -60,6 +60,9 @@ public class Apple2KeypadChooser implements Apple2MenuView {
 
         String asciiStr = asciiRepresentation(ascii);
         Log.d(TAG, "ascii:'" + asciiStr + "' scancode:" + scancode);
+        if (ascii == ' ') {
+            ascii = Apple2KeyboardSettingsMenu.ICONTEXT_VISUAL_SPACE;
+        }
         mChooserState.setKey(mActivity, ascii, scancode);
         Apple2Preferences.setJSONPref(Apple2SettingsMenu.SETTINGS.CURRENT_INPUT, Apple2SettingsMenu.TouchDeviceVariant.JOYSTICK_KEYPAD.ordinal());
         Apple2Preferences.sync(mActivity, Apple2Preferences.PREF_DOMAIN_TOUCHSCREEN);
