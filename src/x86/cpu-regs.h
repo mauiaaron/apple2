@@ -194,7 +194,7 @@
 #       define  _GOT_PRE(sym,reg)       movl _A2_PIC_GOT(%esp), reg; \
                                         movl _UNDER(sym)@GOT(reg), reg;
 
-#       define  CALL_IND0(fn)           _GOT_PRE(fn, _PICREG); calll *_PICREG;
+#       define  CALL_IND0(fn)           _GOT_PRE(fn, _PICREG); calll *(_PICREG);
 
 #       define  CALL_IND(sym,off,sz)    _GOT_PRE(sym,_PICREG); calll *(_PICREG,off,sz);
 
