@@ -158,7 +158,7 @@
     glGetRenderbufferParameteriv(GL_RENDERBUFFER, GL_RENDERBUFFER_WIDTH, &backingWidth);
     glGetRenderbufferParameteriv(GL_RENDERBUFFER, GL_RENDERBUFFER_HEIGHT, &backingHeight);
     
-    video_reshape((int)backingWidth, (int)backingHeight, /*landscape:*/true); // TODO : portrait is possible
+    //video_reshape((int)backingWidth, (int)backingHeight, /*landscape:*/true); // TODO : portrait is possible
     
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
     {
@@ -259,22 +259,22 @@ static inline void _handleTouch(EAGLView *self, SEL _cmd, UITouch *touch, interf
         {
             if ((flags & TOUCH_FLAGS_KBD) != 0)
             {
-                keydriver_setTouchKeyboardOwnsScreen(true);
-                joydriver_setTouchJoystickOwnsScreen(false);
+                //keydriver_setTouchKeyboardOwnsScreen(true);
+                //joydriver_setTouchJoystickOwnsScreen(false);
                 video_animations->animation_showTouchKeyboard();
             }
             else if ((flags & TOUCH_FLAGS_JOY) != 0)
             {
-                keydriver_setTouchKeyboardOwnsScreen(false);
-                joydriver_setTouchJoystickOwnsScreen(true);
-                joydriver_setTouchVariant(EMULATED_JOYSTICK);
+                //keydriver_setTouchKeyboardOwnsScreen(false);
+                //joydriver_setTouchJoystickOwnsScreen(true);
+                //joydriver_setTouchVariant(EMULATED_JOYSTICK);
                 video_animations->animation_showTouchJoystick();
             }
             else if ((flags & TOUCH_FLAGS_JOY_KPAD) != 0)
             {
-                keydriver_setTouchKeyboardOwnsScreen(false);
-                joydriver_setTouchJoystickOwnsScreen(true);
-                joydriver_setTouchVariant(EMULATED_KEYPAD);
+                //keydriver_setTouchKeyboardOwnsScreen(false);
+                //joydriver_setTouchJoystickOwnsScreen(true);
+                //joydriver_setTouchVariant(EMULATED_KEYPAD);
                 video_animations->animation_showTouchJoystick();
             }
             else
