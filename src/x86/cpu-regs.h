@@ -129,7 +129,7 @@
 
 #define ENTRY(x)                        .globl _UNDER(x); .balign 16; _UNDER(x)##:
 
-#if !__PIC__
+#if !__PIC__ || (__APPLE__ && !__LP64__)
 
 // For non-Position Independent Code, the assembly is relatively simple...
 
@@ -161,7 +161,7 @@
 #       define  REG2MEM(op,x,sym)       op   x, _UNDER(sym)(%rip) // op register-to-memory
 #       define  MEM2REG(op,sym,x)       op   _UNDER(sym)(%rip), x // op memory-to-register
 #   elif __LP64__
-#       define  _AT_PLT @PLT
+#       define  _AT_PLT                 @PLT
 #       define  _LEA(sym)               movq _UNDER(sym)@GOTPCREL(%rip), _X8
 #       define  CALL_IND0(fn)           callq *_UNDER(fn)_AT_PLT
 #       define  _2MEM(op,sym)           _LEA(sym); op (_X8)    // op to-memory

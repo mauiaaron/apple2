@@ -16,7 +16,7 @@
 #include "cpu-regs.h"
 #include "vm.h"
 
-#if !__PIC__
+#if !__PIC__ || (__APPLE__ && !__LP64__)
 #   define SAVE_Y_REG() \
                 REG2MEM(movb, Y_Reg, cpu65_y)
 #   define _POP_PICREG()
@@ -2222,7 +2222,7 @@ ENTRY(cpu65_run)
                 // NOTE: should we be also preserving r12-r15?
 #endif
 
-#if __PIC__ && __i386__
+#if __PIC__ && __i386__ && !__APPLE__
                 calll   .Lget_pc_thunk0
 .Lget_pc_thunk0:
                 _POP_PICREG()
