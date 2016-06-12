@@ -39,7 +39,7 @@ public class Apple2Utils {
 
     private static String sDataDir = null;
     private static File sExternalFilesDir = null;
-    private static File sDownloadFilesDir = null;
+    private static File sRealExternalFilesDir = null;
 
     public static boolean readEntireFile(File file, StringBuilder fileData) {
         final int maxAttempts = 5;
@@ -109,17 +109,17 @@ public class Apple2Utils {
             }
 
             String storageState = Environment.getExternalStorageState();
-            if (!storageState.equals(Environment.MEDIA_MOUNTED)) {
-                // 2015/10/28 : do not expose sExternalFilesDir/sDownloadFilesDir unless they are writable
+            if (!Environment.MEDIA_MOUNTED.equals(storageState)) {
+                // 2015/10/28 : do not expose sExternalFilesDir unless it is writable
                 break;
             }
 
-            File externalStorageDir = Environment.getExternalStorageDirectory();
-            if (externalStorageDir == null) {
+            File realExternalStorageDir = Environment.getExternalStorageDirectory();
+            if (realExternalStorageDir == null) {
                 break;
             }
 
-            File externalDir = new File(externalStorageDir, "apple2ix"); // /sdcard/apple2ix
+            File externalDir = new File(realExternalStorageDir, "apple2ix"); // /sdcard/apple2ix
             if (!externalDir.exists()) {
                 boolean made = externalDir.mkdirs();
                 if (!made) {
@@ -129,15 +129,15 @@ public class Apple2Utils {
             }
 
             sExternalFilesDir = externalDir;
-            sDownloadFilesDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+            sRealExternalFilesDir = realExternalStorageDir;
         } while (false);
 
         return sExternalFilesDir;
     }
 
-    public static File getDownloadsDirectory(Apple2Activity activity) {
+    public static File getRealExternalStorageDirectory(Apple2Activity activity) {
         getExternalStorageDirectory(activity);
-        return sDownloadFilesDir;
+        return sRealExternalFilesDir;
     }
 
         // HACK NOTE 2015/02/22 : Apparently native code cannot easily access stuff in the APK ... so copy various resources

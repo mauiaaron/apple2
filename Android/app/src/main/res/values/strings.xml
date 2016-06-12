@@ -170,6 +170,7 @@
     <string name="settings_advanced_summary">Warning: these settings may degrade performance</string>
     <string name="settings_advanced_joystick">Advanced joystick/keypad settings</string>
     <string name="settings_advanced_joystick_summary">Advanced settings and performance tuning</string>
+    <string name="storage">/storage/</string>
     <string name="touch_menu_enable">Enable touch menus</string>
     <string name="touch_menu_enable_summary">Enables soft menu buttons in top screen corners</string>
     <string name="video_configure">Configure video…</string>

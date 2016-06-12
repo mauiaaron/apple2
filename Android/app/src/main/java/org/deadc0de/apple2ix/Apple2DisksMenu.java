@@ -338,14 +338,17 @@ public class Apple2DisksMenu implements Apple2MenuView {
         disksList.setEnabled(true);
 
         String disksDir = pathStackAsDirectory();
-        boolean isRootPath = false;
-        if (disksDir == null) {
-            isRootPath = true;
+        final boolean isRootPath = (disksDir == null);
+        final File extStorageDir = Apple2Utils.getExternalStorageDirectory(mActivity);
+        if (isRootPath) {
             disksDir = Apple2Utils.getDataDir(mActivity) + File.separator + "disks"; // default path
         }
 
-        File dir = new File(disksDir);
+        while (disksDir.charAt(disksDir.length() - 1) == File.separatorChar) {
+            disksDir = disksDir.substring(0, disksDir.length() - 1);
+        }
 
+        File dir = new File(disksDir);
         final File[] files = dir.listFiles(new FilenameFilter() {
             public boolean accept(File dir, String name) {
                 name = name.toLowerCase();
@@ -370,29 +373,40 @@ public class Apple2DisksMenu implements Apple2MenuView {
 
         Arrays.sort(files);
 
-        File extStorageDir = Apple2Utils.getExternalStorageDirectory(mActivity);
-        File downloadsDir = Apple2Utils.getDownloadsDirectory(mActivity);
+        final File realExtStorageDir = Apple2Utils.getRealExternalStorageDirectory(mActivity);
+        final boolean isStoragePath = !isRootPath && (realExtStorageDir != null) && disksDir.equalsIgnoreCase(realExtStorageDir.getAbsolutePath());
+        if (isStoragePath) {
+            // promote apple2ix directory to top of list
+            for (int i = 0; i < files.length; i++) {
+                if (files[i].getName().equals("apple2ix")) {
+                    if (i > 0) {
+                        System.arraycopy(/*src:*/files, /*srcPos:*/0, /*dst:*/files, /*dstPos:*/1, /*length:*/i);
+                        files[0] = new File(realExtStorageDir, "apple2ix");
+                    }
+                    break;
+                }
+            }
+        }
+
         final boolean includeExternalStoragePath = (extStorageDir != null && isRootPath);
-        final boolean includeDownloadsPath = (downloadsDir != null && isRootPath);
-        final int offset = includeExternalStoragePath ? (includeDownloadsPath ? 2 : 1) : (includeDownloadsPath ? 1 : 0);
+        final int offset = includeExternalStoragePath ? 1 : 0;
         final String[] fileNames = new String[files.length + offset];
+        final String[] filePaths = new String[files.length + offset];
         final boolean[] isDirectory = new boolean[files.length + offset];
 
         int idx = 0;
+        // first external storage link should be /sdcard/apple2ix to encourage this form of organization
         if (includeExternalStoragePath) {
-            fileNames[idx] = Apple2Utils.getExternalStorageDirectory(mActivity).getAbsolutePath();
-            isDirectory[idx] = true;
-            ++idx;
-        }
-        if (includeDownloadsPath) {
-            fileNames[idx] = downloadsDir.getAbsolutePath();
+            filePaths[idx] = Apple2Utils.getRealExternalStorageDirectory(mActivity).getAbsolutePath();
+            fileNames[idx] = mActivity.getResources().getString(R.string.storage);
             isDirectory[idx] = true;
             ++idx;
         }
 
         for (File file : files) {
             isDirectory[idx] = file.isDirectory();
-            fileNames[idx] = file.getName();
+            filePaths[idx] = file.getName();
+            fileNames[idx] = filePaths[idx];
             if (isDirectory[idx]) {
                 fileNames[idx] += File.separator;
             }
@@ -469,11 +483,11 @@ public class Apple2DisksMenu implements Apple2MenuView {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, final int position, long id) {
                 if (isDirectory[position]) {
-                    Log.d(TAG, "Descending to path : " + fileNames[position]);
-                    if (parentIsRootPath && !new File(fileNames[position]).isAbsolute()) {
-                        pushPathStack(parentDisksDir + File.separator + fileNames[position]);
+                    Log.d(TAG, "Descending to path : " + filePaths[position]);
+                    if (parentIsRootPath && !new File(filePaths[position]).isAbsolute()) {
+                        pushPathStack(parentDisksDir + File.separator + filePaths[position]);
                     } else {
-                        pushPathStack(fileNames[position]);
+                        pushPathStack(filePaths[position]);
                     }
                     dynamicSetup();
                     ListView disksList = (ListView) mDisksView.findViewById(R.id.listView_settings);
