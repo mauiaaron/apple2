@@ -261,7 +261,7 @@ public class Apple2SettingsMenu extends Apple2AbstractMenu {
 
             @Override
             public void handleSelection(Apple2Activity activity, final Apple2AbstractMenu settingsMenu, boolean isChecked) {
-                String url = "http://deadc0de.org/apple2ix/android/";
+                String url = "https://deadc0de.org/apple2ix/android/";
                 Intent i = new Intent(Intent.ACTION_VIEW);
                 i.setData(Uri.parse(url));
                 activity.startActivity(i);

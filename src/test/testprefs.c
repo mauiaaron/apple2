@@ -1736,17 +1736,17 @@ TEST test_json_array() {
 
 TEST test_json_unescaping() {
     JSON_ref jsonRef = NULL;
-    int errCount = json_createFromString("\"http:\\/\\/deadc0de.org\\/apple2ix\\/android\\/\"", &jsonRef);
+    int errCount = json_createFromString("\"https:\\/\\/deadc0de.org\\/apple2ix\\/android\\/\"", &jsonRef);
     ASSERT(errCount == 1);
     ASSERT(jsonRef);
 
     JSON_s parsedData = *((JSON_s *)jsonRef);
-    ASSERT(strcmp(parsedData.jsonString, "\"http:\\/\\/deadc0de.org\\/apple2ix\\/android\\/\"") == 0);
+    ASSERT(strcmp(parsedData.jsonString, "\"https:\\/\\/deadc0de.org\\/apple2ix\\/android\\/\"") == 0);
     ASSERT(parsedData.jsonLen == strlen(parsedData.jsonString));
 
     bool ok = json_unescapeSlashes(&parsedData.jsonString);
     ASSERT(ok);
-    ASSERT(strcmp(parsedData.jsonString, "\"http://deadc0de.org/apple2ix/android/\"") == 0);
+    ASSERT(strcmp(parsedData.jsonString, "\"https://deadc0de.org/apple2ix/android/\"") == 0);
     size_t newLen = strlen(parsedData.jsonString);
     ASSERT(parsedData.jsonLen != newLen);
     ASSERT(newLen == 39);
