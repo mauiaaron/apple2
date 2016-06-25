@@ -31,6 +31,14 @@
 		4A7EDCA01AE092B80072E98A /* interface.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A7EDC9D1AE092B80072E98A /* interface.c */; };
 		4A7EDCA11AE092B80072E98A /* interface.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A7EDC9D1AE092B80072E98A /* interface.c */; };
 		4A7EDCA21AE092B80072E98A /* interface.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A7EDC9D1AE092B80072E98A /* interface.c */; };
+		4AA2D7D61D1E23F40054A5FF /* jsmn.c in Sources */ = {isa = PBXBuildFile; fileRef = 935C55A71C1389370013166D /* jsmn.c */; };
+		4AA2D7DB1D1E23F50054A5FF /* jsmn.c in Sources */ = {isa = PBXBuildFile; fileRef = 935C55A71C1389370013166D /* jsmn.c */; };
+		4AA2D7DC1D1E23F60054A5FF /* jsmn.c in Sources */ = {isa = PBXBuildFile; fileRef = 935C55A71C1389370013166D /* jsmn.c */; };
+		4AA2D7DD1D1E23F60054A5FF /* jsmn.c in Sources */ = {isa = PBXBuildFile; fileRef = 935C55A71C1389370013166D /* jsmn.c */; };
+		4AA2D7DE1D1E24120054A5FF /* json_parse.c in Sources */ = {isa = PBXBuildFile; fileRef = 935C55701C136E6F0013166D /* json_parse.c */; };
+		4AA2D7DF1D1E24130054A5FF /* json_parse.c in Sources */ = {isa = PBXBuildFile; fileRef = 935C55701C136E6F0013166D /* json_parse.c */; };
+		4AA2D7E01D1E24130054A5FF /* json_parse.c in Sources */ = {isa = PBXBuildFile; fileRef = 935C55701C136E6F0013166D /* json_parse.c */; };
+		4AA2D7E11D1E24140054A5FF /* json_parse.c in Sources */ = {isa = PBXBuildFile; fileRef = 935C55701C136E6F0013166D /* json_parse.c */; };
 		4AD4FE941A52464F00F958EC /* cpu.S in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D9019568A570085CE5F /* cpu.S */; };
 		4AD4FE951A52464F00F958EC /* prefs.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D7719568A570085CE5F /* prefs.c */; };
 		4AD4FE961A52464F00F958EC /* display.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D6419568A570085CE5F /* display.c */; };
@@ -1600,6 +1608,7 @@
 				4AD4FE991A52464F00F958EC /* modelUtil.c in Sources */,
 				4AD4FE9A1A52464F00F958EC /* debugger.c in Sources */,
 				4AD4FE9B1A52464F00F958EC /* keys.c in Sources */,
+				4AA2D7DB1D1E23F50054A5FF /* jsmn.c in Sources */,
 				4AD4FE9C1A52464F00F958EC /* timing.c in Sources */,
 				4AD4FE9D1A52464F00F958EC /* testcommon.c in Sources */,
 				4AD4FE9E1A52464F00F958EC /* misc.c in Sources */,
@@ -1613,6 +1622,7 @@
 				4AD4FEA31A52464F00F958EC /* darwin-shim.c in Sources */,
 				4A7EDC9A1AE092680072E98A /* glnode.c in Sources */,
 				4AD4FECB1A52468700F958EC /* testdisk.c in Sources */,
+				4AA2D7DF1D1E24130054A5FF /* json_parse.c in Sources */,
 				4AD4FEA51A52464F00F958EC /* vectorUtil.c in Sources */,
 				4AD4FEA61A52464F00F958EC /* debug.l in Sources */,
 				4AD4FEA71A52464F00F958EC /* CPUTestAppDelegate.m in Sources */,
@@ -1639,6 +1649,7 @@
 				4ADC520319E8CA4500186B36 /* modelUtil.c in Sources */,
 				4ADC520419E8CA4500186B36 /* debugger.c in Sources */,
 				4ADC520519E8CA4500186B36 /* keys.c in Sources */,
+				4AA2D7DD1D1E23F60054A5FF /* jsmn.c in Sources */,
 				4ADC520619E8CA4500186B36 /* timing.c in Sources */,
 				4ADC520719E8CA4500186B36 /* testcommon.c in Sources */,
 				4ADC520819E8CA4500186B36 /* misc.c in Sources */,
@@ -1652,6 +1663,7 @@
 				4ADC520D19E8CA4500186B36 /* darwin-shim.c in Sources */,
 				4A7EDC9C1AE092680072E98A /* glnode.c in Sources */,
 				4ADC520F19E8CA4500186B36 /* vectorUtil.c in Sources */,
+				4AA2D7E11D1E24140054A5FF /* json_parse.c in Sources */,
 				4ADC521019E8CA4500186B36 /* debug.l in Sources */,
 				4ADC521119E8CA4500186B36 /* CPUTestAppDelegate.m in Sources */,
 				4ADC522919E8CEAD00186B36 /* testvm.c in Sources */,
@@ -1743,6 +1755,7 @@
 				4ADC51C419E8BD3D00186B36 /* modelUtil.c in Sources */,
 				779DD833195BD9F900DF89E5 /* debugger.c in Sources */,
 				779DD834195BD9F900DF89E5 /* keys.c in Sources */,
+				4AA2D7D61D1E23F40054A5FF /* jsmn.c in Sources */,
 				779DD835195BD9F900DF89E5 /* timing.c in Sources */,
 				779DD853195BDA3400DF89E5 /* testcommon.c in Sources */,
 				779DD836195BD9F900DF89E5 /* misc.c in Sources */,
@@ -1756,6 +1769,7 @@
 				779DD83A195BD9F900DF89E5 /* darwin-shim.c in Sources */,
 				4A7EDC991AE092680072E98A /* glnode.c in Sources */,
 				4ADC51C219E8BD3700186B36 /* vectorUtil.c in Sources */,
+				4AA2D7DE1D1E24120054A5FF /* json_parse.c in Sources */,
 				779DD83C195BD9F900DF89E5 /* debug.l in Sources */,
 				779DD856195BDB1700DF89E5 /* CPUTestAppDelegate.m in Sources */,
 				779DD852195BDA3000DF89E5 /* testcpu.c in Sources */,
@@ -1782,6 +1796,7 @@
 				779F566819EB0B9100A6F107 /* sourceUtil.c in Sources */,
 				779F566919EB0B9100A6F107 /* modelUtil.c in Sources */,
 				779F566A19EB0B9100A6F107 /* debugger.c in Sources */,
+				4AA2D7DC1D1E23F60054A5FF /* jsmn.c in Sources */,
 				779F566B19EB0B9100A6F107 /* keys.c in Sources */,
 				779F566C19EB0B9100A6F107 /* timing.c in Sources */,
 				779F566D19EB0B9100A6F107 /* testcommon.c in Sources */,
@@ -1795,6 +1810,7 @@
 				779F567219EB0B9100A6F107 /* zlib-helpers.c in Sources */,
 				4A7EDC9B1AE092680072E98A /* glnode.c in Sources */,
 				779F567319EB0B9100A6F107 /* darwin-shim.c in Sources */,
+				4AA2D7E01D1E24130054A5FF /* json_parse.c in Sources */,
 				779F567519EB0B9100A6F107 /* vectorUtil.c in Sources */,
 				779F567619EB0B9100A6F107 /* debug.l in Sources */,
 				779F567719EB0B9100A6F107 /* CPUTestAppDelegate.m in Sources */,
