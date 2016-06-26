@@ -32,9 +32,11 @@
 #endif
 
 // custom annotations
-#define INPARM
-#define OUTPARM
 #define INOUT
+#define INPARM
+#define _NONNULL
+#define _NULLABLE
+#define OUTPARM
 #define PRIVATE
 #define PUBLIC
 #define READONLY
@@ -65,11 +67,12 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
+#include "json_parse.h"
 #include "misc.h"
 #include "vm.h"
 #include "timing.h"
 #include "cpu.h"
-#include "video/video.h"
+#include "display.h"
 #include "disk.h"
 #include "interface.h"
 #include "keys.h"
@@ -85,16 +88,12 @@
 #import <CoreFoundation/CoreFoundation.h>
 #endif
 
-#define CTOR_PRIORITY_FIRST  101
-#define CTOR_PRIORITY_EARLY  111
-#define CTOR_PRIORITY_LATE   201
-
 #if VIDEO_OPENGL
 #include "video_util/glUtil.h"
 // 2015/04/01 ... early calls to glGetError()--before a context exists--causes segfaults on MacOS X
 extern bool safe_to_do_opengl_logging;
 static inline GLenum safeGLGetError(void) {
-    if (safe_to_do_opengl_logging) {
+    if (safe_to_do_opengl_logging && video_isRenderThread()) {
         return glGetError();
     }
     return (GLenum)0;

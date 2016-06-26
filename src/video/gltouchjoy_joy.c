@@ -15,28 +15,38 @@
 #error this is a touch interface module, possibly you mean to not compile this at all?
 #endif
 
-#define BUTTON_TAP_DELAY_NANOS_DEFAULT 50000000
+#define BUTTON_TAP_DELAY_NANOS_DEFAULT   (NANOSECONDS_PER_SECOND/20)     // 0.2 secs
+#define BUTTON_TAP_DELAY_NANOS_MIN       (NANOSECONDS_PER_SECOND/10000)  // 0.0001 secs
+
+typedef struct touch_event_s {
+    struct touch_event_s *next;
+    interface_touch_event_t event;
+    uint8_t currJoyButtonValue0;
+    uint8_t currJoyButtonValue1;
+    uint8_t currButtonDisplayChar;
+} touch_event_s;
+
+static touch_event_s *touchEventQ = NULL;
 
 static GLTouchJoyVariant happyHappyJoyJoy = { 0 };
 
 static struct {
-    uint8_t currJoyButtonValue0;
-    uint8_t currJoyButtonValue1;
-    uint8_t currButtonDisplayChar;
     void (*buttonDrawCallback)(char newChar);
 
-    bool trackingButton;
-    bool trackingButtonMove;
     pthread_t tapDelayThreadId;
     pthread_mutex_t tapDelayMutex;
     pthread_cond_t tapDelayCond;
     unsigned int tapDelayNanos;
-} joys;
+
+    touchjoy_button_type_t touchDownChar;
+    touchjoy_button_type_t northChar;
+    touchjoy_button_type_t southChar;
+} joys = { 0 };
 
 // ----------------------------------------------------------------------------
 
-static touchjoy_variant_t touchjoy_variant(void) {
-    return EMULATED_JOYSTICK;
+static interface_device_t touchjoy_variant(void) {
+    return TOUCH_DEVICE_JOYSTICK;
 }
 
 static inline void _reset_axis_state(void) {
@@ -47,24 +57,28 @@ static inline void _reset_axis_state(void) {
 static inline void _reset_buttons_state(void) {
     joy_button0 = 0x0;
     joy_button1 = 0x0;
-    joys.currJoyButtonValue0 = 0;
-    joys.currJoyButtonValue1 = 0;
-    joys.currButtonDisplayChar = ' ';
 }
 
 static void touchjoy_resetState(void) {
     _reset_axis_state();
-    _reset_buttons_state();
+    //_reset_buttons_state(); -- do not reset button state here, it may interfere with other code performing reboot/reset
 }
 
 // ----------------------------------------------------------------------------
 
-// Tap Delay Thread : delays processing of touch-down so that a different joystick button can be fired
+// Tap Delay Thread : implements a gesture recognizer that differentiates between a "long touch", "tap", and "swipe
+// down/up" gestures.  Necessarily delays processing of initial touch down event to make a proper determination.  Also
+// delays resetting joystick button state after touch up event to avoid resetting joystick button state too soon.
+//
+//  * long touch and tap are interpreted as one (configurable) joystick button fire event
+//  * swipe up and swipe down are the other two (configurable) joystick button fire events
+//
 
-static inline void _signal_tap_delay(void) {
-    pthread_mutex_lock(&joys.tapDelayMutex);
-    pthread_cond_signal(&joys.tapDelayCond);
-    pthread_mutex_unlock(&joys.tapDelayMutex);
+static struct timespec *_tap_wait(void) {
+    static struct timespec wait = { 0 };
+    clock_gettime(CLOCK_REALTIME, &wait);
+    wait = timespec_add(wait, joys.tapDelayNanos);
+    return &wait;
 }
 
 static void *_button_tap_delayed_thread(void *dummyptr) {
@@ -72,63 +86,104 @@ static void *_button_tap_delayed_thread(void *dummyptr) {
 
     pthread_mutex_lock(&joys.tapDelayMutex);
 
-    bool deepSleep = false;
-    uint8_t currJoyButtonValue0 = 0x0;
-    uint8_t currJoyButtonValue1 = 0x0;
-    uint8_t currButtonDisplayChar = ' ';
+    int timedOut = ETIMEDOUT;
     for (;;) {
-        if (UNLIKELY(joyglobals.isShuttingDown)) {
+        if (UNLIKELY(emulator_isShuttingDown())) {
             break;
         }
 
-        struct timespec wait;
-        clock_gettime(CLOCK_REALTIME, &wait); // should use CLOCK_MONOTONIC ?
-        wait = timespec_add(wait, joys.tapDelayNanos);
-        int timedOut = pthread_cond_timedwait(&joys.tapDelayCond, &joys.tapDelayMutex, &wait); // wait and possibly consume event
-        assert((!timedOut || timedOut == ETIMEDOUT) && "should not fail any other way");
+        if (timedOut) {
+            // reset state and deep sleep waiting for touch down
+            _reset_buttons_state();
+            TOUCH_JOY_GESTURE_LOG(">>> [DELAYEDTAP] deep sleep ...");
+            pthread_cond_wait(&joys.tapDelayCond, &joys.tapDelayMutex);
+        } else {
+            // delays reset of button state while remaining ready to process a touch down
+            TOUCH_JOY_GESTURE_LOG(">>> [DELAYEDTAP] event looping ...");
+            timedOut = pthread_cond_timedwait(&joys.tapDelayCond, &joys.tapDelayMutex, _tap_wait()); // wait and possibly consume event
+            assert((!timedOut || timedOut == ETIMEDOUT) && "should not fail any other way");
+            if (timedOut) {
+                // reset state and go into deep sleep
+                continue;
+            }
+            _reset_buttons_state();
+        }
 
-        if (!timedOut) {
-            if (!deepSleep) {
-                if (joys.trackingButtonMove) {
-                    // dragging
-                    currJoyButtonValue0 = 0x0;
-                    currJoyButtonValue1 = 0x0;
-                    currButtonDisplayChar = joys.currButtonDisplayChar;
-                } else if (joys.trackingButton) {
-                    // touch down -- delay consumption to determine if tap or drag
-                    currJoyButtonValue0 = joys.currJoyButtonValue0;
-                    currJoyButtonValue1 = joys.currJoyButtonValue1;
-                    currButtonDisplayChar = joys.currButtonDisplayChar;
-                    joys.buttonDrawCallback(currButtonDisplayChar);
-                    // zero the buttons before delay
-                    _reset_buttons_state();
-                    continue;
-                } else {
-                    // touch up becomes tap
-                    joys.currJoyButtonValue0 = currJoyButtonValue0;
-                    joys.currJoyButtonValue1 = currJoyButtonValue1;
-                    joys.currButtonDisplayChar = currButtonDisplayChar;
-                }
+        if (UNLIKELY(emulator_isShuttingDown())) {
+            break;
+        }
+
+        TOUCH_JOY_GESTURE_LOG(">>> [DELAYEDTAP] touch down ...");
+
+        touch_event_s *touchCurrEvent = NULL;
+        touch_event_s *touchPrevEvent = touchEventQ;
+        assert(touchPrevEvent && "should be a touch event ready to consume");
+        touchEventQ = touchEventQ->next;
+        assert(touchPrevEvent->event == TOUCH_DOWN && "event queue head should be a touch down event");
+
+        for (;;) {
+            // delay processing of touch down to perform simple gesture recognition
+            timedOut = pthread_cond_timedwait(&joys.tapDelayCond, &joys.tapDelayMutex, _tap_wait());
+            assert((!timedOut || timedOut == ETIMEDOUT) && "should not fail any other way");
+
+            if (UNLIKELY(emulator_isShuttingDown())) {
+                break;
+            }
+
+            touchCurrEvent = touchEventQ;
+            if (!touchCurrEvent) {
+                assert(timedOut);
+                // touch-down-and-hold
+                TOUCH_JOY_GESTURE_LOG(">>> [DELAYEDTAP] long touch ...");
+                joy_button0 = touchPrevEvent->currJoyButtonValue0;
+                joy_button1 = touchPrevEvent->currJoyButtonValue1;
+                joys.buttonDrawCallback(touchPrevEvent->currButtonDisplayChar);
+                continue;
+            }
+            touchEventQ = touchEventQ->next;
+
+            if (touchCurrEvent->event == TOUCH_MOVE) {
+                // dragging ...
+                TOUCH_JOY_GESTURE_LOG(">>> [DELAYEDTAP] move ...");
+                joy_button0 = touchCurrEvent->currJoyButtonValue0;
+                joy_button1 = touchCurrEvent->currJoyButtonValue1;
+                joys.buttonDrawCallback(touchCurrEvent->currButtonDisplayChar);
+                FREE(touchPrevEvent);
+                touchPrevEvent = touchCurrEvent;
+            } else if (touchCurrEvent->event == TOUCH_UP) {
+                // tap
+                TOUCH_JOY_GESTURE_LOG(">>> [DELAYEDTAP] touch up ...");
+                joy_button0 = touchPrevEvent->currJoyButtonValue0;
+                joy_button1 = touchPrevEvent->currJoyButtonValue1;
+                joys.buttonDrawCallback(touchPrevEvent->currButtonDisplayChar);
+                timedOut = 0;
+                break;
+            } else if (touchCurrEvent->event == TOUCH_DOWN) {
+                LOG("WHOA : unexpected touch down, are you spamming the touchscreen?!");
+                FREE(touchPrevEvent);
+                touchPrevEvent = touchCurrEvent;
+                continue;
+            } else {
+                __builtin_unreachable();
             }
         }
 
-        joy_button0 = joys.currJoyButtonValue0;
-        joy_button1 = joys.currJoyButtonValue1;
-        joys.buttonDrawCallback(joys.currButtonDisplayChar);
+        FREE(touchPrevEvent);
+        FREE(touchCurrEvent);
+    }
 
-        deepSleep = false;
-        if (timedOut && !joys.trackingButton) {
-            deepSleep = true;
-            _reset_buttons_state();
-            TOUCH_JOY_LOG(">>> [DELAYEDTAP] end ...");
-            pthread_cond_wait(&joys.tapDelayCond, &joys.tapDelayMutex); // consume initial touch down
-            TOUCH_JOY_LOG(">>> [DELAYEDTAP] begin ...");
-        } else {
-            TOUCH_JOY_LOG(">>> [DELAYEDTAP] event looping ...");
-        }
+    // clear out event queue
+    touch_event_s *p = touchEventQ;
+    while (p) {
+        touch_event_s *dead = p;
+        p = p->next;
+        FREE(dead);
     }
 
     pthread_mutex_unlock(&joys.tapDelayMutex);
+
+    joys.tapDelayMutex = (pthread_mutex_t)PTHREAD_MUTEX_INITIALIZER;
+    joys.tapDelayCond = (pthread_cond_t)PTHREAD_COND_INITIALIZER;
 
     LOG(">>> [DELAYEDTAP] thread exit ...");
 
@@ -136,19 +191,20 @@ static void *_button_tap_delayed_thread(void *dummyptr) {
 }
 
 static void touchjoy_setup(void (*buttonDrawCallback)(char newChar)) {
-    assert((joys.tapDelayThreadId == 0) && "setup called multiple times!");
     joys.buttonDrawCallback = buttonDrawCallback;
-    pthread_create(&joys.tapDelayThreadId, NULL, (void *)&_button_tap_delayed_thread, (void *)NULL);
+    if (joys.tapDelayThreadId == 0) {
+        pthread_create(&joys.tapDelayThreadId, NULL, (void *)&_button_tap_delayed_thread, (void *)NULL);
+    }
 }
 
 static void touchjoy_shutdown(void) {
-    pthread_cond_signal(&joys.tapDelayCond);
-    if (pthread_join(joys.tapDelayThreadId, NULL)) {
-        ERRLOG("OOPS: pthread_join tap delay thread ...");
+    if (joys.tapDelayThreadId && emulator_isShuttingDown()) {
+        pthread_mutex_lock(&joys.tapDelayMutex);
+        pthread_cond_signal(&joys.tapDelayCond);
+        pthread_mutex_unlock(&joys.tapDelayMutex);
+        pthread_join(joys.tapDelayThreadId, NULL);
+        joys.tapDelayThreadId = 0;
     }
-    joys.tapDelayThreadId = 0;
-    joys.tapDelayMutex = (pthread_mutex_t){ 0 };
-    joys.tapDelayCond = (pthread_cond_t)PTHREAD_COND_INITIALIZER;
 }
 
 // ----------------------------------------------------------------------------
@@ -191,30 +247,46 @@ static void touchjoy_axisUp(int x, int y) {
 // ----------------------------------------------------------------------------
 // button state
 
-static void _set_current_button_state(touchjoy_button_type_t theButtonChar) {
-    if (theButtonChar == TOUCH_BUTTON0) {
-        joys.currJoyButtonValue0 = 0x80;
-        joys.currJoyButtonValue1 = 0;
-        joys.currButtonDisplayChar = MOUSETEXT_OPENAPPLE;
-    } else if (theButtonChar == TOUCH_BUTTON1) {
-        joys.currJoyButtonValue0 = 0;
-        joys.currJoyButtonValue1 = 0x80;
-        joys.currButtonDisplayChar = MOUSETEXT_CLOSEDAPPLE;
+static void _signal_tap_delay_event(interface_touch_event_t type, touchjoy_button_type_t theButtonChar) {
+    touch_event_s *touchEvent = MALLOC(sizeof(*touchEvent));
+    touchEvent->next = NULL;
+    touchEvent->event = type;
+    if (theButtonChar == TOUCH_BUTTON1) {
+        touchEvent->currJoyButtonValue0 = 0x80;
+        touchEvent->currJoyButtonValue1 = 0;
+        touchEvent->currButtonDisplayChar = MOUSETEXT_OPENAPPLE;
+    } else if (theButtonChar == TOUCH_BUTTON2) {
+        touchEvent->currJoyButtonValue0 = 0;
+        touchEvent->currJoyButtonValue1 = 0x80;
+        touchEvent->currButtonDisplayChar = MOUSETEXT_CLOSEDAPPLE;
     } else if (theButtonChar == TOUCH_BOTH) {
-        joys.currJoyButtonValue0 = 0x80;
-        joys.currJoyButtonValue1 = 0x80;
-        joys.currButtonDisplayChar = '+';
+        touchEvent->currJoyButtonValue0 = 0x80;
+        touchEvent->currJoyButtonValue1 = 0x80;
+        touchEvent->currButtonDisplayChar = '+';
     } else {
-        joys.currJoyButtonValue0 = 0;
-        joys.currJoyButtonValue1 = 0;
-        joys.currButtonDisplayChar = ' ';
+        touchEvent->currJoyButtonValue0 = 0;
+        touchEvent->currJoyButtonValue1 = 0;
+        touchEvent->currButtonDisplayChar = ' ';
     }
+
+    pthread_mutex_lock(&joys.tapDelayMutex);
+    touch_event_s *p0 = NULL;
+    touch_event_s *p = touchEventQ;
+    while (p) {
+        p0 = p;
+        p = p->next;
+    }
+    if (p0) {
+        p0->next = touchEvent;
+    } else {
+        touchEventQ = touchEvent;
+    }
+    pthread_cond_signal(&joys.tapDelayCond);
+    pthread_mutex_unlock(&joys.tapDelayMutex);
 }
 
 static void touchjoy_buttonDown(void) {
-    _set_current_button_state(buttons.touchDownChar);
-    joys.trackingButton = true;
-    _signal_tap_delay();
+    _signal_tap_delay_event(TOUCH_DOWN, joys.touchDownChar);
 }
 
 static void touchjoy_buttonMove(int dx, int dy) {
@@ -222,41 +294,55 @@ static void touchjoy_buttonMove(int dx, int dy) {
 
         touchjoy_button_type_t theButtonChar = -1;
         if (dy < 0) {
-            theButtonChar = buttons.northChar;
+            theButtonChar = joys.northChar;
         } else {
-            theButtonChar = buttons.southChar;
+            theButtonChar = joys.southChar;
         }
 
-        _set_current_button_state(theButtonChar);
-        _signal_tap_delay();
+        _signal_tap_delay_event(TOUCH_MOVE, theButtonChar);
     }
-    joys.trackingButtonMove = true;
 }
 
 static void touchjoy_buttonUp(int dx, int dy) {
-    joys.trackingButton = false;
-    joys.trackingButtonMove = false;
-    _signal_tap_delay();
+    _signal_tap_delay_event(TOUCH_UP, ' ');
 }
 
-static void gltouchjoy_setTapDelay(float secs) {
-    if (UNLIKELY(secs < 0.f)) {
-        ERRLOG("Clamping tap delay to 0.0 secs");
+static void touchjoy_prefsChanged(const char *domain) {
+    assert(video_isRenderThread());
+
+    long lVal = 0;
+
+    joys.touchDownChar = prefs_parseLongValue(domain, PREF_JOY_TOUCHDOWN_CHAR, &lVal, /*base:*/10) ? lVal : TOUCH_BUTTON1;
+    joys.northChar = prefs_parseLongValue(domain, PREF_JOY_SWIPE_NORTH_CHAR, &lVal, /*base:*/10) ? lVal : TOUCH_BOTH;
+    joys.southChar = prefs_parseLongValue(domain, PREF_JOY_SWIPE_SOUTH_CHAR, &lVal, /*base:*/10) ? lVal : TOUCH_BUTTON2;
+
+    float fVal = 0.f;
+    joys.tapDelayNanos = prefs_parseFloatValue(domain, PREF_JOY_TAP_DELAY, &fVal) ? (fVal * NANOSECONDS_PER_SECOND) : BUTTON_TAP_DELAY_NANOS_DEFAULT;
+    if (joys.tapDelayNanos < BUTTON_TAP_DELAY_NANOS_MIN) {
+        joys.tapDelayNanos = BUTTON_TAP_DELAY_NANOS_MIN;
     }
-    if (UNLIKELY(secs > 1.f)) {
-        ERRLOG("Clamping tap delay to 1.0 secs");
+}
+
+static uint8_t *touchjoy_rosetteChars(void) {
+    static uint8_t rosetteChars[ROSETTE_ROWS * ROSETTE_COLS] = { 0 };
+    if (rosetteChars[0] == 0x0)  {
+        rosetteChars[0]     = ' ';
+        rosetteChars[1]     = MOUSETEXT_UP;
+        rosetteChars[2]     = ' ';
+
+        rosetteChars[3]     = MOUSETEXT_LEFT;
+        rosetteChars[4]     = ICONTEXT_MENU_TOUCHJOY;
+        rosetteChars[5]     = MOUSETEXT_RIGHT;
+
+        rosetteChars[6]     = ' ';
+        rosetteChars[7]     = MOUSETEXT_DOWN;
+        rosetteChars[8]     = ' ';
     }
-    unsigned int tapDelayNanos = (unsigned int)((float)NANOSECONDS_PER_SECOND * secs);
-#define MIN_WAIT_NANOS 1000000
-    if (tapDelayNanos < MIN_WAIT_NANOS) {
-        tapDelayNanos = MIN_WAIT_NANOS;
-    }
-    joys.tapDelayNanos = tapDelayNanos;
+    return rosetteChars;
 }
 
 // ----------------------------------------------------------------------------
 
-__attribute__((constructor(CTOR_PRIORITY_EARLY)))
 static void _init_gltouchjoy_joy(void) {
     LOG("Registering OpenGL software touch joystick (joystick variant)");
 
@@ -264,6 +350,8 @@ static void _init_gltouchjoy_joy(void) {
     happyHappyJoyJoy.resetState = &touchjoy_resetState,
     happyHappyJoyJoy.setup = &touchjoy_setup,
     happyHappyJoyJoy.shutdown = &touchjoy_shutdown,
+
+    happyHappyJoyJoy.prefsChanged = &touchjoy_prefsChanged;
 
     happyHappyJoyJoy.buttonDown = &touchjoy_buttonDown,
     happyHappyJoyJoy.buttonMove = &touchjoy_buttonMove,
@@ -273,12 +361,15 @@ static void _init_gltouchjoy_joy(void) {
     happyHappyJoyJoy.axisMove = &touchjoy_axisMove,
     happyHappyJoyJoy.axisUp = &touchjoy_axisUp,
 
-    joys.tapDelayMutex = (pthread_mutex_t){ 0 };
+    happyHappyJoyJoy.rosetteChars = &touchjoy_rosetteChars;
+
+    joys.tapDelayMutex = (pthread_mutex_t)PTHREAD_MUTEX_INITIALIZER;
     joys.tapDelayCond = (pthread_cond_t)PTHREAD_COND_INITIALIZER;
-    joys.tapDelayNanos = BUTTON_TAP_DELAY_NANOS_DEFAULT;
 
-    joydriver_setTapDelay = &gltouchjoy_setTapDelay;
+    gltouchjoy_registerVariant(TOUCH_DEVICE_JOYSTICK, &happyHappyJoyJoy);
+}
 
-    gltouchjoy_registerVariant(EMULATED_JOYSTICK, &happyHappyJoyJoy);
+static __attribute__((constructor)) void __init_gltouchjoy_joy(void) {
+    emulator_registerStartupCallback(CTOR_PRIORITY_EARLY, &_init_gltouchjoy_joy);
 }
 

@@ -387,12 +387,13 @@ TEST test_boot_disk_vmtrace_po() {
 GREATEST_SUITE(test_suite_trace) {
     pthread_mutex_lock(&interface_mutex);
 
+    test_thread_running = true;
+    
     GREATEST_SET_SETUP_CB(testtrace_setup, NULL);
     GREATEST_SET_TEARDOWN_CB(testtrace_teardown, NULL);
     GREATEST_SET_BREAKPOINT_CB(test_breakpoint, NULL);
 
     // TESTS --------------------------
-    test_thread_running = true;
 
 #if ABUSIVE_TESTS
     RUN_TESTp(test_boot_disk_cputrace);
@@ -418,34 +419,31 @@ GREATEST_MAIN_DEFS();
 static char **test_argv = NULL;
 static int test_argc = 0;
 
-static void *test_thread(void *dummyptr) {
+static void *_test_thread(void) {
     int argc = test_argc;
     char **argv = test_argv;
     GREATEST_MAIN_BEGIN();
     RUN_SUITE(test_suite_trace);
     GREATEST_MAIN_END();
+}
+
+static void *test_thread(void *dummyptr) {
+    _test_thread();
     return NULL;
 }
 
-void test_trace(int argc, char **argv) {
-    test_argc = argc;
-    test_argv = argv;
+void test_trace(int _argc, char **_argv) {
+    test_argc = _argc;
+    test_argv = _argv;
 
     test_common_init();
 
     pthread_t p;
     pthread_create(&p, NULL, (void *)&test_thread, (void *)NULL);
-
     while (!test_thread_running) {
         struct timespec ts = { .tv_sec=0, .tv_nsec=33333333 };
         nanosleep(&ts, NULL);
     }
-    emulator_start();
-    //pthread_join(p, NULL);
+    pthread_detach(p);
 }
 
-#if !defined(__APPLE__) && !defined(ANDROID)
-int main(int argc, char **argv) {
-    test_trace(argc, argv);
-}
-#endif

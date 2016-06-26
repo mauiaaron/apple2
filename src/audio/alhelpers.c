@@ -28,15 +28,6 @@
  * finding an appropriate buffer format, and getting readable strings for
  * channel configs and sample types. */
 
-#ifdef __APPLE__
-#import <OpenAL/al.h>
-#import <OpenAL/alc.h>
-#else
-#include <AL/al.h>
-#include <AL/alc.h>
-#include <AL/alext.h>
-#endif
-
 #include "common.h"
 #include "audio/alhelpers.h"
 

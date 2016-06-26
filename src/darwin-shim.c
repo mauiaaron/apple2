@@ -21,14 +21,17 @@
 static double orwl_timebase = 0.0;
 static uint64_t orwl_timestart = 0;
 
-__attribute__((constructor(CTOR_PRIORITY_LATE)))
-static void __init_darwin_shim() {
+static void _init_darwin_shim(void) {
     LOG("Initializing Darwin Shim");
     mach_timebase_info_data_t tb = { 0 };
     mach_timebase_info(&tb);
     orwl_timebase = tb.numer;
     orwl_timebase /= tb.denom;
     orwl_timestart = mach_absolute_time();
+}
+
+static __attribute__((constructor)) void __init_darwin_shim(void) {
+    emulator_registerStartupCallback(CTOR_PRIORITY_LATE, &_init_darwin_shim);
 }
 
 int clock_gettime(int clk_id, struct timespec *tp) {

@@ -20,7 +20,6 @@ void speaker_init(void);
 void speaker_destroy(void);
 void speaker_reset(void);
 void speaker_flush(void);
-void speaker_setVolumeZeroToTen(unsigned long goesToTen);
 bool speaker_isActive(void);
 
 /*

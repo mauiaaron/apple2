@@ -10,6 +10,12 @@
 		4A2636F919FDEDB700DBFB00 /* Apple2Mac.help in Resources */ = {isa = PBXBuildFile; fileRef = 4A2636F819FDEDB700DBFB00 /* Apple2Mac.help */; };
 		4A61119D1A6A1DE60035F7DE /* blank.po.gz in Resources */ = {isa = PBXBuildFile; fileRef = 4A61119B1A6A1DE60035F7DE /* blank.po.gz */; };
 		4A69C1921A33DB90001579EF /* DDHidLib.framework in Copy Files (1 item) */ = {isa = PBXBuildFile; fileRef = 77C2796F1A1047AF000FE33F /* DDHidLib.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		4A73BE2F1CCBE21B0041C573 /* memmngt.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A73BE2E1CCBE21A0041C573 /* memmngt.c */; };
+		4A73BE301CCBE22A0041C573 /* memmngt.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A73BE2E1CCBE21A0041C573 /* memmngt.c */; };
+		4A73BE311CCBE22B0041C573 /* memmngt.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A73BE2E1CCBE21A0041C573 /* memmngt.c */; };
+		4A73BE321CCBE22C0041C573 /* memmngt.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A73BE2E1CCBE21A0041C573 /* memmngt.c */; };
+		4A73BE331CCBE22C0041C573 /* memmngt.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A73BE2E1CCBE21A0041C573 /* memmngt.c */; };
+		4A73BE341CCBE22E0041C573 /* memmngt.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A73BE2E1CCBE21A0041C573 /* memmngt.c */; };
 		4A7EDC931AE092680072E98A /* glhudmodel.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A7EDC911AE092680072E98A /* glhudmodel.c */; };
 		4A7EDC941AE092680072E98A /* glhudmodel.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A7EDC911AE092680072E98A /* glhudmodel.c */; };
 		4A7EDC951AE092680072E98A /* glhudmodel.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A7EDC911AE092680072E98A /* glhudmodel.c */; };
@@ -25,6 +31,34 @@
 		4A7EDCA01AE092B80072E98A /* interface.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A7EDC9D1AE092B80072E98A /* interface.c */; };
 		4A7EDCA11AE092B80072E98A /* interface.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A7EDC9D1AE092B80072E98A /* interface.c */; };
 		4A7EDCA21AE092B80072E98A /* interface.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A7EDC9D1AE092B80072E98A /* interface.c */; };
+		4AA2D7D61D1E23F40054A5FF /* jsmn.c in Sources */ = {isa = PBXBuildFile; fileRef = 935C55A71C1389370013166D /* jsmn.c */; };
+		4AA2D7DB1D1E23F50054A5FF /* jsmn.c in Sources */ = {isa = PBXBuildFile; fileRef = 935C55A71C1389370013166D /* jsmn.c */; };
+		4AA2D7DC1D1E23F60054A5FF /* jsmn.c in Sources */ = {isa = PBXBuildFile; fileRef = 935C55A71C1389370013166D /* jsmn.c */; };
+		4AA2D7DD1D1E23F60054A5FF /* jsmn.c in Sources */ = {isa = PBXBuildFile; fileRef = 935C55A71C1389370013166D /* jsmn.c */; };
+		4AA2D7DE1D1E24120054A5FF /* json_parse.c in Sources */ = {isa = PBXBuildFile; fileRef = 935C55701C136E6F0013166D /* json_parse.c */; };
+		4AA2D7DF1D1E24130054A5FF /* json_parse.c in Sources */ = {isa = PBXBuildFile; fileRef = 935C55701C136E6F0013166D /* json_parse.c */; };
+		4AA2D7E01D1E24130054A5FF /* json_parse.c in Sources */ = {isa = PBXBuildFile; fileRef = 935C55701C136E6F0013166D /* json_parse.c */; };
+		4AA2D7E11D1E24140054A5FF /* json_parse.c in Sources */ = {isa = PBXBuildFile; fileRef = 935C55701C136E6F0013166D /* json_parse.c */; };
+		4AA2D7E21D1F559E0054A5FF /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 773B3D241956885A0085CE5F /* MainMenu.xib */; };
+		4AA2D7E31D1F559E0054A5FF /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 773B3D241956885A0085CE5F /* MainMenu.xib */; };
+		4AA2D7E41D1F559F0054A5FF /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 773B3D241956885A0085CE5F /* MainMenu.xib */; };
+		4AA2D7E51D202A5B0054A5FF /* EmulatorGLView.m in Sources */ = {isa = PBXBuildFile; fileRef = 935C55041C12B61D0013166D /* EmulatorGLView.m */; };
+		4AA2D7E61D202A5C0054A5FF /* EmulatorGLView.m in Sources */ = {isa = PBXBuildFile; fileRef = 935C55041C12B61D0013166D /* EmulatorGLView.m */; };
+		4AA2D7E71D202A5D0054A5FF /* EmulatorGLView.m in Sources */ = {isa = PBXBuildFile; fileRef = 935C55041C12B61D0013166D /* EmulatorGLView.m */; };
+		4AA2D7E81D202BEA0054A5FF /* EmulatorJoystickController.m in Sources */ = {isa = PBXBuildFile; fileRef = 935C550C1C12B61D0013166D /* EmulatorJoystickController.m */; };
+		4AA2D7E91D202BEB0054A5FF /* EmulatorJoystickController.m in Sources */ = {isa = PBXBuildFile; fileRef = 935C550C1C12B61D0013166D /* EmulatorJoystickController.m */; };
+		4AA2D7EA1D202BEC0054A5FF /* EmulatorJoystickController.m in Sources */ = {isa = PBXBuildFile; fileRef = 935C550C1C12B61D0013166D /* EmulatorJoystickController.m */; };
+		4AA2D7EB1D202BED0054A5FF /* EmulatorJoystickController.m in Sources */ = {isa = PBXBuildFile; fileRef = 935C550C1C12B61D0013166D /* EmulatorJoystickController.m */; };
+		4AA2D7EC1D202BFA0054A5FF /* EmulatorGLView.m in Sources */ = {isa = PBXBuildFile; fileRef = 935C55041C12B61D0013166D /* EmulatorGLView.m */; };
+		4AA2D7F11D202C810054A5FF /* DDHidLib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 77C2796F1A1047AF000FE33F /* DDHidLib.framework */; };
+		4AA2D7F21D202C890054A5FF /* DDHidLib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 77C2796F1A1047AF000FE33F /* DDHidLib.framework */; };
+		4AA2D7F31D202C900054A5FF /* DDHidLib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 77C2796F1A1047AF000FE33F /* DDHidLib.framework */; };
+		4AA2D7F61D202CA70054A5FF /* DDHidLib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 77C2796F1A1047AF000FE33F /* DDHidLib.framework */; };
+		4AA2D7F91D202CE60054A5FF /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 77FA92931C72D93D0090755C /* libz.tbd */; };
+		4AA2D7FA1D202FF10054A5FF /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 77FA92931C72D93D0090755C /* libz.tbd */; };
+		4AA2D7FB1D20301F0054A5FF /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 773B3D241956885A0085CE5F /* MainMenu.xib */; };
+		4AA2D7FC1D20309C0054A5FF /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 77FA92931C72D93D0090755C /* libz.tbd */; };
+		4AA2D7FD1D20367D0054A5FF /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 77FA92931C72D93D0090755C /* libz.tbd */; };
 		4AD4FE941A52464F00F958EC /* cpu.S in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D9019568A570085CE5F /* cpu.S */; };
 		4AD4FE951A52464F00F958EC /* prefs.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D7719568A570085CE5F /* prefs.c */; };
 		4AD4FE961A52464F00F958EC /* display.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D6419568A570085CE5F /* display.c */; };
@@ -43,20 +77,17 @@
 		4AD4FEA31A52464F00F958EC /* darwin-shim.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D6019568A570085CE5F /* darwin-shim.c */; };
 		4AD4FEA51A52464F00F958EC /* vectorUtil.c in Sources */ = {isa = PBXBuildFile; fileRef = 77E1C0A919D72700004344E0 /* vectorUtil.c */; };
 		4AD4FEA61A52464F00F958EC /* debug.l in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D7219568A570085CE5F /* debug.l */; };
-		4AD4FEA71A52464F00F958EC /* CPUTestAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 779DD854195BDB1700DF89E5 /* CPUTestAppDelegate.m */; };
 		4AD4FEA91A52464F00F958EC /* font.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D6519568A570085CE5F /* font.c */; };
 		4AD4FEAA1A52464F00F958EC /* cpu-supp.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D5D19568A570085CE5F /* cpu-supp.c */; };
 		4AD4FEAB1A52464F00F958EC /* vm.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D8D19568A570085CE5F /* vm.c */; };
 		4AD4FEAC1A52464F00F958EC /* darwin-glue.S in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D9119568A570085CE5F /* darwin-glue.S */; };
 		4AD4FEAD1A52464F00F958EC /* matrixUtil.c in Sources */ = {isa = PBXBuildFile; fileRef = 77E1C0AF19D72700004344E0 /* matrixUtil.c */; };
 		4AD4FEAE1A52464F00F958EC /* joystick.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D6C19568A570085CE5F /* joystick.c */; };
-		4AD4FEB01A52464F00F958EC /* OpenAL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 779F565F19EAF6D000A6F107 /* OpenAL.framework */; };
 		4AD4FEB21A52464F00F958EC /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 773B3D0F1956885A0085CE5F /* Cocoa.framework */; };
 		4AD4FEB51A52464F00F958EC /* blank.dsk.gz in Resources */ = {isa = PBXBuildFile; fileRef = 4ADC523019E8D3F600186B36 /* blank.dsk.gz */; };
 		4AD4FEB61A52464F00F958EC /* blank.nib.gz in Resources */ = {isa = PBXBuildFile; fileRef = 4ADC523119E8D3F600186B36 /* blank.nib.gz */; };
 		4AD4FEB71A52464F00F958EC /* testvm1.dsk.gz in Resources */ = {isa = PBXBuildFile; fileRef = 4ADC523819E8D3F600186B36 /* testvm1.dsk.gz */; };
 		4AD4FEB81A52464F00F958EC /* README in Resources */ = {isa = PBXBuildFile; fileRef = 4ADC523419E8D3F600186B36 /* README */; };
-		4AD4FEB91A52464F00F958EC /* MainMenu-Test.xib in Resources */ = {isa = PBXBuildFile; fileRef = 4ADC51C919E8BEB700186B36 /* MainMenu-Test.xib */; };
 		4AD4FEBA1A52464F00F958EC /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 773B3D181956885A0085CE5F /* InfoPlist.strings */; };
 		4AD4FEBB1A52464F00F958EC /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 773B3D271956885A0085CE5F /* Images.xcassets */; };
 		4AD4FEBC1A52464F00F958EC /* speedtest.txt in Resources */ = {isa = PBXBuildFile; fileRef = 4ADC523619E8D3F600186B36 /* speedtest.txt */; };
@@ -64,7 +95,6 @@
 		4AD4FEBE1A52464F00F958EC /* Basic.vsh in Resources */ = {isa = PBXBuildFile; fileRef = 779F562719E4FE9E00A6F107 /* Basic.vsh */; };
 		4AD4FEBF1A52464F00F958EC /* Basic.fsh in Resources */ = {isa = PBXBuildFile; fileRef = 779F562819E4FE9E00A6F107 /* Basic.fsh */; };
 		4AD4FECB1A52468700F958EC /* testdisk.c in Sources */ = {isa = PBXBuildFile; fileRef = 4AD4FEC91A52467D00F958EC /* testdisk.c */; };
-		4AD4FED21A524BED00F958EC /* Apple2MacTestDisk-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 4AD4FEC41A52464F00F958EC /* Apple2MacTestDisk-Info.plist */; };
 		4ADC51C219E8BD3700186B36 /* vectorUtil.c in Sources */ = {isa = PBXBuildFile; fileRef = 77E1C0A919D72700004344E0 /* vectorUtil.c */; };
 		4ADC51C319E8BD3A00186B36 /* sourceUtil.c in Sources */ = {isa = PBXBuildFile; fileRef = 77E1C0AB19D72700004344E0 /* sourceUtil.c */; };
 		4ADC51C419E8BD3D00186B36 /* modelUtil.c in Sources */ = {isa = PBXBuildFile; fileRef = 77E1C0AD19D72700004344E0 /* modelUtil.c */; };
@@ -72,7 +102,6 @@
 		4ADC51C619E8BD5200186B36 /* glvideo.c in Sources */ = {isa = PBXBuildFile; fileRef = 77E1C0C719D736EB004344E0 /* glvideo.c */; };
 		4ADC51C719E8BD5800186B36 /* Basic.vsh in Resources */ = {isa = PBXBuildFile; fileRef = 779F562719E4FE9E00A6F107 /* Basic.vsh */; };
 		4ADC51C819E8BD5A00186B36 /* Basic.fsh in Resources */ = {isa = PBXBuildFile; fileRef = 779F562819E4FE9E00A6F107 /* Basic.fsh */; };
-		4ADC51CD19E8C19A00186B36 /* MainMenu-Test.xib in Resources */ = {isa = PBXBuildFile; fileRef = 4ADC51C919E8BEB700186B36 /* MainMenu-Test.xib */; };
 		4ADC51FE19E8CA4500186B36 /* cpu.S in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D9019568A570085CE5F /* cpu.S */; };
 		4ADC51FF19E8CA4500186B36 /* prefs.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D7719568A570085CE5F /* prefs.c */; };
 		4ADC520019E8CA4500186B36 /* display.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D6419568A570085CE5F /* display.c */; };
@@ -91,7 +120,6 @@
 		4ADC520D19E8CA4500186B36 /* darwin-shim.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D6019568A570085CE5F /* darwin-shim.c */; };
 		4ADC520F19E8CA4500186B36 /* vectorUtil.c in Sources */ = {isa = PBXBuildFile; fileRef = 77E1C0A919D72700004344E0 /* vectorUtil.c */; };
 		4ADC521019E8CA4500186B36 /* debug.l in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D7219568A570085CE5F /* debug.l */; };
-		4ADC521119E8CA4500186B36 /* CPUTestAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 779DD854195BDB1700DF89E5 /* CPUTestAppDelegate.m */; };
 		4ADC521319E8CA4500186B36 /* font.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D6519568A570085CE5F /* font.c */; };
 		4ADC521419E8CA4500186B36 /* cpu-supp.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D5D19568A570085CE5F /* cpu-supp.c */; };
 		4ADC521519E8CA4500186B36 /* vm.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D8D19568A570085CE5F /* vm.c */; };
@@ -99,7 +127,6 @@
 		4ADC521719E8CA4500186B36 /* matrixUtil.c in Sources */ = {isa = PBXBuildFile; fileRef = 77E1C0AF19D72700004344E0 /* matrixUtil.c */; };
 		4ADC521819E8CA4500186B36 /* joystick.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D6C19568A570085CE5F /* joystick.c */; };
 		4ADC521B19E8CA4500186B36 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 773B3D0F1956885A0085CE5F /* Cocoa.framework */; };
-		4ADC521E19E8CA4500186B36 /* MainMenu-Test.xib in Resources */ = {isa = PBXBuildFile; fileRef = 4ADC51C919E8BEB700186B36 /* MainMenu-Test.xib */; };
 		4ADC521F19E8CA4500186B36 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 773B3D181956885A0085CE5F /* InfoPlist.strings */; };
 		4ADC522019E8CA4500186B36 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 773B3D271956885A0085CE5F /* Images.xcassets */; };
 		4ADC522119E8CA4500186B36 /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = 773B3D1E1956885A0085CE5F /* Credits.rtf */; };
@@ -190,7 +217,6 @@
 		779DD84B195BD9F900DF89E5 /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = 773B3D1E1956885A0085CE5F /* Credits.rtf */; };
 		779DD852195BDA3000DF89E5 /* testcpu.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D7E19568A570085CE5F /* testcpu.c */; };
 		779DD853195BDA3400DF89E5 /* testcommon.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D7C19568A570085CE5F /* testcommon.c */; };
-		779DD856195BDB1700DF89E5 /* CPUTestAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 779DD854195BDB1700DF89E5 /* CPUTestAppDelegate.m */; };
 		779F561C19D7929100A6F107 /* glvideo.c in Sources */ = {isa = PBXBuildFile; fileRef = 77E1C0C719D736EB004344E0 /* glvideo.c */; };
 		779F562319DA59D600A6F107 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 773B3D241956885A0085CE5F /* MainMenu.xib */; };
 		779F562919E4FE9E00A6F107 /* Basic.vsh in Resources */ = {isa = PBXBuildFile; fileRef = 779F562719E4FE9E00A6F107 /* Basic.vsh */; };
@@ -201,7 +227,6 @@
 		779F565B19EAF66E00A6F107 /* soundcore-openal.c in Sources */ = {isa = PBXBuildFile; fileRef = 779F564F19EAF66E00A6F107 /* soundcore-openal.c */; };
 		779F565C19EAF66E00A6F107 /* soundcore.c in Sources */ = {isa = PBXBuildFile; fileRef = 779F565119EAF66E00A6F107 /* soundcore.c */; };
 		779F565D19EAF66E00A6F107 /* speaker.c in Sources */ = {isa = PBXBuildFile; fileRef = 779F565319EAF66E00A6F107 /* speaker.c */; };
-		779F566019EAF6D000A6F107 /* OpenAL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 779F565F19EAF6D000A6F107 /* OpenAL.framework */; };
 		779F566419EB0B9100A6F107 /* cpu.S in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D9019568A570085CE5F /* cpu.S */; };
 		779F566519EB0B9100A6F107 /* prefs.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D7719568A570085CE5F /* prefs.c */; };
 		779F566619EB0B9100A6F107 /* display.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D6419568A570085CE5F /* display.c */; };
@@ -220,17 +245,14 @@
 		779F567319EB0B9100A6F107 /* darwin-shim.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D6019568A570085CE5F /* darwin-shim.c */; };
 		779F567519EB0B9100A6F107 /* vectorUtil.c in Sources */ = {isa = PBXBuildFile; fileRef = 77E1C0A919D72700004344E0 /* vectorUtil.c */; };
 		779F567619EB0B9100A6F107 /* debug.l in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D7219568A570085CE5F /* debug.l */; };
-		779F567719EB0B9100A6F107 /* CPUTestAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 779DD854195BDB1700DF89E5 /* CPUTestAppDelegate.m */; };
 		779F567919EB0B9100A6F107 /* font.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D6519568A570085CE5F /* font.c */; };
 		779F567A19EB0B9100A6F107 /* cpu-supp.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D5D19568A570085CE5F /* cpu-supp.c */; };
 		779F567B19EB0B9100A6F107 /* vm.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D8D19568A570085CE5F /* vm.c */; };
 		779F567C19EB0B9100A6F107 /* darwin-glue.S in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D9119568A570085CE5F /* darwin-glue.S */; };
 		779F567D19EB0B9100A6F107 /* matrixUtil.c in Sources */ = {isa = PBXBuildFile; fileRef = 77E1C0AF19D72700004344E0 /* matrixUtil.c */; };
 		779F567E19EB0B9100A6F107 /* joystick.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D6C19568A570085CE5F /* joystick.c */; };
-		779F568019EB0B9100A6F107 /* OpenAL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 779F565F19EAF6D000A6F107 /* OpenAL.framework */; };
 		779F568219EB0B9100A6F107 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 773B3D0F1956885A0085CE5F /* Cocoa.framework */; };
 		779F568619EB0B9100A6F107 /* README in Resources */ = {isa = PBXBuildFile; fileRef = 4ADC523419E8D3F600186B36 /* README */; };
-		779F568719EB0B9100A6F107 /* MainMenu-Test.xib in Resources */ = {isa = PBXBuildFile; fileRef = 4ADC51C919E8BEB700186B36 /* MainMenu-Test.xib */; };
 		779F568819EB0B9100A6F107 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 773B3D181956885A0085CE5F /* InfoPlist.strings */; };
 		779F568919EB0B9100A6F107 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 773B3D271956885A0085CE5F /* Images.xcassets */; };
 		779F568A19EB0B9100A6F107 /* speedtest.txt in Resources */ = {isa = PBXBuildFile; fileRef = 4ADC523619E8D3F600186B36 /* speedtest.txt */; };
@@ -264,7 +286,6 @@
 		935C55201C12B64A0013166D /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 935C551B1C12B6400013166D /* main.m */; };
 		935C55351C12BA5F0013166D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 935C55331C12BA5F0013166D /* Main.storyboard */; };
 		935C55371C12BA5F0013166D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 935C55361C12BA5F0013166D /* Assets.xcassets */; };
-		935C55431C12BCFD0013166D /* Apple2iOS-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 935C55421C12BCFD0013166D /* Apple2iOS-Info.plist */; };
 		935C55461C12BE110013166D /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = 935C55441C12BE110013166D /* LaunchScreen.xib */; };
 		935C554D1C12BE510013166D /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 935C55481C12BE510013166D /* AppDelegate.m */; };
 		935C554E1C12BE510013166D /* EAGLView.m in Sources */ = {isa = PBXBuildFile; fileRef = 935C554A1C12BE510013166D /* EAGLView.m */; };
@@ -324,6 +345,34 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		4AA2D7ED1D202C430054A5FF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 77C279601A1047AE000FE33F /* DDHidLib.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 55193E4F0B93F2EE004C0C98;
+			remoteInfo = DDHidLib;
+		};
+		4AA2D7EF1D202C5D0054A5FF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 77C279601A1047AE000FE33F /* DDHidLib.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 55193E4F0B93F2EE004C0C98;
+			remoteInfo = DDHidLib;
+		};
+		4AA2D7F41D202C950054A5FF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 77C279601A1047AE000FE33F /* DDHidLib.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 55193E4F0B93F2EE004C0C98;
+			remoteInfo = DDHidLib;
+		};
+		4AA2D7F71D202CAD0054A5FF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 77C279601A1047AE000FE33F /* DDHidLib.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 55193E4F0B93F2EE004C0C98;
+			remoteInfo = DDHidLib;
+		};
 		77C279681A1047AF000FE33F /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 77C279601A1047AE000FE33F /* DDHidLib.xcodeproj */;
@@ -392,13 +441,14 @@
 /* Begin PBXFileReference section */
 		4A2636F819FDEDB700DBFB00 /* Apple2Mac.help */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Apple2Mac.help; sourceTree = "<group>"; };
 		4A61119B1A6A1DE60035F7DE /* blank.po.gz */ = {isa = PBXFileReference; lastKnownFileType = archive.gzip; path = blank.po.gz; sourceTree = "<group>"; };
+		4A73BE2E1CCBE21A0041C573 /* memmngt.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = memmngt.c; sourceTree = "<group>"; };
 		4A7EDC911AE092680072E98A /* glhudmodel.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = glhudmodel.c; sourceTree = "<group>"; };
 		4A7EDC921AE092680072E98A /* glnode.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = glnode.c; sourceTree = "<group>"; };
 		4A7EDC9D1AE092B80072E98A /* interface.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = interface.c; sourceTree = "<group>"; };
+		4AA2D7FE1D2038380054A5FF /* testprefs.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = testprefs.c; sourceTree = "<group>"; };
 		4AD4FEC31A52464F00F958EC /* Apple2MacTestDisk.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Apple2MacTestDisk.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		4AD4FEC41A52464F00F958EC /* Apple2MacTestDisk-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "Apple2MacTestDisk-Info.plist"; path = "Apple2MacTests/Apple2MacTestDisk-Info.plist"; sourceTree = SOURCE_ROOT; };
 		4AD4FEC91A52467D00F958EC /* testdisk.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = testdisk.c; sourceTree = "<group>"; };
-		4ADC51CA19E8BEB700186B36 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = "Base.lproj/MainMenu-Test.xib"; sourceTree = "<group>"; };
 		4ADC522719E8CA4500186B36 /* Apple2MacTestVM.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Apple2MacTestVM.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		4ADC522819E8CA4500186B36 /* Apple2MacTestVM-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "Apple2MacTestVM-Info.plist"; path = "Apple2MacTests/Apple2MacTestVM-Info.plist"; sourceTree = SOURCE_ROOT; };
 		4ADC523019E8D3F600186B36 /* blank.dsk.gz */ = {isa = PBXFileReference; lastKnownFileType = archive.gzip; path = blank.dsk.gz; sourceTree = "<group>"; };
@@ -418,7 +468,6 @@
 		4E4356E31C386AC500B71328 /* interface.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = interface.h; sourceTree = "<group>"; };
 		4E4356E41C386AC500B71328 /* memmngt.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = memmngt.h; sourceTree = "<group>"; };
 		4E4585F91C29F2B9003E74A1 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/MainMenu.xib; sourceTree = "<group>"; };
-		4E4585FF1C29F393003E74A1 /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = "fr.lproj/MainMenu-Test.strings"; sourceTree = "<group>"; };
 		4E4586001C29F399003E74A1 /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = fr; path = fr.lproj/Credits.rtf; sourceTree = "<group>"; };
 		4E4586011C29F399003E74A1 /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		4E4586021C29F399003E74A1 /* fr */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = fr; path = fr.lproj/MainMenu.xib; sourceTree = "<group>"; };
@@ -499,8 +548,6 @@
 		779DD826195764E200DF89E5 /* rom-shim.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = "rom-shim.c"; sourceTree = "<group>"; };
 		779DD850195BD9F900DF89E5 /* Apple2MacTestCPU.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Apple2MacTestCPU.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		779DD851195BD9F900DF89E5 /* Apple2MacTestCPU-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "Apple2MacTestCPU-Info.plist"; path = "Apple2MacTests/Apple2MacTestCPU-Info.plist"; sourceTree = SOURCE_ROOT; };
-		779DD854195BDB1700DF89E5 /* CPUTestAppDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CPUTestAppDelegate.m; sourceTree = "<group>"; };
-		779DD855195BDB1700DF89E5 /* CPUTestAppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CPUTestAppDelegate.h; sourceTree = "<group>"; };
 		779F562719E4FE9E00A6F107 /* Basic.vsh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = Basic.vsh; sourceTree = "<group>"; };
 		779F562819E4FE9E00A6F107 /* Basic.fsh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = Basic.fsh; sourceTree = "<group>"; };
 		779F564719EAF66E00A6F107 /* alhelpers.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = alhelpers.c; sourceTree = "<group>"; };
@@ -532,6 +579,7 @@
 		77E1C0B119D72700004344E0 /* imageUtil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = imageUtil.h; path = video_util/imageUtil.h; sourceTree = "<group>"; };
 		77E1C0B219D72700004344E0 /* glUtil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = glUtil.h; path = video_util/glUtil.h; sourceTree = "<group>"; };
 		77E1C0C719D736EB004344E0 /* glvideo.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = glvideo.c; sourceTree = "<group>"; };
+		77FA92931C72D93D0090755C /* libz.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.tbd; path = usr/lib/libz.tbd; sourceTree = SDKROOT; };
 		93206C771C14E14000668153 /* Base */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = Base; path = Base.lproj/Apple2iOS.strings; sourceTree = "<group>"; };
 		93206C831C156BD300668153 /* A2IXPopupChoreographer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = A2IXPopupChoreographer.h; path = Classes/iOS/A2IXPopupChoreographer.h; sourceTree = SOURCE_ROOT; };
 		93206C841C156BD300668153 /* A2IXPopupChoreographer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = A2IXPopupChoreographer.m; path = Classes/iOS/A2IXPopupChoreographer.m; sourceTree = SOURCE_ROOT; };
@@ -593,7 +641,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4AD4FEB01A52464F00F958EC /* OpenAL.framework in Frameworks */,
+				4AA2D7FC1D20309C0054A5FF /* libz.tbd in Frameworks */,
+				4AA2D7F31D202C900054A5FF /* DDHidLib.framework in Frameworks */,
 				4AD4FEB21A52464F00F958EC /* Cocoa.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -602,7 +651,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				779F566019EAF6D000A6F107 /* OpenAL.framework in Frameworks */,
+				4AA2D7F91D202CE60054A5FF /* libz.tbd in Frameworks */,
+				4AA2D7F11D202C810054A5FF /* DDHidLib.framework in Frameworks */,
 				4ADC521B19E8CA4500186B36 /* Cocoa.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -628,6 +678,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4AA2D7FA1D202FF10054A5FF /* libz.tbd in Frameworks */,
+				4AA2D7F61D202CA70054A5FF /* DDHidLib.framework in Frameworks */,
 				779DD846195BD9F900DF89E5 /* Cocoa.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -636,7 +688,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				779F568019EB0B9100A6F107 /* OpenAL.framework in Frameworks */,
+				4AA2D7FD1D20367D0054A5FF /* libz.tbd in Frameworks */,
+				4AA2D7F21D202C890054A5FF /* DDHidLib.framework in Frameworks */,
 				779F568219EB0B9100A6F107 /* Cocoa.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -733,6 +786,7 @@
 		773B3D0E1956885A0085CE5F /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				77FA92931C72D93D0090755C /* libz.tbd */,
 				4EB4F8561C393F0E0072A15C /* OpenAL.framework */,
 				4ECFC3BE1C368ED3008E2633 /* GameController.framework */,
 				77C279601A1047AE000FE33F /* DDHidLib.xcodeproj */,
@@ -762,7 +816,6 @@
 				773B3D181956885A0085CE5F /* InfoPlist.strings */,
 				773B3D271956885A0085CE5F /* Images.xcassets */,
 				773B3D241956885A0085CE5F /* MainMenu.xib */,
-				4ADC51C919E8BEB700186B36 /* MainMenu-Test.xib */,
 			);
 			path = Apple2Mac;
 			sourceTree = "<group>";
@@ -770,8 +823,6 @@
 		773B3D331956885A0085CE5F /* Apple2MacTests */ = {
 			isa = PBXGroup;
 			children = (
-				779DD854195BDB1700DF89E5 /* CPUTestAppDelegate.m */,
-				779DD855195BDB1700DF89E5 /* CPUTestAppDelegate.h */,
 				773B3D341956885A0085CE5F /* Supporting Files */,
 			);
 			path = Apple2MacTests;
@@ -802,8 +853,6 @@
 		773B3D4519568A570085CE5F /* src */ = {
 			isa = PBXGroup;
 			children = (
-				4E4356E31C386AC500B71328 /* interface.h */,
-				4E4356E41C386AC500B71328 /* memmngt.h */,
 				935C55781C136F550013166D /* arm */,
 				779F564619EAF66E00A6F107 /* audio */,
 				773B3D5C19568A570085CE5F /* common.h */,
@@ -817,6 +866,7 @@
 				773B3D6419568A570085CE5F /* display.c */,
 				773B3D6519568A570085CE5F /* font.c */,
 				773B3D6919568A570085CE5F /* glue.h */,
+				4E4356E31C386AC500B71328 /* interface.h */,
 				4A7EDC9D1AE092B80072E98A /* interface.c */,
 				773B3D6D19568A570085CE5F /* joystick.h */,
 				773B3D6C19568A570085CE5F /* joystick.c */,
@@ -824,6 +874,8 @@
 				935C55701C136E6F0013166D /* json_parse.c */,
 				773B3D6F19568A570085CE5F /* keys.h */,
 				773B3D6E19568A570085CE5F /* keys.c */,
+				4E4356E41C386AC500B71328 /* memmngt.h */,
+				4A73BE2E1CCBE21A0041C573 /* memmngt.c */,
 				773B3D7019568A570085CE5F /* meta */,
 				773B3D7619568A570085CE5F /* misc.h */,
 				773B3D7519568A570085CE5F /* misc.c */,
@@ -859,6 +911,7 @@
 		773B3D7919568A570085CE5F /* test */ = {
 			isa = PBXGroup;
 			children = (
+				4AA2D7FE1D2038380054A5FF /* testprefs.c */,
 				773B3D7A19568A570085CE5F /* greatest.h */,
 				935C55771C136F260013166D /* sha1.h */,
 				4AFC17091AAE9C3200B215FA /* sha1.c */,
@@ -1066,6 +1119,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				4AA2D7F51D202C950054A5FF /* PBXTargetDependency */,
 			);
 			name = Apple2MacTestDisk;
 			productName = Apple2Mac;
@@ -1085,6 +1139,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				4AA2D7EE1D202C430054A5FF /* PBXTargetDependency */,
 			);
 			name = Apple2MacTestVM;
 			productName = Apple2Mac;
@@ -1142,6 +1197,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				4AA2D7F81D202CAD0054A5FF /* PBXTargetDependency */,
 			);
 			name = Apple2MacTestCPU;
 			productName = Apple2Mac;
@@ -1161,6 +1217,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				4AA2D7F01D202C5D0054A5FF /* PBXTargetDependency */,
 			);
 			name = Apple2MacTestDisplay;
 			productName = Apple2Mac;
@@ -1193,7 +1250,7 @@
 		773B3D04195688590085CE5F /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0510;
+				LastUpgradeCheck = 0730;
 				ORGANIZATIONNAME = deadc0de.org;
 				TargetAttributes = {
 					4ECFC3A91C368EAB008E2633 = {
@@ -1282,10 +1339,9 @@
 				4AD4FEB51A52464F00F958EC /* blank.dsk.gz in Resources */,
 				4AD4FEB61A52464F00F958EC /* blank.nib.gz in Resources */,
 				4AD4FEB71A52464F00F958EC /* testvm1.dsk.gz in Resources */,
-				4AD4FED21A524BED00F958EC /* Apple2MacTestDisk-Info.plist in Resources */,
 				4AD4FEB81A52464F00F958EC /* README in Resources */,
 				4AFC17161AAE9CC000B215FA /* testvm1.nib.gz in Resources */,
-				4AD4FEB91A52464F00F958EC /* MainMenu-Test.xib in Resources */,
+				4AA2D7E21D1F559E0054A5FF /* MainMenu.xib in Resources */,
 				4AD4FEBA1A52464F00F958EC /* InfoPlist.strings in Resources */,
 				4AD4FEBB1A52464F00F958EC /* Images.xcassets in Resources */,
 				4A61119D1A6A1DE60035F7DE /* blank.po.gz in Resources */,
@@ -1304,7 +1360,7 @@
 				77EB316D1A27A9AF00DC5A8A /* blank.nib.gz in Resources */,
 				4ADC525319E8D3F600186B36 /* testvm1.dsk.gz in Resources */,
 				4ADC524719E8D3F600186B36 /* README in Resources */,
-				4ADC521E19E8CA4500186B36 /* MainMenu-Test.xib in Resources */,
+				4AA2D7E41D1F559F0054A5FF /* MainMenu.xib in Resources */,
 				4ADC521F19E8CA4500186B36 /* InfoPlist.strings in Resources */,
 				4ADC522019E8CA4500186B36 /* Images.xcassets in Resources */,
 				4ADC524D19E8D3F600186B36 /* speedtest.txt in Resources */,
@@ -1349,13 +1405,13 @@
 			buildActionMask = 2147483647;
 			files = (
 				4ADC524619E8D3F600186B36 /* README in Resources */,
-				4ADC51CD19E8C19A00186B36 /* MainMenu-Test.xib in Resources */,
 				779DD849195BD9F900DF89E5 /* InfoPlist.strings in Resources */,
 				779DD84A195BD9F900DF89E5 /* Images.xcassets in Resources */,
 				4ADC524C19E8D3F600186B36 /* speedtest.txt in Resources */,
 				779DD84B195BD9F900DF89E5 /* Credits.rtf in Resources */,
 				4ADC51C719E8BD5800186B36 /* Basic.vsh in Resources */,
 				4ADC51C819E8BD5A00186B36 /* Basic.fsh in Resources */,
+				4AA2D7FB1D20301F0054A5FF /* MainMenu.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1366,7 +1422,6 @@
 				779F569419EB10A100A6F107 /* testdisplay1.dsk.gz in Resources */,
 				779F568619EB0B9100A6F107 /* README in Resources */,
 				4AFC17131AAE9CC000B215FA /* testdisplay1.nib.gz in Resources */,
-				779F568719EB0B9100A6F107 /* MainMenu-Test.xib in Resources */,
 				4AFC17171AAE9CC000B215FA /* testvm1.nib.gz in Resources */,
 				779F568819EB0B9100A6F107 /* InfoPlist.strings in Resources */,
 				779F568919EB0B9100A6F107 /* Images.xcassets in Resources */,
@@ -1374,6 +1429,7 @@
 				779F568B19EB0B9100A6F107 /* Credits.rtf in Resources */,
 				779F568C19EB0B9100A6F107 /* Basic.vsh in Resources */,
 				779F568D19EB0B9100A6F107 /* Basic.fsh in Resources */,
+				4AA2D7E31D1F559E0054A5FF /* MainMenu.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1384,7 +1440,6 @@
 				939C95A21C3B8E2100263E41 /* SolidColor.vsh in Resources */,
 				935C55371C12BA5F0013166D /* Assets.xcassets in Resources */,
 				939C959F1C3B8E2100263E41 /* SolidColor.fsh in Resources */,
-				935C55431C12BCFD0013166D /* Apple2iOS-Info.plist in Resources */,
 				935C55461C12BE110013166D /* LaunchScreen.xib in Resources */,
 				935C55351C12BA5F0013166D /* Main.storyboard in Resources */,
 				4ECFC3A01C368620008E2633 /* NSCT.dsk in Resources */,
@@ -1580,27 +1635,31 @@
 				4AD4FE941A52464F00F958EC /* cpu.S in Sources */,
 				4AD4FE951A52464F00F958EC /* prefs.c in Sources */,
 				4AD4FE961A52464F00F958EC /* display.c in Sources */,
+				4AA2D7E51D202A5B0054A5FF /* EmulatorGLView.m in Sources */,
 				4AD4FE971A52464F00F958EC /* disk.c in Sources */,
 				4AFC170C1AAE9C3200B215FA /* sha1.c in Sources */,
 				4AD4FE981A52464F00F958EC /* sourceUtil.c in Sources */,
 				4AD4FE991A52464F00F958EC /* modelUtil.c in Sources */,
 				4AD4FE9A1A52464F00F958EC /* debugger.c in Sources */,
 				4AD4FE9B1A52464F00F958EC /* keys.c in Sources */,
+				4AA2D7DB1D1E23F50054A5FF /* jsmn.c in Sources */,
 				4AD4FE9C1A52464F00F958EC /* timing.c in Sources */,
 				4AD4FE9D1A52464F00F958EC /* testcommon.c in Sources */,
 				4AD4FE9E1A52464F00F958EC /* misc.c in Sources */,
 				4AD4FE9F1A52464F00F958EC /* opcodes.c in Sources */,
 				935C551F1C12B6460013166D /* main.m in Sources */,
 				4A7EDCA01AE092B80072E98A /* interface.c in Sources */,
+				4A73BE311CCBE22B0041C573 /* memmngt.c in Sources */,
 				4AD4FEA01A52464F00F958EC /* glvideo.c in Sources */,
 				4AD4FEA11A52464F00F958EC /* rom-shim.c in Sources */,
 				4AD4FEA21A52464F00F958EC /* zlib-helpers.c in Sources */,
 				4AD4FEA31A52464F00F958EC /* darwin-shim.c in Sources */,
 				4A7EDC9A1AE092680072E98A /* glnode.c in Sources */,
 				4AD4FECB1A52468700F958EC /* testdisk.c in Sources */,
+				4AA2D7DF1D1E24130054A5FF /* json_parse.c in Sources */,
 				4AD4FEA51A52464F00F958EC /* vectorUtil.c in Sources */,
 				4AD4FEA61A52464F00F958EC /* debug.l in Sources */,
-				4AD4FEA71A52464F00F958EC /* CPUTestAppDelegate.m in Sources */,
+				4AA2D7E81D202BEA0054A5FF /* EmulatorJoystickController.m in Sources */,
 				4AD4FEA91A52464F00F958EC /* font.c in Sources */,
 				4AD4FEAA1A52464F00F958EC /* cpu-supp.c in Sources */,
 				4AD4FEAB1A52464F00F958EC /* vm.c in Sources */,
@@ -1618,27 +1677,31 @@
 				4ADC51FE19E8CA4500186B36 /* cpu.S in Sources */,
 				4ADC51FF19E8CA4500186B36 /* prefs.c in Sources */,
 				4ADC520019E8CA4500186B36 /* display.c in Sources */,
+				4AA2D7E61D202A5C0054A5FF /* EmulatorGLView.m in Sources */,
 				4ADC520119E8CA4500186B36 /* disk.c in Sources */,
 				4AFC170E1AAE9C3200B215FA /* sha1.c in Sources */,
 				4ADC520219E8CA4500186B36 /* sourceUtil.c in Sources */,
 				4ADC520319E8CA4500186B36 /* modelUtil.c in Sources */,
 				4ADC520419E8CA4500186B36 /* debugger.c in Sources */,
 				4ADC520519E8CA4500186B36 /* keys.c in Sources */,
+				4AA2D7DD1D1E23F60054A5FF /* jsmn.c in Sources */,
 				4ADC520619E8CA4500186B36 /* timing.c in Sources */,
 				4ADC520719E8CA4500186B36 /* testcommon.c in Sources */,
 				4ADC520819E8CA4500186B36 /* misc.c in Sources */,
 				4ADC520919E8CA4500186B36 /* opcodes.c in Sources */,
 				935C551D1C12B6450013166D /* main.m in Sources */,
 				4A7EDCA21AE092B80072E98A /* interface.c in Sources */,
+				4A73BE331CCBE22C0041C573 /* memmngt.c in Sources */,
 				4ADC520A19E8CA4500186B36 /* glvideo.c in Sources */,
 				4ADC520B19E8CA4500186B36 /* rom-shim.c in Sources */,
 				4ADC520C19E8CA4500186B36 /* zlib-helpers.c in Sources */,
 				4ADC520D19E8CA4500186B36 /* darwin-shim.c in Sources */,
 				4A7EDC9C1AE092680072E98A /* glnode.c in Sources */,
 				4ADC520F19E8CA4500186B36 /* vectorUtil.c in Sources */,
+				4AA2D7E11D1E24140054A5FF /* json_parse.c in Sources */,
 				4ADC521019E8CA4500186B36 /* debug.l in Sources */,
-				4ADC521119E8CA4500186B36 /* CPUTestAppDelegate.m in Sources */,
 				4ADC522919E8CEAD00186B36 /* testvm.c in Sources */,
+				4AA2D7EA1D202BEC0054A5FF /* EmulatorJoystickController.m in Sources */,
 				4ADC521319E8CA4500186B36 /* font.c in Sources */,
 				4ADC521419E8CA4500186B36 /* cpu-supp.c in Sources */,
 				4ADC521519E8CA4500186B36 /* vm.c in Sources */,
@@ -1678,6 +1741,7 @@
 				77E1C0B319D72700004344E0 /* vectorUtil.c in Sources */,
 				4A7EDC9E1AE092B80072E98A /* interface.c in Sources */,
 				773B3DAB19568A570085CE5F /* keys.c in Sources */,
+				4A73BE2F1CCBE21B0041C573 /* memmngt.c in Sources */,
 				773B3DBC19568A570085CE5F /* timing.c in Sources */,
 				773BC91A19F31E7B00996893 /* prefs.c in Sources */,
 				77E1C0B619D72700004344E0 /* matrixUtil.c in Sources */,
@@ -1720,26 +1784,30 @@
 				779DD82F195BD9F900DF89E5 /* cpu.S in Sources */,
 				779DD830195BD9F900DF89E5 /* prefs.c in Sources */,
 				779DD831195BD9F900DF89E5 /* display.c in Sources */,
+				4AA2D7EC1D202BFA0054A5FF /* EmulatorGLView.m in Sources */,
 				779DD832195BD9F900DF89E5 /* disk.c in Sources */,
 				4AFC170B1AAE9C3200B215FA /* sha1.c in Sources */,
 				4ADC51C319E8BD3A00186B36 /* sourceUtil.c in Sources */,
 				4ADC51C419E8BD3D00186B36 /* modelUtil.c in Sources */,
 				779DD833195BD9F900DF89E5 /* debugger.c in Sources */,
+				4AA2D7EB1D202BED0054A5FF /* EmulatorJoystickController.m in Sources */,
 				779DD834195BD9F900DF89E5 /* keys.c in Sources */,
+				4AA2D7D61D1E23F40054A5FF /* jsmn.c in Sources */,
 				779DD835195BD9F900DF89E5 /* timing.c in Sources */,
 				779DD853195BDA3400DF89E5 /* testcommon.c in Sources */,
 				779DD836195BD9F900DF89E5 /* misc.c in Sources */,
 				779DD837195BD9F900DF89E5 /* opcodes.c in Sources */,
 				935C55201C12B64A0013166D /* main.m in Sources */,
 				4A7EDC9F1AE092B80072E98A /* interface.c in Sources */,
+				4A73BE301CCBE22A0041C573 /* memmngt.c in Sources */,
 				4ADC51C619E8BD5200186B36 /* glvideo.c in Sources */,
 				779DD838195BD9F900DF89E5 /* rom-shim.c in Sources */,
 				779DD839195BD9F900DF89E5 /* zlib-helpers.c in Sources */,
 				779DD83A195BD9F900DF89E5 /* darwin-shim.c in Sources */,
 				4A7EDC991AE092680072E98A /* glnode.c in Sources */,
 				4ADC51C219E8BD3700186B36 /* vectorUtil.c in Sources */,
+				4AA2D7DE1D1E24120054A5FF /* json_parse.c in Sources */,
 				779DD83C195BD9F900DF89E5 /* debug.l in Sources */,
-				779DD856195BDB1700DF89E5 /* CPUTestAppDelegate.m in Sources */,
 				779DD852195BDA3000DF89E5 /* testcpu.c in Sources */,
 				779DD83D195BD9F900DF89E5 /* font.c in Sources */,
 				779DD83E195BD9F900DF89E5 /* cpu-supp.c in Sources */,
@@ -1758,27 +1826,31 @@
 				779F566419EB0B9100A6F107 /* cpu.S in Sources */,
 				779F566519EB0B9100A6F107 /* prefs.c in Sources */,
 				779F566619EB0B9100A6F107 /* display.c in Sources */,
+				4AA2D7E71D202A5D0054A5FF /* EmulatorGLView.m in Sources */,
 				779F566719EB0B9100A6F107 /* disk.c in Sources */,
 				4AFC170D1AAE9C3200B215FA /* sha1.c in Sources */,
 				779F569319EB0D1E00A6F107 /* testdisplay.c in Sources */,
 				779F566819EB0B9100A6F107 /* sourceUtil.c in Sources */,
 				779F566919EB0B9100A6F107 /* modelUtil.c in Sources */,
 				779F566A19EB0B9100A6F107 /* debugger.c in Sources */,
+				4AA2D7DC1D1E23F60054A5FF /* jsmn.c in Sources */,
 				779F566B19EB0B9100A6F107 /* keys.c in Sources */,
 				779F566C19EB0B9100A6F107 /* timing.c in Sources */,
 				779F566D19EB0B9100A6F107 /* testcommon.c in Sources */,
 				779F566E19EB0B9100A6F107 /* misc.c in Sources */,
 				935C551E1C12B6450013166D /* main.m in Sources */,
 				4A7EDCA11AE092B80072E98A /* interface.c in Sources */,
+				4A73BE321CCBE22C0041C573 /* memmngt.c in Sources */,
 				779F566F19EB0B9100A6F107 /* opcodes.c in Sources */,
 				779F567019EB0B9100A6F107 /* glvideo.c in Sources */,
 				779F567119EB0B9100A6F107 /* rom-shim.c in Sources */,
 				779F567219EB0B9100A6F107 /* zlib-helpers.c in Sources */,
 				4A7EDC9B1AE092680072E98A /* glnode.c in Sources */,
 				779F567319EB0B9100A6F107 /* darwin-shim.c in Sources */,
+				4AA2D7E01D1E24130054A5FF /* json_parse.c in Sources */,
 				779F567519EB0B9100A6F107 /* vectorUtil.c in Sources */,
 				779F567619EB0B9100A6F107 /* debug.l in Sources */,
-				779F567719EB0B9100A6F107 /* CPUTestAppDelegate.m in Sources */,
+				4AA2D7E91D202BEB0054A5FF /* EmulatorJoystickController.m in Sources */,
 				779F567919EB0B9100A6F107 /* font.c in Sources */,
 				779F567A19EB0B9100A6F107 /* cpu-supp.c in Sources */,
 				779F567B19EB0B9100A6F107 /* vm.c in Sources */,
@@ -1808,6 +1880,7 @@
 				935C55641C136E070013166D /* rom-shim.c in Sources */,
 				935C55651C136E070013166D /* timing.c in Sources */,
 				935C55661C136E070013166D /* glalert.c in Sources */,
+				4A73BE341CCBE22E0041C573 /* memmngt.c in Sources */,
 				935C55A91C1389370013166D /* jsmn.c in Sources */,
 				935C55671C136E070013166D /* glhudmodel.c in Sources */,
 				935C55681C136E070013166D /* glnode.c in Sources */,
@@ -1846,6 +1919,26 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		4AA2D7EE1D202C430054A5FF /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = DDHidLib;
+			targetProxy = 4AA2D7ED1D202C430054A5FF /* PBXContainerItemProxy */;
+		};
+		4AA2D7F01D202C5D0054A5FF /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = DDHidLib;
+			targetProxy = 4AA2D7EF1D202C5D0054A5FF /* PBXContainerItemProxy */;
+		};
+		4AA2D7F51D202C950054A5FF /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = DDHidLib;
+			targetProxy = 4AA2D7F41D202C950054A5FF /* PBXContainerItemProxy */;
+		};
+		4AA2D7F81D202CAD0054A5FF /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = DDHidLib;
+			targetProxy = 4AA2D7F71D202CAD0054A5FF /* PBXContainerItemProxy */;
+		};
 		77C279721A1047E7000FE33F /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			name = DDHidLib;
@@ -1854,15 +1947,6 @@
 /* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
-		4ADC51C919E8BEB700186B36 /* MainMenu-Test.xib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				4ADC51CA19E8BEB700186B36 /* Base */,
-				4E4585FF1C29F393003E74A1 /* fr */,
-			);
-			name = "MainMenu-Test.xib";
-			sourceTree = "<group>";
-		};
 		4ECFC3B51C368EAB008E2633 /* Main.storyboard */ = {
 			isa = PBXVariantGroup;
 			children = (
@@ -1957,12 +2041,14 @@
 					"CPU_TRACING=1",
 					"DISK_TRACING=1",
 					"VM_TRACING=1",
+					"VIDEO_OPENGL=1",
 				);
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
 				);
 				INFOPLIST_FILE = "$(SRCROOT)/Apple2MacTests/Apple2MacTestDisk-Info.plist";
+				PRODUCT_BUNDLE_IDENTIFIER = "org.deadc0de.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = Apple2MacTestDisk;
 				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/../src";
 				WRAPPER_EXTENSION = app;
@@ -1986,12 +2072,14 @@
 					"TEST_VM=1",
 					"TESTING=1",
 					"CPU_TRACING=1",
+					"VIDEO_OPENGL=1",
 				);
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
 				);
 				INFOPLIST_FILE = "$(SRCROOT)/Apple2MacTests/Apple2MacTestDisk-Info.plist";
+				PRODUCT_BUNDLE_IDENTIFIER = "org.deadc0de.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = Apple2MacTestDisk;
 				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/../src";
 				WRAPPER_EXTENSION = app;
@@ -2016,12 +2104,14 @@
 					"CPU_TRACING=1",
 					"DISK_TRACING=1",
 					"VM_TRACING=1",
+					"VIDEO_OPENGL=1",
 				);
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
 				);
 				INFOPLIST_FILE = "$(SRCROOT)/Apple2MacTests/Apple2MacTestVM-Info.plist";
+				PRODUCT_BUNDLE_IDENTIFIER = "org.deadc0de.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = Apple2MacTestVM;
 				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/../src";
 				WRAPPER_EXTENSION = app;
@@ -2045,12 +2135,14 @@
 					"TEST_VM=1",
 					"TESTING=1",
 					"CPU_TRACING=1",
+					"VIDEO_OPENGL=1",
 				);
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
 				);
 				INFOPLIST_FILE = "$(SRCROOT)/Apple2MacTests/Apple2MacTestVM-Info.plist";
+				PRODUCT_BUNDLE_IDENTIFIER = "org.deadc0de.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = Apple2MacTestVM;
 				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/../src";
 				WRAPPER_EXTENSION = app;
@@ -2115,6 +2207,7 @@
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
@@ -2172,7 +2265,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = YES;
-				ARCHS = "$(ARCHS_STANDARD)";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_OBJC_ARC = NO;
 				COMBINE_HIDPI_IMAGES = YES;
@@ -2192,7 +2284,7 @@
 				INFOPLIST_FILE = "Apple2Mac/Apple2Mac-Info.plist";
 				MACOSX_DEPLOYMENT_TARGET = 10.8;
 				OTHER_LDFLAGS = "-lz";
-				PRODUCT_BUNDLE_IDENTIFIER = bxo.Apple2Mac;
+				PRODUCT_BUNDLE_IDENTIFIER = org.deadc0de.Apple2Mac;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/../src";
 				WRAPPER_EXTENSION = app;
@@ -2203,7 +2295,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = YES;
-				ARCHS = "$(ARCHS_STANDARD)";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_OBJC_ARC = NO;
 				COMBINE_HIDPI_IMAGES = YES;
@@ -2224,7 +2315,7 @@
 				INFOPLIST_FILE = "Apple2Mac/Apple2Mac-Info.plist";
 				MACOSX_DEPLOYMENT_TARGET = 10.8;
 				OTHER_LDFLAGS = "-lz";
-				PRODUCT_BUNDLE_IDENTIFIER = bxo.Apple2Mac;
+				PRODUCT_BUNDLE_IDENTIFIER = org.deadc0de.Apple2Mac;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/../src";
 				WRAPPER_EXTENSION = app;
@@ -2246,12 +2337,14 @@
 					"KEYPAD_JOYSTICK=1",
 					"TEST_CPU=1",
 					"TESTING=1",
+					"VIDEO_OPENGL=1",
 				);
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
 				);
 				INFOPLIST_FILE = "Apple2MacTests/Apple2MacTestCPU-Info.plist";
+				PRODUCT_BUNDLE_IDENTIFIER = "org.deadc0de.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = Apple2MacTestCPU;
 				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/../src";
 				WRAPPER_EXTENSION = app;
@@ -2274,12 +2367,14 @@
 					"KEYPAD_JOYSTICK=1",
 					"TEST_CPU=1",
 					"TESTING=1",
+					"VIDEO_OPENGL=1",
 				);
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
 				);
 				INFOPLIST_FILE = "Apple2MacTests/Apple2MacTestCPU-Info.plist";
+				PRODUCT_BUNDLE_IDENTIFIER = "org.deadc0de.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = Apple2MacTestCPU;
 				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/../src";
 				WRAPPER_EXTENSION = app;
@@ -2304,12 +2399,14 @@
 					"CPU_TRACING=1",
 					"DISK_TRACING=1",
 					"VM_TRACING=1",
+					"VIDEO_OPENGL=1",
 				);
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
 				);
 				INFOPLIST_FILE = "$(SRCROOT)/Apple2MacTests/Apple2MacTestDisplay-Info.plist";
+				PRODUCT_BUNDLE_IDENTIFIER = "org.deadc0de.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = Apple2MacTestDisplay;
 				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/../src";
 				WRAPPER_EXTENSION = app;
@@ -2339,6 +2436,7 @@
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
 				);
 				INFOPLIST_FILE = "$(SRCROOT)/Apple2MacTests/Apple2MacTestDisplay-Info.plist";
+				PRODUCT_BUNDLE_IDENTIFIER = "org.deadc0de.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = Apple2MacTestDisplay;
 				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/../src";
 				WRAPPER_EXTENSION = app;
@@ -2349,7 +2447,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = YES;
-				ARCHS = armv7;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_OBJC_ARC = NO;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
@@ -2387,7 +2484,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = YES;
-				ARCHS = armv7;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_OBJC_ARC = NO;
 				CLANG_WARN_UNREACHABLE_CODE = YES;

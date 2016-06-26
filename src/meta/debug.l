@@ -854,7 +854,7 @@ ADDRS	[0-9a-fA-F]+
     char *buf = NULL;
     asprintf(&buf, "%s/%s", getenv("HOME"), "cputrace.txt");
     cpu65_trace_toggle(buf);
-    ASPRINTF_FREE(buf);
+    FREE(buf);
 #else
     LOG("CPU tracing not enabled...");
 #endif
@@ -865,7 +865,7 @@ ADDRS	[0-9a-fA-F]+
     char *buf = NULL;
     asprintf(&buf, "%s/%s", getenv("HOME"), "disktrace.txt");
     c_toggle_disk_trace_6(buf, NULL);
-    ASPRINTF_FREE(buf);
+    FREE(buf);
 #else
     LOG("Disk tracing not enabled...");
 #endif
@@ -987,7 +987,6 @@ void init_lex (char *str, int size) {
     buffer = yy_scan_buffer(str, size);
 
     if (!buffer) {	/* oops */
-	video_shutdown();
 	printf("lex buffer not big enough\n");
 	exit(1);
     }	       

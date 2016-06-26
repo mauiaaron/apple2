@@ -106,9 +106,9 @@
 {
     cpu_pause();
     timing_toggleCPUSpeed();
-    if (video_backend && video_backend->animation_showCPUSpeed)
+    if (video_animations && video_animations->animation_showCPUSpeed)
     {
-        video_backend->animation_showCPUSpeed();
+        video_animations->animation_showCPUSpeed();
     }
     cpu_resume();
 }
@@ -141,9 +141,9 @@
         [[self pauseItem] setLabel:@"Running"];
         cpu_resume();
     }
-    if (video_backend && video_backend->animation_showPaused)
+    if (video_animations && video_animations->animation_showPaused)
     {
-        video_backend->animation_showPaused();
+        video_animations->animation_showPaused();
     }
 }
 

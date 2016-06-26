@@ -47,8 +47,7 @@ typedef enum lifecycle_seq_t {
 static lifecycle_seq_t appState = APP_RUNNING;
 
 #if TESTING
-static bool running_tests = false;
-static void _run_tests(void) {
+static void _start_tests(void) {
     char *local_argv[] = {
         "-f",
         NULL
@@ -57,20 +56,23 @@ static void _run_tests(void) {
     for (char **p = &local_argv[0]; *p != NULL; p++) {
         ++local_argc;
     }
-#if defined(TEST_CPU)
+#if TEST_CPU
     // Currently this test is the only one that runs as a black screen
     extern int test_cpu(int, char *[]);
     test_cpu(local_argc, local_argv);
-    tkill(getpid(), SIGKILL); // and we're done ...
-#elif defined(TEST_VM)
-    extern int test_vm(int, char *[]);
+    kill(getpid(), SIGKILL); // and we're done ...
+#elif TEST_VM
+    extern void test_vm(int, char *[]);
     test_vm(local_argc, local_argv);
-#elif defined(TEST_DISPLAY)
-    extern int test_display(int, char *[]);
+#elif TEST_DISPLAY
+    extern void test_display(int, char *[]);
     test_display(local_argc, local_argv);
-#elif defined(TEST_DISK)
-    extern int test_disk(int, char *[]);
+#elif TEST_DISK
+    extern void test_disk(int, char *[]);
     test_disk(local_argc, local_argv);
+#elif TEST_PREFS
+    extern void test_prefs(int, char *[]);
+    test_prefs(local_argc, local_argv);
 #else
 #   error "OOPS, no tests specified"
 #endif
@@ -159,9 +161,15 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnCreate(JNIEnv *env, jclas
     int pagesize = getpagesize();
     LOG("PAGESIZE IS : %d", pagesize);
 
-    data_dir = strdup(dataDir);
+    data_dir = STRDUP(dataDir);
     if (crashHandler && crashHandler->init) {
         crashHandler->init(data_dir);
+    }
+    char *home = NULL;
+    ASPRINTF(&home, "HOME=%s", data_dir);
+    if (home) {
+        putenv(home);
+        LEAK(home);
     }
 
     (*env)->ReleaseStringUTFChars(env, j_dataDir, dataDir);
@@ -173,61 +181,60 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnCreate(JNIEnv *env, jclas
 
     joydriver_setClampBeyondRadius(true);
 
-#if !TESTING
-    cpu_pause();
-    emulator_start();
+//#define DO_CPU65_TRACING 1
+#if DO_CPU65_TRACING
+#   warning !!!!!!!!!! this will quickly eat up disk space !!!!!!!!!!
+    char *trfile = NULL;
+    ASPRINTF(&trfile, "%s/%s", data_dir, "cpu_trace.txt");
+    cpu65_trace_begin(trfile);
+    FREE(trfile);
 #endif
-}
 
-void Java_org_deadc0de_apple2ix_Apple2View_nativeGraphicsChanged(JNIEnv *env, jclass cls, jint width, jint height) {
-    // WARNING : this can happen on non-GL thread
-    LOG("...");
-    video_backend->reshape(width, height);
-}
-
-void Java_org_deadc0de_apple2ix_Apple2View_nativeGraphicsInitialized(JNIEnv *env, jclass cls, jint width, jint height) {
-    // WARNING : this needs to happen on the GL thread only
-    LOG("width:%d height:%d", width, height);
-    video_shutdown();
-    video_backend->reshape(width, height);
-    video_backend->init((void *)0);
-}
-
-void Java_org_deadc0de_apple2ix_Apple2Activity_nativeEmulationResume(JNIEnv *env, jclass cls) {
+    cpu_pause();
 #if TESTING
-    // test driver thread is managing CPU
-    if (!running_tests) {
-        running_tests = true;
-        assert(cpu_thread_id == 0 && "CPU thread must not be initialized yet...");
-        _run_tests();
-    }
-#else
+    _start_tests();
+#endif
+    emulator_start();
+}
+
+void Java_org_deadc0de_apple2ix_Apple2View_nativeGraphicsInitialized(JNIEnv *env, jclass cls) {
+    LOG("...");
+    _video_setRenderThread(pthread_self()); // by definition, this method is called on the render thread ...
+    video_shutdown();
+    video_init();
+}
+
+jboolean Java_org_deadc0de_apple2ix_Apple2Activity_nativeEmulationResume(JNIEnv *env, jclass cls) {
     if (!cpu_isPaused()) {
-        return;
+        return false;
     }
     LOG("...");
     cpu_resume();
-#endif
+
+    return true;
 }
 
-void Java_org_deadc0de_apple2ix_Apple2Activity_nativeEmulationPause(JNIEnv *env, jclass cls) {
+jboolean Java_org_deadc0de_apple2ix_Apple2Activity_nativeEmulationPause(JNIEnv *env, jclass cls) {
     if (appState != APP_RUNNING) {
-        return;
+        return false;
     }
+
+#if DO_CPU65_TRACING
+    cpu65_trace_checkpoint();
+#endif
 
     disk6_flush(0);
     disk6_flush(1);
 
     if (cpu_isPaused()) {
-        return;
+        return false;
     }
     LOG("...");
 
-#if TESTING
-    // test driver thread is managing CPU
-#else
     cpu_pause();
-#endif
+    prefs_save();
+
+    return true;
 }
 
 void Java_org_deadc0de_apple2ix_Apple2View_nativeRender(JNIEnv *env, jclass cls) {
@@ -241,6 +248,7 @@ void Java_org_deadc0de_apple2ix_Apple2View_nativeRender(JNIEnv *env, jclass cls)
         return;
     }
 
+//#define FPS_LOG 1
 #if FPS_LOG
     static uint32_t prevCount = 0;
     static uint32_t idleCount = 0;
@@ -258,27 +266,34 @@ void Java_org_deadc0de_apple2ix_Apple2View_nativeRender(JNIEnv *env, jclass cls)
     }
 #endif
 
-    video_backend->render();
+    video_render();
 }
 
-void Java_org_deadc0de_apple2ix_Apple2Activity_nativeReboot(JNIEnv *env, jclass cls) {
+void Java_org_deadc0de_apple2ix_Apple2Activity_nativeReboot(JNIEnv *env, jclass cls, jint resetState) {
     LOG("...");
-    cpu65_reboot();
+    if (resetState) {
+        // joystick button settings should be balanced by c_joystick_reset() triggered on CPU thread
+        if (resetState == 1) {
+            joy_button0 = 0xff;
+            joy_button1 = 0x0;
+        } else {
+            joy_button0 = 0x0;
+            joy_button1 = 0xff;
+        }
+    }
+    cpu65_interrupt(ResetSig);
 }
 
 void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnQuit(JNIEnv *env, jclass cls) {
-#if TESTING
-    // test driver thread is managing CPU
-#else
     appState = APP_REQUESTED_SHUTDOWN;
 
     LOG("...");
 
-    disk6_eject(0);
-    disk6_eject(1);
+#if DO_CPU65_TRACING
+    cpu65_trace_end();
+#endif
 
     cpu_resume();
-#endif
 }
 
 void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnKeyDown(JNIEnv *env, jclass cls, jint keyCode, jint metaState) {
@@ -324,7 +339,11 @@ jlong Java_org_deadc0de_apple2ix_Apple2View_nativeOnTouch(JNIEnv *env, jclass cl
     return flags;
 }
 
-void Java_org_deadc0de_apple2ix_Apple2Activity_nativeChooseDisk(JNIEnv *env, jclass cls, jstring jPath, jboolean driveA, jboolean readOnly) {
+void Java_org_deadc0de_apple2ix_Apple2DisksMenu_nativeChooseDisk(JNIEnv *env, jclass cls, jstring jPath, jboolean driveA, jboolean readOnly) {
+#if TESTING
+    return;
+#endif
+
     const char *path = (*env)->GetStringUTFChars(env, jPath, NULL);
     int drive = driveA ? 0 : 1;
     int ro = readOnly ? 1 : 0;
@@ -334,22 +353,22 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeChooseDisk(JNIEnv *env, jcl
     LOG(": (%s, %s, %s)", path, driveA ? "drive A" : "drive B", readOnly ? "read only" : "read/write");
     if (disk6_insert(drive, path, ro)) {
         char *gzPath = NULL;
-        asprintf(&gzPath, "%s.gz", path);
+        ASPRINTF(&gzPath, "%s.gz", path);
         if (disk6_insert(drive, gzPath, ro)) {
             char *diskImageUnreadable = "Disk Image Unreadable";
             unsigned int cols = strlen(diskImageUnreadable);
-            video_backend->animation_showMessage(diskImageUnreadable, cols, 1);
+            video_animations->animation_showMessage(diskImageUnreadable, cols, 1);
         } else {
-            video_backend->animation_showDiskChosen(drive);
+            video_animations->animation_showDiskChosen(drive);
         }
-        ASPRINTF_FREE(gzPath);
+        FREE(gzPath);
     } else {
-        video_backend->animation_showDiskChosen(drive);
+        video_animations->animation_showDiskChosen(drive);
     }
     (*env)->ReleaseStringUTFChars(env, jPath, path);
 }
 
-void Java_org_deadc0de_apple2ix_Apple2Activity_nativeEjectDisk(JNIEnv *env, jclass cls, jboolean driveA) {
+void Java_org_deadc0de_apple2ix_Apple2DisksMenu_nativeEjectDisk(JNIEnv *env, jclass cls, jboolean driveA) {
     LOG("...");
     disk6_eject(!driveA);
 }
@@ -387,20 +406,28 @@ jstring Java_org_deadc0de_apple2ix_Apple2Activity_nativeLoadState(JNIEnv *env, j
     bool readOnly2 = disk6.disk[1].is_protected;
     char *str = NULL;
     jstring jstr = NULL;
-    asprintf(&str, "{ disk1 = \"%s\"; readOnly1 = %s; disk2 = \"%s\"; readOnly2 = %s }", (disk1 ?: ""), readOnly1 ? "true" : "false", (disk2 ?: ""), readOnly2 ? "true" : "false");
+    ASPRINTF(&str, "{ disk1 = \"%s\"; readOnly1 = %s; disk2 = \"%s\"; readOnly2 = %s }", (disk1 ?: ""), readOnly1 ? "true" : "false", (disk2 ?: ""), readOnly2 ? "true" : "false");
     if (str) {
         jstr = (*env)->NewStringUTF(env, str);
-        ASPRINTF_FREE(str);
+        FREE(str);
     }
 
     return jstr;
 }
 
-// ----------------------------------------------------------------------------
-// Constructor
+void Java_org_deadc0de_apple2ix_Apple2Preferences_nativePrefsSync(JNIEnv *env, jclass cls, jstring jDomain) {
+    const char *domain = NULL;
 
-__attribute__((constructor(CTOR_PRIORITY_LATE)))
-static void _init_jnihooks(void) {
-    // ...
+    if (jDomain) {
+        domain = (*env)->GetStringUTFChars(env, jDomain, 0);
+    }
+
+    LOG("... domain: %s", domain);
+    prefs_load();
+    prefs_sync(domain);
+
+    if (jDomain) {
+        (*env)->ReleaseStringUTFChars(env, jDomain, domain);
+    }
 }
 

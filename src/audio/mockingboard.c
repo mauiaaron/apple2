@@ -190,7 +190,7 @@ static unsigned long g_n6522TimerPeriod = 0;
 static const unsigned int TIMERDEVICE_INVALID = -1;
 #endif
 static unsigned int g_nMBTimerDevice = TIMERDEVICE_INVALID;	// SY6522 device# which is generating timer IRQ
-static uint64_t g_uLastCumulativeCycles = 0;
+static unsigned long g_uLastCumulativeCycles = 0;
 
 // SSI263 vars:
 static uint16_t g_nSSI263Device = 0;	// SSI263 device# which is generating phoneme-complete IRQ
@@ -209,7 +209,7 @@ static short* ppAYVoiceBuffer[NUM_VOICES] = {0};
 
 #ifdef APPLE2IX
 bool g_bDisableDirectSoundMockingboard = false;
-static uint64_t	g_nMB_InActiveCycleCount = 0;
+static unsigned long g_nMB_InActiveCycleCount = 0;
 #else
 static uint64_t	g_nMB_InActiveCycleCount = 0;
 #endif
@@ -948,9 +948,9 @@ static void MB_Update()
 			g_nMB_InActiveCycleCount = cycles_count_total;
 		}
 #ifdef APPLE2IX
-		else if(cycles_count_total - g_nMB_InActiveCycleCount > (uint64_t)cycles_persec_target/10)
+		else if(cycles_count_total - g_nMB_InActiveCycleCount > cycles_persec_target/10)
 #else
-		else if(cycles_count_total - g_nMB_InActiveCycleCount > (uint64_t)cycles_persec_target/10)
+		else if(cycles_count_total - g_nMB_InActiveCycleCount > cycles_persec_target/10)
 #endif
 		{
 			// After 0.1 sec of Apple time, assume MB is not active
@@ -1743,6 +1743,18 @@ void MB_Initialize()
 	}
 }
 
+#ifdef APPLE2IX
+// HACK functions for "soft" destroying backend audio resource (but keeping current state)
+void MB_SoftDestroy(void) {
+    assert(pthread_self() == cpu_thread_id);
+    MB_DSUninit();
+}
+void MB_SoftInitialize(void) {
+    assert(pthread_self() == cpu_thread_id);
+    MB_DSInit();
+}
+#endif
+
 //-----------------------------------------------------------------------------
 
 // NB. Called when /cycles_persec_target/ changes
@@ -1768,13 +1780,23 @@ void MB_Destroy()
         }
 }
 
+#ifdef APPLE2IX
+// HACK NOTE TODO FIXME : hardcoded for now (until we have dynamic emulation for other cards in these slots) ...
+//SS_CARDTYPE g_Slot4 = CT_Phasor;
+//SS_CARDTYPE g_Slot5 = CT_Empty;
+SS_CARDTYPE g_Slot4 = CT_MockingboardC;
+SS_CARDTYPE g_Slot5 = CT_MockingboardC;
 void MB_SetEnabled(bool enabled) {
     g_bDisableDirectSoundMockingboard = !enabled;
+    g_SoundcardType = enabled ? CT_MockingboardC : CT_Empty;
+    g_Slot4 = enabled ? CT_MockingboardC : CT_Empty;
+    g_Slot5 = enabled ? CT_MockingboardC : CT_Empty;
 }
 
 bool MB_ISEnabled(void) {
     return (MockingboardVoice != NULL);
 }
+#endif
 
 //-----------------------------------------------------------------------------
 
@@ -2003,11 +2025,6 @@ static uint8_t PhasorIO(uint16_t PC, uint16_t nAddr, uint8_t bWrite, uint8_t nVa
 
 //-----------------------------------------------------------------------------
 #ifdef APPLE2IX
-// HACK NOTE TODO FIXME : hardcoded for now (until we have dynamic emulation for other cards in these slots) ...
-//SS_CARDTYPE g_Slot4 = CT_Phasor;
-//SS_CARDTYPE g_Slot5 = CT_Empty;
-SS_CARDTYPE g_Slot4 = CT_MockingboardC;
-SS_CARDTYPE g_Slot5 = CT_MockingboardC;
 
 #define IO_Null NULL
 
@@ -2141,7 +2158,7 @@ void MB_UpdateCycles(void)
 		return;
 
 	timing_checkpoint_cycles();
-	uint64_t uCycles = cycles_count_total - g_uLastCumulativeCycles;
+	unsigned long uCycles = cycles_count_total - g_uLastCumulativeCycles;
 	g_uLastCumulativeCycles = cycles_count_total;
 	//assert(uCycles < 0x10000);
         if (uCycles >= 0x10000) {
@@ -2353,3 +2370,20 @@ unsigned long MB_SetSnapshot(SS_CARD_MOCKINGBOARD* pSS, unsigned long dwSlot_unu
 #endif
 }
 
+// ----------------------------------------------------------------------------
+
+static void mb_prefsChanged(const char *domain) {
+    long lVal = 0;
+    long goesToTen = prefs_parseLongValue(domain, PREF_MOCKINGBOARD_VOLUME, &lVal, /*base:*/10) ? lVal : 5; // expected range 0-10
+    if (goesToTen < 0) {
+        goesToTen = 0;
+    }
+    if (goesToTen > 10) {
+        goesToTen = 10;
+    }
+    MB_SetVolumeZeroToTen(goesToTen);
+}
+
+static __attribute__((constructor)) void _init_mockingboard(void) {
+    prefs_registerListener(PREF_DOMAIN_AUDIO, &mb_prefsChanged);
+}

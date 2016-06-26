@@ -20,10 +20,10 @@ ENTRY(func)             SYM(r1, softswitches); \
                         SYM(r1, pointer); \
                         tst     r0, $SS_CXROM; \
                         bne     1f; \
-                        push    {r0, EffectiveAddr, PC_Reg, /*SP_Reg, F_Reg, Y_Reg, X_Reg, A_Reg,*/ lr}; \
+                        push    {EffectiveAddr, PC_Reg, /*SP_Reg, F_Reg, Y_Reg, X_Reg, A_Reg,*/ lr}; \
                         ldr     r1, [r1]; \
                         blx     r1; \
-                        pop     {r0, EffectiveAddr, PC_Reg, /*SP_Reg, F_Reg, Y_Reg, X_Reg, A_Reg,*/ pc}; \
+                        pop     {EffectiveAddr, PC_Reg, /*SP_Reg, F_Reg, Y_Reg, X_Reg, A_Reg,*/ pc}; \
 1:                      ldr     r1, [r1]; \
                         ldrb    r0, [r1, EffectiveAddr]; \
                         mov     pc, lr;

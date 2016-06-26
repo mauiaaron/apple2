@@ -36,12 +36,12 @@
 
 #define RestoreAltZP \
     /* Apple //e set stack point to ALTZP (or not) */ \
-    movLQ   SYM(base_stackzp), _XAX; \
-    subLQ   SYM(base_vmem), _XAX; \
+    MEM2REG(movLQ, base_stackzp, _XAX); \
+    MEM2REG(subLQ, base_vmem, _XAX); \
     orLQ    $0x0100, SP_Reg_X; \
     orLQ    _XAX, SP_Reg_X;
 
-#ifdef __LP64__
+#if __LP64__
 #   define SZ_PTR           8
 #   define ROR_BIT          63
 // x86_64 registers
@@ -84,6 +84,7 @@
 #   define ROR_BIT          31
 // x86 registers
 #   define _XBP             %ebp        /* x86 base pointer        */
+#   define _PICREG          %ebp        /* used for accessing GOT  */
 #   define _XSP             %esp        /* x86 stack pointer       */
 #   define _XDI             %edi
 #   define _XSI             %esi
@@ -120,33 +121,93 @@
 #endif
 
 /* Symbol naming issues */
-#ifdef NO_UNDERSCORES
-#define         SYM(foo) foo
-#define         SYMX(foo, INDEX, SCALE) foo(,INDEX,SCALE)
-#define         SYMX_PROLOGUE(foo)
-#define         ENTRY(foo)          .globl foo; .balign 16; foo##:
-#define         CALL(foo) foo
-#else /* !NO_UNDERSCORES */
-#if defined(__APPLE__)
-#   ifdef __LP64__
-#       warning "2014/06/22 -- Mac requires PIC indexing
-#       define APPLE_ASSEMBLER_IS_BROKEN 1
-#       define     SYM(foo) _##foo(%rip)
-#       define     SYMX(foo, INDEX, SCALE) (_X8,INDEX,SCALE)
-#       define     SYMX_PROLOGUE(foo)  leaLQ   _##foo(%rip), _X8;
-#   else
-#       define     SYM(foo) _##foo
-#       define     SYMX(foo, INDEX, SCALE) _##foo(,INDEX,SCALE)
-#       define     SYMX_PROLOGUE(foo)
-#   endif
-#   define         ENTRY(foo)          .globl _##foo; .balign 16; _##foo##:
+#if NO_UNDERSCORES
+#   define _UNDER(x)                    x
 #else
-#   define         SYM(foo) _##foo
-#   define         SYMX(foo, INDEX, SCALE) _##foo(,INDEX,SCALE)
-#   define         SYMX_PROLOGUE(foo)
-#   define         ENTRY(foo)          .globl _##foo; .balign 16; _##foo##:
+#   define _UNDER(x)                    _##x
 #endif
-#define         CALL(foo) _##foo
-#endif /* !NO_UNDERSCORES */
+
+#define ENTRY(x)                        .globl _UNDER(x); .balign 16; _UNDER(x)##:
+
+#if !__PIC__ || (__APPLE__ && !__LP64__)
+
+// For non-Position Independent Code, the assembly is relatively simple...
+
+#   define      CALL_FN(op,fn,stk)      op _UNDER(fn)
+#   define      JUMP_FN(op,fn)          op _UNDER(fn)
+#   define      CALL_IND0(sym)          callLQ  *_UNDER(sym)
+#   define      CALL_IND(sym,off,sz)    callLQ  *_UNDER(sym)(,off,sz)
+#   define      JUMP_IND(sym,off,sz)    jmp     *_UNDER(sym)(,off,sz)
+#   define      MEM2REG_IND(op,sym,off,sz,x) op     _UNDER(sym)(,off,sz), x
+#   define      REG2MEM_IND(op,x,sym,off,sz) op  x, _UNDER(sym)(,off,sz)
+#   define      _2MEM(op,sym)           op      _UNDER(sym) // op to-memory
+#   define      REG2MEM(op,x,sym)       op   x, _UNDER(sym) // op register-to-memory
+#   define      MEM2REG(op,sym,x)       op   _UNDER(sym), x // op memory-to-register
+#else
+
+// For PIC code, the assembly is more convoluted, because we have to access symbols only indirectly through the Global
+// Offset Table and the Procedure Linkage Table.  There is some redundancy in the codegen from these macros (e.g.,
+// access to the same symbol back-to-back results in duplicate register loads, when we could keep using the previously
+// calculated value).
+
+#   if __APPLE__
+#       if !__LP64__
+#           error unsure of __PIC__ code on i386 Mac
+#       endif
+#       define  _AT_PLT
+#       define  _LEA(sym)               leaq _UNDER(sym)(%rip), _X8
+#       define  CALL_IND0(fn)           callq *_UNDER(fn)(%rip)
+#       define  _2MEM(op,sym)           op   _UNDER(sym)(%rip)    // op to-memory
+#       define  REG2MEM(op,x,sym)       op   x, _UNDER(sym)(%rip) // op register-to-memory
+#       define  MEM2REG(op,sym,x)       op   _UNDER(sym)(%rip), x // op memory-to-register
+#   elif __LP64__
+#       define  _AT_PLT                 @PLT
+#       define  _LEA(sym)               movq _UNDER(sym)@GOTPCREL(%rip), _X8
+#       define  CALL_IND0(fn)           callq *_UNDER(fn)_AT_PLT
+#       define  _2MEM(op,sym)           _LEA(sym); op (_X8)    // op to-memory
+#       define  REG2MEM(op,x,sym)       _LEA(sym); op x, (_X8) // op register-to-memory
+#       define  MEM2REG(op,sym,x)       _LEA(sym); op (_X8), x // op memory-to-register
+#   endif
+
+#   if __LP64__
+#       define  CALL_FN(op,fn,stk)           op _UNDER(fn)_AT_PLT
+#       define  JUMP_FN(op,fn)               op _UNDER(fn)_AT_PLT
+#       define  CALL_IND(sym,off,sz)         _LEA(sym); callq  *(_X8,off,sz)
+#       define  JUMP_IND(sym,off,sz)         _LEA(sym); jmp    *(_X8,off,sz)
+#       define  MEM2REG_IND(op,sym,off,sz,x) _LEA(sym); op      (_X8,off,sz), x
+#       define  REG2MEM_IND(op,x,sym,off,sz) _LEA(sym); op x, (_X8,off,sz)
+#   else
+
+#       if !__i386__
+#           error what architecture is this?!
+#       endif
+
+// http://ewontfix.com/18/ -- "32-bit x86 Position Independent Code - It's that bad"
+
+// 2016/05/01 : Strategy here is to (ab)use _PICREG in cpu65_run() to contain the offset to the GOT for symbol access.
+// %ebx is used only for actual calls to the fn@PLT (per ABI convention).  Similar to x64 PIC, use of these macros does
+// result in some code duplication...
+
+#       define  CALL_FN(op,fn,stk)      movl stk(%esp), %ebx; \
+                                        op _UNDER(fn)@PLT;
+
+#       define  _GOT_PRE(sym,reg)       movl _A2_PIC_GOT(%esp), reg; \
+                                        movl _UNDER(sym)@GOT(reg), reg;
+
+#       define  CALL_IND0(fn)           _GOT_PRE(fn, _PICREG); calll *(_PICREG);
+
+#       define  CALL_IND(sym,off,sz)    _GOT_PRE(sym,_PICREG); calll *(_PICREG,off,sz);
+
+#       define  JUMP_FN(op,fn)          op _UNDER(fn)
+
+#       define  JUMP_IND(sym,off,sz)         _GOT_PRE(sym,_PICREG); jmp  *(_PICREG,off,sz);
+#       define  MEM2REG_IND(op,sym,off,sz,x) _GOT_PRE(sym,_PICREG); op (_PICREG,off,sz), x;
+#       define  REG2MEM_IND(op,x,sym,off,sz) _GOT_PRE(sym,_PICREG); op x, (_PICREG,off,sz);
+#       define  _2MEM(op,sym)                _GOT_PRE(sym,_PICREG); op (_PICREG);    // op to-memory
+#       define  REG2MEM(op,x,sym)            _GOT_PRE(sym,_PICREG); op x, (_PICREG); // op register-to-memory
+#       define  MEM2REG(op,sym,x)            _GOT_PRE(sym,_PICREG); op (_PICREG), x; // op memory-to-register
+#   endif
+#endif
 
 #endif // whole file
+

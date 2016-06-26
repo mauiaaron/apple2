@@ -14,6 +14,7 @@
  */
 
 #include "common.h"
+#include "video/video.h"
 
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
@@ -24,8 +25,6 @@
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #include <X11/extensions/XShm.h> /* MITSHM! */
-#else
-#error non-XShm is buggy ... key autorepeat delay is somehow set too low
 #endif
 
 static Display *display;
@@ -62,8 +61,6 @@ static int bitmap_pad = sizeof(uint32_t);
 static video_backend_s xvideo_backend = { 0 };
 static bool request_set_mode = false;
 static int request_mode = 0;
-
-volatile unsigned long _backend_vid_dirty = 0;
 
 typedef struct {
     unsigned long flags;
@@ -339,7 +336,7 @@ static int keysym_to_scancode(void) {
 
 static void post_image() {
     // copy Apple //e video memory into XImage uint32_t buffer
-    uint8_t *fb = !video__current_page ? video__fb1 : video__fb2;
+    uint8_t *fb = video_scan();
     uint8_t index;
 
     unsigned int count = SCANWIDTH * SCANHEIGHT;
@@ -408,96 +405,39 @@ static void post_image() {
     }
 }
 
-static void c_flash_cursor(int on) {
-    // flash only if it's text or mixed modes.
-    if (softswitches & (SS_TEXT|SS_MIXED))
-    {
-        if (!on)
-        {
-            colormap[ COLOR_FLASHING_BLACK].red   = 0;
-            colormap[ COLOR_FLASHING_BLACK].green = 0;
-            colormap[ COLOR_FLASHING_BLACK].blue  = 0;
-
-            colormap[ COLOR_FLASHING_WHITE].red   = (uint8_t)0xffff;
-            colormap[ COLOR_FLASHING_WHITE].green = (uint8_t)0xffff;
-            colormap[ COLOR_FLASHING_WHITE].blue  = (uint8_t)0xffff;
-        }
-        else
-        {
-            colormap[ COLOR_FLASHING_WHITE].red   = 0;
-            colormap[ COLOR_FLASHING_WHITE].green = 0;
-            colormap[ COLOR_FLASHING_WHITE].blue  = 0;
-
-            colormap[ COLOR_FLASHING_BLACK].red   = (uint8_t)0xffff;
-            colormap[ COLOR_FLASHING_BLACK].green = (uint8_t)0xffff;
-            colormap[ COLOR_FLASHING_BLACK].blue  = (uint8_t)0xffff;
-        }
-    }
-}
-
 void video_driver_sync(void) {
 
-    static int flash_count = 0;
     // post the image and loop waiting for it to finish and
     // also process other input events
     post_image();
 
 #if TESTING
     // no input processing if test-driven ...
-#else
-    bool keyevent = true;
-    do {
-#ifdef HAVE_X11_SHM
-        if (doShm)
-        {
+    return;
+#endif
+
+    if (!XPending(display)) {
+        c_keys_handle_input(/*scancode:*/-1, /*pressed:*/0, 0);
+    } else {
+        do {
             XNextEvent(display, &xevent);
-            keyevent = !(xevent.type == xshmeventtype);
-        } else
-#endif
-        {
-            keyevent = XCheckMaskEvent(display, KeyPressMask|KeyReleaseMask, &xevent);
-        }
 
-        int scancode = -1;
-        int pressed = 0;
-        switch (xevent.type)
-        {
-        case KeyPress:
-            scancode = keysym_to_scancode();
-            pressed = 1;
-            break;
-        case KeyRelease:
-            scancode = keysym_to_scancode();
-            pressed = 0;
-            break;
-        default:
-            break;
-        }
+            int scancode = -1;
+            int pressed = 0;
+            if (xevent.type == KeyPress || xevent.type == KeyRelease) {
+                scancode = keysym_to_scancode();
+                pressed = (xevent.type == KeyPress);
+            }
 
-        c_keys_handle_input(scancode, pressed, 0);
-
-    } while (keyevent);
-#endif
-
-#warning HACKISH flash count needs refactoring ...
-    switch (++flash_count)
-    {
-    case 6:
-        c_flash_cursor(1);
-        break;
-    case 12:
-        c_flash_cursor(0);
-        flash_count = 0;
-        break;
-    default:
-        break;
+            c_keys_handle_input(scancode, pressed, 0);
+        } while (XPending(display));
     }
 }
 
 static void _redo_image(void);
 
 static void xdriver_main_loop(void) {
-    struct timespec sleeptime = { .tv_sec=0, .tv_nsec=8333333 }; // 120Hz
+    struct timespec sleeptime = { .tv_sec=0, .tv_nsec=16666667 }; // 60Hz
     do {
         if (request_set_mode) {
             request_set_mode = false;
@@ -559,7 +499,7 @@ static void _destroy_image() {
         // Detach from X server
         if (!XShmDetach(display, &xshminfo))
         {
-            fprintf(stderr,"XShmDetach() failed in video_shutdown()\n");
+            fprintf(stderr,"XShmDetach() failed\n");
         }
 
         XDestroyImage(image);
@@ -922,7 +862,7 @@ static void xdriver_init(void *context) {
 #endif
 }
 
-static void xdriver_shutdown(void) {
+static void xdriver_shutdown(bool emulatorShuttingDown) {
     _destroy_image();
 }
 
@@ -934,7 +874,6 @@ static void xdriver_render(void) {
     // no-op
 }
 
-__attribute__((constructor(CTOR_PRIORITY_EARLY)))
 static void _init_xvideo(void) {
     LOG("Initializing X11 renderer");
 
@@ -947,5 +886,9 @@ static void _init_xvideo(void) {
     xvideo_backend.shutdown  = &xdriver_shutdown;
 
     video_backend = &xvideo_backend;
+}
+
+static __attribute__((constructor)) void __init_xvideo(void) {
+    emulator_registerStartupCallback(CTOR_PRIORITY_EARLY, &_init_xvideo);
 }
 

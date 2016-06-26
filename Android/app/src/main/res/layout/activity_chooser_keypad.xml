@@ -20,11 +20,26 @@
         android:layout_marginLeft="@dimen/preference_margin_left"
         android:layout_marginStart="@dimen/preference_margin_left"
         android:layout_marginTop="@dimen/preference_margin_top"
+        android:background="@color/white"
+        android:textColor="@color/black"
         android:text="@string/keypad_choose_current" />
+
+    <Button
+        android:id="@+id/noneButton"
+        style="?android:attr/buttonStyleSmall"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentRight="true"
+        android:layout_marginEnd="@dimen/preference_margin_right"
+        android:layout_marginRight="@dimen/preference_margin_right"
+        android:layout_marginTop="@dimen/preference_margin_top"
+        android:text="@string/key_none" />
 
     <Button
         android:id="@+id/skipButton"
         style="?android:attr/buttonStyleSmall"
+        android:layout_below="@id/noneButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentEnd="true"

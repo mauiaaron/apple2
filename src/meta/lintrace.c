@@ -27,7 +27,6 @@
 static int trace_fd = -1;
 static int trace_pid = -1;
 
-__attribute__((constructor(CTOR_PRIORITY_LATE)))
 static void _trace_init(void) {
     TEMP_FAILURE_RETRY(trace_fd = open(TRACING_FILE, O_WRONLY));
     if (trace_fd == -1) {
@@ -36,6 +35,11 @@ static void _trace_init(void) {
         LOG("Initialized Linux tracing facility");
     }
     trace_pid = getpid();
+}
+
+
+static __attribute__((constructor)) void __trace_init(void) {
+    emulator_registerStartupCallback(CTOR_PRIORITY_LATE, &_trace_init);
 }
 
 __attribute__((destructor(255)))

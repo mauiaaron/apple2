@@ -26,5 +26,5 @@ void gldriver_on_key_special_down(int key, int x, int y);
 void gldriver_on_key_special_up(int key, int x, int y);
 
 // reset joystick function
-void gldriver_joystick_reset(void);
+void _glutJoystickReset(void);
 

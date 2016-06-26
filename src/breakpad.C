@@ -60,8 +60,7 @@ extern "C" {
 #endif
     }
 
-    __attribute__((constructor(CTOR_PRIORITY_EARLY)))
-    static void _breakpad_registration(void) {
+    static void __attribute__((constructor)) _breakpad_registration(void) {
         LOG("Registering Breakpad as native crash handler");
         breakpadHandler.init = &initBreakpadHandler;
         breakpadHandler.shutdown = &shutdownBreakpadHandler;

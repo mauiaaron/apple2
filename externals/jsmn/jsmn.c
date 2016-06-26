@@ -1,6 +1,29 @@
-#include <stdlib.h>
-
 #include "jsmn.h"
+
+#include <assert.h>
+
+typedef struct {
+	jsmntype_t type;
+	int start;
+	int end;
+	int size;
+	int skip;
+	int parent;
+	/* private data */
+	int _lasttype;
+	int _depth;
+} jsmntok_priv_t;
+
+/**
+ * Private parsing tokens.
+ */
+enum {
+	_JSMN_SEPARATOR_COLON = 201,
+	_JSMN_SEPARATOR_COMMA,
+	_JSMN_OBJECT_END,
+	_JSMN_ARRAY_END,
+	_JSMN_STRING_KEY,
+};
 
 /**
  * Allocates a fresh unused token from the token pull.
@@ -14,17 +37,17 @@ static jsmntok_t *jsmn_alloc_token(jsmn_parser *parser,
 	tok = &tokens[parser->toknext++];
 	tok->start = tok->end = -1;
 	tok->size = 0;
-#ifdef JSMN_PARENT_LINKS
+	tok->skip = 1;
 	tok->parent = -1;
-#endif
+	((jsmntok_priv_t *)tok)->_lasttype = JSMN_UNDEFINED;
+	((jsmntok_priv_t *)tok)->_depth = -1;
 	return tok;
 }
 
 /**
  * Fills token type and boundaries.
  */
-static void jsmn_fill_token(jsmntok_t *token, jsmntype_t type,
-                            int start, int end) {
+static void jsmn_fill_token(jsmntok_t *token, jsmntype_t type, int start, int end) {
 	token->type = type;
 	token->start = start;
 	token->end = end;
@@ -32,9 +55,178 @@ static void jsmn_fill_token(jsmntok_t *token, jsmntype_t type,
 }
 
 /**
+ * Parse digit(s).
+ */
+static int jsmn_parse_primitive_digits(const char *js, jsmntok_t *token, int start, int *end) {
+	int i;
+	int ended = 0;
+
+	/* must be at least one digit */
+	i = start;
+	switch (js[i]) {
+		case '0': case '1': case '2': case '3': case '4':
+		case '5': case '6': case '7': case '8': case '9':
+			break;
+		default:
+			return JSMN_ERROR_PRIMITIVE_INVAL;
+	}
+	++i;
+
+	for (; i < token->end; i++) {
+		switch (js[i]) {
+			case '0': case '1': case '2': case '3': case '4':
+			case '5': case '6': case '7': case '8': case '9':
+				break;
+			default:
+				ended = 1;
+				break;
+		}
+
+		if (ended) {
+			break;
+		}
+	}
+
+	*end = i;
+	return 0;
+}
+
+/**
+ * Parse exponent.
+ */
+static int jsmn_parse_primitive_exp(const char *js, jsmntok_t *token, int start, int *end) {
+	int i;
+	int ret;
+
+	i = start;
+	assert(i < token->end);
+
+	if (js[i] != 'e' && js[i] != 'E') {
+		return JSMN_ERROR_PRIMITIVE_INVAL;
+	}
+
+	++i;
+	if (i >= token->end) {
+		return JSMN_ERROR_PART;
+	}
+
+	if (js[i] == '-' || js[i] == '+') {
+		++i;
+		if (i >= token->end) {
+			return JSMN_ERROR_PART;
+		}
+	}
+
+	ret = jsmn_parse_primitive_digits(js, token, i, &i);
+	if (ret) {
+		return ret;
+	}
+
+	/* should be exactly at the end */
+	if (i != token->end) {
+		return JSMN_ERROR_PRIMITIVE_INVAL;
+	}
+
+	*end = i;
+	return 0;
+}
+
+/**
+ * Parse fraction or exponent component.
+ */
+static int jsmn_parse_primitive_frac_or_exp(const char *js, jsmntok_t *token, int start, int *end) {
+	int i;
+	int ret;
+
+	i = start;
+	assert(i < token->end);
+
+	if (js[i] == '.') {
+		++i;
+		if (i >= token->end) {
+			return JSMN_ERROR_PART;
+		}
+		ret = jsmn_parse_primitive_digits(js, token, i, &i);
+		if (ret) {
+			return ret;
+		}
+		if (i < token->end) {
+			ret = jsmn_parse_primitive_exp(js, token, i, &i);
+			if (ret) {
+				return ret;
+			}
+		}
+	} else {
+		ret = jsmn_parse_primitive_exp(js, token, i, &i);
+		if (ret) {
+			return ret;
+		}
+	}
+
+	*end = i;
+	return 0;
+}
+
+/**
+ * Parse primitive number.
+ */
+static int jsmn_parse_primitive_number(const char *js, jsmntok_t *token) {
+	int i;
+	int ret;
+
+	i = token->start;
+
+	if (token->end - token->start <= 0) {
+		return JSMN_ERROR_PRIMITIVE_INVAL;
+	}
+
+	/* parse negative */
+	if (js[i] == '-') {
+		++i;
+		if (i >= token->end) {
+			return JSMN_ERROR_PART;
+		}
+	}
+
+	/* parse beginning zero */
+	if (js[i] == '0') {
+		++i;
+		if (i < token->end) {
+			ret = jsmn_parse_primitive_frac_or_exp(js, token, i, &i);
+			if (ret) {
+				return ret;
+			}
+			if (i < token->end) {
+				return JSMN_ERROR_PRIMITIVE_INVAL;
+			}
+		}
+		return 0;
+	}
+
+	/* parse main digits */
+	ret = jsmn_parse_primitive_digits(js, token, i, &i);
+	if (ret) {
+		return ret;
+	}
+	if (i == token->end) {
+		return 0;
+	}
+
+	/* parse remaining fraction or exponent */
+	assert(i < token->end);
+	ret = jsmn_parse_primitive_frac_or_exp(js, token, i, &i);
+
+	if (i < token->end) {
+		return JSMN_ERROR_PRIMITIVE_INVAL;
+	}
+
+	return ret;
+}
+
+/**
  * Fills next available token with JSON primitive.
  */
-static jsmnerr_t jsmn_parse_primitive(jsmn_parser *parser, const char *js,
+static int jsmn_parse_primitive(jsmn_parser *parser, const char *js,
 		size_t len, jsmntok_t *tokens, size_t num_tokens) {
 	jsmntok_t *token;
 	int start;
@@ -43,10 +235,6 @@ static jsmnerr_t jsmn_parse_primitive(jsmn_parser *parser, const char *js,
 
 	for (; parser->pos < len && js[parser->pos] != '\0'; parser->pos++) {
 		switch (js[parser->pos]) {
-#ifndef JSMN_STRICT
-			/* In strict mode primitive must be followed by "," or "}" or "]" */
-			case ':':
-#endif
 			case '\t' : case '\r' : case '\n' : case ' ' :
 			case ','  : case ']'  : case '}' :
 				goto found;
@@ -56,34 +244,54 @@ static jsmnerr_t jsmn_parse_primitive(jsmn_parser *parser, const char *js,
 			return JSMN_ERROR_INVAL;
 		}
 	}
-#ifdef JSMN_STRICT
-	/* In strict mode primitive must be followed by a comma/object/array */
-	parser->pos = start;
-	return JSMN_ERROR_PART;
-#endif
+	if ( (parser->pos < len) && (js[parser->pos] != '\0') ) {
+		/* In strict mode primitive must be followed by a comma/object/array or end-of-string */
+		parser->pos = start;
+		return JSMN_ERROR_PART;
+	}
 
 found:
-	if (tokens == NULL) {
-		parser->pos--;
-		return 0;
-	}
 	token = jsmn_alloc_token(parser, tokens, num_tokens);
 	if (token == NULL) {
 		parser->pos = start;
 		return JSMN_ERROR_NOMEM;
 	}
 	jsmn_fill_token(token, JSMN_PRIMITIVE, start, parser->pos);
-#ifdef JSMN_PARENT_LINKS
 	token->parent = parser->toksuper;
-#endif
+
+	/* parse/validate primitives according */
+	do {
+		if (js[start] == 't') {
+			if ( (token->end - start == 4) && (js[start+1] == 'r') && (js[start+2] == 'u') && (js[start+3] == 'e') ) {
+				break;
+			}
+		} else if (js[start] == 'f') {
+			if ( (token->end - start == 5) && (js[start+1] == 'a') && (js[start+2] == 'l') && (js[start+3] == 's') && (js[start+4] == 'e') ) {
+				break;
+			}
+		} else if (js[start] == 'n') {
+			if ( (token->end - start == 4) && (js[start+1] == 'u') && (js[start+2] == 'l') && (js[start+3] == 'l') ) {
+				break;
+			}
+		} else {
+			if (jsmn_parse_primitive_number(js, token) == 0) {
+				break;
+			}
+		}
+
+		/* primitive validation failed */
+		parser->pos = token->start;
+		return JSMN_ERROR_PRIMITIVE_INVAL;
+	} while (0);
+
 	parser->pos--;
 	return 0;
 }
 
 /**
- * Filsl next token with JSON string.
+ * Fills next token with JSON string.
  */
-static jsmnerr_t jsmn_parse_string(jsmn_parser *parser, const char *js,
+static int jsmn_parse_string(jsmn_parser *parser, const char *js,
 		size_t len, jsmntok_t *tokens, size_t num_tokens) {
 	jsmntok_t *token;
 
@@ -97,18 +305,13 @@ static jsmnerr_t jsmn_parse_string(jsmn_parser *parser, const char *js,
 
 		/* Quote: end of string */
 		if (c == '\"') {
-			if (tokens == NULL) {
-				return 0;
-			}
 			token = jsmn_alloc_token(parser, tokens, num_tokens);
 			if (token == NULL) {
 				parser->pos = start;
 				return JSMN_ERROR_NOMEM;
 			}
 			jsmn_fill_token(token, JSMN_STRING, start+1, parser->pos);
-#ifdef JSMN_PARENT_LINKS
 			token->parent = parser->toksuper;
-#endif
 			return 0;
 		}
 
@@ -147,15 +350,34 @@ static jsmnerr_t jsmn_parse_string(jsmn_parser *parser, const char *js,
 	return JSMN_ERROR_PART;
 }
 
+static void jsmn_percolate_skip_counts(jsmntok_t *tokens, int parent) {
+	jsmntok_t *token;
+
+	token = &tokens[parent];
+	token->skip++;
+	for (;;) {
+		if (token->parent == -1) {
+			break;
+		}
+		token = &tokens[token->parent];
+		token->skip++;
+	}
+}
+
 /**
  * Parse JSON string and fill tokens.
  */
-jsmnerr_t jsmn_parse(jsmn_parser *parser, const char *js, size_t len,
+int jsmn_parse(jsmn_parser *parser, const char *js, size_t len,
 		jsmntok_t *tokens, unsigned int num_tokens) {
-	jsmnerr_t r;
+	int r;
 	int i;
-	jsmntok_t *token;
-	int count = 0;
+	jsmntok_priv_t *token;
+	int depth = 0;
+	int count = parser->toknext;
+
+	if (tokens == NULL) {
+		return JSMN_ERROR_NOMEM;
+	}
 
 	for (; parser->pos < len && js[parser->pos] != '\0'; parser->pos++) {
 		char c;
@@ -164,32 +386,60 @@ jsmnerr_t jsmn_parse(jsmn_parser *parser, const char *js, size_t len,
 		c = js[parser->pos];
 		switch (c) {
 			case '{': case '[':
-				count++;
-				if (tokens == NULL) {
-					break;
+				/* check previous token is valid */
+				if (parser->toknext >= 1) {
+					token = (jsmntok_priv_t *)&tokens[parser->toknext - 1];
+					depth = token->_depth;
+					switch (token->_lasttype) {
+						case _JSMN_SEPARATOR_COMMA:
+						case _JSMN_SEPARATOR_COLON:
+						case JSMN_ARRAY:
+							break;
+						default:
+							return JSMN_ERROR_INVAL;
+					}
 				}
-				token = jsmn_alloc_token(parser, tokens, num_tokens);
-				if (token == NULL)
-					return JSMN_ERROR_NOMEM;
+				/* check parent token is valid */
+				if (parser->toksuper != -1) {
+					token = (jsmntok_priv_t *)&tokens[parser->toksuper];
+					if (token->type == JSMN_OBJECT) {
+						return JSMN_ERROR_INVAL;
+					}
+				}
+				count++;
+				token = (jsmntok_priv_t *)jsmn_alloc_token(parser, tokens, num_tokens);
+				if (token == NULL) return JSMN_ERROR_NOMEM;
 				if (parser->toksuper != -1) {
 					tokens[parser->toksuper].size++;
-#ifdef JSMN_PARENT_LINKS
 					token->parent = parser->toksuper;
-#endif
+					jsmn_percolate_skip_counts(tokens, parser->toksuper);
 				}
 				token->type = (c == '{' ? JSMN_OBJECT : JSMN_ARRAY);
+				token->_lasttype = token->type;
+				token->_depth = depth+1;
 				token->start = parser->pos;
 				parser->toksuper = parser->toknext - 1;
 				break;
 			case '}': case ']':
-				if (tokens == NULL)
-					break;
 				type = (c == '}' ? JSMN_OBJECT : JSMN_ARRAY);
-#ifdef JSMN_PARENT_LINKS
+				if (parser->toksuper == -1) {
+					return JSMN_ERROR_INVAL;
+				}
 				if (parser->toknext < 1) {
 					return JSMN_ERROR_INVAL;
 				}
-				token = &tokens[parser->toknext - 1];
+				token = (jsmntok_priv_t *)&tokens[parser->toknext - 1];
+				switch (token->_lasttype) {
+					case JSMN_PRIMITIVE:
+					case JSMN_STRING:
+					case JSMN_OBJECT:
+					case JSMN_ARRAY:
+					case _JSMN_OBJECT_END:
+					case _JSMN_ARRAY_END:
+						break;
+					default:
+						return JSMN_ERROR_INVAL;
+				}
 				for (;;) {
 					if (token->start != -1 && token->end == -1) {
 						if (token->type != type) {
@@ -197,104 +447,142 @@ jsmnerr_t jsmn_parse(jsmn_parser *parser, const char *js, size_t len,
 						}
 						token->end = parser->pos + 1;
 						parser->toksuper = token->parent;
+						token->_depth--;
 						break;
 					}
 					if (token->parent == -1) {
 						break;
 					}
-					token = &tokens[token->parent];
+					token = (jsmntok_priv_t *)&tokens[token->parent];
 				}
-#else
-				for (i = parser->toknext - 1; i >= 0; i--) {
-					token = &tokens[i];
-					if (token->start != -1 && token->end == -1) {
-						if (token->type != type) {
-							return JSMN_ERROR_INVAL;
-						}
-						parser->toksuper = -1;
-						token->end = parser->pos + 1;
-						break;
-					}
-				}
-				/* Error if unmatched closing bracket */
-				if (i == -1) return JSMN_ERROR_INVAL;
-				for (; i >= 0; i--) {
-					token = &tokens[i];
-					if (token->start != -1 && token->end == -1) {
-						parser->toksuper = i;
-						break;
-					}
-				}
-#endif
+				token->_lasttype = token->type == JSMN_OBJECT ? _JSMN_OBJECT_END : _JSMN_ARRAY_END;
 				break;
 			case '\"':
+				if (parser->toknext >= 1) {
+					token = (jsmntok_priv_t *)&tokens[parser->toknext - 1];
+					depth = token->_depth;
+					switch (token->_lasttype) {
+						case JSMN_OBJECT:
+						case JSMN_ARRAY:
+						case _JSMN_SEPARATOR_COLON:
+						case _JSMN_SEPARATOR_COMMA:
+							break;
+						default:
+							return JSMN_ERROR_INVAL;
+					}
+				}
 				r = jsmn_parse_string(parser, js, len, tokens, num_tokens);
 				if (r < 0) return r;
 				count++;
-				if (parser->toksuper != -1 && tokens != NULL)
+				if (parser->toksuper != -1) {
 					tokens[parser->toksuper].size++;
+					jsmn_percolate_skip_counts(tokens, parser->toksuper);
+					token = (jsmntok_priv_t *)&tokens[parser->toksuper];
+					type = token->_lasttype == JSMN_OBJECT ? _JSMN_STRING_KEY : JSMN_STRING;
+				} else {
+				    type = JSMN_STRING;
+				}
+				token = (jsmntok_priv_t *)&tokens[parser->toknext - 1];
+				token->_lasttype = type;
+				token->_depth = depth;
 				break;
 			case '\t' : case '\r' : case '\n' : case ' ':
 				break;
 			case ':':
+				if (parser->toksuper == -1) {
+					return JSMN_ERROR_INVAL;
+				}
+				assert(parser->toknext >= 1);
+				token = (jsmntok_priv_t *)&tokens[parser->toknext - 1];
+				switch (token->_lasttype) {
+					case _JSMN_STRING_KEY:
+						break;
+					default:
+						return JSMN_ERROR_INVAL;
+				}
 				parser->toksuper = parser->toknext - 1;
+				token->_lasttype = _JSMN_SEPARATOR_COLON;
 				break;
 			case ',':
-				if (tokens != NULL &&
+				if (parser->toksuper == -1) {
+					return JSMN_ERROR_INVAL;
+				}
+				assert(parser->toknext >= 1);
+				token = (jsmntok_priv_t *)&tokens[parser->toknext - 1];
+				switch (token->_lasttype) {
+					case JSMN_PRIMITIVE:
+					case JSMN_STRING:
+					case _JSMN_OBJECT_END:
+					case _JSMN_ARRAY_END:
+						break;
+					default:
+						return JSMN_ERROR_INVAL;
+				}
+				if (
 						tokens[parser->toksuper].type != JSMN_ARRAY &&
 						tokens[parser->toksuper].type != JSMN_OBJECT) {
-#ifdef JSMN_PARENT_LINKS
 					parser->toksuper = tokens[parser->toksuper].parent;
-#else
-					for (i = parser->toknext - 1; i >= 0; i--) {
-						if (tokens[i].type == JSMN_ARRAY || tokens[i].type == JSMN_OBJECT) {
-							if (tokens[i].start != -1 && tokens[i].end == -1) {
-								parser->toksuper = i;
-								break;
-							}
-						}
-					}
-#endif
 				}
+				token->_lasttype = _JSMN_SEPARATOR_COMMA;
 				break;
-#ifdef JSMN_STRICT
 			/* In strict mode primitives are: numbers and booleans */
 			case '-': case '0': case '1' : case '2': case '3' : case '4':
 			case '5': case '6': case '7' : case '8': case '9':
 			case 't': case 'f': case 'n' :
 				/* And they must not be keys of the object */
-				if (tokens != NULL) {
-					jsmntok_t *t = &tokens[parser->toksuper];
-					if (t->type == JSMN_OBJECT ||
-							(t->type == JSMN_STRING && t->size != 0)) {
+				if (parser->toksuper != -1) {
+					token = (jsmntok_priv_t *)&tokens[parser->toksuper];
+					if (token->type == JSMN_OBJECT ||
+							(token->type == JSMN_STRING && token->size != 0)) {
 						return JSMN_ERROR_INVAL;
 					}
+					depth = token->_depth;
 				}
-#else
-			/* In non-strict mode every unquoted value is a primitive */
-			default:
-#endif
+				if (parser->toknext >= 1) {
+					token = (jsmntok_priv_t *)&tokens[parser->toknext - 1];
+					switch (token->_lasttype) {
+						case JSMN_ARRAY:
+						case _JSMN_SEPARATOR_COLON:
+						case _JSMN_SEPARATOR_COMMA:
+							break;
+						default:
+							return JSMN_ERROR_INVAL;
+					}
+				}
 				r = jsmn_parse_primitive(parser, js, len, tokens, num_tokens);
 				if (r < 0) return r;
 				count++;
-				if (parser->toksuper != -1 && tokens != NULL)
+				if (parser->toksuper != -1) {
 					tokens[parser->toksuper].size++;
+					jsmn_percolate_skip_counts(tokens, parser->toksuper);
+				}
+				token = (jsmntok_priv_t *)&tokens[parser->toknext - 1];
+				token->_lasttype = JSMN_PRIMITIVE;
+				token->_depth = depth;
 				break;
 
-#ifdef JSMN_STRICT
 			/* Unexpected char in strict mode */
 			default:
 				return JSMN_ERROR_INVAL;
-#endif
 		}
 	}
 
-	for (i = parser->toknext - 1; i >= 0; i--) {
+	if (tokens[0].type == JSMN_OBJECT || tokens[0].type == JSMN_ARRAY) {
 		/* Unmatched opened object or array */
-		if (tokens[i].start != -1 && tokens[i].end == -1) {
-			return JSMN_ERROR_PART;
+		if (((jsmntok_priv_t *)(&tokens[0]))->_depth != 0) {
+				return JSMN_ERROR_INVAL;
 		}
 	}
+
+#ifndef NDEBUG
+	/* sanity checks */
+	for (i = 0; i < parser->toknext; i++) {
+		assert(tokens[i].start != -1);
+		assert(tokens[i].end != -1);
+		assert(((jsmntok_priv_t *)(&tokens[i]))->_depth != -1);
+		assert(((jsmntok_priv_t *)(&tokens[i]))->_lasttype != JSMN_UNDEFINED);
+	}
+#endif
 
 	return count;
 }

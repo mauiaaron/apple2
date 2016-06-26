@@ -20,20 +20,46 @@
 extern void copy_and_pad_string(char *dest, const char* src, const char c, const int len, const char cap);
 #endif
 
+joystick_mode_t joy_mode = JOY_PCJOY;
+
 /* parameters for generic and keyboard-simulated joysticks */
 uint16_t joy_x = HALF_JOY_RANGE;
 uint16_t joy_y = HALF_JOY_RANGE;
 uint8_t joy_button0 = 0;
 uint8_t joy_button1 = 0;
-uint8_t joy_button2 = 0; // unused?
 bool joy_clip_to_radius = false;
 
 #ifdef KEYPAD_JOYSTICK
 short joy_step = 1;
-uint8_t joy_auto_recenter = 0;
+bool joy_auto_recenter = false;
 #endif
 
+void (*joydriver_resetJoystick)(void) = NULL;
+
+static void joystick_prefsChanged(const char *domain) {
+    assert(strcmp(domain, PREF_DOMAIN_JOYSTICK) == 0);
+
+#ifdef KEYPAD_JOYSTICK
+    long lVal = 0;
+    prefs_parseLongValue(domain, PREF_JOYSTICK_KPAD_STEP, &lVal, /*base:*/10);
+    joy_step = (short)lVal;
+    if (joy_step < 1) {
+        joy_step = 1;
+    }
+    if (joy_step > 255) {
+        joy_step = 255;
+    }
+
+    prefs_parseBoolValue(domain, PREF_JOYSTICK_KPAD_AUTO_RECENTER, &joy_auto_recenter);
+#endif
+}
+
+static __attribute__((constructor)) void _init_joystick(void) {
+    prefs_registerListener(PREF_DOMAIN_JOYSTICK, &joystick_prefsChanged);
+}
+
 #ifdef INTERFACE_CLASSIC
+
 /* -------------------------------------------------------------------------
     c_calibrate_pc_joystick() - calibrates joystick.  determines extreme
     and center coordinates.  assumes that it can write to the interface
@@ -109,7 +135,7 @@ static void c_calibrate_pc_joystick()
     }
 }
 
-#if defined(KEYPAD_JOYSTICK)
+#ifdef KEYPAD_JOYSTICK
 static void c_calibrate_keypad_joystick()
 {
 
@@ -216,6 +242,9 @@ static void c_calibrate_keypad_joystick()
         static struct timespec ts = { .tv_sec=0, .tv_nsec=33333333 };
         nanosleep(&ts, NULL);
     }
+
+    prefs_setLongValue(PREF_DOMAIN_JOYSTICK, PREF_JOYSTICK_KPAD_STEP, joy_step);
+    prefs_setBoolValue(PREF_DOMAIN_JOYSTICK, PREF_JOYSTICK_KPAD_AUTO_RECENTER, joy_auto_recenter);
 }
 #endif // KEYPAD_JOYSTICK
 
@@ -227,7 +256,7 @@ void c_calibrate_joystick()
     }
 
 #ifdef KEYPAD_JOYSTICK
-    if (joy_mode == JOY_KPAD)
+    else if (joy_mode == JOY_KPAD)
     {
         c_calibrate_keypad_joystick();
     }
@@ -235,22 +264,38 @@ void c_calibrate_joystick()
 }
 #endif // INTERFACE_CLASSIC
 
-extern void gldriver_joystick_reset(void);
-void c_joystick_reset(void)
-{
-#if VIDEO_OPENGL && !TESTING
-    gldriver_joystick_reset();
-#endif
+// HACK : avoid resetting joystick button values too quickly. This should allow for ClosedApple-Reset. (This is still a
+// race, but hopefully much less likely to trigger).
+static void *_joystick_resetDelayed(void *ctx) {
+    (void)ctx;
+
+    // delay
+    sleep(1);
+
     joy_button0 = 0x0;
     joy_button1 = 0x0;
-    joy_button2 = 0x0;
-#ifdef KEYPAD_JOYSTICK
-    if (joy_mode == JOY_KPAD)
-    {
-        joy_x = HALF_JOY_RANGE;
-        joy_y = HALF_JOY_RANGE;
+
+    return NULL;
+}
+
+void c_joystick_reset(void)
+{
+    if (joydriver_resetJoystick) {
+        joydriver_resetJoystick();
     }
+
+#if TESTING
+    // For "testdisk" determinism, these need to be reset immediately
+    joy_button0 = 0x0;
+    joy_button1 = 0x0;
+#else
+    pthread_t pid;
+    pthread_create(&pid, NULL, (void *)&_joystick_resetDelayed, (void *)NULL);
+    pthread_detach(pid);
 #endif
+
+    joy_x = HALF_JOY_RANGE;
+    joy_y = HALF_JOY_RANGE;
 }
 
 // clamps modern gamepad controller axis values to the "corners" of a traditional joystick as used on the Apple //e
@@ -301,29 +346,4 @@ void joydriver_setButton0Pressed(bool pressed) {
 void joydriver_setButton1Pressed(bool pressed) {
     joy_button1 = (pressed) ? 0x80 : 0x0;
 }
-
-#if INTERFACE_TOUCH
-bool (*joydriver_isTouchJoystickAvailable)(void) = NULL;
-void (*joydriver_setTouchJoystickEnabled)(bool enabled) = NULL;
-void (*joydriver_setTouchJoystickOwnsScreen)(bool pwnd) = NULL;
-bool (*joydriver_ownsScreen)(void) = NULL;
-void (*joydriver_setTouchButtonTypes)(
-        touchjoy_button_type_t touchDownChar, int downScancode,
-        touchjoy_button_type_t northChar, int northScancode,
-        touchjoy_button_type_t southChar, int southScancode) = NULL;
-void (*joydriver_setTapDelay)(float secs) = NULL;
-void (*joydriver_setTouchAxisSensitivity)(float multiplier) = NULL;
-void (*joydriver_setButtonSwitchThreshold)(int delta) = NULL;
-void (*joydriver_setTouchVariant)(touchjoy_variant_t variant) = NULL;
-touchjoy_variant_t (*joydriver_getTouchVariant)(void) = NULL;
-void (*joydriver_setTouchAxisTypes)(uint8_t rosetteChars[(ROSETTE_ROWS * ROSETTE_COLS)], int rosetteScancodes[(ROSETTE_ROWS * ROSETTE_COLS)]) = NULL;
-void (*joydriver_setScreenDivision)(float division) = NULL;
-void (*joydriver_setAxisOnLeft)(bool axisIsOnLeft) = NULL;
-void (*joydriver_beginCalibration)(void) = NULL;
-void (*joydriver_endCalibration)(void) = NULL;
-bool (*joydriver_isCalibrating)(void) = NULL;
-void (*joydriver_setShowControls)(bool showControls) = NULL;
-void (*joydriver_setShowAzimuth)(bool showAzimuth) = NULL;
-void (*joydriver_setKeyRepeatThreshold)(float repeatThresholdSecs) = NULL;
-#endif
 

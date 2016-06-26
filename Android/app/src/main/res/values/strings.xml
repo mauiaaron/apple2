@@ -9,6 +9,8 @@
     <string name="crasher_title">Crash emulator</string>
     <string name="crash_null">NULL-deref</string>
     <string name="crash_java_npe">Java NPE</string>
+    <string name="crash_sigabrt">SIGABRT</string>
+    <string name="crash_sigfpe">SIGFPE</string>
     <string name="crash_stackcall_overflow">stack call overflow</string>
     <string name="crash_stackbuf_overflow">stack buffer overflow</string>
 
@@ -21,6 +23,8 @@
     <string name="audio_latency">Audio latency</string>
     <string name="audio_latency_summary">Audio latency in secs</string>
     <string name="cancel">Cancel</string>
+    <string name="color_configure">Configure color</string>
+    <string name="color_configure_summary">Color mode</string>
     <string name="color_bw">Black/white</string>
     <string name="color_color">Color</string>
     <string name="color_interpolated">Interpolated color</string>
@@ -39,8 +43,7 @@
     <string name="disk_show_operation">Show Disk ][ operations</string>
     <string name="disk_show_operation_summary">Shows when disk drives are reading or writing</string>
     <string name="emulation_continue">Continue…</string>
-    <string name="emulation_settings">Settings…</string>
-    <string name="emulation_disks">Load disk image…</string>
+    <string name="emulation_disks">Load disk image</string>
     <string name="header_disks">Insert disk:</string>
     <string name="input_current">Current touch device</string>
     <string name="input_current_summary">Choose current touch device</string>
@@ -133,16 +136,27 @@
     <string name="mockingboard_enable_summary">Revision C in Slot 4/5 (may require restart)</string>
     <string name="mockingboard_volume">Mockingboard volume</string>
     <string name="mockingboard_volume_summary">Set the Mockingboard volume</string>
+    <string name="mode_landscape">Landscape</string>
+    <string name="mode_landscape_summary">Enable landscape or portrait mode</string>
     <string name="no">No</string>
     <string name="ok">OK</string>
+    <string name="portrait_calibrate">Calibrate portrait mode</string>
+    <string name="portrait_calibrate_framebuffer">Display position</string>
+    <string name="portrait_calibrate_keyboard_height">Keyboard height</string>
+    <string name="portrait_calibrate_keyboard_position">Keyboard position</string>
+    <string name="portrait_calibrate_summary">Adjust keyboard size, framebuffer position, etc</string>
     <string name="preferences_reset_title">Reset preferences</string>
     <string name="preferences_reset_summary">Reset preferences to defaults and quit emulator</string>
     <string name="preferences_reset_really">Really reset and quit?</string>
     <string name="preferences_reset_warning">You will lose your settings</string>
     <string name="quit">Quit</string>
-    <string name="quit_reboot">Reboot or quit emulator…</string>
-    <string name="quit_reboot_choice">Reboot or quit?</string>
+    <string name="quit_reboot">Reset or quit emulator…</string>
+    <string name="quit_reboot_choice">Reset/reboot or quit?</string>
     <string name="reboot">Reboot</string>
+    <string name="reset">Reset</string>
+    <string name="reset_preferences">Reset settings</string>
+    <string name="reset_self_test">Self Test</string>
+    <string name="reset_soft">Soft</string>
     <string name="restore">Quick restore</string>
     <string name="save">Quick save</string>
     <string name="saverestore">Save &amp; restore…</string>
@@ -156,9 +170,10 @@
     <string name="settings_advanced_summary">Warning: these settings may degrade performance</string>
     <string name="settings_advanced_joystick">Advanced joystick/keypad settings</string>
     <string name="settings_advanced_joystick_summary">Advanced settings and performance tuning</string>
+    <string name="storage">/storage/</string>
     <string name="touch_menu_enable">Enable touch menus</string>
     <string name="touch_menu_enable_summary">Enables soft menu buttons in top screen corners</string>
     <string name="video_configure">Configure video…</string>
-    <string name="video_configure_summary">Color settings</string>
+    <string name="video_configure_summary">Color landscape/portrait, color, etc</string>
 
 </resources>

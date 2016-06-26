@@ -648,9 +648,7 @@ void cpu65_uninterrupt(int reason)
 }
 
 void cpu65_reboot(void) {
-    timing_initialize();
-    video_reset();
-    joy_button0 = 0xff; // OpenApple
+    joy_button0 = 0xff; // OpenApple -- should be balanced by c_joystick_reset() triggers on CPU thread
     cpu65_interrupt(ResetSig);
 }
 
@@ -923,7 +921,7 @@ GLUE_C_WRITE(cpu65_trace_epilogue)
 
 void cpu65_trace_checkpoint(void) {
     if (cpu_trace_fp) {
-        fprintf(cpu_trace_fp, "---TOTAL CYC:%lu\n",cycles_count_total);
+        //fprintf(cpu_trace_fp, "---TOTAL CYC:%lu\n",cycles_count_total);
         fflush(cpu_trace_fp);
     }
 }

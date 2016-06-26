@@ -16,6 +16,9 @@
 
 #include "common.h"
 
+#define GL_MODEL_MAX 2.0 // entire model space (-1.0 to 1.0)
+#define GL_MODEL_HALF 1.0
+
 enum {
     POS_ATTRIB_IDX,
     TEXCOORD_ATTRIB_IDX,
@@ -24,7 +27,7 @@ enum {
 #endif
 };
 
-typedef struct GLModel;
+struct GLModel;
 
 #define MODEL_CLASS(CLS, ...) \
     typedef struct CLS { \
@@ -82,7 +85,6 @@ typedef struct GLModel {
     GLuint elementBufferName;
 
     // Custom
-#warning FIXME TODO : investigate whether we can just MACRO-inherit from GLModel rather than use custom pointer
     GLCustom *custom;
 } GLModel;
 

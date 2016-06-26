@@ -12,6 +12,7 @@
 // Based on sample code from https://developer.apple.com/library/mac/samplecode/GLEssentials/Introduction/Intro.html
 
 #import "EmulatorGLView.h"
+#import "EmulatorJoystickController.h"
 
 // Apple //e common routines
 #import "common.h"
@@ -189,7 +190,45 @@ static CVReturn displayLinkCallback(CVDisplayLinkRef displayLink, const CVTimeSt
     // to [self openGLContext])
     [[self openGLContext] makeCurrentContext];
     
+    [EmulatorJoystickController sharedInstance];
+    
+#if TESTING
+    char *local_argv[] = {
+        "-f",
+        NULL
+    };
+    int local_argc = 0;
+    for (char **p = &local_argv[0]; *p != NULL; p++) {
+        ++local_argc;
+    }
+    
+#   if TEST_CPU
+    // Currently this test is the only one that blocks current thread and runs as a black screen
+    extern int test_cpu(int, char *[]);
+    test_cpu(local_argc, local_argv);
+#   elif TEST_VM
+    extern int test_vm(int, char *[]);
+    test_vm(local_argc, local_argv);
+#   elif TEST_DISPLAY
+    extern int test_display(int, char *[]);
+    test_display(local_argc, local_argv);
+#   elif TEST_DISK
+    extern int test_disk(int, char *[]);
+    test_disk(local_argc, local_argv);
+#   elif TEST_PREFS
+    extern void test_prefs(int, char *[]);
+    test_prefs(local_argc, local_argv);
+#   elif TEST_TRACE
+    extern void test_trace(int, char *[]);
+    test_trace(local_argc, local_argv);
+#   else
+#       error "OOPS, no testsuite specified"
+#   endif
+#endif
+    
+    cpu_pause();
     emulator_start();
+    cpu_resume();
     
     // Synchronize buffer swaps with vertical refresh rate
     GLint swapInt = 1;
@@ -198,10 +237,9 @@ static CVReturn displayLinkCallback(CVDisplayLinkRef displayLink, const CVTimeSt
     // Init our renderer.  Use 0 for the defaultFBO which is appropriate for
     // OSX (but not iOS since iOS apps must create their own FBO)
 #if TARGET_OS_MAC
-    video_backend->init(0);
+    video_init();
 #elif TARGET_OS_IPHONE
-#   error "FBO FIXME TODO"
-    video_backend->init(otherFBO);
+#   error this is OSX specific
 #else
 #   error "unknown/unsupported Apple platform
 #endif
@@ -248,7 +286,10 @@ static CVReturn displayLinkCallback(CVDisplayLinkRef displayLink, const CVTimeSt
 #endif // !SUPPORT_RETINA_RESOLUTION
     
     // Set the new dimensions in our renderer
-    video_backend->reshape((int)viewRectPixels.size.width, (int)viewRectPixels.size.height);
+    prefs_setLongValue(PREF_DOMAIN_INTERFACE, PREF_DEVICE_WIDTH, (int)viewRectPixels.size.width);
+    prefs_setLongValue(PREF_DOMAIN_INTERFACE, PREF_DEVICE_HEIGHT, (int)viewRectPixels.size.height);
+    prefs_setLongValue(PREF_DOMAIN_INTERFACE, PREF_DEVICE_LANDSCAPE, true);
+    prefs_sync(PREF_DOMAIN_INTERFACE);
     
     CGLUnlockContext([[self openGLContext] CGLContextObj]);
 }
@@ -278,7 +319,7 @@ static CVReturn displayLinkCallback(CVDisplayLinkRef displayLink, const CVTimeSt
 - (void)drawView
 {
     CGLLockContext([[self openGLContext] CGLContextObj]);
-    video_backend->render();
+    video_render();
     CGLFlushDrawable([[self openGLContext] CGLContextObj]);
     CGLUnlockContext([[self openGLContext] CGLContextObj]);
     [[NSNotificationCenter defaultCenter] postNotificationName:(NSString *)kDrawTimerNotification object:nil];

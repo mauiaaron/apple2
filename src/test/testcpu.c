@@ -7417,7 +7417,6 @@ GREATEST_SUITE(test_suite_cpu) {
 
     srandom(time(NULL));
 
-    video_init();
     test_common_init();
     assert(cpu_thread_id == 0 && "This test is not designed to run with alternate CPU thread");
     extern void reinitialize(void);
@@ -8057,8 +8056,3 @@ int test_cpu(int argc, char **argv) {
     GREATEST_MAIN_END();
 }
 
-#if !defined(__APPLE__) && !defined(ANDROID)
-int main(int argc, char **argv) {
-    test_cpu(argc, argv);
-}
-#endif

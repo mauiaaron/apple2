@@ -21,10 +21,6 @@
 - (void)resetJoysticks;
 @end
 
-void gldriver_joystick_reset(void) {
-    [EmulatorJoystickController sharedInstance];
-}
-
 @implementation EmulatorJoystickController
 
 @synthesize allJoysticks = _allJoysticks;
@@ -136,8 +132,14 @@ void gldriver_joystick_reset(void) {
     }
 #endif
     
-    uint8_t x = (uint8_t)((value+DDHID_JOYSTICK_VALUE_MAX) * DDHID_JOYSTICK_NORMALIZER);
-    joydriver_setAxisValue(x, joydriver_getAxisY());
+    int x = (int)((value+DDHID_JOYSTICK_VALUE_MAX) * DDHID_JOYSTICK_NORMALIZER);
+    if (x < 0) {
+        x = 0;
+    }
+    if (x >= JOY_RANGE) {
+        x = JOY_RANGE-1;
+    }
+    joydriver_setAxisValue((uint8_t)x, joydriver_getAxisY());
 }
 
 - (void)ddhidJoystick:(DDHidJoystick *)joystick stick:(unsigned int)stick yChanged:(int)value
@@ -148,8 +150,14 @@ void gldriver_joystick_reset(void) {
     }
 #endif
     
-    uint8_t y = (uint8_t)((value+DDHID_JOYSTICK_VALUE_MAX) * DDHID_JOYSTICK_NORMALIZER);
-    joydriver_setAxisValue(joydriver_getAxisX(), y);
+    int y = (int)((value+DDHID_JOYSTICK_VALUE_MAX) * DDHID_JOYSTICK_NORMALIZER);
+    if (y < 0) {
+        y = 0;
+    }
+    if (y >= JOY_RANGE) {
+        y = JOY_RANGE-1;
+    }
+    joydriver_setAxisValue(joydriver_getAxisX(), (uint8_t)y);
 }
 
 - (void)ddhidJoystick:(DDHidJoystick *)joystick stick:(unsigned int)stick otherAxis:(unsigned)otherAxis valueChanged:(int)value

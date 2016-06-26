@@ -1,0 +1,249 @@
+
+##----------------------------------------------------------------------##
+
+# Format of this file is:
+# {
+#     name_of_suppression
+#     tool_name:supp_kind
+#     (optional extra info for some suppression types)
+#     caller0 name, or /name/of/so/file.so
+#     caller1 name, or ditto
+#     (optionally: caller2 name)
+#     (optionally: caller3 name)
+#  }
+#
+# For Memcheck, the supp_kinds are:
+#
+#     Param Value1 Value2 Value4 Value8 Value16 Jump
+#     Free Addr1 Addr2 Addr4 Addr8 Addr16
+#     Cond (previously known as Value0)
+#
+# and the optional extra info is:
+#     if Param: name of system call param
+
+##----------------------------------------------------------------------##
+
+
+# zlib-1.2.x uses uninitialised memory in some tricky way which
+# apparently is harmless (it must amount to a vectorised while-loop,
+# nothing else makes sense).  Fools Memcheck though.  See the mentioned
+# URL for details.
+{
+   zlib-1.2.x trickyness (1a): See http://www.zlib.net/zlib_faq.html#faq36
+   Memcheck:Cond
+   obj:/*lib*/libz.so.1.2.*
+   ...
+   obj:/*lib*/libz.so.1.2.*
+   fun:deflate
+}
+
+{
+   zlib-1.2.x trickyness (1b): See http://www.zlib.net/zlib_faq.html#faq36
+   Memcheck:Cond
+   obj:/*lib*/libz.so.1.2.*
+   fun:deflate
+}
+
+{
+   zlib-1.2.x trickyness (2a): See http://www.zlib.net/zlib_faq.html#faq36
+   Memcheck:Value8
+   obj:/*lib*/libz.so.1.2.*
+   ...
+   obj:/*lib*/libz.so.1.2.*
+   fun:deflate
+}
+
+{
+   zlib-1.2.x trickyness (2b): See http://www.zlib.net/zlib_faq.html#faq36
+   Memcheck:Value8
+   obj:/*lib*/libz.so.1.2.*
+   fun:deflate
+}
+
+{
+   zlib-1.2.x trickyness (3a): See http://www.zlib.net/zlib_faq.html#faq36
+   Memcheck:Value4
+   obj:/*lib*/libz.so.1.2.*
+   ...
+   obj:/*lib*/libz.so.1.2.*
+   fun:deflate
+}
+
+{
+   zlib-1.2.x trickyness (3b): See http://www.zlib.net/zlib_faq.html#faq36
+   Memcheck:Value4
+   obj:/*lib*/libz.so.1.2.*
+   fun:deflate
+}
+
+##----------------------------------------------------------------------##
+
+# Suppressions for Android's libc (bionic) and probably other
+# stuff too.
+
+# this is a real bug in the Android stack -- this routine really does read and write below sp.
+{
+   sha1_block_data_order-reads-below-sp
+   Memcheck:Addr4
+   fun:sha1_block_data_order
+}
+
+# This is a false error, and it's reported in the wrong place.  Memcheck misinterprets
+# a restore path in dvmPlatformInvoke: "ldmdb   r4, {r4, r5, r6, r7, r8, r9, sp, pc}"
+# because it breaks this up into non-atomic IR.  This non atomic IR restores PC
+# first, then SP, and then r4-r9; the latter of which happen after (from Memcheck's
+# point of view) the assignment to SP, hence constitute a read below SP (depends
+# which way SP moved, I guess).  Worse, because these happen after the restore to SP,
+# the errors are reported in the callers of this function, not here :-(
+# General bogusness all round, but I don't see how to handle it any better.  Hence
+# hide all the callers; fortunately there appear to be not many.
+#
+{
+   dvmPlatformInvoke-misinterpretation-1
+   Memcheck:Addr4
+   fun:dvmCallJNIMethod_virtualNoRef
+}
+
+{
+   dvmPlatformInvoke-misinterpretation-2
+   Memcheck:Addr4
+   fun:dvmCallJNIMethod_staticNoRef
+}
+
+{
+   dvmPlatformInvoke-misinterpretation-3
+   Memcheck:Addr4
+   fun:dvmCallJNIMethod_general
+}
+
+##----------------------------------------------------------------------##
+# ASC ADDED ...
+
+{
+   Linker-1
+   Memcheck:Cond
+   obj:/system/bin/linker
+}
+
+{
+   Linker-2
+   Memcheck:Value4
+   obj:/system/bin/linker
+}
+
+{
+   Linker-3
+   Memcheck:Free
+   obj:/system/bin/linker
+}
+
+{
+   Linker-4
+   Memcheck:Leak
+   obj:/system/bin/linker
+}
+
+# ...
+
+{
+   BootOAT-1
+   Memcheck:Cond
+   obj:/data/dalvik-cache/arm/system@framework@boot.oat
+}
+
+{
+   BootOAT-2
+   Memcheck:Addr4
+   obj:/data/dalvik-cache/arm/system@framework@boot.oat
+}
+
+{
+   BootOAT-3
+   Memcheck:Free
+   obj:/data/dalvik-cache/arm/system@framework@boot.oat
+}
+
+{
+   BootOAT-4
+   Memcheck:Leak
+   obj:/data/dalvik-cache/arm/system@framework@boot.oat
+}
+
+# ...
+
+{
+   LibJavaCore-1
+   Memcheck:Cond
+   obj:/system/lib/libjavacore.so
+}
+
+{
+   LibJavaCore-2
+   Memcheck:Addr4
+   obj:/system/lib/libjavacore.so
+}
+
+{
+   LibJavaCore-3
+   Memcheck:Free
+   obj:/system/lib/libjavacore.so
+}
+
+{
+   LibJavaCore-4
+   Memcheck:Leak
+   obj:/system/lib/libjavacore.so
+}
+
+# ...
+
+{
+   APP2-SPECIFIC-1
+   Memcheck:Cond
+   obj:/data/dalvik-cache/arm/data@app@org.deadc0de.apple2ix.basic-2@base.apk@classes.dex
+}
+
+{
+   APP2-SPECIFIC-2
+   Memcheck:Addr4
+   obj:/data/dalvik-cache/arm/data@app@org.deadc0de.apple2ix.basic-2@base.apk@classes.dex
+}
+
+{
+   APP2-SPECIFIC-3
+   Memcheck:Free
+   obj:/data/dalvik-cache/arm/data@app@org.deadc0de.apple2ix.basic-2@base.apk@classes.dex
+}
+
+{
+   APP2-SPECIFIC-4
+   Memcheck:Leak
+   obj:/data/dalvik-cache/arm/data@app@org.deadc0de.apple2ix.basic-2@base.apk@classes.dex
+}
+
+# ...
+
+{
+   APP-SPECIFIC-1
+   Memcheck:Cond
+   obj:/data/dalvik-cache/arm/data@app@org.deadc0de.apple2ix.basic@base.apk@classes.dex
+}
+
+{
+   APP-SPECIFIC-2
+   Memcheck:Addr4
+   obj:/data/dalvik-cache/arm/data@app@org.deadc0de.apple2ix.basic@base.apk@classes.dex
+}
+
+{
+   APP-SPECIFIC-3
+   Memcheck:Free
+   obj:/data/dalvik-cache/arm/data@app@org.deadc0de.apple2ix.basic@base.apk@classes.dex
+}
+
+{
+   APP-SPECIFIC-4
+   Memcheck:Leak
+   obj:/data/dalvik-cache/arm/data@app@org.deadc0de.apple2ix.basic@base.apk@classes.dex
+}
+

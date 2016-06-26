@@ -17,6 +17,8 @@ enum {
     CRASH_NULL_DEREF,
     CRASH_STACKCALL_OVERFLOW,
     CRASH_STACKBUF_OVERFLOW,
+    CRASH_SIGABRT,
+    CRASH_SIGFPE,
     // MOAR!
 };
 
@@ -68,6 +70,21 @@ static volatile int __attribute__((noinline)) _crash_stackbuf_overflow(void) {
     return getpid();
 }
 
+static void _crash_sigabrt(void) {
+    kill(getpid(), SIGABRT);
+    __builtin_unreachable();
+}
+
+static void _crash_sigfpe(void) {
+    static volatile int foo = 2;
+    static volatile int bar = 0;
+    while (foo >= 0) {
+        --foo;
+        bar = 2/foo;
+    }
+    __builtin_unreachable();
+}
+
 void Java_org_deadc0de_apple2ix_Apple2CrashHandler_nativePerformCrash(JNIEnv *env, jclass cls, jint crashType) {
 #warning FIXME TODO ... we should turn off test codepaths in release build =D
     LOG("... performing crash of type : %d", crashType);
@@ -83,6 +100,14 @@ void Java_org_deadc0de_apple2ix_Apple2CrashHandler_nativePerformCrash(JNIEnv *en
 
         case CRASH_STACKBUF_OVERFLOW:
             _crash_stackbuf_overflow();
+            break;
+
+        case CRASH_SIGABRT:
+            _crash_sigabrt();
+            break;
+
+        case CRASH_SIGFPE:
+            _crash_sigfpe();
             break;
 
         default:
@@ -112,11 +137,11 @@ void Java_org_deadc0de_apple2ix_Apple2CrashHandler_nativeProcessCrash(JNIEnv *en
         }
 
         if (android_armArchV7A) {
-            asprintf(&symbolsPath, "%s/symbols/armeabi-v7a", data_dir);
+            ASPRINTF(&symbolsPath, "%s/symbols/armeabi-v7a", data_dir);
         } else if (android_x86) {
-            asprintf(&symbolsPath, "%s/symbols/x86", data_dir);
+            ASPRINTF(&symbolsPath, "%s/symbols/x86", data_dir);
         } else /*if (android_armArch)*/ {
-            asprintf(&symbolsPath, "%s/symbols/armeabi", data_dir);
+            ASPRINTF(&symbolsPath, "%s/symbols/armeabi", data_dir);
         } /*else { moar archs ... } */
 
         bool success = crashHandler->processCrash(crashPath, symbolsPath, outputFILE);
@@ -131,7 +156,7 @@ void Java_org_deadc0de_apple2ix_Apple2CrashHandler_nativeProcessCrash(JNIEnv *en
     }
 
     if (symbolsPath) {
-        ASPRINTF_FREE(symbolsPath);
+        FREE(symbolsPath);
     }
 
     (*env)->ReleaseStringUTFChars(env, jCrashPath,  crashPath);

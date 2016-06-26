@@ -64,7 +64,7 @@
 #error __COUNTER__ macro should be available in modern compilers
 #endif
 
-#if PREVENT_TEXTREL
+#if __PIC__
 
 #   define _SYM_ADDR_PRE(reg) \
                 ldr     reg, 5f;
@@ -89,7 +89,7 @@
                 _SYM_ADDR_OFF_ARM(reg, __COUNTER__); \
                 _SYM_ADDR_POST(var,8)
 #   endif
-#else /* !PREVENT_TEXTREL */
+#else /* !__PIC__ */
 #   if NO_UNDERSCORES
 #       define SYM(reg,var) \
                 ldr     reg, =var

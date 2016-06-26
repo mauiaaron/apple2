@@ -18,26 +18,36 @@
 #define SAVE_MAGICK "A2VM"
 #define SAVE_MAGICK_LEN sizeof(SAVE_MAGICK)
 
+typedef struct module_ctor_node_s {
+    struct module_ctor_node_s *next;
+    long order;
+    startup_callback_f ctor;
+} module_ctor_node_s;
+
+static module_ctor_node_s *head = NULL;
+static bool emulatorShuttingDown = false;
+
 bool do_logging = true; // also controlled by NDEBUG
 FILE *error_log = NULL;
-int sound_volume = 2;
-color_mode_t color_mode = COLOR;
 const char *data_dir = NULL;
 char **argv = NULL;
 int argc = 0;
 CrashHandler_s *crashHandler = NULL;
 
-__attribute__((constructor(CTOR_PRIORITY_FIRST)))
+#if defined(CONFIG_DATADIR)
 static void _init_common(void) {
     LOG("Initializing common...");
-#if defined(CONFIG_DATADIR)
-    data_dir = strdup(CONFIG_DATADIR PATH_SEPARATOR PACKAGE_NAME);
-#elif defined(ANDROID)
-    // data_dir is set up in JNI
-#elif !defined(__APPLE__)
+    data_dir = STRDUP(CONFIG_DATADIR PATH_SEPARATOR PACKAGE_NAME);
+}
+
+static __attribute__((constructor)) void __init_common(void) {
+    emulator_registerStartupCallback(CTOR_PRIORITY_FIRST, &_init_common);
+}
+#elif defined(ANDROID) || defined(__APPLE__)
+    // data_dir is set up elsewhere
+#else
 #   error "Specify a CONFIG_DATADIR and PACKAGE_NAME"
 #endif
-}
 
 static bool _save_state(int fd, const uint8_t * outbuf, ssize_t outmax) {
     ssize_t outlen = 0;
@@ -85,7 +95,7 @@ bool emulator_saveState(const char * const path) {
         assert(fd != 0 && "crazy platform");
 
         // save header
-        if (!_save_state(fd, SAVE_MAGICK, SAVE_MAGICK_LEN)) {
+        if (!_save_state(fd, (const uint8_t *)SAVE_MAGICK, SAVE_MAGICK_LEN)) {
             break;
         }
 
@@ -132,6 +142,8 @@ bool emulator_loadState(const char * const path) {
     bool loaded = false;
 
     assert(cpu_isPaused() && "should be paused to load state");
+
+    video_setDirty(A2_DIRTY_FLAG);
 
     do {
         TEMP_FAILURE_RETRY(fd = open(path, O_RDONLY));
@@ -189,8 +201,7 @@ bool emulator_loadState(const char * const path) {
 }
 
 static void _shutdown_threads(void) {
-#if !TESTING
-#   if defined(__linux__) && !defined(ANDROID)
+#if defined(__linux__) && !defined(ANDROID)
     LOG("Emulator waiting for other threads to clean up...");
     do {
         DIR *dir = opendir("/proc/self/task");
@@ -221,36 +232,117 @@ static void _shutdown_threads(void) {
         static struct timespec ts = { .tv_sec=0, .tv_nsec=33333333 };
         nanosleep(&ts, NULL); // 30Hz framerate
     } while (1);
-#   endif
 #endif
+}
+
+void emulator_registerStartupCallback(long order, startup_callback_f ctor) {
+
+    static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+    pthread_mutex_lock(&mutex);
+
+    module_ctor_node_s *node = MALLOC(sizeof(module_ctor_node_s));
+    assert(node);
+    node->next = NULL;
+    node->order = order;
+    node->ctor = ctor;
+
+    module_ctor_node_s *p0 = NULL;
+    module_ctor_node_s *p = head;
+    while (p && (order > p->order)) {
+        p0 = p;
+        p = p->next;
+    }
+    if (p0) {
+        p0->next = node;
+    } else {
+        head = node;
+    }
+    node->next = p;
+
+    pthread_mutex_unlock(&mutex);
+}
+
+void emulator_ctors(void) {
+    module_ctor_node_s *p = head;
+    head = NULL;
+    while (p) {
+        p->ctor();
+        module_ctor_node_s *next = p->next;
+        FREE(p);
+        p = next;
+    }
+    head = NULL;
 }
 
 void emulator_start(void) {
-#ifdef INTERFACE_CLASSIC
-    load_settings(); // user prefs
+
+    emulator_ctors();
+
+    prefs_load(); // user prefs
+    prefs_sync(NULL);
+
+#if defined(INTERFACE_CLASSIC) && !TESTING
     c_keys_set_key(kF8); // show credits before emulation start
 #endif
+
+#if !defined(__APPLE__) && !defined(ANDROID)
     video_init();
+#endif
+
     timing_startCPU();
-    video_main_loop();
 }
 
 void emulator_shutdown(void) {
+    emulatorShuttingDown = true;
     disk6_eject(0);
     disk6_eject(1);
     video_shutdown();
+    prefs_shutdown();
     timing_stopCPU();
     _shutdown_threads();
 }
 
-#if !TESTING && !defined(__APPLE__) && !defined(ANDROID)
+bool emulator_isShuttingDown(void) {
+    return emulatorShuttingDown;
+}
+
+#if !defined(__APPLE__) && !defined(ANDROID)
 int main(int _argc, char **_argv) {
     argc = _argc;
     argv = _argv;
 
+#if TESTING
+#   if TEST_CPU
+    // Currently this test is the only one that blocks current thread and runs as a black screen
+    extern int test_cpu(int, char *[]);
+    test_cpu(argc, argv);
+#   elif TEST_VM
+    extern int test_vm(int, char *[]);
+    test_vm(argc, argv);
+#   elif TEST_DISPLAY
+    extern int test_display(int, char *[]);
+    test_display(argc, argv);
+#   elif TEST_DISK
+    extern int test_disk(int, char *[]);
+    test_disk(argc, argv);
+#   elif TEST_PREFS
+    extern void test_prefs(int, char *[]);
+    test_prefs(argc, argv);
+#   elif TEST_TRACE
+    extern void test_trace(int, char *[]);
+    test_trace(argc, argv);
+#   else
+#       error "OOPS, no testsuite specified"
+#   endif
+#endif
+
+    cpu_pause();
+
     emulator_start();
 
-    // main loop ...
+    cpu_resume();
+
+    video_main_loop();
 
     emulator_shutdown();
 

@@ -82,6 +82,12 @@ public abstract class Apple2AbstractMenu implements Apple2MenuView {
 
         public String getSummary(final Apple2Activity activity);
 
+        public String getPrefDomain();
+
+        public String getPrefKey();
+
+        public Object getPrefDefault();
+
         public View getView(final Apple2Activity activity, View convertView);
 
         public void handleSelection(final Apple2Activity activity, final Apple2AbstractMenu settingsMenu, boolean isChecked);

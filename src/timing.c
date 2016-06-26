@@ -50,7 +50,7 @@
 
 // cycle counting
 double cycles_persec_target = CLK_6502;
-unsigned long long cycles_count_total = 0;
+unsigned long cycles_count_total = 0;           // Running at spec ~1MHz, this will approach overflow in ~4000secs
 int cycles_speaker_feedback = 0;
 int32_t cpu65_cycles_to_execute = 0;            // cycles-to-execute by cpu65_run()
 int32_t cpu65_cycle_count = 0;                  // cycles currently excuted by cpu65_run()
@@ -72,24 +72,17 @@ bool alt_speed_enabled = false;
 // misc
 volatile uint8_t emul_reinitialize = 1;
 #ifdef AUDIO_ENABLED
-static bool emul_reinitialize_audio = true;
+static bool emul_reinitialize_audio = false;
 static bool emul_pause_audio = false;
 static bool emul_resume_audio = false;
 #endif
 static bool cpu_shutting_down = false;
 pthread_t cpu_thread_id = 0;
-pthread_mutex_t interface_mutex = { 0 };
+pthread_mutex_t interface_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t dbg_thread_cond = PTHREAD_COND_INITIALIZER;
 pthread_cond_t cpu_thread_cond = PTHREAD_COND_INITIALIZER;
 
 // -----------------------------------------------------------------------------
-
-__attribute__((constructor(CTOR_PRIORITY_LATE)))
-static void _init_timing(void) {
-    pthread_mutexattr_t attr;
-    pthread_mutexattr_init(&attr);
-    pthread_mutex_init(&interface_mutex, &attr);
-}
 
 struct timespec timespec_diff(struct timespec start, struct timespec end, bool *negative) {
     struct timespec t;
@@ -139,7 +132,7 @@ struct timespec timespec_add(struct timespec start, unsigned long nsecs) {
 }
 
 static void _timing_initialize(double scale) {
-    is_fullspeed = (scale >= CPU_SCALE_FASTEST);
+    is_fullspeed = (scale > CPU_SCALE_FASTEST_PIVOT);
     if (!is_fullspeed) {
         cycles_persec_target = CLK_6502 * scale;
     }
@@ -163,9 +156,7 @@ void reinitialize(void) {
 
     softswitches = SS_TEXT | SS_IOUDIS | SS_C3ROM | SS_LCWRT | SS_LCSEC;
 
-    video_setpage( 0 );
-
-    video_redraw();
+    video_setDirty(A2_DIRTY_FLAG);
 
     cpu65_init();
 
@@ -197,7 +188,9 @@ void timing_toggleCPUSpeed(void) {
 void timing_reinitializeAudio(void) {
     SPINLOCK_ACQUIRE(&_pause_spinLock);
     assert(pthread_self() != cpu_thread_id);
+#if !TESTING
     assert(cpu_isPaused());
+#endif
     emul_reinitialize_audio = true;
     emul_pause_audio = false;
     emul_resume_audio = false;
@@ -256,7 +249,7 @@ bool cpu_isPaused(void) {
 #if !MOBILE_DEVICE
 bool timing_shouldAutoAdjustSpeed(void) {
     double speed = alt_speed_enabled ? cpu_altscale_factor : cpu_scale_factor;
-    return auto_adjust_speed && (speed < CPU_SCALE_FASTEST);
+    return auto_adjust_speed && (speed <= CPU_SCALE_FASTEST_PIVOT);
 }
 #endif
 
@@ -266,23 +259,30 @@ static void *cpu_thread(void *dummyptr) {
 
     LOG("cpu_thread : initialized...");
 
-    struct timespec deltat;
+    struct timespec deltat = { 0 };
 #if !MOBILE_DEVICE
-    struct timespec disk_motor_time;
+    struct timespec disk_motor_time = { 0 };
 #endif
-    struct timespec t0;         // the target timer
-    struct timespec ti, tj;     // actual time samples
+    struct timespec t0 = { 0 }; // the target timer
+    struct timespec ti = { 0 }; // actual before time sample
+    struct timespec tj = { 0 }; // actual after time sample
     bool negative = false;
     long drift_adj_nsecs = 0;   // generic drift adjustment between target and actual
 
     int debugging_cycles0 = 0;
     int debugging_cycles = 0;
 
-#if DEBUG_TIMING
     unsigned long dbg_ticks = 0;
+#if DEBUG_TIMING
     int speaker_neg_feedback = 0;
     int speaker_pos_feedback = 0;
-    unsigned int dbg_cycles_executed = 0;
+    unsigned long dbg_cycles_executed = 0;
+#endif
+
+#ifdef AUDIO_ENABLED
+    audio_init();
+    speaker_init();
+    MB_Initialize();
 #endif
 
     do
@@ -294,12 +294,14 @@ static void *cpu_thread(void *dummyptr) {
             emul_reinitialize_audio = false;
 
             speaker_destroy();
-            MB_Destroy();
+            extern void MB_SoftDestroy(void);
+            MB_SoftDestroy();
             audio_shutdown();
 
             audio_init();
             speaker_init();
-            MB_Initialize();
+            extern void MB_SoftInitialize(void);
+            MB_SoftInitialize();
         }
         pthread_mutex_unlock(&interface_mutex);
         LOG("UNLOCKING FOR MAYBE INITIALIZING AUDIO ...");
@@ -310,6 +312,11 @@ static void *cpu_thread(void *dummyptr) {
         }
 
         LOG("cpu_thread : begin main loop ...");
+
+#ifndef NDEBUG
+        extern void timing_testCyclesCountOverflow(void);
+        timing_testCyclesCountOverflow();
+#endif
 
         clock_gettime(CLOCK_MONOTONIC, &t0);
 
@@ -400,9 +407,6 @@ static void *cpu_thread(void *dummyptr) {
 #endif
 
             timing_checkpoint_cycles();
-#if CPU_TRACING
-            cpu65_trace_checkpoint();
-#endif
 
 #ifdef AUDIO_ENABLED
             speaker_flush(); // play audio
@@ -427,7 +431,7 @@ static void *cpu_thread(void *dummyptr) {
 #ifdef AUDIO_ENABLED
                         !speaker_isActive() &&
 #endif
-                        !video_isDirty() && (!disk6.motor_off && (disk_motor_time.tv_sec || disk_motor_time.tv_nsec > DISK_MOTOR_QUIET_NSECS)) )
+                        !video_isDirty(A2_DIRTY_FLAG) && (!disk6.motor_off && (disk_motor_time.tv_sec || disk_motor_time.tv_nsec > DISK_MOTOR_QUIET_NSECS)) )
                 {
                     TIMING_LOG("auto switching to full speed");
                     _timing_initialize(CPU_SCALE_FASTEST);
@@ -437,9 +441,13 @@ static void *cpu_thread(void *dummyptr) {
 
             if (!is_fullspeed) {
                 deltat = timespec_diff(ti, tj, &negative);
-                assert(!negative);
+                if (negative) {
+                    // 2016/05/05 : crash report from the wild on Android if we assert(!negative)
+                    LOG("WHOA... time went backwards! Did you just cross a timezone?");
+                    deltat.tv_sec = 1;
+                }
                 long sleepfor = 0;
-                if (!deltat.tv_sec)
+                if (LIKELY(!deltat.tv_sec))
                 {
                     sleepfor = EXECUTION_PERIOD_NSECS - drift_adj_nsecs - deltat.tv_nsec;
                 }
@@ -463,6 +471,11 @@ static void *cpu_thread(void *dummyptr) {
                     TRACE_CPU_END();
                 }
 
+                dbg_ticks += EXECUTION_PERIOD_NSECS;
+                if ((dbg_ticks % (NANOSECONDS_PER_SECOND>>1)) == 0)
+                {
+                    video_flashText(); // TODO FIXME : proper FLASH timing ...
+                }
 #if DEBUG_TIMING
                 // collect timing statistics
                 if (speaker_neg_feedback > cycles_speaker_feedback)
@@ -474,16 +487,17 @@ static void *cpu_thread(void *dummyptr) {
                     speaker_pos_feedback = cycles_speaker_feedback;
                 }
 
-                dbg_ticks += EXECUTION_PERIOD_NSECS;
                 if ((dbg_ticks % NANOSECONDS_PER_SECOND) == 0)
                 {
                     TIMING_LOG("tick:(%ld.%ld) real:(%ld.%ld) cycles exe: %d ... speaker feedback: %d/%d", t0.tv_sec, t0.tv_nsec, ti.tv_sec, ti.tv_nsec, dbg_cycles_executed, speaker_neg_feedback, speaker_pos_feedback);
                     dbg_cycles_executed = 0;
-                    dbg_ticks = 0;
                     speaker_neg_feedback = 0;
                     speaker_pos_feedback = 0;
                 }
 #endif
+                if ((dbg_ticks % NANOSECONDS_PER_SECOND) == 0) {
+                    dbg_ticks = 0;
+                }
             }
 
 #if !MOBILE_DEVICE
@@ -492,10 +506,10 @@ static void *cpu_thread(void *dummyptr) {
 #ifdef AUDIO_ENABLED
                             speaker_isActive() ||
 #endif
-                            video_isDirty() || (disk6.motor_off && (disk_motor_time.tv_sec || disk_motor_time.tv_nsec > DISK_MOTOR_QUIET_NSECS))) )
+                            video_isDirty(A2_DIRTY_FLAG) || (disk6.motor_off && (disk_motor_time.tv_sec || disk_motor_time.tv_nsec > DISK_MOTOR_QUIET_NSECS))) )
                 {
                     double speed = alt_speed_enabled ? cpu_altscale_factor : cpu_scale_factor;
-                    if (speed < CPU_SCALE_FASTEST) {
+                    if (speed <= CPU_SCALE_FASTEST_PIVOT) {
                         TIMING_LOG("auto switching to configured speed");
                         _timing_initialize(speed);
                     }
@@ -562,6 +576,67 @@ void timing_checkpoint_cycles(void) {
     const int32_t d = cpu65_cycle_count - cycles_checkpoint_count;
     assert(d >= 0);
     cycles_count_total += d;
+#ifndef NDEBUG
+    if (UNLIKELY(cycles_count_total < cycles_checkpoint_count)) {
+        LOG("OVERFLOWED cycles_count_total...");
+    }
+#endif
     cycles_checkpoint_count = cpu65_cycle_count;
+}
+
+#ifndef NDEBUG
+void timing_testCyclesCountOverflow(void) {
+    // advance cycles count to near overflow
+    LOG("almost overflow ...");
+    cycles_count_total = ULONG_MAX - (CLK_6502_INT*10);
+}
+#endif
+
+// ----------------------------------------------------------------------------
+
+static void vm_prefsChanged(const char *domain) {
+    (void)domain;
+
+    float fVal = 1.0;
+
+    cpu_scale_factor = prefs_parseFloatValue(PREF_DOMAIN_VM, PREF_CPU_SCALE, &fVal) ?  fVal / 100.f : 1.f;
+    if (cpu_scale_factor < CPU_SCALE_SLOWEST) {
+        cpu_scale_factor = CPU_SCALE_SLOWEST;
+    }
+    if (cpu_scale_factor > CPU_SCALE_FASTEST_PIVOT) {
+        cpu_scale_factor = CPU_SCALE_FASTEST;
+    }
+    cpu_altscale_factor = prefs_parseFloatValue(PREF_DOMAIN_VM, PREF_CPU_SCALE_ALT, &fVal) ?  fVal / 100.f : 1.f;
+    if (cpu_altscale_factor < CPU_SCALE_SLOWEST) {
+        cpu_altscale_factor = CPU_SCALE_SLOWEST;
+    }
+    if (cpu_altscale_factor > CPU_SCALE_FASTEST_PIVOT) {
+        cpu_altscale_factor = CPU_SCALE_FASTEST;
+    }
+#ifdef AUDIO_ENABLED
+
+    static float audioLatency = 0.f;
+    float latency = prefs_parseFloatValue(PREF_DOMAIN_AUDIO, PREF_AUDIO_LATENCY, &fVal) ? fVal : 0.25f;
+#define SMALL_EPSILON (1.f/1024.f)
+    if (fabsf(audioLatency - latency) > SMALL_EPSILON) {
+        audioLatency = latency;
+        audio_setLatency(latency);
+        timing_reinitializeAudio();
+    }
+
+    static bool mbEnabled = false;
+    bool bVal = false;
+    bool enabled = prefs_parseBoolValue(PREF_DOMAIN_AUDIO, PREF_MOCKINGBOARD_ENABLED, &bVal) ? bVal : true;
+    if (enabled != mbEnabled) {
+        mbEnabled = enabled;
+        MB_SetEnabled(enabled);
+        timing_reinitializeAudio();
+    }
+#endif
+}
+
+static __attribute__((constructor)) void _init_vm(void) {
+    prefs_registerListener(PREF_DOMAIN_VM, &vm_prefsChanged);
+    prefs_registerListener(PREF_DOMAIN_AUDIO, &vm_prefsChanged);
 }
 

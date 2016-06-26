@@ -73,8 +73,8 @@ LOCAL_ARM_MODE := arm
 # List of client source files, directly taken from Makefile.am
 LOCAL_SRC_FILES := \
     src/client/linux/crash_generation/crash_generation_client.cc \
-    src/client/linux/dump_writer_common/ucontext_reader.cc \
     src/client/linux/dump_writer_common/thread_info.cc \
+    src/client/linux/dump_writer_common/ucontext_reader.cc \
     src/client/linux/handler/exception_handler.cc \
     src/client/linux/handler/minidump_descriptor.cc \
     src/client/linux/log/log.cc \

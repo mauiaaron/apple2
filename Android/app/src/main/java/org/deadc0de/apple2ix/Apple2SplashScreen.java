@@ -11,7 +11,9 @@
 
 package org.deadc0de.apple2ix;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
@@ -44,12 +46,19 @@ public class Apple2SplashScreen implements Apple2MenuView {
             }
         });
 
-        Button prefsButton = (Button) mSettingsView.findViewById(R.id.prefsButton);
+        Button prefsButton = (Button) mSettingsView.findViewById(R.id.resetButton);
         prefsButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Apple2SettingsMenu settingsMenu = mActivity.getSettingsMenu();
-                settingsMenu.show();
+                AlertDialog.Builder builder = new AlertDialog.Builder(mActivity).setIcon(R.drawable.ic_launcher).setCancelable(true).setTitle(R.string.preferences_reset_really).setMessage(R.string.preferences_reset_warning).setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                        Apple2Preferences.reset(mActivity);
+                    }
+                }).setNegativeButton(R.string.no, null);
+                AlertDialog dialog = builder.create();
+                mActivity.registerAndShowDialog(dialog);
             }
         });
 
@@ -70,7 +79,7 @@ public class Apple2SplashScreen implements Apple2MenuView {
             public void run() {
                 Button startButton = (Button) mSettingsView.findViewById(R.id.startButton);
                 startButton.setEnabled(mDismissable);
-                Button prefsButton = (Button) mSettingsView.findViewById(R.id.prefsButton);
+                Button prefsButton = (Button) mSettingsView.findViewById(R.id.resetButton);
                 prefsButton.setEnabled(mDismissable);
                 Button disksButton = (Button) mSettingsView.findViewById(R.id.disksButton);
                 disksButton.setEnabled(mDismissable);

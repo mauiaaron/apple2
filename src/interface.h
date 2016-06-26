@@ -46,9 +46,13 @@ void interface_plotMessage(uint8_t *fb, interface_colorscheme_t cs, char *messag
 #if INTERFACE_TOUCH
 typedef enum interface_device_t {
     TOUCH_DEVICE_NONE = 0,
+    TOUCH_DEVICE_FRAMEBUFFER = 0,
     TOUCH_DEVICE_JOYSTICK,
     TOUCH_DEVICE_JOYSTICK_KEYPAD,
     TOUCH_DEVICE_KEYBOARD,
+    TOUCH_DEVICE_TOPMENU,
+    TOUCH_DEVICE_ALERT,
+    // ...
     TOUCH_DEVICE_DEVICE_MAX,
 } interface_device_t;
 
@@ -78,19 +82,7 @@ typedef enum interface_touch_event_flags {
 
 // handle touch event
 extern int64_t (*interface_onTouchEvent)(interface_touch_event_t action, int pointer_count, int pointer_idx, float *x_coords, float *y_coords);
-
-// is the touch menu module itself available?
-extern bool (*interface_isTouchMenuAvailable)(void);
-
-// enable/disable touch menu HUD element
-extern void (*interface_setTouchMenuEnabled)(bool enabled);
-
-// set min/max alpha visibility of touch menu HUD element
-extern void (*interface_setTouchMenuVisibility)(float inactiveAlpha, float activeAlpha);
-
-// set a finer-grained font size (if glyphScale > 1)
-extern void (*interface_setGlyphScale)(int glyphScale);
-#endif
+#endif // INTERFACE_TOUCH
 
 #define EXT_GZ  ".gz"
 #define _GZLEN (sizeof(EXT_GZ)-1)

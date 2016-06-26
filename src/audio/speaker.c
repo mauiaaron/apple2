@@ -45,12 +45,13 @@ static unsigned int remainder_buffer_size = 0;
 static unsigned long remainder_buffer_size_max = 0;
 static unsigned int remainder_buffer_idx = 0;
 
+static long speaker_volume = 0;
 static int16_t speaker_amplitude = SPKR_DATA_INIT;
 static int16_t speaker_data = 0;
 
 static double cycles_per_sample = 0.0;
-static unsigned long long cycles_last_update = 0;
-static unsigned long long cycles_quiet_time = 0;
+static unsigned long cycles_last_update = 0;
+static unsigned long cycles_quiet_time = 0;
 
 static bool speaker_accessed_since_last_flush = false;
 static bool speaker_recently_active = false;
@@ -62,6 +63,23 @@ static int samples_adjustment_counter = 0;
 static AudioBuffer_s *speakerBuffer = NULL;
 
 // --------------------------------------------------------------------------------------------------------------------
+
+static void speaker_prefsChanged(const char *domain) {
+    long lVal = 0;
+    speaker_volume = prefs_parseLongValue(domain, PREF_SPEAKER_VOLUME, &lVal, /*base:*/10) ? lVal : 5; // expected range 0-10
+    if (speaker_volume < 0) {
+        speaker_volume = 0;
+    }
+    if (speaker_volume > 10) {
+        speaker_volume = 10;
+    }
+    float samplesScale = speaker_volume/10.f;
+    speaker_amplitude = (int16_t)(SPKR_DATA_INIT * samplesScale);
+}
+
+static __attribute__((constructor)) void _init_speaker(void) {
+    prefs_registerListener(PREF_DOMAIN_AUDIO, &speaker_prefsChanged);
+}
 
 /*
  * Because disk image loading is slow (AKA close-to-original-//e-speed), we may auto-switch to "fullspeed" for faster
@@ -130,9 +148,17 @@ static void _speaker_init_timing(void) {
  */
 static void _speaker_update(/*bool toggled*/) {
 
-    if (!is_fullspeed) {
+    do {
+        if (is_fullspeed) {
+            break;
+        }
 
-        unsigned long long cycles_diff = cycles_count_total - cycles_last_update;
+        if (UNLIKELY(cycles_last_update > cycles_count_total)) {
+            LOG("ignoring cycles_count_total overflow ...");
+            break; // ignore cycles_count_total overflow ...
+        }
+
+        unsigned long cycles_diff = cycles_count_total - cycles_last_update;
 
         if (remainder_buffer_idx) {
             // top-off previous previous fractional remainder cycles
@@ -161,9 +187,9 @@ static void _speaker_update(/*bool toggled*/) {
             }
         }
 
-        const unsigned long long samples_count = (unsigned long long)((double)cycles_diff / cycles_per_sample);
-        unsigned long long num_samples = samples_count;
-        const unsigned long long cycles_remainder = (unsigned long long)((double)cycles_diff - (double)num_samples * cycles_per_sample);
+        const unsigned long samples_count = (unsigned long)((double)cycles_diff / cycles_per_sample);
+        unsigned long num_samples = samples_count;
+        const unsigned long cycles_remainder = (unsigned long)((double)cycles_diff - (double)num_samples * cycles_per_sample);
 
         // populate samples_buffer with whole samples
         while (num_samples && (samples_buffer_idx < channelsSampleRateHz)) {
@@ -182,21 +208,24 @@ static void _speaker_update(/*bool toggled*/) {
         if (cycles_remainder > 0) {
             // populate remainder_buffer with fractional samples
             assert(remainder_buffer_idx == 0 && "should have already dealt with remainder buffer");
-            assert(cycles_remainder < remainder_buffer_size && "otherwise there should have been another whole sample");
-
-            while (remainder_buffer_idx<cycles_remainder) {
-                remainder_buffer[remainder_buffer_idx] = speaker_data;
-                ++remainder_buffer_idx;
+            //assert(cycles_remainder < remainder_buffer_size && "otherwise there should have been another whole sample");
+            if (UNLIKELY(cycles_remainder >= remainder_buffer_size)) {
+                LOG("OOPS, overflow in cycles_remainder:%lu", cycles_remainder);
+            } else {
+                while (remainder_buffer_idx<cycles_remainder) {
+                    remainder_buffer[remainder_buffer_idx] = speaker_data;
+                    ++remainder_buffer_idx;
+                }
             }
         }
 
         if (UNLIKELY(samples_buffer_idx > channelsSampleRateHz)) {
             ////assert(samples_buffer_idx == channelsSampleRateHz && "should be at exactly the end, no further");
             if (UNLIKELY(samples_buffer_idx > channelsSampleRateHz)) {
-                ERRLOG("OOPS, possible overflow in speaker samples buffer ... samples_buffer_idx:%lu channelsSampleRateHz:%lu", samples_buffer_idx, channelsSampleRateHz);
+                LOG("OOPS, possible overflow in speaker samples buffer ... samples_buffer_idx:%lu channelsSampleRateHz:%lu", (unsigned long)samples_buffer_idx, channelsSampleRateHz);
             }
         }
-    }
+    } while (0);
 
     cycles_last_update = cycles_count_total;
 }
@@ -467,11 +496,6 @@ void speaker_flush(void) {
 
 bool speaker_isActive(void) {
     return speaker_recently_active;
-}
-
-void speaker_setVolumeZeroToTen(unsigned long goesToTen) {
-    float samplesScale = goesToTen/10.f;
-    speaker_amplitude = (int16_t)(SPKR_DATA_INIT * samplesScale);
 }
 
 double speaker_cyclesPerSample(void) {

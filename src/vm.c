@@ -135,7 +135,7 @@ GLUE_C_READ(iie_page2_off)
         }
     }
 
-    video_setpage(0);
+    video_setDirty(A2_DIRTY_FLAG);
 
     return floating_bus();
 }
@@ -159,8 +159,9 @@ GLUE_C_READ(iie_page2_on)
         }
     } else {
         softswitches |= SS_SCREEN;
-        video_setpage(1);
     }
+
+    video_setDirty(A2_DIRTY_FLAG);
 
     return floating_bus();
 }
@@ -174,7 +175,7 @@ GLUE_C_READ(read_switch_graphics)
 {
     if (softswitches & SS_TEXT) {
         softswitches &= ~SS_TEXT;
-        video_redraw();
+        video_setDirty(A2_DIRTY_FLAG);
     }
     return floating_bus();
 }
@@ -183,7 +184,7 @@ GLUE_C_READ(read_switch_text)
 {
     if (!(softswitches & SS_TEXT)) {
         softswitches |= SS_TEXT;
-        video_redraw();
+        video_setDirty(A2_DIRTY_FLAG);
     }
     return floating_bus();
 }
@@ -197,7 +198,7 @@ GLUE_C_READ(read_switch_no_mixed)
 {
     if (softswitches & SS_MIXED) {
         softswitches &= ~SS_MIXED;
-        video_redraw();
+        video_setDirty(A2_DIRTY_FLAG);
     }
     return floating_bus();
 }
@@ -206,7 +207,7 @@ GLUE_C_READ(read_switch_mixed)
 {
     if (!(softswitches & SS_MIXED)) {
         softswitches |= SS_MIXED;
-        video_redraw();
+        video_setDirty(A2_DIRTY_FLAG);
     }
     return floating_bus();
 }
@@ -244,7 +245,8 @@ GLUE_C_READ(iie_hires_off)
         softswitches |= SS_HGRWRT;
     }
 
-    video_redraw();
+    video_setDirty(A2_DIRTY_FLAG);
+
     return floating_bus();
 }
 
@@ -268,7 +270,8 @@ GLUE_C_READ(iie_hires_on)
         }
     }
 
-    video_redraw();
+    video_setDirty(A2_DIRTY_FLAG);
+
     return floating_bus();
 }
 
@@ -295,7 +298,7 @@ GLUE_C_READ(read_button1)
 
 GLUE_C_READ(read_button2)
 {
-    return joy_button2;
+    return joy_button0 | joy_button1;
 }
 
 GLUE_C_READ(read_gc_strobe)
@@ -542,8 +545,9 @@ GLUE_C_READ(iie_80store_off)
 
     if (softswitches & SS_PAGE2) {
         softswitches |= SS_SCREEN;
-        video_setpage(1);
     }
+
+    video_setDirty(A2_DIRTY_FLAG);
 
     return floating_bus();
 }
@@ -577,7 +581,8 @@ GLUE_C_READ(iie_80store_on)
     }
 
     softswitches &= ~SS_SCREEN;
-    video_setpage(0);
+    video_setDirty(A2_DIRTY_FLAG);
+
     return floating_bus();
 }
 
@@ -606,6 +611,8 @@ GLUE_C_READ(iie_ramrd_main)
         base_hgrrd  = apple_ii_64k[0];
     }
 
+    video_setDirty(A2_DIRTY_FLAG);
+
     return floating_bus();
 }
 
@@ -628,6 +635,8 @@ GLUE_C_READ(iie_ramrd_aux)
         base_textrd = apple_ii_64k[1];
         base_hgrrd  = apple_ii_64k[1];
     }
+
+    video_setDirty(A2_DIRTY_FLAG);
 
     return floating_bus();
 }
@@ -738,10 +747,7 @@ GLUE_C_READ(iie_80col_off)
     }
 
     softswitches &= ~SS_80COL;
-
-    if (softswitches & (SS_TEXT|SS_MIXED|SS_DHIRES)) {
-        video_redraw();
-    }
+    video_setDirty(A2_DIRTY_FLAG);
 
     return floating_bus();
 }
@@ -753,10 +759,7 @@ GLUE_C_READ(iie_80col_on)
     }
 
     softswitches |= SS_80COL;
-
-    if (softswitches & (SS_TEXT|SS_MIXED|SS_DHIRES)) {
-        video_redraw();
-    }
+    video_setDirty(A2_DIRTY_FLAG);
 
     return floating_bus();
 }
@@ -771,7 +774,7 @@ GLUE_C_READ(iie_altchar_off)
     if (softswitches & SS_ALTCHAR) {
         softswitches &= ~SS_ALTCHAR;
         video_loadfont(0x40,0x40,ucase_glyphs,3);
-        video_redraw();
+        video_setDirty(A2_DIRTY_FLAG);
     }
     return floating_bus();
 }
@@ -782,7 +785,7 @@ GLUE_C_READ(iie_altchar_on)
         softswitches |= SS_ALTCHAR;
         video_loadfont(0x40,0x20,mousetext_glyphs,1);
         video_loadfont(0x60,0x20,lcase_glyphs,2);
-        video_redraw();
+        video_setDirty(A2_DIRTY_FLAG);
     }
     return floating_bus();
 }
@@ -814,7 +817,7 @@ GLUE_C_READ(iie_dhires_on)
 {
     if (!(softswitches & SS_DHIRES)) {
         softswitches |= SS_DHIRES;
-        video_redraw();
+        video_setDirty(A2_DIRTY_FLAG);
     }
     return floating_bus();
 }
@@ -823,7 +826,7 @@ GLUE_C_READ(iie_dhires_off)
 {
     if (softswitches & SS_DHIRES) {
         softswitches &= ~SS_DHIRES;
-        video_redraw();
+        video_setDirty(A2_DIRTY_FLAG);
     }
     return floating_bus();
 }
@@ -943,7 +946,6 @@ static void _initialize_font(void) {
     video_loadfont(0x80,0x40,ucase_glyphs,0);
     video_loadfont(0xC0,0x20,ucase_glyphs,0);
     video_loadfont(0xE0,0x20,lcase_glyphs,0);
-    video_redraw();
 }
 
 static void _initialize_apple_ii_memory(void) {
@@ -1210,16 +1212,13 @@ void vm_initialize(void) {
 }
 
 void vm_reinitializeAudio(void) {
-#ifdef AUDIO_ENABLED
-    speaker_setVolumeZeroToTen(sound_volume);
-    MB_SetVolumeZeroToTen(sound_volume);
-#endif
     for (unsigned int i = 0xC030; i < 0xC040; i++) {
         cpu65_vmem_r[i] = cpu65_vmem_w[i] =
 #ifdef AUDIO_ENABLED
-            (sound_volume > 0) ? speaker_toggle :
-#endif
+            speaker_toggle;
+#else
             ram_nop;
+#endif
     }
 #warning TODO FIXME ... should unset MB/Phasor hooks if volume is zero ...
 }

@@ -51,7 +51,7 @@ static const char* const _gzerr(gzFile gzf) {
     }
 }
 
-/* Compress some_file to some_file.gz and unlink previous.
+/* Compress some_file to some_file.gz
  *
  * If expected_bytecount > 0, check that byte count written matches expected.
  *
@@ -142,7 +142,7 @@ const char *zlib_deflate(const char* const src, const int expected_bytecount) {
     return err;
 }
 
-/* Decompress some_file.gz to some_file and unlink previous.
+/* Decompress some_file.gz to some_file
  *
  * If expected_bytecount > 0, check that byte count read matches expected.
  *

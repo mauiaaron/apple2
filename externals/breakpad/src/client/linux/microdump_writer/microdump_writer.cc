@@ -34,17 +34,22 @@
 
 #include <sys/utsname.h>
 
+#include <algorithm>
+
 #include "client/linux/dump_writer_common/thread_info.h"
 #include "client/linux/dump_writer_common/ucontext_reader.h"
 #include "client/linux/handler/exception_handler.h"
 #include "client/linux/handler/microdump_extra_info.h"
 #include "client/linux/log/log.h"
 #include "client/linux/minidump_writer/linux_ptrace_dumper.h"
+#include "common/linux/file_id.h"
 #include "common/linux/linux_libc_support.h"
 
 namespace {
 
+using google_breakpad::auto_wasteful_vector;
 using google_breakpad::ExceptionHandler;
+using google_breakpad::kDefaultBuildIdSize;
 using google_breakpad::LinuxDumper;
 using google_breakpad::LinuxPtraceDumper;
 using google_breakpad::MappingInfo;
@@ -179,7 +184,13 @@ class MicrodumpWriter {
 #elif defined(__i386__)
     const char kArch[] = "x86";
 #elif defined(__mips__)
+# if _MIPS_SIM == _ABIO32
     const char kArch[] = "mips";
+# elif _MIPS_SIM == _ABI64
+    const char kArch[] = "mips64";
+# else
+#  error "This mips ABI is currently not supported (n32)"
+#endif
 #else
 #error "This code has not been ported to your platform yet"
 #endif
@@ -330,21 +341,31 @@ class MicrodumpWriter {
                   bool member,
                   unsigned int mapping_id,
                   const uint8_t* identifier) {
-    MDGUID module_identifier;
+
+    auto_wasteful_vector<uint8_t, kDefaultBuildIdSize> identifier_bytes(
+        dumper_->allocator());
+
     if (identifier) {
       // GUID was provided by caller.
-      my_memcpy(&module_identifier, identifier, sizeof(MDGUID));
+      identifier_bytes.insert(identifier_bytes.end(),
+                              identifier,
+                              identifier + sizeof(MDGUID));
     } else {
       dumper_->ElfFileIdentifierForMapping(
           mapping,
           member,
           mapping_id,
-          reinterpret_cast<uint8_t*>(&module_identifier));
+          identifier_bytes);
     }
+
+    // Copy as many bytes of |identifier| as will fit into a MDGUID
+    MDGUID module_identifier = {0};
+    memcpy(&module_identifier, &identifier_bytes[0],
+           std::min(sizeof(MDGUID), identifier_bytes.size()));
 
     char file_name[NAME_MAX];
     char file_path[NAME_MAX];
-    LinuxDumper::GetMappingEffectiveNameAndPath(
+    dumper_->GetMappingEffectiveNameAndPath(
         mapping, file_path, sizeof(file_path), file_name, sizeof(file_name));
 
     LogAppend("M ");

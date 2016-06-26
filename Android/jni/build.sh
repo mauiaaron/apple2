@@ -89,12 +89,14 @@ fi
 
 if test "$(basename $0)" = "testcpu" ; then
     ln -s testcpu.mk Android.mk
-elif test "$(basename $0)" = "testvm" ; then
-    ln -s testvm.mk Android.mk
-elif test "$(basename $0)" = "testdisplay" ; then
-    ln -s testdisplay.mk Android.mk
 elif test "$(basename $0)" = "testdisk" ; then
     ln -s testdisk.mk Android.mk
+elif test "$(basename $0)" = "testdisplay" ; then
+    ln -s testdisplay.mk Android.mk
+elif test "$(basename $0)" = "testprefs" ; then
+    ln -s testprefs.mk Android.mk
+elif test "$(basename $0)" = "testvm" ; then
+    ln -s testvm.mk Android.mk
 else
     ln -s apple2ix.mk Android.mk
 fi
@@ -122,14 +124,14 @@ if test "x$do_build" = "x1" -o "x$do_release" = "x1" ; then
 
     if test "x$do_build" = "x1" ; then
         export BUILD_MODE=debug
-        ndk-build V=1 NDK_MODULE_PATH=. NDK_DEBUG=1 # NDK_TOOLCHAIN_VERSION=clang
+        ndk-build V=1 NDK_MODULE_PATH=. NDK_DEBUG=1 NDK_TOOLCHAIN_VERSION=4.9
         ret=$?
         if test "x$ret" != "x0" ; then
             exit $ret
         fi
     else
         export BUILD_MODE=release
-        ndk-build V=1 NDK_MODULE_PATH=. # NDK_TOOLCHAIN_VERSION=clang
+        ndk-build V=1 NDK_MODULE_PATH=. NDK_DEBUG=0 NDK_TOOLCHAIN_VERSION=4.9
         ret=$?
         if test "x$ret" != "x0" ; then
             exit $ret

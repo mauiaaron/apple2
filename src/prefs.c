@@ -13,371 +13,476 @@
  *
  */
 
-#define _GNU_SOURCE
+#include "prefs.h"
+#include "json_parse_private.h"
 
-#include "common.h"
+typedef struct prefs_listener_s {
+    prefs_change_callback_f prefsChanged;
+    struct prefs_listener_s *nextListener;
+} prefs_listener_s;
 
-#define         PRM_NONE                        0
-#define         PRM_SPEED                       1
-#define         PRM_ALTSPEED                    101
-#define         PRM_MODE                        2
-#define         PRM_DISK_PATH                   3
-#define         PRM_HIRES_COLOR                 4
-#define         PRM_VOLUME                      5
-#define         PRM_JOY_INPUT                   6
-#define         PRM_VIDEO_MODE                  7
-#define         PRM_JOY_KPAD_CALIBRATE          11
-#define         PRM_ROM_PATH                    12
-#define         PRM_CAPSLOCK                    102
+typedef struct prefs_domain_s {
+    char *domain;
+    struct prefs_listener_s *listeners;
+    struct prefs_domain_s *nextDomain;
+} prefs_domain_s;
 
+static JSON_ref jsonPrefs = NULL;
+static prefs_domain_s *domains = NULL;
+static char *prefsFile = NULL;
+static unsigned long listenerCount = 0;
 
-char system_path[PATH_MAX] = { 0 };
-char disk_path[PATH_MAX] = { 0 };
+static pthread_mutex_t prefsLock = PTHREAD_MUTEX_INITIALIZER;
 
-#warning FIXME TODO : completely excise deprecated apple_mode stuff
-int apple_mode = 2/*IIE_MODE*/;
-a2_video_mode_t a2_video_mode = VIDEO_1X;
-joystick_mode_t joy_mode = JOY_PCJOY;
+// ----------------------------------------------------------------------------
 
-static char *config_filename = NULL;
+void prefs_load(void) {
+    pthread_mutex_lock(&prefsLock);
 
-struct match_table
-{
-    const char *tag;
-    int value;
-};
+    FREE(prefsFile);
 
-static const struct match_table prefs_table[] =
-{
-    { "speed", PRM_SPEED },
-    { "altspeed", PRM_ALTSPEED },
-    { "mode", PRM_MODE },
-    { "path", PRM_DISK_PATH },
-    { "disk path", PRM_DISK_PATH },
-    { "disk_path", PRM_DISK_PATH },
-    { "path", PRM_DISK_PATH },
-    { "color", PRM_HIRES_COLOR },
-    { "video", PRM_VIDEO_MODE },
-    { "volume", PRM_VOLUME },
-    { "caps_lock", PRM_CAPSLOCK },
-    { "caps lock", PRM_CAPSLOCK },
-    { "joystick", PRM_JOY_INPUT },
-    { "keypad joystick parms", PRM_JOY_KPAD_CALIBRATE },
-    { "keypad_joystick_parms", PRM_JOY_KPAD_CALIBRATE },
-    { "system path", PRM_ROM_PATH },
-    { "system_path", PRM_ROM_PATH },
-    { 0, PRM_NONE }
-};
-
-static const struct match_table color_table[] =
-{
-    { "black/white", COLOR_NONE },
-    /*{ "lazy color", LAZY_COLOR }, deprecated*/
-    { "color", COLOR },
-    /*{ "lazy interpolated", LAZY_INTERP }, deprecated*/
-    { "interpolated", COLOR_INTERP },
-    { "off", 0 },
-    { "on", COLOR },
-    { 0, COLOR }
-};
-
-static const struct match_table video_table[] =
-{
-    { "1X", VIDEO_1X },
-    { "2X", VIDEO_2X },
-    { "Fullscreen", VIDEO_FULLSCREEN },
-    { 0, VIDEO_1X }
-};
-
-static const struct match_table volume_table[] =
-{
-    { "0", 0 },
-    { "1", 1 },
-    { "2", 2 },
-    { "3", 3 },
-    { "4", 4 },
-    { "5", 5 },
-    { "6", 6 },
-    { "7", 7 },
-    { "8", 8 },
-    { "9", 9 },
-    { "10", 10 },
-    { 0, 10 },
-};
-
-static const struct match_table capslock_table[] =
-{
-    { "0", 0 },
-    { "1", 1 },
-};
-
-static const struct match_table joy_input_table[] =
-{
-    { "pc joystick", JOY_PCJOY },
-#ifdef KEYPAD_JOYSTICK
-    { "joy keypad", JOY_KPAD },
-    { "joy_keypad", JOY_KPAD },
-#endif
-    { 0, JOY_PCJOY }
-};
-
-/* Find the number assigned to KEYWORD in a match table PARADIGM. If no match,
- * then the value associated with the terminating entry is used as a
- * default. */
-static int match(const struct match_table *paradigm, const char *keyword)
-{
-    while (paradigm->tag && strcasecmp(paradigm->tag, keyword))
-    {
-        paradigm++;
+    const char *apple2JSON = getenv("APPLE2IX_JSON");
+    if (apple2JSON) {
+        ASPRINTF(&prefsFile, "%s", apple2JSON);
     }
 
-    return paradigm->value;
+    if (!prefsFile) {
+        ASPRINTF(&prefsFile, "%s/.apple2.json", getenv("HOME"));
+    }
+    assert(prefsFile);
+
+    json_destroy(&jsonPrefs);
+    int tokCount = json_createFromFile(prefsFile, &jsonPrefs);
+    if (tokCount < 0) {
+        tokCount = json_createFromString("{}", &jsonPrefs);
+        assert(tokCount > 0);
+    }
+
+    pthread_mutex_unlock(&prefsLock);
 }
 
-/* Reverse match -- find a keyword associated with number KEY in
- * PARADIGM. The first match is used -- synonym keywords appearing later
- * in the table are not chosen.
- *
- * A null is returned for no match.
- */
-static const char *reverse_match(const struct match_table *paradigm, int key)
-{
-    while (paradigm->tag && key != paradigm->value)
-    {
-        paradigm++;
+void prefs_loadString(const char *jsonString) {
+    pthread_mutex_lock(&prefsLock);
+    json_destroy(&jsonPrefs);
+    int tokCount = json_createFromString(jsonString, &jsonPrefs);
+    if (tokCount < 0) {
+        tokCount = json_createFromString("{}", &jsonPrefs);
+        assert(tokCount > 0);
     }
-
-    return paradigm->tag;
+    pthread_mutex_unlock(&prefsLock);
 }
 
-/* Eat leading and trailing whitespace of string X.  The old string is
- * overwritten and a new pointer is returned.
- */
-static char * clean_string(char *x)
-{
-    size_t y;
+bool prefs_save(void) {
+    pthread_mutex_lock(&prefsLock);
 
-    /* Leading white space */
-    while (isspace(*x))
-    {
-        x++;
-    }
-
-    /* Trailing white space */
-    y = strlen(x);
-    while (y && x[y--] == ' ')
-    {
-    }
-
-    x[y] = 0;
-
-    return x;
-}
-
-/* Load the configuration. Must be called *once* at start. */
-void load_settings(void)
-{
-    /* set system defaults before user defaults. */
-    strcpy(disk_path, "./disks");
-    strcpy(system_path, "./rom");
-
-    const char *apple2cfg = getenv("APPLE2IXCFG");
-    if (apple2cfg) {
-        config_filename = strdup(apple2cfg);
-    } else {
-        const char *homedir;
-
-        homedir = getenv("HOME");
-        config_filename = malloc(strlen(homedir) + 9);
-        strcpy(config_filename, homedir);
-        strcat(config_filename, "/.apple2");
-
-        /* config_filename is left allocated for convinence in
-         * save_settings */
-    }
-
-    {
-        char *buffer = 0;
-        size_t size = 0;
-
-        FILE *config_file = fopen(config_filename, "r");
-        if (config_file == NULL)
-        {
-            ERRLOG(
-                "Warning. Cannot open the .apple2 system defaults file.\n"
-                "Make sure it's readable in your home directory.");
-            return;
+    int fd = -1;
+    bool success = false;
+    do {
+        if (!prefsFile) {
+            ERRLOG("Not saving preferences, no file loaded...");
+            break;
         }
 
-        while (getline(&buffer, &size, config_file) != -1)
-        {
-            char *parameter;
-            char *argument;
-
-            /* Split line between parameter and argument */
-
-            parameter = buffer;
-            argument = strchr(buffer, '=');
-            argument[0] = 0;
-            argument++;
-
-            parameter = clean_string(parameter);
-            argument = clean_string(argument);
-
-            int main_match = match(prefs_table, parameter);
-            switch (main_match)
-            {
-            case PRM_NONE:
-                ERRLOG("Unrecognized config parameter `%s'", parameter);
-                break;
-
-            case PRM_SPEED:
-            case PRM_ALTSPEED:
-            {
-                double x = strtod(argument, NULL);
-                if (x > CPU_SCALE_FASTEST)
-                {
-                    x = CPU_SCALE_FASTEST;
-                }
-                else if (x < CPU_SCALE_SLOWEST)
-                {
-                    x = CPU_SCALE_SLOWEST;
-                }
-                if (main_match == PRM_SPEED)
-                {
-                    cpu_scale_factor = x;
-                }
-                else
-                {
-                    cpu_altscale_factor = x;
-                }
-                break;
-            }
-
-            case PRM_DISK_PATH:
-                strncpy(disk_path, argument, PATH_MAX-1);
-                disk_path[PATH_MAX-1] = '\0';
-                break;
-
-            case PRM_HIRES_COLOR:
-                color_mode = match(color_table, argument);
-                break;
-
-            case PRM_VIDEO_MODE:
-                a2_video_mode = match(video_table, argument);
-                break;
-
-            case PRM_VOLUME:
-                sound_volume = match(volume_table, argument);
-                break;
-
-            case PRM_CAPSLOCK:
-                caps_lock = match(capslock_table, argument) ? true : false;
-                break;
-
-            case PRM_JOY_INPUT:
-                joy_mode = match(joy_input_table, argument);
-                break;
-
-#ifdef KEYPAD_JOYSTICK
-            case PRM_JOY_KPAD_CALIBRATE:
-                joy_step = strtol(argument, &argument, 10);
-                if (joy_step < 1)
-                {
-                    joy_step = 1;
-                }
-                else if (joy_step > 255)
-                {
-                    joy_step = 255;
-                }
-
-                joy_auto_recenter = strtol(argument, &argument, 10);
-
-                break;
-#endif
-
-            case PRM_ROM_PATH:
-                strncpy(system_path, argument, PATH_MAX-1);
-                system_path[PATH_MAX-1] = '\0';
-                break;
-            }
+        if (!jsonPrefs) {
+            ERRLOG("Not saving preferences, none loaded...");
+            break;
         }
 
-        GETLINE_FREE(buffer);
+        if (((JSON_s *)jsonPrefs)->numTokens <= 0) {
+            ERRLOG("Not saving preferences, no preferences loaded...");
+            break;
+        }
 
-        fclose(config_file);
-    }
-}
-
-
-/* Save the configuration */
-bool save_settings(void)
-{
-    FILE *config_file = NULL;
-
-    LOG("Saving preferences...");
+        assert(((JSON_s *)jsonPrefs)->jsonString && "string should be valid");
 
 #define PREFS_ERRPRINT() \
         ERRLOG( \
-            "Cannot open the .apple2/apple2.cfg system defaults file for writing.\n" \
-            "Make sure it has rw permission in your home directory.")
+                "Cannot open the .apple2.json preferences file for writing.\n" \
+                "Make sure it has R/W permission in your home directory.")
 
-#define ERROR_SUBMENU_H 9
+#define ERROR_SUBMENU_H 8
 #define ERROR_SUBMENU_W 40
-#ifdef INTERFACE_CLASSIC
-    int ch = -1;
-    char submenu[ERROR_SUBMENU_H][ERROR_SUBMENU_W+1] =
-    //1.  5.  10.  15.  20.  25.  30.  35.  40.
-    { "||||||||||||||||||||||||||||||||||||||||",
-      "|                                      |",
-      "|                                      |",
-      "| OOPS, could not open or write to the |",
-      "| .apple2/apple2.cfg file in your HOME |",
-      "| directory ...                        |",
-      "|                                      |",
-      "|                                      |",
-      "||||||||||||||||||||||||||||||||||||||||" };
+#if defined(INTERFACE_CLASSIC) && !TESTING
+        int ch = -1;
+        char submenu[ERROR_SUBMENU_H][ERROR_SUBMENU_W+1] =
+            //1.  5.  10.  15.  20.  25.  30.  35.  40.
+        { "||||||||||||||||||||||||||||||||||||||||",
+            "|                                      |",
+            "|                                      |",
+            "| OOPS, could not open or write to the |",
+            "| .apple2.json preferences file        |",
+            "|                                      |",
+            "|                                      |",
+            "||||||||||||||||||||||||||||||||||||||||" };
 #endif
 
-    config_file = fopen(config_filename, "w");
-    if (config_file == NULL)
-    {
-        PREFS_ERRPRINT();
-#ifdef INTERFACE_CLASSIC
-        c_interface_print_submenu_centered(submenu[0], ERROR_SUBMENU_W, ERROR_SUBMENU_H);
-        while ((ch = c_mygetch(1)) == -1)
-        {
+        TEMP_FAILURE_RETRY(fd = open(prefsFile, O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR));
+        if (fd == -1) {
+            PREFS_ERRPRINT();
+#if defined(INTERFACE_CLASSIC) && !TESTING
+            c_interface_print_submenu_centered(submenu[0], ERROR_SUBMENU_W, ERROR_SUBMENU_H);
+            while ((ch = c_mygetch(1)) == -1) {
+                // ...
+            }
+#endif
+            break;
         }
-#endif
-        return false;
+
+        success = json_serialize(jsonPrefs, fd, /*pretty:*/true);
+    } while (0);
+
+    if (fd != -1) {
+        TEMP_FAILURE_RETRY(fsync(fd));
+        TEMP_FAILURE_RETRY(close(fd));
     }
 
-    int err = 0;
-    err |= fprintf(config_file, "speed = %0.2lf\n", cpu_scale_factor);
-    err |= fprintf(config_file, "altspeed = %0.2lf\n", cpu_altscale_factor);
-    err |= fprintf(config_file, "disk path = %s\n", disk_path);
-    err |= fprintf(config_file, "color = %s\n", reverse_match(color_table, color_mode));
-    err |= fprintf(config_file, "video = %s\n", reverse_match(video_table, a2_video_mode));
-    err |= fprintf(config_file, "volume = %s\n", reverse_match(volume_table, sound_volume));
-    err |= fprintf(config_file, "caps lock = %s\n", reverse_match(capslock_table, (int)caps_lock));
-    err |= fprintf(config_file, "joystick = %s\n", reverse_match(joy_input_table, joy_mode));
-    err |= fprintf(config_file, "system path = %s\n", system_path);
+    pthread_mutex_unlock(&prefsLock);
 
-#ifdef KEYPAD_JOYSTICK
-    err |= fprintf(config_file, "keypad joystick parms = %d %u\n", joy_step, (joy_auto_recenter ? 1 : 0));
-#endif
+    return success;
+}
 
-    if (err < 0) {
-        PREFS_ERRPRINT();
-#ifdef INTERFACE_CLASSIC
-        c_interface_print_submenu_centered(submenu[0], ERROR_SUBMENU_W, ERROR_SUBMENU_H);
-        while ((ch = c_mygetch(1)) == -1) {  }
-#endif
-        return false;
+bool prefs_copyJSONValue(const char * _NONNULL domain, const char * _NONNULL key, INOUT JSON_ref *jsonVal) {
+    pthread_mutex_lock(&prefsLock);
+
+    bool ret = false;
+    JSON_ref jsonRef = NULL;
+    do {
+        int errCount = json_mapCopyJSON(jsonPrefs, domain, &jsonRef);
+        if (errCount < 0) {
+            break;
+        }
+
+        ret = json_mapCopyJSON(jsonRef, key, jsonVal);
+    } while (0);
+
+    pthread_mutex_unlock(&prefsLock);
+    json_destroy(&jsonRef);
+
+    return ret;
+}
+
+bool prefs_copyStringValue(const char *domain, const char *key, INOUT char **val) {
+    pthread_mutex_lock(&prefsLock);
+
+    bool ret = false;
+    JSON_ref jsonRef = NULL;
+    do {
+        int errCount = json_mapCopyJSON(jsonPrefs, domain, &jsonRef);
+        if (errCount < 0) {
+            break;
+        }
+
+        ret = json_mapCopyStringValue(jsonRef, key, val);
+    } while (0);
+
+    pthread_mutex_unlock(&prefsLock);
+    json_destroy(&jsonRef);
+
+    return ret;
+}
+
+bool prefs_parseLongValue(const char *domain, const char *key, INOUT long *val, const long base) {
+    pthread_mutex_lock(&prefsLock);
+
+    bool ret = false;
+    JSON_ref jsonRef = NULL;
+    do {
+        int errCount = json_mapCopyJSON(jsonPrefs, domain, &jsonRef);
+        if (errCount < 0) {
+            break;
+        }
+
+        ret = json_mapParseLongValue(jsonRef, key, val, base);
+    } while (0);
+
+    pthread_mutex_unlock(&prefsLock);
+    json_destroy(&jsonRef);
+
+    return ret;
+}
+
+bool prefs_parseBoolValue(const char *domain, const char *key, INOUT bool *val) {
+    pthread_mutex_lock(&prefsLock);
+
+    bool ret = false;
+    JSON_ref jsonRef = NULL;
+    do {
+        int errCount = json_mapCopyJSON(jsonPrefs, domain, &jsonRef);
+        if (errCount < 0) {
+            break;
+        }
+
+        ret = json_mapParseBoolValue(jsonRef, key, val);
+    } while (0);
+
+    pthread_mutex_unlock(&prefsLock);
+    json_destroy(&jsonRef);
+
+    return ret;
+}
+
+bool prefs_parseFloatValue(const char *domain, const char *key, INOUT float *val) {
+    pthread_mutex_lock(&prefsLock);
+
+    bool ret = false;
+    JSON_ref jsonRef = NULL;
+    do {
+        int errCount = json_mapCopyJSON(jsonPrefs, domain, &jsonRef);
+        if (errCount < 0) {
+            break;
+        }
+
+        ret = json_mapParseFloatValue(jsonRef, key, val);
+    } while (0);
+
+    pthread_mutex_unlock(&prefsLock);
+    json_destroy(&jsonRef);
+
+    return ret;
+}
+
+bool prefs_setStringValue(const char *domain, const char * _NONNULL key, const char * _NONNULL val) {
+    pthread_mutex_lock(&prefsLock);
+
+    bool ret = false;
+    JSON_ref jsonRef = NULL;
+    do {
+        int errCount = json_mapCopyJSON(jsonPrefs, domain, &jsonRef);
+        if (errCount <= 0) {
+            errCount = json_createFromString("{}", &jsonRef);
+            assert(errCount > 0);
+            assert(jsonRef);
+        }
+
+        ret = json_mapSetStringValue(jsonRef, key, val);
+        if (!ret) {
+            break;
+        }
+
+        ret = json_mapSetJSONValue(jsonPrefs, domain, jsonRef);
+        if (!ret) {
+            break;
+        }
+    } while (0);
+
+    pthread_mutex_unlock(&prefsLock);
+    json_destroy(&jsonRef);
+
+    return ret;
+}
+
+bool prefs_setLongValue(const char * _NONNULL domain, const char * _NONNULL key, long val) {
+    pthread_mutex_lock(&prefsLock);
+
+    bool ret = false;
+    JSON_ref jsonRef = NULL;
+    do {
+        int errCount = json_mapCopyJSON(jsonPrefs, domain, &jsonRef);
+        if (errCount <= 0) {
+            errCount = json_createFromString("{}", &jsonRef);
+            assert(errCount > 0);
+            assert(jsonRef);
+        }
+
+        ret = json_mapSetLongValue(jsonRef, key, val);
+        if (!ret) {
+            break;
+        }
+
+        ret = json_mapSetJSONValue(jsonPrefs, domain, jsonRef);
+        if (!ret) {
+            break;
+        }
+    } while (0);
+
+    pthread_mutex_unlock(&prefsLock);
+    json_destroy(&jsonRef);
+
+    return ret;
+}
+
+bool prefs_setBoolValue(const char * _NONNULL domain, const char * _NONNULL key, bool val) {
+    pthread_mutex_lock(&prefsLock);
+
+    bool ret = false;
+    JSON_ref jsonRef = NULL;
+    do {
+        int errCount = json_mapCopyJSON(jsonPrefs, domain, &jsonRef);
+        if (errCount <= 0) {
+            errCount = json_createFromString("{}", &jsonRef);
+            assert(errCount > 0);
+            assert(jsonRef);
+        }
+
+        ret = json_mapSetBoolValue(jsonRef, key, val);
+        if (!ret) {
+            break;
+        }
+
+        ret = json_mapSetJSONValue(jsonPrefs, domain, jsonRef);
+        if (!ret) {
+            break;
+        }
+    } while (0);
+
+    pthread_mutex_unlock(&prefsLock);
+    json_destroy(&jsonRef);
+
+    return ret;
+}
+
+bool prefs_setFloatValue(const char * _NONNULL domain, const char * _NONNULL key, float val) {
+    pthread_mutex_lock(&prefsLock);
+
+    bool ret = false;
+    JSON_ref jsonRef = NULL;
+    do {
+        int errCount = json_mapCopyJSON(jsonPrefs, domain, &jsonRef);
+        if (errCount <= 0) {
+            errCount = json_createFromString("{}", &jsonRef);
+            assert(errCount > 0);
+            assert(jsonRef);
+        }
+
+        ret = json_mapSetFloatValue(jsonRef, key, val);
+        if (!ret) {
+            break;
+        }
+
+        ret = json_mapSetJSONValue(jsonPrefs, domain, jsonRef);
+        if (!ret) {
+            break;
+        }
+    } while (0);
+
+    pthread_mutex_unlock(&prefsLock);
+    json_destroy(&jsonRef);
+
+    return ret;
+}
+
+void prefs_registerListener(const char *domain, prefs_change_callback_f callback) {
+    pthread_mutex_lock(&prefsLock);
+
+    assert(domain && "listener needs to specify non-NULL domain");
+
+    prefs_domain_s *dom = domains;
+    while (dom) {
+        if (strcmp(domain, dom->domain) == 0) {
+            break;
+        }
+        dom = dom->nextDomain;
     }
 
-    fclose(config_file);
+    if (!dom) {
+        dom = MALLOC(sizeof(*dom));
+        dom->domain = STRDUP(domain);
+        dom->nextDomain = domains;
+        dom->listeners = NULL;
+        domains = dom;
+    }
 
-    return true;
+    prefs_listener_s *newL = MALLOC(sizeof(*newL));
+    prefs_listener_s *oldL = dom->listeners;
+    dom->listeners = newL;
+    newL->nextListener = oldL;
+    newL->prefsChanged = callback;
+
+    ++listenerCount;
+
+    pthread_mutex_unlock(&prefsLock);
+}
+
+void prefs_sync(const char *domain) {
+    static unsigned long syncCount = 0;
+    pthread_mutex_lock(&prefsLock);
+    ++syncCount;
+    if (syncCount > 1) {
+        pthread_mutex_unlock(&prefsLock);
+        return;
+    }
+    pthread_mutex_unlock(&prefsLock);
+
+    void **alreadySynced = MALLOC(listenerCount * sizeof(void *));
+    unsigned long idx = 0;
+
+    prefs_domain_s *dom = domains;
+    do {
+        while (dom) {
+            if (domain && (strcmp(domain, dom->domain) != 0)) {
+                dom = dom->nextDomain;
+                continue;
+            }
+
+            prefs_listener_s *listener = dom->listeners;
+            while (listener) {
+
+                bool foundAlready = false;
+                for (unsigned long i = 0; i < idx; i++) {
+                    if (alreadySynced[i] == (void *)listener->prefsChanged) {
+                        LOG("ignoring already synced listener %p for domain %s", alreadySynced[i], dom->domain);
+                        foundAlready = true;
+                        break;
+                    }
+                }
+
+                if (!foundAlready) {
+                    alreadySynced[idx++] = (void *)listener->prefsChanged;
+                    assert(idx <= listenerCount);
+                    listener->prefsChanged(dom->domain);
+                }
+                listener = listener->nextListener;
+            }
+
+            if (domain) {
+                break;
+            }
+
+            dom = dom->nextDomain;
+        }
+
+        pthread_mutex_lock(&prefsLock);
+        --syncCount;
+        if (syncCount == 0) {
+            pthread_mutex_unlock(&prefsLock);
+            break;
+        }
+        pthread_mutex_unlock(&prefsLock);
+
+    } while (1);
+
+    FREE(alreadySynced);
+}
+
+void prefs_shutdown(void) {
+    if (!emulator_isShuttingDown()) {
+        return;
+    }
+
+    pthread_mutex_lock(&prefsLock);
+
+    FREE(prefsFile);
+
+    prefs_domain_s *dom = domains;
+    domains = NULL;
+
+    while (dom) {
+        prefs_listener_s *listener = dom->listeners;
+        while (listener) {
+            prefs_listener_s *dead = listener;
+            listener = listener->nextListener;
+            FREE(dead);
+        }
+
+        prefs_domain_s *dead = dom;
+        dom = dom->nextDomain;
+
+        FREE(dead->domain);
+        FREE(dead);
+    }
+
+    listenerCount = 0;
+
+    pthread_mutex_unlock(&prefsLock);
 }
 

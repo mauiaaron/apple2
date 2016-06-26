@@ -978,7 +978,6 @@ void show_opcode_breakpts() {
    ------------------------------------------------------------------------- */
 void show_lc_info() {
     int i = num_buffer_lines;
-#warning FIXME TODO ... investigate/refactor all uses of !! here and elsewhere
     sprintf(second_buf[i++], "lc bank = %d", 1 + !!(softswitches & SS_BANK2));
     (softswitches & SS_LCWRT) ? sprintf(second_buf[i++], "write LC") : sprintf(second_buf[i++], "LC write protected");
     (softswitches & SS_LCRAM) ? sprintf(second_buf[i++], "read LC")  : sprintf(second_buf[i++], "read ROM");
@@ -1075,7 +1074,6 @@ void show_disk_info() {
 void clear_debugger_screen() {
 #ifdef INTERFACE_CLASSIC
     int i;
-    video_setpage( 0 );
     for (i = 0; i < 24; i++)
     {
         c_interface_print(0, i, 2, screen[ i ] );
@@ -1090,10 +1088,7 @@ void fb_sha1() {
     uint8_t md[SHA_DIGEST_LENGTH];
     char buf[(SHA_DIGEST_LENGTH*2)+1];
 
-    video_setpage(!!(softswitches & SS_SCREEN));
-    video_redraw();
-
-    const uint8_t * const fb = video_current_framebuffer();
+    const uint8_t * const fb = video_scan();
     SHA1(fb, SCANWIDTH*SCANHEIGHT, md);
 
     int i=0;
@@ -1125,7 +1120,6 @@ static int begin_cpu_stepping() {
     // kludgey set max CPU speed... 
     double saved_scale = cpu_scale_factor;
     double saved_altscale = cpu_altscale_factor;
-    bool saved_fullspeed = is_fullspeed;
     cpu_scale_factor = CPU_SCALE_FASTEST;
     cpu_altscale_factor = CPU_SCALE_FASTEST;
     timing_initialize();
@@ -1319,7 +1313,6 @@ void display_help() {
     num_buffer_lines = i;
 }
 
-__attribute__((constructor(CTOR_PRIORITY_LATE)))
 static void _init_debugger(void) {
 
     LOG("Initializing virtual machine debugger subsystem");
@@ -1334,6 +1327,10 @@ static void _init_debugger(void) {
     {
         op_breakpoints[(unsigned char)i] = 0;
     }
+}
+
+static __attribute__((constructor)) void __init_debugger(void) {
+    emulator_registerStartupCallback(CTOR_PRIORITY_LATE, &_init_debugger);
 }
 
 #ifdef INTERFACE_CLASSIC
@@ -1418,9 +1415,7 @@ void c_interface_debugging() {
     int ch;
     int command_pos = PROMPT_X;
 
-    opcodes = (apple_mode == 0) ? opcodes_6502 :
-              (apple_mode == 1) ? opcodes_undoc :
-              opcodes_65c02;
+    opcodes = opcodes_65c02;
 
     /* initialize the buffers */
     for (i=0; i<BUF_Y; i++)
@@ -1441,7 +1436,6 @@ void c_interface_debugging() {
         lex_initted = 1;
     }
 
-    video_setpage( 0 );
     c_interface_translate_screen( screen );
     for (i = 0; i < 24; i++)
     {
@@ -1523,5 +1517,9 @@ void c_debugger_set_timeout(const unsigned int secs) {
 
 bool c_debugger_set_watchpoint(const uint16_t addr) {
     return set_halt(watchpoints, addr);
+}
+
+void c_debugger_clear_watchpoints(void) {
+    clear_halt(watchpoints, 0);
 }
 

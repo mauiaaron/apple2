@@ -12,8 +12,6 @@
 #ifndef _GLTOUCHJOY_H_
 #define _GLTOUCHJOY_H_
 
-#include "common.h"
-#include "video/glvideo.h"
 #include "video/glhudmodel.h"
 #include "video/glnode.h"
 
@@ -24,14 +22,35 @@
 #   define TOUCH_JOY_LOG(...)
 #endif
 
+#define DEBUG_TOUCH_JOY_GESTURE 0
+#if DEBUG_TOUCH_JOY_GESTURE
+#   define TOUCH_JOY_GESTURE_LOG(...) LOG(__VA_ARGS__)
+#else
+#   define TOUCH_JOY_GESTURE_LOG(...)
+#endif
+
+#define ROSETTE_ROWS 3
+#define ROSETTE_COLS 3
+
+enum {
+    ROSETTE_NORTHWEST=0,
+    ROSETTE_NORTH,
+    ROSETTE_NORTHEAST,
+    ROSETTE_WEST,
+    ROSETTE_CENTER,
+    ROSETTE_EAST,
+    ROSETTE_SOUTHWEST,
+    ROSETTE_SOUTH,
+    ROSETTE_SOUTHEAST,
+};
+
 // globals
 
 typedef struct GLTouchJoyGlobals {
 
+    bool prefsChanged;
     bool isAvailable;       // Were there any OpenGL/memory errors on gltouchjoy initialization?
-    bool isShuttingDown;
     bool isCalibrating;     // Are we running in calibration mode?
-    bool isEnabled;         // Does player want touchjoy enabled?
     bool ownsScreen;        // Does the touchjoy currently own the screen?
     bool showControls;      // Are controls visible?
     bool showAzimuth;       // Is joystick azimuth shown?
@@ -39,7 +58,6 @@ typedef struct GLTouchJoyGlobals {
     float minAlpha;
     float screenDivider;
     bool axisIsOnLeft;
-
     int switchThreshold;
 
 } GLTouchJoyGlobals;
@@ -55,10 +73,6 @@ typedef struct GLTouchJoyAxes {
 
     // azimuth model
     GLModel *azimuthModel;
-    bool azimuthModelDirty;
-
-    uint8_t rosetteChars[ROSETTE_ROWS * ROSETTE_COLS];
-    int rosetteScancodes[ROSETTE_ROWS * ROSETTE_COLS];
 
     int centerX;
     int centerY;
@@ -76,13 +90,6 @@ typedef struct GLTouchJoyButtons {
     uint8_t activeChar;
     bool modelDirty;
 
-    touchjoy_button_type_t touchDownChar;
-    int                    touchDownScancode;
-    touchjoy_button_type_t northChar;
-    int                    northScancode;
-    touchjoy_button_type_t southChar;
-    int                    southScancode;
-
     int centerX;
     int centerY;
     int trackingIndex;
@@ -92,10 +99,12 @@ typedef struct GLTouchJoyButtons {
 extern GLTouchJoyButtons buttons;
 
 typedef struct GLTouchJoyVariant {
-    touchjoy_variant_t (*variant)(void);
+    interface_device_t (*variant)(void);
     void (*resetState)(void);
     void (*setup)(void (*buttonDrawCallback)(char newChar));
     void (*shutdown)(void);
+
+    void (*prefsChanged)(const char *domain);
 
     void (*buttonDown)(void);
     void (*buttonMove)(int dx, int dy);
@@ -105,9 +114,11 @@ typedef struct GLTouchJoyVariant {
     void (*axisMove)(int dx, int dy);
     void (*axisUp)(int dx, int dy);
 
+    uint8_t *(*rosetteChars)(void);
+
 } GLTouchJoyVariant;
 
 // registers a touch joystick variant with manager
-void gltouchjoy_registerVariant(touchjoy_variant_t variant, GLTouchJoyVariant *touchJoyVariant);
+void gltouchjoy_registerVariant(interface_device_t variant, GLTouchJoyVariant *touchJoyVariant);
 
 #endif // whole file

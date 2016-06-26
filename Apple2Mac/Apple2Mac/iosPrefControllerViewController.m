@@ -77,7 +77,7 @@
         mode = COLOR_NONE;
     }
     //[self.videoModePicker d:mode];
-    color_mode = (color_mode_t)mode;
+    //color_mode = (color_mode_t)mode;
 
     mode = [defaults integerForKey:kApple2JoystickConfig];
     if (! ((mode >= JOY_PCJOY) && (mode < NUM_JOYOPTS)) )
@@ -148,7 +148,7 @@
     [defaults setDouble:cpu_altscale_factor forKey:kApple2AltSpeed];
    // [defaults setBool:([self.cpuMaxChoice state] == NSOnState) forKey:kApple2CPUSpeedIsMax];
    // [defaults setBool:([self.altMaxChoice state] == NSOnState) forKey:kApple2AltSpeedIsMax];
-    [defaults setInteger:color_mode forKey:kApple2ColorConfig];
+    // [defaults setInteger:color_mode forKey:kApple2ColorConfig];
     [defaults setInteger:joy_mode forKey:kApple2JoystickConfig];
    // [defaults setInteger:joy_step forKey:kApple2JoystickStep];
    // [defaults setBool:joy_auto_recenter forKey:kApple2JoystickAutoRecenter];

@@ -60,7 +60,7 @@
 
 namespace google_breakpad {
 
-const int Stackwalker::kRASearchWords = 30;
+const int Stackwalker::kRASearchWords = 40;
 
 uint32_t Stackwalker::max_frames_ = 1024;
 bool Stackwalker::max_frames_set_ = false;
@@ -240,6 +240,7 @@ Stackwalker* Stackwalker::StackwalkerForCPU(
 #endif
  
     case MD_CONTEXT_MIPS:
+    case MD_CONTEXT_MIPS64:
       cpu_stackwalker = new StackwalkerMIPS(system_info,
                                             context->GetContextMIPS(),
                                             memory, modules, frame_symbolizer);

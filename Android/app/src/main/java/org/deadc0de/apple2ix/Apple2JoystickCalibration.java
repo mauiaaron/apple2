@@ -24,23 +24,26 @@ public class Apple2JoystickCalibration implements Apple2MenuView {
 
     private final static String TAG = "Apple2JoystickCalibration";
 
+    public final static int JOYSTICK_DIVIDER_NUM_CHOICES = Apple2Preferences.DECENT_AMOUNT_OF_CHOICES;
+    public final static String PREF_SCREEN_DIVISION = "screenDivider";
+
     private Apple2Activity mActivity = null;
     private View mSettingsView = null;
     private ArrayList<Apple2MenuView> mViewStack = null;
     private boolean mTouchMenuEnabled = false;
-    private int mSavedTouchDevice = Apple2Preferences.TouchDeviceVariant.NONE.ordinal();
+    private int mSavedTouchDevice = Apple2SettingsMenu.TouchDeviceVariant.NONE.ordinal();
 
-    public Apple2JoystickCalibration(Apple2Activity activity, ArrayList<Apple2MenuView> viewStack, Apple2Preferences.TouchDeviceVariant variant) {
+    public Apple2JoystickCalibration(Apple2Activity activity, ArrayList<Apple2MenuView> viewStack, Apple2SettingsMenu.TouchDeviceVariant variant) {
         mActivity = activity;
         mViewStack = viewStack;
-        if (!(variant == Apple2Preferences.TouchDeviceVariant.JOYSTICK || variant == Apple2Preferences.TouchDeviceVariant.JOYSTICK_KEYPAD)) {
+        if (!(variant == Apple2SettingsMenu.TouchDeviceVariant.JOYSTICK || variant == Apple2SettingsMenu.TouchDeviceVariant.JOYSTICK_KEYPAD)) {
             throw new RuntimeException("You're doing it wrong");
         }
 
         setup(variant);
     }
 
-    private void setup(Apple2Preferences.TouchDeviceVariant variant) {
+    private void setup(Apple2SettingsMenu.TouchDeviceVariant variant) {
         LayoutInflater inflater = (LayoutInflater) mActivity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         mSettingsView = inflater.inflate(R.layout.activity_calibrate_joystick, null, false);
 
@@ -51,7 +54,8 @@ public class Apple2JoystickCalibration implements Apple2MenuView {
                 if (!fromUser) {
                     return;
                 }
-                Apple2Preferences.JOYSTICK_DIVIDER.saveInt(mActivity, progress);
+                Apple2Preferences.setJSONPref(Apple2Preferences.PREF_DOMAIN_JOYSTICK, PREF_SCREEN_DIVISION, (float) progress / JOYSTICK_DIVIDER_NUM_CHOICES);
+                Apple2Preferences.sync(mActivity, Apple2Preferences.PREF_DOMAIN_JOYSTICK);
             }
 
             @Override
@@ -64,20 +68,17 @@ public class Apple2JoystickCalibration implements Apple2MenuView {
         });
 
         sb.setMax(0); // http://stackoverflow.com/questions/10278467/seekbar-not-setting-actual-progress-setprogress-not-working-on-early-android
-        sb.setMax(Apple2Preferences.JOYSTICK_DIVIDER_NUM_CHOICES);
-        sb.setProgress(Apple2Preferences.JOYSTICK_DIVIDER.intValue(mActivity));
+        sb.setMax(JOYSTICK_DIVIDER_NUM_CHOICES);
+        float val = Apple2Preferences.getFloatJSONPref(Apple2Preferences.PREF_DOMAIN_JOYSTICK, PREF_SCREEN_DIVISION, (JOYSTICK_DIVIDER_NUM_CHOICES >> 1) / (float) JOYSTICK_DIVIDER_NUM_CHOICES);
+        sb.setProgress((int) (val * JOYSTICK_DIVIDER_NUM_CHOICES));
 
-        mTouchMenuEnabled = Apple2Preferences.TOUCH_MENU_ENABLED.booleanValue(mActivity);
-        Apple2Preferences.nativeSetTouchMenuEnabled(false);
-        mSavedTouchDevice = Apple2Preferences.CURRENT_TOUCH_DEVICE.intValue(mActivity);
-        Apple2Preferences.nativeSetCurrentTouchDevice(variant.ordinal());
-        if (variant == Apple2Preferences.TouchDeviceVariant.JOYSTICK) {
-            Apple2Preferences.loadAllJoystickButtons(mActivity);
-        } else {
-            Apple2Preferences.loadAllKeypadKeys(mActivity);
-        }
+        mTouchMenuEnabled = (boolean) Apple2Preferences.getJSONPref(Apple2KeyboardSettingsMenu.SETTINGS.TOUCH_MENU_ENABLED);
+        Apple2Preferences.setJSONPref(Apple2KeyboardSettingsMenu.SETTINGS.TOUCH_MENU_ENABLED, false);
+        mSavedTouchDevice = (int) Apple2Preferences.getJSONPref(Apple2SettingsMenu.SETTINGS.CURRENT_INPUT);
+        Apple2Preferences.setJSONPref(Apple2SettingsMenu.SETTINGS.CURRENT_INPUT, variant.ordinal());
 
-        Apple2Preferences.nativeTouchDeviceBeginCalibrationMode();
+        Apple2Preferences.setJSONPref(Apple2Preferences.PREF_DOMAIN_TOUCHSCREEN, Apple2Preferences.PREF_CALIBRATING, true);
+        Apple2Preferences.sync(mActivity, Apple2Preferences.PREF_DOMAIN_TOUCHSCREEN);
     }
 
     public final boolean isCalibrating() {
@@ -85,7 +86,6 @@ public class Apple2JoystickCalibration implements Apple2MenuView {
     }
 
     public void onKeyTapCalibrationEvent(char ascii, int scancode) {
-        /* ... */
     }
 
     public void show() {
@@ -102,9 +102,11 @@ public class Apple2JoystickCalibration implements Apple2MenuView {
             }
         }
 
-        Apple2Preferences.nativeTouchDeviceEndCalibrationMode();
-        Apple2Preferences.nativeSetTouchMenuEnabled(mTouchMenuEnabled);
-        Apple2Preferences.nativeSetCurrentTouchDevice(mSavedTouchDevice);
+        Apple2Preferences.setJSONPref(Apple2Preferences.PREF_DOMAIN_TOUCHSCREEN, Apple2Preferences.PREF_CALIBRATING, false);
+        Apple2Preferences.setJSONPref(Apple2KeyboardSettingsMenu.SETTINGS.TOUCH_MENU_ENABLED, mTouchMenuEnabled);
+        Apple2Preferences.setJSONPref(Apple2SettingsMenu.SETTINGS.CURRENT_INPUT, mSavedTouchDevice);
+
+        Apple2Preferences.sync(mActivity, Apple2Preferences.PREF_DOMAIN_TOUCHSCREEN);
 
         mActivity.popApple2View(this);
     }

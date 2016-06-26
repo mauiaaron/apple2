@@ -16,36 +16,46 @@
 #include "vm.h"
 #include "cpu-regs.h"
 
+/*
+ * These "glue" macros code become auto-generated trampoline functions for the exclusive use of cpu65_run() CPU module
+ * to make calls back into C that conform with the x86 and x86_64 calling ABIs.
+ */
+
+#if __PIC__ && __i386__
+#   define _A2_PIC_GOT(reg) 0x4(reg) // Stack offset assumes a CALL has been made that pushed %eip
+#endif
+#define _PUSH_COUNT ((/*args:*/7+/*ret:*/1) * SZ_PTR)
+
 #define GLUE_EXTERN_C_READ(func)
 
 #define GLUE_BANK_MAYBEREAD(func,pointer) \
-ENTRY(func)             testLQ  $SS_CXROM, SYM(softswitches); \
+ENTRY(func)             REG2MEM(testLQ, $SS_CXROM, softswitches); \
                         jnz     1f; \
-                        callLQ  *SYM(pointer); \
+                        CALL_IND0(pointer); \
                         ret; \
-1:                      addLQ   SYM(pointer),EffectiveAddr_X; \
+1:                      MEM2REG(addLQ, pointer, EffectiveAddr_X); \
                         movb    (EffectiveAddr_X),%al; \
-                        subLQ   SYM(pointer),EffectiveAddr_X; \
+                        MEM2REG(subLQ, pointer, EffectiveAddr_X); \
                         ret;
 
 #define GLUE_BANK_READ(func,pointer) \
-ENTRY(func)             addLQ   SYM(pointer),EffectiveAddr_X; \
+ENTRY(func)             MEM2REG(addLQ, pointer, EffectiveAddr_X); \
                         movb    (EffectiveAddr_X),%al; \
-                        subLQ   SYM(pointer),EffectiveAddr_X; \
+                        MEM2REG(subLQ, pointer, EffectiveAddr_X); \
                         ret;
 
 #define GLUE_BANK_WRITE(func,pointer) \
-ENTRY(func)             addLQ   SYM(pointer),EffectiveAddr_X; \
+ENTRY(func)             MEM2REG(addLQ, pointer, EffectiveAddr_X); \
                         movb    %al,(EffectiveAddr_X); \
-                        subLQ   SYM(pointer),EffectiveAddr_X; \
+                        MEM2REG(subLQ, pointer, EffectiveAddr_X); \
                         ret;
 
 #define GLUE_BANK_MAYBEWRITE(func,pointer) \
-ENTRY(func)             addLQ   SYM(pointer),EffectiveAddr_X; \
-                        cmpl    $0,SYM(pointer); \
+ENTRY(func)             MEM2REG(addLQ, pointer, EffectiveAddr_X); \
+                        REG2MEM(cmpl, $0, pointer); \
                         jz      1f; \
                         movb    %al,(EffectiveAddr_X); \
-1:                      subLQ   SYM(pointer),EffectiveAddr_X; \
+1:                      MEM2REG(subLQ, pointer, EffectiveAddr_X); \
                         ret;
 
 
@@ -68,7 +78,7 @@ ENTRY(func)             pushLQ  _XAX; \
                         pushLQ  PC_Reg_X; \
                         andLQ   $0xff,_XAX; \
                         _PUSH_ARGS \
-                        callLQ  CALL(c_##func); \
+                        CALL_FN(callLQ, c_##func, _PUSH_COUNT); \
                         _POP_ARGS \
                         popLQ   PC_Reg_X; \
                         popLQ   SP_Reg_X; \
@@ -76,6 +86,15 @@ ENTRY(func)             pushLQ  _XAX; \
                         popLQ   XY_Reg_X; \
                         popLQ   _XAX; \
                         ret;
+
+#if __PIC__ && __i386__
+#   define _PUSH_GOT()  movl    _A2_PIC_GOT(%esp), _PICREG; \
+                        pushl   _PICREG;
+#   define _POP_GOT()   addl    $4, %esp
+#else
+#   define _PUSH_GOT()
+#   define _POP_GOT()
+#endif
 
 // TODO FIXME : implement CDECL prologue/epilogues...
 #define _GLUE_C_READ(func, ...) \
@@ -85,7 +104,7 @@ ENTRY(func)             pushLQ  XY_Reg_X; \
                         pushLQ  PC_Reg_X; \
                         pushLQ  _XAX; /* HACK: works around mysterious issue with generated mov(_XAX), _XAX ... */ \
                         pushLQ  EffectiveAddr_X; /* ea is arg0 (and preserved) */ \
-                        callLQ  CALL(c_##func); \
+                        CALL_FN(callLQ, c_##func, _PUSH_COUNT); \
                         popLQ   EffectiveAddr_X; /* restore ea */ \
                         movb    %al, %dl; \
                         popLQ   _XAX; /* ... ugh */ \
@@ -94,7 +113,9 @@ ENTRY(func)             pushLQ  XY_Reg_X; \
                         popLQ   SP_Reg_X; \
                         popLQ   AF_Reg_X; \
                         popLQ   XY_Reg_X; \
+                        _PUSH_GOT(); \
                         __VA_ARGS__ \
+                        _POP_GOT(); \
                         ret;
 
 // TODO FIXME : implement CDECL prologue/epilogues...

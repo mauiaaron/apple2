@@ -15,12 +15,10 @@
 
 #include "common.h"
 
-/* from misc.c */
-extern uid_t user, privileged;
-
 static int next_key = -1;
 static int last_scancode = -1;
 bool caps_lock = true; // default enabled because so much breaks otherwise
+bool use_system_caps_lock = false;
 
 /* ----------------------------------------------------
     //e Keymap. Mapping scancodes to Apple //e US Keyboard
@@ -254,8 +252,8 @@ void c_keys_handle_input(int scancode, int pressed, int is_cooked)
                 cpu_pause();
                 timing_toggleCPUSpeed();
                 cpu_resume();
-                if (video_backend->animation_showCPUSpeed) {
-                    video_backend->animation_showCPUSpeed();
+                if (video_animations->animation_showCPUSpeed) {
+                    video_animations->animation_showCPUSpeed();
                 }
                 break;
             }
@@ -263,8 +261,8 @@ void c_keys_handle_input(int scancode, int pressed, int is_cooked)
 
                 double scale = (alt_speed_enabled ? cpu_altscale_factor : cpu_scale_factor);
                 int percent_scale = (int)round(scale * 100);
-                if (scale == CPU_SCALE_FASTEST) {
-                    scale = CPU_SCALE_FASTEST0;
+                if (scale > CPU_SCALE_FASTEST_PIVOT) {
+                    scale = CPU_SCALE_FASTEST_PIVOT;
                     percent_scale = (int)round(scale * 100);
                 } else {
                     if (percent_scale > 100) {
@@ -285,8 +283,8 @@ void c_keys_handle_input(int scancode, int pressed, int is_cooked)
                     cpu_scale_factor = scale;
                 }
 
-                if (video_backend->animation_showCPUSpeed) {
-                    video_backend->animation_showCPUSpeed();
+                if (video_animations->animation_showCPUSpeed) {
+                    video_animations->animation_showCPUSpeed();
                 }
 
                 cpu_pause();
@@ -315,8 +313,8 @@ void c_keys_handle_input(int scancode, int pressed, int is_cooked)
                     cpu_scale_factor = scale;
                 }
 
-                if (video_backend->animation_showCPUSpeed) {
-                    video_backend->animation_showCPUSpeed();
+                if (video_animations->animation_showCPUSpeed) {
+                    video_animations->animation_showCPUSpeed();
                 }
 
                 cpu_pause();
@@ -345,7 +343,7 @@ void c_keys_handle_input(int scancode, int pressed, int is_cooked)
         } while(0);
     }
 
-#if defined(KEYPAD_JOYSTICK)
+#ifdef KEYPAD_JOYSTICK
     // Keypad emulated joystick relies on "raw" keyboard input
     if (joy_mode == JOY_KPAD)
     {
@@ -484,17 +482,18 @@ bool c_keys_is_interface_key(int key)
 }
 #endif
 
+static void keys_prefsChanged(const char *domain) {
+    bool val = false;
+    if (prefs_parseBoolValue(domain, PREF_KEYBOARD_CAPS, &val)) {
+        caps_lock = val;
+    }
+}
+
+static __attribute__((constructor)) void __init_keys(void) {
+    prefs_registerListener(PREF_DOMAIN_KEYBOARD, &keys_prefsChanged);
+}
+
 #if INTERFACE_TOUCH
-bool (*keydriver_isTouchKeyboardAvailable)(void) = NULL;
-void (*keydriver_setTouchKeyboardEnabled)(bool enabled) = NULL;
-void (*keydriver_setTouchKeyboardOwnsScreen)(bool pwnd) = NULL;
-bool (*keydriver_ownsScreen)(void) = NULL;
-void (*keydriver_setGlyphScale)(int glyphScale) = NULL;
-void (*keydriver_setVisibilityWhenOwnsScreen)(float inactiveAlpha, float activeAlpha) = NULL;
-void (*keydriver_setLowercaseEnabled)(bool enabled) = NULL;
 void (*keydriver_keyboardReadCallback)(void) = NULL;
-void (*keydriver_beginCalibration)(void) = NULL;
-void (*keydriver_endCalibration)(void) = NULL;
-void (*keydriver_loadAltKbd)(const char *kbdPath) = NULL;
 #endif
 

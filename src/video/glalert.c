@@ -9,20 +9,25 @@
  *
  */
 
-#include "common.h"
-#include "video/glvideo.h"
 #include "video/glhudmodel.h"
 #include "video/glnode.h"
 
 #define MODEL_DEPTH -0.0625
 
+#define ALERT_MODEL_W 0.7
+#define ALERT_MODEL_H 0.7
+
 static bool isEnabled = true;
-static pthread_mutex_t messageMutex = { 0 };
+static pthread_mutex_t messageMutex = PTHREAD_MUTEX_INITIALIZER;
 static char *nextMessage = NULL;
 static unsigned int nextMessageCols = 0;
 static unsigned int nextMessageRows = 0;
 static struct timespec messageTimingBegin = { 0 };
 static GLModel *messageModel = NULL;
+static GLfloat landscapeScale = 1.f;
+static bool prefsChanged = true;
+
+static void alert_applyPrefs(void);
 
 // ----------------------------------------------------------------------------
 
@@ -60,12 +65,13 @@ static void _alertToModel(char *message, unsigned int messageCols, unsigned int 
         const unsigned int fbWidth = (messageCols * FONT80_WIDTH_PIXELS);
         const unsigned int fbHeight = (messageRows * FONT_HEIGHT_PIXELS);
 
+        GLfloat modelHeight = (ALERT_MODEL_H * landscapeScale);
         messageModel = mdlCreateQuad((GLModelParams_s){
-                .skew_x = -0.3,
-                .skew_y = -0.3,
+                .skew_x = -1.0 + ALERT_MODEL_W,
+                .skew_y = 1.0 - modelHeight,
                 .z = MODEL_DEPTH,
-                .obj_w = 0.7,
-                .obj_h = 0.7,
+                .obj_w = ALERT_MODEL_W,
+                .obj_h = (ALERT_MODEL_H * landscapeScale),
                 .positionUsageHint = GL_STATIC_DRAW, // positions don't change
                 .tex_w = fbWidth,
                 .tex_h = fbHeight,
@@ -144,6 +150,9 @@ static void _alertToModel(char *message, unsigned int messageCols, unsigned int 
 
 static void alert_init(void) {
     // no-op
+    if (prefsChanged) {
+        alert_applyPrefs();
+    }
 }
 
 static void alert_shutdown(void) {
@@ -160,6 +169,10 @@ static void alert_render(void) {
         nextMessage = NULL;
         pthread_mutex_unlock(&messageMutex);
         _alertToModel(message, cols, rows);
+    }
+
+    if (prefsChanged) {
+        alert_applyPrefs();
     }
 
     if (!isEnabled) {
@@ -198,13 +211,15 @@ static void alert_render(void) {
     glhud_renderDefault(messageModel);
 }
 
-static void alert_reshape(int w, int h) {
-    // no-op
+static void alert_reshape(int w, int h, bool landscape) {
+    assert(video_isRenderThread());
+    swizzleDimensions(&w, &h, landscape);
+    landscapeScale = landscape ? 1.f : ((GLfloat)w/h);
 }
 
 #if INTERFACE_TOUCH
 static int64_t alert_onTouchEvent(interface_touch_event_t action, int pointer_count, int pointer_idx, float *x_coords, float *y_coords) {
-    return false; // non-interactive element ...
+    return 0x0; // non-interactive element ...
 }
 #endif
 
@@ -265,13 +280,13 @@ static void _animation_showCPUSpeed(void) {
 
     char buf[8] = { 0 };
     double scale = (alt_speed_enabled ? cpu_altscale_factor : cpu_scale_factor);
-    int percentScale = scale * 100;
-    if (percentScale < 100.0) {
+    int percentScale = roundf(scale * 100);
+    if (percentScale < 100) {
         snprintf(buf, 3, "%d", percentScale);
         cpuTemplate[0][1] = ' ';
         cpuTemplate[0][2] = buf[0];
         cpuTemplate[0][3] = buf[1];
-    } else if (scale == CPU_SCALE_FASTEST) {
+    } else if (scale > CPU_SCALE_FASTEST_PIVOT) {
         cpuTemplate[0][1] = 'm';
         cpuTemplate[0][2] = 'a';
         cpuTemplate[0][3] = 'x';
@@ -357,33 +372,54 @@ static void _animation_showTrackSector(int drive, int track, int sect) {
     _animation_showMessage(template, DISK_TRACK_SECTOR_COLS, DISK_TRACK_SECTOR_ROWS);
 }
 
-static void _animation_setEnableShowTrackSector(bool enabled) {
+static void alert_applyPrefs(void) {
+    assert(video_isRenderThread());
+
+    prefsChanged = false;
+
+    bool bVal = false;
+    bool enabled = prefs_parseBoolValue(PREF_DOMAIN_INTERFACE, PREF_DISK_ANIMATIONS_ENABLED, &bVal) ? bVal : true;
     if (enabled) {
-        video_backend->animation_showTrackSector = &_animation_showTrackSector;
+        video_animations->animation_showTrackSector = &_animation_showTrackSector;
     } else {
-        video_backend->animation_showTrackSector = NULL;
+        video_animations->animation_showTrackSector = NULL;
     }
+
+    long lVal = 0;
+    long width            = prefs_parseLongValue (PREF_DOMAIN_INTERFACE, PREF_DEVICE_WIDTH,      &lVal, 10) ? lVal : (long)(SCANWIDTH*1.5);
+    long height           = prefs_parseLongValue (PREF_DOMAIN_INTERFACE, PREF_DEVICE_HEIGHT,     &lVal, 10) ? lVal : (long)(SCANHEIGHT*1.5);
+    bool isLandscape      = prefs_parseBoolValue (PREF_DOMAIN_INTERFACE, PREF_DEVICE_LANDSCAPE,  &bVal)     ? bVal : true;
+
+    alert_reshape(width, height, isLandscape);
 }
 
-__attribute__((constructor(CTOR_PRIORITY_LATE)))
+static void alert_prefsChanged(const char *domain) {
+    prefsChanged = true;
+}
+
 static void _init_glalert(void) {
     LOG("Initializing message animation subsystem");
 
-    video_backend->animation_showMessage = &_animation_showMessage;
-    video_backend->animation_showPaused = &_animation_showPaused;
-    video_backend->animation_showCPUSpeed = &_animation_showCPUSpeed;
-    video_backend->animation_showDiskChosen = &_animation_showDiskChosen;
-    video_backend->animation_showTrackSector = &_animation_showTrackSector;
-    video_backend->animation_setEnableShowTrackSector = &_animation_setEnableShowTrackSector;
+    video_animations->animation_showMessage = &_animation_showMessage;
+    video_animations->animation_showPaused = &_animation_showPaused;
+    video_animations->animation_showCPUSpeed = &_animation_showCPUSpeed;
+    video_animations->animation_showDiskChosen = &_animation_showDiskChosen;
+    video_animations->animation_showTrackSector = &_animation_showTrackSector;
 
     glnode_registerNode(RENDER_MIDDLE, (GLNode){
         .setup = &alert_init,
         .shutdown = &alert_shutdown,
         .render = &alert_render,
-        .reshape = &alert_reshape,
 #if INTERFACE_TOUCH
+        .type = TOUCH_DEVICE_ALERT,
         .onTouchEvent = &alert_onTouchEvent,
 #endif
     });
+
+    prefs_registerListener(PREF_DOMAIN_INTERFACE, &alert_prefsChanged);
+}
+
+static __attribute__((constructor)) void __init_glalert(void) {
+    emulator_registerStartupCallback(CTOR_PRIORITY_LATE, &_init_glalert);
 }
 

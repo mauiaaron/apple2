@@ -37,6 +37,8 @@ static int stepper_phases = 0; // state bits for stepper magnet phases 0-3
 static int skew_table_6_po[16] = { 0x00,0x08,0x01,0x09,0x02,0x0A,0x03,0x0B, 0x04,0x0C,0x05,0x0D,0x06,0x0E,0x07,0x0F }; // ProDOS order
 static int skew_table_6_do[16] = { 0x00,0x07,0x0E,0x06,0x0D,0x05,0x0C,0x04, 0x0B,0x03,0x0A,0x02,0x09,0x01,0x08,0x0F }; // DOS order
 
+static pthread_mutex_t unlink_mutex = PTHREAD_MUTEX_INITIALIZER;
+
 static uint8_t translate_table_6[0x40] = {
     0x96, 0x97, 0x9a, 0x9b, 0x9d, 0x9e, 0x9f, 0xa6,
     0xa7, 0xab, 0xac, 0xad, 0xae, 0xaf, 0xb2, 0xb3,
@@ -76,7 +78,6 @@ static uint8_t translate_table_6[0x40] = {
 
 static uint8_t rev_translate_table_6[0x80] = { 0x01 };
 
-__attribute__((constructor(CTOR_PRIORITY_LATE)))
 static void _init_disk6(void) {
     LOG("Disk ][ emulation module early setup");
     memset(&disk6, 0x0, sizeof(disk6));
@@ -88,6 +89,10 @@ static void _init_disk6(void) {
     for (unsigned int i=0; i<0x40; i++) {
         rev_translate_table_6[translate_table_6[i]-0x80] = i << 2;
     }
+}
+
+static __attribute__((constructor)) void __init_disk6(void) {
+    emulator_registerStartupCallback(CTOR_PRIORITY_LATE, &_init_disk6);
 }
 
 static inline bool is_nib(const char * const name) {
@@ -457,7 +462,7 @@ static void save_track_data(int drive) {
 }
 
 static inline void animate_disk_track_sector(void) {
-    if (video_backend && video_backend->animation_showTrackSector) {
+    if (video_animations && video_animations->animation_showTrackSector) {
         static int previous_sect = 0;
         int sect_width = disk6.disk[disk6.drive].track_width>>4; // div-by-16
         do {
@@ -467,7 +472,7 @@ static inline void animate_disk_track_sector(void) {
             int sect = disk6.disk[disk6.drive].run_byte/sect_width;
             if (sect != previous_sect) {
                 previous_sect = sect;
-                video_backend->animation_showTrackSector(disk6.drive, disk6.disk[disk6.drive].phase>>1, sect);
+                video_animations->animation_showTrackSector(disk6.drive, disk6.disk[disk6.drive].phase>>1, sect);
             }
         } while (0);
     }
@@ -714,9 +719,12 @@ void disk6_init(void) {
 
     cpu65_vmem_w[0xC0ED] = disk_write_latch;
 
+    stepper_phases = 0;
+
     disk6.disk[0].phase = disk6.disk[1].phase = 0;
-    disk6.disk[0].track_valid = disk6.disk[1].track_valid = 0;
-    disk6.disk[0].track_dirty = disk6.disk[1].track_dirty = 0;
+    disk6.disk[0].run_byte = disk6.disk[1].run_byte = 0;
+    disk6.disk[0].track_valid = disk6.disk[1].track_valid = false;
+    disk6.disk[0].track_dirty = disk6.disk[1].track_dirty = false;
     disk6.motor_time = (struct timespec){ 0 };
     disk6.motor_off = 1;
     disk6.drive = 0;
@@ -727,8 +735,7 @@ const char *disk6_eject(int drive) {
 
     const char *err = NULL;
 
-    if (disk6.disk[drive].fd >= 0) {
-        assert(disk6.disk[drive].fd != 0);
+    if (disk6.disk[drive].fd > 0) {
         disk6_flush(drive);
 
         int ret = -1;
@@ -751,21 +758,38 @@ const char *disk6_eject(int drive) {
 #   warning FIXME TODO : can we not inflate/deflate disk images within the iOS port?  Maybe this is just a permission thing?
 #else
         // foo.dsk -> foo.dsk.gz
+        pthread_mutex_lock(&unlink_mutex);
         err = zlib_deflate(disk6.disk[drive].file_name, is_nib(disk6.disk[drive].file_name) ? NIB_SIZE : DSK_SIZE);
         if (err) {
             ERRLOG("OOPS: An error occurred when attempting to compress a disk image : %s", err);
         } else {
             unlink(disk6.disk[drive].file_name);
         }
+        pthread_mutex_unlock(&unlink_mutex);
 #endif
     }
 
-    STRDUP_FREE(disk6.disk[drive].file_name);
-    memset(&disk6.disk[drive], 0x0, sizeof(disk6.disk[drive]));
+    FREE(disk6.disk[drive].file_name);
 
     disk6.disk[drive].fd = -1;
-    disk6.disk[drive].whole_len = -1;
     disk6.disk[drive].mmap_image = MAP_FAILED;
+    disk6.disk[drive].whole_len = 0;
+    disk6.disk[drive].whole_image = NULL;
+    disk6.disk[drive].nibblized = false;
+    disk6.disk[drive].is_protected = false;
+    disk6.disk[drive].track_valid = false;
+    disk6.disk[drive].track_dirty = false;
+    disk6.disk[drive].skew_table = NULL;
+    disk6.disk[drive].track_width = 0;
+    // WARNING DO NOT RESET certain disk parameters on simple eject.  We need to retain state in the case where an image
+    // was "re-inserted" ... e.g. Drol load screen)
+    //disk6.disk[drive].phase = 0;
+    //disk6.disk[drive].run_byte = 0;
+
+    //disk6.motor_time = (struct timespec){ 0 };
+    //disk6.motor_off = 1;
+    //disk6.drive = 0;
+    //disk6.ddrw = 0;
 
     return err;
 }
@@ -774,8 +798,7 @@ const char *disk6_insert(int drive, const char * const raw_file_name, int readon
 
     disk6_eject(drive);
 
-    disk6.disk[drive].file_name = strdup(raw_file_name);
-    stepper_phases = 0;
+    disk6.disk[drive].file_name = STRDUP(raw_file_name);
 
     int expected = NIB_SIZE;
     disk6.disk[drive].nibblized = true;
@@ -791,13 +814,18 @@ const char *disk6_insert(int drive, const char * const raw_file_name, int readon
     char *err = NULL;
     do {
         if (is_gz(disk6.disk[drive].file_name)) {
+            pthread_mutex_lock(&unlink_mutex);
             err = (char *)zlib_inflate(disk6.disk[drive].file_name, expected); // foo.dsk.gz -> foo.dsk
+            if (!err) {
+                if (unlink(disk6.disk[drive].file_name)) { // temporarily remove .gz file
+                    ERRLOG("OOPS, cannot unlink %s", disk6.disk[drive].file_name);
+                }
+            }
+            pthread_mutex_unlock(&unlink_mutex);
+
             if (err) {
                 ERRLOG("OOPS: An error occurred when attempting to inflate/load a disk image : %s", err);
                 break;
-            }
-            if (unlink(disk6.disk[drive].file_name)) { // temporarily remove .gz file
-                ERRLOG("OOPS, cannot unlink %s", disk6.disk[drive].file_name);
             }
             cut_gz(disk6.disk[drive].file_name);
         }
@@ -829,6 +857,7 @@ const char *disk6_insert(int drive, const char * const raw_file_name, int readon
             err = ERR_CANNOT_OPEN;
             break;
         }
+        assert(disk6.disk[drive].fd > 0);
 
         // mmap image file
         TEMP_FAILURE_RETRY(disk6.disk[drive].mmap_image = mmap(NULL, disk6.disk[drive].whole_len, (readonly ? PROT_READ : PROT_READ|PROT_WRITE), MAP_SHARED|MAP_FILE, disk6.disk[drive].fd, /*offset:*/0));
@@ -841,6 +870,8 @@ const char *disk6_insert(int drive, const char * const raw_file_name, int readon
         // direct pass-thru to mmap_image (for NIB)
         disk6.disk[drive].whole_image = disk6.disk[drive].mmap_image;
         disk6.disk[drive].track_width = NIB_TRACK_SIZE;
+
+        int lastphase = disk6.disk[drive].phase;
 
         if (!disk6.disk[drive].nibblized) {
             // DSK/DO/PO require nibblizing on read (and denibblizing on write) ...
@@ -876,7 +907,7 @@ const char *disk6_insert(int drive, const char * const raw_file_name, int readon
             // ...
         }
 
-        disk6.disk[drive].phase = 0;
+        disk6.disk[drive].phase = lastphase; // needed for some images when "re-inserted" ... e.g. Drol load screen
     } while (0);
 
     if (err) {
@@ -892,6 +923,10 @@ void disk6_flush(int drive) {
     }
 
     if (disk6.disk[drive].is_protected) {
+        return;
+    }
+
+    if (disk6.disk[drive].mmap_image == MAP_FAILED) {
         return;
     }
 
@@ -969,7 +1004,7 @@ bool disk6_saveState(StateHelper_s *helper) {
                     break;
                 }
 
-                if (!helper->save(fd, disk6.disk[i].file_name, namelen)) {
+                if (!helper->save(fd, (const uint8_t *)disk6.disk[i].file_name, namelen)) {
                     break;
                 }
 
@@ -982,11 +1017,11 @@ bool disk6_saveState(StateHelper_s *helper) {
                 LOG("SAVE disk[%lu] (0) <NULL>", i);
             }
 
-            // Save unused placeholder -- backwards compatibility
-            state = 0x0;
+            state = (uint8_t)stepper_phases;
             if (!helper->save(fd, &state, 1)) {
                 break;
             }
+            LOG("SAVE stepper_phases[%lu] = %02x", i, stepper_phases);
 
             // Save unused placeholder -- backwards compatibility
             state = 0x0;
@@ -1059,14 +1094,13 @@ bool disk6_loadState(StateHelper_s *helper) {
                 break;
             }
 
-            uint8_t serialized[4] = { 0 };
-
             if (!helper->load(fd, &state, 1)) {
                 break;
             }
             disk6.disk[i].is_protected = state;
             LOG("LOAD is_protected[%lu] = %02x", i, disk6.disk[i].is_protected);
 
+            uint8_t serialized[4] = { 0 };
             if (!helper->load(fd, serialized, 4)) {
                 break;
             }
@@ -1081,7 +1115,7 @@ bool disk6_loadState(StateHelper_s *helper) {
             if (namelen) {
                 unsigned long gzlen = (_GZLEN+1);
                 char *namebuf = MALLOC(namelen+gzlen+1);
-                if (!helper->load(fd, namebuf, namelen)) {
+                if (!helper->load(fd, (uint8_t *)namebuf, namelen)) {
                     FREE(namebuf);
                     break;
                 }
@@ -1100,10 +1134,11 @@ bool disk6_loadState(StateHelper_s *helper) {
                 FREE(namebuf);
             }
 
-            // load placeholder
             if (!helper->load(fd, &state, 1)) {
                 break;
             }
+            stepper_phases = state & 0x3;
+            LOG("LOAD stepper_phases[%lu] : %02x", i, stepper_phases);
 
             // load placeholder
             if (!helper->load(fd, &state, 1)) {
