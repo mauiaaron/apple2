@@ -321,10 +321,10 @@ TEST test_80col_hires() {
 // Test Suite
 
 GREATEST_SUITE(test_suite_display) {
-    test_thread_running = true;
-
     pthread_mutex_lock(&interface_mutex);
 
+    test_thread_running = true;
+    
     GREATEST_SET_SETUP_CB(testdisplay_setup, NULL);
     GREATEST_SET_TEARDOWN_CB(testdisplay_teardown, NULL);
     GREATEST_SET_BREAKPOINT_CB(test_breakpoint, NULL);

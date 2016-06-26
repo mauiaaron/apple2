@@ -385,10 +385,10 @@ TEST test_boot_disk_vmtrace_po() {
 // Test Suite
 
 GREATEST_SUITE(test_suite_trace) {
-    test_thread_running = true;
-
     pthread_mutex_lock(&interface_mutex);
 
+    test_thread_running = true;
+    
     GREATEST_SET_SETUP_CB(testtrace_setup, NULL);
     GREATEST_SET_TEARDOWN_CB(testtrace_teardown, NULL);
     GREATEST_SET_BREAKPOINT_CB(test_breakpoint, NULL);

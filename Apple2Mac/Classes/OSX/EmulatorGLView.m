@@ -191,6 +191,41 @@ static CVReturn displayLinkCallback(CVDisplayLinkRef displayLink, const CVTimeSt
     [[self openGLContext] makeCurrentContext];
     
     [EmulatorJoystickController sharedInstance];
+    
+#if TESTING
+    char *local_argv[] = {
+        "-f",
+        NULL
+    };
+    int local_argc = 0;
+    for (char **p = &local_argv[0]; *p != NULL; p++) {
+        ++local_argc;
+    }
+    
+#   if TEST_CPU
+    // Currently this test is the only one that blocks current thread and runs as a black screen
+    extern int test_cpu(int, char *[]);
+    test_cpu(local_argc, local_argv);
+#   elif TEST_VM
+    extern int test_vm(int, char *[]);
+    test_vm(local_argc, local_argv);
+#   elif TEST_DISPLAY
+    extern int test_display(int, char *[]);
+    test_display(local_argc, local_argv);
+#   elif TEST_DISK
+    extern int test_disk(int, char *[]);
+    test_disk(local_argc, local_argv);
+#   elif TEST_PREFS
+    extern void test_prefs(int, char *[]);
+    test_prefs(local_argc, local_argv);
+#   elif TEST_TRACE
+    extern void test_trace(int, char *[]);
+    test_trace(local_argc, local_argv);
+#   else
+#       error "OOPS, no testsuite specified"
+#   endif
+#endif
+    
     cpu_pause();
     emulator_start();
     cpu_resume();
