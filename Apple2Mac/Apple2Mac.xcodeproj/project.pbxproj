@@ -59,6 +59,7 @@
 		4AA2D7FB1D20301F0054A5FF /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 773B3D241956885A0085CE5F /* MainMenu.xib */; };
 		4AA2D7FC1D20309C0054A5FF /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 77FA92931C72D93D0090755C /* libz.tbd */; };
 		4AA2D7FD1D20367D0054A5FF /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 77FA92931C72D93D0090755C /* libz.tbd */; };
+		4ACD731A1D205D6000123DE6 /* disks in Resources */ = {isa = PBXBuildFile; fileRef = 4ACD73191D205D6000123DE6 /* disks */; };
 		4AD4FE941A52464F00F958EC /* cpu.S in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D9019568A570085CE5F /* cpu.S */; };
 		4AD4FE951A52464F00F958EC /* prefs.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D7719568A570085CE5F /* prefs.c */; };
 		4AD4FE961A52464F00F958EC /* display.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D6419568A570085CE5F /* display.c */; };
@@ -152,11 +153,6 @@
 		4E1733E31C2C5F7600CDF9DF /* iosPrefControllerViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4E4E62A01C2C5B56002E324F /* iosPrefControllerViewController.m */; };
 		4E1733E41C2C5F7A00CDF9DF /* AppleViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4E1733DD1C2C5E5D00CDF9DF /* AppleViewController.m */; };
 		4EB4F8571C393F0E0072A15C /* OpenAL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4EB4F8561C393F0E0072A15C /* OpenAL.framework */; };
-		4ECBEADF1C3432010046F537 /* speedtest.dsk in Resources */ = {isa = PBXBuildFile; fileRef = 4ECBEADD1C3432010046F537 /* speedtest.dsk */; };
-		4ECBEAE01C3432010046F537 /* testvm1.dsk in Resources */ = {isa = PBXBuildFile; fileRef = 4ECBEADE1C3432010046F537 /* testvm1.dsk */; };
-		4ECFC39E1C368620008E2633 /* flapple140.po in Resources */ = {isa = PBXBuildFile; fileRef = 4ECFC39B1C368620008E2633 /* flapple140.po */; };
-		4ECFC39F1C368620008E2633 /* mystery.dsk in Resources */ = {isa = PBXBuildFile; fileRef = 4ECFC39C1C368620008E2633 /* mystery.dsk */; };
-		4ECFC3A01C368620008E2633 /* NSCT.dsk in Resources */ = {isa = PBXBuildFile; fileRef = 4ECFC39D1C368620008E2633 /* NSCT.dsk */; };
 		4ECFC3A11C368643008E2633 /* NSCT.dsk in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4ECFC39D1C368620008E2633 /* NSCT.dsk */; };
 		4ECFC3A21C368645008E2633 /* flapple140.po in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4ECFC39B1C368620008E2633 /* flapple140.po */; };
 		4ECFC3A31C368647008E2633 /* mystery.dsk in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4ECFC39C1C368620008E2633 /* mystery.dsk */; };
@@ -170,7 +166,6 @@
 		4ECFC3BF1C368ED3008E2633 /* GameController.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4ECFC3BE1C368ED3008E2633 /* GameController.framework */; };
 		4EEF0E8A1C3536A3001BEB67 /* disksViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4EEF0E891C3536A3001BEB67 /* disksViewController.m */; };
 		4EF7D04D1C38204C007E0ADD /* floppy.png in Resources */ = {isa = PBXBuildFile; fileRef = 4EF7D04C1C38204C007E0ADD /* floppy.png */; };
-		4EF7D04E1C38204C007E0ADD /* floppy.png in Resources */ = {isa = PBXBuildFile; fileRef = 4EF7D04C1C38204C007E0ADD /* floppy.png */; };
 		773B3D101956885A0085CE5F /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 773B3D0F1956885A0085CE5F /* Cocoa.framework */; };
 		773B3D1A1956885A0085CE5F /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 773B3D181956885A0085CE5F /* InfoPlist.strings */; };
 		773B3D201956885A0085CE5F /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = 773B3D1E1956885A0085CE5F /* Credits.rtf */; };
@@ -446,6 +441,7 @@
 		4A7EDC921AE092680072E98A /* glnode.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = glnode.c; sourceTree = "<group>"; };
 		4A7EDC9D1AE092B80072E98A /* interface.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = interface.c; sourceTree = "<group>"; };
 		4AA2D7FE1D2038380054A5FF /* testprefs.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = testprefs.c; sourceTree = "<group>"; };
+		4ACD73191D205D6000123DE6 /* disks */ = {isa = PBXFileReference; lastKnownFileType = folder; name = disks; path = "../../apple2-images-pub/disks"; sourceTree = "<group>"; };
 		4AD4FEC31A52464F00F958EC /* Apple2MacTestDisk.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Apple2MacTestDisk.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		4AD4FEC41A52464F00F958EC /* Apple2MacTestDisk-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "Apple2MacTestDisk-Info.plist"; path = "Apple2MacTests/Apple2MacTestDisk-Info.plist"; sourceTree = SOURCE_ROOT; };
 		4AD4FEC91A52467D00F958EC /* testdisk.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = testdisk.c; sourceTree = "<group>"; };
@@ -617,7 +613,6 @@
 		935C55771C136F260013166D /* sha1.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sha1.h; sourceTree = "<group>"; };
 		935C557A1C136F7E0013166D /* cpu-regs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "cpu-regs.h"; path = "arm/cpu-regs.h"; sourceTree = "<group>"; };
 		935C557C1C136FBD0013166D /* glue-prologue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "glue-prologue.h"; path = "arm/glue-prologue.h"; sourceTree = "<group>"; };
-		935C557F1C136FEF0013166D /* glvideo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = glvideo.h; sourceTree = "<group>"; };
 		935C55811C13702A0013166D /* glhudmodel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = glhudmodel.h; sourceTree = "<group>"; };
 		935C55821C13703F0013166D /* glnode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = glnode.h; sourceTree = "<group>"; };
 		935C55841C1370800013166D /* gltouchjoy_joy.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = gltouchjoy_joy.c; sourceTree = "<group>"; };
@@ -761,6 +756,7 @@
 				935C55291C12BA5F0013166D /* Apple2iOS */,
 				4ECFC3AB1C368EAB008E2633 /* Apple2etvOS */,
 				773B3D431956897D0085CE5F /* Classes */,
+				4ACD73191D205D6000123DE6 /* disks */,
 				773B3D4519568A570085CE5F /* src */,
 				935C55A51C1389000013166D /* externals */,
 				4ADC522F19E8D3F600186B36 /* Documents */,
@@ -939,7 +935,6 @@
 				4A7EDC911AE092680072E98A /* glhudmodel.c */,
 				935C55821C13703F0013166D /* glnode.h */,
 				4A7EDC921AE092680072E98A /* glnode.c */,
-				935C557F1C136FEF0013166D /* glvideo.h */,
 				77E1C0C719D736EB004344E0 /* glvideo.c */,
 				773B3D8B19568A570085CE5F /* video.h */,
 			);
@@ -1264,7 +1259,6 @@
 					};
 					935C55271C12BA5F0013166D = {
 						CreatedOnToolsVersion = 7.1.1;
-						DevelopmentTeam = 2SR5BWLATN;
 					};
 				};
 			};
@@ -1438,19 +1432,14 @@
 			buildActionMask = 2147483647;
 			files = (
 				939C95A21C3B8E2100263E41 /* SolidColor.vsh in Resources */,
+				4ACD731A1D205D6000123DE6 /* disks in Resources */,
 				935C55371C12BA5F0013166D /* Assets.xcassets in Resources */,
 				939C959F1C3B8E2100263E41 /* SolidColor.fsh in Resources */,
 				935C55461C12BE110013166D /* LaunchScreen.xib in Resources */,
 				935C55351C12BA5F0013166D /* Main.storyboard in Resources */,
-				4ECFC3A01C368620008E2633 /* NSCT.dsk in Resources */,
 				935C55921C1371AD0013166D /* Basic.vsh in Resources */,
-				4ECBEAE01C3432010046F537 /* testvm1.dsk in Resources */,
 				935C55911C1371AD0013166D /* Basic.fsh in Resources */,
-				4ECFC39E1C368620008E2633 /* flapple140.po in Resources */,
-				4ECBEADF1C3432010046F537 /* speedtest.dsk in Resources */,
-				4EF7D04E1C38204C007E0ADD /* floppy.png in Resources */,
 				93206C781C14E14000668153 /* Apple2iOS.strings in Resources */,
-				4ECFC39F1C368620008E2633 /* mystery.dsk in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2469,6 +2458,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-lz";
 				PRODUCT_BUNDLE_IDENTIFIER = com.deadc0de.Apple2iOS;
 				PRODUCT_NAME = "$(TARGET_NAME)";
