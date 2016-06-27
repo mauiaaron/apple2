@@ -84,6 +84,12 @@
         // start emulator from paused state
         cpu_pause();
         emulator_start();
+        
+        // set up defaults
+        CGRect screenBounds = [[UIScreen mainScreen] bounds];
+        prefs_setLongValue(PREF_DOMAIN_INTERFACE, PREF_DEVICE_WIDTH, (long)screenBounds.size.width);
+        prefs_setLongValue(PREF_DOMAIN_INTERFACE, PREF_DEVICE_HEIGHT, (long)screenBounds.size.height);
+
         video_init();
         
         _animating = NO;
