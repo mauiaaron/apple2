@@ -754,9 +754,6 @@ const char *disk6_eject(int drive) {
             ERRLOG("Error close()ing file %s", disk6.disk[drive].file_name);
         }
 
-#ifdef __APPLE__
-#   warning FIXME TODO : can we not inflate/deflate disk images within the iOS port?  Maybe this is just a permission thing?
-#else
         // foo.dsk -> foo.dsk.gz
         pthread_mutex_lock(&unlink_mutex);
         err = zlib_deflate(disk6.disk[drive].file_name, is_nib(disk6.disk[drive].file_name) ? NIB_SIZE : DSK_SIZE);
@@ -766,7 +763,6 @@ const char *disk6_eject(int drive) {
             unlink(disk6.disk[drive].file_name);
         }
         pthread_mutex_unlock(&unlink_mutex);
-#endif
     }
 
     FREE(disk6.disk[drive].file_name);

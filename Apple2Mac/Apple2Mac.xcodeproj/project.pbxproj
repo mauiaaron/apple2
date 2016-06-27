@@ -60,6 +60,278 @@
 		4AA2D7FC1D20309C0054A5FF /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 77FA92931C72D93D0090755C /* libz.tbd */; };
 		4AA2D7FD1D20367D0054A5FF /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 77FA92931C72D93D0090755C /* libz.tbd */; };
 		4ACD731A1D205D6000123DE6 /* disks in Resources */ = {isa = PBXBuildFile; fileRef = 4ACD73191D205D6000123DE6 /* disks */; };
+		4ACD73231D20A83E00123DE6 /* darwin-cpu-glue.S in Sources */ = {isa = PBXBuildFile; fileRef = 935C559E1C1384240013166D /* darwin-cpu-glue.S */; };
+		4ACD73241D20A83E00123DE6 /* misc.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D7519568A570085CE5F /* misc.c */; };
+		4ACD73251D20A83E00123DE6 /* glvideo.c in Sources */ = {isa = PBXBuildFile; fileRef = 77E1C0C719D736EB004344E0 /* glvideo.c */; };
+		4ACD73261D20A83E00123DE6 /* gltouchjoy_joy.c in Sources */ = {isa = PBXBuildFile; fileRef = 935C55841C1370800013166D /* gltouchjoy_joy.c */; };
+		4ACD73271D20A83E00123DE6 /* A2IXPopupChoreographer.m in Sources */ = {isa = PBXBuildFile; fileRef = 93206C841C156BD300668153 /* A2IXPopupChoreographer.m */; };
+		4ACD73281D20A83E00123DE6 /* gltouchjoy_kpad.c in Sources */ = {isa = PBXBuildFile; fileRef = 935C55851C1370800013166D /* gltouchjoy_kpad.c */; };
+		4ACD73291D20A83E00123DE6 /* gltouchjoy.c in Sources */ = {isa = PBXBuildFile; fileRef = 935C55861C1370800013166D /* gltouchjoy.c */; };
+		4ACD732A1D20A83E00123DE6 /* soundcore.c in Sources */ = {isa = PBXBuildFile; fileRef = 779F565119EAF66E00A6F107 /* soundcore.c */; };
+		4ACD732B1D20A83E00123DE6 /* soundcore-openal.c in Sources */ = {isa = PBXBuildFile; fileRef = 779F564F19EAF66E00A6F107 /* soundcore-openal.c */; };
+		4ACD732C1D20A83E00123DE6 /* opcodes.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D7419568A570085CE5F /* opcodes.c */; };
+		4ACD732D1D20A83E00123DE6 /* prefs.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D7719568A570085CE5F /* prefs.c */; };
+		4ACD732E1D20A83E00123DE6 /* json_parse.c in Sources */ = {isa = PBXBuildFile; fileRef = 935C55701C136E6F0013166D /* json_parse.c */; };
+		4ACD732F1D20A83E00123DE6 /* rom-shim.c in Sources */ = {isa = PBXBuildFile; fileRef = 779DD826195764E200DF89E5 /* rom-shim.c */; };
+		4ACD73301D20A83E00123DE6 /* timing.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D8719568A570085CE5F /* timing.c */; };
+		4ACD73311D20A83E00123DE6 /* glalert.c in Sources */ = {isa = PBXBuildFile; fileRef = 93BC72541BF6F8E2005CDFCA /* glalert.c */; };
+		4ACD73321D20A83E00123DE6 /* memmngt.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A73BE2E1CCBE21A0041C573 /* memmngt.c */; };
+		4ACD73331D20A83E00123DE6 /* jsmn.c in Sources */ = {isa = PBXBuildFile; fileRef = 935C55A71C1389370013166D /* jsmn.c */; };
+		4ACD73341D20A83E00123DE6 /* glhudmodel.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A7EDC911AE092680072E98A /* glhudmodel.c */; };
+		4ACD73351D20A83E00123DE6 /* glnode.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A7EDC921AE092680072E98A /* glnode.c */; };
+		4ACD73361D20A83E00123DE6 /* matrixUtil.c in Sources */ = {isa = PBXBuildFile; fileRef = 77E1C0AF19D72700004344E0 /* matrixUtil.c */; };
+		4ACD73371D20A83E00123DE6 /* disksViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4EEF0E891C3536A3001BEB67 /* disksViewController.m */; };
+		4ACD73381D20A83E00123DE6 /* modelUtil.c in Sources */ = {isa = PBXBuildFile; fileRef = 77E1C0AD19D72700004344E0 /* modelUtil.c */; };
+		4ACD73391D20A83E00123DE6 /* sourceUtil.c in Sources */ = {isa = PBXBuildFile; fileRef = 77E1C0AB19D72700004344E0 /* sourceUtil.c */; };
+		4ACD733A1D20A83E00123DE6 /* vectorUtil.c in Sources */ = {isa = PBXBuildFile; fileRef = 77E1C0A919D72700004344E0 /* vectorUtil.c */; };
+		4ACD733B1D20A83E00123DE6 /* vm.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D8D19568A570085CE5F /* vm.c */; };
+		4ACD733C1D20A83E00123DE6 /* zlib-helpers.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D9519568A570085CE5F /* zlib-helpers.c */; };
+		4ACD733D1D20A83E00123DE6 /* gltouchkbd.c in Sources */ = {isa = PBXBuildFile; fileRef = 935C55881C1370800013166D /* gltouchkbd.c */; };
+		4ACD733E1D20A83E00123DE6 /* alhelpers.c in Sources */ = {isa = PBXBuildFile; fileRef = 779F564719EAF66E00A6F107 /* alhelpers.c */; };
+		4ACD733F1D20A83E00123DE6 /* AY8910.c in Sources */ = {isa = PBXBuildFile; fileRef = 779F564919EAF66E00A6F107 /* AY8910.c */; };
+		4ACD73401D20A83E00123DE6 /* mockingboard.c in Sources */ = {isa = PBXBuildFile; fileRef = 779F564C19EAF66E00A6F107 /* mockingboard.c */; };
+		4ACD73411D20A83E00123DE6 /* playqueue.c in Sources */ = {isa = PBXBuildFile; fileRef = 93BC72561BF6FF11005CDFCA /* playqueue.c */; };
+		4ACD73421D20A83E00123DE6 /* gltouchmenu.c in Sources */ = {isa = PBXBuildFile; fileRef = 935C55891C1370800013166D /* gltouchmenu.c */; };
+		4ACD73431D20A83E00123DE6 /* speaker.c in Sources */ = {isa = PBXBuildFile; fileRef = 779F565319EAF66E00A6F107 /* speaker.c */; };
+		4ACD73441D20A83E00123DE6 /* AppleViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4E1733DD1C2C5E5D00CDF9DF /* AppleViewController.m */; };
+		4ACD73451D20A83E00123DE6 /* cpu-supp.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D5D19568A570085CE5F /* cpu-supp.c */; };
+		4ACD73461D20A83E00123DE6 /* darwin-shim.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D6019568A570085CE5F /* darwin-shim.c */; };
+		4ACD73471D20A83E00123DE6 /* debugger.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D7319568A570085CE5F /* debugger.c */; };
+		4ACD73481D20A83E00123DE6 /* disk.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D6219568A570085CE5F /* disk.c */; };
+		4ACD73491D20A83E00123DE6 /* display.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D6419568A570085CE5F /* display.c */; };
+		4ACD734A1D20A83E00123DE6 /* font.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D6519568A570085CE5F /* font.c */; };
+		4ACD734B1D20A83E00123DE6 /* interface.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A7EDC9D1AE092B80072E98A /* interface.c */; };
+		4ACD734C1D20A83E00123DE6 /* joystick.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D6C19568A570085CE5F /* joystick.c */; };
+		4ACD734D1D20A83E00123DE6 /* iosPrefControllerViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4E4E62A01C2C5B56002E324F /* iosPrefControllerViewController.m */; };
+		4ACD734E1D20A83E00123DE6 /* sha1.c in Sources */ = {isa = PBXBuildFile; fileRef = 4AFC17091AAE9C3200B215FA /* sha1.c */; };
+		4ACD734F1D20A83E00123DE6 /* keys.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D6E19568A570085CE5F /* keys.c */; };
+		4ACD73501D20A83E00123DE6 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 935C55481C12BE510013166D /* AppDelegate.m */; };
+		4ACD73511D20A83E00123DE6 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 935C551B1C12B6400013166D /* main.m */; };
+		4ACD73521D20A83E00123DE6 /* EAGLView.m in Sources */ = {isa = PBXBuildFile; fileRef = 935C554A1C12BE510013166D /* EAGLView.m */; };
+		4ACD73541D20A83E00123DE6 /* OpenAL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4EB4F8561C393F0E0072A15C /* OpenAL.framework */; };
+		4ACD73571D20A83E00123DE6 /* SolidColor.vsh in Resources */ = {isa = PBXBuildFile; fileRef = 939C959D1C3B8E2100263E41 /* SolidColor.vsh */; };
+		4ACD73581D20A83E00123DE6 /* disks in Resources */ = {isa = PBXBuildFile; fileRef = 4ACD73191D205D6000123DE6 /* disks */; };
+		4ACD73591D20A83E00123DE6 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 935C55361C12BA5F0013166D /* Assets.xcassets */; };
+		4ACD735A1D20A83E00123DE6 /* SolidColor.fsh in Resources */ = {isa = PBXBuildFile; fileRef = 939C959C1C3B8E2100263E41 /* SolidColor.fsh */; };
+		4ACD735B1D20A83E00123DE6 /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = 935C55441C12BE110013166D /* LaunchScreen.xib */; };
+		4ACD735C1D20A83E00123DE6 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 935C55331C12BA5F0013166D /* Main.storyboard */; };
+		4ACD735D1D20A83E00123DE6 /* Basic.vsh in Resources */ = {isa = PBXBuildFile; fileRef = 779F562719E4FE9E00A6F107 /* Basic.vsh */; };
+		4ACD735E1D20A83E00123DE6 /* Basic.fsh in Resources */ = {isa = PBXBuildFile; fileRef = 779F562819E4FE9E00A6F107 /* Basic.fsh */; };
+		4ACD735F1D20A83E00123DE6 /* Apple2iOS.strings in Resources */ = {isa = PBXBuildFile; fileRef = 93206C761C14E14000668153 /* Apple2iOS.strings */; };
+		4ACD736C1D20A9D700123DE6 /* Apple2iOSTestCPU-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 4ACD736B1D20A9D700123DE6 /* Apple2iOSTestCPU-Info.plist */; };
+		4ACD736D1D20AAA200123DE6 /* testcpu.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D7E19568A570085CE5F /* testcpu.c */; };
+		4ACD736E1D20AAC500123DE6 /* testcommon.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D7C19568A570085CE5F /* testcommon.c */; };
+		4ACD73721D20AB6A00123DE6 /* darwin-cpu-glue.S in Sources */ = {isa = PBXBuildFile; fileRef = 935C559E1C1384240013166D /* darwin-cpu-glue.S */; };
+		4ACD73731D20AB6A00123DE6 /* misc.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D7519568A570085CE5F /* misc.c */; };
+		4ACD73741D20AB6A00123DE6 /* glvideo.c in Sources */ = {isa = PBXBuildFile; fileRef = 77E1C0C719D736EB004344E0 /* glvideo.c */; };
+		4ACD73751D20AB6A00123DE6 /* gltouchjoy_joy.c in Sources */ = {isa = PBXBuildFile; fileRef = 935C55841C1370800013166D /* gltouchjoy_joy.c */; };
+		4ACD73761D20AB6A00123DE6 /* A2IXPopupChoreographer.m in Sources */ = {isa = PBXBuildFile; fileRef = 93206C841C156BD300668153 /* A2IXPopupChoreographer.m */; };
+		4ACD73771D20AB6A00123DE6 /* gltouchjoy_kpad.c in Sources */ = {isa = PBXBuildFile; fileRef = 935C55851C1370800013166D /* gltouchjoy_kpad.c */; };
+		4ACD73781D20AB6A00123DE6 /* gltouchjoy.c in Sources */ = {isa = PBXBuildFile; fileRef = 935C55861C1370800013166D /* gltouchjoy.c */; };
+		4ACD73791D20AB6A00123DE6 /* soundcore.c in Sources */ = {isa = PBXBuildFile; fileRef = 779F565119EAF66E00A6F107 /* soundcore.c */; };
+		4ACD737A1D20AB6A00123DE6 /* soundcore-openal.c in Sources */ = {isa = PBXBuildFile; fileRef = 779F564F19EAF66E00A6F107 /* soundcore-openal.c */; };
+		4ACD737B1D20AB6A00123DE6 /* opcodes.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D7419568A570085CE5F /* opcodes.c */; };
+		4ACD737C1D20AB6A00123DE6 /* prefs.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D7719568A570085CE5F /* prefs.c */; };
+		4ACD737E1D20AB6A00123DE6 /* json_parse.c in Sources */ = {isa = PBXBuildFile; fileRef = 935C55701C136E6F0013166D /* json_parse.c */; };
+		4ACD737F1D20AB6A00123DE6 /* rom-shim.c in Sources */ = {isa = PBXBuildFile; fileRef = 779DD826195764E200DF89E5 /* rom-shim.c */; };
+		4ACD73801D20AB6A00123DE6 /* timing.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D8719568A570085CE5F /* timing.c */; };
+		4ACD73811D20AB6A00123DE6 /* glalert.c in Sources */ = {isa = PBXBuildFile; fileRef = 93BC72541BF6F8E2005CDFCA /* glalert.c */; };
+		4ACD73821D20AB6A00123DE6 /* testcommon.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D7C19568A570085CE5F /* testcommon.c */; };
+		4ACD73831D20AB6A00123DE6 /* memmngt.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A73BE2E1CCBE21A0041C573 /* memmngt.c */; };
+		4ACD73841D20AB6A00123DE6 /* jsmn.c in Sources */ = {isa = PBXBuildFile; fileRef = 935C55A71C1389370013166D /* jsmn.c */; };
+		4ACD73851D20AB6A00123DE6 /* glhudmodel.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A7EDC911AE092680072E98A /* glhudmodel.c */; };
+		4ACD73861D20AB6A00123DE6 /* glnode.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A7EDC921AE092680072E98A /* glnode.c */; };
+		4ACD73871D20AB6A00123DE6 /* matrixUtil.c in Sources */ = {isa = PBXBuildFile; fileRef = 77E1C0AF19D72700004344E0 /* matrixUtil.c */; };
+		4ACD73881D20AB6A00123DE6 /* disksViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4EEF0E891C3536A3001BEB67 /* disksViewController.m */; };
+		4ACD73891D20AB6A00123DE6 /* modelUtil.c in Sources */ = {isa = PBXBuildFile; fileRef = 77E1C0AD19D72700004344E0 /* modelUtil.c */; };
+		4ACD738A1D20AB6A00123DE6 /* sourceUtil.c in Sources */ = {isa = PBXBuildFile; fileRef = 77E1C0AB19D72700004344E0 /* sourceUtil.c */; };
+		4ACD738B1D20AB6A00123DE6 /* vectorUtil.c in Sources */ = {isa = PBXBuildFile; fileRef = 77E1C0A919D72700004344E0 /* vectorUtil.c */; };
+		4ACD738C1D20AB6A00123DE6 /* vm.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D8D19568A570085CE5F /* vm.c */; };
+		4ACD738D1D20AB6A00123DE6 /* zlib-helpers.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D9519568A570085CE5F /* zlib-helpers.c */; };
+		4ACD738E1D20AB6A00123DE6 /* gltouchkbd.c in Sources */ = {isa = PBXBuildFile; fileRef = 935C55881C1370800013166D /* gltouchkbd.c */; };
+		4ACD738F1D20AB6A00123DE6 /* alhelpers.c in Sources */ = {isa = PBXBuildFile; fileRef = 779F564719EAF66E00A6F107 /* alhelpers.c */; };
+		4ACD73901D20AB6A00123DE6 /* AY8910.c in Sources */ = {isa = PBXBuildFile; fileRef = 779F564919EAF66E00A6F107 /* AY8910.c */; };
+		4ACD73911D20AB6A00123DE6 /* mockingboard.c in Sources */ = {isa = PBXBuildFile; fileRef = 779F564C19EAF66E00A6F107 /* mockingboard.c */; };
+		4ACD73921D20AB6A00123DE6 /* playqueue.c in Sources */ = {isa = PBXBuildFile; fileRef = 93BC72561BF6FF11005CDFCA /* playqueue.c */; };
+		4ACD73931D20AB6A00123DE6 /* gltouchmenu.c in Sources */ = {isa = PBXBuildFile; fileRef = 935C55891C1370800013166D /* gltouchmenu.c */; };
+		4ACD73941D20AB6A00123DE6 /* speaker.c in Sources */ = {isa = PBXBuildFile; fileRef = 779F565319EAF66E00A6F107 /* speaker.c */; };
+		4ACD73951D20AB6A00123DE6 /* AppleViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4E1733DD1C2C5E5D00CDF9DF /* AppleViewController.m */; };
+		4ACD73961D20AB6A00123DE6 /* cpu-supp.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D5D19568A570085CE5F /* cpu-supp.c */; };
+		4ACD73971D20AB6A00123DE6 /* darwin-shim.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D6019568A570085CE5F /* darwin-shim.c */; };
+		4ACD73981D20AB6A00123DE6 /* debugger.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D7319568A570085CE5F /* debugger.c */; };
+		4ACD73991D20AB6A00123DE6 /* disk.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D6219568A570085CE5F /* disk.c */; };
+		4ACD739A1D20AB6A00123DE6 /* display.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D6419568A570085CE5F /* display.c */; };
+		4ACD739B1D20AB6A00123DE6 /* font.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D6519568A570085CE5F /* font.c */; };
+		4ACD739C1D20AB6A00123DE6 /* interface.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A7EDC9D1AE092B80072E98A /* interface.c */; };
+		4ACD739D1D20AB6A00123DE6 /* joystick.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D6C19568A570085CE5F /* joystick.c */; };
+		4ACD739E1D20AB6A00123DE6 /* iosPrefControllerViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4E4E62A01C2C5B56002E324F /* iosPrefControllerViewController.m */; };
+		4ACD739F1D20AB6A00123DE6 /* sha1.c in Sources */ = {isa = PBXBuildFile; fileRef = 4AFC17091AAE9C3200B215FA /* sha1.c */; };
+		4ACD73A01D20AB6A00123DE6 /* keys.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D6E19568A570085CE5F /* keys.c */; };
+		4ACD73A11D20AB6A00123DE6 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 935C55481C12BE510013166D /* AppDelegate.m */; };
+		4ACD73A21D20AB6A00123DE6 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 935C551B1C12B6400013166D /* main.m */; };
+		4ACD73A31D20AB6A00123DE6 /* EAGLView.m in Sources */ = {isa = PBXBuildFile; fileRef = 935C554A1C12BE510013166D /* EAGLView.m */; };
+		4ACD73A51D20AB6A00123DE6 /* OpenAL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4EB4F8561C393F0E0072A15C /* OpenAL.framework */; };
+		4ACD73A81D20AB6A00123DE6 /* SolidColor.vsh in Resources */ = {isa = PBXBuildFile; fileRef = 939C959D1C3B8E2100263E41 /* SolidColor.vsh */; };
+		4ACD73A91D20AB6A00123DE6 /* disks in Resources */ = {isa = PBXBuildFile; fileRef = 4ACD73191D205D6000123DE6 /* disks */; };
+		4ACD73AA1D20AB6A00123DE6 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 935C55361C12BA5F0013166D /* Assets.xcassets */; };
+		4ACD73AB1D20AB6A00123DE6 /* SolidColor.fsh in Resources */ = {isa = PBXBuildFile; fileRef = 939C959C1C3B8E2100263E41 /* SolidColor.fsh */; };
+		4ACD73AC1D20AB6A00123DE6 /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = 935C55441C12BE110013166D /* LaunchScreen.xib */; };
+		4ACD73AD1D20AB6A00123DE6 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 935C55331C12BA5F0013166D /* Main.storyboard */; };
+		4ACD73AE1D20AB6A00123DE6 /* Basic.vsh in Resources */ = {isa = PBXBuildFile; fileRef = 779F562719E4FE9E00A6F107 /* Basic.vsh */; };
+		4ACD73AF1D20AB6A00123DE6 /* Basic.fsh in Resources */ = {isa = PBXBuildFile; fileRef = 779F562819E4FE9E00A6F107 /* Basic.fsh */; };
+		4ACD73B01D20AB6A00123DE6 /* Apple2iOS.strings in Resources */ = {isa = PBXBuildFile; fileRef = 93206C761C14E14000668153 /* Apple2iOS.strings */; };
+		4ACD73BC1D20ABAD00123DE6 /* testvm.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D8619568A570085CE5F /* testvm.c */; };
+		4ACD73BE1D20AC6500123DE6 /* Apple2iOSTestVM-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 4ACD73BD1D20AC6500123DE6 /* Apple2iOSTestVM-Info.plist */; };
+		4ACD73C31D20B11D00123DE6 /* darwin-cpu-glue.S in Sources */ = {isa = PBXBuildFile; fileRef = 935C559E1C1384240013166D /* darwin-cpu-glue.S */; };
+		4ACD73C41D20B11D00123DE6 /* misc.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D7519568A570085CE5F /* misc.c */; };
+		4ACD73C51D20B11D00123DE6 /* glvideo.c in Sources */ = {isa = PBXBuildFile; fileRef = 77E1C0C719D736EB004344E0 /* glvideo.c */; };
+		4ACD73C61D20B11D00123DE6 /* gltouchjoy_joy.c in Sources */ = {isa = PBXBuildFile; fileRef = 935C55841C1370800013166D /* gltouchjoy_joy.c */; };
+		4ACD73C71D20B11D00123DE6 /* A2IXPopupChoreographer.m in Sources */ = {isa = PBXBuildFile; fileRef = 93206C841C156BD300668153 /* A2IXPopupChoreographer.m */; };
+		4ACD73C81D20B11D00123DE6 /* gltouchjoy_kpad.c in Sources */ = {isa = PBXBuildFile; fileRef = 935C55851C1370800013166D /* gltouchjoy_kpad.c */; };
+		4ACD73C91D20B11D00123DE6 /* gltouchjoy.c in Sources */ = {isa = PBXBuildFile; fileRef = 935C55861C1370800013166D /* gltouchjoy.c */; };
+		4ACD73CA1D20B11D00123DE6 /* soundcore.c in Sources */ = {isa = PBXBuildFile; fileRef = 779F565119EAF66E00A6F107 /* soundcore.c */; };
+		4ACD73CB1D20B11D00123DE6 /* soundcore-openal.c in Sources */ = {isa = PBXBuildFile; fileRef = 779F564F19EAF66E00A6F107 /* soundcore-openal.c */; };
+		4ACD73CC1D20B11D00123DE6 /* opcodes.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D7419568A570085CE5F /* opcodes.c */; };
+		4ACD73CD1D20B11D00123DE6 /* prefs.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D7719568A570085CE5F /* prefs.c */; };
+		4ACD73CE1D20B11D00123DE6 /* json_parse.c in Sources */ = {isa = PBXBuildFile; fileRef = 935C55701C136E6F0013166D /* json_parse.c */; };
+		4ACD73CF1D20B11D00123DE6 /* rom-shim.c in Sources */ = {isa = PBXBuildFile; fileRef = 779DD826195764E200DF89E5 /* rom-shim.c */; };
+		4ACD73D01D20B11D00123DE6 /* timing.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D8719568A570085CE5F /* timing.c */; };
+		4ACD73D11D20B11D00123DE6 /* glalert.c in Sources */ = {isa = PBXBuildFile; fileRef = 93BC72541BF6F8E2005CDFCA /* glalert.c */; };
+		4ACD73D21D20B11D00123DE6 /* testcommon.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D7C19568A570085CE5F /* testcommon.c */; };
+		4ACD73D31D20B11D00123DE6 /* memmngt.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A73BE2E1CCBE21A0041C573 /* memmngt.c */; };
+		4ACD73D41D20B11D00123DE6 /* jsmn.c in Sources */ = {isa = PBXBuildFile; fileRef = 935C55A71C1389370013166D /* jsmn.c */; };
+		4ACD73D51D20B11D00123DE6 /* glhudmodel.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A7EDC911AE092680072E98A /* glhudmodel.c */; };
+		4ACD73D61D20B11D00123DE6 /* glnode.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A7EDC921AE092680072E98A /* glnode.c */; };
+		4ACD73D71D20B11D00123DE6 /* matrixUtil.c in Sources */ = {isa = PBXBuildFile; fileRef = 77E1C0AF19D72700004344E0 /* matrixUtil.c */; };
+		4ACD73D81D20B11D00123DE6 /* disksViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4EEF0E891C3536A3001BEB67 /* disksViewController.m */; };
+		4ACD73D91D20B11D00123DE6 /* modelUtil.c in Sources */ = {isa = PBXBuildFile; fileRef = 77E1C0AD19D72700004344E0 /* modelUtil.c */; };
+		4ACD73DA1D20B11D00123DE6 /* sourceUtil.c in Sources */ = {isa = PBXBuildFile; fileRef = 77E1C0AB19D72700004344E0 /* sourceUtil.c */; };
+		4ACD73DB1D20B11D00123DE6 /* vectorUtil.c in Sources */ = {isa = PBXBuildFile; fileRef = 77E1C0A919D72700004344E0 /* vectorUtil.c */; };
+		4ACD73DC1D20B11D00123DE6 /* vm.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D8D19568A570085CE5F /* vm.c */; };
+		4ACD73DD1D20B11D00123DE6 /* zlib-helpers.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D9519568A570085CE5F /* zlib-helpers.c */; };
+		4ACD73DE1D20B11D00123DE6 /* gltouchkbd.c in Sources */ = {isa = PBXBuildFile; fileRef = 935C55881C1370800013166D /* gltouchkbd.c */; };
+		4ACD73DF1D20B11D00123DE6 /* alhelpers.c in Sources */ = {isa = PBXBuildFile; fileRef = 779F564719EAF66E00A6F107 /* alhelpers.c */; };
+		4ACD73E01D20B11D00123DE6 /* AY8910.c in Sources */ = {isa = PBXBuildFile; fileRef = 779F564919EAF66E00A6F107 /* AY8910.c */; };
+		4ACD73E11D20B11D00123DE6 /* mockingboard.c in Sources */ = {isa = PBXBuildFile; fileRef = 779F564C19EAF66E00A6F107 /* mockingboard.c */; };
+		4ACD73E21D20B11D00123DE6 /* playqueue.c in Sources */ = {isa = PBXBuildFile; fileRef = 93BC72561BF6FF11005CDFCA /* playqueue.c */; };
+		4ACD73E31D20B11D00123DE6 /* gltouchmenu.c in Sources */ = {isa = PBXBuildFile; fileRef = 935C55891C1370800013166D /* gltouchmenu.c */; };
+		4ACD73E41D20B11D00123DE6 /* speaker.c in Sources */ = {isa = PBXBuildFile; fileRef = 779F565319EAF66E00A6F107 /* speaker.c */; };
+		4ACD73E51D20B11D00123DE6 /* AppleViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4E1733DD1C2C5E5D00CDF9DF /* AppleViewController.m */; };
+		4ACD73E61D20B11D00123DE6 /* cpu-supp.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D5D19568A570085CE5F /* cpu-supp.c */; };
+		4ACD73E71D20B11D00123DE6 /* darwin-shim.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D6019568A570085CE5F /* darwin-shim.c */; };
+		4ACD73E81D20B11D00123DE6 /* debugger.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D7319568A570085CE5F /* debugger.c */; };
+		4ACD73E91D20B11D00123DE6 /* disk.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D6219568A570085CE5F /* disk.c */; };
+		4ACD73EA1D20B11D00123DE6 /* display.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D6419568A570085CE5F /* display.c */; };
+		4ACD73EB1D20B11D00123DE6 /* font.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D6519568A570085CE5F /* font.c */; };
+		4ACD73EC1D20B11D00123DE6 /* interface.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A7EDC9D1AE092B80072E98A /* interface.c */; };
+		4ACD73ED1D20B11D00123DE6 /* joystick.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D6C19568A570085CE5F /* joystick.c */; };
+		4ACD73EE1D20B11D00123DE6 /* iosPrefControllerViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4E4E62A01C2C5B56002E324F /* iosPrefControllerViewController.m */; };
+		4ACD73EF1D20B11D00123DE6 /* sha1.c in Sources */ = {isa = PBXBuildFile; fileRef = 4AFC17091AAE9C3200B215FA /* sha1.c */; };
+		4ACD73F01D20B11D00123DE6 /* keys.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D6E19568A570085CE5F /* keys.c */; };
+		4ACD73F11D20B11D00123DE6 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 935C55481C12BE510013166D /* AppDelegate.m */; };
+		4ACD73F21D20B11D00123DE6 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 935C551B1C12B6400013166D /* main.m */; };
+		4ACD73F31D20B11D00123DE6 /* EAGLView.m in Sources */ = {isa = PBXBuildFile; fileRef = 935C554A1C12BE510013166D /* EAGLView.m */; };
+		4ACD73F51D20B11D00123DE6 /* OpenAL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4EB4F8561C393F0E0072A15C /* OpenAL.framework */; };
+		4ACD73F81D20B11D00123DE6 /* SolidColor.vsh in Resources */ = {isa = PBXBuildFile; fileRef = 939C959D1C3B8E2100263E41 /* SolidColor.vsh */; };
+		4ACD73F91D20B11D00123DE6 /* disks in Resources */ = {isa = PBXBuildFile; fileRef = 4ACD73191D205D6000123DE6 /* disks */; };
+		4ACD73FA1D20B11D00123DE6 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 935C55361C12BA5F0013166D /* Assets.xcassets */; };
+		4ACD73FB1D20B11D00123DE6 /* SolidColor.fsh in Resources */ = {isa = PBXBuildFile; fileRef = 939C959C1C3B8E2100263E41 /* SolidColor.fsh */; };
+		4ACD73FC1D20B11D00123DE6 /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = 935C55441C12BE110013166D /* LaunchScreen.xib */; };
+		4ACD73FD1D20B11D00123DE6 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 935C55331C12BA5F0013166D /* Main.storyboard */; };
+		4ACD73FE1D20B11D00123DE6 /* Basic.vsh in Resources */ = {isa = PBXBuildFile; fileRef = 779F562719E4FE9E00A6F107 /* Basic.vsh */; };
+		4ACD73FF1D20B11D00123DE6 /* Basic.fsh in Resources */ = {isa = PBXBuildFile; fileRef = 779F562819E4FE9E00A6F107 /* Basic.fsh */; };
+		4ACD74001D20B11D00123DE6 /* Apple2iOS.strings in Resources */ = {isa = PBXBuildFile; fileRef = 93206C761C14E14000668153 /* Apple2iOS.strings */; };
+		4ACD74061D20B14100123DE6 /* testdisk.c in Sources */ = {isa = PBXBuildFile; fileRef = 4AD4FEC91A52467D00F958EC /* testdisk.c */; };
+		4ACD74081D20B1B300123DE6 /* Apple2iOSTestDisk-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 4ACD74071D20B1B300123DE6 /* Apple2iOSTestDisk-Info.plist */; };
+		4ACD74091D2619E100123DE6 /* mockingboard.c in Sources */ = {isa = PBXBuildFile; fileRef = 779F564C19EAF66E00A6F107 /* mockingboard.c */; };
+		4ACD740A1D2619E100123DE6 /* mockingboard.c in Sources */ = {isa = PBXBuildFile; fileRef = 779F564C19EAF66E00A6F107 /* mockingboard.c */; };
+		4ACD740B1D2619E200123DE6 /* mockingboard.c in Sources */ = {isa = PBXBuildFile; fileRef = 779F564C19EAF66E00A6F107 /* mockingboard.c */; };
+		4ACD740C1D2619E400123DE6 /* mockingboard.c in Sources */ = {isa = PBXBuildFile; fileRef = 779F564C19EAF66E00A6F107 /* mockingboard.c */; };
+		4ACD740D1D2619ED00123DE6 /* speaker.c in Sources */ = {isa = PBXBuildFile; fileRef = 779F565319EAF66E00A6F107 /* speaker.c */; };
+		4ACD740E1D2619ED00123DE6 /* speaker.c in Sources */ = {isa = PBXBuildFile; fileRef = 779F565319EAF66E00A6F107 /* speaker.c */; };
+		4ACD740F1D2619EE00123DE6 /* speaker.c in Sources */ = {isa = PBXBuildFile; fileRef = 779F565319EAF66E00A6F107 /* speaker.c */; };
+		4ACD74101D2619EF00123DE6 /* speaker.c in Sources */ = {isa = PBXBuildFile; fileRef = 779F565319EAF66E00A6F107 /* speaker.c */; };
+		4ACD74111D261A1200123DE6 /* soundcore.c in Sources */ = {isa = PBXBuildFile; fileRef = 779F565119EAF66E00A6F107 /* soundcore.c */; };
+		4ACD74121D261A1300123DE6 /* soundcore.c in Sources */ = {isa = PBXBuildFile; fileRef = 779F565119EAF66E00A6F107 /* soundcore.c */; };
+		4ACD74131D261A1400123DE6 /* soundcore.c in Sources */ = {isa = PBXBuildFile; fileRef = 779F565119EAF66E00A6F107 /* soundcore.c */; };
+		4ACD74141D261A1500123DE6 /* soundcore.c in Sources */ = {isa = PBXBuildFile; fileRef = 779F565119EAF66E00A6F107 /* soundcore.c */; };
+		4ACD74151D261A1E00123DE6 /* soundcore-openal.c in Sources */ = {isa = PBXBuildFile; fileRef = 779F564F19EAF66E00A6F107 /* soundcore-openal.c */; };
+		4ACD74161D261A1F00123DE6 /* soundcore-openal.c in Sources */ = {isa = PBXBuildFile; fileRef = 779F564F19EAF66E00A6F107 /* soundcore-openal.c */; };
+		4ACD74171D261A1F00123DE6 /* soundcore-openal.c in Sources */ = {isa = PBXBuildFile; fileRef = 779F564F19EAF66E00A6F107 /* soundcore-openal.c */; };
+		4ACD74181D261A2000123DE6 /* soundcore-openal.c in Sources */ = {isa = PBXBuildFile; fileRef = 779F564F19EAF66E00A6F107 /* soundcore-openal.c */; };
+		4ACD74191D261ACA00123DE6 /* AY8910.c in Sources */ = {isa = PBXBuildFile; fileRef = 779F564919EAF66E00A6F107 /* AY8910.c */; };
+		4ACD741A1D261ACB00123DE6 /* AY8910.c in Sources */ = {isa = PBXBuildFile; fileRef = 779F564919EAF66E00A6F107 /* AY8910.c */; };
+		4ACD741B1D261ACB00123DE6 /* AY8910.c in Sources */ = {isa = PBXBuildFile; fileRef = 779F564919EAF66E00A6F107 /* AY8910.c */; };
+		4ACD741C1D261ACC00123DE6 /* AY8910.c in Sources */ = {isa = PBXBuildFile; fileRef = 779F564919EAF66E00A6F107 /* AY8910.c */; };
+		4ACD741D1D261ADA00123DE6 /* playqueue.c in Sources */ = {isa = PBXBuildFile; fileRef = 93BC72561BF6FF11005CDFCA /* playqueue.c */; };
+		4ACD741E1D261ADA00123DE6 /* playqueue.c in Sources */ = {isa = PBXBuildFile; fileRef = 93BC72561BF6FF11005CDFCA /* playqueue.c */; };
+		4ACD741F1D261ADB00123DE6 /* playqueue.c in Sources */ = {isa = PBXBuildFile; fileRef = 93BC72561BF6FF11005CDFCA /* playqueue.c */; };
+		4ACD74201D261ADB00123DE6 /* playqueue.c in Sources */ = {isa = PBXBuildFile; fileRef = 93BC72561BF6FF11005CDFCA /* playqueue.c */; };
+		4ACD74211D261AEC00123DE6 /* alhelpers.c in Sources */ = {isa = PBXBuildFile; fileRef = 779F564719EAF66E00A6F107 /* alhelpers.c */; };
+		4ACD74221D261AED00123DE6 /* alhelpers.c in Sources */ = {isa = PBXBuildFile; fileRef = 779F564719EAF66E00A6F107 /* alhelpers.c */; };
+		4ACD74231D261AED00123DE6 /* alhelpers.c in Sources */ = {isa = PBXBuildFile; fileRef = 779F564719EAF66E00A6F107 /* alhelpers.c */; };
+		4ACD74241D261AEE00123DE6 /* alhelpers.c in Sources */ = {isa = PBXBuildFile; fileRef = 779F564719EAF66E00A6F107 /* alhelpers.c */; };
+		4ACD74291D26210600123DE6 /* darwin-cpu-glue.S in Sources */ = {isa = PBXBuildFile; fileRef = 935C559E1C1384240013166D /* darwin-cpu-glue.S */; };
+		4ACD742A1D26210600123DE6 /* misc.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D7519568A570085CE5F /* misc.c */; };
+		4ACD742B1D26210600123DE6 /* glvideo.c in Sources */ = {isa = PBXBuildFile; fileRef = 77E1C0C719D736EB004344E0 /* glvideo.c */; };
+		4ACD742C1D26210600123DE6 /* gltouchjoy_joy.c in Sources */ = {isa = PBXBuildFile; fileRef = 935C55841C1370800013166D /* gltouchjoy_joy.c */; };
+		4ACD742D1D26210600123DE6 /* A2IXPopupChoreographer.m in Sources */ = {isa = PBXBuildFile; fileRef = 93206C841C156BD300668153 /* A2IXPopupChoreographer.m */; };
+		4ACD742E1D26210600123DE6 /* gltouchjoy_kpad.c in Sources */ = {isa = PBXBuildFile; fileRef = 935C55851C1370800013166D /* gltouchjoy_kpad.c */; };
+		4ACD742F1D26210600123DE6 /* gltouchjoy.c in Sources */ = {isa = PBXBuildFile; fileRef = 935C55861C1370800013166D /* gltouchjoy.c */; };
+		4ACD74301D26210600123DE6 /* soundcore.c in Sources */ = {isa = PBXBuildFile; fileRef = 779F565119EAF66E00A6F107 /* soundcore.c */; };
+		4ACD74311D26210600123DE6 /* soundcore-openal.c in Sources */ = {isa = PBXBuildFile; fileRef = 779F564F19EAF66E00A6F107 /* soundcore-openal.c */; };
+		4ACD74321D26210600123DE6 /* opcodes.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D7419568A570085CE5F /* opcodes.c */; };
+		4ACD74331D26210600123DE6 /* prefs.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D7719568A570085CE5F /* prefs.c */; };
+		4ACD74341D26210600123DE6 /* json_parse.c in Sources */ = {isa = PBXBuildFile; fileRef = 935C55701C136E6F0013166D /* json_parse.c */; };
+		4ACD74351D26210600123DE6 /* rom-shim.c in Sources */ = {isa = PBXBuildFile; fileRef = 779DD826195764E200DF89E5 /* rom-shim.c */; };
+		4ACD74361D26210600123DE6 /* timing.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D8719568A570085CE5F /* timing.c */; };
+		4ACD74371D26210600123DE6 /* glalert.c in Sources */ = {isa = PBXBuildFile; fileRef = 93BC72541BF6F8E2005CDFCA /* glalert.c */; };
+		4ACD74381D26210600123DE6 /* testcommon.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D7C19568A570085CE5F /* testcommon.c */; };
+		4ACD74391D26210600123DE6 /* memmngt.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A73BE2E1CCBE21A0041C573 /* memmngt.c */; };
+		4ACD743A1D26210600123DE6 /* jsmn.c in Sources */ = {isa = PBXBuildFile; fileRef = 935C55A71C1389370013166D /* jsmn.c */; };
+		4ACD743B1D26210600123DE6 /* glhudmodel.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A7EDC911AE092680072E98A /* glhudmodel.c */; };
+		4ACD743C1D26210600123DE6 /* glnode.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A7EDC921AE092680072E98A /* glnode.c */; };
+		4ACD743D1D26210600123DE6 /* matrixUtil.c in Sources */ = {isa = PBXBuildFile; fileRef = 77E1C0AF19D72700004344E0 /* matrixUtil.c */; };
+		4ACD743E1D26210600123DE6 /* disksViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4EEF0E891C3536A3001BEB67 /* disksViewController.m */; };
+		4ACD743F1D26210600123DE6 /* modelUtil.c in Sources */ = {isa = PBXBuildFile; fileRef = 77E1C0AD19D72700004344E0 /* modelUtil.c */; };
+		4ACD74401D26210600123DE6 /* sourceUtil.c in Sources */ = {isa = PBXBuildFile; fileRef = 77E1C0AB19D72700004344E0 /* sourceUtil.c */; };
+		4ACD74411D26210600123DE6 /* vectorUtil.c in Sources */ = {isa = PBXBuildFile; fileRef = 77E1C0A919D72700004344E0 /* vectorUtil.c */; };
+		4ACD74421D26210600123DE6 /* vm.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D8D19568A570085CE5F /* vm.c */; };
+		4ACD74431D26210600123DE6 /* zlib-helpers.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D9519568A570085CE5F /* zlib-helpers.c */; };
+		4ACD74441D26210600123DE6 /* gltouchkbd.c in Sources */ = {isa = PBXBuildFile; fileRef = 935C55881C1370800013166D /* gltouchkbd.c */; };
+		4ACD74451D26210600123DE6 /* alhelpers.c in Sources */ = {isa = PBXBuildFile; fileRef = 779F564719EAF66E00A6F107 /* alhelpers.c */; };
+		4ACD74461D26210600123DE6 /* AY8910.c in Sources */ = {isa = PBXBuildFile; fileRef = 779F564919EAF66E00A6F107 /* AY8910.c */; };
+		4ACD74471D26210600123DE6 /* mockingboard.c in Sources */ = {isa = PBXBuildFile; fileRef = 779F564C19EAF66E00A6F107 /* mockingboard.c */; };
+		4ACD74481D26210600123DE6 /* playqueue.c in Sources */ = {isa = PBXBuildFile; fileRef = 93BC72561BF6FF11005CDFCA /* playqueue.c */; };
+		4ACD74491D26210600123DE6 /* gltouchmenu.c in Sources */ = {isa = PBXBuildFile; fileRef = 935C55891C1370800013166D /* gltouchmenu.c */; };
+		4ACD744A1D26210600123DE6 /* speaker.c in Sources */ = {isa = PBXBuildFile; fileRef = 779F565319EAF66E00A6F107 /* speaker.c */; };
+		4ACD744B1D26210600123DE6 /* AppleViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4E1733DD1C2C5E5D00CDF9DF /* AppleViewController.m */; };
+		4ACD744C1D26210600123DE6 /* cpu-supp.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D5D19568A570085CE5F /* cpu-supp.c */; };
+		4ACD744D1D26210600123DE6 /* darwin-shim.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D6019568A570085CE5F /* darwin-shim.c */; };
+		4ACD744E1D26210600123DE6 /* debugger.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D7319568A570085CE5F /* debugger.c */; };
+		4ACD744F1D26210600123DE6 /* disk.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D6219568A570085CE5F /* disk.c */; };
+		4ACD74501D26210600123DE6 /* display.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D6419568A570085CE5F /* display.c */; };
+		4ACD74511D26210600123DE6 /* font.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D6519568A570085CE5F /* font.c */; };
+		4ACD74521D26210600123DE6 /* interface.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A7EDC9D1AE092B80072E98A /* interface.c */; };
+		4ACD74531D26210600123DE6 /* joystick.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D6C19568A570085CE5F /* joystick.c */; };
+		4ACD74541D26210600123DE6 /* iosPrefControllerViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4E4E62A01C2C5B56002E324F /* iosPrefControllerViewController.m */; };
+		4ACD74551D26210600123DE6 /* sha1.c in Sources */ = {isa = PBXBuildFile; fileRef = 4AFC17091AAE9C3200B215FA /* sha1.c */; };
+		4ACD74561D26210600123DE6 /* keys.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D6E19568A570085CE5F /* keys.c */; };
+		4ACD74571D26210600123DE6 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 935C55481C12BE510013166D /* AppDelegate.m */; };
+		4ACD74581D26210600123DE6 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 935C551B1C12B6400013166D /* main.m */; };
+		4ACD74591D26210600123DE6 /* EAGLView.m in Sources */ = {isa = PBXBuildFile; fileRef = 935C554A1C12BE510013166D /* EAGLView.m */; };
+		4ACD745B1D26210600123DE6 /* OpenAL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4EB4F8561C393F0E0072A15C /* OpenAL.framework */; };
+		4ACD745E1D26210600123DE6 /* SolidColor.vsh in Resources */ = {isa = PBXBuildFile; fileRef = 939C959D1C3B8E2100263E41 /* SolidColor.vsh */; };
+		4ACD745F1D26210600123DE6 /* disks in Resources */ = {isa = PBXBuildFile; fileRef = 4ACD73191D205D6000123DE6 /* disks */; };
+		4ACD74601D26210600123DE6 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 935C55361C12BA5F0013166D /* Assets.xcassets */; };
+		4ACD74611D26210600123DE6 /* SolidColor.fsh in Resources */ = {isa = PBXBuildFile; fileRef = 939C959C1C3B8E2100263E41 /* SolidColor.fsh */; };
+		4ACD74621D26210600123DE6 /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = 935C55441C12BE110013166D /* LaunchScreen.xib */; };
+		4ACD74631D26210600123DE6 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 935C55331C12BA5F0013166D /* Main.storyboard */; };
+		4ACD74641D26210600123DE6 /* Basic.vsh in Resources */ = {isa = PBXBuildFile; fileRef = 779F562719E4FE9E00A6F107 /* Basic.vsh */; };
+		4ACD74651D26210600123DE6 /* Basic.fsh in Resources */ = {isa = PBXBuildFile; fileRef = 779F562819E4FE9E00A6F107 /* Basic.fsh */; };
+		4ACD74661D26210600123DE6 /* Apple2iOS.strings in Resources */ = {isa = PBXBuildFile; fileRef = 93206C761C14E14000668153 /* Apple2iOS.strings */; };
+		4ACD746D1D2621C800123DE6 /* Apple2iOSTestDisplay-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 4ACD746C1D2621C800123DE6 /* Apple2iOSTestDisplay-Info.plist */; };
+		4ACD746E1D2622AE00123DE6 /* testdisplay.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D7F19568A570085CE5F /* testdisplay.c */; };
 		4AD4FE941A52464F00F958EC /* cpu.S in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D9019568A570085CE5F /* cpu.S */; };
 		4AD4FE951A52464F00F958EC /* prefs.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D7719568A570085CE5F /* prefs.c */; };
 		4AD4FE961A52464F00F958EC /* display.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D6419568A570085CE5F /* display.c */; };
@@ -442,6 +714,17 @@
 		4A7EDC9D1AE092B80072E98A /* interface.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = interface.c; sourceTree = "<group>"; };
 		4AA2D7FE1D2038380054A5FF /* testprefs.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = testprefs.c; sourceTree = "<group>"; };
 		4ACD73191D205D6000123DE6 /* disks */ = {isa = PBXFileReference; lastKnownFileType = folder; name = disks; path = "../../apple2-images-pub/disks"; sourceTree = "<group>"; };
+		4ACD73691D20A83E00123DE6 /* Apple2iOSTestCPU.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Apple2iOSTestCPU.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		4ACD736B1D20A9D700123DE6 /* Apple2iOSTestCPU-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "Apple2iOSTestCPU-Info.plist"; sourceTree = "<group>"; };
+		4ACD73BA1D20AB6A00123DE6 /* Apple2iOSTestVM.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Apple2iOSTestVM.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		4ACD73BB1D20AB6A00123DE6 /* Apple2iOSTestCPU copy-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "Apple2iOSTestCPU copy-Info.plist"; path = "/Users/asc/Documents/00web/apple2ix/Apple2Mac/Apple2iOSTestCPU copy-Info.plist"; sourceTree = "<absolute>"; };
+		4ACD73BD1D20AC6500123DE6 /* Apple2iOSTestVM-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "Apple2iOSTestVM-Info.plist"; sourceTree = "<group>"; };
+		4ACD74041D20B11D00123DE6 /* Apple2iOSTestDisk.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Apple2iOSTestDisk.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		4ACD74051D20B11E00123DE6 /* Apple2iOSTestVM copy-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "Apple2iOSTestVM copy-Info.plist"; path = "/Users/asc/Documents/00web/apple2ix/Apple2Mac/Apple2iOSTestVM copy-Info.plist"; sourceTree = "<absolute>"; };
+		4ACD74071D20B1B300123DE6 /* Apple2iOSTestDisk-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "Apple2iOSTestDisk-Info.plist"; sourceTree = "<group>"; };
+		4ACD746A1D26210600123DE6 /* Apple2iOSTestDisplay.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Apple2iOSTestDisplay.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		4ACD746B1D26210700123DE6 /* Apple2iOSTestVM copy-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "Apple2iOSTestVM copy-Info.plist"; path = "/Users/asc/Documents/00web/apple2ix/Apple2Mac/Apple2iOSTestVM copy-Info.plist"; sourceTree = "<absolute>"; };
+		4ACD746C1D2621C800123DE6 /* Apple2iOSTestDisplay-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "Apple2iOSTestDisplay-Info.plist"; sourceTree = "<group>"; };
 		4AD4FEC31A52464F00F958EC /* Apple2MacTestDisk.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Apple2MacTestDisk.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		4AD4FEC41A52464F00F958EC /* Apple2MacTestDisk-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "Apple2MacTestDisk-Info.plist"; path = "Apple2MacTests/Apple2MacTestDisk-Info.plist"; sourceTree = SOURCE_ROOT; };
 		4AD4FEC91A52467D00F958EC /* testdisk.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = testdisk.c; sourceTree = "<group>"; };
@@ -632,6 +915,38 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		4ACD73531D20A83E00123DE6 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4ACD73541D20A83E00123DE6 /* OpenAL.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		4ACD73A41D20AB6A00123DE6 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4ACD73A51D20AB6A00123DE6 /* OpenAL.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		4ACD73F41D20B11D00123DE6 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4ACD73F51D20B11D00123DE6 /* OpenAL.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		4ACD745A1D26210600123DE6 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4ACD745B1D26210600123DE6 /* OpenAL.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		4AD4FEAF1A52464F00F958EC /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -762,6 +1077,9 @@
 				4ADC522F19E8D3F600186B36 /* Documents */,
 				773B3D0E1956885A0085CE5F /* Frameworks */,
 				773B3D0D1956885A0085CE5F /* Products */,
+				4ACD73BB1D20AB6A00123DE6 /* Apple2iOSTestCPU copy-Info.plist */,
+				4ACD74051D20B11E00123DE6 /* Apple2iOSTestVM copy-Info.plist */,
+				4ACD746B1D26210700123DE6 /* Apple2iOSTestVM copy-Info.plist */,
 			);
 			sourceTree = "<group>";
 		};
@@ -775,6 +1093,10 @@
 				4AD4FEC31A52464F00F958EC /* Apple2MacTestDisk.app */,
 				935C55281C12BA5F0013166D /* Apple2iOS.app */,
 				4ECFC3AA1C368EAB008E2633 /* Apple2etvOS.app */,
+				4ACD73691D20A83E00123DE6 /* Apple2iOSTestCPU.app */,
+				4ACD73BA1D20AB6A00123DE6 /* Apple2iOSTestVM.app */,
+				4ACD74041D20B11D00123DE6 /* Apple2iOSTestDisk.app */,
+				4ACD746A1D26210600123DE6 /* Apple2iOSTestDisplay.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -827,6 +1149,10 @@
 		773B3D341956885A0085CE5F /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
+				4ACD746C1D2621C800123DE6 /* Apple2iOSTestDisplay-Info.plist */,
+				4ACD74071D20B1B300123DE6 /* Apple2iOSTestDisk-Info.plist */,
+				4ACD73BD1D20AC6500123DE6 /* Apple2iOSTestVM-Info.plist */,
+				4ACD736B1D20A9D700123DE6 /* Apple2iOSTestCPU-Info.plist */,
 				779DD851195BD9F900DF89E5 /* Apple2MacTestCPU-Info.plist */,
 				779F569219EB0B9100A6F107 /* Apple2MacTestDisplay-Info.plist */,
 				4ADC522819E8CA4500186B36 /* Apple2MacTestVM-Info.plist */,
@@ -1101,6 +1427,82 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		4ACD73201D20A83E00123DE6 /* Apple2iOSTestCPU */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 4ACD73661D20A83E00123DE6 /* Build configuration list for PBXNativeTarget "Apple2iOSTestCPU" */;
+			buildPhases = (
+				4ACD73211D20A83E00123DE6 /* ShellScript */,
+				4ACD73221D20A83E00123DE6 /* Sources */,
+				4ACD73531D20A83E00123DE6 /* Frameworks */,
+				4ACD73551D20A83E00123DE6 /* ShellScript */,
+				4ACD73561D20A83E00123DE6 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Apple2iOSTestCPU;
+			productName = Apple2iOS;
+			productReference = 4ACD73691D20A83E00123DE6 /* Apple2iOSTestCPU.app */;
+			productType = "com.apple.product-type.application";
+		};
+		4ACD736F1D20AB6A00123DE6 /* Apple2iOSTestVM */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 4ACD73B71D20AB6A00123DE6 /* Build configuration list for PBXNativeTarget "Apple2iOSTestVM" */;
+			buildPhases = (
+				4ACD73701D20AB6A00123DE6 /* ShellScript */,
+				4ACD73711D20AB6A00123DE6 /* Sources */,
+				4ACD73A41D20AB6A00123DE6 /* Frameworks */,
+				4ACD73A61D20AB6A00123DE6 /* ShellScript */,
+				4ACD73A71D20AB6A00123DE6 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Apple2iOSTestVM;
+			productName = Apple2iOS;
+			productReference = 4ACD73BA1D20AB6A00123DE6 /* Apple2iOSTestVM.app */;
+			productType = "com.apple.product-type.application";
+		};
+		4ACD73BF1D20B11D00123DE6 /* Apple2iOSTestDisk */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 4ACD74011D20B11D00123DE6 /* Build configuration list for PBXNativeTarget "Apple2iOSTestDisk" */;
+			buildPhases = (
+				4ACD73C01D20B11D00123DE6 /* ShellScript */,
+				4ACD73C11D20B11D00123DE6 /* Sources */,
+				4ACD73F41D20B11D00123DE6 /* Frameworks */,
+				4ACD73F61D20B11D00123DE6 /* ShellScript */,
+				4ACD73F71D20B11D00123DE6 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Apple2iOSTestDisk;
+			productName = Apple2iOS;
+			productReference = 4ACD74041D20B11D00123DE6 /* Apple2iOSTestDisk.app */;
+			productType = "com.apple.product-type.application";
+		};
+		4ACD74251D26210600123DE6 /* Apple2iOSTestDisplay */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 4ACD74671D26210600123DE6 /* Build configuration list for PBXNativeTarget "Apple2iOSTestDisplay" */;
+			buildPhases = (
+				4ACD74261D26210600123DE6 /* ShellScript */,
+				4ACD74271D26210600123DE6 /* Sources */,
+				4ACD745A1D26210600123DE6 /* Frameworks */,
+				4ACD745C1D26210600123DE6 /* ShellScript */,
+				4ACD745D1D26210600123DE6 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Apple2iOSTestDisplay;
+			productName = Apple2iOS;
+			productReference = 4ACD746A1D26210600123DE6 /* Apple2iOSTestDisplay.app */;
+			productType = "com.apple.product-type.application";
+		};
 		4AD4FE911A52464F00F958EC /* Apple2MacTestDisk */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 4AD4FEC01A52464F00F958EC /* Build configuration list for PBXNativeTarget "Apple2MacTestDisk" */;
@@ -1287,8 +1689,12 @@
 				4AD4FE911A52464F00F958EC /* Apple2MacTestDisk */,
 				779F566119EB0B9100A6F107 /* Apple2MacTestDisplay */,
 				4ADC51FB19E8CA4500186B36 /* Apple2MacTestVM */,
-				935C55271C12BA5F0013166D /* Apple2iOS */,
 				4ECFC3A91C368EAB008E2633 /* Apple2etvOS */,
+				935C55271C12BA5F0013166D /* Apple2iOS */,
+				4ACD73201D20A83E00123DE6 /* Apple2iOSTestCPU */,
+				4ACD73BF1D20B11D00123DE6 /* Apple2iOSTestDisk */,
+				4ACD74251D26210600123DE6 /* Apple2iOSTestDisplay */,
+				4ACD736F1D20AB6A00123DE6 /* Apple2iOSTestVM */,
 			);
 		};
 /* End PBXProject section */
@@ -1325,6 +1731,70 @@
 /* End PBXReferenceProxy section */
 
 /* Begin PBXResourcesBuildPhase section */
+		4ACD73561D20A83E00123DE6 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4ACD73571D20A83E00123DE6 /* SolidColor.vsh in Resources */,
+				4ACD73581D20A83E00123DE6 /* disks in Resources */,
+				4ACD73591D20A83E00123DE6 /* Assets.xcassets in Resources */,
+				4ACD735A1D20A83E00123DE6 /* SolidColor.fsh in Resources */,
+				4ACD735B1D20A83E00123DE6 /* LaunchScreen.xib in Resources */,
+				4ACD735C1D20A83E00123DE6 /* Main.storyboard in Resources */,
+				4ACD735D1D20A83E00123DE6 /* Basic.vsh in Resources */,
+				4ACD735E1D20A83E00123DE6 /* Basic.fsh in Resources */,
+				4ACD735F1D20A83E00123DE6 /* Apple2iOS.strings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		4ACD73A71D20AB6A00123DE6 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4ACD73A81D20AB6A00123DE6 /* SolidColor.vsh in Resources */,
+				4ACD73A91D20AB6A00123DE6 /* disks in Resources */,
+				4ACD73AA1D20AB6A00123DE6 /* Assets.xcassets in Resources */,
+				4ACD73AB1D20AB6A00123DE6 /* SolidColor.fsh in Resources */,
+				4ACD73AC1D20AB6A00123DE6 /* LaunchScreen.xib in Resources */,
+				4ACD73AD1D20AB6A00123DE6 /* Main.storyboard in Resources */,
+				4ACD73AE1D20AB6A00123DE6 /* Basic.vsh in Resources */,
+				4ACD73AF1D20AB6A00123DE6 /* Basic.fsh in Resources */,
+				4ACD73B01D20AB6A00123DE6 /* Apple2iOS.strings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		4ACD73F71D20B11D00123DE6 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4ACD73F81D20B11D00123DE6 /* SolidColor.vsh in Resources */,
+				4ACD73F91D20B11D00123DE6 /* disks in Resources */,
+				4ACD73FA1D20B11D00123DE6 /* Assets.xcassets in Resources */,
+				4ACD73FB1D20B11D00123DE6 /* SolidColor.fsh in Resources */,
+				4ACD73FC1D20B11D00123DE6 /* LaunchScreen.xib in Resources */,
+				4ACD73FD1D20B11D00123DE6 /* Main.storyboard in Resources */,
+				4ACD73FE1D20B11D00123DE6 /* Basic.vsh in Resources */,
+				4ACD73FF1D20B11D00123DE6 /* Basic.fsh in Resources */,
+				4ACD74001D20B11D00123DE6 /* Apple2iOS.strings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		4ACD745D1D26210600123DE6 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4ACD745E1D26210600123DE6 /* SolidColor.vsh in Resources */,
+				4ACD745F1D26210600123DE6 /* disks in Resources */,
+				4ACD74601D26210600123DE6 /* Assets.xcassets in Resources */,
+				4ACD74611D26210600123DE6 /* SolidColor.fsh in Resources */,
+				4ACD74621D26210600123DE6 /* LaunchScreen.xib in Resources */,
+				4ACD74631D26210600123DE6 /* Main.storyboard in Resources */,
+				4ACD74641D26210600123DE6 /* Basic.vsh in Resources */,
+				4ACD74651D26210600123DE6 /* Basic.fsh in Resources */,
+				4ACD74661D26210600123DE6 /* Apple2iOS.strings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		4AD4FEB41A52464F00F958EC /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -1383,14 +1853,18 @@
 			files = (
 				773B3D281956885A0085CE5F /* Images.xcassets in Resources */,
 				939C959E1C3B8E2100263E41 /* SolidColor.fsh in Resources */,
+				4ACD74081D20B1B300123DE6 /* Apple2iOSTestDisk-Info.plist in Resources */,
 				773B3D1A1956885A0085CE5F /* InfoPlist.strings in Resources */,
 				773B3D201956885A0085CE5F /* Credits.rtf in Resources */,
+				4ACD746D1D2621C800123DE6 /* Apple2iOSTestDisplay-Info.plist in Resources */,
 				4A2636F919FDEDB700DBFB00 /* Apple2Mac.help in Resources */,
+				4ACD736C1D20A9D700123DE6 /* Apple2iOSTestCPU-Info.plist in Resources */,
 				939C95A11C3B8E2100263E41 /* SolidColor.vsh in Resources */,
 				779F562319DA59D600A6F107 /* MainMenu.xib in Resources */,
 				779F562919E4FE9E00A6F107 /* Basic.vsh in Resources */,
 				779F562A19E4FE9E00A6F107 /* Basic.fsh in Resources */,
 				4EF7D04D1C38204C007E0ADD /* floppy.png in Resources */,
+				4ACD73BE1D20AC6500123DE6 /* Apple2iOSTestVM-Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1446,6 +1920,118 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		4ACD73211D20A83E00123DE6 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# ARM glue\n\"$SRCROOT/../src/arm/genglue\" \"$SRCROOT/../src/cpu-supp.c\" \"$SRCROOT/../src/disk.c\" \"$SRCROOT/../src/display.c\" \"$SRCROOT/../src/vm.c\" \"$SRCROOT/../src/audio/speaker.c\" \"$SRCROOT/../src/audio/mockingboard.c\" > \"$SRCROOT/../src/arm/glue.S\"\n# x86 (simulator) glue\n\"$SRCROOT/../src/x86/genglue\" \"$SRCROOT/../src/cpu-supp.c\" \"$SRCROOT/../src/disk.c\" \"$SRCROOT/../src/display.c\" \"$SRCROOT/../src/vm.c\" \"$SRCROOT/../src/audio/speaker.c\" \"$SRCROOT/../src/audio/mockingboard.c\" > \"$SRCROOT/../src/x86/glue.S\"";
+			showEnvVarsInLog = 0;
+		};
+		4ACD73551D20A83E00123DE6 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "/bin/rm -f \"$SRCROOT/../src/arm/glue.S\"";
+			showEnvVarsInLog = 0;
+		};
+		4ACD73701D20AB6A00123DE6 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# ARM glue\n\"$SRCROOT/../src/arm/genglue\" \"$SRCROOT/../src/cpu-supp.c\" \"$SRCROOT/../src/disk.c\" \"$SRCROOT/../src/display.c\" \"$SRCROOT/../src/vm.c\" \"$SRCROOT/../src/audio/speaker.c\" \"$SRCROOT/../src/audio/mockingboard.c\" > \"$SRCROOT/../src/arm/glue.S\"\n# x86 (simulator) glue\n\"$SRCROOT/../src/x86/genglue\" \"$SRCROOT/../src/cpu-supp.c\" \"$SRCROOT/../src/disk.c\" \"$SRCROOT/../src/display.c\" \"$SRCROOT/../src/vm.c\" \"$SRCROOT/../src/audio/speaker.c\" \"$SRCROOT/../src/audio/mockingboard.c\" > \"$SRCROOT/../src/x86/glue.S\"";
+			showEnvVarsInLog = 0;
+		};
+		4ACD73A61D20AB6A00123DE6 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "/bin/rm -f \"$SRCROOT/../src/arm/glue.S\"";
+			showEnvVarsInLog = 0;
+		};
+		4ACD73C01D20B11D00123DE6 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# ARM glue\n\"$SRCROOT/../src/arm/genglue\" \"$SRCROOT/../src/cpu-supp.c\" \"$SRCROOT/../src/disk.c\" \"$SRCROOT/../src/display.c\" \"$SRCROOT/../src/vm.c\" \"$SRCROOT/../src/audio/speaker.c\" \"$SRCROOT/../src/audio/mockingboard.c\" > \"$SRCROOT/../src/arm/glue.S\"\n# x86 (simulator) glue\n\"$SRCROOT/../src/x86/genglue\" \"$SRCROOT/../src/cpu-supp.c\" \"$SRCROOT/../src/disk.c\" \"$SRCROOT/../src/display.c\" \"$SRCROOT/../src/vm.c\" \"$SRCROOT/../src/audio/speaker.c\" \"$SRCROOT/../src/audio/mockingboard.c\" > \"$SRCROOT/../src/x86/glue.S\"";
+			showEnvVarsInLog = 0;
+		};
+		4ACD73F61D20B11D00123DE6 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "/bin/rm -f \"$SRCROOT/../src/arm/glue.S\"";
+			showEnvVarsInLog = 0;
+		};
+		4ACD74261D26210600123DE6 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# ARM glue\n\"$SRCROOT/../src/arm/genglue\" \"$SRCROOT/../src/cpu-supp.c\" \"$SRCROOT/../src/disk.c\" \"$SRCROOT/../src/display.c\" \"$SRCROOT/../src/vm.c\" \"$SRCROOT/../src/audio/speaker.c\" \"$SRCROOT/../src/audio/mockingboard.c\" > \"$SRCROOT/../src/arm/glue.S\"\n# x86 (simulator) glue\n\"$SRCROOT/../src/x86/genglue\" \"$SRCROOT/../src/cpu-supp.c\" \"$SRCROOT/../src/disk.c\" \"$SRCROOT/../src/display.c\" \"$SRCROOT/../src/vm.c\" \"$SRCROOT/../src/audio/speaker.c\" \"$SRCROOT/../src/audio/mockingboard.c\" > \"$SRCROOT/../src/x86/glue.S\"";
+			showEnvVarsInLog = 0;
+		};
+		4ACD745C1D26210600123DE6 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "/bin/rm -f \"$SRCROOT/../src/arm/glue.S\"";
+			showEnvVarsInLog = 0;
+		};
 		4AD4FE921A52464F00F958EC /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -1457,7 +2043,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"$SRCROOT/../src/x86/genglue\" \"$SRCROOT/../src/disk.c\" \"$SRCROOT/../src/misc.c\" \"$SRCROOT/../src/display.c\" \"$SRCROOT/../src/vm.c\" \"$SRCROOT/../src/cpu-supp.c\" > \"$SRCROOT/../src/x86/glue.S\"";
+			shellScript = "\"$SRCROOT/../src/x86/genglue\" \"$SRCROOT/../src/cpu-supp.c\" \"$SRCROOT/../src/disk.c\" \"$SRCROOT/../src/display.c\" \"$SRCROOT/../src/vm.c\" \"$SRCROOT/../src/audio/speaker.c\" \"$SRCROOT/../src/audio/mockingboard.c\" > \"$SRCROOT/../src/x86/glue.S\"";
 			showEnvVarsInLog = 0;
 		};
 		4AD4FEB31A52464F00F958EC /* ShellScript */ = {
@@ -1485,7 +2071,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"$SRCROOT/../src/x86/genglue\" \"$SRCROOT/../src/disk.c\" \"$SRCROOT/../src/misc.c\" \"$SRCROOT/../src/display.c\" \"$SRCROOT/../src/vm.c\" \"$SRCROOT/../src/cpu-supp.c\" > \"$SRCROOT/../src/x86/glue.S\"";
+			shellScript = "\"$SRCROOT/../src/x86/genglue\" \"$SRCROOT/../src/cpu-supp.c\" \"$SRCROOT/../src/disk.c\" \"$SRCROOT/../src/display.c\" \"$SRCROOT/../src/vm.c\" \"$SRCROOT/../src/audio/speaker.c\" \"$SRCROOT/../src/audio/mockingboard.c\" > \"$SRCROOT/../src/x86/glue.S\"";
 			showEnvVarsInLog = 0;
 		};
 		4ADC521C19E8CA4500186B36 /* ShellScript */ = {
@@ -1513,7 +2099,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"$SRCROOT/../src/x86/genglue\" \"$SRCROOT/../src/disk.c\" \"$SRCROOT/../src/misc.c\" \"$SRCROOT/../src/display.c\" \"$SRCROOT/../src/vm.c\" \"$SRCROOT/../src/audio/speaker.c\" \"$SRCROOT/../src/audio/mockingboard.c\" > \"$SRCROOT/../src/x86/glue.S\"";
+			shellScript = "\"$SRCROOT/../src/x86/genglue\" \"$SRCROOT/../src/cpu-supp.c\" \"$SRCROOT/../src/disk.c\" \"$SRCROOT/../src/display.c\" \"$SRCROOT/../src/vm.c\" \"$SRCROOT/../src/audio/speaker.c\" \"$SRCROOT/../src/audio/mockingboard.c\" > \"$SRCROOT/../src/x86/glue.S\"";
 			showEnvVarsInLog = 0;
 		};
 		773B3DC919568BF20085CE5F /* ShellScript */ = {
@@ -1541,7 +2127,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"$SRCROOT/../src/x86/genglue\" \"$SRCROOT/../src/disk.c\" \"$SRCROOT/../src/misc.c\" \"$SRCROOT/../src/display.c\" \"$SRCROOT/../src/vm.c\" > \"$SRCROOT/../src/x86/glue.S\"";
+			shellScript = "\"$SRCROOT/../src/x86/genglue\" \"$SRCROOT/../src/cpu-supp.c\" \"$SRCROOT/../src/disk.c\" \"$SRCROOT/../src/display.c\" \"$SRCROOT/../src/vm.c\" \"$SRCROOT/../src/audio/speaker.c\" \"$SRCROOT/../src/audio/mockingboard.c\" > \"$SRCROOT/../src/x86/glue.S\"";
 			showEnvVarsInLog = 0;
 		};
 		779DD847195BD9F900DF89E5 /* ShellScript */ = {
@@ -1569,7 +2155,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"$SRCROOT/../src/x86/genglue\" \"$SRCROOT/../src/disk.c\" \"$SRCROOT/../src/misc.c\" \"$SRCROOT/../src/display.c\" \"$SRCROOT/../src/vm.c\" \"$SRCROOT/../src/cpu-supp.c\" > \"$SRCROOT/../src/x86/glue.S\"";
+			shellScript = "\"$SRCROOT/../src/x86/genglue\" \"$SRCROOT/../src/cpu-supp.c\" \"$SRCROOT/../src/disk.c\" \"$SRCROOT/../src/display.c\" \"$SRCROOT/../src/vm.c\" \"$SRCROOT/../src/audio/speaker.c\" \"$SRCROOT/../src/audio/mockingboard.c\" > \"$SRCROOT/../src/x86/glue.S\"";
 			showEnvVarsInLog = 0;
 		};
 		779F568319EB0B9100A6F107 /* ShellScript */ = {
@@ -1597,7 +2183,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"$SRCROOT/../src/arm/genglue\" \"$SRCROOT/../src/disk.c\" \"$SRCROOT/../src/misc.c\" \"$SRCROOT/../src/display.c\" \"$SRCROOT/../src/vm.c\" \"$SRCROOT/../src/audio/speaker.c\" \"$SRCROOT/../src/audio/mockingboard.c\" > \"$SRCROOT/../src/arm/glue.S\"\n\"$SRCROOT/../src/x86/genglue\" \"$SRCROOT/../src/disk.c\" \"$SRCROOT/../src/misc.c\" \"$SRCROOT/../src/display.c\" \"$SRCROOT/../src/vm.c\" \"$SRCROOT/../src/audio/speaker.c\" \"$SRCROOT/../src/audio/mockingboard.c\" > \"$SRCROOT/../src/x86/glue.S\"";
+			shellScript = "# ARM glue\n\"$SRCROOT/../src/arm/genglue\" \"$SRCROOT/../src/cpu-supp.c\" \"$SRCROOT/../src/disk.c\" \"$SRCROOT/../src/display.c\" \"$SRCROOT/../src/vm.c\" \"$SRCROOT/../src/audio/speaker.c\" \"$SRCROOT/../src/audio/mockingboard.c\" > \"$SRCROOT/../src/arm/glue.S\"\n# x86 (simulator) glue\n\"$SRCROOT/../src/x86/genglue\" \"$SRCROOT/../src/cpu-supp.c\" \"$SRCROOT/../src/disk.c\" \"$SRCROOT/../src/display.c\" \"$SRCROOT/../src/vm.c\" \"$SRCROOT/../src/audio/speaker.c\" \"$SRCROOT/../src/audio/mockingboard.c\" > \"$SRCROOT/../src/x86/glue.S\"";
 			showEnvVarsInLog = 0;
 		};
 		935C55901C13715A0013166D /* ShellScript */ = {
@@ -1617,6 +2203,234 @@
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		4ACD73221D20A83E00123DE6 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4ACD73231D20A83E00123DE6 /* darwin-cpu-glue.S in Sources */,
+				4ACD73241D20A83E00123DE6 /* misc.c in Sources */,
+				4ACD73251D20A83E00123DE6 /* glvideo.c in Sources */,
+				4ACD73261D20A83E00123DE6 /* gltouchjoy_joy.c in Sources */,
+				4ACD73271D20A83E00123DE6 /* A2IXPopupChoreographer.m in Sources */,
+				4ACD73281D20A83E00123DE6 /* gltouchjoy_kpad.c in Sources */,
+				4ACD73291D20A83E00123DE6 /* gltouchjoy.c in Sources */,
+				4ACD732A1D20A83E00123DE6 /* soundcore.c in Sources */,
+				4ACD732B1D20A83E00123DE6 /* soundcore-openal.c in Sources */,
+				4ACD732C1D20A83E00123DE6 /* opcodes.c in Sources */,
+				4ACD732D1D20A83E00123DE6 /* prefs.c in Sources */,
+				4ACD736D1D20AAA200123DE6 /* testcpu.c in Sources */,
+				4ACD732E1D20A83E00123DE6 /* json_parse.c in Sources */,
+				4ACD732F1D20A83E00123DE6 /* rom-shim.c in Sources */,
+				4ACD73301D20A83E00123DE6 /* timing.c in Sources */,
+				4ACD73311D20A83E00123DE6 /* glalert.c in Sources */,
+				4ACD736E1D20AAC500123DE6 /* testcommon.c in Sources */,
+				4ACD73321D20A83E00123DE6 /* memmngt.c in Sources */,
+				4ACD73331D20A83E00123DE6 /* jsmn.c in Sources */,
+				4ACD73341D20A83E00123DE6 /* glhudmodel.c in Sources */,
+				4ACD73351D20A83E00123DE6 /* glnode.c in Sources */,
+				4ACD73361D20A83E00123DE6 /* matrixUtil.c in Sources */,
+				4ACD73371D20A83E00123DE6 /* disksViewController.m in Sources */,
+				4ACD73381D20A83E00123DE6 /* modelUtil.c in Sources */,
+				4ACD73391D20A83E00123DE6 /* sourceUtil.c in Sources */,
+				4ACD733A1D20A83E00123DE6 /* vectorUtil.c in Sources */,
+				4ACD733B1D20A83E00123DE6 /* vm.c in Sources */,
+				4ACD733C1D20A83E00123DE6 /* zlib-helpers.c in Sources */,
+				4ACD733D1D20A83E00123DE6 /* gltouchkbd.c in Sources */,
+				4ACD733E1D20A83E00123DE6 /* alhelpers.c in Sources */,
+				4ACD733F1D20A83E00123DE6 /* AY8910.c in Sources */,
+				4ACD73401D20A83E00123DE6 /* mockingboard.c in Sources */,
+				4ACD73411D20A83E00123DE6 /* playqueue.c in Sources */,
+				4ACD73421D20A83E00123DE6 /* gltouchmenu.c in Sources */,
+				4ACD73431D20A83E00123DE6 /* speaker.c in Sources */,
+				4ACD73441D20A83E00123DE6 /* AppleViewController.m in Sources */,
+				4ACD73451D20A83E00123DE6 /* cpu-supp.c in Sources */,
+				4ACD73461D20A83E00123DE6 /* darwin-shim.c in Sources */,
+				4ACD73471D20A83E00123DE6 /* debugger.c in Sources */,
+				4ACD73481D20A83E00123DE6 /* disk.c in Sources */,
+				4ACD73491D20A83E00123DE6 /* display.c in Sources */,
+				4ACD734A1D20A83E00123DE6 /* font.c in Sources */,
+				4ACD734B1D20A83E00123DE6 /* interface.c in Sources */,
+				4ACD734C1D20A83E00123DE6 /* joystick.c in Sources */,
+				4ACD734D1D20A83E00123DE6 /* iosPrefControllerViewController.m in Sources */,
+				4ACD734E1D20A83E00123DE6 /* sha1.c in Sources */,
+				4ACD734F1D20A83E00123DE6 /* keys.c in Sources */,
+				4ACD73501D20A83E00123DE6 /* AppDelegate.m in Sources */,
+				4ACD73511D20A83E00123DE6 /* main.m in Sources */,
+				4ACD73521D20A83E00123DE6 /* EAGLView.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		4ACD73711D20AB6A00123DE6 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4ACD73BC1D20ABAD00123DE6 /* testvm.c in Sources */,
+				4ACD73721D20AB6A00123DE6 /* darwin-cpu-glue.S in Sources */,
+				4ACD73731D20AB6A00123DE6 /* misc.c in Sources */,
+				4ACD73741D20AB6A00123DE6 /* glvideo.c in Sources */,
+				4ACD73751D20AB6A00123DE6 /* gltouchjoy_joy.c in Sources */,
+				4ACD73761D20AB6A00123DE6 /* A2IXPopupChoreographer.m in Sources */,
+				4ACD73771D20AB6A00123DE6 /* gltouchjoy_kpad.c in Sources */,
+				4ACD73781D20AB6A00123DE6 /* gltouchjoy.c in Sources */,
+				4ACD73791D20AB6A00123DE6 /* soundcore.c in Sources */,
+				4ACD737A1D20AB6A00123DE6 /* soundcore-openal.c in Sources */,
+				4ACD737B1D20AB6A00123DE6 /* opcodes.c in Sources */,
+				4ACD737C1D20AB6A00123DE6 /* prefs.c in Sources */,
+				4ACD737E1D20AB6A00123DE6 /* json_parse.c in Sources */,
+				4ACD737F1D20AB6A00123DE6 /* rom-shim.c in Sources */,
+				4ACD73801D20AB6A00123DE6 /* timing.c in Sources */,
+				4ACD73811D20AB6A00123DE6 /* glalert.c in Sources */,
+				4ACD73821D20AB6A00123DE6 /* testcommon.c in Sources */,
+				4ACD73831D20AB6A00123DE6 /* memmngt.c in Sources */,
+				4ACD73841D20AB6A00123DE6 /* jsmn.c in Sources */,
+				4ACD73851D20AB6A00123DE6 /* glhudmodel.c in Sources */,
+				4ACD73861D20AB6A00123DE6 /* glnode.c in Sources */,
+				4ACD73871D20AB6A00123DE6 /* matrixUtil.c in Sources */,
+				4ACD73881D20AB6A00123DE6 /* disksViewController.m in Sources */,
+				4ACD73891D20AB6A00123DE6 /* modelUtil.c in Sources */,
+				4ACD738A1D20AB6A00123DE6 /* sourceUtil.c in Sources */,
+				4ACD738B1D20AB6A00123DE6 /* vectorUtil.c in Sources */,
+				4ACD738C1D20AB6A00123DE6 /* vm.c in Sources */,
+				4ACD738D1D20AB6A00123DE6 /* zlib-helpers.c in Sources */,
+				4ACD738E1D20AB6A00123DE6 /* gltouchkbd.c in Sources */,
+				4ACD738F1D20AB6A00123DE6 /* alhelpers.c in Sources */,
+				4ACD73901D20AB6A00123DE6 /* AY8910.c in Sources */,
+				4ACD73911D20AB6A00123DE6 /* mockingboard.c in Sources */,
+				4ACD73921D20AB6A00123DE6 /* playqueue.c in Sources */,
+				4ACD73931D20AB6A00123DE6 /* gltouchmenu.c in Sources */,
+				4ACD73941D20AB6A00123DE6 /* speaker.c in Sources */,
+				4ACD73951D20AB6A00123DE6 /* AppleViewController.m in Sources */,
+				4ACD73961D20AB6A00123DE6 /* cpu-supp.c in Sources */,
+				4ACD73971D20AB6A00123DE6 /* darwin-shim.c in Sources */,
+				4ACD73981D20AB6A00123DE6 /* debugger.c in Sources */,
+				4ACD73991D20AB6A00123DE6 /* disk.c in Sources */,
+				4ACD739A1D20AB6A00123DE6 /* display.c in Sources */,
+				4ACD739B1D20AB6A00123DE6 /* font.c in Sources */,
+				4ACD739C1D20AB6A00123DE6 /* interface.c in Sources */,
+				4ACD739D1D20AB6A00123DE6 /* joystick.c in Sources */,
+				4ACD739E1D20AB6A00123DE6 /* iosPrefControllerViewController.m in Sources */,
+				4ACD739F1D20AB6A00123DE6 /* sha1.c in Sources */,
+				4ACD73A01D20AB6A00123DE6 /* keys.c in Sources */,
+				4ACD73A11D20AB6A00123DE6 /* AppDelegate.m in Sources */,
+				4ACD73A21D20AB6A00123DE6 /* main.m in Sources */,
+				4ACD73A31D20AB6A00123DE6 /* EAGLView.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		4ACD73C11D20B11D00123DE6 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4ACD73C31D20B11D00123DE6 /* darwin-cpu-glue.S in Sources */,
+				4ACD73C41D20B11D00123DE6 /* misc.c in Sources */,
+				4ACD73C51D20B11D00123DE6 /* glvideo.c in Sources */,
+				4ACD73C61D20B11D00123DE6 /* gltouchjoy_joy.c in Sources */,
+				4ACD73C71D20B11D00123DE6 /* A2IXPopupChoreographer.m in Sources */,
+				4ACD73C81D20B11D00123DE6 /* gltouchjoy_kpad.c in Sources */,
+				4ACD73C91D20B11D00123DE6 /* gltouchjoy.c in Sources */,
+				4ACD73CA1D20B11D00123DE6 /* soundcore.c in Sources */,
+				4ACD73CB1D20B11D00123DE6 /* soundcore-openal.c in Sources */,
+				4ACD73CC1D20B11D00123DE6 /* opcodes.c in Sources */,
+				4ACD73CD1D20B11D00123DE6 /* prefs.c in Sources */,
+				4ACD73CE1D20B11D00123DE6 /* json_parse.c in Sources */,
+				4ACD73CF1D20B11D00123DE6 /* rom-shim.c in Sources */,
+				4ACD73D01D20B11D00123DE6 /* timing.c in Sources */,
+				4ACD73D11D20B11D00123DE6 /* glalert.c in Sources */,
+				4ACD73D21D20B11D00123DE6 /* testcommon.c in Sources */,
+				4ACD73D31D20B11D00123DE6 /* memmngt.c in Sources */,
+				4ACD73D41D20B11D00123DE6 /* jsmn.c in Sources */,
+				4ACD74061D20B14100123DE6 /* testdisk.c in Sources */,
+				4ACD73D51D20B11D00123DE6 /* glhudmodel.c in Sources */,
+				4ACD73D61D20B11D00123DE6 /* glnode.c in Sources */,
+				4ACD73D71D20B11D00123DE6 /* matrixUtil.c in Sources */,
+				4ACD73D81D20B11D00123DE6 /* disksViewController.m in Sources */,
+				4ACD73D91D20B11D00123DE6 /* modelUtil.c in Sources */,
+				4ACD73DA1D20B11D00123DE6 /* sourceUtil.c in Sources */,
+				4ACD73DB1D20B11D00123DE6 /* vectorUtil.c in Sources */,
+				4ACD73DC1D20B11D00123DE6 /* vm.c in Sources */,
+				4ACD73DD1D20B11D00123DE6 /* zlib-helpers.c in Sources */,
+				4ACD73DE1D20B11D00123DE6 /* gltouchkbd.c in Sources */,
+				4ACD73DF1D20B11D00123DE6 /* alhelpers.c in Sources */,
+				4ACD73E01D20B11D00123DE6 /* AY8910.c in Sources */,
+				4ACD73E11D20B11D00123DE6 /* mockingboard.c in Sources */,
+				4ACD73E21D20B11D00123DE6 /* playqueue.c in Sources */,
+				4ACD73E31D20B11D00123DE6 /* gltouchmenu.c in Sources */,
+				4ACD73E41D20B11D00123DE6 /* speaker.c in Sources */,
+				4ACD73E51D20B11D00123DE6 /* AppleViewController.m in Sources */,
+				4ACD73E61D20B11D00123DE6 /* cpu-supp.c in Sources */,
+				4ACD73E71D20B11D00123DE6 /* darwin-shim.c in Sources */,
+				4ACD73E81D20B11D00123DE6 /* debugger.c in Sources */,
+				4ACD73E91D20B11D00123DE6 /* disk.c in Sources */,
+				4ACD73EA1D20B11D00123DE6 /* display.c in Sources */,
+				4ACD73EB1D20B11D00123DE6 /* font.c in Sources */,
+				4ACD73EC1D20B11D00123DE6 /* interface.c in Sources */,
+				4ACD73ED1D20B11D00123DE6 /* joystick.c in Sources */,
+				4ACD73EE1D20B11D00123DE6 /* iosPrefControllerViewController.m in Sources */,
+				4ACD73EF1D20B11D00123DE6 /* sha1.c in Sources */,
+				4ACD73F01D20B11D00123DE6 /* keys.c in Sources */,
+				4ACD73F11D20B11D00123DE6 /* AppDelegate.m in Sources */,
+				4ACD73F21D20B11D00123DE6 /* main.m in Sources */,
+				4ACD73F31D20B11D00123DE6 /* EAGLView.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		4ACD74271D26210600123DE6 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4ACD74291D26210600123DE6 /* darwin-cpu-glue.S in Sources */,
+				4ACD742A1D26210600123DE6 /* misc.c in Sources */,
+				4ACD742B1D26210600123DE6 /* glvideo.c in Sources */,
+				4ACD742C1D26210600123DE6 /* gltouchjoy_joy.c in Sources */,
+				4ACD742D1D26210600123DE6 /* A2IXPopupChoreographer.m in Sources */,
+				4ACD742E1D26210600123DE6 /* gltouchjoy_kpad.c in Sources */,
+				4ACD742F1D26210600123DE6 /* gltouchjoy.c in Sources */,
+				4ACD74301D26210600123DE6 /* soundcore.c in Sources */,
+				4ACD74311D26210600123DE6 /* soundcore-openal.c in Sources */,
+				4ACD74321D26210600123DE6 /* opcodes.c in Sources */,
+				4ACD74331D26210600123DE6 /* prefs.c in Sources */,
+				4ACD74341D26210600123DE6 /* json_parse.c in Sources */,
+				4ACD74351D26210600123DE6 /* rom-shim.c in Sources */,
+				4ACD74361D26210600123DE6 /* timing.c in Sources */,
+				4ACD74371D26210600123DE6 /* glalert.c in Sources */,
+				4ACD74381D26210600123DE6 /* testcommon.c in Sources */,
+				4ACD74391D26210600123DE6 /* memmngt.c in Sources */,
+				4ACD743A1D26210600123DE6 /* jsmn.c in Sources */,
+				4ACD743B1D26210600123DE6 /* glhudmodel.c in Sources */,
+				4ACD743C1D26210600123DE6 /* glnode.c in Sources */,
+				4ACD743D1D26210600123DE6 /* matrixUtil.c in Sources */,
+				4ACD743E1D26210600123DE6 /* disksViewController.m in Sources */,
+				4ACD743F1D26210600123DE6 /* modelUtil.c in Sources */,
+				4ACD74401D26210600123DE6 /* sourceUtil.c in Sources */,
+				4ACD74411D26210600123DE6 /* vectorUtil.c in Sources */,
+				4ACD74421D26210600123DE6 /* vm.c in Sources */,
+				4ACD74431D26210600123DE6 /* zlib-helpers.c in Sources */,
+				4ACD74441D26210600123DE6 /* gltouchkbd.c in Sources */,
+				4ACD74451D26210600123DE6 /* alhelpers.c in Sources */,
+				4ACD74461D26210600123DE6 /* AY8910.c in Sources */,
+				4ACD74471D26210600123DE6 /* mockingboard.c in Sources */,
+				4ACD74481D26210600123DE6 /* playqueue.c in Sources */,
+				4ACD74491D26210600123DE6 /* gltouchmenu.c in Sources */,
+				4ACD746E1D2622AE00123DE6 /* testdisplay.c in Sources */,
+				4ACD744A1D26210600123DE6 /* speaker.c in Sources */,
+				4ACD744B1D26210600123DE6 /* AppleViewController.m in Sources */,
+				4ACD744C1D26210600123DE6 /* cpu-supp.c in Sources */,
+				4ACD744D1D26210600123DE6 /* darwin-shim.c in Sources */,
+				4ACD744E1D26210600123DE6 /* debugger.c in Sources */,
+				4ACD744F1D26210600123DE6 /* disk.c in Sources */,
+				4ACD74501D26210600123DE6 /* display.c in Sources */,
+				4ACD74511D26210600123DE6 /* font.c in Sources */,
+				4ACD74521D26210600123DE6 /* interface.c in Sources */,
+				4ACD74531D26210600123DE6 /* joystick.c in Sources */,
+				4ACD74541D26210600123DE6 /* iosPrefControllerViewController.m in Sources */,
+				4ACD74551D26210600123DE6 /* sha1.c in Sources */,
+				4ACD74561D26210600123DE6 /* keys.c in Sources */,
+				4ACD74571D26210600123DE6 /* AppDelegate.m in Sources */,
+				4ACD74581D26210600123DE6 /* main.m in Sources */,
+				4ACD74591D26210600123DE6 /* EAGLView.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		4AD4FE931A52464F00F958EC /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -1628,8 +2442,10 @@
 				4AD4FE971A52464F00F958EC /* disk.c in Sources */,
 				4AFC170C1AAE9C3200B215FA /* sha1.c in Sources */,
 				4AD4FE981A52464F00F958EC /* sourceUtil.c in Sources */,
+				4ACD740B1D2619E200123DE6 /* mockingboard.c in Sources */,
 				4AD4FE991A52464F00F958EC /* modelUtil.c in Sources */,
 				4AD4FE9A1A52464F00F958EC /* debugger.c in Sources */,
+				4ACD740E1D2619ED00123DE6 /* speaker.c in Sources */,
 				4AD4FE9B1A52464F00F958EC /* keys.c in Sources */,
 				4AA2D7DB1D1E23F50054A5FF /* jsmn.c in Sources */,
 				4AD4FE9C1A52464F00F958EC /* timing.c in Sources */,
@@ -1642,19 +2458,24 @@
 				4AD4FEA01A52464F00F958EC /* glvideo.c in Sources */,
 				4AD4FEA11A52464F00F958EC /* rom-shim.c in Sources */,
 				4AD4FEA21A52464F00F958EC /* zlib-helpers.c in Sources */,
+				4ACD74171D261A1F00123DE6 /* soundcore-openal.c in Sources */,
+				4ACD74221D261AED00123DE6 /* alhelpers.c in Sources */,
 				4AD4FEA31A52464F00F958EC /* darwin-shim.c in Sources */,
 				4A7EDC9A1AE092680072E98A /* glnode.c in Sources */,
 				4AD4FECB1A52468700F958EC /* testdisk.c in Sources */,
 				4AA2D7DF1D1E24130054A5FF /* json_parse.c in Sources */,
 				4AD4FEA51A52464F00F958EC /* vectorUtil.c in Sources */,
+				4ACD741A1D261ACB00123DE6 /* AY8910.c in Sources */,
 				4AD4FEA61A52464F00F958EC /* debug.l in Sources */,
 				4AA2D7E81D202BEA0054A5FF /* EmulatorJoystickController.m in Sources */,
 				4AD4FEA91A52464F00F958EC /* font.c in Sources */,
 				4AD4FEAA1A52464F00F958EC /* cpu-supp.c in Sources */,
 				4AD4FEAB1A52464F00F958EC /* vm.c in Sources */,
 				4AD4FEAC1A52464F00F958EC /* darwin-glue.S in Sources */,
+				4ACD74121D261A1300123DE6 /* soundcore.c in Sources */,
 				4AD4FEAD1A52464F00F958EC /* matrixUtil.c in Sources */,
 				4A7EDC951AE092680072E98A /* glhudmodel.c in Sources */,
+				4ACD741E1D261ADA00123DE6 /* playqueue.c in Sources */,
 				4AD4FEAE1A52464F00F958EC /* joystick.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1670,8 +2491,10 @@
 				4ADC520119E8CA4500186B36 /* disk.c in Sources */,
 				4AFC170E1AAE9C3200B215FA /* sha1.c in Sources */,
 				4ADC520219E8CA4500186B36 /* sourceUtil.c in Sources */,
+				4ACD74091D2619E100123DE6 /* mockingboard.c in Sources */,
 				4ADC520319E8CA4500186B36 /* modelUtil.c in Sources */,
 				4ADC520419E8CA4500186B36 /* debugger.c in Sources */,
+				4ACD74101D2619EF00123DE6 /* speaker.c in Sources */,
 				4ADC520519E8CA4500186B36 /* keys.c in Sources */,
 				4AA2D7DD1D1E23F60054A5FF /* jsmn.c in Sources */,
 				4ADC520619E8CA4500186B36 /* timing.c in Sources */,
@@ -1684,19 +2507,24 @@
 				4ADC520A19E8CA4500186B36 /* glvideo.c in Sources */,
 				4ADC520B19E8CA4500186B36 /* rom-shim.c in Sources */,
 				4ADC520C19E8CA4500186B36 /* zlib-helpers.c in Sources */,
+				4ACD74151D261A1E00123DE6 /* soundcore-openal.c in Sources */,
+				4ACD74241D261AEE00123DE6 /* alhelpers.c in Sources */,
 				4ADC520D19E8CA4500186B36 /* darwin-shim.c in Sources */,
 				4A7EDC9C1AE092680072E98A /* glnode.c in Sources */,
 				4ADC520F19E8CA4500186B36 /* vectorUtil.c in Sources */,
 				4AA2D7E11D1E24140054A5FF /* json_parse.c in Sources */,
 				4ADC521019E8CA4500186B36 /* debug.l in Sources */,
+				4ACD741C1D261ACC00123DE6 /* AY8910.c in Sources */,
 				4ADC522919E8CEAD00186B36 /* testvm.c in Sources */,
 				4AA2D7EA1D202BEC0054A5FF /* EmulatorJoystickController.m in Sources */,
 				4ADC521319E8CA4500186B36 /* font.c in Sources */,
 				4ADC521419E8CA4500186B36 /* cpu-supp.c in Sources */,
 				4ADC521519E8CA4500186B36 /* vm.c in Sources */,
 				4ADC521619E8CA4500186B36 /* darwin-glue.S in Sources */,
+				4ACD74141D261A1500123DE6 /* soundcore.c in Sources */,
 				4ADC521719E8CA4500186B36 /* matrixUtil.c in Sources */,
 				4A7EDC971AE092680072E98A /* glhudmodel.c in Sources */,
+				4ACD74201D261ADB00123DE6 /* playqueue.c in Sources */,
 				4ADC521819E8CA4500186B36 /* joystick.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1777,8 +2605,10 @@
 				779DD832195BD9F900DF89E5 /* disk.c in Sources */,
 				4AFC170B1AAE9C3200B215FA /* sha1.c in Sources */,
 				4ADC51C319E8BD3A00186B36 /* sourceUtil.c in Sources */,
+				4ACD740C1D2619E400123DE6 /* mockingboard.c in Sources */,
 				4ADC51C419E8BD3D00186B36 /* modelUtil.c in Sources */,
 				779DD833195BD9F900DF89E5 /* debugger.c in Sources */,
+				4ACD740D1D2619ED00123DE6 /* speaker.c in Sources */,
 				4AA2D7EB1D202BED0054A5FF /* EmulatorJoystickController.m in Sources */,
 				779DD834195BD9F900DF89E5 /* keys.c in Sources */,
 				4AA2D7D61D1E23F40054A5FF /* jsmn.c in Sources */,
@@ -1791,19 +2621,24 @@
 				4A73BE301CCBE22A0041C573 /* memmngt.c in Sources */,
 				4ADC51C619E8BD5200186B36 /* glvideo.c in Sources */,
 				779DD838195BD9F900DF89E5 /* rom-shim.c in Sources */,
+				4ACD74181D261A2000123DE6 /* soundcore-openal.c in Sources */,
+				4ACD74211D261AEC00123DE6 /* alhelpers.c in Sources */,
 				779DD839195BD9F900DF89E5 /* zlib-helpers.c in Sources */,
 				779DD83A195BD9F900DF89E5 /* darwin-shim.c in Sources */,
 				4A7EDC991AE092680072E98A /* glnode.c in Sources */,
 				4ADC51C219E8BD3700186B36 /* vectorUtil.c in Sources */,
 				4AA2D7DE1D1E24120054A5FF /* json_parse.c in Sources */,
+				4ACD74191D261ACA00123DE6 /* AY8910.c in Sources */,
 				779DD83C195BD9F900DF89E5 /* debug.l in Sources */,
 				779DD852195BDA3000DF89E5 /* testcpu.c in Sources */,
 				779DD83D195BD9F900DF89E5 /* font.c in Sources */,
 				779DD83E195BD9F900DF89E5 /* cpu-supp.c in Sources */,
 				779DD83F195BD9F900DF89E5 /* vm.c in Sources */,
 				779DD840195BD9F900DF89E5 /* darwin-glue.S in Sources */,
+				4ACD74111D261A1200123DE6 /* soundcore.c in Sources */,
 				4ADC51C519E8BD4000186B36 /* matrixUtil.c in Sources */,
 				4A7EDC941AE092680072E98A /* glhudmodel.c in Sources */,
+				4ACD741D1D261ADA00123DE6 /* playqueue.c in Sources */,
 				779DD843195BD9F900DF89E5 /* joystick.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1819,8 +2654,10 @@
 				779F566719EB0B9100A6F107 /* disk.c in Sources */,
 				4AFC170D1AAE9C3200B215FA /* sha1.c in Sources */,
 				779F569319EB0D1E00A6F107 /* testdisplay.c in Sources */,
+				4ACD740A1D2619E100123DE6 /* mockingboard.c in Sources */,
 				779F566819EB0B9100A6F107 /* sourceUtil.c in Sources */,
 				779F566919EB0B9100A6F107 /* modelUtil.c in Sources */,
+				4ACD740F1D2619EE00123DE6 /* speaker.c in Sources */,
 				779F566A19EB0B9100A6F107 /* debugger.c in Sources */,
 				4AA2D7DC1D1E23F60054A5FF /* jsmn.c in Sources */,
 				779F566B19EB0B9100A6F107 /* keys.c in Sources */,
@@ -1833,19 +2670,24 @@
 				779F566F19EB0B9100A6F107 /* opcodes.c in Sources */,
 				779F567019EB0B9100A6F107 /* glvideo.c in Sources */,
 				779F567119EB0B9100A6F107 /* rom-shim.c in Sources */,
+				4ACD74161D261A1F00123DE6 /* soundcore-openal.c in Sources */,
+				4ACD74231D261AED00123DE6 /* alhelpers.c in Sources */,
 				779F567219EB0B9100A6F107 /* zlib-helpers.c in Sources */,
 				4A7EDC9B1AE092680072E98A /* glnode.c in Sources */,
 				779F567319EB0B9100A6F107 /* darwin-shim.c in Sources */,
 				4AA2D7E01D1E24130054A5FF /* json_parse.c in Sources */,
 				779F567519EB0B9100A6F107 /* vectorUtil.c in Sources */,
+				4ACD741B1D261ACB00123DE6 /* AY8910.c in Sources */,
 				779F567619EB0B9100A6F107 /* debug.l in Sources */,
 				4AA2D7E91D202BEB0054A5FF /* EmulatorJoystickController.m in Sources */,
 				779F567919EB0B9100A6F107 /* font.c in Sources */,
 				779F567A19EB0B9100A6F107 /* cpu-supp.c in Sources */,
 				779F567B19EB0B9100A6F107 /* vm.c in Sources */,
 				779F567C19EB0B9100A6F107 /* darwin-glue.S in Sources */,
+				4ACD74131D261A1400123DE6 /* soundcore.c in Sources */,
 				779F567D19EB0B9100A6F107 /* matrixUtil.c in Sources */,
 				4A7EDC961AE092680072E98A /* glhudmodel.c in Sources */,
+				4ACD741F1D261ADB00123DE6 /* playqueue.c in Sources */,
 				779F567E19EB0B9100A6F107 /* joystick.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2012,6 +2854,328 @@
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
+		4ACD73671D20A83E00123DE6 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = YES;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ENABLE_OBJC_ARC = NO;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_PREFIX_HEADER = "Apple2Mac-Prefix.pch";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"APPLE2IX=1",
+					"INTERFACE_TOUCH=1",
+					"MOBILE_DEVICE=1",
+					"DEBUGGER=1",
+					"TESTING=1",
+					"TEST_CPU=1",
+					"VIDEO_OPENGL=1",
+					"AUDIO_ENABLED=1",
+				);
+				INFOPLIST_FILE = "$(SRCROOT)/Apple2MacTests/Apple2iOSTestCPU-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = NO;
+				OTHER_LDFLAGS = "-lz";
+				PRODUCT_BUNDLE_IDENTIFIER = com.deadc0de.Apple2iOS;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "";
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/../src";
+				VALID_ARCHS = "armv7 armv7s";
+			};
+			name = Debug;
+		};
+		4ACD73681D20A83E00123DE6 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = YES;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ENABLE_OBJC_ARC = NO;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_PREFIX_HEADER = "Apple2Mac-Prefix.pch";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"APPLE2IX=1",
+					"INTERFACE_TOUCH=1",
+					"MOBILE_DEVICE=1",
+					"DEBUGGER=1",
+					"TESTING=1",
+					"TEST_CPU=1",
+					"VIDEO_OPENGL=1",
+					"AUDIO_ENABLED=1",
+					"NDEBUG=1",
+				);
+				INFOPLIST_FILE = "$(SRCROOT)/Apple2MacTests/Apple2iOSTestCPU-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				MTL_ENABLE_DEBUG_INFO = NO;
+				OTHER_LDFLAGS = "-lz";
+				PRODUCT_BUNDLE_IDENTIFIER = com.deadc0de.Apple2iOS;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "";
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/../src";
+				VALIDATE_PRODUCT = YES;
+				VALID_ARCHS = "armv7 armv7s";
+			};
+			name = Release;
+		};
+		4ACD73B81D20AB6A00123DE6 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = YES;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ENABLE_OBJC_ARC = NO;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_PREFIX_HEADER = "Apple2Mac-Prefix.pch";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"APPLE2IX=1",
+					"INTERFACE_TOUCH=1",
+					"MOBILE_DEVICE=1",
+					"DEBUGGER=1",
+					"TESTING=1",
+					"TEST_DISPLAY=1",
+					"VIDEO_OPENGL=1",
+					"AUDIO_ENABLED=1",
+				);
+				INFOPLIST_FILE = "$(SRCROOT)/Apple2MacTests/Apple2iOSTestVM-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = NO;
+				OTHER_LDFLAGS = "-lz";
+				PRODUCT_BUNDLE_IDENTIFIER = com.deadc0de.Apple2iOS;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "";
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/../src";
+				VALID_ARCHS = "armv7 armv7s";
+			};
+			name = Debug;
+		};
+		4ACD73B91D20AB6A00123DE6 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = YES;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ENABLE_OBJC_ARC = NO;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_PREFIX_HEADER = "Apple2Mac-Prefix.pch";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"APPLE2IX=1",
+					"INTERFACE_TOUCH=1",
+					"MOBILE_DEVICE=1",
+					"DEBUGGER=1",
+					"TESTING=1",
+					"TEST_DISPLAY=1",
+					"VIDEO_OPENGL=1",
+					"AUDIO_ENABLED=1",
+					"NDEBUG=1",
+				);
+				INFOPLIST_FILE = "$(SRCROOT)/Apple2MacTests/Apple2iOSTestVM-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				MTL_ENABLE_DEBUG_INFO = NO;
+				OTHER_LDFLAGS = "-lz";
+				PRODUCT_BUNDLE_IDENTIFIER = com.deadc0de.Apple2iOS;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "";
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/../src";
+				VALIDATE_PRODUCT = YES;
+				VALID_ARCHS = "armv7 armv7s";
+			};
+			name = Release;
+		};
+		4ACD74021D20B11D00123DE6 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = YES;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ENABLE_OBJC_ARC = NO;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_PREFIX_HEADER = "Apple2Mac-Prefix.pch";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"APPLE2IX=1",
+					"INTERFACE_TOUCH=1",
+					"MOBILE_DEVICE=1",
+					"DEBUGGER=1",
+					"TESTING=1",
+					"TEST_DISK=1",
+					"CPU_TRACING=1",
+					"DISK_TRACING=1",
+					"VM_TRACING=1",
+					"VIDEO_OPENGL=1",
+					"AUDIO_ENABLED=1",
+				);
+				INFOPLIST_FILE = "$(SRCROOT)/Apple2MacTests/Apple2iOSTestDisk-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = NO;
+				OTHER_LDFLAGS = "-lz";
+				PRODUCT_BUNDLE_IDENTIFIER = com.deadc0de.Apple2iOS;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "";
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/../src";
+				VALID_ARCHS = "armv7 armv7s";
+			};
+			name = Debug;
+		};
+		4ACD74031D20B11D00123DE6 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = YES;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ENABLE_OBJC_ARC = NO;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_PREFIX_HEADER = "Apple2Mac-Prefix.pch";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"APPLE2IX=1",
+					"INTERFACE_TOUCH=1",
+					"MOBILE_DEVICE=1",
+					"DEBUGGER=1",
+					"TESTING=1",
+					"TEST_DISK=1",
+					"CPU_TRACING=1",
+					"DISK_TRACING=1",
+					"VM_TRACING=1",
+					"VIDEO_OPENGL=1",
+					"AUDIO_ENABLED=1",
+					"NDEBUG=1",
+				);
+				INFOPLIST_FILE = "$(SRCROOT)/Apple2MacTests/Apple2iOSTestDisk-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				MTL_ENABLE_DEBUG_INFO = NO;
+				OTHER_LDFLAGS = "-lz";
+				PRODUCT_BUNDLE_IDENTIFIER = com.deadc0de.Apple2iOS;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "";
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/../src";
+				VALIDATE_PRODUCT = YES;
+				VALID_ARCHS = "armv7 armv7s";
+			};
+			name = Release;
+		};
+		4ACD74681D26210600123DE6 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = YES;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ENABLE_OBJC_ARC = NO;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_PREFIX_HEADER = "Apple2Mac-Prefix.pch";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"APPLE2IX=1",
+					"INTERFACE_TOUCH=1",
+					"MOBILE_DEVICE=1",
+					"DEBUGGER=1",
+					"TESTING=1",
+					"TEST_DISPLAY=1",
+					"VIDEO_OPENGL=1",
+					"AUDIO_ENABLED=1",
+				);
+				INFOPLIST_FILE = "$(SRCROOT)/Apple2MacTests/Apple2iOSTestDisplay-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = NO;
+				OTHER_LDFLAGS = "-lz";
+				PRODUCT_BUNDLE_IDENTIFIER = com.deadc0de.Apple2iOS;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "";
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/../src";
+				VALID_ARCHS = "armv7 armv7s";
+			};
+			name = Debug;
+		};
+		4ACD74691D26210600123DE6 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = YES;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ENABLE_OBJC_ARC = NO;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_PREFIX_HEADER = "Apple2Mac-Prefix.pch";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"APPLE2IX=1",
+					"INTERFACE_TOUCH=1",
+					"MOBILE_DEVICE=1",
+					"DEBUGGER=1",
+					"TESTING=1",
+					"TEST_DISPLAY=1",
+					"VIDEO_OPENGL=1",
+					"AUDIO_ENABLED=1",
+					"NDEBUG=1",
+				);
+				INFOPLIST_FILE = "$(SRCROOT)/Apple2MacTests/Apple2iOSTestDisplay-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				MTL_ENABLE_DEBUG_INFO = NO;
+				OTHER_LDFLAGS = "-lz";
+				PRODUCT_BUNDLE_IDENTIFIER = com.deadc0de.Apple2iOS;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "";
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/../src";
+				VALIDATE_PRODUCT = YES;
+				VALID_ARCHS = "armv7 armv7s";
+			};
+			name = Release;
+		};
 		4AD4FEC11A52464F00F958EC /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -2031,6 +3195,7 @@
 					"DISK_TRACING=1",
 					"VM_TRACING=1",
 					"VIDEO_OPENGL=1",
+					"AUDIO_ENABLED=1",
 				);
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
@@ -2054,14 +3219,17 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Apple2Mac/Apple2Mac-Prefix.pch";
 				GCC_PREPROCESSOR_DEFINITIONS = (
-					"NDEBUG=1",
 					"APPLE2IX=1",
 					"DEBUGGER=1",
 					"KEYPAD_JOYSTICK=1",
-					"TEST_VM=1",
+					"TEST_DISK=1",
 					"TESTING=1",
 					"CPU_TRACING=1",
+					"DISK_TRACING=1",
+					"VM_TRACING=1",
 					"VIDEO_OPENGL=1",
+					"AUDIO_ENABLED=1",
+					"NDEBUG=1",
 				);
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
@@ -2090,10 +3258,8 @@
 					"KEYPAD_JOYSTICK=1",
 					"TEST_VM=1",
 					"TESTING=1",
-					"CPU_TRACING=1",
-					"DISK_TRACING=1",
-					"VM_TRACING=1",
 					"VIDEO_OPENGL=1",
+					"AUDIO_ENABLED=1",
 				);
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
@@ -2117,14 +3283,14 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Apple2Mac/Apple2Mac-Prefix.pch";
 				GCC_PREPROCESSOR_DEFINITIONS = (
-					"NDEBUG=1",
 					"APPLE2IX=1",
 					"DEBUGGER=1",
 					"KEYPAD_JOYSTICK=1",
 					"TEST_VM=1",
 					"TESTING=1",
-					"CPU_TRACING=1",
 					"VIDEO_OPENGL=1",
+					"AUDIO_ENABLED=1",
+					"NDEBUG=1",
 				);
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
@@ -2290,12 +3456,12 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Apple2Mac-Prefix.pch";
 				GCC_PREPROCESSOR_DEFINITIONS = (
-					"NDEBUG=1",
 					"APPLE2IX=1",
 					"DEBUGGER=1",
 					"KEYPAD_JOYSTICK=1",
 					"AUDIO_ENABLED=1",
 					"VIDEO_OPENGL=1",
+					"NDEBUG=1",
 				);
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
@@ -2327,6 +3493,7 @@
 					"TEST_CPU=1",
 					"TESTING=1",
 					"VIDEO_OPENGL=1",
+					"AUDIO_ENABLED=1",
 				);
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
@@ -2350,13 +3517,14 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Apple2Mac/Apple2Mac-Prefix.pch";
 				GCC_PREPROCESSOR_DEFINITIONS = (
-					"NDEBUG=1",
 					"APPLE2IX=1",
 					"DEBUGGER=1",
 					"KEYPAD_JOYSTICK=1",
 					"TEST_CPU=1",
 					"TESTING=1",
 					"VIDEO_OPENGL=1",
+					"AUDIO_ENABLED=1",
+					"NDEBUG=1",
 				);
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
@@ -2383,12 +3551,10 @@
 					"APPLE2IX=1",
 					"DEBUGGER=1",
 					"KEYPAD_JOYSTICK=1",
-					"TEST_DISPLAY=1",
 					"TESTING=1",
-					"CPU_TRACING=1",
-					"DISK_TRACING=1",
-					"VM_TRACING=1",
+					"TEST_DISPLAY=1",
 					"VIDEO_OPENGL=1",
+					"AUDIO_ENABLED=1",
 				);
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
@@ -2412,13 +3578,14 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Apple2Mac/Apple2Mac-Prefix.pch";
 				GCC_PREPROCESSOR_DEFINITIONS = (
-					"NDEBUG=1",
 					"APPLE2IX=1",
 					"DEBUGGER=1",
 					"KEYPAD_JOYSTICK=1",
-					"TEST_DISPLAY=1",
 					"TESTING=1",
-					"CPU_TRACING=1",
+					"TEST_DISPLAY=1",
+					"VIDEO_OPENGL=1",
+					"AUDIO_ENABLED=1",
+					"NDEBUG=1",
 				);
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
@@ -2483,13 +3650,13 @@
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_PREFIX_HEADER = "Apple2Mac-Prefix.pch";
 				GCC_PREPROCESSOR_DEFINITIONS = (
-					"NDEBUG=1",
 					"APPLE2IX=1",
 					"INTERFACE_TOUCH=1",
 					"MOBILE_DEVICE=1",
 					"DEBUGGER=1",
 					"VIDEO_OPENGL=1",
 					"AUDIO_ENABLED=1",
+					"NDEBUG=1",
 				);
 				INFOPLIST_FILE = "$(SRCROOT)/Apple2iOS/Apple2iOS-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
@@ -2510,6 +3677,42 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		4ACD73661D20A83E00123DE6 /* Build configuration list for PBXNativeTarget "Apple2iOSTestCPU" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4ACD73671D20A83E00123DE6 /* Debug */,
+				4ACD73681D20A83E00123DE6 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		4ACD73B71D20AB6A00123DE6 /* Build configuration list for PBXNativeTarget "Apple2iOSTestVM" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4ACD73B81D20AB6A00123DE6 /* Debug */,
+				4ACD73B91D20AB6A00123DE6 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		4ACD74011D20B11D00123DE6 /* Build configuration list for PBXNativeTarget "Apple2iOSTestDisk" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4ACD74021D20B11D00123DE6 /* Debug */,
+				4ACD74031D20B11D00123DE6 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		4ACD74671D26210600123DE6 /* Build configuration list for PBXNativeTarget "Apple2iOSTestDisplay" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4ACD74681D26210600123DE6 /* Debug */,
+				4ACD74691D26210600123DE6 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		4AD4FEC01A52464F00F958EC /* Build configuration list for PBXNativeTarget "Apple2MacTestDisk" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

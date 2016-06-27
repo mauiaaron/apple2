@@ -113,6 +113,24 @@ int test_setup_boot_disk(const char *fileName, int readonly) {
     CFBundleRef mainBundle = CFBundleGetMainBundle();
     CFStringRef fileString = CFStringCreateWithCString(/*allocator*/NULL, fileName, CFStringGetSystemEncoding());
     CFURLRef fileURL = CFBundleCopyResourceURL(mainBundle, fileString, NULL, NULL);
+    
+    if (!fileURL) {
+        CFRELEASE(fileString);
+        char *fileName2 = NULL;
+        ASPRINTF(&fileName2, "disks/demo/%s", fileName);
+        fileString = CFStringCreateWithCString(/*allocator*/NULL, fileName2, CFStringGetSystemEncoding());
+        FREE(fileName2);
+        fileURL = CFBundleCopyResourceURL(mainBundle, fileString, NULL, NULL);
+        if (!fileURL) {
+            CFRELEASE(fileString);
+            ASPRINTF(&fileName2, "disks/blanks/%s", fileName);
+            fileString = CFStringCreateWithCString(/*allocator*/NULL, fileName2, CFStringGetSystemEncoding());
+            FREE(fileName2);
+            fileURL = CFBundleCopyResourceURL(mainBundle, fileString, NULL, NULL);
+        }
+        assert(fileURL);
+    }
+    
     CFStringRef filePath = CFURLCopyFileSystemPath(fileURL, kCFURLPOSIXPathStyle);
     CFRELEASE(fileString);
     CFRELEASE(fileURL);
