@@ -1749,7 +1749,7 @@ TEST test_json_unescaping() {
     ASSERT(strcmp(parsedData.jsonString, "\"https://deadc0de.org/apple2ix/android/\"") == 0);
     size_t newLen = strlen(parsedData.jsonString);
     ASSERT(parsedData.jsonLen != newLen);
-    ASSERT(newLen == 39);
+    ASSERT(newLen == 40);
 
     json_destroy(&jsonRef);
 
