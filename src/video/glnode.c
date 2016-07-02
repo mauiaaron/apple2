@@ -128,7 +128,6 @@ static void _glnode_initGLUTPost(void) {
     glutReshapeFunc(_glnode_reshapeGLUT);
     glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_GLUTMAINLOOP_RETURNS);
 
-#if !TESTING
     glutKeyboardFunc(gldriver_on_key_down);
     glutKeyboardUpFunc(gldriver_on_key_up);
     glutSpecialFunc(gldriver_on_key_special_down);
@@ -136,7 +135,6 @@ static void _glnode_initGLUTPost(void) {
     //glutMouseFunc(gldriver_mouse);
     //glutMotionFunc(gldriver_mouse_drag);
     c_joystick_reset();
-#endif
 }
 #endif
 
@@ -255,7 +253,7 @@ static void _init_glnode_manager(void) {
     interface_onTouchEvent = &glnode_onTouchEvent;
 #endif
 
-#if USE_GLUT
+#if USE_GLUT && !TEST_CPU
     joydriver_resetJoystick = &_glutJoystickReset;
 #endif
 }

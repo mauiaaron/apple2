@@ -13,8 +13,6 @@
 #include "video/glinput.h"
 #include <math.h>
 
-#if !TESTING
-
 //----------------------------------------------------------------------------
 //
 // keyboard
@@ -231,6 +229,4 @@ void _glutJoystickReset(void) {
     glutJoystickFunc(NULL, 0);
     glutJoystickFunc(gldriver_joystick_callback, (int)JOYSTICK_POLL_INTERVAL_MILLIS);
 }
-
-#endif // TESTING
 

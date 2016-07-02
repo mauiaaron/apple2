@@ -191,7 +191,6 @@ static void getshm(int size) {
 }
 #endif
 
-#if !TESTING
 // Map X keysyms into Apple//ix internal-representation scancodes.
 static int keysym_to_scancode(void) {
     int rc = XkbKeycodeToKeysym(display, xevent.xkey.keycode, 0, 0);
@@ -332,7 +331,6 @@ static int keysym_to_scancode(void) {
     assert(rc < 0x80);
     return rc;
 }
-#endif
 
 static void post_image() {
     // copy Apple //e video memory into XImage uint32_t buffer
@@ -410,11 +408,6 @@ void video_driver_sync(void) {
     // post the image and loop waiting for it to finish and
     // also process other input events
     post_image();
-
-#if TESTING
-    // no input processing if test-driven ...
-    return;
-#endif
 
     if (!XPending(display)) {
         c_keys_handle_input(/*scancode:*/-1, /*pressed:*/0, 0);
