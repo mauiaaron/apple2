@@ -52,14 +52,7 @@ META_SRC = \
 	src/meta/lintrace.c
 
 # NOTE : selectively enabled through configuration process ...
-EXTRA_apple2ix_SOURCES = \
-	$(ASM_SRC_x86) \
-	\
-	$(VIDEO_SRC) \
-	\
-	$(AUDIO_SRC) \
-	\
-	$(META_SRC)
+EXTRA_apple2ix_SOURCES = $(ASM_SRC_x86) $(VIDEO_SRC) $(AUDIO_SRC) $(META_SRC)
 
 apple2ix_SOURCES = src/font.c src/rom.c src/misc.c src/display.c src/vm.c \
 	src/timing.c src/zlib-helpers.c src/joystick.c src/keys.c src/prefs.c \
@@ -88,77 +81,73 @@ src/x86/glue.S: src/cpu-supp.c src/disk.c src/display.c src/vm.c @AUDIO_GLUE_C@
 ###############################################################################
 # Testing
 
-LOG_DRIVER = testcpu  ## hack TODO/FIXME ... should be wrapper shell script accepting standard GNU testing API args ...
+#LOG_DRIVER =  ## hack TODO/FIXME ... should be wrapper shell script accepting standard GNU testing API args ...
 
 A2_TEST_SOURCES = $(apple2ix_SOURCES) src/test/testcommon.c
-A2_TEST_CFLAGS = -DTESTING=1 -DCPU_TRACING=1 -DDISK_TRACING=1 -DVM_TRACING=1 -Isrc/test
+A2_TEST_CFLAGS  = $(apple2ix_CFLAGS) -DTESTING=1 -Isrc/test
 
 TESTS          = testcpu testdisplay testvm testdisk testprefs testtrace
 check_PROGRAMS = testcpu testdisplay testvm testdisk testprefs testtrace
 
 #######################################
-testcpu_SOURCES = src/test/testcpu.c $(A2_TEST_SOURCES) $(META_SRC)
-testcpu_CFLAGS = $(apple2ix_CFLAGS) $(A2_TEST_CFLAGS) -DTEST_CPU=1
+
+testcpu_SOURCES = src/test/testcpu.c $(A2_TEST_SOURCES)
+testcpu_CFLAGS = $(A2_TEST_CFLAGS) -DTEST_CPU=1
 testcpu_CCASFLAGS = $(testcpu_CFLAGS)
 testcpu_LDFLAGS = $(apple2ix_LDFLAGS)
-testcpu_LDADD = @ASM_O@ @VIDEO_O@ @AUDIO_O@
-testcpu_DEPENDENCIES = @ASM_O@ @META_O@ @VIDEO_O@ @AUDIO_O@
-
-EXTRA_testcpu_SOURCES = $(ASM_SRC_x86)
-
-#######################################
-testdisplay_SOURCES = src/test/testdisplay.c $(A2_TEST_SOURCES) $(META_SRC)
-testdisplay_CFLAGS = $(apple2ix_CFLAGS) $(A2_TEST_CFLAGS) -DTEST_DISPLAY=1
-testdisplay_CCASFLAGS = $(testdisplay_CFLAGS)
-testdisplay_LDFLAGS = $(apple2ix_LDFLAGS)
-testdisplay_LDADD = @ASM_O@ @VIDEO_O@ @AUDIO_O@
-testdisplay_DEPENDENCIES = @ASM_O@ @META_O@ @VIDEO_O@ @AUDIO_O@
-
-EXTRA_testdisplay_SOURCES = $(ASM_SRC_x86) $(VIDEO_SRC)
+testcpu_LDADD = @testcpu_ASM_O@ @testcpu_VIDEO_O@ @testcpu_AUDIO_O@ @testcpu_META_O@ @X_LIBS@
+testcpu_DEPENDENCIES = @testcpu_ASM_O@ @testcpu_VIDEO_O@ @testcpu_AUDIO_O@ @testcpu_META_O@
+EXTRA_testcpu_SOURCES = $(ASM_SRC_x86) $(VIDEO_SRC) $(AUDIO_SRC) $(META_SRC)
 
 #######################################
-testvm_SOURCES = src/test/testvm.c $(A2_TEST_SOURCES) $(META_SRC)
-testvm_CFLAGS = $(apple2ix_CFLAGS) $(A2_TEST_CFLAGS) -DTEST_VM=1
-testvm_CCASFLAGS = $(testvm_CFLAGS)
-testvm_LDFLAGS = $(apple2ix_LDFLAGS)
-# HACK FIXME TODO NOTE: specify TESTVM_ASM_O to force it to rebuild with proper CCASFLAGS ... automake bug?
-testvm_LDADD = @TESTVM_ASM_O@ @VIDEO_O@ @AUDIO_O@
-testvm_DEPENDENCIES = @TESTVM_ASM_O@ @META_O@ @VIDEO_O@ @AUDIO_O@
 
-EXTRA_testvm_SOURCES = $(ASM_SRC_x86) $(VIDEO_SRC)
-
-#######################################
-testdisk_SOURCES = src/test/testdisk.c $(A2_TEST_SOURCES) $(META_SRC)
-testdisk_CFLAGS = $(apple2ix_CFLAGS) $(A2_TEST_CFLAGS) -DTEST_DISK=1
+testdisk_SOURCES = src/test/testdisk.c $(A2_TEST_SOURCES)
+testdisk_CFLAGS = $(A2_TEST_CFLAGS) -DTEST_DISK=1 -DCPU_TRACING=1 -DDISK_TRACING=1 -DVM_TRACING=1
 testdisk_CCASFLAGS = $(testdisk_CFLAGS)
 testdisk_LDFLAGS = $(apple2ix_LDFLAGS)
-# HACK FIXME TODO NOTE: specify testdisk_ASM_O to force it to rebuild with proper CCASFLAGS ... automake bug?
-testdisk_LDADD = @TESTDISK_ASM_O@ @VIDEO_O@ @AUDIO_O@
-testdisk_DEPENDENCIES = @TESTDISK_ASM_O@ @META_O@ @VIDEO_O@ @AUDIO_O@
-
-EXTRA_testdisk_SOURCES = $(ASM_SRC_x86) $(VIDEO_SRC)
+testdisk_LDADD = @testdisk_ASM_O@ @testdisk_VIDEO_O@ @testdisk_AUDIO_O@ @testdisk_META_O@ @X_LIBS@
+testdisk_DEPENDENCIES = @testdisk_ASM_O@ @testdisk_VIDEO_O@ @testdisk_AUDIO_O@ @testdisk_META_O@
+EXTRA_testdisk_SOURCES = $(ASM_SRC_x86) $(VIDEO_SRC) $(AUDIO_SRC) $(META_SRC)
 
 #######################################
-testprefs_SOURCES = src/test/testprefs.c $(A2_TEST_SOURCES) $(META_SRC)
-testprefs_CFLAGS = $(apple2ix_CFLAGS) $(A2_TEST_CFLAGS) -DTEST_PREFS=1
+
+testdisplay_SOURCES = src/test/testdisplay.c $(A2_TEST_SOURCES)
+testdisplay_CFLAGS = $(A2_TEST_CFLAGS) -DTEST_DISPLAY=1
+testdisplay_CCASFLAGS = $(testdisplay_CFLAGS)
+testdisplay_LDFLAGS = $(apple2ix_LDFLAGS)
+testdisplay_LDADD = @testdisplay_ASM_O@ @testdisplay_VIDEO_O@ @testdisplay_AUDIO_O@ @testdisplay_META_O@ @X_LIBS@
+testdisplay_DEPENDENCIES = @testdisplay_ASM_O@ @testdisplay_VIDEO_O@ @testdisplay_AUDIO_O@ @testdisplay_META_O@
+EXTRA_testdisplay_SOURCES = $(ASM_SRC_x86) $(VIDEO_SRC) $(AUDIO_SRC) $(META_SRC)
+
+#######################################
+
+testprefs_SOURCES = src/test/testprefs.c $(A2_TEST_SOURCES)
+testprefs_CFLAGS = $(A2_TEST_CFLAGS) -DTEST_PREFS=1
 testprefs_CCASFLAGS = $(testprefs_CFLAGS)
 testprefs_LDFLAGS = $(apple2ix_LDFLAGS)
-# HACK FIXME TODO NOTE: specify testprefs_ASM_O to force it to rebuild with proper CCASFLAGS ... automake bug?
-testprefs_LDADD = @TESTPREFS_ASM_O@ @VIDEO_O@ @AUDIO_O@
-testprefs_DEPENDENCIES = @TESTPREFS_ASM_O@ @META_O@ @VIDEO_O@ @AUDIO_O@
-
-EXTRA_testprefs_SOURCES = $(ASM_SRC_x86) $(VIDEO_SRC)
+testprefs_LDADD = @testprefs_ASM_O@ @testprefs_VIDEO_O@ @testprefs_AUDIO_O@ @testprefs_META_O@ @X_LIBS@
+testprefs_DEPENDENCIES = @testprefs_ASM_O@ @testprefs_VIDEO_O@ @testprefs_AUDIO_O@ @testprefs_META_O@
+EXTRA_testprefs_SOURCES = $(ASM_SRC_x86) $(VIDEO_SRC) $(AUDIO_SRC) $(META_SRC)
 
 #######################################
-testtrace_SOURCES = src/test/testtrace.c $(A2_TEST_SOURCES) $(META_SRC)
-testtrace_CFLAGS = $(apple2ix_CFLAGS) $(A2_TEST_CFLAGS) -DTEST_TRACE=1
+
+testtrace_SOURCES = src/test/testtrace.c $(A2_TEST_SOURCES)
+testtrace_CFLAGS = $(A2_TEST_CFLAGS) -DTEST_TRACE=1 -DCPU_TRACING=1 -DDISK_TRACING=1 -DVM_TRACING=1
 testtrace_CCASFLAGS = $(testtrace_CFLAGS)
 testtrace_LDFLAGS = $(apple2ix_LDFLAGS)
-# HACK FIXME TODO NOTE: specify testtrace_ASM_O to force it to rebuild with proper CCASFLAGS ... automake bug?
-testtrace_LDADD = @TESTTRACE_ASM_O@ @VIDEO_O@ @AUDIO_O@
-testtrace_DEPENDENCIES = @TESTTRACE_ASM_O@ @META_O@ @VIDEO_O@ @AUDIO_O@
+testtrace_LDADD = @testtrace_ASM_O@ @testtrace_VIDEO_O@ @testtrace_AUDIO_O@ @testtrace_META_O@ @X_LIBS@
+testtrace_DEPENDENCIES = @testtrace_ASM_O@ @testtrace_VIDEO_O@ @testtrace_AUDIO_O@ @testtrace_META_O@
+EXTRA_testtrace_SOURCES = $(ASM_SRC_x86) $(VIDEO_SRC) $(AUDIO_SRC) $(META_SRC)
 
-EXTRA_testtrace_SOURCES = $(ASM_SRC_x86) $(VIDEO_SRC)
+#######################################
+
+testvm_SOURCES = src/test/testvm.c $(A2_TEST_SOURCES)
+testvm_CFLAGS = $(A2_TEST_CFLAGS) -DTEST_VM=1
+testvm_CCASFLAGS = $(testvm_CFLAGS)
+testvm_LDFLAGS = $(apple2ix_LDFLAGS)
+testvm_LDADD = @testvm_ASM_O@ @testvm_VIDEO_O@ @testvm_AUDIO_O@ @testvm_META_O@ @X_LIBS@
+testvm_DEPENDENCIES = @testvm_ASM_O@ @testvm_VIDEO_O@ @testvm_AUDIO_O@ @testvm_META_O@
+EXTRA_testvm_SOURCES = $(ASM_SRC_x86) $(VIDEO_SRC) $(AUDIO_SRC) $(META_SRC)
 
 ###############################################################################
 # Misc & Installation
