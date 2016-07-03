@@ -20,7 +20,7 @@ void test_common_setup(void) {
 }
 
 void test_type_input(const char *input) {
-    debugger_setInputText(input);
+    debugger_setInputText(input, false);
 }
 
 void test_breakpoint(void *arg) {

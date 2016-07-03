@@ -35,6 +35,7 @@ typedef enum {
     GOING
 } stepping_type_t;
 
+// FIXME TODO : make opaque type ...
 typedef struct stepping_struct_t {
     stepping_type_t step_type;
     uint16_t step_count;
@@ -43,6 +44,7 @@ typedef struct stepping_struct_t {
     bool should_break;
     time_t timeout;
     const char *step_text;
+    const bool step_deterministically;
 } stepping_struct_t;
 
 #define DEBUGGER_BUF_X  39
@@ -85,7 +87,7 @@ extern const struct opcode_struct *opcodes;
 void c_interface_debugging();
 #endif
 
-void debugger_setInputText(const char *text);
+void debugger_setInputText(const char *text, const bool deterministically);
 void c_debugger_go(void);
 bool c_debugger_should_break(void);
 void c_debugger_set_timeout(const unsigned int secs);
