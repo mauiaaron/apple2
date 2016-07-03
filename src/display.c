@@ -1531,11 +1531,19 @@ uint16_t video_scanner_get_address(bool *vblBarOut) {
 }
 
 uint8_t floating_bus(void) {
+#if TESTING
+    // HACK FIXME TODO : where is the non-determinism sneaking in here?
+    return 0;
+#endif
     uint16_t scanner_addr = video_scanner_get_address(NULL);
     return apple_ii_64k[0][scanner_addr];
 }
 
 uint8_t floating_bus_hibit(const bool hibit) {
+#if TESTING
+    // HACK FIXME TODO : where is the non-determinism sneaking in here?
+    return 0;
+#endif
     uint16_t scanner_addr = video_scanner_get_address(NULL);
     uint8_t b = apple_ii_64k[0][scanner_addr];
     return (b & ~0x80) | (hibit ? 0x80 : 0);
