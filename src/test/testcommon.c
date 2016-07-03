@@ -11,57 +11,17 @@
 
 #include "testcommon.h"
 
-#define TESTBUF_SZ 1024
-
 bool test_do_reboot = true;
 char mdstr[(SHA_DIGEST_LENGTH*2)+1];
 
-static char input_str[TESTBUF_SZ]; // ASCII
-static unsigned int input_length = 0;
-static unsigned int input_counter = 0;
-
 // ----------------------------------------------------------------------------
 
-void test_common_setup() {
-    input_counter = 0;
-    input_length = 0;
-    input_str[0] = '\0';
-}
-
-// ----------------------------------------------------------------------------
-// test video functions and stubs
-
-void testing_video_sync() {
-
-    if (!input_length) {
-        input_length = strlen(input_str);
-    }
-
-    if (input_counter >= input_length) {
-        return;
-    }
-
-    uint8_t ch = (uint8_t)input_str[input_counter];
-    if (ch == '\n') {
-        ch = '\r';
-    }
-
-    if ( (apple_ii_64k[0][0xC000] & 0x80) || (apple_ii_64k[1][0xC000] & 0x80) ) {
-        // last character typed not processed by emulator...
-        return;
-    }
-
-    apple_ii_64k[0][0xC000] = ch | 0x80;
-    apple_ii_64k[1][0xC000] = ch | 0x80;
-
-    ++input_counter;
+void test_common_setup(void) {
 }
 
 void test_type_input(const char *input) {
-    strcat(input_str, input);
+    debugger_setInputText(input);
 }
-
-// ----------------------------------------------------------------------------
 
 void test_breakpoint(void *arg) {
     fprintf(GREATEST_STDOUT, "DISPLAY NOTE: busy-spinning in test_breakpoint(), needs gdb/lldb intervention to continue...\n");
@@ -72,9 +32,7 @@ void test_breakpoint(void *arg) {
     }
 }
 
-// ----------------------------------------------------------------------------
-
-void test_common_init() {
+void test_common_init(void) {
     GREATEST_SET_BREAKPOINT_CB(test_breakpoint, NULL);
 
     do_logging = false;// silence regular emulator logging

@@ -85,6 +85,7 @@ extern const struct opcode_struct *opcodes;
 void c_interface_debugging();
 #endif
 
+void debugger_setInputText(const char *text);
 void c_debugger_go(void);
 bool c_debugger_should_break(void);
 void c_debugger_set_timeout(const unsigned int secs);

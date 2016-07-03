@@ -32,6 +32,8 @@
 
 const struct opcode_struct *opcodes;
 
+static char input_str[1024] = { 0 }; // ASCII values
+
 static stepping_struct_t stepping_struct = { 0 };
 static unsigned int stepping_timeout = 0;
 
@@ -1153,16 +1155,12 @@ static int begin_cpu_stepping() {
             ERRLOG("pthread_cond_wait : %d", err);
         }
 
-#if TESTING
-#warning FIXME TODO : this is mis-named now ... GLVideo pushes sync state so we do not need to force poll ... but we need this to type the testing strings ... should refactor to leverage a common codepath, preferablly using the 'typing' mechanism here...
-        extern void testing_video_sync();
-        testing_video_sync();
-#elif defined(INTERFACE_CLASSIC)
+#if defined(INTERFACE_CLASSIC)
         if ((ch = c_mygetch(0)) != -1) {
             break;
         }
 #endif
-        if ( (stepping_struct.step_type != TYPING) && (idx > textlen) ) {
+        if ( (stepping_struct.step_type == TYPING) && (idx > textlen) ) {
             break; // finished typing
         }
         if (stepping_timeout && (stepping_struct.timeout < time(NULL))) {
@@ -1495,9 +1493,19 @@ void c_interface_debugging() {
 /* -------------------------------------------------------------------------
     debugger testing-driven API
    ------------------------------------------------------------------------- */
+void debugger_setInputText(const char *text) {
+    strcat(input_str, text);
+}
 
-void c_debugger_go() {
+void c_debugger_go(void) {
+    void *buf = NULL;
+    if (strlen(input_str)) {
+        buf = STRDUP(input_str);
+        input_str[0] = '\0';
+    }
+
     stepping_struct_t s = (stepping_struct_t){
+        .step_text = buf,
         .step_type = GOING,
         .timeout = time(NULL) + stepping_timeout
     };
@@ -1506,6 +1514,8 @@ void c_debugger_go() {
     is_debugging = true;
 
     debugger_go(s);
+
+    FREE(buf);
 
     is_debugging = false;
     num_buffer_lines = 0;
