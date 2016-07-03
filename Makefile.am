@@ -102,7 +102,7 @@ EXTRA_testcpu_SOURCES = $(ASM_SRC_x86) $(VIDEO_SRC) $(AUDIO_SRC) $(META_SRC)
 #######################################
 
 testdisk_SOURCES = src/test/testdisk.c $(A2_TEST_SOURCES)
-testdisk_CFLAGS = $(A2_TEST_CFLAGS) -DTEST_DISK=1 -DCPU_TRACING=1 -DDISK_TRACING=1 -DVM_TRACING=1
+testdisk_CFLAGS = $(A2_TEST_CFLAGS) -DTEST_DISK=1 -DDISK_TRACING=1
 testdisk_CCASFLAGS = $(testdisk_CFLAGS)
 testdisk_LDFLAGS = $(apple2ix_LDFLAGS)
 testdisk_LDADD = @testdisk_ASM_O@ @testdisk_VIDEO_O@ @testdisk_AUDIO_O@ @testdisk_META_O@ @X_LIBS@
