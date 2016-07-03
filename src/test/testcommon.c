@@ -23,6 +23,10 @@ void test_type_input(const char *input) {
     debugger_setInputText(input, false);
 }
 
+void test_type_input_deterministically(const char *input) {
+    debugger_setInputText(input, true);
+}
+
 void test_breakpoint(void *arg) {
     fprintf(GREATEST_STDOUT, "DISPLAY NOTE: busy-spinning in test_breakpoint(), needs gdb/lldb intervention to continue...\n");
     volatile bool debug_continue = false;
