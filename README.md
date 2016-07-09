@@ -1,7 +1,7 @@
 Apple //ix
 ==========
 
-Apple2ix is an Apple //e (8bit 65c02 CPU) emulator designed to work on varios POSIX platforms.
+Apple2ix is an Apple //e (8bit 65c02 CPU) emulator designed to work on various POSIX platforms.
 
 Lineage
 -------
