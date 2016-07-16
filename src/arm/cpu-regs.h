@@ -64,7 +64,8 @@
 #error __COUNTER__ macro should be available in modern compilers
 #endif
 
-#if __PIC__
+#if __PIC__ && !__APPLE__
+// 2016/07/15 : TODO FIXME : this PIC code does not work on ARM-Darwin
 
 #   define _SYM_ADDR_PRE(reg) \
                 ldr     reg, 5f;
@@ -89,7 +90,7 @@
                 _SYM_ADDR_OFF_ARM(reg, __COUNTER__); \
                 _SYM_ADDR_POST(var,8)
 #   endif
-#else /* !__PIC__ */
+#else
 #   if NO_UNDERSCORES
 #       define SYM(reg,var) \
                 ldr     reg, =var

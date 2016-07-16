@@ -11,13 +11,13 @@
 
 #ifdef __APPLE__
 #   if defined(__arm__)
-#       include "arm/cpu.S"
 #       include "arm/glue.S"
+#       include "arm/cpu.S"
 #   elif defined(__arm64__)
 #       error aarch64 not implemented ... TODO SOON
 #   else
 // simulator is x86
-#       include "x86/cpu.S"
 #       include "x86/glue.S"
+#       include "x86/cpu.S"
 #   endif
 #endif
