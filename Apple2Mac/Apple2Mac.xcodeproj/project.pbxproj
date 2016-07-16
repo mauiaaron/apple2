@@ -1650,6 +1650,9 @@
 				LastUpgradeCheck = 0730;
 				ORGANIZATIONNAME = deadc0de.org;
 				TargetAttributes = {
+					4ACD73201D20A83E00123DE6 = {
+						DevelopmentTeam = 4S92KXH58V;
+					};
 					4ECFC3A91C368EAB008E2633 = {
 						CreatedOnToolsVersion = 7.2;
 						DevelopmentTeam = 774X2MBDTH;
@@ -1661,6 +1664,7 @@
 					};
 					935C55271C12BA5F0013166D = {
 						CreatedOnToolsVersion = 7.1.1;
+						DevelopmentTeam = 4S92KXH58V;
 					};
 				};
 			};
