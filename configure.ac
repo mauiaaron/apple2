@@ -97,7 +97,7 @@ unsupported_for_now
 #elif __APPLE__
 unsupported_for_now
     #include "TargetConditionals.h"
-    #if TARGET_IPHONE_SIMULATOR
+    #if TARGET_OS_SIMULATOR
     #elif TARGET_OS_IPHONE
     #elif TARGET_OS_MAC
     #else
