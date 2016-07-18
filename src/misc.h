@@ -25,6 +25,12 @@ enum {
 // top installation directory
 extern const char *data_dir;
 
+#if MOBILE_DEVICE
+#   define HOMEDIR data_dir
+#else
+#   define HOMEDIR getenv("HOME")
+#endif
+
 // global ref to CLI args
 extern char **argv;
 extern int argc;

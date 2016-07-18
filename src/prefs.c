@@ -47,7 +47,7 @@ void prefs_load(void) {
     }
 
     if (!prefsFile) {
-        ASPRINTF(&prefsFile, "%s/.apple2.json", getenv("HOME"));
+        ASPRINTF(&prefsFile, "%s/.apple2.json", HOMEDIR);
     }
     assert(prefsFile);
 

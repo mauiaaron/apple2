@@ -407,7 +407,7 @@ void c_interface_select_diskette( int drive )
         if (entries <= 0)
         {
             DISKERR_SHOWERR("Problem reading directory");
-            snprintf(disk_path, PATH_MAX, "%s", getenv("HOME"));
+            snprintf(disk_path, PATH_MAX, "%s", HOMEDIR);
             nextdir = true;
             continue;
         }
@@ -1545,7 +1545,7 @@ static void *interface_thread(void *current_key)
     char *path = NULL;
     prefs_copyStringValue(PREF_DOMAIN_INTERFACE, PREF_DISK_PATH, &path);
     if (!path) {
-        ASPRINTF(&path, "%s", getenv("HOME"));
+        ASPRINTF(&path, "%s", HOMEDIR);
     }
     strncpy(disk_path, path, PATH_MAX-1);
     disk_path[PATH_MAX-1] = '\0';

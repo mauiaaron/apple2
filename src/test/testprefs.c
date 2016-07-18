@@ -272,7 +272,7 @@ TEST test_json_serialization() {
     ASSERT(tokCount > 0);
 
     char *tmpFile = NULL;
-    ASPRINTF(&tmpFile, "%s/json-XXXXXX", getenv("HOME"));
+    ASPRINTF(&tmpFile, "%s/json-XXXXXX", HOMEDIR);
     ASSERT(tmpFile);
     int fd = mkstemp(tmpFile);
     ASSERT(fd > 0);
@@ -304,7 +304,7 @@ TEST test_json_serialization_pretty() {
     ASSERT(parsedData);
 
     char *tmpFile = NULL;
-    ASPRINTF(&tmpFile, "%s/json-pretty-XXXXXX", getenv("HOME"));
+    ASPRINTF(&tmpFile, "%s/json-pretty-XXXXXX", HOMEDIR);
     ASSERT(tmpFile);
     int fd = mkstemp(tmpFile);
     ASSERT(fd > 0);
@@ -1896,12 +1896,12 @@ TEST test_prefs_set_props() {
 TEST test_prefs_load_and_save() {
 
     char *apple2JSON = NULL;
-    ASPRINTF(&apple2JSON, "%s/%s", getenv("HOME"), TEST_JSON);
+    ASPRINTF(&apple2JSON, "%s/%s", HOMEDIR, TEST_JSON);
     ASSERT(apple2JSON);
     unlink(apple2JSON);
 
     char *apple2JSONEnv = NULL;
-    ASPRINTF(&apple2JSONEnv, "APPLE2IX_JSON=%s/%s", getenv("HOME"), TEST_JSON);
+    ASPRINTF(&apple2JSONEnv, "APPLE2IX_JSON=%s/%s", HOMEDIR, TEST_JSON);
     ASSERT(apple2JSONEnv);
     putenv(apple2JSONEnv);
     LEAK(apple2JSONEnv);

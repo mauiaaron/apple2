@@ -2366,7 +2366,7 @@ YY_RULE_SETUP
 {
 #if CPU_TRACING
     char *buf = NULL;
-    asprintf(&buf, "%s/%s", getenv("HOME"), "cputrace.txt");
+    asprintf(&buf, "%s/%s", HOMEDIR, "cputrace.txt");
     cpu65_trace_toggle(buf);
     FREE(buf);
 #else
@@ -2381,7 +2381,7 @@ YY_RULE_SETUP
 {
 #if DISK_TRACING
     char *buf = NULL;
-    asprintf(&buf, "%s/%s", getenv("HOME"), "disktrace.txt");
+    asprintf(&buf, "%s/%s", HOMEDIR, "disktrace.txt");
     c_toggle_disk_trace_6(buf, NULL);
     FREE(buf);
 #else

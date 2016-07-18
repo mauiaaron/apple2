@@ -852,7 +852,7 @@ ADDRS	[0-9a-fA-F]+
 {BOS}cput?r?a?c?e?{EOS} {
 #if CPU_TRACING
     char *buf = NULL;
-    asprintf(&buf, "%s/%s", getenv("HOME"), "cputrace.txt");
+    asprintf(&buf, "%s/%s", HOMEDIR, "cputrace.txt");
     cpu65_trace_toggle(buf);
     FREE(buf);
 #else
@@ -863,7 +863,7 @@ ADDRS	[0-9a-fA-F]+
 {BOS}diskt?r?a?c?e?{EOS} {
 #if DISK_TRACING
     char *buf = NULL;
-    asprintf(&buf, "%s/%s", getenv("HOME"), "disktrace.txt");
+    asprintf(&buf, "%s/%s", HOMEDIR, "disktrace.txt");
     c_toggle_disk_trace_6(buf, NULL);
     FREE(buf);
 #else

@@ -45,7 +45,7 @@ void test_common_init(void) {
     emulator_ctors();
 
     char *envvar = NULL;
-    ASPRINTF(&envvar, "APPLE2IX_JSON=%s/.apple2.test.json", getenv("HOME"));
+    ASPRINTF(&envvar, "APPLE2IX_JSON=%s/.apple2.test.json", HOMEDIR);
     assert(envvar);
     putenv(envvar);
     LEAK(envvar);
