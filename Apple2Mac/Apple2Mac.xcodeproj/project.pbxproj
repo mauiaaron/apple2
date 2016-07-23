@@ -2773,7 +2773,6 @@
 					"APPLE2IX=1",
 					"INTERFACE_TOUCH=1",
 					"MOBILE_DEVICE=1",
-					"DEBUGGER=1",
 					"TESTING=1",
 					"TEST_CPU=1",
 					"VIDEO_OPENGL=1",
@@ -2810,7 +2809,6 @@
 					"APPLE2IX=1",
 					"INTERFACE_TOUCH=1",
 					"MOBILE_DEVICE=1",
-					"DEBUGGER=1",
 					"TESTING=1",
 					"TEST_CPU=1",
 					"VIDEO_OPENGL=1",
@@ -2850,7 +2848,6 @@
 					"APPLE2IX=1",
 					"INTERFACE_TOUCH=1",
 					"MOBILE_DEVICE=1",
-					"DEBUGGER=1",
 					"TESTING=1",
 					"TEST_VM=1",
 					"VIDEO_OPENGL=1",
@@ -2887,7 +2884,6 @@
 					"APPLE2IX=1",
 					"INTERFACE_TOUCH=1",
 					"MOBILE_DEVICE=1",
-					"DEBUGGER=1",
 					"TESTING=1",
 					"TEST_VM=1",
 					"VIDEO_OPENGL=1",
@@ -2927,7 +2923,6 @@
 					"APPLE2IX=1",
 					"INTERFACE_TOUCH=1",
 					"MOBILE_DEVICE=1",
-					"DEBUGGER=1",
 					"TESTING=1",
 					"TEST_DISK=1",
 					"CPU_TRACING=1",
@@ -2967,7 +2962,6 @@
 					"APPLE2IX=1",
 					"INTERFACE_TOUCH=1",
 					"MOBILE_DEVICE=1",
-					"DEBUGGER=1",
 					"TESTING=1",
 					"TEST_DISK=1",
 					"CPU_TRACING=1",
@@ -3010,7 +3004,6 @@
 					"APPLE2IX=1",
 					"INTERFACE_TOUCH=1",
 					"MOBILE_DEVICE=1",
-					"DEBUGGER=1",
 					"TESTING=1",
 					"TEST_DISPLAY=1",
 					"VIDEO_OPENGL=1",
@@ -3047,7 +3040,6 @@
 					"APPLE2IX=1",
 					"INTERFACE_TOUCH=1",
 					"MOBILE_DEVICE=1",
-					"DEBUGGER=1",
 					"TESTING=1",
 					"TEST_DISPLAY=1",
 					"VIDEO_OPENGL=1",
@@ -3080,7 +3072,6 @@
 				GCC_PREFIX_HEADER = "Apple2Mac/Apple2Mac-Prefix.pch";
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"APPLE2IX=1",
-					"DEBUGGER=1",
 					"KEYPAD_JOYSTICK=1",
 					"TEST_DISK=1",
 					"TESTING=1",
@@ -3112,7 +3103,6 @@
 				GCC_PREFIX_HEADER = "Apple2Mac/Apple2Mac-Prefix.pch";
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"APPLE2IX=1",
-					"DEBUGGER=1",
 					"KEYPAD_JOYSTICK=1",
 					"TEST_DISK=1",
 					"TESTING=1",
@@ -3145,7 +3135,6 @@
 				GCC_PREFIX_HEADER = "Apple2Mac/Apple2Mac-Prefix.pch";
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"APPLE2IX=1",
-					"DEBUGGER=1",
 					"KEYPAD_JOYSTICK=1",
 					"TEST_VM=1",
 					"TESTING=1",
@@ -3174,7 +3163,6 @@
 				GCC_PREFIX_HEADER = "Apple2Mac/Apple2Mac-Prefix.pch";
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"APPLE2IX=1",
-					"DEBUGGER=1",
 					"KEYPAD_JOYSTICK=1",
 					"TEST_VM=1",
 					"TESTING=1",
@@ -3316,7 +3304,6 @@
 				GCC_PREFIX_HEADER = "Apple2Mac-Prefix.pch";
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"APPLE2IX=1",
-					"DEBUGGER=1",
 					"KEYPAD_JOYSTICK=1",
 					"VIDEO_OPENGL=1",
 				);
@@ -3345,7 +3332,6 @@
 				GCC_PREFIX_HEADER = "Apple2Mac-Prefix.pch";
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"APPLE2IX=1",
-					"DEBUGGER=1",
 					"KEYPAD_JOYSTICK=1",
 					"VIDEO_OPENGL=1",
 					"NDEBUG=1",
@@ -3375,7 +3361,6 @@
 				GCC_PREFIX_HEADER = "Apple2Mac/Apple2Mac-Prefix.pch";
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"APPLE2IX=1",
-					"DEBUGGER=1",
 					"KEYPAD_JOYSTICK=1",
 					"TEST_CPU=1",
 					"TESTING=1",
@@ -3404,7 +3389,6 @@
 				GCC_PREFIX_HEADER = "Apple2Mac/Apple2Mac-Prefix.pch";
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"APPLE2IX=1",
-					"DEBUGGER=1",
 					"KEYPAD_JOYSTICK=1",
 					"TEST_CPU=1",
 					"TESTING=1",
@@ -3434,7 +3418,6 @@
 				GCC_PREFIX_HEADER = "Apple2Mac/Apple2Mac-Prefix.pch";
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"APPLE2IX=1",
-					"DEBUGGER=1",
 					"KEYPAD_JOYSTICK=1",
 					"TESTING=1",
 					"TEST_DISPLAY=1",
@@ -3463,7 +3446,6 @@
 				GCC_PREFIX_HEADER = "Apple2Mac/Apple2Mac-Prefix.pch";
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"APPLE2IX=1",
-					"DEBUGGER=1",
 					"KEYPAD_JOYSTICK=1",
 					"TESTING=1",
 					"TEST_DISPLAY=1",
@@ -3500,7 +3482,6 @@
 					"APPLE2IX=1",
 					"INTERFACE_TOUCH=1",
 					"MOBILE_DEVICE=1",
-					"DEBUGGER=1",
 					"VIDEO_OPENGL=1",
 				);
 				INFOPLIST_FILE = "$(SRCROOT)/Apple2iOS/Apple2iOS-Info.plist";
@@ -3535,7 +3516,6 @@
 					"APPLE2IX=1",
 					"INTERFACE_TOUCH=1",
 					"MOBILE_DEVICE=1",
-					"DEBUGGER=1",
 					"VIDEO_OPENGL=1",
 					"NDEBUG=1",
 				);

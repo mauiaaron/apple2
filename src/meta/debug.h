@@ -19,11 +19,7 @@
 
 #include "common.h"
 
-#ifdef DEBUGGER
 extern volatile bool is_debugging;
-#else
-#define is_debugging false
-#endif
 
 typedef enum {
     STEPPING = 0,

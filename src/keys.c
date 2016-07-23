@@ -469,9 +469,7 @@ bool c_keys_is_interface_key(int key)
         case kF1:
         case kF2:
         case kF5:
-#ifdef DEBUGGER
         case kF7:
-#endif
         case kF8:
         case kF10:
             return true;

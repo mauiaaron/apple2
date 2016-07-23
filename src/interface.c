@@ -1572,11 +1572,9 @@ static void *interface_thread(void *current_key)
         c_interface_keyboard_layout();
         break;
 
-#ifdef DEBUGGER
     case kF7:
         c_interface_debugging();
         break;
-#endif
 
     case kF8:
         c_interface_credits();

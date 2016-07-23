@@ -302,7 +302,6 @@ AS_IF([test "x$openal_supported" = "xyes"], [
 dnl ---------------------------------------------------------------------------
 dnl Debugger & classic interface ...
 AC_ARG_ENABLE([debugger], AS_HELP_STRING([--disable-debugger], [Disable 6502 debugging console]), [], [
-    AC_DEFINE(DEBUGGER, 1, [Enable 6502 debugger module])
     META_O="src/meta/debug.o src/meta/debugger.o src/meta/opcodes.o src/test/sha1.o"
     dnl HACK there's gotta be a better way ... without this verbosity, CFLAGS are not correct (lacking -DTESTING=1 , etc) if we don't specify specific obj files for test binaries
     testcpu_META_O="src/meta/testcpu-debug.o src/meta/testcpu-debugger.o src/meta/testcpu-opcodes.o src/test/testcpu-sha1.o"
