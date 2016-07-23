@@ -76,7 +76,7 @@ src/rom.c: genrom
 	./genrom src/rom/apple_IIe.rom src/rom/slot6.rom > $@
 
 src/x86/glue.S: src/cpu-supp.c src/disk.c src/display.c src/vm.c @AUDIO_GLUE_C@
-	./src/x86/genglue $^ > $@
+	TARGET_ARCH=x86 ./src/genglue.sh $^ > $@
 
 ###############################################################################
 # Testing
@@ -175,7 +175,7 @@ EXTRA_DIST = reconf.sh configure README.debugger PROBLEMS .apple2 \
 	$(man_MANS) \
 	\
 	src/font.txt \
-	src/x86/genglue \
+	src/genglue.sh \
 	\
 	$(shaders_DATA)
 

@@ -256,7 +256,7 @@ AC_ARG_ENABLE([audio], AS_HELP_STRING([--disable-audio], [Disable emulator audio
                 AC_SEARCH_LIBS(alcOpenDevice, openal, [
                     dnl found OpenAL ...
                     openal_supported='yes'
-                    AUDIO_GLUE_C="src/audio/speaker.c src/audio/mockingboard.c src/audio/playqueue.c"
+                    AUDIO_GLUE_C="src/audio/speaker.c src/audio/mockingboard.c"
                     AUDIO_O="src/audio/soundcore.o src/audio/soundcore-openal.o src/audio/speaker.o src/audio/playqueue.o src/audio/alhelpers.o src/audio/mockingboard.o src/audio/AY8910.o"
                     dnl HACK there's gotta be a better way ... without this verbosity, CFLAGS are not correct (lacking -DTESTING=1 , etc) if we don't specify specific obj files for test binaries
                     testcpu_AUDIO_O="src/audio/testcpu-soundcore.o src/audio/testcpu-soundcore-openal.o src/audio/testcpu-speaker.o src/audio/testcpu-playqueue.o src/audio/testcpu-alhelpers.o src/audio/testcpu-mockingboard.o src/audio/testcpu-AY8910.o"

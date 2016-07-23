@@ -2,7 +2,7 @@
 
 package_id="org.deadc0de.apple2ix.basic"
 apple2_src_path=apple2ix-src
-glue_srcs="$apple2_src_path/disk.c $apple2_src_path/misc.c $apple2_src_path/display.c $apple2_src_path/vm.c $apple2_src_path/cpu-supp.c $apple2_src_path/audio/speaker.c $apple2_src_path/audio/mockingboard.c"
+glue_srcs="$apple2_src_path/cpu-supp.c $apple2_src_path/disk.c $apple2_src_path/display.c $apple2_src_path/vm.c $apple2_src_path/audio/speaker.c $apple2_src_path/audio/mockingboard.c"
 
 usage() {
     if test "$(basename $0)" = "clean" ; then
@@ -118,9 +118,9 @@ if test "x$do_build" = "x1" -o "x$do_release" = "x1" ; then
     $CC $CFLAGS -o $apple2_src_path/genfont $apple2_src_path/genfont.c && \
         $apple2_src_path/genfont < $apple2_src_path/font.txt > $apple2_src_path/font.c
 
-    # glue
-    $apple2_src_path/x86/genglue $glue_srcs > $apple2_src_path/x86/glue.S
-    $apple2_src_path/arm/genglue $glue_srcs > $apple2_src_path/arm/glue.S
+    # trampoline generation
+    TARGET_ARCH=x86 $apple2_src_path/genglue.sh $glue_srcs > $apple2_src_path/x86/glue.S
+    TARGET_ARCH=arm $apple2_src_path/genglue.sh $glue_srcs > $apple2_src_path/arm/glue.S
 
     if test "x$do_build" = "x1" ; then
         export BUILD_MODE=debug
