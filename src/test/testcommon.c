@@ -140,7 +140,7 @@ int test_setup_boot_disk(const char *fileName, int readonly) {
         const char **fmtPtr = &fmts[0];
         unsigned int idx = 0;
         while (*fmtPtr) {
-            const char *fmt = *fmtPtr;
+            const char *fmt = *fmtPtr++;
             ASPRINTF(&paths[idx++], fmt, data_dir, "/", fileName);
         }
     } while (0);
