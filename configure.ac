@@ -256,7 +256,6 @@ AC_ARG_ENABLE([audio], AS_HELP_STRING([--disable-audio], [Disable emulator audio
                 AC_SEARCH_LIBS(alcOpenDevice, openal, [
                     dnl found OpenAL ...
                     openal_supported='yes'
-                    AC_DEFINE(AUDIO_ENABLED, 1, [Enable sound module])
                     AUDIO_GLUE_C="src/audio/speaker.c src/audio/mockingboard.c src/audio/playqueue.c"
                     AUDIO_O="src/audio/soundcore.o src/audio/soundcore-openal.o src/audio/speaker.o src/audio/playqueue.o src/audio/alhelpers.o src/audio/mockingboard.o src/audio/AY8910.o"
                     dnl HACK there's gotta be a better way ... without this verbosity, CFLAGS are not correct (lacking -DTESTING=1 , etc) if we don't specify specific obj files for test binaries
@@ -267,19 +266,19 @@ AC_ARG_ENABLE([audio], AS_HELP_STRING([--disable-audio], [Disable emulator audio
                     testtrace_AUDIO_O="src/audio/testtrace-soundcore.o src/audio/testtrace-soundcore-openal.o src/audio/testtrace-speaker.o src/audio/testtrace-playqueue.o src/audio/testtrace-alhelpers.o src/audio/testtrace-mockingboard.o src/audio/testtrace-AY8910.o"
                     testvm_AUDIO_O="src/audio/testvm-soundcore.o src/audio/testvm-soundcore-openal.o src/audio/testvm-speaker.o src/audio/testvm-playqueue.o src/audio/testvm-alhelpers.o src/audio/testvm-mockingboard.o src/audio/testvm-AY8910.o"
                 ], [
-                    AC_MSG_WARN([Could not find OpenAL libraries, sound will be disabled])
+                    AC_MSG_ERROR([Could not find OpenAL libraries ... todo fixme ... implement a null sound backend])
                 ], [])
             ], [
-                AC_MSG_WARN([Could not find OpenAL headers, sound will be disabled])
+                AC_MSG_ERROR([Could not find OpenAL headers ... todo fixme ... implement a null sound backend])
             ], [
 #include <AL/al.h>
 #include <AL/alc.h>
             ])
         ], [
-            AC_MSG_WARN([Could not find OpenAL headers, sound will be disabled])
+            AC_MSG_ERROR([Could not find OpenAL headers ... todo fixme ... implement a null sound backend])
         ])
     ], [
-        AC_MSG_WARN([Could not find OpenAL headers, sound will be disabled])
+        AC_MSG_ERROR([Could not find OpenAL headers ... todo fixme ... implement a null sound backend])
     ])
 ])
 AC_SUBST(AUDIO_GLUE_C)

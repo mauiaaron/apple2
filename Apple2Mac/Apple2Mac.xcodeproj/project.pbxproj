@@ -2777,7 +2777,6 @@
 					"TESTING=1",
 					"TEST_CPU=1",
 					"VIDEO_OPENGL=1",
-					"AUDIO_ENABLED=1",
 				);
 				INFOPLIST_FILE = "$(SRCROOT)/Apple2MacTests/Apple2iOSTestCPU-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
@@ -2815,7 +2814,6 @@
 					"TESTING=1",
 					"TEST_CPU=1",
 					"VIDEO_OPENGL=1",
-					"AUDIO_ENABLED=1",
 					"NDEBUG=1",
 				);
 				INFOPLIST_FILE = "$(SRCROOT)/Apple2MacTests/Apple2iOSTestCPU-Info.plist";
@@ -2856,7 +2854,6 @@
 					"TESTING=1",
 					"TEST_VM=1",
 					"VIDEO_OPENGL=1",
-					"AUDIO_ENABLED=1",
 				);
 				INFOPLIST_FILE = "$(SRCROOT)/Apple2MacTests/Apple2iOSTestVM-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
@@ -2894,7 +2891,6 @@
 					"TESTING=1",
 					"TEST_VM=1",
 					"VIDEO_OPENGL=1",
-					"AUDIO_ENABLED=1",
 					"NDEBUG=1",
 				);
 				INFOPLIST_FILE = "$(SRCROOT)/Apple2MacTests/Apple2iOSTestVM-Info.plist";
@@ -2938,7 +2934,6 @@
 					"DISK_TRACING=1",
 					"VM_TRACING=1",
 					"VIDEO_OPENGL=1",
-					"AUDIO_ENABLED=1",
 				);
 				INFOPLIST_FILE = "$(SRCROOT)/Apple2MacTests/Apple2iOSTestDisk-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
@@ -2979,7 +2974,6 @@
 					"DISK_TRACING=1",
 					"VM_TRACING=1",
 					"VIDEO_OPENGL=1",
-					"AUDIO_ENABLED=1",
 					"NDEBUG=1",
 				);
 				INFOPLIST_FILE = "$(SRCROOT)/Apple2MacTests/Apple2iOSTestDisk-Info.plist";
@@ -3020,7 +3014,6 @@
 					"TESTING=1",
 					"TEST_DISPLAY=1",
 					"VIDEO_OPENGL=1",
-					"AUDIO_ENABLED=1",
 				);
 				INFOPLIST_FILE = "$(SRCROOT)/Apple2MacTests/Apple2iOSTestDisplay-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
@@ -3058,7 +3051,6 @@
 					"TESTING=1",
 					"TEST_DISPLAY=1",
 					"VIDEO_OPENGL=1",
-					"AUDIO_ENABLED=1",
 					"NDEBUG=1",
 				);
 				INFOPLIST_FILE = "$(SRCROOT)/Apple2MacTests/Apple2iOSTestDisplay-Info.plist";
@@ -3096,7 +3088,6 @@
 					"DISK_TRACING=1",
 					"VM_TRACING=1",
 					"VIDEO_OPENGL=1",
-					"AUDIO_ENABLED=1",
 				);
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
@@ -3129,7 +3120,6 @@
 					"DISK_TRACING=1",
 					"VM_TRACING=1",
 					"VIDEO_OPENGL=1",
-					"AUDIO_ENABLED=1",
 					"NDEBUG=1",
 				);
 				HEADER_SEARCH_PATHS = (
@@ -3160,7 +3150,6 @@
 					"TEST_VM=1",
 					"TESTING=1",
 					"VIDEO_OPENGL=1",
-					"AUDIO_ENABLED=1",
 				);
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
@@ -3190,7 +3179,6 @@
 					"TEST_VM=1",
 					"TESTING=1",
 					"VIDEO_OPENGL=1",
-					"AUDIO_ENABLED=1",
 					"NDEBUG=1",
 				);
 				HEADER_SEARCH_PATHS = (
@@ -3330,7 +3318,6 @@
 					"APPLE2IX=1",
 					"DEBUGGER=1",
 					"KEYPAD_JOYSTICK=1",
-					"AUDIO_ENABLED=1",
 					"VIDEO_OPENGL=1",
 				);
 				HEADER_SEARCH_PATHS = (
@@ -3360,7 +3347,6 @@
 					"APPLE2IX=1",
 					"DEBUGGER=1",
 					"KEYPAD_JOYSTICK=1",
-					"AUDIO_ENABLED=1",
 					"VIDEO_OPENGL=1",
 					"NDEBUG=1",
 				);
@@ -3394,7 +3380,6 @@
 					"TEST_CPU=1",
 					"TESTING=1",
 					"VIDEO_OPENGL=1",
-					"AUDIO_ENABLED=1",
 				);
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
@@ -3424,7 +3409,6 @@
 					"TEST_CPU=1",
 					"TESTING=1",
 					"VIDEO_OPENGL=1",
-					"AUDIO_ENABLED=1",
 					"NDEBUG=1",
 				);
 				HEADER_SEARCH_PATHS = (
@@ -3455,7 +3439,6 @@
 					"TESTING=1",
 					"TEST_DISPLAY=1",
 					"VIDEO_OPENGL=1",
-					"AUDIO_ENABLED=1",
 				);
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
@@ -3485,7 +3468,6 @@
 					"TESTING=1",
 					"TEST_DISPLAY=1",
 					"VIDEO_OPENGL=1",
-					"AUDIO_ENABLED=1",
 					"NDEBUG=1",
 				);
 				HEADER_SEARCH_PATHS = (
@@ -3520,7 +3502,6 @@
 					"MOBILE_DEVICE=1",
 					"DEBUGGER=1",
 					"VIDEO_OPENGL=1",
-					"AUDIO_ENABLED=1",
 				);
 				INFOPLIST_FILE = "$(SRCROOT)/Apple2iOS/Apple2iOS-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
@@ -3556,7 +3537,6 @@
 					"MOBILE_DEVICE=1",
 					"DEBUGGER=1",
 					"VIDEO_OPENGL=1",
-					"AUDIO_ENABLED=1",
 					"NDEBUG=1",
 				);
 				INFOPLIST_FILE = "$(SRCROOT)/Apple2iOS/Apple2iOS-Info.plist";

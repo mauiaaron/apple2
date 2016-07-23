@@ -71,11 +71,9 @@ bool alt_speed_enabled = false;
 
 // misc
 volatile uint8_t emul_reinitialize = 1;
-#ifdef AUDIO_ENABLED
 static bool emul_reinitialize_audio = false;
 static bool emul_pause_audio = false;
 static bool emul_resume_audio = false;
-#endif
 static bool cpu_shutting_down = false;
 pthread_t cpu_thread_id = 0;
 pthread_mutex_t interface_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -136,10 +134,8 @@ static void _timing_initialize(double scale) {
     if (!is_fullspeed) {
         cycles_persec_target = CLK_6502 * scale;
     }
-#ifdef AUDIO_ENABLED
     speaker_reset();
     //TIMING_LOG("ClockRate:%0.2lf  ClockCyclesPerSpeakerSample:%0.2lf", cycles_persec_target, speaker_cyclesPerSample());
-#endif
 }
 
 #if !TESTING
@@ -162,9 +158,7 @@ void reinitialize(void) {
 
     timing_initialize();
 
-#ifdef AUDIO_ENABLED
     MB_Reset();
-#endif
 }
 
 void timing_initialize(void) {
@@ -184,8 +178,7 @@ void timing_toggleCPUSpeed(void) {
     timing_initialize();
 }
 
-#ifdef AUDIO_ENABLED
-void timing_reinitializeAudio(void) {
+static void timing_reinitializeAudio(void) {
     SPINLOCK_ACQUIRE(&_pause_spinLock);
     assert(pthread_self() != cpu_thread_id);
 #if !TESTING
@@ -196,7 +189,6 @@ void timing_reinitializeAudio(void) {
     emul_resume_audio = false;
     SPINLOCK_RELINQUISH(&_pause_spinLock);
 }
-#endif
 
 void cpu_pause(void) {
     assert(pthread_self() != cpu_thread_id);
@@ -209,11 +201,9 @@ void cpu_pause(void) {
 
         // CPU thread will be paused when it next tries to acquire interface_mutex
         LOG("PAUSING CPU...");
-#ifdef AUDIO_ENABLED
         if (!emul_reinitialize_audio) {
             emul_pause_audio = true;
         }
-#endif
         pthread_mutex_lock(&interface_mutex);
         is_paused = true;
     } while (0);
@@ -230,11 +220,9 @@ void cpu_resume(void) {
         }
 
         // CPU thread will be unblocked to acquire interface_mutex
-#ifdef AUDIO_ENABLED
         if (!emul_reinitialize_audio) {
             emul_resume_audio = true;
         }
-#endif
         LOG("RESUMING CPU...");
         pthread_mutex_unlock(&interface_mutex);
         is_paused = false;
@@ -279,15 +267,12 @@ static void *cpu_thread(void *dummyptr) {
     unsigned long dbg_cycles_executed = 0;
 #endif
 
-#ifdef AUDIO_ENABLED
     audio_init();
     speaker_init();
     MB_Initialize();
-#endif
 
     do
     {
-#ifdef AUDIO_ENABLED
         LOG("CPUTHREAD %lu LOCKING FOR MAYBE INITIALIZING AUDIO ...", cpu_thread_id);
         pthread_mutex_lock(&interface_mutex);
         if (emul_reinitialize_audio) {
@@ -305,7 +290,6 @@ static void *cpu_thread(void *dummyptr) {
         }
         pthread_mutex_unlock(&interface_mutex);
         LOG("UNLOCKING FOR MAYBE INITIALIZING AUDIO ...");
-#endif
 
         if (emul_reinitialize) {
             reinitialize();
@@ -323,19 +307,15 @@ static void *cpu_thread(void *dummyptr) {
         do {
             SCOPE_TRACE_CPU("CPU mainloop");
             // -LOCK----------------------------------------------------------------------------------------- SAMPLE ti
-#ifdef AUDIO_ENABLED
             if (UNLIKELY(emul_pause_audio)) {
                 emul_pause_audio = false;
                 audio_pause();
             }
-#endif
             pthread_mutex_lock(&interface_mutex);
-#ifdef AUDIO_ENABLED
             if (UNLIKELY(emul_resume_audio)) {
                 emul_resume_audio = false;
                 audio_resume();
             }
-#endif
             clock_gettime(CLOCK_MONOTONIC, &ti);
 
             deltat = timespec_diff(t0, ti, &negative);
@@ -360,9 +340,7 @@ static void *cpu_thread(void *dummyptr) {
                 cpu65_cycles_to_execute = 0;
             }
 
-#ifdef AUDIO_ENABLED
             MB_StartOfCpuExecute();
-#endif
             if (is_debugging) {
                 debugging_cycles0 = cpu65_cycles_to_execute;
                 debugging_cycles  = cpu65_cycles_to_execute;
@@ -402,21 +380,15 @@ static void *cpu_thread(void *dummyptr) {
 #endif
             g_dwCyclesThisFrame += cpu65_cycle_count;
 
-#ifdef AUDIO_ENABLED
             MB_UpdateCycles(); // update 6522s (NOTE: do this before updating cycles_count_total)
-#endif
 
             timing_checkpoint_cycles();
 
-#ifdef AUDIO_ENABLED
             speaker_flush(); // play audio
-#endif
 
             if (g_dwCyclesThisFrame >= dwClksPerFrame) {
                 g_dwCyclesThisFrame -= dwClksPerFrame;
-#ifdef AUDIO_ENABLED
                 MB_EndOfVideoFrame();
-#endif
             }
 
             clock_gettime(CLOCK_MONOTONIC, &tj);
@@ -428,9 +400,7 @@ static void *cpu_thread(void *dummyptr) {
                 disk_motor_time = timespec_diff(disk6.motor_time, tj, &negative);
                 assert(!negative);
                 if (!is_fullspeed &&
-#ifdef AUDIO_ENABLED
                         !speaker_isActive() &&
-#endif
                         !video_isDirty(A2_DIRTY_FLAG) && (!disk6.motor_off && (disk_motor_time.tv_sec || disk_motor_time.tv_nsec > DISK_MOTOR_QUIET_NSECS)) )
                 {
                     TIMING_LOG("auto switching to full speed");
@@ -503,9 +473,7 @@ static void *cpu_thread(void *dummyptr) {
 #if !MOBILE_DEVICE
             if (timing_shouldAutoAdjustSpeed()) {
                 if (is_fullspeed && (
-#ifdef AUDIO_ENABLED
                             speaker_isActive() ||
-#endif
                             video_isDirty(A2_DIRTY_FLAG) || (disk6.motor_off && (disk_motor_time.tv_sec || disk_motor_time.tv_nsec > DISK_MOTOR_QUIET_NSECS))) )
                 {
                     double speed = alt_speed_enabled ? cpu_altscale_factor : cpu_scale_factor;
@@ -521,11 +489,9 @@ static void *cpu_thread(void *dummyptr) {
                 break;
             }
 
-#ifdef AUDIO_ENABLED
             if (UNLIKELY(emul_reinitialize_audio)) {
                 break;
             }
-#endif
 
             if (UNLIKELY(cpu_shutting_down)) {
                 break;
@@ -537,11 +503,9 @@ static void *cpu_thread(void *dummyptr) {
         }
     } while (1);
 
-#ifdef AUDIO_ENABLED
     speaker_destroy();
     MB_Destroy();
     audio_shutdown();
-#endif
 
     return NULL;
 }
@@ -613,7 +577,6 @@ static void vm_prefsChanged(const char *domain) {
     if (cpu_altscale_factor > CPU_SCALE_FASTEST_PIVOT) {
         cpu_altscale_factor = CPU_SCALE_FASTEST;
     }
-#ifdef AUDIO_ENABLED
 
     static float audioLatency = 0.f;
     float latency = prefs_parseFloatValue(PREF_DOMAIN_AUDIO, PREF_AUDIO_LATENCY, &fVal) ? fVal : 0.25f;
@@ -632,7 +595,6 @@ static void vm_prefsChanged(const char *domain) {
         MB_SetEnabled(enabled);
         timing_reinitializeAudio();
     }
-#endif
 }
 
 static __attribute__((constructor)) void _init_vm(void) {

@@ -104,15 +104,11 @@ static inline GLenum safeGLGetError(void) {
 #define glGetError() 0
 #endif
 
-#ifdef DEBUGGER
 #include "meta/debug.h"
-#endif
 
-#ifdef AUDIO_ENABLED
 #include "audio/soundcore.h"
 #include "audio/speaker.h"
 #include "audio/mockingboard.h"
-#endif
 
 #ifdef ANDROID
 #   include "../Android/jni/android_globals.h"
