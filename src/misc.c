@@ -316,21 +316,21 @@ int main(int _argc, char **_argv) {
     // Currently this test is the only one that blocks current thread and runs as a black screen
     extern int test_cpu(int, char *[]);
     test_cpu(argc, argv);
-#   elif TEST_VM
-    extern int test_vm(int, char *[]);
-    test_vm(argc, argv);
-#   elif TEST_DISPLAY
-    extern int test_display(int, char *[]);
-    test_display(argc, argv);
 #   elif TEST_DISK
     extern int test_disk(int, char *[]);
     test_disk(argc, argv);
+#   elif TEST_DISPLAY
+    extern int test_display(int, char *[]);
+    test_display(argc, argv);
 #   elif TEST_PREFS
     extern void test_prefs(int, char *[]);
     test_prefs(argc, argv);
 #   elif TEST_TRACE
     extern void test_trace(int, char *[]);
     test_trace(argc, argv);
+#   elif TEST_VM
+    extern int test_vm(int, char *[]);
+    test_vm(argc, argv);
 #   else
 #       error "OOPS, no testsuite specified"
 #   endif
