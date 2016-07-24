@@ -28,6 +28,11 @@ uint8_t* AY8910_GetRegsPtr(unsigned int uChip);
 
 void AY8910UpdateSetCycles();
 
+#if UNBREAK_SOON
+UINT AY8910_SaveSnapshot(class YamlSaveHelper& yamlSaveHelper, UINT uChip, std::string& suffix);
+UINT AY8910_LoadSnapshot(class YamlLoadHelper& yamlLoadHelper, UINT uChip, std::string& suffix);
+#endif
+
 //-------------------------------------
 // FUSE stuff
 
@@ -43,9 +48,11 @@ struct CAY8910;
  */
 #define AY_CHANGE_MAX		8000
 
-//class CAY8910
-//{
-//public:
+/*
+class CAY8910
+{
+public:
+*/
 	void CAY8910_init(struct CAY8910 *_this);
 
 	void sound_ay_init(struct CAY8910 *_this);
@@ -55,11 +62,17 @@ struct CAY8910;
 	void sound_frame(struct CAY8910 *_this);
 	uint8_t* GetAYRegsPtr(struct CAY8910 *_this);
 	void SetCLK(double CLK);
+#if UNBREAK_SOON
+	void SaveSnapshot(class YamlSaveHelper& yamlSaveHelper, std::string& suffix);
+	bool LoadSnapshot(class YamlLoadHelper& yamlLoadHelper, std::string& suffix);
+#endif
 
-//private:
-//	void sound_end(struct CAY8910 *_this, void);
-//	void sound_ay_overlay(struct CAY8910 *_this, void);
-
+/*
+private:
+	void init( void );
+	void sound_end( void );
+	void sound_ay_overlay( void );
+*/
 
 typedef struct ay_change_tag
 {
@@ -68,7 +81,9 @@ typedef struct ay_change_tag
     unsigned char reg, val;
 } ay_change_tag;
 
-//private:
+/*
+private:
+*/
 typedef struct CAY8910
 {
 	/* foo_subcycles are fixed-point with low 16 bits as fractional part.
@@ -85,7 +100,7 @@ typedef struct CAY8910
 	/* Local copy of the AY registers */
 	libspectrum_byte sound_ay_registers[16];
 
-	ay_change_tag ay_change[ AY_CHANGE_MAX ];
+	struct ay_change_tag ay_change[ AY_CHANGE_MAX ];
 	int ay_change_count;
 
 	// statics from sound_ay_overlay()
@@ -94,7 +109,7 @@ typedef struct CAY8910
 	int env_first, env_rev, env_counter;
 } CAY8910;
 
-// Vars shared between all AY's
-extern double m_fCurrentCLK_AY8910;
+	// Vars shared between all AY's
+	extern double m_fCurrentCLK_AY8910;
 
 #endif

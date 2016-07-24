@@ -37,14 +37,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * Author: Copyright (c) 2002-2006, Tom Charlesworth
  */
 
-#define DSBCAPS_LOCSOFTWARE         0x00000008
-#define DSBCAPS_CTRLVOLUME          0x00000080
-#define DSBCAPS_CTRLPOSITIONNOTIFY  0x00000100
-
-#define DSBVOLUME_MIN               -10000
-#define DSBVOLUME_MAX               0
-
-
 // History:
 //
 // v1.12.07.1 (30 Dec 2005)
@@ -94,8 +86,31 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //   . ORB  = 0x3F (STOP)
 //
 
+#if 0 // !APPLE2IX
+#include "StdAfx.h"
+
+#include "SaveState_Structs_v1.h"
+
+#include "AppleWin.h"
+#include "CPU.h"
+#include "Log.h"
+#include "Memory.h"
+#include "Mockingboard.h"
+#include "SoundCore.h"
+#include "YamlHelper.h"
+
+#include "AY8910.h"
+#include "SSI263Phonemes.h"
+#else
+
+#define DSBCAPS_LOCSOFTWARE         0x00000008
+#define DSBCAPS_CTRLVOLUME          0x00000080
+#define DSBCAPS_CTRLPOSITIONNOTIFY  0x00000100
+
+#define DSBVOLUME_MIN               -10000
+#define DSBVOLUME_MAX               0
+
 #include "common.h"
-#ifdef APPLE2IX
 #       if defined(__linux) && !defined(ANDROID)
 #       include <sys/io.h>
 #       endif
@@ -108,21 +123,16 @@ static inline bool FAILED(int x) { return x != 0; }
 #define THREAD_PRIORITY_NORMAL 0
 #define THREAD_PRIORITY_TIME_CRITICAL 15
 #define STILL_ACTIVE 259
-extern bool GetExitCodeThread(pthread_t hThread, unsigned long *lpExitCode);
-extern pthread_t CreateThread(void* unused_lpThreadAttributes, int unused_dwStackSize, void *(*lpStartAddress)(void *unused), void *lpParameter, unsigned long unused_dwCreationFlags, unsigned long *lpThreadId);
-extern bool SetThreadPriority(pthread_t hThread, int nPriority);
-#else
-#include "StdAfx.h"
-#endif
-
-
-
-#define LOG_SSI263 0
 
 #include <wchar.h>
-
 #include "audio/AY8910.h"
 #include "audio/SSI263Phonemes.h"
+
+#define g_bFullSpeed is_fullspeed
+#define g_bDisableDirectSound false
+#endif
+
+#define LOG_SSI263 0
 
 
 #define SY6522_DEVICE_A 0
@@ -180,47 +190,42 @@ typedef struct
 
 
 // Support 2 MB's, each with 2x SY6522/AY8910 pairs.
-static SY6522_AY8910 g_MB[NUM_AY8910] = { 0 };
+static SY6522_AY8910 g_MB[NUM_AY8910];
 
 // Timer vars
 static unsigned long g_n6522TimerPeriod = 0;
-#ifdef APPLE2IX
-#define TIMERDEVICE_INVALID -1
-#else
 static const unsigned int TIMERDEVICE_INVALID = -1;
-#endif
 static unsigned int g_nMBTimerDevice = TIMERDEVICE_INVALID;	// SY6522 device# which is generating timer IRQ
 static unsigned long g_uLastCumulativeCycles = 0;
 
 // SSI263 vars:
 static uint16_t g_nSSI263Device = 0;	// SSI263 device# which is generating phoneme-complete IRQ
-static int g_nCurrentActivePhoneme = -1;
-static bool g_bStopPhoneme = false;
+static volatile int g_nCurrentActivePhoneme = -1;	// Modified by threads: main & SSI263Thread
+static volatile bool g_bStopPhoneme = false;		// Modified by threads: main & SSI263Thread
 static bool g_bVotraxPhoneme = false;
 
-#ifdef APPLE2IX
+#if 1 // APPLE2IX
 static unsigned long SAMPLE_RATE = 0;
 static float samplesScale = 1.f;
 #else
-static const unsigned long SAMPLE_RATE = 44100;	// Use a base freq so that DirectX (or sound h/w) doesn't have to up/down-sample
+static const DWORD SAMPLE_RATE = 44100;	// Use a base freq so that DirectX (or sound h/w) doesn't have to up/down-sample
 #endif
 
 static short* ppAYVoiceBuffer[NUM_VOICES] = {0};
 
-#ifdef APPLE2IX
+#if 1 // APPLE2IX
 bool g_bDisableDirectSoundMockingboard = false;
 static unsigned long g_nMB_InActiveCycleCount = 0;
 #else
-static uint64_t	g_nMB_InActiveCycleCount = 0;
+static unsigned __int64	g_nMB_InActiveCycleCount = 0;
 #endif
 static bool g_bMB_RegAccessedFlag = false;
 static bool g_bMB_Active = false;
 
-#ifdef APPLE2IX
-//static pthread_t mockingboard_thread = (pthread_t)-1;
+#if 1 // APPLE2IX
 static pthread_t g_hThread = 0;
 #else
-static void *g_hThread = NULL;
+static HANDLE g_hThread = NULL;
 #endif
 
 static bool g_bMBAvailable = false;
@@ -230,44 +235,41 @@ static bool g_bMBAvailable = false;
 static SS_CARDTYPE g_SoundcardType = CT_Empty;	// Use CT_Empty to mean: no soundcard
 static bool g_bPhasorEnable = false;
 static uint8_t g_nPhasorMode = 0;	// 0=Mockingboard emulation, 1=Phasor native
+static unsigned int g_PhasorClockScaleFactor = 1;	// for save-state only
 
 //-------------------------------------
 
-#ifdef APPLE2IX
-#define MB_CHANNELS 2
-static unsigned long MB_BUF_SIZE = 0;
-static unsigned short g_nMB_NumChannels = MB_CHANNELS;
-static unsigned long g_dwDSBufferSize = 0;
-#else
 static const unsigned short g_nMB_NumChannels = 2;
 
-static const unsigned long g_dwDSBufferSize = MAX_SAMPLES * sizeof(short) * g_nMB_NumChannels;
+#if 1 // APPLE2IX
+static unsigned long g_dwDSBufferSize = 0;
+#else
+static const DWORD g_dwDSBufferSize = MAX_SAMPLES * sizeof(short) * g_nMB_NumChannels;
 #endif
 
 static const int16_t nWaveDataMin = (int16_t)0x8000;
 static const int16_t nWaveDataMax = (int16_t)0x7FFF;
 
-#ifdef APPLE2IX
+#if 1 // APPLE2IX
 static short *g_nMixBuffer = NULL;
 #else
 static short g_nMixBuffer[g_dwDSBufferSize / sizeof(short)];
 #endif
 
 
+#if 1 // APPLE2IX
 static AudioBuffer_s *MockingboardVoice = NULL;
-
-// HACK FIXME TODO : why 64?  do we really need this much?!
-#define MAX_VOICES 64
-static AudioBuffer_s *SSI263Voice[MAX_VOICES] = { 0 };
-
-#ifdef APPLE2IX
-static pthread_cond_t mockingboard_cond = PTHREAD_COND_INITIALIZER;
-static pthread_mutex_t mockingboard_mutex = PTHREAD_MUTEX_INITIALIZER;
+static AudioBuffer_s *SSI263Voice[64] = { 0 };
+static pthread_cond_t ssi263_cond = PTHREAD_COND_INITIALIZER;
+static pthread_mutex_t ssi263_mutex = PTHREAD_MUTEX_INITIALIZER;
 static uint8_t quit_event = false;
 #else
+static VOICE MockingboardVoice = {0};
+static VOICE SSI263Voice[64] = {0};
+
 static const int g_nNumEvents = 2;
-static void *g_hSSI263Event[g_nNumEvents] = {NULL};	// 1: Phoneme finished playing, 2: Exit thread
-static unsigned long g_dwMaxPhonemeLen = 0;
+static HANDLE g_hSSI263Event[g_nNumEvents] = {NULL};	// 1: Phoneme finished playing, 2: Exit thread
+static DWORD g_dwMaxPhonemeLen = 0;
 #endif
 
 // When 6522 IRQ is *not* active use 60Hz update freq for MB voices
@@ -284,80 +286,12 @@ uint32_t g_uTimer1IrqCount = 0;	// DEBUG
 //---------------------------------------------------------------------------
 
 // Forward refs:
-#ifdef APPLE2IX
+#if 0 // !APPLE2IX
+static DWORD WINAPI SSI263Thread(LPVOID);
+static void Votrax_Write(BYTE nDevice, BYTE nValue);
+#else
 static void* SSI263Thread(void *);
-#else
-static unsigned long SSI263Thread(void *);
-#endif
 static void Votrax_Write(uint8_t nDevice, uint8_t nValue);
-
-#ifdef APPLE2IX
-//---------------------------------------------------------------------------
-// Windows Shim Code ...
-
-pthread_t CreateThread(void* unused_lpThreadAttributes, int unused_dwStackSize, void *(*lpStartRoutine)(void *stuff), void *lpParameter, unsigned long unused_dwCreationFlags, unsigned long *lpThreadId)
-{
-    pthread_t a_thread = 0;
-    int err = 0;
-    if ((err = pthread_create(&a_thread, NULL, lpStartRoutine, lpParameter)))
-    {
-        ERRLOG("pthread_create");
-    }
-
-    return a_thread; 
-}
-
-bool SetThreadPriority(pthread_t thread, int unused_nPriority)
-{
-    // assuming time critical ...
-#if defined(__APPLE__) || defined(ANDROID)
-#warning possible FIXME possible TODO : set thread priority in Darwin/Mach ?
-#else
-    int policy = sched_getscheduler(getpid());
-
-    int prio = 0;
-    if ((prio = sched_get_priority_max(policy)) < 0)
-    {
-        ERRLOG("OOPS sched_get_priority_max");
-        return 0;
-    }
-
-    int err = 0;
-    if ((err = pthread_setschedprio(thread, prio)))
-    {
-        ERRLOG("OOPS pthread_setschedprio");
-        return 0;
-    }
-#endif
-
-    return 1;
-}
-
-bool GetExitCodeThread(pthread_t thread, unsigned long *lpExitCode)
-{
-#if defined(__APPLE__) || defined(ANDROID)
-    int err = 0;
-    if ( (err = pthread_join(thread, NULL)) ) {
-        ERRLOG("OOPS pthread_join");
-    }
-    if (lpExitCode) {
-        *lpExitCode = err;
-    }
-#else
-    if (pthread_tryjoin_np(thread, NULL))
-    {
-        if (lpExitCode)
-        {
-            *lpExitCode = STILL_ACTIVE;
-        }
-    }
-    else if (lpExitCode)
-    {
-        *lpExitCode = 0;
-    }
-#endif
-    return 1;
-}
 #endif
 
 //---------------------------------------------------------------------------
@@ -473,7 +407,7 @@ static void UpdateIFR(SY6522_AY8910* pMB)
 
 	if (bIRQ)
 	{
-#ifdef APPLE2IX
+#if 1 // APPLE2IX
             cpu65_interrupt(IS_6522);
 #else
 	    CpuIrqAssert(IS_6522);
@@ -481,7 +415,7 @@ static void UpdateIFR(SY6522_AY8910* pMB)
 	}
 	else
 	{
-#ifdef APPLE2IX
+#if 1 // APPLE2IX
             cpu65_uninterrupt(IS_6522);
 #else
 	    CpuIrqDeassert(IS_6522);
@@ -686,22 +620,18 @@ static uint8_t SY6522_Read(uint8_t nDevice, uint8_t nReg)
 
 //---------------------------------------------------------------------------
 
-#ifdef APPLE2IX
 static void SSI263_Play(unsigned int nPhoneme);
-#else
-void SSI263_Play(unsigned int nPhoneme);
-#endif
 
 #if 0
 typedef struct
 {
-	uint8_t DurationPhonome;
-	uint8_t Inflection;		// I10..I3
-	uint8_t RateInflection;
-	uint8_t CtrlArtAmp;
-	uint8_t FilterFreq;
+	BYTE DurationPhoneme;
+	BYTE Inflection;		// I10..I3
+	BYTE RateInflection;
+	BYTE CtrlArtAmp;
+	BYTE FilterFreq;
 	//
-	uint8_t CurrentMode;
+	BYTE CurrentMode;
 } SSI263A;
 #endif
 
@@ -750,7 +680,7 @@ static void SSI263_Write(uint8_t nDevice, uint8_t nReg, uint8_t nValue)
 		// Datasheet is not clear, but a write to DURPHON must clear the IRQ
 		if(g_bPhasorEnable)
 		{
-#ifdef APPLE2IX
+#if 1 // APPLE2IX
                     cpu65_uninterrupt(IS_SPEECH);
 #else
 		    CpuIrqDeassert(IS_SPEECH);
@@ -763,7 +693,7 @@ static void SSI263_Write(uint8_t nDevice, uint8_t nReg, uint8_t nValue)
 		}
 		pMB->SpeechChip.CurrentMode &= ~1;	// Clear SSI263's D7 pin
 
-		pMB->SpeechChip.DurationPhonome = nValue;
+		pMB->SpeechChip.DurationPhoneme = nValue;
 
 		g_nSSI263Device = nDevice;
 
@@ -795,7 +725,7 @@ static void SSI263_Write(uint8_t nDevice, uint8_t nReg, uint8_t nValue)
 		LOG("CTRL  = %d, ART = 0x%02X, AMP=0x%02X\n", nValue>>7, (nValue&ARTICULATION_MASK)>>4, nValue&AMPLITUDE_MASK);
 #endif
 		if((pMB->SpeechChip.CtrlArtAmp & CONTROL_MASK) && !(nValue & CONTROL_MASK))	// H->L
-			pMB->SpeechChip.CurrentMode = pMB->SpeechChip.DurationPhonome & DURATION_MODE_MASK;
+			pMB->SpeechChip.CurrentMode = pMB->SpeechChip.DurationPhoneme & DURATION_MODE_MASK;
 		pMB->SpeechChip.CtrlArtAmp = nValue;
 		break;
 	case SSI_FILFREQ:
@@ -811,7 +741,7 @@ static void SSI263_Write(uint8_t nDevice, uint8_t nReg, uint8_t nValue)
 
 //-------------------------------------
 
-static uint8_t Votrax2SSI263[MAX_VOICES] = 
+static uint8_t Votrax2SSI263[64] = 
 {
 	0x02,	// 00: EH3 jackEt -> E1 bEnt
 	0x0A,	// 01: EH2 Enlist -> EH nEst
@@ -900,36 +830,34 @@ static void Votrax_Write(uint8_t nDevice, uint8_t nValue)
 
 static void MB_Update()
 {
-#ifdef APPLE2IX
+#if 1 // APPLE2IX
     if (!audio_isAvailable) {
         return;
     }
 
-        static int nNumSamplesError = 0;
-        if (!MockingboardVoice)
-        {
-            nNumSamplesError = 0;
-            return;
-        }
+    if (!MockingboardVoice)
+    {
+        return;
+    }
 
-        if (!MockingboardVoice->bActive || !g_bMB_Active)
-        {
-            nNumSamplesError = 0;
-            return;
-        }
+    if (!MockingboardVoice->bActive || !g_bMB_Active)
+    {
+        return;
+    }
 #else
 	char szDbg[200];
-	if (!MockingboardVoice->bActive)
+
+	if (!MockingboardVoice.bActive)
 		return;
 #endif
 
-	if (is_fullspeed)
+	if (g_bFullSpeed)
 	{
 		// Keep AY reg writes relative to the current 'frame'
 		// - Required for Ultima3:
 		//   . Tune ends
-		//   . is_fullspeed:=true (disk-spinning) for ~50 frames
-		//   . U3 sets AY_ENABLE:=0xFF (as a side-effect, this sets is_fullspeed:=false)
+		//   . g_bFullSpeed:=true (disk-spinning) for ~50 frames
+		//   . U3 sets AY_ENABLE:=0xFF (as a side-effect, this sets g_bFullSpeed:=false)
 		//   o Without this, the write to AY_ENABLE gets ignored (since AY8910's /g_uLastCumulativeCycles/ was last set 50 frame ago)
 		AY8910UpdateSetCycles();
 
@@ -947,10 +875,10 @@ static void MB_Update()
 		{
 			g_nMB_InActiveCycleCount = cycles_count_total;
 		}
-#ifdef APPLE2IX
+#if 1 // APPLE2IX
 		else if(cycles_count_total - g_nMB_InActiveCycleCount > cycles_persec_target/10)
 #else
-		else if(cycles_count_total - g_nMB_InActiveCycleCount > cycles_persec_target/10)
+		else if(g_nCumulativeCycles - g_nMB_InActiveCycleCount > (unsigned __int64)g_fCurrentCLK6502/10)
 #endif
 		{
 			// After 0.1 sec of Apple time, assume MB is not active
@@ -966,10 +894,10 @@ static void MB_Update()
 
 	//
 
-#ifndef APPLE2IX
-	static unsigned long dwByteOffset = (unsigned long)-1;
-	static int nNumSamplesError = 0;
+#if 0 // !APPLE2IX
+	static DWORD dwByteOffset = (DWORD)-1;
 #endif
+	static int nNumSamplesError = 0;
 
 	const double n6522TimerPeriod = MB_GetFramePeriod();
 
@@ -987,21 +915,23 @@ static void MB_Update()
 
 	//
 
+#if 1 // APPLE2IX
 	unsigned long dwDSLockedBufferSize0 = 0;
 	int16_t *pDSLockedBuffer0 = NULL;
-
-	unsigned long dwCurrentPlayCursor, dwCurrentWriteCursor;
-#ifdef APPLE2IX
-        //dwCurrentWriteCursor = 0;
+	unsigned long dwCurrentPlayCursor;
 	int hr = MockingboardVoice->GetCurrentPosition(MockingboardVoice, &dwCurrentPlayCursor);
 #else
-	int hr = MockingboardVoice->GetCurrentPosition(&dwCurrentPlayCursor, &dwCurrentWriteCursor);
+	DWORD dwDSLockedBufferSize0, dwDSLockedBufferSize1;
+	SHORT *pDSLockedBuffer0, *pDSLockedBuffer1;
+
+	DWORD dwCurrentPlayCursor, dwCurrentWriteCursor;
+	HRESULT hr = MockingboardVoice.lpDSBvoice->GetCurrentPosition(&dwCurrentPlayCursor, &dwCurrentWriteCursor);
 #endif
 	if(FAILED(hr))
 		return;
 
-#if 0
-	if(dwByteOffset == (unsigned long)-1)
+#if 0 // !APPLE2IX
+	if(dwByteOffset == (DWORD)-1)
 	{
 		// First time in this func
 
@@ -1016,12 +946,10 @@ static void MB_Update()
 			// |-----PxxxxxW-----|
 			if((dwByteOffset > dwCurrentPlayCursor) && (dwByteOffset < dwCurrentWriteCursor))
 			{
-#ifndef APPLE2IX
 				double fTicksSecs = (double)GetTickCount() / 1000.0;
 				sprintf(szDbg, "%010.3f: [MBUpdt]    PC=%08X, WC=%08X, Diff=%08X, Off=%08X, NS=%08X xxx\n", fTicksSecs, dwCurrentPlayCursor, dwCurrentWriteCursor, dwCurrentWriteCursor-dwCurrentPlayCursor, dwByteOffset, nNumSamples);
 				OutputDebugString(szDbg);
-				if (g_fh) fprintf(g_fh, szDbg);
-#endif
+				if (g_fh) fprintf(g_fh, "%s", szDbg);
 
 				dwByteOffset = dwCurrentWriteCursor;
 			}
@@ -1031,12 +959,10 @@ static void MB_Update()
 			// |xxW----------Pxxx|
 			if((dwByteOffset > dwCurrentPlayCursor) || (dwByteOffset < dwCurrentWriteCursor))
 			{
-#ifndef APPLE2IX
 				double fTicksSecs = (double)GetTickCount() / 1000.0;
 				sprintf(szDbg, "%010.3f: [MBUpdt]    PC=%08X, WC=%08X, Diff=%08X, Off=%08X, NS=%08X XXX\n", fTicksSecs, dwCurrentPlayCursor, dwCurrentWriteCursor, dwCurrentWriteCursor-dwCurrentPlayCursor, dwByteOffset, nNumSamples);
 				OutputDebugString(szDbg);
-				if (g_fh) fprintf(g_fh, szDbg);
-#endif
+				if (g_fh) fprintf(g_fh, "%s", szDbg);
 
 				dwByteOffset = dwCurrentWriteCursor;
 			}
@@ -1052,25 +978,23 @@ static void MB_Update()
 		nBytesRemaining += g_dwDSBufferSize;
 
 	// Calc correction factor so that play-buffer doesn't under/overflow
-	if((unsigned int)nBytesRemaining < g_dwDSBufferSize / 4)
-		nNumSamplesError += SOUNDCORE_ERROR_INC;				// < 0.25 of buffer remaining
-	else if((unsigned int)nBytesRemaining > g_dwDSBufferSize / 2)
-		nNumSamplesError -= SOUNDCORE_ERROR_INC;				// > 0.50 of buffer remaining
+#if 1 // APPLE2IX
+        assert(nBytesRemaining >= 0);
+	const int nErrorInc = SOUNDCORE_ERROR_INC;
+#else
+	const int nErrorInc = SoundCore_GetErrorInc();
+#endif
+	if(nBytesRemaining < g_dwDSBufferSize / 4)
+		nNumSamplesError += nErrorInc;				// < 0.25 of buffer remaining
+	else if(nBytesRemaining > g_dwDSBufferSize / 2)
+		nNumSamplesError -= nErrorInc;				// > 0.50 of buffer remaining
 	else
 		nNumSamplesError = 0;						// Acceptable amount of data in buffer
 
-#ifdef APPLE2IX
-	if(nNumSamplesError < -SOUNDCORE_ERROR_MAX) nNumSamplesError = -SOUNDCORE_ERROR_MAX;
-	if(nNumSamplesError >  SOUNDCORE_ERROR_MAX) nNumSamplesError =  SOUNDCORE_ERROR_MAX;
+	if(nNumSamples == 0)
+		return;
 
-        static time_t dbg_print = 0;
-        time_t now = time(NULL);
-        if (dbg_print != now)
-        {
-            dbg_print = now;
-            LOG("cycles_speaker_feedback:%d nNumSamplesError:%d n6522TimerPeriod:%f nIrqFreq:%f nNumSamplesPerPeriod:%d nNumSamples:%d nBytesRemaining:%d ", cycles_speaker_feedback, nNumSamplesError, n6522TimerPeriod, nIrqFreq, nNumSamplesPerPeriod, nNumSamples, nBytesRemaining);
-        }
-#endif
+	//
 
 	const double fAttenuation = g_bPhasorEnable ? 2.0/3.0 : 1.0;
 
@@ -1102,17 +1026,29 @@ static void MB_Update()
 		else if(nDataR > nWaveDataMax)
 			nDataR = nWaveDataMax;
 
-#ifdef APPLE2IX
-		g_nMixBuffer[i*g_nMB_NumChannels+0] = (short)nDataL * samplesScale;
-		g_nMixBuffer[i*g_nMB_NumChannels+1] = (short)nDataR * samplesScale;
-#else
-		g_nMixBuffer[i*g_nMB_NumChannels+0] = (short)nDataL;	// L
-		g_nMixBuffer[i*g_nMB_NumChannels+1] = (short)nDataR;	// R
-#endif
+		g_nMixBuffer[i*g_nMB_NumChannels+0] = (short)nDataL * samplesScale;	// L
+		g_nMixBuffer[i*g_nMB_NumChannels+1] = (short)nDataR * samplesScale;	// R
 	}
 
 	//
 
+#if 0 // !APPLE2IX
+	if(!DSGetLock(MockingboardVoice.lpDSBvoice,
+						dwByteOffset, (DWORD)nNumSamples*sizeof(short)*g_nMB_NumChannels,
+						&pDSLockedBuffer0, &dwDSLockedBufferSize0,
+						&pDSLockedBuffer1, &dwDSLockedBufferSize1))
+		return;
+
+	memcpy(pDSLockedBuffer0, &g_nMixBuffer[0], dwDSLockedBufferSize0);
+	if(pDSLockedBuffer1)
+		memcpy(pDSLockedBuffer1, &g_nMixBuffer[dwDSLockedBufferSize0/sizeof(short)], dwDSLockedBufferSize1);
+
+	// Commit sound buffer
+	hr = MockingboardVoice.lpDSBvoice->Unlock((void*)pDSLockedBuffer0, dwDSLockedBufferSize0,
+											  (void*)pDSLockedBuffer1, dwDSLockedBufferSize1);
+
+	dwByteOffset = (dwByteOffset + (DWORD)nNumSamples*sizeof(short)*g_nMB_NumChannels) % g_dwDSBufferSize;
+#else
         const unsigned long originalRequestedBufSize = (unsigned long)nNumSamples*sizeof(short)*g_nMB_NumChannels;
         unsigned long requestedBufSize = originalRequestedBufSize;
         unsigned long bufIdx = 0;
@@ -1139,11 +1075,7 @@ static void MB_Update()
             assert(requestedBufSize <= originalRequestedBufSize);
             ++counter;
         } while (bufIdx < originalRequestedBufSize && counter < 2);
-
         assert(bufIdx == originalRequestedBufSize);
-
-#ifndef APPLE2IX
-	dwByteOffset = (dwByteOffset + (unsigned long)nNumSamples*sizeof(short)*g_nMB_NumChannels) % g_dwDSBufferSize;
 #endif
 
 #ifdef RIFF_MB
@@ -1153,27 +1085,41 @@ static void MB_Update()
 
 //-----------------------------------------------------------------------------
 
-#ifdef APPLE2IX
-static void* SSI263Thread(void *lpParameter)
+#if 0 // !APPLE2IX
+static DWORD WINAPI SSI263Thread(LPVOID lpParameter)
+{
+	while(1)
+	{
+		DWORD dwWaitResult = WaitForMultipleObjects( 
+								g_nNumEvents,		// number of handles in array
+								g_hSSI263Event,		// array of event handles
+								FALSE,				// wait until any one is signaled
+								INFINITE);
+
+		if((dwWaitResult < WAIT_OBJECT_0) || (dwWaitResult > WAIT_OBJECT_0+g_nNumEvents-1))
+			continue;
+
+		dwWaitResult -= WAIT_OBJECT_0;			// Determine event # that signaled
+
+		if(dwWaitResult == (g_nNumEvents-1))	// Termination event
+			break;
 #else
-static unsigned long SSI263Thread(void *lpParameter)
-#endif
+static void* SSI263Thread(void *lpParameter)
 {
         const unsigned long nsecWait = NANOSECONDS_PER_SECOND / audio_backend->systemSettings.sampleRateHz;
         const struct timespec wait = { .tv_sec=0, .tv_nsec=nsecWait };
 
 	while(1)
 	{
-#ifdef APPLE2IX
             int err =0;
 
-            pthread_mutex_lock(&mockingboard_mutex);
-            err = pthread_cond_timedwait(&mockingboard_cond, &mockingboard_mutex, &wait);
+            pthread_mutex_lock(&ssi263_mutex);
+            err = pthread_cond_timedwait(&ssi263_cond, &ssi263_mutex, &wait);
             if (err && (err != ETIMEDOUT))
             {
                 ERRLOG("OOPS pthread_cond_timedwait");
             }
-            pthread_mutex_unlock(&mockingboard_mutex);
+            pthread_mutex_unlock(&ssi263_mutex);
 
             if (quit_event)
             {
@@ -1182,7 +1128,7 @@ static unsigned long SSI263Thread(void *lpParameter)
 
             // poll to see if any samples finished ...
             bool sample_finished = false;
-            for (unsigned int i=0; i<MAX_VOICES; i++)
+            for (unsigned int i=0; i<64; i++)
             {
 		if (SSI263Voice[i] && SSI263Voice[i]->bActive)
                 {
@@ -1200,20 +1146,6 @@ static unsigned long SSI263Thread(void *lpParameter)
             {
                 continue;
             }
-#else
-		unsigned long dwWaitResult = WaitForMultipleObjects( 
-								g_nNumEvents,		// number of handles in array
-								g_hSSI263Event,		// array of event handles
-								false,				// wait until any one is signaled
-								0);
-
-		if((dwWaitResult < 0x0L) || (dwWaitResult > 0x0L+g_nNumEvents-1))
-			continue;
-
-		dwWaitResult -= 0x0L;			// Determine event # that signaled
-
-		if(dwWaitResult == (g_nNumEvents-1))	// Termination event
-			break;
 #endif
 		// Phoneme completed playing
 
@@ -1240,7 +1172,7 @@ static unsigned long SSI263Thread(void *lpParameter)
 				pMB->SpeechChip.CurrentMode |= 1;	// Set SSI263's D7 pin
 
 				// Phasor's SSI263.IRQ line appears to be wired directly to IRQ (Bypassing the 6522)
-#ifdef APPLE2IX
+#if 1 // APPLE2IX
                                 cpu65_interrupt(IS_SPEECH);
 #else
 				CpuIrqAssert(IS_SPEECH);
@@ -1277,37 +1209,44 @@ static unsigned long SSI263Thread(void *lpParameter)
 
 static void SSI263_Play(unsigned int nPhoneme)
 {
-    return; // SSI263 voices are currently deadc0de
-#if 0
+#if 1 // APPLE2IX
+    assert(pthread_self() == cpu_thread_id);
+#warning FIXME TODO : this needs to be properly implemented ...
+#else
 #if 1
-	int hr;
+	HRESULT hr;
 
-	if(g_nCurrentActivePhoneme >= 0)
 	{
-		// A write to DURPHON before previous phoneme has completed
-		g_bStopPhoneme = true;
-#if !defined(APPLE2IX)
-		hr = SSI263Voice[g_nCurrentActivePhoneme]->Stop();
-#endif
+		int nCurrPhoneme = g_nCurrentActivePhoneme;	// local copy in case SSI263Thread sets it to -1
+		if (nCurrPhoneme >= 0)
+		{
+			// A write to DURPHON before previous phoneme has completed
+			g_bStopPhoneme = true;
+			hr = SSI263Voice[nCurrPhoneme].lpDSBvoice->Stop();
+
+			// Busy-wait until ACK from SSI263Thread
+			// . required to avoid data-race
+			while (	g_bStopPhoneme &&				// wait for SSI263Thread to ACK the lpDSBVoice->Stop()
+					g_nCurrentActivePhoneme >= 0)	// wait for SSI263Thread to get end of sample event
+				;
+
+			g_bStopPhoneme = false;
+		}
 	}
 
 	g_nCurrentActivePhoneme = nPhoneme;
 
-#ifdef APPLE2IX
-	hr = SSI263Voice[g_nCurrentActivePhoneme]->Replay(SSI263Voice[g_nCurrentActivePhoneme]);
-#else
-	hr = SSI263Voice[g_nCurrentActivePhoneme]->SetCurrentPosition(0);
+	hr = SSI263Voice[g_nCurrentActivePhoneme].lpDSBvoice->SetCurrentPosition(0);
 	if(FAILED(hr))
 		return;
 
-	hr = SSI263Voice[g_nCurrentActivePhoneme]->Play(0,0,0);	// Not looping
-#endif
+	hr = SSI263Voice[g_nCurrentActivePhoneme].lpDSBvoice->Play(0,0,0);	// Not looping
 	if(FAILED(hr))
 		return;
 
-	SSI263Voice[g_nCurrentActivePhoneme]->bActive = true;
+	SSI263Voice[g_nCurrentActivePhoneme].bActive = true;
 #else
-	int hr;
+	HRESULT hr;
 	bool bPause;
 
 	if(nPhoneme == 1)
@@ -1324,16 +1263,16 @@ static void SSI263_Play(unsigned int nPhoneme)
 		bPause = false;
 	}
 
-	unsigned long dwDSLockedBufferSize = 0;    // Size of the locked DirectSound buffer
-	int16_t* pDSLockedBuffer;
+	DWORD dwDSLockedBufferSize = 0;    // Size of the locked DirectSound buffer
+	SHORT* pDSLockedBuffer;
 
-	hr = SSI263Voice->Stop();
+	hr = SSI263Voice.lpDSBvoice->Stop();
 
-	if(DSGetLock(SSI263Voice, 0, 0, &pDSLockedBuffer, &dwDSLockedBufferSize, NULL, 0))
+	if(!DSGetLock(SSI263Voice.lpDSBvoice, 0, 0, &pDSLockedBuffer, &dwDSLockedBufferSize, NULL, 0))
 		return;
 
 	unsigned int nPhonemeShortLength = g_nPhonemeInfo[nPhoneme].nLength;
-	unsigned int nPhonemeByteLength = g_nPhonemeInfo[nPhoneme].nLength * sizeof(int16_t);
+	unsigned int nPhonemeByteLength = g_nPhonemeInfo[nPhoneme].nLength * sizeof(SHORT);
 
 	if(bPause)
 	{
@@ -1360,15 +1299,11 @@ static void SSI263_Play(unsigned int nPhoneme)
 	}
 #endif
 
-#ifdef APPLE2IX
-	hr = SSI263Voice->Unlock(SSI263Voice, dwDSLockedBufferSize);
-#else
-	hr = SSI263Voice->Unlock((void*)pDSLockedBuffer, dwDSLockedBufferSize, NULL, 0);
-#endif
+	hr = SSI263Voice.lpDSBvoice->Unlock((void*)pDSLockedBuffer, dwDSLockedBufferSize, NULL, 0);
 	if(FAILED(hr))
 		return;
 
-	hr = SSI263Voice->Play(0,0,0);	// Not looping
+	hr = SSI263Voice.lpDSBvoice->Play(0,0,0);	// Not looping
 	if(FAILED(hr))
 		return;
 
@@ -1381,10 +1316,10 @@ static void SSI263_Play(unsigned int nPhoneme)
 
 static bool MB_DSInit()
 {
-#ifdef APPLE2IX
+#if 1 // APPLE2IX
 	LOG("MB_DSInit : %d\n", g_bMBAvailable);
 #else
-	LOG("MB_DSInit\n", g_bMBAvailable);
+	LogFileOutput("MB_DSInit\n", g_bMBAvailable);
 #endif
 #ifdef NO_DIRECT_X
 
@@ -1410,14 +1345,14 @@ static bool MB_DSInit()
 		return false;
 	}
 
+#if 1 // APPLE2IX
         SAMPLE_RATE = audio_backend->systemSettings.sampleRateHz;
-        MB_BUF_SIZE = audio_backend->systemSettings.stereoBufferSizeSamples * audio_backend->systemSettings.bytesPerSample * MB_CHANNELS;
-        g_dwDSBufferSize = MB_BUF_SIZE;
-        g_nMixBuffer = MALLOC(MB_BUF_SIZE / audio_backend->systemSettings.bytesPerSample);
+        g_dwDSBufferSize = audio_backend->systemSettings.stereoBufferSizeSamples * audio_backend->systemSettings.bytesPerSample * g_nMB_NumChannels;
+        g_nMixBuffer = MALLOC(g_dwDSBufferSize / audio_backend->systemSettings.bytesPerSample);
 
-#ifndef APPLE2IX
-	bool bRes = DSZeroVoiceBuffer(&MockingboardVoice, (char*)"MB", g_dwDSBufferSize);
-	LOG("MB_DSInit: DSZeroVoiceBuffer(), res=%d\n", bRes ? 1 : 0);
+#else
+	bool bRes = DSZeroVoiceBuffer(&MockingboardVoice, "MB", g_dwDSBufferSize);
+	LogFileOutput("MB_DSInit: DSZeroVoiceBuffer(), res=%d\n", bRes ? 1 : 0);
 	if (!bRes)
 		return false;
 #endif
@@ -1428,10 +1363,10 @@ static bool MB_DSInit()
 	if(!MockingboardVoice->nVolume)
 		MockingboardVoice->nVolume = DSBVOLUME_MAX;
 
-#if !defined(APPLE2IX)
-	hr = MockingboardVoice->SetVolume(MockingboardVoice->nVolume);
+#if 0 // !APPLE2IX
+	hr = MockingboardVoice.lpDSBvoice->SetVolume(MockingboardVoice.nVolume);
+	LogFileOutput("MB_DSInit: SetVolume(), hr=0x%08X\n", hr);
 #endif
-	LOG("MB_DSInit: SetVolume(), hr=0x%08X\n", (unsigned int)hr);
 
 	//---------------------------------
 
@@ -1444,44 +1379,46 @@ static bool MB_DSInit()
 	for(int i=0; i<sizeof(g_nPhonemeInfo) / sizeof(PHONEME_INFO); i++)
 		if(g_dwMaxPhonemeLen < g_nPhonemeInfo[i].nLength)
 			g_dwMaxPhonemeLen = g_nPhonemeInfo[i].nLength;
-	g_dwMaxPhonemeLen *= sizeof(int16_t);
+	g_dwMaxPhonemeLen *= sizeof(SHORT);
 #endif
 
-        return true;
-#if 0
-
-#ifdef APPLE2IX
+#if 1 // APPLE2IX
         int err = 0;
-        if ((err = pthread_mutex_init(&mockingboard_mutex, NULL)))
+        if ((err = pthread_mutex_init(&ssi263_mutex, NULL)))
         {
             ERRLOG("OOPS pthread_mutex_init");
         }
 
-        if ((err = pthread_cond_init(&mockingboard_cond, NULL)))
+        if ((err = pthread_cond_init(&ssi263_cond, NULL)))
         {
             ERRLOG("OOPS pthread_cond_init");
         }
 #else
 	g_hSSI263Event[0] = CreateEvent(NULL,	// lpEventAttributes
-									false,	// bManualReset (false = auto-reset)
-									false,	// bInitialState (false = non-signaled)
+									FALSE,	// bManualReset (FALSE = auto-reset)
+									FALSE,	// bInitialState (FALSE = non-signaled)
 									NULL);	// lpName
-	LOG("MB_DSInit: CreateEvent(), g_hSSI263Event[0]=0x%08X\n", (uint32_t)g_hSSI263Event[0]);
+	LogFileOutput("MB_DSInit: CreateEvent(), g_hSSI263Event[0]=0x%08X\n", (UINT32)g_hSSI263Event[0]);
 
 	g_hSSI263Event[1] = CreateEvent(NULL,	// lpEventAttributes
-									false,	// bManualReset (false = auto-reset)
-									false,	// bInitialState (false = non-signaled)
+									FALSE,	// bManualReset (FALSE = auto-reset)
+									FALSE,	// bInitialState (FALSE = non-signaled)
 									NULL);	// lpName
-	LOG("MB_DSInit: CreateEvent(), g_hSSI263Event[1]=0x%08X\n", (uint32_t)g_hSSI263Event[1]);
+	LogFileOutput("MB_DSInit: CreateEvent(), g_hSSI263Event[1]=0x%08X\n", (UINT32)g_hSSI263Event[1]);
 
 	if((g_hSSI263Event[0] == NULL) || (g_hSSI263Event[1] == NULL))
 	{
-		LOG("SSI263: CreateEvent failed\n");
+		if(g_fh) fprintf(g_fh, "SSI263: CreateEvent failed\n");
 		return false;
 	}
 #endif
 
-	for(int i=0; i<MAX_VOICES; i++)
+#if 1 // APPLE2IX
+#warning FIXME TODO : this needs to be properly implemented ...
+        return true;
+#else
+
+	for(int i=0; i<64; i++)
 	{
 		unsigned int nPhoneme = i;
 		bool bPause;
@@ -1501,14 +1438,21 @@ static bool MB_DSInit()
 		}
 
 		unsigned int nPhonemeByteLength = g_nPhonemeInfo[nPhoneme].nLength * audio_backend->systemSettings.bytesPerSample;
+#if 0 // !APPLE2IX
+		// NB. DSBCAPS_LOCSOFTWARE required for Phoneme+2==0x28 - sample too short (see KB327698)
+		hr = DSGetSoundBuffer(&SSI263Voice[i], DSBCAPS_CTRLVOLUME+DSBCAPS_CTRLPOSITIONNOTIFY+DSBCAPS_LOCSOFTWARE, nPhonemeByteLength, 22050, 1);
+		LogFileOutput("MB_DSInit: (%02d) DSGetSoundBuffer(), hr=0x%08X\n", i, hr);
+#else
                 if (nPhonemeByteLength > audio_backend->systemSettings.monoBufferSizeSamples) {
                     RELEASE_ERRLOG("!!!!!!!!!!!!!!!!!!!!! phoneme length > buffer size !!!!!!!!!!!!!!!!!!!!!");
 #warning ^^^^^^^^^^ require vigilence here around this change ... we used to be able to specify the exact buffer size ...
                 }
+                nPhonemeByteLength = dwDSLockedBufferSize;
 
 		// NB. DSBCAPS_LOCSOFTWARE required for
 		hr = audio_createSoundBuffer(&SSI263Voice[i], 1);
 		LOG("MB_DSInit: (%02d) DSGetSoundBuffer(), hr=0x%08X\n", i, (unsigned int)hr);
+#endif
 		if(FAILED(hr))
 		{
 			LOG("SSI263: DSGetSoundBuffer failed (%08X)\n",(unsigned int)hr);
@@ -1516,7 +1460,7 @@ static bool MB_DSInit()
 		}
 
 		hr = SSI263Voice[i]->Lock(SSI263Voice[i], 0, &pDSLockedBuffer, &dwDSLockedBufferSize);
-		//LOG("MB_DSInit: (%02d) DSGetLock(), res=%d\n", i, hr ? 1 : 0);	// WARNING: Lock acquired && doing heavy-weight logging
+		//LogFileOutput("MB_DSInit: (%02d) DSGetLock(), res=%d\n", i, bRes ? 1 : 0);	// WARNING: Lock acquired && doing heavy-weight logging
 		if(FAILED(hr))
 		{
 			LOG("SSI263: DSGetLock failed (%08X)\n",(unsigned int)hr);
@@ -1526,29 +1470,22 @@ static bool MB_DSInit()
 		if(bPause)
 		{
 			// 'pause' length is length of 1st phoneme (arbitrary choice, since don't know real length)
-#ifdef APPLE2IX
-			memset(pDSLockedBuffer, 0x00, dwDSLockedBufferSize);
-#else
 			memset(pDSLockedBuffer, 0x00, nPhonemeByteLength);
-#endif
 		}
 		else
 		{
-#ifdef APPLE2IX
-			memcpy(pDSLockedBuffer, &g_nPhonemeData[g_nPhonemeInfo[nPhoneme].nOffset], dwDSLockedBufferSize);
-#else
 			memcpy(pDSLockedBuffer, &g_nPhonemeData[g_nPhonemeInfo[nPhoneme].nOffset], nPhonemeByteLength);
-#endif
 		}
 
-#ifdef APPLE2IX
+#if 1 // APPLE2IX
+#error FIXME TODO : need a way to notify sound finished and remove the bullshit polling
                 // Assume no way to get notification of sound finished, instead we will poll from mockingboard thread ...
 #else
- 		hr = SSI263Voice[i]->QueryInterface(IID_IDirectSoundNotify, (void **)&SSI263Voice[i]->lpDSNotify);
-		//LOG("MB_DSInit: (%02d) QueryInterface(), hr=0x%08X\n", i, hr);	// WARNING: Lock acquired && doing heavy-weight logging
+ 		hr = SSI263Voice[i].lpDSBvoice->QueryInterface(IID_IDirectSoundNotify, (LPVOID *)&SSI263Voice[i].lpDSNotify);
+		//LogFileOutput("MB_DSInit: (%02d) QueryInterface(), hr=0x%08X\n", i, hr);	// WARNING: Lock acquired && doing heavy-weight logging
 		if(FAILED(hr))
 		{
-			LOG("SSI263: QueryInterface failed (%08X)\n",hr);
+			if(g_fh) fprintf(g_fh, "SSI263: QueryInterface failed (%08X)\n",hr);
 			return false;
 		}
 
@@ -1558,21 +1495,22 @@ static bool MB_DSInit()
 		PositionNotify.dwOffset = DSBPN_OFFSETSTOP;			// End of buffer
 		PositionNotify.hEventNotify = g_hSSI263Event[0];
 
-		hr = SSI263Voice[i]->lpDSNotify->SetNotificationPositions(1, &PositionNotify);
-		//LOG("MB_DSInit: (%02d) SetNotificationPositions(), hr=0x%08X\n", i, hr);	// WARNING: Lock acquired && doing heavy-weight logging
+		hr = SSI263Voice[i].lpDSNotify->SetNotificationPositions(1, &PositionNotify);
+		//LogFileOutput("MB_DSInit: (%02d) SetNotificationPositions(), hr=0x%08X\n", i, hr);	// WARNING: Lock acquired && doing heavy-weight logging
 		if(FAILED(hr))
 		{
-			LOG("SSI263: SetNotifyPos failed (%08X)\n",hr);
+			if(g_fh) fprintf(g_fh, "SSI263: SetNotifyPos failed (%08X)\n",hr);
 			return false;
 		}
 #endif
 
 #ifdef APPLE2IX
 		hr = SSI263Voice[i]->UnlockStaticBuffer(SSI263Voice[i], dwDSLockedBufferSize);
-#else
-		hr = SSI263Voice[i]->Unlock((void*)pDSLockedBuffer, dwDSLockedBufferSize, NULL, 0);
-#endif
 		LOG("MB_DSInit: (%02d) Unlock(),hr=0x%08X\n", i, (unsigned int)hr);
+#else
+		hr = SSI263Voice[i].lpDSBvoice->Unlock((void*)pDSLockedBuffer, dwDSLockedBufferSize, NULL, 0);
+		LogFileOutput("MB_DSInit: (%02d) Unlock(),hr=0x%08X\n", i, hr);
+#endif
 		if(FAILED(hr))
 		{
 			LOG("SSI263: DSUnlock failed (%08X)\n",(unsigned int)hr);
@@ -1582,15 +1520,41 @@ static bool MB_DSInit()
 		SSI263Voice[i]->bActive = false;
 		SSI263Voice[i]->nVolume = MockingboardVoice->nVolume;		// Use same volume as MB
 #if !defined(APPLE2IX)
-		hr = SSI263Voice[i]->SetVolume(SSI263Voice[i]->nVolume);
+		hr = SSI263Voice[i].lpDSBvoice->SetVolume(SSI263Voice[i].nVolume);
+		LogFileOutput("MB_DSInit: (%02d) SetVolume(), hr=0x%08X\n", i, hr);
 #endif
-		LOG("MB_DSInit: (%02d) SetVolume(), hr=0x%08X\n", i, (unsigned int)hr);
 	}
 
 	//
 
 	unsigned long dwThreadId;
 
+#ifdef APPLE2IX
+        {
+            int err = 0;
+            if ((err = pthread_create(&g_hThread, NULL, SSI263Thread, NULL)))
+            {
+                ERRLOG("SSI263Thread");
+            }
+
+            // assuming time critical ...
+#   if defined(__APPLE__) || defined(ANDROID)
+#   warning possible FIXME possible TODO : set thread priority in Darwin/Mach
+#   else
+            int policy = sched_getscheduler(getpid());
+
+            int prio = 0;
+            if ((prio = sched_get_priority_max(policy)) < 0) {
+                ERRLOG("OOPS sched_get_priority_max");
+            } else {
+                if ((err = pthread_setschedprio(thread, prio)))
+                {
+                    ERRLOG("OOPS pthread_setschedprio");
+                }
+            }
+#   endif
+        }
+#else
 	g_hThread = CreateThread(NULL,				// lpThreadAttributes
 								0,				// dwStackSize
 								SSI263Thread,
@@ -1601,10 +1565,11 @@ static bool MB_DSInit()
 
 	bool bRes2 = SetThreadPriority(g_hThread, THREAD_PRIORITY_TIME_CRITICAL);
 	LOG("MB_DSInit: SetThreadPriority(), bRes=%d\n", bRes2 ? 1 : 0);
+#endif
 
 	return true;
 
-#endif
+#endif // FIXME : APPLE2IX
 #endif // NO_DIRECT_X
 }
 
@@ -1612,13 +1577,17 @@ static void MB_DSUninit()
 {
 	if(g_hThread)
 	{
-		unsigned long dwExitCode;
 #ifdef APPLE2IX
                 quit_event = true;
-                pthread_cond_signal(&mockingboard_cond);
+                pthread_cond_signal(&ssi263_cond);
+
+                int err = 0;
+                if ( (err = pthread_join(g_hThread, NULL)) ) {
+                    ERRLOG("OOPS pthread_join");
+                }
 #else
+		unsigned long dwExitCode;
 		SetEvent(g_hSSI263Event[g_nNumEvents-1]);	// Signal to thread that it should exit
-#endif
 
 		do
 		{
@@ -1631,11 +1600,12 @@ static void MB_DSUninit()
 			}
 		}
 		while(1);
+#endif
 
 #ifdef APPLE2IX
 		g_hThread = 0;
-                pthread_mutex_destroy(&mockingboard_mutex);
-                pthread_cond_destroy(&mockingboard_cond);
+                pthread_mutex_destroy(&ssi263_mutex);
+                pthread_cond_destroy(&ssi263_cond);
 #else
 		CloseHandle(g_hThread);
 		g_hThread = NULL;
@@ -1647,7 +1617,7 @@ static void MB_DSUninit()
 	if(MockingboardVoice && MockingboardVoice->bActive)
 	{
 #if !defined(APPLE2IX)
-		MockingboardVoice->Stop();
+		MockingboardVoice.lpDSBvoice->Stop();
 #endif
 		MockingboardVoice->bActive = false;
 	}
@@ -1656,12 +1626,12 @@ static void MB_DSUninit()
 
 	//
 
-	for(int i=0; i<MAX_VOICES; i++)
+	for(int i=0; i<64; i++)
 	{
 		if(SSI263Voice[i] && SSI263Voice[i]->bActive)
 		{
 #if !defined(APPLE2IX)
-			SSI263Voice[i]->Stop();
+			SSI263Voice[i].lpDSBvoice->Stop();
 #endif
 			SSI263Voice[i]->bActive = false;
 		}
@@ -1670,9 +1640,10 @@ static void MB_DSUninit()
 	}
 
 	//
-        FREE(g_nMixBuffer);
 
-#ifndef APPLE2IX
+#ifdef APPLE2IX
+        FREE(g_nMixBuffer);
+#else
 	if(g_hSSI263Event[0])
 	{
 		CloseHandle(g_hSSI263Event[0]);
@@ -1699,34 +1670,36 @@ void MB_Initialize()
 {
 #ifdef APPLE2IX
     assert(pthread_self() == cpu_thread_id);
-    memset(SSI263Voice, 0x0, sizeof(AudioBuffer_s *) * MAX_VOICES);
+    memset(SSI263Voice, 0x0, sizeof(AudioBuffer_s *) * 64);
 #endif
-	if (g_bDisableDirectSoundMockingboard)
+	LOG("MB_Initialize: g_bDisableDirectSound=%d, g_bDisableDirectSoundMockingboard=%d\n", g_bDisableDirectSound, g_bDisableDirectSoundMockingboard);
+	if (g_bDisableDirectSound || g_bDisableDirectSoundMockingboard)
 	{
-		//MockingboardVoice->bMute = true;
+#if !defined(APPLE2IX)
+		MockingboardVoice.bMute = true;
+#endif
 		g_SoundcardType = CT_Empty;
 	}
 	else
 	{
 		memset(&g_MB,0,sizeof(g_MB));
 
+#ifdef APPLE2IX
 		g_bMBAvailable = MB_DSInit();
                 if (!g_bMBAvailable) {
                     //MockingboardVoice->bMute = true;
                     g_SoundcardType = CT_Empty;
                     return;
                 }
-
+#endif
 
 		int i;
 		for(i=0; i<NUM_VOICES; i++)
-                {
 #ifdef APPLE2IX
 			ppAYVoiceBuffer[i] = MALLOC(sizeof(short) * SAMPLE_RATE); // Buffer can hold a max of 1 seconds worth of samples
 #else
 			ppAYVoiceBuffer[i] = new short [SAMPLE_RATE];	// Buffer can hold a max of 1 seconds worth of samples
 #endif
-                }
 
 		AY8910_InitAll((int)cycles_persec_target, SAMPLE_RATE);
 		LOG("MB_Initialize: AY8910_InitAll()\n");
@@ -1736,6 +1709,9 @@ void MB_Initialize()
 
 		//
 
+#if !defined(APPLE2IX)
+		g_bMBAvailable = MB_DSInit();
+#endif
 		LOG("MB_Initialize: MB_DSInit(), g_bMBAvailable=%d\n", g_bMBAvailable);
 
 		MB_Reset();
@@ -1760,14 +1736,21 @@ void MB_SoftInitialize(void) {
 // NB. Called when /cycles_persec_target/ changes
 void MB_Reinitialize()
 {
+#ifdef APPLE2IX
 	AY8910_InitClock((int)cycles_persec_target, SAMPLE_RATE);
+#else
+	AY8910_InitClock((int)g_fCurrentCLK6502);	// todo: account for g_PhasorClockScaleFactor?
+#endif
+												// NB. Other calls to AY8910_InitClock() use the constant CLK_6502
 }
 
 //-----------------------------------------------------------------------------
 
 void MB_Destroy()
 {
+#ifdef APPLE2IX
     assert(pthread_self() == cpu_thread_id);
+#endif
 	MB_DSUninit();
 
 	for(int i=0; i<NUM_VOICES; i++)
@@ -1817,9 +1800,10 @@ static void ResetState()
 
 	//g_bMBAvailable = false;
 
-	//g_SoundcardType = CT_Empty;
-	//g_bPhasorEnable = false;
+//	g_SoundcardType = CT_Empty;	// Don't uncomment, else _ASSERT will fire in MB_Read() after an F2->MB_Reset()
+//	g_bPhasorEnable = false;
 	g_nPhasorMode = 0;
+	g_PhasorClockScaleFactor = 1;
 }
 
 void MB_Reset()
@@ -1844,22 +1828,26 @@ void MB_Reset()
 #define nAddr ea
 GLUE_C_READ(MB_Read)
 #else
-static uint8_t MB_Read(uint16_t PC, uint16_t nAddr, uint8_t bWrite, uint8_t nValue, unsigned long nCyclesLeft)
+static BYTE __stdcall MB_Read(WORD PC, WORD nAddr, BYTE bWrite, BYTE nValue, ULONG nCyclesLeft)
 #endif
 {
+#ifdef APPLE2IX
 	MB_UpdateCycles();
+#else
+	MB_UpdateCycles(nCyclesLeft);
+#endif
 
 #ifdef _DEBUG
 	if(!IS_APPLE2 && !MemCheckSLOTCXROM())
 	{
-		assert(0);	// Card ROM disabled, so IORead_Cxxx() returns the internal ROM
+		_ASSERT(0);	// Card ROM disabled, so IORead_Cxxx() returns the internal ROM
 		return mem[nAddr];
 	}
 
 	if(g_SoundcardType == CT_Empty)
 	{
-		assert(0);	// Card unplugged, so IORead_Cxxx() returns the floating bus
-		return MemReadFloatingBus();
+		_ASSERT(0);	// Card unplugged, so IORead_Cxxx() returns the floating bus
+		return MemReadFloatingBus(nCyclesLeft);
 	}
 #endif
 
@@ -1869,9 +1857,11 @@ static uint8_t MB_Read(uint16_t PC, uint16_t nAddr, uint8_t bWrite, uint8_t nVal
 	if(g_bPhasorEnable)
 	{
 		if(nMB != 0)	// Slot4 only
-                {
+#ifdef APPLE2IX
 			return MemReadFloatingBus();
-                }
+#else
+			return MemReadFloatingBus(nCyclesLeft);
+#endif
 
 		int CS;
 		if(g_nPhasorMode & 1)
@@ -1895,25 +1885,25 @@ static uint8_t MB_Read(uint16_t PC, uint16_t nAddr, uint8_t bWrite, uint8_t nVal
 			bAccessedDevice = true;
 		}
 
+#ifdef APPLE2IX
 		return bAccessedDevice ? nRes : MemReadFloatingBus();
+#else
+		return bAccessedDevice ? nRes : MemReadFloatingBus(nCyclesLeft);
+#endif
 	}
 
 	if(nOffset <= (SY6522A_Offset+0x0F))
-        {
 		return SY6522_Read(nMB*NUM_DEVS_PER_MB + SY6522_DEVICE_A, nAddr&0xf);
-        }
 	else if((nOffset >= SY6522B_Offset) && (nOffset <= (SY6522B_Offset+0x0F)))
-        {
 		return SY6522_Read(nMB*NUM_DEVS_PER_MB + SY6522_DEVICE_B, nAddr&0xf);
-        }
 	else if((nOffset >= SSI263_Offset) && (nOffset <= (SSI263_Offset+0x05)))
-        {
 		return SSI263_Read(nMB, nAddr&0xf);
-        }
 	else
-        {
+#ifdef APPLE2IX
 		return MemReadFloatingBus();
-        }
+#else
+		return MemReadFloatingBus(nCyclesLeft);
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -1922,30 +1912,26 @@ static uint8_t MB_Read(uint16_t PC, uint16_t nAddr, uint8_t bWrite, uint8_t nVal
 #define nValue b
 GLUE_C_WRITE(MB_Write)
 #else
-static uint8_t MB_Write(uint16_t PC, uint16_t nAddr, uint8_t bWrite, uint8_t nValue, unsigned long nCyclesLeft)
+static BYTE __stdcall MB_Write(WORD PC, WORD nAddr, BYTE bWrite, BYTE nValue, ULONG nCyclesLeft)
 #endif
 {
+#ifdef APPLE2IX
 	MB_UpdateCycles();
+#else
+	MB_UpdateCycles(nCyclesLeft);
+#endif
 
 #ifdef _DEBUG
 	if(!IS_APPLE2 && !MemCheckSLOTCXROM())
 	{
-		assert(0);	// Card ROM disabled, so IORead_Cxxx() returns the internal ROM
-#ifdef APPLE2IX
-                return;
-#else
+		_ASSERT(0);	// Card ROM disabled, so IORead_Cxxx() returns the internal ROM
 		return 0;
-#endif
 	}
 
 	if(g_SoundcardType == CT_Empty)
 	{
-		assert(0);	// Card unplugged, so IORead_Cxxx() returns the floating bus
-#ifdef APPLE2IX
-                return;
-#else
+		_ASSERT(0);	// Card unplugged, so IORead_Cxxx() returns the floating bus
 		return 0;
-#endif
 	}
 #endif
 
@@ -1955,13 +1941,7 @@ static uint8_t MB_Write(uint16_t PC, uint16_t nAddr, uint8_t bWrite, uint8_t nVa
 	if(g_bPhasorEnable)
 	{
 		if(nMB != 0)	// Slot4 only
-                {
-#ifdef APPLE2IX
-                    return;
-#else
-			return 0;
-#endif
-                }
+			return/*0*/;
 
 		int CS;
 
@@ -1979,11 +1959,7 @@ static uint8_t MB_Write(uint16_t PC, uint16_t nAddr, uint8_t bWrite, uint8_t nVa
 		if((nOffset >= SSI263_Offset) && (nOffset <= (SSI263_Offset+0x05)))
 			SSI263_Write(nMB*2+1, nAddr&0xf, nValue);		// Second 6522 is used for speech chip
 
-#ifdef APPLE2IX
-                return;
-#else
-		return 0;
-#endif
+		return/*0*/;
 	}
 
 	if(nOffset <= (SY6522A_Offset+0x0F))
@@ -1993,11 +1969,7 @@ static uint8_t MB_Write(uint16_t PC, uint16_t nAddr, uint8_t bWrite, uint8_t nVa
 	else if((nOffset >= SSI263_Offset) && (nOffset <= (SSI263_Offset+0x05)))
 		SSI263_Write(nMB*2+1, nAddr&0xf, nValue);		// Second 6522 is used for speech chip
 
-#ifdef APPLE2IX
-        return;
-#else
-	return 0;
-#endif
+	return/*0*/;
 }
 
 //-----------------------------------------------------------------------------
@@ -2005,22 +1977,30 @@ static uint8_t MB_Write(uint16_t PC, uint16_t nAddr, uint8_t bWrite, uint8_t nVa
 #ifdef APPLE2IX
 GLUE_C_READ(PhasorIO)
 #else
-static uint8_t PhasorIO(uint16_t PC, uint16_t nAddr, uint8_t bWrite, uint8_t nValue, unsigned long nCyclesLeft)
+static BYTE __stdcall PhasorIO(WORD PC, WORD nAddr, BYTE bWrite, BYTE nValue, ULONG nCyclesLeft)
 #endif
 {
 	if(!g_bPhasorEnable)
-        {
+#ifdef APPLE2IX
 		return MemReadFloatingBus();
-        }
+#else
+		return MemReadFloatingBus(nCyclesLeft);
+#endif
 
 	if(g_nPhasorMode < 2)
 		g_nPhasorMode = nAddr & 1;
 
-	double fCLK = (nAddr & 4) ? CLK_6502*2 : CLK_6502;
+	g_PhasorClockScaleFactor = (nAddr & 4) ? 2 : 1;
 
-	AY8910_InitClock((int)fCLK, SAMPLE_RATE);
+#ifdef APPLE2IX
+	AY8910_InitClock((int)CLK_6502 * g_PhasorClockScaleFactor, SAMPLE_RATE);
 
 	return MemReadFloatingBus();
+#else
+	AY8910_InitClock((int)(CLK_6502 * g_PhasorClockScaleFactor));
+
+	return MemReadFloatingBus(nCyclesLeft);
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -2034,7 +2014,7 @@ void mb_io_initialize(unsigned int slot4, unsigned int slot5)
 }
 
 //typedef uint8_t (*iofunction)(uint16_t nPC, uint16_t nAddr, uint8_t nWriteFlag, uint8_t nWriteValue, unsigned long nCyclesLeft);
-typedef void (*iofunction)();
+typedef void (*iofunction)(void);
 static void RegisterIoHandler(unsigned int uSlot, iofunction IOReadC0, iofunction IOWriteC0, iofunction IOReadCx, iofunction IOWriteCx, void *unused_lpSlotParameter, uint8_t* unused_pExpansionRom)
 {
 
@@ -2093,14 +2073,14 @@ void MB_Mute()
 	if(MockingboardVoice->bActive && !MockingboardVoice->bMute)
 	{
 #if !defined(APPLE2IX)
-		MockingboardVoice->SetVolume(DSBVOLUME_MIN);
+		MockingboardVoice.lpDSBvoice->SetVolume(DSBVOLUME_MIN);
 #endif
 		MockingboardVoice->bMute = true;
 	}
 
 #if !defined(APPLE2IX)
 	if(g_nCurrentActivePhoneme >= 0)
-		SSI263Voice[g_nCurrentActivePhoneme]->SetVolume(DSBVOLUME_MIN);
+		SSI263Voice[g_nCurrentActivePhoneme].lpDSBvoice->SetVolume(DSBVOLUME_MIN);
 #endif
 }
 
@@ -2114,14 +2094,14 @@ void MB_Demute()
 	if(MockingboardVoice->bActive && MockingboardVoice->bMute)
 	{
 #if !defined(APPLE2IX)
-		MockingboardVoice->SetVolume(MockingboardVoice->nVolume);
+		MockingboardVoice.lpDSBvoice->SetVolume(MockingboardVoice.nVolume);
 #endif
 		MockingboardVoice->bMute = false;
 	}
 
 #if !defined(APPLE2IX)
 	if(g_nCurrentActivePhoneme >= 0)
-		SSI263Voice[g_nCurrentActivePhoneme]->SetVolume(SSI263Voice[g_nCurrentActivePhoneme]->nVolume);
+		SSI263Voice[g_nCurrentActivePhoneme].lpDSBvoice->SetVolume(SSI263Voice[g_nCurrentActivePhoneme].nVolume);
 #endif
 }
 
@@ -2136,13 +2116,8 @@ void MB_StartOfCpuExecute()
 // Called by ContinueExecution() at the end of every video frame
 void MB_EndOfVideoFrame()
 {
-    SCOPE_TRACE_AUDIO("MB_EndOfVideoFrame");
 	if(g_SoundcardType == CT_Empty)
 		return;
-
-        if (!g_bMBAvailable) {
-            return;
-        }
 
 	if(!g_bMBTimerIrqActive)
 		MB_Update();
@@ -2151,39 +2126,39 @@ void MB_EndOfVideoFrame()
 //-----------------------------------------------------------------------------
 
 // Called by CpuExecute() after every N opcodes (N = ~1000 @ 1MHz)
+#ifdef APPLE2IX
 void MB_UpdateCycles(void)
+#else
+void MB_UpdateCycles(ULONG uExecutedCycles)
+#endif
 {
-    SCOPE_TRACE_AUDIO("MB_UpdateCycles");
 	if(g_SoundcardType == CT_Empty)
 		return;
 
 	timing_checkpoint_cycles();
 	unsigned long uCycles = cycles_count_total - g_uLastCumulativeCycles;
 	g_uLastCumulativeCycles = cycles_count_total;
-	//assert(uCycles < 0x10000);
+#if defined(APPLE2IX)
         if (uCycles >= 0x10000) {
             printf("OOPS!!! Mockingboard failed assert!\n");
             return;
         }
+#else
+	_ASSERT(uCycles < 0x10000);
+#endif
 	uint16_t nClocks = (uint16_t) uCycles;
 
-	for(unsigned int i=0; i<NUM_SY6522; i++)
+	for(int i=0; i<NUM_SY6522; i++)
 	{
 		SY6522_AY8910* pMB = &g_MB[i];
 
 		uint16_t OldTimer1 = pMB->sy6522.TIMER1_COUNTER.w;
-#ifndef APPLE2IX
-		uint16_t OldTimer2 = pMB->sy6522.TIMER2_COUNTER.w;
-#endif
 
 		pMB->sy6522.TIMER1_COUNTER.w -= nClocks;
 		pMB->sy6522.TIMER2_COUNTER.w -= nClocks;
 
 		// Check for counter underflow
 		bool bTimer1Underflow = (!(OldTimer1 & 0x8000) && (pMB->sy6522.TIMER1_COUNTER.w & 0x8000));
-#ifndef APPLE2IX
-		bool bTimer2Underflow = (!(OldTimer2 & 0x8000) && (pMB->sy6522.TIMER2_COUNTER.w & 0x8000));
-#endif
 
 		if( bTimer1Underflow && (g_nMBTimerDevice == i) && g_bMBTimerIrqActive )
 		{
@@ -2268,74 +2243,67 @@ void MB_SetVolumeZeroToTen(unsigned long goesToTen) {
     samplesScale = goesToTen/10.f;
 }
 #else
-static long NewVolume(unsigned long dwVolume, unsigned long dwVolumeMax)
+DWORD MB_GetVolume()
 {
-    float fVol = (float) dwVolume / (float) dwVolumeMax;    // 0.0=Max, 1.0=Min
-
-    return (long) ((float) DSBVOLUME_MIN * fVol);
+	return MockingboardVoice.dwUserVolume;
 }
 
-void MB_SetVolume(unsigned long dwVolume, unsigned long dwVolumeMax)
+void MB_SetVolume(DWORD dwVolume, DWORD dwVolumeMax)
 {
-	MockingboardVoice->nVolume = NewVolume(dwVolume, dwVolumeMax);
+	MockingboardVoice.dwUserVolume = dwVolume;
 
-#if !defined(APPLE2IX)
-	if(MockingboardVoice->bActive)
-		MockingboardVoice->SetVolume(MockingboardVoice->nVolume);
-#endif
+	MockingboardVoice.nVolume = NewVolume(dwVolume, dwVolumeMax);
+
+	if(MockingboardVoice.bActive)
+		MockingboardVoice.lpDSBvoice->SetVolume(MockingboardVoice.nVolume);
 }
 #endif
 
 //===========================================================================
 
-unsigned long MB_GetSnapshot(SS_CARD_MOCKINGBOARD* pSS, unsigned long dwSlot)
+// Called by debugger - Debugger_Display.cpp
+#if !defined(APPLE2IX)
+void MB_GetSnapshot_v1(SS_CARD_MOCKINGBOARD_v1* const pSS, const DWORD dwSlot)
 {
-#ifdef APPLE2IX
-    // Saving and loading state currently unimplemented
-    return 0;
-#else
-	pSS->Hdr.UnitHdr.dwLength = sizeof(SS_CARD_DISK2);
-	pSS->Hdr.UnitHdr.dwVersion = MAKE_VERSION(1,0,0,0);
+	pSS->Hdr.UnitHdr.hdr.v2.Length = sizeof(SS_CARD_MOCKINGBOARD_v1);
+	pSS->Hdr.UnitHdr.hdr.v2.Type = UT_Card;
+	pSS->Hdr.UnitHdr.hdr.v2.Version = 1;
 
-	pSS->Hdr.dwSlot = dwSlot;
-	pSS->Hdr.dwType = CT_MockingboardC;
+	pSS->Hdr.Slot = dwSlot;
+	pSS->Hdr.Type = CT_MockingboardC;
 
-	unsigned int nMbCardNum = dwSlot - SLOT4;
-	unsigned int nDeviceNum = nMbCardNum*2;
+	UINT nMbCardNum = dwSlot - SLOT4;
+	UINT nDeviceNum = nMbCardNum*2;
 	SY6522_AY8910* pMB = &g_MB[nDeviceNum];
 
-	for(unsigned int i=0; i<MB_UNITS_PER_CARD; i++)
+	for(UINT i=0; i<MB_UNITS_PER_CARD_v1; i++)
 	{
 		memcpy(&pSS->Unit[i].RegsSY6522, &pMB->sy6522, sizeof(SY6522));
 		memcpy(&pSS->Unit[i].RegsAY8910, AY8910_GetRegsPtr(nDeviceNum), 16);
 		memcpy(&pSS->Unit[i].RegsSSI263, &pMB->SpeechChip, sizeof(SSI263A));
 		pSS->Unit[i].nAYCurrentRegister = pMB->nAYCurrentRegister;
+		pSS->Unit[i].bTimer1IrqPending = false;
+		pSS->Unit[i].bTimer2IrqPending = false;
+		pSS->Unit[i].bSpeechIrqPending = false;
 
 		nDeviceNum++;
 		pMB++;
 	}
-
-	return 0;
-#endif
 }
 
-unsigned long MB_SetSnapshot(SS_CARD_MOCKINGBOARD* pSS, unsigned long dwSlot_unused)
+int MB_SetSnapshot_v1(const SS_CARD_MOCKINGBOARD_v1* const pSS, const DWORD /*dwSlot*/)
 {
-#ifdef APPLE2IX
-    // Saving and loading state currently unimplemented
-    return 0;
-#else
-	if(pSS->Hdr.UnitHdr.dwVersion != MAKE_VERSION(1,0,0,0))
+	if(pSS->Hdr.UnitHdr.hdr.v1.dwVersion != MAKE_VERSION(1,0,0,0))
 		return -1;
 
-	unsigned int nMbCardNum = pSS->Hdr.dwSlot - SLOT4;
-	unsigned int nDeviceNum = nMbCardNum*2;
+	UINT nMbCardNum = pSS->Hdr.Slot - SLOT4;
+	UINT nDeviceNum = nMbCardNum*2;
 	SY6522_AY8910* pMB = &g_MB[nDeviceNum];
 
 	g_nSSI263Device = 0;
 	g_nCurrentActivePhoneme = -1;
 
-	for(unsigned int i=0; i<MB_UNITS_PER_CARD; i++)
+	for(UINT i=0; i<MB_UNITS_PER_CARD_v1; i++)
 	{
 		memcpy(&pMB->sy6522, &pSS->Unit[i].RegsSY6522, sizeof(SY6522));
 		memcpy(AY8910_GetRegsPtr(nDeviceNum), &pSS->Unit[i].RegsAY8910, 16);
@@ -2350,7 +2318,7 @@ unsigned long MB_SetSnapshot(SS_CARD_MOCKINGBOARD* pSS, unsigned long dwSlot_unu
 		// FIX THIS:
 		// . Speech chip could be Votrax instead
 		// . Is this IRQ compatible with Phasor?
-		if(pMB->SpeechChip.DurationPhonome)
+		if(pMB->SpeechChip.DurationPhoneme)
 		{
 			g_nSSI263Device = nDeviceNum;
 
@@ -2367,10 +2335,10 @@ unsigned long MB_SetSnapshot(SS_CARD_MOCKINGBOARD* pSS, unsigned long dwSlot_unu
 	}
 
 	return 0;
-#endif
 }
+#endif
 
-// ----------------------------------------------------------------------------
+//===========================================================================
 
 static void mb_prefsChanged(const char *domain) {
     long lVal = 0;
@@ -2387,3 +2355,358 @@ static void mb_prefsChanged(const char *domain) {
 static __attribute__((constructor)) void _init_mockingboard(void) {
     prefs_registerListener(PREF_DOMAIN_AUDIO, &mb_prefsChanged);
 }
+
+#if !defined(APPLE2IX)
+static UINT DoWriteFile(const HANDLE hFile, const void* const pData, const UINT Length)
+{
+	DWORD dwBytesWritten;
+	BOOL bRes = WriteFile(	hFile,
+							pData,
+							Length,
+							&dwBytesWritten,
+							NULL);
+
+	if(!bRes || (dwBytesWritten != Length))
+	{
+		//dwError = GetLastError();
+		throw std::string("Card: save error");
+	}
+
+	return dwBytesWritten;
+}
+
+static UINT DoReadFile(const HANDLE hFile, void* const pData, const UINT Length)
+{
+	DWORD dwBytesRead;
+	BOOL bRes = ReadFile(	hFile,
+							pData,
+							Length,
+							&dwBytesRead,
+							NULL);
+
+	if (dwBytesRead != Length)
+		throw std::string("Card: file corrupt");
+
+	return dwBytesRead;
+}
+
+//===========================================================================
+
+const UINT NUM_MB_UNITS = 2;
+const UINT NUM_PHASOR_UNITS = 2;
+
+#define SS_YAML_KEY_MB_UNIT "Unit"
+#define SS_YAML_KEY_SY6522 "SY6522"
+#define SS_YAML_KEY_SY6522_REG_ORB "ORB"
+#define SS_YAML_KEY_SY6522_REG_ORA "ORA"
+#define SS_YAML_KEY_SY6522_REG_DDRB "DDRB"
+#define SS_YAML_KEY_SY6522_REG_DDRA "DDRA"
+#define SS_YAML_KEY_SY6522_REG_T1_COUNTER "Timer1 Counter"
+#define SS_YAML_KEY_SY6522_REG_T1_LATCH "Timer1 Latch"
+#define SS_YAML_KEY_SY6522_REG_T2_COUNTER "Timer2 Counter"
+#define SS_YAML_KEY_SY6522_REG_T2_LATCH "Timer2 Latch"
+#define SS_YAML_KEY_SY6522_REG_SERIAL_SHIFT "Serial Shift"
+#define SS_YAML_KEY_SY6522_REG_ACR "ACR"
+#define SS_YAML_KEY_SY6522_REG_PCR "PCR"
+#define SS_YAML_KEY_SY6522_REG_IFR "IFR"
+#define SS_YAML_KEY_SY6522_REG_IER "IER"
+#define SS_YAML_KEY_SSI263 "SSI263"
+#define SS_YAML_KEY_SSI263_REG_DUR_PHON "Duration / Phoneme"
+#define SS_YAML_KEY_SSI263_REG_INF "Inflection"
+#define SS_YAML_KEY_SSI263_REG_RATE_INF "Rate / Inflection"
+#define SS_YAML_KEY_SSI263_REG_CTRL_ART_AMP "Control / Articulation / Amplitude"
+#define SS_YAML_KEY_SSI263_REG_FILTER_FREQ "Filter Frequency"
+#define SS_YAML_KEY_SSI263_REG_CURRENT_MODE "Current Mode"
+#define SS_YAML_KEY_AY_CURR_REG "AY Current Register"
+#define SS_YAML_KEY_TIMER1_IRQ "Timer1 IRQ Pending"
+#define SS_YAML_KEY_TIMER2_IRQ "Timer2 IRQ Pending"
+#define SS_YAML_KEY_SPEECH_IRQ "Speech IRQ Pending"
+
+#define SS_YAML_KEY_PHASOR_UNIT "Unit"
+#define SS_YAML_KEY_PHASOR_CLOCK_SCALE_FACTOR "Clock Scale Factor"
+#define SS_YAML_KEY_PHASOR_MODE "Mode"
+
+std::string MB_GetSnapshotCardName(void)
+{
+	static const std::string name("Mockingboard C");
+	return name;
+}
+
+std::string Phasor_GetSnapshotCardName(void)
+{
+	static const std::string name("Phasor");
+	return name;
+}
+
+static void SaveSnapshotSY6522(YamlSaveHelper& yamlSaveHelper, SY6522& sy6522)
+{
+	YamlSaveHelper::Label label(yamlSaveHelper, "%s:\n", SS_YAML_KEY_SY6522);
+
+	yamlSaveHelper.SaveHexUint8(SS_YAML_KEY_SY6522_REG_ORB, sy6522.ORB);
+	yamlSaveHelper.SaveHexUint8(SS_YAML_KEY_SY6522_REG_ORA, sy6522.ORA);
+	yamlSaveHelper.SaveHexUint8(SS_YAML_KEY_SY6522_REG_DDRB, sy6522.DDRB);
+	yamlSaveHelper.SaveHexUint8(SS_YAML_KEY_SY6522_REG_DDRA, sy6522.DDRA);
+	yamlSaveHelper.SaveHexUint16(SS_YAML_KEY_SY6522_REG_T1_COUNTER, sy6522.TIMER1_COUNTER.w);
+	yamlSaveHelper.SaveHexUint16(SS_YAML_KEY_SY6522_REG_T1_LATCH,   sy6522.TIMER1_LATCH.w);
+	yamlSaveHelper.SaveHexUint16(SS_YAML_KEY_SY6522_REG_T2_COUNTER, sy6522.TIMER2_COUNTER.w);
+	yamlSaveHelper.SaveHexUint16(SS_YAML_KEY_SY6522_REG_T2_LATCH,   sy6522.TIMER2_LATCH.w);
+	yamlSaveHelper.SaveHexUint8(SS_YAML_KEY_SY6522_REG_SERIAL_SHIFT, sy6522.SERIAL_SHIFT);
+	yamlSaveHelper.SaveHexUint8(SS_YAML_KEY_SY6522_REG_ACR, sy6522.ACR);
+	yamlSaveHelper.SaveHexUint8(SS_YAML_KEY_SY6522_REG_PCR, sy6522.PCR);
+	yamlSaveHelper.SaveHexUint8(SS_YAML_KEY_SY6522_REG_IFR, sy6522.IFR);
+	yamlSaveHelper.SaveHexUint8(SS_YAML_KEY_SY6522_REG_IER, sy6522.IER);
+	// NB. No need to write ORA_NO_HS, since same data as ORA, just without handshake
+}
+
+static void SaveSnapshotSSI263(YamlSaveHelper& yamlSaveHelper, SSI263A& ssi263)
+{
+	YamlSaveHelper::Label label(yamlSaveHelper, "%s:\n", SS_YAML_KEY_SSI263);
+
+	yamlSaveHelper.SaveHexUint8(SS_YAML_KEY_SSI263_REG_DUR_PHON, ssi263.DurationPhoneme);
+	yamlSaveHelper.SaveHexUint8(SS_YAML_KEY_SSI263_REG_INF, ssi263.Inflection);
+	yamlSaveHelper.SaveHexUint8(SS_YAML_KEY_SSI263_REG_RATE_INF, ssi263.RateInflection);
+	yamlSaveHelper.SaveHexUint8(SS_YAML_KEY_SSI263_REG_CTRL_ART_AMP, ssi263.CtrlArtAmp);
+	yamlSaveHelper.SaveHexUint8(SS_YAML_KEY_SSI263_REG_FILTER_FREQ, ssi263.FilterFreq);
+	yamlSaveHelper.SaveHexUint8(SS_YAML_KEY_SSI263_REG_CURRENT_MODE, ssi263.CurrentMode);
+}
+
+void MB_SaveSnapshot(YamlSaveHelper& yamlSaveHelper, const UINT uSlot)
+{
+	const UINT nMbCardNum = uSlot - SLOT4;
+	UINT nDeviceNum = nMbCardNum*2;
+	SY6522_AY8910* pMB = &g_MB[nDeviceNum];
+
+	YamlSaveHelper::Slot slot(yamlSaveHelper, MB_GetSnapshotCardName(), uSlot, 1);	// fixme: object should be just 1 Mockingboard card & it will know its slot
+
+	YamlSaveHelper::Label state(yamlSaveHelper, "%s:\n", SS_YAML_KEY_STATE);
+
+	for(UINT i=0; i<NUM_MB_UNITS; i++)
+	{
+		YamlSaveHelper::Label unit(yamlSaveHelper, "%s%d:\n", SS_YAML_KEY_MB_UNIT, i);
+
+		SaveSnapshotSY6522(yamlSaveHelper, pMB->sy6522);
+		AY8910_SaveSnapshot(yamlSaveHelper, nDeviceNum, std::string(""));
+		SaveSnapshotSSI263(yamlSaveHelper, pMB->SpeechChip);
+
+		yamlSaveHelper.SaveHexUint4(SS_YAML_KEY_AY_CURR_REG, pMB->nAYCurrentRegister);
+		yamlSaveHelper.Save("%s: %s # Not supported\n", SS_YAML_KEY_TIMER1_IRQ, "false");
+		yamlSaveHelper.Save("%s: %s # Not supported\n", SS_YAML_KEY_TIMER2_IRQ, "false");
+		yamlSaveHelper.Save("%s: %s # Not supported\n", SS_YAML_KEY_SPEECH_IRQ, "false");
+
+		nDeviceNum++;
+		pMB++;
+	}
+}
+
+static void LoadSnapshotSY6522(YamlLoadHelper& yamlLoadHelper, SY6522& sy6522)
+{
+	if (!yamlLoadHelper.GetSubMap(SS_YAML_KEY_SY6522))
+		throw std::string("Card: Expected key: ") + std::string(SS_YAML_KEY_SY6522);
+
+	sy6522.ORB  = yamlLoadHelper.LoadUint(SS_YAML_KEY_SY6522_REG_ORB);
+	sy6522.ORA  = yamlLoadHelper.LoadUint(SS_YAML_KEY_SY6522_REG_ORA);
+	sy6522.DDRB = yamlLoadHelper.LoadUint(SS_YAML_KEY_SY6522_REG_DDRB);
+	sy6522.DDRA = yamlLoadHelper.LoadUint(SS_YAML_KEY_SY6522_REG_DDRA);
+	sy6522.TIMER1_COUNTER.w = yamlLoadHelper.LoadUint(SS_YAML_KEY_SY6522_REG_T1_COUNTER);
+	sy6522.TIMER1_LATCH.w   = yamlLoadHelper.LoadUint(SS_YAML_KEY_SY6522_REG_T1_LATCH);
+	sy6522.TIMER2_COUNTER.w = yamlLoadHelper.LoadUint(SS_YAML_KEY_SY6522_REG_T2_COUNTER);
+	sy6522.TIMER2_LATCH.w   = yamlLoadHelper.LoadUint(SS_YAML_KEY_SY6522_REG_T2_LATCH);
+	sy6522.SERIAL_SHIFT     = yamlLoadHelper.LoadUint(SS_YAML_KEY_SY6522_REG_SERIAL_SHIFT);
+	sy6522.ACR  = yamlLoadHelper.LoadUint(SS_YAML_KEY_SY6522_REG_ACR);
+	sy6522.PCR  = yamlLoadHelper.LoadUint(SS_YAML_KEY_SY6522_REG_PCR);
+	sy6522.IFR  = yamlLoadHelper.LoadUint(SS_YAML_KEY_SY6522_REG_IFR);
+	sy6522.IER  = yamlLoadHelper.LoadUint(SS_YAML_KEY_SY6522_REG_IER);
+	sy6522.ORA_NO_HS = 0;	// Not saved
+
+	yamlLoadHelper.PopMap();
+}
+
+static void LoadSnapshotSSI263(YamlLoadHelper& yamlLoadHelper, SSI263A& ssi263)
+{
+	if (!yamlLoadHelper.GetSubMap(SS_YAML_KEY_SSI263))
+		throw std::string("Card: Expected key: ") + std::string(SS_YAML_KEY_SSI263);
+
+	ssi263.DurationPhoneme = yamlLoadHelper.LoadUint(SS_YAML_KEY_SSI263_REG_DUR_PHON);
+	ssi263.Inflection      = yamlLoadHelper.LoadUint(SS_YAML_KEY_SSI263_REG_INF);
+	ssi263.RateInflection  = yamlLoadHelper.LoadUint(SS_YAML_KEY_SSI263_REG_RATE_INF);
+	ssi263.CtrlArtAmp      = yamlLoadHelper.LoadUint(SS_YAML_KEY_SSI263_REG_CTRL_ART_AMP);
+	ssi263.FilterFreq      = yamlLoadHelper.LoadUint(SS_YAML_KEY_SSI263_REG_FILTER_FREQ);
+	ssi263.CurrentMode     = yamlLoadHelper.LoadUint(SS_YAML_KEY_SSI263_REG_CURRENT_MODE);
+
+	yamlLoadHelper.PopMap();
+}
+
+bool MB_LoadSnapshot(YamlLoadHelper& yamlLoadHelper, UINT slot, UINT version)
+{
+	if (slot != 4 && slot != 5)	// fixme
+		throw std::string("Card: wrong slot");
+
+	if (version != 1)
+		throw std::string("Card: wrong version");
+
+	AY8910UpdateSetCycles();
+
+	const UINT nMbCardNum = slot - SLOT4;
+	UINT nDeviceNum = nMbCardNum*2;
+	SY6522_AY8910* pMB = &g_MB[nDeviceNum];
+
+	g_nSSI263Device = 0;
+	g_nCurrentActivePhoneme = -1;
+
+	for(UINT i=0; i<NUM_MB_UNITS; i++)
+	{
+		char szNum[2] = {'0'+i,0};
+		std::string unit = std::string(SS_YAML_KEY_MB_UNIT) + std::string(szNum);
+		if (!yamlLoadHelper.GetSubMap(unit))
+			throw std::string("Card: Expected key: ") + std::string(unit);
+
+		LoadSnapshotSY6522(yamlLoadHelper, pMB->sy6522);
+		AY8910_LoadSnapshot(yamlLoadHelper, nDeviceNum, std::string(""));
+		LoadSnapshotSSI263(yamlLoadHelper, pMB->SpeechChip);
+
+		pMB->nAYCurrentRegister = yamlLoadHelper.LoadUint(SS_YAML_KEY_AY_CURR_REG);
+		yamlLoadHelper.LoadBool(SS_YAML_KEY_TIMER1_IRQ);	// Consume
+		yamlLoadHelper.LoadBool(SS_YAML_KEY_TIMER2_IRQ);	// Consume
+		yamlLoadHelper.LoadBool(SS_YAML_KEY_SPEECH_IRQ);	// Consume
+
+		yamlLoadHelper.PopMap();
+
+		//
+
+		StartTimer(pMB);	// Attempt to start timer
+
+		// Crude - currently only support a single speech chip
+		// FIX THIS:
+		// . Speech chip could be Votrax instead
+		// . Is this IRQ compatible with Phasor?
+		if(pMB->SpeechChip.DurationPhoneme)
+		{
+			g_nSSI263Device = nDeviceNum;
+
+			if((pMB->SpeechChip.CurrentMode != MODE_IRQ_DISABLED) && (pMB->sy6522.PCR == 0x0C) && (pMB->sy6522.IER & IxR_PERIPHERAL))
+			{
+				pMB->sy6522.IFR |= IxR_PERIPHERAL;
+				UpdateIFR(pMB);
+				pMB->SpeechChip.CurrentMode |= 1;	// Set SSI263's D7 pin
+			}
+		}
+
+		nDeviceNum++;
+		pMB++;
+	}
+
+	AY8910_InitClock((int)CLK_6502);
+
+	// Setup in MB_InitializeIO() -> MB_SetSoundcardType()
+	g_SoundcardType = CT_Empty;
+	g_bPhasorEnable = false;
+
+	return true;
+}
+
+void Phasor_SaveSnapshot(YamlSaveHelper& yamlSaveHelper, const UINT uSlot)
+{
+	if (uSlot != 4)
+		throw std::string("Card: Phasor only supported in slot-4");
+
+	UINT nDeviceNum = 0;
+	SY6522_AY8910* pMB = &g_MB[0];	// fixme: Phasor uses MB's slot4(2x6522), slot4(2xSSI263), but slot4+5(4xAY8910)
+
+	YamlSaveHelper::Slot slot(yamlSaveHelper, Phasor_GetSnapshotCardName(), uSlot, 1);	// fixme: object should be just 1 Mockingboard card & it will know its slot
+
+	YamlSaveHelper::Label state(yamlSaveHelper, "%s:\n", SS_YAML_KEY_STATE);
+
+	yamlSaveHelper.SaveUint(SS_YAML_KEY_PHASOR_CLOCK_SCALE_FACTOR, g_PhasorClockScaleFactor);
+	yamlSaveHelper.SaveUint(SS_YAML_KEY_PHASOR_MODE, g_nPhasorMode);
+
+	for(UINT i=0; i<NUM_PHASOR_UNITS; i++)
+	{
+		YamlSaveHelper::Label unit(yamlSaveHelper, "%s%d:\n", SS_YAML_KEY_PHASOR_UNIT, i);
+
+		SaveSnapshotSY6522(yamlSaveHelper, pMB->sy6522);
+		AY8910_SaveSnapshot(yamlSaveHelper, nDeviceNum+0, std::string("-A"));
+		AY8910_SaveSnapshot(yamlSaveHelper, nDeviceNum+1, std::string("-B"));
+		SaveSnapshotSSI263(yamlSaveHelper, pMB->SpeechChip);
+
+		yamlSaveHelper.SaveHexUint4(SS_YAML_KEY_AY_CURR_REG, pMB->nAYCurrentRegister);
+		yamlSaveHelper.Save("%s: %s # Not supported\n", SS_YAML_KEY_TIMER1_IRQ, "false");
+		yamlSaveHelper.Save("%s: %s # Not supported\n", SS_YAML_KEY_TIMER2_IRQ, "false");
+		yamlSaveHelper.Save("%s: %s # Not supported\n", SS_YAML_KEY_SPEECH_IRQ, "false");
+
+		nDeviceNum += 2;
+		pMB++;
+	}
+}
+
+bool Phasor_LoadSnapshot(YamlLoadHelper& yamlLoadHelper, UINT slot, UINT version)
+{
+	if (slot != 4)	// fixme
+		throw std::string("Card: wrong slot");
+
+	if (version != 1)
+		throw std::string("Card: wrong version");
+
+	g_PhasorClockScaleFactor = yamlLoadHelper.LoadUint(SS_YAML_KEY_PHASOR_CLOCK_SCALE_FACTOR);
+	g_nPhasorMode = yamlLoadHelper.LoadUint(SS_YAML_KEY_PHASOR_MODE);
+
+	AY8910UpdateSetCycles();
+
+	UINT nDeviceNum = 0;
+	SY6522_AY8910* pMB = &g_MB[0];
+
+	g_nSSI263Device = 0;
+	g_nCurrentActivePhoneme = -1;
+
+	for(UINT i=0; i<NUM_PHASOR_UNITS; i++)
+	{
+		char szNum[2] = {'0'+i,0};
+		std::string unit = std::string(SS_YAML_KEY_MB_UNIT) + std::string(szNum);
+		if (!yamlLoadHelper.GetSubMap(unit))
+			throw std::string("Card: Expected key: ") + std::string(unit);
+
+		LoadSnapshotSY6522(yamlLoadHelper, pMB->sy6522);
+		AY8910_LoadSnapshot(yamlLoadHelper, nDeviceNum+0, std::string("-A"));
+		AY8910_LoadSnapshot(yamlLoadHelper, nDeviceNum+1, std::string("-B"));
+		LoadSnapshotSSI263(yamlLoadHelper, pMB->SpeechChip);
+
+		pMB->nAYCurrentRegister = yamlLoadHelper.LoadUint(SS_YAML_KEY_AY_CURR_REG);
+		yamlLoadHelper.LoadBool(SS_YAML_KEY_TIMER1_IRQ);	// Consume
+		yamlLoadHelper.LoadBool(SS_YAML_KEY_TIMER2_IRQ);	// Consume
+		yamlLoadHelper.LoadBool(SS_YAML_KEY_SPEECH_IRQ);	// Consume
+
+		yamlLoadHelper.PopMap();
+
+		//
+
+		StartTimer(pMB);	// Attempt to start timer
+
+		// Crude - currently only support a single speech chip
+		// FIX THIS:
+		// . Speech chip could be Votrax instead
+		// . Is this IRQ compatible with Phasor?
+		if(pMB->SpeechChip.DurationPhoneme)
+		{
+			g_nSSI263Device = nDeviceNum;
+
+			if((pMB->SpeechChip.CurrentMode != MODE_IRQ_DISABLED) && (pMB->sy6522.PCR == 0x0C) && (pMB->sy6522.IER & IxR_PERIPHERAL))
+			{
+				pMB->sy6522.IFR |= IxR_PERIPHERAL;
+				UpdateIFR(pMB);
+				pMB->SpeechChip.CurrentMode |= 1;	// Set SSI263's D7 pin
+			}
+		}
+
+		nDeviceNum += 2;
+		pMB++;
+	}
+
+	AY8910_InitClock((int)(CLK_6502 * g_PhasorClockScaleFactor));
+
+	// Setup in MB_InitializeIO() -> MB_SetSoundcardType()
+	g_SoundcardType = CT_Empty;
+	g_bPhasorEnable = false;
+
+	return true;
+}
+#endif // !APPLE2IX
+

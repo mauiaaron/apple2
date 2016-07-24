@@ -58,7 +58,7 @@ typedef struct
 
 typedef struct
 {
-	uint8_t DurationPhonome;
+	uint8_t DurationPhoneme;
 	uint8_t Inflection;		// I10..I3
 	uint8_t RateInflection;
 	uint8_t CtrlArtAmp;
@@ -114,10 +114,20 @@ bool    MB_IsActive();
 unsigned long   MB_GetVolume();
 void    MB_SetVolumeZeroToTen(unsigned long goesToTen);
 void    MB_SetVolume(unsigned long dwVolume, unsigned long dwVolumeMax);
-unsigned long   MB_GetSnapshot(SS_CARD_MOCKINGBOARD* pSS, unsigned long dwSlot);
-unsigned long   MB_SetSnapshot(SS_CARD_MOCKINGBOARD* pSS, unsigned long dwSlot);
+#if UNBREAK_SOON
+void    MB_GetSnapshot_v1(struct SS_CARD_MOCKINGBOARD_v1* const pSS, const DWORD dwSlot);	// For debugger
+int     MB_SetSnapshot_v1(const struct SS_CARD_MOCKINGBOARD_v1* const pSS, const DWORD dwSlot);
+std::string MB_GetSnapshotCardName(void);
+void    MB_SaveSnapshot(class YamlSaveHelper& yamlSaveHelper, const UINT uSlot);
+bool    MB_LoadSnapshot(class YamlLoadHelper& yamlLoadHelper, UINT slot, UINT version);
+#endif
 #ifdef APPLE2IX
 void mb_io_initialize(unsigned int slot4, unsigned int slot5);
 #endif
 
+#if UNBREAK_SOON
+std::string Phasor_GetSnapshotCardName(void);
+void Phasor_SaveSnapshot(class YamlSaveHelper& yamlSaveHelper, const UINT uSlot);
+bool Phasor_LoadSnapshot(class YamlLoadHelper& yamlLoadHelper, UINT slot, UINT version);
+#endif
 #endif // whole file

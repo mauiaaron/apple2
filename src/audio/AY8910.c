@@ -35,23 +35,21 @@
 
 // [AppleWin-TC] From FUSE's sound.c module
 
-#include "common.h"
 #if !defined(APPLE2IX)
 #include "StdAfx.h"
+
 #include <windows.h>
 #include <stdio.h>
 #include <crtdbg.h>
-#endif
-
-#ifdef APPLE2IX
-#include "audio/AY8910.h"
-#include "audio/mockingboard.h"
-#else
 #include "AY8910.h"
-#include "Common.h"
-#include "Structs.h"
+
 #include "Applewin.h"		// For g_fh
 #include "Mockingboard.h"	// For g_uTimer1IrqCount
+#include "YamlHelper.h"
+#else
+#   include "common.h"
+#   include "audio/AY8910.h"
+#   include "audio/mockingboard.h"	// For g_uTimer1IrqCount
 #endif
 
 /* The AY white noise RNG algorithm is based on info from MAME's ay8910.c -
@@ -143,9 +141,7 @@ void CAY8910_init(CAY8910 *_this)
 	// Init the statics that were in sound_ay_overlay()
 	_this->rng = 1;
 	_this->noise_toggle = 0;
-	_this->env_first = 1;
-        _this->env_rev = 0;
-        _this->env_counter = 15;
+	_this->env_first = 1; _this->env_rev = 0; _this->env_counter = 15;
 	//m_fCurrentCLK_AY8910 = cycles_persec_target; -- believe this is handled by an initial call to SetCLK()
 };
 
@@ -173,15 +169,13 @@ void sound_ay_init( CAY8910 *_this )
 	_this->ay_env_internal_tick = _this->ay_env_tick = _this->ay_env_period = 0;
 	_this->ay_tone_subcycles = _this->ay_env_subcycles = 0;
 	for( f = 0; f < 3; f++ )
-        {
 		_this->ay_tone_tick[f] = _this->ay_tone_high[f] = 0, _this->ay_tone_period[f] = 1;
-        }
 
 	_this->ay_change_count = 0;
 }
 
 #ifdef APPLE2IX
-#define HZ_COMMON_DENOMINATOR 25
+#define HZ_COMMON_DENOMINATOR 25 // FIXME TODO : why different than upstream?
 #endif
 
 static void sound_init( CAY8910 *_this, const char *device, unsigned long nSampleRate )
@@ -243,17 +237,17 @@ static void sound_init( CAY8910 *_this, const char *device, unsigned long nSampl
   sound_generator_framesiz = sound_generator_freq / (int)hz;
 
 #if 0
-  if( ( sound_buf = (libspectrum_signed_word*) MALLOC( sizeof( libspectrum_signed_word ) *
+  if( ( sound_buf = (libspectrum_signed_word*) malloc( sizeof( libspectrum_signed_word ) *
 			    sound_generator_framesiz * sound_channels ) ) ==
       NULL
       || ( tape_buf =
-	   MALLOC( sizeof( libspectrum_signed_word ) *
+	   malloc( sizeof( libspectrum_signed_word ) *
 		   sound_generator_framesiz ) ) == NULL ) {
     if( sound_buf ) {
-      FREE( sound_buf );
+      free( sound_buf );
       sound_buf = NULL;
     }
-    sound_end(_this);
+    sound_end();
     return;
   }
 #endif
@@ -263,17 +257,17 @@ static void sound_init( CAY8910 *_this, const char *device, unsigned long nSampl
 
 #ifdef HAVE_SAMPLERATE
   if( settings_current.sound_hifi ) {
-    if( ( convert_input_buffer = MALLOC( sizeof( float ) *
+    if( ( convert_input_buffer = malloc( sizeof( float ) *
 					 sound_generator_framesiz *
 					 sound_channels ) ) == NULL
 	|| ( convert_output_buffer =
-	     MALLOC( sizeof( float ) * sound_framesiz * sound_channels ) ) ==
+	     malloc( sizeof( float ) * sound_framesiz * sound_channels ) ) ==
 	NULL ) {
       if( convert_input_buffer ) {
-	FREE( convert_input_buffer );
+	free( convert_input_buffer );
 	convert_input_buffer = NULL;
       }
-      sound_end(_this);
+      sound_end();
       return;
     }
   }
@@ -283,7 +277,7 @@ static void sound_init( CAY8910 *_this, const char *device, unsigned long nSampl
     ui_error( UI_ERROR_ERROR,
 	      "error initialising sample rate converter %s",
 	      src_strerror( error ) );
-    sound_end(_this);
+    sound_end();
     return;
   }
 #endif /* #ifdef HAVE_SAMPLERATE */
@@ -351,7 +345,7 @@ void
 sound_pause( void )
 {
   if( sound_enabled )
-    sound_end(_this);
+    sound_end();
 }
 
 
@@ -367,23 +361,22 @@ sound_unpause( void )
 #endif
 
 
-#ifndef APPLE2IX
 static void sound_end( CAY8910 *_this )
 {
 #if 0
   if( sound_enabled ) {
     if( sound_buf ) {
-      FREE( sound_buf );
+      free( sound_buf );
       sound_buf = NULL;
-      FREE( tape_buf );
+      free( tape_buf );
       tape_buf = NULL;
     }
     if( convert_input_buffer ) {
-      FREE( convert_input_buffer );
+      free( convert_input_buffer );
       convert_input_buffer = NULL;
     }
     if( convert_output_buffer ) {
-      FREE( convert_output_buffer );
+      free( convert_output_buffer );
       convert_output_buffer = NULL;
     }
 #ifdef HAVE_SAMPLERATE
@@ -397,12 +390,11 @@ static void sound_end( CAY8910 *_this )
 
 #if 0
     if( sound_buf ) {
-      FREE( sound_buf );
+      free( sound_buf );
       sound_buf = NULL;
     }
 #endif
 }
-#endif
 
 
 #if 0
@@ -768,6 +760,8 @@ void sound_ay_reset( CAY8910 *_this )
 {
   int f;
 
+  CAY8910_init(_this);	// AppleWin:TC
+
 /* recalculate timings based on new machines ay clock */
   sound_ay_init(_this);
 
@@ -987,19 +981,207 @@ void SetCLK(double CLK)
     m_fCurrentCLK_AY8910 = CLK;
 }
 
+//
+
+#define SS_YAML_KEY_AY8910 "AY8910"
+
+#define SS_YAML_KEY_TONE0_TICK "Tone0 Tick"
+#define SS_YAML_KEY_TONE1_TICK "Tone1 Tick"
+#define SS_YAML_KEY_TONE2_TICK "Tone2 Tick"
+#define SS_YAML_KEY_TONE0_HIGH "Tone0 High"
+#define SS_YAML_KEY_TONE1_HIGH "Tone1 High"
+#define SS_YAML_KEY_TONE2_HIGH "Tone2 High"
+#define SS_YAML_KEY_NOISE_TICK "Noise Tick"
+#define SS_YAML_KEY_TONE_SUBCYCLES "Tone Subcycles"
+#define SS_YAML_KEY_ENV_SUBCYCLES "Env Subcycles"
+#define SS_YAML_KEY_ENV_INTERNAL_TICK "Env Internal Tick"
+#define SS_YAML_KEY_ENV_TICK "Env Tick"
+#define SS_YAML_KEY_TICK_INCR "Tick Incr"
+#define SS_YAML_KEY_TONE0_PERIOD "Tone0 Period"
+#define SS_YAML_KEY_TONE1_PERIOD "Tone1 Period"
+#define SS_YAML_KEY_TONE2_PERIOD "Tone2 Period"
+#define SS_YAML_KEY_NOISE_PERIOD "Noise Period"
+#define SS_YAML_KEY_ENV_PERIOD "Env Period"
+#define SS_YAML_KEY_RNG "RNG"
+#define SS_YAML_KEY_NOISE_TOGGLE "Noise Toggle"
+#define SS_YAML_KEY_ENV_FIRST "Env First"
+#define SS_YAML_KEY_ENV_REV "Env Rev"
+#define SS_YAML_KEY_ENV_COUNTER "Env Counter"
+
+#define SS_YAML_KEY_REGISTERS "Registers"
+#define SS_YAML_KEY_REG_TONE0_PERIOD "Tone0 Period"
+#define SS_YAML_KEY_REG_TONE1_PERIOD "Tone1 Period"
+#define SS_YAML_KEY_REG_TONE2_PERIOD "Tone2 Period"
+#define SS_YAML_KEY_REG_NOISE_PERIOD "Noise Period"
+#define SS_YAML_KEY_REG_MIXER "Mixer"
+#define SS_YAML_KEY_REG_VOL0 "Vol0"
+#define SS_YAML_KEY_REG_VOL1 "Vol1"
+#define SS_YAML_KEY_REG_VOL2 "Vol2"
+#define SS_YAML_KEY_REG_ENV_PERIOD "Env Period"
+#define SS_YAML_KEY_REG_ENV_SHAPE "Env Shape"
+#define SS_YAML_KEY_REG_PORTA "PortA"
+#define SS_YAML_KEY_REG_PORTB "PortB"
+
+#define SS_YAML_KEY_CHANGE "Change"
+#define SS_YAML_VALUE_CHANGE_FORMAT "%d, %d, 0x%1X, 0x%02X"
+
+#if UNBREAK_SOON
+void CAY8910::SaveSnapshot(YamlSaveHelper& yamlSaveHelper, std::string& suffix)
+{
+	std::string unit = std::string(SS_YAML_KEY_AY8910) + suffix;
+	YamlSaveHelper::Label label(yamlSaveHelper, "%s:\n", unit.c_str());
+
+	yamlSaveHelper.SaveUint(SS_YAML_KEY_TONE0_TICK, ay_tone_tick[0]);
+	yamlSaveHelper.SaveUint(SS_YAML_KEY_TONE1_TICK, ay_tone_tick[1]);
+	yamlSaveHelper.SaveUint(SS_YAML_KEY_TONE2_TICK, ay_tone_tick[2]);
+	yamlSaveHelper.SaveUint(SS_YAML_KEY_TONE0_HIGH, ay_tone_high[0]);
+	yamlSaveHelper.SaveUint(SS_YAML_KEY_TONE1_HIGH, ay_tone_high[1]);
+	yamlSaveHelper.SaveUint(SS_YAML_KEY_TONE2_HIGH, ay_tone_high[2]);
+	yamlSaveHelper.SaveUint(SS_YAML_KEY_NOISE_TICK, ay_noise_tick);
+	yamlSaveHelper.SaveUint(SS_YAML_KEY_TONE_SUBCYCLES, ay_tone_subcycles);
+	yamlSaveHelper.SaveUint(SS_YAML_KEY_ENV_SUBCYCLES, ay_env_subcycles);
+	yamlSaveHelper.SaveUint(SS_YAML_KEY_ENV_INTERNAL_TICK, ay_env_internal_tick);
+	yamlSaveHelper.SaveUint(SS_YAML_KEY_ENV_TICK, ay_env_tick);
+	yamlSaveHelper.SaveUint(SS_YAML_KEY_TICK_INCR, ay_tick_incr);
+	yamlSaveHelper.SaveUint(SS_YAML_KEY_TONE0_PERIOD, ay_tone_period[0]);
+	yamlSaveHelper.SaveUint(SS_YAML_KEY_TONE1_PERIOD, ay_tone_period[1]);
+	yamlSaveHelper.SaveUint(SS_YAML_KEY_TONE2_PERIOD, ay_tone_period[2]);
+	yamlSaveHelper.SaveUint(SS_YAML_KEY_NOISE_PERIOD, ay_noise_period);
+	yamlSaveHelper.SaveUint(SS_YAML_KEY_RNG, rng);
+	yamlSaveHelper.SaveUint(SS_YAML_KEY_NOISE_TOGGLE, noise_toggle);
+	yamlSaveHelper.SaveUint(SS_YAML_KEY_ENV_FIRST, env_first);
+	yamlSaveHelper.SaveUint(SS_YAML_KEY_ENV_REV, env_rev);
+	yamlSaveHelper.SaveUint(SS_YAML_KEY_ENV_COUNTER, env_counter);
+
+	// New label
+	{
+		YamlSaveHelper::Label registers(yamlSaveHelper, "%s:\n", SS_YAML_KEY_REGISTERS);
+
+		yamlSaveHelper.SaveHexUint12(SS_YAML_KEY_REG_TONE0_PERIOD, (UINT)(sound_ay_registers[1]<<8) | sound_ay_registers[0]);
+		yamlSaveHelper.SaveHexUint12(SS_YAML_KEY_REG_TONE1_PERIOD, (UINT)(sound_ay_registers[3]<<8) | sound_ay_registers[2]);
+		yamlSaveHelper.SaveHexUint12(SS_YAML_KEY_REG_TONE2_PERIOD, (UINT)(sound_ay_registers[5]<<8) | sound_ay_registers[4]);
+		yamlSaveHelper.SaveHexUint8(SS_YAML_KEY_REG_NOISE_PERIOD, sound_ay_registers[6]);
+		yamlSaveHelper.SaveHexUint8(SS_YAML_KEY_REG_MIXER, sound_ay_registers[7]);
+		yamlSaveHelper.SaveHexUint8(SS_YAML_KEY_REG_VOL0, sound_ay_registers[8]);
+		yamlSaveHelper.SaveHexUint8(SS_YAML_KEY_REG_VOL1, sound_ay_registers[9]);
+		yamlSaveHelper.SaveHexUint8(SS_YAML_KEY_REG_VOL2, sound_ay_registers[10]);
+		yamlSaveHelper.SaveHexUint16(SS_YAML_KEY_REG_ENV_PERIOD, (UINT)(sound_ay_registers[12]<<8) | sound_ay_registers[11]);
+		yamlSaveHelper.SaveHexUint4(SS_YAML_KEY_REG_ENV_SHAPE, sound_ay_registers[13]);
+		yamlSaveHelper.SaveHexUint8(SS_YAML_KEY_REG_PORTA, sound_ay_registers[14]);
+		yamlSaveHelper.SaveHexUint8(SS_YAML_KEY_REG_PORTB, sound_ay_registers[15]);
+	}
+
+	// New label
+	if (ay_change_count)
+	{
+		YamlSaveHelper::Label change(yamlSaveHelper, "%s:\n", SS_YAML_KEY_CHANGE);
+
+		for (int i=0; i<ay_change_count; i++)
+			yamlSaveHelper.Save("0x%04X: " SS_YAML_VALUE_CHANGE_FORMAT "\n", i, ay_change[i].tstates, ay_change[i].ofs, ay_change[i].reg, ay_change[i].val);
+	}
+}
+
+bool CAY8910::LoadSnapshot(YamlLoadHelper& yamlLoadHelper, std::string& suffix)
+{
+	std::string unit = std::string(SS_YAML_KEY_AY8910) + suffix;
+	if (!yamlLoadHelper.GetSubMap(unit))
+		throw std::string("Card: Expected key: ") + unit;
+
+	ay_tone_tick[0] = yamlLoadHelper.LoadUint(SS_YAML_KEY_TONE0_TICK);
+	ay_tone_tick[1] = yamlLoadHelper.LoadUint(SS_YAML_KEY_TONE1_TICK);
+	ay_tone_tick[2] = yamlLoadHelper.LoadUint(SS_YAML_KEY_TONE2_TICK);
+	ay_tone_high[0] = yamlLoadHelper.LoadUint(SS_YAML_KEY_TONE0_HIGH);
+	ay_tone_high[1] = yamlLoadHelper.LoadUint(SS_YAML_KEY_TONE1_HIGH);
+	ay_tone_high[2] = yamlLoadHelper.LoadUint(SS_YAML_KEY_TONE2_HIGH);
+	ay_noise_tick = yamlLoadHelper.LoadUint(SS_YAML_KEY_NOISE_TICK);
+	ay_tone_subcycles = yamlLoadHelper.LoadUint(SS_YAML_KEY_TONE_SUBCYCLES);
+	ay_env_subcycles = yamlLoadHelper.LoadUint(SS_YAML_KEY_ENV_SUBCYCLES);
+	ay_env_internal_tick = yamlLoadHelper.LoadUint(SS_YAML_KEY_ENV_INTERNAL_TICK);
+	ay_env_tick = yamlLoadHelper.LoadUint(SS_YAML_KEY_ENV_TICK);
+	ay_tick_incr = yamlLoadHelper.LoadUint(SS_YAML_KEY_TICK_INCR);
+	ay_tone_period[0] = yamlLoadHelper.LoadUint(SS_YAML_KEY_TONE0_PERIOD);
+	ay_tone_period[1] = yamlLoadHelper.LoadUint(SS_YAML_KEY_TONE1_PERIOD);
+	ay_tone_period[2] = yamlLoadHelper.LoadUint(SS_YAML_KEY_TONE2_PERIOD);
+	ay_noise_period = yamlLoadHelper.LoadUint(SS_YAML_KEY_NOISE_PERIOD);
+	rng = yamlLoadHelper.LoadUint(SS_YAML_KEY_RNG);
+	noise_toggle = yamlLoadHelper.LoadUint(SS_YAML_KEY_NOISE_TOGGLE);
+	env_first = yamlLoadHelper.LoadUint(SS_YAML_KEY_ENV_FIRST);
+	env_rev = yamlLoadHelper.LoadUint(SS_YAML_KEY_ENV_REV);
+	env_counter = yamlLoadHelper.LoadUint(SS_YAML_KEY_ENV_COUNTER);
+
+	if (!yamlLoadHelper.GetSubMap(SS_YAML_KEY_REGISTERS))
+		throw std::string("Card: Expected key: ") + SS_YAML_KEY_REGISTERS;
+
+	USHORT period = (USHORT) yamlLoadHelper.LoadUint(SS_YAML_KEY_REG_TONE0_PERIOD);
+	sound_ay_registers[0] = period & 0xff;
+	sound_ay_registers[1] = (period >> 8) & 0xf;
+	period = (USHORT) yamlLoadHelper.LoadUint(SS_YAML_KEY_REG_TONE1_PERIOD);
+	sound_ay_registers[2] = period & 0xff;
+	sound_ay_registers[3] = (period >> 8) & 0xf;
+	period = (USHORT) yamlLoadHelper.LoadUint(SS_YAML_KEY_REG_TONE2_PERIOD);
+	sound_ay_registers[4] = period & 0xff;
+	sound_ay_registers[5] = (period >> 8) & 0xf;
+	sound_ay_registers[6] = yamlLoadHelper.LoadUint(SS_YAML_KEY_REG_NOISE_PERIOD);
+	sound_ay_registers[7] = yamlLoadHelper.LoadUint(SS_YAML_KEY_REG_MIXER);
+	sound_ay_registers[8] = yamlLoadHelper.LoadUint(SS_YAML_KEY_REG_VOL0);
+	sound_ay_registers[9] = yamlLoadHelper.LoadUint(SS_YAML_KEY_REG_VOL1);
+	sound_ay_registers[10] = yamlLoadHelper.LoadUint(SS_YAML_KEY_REG_VOL2);
+	period = (USHORT) yamlLoadHelper.LoadUint(SS_YAML_KEY_REG_ENV_PERIOD);
+	sound_ay_registers[11] = period & 0xff;
+	sound_ay_registers[12] = period >> 8;
+	sound_ay_registers[13] = yamlLoadHelper.LoadUint(SS_YAML_KEY_REG_ENV_SHAPE);
+	sound_ay_registers[14] = yamlLoadHelper.LoadUint(SS_YAML_KEY_REG_PORTA);
+	sound_ay_registers[15] = yamlLoadHelper.LoadUint(SS_YAML_KEY_REG_PORTB);
+
+	yamlLoadHelper.PopMap();
+
+	ay_change_count = 0;
+	if (yamlLoadHelper.GetSubMap(SS_YAML_KEY_CHANGE))
+	{
+		while(1)
+		{
+			char szIndex[7];
+			sprintf_s(szIndex, sizeof(szIndex), "0x%04X", ay_change_count);
+
+			bool bFound;
+			std::string value = yamlLoadHelper.LoadString_NoThrow(szIndex, bFound);
+			if (!bFound)
+				break;	// done
+
+			if(4 != sscanf_s(value.c_str(), SS_YAML_VALUE_CHANGE_FORMAT,
+				&ay_change[ay_change_count].tstates,
+				&ay_change[ay_change_count].ofs,
+				&ay_change[ay_change_count].reg,
+				&ay_change[ay_change_count].val))
+				throw std::string("Card: AY8910: Failed to scanf change list");
+
+			ay_change_count++;
+			if (ay_change_count > AY_CHANGE_MAX)
+				throw std::string("Card: AY8910: Too many changes");
+		}
+
+		yamlLoadHelper.PopMap();
+	}
+
+	yamlLoadHelper.PopMap();
+
+	return true;
+}
+#endif // UNBREAK_SOON
+
 ///////////////////////////////////////////////////////////////////////////////
 
 // AY8910 interface
 
 #ifndef APPLE2IX
-#include "CPU.h"	// For cycles_count_total
+#include "CPU.h"	// For g_nCumulativeCycles
 #endif
 
 static CAY8910 g_AY8910[MAX_8910];
 #ifdef APPLE2IX
 static uint64_t g_uLastCumulativeCycles = 0;
 #else
-static uint64_t g_uLastCumulativeCycles = 0;
+static unsigned __int64 g_uLastCumulativeCycles = 0;
 #endif
 
 
@@ -1054,4 +1236,23 @@ uint8_t* AY8910_GetRegsPtr(unsigned int uChip)
 
 	return GetAYRegsPtr(&g_AY8910[uChip]);
 }
+
+#if UNBREAK_SOON
+UINT AY8910_SaveSnapshot(YamlSaveHelper& yamlSaveHelper, UINT uChip, std::string& suffix)
+{
+	if (uChip >= MAX_8910)
+		return 0;
+
+	g_AY8910[uChip].SaveSnapshot(yamlSaveHelper, suffix);
+	return 1;
+}
+
+UINT AY8910_LoadSnapshot(YamlLoadHelper& yamlLoadHelper, UINT uChip, std::string& suffix)
+{
+	if (uChip >= MAX_8910)
+		return 0;
+
+	return g_AY8910[uChip].LoadSnapshot(yamlLoadHelper, suffix) ? 1 : 0;
+}
+#endif // UNBREAK_SOON
 
