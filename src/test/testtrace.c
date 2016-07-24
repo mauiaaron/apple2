@@ -12,7 +12,6 @@
 #include "testcommon.h"
 
 #define ABUSIVE_TESTS 1
-#define FINICKY_TESTS 1
 
 #define TESTING_DISK "testvm1.dsk.gz"
 #define BLANK_DSK "blank.dsk.gz"
@@ -39,7 +38,89 @@ static void testtrace_teardown(void *arg) {
 }
 
 // ----------------------------------------------------------------------------
-// Disk TESTS ...
+// Cycles counter overflow test
+
+extern unsigned long (*testing_getCyclesCount)(void);
+extern void (*testing_cyclesOverflow)(void);
+static bool cycles_overflowed = false;
+
+static unsigned long testspeaker_getCyclesCount(void) {
+    // advance cycles count to near overflow
+    return ULONG_MAX - (CLK_6502_INT);
+}
+
+static void testspeaker_cyclesOverflow(void) {
+    cycles_overflowed = true;
+}
+
+TEST test_timing_overflow() {
+
+    // force an almost overflow
+
+    testing_getCyclesCount = &testspeaker_getCyclesCount;
+    testing_cyclesOverflow = &testspeaker_cyclesOverflow;
+
+    ASSERT(!cycles_overflowed);
+    test_setup_boot_disk(BLANK_DSK, /*readonly:*/1);
+    BOOT_TO_DOS();
+    ASSERT(cycles_overflowed);
+
+    // appears emulator handled cycle count overflow gracefully ...
+    testing_getCyclesCount = NULL;
+    testing_cyclesOverflow = NULL;
+
+    PASS();
+}
+
+// ----------------------------------------------------------------------------
+// Tracing TESTS ...
+
+#define EXPECTED_BEEP_TRACE_FILE_SIZE 770
+#define EXPECTED_BEEP_TRACE_SHA "69C728A65B5933D73F91D77694BEE7F674C9EDF7"
+TEST test_boot_sound() {
+
+    const char *homedir = HOMEDIR;
+    char *testout = NULL;
+    ASPRINTF(&testout, "%s/a2_speaker_beep_test.txt", homedir);
+    if (testout) {
+        unlink(testout);
+        speaker_traceBegin(testout);
+    }
+
+    test_setup_boot_disk(BLANK_DSK, /*readonly:*/1);
+    BOOT_TO_DOS();
+
+    speaker_traceEnd();
+    disk6_eject(0);
+
+    do {
+        uint8_t md[SHA_DIGEST_LENGTH];
+        char mdstr0[(SHA_DIGEST_LENGTH*2)+1];
+
+        FILE *fp = fopen(testout, "r");
+
+        fseek(fp, 0, SEEK_END);
+        long expectedSize = ftell(fp);
+        ASSERT(expectedSize == EXPECTED_BEEP_TRACE_FILE_SIZE);
+        fseek(fp, 0, SEEK_SET);
+
+        unsigned char *buf = MALLOC(EXPECTED_BEEP_TRACE_FILE_SIZE);
+        if (fread(buf, 1, EXPECTED_BEEP_TRACE_FILE_SIZE, fp) != EXPECTED_BEEP_TRACE_FILE_SIZE) {
+            ASSERT(false);
+        }
+        fclose(fp); fp = NULL;
+        SHA1(buf, EXPECTED_BEEP_TRACE_FILE_SIZE, md);
+        FREE(buf);
+
+        sha1_to_str(md, mdstr0);
+        ASSERT(strcmp(mdstr0, EXPECTED_BEEP_TRACE_SHA) == 0);
+    } while(0);
+
+    unlink(testout);
+    FREE(testout);
+
+    PASS();
+}
 
 // This test is majorly abusive ... it creates an ~800MB file in $HOME
 // ... but if it's correct, you're fairly assured the cpu/vm is working =)
@@ -395,18 +476,19 @@ GREATEST_SUITE(test_suite_trace) {
 
     // TESTS --------------------------
 
+    RUN_TESTp(test_timing_overflow);
+    RUN_TESTp(test_boot_sound);
+
 #if ABUSIVE_TESTS
     RUN_TESTp(test_boot_disk_cputrace);
 #endif
 
-#if FINICKY_TESTS
     RUN_TESTp(test_cputrace_hello_dsk);
     RUN_TESTp(test_cputrace_hello_nib);
     RUN_TESTp(test_cputrace_hello_po);
     RUN_TESTp(test_boot_disk_vmtrace);
     RUN_TESTp(test_boot_disk_vmtrace_nib);
     RUN_TESTp(test_boot_disk_vmtrace_po);
-#endif
 
     // ...
     disk6_eject(0);

@@ -14,6 +14,9 @@
 bool test_do_reboot = true;
 char mdstr[(SHA_DIGEST_LENGTH*2)+1];
 
+void (*testing_cyclesOverflow)(void) = NULL;
+unsigned long (*testing_getCyclesCount)(void) = NULL;
+
 // ----------------------------------------------------------------------------
 
 void test_common_setup(void) {

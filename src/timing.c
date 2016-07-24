@@ -50,7 +50,7 @@
 
 // cycle counting
 double cycles_persec_target = CLK_6502;
-unsigned long cycles_count_total = 0;           // Running at spec ~1MHz, this will approach overflow in ~4000secs
+unsigned long cycles_count_total = 0;           // Running at spec ~1MHz, this will approach overflow in ~4000secs (for 32bit architectures)
 int cycles_speaker_feedback = 0;
 int32_t cpu65_cycles_to_execute = 0;            // cycles-to-execute by cpu65_run()
 int32_t cpu65_cycle_count = 0;                  // cycles currently excuted by cpu65_run()
@@ -147,6 +147,12 @@ void reinitialize(void) {
 #endif
 
     cycles_count_total = 0;
+#if TESTING
+    extern unsigned long (*testing_getCyclesCount)(void);
+    if (testing_getCyclesCount) {
+        cycles_count_total = testing_getCyclesCount();
+    }
+#endif
 
     vm_initialize();
 
@@ -297,11 +303,6 @@ static void *cpu_thread(void *dummyptr) {
 
         LOG("cpu_thread : begin main loop ...");
 
-#ifndef NDEBUG
-        extern void timing_testCyclesCountOverflow(void);
-        timing_testCyclesCountOverflow();
-#endif
-
         clock_gettime(CLOCK_MONOTONIC, &t0);
 
         do {
@@ -357,6 +358,7 @@ static void *cpu_thread(void *dummyptr) {
 
                 if (is_debugging) {
                     debugging_cycles -= cpu65_cycle_count;
+                    timing_checkpoint_cycles();
                     if (c_debugger_should_break() || (debugging_cycles <= 0)) {
                         int err = 0;
                         if ((err = pthread_cond_signal(&dbg_thread_cond))) {
@@ -366,13 +368,12 @@ static void *cpu_thread(void *dummyptr) {
                             ERRLOG("pthread_cond_wait : %d", err);
                         }
                         if (debugging_cycles <= 0) {
-                            cpu65_cycle_count = debugging_cycles0 - debugging_cycles/*<=0*/;
                             break;
                         }
                     }
-                }
-                if (emul_reinitialize) {
-                    reinitialize();
+                    if (emul_reinitialize) {
+                        reinitialize();
+                    }
                 }
             } while (is_debugging);
 #if DEBUG_TIMING
@@ -539,22 +540,20 @@ void timing_checkpoint_cycles(void) {
 
     const int32_t d = cpu65_cycle_count - cycles_checkpoint_count;
     assert(d >= 0);
+#if TESTING
+    unsigned long previous_cycles_count_total = cycles_count_total;
+#endif
     cycles_count_total += d;
-#ifndef NDEBUG
-    if (UNLIKELY(cycles_count_total < cycles_checkpoint_count)) {
-        LOG("OVERFLOWED cycles_count_total...");
+#if TESTING
+    if (UNLIKELY(cycles_count_total < previous_cycles_count_total)) {
+        extern void (*testing_cyclesOverflow)(void);
+        if (testing_cyclesOverflow) {
+            testing_cyclesOverflow();
+        }
     }
 #endif
     cycles_checkpoint_count = cpu65_cycle_count;
 }
-
-#ifndef NDEBUG
-void timing_testCyclesCountOverflow(void) {
-    // advance cycles count to near overflow
-    LOG("almost overflow ...");
-    cycles_count_total = ULONG_MAX - (CLK_6502_INT*10);
-}
-#endif
 
 // ----------------------------------------------------------------------------
 

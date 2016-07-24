@@ -28,5 +28,11 @@ bool speaker_isActive(void);
  */
 double speaker_cyclesPerSample(void);
 
+#if SPEAKER_TRACING
+void speaker_traceBegin(const char *trace_file);
+void speaker_traceFlush(void);
+void speaker_traceEnd(void);
+#endif
+
 #endif /* whole file */
 

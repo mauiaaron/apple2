@@ -62,6 +62,11 @@ static int samples_adjustment_counter = 0;
 
 static AudioBuffer_s *speakerBuffer = NULL;
 
+#if SPEAKER_TRACING
+static FILE *speaker_trace_fp = NULL;
+static unsigned long cycles_trace_toggled = 0;
+#endif
+
 // --------------------------------------------------------------------------------------------------------------------
 
 static void speaker_prefsChanged(const char *domain) {
@@ -511,6 +516,15 @@ GLUE_C_READ(speaker_toggle)
 
     timing_checkpoint_cycles();
 
+#if SPEAKER_TRACING
+    // output cycle count delta when toggled
+    if (speaker_trace_fp) {
+        unsigned long cycles_trace_delta = cycles_count_total - cycles_trace_toggled;
+        fprintf(speaker_trace_fp, "%lu\n", cycles_trace_delta);
+        cycles_trace_toggled = cycles_count_total;
+    }
+#endif
+
 #if DIRECT_SPEAKER_ACCESS
 #error this used to be implemented ...
     // AFAIK ... this requires an actual speaker device and ability to access it (usually requiring this program to be
@@ -544,4 +558,29 @@ GLUE_C_READ(speaker_toggle)
 
     return floating_bus();
 }
+
+#if SPEAKER_TRACING
+// --------------------------------------------------------------------------------------------------------------------
+// Speaker audio tracing (binary samples output)
+
+void speaker_traceBegin(const char *trace_file) {
+    if (trace_file) {
+        speaker_trace_fp = fopen(trace_file, "w");
+    }
+}
+
+void speaker_traceFlush(void) {
+    if (speaker_trace_fp) {
+        fflush(speaker_trace_fp);
+    }
+}
+
+void speaker_traceEnd(void) {
+    if (speaker_trace_fp) {
+        fflush(speaker_trace_fp);
+        fclose(speaker_trace_fp);
+        speaker_trace_fp = NULL;
+    }
+}
+#endif
 
