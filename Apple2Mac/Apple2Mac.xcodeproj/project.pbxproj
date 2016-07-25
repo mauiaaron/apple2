@@ -1832,7 +1832,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "TARGET_ARCH=arm \"$SRCROOT/../src/genglue.sh\" \"$SRCROOT/../src/cpu-supp.c\" \"$SRCROOT/../src/disk.c\" \"$SRCROOT/../src/display.c\" \"$SRCROOT/../src/vm.c\" \"$SRCROOT/../src/audio/speaker.c\" \"$SRCROOT/../src/audio/mockingboard.c\" > \"$SRCROOT/../src/arm/glue.S\"\nTARGET_ARCH=x86 \"$SRCROOT/../src/x86/genglue\" \"$SRCROOT/../src/cpu-supp.c\" \"$SRCROOT/../src/disk.c\" \"$SRCROOT/../src/display.c\" \"$SRCROOT/../src/vm.c\" \"$SRCROOT/../src/audio/speaker.c\" \"$SRCROOT/../src/audio/mockingboard.c\" > \"$SRCROOT/../src/x86/glue.S\"";
+			shellScript = "TARGET_ARCH=arm \"$SRCROOT/../src/genglue.sh\" \"$SRCROOT/../src/cpu-supp.c\" \"$SRCROOT/../src/disk.c\" \"$SRCROOT/../src/display.c\" \"$SRCROOT/../src/vm.c\" \"$SRCROOT/../src/audio/speaker.c\" \"$SRCROOT/../src/audio/mockingboard.c\" > \"$SRCROOT/../src/arm/glue.S\"\nTARGET_ARCH=x86 \"$SRCROOT/../src/genglue.sh\" \"$SRCROOT/../src/cpu-supp.c\" \"$SRCROOT/../src/disk.c\" \"$SRCROOT/../src/display.c\" \"$SRCROOT/../src/vm.c\" \"$SRCROOT/../src/audio/speaker.c\" \"$SRCROOT/../src/audio/mockingboard.c\" > \"$SRCROOT/../src/x86/glue.S\"";
 			showEnvVarsInLog = 0;
 		};
 		4ACD73551D20A83E00123DE6 /* ShellScript */ = {
@@ -1860,7 +1860,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "TARGET_ARCH=arm \"$SRCROOT/../src/genglue.sh\" \"$SRCROOT/../src/cpu-supp.c\" \"$SRCROOT/../src/disk.c\" \"$SRCROOT/../src/display.c\" \"$SRCROOT/../src/vm.c\" \"$SRCROOT/../src/audio/speaker.c\" \"$SRCROOT/../src/audio/mockingboard.c\" > \"$SRCROOT/../src/arm/glue.S\"\nTARGET_ARCH=x86 \"$SRCROOT/../src/x86/genglue\" \"$SRCROOT/../src/cpu-supp.c\" \"$SRCROOT/../src/disk.c\" \"$SRCROOT/../src/display.c\" \"$SRCROOT/../src/vm.c\" \"$SRCROOT/../src/audio/speaker.c\" \"$SRCROOT/../src/audio/mockingboard.c\" > \"$SRCROOT/../src/x86/glue.S\"";
+			shellScript = "TARGET_ARCH=arm \"$SRCROOT/../src/genglue.sh\" \"$SRCROOT/../src/cpu-supp.c\" \"$SRCROOT/../src/disk.c\" \"$SRCROOT/../src/display.c\" \"$SRCROOT/../src/vm.c\" \"$SRCROOT/../src/audio/speaker.c\" \"$SRCROOT/../src/audio/mockingboard.c\" > \"$SRCROOT/../src/arm/glue.S\"\nTARGET_ARCH=x86 \"$SRCROOT/../src/genglue.sh\" \"$SRCROOT/../src/cpu-supp.c\" \"$SRCROOT/../src/disk.c\" \"$SRCROOT/../src/display.c\" \"$SRCROOT/../src/vm.c\" \"$SRCROOT/../src/audio/speaker.c\" \"$SRCROOT/../src/audio/mockingboard.c\" > \"$SRCROOT/../src/x86/glue.S\"";
 			showEnvVarsInLog = 0;
 		};
 		4ACD73A61D20AB6A00123DE6 /* ShellScript */ = {
@@ -1888,7 +1888,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "TARGET_ARCH=arm \"$SRCROOT/../src/genglue.sh\" \"$SRCROOT/../src/cpu-supp.c\" \"$SRCROOT/../src/disk.c\" \"$SRCROOT/../src/display.c\" \"$SRCROOT/../src/vm.c\" \"$SRCROOT/../src/audio/speaker.c\" \"$SRCROOT/../src/audio/mockingboard.c\" > \"$SRCROOT/../src/arm/glue.S\"\nTARGET_ARCH=x86 \"$SRCROOT/../src/x86/genglue\" \"$SRCROOT/../src/cpu-supp.c\" \"$SRCROOT/../src/disk.c\" \"$SRCROOT/../src/display.c\" \"$SRCROOT/../src/vm.c\" \"$SRCROOT/../src/audio/speaker.c\" \"$SRCROOT/../src/audio/mockingboard.c\" > \"$SRCROOT/../src/x86/glue.S\"";
+			shellScript = "TARGET_ARCH=arm \"$SRCROOT/../src/genglue.sh\" \"$SRCROOT/../src/cpu-supp.c\" \"$SRCROOT/../src/disk.c\" \"$SRCROOT/../src/display.c\" \"$SRCROOT/../src/vm.c\" \"$SRCROOT/../src/audio/speaker.c\" \"$SRCROOT/../src/audio/mockingboard.c\" > \"$SRCROOT/../src/arm/glue.S\"\nTARGET_ARCH=x86 \"$SRCROOT/../src/genglue.sh\" \"$SRCROOT/../src/cpu-supp.c\" \"$SRCROOT/../src/disk.c\" \"$SRCROOT/../src/display.c\" \"$SRCROOT/../src/vm.c\" \"$SRCROOT/../src/audio/speaker.c\" \"$SRCROOT/../src/audio/mockingboard.c\" > \"$SRCROOT/../src/x86/glue.S\"";
 			showEnvVarsInLog = 0;
 		};
 		4ACD73F61D20B11D00123DE6 /* ShellScript */ = {
@@ -1916,7 +1916,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "TARGET_ARCH=arm \"$SRCROOT/../src/genglue.sh\" \"$SRCROOT/../src/cpu-supp.c\" \"$SRCROOT/../src/disk.c\" \"$SRCROOT/../src/display.c\" \"$SRCROOT/../src/vm.c\" \"$SRCROOT/../src/audio/speaker.c\" \"$SRCROOT/../src/audio/mockingboard.c\" > \"$SRCROOT/../src/arm/glue.S\"\nTARGET_ARCH=x86 \"$SRCROOT/../src/x86/genglue\" \"$SRCROOT/../src/cpu-supp.c\" \"$SRCROOT/../src/disk.c\" \"$SRCROOT/../src/display.c\" \"$SRCROOT/../src/vm.c\" \"$SRCROOT/../src/audio/speaker.c\" \"$SRCROOT/../src/audio/mockingboard.c\" > \"$SRCROOT/../src/x86/glue.S\"";
+			shellScript = "TARGET_ARCH=arm \"$SRCROOT/../src/genglue.sh\" \"$SRCROOT/../src/cpu-supp.c\" \"$SRCROOT/../src/disk.c\" \"$SRCROOT/../src/display.c\" \"$SRCROOT/../src/vm.c\" \"$SRCROOT/../src/audio/speaker.c\" \"$SRCROOT/../src/audio/mockingboard.c\" > \"$SRCROOT/../src/arm/glue.S\"\nTARGET_ARCH=x86 \"$SRCROOT/../src/genglue.sh\" \"$SRCROOT/../src/cpu-supp.c\" \"$SRCROOT/../src/disk.c\" \"$SRCROOT/../src/display.c\" \"$SRCROOT/../src/vm.c\" \"$SRCROOT/../src/audio/speaker.c\" \"$SRCROOT/../src/audio/mockingboard.c\" > \"$SRCROOT/../src/x86/glue.S\"";
 			showEnvVarsInLog = 0;
 		};
 		4ACD745C1D26210600123DE6 /* ShellScript */ = {
@@ -1944,7 +1944,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "TARGET_ARCH=arm \"$SRCROOT/../src/genglue.sh\" \"$SRCROOT/../src/cpu-supp.c\" \"$SRCROOT/../src/disk.c\" \"$SRCROOT/../src/display.c\" \"$SRCROOT/../src/vm.c\" \"$SRCROOT/../src/audio/speaker.c\" \"$SRCROOT/../src/audio/mockingboard.c\" > \"$SRCROOT/../src/arm/glue.S\"\nTARGET_ARCH=x86 \"$SRCROOT/../src/x86/genglue\" \"$SRCROOT/../src/cpu-supp.c\" \"$SRCROOT/../src/disk.c\" \"$SRCROOT/../src/display.c\" \"$SRCROOT/../src/vm.c\" \"$SRCROOT/../src/audio/speaker.c\" \"$SRCROOT/../src/audio/mockingboard.c\" > \"$SRCROOT/../src/x86/glue.S\"";
+			shellScript = "TARGET_ARCH=arm \"$SRCROOT/../src/genglue.sh\" \"$SRCROOT/../src/cpu-supp.c\" \"$SRCROOT/../src/disk.c\" \"$SRCROOT/../src/display.c\" \"$SRCROOT/../src/vm.c\" \"$SRCROOT/../src/audio/speaker.c\" \"$SRCROOT/../src/audio/mockingboard.c\" > \"$SRCROOT/../src/arm/glue.S\"\nTARGET_ARCH=x86 \"$SRCROOT/../src/genglue.sh\" \"$SRCROOT/../src/cpu-supp.c\" \"$SRCROOT/../src/disk.c\" \"$SRCROOT/../src/display.c\" \"$SRCROOT/../src/vm.c\" \"$SRCROOT/../src/audio/speaker.c\" \"$SRCROOT/../src/audio/mockingboard.c\" > \"$SRCROOT/../src/x86/glue.S\"";
 			showEnvVarsInLog = 0;
 		};
 		4AD4FEB31A52464F00F958EC /* ShellScript */ = {
@@ -1972,7 +1972,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "TARGET_ARCH=arm \"$SRCROOT/../src/genglue.sh\" \"$SRCROOT/../src/cpu-supp.c\" \"$SRCROOT/../src/disk.c\" \"$SRCROOT/../src/display.c\" \"$SRCROOT/../src/vm.c\" \"$SRCROOT/../src/audio/speaker.c\" \"$SRCROOT/../src/audio/mockingboard.c\" > \"$SRCROOT/../src/arm/glue.S\"\nTARGET_ARCH=x86 \"$SRCROOT/../src/x86/genglue\" \"$SRCROOT/../src/cpu-supp.c\" \"$SRCROOT/../src/disk.c\" \"$SRCROOT/../src/display.c\" \"$SRCROOT/../src/vm.c\" \"$SRCROOT/../src/audio/speaker.c\" \"$SRCROOT/../src/audio/mockingboard.c\" > \"$SRCROOT/../src/x86/glue.S\"";
+			shellScript = "TARGET_ARCH=arm \"$SRCROOT/../src/genglue.sh\" \"$SRCROOT/../src/cpu-supp.c\" \"$SRCROOT/../src/disk.c\" \"$SRCROOT/../src/display.c\" \"$SRCROOT/../src/vm.c\" \"$SRCROOT/../src/audio/speaker.c\" \"$SRCROOT/../src/audio/mockingboard.c\" > \"$SRCROOT/../src/arm/glue.S\"\nTARGET_ARCH=x86 \"$SRCROOT/../src/genglue.sh\" \"$SRCROOT/../src/cpu-supp.c\" \"$SRCROOT/../src/disk.c\" \"$SRCROOT/../src/display.c\" \"$SRCROOT/../src/vm.c\" \"$SRCROOT/../src/audio/speaker.c\" \"$SRCROOT/../src/audio/mockingboard.c\" > \"$SRCROOT/../src/x86/glue.S\"";
 			showEnvVarsInLog = 0;
 		};
 		4ADC521C19E8CA4500186B36 /* ShellScript */ = {
@@ -2000,7 +2000,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "TARGET_ARCH=arm \"$SRCROOT/../src/genglue.sh\" \"$SRCROOT/../src/cpu-supp.c\" \"$SRCROOT/../src/disk.c\" \"$SRCROOT/../src/display.c\" \"$SRCROOT/../src/vm.c\" \"$SRCROOT/../src/audio/speaker.c\" \"$SRCROOT/../src/audio/mockingboard.c\" > \"$SRCROOT/../src/arm/glue.S\"\nTARGET_ARCH=x86 \"$SRCROOT/../src/x86/genglue\" \"$SRCROOT/../src/cpu-supp.c\" \"$SRCROOT/../src/disk.c\" \"$SRCROOT/../src/display.c\" \"$SRCROOT/../src/vm.c\" \"$SRCROOT/../src/audio/speaker.c\" \"$SRCROOT/../src/audio/mockingboard.c\" > \"$SRCROOT/../src/x86/glue.S\"";
+			shellScript = "TARGET_ARCH=arm \"$SRCROOT/../src/genglue.sh\" \"$SRCROOT/../src/cpu-supp.c\" \"$SRCROOT/../src/disk.c\" \"$SRCROOT/../src/display.c\" \"$SRCROOT/../src/vm.c\" \"$SRCROOT/../src/audio/speaker.c\" \"$SRCROOT/../src/audio/mockingboard.c\" > \"$SRCROOT/../src/arm/glue.S\"\nTARGET_ARCH=x86 \"$SRCROOT/../src/genglue.sh\" \"$SRCROOT/../src/cpu-supp.c\" \"$SRCROOT/../src/disk.c\" \"$SRCROOT/../src/display.c\" \"$SRCROOT/../src/vm.c\" \"$SRCROOT/../src/audio/speaker.c\" \"$SRCROOT/../src/audio/mockingboard.c\" > \"$SRCROOT/../src/x86/glue.S\"";
 			showEnvVarsInLog = 0;
 		};
 		773B3DC919568BF20085CE5F /* ShellScript */ = {
@@ -2028,7 +2028,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "TARGET_ARCH=arm \"$SRCROOT/../src/genglue.sh\" \"$SRCROOT/../src/cpu-supp.c\" \"$SRCROOT/../src/disk.c\" \"$SRCROOT/../src/display.c\" \"$SRCROOT/../src/vm.c\" \"$SRCROOT/../src/audio/speaker.c\" \"$SRCROOT/../src/audio/mockingboard.c\" > \"$SRCROOT/../src/arm/glue.S\"\nTARGET_ARCH=x86 \"$SRCROOT/../src/x86/genglue\" \"$SRCROOT/../src/cpu-supp.c\" \"$SRCROOT/../src/disk.c\" \"$SRCROOT/../src/display.c\" \"$SRCROOT/../src/vm.c\" \"$SRCROOT/../src/audio/speaker.c\" \"$SRCROOT/../src/audio/mockingboard.c\" > \"$SRCROOT/../src/x86/glue.S\"";
+			shellScript = "TARGET_ARCH=arm \"$SRCROOT/../src/genglue.sh\" \"$SRCROOT/../src/cpu-supp.c\" \"$SRCROOT/../src/disk.c\" \"$SRCROOT/../src/display.c\" \"$SRCROOT/../src/vm.c\" \"$SRCROOT/../src/audio/speaker.c\" \"$SRCROOT/../src/audio/mockingboard.c\" > \"$SRCROOT/../src/arm/glue.S\"\nTARGET_ARCH=x86 \"$SRCROOT/../src/genglue.sh\" \"$SRCROOT/../src/cpu-supp.c\" \"$SRCROOT/../src/disk.c\" \"$SRCROOT/../src/display.c\" \"$SRCROOT/../src/vm.c\" \"$SRCROOT/../src/audio/speaker.c\" \"$SRCROOT/../src/audio/mockingboard.c\" > \"$SRCROOT/../src/x86/glue.S\"";
 			showEnvVarsInLog = 0;
 		};
 		779DD847195BD9F900DF89E5 /* ShellScript */ = {
@@ -2056,7 +2056,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "TARGET_ARCH=arm \"$SRCROOT/../src/genglue.sh\" \"$SRCROOT/../src/cpu-supp.c\" \"$SRCROOT/../src/disk.c\" \"$SRCROOT/../src/display.c\" \"$SRCROOT/../src/vm.c\" \"$SRCROOT/../src/audio/speaker.c\" \"$SRCROOT/../src/audio/mockingboard.c\" > \"$SRCROOT/../src/arm/glue.S\"\nTARGET_ARCH=x86 \"$SRCROOT/../src/x86/genglue\" \"$SRCROOT/../src/cpu-supp.c\" \"$SRCROOT/../src/disk.c\" \"$SRCROOT/../src/display.c\" \"$SRCROOT/../src/vm.c\" \"$SRCROOT/../src/audio/speaker.c\" \"$SRCROOT/../src/audio/mockingboard.c\" > \"$SRCROOT/../src/x86/glue.S\"";
+			shellScript = "TARGET_ARCH=arm \"$SRCROOT/../src/genglue.sh\" \"$SRCROOT/../src/cpu-supp.c\" \"$SRCROOT/../src/disk.c\" \"$SRCROOT/../src/display.c\" \"$SRCROOT/../src/vm.c\" \"$SRCROOT/../src/audio/speaker.c\" \"$SRCROOT/../src/audio/mockingboard.c\" > \"$SRCROOT/../src/arm/glue.S\"\nTARGET_ARCH=x86 \"$SRCROOT/../src/genglue.sh\" \"$SRCROOT/../src/cpu-supp.c\" \"$SRCROOT/../src/disk.c\" \"$SRCROOT/../src/display.c\" \"$SRCROOT/../src/vm.c\" \"$SRCROOT/../src/audio/speaker.c\" \"$SRCROOT/../src/audio/mockingboard.c\" > \"$SRCROOT/../src/x86/glue.S\"";
 			showEnvVarsInLog = 0;
 		};
 		779F568319EB0B9100A6F107 /* ShellScript */ = {
@@ -2084,7 +2084,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "TARGET_ARCH=arm \"$SRCROOT/../src/genglue.sh\" \"$SRCROOT/../src/cpu-supp.c\" \"$SRCROOT/../src/disk.c\" \"$SRCROOT/../src/display.c\" \"$SRCROOT/../src/vm.c\" \"$SRCROOT/../src/audio/speaker.c\" \"$SRCROOT/../src/audio/mockingboard.c\" > \"$SRCROOT/../src/arm/glue.S\"\nTARGET_ARCH=x86 \"$SRCROOT/../src/x86/genglue\" \"$SRCROOT/../src/cpu-supp.c\" \"$SRCROOT/../src/disk.c\" \"$SRCROOT/../src/display.c\" \"$SRCROOT/../src/vm.c\" \"$SRCROOT/../src/audio/speaker.c\" \"$SRCROOT/../src/audio/mockingboard.c\" > \"$SRCROOT/../src/x86/glue.S\"";
+			shellScript = "TARGET_ARCH=arm \"$SRCROOT/../src/genglue.sh\" \"$SRCROOT/../src/cpu-supp.c\" \"$SRCROOT/../src/disk.c\" \"$SRCROOT/../src/display.c\" \"$SRCROOT/../src/vm.c\" \"$SRCROOT/../src/audio/speaker.c\" \"$SRCROOT/../src/audio/mockingboard.c\" > \"$SRCROOT/../src/arm/glue.S\"\nTARGET_ARCH=x86 \"$SRCROOT/../src/genglue.sh\" \"$SRCROOT/../src/cpu-supp.c\" \"$SRCROOT/../src/disk.c\" \"$SRCROOT/../src/display.c\" \"$SRCROOT/../src/vm.c\" \"$SRCROOT/../src/audio/speaker.c\" \"$SRCROOT/../src/audio/mockingboard.c\" > \"$SRCROOT/../src/x86/glue.S\"";
 			showEnvVarsInLog = 0;
 		};
 		935C55901C13715A0013166D /* ShellScript */ = {
