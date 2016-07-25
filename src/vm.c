@@ -878,8 +878,8 @@ GLUE_C_READ(iie_cxrom_peripheral)
     base_c4rom = (void*)MB_Read;
     base_c5rom = (void*)MB_Read;
 //} else {
-    base_c4rom = (void*)ram_nop;
-    base_c5rom = (void*)ram_nop;
+//    base_c4rom = (void*)ram_nop;
+//    base_c5rom = (void*)ram_nop;
 //}
     if (!(softswitches & SS_C3ROM)) {
         base_c3rom = apple_ii_64k[0];
@@ -1495,8 +1495,8 @@ bool vm_loadState(StateHelper_s *helper) {
             base_c4rom = (void *)MB_Read;
             base_c5rom = (void *)MB_Read;
 //} else {
-            base_c4rom = (void *)ram_nop;
-            base_c5rom = (void *)ram_nop;
+//            base_c4rom = (void *)ram_nop;
+//            base_c5rom = (void *)ram_nop;
 //}
         } else {
             base_cxrom = apple_ii_64k[1];
