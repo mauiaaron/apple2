@@ -279,7 +279,7 @@ static const double g_f6522TimerPeriod_NoIRQ = CLK_6502 / 60.0;		// Constant wha
 
 // External global vars:
 bool g_bMBTimerIrqActive = false;
-#ifdef _DEBUG
+#if 0 // _DEBUG
 uint32_t g_uTimer1IrqCount = 0;	// DEBUG
 #endif
 
@@ -1504,7 +1504,7 @@ static bool MB_DSInit()
 		}
 #endif
 
-#ifdef APPLE2IX
+#if 1 // APPLE2IX
 		hr = SSI263Voice[i]->UnlockStaticBuffer(SSI263Voice[i], dwDSLockedBufferSize);
 		LOG("MB_DSInit: (%02d) Unlock(),hr=0x%08X\n", i, (unsigned int)hr);
 #else
@@ -1519,7 +1519,7 @@ static bool MB_DSInit()
 
 		SSI263Voice[i]->bActive = false;
 		SSI263Voice[i]->nVolume = MockingboardVoice->nVolume;		// Use same volume as MB
-#if !defined(APPLE2IX)
+#if 0 // !APPLE2IX
 		hr = SSI263Voice[i].lpDSBvoice->SetVolume(SSI263Voice[i].nVolume);
 		LogFileOutput("MB_DSInit: (%02d) SetVolume(), hr=0x%08X\n", i, hr);
 #endif
@@ -1529,7 +1529,7 @@ static bool MB_DSInit()
 
 	unsigned long dwThreadId;
 
-#ifdef APPLE2IX
+#if 1 // APPLE2IX
         {
             int err = 0;
             if ((err = pthread_create(&g_hThread, NULL, SSI263Thread, NULL)))
@@ -1577,7 +1577,7 @@ static void MB_DSUninit()
 {
 	if(g_hThread)
 	{
-#ifdef APPLE2IX
+#if 1 // APPLE2IX
                 quit_event = true;
                 pthread_cond_signal(&ssi263_cond);
 
@@ -1602,7 +1602,7 @@ static void MB_DSUninit()
 		while(1);
 #endif
 
-#ifdef APPLE2IX
+#if 1 // APPLE2IX
 		g_hThread = 0;
                 pthread_mutex_destroy(&ssi263_mutex);
                 pthread_cond_destroy(&ssi263_cond);
@@ -1616,7 +1616,7 @@ static void MB_DSUninit()
 
 	if(MockingboardVoice && MockingboardVoice->bActive)
 	{
-#if !defined(APPLE2IX)
+#if 0 // !APPLE2IX
 		MockingboardVoice.lpDSBvoice->Stop();
 #endif
 		MockingboardVoice->bActive = false;
@@ -1630,7 +1630,7 @@ static void MB_DSUninit()
 	{
 		if(SSI263Voice[i] && SSI263Voice[i]->bActive)
 		{
-#if !defined(APPLE2IX)
+#if 0 // !APPLE2IX
 			SSI263Voice[i].lpDSBvoice->Stop();
 #endif
 			SSI263Voice[i]->bActive = false;
@@ -1641,7 +1641,7 @@ static void MB_DSUninit()
 
 	//
 
-#ifdef APPLE2IX
+#if 1 // APPLE2IX
         FREE(g_nMixBuffer);
 #else
 	if(g_hSSI263Event[0])
@@ -1668,14 +1668,14 @@ static void MB_DSUninit()
 
 void MB_Initialize()
 {
-#ifdef APPLE2IX
+#if 1 // APPLE2IX
     assert(pthread_self() == cpu_thread_id);
     memset(SSI263Voice, 0x0, sizeof(AudioBuffer_s *) * 64);
 #endif
 	LOG("MB_Initialize: g_bDisableDirectSound=%d, g_bDisableDirectSoundMockingboard=%d\n", g_bDisableDirectSound, g_bDisableDirectSoundMockingboard);
 	if (g_bDisableDirectSound || g_bDisableDirectSoundMockingboard)
 	{
-#if !defined(APPLE2IX)
+#if 0 // !APPLE2IX
 		MockingboardVoice.bMute = true;
 #endif
 		g_SoundcardType = CT_Empty;
@@ -1684,7 +1684,7 @@ void MB_Initialize()
 	{
 		memset(&g_MB,0,sizeof(g_MB));
 
-#ifdef APPLE2IX
+#if 1 // APPLE2IX
 		g_bMBAvailable = MB_DSInit();
                 if (!g_bMBAvailable) {
                     //MockingboardVoice->bMute = true;
@@ -1695,7 +1695,7 @@ void MB_Initialize()
 
 		int i;
 		for(i=0; i<NUM_VOICES; i++)
-#ifdef APPLE2IX
+#if 1 // APPLE2IX
 			ppAYVoiceBuffer[i] = MALLOC(sizeof(short) * SAMPLE_RATE); // Buffer can hold a max of 1 seconds worth of samples
 #else
 			ppAYVoiceBuffer[i] = new short [SAMPLE_RATE];	// Buffer can hold a max of 1 seconds worth of samples
@@ -1709,7 +1709,7 @@ void MB_Initialize()
 
 		//
 
-#if !defined(APPLE2IX)
+#if 0 // !APPLE2IX
 		g_bMBAvailable = MB_DSInit();
 #endif
 		LOG("MB_Initialize: MB_DSInit(), g_bMBAvailable=%d\n", g_bMBAvailable);
@@ -1719,7 +1719,7 @@ void MB_Initialize()
 	}
 }
 
-#ifdef APPLE2IX
+#if 1 // APPLE2IX
 // HACK functions for "soft" destroying backend audio resource (but keeping current state)
 void MB_SoftDestroy(void) {
     assert(pthread_self() == cpu_thread_id);
@@ -1736,7 +1736,7 @@ void MB_SoftInitialize(void) {
 // NB. Called when /cycles_persec_target/ changes
 void MB_Reinitialize()
 {
-#ifdef APPLE2IX
+#if 1 // APPLE2IX
 	AY8910_InitClock((int)cycles_persec_target, SAMPLE_RATE);
 #else
 	AY8910_InitClock((int)g_fCurrentCLK6502);	// todo: account for g_PhasorClockScaleFactor?
@@ -1748,14 +1748,14 @@ void MB_Reinitialize()
 
 void MB_Destroy()
 {
-#ifdef APPLE2IX
+#if 1 // APPLE2IX
     assert(pthread_self() == cpu_thread_id);
 #endif
 	MB_DSUninit();
 
 	for(int i=0; i<NUM_VOICES; i++)
         {
-#ifdef APPLE2IX
+#if 1 // APPLE2IX
 		FREE(ppAYVoiceBuffer[i]);
 #else
 		delete [] ppAYVoiceBuffer[i];
@@ -1763,7 +1763,7 @@ void MB_Destroy()
         }
 }
 
-#ifdef APPLE2IX
+#if 1 // APPLE2IX
 // HACK NOTE TODO FIXME : hardcoded for now (until we have dynamic emulation for other cards in these slots) ...
 //SS_CARDTYPE g_Slot4 = CT_Phasor;
 //SS_CARDTYPE g_Slot5 = CT_Empty;
@@ -1823,7 +1823,7 @@ void MB_Reset()
 
 //-----------------------------------------------------------------------------
 
-#ifdef APPLE2IX
+#if 1 // APPLE2IX
 #define MemReadFloatingBus floating_bus
 #define nAddr ea
 GLUE_C_READ(MB_Read)
@@ -1831,13 +1831,13 @@ GLUE_C_READ(MB_Read)
 static BYTE __stdcall MB_Read(WORD PC, WORD nAddr, BYTE bWrite, BYTE nValue, ULONG nCyclesLeft)
 #endif
 {
-#ifdef APPLE2IX
+#if 1 // APPLE2IX
 	MB_UpdateCycles();
 #else
 	MB_UpdateCycles(nCyclesLeft);
 #endif
 
-#ifdef _DEBUG
+#if 0 // _DEBUG
 	if(!IS_APPLE2 && !MemCheckSLOTCXROM())
 	{
 		_ASSERT(0);	// Card ROM disabled, so IORead_Cxxx() returns the internal ROM
@@ -1857,7 +1857,7 @@ static BYTE __stdcall MB_Read(WORD PC, WORD nAddr, BYTE bWrite, BYTE nValue, ULO
 	if(g_bPhasorEnable)
 	{
 		if(nMB != 0)	// Slot4 only
-#ifdef APPLE2IX
+#if 1 // APPLE2IX
 			return MemReadFloatingBus();
 #else
 			return MemReadFloatingBus(nCyclesLeft);
@@ -1885,7 +1885,7 @@ static BYTE __stdcall MB_Read(WORD PC, WORD nAddr, BYTE bWrite, BYTE nValue, ULO
 			bAccessedDevice = true;
 		}
 
-#ifdef APPLE2IX
+#if 1 // APPLE2IX
 		return bAccessedDevice ? nRes : MemReadFloatingBus();
 #else
 		return bAccessedDevice ? nRes : MemReadFloatingBus(nCyclesLeft);
@@ -1899,7 +1899,7 @@ static BYTE __stdcall MB_Read(WORD PC, WORD nAddr, BYTE bWrite, BYTE nValue, ULO
 	else if((nOffset >= SSI263_Offset) && (nOffset <= (SSI263_Offset+0x05)))
 		return SSI263_Read(nMB, nAddr&0xf);
 	else
-#ifdef APPLE2IX
+#if 1 // APPLE2IX
 		return MemReadFloatingBus();
 #else
 		return MemReadFloatingBus(nCyclesLeft);
@@ -1908,20 +1908,20 @@ static BYTE __stdcall MB_Read(WORD PC, WORD nAddr, BYTE bWrite, BYTE nValue, ULO
 
 //-----------------------------------------------------------------------------
 
-#ifdef APPLE2IX
+#if 1 // APPLE2IX
 #define nValue b
 GLUE_C_WRITE(MB_Write)
 #else
 static BYTE __stdcall MB_Write(WORD PC, WORD nAddr, BYTE bWrite, BYTE nValue, ULONG nCyclesLeft)
 #endif
 {
-#ifdef APPLE2IX
+#if 1 // APPLE2IX
 	MB_UpdateCycles();
 #else
 	MB_UpdateCycles(nCyclesLeft);
 #endif
 
-#ifdef _DEBUG
+#if 0 // _DEBUG
 	if(!IS_APPLE2 && !MemCheckSLOTCXROM())
 	{
 		_ASSERT(0);	// Card ROM disabled, so IORead_Cxxx() returns the internal ROM
@@ -1974,14 +1974,14 @@ static BYTE __stdcall MB_Write(WORD PC, WORD nAddr, BYTE bWrite, BYTE nValue, UL
 
 //-----------------------------------------------------------------------------
 
-#ifdef APPLE2IX
+#if 1 // APPLE2IX
 GLUE_C_READ(PhasorIO)
 #else
 static BYTE __stdcall PhasorIO(WORD PC, WORD nAddr, BYTE bWrite, BYTE nValue, ULONG nCyclesLeft)
 #endif
 {
 	if(!g_bPhasorEnable)
-#ifdef APPLE2IX
+#if 1 // APPLE2IX
 		return MemReadFloatingBus();
 #else
 		return MemReadFloatingBus(nCyclesLeft);
@@ -1992,7 +1992,7 @@ static BYTE __stdcall PhasorIO(WORD PC, WORD nAddr, BYTE bWrite, BYTE nValue, UL
 
 	g_PhasorClockScaleFactor = (nAddr & 4) ? 2 : 1;
 
-#ifdef APPLE2IX
+#if 1 // APPLE2IX
 	AY8910_InitClock((int)CLK_6502 * g_PhasorClockScaleFactor, SAMPLE_RATE);
 
 	return MemReadFloatingBus();
@@ -2004,7 +2004,7 @@ static BYTE __stdcall PhasorIO(WORD PC, WORD nAddr, BYTE bWrite, BYTE nValue, UL
 }
 
 //-----------------------------------------------------------------------------
-#ifdef APPLE2IX
+#if 1 // APPLE2IX
 
 #define IO_Null NULL
 
@@ -2072,13 +2072,13 @@ void MB_Mute()
 
 	if(MockingboardVoice->bActive && !MockingboardVoice->bMute)
 	{
-#if !defined(APPLE2IX)
+#if 0 // !APPLE2IX
 		MockingboardVoice.lpDSBvoice->SetVolume(DSBVOLUME_MIN);
 #endif
 		MockingboardVoice->bMute = true;
 	}
 
-#if !defined(APPLE2IX)
+#if 0 // !APPLE2IX
 	if(g_nCurrentActivePhoneme >= 0)
 		SSI263Voice[g_nCurrentActivePhoneme].lpDSBvoice->SetVolume(DSBVOLUME_MIN);
 #endif
@@ -2093,13 +2093,13 @@ void MB_Demute()
 
 	if(MockingboardVoice->bActive && MockingboardVoice->bMute)
 	{
-#if !defined(APPLE2IX)
+#if 0 // !APPLE2IX
 		MockingboardVoice.lpDSBvoice->SetVolume(MockingboardVoice.nVolume);
 #endif
 		MockingboardVoice->bMute = false;
 	}
 
-#if !defined(APPLE2IX)
+#if 0 // !APPLE2IX
 	if(g_nCurrentActivePhoneme >= 0)
 		SSI263Voice[g_nCurrentActivePhoneme].lpDSBvoice->SetVolume(SSI263Voice[g_nCurrentActivePhoneme].nVolume);
 #endif
@@ -2126,7 +2126,7 @@ void MB_EndOfVideoFrame()
 //-----------------------------------------------------------------------------
 
 // Called by CpuExecute() after every N opcodes (N = ~1000 @ 1MHz)
-#ifdef APPLE2IX
+#if 1 // APPLE2IX
 void MB_UpdateCycles(void)
 #else
 void MB_UpdateCycles(ULONG uExecutedCycles)
@@ -2138,7 +2138,7 @@ void MB_UpdateCycles(ULONG uExecutedCycles)
 	timing_checkpoint_cycles();
 	unsigned long uCycles = cycles_count_total - g_uLastCumulativeCycles;
 	g_uLastCumulativeCycles = cycles_count_total;
-#if defined(APPLE2IX)
+#if 1 // APPLE2IX
         if (uCycles >= 0x10000) {
             printf("OOPS!!! Mockingboard failed assert!\n");
             return;
@@ -2162,7 +2162,7 @@ void MB_UpdateCycles(ULONG uExecutedCycles)
 
 		if( bTimer1Underflow && (g_nMBTimerDevice == i) && g_bMBTimerIrqActive )
 		{
-#ifdef _DEBUG
+#if 0 // _DEBUG
 			g_uTimer1IrqCount++;	// DEBUG
 #endif
 
@@ -2238,7 +2238,7 @@ bool MB_IsActive()
 }
 
 //-----------------------------------------------------------------------------
-#if defined(APPLE2IX)
+#if 1 // APPLE2IX
 void MB_SetVolumeZeroToTen(unsigned long goesToTen) {
     samplesScale = goesToTen/10.f;
 }
@@ -2262,7 +2262,7 @@ void MB_SetVolume(DWORD dwVolume, DWORD dwVolumeMax)
 //===========================================================================
 
 // Called by debugger - Debugger_Display.cpp
-#if !defined(APPLE2IX)
+#if 0 // !APPLE2IX
 void MB_GetSnapshot_v1(SS_CARD_MOCKINGBOARD_v1* const pSS, const DWORD dwSlot)
 {
 	pSS->Hdr.UnitHdr.hdr.v2.Length = sizeof(SS_CARD_MOCKINGBOARD_v1);
@@ -2356,7 +2356,7 @@ static __attribute__((constructor)) void _init_mockingboard(void) {
     prefs_registerListener(PREF_DOMAIN_AUDIO, &mb_prefsChanged);
 }
 
-#if !defined(APPLE2IX)
+#if 0 // !APPLE2IX
 static UINT DoWriteFile(const HANDLE hFile, const void* const pData, const UINT Length)
 {
 	DWORD dwBytesWritten;
