@@ -290,8 +290,19 @@ uint32_t g_uTimer1IrqCount = 0;	// DEBUG
 static DWORD WINAPI SSI263Thread(LPVOID);
 static void Votrax_Write(BYTE nDevice, BYTE nValue);
 #else
+#   if 0 // ENABLE_SSI263
 static void* SSI263Thread(void *);
 static void Votrax_Write(uint8_t nDevice, uint8_t nValue);
+#   else
+static void mb_assert(bool condition) {
+#       ifdef NDEBUG
+    // RELEASE
+#       else
+    // DEBUG
+    assert(condition);
+#       endif
+}
+#   endif
 #endif
 
 //---------------------------------------------------------------------------
@@ -439,7 +450,11 @@ static void SY6522_Write(uint8_t nDevice, uint8_t nReg, uint8_t nValue)
 				if( (pMB->sy6522.DDRB == 0xFF) && (pMB->sy6522.PCR == 0xB0) )
 				{
 					// Votrax speech data
+#if 0 // ENABLE_SSI263
 					Votrax_Write(nDevice, nValue);
+#else
+                                        mb_assert(false);
+#endif
 					break;
 				}
 
@@ -620,7 +635,9 @@ static uint8_t SY6522_Read(uint8_t nDevice, uint8_t nReg)
 
 //---------------------------------------------------------------------------
 
+#if 0 // ENABLE_SSI263
 static void SSI263_Play(unsigned int nPhoneme);
+#endif
 
 #if 0
 typedef struct
@@ -656,6 +673,7 @@ const uint8_t CONTROL_MASK = 0x80;
 const uint8_t ARTICULATION_MASK = 0x70;
 const uint8_t AMPLITUDE_MASK = 0x0F;
 
+#if 0 // ENABLE_SSI263
 static uint8_t SSI263_Read(uint8_t nDevice, uint8_t nReg)
 {
 	SY6522_AY8910* pMB = &g_MB[nDevice];
@@ -738,6 +756,7 @@ static void SSI263_Write(uint8_t nDevice, uint8_t nReg, uint8_t nValue)
 		break;
 	}
 }
+#endif
 
 //-------------------------------------
 
@@ -812,6 +831,7 @@ static uint8_t Votrax2SSI263[64] =
 	0x00,	// 3F: STOP no sound -> PA
 };
 
+#if 0 // ENABLE_SSI263
 static void Votrax_Write(uint8_t nDevice, uint8_t nValue)
 {
 	g_bVotraxPhoneme = true;
@@ -825,6 +845,7 @@ static void Votrax_Write(uint8_t nDevice, uint8_t nValue)
 
 	SSI263_Play(Votrax2SSI263[nValue & PHONEME_MASK]);
 }
+#endif
 
 //===========================================================================
 
@@ -1085,6 +1106,7 @@ static void MB_Update()
 
 //-----------------------------------------------------------------------------
 
+#if 0 // ENABLE_SSI263
 #if 0 // !APPLE2IX
 static DWORD WINAPI SSI263Thread(LPVOID lpParameter)
 {
@@ -1209,10 +1231,6 @@ static void* SSI263Thread(void *lpParameter)
 
 static void SSI263_Play(unsigned int nPhoneme)
 {
-#if 1 // APPLE2IX
-    assert(pthread_self() == cpu_thread_id);
-#warning FIXME TODO : this needs to be properly implemented ...
-#else
 #if 1
 	HRESULT hr;
 
@@ -1309,8 +1327,8 @@ static void SSI263_Play(unsigned int nPhoneme)
 
 	SSI263Voice.bActive = true;
 #endif
-#endif
 }
+#endif // ENABLE_SSI263
 
 //-----------------------------------------------------------------------------
 
@@ -1413,10 +1431,8 @@ static bool MB_DSInit()
 	}
 #endif
 
-#if 1 // APPLE2IX
+#if 0 // ENABLE_SSI263
 #warning FIXME TODO : this needs to be properly implemented ...
-        return true;
-#else
 
 	for(int i=0; i<64; i++)
 	{
@@ -1567,9 +1583,9 @@ static bool MB_DSInit()
 	LOG("MB_DSInit: SetThreadPriority(), bRes=%d\n", bRes2 ? 1 : 0);
 #endif
 
+#endif // FIXME : ENABLE_SSI263
 	return true;
 
-#endif // FIXME : APPLE2IX
 #endif // NO_DIRECT_X
 }
 
@@ -1881,7 +1897,11 @@ static BYTE __stdcall MB_Read(WORD PC, WORD nAddr, BYTE bWrite, BYTE nValue, ULO
 
 		if((nOffset >= SSI263_Offset) && (nOffset <= (SSI263_Offset+0x05)))
 		{
+#if 0 // ENABLE_SSI263
 			nRes |= SSI263_Read(nMB, nAddr&0xf);
+#else
+                        mb_assert(false);
+#endif
 			bAccessedDevice = true;
 		}
 
@@ -1897,7 +1917,11 @@ static BYTE __stdcall MB_Read(WORD PC, WORD nAddr, BYTE bWrite, BYTE nValue, ULO
 	else if((nOffset >= SY6522B_Offset) && (nOffset <= (SY6522B_Offset+0x0F)))
 		return SY6522_Read(nMB*NUM_DEVS_PER_MB + SY6522_DEVICE_B, nAddr&0xf);
 	else if((nOffset >= SSI263_Offset) && (nOffset <= (SSI263_Offset+0x05)))
+#if 0 // ENABLE_SSI263
 		return SSI263_Read(nMB, nAddr&0xf);
+#else
+                mb_assert(false);
+#endif
 	else
 #if 1 // APPLE2IX
 		return MemReadFloatingBus();
@@ -1957,7 +1981,11 @@ static BYTE __stdcall MB_Write(WORD PC, WORD nAddr, BYTE bWrite, BYTE nValue, UL
 			SY6522_Write(nMB*NUM_DEVS_PER_MB + SY6522_DEVICE_B, nAddr&0xf, nValue);
 
 		if((nOffset >= SSI263_Offset) && (nOffset <= (SSI263_Offset+0x05)))
+#if 0 // ENABLE_SSI263
 			SSI263_Write(nMB*2+1, nAddr&0xf, nValue);		// Second 6522 is used for speech chip
+#else
+                        mb_assert(false);
+#endif
 
 		return/*0*/;
 	}
@@ -1967,7 +1995,11 @@ static BYTE __stdcall MB_Write(WORD PC, WORD nAddr, BYTE bWrite, BYTE nValue, UL
 	else if((nOffset >= SY6522B_Offset) && (nOffset <= (SY6522B_Offset+0x0F)))
 		SY6522_Write(nMB*NUM_DEVS_PER_MB + SY6522_DEVICE_B, nAddr&0xf, nValue);
 	else if((nOffset >= SSI263_Offset) && (nOffset <= (SSI263_Offset+0x05)))
+#if 0 // ENABLE_SSI263
 		SSI263_Write(nMB*2+1, nAddr&0xf, nValue);		// Second 6522 is used for speech chip
+#else
+                mb_assert(false);
+#endif
 
 	return/*0*/;
 }
