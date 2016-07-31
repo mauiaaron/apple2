@@ -1047,6 +1047,7 @@ void CAY8910::SaveSnapshot(YamlSaveHelper& yamlSaveHelper, std::string& suffix)
 	yamlSaveHelper.SaveUint(SS_YAML_KEY_TONE1_PERIOD, ay_tone_period[1]);
 	yamlSaveHelper.SaveUint(SS_YAML_KEY_TONE2_PERIOD, ay_tone_period[2]);
 	yamlSaveHelper.SaveUint(SS_YAML_KEY_NOISE_PERIOD, ay_noise_period);
+        // APPLE2IX FIXME WHAT ABOUT : SS_YAML_KEY_ENV_PERIOD "Env Period" ... AppleWin forgot about this? Also do this on load ...
 	yamlSaveHelper.SaveUint(SS_YAML_KEY_RNG, rng);
 	yamlSaveHelper.SaveUint(SS_YAML_KEY_NOISE_TOGGLE, noise_toggle);
 	yamlSaveHelper.SaveUint(SS_YAML_KEY_ENV_FIRST, env_first);
@@ -1184,6 +1185,36 @@ static uint64_t g_uLastCumulativeCycles = 0;
 static unsigned __int64 g_uLastCumulativeCycles = 0;
 #endif
 
+#if MB_TRACING
+void _mb_trace_AY8910(int chip, FILE *mb_trace_fp) {
+    if (!mb_trace_fp) {
+        return;
+    }
+    assert(chip < MAX_8910);
+    CAY8910 *_this = &g_AY8910[chip];
+
+    fprintf(mb_trace_fp, "\tAY8910(%d):\n", chip);
+
+    fprintf(mb_trace_fp, "\t\tay_tone_tick:%u,%u,%u\n", _this->ay_tone_tick[0], _this->ay_tone_tick[1], _this->ay_tone_tick[2]);
+    fprintf(mb_trace_fp, "\t\tay_tone_high:%u,%u,%u\n", _this->ay_tone_high[0], _this->ay_tone_high[1], _this->ay_tone_high[2]);
+
+    fprintf(mb_trace_fp, "\t\tay_noise_tick:%u ay_tone_subcycles:%u ay_env_subcycles:%u\n", _this->ay_noise_tick, _this->ay_tone_subcycles, _this->ay_env_subcycles);
+    fprintf(mb_trace_fp, "\t\tay_env_internal_tick:%u ay_env_tick:%u ay_tick_incr:%u\n", _this->ay_env_internal_tick, _this->ay_env_tick, _this->ay_tick_incr);
+
+    fprintf(mb_trace_fp, "\t\tay_tone_period:%u,%u,%u\n", _this->ay_tone_period[0], _this->ay_tone_period[1], _this->ay_tone_period[2]);
+
+    fprintf(mb_trace_fp, "\t\tay_noise_period:%u ay_env_period:%u rng:%d noise_toggle:%d\n", _this->ay_noise_period, _this->ay_env_period, _this->rng, _this->noise_toggle);
+    fprintf(mb_trace_fp, "\t\tenv_first:%d env_rev:%d env_counter:%d\n", _this->env_first, _this->env_rev, _this->env_counter);
+
+    fprintf(mb_trace_fp, "\t\tenv_first:%d env_rev:%d env_counter:%d\n", _this->env_first, _this->env_rev, _this->env_counter);
+    fprintf(mb_trace_fp, "\t\tsound_ay_registers: %02X,%02X,%02X,%02X,%02X,%02X,%02X,%02X,%02X,%02X,%02X,%02X,%02X,%02X,%02X,%02X\n", _this->sound_ay_registers[0], _this->sound_ay_registers[1], _this->sound_ay_registers[2], _this->sound_ay_registers[3], _this->sound_ay_registers[4], _this->sound_ay_registers[5], _this->sound_ay_registers[6], _this->sound_ay_registers[7], _this->sound_ay_registers[8], _this->sound_ay_registers[9], _this->sound_ay_registers[10], _this->sound_ay_registers[11], _this->sound_ay_registers[12], _this->sound_ay_registers[13], _this->sound_ay_registers[14], _this->sound_ay_registers[15]);
+
+    fprintf(mb_trace_fp, "\t\tay_change_count:(%d)\n", _this->ay_change_count);
+    for (unsigned int i=0; i<_this->ay_change_count; i++) {
+        fprintf(mb_trace_fp, "\t\t\t%u: tstates:%lu ofs:%04X reg:%02X val:%02X\n", i, _this->ay_change[i].tstates, _this->ay_change[i].ofs, _this->ay_change[i].reg, _this->ay_change[i].val);
+    }
+}
+#endif
 
 void _AYWriteReg(int chip, int r, int v)
 {

@@ -32,13 +32,14 @@ static void testtrace_setup(void *arg) {
     if (test_do_reboot) {
         cpu65_interrupt(ResetSig);
     }
+    c_debugger_set_watchpoint(WATCHPOINT_ADDR);
 }
 
 static void testtrace_teardown(void *arg) {
 }
 
 // ----------------------------------------------------------------------------
-// Cycles counter overflow test
+// Speaker/timing tests
 
 extern unsigned long (*testing_getCyclesCount)(void);
 extern void (*testing_cyclesOverflow)(void);
@@ -71,9 +72,6 @@ TEST test_timing_overflow() {
 
     PASS();
 }
-
-// ----------------------------------------------------------------------------
-// Tracing TESTS ...
 
 #define EXPECTED_BEEP_TRACE_FILE_SIZE 770
 #define EXPECTED_BEEP_TRACE_SHA "69C728A65B5933D73F91D77694BEE7F674C9EDF7"
@@ -121,6 +119,97 @@ TEST test_boot_sound() {
 
     PASS();
 }
+
+// ----------------------------------------------------------------------------
+// Mockingboard tracing
+
+#define NSCT_DSK "NSCT.dsk.gz"
+#define NSCT_TRACE_SHA "35C58FEEB70E76FC31CEB55DB4C830B471B48AE3" // WARNING unstable if tests changed before this ...
+#define NSCT_SAMPS_SHA "C48AFC2ABFECC98CECB8A5B63E2261181195E1B2"
+#define NSCT_TRACE_TARGET_SIZ (512 * 65536)  // 2^25
+#define NSCT_SAMPS_TARGET_SIZ (2048 * 65536) // 2^27
+TEST test_mockingboard_1() {
+    test_setup_boot_disk(NSCT_DSK, 0);
+
+    const char *homedir = HOMEDIR;
+
+    char *mbTraceFile = NULL;
+    ASPRINTF(&mbTraceFile, "%s/a2_mb_nsct", homedir);
+    ASSERT(mbTraceFile);
+    unlink(mbTraceFile);
+
+    char *mbSampsFile = NULL;
+    ASPRINTF(&mbSampsFile, "%s.samp", mbTraceFile);
+    ASSERT(mbSampsFile);
+    unlink(mbSampsFile);
+
+    // Poll for trace file of particular size
+    mb_traceBegin(mbTraceFile); // ".samp" file is automatically created ...
+    c_debugger_clear_watchpoints();
+    c_debugger_set_timeout(1);
+    do {
+        c_debugger_go();
+
+        FILE *fpTrace = fopen(mbTraceFile, "r");
+        fseek(fpTrace, 0, SEEK_END);
+        long minSizeTrace = ftell(fpTrace);
+
+        FILE *fpSamps = fopen(mbSampsFile, "r");
+        fseek(fpSamps, 0, SEEK_END);
+        long minSizeSamps = ftell(fpSamps);
+
+        if ( (minSizeTrace < NSCT_TRACE_TARGET_SIZ) || (minSizeSamps < NSCT_SAMPS_TARGET_SIZ) ) {
+            fclose(fpTrace);
+            fclose(fpSamps);
+            continue;
+        }
+
+        // trace has generated files of sufficient length
+
+        uint8_t md[SHA_DIGEST_LENGTH];
+        char mdstr0[(SHA_DIGEST_LENGTH*2)+1];
+
+        // verify trace file
+        do {
+            unsigned char *buf = MALLOC(NSCT_TRACE_TARGET_SIZ);
+            fseek(fpTrace, 0, SEEK_SET);
+            ASSERT(fread(buf, 1, NSCT_TRACE_TARGET_SIZ, fpTrace) == NSCT_TRACE_TARGET_SIZ);
+            fclose(fpTrace); fpTrace = NULL;
+            SHA1(buf, NSCT_TRACE_TARGET_SIZ, md);
+            FREE(buf);
+            sha1_to_str(md, mdstr0);
+            ASSERT(strcmp(mdstr0, NSCT_TRACE_SHA) == 0);
+        } while (0);
+
+        // verify trace samples file
+        do {
+            unsigned char *buf = MALLOC(NSCT_SAMPS_TARGET_SIZ);
+            fseek(fpSamps, 0, SEEK_SET);
+            ASSERT(fread(buf, 1, NSCT_SAMPS_TARGET_SIZ, fpSamps) == NSCT_SAMPS_TARGET_SIZ);
+            fclose(fpSamps); fpSamps = NULL;
+            SHA1(buf, NSCT_SAMPS_TARGET_SIZ, md);
+            FREE(buf);
+            sha1_to_str(md, mdstr0);
+            ASSERT(strcmp(mdstr0, NSCT_SAMPS_SHA) == 0);
+        } while (0);
+
+        break;
+    } while (1);
+    c_debugger_set_timeout(0);
+    mb_traceEnd();
+
+    unlink(mbTraceFile);
+    FREE(mbTraceFile);
+    unlink(mbSampsFile);
+    FREE(mbSampsFile);
+
+    disk6_eject(0);
+
+    PASS();
+}
+
+// ----------------------------------------------------------------------------
+// CPU tracing
 
 // This test is majorly abusive ... it creates an ~800MB file in $HOME
 // ... but if it's correct, you're fairly assured the cpu/vm is working =)
@@ -320,6 +409,9 @@ TEST test_cputrace_hello_po() {
     PASS();
 }
 
+// ----------------------------------------------------------------------------
+// VM tracing
+
 #define EXPECTED_VM_TRACE_FILE_SIZE 2832136
 #define EXPECTED_VM_TRACE_SHA "E39658183FF87974D8538B38B772A193C6C3276C"
 TEST test_boot_disk_vmtrace() {
@@ -478,6 +570,8 @@ GREATEST_SUITE(test_suite_trace) {
 
     RUN_TESTp(test_timing_overflow);
     RUN_TESTp(test_boot_sound);
+
+    RUN_TESTp(test_mockingboard_1);
 
 #if ABUSIVE_TESTS
     RUN_TESTp(test_boot_disk_cputrace);

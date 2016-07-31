@@ -32,6 +32,9 @@ void AY8910UpdateSetCycles();
 UINT AY8910_SaveSnapshot(class YamlSaveHelper& yamlSaveHelper, UINT uChip, std::string& suffix);
 UINT AY8910_LoadSnapshot(class YamlLoadHelper& yamlLoadHelper, UINT uChip, std::string& suffix);
 #endif
+#if MB_TRACING
+void _mb_trace_AY8910(int chip, FILE *mb_trace_fp);
+#endif
 
 //-------------------------------------
 // FUSE stuff

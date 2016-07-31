@@ -9,8 +9,8 @@
  *
  */
 
-#ifndef _MOCKINGBOARD_H__
-#define _MOCKINGBOARD_H__
+#ifndef _MOCKINGBOARD_H_
+#define _MOCKINGBOARD_H_
 
 #ifdef APPLE2IX
 #include "audio/peripherals.h"
@@ -123,6 +123,11 @@ bool    MB_LoadSnapshot(class YamlLoadHelper& yamlLoadHelper, UINT slot, UINT ve
 #endif
 #ifdef APPLE2IX
 void mb_io_initialize(unsigned int slot4, unsigned int slot5);
+#   if MB_TRACING
+void mb_traceBegin(const char *trace_file);
+void mb_traceFlush(void);
+void mb_traceEnd(void);
+#   endif
 #endif
 
 #if UNBREAK_SOON
@@ -130,4 +135,5 @@ std::string Phasor_GetSnapshotCardName(void);
 void Phasor_SaveSnapshot(class YamlSaveHelper& yamlSaveHelper, const UINT uSlot);
 bool Phasor_LoadSnapshot(class YamlLoadHelper& yamlLoadHelper, UINT slot, UINT version);
 #endif
+
 #endif // whole file

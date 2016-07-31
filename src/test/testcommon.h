@@ -38,6 +38,7 @@ void test_breakpoint(void *arg);
 void test_common_init(void);
 void test_common_setup(void);
 void test_type_input(const char *input);
+void test_type_input_deterministically(const char *input);
 int test_setup_boot_disk(const char *fileName, int readonly);
 void sha1_to_str(const uint8_t * const md, char *buf);
 
