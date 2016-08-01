@@ -11,7 +11,7 @@
 
 #include "testcommon.h"
 
-//#define TEST_DISK_EDGE_CASES 1
+#define TEST_DISK_EDGE_CASES 1
 #define TESTING_DISK "testvm1.dsk.gz"
 #define BLANK_DSK "blank.dsk.gz"
 #define BLANK_NIB "blank.nib.gz"
@@ -1443,7 +1443,7 @@ GREATEST_SUITE(test_suite_disk) {
     c_debugger_set_timeout(0);
 
     // test order from here is important ...
-    //  * load the disks with a buncha junk fiiles
+    //  * load the disks with a buncha junk files
     //  * verify integrity of the junk files
     //  * inithello and verify boots
     //  * check that the disk images are ultimately unchanged

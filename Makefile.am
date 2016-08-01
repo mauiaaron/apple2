@@ -159,18 +159,8 @@ man_MANS = docs/apple2ix.6
 shadersdir = @datadir@/@PACKAGE@/shaders
 shaders_DATA = src/video/Basic.vsh src/video/Basic.fsh
 
-# disk images
-disksdir = @datadir@/@PACKAGE@/disks
-disks_DATA = \
-	disks/README disks/blank.dsk.gz disks/blank.nib.gz disks/blank.po.gz disks/etc.dsk.gz \
-	disks/mystery.dsk.gz disks/speedtest.dsk.gz disks/speedtest.txt disks/flapple140.po.gz \
-	disks/testdisplay1.dsk.gz disks/testdisplay1.nib.gz disks/testvm1.dsk.gz disks/testvm1.nib.gz
-
-
 # Extra distribution stuff
 EXTRA_DIST = reconf.sh configure README.debugger PROBLEMS .apple2 \
-	\
-	$(disks_DATA) \
 	\
 	$(man_MANS) \
 	\
@@ -178,5 +168,15 @@ EXTRA_DIST = reconf.sh configure README.debugger PROBLEMS .apple2 \
 	src/genglue.sh \
 	\
 	$(shaders_DATA)
+
+install-data-hook:
+	rm -rf @datadir@/@PACKAGE@/disks
+	cp -Rp external-disks/ @datadir@/@PACKAGE@/disks/
+
+dist-hook:
+	echo "TODO FIXME disks and external-disks"
+	echo rm -rf $(distdir)/disks
+	echo cp -Rp disks $(distdir)/disks
+	echo cp -Rp external-disks $(distdir)/disks
 
 CLEANFILES = src/font.c src/rom.c src/meta/debug.c src/x86/glue.S
