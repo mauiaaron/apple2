@@ -150,7 +150,8 @@ if test "x$do_build" = "x1" -o "x$do_release" = "x1" ; then
         /bin/rm -rf $SYMDIR
 
         # Run Breakpad's dump_syms
-        ../../externals/bin/dump_syms ../obj/local/$arch/libapple2ix.so > $SYMFILE
+        host_arch=`uname -s`
+        ../../externals/bin/$host_arch/dump_syms ../obj/local/$arch/libapple2ix.so > $SYMFILE
 
         ret=$?
         if test "x$ret" != "x0" ; then
