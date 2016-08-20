@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 package_id="org.deadc0de.apple2ix.basic"
 apple2_src_path=apple2ix-src
@@ -161,12 +161,12 @@ if test "x$do_build" = "x1" -o "x$do_release" = "x1" ; then
 
         # strip to the just the numeric id in the .sym header and verify it makes sense
         sym_id=$(head -1 $SYMFILE  | cut -d ' ' -f 4)
-        sym_id_check=$(echo $sym_id | wc -c)
+        sym_id_check=$(echo $sym_id | wc -c | tr -d ' 	' )
         if test "x$sym_id_check" != "x34" ; then
             echo "OOPS symbol header not expected size, meat-space intervention needed =P"
             exit 1
         fi
-        sym_id_check=$(echo $sym_id | tr -d 'A-Fa-f0-9' | wc -c)
+        sym_id_check=$(echo $sym_id | tr -d 'A-Fa-f0-9' | wc -c | tr -d ' 	' )
         if test "x$sym_id_check" != "x1" ; then
             echo "OOPS unexpected characters in symbol header, meat-space intervention needed =P"
             exit 1
