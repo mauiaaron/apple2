@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="9531" systemVersion="15C50" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="10117" systemVersion="15G31" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
         <deployment version="1060" identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="9531"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="10117"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="NSApplication">
@@ -389,9 +389,17 @@ CA
                     <toolbarItem implicitItemIdentifier="NSToolbarPrintItem" id="sk6-41-C3g"/>
                     <toolbarItem implicitItemIdentifier="NSToolbarSpaceItem" id="AoN-cv-QQ2"/>
                     <toolbarItem implicitItemIdentifier="CBD2C3ED-B0AA-40F1-818F-B61B04F93E7F" label="Preferences" paletteLabel="Preferences" tag="-1" image="Prefs" id="85b-WO-tks"/>
-                    <toolbarItem implicitItemIdentifier="1AF00BE2-1806-4F36-AA9B-EDCD8587D441" label="Reboot" paletteLabel="Reboot" tag="-1" image="Reboot" id="hOg-ec-Okz"/>
+                    <toolbarItem implicitItemIdentifier="1AF00BE2-1806-4F36-AA9B-EDCD8587D441" label="Reboot" paletteLabel="Reboot" tag="-1" image="Reboot" id="hOg-ec-Okz">
+                        <connections>
+                            <action selector="reboot:" target="M8b-ga-iOS" id="KCh-Nu-wyF"/>
+                        </connections>
+                    </toolbarItem>
                     <toolbarItem implicitItemIdentifier="NSToolbarFlexibleSpaceItem" id="372-hX-Xt1"/>
-                    <toolbarItem implicitItemIdentifier="ED8F052E-C9AE-42F6-BA6D-2A675E8390E5" label="Disks" paletteLabel="Disks" tag="-1" image="Disks" id="jHk-qj-bmw"/>
+                    <toolbarItem implicitItemIdentifier="ED8F052E-C9AE-42F6-BA6D-2A675E8390E5" label="Disks" paletteLabel="Disks" tag="-1" image="Disks" id="jHk-qj-bmw">
+                        <connections>
+                            <action selector="showDisksWindow:" target="M8b-ga-iOS" id="kNL-6b-ONr"/>
+                        </connections>
+                    </toolbarItem>
                     <toolbarItem implicitItemIdentifier="8ECDEDAE-A97E-4515-BDBE-FAED31BBCC88" label="CPU" paletteLabel="CPU" tag="-1" image="CPU" id="J7C-1x-bvu" userLabel="CPU">
                         <connections>
                             <action selector="toggleCPUSpeed:" target="M8b-ga-iOS" id="Vn5-mv-Kkq"/>
