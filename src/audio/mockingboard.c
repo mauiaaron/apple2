@@ -194,7 +194,7 @@ static SY6522_AY8910 g_MB[NUM_AY8910];
 
 // Timer vars
 static unsigned long g_n6522TimerPeriod = 0;
-static const unsigned int TIMERDEVICE_INVALID = -1;
+#define TIMERDEVICE_INVALID -1
 static unsigned int g_nMBTimerDevice = TIMERDEVICE_INVALID;	// SY6522 device# which is generating timer IRQ
 static unsigned long g_uLastCumulativeCycles = 0;
 

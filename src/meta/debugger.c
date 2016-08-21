@@ -1266,7 +1266,7 @@ bool c_debugger_should_break() {
     debugger_go () - step into or step over commands
    ------------------------------------------------------------------------- */
 int debugger_go(stepping_struct_t s) {
-    stepping_struct = s;
+    memcpy(&stepping_struct, &s, sizeof(s));
 
     int ch = begin_cpu_stepping();
 
@@ -1281,7 +1281,7 @@ int debugger_go(stepping_struct_t s) {
     }
 #endif
 
-    stepping_struct = (stepping_struct_t){ 0 };
+    memset(&stepping_struct, 0x0, sizeof(s));
 
     return ch;
 }
