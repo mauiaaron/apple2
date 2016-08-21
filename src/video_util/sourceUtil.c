@@ -30,6 +30,9 @@ static demoSource *srcLoadSource(const char *filepathname) {
     }
 
     FILE *curFile = fopen(filepathname, "r");
+    if (!curFile) {
+        return NULL;
+    }
 
     // Get the size of the source
     fseek(curFile, 0, SEEK_END);
