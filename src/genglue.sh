@@ -1,5 +1,9 @@
 #!/bin/sh
 
 echo "#include \"$TARGET_ARCH/glue-prologue.h\""
-grep -E -h '(GLUE_)|(#[ 	]*if)|(#[ 	]*endif)|(#[ 	]*else)|(#[ 	]*elif)' $*
-exit 0
+
+while test "x$1" != "x" ; do
+    grep -E -h '(GLUE_)|(#[ 	]*if)|(#[ 	]*endif)|(#[ 	]*else)|(#[ 	]*elif)' "$1"
+    shift
+done
+
