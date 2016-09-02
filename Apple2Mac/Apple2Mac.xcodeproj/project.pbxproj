@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		4A2636F919FDEDB700DBFB00 /* Apple2Mac.help in Resources */ = {isa = PBXBuildFile; fileRef = 4A2636F819FDEDB700DBFB00 /* Apple2Mac.help */; };
+		4A609CB31D725D4C0066AF38 /* external-disks in Resources */ = {isa = PBXBuildFile; fileRef = 4A609CB21D725D4C0066AF38 /* external-disks */; };
 		4A69C1921A33DB90001579EF /* DDHidLib.framework in Copy Files (1 item) */ = {isa = PBXBuildFile; fileRef = 77C2796F1A1047AF000FE33F /* DDHidLib.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		4A6B7C881D39E92400A02120 /* disks in Resources */ = {isa = PBXBuildFile; fileRef = 4ACD73191D205D6000123DE6 /* disks */; };
 		4A6B7C8D1D39E98C00A02120 /* disks in Resources */ = {isa = PBXBuildFile; fileRef = 4ACD73191D205D6000123DE6 /* disks */; };
@@ -61,6 +62,7 @@
 		4AA2D7FB1D20301F0054A5FF /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 773B3D241956885A0085CE5F /* MainMenu.xib */; };
 		4AA2D7FC1D20309C0054A5FF /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 77FA92931C72D93D0090755C /* libz.tbd */; };
 		4AA2D7FD1D20367D0054A5FF /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 77FA92931C72D93D0090755C /* libz.tbd */; };
+		4ABDA9891D79298B0086A35B /* external-disks in Resources */ = {isa = PBXBuildFile; fileRef = 4A609CB21D725D4C0066AF38 /* external-disks */; };
 		4ACD731A1D205D6000123DE6 /* disks in Resources */ = {isa = PBXBuildFile; fileRef = 4ACD73191D205D6000123DE6 /* disks */; };
 		4ACD73231D20A83E00123DE6 /* darwin-cpu-glue.S in Sources */ = {isa = PBXBuildFile; fileRef = 935C559E1C1384240013166D /* darwin-cpu-glue.S */; };
 		4ACD73241D20A83E00123DE6 /* misc.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D7519568A570085CE5F /* misc.c */; };
@@ -232,7 +234,6 @@
 		4ACD73F31D20B11D00123DE6 /* EAGLView.m in Sources */ = {isa = PBXBuildFile; fileRef = 935C554A1C12BE510013166D /* EAGLView.m */; };
 		4ACD73F51D20B11D00123DE6 /* OpenAL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4EB4F8561C393F0E0072A15C /* OpenAL.framework */; };
 		4ACD73F81D20B11D00123DE6 /* SolidColor.vsh in Resources */ = {isa = PBXBuildFile; fileRef = 939C959D1C3B8E2100263E41 /* SolidColor.vsh */; };
-		4ACD73F91D20B11D00123DE6 /* disks in Resources */ = {isa = PBXBuildFile; fileRef = 4ACD73191D205D6000123DE6 /* disks */; };
 		4ACD73FA1D20B11D00123DE6 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 935C55361C12BA5F0013166D /* Assets.xcassets */; };
 		4ACD73FB1D20B11D00123DE6 /* SolidColor.fsh in Resources */ = {isa = PBXBuildFile; fileRef = 939C959C1C3B8E2100263E41 /* SolidColor.fsh */; };
 		4ACD73FC1D20B11D00123DE6 /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = 935C55441C12BE110013166D /* LaunchScreen.xib */; };
@@ -673,6 +674,7 @@
 
 /* Begin PBXFileReference section */
 		4A2636F819FDEDB700DBFB00 /* Apple2Mac.help */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Apple2Mac.help; sourceTree = "<group>"; };
+		4A609CB21D725D4C0066AF38 /* external-disks */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "external-disks"; path = "../external-disks"; sourceTree = "<group>"; };
 		4A73BE2E1CCBE21A0041C573 /* memmngt.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = memmngt.c; sourceTree = "<group>"; };
 		4A7EDC911AE092680072E98A /* glhudmodel.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = glhudmodel.c; sourceTree = "<group>"; };
 		4A7EDC921AE092680072E98A /* glnode.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = glnode.c; sourceTree = "<group>"; };
@@ -997,6 +999,7 @@
 				4ECFC3AB1C368EAB008E2633 /* Apple2etvOS */,
 				773B3D431956897D0085CE5F /* Classes */,
 				4ACD73191D205D6000123DE6 /* disks */,
+				4A609CB21D725D4C0066AF38 /* external-disks */,
 				773B3D4519568A570085CE5F /* src */,
 				935C55A51C1389000013166D /* externals */,
 				773B3D0E1956885A0085CE5F /* Frameworks */,
@@ -1691,6 +1694,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4ABDA9891D79298B0086A35B /* external-disks in Resources */,
 				4ACD73FA1D20B11D00123DE6 /* Assets.xcassets in Resources */,
 				4ACD73FC1D20B11D00123DE6 /* LaunchScreen.xib in Resources */,
 				4ACD73FD1D20B11D00123DE6 /* Main.storyboard in Resources */,
@@ -1699,7 +1703,6 @@
 				4ACD73F81D20B11D00123DE6 /* SolidColor.vsh in Resources */,
 				4ACD73FB1D20B11D00123DE6 /* SolidColor.fsh in Resources */,
 				4ACD74001D20B11D00123DE6 /* Apple2iOS.strings in Resources */,
-				4ACD73F91D20B11D00123DE6 /* disks in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1767,6 +1770,7 @@
 				773B3D1A1956885A0085CE5F /* InfoPlist.strings in Resources */,
 				773B3D201956885A0085CE5F /* Credits.rtf in Resources */,
 				779F562919E4FE9E00A6F107 /* Basic.vsh in Resources */,
+				4A609CB31D725D4C0066AF38 /* external-disks in Resources */,
 				779F562A19E4FE9E00A6F107 /* Basic.fsh in Resources */,
 				939C95A11C3B8E2100263E41 /* SolidColor.vsh in Resources */,
 				939C959E1C3B8E2100263E41 /* SolidColor.fsh in Resources */,

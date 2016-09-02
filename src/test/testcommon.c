@@ -73,7 +73,7 @@ void test_common_init(void) {
 int test_setup_boot_disk(const char *fileName, int readonly) {
     int err = 0;
     char **path = NULL;
-    const unsigned int pathsCount = 4;
+    const unsigned int pathsCount = 8;
     char *paths[pathsCount + 1] = {
         NULL,
         NULL,
@@ -86,6 +86,10 @@ int test_setup_boot_disk(const char *fileName, int readonly) {
         "%s%sdisks/demo/%s",
         "%s%sdisks/blanks/%s",
         "%s%sdisks/3rd-party-test/%s",
+        "%s%sexternal-disks/%s",
+        "%s%sexternal-disks/demo/%s",
+        "%s%sexternal-disks/blanks/%s",
+        "%s%sexternal-disks/3rd-party-test/%s",
         NULL,
     };
 

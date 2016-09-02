@@ -116,14 +116,18 @@
     
     // copy disks directory into apple2ix directory
     NSString *apple2ix = @"apple2ix";
-    NSString *disks = @"disks";
+    NSString *disks[] = { @"disks", @"external-disks", NULL};
     
-    NSString *apple2ixDirString = [documentsDir stringByAppendingPathComponent:apple2ix];
-    data_dir = strdup([apple2ixDirString UTF8String]);
-    
-    NSString *documentsPath = [apple2ixDirString stringByAppendingPathComponent:disks];
-    NSString *resourcesPath = [[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent:disks];
-    [self copyDirectoryFrom:resourcesPath to:documentsPath];
+    NSString **str = &disks[0];
+    while (*str) {
+        NSString *apple2ixDirString = [documentsDir stringByAppendingPathComponent:apple2ix];
+        data_dir = strdup([apple2ixDirString UTF8String]);
+        
+        NSString *documentsPath = [apple2ixDirString stringByAppendingPathComponent:*str];
+        NSString *resourcesPath = [[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent:*str];
+        [self copyDirectoryFrom:resourcesPath to:documentsPath];
+        ++str;
+    }
 }
 
 - (void)copyDirectoryFrom:(NSString *)resourcesPath to:(NSString *)documentsPath
