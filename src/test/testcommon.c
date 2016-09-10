@@ -107,7 +107,7 @@ int test_setup_boot_disk(const char *fileName, int readonly) {
             CFStringRef fileString = NULL;
             CFURLRef fileURL = NULL;
             
-            ASPRINTF(&diskFile, fmt, prefixPath, sep, fileName);
+            int len = ASPRINTF(&diskFile, fmt, prefixPath, sep, fileName);
             assert(diskFile);
             fileString = CFStringCreateWithCString(kCFAllocatorDefault, diskFile, kCFStringEncodingUTF8);
             assert(fileString);
@@ -119,6 +119,22 @@ int test_setup_boot_disk(const char *fileName, int readonly) {
             // AppDelegate should have copied disks to a R/W location
             fileURL = CFURLCreateWithFileSystemPath(kCFAllocatorDefault, fileString, kCFURLPOSIXPathStyle, /*isDirectory*/false);
 #   endif
+            if (!fileURL) {
+                if (CFStringHasSuffix(fileString, CFSTR(".gz")) || CFStringHasSuffix(fileString, CFSTR(".GZ"))) {
+                    *(diskFile + len - 3) = '\0';
+                    CFRELEASE(fileString);
+                    fileString = CFStringCreateWithCString(kCFAllocatorDefault, diskFile, kCFStringEncodingUTF8);
+                    assert(fileString);
+#   if TARGET_OS_SIMULATOR || !TARGET_OS_EMBEDDED
+                    // Use disks directly out of bundle ... is this OKAY?
+                    fileURL = CFBundleCopyResourceURL(CFBundleGetMainBundle(), fileString, NULL, NULL);
+#   else
+                    // AppDelegate should have copied disks to a R/W location
+                    fileURL = CFURLCreateWithFileSystemPath(kCFAllocatorDefault, fileString, kCFURLPOSIXPathStyle, /*isDirectory*/false);
+#   endif
+}
+            }
+            
             if (fileURL) {
                 CFStringRef filePath = CFURLCopyFileSystemPath(fileURL, kCFURLPOSIXPathStyle);
                 assert(filePath);

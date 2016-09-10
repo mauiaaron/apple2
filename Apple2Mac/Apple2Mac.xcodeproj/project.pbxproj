@@ -9,8 +9,8 @@
 /* Begin PBXBuildFile section */
 		4A2636F919FDEDB700DBFB00 /* Apple2Mac.help in Resources */ = {isa = PBXBuildFile; fileRef = 4A2636F819FDEDB700DBFB00 /* Apple2Mac.help */; };
 		4A609CB31D725D4C0066AF38 /* external-disks in Resources */ = {isa = PBXBuildFile; fileRef = 4A609CB21D725D4C0066AF38 /* external-disks */; };
+		4A6746721D848B51006520C2 /* external-disks in Resources */ = {isa = PBXBuildFile; fileRef = 4A609CB21D725D4C0066AF38 /* external-disks */; };
 		4A69C1921A33DB90001579EF /* DDHidLib.framework in Copy Files (1 item) */ = {isa = PBXBuildFile; fileRef = 77C2796F1A1047AF000FE33F /* DDHidLib.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		4A6B7C881D39E92400A02120 /* disks in Resources */ = {isa = PBXBuildFile; fileRef = 4ACD73191D205D6000123DE6 /* disks */; };
 		4A6B7C8D1D39E98C00A02120 /* disks in Resources */ = {isa = PBXBuildFile; fileRef = 4ACD73191D205D6000123DE6 /* disks */; };
 		4A6B7C8E1D39E9E000A02120 /* disks in Resources */ = {isa = PBXBuildFile; fileRef = 4ACD73191D205D6000123DE6 /* disks */; };
 		4A73BE2F1CCBE21B0041C573 /* memmngt.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A73BE2E1CCBE21A0041C573 /* memmngt.c */; };
@@ -113,9 +113,9 @@
 		4ABDA9C61D792E8C0086A35B /* Basic.vsh in Resources */ = {isa = PBXBuildFile; fileRef = 779F562719E4FE9E00A6F107 /* Basic.vsh */; };
 		4ABDA9C71D792E8C0086A35B /* Basic.fsh in Resources */ = {isa = PBXBuildFile; fileRef = 779F562819E4FE9E00A6F107 /* Basic.fsh */; };
 		4ABDA9C81D792E8C0086A35B /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 773B3D241956885A0085CE5F /* MainMenu.xib */; };
-		4ABDA9C91D792E8C0086A35B /* disks in Resources */ = {isa = PBXBuildFile; fileRef = 4ACD73191D205D6000123DE6 /* disks */; };
 		4ABDA9CF1D792EB40086A35B /* testtrace.c in Sources */ = {isa = PBXBuildFile; fileRef = 935C55751C136F0D0013166D /* testtrace.c */; };
 		4ABDA9D11D792F480086A35B /* Apple2MacTestTrace-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 4ABDA9D01D792F480086A35B /* Apple2MacTestTrace-Info.plist */; };
+		4AC549B01D84C5BD001B6C09 /* external-disks in Resources */ = {isa = PBXBuildFile; fileRef = 4A609CB21D725D4C0066AF38 /* external-disks */; };
 		4ACD731A1D205D6000123DE6 /* disks in Resources */ = {isa = PBXBuildFile; fileRef = 4ACD73191D205D6000123DE6 /* disks */; };
 		4ACD73231D20A83E00123DE6 /* darwin-cpu-glue.S in Sources */ = {isa = PBXBuildFile; fileRef = 935C559E1C1384240013166D /* darwin-cpu-glue.S */; };
 		4ACD73241D20A83E00123DE6 /* misc.c in Sources */ = {isa = PBXBuildFile; fileRef = 773B3D7519568A570085CE5F /* misc.c */; };
@@ -1758,13 +1758,13 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4A6746721D848B51006520C2 /* external-disks in Resources */,
 				4ABDA9C31D792E8C0086A35B /* InfoPlist.strings in Resources */,
 				4ABDA9C41D792E8C0086A35B /* Images.xcassets in Resources */,
 				4ABDA9C51D792E8C0086A35B /* Credits.rtf in Resources */,
 				4ABDA9C61D792E8C0086A35B /* Basic.vsh in Resources */,
 				4ABDA9C71D792E8C0086A35B /* Basic.fsh in Resources */,
 				4ABDA9C81D792E8C0086A35B /* MainMenu.xib in Resources */,
-				4ABDA9C91D792E8C0086A35B /* disks in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1835,13 +1835,13 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4AC549B01D84C5BD001B6C09 /* external-disks in Resources */,
 				4AD4FEBA1A52464F00F958EC /* InfoPlist.strings in Resources */,
 				4AD4FEBB1A52464F00F958EC /* Images.xcassets in Resources */,
 				4AD4FEBD1A52464F00F958EC /* Credits.rtf in Resources */,
 				4AD4FEBE1A52464F00F958EC /* Basic.vsh in Resources */,
 				4AD4FEBF1A52464F00F958EC /* Basic.fsh in Resources */,
 				4AA2D7E21D1F559E0054A5FF /* MainMenu.xib in Resources */,
-				4A6B7C881D39E92400A02120 /* disks in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
