@@ -263,7 +263,6 @@ static void *cpu_thread(void *dummyptr) {
     bool negative = false;
     long drift_adj_nsecs = 0;   // generic drift adjustment between target and actual
 
-    int debugging_cycles0 = 0;
     int debugging_cycles = 0;
 
     unsigned long dbg_ticks = 0;
@@ -343,7 +342,6 @@ static void *cpu_thread(void *dummyptr) {
 
             MB_StartOfCpuExecute();
             if (is_debugging) {
-                debugging_cycles0 = cpu65_cycles_to_execute;
                 debugging_cycles  = cpu65_cycles_to_execute;
             }
 

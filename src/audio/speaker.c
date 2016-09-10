@@ -181,6 +181,7 @@ static void _speaker_update(/*bool toggled*/) {
                     sample_mean += (int)remainder_buffer[i];
                 }
 
+                assert(remainder_buffer_size > 0);
                 sample_mean /= (int)remainder_buffer_size;
 
                 if (samples_buffer_idx < channelsSampleRateHz) {
@@ -213,7 +214,6 @@ static void _speaker_update(/*bool toggled*/) {
         if (cycles_remainder > 0) {
             // populate remainder_buffer with fractional samples
             assert(remainder_buffer_idx == 0 && "should have already dealt with remainder buffer");
-            //assert(cycles_remainder < remainder_buffer_size && "otherwise there should have been another whole sample");
             if (UNLIKELY(cycles_remainder >= remainder_buffer_size)) {
                 LOG("OOPS, overflow in cycles_remainder:%lu", cycles_remainder);
             } else {

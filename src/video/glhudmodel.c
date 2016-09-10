@@ -340,11 +340,10 @@ void glhud_quadModelToScreen(const GLModel *model, const int screenW, const int 
 float glhud_getTimedVisibility(struct timespec timingBegin, float minAlpha, float maxAlpha) {
 
     struct timespec now = { 0 };
-    struct timespec deltat = { 0 };
 
     clock_gettime(CLOCK_MONOTONIC, &now);
     float alpha = minAlpha;
-    deltat = timespec_diff(timingBegin, now, NULL);
+    struct timespec deltat = timespec_diff(timingBegin, now, NULL);
     if (deltat.tv_sec == 0) {
         alpha = maxAlpha;
         if (deltat.tv_nsec >= NANOSECONDS_PER_SECOND/2) {

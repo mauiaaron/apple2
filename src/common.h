@@ -308,11 +308,8 @@ static const char *log_end = "\n";
     do { \
         /* BOOM */ \
         char *ptr = (char *)0xABADF000; \
-        *ptr = '\0';\
-        /* or if that worked, just deref NULL */ \
-        ptr = (char *)0x0; \
-        *ptr = '\0'; \
-    } while (0);
+        *ptr++ = '\0';\
+    } while (1);
 
 // memory management
 #include "memmngt.h"

@@ -20,8 +20,6 @@
 int64_t (*interface_onTouchEvent)(interface_touch_event_t action, int pointer_count, int pointer_idx, float *x_coords, float *y_coords) = NULL;
 #endif
 
-static char disk_path[PATH_MAX] = { 0 };
-
 // 2015/04/12 : This was legacy code for rendering the menu interfaces on desktop Linux. Portions here are resurrected
 // to render HUD messages on desktop and mobile.  Nothing special or pretty here, but has "just worked" for 20+ years ;-)
 
@@ -98,7 +96,6 @@ static void _convert_screen_graphics(char *screen, const int x, const int y, con
                     break;
                 }
             }
-            idx += xlen+1;
         }
 
         if (found_glyph) {
