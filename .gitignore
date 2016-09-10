@@ -51,9 +51,6 @@ src/rom.c
 src/x86/glue.S
 src/arm/glue.S
 
-# sub{tree,module}
-src/rom
-
 # generated binaries
 /apple2ix
 genfont
