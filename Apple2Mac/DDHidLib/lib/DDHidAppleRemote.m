@@ -50,10 +50,12 @@
     CFMutableDictionaryRef hidMatchDictionary =
         IOServiceMatching("AppleIRController");
     
-    return
+    id ret =
         [DDHidDevice allDevicesMatchingCFDictionary: hidMatchDictionary
                                           withClass: self
                                   skipZeroLocations: YES];
+    CFRelease(hidMatchDictionary);// free our +1retain to placate static analysis ... (it is also freed by IOServiceGetMatchingServices() )
+    return ret;
 }
 
 + (DDHidAppleRemote *) firstRemote;

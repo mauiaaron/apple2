@@ -29,6 +29,7 @@
 #import "NSDictionary+DDHidExtras.h"
 #import "NSXReturnThrowError.h"
 
+#import <objc/message.h>
 #include <IOKit/hid/IOHIDUsageTables.h>
 
 @interface DDHidDevice (Private)
@@ -120,7 +121,7 @@
         retVal = [self allDevicesMatchingCFDictionary: hidMatchDictionary
                                       withClass: [DDHidDevice class]
                               skipZeroLocations: NO];
-        //CFRelease(hidMatchDictionary);//dont free, it is freed by IOServiceGetMatchingServices
+        CFRelease(hidMatchDictionary);// free our +1retain to placate static analysis ... (it is also freed by IOServiceGetMatchingServices() )
     }
     return retVal;
 }
@@ -145,7 +146,7 @@
         retVal = [self allDevicesMatchingCFDictionary: hidMatchDictionary
                                           withClass: hidClass
                                   skipZeroLocations: skipZeroLocations];
-        //CFRelease(hidMatchDictionary);//dont free, it is freed by IOServiceGetMatchingServices
+        CFRelease(hidMatchDictionary);// free our +1retain to placate static analysis ... (it is also freed by IOServiceGetMatchingServices() )
     }
 return retVal;
 }
@@ -154,6 +155,9 @@ return retVal;
                                    withClass: (Class) hidClass
                            skipZeroLocations: (BOOL) skipZeroLocations;
 {
+    
+    (void)((id(*)(id, SEL))objc_msgSend((id)matchDictionary, @selector(retain)));
+    
 	// Now search I/O Registry for matching devices.
 	io_iterator_t hidObjectIterator = MACH_PORT_NULL;
     NSMutableArray * devices = [NSMutableArray array];
