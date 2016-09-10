@@ -73,15 +73,9 @@ void test_common_init(void) {
 int test_setup_boot_disk(const char *fileName, int readonly) {
     int err = 0;
     char **path = NULL;
-    const unsigned int pathsCount = 8;
-    char *paths[pathsCount + 1] = {
-        NULL,
-        NULL,
-        NULL,
-        NULL,
-        NULL,
-    };
-    const char *fmts[pathsCount + 1] = {
+#define PATHS_COUNT 8
+    char *paths[PATHS_COUNT + 1] = { 0 };
+    const char *fmts[PATHS_COUNT + 1] = {
         "%s%sdisks/%s",
         "%s%sdisks/demo/%s",
         "%s%sdisks/blanks/%s",
