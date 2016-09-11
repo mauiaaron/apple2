@@ -60,6 +60,14 @@ static inline int ASSERT_SHA_MEM(const char *SHA_STR, uint16_t ea, uint16_t len)
     return 0;
 }
 
+static inline int ASSERT_SHA_BIN(const char *SHA_STR, const uint8_t * const buf, unsigned long len) {
+    uint8_t md[SHA_DIGEST_LENGTH];
+    SHA1(buf, len, md);
+    sha1_to_str(md, mdstr);
+    ASSERT(strcasecmp(mdstr, SHA_STR) == 0);
+    return 0;
+}
+
 static inline int BOOT_TO_DOS(void) {
     if (test_do_reboot) {
         ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);

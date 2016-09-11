@@ -61,13 +61,10 @@ void test_common_init(void) {
     prefs_save();
 
     c_debugger_set_watchpoint(WATCHPOINT_ADDR);
-    if (0) {
-        c_debugger_set_timeout(15);
-    } else {
-        fprintf(stderr, "NOTE : RUNNING WITH DISPLAY\n");
-        fprintf(stderr, "Will spinloop on failed tests for debugger intervention\n");
-        c_debugger_set_timeout(0);
-    }
+
+    fprintf(stderr, "NOTE : RUNNING WITH DISPLAY\n");
+    fprintf(stderr, "Will spinloop on failed tests for debugger intervention\n");
+    c_debugger_set_timeout(0);
 }
 
 int test_setup_boot_disk(const char *fileName, int readonly) {
@@ -97,7 +94,6 @@ int test_setup_boot_disk(const char *fileName, int readonly) {
 #   endif
 
     do {
-        
         const char **fmtPtr = &fmts[0];
         unsigned int idx = 0;
         while (*fmtPtr) {
@@ -132,7 +128,7 @@ int test_setup_boot_disk(const char *fileName, int readonly) {
                     // AppDelegate should have copied disks to a R/W location
                     fileURL = CFURLCreateWithFileSystemPath(kCFAllocatorDefault, fileString, kCFURLPOSIXPathStyle, /*isDirectory*/false);
 #   endif
-}
+                }
             }
             
             if (fileURL) {
