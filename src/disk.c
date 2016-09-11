@@ -1100,8 +1100,8 @@ bool disk6_loadState(StateHelper_s *helper) {
             if (!helper->load(fd, &state, 1)) {
                 break;
             }
-            disk6.disk[i].is_protected = state;
-            LOG("LOAD is_protected[%lu] = %02x", i, disk6.disk[i].is_protected);
+            bool is_protected = (bool)state;
+            LOG("LOAD is_protected[%lu] = %02x", i, is_protected);
 
             uint8_t serialized[4] = { 0 };
             if (!helper->load(fd, serialized, 4)) {
@@ -1124,11 +1124,11 @@ bool disk6_loadState(StateHelper_s *helper) {
                 }
 
                 namebuf[namelen] = '\0';
-                if (disk6_insert(i, namebuf, disk6.disk[i].is_protected)) {
+                if (disk6_insert(i, namebuf, is_protected)) {
                     snprintf(namebuf+namelen, gzlen, "%s", EXT_GZ);
                     namebuf[namelen+gzlen] = '\0';
                     LOG("LOAD disk[%lu] : (%u) %s", i, namelen, namebuf);
-                    if (disk6_insert(i, namebuf, disk6.disk[i].is_protected)) {
+                    if (disk6_insert(i, namebuf, is_protected)) {
                         FREE(namebuf);
                         break;
                     }
