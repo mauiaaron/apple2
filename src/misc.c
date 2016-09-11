@@ -85,7 +85,9 @@ bool emulator_saveState(const char * const path) {
     int fd = -1;
     bool saved = false;
 
+#if !TESTING
     assert(cpu_isPaused() && "should be paused to save state");
+#endif
 
     do {
         TEMP_FAILURE_RETRY(fd = open(path, O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR));
@@ -141,7 +143,9 @@ bool emulator_loadState(const char * const path) {
     int fd = -1;
     bool loaded = false;
 
+#if !TESTING
     assert(cpu_isPaused() && "should be paused to load state");
+#endif
 
     video_setDirty(A2_DIRTY_FLAG);
 
@@ -328,6 +332,9 @@ int main(int _argc, char **_argv) {
 #   elif TEST_TRACE
     extern void test_trace(int, char *[]);
     test_trace(argc, argv);
+#   elif TEST_UI
+    extern int test_ui(int, char *[]);
+    test_ui(argc, argv);
 #   elif TEST_VM
     extern int test_vm(int, char *[]);
     test_vm(argc, argv);
