@@ -76,13 +76,13 @@ int main(int argc, const char *argv[]) {
         error = true;
         do {
             if (idx >= argc) {
-                fprintf(stderr, "WARNING : rom file unspecified\n");
+                printf("\n#error : rom file unspecified on command line\n");
                 break;
             }
 
             fp = fopen(argv[idx], "r");
             if (!fp) {
-                fprintf(stderr, "WARNING : cannot open %s\n", argv[idx]);
+                printf("\n#error : cannot open rom %s ... possibly you failed to download and install in exteral-rom/ directory?\n", roms[idx]);
                 break;
             }
 
@@ -93,7 +93,7 @@ int main(int argc, const char *argv[]) {
 
             num = fread(buf, 1, sizes[idx], fp);
             if (num != sizes[idx]) {
-                fprintf(stderr, "WARNING : rom file size %u mismatched with expected %u\n", (unsigned int)num, (unsigned int)sizes[idx]);
+                printf("\n#error : rom %s file size %u mismatched with expected %u\n", roms[idx], (unsigned int)num, (unsigned int)sizes[idx]);
                 break;
             }
 
@@ -108,8 +108,7 @@ int main(int argc, const char *argv[]) {
         } while(0);
 
         if (error) {
-            printf("\nbool %s = false;\n", bools[idx]);
-            printf("\nuint8_t %s[%u] = { 0 };\n", roms[idx], (unsigned int)sizes[idx]);
+            printf("\n#error : you will need to perform a clean build after fixing this issue\n");
         }
 
         if (buf) {
@@ -119,6 +118,6 @@ int main(int argc, const char *argv[]) {
 
     } while(roms[++idx] != NULL);
 
-    return 0; // no error so build can continue
+    return 0;
 }
 
