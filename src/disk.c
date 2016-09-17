@@ -740,6 +740,10 @@ void disk6_init(void) {
 
 const char *disk6_eject(int drive) {
 
+#if !TESTING
+    assert(cpu_isPaused() && "CPU must be paused for disk ejection");
+#endif
+
     const char *err = NULL;
 
     if (disk6.disk[drive].fd > 0) {
@@ -798,6 +802,10 @@ const char *disk6_eject(int drive) {
 }
 
 const char *disk6_insert(int drive, const char * const raw_file_name, int readonly) {
+
+#if !TESTING
+    assert(cpu_isPaused() && "CPU must be paused for disk insertion");
+#endif
 
     disk6_eject(drive);
 

@@ -298,8 +298,6 @@ void emulator_start(void) {
 
 void emulator_shutdown(void) {
     emulatorShuttingDown = true;
-    disk6_eject(0);
-    disk6_eject(1);
     video_shutdown();
     prefs_shutdown();
     timing_stopCPU();

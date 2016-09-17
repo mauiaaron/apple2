@@ -509,6 +509,9 @@ static void *cpu_thread(void *dummyptr) {
     cpu_thread_id = 0;
     cpu_pause();
 
+    disk6_eject(0);
+    disk6_eject(1);
+
     return NULL;
 }
 
