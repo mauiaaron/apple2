@@ -506,6 +506,9 @@ static void *cpu_thread(void *dummyptr) {
     MB_Destroy();
     audio_shutdown();
 
+    cpu_thread_id = 0;
+    cpu_pause();
+
     return NULL;
 }
 
