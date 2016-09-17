@@ -26,6 +26,7 @@ testdisk_ASM_O="src/x86/testdisk-glue.o src/x86/testdisk-cpu.o"
 testdisplay_ASM_O="src/x86/testdisplay-glue.o src/x86/testdisplay-cpu.o"
 testprefs_ASM_O="src/x86/testprefs-glue.o src/x86/testprefs-cpu.o"
 testtrace_ASM_O="src/x86/testtrace-glue.o src/x86/testtrace-cpu.o"
+testui_ASM_O="src/x86/testui-glue.o src/x86/testui-cpu.o"
 testvm_ASM_O="src/x86/testvm-glue.o src/x86/testvm-cpu.o"
 arch=''
 case $target in
@@ -85,6 +86,7 @@ AC_SUBST(testdisk_ASM_O)
 AC_SUBST(testdisplay_ASM_O)
 AC_SUBST(testprefs_ASM_O)
 AC_SUBST(testtrace_ASM_O)
+AC_SUBST(testui_ASM_O)
 AC_SUBST(testvm_ASM_O)
 
 AC_SUBST([AM_CFLAGS])
@@ -186,6 +188,7 @@ AC_ARG_ENABLE([opengl], AS_HELP_STRING([--disable-opengl], [Disable OpenGL video
                         testdisplay_VIDEO_O="src/video/testdisplay-glvideo.o src/video/testdisplay-glnode.o src/video/testdisplay-glalert.o src/video/testdisplay-glhudmodel.o src/video/testdisplay-glutinput.o src/video_util/testdisplay-matrixUtil.o src/video_util/testdisplay-modelUtil.o src/video_util/testdisplay-sourceUtil.o src/video_util/testdisplay-vectorUtil.o"
                         testprefs_VIDEO_O="src/video/testprefs-glvideo.o src/video/testprefs-glnode.o src/video/testprefs-glalert.o src/video/testprefs-glhudmodel.o src/video/testprefs-glutinput.o src/video_util/testprefs-matrixUtil.o src/video_util/testprefs-modelUtil.o src/video_util/testprefs-sourceUtil.o src/video_util/testprefs-vectorUtil.o"
                         testtrace_VIDEO_O="src/video/testtrace-glvideo.o src/video/testtrace-glnode.o src/video/testtrace-glalert.o src/video/testtrace-glhudmodel.o src/video/testtrace-glutinput.o src/video_util/testtrace-matrixUtil.o src/video_util/testtrace-modelUtil.o src/video_util/testtrace-sourceUtil.o src/video_util/testtrace-vectorUtil.o"
+                        testui_VIDEO_O="src/video/testui-glvideo.o src/video/testui-glnode.o src/video/testui-glalert.o src/video/testui-glhudmodel.o src/video/testui-glutinput.o src/video_util/testui-matrixUtil.o src/video_util/testui-modelUtil.o src/video_util/testui-sourceUtil.o src/video_util/testui-vectorUtil.o"
                         testvm_VIDEO_O="src/video/testvm-glvideo.o src/video/testvm-glnode.o src/video/testvm-glalert.o src/video/testvm-glhudmodel.o src/video/testvm-glutinput.o src/video_util/testvm-matrixUtil.o src/video_util/testvm-modelUtil.o src/video_util/testvm-sourceUtil.o src/video_util/testvm-vectorUtil.o"
                         AC_MSG_RESULT([Building emulator with OpenGL support, w00t!])
                     ], [
@@ -226,6 +229,7 @@ AS_IF([test "x$opengl_supported" = "xyes"], [
             testdisplay_VIDEO_O="src/video/testdisplay-xvideo.o"
             testprefs_VIDEO_O="src/video/testprefs-xvideo.o"
             testtrace_VIDEO_O="src/video/testtrace-xvideo.o"
+            testui_VIDEO_O="src/video/testui-xvideo.o"
             testvm_VIDEO_O="src/video/testvm-xvideo.o"
         ], [
             AC_MSG_ERROR([Did not find OpenGL nor X11 libraries...])
@@ -241,6 +245,7 @@ AC_SUBST(testdisk_VIDEO_O)
 AC_SUBST(testdisplay_VIDEO_O)
 AC_SUBST(testprefs_VIDEO_O)
 AC_SUBST(testtrace_VIDEO_O)
+AC_SUBST(testui_VIDEO_O)
 AC_SUBST(testvm_VIDEO_O)
 
 dnl ---------------------------------------------------------------------------
@@ -264,6 +269,7 @@ AC_ARG_ENABLE([audio], AS_HELP_STRING([--disable-audio], [Disable emulator audio
                     testdisplay_AUDIO_O="src/audio/testdisplay-soundcore.o src/audio/testdisplay-soundcore-openal.o src/audio/testdisplay-speaker.o src/audio/testdisplay-playqueue.o src/audio/testdisplay-alhelpers.o src/audio/testdisplay-mockingboard.o src/audio/testdisplay-AY8910.o"
                     testprefs_AUDIO_O="src/audio/testprefs-soundcore.o src/audio/testprefs-soundcore-openal.o src/audio/testprefs-speaker.o src/audio/testprefs-playqueue.o src/audio/testprefs-alhelpers.o src/audio/testprefs-mockingboard.o src/audio/testprefs-AY8910.o"
                     testtrace_AUDIO_O="src/audio/testtrace-soundcore.o src/audio/testtrace-soundcore-openal.o src/audio/testtrace-speaker.o src/audio/testtrace-playqueue.o src/audio/testtrace-alhelpers.o src/audio/testtrace-mockingboard.o src/audio/testtrace-AY8910.o"
+                    testui_AUDIO_O="src/audio/testui-soundcore.o src/audio/testui-soundcore-openal.o src/audio/testui-speaker.o src/audio/testui-playqueue.o src/audio/testui-alhelpers.o src/audio/testui-mockingboard.o src/audio/testui-AY8910.o"
                     testvm_AUDIO_O="src/audio/testvm-soundcore.o src/audio/testvm-soundcore-openal.o src/audio/testvm-speaker.o src/audio/testvm-playqueue.o src/audio/testvm-alhelpers.o src/audio/testvm-mockingboard.o src/audio/testvm-AY8910.o"
                 ], [
                     AC_MSG_ERROR([Could not find OpenAL libraries ... todo fixme ... implement a null sound backend])
@@ -288,6 +294,7 @@ AC_SUBST(testdisk_AUDIO_O)
 AC_SUBST(testdisplay_AUDIO_O)
 AC_SUBST(testprefs_AUDIO_O)
 AC_SUBST(testtrace_AUDIO_O)
+AC_SUBST(testui_AUDIO_O)
 AC_SUBST(testvm_AUDIO_O)
 
 AS_IF([test "x$openal_supported" = "xyes"], [
@@ -309,6 +316,7 @@ AC_ARG_ENABLE([debugger], AS_HELP_STRING([--disable-debugger], [Disable 6502 deb
     testdisplay_META_O="src/meta/testdisplay-debug.o src/meta/testdisplay-debugger.o src/meta/testdisplay-opcodes.o src/test/testdisplay-sha1.o"
     testprefs_META_O="src/meta/testprefs-debug.o src/meta/testprefs-debugger.o src/meta/testprefs-opcodes.o src/test/testprefs-sha1.o"
     testtrace_META_O="src/meta/testtrace-debug.o src/meta/testtrace-debugger.o src/meta/testtrace-opcodes.o src/test/testtrace-sha1.o"
+    testui_META_O="src/meta/testui-debug.o src/meta/testui-debugger.o src/meta/testui-opcodes.o src/test/testui-sha1.o"
     testvm_META_O="src/meta/testvm-debug.o src/meta/testvm-debugger.o src/meta/testvm-opcodes.o src/test/testvm-sha1.o"
 ])
 AC_SUBST(META_O)
@@ -317,6 +325,7 @@ AC_SUBST(testdisk_META_O)
 AC_SUBST(testdisplay_META_O)
 AC_SUBST(testprefs_META_O)
 AC_SUBST(testtrace_META_O)
+AC_SUBST(testui_META_O)
 AC_SUBST(testvm_META_O)
 
 AC_DEFINE(INTERFACE_CLASSIC, 1, [Use the classic menu interface])

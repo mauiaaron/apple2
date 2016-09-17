@@ -86,8 +86,8 @@ src/x86/glue.S: src/cpu-supp.c src/disk.c src/display.c src/vm.c @AUDIO_GLUE_C@
 A2_TEST_SOURCES = $(apple2ix_SOURCES) src/test/testcommon.c
 A2_TEST_CFLAGS  = $(apple2ix_CFLAGS) -DTESTING=1 -Isrc/test
 
-TESTS          = testcpu testdisplay testvm testdisk testprefs testtrace
-check_PROGRAMS = testcpu testdisplay testvm testdisk testprefs testtrace
+TESTS          = testcpu testdisk testdisplay testprefs testtrace testui testvm
+check_PROGRAMS = testcpu testdisk testdisplay testprefs testtrace testui testvm
 
 #######################################
 
@@ -138,6 +138,16 @@ testtrace_LDFLAGS = $(apple2ix_LDFLAGS)
 testtrace_LDADD = @testtrace_ASM_O@ @testtrace_VIDEO_O@ @testtrace_AUDIO_O@ @testtrace_META_O@ @X_LIBS@
 testtrace_DEPENDENCIES = @testtrace_ASM_O@ @testtrace_VIDEO_O@ @testtrace_AUDIO_O@ @testtrace_META_O@
 EXTRA_testtrace_SOURCES = $(ASM_SRC_x86) $(VIDEO_SRC) $(AUDIO_SRC) $(META_SRC)
+
+#######################################
+
+testui_SOURCES = src/test/testui.c $(A2_TEST_SOURCES)
+testui_CFLAGS = $(A2_TEST_CFLAGS) -DTEST_UI=1
+testui_CCASFLAGS = $(testui_CFLAGS)
+testui_LDFLAGS = $(apple2ix_LDFLAGS)
+testui_LDADD = @testui_ASM_O@ @testui_VIDEO_O@ @testui_AUDIO_O@ @testui_META_O@ @X_LIBS@
+testui_DEPENDENCIES = @testui_ASM_O@ @testui_VIDEO_O@ @testui_AUDIO_O@ @testui_META_O@
+EXTRA_testui_SOURCES = $(ASM_SRC_x86) $(VIDEO_SRC) $(AUDIO_SRC) $(META_SRC)
 
 #######################################
 

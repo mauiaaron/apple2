@@ -34,6 +34,14 @@ static void testui_teardown(void *arg) {
 // ----------------------------------------------------------------------------
 // Various Tests ...
 
+#if CONFORMANT_TRACKS
+#   define BLANK_RUN_BYTE 1208
+#   define BLANK_TRACK_WIDTH 6384
+#else
+#   define BLANK_RUN_BYTE 1130
+#   define BLANK_TRACK_WIDTH 6040
+#endif
+
 static int _assert_blank_boot(void) {
     // Disk6 ...
     ASSERT(disk6.motor_off == 1);
@@ -46,13 +54,13 @@ static int _assert_blank_boot(void) {
     const char *file_name = strrchr(disk6.disk[0].file_name, '/');
     ASSERT(strcmp(file_name, "/blank.dsk") == 0);
     ASSERT(disk6.disk[0].phase == 36);
-    ASSERT(disk6.disk[0].run_byte == 1130);
+    ASSERT(disk6.disk[0].run_byte == BLANK_RUN_BYTE);
     ASSERT(disk6.disk[0].fd > 0);
     ASSERT(disk6.disk[0].mmap_image != 0);
     ASSERT(disk6.disk[0].mmap_image != MAP_FAILED);
     ASSERT(disk6.disk[0].whole_len == 143360);
     ASSERT(disk6.disk[0].whole_image != NULL);
-    ASSERT(disk6.disk[0].track_width == 6040);
+    ASSERT(disk6.disk[0].track_width == BLANK_TRACK_WIDTH);
     ASSERT(!disk6.disk[0].nibblized);
     ASSERT(!disk6.disk[0].track_dirty);
     extern int skew_table_6_do[16];
@@ -89,8 +97,6 @@ static int _assert_blank_boot(void) {
     PASS();
 }
 
-#define EXPECTED_A2VM_FILE_SIZE 164064
-
 TEST test_save_state_1() {
     test_setup_boot_disk(BLANK_DSK, 1);
 
@@ -103,29 +109,6 @@ TEST test_save_state_1() {
 
     bool ret = emulator_saveState(savFile);
     ASSERT(ret);
-
-    do {
-        uint8_t md[SHA_DIGEST_LENGTH];
-        char mdstr0[(SHA_DIGEST_LENGTH*2)+1];
-
-        FILE *fp = fopen(savFile, "r");
-
-        fseek(fp, 0, SEEK_END);
-        long expectedSize = ftell(fp);
-        ASSERT(expectedSize == EXPECTED_A2VM_FILE_SIZE);
-        fseek(fp, 0, SEEK_SET);
-
-        unsigned char *buf = MALLOC(EXPECTED_A2VM_FILE_SIZE);
-        if (fread(buf, 1, EXPECTED_A2VM_FILE_SIZE, fp) != EXPECTED_A2VM_FILE_SIZE) {
-            ASSERT(false);
-        }
-        fclose(fp); fp = NULL;
-        SHA1(buf, EXPECTED_A2VM_FILE_SIZE, md);
-        FREE(buf);
-
-        sha1_to_str(md, mdstr0);
-        ASSERT(strcasecmp(mdstr0, "0f70ed3ed7e018025ca51dcf5ca063553ee4403f") == 0);
-    } while(0);
 
     FREE(savFile);
     PASS();
