@@ -1216,9 +1216,18 @@ void _mb_trace_AY8910(int chip, FILE *mb_trace_fp) {
 }
 #endif
 
-void _AYWriteReg(int chip, int r, int v)
+void _AYWriteReg(int chip, int r, int v
+#if MB_TRACING
+        , FILE *mb_trace_fp
+#endif
+        )
 {
 	libspectrum_dword uOffset = (libspectrum_dword) (cycles_count_total - g_uLastCumulativeCycles);
+#if MB_TRACING
+        if (mb_trace_fp) {
+            fprintf(mb_trace_fp, "\t uOffset: %lu\n", uOffset);
+        }
+#endif
 	sound_ay_write(&g_AY8910[chip], r, v, uOffset);
 }
 

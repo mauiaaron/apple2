@@ -391,7 +391,11 @@ static void AY8910_Write(uint8_t nDevice, uint8_t nReg, uint8_t nValue, uint8_t 
 				break;
 
 			case AY_WRITE:		// 6: WRITE TO PSG
-				_AYWriteReg(nDevice+2*nAYDevice, pMB->nAYCurrentRegister, pMB->sy6522.ORA);
+				_AYWriteReg(nDevice+2*nAYDevice, pMB->nAYCurrentRegister, pMB->sy6522.ORA
+#if MB_TRACING
+                                        , mb_trace_fp
+#endif
+                                        );
 #if MB_TRACING
                                 _mb_trace_AY8910(nDevice+2*nAYDevice, mb_trace_fp);
 #endif
@@ -942,7 +946,7 @@ static void MB_Update()
         return;
     }
 
-    if (!MockingboardVoice->bActive || !g_bMB_Active)
+    if (!MockingboardVoice->bActive)
     {
         return;
     }
@@ -1083,6 +1087,10 @@ static void MB_Update()
 	int nBytesRemaining = (int)dwCurrentPlayCursor;
         //LOG("Mockingboard : sound buffer position : %d", nBytesRemaining);
 #endif
+#if MB_TRACING
+        // set nBytesRemaining at a sweet spot for determinism
+        nBytesRemaining = g_dwDSBufferSize/4 + 16;
+#endif
 	if(nBytesRemaining < 0)
 		nBytesRemaining += g_dwDSBufferSize;
 
@@ -1100,13 +1108,18 @@ static void MB_Update()
 	else
 		nNumSamplesError = 0;						// Acceptable amount of data in buffer
 
+#if MB_TRACING
+        // assert determinism prevails ...
+        assert(nNumSamplesError == 0);
+#endif
+
 	if(nNumSamples == 0)
 		return;
 
 	//
 #if MB_TRACING
         if (mb_trace_fp) {
-            fprintf(mb_trace_fp, "%s", "\tsubmitting samples...\n");
+            fprintf(mb_trace_fp, "\tsubmitting %d samples...\n", nNumSamples);
         }
 #endif
 
@@ -1214,10 +1227,8 @@ static void MB_Update()
             return;
         }
 
+#   if !MB_TRACING
         // make at least 2 attempts to submit data (could be at a ringBuffer boundary)
-#   if MB_TRACING
-        if (!g_bFullSpeed) {
-#   endif
         do {
             if (MockingboardVoice->Lock(MockingboardVoice, requestedBufSize, &pDSLockedBuffer0, &dwDSLockedBufferSize0)) {
                 return;
@@ -1235,8 +1246,6 @@ static void MB_Update()
             ++counter;
         } while (bufIdx < originalRequestedBufSize && counter < 2);
         assert(bufIdx == originalRequestedBufSize);
-#   if MB_TRACING
-        }
 #   endif
 #endif
 
@@ -1506,6 +1515,10 @@ static bool MB_DSInit()
 
 #if 1 // APPLE2IX
         SAMPLE_RATE = audio_backend->systemSettings.sampleRateHz;
+#if MB_TRACING
+        // force determinism
+        SAMPLE_RATE = 44100;
+#endif
         g_dwDSBufferSize = audio_backend->systemSettings.stereoBufferSizeSamples * audio_backend->systemSettings.bytesPerSample * g_nMB_NumChannels;
         g_nMixBuffer = MALLOC(g_dwDSBufferSize / audio_backend->systemSettings.bytesPerSample);
 
@@ -1991,8 +2004,7 @@ static BYTE __stdcall MB_Read(WORD PC, WORD nAddr, BYTE bWrite, BYTE nValue, ULO
 #if 1 // APPLE2IX
 #   if MB_TRACING
     if (mb_trace_fp) {
-        unsigned long uCycles = cycles_count_total - g_uLastCumulativeCycles;
-        fprintf(mb_trace_fp, "MB_Read|%04X|%lu\n", ea, uCycles);
+        fprintf(mb_trace_fp, "MB_Read|%04X\n", ea);
     }
 #   endif
 	MB_UpdateCycles();
@@ -2100,10 +2112,8 @@ static BYTE __stdcall MB_Write(WORD PC, WORD nAddr, BYTE bWrite, BYTE nValue, UL
 {
 #if 1 // APPLE2IX
 #   if MB_TRACING
-    // output cycle count delta when toggled
     if (mb_trace_fp) {
-        unsigned long uCycles = cycles_count_total - g_uLastCumulativeCycles;
-        fprintf(mb_trace_fp, "MB_Write|%04X|%02X|%lu\n", ea, b, uCycles);
+        fprintf(mb_trace_fp, "MB_Write|%04X|%02X\n", ea, b);
     }
 #   endif
 	MB_UpdateCycles();
@@ -2341,6 +2351,11 @@ void MB_UpdateCycles(ULONG uExecutedCycles)
 	timing_checkpoint_cycles();
 	unsigned long uCycles = cycles_count_total - g_uLastCumulativeCycles;
 	g_uLastCumulativeCycles = cycles_count_total;
+#if MB_TRACING
+        if (mb_trace_fp) {
+            fprintf(mb_trace_fp, "\tuCycles:%lu\n", uCycles);
+        }
+#endif
 #if 1 // APPLE2IX
         if (uCycles >= 0x10000) {
             LOG("OOPS!!! Mockingboard failed assert!");
