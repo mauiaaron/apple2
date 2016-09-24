@@ -918,6 +918,12 @@ GLUE_C_READ(debug_illegal_bcd)
     return 0;
 }
 
+GLUE_C_WRITE(cpu_irqCheck)
+{
+    MB_UpdateCycles();
+    // TODO : other peripheral card interrupt handling
+}
+
 // ----------------------------------------------------------------------------
 
 static void _initialize_iie_switches(void) {

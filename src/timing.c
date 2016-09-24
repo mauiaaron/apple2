@@ -54,6 +54,7 @@ unsigned long cycles_count_total = 0;           // Running at spec ~1MHz, this w
 int cycles_speaker_feedback = 0;
 int32_t cpu65_cycles_to_execute = 0;            // cycles-to-execute by cpu65_run()
 int32_t cpu65_cycle_count = 0;                  // cycles currently excuted by cpu65_run()
+int32_t irqCheckTimeout = IRQ_CHECK_CYCLES;
 static int32_t cycles_checkpoint_count = 0;
 static unsigned int g_dwCyclesThisFrame = 0;
 
@@ -147,6 +148,8 @@ void reinitialize(void) {
 #endif
 
     cycles_count_total = 0;
+    g_dwCyclesThisFrame = 0;
+    irqCheckTimeout = IRQ_CHECK_CYCLES;
 #if TESTING
     extern unsigned long (*testing_getCyclesCount)(void);
     if (testing_getCyclesCount) {
@@ -343,7 +346,7 @@ cpu_runloop:
 
             MB_StartOfCpuExecute();
             if (is_debugging) {
-                debugging_cycles  = cpu65_cycles_to_execute;
+                debugging_cycles = cpu65_cycles_to_execute;
             }
 
             do {
@@ -354,10 +357,15 @@ cpu_runloop:
                 cpu65_cycle_count = 0;
                 cycles_checkpoint_count = 0;
                 cpu65_run(); // run emulation for cpu65_cycles_to_execute cycles ...
+#if DEBUG_TIMING
+                dbg_cycles_executed += cpu65_cycle_count;
+#endif
+                g_dwCyclesThisFrame += cpu65_cycle_count;
 
                 if (is_debugging) {
                     debugging_cycles -= cpu65_cycle_count;
                     timing_checkpoint_cycles();
+
                     if (c_debugger_should_break() || (debugging_cycles <= 0)) {
                         int err = 0;
                         if ((err = pthread_cond_signal(&dbg_thread_cond))) {
@@ -370,18 +378,15 @@ cpu_runloop:
                             break;
                         }
                     }
+
                     if (emul_reinitialize) {
                         pthread_mutex_unlock(&interface_mutex);
                         goto cpu_runloop;
                     }
                 }
             } while (is_debugging);
-#if DEBUG_TIMING
-            dbg_cycles_executed += cpu65_cycle_count;
-#endif
-            g_dwCyclesThisFrame += cpu65_cycle_count;
 
-            MB_UpdateCycles(); // update 6522s (NOTE: do this before updating cycles_count_total)
+            MB_UpdateCycles();
 
             timing_checkpoint_cycles();
 
@@ -536,6 +541,8 @@ void timing_stopCPU(void) {
 }
 
 unsigned int CpuGetCyclesThisVideoFrame(void) {
+    assert(pthread_self() == cpu_thread_id);
+
     timing_checkpoint_cycles();
     return g_dwCyclesThisFrame + cycles_checkpoint_count;
 }
@@ -546,11 +553,11 @@ void timing_checkpoint_cycles(void) {
 
     const int32_t d = cpu65_cycle_count - cycles_checkpoint_count;
     assert(d >= 0);
-#if TESTING
-    unsigned long previous_cycles_count_total = cycles_count_total;
-#endif
+#if !TESTING
     cycles_count_total += d;
-#if TESTING
+#else
+    unsigned long previous_cycles_count_total = cycles_count_total;
+    cycles_count_total += d;
     if (UNLIKELY(cycles_count_total < previous_cycles_count_total)) {
         extern void (*testing_cyclesOverflow)(void);
         if (testing_cyclesOverflow) {

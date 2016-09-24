@@ -74,13 +74,12 @@
 
 
 #define CPUStatsReset \
-                SYM(r1, cpu65_opcode); \
-                strb    r0, [r1]; /* r0 should be next opcode */ \
                 eor     r9, r9, r9; \
                 SYM(r1, cpu65_opcycles); \
                 strb    r9, [r1]; \
                 SYM(r1, cpu65_rw); \
                 strb    r9, [r1];
+
 #define CPUStatsSetRead \
                 SYM(r1, cpu65_rw); \
                 ldrb    r9, [r1]; \
@@ -153,7 +152,8 @@
 #define JumpNextInstruction \
                 TRACE_PROLOGUE \
                 GetFromPC_B \
-                CPUStatsReset \
+                SYM(r1, cpu65_opcode); \
+                strb    r0, [r1]; /* r0 should be next opcode */ \
                 SYM(r1, cpu65__opcodes); \
                 ldr     r1, [r1, r0, LSL PTR_SHIFT]; \
                 bx      r1;
@@ -2431,18 +2431,32 @@ continue:
                 add     r9, r9, cycles_exe
                 str     r9, [r1]
 
-                SYM(r1, cpu65_cycles_to_execute)
+                SYM(r1, irqCheckTimeout) // AppleWin : CheckInterruptSources()
+                ldr     r9, [r1]
+                subs    r9, r9, cycles_exe
+                str     r9, [r1]
+                bmi     irq_checkpoint
+
+continue1:      SYM(r1, cpu65_cycles_to_execute)
                 ldr     r9, [r1]
                 subs    r9, r9, cycles_exe
                 str     r9, [r1]
                 bmi     exit_cpu65_run
                 beq     exit_cpu65_run
 
-continue1:      SYM(r1, cpu65__signal)
+continue2:      SYM(r1, cpu65__signal)
                 ldrb    r0, [r1]
                 orrs    r0, r0, r0
                 bne     exception
+                CPUStatsReset
                 JumpNextInstruction
+
+irq_checkpoint:
+                bl      CALL(cpu_irqCheck);
+                SYM(r1, irqCheckTimeout)
+                eor     r9, r9, r9
+                str     r9, [r1]
+                b       continue1
 
 /* -------------------------------------------------------------------------
         Exception handlers
@@ -2466,10 +2480,12 @@ ex_reset:       eor     r0, r0, r0
                 ldrh    EffectiveAddr, [EffectiveAddr]
                 GetFromEA_W
                 mov     PC_Reg, r0
+                CPUStatsReset
                 JumpNextInstruction
 
 ex_irq:         tst     F_Reg, #I_Flag                      // Already interrupted?
                 beq     1f
+                CPUStatsReset
                 JumpNextInstruction                         // Yes (ignored) ...
 1:              TRACE_IRQ                                   // No (handle IRQ) ...
                 mov     r0, PC_Reg
@@ -2486,6 +2502,11 @@ ex_irq:         tst     F_Reg, #I_Flag                      // Already interrupt
                 ldrh    EffectiveAddr, [EffectiveAddr]
                 GetFromEA_W
                 mov     PC_Reg, r0
+                CPUStatsReset
+                SYM(r1, cpu65_opcycles)
+                ldrb    r0, [r1]
+                add     r0, r0, #7                          // IRQ handling will take additional 7 cycles
+                strb    r0, [r1]
                 JumpNextInstruction
 
 /* -------------------------------------------------------------------------
@@ -2517,7 +2538,7 @@ ENTRY(cpu65_run)
                 eorne   r0, r0, r0
                 STRBNE  r0, [r1]
                 bne     ex_reset
-                b       continue1
+                b       continue2
 
 /* -------------------------------------------------------------------------
         65c02 CPU processing loop exit point
