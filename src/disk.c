@@ -488,12 +488,11 @@ static inline void animate_disk_track_sector(void) {
 // ----------------------------------------------------------------------------
 // Emulator hooks
 
-GLUE_C_READ(disk_read_write_byte)
-{
-    uint8_t value = 0xFF; // U5 needs this set to "Journey Onward"
+static void _disk_readWriteByte(void) {
     do {
         if (disk6.disk[disk6.drive].fd < 0) {
             ////ERRLOG_THROTTLE("OOPS, attempt to read byte from NULL image in drive (%d)", disk6.drive+1);
+            disk6.disk_byte = 0xFF;
             break;
         }
 
@@ -505,6 +504,7 @@ GLUE_C_READ(disk_read_write_byte)
             size_t track_width = load_track_data(disk6.drive);
             if (track_width != disk6.disk[disk6.drive].track_width) {
                 ////ERRLOG_THROTTLE("OOPS, problem loading track data");
+                disk6.disk_byte = 0xFF;
                 break;
             }
             disk6.disk[disk6.drive].track_valid = true;
@@ -515,13 +515,11 @@ GLUE_C_READ(disk_read_write_byte)
         track_idx += disk6.disk[disk6.drive].run_byte;
         if (disk6.ddrw) {
             if (disk6.disk[disk6.drive].is_protected) {
-                value = 0x00;
                 break; // Do not write if diskette is write protected
             }
 
             if (disk6.disk_byte < 0x96) {
                 ////ERRLOG_THROTTLE("OOPS, attempting to write a non-nibblized byte");
-                value = 0x00;
                 break;
             }
 
@@ -535,20 +533,20 @@ GLUE_C_READ(disk_read_write_byte)
             disk6.disk[disk6.drive].track_dirty = true;
         } else {
 
-            if (disk6.motor_off) { // ???
+            if (disk6.motor_off) { // !!! FIXME TODO ... introduce a proper spin-down, cribbing from AppleWin
                 if (disk6.motor_off > 99) {
                     ////ERRLOG_THROTTLE("OOPS, potential disk motor issue");
-                    value = 0x00;
+                    disk6.disk_byte = 0xFF;
                     break;
                 } else {
                     disk6.motor_off++;
                 }
             }
 
-            value = disk6.disk[disk6.drive].whole_image[track_idx];
+            disk6.disk_byte = disk6.disk[disk6.drive].whole_image[track_idx];
 #if DISK_TRACING
             if (test_read_fp) {
-                fprintf(test_read_fp, "%02X", value);
+                fprintf(test_read_fp, "%02X", disk6.disk_byte);
             }
 #endif
         }
@@ -574,12 +572,9 @@ GLUE_C_READ(disk_read_write_byte)
         }
     }
 #endif
-
-    return value;
 }
 
-GLUE_C_READ(disk_read_phase)
-{
+static void _disk6_phaseChange(uint16_t ea) {
     ea &= 0xFF;
     int phase = (ea>>1)&3;
     int phase_bit = (1 << phase);
@@ -643,57 +638,104 @@ GLUE_C_READ(disk_read_phase)
 
         animate_disk_track_sector();
     }
-
-    return ea == 0xE0 ? 0xFF : floating_bus_hibit(1);
 }
 
-GLUE_C_READ(disk_read_motor_off)
-{
+static void _disk6_motorControl(uint16_t ea) {
     clock_gettime(CLOCK_MONOTONIC, &disk6.motor_time);
-    disk6.motor_off = 1;
-    return floating_bus_hibit(1);
+    int turnOn = (ea & 0x1);
+    disk6.motor_off = turnOn ? 0 : 1;
 }
 
-GLUE_C_READ(disk_read_motor_on)
-{
-    clock_gettime(CLOCK_MONOTONIC, &disk6.motor_time);
-    disk6.motor_off = 0;
-    return floating_bus_hibit(1);
+static void _disk6_driveSelect(uint16_t ea) {
+    int driveB = (ea & 0x1);
+    disk6.drive = driveB ? 1 : 0;
 }
 
-GLUE_C_READ(disk_read_select_a)
-{
-    disk6.drive = 0;
-    return floating_bus();
+static void _disk_readLatch(void) {
+    if (!disk6.motor_off && !disk6.ddrw) {
+        // UNIMPLEMENTED : phase 1 on forces write protect in the Disk II drive (UTA2E page 9-7)
+        if (disk6.disk[disk6.drive].is_protected) {
+            disk6.disk_byte |= 0x80;
+        } else {
+            disk6.disk_byte &= 0x7F;
+        }
+    }
 }
 
-GLUE_C_READ(disk_read_select_b)
-{
-    disk6.drive = 1;
-    return floating_bus();
+static void _disk_modeSelect(uint16_t ea) {
+    disk6.ddrw = (ea & 0x1);
 }
 
-GLUE_C_READ(disk_read_latch)
+GLUE_C_READ(disk6_ioRead)
 {
-    return disk6.drive;
+    uint8_t sw = ea & 0xf;
+    if (sw <= 0x7) {  // C0E0 - C0E7
+        _disk6_phaseChange(ea);
+    } else {
+        switch (sw) {
+            case 0x8: // C0E8
+            case 0x9: // C0E9
+                _disk6_motorControl(ea);
+                break;
+            case 0xA: // C0EA
+            case 0xB: // C0EB
+                _disk6_driveSelect(ea);
+                break;
+            case 0xC: // C0EC
+                _disk_readWriteByte();
+                break;
+            case 0xD: // C0ED
+                _disk_readLatch();
+                break;
+            case 0xE: // C0EE
+            case 0xF: // C0EF
+                _disk_modeSelect(ea);
+                break;
+            default:
+                assert(false && "all cases should be handled");
+                break;
+        }
+    }
+
+    // Even addresses returns the latch (UTA2E Table 9.1)
+    return (ea & 1) ? floating_bus() : disk6.disk_byte;
 }
 
-GLUE_C_READ(disk_read_prepare_in)
+GLUE_C_WRITE(disk6_ioWrite)
 {
-    disk6.ddrw = 0;
-    return floating_bus_hibit(disk6.disk[disk6.drive].is_protected);
-}
+    uint8_t sw = ea & 0xf;
+    if (sw < 0x7) {   // C0E0 - C0E7
+        _disk6_phaseChange(ea);
+    } else {
+        switch (sw) {
+            case 0x8: // C0E8
+            case 0x9: // C0E9
+                _disk6_motorControl(ea);
+                break;
+            case 0xA: // C0EA
+            case 0xB: // C0EB
+                _disk6_driveSelect(ea);
+                break;
+            case 0xC: // C0EC
+                _disk_readWriteByte();
+                break;
+            case 0xD: // C0ED
+                // _disk_readLatch(); -- do not call on write
+                break;
+            case 0xE: // C0EE
+            case 0xF: // C0EF
+                _disk_modeSelect(ea);
+                break;
+            default:
+                assert(false && "all cases should be handled");
+                break;
+        }
+    }
 
-GLUE_C_READ(disk_read_prepare_out)
-{
-    disk6.ddrw = 1;
-    return floating_bus_hibit(1);
-}
-
-GLUE_C_WRITE(disk_write_latch)
-{
-    disk6.disk_byte = b;
-    //return b;
+    // NOTE : any address writes the latch via sequencer LD command (74LS323 datasheet)
+    if (disk6.ddrw) {
+        disk6.disk_byte = b;
+    }
 }
 
 // ----------------------------------------------------------------------------
@@ -708,23 +750,11 @@ void disk6_init(void) {
 
     // disk softswitches
     // 0xC0Xi : X = slot 0x6 + 0x8 == 0xE
-    cpu65_vmem_r[0xC0E0] = cpu65_vmem_r[0xC0E2] = cpu65_vmem_r[0xC0E4] = cpu65_vmem_r[0xC0E6] = disk_read_phase;
-    cpu65_vmem_r[0xC0E1] = cpu65_vmem_r[0xC0E3] = cpu65_vmem_r[0xC0E5] = cpu65_vmem_r[0xC0E7] = disk_read_phase;
-
-    cpu65_vmem_r[0xC0E8] = disk_read_motor_off;
-    cpu65_vmem_r[0xC0E9] = disk_read_motor_on;
-    cpu65_vmem_r[0xC0EA] = disk_read_select_a;
-    cpu65_vmem_r[0xC0EB] = disk_read_select_b;
-    cpu65_vmem_r[0xC0EC] = disk_read_write_byte;
-    cpu65_vmem_r[0xC0ED] = disk_read_latch;
-    cpu65_vmem_r[0xC0EE] = disk_read_prepare_in;
-    cpu65_vmem_r[0xC0EF] = disk_read_prepare_out;
 
     for (unsigned int i = 0xC0E0; i < 0xC0F0; i++) {
-        cpu65_vmem_w[i] = cpu65_vmem_r[i];
+        cpu65_vmem_r[i] = disk6_ioRead;
+        cpu65_vmem_w[i] = disk6_ioWrite;
     }
-
-    cpu65_vmem_w[0xC0ED] = disk_write_latch;
 
     stepper_phases = 0;
 

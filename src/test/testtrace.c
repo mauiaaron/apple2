@@ -124,8 +124,8 @@ TEST test_boot_sound() {
 // Mockingboard tracing
 
 #define NSCT_DSK "NSCT.dsk.gz"
-#define NSCT_TRACE_SHA "35C58FEEB70E76FC31CEB55DB4C830B471B48AE3" // WARNING unstable if tests changed before this ...
-#define NSCT_SAMPS_SHA "C48AFC2ABFECC98CECB8A5B63E2261181195E1B2"
+#define NSCT_TRACE_SHA "FA2FE78A273405E2B129E46FD13F1CB0C56F8D53"
+#define NSCT_SAMPS_SHA "DF9686D4835B0E55480BE25CB0A065C85A6963DE"
 #define NSCT_TRACE_TARGET_SIZ (512 * 65536)  // 2^25
 #define NSCT_SAMPS_TARGET_SIZ (2048 * 65536) // 2^27
 TEST test_mockingboard_1() {
@@ -169,6 +169,10 @@ TEST test_mockingboard_1() {
         uint8_t md[SHA_DIGEST_LENGTH];
         char mdstr0[(SHA_DIGEST_LENGTH*2)+1];
 
+        mb_traceEnd();
+        truncate(mbTraceFile, NSCT_TRACE_TARGET_SIZ);
+        truncate(mbSampsFile, NSCT_SAMPS_TARGET_SIZ);
+
         // verify trace file
         do {
             unsigned char *buf = MALLOC(NSCT_TRACE_TARGET_SIZ);
@@ -196,7 +200,6 @@ TEST test_mockingboard_1() {
         break;
     } while (1);
     c_debugger_set_timeout(0);
-    mb_traceEnd();
 
     unlink(mbTraceFile);
     FREE(mbTraceFile);
@@ -211,11 +214,11 @@ TEST test_mockingboard_1() {
 // ----------------------------------------------------------------------------
 // CPU tracing
 
-// This test is majorly abusive ... it creates an ~800MB file in $HOME
+// This test is majorly abusive ... it creates an ~900MB file in $HOME
 // ... but if it's correct, you're fairly assured the cpu/vm is working =)
 #if ABUSIVE_TESTS
-#define EXPECTED_CPU_TRACE_FILE_SIZE 889495849
-#define EXPECTED_CPU_TRACE_SHA "5D16B61156B82960E668A8FA2C5DB931471524FE"
+#define EXPECTED_CPU_TRACE_FILE_SIZE 889495699
+#define EXPECTED_CPU_TRACE_SHA "ADFF915FF3B8F15428DD89580DBE21CDF71B7E39"
 TEST test_boot_disk_cputrace() {
     const char *homedir = HOMEDIR;
     char *output = NULL;
@@ -259,8 +262,8 @@ TEST test_boot_disk_cputrace() {
 }
 #endif
 
-#define EXPECTED_CPUTRACE_HELLO_FILE_SIZE 118170553
-#define EXPECTED_CPUTRACE_HELLO_SHA "3BE4CFC3CFDBFED83FAF29EB0C8A004D20964461"
+#define EXPECTED_CPUTRACE_HELLO_FILE_SIZE 118170437
+#define EXPECTED_CPUTRACE_HELLO_SHA "D5BF7650E51404F3358C9C4CBBEBAA191E53AD72"
 TEST test_cputrace_hello_dsk() {
     test_setup_boot_disk(BLANK_DSK, 0);
 
@@ -310,7 +313,7 @@ TEST test_cputrace_hello_dsk() {
 }
 
 #define EXPECTED_CPUTRACE_HELLO_NIB_FILE_SIZE 14153921
-#define EXPECTED_CPUTRACE_HELLO_NIB_SHA "AC3787B7AE7422DD88AA414989B059F13BBF1674"
+#define EXPECTED_CPUTRACE_HELLO_NIB_SHA "B09F85206E964487378C5B62EA26626A6E8159F1"
 TEST test_cputrace_hello_nib() {
     test_setup_boot_disk(BLANK_NIB, 0);
 
@@ -412,8 +415,8 @@ TEST test_cputrace_hello_po() {
 // ----------------------------------------------------------------------------
 // VM tracing
 
-#define EXPECTED_VM_TRACE_FILE_SIZE 2832136
-#define EXPECTED_VM_TRACE_SHA "E39658183FF87974D8538B38B772A193C6C3276C"
+#define EXPECTED_VM_TRACE_FILE_SIZE 2383449
+#define EXPECTED_VM_TRACE_SHA "0B387CBF4342CC24E0B9D2DA37AF517FD75DF467"
 TEST test_boot_disk_vmtrace() {
     const char *homedir = HOMEDIR;
     char *disk = NULL;
@@ -458,8 +461,8 @@ TEST test_boot_disk_vmtrace() {
     PASS();
 }
 
-#define EXPECTED_VM_TRACE_NIB_FILE_SIZE 2931400
-#define EXPECTED_VM_TRACE_NIB_SHA "5ED6270A7A9CC523D9BAB07E08B74394C3386A32"
+#define EXPECTED_VM_TRACE_NIB_FILE_SIZE 2470474
+#define EXPECTED_VM_TRACE_NIB_SHA "0256D57E561FE301588B1FC081F04D20AA870789"
 TEST test_boot_disk_vmtrace_nib() {
     test_setup_boot_disk(BLANK_NIB, 0);
 
@@ -507,7 +510,7 @@ TEST test_boot_disk_vmtrace_nib() {
 }
 
 #define EXPECTED_VM_TRACE_PO_FILE_SIZE EXPECTED_VM_TRACE_FILE_SIZE
-#define EXPECTED_VM_TRACE_PO_SHA "EDBE060984FC1BAA30C2633B791AF49BA89112AE"
+#define EXPECTED_VM_TRACE_PO_SHA "3AE332028B37DE1DD0F967C095800E28D5DC6DB7"
 TEST test_boot_disk_vmtrace_po() {
     test_setup_boot_disk(BLANK_PO, 0);
 
