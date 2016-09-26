@@ -18,7 +18,8 @@
 #endif
 
 #define GLUE_BANK_READ(func,pointer) extern void func(void)
-#define GLUE_BANK_MAYBEREAD(func,pointer) extern void func(void)
+#define GLUE_BANK_MAYBE_READ_C3(func,pointer) extern void func(void)
+#define GLUE_BANK_MAYBE_READ_CX(func,pointer) extern void func(void)
 #define GLUE_BANK_WRITE(func,pointer) extern void func(void)
 #define GLUE_BANK_MAYBEWRITE(func,pointer) extern void func(void)
 

@@ -28,8 +28,20 @@
 
 #define GLUE_EXTERN_C_READ(func)
 
-#define GLUE_BANK_MAYBEREAD(func,pointer) \
+#define GLUE_BANK_MAYBE_READ_CX(func,pointer) \
 ENTRY(func)             REG2MEM(testLQ, $SS_CXROM, softswitches); \
+                        jnz     1f; \
+                        CALL_IND0(pointer); \
+                        ret; \
+1:                      MEM2REG(addLQ, pointer, EffectiveAddr_X); \
+                        movb    (EffectiveAddr_X),%al; \
+                        MEM2REG(subLQ, pointer, EffectiveAddr_X); \
+                        ret;
+
+#define GLUE_BANK_MAYBE_READ_C3(func,pointer) \
+ENTRY(func)             REG2MEM(testLQ, $SS_CXROM, softswitches); \
+                        jnz     1f; \
+                        REG2MEM(testLQ, $SS_C3ROM, softswitches); \
                         jnz     1f; \
                         CALL_IND0(pointer); \
                         ret; \

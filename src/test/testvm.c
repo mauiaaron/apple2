@@ -3005,6 +3005,8 @@ TEST test_c3rom_internal() {
     PASS();
 }
 
+extern uint8_t (*iie_read_peripheral_card)(uint16_t);
+
 #warning WARNING TODO FIXME ... these are poor tests ... really we should be testing small assembly programs that read/write/check banked memory
 TEST test_c3rom_peripheral(bool flag_cxrom) {
     BOOT_TO_DOS();
@@ -3047,7 +3049,7 @@ TEST test_c3rom_peripheral(bool flag_cxrom) {
         ASSERT((base_c3rom == save_base_c3rom));
     } else {
         ASSERT(!(softswitches & SS_CXROM));
-        ASSERT((base_c3rom == apple_ii_64k[0]));
+        ASSERT((base_c3rom == (void *)&iie_read_peripheral_card));
     }
 
     ASSERT((softswitches ^ switch_save) == 0);
@@ -3171,10 +3173,10 @@ TEST test_cxrom_peripheral(bool flag_c3rom) {
         ASSERT((base_c3rom == save_base_c3rom));
     } else {
         ASSERT(!(softswitches & SS_C3ROM));
-        ASSERT((base_c3rom == apple_ii_64k[0]));
+        ASSERT((base_c3rom == (void *)&iie_read_peripheral_card));
     }
 
-    ASSERT(base_cxrom == apple_ii_64k[0]);
+    ASSERT((base_cxrom == (void *)&iie_read_peripheral_card));
 
     // TODO FIXME ... test other peripherals base_xxx here ...
 

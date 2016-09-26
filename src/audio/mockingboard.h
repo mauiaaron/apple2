@@ -122,6 +122,7 @@ void    MB_SaveSnapshot(class YamlSaveHelper& yamlSaveHelper, const UINT uSlot);
 bool    MB_LoadSnapshot(class YamlLoadHelper& yamlLoadHelper, UINT slot, UINT version);
 #endif
 #ifdef APPLE2IX
+uint8_t mb_read(uint16_t ea);
 void mb_io_initialize(unsigned int slot4, unsigned int slot5);
 #   if MB_TRACING
 void mb_traceBegin(const char *trace_file);

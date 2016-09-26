@@ -1997,6 +1997,11 @@ void MB_Reset()
 #define MemReadFloatingBus floating_bus
 #define nAddr ea
 GLUE_C_READ(MB_Read)
+{
+    return mb_read(ea);
+}
+
+uint8_t mb_read(uint16_t ea)
 #else
 static BYTE __stdcall MB_Read(WORD PC, WORD nAddr, BYTE bWrite, BYTE nValue, ULONG nCyclesLeft)
 #endif

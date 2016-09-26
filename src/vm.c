@@ -71,10 +71,10 @@ GLUE_BANK_WRITE(iie_write_screen_hole_hires_page0,base_hgrwrt);
 GLUE_BANK_READ(iie_read_ram_zpage_and_stack,base_stackzp);
 GLUE_BANK_WRITE(iie_write_ram_zpage_and_stack,base_stackzp);
 
-GLUE_BANK_READ(iie_read_slot3,base_c3rom);
-GLUE_BANK_MAYBEREAD(iie_read_slot4,base_c4rom);
-GLUE_BANK_MAYBEREAD(iie_read_slot5,base_c5rom);
-GLUE_BANK_READ(iie_read_slotx,base_cxrom);
+GLUE_BANK_MAYBE_READ_C3(iie_read_slot3,base_c3rom);
+GLUE_BANK_MAYBE_READ_CX(iie_read_slot4,base_c4rom);
+GLUE_BANK_MAYBE_READ_CX(iie_read_slot5,base_c5rom);
+GLUE_BANK_MAYBE_READ_CX(iie_read_slotx,base_cxrom);
 
 GLUE_EXTERN_C_READ(speaker_toggle);
 
@@ -91,6 +91,37 @@ GLUE_C_READ(read_unmapped_softswitch)
 GLUE_C_WRITE(write_unmapped_softswitch)
 {
     // ...
+}
+
+GLUE_C_READ(iie_read_peripheral_card)
+{
+    assert(((ea >> 12) & 0xf) == 0xC && "should only be called for 0xC100-0xC7FF");
+    uint8_t slot = ((ea >> 8) & 0xf);
+
+    // TODO FIXME : route to correct peripheral card
+    switch (slot) {
+        case 0x1:
+        case 0x2:
+        case 0x3:
+        case 0x7:
+            break;
+
+        case 0x4:
+        case 0x5:
+            return mb_read(ea); // FIXME : hardcoded Mockingboards ...
+            break;
+
+        case 0x6:
+            return apple_ii_64k[0][ea];
+            break;
+
+        default:
+            assert(false && "internal configuration error!");
+            break;
+    }
+
+    // no card in slot
+    return floating_bus();
 }
 
 GLUE_C_READ(read_keyboard)
@@ -849,7 +880,7 @@ GLUE_C_READ(iie_c3rom_peripheral)
 {
     softswitches &= ~SS_C3ROM;
     if (!(softswitches & SS_CXROM)) {
-        base_c3rom = apple_ii_64k[0];
+        base_c3rom = (void *)iie_read_peripheral_card;
     }
     return 0x0;
 }
@@ -866,23 +897,14 @@ GLUE_C_READ(iie_check_c3rom)
     return (softswitches & SS_C3ROM) ? 0x00 : 0x80; // reversed pattern
 }
 
-typedef uint8_t *(VMFunc)(uint16_t);
-
 GLUE_C_READ(iie_cxrom_peripheral)
 {
     softswitches &= ~SS_CXROM;
-    base_cxrom = apple_ii_64k[0];
-// FIXME TODO : implement pluggable peripheral API
-//if (mockingboard_inserted) {
-    extern VMFunc MB_Read;
-    base_c4rom = (void*)MB_Read;
-    base_c5rom = (void*)MB_Read;
-//} else {
-//    base_c4rom = (void*)ram_nop;
-//    base_c5rom = (void*)ram_nop;
-//}
+    base_cxrom = (void *)iie_read_peripheral_card;
+    base_c4rom = (void *)iie_read_peripheral_card;
+    base_c5rom = (void *)iie_read_peripheral_card;
     if (!(softswitches & SS_C3ROM)) {
-        base_c3rom = apple_ii_64k[0];
+        base_c3rom = (void *)iie_read_peripheral_card;
     }
     return 0x0;
 }
@@ -944,7 +966,7 @@ static void _initialize_iie_switches(void) {
     base_c3rom = apple_ii_64k[1]; // c3rom internal
     base_c4rom = apple_ii_64k[1]; // c4rom internal
     base_c5rom = apple_ii_64k[1]; // c5rom internal
-    base_cxrom = apple_ii_64k[0]; // cxrom peripheral
+    base_cxrom = (void *)iie_read_peripheral_card; // cxrom peripheral
 }
 
 static void _initialize_font(void) {
@@ -1193,8 +1215,6 @@ static void _initialize_tables(void) {
         cpu65_vmem_r[i] = iie_read_slot_expansion;
     }
 
-    cpu65_vmem_w[0xCFFF] = iie_read_slot_expansion;
-
     video_reset();
 
     // Peripheral card slot initializations ...
@@ -1292,12 +1312,13 @@ bool vm_saveState(StateHelper_s *helper) {
         if (!helper->save(fd, (base_stackzp == apple_ii_64k[0]) ? &serialized[0] : &serialized[1], 1)) {
             break;
         }
-        LOG("SAVE base_c3rom = %d", (base_c3rom == apple_ii_64k[0]) ? serialized[0] : serialized[1]);
-        if (!helper->save(fd, (base_c3rom == apple_ii_64k[0]) ? &serialized[0] : &serialized[1], 1)) {
+        LOG("SAVE base_c3rom = %d", (base_c3rom == (void *)iie_read_peripheral_card) ? serialized[0] : serialized[1]);
+        if (!helper->save(fd, (base_c3rom == (void *)iie_read_peripheral_card) ? &serialized[0] : &serialized[1], 1)) {
             break;
         }
-        LOG("SAVE base_cxrom = %d", (base_cxrom == apple_ii_64k[0]) ? serialized[0] : serialized[1]);
-        if (!helper->save(fd, (base_cxrom == apple_ii_64k[0]) ? &serialized[0] : &serialized[1], 1)) {
+
+        LOG("SAVE base_cxrom = %d", (base_cxrom == (void *)iie_read_peripheral_card) ? serialized[0] : serialized[1]);
+        if (!helper->save(fd, (base_cxrom == (void *)iie_read_peripheral_card) ? &serialized[0] : &serialized[1], 1)) {
             break;
         }
 
@@ -1487,23 +1508,16 @@ bool vm_loadState(StateHelper_s *helper) {
             break;
         }
         LOG("LOAD base_c3rom = %d", state);
-        base_c3rom = state == 0x0 ? apple_ii_64k[0] : apple_ii_64k[1];
+        base_c3rom = state == 0x0 ? (void *)iie_read_peripheral_card : apple_ii_64k[1];
 
         if (!helper->load(fd, &state, 1)) {
             break;
         }
         LOG("LOAD base_cxrom = %d", state);
         if (state == 0) {
-            base_cxrom = apple_ii_64k[0];
-// FIXME TODO : implement pluggable peripheral API
-//if (mockingboard_inserted) {
-            extern VMFunc MB_Read;
-            base_c4rom = (void *)MB_Read;
-            base_c5rom = (void *)MB_Read;
-//} else {
-//            base_c4rom = (void *)ram_nop;
-//            base_c5rom = (void *)ram_nop;
-//}
+            base_cxrom = (void *)iie_read_peripheral_card;
+            base_c4rom = (void *)iie_read_peripheral_card;
+            base_c5rom = (void *)iie_read_peripheral_card;
         } else {
             base_cxrom = apple_ii_64k[1];
             base_c4rom = apple_ii_64k[1];

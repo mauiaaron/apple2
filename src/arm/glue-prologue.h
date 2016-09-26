@@ -14,11 +14,27 @@
 
 #define GLUE_EXTERN_C_READ(func)
 
-#define GLUE_BANK_MAYBEREAD(func,pointer) \
+#define GLUE_BANK_MAYBE_READ_CX(func,pointer) \
 ENTRY(func)             SYM(r1, softswitches); \
                         ldr     r0, [r1]; \
                         SYM(r1, pointer); \
                         tst     r0, $SS_CXROM; \
+                        bne     1f; \
+                        push    {EffectiveAddr, PC_Reg, /*SP_Reg, F_Reg, Y_Reg, X_Reg, A_Reg,*/ lr}; \
+                        ldr     r1, [r1]; \
+                        blx     r1; \
+                        pop     {EffectiveAddr, PC_Reg, /*SP_Reg, F_Reg, Y_Reg, X_Reg, A_Reg,*/ pc}; \
+1:                      ldr     r1, [r1]; \
+                        ldrb    r0, [r1, EffectiveAddr]; \
+                        mov     pc, lr;
+
+#define GLUE_BANK_MAYBE_READ_C3(func,pointer) \
+ENTRY(func)             SYM(r1, softswitches); \
+                        ldr     r0, [r1]; \
+                        SYM(r1, pointer); \
+                        tst     r0, $SS_CXROM; \
+                        bne     1f; \
+                        tst     r0, $SS_C3ROM; \
                         bne     1f; \
                         push    {EffectiveAddr, PC_Reg, /*SP_Reg, F_Reg, Y_Reg, X_Reg, A_Reg,*/ lr}; \
                         ldr     r1, [r1]; \
