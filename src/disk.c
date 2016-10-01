@@ -613,19 +613,24 @@ static void _disk6_phaseChange(uint16_t ea) {
     }
 
     if (direction) {
-        if (disk6.disk[disk6.drive].track_dirty) {
-            save_track_data(disk6.drive);
-        }
-        disk6.disk[disk6.drive].track_valid = false;
-        disk6.disk[disk6.drive].phase += direction;
+        int next_phase = cur_phase + direction;
 
-        if (disk6.disk[disk6.drive].phase<0) {
-            disk6.disk[disk6.drive].phase=0;
+        if (next_phase < 0) {
+            next_phase = 0;
         }
 
-        if (disk6.disk[disk6.drive].phase>69) { // AppleWin uses 79 (extra tracks/phases)?
-            disk6.disk[disk6.drive].phase=69;
+        if (next_phase > 69) { // AppleWin uses 79 (extra tracks/phases)?
+            next_phase = 69;
         }
+
+        if ((cur_phase >> 1) != (next_phase >> 1)) {
+            if (disk6.disk[disk6.drive].track_dirty) {
+                save_track_data(disk6.drive);
+            }
+            disk6.disk[disk6.drive].track_valid = false;
+        }
+
+        disk6.disk[disk6.drive].phase = next_phase;
 
 #if DISK_TRACING
         if (test_read_fp) {
