@@ -91,9 +91,9 @@ extern bool disk6_saveState(StateHelper_s *helper);
 extern bool disk6_loadState(StateHelper_s *helper);
 
 #if DISK_TRACING
-void c_toggle_disk_trace_6(const char *read_file, const char *write_file);
-void c_begin_disk_trace_6(const char *read_file, const char *write_file);
-void c_end_disk_trace_6(void);
+void disk6_traceToggle(const char *read_file, const char *write_file);
+void disk6_traceBegin(const char *read_file, const char *write_file);
+void disk6_traceEnd(void);
 #endif
 
 #endif

@@ -864,7 +864,7 @@ ADDRS	[0-9a-fA-F]+
 #if DISK_TRACING
     char *buf = NULL;
     asprintf(&buf, "%s/%s", HOMEDIR, "disktrace.txt");
-    c_toggle_disk_trace_6(buf, NULL);
+    disk6_traceToggle(buf, NULL);
     FREE(buf);
 #else
     LOG("Disk tracing not enabled...");

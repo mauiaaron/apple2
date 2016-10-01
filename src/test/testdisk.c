@@ -54,12 +54,12 @@ TEST test_boot_disk_bytes() {
     ASPRINTF(&disk, "%s/a2_read_disk_test.txt", homedir);
     if (disk) {
         unlink(disk);
-        c_begin_disk_trace_6(disk, NULL);
+        disk6_traceBegin(disk, NULL);
     }
 
     BOOT_TO_DOS();
 
-    c_end_disk_trace_6();
+    disk6_traceEnd();
     disk6_eject(0);
 
     do {
@@ -102,12 +102,12 @@ TEST test_boot_disk_bytes_nib() {
     ASPRINTF(&disk, "%s/a2_read_disk_test_nib.txt", homedir);
     if (disk) {
         unlink(disk);
-        c_begin_disk_trace_6(disk, NULL);
+        disk6_traceBegin(disk, NULL);
     }
 
     BOOT_TO_DOS();
 
-    c_end_disk_trace_6();
+    disk6_traceEnd();
     disk6_eject(0);
 
     do {
@@ -155,12 +155,12 @@ TEST test_boot_disk_bytes_po() {
     ASPRINTF(&disk, "%s/a2_read_disk_test_po.txt", homedir);
     if (disk) {
         unlink(disk);
-        c_begin_disk_trace_6(disk, NULL);
+        disk6_traceBegin(disk, NULL);
     }
 
     BOOT_TO_DOS();
 
-    c_end_disk_trace_6();
+    disk6_traceEnd();
     disk6_eject(0);
 
     do {
@@ -344,7 +344,7 @@ TEST test_disk_bytes_savehello_dsk() {
     ASPRINTF(&disk, "%s/a2_write_disk_test_dsk.txt", homedir);
     if (disk) {
         unlink(disk);
-        c_begin_disk_trace_6(NULL, disk);
+        disk6_traceBegin(NULL, disk);
     }
 
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x0;
@@ -356,7 +356,7 @@ TEST test_disk_bytes_savehello_dsk() {
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
     ASSERT_SHA(SAVE_SHA1);
 
-    c_end_disk_trace_6();
+    disk6_traceEnd();
 
     do {
         uint8_t md[SHA_DIGEST_LENGTH];
@@ -438,7 +438,7 @@ TEST test_disk_bytes_savehello_nib() {
     ASPRINTF(&disk, "%s/a2_write_disk_test_nib.txt", homedir);
     if (disk) {
         unlink(disk);
-        c_begin_disk_trace_6(NULL, disk);
+        disk6_traceBegin(NULL, disk);
     }
 
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x0;
@@ -450,7 +450,7 @@ TEST test_disk_bytes_savehello_nib() {
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
     ASSERT_SHA(SAVE_SHA1);
 
-    c_end_disk_trace_6();
+    disk6_traceEnd();
 
     do {
         uint8_t md[SHA_DIGEST_LENGTH];
@@ -532,7 +532,7 @@ TEST test_disk_bytes_savehello_po() {
     ASPRINTF(&disk, "%s/a2_write_disk_test_po.txt", homedir);
     if (disk) {
         unlink(disk);
-        c_begin_disk_trace_6(NULL, disk);
+        disk6_traceBegin(NULL, disk);
     }
 
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x0;
@@ -544,7 +544,7 @@ TEST test_disk_bytes_savehello_po() {
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
     ASSERT_SHA(SAVE_SHA1);
 
-    c_end_disk_trace_6();
+    disk6_traceEnd();
 
     do {
         uint8_t md[SHA_DIGEST_LENGTH];
@@ -645,7 +645,7 @@ TEST test_outofspace_dsk() {
     ASPRINTF(&disk, "%s/a2_oos_dsk_test.txt", homedir);
     if (disk) {
         unlink(disk);
-        c_begin_disk_trace_6(NULL, disk);
+        disk6_traceBegin(NULL, disk);
     }
 
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x0;
@@ -657,7 +657,7 @@ TEST test_outofspace_dsk() {
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
     ASSERT_SHA(NOSPACE_SHA1);
 
-    c_end_disk_trace_6();
+    disk6_traceEnd();
 
     do {
         uint8_t md[SHA_DIGEST_LENGTH];
@@ -856,7 +856,7 @@ TEST test_bload_trace_dsk() {
     ASPRINTF(&disk, "%s/a2_bload_trace_test_dsk.txt", homedir);
     if (disk) {
         unlink(disk);
-        c_begin_disk_trace_6(disk, NULL);
+        disk6_traceBegin(disk, NULL);
     }
 
     test_type_input("CALL-151\r");
@@ -925,7 +925,7 @@ TEST test_bload_trace_dsk() {
     ASSERT_SHA_MEM(JUNK_MEM_END_SHA1, 0x2000, 0x4000);
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
-    c_end_disk_trace_6();
+    disk6_traceEnd();
 
     do {
         uint8_t md[SHA_DIGEST_LENGTH];
@@ -974,7 +974,7 @@ TEST test_bload_trace_nib() {
     ASPRINTF(&disk, "%s/a2_bload_trace_test_nib.txt", homedir);
     if (disk) {
         unlink(disk);
-        c_begin_disk_trace_6(disk, NULL);
+        disk6_traceBegin(disk, NULL);
     }
 
     test_type_input("CALL-151\r");
@@ -1043,7 +1043,7 @@ TEST test_bload_trace_nib() {
     ASSERT_SHA_MEM(JUNK_MEM_END_SHA1, 0x2000, 0x4000);
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
-    c_end_disk_trace_6();
+    disk6_traceEnd();
 
     do {
         uint8_t md[SHA_DIGEST_LENGTH];
@@ -1092,7 +1092,7 @@ TEST test_bload_trace_po() {
     ASPRINTF(&disk, "%s/a2_bload_trace_test_po.txt", homedir);
     if (disk) {
         unlink(disk);
-        c_begin_disk_trace_6(disk, NULL);
+        disk6_traceBegin(disk, NULL);
     }
 
     test_type_input("CALL-151\r");
@@ -1161,7 +1161,7 @@ TEST test_bload_trace_po() {
     ASSERT_SHA_MEM(JUNK_MEM_END_SHA1, 0x2000, 0x4000);
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
-    c_end_disk_trace_6();
+    disk6_traceEnd();
 
     do {
         uint8_t md[SHA_DIGEST_LENGTH];
