@@ -542,7 +542,7 @@ uint8_t cpu65__opcycles[256] = {
     7, // op_STP_65c02
     7, // op_UNK_65c02
     4, // op_CMP_abs_x
-    6, // op_DEC_abs_x
+    7, // op_DEC_abs_x
     5, // op_BBS5_65c02
     2, // op_CPX_imm         E0
     6, // op_SBC_ind_x
@@ -574,7 +574,7 @@ uint8_t cpu65__opcycles[256] = {
     7, // op_UNK_65c02
     7, // op_UNK_65c02
     4, // op_SBC_abs_x
-    6, // op_INC_abs_x
+    7, // op_INC_abs_x
     5  // op_BBS7_65c02
 };
 

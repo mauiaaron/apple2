@@ -1125,7 +1125,7 @@ ENTRY(op_DEC_abs) // 0xce
                 Continue
 
 ENTRY(op_DEC_abs_x) // 0xde
-                GetAbs_X
+                GetAbs_X_STx
                 DoDEC
                 Continue
 
@@ -1230,7 +1230,7 @@ ENTRY(op_INC_abs) // 0xee
                 Continue
 
 ENTRY(op_INC_abs_x) // 0xfe
-                GetAbs_X
+                GetAbs_X_STx
                 DoINC
                 Continue
 
