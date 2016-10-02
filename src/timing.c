@@ -276,6 +276,7 @@ static void *cpu_thread(void *dummyptr) {
     speaker_init();
     MB_Initialize();
 
+cpu_runloop:
     do
     {
         LOG("CPUTHREAD %lu LOCKING FOR MAYBE INITIALIZING AUDIO ...", cpu_thread_id);
@@ -370,7 +371,8 @@ static void *cpu_thread(void *dummyptr) {
                         }
                     }
                     if (emul_reinitialize) {
-                        reinitialize();
+                        pthread_mutex_unlock(&interface_mutex);
+                        goto cpu_runloop;
                     }
                 }
             } while (is_debugging);
