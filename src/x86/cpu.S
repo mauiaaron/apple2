@@ -58,12 +58,15 @@
                 CommonSaveCPUState; \
                 popLQ _XAX; \
                 CALL_FN(callLQ, cpu65_trace_epilogue, 0x4);
+#   define TRACE_IRQ \
+                CALL_FN(callLQ, cpu65_trace_irq, 0x4);
 #else
 #   define TRACE_PROLOGUE
 #   define TRACE_ARG
 #   define TRACE_ARG1
 #   define TRACE_ARG2
 #   define TRACE_EPILOGUE
+#   define TRACE_IRQ
 #endif
 
 /* -------------------------------------------------------------------------
@@ -2186,7 +2189,8 @@ ex_reset:       REG2MEM(movb, $0, cpu65__signal)
 ex_irq:         testb   $I_Flag, F_Reg                      // Already interrupted?
                 jz      1f
                 JumpNextInstruction                         // Yes (ignored) ...
-1:              movw    PC_Reg, %ax                         // No (handle IRQ) ...
+1:              TRACE_IRQ                                   // No (handle IRQ) ...
+                movw    PC_Reg, %ax
 #if __PIC__
                 xchgb   %al, %ah
                 Push(%al)

@@ -916,7 +916,13 @@ GLUE_C_WRITE(cpu65_trace_epilogue)
     }
 
     fprintf(cpu_trace_fp, "%s", "\n");
-    fflush(cpu_trace_fp);
+}
+
+GLUE_C_WRITE(cpu65_trace_irq)
+{
+    if (cpu_trace_fp) {
+        fprintf(cpu_trace_fp, "IRQ:%02X\n", cpu65__signal);
+    }
 }
 
 void cpu65_trace_checkpoint(void) {

@@ -61,12 +61,15 @@
 #   define TRACE_EPILOGUE \
                 CommonSaveCPUState; \
                 bl      CALL(cpu65_trace_epilogue);
+#   define TRACE_IRQ \
+                bl      CALL(cpu65_trace_irq);
 #else
 #   define TRACE_PROLOGUE
 #   define TRACE_ARG
 #   define TRACE_ARG1
 #   define TRACE_ARG2
 #   define TRACE_EPILOGUE
+#   define TRACE_IRQ
 #endif
 
 
@@ -2467,8 +2470,9 @@ ex_reset:       eor     r0, r0, r0
 
 ex_irq:         tst     F_Reg, #I_Flag                      // Already interrupted?
                 beq     1f
-                JumpNextInstruction
-1:              mov     r0, PC_Reg
+                JumpNextInstruction                         // Yes (ignored) ...
+1:              TRACE_IRQ                                   // No (handle IRQ) ...
+                mov     r0, PC_Reg
                 mov     r0, r0, ROR #8
                 Push(r0)
                 mov     r0, r0, LSR #24
