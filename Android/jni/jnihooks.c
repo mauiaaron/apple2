@@ -56,12 +56,22 @@ static void _start_tests(void) {
     for (char **p = &local_argv[0]; *p != NULL; p++) {
         ++local_argc;
     }
+
 #if TEST_CPU
     // Currently this test is the only one that runs as a black screen
     extern int test_cpu(int, char *[]);
     test_cpu(local_argc, local_argv);
     kill(getpid(), SIGKILL); // and we're done ...
-#elif TEST_DISK
+#endif
+
+    cpu_pause();
+    emulator_start();
+    while (cpu_thread_id == 0) {
+        sleep(1);
+    }
+    cpu_resume();
+
+#if TEST_DISK
     extern void test_disk(int, char *[]);
     test_disk(local_argc, local_argv);
 #elif TEST_DISPLAY
@@ -76,6 +86,8 @@ static void _start_tests(void) {
 #elif TEST_VM
     extern void test_vm(int, char *[]);
     test_vm(local_argc, local_argv);
+#elif TEST_CPU
+    // handled above ...
 #else
 #   error "OOPS, no tests specified"
 #endif
@@ -193,11 +205,12 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeOnCreate(JNIEnv *env, jclas
     FREE(trfile);
 #endif
 
-    cpu_pause();
 #if TESTING
     _start_tests();
-#endif
+#else
+    cpu_pause();
     emulator_start();
+#endif
 }
 
 void Java_org_deadc0de_apple2ix_Apple2View_nativeGraphicsInitialized(JNIEnv *env, jclass cls) {
