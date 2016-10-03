@@ -51,8 +51,10 @@ static void testcpu_setup(void *arg) {
     cpu65_uninterrupt(0xff);
     extern int32_t cpu65_cycles_to_execute;
     extern int32_t cpu65_cycle_count;
+    extern int32_t irqCheckTimeout;
     cpu65_cycle_count = 0;
     cpu65_cycles_to_execute = 1;
+    irqCheckTimeout = 255;
 
     cpu65_pc = TEST_LOC;
     cpu65_a = 0x0;
@@ -1798,9 +1800,10 @@ TEST test_BRK(void) {
 
 // FIXME TODO : this tests the Apple //e vm, so it prolly should be moved  machine/memory tests ...
 TEST test_IRQ(void) {
-    testcpu_set_opcode1(0xea/*NOP*/); // Implementation NOTE: first an instruction, then reset is handled
+    testcpu_set_opcode1(0xea/*NOP*/); // Implementation NOTE: not executed. IRQ is handled and one BIT instruction at C3FA location is executed
 
     cpu65_interrupt(IRQGeneric);
+    softswitches |= SS_C3ROM;
 
     ASSERT(apple_ii_64k[0][0x1ff] != 0x1f);
     ASSERT(apple_ii_64k[0][0x1fe] != TEST_LOC_LO+1);
@@ -1827,7 +1830,11 @@ TEST test_IRQ(void) {
     ASSERT(cpu65_d        == 0xff);
     ASSERT(cpu65_rw       == RW_READ);
     ASSERT(cpu65_opcode   == 0x2c);
-    ASSERT(cpu65_opcycles == (4));
+    ASSERT(cpu65_opcycles == 11); // 4 cycles BIT instruction + 7 cycles for IRQ handling
+    ASSERT(cpu65_cycle_count == 11);
+
+    softswitches &= ~SS_C3ROM;
+    cpu65_uninterrupt(IRQGeneric);
 
     PASS();
 }
@@ -2783,12 +2790,9 @@ TEST test_DEC_abs_x(uint8_t regA, uint8_t val, uint8_t regX, uint8_t lobyte, uin
 
     testcpu_set_opcode3(0xde, lobyte, hibyte);
 
-    uint8_t cycle_count = 6;
+    uint8_t cycle_count = 7;
     uint16_t addrs = lobyte | (hibyte<<8);
     addrs = addrs + regX;
-    if ((uint8_t)((addrs>>8)&0xff) != (uint8_t)hibyte) {
-        ++cycle_count;
-    }
     apple_ii_64k[0][addrs] = val;
 
     cpu65_a  = regA;
@@ -3436,12 +3440,9 @@ TEST test_INC_abs_x(uint8_t regA, uint8_t val, uint8_t regX, uint8_t lobyte, uin
 
     testcpu_set_opcode3(0xfe, lobyte, hibyte);
 
-    uint8_t cycle_count = 6;
+    uint8_t cycle_count = 7;
     uint16_t addrs = lobyte | (hibyte<<8);
     addrs = addrs + regX;
-    if ((uint8_t)((addrs>>8)&0xff) != (uint8_t)hibyte) {
-        ++cycle_count;
-    }
     apple_ii_64k[0][addrs] = val;
 
     cpu65_a  = regA;
