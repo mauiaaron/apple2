@@ -15,7 +15,9 @@
 
 #include "common.h"
 
-#define SAVE_MAGICK "A2VM"
+#define SAVE_MAGICK  "A2VM"
+#define SAVE_MAGICK2 "A2V2"
+#define SAVE_VERSION 2
 #define SAVE_MAGICK_LEN sizeof(SAVE_MAGICK)
 
 typedef struct module_ctor_node_s {
@@ -97,12 +99,13 @@ bool emulator_saveState(const char * const path) {
         assert(fd != 0 && "crazy platform");
 
         // save header
-        if (!_save_state(fd, (const uint8_t *)SAVE_MAGICK, SAVE_MAGICK_LEN)) {
+        if (!_save_state(fd, (const uint8_t *)SAVE_MAGICK2, SAVE_MAGICK_LEN)) {
             break;
         }
 
         StateHelper_s helper = {
             .fd = fd,
+            .version = SAVE_VERSION,
             .save = &_save_state,
             .load = &_load_state,
         };
@@ -120,6 +123,10 @@ bool emulator_saveState(const char * const path) {
         }
 
         if (!video_saveState(&helper)) {
+            break;
+        }
+
+        if (!mb_saveState(&helper)) {
             break;
         }
 
@@ -149,6 +156,7 @@ bool emulator_loadState(const char * const path) {
 
     video_setDirty(A2_DIRTY_FLAG);
 
+    int version=-1;
     do {
         TEMP_FAILURE_RETRY(fd = open(path, O_RDONLY));
         if (fd < 0) {
@@ -163,13 +171,19 @@ bool emulator_loadState(const char * const path) {
         }
 
         // check header
-        if (memcmp(magick, SAVE_MAGICK, SAVE_MAGICK_LEN) != 0) {
+
+        if (memcmp(magick, SAVE_MAGICK, SAVE_MAGICK_LEN) == 0) {
+            version = 1;
+        } else if (memcmp(magick, SAVE_MAGICK2, SAVE_MAGICK_LEN) == 0) {
+            version = 2;
+        } else {
             ERRLOG("bad header magick in emulator save state file");
             break;
         }
 
         StateHelper_s helper = {
             .fd = fd,
+            .version = version,
             .save = &_save_state,
             .load = &_load_state,
         };
@@ -188,6 +202,12 @@ bool emulator_loadState(const char * const path) {
 
         if (!video_loadState(&helper)) {
             break;
+        }
+
+        if (version >= 2) {
+            if (!mb_loadState(&helper)) {
+                break;
+            }
         }
 
         loaded = true;

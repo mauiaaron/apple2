@@ -59,6 +59,7 @@ bool emulator_isShuttingDown(void);
 
 typedef struct StateHelper_s {
     int fd;
+    int version;
     bool (*save)(int fd, const uint8_t * outbuf, ssize_t outmax);
     bool (*load)(int fd, uint8_t * inbuf, ssize_t inmax);
 } StateHelper_s;

@@ -32,7 +32,10 @@ uint8_t* AY8910_GetRegsPtr(unsigned int uChip);
 
 void AY8910UpdateSetCycles();
 
-#if UNBREAK_SOON
+#if 1 // APPLE2IX
+bool _ay8910_saveState(StateHelper_s *helper, unsigned int chip);
+bool _ay8910_loadState(StateHelper_s *helper, unsigned int chip);
+#else
 UINT AY8910_SaveSnapshot(class YamlSaveHelper& yamlSaveHelper, UINT uChip, std::string& suffix);
 UINT AY8910_LoadSnapshot(class YamlLoadHelper& yamlLoadHelper, UINT uChip, std::string& suffix);
 #endif
@@ -69,7 +72,8 @@ public:
 	void sound_frame(struct CAY8910 *_this);
 	uint8_t* GetAYRegsPtr(struct CAY8910 *_this);
 	void SetCLK(double CLK);
-#if UNBREAK_SOON
+#if 1 // APPLE2IX
+#else
 	void SaveSnapshot(class YamlSaveHelper& yamlSaveHelper, std::string& suffix);
 	bool LoadSnapshot(class YamlLoadHelper& yamlLoadHelper, std::string& suffix);
 #endif

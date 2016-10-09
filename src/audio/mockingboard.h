@@ -114,14 +114,17 @@ bool    MB_IsActive();
 unsigned long   MB_GetVolume();
 void    MB_SetVolumeZeroToTen(unsigned long goesToTen);
 void    MB_SetVolume(unsigned long dwVolume, unsigned long dwVolumeMax);
-#if UNBREAK_SOON
+#if 1 // APPLE2IX
+bool mb_saveState(StateHelper_s *helper);
+bool mb_loadState(StateHelper_s *helper);
+#else
 void    MB_GetSnapshot_v1(struct SS_CARD_MOCKINGBOARD_v1* const pSS, const DWORD dwSlot);	// For debugger
 int     MB_SetSnapshot_v1(const struct SS_CARD_MOCKINGBOARD_v1* const pSS, const DWORD dwSlot);
 std::string MB_GetSnapshotCardName(void);
 void    MB_SaveSnapshot(class YamlSaveHelper& yamlSaveHelper, const UINT uSlot);
 bool    MB_LoadSnapshot(class YamlLoadHelper& yamlLoadHelper, UINT slot, UINT version);
 #endif
-#ifdef APPLE2IX
+#if 1 // APPLE2IX
 uint8_t mb_read(uint16_t ea);
 void mb_io_initialize(unsigned int slot4, unsigned int slot5);
 #   if MB_TRACING

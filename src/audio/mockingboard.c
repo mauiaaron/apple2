@@ -2583,6 +2583,8 @@ int MB_SetSnapshot_v1(const SS_CARD_MOCKINGBOARD_v1* const pSS, const DWORD /*dw
 
 //===========================================================================
 
+#if 1 // APPLE2IX
+
 static void mb_prefsChanged(const char *domain) {
     long lVal = 0;
     long goesToTen = prefs_parseLongValue(domain, PREF_MOCKINGBOARD_VOLUME, &lVal, /*base:*/10) ? lVal : 5; // expected range 0-10
@@ -2599,7 +2601,292 @@ static __attribute__((constructor)) void _init_mockingboard(void) {
     prefs_registerListener(PREF_DOMAIN_AUDIO, &mb_prefsChanged);
 }
 
-#if 0 // !APPLE2IX
+static bool _sy6522_saveState(StateHelper_s *helper, SY6522 *sy6522) {
+    int fd = helper->fd;
+
+    bool saved = false;
+    do {
+        uint8_t state8 = 0x0;
+
+        state8 = sy6522->ORA;
+        if (!helper->save(fd, &state8, 1)) {
+            break;
+        }
+        state8 = sy6522->ORB;
+        if (!helper->save(fd, &state8, 1)) {
+            break;
+        }
+        state8 = sy6522->DDRA;
+        if (!helper->save(fd, &state8, 1)) {
+            break;
+        }
+        state8 = sy6522->DDRB;
+        if (!helper->save(fd, &state8, 1)) {
+            break;
+        }
+
+        uint16_t state16 = 0x0;
+        state16 = sy6522->TIMER1_COUNTER.w;
+        if (!helper->save(fd, (uint8_t *)&state16, 2)) {
+            break;
+        }
+        state16 = sy6522->TIMER1_LATCH.w;
+        if (!helper->save(fd, (uint8_t *)&state16, 2)) {
+            break;
+        }
+        state16 = sy6522->TIMER2_COUNTER.w;
+        if (!helper->save(fd, (uint8_t *)&state16, 2)) {
+            break;
+        }
+        state16 = sy6522->TIMER2_LATCH.w;
+        if (!helper->save(fd, (uint8_t *)&state16, 2)) {
+            break;
+        }
+
+        state8 = sy6522->SERIAL_SHIFT;
+        if (!helper->save(fd, &state8, 1)) {
+            break;
+        }
+        state8 = sy6522->ACR;
+        if (!helper->save(fd, &state8, 1)) {
+            break;
+        }
+        state8 = sy6522->PCR;
+        if (!helper->save(fd, &state8, 1)) {
+            break;
+        }
+        state8 = sy6522->IFR;
+        if (!helper->save(fd, &state8, 1)) {
+            break;
+        }
+        state8 = sy6522->IER;
+        if (!helper->save(fd, &state8, 1)) {
+            break;
+        }
+
+        // NB. No need to write ORA_NO_HS, since same data as ORA, just without handshake
+
+        saved = true;
+    } while (0);
+
+    return saved;
+}
+
+static bool _sy6522_loadState(StateHelper_s *helper, SY6522 *sy6522) {
+    int fd = helper->fd;
+
+    bool loaded = false;
+    do {
+        if (!helper->load(fd, &(sy6522->ORA), 1)) {
+            break;
+        }
+        if (!helper->load(fd, &(sy6522->ORB), 1)) {
+            break;
+        }
+        if (!helper->load(fd, &(sy6522->DDRA), 1)) {
+            break;
+        }
+        if (!helper->load(fd, &(sy6522->DDRB), 1)) {
+            break;
+        }
+
+        if (!helper->load(fd, (uint8_t *)&(sy6522->TIMER1_COUNTER.w), 2)) {
+            break;
+        }
+        if (!helper->load(fd, (uint8_t *)&(sy6522->TIMER1_LATCH.w), 2)) {
+            break;
+        }
+        if (!helper->load(fd, (uint8_t *)&(sy6522->TIMER2_COUNTER.w), 2)) {
+            break;
+        }
+        if (!helper->load(fd, (uint8_t *)&(sy6522->TIMER2_LATCH.w), 2)) {
+            break;
+        }
+
+        if (!helper->load(fd, &(sy6522->SERIAL_SHIFT), 1)) {
+            break;
+        }
+        if (!helper->load(fd, &(sy6522->ACR), 1)) {
+            break;
+        }
+        if (!helper->load(fd, &(sy6522->PCR), 1)) {
+            break;
+        }
+        if (!helper->load(fd, &(sy6522->IFR), 1)) {
+            break;
+        }
+        if (!helper->load(fd, &(sy6522->IER), 1)) {
+            break;
+        }
+
+        // NB. No need to write ORA_NO_HS, since same data as ORA, just without handshake
+
+        loaded = true;
+    } while (0);
+
+    return loaded;
+}
+
+static bool _ssi263_saveState(StateHelper_s *helper, SSI263A *ssi263) {
+    int fd = helper->fd;
+
+    bool saved = false;
+    do {
+        if (!helper->save(fd, &(ssi263->DurationPhoneme), 1)) {
+            break;
+        }
+        if (!helper->save(fd, &(ssi263->Inflection), 1)) {
+            break;
+        }
+        if (!helper->save(fd, &(ssi263->RateInflection), 1)) {
+            break;
+        }
+        if (!helper->save(fd, &(ssi263->CtrlArtAmp), 1)) {
+            break;
+        }
+        if (!helper->save(fd, &(ssi263->FilterFreq), 1)) {
+            break;
+        }
+        if (!helper->save(fd, &(ssi263->CurrentMode), 1)) {
+            break;
+        }
+
+        saved = true;
+    } while (0);
+
+    return saved;
+}
+
+static bool _ssi263_loadState(StateHelper_s *helper, SSI263A *ssi263) {
+    int fd = helper->fd;
+
+    bool loaded = false;
+    do {
+        if (!helper->load(fd, &(ssi263->DurationPhoneme), 1)) {
+            break;
+        }
+        if (!helper->load(fd, &(ssi263->Inflection), 1)) {
+            break;
+        }
+        if (!helper->load(fd, &(ssi263->RateInflection), 1)) {
+            break;
+        }
+        if (!helper->load(fd, &(ssi263->CtrlArtAmp), 1)) {
+            break;
+        }
+        if (!helper->load(fd, &(ssi263->FilterFreq), 1)) {
+            break;
+        }
+        if (!helper->load(fd, &(ssi263->CurrentMode), 1)) {
+            break;
+        }
+
+        loaded = true;
+    } while (0);
+
+    return loaded;
+}
+
+bool mb_saveState(StateHelper_s *helper) {
+    LOG("SAVE mockingboard state ...");
+    int fd = helper->fd;
+
+    bool saved = false;
+    for (unsigned int i=0; i<NUM_DEVS_PER_MB; i++) {
+
+        unsigned int deviceIdx = i<<1;
+        SY6522_AY8910 *mb = &g_MB[deviceIdx];
+
+        for (unsigned int j=0; j<NUM_MB; j++) {
+
+            if (!_sy6522_saveState(helper, &(mb->sy6522))) {
+                goto exit_save;
+            }
+            if (!_ay8910_saveState(helper, deviceIdx)) {
+                goto exit_save;
+            }
+            if (!_ssi263_saveState(helper, &(mb->SpeechChip))) {
+                goto exit_save;
+            }
+
+            if (!helper->save(fd, &(mb->nAYCurrentRegister), 1)) {
+                goto exit_save;
+            }
+
+            // TIMER1 IRQ
+            // TIMER2 IRQ
+            // SPEECH IRQ
+
+            deviceIdx++;
+            mb++;
+        }
+    }
+    saved = true;
+
+exit_save:
+    return saved;
+}
+
+bool mb_loadState(StateHelper_s *helper) {
+    LOG("LOAD mockingboard state ...");
+    int fd = helper->fd;
+
+    // NOTE : always load state and calculate based on CPU @1.0 scale
+    double cpuScaleFactor = cpu_scale_factor;
+    double cpuAltScaleFactor = cpu_altscale_factor;
+    cpu_scale_factor = 1.;
+    cpu_altscale_factor = 1.;
+    timing_initialize();
+
+    MB_Reset();
+    AY8910UpdateSetCycles();
+
+    bool loaded = false;
+    for (unsigned int i=0; i<NUM_DEVS_PER_MB; i++) {
+
+        for (unsigned int j=0; j<NUM_MB; j++) {
+
+            unsigned int idx = (i<<1) + j;
+            SY6522_AY8910 *mb = &g_MB[idx];
+
+            if (!_sy6522_loadState(helper, &(mb->sy6522))) {
+                goto exit_load;
+            }
+            if (!_ay8910_loadState(helper, idx)) {
+                goto exit_load;
+            }
+            if (!_ssi263_loadState(helper, &(mb->SpeechChip))) {
+                goto exit_load;
+            }
+
+            if (!helper->load(fd, &(mb->nAYCurrentRegister), 1)) {
+                goto exit_load;
+            }
+
+            // TIMER1 IRQ
+            // TIMER2 IRQ
+            // SPEECH IRQ
+
+            StartTimer(mb);
+
+            ++mb;
+        }
+    }
+    loaded = true;
+
+    MB_Reinitialize();
+
+exit_load:
+
+    cpu_scale_factor = cpuScaleFactor;
+    cpu_altscale_factor = cpuAltScaleFactor;
+    timing_initialize();
+
+    return loaded;
+}
+
+#else
+
 static UINT DoWriteFile(const HANDLE hFile, const void* const pData, const UINT Length)
 {
 	DWORD dwBytesWritten;
