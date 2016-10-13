@@ -122,6 +122,10 @@ bool emulator_saveState(const char * const path) {
             break;
         }
 
+        if (!timing_saveState(&helper)) {
+            break;
+        }
+
         if (!video_saveState(&helper)) {
             break;
         }
@@ -197,6 +201,10 @@ bool emulator_loadState(const char * const path) {
         }
 
         if (!cpu65_loadState(&helper)) {
+            break;
+        }
+
+        if (!timing_loadState(&helper)) {
             break;
         }
 

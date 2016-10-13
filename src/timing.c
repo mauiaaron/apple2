@@ -570,6 +570,67 @@ void timing_checkpoint_cycles(void) {
 
 // ----------------------------------------------------------------------------
 
+bool timing_saveState(StateHelper_s *helper) {
+    bool saved = false;
+    int fd = helper->fd;
+
+    do {
+        long lVal = 0;
+
+        lVal = (long)(cpu_scale_factor * 100.);
+        if (!helper->save(fd, (uint8_t *)&lVal, sizeof(lVal))) {
+            break;
+        }
+
+        lVal = (long)(cpu_altscale_factor * 100.);
+        if (!helper->save(fd, (uint8_t *)&lVal, sizeof(lVal))) {
+            break;
+        }
+
+        uint8_t bVal = alt_speed_enabled ? 1 : 0;
+        if (!helper->save(fd, &bVal, sizeof(bVal))) {
+            break;
+        }
+
+        saved = true;
+    } while (0);
+
+    return saved;
+}
+
+bool timing_loadState(StateHelper_s *helper) {
+    bool loaded = false;
+    int fd = helper->fd;
+
+    do {
+        long lVal = 0;
+
+        if (!helper->load(fd, (uint8_t *)&lVal, sizeof(lVal))) {
+            break;
+        }
+        cpu_scale_factor = lVal / 100.;
+
+        if (!helper->load(fd, (uint8_t *)&lVal, sizeof(lVal))) {
+            break;
+        }
+        cpu_altscale_factor = lVal / 100.;
+
+        uint8_t bVal = 0;
+        if (!helper->load(fd, &bVal, sizeof(bVal))) {
+            break;
+        }
+        alt_speed_enabled = !!bVal;
+
+        timing_initialize();
+
+        loaded = true;
+    } while (0);
+
+    return loaded;
+}
+
+// ----------------------------------------------------------------------------
+
 static void vm_prefsChanged(const char *domain) {
     (void)domain;
 

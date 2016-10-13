@@ -118,4 +118,11 @@ bool cpu_isPaused(void);
  */
 void timing_checkpoint_cycles(void);
 
+// ----------------------------------------------------------------------------
+
+bool timing_saveState(StateHelper_s *helper);
+
+bool timing_loadState(StateHelper_s *helper);
+
+
 #endif // whole file
