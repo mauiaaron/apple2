@@ -117,6 +117,9 @@ void    MB_SetVolume(unsigned long dwVolume, unsigned long dwVolumeMax);
 #if 1 // APPLE2IX
 bool mb_saveState(StateHelper_s *helper);
 bool mb_loadState(StateHelper_s *helper);
+#   if TESTING
+int mb_testAssertA2V2(uint8_t *exData, size_t dataSiz);
+#   endif
 #else
 void    MB_GetSnapshot_v1(struct SS_CARD_MOCKINGBOARD_v1* const pSS, const DWORD dwSlot);	// For debugger
 int     MB_SetSnapshot_v1(const struct SS_CARD_MOCKINGBOARD_v1* const pSS, const DWORD dwSlot);

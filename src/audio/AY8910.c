@@ -35,7 +35,7 @@
 
 // [AppleWin-TC] From FUSE's sound.c module
 
-#if !defined(APPLE2IX)
+#if 0 // !defined(APPLE2IX)
 #include "StdAfx.h"
 
 #include <windows.h>
@@ -50,6 +50,9 @@
 #   include "common.h"
 #   include "audio/AY8910.h"
 #   include "audio/mockingboard.h"	// For g_uTimer1IrqCount
+#   if TESTING
+#       include "greatest.h"
+#   endif
 #endif
 
 /* The AY white noise RNG algorithm is based on info from MAME's ay8910.c -
@@ -1302,6 +1305,74 @@ static bool _loadState(StateHelper_s *helper, struct CAY8910 *_this) {
 
     return loaded;
 }
+
+#   if TESTING
+int _testStateA2V2(struct CAY8910 *_this, uint8_t **exData) {
+
+    unsigned int *p32 = (unsigned int *)(*exData);
+
+    ASSERT(_this->ay_tone_tick[0] == *p32++);
+    ASSERT(_this->ay_tone_tick[1] == *p32++);
+    ASSERT(_this->ay_tone_tick[2] == *p32++);
+    ASSERT(_this->ay_tone_high[0] == *p32++);
+    ASSERT(_this->ay_tone_high[1] == *p32++);
+    ASSERT(_this->ay_tone_high[2] == *p32++);
+
+    ASSERT(_this->ay_noise_tick == *p32++);
+    ASSERT(_this->ay_tone_subcycles == *p32++);
+    ASSERT(_this->ay_env_subcycles == *p32++);
+    ASSERT(_this->ay_env_internal_tick == *p32++);
+    ASSERT(_this->ay_env_tick == *p32++);
+    ASSERT(_this->ay_tick_incr == *p32++);
+
+    ASSERT(_this->ay_tone_period[0] == *p32++);
+    ASSERT(_this->ay_tone_period[1] == *p32++);
+    ASSERT(_this->ay_tone_period[2] == *p32++);
+
+    ASSERT(_this->ay_noise_period == *p32++);
+    ASSERT(_this->ay_env_period == *p32++);
+    ASSERT(_this->rng == *p32++);
+    ASSERT(_this->noise_toggle == *p32++);
+    ASSERT(_this->env_first == *p32++);
+    ASSERT(_this->env_rev == *p32++);
+    ASSERT(_this->env_counter == *p32++);
+
+    // Registers
+    uint8_t *p8 = (uint8_t *)p32;
+    for (unsigned int i=0; i<16; i++) {
+        ASSERT(_this->sound_ay_registers[i] == *p8++);
+    }
+
+    p32 = (unsigned int *)p8;
+
+    int changeCount = _this->ay_change_count;
+    ASSERT(changeCount == *p32++);
+    ASSERT(changeCount >= 0);
+
+    p8 = (uint8_t *)p32;
+
+    if (changeCount) {
+        for (int i=0; i<changeCount; i++) {
+            unsigned long *pL = (unsigned long *)p8;
+            ASSERT(_this->ay_change[i].tstates == *pL++);
+            p8 = (uint8_t *)pL;
+
+            unsigned short *pS = (unsigned short *)p8;
+            ASSERT(_this->ay_change[i].ofs == *pS++);
+            p8 = (uint8_t *)pS;
+
+            ASSERT(_this->ay_change[i].reg == *p8++);
+            ASSERT(_this->ay_change[i].val == *p8++);
+        }
+    }
+
+    *exData = p8;
+
+    PASS();
+}
+#   endif
+
+
 #else
 void CAY8910::SaveSnapshot(YamlSaveHelper& yamlSaveHelper, std::string& suffix)
 {
@@ -1564,6 +1635,13 @@ bool _ay8910_loadState(StateHelper_s *helper, unsigned int chip) {
     assert(chip < MAX_8910);
     return _loadState(helper, &g_AY8910[chip]);
 }
+
+#   if TESTING
+int _ay8910_testAssertA2V2(unsigned int chip, uint8_t **exData) {
+    return _testStateA2V2(&g_AY8910[chip], exData);
+}
+#   endif
+
 #else
 UINT AY8910_SaveSnapshot(YamlSaveHelper& yamlSaveHelper, UINT uChip, std::string& suffix)
 {

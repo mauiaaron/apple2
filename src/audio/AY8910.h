@@ -35,6 +35,9 @@ void AY8910UpdateSetCycles();
 #if 1 // APPLE2IX
 bool _ay8910_saveState(StateHelper_s *helper, unsigned int chip);
 bool _ay8910_loadState(StateHelper_s *helper, unsigned int chip);
+#   if TESTING
+int _ay8910_testAssertA2V2(unsigned int chip, uint8_t **exData);
+#   endif
 #else
 UINT AY8910_SaveSnapshot(class YamlSaveHelper& yamlSaveHelper, UINT uChip, std::string& suffix);
 UINT AY8910_LoadSnapshot(class YamlLoadHelper& yamlLoadHelper, UINT uChip, std::string& suffix);

@@ -114,6 +114,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #       if defined(__linux) && !defined(ANDROID)
 #       include <sys/io.h>
 #       endif
+#       if TESTING
+#       include "greatest.h"
+#       endif
 
 #if defined(FAILED)
 #undef FAILED
@@ -2885,7 +2888,83 @@ exit_load:
     return loaded;
 }
 
-#else
+#   if TESTING
+static int _sy6522_testAssertA2V2(SY6522 *sy6522, uint8_t **exData) {
+
+    uint8_t *expected = *exData;
+
+    ASSERT(sy6522->ORA == *expected++);
+    ASSERT(sy6522->ORB == *expected++);
+    ASSERT(sy6522->DDRA == *expected++);
+    ASSERT(sy6522->DDRB == *expected++);
+
+    uint16_t *expected16 = (uint16_t *)expected;
+
+    ASSERT(sy6522->TIMER1_COUNTER.w == *expected16++);
+    ASSERT(sy6522->TIMER1_LATCH.w == *expected16++);
+    ASSERT(sy6522->TIMER2_COUNTER.w == *expected16++);
+    ASSERT(sy6522->TIMER2_LATCH.w == *expected16++);
+
+    expected = (uint8_t *)expected16;
+
+    ASSERT(sy6522->SERIAL_SHIFT == *expected++);
+    ASSERT(sy6522->ACR == *expected++);
+    ASSERT(sy6522->PCR == *expected++);
+    ASSERT(sy6522->IFR == *expected++);
+    ASSERT(sy6522->IER == *expected++);
+
+    *exData = expected;
+
+    PASS();
+}
+
+static int _ssi263_testAssertA2V2(SSI263A *ssi263, uint8_t **exData) {
+
+    uint8_t *expected = *exData;
+
+    ASSERT(ssi263->DurationPhoneme == *expected++);
+    ASSERT(ssi263->Inflection == *expected++);
+    ASSERT(ssi263->RateInflection == *expected++);
+    ASSERT(ssi263->CtrlArtAmp == *expected++);
+    ASSERT(ssi263->FilterFreq == *expected++);
+    ASSERT(ssi263->CurrentMode == *expected++);
+
+    *exData = expected;
+
+    PASS();
+}
+
+int mb_testAssertA2V2(uint8_t *exData, size_t dataSiz) {
+
+    uint8_t *exStart = exData;
+
+    for (unsigned int i=0; i<NUM_DEVS_PER_MB; i++) {
+        for (unsigned int j=0; j<NUM_MB; j++) {
+            unsigned int idx = (i<<1) + j;
+            SY6522_AY8910 *mb = &g_MB[idx];
+
+            _sy6522_testAssertA2V2(&(mb->sy6522), &exData);
+            _ay8910_testAssertA2V2(idx, &exData);
+            _ssi263_testAssertA2V2(&(mb->SpeechChip), &exData);
+
+            ASSERT(mb->nAYCurrentRegister == *exData);
+            ++exData;
+
+            // TIMER1 IRQ
+            // TIMER2 IRQ
+            // SPEECH IRQ
+
+            ++mb;
+        }
+    }
+
+    ASSERT(exData - exStart == dataSiz);
+
+    PASS();
+}
+#   endif // TESTING
+
+#else // !APPLE2IX
 
 static UINT DoWriteFile(const HANDLE hFile, const void* const pData, const UINT Length)
 {
