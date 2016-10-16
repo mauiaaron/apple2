@@ -1172,8 +1172,9 @@ bool disk6_loadState(StateHelper_s *helper) {
                     namebuf[namelen+gzlen] = '\0';
                     LOG("LOAD disk[%lu] : (%u) %s", i, namelen, namebuf);
                     if (disk6_insert(i, namebuf, is_protected)) {
-                        FREE(namebuf);
-                        break;
+                        LOG("OOPS loadState : proceeding despite cannot load disk : %s", namebuf);
+                        //FREE(namebuf);
+                        //break; -- ignore error with inserting disk and proceed
                     }
                 }
 

@@ -575,15 +575,27 @@ bool timing_saveState(StateHelper_s *helper) {
     int fd = helper->fd;
 
     do {
-        long lVal = 0;
+        uint32_t lVal = 0;
+        uint8_t serialized[4] = { 0 };
 
-        lVal = (long)(cpu_scale_factor * 100.);
-        if (!helper->save(fd, (uint8_t *)&lVal, sizeof(lVal))) {
+        assert(cpu_scale_factor >= 0);
+        assert(cpu_altscale_factor >= 0);
+
+        lVal = (uint32_t)(cpu_scale_factor * 100.);
+        serialized[0] = (uint8_t)((lVal & 0xFF000000) >> 24);
+        serialized[1] = (uint8_t)((lVal & 0xFF0000  ) >> 16);
+        serialized[2] = (uint8_t)((lVal & 0xFF00    ) >>  8);
+        serialized[3] = (uint8_t)((lVal & 0xFF      ) >>  0);
+        if (!helper->save(fd, serialized, sizeof(serialized))) {
             break;
         }
 
         lVal = (long)(cpu_altscale_factor * 100.);
-        if (!helper->save(fd, (uint8_t *)&lVal, sizeof(lVal))) {
+        serialized[0] = (uint8_t)((lVal & 0xFF000000) >> 24);
+        serialized[1] = (uint8_t)((lVal & 0xFF0000  ) >> 16);
+        serialized[2] = (uint8_t)((lVal & 0xFF00    ) >>  8);
+        serialized[3] = (uint8_t)((lVal & 0xFF      ) >>  0);
+        if (!helper->save(fd, serialized, sizeof(serialized))) {
             break;
         }
 
@@ -603,16 +615,25 @@ bool timing_loadState(StateHelper_s *helper) {
     int fd = helper->fd;
 
     do {
-        long lVal = 0;
+        uint32_t lVal = 0;
+        uint8_t serialized[4] = { 0 };
 
-        if (!helper->load(fd, (uint8_t *)&lVal, sizeof(lVal))) {
+        if (!helper->load(fd, serialized, sizeof(uint32_t))) {
             break;
         }
+        lVal  = (uint32_t)(serialized[0] << 24);
+        lVal |= (uint32_t)(serialized[1] << 16);
+        lVal |= (uint32_t)(serialized[2] <<  8);
+        lVal |= (uint32_t)(serialized[3] <<  0);
         cpu_scale_factor = lVal / 100.;
 
-        if (!helper->load(fd, (uint8_t *)&lVal, sizeof(lVal))) {
+        if (!helper->load(fd, serialized, sizeof(uint32_t))) {
             break;
         }
+        lVal  = (uint32_t)(serialized[0] << 24);
+        lVal |= (uint32_t)(serialized[1] << 16);
+        lVal |= (uint32_t)(serialized[2] <<  8);
+        lVal |= (uint32_t)(serialized[3] <<  0);
         cpu_altscale_factor = lVal / 100.;
 
         uint8_t bVal = 0;

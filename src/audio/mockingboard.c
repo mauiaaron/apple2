@@ -2628,21 +2628,25 @@ static bool _sy6522_saveState(StateHelper_s *helper, SY6522 *sy6522) {
             break;
         }
 
-        uint16_t state16 = 0x0;
-        state16 = sy6522->TIMER1_COUNTER.w;
-        if (!helper->save(fd, (uint8_t *)&state16, 2)) {
+        uint8_t serialized[2] = { 0 };
+        serialized[0] = (uint8_t)((sy6522->TIMER1_COUNTER.w & 0xFF00) >> 8);
+        serialized[1] = (uint8_t)((sy6522->TIMER1_COUNTER.w & 0xFF  ) >> 0);
+        if (!helper->save(fd, serialized, 2)) {
             break;
         }
-        state16 = sy6522->TIMER1_LATCH.w;
-        if (!helper->save(fd, (uint8_t *)&state16, 2)) {
+        serialized[0] = (uint8_t)((sy6522->TIMER1_LATCH.w & 0xFF00) >> 8);
+        serialized[1] = (uint8_t)((sy6522->TIMER1_LATCH.w & 0xFF  ) >> 0);
+        if (!helper->save(fd, serialized, 2)) {
             break;
         }
-        state16 = sy6522->TIMER2_COUNTER.w;
-        if (!helper->save(fd, (uint8_t *)&state16, 2)) {
+        serialized[0] = (uint8_t)((sy6522->TIMER2_COUNTER.w & 0xFF00) >> 8);
+        serialized[1] = (uint8_t)((sy6522->TIMER2_COUNTER.w & 0xFF  ) >> 0);
+        if (!helper->save(fd, serialized, 2)) {
             break;
         }
-        state16 = sy6522->TIMER2_LATCH.w;
-        if (!helper->save(fd, (uint8_t *)&state16, 2)) {
+        serialized[0] = (uint8_t)((sy6522->TIMER2_LATCH.w & 0xFF00) >> 8);
+        serialized[1] = (uint8_t)((sy6522->TIMER2_LATCH.w & 0xFF  ) >> 0);
+        if (!helper->save(fd, serialized, 2)) {
             break;
         }
 
@@ -2693,18 +2697,31 @@ static bool _sy6522_loadState(StateHelper_s *helper, SY6522 *sy6522) {
             break;
         }
 
-        if (!helper->load(fd, (uint8_t *)&(sy6522->TIMER1_COUNTER.w), 2)) {
+        uint8_t serialized[2] = { 0 };
+
+        if (!helper->load(fd, serialized, 2)) {
             break;
         }
-        if (!helper->load(fd, (uint8_t *)&(sy6522->TIMER1_LATCH.w), 2)) {
+        sy6522->TIMER1_COUNTER.h = serialized[0];
+        sy6522->TIMER1_COUNTER.l = serialized[1];
+
+        if (!helper->load(fd, serialized, 2)) {
             break;
         }
-        if (!helper->load(fd, (uint8_t *)&(sy6522->TIMER2_COUNTER.w), 2)) {
+        sy6522->TIMER1_LATCH.h = serialized[0];
+        sy6522->TIMER1_LATCH.l = serialized[1];
+
+        if (!helper->load(fd, serialized, 2)) {
             break;
         }
-        if (!helper->load(fd, (uint8_t *)&(sy6522->TIMER2_LATCH.w), 2)) {
+        sy6522->TIMER2_COUNTER.h = serialized[0];
+        sy6522->TIMER2_COUNTER.l = serialized[1];
+
+        if (!helper->load(fd, serialized, 2)) {
             break;
         }
+        sy6522->TIMER2_LATCH.h = serialized[0];
+        sy6522->TIMER2_LATCH.l = serialized[1];
 
         if (!helper->load(fd, &(sy6522->SERIAL_SHIFT), 1)) {
             break;
@@ -2853,16 +2870,20 @@ bool mb_loadState(StateHelper_s *helper) {
             SY6522_AY8910 *mb = &g_MB[idx];
 
             if (!_sy6522_loadState(helper, &(mb->sy6522))) {
+                LOG("could not load SY6522 %u %u", i, j);
                 goto exit_load;
             }
             if (!_ay8910_loadState(helper, idx)) {
+                LOG("could not load AY8910 %u %u", i, j);
                 goto exit_load;
             }
             if (!_ssi263_loadState(helper, &(mb->SpeechChip))) {
+                LOG("could not load SSI263 %u %u", i, j);
                 goto exit_load;
             }
 
             if (!helper->load(fd, &(mb->nAYCurrentRegister), 1)) {
+                LOG("could not load nAYCurrentRegister %u %u", i, j);
                 goto exit_load;
             }
 
@@ -2889,6 +2910,15 @@ exit_load:
 }
 
 #   if TESTING
+static int _assert_testData16(const uint16_t data16, uint8_t **exData) {
+    uint8_t *expected = *exData;
+    uint16_t d16 = (uint16_t)(expected[0] << 8) |
+                   (uint16_t)(expected[1] << 0);
+    ASSERT(d16 == data16);
+    *exData += 2;
+    PASS();
+}
+
 static int _sy6522_testAssertA2V2(SY6522 *sy6522, uint8_t **exData) {
 
     uint8_t *expected = *exData;
@@ -2898,14 +2928,10 @@ static int _sy6522_testAssertA2V2(SY6522 *sy6522, uint8_t **exData) {
     ASSERT(sy6522->DDRA == *expected++);
     ASSERT(sy6522->DDRB == *expected++);
 
-    uint16_t *expected16 = (uint16_t *)expected;
-
-    ASSERT(sy6522->TIMER1_COUNTER.w == *expected16++);
-    ASSERT(sy6522->TIMER1_LATCH.w == *expected16++);
-    ASSERT(sy6522->TIMER2_COUNTER.w == *expected16++);
-    ASSERT(sy6522->TIMER2_LATCH.w == *expected16++);
-
-    expected = (uint8_t *)expected16;
+    _assert_testData16(sy6522->TIMER1_COUNTER.w, &expected);
+    _assert_testData16(sy6522->TIMER1_LATCH.w, &expected);
+    _assert_testData16(sy6522->TIMER2_COUNTER.w, &expected);
+    _assert_testData16(sy6522->TIMER2_LATCH.w, &expected);
 
     ASSERT(sy6522->SERIAL_SHIFT == *expected++);
     ASSERT(sy6522->ACR == *expected++);

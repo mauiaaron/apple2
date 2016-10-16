@@ -55,7 +55,7 @@ static bool _save_state(int fd, const uint8_t * outbuf, ssize_t outmax) {
     ssize_t outlen = 0;
     do {
         if (TEMP_FAILURE_RETRY(outlen = write(fd, outbuf, outmax)) == -1) {
-            ERRLOG("error writing emulator save state file");
+            ERRLOG("OOPS, error writing emulator save-state file");
             break;
         }
         outbuf += outlen;
@@ -67,13 +67,33 @@ static bool _save_state(int fd, const uint8_t * outbuf, ssize_t outmax) {
 
 static bool _load_state(int fd, uint8_t * inbuf, ssize_t inmax) {
     ssize_t inlen = 0;
+
+    assert(inmax > 0);
+
+    struct stat stat_buf;
+    if (UNLIKELY(fstat(fd, &stat_buf) < 0)) {
+        ERRLOG("OOPS, could not stat FD");
+        return false;
+    }
+    off_t fileSiz = stat_buf.st_size;
+    off_t filePos = lseek(fd, 0, SEEK_CUR);
+    if (UNLIKELY(filePos < 0)) {
+        ERRLOG("OOPS, could not lseek FD");
+        return false;
+    }
+
+    if (UNLIKELY(filePos + inmax > fileSiz)) {
+        LOG("OOPS, encountered truncated save-state file");
+        return false;
+    }
+
     do {
         if (TEMP_FAILURE_RETRY(inlen = read(fd, inbuf, inmax)) == -1) {
-            ERRLOG("error reading emulator save state file");
+            ERRLOG("error reading emulator save-state file");
             break;
         }
         if (inlen == 0) {
-            ERRLOG("error reading emulator save state file (truncated)");
+            ERRLOG("error reading emulator save-state file (truncated)");
             break;
         }
         inbuf += inlen;
@@ -143,7 +163,7 @@ bool emulator_saveState(const char * const path) {
     }
 
     if (!saved) {
-        ERRLOG("could not write to the emulator save state file");
+        ERRLOG("OOPS, could not write to the emulator save-state file");
         unlink(path);
     }
 
@@ -204,8 +224,10 @@ bool emulator_loadState(const char * const path) {
             break;
         }
 
-        if (!timing_loadState(&helper)) {
-            break;
+        if (version >= 2) {
+            if (!timing_loadState(&helper)) {
+                break;
+            }
         }
 
         if (!video_loadState(&helper)) {
@@ -218,6 +240,22 @@ bool emulator_loadState(const char * const path) {
             }
         }
 
+        // sanity-check whole file was read
+
+        struct stat stat_buf;
+        if (fstat(fd, &stat_buf) < 0) {
+            ERRLOG("OOPS, could not stat FD");
+        }
+        off_t fileSiz = stat_buf.st_size;
+        off_t filePos = lseek(fd, 0, SEEK_CUR);
+        if (filePos < 0) {
+            ERRLOG("OOPS, could not lseek FD");
+        }
+
+        if (UNLIKELY(filePos != fileSiz)) {
+            LOG("OOPS, state file read: %lu total: %lu", filePos, fileSiz);
+        }
+
         loaded = true;
     } while (0);
 
@@ -226,7 +264,7 @@ bool emulator_loadState(const char * const path) {
     }
 
     if (!loaded) {
-        ERRLOG("could not load emulator save state file");
+        LOG("OOPS, problem(s) encountered loading emulator save-state file");
     }
 
     return loaded;

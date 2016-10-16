@@ -1029,99 +1029,98 @@ void SetCLK(double CLK)
 #define SS_YAML_VALUE_CHANGE_FORMAT "%d, %d, 0x%1X, 0x%02X"
 
 #if 1 // APPLE2IX
+static bool _saveStateData32(StateHelper_s *helper, uint32_t data) {
+    int fd = helper->fd;
+    uint8_t serialized[sizeof(uint32_t)] = { 0 };
+    serialized[0] = (uint8_t)((data & 0xFF000000) >> 24);
+    serialized[1] = (uint8_t)((data & 0xFF0000  ) >> 16);
+    serialized[2] = (uint8_t)((data & 0xFF00    ) >>  8);
+    serialized[3] = (uint8_t)((data & 0xFF      ) >>  0);
+    return helper->save(fd, serialized, sizeof(serialized));
+}
+
+static bool _loadStateData32(StateHelper_s *helper, uint32_t *data) {
+    int fd = helper->fd;
+    uint8_t serialized[sizeof(uint32_t)] = { 0 };
+    if (!helper->load(fd, serialized, sizeof(uint32_t))) {
+        return false;
+    }
+    *data  = (uint32_t)(serialized[0] << 24) |
+             (uint32_t)(serialized[1] << 16) |
+             (uint32_t)(serialized[2] <<  8) |
+             (uint32_t)(serialized[3] <<  0);
+    return true;
+}
+
 static bool _saveState(StateHelper_s *helper, struct CAY8910 *_this) {
     int fd = helper->fd;
 
     bool saved = false;
     do {
-        unsigned int data = 0;
-
-        data = _this->ay_tone_tick[0];
-        if (!helper->save(fd, (uint8_t *)&data, sizeof(data))) {
+        if (!_saveStateData32(helper, _this->ay_tone_tick[0])) {
             break;
         }
-        data = _this->ay_tone_tick[1];
-        if (!helper->save(fd, (uint8_t *)&data, sizeof(data))) {
+        if (!_saveStateData32(helper, _this->ay_tone_tick[1])) {
             break;
         }
-        data = _this->ay_tone_tick[2];
-        if (!helper->save(fd, (uint8_t *)&data, sizeof(data))) {
+        if (!_saveStateData32(helper, _this->ay_tone_tick[2])) {
             break;
         }
-        data = _this->ay_tone_high[0];
-        if (!helper->save(fd, (uint8_t *)&data, sizeof(data))) {
+        if (!_saveStateData32(helper, _this->ay_tone_high[0])) {
             break;
         }
-        data = _this->ay_tone_high[1];
-        if (!helper->save(fd, (uint8_t *)&data, sizeof(data))) {
+        if (!_saveStateData32(helper, _this->ay_tone_high[1])) {
             break;
         }
-        data = _this->ay_tone_high[2];
-        if (!helper->save(fd, (uint8_t *)&data, sizeof(data))) {
+        if (!_saveStateData32(helper, _this->ay_tone_high[2])) {
             break;
         }
-        data = _this->ay_noise_tick;
-        if (!helper->save(fd, (uint8_t *)&data, sizeof(data))) {
+        if (!_saveStateData32(helper, _this->ay_noise_tick)) {
             break;
         }
-        data = _this->ay_tone_subcycles;
-        if (!helper->save(fd, (uint8_t *)&data, sizeof(data))) {
+        if (!_saveStateData32(helper, _this->ay_tone_subcycles)) {
             break;
         }
-        data = _this->ay_env_subcycles;
-        if (!helper->save(fd, (uint8_t *)&data, sizeof(data))) {
+        if (!_saveStateData32(helper, _this->ay_env_subcycles)) {
             break;
         }
-        data = _this->ay_env_internal_tick;
-        if (!helper->save(fd, (uint8_t *)&data, sizeof(data))) {
+        if (!_saveStateData32(helper, _this->ay_env_internal_tick)) {
             break;
         }
-        data = _this->ay_env_tick;
-        if (!helper->save(fd, (uint8_t *)&data, sizeof(data))) {
+        if (!_saveStateData32(helper, _this->ay_env_tick)) {
             break;
         }
-        data = _this->ay_tick_incr;
-        if (!helper->save(fd, (uint8_t *)&data, sizeof(data))) {
+        if (!_saveStateData32(helper, _this->ay_tick_incr)) {
             break;
         }
-        data = _this->ay_tone_period[0];
-        if (!helper->save(fd, (uint8_t *)&data, sizeof(data))) {
+        if (!_saveStateData32(helper, _this->ay_tone_period[0])) {
             break;
         }
-        data = _this->ay_tone_period[1];
-        if (!helper->save(fd, (uint8_t *)&data, sizeof(data))) {
+        if (!_saveStateData32(helper, _this->ay_tone_period[1])) {
             break;
         }
-        data = _this->ay_tone_period[2];
-        if (!helper->save(fd, (uint8_t *)&data, sizeof(data))) {
+        if (!_saveStateData32(helper, _this->ay_tone_period[2])) {
             break;
         }
-        data = _this->ay_noise_period;
-        if (!helper->save(fd, (uint8_t *)&data, sizeof(data))) {
+        if (!_saveStateData32(helper, _this->ay_noise_period)) {
             break;
         }
-        data = _this->ay_env_period;
-        if (!helper->save(fd, (uint8_t *)&data, sizeof(data))) {
+        if (!_saveStateData32(helper, _this->ay_env_period)) {
             break;
         }
-        data = _this->rng;
-        if (!helper->save(fd, (uint8_t *)&data, sizeof(data))) {
+        if (!_saveStateData32(helper, _this->rng)) {
             break;
         }
-        data = _this->noise_toggle;
-        if (!helper->save(fd, (uint8_t *)&data, sizeof(data))) {
+        if (!_saveStateData32(helper, _this->noise_toggle)) {
             break;
         }
-        data = _this->env_first;
-        if (!helper->save(fd, (uint8_t *)&data, sizeof(data))) {
+        if (!_saveStateData32(helper, _this->env_first)) {
             break;
         }
-        data = _this->env_rev;
-        if (!helper->save(fd, (uint8_t *)&data, sizeof(data))) {
+        if (!_saveStateData32(helper, _this->env_rev)) {
             break;
         }
-        data = _this->env_counter;
-        if (!helper->save(fd, (uint8_t *)&data, sizeof(data))) {
+        if (!_saveStateData32(helper, _this->env_counter)) {
             break;
         }
 
@@ -1142,30 +1141,28 @@ static bool _saveState(StateHelper_s *helper, struct CAY8910 *_this) {
 
         // Queued changes
         assert(_this->ay_change_count >= 0);
-        if (!helper->save(fd, (uint8_t *)&(_this->ay_change_count), sizeof(_this->ay_change_count))) {
+        if (!_saveStateData32(helper, _this->ay_change_count)) {
             break;
         }
         if (_this->ay_change_count)
         {
             bool success = true;
             for (int i=0; i<_this->ay_change_count; i++) {
-                unsigned long tstates = (_this->ay_change[i]).tstates;
-                if (!helper->save(fd, (uint8_t *)&tstates, sizeof(tstates))) {
+                if (!_saveStateData32(helper, (uint32_t)_this->ay_change[i].tstates)) {
                     success = false;
                     break;
                 }
-                unsigned short ofs = (_this->ay_change[i]).ofs;
-                if (!helper->save(fd, (uint8_t *)&ofs, sizeof(ofs))) {
+                if (!_saveStateData32(helper, (uint32_t)(_this->ay_change[i].ofs))) {
                     success = false;
                     break;
                 }
-                unsigned char reg = (_this->ay_change[i]).reg;
-                if (!helper->save(fd, (uint8_t *)&reg, sizeof(reg))) {
+                uint8_t reg = _this->ay_change[i].reg;
+                if (!helper->save(fd, &reg, sizeof(reg))) {
                     success = false;
                     break;
                 }
-                unsigned char val = (_this->ay_change[i]).val;
-                if (!helper->save(fd, (uint8_t *)&val, sizeof(val))) {
+                uint8_t val = _this->ay_change[i].val;
+                if (!helper->save(fd, &val, sizeof(val))) {
                     success = false;
                     break;
                 }
@@ -1187,70 +1184,70 @@ static bool _loadState(StateHelper_s *helper, struct CAY8910 *_this) {
 
     bool loaded = false;
     do {
-        if (!helper->load(fd, (uint8_t *)&(_this->ay_tone_tick[0]), sizeof(unsigned int))) {
+        if (!_loadStateData32(helper, &(_this->ay_tone_tick[0]))) {
             break;
         }
-        if (!helper->load(fd, (uint8_t *)&(_this->ay_tone_tick[1]), sizeof(unsigned int))) {
+        if (!_loadStateData32(helper, &(_this->ay_tone_tick[1]))) {
             break;
         }
-        if (!helper->load(fd, (uint8_t *)&(_this->ay_tone_tick[2]), sizeof(unsigned int))) {
+        if (!_loadStateData32(helper, &(_this->ay_tone_tick[2]))) {
             break;
         }
-        if (!helper->load(fd, (uint8_t *)&(_this->ay_tone_high[0]), sizeof(unsigned int))) {
+        if (!_loadStateData32(helper, &(_this->ay_tone_high[0]))) {
             break;
         }
-        if (!helper->load(fd, (uint8_t *)&(_this->ay_tone_high[1]), sizeof(unsigned int))) {
+        if (!_loadStateData32(helper, &(_this->ay_tone_high[1]))) {
             break;
         }
-        if (!helper->load(fd, (uint8_t *)&(_this->ay_tone_high[2]), sizeof(unsigned int))) {
+        if (!_loadStateData32(helper, &(_this->ay_tone_high[2]))) {
             break;
         }
-        if (!helper->load(fd, (uint8_t *)&(_this->ay_noise_tick), sizeof(unsigned int))) {
+        if (!_loadStateData32(helper, &(_this->ay_noise_tick))) {
             break;
         }
-        if (!helper->load(fd, (uint8_t *)&(_this->ay_tone_subcycles), sizeof(unsigned int))) {
+        if (!_loadStateData32(helper, &(_this->ay_tone_subcycles))) {
             break;
         }
-        if (!helper->load(fd, (uint8_t *)&(_this->ay_env_subcycles), sizeof(unsigned int))) {
+        if (!_loadStateData32(helper, &(_this->ay_env_subcycles))) {
             break;
         }
-        if (!helper->load(fd, (uint8_t *)&(_this->ay_env_internal_tick), sizeof(unsigned int))) {
+        if (!_loadStateData32(helper, &(_this->ay_env_internal_tick))) {
             break;
         }
-        if (!helper->load(fd, (uint8_t *)&(_this->ay_env_tick), sizeof(unsigned int))) {
+        if (!_loadStateData32(helper, &(_this->ay_env_tick))) {
             break;
         }
-        if (!helper->load(fd, (uint8_t *)&(_this->ay_tick_incr), sizeof(unsigned int))) {
+        if (!_loadStateData32(helper, &(_this->ay_tick_incr))) {
             break;
         }
-        if (!helper->load(fd, (uint8_t *)&(_this->ay_tone_period[0]), sizeof(unsigned int))) {
+        if (!_loadStateData32(helper, &(_this->ay_tone_period[0]))) {
             break;
         }
-        if (!helper->load(fd, (uint8_t *)&(_this->ay_tone_period[1]), sizeof(unsigned int))) {
+        if (!_loadStateData32(helper, &(_this->ay_tone_period[1]))) {
             break;
         }
-        if (!helper->load(fd, (uint8_t *)&(_this->ay_tone_period[2]), sizeof(unsigned int))) {
+        if (!_loadStateData32(helper, &(_this->ay_tone_period[2]))) {
             break;
         }
-        if (!helper->load(fd, (uint8_t *)&(_this->ay_noise_period), sizeof(unsigned int))) {
+        if (!_loadStateData32(helper, &(_this->ay_noise_period))) {
             break;
         }
-        if (!helper->load(fd, (uint8_t *)&(_this->ay_env_period), sizeof(unsigned int))) {
+        if (!_loadStateData32(helper, &(_this->ay_env_period))) {
             break;
         }
-        if (!helper->load(fd, (uint8_t *)&(_this->rng), sizeof(unsigned int))) {
+        if (!_loadStateData32(helper, (uint32_t *)&(_this->rng))) {
             break;
         }
-        if (!helper->load(fd, (uint8_t *)&(_this->noise_toggle), sizeof(unsigned int))) {
+        if (!_loadStateData32(helper, (uint32_t *)&(_this->noise_toggle))) {
             break;
         }
-        if (!helper->load(fd, (uint8_t *)&(_this->env_first), sizeof(unsigned int))) {
+        if (!_loadStateData32(helper, (uint32_t *)&(_this->env_first))) {
             break;
         }
-        if (!helper->load(fd, (uint8_t *)&(_this->env_rev), sizeof(unsigned int))) {
+        if (!_loadStateData32(helper, (uint32_t *)&(_this->env_rev))) {
             break;
         }
-        if (!helper->load(fd, (uint8_t *)&(_this->env_counter), sizeof(unsigned int))) {
+        if (!_loadStateData32(helper, (uint32_t *)&(_this->env_counter))) {
             break;
         }
 
@@ -1269,7 +1266,7 @@ static bool _loadState(StateHelper_s *helper, struct CAY8910 *_this) {
         }
 
         // Queued changes
-        if (!helper->load(fd, (uint8_t *)&(_this->ay_change_count), sizeof(_this->ay_change_count))) {
+        if (!_loadStateData32(helper, (uint32_t *)&(_this->ay_change_count))) {
             break;
         }
         assert(_this->ay_change_count >= 0);
@@ -1277,14 +1274,18 @@ static bool _loadState(StateHelper_s *helper, struct CAY8910 *_this) {
         {
             bool success = true;
             for (int i=0; i<_this->ay_change_count; i++) {
-                if (!helper->load(fd, (uint8_t *)&(_this->ay_change[i].tstates), sizeof(_this->ay_change[i].tstates))) {
+                if (!_loadStateData32(helper, (uint32_t *)&(_this->ay_change[i].tstates))) {
                     success = false;
                     break;
                 }
-                if (!helper->load(fd, (uint8_t *)&(_this->ay_change[i].ofs), sizeof(_this->ay_change[i].ofs))) {
+                uint32_t ofs = 0;
+                if (!_loadStateData32(helper, &ofs)) {
                     success = false;
                     break;
                 }
+                assert(ofs <= 65535);
+                _this->ay_change[i].ofs = (uint16_t)ofs;
+
                 if (!helper->load(fd, (uint8_t *)&(_this->ay_change[i].reg), sizeof(_this->ay_change[i].reg))) {
                     success = false;
                     break;
@@ -1307,60 +1308,62 @@ static bool _loadState(StateHelper_s *helper, struct CAY8910 *_this) {
 }
 
 #   if TESTING
+static int _assert_testData32(const uint32_t data32, uint8_t **exData) {
+    uint8_t *expected = *exData;
+    uint32_t d32 = (uint32_t)(expected[0] << 24) |
+                   (uint32_t)(expected[1] << 16) |
+                   (uint32_t)(expected[2] <<  8) |
+                   (uint32_t)(expected[3] <<  0);
+    ASSERT(d32 == data32);
+    *exData += 4;
+    PASS();
+}
+
 int _testStateA2V2(struct CAY8910 *_this, uint8_t **exData) {
 
-    unsigned int *p32 = (unsigned int *)(*exData);
+    uint8_t *p8 = *exData;
 
-    ASSERT(_this->ay_tone_tick[0] == *p32++);
-    ASSERT(_this->ay_tone_tick[1] == *p32++);
-    ASSERT(_this->ay_tone_tick[2] == *p32++);
-    ASSERT(_this->ay_tone_high[0] == *p32++);
-    ASSERT(_this->ay_tone_high[1] == *p32++);
-    ASSERT(_this->ay_tone_high[2] == *p32++);
+    _assert_testData32(_this->ay_tone_tick[0], &p8);
+    _assert_testData32(_this->ay_tone_tick[1], &p8);
+    _assert_testData32(_this->ay_tone_tick[2], &p8);
+    _assert_testData32(_this->ay_tone_high[0], &p8);
+    _assert_testData32(_this->ay_tone_high[1], &p8);
+    _assert_testData32(_this->ay_tone_high[2], &p8);
 
-    ASSERT(_this->ay_noise_tick == *p32++);
-    ASSERT(_this->ay_tone_subcycles == *p32++);
-    ASSERT(_this->ay_env_subcycles == *p32++);
-    ASSERT(_this->ay_env_internal_tick == *p32++);
-    ASSERT(_this->ay_env_tick == *p32++);
-    ASSERT(_this->ay_tick_incr == *p32++);
+    _assert_testData32(_this->ay_noise_tick, &p8);
+    _assert_testData32(_this->ay_tone_subcycles, &p8);
+    _assert_testData32(_this->ay_env_subcycles, &p8);
+    _assert_testData32(_this->ay_env_internal_tick, &p8);
+    _assert_testData32(_this->ay_env_tick, &p8);
 
-    ASSERT(_this->ay_tone_period[0] == *p32++);
-    ASSERT(_this->ay_tone_period[1] == *p32++);
-    ASSERT(_this->ay_tone_period[2] == *p32++);
+    //_assert_testData32(_this->ay_tick_incr, &p8); -- IGNORE... this will change depending on sample rate
+    p8 += 4;
 
-    ASSERT(_this->ay_noise_period == *p32++);
-    ASSERT(_this->ay_env_period == *p32++);
-    ASSERT(_this->rng == *p32++);
-    ASSERT(_this->noise_toggle == *p32++);
-    ASSERT(_this->env_first == *p32++);
-    ASSERT(_this->env_rev == *p32++);
-    ASSERT(_this->env_counter == *p32++);
+    _assert_testData32(_this->ay_tone_period[0], &p8);
+    _assert_testData32(_this->ay_tone_period[1], &p8);
+    _assert_testData32(_this->ay_tone_period[2], &p8);
+
+    _assert_testData32(_this->ay_noise_period, &p8);
+    _assert_testData32(_this->ay_env_period, &p8);
+    _assert_testData32(_this->rng, &p8);
+    _assert_testData32(_this->noise_toggle, &p8);
+    _assert_testData32(_this->env_first, &p8);
+    _assert_testData32(_this->env_rev, &p8);
+    _assert_testData32(_this->env_counter, &p8);
 
     // Registers
-    uint8_t *p8 = (uint8_t *)p32;
     for (unsigned int i=0; i<16; i++) {
         ASSERT(_this->sound_ay_registers[i] == *p8++);
     }
 
-    p32 = (unsigned int *)p8;
-
     int changeCount = _this->ay_change_count;
-    ASSERT(changeCount == *p32++);
+    _assert_testData32(changeCount, &p8);
     ASSERT(changeCount >= 0);
-
-    p8 = (uint8_t *)p32;
 
     if (changeCount) {
         for (int i=0; i<changeCount; i++) {
-            unsigned long *pL = (unsigned long *)p8;
-            ASSERT(_this->ay_change[i].tstates == *pL++);
-            p8 = (uint8_t *)pL;
-
-            unsigned short *pS = (unsigned short *)p8;
-            ASSERT(_this->ay_change[i].ofs == *pS++);
-            p8 = (uint8_t *)pS;
-
+            _assert_testData32(_this->ay_change[i].tstates, &p8);
+            _assert_testData32(_this->ay_change[i].ofs, &p8);
             ASSERT(_this->ay_change[i].reg == *p8++);
             ASSERT(_this->ay_change[i].val == *p8++);
         }
