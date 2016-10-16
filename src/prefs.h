@@ -92,6 +92,10 @@ typedef void (*prefs_change_callback_f)(const char * _NONNULL domain);
 // load preferences from persistent store
 extern void prefs_load(void);
 
+#if TESTING
+extern void prefs_load_file(const char *filePath);
+#endif
+
 // load preferences from JSON string
 extern void prefs_loadString(const char * _NONNULL jsonString);
 

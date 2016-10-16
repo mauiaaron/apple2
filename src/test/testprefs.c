@@ -1900,13 +1900,7 @@ TEST test_prefs_load_and_save() {
     ASSERT(apple2JSON);
     unlink(apple2JSON);
 
-    char *apple2JSONEnv = NULL;
-    ASPRINTF(&apple2JSONEnv, "APPLE2IX_JSON=%s/%s", HOMEDIR, TEST_JSON);
-    ASSERT(apple2JSONEnv);
-    putenv(apple2JSONEnv);
-    LEAK(apple2JSONEnv);
-
-    prefs_load();
+    prefs_load_file(apple2JSON);
     prefs_sync(NULL);
     prefs_save();
 

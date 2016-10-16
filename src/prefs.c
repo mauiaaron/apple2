@@ -36,20 +36,12 @@ static pthread_mutex_t prefsLock = PTHREAD_MUTEX_INITIALIZER;
 
 // ----------------------------------------------------------------------------
 
-void prefs_load(void) {
+static void _prefs_load(const char *filePath) {
     pthread_mutex_lock(&prefsLock);
 
+    assert(filePath && "must specify a file path");
     FREE(prefsFile);
-
-    const char *apple2JSON = getenv("APPLE2IX_JSON");
-    if (apple2JSON) {
-        ASPRINTF(&prefsFile, "%s", apple2JSON);
-    }
-
-    if (!prefsFile) {
-        ASPRINTF(&prefsFile, "%s/.apple2.json", HOMEDIR);
-    }
-    assert(prefsFile);
+    prefsFile = STRDUP(filePath);
 
     json_destroy(&jsonPrefs);
     int tokCount = json_createFromFile(prefsFile, &jsonPrefs);
@@ -60,6 +52,27 @@ void prefs_load(void) {
 
     pthread_mutex_unlock(&prefsLock);
 }
+
+void prefs_load(void) {
+    char *filePath = NULL;
+    const char *apple2JSON = getenv("APPLE2IX_JSON");
+    if (apple2JSON) {
+        filePath = STRDUP(apple2JSON);
+    } else {
+        ASPRINTF(&filePath, "%s/.apple2.json", HOMEDIR);
+    }
+
+    assert(filePath);
+    _prefs_load(filePath);
+
+    FREE(filePath);
+}
+
+#if TESTING
+void prefs_load_file(const char *filePath) {
+    _prefs_load(filePath);
+}
+#endif
 
 void prefs_loadString(const char *jsonString) {
     pthread_mutex_lock(&prefsLock);
