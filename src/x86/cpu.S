@@ -2173,7 +2173,13 @@ continue2:      xorLQ   _XAX, _XAX
                 JumpNextInstruction
 
 irq_checkpoint:
-                CALL_FN(callLQ, cpu_irqCheck, 0x4)
+#if __PIC__ && __i386__
+                pushl   %ebx
+#endif
+                CALL_FN(callLQ, cpu_irqCheck, 0x8)
+#if __PIC__ && __i386__
+                popl    %ebx
+#endif
                 REG2MEM(movl, $IRQ_CHECK_CYCLES, irqCheckTimeout)
                 jmp     continue1
 
