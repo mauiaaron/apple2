@@ -95,10 +95,15 @@ elif test "$(basename $0)" = "testdisplay" ; then
     ln -s testdisplay.mk Android.mk
 elif test "$(basename $0)" = "testprefs" ; then
     ln -s testprefs.mk Android.mk
+elif test "$(basename $0)" = "testui" ; then
+    ln -s testui.mk Android.mk
 elif test "$(basename $0)" = "testvm" ; then
     ln -s testvm.mk Android.mk
-else
+elif test "$(basename $0)" = "apple2ix" ; then
     ln -s apple2ix.mk Android.mk
+else
+    echo "OOPS, unsure of what to build"
+    exit 1
 fi
 
 ###############################################################################
