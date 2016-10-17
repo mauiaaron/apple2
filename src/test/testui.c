@@ -178,32 +178,28 @@ TEST test_load_A2VM_good1() {
     // ASSERT framebuffer matches expected
     ASSERT_SHA("9C654FEF2A672E16D89ED2FB80C593CD2005A026");
 
-#if MOBILE_DEVICE
-    // TODO FIXME ... this is a fragile test due to the fact that the disk path [on Desktop] is hardcoded here
-#else
-    // Disk6 ...
+    // Disk6 ... AVOID ASSERT()ing for non-portable things
     ASSERT(disk6.motor_off == 1);
     ASSERT(disk6.drive == 0);
     ASSERT(disk6.ddrw == 0);
     ASSERT(disk6.disk_byte == 0xAA);
     extern int stepper_phases;
     ASSERT(stepper_phases == 0x0);
-    ASSERT(disk6.disk[0].is_protected);
-    const char *file_name = strrchr(disk6.disk[0].file_name, '/');
-    ASSERT(strcmp(file_name, "/testdisplay1.dsk") == 0);
+    //ASSERT(disk6.disk[0].is_protected);
+    //const char *file_name = strrchr(disk6.disk[0].file_name, '/');
+    //ASSERT(strcmp(file_name, "/testdisplay1.dsk") == 0);
     ASSERT(disk6.disk[0].phase == 34);
     ASSERT(disk6.disk[0].run_byte == 2000);
-    ASSERT(disk6.disk[0].fd > 0);
-    ASSERT(disk6.disk[0].mmap_image != 0);
-    ASSERT(disk6.disk[0].mmap_image != MAP_FAILED);
-    ASSERT(disk6.disk[0].whole_len == 143360);
-    ASSERT(disk6.disk[0].whole_image != NULL);
-    ASSERT(disk6.disk[0].track_width == BLANK_TRACK_WIDTH);
+    //ASSERT(disk6.disk[0].fd > 0);
+    //ASSERT(disk6.disk[0].mmap_image != 0);
+    //ASSERT(disk6.disk[0].mmap_image != MAP_FAILED);
+    //ASSERT(disk6.disk[0].whole_len == 143360);
+    //ASSERT(disk6.disk[0].whole_image != NULL);
+    //ASSERT(disk6.disk[0].track_width == BLANK_TRACK_WIDTH);
     ASSERT(!disk6.disk[0].nibblized);
     ASSERT(!disk6.disk[0].track_dirty);
-    extern int skew_table_6_do[16];
-    ASSERT(disk6.disk[0].skew_table == skew_table_6_do);
-#endif
+    //extern int skew_table_6_do[16];
+    //ASSERT(disk6.disk[0].skew_table == skew_table_6_do);
 
     // VM ...
     ASSERT(softswitches  == 0x000343d1);
@@ -275,32 +271,28 @@ TEST test_load_A2V2_good1() {
     // ASSERT framebuffer matches expected
     ASSERT_SHA("B1CB1C5811B9C629BB077F857CC41DFA8A283E96");
 
-#if MOBILE_DEVICE
-    // TODO FIXME ... this is a fragile test due to the fact that the disk path [on Desktop] is hardcoded here
-#else
-    // Disk6 ...
+    // Disk6 ... AVOID ASSERT()ing for non-portable things
     ASSERT(disk6.motor_off == 1);
     ASSERT(disk6.drive == 0);
     ASSERT(disk6.ddrw == 0);
     ASSERT(disk6.disk_byte == 0x96);
     extern int stepper_phases;
     ASSERT(stepper_phases == 0x0);
-    ASSERT(disk6.disk[0].is_protected);
-    const char *file_name = strrchr(disk6.disk[0].file_name, '/');
-    ASSERT(strcmp(file_name, "/NSCT.dsk") == 0);
+    //ASSERT(disk6.disk[0].is_protected);
+    //const char *file_name = strrchr(disk6.disk[0].file_name, '/');
+    //ASSERT(strcmp(file_name, "/NSCT.dsk") == 0);
     ASSERT(disk6.disk[0].phase == 26);
     ASSERT(disk6.disk[0].run_byte == 5562);
-    ASSERT(disk6.disk[0].fd > 0);
-    ASSERT(disk6.disk[0].mmap_image != 0);
-    ASSERT(disk6.disk[0].mmap_image != MAP_FAILED);
-    ASSERT(disk6.disk[0].whole_len == 143360);
-    ASSERT(disk6.disk[0].whole_image != NULL);
-    ASSERT(disk6.disk[0].track_width == BLANK_TRACK_WIDTH);
+    //ASSERT(disk6.disk[0].fd > 0);
+    //ASSERT(disk6.disk[0].mmap_image != 0);
+    //ASSERT(disk6.disk[0].mmap_image != MAP_FAILED);
+    //ASSERT(disk6.disk[0].whole_len == 143360);
+    //ASSERT(disk6.disk[0].whole_image != NULL);
+    //ASSERT(disk6.disk[0].track_width == BLANK_TRACK_WIDTH);
     ASSERT(!disk6.disk[0].nibblized);
     ASSERT(!disk6.disk[0].track_dirty);
-    extern int skew_table_6_do[16];
-    ASSERT(disk6.disk[0].skew_table == skew_table_6_do);
-#endif
+    //extern int skew_table_6_do[16];
+    //ASSERT(disk6.disk[0].skew_table == skew_table_6_do);
 
     // VM ...
     ASSERT(softswitches  == 0x000140f5);
@@ -384,32 +376,28 @@ TEST test_load_A2V2_good2() {
     // ASSERT framebuffer matches expected
     ASSERT_SHA("7A60972EF2E95956249454402A42C12E7C8FBF7A");
 
-#if MOBILE_DEVICE
-    // TODO FIXME ... this is a fragile test due to the fact that the disk path [on Desktop] is hardcoded here
-#else
-    // Disk6 ...
+    // Disk6 ... AVOID ASSERT()ing for non-portable things
     ASSERT(disk6.motor_off == 1);
     ASSERT(disk6.drive == 0);
     ASSERT(disk6.ddrw == 0);
     ASSERT(disk6.disk_byte == 0xAA);
     extern int stepper_phases;
     ASSERT(stepper_phases == 0x0);
-    ASSERT(disk6.disk[0].is_protected);
-    const char *file_name = strrchr(disk6.disk[0].file_name, '/');
-    ASSERT(strcmp(file_name, "/u5boot.do") == 0);
+    //ASSERT(disk6.disk[0].is_protected);
+    //const char *file_name = strrchr(disk6.disk[0].file_name, '/');
+    //ASSERT(strcmp(file_name, "/u5boot.do") == 0);
     ASSERT(disk6.disk[0].phase == 58);
     ASSERT(disk6.disk[0].run_byte == 1208);
-    ASSERT(disk6.disk[0].fd > 0);
-    ASSERT(disk6.disk[0].mmap_image != 0);
-    ASSERT(disk6.disk[0].mmap_image != MAP_FAILED);
-    ASSERT(disk6.disk[0].whole_len == 143360);
-    ASSERT(disk6.disk[0].whole_image != NULL);
-    ASSERT(disk6.disk[0].track_width == BLANK_TRACK_WIDTH);
+    //ASSERT(disk6.disk[0].fd > 0);
+    //ASSERT(disk6.disk[0].mmap_image != 0);
+    //ASSERT(disk6.disk[0].mmap_image != MAP_FAILED);
+    //ASSERT(disk6.disk[0].whole_len == 143360);
+    //ASSERT(disk6.disk[0].whole_image != NULL);
+    //ASSERT(disk6.disk[0].track_width == BLANK_TRACK_WIDTH);
     ASSERT(!disk6.disk[0].nibblized);
     ASSERT(!disk6.disk[0].track_dirty);
-    extern int skew_table_6_do[16];
-    ASSERT(disk6.disk[0].skew_table == skew_table_6_do);
-#endif
+    //extern int skew_table_6_do[16];
+    //ASSERT(disk6.disk[0].skew_table == skew_table_6_do);
 
     // VM ...
     ASSERT(softswitches  == 0x000140f4);
