@@ -16,10 +16,16 @@
 
 #ifdef __APPLE__
 
-#define CLOCK_MONOTONIC 1
-#define CLOCK_REALTIME 2
+#if !defined(CLOCK_MONOTONIC)
+#   define CLOCK_MONOTONIC 1
+#endif
+#if !defined(CLOCK_REALTIME)
+#   define CLOCK_REALTIME 2
+#endif
 
-int clock_gettime(int, struct timespec *);
+#define clock_gettime my_clock_gettime
+
+int my_clock_gettime(int, struct timespec *);
 
 #endif // __APPLE__
 

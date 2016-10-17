@@ -34,7 +34,7 @@ static __attribute__((constructor)) void __init_darwin_shim(void) {
     emulator_registerStartupCallback(CTOR_PRIORITY_LATE, &_init_darwin_shim);
 }
 
-int clock_gettime(int clk_id, struct timespec *tp) {
+int my_clock_gettime(int clk_id, struct timespec *tp) {
     double diff = (mach_absolute_time() - orwl_timestart) * orwl_timebase;
     tp->tv_sec = diff * ORWL_NANO;
     tp->tv_nsec = diff - (tp->tv_sec * ORWL_GIGA);
