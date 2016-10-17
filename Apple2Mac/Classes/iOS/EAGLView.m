@@ -107,6 +107,9 @@
 #   elif TEST_TRACE
         extern void test_trace(int, char *[]);
         test_trace(local_argc, local_argv);
+#   elif TEST_UI
+        extern int test_ui(int, char *[]);
+        test_ui(local_argc, local_argv);
 #   elif TEST_VM
         extern int test_vm(int, char *[]);
         test_vm(local_argc, local_argv);
