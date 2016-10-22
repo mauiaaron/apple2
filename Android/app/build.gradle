@@ -22,6 +22,9 @@ android {
             jniDebuggable true
         }
     }
+    lintOptions {
+        checkReleaseBuilds false
+    }
 
     defaultConfig {
         applicationId "org.deadc0de.apple2ix.basic"
