@@ -174,8 +174,10 @@ public class Apple2Preferences {
 
         Log.v(TAG, "Triggering migration to Apple2ix version : " + BuildConfig.VERSION_NAME);
         setJSONPref(PREF_DOMAIN_INTERFACE, PREF_EMULATOR_VERSION, BuildConfig.VERSION_CODE);
+
+        Apple2Utils.migrate(activity);
         if (BuildConfig.VERSION_CODE >= 17) {
-            // FIXME TODO : remove this after shipping 1.1.7+
+            // FIXME TODO : remove this after most/all app users are on 18+
 
             boolean keypadPreset = false;
             Apple2AbstractMenu.IMenuEnum menuEnum = null;

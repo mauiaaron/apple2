@@ -19,11 +19,13 @@ import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
 
+import org.deadc0de.apple2ix.basic.BuildConfig;
 import org.deadc0de.apple2ix.basic.R;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -100,6 +102,52 @@ public class Apple2Utils {
         return attempts < maxAttempts;
     }
 
+    public static void migrate(Apple2Activity activity) {
+        do {
+            if (BuildConfig.VERSION_CODE >= 18) {
+
+                // Migrate emulator.state file from internal path to external storage to allow user manipulation
+                // TODO FIXME : Remove this migration code when all/most users are on version >= 18
+
+                final File extStorage = Apple2Utils.getExternalStorageDirectory(activity);
+                if (extStorage == null) {
+                    break;
+                }
+
+                final String srcPath = getDataDir(activity) + File.separator + Apple2MainMenu.SAVE_FILE;
+                final File srcFile = new File(srcPath);
+                if (!srcFile.exists()) {
+                    break;
+                }
+
+                final String dstPath = extStorage + File.separator + Apple2MainMenu.SAVE_FILE;
+
+                final int maxAttempts = 5;
+                int attempts = 0;
+                do {
+                    try {
+                        FileInputStream is = new FileInputStream(srcFile);
+                        FileOutputStream os = new FileOutputStream(dstPath);
+                        copyFile(is, os);
+                        break;
+                    } catch (InterruptedIOException e) {
+                        // EINTR, EAGAIN ...
+                    } catch (IOException e) {
+                        Log.d(TAG, "OOPS exception attempting to copy emulator.state file : " + e);
+                    }
+
+                    try {
+                        Thread.sleep(100, 0);
+                    } catch (InterruptedException ie) {
+                        // ...
+                    }
+                    ++attempts;
+                } while (attempts < maxAttempts);
+
+                srcFile.delete();
+            }
+        } while (false);
+    }
 
     public static File getExternalStorageDirectory(Apple2Activity activity) {
 
@@ -140,7 +188,7 @@ public class Apple2Utils {
         return sRealExternalFilesDir;
     }
 
-        // HACK NOTE 2015/02/22 : Apparently native code cannot easily access stuff in the APK ... so copy various resources
+    // HACK NOTE 2015/02/22 : Apparently native code cannot easily access stuff in the APK ... so copy various resources
     // out of the APK and into the /data/data/... for ease of access.  Because this is FOSS software we don't care about
     // security or DRM for these assets =)
     public static String getDataDir(Apple2Activity activity) {

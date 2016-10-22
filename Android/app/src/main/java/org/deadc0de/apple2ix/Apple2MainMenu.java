@@ -39,7 +39,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Apple2MainMenu {
 
-    private final static String SAVE_FILE = "emulator.state";
+    public final static String SAVE_FILE = "emulator.state";
     private final static String TAG = "Apple2MainMenu";
 
     private Apple2Activity mActivity = null;
@@ -299,7 +299,14 @@ public class Apple2MainMenu {
     public void maybeSaveRestore() {
         mActivity.pauseEmulation();
 
-        final String quickSavePath = Apple2Utils.getDataDir(mActivity) + File.separator + SAVE_FILE;
+        final String quickSavePath;
+        final File extStorage = Apple2Utils.getExternalStorageDirectory(mActivity);
+
+        if (extStorage != null) {
+            quickSavePath = extStorage + File.separator + SAVE_FILE;
+        } else {
+            quickSavePath = Apple2Utils.getDataDir(mActivity) + File.separator + SAVE_FILE;
+        }
 
         final AtomicBoolean selectionAlreadyHandled = new AtomicBoolean(false);
 
