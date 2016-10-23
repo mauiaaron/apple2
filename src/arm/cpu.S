@@ -2431,11 +2431,13 @@ continue:
                 add     r9, r9, cycles_exe
                 str     r9, [r1]
 
+#if CONFORMANT_IRQ_CHECKPOINT
                 SYM(r1, irqCheckTimeout) // AppleWin : CheckInterruptSources()
                 ldr     r9, [r1]
                 subs    r9, r9, cycles_exe
                 str     r9, [r1]
                 bmi     irq_checkpoint
+#endif
 
 continue1:      SYM(r1, cpu65_cycles_to_execute)
                 ldr     r9, [r1]
@@ -2451,12 +2453,14 @@ continue2:      SYM(r1, cpu65__signal)
                 CPUStatsReset
                 JumpNextInstruction
 
+#if CONFORMANT_IRQ_CHECKPOINT
 irq_checkpoint:
                 bl      CALL(cpu_irqCheck);
                 SYM(r1, irqCheckTimeout)
                 eor     r9, r9, r9
                 str     r9, [r1]
                 b       continue1
+#endif
 
 /* -------------------------------------------------------------------------
         Exception handlers

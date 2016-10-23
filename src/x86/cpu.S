@@ -2162,8 +2162,10 @@ continue:
                 REG2MEM(addl, %eax, cpu65_cycle_count)
                 REG2MEM(subl, %eax, gc_cycles_timer_0)
                 REG2MEM(subl, %eax, gc_cycles_timer_1)
+#if CONFORMANT_IRQ_CHECKPOINT
                 REG2MEM(subl, %eax, irqCheckTimeout)
                 jl      irq_checkpoint // AppleWin : CheckInterruptSources()
+#endif
 continue1:      REG2MEM(subl, %eax, cpu65_cycles_to_execute)
                 jle     exit_cpu65_run
 continue2:      xorLQ   _XAX, _XAX
@@ -2172,6 +2174,7 @@ continue2:      xorLQ   _XAX, _XAX
                 CPUStatsReset
                 JumpNextInstruction
 
+#if CONFORMANT_IRQ_CHECKPOINT
 irq_checkpoint:
 #if __PIC__ && __i386__
                 pushl   %ebx
@@ -2182,6 +2185,7 @@ irq_checkpoint:
 #endif
                 REG2MEM(movl, $IRQ_CHECK_CYCLES, irqCheckTimeout)
                 jmp     continue1
+#endif
 
 /* -------------------------------------------------------------------------
         Exception handlers
