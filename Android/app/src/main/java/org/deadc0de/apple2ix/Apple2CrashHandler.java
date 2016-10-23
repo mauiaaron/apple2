@@ -209,6 +209,7 @@ public class Apple2CrashHandler {
             return;
         }
 
+        Apple2Preferences.load(activity);
         if (!(boolean) Apple2Preferences.getJSONPref(Apple2SettingsMenu.SETTINGS.CRASH)) {
             return;
         }
