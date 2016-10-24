@@ -949,7 +949,7 @@ static void MB_Update()
         return;
     }
 
-    if (!MockingboardVoice->bActive)
+    if (!MockingboardVoice->bActive || !g_bMB_Active)
     {
         return;
     }
