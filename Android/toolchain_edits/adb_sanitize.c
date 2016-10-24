@@ -73,12 +73,13 @@ static int _convert_crlf_to_lf(void) {
         }
 
         ssize_t outlen = 0;
+        char *outb = &outbuf[0];
         do {
-            if (TEMP_FAILURE_RETRY(outlen = write(STDOUT_FILENO, outbuf, outmax)) == -1) {
+            if (TEMP_FAILURE_RETRY(outlen = write(STDOUT_FILENO, outb, outmax)) == -1) {
                 errWrt = "error writing to stdout";
                 break;
             }
-            outbuf += outlen;
+            outb += outlen;
             outmax -= outlen;
         } while (outmax > 0);
     }
