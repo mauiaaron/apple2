@@ -776,7 +776,11 @@ void disk6_init(void) {
 const char *disk6_eject(int drive) {
 
 #if !TESTING
+#   if __APPLE__
+#       warning FIXME TODO ...
+#   else
     assert(cpu_isPaused() && "CPU must be paused for disk ejection");
+#   endif
 #endif
 
     const char *err = NULL;
@@ -839,7 +843,11 @@ const char *disk6_eject(int drive) {
 const char *disk6_insert(int drive, const char * const raw_file_name, int readonly) {
 
 #if !TESTING
+#   if __APPLE__
+#       warning FIXME TODO ...
+#   else
     assert(cpu_isPaused() && "CPU must be paused for disk insertion");
+#   endif
 #endif
 
     disk6_eject(drive);
