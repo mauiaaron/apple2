@@ -138,17 +138,17 @@ void video_clear(void);
 /*
  * True if dirty bit(s) are set for flag(s)
  */
-bool video_isDirty(int flags);
+bool video_isDirty(unsigned long flags);
 
 /*
  * Atomically set dirty bit(s), return previous bit(s) value
  */
-unsigned long video_setDirty(int flags);
+unsigned long video_setDirty(unsigned long flags);
 
 /*
  * Atomically clear dirty bit(s), return previous bit(s) value
  */
-unsigned long video_clearDirty(int flags);
+unsigned long video_clearDirty(unsigned long flags);
 
 extern bool video_saveState(StateHelper_s *helper);
 extern bool video_loadState(StateHelper_s *helper);

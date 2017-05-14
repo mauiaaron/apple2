@@ -1405,15 +1405,15 @@ void video_flashText(void) {
     }
 }
 
-bool video_isDirty(int flags) {
+bool video_isDirty(unsigned long flags) {
     return (_vid_dirty & flags);
 }
 
-unsigned long video_setDirty(flags) {
+unsigned long video_setDirty(unsigned long flags) {
     return __sync_fetch_and_or(&_vid_dirty, flags);
 }
 
-unsigned long video_clearDirty(flags) {
+unsigned long video_clearDirty(unsigned long flags) {
     return __sync_fetch_and_and(&_vid_dirty, ~flags);
 }
 
