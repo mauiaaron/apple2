@@ -196,7 +196,7 @@ public class Apple2Activity extends Activity {
             }
         }
         if (path != null && Apple2DisksMenu.hasDiskExtension(path)) {
-            handleInsertDiskIntent(path);
+            //sDiskPathChosen = path;
         }
     }
 
@@ -325,60 +325,6 @@ public class Apple2Activity extends Activity {
 
     public synchronized Apple2SettingsMenu getSettingsMenu() {
         return mSettingsMenu;
-    }
-
-    private void handleInsertDiskIntent(final String path) {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                synchronized (Apple2Activity.this) {
-                    if (mMainMenu == null) {
-                        return;
-                    }
-                    String diskPath = path;
-                    File diskFile = new File(diskPath);
-                    if (!diskFile.canRead()) {
-                        Toast.makeText(Apple2Activity.this, Apple2Activity.this.getString(R.string.disk_insert_could_not_read), Toast.LENGTH_SHORT).show();
-                        return;
-                    }
-
-                    Apple2Preferences.setJSONPref(Apple2DisksMenu.SETTINGS.CURRENT_DISK_PATH_A_RO, true);
-                    final int len = diskPath.length();
-                    final String suffix = diskPath.substring(len - 3, len);
-                    if (suffix.equalsIgnoreCase(".gz")) { // HACK FIXME TODO : small amount of code duplication of Apple2DisksMenu
-                        diskPath = diskPath.substring(0, len - 3);
-                    }
-
-                    Apple2DisksMenu.insertDisk(diskPath, /*driveA:*/true, /*readOnly:*/true);
-
-                    while (mDisksMenu.popPathStack() != null) {
-                        /* ... */
-                    }
-
-                    File storageDir = Apple2Utils.getExternalStorageDirectory(Apple2Activity.this);
-                    if (storageDir != null) {
-                        String storagePath = storageDir.getAbsolutePath();
-                        if (diskPath.contains(storagePath)) {
-                            diskPath = diskPath.replace(storagePath + File.separator, "");
-                            mDisksMenu.pushPathStack(storagePath);
-                        }
-                    }
-                    StringTokenizer tokenizer = new StringTokenizer(diskPath, File.separator);
-                    while (tokenizer.hasMoreTokens()) {
-                        String token = tokenizer.nextToken();
-                        if (token.equals("")) {
-                            continue;
-                        }
-                        if (Apple2DisksMenu.hasDiskExtension(token)) {
-                            continue;
-                        }
-                        mDisksMenu.pushPathStack(token);
-                    }
-
-                    Toast.makeText(Apple2Activity.this, Apple2Activity.this.getString(R.string.disk_insert_toast), Toast.LENGTH_SHORT).show();
-                }
-            }
-        });
     }
 
     public Apple2SplashScreen getSplashScreen() {
