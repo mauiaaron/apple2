@@ -54,14 +54,14 @@ static int _assert_blank_boot(void) {
     ASSERT(stepper_phases == 0x0);
     ASSERT(disk6.disk[0].is_protected);
     const char *file_name = strrchr(disk6.disk[0].file_name, '/');
-    ASSERT(strcmp(file_name, "/blank.dsk") == 0);
+    ASSERT(strcmp(file_name, "/blank.dsk.gz") == 0);
     ASSERT(disk6.disk[0].phase == 36);
     ASSERT(disk6.disk[0].run_byte == BLANK_RUN_BYTE);
     ASSERT(disk6.disk[0].fd > 0);
-    ASSERT(disk6.disk[0].mmap_image != 0);
-    ASSERT(disk6.disk[0].mmap_image != MAP_FAILED);
+    ASSERT(disk6.disk[0].raw_image_data != 0);
+    ASSERT(disk6.disk[0].raw_image_data != MAP_FAILED);
     ASSERT(disk6.disk[0].whole_len == 143360);
-    ASSERT(disk6.disk[0].whole_image != NULL);
+    ASSERT(disk6.disk[0].nib_image_data != NULL);
     ASSERT(disk6.disk[0].track_width == BLANK_TRACK_WIDTH);
     ASSERT(!disk6.disk[0].nibblized);
     ASSERT(!disk6.disk[0].track_dirty);
@@ -99,6 +99,35 @@ static int _assert_blank_boot(void) {
     PASS();
 }
 
+static int _get_fds(JSON_ref jsonData, int *fdA, int *fdB) {
+    {
+        char *pathA = NULL;
+        bool ret = json_mapCopyStringValue(jsonData, "diskA", &pathA);
+        ASSERT(ret);
+        ASSERT(pathA);
+
+        bool readOnlyA = true;
+        ret = json_mapParseBoolValue(jsonData, "readOnlyA", &readOnlyA);
+
+        *fdA = -1;
+        TEMP_FAILURE_RETRY(*fdA = open(pathA, readOnlyA ? O_RDONLY : O_RDWR));
+        FREE(pathA);
+    }
+    {
+        char *pathB = NULL;
+        bool ret = json_mapCopyStringValue(jsonData, "diskB", &pathB);
+        ASSERT(ret);
+        ASSERT(pathB);
+
+        bool readOnlyB = true;
+        ret = json_mapParseBoolValue(jsonData, "readOnlyB", &readOnlyB);
+
+        *fdB = -1;
+        TEMP_FAILURE_RETRY(*fdB = open(pathB, readOnlyB ? O_RDONLY : O_RDWR));
+        FREE(pathB);
+    }
+}
+
 TEST test_save_state_1() {
     test_setup_boot_disk(BLANK_DSK, 1);
 
@@ -106,13 +135,13 @@ TEST test_save_state_1() {
 
     _assert_blank_boot();
 
-    char *savFile = NULL;
-    ASPRINTF(&savFile, "%s/emulator-test.state", HOMEDIR);
+    char *savData = NULL;
+    ASPRINTF(&savData, "%s/emulator-test.state", HOMEDIR);
 
-    bool ret = emulator_saveState(savFile);
+    bool ret = emulator_saveState(savData);
     ASSERT(ret);
 
-    FREE(savFile);
+    FREE(savData);
     PASS();
 }
 
@@ -125,10 +154,21 @@ TEST test_load_state_1() {
     c_debugger_go();
     c_debugger_set_timeout(0);
 
-    char *savFile = NULL;
-    ASPRINTF(&savFile, "%s/emulator-test.state", HOMEDIR);
+    char *savData = NULL;
+    ASPRINTF(&savData, "%s/emulator-test.state", HOMEDIR);
 
-    bool ret = emulator_loadState(savFile);
+    bool ret = false;
+    int fdA = -1;
+    int fdB = -1;
+    {
+        JSON_ref jsonData;
+        ret = emulator_stateExtractDiskPaths(savData, &jsonData);
+        ASSERT(ret);
+        _get_fds(jsonData, &fdA, &fdB);
+        json_destroy(&jsonData);
+    }
+
+    ret = emulator_loadState(savData, fdA, fdB);
     ASSERT(ret);
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
@@ -136,8 +176,8 @@ TEST test_load_state_1() {
 
     _assert_blank_boot();
 
-    unlink(savFile);
-    FREE(savFile);
+    unlink(savData);
+    FREE(savData);
 
     PASS();
 }
@@ -172,7 +212,18 @@ TEST test_load_A2VM_good1() {
 
     // load state and assert
 
-    bool ret = emulator_loadState(savData);
+    bool ret = false;
+    int fdA = -1;
+    int fdB = -1;
+    {
+        JSON_ref jsonData;
+        ret = emulator_stateExtractDiskPaths(savData, &jsonData);
+        ASSERT(ret);
+        _get_fds(jsonData, &fdA, &fdB);
+        json_destroy(&jsonData);
+    }
+
+    ret = emulator_loadState(savData, fdA, fdB);
     ASSERT(ret);
 
     // ASSERT framebuffer matches expected
@@ -191,10 +242,10 @@ TEST test_load_A2VM_good1() {
     ASSERT(disk6.disk[0].phase == 34);
     ASSERT(disk6.disk[0].run_byte == 2000);
     //ASSERT(disk6.disk[0].fd > 0);
-    //ASSERT(disk6.disk[0].mmap_image != 0);
-    //ASSERT(disk6.disk[0].mmap_image != MAP_FAILED);
+    //ASSERT(disk6.disk[0].raw_image_data != 0);
+    //ASSERT(disk6.disk[0].raw_image_data != MAP_FAILED);
     //ASSERT(disk6.disk[0].whole_len == 143360);
-    //ASSERT(disk6.disk[0].whole_image != NULL);
+    //ASSERT(disk6.disk[0].nib_image_data != NULL);
     //ASSERT(disk6.disk[0].track_width == BLANK_TRACK_WIDTH);
     ASSERT(!disk6.disk[0].nibblized);
     ASSERT(!disk6.disk[0].track_dirty);
@@ -265,7 +316,18 @@ TEST test_load_A2V2_good1() {
 
     // load state and assert
 
-    bool ret = emulator_loadState(savData);
+    bool ret = false;
+    int fdA = -1;
+    int fdB = -1;
+    {
+        JSON_ref jsonData;
+        ret = emulator_stateExtractDiskPaths(savData, &jsonData);
+        ASSERT(ret);
+        _get_fds(jsonData, &fdA, &fdB);
+        json_destroy(&jsonData);
+    }
+
+    ret = emulator_loadState(savData, fdA, fdB);
     ASSERT(ret);
 
     // ASSERT framebuffer matches expected
@@ -284,10 +346,10 @@ TEST test_load_A2V2_good1() {
     ASSERT(disk6.disk[0].phase == 26);
     ASSERT(disk6.disk[0].run_byte == 5562);
     //ASSERT(disk6.disk[0].fd > 0);
-    //ASSERT(disk6.disk[0].mmap_image != 0);
-    //ASSERT(disk6.disk[0].mmap_image != MAP_FAILED);
+    //ASSERT(disk6.disk[0].raw_image_data != 0);
+    //ASSERT(disk6.disk[0].raw_image_data != MAP_FAILED);
     //ASSERT(disk6.disk[0].whole_len == 143360);
-    //ASSERT(disk6.disk[0].whole_image != NULL);
+    //ASSERT(disk6.disk[0].nib_image_data != NULL);
     //ASSERT(disk6.disk[0].track_width == BLANK_TRACK_WIDTH);
     ASSERT(!disk6.disk[0].nibblized);
     ASSERT(!disk6.disk[0].track_dirty);
@@ -370,7 +432,18 @@ TEST test_load_A2V2_good2() {
 
     // load state and assert
 
-    bool ret = emulator_loadState(savData);
+    bool ret = false;
+    int fdA = -1;
+    int fdB = -1;
+    {
+        JSON_ref jsonData;
+        ret = emulator_stateExtractDiskPaths(savData, &jsonData);
+        ASSERT(ret);
+        _get_fds(jsonData, &fdA, &fdB);
+        json_destroy(&jsonData);
+    }
+
+    ret = emulator_loadState(savData, fdA, fdB);
     ASSERT(ret);
 
     // ASSERT framebuffer matches expected
@@ -389,10 +462,10 @@ TEST test_load_A2V2_good2() {
     ASSERT(disk6.disk[0].phase == 58);
     ASSERT(disk6.disk[0].run_byte == 1208);
     //ASSERT(disk6.disk[0].fd > 0);
-    //ASSERT(disk6.disk[0].mmap_image != 0);
-    //ASSERT(disk6.disk[0].mmap_image != MAP_FAILED);
+    //ASSERT(disk6.disk[0].raw_image_data != 0);
+    //ASSERT(disk6.disk[0].raw_image_data != MAP_FAILED);
     //ASSERT(disk6.disk[0].whole_len == 143360);
-    //ASSERT(disk6.disk[0].whole_image != NULL);
+    //ASSERT(disk6.disk[0].nib_image_data != NULL);
     //ASSERT(disk6.disk[0].track_width == BLANK_TRACK_WIDTH);
     ASSERT(!disk6.disk[0].nibblized);
     ASSERT(!disk6.disk[0].track_dirty);

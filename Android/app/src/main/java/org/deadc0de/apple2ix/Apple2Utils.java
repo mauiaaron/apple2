@@ -410,4 +410,3 @@ public class Apple2Utils {
         os.flush();
     }
 }
-

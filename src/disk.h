@@ -19,8 +19,7 @@
 #include "common.h"
 
 #define ERR_IMAGE_NOT_EXPECTED_SIZE "disk image is not expected size"
-#define ERR_STAT_FAILED "disk image unreadable for stat"
-#define ERR_CANNOT_OPEN "could not open disk image"
+#define ERR_CANNOT_DUP "could not dup() disk image file descriptor"
 #define ERR_MMAP_FAILED "disk image unreadable for mmap"
 
 #define NUM_TRACKS 35
@@ -51,9 +50,10 @@
 typedef struct diskette_t {
     char *file_name;
     int fd;
-    uint8_t *mmap_image;
+    int fd2;
+    uint8_t *raw_image_data;
     size_t whole_len;
-    uint8_t *whole_image;
+    uint8_t *nib_image_data;
     bool nibblized;
     bool is_protected;
     bool track_valid;
@@ -62,6 +62,7 @@ typedef struct diskette_t {
     long track_width;
     int phase;
     int run_byte;
+    bool was_gzipped;
 } diskette_t;
 
 typedef struct drive_t {
@@ -78,8 +79,9 @@ extern drive_t disk6;
 // initialize emulated 5.25 Disk ][ module
 extern void disk6_init(void);
 
-// insert 5.25 disk image file
-extern const char *disk6_insert(int drive, const char * const file_name, int readonly);
+// insert 5.25 disk image file from file descriptor (internally dup()'d so caller should close() after invocation).
+// file_name need NOT be a path, and is important only to determine the image type via file extension
+extern const char *disk6_insert(int fd, int drive, const char * const file_name, int readonly);
 
 // eject 5.25 disk image file
 extern const char *disk6_eject(int drive);
@@ -89,6 +91,7 @@ extern void disk6_flush(int drive);
 
 extern bool disk6_saveState(StateHelper_s *helper);
 extern bool disk6_loadState(StateHelper_s *helper);
+extern bool disk6_stateExtractDiskPaths(StateHelper_s *helper, JSON_ref *json);
 
 #if DISK_TRACING
 void disk6_traceToggle(const char *read_file, const char *write_file);

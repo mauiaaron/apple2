@@ -32,13 +32,15 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.StringTokenizer;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.deadc0de.apple2ix.basic.BuildConfig;
 import org.deadc0de.apple2ix.basic.R;
 
-public class Apple2Activity extends Activity {
+public class Apple2Activity extends Activity /*implements Apple2DiskChooserActivity.Callback*/ {
 
     private final static String TAG = "Apple2Activity";
+
     private static volatile boolean DEBUG_STRICT = false;
 
     private Apple2View mView = null;
@@ -52,6 +54,8 @@ public class Apple2Activity extends Activity {
 
     private AtomicBoolean mPausing = new AtomicBoolean(false);
     private AtomicBoolean mSwitchingToPortrait = new AtomicBoolean(false);
+
+    private static String sDiskPathChosen = null;
 
     // non-null if we failed to load/link the native code ... likely we are running on some bizarre 'droid variant
     private static Throwable sNativeBarfedThrowable = null;
@@ -68,6 +72,7 @@ public class Apple2Activity extends Activity {
 
     public final static int REQUEST_PERMISSION_RWSTORE = 42;
 
+
     private static native void nativeOnCreate(String dataDir, int sampleRate, int monoBufferSize, int stereoBufferSize);
 
     private static native void nativeOnKeyDown(int keyCode, int metaState);
@@ -76,7 +81,9 @@ public class Apple2Activity extends Activity {
 
     private static native void nativeSaveState(String path);
 
-    private static native String nativeLoadState(String path);
+    private static native String nativeStateExtractDiskPaths(String path);
+
+    private static native String nativeLoadState(String loadStateJson);
 
     private static native boolean nativeEmulationResume();
 
@@ -91,7 +98,7 @@ public class Apple2Activity extends Activity {
     }
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState) {
         if (Apple2Activity.DEBUG_STRICT && BuildConfig.DEBUG) {
             StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder()
                     .detectDiskReads()
@@ -136,12 +143,12 @@ public class Apple2Activity extends Activity {
         boolean switchingToPortrait = Apple2VideoSettingsMenu.SETTINGS.applyLandscapeMode(this);
         Apple2Preferences.sync(this, null);
 
-        Apple2DisksMenu.insertDisk((String) Apple2Preferences.getJSONPref(Apple2DisksMenu.SETTINGS.CURRENT_DISK_PATH_A), /*driveA:*/true, (boolean) Apple2Preferences.getJSONPref(Apple2DisksMenu.SETTINGS.CURRENT_DISK_PATH_A_RO));
-        Apple2DisksMenu.insertDisk((String) Apple2Preferences.getJSONPref(Apple2DisksMenu.SETTINGS.CURRENT_DISK_PATH_B), /*driveA:*/false, (boolean) Apple2Preferences.getJSONPref(Apple2DisksMenu.SETTINGS.CURRENT_DISK_PATH_B_RO));
+        Apple2DisksMenu.insertDisk((String) Apple2Preferences.getJSONPref(Apple2DisksMenu.SETTINGS.CURRENT_DISK_PATH_A), /*driveA:*/true, /*isReadOnly:*/(boolean) Apple2Preferences.getJSONPref(Apple2DisksMenu.SETTINGS.CURRENT_DISK_PATH_A_RO));
+        Apple2DisksMenu.insertDisk((String) Apple2Preferences.getJSONPref(Apple2DisksMenu.SETTINGS.CURRENT_DISK_PATH_B), /*driveA:*/false, /*isReadOnly:*/(boolean) Apple2Preferences.getJSONPref(Apple2DisksMenu.SETTINGS.CURRENT_DISK_PATH_B_RO));
 
         showSplashScreen(!firstTime);
 
-        // Is there a way to persist the user orientation setting such that we launch in the previously set orientation and avoid  get multiple onCreate() onResume()?! ... Android lifecycle edge cases are so damn kludgishly annoying ...
+        // Is there a way to persist the user orientation setting such that we launch in the previously set orientation and avoid getting multiple onCreate() onResume()?! ... Android lifecycle edge cases are so damn kludgishly annoying ...
         mSwitchingToPortrait.set(switchingToPortrait);
         if (!switchingToPortrait) {
             Apple2CrashHandler.getInstance().checkForCrashes(this);
@@ -196,9 +203,14 @@ public class Apple2Activity extends Activity {
             }
         }
         if (path != null && Apple2DisksMenu.hasDiskExtension(path)) {
-            //sDiskPathChosen = path;
+            sDiskPathChosen = path;
         }
     }
+
+    /*@Override
+    public void onDisksChosen(String path) {
+        sDiskPathChosen = path;
+    }*/
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
@@ -232,6 +244,11 @@ public class Apple2Activity extends Activity {
         showSplashScreen(/*dismissable:*/true);
         if (!mSwitchingToPortrait.get()) {
             Apple2CrashHandler.getInstance().checkForCrashes(this); // NOTE : needs to be called again to clean-up
+        }
+
+        if (sDiskPathChosen != null && mDisksMenu != null) {
+            mDisksMenu.showDiskInsertionAlertDialog("title", sDiskPathChosen);
+            sDiskPathChosen = null;
         }
     }
 
@@ -335,6 +352,7 @@ public class Apple2Activity extends Activity {
         if (mSplashScreen != null) {
             return;
         }
+
         mSplashScreen = new Apple2SplashScreen(this, dismissable);
         mSplashScreen.show();
     }
@@ -476,8 +494,12 @@ public class Apple2Activity extends Activity {
         nativeSaveState(stateFile);
     }
 
-    public String loadState(String stateFile) {
-        return Apple2Activity.nativeLoadState(stateFile);
+    public String stateExtractDiskPaths(String stateFile) {
+        return nativeStateExtractDiskPaths(stateFile);
+    }
+
+    public String loadState(String loadStateJson) {
+        return nativeLoadState(loadStateJson);
     }
 
     public void quitEmulator() {

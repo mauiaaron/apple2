@@ -14,7 +14,9 @@ package org.deadc0de.apple2ix;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -35,12 +37,16 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.deadc0de.apple2ix.basic.R;
+import org.json.JSONObject;
 
 public class Apple2DisksMenu implements Apple2MenuView {
 
     private final static String TAG = "Apple2DisksMenu";
+
+    private final static String EXTERNAL_CHOOSER_SENTINEL = "apple2ix://";
 
     private Apple2Activity mActivity = null;
     private View mDisksView = null;
@@ -49,9 +55,9 @@ public class Apple2DisksMenu implements Apple2MenuView {
 
     private static boolean sInitializedPath = false;
 
-    private static native void nativeChooseDisk(String path, boolean driveA, boolean readOnly);
+    private static native String nativeChooseDisk(String jsonData);
 
-    private static native void nativeEjectDisk(boolean driveA);
+    private static native void nativeEjectDisk(boolean isDriveA);
 
     protected enum SETTINGS implements Apple2AbstractMenu.IMenuEnum {
         CURRENT_DISK_SEARCH_PATH {
@@ -79,7 +85,7 @@ public class Apple2DisksMenu implements Apple2MenuView {
         CURRENT_DISK_RO_BUTTON {
             @Override
             public String getPrefKey() {
-                return "driveACurrent";
+                return "driveRO";
             }
 
             @Override
@@ -254,14 +260,27 @@ public class Apple2DisksMenu implements Apple2MenuView {
         return path;
     }
 
-    public static void insertDisk(String fullPath, boolean isDriveA, boolean isReadOnly) {
-        File file = new File(fullPath);
-        final String imageName = fullPath;
-        if (!file.exists()) {
-            fullPath = fullPath + ".gz";
-            file = new File(fullPath);
-        }
-        if (file.exists()) {
+    public static void insertDisk(String imageName, boolean isDriveA, boolean isReadOnly) {
+        try {
+            JSONObject map = new JSONObject();
+
+            ejectDisk(isDriveA);
+
+            if (imageName.startsWith("file://")) {
+                ////int fd = Apple2DiskChooserActivity.openFileDescriptor(imageName, isReadOnly);
+                ////map.put("fd", fd);
+            } else {
+                File file = new File(imageName);
+
+                if (!file.exists()) {
+                    imageName = addGzipExtension(imageName);
+                    file = new File(imageName);
+                    if (!file.exists()) {
+                        throw new RuntimeException("cannot insert : " + imageName);
+                    }
+                }
+            }
+
             if (isDriveA) {
                 Apple2Preferences.setJSONPref(SETTINGS.CURRENT_DISK_PATH_A_RO, isReadOnly);
                 Apple2Preferences.setJSONPref(SETTINGS.CURRENT_DISK_PATH_A, imageName);
@@ -269,12 +288,83 @@ public class Apple2DisksMenu implements Apple2MenuView {
                 Apple2Preferences.setJSONPref(SETTINGS.CURRENT_DISK_PATH_B_RO, isReadOnly);
                 Apple2Preferences.setJSONPref(SETTINGS.CURRENT_DISK_PATH_B, imageName);
             }
-            nativeChooseDisk(fullPath, isDriveA, isReadOnly);
-        } else {
-            Log.d(TAG, "Cannot insert: " + fullPath);
+
+            map.put("disk", imageName);
+            map.put("drive", isDriveA ? "0" : "1");
+            map.put("readOnly", isReadOnly ? "true" : "false");
+
+            String jsonString = nativeChooseDisk(map.toString());
+
+        } catch (Throwable t) {
+            Log.d(TAG, "OOPS: " + t);
         }
     }
 
+    public static void ejectDisk(boolean isDriveA) {
+        if (isDriveA) {
+            Apple2Preferences.setJSONPref(SETTINGS.CURRENT_DISK_PATH_A, "");
+        } else {
+            Apple2Preferences.setJSONPref(SETTINGS.CURRENT_DISK_PATH_B, "");
+        }
+        nativeEjectDisk(isDriveA);
+    }
+
+    public void showDiskInsertionAlertDialog(String title, final String imagePath) {
+
+        title = mActivity.getResources().getString(R.string.header_disks) + " " + title;
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(mActivity).setCancelable(true).setMessage(title);
+        LayoutInflater inflater = (LayoutInflater) mActivity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        final View diskConfirmationView = inflater.inflate(R.layout.a2disk_confirmation, null, false);
+        builder.setView(diskConfirmationView);
+
+        final RadioButton driveA = (RadioButton) diskConfirmationView.findViewById(R.id.radioButton_diskA);
+        boolean driveAChecked = (boolean) Apple2Preferences.getJSONPref(SETTINGS.CURRENT_DRIVE_A);
+        driveA.setChecked(driveAChecked);
+        driveA.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                Apple2Preferences.setJSONPref(SETTINGS.CURRENT_DRIVE_A, isChecked);
+            }
+        });
+        final RadioButton driveB = (RadioButton) diskConfirmationView.findViewById(R.id.radioButton_diskB);
+        driveB.setChecked(!driveAChecked);
+
+        final RadioButton readOnly = (RadioButton) diskConfirmationView.findViewById(R.id.radioButton_readOnly);
+        boolean roChecked = (boolean) Apple2Preferences.getJSONPref(SETTINGS.CURRENT_DISK_RO_BUTTON);
+        readOnly.setChecked(roChecked);
+        readOnly.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                Apple2Preferences.setJSONPref(SETTINGS.CURRENT_DISK_RO_BUTTON, isChecked);
+            }
+        });
+
+        final RadioButton readWrite = (RadioButton) diskConfirmationView.findViewById(R.id.radioButton_readWrite);
+        readWrite.setChecked(!roChecked);
+
+        builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+            }
+        });
+        builder.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                boolean isDriveA = driveA.isChecked();
+                boolean diskReadOnly = readOnly.isChecked();
+
+                insertDisk(imagePath, isDriveA, diskReadOnly);
+
+                dialog.dismiss();
+                mActivity.dismissAllMenus();
+            }
+        });
+
+        AlertDialog dialog = builder.create();
+        mActivity.registerAndShowDialog(dialog);
+    }
 
     public static boolean hasDiskExtension(String name) {
 
@@ -315,6 +405,20 @@ public class Apple2DisksMenu implements Apple2MenuView {
 
         suffix = name.substring(len - 7, len);
         return (suffix.equalsIgnoreCase(".dsk.gz") || suffix.equalsIgnoreCase(".nib.gz"));
+    }
+
+    public static boolean isGzipExtension(String name) {
+        int len = name.length();
+        String ext = name.substring(len - 3, len);
+        return ext.equals(".gz");
+    }
+
+    public static String removeGzipExtention(String name) {
+        return isGzipExtension(name) ? name.substring(0, name.length() - 3) : name;
+    }
+
+    public static String addGzipExtension(String name) {
+        return isGzipExtension(name) ? name : name + ".gz";
     }
 
     // ------------------------------------------------------------------------
@@ -388,13 +492,30 @@ public class Apple2DisksMenu implements Apple2MenuView {
             }
         }
 
+        int off = 0;
         final boolean includeExternalStoragePath = (extStorageDir != null && isRootPath);
-        final int offset = includeExternalStoragePath ? 1 : 0;
+        if (includeExternalStoragePath) {
+            ++off;
+        }
+        final boolean includeExternalFileChooser = isRootPath && (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT);
+        if (includeExternalFileChooser) {
+            ++off;
+        }
+        final int offset = off;
         final String[] fileNames = new String[files.length + offset];
         final String[] filePaths = new String[files.length + offset];
         final boolean[] isDirectory = new boolean[files.length + offset];
 
         int idx = 0;
+
+        // external file chooser can allow navigation to restricted external SD Card
+        if (includeExternalFileChooser) {
+            filePaths[idx] = EXTERNAL_CHOOSER_SENTINEL;
+            fileNames[idx] = mActivity.getResources().getString(R.string.file_chooser);
+            isDirectory[idx] = true;
+            ++idx;
+        }
+
         // first external storage link should be /sdcard/apple2ix to encourage this form of organization
         if (includeExternalStoragePath) {
             filePaths[idx] = Apple2Utils.getRealExternalStorageDirectory(mActivity).getAbsolutePath();
@@ -437,12 +558,6 @@ public class Apple2DisksMenu implements Apple2MenuView {
                 } else {
 
                     String imageName = files[position - offset].getAbsolutePath();
-                    final int len = imageName.length();
-                    final String suffix = imageName.substring(len - 3, len);
-                    if (suffix.equalsIgnoreCase(".gz")) {
-                        imageName = files[position - offset].getAbsolutePath().substring(0, len - 3);
-                    }
-
                     String eject = mActivity.getResources().getString(R.string.disk_eject);
                     if (imageName.equals((String) Apple2Preferences.getJSONPref(SETTINGS.CURRENT_DISK_PATH_A))) {
                         Button ejectButton = new Button(mActivity);
@@ -450,8 +565,7 @@ public class Apple2DisksMenu implements Apple2MenuView {
                         ejectButton.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
-                                nativeEjectDisk(/*driveA:*/true);
-                                Apple2Preferences.setJSONPref(SETTINGS.CURRENT_DISK_PATH_A, "");
+                                ejectDisk(/*driveA:*/true);
                                 dynamicSetup();
                             }
                         });
@@ -462,8 +576,7 @@ public class Apple2DisksMenu implements Apple2MenuView {
                         ejectButton.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
-                                nativeEjectDisk(/*driveA:*/false);
-                                Apple2Preferences.setJSONPref(SETTINGS.CURRENT_DISK_PATH_B, "");
+                                ejectDisk(/*driveA:*/false);
                                 dynamicSetup();
                             }
                         });
@@ -483,6 +596,46 @@ public class Apple2DisksMenu implements Apple2MenuView {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, final int position, long id) {
                 if (isDirectory[position]) {
+                    if (filePaths[position].equals(EXTERNAL_CHOOSER_SENTINEL)) {
+                        /*
+                        final boolean alreadyChoosing = Apple2DiskChooserActivity.sDiskChooserIsChoosing.getAndSet(true);
+                        if (alreadyChoosing) {
+                            return;
+                        }
+
+
+                        ///*
+                        final String packageName = "org.deadc0de.apple2ix.basic";
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                            mActivity.grantUriPermission(packageName, uri, Intent.FLAG_GRANT_PREFIX_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                            mActivity.grantUriPermission(packageName, uri, Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                        }
+                        //* /
+
+                        Intent chooserIntent = new Intent(mActivity, Apple2DiskChooserActivity.class);
+
+
+
+                        ///*
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                            chooserIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_GRANT_PREFIX_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                            chooserIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                        }
+                        //* /
+
+                        //chooserIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_GRANT_PREFIX_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION/* | Intent.FLAG_ACTIVITY_CLEAR_TOP * /);
+
+                        chooserIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION/* | Intent.FLAG_ACTIVITY_CLEAR_TOP * /);
+
+                        //chooserIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION/* | Intent.FLAG_ACTIVITY_CLEAR_TOP * /);
+                        Apple2DiskChooserActivity.sDisksCallback = mActivity;
+                        mActivity.startActivity(chooserIntent);
+                        return;
+                        */
+                    }
+
                     Log.d(TAG, "Descending to path : " + filePaths[position]);
                     if (parentIsRootPath && !new File(filePaths[position]).isAbsolute()) {
                         pushPathStack(parentDisksDir + File.separator + filePaths[position]);
@@ -495,84 +648,19 @@ public class Apple2DisksMenu implements Apple2MenuView {
                     return;
                 }
 
-                String str = files[position - offset].getAbsolutePath();
-                final int len = str.length();
-                final String suffix = str.substring(len - 3, len);
-                if (suffix.equalsIgnoreCase(".gz")) {
-                    str = files[position - offset].getAbsolutePath().substring(0, len - 3);
-                }
-                final String imageName = str;
-
+                final String imageName = files[position - offset].getAbsolutePath();
                 if (imageName.equals((String) Apple2Preferences.getJSONPref(SETTINGS.CURRENT_DISK_PATH_A))) {
-                    nativeEjectDisk(/*driveA:*/true);
-                    Apple2Preferences.setJSONPref(SETTINGS.CURRENT_DISK_PATH_A, "");
+                    ejectDisk(/*isDriveA:*/true);
                     dynamicSetup();
                     return;
                 }
                 if (imageName.equals((String) Apple2Preferences.getJSONPref(SETTINGS.CURRENT_DISK_PATH_B))) {
-                    nativeEjectDisk(/*driveA:*/false);
-                    Apple2Preferences.setJSONPref(SETTINGS.CURRENT_DISK_PATH_B, "");
+                    ejectDisk(/*isDriveA:*/false);
                     dynamicSetup();
                     return;
                 }
 
-                String title = mActivity.getResources().getString(R.string.header_disks);
-                title = title + " " + fileNames[position];
-
-                AlertDialog.Builder builder = new AlertDialog.Builder(mActivity).setCancelable(true).setMessage(title);
-                LayoutInflater inflater = (LayoutInflater) mActivity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-                final View diskConfirmationView = inflater.inflate(R.layout.a2disk_confirmation, null, false);
-                builder.setView(diskConfirmationView);
-
-                final RadioButton driveA = (RadioButton) diskConfirmationView.findViewById(R.id.radioButton_diskA);
-                boolean driveAChecked = (boolean) Apple2Preferences.getJSONPref(SETTINGS.CURRENT_DRIVE_A);
-                driveA.setChecked(driveAChecked);
-                driveA.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                    @Override
-                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                        Apple2Preferences.setJSONPref(SETTINGS.CURRENT_DRIVE_A, isChecked);
-                    }
-                });
-                final RadioButton driveB = (RadioButton) diskConfirmationView.findViewById(R.id.radioButton_diskB);
-                driveB.setChecked(!driveAChecked);
-
-
-                final RadioButton readOnly = (RadioButton) diskConfirmationView.findViewById(R.id.radioButton_readOnly);
-                boolean roChecked = (boolean) Apple2Preferences.getJSONPref(SETTINGS.CURRENT_DISK_RO_BUTTON);
-                readOnly.setChecked(roChecked);
-                readOnly.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                    @Override
-                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                        Apple2Preferences.setJSONPref(SETTINGS.CURRENT_DISK_RO_BUTTON, isChecked);
-                    }
-                });
-
-                final RadioButton readWrite = (RadioButton) diskConfirmationView.findViewById(R.id.radioButton_readWrite);
-                readWrite.setChecked(!roChecked);
-
-                builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.dismiss();
-                    }
-                });
-                builder.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        boolean isDriveA = driveA.isChecked();
-                        boolean diskReadOnly = readOnly.isChecked();
-                        if (isDriveA) {
-                            insertDisk(imageName, /*driveA:*/true, diskReadOnly);
-                        } else {
-                            insertDisk(imageName, /*driveA:*/false, diskReadOnly);
-                        }
-                        dialog.dismiss();
-                        mActivity.dismissAllMenus();
-                    }
-                });
-
-                AlertDialog dialog = builder.create();
-                mActivity.registerAndShowDialog(dialog);
+                showDiskInsertionAlertDialog(/*title:*/fileNames[position], /*diskPath:*/imageName);
             }
         });
     }

@@ -21,6 +21,8 @@
 
 #include <sys/mman.h>
 
+#define READONLY_FD 0x00DEADFD
+
 #if DISK_TRACING
 static FILE *test_read_fp = NULL;
 static FILE *test_write_fp = NULL;
@@ -31,7 +33,9 @@ extern uint8_t slot6_rom[256];
 drive_t disk6;
 
 static uint8_t disk_a[NIB_SIZE] = { 0 };
+static uint8_t disk_a_raw[NIB_SIZE] = { 0 };
 static uint8_t disk_b[NIB_SIZE] = { 0 };
+static uint8_t disk_b_raw[NIB_SIZE] = { 0 };
 
 #if TESTING
 #   define STATIC
@@ -44,7 +48,7 @@ STATIC int stepper_phases = 0; // state bits for stepper magnet phases 0-3
 STATIC int skew_table_6_po[16] = { 0x00,0x08,0x01,0x09,0x02,0x0A,0x03,0x0B, 0x04,0x0C,0x05,0x0D,0x06,0x0E,0x07,0x0F }; // ProDOS order
 STATIC int skew_table_6_do[16] = { 0x00,0x07,0x0E,0x06,0x0D,0x05,0x0C,0x04, 0x0B,0x03,0x0A,0x02,0x09,0x01,0x08,0x0F }; // DOS order
 
-static pthread_mutex_t unlink_mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t insertion_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 static uint8_t translate_table_6[0x40] = {
     0x96, 0x97, 0x9a, 0x9b, 0x9d, 0x9e, 0x9f, 0xa6,
@@ -90,8 +94,8 @@ static void _init_disk6(void) {
     memset(&disk6, 0x0, sizeof(disk6));
     disk6.disk[0].fd = -1;
     disk6.disk[1].fd = -1;
-    disk6.disk[0].mmap_image = MAP_FAILED;
-    disk6.disk[1].mmap_image = MAP_FAILED;
+    disk6.disk[0].raw_image_data = MAP_FAILED;
+    disk6.disk[1].raw_image_data = MAP_FAILED;
 
     for (unsigned int i=0; i<0x40; i++) {
         rev_translate_table_6[translate_table_6[i]-0x80] = i << 2;
@@ -432,7 +436,7 @@ static size_t load_track_data(int drive) {
         unsigned int trk = (disk6.disk[drive].phase >> 1);
         uintptr_t dskoff = DSK_TRACK_SIZE * trk;
         uintptr_t niboff = NIB_TRACK_SIZE * trk;
-        expected = nibblize_track(disk6.disk[drive].mmap_image+dskoff, drive, disk6.disk[drive].whole_image+niboff);
+        expected = nibblize_track(disk6.disk[drive].raw_image_data+dskoff, drive, disk6.disk[drive].nib_image_data+niboff);
     }
 
     return expected;
@@ -447,7 +451,7 @@ static void save_track_data(int drive) {
     if (disk6.disk[drive].nibblized) {
         /*
         int ret = -1;
-        TEMP_FAILURE_RETRY(ret = msync(disk6.disk[drive].mmap_image+niboff, NIB_TRACK_SIZE, MS_SYNC));
+        TEMP_FAILURE_RETRY(ret = msync(disk6.disk[drive].raw_image_data+niboff, NIB_TRACK_SIZE, MS_SYNC));
         if (ret) {
             ERRLOG("Error syncing file %s", disk6.disk[drive].file_name);
         }
@@ -455,10 +459,10 @@ static void save_track_data(int drive) {
     } else {
         // .dsk, .do, .po images
         uintptr_t dskoff = DSK_TRACK_SIZE * trk;
-        denibblize_track(disk6.disk[drive].whole_image+niboff, drive, disk6.disk[drive].mmap_image+dskoff);
+        denibblize_track(/*src:*/disk6.disk[drive].nib_image_data+niboff, drive, /*dst:*/disk6.disk[drive].raw_image_data+dskoff);
         /*
         int ret = -1;
-        TEMP_FAILURE_RETRY(ret = msync(disk6.disk[drive].mmap_image+dskoff, DSK_TRACK_SIZE, MS_SYNC));
+        TEMP_FAILURE_RETRY(ret = msync(disk6.disk[drive].raw_image_data+dskoff, DSK_TRACK_SIZE, MS_SYNC));
         if (ret) {
             ERRLOG("Error syncing file %s", disk6.disk[drive].file_name);
         }
@@ -529,7 +533,7 @@ static void _disk_readWriteByte(void) {
             }
 #endif
 
-            disk6.disk[disk6.drive].whole_image[track_idx] = disk6.disk_byte;
+            disk6.disk[disk6.drive].nib_image_data[track_idx] = disk6.disk_byte;
             disk6.disk[disk6.drive].track_dirty = true;
         } else {
 
@@ -543,7 +547,7 @@ static void _disk_readWriteByte(void) {
                 }
             }
 
-            disk6.disk_byte = disk6.disk[disk6.drive].whole_image[track_idx];
+            disk6.disk_byte = disk6.disk[disk6.drive].nib_image_data[track_idx];
 #if DISK_TRACING
             if (test_read_fp) {
                 fprintf(test_read_fp, "%02X", disk6.disk_byte);
@@ -773,6 +777,10 @@ void disk6_init(void) {
     disk6.ddrw = 0;
 }
 
+static volatile int get_errno() {
+    return errno;
+}
+
 const char *disk6_eject(int drive) {
 
 #if !TESTING
@@ -782,16 +790,52 @@ const char *disk6_eject(int drive) {
     assert(cpu_isPaused() && "CPU must be paused for disk ejection");
 #   endif
 #endif
+    assert(drive == 0 || drive == 1);
 
     const char *err = NULL;
 
-    if (disk6.disk[drive].fd > 0) {
+    pthread_mutex_lock(&insertion_mutex);
+
+    if ((disk6.disk[drive].fd > 0) && !disk6.disk[drive].is_protected) {
         disk6_flush(drive);
 
         int ret = -1;
-        TEMP_FAILURE_RETRY(ret = munmap(disk6.disk[drive].mmap_image, disk6.disk[drive].whole_len));
+        off_t compressed_size = -1;
+
+        if (disk6.disk[drive].was_gzipped) {
+
+            // backup uncompressed data ...
+            char *compressed_data = drive == 0 ? &disk_a_raw[0] : &disk_b_raw[0];
+
+            // re-compress in place ...
+            err = zlib_deflate_buffer(/*src:*/disk6.disk[drive].raw_image_data, disk6.disk[drive].whole_len, /*dst:*/compressed_data, &compressed_size);
+            if (err) {
+                ERRLOG("OOPS, error deflating %s : %s", disk6.disk[drive].file_name, err);
+            }
+
+            if (compressed_size > 0) {
+                assert(compressed_size < disk6.disk[drive].whole_len);
+
+                // overwrite portion of mmap()'d file with compressed data ...
+                memcpy(/*dst:*/disk6.disk[drive].raw_image_data, /*src:*/compressed_data, compressed_size);
+
+                TEMP_FAILURE_RETRY(ret = msync(disk6.disk[drive].raw_image_data, disk6.disk[drive].whole_len, MS_SYNC));
+                if (ret) {
+                    ERRLOG("Error syncing file %s", disk6.disk[drive].file_name);
+                }
+            }
+        }
+
+        TEMP_FAILURE_RETRY(ret = munmap(disk6.disk[drive].raw_image_data, disk6.disk[drive].whole_len));
         if (ret) {
             ERRLOG("Error munmap()ping file %s", disk6.disk[drive].file_name);
+        }
+
+        if (compressed_size > 0) {
+            TEMP_FAILURE_RETRY(ret = ftruncate(disk6.disk[drive].fd, compressed_size));
+            if (ret == -1) {
+                ERRLOG("OOPS, cannot truncate file descriptor!");
+            }
         }
 
         TEMP_FAILURE_RETRY(ret = fsync(disk6.disk[drive].fd));
@@ -803,26 +847,19 @@ const char *disk6_eject(int drive) {
         if (ret) {
             ERRLOG("Error close()ing file %s", disk6.disk[drive].file_name);
         }
-
-        // foo.dsk -> foo.dsk.gz
-        pthread_mutex_lock(&unlink_mutex);
-        err = zlib_deflate(disk6.disk[drive].file_name, is_nib(disk6.disk[drive].file_name) ? NIB_SIZE : DSK_SIZE);
-        if (err) {
-            ERRLOG("OOPS: An error occurred when attempting to compress a disk image : %s", err);
-        } else {
-            unlink(disk6.disk[drive].file_name);
-        }
-        pthread_mutex_unlock(&unlink_mutex);
     }
 
     FREE(disk6.disk[drive].file_name);
 
+    pthread_mutex_unlock(&insertion_mutex);
+
     disk6.disk[drive].fd = -1;
-    disk6.disk[drive].mmap_image = MAP_FAILED;
+    disk6.disk[drive].raw_image_data = MAP_FAILED;
     disk6.disk[drive].whole_len = 0;
-    disk6.disk[drive].whole_image = NULL;
+    disk6.disk[drive].nib_image_data = NULL;
     disk6.disk[drive].nibblized = false;
     disk6.disk[drive].is_protected = false;
+    disk6.disk[drive].was_gzipped = false;
     disk6.disk[drive].track_valid = false;
     disk6.disk[drive].track_dirty = false;
     disk6.disk[drive].skew_table = NULL;
@@ -840,7 +877,7 @@ const char *disk6_eject(int drive) {
     return err;
 }
 
-const char *disk6_insert(int drive, const char * const raw_file_name, int readonly) {
+const char *disk6_insert(int fd, int drive, const char * const file_name, int readonly) {
 
 #if !TESTING
 #   if __APPLE__
@@ -849,10 +886,11 @@ const char *disk6_insert(int drive, const char * const raw_file_name, int readon
     assert(cpu_isPaused() && "CPU must be paused for disk insertion");
 #   endif
 #endif
+    assert(drive == 0 || drive == 1);
 
     disk6_eject(drive);
 
-    disk6.disk[drive].file_name = STRDUP(raw_file_name);
+    disk6.disk[drive].file_name = STRDUP(file_name);
 
     int expected = NIB_SIZE;
     disk6.disk[drive].nibblized = true;
@@ -865,64 +903,44 @@ const char *disk6_insert(int drive, const char * const raw_file_name, int readon
         }
     }
 
-    char *err = NULL;
+    pthread_mutex_lock(&insertion_mutex);
+
+    const char *err = NULL;
     do {
-        if (is_gz(disk6.disk[drive].file_name)) {
-            pthread_mutex_lock(&unlink_mutex);
-            err = (char *)zlib_inflate(disk6.disk[drive].file_name, expected); // foo.dsk.gz -> foo.dsk
-            if (!err) {
-                if (unlink(disk6.disk[drive].file_name)) { // temporarily remove .gz file
-                    ERRLOG("OOPS, cannot unlink %s", disk6.disk[drive].file_name);
-                }
-            }
-            pthread_mutex_unlock(&unlink_mutex);
-
-            if (err) {
-                ERRLOG("OOPS: An error occurred when attempting to inflate/load a disk image : %s", err);
-                break;
-            }
-            cut_gz(disk6.disk[drive].file_name);
-        }
-
-        struct stat stat_buf;
-        if (stat(disk6.disk[drive].file_name, &stat_buf) < 0) {
-            ERRLOG("OOPS, could not stat %s", disk6.disk[drive].file_name);
-            err = ERR_STAT_FAILED;
-            break;
-        }
-
-        if (stat_buf.st_size != expected) {
-            ERRLOG("OOPS, disk image %s does not have expected byte count!", disk6.disk[drive].file_name);
-            err = ERR_IMAGE_NOT_EXPECTED_SIZE;
-            break;
-        }
+        disk6.disk[drive].is_protected = readonly;
         disk6.disk[drive].whole_len = expected;
 
-        // open image file
-        TEMP_FAILURE_RETRY(disk6.disk[drive].fd = open(disk6.disk[drive].file_name, readonly ? O_RDONLY : O_RDWR));
-        if (disk6.disk[drive].fd < 0 && !readonly) {
-            ERRLOG("OOPS, could not open %s read/write, will attempt to open readonly ...", disk6.disk[drive].file_name);
-            readonly = true;
-            TEMP_FAILURE_RETRY(disk6.disk[drive].fd = open(disk6.disk[drive].file_name, O_RDONLY));
-        }
-        disk6.disk[drive].is_protected = readonly;
-        if (disk6.disk[drive].fd < 0) {
-            ERRLOG("OOPS, could not open %s", disk6.disk[drive].file_name);
-            err = ERR_CANNOT_OPEN;
-            break;
-        }
-        assert(disk6.disk[drive].fd > 0);
+        if (readonly) {
+            // disk images inserted readonly use raw_image_data buffer ...
+            disk6.disk[drive].fd = READONLY_FD; // we're essentially done with the real FD, although it still signifies ...
+            disk6.disk[drive].raw_image_data = (drive==0) ? &disk_a_raw[0] : &disk_b_raw[0];
+            err = zlib_inflate_to_buffer(fd, expected, disk6.disk[drive].raw_image_data);
+        } else {
+            // disk images inserted read/write are mmap'd/inflated in place ...
+            TEMP_FAILURE_RETRY(fd = dup(fd));
+            if (fd == -1) {
+                ERRLOG("OOPS, could not dup() file descriptor %d", fd);
+                err = ERR_CANNOT_DUP;
+                break;
+            }
+            disk6.disk[drive].fd = fd;
 
-        // mmap image file
-        TEMP_FAILURE_RETRY(disk6.disk[drive].mmap_image = mmap(NULL, disk6.disk[drive].whole_len, (readonly ? PROT_READ : PROT_READ|PROT_WRITE), MAP_SHARED|MAP_FILE, disk6.disk[drive].fd, /*offset:*/0));
-        if (disk6.disk[drive].mmap_image == MAP_FAILED) {
-            ERRLOG("OOPS, could not mmap file %s", disk6.disk[drive].file_name);
-            err = ERR_MMAP_FAILED;
-            break;
+            err = zlib_inflate_inplace(disk6.disk[drive].fd, expected, &(disk6.disk[drive].was_gzipped));
+            if (err) {
+                ERRLOG("OOPS, An error occurred when attempting to inflate/load a disk image [%s] : [%s]", file_name, err);
+                break;
+            }
+
+            TEMP_FAILURE_RETRY(disk6.disk[drive].raw_image_data = mmap(NULL, disk6.disk[drive].whole_len, (readonly ? PROT_READ : PROT_READ|PROT_WRITE), MAP_SHARED|MAP_FILE, disk6.disk[drive].fd, /*offset:*/0));
+            if (disk6.disk[drive].raw_image_data == MAP_FAILED) {
+                ERRLOG("OOPS, could not mmap file %s", disk6.disk[drive].file_name);
+                err = ERR_MMAP_FAILED;
+                break;
+            }
         }
 
-        // direct pass-thru to mmap_image (for NIB)
-        disk6.disk[drive].whole_image = disk6.disk[drive].mmap_image;
+        // direct pass-thru to raw_image_data (for NIB)
+        disk6.disk[drive].nib_image_data = disk6.disk[drive].raw_image_data;
         disk6.disk[drive].track_width = NIB_TRACK_SIZE;
 
         int lastphase = disk6.disk[drive].phase;
@@ -930,7 +948,7 @@ const char *disk6_insert(int drive, const char * const raw_file_name, int readon
         if (!disk6.disk[drive].nibblized) {
             // DSK/DO/PO require nibblizing on read (and denibblizing on write) ...
 
-            disk6.disk[drive].whole_image = (drive==0) ? &disk_a[0] : &disk_b[0];
+            disk6.disk[drive].nib_image_data = (drive==0) ? &disk_a[0] : &disk_b[0];
             disk6.disk[drive].track_width = 0;
 
             for (unsigned int trk=0; trk<NUM_TRACKS; trk++) {
@@ -955,14 +973,10 @@ const char *disk6_insert(int drive, const char * const raw_file_name, int readon
             }
         }
 
-        // close disk image file if readonly
-        if (readonly) {
-#warning TODO FIXME : close the disk image file here and refactor to support it (checks for .fd < 0 are invalid) ...
-            // ...
-        }
-
         disk6.disk[drive].phase = lastphase; // needed for some images when "re-inserted" ... e.g. Drol load screen
     } while (0);
+
+    pthread_mutex_unlock(&insertion_mutex);
 
     if (err) {
         disk6_eject(drive);
@@ -972,6 +986,8 @@ const char *disk6_insert(int drive, const char * const raw_file_name, int readon
 }
 
 void disk6_flush(int drive) {
+    assert(drive == 0 || drive == 1);
+
     if (disk6.disk[drive].fd < 0) {
         return;
     }
@@ -980,7 +996,7 @@ void disk6_flush(int drive) {
         return;
     }
 
-    if (disk6.disk[drive].mmap_image == MAP_FAILED) {
+    if (disk6.disk[drive].raw_image_data == MAP_FAILED) {
         return;
     }
 
@@ -992,7 +1008,7 @@ void disk6_flush(int drive) {
     __sync_synchronize();
 
     int ret = -1;
-    TEMP_FAILURE_RETRY(ret = msync(disk6.disk[drive].mmap_image, disk6.disk[drive].whole_len, MS_SYNC));
+    TEMP_FAILURE_RETRY(ret = msync(disk6.disk[drive].raw_image_data, disk6.disk[drive].whole_len, MS_SYNC));
     if (ret) {
         ERRLOG("Error syncing file %s", disk6.disk[drive].file_name);
     }
@@ -1107,36 +1123,54 @@ bool disk6_saveState(StateHelper_s *helper) {
     return saved;
 }
 
-bool disk6_loadState(StateHelper_s *helper) {
+static bool _disk6_loadState(StateHelper_s *helper, JSON_ref *json) {
     bool loaded = false;
     int fd = helper->fd;
 
     do {
+        if (json != NULL) {
+            if (!json_createFromString("{}", json)) {
+                LOG("OOPS, could not create JSON!");
+                break;
+            }
+
+            json_mapSetStringValue(*json, "diskA", "");
+            json_mapSetStringValue(*json, "diskB", "");
+            json_mapSetBoolValue(*json, "readOnlyA", "true");
+            json_mapSetBoolValue(*json, "readOnlyB", "true");
+        }
+
+        const bool changeState = (json == NULL);
+
         uint8_t state = 0x0;
 
         if (!helper->load(fd, &state, 1)) {
             break;
         }
-        disk6.motor_off = state;
-        LOG("LOAD motor_off = %02x", disk6.motor_off);
+        if (changeState) {
+            disk6.motor_off = state;
+        }
 
         if (!helper->load(fd, &state, 1)) {
             break;
         }
-        disk6.drive = state;
-        LOG("LOAD drive = %02x", disk6.drive);
+        if (changeState) {
+            disk6.drive = state;
+        }
 
         if (!helper->load(fd, &state, 1)) {
             break;
         }
-        disk6.ddrw = state;
-        LOG("LOAD ddrw = %02x", disk6.ddrw);
+        if (changeState) {
+            disk6.ddrw = state;
+        }
 
         if (!helper->load(fd, &state, 1)) {
             break;
         }
-        disk6.disk_byte = state;
-        LOG("LOAD disk_byte = %02x", disk6.disk_byte);
+        if (changeState) {
+            disk6.disk_byte = state;
+        }
 
         // Drive A/B
 
@@ -1152,7 +1186,6 @@ bool disk6_loadState(StateHelper_s *helper) {
                 break;
             }
             bool is_protected = (bool)state;
-            LOG("LOAD is_protected[%lu] = %02x", i, is_protected);
 
             uint8_t serialized[4] = { 0 };
             if (!helper->load(fd, serialized, 4)) {
@@ -1164,7 +1197,9 @@ bool disk6_loadState(StateHelper_s *helper) {
             namelen |= (uint32_t)(serialized[2] <<  8);
             namelen |= (uint32_t)(serialized[3] <<  0);
 
-            disk6_eject(i);
+            if (changeState) {
+                disk6_eject(i);
+            }
 
             if (namelen) {
                 unsigned long gzlen = (_GZLEN+1);
@@ -1173,16 +1208,20 @@ bool disk6_loadState(StateHelper_s *helper) {
                     FREE(namebuf);
                     break;
                 }
-
                 namebuf[namelen] = '\0';
-                if (disk6_insert(i, namebuf, is_protected)) {
-                    snprintf(namebuf+namelen, gzlen, "%s", EXT_GZ);
-                    namebuf[namelen+gzlen] = '\0';
-                    LOG("LOAD disk[%lu] : (%u) %s", i, namelen, namebuf);
-                    if (disk6_insert(i, namebuf, is_protected)) {
+
+                if (changeState) {
+                    if (disk6_insert(i == 0 ? helper->diskFdA : helper->diskFdB, /*drive:*/i, /*file_name:*/namebuf, /*readonly:*/is_protected)) {
                         LOG("OOPS loadState : proceeding despite cannot load disk : %s", namebuf);
-                        //FREE(namebuf);
-                        //break; -- ignore error with inserting disk and proceed
+                        //FREE(namebuf); break; -- ignore error with inserting disk and proceed
+                    }
+                } else {
+                    if (i == 0) {
+                        json_mapSetStringValue(*json, "diskA", namebuf);
+                        json_mapSetBoolValue(*json, "readOnlyA", is_protected);
+                    } else {
+                        json_mapSetStringValue(*json, "diskB", namebuf);
+                        json_mapSetBoolValue(*json, "readOnlyB", is_protected);
                     }
                 }
 
@@ -1192,8 +1231,9 @@ bool disk6_loadState(StateHelper_s *helper) {
             if (!helper->load(fd, &state, 1)) {
                 break;
             }
-            stepper_phases = state & 0x3;
-            LOG("LOAD stepper_phases[%lu] : %02x", i, stepper_phases);
+            if (changeState) {
+                stepper_phases = state & 0x3; // HACK NOTE : this is unnecessarily encoded twice ...
+            }
 
             // load placeholder
             if (!helper->load(fd, &state, 1)) {
@@ -1203,18 +1243,20 @@ bool disk6_loadState(StateHelper_s *helper) {
             if (!helper->load(fd, &state, 1)) {
                 break;
             }
-            disk6.disk[i].phase = state;
-            LOG("LOAD phase[%lu] = %02x", i, disk6.disk[i].phase);
+            if (changeState) {
+                disk6.disk[i].phase = state;
+            }
 
             if (!helper->load(fd, serialized, 2)) {
                 break;
             }
-            disk6.disk[i].run_byte  = (uint32_t)(serialized[0] << 8);
-            disk6.disk[i].run_byte |= (uint32_t)(serialized[1] << 0);
-            LOG("LOAD run_byte[%lu] = %04x", i, disk6.disk[i].run_byte);
+            if (changeState) {
+                disk6.disk[i].run_byte  = (uint32_t)(serialized[0] << 8);
+                disk6.disk[i].run_byte |= (uint32_t)(serialized[1] << 0);
+            }
         }
 
-        if (!loaded_drives) {
+        if (changeState && !loaded_drives) {
             disk6_eject(0);
             disk6_eject(1);
             break;
@@ -1224,6 +1266,14 @@ bool disk6_loadState(StateHelper_s *helper) {
     } while (0);
 
     return loaded;
+}
+
+bool disk6_loadState(StateHelper_s *helper) {
+    return _disk6_loadState(helper, NULL);
+}
+
+bool disk6_stateExtractDiskPaths(StateHelper_s *helper, JSON_ref *json) {
+    return _disk6_loadState(helper, json);
 }
 
 #if DISK_TRACING

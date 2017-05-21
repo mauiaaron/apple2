@@ -15,7 +15,9 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.drawable.BitmapDrawable;
+import android.net.Uri;
 import android.os.Build;
+import android.os.ParcelFileDescriptor;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -35,6 +37,11 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
+import java.io.FileDescriptor;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.net.URI;
+import java.net.URL;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Apple2MainMenu {
@@ -328,20 +335,57 @@ public class Apple2MainMenu {
                     return;
                 }
 
-                String jsonData = mActivity.loadState(quickSavePath);
-                try {
-                    JSONObject map = new JSONObject(jsonData);
-                    String diskPath1 = map.getString("disk1");
-                    boolean readOnly1 = map.getBoolean("readOnly1");
-                    Apple2Preferences.setJSONPref(Apple2DisksMenu.SETTINGS.CURRENT_DISK_PATH_A, diskPath1);
-                    Apple2Preferences.setJSONPref(Apple2DisksMenu.SETTINGS.CURRENT_DISK_PATH_A_RO, readOnly1);
+                Apple2DisksMenu.ejectDisk(/*isDriveA:*/true);
+                Apple2DisksMenu.ejectDisk(/*isDriveA:*/false);
 
-                    String diskPath2 = map.getString("disk2");
-                    boolean readOnly2 = map.getBoolean("readOnly2");
-                    Apple2Preferences.setJSONPref(Apple2DisksMenu.SETTINGS.CURRENT_DISK_PATH_B, diskPath2);
-                    Apple2Preferences.setJSONPref(Apple2DisksMenu.SETTINGS.CURRENT_DISK_PATH_B_RO, readOnly2);
-                } catch (JSONException je) {
-                    Log.v(TAG, "OOPS : " + je);
+                // First we extract and open the emulator.state disk paths (which could be in a restricted location)
+                String jsonString = mActivity.stateExtractDiskPaths(quickSavePath);
+                try {
+
+                    JSONObject map = new JSONObject(jsonString);
+                    map.put("stateFile", quickSavePath);
+
+                    final String[] diskPathKeys = new String[]{"diskA", "diskB"};
+                    final String[] readOnlyKeys = new String[]{"readOnlyA", "readOnlyB"};
+                    final String[] fdKeys = new String[]{"fdA", "fdB"};
+
+                    for (int i = 0; i < 2; i++) {
+                        String diskPath = map.getString(diskPathKeys[i]);
+                        boolean readOnly = map.getBoolean(readOnlyKeys[i]);
+
+                        Apple2Preferences.setJSONPref(i == 0 ? Apple2DisksMenu.SETTINGS.CURRENT_DISK_PATH_A : Apple2DisksMenu.SETTINGS.CURRENT_DISK_PATH_B, diskPath);
+                        Apple2Preferences.setJSONPref(i == 0 ? Apple2DisksMenu.SETTINGS.CURRENT_DISK_PATH_A_RO : Apple2DisksMenu.SETTINGS.CURRENT_DISK_PATH_B_RO, readOnly);
+
+                        if (diskPath.equals("")) {
+                            continue;
+                        }
+
+                        if (diskPath.startsWith("file://")) {
+                            ////int fd = Apple2DiskChooserActivity.openFileDescriptor(diskPath, /*isReadOnly:*/readOnly);
+                            ////map.put(fdKeys[i], fd);
+                        } else {
+                            boolean isGzip = Apple2DisksMenu.isGzipExtension(diskPath);
+                            boolean exists = new File(diskPath).exists();
+
+                            if (!exists) {
+                                diskPath = isGzip ? Apple2DisksMenu.removeGzipExtention(diskPath) : Apple2DisksMenu.addGzipExtension(diskPath);
+                                isGzip = !isGzip;
+                                exists = new File(diskPath).exists();
+                                if (!exists) {
+                                    Log.e(TAG, "Did not find path(s) for drive #" + i + " specified in emulator.state file : " + diskPath);
+                                }
+                            }
+
+                            Apple2Preferences.setJSONPref(i == 0 ? Apple2DisksMenu.SETTINGS.CURRENT_DISK_PATH_A : Apple2DisksMenu.SETTINGS.CURRENT_DISK_PATH_B, diskPath);
+                        }
+                    }
+
+                    jsonString = mActivity.loadState(map.toString());
+
+                    // FIXME TODO : what to do if state load failed?
+
+                } catch (Throwable t) {
+                    Log.v(TAG, "OOPS : " + t);
                 }
                 Apple2MainMenu.this.dismiss();
             }

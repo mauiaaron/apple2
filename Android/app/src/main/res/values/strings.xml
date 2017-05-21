@@ -44,6 +44,7 @@
     <string name="disk_show_operation_summary">Shows when disk drives are reading or writing</string>
     <string name="emulation_continue">Continue…</string>
     <string name="emulation_disks">Load disk image</string>
+    <string name="file_chooser">System choose disk…</string>
     <string name="header_disks">Insert disk:</string>
     <string name="input_current">Current touch device</string>
     <string name="input_current_summary">Choose current touch device</string>

@@ -392,7 +392,7 @@ TEST test_disk_bytes_savehello_dsk() {
     disk6_eject(0);
 
     // Now verify actual disk bytes written to disk
-    test_setup_boot_disk(BLANK_DSK, 1);
+    test_setup_boot_disk(BLANK_DSK, /*readonly:*/0); // !readonly forces gunzip()ping file so we can read raw data ...
 
     do {
         uint8_t md[SHA_DIGEST_LENGTH];
@@ -486,7 +486,7 @@ TEST test_disk_bytes_savehello_nib() {
     disk6_eject(0);
 
     // Now verify actual disk bytes written to disk
-    test_setup_boot_disk(BLANK_NIB, 1);
+    test_setup_boot_disk(BLANK_NIB, /*readonly:*/0); // !readonly forces gunzip()ping file so we can read raw data ...
 
     do {
         uint8_t md[SHA_DIGEST_LENGTH];
@@ -580,7 +580,7 @@ TEST test_disk_bytes_savehello_po() {
     disk6_eject(0);
 
     // Now verify actual disk bytes written to disk
-    test_setup_boot_disk(BLANK_PO, 1);
+    test_setup_boot_disk(BLANK_PO, /*readonly:*/0); // !readonly forces gunzip()ping file so we can read raw data ...
 
     do {
         uint8_t md[SHA_DIGEST_LENGTH];
@@ -693,7 +693,7 @@ TEST test_outofspace_dsk() {
     disk6_eject(0);
 
     // Now verify actual disk bytes written to disk
-    test_setup_boot_disk(BLANK_DSK, 1);
+    test_setup_boot_disk(BLANK_DSK, /*readonly:*/0); // !readonly forces gunzip()ping file so we can read raw data ...
 
     do {
         uint8_t md[SHA_DIGEST_LENGTH];
@@ -748,7 +748,7 @@ TEST test_outofspace_nib() {
     disk6_eject(0);
 
     // Now verify actual disk bytes written to disk
-    test_setup_boot_disk(BLANK_NIB, 1);
+    test_setup_boot_disk(BLANK_NIB, /*readonly:*/0); // !readonly forces gunzip()ping file so we can read raw data ...
 
     do {
         uint8_t md[SHA_DIGEST_LENGTH];
@@ -803,7 +803,7 @@ TEST test_outofspace_po() {
     disk6_eject(0);
 
     // Now verify actual disk bytes written to disk
-    test_setup_boot_disk(BLANK_PO, 1);
+    test_setup_boot_disk(BLANK_PO, /*readonly:*/0); // !readonly forces gunzip()ping file so we can read raw data ...
 
     do {
         uint8_t md[SHA_DIGEST_LENGTH];
@@ -1276,7 +1276,7 @@ TEST test_inithello_po() {
 
 TEST test_data_stability_dsk() {
 
-    test_setup_boot_disk(BLANK_DSK, 1);
+    test_setup_boot_disk(BLANK_DSK, /*readonly:*/0); // !readonly forces gunzip()ping file so we can read raw data ...
 
     do {
         uint8_t md[SHA_DIGEST_LENGTH];
@@ -1311,7 +1311,7 @@ TEST test_data_stability_dsk() {
 
 TEST test_data_stability_nib() {
 
-    test_setup_boot_disk(BLANK_NIB, 0);
+    test_setup_boot_disk(BLANK_NIB, /*readonly:*/0); // !readonly forces gunzip()ping file so we can read raw data ...
 
     do {
         uint8_t md[SHA_DIGEST_LENGTH];
@@ -1346,7 +1346,7 @@ TEST test_data_stability_nib() {
 
 TEST test_data_stability_po() {
 
-    test_setup_boot_disk(BLANK_PO, 0);
+    test_setup_boot_disk(BLANK_PO, /*readonly:*/0); // !readonly forces gunzip()ping file so we can read raw data ...
 
     do {
         uint8_t md[SHA_DIGEST_LENGTH];
