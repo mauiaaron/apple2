@@ -67,11 +67,9 @@ void test_common_init(void) {
     c_debugger_set_timeout(0);
 }
 
-int test_setup_boot_disk(const char *fileName, int readonly) {
-    int err = 0;
-    char **path = NULL;
-#define PATHS_COUNT 8
-    char *paths[PATHS_COUNT + 1] = { 0 };
+#if defined(__APPLE__)
+#   define PATHS_COUNT 8
+char **_copy_paths_mac(const char *fileName) {
     const char *fmts[PATHS_COUNT + 1] = {
         "%s%sdisks/%s",
         "%s%sdisks/demo/%s",
@@ -84,7 +82,9 @@ int test_setup_boot_disk(const char *fileName, int readonly) {
         NULL,
     };
 
-#if defined(__APPLE__)
+    char **paths = CALLOC(1, sizeof(fmts));
+    assert(paths);
+
 #   if TARGET_OS_SIMULATOR || !TARGET_OS_EMBEDDED
     const char *prefixPath = "";
     const char *sep = "";
@@ -150,18 +150,70 @@ int test_setup_boot_disk(const char *fileName, int readonly) {
             ++fmtPtr;
         }
     } while (0);
-#else // !__APPLE__
+
+    return paths;
+}
+
+#else
+
+#   define PATHS_COUNT 8
+#   if defined(__ANDROID__)
+#       define X_PATHS_COUNT 1
+#   else
+#       define X_PATHS_COUNT 0
+#   endif
+char **_copy_paths_main(const char *fileName) {
+
+    const char *fmts[PATHS_COUNT + X_PATHS_COUNT + 1] = {
+        "%s/disks/%s",
+        "%s/disks/demo/%s",
+        "%s/disks/blanks/%s",
+        "%s/disks/3rd-party-test/%s",
+        "%s/external-disks/%s",
+        "%s/external-disks/demo/%s",
+        "%s/external-disks/blanks/%s",
+        "%s/external-disks/3rd-party-test/%s",
+#   if defined(__ANDROID__)
+        // extra paths ...
+        "/sdcard/apple2ix/%s",
+#   endif
+        NULL,
+    };
+
+    char **paths = CALLOC(1, sizeof(fmts));
+    assert(paths);
+
     do {
+        const char *fmt = NULL;
         const char **fmtPtr = &fmts[0];
         unsigned int idx = 0;
         while (*fmtPtr) {
-            const char *fmt = *fmtPtr++;
-            ASPRINTF(&paths[idx++], fmt, data_dir, "/", fileName);
+            fmt = *fmtPtr++;
+            if (idx < PATHS_COUNT) {
+                ASPRINTF(&paths[idx++], fmt, data_dir, fileName);
+            } else {
+                ASPRINTF(&paths[idx++], fmt, fileName);
+            }
         }
+
     } while (0);
+
+    return paths;
+}
+
 #endif
 
-    path = &paths[0];
+int test_setup_boot_disk(const char *fileName, int readonly) {
+
+#if defined(__APPLE__)
+    char **paths = _copy_paths_mac(fileName);
+#else
+    char **paths = _copy_paths_main(fileName);
+#endif
+
+    int err = 0;
+
+    char **path = &paths[0];
     while (*path) {
         char *disk = *path;
         ++path;
@@ -194,6 +246,8 @@ int test_setup_boot_disk(const char *fileName, int readonly) {
         ++path;
         FREE(disk);
     }
+
+    FREE(paths);
 
     return err;
 }

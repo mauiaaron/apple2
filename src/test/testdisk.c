@@ -1376,6 +1376,46 @@ TEST test_data_stability_po() {
     PASS();
 }
 
+#define GZBAD_NIB "testgzheader.nib"
+#define GZBAD_NIB_LOAD_SHA1 "98EB8D2EF486E5BF888789A6FF9D4E3DEC7902B7"
+#define GZBAD_NIB_LOAD_SHA2 "764F580287564B5464BF98BC2026E110F06C9EA4"
+static int _test_disk_image_with_gzip_header(int readonly) {
+
+    test_setup_boot_disk(GZBAD_NIB, readonly);
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
+    c_debugger_go();
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+
+    test_type_input("CLEAR\r");
+
+    c_debugger_set_timeout(2);
+    c_debugger_go();
+    c_debugger_set_timeout(0);
+
+    do {
+        uint8_t md[SHA_DIGEST_LENGTH];
+        const uint8_t * const fb = video_scan();
+        SHA1(fb, SCANWIDTH*SCANHEIGHT, md);
+        sha1_to_str(md, mdstr);
+        bool matches_sha1 = (strcasecmp(mdstr, GZBAD_NIB_LOAD_SHA1) == 0);
+        bool matches_sha2 = (strcasecmp(mdstr, GZBAD_NIB_LOAD_SHA2) == 0);
+        ASSERT(matches_sha1 || matches_sha2);
+    } while(0);
+
+    disk6_eject(0);
+
+    PASS();
+}
+
+TEST test_disk_image_with_gzip_header_ro() {
+    return _test_disk_image_with_gzip_header(/*readonly:*/1);
+}
+
+TEST test_disk_image_with_gzip_header_rw() {
+    return _test_disk_image_with_gzip_header(/*readonly:*/0);
+}
+
 #if TEST_DISK_EDGE_CASES
 #define DROL_DSK "Drol.dsk.gz"
 #define DROL_CRACK_SCREEN_SHA "FD7332529E117F14DA3880BB36FE8E23C3704799"
@@ -1462,6 +1502,9 @@ GREATEST_SUITE(test_suite_disk) {
     RUN_TESTp(test_data_stability_dsk);
     RUN_TESTp(test_data_stability_nib);
     RUN_TESTp(test_data_stability_po);
+
+    RUN_TESTp(test_disk_image_with_gzip_header_ro);
+    RUN_TESTp(test_disk_image_with_gzip_header_rw);
 
     // edge-case tests may require testing copyrighted images (which I have in my possession by legally owning the
     // original disk image (yep, I do ;-)
