@@ -52,6 +52,7 @@
 #   include "audio/mockingboard.h"	// For g_uTimer1IrqCount
 #   if TESTING
 #       include "greatest.h"
+#       undef fprintf // greatest redefines fprintf on Droid!
 #   endif
 #endif
 

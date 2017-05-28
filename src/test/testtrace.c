@@ -55,18 +55,37 @@ static void testspeaker_cyclesOverflow(void) {
 }
 
 TEST test_timing_overflow() {
+    test_setup_boot_disk(BLANK_DSK, /*readonly:*/1);
+    c_debugger_set_timeout(1);
+
+    ASSERT(!cycles_overflowed);
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
 
     // force an almost overflow
-
     testing_getCyclesCount = &testspeaker_getCyclesCount;
     testing_cyclesOverflow = &testspeaker_cyclesOverflow;
 
-    ASSERT(!cycles_overflowed);
-    test_setup_boot_disk(BLANK_DSK, /*readonly:*/1);
-    BOOT_TO_DOS();
+    extern volatile uint8_t emul_reinitialize;
+    do {
+        emul_reinitialize = 1;
+        c_debugger_go();
+
+        if (cycles_overflowed) {
+            break;
+        }
+
+        ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
+    } while (1);
+
     ASSERT(cycles_overflowed);
 
+    c_debugger_set_timeout(0);
+
+    c_debugger_go();
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+
     // appears emulator handled cycle count overflow gracefully ...
+
     testing_getCyclesCount = NULL;
     testing_cyclesOverflow = NULL;
 

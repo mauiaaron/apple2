@@ -95,6 +95,8 @@ elif test "$(basename $0)" = "testdisplay" ; then
     ln -s testdisplay.mk Android.mk
 elif test "$(basename $0)" = "testprefs" ; then
     ln -s testprefs.mk Android.mk
+elif test "$(basename $0)" = "testtrace" ; then
+    ln -s testtrace.mk Android.mk
 elif test "$(basename $0)" = "testui" ; then
     ln -s testui.mk Android.mk
 elif test "$(basename $0)" = "testvm" ; then

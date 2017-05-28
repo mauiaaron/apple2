@@ -115,7 +115,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #       include <sys/io.h>
 #       endif
 #       if TESTING
-#       include "greatest.h"
+#           include "greatest.h"
+#           undef fprintf // greatest redefines fprintf on Droid!
 #       endif
 
 #if defined(FAILED)
