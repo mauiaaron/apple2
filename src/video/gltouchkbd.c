@@ -711,7 +711,7 @@ static int64_t gltouchkbd_onTouchEvent(interface_touch_event_t action, int point
 static void _loadAltKbd(const char *kbdPath) {
     JSON_ref jsonRef = NULL;
 
-    json_unescapeSlashes(&kbdPath);
+    json_unescapeSlashes((char **)&kbdPath);
     int tokCount = json_createFromFile(kbdPath, &jsonRef);
     JSON_s parsedData = { 0 };
 

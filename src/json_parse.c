@@ -1101,9 +1101,6 @@ void json_destroy(JSON_ref *jsonRef) {
 
     FREE(parsedData->jsonString);
     FREE(parsedData->jsonTokens);
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wincompatible-pointer-types-discards-qualifiers"
-    FREE(*jsonRef);
-#pragma clang diagnostic pop
+    FREE(*((JSON_s **)jsonRef));
 }
 
