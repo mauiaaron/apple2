@@ -115,6 +115,17 @@ public class Apple2DisksMenu implements Apple2MenuView {
                 return true;
             }
         },
+        CURRENT_DISK_PATH_A_GZ {
+            @Override
+            public String getPrefKey() {
+                return "driveAInsertedDiskGZ";
+            }
+
+            @Override
+            public Object getPrefDefault() {
+                return true;
+            }
+        },
         CURRENT_DISK_PATH_B {
             @Override
             public String getPrefKey() {
@@ -130,6 +141,17 @@ public class Apple2DisksMenu implements Apple2MenuView {
             @Override
             public String getPrefKey() {
                 return "driveBInsertedDiskRO";
+            }
+
+            @Override
+            public Object getPrefDefault() {
+                return true;
+            }
+        },
+        CURRENT_DISK_PATH_B_GZ {
+            @Override
+            public String getPrefKey() {
+                return "driveBInsertedDiskGZ";
             }
 
             @Override
@@ -260,7 +282,7 @@ public class Apple2DisksMenu implements Apple2MenuView {
         return path;
     }
 
-    public static void insertDisk(String imageName, boolean isDriveA, boolean isReadOnly) {
+    public static void insertDisk(String imageName, boolean isDriveA, boolean isReadOnly, boolean onLaunch) {
         try {
             JSONObject map = new JSONObject();
 
@@ -271,13 +293,8 @@ public class Apple2DisksMenu implements Apple2MenuView {
                 ////map.put("fd", fd);
             } else {
                 File file = new File(imageName);
-
                 if (!file.exists()) {
-                    imageName = addGzipExtension(imageName);
-                    file = new File(imageName);
-                    if (!file.exists()) {
-                        throw new RuntimeException("cannot insert : " + imageName);
-                    }
+                    throw new RuntimeException("cannot insert : " + imageName);
                 }
             }
 
@@ -292,8 +309,21 @@ public class Apple2DisksMenu implements Apple2MenuView {
             map.put("disk", imageName);
             map.put("drive", isDriveA ? "0" : "1");
             map.put("readOnly", isReadOnly ? "true" : "false");
+            if (onLaunch) {
+                boolean wasGzipped = (boolean) (isDriveA ? Apple2Preferences.getJSONPref(SETTINGS.CURRENT_DISK_PATH_A_GZ) : Apple2Preferences.getJSONPref(SETTINGS.CURRENT_DISK_PATH_B_GZ));
+                map.put("wasGzipped", wasGzipped ? "true" : "false");
+            }
 
             String jsonString = nativeChooseDisk(map.toString());
+
+            map = new JSONObject(jsonString);
+            boolean inserted = map.getBoolean("inserted");
+            if (inserted) {
+                boolean wasGzipped = map.getBoolean("wasGzipped");
+                Apple2Preferences.setJSONPref(isDriveA ? Apple2DisksMenu.SETTINGS.CURRENT_DISK_PATH_A_GZ : Apple2DisksMenu.SETTINGS.CURRENT_DISK_PATH_B_GZ, wasGzipped);
+            } else {
+                ejectDisk(isDriveA);
+            }
 
         } catch (Throwable t) {
             Log.d(TAG, "OOPS: " + t);
@@ -355,7 +385,7 @@ public class Apple2DisksMenu implements Apple2MenuView {
                 boolean isDriveA = driveA.isChecked();
                 boolean diskReadOnly = readOnly.isChecked();
 
-                insertDisk(imagePath, isDriveA, diskReadOnly);
+                insertDisk(imagePath, isDriveA, diskReadOnly, /*onLaunch:*/false);
 
                 dialog.dismiss();
                 mActivity.dismissAllMenus();
@@ -405,20 +435,6 @@ public class Apple2DisksMenu implements Apple2MenuView {
 
         suffix = name.substring(len - 7, len);
         return (suffix.equalsIgnoreCase(".dsk.gz") || suffix.equalsIgnoreCase(".nib.gz"));
-    }
-
-    public static boolean isGzipExtension(String name) {
-        int len = name.length();
-        String ext = name.substring(len - 3, len);
-        return ext.equals(".gz");
-    }
-
-    public static String removeGzipExtention(String name) {
-        return isGzipExtension(name) ? name.substring(0, name.length() - 3) : name;
-    }
-
-    public static String addGzipExtension(String name) {
-        return isGzipExtension(name) ? name : name + ".gz";
     }
 
     // ------------------------------------------------------------------------

@@ -143,8 +143,8 @@ public class Apple2Activity extends Activity /*implements Apple2DiskChooserActiv
         boolean switchingToPortrait = Apple2VideoSettingsMenu.SETTINGS.applyLandscapeMode(this);
         Apple2Preferences.sync(this, null);
 
-        Apple2DisksMenu.insertDisk((String) Apple2Preferences.getJSONPref(Apple2DisksMenu.SETTINGS.CURRENT_DISK_PATH_A), /*driveA:*/true, /*isReadOnly:*/(boolean) Apple2Preferences.getJSONPref(Apple2DisksMenu.SETTINGS.CURRENT_DISK_PATH_A_RO));
-        Apple2DisksMenu.insertDisk((String) Apple2Preferences.getJSONPref(Apple2DisksMenu.SETTINGS.CURRENT_DISK_PATH_B), /*driveA:*/false, /*isReadOnly:*/(boolean) Apple2Preferences.getJSONPref(Apple2DisksMenu.SETTINGS.CURRENT_DISK_PATH_B_RO));
+        Apple2DisksMenu.insertDisk((String) Apple2Preferences.getJSONPref(Apple2DisksMenu.SETTINGS.CURRENT_DISK_PATH_A), /*driveA:*/true, /*isReadOnly:*/(boolean) Apple2Preferences.getJSONPref(Apple2DisksMenu.SETTINGS.CURRENT_DISK_PATH_A_RO), /*onLaunch:*/true);
+        Apple2DisksMenu.insertDisk((String) Apple2Preferences.getJSONPref(Apple2DisksMenu.SETTINGS.CURRENT_DISK_PATH_B), /*driveA:*/false, /*isReadOnly:*/(boolean) Apple2Preferences.getJSONPref(Apple2DisksMenu.SETTINGS.CURRENT_DISK_PATH_B_RO), /*onLaunch:*/true);
 
         showSplashScreen(!firstTime);
 

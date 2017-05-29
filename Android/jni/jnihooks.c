@@ -407,8 +407,16 @@ jstring Java_org_deadc0de_apple2ix_Apple2DisksMenu_nativeChooseDisk(JNIEnv *env,
         inserted = false;
     } else {
         video_animations->animation_showDiskChosen(drive);
+        // possibly override was_gzipped, if specified in args ...
+        bool wasGzipped = false;
+        if (json_mapParseBoolValue(jsonData, "wasGzipped", &wasGzipped)) {
+            disk6.disk[drive].was_gzipped = wasGzipped;
+        }
     }
 
+    // remember if image was gzipped
+    prefs_setBoolValue(PREF_DOMAIN_VM, drive == 0 ? PREF_DISK_DRIVEA_GZ : PREF_DISK_DRIVEB_GZ, disk6.disk[drive].was_gzipped); // HACK FIXME TODO ... refactor : this is erased on the Java side when we resume emulation 
+    json_mapSetBoolValue(jsonData, "wasGzipped", disk6.disk[drive].was_gzipped);
     json_mapSetBoolValue(jsonData, "inserted", inserted);
 
     if (createdFd) {
@@ -452,26 +460,6 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeSaveState(JNIEnv *env, jcla
     (*env)->ReleaseStringUTFChars(env, jPath, path);
 }
 
-static int _insert_path(char *path, bool readOnly) {
-    int fd = -1;
-
-    if (strlen(path) > 0) {
-        TEMP_FAILURE_RETRY(fd = open(path, readOnly ? O_RDONLY : O_RDWR));
-        if (fd == -1) {
-            ASPRINTF(&path, "%s.gz", path);
-            if (path != NULL) {
-                TEMP_FAILURE_RETRY(fd = open(path, readOnly ? O_RDONLY : O_RDWR));
-                if (fd == -1) {
-                    LOG("OOPS could not open disk path %s", path);
-                }
-            }
-            FREE(path);
-        }
-    }
-
-    return fd;
-}
-
 jstring Java_org_deadc0de_apple2ix_Apple2Activity_nativeLoadState(JNIEnv *env, jclass cls, jstring jJsonString) {
     assert(cpu_isPaused() && "considered dangerous to load state when CPU thread is running");
 
@@ -498,7 +486,10 @@ jstring Java_org_deadc0de_apple2ix_Apple2Activity_nativeLoadState(JNIEnv *env, j
         json_mapCopyStringValue(jsonData, "diskA", &pathA);
         json_unescapeSlashes(&pathA);
 
-        fdA = _insert_path(pathA, readOnlyA);
+        TEMP_FAILURE_RETRY(fdA = open(pathA, readOnlyA ? O_RDONLY : O_RDWR));
+        if (fdA == -1) {
+            LOG("OOPS could not open disk path %s", pathA);
+        }
         createdFdA = fdA > 0;
 
         FREE(pathA);
@@ -514,16 +505,23 @@ jstring Java_org_deadc0de_apple2ix_Apple2Activity_nativeLoadState(JNIEnv *env, j
         json_mapCopyStringValue(jsonData, "diskB", &pathB);
         json_unescapeSlashes(&pathB);
 
-        fdB = _insert_path(pathB, readOnlyB);
+        TEMP_FAILURE_RETRY(fdB = open(pathB, readOnlyB ? O_RDONLY : O_RDWR));
+        if (fdB == -1) {
+            LOG("OOPS could not open disk path %s", pathB);
+        }
         createdFdB = fdB > 0;
 
         FREE(pathB);
     }
 
     bool loadStateSuccess = true;
-    if (!emulator_loadState(path, (int)fdA, (int)fdB)) {
+    if (emulator_loadState(path, (int)fdA, (int)fdB)) {
+        json_mapSetBoolValue(jsonData, "wasGzippedA", disk6.disk[0].was_gzipped);
+        json_mapSetBoolValue(jsonData, "wasGzippedB", disk6.disk[1].was_gzipped);
+    } else {
         loadStateSuccess = false;
         LOG("OOPS, could not load emulator state");
+        // FIXME TODO : should show invalid state animation here ...
     }
 
     if (createdFdA) {

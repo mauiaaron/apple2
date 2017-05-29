@@ -1007,6 +1007,8 @@ void disk6_flush(int drive) {
 
     __sync_synchronize();
 
+    LOG("FLUSHING disk image I/O");
+
     int ret = -1;
     TEMP_FAILURE_RETRY(ret = msync(disk6.disk[drive].raw_image_data, disk6.disk[drive].whole_len, MS_SYNC));
     if (ret) {
@@ -1093,8 +1095,7 @@ bool disk6_saveState(StateHelper_s *helper) {
             }
             LOG("SAVE stepper_phases[%lu] = %02x", i, stepper_phases);
 
-            // Save unused placeholder -- backwards compatibility
-            state = 0x0;
+            state = disk6.disk[i].was_gzipped;
             if (!helper->save(fd, &state, 1)) {
                 break;
             }
@@ -1235,9 +1236,15 @@ static bool _disk6_loadState(StateHelper_s *helper, JSON_ref *json) {
                 stepper_phases = state & 0x3; // HACK NOTE : this is unnecessarily encoded twice ...
             }
 
-            // load placeholder
+            // format A2V3+ : was_gzipped, (otherwise placeholder)
             if (!helper->load(fd, &state, 1)) {
                 break;
+            }
+            if (helper->version >= 3) {
+                disk6.disk[i].was_gzipped = (state != 0);
+
+                // remember if image was gzipped
+                prefs_setBoolValue(PREF_DOMAIN_VM, i == 0 ? PREF_DISK_DRIVEA_GZ : PREF_DISK_DRIVEB_GZ, disk6.disk[i].was_gzipped);
             }
 
             if (!helper->load(fd, &state, 1)) {

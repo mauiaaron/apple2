@@ -227,17 +227,6 @@ int test_setup_boot_disk(const char *fileName, int readonly) {
                 break;
             }
         }
-
-        size_t len = strlen(disk);
-        disk[len-3] = '\0'; // try again without '.gz' extension
-        TEMP_FAILURE_RETRY(fd = open(disk, readonly ? O_RDONLY : O_RDWR));
-        if (fd != -1) {
-            err = disk6_insert(fd, /*drive:*/0, disk, readonly) != NULL;
-            TEMP_FAILURE_RETRY(close(fd));
-            if (!err) {
-                break;
-            }
-        }
     }
 
     path = &paths[0];

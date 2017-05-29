@@ -364,23 +364,24 @@ public class Apple2MainMenu {
                             ////int fd = Apple2DiskChooserActivity.openFileDescriptor(diskPath, /*isReadOnly:*/readOnly);
                             ////map.put(fdKeys[i], fd);
                         } else {
-                            boolean isGzip = Apple2DisksMenu.isGzipExtension(diskPath);
                             boolean exists = new File(diskPath).exists();
-
                             if (!exists) {
-                                diskPath = isGzip ? Apple2DisksMenu.removeGzipExtention(diskPath) : Apple2DisksMenu.addGzipExtension(diskPath);
-                                isGzip = !isGzip;
-                                exists = new File(diskPath).exists();
-                                if (!exists) {
-                                    Log.e(TAG, "Did not find path(s) for drive #" + i + " specified in emulator.state file : " + diskPath);
-                                }
+                                Log.e(TAG, "Did not find path(s) for drive #" + i + " specified in emulator.state file : " + diskPath);
                             }
-
-                            Apple2Preferences.setJSONPref(i == 0 ? Apple2DisksMenu.SETTINGS.CURRENT_DISK_PATH_A : Apple2DisksMenu.SETTINGS.CURRENT_DISK_PATH_B, diskPath);
                         }
                     }
 
                     jsonString = mActivity.loadState(map.toString());
+                    map = new JSONObject(jsonString);
+
+                    {
+                        boolean wasGzippedA = map.getBoolean("wasGzippedA");
+                        Apple2Preferences.setJSONPref(Apple2DisksMenu.SETTINGS.CURRENT_DISK_PATH_A_GZ, wasGzippedA);
+                    }
+                    {
+                        boolean wasGzippedB = map.getBoolean("wasGzippedB");
+                        Apple2Preferences.setJSONPref(Apple2DisksMenu.SETTINGS.CURRENT_DISK_PATH_B_GZ, wasGzippedB);
+                    }
 
                     // FIXME TODO : what to do if state load failed?
 

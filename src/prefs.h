@@ -86,6 +86,8 @@
 // vm
 #define PREF_CPU_SCALE "cpuScale"
 #define PREF_CPU_SCALE_ALT "cpuScaleAlt"
+#define PREF_DISK_DRIVEA_GZ "driveAInsertedDiskGZ"
+#define PREF_DISK_DRIVEB_GZ "driveBInsertedDiskGZ"
 
 typedef void (*prefs_change_callback_f)(const char * _NONNULL domain);
 
