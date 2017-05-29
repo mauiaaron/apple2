@@ -21,13 +21,15 @@
 #define ZERR_DEFLATE_OPEN_SOURCE "Error opening source file for deflation"
 #define ZERR_DEFLATE_READ_SOURCE "Error reading source file for deflation"
 
-// inflate/uncompress from file descriptor into previously allocated buffer of expected_bytes length
+// Inflate/uncompress from file descriptor into previously allocated buffer of expected_bytes length.  Underlying file
+// can either be gzipped or not.  This is meant for readonly disk images.
 const char *zlib_inflate_to_buffer(int fd, const int expected_bytescount, char *buf);
 
-// inflate/uncompress from file descriptor back into itself
+// Inflate/uncompress from file descriptor back into itself.  Underlying file can either be gzipped or not.  This is
+// meant for read/write disk images.
 const char *zlib_inflate_inplace(int fd, const int expected_bytescount, bool *is_gzipped);
 
-// inline deflate/compress from buffer to buffer
+// Deflate/compress from buffer to buffer.  This is meant for ejecting read/write disk images.
 const char *zlib_deflate_buffer(const char *src, const int src_bytescount, char *dst, OUTPARM off_t *dst_size);
 
 #endif

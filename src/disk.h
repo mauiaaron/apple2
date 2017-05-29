@@ -79,8 +79,8 @@ extern drive_t disk6;
 // initialize emulated 5.25 Disk ][ module
 extern void disk6_init(void);
 
-// insert 5.25 disk image file from file descriptor (internally dup()'d so caller should close() after invocation).
-// file_name need NOT be a path, and is important only to determine the image type via file extension
+// insert 5.25 disk image file from file descriptor (internally dup()'d so caller may close() the passed fd after
+// invocation).  file_name need NOT be a path, and is important only to determine the image type via file extension
 extern const char *disk6_insert(int fd, int drive, const char * const file_name, int readonly);
 
 // eject 5.25 disk image file
