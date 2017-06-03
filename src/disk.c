@@ -777,10 +777,6 @@ void disk6_init(void) {
     disk6.ddrw = 0;
 }
 
-static volatile int get_errno() {
-    return errno;
-}
-
 const char *disk6_eject(int drive) {
 
 #if !TESTING
@@ -805,7 +801,7 @@ const char *disk6_eject(int drive) {
         if (disk6.disk[drive].was_gzipped) {
 
             // backup uncompressed data ...
-            char *compressed_data = drive == 0 ? &disk_a_raw[0] : &disk_b_raw[0];
+            uint8_t *compressed_data = drive == 0 ? &disk_a_raw[0] : &disk_b_raw[0];
 
             // re-compress in place ...
             err = zlib_deflate_buffer(/*src:*/disk6.disk[drive].raw_image_data, disk6.disk[drive].whole_len, /*dst:*/compressed_data, &compressed_size);

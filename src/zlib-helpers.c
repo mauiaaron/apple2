@@ -31,7 +31,7 @@ static const char* const _gzerr(gzFile gzf) {
     }
 }
 
-static int _gzread_data(gzFile gzsource, char *buf, const int expected_bytescount) {
+static int _gzread_data(gzFile gzsource, uint8_t *buf, const int expected_bytescount) {
     int bytescount = 0;
 
     int maxtries = 10;
@@ -58,7 +58,7 @@ static int _gzread_data(gzFile gzsource, char *buf, const int expected_bytescoun
     return bytescount;
 }
 
-static int _read_data(int fd_own, char *buf, const int expected_bytescount) {
+static int _read_data(int fd_own, uint8_t *buf, const int expected_bytescount) {
     int bytescount = 0;
 
     int maxtries = 10;
@@ -87,7 +87,7 @@ static int _read_data(int fd_own, char *buf, const int expected_bytescount) {
 }
 
 
-static int _write_data(int fd_own, char *buf, const int expected_bytescount) {
+static int _write_data(int fd_own, uint8_t *buf, const int expected_bytescount) {
     int bytescount = 0;
 
     int maxtries = 10;
@@ -121,7 +121,7 @@ static a2gzip_t _check_gzip_magick(int fd_own, const int expected_bytescount) {
     a2gzip_t ret = A2GZT_ERR;
 
     do {
-        char stkbuf[2];
+        uint8_t stkbuf[2];
         int bytescount = _read_data(fd_own, &stkbuf[0], sizeof(stkbuf));
         if (bytescount != sizeof(stkbuf)) {
             ERRLOG("OOPS, could not read file magick for file descriptor");
@@ -158,7 +158,7 @@ static a2gzip_t _check_gzip_magick(int fd_own, const int expected_bytescount) {
  *
  * Return NULL on success, or error string (possibly from zlib) on failure.
  */
-const char *zlib_inflate_to_buffer(int fd, const int expected_bytescount, char *buf) {
+const char *zlib_inflate_to_buffer(int fd, const int expected_bytescount, uint8_t *buf) {
     gzFile gzsource = NULL;
     int fd_own = -1;
 
@@ -254,7 +254,7 @@ const char *zlib_inflate_to_buffer(int fd, const int expected_bytescount, char *
 const char *zlib_inflate_inplace(int fd, const int expected_bytescount, bool *is_gzipped) {
     gzFile gzsource = NULL;
     int fd_own = -1;
-    char *buf = NULL;
+    uint8_t *buf = NULL;
 
     *is_gzipped = false;
 
@@ -374,7 +374,7 @@ const char *zlib_inflate_inplace(int fd, const int expected_bytescount, bool *is
  *
  * Return NULL on success, or error string (possibly from zlib) on failure.
  */
-const char *zlib_deflate_buffer(const char *src, const int src_bytescount, char *dst, OUTPARM off_t *dst_size) {
+const char *zlib_deflate_buffer(const uint8_t *src, const int src_bytescount, uint8_t *dst, OUTPARM off_t *dst_size) {
     char *gzPath = NULL;
     gzFile gzdest = NULL;
     int fd_own = -1;
