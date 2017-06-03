@@ -570,7 +570,12 @@ void c_interface_select_diskette( int drive )
                     /* reopen disk, forcing write enabled */
                     if (toupper(ch) == 'W')
                     {
-                        const char *err_str = disk6_insert(drive, temp, /*readonly:*/0);
+                        int fd = -1;
+                        TEMP_FAILURE_RETRY(fd = open(temp, O_RDWR));
+                        const char *err_str = disk6_insert(fd, drive, temp, /*readonly:*/0);
+                        if (fd > 0) {
+                            TEMP_FAILURE_RETRY(close(fd));
+                        }
                         if (err_str)
                         {
                             int ch = -1;
@@ -640,7 +645,12 @@ void c_interface_select_diskette( int drive )
                 _eject_disk(drive);
                 c_interface_print_screen( screen );
 
-                const char *err_str = disk6_insert(drive, temp, /*readonly:*/(toupper(ch) != 'W'));
+                int fd = -1;
+                TEMP_FAILURE_RETRY(fd = open(temp, O_RDWR));
+                const char *err_str = disk6_insert(fd, drive, temp, /*readonly:*/(toupper(ch) != 'W'));
+                if (fd > 0) {
+                    TEMP_FAILURE_RETRY(close(fd));
+                }
                 if (err_str)
                 {
                     int ch = -1;
