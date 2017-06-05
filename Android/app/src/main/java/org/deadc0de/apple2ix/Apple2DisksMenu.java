@@ -16,6 +16,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.Build;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -35,9 +36,9 @@ import org.json.JSONException;
 
 import java.io.File;
 import java.io.FilenameFilter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.deadc0de.apple2ix.basic.R;
 import org.json.JSONObject;
@@ -46,7 +47,7 @@ public class Apple2DisksMenu implements Apple2MenuView {
 
     private final static String TAG = "Apple2DisksMenu";
 
-    private final static String EXTERNAL_CHOOSER_SENTINEL = "apple2ix://";
+    public final static String EXTERNAL_CHOOSER_SENTINEL = "apple2ix://";
 
     private Apple2Activity mActivity = null;
     private View mDisksView = null;
@@ -282,15 +283,29 @@ public class Apple2DisksMenu implements Apple2MenuView {
         return path;
     }
 
-    public static void insertDisk(String imageName, boolean isDriveA, boolean isReadOnly, boolean onLaunch) {
+    public static void insertDisk(Apple2Activity activity, DiskArgs diskArgs, boolean isDriveA, boolean isReadOnly, boolean onLaunch) {
         try {
             JSONObject map = new JSONObject();
 
             ejectDisk(isDriveA);
 
-            if (imageName.startsWith("file://")) {
-                ////int fd = Apple2DiskChooserActivity.openFileDescriptor(imageName, isReadOnly);
-                ////map.put("fd", fd);
+            String imageName = diskArgs.path;
+
+            if (imageName == null) {
+                imageName = EXTERNAL_CHOOSER_SENTINEL + diskArgs.uri.toString();
+            }
+
+            if (imageName.startsWith(EXTERNAL_CHOOSER_SENTINEL)) {
+                if (diskArgs.pfd == null) {
+                    if (diskArgs.uri == null) {
+                        String uriString = imageName.substring(EXTERNAL_CHOOSER_SENTINEL.length());
+                        diskArgs.uri = Uri.parse(uriString);
+                    }
+                    diskArgs.pfd = Apple2DiskChooserActivity.openFileDescriptorFromUri(activity, diskArgs.uri);
+                }
+
+                int fd = diskArgs.pfd.getFd();
+                map.put("fd", fd);
             } else {
                 File file = new File(imageName);
                 if (!file.exists()) {
@@ -316,6 +331,15 @@ public class Apple2DisksMenu implements Apple2MenuView {
 
             String jsonString = nativeChooseDisk(map.toString());
 
+            if (diskArgs.pfd != null) {
+                try {
+                    diskArgs.pfd.close();
+                } catch (IOException ioe) {
+                    Log.e(TAG, "Error attempting to close PFD : " + ioe);
+                }
+                diskArgs.pfd = null;
+            }
+
             map = new JSONObject(jsonString);
             boolean inserted = map.getBoolean("inserted");
             if (inserted) {
@@ -339,7 +363,7 @@ public class Apple2DisksMenu implements Apple2MenuView {
         nativeEjectDisk(isDriveA);
     }
 
-    public void showDiskInsertionAlertDialog(String title, final String imagePath) {
+    public void showDiskInsertionAlertDialog(String title, final DiskArgs diskArgs) {
 
         title = mActivity.getResources().getString(R.string.header_disks) + " " + title;
 
@@ -385,7 +409,7 @@ public class Apple2DisksMenu implements Apple2MenuView {
                 boolean isDriveA = driveA.isChecked();
                 boolean diskReadOnly = readOnly.isChecked();
 
-                insertDisk(imagePath, isDriveA, diskReadOnly, /*onLaunch:*/false);
+                insertDisk(mActivity, diskArgs, isDriveA, diskReadOnly, /*onLaunch:*/false);
 
                 dialog.dismiss();
                 mActivity.dismissAllMenus();
@@ -613,43 +637,18 @@ public class Apple2DisksMenu implements Apple2MenuView {
             public void onItemClick(AdapterView<?> parent, View view, final int position, long id) {
                 if (isDirectory[position]) {
                     if (filePaths[position].equals(EXTERNAL_CHOOSER_SENTINEL)) {
-                        /*
                         final boolean alreadyChoosing = Apple2DiskChooserActivity.sDiskChooserIsChoosing.getAndSet(true);
                         if (alreadyChoosing) {
                             return;
                         }
 
-
-                        ///*
-                        final String packageName = "org.deadc0de.apple2ix.basic";
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                            mActivity.grantUriPermission(packageName, uri, Intent.FLAG_GRANT_PREFIX_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-                        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                            mActivity.grantUriPermission(packageName, uri, Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-                        }
-                        //* /
-
                         Intent chooserIntent = new Intent(mActivity, Apple2DiskChooserActivity.class);
+                        chooserIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION/* | Intent.FLAG_ACTIVITY_CLEAR_TOP */);
 
-
-
-                        ///*
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                            chooserIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_GRANT_PREFIX_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-                        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                            chooserIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-                        }
-                        //* /
-
-                        //chooserIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_GRANT_PREFIX_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION/* | Intent.FLAG_ACTIVITY_CLEAR_TOP * /);
-
-                        chooserIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION/* | Intent.FLAG_ACTIVITY_CLEAR_TOP * /);
-
-                        //chooserIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION/* | Intent.FLAG_ACTIVITY_CLEAR_TOP * /);
                         Apple2DiskChooserActivity.sDisksCallback = mActivity;
                         mActivity.startActivity(chooserIntent);
+
                         return;
-                        */
                     }
 
                     Log.d(TAG, "Descending to path : " + filePaths[position]);
@@ -676,7 +675,7 @@ public class Apple2DisksMenu implements Apple2MenuView {
                     return;
                 }
 
-                showDiskInsertionAlertDialog(/*title:*/fileNames[position], /*diskPath:*/imageName);
+                showDiskInsertionAlertDialog(/*title:*/fileNames[position], /*diskPath:*/new DiskArgs(imageName));
             }
         });
     }

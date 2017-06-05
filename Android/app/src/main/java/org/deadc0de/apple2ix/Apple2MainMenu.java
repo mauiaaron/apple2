@@ -25,7 +25,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.CompoundButton;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.PopupWindow;
@@ -33,15 +32,10 @@ import android.widget.RadioButton;
 import android.widget.TextView;
 
 import org.deadc0de.apple2ix.basic.R;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
-import java.io.FileDescriptor;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.net.URI;
-import java.net.URL;
+import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Apple2MainMenu {
@@ -349,6 +343,8 @@ public class Apple2MainMenu {
                     final String[] readOnlyKeys = new String[]{"readOnlyA", "readOnlyB"};
                     final String[] fdKeys = new String[]{"fdA", "fdB"};
 
+                    ParcelFileDescriptor[] pfds = { null, null };
+
                     for (int i = 0; i < 2; i++) {
                         String diskPath = map.getString(diskPathKeys[i]);
                         boolean readOnly = map.getBoolean(readOnlyKeys[i]);
@@ -360,9 +356,15 @@ public class Apple2MainMenu {
                             continue;
                         }
 
-                        if (diskPath.startsWith("file://")) {
-                            ////int fd = Apple2DiskChooserActivity.openFileDescriptor(diskPath, /*isReadOnly:*/readOnly);
-                            ////map.put(fdKeys[i], fd);
+                        if (diskPath.startsWith(Apple2DisksMenu.EXTERNAL_CHOOSER_SENTINEL)) {
+                            String uriString = diskPath.substring(Apple2DisksMenu.EXTERNAL_CHOOSER_SENTINEL.length());
+
+                            Uri uri = Uri.parse(uriString);
+
+                            pfds[i] = Apple2DiskChooserActivity.openFileDescriptorFromUri(mActivity, uri);
+                            int fd = pfds[i].getFd();
+
+                            map.put(fdKeys[i], fd);
                         } else {
                             boolean exists = new File(diskPath).exists();
                             if (!exists) {
@@ -372,6 +374,16 @@ public class Apple2MainMenu {
                     }
 
                     jsonString = mActivity.loadState(map.toString());
+
+                    for (int i = 0; i < 2; i++) {
+                        try {
+                            if (pfds[i] != null) {
+                                pfds[i].close();
+                            }
+                        } catch (IOException ioe) {
+                            Log.e(TAG, "Error attempting to close PFD #" + i + " : " + ioe);
+                        }
+                    }
                     map = new JSONObject(jsonString);
 
                     {

@@ -14,9 +14,7 @@ package org.deadc0de.apple2ix;
 import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.StrictMode;
@@ -25,19 +23,14 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
-import android.widget.Toast;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.StringTokenizer;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.deadc0de.apple2ix.basic.BuildConfig;
-import org.deadc0de.apple2ix.basic.R;
 
-public class Apple2Activity extends Activity /*implements Apple2DiskChooserActivity.Callback*/ {
+public class Apple2Activity extends Activity implements Apple2DiskChooserActivity.Callback {
 
     private final static String TAG = "Apple2Activity";
 
@@ -55,7 +48,7 @@ public class Apple2Activity extends Activity /*implements Apple2DiskChooserActiv
     private AtomicBoolean mPausing = new AtomicBoolean(false);
     private AtomicBoolean mSwitchingToPortrait = new AtomicBoolean(false);
 
-    private static String sDiskPathChosen = null;
+    private static DiskArgs sDisksChosen = null;
 
     // non-null if we failed to load/link the native code ... likely we are running on some bizarre 'droid variant
     private static Throwable sNativeBarfedThrowable = null;
@@ -143,8 +136,8 @@ public class Apple2Activity extends Activity /*implements Apple2DiskChooserActiv
         boolean switchingToPortrait = Apple2VideoSettingsMenu.SETTINGS.applyLandscapeMode(this);
         Apple2Preferences.sync(this, null);
 
-        Apple2DisksMenu.insertDisk((String) Apple2Preferences.getJSONPref(Apple2DisksMenu.SETTINGS.CURRENT_DISK_PATH_A), /*driveA:*/true, /*isReadOnly:*/(boolean) Apple2Preferences.getJSONPref(Apple2DisksMenu.SETTINGS.CURRENT_DISK_PATH_A_RO), /*onLaunch:*/true);
-        Apple2DisksMenu.insertDisk((String) Apple2Preferences.getJSONPref(Apple2DisksMenu.SETTINGS.CURRENT_DISK_PATH_B), /*driveA:*/false, /*isReadOnly:*/(boolean) Apple2Preferences.getJSONPref(Apple2DisksMenu.SETTINGS.CURRENT_DISK_PATH_B_RO), /*onLaunch:*/true);
+        Apple2DisksMenu.insertDisk(this, new DiskArgs((String) Apple2Preferences.getJSONPref(Apple2DisksMenu.SETTINGS.CURRENT_DISK_PATH_A)), /*driveA:*/true, /*isReadOnly:*/(boolean) Apple2Preferences.getJSONPref(Apple2DisksMenu.SETTINGS.CURRENT_DISK_PATH_A_RO), /*onLaunch:*/true);
+        Apple2DisksMenu.insertDisk(this, new DiskArgs((String) Apple2Preferences.getJSONPref(Apple2DisksMenu.SETTINGS.CURRENT_DISK_PATH_B)), /*driveA:*/false, /*isReadOnly:*/(boolean) Apple2Preferences.getJSONPref(Apple2DisksMenu.SETTINGS.CURRENT_DISK_PATH_B_RO), /*onLaunch:*/true);
 
         showSplashScreen(!firstTime);
 
@@ -193,24 +186,12 @@ public class Apple2Activity extends Activity /*implements Apple2DiskChooserActiv
 
         mSettingsMenu = new Apple2SettingsMenu(this);
         mDisksMenu = new Apple2DisksMenu(this);
-
-        Intent intent = getIntent();
-        String path = null;
-        if (intent != null) {
-            Uri data = intent.getData();
-            if (data != null) {
-                path = data.getPath();
-            }
-        }
-        if (path != null && Apple2DisksMenu.hasDiskExtension(path)) {
-            sDiskPathChosen = path;
-        }
     }
 
-    /*@Override
-    public void onDisksChosen(String path) {
-        sDiskPathChosen = path;
-    }*/
+    @Override
+    public void onDisksChosen(DiskArgs args) {
+        sDisksChosen = args;
+    }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
@@ -246,9 +227,9 @@ public class Apple2Activity extends Activity /*implements Apple2DiskChooserActiv
             Apple2CrashHandler.getInstance().checkForCrashes(this); // NOTE : needs to be called again to clean-up
         }
 
-        if (sDiskPathChosen != null && mDisksMenu != null) {
-            mDisksMenu.showDiskInsertionAlertDialog("title", sDiskPathChosen);
-            sDiskPathChosen = null;
+        if (sDisksChosen != null && mDisksMenu != null) {
+            mDisksMenu.showDiskInsertionAlertDialog("title", sDisksChosen);
+            sDisksChosen = null;
         }
     }
 
