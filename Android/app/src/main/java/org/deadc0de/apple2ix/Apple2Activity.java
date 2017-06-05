@@ -228,7 +228,9 @@ public class Apple2Activity extends Activity implements Apple2DiskChooserActivit
         }
 
         if (sDisksChosen != null && mDisksMenu != null) {
-            mDisksMenu.showDiskInsertionAlertDialog("title", sDisksChosen);
+            if (sDisksChosen.pfd != null) {
+                mDisksMenu.showDiskInsertionAlertDialog("title", sDisksChosen);
+            }
             sDisksChosen = null;
         }
     }
