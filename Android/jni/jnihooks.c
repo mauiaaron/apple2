@@ -551,17 +551,20 @@ jstring Java_org_deadc0de_apple2ix_Apple2Activity_nativeStateExtractDiskPaths(JN
     LOG(": (%s)", path);
 
     JSON_ref jsonData;
+    bool ret = json_createFromString("{}", &jsonData);
+    assert(ret >= 0 && "should be able to create JSON");
+
     if (!emulator_stateExtractDiskPaths(path, &jsonData)) {
         LOG("OOPS, could not extract disk paths from emulator state file");
     }
-
-    (*env)->ReleaseStringUTFChars(env, jPath, path);
 
     char *jsonString = ((JSON_s *)jsonData)->jsonString;
 
     jstring jstr = (*env)->NewStringUTF(env, jsonString);
 
     json_destroy(&jsonData);
+
+    (*env)->ReleaseStringUTFChars(env, jPath, path);
 
     return jstr;
 }

@@ -1126,11 +1126,6 @@ static bool _disk6_loadState(StateHelper_s *helper, JSON_ref *json) {
 
     do {
         if (json != NULL) {
-            if (!json_createFromString("{}", json)) {
-                LOG("OOPS, could not create JSON!");
-                break;
-            }
-
             json_mapSetStringValue(*json, "diskA", "");
             json_mapSetStringValue(*json, "diskB", "");
             json_mapSetBoolValue(*json, "readOnlyA", "true");

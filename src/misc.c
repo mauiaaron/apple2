@@ -288,6 +288,7 @@ bool emulator_stateExtractDiskPaths(const char * const path, JSON_ref *json) {
     do {
         TEMP_FAILURE_RETRY(fd = open(path, O_RDONLY));
         if (fd < 0) {
+            ERRLOG("OOPS, cannot open path %s", path);
             break;
         }
         assert(fd != 0 && "crazy platform");
