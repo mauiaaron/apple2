@@ -188,6 +188,11 @@ public class Apple2Utils {
         return sRealExternalFilesDir;
     }
 
+    public static boolean isExternalStorageAccessible(Apple2Activity activity) {
+        getExternalStorageDirectory(activity);
+        return (sRealExternalFilesDir != null) && (new File(sRealExternalFilesDir.getAbsolutePath()).listFiles() != null);
+    }
+
     // HACK NOTE 2015/02/22 : Apparently native code cannot easily access stuff in the APK ... so copy various resources
     // out of the APK and into the /data/data/... for ease of access.  Because this is FOSS software we don't care about
     // security or DRM for these assets =)

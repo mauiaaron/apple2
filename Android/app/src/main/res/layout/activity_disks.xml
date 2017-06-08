@@ -1,39 +1,223 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:background="@color/black"
-    android:orientation="vertical"
-    android:baselineAligned="false"
+
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
-    android:layout_height="fill_parent" >
+    android:layout_height="fill_parent"
+    android:layout_marginBottom="5dip"
+    android:layout_marginLeft="5dip"
+    android:layout_marginStart="5dip"
+    android:layout_marginRight="5dip"
+    android:layout_marginEnd="5dip"
+    android:layout_marginTop="5dip"
+    android:background="@color/black"
+    android:layout_weight="1">
 
     <LinearLayout
-        android:background="@color/black"
-        android:orientation="horizontal"
-        android:baselineAligned="false"
+        android:id="@+id/disks_selection_header"
         android:layout_width="fill_parent"
-        android:layout_height="wrap_content" >
-
-        <TextView
-            android:id="@+id/header_disks"
-            style="?android:attr/listSeparatorTextViewStyle"
-            android:layout_width="0dp"
-            android:layout_height="fill_parent"
-            android:layout_weight="1"
-            android:text="@string/header_disks" />
+        android:layout_height="wrap_content"
+        android:background="@color/black"
+        android:baselineAligned="false"
+        android:orientation="horizontal">
 
         <Button
+            android:id="@+id/ejectButton1"
             style="?android:attr/buttonStyleSmall"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:drawableLeft="@android:drawable/ic_menu_close_clear_cancel"
-            android:drawableStart="@android:drawable/ic_menu_close_clear_cancel"
-            android:id="@+id/cancelButton" />
+            android:drawableLeft="@android:drawable/ic_menu_save"
+            android:drawableStart="@android:drawable/ic_menu_save"
+            android:text="@string/header_eject_1" />
+
+        <Button
+            android:id="@+id/ejectButton2"
+            style="?android:attr/buttonStyleSmall"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:drawableLeft="@android:drawable/ic_menu_save"
+            android:drawableStart="@android:drawable/ic_menu_save"
+            android:text="@string/header_eject_2" />
+
+        <!-- FIXME : spacer, prolly a better way ... -->
+        <TextView
+            style="?android:attr/listSeparatorTextViewStyle"
+            android:layout_width="0dp"
+            android:layout_height="fill_parent"
+            android:layout_weight="1" />
+
+        <Button
+            android:id="@+id/cancelButton"
+            style="?android:attr/buttonStyleSmall"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:drawableEnd="@android:drawable/ic_menu_close_clear_cancel"
+            android:drawableRight="@android:drawable/ic_menu_close_clear_cancel" />
 
     </LinearLayout>
 
+    <CheckBox
+        android:id="@+id/newschoolDiskSelectionButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@id/disks_selection_header"
+        android:layout_alignStart="@id/disks_selection_header"
+        android:layout_below="@id/disks_selection_header"
+        android:layout_marginTop="10dip"
+        android:text="@string/disk_selection_newschoool" />
+
     <ListView
-        android:layout_width="fill_parent"
-        android:layout_height="0dp"
         android:id="@+id/listView_settings"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_alignLeft="@id/disks_selection_header"
+        android:layout_alignStart="@id/disks_selection_header"
+        android:layout_below="@id/newschoolDiskSelectionButton"
+        android:visibility="invisible"
         android:layout_weight="1" />
-</LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/disk_selection_newschool_chooser"
+        android:layout_alignLeft="@id/disks_selection_header"
+        android:layout_alignStart="@id/disks_selection_header"
+        android:layout_below="@id/newschoolDiskSelectionButton"
+        android:layout_marginLeft="5dip"
+        android:layout_marginStart="5dip"
+        android:layout_marginRight="5dip"
+        android:layout_marginEnd="5dip"
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="20dip"
+            android:layout_marginTop="20dip"
+            android:ellipsize="marquee"
+            android:fadingEdge="horizontal"
+            android:singleLine="true"
+            android:text="@+string/file_chooser"
+            android:textAppearance="?android:attr/textAppearanceLarge" />
+
+        <!-- FIXME : spacer, prolly a better way ... -->
+        <TextView
+            style="?android:attr/listSeparatorTextViewStyle"
+            android:layout_width="0dp"
+            android:layout_height="fill_parent"
+            android:layout_weight="1" />
+
+        <ImageView
+            android:src="@android:drawable/ic_menu_save"
+            android:layout_gravity="center"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+    </LinearLayout>
+
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/a2_newschool_driveA_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@id/disk_selection_newschool_chooser"
+        android:layout_alignStart="@id/disk_selection_newschool_chooser"
+        android:layout_below="@id/disk_selection_newschool_chooser"
+        android:gravity="center_vertical"
+        android:minHeight="?android:attr/listPreferredItemHeight"
+        android:paddingRight="?android:attr/scrollbarSize">
+
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="5dip"
+            android:layout_marginRight="5dip"
+            android:layout_marginTop="5dip"
+            android:layout_weight="1">
+
+            <TextView
+                android:id="@+id/a2_newschool_driveA"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:ellipsize="marquee"
+                android:fadingEdge="horizontal"
+                android:singleLine="true"
+                android:text="@+string/diskA"
+                android:textAppearance="?android:attr/textAppearanceLarge" />
+
+            <TextView
+                android:id="@+id/a2_newschool_diskA"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignLeft="@id/a2_newschool_driveA"
+                android:layout_alignStart="@id/a2_newschool_driveA"
+                android:layout_below="@id/a2_newschool_driveA"
+                android:maxLines="4"
+                android:text="someLongSelectedDiskName.dsk.gz"
+                android:textAppearance="?android:attr/textAppearanceSmall" />
+
+        </RelativeLayout>
+
+        <!-- Custom preference should place its actual preference widget here. -->
+        <LinearLayout
+            android:id="@+id/a2_newschool_diskA_widget_frame"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:descendantFocusability="blocksDescendants"
+            android:gravity="center_vertical"
+            android:orientation="vertical" />
+
+    </LinearLayout>
+
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/a2_newschool_driveB_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@id/a2_newschool_driveA_layout"
+        android:layout_alignStart="@id/a2_newschool_driveA_layout"
+        android:layout_below="@id/a2_newschool_driveA_layout"
+        android:gravity="center_vertical"
+        android:minHeight="?android:attr/listPreferredItemHeight"
+        android:paddingRight="?android:attr/scrollbarSize">
+
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="5dip"
+            android:layout_marginRight="5dip"
+            android:layout_marginTop="5dip"
+            android:layout_weight="1">
+
+            <TextView
+                android:id="@+id/a2_newschool_driveB"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:ellipsize="marquee"
+                android:fadingEdge="horizontal"
+                android:singleLine="true"
+                android:text="@+string/diskB"
+                android:textAppearance="?android:attr/textAppearanceLarge" />
+
+            <TextView
+                android:id="@+id/a2_newschool_diskB"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignLeft="@id/a2_newschool_driveB"
+                android:layout_alignStart="@id/a2_newschool_driveB"
+                android:layout_below="@id/a2_newschool_driveB"
+                android:maxLines="4"
+                android:text="someLongSelectedDiskName.dsk.gz"
+                android:textAppearance="?android:attr/textAppearanceSmall" />
+
+        </RelativeLayout>
+
+        <!-- Custom preference should place its actual preference widget here. -->
+        <LinearLayout
+            android:id="@+id/a2_newschool_diskB_widget_frame"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:descendantFocusability="blocksDescendants"
+            android:gravity="center_vertical"
+            android:orientation="vertical" />
+
+    </LinearLayout>
+
+</RelativeLayout>

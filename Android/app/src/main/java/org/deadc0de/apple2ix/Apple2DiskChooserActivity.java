@@ -157,7 +157,8 @@ public class Apple2DiskChooserActivity extends Activity {
     @Override
     public void finish() {
         sDiskChooserIsChoosing.set(false);
-        sDisksCallback.onDisksChosen(new DiskArgs(chosenUri, chosenPfd));
+        String name = chosenUri == null ? "" : chosenUri.toString();
+        sDisksCallback.onDisksChosen(new DiskArgs(name, chosenUri, chosenPfd));
         super.finish();
     }
 
@@ -171,11 +172,13 @@ public class Apple2DiskChooserActivity extends Activity {
 }
 
 class DiskArgs {
+    public String name;
     public String path;
     public Uri uri;
     public ParcelFileDescriptor pfd;
 
-    public DiskArgs(Uri uri, ParcelFileDescriptor pfd) {
+    public DiskArgs(String name, Uri uri, ParcelFileDescriptor pfd) {
+        this.name = name;
         this.uri = uri;
         this.pfd = pfd;
     }

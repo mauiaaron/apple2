@@ -343,9 +343,10 @@ public class Apple2MainMenu {
                     final String[] readOnlyKeys = new String[]{"readOnlyA", "readOnlyB"};
                     final String[] fdKeys = new String[]{"fdA", "fdB"};
 
-                    ParcelFileDescriptor[] pfds = { null, null };
+                    ParcelFileDescriptor[] pfds = {null, null};
 
                     for (int i = 0; i < 2; i++) {
+
                         String diskPath = map.getString(diskPathKeys[i]);
                         boolean readOnly = map.getBoolean(readOnlyKeys[i]);
 
@@ -362,13 +363,16 @@ public class Apple2MainMenu {
                             Uri uri = Uri.parse(uriString);
 
                             pfds[i] = Apple2DiskChooserActivity.openFileDescriptorFromUri(mActivity, uri);
-                            int fd = pfds[i].getFd();
-
-                            map.put(fdKeys[i], fd);
+                            if (pfds[i] == null) {
+                                Log.e(TAG, "Did not find URI for drive #" + i + " specified in emulator.state file : " + diskPath);
+                            } else {
+                                int fd = pfds[i].getFd();
+                                map.put(fdKeys[i], fd);
+                            }
                         } else {
                             boolean exists = new File(diskPath).exists();
                             if (!exists) {
-                                Log.e(TAG, "Did not find path(s) for drive #" + i + " specified in emulator.state file : " + diskPath);
+                                Log.e(TAG, "Did not find path for drive #" + i + " specified in emulator.state file : " + diskPath);
                             }
                         }
                     }

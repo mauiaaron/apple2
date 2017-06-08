@@ -25,11 +25,13 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.RadioButton;
+import android.widget.TextView;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -159,6 +161,17 @@ public class Apple2DisksMenu implements Apple2MenuView {
             public Object getPrefDefault() {
                 return true;
             }
+        },
+        USE_NEWSCHOOL_DISK_SELECTION {
+            @Override
+            public String getPrefKey() {
+                return "useNewSchoolDiskSelection";
+            }
+
+            @Override
+            public Object getPrefDefault() {
+                return true;
+            }
         };
 
         @Override
@@ -200,6 +213,28 @@ public class Apple2DisksMenu implements Apple2MenuView {
                 Apple2DisksMenu.this.mActivity.dismissAllMenus();
             }
         });
+
+        {
+            final Button ejectButton1 = (Button) mDisksView.findViewById(R.id.ejectButton1);
+            ejectButton1.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    ejectDisk(/*isDriveA:*/true);
+                    dynamicSetup();
+                }
+            });
+        }
+
+        {
+            final Button ejectButton2 = (Button) mDisksView.findViewById(R.id.ejectButton2);
+            ejectButton2.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    ejectDisk(/*isDriveA:*/false);
+                    dynamicSetup();
+                }
+            });
+        }
 
         Apple2Utils.getExternalStorageDirectory(activity);
     }
@@ -296,6 +331,10 @@ public class Apple2DisksMenu implements Apple2MenuView {
             }
 
             if (imageName.startsWith(EXTERNAL_CHOOSER_SENTINEL)) {
+                if (!Apple2Utils.isExternalStorageAccessible(activity)) {
+                    // disallow access if we cannot access external storage
+                    throw new Exception("External storage not accessible");
+                }
                 if (diskArgs.pfd == null) {
                     if (diskArgs.uri == null) {
                         String uriString = imageName.substring(EXTERNAL_CHOOSER_SENTINEL.length());
@@ -304,7 +343,7 @@ public class Apple2DisksMenu implements Apple2MenuView {
                     diskArgs.pfd = Apple2DiskChooserActivity.openFileDescriptorFromUri(activity, diskArgs.uri);
                 }
 
-                int fd = diskArgs.pfd.getFd();
+                int fd = diskArgs.pfd.getFd(); // NPE thrown if diskArgs.pfd is null
                 map.put("fd", fd);
             } else {
                 File file = new File(imageName);
@@ -331,14 +370,12 @@ public class Apple2DisksMenu implements Apple2MenuView {
 
             String jsonString = nativeChooseDisk(map.toString());
 
-            if (diskArgs.pfd != null) {
-                try {
-                    diskArgs.pfd.close();
-                } catch (IOException ioe) {
-                    Log.e(TAG, "Error attempting to close PFD : " + ioe);
-                }
-                diskArgs.pfd = null;
+            try {
+                diskArgs.pfd.close(); // at this point diskArgs.pfd !null
+            } catch (IOException ioe) {
+                Log.e(TAG, "Error attempting to close PFD : " + ioe);
             }
+            diskArgs.pfd = null;
 
             map = new JSONObject(jsonString);
             boolean inserted = map.getBoolean("inserted");
@@ -479,11 +516,136 @@ public class Apple2DisksMenu implements Apple2MenuView {
     private void dynamicSetup() {
 
         final ListView disksList = (ListView) mDisksView.findViewById(R.id.listView_settings);
-        disksList.setEnabled(true);
+
+        final boolean useNewschoolSelection = (boolean) Apple2Preferences.getJSONPref(SETTINGS.USE_NEWSCHOOL_DISK_SELECTION);
+
+        final CheckBox newschoolSelection = (CheckBox) mDisksView.findViewById(R.id.newschoolDiskSelectionButton);
+        newschoolSelection.setChecked(useNewschoolSelection);
+        newschoolSelection.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Apple2Preferences.setJSONPref(SETTINGS.USE_NEWSCHOOL_DISK_SELECTION, newschoolSelection.isChecked());
+                dynamicSetup();
+            }
+        });
+
+        final boolean isKitKatOrBetter = (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT);
+
+        final boolean includeExternalFileChooser = Apple2Utils.isExternalStorageAccessible(mActivity) && isKitKatOrBetter;
+
+        final View newschoolChooser = mDisksView.findViewById(R.id.disk_selection_newschool_chooser);
+        newschoolChooser.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                final boolean alreadyChoosing = Apple2DiskChooserActivity.sDiskChooserIsChoosing.getAndSet(true);
+                if (alreadyChoosing) {
+                    return;
+                }
+
+                Intent chooserIntent = new Intent(mActivity, Apple2DiskChooserActivity.class);
+                chooserIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION/* | Intent.FLAG_ACTIVITY_CLEAR_TOP */);
+
+                Apple2DiskChooserActivity.sDisksCallback = mActivity;
+                mActivity.startActivity(chooserIntent);
+            }
+        });
+
+        final Button ejectButton1 = (Button) mDisksView.findViewById(R.id.ejectButton1);
+        final Button ejectButton2 = (Button) mDisksView.findViewById(R.id.ejectButton2);
+
+        if (!includeExternalFileChooser || !useNewschoolSelection) {
+            disksList.setEnabled(true);
+            disksList.setVisibility(View.VISIBLE);
+            newschoolChooser.setVisibility(View.INVISIBLE);
+            ejectButton1.setVisibility(View.VISIBLE);
+            ejectButton2.setVisibility(View.VISIBLE);
+
+            for (int i = 0; i < 2; i++) {
+                LinearLayout layout = (LinearLayout) mDisksView.findViewById((i == 0) ? R.id.a2_newschool_driveA_layout : R.id.a2_newschool_driveB_layout);
+                layout.setVisibility(View.INVISIBLE);
+            }
+
+            if (!includeExternalFileChooser) {
+                newschoolSelection.setVisibility(View.INVISIBLE);
+            }
+            Apple2Preferences.setJSONPref(SETTINGS.USE_NEWSCHOOL_DISK_SELECTION, false);
+            oldschoolDynamicSetup();
+            return;
+        }
+
+        disksList.setEnabled(false);
+        disksList.setVisibility(View.INVISIBLE);
+        newschoolChooser.setVisibility(View.VISIBLE);
+        ejectButton1.setVisibility(View.INVISIBLE);
+        ejectButton2.setVisibility(View.INVISIBLE);
+
+        // new external file chooser activity can allow navigation to restricted external SD Card(s) ...
+        newschoolSelection.setVisibility(View.VISIBLE);
+
+        for (int i = 0; i < 2; i++) {
+            String imageName = null;
+            do {
+                String diskPath = (String) Apple2Preferences.getJSONPref((i == 0) ? SETTINGS.CURRENT_DISK_PATH_A : SETTINGS.CURRENT_DISK_PATH_B);
+
+                if (diskPath == null || diskPath.equals("")) {
+                    break;
+                }
+
+                Uri uri = Uri.parse(diskPath);
+                if (uri == null) {
+                    break;
+                }
+
+                diskPath = uri.getPath();
+                int idx = diskPath.lastIndexOf("/");
+                if (idx < 0) {
+                    break;
+                }
+
+                imageName = diskPath.substring(idx + 1);
+            } while (false);
+
+            LinearLayout layout = (LinearLayout) mDisksView.findViewById((i == 0) ? R.id.a2_newschool_driveA_layout : R.id.a2_newschool_driveB_layout);
+
+            LinearLayout widgetLayout = (LinearLayout) mDisksView.findViewById((i == 0) ? R.id.a2_newschool_diskA_widget_frame : R.id.a2_newschool_diskB_widget_frame);
+            if (widgetLayout.getChildCount() > 0) {
+                // layout cells appear to be reused when scrolling into view ... make sure we start with clear hierarchy
+                widgetLayout.removeAllViews();
+            }
+
+            if (imageName == null || imageName.equals("")) {
+                layout.setVisibility(View.INVISIBLE);
+            } else {
+                layout.setVisibility(View.VISIBLE);
+
+                boolean readOnly = (boolean) Apple2Preferences.getJSONPref((i == 0) ? SETTINGS.CURRENT_DISK_PATH_A_RO : SETTINGS.CURRENT_DISK_PATH_B_RO);
+                imageName = "(" + mActivity.getResources().getString((readOnly ? R.string.disk_read_only : R.string.disk_read_write)) + "): " + imageName;
+                TextView textView = (TextView) mDisksView.findViewById((i == 0) ? R.id.a2_newschool_diskA : R.id.a2_newschool_diskB);
+                textView.setText(imageName);
+
+                String eject = mActivity.getResources().getString(R.string.disk_eject);
+                Button ejectButton = new Button(mActivity);
+                ejectButton.setText(eject);
+                final boolean isDriveA = (i == 0);
+                ejectButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        ejectDisk(isDriveA);
+                        dynamicSetup();
+                    }
+                });
+                widgetLayout.addView(ejectButton);
+            }
+
+        }
+    }
+
+    private void oldschoolDynamicSetup() {
+
+        final ListView disksList = (ListView) mDisksView.findViewById(R.id.listView_settings);
 
         String disksDir = pathStackAsDirectory();
         final boolean isRootPath = (disksDir == null);
-        final File extStorageDir = Apple2Utils.getExternalStorageDirectory(mActivity);
         if (isRootPath) {
             disksDir = Apple2Utils.getDataDir(mActivity) + File.separator + "disks"; // default path
         }
@@ -532,31 +694,15 @@ public class Apple2DisksMenu implements Apple2MenuView {
             }
         }
 
-        int off = 0;
-        final boolean includeExternalStoragePath = (extStorageDir != null && isRootPath);
-        if (includeExternalStoragePath) {
-            ++off;
-        }
-        final boolean includeExternalFileChooser = isRootPath && (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT);
-        if (includeExternalFileChooser) {
-            ++off;
-        }
-        final int offset = off;
+        final boolean includeExternalStoragePath = (Apple2Utils.isExternalStorageAccessible(mActivity) && isRootPath);
+
+        final int offset = includeExternalStoragePath ? 1 : 0;
         final String[] fileNames = new String[files.length + offset];
         final String[] filePaths = new String[files.length + offset];
         final boolean[] isDirectory = new boolean[files.length + offset];
 
         int idx = 0;
 
-        // external file chooser can allow navigation to restricted external SD Card
-        if (includeExternalFileChooser) {
-            filePaths[idx] = EXTERNAL_CHOOSER_SENTINEL;
-            fileNames[idx] = mActivity.getResources().getString(R.string.file_chooser);
-            isDirectory[idx] = true;
-            ++idx;
-        }
-
-        // first external storage link should be /sdcard/apple2ix to encourage this form of organization
         if (includeExternalStoragePath) {
             filePaths[idx] = Apple2Utils.getRealExternalStorageDirectory(mActivity).getAbsolutePath();
             fileNames[idx] = mActivity.getResources().getString(R.string.storage);
@@ -636,21 +782,6 @@ public class Apple2DisksMenu implements Apple2MenuView {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, final int position, long id) {
                 if (isDirectory[position]) {
-                    if (filePaths[position].equals(EXTERNAL_CHOOSER_SENTINEL)) {
-                        final boolean alreadyChoosing = Apple2DiskChooserActivity.sDiskChooserIsChoosing.getAndSet(true);
-                        if (alreadyChoosing) {
-                            return;
-                        }
-
-                        Intent chooserIntent = new Intent(mActivity, Apple2DiskChooserActivity.class);
-                        chooserIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION/* | Intent.FLAG_ACTIVITY_CLEAR_TOP */);
-
-                        Apple2DiskChooserActivity.sDisksCallback = mActivity;
-                        mActivity.startActivity(chooserIntent);
-
-                        return;
-                    }
-
                     Log.d(TAG, "Descending to path : " + filePaths[position]);
                     if (parentIsRootPath && !new File(filePaths[position]).isAbsolute()) {
                         pushPathStack(parentDisksDir + File.separator + filePaths[position]);

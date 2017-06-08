@@ -229,7 +229,24 @@ public class Apple2Activity extends Activity implements Apple2DiskChooserActivit
 
         if (sDisksChosen != null && mDisksMenu != null) {
             if (sDisksChosen.pfd != null) {
-                mDisksMenu.showDiskInsertionAlertDialog("title", sDisksChosen);
+                String name = sDisksChosen.name;
+
+                final String[] prefices = {"content://com.android.externalstorage.documents/document", "content://com.android.externalstorage.documents", "content://com.android.externalstorage.documents", "content://"};
+                for (String prefix : prefices) {
+                    if (name.startsWith(prefix)) {
+                        name = name.substring(prefix.length());
+                        break;
+                    }
+                }
+
+                // strip out URL-encoded '/' directory separators
+                String nameLower = name.toLowerCase();
+                int idx = nameLower.lastIndexOf("%2f", /*fromIndex:*/name.length()-3);
+                if (idx >= 0) {
+                    name = name.substring(idx + 3);
+                }
+
+                mDisksMenu.showDiskInsertionAlertDialog(name, sDisksChosen);
             }
             sDisksChosen = null;
         }

@@ -43,6 +43,7 @@
             android:layout_height="wrap_content"
             android:layout_below="@id/a2preference_title"
             android:layout_alignLeft="@id/a2preference_title"
+            android:layout_alignStart="@id/a2preference_title"
             android:textAppearance="?android:attr/textAppearanceSmall"
             android:maxLines="4" />
 
