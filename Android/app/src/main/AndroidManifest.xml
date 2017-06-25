@@ -22,6 +22,7 @@
             android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation"
             android:screenOrientation="sensorLandscape"
             android:theme="@android:style/Theme.NoTitleBar.Fullscreen"
+            android:launchMode="singleTask"
             android:windowSoftInputMode="adjustResize" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -30,28 +31,13 @@
 
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <data android:scheme="file" android:host="*" android:mimeType="application/x-gzip" android:pathPattern="/.*\\.nib\\.gz" />
-                <data android:scheme="file" android:host="*" android:mimeType="application/x-gzip" android:pathPattern="/.*\\.dsk\\.gz" />
-                <data android:scheme="file" android:host="*" android:mimeType="application/x-gzip" android:pathPattern="/.*\\.do\\.gz" />
-                <data android:scheme="file" android:host="*" android:mimeType="application/x-gzip" android:pathPattern="/.*\\.po\\.gz" />
-            </intent-filter>
-
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <data android:scheme="file" /> <!-- catch-all since I can't get the following to work because ... Android -->
-                <!--
-                <data android:scheme="file" android:host="*" android:mimeType="application/octet-stream" android:pathPattern="/.*\\.nib" />
-                <data android:scheme="file" android:host="*" android:mimeType="application/octet-stream" android:pathPattern="/.*\\.dsk" />
-                <data android:scheme="file" android:host="*" android:mimeType="application/octet-stream" android:pathPattern="/.*\\.do" />
-                <data android:scheme="file" android:host="*" android:mimeType="application/octet-stream" android:pathPattern="/.*\\.po" />
-                -->
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="apple2ix" />
             </intent-filter>
 
         </activity>
 
-        <activity android:name="org.deadc0de.apple2ix.Apple2DiskChooserActivity"></activity>
+        <activity android:name="org.deadc0de.apple2ix.Apple2DiskChooserActivity" />
 
         <provider
             android:authorities="${applicationId}.provider"
