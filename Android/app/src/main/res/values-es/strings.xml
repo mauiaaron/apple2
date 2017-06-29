@@ -32,8 +32,6 @@
     <string name="diskA">Disquetera 1</string>
     <string name="diskB">Disquetera 2</string>
     <string name="disk_eject">Eyectar</string>
-    <string name="disk_insert_toast">Disco insertado en la disquetera de sólo lectura</string>
-    <string name="disk_insert_could_not_read">Lo sentimos, no se puede leer la imagen de disquete!</string>
     <string name="disk_read_only">Sólo leer</string>
     <string name="disk_read_write">Leer y escribir</string>
     <string name="disk_show_operation">Mostrar las operaciones de "Disk ]["</string>

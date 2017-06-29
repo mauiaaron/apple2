@@ -263,7 +263,11 @@ public class Apple2DisksMenu implements Apple2MenuView {
     }
 
     public void dismiss() {
-        String path = popPathStack();
+        String path = null;
+        if (!(boolean) Apple2Preferences.getJSONPref(SETTINGS.USE_NEWSCHOOL_DISK_SELECTION)) {
+            path = popPathStack();
+        }
+
         if (path == null) {
             mActivity.popApple2View(this);
         } else {
@@ -496,6 +500,20 @@ public class Apple2DisksMenu implements Apple2MenuView {
 
         suffix = name.substring(len - 7, len);
         return (suffix.equalsIgnoreCase(".dsk.gz") || suffix.equalsIgnoreCase(".nib.gz"));
+    }
+
+    public static boolean hasStateExtension(String name) {
+
+        // check file extensions ... sigh ... no String.endsWithIgnoreCase() ?
+
+        final int extLen = Apple2MainMenu.SAVE_FILE_EXTENSION.length();
+        final int len = name.length();
+        if (len <= extLen) {
+            return false;
+        }
+
+        final String suffix = name.substring(len - extLen, len);
+        return suffix.equalsIgnoreCase(Apple2MainMenu.SAVE_FILE_EXTENSION);
     }
 
     // ------------------------------------------------------------------------

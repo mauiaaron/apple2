@@ -29,6 +29,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InterruptedIOException;
@@ -102,49 +103,59 @@ public class Apple2Utils {
         return attempts < maxAttempts;
     }
 
-    public static void migrate(Apple2Activity activity) {
+    public static void migrateToExternalStorage(Apple2Activity activity) {
+
         do {
             if (BuildConfig.VERSION_CODE >= 18) {
 
-                // Migrate emulator.state file from internal path to external storage to allow user manipulation
+                // Rename old emulator state file
                 // TODO FIXME : Remove this migration code when all/most users are on version >= 18
 
-                final File extStorage = Apple2Utils.getExternalStorageDirectory(activity);
-                if (extStorage == null) {
-                    break;
-                }
-
-                final String srcPath = getDataDir(activity) + File.separator + Apple2MainMenu.SAVE_FILE;
-                final File srcFile = new File(srcPath);
+                final File srcFile = new File(getDataDir(activity) + File.separator + Apple2MainMenu.OLD_SAVE_FILE);
                 if (!srcFile.exists()) {
                     break;
                 }
 
-                final String dstPath = extStorage + File.separator + Apple2MainMenu.SAVE_FILE;
+                final File dstFile = new File(getDataDir(activity) + File.separator + Apple2MainMenu.SAVE_FILE);
+                final boolean success = copyFile(srcFile, dstFile);
+                if (success) {
+                    srcFile.delete();
+                }
+            }
+        } while (false);
 
-                final int maxAttempts = 5;
-                int attempts = 0;
-                do {
-                    try {
-                        FileInputStream is = new FileInputStream(srcFile);
-                        FileOutputStream os = new FileOutputStream(dstPath);
-                        copyFile(is, os);
-                        break;
-                    } catch (InterruptedIOException e) {
-                        // EINTR, EAGAIN ...
-                    } catch (IOException e) {
-                        Log.d(TAG, "OOPS exception attempting to copy emulator.state file : " + e);
-                    }
 
-                    try {
-                        Thread.sleep(100, 0);
-                    } catch (InterruptedException ie) {
-                        // ...
-                    }
-                    ++attempts;
-                } while (attempts < maxAttempts);
+        final File extStorage = Apple2Utils.getExternalStorageDirectory(activity);
+        if (extStorage == null) {
+            return;
+        }
 
-                srcFile.delete();
+        do {
+            if (BuildConfig.VERSION_CODE >= 18) {
+
+                // Migrate old emulator state file from internal path to external storage to allow user manipulation
+                // TODO FIXME : Remove this migration code when all/most users are on version >= 18
+
+                final File srcFile = new File(getDataDir(activity) + File.separator + Apple2MainMenu.SAVE_FILE);
+                if (!srcFile.exists()) {
+                    break;
+                }
+
+                final File dstFile = new File(extStorage + File.separator + Apple2MainMenu.SAVE_FILE);
+                final boolean success = copyFile(srcFile, dstFile);
+                if (success) {
+                    srcFile.delete();
+                }
+            }
+        } while (false);
+
+        do {
+            if (BuildConfig.VERSION_CODE >= 20) {
+
+                // Recursively rename all *.state files found in /sdcard/apple2ix
+                // TODO FIXME : Remove this migration code when all/most users are on version >= 20
+
+                recursivelyRenameEmulatorStateFiles(extStorage);
             }
         } while (false);
     }
@@ -400,6 +411,85 @@ public class Apple2Utils {
             }
             ++attempts;
         } while (attempts < maxAttempts);
+    }
+
+    private static void recursivelyRenameEmulatorStateFiles(File directory) {
+        try {
+            if (!directory.isDirectory()) {
+                return;
+            }
+
+            final int oldSuffixLen = 6;
+
+            File[] files = directory.listFiles(new FilenameFilter() {
+                @Override
+                public boolean accept(File dir, String name) {
+
+                    if (name.equals(".") || name.equals("..")) {
+                        return false;
+                    }
+
+                    final File file = new File(dir, name);
+                    if (file.isDirectory()) {
+                        return true;
+                    }
+
+                    final int len = name.length();
+                    if (len < oldSuffixLen) {
+                        return false;
+                    }
+
+                    final String suffix = name.substring(len - oldSuffixLen, len);
+                    return suffix.equalsIgnoreCase(".state");
+                }
+            });
+
+            if (files == null) {
+                return;
+            }
+
+            for (File file : files) {
+                if (file.isDirectory()) {
+                    recursivelyRenameEmulatorStateFiles(file);
+                } else {
+                    final File srcFile = file;
+                    final String oldName = file.getName();
+                    final String newName = oldName.substring(0, oldName.length() - oldSuffixLen) + Apple2MainMenu.SAVE_FILE_EXTENSION;
+                    boolean success = file.renameTo(new File(file.getParentFile(), newName));
+                    if (success) {
+                        srcFile.delete();
+                    }
+                }
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "OOPS : {e}");
+        }
+    }
+
+    private static boolean copyFile(final File srcFile, final File dstFile) {
+        final int maxAttempts = 5;
+        int attempts = 0;
+        do {
+            try {
+                FileInputStream is = new FileInputStream(srcFile);
+                FileOutputStream os = new FileOutputStream(dstFile);
+                copyFile(is, os);
+                break;
+            } catch (InterruptedIOException e) {
+                // EINTR, EAGAIN ...
+            } catch (IOException e) {
+                Log.d(TAG, "OOPS exception attempting to copy emulator state file : " + e);
+            }
+
+            try {
+                Thread.sleep(100, 0);
+            } catch (InterruptedException ie) {
+                // ...
+            }
+            ++attempts;
+        } while (attempts < maxAttempts);
+
+        return attempts < maxAttempts;
     }
 
     private static void copyFile(InputStream is, OutputStream os) throws IOException {

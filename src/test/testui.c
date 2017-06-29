@@ -136,7 +136,7 @@ TEST test_save_state_1() {
     _assert_blank_boot();
 
     char *savData = NULL;
-    ASPRINTF(&savData, "%s/emulator-test.state", HOMEDIR);
+    ASPRINTF(&savData, "%s/emulator-test.a2state", HOMEDIR);
 
     bool ret = emulator_saveState(savData);
     ASSERT(ret);
@@ -155,7 +155,7 @@ TEST test_load_state_1() {
     c_debugger_set_timeout(0);
 
     char *savData = NULL;
-    ASPRINTF(&savData, "%s/emulator-test.state", HOMEDIR);
+    ASPRINTF(&savData, "%s/emulator-test.a2state", HOMEDIR);
 
     bool ret = false;
     int fdA = -1;

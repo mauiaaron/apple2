@@ -23,12 +23,14 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.deadc0de.apple2ix.basic.BuildConfig;
+import org.deadc0de.apple2ix.basic.R;
 
 public class Apple2Activity extends Activity implements Apple2DiskChooserActivity.Callback {
 
@@ -190,7 +192,20 @@ public class Apple2Activity extends Activity implements Apple2DiskChooserActivit
 
     @Override
     public void onDisksChosen(DiskArgs args) {
-        sDisksChosen = args;
+        if (Apple2DisksMenu.hasDiskExtension(args.name)) {
+            sDisksChosen = args;
+        } else {
+            if (args.name.equals("")) {
+                return;
+            }
+
+            if (Apple2DisksMenu.hasStateExtension(args.name)) {
+                ////mMainMenu.restoreEmulatorState(args); FIXME TODO ...
+                return;
+            }
+
+            Toast.makeText(this, R.string.disk_insert_toast_cannot, Toast.LENGTH_SHORT).show();
+        }
     }
 
     @Override
@@ -205,7 +220,8 @@ public class Apple2Activity extends Activity implements Apple2DiskChooserActivit
                 }
             }
             if (grantedPermissions) {
-                // this will force copying APK files (now that we have permission
+                // perform migration(s) and assets exposure now
+                Apple2Utils.migrateToExternalStorage(Apple2Activity.this);
                 Apple2Utils.exposeAPKAssetsToExternal(Apple2Activity.this);
             } // else ... we keep nagging on app startup ...
         } else {

@@ -40,7 +40,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Apple2MainMenu {
 
-    public final static String SAVE_FILE = "emulator.state";
+    public final static String OLD_SAVE_FILE = "emulator.state";
+    public final static String SAVE_FILE_EXTENSION = ".a2state";
+    public final static String SAVE_FILE = "emulator" + SAVE_FILE_EXTENSION;
     private final static String TAG = "Apple2MainMenu";
 
     private Apple2Activity mActivity = null;
@@ -296,8 +298,86 @@ public class Apple2MainMenu {
         mActivity.registerAndShowDialog(rebootQuitDialog);
     }
 
+    public void restoreEmulatorState(String quickSavePath) {
 
-    public void maybeSaveRestore() {
+        Apple2DisksMenu.ejectDisk(/*isDriveA:*/true);
+        Apple2DisksMenu.ejectDisk(/*isDriveA:*/false);
+
+        // First we extract and open the emulator.a2state disk paths (which could be in a restricted location)
+        String jsonString = mActivity.stateExtractDiskPaths(quickSavePath);
+        try {
+
+            JSONObject map = new JSONObject(jsonString);
+            map.put("stateFile", quickSavePath);
+
+            final String[] diskPathKeys = new String[]{"diskA", "diskB"};
+            final String[] readOnlyKeys = new String[]{"readOnlyA", "readOnlyB"};
+            final String[] fdKeys = new String[]{"fdA", "fdB"};
+
+            ParcelFileDescriptor[] pfds = {null, null};
+
+            for (int i = 0; i < 2; i++) {
+
+                String diskPath = map.getString(diskPathKeys[i]);
+                boolean readOnly = map.getBoolean(readOnlyKeys[i]);
+
+                Apple2Preferences.setJSONPref(i == 0 ? Apple2DisksMenu.SETTINGS.CURRENT_DISK_PATH_A : Apple2DisksMenu.SETTINGS.CURRENT_DISK_PATH_B, diskPath);
+                Apple2Preferences.setJSONPref(i == 0 ? Apple2DisksMenu.SETTINGS.CURRENT_DISK_PATH_A_RO : Apple2DisksMenu.SETTINGS.CURRENT_DISK_PATH_B_RO, readOnly);
+
+                if (diskPath.equals("")) {
+                    continue;
+                }
+
+                if (diskPath.startsWith(Apple2DisksMenu.EXTERNAL_CHOOSER_SENTINEL)) {
+                    String uriString = diskPath.substring(Apple2DisksMenu.EXTERNAL_CHOOSER_SENTINEL.length());
+
+                    Uri uri = Uri.parse(uriString);
+
+                    pfds[i] = Apple2DiskChooserActivity.openFileDescriptorFromUri(mActivity, uri);
+                    if (pfds[i] == null) {
+                        Log.e(TAG, "Did not find URI for drive #" + i + " specified in " + SAVE_FILE + " file : " + diskPath);
+                    } else {
+                        int fd = pfds[i].getFd();
+                        map.put(fdKeys[i], fd);
+                    }
+                } else {
+                    boolean exists = new File(diskPath).exists();
+                    if (!exists) {
+                        Log.e(TAG, "Did not find path for drive #" + i + " specified in " + SAVE_FILE + " file : " + diskPath);
+                    }
+                }
+            }
+
+            jsonString = mActivity.loadState(map.toString());
+
+            for (int i = 0; i < 2; i++) {
+                try {
+                    if (pfds[i] != null) {
+                        pfds[i].close();
+                    }
+                } catch (IOException ioe) {
+                    Log.e(TAG, "Error attempting to close PFD #" + i + " : " + ioe);
+                }
+            }
+            map = new JSONObject(jsonString);
+
+            {
+                boolean wasGzippedA = map.getBoolean("wasGzippedA");
+                Apple2Preferences.setJSONPref(Apple2DisksMenu.SETTINGS.CURRENT_DISK_PATH_A_GZ, wasGzippedA);
+            }
+            {
+                boolean wasGzippedB = map.getBoolean("wasGzippedB");
+                Apple2Preferences.setJSONPref(Apple2DisksMenu.SETTINGS.CURRENT_DISK_PATH_B_GZ, wasGzippedB);
+            }
+
+            // FIXME TODO : what to do if state load failed?
+
+        } catch (Throwable t) {
+            Log.v(TAG, "OOPS : " + t);
+        }
+    }
+
+    private void maybeSaveRestore() {
         mActivity.pauseEmulation();
 
         final String quickSavePath;
@@ -324,86 +404,13 @@ public class Apple2MainMenu {
         }).setNeutralButton(R.string.restore, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
+
                 if (!selectionAlreadyHandled.compareAndSet(false, true)) {
                     Log.v(TAG, "OMG, avoiding nasty UI race in sync/restore onClick()");
                     return;
                 }
 
-                Apple2DisksMenu.ejectDisk(/*isDriveA:*/true);
-                Apple2DisksMenu.ejectDisk(/*isDriveA:*/false);
-
-                // First we extract and open the emulator.state disk paths (which could be in a restricted location)
-                String jsonString = mActivity.stateExtractDiskPaths(quickSavePath);
-                try {
-
-                    JSONObject map = new JSONObject(jsonString);
-                    map.put("stateFile", quickSavePath);
-
-                    final String[] diskPathKeys = new String[]{"diskA", "diskB"};
-                    final String[] readOnlyKeys = new String[]{"readOnlyA", "readOnlyB"};
-                    final String[] fdKeys = new String[]{"fdA", "fdB"};
-
-                    ParcelFileDescriptor[] pfds = {null, null};
-
-                    for (int i = 0; i < 2; i++) {
-
-                        String diskPath = map.getString(diskPathKeys[i]);
-                        boolean readOnly = map.getBoolean(readOnlyKeys[i]);
-
-                        Apple2Preferences.setJSONPref(i == 0 ? Apple2DisksMenu.SETTINGS.CURRENT_DISK_PATH_A : Apple2DisksMenu.SETTINGS.CURRENT_DISK_PATH_B, diskPath);
-                        Apple2Preferences.setJSONPref(i == 0 ? Apple2DisksMenu.SETTINGS.CURRENT_DISK_PATH_A_RO : Apple2DisksMenu.SETTINGS.CURRENT_DISK_PATH_B_RO, readOnly);
-
-                        if (diskPath.equals("")) {
-                            continue;
-                        }
-
-                        if (diskPath.startsWith(Apple2DisksMenu.EXTERNAL_CHOOSER_SENTINEL)) {
-                            String uriString = diskPath.substring(Apple2DisksMenu.EXTERNAL_CHOOSER_SENTINEL.length());
-
-                            Uri uri = Uri.parse(uriString);
-
-                            pfds[i] = Apple2DiskChooserActivity.openFileDescriptorFromUri(mActivity, uri);
-                            if (pfds[i] == null) {
-                                Log.e(TAG, "Did not find URI for drive #" + i + " specified in emulator.state file : " + diskPath);
-                            } else {
-                                int fd = pfds[i].getFd();
-                                map.put(fdKeys[i], fd);
-                            }
-                        } else {
-                            boolean exists = new File(diskPath).exists();
-                            if (!exists) {
-                                Log.e(TAG, "Did not find path for drive #" + i + " specified in emulator.state file : " + diskPath);
-                            }
-                        }
-                    }
-
-                    jsonString = mActivity.loadState(map.toString());
-
-                    for (int i = 0; i < 2; i++) {
-                        try {
-                            if (pfds[i] != null) {
-                                pfds[i].close();
-                            }
-                        } catch (IOException ioe) {
-                            Log.e(TAG, "Error attempting to close PFD #" + i + " : " + ioe);
-                        }
-                    }
-                    map = new JSONObject(jsonString);
-
-                    {
-                        boolean wasGzippedA = map.getBoolean("wasGzippedA");
-                        Apple2Preferences.setJSONPref(Apple2DisksMenu.SETTINGS.CURRENT_DISK_PATH_A_GZ, wasGzippedA);
-                    }
-                    {
-                        boolean wasGzippedB = map.getBoolean("wasGzippedB");
-                        Apple2Preferences.setJSONPref(Apple2DisksMenu.SETTINGS.CURRENT_DISK_PATH_B_GZ, wasGzippedB);
-                    }
-
-                    // FIXME TODO : what to do if state load failed?
-
-                } catch (Throwable t) {
-                    Log.v(TAG, "OOPS : " + t);
-                }
+                restoreEmulatorState(quickSavePath);
                 Apple2MainMenu.this.dismiss();
             }
         }).setNegativeButton(R.string.cancel, null).create();

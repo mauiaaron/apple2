@@ -36,8 +36,7 @@
     <string name="diskA">Drive 1</string>
     <string name="diskB">Drive 2</string>
     <string name="disk_eject">Eject</string>
-    <string name="disk_insert_toast">Inserted disk in drive read-only</string>
-    <string name="disk_insert_could_not_read">Sorry, could not read the disk image!</string>
+    <string name="disk_insert_toast_cannot">Cannot insert (not a disk image or state file)</string>
     <string name="disk_read_only">Read only</string>
     <string name="disk_read_write">Read/write</string>
     <string name="disk_selection_newschoool">Use system file chooser</string>
@@ -130,8 +129,8 @@
     <string name="keypad_preset_left_right_space">&#8592;,&#8594;, tap spacebar</string>
     <string name="keypad_preset_wadx_space">W,A,D,X, tap spacebar</string>
     <string name="keypad_repeat_summary">Key repeat threshold in secs</string>
-    <string name="menu_disks">Load disk image…</string>
-    <string name="menu_disks_summary">Insert a Disk ][ image file</string>
+    <string name="menu_disks">Load image or state file…</string>
+    <string name="menu_disks_summary">Insert Disk ][ image or state file</string>
     <string name="menu_settings">Emulator settings…</string>
     <string name="menu_settings_summary">General settings, joystick, keyboard</string>
     <string name="mockingboard_disabled_title">Mockingboard disabled</string>
@@ -165,7 +164,7 @@
     <string name="save">Quick save</string>
     <string name="saverestore">Save &amp; restore…</string>
     <string name="saverestore_choice">Save current state or restore previous?</string>
-    <string name="saverestore_summary">Quick save and restore</string>
+    <string name="saverestore_summary">Save and restore emulator state</string>
     <string name="skip">Skip&#8594;</string>
     <string name="speaker_volume">Speaker volume</string>
     <string name="speaker_volume_summary">Set the speaker volume</string>

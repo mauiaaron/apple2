@@ -32,8 +32,6 @@
     <string name="diskA">Lecteur 1</string>
     <string name="diskB">Lecteur 2</string>
     <string name="disk_eject">Ejecter</string>
-    <string name="disk_insert_toast">Insérer la disquette dans le drive en lecture seulement</string>
-    <string name="disk_insert_could_not_read">Désolé, impossible de lire l\'image disque!</string>
     <string name="disk_read_only">Lecture seulement</string>
     <string name="disk_read_write">Lecture/Ecriture</string>
     <string name="disk_show_operation">Afficher les opérations (disque) ][</string>

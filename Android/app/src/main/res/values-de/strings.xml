@@ -32,8 +32,6 @@
     <string name="diskA">Laufwerk 1</string>
     <string name="diskB">Laufwerk 2</string>
     <string name="disk_eject">Auswerfen</string>
-    <string name="disk_insert_toast">Die eingelegte Diskette ist schreibgeschützt</string>
-    <string name="disk_insert_could_not_read">Entschuldigung, das Diskettenabbild konnte nicht gelesen werden!</string>
     <string name="disk_read_only">Schreibgeschützt</string>
     <string name="disk_read_write">Lesen/Schreiben</string>
     <string name="disk_show_operation">Zeige Disk ][ Aktivität</string>
