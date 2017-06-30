@@ -91,7 +91,7 @@ extern void disk6_flush(int drive);
 
 extern bool disk6_saveState(StateHelper_s *helper);
 extern bool disk6_loadState(StateHelper_s *helper);
-extern bool disk6_stateExtractDiskPaths(StateHelper_s *helper, JSON_ref *json);
+extern bool disk6_stateExtractDiskPaths(StateHelper_s *helper, JSON_ref json);
 
 #if DISK_TRACING
 void disk6_traceToggle(const char *read_file, const char *write_file);

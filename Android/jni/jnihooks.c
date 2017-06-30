@@ -385,12 +385,15 @@ jstring Java_org_deadc0de_apple2ix_Apple2DisksMenu_nativeChooseDisk(JNIEnv *env,
     json_mapParseBoolValue(jsonData, "readOnly", &readOnly);
 
     long fd = -1;
-    bool createdFd = false;
     if (!json_mapParseLongValue(jsonData, "fd", &fd, 10)) {
-        createdFd = true;
         TEMP_FAILURE_RETRY(fd = open(path, readOnly ? O_RDONLY : O_RDWR));
         if (fd == -1) {
             LOG("OOPS could not open disk path : %s", path);
+        }
+    } else {
+        fd = dup(fd);
+        if (fd == -1) {
+            ERRLOG("OOPS could not dup file descriptor!");
         }
     }
 
@@ -419,7 +422,7 @@ jstring Java_org_deadc0de_apple2ix_Apple2DisksMenu_nativeChooseDisk(JNIEnv *env,
     json_mapSetBoolValue(jsonData, "wasGzipped", disk6.disk[drive].was_gzipped);
     json_mapSetBoolValue(jsonData, "inserted", inserted);
 
-    if (createdFd) {
+    if (fd >= 0) {
         TEMP_FAILURE_RETRY(close(fd));
         fd = -1;
     }
@@ -447,17 +450,67 @@ void Java_org_deadc0de_apple2ix_Apple2DisksMenu_nativeEjectDisk(JNIEnv *env, jcl
     disk6_eject(driveA ? 0 : 1);
 }
 
-void Java_org_deadc0de_apple2ix_Apple2Activity_nativeSaveState(JNIEnv *env, jclass cls, jstring jPath) {
-    const char *path = (*env)->GetStringUTFChars(env, jPath, NULL);
+static int _openFdFromJson(OUTPARM int *fdOut, JSON_ref jsonData, const char * const fdKey, const char * const pathKey, int flags, int mode) {
 
+    long fd = -1;
+    char *path = NULL;
+
+    do {
+        if (!json_mapParseLongValue(jsonData, fdKey, &fd, 10)) {
+            json_mapCopyStringValue(jsonData, pathKey, &path);
+            assert(path != NULL);
+
+            json_unescapeSlashes(&path);
+            if (strlen(path) <= 0) {
+                break;
+            }
+
+            if (mode == 0) {
+                TEMP_FAILURE_RETRY(fd = open(path, flags));
+            } else {
+                TEMP_FAILURE_RETRY(fd = open(path, flags, mode));
+            }
+            if (fd == -1) {
+                LOG("OOPS could not open state file path %s", path);
+            }
+        } else {
+            fd = dup(fd);
+            if (fd == -1) {
+                ERRLOG("OOPS could not dup file descriptor!");
+            }
+        }
+    } while (0);
+
+    FREE(path);
+
+    *fdOut = (int)fd;
+}
+
+void Java_org_deadc0de_apple2ix_Apple2Activity_nativeSaveState(JNIEnv *env, jclass cls, jstring jJsonString) {
     assert(cpu_isPaused() && "considered dangerous to save state when CPU thread is running");
 
-    LOG(": (%s)", path);
-    if (!emulator_saveState(path)) {
+    const char *jsonString = (*env)->GetStringUTFChars(env, jJsonString, NULL);
+    LOG(": (%s)", jsonString);
+
+    JSON_ref jsonData = NULL;
+    bool ret = json_createFromString(jsonString, &jsonData);
+    assert(ret > 0);
+
+    (*env)->ReleaseStringUTFChars(env, jJsonString, jsonString); jsonString = NULL;
+
+    int fdState = -1;
+    _openFdFromJson(&fdState, jsonData, /*fdKey:*/"fdState", /*pathKey:*/"stateFile", O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR);
+
+    if (!emulator_saveState(fdState)) {
         LOG("OOPS, could not save emulator state");
     }
 
-    (*env)->ReleaseStringUTFChars(env, jPath, path);
+    if (fdState >= 0) {
+        TEMP_FAILURE_RETRY(close(fdState));
+        fdState = -1;
+    }
+
+    json_destroy(&jsonData);
 }
 
 jstring Java_org_deadc0de_apple2ix_Apple2Activity_nativeLoadState(JNIEnv *env, jclass cls, jstring jJsonString) {
@@ -472,50 +525,25 @@ jstring Java_org_deadc0de_apple2ix_Apple2Activity_nativeLoadState(JNIEnv *env, j
 
     (*env)->ReleaseStringUTFChars(env, jJsonString, jsonString); jsonString = NULL;
 
-    char *path = NULL;
-    json_mapCopyStringValue(jsonData, "stateFile", &path);
-    json_unescapeSlashes(&path);
+    int fdState = -1;
+    _openFdFromJson(&fdState, jsonData, /*fdKey:*/"fdState", /*pathKey:*/"stateFile", O_RDONLY, 0);
 
-    bool readOnlyA = true;
-    json_mapParseBoolValue(jsonData, "readOnlyA", &readOnlyA);
-
-    bool createdFdA = false;
-    long fdA = -1;
-    if (!json_mapParseLongValue(jsonData, "fdA", &fdA, 10)) {
-        char *pathA = NULL;
-        json_mapCopyStringValue(jsonData, "diskA", &pathA);
-        json_unescapeSlashes(&pathA);
-
-        TEMP_FAILURE_RETRY(fdA = open(pathA, readOnlyA ? O_RDONLY : O_RDWR));
-        if (fdA == -1) {
-            LOG("OOPS could not open disk path %s", pathA);
-        }
-        createdFdA = fdA > 0;
-
-        FREE(pathA);
+    int fdA = -1;
+    {
+        bool readOnlyA = true;
+        json_mapParseBoolValue(jsonData, "readOnlyA", &readOnlyA);
+        _openFdFromJson(&fdA, jsonData, /*fdKey:*/"fdA", /*pathKey:*/"diskA", readOnlyA ? O_RDONLY : O_RDWR, 0);
     }
 
-    bool readOnlyB = true;
-    json_mapParseBoolValue(jsonData, "readOnlyB", &readOnlyB);
-
-    bool createdFdB = false;
-    long fdB = -1;
-    if (!json_mapParseLongValue(jsonData, "fdB", &fdB, 10)) {
-        char *pathB = NULL;
-        json_mapCopyStringValue(jsonData, "diskB", &pathB);
-        json_unescapeSlashes(&pathB);
-
-        TEMP_FAILURE_RETRY(fdB = open(pathB, readOnlyB ? O_RDONLY : O_RDWR));
-        if (fdB == -1) {
-            LOG("OOPS could not open disk path %s", pathB);
-        }
-        createdFdB = fdB > 0;
-
-        FREE(pathB);
+    int fdB = -1;
+    {
+        bool readOnlyB = true;
+        json_mapParseBoolValue(jsonData, "readOnlyB", &readOnlyB);
+        _openFdFromJson(&fdB, jsonData, /*fdKey:*/"fdB", /*pathKey:*/"diskB", readOnlyB ? O_RDONLY : O_RDWR, 0);
     }
 
     bool loadStateSuccess = true;
-    if (emulator_loadState(path, (int)fdA, (int)fdB)) {
+    if (emulator_loadState(fdState, (int)fdA, (int)fdB)) {
         json_mapSetBoolValue(jsonData, "wasGzippedA", disk6.disk[0].was_gzipped);
         json_mapSetBoolValue(jsonData, "wasGzippedB", disk6.disk[1].was_gzipped);
     } else {
@@ -524,11 +552,17 @@ jstring Java_org_deadc0de_apple2ix_Apple2Activity_nativeLoadState(JNIEnv *env, j
         // FIXME TODO : should show invalid state animation here ...
     }
 
-    if (createdFdA) {
-        TEMP_FAILURE_RETRY(close(fdA));
+    if (fdState >= 0) {
+        TEMP_FAILURE_RETRY(close(fdState));
+        fdState = -1;
     }
-    if (createdFdB) {
+    if (fdA >= 0) {
+        TEMP_FAILURE_RETRY(close(fdA));
+        fdA = -1;
+    }
+    if (fdB >= 0) {
         TEMP_FAILURE_RETRY(close(fdB));
+        fdB = -1;
     }
 
     json_mapSetBoolValue(jsonData, "loadStateSuccess", loadStateSuccess);
@@ -536,35 +570,47 @@ jstring Java_org_deadc0de_apple2ix_Apple2Activity_nativeLoadState(JNIEnv *env, j
     jsonString = ((JSON_s *)jsonData)->jsonString;
     jstring jstr = (*env)->NewStringUTF(env, jsonString);
 
-    FREE(path);
-
     json_destroy(&jsonData);
 
     return jstr;
 }
 
-jstring Java_org_deadc0de_apple2ix_Apple2Activity_nativeStateExtractDiskPaths(JNIEnv *env, jclass cls, jstring jPath) {
-    const char *path = (*env)->GetStringUTFChars(env, jPath, NULL);
-
+jstring Java_org_deadc0de_apple2ix_Apple2Activity_nativeStateExtractDiskPaths(JNIEnv *env, jclass cls, jstring jJsonString) {
     assert(cpu_isPaused() && "considered dangerous to save state when CPU thread is running");
 
-    LOG(": (%s)", path);
+    const char *jsonString = (*env)->GetStringUTFChars(env, jJsonString, NULL);
+    LOG(": (%s)", jsonString);
 
-    JSON_ref jsonData;
-    bool ret = json_createFromString("{}", &jsonData);
-    assert(ret >= 0 && "should be able to create JSON");
+    JSON_ref jsonData = NULL;
+    bool ret = json_createFromString(jsonString, &jsonData);
+    assert(ret > 0);
 
-    if (!emulator_stateExtractDiskPaths(path, &jsonData)) {
+    (*env)->ReleaseStringUTFChars(env, jJsonString, jsonString); jsonString = NULL;
+
+    int fdState = -1;
+    _openFdFromJson(&fdState, jsonData, /*fdKey:*/"fdState", /*pathKey:*/"stateFile", O_RDONLY, 0);
+
+    if (!emulator_stateExtractDiskPaths(fdState, jsonData)) {
         LOG("OOPS, could not extract disk paths from emulator state file");
     }
 
-    char *jsonString = ((JSON_s *)jsonData)->jsonString;
+    jsonString = ((JSON_s *)jsonData)->jsonString;
 
     jstring jstr = (*env)->NewStringUTF(env, jsonString);
 
     json_destroy(&jsonData);
 
-    (*env)->ReleaseStringUTFChars(env, jPath, path);
+    if (fdState >= 0) {
+        // 2017/06/30 HACK NOTE : if we dup()'d an Android ParcelFileDescriptor ... seek back to beginning here to reset for
+        // subsequent call to emulator_loadState().  Apparently there is no way to do that via the ParcelFileDescriptor
+        // API because ... rockstarz and ninjaz
+        off_t ret = lseek(fdState, 0, SEEK_SET);
+        if (ret != 0) {
+            ERRLOG("OOPS : state file lseek() failed!");
+        }
+        TEMP_FAILURE_RETRY(close(fdState));
+        fdState = -1;
+    }
 
     return jstr;
 }

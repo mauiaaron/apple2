@@ -74,9 +74,9 @@ public class Apple2Activity extends Activity implements Apple2DiskChooserActivit
 
     private static native void nativeOnKeyUp(int keyCode, int metaState);
 
-    private static native void nativeSaveState(String path);
+    private static native void nativeSaveState(String saveStateJson);
 
-    private static native String nativeStateExtractDiskPaths(String path);
+    private static native String nativeStateExtractDiskPaths(String extractStateJson);
 
     private static native String nativeLoadState(String loadStateJson);
 
@@ -192,18 +192,10 @@ public class Apple2Activity extends Activity implements Apple2DiskChooserActivit
 
     @Override
     public void onDisksChosen(DiskArgs args) {
-        if (Apple2DisksMenu.hasDiskExtension(args.name)) {
+        final String name = args.name;
+        if (Apple2DisksMenu.hasDiskExtension(name) || Apple2DisksMenu.hasStateExtension(name)) {
             sDisksChosen = args;
-        } else {
-            if (args.name.equals("")) {
-                return;
-            }
-
-            if (Apple2DisksMenu.hasStateExtension(args.name)) {
-                ////mMainMenu.restoreEmulatorState(args); FIXME TODO ...
-                return;
-            }
-
+        } else if (!name.equals("")) {
             Toast.makeText(this, R.string.disk_insert_toast_cannot, Toast.LENGTH_SHORT).show();
         }
     }
@@ -232,40 +224,63 @@ public class Apple2Activity extends Activity implements Apple2DiskChooserActivit
     @Override
     protected void onResume() {
         super.onResume();
-        if (sNativeBarfed) {
-            Apple2CrashHandler.getInstance().abandonAllHope(this, sNativeBarfedThrowable);
-            return;
-        }
 
-        Log.d(TAG, "onResume()");
-        showSplashScreen(/*dismissable:*/true);
-        if (!mSwitchingToPortrait.get()) {
-            Apple2CrashHandler.getInstance().checkForCrashes(this); // NOTE : needs to be called again to clean-up
-        }
-
-        if (sDisksChosen != null && mDisksMenu != null) {
-            if (sDisksChosen.pfd != null) {
-                String name = sDisksChosen.name;
-
-                final String[] prefices = {"content://com.android.externalstorage.documents/document", "content://com.android.externalstorage.documents", "content://com.android.externalstorage.documents", "content://"};
-                for (String prefix : prefices) {
-                    if (name.startsWith(prefix)) {
-                        name = name.substring(prefix.length());
-                        break;
-                    }
-                }
-
-                // strip out URL-encoded '/' directory separators
-                String nameLower = name.toLowerCase();
-                int idx = nameLower.lastIndexOf("%2f", /*fromIndex:*/name.length()-3);
-                if (idx >= 0) {
-                    name = name.substring(idx + 3);
-                }
-
-                mDisksMenu.showDiskInsertionAlertDialog(name, sDisksChosen);
+        do {
+            if (sNativeBarfed) {
+                Apple2CrashHandler.getInstance().abandonAllHope(this, sNativeBarfedThrowable);
+                break;
             }
+
+            Log.d(TAG, "onResume()");
+            showSplashScreen(/*dismissable:*/true);
+            if (!mSwitchingToPortrait.get()) {
+                Apple2CrashHandler.getInstance().checkForCrashes(this); // NOTE : needs to be called again to clean-up
+            }
+
+            if (mDisksMenu == null) {
+                break;
+            }
+
+            if (sDisksChosen == null) {
+                break;
+            }
+
+            DiskArgs args = sDisksChosen;
             sDisksChosen = null;
-        }
+
+            if (args.pfd == null) {
+                break;
+            }
+
+            String name = args.name;
+
+            if (Apple2DisksMenu.hasStateExtension(name)) {
+                boolean restored = Apple2MainMenu.restoreEmulatorState(this, args);
+                dismissAllMenus();
+                if (!restored) {
+                    Toast.makeText(this, R.string.state_not_restored, Toast.LENGTH_SHORT).show();
+                }
+                break;
+            }
+
+            final String[] prefices = {"content://com.android.externalstorage.documents/document", "content://com.android.externalstorage.documents", "content://com.android.externalstorage.documents", "content://"};
+            for (String prefix : prefices) {
+                if (name.startsWith(prefix)) {
+                    name = name.substring(prefix.length());
+                    break;
+                }
+            }
+
+            // strip out URL-encoded '/' directory separators
+            String nameLower = name.toLowerCase();
+            int idx = nameLower.lastIndexOf("%2f", /*fromIndex:*/name.length() - 3);
+            if (idx >= 0) {
+                name = name.substring(idx + 3);
+            }
+
+            mDisksMenu.showDiskInsertionAlertDialog(name, args);
+
+        } while (false);
     }
 
     @Override
@@ -488,10 +503,7 @@ public class Apple2Activity extends Activity implements Apple2DiskChooserActivit
     public void maybeResumeEmulation() {
         if (mMenuStack.size() == 0 && !mPausing.get()) {
             Apple2Preferences.sync(this, null);
-            boolean previouslyPaused = nativeEmulationResume();
-            if (BuildConfig.DEBUG && !previouslyPaused) {
-                throw new RuntimeException("expecting native CPU thread to have been paused");
-            }
+            nativeEmulationResume();
         }
     }
 
@@ -506,12 +518,12 @@ public class Apple2Activity extends Activity implements Apple2DiskChooserActivit
         nativeReboot(resetState);
     }
 
-    public void saveState(String stateFile) {
-        nativeSaveState(stateFile);
+    public void saveState(String saveStateJson) {
+        nativeSaveState(saveStateJson);
     }
 
-    public String stateExtractDiskPaths(String stateFile) {
-        return nativeStateExtractDiskPaths(stateFile);
+    public String stateExtractDiskPaths(String extractStateJson) {
+        return nativeStateExtractDiskPaths(extractStateJson);
     }
 
     public String loadState(String loadStateJson) {

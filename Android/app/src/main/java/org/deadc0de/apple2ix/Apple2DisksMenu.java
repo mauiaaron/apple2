@@ -683,7 +683,7 @@ public class Apple2DisksMenu implements Apple2MenuView {
                     return false;
                 }
                 File file = new File(dir, name);
-                return file.isDirectory() || hasDiskExtension(name);
+                return file.isDirectory() || hasDiskExtension(name) || hasStateExtension(name);
             }
         });
 
@@ -821,6 +821,12 @@ public class Apple2DisksMenu implements Apple2MenuView {
                 if (imageName.equals((String) Apple2Preferences.getJSONPref(SETTINGS.CURRENT_DISK_PATH_B))) {
                     ejectDisk(/*isDriveA:*/false);
                     dynamicSetup();
+                    return;
+                }
+
+                if (hasStateExtension(imageName)) {
+                    final String jsonString = "{ \"stateFile\" : \"" + imageName + "\" }";
+                    Apple2MainMenu.restoreEmulatorState(mActivity, jsonString);
                     return;
                 }
 

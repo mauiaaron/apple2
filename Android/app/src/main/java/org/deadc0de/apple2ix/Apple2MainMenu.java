@@ -30,8 +30,10 @@ import android.widget.ListView;
 import android.widget.PopupWindow;
 import android.widget.RadioButton;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.deadc0de.apple2ix.basic.R;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
@@ -298,17 +300,69 @@ public class Apple2MainMenu {
         mActivity.registerAndShowDialog(rebootQuitDialog);
     }
 
-    public void restoreEmulatorState(String quickSavePath) {
+    public static boolean restoreEmulatorState(Apple2Activity activity, DiskArgs diskArgs) {
+        boolean restored = false;
+
+        try {
+            String stateFile = diskArgs.path;
+
+            if (stateFile == null) {
+                stateFile = Apple2DisksMenu.EXTERNAL_CHOOSER_SENTINEL + diskArgs.uri.toString();
+            }
+
+            JSONObject map = new JSONObject();
+            map.put("stateFile", stateFile);
+
+            if (stateFile.startsWith(Apple2DisksMenu.EXTERNAL_CHOOSER_SENTINEL)) {
+                if (!Apple2Utils.isExternalStorageAccessible(activity)) {
+                    // disallow access if we cannot access external storage
+                    throw new Exception("External storage not accessible for state load");
+                }
+                if (diskArgs.pfd == null) {
+                    if (diskArgs.uri == null) {
+                        String uriString = stateFile.substring(Apple2DisksMenu.EXTERNAL_CHOOSER_SENTINEL.length());
+                        diskArgs.uri = Uri.parse(uriString);
+                    }
+                    diskArgs.pfd = Apple2DiskChooserActivity.openFileDescriptorFromUri(activity, diskArgs.uri);
+                }
+
+                int fd = diskArgs.pfd.getFd(); // NPE thrown if diskArgs.pfd is null
+                map.put("fdState", fd);
+            } else {
+                File file = new File(stateFile);
+                if (!file.exists()) {
+                    throw new RuntimeException("cannot insert state file : " + stateFile);
+                }
+            }
+
+            restored = restoreEmulatorState(activity, map.toString());
+
+            try {
+                diskArgs.pfd.close(); // at this point diskArgs.pfd !null
+            } catch (IOException ioe) {
+                Log.e(TAG, "Error attempting to close PFD : " + ioe);
+            }
+            diskArgs.pfd = null;
+
+        } catch (Exception e) {
+            Log.e(TAG, "OOPS: " + e);
+        }
+
+        return restored;
+    }
+
+    public static boolean restoreEmulatorState(Apple2Activity activity, String jsonString) {
+
+        boolean restored = false;
 
         Apple2DisksMenu.ejectDisk(/*isDriveA:*/true);
         Apple2DisksMenu.ejectDisk(/*isDriveA:*/false);
 
         // First we extract and open the emulator.a2state disk paths (which could be in a restricted location)
-        String jsonString = mActivity.stateExtractDiskPaths(quickSavePath);
+        jsonString = activity.stateExtractDiskPaths(jsonString);
         try {
 
             JSONObject map = new JSONObject(jsonString);
-            map.put("stateFile", quickSavePath);
 
             final String[] diskPathKeys = new String[]{"diskA", "diskB"};
             final String[] readOnlyKeys = new String[]{"readOnlyA", "readOnlyB"};
@@ -333,7 +387,7 @@ public class Apple2MainMenu {
 
                     Uri uri = Uri.parse(uriString);
 
-                    pfds[i] = Apple2DiskChooserActivity.openFileDescriptorFromUri(mActivity, uri);
+                    pfds[i] = Apple2DiskChooserActivity.openFileDescriptorFromUri(activity, uri);
                     if (pfds[i] == null) {
                         Log.e(TAG, "Did not find URI for drive #" + i + " specified in " + SAVE_FILE + " file : " + diskPath);
                     } else {
@@ -348,7 +402,7 @@ public class Apple2MainMenu {
                 }
             }
 
-            jsonString = mActivity.loadState(map.toString());
+            jsonString = activity.loadState(map.toString());
 
             for (int i = 0; i < 2; i++) {
                 try {
@@ -370,11 +424,13 @@ public class Apple2MainMenu {
                 Apple2Preferences.setJSONPref(Apple2DisksMenu.SETTINGS.CURRENT_DISK_PATH_B_GZ, wasGzippedB);
             }
 
-            // FIXME TODO : what to do if state load failed?
+            restored = map.getBoolean("loadStateSuccess");
 
         } catch (Throwable t) {
             Log.v(TAG, "OOPS : " + t);
         }
+
+        return restored;
     }
 
     private void maybeSaveRestore() {
@@ -398,7 +454,9 @@ public class Apple2MainMenu {
                     Log.v(TAG, "OMG, avoiding nasty UI race in sync/restore onClick()");
                     return;
                 }
-                mActivity.saveState(quickSavePath);
+
+                String jsonString = "{ \"stateFile\" : \"" + quickSavePath + "\" }";
+                mActivity.saveState(jsonString);
                 Apple2MainMenu.this.dismiss();
             }
         }).setNeutralButton(R.string.restore, new DialogInterface.OnClickListener() {
@@ -410,7 +468,11 @@ public class Apple2MainMenu {
                     return;
                 }
 
-                restoreEmulatorState(quickSavePath);
+                final String jsonString = "{ \"stateFile\" : \"" + quickSavePath + "\" }";
+                boolean restored = restoreEmulatorState(mActivity, jsonString);
+                if (!restored) {
+                    Toast.makeText(mActivity, R.string.state_not_restored, Toast.LENGTH_SHORT).show();
+                }
                 Apple2MainMenu.this.dismiss();
             }
         }).setNegativeButton(R.string.cancel, null).create();

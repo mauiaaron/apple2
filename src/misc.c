@@ -125,8 +125,7 @@ static int _load_magick(int fd) {
     return -1;
 }
 
-bool emulator_saveState(const char * const path) {
-    int fd = -1;
+bool emulator_saveState(int fd) {
     bool saved = false;
 
 #if !TESTING
@@ -134,12 +133,6 @@ bool emulator_saveState(const char * const path) {
 #endif
 
     do {
-        TEMP_FAILURE_RETRY(fd = open(path, O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR));
-        if (fd < 0) {
-            break;
-        }
-        assert(fd != 0 && "crazy platform");
-
         // save header
         if (!_save_state(fd, (const uint8_t *)SAVE_MAGICK3, SAVE_MAGICK_LEN)) {
             break;
@@ -180,20 +173,10 @@ bool emulator_saveState(const char * const path) {
         saved = true;
     } while (0);
 
-    if (fd >= 0) {
-        TEMP_FAILURE_RETRY(close(fd));
-    }
-
-    if (!saved) {
-        ERRLOG("OOPS, could not write to the emulator save-state file");
-        unlink(path);
-    }
-
     return saved;
 }
 
-bool emulator_loadState(const char * const path, int fdA, int fdB) {
-    int fd = -1;
+bool emulator_loadState(int fd, int fdA, int fdB) {
     bool loaded = false;
 
 #if !TESTING
@@ -203,12 +186,6 @@ bool emulator_loadState(const char * const path, int fdA, int fdB) {
     video_setDirty(A2_DIRTY_FLAG);
 
     do {
-        TEMP_FAILURE_RETRY(fd = open(path, O_RDONLY));
-        if (fd < 0) {
-            break;
-        }
-        assert(fd != 0 && "crazy platform");
-
         int version = _load_magick(fd);
         if (version < 0) {
             break;
@@ -270,10 +247,6 @@ bool emulator_loadState(const char * const path, int fdA, int fdB) {
         loaded = true;
     } while (0);
 
-    if (fd >= 0) {
-        TEMP_FAILURE_RETRY(close(fd));
-    }
-
     if (!loaded) {
         LOG("OOPS, problem(s) encountered loading emulator save-state file");
     }
@@ -281,18 +254,10 @@ bool emulator_loadState(const char * const path, int fdA, int fdB) {
     return loaded;
 }
 
-bool emulator_stateExtractDiskPaths(const char * const path, JSON_ref *json) {
-    int fd = -1;
+bool emulator_stateExtractDiskPaths(int fd, JSON_ref json) {
     bool loaded = false;
 
     do {
-        TEMP_FAILURE_RETRY(fd = open(path, O_RDONLY));
-        if (fd < 0) {
-            ERRLOG("OOPS, cannot open path %s", path);
-            break;
-        }
-        assert(fd != 0 && "crazy platform");
-
         int version = _load_magick(fd);
         if (version < 0) {
             break;
@@ -313,10 +278,6 @@ bool emulator_stateExtractDiskPaths(const char * const path, JSON_ref *json) {
 
         loaded = true;
     } while (0);
-
-    if (fd >= 0) {
-        TEMP_FAILURE_RETRY(close(fd));
-    }
 
     if (!loaded) {
         LOG("OOPS, problem(s) encountered loading emulator save-state file");

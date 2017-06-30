@@ -1120,16 +1120,16 @@ bool disk6_saveState(StateHelper_s *helper) {
     return saved;
 }
 
-static bool _disk6_loadState(StateHelper_s *helper, JSON_ref *json) {
+static bool _disk6_loadState(StateHelper_s *helper, JSON_ref json) {
     bool loaded = false;
     int fd = helper->fd;
 
     do {
         if (json != NULL) {
-            json_mapSetStringValue(*json, "diskA", "");
-            json_mapSetStringValue(*json, "diskB", "");
-            json_mapSetBoolValue(*json, "readOnlyA", "true");
-            json_mapSetBoolValue(*json, "readOnlyB", "true");
+            json_mapSetStringValue(json, "diskA", "");
+            json_mapSetStringValue(json, "diskB", "");
+            json_mapSetBoolValue(json, "readOnlyA", "true");
+            json_mapSetBoolValue(json, "readOnlyB", "true");
         }
 
         const bool changeState = (json == NULL);
@@ -1209,11 +1209,11 @@ static bool _disk6_loadState(StateHelper_s *helper, JSON_ref *json) {
                     }
                 } else {
                     if (i == 0) {
-                        json_mapSetStringValue(*json, "diskA", namebuf);
-                        json_mapSetBoolValue(*json, "readOnlyA", is_protected);
+                        json_mapSetStringValue(json, "diskA", namebuf);
+                        json_mapSetBoolValue(json, "readOnlyA", is_protected);
                     } else {
-                        json_mapSetStringValue(*json, "diskB", namebuf);
-                        json_mapSetBoolValue(*json, "readOnlyB", is_protected);
+                        json_mapSetStringValue(json, "diskB", namebuf);
+                        json_mapSetBoolValue(json, "readOnlyB", is_protected);
                     }
                 }
 
@@ -1270,7 +1270,7 @@ bool disk6_loadState(StateHelper_s *helper) {
     return _disk6_loadState(helper, NULL);
 }
 
-bool disk6_stateExtractDiskPaths(StateHelper_s *helper, JSON_ref *json) {
+bool disk6_stateExtractDiskPaths(StateHelper_s *helper, JSON_ref json) {
     return _disk6_loadState(helper, json);
 }
 

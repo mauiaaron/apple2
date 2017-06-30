@@ -67,13 +67,13 @@ typedef struct StateHelper_s {
 } StateHelper_s;
 
 // save current emulator state
-bool emulator_saveState(const char * const path);
+bool emulator_saveState(int fdState);
 
-// load emulator state from save path
-bool emulator_loadState(const char * const path, int fdA, int fdB);
+// load emulator state from save file descriptor
+bool emulator_loadState(int fdState, int fdA, int fdB);
 
-// extract paths from save state file into freshly allocated JSON_ref
-bool emulator_stateExtractDiskPaths(const char * const path, JSON_ref *json);
+// extract path(s) and readonly status(es) from save state file into json
+bool emulator_stateExtractDiskPaths(int fdState, JSON_ref json);
 
 //
 // Crash handling ...
