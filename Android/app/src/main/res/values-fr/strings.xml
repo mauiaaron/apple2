@@ -15,6 +15,8 @@
     <!-- main options -->
     <string name="about_apple2ix">A propos d\'Apple2ix…</string>
     <string name="about_apple2ix_summary">A propos de ce logiciel</string>
+    <string name="about_apple2ix_licenses">Licenses…</string>
+    <string name="about_apple2ix_licenses_summary">Apple2ix software licenses</string>
     <string name="app_name">Apple2ix</string>
     <string name="audio_configure">Configuration audio…</string>
     <string name="audio_configure_summary">Volume du haut-parleur, Mockingboard, etc</string>

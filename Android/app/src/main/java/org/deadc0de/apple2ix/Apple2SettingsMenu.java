@@ -267,6 +267,25 @@ public class Apple2SettingsMenu extends Apple2AbstractMenu {
                 activity.startActivity(i);
             }
         },
+        LICENSES {
+            @Override
+            public final String getTitle(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.about_apple2ix_licenses);
+            }
+
+            @Override
+            public final String getSummary(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.about_apple2ix_licenses_summary);
+            }
+
+            @Override
+            public void handleSelection(Apple2Activity activity, final Apple2AbstractMenu settingsMenu, boolean isChecked) {
+                String url = "https://deadc0de.org/apple2ix/licenses/";
+                Intent i = new Intent(Intent.ACTION_VIEW);
+                i.setData(Uri.parse(url));
+                activity.startActivity(i);
+            }
+        },
         RESET_PREFERENCES {
             @Override
             public final String getTitle(Apple2Activity activity) {
