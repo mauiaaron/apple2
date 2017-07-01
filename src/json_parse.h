@@ -107,7 +107,7 @@ bool json_arrayParseFloatValueAtIndex(const JSON_ref array, unsigned long index,
 bool json_serialize(JSON_ref json, int fd, bool pretty);
 
 // unescape all \/ characters (<sigh> a big fhank you to Java org.json.JSONXXX !)
-bool json_unescapeSlashes(char **kbdPath);
+bool json_unescapeSlashes(char **strPtr);
 
 // ----------------------------------------------------------------------------
 // destructor
