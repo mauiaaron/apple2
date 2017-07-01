@@ -32,6 +32,7 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.RadioButton;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -170,7 +171,8 @@ public class Apple2DisksMenu implements Apple2MenuView {
 
             @Override
             public Object getPrefDefault() {
-                return true;
+                // 2017/06/30 NOTE : keep this default false to accommodate initial installs that only have access to shipped public domain images
+                return false;
             }
         };
 
@@ -214,27 +216,43 @@ public class Apple2DisksMenu implements Apple2MenuView {
             }
         });
 
-        {
-            final Button ejectButton1 = (Button) mDisksView.findViewById(R.id.ejectButton1);
-            ejectButton1.setOnClickListener(new View.OnClickListener() {
+        for (int i = 0; i < 2; i++) {
+            final Button ejectButton = (Button) mDisksView.findViewById(i == 0 ? R.id.ejectButton1 : R.id.ejectButton2);
+            final int idx = i;
+            ejectButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    ejectDisk(/*isDriveA:*/true);
+                    ejectDisk(/*isDriveA:*/idx == 0);
                     dynamicSetup();
                 }
             });
         }
 
-        {
-            final Button ejectButton2 = (Button) mDisksView.findViewById(R.id.ejectButton2);
-            ejectButton2.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    ejectDisk(/*isDriveA:*/false);
-                    dynamicSetup();
+        final CheckBox newschoolSelection = (CheckBox) mDisksView.findViewById(R.id.newschoolDiskSelectionButton);
+        newschoolSelection.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Apple2Preferences.setJSONPref(SETTINGS.USE_NEWSCHOOL_DISK_SELECTION, newschoolSelection.isChecked());
+                dynamicSetup();
+            }
+        });
+
+        final View newschoolChooser = mDisksView.findViewById(R.id.disk_selection_newschool_chooser);
+        newschoolChooser.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                final boolean alreadyChoosing = Apple2DiskChooserActivity.sDiskChooserIsChoosing.getAndSet(true);
+                if (alreadyChoosing) {
+                    return;
                 }
-            });
-        }
+
+                Intent chooserIntent = new Intent(mActivity, Apple2DiskChooserActivity.class);
+                chooserIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION/* | Intent.FLAG_ACTIVITY_CLEAR_TOP */);
+
+                Apple2DiskChooserActivity.sDisksCallback = mActivity;
+                mActivity.startActivity(chooserIntent);
+            }
+        });
 
         Apple2Utils.getExternalStorageDirectory(activity);
     }
@@ -539,44 +557,17 @@ public class Apple2DisksMenu implements Apple2MenuView {
 
         final CheckBox newschoolSelection = (CheckBox) mDisksView.findViewById(R.id.newschoolDiskSelectionButton);
         newschoolSelection.setChecked(useNewschoolSelection);
-        newschoolSelection.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Apple2Preferences.setJSONPref(SETTINGS.USE_NEWSCHOOL_DISK_SELECTION, newschoolSelection.isChecked());
-                dynamicSetup();
-            }
-        });
 
         final boolean isKitKatOrBetter = (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT);
 
         final boolean includeExternalFileChooser = Apple2Utils.isExternalStorageAccessible(mActivity) && isKitKatOrBetter;
 
         final View newschoolChooser = mDisksView.findViewById(R.id.disk_selection_newschool_chooser);
-        newschoolChooser.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                final boolean alreadyChoosing = Apple2DiskChooserActivity.sDiskChooserIsChoosing.getAndSet(true);
-                if (alreadyChoosing) {
-                    return;
-                }
-
-                Intent chooserIntent = new Intent(mActivity, Apple2DiskChooserActivity.class);
-                chooserIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION/* | Intent.FLAG_ACTIVITY_CLEAR_TOP */);
-
-                Apple2DiskChooserActivity.sDisksCallback = mActivity;
-                mActivity.startActivity(chooserIntent);
-            }
-        });
-
-        final Button ejectButton1 = (Button) mDisksView.findViewById(R.id.ejectButton1);
-        final Button ejectButton2 = (Button) mDisksView.findViewById(R.id.ejectButton2);
 
         if (!includeExternalFileChooser || !useNewschoolSelection) {
             disksList.setEnabled(true);
             disksList.setVisibility(View.VISIBLE);
             newschoolChooser.setVisibility(View.INVISIBLE);
-            ejectButton1.setVisibility(View.VISIBLE);
-            ejectButton2.setVisibility(View.VISIBLE);
 
             for (int i = 0; i < 2; i++) {
                 LinearLayout layout = (LinearLayout) mDisksView.findViewById((i == 0) ? R.id.a2_newschool_driveA_layout : R.id.a2_newschool_driveB_layout);
@@ -594,8 +585,6 @@ public class Apple2DisksMenu implements Apple2MenuView {
         disksList.setEnabled(false);
         disksList.setVisibility(View.INVISIBLE);
         newschoolChooser.setVisibility(View.VISIBLE);
-        ejectButton1.setVisibility(View.INVISIBLE);
-        ejectButton2.setVisibility(View.INVISIBLE);
 
         // new external file chooser activity can allow navigation to restricted external SD Card(s) ...
         newschoolSelection.setVisibility(View.VISIBLE);
@@ -625,12 +614,6 @@ public class Apple2DisksMenu implements Apple2MenuView {
 
             LinearLayout layout = (LinearLayout) mDisksView.findViewById((i == 0) ? R.id.a2_newschool_driveA_layout : R.id.a2_newschool_driveB_layout);
 
-            LinearLayout widgetLayout = (LinearLayout) mDisksView.findViewById((i == 0) ? R.id.a2_newschool_diskA_widget_frame : R.id.a2_newschool_diskB_widget_frame);
-            if (widgetLayout.getChildCount() > 0) {
-                // layout cells appear to be reused when scrolling into view ... make sure we start with clear hierarchy
-                widgetLayout.removeAllViews();
-            }
-
             if (imageName == null || imageName.equals("")) {
                 layout.setVisibility(View.INVISIBLE);
             } else {
@@ -640,21 +623,7 @@ public class Apple2DisksMenu implements Apple2MenuView {
                 imageName = "(" + mActivity.getResources().getString((readOnly ? R.string.disk_read_only : R.string.disk_read_write)) + "): " + imageName;
                 TextView textView = (TextView) mDisksView.findViewById((i == 0) ? R.id.a2_newschool_diskA : R.id.a2_newschool_diskB);
                 textView.setText(imageName);
-
-                String eject = mActivity.getResources().getString(R.string.disk_eject);
-                Button ejectButton = new Button(mActivity);
-                ejectButton.setText(eject);
-                final boolean isDriveA = (i == 0);
-                ejectButton.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        ejectDisk(isDriveA);
-                        dynamicSetup();
-                    }
-                });
-                widgetLayout.addView(ejectButton);
             }
-
         }
     }
 
@@ -826,7 +795,11 @@ public class Apple2DisksMenu implements Apple2MenuView {
 
                 if (hasStateExtension(imageName)) {
                     final String jsonString = "{ \"stateFile\" : \"" + imageName + "\" }";
-                    Apple2MainMenu.restoreEmulatorState(mActivity, jsonString);
+                    final boolean restored = Apple2MainMenu.restoreEmulatorState(mActivity, jsonString);
+                    mActivity.dismissAllMenus();
+                    if (!restored) {
+                        Toast.makeText(mActivity, R.string.state_not_restored, Toast.LENGTH_SHORT).show();
+                    }
                     return;
                 }
 

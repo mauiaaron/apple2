@@ -39,12 +39,12 @@
     <string name="disk_insert_toast_cannot">Cannot insert (not a disk image or state file)</string>
     <string name="disk_read_only">Read only</string>
     <string name="disk_read_write">Read/write</string>
-    <string name="disk_selection_newschoool">Use system file chooser</string>
+    <string name="disk_selection_newschoool">System chooser</string>
     <string name="disk_show_operation">Show Disk ][ operations</string>
     <string name="disk_show_operation_summary">Shows when disk drives are reading or writing</string>
     <string name="emulation_continue">Continue…</string>
     <string name="emulation_disks">Load disk image</string>
-    <string name="file_chooser">Choose disk…</string>
+    <string name="file_chooser">Choose disk image or state file…</string>
     <string name="header_disks">Insert disk:</string>
     <string name="header_eject_1">Eject 1</string>
     <string name="header_eject_2">Eject 2</string>
