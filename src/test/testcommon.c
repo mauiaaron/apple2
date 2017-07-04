@@ -42,7 +42,11 @@ void test_breakpoint(void *arg) {
 void test_common_init(void) {
     GREATEST_SET_BREAKPOINT_CB(test_breakpoint, NULL);
 
+#if __ANDROID__
+    // tags help us wade through log soup
+#else
     do_logging = false;// silence regular emulator logging
+#endif
 
     extern void emulator_ctors(void);
     emulator_ctors();

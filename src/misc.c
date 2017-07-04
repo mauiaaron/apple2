@@ -279,6 +279,14 @@ bool emulator_stateExtractDiskPaths(int fd, JSON_ref json) {
         loaded = true;
     } while (0);
 
+    if (fd >= 0) {
+        // Ensure that we leave the file descriptor ready for a call to emulator_loadState()
+        off_t ret = lseek(fd, 0, SEEK_SET);
+        if (ret != 0) {
+            ERRLOG("OOPS : state file lseek() failed!");
+        }
+    }
+
     if (!loaded) {
         LOG("OOPS, problem(s) encountered loading emulator save-state file");
     }

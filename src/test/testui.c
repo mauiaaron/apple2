@@ -138,8 +138,14 @@ TEST test_save_state_1() {
     char *savData = NULL;
     ASPRINTF(&savData, "%s/emulator-test.a2state", HOMEDIR);
 
-    bool ret = emulator_saveState(savData);
+    int fd = -1;
+    TEMP_FAILURE_RETRY(fd = open(savData, O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR));
+    ASSERT(fd > 0);
+
+    bool ret = emulator_saveState(fd);
     ASSERT(ret);
+
+    TEMP_FAILURE_RETRY(close(fd));
 
     FREE(savData);
     PASS();
@@ -157,24 +163,34 @@ TEST test_load_state_1() {
     char *savData = NULL;
     ASPRINTF(&savData, "%s/emulator-test.a2state", HOMEDIR);
 
+    int fdState = -1;
+    TEMP_FAILURE_RETRY(fdState = open(savData, O_RDONLY));
+    ASSERT(fdState > 0);
+
     bool ret = false;
     int fdA = -1;
     int fdB = -1;
     {
         JSON_ref jsonData;
-        ret = emulator_stateExtractDiskPaths(savData, &jsonData);
+        int siz = json_createFromString("{}", &jsonData);
+        ASSERT(siz > 0);
+        ret = emulator_stateExtractDiskPaths(fdState, jsonData);
         ASSERT(ret);
         _get_fds(jsonData, &fdA, &fdB);
         json_destroy(&jsonData);
     }
 
-    ret = emulator_loadState(savData, fdA, fdB);
+    ret = emulator_loadState(fdState, fdA, fdB);
     ASSERT(ret);
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
     ASSERT_SHA(BOOT_SCREEN);
 
     _assert_blank_boot();
+
+    TEMP_FAILURE_RETRY(close(fdState));
+    TEMP_FAILURE_RETRY(close(fdA));
+    TEMP_FAILURE_RETRY(close(fdB));
 
     unlink(savData);
     FREE(savData);
@@ -212,18 +228,24 @@ TEST test_load_A2VM_good1() {
 
     // load state and assert
 
+    int fdState = -1;
+    TEMP_FAILURE_RETRY(fdState = open(savData, O_RDONLY));
+    ASSERT(fdState > 0);
+
     bool ret = false;
     int fdA = -1;
     int fdB = -1;
     {
         JSON_ref jsonData;
-        ret = emulator_stateExtractDiskPaths(savData, &jsonData);
+        int siz = json_createFromString("{}", &jsonData);
+        ASSERT(siz > 0);
+        ret = emulator_stateExtractDiskPaths(fdState, jsonData);
         ASSERT(ret);
         _get_fds(jsonData, &fdA, &fdB);
         json_destroy(&jsonData);
     }
 
-    ret = emulator_loadState(savData, fdA, fdB);
+    ret = emulator_loadState(fdState, fdA, fdB);
     ASSERT(ret);
 
     // ASSERT framebuffer matches expected
@@ -280,6 +302,10 @@ TEST test_load_A2VM_good1() {
     ASSERT(cpu65_y       == 0x01);
     ASSERT(cpu65_sp      == 0xEA);
 
+    TEMP_FAILURE_RETRY(close(fdState));
+    TEMP_FAILURE_RETRY(close(fdA));
+    TEMP_FAILURE_RETRY(close(fdB));
+
     unlink(savData);
     FREE(savData);
 
@@ -316,18 +342,24 @@ TEST test_load_A2V2_good1() {
 
     // load state and assert
 
+    int fdState = -1;
+    TEMP_FAILURE_RETRY(fdState = open(savData, O_RDONLY));
+    ASSERT(fdState > 0);
+
     bool ret = false;
     int fdA = -1;
     int fdB = -1;
     {
         JSON_ref jsonData;
-        ret = emulator_stateExtractDiskPaths(savData, &jsonData);
+        int siz = json_createFromString("{}", &jsonData);
+        ASSERT(siz > 0);
+        ret = emulator_stateExtractDiskPaths(fdState, jsonData);
         ASSERT(ret);
         _get_fds(jsonData, &fdA, &fdB);
         json_destroy(&jsonData);
     }
 
-    ret = emulator_loadState(savData, fdA, fdB);
+    ret = emulator_loadState(fdState, fdA, fdB);
     ASSERT(ret);
 
     // ASSERT framebuffer matches expected
@@ -396,6 +428,10 @@ TEST test_load_A2V2_good1() {
     size_t mbSiz = sizeof(mbData);
     mb_testAssertA2V2(mbData, mbSiz);
 
+    TEMP_FAILURE_RETRY(close(fdState));
+    TEMP_FAILURE_RETRY(close(fdA));
+    TEMP_FAILURE_RETRY(close(fdB));
+
     unlink(savData);
     FREE(savData);
 
@@ -432,18 +468,24 @@ TEST test_load_A2V2_good2() {
 
     // load state and assert
 
+    int fdState = -1;
+    TEMP_FAILURE_RETRY(fdState = open(savData, O_RDONLY));
+    ASSERT(fdState > 0);
+
     bool ret = false;
     int fdA = -1;
     int fdB = -1;
     {
         JSON_ref jsonData;
-        ret = emulator_stateExtractDiskPaths(savData, &jsonData);
+        int siz = json_createFromString("{}", &jsonData);
+        ASSERT(siz > 0);
+        ret = emulator_stateExtractDiskPaths(fdState, jsonData);
         ASSERT(ret);
         _get_fds(jsonData, &fdA, &fdB);
         json_destroy(&jsonData);
     }
 
-    ret = emulator_loadState(savData, fdA, fdB);
+    ret = emulator_loadState(fdState, fdA, fdB);
     ASSERT(ret);
 
     // ASSERT framebuffer matches expected
@@ -511,6 +553,10 @@ TEST test_load_A2V2_good2() {
 #include "test/a2v2-good2-mb.h"
     size_t mbSiz = sizeof(mbData);
     mb_testAssertA2V2(mbData, mbSiz);
+
+    TEMP_FAILURE_RETRY(close(fdState));
+    TEMP_FAILURE_RETRY(close(fdA));
+    TEMP_FAILURE_RETRY(close(fdB));
 
     unlink(savData);
     FREE(savData);

@@ -601,13 +601,6 @@ jstring Java_org_deadc0de_apple2ix_Apple2Activity_nativeStateExtractDiskPaths(JN
     json_destroy(&jsonData);
 
     if (fdState >= 0) {
-        // 2017/06/30 HACK NOTE : if we dup()'d an Android ParcelFileDescriptor ... seek back to beginning here to reset for
-        // subsequent call to emulator_loadState().  Apparently there is no way to do that via the ParcelFileDescriptor
-        // API because ... rockstarz and ninjaz
-        off_t ret = lseek(fdState, 0, SEEK_SET);
-        if (ret != 0) {
-            ERRLOG("OOPS : state file lseek() failed!");
-        }
         TEMP_FAILURE_RETRY(close(fdState));
         fdState = -1;
     }
