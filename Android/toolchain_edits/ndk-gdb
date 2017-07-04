@@ -677,7 +677,7 @@ log "Found data directory: '$DATA_DIR'"
 # is not there, push 'gdbserver' found in prebuilt.
 #
 DEVICE_GDBSERVER=$DATA_DIR/lib/gdbserver
-adb_var_shell2 GDBSERVER_RESULT ls $DEVICE_GDBSERVER
+adb_var_shell2 GDBSERVER_RESULT run-as $PACKAGE_NAME ls $DEVICE_GDBSERVER
 if [ $? != 0 ]; then
 
     # Figure out what's the target-arch and find gdbserver in prebuilt.
