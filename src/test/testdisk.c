@@ -1389,7 +1389,7 @@ static int _test_disk_image_with_gzip_header(int readonly) {
 
     test_type_input("CLEAR\r");
 
-    c_debugger_set_timeout(2);
+    c_debugger_set_timeout(10);
     c_debugger_go();
     c_debugger_set_timeout(0);
 
@@ -1425,7 +1425,7 @@ TEST test_reinsert_edgecase() {
     // TODO FIXME : we need both a timeout and a step-until-framebuffer-is-a-particular-SHA routine ...
 
     // First verify we hit the crackscreen
-    c_debugger_set_timeout(5);
+    c_debugger_set_timeout(10);
     c_debugger_go();
     ASSERT_SHA(DROL_CRACK_SCREEN_SHA);
 
