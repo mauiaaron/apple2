@@ -17,8 +17,7 @@
 
 #define SAVE_MAGICK  "A2VM"
 #define SAVE_MAGICK2 "A2V2"
-#define SAVE_MAGICK3 "A2V3"
-#define SAVE_VERSION 3
+#define SAVE_VERSION 2
 #define SAVE_MAGICK_LEN sizeof(SAVE_MAGICK)
 
 typedef struct module_ctor_node_s {
@@ -113,9 +112,7 @@ static int _load_magick(int fd) {
 
     // check header
 
-    if (memcmp(magick, SAVE_MAGICK3, SAVE_MAGICK_LEN) == 0) {
-        return 3;
-    } else if (memcmp(magick, SAVE_MAGICK2, SAVE_MAGICK_LEN) == 0) {
+    if (memcmp(magick, SAVE_MAGICK2, SAVE_MAGICK_LEN) == 0) {
         return 2;
     } else if (memcmp(magick, SAVE_MAGICK, SAVE_MAGICK_LEN) == 0) {
         return 1;
@@ -134,7 +131,7 @@ bool emulator_saveState(int fd) {
 
     do {
         // save header
-        if (!_save_state(fd, (const uint8_t *)SAVE_MAGICK3, SAVE_MAGICK_LEN)) {
+        if (!_save_state(fd, (const uint8_t *)SAVE_MAGICK2, SAVE_MAGICK_LEN)) {
             break;
         }
 

@@ -119,17 +119,6 @@ public class Apple2DisksMenu implements Apple2MenuView {
                 return true;
             }
         },
-        CURRENT_DISK_PATH_A_GZ {
-            @Override
-            public String getPrefKey() {
-                return "driveAInsertedDiskGZ";
-            }
-
-            @Override
-            public Object getPrefDefault() {
-                return true;
-            }
-        },
         CURRENT_DISK_PATH_B {
             @Override
             public String getPrefKey() {
@@ -145,17 +134,6 @@ public class Apple2DisksMenu implements Apple2MenuView {
             @Override
             public String getPrefKey() {
                 return "driveBInsertedDiskRO";
-            }
-
-            @Override
-            public Object getPrefDefault() {
-                return true;
-            }
-        },
-        CURRENT_DISK_PATH_B_GZ {
-            @Override
-            public String getPrefKey() {
-                return "driveBInsertedDiskGZ";
             }
 
             @Override
@@ -385,26 +363,21 @@ public class Apple2DisksMenu implements Apple2MenuView {
             map.put("disk", imageName);
             map.put("drive", isDriveA ? "0" : "1");
             map.put("readOnly", isReadOnly ? "true" : "false");
-            if (onLaunch) {
-                boolean wasGzipped = (boolean) (isDriveA ? Apple2Preferences.getJSONPref(SETTINGS.CURRENT_DISK_PATH_A_GZ) : Apple2Preferences.getJSONPref(SETTINGS.CURRENT_DISK_PATH_B_GZ));
-                map.put("wasGzipped", wasGzipped ? "true" : "false");
-            }
 
             String jsonString = nativeChooseDisk(map.toString());
 
-            try {
-                diskArgs.pfd.close(); // at this point diskArgs.pfd !null
-            } catch (IOException ioe) {
-                Log.e(TAG, "Error attempting to close PFD : " + ioe);
+            if (diskArgs.pfd != null) {
+                try {
+                    diskArgs.pfd.close();
+                } catch (IOException ioe) {
+                    Log.e(TAG, "Error attempting to close PFD : " + ioe);
+                }
             }
             diskArgs.pfd = null;
 
             map = new JSONObject(jsonString);
             boolean inserted = map.getBoolean("inserted");
-            if (inserted) {
-                boolean wasGzipped = map.getBoolean("wasGzipped");
-                Apple2Preferences.setJSONPref(isDriveA ? Apple2DisksMenu.SETTINGS.CURRENT_DISK_PATH_A_GZ : Apple2DisksMenu.SETTINGS.CURRENT_DISK_PATH_B_GZ, wasGzipped);
-            } else {
+            if (!inserted) {
                 ejectDisk(isDriveA);
             }
 

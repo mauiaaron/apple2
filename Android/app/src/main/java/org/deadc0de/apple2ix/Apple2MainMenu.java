@@ -415,15 +415,6 @@ public class Apple2MainMenu {
             }
             map = new JSONObject(jsonString);
 
-            {
-                boolean wasGzippedA = map.getBoolean("wasGzippedA");
-                Apple2Preferences.setJSONPref(Apple2DisksMenu.SETTINGS.CURRENT_DISK_PATH_A_GZ, wasGzippedA);
-            }
-            {
-                boolean wasGzippedB = map.getBoolean("wasGzippedB");
-                Apple2Preferences.setJSONPref(Apple2DisksMenu.SETTINGS.CURRENT_DISK_PATH_B_GZ, wasGzippedB);
-            }
-
             restored = map.getBoolean("loadStateSuccess");
 
         } catch (Throwable t) {

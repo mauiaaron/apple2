@@ -453,7 +453,7 @@ TEST test_load_A2V2_good2() {
 
     const char *homedir = HOMEDIR;
     char *savData = NULL;
-    ASPRINTF(&savData, "%s/a2_emul_a2v2.dat", homedir);
+    ASPRINTF(&savData, "%s/a2_emul_a2v2-2.dat", homedir);
     if (savData) {
         unlink(savData);
     }
@@ -564,7 +564,7 @@ TEST test_load_A2V2_good2() {
     PASS();
 }
 
-TEST test_load_A2V3_good1() {
+TEST test_load_A2V2_good3() {
 
     // ensure stable test
     disk6_eject(0);
@@ -575,11 +575,11 @@ TEST test_load_A2V3_good1() {
 
     // write saved state to disk
 
-#include "test/a2v3-good1.h"
+#include "test/a2v2-good3.h"
 
     const char *homedir = HOMEDIR;
     char *savData = NULL;
-    ASPRINTF(&savData, "%s/a2_emul_a2v3.dat", homedir);
+    ASPRINTF(&savData, "%s/a2_emul_a2v2-3.dat", homedir);
     if (savData) {
         unlink(savData);
     }
@@ -672,7 +672,7 @@ TEST test_load_A2V3_good1() {
     ASSERT(!alt_speed_enabled);
 
     // Mockingboard ...
-#include "test/a2v3-good1-mb.h"
+#include "test/a2v2-good3-mb.h"
     size_t mbSiz = sizeof(mbData);
     mb_testAssertA2V2(mbData, mbSiz);
 
@@ -707,8 +707,7 @@ GREATEST_SUITE(test_suite_ui) {
 
     RUN_TESTp(test_load_A2V2_good1);
     RUN_TESTp(test_load_A2V2_good2);
-
-    RUN_TESTp(test_load_A2V3_good1);
+    RUN_TESTp(test_load_A2V2_good3);
 
 #if INTERFACE_TOUCH
 #   warning TODO : touch joystick(s), keyboard, mouse, menu

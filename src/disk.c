@@ -798,7 +798,7 @@ const char *disk6_eject(int drive) {
         int ret = -1;
         off_t compressed_size = -1;
 
-        if (disk6.disk[drive].was_gzipped) {
+        if (is_gz(disk6.disk[drive].file_name)) {
 
             // backup uncompressed data ...
             uint8_t *compressed_data = drive == 0 ? &disk_a_raw[0] : &disk_b_raw[0];
@@ -855,7 +855,6 @@ const char *disk6_eject(int drive) {
     disk6.disk[drive].nib_image_data = NULL;
     disk6.disk[drive].nibblized = false;
     disk6.disk[drive].is_protected = false;
-    disk6.disk[drive].was_gzipped = false;
     disk6.disk[drive].track_valid = false;
     disk6.disk[drive].track_dirty = false;
     disk6.disk[drive].skew_table = NULL;
@@ -921,7 +920,8 @@ const char *disk6_insert(int fd, int drive, const char * const file_name, int re
             }
             disk6.disk[drive].fd = fd;
 
-            err = zlib_inflate_inplace(disk6.disk[drive].fd, expected, &(disk6.disk[drive].was_gzipped));
+            bool file_actually_was_gzipped; // but we don't care ...
+            err = zlib_inflate_inplace(disk6.disk[drive].fd, expected, &file_actually_was_gzipped);
             if (err) {
                 ERRLOG("OOPS, An error occurred when attempting to inflate/load a disk image [%s] : [%s]", file_name, err);
                 break;
@@ -1091,7 +1091,7 @@ bool disk6_saveState(StateHelper_s *helper) {
             }
             LOG("SAVE stepper_phases[%lu] = %02x", i, stepper_phases);
 
-            state = disk6.disk[i].was_gzipped;
+            state = 0; // placeholder ...
             if (!helper->save(fd, &state, 1)) {
                 break;
             }
@@ -1227,15 +1227,9 @@ static bool _disk6_loadState(StateHelper_s *helper, JSON_ref json) {
                 stepper_phases = state & 0x3; // HACK NOTE : this is unnecessarily encoded twice ...
             }
 
-            // format A2V3+ : was_gzipped, (otherwise placeholder)
+            // placeholder ...
             if (!helper->load(fd, &state, 1)) {
                 break;
-            }
-            if (helper->version >= 3) {
-                disk6.disk[i].was_gzipped = (state != 0);
-
-                // remember if image was gzipped
-                prefs_setBoolValue(PREF_DOMAIN_VM, i == 0 ? PREF_DISK_DRIVEA_GZ : PREF_DISK_DRIVEB_GZ, disk6.disk[i].was_gzipped);
             }
 
             if (!helper->load(fd, &state, 1)) {

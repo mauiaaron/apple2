@@ -410,16 +410,8 @@ jstring Java_org_deadc0de_apple2ix_Apple2DisksMenu_nativeChooseDisk(JNIEnv *env,
         inserted = false;
     } else {
         video_animations->animation_showDiskChosen(drive);
-        // possibly override was_gzipped, if specified in args ...
-        bool wasGzipped = false;
-        if (json_mapParseBoolValue(jsonData, "wasGzipped", &wasGzipped)) {
-            disk6.disk[drive].was_gzipped = wasGzipped;
-        }
     }
 
-    // remember if image was gzipped
-    prefs_setBoolValue(PREF_DOMAIN_VM, drive == 0 ? PREF_DISK_DRIVEA_GZ : PREF_DISK_DRIVEB_GZ, disk6.disk[drive].was_gzipped); // HACK FIXME TODO ... refactor : this is erased on the Java side when we resume emulation 
-    json_mapSetBoolValue(jsonData, "wasGzipped", disk6.disk[drive].was_gzipped);
     json_mapSetBoolValue(jsonData, "inserted", inserted);
 
     if (fd >= 0) {
@@ -543,10 +535,7 @@ jstring Java_org_deadc0de_apple2ix_Apple2Activity_nativeLoadState(JNIEnv *env, j
     }
 
     bool loadStateSuccess = true;
-    if (emulator_loadState(fdState, (int)fdA, (int)fdB)) {
-        json_mapSetBoolValue(jsonData, "wasGzippedA", disk6.disk[0].was_gzipped);
-        json_mapSetBoolValue(jsonData, "wasGzippedB", disk6.disk[1].was_gzipped);
-    } else {
+    if (!emulator_loadState(fdState, (int)fdA, (int)fdB)) {
         loadStateSuccess = false;
         LOG("OOPS, could not load emulator state");
         // FIXME TODO : should show invalid state animation here ...

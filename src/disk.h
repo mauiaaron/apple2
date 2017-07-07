@@ -62,7 +62,6 @@ typedef struct diskette_t {
     long track_width;
     int phase;
     int run_byte;
-    bool was_gzipped;
 } diskette_t;
 
 typedef struct drive_t {
