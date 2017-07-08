@@ -1416,6 +1416,67 @@ TEST test_disk_image_with_gzip_header_rw() {
     return _test_disk_image_with_gzip_header(/*readonly:*/0);
 }
 
+#define GZINVALID_DSK "CorruptedGzipped.dsk.gz"
+static int _test_disk_invalid_gzipped(int readonly) {
+
+    int found_disk_image_file = 0;
+    {
+        char **paths = test_copy_disk_paths(GZINVALID_DSK);
+
+        char **path = &paths[0];
+        while (*path) {
+            char *diskPath = *path;
+            ++path;
+
+            int fd = -1;
+            TEMP_FAILURE_RETRY(fd = open(diskPath, readonly ? O_RDONLY : O_RDWR));
+            if (fd != -1) {
+
+                ++found_disk_image_file;
+
+                int err = disk6_insert(fd, /*drive:*/0, diskPath, readonly) != NULL;
+                TEMP_FAILURE_RETRY(close(fd));
+                ASSERT(err);
+
+                // did not actually insert corruped disk image and did not crash
+                ASSERT(disk6.disk[0].file_name == NULL);
+                ASSERT(disk6.disk[0].fd == -1);
+
+                ASSERT(disk6.disk[0].raw_image_data == (void *)-1/*MAP_FAILED*/);
+                ASSERT(disk6.disk[0].whole_len == 0);
+                ASSERT(disk6.disk[0].nib_image_data == NULL);
+                ASSERT(disk6.disk[0].nibblized == false);
+                ASSERT(disk6.disk[0].is_protected == false);
+                ASSERT(disk6.disk[0].track_valid == false);
+                ASSERT(disk6.disk[0].track_dirty == false);
+                ASSERT(disk6.disk[0].skew_table == NULL);
+                ASSERT(disk6.disk[0].track_width == 0);
+            }
+        }
+
+        path = &paths[0];
+        while (*path) {
+            char *diskPath = *path;
+            ++path;
+            FREE(diskPath);
+        }
+
+        FREE(paths);
+    }
+
+    ASSERT(found_disk_image_file > 0);
+
+    PASS();
+}
+
+TEST test_disk_invalid_gzipped_ro() {
+    return _test_disk_invalid_gzipped(/*readonly:*/1);
+}
+
+TEST test_disk_invalid_gzipped_rw() {
+    return _test_disk_invalid_gzipped(/*readonly:*/0);
+}
+
 #if TEST_DISK_EDGE_CASES
 #define DROL_DSK "Drol.dsk.gz"
 #define DROL_CRACK_SCREEN_SHA "FD7332529E117F14DA3880BB36FE8E23C3704799"
@@ -1505,6 +1566,9 @@ GREATEST_SUITE(test_suite_disk) {
 
     RUN_TESTp(test_disk_image_with_gzip_header_ro);
     RUN_TESTp(test_disk_image_with_gzip_header_rw);
+
+    RUN_TESTp(test_disk_invalid_gzipped_ro);
+    RUN_TESTp(test_disk_invalid_gzipped_rw);
 
     // edge-case tests may require testing copyrighted images (which I have in my possession by legally owning the
     // original disk image (yep, I do ;-)

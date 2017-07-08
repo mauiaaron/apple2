@@ -207,6 +207,14 @@ char **_copy_paths_main(const char *fileName) {
 
 #endif
 
+char **test_copy_disk_paths(const char *fileName) {
+#if defined(__APPLE__)
+    return _copy_paths_mac(fileName);
+#else
+    return _copy_paths_main(fileName);
+#endif
+}
+
 int test_setup_boot_disk(const char *fileName, int readonly) {
 
 #if defined(__APPLE__)

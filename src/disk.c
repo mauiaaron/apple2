@@ -798,33 +798,35 @@ const char *disk6_eject(int drive) {
         int ret = -1;
         off_t compressed_size = -1;
 
-        if (is_gz(disk6.disk[drive].file_name)) {
+        if (disk6.disk[drive].raw_image_data != MAP_FAILED) {
+            if (is_gz(disk6.disk[drive].file_name)) {
 
-            // backup uncompressed data ...
-            uint8_t *compressed_data = drive == 0 ? &disk_a_raw[0] : &disk_b_raw[0];
+                // backup uncompressed data ...
+                uint8_t *compressed_data = drive == 0 ? &disk_a_raw[0] : &disk_b_raw[0];
 
-            // re-compress in place ...
-            err = zlib_deflate_buffer(/*src:*/disk6.disk[drive].raw_image_data, disk6.disk[drive].whole_len, /*dst:*/compressed_data, &compressed_size);
-            if (err) {
-                ERRLOG("OOPS, error deflating %s : %s", disk6.disk[drive].file_name, err);
-            }
+                // re-compress in place ...
+                err = zlib_deflate_buffer(/*src:*/disk6.disk[drive].raw_image_data, disk6.disk[drive].whole_len, /*dst:*/compressed_data, &compressed_size);
+                if (err) {
+                    ERRLOG("OOPS, error deflating %s : %s", disk6.disk[drive].file_name, err);
+                }
 
-            if (compressed_size > 0) {
-                assert(compressed_size < disk6.disk[drive].whole_len);
+                if (compressed_size > 0) {
+                    assert(compressed_size < disk6.disk[drive].whole_len);
 
-                // overwrite portion of mmap()'d file with compressed data ...
-                memcpy(/*dst:*/disk6.disk[drive].raw_image_data, /*src:*/compressed_data, compressed_size);
+                    // overwrite portion of mmap()'d file with compressed data ...
+                    memcpy(/*dst:*/disk6.disk[drive].raw_image_data, /*src:*/compressed_data, compressed_size);
 
-                TEMP_FAILURE_RETRY(ret = msync(disk6.disk[drive].raw_image_data, disk6.disk[drive].whole_len, MS_SYNC));
-                if (ret) {
-                    ERRLOG("Error syncing file %s", disk6.disk[drive].file_name);
+                    TEMP_FAILURE_RETRY(ret = msync(disk6.disk[drive].raw_image_data, disk6.disk[drive].whole_len, MS_SYNC));
+                    if (ret) {
+                        ERRLOG("Error syncing file %s", disk6.disk[drive].file_name);
+                    }
                 }
             }
-        }
 
-        TEMP_FAILURE_RETRY(ret = munmap(disk6.disk[drive].raw_image_data, disk6.disk[drive].whole_len));
-        if (ret) {
-            ERRLOG("Error munmap()ping file %s", disk6.disk[drive].file_name);
+            TEMP_FAILURE_RETRY(ret = munmap(disk6.disk[drive].raw_image_data, disk6.disk[drive].whole_len));
+            if (ret) {
+                ERRLOG("Error munmap()ping file %s", disk6.disk[drive].file_name);
+            }
         }
 
         if (compressed_size > 0) {
