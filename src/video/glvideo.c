@@ -242,9 +242,11 @@ static void glvideo_init(void) {
     // Check for errors to make sure all of our setup went ok
     GL_ERRLOG("finished initialization");
 
-    GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-    if (status != GL_FRAMEBUFFER_COMPLETE) {
-        ERRQUIT("framebuffer status: %04X", status);
+    if (glCheckFramebufferStatus != NULL) {
+        GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+        if (status != GL_FRAMEBUFFER_COMPLETE) {
+            ERRQUIT("framebuffer status: %04X", status);
+        }
     }
 }
 
