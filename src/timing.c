@@ -252,7 +252,9 @@ bool timing_shouldAutoAdjustSpeed(void) {
 
 static void *cpu_thread(void *dummyptr) {
 
+#ifndef NDEBUG // Spamsung Galaxy Y running Gingerbread triggers this, wTf?!
     assert(pthread_self() == cpu_thread_id);
+#endif
 
     LOG("cpu_thread : initialized...");
 
