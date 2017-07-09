@@ -23,6 +23,12 @@ else
     LOCAL_SRC_FILES += $(APPLE2_ARM_SRC)
 endif
 
+ifeq ($(BUILD_MODE),release)
+    LOCAL_CFLAGS += -DNDEBUG=1
+else
+    LOCAL_CFLAGS += -g
+endif
+
 LOCAL_SRC_FILES += $(APPLE2_MAIN_SRC) $(APPLE2_META_SRC) $(APPLE2_VIDEO_SRC) $(APPLE2_AUDIO_SRC)
 
 # Build a shared library and let Java/Dalvik drive
