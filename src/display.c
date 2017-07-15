@@ -26,12 +26,18 @@ typedef enum drawpage_mode_t {
     DRAWPAGE_HIRES,
 } drawpage_mode_t;
 
+typedef struct backend_node_s {
+    struct backend_node_s *next;
+    long order;
+    video_backend_s *backend;
+} backend_node_s;
+
+static backend_node_s *head = NULL;
+
 // framebuffers
 static uint8_t *video__fb = NULL;
 
 A2Color_s colormap[256] = { { 0 } };
-video_animation_s *video_animations = NULL;
-video_backend_s *video_backend = NULL;
 static pthread_t render_thread_id = 0;
 static pthread_mutex_t video_scan_mutex = PTHREAD_MUTEX_INITIALIZER;
 
@@ -1204,7 +1210,7 @@ void video_init(void) {
     video__fb = MALLOC(SCANWIDTH*SCANHEIGHT*sizeof(uint8_t));
     video_clear();
 
-    video_backend->init((void*)0);
+    video_getCurrentBackend()->init((void*)0);
 }
 
 void _video_setRenderThread(pthread_t id) {
@@ -1224,7 +1230,7 @@ void video_shutdown(void) {
     assert(!render_thread_id || pthread_self() == render_thread_id);
 #endif
 
-    video_backend->shutdown();
+    video_getCurrentBackend()->shutdown();
 
     if (pthread_self() == render_thread_id) {
         FREE(video__fb);
@@ -1233,11 +1239,11 @@ void video_shutdown(void) {
 
 void video_render(void) {
     assert(pthread_self() == render_thread_id);
-    video_backend->render();
+    video_getCurrentBackend()->render();
 }
 
 void video_main_loop(void) {
-    video_backend->main_loop();
+    video_getCurrentBackend()->main_loop();
 }
 
 void video_clear(void) {
@@ -1549,6 +1555,54 @@ uint8_t floating_bus_hibit(const bool hibit) {
     return (b & ~0x80) | (hibit ? 0x80 : 0);
 }
 
+// ----------------------------------------------------------------------------
+
+void video_registerBackend(video_backend_s *backend, long order) {
+    static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+    pthread_mutex_lock(&mutex);
+
+    backend_node_s *node = MALLOC(sizeof(backend_node_s));
+    assert(node);
+    node->next = NULL;
+    node->order = order;
+    node->backend = backend;
+
+    backend_node_s *p0 = NULL;
+    backend_node_s *p = head;
+    while (p && (order > p->order)) {
+        p0 = p;
+        p = p->next;
+    }
+    if (p0) {
+        p0->next = node;
+    } else {
+        head = node;
+    }
+    node->next = p;
+
+    pthread_mutex_unlock(&mutex);
+}
+
+video_backend_s *video_getCurrentBackend(void) {
+    return head->backend;
+}
+
+video_animation_s *video_getAnimationDriver(void) {
+    return video_getCurrentBackend()->anim;
+}
+
+static void _null_backend_init(void *context) {
+}
+
+static void _null_backend_main_loop(void) {
+}
+
+static void _null_backend_render(void) {
+}
+
+static void _null_backend_shutdown(void) {
+}
+
 static void _init_interface(void) {
     LOG("Initializing display subsystem");
     _initialize_interface_fonts();
@@ -1558,6 +1612,15 @@ static void _init_interface(void) {
     _initialize_color();
 
     prefs_registerListener(PREF_DOMAIN_VIDEO, &video_prefsChanged);
+
+    static video_backend_s null_backend = { 0 };
+    null_backend.init      = &_null_backend_init;
+    null_backend.main_loop = &_null_backend_main_loop;
+    null_backend.render    = &_null_backend_render;
+    null_backend.shutdown  = &_null_backend_shutdown;
+    static video_animation_s _null_animations = { 0 };
+    null_backend.anim = &_null_animations;
+    video_registerBackend(&null_backend, VID_PRIO_NULL);
 }
 
 static __attribute__((constructor)) void __init_interface(void) {

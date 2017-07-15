@@ -259,8 +259,8 @@ static inline void _step_cpu_speed(int delta) {
     prefs_setFloatValue(PREF_DOMAIN_VM, PREF_CPU_SCALE, scale);
     prefs_sync(PREF_DOMAIN_VM);
 
-    if (video_animations->animation_showCPUSpeed) {
-        video_animations->animation_showCPUSpeed();
+    if (video_getAnimationDriver()->animation_showCPUSpeed) {
+        video_getAnimationDriver()->animation_showCPUSpeed();
     }
 
     timing_initialize();
@@ -623,8 +623,8 @@ static void gltouchmenu_prefsChanged(const char *domain) {
 static void _init_gltouchmenu(void) {
     LOG("Registering OpenGL software touch menu");
 
-    video_animations->animation_showTouchMenu = &_animation_showTouchMenu;
-    video_animations->animation_hideTouchMenu = &_animation_hideTouchMenu;
+    video_getAnimationDriver()->animation_showTouchMenu = &_animation_showTouchMenu;
+    video_getAnimationDriver()->animation_hideTouchMenu = &_animation_hideTouchMenu;
 
     menu.prefsChanged = true;
 

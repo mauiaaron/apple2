@@ -625,15 +625,11 @@ static long openal_systemResume(AudioContext_s *audio_context) {
 
 static void _init_openal(void) {
     LOG("Initializing OpenAL sound system");
-
-    assert((audio_backend == NULL) && "there can only be one!");
-
     openal_audio_backend.setup            = &openal_systemSetup;
     openal_audio_backend.shutdown         = &openal_systemShutdown;
     openal_audio_backend.pause            = &openal_systemPause;
     openal_audio_backend.resume           = &openal_systemResume;
-
-    audio_backend = &openal_audio_backend;
+    audio_registerBackend(&openal_audio_backend, AUD_PRIO_OPENAL);
 }
 
 static __attribute__((constructor)) void __init_openal(void) {

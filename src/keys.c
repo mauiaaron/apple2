@@ -252,8 +252,8 @@ void c_keys_handle_input(int scancode, int pressed, int is_cooked)
                 cpu_pause();
                 timing_toggleCPUSpeed();
                 cpu_resume();
-                if (video_animations->animation_showCPUSpeed) {
-                    video_animations->animation_showCPUSpeed();
+                if (video_getAnimationDriver()->animation_showCPUSpeed) {
+                    video_getAnimationDriver()->animation_showCPUSpeed();
                 }
                 break;
             }
@@ -283,8 +283,8 @@ void c_keys_handle_input(int scancode, int pressed, int is_cooked)
                     cpu_scale_factor = scale;
                 }
 
-                if (video_animations->animation_showCPUSpeed) {
-                    video_animations->animation_showCPUSpeed();
+                if (video_getAnimationDriver()->animation_showCPUSpeed) {
+                    video_getAnimationDriver()->animation_showCPUSpeed();
                 }
 
                 cpu_pause();
@@ -313,8 +313,8 @@ void c_keys_handle_input(int scancode, int pressed, int is_cooked)
                     cpu_scale_factor = scale;
                 }
 
-                if (video_animations->animation_showCPUSpeed) {
-                    video_animations->animation_showCPUSpeed();
+                if (video_getAnimationDriver()->animation_showCPUSpeed) {
+                    video_getAnimationDriver()->animation_showCPUSpeed();
                 }
 
                 cpu_pause();

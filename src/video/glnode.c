@@ -27,7 +27,7 @@ static glnode_array_node_s *head = NULL;
 static glnode_array_node_s *tail = NULL;
 
 static video_backend_s glnode_backend = { 0 };
-static video_animation_s glnode_animations = { 0 };
+video_animation_s glnode_animations = { 0 };
 
 #if USE_GLUT
 static bool glut_in_main_loop = false;
@@ -238,16 +238,11 @@ static void glnode_mainLoop(void) {
 static void _init_glnode_manager(void) {
     LOG("Initializing GLNode manager subsystem");
 
-    assert((video_backend == NULL) && "there can only be one!");
-    assert((video_animations == NULL) && "there can only be one!");
-
     glnode_backend.init      = &glnode_setupNodes;
     glnode_backend.main_loop = &glnode_mainLoop;
     glnode_backend.render    = &glnode_renderNodes;
     glnode_backend.shutdown  = &glnode_shutdownNodes;
-
-    video_backend = &glnode_backend;
-    video_animations = &glnode_animations;
+    glnode_backend.anim      = &glnode_animations;
 
 #if INTERFACE_TOUCH
     interface_onTouchEvent = &glnode_onTouchEvent;
@@ -256,6 +251,8 @@ static void _init_glnode_manager(void) {
 #if USE_GLUT && !TEST_CPU
     joydriver_resetJoystick = &_glutJoystickReset;
 #endif
+
+    video_registerBackend(&glnode_backend, VID_PRIO_GRAPHICS_GL);
 }
 
 static __attribute__((constructor)) void __init_glnode_manager(void) {

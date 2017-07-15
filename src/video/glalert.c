@@ -380,9 +380,9 @@ static void alert_applyPrefs(void) {
     bool bVal = false;
     bool enabled = prefs_parseBoolValue(PREF_DOMAIN_INTERFACE, PREF_DISK_ANIMATIONS_ENABLED, &bVal) ? bVal : true;
     if (enabled) {
-        video_animations->animation_showTrackSector = &_animation_showTrackSector;
+        glnode_animations->animation_showTrackSector = &_animation_showTrackSector;
     } else {
-        video_animations->animation_showTrackSector = NULL;
+        glnode_animations->animation_showTrackSector = NULL;
     }
 
     long lVal = 0;
@@ -400,11 +400,11 @@ static void alert_prefsChanged(const char *domain) {
 static void _init_glalert(void) {
     LOG("Initializing message animation subsystem");
 
-    video_animations->animation_showMessage = &_animation_showMessage;
-    video_animations->animation_showPaused = &_animation_showPaused;
-    video_animations->animation_showCPUSpeed = &_animation_showCPUSpeed;
-    video_animations->animation_showDiskChosen = &_animation_showDiskChosen;
-    video_animations->animation_showTrackSector = &_animation_showTrackSector;
+    glnode_animations->animation_showMessage = &_animation_showMessage;
+    glnode_animations->animation_showPaused = &_animation_showPaused;
+    glnode_animations->animation_showCPUSpeed = &_animation_showCPUSpeed;
+    glnode_animations->animation_showDiskChosen = &_animation_showDiskChosen;
+    glnode_animations->animation_showTrackSector = &_animation_showTrackSector;
 
     glnode_registerNode(RENDER_MIDDLE, (GLNode){
         .setup = &alert_init,

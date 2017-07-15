@@ -468,7 +468,7 @@ static void gltouchjoy_setup(void) {
     joyglobals.isAvailable = true;
 
     if (joyglobals.ownsScreen) {
-        video_animations->animation_showTouchJoystick();
+        video_getAnimationDriver()->animation_showTouchJoystick();
     }
 }
 
@@ -911,8 +911,8 @@ static void _init_gltouchjoy(void) {
 
     joyglobals.prefsChanged = true; // force reload preferences/defaults
 
-    video_animations->animation_showTouchJoystick = &_animation_showTouchJoystick;
-    video_animations->animation_hideTouchJoystick = &_animation_hideTouchJoystick;
+    video_getAnimationDriver()->animation_showTouchJoystick = &_animation_showTouchJoystick;
+    video_getAnimationDriver()->animation_hideTouchJoystick = &_animation_hideTouchJoystick;
 
     glnode_registerNode(RENDER_LOW, (GLNode){
         .type = TOUCH_DEVICE_JOYSTICK,

@@ -102,7 +102,7 @@ static void _speaker_init_timing(void) {
     // 46.28 //e cycles for 22.05kHz sample rate
 
     // AppleWin NOTE : use integer value: Better for MJ Mahon's RT.SYNTH.DSK (integer multiples of 1.023MHz Clk)
-    cycles_per_sample = (unsigned int)(cycles_persec_target / (double)audio_backend->systemSettings.sampleRateHz);
+    cycles_per_sample = (unsigned int)(cycles_persec_target / (double)audio_getCurrentBackend()->systemSettings.sampleRateHz);
 
     unsigned int last_remainder_buffer_size = remainder_buffer_size;
     remainder_buffer_size = (unsigned int)cycles_per_sample;
@@ -122,7 +122,7 @@ static void _speaker_init_timing(void) {
         cycles_last_update = 0;
     }
 
-    LOG("Speaker initialize timing ... cycles_persec_target:%f cycles_per_sample:%f speaker sampleRateHz:%lu", cycles_persec_target, cycles_per_sample, audio_backend->systemSettings.sampleRateHz);
+    LOG("Speaker initialize timing ... cycles_persec_target:%f cycles_per_sample:%f speaker sampleRateHz:%lu", cycles_persec_target, cycles_per_sample, audio_getCurrentBackend()->systemSettings.sampleRateHz);
 
     if (is_fullspeed) {
         remainder_buffer_idx = 0;
@@ -387,20 +387,20 @@ void speaker_init(void) {
             break;
         }
 
-        assert(audio_backend->systemSettings.bytesPerSample == sizeof(int16_t));
+        assert(audio_getCurrentBackend()->systemSettings.bytesPerSample == sizeof(int16_t));
         assert(NUM_CHANNELS == 2 || NUM_CHANNELS == 1);
 
         if (NUM_CHANNELS == 2) {
-            bufferTotalSize = audio_backend->systemSettings.stereoBufferSizeSamples * audio_backend->systemSettings.bytesPerSample * NUM_CHANNELS;
+            bufferTotalSize = audio_getCurrentBackend()->systemSettings.stereoBufferSizeSamples * audio_getCurrentBackend()->systemSettings.bytesPerSample * NUM_CHANNELS;
         } else {
-            bufferTotalSize = audio_backend->systemSettings.monoBufferSizeSamples * audio_backend->systemSettings.bytesPerSample;
+            bufferTotalSize = audio_getCurrentBackend()->systemSettings.monoBufferSizeSamples * audio_getCurrentBackend()->systemSettings.bytesPerSample;
         }
         bufferSizeIdealMin = bufferTotalSize/4;
         bufferSizeIdealMax = bufferTotalSize/2;
-        channelsSampleRateHz = audio_backend->systemSettings.sampleRateHz * NUM_CHANNELS;
-        LOG("Speaker initializing with %lu buffer size (bytes), sample rate of %lu", bufferTotalSize, audio_backend->systemSettings.sampleRateHz);
+        channelsSampleRateHz = audio_getCurrentBackend()->systemSettings.sampleRateHz * NUM_CHANNELS;
+        LOG("Speaker initializing with %lu buffer size (bytes), sample rate of %lu", bufferTotalSize, audio_getCurrentBackend()->systemSettings.sampleRateHz);
 
-        remainder_buffer_size_max = ((CLK_6502_INT*(unsigned long)CPU_SCALE_FASTEST)/audio_backend->systemSettings.sampleRateHz)+1;
+        remainder_buffer_size_max = ((CLK_6502_INT*(unsigned long)CPU_SCALE_FASTEST)/audio_getCurrentBackend()->systemSettings.sampleRateHz)+1;
 
         samples_buffer = CALLOC(1, channelsSampleRateHz * sizeof(int16_t));
         if (!samples_buffer) {

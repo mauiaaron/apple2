@@ -43,9 +43,9 @@ typedef struct video_animation_s {
 } video_animation_s;
 
 /*
- * The registered video animations.
+ * Get current animation driver
  */
-extern video_animation_s *video_animations;
+video_animation_s *video_getAnimationDriver(void);
 
 /*
  * Prepare the video system, converting console to graphics mode, or

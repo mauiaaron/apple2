@@ -118,5 +118,8 @@ static void inline swizzleDimensions(int *w, int *h, bool landscape) {
     }
 }
 
+// animations
+extern video_animation_s glnode_animations;
+
 #endif // whole file
 

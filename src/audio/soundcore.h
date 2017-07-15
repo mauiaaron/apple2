@@ -146,7 +146,15 @@ typedef struct AudioBackend_s {
 
 } AudioBackend_s;
 
-// Audio backend registered at CTOR time
-extern AudioBackend_s *audio_backend;
+enum {
+    AUD_PRIO_ALSA     = 10,
+    AUD_PRIO_OPENAL   = 20,
+    AUD_PRIO_OPENSLES = 30,
+    AUD_PRIO_NULL     = 100,
+};
+
+void audio_registerBackend(AudioBackend_s *backend, long prio);
+
+AudioBackend_s *audio_getCurrentBackend(void);
 
 #endif /* whole file */

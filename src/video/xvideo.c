@@ -60,7 +60,6 @@ static int xshmeventtype;
 // pad pixels to uint32_t boundaries
 static int bitmap_pad = sizeof(uint32_t);
 
-static video_backend_s xvideo_backend = { 0 };
 static bool request_set_mode = false;
 static a2_video_mode_t request_mode = VIDEO_2X;
 
@@ -860,10 +859,6 @@ static void xdriver_shutdown(bool emulatorShuttingDown) {
     _destroy_image();
 }
 
-static void xdriver_reshape(int width, int height) {
-    // no-op
-}
-
 static void xdriver_render(void) {
     // no-op
 }
@@ -871,15 +866,14 @@ static void xdriver_render(void) {
 static void _init_xvideo(void) {
     LOG("Initializing X11 renderer");
 
-    assert((video_backend == NULL) && "there can only be one!");
-
+    static video_backend_s xvideo_backend = { 0 };
+    static video_animation_s xdriver_animations = { 0 };
     xvideo_backend.init      = &xdriver_init;
     xvideo_backend.main_loop = &xdriver_main_loop;
-    xvideo_backend.reshape   = &xdriver_reshape;
     xvideo_backend.render    = &xdriver_render;
     xvideo_backend.shutdown  = &xdriver_shutdown;
-
-    video_backend = &xvideo_backend;
+    xvideo_backend.anim      = &xdriver_animations;
+    video_registerBackend(&xvideo_backend, VID_PRIO_GRAPHICS_X);
 }
 
 static __attribute__((constructor)) void __init_xvideo(void) {

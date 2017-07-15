@@ -571,7 +571,7 @@ static void gltouchkbd_setup(void) {
     isAvailable = true;
 
     if (ownsScreen) {
-        video_animations->animation_showTouchKeyboard();
+        video_getAnimationDriver()->animation_showTouchKeyboard();
     }
 }
 
@@ -1054,8 +1054,8 @@ static void _init_gltouchkbd(void) {
 
     _initialize_keyboard_templates();
 
-    video_animations->animation_showTouchKeyboard = &_animation_showTouchKeyboard;
-    video_animations->animation_hideTouchKeyboard = &_animation_hideTouchKeyboard;
+    video_getAnimationDriver()->animation_showTouchKeyboard = &_animation_showTouchKeyboard;
+    video_getAnimationDriver()->animation_hideTouchKeyboard = &_animation_hideTouchKeyboard;
 
     kbd.prefsChanged = true;
     kbd.selectedCol = -1;

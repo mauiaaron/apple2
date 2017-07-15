@@ -1282,7 +1282,7 @@ static DWORD WINAPI SSI263Thread(LPVOID lpParameter)
 #else
 static void* SSI263Thread(void *lpParameter)
 {
-        const unsigned long nsecWait = NANOSECONDS_PER_SECOND / audio_backend->systemSettings.sampleRateHz;
+        const unsigned long nsecWait = NANOSECONDS_PER_SECOND / audio_getCurrentBackend()->systemSettings.sampleRateHz;
         const struct timespec wait = { .tv_sec=0, .tv_nsec=nsecWait };
 
 	while(1)
@@ -1518,13 +1518,13 @@ static bool MB_DSInit()
 	}
 
 #if 1 // APPLE2IX
-        SAMPLE_RATE = audio_backend->systemSettings.sampleRateHz;
+        SAMPLE_RATE = audio_getCurrentBackend()->systemSettings.sampleRateHz;
 #if MB_TRACING
         // force determinism
         SAMPLE_RATE = 44100;
 #endif
-        g_dwDSBufferSize = audio_backend->systemSettings.stereoBufferSizeSamples * audio_backend->systemSettings.bytesPerSample * g_nMB_NumChannels;
-        g_nMixBuffer = MALLOC(g_dwDSBufferSize / audio_backend->systemSettings.bytesPerSample);
+        g_dwDSBufferSize = audio_getCurrentBackend()->systemSettings.stereoBufferSizeSamples * audio_getCurrentBackend()->systemSettings.bytesPerSample * g_nMB_NumChannels;
+        g_nMixBuffer = MALLOC(g_dwDSBufferSize / audio_getCurrentBackend()->systemSettings.bytesPerSample);
 
 #else
 	bool bRes = DSZeroVoiceBuffer(&MockingboardVoice, "MB", g_dwDSBufferSize);
@@ -1611,13 +1611,13 @@ static bool MB_DSInit()
 			bPause = false;
 		}
 
-		unsigned int nPhonemeByteLength = g_nPhonemeInfo[nPhoneme].nLength * audio_backend->systemSettings.bytesPerSample;
+		unsigned int nPhonemeByteLength = g_nPhonemeInfo[nPhoneme].nLength * audio_getCurrentBackend()->systemSettings.bytesPerSample;
 #if 0 // !APPLE2IX
 		// NB. DSBCAPS_LOCSOFTWARE required for Phoneme+2==0x28 - sample too short (see KB327698)
 		hr = DSGetSoundBuffer(&SSI263Voice[i], DSBCAPS_CTRLVOLUME+DSBCAPS_CTRLPOSITIONNOTIFY+DSBCAPS_LOCSOFTWARE, nPhonemeByteLength, 22050, 1);
 		LogFileOutput("MB_DSInit: (%02d) DSGetSoundBuffer(), hr=0x%08X\n", i, hr);
 #else
-                if (nPhonemeByteLength > audio_backend->systemSettings.monoBufferSizeSamples) {
+                if (nPhonemeByteLength > audio_getCurrentBackend()->systemSettings.monoBufferSizeSamples) {
                     RELEASE_ERRLOG("!!!!!!!!!!!!!!!!!!!!! phoneme length > buffer size !!!!!!!!!!!!!!!!!!!!!");
 #warning ^^^^^^^^^^ require vigilence here around this change ... we used to be able to specify the exact buffer size ...
                 }

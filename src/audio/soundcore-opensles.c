@@ -760,15 +760,11 @@ static long opensles_systemResume(AudioContext_s *audio_context) {
 
 static void _init_opensl(void) {
     LOG("Initializing OpenSLES sound system");
-
-    assert(audio_backend == NULL && "there can only be one!");
-
     opensles_audio_backend.setup            = &opensles_systemSetup;
     opensles_audio_backend.shutdown         = &opensles_systemShutdown;
     opensles_audio_backend.pause            = &opensles_systemPause;
     opensles_audio_backend.resume           = &opensles_systemResume;
-
-    audio_backend = &opensles_audio_backend;
+    audio_registerBackend(&opensles_audio_backend, AUD_PRIO_OPENSLES);
 }
 
 static __attribute__((constructor)) void __init_opensl(void) {

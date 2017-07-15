@@ -19,15 +19,10 @@
 typedef struct video_backend_s {
     void (*init)(void *context);
     void (*main_loop)(void);
-    void (*reshape)(int width, int height, bool landscape);
     void (*render)(void);
     void (*shutdown)(void);
+    video_animation_s *anim;
 } video_backend_s;
-
-/*
- * The registered video backend (renderer).
- */
-extern video_backend_s *video_backend;
 
 /*
  * Color structure
@@ -54,6 +49,17 @@ typedef enum a2_video_mode_t {
 
 extern a2_video_mode_t a2_video_mode;
 #endif
+
+enum {
+    VID_PRIO_GRAPHICS_GL = 10,
+    VID_PRIO_GRAPHICS_X  = 20,
+    VID_PRIO_TERMINAL    = 30,
+    VID_PRIO_NULL        = 100,
+};
+
+void video_registerBackend(video_backend_s *backend, long prio);
+
+video_backend_s *video_getCurrentBackend(void);
 
 #endif /* !A2_VIDEO_H */
 
