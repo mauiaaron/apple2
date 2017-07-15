@@ -13,6 +13,8 @@
  *
  */
 
+#define VIDEO_X11 1
+
 #include "common.h"
 #include "video/video.h"
 
@@ -31,7 +33,7 @@ static Display *display;
 static Window win;
 static GC gc;
 static unsigned int width, height;      /* window size */
-static unsigned int scale = 1;
+static unsigned int scale = 2;
 
 static int screen_num;
 static XVisualInfo visualinfo;
@@ -60,7 +62,7 @@ static int bitmap_pad = sizeof(uint32_t);
 
 static video_backend_s xvideo_backend = { 0 };
 static bool request_set_mode = false;
-static int request_mode = 0;
+static a2_video_mode_t request_mode = VIDEO_2X;
 
 typedef struct {
     unsigned long flags;
@@ -569,10 +571,9 @@ void video_set_mode(a2_video_mode_t mode) {
 static void _redo_image(void) {
     _destroy_image();
 
-    int mode = request_mode;
-    scale = mode;
-    if (mode == VIDEO_FULLSCREEN) {
-        scale = 1; // HACK FIXME for now ................
+    scale = (int)request_mode;
+    if (scale == VIDEO_FULLSCREEN) {
+        scale = 2; // HACK FIXME for now ................
     }
 
     width = SCANWIDTH*scale;

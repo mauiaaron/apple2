@@ -43,7 +43,7 @@ typedef struct A2Color_s {
  */
 extern A2Color_s colormap[];
 
-#if !VIDEO_OPENGL
+#if VIDEO_X11
 // X11 scaling ...
 typedef enum a2_video_mode_t {
     VIDEO_FULLSCREEN = 0,

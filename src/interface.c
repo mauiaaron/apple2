@@ -699,9 +699,6 @@ typedef enum interface_enum_t {
     OPT_CALIBRATE,
     OPT_PATH,
     OPT_COLOR,
-#if !VIDEO_OPENGL
-    OPT_VIDEO,
-#endif
     OPT_VOLUME,
     OPT_CAPS,
 
@@ -718,9 +715,6 @@ static const char *options[] =
     "        --> Calibrate Joystick",
     "     Path :  ",
     "    Color :  ",
-#if !VIDEO_OPENGL
-    "    Video :  ",
-#endif
     "   Volume :  ",
     " CAPSlock :  ",
 };
@@ -829,12 +823,6 @@ void c_interface_parameters()
                 sprintf(temp, "%s", (color_mode == COLOR) ? "Color       " :
                         (color_mode == COLOR_INTERP) ? "Interpolated" : "Black/White ");
                 break;
-
-#if !VIDEO_OPENGL
-            case OPT_VIDEO:
-                sprintf(temp, "%s", (a2_video_mode == VIDEO_1X) ? "1X       " : (a2_video_mode == VIDEO_2X) ? "2X       " : "Fullscreen");
-                break;
-#endif
 
             case OPT_JOYSTICK:
                 snprintf(temp, TEMPSIZE, "%s", (joy_mode == JOY_KPAD) ? "Emulated on Keypad" : "PC Joystick      ");
@@ -1008,21 +996,6 @@ void c_interface_parameters()
                 prefs_setLongValue(PREF_DOMAIN_VIDEO, PREF_COLOR_MODE, color_mode);
                 break;
 
-#if !VIDEO_OPENGL
-            case OPT_VIDEO:
-                if (a2_video_mode == 1)
-                {
-                    a2_video_mode = NUM_VIDOPTS-1;
-                }
-                else
-                {
-                    --a2_video_mode;
-                }
-                extern void video_set_mode(a2_video_mode_t);
-                video_set_mode(a2_video_mode);
-                break;
-#endif
-
             case OPT_VOLUME:
                 if (speaker_volume > 0)
                 {
@@ -1093,21 +1066,6 @@ void c_interface_parameters()
                 color_mode = (color_mode >= NUM_COLOROPTS-1) ? 0 : color_mode+1;
                 prefs_setLongValue(PREF_DOMAIN_VIDEO, PREF_COLOR_MODE, color_mode);
                 break;
-
-#if !VIDEO_OPENGL
-            case OPT_VIDEO:
-                if (a2_video_mode == NUM_VIDOPTS-1)
-                {
-                    a2_video_mode = 1;
-                }
-                else
-                {
-                    ++a2_video_mode;
-                }
-                extern void video_set_mode(a2_video_mode_t);
-                video_set_mode(a2_video_mode);
-                break;
-#endif
 
             case OPT_VOLUME:
                 speaker_volume++;
