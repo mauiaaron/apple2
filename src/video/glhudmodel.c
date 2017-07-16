@@ -274,7 +274,7 @@ void glhud_renderDefault(GLModel *parent) {
     // Draw the object
     _HACKAROUND_GLDRAW_PRE();
     glDrawElements(parent->primType, parent->numElements, parent->elementType, 0);
-    GL_ERRLOG("glhudparent render");
+    GL_MAYBELOG("glhudparent render");
 }
 
 void glhud_destroyDefault(GLModel *parent) {

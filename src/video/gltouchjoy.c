@@ -168,7 +168,7 @@ static void *_azimuth_create_model(GLModel *parent) {
         err = false;
     } while (0);
 
-    GL_ERRLOG("build Aziumth joystick");
+    GL_MAYBELOG("build Aziumth joystick");
 
     if (vtxSource) {
         glshader_destroySource(vtxSource);
@@ -228,7 +228,7 @@ static void _azimuth_render(void) {
     // back to main framebuffer/quad program
     glUseProgram(mainShaderProgram);
 
-    GL_ERRLOG("Azimuth render");
+    GL_MAYBELOG("Azimuth render");
 }
 
 // ----------------------------------------------------------------------------

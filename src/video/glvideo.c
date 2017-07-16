@@ -218,7 +218,7 @@ static void glvideo_init(void) {
         LOG("OOPS, no texture selector in shader : %d", alphaValue);
     }
 
-    GL_ERRLOG("build program");
+    GL_MAYBELOG("build program");
 
     // ----------------------------
     // setup static OpenGL state
@@ -240,7 +240,7 @@ static void glvideo_init(void) {
     video_render();
 
     // Check for errors to make sure all of our setup went ok
-    GL_ERRLOG("finished initialization");
+    GL_MAYBELOG("finished initialization");
 
     if (glCheckFramebufferStatus != NULL) {
         GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
@@ -393,7 +393,7 @@ static void glvideo_render(void) {
     _HACKAROUND_GLDRAW_PRE();
     glDrawElements(GL_TRIANGLES, crtModel->numElements, crtModel->elementType, 0);
 
-    GL_ERRLOG("glvideo_render");
+    GL_MAYBELOG("glvideo_render");
 }
 
 static void glvideo_reshape(int w, int h, bool landscape) {

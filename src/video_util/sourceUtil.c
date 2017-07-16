@@ -100,7 +100,7 @@ GLuint glshader_buildProgram(demoSource *vertexSource, demoSource *fragmentSourc
 
     char *shaderLangVersion = (char *)glGetString(GL_SHADING_LANGUAGE_VERSION);
     if (shaderLangVersion == NULL) {
-        ERRQUIT("shader toolchain unavailable");
+        GL_ERRQUIT("shader toolchain unavailable");
     }
 #if TARGET_OS_IPHONE
     sscanf(shaderLangVersion, "OpenGL ES GLSL ES %f", &glLanguageVersion);
@@ -247,7 +247,7 @@ GLuint glshader_buildProgram(demoSource *vertexSource, demoSource *fragmentSourc
         return 0;
     }
 
-    GL_ERRLOG("build program");
+    GL_MAYBELOG("build program");
     return prgName;
 }
 

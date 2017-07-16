@@ -444,7 +444,7 @@ static void gltouchmenu_setup(void) {
 
     isAvailable = true;
 
-    GL_ERRLOG("gltouchmenu_setup");
+    GL_MAYBELOG("gltouchmenu_setup");
 }
 
 static void gltouchmenu_render(void) {
@@ -481,7 +481,7 @@ static void gltouchmenu_render(void) {
     glUniform1i(texSamplerLoc, TEXTURE_ID_TOUCHMENU);
     glhud_renderDefault(menu.model);
 
-    GL_ERRLOG("gltouchmenu_render");
+    GL_MAYBELOG("gltouchmenu_render");
 }
 
 static void gltouchmenu_reshape(int w, int h, bool landscape) {

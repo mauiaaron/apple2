@@ -388,7 +388,7 @@ static void _quadCreateVAOAndVBOs(GLModel *model) {
     FREE(model->texCoords);
 #endif
 
-    GL_ERRLOG("quad creation of VAO/VBOs");
+    GL_MAYBELOG("quad creation of VAO/VBOs");
 }
 
 static GLuint _quadCreateTexture(GLModel *model) {
@@ -412,7 +412,7 @@ static GLuint _quadCreateTexture(GLModel *model) {
     // register texture with OpenGL
     glTexImage2D(GL_TEXTURE_2D, /*level*/0, /*internal format*/TEX_FORMAT_INTERNAL, model->texWidth, model->texHeight, /*border*/0, TEX_FORMAT, TEX_TYPE, NULL);
 
-    GL_ERRLOG("quad texture creation");
+    GL_MAYBELOG("quad texture creation");
 
     return texName;
 }
@@ -546,7 +546,7 @@ GLModel *mdlCreateQuad(GLModelParams_s parms, GLCustom clazz) {
             model->custom->destroy = clazz.destroy;
         }
 
-        GL_ERRLOG("quad creation");
+        GL_MAYBELOG("quad creation");
 
         return model;
     } while (0);

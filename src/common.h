@@ -238,7 +238,8 @@ static const char *log_end = "\n";
         } \
     } //
 
-#define GL_ERRLOG(...) \
+// GL_MAYBELOG() only logs if an OpenGL error occurred
+#define GL_MAYBELOG(...) \
     if (do_logging) { \
         GLenum _glerr = 0; \
         while ( (_glerr = safeGLGetError()) ) { \
@@ -256,24 +257,29 @@ static const char *log_end = "\n";
         QUIT_FUNCTION(1); \
     } while (0)
 
+// GL_ERRQUIT() only logs/quits if an OpenGL error occurred
 #define GL_ERRQUIT(...) \
     do { \
         GLenum _glerr = 0; \
+        GLenum _last_glerr = 0; \
         while ( (_glerr = safeGLGetError()) ) { \
+            _last_glerr = _glerr; \
             _LOG(__VA_ARGS__); \
-            QUIT_FUNCTION(_glerr); \
+        } \
+        if (_last_glerr) { \
+            QUIT_FUNCTION(_last_glerr); \
         } \
     } while (0)
 
 #else // NDEBUG
 
-#define ERRQUIT(...) \
-    do { } while (0)
-
 #define LOG(...) \
     do { } while (0)
 
-#define GL_ERRLOG(...) \
+#define GL_MAYBELOG(...) \
+    do { } while (0)
+
+#define ERRQUIT(...) \
     do { } while (0)
 
 #define GL_ERRQUIT(...) \
