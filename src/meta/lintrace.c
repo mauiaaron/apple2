@@ -30,7 +30,7 @@ static int trace_pid = -1;
 static void _trace_init(void) {
     TEMP_FAILURE_RETRY(trace_fd = open(TRACING_FILE, O_WRONLY));
     if (trace_fd == -1) {
-        ERRLOG("Could not open kernel trace file");
+        LOG("Could not open kernel trace file");
     } else {
         LOG("Initialized Linux tracing facility");
     }

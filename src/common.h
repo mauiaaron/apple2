@@ -231,13 +231,6 @@ static const char *log_end = "\n";
 
 #define LOG(...) \
     if (do_logging) { \
-        errno = 0; \
-        GLenum _glerr = 0; \
-        _LOG(__VA_ARGS__); \
-    } //
-
-#define ERRLOG(...) \
-    if (do_logging) { \
         GLenum _glerr = safeGLGetError(); \
         _LOG(__VA_ARGS__); \
         while ( (_glerr = safeGLGetError()) ) { \
@@ -273,9 +266,6 @@ static const char *log_end = "\n";
     } while (0)
 
 #else // NDEBUG
-
-#define ERRLOG(...) \
-    do { } while (0)
 
 #define ERRQUIT(...) \
     do { } while (0)

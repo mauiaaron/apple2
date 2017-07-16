@@ -47,7 +47,7 @@ static void _glvideo_setup_hackarounds(void) {
     if (vendor && renderer && version) {
         LOG("GL_VENDOR:[%s] GL_RENDERER:[%s] GL_VERSION:[%s]", vendor, renderer, version);
     } else {
-        ERRLOG("One or more of GL_VENDOR, GL_RENDERER, and GL_VERSION is NULL ... this is bad ...");
+        LOG("One or more of GL_VENDOR, GL_RENDERER, and GL_VERSION is NULL ... this is bad ...");
         return;
     }
 
@@ -203,7 +203,7 @@ static void glvideo_init(void) {
 
     if (maxTextureUnits < TEXTURE_ID_MAX) {
 #warning FIXME TODO ... gracefully handle devices with low max texture units?
-        ERRLOG("OOPS ... MAX TEXTURE UNITS : %d (<%d)", maxTextureUnits, TEXTURE_ID_MAX);
+        LOG("OOPS ... MAX TEXTURE UNITS : %d (<%d)", maxTextureUnits, TEXTURE_ID_MAX);
     } else {
         LOG("GL_MAX_TEXTURE_IMAGE_UNITS : %d", maxTextureUnits);
     }

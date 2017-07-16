@@ -338,7 +338,7 @@ static unsigned int _submit_samples_buffer(const unsigned long num_channel_sampl
         unsigned long counter = 0;
         do {
             if (speakerBuffer->Lock(speakerBuffer, curr_buffer_size, &system_samples_buffer, &system_buffer_size)) {
-                ERRLOG("Problem locking speaker buffer");
+                LOG("Problem locking speaker buffer");
                 break;
             }
 
@@ -352,7 +352,7 @@ static unsigned int _submit_samples_buffer(const unsigned long num_channel_sampl
 
             err = speakerBuffer->Unlock(speakerBuffer, system_buffer_size);
             if (err) {
-                ERRLOG("Problem unlocking speaker buffer");
+                LOG("Problem unlocking speaker buffer");
                 break;
             }
 

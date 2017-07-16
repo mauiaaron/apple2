@@ -74,7 +74,7 @@ demoSource *glshader_createSource(const char *fileName) {
         src = srcLoadSource(filePath);
         FREE(filePath);
     } else {
-        ERRLOG("OOPS Could not load shader from %s (%s)", filePath, fileName);
+        LOG("OOPS Could not load shader from %s (%s)", filePath, fileName);
     }
 #endif
     return src;

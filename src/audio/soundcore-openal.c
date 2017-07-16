@@ -84,7 +84,7 @@ static long _ALProcessPlayBuffers(ALVoice *voice, ALuint *bytes_queued) {
         ALint processed = 0;
         alGetSourcei(voice->source, AL_BUFFERS_PROCESSED, &processed);
         if ((err = alGetError()) != AL_NO_ERROR) {
-            ERRLOG("OOPS, error in checking processed buffers : 0x%08lx", err);
+            LOG("OOPS, error in checking processed buffers : 0x%08lx", err);
             break;
         }
 
@@ -93,7 +93,7 @@ static long _ALProcessPlayBuffers(ALVoice *voice, ALuint *bytes_queued) {
             ALuint bufid = 0;
             alSourceUnqueueBuffers(voice->source, 1, &bufid);
             if ((err = alGetError()) != AL_NO_ERROR) {
-                ERRLOG("OOPS, OpenAL error dequeuing buffer : 0x%08lx", err);
+                LOG("OOPS, OpenAL error dequeuing buffer : 0x%08lx", err);
                 break;
             }
 
@@ -103,7 +103,7 @@ static long _ALProcessPlayBuffers(ALVoice *voice, ALuint *bytes_queued) {
             };
             err = voice->playq->Get(voice->playq, &playNode);
             if (err) {
-                ERRLOG("OOPS, OpenAL bufid %u not found in playlist...", bufid);
+                LOG("OOPS, OpenAL bufid %u not found in playlist...", bufid);
             } else {
                 _playq_removeNode(voice, &playNode);
             }
@@ -112,7 +112,7 @@ static long _ALProcessPlayBuffers(ALVoice *voice, ALuint *bytes_queued) {
         ALint play_offset = 0;
         alGetSourcei(voice->source, AL_BYTE_OFFSET, &play_offset);
         if ((err = alGetError()) != AL_NO_ERROR) {
-            ERRLOG("OOPS, alGetSourcei AL_BYTE_OFFSET : 0x%08lx", err);
+            LOG("OOPS, alGetSourcei AL_BYTE_OFFSET : 0x%08lx", err);
             break;
         }
         assert((play_offset >= 0)/* && (play_offset < voice->buffersize)*/);
@@ -219,7 +219,7 @@ static long _ALSubmitBufferToOpenAL(ALVoice *voice) {
         alBufferData(playNode.nodeId, voice->format, playNode.bytes, playNode.numBytes, voice->rate);
         if ((err = alGetError()) != AL_NO_ERROR) {
             _playq_removeNode(voice, &playNode);
-            ERRLOG("OOPS, Error alBufferData : 0x%08lx", err);
+            LOG("OOPS, Error alBufferData : 0x%08lx", err);
             break;
         }
 
@@ -227,14 +227,14 @@ static long _ALSubmitBufferToOpenAL(ALVoice *voice) {
         alSourceQueueBuffers(voice->source, 1, &nodeId);
         if ((err = alGetError()) != AL_NO_ERROR) {
             _playq_removeNode(voice, &playNode);
-            ERRLOG("OOPS, Error buffering data : 0x%08lx", err);
+            LOG("OOPS, Error buffering data : 0x%08lx", err);
             break;
         }
 
         ALint state = 0;
         alGetSourcei(voice->source, AL_SOURCE_STATE, &state);
         if ((err = alGetError()) != AL_NO_ERROR) {
-            ERRLOG("OOPS, Error checking source state : 0x%08lx", err);
+            LOG("OOPS, Error checking source state : 0x%08lx", err);
             break;
         }
         if ((state != AL_PLAYING) && (state != AL_PAUSED)) {
@@ -313,7 +313,7 @@ static long ALGetStatus(AudioBuffer_s *_this, OUTPARM unsigned long *status) {
         ALint state = 0;
         alGetSourcei(voice->source, AL_SOURCE_STATE, &state);
         if ((err = alGetError()) != AL_NO_ERROR) {
-            ERRLOG("OOPS, Error checking source state : 0x%08lx", err);
+            LOG("OOPS, Error checking source state : 0x%08lx", err);
             break;
         }
 
@@ -333,7 +333,7 @@ static long ALGetStatus(AudioBuffer_s *_this, OUTPARM unsigned long *status) {
 static void _openal_destroyVoice(ALVoice *voice) {
     alDeleteSources(1, &voice->source);
     if (alGetError() != AL_NO_ERROR) {
-        ERRLOG("OOPS, Failed to delete source");
+        LOG("OOPS, Failed to delete source");
     }
 
     if (voice->data) {
@@ -343,7 +343,7 @@ static void _openal_destroyVoice(ALVoice *voice) {
     for (unsigned int i=0; i<OPENAL_NUM_BUFFERS; i++) {
         alDeleteBuffers(1, voice->buffers);
         if (alGetError() != AL_NO_ERROR) {
-            ERRLOG("OOPS, Failed to delete object IDs");
+            LOG("OOPS, Failed to delete object IDs");
         }
     }
 
@@ -359,43 +359,43 @@ static ALVoice *_openal_createVoice(unsigned long numChannels) {
     do {
         voice = CALLOC(1, sizeof(*voice));
         if (voice == NULL) {
-            ERRLOG("OOPS, Out of memory!");
+            LOG("OOPS, Out of memory!");
             break;
         }
 
         alGenBuffers(OPENAL_NUM_BUFFERS, voice->buffers);
         if (alGetError() != AL_NO_ERROR) {
-            ERRLOG("OOPS, Could not create buffers");
+            LOG("OOPS, Could not create buffers");
             break;
         }
 
         alGenSources(1, &voice->source);
         if (alGetError() != AL_NO_ERROR) {
-            ERRLOG("OOPS, Could not create source");
+            LOG("OOPS, Could not create source");
             break;
         }
 
         // Set parameters so mono sources play out the front-center speaker and won't distance attenuate.
         alSource3i(voice->source, AL_POSITION, 0, 0, -1);
         if (alGetError() != AL_NO_ERROR) {
-            ERRLOG("OOPS, Could not set AL_POSITION source parameter");
+            LOG("OOPS, Could not set AL_POSITION source parameter");
             break;
         }
         alSourcei(voice->source, AL_SOURCE_RELATIVE, AL_TRUE);
         if (alGetError() != AL_NO_ERROR) {
-            ERRLOG("OOPS, Could not set AL_SOURCE_RELATIVE source parameter");
+            LOG("OOPS, Could not set AL_SOURCE_RELATIVE source parameter");
             break;
         }
         alSourcei(voice->source, AL_ROLLOFF_FACTOR, 0);
         if (alGetError() != AL_NO_ERROR) {
-            ERRLOG("OOPS, Could not set AL_ROLLOFF_FACTOR source parameter");
+            LOG("OOPS, Could not set AL_ROLLOFF_FACTOR source parameter");
             break;
         }
 
 #if 0
         alSourcei(voice->source, AL_STREAMING, AL_TRUE);
         if (alGetError() != AL_NO_ERROR) {
-            ERRLOG("OOPS, Could not set AL_STREAMING source parameter");
+            LOG("OOPS, Could not set AL_STREAMING source parameter");
             break;
         }
 #endif
@@ -406,7 +406,7 @@ static ALVoice *_openal_createVoice(unsigned long numChannels) {
         }
         voice->playq = playq_createPlayQueue(longBuffers, OPENAL_NUM_BUFFERS);
         if (!voice->playq) {
-            ERRLOG("OOPS, Not enough memory for PlayQueue");
+            LOG("OOPS, Not enough memory for PlayQueue");
             break;
         }
 
@@ -426,7 +426,7 @@ static ALVoice *_openal_createVoice(unsigned long numChannels) {
 
         voice->data = CALLOC(1, voice->buffersize);
         if (voice->data == NULL) {
-            ERRLOG("OOPS, Error allocating %d bytes", voice->buffersize);
+            LOG("OOPS, Error allocating %d bytes", voice->buffersize);
             break;
         }
 
@@ -483,14 +483,14 @@ static long openal_createSoundBuffer(const AudioContext_s *audio_context, INOUT 
         assert(ctx != NULL);
 
         if ((voice = _openal_createVoice(NUM_CHANNELS)) == NULL) {
-            ERRLOG("OOPS, Cannot create new voice");
+            LOG("OOPS, Cannot create new voice");
             break;
         }
 
         ALVoices immutableNode = { /*const*/.source = voice->source };
         ALVoices *vnode = CALLOC(1, sizeof(ALVoices));
         if (!vnode) {
-            ERRLOG("OOPS, Not enough memory");
+            LOG("OOPS, Not enough memory");
             break;
         }
         memcpy(vnode, &immutableNode, sizeof(ALVoices));
@@ -498,7 +498,7 @@ static long openal_createSoundBuffer(const AudioContext_s *audio_context, INOUT 
         HASH_ADD_INT(voices, source, vnode);
 
         if ((*soundbuf_struct = CALLOC(1, sizeof(AudioBuffer_s))) == NULL) {
-            ERRLOG("OOPS, Not enough memory");
+            LOG("OOPS, Not enough memory");
             break;
         }
 
@@ -556,7 +556,7 @@ static long openal_systemSetup(INOUT AudioContext_s **audio_context) {
 
         if ((ctx = InitAL()) == NULL) {
             // NOTE : currently assuming just one OpenAL global context
-            ERRLOG("OOPS, OpenAL initialize failed");
+            LOG("OOPS, OpenAL initialize failed");
             break;
         }
 
@@ -567,7 +567,7 @@ static long openal_systemSetup(INOUT AudioContext_s **audio_context) {
         }
 
         if ((*audio_context = CALLOC(1, sizeof(AudioContext_s))) == NULL) {
-            ERRLOG("OOPS, Not enough memory");
+            LOG("OOPS, Not enough memory");
             break;
         }
 
@@ -600,7 +600,7 @@ static long openal_systemPause(AudioContext_s *audio_context) {
         alSourcePause(vnode->source);
         err = alGetError();
         if (err != AL_NO_ERROR) {
-            ERRLOG("OOPS, Failed to pause source : 0x%08lx", err);
+            LOG("OOPS, Failed to pause source : 0x%08lx", err);
         }
     }
 
@@ -616,7 +616,7 @@ static long openal_systemResume(AudioContext_s *audio_context) {
         alSourcePlay(vnode->source);
         err = alGetError();
         if (err != AL_NO_ERROR) {
-            ERRLOG("OOPS, Failed to pause source : 0x%08lx", err);
+            LOG("OOPS, Failed to pause source : 0x%08lx", err);
         }
     }
 

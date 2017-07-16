@@ -235,7 +235,7 @@ static int _json_createFromString(const char *jsonString, INOUT JSON_ref *jsonRe
             if (!parsedData->jsonTokens) {
                 parsedData->jsonTokens = CALLOC(numTokens, sizeof(jsmntok_t));
                 if (UNLIKELY(!parsedData->jsonTokens)) {
-                    ERRLOG("WHOA3 : %s", strerror(errno));
+                    LOG("WHOA3 : %s", strerror(errno));
                     break;
                 }
             } else {
@@ -243,7 +243,7 @@ static int _json_createFromString(const char *jsonString, INOUT JSON_ref *jsonRe
                 numTokens <<= 1;
                 jsmntok_t *newTokens = REALLOC(parsedData->jsonTokens, numTokens * sizeof(jsmntok_t));
                 if (UNLIKELY(!newTokens)) {
-                    ERRLOG("WHOA4 : %s", strerror(errno));
+                    LOG("WHOA4 : %s", strerror(errno));
                     break;
                 }
                 memset(newTokens, '\0', numTokens * sizeof(jsmntok_t));
@@ -258,22 +258,22 @@ static int _json_createFromString(const char *jsonString, INOUT JSON_ref *jsonRe
         }
 
         if (errCount < 0) {
-            ERRLOG("%s", "OOPS error parsing JSON : ");
+            LOG("%s", "OOPS error parsing JSON : ");
             switch (errCount) {
                 case JSMN_ERROR_NOMEM:
                     assert(0 && "should not happen");
                     break;
                 case JSMN_ERROR_INVAL:
-                    ERRLOG("%s", "Invalid character inside JSON string");
+                    LOG("%s", "Invalid character inside JSON string");
                     break;
                 case JSMN_ERROR_PART:
-                    ERRLOG("%s", "String is not a complete JSON packet, moar bytes expected");
+                    LOG("%s", "String is not a complete JSON packet, moar bytes expected");
                     break;
                 case JSMN_ERROR_PRIMITIVE_INVAL:
-                    ERRLOG("%s", "Invalid character inside JSON primitive");
+                    LOG("%s", "Invalid character inside JSON primitive");
                     break;
                 default:
-                    ERRLOG("UNKNOWN errCount : %d", errCount);
+                    LOG("UNKNOWN errCount : %d", errCount);
                     break;
             }
             break;
@@ -310,7 +310,7 @@ int json_createFromFD(int fd, INOUT JSON_ref *jsonRef) {
         jsonLen = JSON_LENGTH*2;
         jsonString = MALLOC(jsonLen);
         if (UNLIKELY(jsonString == NULL)) {
-            ERRLOG("WHOA : %s", strerror(errno));
+            LOG("WHOA : %s", strerror(errno));
             break;
         }
 
@@ -318,7 +318,7 @@ int json_createFromFD(int fd, INOUT JSON_ref *jsonRef) {
         do {
             TEMP_FAILURE_RETRY(bytesRead = read(fd, jsonString+jsonIdx, JSON_LENGTH));
             if (bytesRead < 0) {
-                ERRLOG("Error reading file : %s", strerror(errno));
+                LOG("Error reading file : %s", strerror(errno));
                 break;
             }
             if (bytesRead) {
@@ -328,7 +328,7 @@ int json_createFromFD(int fd, INOUT JSON_ref *jsonRef) {
                     jsonLen <<= 1;
                     char *newString = REALLOC(jsonString, jsonLen);
                     if (UNLIKELY(!newString)) {
-                        ERRLOG("WHOA2 : %s", strerror(errno));
+                        LOG("WHOA2 : %s", strerror(errno));
                         bytesRead = -1;
                         break;
                     }
@@ -368,7 +368,7 @@ int json_createFromFile(const char *filePath, INOUT JSON_ref *jsonRef) {
 
         TEMP_FAILURE_RETRY(fd = open(filePath, O_RDONLY));
         if (fd < 0) {
-            ERRLOG("Error opening file : %s", strerror(errno));
+            LOG("Error opening file : %s", strerror(errno));
             break;
         }
 
@@ -418,7 +418,7 @@ static bool _json_mapGetStringValue(const JSON_s *map, const char *key, INOUT in
 
         // should begin as map ...
         if (map->jsonTokens[idx].type != JSMN_OBJECT) {
-            ERRLOG("Map JSON : must start with begin map token");
+            LOG("Map JSON : must start with begin map token");
             break;
         }
         ++idx;
@@ -430,7 +430,7 @@ static bool _json_mapGetStringValue(const JSON_s *map, const char *key, INOUT in
             assert(keyTok.parent == 0);
 
             if (keyTok.type != JSMN_STRING) {
-                ERRLOG("Map JSON : expecting a string key at map position %d", idx);
+                LOG("Map JSON : expecting a string key at map position %d", idx);
                 break;
             }
 
@@ -641,7 +641,7 @@ static bool _json_mapSetValue(const JSON_ref jsonRef, const char *key, const cha
         }
 
         if (map->jsonTokens[0].type != JSMN_OBJECT) {
-            ERRLOG("Map JSON : object not a map!");
+            LOG("Map JSON : object not a map!");
             break;
         }
 
@@ -750,7 +750,7 @@ static bool _json_mapSetValue(const JSON_ref jsonRef, const char *key, const cha
         JSON_ref newRef = NULL;
         int errCount = json_createFromString(jsonString, &newRef);
         if (errCount < 0) {
-            ERRLOG("Cannot set new JSON value err : %d", errCount);
+            LOG("Cannot set new JSON value err : %d", errCount);
         } else {
             JSON_s *newMap = (JSON_s *)newRef;
             FREE(map->jsonString);

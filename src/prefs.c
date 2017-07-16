@@ -92,24 +92,24 @@ bool prefs_save(void) {
     bool success = false;
     do {
         if (!prefsFile) {
-            ERRLOG("Not saving preferences, no file loaded...");
+            LOG("Not saving preferences, no file loaded...");
             break;
         }
 
         if (!jsonPrefs) {
-            ERRLOG("Not saving preferences, none loaded...");
+            LOG("Not saving preferences, none loaded...");
             break;
         }
 
         if (((JSON_s *)jsonPrefs)->numTokens <= 0) {
-            ERRLOG("Not saving preferences, no preferences loaded...");
+            LOG("Not saving preferences, no preferences loaded...");
             break;
         }
 
         assert(((JSON_s *)jsonPrefs)->jsonString && "string should be valid");
 
 #define PREFS_ERRPRINT() \
-        ERRLOG( \
+        LOG( \
                 "Cannot open the .apple2.json preferences file for writing.\n" \
                 "Make sure it has R/W permission in your home directory.")
 

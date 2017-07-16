@@ -393,7 +393,7 @@ jstring Java_org_deadc0de_apple2ix_Apple2DisksMenu_nativeChooseDisk(JNIEnv *env,
     } else {
         fd = dup(fd);
         if (fd == -1) {
-            ERRLOG("OOPS could not dup file descriptor!");
+            LOG("OOPS could not dup file descriptor!");
         }
     }
 
@@ -468,7 +468,7 @@ static int _openFdFromJson(OUTPARM int *fdOut, JSON_ref jsonData, const char * c
         } else {
             fd = dup(fd);
             if (fd == -1) {
-                ERRLOG("OOPS could not dup file descriptor!");
+                LOG("OOPS could not dup file descriptor!");
             }
         }
     } while (0);

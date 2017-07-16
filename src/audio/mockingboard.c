@@ -1293,7 +1293,7 @@ static void* SSI263Thread(void *lpParameter)
             err = pthread_cond_timedwait(&ssi263_cond, &ssi263_mutex, &wait);
             if (err && (err != ETIMEDOUT))
             {
-                ERRLOG("OOPS pthread_cond_timedwait");
+                LOG("OOPS pthread_cond_timedwait");
             }
             pthread_mutex_unlock(&ssi263_mutex);
 
@@ -1562,12 +1562,12 @@ static bool MB_DSInit()
         int err = 0;
         if ((err = pthread_mutex_init(&ssi263_mutex, NULL)))
         {
-            ERRLOG("OOPS pthread_mutex_init");
+            LOG("OOPS pthread_mutex_init");
         }
 
         if ((err = pthread_cond_init(&ssi263_cond, NULL)))
         {
-            ERRLOG("OOPS pthread_cond_init");
+            LOG("OOPS pthread_cond_init");
         }
 #else
 	g_hSSI263Event[0] = CreateEvent(NULL,	// lpEventAttributes
@@ -1708,7 +1708,7 @@ static bool MB_DSInit()
             int err = 0;
             if ((err = pthread_create(&g_hThread, NULL, SSI263Thread, NULL)))
             {
-                ERRLOG("SSI263Thread");
+                LOG("SSI263Thread");
             }
 
             // assuming time critical ...
@@ -1719,11 +1719,11 @@ static bool MB_DSInit()
 
             int prio = 0;
             if ((prio = sched_get_priority_max(policy)) < 0) {
-                ERRLOG("OOPS sched_get_priority_max");
+                LOG("OOPS sched_get_priority_max");
             } else {
                 if ((err = pthread_setschedprio(thread, prio)))
                 {
-                    ERRLOG("OOPS pthread_setschedprio");
+                    LOG("OOPS pthread_setschedprio");
                 }
             }
 #   endif
@@ -1757,7 +1757,7 @@ static void MB_DSUninit()
 
                 int err = 0;
                 if ( (err = pthread_join(g_hThread, NULL)) ) {
-                    ERRLOG("OOPS pthread_join");
+                    LOG("OOPS pthread_join");
                 }
 #else
 		unsigned long dwExitCode;

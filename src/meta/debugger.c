@@ -1148,10 +1148,10 @@ static int begin_cpu_stepping() {
         }
 
         if ((err = pthread_cond_signal(&cpu_thread_cond))) {
-            ERRLOG("pthread_cond_signal : %d", err);
+            LOG("pthread_cond_signal : %d", err);
         }
         if ((err = pthread_cond_wait(&dbg_thread_cond, &interface_mutex))) {
-            ERRLOG("pthread_cond_wait : %d", err);
+            LOG("pthread_cond_wait : %d", err);
         }
 
 #if defined(INTERFACE_CLASSIC)
@@ -1168,7 +1168,7 @@ static int begin_cpu_stepping() {
     } while (!stepping_struct.should_break);
 
     if ((err = pthread_cond_signal(&cpu_thread_cond))) {
-        ERRLOG("pthread_cond_signal : %d", err);
+        LOG("pthread_cond_signal : %d", err);
     }
 
     cpu_scale_factor = saved_scale;
@@ -1185,7 +1185,7 @@ bool c_debugger_should_break() {
 
     if (pthread_self() != cpu_thread_id) {
         // OOPS ...
-        ERRLOG("should only call this from cpu thread, bailing...");
+        LOG("should only call this from cpu thread, bailing...");
         assert(false);
     }
 
@@ -1489,7 +1489,7 @@ void c_interface_debugging() {
     is_debugging = false;
     if ((err = pthread_cond_signal(&cpu_thread_cond)))
     {
-        ERRLOG("pthread_cond_signal : %d", err);
+        LOG("pthread_cond_signal : %d", err);
     }
     return;
 }

@@ -727,21 +727,21 @@ static void _loadAltKbd(const char *kbdPath) {
 
         // begin with array
         if (parsedData.jsonTokens[idx].type != JSMN_ARRAY) {
-            ERRLOG("Keyboard JSON must start with array");
+            LOG("Keyboard JSON must start with array");
             break;
         }
         ++idx;
 
         // next is a global comment string
         if (parsedData.jsonTokens[idx].type != JSMN_STRING) {
-            ERRLOG("Expecting a comment string at JSON token position 1");
+            LOG("Expecting a comment string at JSON token position 1");
             break;
         }
         ++idx;
 
         // next is the dictionary of special strings
         if (parsedData.jsonTokens[idx].type != JSMN_OBJECT) {
-            ERRLOG("Expecting a dictionary at JSON token position 2");
+            LOG("Expecting a dictionary at JSON token position 2");
             break;
         }
         const int dictCount = parsedData.jsonTokens[idx].size;
@@ -762,7 +762,7 @@ static void _loadAltKbd(const char *kbdPath) {
             }
         }
         if (!allStrings) {
-            ERRLOG("Specials dictionary should only contain strings");
+            LOG("Specials dictionary should only contain strings");
             break;
         }
 
@@ -771,7 +771,7 @@ static void _loadAltKbd(const char *kbdPath) {
         while (idx < tokCount) {
             if (row < 2) {
                 if ( !((parsedData.jsonTokens[idx].type == JSMN_ARRAY) && (parsedData.jsonTokens[idx].parent == 0)) ) {
-                    ERRLOG("Expecting a reserved array at keyboard row %d", row+1);
+                    LOG("Expecting a reserved array at keyboard row %d", row+1);
                     break;
                 }
                 if (parsedData.jsonTokens[idx].size != KBD_TEMPLATE_COLS) {
@@ -786,7 +786,7 @@ static void _loadAltKbd(const char *kbdPath) {
                     continue;
                 }
             } else if ( !((parsedData.jsonTokens[idx].type == JSMN_ARRAY) && (parsedData.jsonTokens[idx].size == KBD_TEMPLATE_COLS) && (parsedData.jsonTokens[idx].parent == 0)) ) {
-                ERRLOG("Expecting an array of ten items at keyboard row %d", row+1);
+                LOG("Expecting an array of ten items at keyboard row %d", row+1);
                 break;
             }
 
@@ -795,7 +795,7 @@ static void _loadAltKbd(const char *kbdPath) {
             for (int col=0; idx<count; col++, idx++) {
 
                 if (parsedData.jsonTokens[idx].type != JSMN_STRING) {
-                    ERRLOG("Unexpected non-string at keyboard row %d", row+1);
+                    LOG("Unexpected non-string at keyboard row %d", row+1);
                     break;
                 }
 
@@ -839,7 +839,7 @@ static void _loadAltKbd(const char *kbdPath) {
                     }
                 }
                 if (!foundMatch) {
-                    ERRLOG("no match for found multichar value in keyboard row %d", row+1);
+                    LOG("no match for found multichar value in keyboard row %d", row+1);
                 }
             }
 
@@ -851,7 +851,7 @@ static void _loadAltKbd(const char *kbdPath) {
         }
 
         if (row != KBD_TEMPLATE_ROWS) {
-            ERRLOG("Did not find expected number of keyboard rows");
+            LOG("Did not find expected number of keyboard rows");
         } else {
             LOG("Parsed keyboard at %s", kbdPath);
         }

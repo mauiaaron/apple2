@@ -146,13 +146,13 @@ static void *_azimuth_create_model(GLModel *parent) {
 
         vtxSource = glshader_createSource("SolidColor.vsh");
         if (!vtxSource) {
-            ERRLOG("Cannot compile vertex shader for joystick azimuth!");
+            LOG("Cannot compile vertex shader for joystick azimuth!");
             break;
         }
 
         frgSource = glshader_createSource("SolidColor.fsh");
         if (!frgSource) {
-            ERRLOG("Cannot compile fragment shader for joystick azimuth!");
+            LOG("Cannot compile fragment shader for joystick azimuth!");
             break;
         }
 

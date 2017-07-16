@@ -371,10 +371,10 @@ cpu_runloop:
                     if (c_debugger_should_break() || (debugging_cycles <= 0)) {
                         int err = 0;
                         if ((err = pthread_cond_signal(&dbg_thread_cond))) {
-                            ERRLOG("pthread_cond_signal : %d", err);
+                            LOG("pthread_cond_signal : %d", err);
                         }
                         if ((err = pthread_cond_wait(&cpu_thread_cond, &interface_mutex))) {
-                            ERRLOG("pthread_cond_wait : %d", err);
+                            LOG("pthread_cond_wait : %d", err);
                         }
                         if (debugging_cycles <= 0) {
                             break;
@@ -528,7 +528,7 @@ void timing_startCPU(void) {
     cpu_shutting_down = false;
     int err = TEMP_FAILURE_RETRY(pthread_create(&cpu_thread_id, NULL, (void *)&cpu_thread, (void *)NULL));
     if (err) {
-        ERRLOG("pthread_create failed!");
+        LOG("pthread_create failed!");
         assert(false);
     }
 }
@@ -538,7 +538,7 @@ void timing_stopCPU(void) {
 
     LOG("Emulator waiting for CPU thread clean up...");
     if (pthread_join(cpu_thread_id, NULL)) {
-        ERRLOG("OOPS: pthread_join of CPU thread ...");
+        LOG("OOPS: pthread_join of CPU thread ...");
     }
 }
 

@@ -45,7 +45,7 @@ static long playq_enqueue(PlayQueue_s *_this, INOUT PlayNode_s *node) {
         // detach a node from the available pool
         PQListNode_s *listNode = list->availNodes;
         if (!listNode) {
-            ERRLOG("Cannot enqueue: no slots available");
+            LOG("Cannot enqueue: no slots available");
             err = -1;
             break;
         }
@@ -228,14 +228,14 @@ PlayQueue_s *playq_createPlayQueue(const long *nodeIdPtr, unsigned long numBuffe
     do {
         playq = CALLOC(1, sizeof(PlayQueue_s));
         if (!playq) {
-            ERRLOG("no memory");
+            LOG("no memory");
             break;
         }
 
         PQList_s *list = CALLOC(1, sizeof(PQList_s));
         playq->_internal = list;
         if (!list) {
-            ERRLOG("no memory");
+            LOG("no memory");
             break;
         }
 
@@ -245,7 +245,7 @@ PlayQueue_s *playq_createPlayQueue(const long *nodeIdPtr, unsigned long numBuffe
             LOG("CREATING PlayNode_s node ID: %ld", nodeIdPtr[i]);
             listNode->node.nodeId = nodeIdPtr[i];
             if (!listNode) {
-                ERRLOG("no memory");
+                LOG("no memory");
                 allocSuccess = false;
                 break;
             }

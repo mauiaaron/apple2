@@ -52,7 +52,7 @@ long audio_createSoundBuffer(INOUT AudioBuffer_s **audioBuffer) {
     long err = 0;
     do {
         if (!audioContext) {
-            ERRLOG("Cannot create sound buffer, no context");
+            LOG("Cannot create sound buffer, no context");
             err = -1;
             break;
         }

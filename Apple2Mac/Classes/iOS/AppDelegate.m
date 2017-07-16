@@ -86,13 +86,13 @@
     [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryAmbient error:&error];
     if (error)
     {
-        ERRLOG("Error setting AVAudioSessionCategoryAmbient : %s", [[error description] UTF8String]);
+        LOG("Error setting AVAudioSessionCategoryAmbient : %s", [[error description] UTF8String]);
         error = nil;
     }
     [[AVAudioSession sharedInstance] setActive:YES error:&error];
     if (error)
     {
-        ERRLOG("Error activating AVAudioSession : %s", [[error description] UTF8String]);
+        LOG("Error activating AVAudioSession : %s", [[error description] UTF8String]);
         error = nil;
     }
 }
@@ -103,7 +103,7 @@
     [[AVAudioSession sharedInstance] setActive:NO error:&error];
     if (error)
     {
-        ERRLOG("Error deactivating AVAudioSession : %s", [[error description] UTF8String]);
+        LOG("Error deactivating AVAudioSession : %s", [[error description] UTF8String]);
     }
 }
 
@@ -142,14 +142,14 @@
 
     if (error)
     {
-        ERRLOG("Could not create directory. Error: %s", [[error description] UTF8String]);
+        LOG("Could not create directory. Error: %s", [[error description] UTF8String]);
         return;
     }
     
     NSArray *fileList = [fileManager contentsOfDirectoryAtPath:resourcesPath error:&error];
     if (error)
     {
-        ERRLOG("Could not list contents of bundle. Error: %s", [[error description] UTF8String]);
+        LOG("Could not list contents of bundle. Error: %s", [[error description] UTF8String]);
         return;
     }
     
@@ -174,7 +174,7 @@
             [fileManager copyItemAtPath:resourcesFile toPath:documentsFile error:&error];
             if (error)
             {
-                ERRLOG("Could not copy file. Error: %s", [[error description] UTF8String]);
+                LOG("Could not copy file. Error: %s", [[error description] UTF8String]);
             }
         }
     }

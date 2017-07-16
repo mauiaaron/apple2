@@ -551,7 +551,7 @@ GLModel *mdlCreateQuad(GLModelParams_s parms, GLCustom clazz) {
         return model;
     } while (0);
 
-    ERRLOG("error in quad creation");
+    LOG("error in quad creation");
     if (model) {
         mdlDestroyModel(&model);
     }

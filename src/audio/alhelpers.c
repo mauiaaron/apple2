@@ -43,7 +43,7 @@ ALCcontext* InitAL(void)
     device = alcOpenDevice(NULL);
     if(!device)
     {
-        ERRLOG("Could not open a device!");
+        LOG("Could not open a device!");
         return NULL;
     }
 
@@ -55,7 +55,7 @@ ALCcontext* InitAL(void)
             alcDestroyContext(ctx);
         }
         alcCloseDevice(device);
-        ERRLOG("Could not set a context!");
+        LOG("Could not set a context!");
         return NULL;
     }
 

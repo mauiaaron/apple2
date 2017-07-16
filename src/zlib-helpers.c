@@ -39,10 +39,10 @@ static int _gzread_data(gzFile gzsource, uint8_t *buf, const int expected_bytesc
         int bytesread = gzread(gzsource, buf+bytescount, expected_bytescount-bytescount);
         if (bytesread <= 0) {
             if (--maxtries == 0) {
-                ERRLOG("OOPS, giving up on gzread() ...");
+                LOG("OOPS, giving up on gzread() ...");
                 break;
             }
-            ERRLOG("OOPS, gzread() ...");
+            LOG("OOPS, gzread() ...");
             usleep(100);
             continue;
         }
@@ -67,10 +67,10 @@ static int _read_data(int fd_own, uint8_t *buf, const int expected_bytescount) {
         TEMP_FAILURE_RETRY(bytesread = read(fd_own, buf+bytescount, expected_bytescount-bytescount));
         if (bytesread <= 0) {
             if (--maxtries == 0) {
-                ERRLOG("OOPS, giving up on read() ...");
+                LOG("OOPS, giving up on read() ...");
                 break;
             }
-            ERRLOG("OOPS, read() ...");
+            LOG("OOPS, read() ...");
             usleep(100);
             continue;
         }
@@ -97,10 +97,10 @@ static int _write_data(int fd_own, uint8_t *buf, const int expected_bytescount) 
 
         if (byteswritten <= 0) {
             if (--maxtries == 0) {
-                ERRLOG("OOPS, giving up on write() ...");
+                LOG("OOPS, giving up on write() ...");
                 break;
             }
-            ERRLOG("OOPS, write ...");
+            LOG("OOPS, write ...");
             usleep(100);
             continue;
         }
@@ -124,13 +124,13 @@ static a2gzip_t _check_gzip_magick(int fd_own, const int expected_bytescount) {
         uint8_t stkbuf[2];
         int bytescount = _read_data(fd_own, &stkbuf[0], sizeof(stkbuf));
         if (bytescount != sizeof(stkbuf)) {
-            ERRLOG("OOPS, could not read file magick for file descriptor");
+            LOG("OOPS, could not read file magick for file descriptor");
             break;
         }
 
         bytescount = lseek(fd_own, 0L, SEEK_END);
         if (bytescount == -1) {
-            ERRLOG("OOPS, cannot seek to end of file descriptor!");
+            LOG("OOPS, cannot seek to end of file descriptor!");
             break;
         }
 
@@ -171,7 +171,7 @@ const char *zlib_inflate_to_buffer(int fd, const int expected_bytescount, uint8_
 
         TEMP_FAILURE_RETRY(fd_own = dup(fd)); // balance gzclose() behavior
         if (fd_own == -1) {
-            ERRLOG("OOPS, could not dup() file descriptor %d", fd);
+            LOG("OOPS, could not dup() file descriptor %d", fd);
             break;
         }
         fd = -1;
@@ -183,7 +183,7 @@ const char *zlib_inflate_to_buffer(int fd, const int expected_bytescount, uint8_
         }
 
         if (lseek(fd_own, 0L, SEEK_SET) == -1) {
-            ERRLOG("OOPS, cannot seek to start of file descriptor!");
+            LOG("OOPS, cannot seek to start of file descriptor!");
             break;
         }
 
@@ -197,17 +197,17 @@ const char *zlib_inflate_to_buffer(int fd, const int expected_bytescount, uint8_
 
         gzsource = gzdopen(fd_own, "r");
         if (gzsource == NULL) {
-            ERRLOG("OOPS, cannot open file descriptor for reading");
+            LOG("OOPS, cannot open file descriptor for reading");
             break;
         }
 
         bytescount = _gzread_data(gzsource, buf, expected_bytescount);
         if (bytescount != expected_bytescount) {
             // could not gzread(), maybe it's not actually a gzip stream? ...
-            ERRLOG("OOPS, did not gzread() expected_bytescount of %d ... apparently read %d ... checking file length heuristic ...", expected_bytescount, bytescount);
+            LOG("OOPS, did not gzread() expected_bytescount of %d ... apparently read %d ... checking file length heuristic ...", expected_bytescount, bytescount);
 
             if (lseek(fd_own, 0L, SEEK_SET) == -1) {
-                ERRLOG("OOPS, cannot seek to start of file descriptor!");
+                LOG("OOPS, cannot seek to start of file descriptor!");
                 break;
             }
 
@@ -226,7 +226,7 @@ const char *zlib_inflate_to_buffer(int fd, const int expected_bytescount, uint8_
     } while (0);
 
     if (bytescount != expected_bytescount) {
-        ERRLOG("OOPS did not read expected_bytescount of %d ... apparently read %d", expected_bytescount, bytescount);
+        LOG("OOPS did not read expected_bytescount of %d ... apparently read %d", expected_bytescount, bytescount);
         if (gzsource) {
             err = (char *)_gzerr(gzsource);
         }
@@ -265,7 +265,7 @@ const char *zlib_inflate_inplace(int fd, const int expected_bytescount, bool *is
 
         TEMP_FAILURE_RETRY(fd_own = dup(fd)); // balance gzclose()
         if (fd_own == -1) {
-            ERRLOG("OOPS, could not dup() file descriptor %d", fd);
+            LOG("OOPS, could not dup() file descriptor %d", fd);
             break;
         }
         fd = -1;
@@ -284,29 +284,29 @@ const char *zlib_inflate_inplace(int fd, const int expected_bytescount, bool *is
 
         buf = MALLOC(expected_bytescount);
         if (buf == NULL) {
-            ERRLOG("OOPS, failed allocation of %d bytes", expected_bytescount);
+            LOG("OOPS, failed allocation of %d bytes", expected_bytescount);
             break;
         }
 
         if (lseek(fd_own, 0L, SEEK_SET) == -1) {
-            ERRLOG("OOPS, cannot seek to start of file descriptor!");
+            LOG("OOPS, cannot seek to start of file descriptor!");
             break;
         }
 
         gzsource = gzdopen(fd_own, "r");
         if (gzsource == NULL) {
-            ERRLOG("OOPS, cannot open file file descriptor for reading");
+            LOG("OOPS, cannot open file file descriptor for reading");
             break;
         }
 
         bytescount = _gzread_data(gzsource, buf, expected_bytescount);
         if (bytescount != expected_bytescount) {
             // could not gzread(), maybe it's not actually a gzip stream? ...
-            ERRLOG("OOPS, did not in-place gzread() expected_bytescount of %d ... apparently read %d ... checking file length heuristic ...", expected_bytescount, bytescount);
+            LOG("OOPS, did not in-place gzread() expected_bytescount of %d ... apparently read %d ... checking file length heuristic ...", expected_bytescount, bytescount);
 
             bytescount = lseek(fd_own, 0L, SEEK_END);
             if (bytescount == -1) {
-                ERRLOG("OOPS, cannot seek to end of file descriptor!");
+                LOG("OOPS, cannot seek to end of file descriptor!");
                 break;
             }
 
@@ -326,7 +326,7 @@ const char *zlib_inflate_inplace(int fd, const int expected_bytescount, bool *is
         // inplace write file
 
         if (lseek(fd_own, 0L, SEEK_SET) == -1) {
-            ERRLOG("OOPS, cannot seek to start of file descriptor!");
+            LOG("OOPS, cannot seek to start of file descriptor!");
             break;
         }
 
@@ -336,7 +336,7 @@ const char *zlib_inflate_inplace(int fd, const int expected_bytescount, bool *is
             int ret = -1;
             TEMP_FAILURE_RETRY(ret = ftruncate(fd_own, expected_bytescount));
             if (ret == -1) {
-                ERRLOG("OOPS, ftruncate file descriptor failed");
+                LOG("OOPS, ftruncate file descriptor failed");
                 break;
             }
         }
@@ -345,7 +345,7 @@ const char *zlib_inflate_inplace(int fd, const int expected_bytescount, bool *is
 
     char *err = NULL;
     if (bytescount != expected_bytescount) {
-        ERRLOG("OOPS, did not write expected_bytescount of %d ... apparently wrote %d", expected_bytescount, bytescount);
+        LOG("OOPS, did not write expected_bytescount of %d ... apparently wrote %d", expected_bytescount, bytescount);
         if (gzsource) {
             err = (char *)_gzerr(gzsource);
         }
@@ -392,20 +392,20 @@ const char *zlib_deflate_buffer(const uint8_t *src, const int src_bytescount, ui
 
         TEMP_FAILURE_RETRY(fd_own = open(gzPath, O_RDWR|O_CREAT|O_TRUNC));
         if (fd_own == -1) {
-            ERRLOG("OOPS could not open temp image path : %s", gzPath);
+            LOG("OOPS could not open temp image path : %s", gzPath);
             break;
         }
 
         gzdest = gzdopen(fd_own, "w");
         if (gzdest == NULL) {
-            ERRLOG("OOPS, cannot open file descriptor for writing");
+            LOG("OOPS, cannot open file descriptor for writing");
             break;
         }
 
         do {
             int byteswritten = gzwrite(gzdest, src+bytescount, expected_bytescount-bytescount);
             if (byteswritten <= 0) {
-                ERRLOG("OOPS, gzwrite() returned %d", byteswritten);
+                LOG("OOPS, gzwrite() returned %d", byteswritten);
                 break;
             }
 
@@ -423,7 +423,7 @@ const char *zlib_deflate_buffer(const uint8_t *src, const int src_bytescount, ui
         }
 
         if (gzflush(gzdest, Z_FINISH) != Z_OK) {
-            ERRLOG("Error flushing compressed output : %s", err);
+            LOG("Error flushing compressed output : %s", err);
             break;
         }
 
@@ -436,7 +436,7 @@ const char *zlib_deflate_buffer(const uint8_t *src, const int src_bytescount, ui
         }
 
         if (lseek(fd_own, 0L, SEEK_SET) == -1) {
-            ERRLOG("OOPS, cannot seek to start of file descriptor!");
+            LOG("OOPS, cannot seek to start of file descriptor!");
             break;
         }
 
@@ -450,7 +450,7 @@ const char *zlib_deflate_buffer(const uint8_t *src, const int src_bytescount, ui
     } while (0);
 
     if (bytescount != expected_bytescount) {
-        ERRLOG("OOPS, did not write/read expected number of bytes of %d ... apparently wrote %d", expected_bytescount, bytescount);
+        LOG("OOPS, did not write/read expected number of bytes of %d ... apparently wrote %d", expected_bytescount, bytescount);
         if (gzdest) {
             err = (char *)_gzerr(gzdest);
         }
