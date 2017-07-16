@@ -226,7 +226,8 @@ static bool _sprout_menu(float x, float y) {
         }
         return menu.topRightShowing;
     } else {
-        RELEASE_ERRLOG("This should not happen");
+        LOG("This should not happen");
+        assert(false);
         return false;
     }
 }

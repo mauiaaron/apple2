@@ -1186,7 +1186,7 @@ bool c_debugger_should_break() {
     if (pthread_self() != cpu_thread_id) {
         // OOPS ...
         ERRLOG("should only call this from cpu thread, bailing...");
-        RELEASE_BREAK();
+        assert(false);
     }
 
     bool break_stepping = false;

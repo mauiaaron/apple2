@@ -149,7 +149,7 @@ GLuint glshader_buildProgram(demoSource *vertexSource, demoSource *fragmentSourc
     if (version) {
         sprintf(sourceString, "#version %d\n%s", version, vertexSource->string);
     } else {
-        RELEASE_LOG("No GLSL version specified ... so NOT adding a #version directive to shader sources =P");
+        LOG("No GLSL version specified ... so NOT adding a #version directive to shader sources =P");
         sprintf(sourceString, "%s", vertexSource->string);
     }
 

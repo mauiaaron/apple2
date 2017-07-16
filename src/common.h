@@ -291,26 +291,6 @@ static const char *log_end = "\n";
 
 #endif // NDEBUG
 
-#define RELEASE_ERRLOG(...) \
-    do { \
-        GLenum _glerr = 0; \
-        _LOG(__VA_ARGS__); \
-    } while (0)
-
-#define RELEASE_LOG(...) \
-    do { \
-        GLenum _glerr = safeGLGetError(); \
-        errno = 0; \
-        _LOG(__VA_ARGS__); \
-    } while (0)
-
-#define RELEASE_BREAK() \
-    do { \
-        /* BOOM */ \
-        char *ptr = (char *)0xABADF000; \
-        *ptr++ = '\0';\
-    } while (1);
-
 // memory management
 #include "memmngt.h"
 

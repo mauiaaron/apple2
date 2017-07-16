@@ -1618,7 +1618,7 @@ static bool MB_DSInit()
 		LogFileOutput("MB_DSInit: (%02d) DSGetSoundBuffer(), hr=0x%08X\n", i, hr);
 #else
                 if (nPhonemeByteLength > audio_getCurrentBackend()->systemSettings.monoBufferSizeSamples) {
-                    RELEASE_ERRLOG("!!!!!!!!!!!!!!!!!!!!! phoneme length > buffer size !!!!!!!!!!!!!!!!!!!!!");
+                    LOG("!!!!!!!!!!!!!!!!!!!!! phoneme length > buffer size !!!!!!!!!!!!!!!!!!!!!");
 #warning ^^^^^^^^^^ require vigilence here around this change ... we used to be able to specify the exact buffer size ...
                 }
                 nPhonemeByteLength = dwDSLockedBufferSize;

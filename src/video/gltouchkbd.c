@@ -421,7 +421,7 @@ static inline int64_t _tap_key_at_point(float x, float y) {
         default: // ASCII
             isASCII = true;
             if (key >= 0x80) {
-                RELEASE_LOG("unhandled key code...");
+                LOG("unhandled key code...");
                 key = 0;
             }
             break;

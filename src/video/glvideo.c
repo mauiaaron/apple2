@@ -47,7 +47,7 @@ static void _glvideo_setup_hackarounds(void) {
     if (vendor && renderer && version) {
         LOG("GL_VENDOR:[%s] GL_RENDERER:[%s] GL_VERSION:[%s]", vendor, renderer, version);
     } else {
-        RELEASE_LOG("One or more of GL_VENDOR, GL_RENDERER, and GL_VERSION is NULL ... this is bad ...");
+        ERRLOG("One or more of GL_VENDOR, GL_RENDERER, and GL_VERSION is NULL ... this is bad ...");
         return;
     }
 

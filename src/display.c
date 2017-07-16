@@ -789,7 +789,7 @@ static void (*_textpage_plotter(uint32_t currswitches, uint32_t txtflags))(uint1
                 plotFn = _plot_block80;
             } else {
                 /* ??? */
-                RELEASE_LOG("!!!!!!!!!!!! what mode is this? !!!!!!!!!!!!");
+                LOG("!!!!!!!!!!!! what mode is this? !!!!!!!!!!!!");
                 plotFn = _plot_block40;
 #warning FIXME TODO ... verify this lores40/lores80 mode ...
             }

@@ -406,7 +406,7 @@ static void denibblize_track(const uint8_t * const src, int drive, uint8_t * con
             continue;
         }
         if (UNLIKELY(prologue[2] != 0xAD)) {
-            RELEASE_LOG("OMG, found mid-track 0xD5 byte...");
+            LOG("OMG, found mid-track 0xD5 byte...");
             continue;
         }
 

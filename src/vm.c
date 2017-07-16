@@ -936,7 +936,7 @@ GLUE_C_READ(iie_read_slot_expansion)
 
 GLUE_C_READ(debug_illegal_bcd)
 {
-    RELEASE_LOG("Illegal/undefined BCD operation encountered, debug break on c_debug_illegal_bcd to debug...");
+    LOG("Illegal/undefined BCD operation encountered, debug break on c_debug_illegal_bcd to debug...");
     return 0;
 }
 
@@ -1349,7 +1349,7 @@ bool vm_saveState(StateHelper_s *helper) {
             }
         } else {
             LOG("OOPS ... language_banks[0] == %p base_d000_rd == %p", language_banks[0], base_d000_rd);
-            RELEASE_BREAK();
+            assert(false);
         }
 
         if (base_d000_wrt == 0) {
@@ -1379,7 +1379,7 @@ bool vm_saveState(StateHelper_s *helper) {
             }
         } else {
             LOG("OOPS ... language_banks[0] == %p base_d000_wrt == %p", language_banks[0], base_d000_wrt);
-            RELEASE_BREAK();
+            assert(false);
         }
 
         if (base_e000_rd == apple_ii_64k[0]) {
@@ -1399,7 +1399,7 @@ bool vm_saveState(StateHelper_s *helper) {
             }
         } else {
             LOG("OOPS ... language_card[0] == %p base_e000_rd == %p", language_card[0], base_e000_rd);
-            RELEASE_BREAK();
+            assert(false);
         }
 
         if (base_e000_wrt == 0) {
@@ -1419,7 +1419,7 @@ bool vm_saveState(StateHelper_s *helper) {
             }
         } else {
             LOG("OOPS ... language_card[0] == %p base_e000_wrt == %p", language_card[0], base_e000_wrt);
-            RELEASE_BREAK();
+            assert(false);
         }
 
         saved = true;
@@ -1545,7 +1545,7 @@ bool vm_loadState(StateHelper_s *helper) {
                 break;
             default:
                 LOG("Unknown state base_d000_rd %02x", state);
-                RELEASE_BREAK();
+                assert(false);
                 break;
         }
         LOG("LOAD base_d000_rd = %d", state);
@@ -1571,7 +1571,7 @@ bool vm_loadState(StateHelper_s *helper) {
                 break;
             default:
                 LOG("Unknown state base_d000_wrt %02x", state);
-                RELEASE_BREAK();
+                assert(false);
                 break;
         }
         LOG("LOAD base_d000_wrt = %d", state);
@@ -1591,7 +1591,7 @@ bool vm_loadState(StateHelper_s *helper) {
                 break;
             default:
                 LOG("Unknown state base_e000_rd %02x", state);
-                RELEASE_BREAK();
+                assert(false);
                 break;
         }
         LOG("LOAD base_e000_rd = %d", state);
@@ -1611,7 +1611,7 @@ bool vm_loadState(StateHelper_s *helper) {
                 break;
             default:
                 LOG("Unknown state base_e000_wrt %02x", state);
-                RELEASE_BREAK();
+                assert(false);
                 break;
         }
         LOG("LOAD base_e000_wrt = %d", state);

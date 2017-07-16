@@ -343,7 +343,7 @@ static unsigned int _submit_samples_buffer(const unsigned long num_channel_sampl
             }
 
             if (system_buffer_size > maxSpeakerBytes) {
-                RELEASE_LOG("AVOIDING BUFOVER...");
+                LOG("AVOIDING BUFOVER...");
                 system_buffer_size = maxSpeakerBytes;
                 requested_buffer_size = maxSpeakerBytes;
             }

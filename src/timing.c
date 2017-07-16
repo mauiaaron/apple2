@@ -528,8 +528,8 @@ void timing_startCPU(void) {
     cpu_shutting_down = false;
     int err = TEMP_FAILURE_RETRY(pthread_create(&cpu_thread_id, NULL, (void *)&cpu_thread, (void *)NULL));
     if (err) {
-        RELEASE_ERRLOG("pthread_create failed!");
-        RELEASE_BREAK();
+        ERRLOG("pthread_create failed!");
+        assert(false);
     }
 }
 

@@ -231,7 +231,7 @@ static int disk_select(const struct dirent *e) {
     const size_t diskNameSize = MIN(PATH_MAX, strlen(disk_path)) + pathSepSize + MIN(PATH_MAX, strlen(e->d_name));
 
     if (diskNameSize >= PATH_MAX) {
-        RELEASE_ERRLOG("OOPS computed path size >= PATH_MAX!");
+        LOG("OOPS computed path size >= PATH_MAX!");
         return 0;
     }
 
