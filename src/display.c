@@ -1557,6 +1557,8 @@ uint8_t floating_bus_hibit(const bool hibit) {
 
 // ----------------------------------------------------------------------------
 
+static bool null_backend_running = true;
+
 void video_registerBackend(video_backend_s *backend, long order) {
     static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
     pthread_mutex_lock(&mutex);
@@ -1595,12 +1597,16 @@ static void _null_backend_init(void *context) {
 }
 
 static void _null_backend_main_loop(void) {
+    while (null_backend_running) {
+        sleep(1);
+    }
 }
 
 static void _null_backend_render(void) {
 }
 
 static void _null_backend_shutdown(void) {
+    null_backend_running = false;
 }
 
 static void _init_interface(void) {
