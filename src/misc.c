@@ -29,8 +29,6 @@ typedef struct module_ctor_node_s {
 static module_ctor_node_s *head = NULL;
 static bool emulatorShuttingDown = false;
 
-bool do_logging = true; // also controlled by NDEBUG
-FILE *error_log = NULL;
 const char *data_dir = NULL;
 char **argv = NULL;
 int argc = 0;
@@ -38,8 +36,9 @@ CrashHandler_s *crashHandler = NULL;
 
 #if defined(CONFIG_DATADIR)
 static void _init_common(void) {
-    LOG("Initializing common...");
     data_dir = STRDUP(CONFIG_DATADIR PATH_SEPARATOR PACKAGE_NAME);
+    log_init();
+    LOG("Initializing common...");
 }
 
 static __attribute__((constructor)) void __init_common(void) {

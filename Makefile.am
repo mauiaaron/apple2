@@ -14,7 +14,7 @@ noinst_HEADERS = src/common.h src/cpu.h src/disk.h src/glue.h src/vm.h \
 	src/timing.h src/uthash.h src/video/video.h src/zlib-helpers.h \
 	\
 	src/x86/glue-prologue.h \
-	src/meta/debug.h src/meta/trace.h \
+	src/meta/debug.h src/meta/log.h src/meta/trace.h \
 	\
 	src/audio/alhelpers.h src/audio/AY8910.h src/audio/mockingboard.h \
 	src/audio/peripherals.h src/audio/soundcore.h src/audio/speaker.h \
@@ -66,6 +66,7 @@ apple2ix_SOURCES = \
 	src/meta/debugger.c \
 	src/meta/opcodes.c \
 	src/meta/lintrace.c \
+	src/meta/log.c \
 	src/misc.c \
 	src/prefs.c \
 	src/rom.c \

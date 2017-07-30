@@ -45,7 +45,7 @@ void test_common_init(void) {
 #if __ANDROID__
     // tags help us wade through log soup
 #else
-    do_logging = false;// silence regular emulator logging
+    do_std_logging = false;// silence regular emulator logging
 #endif
 
     extern void emulator_ctors(void);

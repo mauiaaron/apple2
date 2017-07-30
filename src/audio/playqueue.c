@@ -277,7 +277,6 @@ PlayQueue_s *playq_createPlayQueue(const long *nodeIdPtr, unsigned long numBuffe
 #define SELF_TEST 0
 #if SELF_TEST
 bool do_logging = true;
-FILE *error_log = NULL;
 
 static void _test_creation(void) {
     LOG("begin test");
@@ -789,7 +788,6 @@ static void _test_remove_middle_of_queue(void) {
 
 int main(int argc, char **argv) {
 #warning use Valgrind to check proper memory management
-    error_log = stdout;
     LOG("beginning tests");
     _test_creation();
     _test_internal_list_creation_integrity();
