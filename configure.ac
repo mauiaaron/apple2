@@ -328,35 +328,13 @@ AC_SUBST(testvm_AUDIO_O)
 
 
 dnl ---------------------------------------------------------------------------
-dnl Debugger & classic interface ...
-AC_ARG_ENABLE([debugger], AS_HELP_STRING([--disable-debugger], [Disable 6502 debugging console]), [], [
-    META_O="src/meta/debug.o src/meta/debugger.o src/meta/opcodes.o src/test/sha1.o"
-    dnl HACK there's gotta be a better way ... without this verbosity, CFLAGS are not correct (lacking -DTESTING=1 , etc) if we don't specify specific obj files for test binaries
-    testcpu_META_O="src/meta/testcpu-debug.o src/meta/testcpu-debugger.o src/meta/testcpu-opcodes.o src/test/testcpu-sha1.o"
-    testdisk_META_O="src/meta/testdisk-debug.o src/meta/testdisk-debugger.o src/meta/testdisk-opcodes.o src/test/testdisk-sha1.o"
-    testdisplay_META_O="src/meta/testdisplay-debug.o src/meta/testdisplay-debugger.o src/meta/testdisplay-opcodes.o src/test/testdisplay-sha1.o"
-    testprefs_META_O="src/meta/testprefs-debug.o src/meta/testprefs-debugger.o src/meta/testprefs-opcodes.o src/test/testprefs-sha1.o"
-    testtrace_META_O="src/meta/testtrace-debug.o src/meta/testtrace-debugger.o src/meta/testtrace-opcodes.o src/test/testtrace-sha1.o"
-    testui_META_O="src/meta/testui-debug.o src/meta/testui-debugger.o src/meta/testui-opcodes.o src/test/testui-sha1.o"
-    testvm_META_O="src/meta/testvm-debug.o src/meta/testvm-debugger.o src/meta/testvm-opcodes.o src/test/testvm-sha1.o"
-])
-AC_SUBST(META_O)
-AC_SUBST(testcpu_META_O)
-AC_SUBST(testdisk_META_O)
-AC_SUBST(testdisplay_META_O)
-AC_SUBST(testprefs_META_O)
-AC_SUBST(testtrace_META_O)
-AC_SUBST(testui_META_O)
-AC_SUBST(testvm_META_O)
-
-AC_DEFINE(INTERFACE_CLASSIC, 1, [Use the classic menu interface])
-
-dnl ---------------------------------------------------------------------------
 dnl Misc ...
 
 AC_DEFINE(APPLE2IX, 1, [Denotes a section of code as Apple//ix sourced, used with external sources])
+AC_DEFINE(INTERFACE_CLASSIC, 1, [Use the classic menu interface])
 AC_DEFINE(KEYPAD_JOYSTICK, 1, [Joystick emulated on keyboard ... should not be true on mobile devices])
 AC_DEFINE(CONFORMANT_TRACKS, 1, [Conformant to Applewin, and apparently also to the original //e disk timing, but hella-slow on low-end mobile devices])
+
 
 dnl ---------------------------------------------------------------------------
 
