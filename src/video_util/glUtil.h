@@ -43,10 +43,6 @@
 #   include <GL/freeglut.h>
 #endif
 
-#if !defined(USE_VAO)
-#   define USE_VAO 1
-#endif
-
 // Global unified texture format constants ...
 
 #define TEX_FORMAT GL_RGBA
