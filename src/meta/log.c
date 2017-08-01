@@ -79,6 +79,17 @@ static void _log_rotate(bool performRotation) {
     FREE(logPath);
 }
 
+#if VIDEO_OPENGL
+// 2015/04/01 ... early calls to glGetError()--before a context exists--causes segfaults on MacOS X
+extern bool safe_to_do_opengl_logging;
+GLenum safeGLGetError(void) {
+    if (safe_to_do_opengl_logging && video_isRenderThread()) {
+        return glGetError();
+    }
+    return (GLenum)0;
+}
+#endif
+
 void log_init(void) {
     _log_rotate(/*performRotation:*/false);
 }

@@ -12,22 +12,15 @@
 #ifndef _LOG_H_
 #define _LOG_H_
 
+#if __cplusplus
+extern "C" {
+#endif
+
 #if VIDEO_OPENGL
-#   include "video_util/glUtil.h"
-
-// 2015/04/01 ... early calls to glGetError()--before a context exists--causes segfaults on MacOS X
-extern bool safe_to_do_opengl_logging;
-static inline GLenum safeGLGetError(void) {
-    if (safe_to_do_opengl_logging && video_isRenderThread()) {
-        return glGetError();
-    }
-    return (GLenum)0;
-}
-
+extern GLenum safeGLGetError(void);
 #else
 #   define GLenum int
 #   define safeGLGetError() 0
-#   define glGetError() 0
 #endif
 
 // global logging kill switch
@@ -137,5 +130,8 @@ void log_outputString(const char * const str);
         } \
     } while (0)
 
+#if __cplusplus
+}
+#endif
 
 #endif // whole file

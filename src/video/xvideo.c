@@ -730,10 +730,14 @@ static void xdriver_init(void *context) {
     fprintf(stderr, "red mask:%08x green mask:%08x blue mask:%08x\n", (uint32_t)visualinfo.red_mask, (uint32_t)visualinfo.blue_mask, (uint32_t)visualinfo.green_mask);
     fprintf(stderr, "redshift:%08d greenshift:%08d blueshift:%08d alphashift:%08d\n", red_shift, blue_shift, green_shift, alpha_shift);
 
+#if 1
+    scale = VIDEO_2X;
+#else
     scale = a2_video_mode;
     if (a2_video_mode == VIDEO_FULLSCREEN) {
         scale = 1; // HACK FIXME FOR NOW ...
     }
+#endif
 
     /* Note that in a real Xlib application, x and y would default to 0
      * but would be settable from the command line or resource database.

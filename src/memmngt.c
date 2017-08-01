@@ -11,6 +11,8 @@
 
 #include "common.h"
 
+#include <stdarg.h>
+
 #ifndef NDEBUG
 
 void *_a2_malloc(size_t size) {

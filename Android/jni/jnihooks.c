@@ -406,10 +406,10 @@ jstring Java_org_deadc0de_apple2ix_Apple2DisksMenu_nativeChooseDisk(JNIEnv *env,
     if (err) {
         char *diskImageUnreadable = "Disk Image Unreadable";
         unsigned int cols = strlen(diskImageUnreadable);
-        video_animations->animation_showMessage(diskImageUnreadable, cols, 1);
+        video_getAnimationDriver()->animation_showMessage(diskImageUnreadable, cols, 1);
         inserted = false;
     } else {
-        video_animations->animation_showDiskChosen(drive);
+        video_getAnimationDriver()->animation_showDiskChosen(drive);
     }
 
     json_mapSetBoolValue(jsonData, "inserted", inserted);

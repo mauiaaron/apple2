@@ -16,6 +16,8 @@
 #include "common.h"
 #include "trace.h"
 
+#include <stdarg.h>
+
 #define MAX_MSG_LEN 1024
 #define MAX_ARG_LEN 768
 
