@@ -333,39 +333,55 @@ static int keysym_to_scancode(void) {
     return rc;
 }
 
+// copy Apple //e video memory into XImage uint32_t buffer
 static void post_image() {
-    // copy Apple //e video memory into XImage uint32_t buffer
-    uint8_t *fb = video_scan();
-    uint8_t index;
 
-    unsigned int count = SCANWIDTH * SCANHEIGHT;
-    for (unsigned int i=0, j=0; i<count; i++, j+=4)
-    {
-        index = *(fb + i);
-        *( (uint32_t*)(image->data + j) ) = (uint32_t)(
-            ((uint32_t)(colormap[index].red)   << red_shift)   |
-            ((uint32_t)(colormap[index].green) << green_shift) |
-            ((uint32_t)(colormap[index].blue)  << blue_shift)  |
-            ((uint32_t)0xff /* alpha */ << alpha_shift)
-            );
-        if (scale > 1)
+    static uint8_t fb[SCANWIDTH*SCANHEIGHT*sizeof(uint8_t)];
+#if INTERFACE_CLASSIC
+    interface_setStagingFramebuffer(fb);
+#endif
+    unsigned long wasDirty = 0UL;
+
+    // check if a2 video memory is dirty
+    wasDirty = video_clearDirty(A2_DIRTY_FLAG);
+    if (wasDirty) {
+        display_renderStagingFramebuffer(fb);
+    }
+
+    // now check/clear if we should redraw
+    wasDirty = video_clearDirty(FB_DIRTY_FLAG);
+    if (wasDirty) {
+        uint8_t index;
+
+        unsigned int count = SCANWIDTH * SCANHEIGHT;
+        for (unsigned int i=0, j=0; i<count; i++, j+=4)
         {
-            j+=4;
-
-            // duplicate pixel
+            index = *(fb + i);
             *( (uint32_t*)(image->data + j) ) = (uint32_t)(
-                ((uint32_t)(colormap[index].red)   << red_shift)   |
-                ((uint32_t)(colormap[index].green) << green_shift) |
-                ((uint32_t)(colormap[index].blue)  << blue_shift)  |
-                ((uint32_t)0xff /* alpha */ << alpha_shift)
-                );
-
-            if (((i+1) % SCANWIDTH) == 0)
+                    ((uint32_t)(colormap[index].red)   << red_shift)   |
+                    ((uint32_t)(colormap[index].green) << green_shift) |
+                    ((uint32_t)(colormap[index].blue)  << blue_shift)  |
+                    ((uint32_t)0xff /* alpha */ << alpha_shift)
+                    );
+            if (scale > 1)
             {
-                // duplicate entire row
-                int stride8 = SCANWIDTH<<3;//*8
-                memcpy(/* dest */image->data + j + 4, /* src */image->data + j + 4 - stride8, stride8);
-                j += stride8;
+                j+=4;
+
+                // duplicate pixel
+                *( (uint32_t*)(image->data + j) ) = (uint32_t)(
+                        ((uint32_t)(colormap[index].red)   << red_shift)   |
+                        ((uint32_t)(colormap[index].green) << green_shift) |
+                        ((uint32_t)(colormap[index].blue)  << blue_shift)  |
+                        ((uint32_t)0xff /* alpha */ << alpha_shift)
+                        );
+
+                if (((i+1) % SCANWIDTH) == 0)
+                {
+                    // duplicate entire row
+                    int stride8 = SCANWIDTH<<3;//*8
+                    memcpy(/* dest */image->data + j + 4, /* src */image->data + j + 4 - stride8, stride8);
+                    j += stride8;
+                }
             }
         }
     }
@@ -859,7 +875,7 @@ static void xdriver_init(void *context) {
 #endif
 }
 
-static void xdriver_shutdown(bool emulatorShuttingDown) {
+static void xdriver_shutdown(void) {
     _destroy_image();
 }
 

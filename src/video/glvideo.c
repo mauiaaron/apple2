@@ -280,11 +280,6 @@ static void glvideo_shutdown(void) {
 static void glvideo_render(void) {
     SCOPE_TRACE_VIDEO("glvideo render");
 
-    uint8_t *fb = video_currentFramebuffer();
-    if (UNLIKELY(!fb)) {
-        return;
-    }
-
     if (UNLIKELY(prefsChanged)) {
         glvideo_applyPrefs();
     }
@@ -316,15 +311,20 @@ static void glvideo_render(void) {
     glUniformMatrix4fv(uniformMVPIdx, 1, GL_FALSE, mvpIdentity);
 #endif
 
+    static uint8_t fb[SCANWIDTH*SCANHEIGHT*sizeof(uint8_t)];
+#if INTERFACE_CLASSIC
+    interface_setStagingFramebuffer(fb);
+#endif
+    unsigned long wasDirty = 0UL;
     if (!cpu_isPaused()) {
         // check if a2 video memory is dirty
-        unsigned long wasDirty = video_clearDirty(A2_DIRTY_FLAG);
+        wasDirty = video_clearDirty(A2_DIRTY_FLAG);
         if (wasDirty) {
-            fb = video_scan();
+            display_renderStagingFramebuffer(fb);
         }
     }
 
-    unsigned long wasDirty = video_clearDirty(FB_DIRTY_FLAG);
+    wasDirty = video_clearDirty(FB_DIRTY_FLAG);
     char *pixels = (char *)crtModel->texPixels;
     if (wasDirty) {
         SCOPE_TRACE_VIDEO("pixel convert");

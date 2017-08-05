@@ -1395,8 +1395,12 @@ static int _test_disk_image_with_gzip_header(int readonly) {
 
     do {
         uint8_t md[SHA_DIGEST_LENGTH];
-        const uint8_t * const fb = video_scan();
+
+        uint8_t fb = MALLOC(SCANWIDTH*SCANHEIGHT);
+        display_renderStagingFramebuffer(fb);
         SHA1(fb, SCANWIDTH*SCANHEIGHT, md);
+        FREE(fb);
+
         sha1_to_str(md, mdstr);
         bool matches_sha1 = (strcasecmp(mdstr, GZBAD_NIB_LOAD_SHA1) == 0);
         bool matches_sha2 = (strcasecmp(mdstr, GZBAD_NIB_LOAD_SHA2) == 0);
@@ -1499,8 +1503,12 @@ TEST test_reinsert_edgecase() {
     c_debugger_clear_watchpoints();
     c_debugger_go();
     uint8_t md[SHA_DIGEST_LENGTH];
-    const uint8_t * const fb = video_scan();
+
+    uint8_t fb = MALLOC(SCANWIDTH*SCANHEIGHT);
+    display_renderStagingFramebuffer(fb);
     SHA1(fb, SCANWIDTH*SCANHEIGHT, md);
+    FREE(fb);
+
     sha1_to_str(md, mdstr);
     ASSERT(strcmp(mdstr, BLANK_SCREEN) != 0);
 

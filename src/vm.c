@@ -804,7 +804,7 @@ GLUE_C_READ(iie_altchar_off)
 {
     if (softswitches & SS_ALTCHAR) {
         softswitches &= ~SS_ALTCHAR;
-        video_loadfont(0x40,0x40,ucase_glyphs,3);
+        display_loadFont(0x40,0x40,ucase_glyphs,3);
         video_setDirty(A2_DIRTY_FLAG);
     }
     return floating_bus();
@@ -814,8 +814,8 @@ GLUE_C_READ(iie_altchar_on)
 {
     if (!(softswitches & SS_ALTCHAR)) {
         softswitches |= SS_ALTCHAR;
-        video_loadfont(0x40,0x20,mousetext_glyphs,1);
-        video_loadfont(0x60,0x20,lcase_glyphs,2);
+        display_loadFont(0x40,0x20,mousetext_glyphs,1);
+        display_loadFont(0x60,0x20,lcase_glyphs,2);
         video_setDirty(A2_DIRTY_FLAG);
     }
     return floating_bus();
@@ -970,11 +970,11 @@ static void _initialize_iie_switches(void) {
 }
 
 static void _initialize_font(void) {
-    video_loadfont(0x00,0x40,ucase_glyphs,2);
-    video_loadfont(0x40,0x40,ucase_glyphs,3);
-    video_loadfont(0x80,0x40,ucase_glyphs,0);
-    video_loadfont(0xC0,0x20,ucase_glyphs,0);
-    video_loadfont(0xE0,0x20,lcase_glyphs,0);
+    display_loadFont(0x00,0x40,ucase_glyphs,2);
+    display_loadFont(0x40,0x40,ucase_glyphs,3);
+    display_loadFont(0x80,0x40,ucase_glyphs,0);
+    display_loadFont(0xC0,0x20,ucase_glyphs,0);
+    display_loadFont(0xE0,0x20,lcase_glyphs,0);
 }
 
 static void _initialize_apple_ii_memory(void) {
@@ -1049,7 +1049,7 @@ static void _initialize_tables(void) {
 
     // initialize first text & hires page, which are specially bank switched
     //
-    // video_reset() below substitutes it's own hooks for all visible write locations affect the display, leaving our
+    // display_reset() below substitutes it's own hooks for all visible write locations affect the display, leaving our
     // write-functions in place only at the `screen holes', hence the name.
     for (unsigned int i = 0x400; i < 0x800; i++) {
         cpu65_vmem_r[i] = iie_read_ram_text_page0;
@@ -1215,7 +1215,7 @@ static void _initialize_tables(void) {
         cpu65_vmem_r[i] = iie_read_slot_expansion;
     }
 
-    video_reset();
+    display_reset();
 
     // Peripheral card slot initializations ...
 

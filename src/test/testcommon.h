@@ -45,8 +45,12 @@ void sha1_to_str(const uint8_t * const md, char *buf);
 
 static inline int ASSERT_SHA(const char *SHA_STR) {
     uint8_t md[SHA_DIGEST_LENGTH];
-    const uint8_t * const fb = video_scan();
+
+    uint8_t fb = MALLOC(SCANWIDTH*SCANHEIGHT);
+    display_renderStagingFramebuffer(fb);
     SHA1(fb, SCANWIDTH*SCANHEIGHT, md);
+    FREE(fb);
+
     sha1_to_str(md, mdstr);
     ASSERT(strcasecmp(mdstr, SHA_STR) == 0);
     return 0;

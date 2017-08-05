@@ -170,6 +170,15 @@ dnl Video ...
 AC_PATH_XTRA
 
 
+VIDEO_O="src/video/video.o"
+testcpu_VIDEO_O="src/video/video.o"
+testdisk_VIDEO_O="src/video/video.o"
+testdisplay_VIDEO_O="src/video/video.o"
+testprefs_VIDEO_O="src/video/video.o"
+testtrace_VIDEO_O="src/video/video.o"
+testui_VIDEO_O="src/video/video.o"
+testvm_VIDEO_O="src/video/video.o"
+
 AC_ARG_ENABLE([opengl], AS_HELP_STRING([--enable-opengl], [Enable OpenGL graphics output (autodetected)]))
 AC_CHECK_HEADER(GL/glew.h, [
     AC_CHECK_HEADER(GL/freeglut.h, [
@@ -181,15 +190,15 @@ AC_CHECK_HEADER(GL/glew.h, [
 
                         AC_DEFINE(VIDEO_OPENGL, 1, [Building with OpenGL support])
                         AC_DEFINE(USE_GLUT, 1, [Use GLUT library])
-                        VIDEO_O="src/video/glvideo.o src/video/glnode.o src/video/glalert.o src/video/glhudmodel.o src/video/glutinput.o src/video_util/matrixUtil.o src/video_util/modelUtil.o src/video_util/sourceUtil.o src/video_util/vectorUtil.o"
+                        VIDEO_O="$VIDEO_O src/video/glvideo.o src/video/glnode.o src/video/glalert.o src/video/glhudmodel.o src/video/glutinput.o src/video_util/matrixUtil.o src/video_util/modelUtil.o src/video_util/sourceUtil.o src/video_util/vectorUtil.o"
                         dnl HACK there's gotta be a better way ... without this verbosity, CFLAGS are not correct (lacking -DTESTING=1 , etc) if we don't specify specific obj files for test binaries
-                        testcpu_VIDEO_O="src/video/testcpu-glvideo.o src/video/testcpu-glnode.o src/video/testcpu-glalert.o src/video/testcpu-glhudmodel.o src/video/testcpu-glutinput.o src/video_util/testcpu-matrixUtil.o src/video_util/testcpu-modelUtil.o src/video_util/testcpu-sourceUtil.o src/video_util/testcpu-vectorUtil.o"
-                        testdisk_VIDEO_O="src/video/testdisk-glvideo.o src/video/testdisk-glnode.o src/video/testdisk-glalert.o src/video/testdisk-glhudmodel.o src/video/testdisk-glutinput.o src/video_util/testdisk-matrixUtil.o src/video_util/testdisk-modelUtil.o src/video_util/testdisk-sourceUtil.o src/video_util/testdisk-vectorUtil.o"
-                        testdisplay_VIDEO_O="src/video/testdisplay-glvideo.o src/video/testdisplay-glnode.o src/video/testdisplay-glalert.o src/video/testdisplay-glhudmodel.o src/video/testdisplay-glutinput.o src/video_util/testdisplay-matrixUtil.o src/video_util/testdisplay-modelUtil.o src/video_util/testdisplay-sourceUtil.o src/video_util/testdisplay-vectorUtil.o"
-                        testprefs_VIDEO_O="src/video/testprefs-glvideo.o src/video/testprefs-glnode.o src/video/testprefs-glalert.o src/video/testprefs-glhudmodel.o src/video/testprefs-glutinput.o src/video_util/testprefs-matrixUtil.o src/video_util/testprefs-modelUtil.o src/video_util/testprefs-sourceUtil.o src/video_util/testprefs-vectorUtil.o"
-                        testtrace_VIDEO_O="src/video/testtrace-glvideo.o src/video/testtrace-glnode.o src/video/testtrace-glalert.o src/video/testtrace-glhudmodel.o src/video/testtrace-glutinput.o src/video_util/testtrace-matrixUtil.o src/video_util/testtrace-modelUtil.o src/video_util/testtrace-sourceUtil.o src/video_util/testtrace-vectorUtil.o"
-                        testui_VIDEO_O="src/video/testui-glvideo.o src/video/testui-glnode.o src/video/testui-glalert.o src/video/testui-glhudmodel.o src/video/testui-glutinput.o src/video_util/testui-matrixUtil.o src/video_util/testui-modelUtil.o src/video_util/testui-sourceUtil.o src/video_util/testui-vectorUtil.o"
-                        testvm_VIDEO_O="src/video/testvm-glvideo.o src/video/testvm-glnode.o src/video/testvm-glalert.o src/video/testvm-glhudmodel.o src/video/testvm-glutinput.o src/video_util/testvm-matrixUtil.o src/video_util/testvm-modelUtil.o src/video_util/testvm-sourceUtil.o src/video_util/testvm-vectorUtil.o"
+                        testcpu_VIDEO_O="$testcpu_VIDEO_O src/video/testcpu-glvideo.o src/video/testcpu-glnode.o src/video/testcpu-glalert.o src/video/testcpu-glhudmodel.o src/video/testcpu-glutinput.o src/video_util/testcpu-matrixUtil.o src/video_util/testcpu-modelUtil.o src/video_util/testcpu-sourceUtil.o src/video_util/testcpu-vectorUtil.o"
+                        testdisk_VIDEO_O="$testdisk_VIDEO_O src/video/testdisk-glvideo.o src/video/testdisk-glnode.o src/video/testdisk-glalert.o src/video/testdisk-glhudmodel.o src/video/testdisk-glutinput.o src/video_util/testdisk-matrixUtil.o src/video_util/testdisk-modelUtil.o src/video_util/testdisk-sourceUtil.o src/video_util/testdisk-vectorUtil.o"
+                        testdisplay_VIDEO_O="$testdisplay_VIDEO_O src/video/testdisplay-glvideo.o src/video/testdisplay-glnode.o src/video/testdisplay-glalert.o src/video/testdisplay-glhudmodel.o src/video/testdisplay-glutinput.o src/video_util/testdisplay-matrixUtil.o src/video_util/testdisplay-modelUtil.o src/video_util/testdisplay-sourceUtil.o src/video_util/testdisplay-vectorUtil.o"
+                        testprefs_VIDEO_O="$testprefs_VIDEO_O src/video/testprefs-glvideo.o src/video/testprefs-glnode.o src/video/testprefs-glalert.o src/video/testprefs-glhudmodel.o src/video/testprefs-glutinput.o src/video_util/testprefs-matrixUtil.o src/video_util/testprefs-modelUtil.o src/video_util/testprefs-sourceUtil.o src/video_util/testprefs-vectorUtil.o"
+                        testtrace_VIDEO_O="$testtrace_VIDEO_O src/video/testtrace-glvideo.o src/video/testtrace-glnode.o src/video/testtrace-glalert.o src/video/testtrace-glhudmodel.o src/video/testtrace-glutinput.o src/video_util/testtrace-matrixUtil.o src/video_util/testtrace-modelUtil.o src/video_util/testtrace-sourceUtil.o src/video_util/testtrace-vectorUtil.o"
+                        testui_VIDEO_O="$testui_VIDEO_O src/video/testui-glvideo.o src/video/testui-glnode.o src/video/testui-glalert.o src/video/testui-glhudmodel.o src/video/testui-glutinput.o src/video_util/testui-matrixUtil.o src/video_util/testui-modelUtil.o src/video_util/testui-sourceUtil.o src/video_util/testui-vectorUtil.o"
+                        testvm_VIDEO_O="$testvm_VIDEO_O src/video/testvm-glvideo.o src/video/testvm-glnode.o src/video/testvm-glalert.o src/video/testvm-glhudmodel.o src/video/testvm-glutinput.o src/video_util/testvm-matrixUtil.o src/video_util/testvm-modelUtil.o src/video_util/testvm-sourceUtil.o src/video_util/testvm-vectorUtil.o"
                         AC_MSG_RESULT([Building emulator with OpenGL support, w00t!])
                     ])
                 ], [

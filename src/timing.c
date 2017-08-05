@@ -452,7 +452,7 @@ cpu_runloop:
                 dbg_ticks += EXECUTION_PERIOD_NSECS;
                 if ((dbg_ticks % (NANOSECONDS_PER_SECOND>>1)) == 0)
                 {
-                    video_flashText(); // TODO FIXME : proper FLASH timing ...
+                    display_flashText(); // TODO FIXME : proper FLASH timing ...
                 }
 #if DEBUG_TIMING
                 // collect timing statistics

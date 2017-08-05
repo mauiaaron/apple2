@@ -31,12 +31,13 @@ ASM_SRC_x86 = \
 	src/x86/glue.S src/x86/cpu.S
 
 VIDEO_SRC = \
-	src/video/xvideo.c \
 	src/video/glvideo.c \
 	src/video/glutinput.c \
 	src/video/glnode.c \
 	src/video/glhudmodel.c \
 	src/video/glalert.c \
+	src/video/video.c \
+	src/video/xvideo.c \
 	src/video_util/matrixUtil.c \
 	src/video_util/modelUtil.c \
 	src/video_util/sourceUtil.c \

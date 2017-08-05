@@ -12,74 +12,53 @@
 #ifndef _DISPLAY_H_
 #define _DISPLAY_H_
 
+/*
+ * Color structure
+ */
+typedef struct A2Color_s {
+    uint8_t red;
+    uint8_t green;
+    uint8_t blue;
+} A2Color_s;
+
+/*
+ * Reference to the internal 8bit-indexed color format
+ */
+extern A2Color_s colormap[];
+
+/*
+ * Color options
+ */
 typedef enum color_mode_t {
     COLOR_NONE = 0,
-    /*LAZY_COLOR, deprecated*/
     COLOR,
-    /*LAZY_INTERP, deprecated*/
     COLOR_INTERP,
     NUM_COLOROPTS
 } color_mode_t;
 
-typedef struct video_animation_s {
-
-#if INTERFACE_TOUCH
-    // touch HUD functions
-    void (*animation_showTouchKeyboard)(void);
-    void (*animation_hideTouchKeyboard)(void);
-    void (*animation_showTouchJoystick)(void);
-    void (*animation_hideTouchJoystick)(void);
-    void (*animation_showTouchMenu)(void);
-    void (*animation_hideTouchMenu)(void);
-#endif
-
-    // misc animations
-    void (*animation_showMessage)(char *message, unsigned int cols, unsigned int rows);
-    void (*animation_showPaused)(void);
-    void (*animation_showCPUSpeed)(void);
-    void (*animation_showDiskChosen)(int drive);
-    void (*animation_showTrackSector)(int drive, int track, int sect);
-
-} video_animation_s;
+/*
+ * Graphics mode
+ */
+typedef enum drawpage_mode_t {
+    DRAWPAGE_TEXT = 1,
+    DRAWPAGE_HIRES,
+    NUM_DRAWPAGE_MODES,
+} drawpage_mode_t;
 
 /*
- * Get current animation driver
+ * Pixel deltas
  */
-video_animation_s *video_getAnimationDriver(void);
+typedef struct pixel_delta_t {
+    uint8_t row; // row
+    uint8_t col; // col
+    uint8_t b;   // byte
+    uint8_t cs;  // colorscheme (interface updates only)
+} pixel_delta_t;
 
 /*
- * Prepare the video system, converting console to graphics mode, or
- * opening X window, or whatever.  This is called only once when the
- * emulator is run
+ * Text/hires callback
  */
-void video_init(void);
-
-/*
- * Enters emulator-managed main video loop--if backend rendering system requires it.  Currently only used by desktop X11
- * and desktop OpenGL/GLUT.
- */
-void video_main_loop(void);
-
-/*
- * Shutdown video system.  Should only be called on the render thread (unless render thread is in emulator-managed main
- * video loop).
- */
-void video_shutdown(void);
-
-/*
- * Begin a render pass (only for non-emulator-managed main video).  This should only be called on the render thread.
- */
-void video_render(void);
-
-/*
- * Set the render thread ID.  Use with caution.
- */
-void _video_setRenderThread(pthread_t id);
-
-/*
- * Check if running on render thread.
- */
-bool video_isRenderThread(void);
+typedef void (*display_update_fn)(pixel_delta_t);
 
 /*
  * Setup the display. This may be called multiple times in a run, and is
@@ -90,7 +69,7 @@ bool video_isRenderThread(void);
  * soft-switches.
  *
  */
-void video_reset(void);
+void display_reset(void);
 
 /*
  * Set the font used by the display.  QTY characters are loaded starting
@@ -109,49 +88,53 @@ void video_reset(void);
  * adaptors which color normal text and MouseText differently.  I had one
  * once for a //c.
  */
-void video_loadfont(int first, int qty, const uint8_t *data, int mode);
-
-/*
- * Flushes currently set Apple //e video memory into staging framebuffer and returns pointer.
- * This should only really be called from render thread or testsuite.
- */
-uint8_t *video_scan(void);
-
-/*
- * Get a reference to current staging framebuffer
- */
-uint8_t *video_currentFramebuffer(void);
+void display_loadFont(int first, int qty, const uint8_t *data, int mode);
 
 /*
  * Toggles FLASHing text between NORMAL and INVERSE character sets.
  */
-void video_flashText(void);
+void display_flashText(void);
+
+// ----------------------------------------------------------------------------
 
 /*
- * Clear the current display.
+ * Plot character into staging framebuffer.
+ *
+ *  - Framebuffer may be NULL or should be exactly SCANWIDTH*SCANHEIGHT*sizeof(uint8_t) size
+ *  - Pixels in the framebuffer are 8bit indexed color into the colormap array
+ *  - Triggers text update callback
+ *  - This should only be called from video backends/interface
  */
-void video_clear(void);
-
-#define A2_DIRTY_FLAG 0x1 // Apple //e video is dirty
-#define FB_DIRTY_FLAG 0x2 // Internal framebuffer is dirty
+void display_plotChar(uint8_t *fb, const uint8_t col, const uint8_t row, const interface_colorscheme_t cs, const uint8_t c);
 
 /*
- * True if dirty bit(s) are set for flag(s)
+ * Plot NULL_terminated string into staging framebuffer.
+ *  - See display_plotChar() ...
+ *
  */
-bool video_isDirty(unsigned long flags);
+void display_plotLine(uint8_t *fb, const uint8_t col, const uint8_t row, const interface_colorscheme_t cs, const char *message);
 
 /*
- * Atomically set dirty bit(s), return previous bit(s) value
+ * Plot multi-line message into staging framebuffer.
+ *  - See display_plotChar() ...
  */
-unsigned long video_setDirty(unsigned long flags);
+void display_plotMessage(uint8_t *fb, const interface_colorscheme_t cs, const char *message, const uint8_t message_cols, const uint8_t message_rows);
+
+// ----------------------------------------------------------------------------
 
 /*
- * Atomically clear dirty bit(s), return previous bit(s) value
+ * Set TEXT/HIRES update callback(s).
  */
-unsigned long video_clearDirty(unsigned long flags);
+void display_setUpdateCallback(drawpage_mode_t mode, display_update_fn updateFn);
 
-extern bool video_saveState(StateHelper_s *helper);
-extern bool video_loadState(StateHelper_s *helper);
+/*
+ * Flushes currently set Apple //e video memory into staging framebuffer.
+ *
+ *  - Framebuffer should be exactly SCANWIDTH*SCANHEIGHT*sizeof(uint8_t) size
+ *  - Pixels in the framebuffer are 8bit indexed color into the colormap array
+ *  - This should only be called from video backends or testsuite
+ */
+void display_renderStagingFramebuffer(uint8_t *stagingFB);
 
 // ----------------------------------------------------------------------------
 

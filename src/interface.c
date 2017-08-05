@@ -20,6 +20,8 @@
 int64_t (*interface_onTouchEvent)(interface_touch_event_t action, int pointer_count, int pointer_idx, float *x_coords, float *y_coords) = NULL;
 #endif
 
+static uint8_t *stagingFB = NULL;
+
 static char disk_path[PATH_MAX] = { 0 };
 
 // 2015/04/12 : This was legacy code for rendering the menu interfaces on desktop Linux. Portions here are resurrected
@@ -120,29 +122,19 @@ static void _translate_screen_x_y(char *screen, const int xlen, const int ylen) 
     }
 }
 
-// ----------------------------------------------------------------------------
-// Menu/HUD message printing
-
-static void _interface_plotLine(uint8_t *fb, int fb_pix_width, int fb_pix_x_adjust, int col, int row, interface_colorscheme_t cs, const char *message) {
-    for (; *message; col++, message++) {
-        char c = *message;
-        unsigned int off = row * fb_pix_width * FONT_HEIGHT_PIXELS + col * FONT80_WIDTH_PIXELS + fb_pix_x_adjust;
-        interface_plotChar(fb+off, fb_pix_width, cs, c);
-    }
-}
-
-void interface_plotMessage(uint8_t *fb, interface_colorscheme_t cs, char *message, int message_cols, int message_rows) {
+void interface_plotMessage(uint8_t *fb, const interface_colorscheme_t cs, char *message, const uint8_t message_cols, const uint8_t message_rows) {
     _translate_screen_x_y(message, message_cols, message_rows);
-    int fb_pix_width = (message_cols*FONT80_WIDTH_PIXELS);
-    for (int row=0, idx=0; row<message_rows; row++, idx+=message_cols+1) {
-        _interface_plotLine(fb, fb_pix_width, 0, 0, row, cs, &message[ idx ]);
-    }
+    display_plotMessage(fb, cs, message, message_cols, message_rows);
 }
 
 // ----------------------------------------------------------------------------
 // Desktop Legacy Menu Interface
 
-#ifdef INTERFACE_CLASSIC
+#if INTERFACE_CLASSIC
+
+void interface_setStagingFramebuffer(uint8_t *fb) {
+    stagingFB = fb;
+}
 
 static void _interface_plotMessageCentered(uint8_t *fb, int fb_cols, int fb_rows, interface_colorscheme_t cs, char *message, const int message_cols, const int message_rows) {
     _translate_screen_x_y(message, message_cols, message_rows);
@@ -152,18 +144,12 @@ static void _interface_plotMessageCentered(uint8_t *fb, int fb_cols, int fb_rows
     assert(fb_pix_width == SCANWIDTH);
     int row_max = row + message_rows;
     for (int idx=0; row<row_max; row++, idx+=message_cols+1) {
-        _interface_plotLine(fb, fb_pix_width, _INTERPOLATED_PIXEL_ADJUSTMENT_PRE, col, row, cs, &message[ idx ]);
+        display_plotLine(fb, col, row, cs, &message[idx]);
     }
 }
 
 static struct stat statbuf = { 0 };
 static int altdrive = 0;
-
-void video_plotchar(const int col, const int row, const interface_colorscheme_t cs, const uint8_t c) {
-    unsigned int off = row * SCANWIDTH * FONT_HEIGHT_PIXELS + col * FONT80_WIDTH_PIXELS + _INTERPOLATED_PIXEL_ADJUSTMENT_PRE;
-    interface_plotChar(video_currentFramebuffer()+off, SCANWIDTH, cs, c);
-    video_setDirty(FB_DIRTY_FLAG);
-}
 
 void copy_and_pad_string(char *dest, const char* src, const char c, const int len, const char cap) {
     const char* p = src;
@@ -195,7 +181,7 @@ static void pad_string(char *s, const char c, const int len) {
 }
 
 void c_interface_print( int x, int y, const interface_colorscheme_t cs, const char *s ) {
-    _interface_plotLine(video_currentFramebuffer(), SCANWIDTH, _INTERPOLATED_PIXEL_ADJUSTMENT_PRE, x, y, cs, s);
+    display_plotLine(stagingFB, /*col:*/x, /*row:*/y, cs, s);
     video_setDirty(FB_DIRTY_FLAG);
 }
 
@@ -217,7 +203,7 @@ void c_interface_translate_screen( char screen[24][INTERFACE_SCREEN_X+1] ) {
 }
 
 void c_interface_print_submenu_centered( char *submenu, const int message_cols, const int message_rows ) {
-    _interface_plotMessageCentered(video_currentFramebuffer(), INTERFACE_SCREEN_X, TEXT_ROWS, RED_ON_BLACK, submenu, message_cols, message_rows);
+    _interface_plotMessageCentered(stagingFB, INTERFACE_SCREEN_X, TEXT_ROWS, RED_ON_BLACK, submenu, message_cols, message_rows);
     video_setDirty(FB_DIRTY_FLAG);
 }
 
@@ -879,26 +865,26 @@ void c_interface_parameters()
                     {
                         if (temp[ j ] == '\0')
                         {
-                            video_plotchar( INTERFACE_PATH_MIN + j, 5+i, 0, ' ' );
+                            display_plotChar(stagingFB, /*col:*/INTERFACE_PATH_MIN + j, /*row:*/5+i, GREEN_ON_BLACK, ' ' );
                             j++;
                             break;
                         }
                         else
                         {
-                            video_plotchar( INTERFACE_PATH_MIN + j, 5+i, 0, temp[ j ] );
+                            display_plotChar(stagingFB, /*col:*/INTERFACE_PATH_MIN + j, /*row:*/5+i, /*cs:*/GREEN_ON_BLACK, temp[j]);
                         }
                     }
                     else
                     {
                         if (temp[ j ] == '\0')
                         {
-                            video_plotchar( INTERFACE_PATH_MIN + j, 5+i, option==OPT_PATH,' ' );
+                            display_plotChar(stagingFB, /*col:*/INTERFACE_PATH_MIN + j, /*row:*/5+i, (option == OPT_PATH ? GREEN_ON_BLUE : GREEN_ON_BLACK), ' ' );
                             j++;
                             break;
                         }
                         else
                         {
-                            video_plotchar( INTERFACE_PATH_MIN + j, 5+i, option==OPT_PATH, temp[ j ]);
+                            display_plotChar(stagingFB, /*col:*/INTERFACE_PATH_MIN + j, /*row:*/5+i, (option == OPT_PATH ? GREEN_ON_BLUE : GREEN_ON_BLACK), temp[j]);
                         }
 
                     }
@@ -906,7 +892,7 @@ void c_interface_parameters()
 
                 for (; j < INTERFACE_PATH_MAX; j++)
                 {
-                    video_plotchar( INTERFACE_PATH_MIN + j, 5+i, 0, ' ' );
+                    display_plotChar(stagingFB, /*col:*/INTERFACE_PATH_MIN + j, /*row:*/5+i, GREEN_ON_BLACK, ' ');
                 }
             }
         }
@@ -1103,7 +1089,7 @@ void c_interface_parameters()
         else if ((ch == kESC) || c_keys_is_interface_key(ch))
         {
             timing_initialize();
-            video_reset();
+            display_reset();
             vm_reinitializeAudio();
             c_joystick_reset();
 #if !TESTING
@@ -1540,7 +1526,7 @@ static void *interface_thread(void *current_key)
         break;
 
     case kF7:
-        c_interface_debugging();
+        c_interface_debugging(stagingFB);
         break;
 
     case kF8:

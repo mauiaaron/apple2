@@ -24,8 +24,7 @@ typedef enum interface_colorscheme_t {
     RED_ON_BLACK,
 } interface_colorscheme_t;
 
-#ifdef INTERFACE_CLASSIC
-void video_plotchar(int col, int row, interface_colorscheme_t cs, uint8_t c);
+#if INTERFACE_CLASSIC
 void c_interface_begin(int current_key);
 void c_interface_print(int x, int y, const interface_colorscheme_t cs, const char *s);
 void c_interface_print_submenu_centered(char *submenu, int xlen, int ylen);
@@ -35,13 +34,11 @@ void c_interface_credits();
 void c_interface_exit(int ch);
 void c_interface_translate_screen(char screen[24][INTERFACE_SCREEN_X+1]);
 void c_interface_select_diskette(int);
+void interface_setStagingFramebuffer(uint8_t *stagingFB);
 #endif
 
-// Plot character at pixel buffer offset
-void interface_plotChar(uint8_t *fboff, int fb_pix_width, interface_colorscheme_t cs, uint8_t c);
-
 // Plot message into pixel buffer
-void interface_plotMessage(uint8_t *fb, interface_colorscheme_t cs, char *message, int message_cols, int message_rows);
+void interface_plotMessage(uint8_t *fb, const interface_colorscheme_t cs, char *message, const uint8_t message_cols, const uint8_t message_rows);
 
 #if INTERFACE_TOUCH
 typedef enum interface_device_t {
