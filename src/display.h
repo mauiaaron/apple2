@@ -99,7 +99,7 @@ void display_reset(void);
  * adaptors which color normal text and MouseText differently.  I had one
  * once for a //c.
  */
-void display_loadFont(int first, int qty, const uint8_t *data, int mode);
+void display_loadFont(const uint8_t start, const uint8_t qty, const uint8_t *data, font_mode_t mode);
 
 /*
  * Toggles FLASHing text between NORMAL and INVERSE character sets.
@@ -132,6 +132,11 @@ void display_plotLine(uint8_t *fb, const uint8_t col, const uint8_t row, const i
 void display_plotMessage(uint8_t *fb, const interface_colorscheme_t cs, const char *message, const uint8_t message_cols, const uint8_t message_rows);
 
 // ----------------------------------------------------------------------------
+
+/*
+ * Current dominant screen mode, TEXT or MIXED/HIRES
+ */
+drawpage_mode_t display_currentDrawpageMode(uint32_t currswitches);
 
 /*
  * Set TEXT/HIRES update callback(s).
