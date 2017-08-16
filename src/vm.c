@@ -804,7 +804,7 @@ GLUE_C_READ(iie_altchar_off)
 {
     if (softswitches & SS_ALTCHAR) {
         softswitches &= ~SS_ALTCHAR;
-        display_loadFont(0x40,0x40,ucase_glyphs,3);
+        display_loadFont(/*start:*/0x40, /*qty:*/0x40, /*data:*/ucase_glyphs, FONT_MODE_FLASH);
         video_setDirty(A2_DIRTY_FLAG);
     }
     return floating_bus();
@@ -814,8 +814,8 @@ GLUE_C_READ(iie_altchar_on)
 {
     if (!(softswitches & SS_ALTCHAR)) {
         softswitches |= SS_ALTCHAR;
-        display_loadFont(0x40,0x20,mousetext_glyphs,1);
-        display_loadFont(0x60,0x20,lcase_glyphs,2);
+        display_loadFont(/*start:*/0x40, /*qty:*/0x20, /*data:*/mousetext_glyphs, FONT_MODE_MOUSETEXT);
+        display_loadFont(/*start:*/0x60, /*qty:*/0x20, /*data:*/lcase_glyphs, FONT_MODE_INVERSE);
         video_setDirty(A2_DIRTY_FLAG);
     }
     return floating_bus();
@@ -970,11 +970,11 @@ static void _initialize_iie_switches(void) {
 }
 
 static void _initialize_font(void) {
-    display_loadFont(0x00,0x40,ucase_glyphs,2);
-    display_loadFont(0x40,0x40,ucase_glyphs,3);
-    display_loadFont(0x80,0x40,ucase_glyphs,0);
-    display_loadFont(0xC0,0x20,ucase_glyphs,0);
-    display_loadFont(0xE0,0x20,lcase_glyphs,0);
+    display_loadFont(/*start:*/0x00, /*qty:*/0x40, /*data:*/ucase_glyphs, FONT_MODE_INVERSE);
+    display_loadFont(/*start:*/0x40, /*qty:*/0x40, /*data:*/ucase_glyphs, FONT_MODE_FLASH);
+    display_loadFont(/*start:*/0x80, /*qty:*/0x40, /*data:*/ucase_glyphs, FONT_MODE_NORMAL);
+    display_loadFont(/*start:*/0xC0, /*qty:*/0x20, /*data:*/ucase_glyphs, FONT_MODE_NORMAL);
+    display_loadFont(/*start:*/0xE0, /*qty:*/0x20, /*data:*/lcase_glyphs, FONT_MODE_NORMAL);
 }
 
 static void _initialize_apple_ii_memory(void) {

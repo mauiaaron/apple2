@@ -37,6 +37,17 @@ typedef enum color_mode_t {
 } color_mode_t;
 
 /*
+ * Font mode
+ */
+typedef enum font_mode_t {
+    FONT_MODE_NORMAL=0,
+    FONT_MODE_MOUSETEXT,
+    FONT_MODE_INVERSE,
+    FONT_MODE_FLASH,
+    NUM_FONT_MODES,
+} font_mode_t;
+
+/*
  * Graphics mode
  */
 typedef enum drawpage_mode_t {
