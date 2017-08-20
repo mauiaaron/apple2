@@ -172,7 +172,7 @@ void reinitialize(void) {
 
 void timing_initialize(void) {
 #if !TESTING
-#   ifdef __APPLE__
+#   if (TARGET_OS_MAC || TARGET_OS_PHONE)
 #       warning FIXME TODO : this assert is firing on iOS port ... but the assert is valid ... fix soon 
 #   else
     assert(cpu_isPaused() || (pthread_self() == cpu_thread_id));
@@ -284,7 +284,7 @@ static void *cpu_thread(void *dummyptr) {
 cpu_runloop:
     do
     {
-        LOG("CPUTHREAD %lu LOCKING FOR MAYBE INITIALIZING AUDIO ...", cpu_thread_id);
+        LOG("CPUTHREAD %lu LOCKING FOR MAYBE INITIALIZING AUDIO ...", (unsigned long)cpu_thread_id);
         pthread_mutex_lock(&interface_mutex);
         if (emul_reinitialize_audio) {
             emul_reinitialize_audio = false;

@@ -92,36 +92,6 @@ AC_SUBST(testvm_ASM_O)
 AC_SUBST([AM_CFLAGS])
 
 
-dnl OS Check
-AC_EGREP_CPP(unsupported_, [
-#if defined(__ANDROID__)
-unsupported_for_now
-#elif __APPLE__
-unsupported_for_now
-    #include "TargetConditionals.h"
-    #if TARGET_OS_SIMULATOR
-    #elif TARGET_OS_IPHONE
-    #elif TARGET_OS_MAC
-    #else
-    #endif
-#elif __linux
-linux
-#elif __unix
-unix
-#elif __posix
-posix
-#else
-unknown
-#endif
-], [
-    AC_MSG_CHECKING([Operating System ])
-    AC_MSG_RESULT([unsupported])
-    AC_MSG_ERROR([Apparently you have an unsupported OS, build aborted])
-], [
-    AC_MSG_CHECKING([Operating System ])
-    AC_MSG_RESULT([supported])
-])
-
 dnl ASM underscore linking test
 AC_TRY_LINK([asm("_glibc_foobar:");], [glibc_foobar()], [
     AC_MSG_NOTICE([Underscores in assembly linkage allowed...])
@@ -132,6 +102,12 @@ AC_TRY_LINK([asm("_glibc_foobar:");], [glibc_foobar()], [
 
 
 dnl ---------------------------------------------------------------------------
+
+dnl CLI builds extra search areas ...
+CPPFLAGS="$CPPFLAGS -I/opt/local/include"
+CFLAGS="$CFLAGS -I/opt/local/include"
+CXXFLAGS="$CXXFLAGS -I/opt/local/include"
+LDFLAGS="$LDFLAGS -L/opt/local/lib"
 
 # Sometimes Flex is installed as Lex, e.g., NetBSD.
 AC_CHECK_PROG([FLEX], [flex lex], [flex])

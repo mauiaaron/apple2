@@ -1489,7 +1489,11 @@ void c_interface_keyboard_layout()
 static pthread_mutex_t classic_interface_lock = PTHREAD_MUTEX_INITIALIZER;
 static pthread_t interface_thread_id = 0;
 
-static void *interface_thread(void *current_key)
+typedef struct interface_key_s {
+    int current_key;
+} interface_key_s;
+
+static void *interface_thread(void *data)
 {
     interface_thread_id = pthread_self();
 
@@ -1504,7 +1508,9 @@ static void *interface_thread(void *current_key)
     disk_path[PATH_MAX-1] = '\0';
     FREE(path);
 
-    switch ((__SWORD_TYPE)current_key) {
+    interface_key_s *interface_key = (interface_key_s *)data;
+
+    switch (interface_key->current_key) {
     case kF1:
         c_interface_select_diskette( 0 );
         break;
@@ -1550,12 +1556,15 @@ static void *interface_thread(void *current_key)
 
 void c_interface_begin(int current_key)
 {
+    static interface_key_s interface_key = { 0 };
+
     if (interface_thread_id) {
         return;
     }
     pthread_mutex_lock(&classic_interface_lock);
     interface_thread_id=1; // interface thread starting ...
-    pthread_create(&interface_thread_id, NULL, (void *)&interface_thread, (void *)((__SWORD_TYPE)current_key));
+    interface_key.current_key = current_key;
+    pthread_create(&interface_thread_id, NULL, (void *)&interface_thread, &interface_key);
     pthread_detach(interface_thread_id);
 }
 

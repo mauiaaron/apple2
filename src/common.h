@@ -16,21 +16,6 @@
 #   define _GNU_SOURCE 1
 #endif
 
-#ifdef __APPLE__
-#   warning DEFINING CUSTOM TEMP_FAILURE_RETRY(x) macro
-#   define TEMP_FAILURE_RETRY(exp) ({ \
-        typeof (exp) _rc; \
-        do { \
-            _rc = (exp); \
-            if (_rc == -1 && (errno == EINTR || errno == EAGAIN) ) { \
-                usleep(10); \
-            } else { \
-                break; \
-            } \
-        } while (1); \
-        _rc; })
-#endif
-
 // custom annotations
 #define INOUT
 #define INPARM
@@ -84,9 +69,11 @@
 
 #include "meta/trace.h"
 
-#ifdef __APPLE__
-#include "darwin-shim.h"
-#import <CoreFoundation/CoreFoundation.h>
+#if __APPLE__
+#   include "meta/darwin-shim.h"
+#   if TARGET_OS_MAC || TARGET_OS_PHONE
+#       import <CoreFoundation/CoreFoundation.h>
+#   endif
 #endif
 
 #if VIDEO_OPENGL
@@ -153,5 +140,20 @@
 // branch prediction
 #define LIKELY(x)   __builtin_expect((x), true)
 #define UNLIKELY(x) __builtin_expect((x), false)
+
+#if !defined(TEMP_FAILURE_RETRY)
+#   define TEMP_FAILURE_RETRY(exp) ({ \
+        typeof (exp) _rc; \
+        do { \
+            _rc = (exp); \
+            if (_rc == -1 && (errno == EINTR || errno == EAGAIN) ) { \
+                usleep(10); \
+            } else { \
+                break; \
+            } \
+        } while (1); \
+        _rc; })
+#endif
+
 
 #endif // whole file

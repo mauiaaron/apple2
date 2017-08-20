@@ -66,7 +66,7 @@ int _a2_asprintf(char **strp, const char *fmt, ...);
 
 #endif
 
-#ifdef __APPLE__
+#if TARGET_OS_MAC || TARGET_OS_PHONE
 #define CFRELEASE(x) \
     do { \
         CFRelease((x)); \

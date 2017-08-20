@@ -9,6 +9,8 @@
  *
  */
 
+#if __APPLE__
+
 #include "common.h"
 #include <mach/mach_time.h>
 
@@ -40,3 +42,6 @@ int my_clock_gettime(int clk_id, struct timespec *tp) {
     tp->tv_nsec = diff - (tp->tv_sec * ORWL_GIGA);
     return 0;
 }
+
+#endif
+

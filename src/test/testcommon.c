@@ -71,7 +71,7 @@ void test_common_init(void) {
     c_debugger_set_timeout(0);
 }
 
-#if defined(__APPLE__)
+#if (TARGET_OS_MAC || TARGET_OS_PHONE)
 #   define PATHS_COUNT 8
 char **_copy_paths_mac(const char *fileName) {
     const char *fmts[PATHS_COUNT + 1] = {
@@ -208,7 +208,7 @@ char **_copy_paths_main(const char *fileName) {
 #endif
 
 char **test_copy_disk_paths(const char *fileName) {
-#if defined(__APPLE__)
+#if (TARGET_OS_MAC || TARGET_OS_PHONE)
     return _copy_paths_mac(fileName);
 #else
     return _copy_paths_main(fileName);
@@ -217,7 +217,7 @@ char **test_copy_disk_paths(const char *fileName) {
 
 int test_setup_boot_disk(const char *fileName, int readonly) {
 
-#if defined(__APPLE__)
+#if (TARGET_OS_MAC || TARGET_OS_PHONE)
     char **paths = _copy_paths_mac(fileName);
 #else
     char **paths = _copy_paths_main(fileName);

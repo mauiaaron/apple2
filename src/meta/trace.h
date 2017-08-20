@@ -21,7 +21,7 @@
 #define TRACE_TOUCH 0
 
 #if !defined(__linux__)
-#   warning Linux-specific function call tracing and general profiling not enabled
+// TODO FIXME ... implement systrace ...
 #else
 
 extern void _trace_cleanup(void *token);

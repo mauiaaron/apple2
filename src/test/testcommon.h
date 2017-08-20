@@ -46,7 +46,7 @@ void sha1_to_str(const uint8_t * const md, char *buf);
 static inline int ASSERT_SHA(const char *SHA_STR) {
     uint8_t md[SHA_DIGEST_LENGTH];
 
-    uint8_t fb = MALLOC(SCANWIDTH*SCANHEIGHT);
+    uint8_t *fb = MALLOC(SCANWIDTH*SCANHEIGHT);
     display_renderStagingFramebuffer(fb);
     SHA1(fb, SCANWIDTH*SCANHEIGHT, md);
     FREE(fb);

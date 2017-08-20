@@ -110,7 +110,7 @@ void audio_shutdown(void) {
 void audio_pause(void) {
     // CPU thread owns audio lifecycle (see note above)
     // Deadlock on Kindle Fire 1st Gen if audio_pause() and audio_resume() happen off CPU thread ...
-#ifdef __APPLE__
+#if TARGET_OS_MAC || TARGET_OS_PHONE
 #   warning FIXME TODO : this assert is firing on iOS port ... but the assert is valid ... fix soon 
 #else
     assert(pthread_self() == cpu_thread_id);

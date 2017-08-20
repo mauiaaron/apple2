@@ -44,7 +44,7 @@ static void _init_common(void) {
 static __attribute__((constructor)) void __init_common(void) {
     emulator_registerStartupCallback(CTOR_PRIORITY_FIRST, &_init_common);
 }
-#elif defined(ANDROID) || defined(__APPLE__)
+#elif defined(ANDROID) || (TARGET_OS_MAC || TARGET_OS_PHONE)
     // data_dir is set up elsewhere
 #else
 #   error "Specify a CONFIG_DATADIR and PACKAGE_NAME"
@@ -237,7 +237,7 @@ bool emulator_loadState(int fd, int fdA, int fdB) {
         }
 
         if (UNLIKELY(filePos != fileSiz)) {
-            LOG("OOPS, state file read: %lu total: %lu", filePos, fileSiz);
+            LOG("OOPS, state file read: %lu total: %lu", (unsigned long)filePos, (unsigned long)fileSiz);
         }
 
         loaded = true;
@@ -375,7 +375,7 @@ void emulator_start(void) {
     c_keys_set_key(kF8); // show credits before emulation start
 #endif
 
-#if !defined(__APPLE__) && !defined(ANDROID)
+#if !(TARGET_OS_MAC || TARGET_OS_PHONE) && !defined(ANDROID)
     video_init();
 #endif
 
@@ -394,7 +394,7 @@ bool emulator_isShuttingDown(void) {
     return emulatorShuttingDown;
 }
 
-#if !defined(__APPLE__) && !defined(ANDROID)
+#if !(TARGET_OS_MAC || TARGET_OS_PHONE) && !defined(ANDROID)
 int main(int _argc, char **_argv) {
     argc = _argc;
     argv = _argv;

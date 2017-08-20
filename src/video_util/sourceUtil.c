@@ -58,7 +58,7 @@ static demoSource *srcLoadSource(const char *filepathname) {
 
 demoSource *glshader_createSource(const char *fileName) {
     demoSource *src = NULL;
-#if defined(__APPLE__)
+#if (TARGET_OS_MAC || TARGET_OS_PHONE)
     CFBundleRef mainBundle = CFBundleGetMainBundle();
     CFStringRef fileString = CFStringCreateWithCString(/*allocator*/NULL, fileName, CFStringGetSystemEncoding());
     CFURLRef fileURL = CFBundleCopyResourceURL(mainBundle, fileString, NULL, NULL);

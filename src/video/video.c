@@ -29,7 +29,7 @@ void video_init(void) {
     video_initialized = true;
 
     assert(pthread_self() != cpu_thread_id);
-    LOG("(re)setting render_thread_id : %ld -> %ld", render_thread_id, pthread_self());
+    LOG("(re)setting render_thread_id : %lu -> %lu", (unsigned long)render_thread_id, (unsigned long)pthread_self());
     render_thread_id = pthread_self();
 
     video_clear();
@@ -38,7 +38,7 @@ void video_init(void) {
 }
 
 void _video_setRenderThread(pthread_t id) {
-    LOG("setting render_thread_id : %ld -> %ld", render_thread_id, id);
+    LOG("setting render_thread_id : %lu -> %lu", (unsigned long)render_thread_id, (unsigned long)id);
     render_thread_id = id;
 }
 
