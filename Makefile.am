@@ -62,12 +62,13 @@ apple2ix_SOURCES = \
 	src/joystick.c \
 	src/json_parse.c \
 	src/keys.c \
-	src/memmngt.c \
+	src/meta/darwin-shim.c \
 	src/meta/debug.l \
 	src/meta/debugger.c \
-	src/meta/opcodes.c \
 	src/meta/lintrace.c \
 	src/meta/log.c \
+	src/meta/memmngt.c \
+	src/meta/opcodes.c \
 	src/misc.c \
 	src/prefs.c \
 	src/rom.c \
