@@ -44,18 +44,20 @@ void log_outputString(const char * const str);
         \
         char *syserr_str = NULL; \
         char *glerr_str = NULL; \
+        int ignored; \
         if (_err) { \
-            asprintf(&syserr_str, " (syserr:%s)", strerror(_err)); \
+            ignored = asprintf(&syserr_str, " (syserr:%s)", strerror(_err)); \
         } \
         if (_glerr) { \
-            asprintf(&glerr_str, " (glerr:%04X)", _glerr); \
+            ignored = asprintf(&glerr_str, " (glerr:%04X)", _glerr); \
         } \
         \
         char *buf0 = NULL; \
-        asprintf(&buf0, __VA_ARGS__); \
+        ignored = asprintf(&buf0, __VA_ARGS__); \
         \
         char *buf = NULL; \
-        asprintf(&buf, "%s:%d (%s) -%s%s %s", _MYFILE_, __LINE__, __func__, (syserr_str ? : ""), (glerr_str ? : ""), buf0); \
+        ignored = asprintf(&buf, "%s:%d (%s) -%s%s %s", _MYFILE_, __LINE__, __func__, (syserr_str ? : ""), (glerr_str ? : ""), buf0); \
+        (void)ignored; \
         \
         log_outputString(buf); \
         \
