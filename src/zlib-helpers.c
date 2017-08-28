@@ -390,7 +390,7 @@ const char *zlib_deflate_buffer(const uint8_t *src, const int src_bytescount, ui
         ASPRINTF(&gzPath, "%s/tmp.img", data_dir);
         assert(gzPath != NULL);
 
-        TEMP_FAILURE_RETRY(fd_own = open(gzPath, O_RDWR|O_CREAT|O_TRUNC));
+        TEMP_FAILURE_RETRY(fd_own = open(gzPath, O_RDWR|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR));
         if (fd_own == -1) {
             LOG("OOPS could not open temp image path : %s", gzPath);
             break;
