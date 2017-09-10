@@ -22,6 +22,8 @@ int64_t (*interface_onTouchEvent)(interface_touch_event_t action, int pointer_co
 
 static uint8_t *stagingFB = NULL;
 
+static bool isShowing = false;
+
 static char disk_path[PATH_MAX] = { 0 };
 
 // 2015/04/12 : This was legacy code for rendering the menu interfaces on desktop Linux. Portions here are resurrected
@@ -1512,10 +1514,12 @@ static void *interface_thread(void *data)
 
     switch (interface_key->current_key) {
     case kF1:
+        isShowing = true;
         c_interface_select_diskette( 0 );
         break;
 
     case kF2:
+        isShowing = true;
         c_interface_select_diskette( 1 );
         break;
 
@@ -1528,18 +1532,22 @@ static void *interface_thread(void *data)
         break;
 
     case kF5:
+        isShowing = true;
         c_interface_keyboard_layout();
         break;
 
     case kF7:
+        isShowing = true;
         c_interface_debugging(stagingFB);
         break;
 
     case kF8:
+        isShowing = true;
         c_interface_credits();
         break;
 
     case kF10:
+        isShowing = true;
         c_interface_parameters();
         break;
 
@@ -1550,6 +1558,7 @@ static void *interface_thread(void *data)
     cpu_resume();
 
     interface_thread_id = 0;
+    isShowing = false;
     pthread_mutex_unlock(&classic_interface_lock);
     return NULL;
 }
@@ -1566,6 +1575,10 @@ void c_interface_begin(int current_key)
     interface_key.current_key = current_key;
     pthread_create(&interface_thread_id, NULL, (void *)&interface_thread, &interface_key);
     pthread_detach(interface_thread_id);
+}
+
+bool interface_isShowing(void) {
+    return isShowing;
 }
 
 #endif
