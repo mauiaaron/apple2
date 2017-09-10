@@ -392,38 +392,22 @@ static void _initialize_color() {
     colormap[ COLOR_FLASHING_WHITE].green = 255;
     colormap[ COLOR_FLASHING_WHITE].blue  = 255;
 
-    colormap[0x00].red = 0; colormap[0x00].green = 0;
-    colormap[0x00].blue = 0;   /* Black */
-    colormap[0x10].red = 195; colormap[0x10].green = 0;
-    colormap[0x10].blue = 48;  /* Magenta */
-    colormap[0x20].red = 0; colormap[0x20].green = 0;
-    colormap[0x20].blue = 130; /* Dark Blue */
-    colormap[0x30].red = 166; colormap[0x30].green = 52;
-    colormap[0x30].blue = 170; /* Purple */
-    colormap[0x40].red = 0; colormap[0x40].green = 146;
-    colormap[0x40].blue = 0;   /* Dark Green */
-    colormap[0x50].red = 105; colormap[0x50].green = 105;
-    colormap[0x50].blue = 105; /* Dark Grey*/
-    colormap[0x60].red = 24; colormap[0x60].green = 113;
-    colormap[0x60].blue = 255; /* Medium Blue */
-    colormap[0x70].red = 12; colormap[0x70].green = 190;
-    colormap[0x70].blue = 235; /* Light Blue */
-    colormap[0x80].red = 150; colormap[0x80].green = 85;
-    colormap[0x80].blue = 40; /* Brown */
-    colormap[0x90].red = 255; colormap[0xa0].green = 24;
-    colormap[0x90].blue = 44; /* Orange */
-    colormap[0xa0].red = 150; colormap[0xa0].green = 170;
-    colormap[0xa0].blue = 170; /* Light Gray */
-    colormap[0xb0].red = 255; colormap[0xb0].green = 158;
-    colormap[0xb0].blue = 150; /* Pink */
-    colormap[0xc0].red = 0; colormap[0xc0].green = 255;
-    colormap[0xc0].blue = 0; /* Green */
-    colormap[0xd0].red = 255; colormap[0xd0].green = 255;
-    colormap[0xd0].blue = 0; /* Yellow */
-    colormap[0xe0].red = 130; colormap[0xe0].green = 255;
-    colormap[0xe0].blue = 130; /* Aqua */
-    colormap[0xf0].red = 255; colormap[0xf0].green = 255;
-    colormap[0xf0].blue = 255; /* White */
+    colormap[IDX_BLACK    ] = (A2Color_s) { .red = 0,   .green = 0,   .blue = 0   };
+    colormap[IDX_MAGENTA  ] = (A2Color_s) { .red = 195, .green = 0,   .blue = 48  };
+    colormap[IDX_DARKBLUE ] = (A2Color_s) { .red = 0,   .green = 0,   .blue = 130 };
+    colormap[IDX_PURPLE   ] = (A2Color_s) { .red = 166, .green = 52,  .blue = 170 };
+    colormap[IDX_DARKGREEN] = (A2Color_s) { .red = 0,   .green = 146, .blue = 0   };
+    colormap[IDX_DARKGREY ] = (A2Color_s) { .red = 105, .green = 105, .blue = 105 };
+    colormap[IDX_MEDBLUE  ] = (A2Color_s) { .red = 24,  .green = 113, .blue = 255 };
+    colormap[IDX_LIGHTBLUE] = (A2Color_s) { .red = 12,  .green = 190, .blue = 235 };
+    colormap[IDX_BROWN    ] = (A2Color_s) { .red = 150, .green = 85,  .blue = 40  };
+    colormap[IDX_ORANGE   ] = (A2Color_s) { .red = 255, .green = 24,  .blue = 44  };
+    colormap[IDX_LIGHTGREY] = (A2Color_s) { .red = 150, .green = 170, .blue = 170 };
+    colormap[IDX_PINK     ] = (A2Color_s) { .red = 255, .green = 158, .blue = 150 };
+    colormap[IDX_GREEN    ] = (A2Color_s) { .red = 0,   .green = 255, .blue = 0   };
+    colormap[IDX_YELLOW   ] = (A2Color_s) { .red = 255, .green = 255, .blue = 0   };
+    colormap[IDX_AQUA     ] = (A2Color_s) { .red = 130, .green = 255, .blue = 130 };
+    colormap[IDX_WHITE    ] = (A2Color_s) { .red = 255, .green = 255, .blue = 255 };
 
     /* mirror of lores colormap optimized for dhires code */
     colormap[0x00].red = 0; colormap[0x00].green = 0;

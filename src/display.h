@@ -21,6 +21,23 @@ typedef struct A2Color_s {
     uint8_t blue;
 } A2Color_s;
 
+#define IDX_BLACK     0x00
+#define IDX_MAGENTA   0x10
+#define IDX_DARKBLUE  0x20
+#define IDX_PURPLE    0x30
+#define IDX_DARKGREEN 0x40
+#define IDX_DARKGREY  0x50
+#define IDX_MEDBLUE   0x60
+#define IDX_LIGHTBLUE 0x70
+#define IDX_BROWN     0x80
+#define IDX_ORANGE    0x90
+#define IDX_LIGHTGREY 0xa0
+#define IDX_PINK      0xb0
+#define IDX_GREEN     0xc0
+#define IDX_YELLOW    0xd0
+#define IDX_AQUA      0xe0
+#define IDX_WHITE     0xf0
+
 /*
  * Reference to the internal 8bit-indexed color format
  */
