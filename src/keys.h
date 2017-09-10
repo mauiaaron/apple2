@@ -148,6 +148,8 @@ int c_keys_is_shifted();
 int c_keys_ascii_to_scancode(int ch);
 void c_keys_handle_input(int scancode, int pressed, int is_cooked);
 
+uint8_t keys_apple2ASCII(uint8_t c, OUTPARM font_mode_t *mode);
+
 #if INTERFACE_TOUCH
 // keyboard read callback
 extern void (*keydriver_keyboardReadCallback)(void);

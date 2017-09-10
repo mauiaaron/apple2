@@ -140,6 +140,44 @@ static int scode_map[MAP_SIZE] =
   /*p*/25, /*q*/16, /*r*/19, /*s*/31, /*t*/20, /*u*/22, /*v*/47, /*w*/17,       /* 112-119 */
   /*x*/45, /*y*/21, /*z*/44, /*{*/26, /*|*/43, /*}*/27, /*~*/41, SCODE_DEL };   /* 120-127 */
 
+uint8_t keys_apple2ASCII(uint8_t c, OUTPARM font_mode_t *mode) {
+    if (c < 0x20) {
+        *mode = FONT_MODE_INVERSE;
+        return c + 0x40;                // Apple //e (0x00-0x1F) -> ASCII (0x40-0x5F)
+    } else if (c < 0x40) {
+        *mode = FONT_MODE_INVERSE;
+        return c;                       // Apple //e (0x20-0x3F) -> ASCII (0x20-0x3F)
+    } else if (c < 0x60) {
+        if (/*altchar on:*/(softswitches & SS_ALTCHAR)) {
+            *mode = FONT_MODE_MOUSETEXT;
+            return c+0x40;
+        } else {
+            *mode = FONT_MODE_FLASH;
+            return c;                   // Apple //e (0x40-0x5F) -> ASCII (0x40-0x5F)
+        }
+    } else if (c < 0x80) {
+        if (/*altchar on:*/(softswitches & SS_ALTCHAR)) {
+            *mode = FONT_MODE_INVERSE;
+            return c;                   // Apple //e (0x60-0x7F) -> ASCII (0x60-0x7F)
+        } else {
+            *mode = FONT_MODE_FLASH;
+            return c - 0x40;            // Apple //e (0x60-0x7F) -> ASCII (0x20-0x3F)
+        }
+    } else if (c < 0xA0) {
+        *mode = FONT_MODE_NORMAL;
+        return c - 0x40;                // Apple //e (0x80-0x9F) -> ASCII (0x40-0x5F)
+    } else if (c < 0xC0) {
+        *mode = FONT_MODE_NORMAL;
+        return c - 0x80;                // Apple //e (0xA0-0xBF) -> ASCII (0x20-0x3F)
+    } else if (c < 0xE0) {
+        *mode = FONT_MODE_NORMAL;
+        return c - 0x80;                // Apple //e (0xC0-0xDF) -> ASCII (0x40-0x5F)
+    } else {
+        *mode = FONT_MODE_NORMAL;
+        return c - 0x80;                // Apple //e (0xE0-0xFF) -> ASCII (0x60-0x7F)
+    }
+}
+
 int c_keys_ascii_to_scancode(int c)
 {
     return scode_map[c&0x7f];
