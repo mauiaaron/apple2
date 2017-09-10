@@ -70,6 +70,7 @@ typedef enum font_mode_t {
 typedef enum drawpage_mode_t {
     DRAWPAGE_TEXT = 1,
     DRAWPAGE_HIRES,
+    DRAWPAGE_MODE_CHANGE,
     NUM_DRAWPAGE_MODES,
 } drawpage_mode_t;
 

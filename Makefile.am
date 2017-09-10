@@ -36,6 +36,7 @@ VIDEO_SRC = \
 	src/video/glnode.c \
 	src/video/glhudmodel.c \
 	src/video/glalert.c \
+	src/video/ncvideo.c \
 	src/video/video.c \
 	src/video/xvideo.c \
 	src/video_util/matrixUtil.c \

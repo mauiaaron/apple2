@@ -60,8 +60,10 @@ static const int kVSyncLines    =     4; // lines per VSync duration
 static uint8_t video__odd_colors[2] = { COLOR_LIGHT_PURPLE, COLOR_LIGHT_BLUE };
 static uint8_t video__even_colors[2] = { COLOR_LIGHT_GREEN, COLOR_LIGHT_RED };
 
+// TODO FIXME : support linked list of callbacks here ...
 static display_update_fn textCallbackFn = NULL;
 static display_update_fn hiresCallbackFn = NULL;
+static display_update_fn modeCallbackFn = NULL;
 
 // 40col/80col/lores/hires/dhires line offsets
 static uint16_t video__line_offset[TEXT_ROWS] = {
@@ -1264,6 +1266,8 @@ void display_setUpdateCallback(drawpage_mode_t mode, display_update_fn updateFn)
         textCallbackFn = updateFn;
     } else if (mode == DRAWPAGE_HIRES) {
         hiresCallbackFn = updateFn;
+    } else if (mode == DRAWPAGE_MODE_CHANGE) {
+        modeCallbackFn = updateFn;
     } else {
         assert(false);
     }
@@ -1372,6 +1376,9 @@ bool video_isDirty(unsigned long flags) {
 }
 
 unsigned long video_setDirty(unsigned long flags) {
+    if (modeCallbackFn) {
+        modeCallbackFn((pixel_delta_t){ 0 });
+    }
     return __sync_fetch_and_or(&_vid_dirty, flags);
 }
 

@@ -146,6 +146,7 @@ dnl Video ...
 AC_PATH_XTRA
 
 
+video_output="VIDEO RENDERERS:"
 VIDEO_O="src/video/video.o"
 testcpu_VIDEO_O="src/video/video.o"
 testdisk_VIDEO_O="src/video/video.o"
@@ -163,7 +164,7 @@ AC_CHECK_HEADER(GL/glew.h, [
                 AC_SEARCH_LIBS(glewInit, [GLEW glew], [
 
                     AS_IF([test "x$enable_opengl" != "xno"], [
-
+                        video_output="$video_output OpenGL"
                         AC_DEFINE(VIDEO_OPENGL, 1, [Building with OpenGL support])
                         AC_DEFINE(USE_GLUT, 1, [Use GLUT library])
                         VIDEO_O="$VIDEO_O src/video/glvideo.o src/video/glnode.o src/video/glalert.o src/video/glhudmodel.o src/video/glutinput.o src/video_util/matrixUtil.o src/video_util/modelUtil.o src/video_util/sourceUtil.o src/video_util/vectorUtil.o"
@@ -175,7 +176,7 @@ AC_CHECK_HEADER(GL/glew.h, [
                         testtrace_VIDEO_O="$testtrace_VIDEO_O src/video/testtrace-glvideo.o src/video/testtrace-glnode.o src/video/testtrace-glalert.o src/video/testtrace-glhudmodel.o src/video/testtrace-glutinput.o src/video_util/testtrace-matrixUtil.o src/video_util/testtrace-modelUtil.o src/video_util/testtrace-sourceUtil.o src/video_util/testtrace-vectorUtil.o"
                         testui_VIDEO_O="$testui_VIDEO_O src/video/testui-glvideo.o src/video/testui-glnode.o src/video/testui-glalert.o src/video/testui-glhudmodel.o src/video/testui-glutinput.o src/video_util/testui-matrixUtil.o src/video_util/testui-modelUtil.o src/video_util/testui-sourceUtil.o src/video_util/testui-vectorUtil.o"
                         testvm_VIDEO_O="$testvm_VIDEO_O src/video/testvm-glvideo.o src/video/testvm-glnode.o src/video/testvm-glalert.o src/video/testvm-glhudmodel.o src/video/testvm-glutinput.o src/video_util/testvm-matrixUtil.o src/video_util/testvm-modelUtil.o src/video_util/testvm-sourceUtil.o src/video_util/testvm-vectorUtil.o"
-                        AC_MSG_RESULT([Building emulator with OpenGL support, w00t!])
+                        AC_MSG_RESULT([configure: NOTE: Building emulator with OpenGL support, w00t!])
                     ])
                 ], [
                     AS_IF([test "x$enable_opengl" != "xno"], [
@@ -213,6 +214,7 @@ AC_CHECK_HEADER(X11/XKBlib.h, [
             ], [
                 AC_MSG_WARN([Building emulator without support of X11 MITSHM extension...])
             ], [-lX11])
+            video_output="$video_output X11"
             VIDEO_O="$VIDEO_O src/video/xvideo.o"
             dnl HACK there's gotta be a better way ... without this verbosity, CFLAGS are not correct (lacking -DTESTING=1 , etc) if we don't specify specific obj files for test binaries
             testcpu_VIDEO_O="$testcpu_VIDEO_O src/video/testcpu-xvideo.o"
@@ -222,7 +224,7 @@ AC_CHECK_HEADER(X11/XKBlib.h, [
             testtrace_VIDEO_O="$testtrace_VIDEO_O src/video/testtrace-xvideo.o"
             testui_VIDEO_O="$testui_VIDEO_O src/video/testui-xvideo.o"
             testvm_VIDEO_O="$testvm_VIDEO_O src/video/testvm-xvideo.o"
-            AC_MSG_RESULT([Building emulator with X11 support])
+            AC_MSG_RESULT([configure: NOTE: Building emulator with X11 support])
         ])
     ], [
         AS_IF([test "x$enable_x11" != "xno"], [
@@ -233,6 +235,46 @@ AC_CHECK_HEADER(X11/XKBlib.h, [
     AS_IF([test "x$enable_x11" != "xno"], [
         AC_MSG_WARN([Did not find X11 headers, X11 support is disabled ...])
     ])
+])
+
+
+AC_ARG_ENABLE([ncurses], AS_HELP_STRING([--enable-ncurses], [Enable ncurses graphics output (autodetected)]))
+AS_IF([test "x$enable_ncurses" != "xno"], [
+    AC_CHECK_HEADERS(ncurses.h ncursesw/ncurses.h ncurses/ncurses.h ncurses/curses.h curses.h, [
+        AC_SEARCH_LIBS(initscr, [ncursesw], [
+            found_ncurses="1"
+            video_output="$video_output terminal"
+            VIDEO_O="$VIDEO_O src/video/ncvideo.o"
+            dnl HACK there's gotta be a better way ... without this verbosity, CFLAGS are not correct (lacking -DTESTING=1 , etc) if we don't specify specific obj files for test binaries
+            testcpu_VIDEO_O="$testcpu_VIDEO_O src/video/testcpu-ncvideo.o"
+            testdisk_VIDEO_O="$testdisk_VIDEO_O src/video/testdisk-ncvideo.o"
+            testdisplay_VIDEO_O="$testdisplay_VIDEO_O src/video/testdisplay-ncvideo.o"
+            testprefs_VIDEO_O="$testprefs_VIDEO_O src/video/testprefs-ncvideo.o"
+            testtrace_VIDEO_O="$testtrace_VIDEO_O src/video/testtrace-ncvideo.o"
+            testui_VIDEO_O="$testui_VIDEO_O src/video/testui-ncvideo.o"
+            testvm_VIDEO_O="$testvm_VIDEO_O src/video/testvm-ncvideo.o"
+            AC_DEFINE(NCURSES_UTF8, 1, [ncurses supports UTF-8])
+            AC_MSG_RESULT([configure: NOTE: Building emulator with ncurses (UTF-8) support])
+        ], [
+            AC_SEARCH_LIBS(initscr, [ncurses], [
+                found_ncurses="1"
+                video_output="$video_output terminal"
+                VIDEO_O="$VIDEO_O src/video/ncvideo.o"
+                testcpu_VIDEO_O="$testcpu_VIDEO_O src/video/testcpu-ncvideo.o"
+                testdisk_VIDEO_O="$testdisk_VIDEO_O src/video/testdisk-ncvideo.o"
+                testdisplay_VIDEO_O="$testdisplay_VIDEO_O src/video/testdisplay-ncvideo.o"
+                testprefs_VIDEO_O="$testprefs_VIDEO_O src/video/testprefs-ncvideo.o"
+                testtrace_VIDEO_O="$testtrace_VIDEO_O src/video/testtrace-ncvideo.o"
+                testui_VIDEO_O="$testui_VIDEO_O src/video/testui-ncvideo.o"
+                testvm_VIDEO_O="$testvm_VIDEO_O src/video/testvm-ncvideo.o"
+                AC_MSG_RESULT([configure: NOTE: Building emulator with ncurses support])
+            ])
+        ])
+        break
+    ])
+])
+AS_IF([test "x$found_ncurses" != "x1"], [
+    AC_MSG_WARN([Did not find ncurses headers/libraries ... ncurses support is disabled ...])
 ])
 
 
@@ -261,12 +303,14 @@ testvm_AUDIO_O="src/audio/testvm-soundcore.o src/audio/testvm-speaker.o src/audi
 
 AC_ARG_ENABLE([openal], AS_HELP_STRING([--enable-openal], [Enable OpenAL audio output (autodetected)]))
 
+audio_output="AUDIO RENDERERS:"
 AC_CHECK_HEADER(AL/al.h, [
     AC_CHECK_HEADER(AL/alc.h, [
         AC_CHECK_HEADER(AL/alext.h, [
             AC_SEARCH_LIBS(alcOpenDevice, openal, [
                 AS_IF([test "x$enable_openal" != "xno"], [
                     dnl found OpenAL ...
+                    audio_output="$audio_output OpenAL"
                     AUDIO_O="$AUDIO_O src/audio/soundcore-openal.o src/audio/playqueue.o src/audio/alhelpers.o"
                     dnl HACK there's gotta be a better way ... without this verbosity, CFLAGS are not correct (lacking -DTESTING=1 , etc) if we don't specify specific obj files for test binaries
                     testcpu_AUDIO_O="$testcpu_AUDIO_O src/audio/testcpu-soundcore-openal.o src/audio/testcpu-playqueue.o src/audio/testcpu-alhelpers.o"
@@ -276,6 +320,7 @@ AC_CHECK_HEADER(AL/al.h, [
                     testtrace_AUDIO_O="$testtrace_AUDIO_O src/audio/testtrace-soundcore-openal.o src/audio/testtrace-playqueue.o src/audio/testtrace-alhelpers.o"
                     testui_AUDIO_O="$testui_AUDIO_O src/audio/testui-soundcore-openal.o src/audio/testui-playqueue.o src/audio/testui-alhelpers.o"
                     testvm_AUDIO_O="$testvm_AUDIO_O src/audio/testvm-soundcore-openal.o src/audio/testvm-playqueue.o src/audio/testvm-alhelpers.o"
+                    AC_MSG_RESULT([configure: NOTE: Building emulator with OpenAL sound output, w00t!])
                 ])
             ], [
                 AS_IF([test "x$enable_openal" != "xno"], [
@@ -326,3 +371,9 @@ dnl ---------------------------------------------------------------------------
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT
 
+
+AC_MSG_RESULT([])
+AC_MSG_RESULT([Apple //ix emulator A/V configuration:])
+AC_MSG_RESULT([	$video_output])
+AC_MSG_RESULT([	$audio_output])
+AC_MSG_RESULT([])
