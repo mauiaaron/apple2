@@ -35,6 +35,9 @@ extern const char *data_dir;
 extern char **argv;
 extern int argc;
 
+// locale
+extern const char *locale;
+
 //
 // Emulator lifecycle
 //

@@ -15,6 +15,8 @@
 
 #include "common.h"
 
+#include <locale.h>
+
 #define SAVE_MAGICK  "A2VM"
 #define SAVE_MAGICK2 "A2V2"
 #define SAVE_VERSION 2
@@ -32,6 +34,7 @@ static bool emulatorShuttingDown = false;
 const char *data_dir = NULL;
 char **argv = NULL;
 int argc = 0;
+const char *locale = NULL;
 CrashHandler_s *crashHandler = NULL;
 
 #if defined(CONFIG_DATADIR)
@@ -80,7 +83,6 @@ static void _cli_argsToPrefs(void) {
         }
     }
 }
-
 #elif defined(ANDROID) || (TARGET_OS_MAC || TARGET_OS_PHONE)
     // data_dir is set up elsewhere
 #else
@@ -439,6 +441,9 @@ bool emulator_isShuttingDown(void) {
 int main(int _argc, char **_argv) {
     argc = _argc;
     argv = _argv;
+
+    locale = setlocale(LC_ALL, "");
+    LOG("locale is : %s", locale);
 
 #if TESTING
 #   if TEST_CPU
