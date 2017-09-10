@@ -115,6 +115,7 @@ video_animation_s *video_getAnimationDriver(void);
 // Video Backend API
 
 typedef struct video_backend_s {
+    const char *(*name)(void);
     void (*init)(void *context);
     void (*main_loop)(void);
     void (*render)(void);
@@ -142,9 +143,15 @@ enum {
 };
 
 /*
- * Register a video backend at the specific prioritization, regardless of user choice.
+ * Register a video backend at the specific prioritization
  */
 void video_registerBackend(video_backend_s *backend, long prio);
+
+void video_printBackends(FILE *out);
+
+void video_chooseBackend(const char *name);
+
+video_backend_s *video_getCurrentBackend(void);
 
 #endif /* !A2_VIDEO_H */
 

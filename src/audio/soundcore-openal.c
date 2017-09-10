@@ -539,6 +539,10 @@ static long openal_systemShutdown(INOUT AudioContext_s **audio_context) {
     return 0;
 }
 
+static const char *openal_systemName(void) {
+    return "OpenAL";
+}
+
 static long openal_systemSetup(INOUT AudioContext_s **audio_context) {
     assert(*audio_context == NULL);
     assert(voices == NULL);
@@ -625,6 +629,7 @@ static long openal_systemResume(AudioContext_s *audio_context) {
 
 static void _init_openal(void) {
     LOG("Initializing OpenAL sound system");
+    openal_audio_backend.name             = &openal_systemName;
     openal_audio_backend.setup            = &openal_systemSetup;
     openal_audio_backend.shutdown         = &openal_systemShutdown;
     openal_audio_backend.pause            = &openal_systemPause;

@@ -138,10 +138,17 @@ static void _glnode_initGLUTPost(void) {
 }
 #endif
 
+static const char *glnode_name(void) {
+    return "OpenGL";
+}
+
 static void glnode_setupNodes(void *ctx) {
     LOG("BEGIN glnode_setupNodes ...");
 
 #if USE_GLUT
+#   if !TEST_CPU
+    joydriver_resetJoystick = &_glutJoystickReset;
+#   endif
     _glnode_initGLUTPre();
 #endif
 
@@ -238,6 +245,7 @@ static void glnode_mainLoop(void) {
 static void _init_glnode_manager(void) {
     LOG("Initializing GLNode manager subsystem");
 
+    glnode_backend.name      = &glnode_name;
     glnode_backend.init      = &glnode_setupNodes;
     glnode_backend.main_loop = &glnode_mainLoop;
     glnode_backend.render    = &glnode_renderNodes;
@@ -246,10 +254,6 @@ static void _init_glnode_manager(void) {
 
 #if INTERFACE_TOUCH
     interface_onTouchEvent = &glnode_onTouchEvent;
-#endif
-
-#if USE_GLUT && !TEST_CPU
-    joydriver_resetJoystick = &_glutJoystickReset;
 #endif
 
     video_registerBackend(&glnode_backend, VID_PRIO_GRAPHICS_GL);

@@ -44,6 +44,43 @@ static void _init_common(void) {
 static __attribute__((constructor)) void __init_common(void) {
     emulator_registerStartupCallback(CTOR_PRIORITY_FIRST, &_init_common);
 }
+
+static void _cli_help(void) {
+    fprintf(stderr, "\n");
+    fprintf(stderr, "Usage: %s [-A <audio>] [-V <video>]\n", argv[0]);
+
+    const char *aname = audio_getCurrentBackend()->name();
+    fprintf(stderr, "\t-A <");
+    audio_printBackends(stderr);
+    fprintf(stderr, "> -- choose audio renderer (default: %s)\n", aname);
+
+    const char *vname = video_getCurrentBackend()->name();
+    fprintf(stderr, "\t-V <");
+    video_printBackends(stderr);
+    fprintf(stderr, "> -- choose video renderer (default: %s)\n", vname);
+
+    fprintf(stderr, "\n");
+}
+
+static void _cli_argsToPrefs(void) {
+    int opt = -1;
+    while ((opt = getopt(argc, argv, "?hA:V:")) != -1) {
+        switch (opt) {
+            case 'A':
+                audio_chooseBackend(optarg);
+                break;
+            case 'V':
+                video_chooseBackend(optarg);
+                break;
+            case '?':
+            case 'h':
+            default:
+                _cli_help();
+                exit(EXIT_FAILURE);
+        }
+    }
+}
+
 #elif defined(ANDROID) || (TARGET_OS_MAC || TARGET_OS_PHONE)
     // data_dir is set up elsewhere
 #else
@@ -371,6 +408,10 @@ void emulator_start(void) {
     prefs_load(); // user prefs
     prefs_sync(NULL);
 
+#if defined(CONFIG_DATADIR)
+    _cli_argsToPrefs();
+#endif
+
 #if defined(INTERFACE_CLASSIC) && !TESTING
     c_keys_set_key(kF8); // show credits before emulation start
 #endif
@@ -439,7 +480,7 @@ int main(int _argc, char **_argv) {
 
     LOG("Emulator exit ...");
 
-    return 0;
+    return EXIT_SUCCESS;
 }
 #endif
 

@@ -111,9 +111,6 @@ bool video_loadState(StateHelper_s *helper) {
 void video_registerBackend(video_backend_s *backend, long order) {
     assert(!video_initialized); // backends cannot be registered after we've picked one to use
 
-    static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
-    pthread_mutex_lock(&mutex);
-
     backend_node_s *node = MALLOC(sizeof(backend_node_s));
     assert(node);
     node->next = NULL;
@@ -134,16 +131,53 @@ void video_registerBackend(video_backend_s *backend, long order) {
     node->next = p;
 
     currentBackend = head->backend;
+}
 
-    pthread_mutex_unlock(&mutex);
+void video_printBackends(FILE *out) {
+    backend_node_s *p = head;
+    int count = 0;
+    while (p) {
+        const char *name = p->backend->name();
+        if (count++) {
+            fprintf(out, "|");
+        }
+        fprintf(out, "%s", name);
+        p = p->next;
+    }
+}
+
+static const char *_null_backend_name(void);
+void video_chooseBackend(const char *name) {
+    if (!name) {
+        name = _null_backend_name();
+    }
+
+    backend_node_s *p = head;
+    while (p) {
+        const char *bname = p->backend->name();
+        if (strcasecmp(name, bname) == 0) {
+            currentBackend = p->backend;
+            LOG("Setting current video backend to %s", name);
+            break;
+        }
+        p = p->next;
+    }
 }
 
 video_animation_s *video_getAnimationDriver(void) {
     return currentBackend->anim;
 }
 
+video_backend_s *video_getCurrentBackend(void) {
+    return currentBackend;
+}
+
 // ----------------------------------------------------------------------------
 // NULL video backend ...
+
+static const char *_null_backend_name(void) {
+    return "none";
+}
 
 static void _null_backend_init(void *context) {
 }
@@ -163,6 +197,7 @@ static void _null_backend_shutdown(void) {
 
 static __attribute__((constructor)) void _init_video(void) {
     static video_backend_s null_backend = { 0 };
+    null_backend.name      = &_null_backend_name;
     null_backend.init      = &_null_backend_init;
     null_backend.main_loop = &_null_backend_main_loop;
     null_backend.render    = &_null_backend_render;

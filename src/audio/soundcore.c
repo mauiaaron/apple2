@@ -34,6 +34,8 @@ typedef struct backend_node_s {
 
 static backend_node_s *head = NULL;
 
+static AudioBackend_s *currentBackend = NULL;
+
 //-----------------------------------------------------------------------------
 
 long audio_createSoundBuffer(INOUT AudioBuffer_s **audioBuffer) {
@@ -82,10 +84,10 @@ bool audio_init(void) {
 
     do {
         if (audioContext) {
-            audio_getCurrentBackend()->shutdown(&audioContext);
+            currentBackend->shutdown(&audioContext);
         }
 
-        long err = audio_getCurrentBackend()->setup((AudioContext_s**)&audioContext);
+        long err = currentBackend->setup((AudioContext_s**)&audioContext);
         if (err) {
             LOG("Failed to create an audio context!");
             break;
@@ -103,7 +105,7 @@ void audio_shutdown(void) {
     if (!audio_isAvailable) {
         return;
     }
-    audio_getCurrentBackend()->shutdown(&audioContext);
+    currentBackend->shutdown(&audioContext);
     audio_isAvailable = false;
 }
 
@@ -118,7 +120,7 @@ void audio_pause(void) {
     if (!audio_isAvailable) {
         return;
     }
-    audio_getCurrentBackend()->pause(audioContext);
+    currentBackend->pause(audioContext);
 }
 
 void audio_resume(void) {
@@ -127,7 +129,7 @@ void audio_resume(void) {
     if (!audio_isAvailable) {
         return;
     }
-    audio_getCurrentBackend()->resume(audioContext);
+    currentBackend->resume(audioContext);
 }
 
 void audio_setLatency(float latencySecs) {
@@ -141,9 +143,6 @@ float audio_getLatency(void) {
 //-----------------------------------------------------------------------------
 
 void audio_registerBackend(AudioBackend_s *backend, long order) {
-    static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
-    pthread_mutex_lock(&mutex);
-
     backend_node_s *node = MALLOC(sizeof(backend_node_s));
     assert(node);
     node->next = NULL;
@@ -163,11 +162,46 @@ void audio_registerBackend(AudioBackend_s *backend, long order) {
     }
     node->next = p;
 
-    pthread_mutex_unlock(&mutex);
+    currentBackend = head->backend;
+}
+
+void audio_printBackends(FILE *out) {
+    backend_node_s *p = head;
+    int count = 0;
+    while (p) {
+        const char *name = p->backend->name();
+        if (count++) {
+            fprintf(out, "|");
+        }
+        fprintf(out, "%s", name);
+        p = p->next;
+    }
+}
+
+static const char *_null_backend_name(void);
+void audio_chooseBackend(const char *name) {
+    if (!name) {
+        name = _null_backend_name();
+    }
+
+    backend_node_s *p = head;
+    while (p) {
+        const char *bname = p->backend->name();
+        if (strcasecmp(name, bname) == 0) {
+            currentBackend = p->backend;
+            LOG("Setting current audio backend to %s", name);
+            break;
+        }
+        p = p->next;
+    }
 }
 
 AudioBackend_s *audio_getCurrentBackend(void) {
-    return head->backend;
+    return currentBackend;
+}
+
+static const char *_null_backend_name(void) {
+    return "none";
 }
 
 static long _null_backend_setup(INOUT AudioContext_s **audio_context) {
@@ -191,6 +225,7 @@ static long _null_backend_resume(AudioContext_s *audio_context) {
 static void _init_soundcore(void) {
     LOG("Initializing audio subsystem");
     static AudioBackend_s null_backend = { { 0 } };
+    null_backend.name     = &_null_backend_name;
     null_backend.setup    = &_null_backend_setup;
     null_backend.shutdown = &_null_backend_shutdown;
     null_backend.pause    = &_null_backend_pause;

@@ -526,6 +526,10 @@ static long opensles_systemShutdown(AudioContext_s **audio_context) {
     return 0;
 }
 
+static const char *opensles_systemName(void) {
+    return "OpenSLES";
+}
+
 static long opensles_systemSetup(INOUT AudioContext_s **audio_context) {
     assert(*audio_context == NULL);
 
@@ -760,6 +764,7 @@ static long opensles_systemResume(AudioContext_s *audio_context) {
 
 static void _init_opensl(void) {
     LOG("Initializing OpenSLES sound system");
+    opensles_audio_backend.name             = &opensles_systemName;
     opensles_audio_backend.setup            = &opensles_systemSetup;
     opensles_audio_backend.shutdown         = &opensles_systemShutdown;
     opensles_audio_backend.pause            = &opensles_systemPause;

@@ -639,6 +639,10 @@ static void _redo_image(void) {
     _size_hints_set_fixed();
 }
 
+static const char *xdriver_name(void) {
+    return "X11";
+}
+
 static void xdriver_init(void *context) {
     XSetWindowAttributes attribs;
     unsigned long attribmask;
@@ -888,6 +892,7 @@ static void _init_xvideo(void) {
 
     static video_backend_s xvideo_backend = { 0 };
     static video_animation_s xdriver_animations = { 0 };
+    xvideo_backend.name      = &xdriver_name;
     xvideo_backend.init      = &xdriver_init;
     xvideo_backend.main_loop = &xdriver_main_loop;
     xvideo_backend.render    = &xdriver_render;
