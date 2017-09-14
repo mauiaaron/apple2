@@ -232,7 +232,7 @@
     [self _savePrefs];
     
 #warning HACK TODO FIXME need to refactor video resetting procedure
-    video_reset();
+    display_reset();
 }
 
 - (IBAction)soundCardChoiceChanged:(id)sender

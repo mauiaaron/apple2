@@ -13,20 +13,21 @@
 #   import "AppDelegate.h"
 #endif
 
-extern int argc;
-extern const char **argv;
+#include "common.h"
 
-int main(int argc_, const char *argv_[])
+int main(int argc_, char *argv_[])
 {
     int retVal = 1;
     argc = argc_;
     argv = argv_;
     
+    cpu_pause();
+    
     @autoreleasepool {
 #if TARGET_OS_IPHONE
         retVal = UIApplicationMain(argc, argv, nil, NSStringFromClass([AppDelegate class]));
 #else
-        retVal = NSApplicationMain(argc, argv);
+        retVal = NSApplicationMain(argc, (const char **)argv);
 #endif
     }
 

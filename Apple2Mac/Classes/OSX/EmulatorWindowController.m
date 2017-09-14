@@ -106,9 +106,10 @@
 {
     cpu_pause();
     timing_toggleCPUSpeed();
-    if (video_animations && video_animations->animation_showCPUSpeed)
+    video_animation_s *anim = video_getAnimationDriver();
+    if (anim && anim->animation_showCPUSpeed)
     {
-        video_animations->animation_showCPUSpeed();
+        anim->animation_showCPUSpeed();
     }
     cpu_resume();
 }
@@ -141,9 +142,10 @@
         [[self pauseItem] setLabel:@"Running"];
         cpu_resume();
     }
-    if (video_animations && video_animations->animation_showPaused)
+    video_animation_s *anim = video_getAnimationDriver();
+    if (anim && anim->animation_showPaused)
     {
-        video_animations->animation_showPaused();
+        anim->animation_showPaused();
     }
 }
 

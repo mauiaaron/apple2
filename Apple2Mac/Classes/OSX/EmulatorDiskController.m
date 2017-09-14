@@ -55,31 +55,47 @@
     
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
     
-    NSString *startupDiskA = [defaults stringForKey:kApple2PrefStartupDiskA];
-    BOOL readOnlyA = [defaults boolForKey:kApple2PrefStartupDiskAProtected];
-    if (startupDiskA)
     {
-        const char *err = disk6_insert(0, [[NSString stringWithFormat:@"%@.gz", startupDiskA] UTF8String], readOnlyA);
-        if (!err)
+        NSString *startupDiskA = [defaults stringForKey:kApple2PrefStartupDiskA];
+        BOOL readOnlyA = [defaults boolForKey:kApple2PrefStartupDiskAProtected];
+        if (startupDiskA)
         {
-            [self.diskInA setStringValue:[[startupDiskA pathComponents] lastObject]];
-            [self.startupLoadDiskA setState:NSOnState];
-            [self.diskAProtection setState:(readOnlyA ? NSOnState : NSOffState) atRow:0 column:0];
-            [self.diskAProtection setState:(!readOnlyA ? NSOnState : NSOffState) atRow:0 column:1];
+            const char *path = [startupDiskA UTF8String];
+            int fdA = -1;
+            TEMP_FAILURE_RETRY(fdA = open(path, readOnlyA ? O_RDONLY : O_RDWR));
+            const char *err = disk6_insert(fdA, 0, path, readOnlyA);
+            if (fdA >= 0) {
+                TEMP_FAILURE_RETRY(close(fdA));
+            }
+            if (!err)
+            {
+                [self.diskInA setStringValue:[[startupDiskA pathComponents] lastObject]];
+                [self.startupLoadDiskA setState:NSOnState];
+                [self.diskAProtection setState:(readOnlyA ? NSOnState : NSOffState) atRow:0 column:0];
+                [self.diskAProtection setState:(!readOnlyA ? NSOnState : NSOffState) atRow:0 column:1];
+            }
         }
     }
     
-    NSString *startupDiskB = [defaults stringForKey:kApple2PrefStartupDiskB];
-    BOOL readOnlyB = [defaults boolForKey:kApple2PrefStartupDiskBProtected];
-    if (startupDiskB)
     {
-        const char *err = disk6_insert(1, [[NSString stringWithFormat:@"%@.gz", startupDiskB] UTF8String], readOnlyB);
-        if (!err)
+        NSString *startupDiskB = [defaults stringForKey:kApple2PrefStartupDiskB];
+        BOOL readOnlyB = [defaults boolForKey:kApple2PrefStartupDiskBProtected];
+        if (startupDiskB)
         {
-            [self.diskInB setStringValue:[[startupDiskB pathComponents] lastObject]];
-            [self.startupLoadDiskB setState:NSOnState];
-            [self.diskBProtection setState:(readOnlyB ? NSOnState : NSOffState) atRow:0 column:0];
-            [self.diskBProtection setState:(!readOnlyB ? NSOnState : NSOffState) atRow:0 column:1];
+            const char *path = [startupDiskB UTF8String];
+            int fdB = -1;
+            TEMP_FAILURE_RETRY(fdB = open(path, readOnlyB ? O_RDONLY : O_RDWR));
+            const char *err = disk6_insert(fdB, 1, path, readOnlyB);
+            if (fdB >= 0) {
+                TEMP_FAILURE_RETRY(close(fdB));
+            }
+            if (!err)
+            {
+                [self.diskInB setStringValue:[[startupDiskB pathComponents] lastObject]];
+                [self.startupLoadDiskB setState:NSOnState];
+                [self.diskBProtection setState:(readOnlyB ? NSOnState : NSOffState) atRow:0 column:0];
+                [self.diskBProtection setState:(!readOnlyB ? NSOnState : NSOffState) atRow:0 column:1];
+            }
         }
     }
 }
@@ -145,27 +161,27 @@
 {
     disk6_eject(drive);
     
-    const char *errMsg = disk6_insert(drive, [path UTF8String], readOnly);
+    int fd = -1;
+    TEMP_FAILURE_RETRY(fd = open([path UTF8String], readOnly ? O_RDONLY : O_RDWR));
+    const char *errMsg = disk6_insert(fd, drive, [path UTF8String], readOnly);
+    if (fd >= 0) {
+        TEMP_FAILURE_RETRY(close(fd));
+    }
     if (errMsg)
     {
-        path = [NSString stringWithFormat:@"%@.gz", path];
-        errMsg = disk6_insert(drive, [path UTF8String], readOnly);
-        if (errMsg)
+        NSAlert *alert = [NSAlert alertWithError:[NSError errorWithDomain:[NSString stringWithUTF8String:errMsg] code:-1 userInfo:nil]];
+        [alert beginSheetModalForWindow:[self disksWindow] completionHandler:nil];
+        if (!drive)
         {
-            NSAlert *alert = [NSAlert alertWithError:[NSError errorWithDomain:[NSString stringWithUTF8String:errMsg] code:-1 userInfo:nil]];
-            [alert beginSheetModalForWindow:[self disksWindow] completionHandler:nil];
-            if (!drive)
-            {
-                [[self diskInA] setStringValue:NO_DISK_INSERTED];
-                [[self diskAProperties] setStringValue:@""];
-            }
-            else
-            {
-                [[self diskInB] setStringValue:NO_DISK_INSERTED];
-                [[self diskBProperties] setStringValue:@""];
-            }
-            return NO;
+            [[self diskInA] setStringValue:NO_DISK_INSERTED];
+            [[self diskAProperties] setStringValue:@""];
         }
+        else
+        {
+            [[self diskInB] setStringValue:NO_DISK_INSERTED];
+            [[self diskBProperties] setStringValue:@""];
+        }
+        return NO;
     }
     path = [NSString stringWithUTF8String:disk6.disk[drive].file_name];
     NSString *imageName = [[path pathComponents] lastObject];

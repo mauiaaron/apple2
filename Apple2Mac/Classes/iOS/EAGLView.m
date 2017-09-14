@@ -300,25 +300,35 @@ static inline void _handleTouch(EAGLView *self, SEL _cmd, UITouch *touch, interf
         // touched menu item ...
         if ((flags & TOUCH_FLAGS_INPUT_DEVICE_CHANGE) != 0)
         {
+            video_animation_s *anim = video_getAnimationDriver();
             if ((flags & TOUCH_FLAGS_KBD) != 0)
             {
                 //keydriver_setTouchKeyboardOwnsScreen(true);
                 //joydriver_setTouchJoystickOwnsScreen(false);
-                video_animations->animation_showTouchKeyboard();
+                if (anim && anim->animation_showTouchKeyboard)
+                {
+                    anim->animation_showTouchKeyboard();
+                }
             }
             else if ((flags & TOUCH_FLAGS_JOY) != 0)
             {
                 //keydriver_setTouchKeyboardOwnsScreen(false);
                 //joydriver_setTouchJoystickOwnsScreen(true);
                 //joydriver_setTouchVariant(EMULATED_JOYSTICK);
-                video_animations->animation_showTouchJoystick();
+                if (anim && anim->animation_showTouchKeyboard)
+                {
+                    anim->animation_showTouchJoystick();
+                }
             }
             else if ((flags & TOUCH_FLAGS_JOY_KPAD) != 0)
             {
                 //keydriver_setTouchKeyboardOwnsScreen(false);
                 //joydriver_setTouchJoystickOwnsScreen(true);
                 //joydriver_setTouchVariant(EMULATED_KEYPAD);
-                video_animations->animation_showTouchJoystick();
+                if (anim && anim->animation_showTouchKeyboard)
+                {
+                    anim->animation_showTouchJoystick();
+                }
             }
             else
             {

@@ -80,9 +80,10 @@
 {
     cpu_pause();
     timing_toggleCPUSpeed();
-    if (video_animations && video_animations->animation_showCPUSpeed)
+    video_animation_s *anim = video_getAnimationDriver();
+    if (anim && anim->animation_showCPUSpeed)
     {
-        video_animations->animation_showCPUSpeed();
+        anim->animation_showCPUSpeed();
     }
     cpu_resume();
 }
@@ -92,6 +93,7 @@
     NSAssert(pthread_main_np(), @"Pause emulation called from non-main thread");
     self.paused = !_paused;
 }
+
 - (void)setPaused:(BOOL)paused
 {
     if (_paused == paused)
@@ -102,15 +104,17 @@
     _paused = paused;
     if (paused)
     {
-                cpu_pause();
+        cpu_pause();
     }
     else
     {
         cpu_resume();
     }
-    if (video_animations && video_animations->animation_showPaused)
+    
+    video_animation_s *anim = video_getAnimationDriver();
+    if (anim && anim->animation_showPaused)
     {
-        video_animations->animation_showPaused();
+        anim->animation_showPaused();
     }
 }
 

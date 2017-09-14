@@ -56,23 +56,30 @@
 {
     // This method is triggered whenever the user makes a change to the picker selection.
     // The parameter named row and component represents what was selected.
-    int drive=0;
-    BOOL ro=YES;
+    int drive = 0;
+    BOOL ro = YES;
     
-    if(pickerView==self.disk1Picker)
+    if (pickerView == self.disk1Picker)
     {
         drive=0;
         ro=self.diskAProtection.on;
     }
-    if(pickerView==self.disk2Picker)
+    if (pickerView == self.disk2Picker)
     {
-     drive=1;
+        drive=1;
         ro=self.diskBProtection.on;
     }
     
     NSLog(@"Selected Row %d %@ %c", row,(NSString*)[self._disks objectAtIndex:row],ro);
     disk6_eject(drive);
-    const char *errMsg = disk6_insert(drive, [[self.path stringByAppendingPathComponent:[self._disks objectAtIndex:row]] UTF8String], ro);
+    
+    const char *path = [[self.path stringByAppendingPathComponent:[self._disks objectAtIndex:row]] UTF8String];
+    int fd = -1;
+    TEMP_FAILURE_RETRY(fd = open(path, ro ? O_RDONLY : O_RDWR));
+    const char *errMsg = disk6_insert(fd, drive, path, ro);
+    if (fd >= 0) {
+        TEMP_FAILURE_RETRY(close(fd));
+    }
 }
 
 - (IBAction)unwindToMainViewController:(UIStoryboardSegue*)sender

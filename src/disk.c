@@ -877,11 +877,7 @@ const char *disk6_eject(int drive) {
 const char *disk6_insert(int fd, int drive, const char * const file_name, int readonly) {
 
 #if !TESTING
-#   if TARGET_OS_MAC || TARGET_OS_PHONE
-#       warning FIXME TODO ...
-#   else
     assert(cpu_isPaused() && "CPU must be paused for disk insertion");
-#   endif
 #endif
     assert(drive == 0 || drive == 1);
 
