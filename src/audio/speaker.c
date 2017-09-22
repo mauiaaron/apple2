@@ -40,7 +40,7 @@ static bool speaker_isAvailable = false;
 
 static int16_t *samples_buffer = NULL; // holds max 1 second of samples
 static int16_t *remainder_buffer = NULL; // holds enough to create one sample (averaged)
-static unsigned int samples_buffer_idx = 0;
+static unsigned long samples_buffer_idx = 0;
 static unsigned int remainder_buffer_size = 0;
 static unsigned long remainder_buffer_size_max = 0;
 static unsigned int remainder_buffer_idx = 0;
@@ -257,7 +257,7 @@ static void _submit_samples_buffer_fullspeed(void) {
         return;
     }
 
-    unsigned int num_samples_pad = (bufferSizeIdealMax - bytes_queued) / sizeof(int16_t);
+    unsigned long num_samples_pad = (bufferSizeIdealMax - bytes_queued) / sizeof(int16_t);
     if (num_samples_pad == 0) {
         return;
     }
@@ -282,7 +282,7 @@ static void _submit_samples_buffer_fullspeed(void) {
 // Submits samples from the samples_buffer to the audio system backend when running at a normal scaled-speed.  This also
 // generates cycles feedback to the main CPU timing routine depending on the needs of the streaming audio (more or less
 // data).
-static unsigned int _submit_samples_buffer(const unsigned long num_channel_samples) {
+static unsigned long _submit_samples_buffer(const unsigned long num_channel_samples) {
 
     assert(num_channel_samples);
 
@@ -319,7 +319,7 @@ static unsigned int _submit_samples_buffer(const unsigned long num_channel_sampl
     // copy samples to audio system backend
     //
 
-    const unsigned int bytes_free = bufferTotalSize - bytes_queued;
+    const unsigned long bytes_free = bufferTotalSize - bytes_queued;
     unsigned long requested_samples = num_channel_samples;
     unsigned long requested_buffer_size = num_channel_samples * sizeof(int16_t);
 
@@ -481,7 +481,7 @@ void speaker_flush(void) {
     }
     _speaker_update(/*toggled:false*/);
 
-    unsigned int samples_used = 0;
+    unsigned long samples_used = 0;
     if (is_fullspeed) {
         assert(!samples_buffer_idx && "should be all quiet samples");
         _submit_samples_buffer_fullspeed();

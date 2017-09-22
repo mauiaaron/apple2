@@ -1103,8 +1103,8 @@ void fb_sha1() {
     sprintf(buf+i, "%c", '\0');
     LOG("SHA1 : %s", buf);
 
-    int ch = -1;
 #ifdef INTERFACE_CLASSIC
+    int ch = -1;
     while ((ch = c_mygetch(1)) == -1) {
         // ...
     }

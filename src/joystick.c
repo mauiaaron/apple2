@@ -167,10 +167,10 @@ static void c_calibrate_keypad_joystick()
       "|  Alt btn1:@ Alt btn2:@     x:@@ y:@@ |",
       "||||||||||||||||||||||||||||||||||||||||" };
 
-    submenu[8][29]  = MOUSETEXT_BEGIN + 0x0b;
-    submenu[9][27]  = MOUSETEXT_BEGIN + 0x08;
-    submenu[9][31]  = MOUSETEXT_BEGIN + 0x15;
-    submenu[10][29] = MOUSETEXT_BEGIN + 0x0a;
+    submenu[8][29]  = (char)(MOUSETEXT_BEGIN + 0x0b);
+    submenu[9][27]  = (char)(MOUSETEXT_BEGIN + 0x08);
+    submenu[9][31]  = (char)(MOUSETEXT_BEGIN + 0x15);
+    submenu[10][29] = (char)(MOUSETEXT_BEGIN + 0x0a);
 
     joy_x = HALF_JOY_RANGE;
     joy_y = HALF_JOY_RANGE;

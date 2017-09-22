@@ -424,10 +424,10 @@ static void denibblize_track(const uint8_t * const src, int drive, uint8_t * con
     }
 }
 
-static size_t load_track_data(int drive) {
+static unsigned int load_track_data(int drive) {
     SCOPE_TRACE_DISK("load_track_data");
 
-    size_t expected = 0;
+    unsigned int expected = 0;
 
     if (disk6.disk[drive].nibblized) {
         expected = NIB_TRACK_SIZE;
@@ -436,7 +436,11 @@ static size_t load_track_data(int drive) {
         unsigned int trk = (disk6.disk[drive].phase >> 1);
         uintptr_t dskoff = DSK_TRACK_SIZE * trk;
         uintptr_t niboff = NIB_TRACK_SIZE * trk;
-        expected = nibblize_track(disk6.disk[drive].raw_image_data+dskoff, drive, disk6.disk[drive].nib_image_data+niboff);
+        unsigned long ex0 = nibblize_track(disk6.disk[drive].raw_image_data+dskoff, drive, disk6.disk[drive].nib_image_data+niboff);
+        expected = (unsigned int)ex0;
+        if (UNLIKELY(ex0 > UINT_MAX)) {
+            assert(false);
+        }
     }
 
     return expected;
@@ -780,11 +784,7 @@ void disk6_init(void) {
 const char *disk6_eject(int drive) {
 
 #if !TESTING
-#   if TARGET_OS_MAC || TARGET_OS_PHONE
-#       warning FIXME TODO ...
-#   else
     assert(cpu_isPaused() && "CPU must be paused for disk ejection");
-#   endif
 #endif
     assert(drive == 0 || drive == 1);
 
@@ -885,7 +885,7 @@ const char *disk6_insert(int fd, int drive, const char * const file_name, int re
 
     disk6.disk[drive].file_name = STRDUP(file_name);
 
-    int expected = NIB_SIZE;
+    unsigned int expected = NIB_SIZE;
     disk6.disk[drive].nibblized = true;
     if (!is_nib(disk6.disk[drive].file_name)) {
         expected = DSK_SIZE;
@@ -925,7 +925,7 @@ const char *disk6_insert(int fd, int drive, const char * const file_name, int re
                 break;
             }
 
-            TEMP_FAILURE_RETRY(disk6.disk[drive].raw_image_data = mmap(NULL, disk6.disk[drive].whole_len, (readonly ? PROT_READ : PROT_READ|PROT_WRITE), MAP_SHARED|MAP_FILE, disk6.disk[drive].fd, /*offset:*/0));
+            TEMP_FAILURE_RETRY( (long)(disk6.disk[drive].raw_image_data = mmap(NULL, disk6.disk[drive].whole_len, (readonly ? PROT_READ : PROT_READ|PROT_WRITE), MAP_SHARED|MAP_FILE, disk6.disk[drive].fd, /*offset:*/0)) );
             if (disk6.disk[drive].raw_image_data == MAP_FAILED) {
                 LOG("OOPS, could not mmap file %s", disk6.disk[drive].file_name);
                 err = ERR_MMAP_FAILED;
@@ -948,7 +948,7 @@ const char *disk6_insert(int fd, int drive, const char * const file_name, int re
             for (unsigned int trk=0; trk<NUM_TRACKS; trk++) {
 
                 disk6.disk[drive].phase = (trk<<1); // HACK : load_track_data()/nibblize_track() expects this set properly
-                size_t track_width = load_track_data(drive);
+                unsigned int track_width = load_track_data(drive);
                 if (disk6.disk[drive].nibblized) {
                     assert(track_width == NIB_TRACK_SIZE);
                 } else {
@@ -1021,30 +1021,26 @@ bool disk6_saveState(StateHelper_s *helper) {
         if (!helper->save(fd, &state, 1)) {
             break;
         }
-        LOG("SAVE motor_off = %02x", state);
 
         state = (uint8_t)disk6.drive;
         if (!helper->save(fd, &state, 1)) {
             break;
         }
-        LOG("SAVE drive = %02x", state);
 
         state = (uint8_t)disk6.ddrw;
         if (!helper->save(fd, &state, 1)) {
             break;
         }
-        LOG("SAVE ddrw = %02x", state);
 
         state = (uint8_t)disk6.disk_byte;
         if (!helper->save(fd, &state, 1)) {
             break;
         }
-        LOG("SAVE disk_byte = %02x", state);
 
         // Drive A/B
 
         bool saved_drives = false;
-        for (unsigned long i=0; i<3; i++) {
+        for (unsigned int i=0; i<3; i++) {
             if (i >= 2) {
                 saved_drives = true;
                 break;
@@ -1056,12 +1052,15 @@ bool disk6_saveState(StateHelper_s *helper) {
             if (!helper->save(fd, &state, 1)) {
                 break;
             }
-            LOG("SAVE is_protected[%lu] = %02x", i, state);
 
             uint8_t serialized[4] = { 0 };
 
             if (disk6.disk[i].file_name != NULL) {
-                uint32_t namelen = strlen(disk6.disk[i].file_name);
+                size_t name0 = strlen(disk6.disk[i].file_name);
+                uint32_t namelen = (uint32_t)name0;
+                if (name0 > UINT_MAX) {
+                    assert(false);
+                }
                 serialized[0] = (uint8_t)((namelen & 0xFF000000) >> 24);
                 serialized[1] = (uint8_t)((namelen & 0xFF0000  ) >> 16);
                 serialized[2] = (uint8_t)((namelen & 0xFF00    ) >>  8);
@@ -1074,20 +1073,17 @@ bool disk6_saveState(StateHelper_s *helper) {
                     break;
                 }
 
-                LOG("SAVE disk[%lu] : (%u) %s", i, namelen, disk6.disk[i].file_name);
             } else {
                 memset(serialized, 0x0, sizeof(serialized));
                 if (!helper->save(fd, serialized, 4)) {
                     break;
                 }
-                LOG("SAVE disk[%lu] (0) <NULL>", i);
             }
 
             state = (uint8_t)stepper_phases;
             if (!helper->save(fd, &state, 1)) {
                 break;
             }
-            LOG("SAVE stepper_phases[%lu] = %02x", i, stepper_phases);
 
             state = 0; // placeholder ...
             if (!helper->save(fd, &state, 1)) {
@@ -1098,14 +1094,12 @@ bool disk6_saveState(StateHelper_s *helper) {
             if (!helper->save(fd, &state, 1)) {
                 break;
             }
-            LOG("SAVE phase[%lu] = %02x", i, state);
 
             serialized[0] = (uint8_t)((disk6.disk[i].run_byte & 0xFF00) >>  8);
             serialized[1] = (uint8_t)((disk6.disk[i].run_byte & 0xFF  ) >>  0);
             if (!helper->save(fd, serialized, 2)) {
                 break;
             }
-            LOG("SAVE run_byte[%lu] = %04x", i, disk6.disk[i].run_byte);
         }
 
         if (!saved_drives) {
@@ -1166,7 +1160,7 @@ static bool _disk6_loadState(StateHelper_s *helper, JSON_ref json) {
 
         bool loaded_drives = false;
 
-        for (unsigned long i=0; i<3; i++) {
+        for (unsigned int i=0; i<3; i++) {
             if (i >= 2) {
                 loaded_drives = true;
                 break;

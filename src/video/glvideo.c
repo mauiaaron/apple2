@@ -242,7 +242,11 @@ static void glvideo_init(void) {
     // Check for errors to make sure all of our setup went ok
     GL_MAYBELOG("finished initialization");
 
+#if __APPLE__
+    if (1) {
+#else
     if (glCheckFramebufferStatus != NULL) {
+#endif
         GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
         if (status != GL_FRAMEBUFFER_COMPLETE) {
             ERRQUIT("framebuffer status: %04X", status);
@@ -445,7 +449,7 @@ static void glvideo_applyPrefs(void) {
     long height           = prefs_parseLongValue (PREF_DOMAIN_INTERFACE,   PREF_DEVICE_HEIGHT,     &lVal, 10) ? lVal : (long)(SCANHEIGHT*1.5);
     bool isLandscape      = prefs_parseBoolValue (PREF_DOMAIN_INTERFACE,   PREF_DEVICE_LANDSCAPE,  &bVal)     ? bVal : true;
 
-    glvideo_reshape(width, height, isLandscape);
+    glvideo_reshape((int)width, (int)height, isLandscape);
 }
 
 static void glvideo_prefsChanged(const char *domain) {

@@ -220,7 +220,7 @@ void playq_destroyPlayQueue(INOUT PlayQueue_s **queue) {
     FREE(*queue);
 }
 
-PlayQueue_s *playq_createPlayQueue(const long *nodeIdPtr, unsigned long numBuffers) {
+PlayQueue_s *playq_createPlayQueue(const unsigned int *nodeIdPtr, unsigned long numBuffers) {
     PlayQueue_s *playq = NULL;
 
     assert(numBuffers <= MAX_PLAYQ_BUFFERS);
@@ -242,7 +242,7 @@ PlayQueue_s *playq_createPlayQueue(const long *nodeIdPtr, unsigned long numBuffe
         bool allocSuccess = true;
         for (unsigned long i=0; i<numBuffers; i++) {
             PQListNode_s *listNode = CALLOC(1, sizeof(PQListNode_s));
-            LOG("CREATING PlayNode_s node ID: %ld", nodeIdPtr[i]);
+            LOG("CREATING PlayNode_s node ID: %u", nodeIdPtr[i]);
             listNode->node.nodeId = nodeIdPtr[i];
             if (!listNode) {
                 LOG("no memory");

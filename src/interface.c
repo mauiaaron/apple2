@@ -20,12 +20,6 @@
 int64_t (*interface_onTouchEvent)(interface_touch_event_t action, int pointer_count, int pointer_idx, float *x_coords, float *y_coords) = NULL;
 #endif
 
-static uint8_t *stagingFB = NULL;
-
-static bool isShowing = false;
-
-static char disk_path[PATH_MAX] = { 0 };
-
 // 2015/04/12 : This was legacy code for rendering the menu interfaces on desktop Linux. Portions here are resurrected
 // to render HUD messages on desktop and mobile.  Nothing special or pretty here, but has "just worked" for 20+ years ;-)
 
@@ -133,6 +127,12 @@ void interface_plotMessage(uint8_t *fb, const interface_colorscheme_t cs, char *
 // Desktop Legacy Menu Interface
 
 #if INTERFACE_CLASSIC
+
+static uint8_t *stagingFB = NULL;
+
+static bool isShowing = false;
+
+static char disk_path[PATH_MAX] = { 0 };
 
 void interface_setStagingFramebuffer(uint8_t *fb) {
     stagingFB = fb;
@@ -533,8 +533,8 @@ void c_interface_select_diskette( int drive )
                   "|                                      |",
                   "||||||||||||||||||||||||||||||||||||||||" };
 
-                submenu[ 2 ][ 14 ] = MOUSETEXT_UP;
-                submenu[ 2 ][ 20 ] = MOUSETEXT_DOWN;
+                submenu[ 2 ][ 14 ] = (char)MOUSETEXT_UP;
+                submenu[ 2 ][ 20 ] = (char)MOUSETEXT_DOWN;
                 c_interface_print_submenu_centered(submenu[0], DISKHELP_SUBMENU_W, DISKHELP_SUBMENU_H);
                 while ((ch = c_mygetch(1)) == -1)
                 {
@@ -758,8 +758,8 @@ void c_interface_parameters()
     /* reset the x position, so we don't lose our cursor if path changes */
     cur_x = 0;
 
-    screen[ 2 ][ 33 ] = MOUSETEXT_OPENAPPLE;
-    screen[ 2 ][ 46 ] = MOUSETEXT_CLOSEDAPPLE;
+    screen[ 2 ][ 33 ] = (char)MOUSETEXT_OPENAPPLE;
+    screen[ 2 ][ 46 ] = (char)MOUSETEXT_CLOSEDAPPLE;
 
     c_interface_translate_screen( screen );
     c_interface_print_screen( screen );
@@ -1124,10 +1124,10 @@ void c_interface_parameters()
               "| Ctrl-LeftAlt-End Reboots //e         |",
               "| Pause/Brk : Pause Emulator           |",
               "||||||||||||||||||||||||||||||||||||||||" };
-            submenu[ 1 ][ 14 ] = MOUSETEXT_UP;
-            submenu[ 1 ][ 20 ] = MOUSETEXT_DOWN;
-            submenu[ 3 ][ 14 ] = MOUSETEXT_LEFT;
-            submenu[ 3 ][ 20 ] = MOUSETEXT_RIGHT;
+            submenu[ 1 ][ 14 ] = (char)MOUSETEXT_UP;
+            submenu[ 1 ][ 20 ] = (char)MOUSETEXT_DOWN;
+            submenu[ 3 ][ 14 ] = (char)MOUSETEXT_LEFT;
+            submenu[ 3 ][ 20 ] = (char)MOUSETEXT_RIGHT;
 
             c_interface_print_submenu_centered(submenu[0], MAINHELP_SUBMENU_W, MAINHELP_SUBMENU_H);
             while ((ch = c_mygetch(1)) == -1)
@@ -1305,11 +1305,11 @@ void c_interface_credits()
 #define SCROLL_AREA_Y 5
 #define SCROLL_AREA_HEIGHT 16
 
-    screen[ 2 ][ 33 ] = MOUSETEXT_OPENAPPLE;
-    screen[ 2 ][ 46 ] = MOUSETEXT_CLOSEDAPPLE;
+    screen[ 2 ][ 33 ] = (char)MOUSETEXT_OPENAPPLE;
+    screen[ 2 ][ 46 ] = (char)MOUSETEXT_CLOSEDAPPLE;
 
-    screen[ 22 ][ 18 ] = MOUSETEXT_UP;
-    screen[ 22 ][ 20 ] = MOUSETEXT_DOWN;
+    screen[ 22 ][ 18 ] = (char)MOUSETEXT_UP;
+    screen[ 22 ][ 20 ] = (char)MOUSETEXT_DOWN;
 
 #define SCROLL_LENGTH 58
 #define SCROLL_WIDTH (INTERFACE_SCREEN_X+1-(SCROLL_AREA_X*2))
@@ -1392,8 +1392,8 @@ void c_interface_credits()
         if (!count)
         {
             mt_idx = (mt_idx+1) % 2;
-            credits[ 3 ][ 20 ] = MOUSETEXT_BEGIN + mt_idx;
-            credits[ 3 ][ 55 ] = MOUSETEXT_BEGIN + ((mt_idx+1) % 2);
+            credits[ 3 ][ 20 ] = (char)(MOUSETEXT_BEGIN + mt_idx);
+            credits[ 3 ][ 55 ] = (char)(MOUSETEXT_BEGIN + ((mt_idx+1) % 2));
         }
 
         for (int i=0, p=pos; i<SCROLL_AREA_HEIGHT; i++)
@@ -1463,15 +1463,15 @@ void c_interface_keyboard_layout()
       "|                           (Press any key to exit)                            |",
       "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||" };
 
-    screen[ 6 ][ 68 ] = MOUSETEXT_UP;
-    screen[ 7 ][ 67 ] = MOUSETEXT_LEFT;
-    screen[ 7 ][ 69 ] = MOUSETEXT_RIGHT;
-    screen[ 8 ][ 68 ] = MOUSETEXT_DOWN;
+    screen[ 6 ][ 68 ] = (char)MOUSETEXT_UP;
+    screen[ 7 ][ 67 ] = (char)MOUSETEXT_LEFT;
+    screen[ 7 ][ 69 ] = (char)MOUSETEXT_RIGHT;
+    screen[ 8 ][ 68 ] = (char)MOUSETEXT_DOWN;
 
-    screen[ 8 ][ 25 ] = MOUSETEXT_OPENAPPLE;
-    screen[ 8 ][ 47 ] = MOUSETEXT_CLOSEDAPPLE;
-    screen[ 11 ][ 14 ] = MOUSETEXT_OPENAPPLE;
-    screen[ 12 ][ 15 ] = MOUSETEXT_CLOSEDAPPLE;
+    screen[ 8 ][ 25 ] = (char)MOUSETEXT_OPENAPPLE;
+    screen[ 8 ][ 47 ] = (char)MOUSETEXT_CLOSEDAPPLE;
+    screen[ 11 ][ 14 ] = (char)MOUSETEXT_OPENAPPLE;
+    screen[ 12 ][ 15 ] = (char)MOUSETEXT_CLOSEDAPPLE;
 
     c_interface_translate_screen(screen);
     c_interface_print_screen( screen );

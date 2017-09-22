@@ -400,17 +400,17 @@ static ALVoice *_openal_createVoice(unsigned long numChannels) {
         }
 #endif
 
-        long longBuffers[OPENAL_NUM_BUFFERS];
+        unsigned int bufs[OPENAL_NUM_BUFFERS];
         for (unsigned int i=0; i<OPENAL_NUM_BUFFERS; i++) {
-            longBuffers[i] = (long)(voice->buffers[i]);
+            bufs[i] = voice->buffers[i];
         }
-        voice->playq = playq_createPlayQueue(longBuffers, OPENAL_NUM_BUFFERS);
+        voice->playq = playq_createPlayQueue(bufs, OPENAL_NUM_BUFFERS);
         if (!voice->playq) {
             LOG("OOPS, Not enough memory for PlayQueue");
             break;
         }
 
-        voice->rate = openal_audio_backend.systemSettings.sampleRateHz;
+        voice->rate = (ALuint)openal_audio_backend.systemSettings.sampleRateHz;
 
         // Emulator supports only mono and stereo
         if (numChannels == 2) {
@@ -422,7 +422,7 @@ static ALVoice *_openal_createVoice(unsigned long numChannels) {
         /* Allocate enough space for the temp buffer, given the format */
         assert(numChannels == 1 || numChannels == 2);
         unsigned long maxSamples = openal_audio_backend.systemSettings.monoBufferSizeSamples * numChannels;
-        voice->buffersize = maxSamples * openal_audio_backend.systemSettings.bytesPerSample;
+        voice->buffersize = (ALsizei)maxSamples * (ALsizei)openal_audio_backend.systemSettings.bytesPerSample;
 
         voice->data = CALLOC(1, voice->buffersize);
         if (voice->data == NULL) {

@@ -172,11 +172,7 @@ void reinitialize(void) {
 
 void timing_initialize(void) {
 #if !TESTING
-#   if (TARGET_OS_MAC || TARGET_OS_PHONE)
-#       warning FIXME TODO : this assert is firing on iOS port ... but the assert is valid ... fix soon 
-#   else
     assert(cpu_isPaused() || (pthread_self() == cpu_thread_id));
-#   endif
 #endif
     _timing_initialize(alt_speed_enabled ? cpu_altscale_factor : cpu_scale_factor);
 }
@@ -583,7 +579,7 @@ bool timing_saveState(StateHelper_s *helper) {
         assert(cpu_scale_factor >= 0);
         assert(cpu_altscale_factor >= 0);
 
-        lVal = (uint32_t)(cpu_scale_factor * 100.);
+        lVal = (cpu_scale_factor * 100.);
         serialized[0] = (uint8_t)((lVal & 0xFF000000) >> 24);
         serialized[1] = (uint8_t)((lVal & 0xFF0000  ) >> 16);
         serialized[2] = (uint8_t)((lVal & 0xFF00    ) >>  8);
@@ -592,7 +588,7 @@ bool timing_saveState(StateHelper_s *helper) {
             break;
         }
 
-        lVal = (long)(cpu_altscale_factor * 100.);
+        lVal = (cpu_altscale_factor * 100.);
         serialized[0] = (uint8_t)((lVal & 0xFF000000) >> 24);
         serialized[1] = (uint8_t)((lVal & 0xFF0000  ) >> 16);
         serialized[2] = (uint8_t)((lVal & 0xFF00    ) >>  8);

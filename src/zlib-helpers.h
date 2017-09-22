@@ -23,13 +23,13 @@
 
 // Inflate/uncompress from file descriptor into previously allocated buffer of expected_bytes length.  Underlying file
 // can either be gzipped or not.  This is meant for readonly disk images.
-const char *zlib_inflate_to_buffer(int fd, const int expected_bytescount, uint8_t *buf);
+const char *zlib_inflate_to_buffer(int fd, const unsigned int expected_bytescount, uint8_t *buf);
 
 // Inflate/uncompress from file descriptor back into itself.  Underlying file can either be gzipped or not.  This is
 // meant for read/write disk images.
-const char *zlib_inflate_inplace(int fd, const int expected_bytescount, bool *is_gzipped);
+const char *zlib_inflate_inplace(int fd, const unsigned int expected_bytescount, bool *is_gzipped);
 
 // Deflate/compress from buffer to buffer.  This is meant for ejecting read/write disk images.
-const char *zlib_deflate_buffer(const uint8_t *src, const int src_bytescount, uint8_t *dst, OUTPARM off_t *dst_size);
+const char *zlib_deflate_buffer(const uint8_t *src, const unsigned int src_bytescount, uint8_t *dst, OUTPARM off_t *dst_size);
 
 #endif

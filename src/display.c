@@ -16,6 +16,15 @@
 #include "common.h"
 #include "video/video.h"
 
+#if __clang__
+#   pragma clang diagnostic push
+#   pragma clang diagnostic ignored "-Wunused-variable"
+#elif __GNUC__
+#   pragma GCC diagnostic push
+#   pragma GCC diagnostic ignored "-Wunused-variable"
+#   pragma GCC diagnostic ignored "-Wunused-const-variable"
+#endif
+
 #define SCANSTEP (SCANWIDTH-12)
 #define SCANDSTEP (SCANWIDTH-6)
 
@@ -1394,6 +1403,7 @@ unsigned long video_clearDirty(unsigned long flags) {
 
 extern unsigned int CpuGetCyclesThisVideoFrame(void);
 uint16_t video_scanner_get_address(bool *vblBarOut) {
+
     const bool SW_HIRES   = (softswitches & SS_HIRES);
     const bool SW_TEXT    = (softswitches & SS_TEXT);
     const bool SW_PAGE2   = (softswitches & SS_PAGE2);
@@ -1532,4 +1542,10 @@ static void _init_interface(void) {
 static __attribute__((constructor)) void __init_interface(void) {
     emulator_registerStartupCallback(CTOR_PRIORITY_LATE, &_init_interface);
 }
+
+#if __clang__
+#   pragma clang diagnostic pop
+#elif __GNUC__
+#   pragma GCC diagnostic pop
+#endif
 

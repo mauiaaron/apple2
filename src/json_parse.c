@@ -414,7 +414,7 @@ static bool _json_mapGetStringValue(const JSON_s *map, const char *key, INOUT in
         }
 
         int idx=0;
-        const int keySize = strlen(key);
+        const size_t keySize = strlen(key);
 
         // should begin as map ...
         if (map->jsonTokens[idx].type != JSMN_OBJECT) {
@@ -553,7 +553,7 @@ bool json_mapParseLongValue(const JSON_ref jsonRef, const char *key, INOUT long 
         char *str = &map->jsonString[tok.start];
         char ch = str[len];
         str[len] = '\0';
-        *val = strtol(str, NULL, base);
+        *val = strtol(str, NULL, (int)base);
         str[len] = ch;
 
         foundMatch = true;
@@ -687,7 +687,7 @@ static bool _json_mapSetValue(const JSON_ref jsonRef, const char *key, const cha
             size_t quoLen = (valType == JSMN_STRING) ? QUOTE_LEN : 0;
             size_t comLen = tok.size ? COMMA_LEN : 0;
 
-            int keyValLen = QUOTE_LEN + keyLen + QUOTE_LEN + COLON_LEN + quoLen + valLen + quoLen + comLen;
+            size_t keyValLen = QUOTE_LEN + keyLen + QUOTE_LEN + COLON_LEN + quoLen + valLen + quoLen + comLen;
             newVal = MALLOC(keyValLen+1);
             if (!newVal) {
                 break;
@@ -733,10 +733,10 @@ static bool _json_mapSetValue(const JSON_ref jsonRef, const char *key, const cha
         assert(spliceBegin > 0);            // must always begin with '{'
         assert(spliceEnd < map->jsonLen);   // must always close with '}'
 
-        int prefixLen = spliceBegin;
-        int suffixLen = (map->jsonLen - spliceEnd);
+        size_t prefixLen = spliceBegin;
+        size_t suffixLen = (map->jsonLen - spliceEnd);
 
-        int newLen = prefixLen+valLen+suffixLen;
+        size_t newLen = prefixLen+valLen+suffixLen;
 
         char *jsonString = MALLOC(newLen + 1);
         if (!jsonString) {
@@ -981,7 +981,7 @@ bool json_arrayParseLongValueAtIndex(const JSON_ref jsonRef, unsigned long index
         char *str = &array->jsonString[tok.start];
         char ch = str[len];
         str[len] = '\0';
-        *val = strtol(str, NULL, base);
+        *val = strtol(str, NULL, (int)base);
         str[len] = ch;
 
         ret = true;

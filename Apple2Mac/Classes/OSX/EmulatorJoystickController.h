@@ -13,4 +13,6 @@
 
 @interface EmulatorJoystickController : NSObject
 
++ (EmulatorJoystickController *)sharedInstance;
+
 @end

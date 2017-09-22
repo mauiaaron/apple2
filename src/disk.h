@@ -52,14 +52,14 @@ typedef struct diskette_t {
     int fd;
     int fd2;
     uint8_t *raw_image_data;
-    size_t whole_len;
+    unsigned int whole_len;
     uint8_t *nib_image_data;
     bool nibblized;
     bool is_protected;
     bool track_valid;
     bool track_dirty;
     int *skew_table;
-    long track_width;
+    unsigned int track_width;
     int phase;
     int run_byte;
 } diskette_t;

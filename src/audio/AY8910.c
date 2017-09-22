@@ -237,7 +237,14 @@ static void sound_init( CAY8910 *_this, const char *device, unsigned long nSampl
 
 //  sound_generator_freq =
 //    settings_current.sound_hifi ? HIFI_FREQ : settings_current.sound_freq;
+#ifdef APPLE2IX
+  sound_generator_freq = (int)nSampleRate;
+  if (UNLIKELY(nSampleRate > INT_MAX)) {
+      assert(0);
+  }
+#else
   sound_generator_freq = nSampleRate;
+#endif
   sound_generator_framesiz = sound_generator_freq / (int)hz;
 
 #if 0
@@ -365,6 +372,7 @@ sound_unpause( void )
 #endif
 
 
+#if !defined(APPLE2IX)
 static void sound_end( CAY8910 *_this )
 {
 #if 0
@@ -399,6 +407,7 @@ static void sound_end( CAY8910 *_this )
     }
 #endif
 }
+#endif
 
 
 #if 0

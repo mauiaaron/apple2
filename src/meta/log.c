@@ -25,7 +25,7 @@ bool do_logging = true;
 bool do_std_logging = true;
 
 static int logFd = -1;
-static int logSiz = 0;
+static off_t logSiz = 0;
 static const unsigned int logRotateSize = 1024 * 1024;
 static const unsigned int logRotateCount = 4;
 
@@ -117,8 +117,8 @@ void log_outputString(const char * const str) {
 
     pthread_mutex_lock(&log_mutex);
 
-    int expected_bytescount = strlen(str);
-    int bytescount = 0;
+    size_t expected_bytescount = strlen(str);
+    size_t bytescount = 0;
 
     do {
         ssize_t byteswritten = 0;

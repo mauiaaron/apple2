@@ -31,7 +31,7 @@ static const char* const _gzerr(gzFile gzf) {
     }
 }
 
-static int _gzread_data(gzFile gzsource, uint8_t *buf, const int expected_bytescount) {
+static int _gzread_data(gzFile gzsource, uint8_t *buf, const unsigned int expected_bytescount) {
     int bytescount = 0;
 
     int maxtries = 10;
@@ -58,12 +58,12 @@ static int _gzread_data(gzFile gzsource, uint8_t *buf, const int expected_bytesc
     return bytescount;
 }
 
-static int _read_data(int fd_own, uint8_t *buf, const int expected_bytescount) {
-    int bytescount = 0;
+static ssize_t _read_data(int fd_own, uint8_t *buf, const off_t expected_bytescount) {
+    ssize_t bytescount = 0;
 
     int maxtries = 10;
     do {
-        int bytesread = 0;
+        ssize_t bytesread = 0;
         TEMP_FAILURE_RETRY(bytesread = read(fd_own, buf+bytescount, expected_bytescount-bytescount));
         if (bytesread <= 0) {
             if (--maxtries == 0) {
@@ -78,7 +78,7 @@ static int _read_data(int fd_own, uint8_t *buf, const int expected_bytescount) {
         bytescount += bytesread;
 
         if (bytescount >= expected_bytescount) {
-            bytescount = expected_bytescount;
+            bytescount = (int)expected_bytescount;
             break; // DONE
         }
     } while (1);
@@ -87,8 +87,8 @@ static int _read_data(int fd_own, uint8_t *buf, const int expected_bytescount) {
 }
 
 
-static int _write_data(int fd_own, uint8_t *buf, const int expected_bytescount) {
-    int bytescount = 0;
+static ssize_t _write_data(int fd_own, uint8_t *buf, const unsigned int expected_bytescount) {
+    ssize_t bytescount = 0;
 
     int maxtries = 10;
     do {
@@ -116,13 +116,13 @@ static int _write_data(int fd_own, uint8_t *buf, const int expected_bytescount) 
     return bytescount;
 }
 
-static a2gzip_t _check_gzip_magick(int fd_own, const int expected_bytescount) {
+static a2gzip_t _check_gzip_magick(int fd_own, const unsigned int expected_bytescount) {
 
     a2gzip_t ret = A2GZT_ERR;
 
     do {
         uint8_t stkbuf[2];
-        int bytescount = _read_data(fd_own, &stkbuf[0], sizeof(stkbuf));
+        off_t bytescount = _read_data(fd_own, &stkbuf[0], sizeof(stkbuf));
         if (bytescount != sizeof(stkbuf)) {
             LOG("OOPS, could not read file magick for file descriptor");
             break;
@@ -146,7 +146,7 @@ static a2gzip_t _check_gzip_magick(int fd_own, const int expected_bytescount) {
             if (bytescount >= expected_bytescount) {
                 ret = A2GZT_NOT_GZ;
             } else {
-                LOG("OOPS, did not find gzip magick, and file is %d bytes, not expected size of %d", bytescount, expected_bytescount);
+                LOG("OOPS, did not find gzip magick, and file is %lld bytes, not expected size of %u", (long long)bytescount, expected_bytescount);
             }
         }
     } while (0);
@@ -158,14 +158,14 @@ static a2gzip_t _check_gzip_magick(int fd_own, const int expected_bytescount) {
  *
  * Return NULL on success, or error string (possibly from zlib) on failure.
  */
-const char *zlib_inflate_to_buffer(int fd, const int expected_bytescount, uint8_t *buf) {
+const char *zlib_inflate_to_buffer(int fd, const unsigned int expected_bytescount, uint8_t *buf) {
     gzFile gzsource = NULL;
     int fd_own = -1;
 
     assert(buf != NULL);
     assert(expected_bytescount > 0);
 
-    int bytescount = 0;
+    ssize_t bytescount = 0;
     char *err = NULL;
     do {
 
@@ -204,7 +204,7 @@ const char *zlib_inflate_to_buffer(int fd, const int expected_bytescount, uint8_
         bytescount = _gzread_data(gzsource, buf, expected_bytescount);
         if (bytescount != expected_bytescount) {
             // could not gzread(), maybe it's not actually a gzip stream? ...
-            LOG("OOPS, did not gzread() expected_bytescount of %d ... apparently read %d ... checking file length heuristic ...", expected_bytescount, bytescount);
+            LOG("OOPS, did not gzread() expected_bytescount of %u ... apparently read %zd ... checking file length heuristic ...", expected_bytescount, bytescount);
 
             if (lseek(fd_own, 0L, SEEK_SET) == -1) {
                 LOG("OOPS, cannot seek to start of file descriptor!");
@@ -226,7 +226,7 @@ const char *zlib_inflate_to_buffer(int fd, const int expected_bytescount, uint8_
     } while (0);
 
     if (bytescount != expected_bytescount) {
-        LOG("OOPS did not read expected_bytescount of %d ... apparently read %d", expected_bytescount, bytescount);
+        LOG("OOPS did not read expected_bytescount of %u ... apparently read %zd", expected_bytescount, bytescount);
         if (gzsource) {
             err = (char *)_gzerr(gzsource);
         }
@@ -251,7 +251,7 @@ const char *zlib_inflate_to_buffer(int fd, const int expected_bytescount, uint8_
  *
  * Return NULL on success, or error string (possibly from zlib) on failure.
  */
-const char *zlib_inflate_inplace(int fd, const int expected_bytescount, bool *is_gzipped) {
+const char *zlib_inflate_inplace(int fd, const unsigned int expected_bytescount, bool *is_gzipped) {
     gzFile gzsource = NULL;
     int fd_own = -1;
     uint8_t *buf = NULL;
@@ -260,7 +260,7 @@ const char *zlib_inflate_inplace(int fd, const int expected_bytescount, bool *is
 
     assert(expected_bytescount > 2);
 
-    int bytescount = 0;
+    off_t bytescount = 0;
     do {
 
         TEMP_FAILURE_RETRY(fd_own = dup(fd)); // balance gzclose()
@@ -302,7 +302,7 @@ const char *zlib_inflate_inplace(int fd, const int expected_bytescount, bool *is
         bytescount = _gzread_data(gzsource, buf, expected_bytescount);
         if (bytescount != expected_bytescount) {
             // could not gzread(), maybe it's not actually a gzip stream? ...
-            LOG("OOPS, did not in-place gzread() expected_bytescount of %d ... apparently read %d ... checking file length heuristic ...", expected_bytescount, bytescount);
+            LOG("OOPS, did not in-place gzread() expected_bytescount of %u ... apparently read %lld ... checking file length heuristic ...", expected_bytescount, (long long)bytescount);
 
             bytescount = lseek(fd_own, 0L, SEEK_END);
             if (bytescount == -1) {
@@ -345,7 +345,7 @@ const char *zlib_inflate_inplace(int fd, const int expected_bytescount, bool *is
 
     char *err = NULL;
     if (bytescount != expected_bytescount) {
-        LOG("OOPS, did not write expected_bytescount of %d ... apparently wrote %d", expected_bytescount, bytescount);
+        LOG("OOPS, did not write expected_bytescount of %u ... apparently wrote %lld", expected_bytescount, (long long)bytescount);
         if (gzsource) {
             err = (char *)_gzerr(gzsource);
         }
@@ -374,17 +374,16 @@ const char *zlib_inflate_inplace(int fd, const int expected_bytescount, bool *is
  *
  * Return NULL on success, or error string (possibly from zlib) on failure.
  */
-const char *zlib_deflate_buffer(const uint8_t *src, const int src_bytescount, uint8_t *dst, OUTPARM off_t *dst_size) {
+const char *zlib_deflate_buffer(const uint8_t *src, const unsigned int src_bytescount, uint8_t *dst, OUTPARM off_t *dst_size) {
     char *gzPath = NULL;
     gzFile gzdest = NULL;
     int fd_own = -1;
 
-    assert(src_bytescount > 0);
-    int expected_bytescount = src_bytescount;
+    off_t expected_bytescount = src_bytescount;
 
     *dst_size = -1;
 
-    int bytescount = 0;
+    off_t bytescount = 0;
     char *err = NULL;
     do {
         ASPRINTF(&gzPath, "%s/tmp.img", data_dir);
@@ -403,7 +402,12 @@ const char *zlib_deflate_buffer(const uint8_t *src, const int src_bytescount, ui
         }
 
         do {
-            int byteswritten = gzwrite(gzdest, src+bytescount, expected_bytescount-bytescount);
+            ssize_t len0 = expected_bytescount-bytescount;
+            unsigned int len = (unsigned int)len0;
+            if (UNLIKELY(len0 > UINT_MAX || len0 < 0)) {
+                assert(false);
+            }
+            int byteswritten = gzwrite(gzdest, src+bytescount, len);
             if (byteswritten <= 0) {
                 LOG("OOPS, gzwrite() returned %d", byteswritten);
                 break;
@@ -430,7 +434,7 @@ const char *zlib_deflate_buffer(const uint8_t *src, const int src_bytescount, ui
         // now read compressed data into buffer ...
 
         {
-            int compressed_size = lseek(fd_own, 0L, SEEK_CUR);
+            off_t compressed_size = lseek(fd_own, 0L, SEEK_CUR);
             assert(compressed_size > 0 && compressed_size < expected_bytescount);
             expected_bytescount = compressed_size;
         }
@@ -450,7 +454,7 @@ const char *zlib_deflate_buffer(const uint8_t *src, const int src_bytescount, ui
     } while (0);
 
     if (bytescount != expected_bytescount) {
-        LOG("OOPS, did not write/read expected number of bytes of %d ... apparently wrote %d", expected_bytescount, bytescount);
+        LOG("OOPS, did not write/read expected number of bytes of %lld ... apparently wrote %lld", (long long)expected_bytescount, (long long)bytescount);
         if (gzdest) {
             err = (char *)_gzerr(gzdest);
         }

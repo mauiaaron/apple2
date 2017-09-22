@@ -39,6 +39,8 @@
  */
 
 #include "sha1.h"
+#include <limits.h>
+#include <assert.h>
 
 /*
  *  Define the circular shift macro
@@ -374,7 +376,11 @@ void SHA1PadMessage(SHA1Context *context)
 void SHA1(const unsigned char *d, size_t n, unsigned char *md) {
     SHA1Context sha = { { 0 } };
     SHA1Reset(&sha);
-    SHA1Input(&sha, d, n);
+    unsigned int len = (unsigned int)n;
+    if (__builtin_expect((n > UINT_MAX), 0)) {
+        assert(0);
+    }
+    SHA1Input(&sha, d, len);
     if (!SHA1Result(&sha)) {
         memset(md, '\0', SHA_DIGEST_LENGTH);
     } else {

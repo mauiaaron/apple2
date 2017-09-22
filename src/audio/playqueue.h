@@ -23,8 +23,8 @@
 #define INVALID_NODE_ID INT_MIN
 
 typedef struct PlayNode_s {
-    long nodeId;
-    unsigned long numBytes;
+    unsigned int nodeId;
+    int numBytes;
     uint8_t *bytes;
 } PlayNode_s;
 
@@ -54,7 +54,7 @@ typedef struct PlayQueue_s {
 } PlayQueue_s;
 
 // create a play queue object
-PlayQueue_s *playq_createPlayQueue(const long *nodeIdPtr, unsigned long numBuffers);
+PlayQueue_s *playq_createPlayQueue(const unsigned int *nodeIdPtr, unsigned long numBuffers);
 
 // destroy a play queue object
 void playq_destroyPlayQueue(INOUT PlayQueue_s **queue);
