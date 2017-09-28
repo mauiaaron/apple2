@@ -147,6 +147,7 @@ AC_PATH_XTRA
 
 
 video_output="VIDEO RENDERERS:"
+video_output_disabled="VIDEO RENDERERS (DISABLED):"
 VIDEO_O="src/video/video.o"
 testcpu_VIDEO_O="src/video/video.o"
 testdisk_VIDEO_O="src/video/video.o"
@@ -157,14 +158,14 @@ testui_VIDEO_O="src/video/video.o"
 testvm_VIDEO_O="src/video/video.o"
 
 AC_ARG_ENABLE([opengl], AS_HELP_STRING([--enable-opengl], [Enable OpenGL graphics output (autodetected)]))
-AC_CHECK_HEADER(GL/glew.h, [
-    AC_CHECK_HEADER(GL/freeglut.h, [
-        AC_SEARCH_LIBS(glCreateProgram, [GL], [
-            AC_SEARCH_LIBS(glutMainLoop, [glut freeglut], [
-                AC_SEARCH_LIBS(glewInit, [GLEW glew], [
-
-                    AS_IF([test "x$enable_opengl" != "xno"], [
+AS_IF([test "x$enable_opengl" != "xno"], [
+    AC_CHECK_HEADER(GL/glew.h, [
+        AC_CHECK_HEADER(GL/freeglut.h, [
+            AC_SEARCH_LIBS(glCreateProgram, [GL], [
+                AC_SEARCH_LIBS(glutMainLoop, [glut freeglut], [
+                    AC_SEARCH_LIBS(glewInit, [GLEW glew], [
                         video_output="$video_output OpenGL"
+                        found_opengl="1"
                         AC_DEFINE(VIDEO_OPENGL, 1, [Building with OpenGL support])
                         AC_DEFINE(USE_GLUT, 1, [Use GLUT library])
                         VIDEO_O="$VIDEO_O src/video/glvideo.o src/video/glnode.o src/video/glalert.o src/video/glhudmodel.o src/video/glutinput.o src/video_util/matrixUtil.o src/video_util/modelUtil.o src/video_util/sourceUtil.o src/video_util/vectorUtil.o"
@@ -177,38 +178,23 @@ AC_CHECK_HEADER(GL/glew.h, [
                         testui_VIDEO_O="$testui_VIDEO_O src/video/testui-glvideo.o src/video/testui-glnode.o src/video/testui-glalert.o src/video/testui-glhudmodel.o src/video/testui-glutinput.o src/video_util/testui-matrixUtil.o src/video_util/testui-modelUtil.o src/video_util/testui-sourceUtil.o src/video_util/testui-vectorUtil.o"
                         testvm_VIDEO_O="$testvm_VIDEO_O src/video/testvm-glvideo.o src/video/testvm-glnode.o src/video/testvm-glalert.o src/video/testvm-glhudmodel.o src/video/testvm-glutinput.o src/video_util/testvm-matrixUtil.o src/video_util/testvm-modelUtil.o src/video_util/testvm-sourceUtil.o src/video_util/testvm-vectorUtil.o"
                         AC_MSG_RESULT([configure: NOTE: Building emulator with OpenGL support, w00t!])
-                    ])
-                ], [
-                    AS_IF([test "x$enable_opengl" != "xno"], [
-                        AC_MSG_WARN([Did not find OpenGL GLEW library, OpenGL support is disabled ...])
-                    ])
-                ], [-lGL -lGLEW -lglut])
-            ], [
-                AS_IF([test "x$enable_opengl" != "xno"], [
-                    AC_MSG_WARN([Did not find glut library, OpenGL support is disabled ...])
-                ])
-            ], [-lGL -lGLEW -lglut])
-        ], [
-            AS_IF([test "x$enable_opengl" != "xno"], [
-                AC_MSG_WARN([Did not find OpenGL library, OpenGL support is disabled ...])
-            ])
-        ], [-lGL])
-    ], [
-        AS_IF([test "x$enable_opengl" != "xno"], [
-            AC_MSG_WARN([Did not find GL/freeglut.h header, OpenGL support is disabled ...])
+                    ], [], [-lGL -lGLEW -lglut])
+                ], [], [-lGL -lGLEW -lglut])
+            ], [], [-lGL])
         ])
     ])
-], [
-    AS_IF([test "x$enable_opengl" != "xno"], [
-        AC_MSG_WARN([Did not find GL/glew.h header, OpenGL support is disabled ...])
+    AS_IF([test "x$found_opengl" != "x1"], [
+        AC_MSG_WARN([Did not find OpenGL headers/libraries ... OpenGL support is disabled ...])
+        video_output_disabled="$video_output_disabled OpenGL"
     ])
 ])
 
 
 AC_ARG_ENABLE([x11], AS_HELP_STRING([--enable-x11], [Enable X11 graphics output (autodetected)]))
-AC_CHECK_HEADER(X11/XKBlib.h, [
-    AC_SEARCH_LIBS(XPutImage, [X11], [
-        AS_IF([test "x$enable_x11" != "xno"], [
+AS_IF([test "x$enable_x11" != "xno"], [
+    AC_CHECK_HEADER(X11/XKBlib.h, [
+        AC_SEARCH_LIBS(XPutImage, [X11], [
+            found_x11="1"
             AC_SEARCH_LIBS(XShmAttach, Xext, [
                 AC_DEFINE(HAVE_X11_SHM, 1, [Enable X11 MIT SHM extension])
             ], [
@@ -225,15 +211,11 @@ AC_CHECK_HEADER(X11/XKBlib.h, [
             testui_VIDEO_O="$testui_VIDEO_O src/video/testui-xvideo.o"
             testvm_VIDEO_O="$testvm_VIDEO_O src/video/testvm-xvideo.o"
             AC_MSG_RESULT([configure: NOTE: Building emulator with X11 support])
-        ])
-    ], [
-        AS_IF([test "x$enable_x11" != "xno"], [
-            AC_MSG_WARN([Did not find X11 libraries, X11 support is disabled ...])
-        ])
-    ], [-LX11])
-], [
-    AS_IF([test "x$enable_x11" != "xno"], [
-        AC_MSG_WARN([Did not find X11 headers, X11 support is disabled ...])
+        ], [], [-LX11])
+    ])
+    AS_IF([test "x$found_x11" != "x1"], [
+        AC_MSG_WARN([Did not find X11 headers/libraries ... X11 support is disabled ...])
+        video_output_disabled="$video_output_disabled X11"
     ])
 ])
 
@@ -275,6 +257,7 @@ AS_IF([test "x$enable_ncurses" != "xno"], [
 ])
 AS_IF([test "x$found_ncurses" != "x1"], [
     AC_MSG_WARN([Did not find ncurses headers/libraries ... ncurses support is disabled ...])
+    video_output_disabled="$video_output_disabled terminal"
 ])
 
 
@@ -301,48 +284,38 @@ testtrace_AUDIO_O="src/audio/testtrace-soundcore.o src/audio/testtrace-speaker.o
 testui_AUDIO_O="src/audio/testui-soundcore.o src/audio/testui-speaker.o src/audio/testui-mockingboard.o src/audio/testui-AY8910.o"
 testvm_AUDIO_O="src/audio/testvm-soundcore.o src/audio/testvm-speaker.o src/audio/testvm-mockingboard.o src/audio/testvm-AY8910.o"
 
-AC_ARG_ENABLE([openal], AS_HELP_STRING([--enable-openal], [Enable OpenAL audio output (autodetected)]))
-
 audio_output="AUDIO RENDERERS:"
-AC_CHECK_HEADER(AL/al.h, [
-    AC_CHECK_HEADER(AL/alc.h, [
-        AC_CHECK_HEADER(AL/alext.h, [
+audio_output_disabled="AUDIO RENDERERS (DISABLED): OpenSLES"
+AC_ARG_ENABLE([openal], AS_HELP_STRING([--enable-openal], [Enable OpenAL audio output (autodetected)]))
+AS_IF([test "x$enable_openal" != "xno"], [
+    AC_CHECK_HEADERS(AL/al.h AL/alc.h AL/alext.h, [
+        AS_IF([test "x$found_openal" != "x1"], [
             AC_SEARCH_LIBS(alcOpenDevice, openal, [
-                AS_IF([test "x$enable_openal" != "xno"], [
-                    dnl found OpenAL ...
-                    audio_output="$audio_output OpenAL"
-                    AUDIO_O="$AUDIO_O src/audio/soundcore-openal.o src/audio/playqueue.o src/audio/alhelpers.o"
-                    dnl HACK there's gotta be a better way ... without this verbosity, CFLAGS are not correct (lacking -DTESTING=1 , etc) if we don't specify specific obj files for test binaries
-                    testcpu_AUDIO_O="$testcpu_AUDIO_O src/audio/testcpu-soundcore-openal.o src/audio/testcpu-playqueue.o src/audio/testcpu-alhelpers.o"
-                    testdisk_AUDIO_O="$testdisk_AUDIO_O src/audio/testdisk-soundcore-openal.o src/audio/testdisk-playqueue.o src/audio/testdisk-alhelpers.o"
-                    testdisplay_AUDIO_O="$testdisplay_AUDIO_O src/audio/testdisplay-soundcore-openal.o src/audio/testdisplay-playqueue.o src/audio/testdisplay-alhelpers.o"
-                    testprefs_AUDIO_O="$testprefs_AUDIO_O src/audio/testprefs-soundcore-openal.o src/audio/testprefs-playqueue.o src/audio/testprefs-alhelpers.o"
-                    testtrace_AUDIO_O="$testtrace_AUDIO_O src/audio/testtrace-soundcore-openal.o src/audio/testtrace-playqueue.o src/audio/testtrace-alhelpers.o"
-                    testui_AUDIO_O="$testui_AUDIO_O src/audio/testui-soundcore-openal.o src/audio/testui-playqueue.o src/audio/testui-alhelpers.o"
-                    testvm_AUDIO_O="$testvm_AUDIO_O src/audio/testvm-soundcore-openal.o src/audio/testvm-playqueue.o src/audio/testvm-alhelpers.o"
-                    AC_MSG_RESULT([configure: NOTE: Building emulator with OpenAL sound output, w00t!])
-                ])
-            ], [
-                AS_IF([test "x$enable_openal" != "xno"], [
-                    AC_MSG_WARN([Did not find OpenAL libraries, OpenAL sound output is disabled ...])
-                ])
-            ], [])
-        ], [
-            AS_IF([test "x$enable_openal" != "xno"], [
-                AC_MSG_WARN([Could not find OpenAL headers, OpenAL sound output is disabled ...])
+                found_openal="1"
+                AUDIO_O="$AUDIO_O src/audio/soundcore-openal.o src/audio/playqueue.o src/audio/alhelpers.o"
+                dnl HACK there's gotta be a better way ... without this verbosity, CFLAGS are not correct (lacking -DTESTING=1 , etc) if we don't specify specific obj files for test binaries
+                testcpu_AUDIO_O="$testcpu_AUDIO_O src/audio/testcpu-soundcore-openal.o src/audio/testcpu-playqueue.o src/audio/testcpu-alhelpers.o"
+                testdisk_AUDIO_O="$testdisk_AUDIO_O src/audio/testdisk-soundcore-openal.o src/audio/testdisk-playqueue.o src/audio/testdisk-alhelpers.o"
+                testdisplay_AUDIO_O="$testdisplay_AUDIO_O src/audio/testdisplay-soundcore-openal.o src/audio/testdisplay-playqueue.o src/audio/testdisplay-alhelpers.o"
+                testprefs_AUDIO_O="$testprefs_AUDIO_O src/audio/testprefs-soundcore-openal.o src/audio/testprefs-playqueue.o src/audio/testprefs-alhelpers.o"
+                testtrace_AUDIO_O="$testtrace_AUDIO_O src/audio/testtrace-soundcore-openal.o src/audio/testtrace-playqueue.o src/audio/testtrace-alhelpers.o"
+                testui_AUDIO_O="$testui_AUDIO_O src/audio/testui-soundcore-openal.o src/audio/testui-playqueue.o src/audio/testui-alhelpers.o"
+                testvm_AUDIO_O="$testvm_AUDIO_O src/audio/testvm-soundcore-openal.o src/audio/testvm-playqueue.o src/audio/testvm-alhelpers.o"
+            ], [], [
+dnl -lopenal
             ])
-        ], [
-#include <AL/al.h>
-#include <AL/alc.h>
         ])
     ], [
-        AS_IF([test "x$enable_openal" != "xno"], [
-            AC_MSG_WARN([Could not find OpenAL headers, OpenAL sound output is disabled ...])
-        ])
+    ], [
+#include <AL/al.h>
+#include <AL/alc.h>
     ])
-], [
-    AS_IF([test "x$enable_openal" != "xno"], [
-        AC_MSG_WARN([Could not find OpenAL headers, OpenAL sound output is disabled ...])
+
+    AS_IF([test "x$found_openal" != "x1"], [
+        AC_MSG_WARN([Did not find OpenAL headers/libraries ... OpenAL sound output is disabled ...])
+        audio_output_disabled="$audio_output_disabled OpenAL"
+    ], [
+        audio_output="$audio_output OpenAL"
     ])
 ])
 
@@ -376,4 +349,7 @@ AC_MSG_RESULT([])
 AC_MSG_RESULT([Apple //ix emulator A/V configuration:])
 AC_MSG_RESULT([	$video_output])
 AC_MSG_RESULT([	$audio_output])
+AC_MSG_RESULT([])
+AC_MSG_RESULT([	$video_output_disabled])
+AC_MSG_RESULT([	$audio_output_disabled])
 AC_MSG_RESULT([])
