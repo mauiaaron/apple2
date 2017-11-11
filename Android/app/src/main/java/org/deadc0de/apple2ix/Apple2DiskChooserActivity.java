@@ -158,7 +158,9 @@ public class Apple2DiskChooserActivity extends Activity {
     public void finish() {
         sDiskChooserIsChoosing.set(false);
         String name = chosenUri == null ? "" : chosenUri.toString();
-        sDisksCallback.onDisksChosen(new DiskArgs(name, chosenUri, chosenPfd));
+        if (sDisksCallback != null) {
+            sDisksCallback.onDisksChosen(new DiskArgs(name, chosenUri, chosenPfd));
+        }
         super.finish();
     }
 
