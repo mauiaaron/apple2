@@ -89,6 +89,7 @@ typedef enum interface_touch_event_t {
 typedef enum interface_touch_event_flags {
     TOUCH_FLAGS_HANDLED             = (1<<0),
     TOUCH_FLAGS_REQUEST_HOST_MENU   = (1<<1),
+    TOUCH_FLAGS_REQUEST_SYSTEM_KBD  = (1<<2),
     TOUCH_FLAGS_KEY_TAP             = (1<<4),
     TOUCH_FLAGS_KBD                 = (1<<5),
     TOUCH_FLAGS_JOY                 = (1<<6),

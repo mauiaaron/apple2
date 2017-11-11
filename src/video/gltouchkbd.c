@@ -322,6 +322,7 @@ static inline int64_t _tap_key_at_point(float x, float y) {
     bool handled = true;
     bool isASCII = false;
     bool isCTRL = false;
+    int64_t flags = 0x0LL;
     switch (key) {
         case ICONTEXT_LOWERCASE:
             key = 0;
@@ -399,6 +400,12 @@ static inline int64_t _tap_key_at_point(float x, float y) {
             scancode = SCODE_R_ALT;
             break;
 
+        case MOUSETEXT_CURSOR0:
+        case MOUSETEXT_CURSOR1:
+            key = 0;
+            flags |= TOUCH_FLAGS_REQUEST_SYSTEM_KBD;
+            break;
+
         case ICONTEXT_MENU_SPROUT:
             key = 0;
             prefs_setLongValue(PREF_DOMAIN_KEYBOARD, PREF_KEYBOARD_VARIANT, KBD_VARIANT_USERALT);
@@ -454,7 +461,9 @@ static inline int64_t _tap_key_at_point(float x, float y) {
     _rerender_selected(kbd.selectedCol, kbd.selectedRow);
 
     // return the key+scancode+handled
-    int64_t flags = (handled ? TOUCH_FLAGS_HANDLED : 0x0LL);
+    if (handled) {
+        flags |= TOUCH_FLAGS_HANDLED;
+    }
 
     key = key & 0xff;
     scancode = scancode & 0xff;
@@ -686,6 +695,7 @@ static int64_t gltouchkbd_onTouchEvent(interface_touch_event_t action, int point
                 if (trackingIndex == pointer_idx) {
                     int64_t handledAndData = _tap_key_at_point(x, y);
                     flags |= ((handledAndData & TOUCH_FLAGS_HANDLED) ? (TOUCH_FLAGS_HANDLED|TOUCH_FLAGS_KEY_TAP) : 0x0LL);
+                    flags |= (handledAndData & TOUCH_FLAGS_REQUEST_SYSTEM_KBD);
                     flags |= (handledAndData & TOUCH_FLAGS_ASCII_AND_SCANCODE_MASK);
                     trackingIndex = TRACKING_NONE;
                 }
@@ -1026,6 +1036,9 @@ static void _initialize_keyboard_templates(void) {
 
     kbdTemplateUCase[MAINROW+3][0] = ICONTEXT_GOTO;
     kbdTemplateLCase[MAINROW+3][0] = ICONTEXT_GOTO;
+
+    kbdTemplateUCase[MAINROW+3][2] = MOUSETEXT_CURSOR1;
+    kbdTemplateLCase[MAINROW+3][2] = MOUSETEXT_CURSOR1;
 
     kbdTemplateUCase[MAINROW+3][3] = ICONTEXT_LEFTSPACE;
     kbdTemplateLCase[MAINROW+3][3] = ICONTEXT_LEFTSPACE;

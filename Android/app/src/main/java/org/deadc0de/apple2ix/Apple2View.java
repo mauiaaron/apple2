@@ -26,6 +26,7 @@ import android.util.Log;
 import android.view.InputDevice;
 import android.view.MotionEvent;
 import android.view.ViewTreeObserver;
+import android.view.inputmethod.InputMethodManager;
 
 import com.example.inputmanagercompat.InputManagerCompat;
 
@@ -42,6 +43,7 @@ class Apple2View extends GLSurfaceView implements InputManagerCompat.InputDevice
 
     public final static long NATIVE_TOUCH_HANDLED = (1 << 0);
     public final static long NATIVE_TOUCH_REQUEST_SHOW_MENU = (1 << 1);
+    public final static long NATIVE_TOUCH_REQUEST_SHOW_SYSTEM_KBD = (1 << 2);
 
     public final static long NATIVE_TOUCH_KEY_TAP = (1 << 4);
     public final static long NATIVE_TOUCH_KBD = (1 << 5);
@@ -519,6 +521,16 @@ class Apple2View extends GLSurfaceView implements InputManagerCompat.InputDevice
                     apple2MenuView.onKeyTapCalibrationEvent(ascii, scancode);
                 }
             }
+
+            if ((nativeFlags & NATIVE_TOUCH_REQUEST_SHOW_SYSTEM_KBD) != 0) {
+                clearFocus();
+                requestFocus();
+                InputMethodManager inputMethodManager = (InputMethodManager) mActivity.getSystemService(Context.INPUT_METHOD_SERVICE);
+                if (inputMethodManager != null) {
+                    inputMethodManager.showSoftInput(this, InputMethodManager.SHOW_FORCED);
+                }
+            }
+
         } while (false);
 
         return true;
