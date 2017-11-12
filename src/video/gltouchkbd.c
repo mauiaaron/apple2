@@ -251,7 +251,6 @@ static inline void _switch_keyboard(GLModel *parent, uint8_t *template) {
     memcpy(hudKeyboard->tpl, template, sizeof(kbdTemplateUCase/* assuming all the same size */));
 
     // setup normal color pixels
-    hudKeyboard->colorScheme = RED_ON_BLACK;
     glhud_setupDefault(parent);
 
     // find the CTRL visual(s) and render them engaged
@@ -517,9 +516,6 @@ static void *_create_touchkbd_hud(GLModel *parent) {
     }
 
     memcpy(hudKeyboard->tpl, template, sizeof(kbdTemplateUCase/* assuming all the same dimensions */));
-
-    // setup normal color pixels
-    hudKeyboard->colorScheme = RED_ON_BLACK;
 
     glhud_setupDefault(parent);
 
@@ -917,7 +913,6 @@ static void gltouchkbd_applyPrefs(void) {
 
         if (kbd.model) {
             GLModelHUDElement *hudKeyboard = (GLModelHUDElement *)kbd.model->custom;
-            hudKeyboard->colorScheme = RED_ON_BLACK;
             glhud_setupDefault(kbd.model);
         }
 
@@ -935,6 +930,8 @@ static void gltouchkbd_applyPrefs(void) {
     long width            = prefs_parseLongValue (PREF_DOMAIN_INTERFACE, PREF_DEVICE_WIDTH,      &lVal, 10) ? lVal : (long)(SCANWIDTH*1.5);
     long height           = prefs_parseLongValue (PREF_DOMAIN_INTERFACE, PREF_DEVICE_HEIGHT,     &lVal, 10) ? lVal : (long)(SCANHEIGHT*1.5);
     bool isLandscape      = prefs_parseBoolValue (PREF_DOMAIN_INTERFACE, PREF_DEVICE_LANDSCAPE,  &bVal)     ? bVal : true;
+
+    glhud_currentColorScheme = prefs_parseLongValue(PREF_DOMAIN_INTERFACE, PREF_SOFTHUD_COLOR, &lVal, 10) ? (interface_colorscheme_t)lVal : RED_ON_BLACK;
 
     gltouchkbd_reshape(width, height, isLandscape);
 }

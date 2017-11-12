@@ -76,6 +76,7 @@ static struct {
         GLuint vertShader; \
         GLuint fragShader; \
         GLuint program; \
+        GLint uniformSolidColorIdx; \
         GLint uniformMVPIdx;);
 
 AZIMUTH_CLASS(GLModelJoystickAzimuth);
@@ -136,6 +137,7 @@ static void *_azimuth_create_model(GLModel *parent) {
     azimuthJoystick->vertShader = UNINITIALIZED_GL;
     azimuthJoystick->fragShader = UNINITIALIZED_GL;
     azimuthJoystick->program = UNINITIALIZED_GL;
+    azimuthJoystick->uniformSolidColorIdx = UNINITIALIZED_GL;
     azimuthJoystick->uniformMVPIdx = UNINITIALIZED_GL;
 
     bool err = true;
@@ -158,6 +160,14 @@ static void *_azimuth_create_model(GLModel *parent) {
 
         // Build/use Program
         azimuthJoystick->program = glshader_buildProgram(vtxSource, frgSource, /*withTexcoord:*/false, &azimuthJoystick->vertShader, &azimuthJoystick->fragShader);
+
+        // Get uniforms locations
+
+        azimuthJoystick->uniformSolidColorIdx = glGetUniformLocation(azimuthJoystick->program, "solidColor");
+        if (azimuthJoystick->uniformSolidColorIdx < 0) {
+            LOG("OOPS, no solidColor uniform in Azimuth shader : %d", azimuthJoystick->uniformSolidColorIdx);
+            break;
+        }
 
         azimuthJoystick->uniformMVPIdx = glGetUniformLocation(azimuthJoystick->program, "modelViewProjectionMatrix");
         if (azimuthJoystick->uniformMVPIdx < 0) {
@@ -196,6 +206,33 @@ static void _azimuth_render(void) {
     glUseProgram(azimuthJoystick->program);
 
     glUniformMatrix4fv(azimuthJoystick->uniformMVPIdx, 1, GL_FALSE, mvpIdentity);
+
+    // set the solid color values
+    {
+        float R = 0.f;
+        float G = 0.f;
+        float B = 0.f;
+        float A = 1.f;
+        switch (glhud_currentColorScheme) {
+            case GREEN_ON_BLACK:
+                G = 1.f;
+                break;
+            case GREEN_ON_BLUE:
+                G = 1.f; // TODO FIXME : background colors ...
+                break;
+            case BLUE_ON_BLACK:
+                B = 1.f;
+                break;
+            case WHITE_ON_BLACK:
+                R = 1.f; G = 1.f; B = 1.f;
+                break;
+            case RED_ON_BLACK:
+            default:
+                R = 1.f;
+                break;
+        }
+        glUniform4f(azimuthJoystick->uniformSolidColorIdx, R, G, B, A);
+    }
 
     // NOTE : assuming we should just upload new postion data every time ...
     glBindBuffer(GL_ARRAY_BUFFER, axes.azimuthModel->posBufferName);
@@ -889,6 +926,8 @@ static void gltouchjoy_applyPrefs(void) {
     long width                 = prefs_parseLongValue (PREF_DOMAIN_INTERFACE, PREF_DEVICE_WIDTH,      &lVal, 10) ? lVal : (long)(SCANWIDTH*1.5);
     long height                = prefs_parseLongValue (PREF_DOMAIN_INTERFACE, PREF_DEVICE_HEIGHT,     &lVal, 10) ? lVal : (long)(SCANHEIGHT*1.5);
     bool isLandscape           = prefs_parseBoolValue (PREF_DOMAIN_INTERFACE, PREF_DEVICE_LANDSCAPE,  &bVal)     ? bVal : true;
+
+    glhud_currentColorScheme = prefs_parseLongValue(PREF_DOMAIN_INTERFACE, PREF_SOFTHUD_COLOR, &lVal, 10) ? (interface_colorscheme_t)lVal : RED_ON_BLACK;
 
     gltouchjoy_reshape(width, height, isLandscape);
 }

@@ -39,6 +39,7 @@
 #define PREF_DEVICE_LANDSCAPE "landscapeEnabled"
 #define PREF_DISK_PATH "diskPath"
 #define PREF_DISK_ANIMATIONS_ENABLED "diskAnimationsEnabled"
+#define PREF_SOFTHUD_COLOR "hudColorMode"
 
 // joystick
 #define PREF_JOYSTICK_KPAD_AUTO_RECENTER "kpAutoRecenter"

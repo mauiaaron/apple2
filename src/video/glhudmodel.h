@@ -63,4 +63,7 @@ void glhud_quadModelToScreen(const GLModel *model, const int screenW, const int 
 // helper method to sync timing of fade out
 float glhud_getTimedVisibility(struct timespec timingBegin, float minAlpha, float maxAlpha);
 
+// current color of HUD elements
+extern interface_colorscheme_t glhud_currentColorScheme;
+
 #endif

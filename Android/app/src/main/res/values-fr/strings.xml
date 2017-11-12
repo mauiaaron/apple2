@@ -179,5 +179,14 @@
     <string name="reset_self_test">Self Test</string>
     <string name="reset_preferences">Reset settings</string>
     <string name="reset_soft">Soft</string>
+    <string name="touch_device_color">Configure touch device color</string>
+    <string name="touch_device_color_summary">Configure color of HUD elements</string>
+    <string name="state_not_restored">Error restoring state…</string>
+    <string name="storage">/storage/</string>
+    <string name="touch_device_color_configure">Configure HUD color…</string>
+    <string name="color_red_on_black">Red on black</string>
+    <string name="color_green_on_black">Green on black</string>
+    <string name="color_blue_on_black">Blue on black</string>
+    <string name="color_white_on_black">White on black</string>
 
 </resources>

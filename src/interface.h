@@ -22,9 +22,14 @@ typedef enum interface_colorscheme_t {
     GREEN_ON_BLACK = 0,
     GREEN_ON_BLUE,
     RED_ON_BLACK,
+    BLUE_ON_BLACK,
+    WHITE_ON_BLACK,
+
+    // WARNING : changing here requires updating display.c ncvideo.c
+
     BLACK_ON_RED,
 
-    // 16 COLORS
+    // 16 COLORS -- ncvideo.c
     BLACK_ON_BLACK,
     BLACK_ON_MAGENTA,
     BLACK_ON_DARKBLUE,

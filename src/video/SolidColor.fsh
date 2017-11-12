@@ -9,17 +9,19 @@ precision highp float;
 //             but we must explicitly declared this in shaders version 1.40 and
 //             above.
 
+uniform vec4 solidColor;
+
 #if __VERSION__ >= 140
 out vec4 fragColor;
 #endif
 
 #if __VERSION__ >= 140
-#define OUTPUT_RED fragColor = vec4(1.0, 0.0, 0.0, 1.0)
+#define OUTPUT_COLOR fragColor = vec4(solidColor.r, solidColor.g, solidColor.b, solidColor.a)
 #else
-#define OUTPUT_RED gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0)
+#define OUTPUT_COLOR gl_FragColor = vec4(solidColor.r, solidColor.g, solidColor.b, solidColor.a)
 #endif
 
 void main(void)
 {
-    OUTPUT_RED;
+    OUTPUT_COLOR;
 }

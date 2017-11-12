@@ -35,7 +35,7 @@ static pthread_mutex_t display_scan_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 static uint8_t video__wider_font[0x8000] = { 0 };
 static uint8_t video__font[0x4000] = { 0 };
-static uint8_t video__int_font[3][0x4000] = { { 0 } }; // interface font
+static uint8_t video__int_font[5][0x4000] = { { 0 } }; // interface font
 
 static color_mode_t color_mode = COLOR_NONE;
 
@@ -521,13 +521,17 @@ static void _loadfont_int(int first, int quantity, const uint8_t *data) {
         while (j--) {
             unsigned int y = (first << 6) + (i << 3) + j;
             if (x & 128) {
-                video__int_font[0][y] = COLOR_LIGHT_GREEN;
-                video__int_font[1][y] = COLOR_LIGHT_GREEN;
-                video__int_font[2][y] = COLOR_LIGHT_RED;
+                video__int_font[GREEN_ON_BLACK][y] = COLOR_LIGHT_GREEN;
+                video__int_font[GREEN_ON_BLUE][y] = COLOR_LIGHT_GREEN;
+                video__int_font[RED_ON_BLACK][y] = COLOR_LIGHT_RED;
+                video__int_font[BLUE_ON_BLACK][y] = COLOR_LIGHT_BLUE;
+                video__int_font[WHITE_ON_BLACK][y] = COLOR_LIGHT_WHITE;
             } else {
-                video__int_font[0][y] = COLOR_BLACK;
-                video__int_font[1][y] = COLOR_MEDIUM_BLUE;
-                video__int_font[2][y] = COLOR_BLACK;
+                video__int_font[GREEN_ON_BLACK][y] = COLOR_BLACK;
+                video__int_font[GREEN_ON_BLUE][y] = COLOR_MEDIUM_BLUE;
+                video__int_font[RED_ON_BLACK][y] = COLOR_BLACK;
+                video__int_font[BLUE_ON_BLACK][y] = COLOR_BLACK;
+                video__int_font[WHITE_ON_BLACK][y] = COLOR_BLACK;
             }
             x <<= 1;
         }

@@ -38,6 +38,8 @@ typedef struct EightPatchArgs_s {
     } while (0);
 #endif
 
+interface_colorscheme_t glhud_currentColorScheme = RED_ON_BLACK;
+
 // Generates a semi-opaque halo effect around each glyph
 static void _eightpatch_opaquePixelHaloFilter(const EightPatchArgs_s args) {
 
@@ -134,7 +136,6 @@ void *glhud_createCustom(unsigned int sizeofModel) {
     GLModelHUDElement *hudElement = (GLModelHUDElement *)CALLOC(sizeofModel, 1);
     if (hudElement) {
         hudElement->glyphMultiplier = 1;
-        hudElement->colorScheme = RED_ON_BLACK;
     }
     return hudElement;
 }
@@ -143,6 +144,8 @@ void glhud_setupDefault(GLModel *parent) {
 
     GLModelHUDElement *hudElement = (GLModelHUDElement *)parent->custom;
     assert(hudElement->glyphMultiplier > 0);
+
+    hudElement->colorScheme = glhud_currentColorScheme;
 
     char *submenu = (char *)(hudElement->tpl);
     const unsigned int cols = hudElement->tplWidth;

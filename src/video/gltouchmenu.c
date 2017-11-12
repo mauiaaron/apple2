@@ -85,8 +85,6 @@ static void gltouchmenu_applyPrefs(void);
 static inline void _present_menu(GLModel *parent) {
     GLModelHUDElement *hudMenu = (GLModelHUDElement *)parent->custom;
     memcpy(hudMenu->tpl, topMenuTemplate, sizeof(topMenuTemplate));
-
-    hudMenu->colorScheme = RED_ON_BLACK;
     glhud_setupDefault(parent);
 }
 
@@ -610,6 +608,8 @@ static void gltouchmenu_applyPrefs(void) {
     long width            = prefs_parseLongValue (PREF_DOMAIN_INTERFACE, PREF_DEVICE_WIDTH,      &lVal, 10) ? lVal : (long)(SCANWIDTH*1.5);
     long height           = prefs_parseLongValue (PREF_DOMAIN_INTERFACE, PREF_DEVICE_HEIGHT,     &lVal, 10) ? lVal : (long)(SCANHEIGHT*1.5);
     bool isLandscape      = prefs_parseBoolValue (PREF_DOMAIN_INTERFACE, PREF_DEVICE_LANDSCAPE,  &bVal)     ? bVal : true;
+
+    glhud_currentColorScheme = prefs_parseLongValue(PREF_DOMAIN_INTERFACE, PREF_SOFTHUD_COLOR, &lVal, 10) ? (interface_colorscheme_t)lVal : RED_ON_BLACK;
 
     gltouchmenu_reshape(width, height, isLandscape);
 }

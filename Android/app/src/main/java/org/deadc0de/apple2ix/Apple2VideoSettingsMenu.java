@@ -62,6 +62,21 @@ public class Apple2VideoSettingsMenu extends Apple2AbstractMenu {
         INTERPOLATED
     }
 
+    // must match interface_colorscheme_t
+    public enum DeviceColor {
+        GREEN_ON_BLACK(0),
+        GREEN_ON_BLUE(1), // ...
+        RED_ON_BLACK(2),
+        BLUE_ON_BLACK(3),
+        WHITE_ON_BLACK(4);
+
+        private int val;
+
+        DeviceColor(int val) {
+            this.val = val;
+        }
+    }
+
     protected enum SETTINGS implements Apple2AbstractMenu.IMenuEnum {
         LANDSCAPE_MODE {
             @Override
@@ -97,7 +112,7 @@ public class Apple2VideoSettingsMenu extends Apple2AbstractMenu {
                 cb.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                     @Override
                     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                        Apple2Preferences.setJSONPref((IMenuEnum)self, isChecked);
+                        Apple2Preferences.setJSONPref((IMenuEnum) self, isChecked);
                         applyLandscapeMode(activity);
                     }
                 });
@@ -193,6 +208,82 @@ public class Apple2VideoSettingsMenu extends Apple2AbstractMenu {
                     @Override
                     public void saveInt(int value) {
                         Apple2Preferences.setJSONPref(self, HiresColor.values()[value].ordinal());
+                    }
+                });
+            }
+        },
+        COLOR_DEVICE_CONFIGURE {
+            @Override
+            public final String getTitle(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.touch_device_color);
+            }
+
+            @Override
+            public final String getSummary(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.touch_device_color_summary);
+            }
+
+            @Override
+            public String getPrefDomain() {
+                return Apple2Preferences.PREF_DOMAIN_INTERFACE;
+            }
+
+            @Override
+            public String getPrefKey() {
+                return "hudColorMode";
+            }
+
+            @Override
+            public Object getPrefDefault() {
+                return 0;
+            }
+
+            @Override
+            public View getView(Apple2Activity activity, View convertView) {
+                convertView = _basicView(activity, this, convertView);
+                _addPopupIcon(activity, this, convertView);
+                return convertView;
+            }
+
+            @Override
+            public void handleSelection(final Apple2Activity activity, final Apple2AbstractMenu settingsMenu, boolean isChecked) {
+                final Apple2AbstractMenu.IMenuEnum self = this;
+                _alertDialogHandleSelection(activity, R.string.touch_device_color_configure, new String[]{
+                        settingsMenu.mActivity.getResources().getString(R.string.color_red_on_black),
+                        settingsMenu.mActivity.getResources().getString(R.string.color_green_on_black),
+                        settingsMenu.mActivity.getResources().getString(R.string.color_blue_on_black),
+                        settingsMenu.mActivity.getResources().getString(R.string.color_white_on_black),
+                }, new IPreferenceLoadSave() {
+                    @Override
+                    public int intValue() {
+                        int colorscheme = (int) Apple2Preferences.getJSONPref(self);
+                        if (colorscheme == DeviceColor.GREEN_ON_BLACK.ordinal()) {
+                            return 1;
+                        } else if (colorscheme == DeviceColor.BLUE_ON_BLACK.ordinal()) {
+                            return 2;
+                        } else if (colorscheme == DeviceColor.WHITE_ON_BLACK.ordinal()) {
+                            return 3;
+                        } else {
+                            return 0;
+                        }
+                    }
+
+                    @Override
+                    public void saveInt(int value) {
+                        switch (value) {
+                            case 1:
+                                Apple2Preferences.setJSONPref(self, (int) DeviceColor.GREEN_ON_BLACK.ordinal());
+                                break;
+                            case 2:
+                                Apple2Preferences.setJSONPref(self, (int) DeviceColor.BLUE_ON_BLACK.ordinal());
+                                break;
+                            case 3:
+                                Apple2Preferences.setJSONPref(self, (int) DeviceColor.WHITE_ON_BLACK.ordinal());
+                                break;
+                            default:
+                                Apple2Preferences.setJSONPref(self, (int) DeviceColor.RED_ON_BLACK.ordinal());
+                                break;
+                        }
                     }
                 });
             }

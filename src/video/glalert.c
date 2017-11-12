@@ -35,7 +35,6 @@ static void *_create_alert(GLModel *parent) {
     parent->custom = glhud_createDefault();
     GLModelHUDElement *hudElement = (GLModelHUDElement *)parent->custom;
     if (hudElement) {
-        hudElement->colorScheme = RED_ON_BLACK;
         hudElement->blackIsTransparent = false;
         hudElement->opaquePixelHalo = false;
     }
@@ -389,6 +388,8 @@ static void alert_applyPrefs(void) {
     long width            = prefs_parseLongValue (PREF_DOMAIN_INTERFACE, PREF_DEVICE_WIDTH,      &lVal, 10) ? lVal : (long)(SCANWIDTH*1.5);
     long height           = prefs_parseLongValue (PREF_DOMAIN_INTERFACE, PREF_DEVICE_HEIGHT,     &lVal, 10) ? lVal : (long)(SCANHEIGHT*1.5);
     bool isLandscape      = prefs_parseBoolValue (PREF_DOMAIN_INTERFACE, PREF_DEVICE_LANDSCAPE,  &bVal)     ? bVal : true;
+
+    glhud_currentColorScheme = prefs_parseLongValue(PREF_DOMAIN_INTERFACE, PREF_SOFTHUD_COLOR, &lVal, 10) ? (interface_colorscheme_t)lVal : RED_ON_BLACK;
 
     alert_reshape((int)width, (int)height, isLandscape);
 }
