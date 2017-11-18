@@ -1396,7 +1396,7 @@ static int _test_disk_image_with_gzip_header(int readonly) {
     do {
         uint8_t md[SHA_DIGEST_LENGTH];
 
-        uint8_t fb = MALLOC(SCANWIDTH*SCANHEIGHT);
+        uint8_t *fb = MALLOC(SCANWIDTH*SCANHEIGHT);
         display_renderStagingFramebuffer(fb);
         SHA1(fb, SCANWIDTH*SCANHEIGHT, md);
         FREE(fb);
@@ -1504,7 +1504,7 @@ TEST test_reinsert_edgecase() {
     c_debugger_go();
     uint8_t md[SHA_DIGEST_LENGTH];
 
-    uint8_t fb = MALLOC(SCANWIDTH*SCANHEIGHT);
+    uint8_t *fb = MALLOC(SCANWIDTH*SCANHEIGHT);
     display_renderStagingFramebuffer(fb);
     SHA1(fb, SCANWIDTH*SCANHEIGHT, md);
     FREE(fb);
