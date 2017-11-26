@@ -389,13 +389,15 @@ static void alert_applyPrefs(void) {
     long height           = prefs_parseLongValue (PREF_DOMAIN_INTERFACE, PREF_DEVICE_HEIGHT,     &lVal, 10) ? lVal : (long)(SCANHEIGHT*1.5);
     bool isLandscape      = prefs_parseBoolValue (PREF_DOMAIN_INTERFACE, PREF_DEVICE_LANDSCAPE,  &bVal)     ? bVal : true;
 
-    glhud_currentColorScheme = prefs_parseLongValue(PREF_DOMAIN_INTERFACE, PREF_SOFTHUD_COLOR, &lVal, 10) ? (interface_colorscheme_t)lVal : RED_ON_BLACK;
-
     alert_reshape((int)width, (int)height, isLandscape);
 }
 
 static void alert_prefsChanged(const char *domain) {
     prefsChanged = true;
+
+    // HACK NOTE : on startup, ensure that we have the correct color scheme before drawing anything
+    long lVal = 0;
+    glhud_currentColorScheme = prefs_parseLongValue(PREF_DOMAIN_INTERFACE, PREF_SOFTHUD_COLOR, &lVal, 10) ? (interface_colorscheme_t)lVal : RED_ON_BLACK;
 }
 
 static void _init_glalert(void) {
