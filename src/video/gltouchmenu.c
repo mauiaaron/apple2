@@ -123,7 +123,7 @@ static inline void _hide_top_left(void) {
 static inline void _show_top_right(void) {
     topMenuTemplate[0][MENU_TEMPLATE_COLS-2] = MOUSETEXT_LEFT;
     topMenuTemplate[0][MENU_TEMPLATE_COLS-1] = ICONTEXT_MENU_SPROUT;
-    topMenuTemplate[1][MENU_TEMPLATE_COLS-2] = ICONTEXT_NONACTIONABLE;
+    topMenuTemplate[1][MENU_TEMPLATE_COLS-2] = MOUSETEXT_CURSOR1;
     topMenuTemplate[1][MENU_TEMPLATE_COLS-1] = MOUSETEXT_CHECKMARK;
     menu.topRightShowing = true;
     _present_menu(menu.model);
@@ -297,6 +297,14 @@ static int64_t _tap_menu_item(float x, float y) {
         case MOUSETEXT_CHECKMARK:
             LOG("showing main menu...");
             flags |= TOUCH_FLAGS_REQUEST_HOST_MENU;
+            _hide_top_right();
+            prefs_save();
+            break;
+
+        case MOUSETEXT_CURSOR0:
+        case MOUSETEXT_CURSOR1:
+            LOG("showing system keyboard...");
+            flags |= TOUCH_FLAGS_REQUEST_SYSTEM_KBD;
             _hide_top_right();
             prefs_save();
             break;
