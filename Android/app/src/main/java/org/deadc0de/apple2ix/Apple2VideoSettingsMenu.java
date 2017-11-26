@@ -235,7 +235,7 @@ public class Apple2VideoSettingsMenu extends Apple2AbstractMenu {
 
             @Override
             public Object getPrefDefault() {
-                return 0;
+                return DeviceColor.RED_ON_BLACK.ordinal();
             }
 
             @Override
