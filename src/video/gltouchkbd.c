@@ -168,12 +168,30 @@ static void _rerender_character(int col, int row) {
         for (unsigned int j=0; j<FONT80_WIDTH_PIXELS; j++, texIdx+=dstPointStride) {
             // HACK : red <-> green swap of texture data
             PIXEL_TYPE rgba = *((PIXEL_TYPE *)(kbd.model->texPixels + texIdx));
-            PIXEL_TYPE r = (rgba >> SHIFT_R) & MAX_SATURATION;
-            PIXEL_TYPE g = (rgba >> SHIFT_G) & MAX_SATURATION;
+            uint8_t r = (rgba >> SHIFT_R) & MAX_SATURATION;
+            uint8_t g = (rgba >> SHIFT_G) & MAX_SATURATION;
+            uint8_t b = (rgba >> SHIFT_B) & MAX_SATURATION;
+            uint8_t a = (rgba >> SHIFT_A) & MAX_SATURATION;
+
 #if USE_RGBA4444
 #error fixme
 #else
-            rgba = ( ((rgba>>SHIFT_B)<<SHIFT_B) | (r << SHIFT_G) | (g << SHIFT_R) );
+            if ((glhud_currentColorScheme == RED_ON_BLACK) || (glhud_currentColorScheme == GREEN_ON_BLACK)) {
+                rgba = ( (r << SHIFT_G) | (g << SHIFT_R) | (b << SHIFT_B) | (a << SHIFT_A) );
+            } else if (glhud_currentColorScheme == BLUE_ON_BLACK) {
+                rgba = ( (r << SHIFT_R) | (g << SHIFT_B) | (b << SHIFT_G) | (a << SHIFT_A) );
+            } else /*if (glhud_currentColorScheme == WHITE_ON_BLACK)*/ {
+                if (a == MAX_SATURATION) {
+                    if (r) {
+                        r = 0x0;
+                        b = 0x0;
+                    } else {
+                        r = MAX_SATURATION;
+                        b = MAX_SATURATION;
+                    }
+                    rgba = ( (r << SHIFT_R) | (g << SHIFT_G) | (b << SHIFT_B) | (a << SHIFT_A) );
+                }
+            }
 #endif
             // scale texture data 1x, 2x, ...
             unsigned int dstIdx = texIdx;
