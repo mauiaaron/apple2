@@ -604,9 +604,11 @@ void Java_org_deadc0de_apple2ix_Apple2Preferences_nativePrefsSync(JNIEnv *env, j
         domain = (*env)->GetStringUTFChars(env, jDomain, 0);
     }
 
+#if !TEST_PREFS
     LOG("... domain: %s", domain);
     prefs_load();
     prefs_sync(domain);
+#endif
 
     if (jDomain) {
         (*env)->ReleaseStringUTFChars(env, jDomain, domain);
