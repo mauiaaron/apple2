@@ -41,33 +41,30 @@
         char bufA[MSG_SIZE]; \
         char bufB[MSG_SIZE]; \
         flags_to_string(flags, bufA); \
-        flags_to_string(cpu65_f, bufB); \
-        snprintf(msgbuf0, MSG_SIZE, MSG_FLAGS0, regA, val, result, bufA, cpu65_a, bufB); \
-        ASSERTm(msgbuf0, cpu65_f == flags); \
+        flags_to_string(run_args.cpu65_f, bufB); \
+        snprintf(msgbuf0, MSG_SIZE, MSG_FLAGS0, regA, val, result, bufA, run_args.cpu65_a, bufB); \
+        ASSERTm(msgbuf0, run_args.cpu65_f == flags); \
     } while (0)
 
 static void testcpu_setup(void *arg) {
 
     cpu65_uninterrupt(0xff);
-    extern int32_t cpu65_cycles_to_execute;
-    extern int32_t cpu65_cycle_count;
-    extern int32_t irqCheckTimeout;
-    cpu65_cycle_count = 0;
-    cpu65_cycles_to_execute = 1;
-    irqCheckTimeout = 255;
+    run_args.cpu65_cycle_count = 0;
+    run_args.cpu65_cycles_to_execute = 1;
+    run_args.irq_check_timeout = 255;
 
-    cpu65_pc = TEST_LOC;
-    cpu65_a = 0x0;
-    cpu65_x = 0x0;
-    cpu65_y = 0x0;
-    cpu65_f = 0x0;
-    cpu65_sp = 0xff;
+    run_args.cpu65_pc = TEST_LOC;
+    run_args.cpu65_a = 0x0;
+    run_args.cpu65_x = 0x0;
+    run_args.cpu65_y = 0x0;
+    run_args.cpu65_f = 0x0;
+    run_args.cpu65_sp = 0xff;
 
-    cpu65_ea = 0xffff;
-    cpu65_d = 0xff;
-    cpu65_rw = 0xff;
-    cpu65_opcode = 0xff;
-    cpu65_opcycles = 0xff;
+    run_args.cpu65_ea = 0xffff;
+    run_args.cpu65_d = 0xff;
+    run_args.cpu65_rw = 0xff;
+    run_args.cpu65_opcode = 0xff;
+    run_args.cpu65_opcycles = 0xff;
 
     // clear ZP & stack memory
     memset(apple_ii_64k, 0x0, 0x200);
@@ -81,7 +78,7 @@ static void testcpu_teardown(void *arg) {
 }
 
 static void testcpu_set_opcodeX(uint8_t op, uint8_t val, uint8_t arg1, uint16_t addrs) {
-    cpu65_pc = addrs;
+    run_args.cpu65_pc = addrs;
     apple_ii_64k[0][addrs] = op;
     apple_ii_64k[0][(uint16_t)(addrs+1)] = val;
     apple_ii_64k[0][(uint16_t)(addrs+2)] = arg1;
@@ -233,34 +230,34 @@ TEST test_ADC_imm(uint8_t regA, uint8_t val, bool decimal, bool carry) {
 
     testcpu_set_opcode2(0x69, val);
 
-    cpu65_a  = regA;
-    cpu65_x  = 0x03;
-    cpu65_y  = 0x04;
-    cpu65_sp = 0x80;
-    cpu65_f |= decimal ? (fD) : 0x00;
-    cpu65_f |= carry   ? (fC) : 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0x03;
+    run_args.cpu65_y  = 0x04;
+    run_args.cpu65_sp = 0x80;
+    run_args.cpu65_f |= decimal ? (fD) : 0x00;
+    run_args.cpu65_f |= carry   ? (fC) : 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+2);
-    ASSERT(cpu65_x       == 0x03);
-    ASSERT(cpu65_y       == 0x04);
-    ASSERT(cpu65_sp      == 0x80);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+2);
+    ASSERT(run_args.cpu65_x       == 0x03);
+    ASSERT(run_args.cpu65_y       == 0x04);
+    ASSERT(run_args.cpu65_sp      == 0x80);
 
     do {
         char msgbuf[MSG_SIZE];
         char buf0[MSG_SIZE];
         char buf1[MSG_SIZE];
-        snprintf(msgbuf, MSG_SIZE, MSG_FLAGS0, regA, val, result, buf0, cpu65_a, buf1);
-        ASSERTm(msgbuf, cpu65_a == result);
+        snprintf(msgbuf, MSG_SIZE, MSG_FLAGS0, regA, val, result, buf0, run_args.cpu65_a, buf1);
+        ASSERTm(msgbuf, run_args.cpu65_a == result);
         VERIFY_FLAGS();
     } while (0);
 
-    ASSERT(cpu65_ea        == TEST_LOC+1);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_READ);
-    ASSERT(cpu65_opcode    == 0x69);
-    ASSERT(cpu65_opcycles  == (decimal ? 3 : 2));
+    ASSERT(run_args.cpu65_ea        == TEST_LOC+1);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_READ);
+    ASSERT(run_args.cpu65_opcode    == 0x69);
+    ASSERT(run_args.cpu65_opcycles  == (decimal ? 3 : 2));
 
     PASS();
 }
@@ -275,26 +272,26 @@ TEST test_ADC_zpage(uint8_t regA, uint8_t val, uint8_t arg0) {
 
     apple_ii_64k[0][arg0] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = 0x03;
-    cpu65_y  = 0x04;
-    cpu65_sp = 0x80;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0x03;
+    run_args.cpu65_y  = 0x04;
+    run_args.cpu65_sp = 0x80;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+2);
-    ASSERT(cpu65_x       == 0x03);
-    ASSERT(cpu65_y       == 0x04);
-    ASSERT(cpu65_sp      == 0x80);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+2);
+    ASSERT(run_args.cpu65_x       == 0x03);
+    ASSERT(run_args.cpu65_y       == 0x04);
+    ASSERT(run_args.cpu65_sp      == 0x80);
 
-    ASSERT(cpu65_a == result);
+    ASSERT(run_args.cpu65_a == result);
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == arg0);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_READ);
-    ASSERT(cpu65_opcode    == 0x65);
-    ASSERT(cpu65_opcycles  == (3));
+    ASSERT(run_args.cpu65_ea        == arg0);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_READ);
+    ASSERT(run_args.cpu65_opcode    == 0x65);
+    ASSERT(run_args.cpu65_opcycles  == (3));
 
     PASS();
 }
@@ -311,26 +308,26 @@ TEST test_ADC_zpage_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX) {
 
     apple_ii_64k[0][idx] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = regX;
-    cpu65_y  = 0x05;
-    cpu65_sp = 0x81;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = regX;
+    run_args.cpu65_y  = 0x05;
+    run_args.cpu65_sp = 0x81;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+2);
-    ASSERT(cpu65_x       == regX);
-    ASSERT(cpu65_y       == 0x05);
-    ASSERT(cpu65_sp      == 0x81);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+2);
+    ASSERT(run_args.cpu65_x       == regX);
+    ASSERT(run_args.cpu65_y       == 0x05);
+    ASSERT(run_args.cpu65_sp      == 0x81);
 
-    ASSERT(cpu65_a == result);
+    ASSERT(run_args.cpu65_a == result);
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == idx);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_READ);
-    ASSERT(cpu65_opcode    == 0x75);
-    ASSERT(cpu65_opcycles  == (4));
+    ASSERT(run_args.cpu65_ea        == idx);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_READ);
+    ASSERT(run_args.cpu65_opcode    == 0x75);
+    ASSERT(run_args.cpu65_opcycles  == (4));
 
     PASS();
 }
@@ -346,26 +343,26 @@ TEST test_ADC_abs(uint8_t regA, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
     uint16_t addrs = lobyte | (hibyte<<8);
     apple_ii_64k[0][addrs] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = 0xf4;
-    cpu65_y  = 0x05;
-    cpu65_sp = 0x81;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0xf4;
+    run_args.cpu65_y  = 0x05;
+    run_args.cpu65_sp = 0x81;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+3);
-    ASSERT(cpu65_x       == 0xf4);
-    ASSERT(cpu65_y       == 0x05);
-    ASSERT(cpu65_sp      == 0x81);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+3);
+    ASSERT(run_args.cpu65_x       == 0xf4);
+    ASSERT(run_args.cpu65_y       == 0x05);
+    ASSERT(run_args.cpu65_sp      == 0x81);
 
-    ASSERT(cpu65_a == result);
+    ASSERT(run_args.cpu65_a == result);
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == addrs);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_READ);
-    ASSERT(cpu65_opcode    == 0x6d);
-    ASSERT(cpu65_opcycles  == (4));
+    ASSERT(run_args.cpu65_ea        == addrs);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_READ);
+    ASSERT(run_args.cpu65_opcode    == 0x6d);
+    ASSERT(run_args.cpu65_opcycles  == (4));
 
     PASS();
 }
@@ -386,28 +383,28 @@ TEST test_ADC_abs_x(uint8_t regA, uint8_t val, uint8_t regX, uint8_t lobyte, uin
     }
     apple_ii_64k[0][addrs] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = regX;
-    cpu65_y  = 0x05;
-    cpu65_sp = 0x81;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = regX;
+    run_args.cpu65_y  = 0x05;
+    run_args.cpu65_sp = 0x81;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+3);
-    ASSERT(cpu65_x       == regX);
-    ASSERT(cpu65_y       == 0x05);
-    ASSERT(cpu65_sp      == 0x81);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+3);
+    ASSERT(run_args.cpu65_x       == regX);
+    ASSERT(run_args.cpu65_y       == 0x05);
+    ASSERT(run_args.cpu65_sp      == 0x81);
 
-    ASSERT(cpu65_a == result);
+    ASSERT(run_args.cpu65_a == result);
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == addrs);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_READ);
-    ASSERT(cpu65_opcode    == 0x7d);
+    ASSERT(run_args.cpu65_ea        == addrs);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_READ);
+    ASSERT(run_args.cpu65_opcode    == 0x7d);
 
     cycle_count += 4;
-    ASSERT(cpu65_opcycles == cycle_count);
+    ASSERT(run_args.cpu65_opcycles == cycle_count);
 
     PASS();
 }
@@ -428,28 +425,28 @@ TEST test_ADC_abs_y(uint8_t regA, uint8_t val, uint8_t regY, uint8_t lobyte, uin
     }
     apple_ii_64k[0][addrs] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = 0x02;
-    cpu65_y  = regY;
-    cpu65_sp = 0x81;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0x02;
+    run_args.cpu65_y  = regY;
+    run_args.cpu65_sp = 0x81;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+3);
-    ASSERT(cpu65_x       == 0x02);
-    ASSERT(cpu65_y       == regY);
-    ASSERT(cpu65_sp      == 0x81);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+3);
+    ASSERT(run_args.cpu65_x       == 0x02);
+    ASSERT(run_args.cpu65_y       == regY);
+    ASSERT(run_args.cpu65_sp      == 0x81);
 
-    ASSERT(cpu65_a == result);
+    ASSERT(run_args.cpu65_a == result);
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == addrs);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_READ);
-    ASSERT(cpu65_opcode    == 0x79);
+    ASSERT(run_args.cpu65_ea        == addrs);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_READ);
+    ASSERT(run_args.cpu65_opcode    == 0x79);
 
     cycle_count += 4;
-    ASSERT(cpu65_opcycles == cycle_count);
+    ASSERT(run_args.cpu65_opcycles == cycle_count);
 
     PASS();
 }
@@ -470,27 +467,27 @@ TEST test_ADC_ind_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX, uint8
     apple_ii_64k[0][idx_hi] = hibyte;
     apple_ii_64k[0][addrs] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = regX;
-    cpu65_y  = 0x15;
-    cpu65_sp = 0x81;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = regX;
+    run_args.cpu65_y  = 0x15;
+    run_args.cpu65_sp = 0x81;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+2);
-    ASSERT(cpu65_x       == regX);
-    ASSERT(cpu65_y       == 0x15);
-    ASSERT(cpu65_sp      == 0x81);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+2);
+    ASSERT(run_args.cpu65_x       == regX);
+    ASSERT(run_args.cpu65_y       == 0x15);
+    ASSERT(run_args.cpu65_sp      == 0x81);
 
-    ASSERT(cpu65_a == result);
+    ASSERT(run_args.cpu65_a == result);
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == addrs);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_READ);
-    ASSERT(cpu65_opcode    == 0x61);
+    ASSERT(run_args.cpu65_ea        == addrs);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_READ);
+    ASSERT(run_args.cpu65_opcode    == 0x61);
 
-    ASSERT(cpu65_opcycles  == (6));
+    ASSERT(run_args.cpu65_opcycles  == (6));
 
     PASS();
 }
@@ -518,27 +515,27 @@ TEST test_ADC_ind_y(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regY, uint8
 
     apple_ii_64k[0][addrs] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = 0x84;
-    cpu65_y  = regY;
-    cpu65_sp = 0x81;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0x84;
+    run_args.cpu65_y  = regY;
+    run_args.cpu65_sp = 0x81;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+2);
-    ASSERT(cpu65_x       == 0x84);
-    ASSERT(cpu65_y       == regY);
-    ASSERT(cpu65_sp      == 0x81);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+2);
+    ASSERT(run_args.cpu65_x       == 0x84);
+    ASSERT(run_args.cpu65_y       == regY);
+    ASSERT(run_args.cpu65_sp      == 0x81);
 
-    ASSERT(cpu65_a == result);
+    ASSERT(run_args.cpu65_a == result);
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == addrs);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_READ);
-    ASSERT(cpu65_opcode    == 0x71);
+    ASSERT(run_args.cpu65_ea        == addrs);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_READ);
+    ASSERT(run_args.cpu65_opcode    == 0x71);
     cycle_count += 5;
-    ASSERT(cpu65_opcycles == cycle_count);
+    ASSERT(run_args.cpu65_opcycles == cycle_count);
 
     PASS();
 }
@@ -560,26 +557,26 @@ TEST test_ADC_ind_zpage(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t lobyte,
     uint16_t addrs = lobyte | (hibyte<<8);
     apple_ii_64k[0][addrs] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = 0x14;
-    cpu65_y  = 0x85;
-    cpu65_sp = 0x81;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0x14;
+    run_args.cpu65_y  = 0x85;
+    run_args.cpu65_sp = 0x81;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+2);
-    ASSERT(cpu65_x       == 0x14);
-    ASSERT(cpu65_y       == 0x85);
-    ASSERT(cpu65_sp      == 0x81);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+2);
+    ASSERT(run_args.cpu65_x       == 0x14);
+    ASSERT(run_args.cpu65_y       == 0x85);
+    ASSERT(run_args.cpu65_sp      == 0x81);
 
-    ASSERT(cpu65_a == result);
+    ASSERT(run_args.cpu65_a == result);
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == addrs);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_READ);
-    ASSERT(cpu65_opcode    == 0x72);
-    ASSERT(cpu65_opcycles  == (5));
+    ASSERT(run_args.cpu65_ea        == addrs);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_READ);
+    ASSERT(run_args.cpu65_opcode    == 0x72);
+    ASSERT(run_args.cpu65_opcycles  == (5));
 
     PASS();
 }
@@ -610,33 +607,33 @@ TEST test_AND_imm(uint8_t regA, uint8_t val) {
 
     testcpu_set_opcode2(0x29, val);
 
-    cpu65_a  = regA;
-    cpu65_x  = 0x03;
-    cpu65_y  = 0x04;
-    cpu65_sp = 0x80;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0x03;
+    run_args.cpu65_y  = 0x04;
+    run_args.cpu65_sp = 0x80;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+2);
-    ASSERT(cpu65_x       == 0x03);
-    ASSERT(cpu65_y       == 0x04);
-    ASSERT(cpu65_sp      == 0x80);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+2);
+    ASSERT(run_args.cpu65_x       == 0x03);
+    ASSERT(run_args.cpu65_y       == 0x04);
+    ASSERT(run_args.cpu65_sp      == 0x80);
 
     do {
         char msgbuf[MSG_SIZE];
         char buf0[MSG_SIZE];
         char buf1[MSG_SIZE];
-        snprintf(msgbuf, MSG_SIZE, MSG_FLAGS0, regA, val, result, buf0, cpu65_a, buf1);
-        ASSERTm(msgbuf, cpu65_a == result);
+        snprintf(msgbuf, MSG_SIZE, MSG_FLAGS0, regA, val, result, buf0, run_args.cpu65_a, buf1);
+        ASSERTm(msgbuf, run_args.cpu65_a == result);
         VERIFY_FLAGS();
     } while (0);
 
-    ASSERT(cpu65_ea        == TEST_LOC+1);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_READ);
-    ASSERT(cpu65_opcode    == 0x29);
-    ASSERT(cpu65_opcycles  == (2));
+    ASSERT(run_args.cpu65_ea        == TEST_LOC+1);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_READ);
+    ASSERT(run_args.cpu65_opcode    == 0x29);
+    ASSERT(run_args.cpu65_opcycles  == (2));
 
     PASS();
 }
@@ -650,27 +647,27 @@ TEST test_AND_zpage(uint8_t regA, uint8_t val, uint8_t arg0) {
 
     apple_ii_64k[0][arg0] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = 0x03;
-    cpu65_y  = 0x04;
-    cpu65_sp = 0x80;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0x03;
+    run_args.cpu65_y  = 0x04;
+    run_args.cpu65_sp = 0x80;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+2);
-    ASSERT(cpu65_x       == 0x03);
-    ASSERT(cpu65_y       == 0x04);
-    ASSERT(cpu65_sp      == 0x80);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+2);
+    ASSERT(run_args.cpu65_x       == 0x03);
+    ASSERT(run_args.cpu65_y       == 0x04);
+    ASSERT(run_args.cpu65_sp      == 0x80);
 
-    ASSERT(cpu65_a == result);
+    ASSERT(run_args.cpu65_a == result);
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == arg0);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_READ);
-    ASSERT(cpu65_opcode    == 0x25);
-    ASSERT(cpu65_opcycles  == (3));
+    ASSERT(run_args.cpu65_ea        == arg0);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_READ);
+    ASSERT(run_args.cpu65_opcode    == 0x25);
+    ASSERT(run_args.cpu65_opcycles  == (3));
 
     PASS();
 }
@@ -686,27 +683,27 @@ TEST test_AND_zpage_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX) {
 
     apple_ii_64k[0][idx] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = regX;
-    cpu65_y  = 0x05;
-    cpu65_sp = 0x81;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = regX;
+    run_args.cpu65_y  = 0x05;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+2);
-    ASSERT(cpu65_x       == regX);
-    ASSERT(cpu65_y       == 0x05);
-    ASSERT(cpu65_sp      == 0x81);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+2);
+    ASSERT(run_args.cpu65_x       == regX);
+    ASSERT(run_args.cpu65_y       == 0x05);
+    ASSERT(run_args.cpu65_sp      == 0x81);
 
-    ASSERT(cpu65_a == result);
+    ASSERT(run_args.cpu65_a == result);
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == idx);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_READ);
-    ASSERT(cpu65_opcode    == 0x35);
-    ASSERT(cpu65_opcycles  == (4));
+    ASSERT(run_args.cpu65_ea        == idx);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_READ);
+    ASSERT(run_args.cpu65_opcode    == 0x35);
+    ASSERT(run_args.cpu65_opcycles  == (4));
 
     PASS();
 }
@@ -721,27 +718,27 @@ TEST test_AND_abs(uint8_t regA, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
     uint16_t addrs = lobyte | (hibyte<<8);
     apple_ii_64k[0][addrs] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = 0xf4;
-    cpu65_y  = 0x05;
-    cpu65_sp = 0x81;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0xf4;
+    run_args.cpu65_y  = 0x05;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+3);
-    ASSERT(cpu65_x       == 0xf4);
-    ASSERT(cpu65_y       == 0x05);
-    ASSERT(cpu65_sp      == 0x81);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+3);
+    ASSERT(run_args.cpu65_x       == 0xf4);
+    ASSERT(run_args.cpu65_y       == 0x05);
+    ASSERT(run_args.cpu65_sp      == 0x81);
 
-    ASSERT(cpu65_a == result);
+    ASSERT(run_args.cpu65_a == result);
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == addrs);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_READ);
-    ASSERT(cpu65_opcode    == 0x2d);
-    ASSERT(cpu65_opcycles  == (4));
+    ASSERT(run_args.cpu65_ea        == addrs);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_READ);
+    ASSERT(run_args.cpu65_opcode    == 0x2d);
+    ASSERT(run_args.cpu65_opcycles  == (4));
 
     PASS();
 }
@@ -761,27 +758,27 @@ TEST test_AND_abs_x(uint8_t regA, uint8_t val, uint8_t regX, uint8_t lobyte, uin
     }
     apple_ii_64k[0][addrs] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = regX;
-    cpu65_y  = 0x05;
-    cpu65_sp = 0x81;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = regX;
+    run_args.cpu65_y  = 0x05;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+3);
-    ASSERT(cpu65_x       == regX);
-    ASSERT(cpu65_y       == 0x05);
-    ASSERT(cpu65_sp      == 0x81);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+3);
+    ASSERT(run_args.cpu65_x       == regX);
+    ASSERT(run_args.cpu65_y       == 0x05);
+    ASSERT(run_args.cpu65_sp      == 0x81);
 
-    ASSERT(cpu65_a == result);
+    ASSERT(run_args.cpu65_a == result);
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == addrs);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_READ);
-    ASSERT(cpu65_opcode    == 0x3d);
-    ASSERT(cpu65_opcycles  == cycle_count);
+    ASSERT(run_args.cpu65_ea        == addrs);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_READ);
+    ASSERT(run_args.cpu65_opcode    == 0x3d);
+    ASSERT(run_args.cpu65_opcycles  == cycle_count);
 
     PASS();
 }
@@ -801,27 +798,27 @@ TEST test_AND_abs_y(uint8_t regA, uint8_t val, uint8_t regY, uint8_t lobyte, uin
     }
     apple_ii_64k[0][addrs] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = 0x02;
-    cpu65_y  = regY;
-    cpu65_sp = 0x81;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0x02;
+    run_args.cpu65_y  = regY;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+3);
-    ASSERT(cpu65_x       == 0x02);
-    ASSERT(cpu65_y       == regY);
-    ASSERT(cpu65_sp      == 0x81);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+3);
+    ASSERT(run_args.cpu65_x       == 0x02);
+    ASSERT(run_args.cpu65_y       == regY);
+    ASSERT(run_args.cpu65_sp      == 0x81);
 
-    ASSERT(cpu65_a == result);
+    ASSERT(run_args.cpu65_a == result);
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == addrs);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_READ);
-    ASSERT(cpu65_opcode    == 0x39);
-    ASSERT(cpu65_opcycles == cycle_count);
+    ASSERT(run_args.cpu65_ea        == addrs);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_READ);
+    ASSERT(run_args.cpu65_opcode    == 0x39);
+    ASSERT(run_args.cpu65_opcycles == cycle_count);
 
     PASS();
 }
@@ -841,28 +838,28 @@ TEST test_AND_ind_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX, uint8
     apple_ii_64k[0][idx_hi] = hibyte;
     apple_ii_64k[0][addrs] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = regX;
-    cpu65_y  = 0x15;
-    cpu65_sp = 0x81;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = regX;
+    run_args.cpu65_y  = 0x15;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+2);
-    ASSERT(cpu65_x       == regX);
-    ASSERT(cpu65_y       == 0x15);
-    ASSERT(cpu65_sp      == 0x81);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+2);
+    ASSERT(run_args.cpu65_x       == regX);
+    ASSERT(run_args.cpu65_y       == 0x15);
+    ASSERT(run_args.cpu65_sp      == 0x81);
 
-    ASSERT(cpu65_a == result);
+    ASSERT(run_args.cpu65_a == result);
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == addrs);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_READ);
-    ASSERT(cpu65_opcode    == 0x21);
+    ASSERT(run_args.cpu65_ea        == addrs);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_READ);
+    ASSERT(run_args.cpu65_opcode    == 0x21);
 
-    ASSERT(cpu65_opcycles  == (6));
+    ASSERT(run_args.cpu65_opcycles  == (6));
 
     PASS();
 }
@@ -889,27 +886,27 @@ TEST test_AND_ind_y(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regY, uint8
 
     apple_ii_64k[0][addrs] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = 0x84;
-    cpu65_y  = regY;
-    cpu65_sp = 0x81;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0x84;
+    run_args.cpu65_y  = regY;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+2);
-    ASSERT(cpu65_x       == 0x84);
-    ASSERT(cpu65_y       == regY);
-    ASSERT(cpu65_sp      == 0x81);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+2);
+    ASSERT(run_args.cpu65_x       == 0x84);
+    ASSERT(run_args.cpu65_y       == regY);
+    ASSERT(run_args.cpu65_sp      == 0x81);
 
-    ASSERT(cpu65_a == result);
+    ASSERT(run_args.cpu65_a == result);
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == addrs);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_READ);
-    ASSERT(cpu65_opcode    == 0x31);
-    ASSERT(cpu65_opcycles  == cycle_count);
+    ASSERT(run_args.cpu65_ea        == addrs);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_READ);
+    ASSERT(run_args.cpu65_opcode    == 0x31);
+    ASSERT(run_args.cpu65_opcycles  == cycle_count);
 
     PASS();
 }
@@ -930,27 +927,27 @@ TEST test_AND_ind_zpage(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t lobyte,
     uint16_t addrs = lobyte | (hibyte<<8);
     apple_ii_64k[0][addrs] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = 0x14;
-    cpu65_y  = 0x85;
-    cpu65_sp = 0x81;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0x14;
+    run_args.cpu65_y  = 0x85;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+2);
-    ASSERT(cpu65_x       == 0x14);
-    ASSERT(cpu65_y       == 0x85);
-    ASSERT(cpu65_sp      == 0x81);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+2);
+    ASSERT(run_args.cpu65_x       == 0x14);
+    ASSERT(run_args.cpu65_y       == 0x85);
+    ASSERT(run_args.cpu65_sp      == 0x81);
 
-    ASSERT(cpu65_a == result);
+    ASSERT(run_args.cpu65_a == result);
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == addrs);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_READ);
-    ASSERT(cpu65_opcode    == 0x32);
-    ASSERT(cpu65_opcycles  == (5));
+    ASSERT(run_args.cpu65_ea        == addrs);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_READ);
+    ASSERT(run_args.cpu65_opcode    == 0x32);
+    ASSERT(run_args.cpu65_opcycles  == (5));
 
     PASS();
 }
@@ -983,27 +980,27 @@ TEST test_ASL_acc(uint8_t regA) {
 
     testcpu_set_opcode1(0x0a);
 
-    cpu65_a  = regA;
-    cpu65_x  = 0x03;
-    cpu65_y  = 0x04;
-    cpu65_sp = 0x80;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0x03;
+    run_args.cpu65_y  = 0x04;
+    run_args.cpu65_sp = 0x80;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+1);
-    ASSERT(cpu65_x       == 0x03);
-    ASSERT(cpu65_y       == 0x04);
-    ASSERT(cpu65_sp      == 0x80);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+1);
+    ASSERT(run_args.cpu65_x       == 0x03);
+    ASSERT(run_args.cpu65_y       == 0x04);
+    ASSERT(run_args.cpu65_sp      == 0x80);
 
-    ASSERT(cpu65_a == result);
+    ASSERT(run_args.cpu65_a == result);
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == TEST_LOC);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == 0);
-    ASSERT(cpu65_opcode    == 0x0a);
-    ASSERT(cpu65_opcycles  == (2));
+    ASSERT(run_args.cpu65_ea        == TEST_LOC);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == 0);
+    ASSERT(run_args.cpu65_opcode    == 0x0a);
+    ASSERT(run_args.cpu65_opcycles  == (2));
 
     PASS();
 }
@@ -1017,29 +1014,29 @@ TEST test_ASL_zpage(uint8_t regA, uint8_t val, uint8_t arg0) {
 
     apple_ii_64k[0][arg0] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = 0x03;
-    cpu65_y  = 0x04;
-    cpu65_sp = 0x80;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0x03;
+    run_args.cpu65_y  = 0x04;
+    run_args.cpu65_sp = 0x80;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
     ASSERT(apple_ii_64k[0][arg0] == result);
 
-    ASSERT(cpu65_a  == regA);
-    ASSERT(cpu65_pc == TEST_LOC+2);
-    ASSERT(cpu65_x  == 0x03);
-    ASSERT(cpu65_y  == 0x04);
-    ASSERT(cpu65_sp == 0x80);
+    ASSERT(run_args.cpu65_a  == regA);
+    ASSERT(run_args.cpu65_pc == TEST_LOC+2);
+    ASSERT(run_args.cpu65_x  == 0x03);
+    ASSERT(run_args.cpu65_y  == 0x04);
+    ASSERT(run_args.cpu65_sp == 0x80);
 
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == arg0);
-    ASSERT(cpu65_d         == result);
-    ASSERT(cpu65_rw        == (RW_READ|RW_WRITE));
-    ASSERT(cpu65_opcode    == 0x06);
-    ASSERT(cpu65_opcycles  == (5));
+    ASSERT(run_args.cpu65_ea        == arg0);
+    ASSERT(run_args.cpu65_d         == result);
+    ASSERT(run_args.cpu65_rw        == (RW_READ|RW_WRITE));
+    ASSERT(run_args.cpu65_opcode    == 0x06);
+    ASSERT(run_args.cpu65_opcycles  == (5));
 
     PASS();
 }
@@ -1055,28 +1052,28 @@ TEST test_ASL_zpage_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX) {
 
     apple_ii_64k[0][idx] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = regX;
-    cpu65_y  = 0x05;
-    cpu65_sp = 0x81;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = regX;
+    run_args.cpu65_y  = 0x05;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
     ASSERT(apple_ii_64k[0][idx] == result);
 
-    ASSERT(cpu65_a   == regA);
-    ASSERT(cpu65_pc  == TEST_LOC+2);
-    ASSERT(cpu65_x   == regX);
-    ASSERT(cpu65_y   == 0x05);
-    ASSERT(cpu65_sp  == 0x81);
+    ASSERT(run_args.cpu65_a   == regA);
+    ASSERT(run_args.cpu65_pc  == TEST_LOC+2);
+    ASSERT(run_args.cpu65_x   == regX);
+    ASSERT(run_args.cpu65_y   == 0x05);
+    ASSERT(run_args.cpu65_sp  == 0x81);
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == idx);
-    ASSERT(cpu65_d         == result);
-    ASSERT(cpu65_rw        == (RW_READ|RW_WRITE));
-    ASSERT(cpu65_opcode    == 0x16);
-    ASSERT(cpu65_opcycles  == (6));
+    ASSERT(run_args.cpu65_ea        == idx);
+    ASSERT(run_args.cpu65_d         == result);
+    ASSERT(run_args.cpu65_rw        == (RW_READ|RW_WRITE));
+    ASSERT(run_args.cpu65_opcode    == 0x16);
+    ASSERT(run_args.cpu65_opcycles  == (6));
 
     PASS();
 }
@@ -1091,29 +1088,29 @@ TEST test_ASL_abs(uint8_t regA, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
     uint16_t addrs = lobyte | (hibyte<<8);
     apple_ii_64k[0][addrs] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = 0xf4;
-    cpu65_y  = 0x05;
-    cpu65_sp = 0x81;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0xf4;
+    run_args.cpu65_y  = 0x05;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
     ASSERT(apple_ii_64k[0][addrs] == result);
 
-    ASSERT(cpu65_a  == regA);
-    ASSERT(cpu65_pc == TEST_LOC+3);
-    ASSERT(cpu65_x  == 0xf4);
-    ASSERT(cpu65_y  == 0x05);
-    ASSERT(cpu65_sp == 0x81);
+    ASSERT(run_args.cpu65_a  == regA);
+    ASSERT(run_args.cpu65_pc == TEST_LOC+3);
+    ASSERT(run_args.cpu65_x  == 0xf4);
+    ASSERT(run_args.cpu65_y  == 0x05);
+    ASSERT(run_args.cpu65_sp == 0x81);
 
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == addrs);
-    ASSERT(cpu65_d         == result);
-    ASSERT(cpu65_rw        == (RW_READ|RW_WRITE));
-    ASSERT(cpu65_opcode    == 0x0e);
-    ASSERT(cpu65_opcycles  == (6));
+    ASSERT(run_args.cpu65_ea        == addrs);
+    ASSERT(run_args.cpu65_d         == result);
+    ASSERT(run_args.cpu65_rw        == (RW_READ|RW_WRITE));
+    ASSERT(run_args.cpu65_opcode    == 0x0e);
+    ASSERT(run_args.cpu65_opcycles  == (6));
 
     PASS();
 }
@@ -1133,29 +1130,29 @@ TEST test_ASL_abs_x(uint8_t regA, uint8_t val, uint8_t regX, uint8_t lobyte, uin
     }
     apple_ii_64k[0][addrs] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = regX;
-    cpu65_y  = 0x05;
-    cpu65_sp = 0x81;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = regX;
+    run_args.cpu65_y  = 0x05;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
     ASSERT(apple_ii_64k[0][addrs] == result);
 
-    ASSERT(cpu65_a  == regA);
-    ASSERT(cpu65_pc == TEST_LOC+3);
-    ASSERT(cpu65_x  == regX);
-    ASSERT(cpu65_y  == 0x05);
-    ASSERT(cpu65_sp == 0x81);
+    ASSERT(run_args.cpu65_a  == regA);
+    ASSERT(run_args.cpu65_pc == TEST_LOC+3);
+    ASSERT(run_args.cpu65_x  == regX);
+    ASSERT(run_args.cpu65_y  == 0x05);
+    ASSERT(run_args.cpu65_sp == 0x81);
 
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == addrs);
-    ASSERT(cpu65_d         == result);
-    ASSERT(cpu65_rw        == (RW_READ|RW_WRITE));
-    ASSERT(cpu65_opcode    == 0x1e);
-    ASSERT(cpu65_opcycles  == cycle_count);
+    ASSERT(run_args.cpu65_ea        == addrs);
+    ASSERT(run_args.cpu65_d         == result);
+    ASSERT(run_args.cpu65_rw        == (RW_READ|RW_WRITE));
+    ASSERT(run_args.cpu65_opcode    == 0x1e);
+    ASSERT(run_args.cpu65_opcycles  == cycle_count);
 
     PASS();
 }
@@ -1166,7 +1163,7 @@ TEST test_ASL_abs_x(uint8_t regA, uint8_t val, uint8_t regX, uint8_t lobyte, uin
 TEST test_BCC(int8_t off, bool flag, uint16_t addrs) {
     uint8_t flags = 0x0;
 
-    cpu65_pc = addrs;
+    run_args.cpu65_pc = addrs;
     flags |= flag ? fC : 0;
 
     uint8_t cycle_count = 2;
@@ -1184,26 +1181,26 @@ TEST test_BCC(int8_t off, bool flag, uint16_t addrs) {
     apple_ii_64k[0][(uint16_t)(addrs+1)] = off;
     apple_ii_64k[0][(uint16_t)(addrs+2)] = (uint8_t)random();
 
-    cpu65_a  = 0xed;
-    cpu65_x  = 0xde;
-    cpu65_y  = 0x05;
-    cpu65_sp = 0x81;
-    cpu65_f  = flags;
+    run_args.cpu65_a  = 0xed;
+    run_args.cpu65_x  = 0xde;
+    run_args.cpu65_y  = 0x05;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = flags;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc == newpc);
-    ASSERT(cpu65_a  == 0xed);
-    ASSERT(cpu65_x  == 0xde);
-    ASSERT(cpu65_y  == 0x05);
-    ASSERT(cpu65_sp == 0x81);
-    ASSERT(cpu65_f  == flags);
+    ASSERT(run_args.cpu65_pc == newpc);
+    ASSERT(run_args.cpu65_a  == 0xed);
+    ASSERT(run_args.cpu65_x  == 0xde);
+    ASSERT(run_args.cpu65_y  == 0x05);
+    ASSERT(run_args.cpu65_sp == 0x81);
+    ASSERT(run_args.cpu65_f  == flags);
 
-    ASSERT(cpu65_ea        == (uint16_t)(addrs+1));
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_NONE);
-    ASSERT(cpu65_opcode    == 0x90);
-    ASSERT(cpu65_opcycles  == cycle_count);
+    ASSERT(run_args.cpu65_ea        == (uint16_t)(addrs+1));
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_NONE);
+    ASSERT(run_args.cpu65_opcode    == 0x90);
+    ASSERT(run_args.cpu65_opcycles  == cycle_count);
 
     PASS();
 }
@@ -1211,7 +1208,7 @@ TEST test_BCC(int8_t off, bool flag, uint16_t addrs) {
 TEST test_BCS(int8_t off, bool flag, uint16_t addrs) {
     uint8_t flags = 0x0;
 
-    cpu65_pc = addrs;
+    run_args.cpu65_pc = addrs;
     flags |= flag ? fC : 0;
 
     uint8_t cycle_count = 2;
@@ -1229,26 +1226,26 @@ TEST test_BCS(int8_t off, bool flag, uint16_t addrs) {
     apple_ii_64k[0][(uint16_t)(addrs+1)] = off;
     apple_ii_64k[0][(uint16_t)(addrs+2)] = (uint8_t)random();
 
-    cpu65_a  = 0xed;
-    cpu65_x  = 0xde;
-    cpu65_y  = 0x05;
-    cpu65_sp = 0x81;
-    cpu65_f  = flags;
+    run_args.cpu65_a  = 0xed;
+    run_args.cpu65_x  = 0xde;
+    run_args.cpu65_y  = 0x05;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = flags;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc == newpc);
-    ASSERT(cpu65_a  == 0xed);
-    ASSERT(cpu65_x  == 0xde);
-    ASSERT(cpu65_y  == 0x05);
-    ASSERT(cpu65_sp == 0x81);
-    ASSERT(cpu65_f  == flags);
+    ASSERT(run_args.cpu65_pc == newpc);
+    ASSERT(run_args.cpu65_a  == 0xed);
+    ASSERT(run_args.cpu65_x  == 0xde);
+    ASSERT(run_args.cpu65_y  == 0x05);
+    ASSERT(run_args.cpu65_sp == 0x81);
+    ASSERT(run_args.cpu65_f  == flags);
 
-    ASSERT(cpu65_ea        == (uint16_t)(addrs+1));
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_NONE);
-    ASSERT(cpu65_opcode    == 0xB0);
-    ASSERT(cpu65_opcycles  == cycle_count);
+    ASSERT(run_args.cpu65_ea        == (uint16_t)(addrs+1));
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_NONE);
+    ASSERT(run_args.cpu65_opcode    == 0xB0);
+    ASSERT(run_args.cpu65_opcycles  == cycle_count);
 
     PASS();
 }
@@ -1256,7 +1253,7 @@ TEST test_BCS(int8_t off, bool flag, uint16_t addrs) {
 TEST test_BEQ(int8_t off, bool flag, uint16_t addrs) {
     uint8_t flags = 0x0;
 
-    cpu65_pc = addrs;
+    run_args.cpu65_pc = addrs;
     flags |= flag ? fZ : 0;
 
     uint8_t cycle_count = 2;
@@ -1274,26 +1271,26 @@ TEST test_BEQ(int8_t off, bool flag, uint16_t addrs) {
     apple_ii_64k[0][(uint16_t)(addrs+1)] = off;
     apple_ii_64k[0][(uint16_t)(addrs+2)] = (uint8_t)random();
 
-    cpu65_a  = 0xed;
-    cpu65_x  = 0xde;
-    cpu65_y  = 0x05;
-    cpu65_sp = 0x81;
-    cpu65_f  = flags;
+    run_args.cpu65_a  = 0xed;
+    run_args.cpu65_x  = 0xde;
+    run_args.cpu65_y  = 0x05;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = flags;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc == newpc);
-    ASSERT(cpu65_a  == 0xed);
-    ASSERT(cpu65_x  == 0xde);
-    ASSERT(cpu65_y  == 0x05);
-    ASSERT(cpu65_sp == 0x81);
-    ASSERT(cpu65_f  == flags);
+    ASSERT(run_args.cpu65_pc == newpc);
+    ASSERT(run_args.cpu65_a  == 0xed);
+    ASSERT(run_args.cpu65_x  == 0xde);
+    ASSERT(run_args.cpu65_y  == 0x05);
+    ASSERT(run_args.cpu65_sp == 0x81);
+    ASSERT(run_args.cpu65_f  == flags);
 
-    ASSERT(cpu65_ea        == (uint16_t)(addrs+1));
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_NONE);
-    ASSERT(cpu65_opcode    == 0xF0);
-    ASSERT(cpu65_opcycles  == cycle_count);
+    ASSERT(run_args.cpu65_ea        == (uint16_t)(addrs+1));
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_NONE);
+    ASSERT(run_args.cpu65_opcode    == 0xF0);
+    ASSERT(run_args.cpu65_opcycles  == cycle_count);
 
     PASS();
 }
@@ -1301,7 +1298,7 @@ TEST test_BEQ(int8_t off, bool flag, uint16_t addrs) {
 TEST test_BNE(int8_t off, bool flag, uint16_t addrs) {
     uint8_t flags = 0x0;
 
-    cpu65_pc = addrs;
+    run_args.cpu65_pc = addrs;
     flags |= flag ? fZ : 0;
 
     uint8_t cycle_count = 2;
@@ -1319,26 +1316,26 @@ TEST test_BNE(int8_t off, bool flag, uint16_t addrs) {
     apple_ii_64k[0][(uint16_t)(addrs+1)] = off;
     apple_ii_64k[0][(uint16_t)(addrs+2)] = (uint8_t)random();
 
-    cpu65_a  = 0xed;
-    cpu65_x  = 0xde;
-    cpu65_y  = 0x05;
-    cpu65_sp = 0x81;
-    cpu65_f  = flags;
+    run_args.cpu65_a  = 0xed;
+    run_args.cpu65_x  = 0xde;
+    run_args.cpu65_y  = 0x05;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = flags;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc == newpc);
-    ASSERT(cpu65_a  == 0xed);
-    ASSERT(cpu65_x  == 0xde);
-    ASSERT(cpu65_y  == 0x05);
-    ASSERT(cpu65_sp == 0x81);
-    ASSERT(cpu65_f  == flags);
+    ASSERT(run_args.cpu65_pc == newpc);
+    ASSERT(run_args.cpu65_a  == 0xed);
+    ASSERT(run_args.cpu65_x  == 0xde);
+    ASSERT(run_args.cpu65_y  == 0x05);
+    ASSERT(run_args.cpu65_sp == 0x81);
+    ASSERT(run_args.cpu65_f  == flags);
 
-    ASSERT(cpu65_ea        == (uint16_t)(addrs+1));
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_NONE);
-    ASSERT(cpu65_opcode    == 0xD0);
-    ASSERT(cpu65_opcycles  == cycle_count);
+    ASSERT(run_args.cpu65_ea        == (uint16_t)(addrs+1));
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_NONE);
+    ASSERT(run_args.cpu65_opcode    == 0xD0);
+    ASSERT(run_args.cpu65_opcycles  == cycle_count);
 
     PASS();
 }
@@ -1346,7 +1343,7 @@ TEST test_BNE(int8_t off, bool flag, uint16_t addrs) {
 TEST test_BMI(int8_t off, bool flag, uint16_t addrs) {
     uint8_t flags = 0x0;
 
-    cpu65_pc = addrs;
+    run_args.cpu65_pc = addrs;
     flags |= flag ? fN : 0;
 
     uint8_t cycle_count = 2;
@@ -1364,26 +1361,26 @@ TEST test_BMI(int8_t off, bool flag, uint16_t addrs) {
     apple_ii_64k[0][(uint16_t)(addrs+1)] = off;
     apple_ii_64k[0][(uint16_t)(addrs+2)] = (uint8_t)random();
 
-    cpu65_a  = 0xed;
-    cpu65_x  = 0xde;
-    cpu65_y  = 0x05;
-    cpu65_sp = 0x81;
-    cpu65_f  = flags;
+    run_args.cpu65_a  = 0xed;
+    run_args.cpu65_x  = 0xde;
+    run_args.cpu65_y  = 0x05;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = flags;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc == newpc);
-    ASSERT(cpu65_a  == 0xed);
-    ASSERT(cpu65_x  == 0xde);
-    ASSERT(cpu65_y  == 0x05);
-    ASSERT(cpu65_sp == 0x81);
-    ASSERT(cpu65_f  == flags);
+    ASSERT(run_args.cpu65_pc == newpc);
+    ASSERT(run_args.cpu65_a  == 0xed);
+    ASSERT(run_args.cpu65_x  == 0xde);
+    ASSERT(run_args.cpu65_y  == 0x05);
+    ASSERT(run_args.cpu65_sp == 0x81);
+    ASSERT(run_args.cpu65_f  == flags);
 
-    ASSERT(cpu65_ea        == (uint16_t)(addrs+1));
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_NONE);
-    ASSERT(cpu65_opcode    == 0x30);
-    ASSERT(cpu65_opcycles  == cycle_count);
+    ASSERT(run_args.cpu65_ea        == (uint16_t)(addrs+1));
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_NONE);
+    ASSERT(run_args.cpu65_opcode    == 0x30);
+    ASSERT(run_args.cpu65_opcycles  == cycle_count);
 
     PASS();
 }
@@ -1391,7 +1388,7 @@ TEST test_BMI(int8_t off, bool flag, uint16_t addrs) {
 TEST test_BPL(int8_t off, bool flag, uint16_t addrs) {
     uint8_t flags = 0x0;
 
-    cpu65_pc = addrs;
+    run_args.cpu65_pc = addrs;
     flags |= flag ? fN : 0;
 
     uint8_t cycle_count = 2;
@@ -1409,26 +1406,26 @@ TEST test_BPL(int8_t off, bool flag, uint16_t addrs) {
     apple_ii_64k[0][(uint16_t)(addrs+1)] = off;
     apple_ii_64k[0][(uint16_t)(addrs+2)] = (uint8_t)random();
 
-    cpu65_a  = 0xed;
-    cpu65_x  = 0xde;
-    cpu65_y  = 0x05;
-    cpu65_sp = 0x81;
-    cpu65_f  = flags;
+    run_args.cpu65_a  = 0xed;
+    run_args.cpu65_x  = 0xde;
+    run_args.cpu65_y  = 0x05;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = flags;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc == newpc);
-    ASSERT(cpu65_a  == 0xed);
-    ASSERT(cpu65_x  == 0xde);
-    ASSERT(cpu65_y  == 0x05);
-    ASSERT(cpu65_sp == 0x81);
-    ASSERT(cpu65_f  == flags);
+    ASSERT(run_args.cpu65_pc == newpc);
+    ASSERT(run_args.cpu65_a  == 0xed);
+    ASSERT(run_args.cpu65_x  == 0xde);
+    ASSERT(run_args.cpu65_y  == 0x05);
+    ASSERT(run_args.cpu65_sp == 0x81);
+    ASSERT(run_args.cpu65_f  == flags);
 
-    ASSERT(cpu65_ea        == (uint16_t)(addrs+1));
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_NONE);
-    ASSERT(cpu65_opcode    == 0x10);
-    ASSERT(cpu65_opcycles  == cycle_count);
+    ASSERT(run_args.cpu65_ea        == (uint16_t)(addrs+1));
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_NONE);
+    ASSERT(run_args.cpu65_opcode    == 0x10);
+    ASSERT(run_args.cpu65_opcycles  == cycle_count);
 
     PASS();
 }
@@ -1436,7 +1433,7 @@ TEST test_BPL(int8_t off, bool flag, uint16_t addrs) {
 TEST test_BRA(volatile int8_t off, volatile bool flag, volatile uint16_t addrs) {
     uint8_t flags = 0x0;
 
-    cpu65_pc = addrs;
+    run_args.cpu65_pc = addrs;
     flags |= flag ? fN : 0;
 
     uint8_t cycle_count = 3;
@@ -1451,26 +1448,26 @@ TEST test_BRA(volatile int8_t off, volatile bool flag, volatile uint16_t addrs) 
     apple_ii_64k[0][(uint16_t)(addrs+1)] = off;
     apple_ii_64k[0][(uint16_t)(addrs+2)] = (uint8_t)random();
 
-    cpu65_a  = 0xed;
-    cpu65_x  = 0xde;
-    cpu65_y  = 0x05;
-    cpu65_sp = 0x81;
-    cpu65_f  = flags;
+    run_args.cpu65_a  = 0xed;
+    run_args.cpu65_x  = 0xde;
+    run_args.cpu65_y  = 0x05;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = flags;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc == newpc);
-    ASSERT(cpu65_a  == 0xed);
-    ASSERT(cpu65_x  == 0xde);
-    ASSERT(cpu65_y  == 0x05);
-    ASSERT(cpu65_sp == 0x81);
-    ASSERT(cpu65_f  == flags);
+    ASSERT(run_args.cpu65_pc == newpc);
+    ASSERT(run_args.cpu65_a  == 0xed);
+    ASSERT(run_args.cpu65_x  == 0xde);
+    ASSERT(run_args.cpu65_y  == 0x05);
+    ASSERT(run_args.cpu65_sp == 0x81);
+    ASSERT(run_args.cpu65_f  == flags);
 
-    ASSERT(cpu65_ea        == (uint16_t)(addrs+1));
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_NONE);
-    ASSERT(cpu65_opcode    == 0x80);
-    ASSERT(cpu65_opcycles  == cycle_count);
+    ASSERT(run_args.cpu65_ea        == (uint16_t)(addrs+1));
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_NONE);
+    ASSERT(run_args.cpu65_opcode    == 0x80);
+    ASSERT(run_args.cpu65_opcycles  == cycle_count);
 
     PASS();
 }
@@ -1478,7 +1475,7 @@ TEST test_BRA(volatile int8_t off, volatile bool flag, volatile uint16_t addrs) 
 TEST test_BVC(int8_t off, bool flag, uint16_t addrs) {
     uint8_t flags = 0x0;
 
-    cpu65_pc = addrs;
+    run_args.cpu65_pc = addrs;
     flags |= flag ? fV : 0;
 
     uint8_t cycle_count = 2;
@@ -1496,26 +1493,26 @@ TEST test_BVC(int8_t off, bool flag, uint16_t addrs) {
     apple_ii_64k[0][(uint16_t)(addrs+1)] = off;
     apple_ii_64k[0][(uint16_t)(addrs+2)] = (uint8_t)random();
 
-    cpu65_a  = 0xed;
-    cpu65_x  = 0xde;
-    cpu65_y  = 0x05;
-    cpu65_sp = 0x81;
-    cpu65_f  = flags;
+    run_args.cpu65_a  = 0xed;
+    run_args.cpu65_x  = 0xde;
+    run_args.cpu65_y  = 0x05;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = flags;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc == newpc);
-    ASSERT(cpu65_a  == 0xed);
-    ASSERT(cpu65_x  == 0xde);
-    ASSERT(cpu65_y  == 0x05);
-    ASSERT(cpu65_sp == 0x81);
-    ASSERT(cpu65_f  == flags);
+    ASSERT(run_args.cpu65_pc == newpc);
+    ASSERT(run_args.cpu65_a  == 0xed);
+    ASSERT(run_args.cpu65_x  == 0xde);
+    ASSERT(run_args.cpu65_y  == 0x05);
+    ASSERT(run_args.cpu65_sp == 0x81);
+    ASSERT(run_args.cpu65_f  == flags);
 
-    ASSERT(cpu65_ea        == (uint16_t)(addrs+1));
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_NONE);
-    ASSERT(cpu65_opcode    == 0x50);
-    ASSERT(cpu65_opcycles  == cycle_count);
+    ASSERT(run_args.cpu65_ea        == (uint16_t)(addrs+1));
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_NONE);
+    ASSERT(run_args.cpu65_opcode    == 0x50);
+    ASSERT(run_args.cpu65_opcycles  == cycle_count);
 
     PASS();
 }
@@ -1523,7 +1520,7 @@ TEST test_BVC(int8_t off, bool flag, uint16_t addrs) {
 TEST test_BVS(int8_t off, bool flag, uint16_t addrs) {
     uint8_t flags = 0x0;
 
-    cpu65_pc = addrs;
+    run_args.cpu65_pc = addrs;
     flags |= flag ? fV : 0;
 
     uint8_t cycle_count = 2;
@@ -1541,26 +1538,26 @@ TEST test_BVS(int8_t off, bool flag, uint16_t addrs) {
     apple_ii_64k[0][(uint16_t)(addrs+1)] = off;
     apple_ii_64k[0][(uint16_t)(addrs+2)] = (uint8_t)random();
 
-    cpu65_a  = 0xed;
-    cpu65_x  = 0xde;
-    cpu65_y  = 0x05;
-    cpu65_sp = 0x81;
-    cpu65_f  = flags;
+    run_args.cpu65_a  = 0xed;
+    run_args.cpu65_x  = 0xde;
+    run_args.cpu65_y  = 0x05;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = flags;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc == newpc);
-    ASSERT(cpu65_a  == 0xed);
-    ASSERT(cpu65_x  == 0xde);
-    ASSERT(cpu65_y  == 0x05);
-    ASSERT(cpu65_sp == 0x81);
-    ASSERT(cpu65_f  == flags);
+    ASSERT(run_args.cpu65_pc == newpc);
+    ASSERT(run_args.cpu65_a  == 0xed);
+    ASSERT(run_args.cpu65_x  == 0xde);
+    ASSERT(run_args.cpu65_y  == 0x05);
+    ASSERT(run_args.cpu65_sp == 0x81);
+    ASSERT(run_args.cpu65_f  == flags);
 
-    ASSERT(cpu65_ea        == (uint16_t)(addrs+1));
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_NONE);
-    ASSERT(cpu65_opcode    == 0x70);
-    ASSERT(cpu65_opcycles  == cycle_count);
+    ASSERT(run_args.cpu65_ea        == (uint16_t)(addrs+1));
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_NONE);
+    ASSERT(run_args.cpu65_opcode    == 0x70);
+    ASSERT(run_args.cpu65_opcycles  == cycle_count);
 
     PASS();
 }
@@ -1578,27 +1575,27 @@ TEST test_BIT_imm(uint8_t regA, uint8_t val) {
 
     testcpu_set_opcode2(0x89, val);
 
-    cpu65_a  = regA;
-    cpu65_x  = 0x03;
-    cpu65_y  = 0x04;
-    cpu65_sp = 0x80;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0x03;
+    run_args.cpu65_y  = 0x04;
+    run_args.cpu65_sp = 0x80;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc == TEST_LOC+2);
-    ASSERT(cpu65_a  == regA);
-    ASSERT(cpu65_x  == 0x03);
-    ASSERT(cpu65_y  == 0x04);
-    ASSERT(cpu65_sp == 0x80);
+    ASSERT(run_args.cpu65_pc == TEST_LOC+2);
+    ASSERT(run_args.cpu65_a  == regA);
+    ASSERT(run_args.cpu65_x  == 0x03);
+    ASSERT(run_args.cpu65_y  == 0x04);
+    ASSERT(run_args.cpu65_sp == 0x80);
 
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == TEST_LOC+1);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_READ);
-    ASSERT(cpu65_opcode    == 0x89);
-    ASSERT(cpu65_opcycles  == (2));
+    ASSERT(run_args.cpu65_ea        == TEST_LOC+1);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_READ);
+    ASSERT(run_args.cpu65_opcode    == 0x89);
+    ASSERT(run_args.cpu65_opcycles  == (2));
 
     PASS();
 }
@@ -1625,26 +1622,26 @@ TEST test_BIT_zpage(uint8_t regA, uint8_t val, uint8_t arg0) {
 
     apple_ii_64k[0][arg0] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = 0x03;
-    cpu65_y  = 0x04;
-    cpu65_sp = 0x80;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0x03;
+    run_args.cpu65_y  = 0x04;
+    run_args.cpu65_sp = 0x80;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+2);
-    ASSERT(cpu65_a       == regA);
-    ASSERT(cpu65_x       == 0x03);
-    ASSERT(cpu65_y       == 0x04);
-    ASSERT(cpu65_sp      == 0x80);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+2);
+    ASSERT(run_args.cpu65_a       == regA);
+    ASSERT(run_args.cpu65_x       == 0x03);
+    ASSERT(run_args.cpu65_y       == 0x04);
+    ASSERT(run_args.cpu65_sp      == 0x80);
 
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == arg0);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_READ);
-    ASSERT(cpu65_opcode    == 0x24);
-    ASSERT(cpu65_opcycles  == (3));
+    ASSERT(run_args.cpu65_ea        == arg0);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_READ);
+    ASSERT(run_args.cpu65_opcode    == 0x24);
+    ASSERT(run_args.cpu65_opcycles  == (3));
 
     PASS();
 }
@@ -1661,26 +1658,26 @@ TEST test_BIT_zpage_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX) {
 
     apple_ii_64k[0][idx] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = regX;
-    cpu65_y  = 0x05;
-    cpu65_sp = 0x81;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = regX;
+    run_args.cpu65_y  = 0x05;
+    run_args.cpu65_sp = 0x81;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc == TEST_LOC+2);
-    ASSERT(cpu65_a  == regA);
-    ASSERT(cpu65_x  == regX);
-    ASSERT(cpu65_y  == 0x05);
-    ASSERT(cpu65_sp == 0x81);
+    ASSERT(run_args.cpu65_pc == TEST_LOC+2);
+    ASSERT(run_args.cpu65_a  == regA);
+    ASSERT(run_args.cpu65_x  == regX);
+    ASSERT(run_args.cpu65_y  == 0x05);
+    ASSERT(run_args.cpu65_sp == 0x81);
 
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == idx);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_READ);
-    ASSERT(cpu65_opcode    == 0x34);
-    ASSERT(cpu65_opcycles  == (4));
+    ASSERT(run_args.cpu65_ea        == idx);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_READ);
+    ASSERT(run_args.cpu65_opcode    == 0x34);
+    ASSERT(run_args.cpu65_opcycles  == (4));
 
     PASS();
 }
@@ -1696,26 +1693,26 @@ TEST test_BIT_abs(uint8_t regA, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
     uint16_t addrs = lobyte | (hibyte<<8);
     apple_ii_64k[0][addrs] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = 0xf4;
-    cpu65_y  = 0x05;
-    cpu65_sp = 0x81;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0xf4;
+    run_args.cpu65_y  = 0x05;
+    run_args.cpu65_sp = 0x81;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc == TEST_LOC+3);
-    ASSERT(cpu65_a  == regA);
-    ASSERT(cpu65_x  == 0xf4);
-    ASSERT(cpu65_y  == 0x05);
-    ASSERT(cpu65_sp == 0x81);
+    ASSERT(run_args.cpu65_pc == TEST_LOC+3);
+    ASSERT(run_args.cpu65_a  == regA);
+    ASSERT(run_args.cpu65_x  == 0xf4);
+    ASSERT(run_args.cpu65_y  == 0x05);
+    ASSERT(run_args.cpu65_sp == 0x81);
 
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == addrs);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_READ);
-    ASSERT(cpu65_opcode    == 0x2c);
-    ASSERT(cpu65_opcycles  == (4));
+    ASSERT(run_args.cpu65_ea        == addrs);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_READ);
+    ASSERT(run_args.cpu65_opcode    == 0x2c);
+    ASSERT(run_args.cpu65_opcycles  == (4));
 
     PASS();
 }
@@ -1736,28 +1733,28 @@ TEST test_BIT_abs_x(uint8_t regA, uint8_t val, uint8_t regX, uint8_t lobyte, uin
     }
     apple_ii_64k[0][addrs] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = regX;
-    cpu65_y  = 0x05;
-    cpu65_sp = 0x81;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = regX;
+    run_args.cpu65_y  = 0x05;
+    run_args.cpu65_sp = 0x81;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc == TEST_LOC+3);
-    ASSERT(cpu65_a  == regA);
-    ASSERT(cpu65_x  == regX);
-    ASSERT(cpu65_y  == 0x05);
-    ASSERT(cpu65_sp == 0x81);
+    ASSERT(run_args.cpu65_pc == TEST_LOC+3);
+    ASSERT(run_args.cpu65_a  == regA);
+    ASSERT(run_args.cpu65_x  == regX);
+    ASSERT(run_args.cpu65_y  == 0x05);
+    ASSERT(run_args.cpu65_sp == 0x81);
 
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == addrs);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_READ);
-    ASSERT(cpu65_opcode    == 0x3c);
+    ASSERT(run_args.cpu65_ea        == addrs);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_READ);
+    ASSERT(run_args.cpu65_opcode    == 0x3c);
 
     cycle_count += 4;
-    ASSERT(cpu65_opcycles == cycle_count);
+    ASSERT(run_args.cpu65_opcycles == cycle_count);
 
     PASS();
 }
@@ -1771,29 +1768,29 @@ TEST test_BRK(void) {
     ASSERT(apple_ii_64k[0][0x1ff] != 0x1f);
     ASSERT(apple_ii_64k[0][0x1fe] != TEST_LOC_LO+2);
 
-    cpu65_a = 0x02;
-    cpu65_x = 0x03;
-    cpu65_y = 0x04;
-    cpu65_f = 0x00;
+    run_args.cpu65_a = 0x02;
+    run_args.cpu65_x = 0x03;
+    run_args.cpu65_y = 0x04;
+    run_args.cpu65_f = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc     == 0xc3fa);
-    ASSERT(cpu65_a      == 0x02);
-    ASSERT(cpu65_x      == 0x03);
-    ASSERT(cpu65_y      == 0x04);
-    ASSERT(cpu65_f      == (fB|fX|fI));
-    ASSERT(cpu65_sp     == 0xfc);
+    ASSERT(run_args.cpu65_pc     == 0xc3fa);
+    ASSERT(run_args.cpu65_a      == 0x02);
+    ASSERT(run_args.cpu65_x      == 0x03);
+    ASSERT(run_args.cpu65_y      == 0x04);
+    ASSERT(run_args.cpu65_f      == (fB|fX|fI));
+    ASSERT(run_args.cpu65_sp     == 0xfc);
 
     ASSERT(apple_ii_64k[0][0x1ff] == 0x1f);
     ASSERT(apple_ii_64k[0][0x1fe] == TEST_LOC_LO+2);
     ASSERT(apple_ii_64k[0][0x1fd] == cpu65_flags_encode[B_Flag|X_Flag]);
 
-    //ASSERT(cpu65_ea       == 0xfffe); -- EA is managed differently on ARM
-    ASSERT(cpu65_d        == 0xff);
-    ASSERT(cpu65_rw       == RW_NONE);
-    ASSERT(cpu65_opcode   == 0x0);
-    ASSERT(cpu65_opcycles == (7));
+    //ASSERT(run_args.cpu65_ea       == 0xfffe); -- EA is managed differently on ARM
+    ASSERT(run_args.cpu65_d        == 0xff);
+    ASSERT(run_args.cpu65_rw       == RW_NONE);
+    ASSERT(run_args.cpu65_opcode   == 0x0);
+    ASSERT(run_args.cpu65_opcycles == (7));
 
     PASS();
 }
@@ -1803,37 +1800,37 @@ TEST test_IRQ(void) {
     testcpu_set_opcode1(0xea/*NOP*/); // Implementation NOTE: not executed. IRQ is handled and one BIT instruction at C3FA location is executed
 
     cpu65_interrupt(IRQGeneric);
-    softswitches |= SS_C3ROM;
+    run_args.softswitches |= SS_C3ROM;
 
     ASSERT(apple_ii_64k[0][0x1ff] != 0x1f);
     ASSERT(apple_ii_64k[0][0x1fe] != TEST_LOC_LO+1);
 
-    cpu65_a = 0x02;
-    cpu65_x = 0x03;
-    cpu65_y = 0x04;
-    cpu65_f = 0x00;
+    run_args.cpu65_a = 0x02;
+    run_args.cpu65_x = 0x03;
+    run_args.cpu65_y = 0x04;
+    run_args.cpu65_f = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc     == 0xc3fd);
-    ASSERT(cpu65_a      == 0x02);
-    ASSERT(cpu65_x      == 0x03);
-    ASSERT(cpu65_y      == 0x04);
-    ASSERT(cpu65_f      == (fB|fX|fI|fZ)); // Implementation NOTE : Z set by 2nd BIT instruction at C3FA
-    ASSERT(cpu65_sp     == 0xfc);
+    ASSERT(run_args.cpu65_pc     == 0xc3fd);
+    ASSERT(run_args.cpu65_a      == 0x02);
+    ASSERT(run_args.cpu65_x      == 0x03);
+    ASSERT(run_args.cpu65_y      == 0x04);
+    ASSERT(run_args.cpu65_f      == (fB|fX|fI|fZ)); // Implementation NOTE : Z set by 2nd BIT instruction at C3FA
+    ASSERT(run_args.cpu65_sp     == 0xfc);
 
     ASSERT(apple_ii_64k[0][0x1ff] == 0x1f);
     ASSERT(apple_ii_64k[0][0x1fe] == TEST_LOC_LO);
     ASSERT(apple_ii_64k[0][0x1fd] == cpu65_flags_encode[X_Flag]);
 
-    ASSERT(cpu65_ea       == 0xc015);
-    ASSERT(cpu65_d        == 0xff);
-    ASSERT(cpu65_rw       == RW_READ);
-    ASSERT(cpu65_opcode   == 0x2c);
-    ASSERT(cpu65_opcycles == 11); // 4 cycles BIT instruction + 7 cycles for IRQ handling
-    ASSERT(cpu65_cycle_count == 11);
+    ASSERT(run_args.cpu65_ea       == 0xc015);
+    ASSERT(run_args.cpu65_d        == 0xff);
+    ASSERT(run_args.cpu65_rw       == RW_READ);
+    ASSERT(run_args.cpu65_opcode   == 0x2c);
+    ASSERT(run_args.cpu65_opcycles == 11); // 4 cycles BIT instruction + 7 cycles for IRQ handling
+    ASSERT(run_args.cpu65_cycle_count == 11);
 
-    softswitches &= ~SS_C3ROM;
+    run_args.softswitches &= ~SS_C3ROM;
     cpu65_uninterrupt(IRQGeneric);
 
     PASS();
@@ -1845,26 +1842,26 @@ TEST test_IRQ(void) {
 TEST test_CLC(void) {
     testcpu_set_opcode1(0x18);
 
-    cpu65_a  = 0x02;
-    cpu65_x  = 0x03;
-    cpu65_y  = 0x04;
-    cpu65_sp = 0x81;
-    cpu65_f  = fC;
+    run_args.cpu65_a  = 0x02;
+    run_args.cpu65_x  = 0x03;
+    run_args.cpu65_y  = 0x04;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = fC;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc     == TEST_LOC+1);
-    ASSERT(cpu65_a      == 0x02);
-    ASSERT(cpu65_x      == 0x03);
-    ASSERT(cpu65_y      == 0x04);
-    ASSERT(cpu65_sp     == 0x81);
-    ASSERT(cpu65_f      == 0x00);
+    ASSERT(run_args.cpu65_pc     == TEST_LOC+1);
+    ASSERT(run_args.cpu65_a      == 0x02);
+    ASSERT(run_args.cpu65_x      == 0x03);
+    ASSERT(run_args.cpu65_y      == 0x04);
+    ASSERT(run_args.cpu65_sp     == 0x81);
+    ASSERT(run_args.cpu65_f      == 0x00);
 
-    ASSERT(cpu65_ea       == TEST_LOC);
-    ASSERT(cpu65_d        == 0xff);
-    ASSERT(cpu65_rw       == RW_NONE);
-    ASSERT(cpu65_opcode   == 0x18);
-    ASSERT(cpu65_opcycles == (2));
+    ASSERT(run_args.cpu65_ea       == TEST_LOC);
+    ASSERT(run_args.cpu65_d        == 0xff);
+    ASSERT(run_args.cpu65_rw       == RW_NONE);
+    ASSERT(run_args.cpu65_opcode   == 0x18);
+    ASSERT(run_args.cpu65_opcycles == (2));
 
     PASS();
 }
@@ -1872,26 +1869,26 @@ TEST test_CLC(void) {
 TEST test_CLD(void) {
     testcpu_set_opcode1(0xd8);
 
-    cpu65_a  = 0x02;
-    cpu65_x  = 0x03;
-    cpu65_y  = 0x04;
-    cpu65_sp = 0x81;
-    cpu65_f  = fD;
+    run_args.cpu65_a  = 0x02;
+    run_args.cpu65_x  = 0x03;
+    run_args.cpu65_y  = 0x04;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = fD;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc     == TEST_LOC+1);
-    ASSERT(cpu65_a      == 0x02);
-    ASSERT(cpu65_x      == 0x03);
-    ASSERT(cpu65_y      == 0x04);
-    ASSERT(cpu65_sp     == 0x81);
-    ASSERT(cpu65_f      == 0x00);
+    ASSERT(run_args.cpu65_pc     == TEST_LOC+1);
+    ASSERT(run_args.cpu65_a      == 0x02);
+    ASSERT(run_args.cpu65_x      == 0x03);
+    ASSERT(run_args.cpu65_y      == 0x04);
+    ASSERT(run_args.cpu65_sp     == 0x81);
+    ASSERT(run_args.cpu65_f      == 0x00);
 
-    ASSERT(cpu65_ea       == TEST_LOC);
-    ASSERT(cpu65_d        == 0xff);
-    ASSERT(cpu65_rw       == RW_NONE);
-    ASSERT(cpu65_opcode   == 0xd8);
-    ASSERT(cpu65_opcycles == (2));
+    ASSERT(run_args.cpu65_ea       == TEST_LOC);
+    ASSERT(run_args.cpu65_d        == 0xff);
+    ASSERT(run_args.cpu65_rw       == RW_NONE);
+    ASSERT(run_args.cpu65_opcode   == 0xd8);
+    ASSERT(run_args.cpu65_opcycles == (2));
 
     PASS();
 }
@@ -1899,26 +1896,26 @@ TEST test_CLD(void) {
 TEST test_CLI(void) {
     testcpu_set_opcode1(0x58);
 
-    cpu65_a  = 0x02;
-    cpu65_x  = 0x03;
-    cpu65_y  = 0x04;
-    cpu65_sp = 0x81;
-    cpu65_f  = fI;
+    run_args.cpu65_a  = 0x02;
+    run_args.cpu65_x  = 0x03;
+    run_args.cpu65_y  = 0x04;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = fI;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc     == TEST_LOC+1);
-    ASSERT(cpu65_a      == 0x02);
-    ASSERT(cpu65_x      == 0x03);
-    ASSERT(cpu65_y      == 0x04);
-    ASSERT(cpu65_sp     == 0x81);
-    ASSERT(cpu65_f      == 0x00);
+    ASSERT(run_args.cpu65_pc     == TEST_LOC+1);
+    ASSERT(run_args.cpu65_a      == 0x02);
+    ASSERT(run_args.cpu65_x      == 0x03);
+    ASSERT(run_args.cpu65_y      == 0x04);
+    ASSERT(run_args.cpu65_sp     == 0x81);
+    ASSERT(run_args.cpu65_f      == 0x00);
 
-    ASSERT(cpu65_ea       == TEST_LOC);
-    ASSERT(cpu65_d        == 0xff);
-    ASSERT(cpu65_rw       == RW_NONE);
-    ASSERT(cpu65_opcode   == 0x58);
-    ASSERT(cpu65_opcycles == (2));
+    ASSERT(run_args.cpu65_ea       == TEST_LOC);
+    ASSERT(run_args.cpu65_d        == 0xff);
+    ASSERT(run_args.cpu65_rw       == RW_NONE);
+    ASSERT(run_args.cpu65_opcode   == 0x58);
+    ASSERT(run_args.cpu65_opcycles == (2));
 
     PASS();
 }
@@ -1926,26 +1923,26 @@ TEST test_CLI(void) {
 TEST test_CLV(void) {
     testcpu_set_opcode1(0xb8);
 
-    cpu65_a  = 0x02;
-    cpu65_x  = 0x03;
-    cpu65_y  = 0x04;
-    cpu65_sp = 0x81;
-    cpu65_f  = fV;
+    run_args.cpu65_a  = 0x02;
+    run_args.cpu65_x  = 0x03;
+    run_args.cpu65_y  = 0x04;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = fV;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc     == TEST_LOC+1);
-    ASSERT(cpu65_a      == 0x02);
-    ASSERT(cpu65_x      == 0x03);
-    ASSERT(cpu65_y      == 0x04);
-    ASSERT(cpu65_sp     == 0x81);
-    ASSERT(cpu65_f      == 0x00);
+    ASSERT(run_args.cpu65_pc     == TEST_LOC+1);
+    ASSERT(run_args.cpu65_a      == 0x02);
+    ASSERT(run_args.cpu65_x      == 0x03);
+    ASSERT(run_args.cpu65_y      == 0x04);
+    ASSERT(run_args.cpu65_sp     == 0x81);
+    ASSERT(run_args.cpu65_f      == 0x00);
 
-    ASSERT(cpu65_ea       == TEST_LOC);
-    ASSERT(cpu65_d        == 0xff);
-    ASSERT(cpu65_rw       == RW_NONE);
-    ASSERT(cpu65_opcode   == 0xb8);
-    ASSERT(cpu65_opcycles == (2));
+    ASSERT(run_args.cpu65_ea       == TEST_LOC);
+    ASSERT(run_args.cpu65_d        == 0xff);
+    ASSERT(run_args.cpu65_rw       == RW_NONE);
+    ASSERT(run_args.cpu65_opcode   == 0xb8);
+    ASSERT(run_args.cpu65_opcycles == (2));
 
     PASS();
 }
@@ -1978,27 +1975,27 @@ TEST test_CMP_imm(uint8_t regA, uint8_t val) {
 
     testcpu_set_opcode2(0xC9, val);
 
-    cpu65_a  = regA;
-    cpu65_x  = 0x03;
-    cpu65_y  = 0x04;
-    cpu65_sp = 0x80;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0x03;
+    run_args.cpu65_y  = 0x04;
+    run_args.cpu65_sp = 0x80;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+2);
-    ASSERT(cpu65_a       == regA);
-    ASSERT(cpu65_x       == 0x03);
-    ASSERT(cpu65_y       == 0x04);
-    ASSERT(cpu65_sp      == 0x80);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+2);
+    ASSERT(run_args.cpu65_a       == regA);
+    ASSERT(run_args.cpu65_x       == 0x03);
+    ASSERT(run_args.cpu65_y       == 0x04);
+    ASSERT(run_args.cpu65_sp      == 0x80);
 
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == TEST_LOC+1);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_READ);
-    ASSERT(cpu65_opcode    == 0xC9);
-    ASSERT(cpu65_opcycles  == (2));
+    ASSERT(run_args.cpu65_ea        == TEST_LOC+1);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_READ);
+    ASSERT(run_args.cpu65_opcode    == 0xC9);
+    ASSERT(run_args.cpu65_opcycles  == (2));
 
     PASS();
 }
@@ -2013,27 +2010,27 @@ TEST test_CMP_zpage(uint8_t regA, uint8_t val, uint8_t arg0) {
 
     apple_ii_64k[0][arg0] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = 0x03;
-    cpu65_y  = 0x04;
-    cpu65_sp = 0x80;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0x03;
+    run_args.cpu65_y  = 0x04;
+    run_args.cpu65_sp = 0x80;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+2);
-    ASSERT(cpu65_a       == regA);
-    ASSERT(cpu65_x       == 0x03);
-    ASSERT(cpu65_y       == 0x04);
-    ASSERT(cpu65_sp      == 0x80);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+2);
+    ASSERT(run_args.cpu65_a       == regA);
+    ASSERT(run_args.cpu65_x       == 0x03);
+    ASSERT(run_args.cpu65_y       == 0x04);
+    ASSERT(run_args.cpu65_sp      == 0x80);
 
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == arg0);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_READ);
-    ASSERT(cpu65_opcode    == 0xc5);
-    ASSERT(cpu65_opcycles  == (3));
+    ASSERT(run_args.cpu65_ea        == arg0);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_READ);
+    ASSERT(run_args.cpu65_opcode    == 0xc5);
+    ASSERT(run_args.cpu65_opcycles  == (3));
 
     PASS();
 }
@@ -2050,27 +2047,27 @@ TEST test_CMP_zpage_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX) {
 
     apple_ii_64k[0][idx] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = regX;
-    cpu65_y  = 0x05;
-    cpu65_sp = 0x81;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = regX;
+    run_args.cpu65_y  = 0x05;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+2);
-    ASSERT(cpu65_a       == regA);
-    ASSERT(cpu65_x       == regX);
-    ASSERT(cpu65_y       == 0x05);
-    ASSERT(cpu65_sp      == 0x81);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+2);
+    ASSERT(run_args.cpu65_a       == regA);
+    ASSERT(run_args.cpu65_x       == regX);
+    ASSERT(run_args.cpu65_y       == 0x05);
+    ASSERT(run_args.cpu65_sp      == 0x81);
 
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == idx);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_READ);
-    ASSERT(cpu65_opcode    == 0xd5);
-    ASSERT(cpu65_opcycles  == (4));
+    ASSERT(run_args.cpu65_ea        == idx);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_READ);
+    ASSERT(run_args.cpu65_opcode    == 0xd5);
+    ASSERT(run_args.cpu65_opcycles  == (4));
 
     PASS();
 }
@@ -2086,27 +2083,27 @@ TEST test_CMP_abs(uint8_t regA, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
     uint16_t addrs = lobyte | (hibyte<<8);
     apple_ii_64k[0][addrs] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = 0xf4;
-    cpu65_y  = 0x05;
-    cpu65_sp = 0x81;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0xf4;
+    run_args.cpu65_y  = 0x05;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+3);
-    ASSERT(cpu65_a       == regA);
-    ASSERT(cpu65_x       == 0xf4);
-    ASSERT(cpu65_y       == 0x05);
-    ASSERT(cpu65_sp      == 0x81);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+3);
+    ASSERT(run_args.cpu65_a       == regA);
+    ASSERT(run_args.cpu65_x       == 0xf4);
+    ASSERT(run_args.cpu65_y       == 0x05);
+    ASSERT(run_args.cpu65_sp      == 0x81);
 
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == addrs);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_READ);
-    ASSERT(cpu65_opcode    == 0xcd);
-    ASSERT(cpu65_opcycles  == (4));
+    ASSERT(run_args.cpu65_ea        == addrs);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_READ);
+    ASSERT(run_args.cpu65_opcode    == 0xcd);
+    ASSERT(run_args.cpu65_opcycles  == (4));
 
     PASS();
 }
@@ -2127,27 +2124,27 @@ TEST test_CMP_abs_x(uint8_t regA, uint8_t val, uint8_t regX, uint8_t lobyte, uin
     }
     apple_ii_64k[0][addrs] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = regX;
-    cpu65_y  = 0x05;
-    cpu65_sp = 0x81;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = regX;
+    run_args.cpu65_y  = 0x05;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+3);
-    ASSERT(cpu65_a       == regA);
-    ASSERT(cpu65_x       == regX);
-    ASSERT(cpu65_y       == 0x05);
-    ASSERT(cpu65_sp      == 0x81);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+3);
+    ASSERT(run_args.cpu65_a       == regA);
+    ASSERT(run_args.cpu65_x       == regX);
+    ASSERT(run_args.cpu65_y       == 0x05);
+    ASSERT(run_args.cpu65_sp      == 0x81);
 
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == addrs);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_READ);
-    ASSERT(cpu65_opcode    == 0xdd);
-    ASSERT(cpu65_opcycles  == cycle_count);
+    ASSERT(run_args.cpu65_ea        == addrs);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_READ);
+    ASSERT(run_args.cpu65_opcode    == 0xdd);
+    ASSERT(run_args.cpu65_opcycles  == cycle_count);
 
     PASS();
 }
@@ -2168,27 +2165,27 @@ TEST test_CMP_abs_y(uint8_t regA, uint8_t val, uint8_t regY, uint8_t lobyte, uin
     }
     apple_ii_64k[0][addrs] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = 0x02;
-    cpu65_y  = regY;
-    cpu65_sp = 0x81;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0x02;
+    run_args.cpu65_y  = regY;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+3);
-    ASSERT(cpu65_a       == regA);
-    ASSERT(cpu65_x       == 0x02);
-    ASSERT(cpu65_y       == regY);
-    ASSERT(cpu65_sp      == 0x81);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+3);
+    ASSERT(run_args.cpu65_a       == regA);
+    ASSERT(run_args.cpu65_x       == 0x02);
+    ASSERT(run_args.cpu65_y       == regY);
+    ASSERT(run_args.cpu65_sp      == 0x81);
 
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == addrs);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_READ);
-    ASSERT(cpu65_opcode    == 0xd9);
-    ASSERT(cpu65_opcycles == cycle_count);
+    ASSERT(run_args.cpu65_ea        == addrs);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_READ);
+    ASSERT(run_args.cpu65_opcode    == 0xd9);
+    ASSERT(run_args.cpu65_opcycles == cycle_count);
 
     PASS();
 }
@@ -2209,28 +2206,28 @@ TEST test_CMP_ind_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX, uint8
     apple_ii_64k[0][idx_hi] = hibyte;
     apple_ii_64k[0][addrs] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = regX;
-    cpu65_y  = 0x15;
-    cpu65_sp = 0x81;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = regX;
+    run_args.cpu65_y  = 0x15;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+2);
-    ASSERT(cpu65_a       == regA);
-    ASSERT(cpu65_x       == regX);
-    ASSERT(cpu65_y       == 0x15);
-    ASSERT(cpu65_sp      == 0x81);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+2);
+    ASSERT(run_args.cpu65_a       == regA);
+    ASSERT(run_args.cpu65_x       == regX);
+    ASSERT(run_args.cpu65_y       == 0x15);
+    ASSERT(run_args.cpu65_sp      == 0x81);
 
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == addrs);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_READ);
-    ASSERT(cpu65_opcode    == 0xc1);
+    ASSERT(run_args.cpu65_ea        == addrs);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_READ);
+    ASSERT(run_args.cpu65_opcode    == 0xc1);
 
-    ASSERT(cpu65_opcycles  == (6));
+    ASSERT(run_args.cpu65_opcycles  == (6));
 
     PASS();
 }
@@ -2258,27 +2255,27 @@ TEST test_CMP_ind_y(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regY, uint8
 
     apple_ii_64k[0][addrs] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = 0x84;
-    cpu65_y  = regY;
-    cpu65_sp = 0x81;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0x84;
+    run_args.cpu65_y  = regY;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+2);
-    ASSERT(cpu65_a       == regA);
-    ASSERT(cpu65_x       == 0x84);
-    ASSERT(cpu65_y       == regY);
-    ASSERT(cpu65_sp      == 0x81);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+2);
+    ASSERT(run_args.cpu65_a       == regA);
+    ASSERT(run_args.cpu65_x       == 0x84);
+    ASSERT(run_args.cpu65_y       == regY);
+    ASSERT(run_args.cpu65_sp      == 0x81);
 
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == addrs);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_READ);
-    ASSERT(cpu65_opcode    == 0xd1);
-    ASSERT(cpu65_opcycles  == cycle_count);
+    ASSERT(run_args.cpu65_ea        == addrs);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_READ);
+    ASSERT(run_args.cpu65_opcode    == 0xd1);
+    ASSERT(run_args.cpu65_opcycles  == cycle_count);
 
     PASS();
 }
@@ -2301,27 +2298,27 @@ TEST test_CMP_ind_zpage(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t lobyte,
     uint16_t addrs = lobyte | (hibyte<<8);
     apple_ii_64k[0][addrs] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = 0x14;
-    cpu65_y  = 0x85;
-    cpu65_sp = 0x81;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0x14;
+    run_args.cpu65_y  = 0x85;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+2);
-    ASSERT(cpu65_a       == regA);
-    ASSERT(cpu65_x       == 0x14);
-    ASSERT(cpu65_y       == 0x85);
-    ASSERT(cpu65_sp      == 0x81);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+2);
+    ASSERT(run_args.cpu65_a       == regA);
+    ASSERT(run_args.cpu65_x       == 0x14);
+    ASSERT(run_args.cpu65_y       == 0x85);
+    ASSERT(run_args.cpu65_sp      == 0x81);
 
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == addrs);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_READ);
-    ASSERT(cpu65_opcode    == 0xd2);
-    ASSERT(cpu65_opcycles  == (5));
+    ASSERT(run_args.cpu65_ea        == addrs);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_READ);
+    ASSERT(run_args.cpu65_opcode    == 0xd2);
+    ASSERT(run_args.cpu65_opcycles  == (5));
 
     PASS();
 }
@@ -2338,27 +2335,27 @@ TEST test_CPX_imm(uint8_t regX, uint8_t val) {
 
     testcpu_set_opcode2(0xe0, val);
 
-    cpu65_a  = regA;
-    cpu65_x  = regX;
-    cpu65_y  = 0x04;
-    cpu65_sp = 0x80;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = regX;
+    run_args.cpu65_y  = 0x04;
+    run_args.cpu65_sp = 0x80;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+2);
-    ASSERT(cpu65_a       == regA);
-    ASSERT(cpu65_x       == regX);
-    ASSERT(cpu65_y       == 0x04);
-    ASSERT(cpu65_sp      == 0x80);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+2);
+    ASSERT(run_args.cpu65_a       == regA);
+    ASSERT(run_args.cpu65_x       == regX);
+    ASSERT(run_args.cpu65_y       == 0x04);
+    ASSERT(run_args.cpu65_sp      == 0x80);
 
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == TEST_LOC+1);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_READ);
-    ASSERT(cpu65_opcode    == 0xe0);
-    ASSERT(cpu65_opcycles  == (2));
+    ASSERT(run_args.cpu65_ea        == TEST_LOC+1);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_READ);
+    ASSERT(run_args.cpu65_opcode    == 0xe0);
+    ASSERT(run_args.cpu65_opcycles  == (2));
 
     PASS();
 }
@@ -2374,27 +2371,27 @@ TEST test_CPX_zpage(uint8_t regX, uint8_t val, uint8_t arg0) {
 
     apple_ii_64k[0][arg0] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = regX;
-    cpu65_y  = 0x04;
-    cpu65_sp = 0x80;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = regX;
+    run_args.cpu65_y  = 0x04;
+    run_args.cpu65_sp = 0x80;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+2);
-    ASSERT(cpu65_a       == regA);
-    ASSERT(cpu65_x       == regX);
-    ASSERT(cpu65_y       == 0x04);
-    ASSERT(cpu65_sp      == 0x80);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+2);
+    ASSERT(run_args.cpu65_a       == regA);
+    ASSERT(run_args.cpu65_x       == regX);
+    ASSERT(run_args.cpu65_y       == 0x04);
+    ASSERT(run_args.cpu65_sp      == 0x80);
 
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == arg0);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_READ);
-    ASSERT(cpu65_opcode    == 0xe4);
-    ASSERT(cpu65_opcycles  == (3));
+    ASSERT(run_args.cpu65_ea        == arg0);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_READ);
+    ASSERT(run_args.cpu65_opcode    == 0xe4);
+    ASSERT(run_args.cpu65_opcycles  == (3));
 
     PASS();
 }
@@ -2411,27 +2408,27 @@ TEST test_CPX_abs(uint8_t regX, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
     uint16_t addrs = lobyte | (hibyte<<8);
     apple_ii_64k[0][addrs] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = regX;
-    cpu65_y  = 0x05;
-    cpu65_sp = 0x81;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = regX;
+    run_args.cpu65_y  = 0x05;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+3);
-    ASSERT(cpu65_a       == regA);
-    ASSERT(cpu65_x       == regX);
-    ASSERT(cpu65_y       == 0x05);
-    ASSERT(cpu65_sp      == 0x81);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+3);
+    ASSERT(run_args.cpu65_a       == regA);
+    ASSERT(run_args.cpu65_x       == regX);
+    ASSERT(run_args.cpu65_y       == 0x05);
+    ASSERT(run_args.cpu65_sp      == 0x81);
 
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == addrs);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_READ);
-    ASSERT(cpu65_opcode    == 0xec);
-    ASSERT(cpu65_opcycles  == (4));
+    ASSERT(run_args.cpu65_ea        == addrs);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_READ);
+    ASSERT(run_args.cpu65_opcode    == 0xec);
+    ASSERT(run_args.cpu65_opcycles  == (4));
 
     PASS();
 }
@@ -2445,27 +2442,27 @@ TEST test_CPY_imm(uint8_t regY, uint8_t val) {
 
     testcpu_set_opcode2(0xc0, val);
 
-    cpu65_a  = regA;
-    cpu65_x  = 0x66;
-    cpu65_y  = regY;
-    cpu65_sp = 0x80;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0x66;
+    run_args.cpu65_y  = regY;
+    run_args.cpu65_sp = 0x80;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+2);
-    ASSERT(cpu65_a       == regA);
-    ASSERT(cpu65_x       == 0x66);
-    ASSERT(cpu65_y       == regY);
-    ASSERT(cpu65_sp      == 0x80);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+2);
+    ASSERT(run_args.cpu65_a       == regA);
+    ASSERT(run_args.cpu65_x       == 0x66);
+    ASSERT(run_args.cpu65_y       == regY);
+    ASSERT(run_args.cpu65_sp      == 0x80);
 
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == TEST_LOC+1);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_READ);
-    ASSERT(cpu65_opcode    == 0xc0);
-    ASSERT(cpu65_opcycles  == (2));
+    ASSERT(run_args.cpu65_ea        == TEST_LOC+1);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_READ);
+    ASSERT(run_args.cpu65_opcode    == 0xc0);
+    ASSERT(run_args.cpu65_opcycles  == (2));
 
     PASS();
 }
@@ -2481,27 +2478,27 @@ TEST test_CPY_zpage(uint8_t regY, uint8_t val, uint8_t arg0) {
 
     apple_ii_64k[0][arg0] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = 0x27;
-    cpu65_y  = regY;
-    cpu65_sp = 0x80;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0x27;
+    run_args.cpu65_y  = regY;
+    run_args.cpu65_sp = 0x80;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+2);
-    ASSERT(cpu65_a       == regA);
-    ASSERT(cpu65_x       == 0x27);
-    ASSERT(cpu65_y       == regY);
-    ASSERT(cpu65_sp      == 0x80);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+2);
+    ASSERT(run_args.cpu65_a       == regA);
+    ASSERT(run_args.cpu65_x       == 0x27);
+    ASSERT(run_args.cpu65_y       == regY);
+    ASSERT(run_args.cpu65_sp      == 0x80);
 
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == arg0);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_READ);
-    ASSERT(cpu65_opcode    == 0xc4);
-    ASSERT(cpu65_opcycles  == (3));
+    ASSERT(run_args.cpu65_ea        == arg0);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_READ);
+    ASSERT(run_args.cpu65_opcode    == 0xc4);
+    ASSERT(run_args.cpu65_opcycles  == (3));
 
     PASS();
 }
@@ -2518,27 +2515,27 @@ TEST test_CPY_abs(uint8_t regY, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
     uint16_t addrs = lobyte | (hibyte<<8);
     apple_ii_64k[0][addrs] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = 0x7b;
-    cpu65_y  = regY;
-    cpu65_sp = 0x81;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0x7b;
+    run_args.cpu65_y  = regY;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+3);
-    ASSERT(cpu65_a       == regA);
-    ASSERT(cpu65_x       == 0x7b);
-    ASSERT(cpu65_y       == regY);
-    ASSERT(cpu65_sp      == 0x81);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+3);
+    ASSERT(run_args.cpu65_a       == regA);
+    ASSERT(run_args.cpu65_x       == 0x7b);
+    ASSERT(run_args.cpu65_y       == regY);
+    ASSERT(run_args.cpu65_sp      == 0x81);
 
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == addrs);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_READ);
-    ASSERT(cpu65_opcode    == 0xcc);
-    ASSERT(cpu65_opcycles  == (4));
+    ASSERT(run_args.cpu65_ea        == addrs);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_READ);
+    ASSERT(run_args.cpu65_opcode    == 0xcc);
+    ASSERT(run_args.cpu65_opcycles  == (4));
 
     PASS();
 }
@@ -2569,31 +2566,31 @@ TEST test_DEA(uint8_t regA) {
 
     testcpu_set_opcode1(0x3a);
 
-    cpu65_a  = regA;
-    cpu65_x  = 0x03;
-    cpu65_y  = 0x04;
-    cpu65_sp = 0x80;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0x03;
+    run_args.cpu65_y  = 0x04;
+    run_args.cpu65_sp = 0x80;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+1);
-    ASSERT(cpu65_a       == result);
-    ASSERT(cpu65_x       == 0x03);
-    ASSERT(cpu65_y       == 0x04);
-    ASSERT(cpu65_sp      == 0x80);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+1);
+    ASSERT(run_args.cpu65_a       == result);
+    ASSERT(run_args.cpu65_x       == 0x03);
+    ASSERT(run_args.cpu65_y       == 0x04);
+    ASSERT(run_args.cpu65_sp      == 0x80);
 
     do {
         char msgbuf[MSG_SIZE];
-        ASSERTm(msgbuf, cpu65_a == result);
+        ASSERTm(msgbuf, run_args.cpu65_a == result);
         VERIFY_FLAGS();
     } while (0);
 
-    ASSERT(cpu65_ea        == TEST_LOC);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_NONE);
-    ASSERT(cpu65_opcode    == 0x3a);
-    ASSERT(cpu65_opcycles  == (2));
+    ASSERT(run_args.cpu65_ea        == TEST_LOC);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_NONE);
+    ASSERT(run_args.cpu65_opcode    == 0x3a);
+    ASSERT(run_args.cpu65_opcycles  == (2));
 
     PASS();
 }
@@ -2608,27 +2605,27 @@ TEST test_DEX(uint8_t regX) {
 
     testcpu_set_opcode1(0xca);
 
-    cpu65_a  = regA;
-    cpu65_x  = regX;
-    cpu65_y  = 0x04;
-    cpu65_sp = 0x80;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = regX;
+    run_args.cpu65_y  = 0x04;
+    run_args.cpu65_sp = 0x80;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+1);
-    ASSERT(cpu65_a       == regA);
-    ASSERT(cpu65_x       == result);
-    ASSERT(cpu65_y       == 0x04);
-    ASSERT(cpu65_sp      == 0x80);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+1);
+    ASSERT(run_args.cpu65_a       == regA);
+    ASSERT(run_args.cpu65_x       == result);
+    ASSERT(run_args.cpu65_y       == 0x04);
+    ASSERT(run_args.cpu65_sp      == 0x80);
 
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == TEST_LOC);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_NONE);
-    ASSERT(cpu65_opcode    == 0xca);
-    ASSERT(cpu65_opcycles  == (2));
+    ASSERT(run_args.cpu65_ea        == TEST_LOC);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_NONE);
+    ASSERT(run_args.cpu65_opcode    == 0xca);
+    ASSERT(run_args.cpu65_opcycles  == (2));
 
     PASS();
 }
@@ -2643,27 +2640,27 @@ TEST test_DEY(uint8_t regY) {
 
     testcpu_set_opcode1(0x88);
 
-    cpu65_a  = regA;
-    cpu65_x  = 0x13;
-    cpu65_y  = regY;
-    cpu65_sp = 0x80;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0x13;
+    run_args.cpu65_y  = regY;
+    run_args.cpu65_sp = 0x80;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+1);
-    ASSERT(cpu65_a       == regA);
-    ASSERT(cpu65_x       == 0x13);
-    ASSERT(cpu65_y       == result);
-    ASSERT(cpu65_sp      == 0x80);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+1);
+    ASSERT(run_args.cpu65_a       == regA);
+    ASSERT(run_args.cpu65_x       == 0x13);
+    ASSERT(run_args.cpu65_y       == result);
+    ASSERT(run_args.cpu65_sp      == 0x80);
 
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == TEST_LOC);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_NONE);
-    ASSERT(cpu65_opcode    == 0x88);
-    ASSERT(cpu65_opcycles  == (2));
+    ASSERT(run_args.cpu65_ea        == TEST_LOC);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_NONE);
+    ASSERT(run_args.cpu65_opcode    == 0x88);
+    ASSERT(run_args.cpu65_opcycles  == (2));
 
     PASS();
 }
@@ -2681,28 +2678,28 @@ TEST test_DEC_zpage(uint8_t regA, uint8_t val, uint8_t arg0) {
 
     apple_ii_64k[0][arg0] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = 0x03;
-    cpu65_y  = 0x04;
-    cpu65_sp = 0x80;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0x03;
+    run_args.cpu65_y  = 0x04;
+    run_args.cpu65_sp = 0x80;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+2);
-    ASSERT(cpu65_a       == regA);
-    ASSERT(cpu65_x       == 0x03);
-    ASSERT(cpu65_y       == 0x04);
-    ASSERT(cpu65_sp      == 0x80);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+2);
+    ASSERT(run_args.cpu65_a       == regA);
+    ASSERT(run_args.cpu65_x       == 0x03);
+    ASSERT(run_args.cpu65_y       == 0x04);
+    ASSERT(run_args.cpu65_sp      == 0x80);
 
     ASSERT(apple_ii_64k[0][arg0] == result);
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == arg0);
-    ASSERT(cpu65_d         == result);
-    ASSERT(cpu65_rw        == (RW_READ|RW_WRITE));
-    ASSERT(cpu65_opcode    == 0xc6);
-    ASSERT(cpu65_opcycles  == (5));
+    ASSERT(run_args.cpu65_ea        == arg0);
+    ASSERT(run_args.cpu65_d         == result);
+    ASSERT(run_args.cpu65_rw        == (RW_READ|RW_WRITE));
+    ASSERT(run_args.cpu65_opcode    == 0xc6);
+    ASSERT(run_args.cpu65_opcycles  == (5));
 
     PASS();
 }
@@ -2719,28 +2716,28 @@ TEST test_DEC_zpage_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX) {
 
     apple_ii_64k[0][idx] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = regX;
-    cpu65_y  = 0x05;
-    cpu65_sp = 0x81;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = regX;
+    run_args.cpu65_y  = 0x05;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+2);
-    ASSERT(cpu65_a       == regA);
-    ASSERT(cpu65_x       == regX);
-    ASSERT(cpu65_y       == 0x05);
-    ASSERT(cpu65_sp      == 0x81);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+2);
+    ASSERT(run_args.cpu65_a       == regA);
+    ASSERT(run_args.cpu65_x       == regX);
+    ASSERT(run_args.cpu65_y       == 0x05);
+    ASSERT(run_args.cpu65_sp      == 0x81);
 
     ASSERT(apple_ii_64k[0][idx]  == result);
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == idx);
-    ASSERT(cpu65_d         == result);
-    ASSERT(cpu65_rw        == (RW_READ|RW_WRITE));
-    ASSERT(cpu65_opcode    == 0xd6);
-    ASSERT(cpu65_opcycles  == (6));
+    ASSERT(run_args.cpu65_ea        == idx);
+    ASSERT(run_args.cpu65_d         == result);
+    ASSERT(run_args.cpu65_rw        == (RW_READ|RW_WRITE));
+    ASSERT(run_args.cpu65_opcode    == 0xd6);
+    ASSERT(run_args.cpu65_opcycles  == (6));
 
     PASS();
 }
@@ -2756,28 +2753,28 @@ TEST test_DEC_abs(uint8_t regA, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
     uint16_t addrs = lobyte | (hibyte<<8);
     apple_ii_64k[0][addrs] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = 0xf4;
-    cpu65_y  = 0x05;
-    cpu65_sp = 0x81;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0xf4;
+    run_args.cpu65_y  = 0x05;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+3);
-    ASSERT(cpu65_a       == regA);
-    ASSERT(cpu65_x       == 0xf4);
-    ASSERT(cpu65_y       == 0x05);
-    ASSERT(cpu65_sp      == 0x81);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+3);
+    ASSERT(run_args.cpu65_a       == regA);
+    ASSERT(run_args.cpu65_x       == 0xf4);
+    ASSERT(run_args.cpu65_y       == 0x05);
+    ASSERT(run_args.cpu65_sp      == 0x81);
 
     ASSERT(apple_ii_64k[0][addrs] == result);
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == addrs);
-    ASSERT(cpu65_d         == result);
-    ASSERT(cpu65_rw        == (RW_READ|RW_WRITE));
-    ASSERT(cpu65_opcode    == 0xce);
-    ASSERT(cpu65_opcycles  == (6));
+    ASSERT(run_args.cpu65_ea        == addrs);
+    ASSERT(run_args.cpu65_d         == result);
+    ASSERT(run_args.cpu65_rw        == (RW_READ|RW_WRITE));
+    ASSERT(run_args.cpu65_opcode    == 0xce);
+    ASSERT(run_args.cpu65_opcycles  == (6));
 
     PASS();
 }
@@ -2795,28 +2792,28 @@ TEST test_DEC_abs_x(uint8_t regA, uint8_t val, uint8_t regX, uint8_t lobyte, uin
     addrs = addrs + regX;
     apple_ii_64k[0][addrs] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = regX;
-    cpu65_y  = 0x05;
-    cpu65_sp = 0x81;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = regX;
+    run_args.cpu65_y  = 0x05;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+3);
-    ASSERT(cpu65_a       == regA);
-    ASSERT(cpu65_x       == regX);
-    ASSERT(cpu65_y       == 0x05);
-    ASSERT(cpu65_sp      == 0x81);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+3);
+    ASSERT(run_args.cpu65_a       == regA);
+    ASSERT(run_args.cpu65_x       == regX);
+    ASSERT(run_args.cpu65_y       == 0x05);
+    ASSERT(run_args.cpu65_sp      == 0x81);
 
     ASSERT(apple_ii_64k[0][addrs] == result);
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == addrs);
-    ASSERT(cpu65_d         == result);
-    ASSERT(cpu65_rw        == (RW_READ|RW_WRITE));
-    ASSERT(cpu65_opcode    == 0xde);
-    ASSERT(cpu65_opcycles  == cycle_count);
+    ASSERT(run_args.cpu65_ea        == addrs);
+    ASSERT(run_args.cpu65_d         == result);
+    ASSERT(run_args.cpu65_rw        == (RW_READ|RW_WRITE));
+    ASSERT(run_args.cpu65_opcode    == 0xde);
+    ASSERT(run_args.cpu65_opcycles  == cycle_count);
 
     PASS();
 }
@@ -2847,33 +2844,33 @@ TEST test_EOR_imm(uint8_t regA, uint8_t val) {
 
     testcpu_set_opcode2(0x49, val);
 
-    cpu65_a  = regA;
-    cpu65_x  = 0x03;
-    cpu65_y  = 0x04;
-    cpu65_sp = 0x80;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0x03;
+    run_args.cpu65_y  = 0x04;
+    run_args.cpu65_sp = 0x80;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+2);
-    ASSERT(cpu65_x       == 0x03);
-    ASSERT(cpu65_y       == 0x04);
-    ASSERT(cpu65_sp      == 0x80);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+2);
+    ASSERT(run_args.cpu65_x       == 0x03);
+    ASSERT(run_args.cpu65_y       == 0x04);
+    ASSERT(run_args.cpu65_sp      == 0x80);
 
     do {
         char msgbuf[MSG_SIZE];
         char buf0[MSG_SIZE];
         char buf1[MSG_SIZE];
-        snprintf(msgbuf, MSG_SIZE, MSG_FLAGS0, regA, val, result, buf0, cpu65_a, buf1);
-        ASSERTm(msgbuf, cpu65_a == result);
+        snprintf(msgbuf, MSG_SIZE, MSG_FLAGS0, regA, val, result, buf0, run_args.cpu65_a, buf1);
+        ASSERTm(msgbuf, run_args.cpu65_a == result);
         VERIFY_FLAGS();
     } while (0);
 
-    ASSERT(cpu65_ea        == TEST_LOC+1);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_READ);
-    ASSERT(cpu65_opcode    == 0x49);
-    ASSERT(cpu65_opcycles  == (2));
+    ASSERT(run_args.cpu65_ea        == TEST_LOC+1);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_READ);
+    ASSERT(run_args.cpu65_opcode    == 0x49);
+    ASSERT(run_args.cpu65_opcycles  == (2));
 
     PASS();
 }
@@ -2887,27 +2884,27 @@ TEST test_EOR_zpage(uint8_t regA, uint8_t val, uint8_t arg0) {
 
     apple_ii_64k[0][arg0] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = 0x03;
-    cpu65_y  = 0x04;
-    cpu65_sp = 0x80;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0x03;
+    run_args.cpu65_y  = 0x04;
+    run_args.cpu65_sp = 0x80;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+2);
-    ASSERT(cpu65_x       == 0x03);
-    ASSERT(cpu65_y       == 0x04);
-    ASSERT(cpu65_sp      == 0x80);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+2);
+    ASSERT(run_args.cpu65_x       == 0x03);
+    ASSERT(run_args.cpu65_y       == 0x04);
+    ASSERT(run_args.cpu65_sp      == 0x80);
 
-    ASSERT(cpu65_a == result);
+    ASSERT(run_args.cpu65_a == result);
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == arg0);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_READ);
-    ASSERT(cpu65_opcode    == 0x45);
-    ASSERT(cpu65_opcycles  == (3));
+    ASSERT(run_args.cpu65_ea        == arg0);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_READ);
+    ASSERT(run_args.cpu65_opcode    == 0x45);
+    ASSERT(run_args.cpu65_opcycles  == (3));
 
     PASS();
 }
@@ -2923,27 +2920,27 @@ TEST test_EOR_zpage_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX) {
 
     apple_ii_64k[0][idx] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = regX;
-    cpu65_y  = 0x05;
-    cpu65_sp = 0x81;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = regX;
+    run_args.cpu65_y  = 0x05;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+2);
-    ASSERT(cpu65_x       == regX);
-    ASSERT(cpu65_y       == 0x05);
-    ASSERT(cpu65_sp      == 0x81);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+2);
+    ASSERT(run_args.cpu65_x       == regX);
+    ASSERT(run_args.cpu65_y       == 0x05);
+    ASSERT(run_args.cpu65_sp      == 0x81);
 
-    ASSERT(cpu65_a == result);
+    ASSERT(run_args.cpu65_a == result);
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == idx);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_READ);
-    ASSERT(cpu65_opcode    == 0x55);
-    ASSERT(cpu65_opcycles  == (4));
+    ASSERT(run_args.cpu65_ea        == idx);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_READ);
+    ASSERT(run_args.cpu65_opcode    == 0x55);
+    ASSERT(run_args.cpu65_opcycles  == (4));
 
     PASS();
 }
@@ -2958,27 +2955,27 @@ TEST test_EOR_abs(uint8_t regA, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
     uint16_t addrs = lobyte | (hibyte<<8);
     apple_ii_64k[0][addrs] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = 0xf4;
-    cpu65_y  = 0x05;
-    cpu65_sp = 0x81;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0xf4;
+    run_args.cpu65_y  = 0x05;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+3);
-    ASSERT(cpu65_x       == 0xf4);
-    ASSERT(cpu65_y       == 0x05);
-    ASSERT(cpu65_sp      == 0x81);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+3);
+    ASSERT(run_args.cpu65_x       == 0xf4);
+    ASSERT(run_args.cpu65_y       == 0x05);
+    ASSERT(run_args.cpu65_sp      == 0x81);
 
-    ASSERT(cpu65_a == result);
+    ASSERT(run_args.cpu65_a == result);
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == addrs);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_READ);
-    ASSERT(cpu65_opcode    == 0x4d);
-    ASSERT(cpu65_opcycles  == (4));
+    ASSERT(run_args.cpu65_ea        == addrs);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_READ);
+    ASSERT(run_args.cpu65_opcode    == 0x4d);
+    ASSERT(run_args.cpu65_opcycles  == (4));
 
     PASS();
 }
@@ -2998,27 +2995,27 @@ TEST test_EOR_abs_x(uint8_t regA, uint8_t val, uint8_t regX, uint8_t lobyte, uin
     }
     apple_ii_64k[0][addrs] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = regX;
-    cpu65_y  = 0x05;
-    cpu65_sp = 0x81;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = regX;
+    run_args.cpu65_y  = 0x05;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+3);
-    ASSERT(cpu65_x       == regX);
-    ASSERT(cpu65_y       == 0x05);
-    ASSERT(cpu65_sp      == 0x81);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+3);
+    ASSERT(run_args.cpu65_x       == regX);
+    ASSERT(run_args.cpu65_y       == 0x05);
+    ASSERT(run_args.cpu65_sp      == 0x81);
 
-    ASSERT(cpu65_a == result);
+    ASSERT(run_args.cpu65_a == result);
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == addrs);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_READ);
-    ASSERT(cpu65_opcode    == 0x5d);
-    ASSERT(cpu65_opcycles  == cycle_count);
+    ASSERT(run_args.cpu65_ea        == addrs);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_READ);
+    ASSERT(run_args.cpu65_opcode    == 0x5d);
+    ASSERT(run_args.cpu65_opcycles  == cycle_count);
 
     PASS();
 }
@@ -3038,27 +3035,27 @@ TEST test_EOR_abs_y(uint8_t regA, uint8_t val, uint8_t regY, uint8_t lobyte, uin
     }
     apple_ii_64k[0][addrs] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = 0x02;
-    cpu65_y  = regY;
-    cpu65_sp = 0x81;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0x02;
+    run_args.cpu65_y  = regY;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+3);
-    ASSERT(cpu65_x       == 0x02);
-    ASSERT(cpu65_y       == regY);
-    ASSERT(cpu65_sp      == 0x81);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+3);
+    ASSERT(run_args.cpu65_x       == 0x02);
+    ASSERT(run_args.cpu65_y       == regY);
+    ASSERT(run_args.cpu65_sp      == 0x81);
 
-    ASSERT(cpu65_a == result);
+    ASSERT(run_args.cpu65_a == result);
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == addrs);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_READ);
-    ASSERT(cpu65_opcode    == 0x59);
-    ASSERT(cpu65_opcycles == cycle_count);
+    ASSERT(run_args.cpu65_ea        == addrs);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_READ);
+    ASSERT(run_args.cpu65_opcode    == 0x59);
+    ASSERT(run_args.cpu65_opcycles == cycle_count);
 
     PASS();
 }
@@ -3078,28 +3075,28 @@ TEST test_EOR_ind_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX, uint8
     apple_ii_64k[0][idx_hi] = hibyte;
     apple_ii_64k[0][addrs] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = regX;
-    cpu65_y  = 0x15;
-    cpu65_sp = 0x81;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = regX;
+    run_args.cpu65_y  = 0x15;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+2);
-    ASSERT(cpu65_x       == regX);
-    ASSERT(cpu65_y       == 0x15);
-    ASSERT(cpu65_sp      == 0x81);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+2);
+    ASSERT(run_args.cpu65_x       == regX);
+    ASSERT(run_args.cpu65_y       == 0x15);
+    ASSERT(run_args.cpu65_sp      == 0x81);
 
-    ASSERT(cpu65_a == result);
+    ASSERT(run_args.cpu65_a == result);
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == addrs);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_READ);
-    ASSERT(cpu65_opcode    == 0x41);
+    ASSERT(run_args.cpu65_ea        == addrs);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_READ);
+    ASSERT(run_args.cpu65_opcode    == 0x41);
 
-    ASSERT(cpu65_opcycles  == (6));
+    ASSERT(run_args.cpu65_opcycles  == (6));
 
     PASS();
 }
@@ -3126,27 +3123,27 @@ TEST test_EOR_ind_y(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regY, uint8
 
     apple_ii_64k[0][addrs] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = 0x84;
-    cpu65_y  = regY;
-    cpu65_sp = 0x81;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0x84;
+    run_args.cpu65_y  = regY;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+2);
-    ASSERT(cpu65_x       == 0x84);
-    ASSERT(cpu65_y       == regY);
-    ASSERT(cpu65_sp      == 0x81);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+2);
+    ASSERT(run_args.cpu65_x       == 0x84);
+    ASSERT(run_args.cpu65_y       == regY);
+    ASSERT(run_args.cpu65_sp      == 0x81);
 
-    ASSERT(cpu65_a == result);
+    ASSERT(run_args.cpu65_a == result);
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == addrs);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_READ);
-    ASSERT(cpu65_opcode    == 0x51);
-    ASSERT(cpu65_opcycles  == cycle_count);
+    ASSERT(run_args.cpu65_ea        == addrs);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_READ);
+    ASSERT(run_args.cpu65_opcode    == 0x51);
+    ASSERT(run_args.cpu65_opcycles  == cycle_count);
 
     PASS();
 }
@@ -3168,27 +3165,27 @@ TEST test_EOR_ind_zpage(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t lobyte,
     uint16_t addrs = lobyte | (hibyte<<8);
     apple_ii_64k[0][addrs] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = 0x14;
-    cpu65_y  = 0x85;
-    cpu65_sp = 0x81;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0x14;
+    run_args.cpu65_y  = 0x85;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+2);
-    ASSERT(cpu65_x       == 0x14);
-    ASSERT(cpu65_y       == 0x85);
-    ASSERT(cpu65_sp      == 0x81);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+2);
+    ASSERT(run_args.cpu65_x       == 0x14);
+    ASSERT(run_args.cpu65_y       == 0x85);
+    ASSERT(run_args.cpu65_sp      == 0x81);
 
-    ASSERT(cpu65_a == result);
+    ASSERT(run_args.cpu65_a == result);
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == addrs);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_READ);
-    ASSERT(cpu65_opcode    == 0x52);
-    ASSERT(cpu65_opcycles  == (5));
+    ASSERT(run_args.cpu65_ea        == addrs);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_READ);
+    ASSERT(run_args.cpu65_opcode    == 0x52);
+    ASSERT(run_args.cpu65_opcycles  == (5));
 
     PASS();
 }
@@ -3219,31 +3216,31 @@ TEST test_INA(uint8_t regA) {
 
     testcpu_set_opcode1(0x1a);
 
-    cpu65_a  = regA;
-    cpu65_x  = 0x03;
-    cpu65_y  = 0x04;
-    cpu65_sp = 0x80;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0x03;
+    run_args.cpu65_y  = 0x04;
+    run_args.cpu65_sp = 0x80;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+1);
-    ASSERT(cpu65_a       == result);
-    ASSERT(cpu65_x       == 0x03);
-    ASSERT(cpu65_y       == 0x04);
-    ASSERT(cpu65_sp      == 0x80);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+1);
+    ASSERT(run_args.cpu65_a       == result);
+    ASSERT(run_args.cpu65_x       == 0x03);
+    ASSERT(run_args.cpu65_y       == 0x04);
+    ASSERT(run_args.cpu65_sp      == 0x80);
 
     do {
         char msgbuf[MSG_SIZE];
-        ASSERTm(msgbuf, cpu65_a == result);
+        ASSERTm(msgbuf, run_args.cpu65_a == result);
         VERIFY_FLAGS();
     } while (0);
 
-    ASSERT(cpu65_ea        == TEST_LOC);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_NONE);
-    ASSERT(cpu65_opcode    == 0x1a);
-    ASSERT(cpu65_opcycles  == (2));
+    ASSERT(run_args.cpu65_ea        == TEST_LOC);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_NONE);
+    ASSERT(run_args.cpu65_opcode    == 0x1a);
+    ASSERT(run_args.cpu65_opcycles  == (2));
 
     PASS();
 }
@@ -3258,27 +3255,27 @@ TEST test_INX(uint8_t regX) {
 
     testcpu_set_opcode1(0xe8);
 
-    cpu65_a  = regA;
-    cpu65_x  = regX;
-    cpu65_y  = 0x04;
-    cpu65_sp = 0x80;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = regX;
+    run_args.cpu65_y  = 0x04;
+    run_args.cpu65_sp = 0x80;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+1);
-    ASSERT(cpu65_a       == regA);
-    ASSERT(cpu65_x       == result);
-    ASSERT(cpu65_y       == 0x04);
-    ASSERT(cpu65_sp      == 0x80);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+1);
+    ASSERT(run_args.cpu65_a       == regA);
+    ASSERT(run_args.cpu65_x       == result);
+    ASSERT(run_args.cpu65_y       == 0x04);
+    ASSERT(run_args.cpu65_sp      == 0x80);
 
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == TEST_LOC);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_NONE);
-    ASSERT(cpu65_opcode    == 0xe8);
-    ASSERT(cpu65_opcycles  == (2));
+    ASSERT(run_args.cpu65_ea        == TEST_LOC);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_NONE);
+    ASSERT(run_args.cpu65_opcode    == 0xe8);
+    ASSERT(run_args.cpu65_opcycles  == (2));
 
     PASS();
 }
@@ -3293,27 +3290,27 @@ TEST test_INY(uint8_t regY) {
 
     testcpu_set_opcode1(0xc8);
 
-    cpu65_a  = regA;
-    cpu65_x  = 0x13;
-    cpu65_y  = regY;
-    cpu65_sp = 0x80;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0x13;
+    run_args.cpu65_y  = regY;
+    run_args.cpu65_sp = 0x80;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+1);
-    ASSERT(cpu65_a       == regA);
-    ASSERT(cpu65_x       == 0x13);
-    ASSERT(cpu65_y       == result);
-    ASSERT(cpu65_sp      == 0x80);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+1);
+    ASSERT(run_args.cpu65_a       == regA);
+    ASSERT(run_args.cpu65_x       == 0x13);
+    ASSERT(run_args.cpu65_y       == result);
+    ASSERT(run_args.cpu65_sp      == 0x80);
 
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == TEST_LOC);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_NONE);
-    ASSERT(cpu65_opcode    == 0xc8);
-    ASSERT(cpu65_opcycles  == (2));
+    ASSERT(run_args.cpu65_ea        == TEST_LOC);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_NONE);
+    ASSERT(run_args.cpu65_opcode    == 0xc8);
+    ASSERT(run_args.cpu65_opcycles  == (2));
 
     PASS();
 }
@@ -3331,28 +3328,28 @@ TEST test_INC_zpage(uint8_t regA, uint8_t val, uint8_t arg0) {
 
     apple_ii_64k[0][arg0] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = 0x03;
-    cpu65_y  = 0x04;
-    cpu65_sp = 0x80;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0x03;
+    run_args.cpu65_y  = 0x04;
+    run_args.cpu65_sp = 0x80;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+2);
-    ASSERT(cpu65_a       == regA);
-    ASSERT(cpu65_x       == 0x03);
-    ASSERT(cpu65_y       == 0x04);
-    ASSERT(cpu65_sp      == 0x80);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+2);
+    ASSERT(run_args.cpu65_a       == regA);
+    ASSERT(run_args.cpu65_x       == 0x03);
+    ASSERT(run_args.cpu65_y       == 0x04);
+    ASSERT(run_args.cpu65_sp      == 0x80);
 
     ASSERT(apple_ii_64k[0][arg0] == result);
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == arg0);
-    ASSERT(cpu65_d         == result);
-    ASSERT(cpu65_rw        == (RW_READ|RW_WRITE));
-    ASSERT(cpu65_opcode    == 0xe6);
-    ASSERT(cpu65_opcycles  == (5));
+    ASSERT(run_args.cpu65_ea        == arg0);
+    ASSERT(run_args.cpu65_d         == result);
+    ASSERT(run_args.cpu65_rw        == (RW_READ|RW_WRITE));
+    ASSERT(run_args.cpu65_opcode    == 0xe6);
+    ASSERT(run_args.cpu65_opcycles  == (5));
 
     PASS();
 }
@@ -3369,28 +3366,28 @@ TEST test_INC_zpage_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX) {
 
     apple_ii_64k[0][idx] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = regX;
-    cpu65_y  = 0x05;
-    cpu65_sp = 0x81;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = regX;
+    run_args.cpu65_y  = 0x05;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+2);
-    ASSERT(cpu65_a       == regA);
-    ASSERT(cpu65_x       == regX);
-    ASSERT(cpu65_y       == 0x05);
-    ASSERT(cpu65_sp      == 0x81);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+2);
+    ASSERT(run_args.cpu65_a       == regA);
+    ASSERT(run_args.cpu65_x       == regX);
+    ASSERT(run_args.cpu65_y       == 0x05);
+    ASSERT(run_args.cpu65_sp      == 0x81);
 
     ASSERT(apple_ii_64k[0][idx]  == result);
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == idx);
-    ASSERT(cpu65_d         == result);
-    ASSERT(cpu65_rw        == (RW_READ|RW_WRITE));
-    ASSERT(cpu65_opcode    == 0xf6);
-    ASSERT(cpu65_opcycles  == (6));
+    ASSERT(run_args.cpu65_ea        == idx);
+    ASSERT(run_args.cpu65_d         == result);
+    ASSERT(run_args.cpu65_rw        == (RW_READ|RW_WRITE));
+    ASSERT(run_args.cpu65_opcode    == 0xf6);
+    ASSERT(run_args.cpu65_opcycles  == (6));
 
     PASS();
 }
@@ -3406,28 +3403,28 @@ TEST test_INC_abs(uint8_t regA, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
     uint16_t addrs = lobyte | (hibyte<<8);
     apple_ii_64k[0][addrs] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = 0xf4;
-    cpu65_y  = 0x05;
-    cpu65_sp = 0x81;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0xf4;
+    run_args.cpu65_y  = 0x05;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+3);
-    ASSERT(cpu65_a       == regA);
-    ASSERT(cpu65_x       == 0xf4);
-    ASSERT(cpu65_y       == 0x05);
-    ASSERT(cpu65_sp      == 0x81);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+3);
+    ASSERT(run_args.cpu65_a       == regA);
+    ASSERT(run_args.cpu65_x       == 0xf4);
+    ASSERT(run_args.cpu65_y       == 0x05);
+    ASSERT(run_args.cpu65_sp      == 0x81);
 
     ASSERT(apple_ii_64k[0][addrs] == result);
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == addrs);
-    ASSERT(cpu65_d         == result);
-    ASSERT(cpu65_rw        == (RW_READ|RW_WRITE));
-    ASSERT(cpu65_opcode    == 0xee);
-    ASSERT(cpu65_opcycles  == (6));
+    ASSERT(run_args.cpu65_ea        == addrs);
+    ASSERT(run_args.cpu65_d         == result);
+    ASSERT(run_args.cpu65_rw        == (RW_READ|RW_WRITE));
+    ASSERT(run_args.cpu65_opcode    == 0xee);
+    ASSERT(run_args.cpu65_opcycles  == (6));
 
     PASS();
 }
@@ -3445,28 +3442,28 @@ TEST test_INC_abs_x(uint8_t regA, uint8_t val, uint8_t regX, uint8_t lobyte, uin
     addrs = addrs + regX;
     apple_ii_64k[0][addrs] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = regX;
-    cpu65_y  = 0x05;
-    cpu65_sp = 0x81;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = regX;
+    run_args.cpu65_y  = 0x05;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+3);
-    ASSERT(cpu65_a       == regA);
-    ASSERT(cpu65_x       == regX);
-    ASSERT(cpu65_y       == 0x05);
-    ASSERT(cpu65_sp      == 0x81);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+3);
+    ASSERT(run_args.cpu65_a       == regA);
+    ASSERT(run_args.cpu65_x       == regX);
+    ASSERT(run_args.cpu65_y       == 0x05);
+    ASSERT(run_args.cpu65_sp      == 0x81);
 
     ASSERT(apple_ii_64k[0][addrs] == result);
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == addrs);
-    ASSERT(cpu65_d         == result);
-    ASSERT(cpu65_rw        == (RW_READ|RW_WRITE));
-    ASSERT(cpu65_opcode    == 0xfe);
-    ASSERT(cpu65_opcycles  == cycle_count);
+    ASSERT(run_args.cpu65_ea        == addrs);
+    ASSERT(run_args.cpu65_d         == result);
+    ASSERT(run_args.cpu65_rw        == (RW_READ|RW_WRITE));
+    ASSERT(run_args.cpu65_opcode    == 0xfe);
+    ASSERT(run_args.cpu65_opcycles  == cycle_count);
 
     PASS();
 }
@@ -3486,26 +3483,26 @@ TEST test_JMP_abs(uint8_t lobyte, uint8_t hibyte, uint16_t insAddrs) {
 
     uint16_t addrs = (hibyte<<8) | lobyte;
 
-    cpu65_a  = regA;
-    cpu65_x  = regX;
-    cpu65_y  = regY;
-    cpu65_sp = sp;
-    cpu65_f  = f;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = regX;
+    run_args.cpu65_y  = regY;
+    run_args.cpu65_sp = sp;
+    run_args.cpu65_f  = f;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc     == addrs);
-    ASSERT(cpu65_a      == regA);
-    ASSERT(cpu65_x      == regX);
-    ASSERT(cpu65_y      == regY);
-    ASSERT(cpu65_f      == f);
-    ASSERT(cpu65_sp     == sp);
+    ASSERT(run_args.cpu65_pc     == addrs);
+    ASSERT(run_args.cpu65_a      == regA);
+    ASSERT(run_args.cpu65_x      == regX);
+    ASSERT(run_args.cpu65_y      == regY);
+    ASSERT(run_args.cpu65_f      == f);
+    ASSERT(run_args.cpu65_sp     == sp);
 
-    ASSERT(cpu65_ea       == addrs);
-    ASSERT(cpu65_d        == 0xff);
-    ASSERT(cpu65_rw       == RW_NONE);
-    ASSERT(cpu65_opcode   == 0x4c);
-    ASSERT(cpu65_opcycles == (3));
+    ASSERT(run_args.cpu65_ea       == addrs);
+    ASSERT(run_args.cpu65_d        == 0xff);
+    ASSERT(run_args.cpu65_rw       == RW_NONE);
+    ASSERT(run_args.cpu65_opcode   == 0x4c);
+    ASSERT(run_args.cpu65_opcycles == (3));
 
     PASS();
 }
@@ -3546,26 +3543,26 @@ TEST test_JMP_ind(uint8_t _lobyte, uint8_t _hibyte, uint16_t insAddrs) {
     }
 #endif
 
-    cpu65_a  = regA;
-    cpu65_x  = regX;
-    cpu65_y  = regY;
-    cpu65_sp = sp;
-    cpu65_f  = f;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = regX;
+    run_args.cpu65_y  = regY;
+    run_args.cpu65_sp = sp;
+    run_args.cpu65_f  = f;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc     == addr);
-    ASSERT(cpu65_a      == regA);
-    ASSERT(cpu65_x      == regX);
-    ASSERT(cpu65_y      == regY);
-    ASSERT(cpu65_f      == f);
-    ASSERT(cpu65_sp     == sp);
+    ASSERT(run_args.cpu65_pc     == addr);
+    ASSERT(run_args.cpu65_a      == regA);
+    ASSERT(run_args.cpu65_x      == regX);
+    ASSERT(run_args.cpu65_y      == regY);
+    ASSERT(run_args.cpu65_f      == f);
+    ASSERT(run_args.cpu65_sp     == sp);
 
-    //ASSERT(cpu65_ea       == _addrs); -- EA is managed differently on ARM
-    ASSERT(cpu65_d        == 0xff);
-    ASSERT(cpu65_rw       == RW_NONE);
-    ASSERT(cpu65_opcode   == 0x6c);
-    ASSERT(cpu65_opcycles == (6));
+    //ASSERT(run_args.cpu65_ea       == _addrs); -- EA is managed differently on ARM
+    ASSERT(run_args.cpu65_d        == 0xff);
+    ASSERT(run_args.cpu65_rw       == RW_NONE);
+    ASSERT(run_args.cpu65_opcode   == 0x6c);
+    ASSERT(run_args.cpu65_opcycles == (6));
 
     PASS();
 }
@@ -3602,26 +3599,26 @@ TEST test_JMP_abs_ind_x(uint8_t _lobyte, uint8_t _hibyte, uint16_t insAddrs, uin
     }
 #endif
 
-    cpu65_a  = regA;
-    cpu65_x  = regX;
-    cpu65_y  = regY;
-    cpu65_sp = sp;
-    cpu65_f  = f;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = regX;
+    run_args.cpu65_y  = regY;
+    run_args.cpu65_sp = sp;
+    run_args.cpu65_f  = f;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc     == addr);
-    ASSERT(cpu65_a      == regA);
-    ASSERT(cpu65_x      == regX);
-    ASSERT(cpu65_y      == regY);
-    ASSERT(cpu65_f      == f);
-    ASSERT(cpu65_sp     == sp);
+    ASSERT(run_args.cpu65_pc     == addr);
+    ASSERT(run_args.cpu65_a      == regA);
+    ASSERT(run_args.cpu65_x      == regX);
+    ASSERT(run_args.cpu65_y      == regY);
+    ASSERT(run_args.cpu65_f      == f);
+    ASSERT(run_args.cpu65_sp     == sp);
 
-    //ASSERT(cpu65_ea       == _addrs); -- EA is managed differently on ARM
-    ASSERT(cpu65_d        == 0xff);
-    ASSERT(cpu65_rw       == RW_NONE);
-    ASSERT(cpu65_opcode   == 0x7c);
-    ASSERT(cpu65_opcycles == (6));
+    //ASSERT(run_args.cpu65_ea       == _addrs); -- EA is managed differently on ARM
+    ASSERT(run_args.cpu65_d        == 0xff);
+    ASSERT(run_args.cpu65_rw       == RW_NONE);
+    ASSERT(run_args.cpu65_opcode   == 0x7c);
+    ASSERT(run_args.cpu65_opcycles == (6));
 
     PASS();
 }
@@ -3644,29 +3641,29 @@ TEST test_JSR_abs(uint8_t lobyte, uint8_t hibyte, uint16_t insAddrs) {
     uint8_t hi_ret = (insAddrs >> 8) & 0xff;
     uint8_t lo_ret = insAddrs & 0xff;
 
-    cpu65_a  = regA;
-    cpu65_x  = regX;
-    cpu65_y  = regY;
-    cpu65_sp = 0xff;
-    cpu65_f  = f;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = regX;
+    run_args.cpu65_y  = regY;
+    run_args.cpu65_sp = 0xff;
+    run_args.cpu65_f  = f;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc     == addrs);
-    ASSERT(cpu65_a      == regA);
-    ASSERT(cpu65_x      == regX);
-    ASSERT(cpu65_y      == regY);
-    ASSERT(cpu65_f      == f);
-    ASSERT(cpu65_sp     == 0xfd);
+    ASSERT(run_args.cpu65_pc     == addrs);
+    ASSERT(run_args.cpu65_a      == regA);
+    ASSERT(run_args.cpu65_x      == regX);
+    ASSERT(run_args.cpu65_y      == regY);
+    ASSERT(run_args.cpu65_f      == f);
+    ASSERT(run_args.cpu65_sp     == 0xfd);
 
     ASSERT(apple_ii_64k[0][0x1ff] == hi_ret);
     ASSERT(apple_ii_64k[0][0x1fe] == lo_ret);
 
-    ASSERT(cpu65_ea       == addrs);
-    ASSERT(cpu65_d        == 0xff);
-    ASSERT(cpu65_rw       == RW_NONE);
-    ASSERT(cpu65_opcode   == 0x20);
-    ASSERT(cpu65_opcycles == (6));
+    ASSERT(run_args.cpu65_ea       == addrs);
+    ASSERT(run_args.cpu65_d        == 0xff);
+    ASSERT(run_args.cpu65_rw       == RW_NONE);
+    ASSERT(run_args.cpu65_opcode   == 0x20);
+    ASSERT(run_args.cpu65_opcycles == (6));
 
     PASS();
 }
@@ -3693,27 +3690,27 @@ TEST test_LDA_imm(uint8_t regA, uint8_t val) {
 
     testcpu_set_opcode2(0xa9, val);
 
-    cpu65_a  = regA;
-    cpu65_x  = 0x03;
-    cpu65_y  = 0x04;
-    cpu65_sp = 0x80;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0x03;
+    run_args.cpu65_y  = 0x04;
+    run_args.cpu65_sp = 0x80;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+2);
-    ASSERT(cpu65_a       == val);
-    ASSERT(cpu65_x       == 0x03);
-    ASSERT(cpu65_y       == 0x04);
-    ASSERT(cpu65_sp      == 0x80);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+2);
+    ASSERT(run_args.cpu65_a       == val);
+    ASSERT(run_args.cpu65_x       == 0x03);
+    ASSERT(run_args.cpu65_y       == 0x04);
+    ASSERT(run_args.cpu65_sp      == 0x80);
 
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == TEST_LOC+1);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_READ);
-    ASSERT(cpu65_opcode    == 0xa9);
-    ASSERT(cpu65_opcycles  == (2));
+    ASSERT(run_args.cpu65_ea        == TEST_LOC+1);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_READ);
+    ASSERT(run_args.cpu65_opcode    == 0xa9);
+    ASSERT(run_args.cpu65_opcycles  == (2));
 
     PASS();
 }
@@ -3728,27 +3725,27 @@ TEST test_LDA_zpage(uint8_t regA, uint8_t val, uint8_t arg0) {
 
     apple_ii_64k[0][arg0] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = 0x03;
-    cpu65_y  = 0x04;
-    cpu65_sp = 0x80;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0x03;
+    run_args.cpu65_y  = 0x04;
+    run_args.cpu65_sp = 0x80;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+2);
-    ASSERT(cpu65_a       == val);
-    ASSERT(cpu65_x       == 0x03);
-    ASSERT(cpu65_y       == 0x04);
-    ASSERT(cpu65_sp      == 0x80);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+2);
+    ASSERT(run_args.cpu65_a       == val);
+    ASSERT(run_args.cpu65_x       == 0x03);
+    ASSERT(run_args.cpu65_y       == 0x04);
+    ASSERT(run_args.cpu65_sp      == 0x80);
 
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == arg0);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_READ);
-    ASSERT(cpu65_opcode    == 0xa5);
-    ASSERT(cpu65_opcycles  == (3));
+    ASSERT(run_args.cpu65_ea        == arg0);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_READ);
+    ASSERT(run_args.cpu65_opcode    == 0xa5);
+    ASSERT(run_args.cpu65_opcycles  == (3));
 
     PASS();
 }
@@ -3765,27 +3762,27 @@ TEST test_LDA_zpage_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX) {
 
     apple_ii_64k[0][idx] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = regX;
-    cpu65_y  = 0x05;
-    cpu65_sp = 0x81;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = regX;
+    run_args.cpu65_y  = 0x05;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+2);
-    ASSERT(cpu65_a       == val);
-    ASSERT(cpu65_x       == regX);
-    ASSERT(cpu65_y       == 0x05);
-    ASSERT(cpu65_sp      == 0x81);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+2);
+    ASSERT(run_args.cpu65_a       == val);
+    ASSERT(run_args.cpu65_x       == regX);
+    ASSERT(run_args.cpu65_y       == 0x05);
+    ASSERT(run_args.cpu65_sp      == 0x81);
 
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == idx);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_READ);
-    ASSERT(cpu65_opcode    == 0xb5);
-    ASSERT(cpu65_opcycles  == (4));
+    ASSERT(run_args.cpu65_ea        == idx);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_READ);
+    ASSERT(run_args.cpu65_opcode    == 0xb5);
+    ASSERT(run_args.cpu65_opcycles  == (4));
 
     PASS();
 }
@@ -3801,27 +3798,27 @@ TEST test_LDA_abs(uint8_t regA, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
     uint16_t addrs = lobyte | (hibyte<<8);
     apple_ii_64k[0][addrs] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = 0xf4;
-    cpu65_y  = 0x05;
-    cpu65_sp = 0x81;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0xf4;
+    run_args.cpu65_y  = 0x05;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+3);
-    ASSERT(cpu65_a       == val);
-    ASSERT(cpu65_x       == 0xf4);
-    ASSERT(cpu65_y       == 0x05);
-    ASSERT(cpu65_sp      == 0x81);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+3);
+    ASSERT(run_args.cpu65_a       == val);
+    ASSERT(run_args.cpu65_x       == 0xf4);
+    ASSERT(run_args.cpu65_y       == 0x05);
+    ASSERT(run_args.cpu65_sp      == 0x81);
 
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == addrs);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_READ);
-    ASSERT(cpu65_opcode    == 0xad);
-    ASSERT(cpu65_opcycles  == (4));
+    ASSERT(run_args.cpu65_ea        == addrs);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_READ);
+    ASSERT(run_args.cpu65_opcode    == 0xad);
+    ASSERT(run_args.cpu65_opcycles  == (4));
 
     PASS();
 }
@@ -3842,27 +3839,27 @@ TEST test_LDA_abs_x(uint8_t regA, uint8_t val, uint8_t regX, uint8_t lobyte, uin
     }
     apple_ii_64k[0][addrs] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = regX;
-    cpu65_y  = 0x05;
-    cpu65_sp = 0x81;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = regX;
+    run_args.cpu65_y  = 0x05;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+3);
-    ASSERT(cpu65_a       == val);
-    ASSERT(cpu65_x       == regX);
-    ASSERT(cpu65_y       == 0x05);
-    ASSERT(cpu65_sp      == 0x81);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+3);
+    ASSERT(run_args.cpu65_a       == val);
+    ASSERT(run_args.cpu65_x       == regX);
+    ASSERT(run_args.cpu65_y       == 0x05);
+    ASSERT(run_args.cpu65_sp      == 0x81);
 
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == addrs);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_READ);
-    ASSERT(cpu65_opcode    == 0xbd);
-    ASSERT(cpu65_opcycles  == cycle_count);
+    ASSERT(run_args.cpu65_ea        == addrs);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_READ);
+    ASSERT(run_args.cpu65_opcode    == 0xbd);
+    ASSERT(run_args.cpu65_opcycles  == cycle_count);
 
     PASS();
 }
@@ -3883,27 +3880,27 @@ TEST test_LDA_abs_y(uint8_t regA, uint8_t val, uint8_t regY, uint8_t lobyte, uin
     }
     apple_ii_64k[0][addrs] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = 0x02;
-    cpu65_y  = regY;
-    cpu65_sp = 0x81;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0x02;
+    run_args.cpu65_y  = regY;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+3);
-    ASSERT(cpu65_a       == val);
-    ASSERT(cpu65_x       == 0x02);
-    ASSERT(cpu65_y       == regY);
-    ASSERT(cpu65_sp      == 0x81);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+3);
+    ASSERT(run_args.cpu65_a       == val);
+    ASSERT(run_args.cpu65_x       == 0x02);
+    ASSERT(run_args.cpu65_y       == regY);
+    ASSERT(run_args.cpu65_sp      == 0x81);
 
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == addrs);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_READ);
-    ASSERT(cpu65_opcode    == 0xb9);
-    ASSERT(cpu65_opcycles == cycle_count);
+    ASSERT(run_args.cpu65_ea        == addrs);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_READ);
+    ASSERT(run_args.cpu65_opcode    == 0xb9);
+    ASSERT(run_args.cpu65_opcycles == cycle_count);
 
     PASS();
 }
@@ -3924,28 +3921,28 @@ TEST test_LDA_ind_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX, uint8
     apple_ii_64k[0][idx_hi] = hibyte;
     apple_ii_64k[0][addrs] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = regX;
-    cpu65_y  = 0x15;
-    cpu65_sp = 0x81;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = regX;
+    run_args.cpu65_y  = 0x15;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+2);
-    ASSERT(cpu65_a       == val);
-    ASSERT(cpu65_x       == regX);
-    ASSERT(cpu65_y       == 0x15);
-    ASSERT(cpu65_sp      == 0x81);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+2);
+    ASSERT(run_args.cpu65_a       == val);
+    ASSERT(run_args.cpu65_x       == regX);
+    ASSERT(run_args.cpu65_y       == 0x15);
+    ASSERT(run_args.cpu65_sp      == 0x81);
 
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == addrs);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_READ);
-    ASSERT(cpu65_opcode    == 0xa1);
+    ASSERT(run_args.cpu65_ea        == addrs);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_READ);
+    ASSERT(run_args.cpu65_opcode    == 0xa1);
 
-    ASSERT(cpu65_opcycles  == (6));
+    ASSERT(run_args.cpu65_opcycles  == (6));
 
     PASS();
 }
@@ -3973,27 +3970,27 @@ TEST test_LDA_ind_y(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regY, uint8
 
     apple_ii_64k[0][addrs] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = 0x84;
-    cpu65_y  = regY;
-    cpu65_sp = 0x81;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0x84;
+    run_args.cpu65_y  = regY;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+2);
-    ASSERT(cpu65_a       == val);
-    ASSERT(cpu65_x       == 0x84);
-    ASSERT(cpu65_y       == regY);
-    ASSERT(cpu65_sp      == 0x81);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+2);
+    ASSERT(run_args.cpu65_a       == val);
+    ASSERT(run_args.cpu65_x       == 0x84);
+    ASSERT(run_args.cpu65_y       == regY);
+    ASSERT(run_args.cpu65_sp      == 0x81);
 
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == addrs);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_READ);
-    ASSERT(cpu65_opcode    == 0xb1);
-    ASSERT(cpu65_opcycles  == cycle_count);
+    ASSERT(run_args.cpu65_ea        == addrs);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_READ);
+    ASSERT(run_args.cpu65_opcode    == 0xb1);
+    ASSERT(run_args.cpu65_opcycles  == cycle_count);
 
     PASS();
 }
@@ -4016,27 +4013,27 @@ TEST test_LDA_ind_zpage(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t lobyte,
     uint16_t addrs = lobyte | (hibyte<<8);
     apple_ii_64k[0][addrs] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = 0x14;
-    cpu65_y  = 0x85;
-    cpu65_sp = 0x81;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0x14;
+    run_args.cpu65_y  = 0x85;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+2);
-    ASSERT(cpu65_a       == val);
-    ASSERT(cpu65_x       == 0x14);
-    ASSERT(cpu65_y       == 0x85);
-    ASSERT(cpu65_sp      == 0x81);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+2);
+    ASSERT(run_args.cpu65_a       == val);
+    ASSERT(run_args.cpu65_x       == 0x14);
+    ASSERT(run_args.cpu65_y       == 0x85);
+    ASSERT(run_args.cpu65_sp      == 0x81);
 
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == addrs);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_READ);
-    ASSERT(cpu65_opcode    == 0xb2);
-    ASSERT(cpu65_opcycles  == (5));
+    ASSERT(run_args.cpu65_ea        == addrs);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_READ);
+    ASSERT(run_args.cpu65_opcode    == 0xb2);
+    ASSERT(run_args.cpu65_opcycles  == (5));
 
     PASS();
 }
@@ -4054,27 +4051,27 @@ TEST test_LDX_imm(uint8_t regX, uint8_t val) {
 
     testcpu_set_opcode2(0xa2, val);
 
-    cpu65_a  = regA;
-    cpu65_x  = regX;
-    cpu65_y  = 0x04;
-    cpu65_sp = 0x80;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = regX;
+    run_args.cpu65_y  = 0x04;
+    run_args.cpu65_sp = 0x80;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+2);
-    ASSERT(cpu65_a       == regA);
-    ASSERT(cpu65_x       == val);
-    ASSERT(cpu65_y       == 0x04);
-    ASSERT(cpu65_sp      == 0x80);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+2);
+    ASSERT(run_args.cpu65_a       == regA);
+    ASSERT(run_args.cpu65_x       == val);
+    ASSERT(run_args.cpu65_y       == 0x04);
+    ASSERT(run_args.cpu65_sp      == 0x80);
 
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == TEST_LOC+1);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_READ);
-    ASSERT(cpu65_opcode    == 0xa2);
-    ASSERT(cpu65_opcycles  == (2));
+    ASSERT(run_args.cpu65_ea        == TEST_LOC+1);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_READ);
+    ASSERT(run_args.cpu65_opcode    == 0xa2);
+    ASSERT(run_args.cpu65_opcycles  == (2));
 
     PASS();
 }
@@ -4090,27 +4087,27 @@ TEST test_LDX_zpage(uint8_t regX, uint8_t val, uint8_t arg0) {
 
     apple_ii_64k[0][arg0] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = regX;
-    cpu65_y  = 0x04;
-    cpu65_sp = 0x80;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = regX;
+    run_args.cpu65_y  = 0x04;
+    run_args.cpu65_sp = 0x80;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+2);
-    ASSERT(cpu65_a       == regA);
-    ASSERT(cpu65_x       == val);
-    ASSERT(cpu65_y       == 0x04);
-    ASSERT(cpu65_sp      == 0x80);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+2);
+    ASSERT(run_args.cpu65_a       == regA);
+    ASSERT(run_args.cpu65_x       == val);
+    ASSERT(run_args.cpu65_y       == 0x04);
+    ASSERT(run_args.cpu65_sp      == 0x80);
 
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == arg0);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_READ);
-    ASSERT(cpu65_opcode    == 0xa6);
-    ASSERT(cpu65_opcycles  == (3));
+    ASSERT(run_args.cpu65_ea        == arg0);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_READ);
+    ASSERT(run_args.cpu65_opcode    == 0xa6);
+    ASSERT(run_args.cpu65_opcycles  == (3));
 
     PASS();
 }
@@ -4127,27 +4124,27 @@ TEST test_LDX_zpage_y(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regY) {
 
     apple_ii_64k[0][idx] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = 0x3e;
-    cpu65_y  = regY;
-    cpu65_sp = 0x81;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0x3e;
+    run_args.cpu65_y  = regY;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+2);
-    ASSERT(cpu65_a       == regA);
-    ASSERT(cpu65_x       == val);
-    ASSERT(cpu65_y       == regY);
-    ASSERT(cpu65_sp      == 0x81);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+2);
+    ASSERT(run_args.cpu65_a       == regA);
+    ASSERT(run_args.cpu65_x       == val);
+    ASSERT(run_args.cpu65_y       == regY);
+    ASSERT(run_args.cpu65_sp      == 0x81);
 
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == idx);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_READ);
-    ASSERT(cpu65_opcode    == 0xb6);
-    ASSERT(cpu65_opcycles  == (4));
+    ASSERT(run_args.cpu65_ea        == idx);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_READ);
+    ASSERT(run_args.cpu65_opcode    == 0xb6);
+    ASSERT(run_args.cpu65_opcycles  == (4));
 
     PASS();
 }
@@ -4164,27 +4161,27 @@ TEST test_LDX_abs(uint8_t regX, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
     uint16_t addrs = lobyte | (hibyte<<8);
     apple_ii_64k[0][addrs] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = regX;
-    cpu65_y  = 0x05;
-    cpu65_sp = 0x81;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = regX;
+    run_args.cpu65_y  = 0x05;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+3);
-    ASSERT(cpu65_a       == regA);
-    ASSERT(cpu65_x       == val);
-    ASSERT(cpu65_y       == 0x05);
-    ASSERT(cpu65_sp      == 0x81);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+3);
+    ASSERT(run_args.cpu65_a       == regA);
+    ASSERT(run_args.cpu65_x       == val);
+    ASSERT(run_args.cpu65_y       == 0x05);
+    ASSERT(run_args.cpu65_sp      == 0x81);
 
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == addrs);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_READ);
-    ASSERT(cpu65_opcode    == 0xae);
-    ASSERT(cpu65_opcycles  == (4));
+    ASSERT(run_args.cpu65_ea        == addrs);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_READ);
+    ASSERT(run_args.cpu65_opcode    == 0xae);
+    ASSERT(run_args.cpu65_opcycles  == (4));
 
     PASS();
 }
@@ -4206,27 +4203,27 @@ TEST test_LDX_abs_y(uint8_t regX, uint8_t val, uint8_t regY, uint8_t lobyte, uin
     }
     apple_ii_64k[0][addrs] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = regX;
-    cpu65_y  = regY;
-    cpu65_sp = 0x81;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = regX;
+    run_args.cpu65_y  = regY;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+3);
-    ASSERT(cpu65_a       == regA);
-    ASSERT(cpu65_x       == val);
-    ASSERT(cpu65_y       == regY);
-    ASSERT(cpu65_sp      == 0x81);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+3);
+    ASSERT(run_args.cpu65_a       == regA);
+    ASSERT(run_args.cpu65_x       == val);
+    ASSERT(run_args.cpu65_y       == regY);
+    ASSERT(run_args.cpu65_sp      == 0x81);
 
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == addrs);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_READ);
-    ASSERT(cpu65_opcode    == 0xbe);
-    ASSERT(cpu65_opcycles  == cycle_count);
+    ASSERT(run_args.cpu65_ea        == addrs);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_READ);
+    ASSERT(run_args.cpu65_opcode    == 0xbe);
+    ASSERT(run_args.cpu65_opcycles  == cycle_count);
 
     PASS();
 }
@@ -4241,27 +4238,27 @@ TEST test_LDY_imm(uint8_t regY, uint8_t val) {
 
     testcpu_set_opcode2(0xa0, val);
 
-    cpu65_a  = regA;
-    cpu65_x  = 0x18;
-    cpu65_y  = regY;
-    cpu65_sp = 0x80;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0x18;
+    run_args.cpu65_y  = regY;
+    run_args.cpu65_sp = 0x80;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+2);
-    ASSERT(cpu65_a       == regA);
-    ASSERT(cpu65_x       == 0x18);
-    ASSERT(cpu65_y       == val);
-    ASSERT(cpu65_sp      == 0x80);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+2);
+    ASSERT(run_args.cpu65_a       == regA);
+    ASSERT(run_args.cpu65_x       == 0x18);
+    ASSERT(run_args.cpu65_y       == val);
+    ASSERT(run_args.cpu65_sp      == 0x80);
 
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == TEST_LOC+1);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_READ);
-    ASSERT(cpu65_opcode    == 0xa0);
-    ASSERT(cpu65_opcycles  == (2));
+    ASSERT(run_args.cpu65_ea        == TEST_LOC+1);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_READ);
+    ASSERT(run_args.cpu65_opcode    == 0xa0);
+    ASSERT(run_args.cpu65_opcycles  == (2));
 
     PASS();
 }
@@ -4277,27 +4274,27 @@ TEST test_LDY_zpage(uint8_t regY, uint8_t val, uint8_t arg0) {
 
     apple_ii_64k[0][arg0] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = 0x4e;
-    cpu65_y  = regY;
-    cpu65_sp = 0x80;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0x4e;
+    run_args.cpu65_y  = regY;
+    run_args.cpu65_sp = 0x80;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+2);
-    ASSERT(cpu65_a       == regA);
-    ASSERT(cpu65_x       == 0x4e);
-    ASSERT(cpu65_y       == val);
-    ASSERT(cpu65_sp      == 0x80);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+2);
+    ASSERT(run_args.cpu65_a       == regA);
+    ASSERT(run_args.cpu65_x       == 0x4e);
+    ASSERT(run_args.cpu65_y       == val);
+    ASSERT(run_args.cpu65_sp      == 0x80);
 
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == arg0);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_READ);
-    ASSERT(cpu65_opcode    == 0xa4);
-    ASSERT(cpu65_opcycles  == (3));
+    ASSERT(run_args.cpu65_ea        == arg0);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_READ);
+    ASSERT(run_args.cpu65_opcode    == 0xa4);
+    ASSERT(run_args.cpu65_opcycles  == (3));
 
     PASS();
 }
@@ -4315,27 +4312,27 @@ TEST test_LDY_zpage_x(uint8_t regY, uint8_t val, uint8_t arg0, uint8_t regX) {
 
     apple_ii_64k[0][idx] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = regX;
-    cpu65_y  = regY;
-    cpu65_sp = 0x81;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = regX;
+    run_args.cpu65_y  = regY;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+2);
-    ASSERT(cpu65_a       == regA);
-    ASSERT(cpu65_x       == regX);
-    ASSERT(cpu65_y       == val);
-    ASSERT(cpu65_sp      == 0x81);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+2);
+    ASSERT(run_args.cpu65_a       == regA);
+    ASSERT(run_args.cpu65_x       == regX);
+    ASSERT(run_args.cpu65_y       == val);
+    ASSERT(run_args.cpu65_sp      == 0x81);
 
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == idx);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_READ);
-    ASSERT(cpu65_opcode    == 0xb4);
-    ASSERT(cpu65_opcycles  == (4));
+    ASSERT(run_args.cpu65_ea        == idx);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_READ);
+    ASSERT(run_args.cpu65_opcode    == 0xb4);
+    ASSERT(run_args.cpu65_opcycles  == (4));
 
     PASS();
 }
@@ -4352,27 +4349,27 @@ TEST test_LDY_abs(uint8_t regY, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
     uint16_t addrs = lobyte | (hibyte<<8);
     apple_ii_64k[0][addrs] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = 0x1a;
-    cpu65_y  = regY;
-    cpu65_sp = 0x81;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0x1a;
+    run_args.cpu65_y  = regY;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+3);
-    ASSERT(cpu65_a       == regA);
-    ASSERT(cpu65_x       == 0x1a);
-    ASSERT(cpu65_y       == val);
-    ASSERT(cpu65_sp      == 0x81);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+3);
+    ASSERT(run_args.cpu65_a       == regA);
+    ASSERT(run_args.cpu65_x       == 0x1a);
+    ASSERT(run_args.cpu65_y       == val);
+    ASSERT(run_args.cpu65_sp      == 0x81);
 
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == addrs);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_READ);
-    ASSERT(cpu65_opcode    == 0xac);
-    ASSERT(cpu65_opcycles  == (4));
+    ASSERT(run_args.cpu65_ea        == addrs);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_READ);
+    ASSERT(run_args.cpu65_opcode    == 0xac);
+    ASSERT(run_args.cpu65_opcycles  == (4));
 
     PASS();
 }
@@ -4394,27 +4391,27 @@ TEST test_LDY_abs_x(uint8_t regY, uint8_t val, uint8_t regX, uint8_t lobyte, uin
     }
     apple_ii_64k[0][addrs] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = regX;
-    cpu65_y  = regY;
-    cpu65_sp = 0x81;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = regX;
+    run_args.cpu65_y  = regY;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+3);
-    ASSERT(cpu65_a       == regA);
-    ASSERT(cpu65_x       == regX);
-    ASSERT(cpu65_y       == val);
-    ASSERT(cpu65_sp      == 0x81);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+3);
+    ASSERT(run_args.cpu65_a       == regA);
+    ASSERT(run_args.cpu65_x       == regX);
+    ASSERT(run_args.cpu65_y       == val);
+    ASSERT(run_args.cpu65_sp      == 0x81);
 
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == addrs);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_READ);
-    ASSERT(cpu65_opcode    == 0xbc);
-    ASSERT(cpu65_opcycles  == cycle_count);
+    ASSERT(run_args.cpu65_ea        == addrs);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_READ);
+    ASSERT(run_args.cpu65_opcode    == 0xbc);
+    ASSERT(run_args.cpu65_opcycles  == cycle_count);
 
     PASS();
 }
@@ -4447,27 +4444,27 @@ TEST test_LSR_acc(uint8_t regA) {
 
     testcpu_set_opcode1(0x4a);
 
-    cpu65_a  = regA;
-    cpu65_x  = 0x03;
-    cpu65_y  = 0x04;
-    cpu65_sp = 0x80;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0x03;
+    run_args.cpu65_y  = 0x04;
+    run_args.cpu65_sp = 0x80;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+1);
-    ASSERT(cpu65_x       == 0x03);
-    ASSERT(cpu65_y       == 0x04);
-    ASSERT(cpu65_sp      == 0x80);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+1);
+    ASSERT(run_args.cpu65_x       == 0x03);
+    ASSERT(run_args.cpu65_y       == 0x04);
+    ASSERT(run_args.cpu65_sp      == 0x80);
 
-    ASSERT(cpu65_a == result);
+    ASSERT(run_args.cpu65_a == result);
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == TEST_LOC);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_NONE);
-    ASSERT(cpu65_opcode    == 0x4a);
-    ASSERT(cpu65_opcycles  == (2));
+    ASSERT(run_args.cpu65_ea        == TEST_LOC);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_NONE);
+    ASSERT(run_args.cpu65_opcode    == 0x4a);
+    ASSERT(run_args.cpu65_opcycles  == (2));
 
     PASS();
 }
@@ -4482,29 +4479,29 @@ TEST test_LSR_zpage(uint8_t regA, uint8_t val, uint8_t arg0) {
 
     apple_ii_64k[0][arg0] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = 0x03;
-    cpu65_y  = 0x04;
-    cpu65_sp = 0x80;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0x03;
+    run_args.cpu65_y  = 0x04;
+    run_args.cpu65_sp = 0x80;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
     ASSERT(apple_ii_64k[0][arg0] == result);
 
-    ASSERT(cpu65_a  == regA);
-    ASSERT(cpu65_pc == TEST_LOC+2);
-    ASSERT(cpu65_x  == 0x03);
-    ASSERT(cpu65_y  == 0x04);
-    ASSERT(cpu65_sp == 0x80);
+    ASSERT(run_args.cpu65_a  == regA);
+    ASSERT(run_args.cpu65_pc == TEST_LOC+2);
+    ASSERT(run_args.cpu65_x  == 0x03);
+    ASSERT(run_args.cpu65_y  == 0x04);
+    ASSERT(run_args.cpu65_sp == 0x80);
 
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == arg0);
-    ASSERT(cpu65_d         == result);
-    ASSERT(cpu65_rw        == (RW_READ|RW_WRITE));
-    ASSERT(cpu65_opcode    == 0x46);
-    ASSERT(cpu65_opcycles  == (5));
+    ASSERT(run_args.cpu65_ea        == arg0);
+    ASSERT(run_args.cpu65_d         == result);
+    ASSERT(run_args.cpu65_rw        == (RW_READ|RW_WRITE));
+    ASSERT(run_args.cpu65_opcode    == 0x46);
+    ASSERT(run_args.cpu65_opcycles  == (5));
 
     PASS();
 }
@@ -4521,28 +4518,28 @@ TEST test_LSR_zpage_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX) {
 
     apple_ii_64k[0][idx] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = regX;
-    cpu65_y  = 0x05;
-    cpu65_sp = 0x81;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = regX;
+    run_args.cpu65_y  = 0x05;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
     ASSERT(apple_ii_64k[0][idx] == result);
 
-    ASSERT(cpu65_a   == regA);
-    ASSERT(cpu65_pc  == TEST_LOC+2);
-    ASSERT(cpu65_x   == regX);
-    ASSERT(cpu65_y   == 0x05);
-    ASSERT(cpu65_sp  == 0x81);
+    ASSERT(run_args.cpu65_a   == regA);
+    ASSERT(run_args.cpu65_pc  == TEST_LOC+2);
+    ASSERT(run_args.cpu65_x   == regX);
+    ASSERT(run_args.cpu65_y   == 0x05);
+    ASSERT(run_args.cpu65_sp  == 0x81);
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == idx);
-    ASSERT(cpu65_d         == result);
-    ASSERT(cpu65_rw        == (RW_READ|RW_WRITE));
-    ASSERT(cpu65_opcode    == 0x56);
-    ASSERT(cpu65_opcycles  == (6));
+    ASSERT(run_args.cpu65_ea        == idx);
+    ASSERT(run_args.cpu65_d         == result);
+    ASSERT(run_args.cpu65_rw        == (RW_READ|RW_WRITE));
+    ASSERT(run_args.cpu65_opcode    == 0x56);
+    ASSERT(run_args.cpu65_opcycles  == (6));
 
     PASS();
 }
@@ -4558,29 +4555,29 @@ TEST test_LSR_abs(uint8_t regA, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
     uint16_t addrs = lobyte | (hibyte<<8);
     apple_ii_64k[0][addrs] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = 0xf4;
-    cpu65_y  = 0x05;
-    cpu65_sp = 0x81;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0xf4;
+    run_args.cpu65_y  = 0x05;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
     ASSERT(apple_ii_64k[0][addrs] == result);
 
-    ASSERT(cpu65_a  == regA);
-    ASSERT(cpu65_pc == TEST_LOC+3);
-    ASSERT(cpu65_x  == 0xf4);
-    ASSERT(cpu65_y  == 0x05);
-    ASSERT(cpu65_sp == 0x81);
+    ASSERT(run_args.cpu65_a  == regA);
+    ASSERT(run_args.cpu65_pc == TEST_LOC+3);
+    ASSERT(run_args.cpu65_x  == 0xf4);
+    ASSERT(run_args.cpu65_y  == 0x05);
+    ASSERT(run_args.cpu65_sp == 0x81);
 
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == addrs);
-    ASSERT(cpu65_d         == result);
-    ASSERT(cpu65_rw        == (RW_READ|RW_WRITE));
-    ASSERT(cpu65_opcode    == 0x4e);
-    ASSERT(cpu65_opcycles  == (6));
+    ASSERT(run_args.cpu65_ea        == addrs);
+    ASSERT(run_args.cpu65_d         == result);
+    ASSERT(run_args.cpu65_rw        == (RW_READ|RW_WRITE));
+    ASSERT(run_args.cpu65_opcode    == 0x4e);
+    ASSERT(run_args.cpu65_opcycles  == (6));
 
     PASS();
 }
@@ -4601,29 +4598,29 @@ TEST test_LSR_abs_x(uint8_t regA, uint8_t val, uint8_t regX, uint8_t lobyte, uin
     }
     apple_ii_64k[0][addrs] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = regX;
-    cpu65_y  = 0x05;
-    cpu65_sp = 0x81;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = regX;
+    run_args.cpu65_y  = 0x05;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
     ASSERT(apple_ii_64k[0][addrs] == result);
 
-    ASSERT(cpu65_a  == regA);
-    ASSERT(cpu65_pc == TEST_LOC+3);
-    ASSERT(cpu65_x  == regX);
-    ASSERT(cpu65_y  == 0x05);
-    ASSERT(cpu65_sp == 0x81);
+    ASSERT(run_args.cpu65_a  == regA);
+    ASSERT(run_args.cpu65_pc == TEST_LOC+3);
+    ASSERT(run_args.cpu65_x  == regX);
+    ASSERT(run_args.cpu65_y  == 0x05);
+    ASSERT(run_args.cpu65_sp == 0x81);
 
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == addrs);
-    ASSERT(cpu65_d         == result);
-    ASSERT(cpu65_rw        == (RW_READ|RW_WRITE));
-    ASSERT(cpu65_opcode    == 0x5e);
-    ASSERT(cpu65_opcycles  == cycle_count);
+    ASSERT(run_args.cpu65_ea        == addrs);
+    ASSERT(run_args.cpu65_d         == result);
+    ASSERT(run_args.cpu65_rw        == (RW_READ|RW_WRITE));
+    ASSERT(run_args.cpu65_opcode    == 0x5e);
+    ASSERT(run_args.cpu65_opcycles  == cycle_count);
 
     PASS();
 }
@@ -4634,26 +4631,26 @@ TEST test_LSR_abs_x(uint8_t regA, uint8_t val, uint8_t regX, uint8_t lobyte, uin
 TEST test_NOP(void) {
     testcpu_set_opcode1(0xea);
 
-    cpu65_a  = 0x02;
-    cpu65_x  = 0x03;
-    cpu65_y  = 0x04;
-    cpu65_sp = 0x80;
-    cpu65_f  = 0x55;
+    run_args.cpu65_a  = 0x02;
+    run_args.cpu65_x  = 0x03;
+    run_args.cpu65_y  = 0x04;
+    run_args.cpu65_sp = 0x80;
+    run_args.cpu65_f  = 0x55;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc     == TEST_LOC+1);
-    ASSERT(cpu65_a      == 0x02);
-    ASSERT(cpu65_x      == 0x03);
-    ASSERT(cpu65_y      == 0x04);
-    ASSERT(cpu65_f      == 0x55);
-    ASSERT(cpu65_sp     == 0x80);
+    ASSERT(run_args.cpu65_pc     == TEST_LOC+1);
+    ASSERT(run_args.cpu65_a      == 0x02);
+    ASSERT(run_args.cpu65_x      == 0x03);
+    ASSERT(run_args.cpu65_y      == 0x04);
+    ASSERT(run_args.cpu65_f      == 0x55);
+    ASSERT(run_args.cpu65_sp     == 0x80);
 
-    ASSERT(cpu65_ea       == TEST_LOC);
-    ASSERT(cpu65_d        == 0xff);
-    ASSERT(cpu65_rw       == RW_NONE);
-    ASSERT(cpu65_opcode   == 0xea);
-    ASSERT(cpu65_opcycles == (2));
+    ASSERT(run_args.cpu65_ea       == TEST_LOC);
+    ASSERT(run_args.cpu65_d        == 0xff);
+    ASSERT(run_args.cpu65_rw       == RW_NONE);
+    ASSERT(run_args.cpu65_opcode   == 0xea);
+    ASSERT(run_args.cpu65_opcycles == (2));
 
     PASS();
 }
@@ -4684,33 +4681,33 @@ TEST test_ORA_imm(uint8_t regA, uint8_t val) {
 
     testcpu_set_opcode2(0x09, val);
 
-    cpu65_a  = regA;
-    cpu65_x  = 0x03;
-    cpu65_y  = 0x04;
-    cpu65_sp = 0x80;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0x03;
+    run_args.cpu65_y  = 0x04;
+    run_args.cpu65_sp = 0x80;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+2);
-    ASSERT(cpu65_x       == 0x03);
-    ASSERT(cpu65_y       == 0x04);
-    ASSERT(cpu65_sp      == 0x80);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+2);
+    ASSERT(run_args.cpu65_x       == 0x03);
+    ASSERT(run_args.cpu65_y       == 0x04);
+    ASSERT(run_args.cpu65_sp      == 0x80);
 
     do {
         char msgbuf[MSG_SIZE];
         char buf0[MSG_SIZE];
         char buf1[MSG_SIZE];
-        snprintf(msgbuf, MSG_SIZE, MSG_FLAGS0, regA, val, result, buf0, cpu65_a, buf1);
-        ASSERTm(msgbuf, cpu65_a == result);
+        snprintf(msgbuf, MSG_SIZE, MSG_FLAGS0, regA, val, result, buf0, run_args.cpu65_a, buf1);
+        ASSERTm(msgbuf, run_args.cpu65_a == result);
         VERIFY_FLAGS();
     } while (0);
 
-    ASSERT(cpu65_ea        == TEST_LOC+1);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_READ);
-    ASSERT(cpu65_opcode    == 0x09);
-    ASSERT(cpu65_opcycles  == (2));
+    ASSERT(run_args.cpu65_ea        == TEST_LOC+1);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_READ);
+    ASSERT(run_args.cpu65_opcode    == 0x09);
+    ASSERT(run_args.cpu65_opcycles  == (2));
 
     PASS();
 }
@@ -4724,27 +4721,27 @@ TEST test_ORA_zpage(uint8_t regA, uint8_t val, uint8_t arg0) {
 
     apple_ii_64k[0][arg0] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = 0x03;
-    cpu65_y  = 0x04;
-    cpu65_sp = 0x80;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0x03;
+    run_args.cpu65_y  = 0x04;
+    run_args.cpu65_sp = 0x80;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+2);
-    ASSERT(cpu65_x       == 0x03);
-    ASSERT(cpu65_y       == 0x04);
-    ASSERT(cpu65_sp      == 0x80);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+2);
+    ASSERT(run_args.cpu65_x       == 0x03);
+    ASSERT(run_args.cpu65_y       == 0x04);
+    ASSERT(run_args.cpu65_sp      == 0x80);
 
-    ASSERT(cpu65_a == result);
+    ASSERT(run_args.cpu65_a == result);
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == arg0);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_READ);
-    ASSERT(cpu65_opcode    == 0x05);
-    ASSERT(cpu65_opcycles  == (3));
+    ASSERT(run_args.cpu65_ea        == arg0);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_READ);
+    ASSERT(run_args.cpu65_opcode    == 0x05);
+    ASSERT(run_args.cpu65_opcycles  == (3));
 
     PASS();
 }
@@ -4760,27 +4757,27 @@ TEST test_ORA_zpage_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX) {
 
     apple_ii_64k[0][idx] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = regX;
-    cpu65_y  = 0x05;
-    cpu65_sp = 0x81;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = regX;
+    run_args.cpu65_y  = 0x05;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+2);
-    ASSERT(cpu65_x       == regX);
-    ASSERT(cpu65_y       == 0x05);
-    ASSERT(cpu65_sp      == 0x81);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+2);
+    ASSERT(run_args.cpu65_x       == regX);
+    ASSERT(run_args.cpu65_y       == 0x05);
+    ASSERT(run_args.cpu65_sp      == 0x81);
 
-    ASSERT(cpu65_a == result);
+    ASSERT(run_args.cpu65_a == result);
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == idx);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_READ);
-    ASSERT(cpu65_opcode    == 0x15);
-    ASSERT(cpu65_opcycles  == (4));
+    ASSERT(run_args.cpu65_ea        == idx);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_READ);
+    ASSERT(run_args.cpu65_opcode    == 0x15);
+    ASSERT(run_args.cpu65_opcycles  == (4));
 
     PASS();
 }
@@ -4795,27 +4792,27 @@ TEST test_ORA_abs(uint8_t regA, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
     uint16_t addrs = lobyte | (hibyte<<8);
     apple_ii_64k[0][addrs] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = 0xf4;
-    cpu65_y  = 0x05;
-    cpu65_sp = 0x81;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0xf4;
+    run_args.cpu65_y  = 0x05;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+3);
-    ASSERT(cpu65_x       == 0xf4);
-    ASSERT(cpu65_y       == 0x05);
-    ASSERT(cpu65_sp      == 0x81);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+3);
+    ASSERT(run_args.cpu65_x       == 0xf4);
+    ASSERT(run_args.cpu65_y       == 0x05);
+    ASSERT(run_args.cpu65_sp      == 0x81);
 
-    ASSERT(cpu65_a == result);
+    ASSERT(run_args.cpu65_a == result);
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == addrs);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_READ);
-    ASSERT(cpu65_opcode    == 0x0d);
-    ASSERT(cpu65_opcycles  == (4));
+    ASSERT(run_args.cpu65_ea        == addrs);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_READ);
+    ASSERT(run_args.cpu65_opcode    == 0x0d);
+    ASSERT(run_args.cpu65_opcycles  == (4));
 
     PASS();
 }
@@ -4835,27 +4832,27 @@ TEST test_ORA_abs_x(uint8_t regA, uint8_t val, uint8_t regX, uint8_t lobyte, uin
     }
     apple_ii_64k[0][addrs] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = regX;
-    cpu65_y  = 0x05;
-    cpu65_sp = 0x81;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = regX;
+    run_args.cpu65_y  = 0x05;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+3);
-    ASSERT(cpu65_x       == regX);
-    ASSERT(cpu65_y       == 0x05);
-    ASSERT(cpu65_sp      == 0x81);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+3);
+    ASSERT(run_args.cpu65_x       == regX);
+    ASSERT(run_args.cpu65_y       == 0x05);
+    ASSERT(run_args.cpu65_sp      == 0x81);
 
-    ASSERT(cpu65_a == result);
+    ASSERT(run_args.cpu65_a == result);
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == addrs);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_READ);
-    ASSERT(cpu65_opcode    == 0x1d);
-    ASSERT(cpu65_opcycles  == cycle_count);
+    ASSERT(run_args.cpu65_ea        == addrs);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_READ);
+    ASSERT(run_args.cpu65_opcode    == 0x1d);
+    ASSERT(run_args.cpu65_opcycles  == cycle_count);
 
     PASS();
 }
@@ -4875,27 +4872,27 @@ TEST test_ORA_abs_y(uint8_t regA, uint8_t val, uint8_t regY, uint8_t lobyte, uin
     }
     apple_ii_64k[0][addrs] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = 0x02;
-    cpu65_y  = regY;
-    cpu65_sp = 0x81;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0x02;
+    run_args.cpu65_y  = regY;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+3);
-    ASSERT(cpu65_x       == 0x02);
-    ASSERT(cpu65_y       == regY);
-    ASSERT(cpu65_sp      == 0x81);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+3);
+    ASSERT(run_args.cpu65_x       == 0x02);
+    ASSERT(run_args.cpu65_y       == regY);
+    ASSERT(run_args.cpu65_sp      == 0x81);
 
-    ASSERT(cpu65_a == result);
+    ASSERT(run_args.cpu65_a == result);
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == addrs);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_READ);
-    ASSERT(cpu65_opcode    == 0x19);
-    ASSERT(cpu65_opcycles == cycle_count);
+    ASSERT(run_args.cpu65_ea        == addrs);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_READ);
+    ASSERT(run_args.cpu65_opcode    == 0x19);
+    ASSERT(run_args.cpu65_opcycles == cycle_count);
 
     PASS();
 }
@@ -4915,28 +4912,28 @@ TEST test_ORA_ind_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX, uint8
     apple_ii_64k[0][idx_hi] = hibyte;
     apple_ii_64k[0][addrs] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = regX;
-    cpu65_y  = 0x15;
-    cpu65_sp = 0x81;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = regX;
+    run_args.cpu65_y  = 0x15;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+2);
-    ASSERT(cpu65_x       == regX);
-    ASSERT(cpu65_y       == 0x15);
-    ASSERT(cpu65_sp      == 0x81);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+2);
+    ASSERT(run_args.cpu65_x       == regX);
+    ASSERT(run_args.cpu65_y       == 0x15);
+    ASSERT(run_args.cpu65_sp      == 0x81);
 
-    ASSERT(cpu65_a == result);
+    ASSERT(run_args.cpu65_a == result);
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == addrs);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_READ);
-    ASSERT(cpu65_opcode    == 0x01);
+    ASSERT(run_args.cpu65_ea        == addrs);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_READ);
+    ASSERT(run_args.cpu65_opcode    == 0x01);
 
-    ASSERT(cpu65_opcycles  == (6));
+    ASSERT(run_args.cpu65_opcycles  == (6));
 
     PASS();
 }
@@ -4963,27 +4960,27 @@ TEST test_ORA_ind_y(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regY, uint8
 
     apple_ii_64k[0][addrs] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = 0x84;
-    cpu65_y  = regY;
-    cpu65_sp = 0x81;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0x84;
+    run_args.cpu65_y  = regY;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+2);
-    ASSERT(cpu65_x       == 0x84);
-    ASSERT(cpu65_y       == regY);
-    ASSERT(cpu65_sp      == 0x81);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+2);
+    ASSERT(run_args.cpu65_x       == 0x84);
+    ASSERT(run_args.cpu65_y       == regY);
+    ASSERT(run_args.cpu65_sp      == 0x81);
 
-    ASSERT(cpu65_a == result);
+    ASSERT(run_args.cpu65_a == result);
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == addrs);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_READ);
-    ASSERT(cpu65_opcode    == 0x11);
-    ASSERT(cpu65_opcycles  == cycle_count);
+    ASSERT(run_args.cpu65_ea        == addrs);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_READ);
+    ASSERT(run_args.cpu65_opcode    == 0x11);
+    ASSERT(run_args.cpu65_opcycles  == cycle_count);
 
     PASS();
 }
@@ -5005,27 +5002,27 @@ TEST test_ORA_ind_zpage(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t lobyte,
     uint16_t addrs = lobyte | (hibyte<<8);
     apple_ii_64k[0][addrs] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = 0x14;
-    cpu65_y  = 0x85;
-    cpu65_sp = 0x81;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0x14;
+    run_args.cpu65_y  = 0x85;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+2);
-    ASSERT(cpu65_x       == 0x14);
-    ASSERT(cpu65_y       == 0x85);
-    ASSERT(cpu65_sp      == 0x81);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+2);
+    ASSERT(run_args.cpu65_x       == 0x14);
+    ASSERT(run_args.cpu65_y       == 0x85);
+    ASSERT(run_args.cpu65_sp      == 0x81);
 
-    ASSERT(cpu65_a == result);
+    ASSERT(run_args.cpu65_a == result);
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == addrs);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_READ);
-    ASSERT(cpu65_opcode    == 0x12);
-    ASSERT(cpu65_opcycles  == (5));
+    ASSERT(run_args.cpu65_ea        == addrs);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_READ);
+    ASSERT(run_args.cpu65_opcode    == 0x12);
+    ASSERT(run_args.cpu65_opcycles  == (5));
 
     PASS();
 }
@@ -5039,27 +5036,27 @@ TEST test_PHA(void) {
     uint8_t regA = (uint8_t)random();
     apple_ii_64k[0][0x1ff] = ~regA;
 
-    cpu65_a  = regA;
-    cpu65_x  = 0x03;
-    cpu65_y  = 0x04;
-    cpu65_f  = 0x55;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0x03;
+    run_args.cpu65_y  = 0x04;
+    run_args.cpu65_f  = 0x55;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc     == TEST_LOC+1);
-    ASSERT(cpu65_a      == regA);
-    ASSERT(cpu65_x      == 0x03);
-    ASSERT(cpu65_y      == 0x04);
-    ASSERT(cpu65_f      == 0x55);
-    ASSERT(cpu65_sp     == 0xfe);
+    ASSERT(run_args.cpu65_pc     == TEST_LOC+1);
+    ASSERT(run_args.cpu65_a      == regA);
+    ASSERT(run_args.cpu65_x      == 0x03);
+    ASSERT(run_args.cpu65_y      == 0x04);
+    ASSERT(run_args.cpu65_f      == 0x55);
+    ASSERT(run_args.cpu65_sp     == 0xfe);
 
     ASSERT(apple_ii_64k[0][0x1ff] == regA);
 
-    ASSERT(cpu65_ea       == TEST_LOC);
-    ASSERT(cpu65_d        == 0xff);
-    ASSERT(cpu65_rw       == RW_NONE);
-    ASSERT(cpu65_opcode   == 0x48);
-    ASSERT(cpu65_opcycles == (3));
+    ASSERT(run_args.cpu65_ea       == TEST_LOC);
+    ASSERT(run_args.cpu65_d        == 0xff);
+    ASSERT(run_args.cpu65_rw       == RW_NONE);
+    ASSERT(run_args.cpu65_opcode   == 0x48);
+    ASSERT(run_args.cpu65_opcycles == (3));
 
     PASS();
 }
@@ -5068,29 +5065,29 @@ static int test_PLP(uint8_t flags);
 TEST test_PHP(uint8_t flags) {
     testcpu_set_opcode1(0x08);
 
-    cpu65_a  = 0x02;
-    cpu65_x  = 0x03;
-    cpu65_y  = 0x04;
-    cpu65_f  = flags;
+    run_args.cpu65_a  = 0x02;
+    run_args.cpu65_x  = 0x03;
+    run_args.cpu65_y  = 0x04;
+    run_args.cpu65_f  = flags;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc     == TEST_LOC+1);
-    ASSERT(cpu65_a      == 0x02);
-    ASSERT(cpu65_x      == 0x03);
-    ASSERT(cpu65_y      == 0x04);
-    ASSERT(cpu65_f      == flags);
-    ASSERT(cpu65_sp     == 0xfe);
+    ASSERT(run_args.cpu65_pc     == TEST_LOC+1);
+    ASSERT(run_args.cpu65_a      == 0x02);
+    ASSERT(run_args.cpu65_x      == 0x03);
+    ASSERT(run_args.cpu65_y      == 0x04);
+    ASSERT(run_args.cpu65_f      == flags);
+    ASSERT(run_args.cpu65_sp     == 0xfe);
 
     ASSERT(apple_ii_64k[0][0x1ff] == flags);
 
-    ASSERT(cpu65_ea       == TEST_LOC);
-    ASSERT(cpu65_d        == 0xff);
-    ASSERT(cpu65_rw       == RW_NONE);
-    ASSERT(cpu65_opcode   == 0x08);
-    ASSERT(cpu65_opcycles == (3));
+    ASSERT(run_args.cpu65_ea       == TEST_LOC);
+    ASSERT(run_args.cpu65_d        == 0xff);
+    ASSERT(run_args.cpu65_rw       == RW_NONE);
+    ASSERT(run_args.cpu65_opcode   == 0x08);
+    ASSERT(run_args.cpu65_opcycles == (3));
 
-    cpu65_pc = TEST_LOC;
+    run_args.cpu65_pc = TEST_LOC;
     test_PLP(flags);
 
     PASS();
@@ -5101,27 +5098,27 @@ TEST test_PHX(void) {
 
     uint8_t regX = (uint8_t)random();
 
-    cpu65_a  = 0x03;
-    cpu65_x  = regX;
-    cpu65_y  = 0x05;
-    cpu65_f  = 0x53;
+    run_args.cpu65_a  = 0x03;
+    run_args.cpu65_x  = regX;
+    run_args.cpu65_y  = 0x05;
+    run_args.cpu65_f  = 0x53;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc     == TEST_LOC+1);
-    ASSERT(cpu65_a      == 0x03);
-    ASSERT(cpu65_x      == regX);
-    ASSERT(cpu65_y      == 0x05);
-    ASSERT(cpu65_f      == 0x53);
-    ASSERT(cpu65_sp     == 0xfe);
+    ASSERT(run_args.cpu65_pc     == TEST_LOC+1);
+    ASSERT(run_args.cpu65_a      == 0x03);
+    ASSERT(run_args.cpu65_x      == regX);
+    ASSERT(run_args.cpu65_y      == 0x05);
+    ASSERT(run_args.cpu65_f      == 0x53);
+    ASSERT(run_args.cpu65_sp     == 0xfe);
 
     ASSERT(apple_ii_64k[0][0x1ff] == regX);
 
-    ASSERT(cpu65_ea       == TEST_LOC);
-    ASSERT(cpu65_d        == 0xff);
-    ASSERT(cpu65_rw       == RW_NONE);
-    ASSERT(cpu65_opcode   == 0xda);
-    ASSERT(cpu65_opcycles == (3));
+    ASSERT(run_args.cpu65_ea       == TEST_LOC);
+    ASSERT(run_args.cpu65_d        == 0xff);
+    ASSERT(run_args.cpu65_rw       == RW_NONE);
+    ASSERT(run_args.cpu65_opcode   == 0xda);
+    ASSERT(run_args.cpu65_opcycles == (3));
 
     PASS();
 }
@@ -5131,27 +5128,27 @@ TEST test_PHY(void) {
 
     uint8_t regY = (uint8_t)random();
 
-    cpu65_a  = 0x03;
-    cpu65_x  = 0x50;
-    cpu65_y  = regY;
-    cpu65_f  = 0x53;
+    run_args.cpu65_a  = 0x03;
+    run_args.cpu65_x  = 0x50;
+    run_args.cpu65_y  = regY;
+    run_args.cpu65_f  = 0x53;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc     == TEST_LOC+1);
-    ASSERT(cpu65_a      == 0x03);
-    ASSERT(cpu65_x      == 0x50);
-    ASSERT(cpu65_y      == regY);
-    ASSERT(cpu65_f      == 0x53);
-    ASSERT(cpu65_sp     == 0xfe);
+    ASSERT(run_args.cpu65_pc     == TEST_LOC+1);
+    ASSERT(run_args.cpu65_a      == 0x03);
+    ASSERT(run_args.cpu65_x      == 0x50);
+    ASSERT(run_args.cpu65_y      == regY);
+    ASSERT(run_args.cpu65_f      == 0x53);
+    ASSERT(run_args.cpu65_sp     == 0xfe);
 
     ASSERT(apple_ii_64k[0][0x1ff] == regY);
 
-    ASSERT(cpu65_ea       == TEST_LOC);
-    ASSERT(cpu65_d        == 0xff);
-    ASSERT(cpu65_rw       == RW_NONE);
-    ASSERT(cpu65_opcode   == 0x5a);
-    ASSERT(cpu65_opcycles == (3));
+    ASSERT(run_args.cpu65_ea       == TEST_LOC);
+    ASSERT(run_args.cpu65_d        == 0xff);
+    ASSERT(run_args.cpu65_rw       == RW_NONE);
+    ASSERT(run_args.cpu65_opcode   == 0x5a);
+    ASSERT(run_args.cpu65_opcycles == (3));
 
     PASS();
 }
@@ -5182,27 +5179,27 @@ TEST test_PLA(uint8_t regA) {
     testcpu_set_opcode1(0x68);
     apple_ii_64k[0][0x101+sp] = regA;
 
-    cpu65_a  = 0x00;
-    cpu65_x  = 0x03;
-    cpu65_y  = 0x04;
-    cpu65_f  = 0x00;
-    cpu65_sp = sp;
+    run_args.cpu65_a  = 0x00;
+    run_args.cpu65_x  = 0x03;
+    run_args.cpu65_y  = 0x04;
+    run_args.cpu65_f  = 0x00;
+    run_args.cpu65_sp = sp;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc     == TEST_LOC+1);
-    ASSERT(cpu65_a      == regA);
-    ASSERT(cpu65_x      == 0x03);
-    ASSERT(cpu65_y      == 0x04);
-    ASSERT(cpu65_sp     == sp+1);
+    ASSERT(run_args.cpu65_pc     == TEST_LOC+1);
+    ASSERT(run_args.cpu65_a      == regA);
+    ASSERT(run_args.cpu65_x      == 0x03);
+    ASSERT(run_args.cpu65_y      == 0x04);
+    ASSERT(run_args.cpu65_sp     == sp+1);
 
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea       == TEST_LOC);
-    ASSERT(cpu65_d        == 0xff);
-    ASSERT(cpu65_rw       == RW_NONE);
-    ASSERT(cpu65_opcode   == 0x68);
-    ASSERT(cpu65_opcycles == (4));
+    ASSERT(run_args.cpu65_ea       == TEST_LOC);
+    ASSERT(run_args.cpu65_d        == 0xff);
+    ASSERT(run_args.cpu65_rw       == RW_NONE);
+    ASSERT(run_args.cpu65_opcode   == 0x68);
+    ASSERT(run_args.cpu65_opcycles == (4));
 
     PASS();
 }
@@ -5210,31 +5207,31 @@ TEST test_PLA(uint8_t regA) {
 TEST test_PLP(uint8_t flags) {
     uint8_t sp = 0x80;
 
-    ASSERT(cpu65_pc     == TEST_LOC);
+    ASSERT(run_args.cpu65_pc     == TEST_LOC);
 
     testcpu_set_opcode1(0x28);
     apple_ii_64k[0][0x101+sp] = flags;
 
-    cpu65_a  = 0x02;
-    cpu65_x  = 0x03;
-    cpu65_y  = 0x04;
-    cpu65_f  = ~flags;
-    cpu65_sp = sp;
+    run_args.cpu65_a  = 0x02;
+    run_args.cpu65_x  = 0x03;
+    run_args.cpu65_y  = 0x04;
+    run_args.cpu65_f  = ~flags;
+    run_args.cpu65_sp = sp;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc     == TEST_LOC+1);
-    ASSERT(cpu65_a      == 0x02);
-    ASSERT(cpu65_x      == 0x03);
-    ASSERT(cpu65_y      == 0x04);
-    ASSERT(cpu65_sp     == sp+1);
-    ASSERT(cpu65_f      == (flags | fB | fX));
+    ASSERT(run_args.cpu65_pc     == TEST_LOC+1);
+    ASSERT(run_args.cpu65_a      == 0x02);
+    ASSERT(run_args.cpu65_x      == 0x03);
+    ASSERT(run_args.cpu65_y      == 0x04);
+    ASSERT(run_args.cpu65_sp     == sp+1);
+    ASSERT(run_args.cpu65_f      == (flags | fB | fX));
 
-    ASSERT(cpu65_ea       == TEST_LOC);
-    ASSERT(cpu65_d        == 0xff);
-    ASSERT(cpu65_rw       == RW_NONE);
-    ASSERT(cpu65_opcode   == 0x28);
-    ASSERT(cpu65_opcycles == (4));
+    ASSERT(run_args.cpu65_ea       == TEST_LOC);
+    ASSERT(run_args.cpu65_d        == 0xff);
+    ASSERT(run_args.cpu65_rw       == RW_NONE);
+    ASSERT(run_args.cpu65_opcode   == 0x28);
+    ASSERT(run_args.cpu65_opcycles == (4));
 
     PASS();
 }
@@ -5251,27 +5248,27 @@ TEST test_PLX(uint8_t regX) {
     testcpu_set_opcode1(0xfa);
     apple_ii_64k[0][0x101+sp] = regX;
 
-    cpu65_a  = 0x43;
-    cpu65_x  = 0x00;
-    cpu65_y  = 0x04;
-    cpu65_f  = 0x00;
-    cpu65_sp = sp;
+    run_args.cpu65_a  = 0x43;
+    run_args.cpu65_x  = 0x00;
+    run_args.cpu65_y  = 0x04;
+    run_args.cpu65_f  = 0x00;
+    run_args.cpu65_sp = sp;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc     == TEST_LOC+1);
-    ASSERT(cpu65_a      == 0x43);
-    ASSERT(cpu65_x      == regX);
-    ASSERT(cpu65_y      == 0x04);
-    ASSERT(cpu65_sp     == sp+1);
+    ASSERT(run_args.cpu65_pc     == TEST_LOC+1);
+    ASSERT(run_args.cpu65_a      == 0x43);
+    ASSERT(run_args.cpu65_x      == regX);
+    ASSERT(run_args.cpu65_y      == 0x04);
+    ASSERT(run_args.cpu65_sp     == sp+1);
 
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea       == TEST_LOC);
-    ASSERT(cpu65_d        == 0xff);
-    ASSERT(cpu65_rw       == RW_NONE);
-    ASSERT(cpu65_opcode   == 0xfa);
-    ASSERT(cpu65_opcycles == (4));
+    ASSERT(run_args.cpu65_ea       == TEST_LOC);
+    ASSERT(run_args.cpu65_d        == 0xff);
+    ASSERT(run_args.cpu65_rw       == RW_NONE);
+    ASSERT(run_args.cpu65_opcode   == 0xfa);
+    ASSERT(run_args.cpu65_opcycles == (4));
 
     PASS();
 }
@@ -5288,27 +5285,27 @@ TEST test_PLY(uint8_t regY) {
     testcpu_set_opcode1(0x7a);
     apple_ii_64k[0][0x101+sp] = regY;
 
-    cpu65_a  = 0x43;
-    cpu65_x  = 0x34;
-    cpu65_y  = 0x00;
-    cpu65_f  = 0x00;
-    cpu65_sp = sp;
+    run_args.cpu65_a  = 0x43;
+    run_args.cpu65_x  = 0x34;
+    run_args.cpu65_y  = 0x00;
+    run_args.cpu65_f  = 0x00;
+    run_args.cpu65_sp = sp;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc     == TEST_LOC+1);
-    ASSERT(cpu65_a      == 0x43);
-    ASSERT(cpu65_x      == 0x34);
-    ASSERT(cpu65_y      == regY);
-    ASSERT(cpu65_sp     == sp+1);
+    ASSERT(run_args.cpu65_pc     == TEST_LOC+1);
+    ASSERT(run_args.cpu65_a      == 0x43);
+    ASSERT(run_args.cpu65_x      == 0x34);
+    ASSERT(run_args.cpu65_y      == regY);
+    ASSERT(run_args.cpu65_sp     == sp+1);
 
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea       == TEST_LOC);
-    ASSERT(cpu65_d        == 0xff);
-    ASSERT(cpu65_rw       == RW_NONE);
-    ASSERT(cpu65_opcode   == 0x7a);
-    ASSERT(cpu65_opcycles == (4));
+    ASSERT(run_args.cpu65_ea       == TEST_LOC);
+    ASSERT(run_args.cpu65_d        == 0xff);
+    ASSERT(run_args.cpu65_rw       == RW_NONE);
+    ASSERT(run_args.cpu65_opcode   == 0x7a);
+    ASSERT(run_args.cpu65_opcycles == (4));
 
     PASS();
 }
@@ -5353,27 +5350,27 @@ TEST test_ROL_acc(uint8_t regA, bool carry) {
 
     testcpu_set_opcode1(0x2a);
 
-    cpu65_a  = regA;
-    cpu65_x  = 0x03;
-    cpu65_y  = 0x04;
-    cpu65_sp = 0x80;
-    cpu65_f  = carry ? (fC) : 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0x03;
+    run_args.cpu65_y  = 0x04;
+    run_args.cpu65_sp = 0x80;
+    run_args.cpu65_f  = carry ? (fC) : 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+1);
-    ASSERT(cpu65_x       == 0x03);
-    ASSERT(cpu65_y       == 0x04);
-    ASSERT(cpu65_sp      == 0x80);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+1);
+    ASSERT(run_args.cpu65_x       == 0x03);
+    ASSERT(run_args.cpu65_y       == 0x04);
+    ASSERT(run_args.cpu65_sp      == 0x80);
 
-    ASSERT(cpu65_a == result);
+    ASSERT(run_args.cpu65_a == result);
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == TEST_LOC);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == 0);
-    ASSERT(cpu65_opcode    == 0x2a);
-    ASSERT(cpu65_opcycles  == (2));
+    ASSERT(run_args.cpu65_ea        == TEST_LOC);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == 0);
+    ASSERT(run_args.cpu65_opcode    == 0x2a);
+    ASSERT(run_args.cpu65_opcycles  == (2));
 
     PASS();
 }
@@ -5390,29 +5387,29 @@ TEST test_ROL_zpage(bool regA, uint8_t val, uint8_t arg0, bool carry) {
 
     apple_ii_64k[0][arg0] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = 0x03;
-    cpu65_y  = 0x04;
-    cpu65_sp = 0x80;
-    cpu65_f  = carry ? (fC) : 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0x03;
+    run_args.cpu65_y  = 0x04;
+    run_args.cpu65_sp = 0x80;
+    run_args.cpu65_f  = carry ? (fC) : 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
     ASSERT(apple_ii_64k[0][arg0] == result);
 
-    ASSERT(cpu65_a  == regA);
-    ASSERT(cpu65_pc == TEST_LOC+2);
-    ASSERT(cpu65_x  == 0x03);
-    ASSERT(cpu65_y  == 0x04);
-    ASSERT(cpu65_sp == 0x80);
+    ASSERT(run_args.cpu65_a  == regA);
+    ASSERT(run_args.cpu65_pc == TEST_LOC+2);
+    ASSERT(run_args.cpu65_x  == 0x03);
+    ASSERT(run_args.cpu65_y  == 0x04);
+    ASSERT(run_args.cpu65_sp == 0x80);
 
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == arg0);
-    ASSERT(cpu65_d         == result);
-    ASSERT(cpu65_rw        == (RW_READ|RW_WRITE));
-    ASSERT(cpu65_opcode    == 0x26);
-    ASSERT(cpu65_opcycles  == (5));
+    ASSERT(run_args.cpu65_ea        == arg0);
+    ASSERT(run_args.cpu65_d         == result);
+    ASSERT(run_args.cpu65_rw        == (RW_READ|RW_WRITE));
+    ASSERT(run_args.cpu65_opcode    == 0x26);
+    ASSERT(run_args.cpu65_opcycles  == (5));
 
     PASS();
 }
@@ -5431,28 +5428,28 @@ TEST test_ROL_zpage_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX, boo
 
     apple_ii_64k[0][idx] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = regX;
-    cpu65_y  = 0x05;
-    cpu65_sp = 0x81;
-    cpu65_f  = carry ? (fC) : 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = regX;
+    run_args.cpu65_y  = 0x05;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = carry ? (fC) : 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
     ASSERT(apple_ii_64k[0][idx] == result);
 
-    ASSERT(cpu65_a   == regA);
-    ASSERT(cpu65_pc  == TEST_LOC+2);
-    ASSERT(cpu65_x   == regX);
-    ASSERT(cpu65_y   == 0x05);
-    ASSERT(cpu65_sp  == 0x81);
+    ASSERT(run_args.cpu65_a   == regA);
+    ASSERT(run_args.cpu65_pc  == TEST_LOC+2);
+    ASSERT(run_args.cpu65_x   == regX);
+    ASSERT(run_args.cpu65_y   == 0x05);
+    ASSERT(run_args.cpu65_sp  == 0x81);
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == idx);
-    ASSERT(cpu65_d         == result);
-    ASSERT(cpu65_rw        == (RW_READ|RW_WRITE));
-    ASSERT(cpu65_opcode    == 0x36);
-    ASSERT(cpu65_opcycles  == (6));
+    ASSERT(run_args.cpu65_ea        == idx);
+    ASSERT(run_args.cpu65_d         == result);
+    ASSERT(run_args.cpu65_rw        == (RW_READ|RW_WRITE));
+    ASSERT(run_args.cpu65_opcode    == 0x36);
+    ASSERT(run_args.cpu65_opcycles  == (6));
 
     PASS();
 }
@@ -5470,29 +5467,29 @@ TEST test_ROL_abs(uint8_t regA, uint8_t val, uint8_t lobyte, uint8_t hibyte, boo
     uint16_t addrs = lobyte | (hibyte<<8);
     apple_ii_64k[0][addrs] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = 0xf4;
-    cpu65_y  = 0x05;
-    cpu65_sp = 0x81;
-    cpu65_f  = carry ? (fC) : 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0xf4;
+    run_args.cpu65_y  = 0x05;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = carry ? (fC) : 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
     ASSERT(apple_ii_64k[0][addrs] == result);
 
-    ASSERT(cpu65_a  == regA);
-    ASSERT(cpu65_pc == TEST_LOC+3);
-    ASSERT(cpu65_x  == 0xf4);
-    ASSERT(cpu65_y  == 0x05);
-    ASSERT(cpu65_sp == 0x81);
+    ASSERT(run_args.cpu65_a  == regA);
+    ASSERT(run_args.cpu65_pc == TEST_LOC+3);
+    ASSERT(run_args.cpu65_x  == 0xf4);
+    ASSERT(run_args.cpu65_y  == 0x05);
+    ASSERT(run_args.cpu65_sp == 0x81);
 
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == addrs);
-    ASSERT(cpu65_d         == result);
-    ASSERT(cpu65_rw        == (RW_READ|RW_WRITE));
-    ASSERT(cpu65_opcode    == 0x2e);
-    ASSERT(cpu65_opcycles  == (6));
+    ASSERT(run_args.cpu65_ea        == addrs);
+    ASSERT(run_args.cpu65_d         == result);
+    ASSERT(run_args.cpu65_rw        == (RW_READ|RW_WRITE));
+    ASSERT(run_args.cpu65_opcode    == 0x2e);
+    ASSERT(run_args.cpu65_opcycles  == (6));
 
     PASS();
 }
@@ -5515,29 +5512,29 @@ TEST test_ROL_abs_x(uint8_t regA, uint8_t val, uint8_t regX, uint8_t lobyte, uin
     }
     apple_ii_64k[0][addrs] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = regX;
-    cpu65_y  = 0x05;
-    cpu65_sp = 0x81;
-    cpu65_f  = carry ? (fC) : 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = regX;
+    run_args.cpu65_y  = 0x05;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = carry ? (fC) : 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
     ASSERT(apple_ii_64k[0][addrs] == result);
 
-    ASSERT(cpu65_a  == regA);
-    ASSERT(cpu65_pc == TEST_LOC+3);
-    ASSERT(cpu65_x  == regX);
-    ASSERT(cpu65_y  == 0x05);
-    ASSERT(cpu65_sp == 0x81);
+    ASSERT(run_args.cpu65_a  == regA);
+    ASSERT(run_args.cpu65_pc == TEST_LOC+3);
+    ASSERT(run_args.cpu65_x  == regX);
+    ASSERT(run_args.cpu65_y  == 0x05);
+    ASSERT(run_args.cpu65_sp == 0x81);
 
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == addrs);
-    ASSERT(cpu65_d         == result);
-    ASSERT(cpu65_rw        == (RW_READ|RW_WRITE));
-    ASSERT(cpu65_opcode    == 0x3e);
-    ASSERT(cpu65_opcycles  == cycle_count);
+    ASSERT(run_args.cpu65_ea        == addrs);
+    ASSERT(run_args.cpu65_d         == result);
+    ASSERT(run_args.cpu65_rw        == (RW_READ|RW_WRITE));
+    ASSERT(run_args.cpu65_opcode    == 0x3e);
+    ASSERT(run_args.cpu65_opcycles  == cycle_count);
 
     PASS();
 }
@@ -5584,27 +5581,27 @@ TEST test_ROR_acc(uint8_t regA, bool carry) {
 
     testcpu_set_opcode1(0x6a);
 
-    cpu65_a  = regA;
-    cpu65_x  = 0x03;
-    cpu65_y  = 0x04;
-    cpu65_sp = 0x80;
-    cpu65_f  = carry ? (fC) : 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0x03;
+    run_args.cpu65_y  = 0x04;
+    run_args.cpu65_sp = 0x80;
+    run_args.cpu65_f  = carry ? (fC) : 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+1);
-    ASSERT(cpu65_x       == 0x03);
-    ASSERT(cpu65_y       == 0x04);
-    ASSERT(cpu65_sp      == 0x80);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+1);
+    ASSERT(run_args.cpu65_x       == 0x03);
+    ASSERT(run_args.cpu65_y       == 0x04);
+    ASSERT(run_args.cpu65_sp      == 0x80);
 
-    ASSERT(cpu65_a == result);
+    ASSERT(run_args.cpu65_a == result);
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == TEST_LOC);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == 0);
-    ASSERT(cpu65_opcode    == 0x6a);
-    ASSERT(cpu65_opcycles  == (2));
+    ASSERT(run_args.cpu65_ea        == TEST_LOC);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == 0);
+    ASSERT(run_args.cpu65_opcode    == 0x6a);
+    ASSERT(run_args.cpu65_opcycles  == (2));
 
     PASS();
 }
@@ -5621,29 +5618,29 @@ TEST test_ROR_zpage(bool regA, uint8_t val, uint8_t arg0, bool carry) {
 
     apple_ii_64k[0][arg0] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = 0x03;
-    cpu65_y  = 0x04;
-    cpu65_sp = 0x80;
-    cpu65_f  = carry ? (fC) : 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0x03;
+    run_args.cpu65_y  = 0x04;
+    run_args.cpu65_sp = 0x80;
+    run_args.cpu65_f  = carry ? (fC) : 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
     ASSERT(apple_ii_64k[0][arg0] == result);
 
-    ASSERT(cpu65_a  == regA);
-    ASSERT(cpu65_pc == TEST_LOC+2);
-    ASSERT(cpu65_x  == 0x03);
-    ASSERT(cpu65_y  == 0x04);
-    ASSERT(cpu65_sp == 0x80);
+    ASSERT(run_args.cpu65_a  == regA);
+    ASSERT(run_args.cpu65_pc == TEST_LOC+2);
+    ASSERT(run_args.cpu65_x  == 0x03);
+    ASSERT(run_args.cpu65_y  == 0x04);
+    ASSERT(run_args.cpu65_sp == 0x80);
 
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == arg0);
-    ASSERT(cpu65_d         == result);
-    ASSERT(cpu65_rw        == (RW_READ|RW_WRITE));
-    ASSERT(cpu65_opcode    == 0x66);
-    ASSERT(cpu65_opcycles  == (5));
+    ASSERT(run_args.cpu65_ea        == arg0);
+    ASSERT(run_args.cpu65_d         == result);
+    ASSERT(run_args.cpu65_rw        == (RW_READ|RW_WRITE));
+    ASSERT(run_args.cpu65_opcode    == 0x66);
+    ASSERT(run_args.cpu65_opcycles  == (5));
 
     PASS();
 }
@@ -5662,28 +5659,28 @@ TEST test_ROR_zpage_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX, boo
 
     apple_ii_64k[0][idx] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = regX;
-    cpu65_y  = 0x05;
-    cpu65_sp = 0x81;
-    cpu65_f  = carry ? (fC) : 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = regX;
+    run_args.cpu65_y  = 0x05;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = carry ? (fC) : 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
     ASSERT(apple_ii_64k[0][idx] == result);
 
-    ASSERT(cpu65_a   == regA);
-    ASSERT(cpu65_pc  == TEST_LOC+2);
-    ASSERT(cpu65_x   == regX);
-    ASSERT(cpu65_y   == 0x05);
-    ASSERT(cpu65_sp  == 0x81);
+    ASSERT(run_args.cpu65_a   == regA);
+    ASSERT(run_args.cpu65_pc  == TEST_LOC+2);
+    ASSERT(run_args.cpu65_x   == regX);
+    ASSERT(run_args.cpu65_y   == 0x05);
+    ASSERT(run_args.cpu65_sp  == 0x81);
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == idx);
-    ASSERT(cpu65_d         == result);
-    ASSERT(cpu65_rw        == (RW_READ|RW_WRITE));
-    ASSERT(cpu65_opcode    == 0x76);
-    ASSERT(cpu65_opcycles  == (6));
+    ASSERT(run_args.cpu65_ea        == idx);
+    ASSERT(run_args.cpu65_d         == result);
+    ASSERT(run_args.cpu65_rw        == (RW_READ|RW_WRITE));
+    ASSERT(run_args.cpu65_opcode    == 0x76);
+    ASSERT(run_args.cpu65_opcycles  == (6));
 
     PASS();
 }
@@ -5701,29 +5698,29 @@ TEST test_ROR_abs(uint8_t regA, uint8_t val, uint8_t lobyte, uint8_t hibyte, boo
     uint16_t addrs = lobyte | (hibyte<<8);
     apple_ii_64k[0][addrs] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = 0xf4;
-    cpu65_y  = 0x05;
-    cpu65_sp = 0x81;
-    cpu65_f  = carry ? (fC) : 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0xf4;
+    run_args.cpu65_y  = 0x05;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = carry ? (fC) : 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
     ASSERT(apple_ii_64k[0][addrs] == result);
 
-    ASSERT(cpu65_a  == regA);
-    ASSERT(cpu65_pc == TEST_LOC+3);
-    ASSERT(cpu65_x  == 0xf4);
-    ASSERT(cpu65_y  == 0x05);
-    ASSERT(cpu65_sp == 0x81);
+    ASSERT(run_args.cpu65_a  == regA);
+    ASSERT(run_args.cpu65_pc == TEST_LOC+3);
+    ASSERT(run_args.cpu65_x  == 0xf4);
+    ASSERT(run_args.cpu65_y  == 0x05);
+    ASSERT(run_args.cpu65_sp == 0x81);
 
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == addrs);
-    ASSERT(cpu65_d         == result);
-    ASSERT(cpu65_rw        == (RW_READ|RW_WRITE));
-    ASSERT(cpu65_opcode    == 0x6e);
-    ASSERT(cpu65_opcycles  == (6));
+    ASSERT(run_args.cpu65_ea        == addrs);
+    ASSERT(run_args.cpu65_d         == result);
+    ASSERT(run_args.cpu65_rw        == (RW_READ|RW_WRITE));
+    ASSERT(run_args.cpu65_opcode    == 0x6e);
+    ASSERT(run_args.cpu65_opcycles  == (6));
 
     PASS();
 }
@@ -5746,29 +5743,29 @@ TEST test_ROR_abs_x(uint8_t regA, uint8_t val, uint8_t regX, uint8_t lobyte, uin
     }
     apple_ii_64k[0][addrs] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = regX;
-    cpu65_y  = 0x05;
-    cpu65_sp = 0x81;
-    cpu65_f  = carry ? (fC) : 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = regX;
+    run_args.cpu65_y  = 0x05;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = carry ? (fC) : 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
     ASSERT(apple_ii_64k[0][addrs] == result);
 
-    ASSERT(cpu65_a  == regA);
-    ASSERT(cpu65_pc == TEST_LOC+3);
-    ASSERT(cpu65_x  == regX);
-    ASSERT(cpu65_y  == 0x05);
-    ASSERT(cpu65_sp == 0x81);
+    ASSERT(run_args.cpu65_a  == regA);
+    ASSERT(run_args.cpu65_pc == TEST_LOC+3);
+    ASSERT(run_args.cpu65_x  == regX);
+    ASSERT(run_args.cpu65_y  == 0x05);
+    ASSERT(run_args.cpu65_sp == 0x81);
 
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == addrs);
-    ASSERT(cpu65_d         == result);
-    ASSERT(cpu65_rw        == (RW_READ|RW_WRITE));
-    ASSERT(cpu65_opcode    == 0x7e);
-    ASSERT(cpu65_opcycles  == cycle_count);
+    ASSERT(run_args.cpu65_ea        == addrs);
+    ASSERT(run_args.cpu65_d         == result);
+    ASSERT(run_args.cpu65_rw        == (RW_READ|RW_WRITE));
+    ASSERT(run_args.cpu65_opcode    == 0x7e);
+    ASSERT(run_args.cpu65_opcycles  == cycle_count);
 
     PASS();
 }
@@ -5780,11 +5777,11 @@ TEST test_RTI(uint8_t flags) {
 
     testcpu_set_opcode1(0x40);
 
-    cpu65_a  = 0x02;
-    cpu65_x  = 0x03;
-    cpu65_y  = 0x04;
-    cpu65_f  = 0x00;
-    cpu65_sp = 0x80;
+    run_args.cpu65_a  = 0x02;
+    run_args.cpu65_x  = 0x03;
+    run_args.cpu65_y  = 0x04;
+    run_args.cpu65_f  = 0x00;
+    run_args.cpu65_sp = 0x80;
 
     uint8_t lo_ret = (uint8_t)random();
     uint8_t hi_ret = (uint8_t)random();
@@ -5793,20 +5790,20 @@ TEST test_RTI(uint8_t flags) {
     apple_ii_64k[0][0x182] = lo_ret;
     apple_ii_64k[0][0x183] = hi_ret;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc     == ((hi_ret<<8)| lo_ret));
-    ASSERT(cpu65_a      == 0x02);
-    ASSERT(cpu65_x      == 0x03);
-    ASSERT(cpu65_y      == 0x04);
-    ASSERT(cpu65_f      == (flags | fB | fX));
-    ASSERT(cpu65_sp     == 0x83);
+    ASSERT(run_args.cpu65_pc     == ((hi_ret<<8)| lo_ret));
+    ASSERT(run_args.cpu65_a      == 0x02);
+    ASSERT(run_args.cpu65_x      == 0x03);
+    ASSERT(run_args.cpu65_y      == 0x04);
+    ASSERT(run_args.cpu65_f      == (flags | fB | fX));
+    ASSERT(run_args.cpu65_sp     == 0x83);
 
-    ASSERT(cpu65_ea       == TEST_LOC);
-    ASSERT(cpu65_d        == 0xff);
-    ASSERT(cpu65_rw       == RW_NONE);
-    ASSERT(cpu65_opcode   == 0x40);
-    ASSERT(cpu65_opcycles == (6));
+    ASSERT(run_args.cpu65_ea       == TEST_LOC);
+    ASSERT(run_args.cpu65_d        == 0xff);
+    ASSERT(run_args.cpu65_rw       == RW_NONE);
+    ASSERT(run_args.cpu65_opcode   == 0x40);
+    ASSERT(run_args.cpu65_opcycles == (6));
 
     PASS();
 }
@@ -5818,30 +5815,30 @@ TEST test_RTS(uint8_t lobyte, uint8_t hibyte, uint16_t insAddrs) {
 
     testcpu_set_opcodeX(0x60, random(), random(), insAddrs);
 
-    cpu65_a  = 0x02;
-    cpu65_x  = 0x03;
-    cpu65_y  = 0x04;
-    cpu65_f  = 0x00;
-    cpu65_sp = 0x80;
+    run_args.cpu65_a  = 0x02;
+    run_args.cpu65_x  = 0x03;
+    run_args.cpu65_y  = 0x04;
+    run_args.cpu65_f  = 0x00;
+    run_args.cpu65_sp = 0x80;
 
     apple_ii_64k[0][0x181] = lobyte;
     apple_ii_64k[0][0x182] = hibyte;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
     uint16_t newpc = ((hibyte<<8) | lobyte) + 1;
-    ASSERT(cpu65_pc     == newpc);
-    ASSERT(cpu65_a      == 0x02);
-    ASSERT(cpu65_x      == 0x03);
-    ASSERT(cpu65_y      == 0x04);
-    ASSERT(cpu65_f      == 0x00);
-    ASSERT(cpu65_sp     == 0x82);
+    ASSERT(run_args.cpu65_pc     == newpc);
+    ASSERT(run_args.cpu65_a      == 0x02);
+    ASSERT(run_args.cpu65_x      == 0x03);
+    ASSERT(run_args.cpu65_y      == 0x04);
+    ASSERT(run_args.cpu65_f      == 0x00);
+    ASSERT(run_args.cpu65_sp     == 0x82);
 
-    ASSERT(cpu65_ea       == insAddrs);
-    ASSERT(cpu65_d        == 0xff);
-    ASSERT(cpu65_rw       == RW_NONE);
-    ASSERT(cpu65_opcode   == 0x60);
-    ASSERT(cpu65_opcycles == (6));
+    ASSERT(run_args.cpu65_ea       == insAddrs);
+    ASSERT(run_args.cpu65_d        == 0xff);
+    ASSERT(run_args.cpu65_rw       == RW_NONE);
+    ASSERT(run_args.cpu65_opcode   == 0x60);
+    ASSERT(run_args.cpu65_opcycles == (6));
 
     PASS();
 }
@@ -5946,34 +5943,34 @@ TEST test_SBC_imm(uint8_t regA, uint8_t val, bool decimal, bool carry) {
 
     testcpu_set_opcode2(0xe9, val);
 
-    cpu65_a  = regA;
-    cpu65_x  = 0x33;
-    cpu65_y  = 0x44;
-    cpu65_sp = 0x88;
-    cpu65_f |= decimal ? (fD) : 0x00;
-    cpu65_f |= carry   ? (fC) : 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0x33;
+    run_args.cpu65_y  = 0x44;
+    run_args.cpu65_sp = 0x88;
+    run_args.cpu65_f |= decimal ? (fD) : 0x00;
+    run_args.cpu65_f |= carry   ? (fC) : 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+2);
-    ASSERT(cpu65_x       == 0x33);
-    ASSERT(cpu65_y       == 0x44);
-    ASSERT(cpu65_sp      == 0x88);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+2);
+    ASSERT(run_args.cpu65_x       == 0x33);
+    ASSERT(run_args.cpu65_y       == 0x44);
+    ASSERT(run_args.cpu65_sp      == 0x88);
 
     do {
         char msgbuf[MSG_SIZE];
         char buf0[MSG_SIZE];
         char buf1[MSG_SIZE];
-        snprintf(msgbuf, MSG_SIZE, MSG_FLAGS0, regA, val, result, buf0, cpu65_a, buf1);
-        ASSERTm(msgbuf, cpu65_a == result);
+        snprintf(msgbuf, MSG_SIZE, MSG_FLAGS0, regA, val, result, buf0, run_args.cpu65_a, buf1);
+        ASSERTm(msgbuf, run_args.cpu65_a == result);
         VERIFY_FLAGS();
     } while (0);
 
-    ASSERT(cpu65_ea        == TEST_LOC+1);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_READ);
-    ASSERT(cpu65_opcode    == 0xe9);
-    ASSERT(cpu65_opcycles  == (decimal ? 3 : 2));
+    ASSERT(run_args.cpu65_ea        == TEST_LOC+1);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_READ);
+    ASSERT(run_args.cpu65_opcode    == 0xe9);
+    ASSERT(run_args.cpu65_opcycles  == (decimal ? 3 : 2));
 
     PASS();
 }
@@ -5988,26 +5985,26 @@ TEST test_SBC_zpage(uint8_t regA, uint8_t val, uint8_t arg0) {
 
     apple_ii_64k[0][arg0] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = 0x03;
-    cpu65_y  = 0x04;
-    cpu65_sp = 0x80;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0x03;
+    run_args.cpu65_y  = 0x04;
+    run_args.cpu65_sp = 0x80;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+2);
-    ASSERT(cpu65_x       == 0x03);
-    ASSERT(cpu65_y       == 0x04);
-    ASSERT(cpu65_sp      == 0x80);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+2);
+    ASSERT(run_args.cpu65_x       == 0x03);
+    ASSERT(run_args.cpu65_y       == 0x04);
+    ASSERT(run_args.cpu65_sp      == 0x80);
 
-    ASSERT(cpu65_a == result);
+    ASSERT(run_args.cpu65_a == result);
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == arg0);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_READ);
-    ASSERT(cpu65_opcode    == 0xe5);
-    ASSERT(cpu65_opcycles  == (3));
+    ASSERT(run_args.cpu65_ea        == arg0);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_READ);
+    ASSERT(run_args.cpu65_opcode    == 0xe5);
+    ASSERT(run_args.cpu65_opcycles  == (3));
 
     PASS();
 }
@@ -6024,26 +6021,26 @@ TEST test_SBC_zpage_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX) {
 
     apple_ii_64k[0][idx] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = regX;
-    cpu65_y  = 0x05;
-    cpu65_sp = 0x81;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = regX;
+    run_args.cpu65_y  = 0x05;
+    run_args.cpu65_sp = 0x81;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+2);
-    ASSERT(cpu65_x       == regX);
-    ASSERT(cpu65_y       == 0x05);
-    ASSERT(cpu65_sp      == 0x81);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+2);
+    ASSERT(run_args.cpu65_x       == regX);
+    ASSERT(run_args.cpu65_y       == 0x05);
+    ASSERT(run_args.cpu65_sp      == 0x81);
 
-    ASSERT(cpu65_a == result);
+    ASSERT(run_args.cpu65_a == result);
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == idx);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_READ);
-    ASSERT(cpu65_opcode    == 0xf5);
-    ASSERT(cpu65_opcycles  == (4));
+    ASSERT(run_args.cpu65_ea        == idx);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_READ);
+    ASSERT(run_args.cpu65_opcode    == 0xf5);
+    ASSERT(run_args.cpu65_opcycles  == (4));
 
     PASS();
 }
@@ -6059,26 +6056,26 @@ TEST test_SBC_abs(uint8_t regA, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
     uint16_t addrs = lobyte | (hibyte<<8);
     apple_ii_64k[0][addrs] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = 0xf4;
-    cpu65_y  = 0x05;
-    cpu65_sp = 0x81;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0xf4;
+    run_args.cpu65_y  = 0x05;
+    run_args.cpu65_sp = 0x81;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+3);
-    ASSERT(cpu65_x       == 0xf4);
-    ASSERT(cpu65_y       == 0x05);
-    ASSERT(cpu65_sp      == 0x81);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+3);
+    ASSERT(run_args.cpu65_x       == 0xf4);
+    ASSERT(run_args.cpu65_y       == 0x05);
+    ASSERT(run_args.cpu65_sp      == 0x81);
 
-    ASSERT(cpu65_a == result);
+    ASSERT(run_args.cpu65_a == result);
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == addrs);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_READ);
-    ASSERT(cpu65_opcode    == 0xed);
-    ASSERT(cpu65_opcycles  == (4));
+    ASSERT(run_args.cpu65_ea        == addrs);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_READ);
+    ASSERT(run_args.cpu65_opcode    == 0xed);
+    ASSERT(run_args.cpu65_opcycles  == (4));
 
     PASS();
 }
@@ -6099,28 +6096,28 @@ TEST test_SBC_abs_x(uint8_t regA, uint8_t val, uint8_t regX, uint8_t lobyte, uin
     }
     apple_ii_64k[0][addrs] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = regX;
-    cpu65_y  = 0x05;
-    cpu65_sp = 0x81;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = regX;
+    run_args.cpu65_y  = 0x05;
+    run_args.cpu65_sp = 0x81;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+3);
-    ASSERT(cpu65_x       == regX);
-    ASSERT(cpu65_y       == 0x05);
-    ASSERT(cpu65_sp      == 0x81);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+3);
+    ASSERT(run_args.cpu65_x       == regX);
+    ASSERT(run_args.cpu65_y       == 0x05);
+    ASSERT(run_args.cpu65_sp      == 0x81);
 
-    ASSERT(cpu65_a == result);
+    ASSERT(run_args.cpu65_a == result);
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == addrs);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_READ);
-    ASSERT(cpu65_opcode    == 0xfd);
+    ASSERT(run_args.cpu65_ea        == addrs);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_READ);
+    ASSERT(run_args.cpu65_opcode    == 0xfd);
 
     cycle_count += 4;
-    ASSERT(cpu65_opcycles == cycle_count);
+    ASSERT(run_args.cpu65_opcycles == cycle_count);
 
     PASS();
 }
@@ -6141,28 +6138,28 @@ TEST test_SBC_abs_y(uint8_t regA, uint8_t val, uint8_t regY, uint8_t lobyte, uin
     }
     apple_ii_64k[0][addrs] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = 0x02;
-    cpu65_y  = regY;
-    cpu65_sp = 0x81;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0x02;
+    run_args.cpu65_y  = regY;
+    run_args.cpu65_sp = 0x81;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+3);
-    ASSERT(cpu65_x       == 0x02);
-    ASSERT(cpu65_y       == regY);
-    ASSERT(cpu65_sp      == 0x81);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+3);
+    ASSERT(run_args.cpu65_x       == 0x02);
+    ASSERT(run_args.cpu65_y       == regY);
+    ASSERT(run_args.cpu65_sp      == 0x81);
 
-    ASSERT(cpu65_a == result);
+    ASSERT(run_args.cpu65_a == result);
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == addrs);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_READ);
-    ASSERT(cpu65_opcode    == 0xf9);
+    ASSERT(run_args.cpu65_ea        == addrs);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_READ);
+    ASSERT(run_args.cpu65_opcode    == 0xf9);
 
     cycle_count += 4;
-    ASSERT(cpu65_opcycles == cycle_count);
+    ASSERT(run_args.cpu65_opcycles == cycle_count);
 
     PASS();
 }
@@ -6183,27 +6180,27 @@ TEST test_SBC_ind_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX, uint8
     apple_ii_64k[0][idx_hi] = hibyte;
     apple_ii_64k[0][addrs] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = regX;
-    cpu65_y  = 0x15;
-    cpu65_sp = 0x81;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = regX;
+    run_args.cpu65_y  = 0x15;
+    run_args.cpu65_sp = 0x81;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+2);
-    ASSERT(cpu65_x       == regX);
-    ASSERT(cpu65_y       == 0x15);
-    ASSERT(cpu65_sp      == 0x81);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+2);
+    ASSERT(run_args.cpu65_x       == regX);
+    ASSERT(run_args.cpu65_y       == 0x15);
+    ASSERT(run_args.cpu65_sp      == 0x81);
 
-    ASSERT(cpu65_a == result);
+    ASSERT(run_args.cpu65_a == result);
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == addrs);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_READ);
-    ASSERT(cpu65_opcode    == 0xe1);
+    ASSERT(run_args.cpu65_ea        == addrs);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_READ);
+    ASSERT(run_args.cpu65_opcode    == 0xe1);
 
-    ASSERT(cpu65_opcycles  == (6));
+    ASSERT(run_args.cpu65_opcycles  == (6));
 
     PASS();
 }
@@ -6231,27 +6228,27 @@ TEST test_SBC_ind_y(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regY, uint8
 
     apple_ii_64k[0][addrs] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = 0x84;
-    cpu65_y  = regY;
-    cpu65_sp = 0x81;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0x84;
+    run_args.cpu65_y  = regY;
+    run_args.cpu65_sp = 0x81;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+2);
-    ASSERT(cpu65_x       == 0x84);
-    ASSERT(cpu65_y       == regY);
-    ASSERT(cpu65_sp      == 0x81);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+2);
+    ASSERT(run_args.cpu65_x       == 0x84);
+    ASSERT(run_args.cpu65_y       == regY);
+    ASSERT(run_args.cpu65_sp      == 0x81);
 
-    ASSERT(cpu65_a == result);
+    ASSERT(run_args.cpu65_a == result);
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == addrs);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_READ);
-    ASSERT(cpu65_opcode    == 0xf1);
+    ASSERT(run_args.cpu65_ea        == addrs);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_READ);
+    ASSERT(run_args.cpu65_opcode    == 0xf1);
     cycle_count += 5;
-    ASSERT(cpu65_opcycles == cycle_count);
+    ASSERT(run_args.cpu65_opcycles == cycle_count);
 
     PASS();
 }
@@ -6273,26 +6270,26 @@ TEST test_SBC_ind_zpage(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t lobyte,
     uint16_t addrs = lobyte | (hibyte<<8);
     apple_ii_64k[0][addrs] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = 0x14;
-    cpu65_y  = 0x85;
-    cpu65_sp = 0x81;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0x14;
+    run_args.cpu65_y  = 0x85;
+    run_args.cpu65_sp = 0x81;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+2);
-    ASSERT(cpu65_x       == 0x14);
-    ASSERT(cpu65_y       == 0x85);
-    ASSERT(cpu65_sp      == 0x81);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+2);
+    ASSERT(run_args.cpu65_x       == 0x14);
+    ASSERT(run_args.cpu65_y       == 0x85);
+    ASSERT(run_args.cpu65_sp      == 0x81);
 
-    ASSERT(cpu65_a == result);
+    ASSERT(run_args.cpu65_a == result);
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == addrs);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_READ);
-    ASSERT(cpu65_opcode    == 0xf2);
-    ASSERT(cpu65_opcycles  == (5));
+    ASSERT(run_args.cpu65_ea        == addrs);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_READ);
+    ASSERT(run_args.cpu65_opcode    == 0xf2);
+    ASSERT(run_args.cpu65_opcycles  == (5));
 
     PASS();
 }
@@ -6303,26 +6300,26 @@ TEST test_SBC_ind_zpage(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t lobyte,
 TEST test_SEC(void) {
     testcpu_set_opcode1(0x38);
 
-    cpu65_a  = 0x02;
-    cpu65_x  = 0x03;
-    cpu65_y  = 0x04;
-    cpu65_sp = 0x81;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = 0x02;
+    run_args.cpu65_x  = 0x03;
+    run_args.cpu65_y  = 0x04;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc     == TEST_LOC+1);
-    ASSERT(cpu65_a      == 0x02);
-    ASSERT(cpu65_x      == 0x03);
-    ASSERT(cpu65_y      == 0x04);
-    ASSERT(cpu65_sp     == 0x81);
-    ASSERT(cpu65_f      == (fC));
+    ASSERT(run_args.cpu65_pc     == TEST_LOC+1);
+    ASSERT(run_args.cpu65_a      == 0x02);
+    ASSERT(run_args.cpu65_x      == 0x03);
+    ASSERT(run_args.cpu65_y      == 0x04);
+    ASSERT(run_args.cpu65_sp     == 0x81);
+    ASSERT(run_args.cpu65_f      == (fC));
 
-    ASSERT(cpu65_ea       == TEST_LOC);
-    ASSERT(cpu65_d        == 0xff);
-    ASSERT(cpu65_rw       == RW_NONE);
-    ASSERT(cpu65_opcode   == 0x38);
-    ASSERT(cpu65_opcycles == (2));
+    ASSERT(run_args.cpu65_ea       == TEST_LOC);
+    ASSERT(run_args.cpu65_d        == 0xff);
+    ASSERT(run_args.cpu65_rw       == RW_NONE);
+    ASSERT(run_args.cpu65_opcode   == 0x38);
+    ASSERT(run_args.cpu65_opcycles == (2));
 
     PASS();
 }
@@ -6330,26 +6327,26 @@ TEST test_SEC(void) {
 TEST test_SED(void) {
     testcpu_set_opcode1(0xf8);
 
-    cpu65_a  = 0x02;
-    cpu65_x  = 0x03;
-    cpu65_y  = 0x04;
-    cpu65_sp = 0x81;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = 0x02;
+    run_args.cpu65_x  = 0x03;
+    run_args.cpu65_y  = 0x04;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc     == TEST_LOC+1);
-    ASSERT(cpu65_a      == 0x02);
-    ASSERT(cpu65_x      == 0x03);
-    ASSERT(cpu65_y      == 0x04);
-    ASSERT(cpu65_sp     == 0x81);
-    ASSERT(cpu65_f      == (fD));
+    ASSERT(run_args.cpu65_pc     == TEST_LOC+1);
+    ASSERT(run_args.cpu65_a      == 0x02);
+    ASSERT(run_args.cpu65_x      == 0x03);
+    ASSERT(run_args.cpu65_y      == 0x04);
+    ASSERT(run_args.cpu65_sp     == 0x81);
+    ASSERT(run_args.cpu65_f      == (fD));
 
-    ASSERT(cpu65_ea       == TEST_LOC);
-    ASSERT(cpu65_d        == 0xff);
-    ASSERT(cpu65_rw       == RW_NONE);
-    ASSERT(cpu65_opcode   == 0xf8);
-    ASSERT(cpu65_opcycles == (2));
+    ASSERT(run_args.cpu65_ea       == TEST_LOC);
+    ASSERT(run_args.cpu65_d        == 0xff);
+    ASSERT(run_args.cpu65_rw       == RW_NONE);
+    ASSERT(run_args.cpu65_opcode   == 0xf8);
+    ASSERT(run_args.cpu65_opcycles == (2));
 
     PASS();
 }
@@ -6357,26 +6354,26 @@ TEST test_SED(void) {
 TEST test_SEI(void) {
     testcpu_set_opcode1(0x78);
 
-    cpu65_a  = 0x02;
-    cpu65_x  = 0x03;
-    cpu65_y  = 0x04;
-    cpu65_sp = 0x81;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = 0x02;
+    run_args.cpu65_x  = 0x03;
+    run_args.cpu65_y  = 0x04;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc     == TEST_LOC+1);
-    ASSERT(cpu65_a      == 0x02);
-    ASSERT(cpu65_x      == 0x03);
-    ASSERT(cpu65_y      == 0x04);
-    ASSERT(cpu65_sp     == 0x81);
-    ASSERT(cpu65_f      == (fI));
+    ASSERT(run_args.cpu65_pc     == TEST_LOC+1);
+    ASSERT(run_args.cpu65_a      == 0x02);
+    ASSERT(run_args.cpu65_x      == 0x03);
+    ASSERT(run_args.cpu65_y      == 0x04);
+    ASSERT(run_args.cpu65_sp     == 0x81);
+    ASSERT(run_args.cpu65_f      == (fI));
 
-    ASSERT(cpu65_ea       == TEST_LOC);
-    ASSERT(cpu65_d        == 0xff);
-    ASSERT(cpu65_rw       == RW_NONE);
-    ASSERT(cpu65_opcode   == 0x78);
-    ASSERT(cpu65_opcycles == (2));
+    ASSERT(run_args.cpu65_ea       == TEST_LOC);
+    ASSERT(run_args.cpu65_d        == 0xff);
+    ASSERT(run_args.cpu65_rw       == RW_NONE);
+    ASSERT(run_args.cpu65_opcode   == 0x78);
+    ASSERT(run_args.cpu65_opcycles == (2));
 
     PASS();
 }
@@ -6388,28 +6385,28 @@ TEST test_STA_zpage(uint8_t regA, uint8_t val, uint8_t arg0) {
 
     testcpu_set_opcode2(0x85, arg0);
 
-    cpu65_a  = regA;
-    cpu65_x  = 0x03;
-    cpu65_y  = 0x04;
-    cpu65_sp = 0x80;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0x03;
+    run_args.cpu65_y  = 0x04;
+    run_args.cpu65_sp = 0x80;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
     ASSERT(apple_ii_64k[0][arg0] == regA);
 
-    ASSERT(cpu65_pc      == TEST_LOC+2);
-    ASSERT(cpu65_a       == regA);
-    ASSERT(cpu65_x       == 0x03);
-    ASSERT(cpu65_y       == 0x04);
-    ASSERT(cpu65_sp      == 0x80);
-    ASSERT(cpu65_f       == 0x00);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+2);
+    ASSERT(run_args.cpu65_a       == regA);
+    ASSERT(run_args.cpu65_x       == 0x03);
+    ASSERT(run_args.cpu65_y       == 0x04);
+    ASSERT(run_args.cpu65_sp      == 0x80);
+    ASSERT(run_args.cpu65_f       == 0x00);
 
-    ASSERT(cpu65_ea        == arg0);
-    ASSERT(cpu65_d         == regA);
-    ASSERT(cpu65_rw        == (RW_WRITE));
-    ASSERT(cpu65_opcode    == 0x85);
-    ASSERT(cpu65_opcycles  == (3));
+    ASSERT(run_args.cpu65_ea        == arg0);
+    ASSERT(run_args.cpu65_d         == regA);
+    ASSERT(run_args.cpu65_rw        == (RW_WRITE));
+    ASSERT(run_args.cpu65_opcode    == 0x85);
+    ASSERT(run_args.cpu65_opcycles  == (3));
 
     PASS();
 }
@@ -6420,28 +6417,28 @@ TEST test_STA_zpage_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX) {
 
     uint8_t idx = arg0+regX;
 
-    cpu65_a  = regA;
-    cpu65_x  = regX;
-    cpu65_y  = 0x05;
-    cpu65_sp = 0x81;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = regX;
+    run_args.cpu65_y  = 0x05;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
     ASSERT(apple_ii_64k[0][idx] == regA);
 
-    ASSERT(cpu65_a   == regA);
-    ASSERT(cpu65_pc  == TEST_LOC+2);
-    ASSERT(cpu65_x   == regX);
-    ASSERT(cpu65_y   == 0x05);
-    ASSERT(cpu65_sp  == 0x81);
-    ASSERT(cpu65_f   == 0x00);
+    ASSERT(run_args.cpu65_a   == regA);
+    ASSERT(run_args.cpu65_pc  == TEST_LOC+2);
+    ASSERT(run_args.cpu65_x   == regX);
+    ASSERT(run_args.cpu65_y   == 0x05);
+    ASSERT(run_args.cpu65_sp  == 0x81);
+    ASSERT(run_args.cpu65_f   == 0x00);
 
-    ASSERT(cpu65_ea        == idx);
-    ASSERT(cpu65_d         == regA);
-    ASSERT(cpu65_rw        == (RW_WRITE));
-    ASSERT(cpu65_opcode    == 0x95);
-    ASSERT(cpu65_opcycles  == (4));
+    ASSERT(run_args.cpu65_ea        == idx);
+    ASSERT(run_args.cpu65_d         == regA);
+    ASSERT(run_args.cpu65_rw        == (RW_WRITE));
+    ASSERT(run_args.cpu65_opcode    == 0x95);
+    ASSERT(run_args.cpu65_opcycles  == (4));
 
     PASS();
 }
@@ -6452,28 +6449,28 @@ TEST test_STA_abs(uint8_t regA, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
 
     uint16_t addrs = lobyte | (hibyte<<8);
 
-    cpu65_a  = regA;
-    cpu65_x  = 0xf4;
-    cpu65_y  = 0x05;
-    cpu65_sp = 0x81;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0xf4;
+    run_args.cpu65_y  = 0x05;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
     ASSERT(apple_ii_64k[0][addrs] == regA);
 
-    ASSERT(cpu65_a  == regA);
-    ASSERT(cpu65_pc == TEST_LOC+3);
-    ASSERT(cpu65_x  == 0xf4);
-    ASSERT(cpu65_y  == 0x05);
-    ASSERT(cpu65_sp == 0x81);
-    ASSERT(cpu65_f  == 0x00);
+    ASSERT(run_args.cpu65_a  == regA);
+    ASSERT(run_args.cpu65_pc == TEST_LOC+3);
+    ASSERT(run_args.cpu65_x  == 0xf4);
+    ASSERT(run_args.cpu65_y  == 0x05);
+    ASSERT(run_args.cpu65_sp == 0x81);
+    ASSERT(run_args.cpu65_f  == 0x00);
 
-    ASSERT(cpu65_ea        == addrs);
-    ASSERT(cpu65_d         == regA);
-    ASSERT(cpu65_rw        == (RW_WRITE));
-    ASSERT(cpu65_opcode    == 0x8d);
-    ASSERT(cpu65_opcycles  == (4));
+    ASSERT(run_args.cpu65_ea        == addrs);
+    ASSERT(run_args.cpu65_d         == regA);
+    ASSERT(run_args.cpu65_rw        == (RW_WRITE));
+    ASSERT(run_args.cpu65_opcode    == 0x8d);
+    ASSERT(run_args.cpu65_opcycles  == (4));
 
     PASS();
 }
@@ -6485,28 +6482,28 @@ TEST test_STA_abs_x(uint8_t regA, uint8_t val, uint8_t regX, uint8_t lobyte, uin
     uint16_t addrs = lobyte | (hibyte<<8);
     addrs = addrs + regX;
 
-    cpu65_a  = regA;
-    cpu65_x  = regX;
-    cpu65_y  = 0x05;
-    cpu65_sp = 0x81;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = regX;
+    run_args.cpu65_y  = 0x05;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
     ASSERT(apple_ii_64k[0][addrs] == regA);
 
-    ASSERT(cpu65_a  == regA);
-    ASSERT(cpu65_pc == TEST_LOC+3);
-    ASSERT(cpu65_x  == regX);
-    ASSERT(cpu65_y  == 0x05);
-    ASSERT(cpu65_sp == 0x81);
-    ASSERT(cpu65_f  == 0x00);
+    ASSERT(run_args.cpu65_a  == regA);
+    ASSERT(run_args.cpu65_pc == TEST_LOC+3);
+    ASSERT(run_args.cpu65_x  == regX);
+    ASSERT(run_args.cpu65_y  == 0x05);
+    ASSERT(run_args.cpu65_sp == 0x81);
+    ASSERT(run_args.cpu65_f  == 0x00);
 
-    ASSERT(cpu65_ea        == addrs);
-    ASSERT(cpu65_d         == regA);
-    ASSERT(cpu65_rw        == (RW_WRITE));
-    ASSERT(cpu65_opcode    == 0x9d);
-    ASSERT(cpu65_opcycles  == 5);
+    ASSERT(run_args.cpu65_ea        == addrs);
+    ASSERT(run_args.cpu65_d         == regA);
+    ASSERT(run_args.cpu65_rw        == (RW_WRITE));
+    ASSERT(run_args.cpu65_opcode    == 0x9d);
+    ASSERT(run_args.cpu65_opcycles  == 5);
 
     PASS();
 }
@@ -6518,28 +6515,28 @@ TEST test_STA_abs_y(uint8_t regA, uint8_t val, uint8_t regY, uint8_t lobyte, uin
     uint16_t addrs = lobyte | (hibyte<<8);
     addrs = addrs + regY;
 
-    cpu65_a  = regA;
-    cpu65_x  = 0x02;
-    cpu65_y  = regY;
-    cpu65_sp = 0x81;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0x02;
+    run_args.cpu65_y  = regY;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
     ASSERT(apple_ii_64k[0][addrs] == regA);
 
-    ASSERT(cpu65_pc      == TEST_LOC+3);
-    ASSERT(cpu65_a       == regA);
-    ASSERT(cpu65_x       == 0x02);
-    ASSERT(cpu65_y       == regY);
-    ASSERT(cpu65_sp      == 0x81);
-    ASSERT(cpu65_f       == 0x00);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+3);
+    ASSERT(run_args.cpu65_a       == regA);
+    ASSERT(run_args.cpu65_x       == 0x02);
+    ASSERT(run_args.cpu65_y       == regY);
+    ASSERT(run_args.cpu65_sp      == 0x81);
+    ASSERT(run_args.cpu65_f       == 0x00);
 
-    ASSERT(cpu65_ea        == addrs);
-    ASSERT(cpu65_d         == regA);
-    ASSERT(cpu65_rw        == RW_WRITE);
-    ASSERT(cpu65_opcode    == 0x99);
-    ASSERT(cpu65_opcycles  == 5);
+    ASSERT(run_args.cpu65_ea        == addrs);
+    ASSERT(run_args.cpu65_d         == regA);
+    ASSERT(run_args.cpu65_rw        == RW_WRITE);
+    ASSERT(run_args.cpu65_opcode    == 0x99);
+    ASSERT(run_args.cpu65_opcycles  == 5);
 
     PASS();
 }
@@ -6555,29 +6552,29 @@ TEST test_STA_ind_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX, uint8
     apple_ii_64k[0][idx_lo] = lobyte;
     apple_ii_64k[0][idx_hi] = hibyte;
 
-    cpu65_a  = regA;
-    cpu65_x  = regX;
-    cpu65_y  = 0x15;
-    cpu65_sp = 0x81;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = regX;
+    run_args.cpu65_y  = 0x15;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
     ASSERT(apple_ii_64k[0][addrs] == regA);
 
-    ASSERT(cpu65_pc      == TEST_LOC+2);
-    ASSERT(cpu65_a       == regA);
-    ASSERT(cpu65_x       == regX);
-    ASSERT(cpu65_y       == 0x15);
-    ASSERT(cpu65_sp      == 0x81);
-    ASSERT(cpu65_f       == 0x00);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+2);
+    ASSERT(run_args.cpu65_a       == regA);
+    ASSERT(run_args.cpu65_x       == regX);
+    ASSERT(run_args.cpu65_y       == 0x15);
+    ASSERT(run_args.cpu65_sp      == 0x81);
+    ASSERT(run_args.cpu65_f       == 0x00);
 
-    ASSERT(cpu65_ea        == addrs);
-    ASSERT(cpu65_d         == regA);
-    ASSERT(cpu65_rw        == (RW_READ|RW_WRITE));
-    ASSERT(cpu65_opcode    == 0x81);
+    ASSERT(run_args.cpu65_ea        == addrs);
+    ASSERT(run_args.cpu65_d         == regA);
+    ASSERT(run_args.cpu65_rw        == (RW_READ|RW_WRITE));
+    ASSERT(run_args.cpu65_opcode    == 0x81);
 
-    ASSERT(cpu65_opcycles  == (6));
+    ASSERT(run_args.cpu65_opcycles  == (6));
 
     PASS();
 }
@@ -6595,28 +6592,28 @@ TEST test_STA_ind_y(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regY, uint8
     uint16_t addrs = val_zp0 | (val_zp1<<8);
     addrs += (uint8_t)regY;
 
-    cpu65_a  = regA;
-    cpu65_x  = 0x84;
-    cpu65_y  = regY;
-    cpu65_sp = 0x81;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0x84;
+    run_args.cpu65_y  = regY;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
     ASSERT(apple_ii_64k[0][addrs] == regA);
 
-    ASSERT(cpu65_pc      == TEST_LOC+2);
-    ASSERT(cpu65_a       == regA);
-    ASSERT(cpu65_x       == 0x84);
-    ASSERT(cpu65_y       == regY);
-    ASSERT(cpu65_sp      == 0x81);
-    ASSERT(cpu65_f       == 0x00);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+2);
+    ASSERT(run_args.cpu65_a       == regA);
+    ASSERT(run_args.cpu65_x       == 0x84);
+    ASSERT(run_args.cpu65_y       == regY);
+    ASSERT(run_args.cpu65_sp      == 0x81);
+    ASSERT(run_args.cpu65_f       == 0x00);
 
-    ASSERT(cpu65_ea        == addrs);
-    ASSERT(cpu65_d         == regA);
-    ASSERT(cpu65_rw        == (RW_READ|RW_WRITE));
-    ASSERT(cpu65_opcode    == 0x91);
-    ASSERT(cpu65_opcycles  == 6);
+    ASSERT(run_args.cpu65_ea        == addrs);
+    ASSERT(run_args.cpu65_d         == regA);
+    ASSERT(run_args.cpu65_rw        == (RW_READ|RW_WRITE));
+    ASSERT(run_args.cpu65_opcode    == 0x91);
+    ASSERT(run_args.cpu65_opcycles  == 6);
 
     PASS();
 }
@@ -6634,28 +6631,28 @@ TEST test_STA_ind_zpage(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t lobyte,
 
     uint16_t addrs = lobyte | (hibyte<<8);
 
-    cpu65_a  = regA;
-    cpu65_x  = 0x14;
-    cpu65_y  = 0x85;
-    cpu65_sp = 0x81;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0x14;
+    run_args.cpu65_y  = 0x85;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
     ASSERT(apple_ii_64k[0][addrs] == regA);
 
-    ASSERT(cpu65_pc      == TEST_LOC+2);
-    ASSERT(cpu65_a       == regA);
-    ASSERT(cpu65_x       == 0x14);
-    ASSERT(cpu65_y       == 0x85);
-    ASSERT(cpu65_sp      == 0x81);
-    ASSERT(cpu65_f       == 0x00);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+2);
+    ASSERT(run_args.cpu65_a       == regA);
+    ASSERT(run_args.cpu65_x       == 0x14);
+    ASSERT(run_args.cpu65_y       == 0x85);
+    ASSERT(run_args.cpu65_sp      == 0x81);
+    ASSERT(run_args.cpu65_f       == 0x00);
 
-    ASSERT(cpu65_ea        == addrs);
-    ASSERT(cpu65_d         == regA);
-    ASSERT(cpu65_rw        == (RW_READ|RW_WRITE));
-    ASSERT(cpu65_opcode    == 0x92);
-    ASSERT(cpu65_opcycles  == (5));
+    ASSERT(run_args.cpu65_ea        == addrs);
+    ASSERT(run_args.cpu65_d         == regA);
+    ASSERT(run_args.cpu65_rw        == (RW_READ|RW_WRITE));
+    ASSERT(run_args.cpu65_opcode    == 0x92);
+    ASSERT(run_args.cpu65_opcycles  == (5));
 
     PASS();
 }
@@ -6667,28 +6664,28 @@ TEST test_STX_zpage(uint8_t regX, uint8_t val, uint8_t arg0) {
 
     testcpu_set_opcode2(0x86, arg0);
 
-    cpu65_a  = 0xe3;
-    cpu65_x  = regX;
-    cpu65_y  = 0x04;
-    cpu65_sp = 0x80;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = 0xe3;
+    run_args.cpu65_x  = regX;
+    run_args.cpu65_y  = 0x04;
+    run_args.cpu65_sp = 0x80;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
     ASSERT(apple_ii_64k[0][arg0] == regX);
 
-    ASSERT(cpu65_pc      == TEST_LOC+2);
-    ASSERT(cpu65_a       == 0xe3);
-    ASSERT(cpu65_x       == regX);
-    ASSERT(cpu65_y       == 0x04);
-    ASSERT(cpu65_sp      == 0x80);
-    ASSERT(cpu65_f       == 0x00);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+2);
+    ASSERT(run_args.cpu65_a       == 0xe3);
+    ASSERT(run_args.cpu65_x       == regX);
+    ASSERT(run_args.cpu65_y       == 0x04);
+    ASSERT(run_args.cpu65_sp      == 0x80);
+    ASSERT(run_args.cpu65_f       == 0x00);
 
-    ASSERT(cpu65_ea        == arg0);
-    ASSERT(cpu65_d         == regX);
-    ASSERT(cpu65_rw        == (RW_WRITE));
-    ASSERT(cpu65_opcode    == 0x86);
-    ASSERT(cpu65_opcycles  == (3));
+    ASSERT(run_args.cpu65_ea        == arg0);
+    ASSERT(run_args.cpu65_d         == regX);
+    ASSERT(run_args.cpu65_rw        == (RW_WRITE));
+    ASSERT(run_args.cpu65_opcode    == 0x86);
+    ASSERT(run_args.cpu65_opcycles  == (3));
 
     PASS();
 }
@@ -6699,28 +6696,28 @@ TEST test_STX_zpage_y(uint8_t regX, uint8_t val, uint8_t arg0, uint8_t regY) {
 
     uint8_t idx = arg0+regY;
 
-    cpu65_a  = 0xcc;
-    cpu65_x  = regX;
-    cpu65_y  = regY;
-    cpu65_sp = 0x81;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = 0xcc;
+    run_args.cpu65_x  = regX;
+    run_args.cpu65_y  = regY;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
     ASSERT(apple_ii_64k[0][idx]  == regX);
 
-    ASSERT(cpu65_pc      == TEST_LOC+2);
-    ASSERT(cpu65_a       == 0xcc);
-    ASSERT(cpu65_x       == regX);
-    ASSERT(cpu65_y       == regY);
-    ASSERT(cpu65_sp      == 0x81);
-    ASSERT(cpu65_f       == 0x00);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+2);
+    ASSERT(run_args.cpu65_a       == 0xcc);
+    ASSERT(run_args.cpu65_x       == regX);
+    ASSERT(run_args.cpu65_y       == regY);
+    ASSERT(run_args.cpu65_sp      == 0x81);
+    ASSERT(run_args.cpu65_f       == 0x00);
 
-    ASSERT(cpu65_ea        == idx);
-    ASSERT(cpu65_d         == regX);
-    ASSERT(cpu65_rw        == RW_WRITE);
-    ASSERT(cpu65_opcode    == 0x96);
-    ASSERT(cpu65_opcycles  == (4));
+    ASSERT(run_args.cpu65_ea        == idx);
+    ASSERT(run_args.cpu65_d         == regX);
+    ASSERT(run_args.cpu65_rw        == RW_WRITE);
+    ASSERT(run_args.cpu65_opcode    == 0x96);
+    ASSERT(run_args.cpu65_opcycles  == (4));
 
     PASS();
 }
@@ -6731,28 +6728,28 @@ TEST test_STX_abs(uint8_t regX, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
 
     uint16_t addrs = lobyte | (hibyte<<8);
 
-    cpu65_a  = 0xf4;
-    cpu65_x  = regX;
-    cpu65_y  = 0x05;
-    cpu65_sp = 0x81;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = 0xf4;
+    run_args.cpu65_x  = regX;
+    run_args.cpu65_y  = 0x05;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
     ASSERT(apple_ii_64k[0][addrs] == regX);
 
-    ASSERT(cpu65_a  == 0xf4);
-    ASSERT(cpu65_pc == TEST_LOC+3);
-    ASSERT(cpu65_x  == regX);
-    ASSERT(cpu65_y  == 0x05);
-    ASSERT(cpu65_sp == 0x81);
-    ASSERT(cpu65_f  == 0x00);
+    ASSERT(run_args.cpu65_a  == 0xf4);
+    ASSERT(run_args.cpu65_pc == TEST_LOC+3);
+    ASSERT(run_args.cpu65_x  == regX);
+    ASSERT(run_args.cpu65_y  == 0x05);
+    ASSERT(run_args.cpu65_sp == 0x81);
+    ASSERT(run_args.cpu65_f  == 0x00);
 
-    ASSERT(cpu65_ea        == addrs);
-    ASSERT(cpu65_d         == regX);
-    ASSERT(cpu65_rw        == (RW_WRITE));
-    ASSERT(cpu65_opcode    == 0x8e);
-    ASSERT(cpu65_opcycles  == (4));
+    ASSERT(run_args.cpu65_ea        == addrs);
+    ASSERT(run_args.cpu65_d         == regX);
+    ASSERT(run_args.cpu65_rw        == (RW_WRITE));
+    ASSERT(run_args.cpu65_opcode    == 0x8e);
+    ASSERT(run_args.cpu65_opcycles  == (4));
 
     PASS();
 }
@@ -6761,28 +6758,28 @@ TEST test_STY_zpage(uint8_t regY, uint8_t val, uint8_t arg0) {
 
     testcpu_set_opcode2(0x84, arg0);
 
-    cpu65_a  = 0xa8;
-    cpu65_x  = 0x03;
-    cpu65_y  = regY;
-    cpu65_sp = 0x80;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = 0xa8;
+    run_args.cpu65_x  = 0x03;
+    run_args.cpu65_y  = regY;
+    run_args.cpu65_sp = 0x80;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
     ASSERT(apple_ii_64k[0][arg0] == regY);
 
-    ASSERT(cpu65_pc      == TEST_LOC+2);
-    ASSERT(cpu65_a       == 0xa8);
-    ASSERT(cpu65_x       == 0x03);
-    ASSERT(cpu65_y       == regY);
-    ASSERT(cpu65_sp      == 0x80);
-    ASSERT(cpu65_f       == 0x00);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+2);
+    ASSERT(run_args.cpu65_a       == 0xa8);
+    ASSERT(run_args.cpu65_x       == 0x03);
+    ASSERT(run_args.cpu65_y       == regY);
+    ASSERT(run_args.cpu65_sp      == 0x80);
+    ASSERT(run_args.cpu65_f       == 0x00);
 
-    ASSERT(cpu65_ea        == arg0);
-    ASSERT(cpu65_d         == regY);
-    ASSERT(cpu65_rw        == (RW_WRITE));
-    ASSERT(cpu65_opcode    == 0x84);
-    ASSERT(cpu65_opcycles  == (3));
+    ASSERT(run_args.cpu65_ea        == arg0);
+    ASSERT(run_args.cpu65_d         == regY);
+    ASSERT(run_args.cpu65_rw        == (RW_WRITE));
+    ASSERT(run_args.cpu65_opcode    == 0x84);
+    ASSERT(run_args.cpu65_opcycles  == (3));
 
     PASS();
 }
@@ -6793,28 +6790,28 @@ TEST test_STY_zpage_x(uint8_t regY, uint8_t val, uint8_t arg0, uint8_t regX) {
 
     uint8_t idx = arg0+regX;
 
-    cpu65_a  = 0x11;
-    cpu65_x  = regX;
-    cpu65_y  = regY;
-    cpu65_sp = 0x81;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = 0x11;
+    run_args.cpu65_x  = regX;
+    run_args.cpu65_y  = regY;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
     ASSERT(apple_ii_64k[0][idx] == regY);
 
-    ASSERT(cpu65_a   == 0x11);
-    ASSERT(cpu65_pc  == TEST_LOC+2);
-    ASSERT(cpu65_x   == regX);
-    ASSERT(cpu65_y   == regY);
-    ASSERT(cpu65_sp  == 0x81);
-    ASSERT(cpu65_f   == 0x00);
+    ASSERT(run_args.cpu65_a   == 0x11);
+    ASSERT(run_args.cpu65_pc  == TEST_LOC+2);
+    ASSERT(run_args.cpu65_x   == regX);
+    ASSERT(run_args.cpu65_y   == regY);
+    ASSERT(run_args.cpu65_sp  == 0x81);
+    ASSERT(run_args.cpu65_f   == 0x00);
 
-    ASSERT(cpu65_ea        == idx);
-    ASSERT(cpu65_d         == regY);
-    ASSERT(cpu65_rw        == (RW_WRITE));
-    ASSERT(cpu65_opcode    == 0x94);
-    ASSERT(cpu65_opcycles  == (4));
+    ASSERT(run_args.cpu65_ea        == idx);
+    ASSERT(run_args.cpu65_d         == regY);
+    ASSERT(run_args.cpu65_rw        == (RW_WRITE));
+    ASSERT(run_args.cpu65_opcode    == 0x94);
+    ASSERT(run_args.cpu65_opcycles  == (4));
 
     PASS();
 }
@@ -6825,28 +6822,28 @@ TEST test_STY_abs(uint8_t regY, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
 
     uint16_t addrs = lobyte | (hibyte<<8);
 
-    cpu65_a  = 0x4f;
-    cpu65_x  = 0xf4;
-    cpu65_y  = regY;
-    cpu65_sp = 0x81;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = 0x4f;
+    run_args.cpu65_x  = 0xf4;
+    run_args.cpu65_y  = regY;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
     ASSERT(apple_ii_64k[0][addrs] == regY);
 
-    ASSERT(cpu65_a  == 0x4f);
-    ASSERT(cpu65_pc == TEST_LOC+3);
-    ASSERT(cpu65_x  == 0xf4);
-    ASSERT(cpu65_y  == regY);
-    ASSERT(cpu65_sp == 0x81);
-    ASSERT(cpu65_f  == 0x00);
+    ASSERT(run_args.cpu65_a  == 0x4f);
+    ASSERT(run_args.cpu65_pc == TEST_LOC+3);
+    ASSERT(run_args.cpu65_x  == 0xf4);
+    ASSERT(run_args.cpu65_y  == regY);
+    ASSERT(run_args.cpu65_sp == 0x81);
+    ASSERT(run_args.cpu65_f  == 0x00);
 
-    ASSERT(cpu65_ea        == addrs);
-    ASSERT(cpu65_d         == regY);
-    ASSERT(cpu65_rw        == (RW_WRITE));
-    ASSERT(cpu65_opcode    == 0x8c);
-    ASSERT(cpu65_opcycles  == (4));
+    ASSERT(run_args.cpu65_ea        == addrs);
+    ASSERT(run_args.cpu65_d         == regY);
+    ASSERT(run_args.cpu65_rw        == (RW_WRITE));
+    ASSERT(run_args.cpu65_opcode    == 0x8c);
+    ASSERT(run_args.cpu65_opcycles  == (4));
 
     PASS();
 }
@@ -6858,28 +6855,28 @@ TEST test_STZ_zpage(uint8_t regA, uint8_t val, uint8_t arg0) {
 
     apple_ii_64k[0][arg0] = 0xff;
 
-    cpu65_a  = regA;
-    cpu65_x  = 0x03;
-    cpu65_y  = 0x04;
-    cpu65_sp = 0x80;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0x03;
+    run_args.cpu65_y  = 0x04;
+    run_args.cpu65_sp = 0x80;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
     ASSERT(apple_ii_64k[0][arg0] == 0x00);
 
-    ASSERT(cpu65_pc      == TEST_LOC+2);
-    ASSERT(cpu65_a       == regA);
-    ASSERT(cpu65_x       == 0x03);
-    ASSERT(cpu65_y       == 0x04);
-    ASSERT(cpu65_sp      == 0x80);
-    ASSERT(cpu65_f       == 0x00);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+2);
+    ASSERT(run_args.cpu65_a       == regA);
+    ASSERT(run_args.cpu65_x       == 0x03);
+    ASSERT(run_args.cpu65_y       == 0x04);
+    ASSERT(run_args.cpu65_sp      == 0x80);
+    ASSERT(run_args.cpu65_f       == 0x00);
 
-    ASSERT(cpu65_ea        == arg0);
-    ASSERT(cpu65_d         == 0x00);
-    ASSERT(cpu65_rw        == (RW_WRITE));
-    ASSERT(cpu65_opcode    == 0x64);
-    ASSERT(cpu65_opcycles  == (3));
+    ASSERT(run_args.cpu65_ea        == arg0);
+    ASSERT(run_args.cpu65_d         == 0x00);
+    ASSERT(run_args.cpu65_rw        == (RW_WRITE));
+    ASSERT(run_args.cpu65_opcode    == 0x64);
+    ASSERT(run_args.cpu65_opcycles  == (3));
 
     PASS();
 }
@@ -6893,28 +6890,28 @@ TEST test_STZ_zpage_x(uint8_t regA, uint8_t val, uint8_t arg0, uint8_t regX) {
 
     apple_ii_64k[0][idx] = 0xff;
 
-    cpu65_a  = regA;
-    cpu65_x  = regX;
-    cpu65_y  = 0x05;
-    cpu65_sp = 0x81;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = regX;
+    run_args.cpu65_y  = 0x05;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
     ASSERT(apple_ii_64k[0][idx] == 0x00);
 
-    ASSERT(cpu65_a   == regA);
-    ASSERT(cpu65_pc  == TEST_LOC+2);
-    ASSERT(cpu65_x   == regX);
-    ASSERT(cpu65_y   == 0x05);
-    ASSERT(cpu65_sp  == 0x81);
-    ASSERT(cpu65_f   == 0x00);
+    ASSERT(run_args.cpu65_a   == regA);
+    ASSERT(run_args.cpu65_pc  == TEST_LOC+2);
+    ASSERT(run_args.cpu65_x   == regX);
+    ASSERT(run_args.cpu65_y   == 0x05);
+    ASSERT(run_args.cpu65_sp  == 0x81);
+    ASSERT(run_args.cpu65_f   == 0x00);
 
-    ASSERT(cpu65_ea        == idx);
-    ASSERT(cpu65_d         == 0x00);
-    ASSERT(cpu65_rw        == (RW_WRITE));
-    ASSERT(cpu65_opcode    == 0x74);
-    ASSERT(cpu65_opcycles  == (4));
+    ASSERT(run_args.cpu65_ea        == idx);
+    ASSERT(run_args.cpu65_d         == 0x00);
+    ASSERT(run_args.cpu65_rw        == (RW_WRITE));
+    ASSERT(run_args.cpu65_opcode    == 0x74);
+    ASSERT(run_args.cpu65_opcycles  == (4));
 
     PASS();
 }
@@ -6928,28 +6925,28 @@ TEST test_STZ_abs(uint8_t regA, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
 
     apple_ii_64k[0][addrs] = 0xff;
 
-    cpu65_a  = regA;
-    cpu65_x  = 0xf4;
-    cpu65_y  = 0x05;
-    cpu65_sp = 0x81;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0xf4;
+    run_args.cpu65_y  = 0x05;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
     ASSERT(apple_ii_64k[0][addrs] == 0x00);
 
-    ASSERT(cpu65_a  == regA);
-    ASSERT(cpu65_pc == TEST_LOC+3);
-    ASSERT(cpu65_x  == 0xf4);
-    ASSERT(cpu65_y  == 0x05);
-    ASSERT(cpu65_sp == 0x81);
-    ASSERT(cpu65_f  == 0x00);
+    ASSERT(run_args.cpu65_a  == regA);
+    ASSERT(run_args.cpu65_pc == TEST_LOC+3);
+    ASSERT(run_args.cpu65_x  == 0xf4);
+    ASSERT(run_args.cpu65_y  == 0x05);
+    ASSERT(run_args.cpu65_sp == 0x81);
+    ASSERT(run_args.cpu65_f  == 0x00);
 
-    ASSERT(cpu65_ea        == addrs);
-    ASSERT(cpu65_d         == 0x00);
-    ASSERT(cpu65_rw        == (RW_WRITE));
-    ASSERT(cpu65_opcode    == 0x9c);
-    ASSERT(cpu65_opcycles  == (4));
+    ASSERT(run_args.cpu65_ea        == addrs);
+    ASSERT(run_args.cpu65_d         == 0x00);
+    ASSERT(run_args.cpu65_rw        == (RW_WRITE));
+    ASSERT(run_args.cpu65_opcode    == 0x9c);
+    ASSERT(run_args.cpu65_opcycles  == (4));
 
     PASS();
 }
@@ -6964,28 +6961,28 @@ TEST test_STZ_abs_x(uint8_t regA, uint8_t val, uint8_t regX, uint8_t lobyte, uin
 
     apple_ii_64k[0][addrs] = 0xff;
 
-    cpu65_a  = regA;
-    cpu65_x  = regX;
-    cpu65_y  = 0x05;
-    cpu65_sp = 0x81;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = regX;
+    run_args.cpu65_y  = 0x05;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
     ASSERT(apple_ii_64k[0][addrs] == 0x00);
 
-    ASSERT(cpu65_a  == regA);
-    ASSERT(cpu65_pc == TEST_LOC+3);
-    ASSERT(cpu65_x  == regX);
-    ASSERT(cpu65_y  == 0x05);
-    ASSERT(cpu65_sp == 0x81);
-    ASSERT(cpu65_f  == 0x00);
+    ASSERT(run_args.cpu65_a  == regA);
+    ASSERT(run_args.cpu65_pc == TEST_LOC+3);
+    ASSERT(run_args.cpu65_x  == regX);
+    ASSERT(run_args.cpu65_y  == 0x05);
+    ASSERT(run_args.cpu65_sp == 0x81);
+    ASSERT(run_args.cpu65_f  == 0x00);
 
-    ASSERT(cpu65_ea        == addrs);
-    ASSERT(cpu65_d         == 0x00);
-    ASSERT(cpu65_rw        == (RW_WRITE));
-    ASSERT(cpu65_opcode    == 0x9e);
-    ASSERT(cpu65_opcycles  == 5);
+    ASSERT(run_args.cpu65_ea        == addrs);
+    ASSERT(run_args.cpu65_d         == 0x00);
+    ASSERT(run_args.cpu65_rw        == (RW_WRITE));
+    ASSERT(run_args.cpu65_opcode    == 0x9e);
+    ASSERT(run_args.cpu65_opcycles  == 5);
 
     PASS();
 }
@@ -7014,27 +7011,27 @@ TEST test_TAX(uint8_t regA) {
 
     testcpu_set_opcode1(0xaa);
 
-    cpu65_a  = regA;
-    cpu65_x  = regX;
-    cpu65_y  = 0x04;
-    cpu65_sp = 0x80;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = regX;
+    run_args.cpu65_y  = 0x04;
+    run_args.cpu65_sp = 0x80;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+1);
-    ASSERT(cpu65_a       == regA);
-    ASSERT(cpu65_x       == regA);
-    ASSERT(cpu65_y       == 0x04);
-    ASSERT(cpu65_sp      == 0x80);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+1);
+    ASSERT(run_args.cpu65_a       == regA);
+    ASSERT(run_args.cpu65_x       == regA);
+    ASSERT(run_args.cpu65_y       == 0x04);
+    ASSERT(run_args.cpu65_sp      == 0x80);
 
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == TEST_LOC);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_NONE);
-    ASSERT(cpu65_opcode    == 0xaa);
-    ASSERT(cpu65_opcycles  == (2));
+    ASSERT(run_args.cpu65_ea        == TEST_LOC);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_NONE);
+    ASSERT(run_args.cpu65_opcode    == 0xaa);
+    ASSERT(run_args.cpu65_opcycles  == (2));
 
     PASS();
 }
@@ -7049,27 +7046,27 @@ TEST test_TAY(uint8_t regA) {
 
     testcpu_set_opcode1(0xa8);
 
-    cpu65_a  = regA;
-    cpu65_x  = 0x6e;
-    cpu65_y  = regY;
-    cpu65_sp = 0x80;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0x6e;
+    run_args.cpu65_y  = regY;
+    run_args.cpu65_sp = 0x80;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+1);
-    ASSERT(cpu65_a       == regA);
-    ASSERT(cpu65_x       == 0x6e);
-    ASSERT(cpu65_y       == regA);
-    ASSERT(cpu65_sp      == 0x80);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+1);
+    ASSERT(run_args.cpu65_a       == regA);
+    ASSERT(run_args.cpu65_x       == 0x6e);
+    ASSERT(run_args.cpu65_y       == regA);
+    ASSERT(run_args.cpu65_sp      == 0x80);
 
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == TEST_LOC);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_NONE);
-    ASSERT(cpu65_opcode    == 0xa8);
-    ASSERT(cpu65_opcycles  == (2));
+    ASSERT(run_args.cpu65_ea        == TEST_LOC);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_NONE);
+    ASSERT(run_args.cpu65_opcode    == 0xa8);
+    ASSERT(run_args.cpu65_opcycles  == (2));
 
     PASS();
 }
@@ -7084,27 +7081,27 @@ TEST test_TXA(uint8_t regX) {
 
     testcpu_set_opcode1(0x8a);
 
-    cpu65_a  = regA;
-    cpu65_x  = regX;
-    cpu65_y  = 0x04;
-    cpu65_sp = 0x80;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = regX;
+    run_args.cpu65_y  = 0x04;
+    run_args.cpu65_sp = 0x80;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+1);
-    ASSERT(cpu65_a       == regX);
-    ASSERT(cpu65_x       == regX);
-    ASSERT(cpu65_y       == 0x04);
-    ASSERT(cpu65_sp      == 0x80);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+1);
+    ASSERT(run_args.cpu65_a       == regX);
+    ASSERT(run_args.cpu65_x       == regX);
+    ASSERT(run_args.cpu65_y       == 0x04);
+    ASSERT(run_args.cpu65_sp      == 0x80);
 
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == TEST_LOC);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_NONE);
-    ASSERT(cpu65_opcode    == 0x8a);
-    ASSERT(cpu65_opcycles  == (2));
+    ASSERT(run_args.cpu65_ea        == TEST_LOC);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_NONE);
+    ASSERT(run_args.cpu65_opcode    == 0x8a);
+    ASSERT(run_args.cpu65_opcycles  == (2));
 
     PASS();
 }
@@ -7119,27 +7116,27 @@ TEST test_TYA(uint8_t regY) {
 
     testcpu_set_opcode1(0x98);
 
-    cpu65_a  = regA;
-    cpu65_x  = 0xa4;
-    cpu65_y  = regY;
-    cpu65_sp = 0x80;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0xa4;
+    run_args.cpu65_y  = regY;
+    run_args.cpu65_sp = 0x80;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+1);
-    ASSERT(cpu65_a       == regY);
-    ASSERT(cpu65_x       == 0xa4);
-    ASSERT(cpu65_y       == regY);
-    ASSERT(cpu65_sp      == 0x80);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+1);
+    ASSERT(run_args.cpu65_a       == regY);
+    ASSERT(run_args.cpu65_x       == 0xa4);
+    ASSERT(run_args.cpu65_y       == regY);
+    ASSERT(run_args.cpu65_sp      == 0x80);
 
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == TEST_LOC);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_NONE);
-    ASSERT(cpu65_opcode    == 0x98);
-    ASSERT(cpu65_opcycles  == (2));
+    ASSERT(run_args.cpu65_ea        == TEST_LOC);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_NONE);
+    ASSERT(run_args.cpu65_opcode    == 0x98);
+    ASSERT(run_args.cpu65_opcycles  == (2));
 
     PASS();
 }
@@ -7170,29 +7167,29 @@ TEST test_TRB_abs(uint8_t regA, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
     uint16_t addrs = lobyte | (hibyte<<8);
     apple_ii_64k[0][addrs] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = 0xf4;
-    cpu65_y  = 0x05;
-    cpu65_sp = 0x81;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0xf4;
+    run_args.cpu65_y  = 0x05;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
     ASSERT(apple_ii_64k[0][addrs] == result);
 
-    ASSERT(cpu65_pc      == TEST_LOC+3);
-    ASSERT(cpu65_a       == regA);
-    ASSERT(cpu65_x       == 0xf4);
-    ASSERT(cpu65_y       == 0x05);
-    ASSERT(cpu65_sp      == 0x81);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+3);
+    ASSERT(run_args.cpu65_a       == regA);
+    ASSERT(run_args.cpu65_x       == 0xf4);
+    ASSERT(run_args.cpu65_y       == 0x05);
+    ASSERT(run_args.cpu65_sp      == 0x81);
 
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == addrs);
-    ASSERT(cpu65_d         == result);
-    ASSERT(cpu65_rw        == (RW_READ|RW_WRITE));
-    ASSERT(cpu65_opcode    == 0x1c);
-    ASSERT(cpu65_opcycles  == (6));
+    ASSERT(run_args.cpu65_ea        == addrs);
+    ASSERT(run_args.cpu65_d         == result);
+    ASSERT(run_args.cpu65_rw        == (RW_READ|RW_WRITE));
+    ASSERT(run_args.cpu65_opcode    == 0x1c);
+    ASSERT(run_args.cpu65_opcycles  == (6));
 
     PASS();
 }
@@ -7208,29 +7205,29 @@ TEST test_TRB_zpage(uint8_t regA, uint8_t val, uint8_t arg0) {
 
     apple_ii_64k[0][arg0] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = 0x03;
-    cpu65_y  = 0x04;
-    cpu65_sp = 0x80;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0x03;
+    run_args.cpu65_y  = 0x04;
+    run_args.cpu65_sp = 0x80;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
     ASSERT(apple_ii_64k[0][arg0] == result);
 
-    ASSERT(cpu65_pc      == TEST_LOC+2);
-    ASSERT(cpu65_a       == regA);
-    ASSERT(cpu65_x       == 0x03);
-    ASSERT(cpu65_y       == 0x04);
-    ASSERT(cpu65_sp      == 0x80);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+2);
+    ASSERT(run_args.cpu65_a       == regA);
+    ASSERT(run_args.cpu65_x       == 0x03);
+    ASSERT(run_args.cpu65_y       == 0x04);
+    ASSERT(run_args.cpu65_sp      == 0x80);
 
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == arg0);
-    ASSERT(cpu65_d         == result);
-    ASSERT(cpu65_rw        == (RW_READ|RW_WRITE));
-    ASSERT(cpu65_opcode    == 0x14);
-    ASSERT(cpu65_opcycles  == (5));
+    ASSERT(run_args.cpu65_ea        == arg0);
+    ASSERT(run_args.cpu65_d         == result);
+    ASSERT(run_args.cpu65_rw        == (RW_READ|RW_WRITE));
+    ASSERT(run_args.cpu65_opcode    == 0x14);
+    ASSERT(run_args.cpu65_opcycles  == (5));
 
     PASS();
 }
@@ -7259,29 +7256,29 @@ TEST test_TSB_abs(uint8_t regA, uint8_t val, uint8_t lobyte, uint8_t hibyte) {
     uint16_t addrs = lobyte | (hibyte<<8);
     apple_ii_64k[0][addrs] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = 0xf4;
-    cpu65_y  = 0x05;
-    cpu65_sp = 0x81;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0xf4;
+    run_args.cpu65_y  = 0x05;
+    run_args.cpu65_sp = 0x81;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
     ASSERT(apple_ii_64k[0][addrs] == result);
 
-    ASSERT(cpu65_pc      == TEST_LOC+3);
-    ASSERT(cpu65_a       == regA);
-    ASSERT(cpu65_x       == 0xf4);
-    ASSERT(cpu65_y       == 0x05);
-    ASSERT(cpu65_sp      == 0x81);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+3);
+    ASSERT(run_args.cpu65_a       == regA);
+    ASSERT(run_args.cpu65_x       == 0xf4);
+    ASSERT(run_args.cpu65_y       == 0x05);
+    ASSERT(run_args.cpu65_sp      == 0x81);
 
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == addrs);
-    ASSERT(cpu65_d         == result);
-    ASSERT(cpu65_rw        == (RW_READ|RW_WRITE));
-    ASSERT(cpu65_opcode    == 0x0c);
-    ASSERT(cpu65_opcycles  == (6));
+    ASSERT(run_args.cpu65_ea        == addrs);
+    ASSERT(run_args.cpu65_d         == result);
+    ASSERT(run_args.cpu65_rw        == (RW_READ|RW_WRITE));
+    ASSERT(run_args.cpu65_opcode    == 0x0c);
+    ASSERT(run_args.cpu65_opcycles  == (6));
 
     PASS();
 }
@@ -7297,29 +7294,29 @@ TEST test_TSB_zpage(uint8_t regA, uint8_t val, uint8_t arg0) {
 
     apple_ii_64k[0][arg0] = val;
 
-    cpu65_a  = regA;
-    cpu65_x  = 0x03;
-    cpu65_y  = 0x04;
-    cpu65_sp = 0x80;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = 0x03;
+    run_args.cpu65_y  = 0x04;
+    run_args.cpu65_sp = 0x80;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
     ASSERT(apple_ii_64k[0][arg0] == result);
 
-    ASSERT(cpu65_pc      == TEST_LOC+2);
-    ASSERT(cpu65_a       == regA);
-    ASSERT(cpu65_x       == 0x03);
-    ASSERT(cpu65_y       == 0x04);
-    ASSERT(cpu65_sp      == 0x80);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+2);
+    ASSERT(run_args.cpu65_a       == regA);
+    ASSERT(run_args.cpu65_x       == 0x03);
+    ASSERT(run_args.cpu65_y       == 0x04);
+    ASSERT(run_args.cpu65_sp      == 0x80);
 
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == arg0);
-    ASSERT(cpu65_d         == result);
-    ASSERT(cpu65_rw        == (RW_READ|RW_WRITE));
-    ASSERT(cpu65_opcode    == 0x04);
-    ASSERT(cpu65_opcycles  == (5));
+    ASSERT(run_args.cpu65_ea        == arg0);
+    ASSERT(run_args.cpu65_d         == result);
+    ASSERT(run_args.cpu65_rw        == (RW_READ|RW_WRITE));
+    ASSERT(run_args.cpu65_opcode    == 0x04);
+    ASSERT(run_args.cpu65_opcycles  == (5));
 
     PASS();
 }
@@ -7349,27 +7346,27 @@ TEST test_TSX(uint8_t sp) {
 
     testcpu_set_opcode1(0xba);
 
-    cpu65_a  = regA;
-    cpu65_x  = regX;
-    cpu65_y  = 0x04;
-    cpu65_sp = sp;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = regA;
+    run_args.cpu65_x  = regX;
+    run_args.cpu65_y  = 0x04;
+    run_args.cpu65_sp = sp;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+1);
-    ASSERT(cpu65_a       == regA);
-    ASSERT(cpu65_x       == sp);
-    ASSERT(cpu65_y       == 0x04);
-    ASSERT(cpu65_sp      == sp);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+1);
+    ASSERT(run_args.cpu65_a       == regA);
+    ASSERT(run_args.cpu65_x       == sp);
+    ASSERT(run_args.cpu65_y       == 0x04);
+    ASSERT(run_args.cpu65_sp      == sp);
 
     VERIFY_FLAGS();
 
-    ASSERT(cpu65_ea        == TEST_LOC);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_NONE);
-    ASSERT(cpu65_opcode    == 0xba);
-    ASSERT(cpu65_opcycles  == (2));
+    ASSERT(run_args.cpu65_ea        == TEST_LOC);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_NONE);
+    ASSERT(run_args.cpu65_opcode    == 0xba);
+    ASSERT(run_args.cpu65_opcycles  == (2));
 
     PASS();
 }
@@ -7379,26 +7376,26 @@ TEST test_TXS(uint8_t regX) {
 
     testcpu_set_opcode1(0x9a);
 
-    cpu65_a  = 0x22;
-    cpu65_x  = regX;
-    cpu65_y  = 0x04;
-    cpu65_sp = sp;
-    cpu65_f  = 0x00;
+    run_args.cpu65_a  = 0x22;
+    run_args.cpu65_x  = regX;
+    run_args.cpu65_y  = 0x04;
+    run_args.cpu65_sp = sp;
+    run_args.cpu65_f  = 0x00;
 
-    cpu65_run();
+    cpu65_run(&run_args);
 
-    ASSERT(cpu65_pc      == TEST_LOC+1);
-    ASSERT(cpu65_a       == 0x22);
-    ASSERT(cpu65_x       == regX);
-    ASSERT(cpu65_y       == 0x04);
-    ASSERT(cpu65_sp      == regX);
-    ASSERT(cpu65_f       == 0x00);
+    ASSERT(run_args.cpu65_pc      == TEST_LOC+1);
+    ASSERT(run_args.cpu65_a       == 0x22);
+    ASSERT(run_args.cpu65_x       == regX);
+    ASSERT(run_args.cpu65_y       == 0x04);
+    ASSERT(run_args.cpu65_sp      == regX);
+    ASSERT(run_args.cpu65_f       == 0x00);
 
-    ASSERT(cpu65_ea        == TEST_LOC);
-    ASSERT(cpu65_d         == 0xff);
-    ASSERT(cpu65_rw        == RW_NONE);
-    ASSERT(cpu65_opcode    == 0x9a);
-    ASSERT(cpu65_opcycles  == (2));
+    ASSERT(run_args.cpu65_ea        == TEST_LOC);
+    ASSERT(run_args.cpu65_d         == 0xff);
+    ASSERT(run_args.cpu65_rw        == RW_NONE);
+    ASSERT(run_args.cpu65_opcode    == 0x9a);
+    ASSERT(run_args.cpu65_opcycles  == (2));
 
     PASS();
 }
@@ -7423,8 +7420,7 @@ GREATEST_SUITE(test_suite_cpu) {
     extern void reinitialize(void);
     reinitialize();
 
-    extern volatile uint8_t emul_reinitialize;
-    emul_reinitialize = 0;
+    run_args.emul_reinitialize = 0;
 
     // --------------------------------
 

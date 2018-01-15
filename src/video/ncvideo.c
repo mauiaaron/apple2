@@ -721,7 +721,7 @@ static void _nc_modeChange(pixel_delta_t pixel) {
     }
 
     WINDOW *winPrev = winCurr;
-    uint32_t currswitches = softswitches;
+    uint32_t currswitches = run_args.softswitches;
     if ((currswitches & SS_TEXT) && !(currswitches & SS_MIXED)) {
         winCurr = (currswitches & SS_80COL) ? winTxt80 : winTxt40;
     } else {

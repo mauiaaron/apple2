@@ -23,23 +23,14 @@
 #include <sys/types.h>
 #include <stdint.h>
 
+#include "glue.h"
+
 /* types */
 
 #define MEM_READ_FLAG  (1<<0)
 #define MEM_WRITE_FLAG (1<<1)
 
-extern uint16_t cpu65_pc;       // Program counter
-extern uint8_t  cpu65_a;        // Accumulator
-extern uint8_t  cpu65_f;        // Flags (host-order)
-extern uint8_t  cpu65_x;        // X Index register
-extern uint8_t  cpu65_y;        // Y Index register
-extern uint8_t  cpu65_sp;       // Stack Pointer
-
-extern uint16_t cpu65_ea;       // Last effective address
-extern uint8_t  cpu65_d;        // Last data byte written
-extern uint8_t  cpu65_rw;       // MEM_READ_FLAG = read occured, MEM_WRITE_FLAG = write
-extern uint8_t  cpu65_opcode;   // Last opcode
-extern uint8_t  cpu65_opcycles; // Last opcode extra cycles
+extern cpu65_run_args_s run_args;
 
 /* Set up the processor for a new run. Sets up opcode table. */
 extern void cpu65_init();
@@ -48,7 +39,7 @@ extern void cpu65_init();
 extern void cpu65_interrupt(int reason);
 extern void cpu65_uninterrupt(int reason);
 
-extern void cpu65_run(void);
+extern void cpu65_run(void *args);
 extern void cpu65_reboot(void);
 
 extern bool cpu65_saveState(StateHelper_s *helper);
@@ -59,10 +50,8 @@ extern void cpu65_direct_write(int ea,int data);
 extern void *cpu65_vmem_r[65536];
 extern void *cpu65_vmem_w[65536];
 
-extern unsigned char cpu65_flags_encode[256];
-extern unsigned char cpu65_flags_decode[256];
-
-extern int32_t cpu65_cycle_count;
+extern uint8_t cpu65_flags_encode[256];
+extern uint8_t cpu65_flags_decode[256];
 
 #if CPU_TRACING
 void cpu65_trace_begin(const char *trace_file);

@@ -13,6 +13,7 @@
 #define _CPU_REGS_H_
 
 #include "cpu.h"
+#include "glue-offsets.h"
 
 // ARM register mappings
 
@@ -25,7 +26,7 @@
 #define X_Reg           r7              /* 8bit 6502 X register       */
 #define A_Reg           r8              /* 8bit 6502 A register       */
 // r9 is "ARM platform register" ... used as a scratch register
-// r10 is another scratch variable
+#define reg_args        r10             /* cpu65_run() args register  */
 #define reg_vmem_r      r11             /* cpu65_vmem_r table address */
 // r12 is "ARM Intra-Procedure-call scratch register" ... used as a scratch register
 // r13 ARM SP
@@ -40,7 +41,6 @@
 #   define PTR_SHIFT        #2 // 2<<1 = 4
 #   define ROR_BIT          0x80000000
 #endif
-
 
 #if !defined(__APPLE__)
 #   define NO_UNDERSCORES 1
@@ -57,48 +57,5 @@
 #   define CALL(x)          _##x
 #endif
 
-// 2015/11/08 NOTE : Android requires all apps targeting API 23 (AKA Marshmallow) to use Position Independent Code (PIC)
-// that does not have TEXT segment relocations
-
-#if !defined(__COUNTER__)
-#error __COUNTER__ macro should be available in modern compilers
-#endif
-
-#if __PIC__ && !__APPLE__
-// 2016/07/15 : TODO FIXME : this PIC code does not work on ARM-Darwin
-
-#   define _SYM_ADDR_PRE(reg) \
-                ldr     reg, 5f;
-#   define _SYM_ADDR_OFF_THUMB(reg,ct) \
-4:              add     reg, pc; \
-                ldr     reg, [reg];
-#   define _SYM_ADDR_OFF_ARM(reg,ct) \
-4:              ldr     reg, [pc, reg];
-#   define _SYM_ADDR_POST(var,poff) \
-                b       6f; \
-                .align  2; \
-5:              .word   var(GOT_PREL)+(. - (4b + poff)); \
-6:
-#   if defined(THUMB)
-#       define SYM(reg,var) \
-                _SYM_ADDR_PRE(reg) \
-                _SYM_ADDR_OFF_THUMB(reg, __COUNTER__); \
-                _SYM_ADDR_POST(var,4)
-#   else
-#       define SYM(reg,var) \
-                _SYM_ADDR_PRE(reg) \
-                _SYM_ADDR_OFF_ARM(reg, __COUNTER__); \
-                _SYM_ADDR_POST(var,8)
-#   endif
-#else
-#   if NO_UNDERSCORES
-#       define SYM(reg,var) \
-                ldr     reg, =var
-#   else
-#       define SYM(reg,var) \
-                ldr     reg, =_##var
-#   endif
-#endif
-
-
 #endif // whole file
+

@@ -26,7 +26,7 @@ static void testdisk_setup(void *arg) {
     apple_ii_64k[0][MIXSWITCH_ADDR] = 0x00;
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x00;
     apple_ii_64k[0][TESTOUT_ADDR] = 0x00;
-    joy_button0 = 0xff; // OpenApple
+    run_args.joy_button0 = 0xff; // OpenApple
     test_setup_boot_disk(TESTING_DISK, 1);
     if (test_do_reboot) {
         cpu65_interrupt(ResetSig);

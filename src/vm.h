@@ -123,26 +123,6 @@ extern uint8_t apple_ii_64k[2][65536];
 extern uint8_t language_card[2][8192];
 extern uint8_t language_banks[2][8192];
 
-extern uint32_t softswitches;
-
-extern uint8_t *base_ramrd;
-extern uint8_t *base_ramwrt;
-extern uint8_t *base_textrd;
-extern uint8_t *base_textwrt;
-extern uint8_t *base_hgrrd;
-extern uint8_t *base_hgrwrt;
-
-extern uint8_t *base_stackzp;
-extern uint8_t *base_d000_rd;
-extern uint8_t *base_e000_rd;
-extern uint8_t *base_d000_wrt;
-extern uint8_t *base_e000_wrt;
-
-extern uint8_t *base_c3rom;
-extern uint8_t *base_c4rom; // points to function or memory vector
-extern uint8_t *base_c5rom; // points to function or memory vector
-extern uint8_t *base_cxrom;
-
 void vm_initialize(void);
 
 void vm_reinitializeAudio(void);

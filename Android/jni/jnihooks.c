@@ -294,11 +294,11 @@ void Java_org_deadc0de_apple2ix_Apple2Activity_nativeReboot(JNIEnv *env, jclass 
     if (resetState) {
         // joystick button settings should be balanced by c_joystick_reset() triggered on CPU thread
         if (resetState == 1) {
-            joy_button0 = 0xff;
-            joy_button1 = 0x0;
+            run_args.joy_button0 = 0xff;
+            run_args.joy_button1 = 0x0;
         } else {
-            joy_button0 = 0x0;
-            joy_button1 = 0xff;
+            run_args.joy_button0 = 0x0;
+            run_args.joy_button1 = 0xff;
         }
     }
     cpu65_interrupt(ResetSig);

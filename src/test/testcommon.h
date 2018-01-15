@@ -87,7 +87,7 @@ static inline int BOOT_TO_DOS(void) {
 static inline void REBOOT_TO_DOS(void) {
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x00;
     apple_ii_64k[0][TESTOUT_ADDR] = 0x00;
-    joy_button0 = 0xff;
+    run_args.joy_button0 = 0xff;
     cpu65_interrupt(ResetSig);
 }
 

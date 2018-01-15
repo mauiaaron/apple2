@@ -19,7 +19,7 @@ static void testdisplay_setup(void *arg) {
     test_common_setup();
     apple_ii_64k[0][MIXSWITCH_ADDR] = 0x00;
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x00;
-    joy_button0 = 0xff; // OpenApple
+    run_args.joy_button0 = 0xff; // OpenApple
     if (test_do_reboot) {
         cpu65_interrupt(ResetSig);
     }

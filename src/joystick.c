@@ -25,8 +25,6 @@ joystick_mode_t joy_mode = JOY_PCJOY;
 /* parameters for generic and keyboard-simulated joysticks */
 uint16_t joy_x = HALF_JOY_RANGE;
 uint16_t joy_y = HALF_JOY_RANGE;
-uint8_t joy_button0 = 0;
-uint8_t joy_button1 = 0;
 bool joy_clip_to_radius = false;
 
 #ifdef KEYPAD_JOYSTICK
@@ -114,8 +112,8 @@ static void c_calibrate_pc_joystick()
         x_last = x_plot;
         y_last = y_plot;
 
-        joymenu[CALIBRATE_JOYMENU_H-4][8]  = joy_button0 ? 'X' : ' ';
-        joymenu[CALIBRATE_JOYMENU_H-4][15] = joy_button1 ? 'X' : ' ';
+        joymenu[CALIBRATE_JOYMENU_H-4][8]  = run_args.joy_button0 ? 'X' : ' ';
+        joymenu[CALIBRATE_JOYMENU_H-4][15] = run_args.joy_button1 ? 'X' : ' ';
 
         snprintf(temp, TEMPSIZE, "%04x", (short)(joy_x));
         copy_and_pad_string(&joymenu[CALIBRATE_JOYMENU_H-4][24], temp, ' ', 5, ' ');
@@ -182,8 +180,8 @@ static void c_calibrate_keypad_joystick()
     char temp[TEMPSIZE];
     for (;;)
     {
-        submenu[KEYPAD_SUBMENU_H-2][12] = joy_button0 ? 'X' : ' ';
-        submenu[KEYPAD_SUBMENU_H-2][23] = joy_button1 ? 'X' : ' ';
+        submenu[KEYPAD_SUBMENU_H-2][12] = run_args.joy_button0 ? 'X' : ' ';
+        submenu[KEYPAD_SUBMENU_H-2][23] = run_args.joy_button1 ? 'X' : ' ';
 
         snprintf(temp, TEMPSIZE, "%02x", (uint8_t)joy_x);
         copy_and_pad_string(&submenu[KEYPAD_SUBMENU_H-2][31], temp, ' ', 3, ' ');
@@ -272,8 +270,8 @@ static void *_joystick_resetDelayed(void *ctx) {
     // delay
     sleep(1);
 
-    joy_button0 = 0x0;
-    joy_button1 = 0x0;
+    run_args.joy_button0 = 0x0;
+    run_args.joy_button1 = 0x0;
 
     return NULL;
 }
@@ -286,8 +284,8 @@ void c_joystick_reset(void)
 
 #if TESTING
     // For "testdisk" determinism, these need to be reset immediately
-    joy_button0 = 0x0;
-    joy_button1 = 0x0;
+    run_args.joy_button0 = 0x0;
+    run_args.joy_button1 = 0x0;
 #else
     pthread_t pid;
     pthread_create(&pid, NULL, (void *)&_joystick_resetDelayed, (void *)NULL);
@@ -339,11 +337,11 @@ uint8_t joydriver_getAxisY(void) {
 
 // set button 0 pressed
 void joydriver_setButton0Pressed(bool pressed) {
-    joy_button0 = (pressed) ? 0x80 : 0x0;
+    run_args.joy_button0 = (pressed) ? 0x80 : 0x0;
 }
 
 // set button 1 pressed
 void joydriver_setButton1Pressed(bool pressed) {
-    joy_button1 = (pressed) ? 0x80 : 0x0;
+    run_args.joy_button1 = (pressed) ? 0x80 : 0x0;
 }
 

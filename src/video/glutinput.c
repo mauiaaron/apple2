@@ -179,11 +179,11 @@ static void gldriver_joystick_callback(unsigned int buttonMask, int x, int y, in
 #endif
 
     // sample buttons only if apple keys aren't pressed. keys get set to 0xff, and js buttons are set to 0x80.
-    if (!(joy_button0 & 0x7f)) {
-        joy_button0 = (buttonMask & 0x01) ? 0x80 : 0x0;
+    if (!(run_args.joy_button0 & 0x7f)) {
+        run_args.joy_button0 = (buttonMask & 0x01) ? 0x80 : 0x0;
     }
-    if (!(joy_button1 & 0x7f)) {
-        joy_button1 = (buttonMask & 0x02) ? 0x80 : 0x0;
+    if (!(run_args.joy_button1 & 0x7f)) {
+        run_args.joy_button1 = (buttonMask & 0x02) ? 0x80 : 0x0;
     }
 
     // normalize GLUT range

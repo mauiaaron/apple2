@@ -161,7 +161,6 @@ static void _rerender_character(int col, int row) {
     const unsigned int dstPointStride = pixelSize * glyphScale;
     const unsigned int dstRowStride = fb_w * dstPointStride;
     const unsigned int texSubRowStride = dstRowStride + (dstRowStride * (glyphScale-1));
-    const unsigned int indexedIdx = (row * fb_w * FONT_HEIGHT_PIXELS) + (col * FONT80_WIDTH_PIXELS);
     unsigned int texIdx = ((row * fb_w * FONT_HEIGHT_PIXELS * /*1 row:*/glyphScale) + (col * FONT80_WIDTH_PIXELS)) * dstPointStride;
 
     for (unsigned int i=0; i<FONT_HEIGHT_PIXELS; i++, texIdx+=texSubRowStride) {
@@ -317,8 +316,8 @@ static inline int64_t _tap_key_at_point(float x, float y) {
     _rerender_selected(kbd.selectedCol, kbd.selectedRow);
 
     if (!_is_point_on_keyboard(x, y)) {
-        joy_button0 = 0x0;
-        joy_button1 = 0x0;
+        run_args.joy_button0 = 0x0;
+        run_args.joy_button1 = 0x0;
         kbd.selectedCol = -1;
         kbd.selectedRow = -1;
         return false;
@@ -408,12 +407,12 @@ static inline int64_t _tap_key_at_point(float x, float y) {
             break;
 
         case MOUSETEXT_OPENAPPLE:
-            joy_button0 = joy_button0 ? 0x0 : 0x80;
+            run_args.joy_button0 = run_args.joy_button0 ? 0x0 : 0x80;
             scancode = SCODE_L_ALT;
             break;
 
         case MOUSETEXT_CLOSEDAPPLE:
-            joy_button1 = joy_button1 ? 0x0 : 0x80;
+            run_args.joy_button1 = run_args.joy_button1 ? 0x0 : 0x80;
             scancode = SCODE_R_ALT;
             break;
 
@@ -737,14 +736,13 @@ static void _loadAltKbd(const char *kbdPath) {
 
     json_unescapeSlashes((char **)&kbdPath);
     int tokCount = json_createFromFile(kbdPath, &jsonRef);
-    JSON_s parsedData = { 0 };
 
     do {
         if (tokCount < 0) {
             break;
         }
 
-        parsedData = (JSON_s)(*jsonRef);
+        JSON_s parsedData = (JSON_s)(*jsonRef);
 
         // we are expecting a very specific layout ... abort if anything is not correct
         int idx=0;

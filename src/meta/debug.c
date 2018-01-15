@@ -1491,7 +1491,7 @@ YY_RULE_SETUP
     ++debugtext;
 
     arg1 = (int)strtol(debugtext, &debugtext, 16);
-    dump_mem(cpu65_pc, arg1, 0, do_ascii, -1);
+    dump_mem(run_args.cpu65_pc, arg1, 0, do_ascii, -1);
     return MEM;
 }
 	YY_BREAK
@@ -1505,7 +1505,7 @@ YY_RULE_SETUP
 
     if (tolower(debugtext[0]) == 'a')
 	do_ascii = 1;
-    dump_mem(cpu65_pc, 256, 0, do_ascii, -1);
+    dump_mem(run_args.cpu65_pc, 256, 0, do_ascii, -1);
     return MEM;
 }
 	YY_BREAK
@@ -1646,7 +1646,7 @@ YY_RULE_SETUP
 
     arg1 = (int)strtol(debugtext, &debugtext, 16);
     arg2 = 256;
-    if ((arg1 < 0) || (arg1 > 65535)) arg1 = cpu65_pc;
+    if ((arg1 < 0) || (arg1 > 65535)) arg1 = run_args.cpu65_pc;
 
     disasm(arg1, arg2, 0, -1);
     return DIS;
@@ -1665,7 +1665,7 @@ YY_RULE_SETUP
 
     arg1 = (int)strtol(debugtext, &debugtext, 16);
     arg2 = 256;
-    if ((arg1 < 0) || (arg1 > 65535)) arg1 = cpu65_pc;
+    if ((arg1 < 0) || (arg1 > 65535)) arg1 = run_args.cpu65_pc;
 
     disasm(arg1, arg2, 0, arg3);
     return DIS;
@@ -1681,7 +1681,7 @@ YY_RULE_SETUP
     ++debugtext;
 
     arg1 = (int)strtol(debugtext, &debugtext, 16);
-    disasm(cpu65_pc, arg1, 0, -1);
+    disasm(run_args.cpu65_pc, arg1, 0, -1);
     return DIS;
 }
 	YY_BREAK
@@ -1691,7 +1691,7 @@ YY_RULE_SETUP
 #line 331 "src/meta/debug.l"
 {
     /* disassemble current location */
-    disasm(cpu65_pc, 256, 0, -1);
+    disasm(run_args.cpu65_pc, 256, 0, -1);
     return DIS;
 }
 	YY_BREAK
@@ -1959,7 +1959,7 @@ YY_RULE_SETUP
 
     stepping_struct_t s = {
         .step_type = UNTILING,
-        .step_pc = cpu65_pc + delta
+        .step_pc = run_args.cpu65_pc + delta
     };
 
     debugger_go(s);
@@ -1975,7 +1975,7 @@ YY_RULE_SETUP
     while (!isspace(*debugtext)) ++debugtext;
 
     /* DANGEROUS! */
-    cpu65_pc = (int)strtol(debugtext, (char**)NULL, 16);
+    run_args.cpu65_pc = (int)strtol(debugtext, (char**)NULL, 16);
 
     stepping_struct_t s = {
         .step_type = GOING
@@ -2004,7 +2004,7 @@ YY_RULE_SETUP
 #line 584 "src/meta/debug.l"
 {
     /* set watchpoint */
-    set_halt(watchpoints, cpu65_pc);
+    set_halt(watchpoints, run_args.cpu65_pc);
     return WATCH;
 }
 	YY_BREAK
@@ -2032,7 +2032,7 @@ YY_RULE_SETUP
 #line 605 "src/meta/debug.l"
 {
     /* set breakpoint */
-    set_halt(breakpoints, cpu65_pc);
+    set_halt(breakpoints, run_args.cpu65_pc);
     return BREAK;
 }
 	YY_BREAK

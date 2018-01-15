@@ -14,13 +14,14 @@ noinst_HEADERS = src/common.h src/cpu.h src/disk.h src/glue.h src/vm.h \
 	src/timing.h src/uthash.h src/video/video.h src/zlib-helpers.h \
 	\
 	src/x86/glue-prologue.h \
+	src/x86/glue-offsets.h src/x86/glue-offsets32.h src/x86/glue-offsets64.h \
 	src/meta/debug.h src/meta/log.h src/meta/trace.h \
 	\
 	src/audio/alhelpers.h src/audio/AY8910.h src/audio/mockingboard.h \
 	src/audio/peripherals.h src/audio/soundcore.h src/audio/speaker.h \
 	src/audio/SSI263Phonemes.h
 
-noinst_PROGRAMS = genfont genrom
+noinst_PROGRAMS = genfont genrom glue_offsets
 
 ###############################################################################
 # Apple //ix and supporting sources
@@ -86,6 +87,8 @@ apple2ix_DEPENDENCIES = @ASM_O@ @VIDEO_O@ @AUDIO_O@
 genfont_SOURCES = src/genfont.c
 
 genrom_SOURCES = src/genrom.c
+
+glue_offsets_SOURCES = src/glue-offsets.c
 
 src/font.c: src/font.txt genfont
 	./genfont < $< > $@

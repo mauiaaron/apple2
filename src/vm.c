@@ -17,30 +17,7 @@ uint8_t apple_ii_64k[2][65536] = { { 0 } };
 uint8_t language_card[2][8192] = { { 0 } };
 uint8_t language_banks[2][8192] = { { 0 } };
 
-uint32_t softswitches = 0x0;
-
 const uint8_t *base_vmem = apple_ii_64k[0];
-uint8_t *base_ramrd = NULL;
-uint8_t *base_ramwrt = NULL;
-uint8_t *base_textrd = NULL;
-uint8_t *base_textwrt = NULL;
-uint8_t *base_hgrrd = NULL;
-uint8_t *base_hgrwrt = NULL;
-
-uint8_t *base_stackzp = NULL;
-uint8_t *base_d000_rd = NULL;
-uint8_t *base_e000_rd = NULL;
-uint8_t *base_d000_wrt = NULL;
-uint8_t *base_e000_wrt = NULL;
-
-uint8_t *base_c3rom = NULL;
-uint8_t *base_c4rom = NULL;
-uint8_t *base_c5rom = NULL;
-uint8_t *base_cxrom = NULL;
-
-// joystick timer values
-int gc_cycles_timer_0 = 0;
-int gc_cycles_timer_1 = 0;
 
 #if VM_TRACING
 FILE *test_vm_fp = NULL;
@@ -53,34 +30,35 @@ typedef struct vm_trace_range_t {
 
 // ----------------------------------------------------------------------------
 
-GLUE_BANK_READ(iie_read_ram_default,base_ramrd);
-GLUE_BANK_WRITE(iie_write_ram_default,base_ramwrt);
+GLUE_BANK_READ(iie_read_ram_default, BASE_RAMRD);
+GLUE_BANK_WRITE(iie_write_ram_default, BASE_RAMWRT);
 
-GLUE_BANK_READ(read_ram_bank,base_d000_rd);
-GLUE_BANK_MAYBEWRITE(write_ram_bank,base_d000_wrt);
+GLUE_BANK_READ(read_ram_bank, BASE_D000_RD);
+GLUE_BANK_MAYBEWRITE(write_ram_bank, BASE_D000_WRT);
 
-GLUE_BANK_READ(read_ram_lc,base_e000_rd);
-GLUE_BANK_MAYBEWRITE(write_ram_lc,base_e000_wrt);
+GLUE_BANK_READ(read_ram_lc, BASE_E000_RD);
+GLUE_BANK_MAYBEWRITE(write_ram_lc, BASE_E000_WRT);
 
-GLUE_BANK_READ(iie_read_ram_text_page0,base_textrd);
-GLUE_BANK_WRITE(iie_write_screen_hole_text_page0,base_textwrt);
+GLUE_BANK_READ(iie_read_ram_text_page0, BASE_TEXTRD);
+GLUE_BANK_WRITE(iie_write_screen_hole_text_page0, BASE_TEXTWRT);
 
-GLUE_BANK_READ(iie_read_ram_hires_page0,base_hgrrd);
-GLUE_BANK_WRITE(iie_write_screen_hole_hires_page0,base_hgrwrt);
+GLUE_BANK_READ(iie_read_ram_hires_page0, BASE_HGRRD);
+GLUE_BANK_WRITE(iie_write_screen_hole_hires_page0, BASE_HGRWRT);
 
-GLUE_BANK_READ(iie_read_ram_zpage_and_stack,base_stackzp);
-GLUE_BANK_WRITE(iie_write_ram_zpage_and_stack,base_stackzp);
+GLUE_BANK_READ(iie_read_ram_zpage_and_stack, BASE_STACKZP);
+GLUE_BANK_WRITE(iie_write_ram_zpage_and_stack, BASE_STACKZP);
 
-GLUE_BANK_MAYBE_READ_C3(iie_read_slot3,base_c3rom);
-GLUE_BANK_MAYBE_READ_CX(iie_read_slot4,base_c4rom);
-GLUE_BANK_MAYBE_READ_CX(iie_read_slot5,base_c5rom);
-GLUE_BANK_MAYBE_READ_CX(iie_read_slotx,base_cxrom);
+GLUE_BANK_MAYBE_READ_C3(iie_read_slot3, BASE_C3ROM);
+GLUE_BANK_MAYBE_READ_CX(iie_read_slot4, BASE_C4ROM);
+GLUE_BANK_MAYBE_READ_CX(iie_read_slot5, BASE_C5ROM);
+GLUE_BANK_MAYBE_READ_CX(iie_read_slotx, BASE_CXROM);
 
 GLUE_EXTERN_C_READ(speaker_toggle);
 
 GLUE_C_READ(ram_nop)
 {
-    return (cpu65_rw&MEM_WRITE_FLAG) ? 0x0 : floating_bus();
+    (void)ea;
+    return (run_args.cpu65_rw&MEM_WRITE_FLAG) ? 0x0 : floating_bus();
 }
 
 GLUE_C_READ(read_unmapped_softswitch)
@@ -90,7 +68,8 @@ GLUE_C_READ(read_unmapped_softswitch)
 
 GLUE_C_WRITE(write_unmapped_softswitch)
 {
-    // ...
+    (void)ea;
+    (void)b;
 }
 
 GLUE_C_READ(iie_read_peripheral_card)
@@ -149,20 +128,20 @@ GLUE_C_READ(read_keyboard_strobe)
 
 GLUE_C_READ(iie_page2_off)
 {
-    if (!(softswitches & SS_PAGE2)) {
+    if (!(run_args.softswitches & SS_PAGE2)) {
         return floating_bus();
     }
 
-    softswitches &= ~(SS_PAGE2|SS_SCREEN);
+    run_args.softswitches &= ~(SS_PAGE2|SS_SCREEN);
 
-    if (softswitches & SS_80STORE) {
-        softswitches &= ~(SS_TEXTRD|SS_TEXTWRT);
-        base_textrd  = apple_ii_64k[0];
-        base_textwrt = apple_ii_64k[0];
-        if (softswitches & SS_HIRES) {
-            softswitches &= ~(SS_HGRRD|SS_HGRWRT);
-            base_hgrrd  = apple_ii_64k[0];
-            base_hgrwrt = apple_ii_64k[0];
+    if (run_args.softswitches & SS_80STORE) {
+        run_args.softswitches &= ~(SS_TEXTRD|SS_TEXTWRT);
+        run_args.base_textrd  = apple_ii_64k[0];
+        run_args.base_textwrt = apple_ii_64k[0];
+        if (run_args.softswitches & SS_HIRES) {
+            run_args.softswitches &= ~(SS_HGRRD|SS_HGRWRT);
+            run_args.base_hgrrd  = apple_ii_64k[0];
+            run_args.base_hgrwrt = apple_ii_64k[0];
         }
     }
 
@@ -173,23 +152,23 @@ GLUE_C_READ(iie_page2_off)
 
 GLUE_C_READ(iie_page2_on)
 {
-    if (softswitches & SS_PAGE2) {
+    if (run_args.softswitches & SS_PAGE2) {
         return floating_bus();
     }
 
-    softswitches |= SS_PAGE2;
+    run_args.softswitches |= SS_PAGE2;
 
-    if (softswitches & SS_80STORE) {
-        softswitches |= (SS_TEXTRD|SS_TEXTWRT);
-        base_textrd  = apple_ii_64k[1];
-        base_textwrt = apple_ii_64k[1];
-        if (softswitches & SS_HIRES) {
-            softswitches |= (SS_HGRRD|SS_HGRWRT);
-            base_hgrrd  = apple_ii_64k[1];
-            base_hgrwrt = apple_ii_64k[1];
+    if (run_args.softswitches & SS_80STORE) {
+        run_args.softswitches |= (SS_TEXTRD|SS_TEXTWRT);
+        run_args.base_textrd  = apple_ii_64k[1];
+        run_args.base_textwrt = apple_ii_64k[1];
+        if (run_args.softswitches & SS_HIRES) {
+            run_args.softswitches |= (SS_HGRRD|SS_HGRWRT);
+            run_args.base_hgrrd  = apple_ii_64k[1];
+            run_args.base_hgrwrt = apple_ii_64k[1];
         }
     } else {
-        softswitches |= SS_SCREEN;
+        run_args.softswitches |= SS_SCREEN;
     }
 
     video_setDirty(A2_DIRTY_FLAG);
@@ -199,13 +178,13 @@ GLUE_C_READ(iie_page2_on)
 
 GLUE_C_READ(iie_check_page2)
 {
-    return (softswitches & SS_PAGE2) ? 0x80 : 0x00;
+    return (run_args.softswitches & SS_PAGE2) ? 0x80 : 0x00;
 }
 
 GLUE_C_READ(read_switch_graphics)
 {
-    if (softswitches & SS_TEXT) {
-        softswitches &= ~SS_TEXT;
+    if (run_args.softswitches & SS_TEXT) {
+        run_args.softswitches &= ~SS_TEXT;
         video_setDirty(A2_DIRTY_FLAG);
     }
     return floating_bus();
@@ -213,8 +192,8 @@ GLUE_C_READ(read_switch_graphics)
 
 GLUE_C_READ(read_switch_text)
 {
-    if (!(softswitches & SS_TEXT)) {
-        softswitches |= SS_TEXT;
+    if (!(run_args.softswitches & SS_TEXT)) {
+        run_args.softswitches |= SS_TEXT;
         video_setDirty(A2_DIRTY_FLAG);
     }
     return floating_bus();
@@ -222,13 +201,13 @@ GLUE_C_READ(read_switch_text)
 
 GLUE_C_READ(iie_check_text)
 {
-    return (softswitches & SS_TEXT) ? 0x80 : 0x00;
+    return (run_args.softswitches & SS_TEXT) ? 0x80 : 0x00;
 }
 
 GLUE_C_READ(read_switch_no_mixed)
 {
-    if (softswitches & SS_MIXED) {
-        softswitches &= ~SS_MIXED;
+    if (run_args.softswitches & SS_MIXED) {
+        run_args.softswitches &= ~SS_MIXED;
         video_setDirty(A2_DIRTY_FLAG);
     }
     return floating_bus();
@@ -236,8 +215,8 @@ GLUE_C_READ(read_switch_no_mixed)
 
 GLUE_C_READ(read_switch_mixed)
 {
-    if (!(softswitches & SS_MIXED)) {
-        softswitches |= SS_MIXED;
+    if (!(run_args.softswitches & SS_MIXED)) {
+        run_args.softswitches |= SS_MIXED;
         video_setDirty(A2_DIRTY_FLAG);
     }
     return floating_bus();
@@ -245,7 +224,7 @@ GLUE_C_READ(read_switch_mixed)
 
 GLUE_C_READ(iie_check_mixed)
 {
-    return (softswitches & SS_MIXED) ? 0x80 : 0x00;
+    return (run_args.softswitches & SS_MIXED) ? 0x80 : 0x00;
 }
 
 GLUE_C_READ(iie_annunciator)
@@ -253,27 +232,27 @@ GLUE_C_READ(iie_annunciator)
     if ((ea >= 0xC058) && (ea <= 0xC05B)) {
         // TODO: alternate joystick management?
     }
-    return (cpu65_rw&MEM_WRITE_FLAG) ? 0x0 : floating_bus();
+    return (run_args.cpu65_rw&MEM_WRITE_FLAG) ? 0x0 : floating_bus();
 }
 
 GLUE_C_READ(iie_hires_off)
 {
-    if (!(softswitches & SS_HIRES)) {
+    if (!(run_args.softswitches & SS_HIRES)) {
         return floating_bus();
     }
 
-    softswitches &= ~(SS_HIRES|SS_HGRRD|SS_HGRWRT);
-    base_hgrrd  = apple_ii_64k[0];
-    base_hgrwrt = apple_ii_64k[0];
+    run_args.softswitches &= ~(SS_HIRES|SS_HGRRD|SS_HGRWRT);
+    run_args.base_hgrrd  = apple_ii_64k[0];
+    run_args.base_hgrwrt = apple_ii_64k[0];
 
-    if (softswitches & SS_RAMRD) {
-        base_hgrrd = apple_ii_64k[1];
-        softswitches |= SS_HGRRD;
+    if (run_args.softswitches & SS_RAMRD) {
+        run_args.base_hgrrd = apple_ii_64k[1];
+        run_args.softswitches |= SS_HGRRD;
     }
 
-    if (softswitches & SS_RAMWRT) {
-        base_hgrwrt = apple_ii_64k[1];
-        softswitches |= SS_HGRWRT;
+    if (run_args.softswitches & SS_RAMWRT) {
+        run_args.base_hgrwrt = apple_ii_64k[1];
+        run_args.softswitches |= SS_HGRWRT;
     }
 
     video_setDirty(A2_DIRTY_FLAG);
@@ -283,21 +262,21 @@ GLUE_C_READ(iie_hires_off)
 
 GLUE_C_READ(iie_hires_on)
 {
-    if (softswitches & SS_HIRES) {
+    if (run_args.softswitches & SS_HIRES) {
         return floating_bus();
     }
 
-    softswitches |= SS_HIRES;
+    run_args.softswitches |= SS_HIRES;
 
-    if (softswitches & SS_80STORE) {
-        if (softswitches & SS_PAGE2) {
-            softswitches |= (SS_HGRRD|SS_HGRWRT);
-            base_hgrrd  = apple_ii_64k[1];
-            base_hgrwrt = apple_ii_64k[1];
+    if (run_args.softswitches & SS_80STORE) {
+        if (run_args.softswitches & SS_PAGE2) {
+            run_args.softswitches |= (SS_HGRRD|SS_HGRWRT);
+            run_args.base_hgrrd  = apple_ii_64k[1];
+            run_args.base_hgrwrt = apple_ii_64k[1];
         } else {
-            softswitches &= ~(SS_HGRRD|SS_HGRWRT);
-            base_hgrrd  = apple_ii_64k[0];
-            base_hgrwrt = apple_ii_64k[0];
+            run_args.softswitches &= ~(SS_HGRRD|SS_HGRWRT);
+            run_args.base_hgrrd  = apple_ii_64k[0];
+            run_args.base_hgrwrt = apple_ii_64k[0];
         }
     }
 
@@ -308,7 +287,7 @@ GLUE_C_READ(iie_hires_on)
 
 GLUE_C_READ(iie_check_hires)
 {
-    return (softswitches & SS_HIRES) ? 0x80 : 0x00;
+    return (run_args.softswitches & SS_HIRES) ? 0x80 : 0x00;
 }
 
 // ----------------------------------------------------------------------------
@@ -317,19 +296,13 @@ GLUE_C_READ(iie_check_hires)
 #define CYCLES_PER_USEC (CLK_6502 / 1000000)
 #define JOY_STEP_CYCLES (JOY_STEP_USEC / CYCLES_PER_USEC)
 
-GLUE_C_READ(read_button0)
-{
-    return joy_button0;
-}
+GLUE_INLINE_READ(read_button0, JOY_BUTTON0);
 
-GLUE_C_READ(read_button1)
-{
-    return joy_button1;
-}
+GLUE_INLINE_READ(read_button1, JOY_BUTTON1);
 
 GLUE_C_READ(read_button2)
 {
-    return joy_button0 | joy_button1;
+    return run_args.joy_button0 | run_args.joy_button1;
 }
 
 GLUE_C_READ(read_gc_strobe)
@@ -339,13 +312,13 @@ GLUE_C_READ(read_gc_strobe)
     //  * 7-29, discussing PREAD : "The timer duration will vary between 2 and 3302 usecs"
     //  * 7-30, timer reset : "But the timer pulse may still be high from the previous [strobe access] and the timers are
     //  not retriggered by C07X' if they have not yet reset from the previous trigger"
-    if (gc_cycles_timer_0 <= 0)
+    if (run_args.gc_cycles_timer_0 <= 0)
     {
-        gc_cycles_timer_0 = (int)((joy_x-5) * JOY_STEP_CYCLES);
+        run_args.gc_cycles_timer_0 = (int)((joy_x-5) * JOY_STEP_CYCLES);
     }
-    if (gc_cycles_timer_1 <= 0)
+    if (run_args.gc_cycles_timer_1 <= 0)
     {
-        gc_cycles_timer_1 = (int)(joy_y * JOY_STEP_CYCLES) + 2;
+        run_args.gc_cycles_timer_1 = (int)(joy_y * JOY_STEP_CYCLES) + 2;
     }
 
     // NOTE (possible TODO FIXME): unimplemented GC2 and GC3 timers since they were not wired on the //e ...
@@ -354,9 +327,9 @@ GLUE_C_READ(read_gc_strobe)
 
 GLUE_C_READ(read_gc0)
 {
-    if (gc_cycles_timer_0 <= 0)
+    if (run_args.gc_cycles_timer_0 <= 0)
     {
-        gc_cycles_timer_0 = 0;
+        run_args.gc_cycles_timer_0 = 0;
         return 0;
     }
     return 0xFF;
@@ -364,9 +337,9 @@ GLUE_C_READ(read_gc0)
 
 GLUE_C_READ(read_gc1)
 {
-    if (gc_cycles_timer_1 <= 0)
+    if (run_args.gc_cycles_timer_1 <= 0)
     {
-        gc_cycles_timer_1 = 0;
+        run_args.gc_cycles_timer_1 = 0;
         return 0;
     }
     return 0xFF;
@@ -386,29 +359,29 @@ GLUE_C_READ(iie_read_gc3)
 // LC : language card routines
 
 static inline void _lc_to_auxmem() {
-    if (softswitches & SS_LCRAM) {
-        base_d000_rd += 0x2000;
-        base_e000_rd = language_card[0]-0xC000;
+    if (run_args.softswitches & SS_LCRAM) {
+        run_args.base_d000_rd += 0x2000;
+        run_args.base_e000_rd = language_card[0]-0xC000;
     }
 
-    if (softswitches & SS_LCWRT) {
-        base_d000_wrt += 0x2000;
-        base_e000_wrt = language_card[0]-0xC000;
+    if (run_args.softswitches & SS_LCWRT) {
+        run_args.base_d000_wrt += 0x2000;
+        run_args.base_e000_wrt = language_card[0]-0xC000;
     }
 }
 
 GLUE_C_READ(iie_c080)
 {
-    softswitches |= (SS_LCRAM|SS_BANK2);
-    softswitches &= ~(SS_LCSEC|SS_LCWRT);
+    run_args.softswitches |= (SS_LCRAM|SS_BANK2);
+    run_args.softswitches &= ~(SS_LCSEC|SS_LCWRT);
 
-    base_d000_rd = language_banks[0]-0xD000;
-    base_e000_rd = language_card[0]-0xE000;
+    run_args.base_d000_rd = language_banks[0]-0xD000;
+    run_args.base_e000_rd = language_card[0]-0xE000;
 
-    base_d000_wrt = 0;
-    base_e000_wrt = 0;
+    run_args.base_d000_wrt = 0;
+    run_args.base_e000_wrt = 0;
 
-    if (softswitches & SS_ALTZP) {
+    if (run_args.softswitches & SS_ALTZP) {
         _lc_to_auxmem();
     }
     return floating_bus();
@@ -416,19 +389,19 @@ GLUE_C_READ(iie_c080)
 
 GLUE_C_READ(iie_c081)
 {
-    if (softswitches & SS_LCSEC) {
-        softswitches |= SS_LCWRT;
-        base_d000_wrt = language_banks[0]-0xD000;
-        base_e000_wrt = language_card[0]-0xE000;
+    if (run_args.softswitches & SS_LCSEC) {
+        run_args.softswitches |= SS_LCWRT;
+        run_args.base_d000_wrt = language_banks[0]-0xD000;
+        run_args.base_e000_wrt = language_card[0]-0xE000;
     }
 
-    softswitches |= (SS_LCSEC|SS_BANK2);
-    softswitches &= ~SS_LCRAM;
+    run_args.softswitches |= (SS_LCSEC|SS_BANK2);
+    run_args.softswitches &= ~SS_LCRAM;
 
-    base_d000_rd = apple_ii_64k[0];
-    base_e000_rd = apple_ii_64k[0];
+    run_args.base_d000_rd = apple_ii_64k[0];
+    run_args.base_e000_rd = apple_ii_64k[0];
 
-    if (softswitches & SS_ALTZP) {
+    if (run_args.softswitches & SS_ALTZP) {
         _lc_to_auxmem();
     }
     return floating_bus();
@@ -436,31 +409,31 @@ GLUE_C_READ(iie_c081)
 
 GLUE_C_READ(lc_c082)
 {
-    softswitches &= ~(SS_LCRAM|SS_LCWRT|SS_LCSEC);
-    softswitches |= SS_BANK2;
+    run_args.softswitches &= ~(SS_LCRAM|SS_LCWRT|SS_LCSEC);
+    run_args.softswitches |= SS_BANK2;
 
-    base_d000_rd = apple_ii_64k[0];
-    base_e000_rd = apple_ii_64k[0];
+    run_args.base_d000_rd = apple_ii_64k[0];
+    run_args.base_e000_rd = apple_ii_64k[0];
 
-    base_d000_wrt = 0;
-    base_e000_wrt = 0;
+    run_args.base_d000_wrt = 0;
+    run_args.base_e000_wrt = 0;
 
     return floating_bus();
 }
 
 GLUE_C_READ(iie_c083)
 {
-    if (softswitches & SS_LCSEC) {
-        softswitches |= SS_LCWRT;
-        base_d000_wrt = language_banks[0]-0xD000;
-        base_e000_wrt = language_card[0]-0xE000;
+    if (run_args.softswitches & SS_LCSEC) {
+        run_args.softswitches |= SS_LCWRT;
+        run_args.base_d000_wrt = language_banks[0]-0xD000;
+        run_args.base_e000_wrt = language_card[0]-0xE000;
     }
 
-    softswitches |= (SS_LCSEC|SS_LCRAM|SS_BANK2);
-    base_d000_rd = language_banks[0]-0xD000;
-    base_e000_rd = language_card[0]-0xE000;
+    run_args.softswitches |= (SS_LCSEC|SS_LCRAM|SS_BANK2);
+    run_args.base_d000_rd = language_banks[0]-0xD000;
+    run_args.base_e000_rd = language_card[0]-0xE000;
 
-    if (softswitches & SS_ALTZP) {
+    if (run_args.softswitches & SS_ALTZP) {
         _lc_to_auxmem();
     }
     return floating_bus();
@@ -468,16 +441,16 @@ GLUE_C_READ(iie_c083)
 
 GLUE_C_READ(iie_c088)
 {
-    softswitches |= SS_LCRAM;
-    softswitches &= ~(SS_LCWRT|SS_LCSEC|SS_BANK2);
+    run_args.softswitches |= SS_LCRAM;
+    run_args.softswitches &= ~(SS_LCWRT|SS_LCSEC|SS_BANK2);
 
-    base_d000_rd = language_banks[0]-0xC000;
-    base_e000_rd = language_card[0]-0xE000;
+    run_args.base_d000_rd = language_banks[0]-0xC000;
+    run_args.base_e000_rd = language_card[0]-0xE000;
 
-    base_d000_wrt = 0;
-    base_e000_wrt = 0;
+    run_args.base_d000_wrt = 0;
+    run_args.base_e000_wrt = 0;
 
-    if (softswitches & SS_ALTZP) {
+    if (run_args.softswitches & SS_ALTZP) {
         _lc_to_auxmem();
     }
     return floating_bus();
@@ -485,19 +458,19 @@ GLUE_C_READ(iie_c088)
 
 GLUE_C_READ(iie_c089)
 {
-    if (softswitches & SS_LCSEC) {
-        softswitches |= SS_LCWRT;
-        base_d000_wrt = language_banks[0]-0xC000;
-        base_e000_wrt = language_card[0]-0xE000;
+    if (run_args.softswitches & SS_LCSEC) {
+        run_args.softswitches |= SS_LCWRT;
+        run_args.base_d000_wrt = language_banks[0]-0xC000;
+        run_args.base_e000_wrt = language_card[0]-0xE000;
     }
 
-    softswitches |= SS_LCSEC;
-    softswitches &= ~(SS_LCRAM|SS_BANK2);
+    run_args.softswitches |= SS_LCSEC;
+    run_args.softswitches &= ~(SS_LCRAM|SS_BANK2);
 
-    base_d000_rd = apple_ii_64k[0];
-    base_e000_rd = apple_ii_64k[0];
+    run_args.base_d000_rd = apple_ii_64k[0];
+    run_args.base_e000_rd = apple_ii_64k[0];
 
-    if (softswitches & SS_ALTZP) {
+    if (run_args.softswitches & SS_ALTZP) {
         _lc_to_auxmem();
     }
     return floating_bus();
@@ -505,32 +478,32 @@ GLUE_C_READ(iie_c089)
 
 GLUE_C_READ(lc_c08a)
 {
-    softswitches &= ~(SS_LCRAM|SS_LCWRT|SS_LCSEC|SS_BANK2);
+    run_args.softswitches &= ~(SS_LCRAM|SS_LCWRT|SS_LCSEC|SS_BANK2);
 
-    base_d000_rd = apple_ii_64k[0];
-    base_e000_rd = apple_ii_64k[0];
+    run_args.base_d000_rd = apple_ii_64k[0];
+    run_args.base_e000_rd = apple_ii_64k[0];
 
-    base_d000_wrt = 0;
-    base_e000_wrt = 0;
+    run_args.base_d000_wrt = 0;
+    run_args.base_e000_wrt = 0;
 
     return floating_bus();
 }
 
 GLUE_C_READ(iie_c08b)
 {
-    if (softswitches & SS_LCSEC) {
-        softswitches |= SS_LCWRT;
-        base_d000_wrt = language_banks[0]-0xC000;
-        base_e000_wrt = language_card[0]-0xE000;
+    if (run_args.softswitches & SS_LCSEC) {
+        run_args.softswitches |= SS_LCWRT;
+        run_args.base_d000_wrt = language_banks[0]-0xC000;
+        run_args.base_e000_wrt = language_card[0]-0xE000;
     }
 
-    softswitches |= (SS_LCRAM|SS_LCSEC);
-    softswitches &= ~SS_BANK2;
+    run_args.softswitches |= (SS_LCRAM|SS_LCSEC);
+    run_args.softswitches &= ~SS_BANK2;
 
-    base_d000_rd = language_banks[0]-0xC000;
-    base_e000_rd = language_card[0]-0xE000;
+    run_args.base_d000_rd = language_banks[0]-0xC000;
+    run_args.base_e000_rd = language_card[0]-0xE000;
 
-    if (softswitches & SS_ALTZP) {
+    if (run_args.softswitches & SS_ALTZP) {
         _lc_to_auxmem();
     }
     return floating_bus();
@@ -538,12 +511,12 @@ GLUE_C_READ(iie_c08b)
 
 GLUE_C_READ(iie_check_bank)
 {
-    return (softswitches & SS_BANK2) ? 0x80 : 0x00;
+    return (run_args.softswitches & SS_BANK2) ? 0x80 : 0x00;
 }
 
 GLUE_C_READ(iie_check_lcram)
 {
-    return (softswitches & SS_LCRAM) ? 0x80 : 0x00;
+    return (run_args.softswitches & SS_LCRAM) ? 0x80 : 0x00;
 }
 
 // ----------------------------------------------------------------------------
@@ -551,31 +524,31 @@ GLUE_C_READ(iie_check_lcram)
 
 GLUE_C_READ(iie_80store_off)
 {
-    if (!(softswitches & SS_80STORE)) {
+    if (!(run_args.softswitches & SS_80STORE)) {
         return floating_bus();
     }
 
-    softswitches &= ~(SS_80STORE|SS_TEXTRD|SS_TEXTWRT|SS_HGRRD|SS_HGRWRT);
+    run_args.softswitches &= ~(SS_80STORE|SS_TEXTRD|SS_TEXTWRT|SS_HGRRD|SS_HGRWRT);
 
-    base_textrd  = apple_ii_64k[0];
-    base_textwrt = apple_ii_64k[0];
-    base_hgrrd   = apple_ii_64k[0];
-    base_hgrwrt  = apple_ii_64k[0];
+    run_args.base_textrd  = apple_ii_64k[0];
+    run_args.base_textwrt = apple_ii_64k[0];
+    run_args.base_hgrrd   = apple_ii_64k[0];
+    run_args.base_hgrwrt  = apple_ii_64k[0];
 
-    if (softswitches & SS_RAMRD) {
-        softswitches |= (SS_TEXTRD|SS_HGRRD);
-        base_textrd = apple_ii_64k[1];
-        base_hgrrd  = apple_ii_64k[1];
+    if (run_args.softswitches & SS_RAMRD) {
+        run_args.softswitches |= (SS_TEXTRD|SS_HGRRD);
+        run_args.base_textrd = apple_ii_64k[1];
+        run_args.base_hgrrd  = apple_ii_64k[1];
     }
 
-    if (softswitches & SS_RAMWRT) {
-        softswitches |= (SS_TEXTWRT|SS_HGRWRT);
-        base_textwrt = apple_ii_64k[1];
-        base_hgrwrt  = apple_ii_64k[1];
+    if (run_args.softswitches & SS_RAMWRT) {
+        run_args.softswitches |= (SS_TEXTWRT|SS_HGRWRT);
+        run_args.base_textwrt = apple_ii_64k[1];
+        run_args.base_hgrwrt  = apple_ii_64k[1];
     }
 
-    if (softswitches & SS_PAGE2) {
-        softswitches |= SS_SCREEN;
+    if (run_args.softswitches & SS_PAGE2) {
+        run_args.softswitches |= SS_SCREEN;
     }
 
     video_setDirty(A2_DIRTY_FLAG);
@@ -585,33 +558,33 @@ GLUE_C_READ(iie_80store_off)
 
 GLUE_C_READ(iie_80store_on)
 {
-    if (softswitches & SS_80STORE) {
+    if (run_args.softswitches & SS_80STORE) {
         return floating_bus();
     }
 
-    softswitches |= SS_80STORE;
+    run_args.softswitches |= SS_80STORE;
 
-    if (softswitches & SS_PAGE2) {
-        softswitches |= (SS_TEXTRD|SS_TEXTWRT);
-        base_textrd  = apple_ii_64k[1];
-        base_textwrt = apple_ii_64k[1];
-        if (softswitches & SS_HIRES) {
-            softswitches |= (SS_HGRRD|SS_HGRWRT);
-            base_hgrrd  = apple_ii_64k[1];
-            base_hgrwrt = apple_ii_64k[1];
+    if (run_args.softswitches & SS_PAGE2) {
+        run_args.softswitches |= (SS_TEXTRD|SS_TEXTWRT);
+        run_args.base_textrd  = apple_ii_64k[1];
+        run_args.base_textwrt = apple_ii_64k[1];
+        if (run_args.softswitches & SS_HIRES) {
+            run_args.softswitches |= (SS_HGRRD|SS_HGRWRT);
+            run_args.base_hgrrd  = apple_ii_64k[1];
+            run_args.base_hgrwrt = apple_ii_64k[1];
         }
     } else {
-        softswitches &= ~(SS_TEXTRD|SS_TEXTWRT);
-        base_textrd  = apple_ii_64k[0];
-        base_textwrt = apple_ii_64k[0];
-        if (softswitches & SS_HIRES) {
-            softswitches &= ~(SS_HGRRD|SS_HGRWRT);
-            base_hgrrd  = apple_ii_64k[0];
-            base_hgrwrt = apple_ii_64k[0];
+        run_args.softswitches &= ~(SS_TEXTRD|SS_TEXTWRT);
+        run_args.base_textrd  = apple_ii_64k[0];
+        run_args.base_textwrt = apple_ii_64k[0];
+        if (run_args.softswitches & SS_HIRES) {
+            run_args.softswitches &= ~(SS_HGRRD|SS_HGRWRT);
+            run_args.base_hgrrd  = apple_ii_64k[0];
+            run_args.base_hgrwrt = apple_ii_64k[0];
         }
     }
 
-    softswitches &= ~SS_SCREEN;
+    run_args.softswitches &= ~SS_SCREEN;
     video_setDirty(A2_DIRTY_FLAG);
 
     return floating_bus();
@@ -619,27 +592,27 @@ GLUE_C_READ(iie_80store_on)
 
 GLUE_C_READ(iie_check_80store)
 {
-    return (softswitches & SS_80STORE) ? 0x80 : 0x00;
+    return (run_args.softswitches & SS_80STORE) ? 0x80 : 0x00;
 }
 
 GLUE_C_READ(iie_ramrd_main)
 {
-    if (!(softswitches & SS_RAMRD)) {
+    if (!(run_args.softswitches & SS_RAMRD)) {
         return floating_bus();
     }
 
-    softswitches &= ~SS_RAMRD;
-    base_ramrd = apple_ii_64k[0];
+    run_args.softswitches &= ~SS_RAMRD;
+    run_args.base_ramrd = apple_ii_64k[0];
 
-    if (softswitches & SS_80STORE) {
-        if (!(softswitches & SS_HIRES)) {
-            softswitches &= ~SS_HGRRD;
-            base_hgrrd = apple_ii_64k[0];
+    if (run_args.softswitches & SS_80STORE) {
+        if (!(run_args.softswitches & SS_HIRES)) {
+            run_args.softswitches &= ~SS_HGRRD;
+            run_args.base_hgrrd = apple_ii_64k[0];
         }
     } else {
-        softswitches &= ~(SS_TEXTRD|SS_HGRRD);
-        base_textrd = apple_ii_64k[0];
-        base_hgrrd  = apple_ii_64k[0];
+        run_args.softswitches &= ~(SS_TEXTRD|SS_HGRRD);
+        run_args.base_textrd = apple_ii_64k[0];
+        run_args.base_hgrrd  = apple_ii_64k[0];
     }
 
     video_setDirty(A2_DIRTY_FLAG);
@@ -649,22 +622,22 @@ GLUE_C_READ(iie_ramrd_main)
 
 GLUE_C_READ(iie_ramrd_aux)
 {
-    if (softswitches & SS_RAMRD) {
+    if (run_args.softswitches & SS_RAMRD) {
         return floating_bus();
     }
 
-    softswitches |= SS_RAMRD;
-    base_ramrd = apple_ii_64k[1];
+    run_args.softswitches |= SS_RAMRD;
+    run_args.base_ramrd = apple_ii_64k[1];
 
-    if (softswitches & SS_80STORE) {
-        if (!(softswitches & SS_HIRES)) {
-            softswitches |= SS_HGRRD;
-            base_hgrrd = apple_ii_64k[1];
+    if (run_args.softswitches & SS_80STORE) {
+        if (!(run_args.softswitches & SS_HIRES)) {
+            run_args.softswitches |= SS_HGRRD;
+            run_args.base_hgrrd = apple_ii_64k[1];
         }
     } else {
-        softswitches |= (SS_TEXTRD|SS_HGRRD);
-        base_textrd = apple_ii_64k[1];
-        base_hgrrd  = apple_ii_64k[1];
+        run_args.softswitches |= (SS_TEXTRD|SS_HGRRD);
+        run_args.base_textrd = apple_ii_64k[1];
+        run_args.base_hgrrd  = apple_ii_64k[1];
     }
 
     video_setDirty(A2_DIRTY_FLAG);
@@ -674,27 +647,27 @@ GLUE_C_READ(iie_ramrd_aux)
 
 GLUE_C_READ(iie_check_ramrd)
 {
-    return (softswitches & SS_RAMRD) ? 0x80 : 0x00;
+    return (run_args.softswitches & SS_RAMRD) ? 0x80 : 0x00;
 }
 
 GLUE_C_READ(iie_ramwrt_main)
 {
-    if (!(softswitches & SS_RAMWRT)) {
+    if (!(run_args.softswitches & SS_RAMWRT)) {
         return floating_bus();
     }
 
-    softswitches &= ~SS_RAMWRT;
-    base_ramwrt = apple_ii_64k[0];
+    run_args.softswitches &= ~SS_RAMWRT;
+    run_args.base_ramwrt = apple_ii_64k[0];
 
-    if (softswitches & SS_80STORE) {
-        if (!(softswitches & SS_HIRES)) {
-            softswitches &= ~SS_HGRWRT;
-            base_hgrwrt = apple_ii_64k[0];
+    if (run_args.softswitches & SS_80STORE) {
+        if (!(run_args.softswitches & SS_HIRES)) {
+            run_args.softswitches &= ~SS_HGRWRT;
+            run_args.base_hgrwrt = apple_ii_64k[0];
         }
     } else {
-        softswitches &= ~(SS_TEXTWRT|SS_HGRWRT);
-        base_textwrt = apple_ii_64k[0];
-        base_hgrwrt  = apple_ii_64k[0];
+        run_args.softswitches &= ~(SS_TEXTWRT|SS_HGRWRT);
+        run_args.base_textwrt = apple_ii_64k[0];
+        run_args.base_hgrwrt  = apple_ii_64k[0];
     }
 
     return floating_bus();
@@ -702,22 +675,22 @@ GLUE_C_READ(iie_ramwrt_main)
 
 GLUE_C_READ(iie_ramwrt_aux)
 {
-    if (softswitches & SS_RAMWRT) {
+    if (run_args.softswitches & SS_RAMWRT) {
         return floating_bus();
     }
 
-    softswitches |= SS_RAMWRT;
-    base_ramwrt = apple_ii_64k[1];
+    run_args.softswitches |= SS_RAMWRT;
+    run_args.base_ramwrt = apple_ii_64k[1];
 
-    if (softswitches & SS_80STORE) {
-        if (!(softswitches & SS_HIRES)) {
-            softswitches |= SS_HGRWRT;
-            base_hgrwrt = apple_ii_64k[1];
+    if (run_args.softswitches & SS_80STORE) {
+        if (!(run_args.softswitches & SS_HIRES)) {
+            run_args.softswitches |= SS_HGRWRT;
+            run_args.base_hgrwrt = apple_ii_64k[1];
         }
     } else {
-        softswitches |= (SS_TEXTWRT|SS_HGRWRT);
-        base_textwrt = apple_ii_64k[1];
-        base_hgrwrt  = apple_ii_64k[1];
+        run_args.softswitches |= (SS_TEXTWRT|SS_HGRWRT);
+        run_args.base_textwrt = apple_ii_64k[1];
+        run_args.base_hgrwrt  = apple_ii_64k[1];
     }
 
     return floating_bus();
@@ -725,27 +698,27 @@ GLUE_C_READ(iie_ramwrt_aux)
 
 GLUE_C_READ(iie_check_ramwrt)
 {
-    return (softswitches & SS_RAMWRT) ? 0x80 : 0x00;
+    return (run_args.softswitches & SS_RAMWRT) ? 0x80 : 0x00;
 }
 
 GLUE_C_READ_ALTZP(iie_altzp_main)
 {
-    if (!(softswitches & SS_ALTZP)) {
+    if (!(run_args.softswitches & SS_ALTZP)) {
         /* NOTE : test if ALTZP already off - due to d000-bank issues it is *needed*, not just a shortcut */
         return floating_bus();
     }
 
-    softswitches &= ~SS_ALTZP;
-    base_stackzp = apple_ii_64k[0];
+    run_args.softswitches &= ~SS_ALTZP;
+    run_args.base_stackzp = apple_ii_64k[0];
 
-    if (softswitches & SS_LCRAM) {
-        base_d000_rd -= 0x2000;
-        base_e000_rd = language_card[0] - 0xE000;
+    if (run_args.softswitches & SS_LCRAM) {
+        run_args.base_d000_rd -= 0x2000;
+        run_args.base_e000_rd = language_card[0] - 0xE000;
     }
 
-    if (softswitches & SS_LCWRT) {
-        base_d000_wrt -= 0x2000;
-        base_e000_wrt = language_card[0] - 0xE000;
+    if (run_args.softswitches & SS_LCWRT) {
+        run_args.base_d000_wrt -= 0x2000;
+        run_args.base_e000_wrt = language_card[0] - 0xE000;
     }
 
     return floating_bus();
@@ -753,13 +726,13 @@ GLUE_C_READ_ALTZP(iie_altzp_main)
 
 GLUE_C_READ_ALTZP(iie_altzp_aux)
 {
-    if (softswitches & SS_ALTZP) {
+    if (run_args.softswitches & SS_ALTZP) {
         /* NOTE : test if ALTZP already on - due to d000-bank issues it is *needed*, not just a shortcut */
         return floating_bus();
     }
 
-    softswitches |= SS_ALTZP;
-    base_stackzp = apple_ii_64k[1];
+    run_args.softswitches |= SS_ALTZP;
+    run_args.base_stackzp = apple_ii_64k[1];
 
     _lc_to_auxmem();
 
@@ -768,16 +741,16 @@ GLUE_C_READ_ALTZP(iie_altzp_aux)
 
 GLUE_C_READ(iie_check_altzp)
 {
-    return (softswitches & SS_ALTZP) ? 0x80 : 0x00;
+    return (run_args.softswitches & SS_ALTZP) ? 0x80 : 0x00;
 }
 
 GLUE_C_READ(iie_80col_off)
 {
-    if (!(softswitches & SS_80COL)) {
+    if (!(run_args.softswitches & SS_80COL)) {
         return floating_bus();
     }
 
-    softswitches &= ~SS_80COL;
+    run_args.softswitches &= ~SS_80COL;
     video_setDirty(A2_DIRTY_FLAG);
 
     return floating_bus();
@@ -785,11 +758,11 @@ GLUE_C_READ(iie_80col_off)
 
 GLUE_C_READ(iie_80col_on)
 {
-    if (softswitches & SS_80COL) {
+    if (run_args.softswitches & SS_80COL) {
         return floating_bus();
     }
 
-    softswitches |= SS_80COL;
+    run_args.softswitches |= SS_80COL;
     video_setDirty(A2_DIRTY_FLAG);
 
     return floating_bus();
@@ -797,13 +770,13 @@ GLUE_C_READ(iie_80col_on)
 
 GLUE_C_READ(iie_check_80col)
 {
-    return (softswitches & SS_80COL) ? 0x80 : 0x00;
+    return (run_args.softswitches & SS_80COL) ? 0x80 : 0x00;
 }
 
 GLUE_C_READ(iie_altchar_off)
 {
-    if (softswitches & SS_ALTCHAR) {
-        softswitches &= ~SS_ALTCHAR;
+    if (run_args.softswitches & SS_ALTCHAR) {
+        run_args.softswitches &= ~SS_ALTCHAR;
         display_loadFont(/*start:*/0x40, /*qty:*/0x40, /*data:*/ucase_glyphs, FONT_MODE_FLASH);
         video_setDirty(A2_DIRTY_FLAG);
     }
@@ -812,8 +785,8 @@ GLUE_C_READ(iie_altchar_off)
 
 GLUE_C_READ(iie_altchar_on)
 {
-    if (!(softswitches & SS_ALTCHAR)) {
-        softswitches |= SS_ALTCHAR;
+    if (!(run_args.softswitches & SS_ALTCHAR)) {
+        run_args.softswitches |= SS_ALTCHAR;
         display_loadFont(/*start:*/0x40, /*qty:*/0x20, /*data:*/mousetext_glyphs, FONT_MODE_MOUSETEXT);
         display_loadFont(/*start:*/0x60, /*qty:*/0x20, /*data:*/lcase_glyphs, FONT_MODE_INVERSE);
         video_setDirty(A2_DIRTY_FLAG);
@@ -823,31 +796,31 @@ GLUE_C_READ(iie_altchar_on)
 
 GLUE_C_READ(iie_check_altchar)
 {
-    return (softswitches & SS_ALTCHAR) ? 0x80 : 0x00;
+    return (run_args.softswitches & SS_ALTCHAR) ? 0x80 : 0x00;
 }
 
 GLUE_C_READ(iie_ioudis_off)
 {
-    softswitches &= ~SS_IOUDIS;
+    run_args.softswitches &= ~SS_IOUDIS;
     return c_read_gc_strobe(ea);
 }
 
 GLUE_C_READ(iie_ioudis_on)
 {
-    softswitches |= SS_IOUDIS;
+    run_args.softswitches |= SS_IOUDIS;
     return c_read_gc_strobe(ea);
 }
 
 GLUE_C_READ(iie_check_ioudis)
 {
     c_read_gc_strobe(ea);
-    return (softswitches & SS_IOUDIS) ? 0x80 : 0x00;
+    return (run_args.softswitches & SS_IOUDIS) ? 0x80 : 0x00;
 }
 
 GLUE_C_READ(iie_dhires_on)
 {
-    if (!(softswitches & SS_DHIRES)) {
-        softswitches |= SS_DHIRES;
+    if (!(run_args.softswitches & SS_DHIRES)) {
+        run_args.softswitches |= SS_DHIRES;
         video_setDirty(A2_DIRTY_FLAG);
     }
     return floating_bus();
@@ -855,8 +828,8 @@ GLUE_C_READ(iie_dhires_on)
 
 GLUE_C_READ(iie_dhires_off)
 {
-    if (softswitches & SS_DHIRES) {
-        softswitches &= ~SS_DHIRES;
+    if (run_args.softswitches & SS_DHIRES) {
+        run_args.softswitches &= ~SS_DHIRES;
         video_setDirty(A2_DIRTY_FLAG);
     }
     return floating_bus();
@@ -865,7 +838,7 @@ GLUE_C_READ(iie_dhires_off)
 GLUE_C_READ(iie_check_dhires)
 {
     c_read_gc_strobe(ea); // HACK FIXME : is this correct?
-    return (softswitches & SS_DHIRES) ? 0x80 : 0x00;
+    return (run_args.softswitches & SS_DHIRES) ? 0x80 : 0x00;
 }
 
 GLUE_C_READ(iie_check_vbl)
@@ -878,50 +851,50 @@ GLUE_C_READ(iie_check_vbl)
 
 GLUE_C_READ(iie_c3rom_peripheral)
 {
-    softswitches &= ~SS_C3ROM;
-    if (!(softswitches & SS_CXROM)) {
-        base_c3rom = (void *)iie_read_peripheral_card;
+    run_args.softswitches &= ~SS_C3ROM;
+    if (!(run_args.softswitches & SS_CXROM)) {
+        run_args.base_c3rom = (void *)iie_read_peripheral_card;
     }
     return 0x0;
 }
 
 GLUE_C_READ(iie_c3rom_internal)
 {
-    softswitches |= SS_C3ROM;
-    base_c3rom = apple_ii_64k[1];
+    run_args.softswitches |= SS_C3ROM;
+    run_args.base_c3rom = apple_ii_64k[1];
     return 0x0;
 }
 
 GLUE_C_READ(iie_check_c3rom)
 {
-    return (softswitches & SS_C3ROM) ? 0x00 : 0x80; // reversed pattern
+    return (run_args.softswitches & SS_C3ROM) ? 0x00 : 0x80; // reversed pattern
 }
 
 GLUE_C_READ(iie_cxrom_peripheral)
 {
-    softswitches &= ~SS_CXROM;
-    base_cxrom = (void *)iie_read_peripheral_card;
-    base_c4rom = (void *)iie_read_peripheral_card;
-    base_c5rom = (void *)iie_read_peripheral_card;
-    if (!(softswitches & SS_C3ROM)) {
-        base_c3rom = (void *)iie_read_peripheral_card;
+    run_args.softswitches &= ~SS_CXROM;
+    run_args.base_cxrom = (void *)iie_read_peripheral_card;
+    run_args.base_c4rom = (void *)iie_read_peripheral_card;
+    run_args.base_c5rom = (void *)iie_read_peripheral_card;
+    if (!(run_args.softswitches & SS_C3ROM)) {
+        run_args.base_c3rom = (void *)iie_read_peripheral_card;
     }
     return 0x0;
 }
 
 GLUE_C_READ(iie_cxrom_internal)
 {
-    softswitches |= SS_CXROM;
-    base_cxrom = apple_ii_64k[1];
-    base_c3rom = apple_ii_64k[1];
-    base_c4rom = apple_ii_64k[1];
-    base_c5rom = apple_ii_64k[1];
+    run_args.softswitches |= SS_CXROM;
+    run_args.base_cxrom = apple_ii_64k[1];
+    run_args.base_c3rom = apple_ii_64k[1];
+    run_args.base_c4rom = apple_ii_64k[1];
+    run_args.base_c5rom = apple_ii_64k[1];
     return 0x0;
 }
 
 GLUE_C_READ(iie_check_cxrom)
 {
-    return (softswitches & SS_CXROM) ? 0x80 : 0x00;
+    return (run_args.softswitches & SS_CXROM) ? 0x80 : 0x00;
 }
 
 GLUE_C_READ(iie_read_slot_expansion)
@@ -950,23 +923,23 @@ GLUE_C_WRITE(cpu_irqCheck)
 
 static void _initialize_iie_switches(void) {
 
-    base_stackzp = apple_ii_64k[0];
-    base_d000_rd = apple_ii_64k[0];
-    base_d000_wrt = language_banks[0] - 0xD000;
-    base_e000_rd = apple_ii_64k[0];
-    base_e000_wrt = language_card[0] - 0xE000;
+    run_args.base_stackzp = apple_ii_64k[0];
+    run_args.base_d000_rd = apple_ii_64k[0];
+    run_args.base_d000_wrt = language_banks[0] - 0xD000;
+    run_args.base_e000_rd = apple_ii_64k[0];
+    run_args.base_e000_wrt = language_card[0] - 0xE000;
 
-    base_ramrd = apple_ii_64k[0];
-    base_ramwrt = apple_ii_64k[0];
-    base_textrd = apple_ii_64k[0];
-    base_textwrt = apple_ii_64k[0];
-    base_hgrrd = apple_ii_64k[0];
-    base_hgrwrt= apple_ii_64k[0];
+    run_args.base_ramrd = apple_ii_64k[0];
+    run_args.base_ramwrt = apple_ii_64k[0];
+    run_args.base_textrd = apple_ii_64k[0];
+    run_args.base_textwrt = apple_ii_64k[0];
+    run_args.base_hgrrd = apple_ii_64k[0];
+    run_args.base_hgrwrt= apple_ii_64k[0];
 
-    base_c3rom = apple_ii_64k[1]; // c3rom internal
-    base_c4rom = apple_ii_64k[1]; // c4rom internal
-    base_c5rom = apple_ii_64k[1]; // c5rom internal
-    base_cxrom = (void *)iie_read_peripheral_card; // cxrom peripheral
+    run_args.base_c3rom = apple_ii_64k[1]; // c3rom internal
+    run_args.base_c4rom = apple_ii_64k[1]; // c4rom internal
+    run_args.base_c5rom = apple_ii_64k[1]; // c5rom internal
+    run_args.base_cxrom = (void *)iie_read_peripheral_card; // cxrom peripheral
 }
 
 static void _initialize_font(void) {
@@ -1237,6 +1210,8 @@ void vm_initialize(void) {
     disk6_init();
     _initialize_iie_switches();
     c_joystick_reset();
+
+    run_args.softswitches = SS_TEXT | SS_IOUDIS | SS_C3ROM | SS_LCWRT | SS_LCSEC;
 }
 
 void vm_reinitializeAudio(void) {
@@ -1253,12 +1228,11 @@ bool vm_saveState(StateHelper_s *helper) {
     do {
         uint8_t serialized[8] = { 0 };
 
-        serialized[0] = (uint8_t)((softswitches & 0xFF000000) >> 24);
-        serialized[1] = (uint8_t)((softswitches & 0xFF0000  ) >> 16);
-        serialized[2] = (uint8_t)((softswitches & 0xFF00    ) >>  8);
-        serialized[3] = (uint8_t)((softswitches & 0xFF      ) >>  0);
-        LOG("SAVE softswitches = %08x", softswitches);
-        if (!helper->save(fd, serialized, sizeof(softswitches))) {
+        serialized[0] = (uint8_t)((run_args.softswitches & 0xFF000000) >> 24);
+        serialized[1] = (uint8_t)((run_args.softswitches & 0xFF0000  ) >> 16);
+        serialized[2] = (uint8_t)((run_args.softswitches & 0xFF00    ) >>  8);
+        serialized[3] = (uint8_t)((run_args.softswitches & 0xFF      ) >>  0);
+        if (!helper->save(fd, serialized, sizeof(run_args.softswitches))) {
             break;
         }
 
@@ -1284,141 +1258,116 @@ bool vm_saveState(StateHelper_s *helper) {
         serialized[3] = 0x3;
         serialized[4] = 0x4;
         serialized[5] = 0x5;
-        LOG("SAVE base_ramrd = %d", (base_ramrd == apple_ii_64k[0]) ? serialized[0] : serialized[1]);
-        if (!helper->save(fd, (base_ramrd == apple_ii_64k[0]) ? &serialized[0] : &serialized[1], 1)) {
+        if (!helper->save(fd, (run_args.base_ramrd == apple_ii_64k[0]) ? &serialized[0] : &serialized[1], 1)) {
             break;
         }
-        LOG("SAVE base_ramwrt = %d", (base_ramwrt == apple_ii_64k[0]) ? serialized[0] : serialized[1]);
-        if (!helper->save(fd, (base_ramwrt == apple_ii_64k[0]) ? &serialized[0] : &serialized[1], 1)) {
+        if (!helper->save(fd, (run_args.base_ramwrt == apple_ii_64k[0]) ? &serialized[0] : &serialized[1], 1)) {
             break;
         }
-        LOG("SAVE base_textrd = %d", (base_textrd == apple_ii_64k[0]) ? serialized[0] : serialized[1]);
-        if (!helper->save(fd, (base_textrd == apple_ii_64k[0]) ? &serialized[0] : &serialized[1], 1)) {
+        if (!helper->save(fd, (run_args.base_textrd == apple_ii_64k[0]) ? &serialized[0] : &serialized[1], 1)) {
             break;
         }
-        LOG("SAVE base_textwrt = %d", (base_textwrt == apple_ii_64k[0]) ? serialized[0] : serialized[1]);
-        if (!helper->save(fd, (base_textwrt == apple_ii_64k[0]) ? &serialized[0] : &serialized[1], 1)) {
+        if (!helper->save(fd, (run_args.base_textwrt == apple_ii_64k[0]) ? &serialized[0] : &serialized[1], 1)) {
             break;
         }
-        LOG("SAVE base_hgrrd = %d", (base_hgrrd == apple_ii_64k[0]) ? serialized[0] : serialized[1]);
-        if (!helper->save(fd, (base_hgrrd == apple_ii_64k[0]) ? &serialized[0] : &serialized[1], 1)) {
+        if (!helper->save(fd, (run_args.base_hgrrd == apple_ii_64k[0]) ? &serialized[0] : &serialized[1], 1)) {
             break;
         }
-        LOG("SAVE base_hgrwrt = %d", (base_hgrwrt == apple_ii_64k[0]) ? serialized[0] : serialized[1]);
-        if (!helper->save(fd, (base_hgrwrt == apple_ii_64k[0]) ? &serialized[0] : &serialized[1], 1)) {
+        if (!helper->save(fd, (run_args.base_hgrwrt == apple_ii_64k[0]) ? &serialized[0] : &serialized[1], 1)) {
             break;
         }
-        LOG("SAVE base_stackzp = %d", (base_stackzp == apple_ii_64k[0]) ? serialized[0] : serialized[1]);
-        if (!helper->save(fd, (base_stackzp == apple_ii_64k[0]) ? &serialized[0] : &serialized[1], 1)) {
+        if (!helper->save(fd, (run_args.base_stackzp == apple_ii_64k[0]) ? &serialized[0] : &serialized[1], 1)) {
             break;
         }
-        LOG("SAVE base_c3rom = %d", (base_c3rom == (void *)iie_read_peripheral_card) ? serialized[0] : serialized[1]);
-        if (!helper->save(fd, (base_c3rom == (void *)iie_read_peripheral_card) ? &serialized[0] : &serialized[1], 1)) {
+        if (!helper->save(fd, (run_args.base_c3rom == (void *)iie_read_peripheral_card) ? &serialized[0] : &serialized[1], 1)) {
             break;
         }
 
-        LOG("SAVE base_cxrom = %d", (base_cxrom == (void *)iie_read_peripheral_card) ? serialized[0] : serialized[1]);
-        if (!helper->save(fd, (base_cxrom == (void *)iie_read_peripheral_card) ? &serialized[0] : &serialized[1], 1)) {
+        if (!helper->save(fd, (run_args.base_cxrom == (void *)iie_read_peripheral_card) ? &serialized[0] : &serialized[1], 1)) {
             break;
         }
 
-        if (base_d000_rd == apple_ii_64k[0]) {
-            LOG("SAVE base_d000_rd = %d", serialized[0]);
+        if (run_args.base_d000_rd == apple_ii_64k[0]) {
             if (!helper->save(fd, &serialized[0], 1)) { // base_d000_rd --> //e ROM
                 break;
             }
-        } else if (base_d000_rd == language_banks[0] - 0xD000) {
-            LOG("SAVE base_d000_rd = %d", serialized[2]);
+        } else if (run_args.base_d000_rd == language_banks[0] - 0xD000) {
             if (!helper->save(fd, &serialized[2], 1)) { // base_d000_rd --> main LC mem
                 break;
             }
-        } else if (base_d000_rd == language_banks[0] - 0xC000) {
-            LOG("SAVE base_d000_rd = %d", serialized[3]);
+        } else if (run_args.base_d000_rd == language_banks[0] - 0xC000) {
             if (!helper->save(fd, &serialized[3], 1)) { // base_d000_rd --> main LC mem
                 break;
             }
-        } else if (base_d000_rd == language_banks[1] - 0xD000) {
-            LOG("SAVE base_d000_rd = %d", serialized[4]);
+        } else if (run_args.base_d000_rd == language_banks[1] - 0xD000) {
             if (!helper->save(fd, &serialized[4], 1)) { // base_d000_rd --> aux  LC mem
                 break;
             }
-        } else if (base_d000_rd == language_banks[1] - 0xC000) {
-            LOG("SAVE base_d000_rd = %d", serialized[5]);
+        } else if (run_args.base_d000_rd == language_banks[1] - 0xC000) {
             if (!helper->save(fd, &serialized[5], 1)) { // base_d000_rd --> aux  LC mem
                 break;
             }
         } else {
-            LOG("OOPS ... language_banks[0] == %p base_d000_rd == %p", language_banks[0], base_d000_rd);
+            LOG("OOPS ... language_banks[0] == %p base_d000_rd == %p", language_banks[0], run_args.base_d000_rd);
             assert(false);
         }
 
-        if (base_d000_wrt == 0) {
-            LOG("SAVE base_d000_wrt = %d", serialized[0]);
+        if (run_args.base_d000_wrt == 0) {
             if (!helper->save(fd, &serialized[0], 1)) { // base_d000_wrt --> no write
                 break;
             }
-        } else if (base_d000_wrt == language_banks[0] - 0xD000) {
-            LOG("SAVE base_d000_wrt = %d", serialized[2]);
+        } else if (run_args.base_d000_wrt == language_banks[0] - 0xD000) {
             if (!helper->save(fd, &serialized[2], 1)) { // base_d000_wrt --> main LC mem
                 break;
             }
-        } else if (base_d000_wrt == language_banks[0] - 0xC000) {
-            LOG("SAVE base_d000_wrt = %d", serialized[3]);
+        } else if (run_args.base_d000_wrt == language_banks[0] - 0xC000) {
             if (!helper->save(fd, &serialized[3], 1)) { // base_d000_wrt --> main LC mem
                 break;
             }
-        } else if (base_d000_wrt == language_banks[1] - 0xD000) {
-            LOG("SAVE base_d000_wrt = %d", serialized[4]);
+        } else if (run_args.base_d000_wrt == language_banks[1] - 0xD000) {
             if (!helper->save(fd, &serialized[4], 1)) { // base_d000_wrt --> aux  LC mem
                 break;
             }
-        } else if (base_d000_wrt == language_banks[1] - 0xC000) {
-            LOG("SAVE base_d000_wrt = %d", serialized[5]);
+        } else if (run_args.base_d000_wrt == language_banks[1] - 0xC000) {
             if (!helper->save(fd, &serialized[5], 1)) { // base_d000_wrt --> aux  LC mem
                 break;
             }
         } else {
-            LOG("OOPS ... language_banks[0] == %p base_d000_wrt == %p", language_banks[0], base_d000_wrt);
+            LOG("OOPS ... language_banks[0] == %p run_args.base_d000_wrt == %p", language_banks[0], run_args.base_d000_wrt);
             assert(false);
         }
 
-        if (base_e000_rd == apple_ii_64k[0]) {
-            LOG("SAVE base_e000_rd = %d", serialized[0]);
+        if (run_args.base_e000_rd == apple_ii_64k[0]) {
             if (!helper->save(fd, &serialized[0], 1)) { // base_e000_rd --> //e ROM
                 break;
             }
-        } else if (base_e000_rd == language_card[0] - 0xE000) {
-            LOG("SAVE base_e000_rd = %d", serialized[2]);
+        } else if (run_args.base_e000_rd == language_card[0] - 0xE000) {
             if (!helper->save(fd, &serialized[2], 1)) { // base_e000_rd --> main LC mem
                 break;
             }
-        } else if (base_e000_rd == language_card[0] - 0xC000) {
-            LOG("SAVE base_e000_rd = %d", serialized[3]);
+        } else if (run_args.base_e000_rd == language_card[0] - 0xC000) {
             if (!helper->save(fd, &serialized[3], 1)) { // base_e000_rd --> aux  LC mem
                 break;
             }
         } else {
-            LOG("OOPS ... language_card[0] == %p base_e000_rd == %p", language_card[0], base_e000_rd);
+            LOG("OOPS ... language_card[0] == %p run_args.base_e000_rd == %p", language_card[0], run_args.base_e000_rd);
             assert(false);
         }
 
-        if (base_e000_wrt == 0) {
-            LOG("SAVE base_e000_wrt = %d", serialized[0]);
+        if (run_args.base_e000_wrt == 0) {
             if (!helper->save(fd, &serialized[0], 1)) { // base_e000_wrt --> no write
                 break;
             }
-        } else if (base_e000_wrt == language_card[0] - 0xE000) {
-            LOG("SAVE base_e000_wrt = %d", serialized[2]);
+        } else if (run_args.base_e000_wrt == language_card[0] - 0xE000) {
             if (!helper->save(fd, &serialized[2], 1)) { // base_e000_wrt --> main LC mem
                 break;
             }
-        } else if (base_e000_wrt == language_card[0] - 0xC000) {
-            LOG("SAVE base_e000_wrt = %d", serialized[3]);
+        } else if (run_args.base_e000_wrt == language_card[0] - 0xC000) {
             if (!helper->save(fd, &serialized[3], 1)) { // base_e000_wrt --> aux  LC mem
                 break;
             }
         } else {
-            LOG("OOPS ... language_card[0] == %p base_e000_wrt == %p", language_card[0], base_e000_wrt);
+            LOG("OOPS ... language_card[0] == %p run_args.base_e000_wrt == %p", language_card[0], run_args.base_e000_wrt);
             assert(false);
         }
 
@@ -1439,11 +1388,10 @@ bool vm_loadState(StateHelper_s *helper) {
         if (!helper->load(fd, serialized, sizeof(uint32_t))) {
             break;
         }
-        softswitches  = (uint32_t)(serialized[0] << 24);
-        softswitches |= (uint32_t)(serialized[1] << 16);
-        softswitches |= (uint32_t)(serialized[2] <<  8);
-        softswitches |= (uint32_t)(serialized[3] <<  0);
-        LOG("LOAD softswitches = %08x", softswitches);
+        run_args.softswitches  = (uint32_t)(serialized[0] << 24);
+        run_args.softswitches |= (uint32_t)(serialized[1] << 16);
+        run_args.softswitches |= (uint32_t)(serialized[2] <<  8);
+        run_args.softswitches |= (uint32_t)(serialized[3] <<  0);
 
         // load main/aux memory state
         if (!helper->load(fd, apple_ii_64k[0], sizeof(apple_ii_64k))) {
@@ -1465,63 +1413,54 @@ bool vm_loadState(StateHelper_s *helper) {
         if (!helper->load(fd, &state, 1)) {
             break;
         }
-        LOG("LOAD base_ramrd = %d", state);
-        base_ramrd = state == 0x0 ? apple_ii_64k[0] : apple_ii_64k[1];
+        run_args.base_ramrd = state == 0x0 ? apple_ii_64k[0] : apple_ii_64k[1];
 
         if (!helper->load(fd, &state, 1)) {
             break;
         }
-        LOG("LOAD base_ramwrt = %d", state);
-        base_ramwrt = state == 0x0 ? apple_ii_64k[0] : apple_ii_64k[1];
+        run_args.base_ramwrt = state == 0x0 ? apple_ii_64k[0] : apple_ii_64k[1];
 
         if (!helper->load(fd, &state, 1)) {
             break;
         }
-        LOG("LOAD base_textrd = %d", state);
-        base_textrd = state == 0x0 ? apple_ii_64k[0] : apple_ii_64k[1];
+        run_args.base_textrd = state == 0x0 ? apple_ii_64k[0] : apple_ii_64k[1];
 
         if (!helper->load(fd, &state, 1)) {
             break;
         }
-        LOG("LOAD base_textwrt = %d", state);
-        base_textwrt = state == 0x0 ? apple_ii_64k[0] : apple_ii_64k[1];
+        run_args.base_textwrt = state == 0x0 ? apple_ii_64k[0] : apple_ii_64k[1];
 
         if (!helper->load(fd, &state, 1)) {
             break;
         }
-        LOG("LOAD base_hgrrd = %d", state);
-        base_hgrrd = state == 0x0 ? apple_ii_64k[0] : apple_ii_64k[1];
+        run_args.base_hgrrd = state == 0x0 ? apple_ii_64k[0] : apple_ii_64k[1];
 
         if (!helper->load(fd, &state, 1)) {
             break;
         }
-        LOG("LOAD base_hgrwrt = %d", state);
-        base_hgrwrt = state == 0x0 ? apple_ii_64k[0] : apple_ii_64k[1];
+        run_args.base_hgrwrt = state == 0x0 ? apple_ii_64k[0] : apple_ii_64k[1];
 
         if (!helper->load(fd, &state, 1)) {
             break;
         }
-        LOG("LOAD base_stackzp = %d", state);
-        base_stackzp = state == 0x0 ? apple_ii_64k[0] : apple_ii_64k[1];
+        run_args.base_stackzp = state == 0x0 ? apple_ii_64k[0] : apple_ii_64k[1];
 
         if (!helper->load(fd, &state, 1)) {
             break;
         }
-        LOG("LOAD base_c3rom = %d", state);
-        base_c3rom = state == 0x0 ? (void *)iie_read_peripheral_card : apple_ii_64k[1];
+        run_args.base_c3rom = state == 0x0 ? (void *)iie_read_peripheral_card : apple_ii_64k[1];
 
         if (!helper->load(fd, &state, 1)) {
             break;
         }
-        LOG("LOAD base_cxrom = %d", state);
         if (state == 0) {
-            base_cxrom = (void *)iie_read_peripheral_card;
-            base_c4rom = (void *)iie_read_peripheral_card;
-            base_c5rom = (void *)iie_read_peripheral_card;
+            run_args.base_cxrom = (void *)iie_read_peripheral_card;
+            run_args.base_c4rom = (void *)iie_read_peripheral_card;
+            run_args.base_c5rom = (void *)iie_read_peripheral_card;
         } else {
-            base_cxrom = apple_ii_64k[1];
-            base_c4rom = apple_ii_64k[1];
-            base_c5rom = apple_ii_64k[1];
+            run_args.base_cxrom = apple_ii_64k[1];
+            run_args.base_c4rom = apple_ii_64k[1];
+            run_args.base_c5rom = apple_ii_64k[1];
         }
 
         if (!helper->load(fd, &state, 1)) {
@@ -1529,92 +1468,89 @@ bool vm_loadState(StateHelper_s *helper) {
         }
         switch (state) {
             case 0:
-                base_d000_rd = apple_ii_64k[0];
+                run_args.base_d000_rd = apple_ii_64k[0];
                 break;
             case 2:
-                base_d000_rd = language_banks[0] - 0xD000;
+                run_args.base_d000_rd = language_banks[0] - 0xD000;
                 break;
             case 3:
-                base_d000_rd = language_banks[0] - 0xC000;
+                run_args.base_d000_rd = language_banks[0] - 0xC000;
                 break;
             case 4:
-                base_d000_rd = language_banks[1] - 0xD000;
+                run_args.base_d000_rd = language_banks[1] - 0xD000;
                 break;
             case 5:
-                base_d000_rd = language_banks[1] - 0xC000;
+                run_args.base_d000_rd = language_banks[1] - 0xC000;
                 break;
             default:
                 LOG("Unknown state base_d000_rd %02x", state);
                 assert(false);
                 break;
         }
-        LOG("LOAD base_d000_rd = %d", state);
 
         if (!helper->load(fd, &state, 1)) {
             break;
         }
         switch (state) {
             case 0:
-                base_d000_wrt = 0;
+                run_args.base_d000_wrt = 0;
                 break;
             case 2:
-                base_d000_wrt = language_banks[0] - 0xD000;
+                run_args.base_d000_wrt = language_banks[0] - 0xD000;
                 break;
             case 3:
-                base_d000_wrt = language_banks[0] - 0xC000;
+                run_args.base_d000_wrt = language_banks[0] - 0xC000;
                 break;
             case 4:
-                base_d000_wrt = language_banks[1] - 0xD000;
+                run_args.base_d000_wrt = language_banks[1] - 0xD000;
                 break;
             case 5:
-                base_d000_wrt = language_banks[1] - 0xC000;
+                run_args.base_d000_wrt = language_banks[1] - 0xC000;
                 break;
             default:
                 LOG("Unknown state base_d000_wrt %02x", state);
                 assert(false);
                 break;
         }
-        LOG("LOAD base_d000_wrt = %d", state);
 
         if (!helper->load(fd, &state, 1)) {
             break;
         }
         switch (state) {
             case 0:
-                base_e000_rd = apple_ii_64k[0];
+                run_args.base_e000_rd = apple_ii_64k[0];
                 break;
             case 2:
-                base_e000_rd = language_card[0] - 0xE000;
+                run_args.base_e000_rd = language_card[0] - 0xE000;
                 break;
             case 3:
-                base_e000_rd = language_card[0] - 0xC000;
+                run_args.base_e000_rd = language_card[0] - 0xC000;
                 break;
             default:
                 LOG("Unknown state base_e000_rd %02x", state);
                 assert(false);
                 break;
         }
-        LOG("LOAD base_e000_rd = %d", state);
 
         if (!helper->load(fd, &state, 1)) {
             break;
         }
         switch (state) {
             case 0:
-                base_e000_wrt = 0;
+                run_args.base_e000_wrt = 0;
                 break;
             case 2:
-                base_e000_wrt = language_card[0] - 0xE000;
+                run_args.base_e000_wrt = language_card[0] - 0xE000;
                 break;
             case 3:
-                base_e000_wrt = language_card[0] - 0xC000;
+                run_args.base_e000_wrt = language_card[0] - 0xC000;
                 break;
             default:
                 LOG("Unknown state base_e000_wrt %02x", state);
                 assert(false);
                 break;
         }
-        LOG("LOAD base_e000_wrt = %d", state);
+        LOG("LOAD run_args.base_e000_wrt = %d", state);
 
         loaded = true;
     } while (0);
@@ -1626,81 +1562,81 @@ void debug_print_softwitches(void) {
     // useful from GDB ...
 
     fprintf(stderr, "STANDARD: ");
-    if (softswitches & SS_TEXT) {
+    if (run_args.softswitches & SS_TEXT) {
         fprintf(stderr, "SS_TEXT ");
     }
-    if (softswitches & SS_MIXED) {
+    if (run_args.softswitches & SS_MIXED) {
         fprintf(stderr, "SS_MIXED ");
     }
-    if (softswitches & SS_HIRES) {
+    if (run_args.softswitches & SS_HIRES) {
         fprintf(stderr, "SS_HIRES ");
     }
-    if (softswitches & SS_PAGE2) {
+    if (run_args.softswitches & SS_PAGE2) {
         fprintf(stderr, "SS_PAGE2 ");
     }
-    if (softswitches & SS_BANK2) {
+    if (run_args.softswitches & SS_BANK2) {
         fprintf(stderr, "SS_BANK2 ");
     }
-    if (softswitches & SS_LCRAM) {
+    if (run_args.softswitches & SS_LCRAM) {
         fprintf(stderr, "SS_LCRAM ");
     }
-    if (softswitches & SS_80STORE) {
+    if (run_args.softswitches & SS_80STORE) {
         fprintf(stderr, "SS_80STORE ");
     }
-    if (softswitches & SS_80COL) {
+    if (run_args.softswitches & SS_80COL) {
         fprintf(stderr, "SS_80COL ");
     }
-    if (softswitches & SS_RAMRD) {
+    if (run_args.softswitches & SS_RAMRD) {
         fprintf(stderr, "SS_RAMRD ");
     }
-    if (softswitches & SS_RAMWRT) {
+    if (run_args.softswitches & SS_RAMWRT) {
         fprintf(stderr, "SS_RAMWRT ");
     }
-    if (softswitches & SS_ALTZP) {
+    if (run_args.softswitches & SS_ALTZP) {
         fprintf(stderr, "SS_ALTZP ");
     }
-    if (softswitches & SS_DHIRES) {
+    if (run_args.softswitches & SS_DHIRES) {
         fprintf(stderr, "SS_DHIRES ");
     }
-    if (softswitches & SS_IOUDIS) {
+    if (run_args.softswitches & SS_IOUDIS) {
         fprintf(stderr, "SS_IOUDIS ");
     }
-    if (softswitches & SS_CXROM) {
+    if (run_args.softswitches & SS_CXROM) {
         fprintf(stderr, "SS_CXROM ");
     }
-    if (softswitches & SS_C3ROM) {
+    if (run_args.softswitches & SS_C3ROM) {
         fprintf(stderr, "SS_C3ROM ");
     }
-    if (softswitches & SS_ALTCHAR) {
+    if (run_args.softswitches & SS_ALTCHAR) {
         fprintf(stderr, "SS_ALTCHAR ");
     }
     fprintf(stderr, "\n");
 
     // pseudo #1
     fprintf(stderr, "PSEUDO 1: ");
-    if (softswitches & SS_LCSEC) {
+    if (run_args.softswitches & SS_LCSEC) {
         fprintf(stderr, "SS_LCSEC ");
     }
-    if (softswitches & SS_LCWRT) {
+    if (run_args.softswitches & SS_LCWRT) {
         fprintf(stderr, "SS_LCWRT ");
     }
     fprintf(stderr, "\n");
 
     // pseudo #2
     fprintf(stderr, "PSEUDO 2: ");
-    if (softswitches & SS_SCREEN) {
+    if (run_args.softswitches & SS_SCREEN) {
         fprintf(stderr, "SS_SCREEN ");
     }
-    if (softswitches & SS_TEXTRD) {
+    if (run_args.softswitches & SS_TEXTRD) {
         fprintf(stderr, "SS_TEXTRD ");
     }
-    if (softswitches & SS_TEXTWRT) {
+    if (run_args.softswitches & SS_TEXTWRT) {
         fprintf(stderr, "SS_TEXTWRT ");
     }
-    if (softswitches & SS_HGRRD) {
+    if (run_args.softswitches & SS_HGRRD) {
         fprintf(stderr, "SS_HGRRD ");
     }
-    if (softswitches & SS_HGRWRT) {
+    if (run_args.softswitches & SS_HGRWRT) {
         fprintf(stderr, "SS_HGRWRT ");
     }
 

@@ -836,48 +836,48 @@ static inline drawpage_mode_t _currentMixedMode(uint32_t currswitches) {
 
 GLUE_C_WRITE(video__write_2e_text0)
 {
-    base_textwrt[ea] = b;
-    drawpage_mode_t mode = _currentMainMode(softswitches);
+    run_args.base_textwrt[ea] = b;
+    drawpage_mode_t mode = _currentMainMode(run_args.softswitches);
     if (mode == DRAWPAGE_HIRES) {
         return;
     }
-    if (!(softswitches & SS_PAGE2)) {
+    if (!(run_args.softswitches & SS_PAGE2)) {
         video_setDirty(A2_DIRTY_FLAG);
     }
 }
 
 GLUE_C_WRITE(video__write_2e_text0_mixed)
 {
-    base_textwrt[ea] = b;
-    drawpage_mode_t mode = _currentMixedMode(softswitches);
+    run_args.base_textwrt[ea] = b;
+    drawpage_mode_t mode = _currentMixedMode(run_args.softswitches);
     if (mode == DRAWPAGE_HIRES) {
         return;
     }
-    if (!(softswitches & SS_PAGE2)) {
+    if (!(run_args.softswitches & SS_PAGE2)) {
         video_setDirty(A2_DIRTY_FLAG);
     }
 }
 
 GLUE_C_WRITE(video__write_2e_text1)
 {
-    base_ramwrt[ea] = b;
-    drawpage_mode_t mode = _currentMainMode(softswitches);
+    run_args.base_ramwrt[ea] = b;
+    drawpage_mode_t mode = _currentMainMode(run_args.softswitches);
     if (mode == DRAWPAGE_HIRES) {
         return;
     }
-    if (softswitches & SS_PAGE2) {
+    if (run_args.softswitches & SS_PAGE2) {
         video_setDirty(A2_DIRTY_FLAG);
     }
 }
 
 GLUE_C_WRITE(video__write_2e_text1_mixed)
 {
-    base_ramwrt[ea] = b;
-    drawpage_mode_t mode = _currentMixedMode(softswitches);
+    run_args.base_ramwrt[ea] = b;
+    drawpage_mode_t mode = _currentMixedMode(run_args.softswitches);
     if (mode == DRAWPAGE_HIRES) {
         return;
     }
-    if (softswitches & SS_PAGE2) {
+    if (run_args.softswitches & SS_PAGE2) {
         video_setDirty(A2_DIRTY_FLAG);
     }
 }
@@ -1161,96 +1161,96 @@ static void (*_hirespage_plotter(uint32_t currswitches))(uint16_t, int, int, boo
 
 GLUE_C_WRITE(video__write_2e_even0)
 {
-    base_hgrwrt[ea] = b;
-    drawpage_mode_t mode = _currentMainMode(softswitches);
+    run_args.base_hgrwrt[ea] = b;
+    drawpage_mode_t mode = _currentMainMode(run_args.softswitches);
     if (mode == DRAWPAGE_TEXT) {
         return;
     }
-    if (!(softswitches & SS_PAGE2)) {
+    if (!(run_args.softswitches & SS_PAGE2)) {
         video_setDirty(A2_DIRTY_FLAG);
     }
 }
 
 GLUE_C_WRITE(video__write_2e_even0_mixed)
 {
-    base_hgrwrt[ea] = b;
-    drawpage_mode_t mode = _currentMixedMode(softswitches);
+    run_args.base_hgrwrt[ea] = b;
+    drawpage_mode_t mode = _currentMixedMode(run_args.softswitches);
     if (mode == DRAWPAGE_TEXT) {
         return;
     }
-    if (!(softswitches & SS_PAGE2)) {
+    if (!(run_args.softswitches & SS_PAGE2)) {
         video_setDirty(A2_DIRTY_FLAG);
     }
 }
 
 GLUE_C_WRITE(video__write_2e_odd0)
 {
-    base_hgrwrt[ea] = b;
-    drawpage_mode_t mode = _currentMainMode(softswitches);
+    run_args.base_hgrwrt[ea] = b;
+    drawpage_mode_t mode = _currentMainMode(run_args.softswitches);
     if (mode == DRAWPAGE_TEXT) {
         return;
     }
-    if (!(softswitches & SS_PAGE2)) {
+    if (!(run_args.softswitches & SS_PAGE2)) {
         video_setDirty(A2_DIRTY_FLAG);
     }
 }
 
 GLUE_C_WRITE(video__write_2e_odd0_mixed)
 {
-    base_hgrwrt[ea] = b;
-    drawpage_mode_t mode = _currentMixedMode(softswitches);
+    run_args.base_hgrwrt[ea] = b;
+    drawpage_mode_t mode = _currentMixedMode(run_args.softswitches);
     if (mode == DRAWPAGE_TEXT) {
         return;
     }
-    if (!(softswitches & SS_PAGE2)) {
+    if (!(run_args.softswitches & SS_PAGE2)) {
         video_setDirty(A2_DIRTY_FLAG);
     }
 }
 
 GLUE_C_WRITE(video__write_2e_even1)
 {
-    base_ramwrt[ea] = b;
-    drawpage_mode_t mode = _currentMainMode(softswitches);
+    run_args.base_ramwrt[ea] = b;
+    drawpage_mode_t mode = _currentMainMode(run_args.softswitches);
     if (mode == DRAWPAGE_TEXT) {
         return;
     }
-    if (softswitches & SS_PAGE2) {
+    if (run_args.softswitches & SS_PAGE2) {
         video_setDirty(A2_DIRTY_FLAG);
     }
 }
 
 GLUE_C_WRITE(video__write_2e_even1_mixed)
 {
-    base_ramwrt[ea] = b;
-    drawpage_mode_t mode = _currentMixedMode(softswitches);
+    run_args.base_ramwrt[ea] = b;
+    drawpage_mode_t mode = _currentMixedMode(run_args.softswitches);
     if (mode == DRAWPAGE_TEXT) {
         return;
     }
-    if (softswitches & SS_PAGE2) {
+    if (run_args.softswitches & SS_PAGE2) {
         video_setDirty(A2_DIRTY_FLAG);
     }
 }
 
 GLUE_C_WRITE(video__write_2e_odd1)
 {
-    base_ramwrt[ea] = b;
-    drawpage_mode_t mode = _currentMainMode(softswitches);
+    run_args.base_ramwrt[ea] = b;
+    drawpage_mode_t mode = _currentMainMode(run_args.softswitches);
     if (mode == DRAWPAGE_TEXT) {
         return;
     }
-    if (softswitches & SS_PAGE2) {
+    if (run_args.softswitches & SS_PAGE2) {
         video_setDirty(A2_DIRTY_FLAG);
     }
 }
 
 GLUE_C_WRITE(video__write_2e_odd1_mixed)
 {
-    base_ramwrt[ea] = b;
-    drawpage_mode_t mode = _currentMixedMode(softswitches);
+    run_args.base_ramwrt[ea] = b;
+    drawpage_mode_t mode = _currentMixedMode(run_args.softswitches);
     if (mode == DRAWPAGE_TEXT) {
         return;
     }
-    if (softswitches & SS_PAGE2) {
+    if (run_args.softswitches & SS_PAGE2) {
         video_setDirty(A2_DIRTY_FLAG);
     }
 }
@@ -1294,7 +1294,7 @@ void display_renderStagingFramebuffer(uint8_t *stagingFB) {
 
     int page = 0;
     int bank = 0;
-    const uint32_t mainswitches = softswitches;
+    const uint32_t mainswitches = run_args.softswitches;
 
     // render main portion of screen ...
 
@@ -1323,7 +1323,7 @@ void display_renderStagingFramebuffer(uint8_t *stagingFB) {
     }
 
     // resample current switches ... and render mixed portion of screen
-    const uint32_t mixedswitches = softswitches;
+    const uint32_t mixedswitches = run_args.softswitches;
 
     drawpage_mode_t mixedDrawPageMode = _currentMixedMode(mixedswitches);
     _currentPageAndBank(mixedswitches, mixedDrawPageMode, &page, &bank);
@@ -1361,7 +1361,7 @@ void display_flashText(void) {
     normal = !normal;
 
     // flash only if it's text or mixed modes.
-    if (softswitches & (SS_TEXT|SS_MIXED)) {
+    if (run_args.softswitches & (SS_TEXT|SS_MIXED)) {
         if (normal) {
             colormap[ COLOR_FLASHING_BLACK].red   = 0;
             colormap[ COLOR_FLASHING_BLACK].green = 0;
@@ -1407,12 +1407,11 @@ unsigned long video_clearDirty(unsigned long flags) {
 
 extern unsigned int CpuGetCyclesThisVideoFrame(void);
 uint16_t video_scanner_get_address(bool *vblBarOut) {
-
-    const bool SW_HIRES   = (softswitches & SS_HIRES);
-    const bool SW_TEXT    = (softswitches & SS_TEXT);
-    const bool SW_PAGE2   = (softswitches & SS_PAGE2);
-    const bool SW_80STORE = (softswitches & SS_80STORE);
-    const bool SW_MIXED   = (softswitches & SS_MIXED);
+    const bool SW_HIRES   = (run_args.softswitches & SS_HIRES);
+    const bool SW_TEXT    = (run_args.softswitches & SS_TEXT);
+    const bool SW_PAGE2   = (run_args.softswitches & SS_PAGE2);
+    const bool SW_80STORE = (run_args.softswitches & SS_80STORE);
+    const bool SW_MIXED   = (run_args.softswitches & SS_MIXED);
 
     // get video scanner position
     unsigned int nCycles = CpuGetCyclesThisVideoFrame();

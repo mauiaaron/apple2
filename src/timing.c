@@ -52,9 +52,6 @@
 double cycles_persec_target = CLK_6502;
 unsigned long cycles_count_total = 0;           // Running at spec ~1MHz, this will approach overflow in ~4000secs (for 32bit architectures)
 int cycles_speaker_feedback = 0;
-int32_t cpu65_cycles_to_execute = 0;            // cycles-to-execute by cpu65_run()
-int32_t cpu65_cycle_count = 0;                  // cycles currently excuted by cpu65_run()
-int32_t irqCheckTimeout = IRQ_CHECK_CYCLES;
 static int32_t cycles_checkpoint_count = 0;
 static unsigned int g_dwCyclesThisFrame = 0;
 
@@ -71,7 +68,6 @@ bool is_fullspeed = false;
 bool alt_speed_enabled = false;
 
 // misc
-volatile uint8_t emul_reinitialize = 1;
 static bool emul_reinitialize_audio = false;
 static bool emul_pause_audio = false;
 static bool emul_resume_audio = false;
@@ -149,7 +145,7 @@ void reinitialize(void) {
 
     cycles_count_total = 0;
     g_dwCyclesThisFrame = 0;
-    irqCheckTimeout = IRQ_CHECK_CYCLES;
+    run_args.irq_check_timeout = IRQ_CHECK_CYCLES;
 #if TESTING
     extern unsigned long (*testing_getCyclesCount)(void);
     if (testing_getCyclesCount) {
@@ -158,8 +154,6 @@ void reinitialize(void) {
 #endif
 
     vm_initialize();
-
-    softswitches = SS_TEXT | SS_IOUDIS | SS_C3ROM | SS_LCWRT | SS_LCSEC;
 
     video_setDirty(A2_DIRTY_FLAG);
 
@@ -277,9 +271,10 @@ static void *cpu_thread(void *dummyptr) {
     speaker_init();
     MB_Initialize();
 
+    run_args.emul_reinitialize = 1;
+
 cpu_runloop:
-    do
-    {
+    do {
         LOG("CPUTHREAD %lu LOCKING FOR MAYBE INITIALIZING AUDIO ...", (unsigned long)cpu_thread_id);
         pthread_mutex_lock(&interface_mutex);
         if (emul_reinitialize_audio) {
@@ -298,7 +293,7 @@ cpu_runloop:
         pthread_mutex_unlock(&interface_mutex);
         LOG("UNLOCKING FOR MAYBE INITIALIZING AUDIO ...");
 
-        if (emul_reinitialize) {
+        if (run_args.emul_reinitialize) {
             reinitialize();
         }
 
@@ -321,8 +316,7 @@ cpu_runloop:
             clock_gettime(CLOCK_MONOTONIC, &ti);
 
             deltat = timespec_diff(t0, ti, &negative);
-            if (deltat.tv_sec)
-            {
+            if (deltat.tv_sec) {
                 if (!is_fullspeed) {
                     TIMING_LOG("NOTE : serious divergence from target time ...");
                 }
@@ -333,35 +327,36 @@ cpu_runloop:
             drift_adj_nsecs = negative ? ~deltat.tv_nsec : deltat.tv_nsec;
 
             // set up increment & decrement counters
-            cpu65_cycles_to_execute = (cycles_persec_target / 1000); // cycles_persec_target * EXECUTION_PERIOD_NSECS / NANOSECONDS_PER_SECOND
+            run_args.cpu65_cycles_to_execute = (cycles_persec_target / 1000); // cycles_persec_target * EXECUTION_PERIOD_NSECS / NANOSECONDS_PER_SECOND
             if (!is_fullspeed) {
-                cpu65_cycles_to_execute += cycles_speaker_feedback;
+                run_args.cpu65_cycles_to_execute += cycles_speaker_feedback;
             }
-            if (cpu65_cycles_to_execute < 0)
-            {
-                cpu65_cycles_to_execute = 0;
+            if (run_args.cpu65_cycles_to_execute < 0) {
+                run_args.cpu65_cycles_to_execute = 0;
             }
 
             MB_StartOfCpuExecute();
             if (is_debugging) {
-                debugging_cycles = cpu65_cycles_to_execute;
+                debugging_cycles = run_args.cpu65_cycles_to_execute;
             }
 
             do {
                 if (is_debugging) {
-                    cpu65_cycles_to_execute = 1;
+                    run_args.cpu65_cycles_to_execute = 1;
                 }
 
-                cpu65_cycle_count = 0;
+                run_args.cpu65_cycle_count = 0;
                 cycles_checkpoint_count = 0;
-                cpu65_run(); // run emulation for cpu65_cycles_to_execute cycles ...
+
+                cpu65_run(&run_args); // run emulation for cpu65_cycles_to_execute cycles ...
+
 #if DEBUG_TIMING
-                dbg_cycles_executed += cpu65_cycle_count;
+                dbg_cycles_executed += run_args.cpu65_cycle_count;
 #endif
-                g_dwCyclesThisFrame += cpu65_cycle_count;
+                g_dwCyclesThisFrame += run_args.cpu65_cycle_count;
 
                 if (is_debugging) {
-                    debugging_cycles -= cpu65_cycle_count;
+                    debugging_cycles -= run_args.cpu65_cycle_count;
                     timing_checkpoint_cycles();
 
                     if (c_debugger_should_break() || (debugging_cycles <= 0)) {
@@ -377,7 +372,7 @@ cpu_runloop:
                         }
                     }
 
-                    if (emul_reinitialize) {
+                    if (run_args.emul_reinitialize) {
                         pthread_mutex_unlock(&interface_mutex);
                         goto cpu_runloop;
                     }
@@ -489,7 +484,7 @@ cpu_runloop:
             }
 #endif
 
-            if (UNLIKELY(emul_reinitialize)) {
+            if (UNLIKELY(run_args.emul_reinitialize)) {
                 break;
             }
 
@@ -549,7 +544,7 @@ unsigned int CpuGetCyclesThisVideoFrame(void) {
 void timing_checkpoint_cycles(void) {
     assert(pthread_self() == cpu_thread_id);
 
-    const int32_t d = cpu65_cycle_count - cycles_checkpoint_count;
+    const int32_t d = run_args.cpu65_cycle_count - cycles_checkpoint_count;
     assert(d >= 0);
 #if !TESTING
     cycles_count_total += d;
@@ -563,7 +558,7 @@ void timing_checkpoint_cycles(void) {
         }
     }
 #endif
-    cycles_checkpoint_count = cpu65_cycle_count;
+    cycles_checkpoint_count = run_args.cpu65_cycle_count;
 }
 
 // ----------------------------------------------------------------------------

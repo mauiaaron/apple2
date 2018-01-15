@@ -22,20 +22,7 @@
 
 #include "common.h"
 
-uint16_t cpu65_pc;
-uint8_t  cpu65_a;
-uint8_t  cpu65_f;
-uint8_t  cpu65_x;
-uint8_t  cpu65_y;
-uint8_t  cpu65_sp;
-
-uint16_t cpu65_ea;
-uint8_t  cpu65_d;
-uint8_t  cpu65_rw;
-uint8_t  cpu65_opcode;
-uint8_t  cpu65_opcycles;
-
-uint8_t cpu65__signal = 0;
+cpu65_run_args_s run_args = { 0 };
 
 static pthread_mutex_t irq_mutex = PTHREAD_MUTEX_INITIALIZER;
 
@@ -57,7 +44,7 @@ static FILE *cpu_trace_fp = NULL;
 
 extern void op_BRK(), op_ORA_ind_x(), op_UNK_65c02(), op_TSB_zpage(), op_ORA_zpage(), op_ASL_zpage(), op_RMB0_65c02(), op_PHP(), op_ORA_imm(), op_ASL_acc(), op_TSB_abs(), op_ORA_abs(), op_ASL_abs(), op_BBR0_65c02(), op_BPL(), op_ORA_ind_y(), op_ORA_ind_zpage(), op_TRB_zpage(), op_ORA_zpage_x(), op_ASL_zpage_x(), op_RMB1_65c02(), op_CLC(), op_ORA_abs_y(), op_INA(), op_TRB_abs(), op_ORA_abs_x(), op_ASL_abs_x(), op_BBR1_65c02(), op_JSR(), op_AND_ind_x(), op_BIT_zpage(), op_AND_zpage(), op_ROL_zpage(), op_RMB2_65c02(), op_PLP(), op_AND_imm(), op_ROL_acc(), op_BIT_abs(), op_AND_abs(), op_ROL_abs(), op_BBR2_65c02(), op_BMI(), op_AND_ind_y(), op_AND_ind_zpage(), op_BIT_zpage_x(), op_AND_zpage_x(), op_ROL_zpage_x(), op_RMB3_65c02(), op_SEC(), op_AND_abs_y(), op_DEA(), op_BIT_abs_x(), op_AND_abs_x(), op_ROL_abs_x(), op_BBR3_65c02(), op_RTI(), op_EOR_ind_x(), op_EOR_zpage(), op_LSR_zpage(), op_RMB4_65c02(), op_PHA(), op_EOR_imm(), op_LSR_acc(), op_JMP_abs(), op_EOR_abs(), op_LSR_abs(), op_BBR4_65c02(), op_BVC(), op_EOR_ind_y(), op_EOR_ind_zpage(), op_EOR_zpage_x(), op_LSR_zpage_x(), op_RMB5_65c02(), op_CLI(), op_EOR_abs_y(), op_PHY(), op_EOR_abs_x(), op_LSR_abs_x(), op_BBR5_65c02(), op_RTS(), op_ADC_ind_x(), op_STZ_zpage(), op_ADC_zpage(), op_ROR_zpage(), op_RMB6_65c02(), op_PLA(), op_ADC_imm(), op_ROR_acc(), op_JMP_ind(), op_ADC_abs(), op_ROR_abs(), op_BBR6_65c02(), op_BVS(), op_ADC_ind_y(), op_ADC_ind_zpage(), op_STZ_zpage_x(), op_ADC_zpage_x(), op_ROR_zpage_x(), op_RMB7_65c02(), op_SEI(), op_ADC_abs_y(), op_PLY(), op_JMP_abs_ind_x(), op_ADC_abs_x(), op_ROR_abs_x(), op_BBR7_65c02(), op_BRA(), op_STA_ind_x(), op_STY_zpage(), op_STA_zpage(), op_STX_zpage(), op_SMB0_65c02(), op_DEY(), op_BIT_imm(), op_TXA(), op_STY_abs(), op_STA_abs(), op_STX_abs(), op_BBS0_65c02(), op_BCC(), op_STA_ind_y(), op_STA_ind_zpage(), op_STY_zpage_x(), op_STA_zpage_x(), op_STX_zpage_y(), op_SMB1_65c02(), op_TYA(), op_STA_abs_y(), op_TXS(), op_STZ_abs(), op_STA_abs_x(), op_STZ_abs_x(), op_BBS1_65c02(), op_LDY_imm(), op_LDA_ind_x(), op_LDX_imm(), op_LDY_zpage(), op_LDA_zpage(), op_LDX_zpage(), op_SMB2_65c02(), op_TAY(), op_LDA_imm(), op_TAX(), op_LDY_abs(), op_LDA_abs(), op_LDX_abs(), op_BBS2_65c02(), op_BCS(), op_LDA_ind_y(), op_LDA_ind_zpage(), op_LDY_zpage_x(), op_LDA_zpage_x(), op_LDX_zpage_y(), op_SMB3_65c02(), op_CLV(), op_LDA_abs_y(), op_TSX(), op_LDY_abs_x(), op_LDA_abs_x(), op_LDX_abs_y(), op_BBS3_65c02(), op_CPY_imm(), op_CMP_ind_x(), op_CPY_zpage(), op_CMP_zpage(), op_DEC_zpage(), op_SMB4_65c02(), op_INY(), op_CMP_imm(), op_DEX(), op_WAI_65c02(), op_CPY_abs(), op_CMP_abs(), op_DEC_abs(), op_BBS4_65c02(), op_BNE(), op_CMP_ind_y(), op_CMP_ind_zpage(), op_CMP_zpage_x(), op_DEC_zpage_x(), op_SMB5_65c02(), op_CLD(), op_CMP_abs_y(), op_PHX(), op_STP_65c02(), op_CMP_abs_x(), op_DEC_abs_x(), op_BBS5_65c02(), op_CPX_imm(), op_SBC_ind_x(), op_CPX_zpage(), op_SBC_zpage(), op_INC_zpage(), op_SMB6_65c02(), op_INX(), op_SBC_imm(), op_NOP(), op_CPX_abs(), op_SBC_abs(), op_INC_abs(), op_BBS6_65c02(), op_BEQ(), op_SBC_ind_y(), op_SBC_ind_zpage(), op_SBC_zpage_x(), op_INC_zpage_x(), op_SMB7_65c02(), op_SED(), op_SBC_abs_y(), op_PLX(), op_SBC_abs_x(), op_INC_abs_x(), op_BBS7_65c02();
 
-void *const cpu65__opcodes[256] = {
+void *cpu65__opcodes[256] = {
     op_BRK,            // 00
     op_ORA_ind_x,
     op_UNK_65c02,
@@ -620,35 +607,69 @@ static void init_flags_conversion_tables(void) {
     }
 }
 
-void cpu65_init(void)
-{
-    init_flags_conversion_tables();
-    cpu65__signal = 0;
-    cpu65_pc = 0x0;
-    cpu65_ea = 0x0;
-    cpu65_a = 0xFF;
-    cpu65_x = 0xFF;
-    cpu65_y = 0xFF;
-    cpu65_f = (C_Flag_6502|X_Flag_6502|I_Flag_6502|V_Flag_6502|B_Flag_6502|Z_Flag_6502|N_Flag_6502);
-    cpu65_sp = 0xFC;
+static __attribute__((constructor)) void __init_cpu65(void) {
+    // emulator_registerStartupCallback(CTOR_PRIORITY_LATE, &_init_cpu65); -- 2018/01/15 NOTE : too late for testcpu.c
+
+    extern void (*cpu_irqCheck)(uint16_t, uint8_t);
+    run_args.cpu_irqCheck = cpu_irqCheck;
+
+    run_args.cpu65_vmem_r = &cpu65_vmem_r[0];
+    run_args.cpu65_vmem_w = &cpu65_vmem_w[0];
+    run_args.cpu65_flags_encode = &cpu65_flags_encode[0];
+    run_args.cpu65_flags_decode = &cpu65_flags_decode[0];
+    run_args.cpu65__opcodes = &cpu65__opcodes[0];
+    run_args.cpu65__opcycles = &cpu65__opcycles[0];
+
+    run_args.interrupt_vector = 0xFFFE;
+    run_args.reset_vector = 0xFFFC;
+
+#if CPU_TRACING
+    extern void (*cpu65_trace_prologue)(uint16_t, uint8_t);
+    run_args.cpu65_trace_prologue = cpu65_trace_prologue;
+    extern void (*cpu65_trace_arg)(uint16_t, uint8_t);
+    run_args.cpu65_trace_arg = cpu65_trace_arg;
+    extern void (*cpu65_trace_arg1)(uint16_t, uint8_t);
+    run_args.cpu65_trace_arg1 = cpu65_trace_arg1;
+    extern void (*cpu65_trace_arg2)(uint16_t, uint8_t);
+    run_args.cpu65_trace_arg2 = cpu65_trace_arg2;
+    extern void (*cpu65_trace_epilogue)(uint16_t, uint8_t);
+    run_args.cpu65_trace_epilogue = cpu65_trace_epilogue;
+    extern void (*cpu65_trace_irq)(uint16_t, uint8_t);
+    run_args.cpu65_trace_irq = cpu65_trace_irq;
+#endif
+
+#ifndef NDEBUG
+    extern uint8_t (*debug_illegal_bcd)(uint16_t);
+    run_args.debug_illegal_bcd = debug_illegal_bcd;
+#endif
 }
 
-void cpu65_interrupt(int reason)
-{
+void cpu65_init(void) {
+    init_flags_conversion_tables();
+    run_args.cpu65__signal = 0;
+    run_args.cpu65_pc = 0x0;
+    run_args.cpu65_ea = 0x0;
+    run_args.cpu65_a = 0xFF;
+    run_args.cpu65_x = 0xFF;
+    run_args.cpu65_y = 0xFF;
+    run_args.cpu65_f = (C_Flag_6502|X_Flag_6502|I_Flag_6502|V_Flag_6502|B_Flag_6502|Z_Flag_6502|N_Flag_6502);
+    run_args.cpu65_sp = 0xFC;
+}
+
+void cpu65_interrupt(int reason) {
     pthread_mutex_lock(&irq_mutex);
-    cpu65__signal |= reason;
+    run_args.cpu65__signal |= reason;
     pthread_mutex_unlock(&irq_mutex);
 }
 
-void cpu65_uninterrupt(int reason)
-{
+void cpu65_uninterrupt(int reason) {
     pthread_mutex_lock(&irq_mutex);
-    cpu65__signal &= ~reason;
+    run_args.cpu65__signal &= ~reason;
     pthread_mutex_unlock(&irq_mutex);
 }
 
 void cpu65_reboot(void) {
-    joy_button0 = 0xff; // OpenApple -- should be balanced by c_joystick_reset() triggers on CPU thread
+    run_args.joy_button0 = 0xff; // OpenApple -- should be balanced by c_joystick_reset() triggers on CPU thread
     cpu65_interrupt(ResetSig);
 }
 
@@ -660,40 +681,33 @@ bool cpu65_saveState(StateHelper_s *helper) {
         uint8_t serialized[4] = { 0 };
 
         // save CPU state
-        serialized[0] = ((cpu65_pc & 0xFF00) >> 8);
-        serialized[1] = ((cpu65_pc & 0xFF  ) >> 0);
-        if (!helper->save(fd, serialized, sizeof(cpu65_pc))) {
+        serialized[0] = ((run_args.cpu65_pc & 0xFF00) >> 8);
+        serialized[1] = ((run_args.cpu65_pc & 0xFF  ) >> 0);
+        if (!helper->save(fd, serialized, sizeof(run_args.cpu65_pc))) {
             break;
         }
-        LOG("SAVE cpu65_pc = %04x", cpu65_pc);
 
-        serialized[0] = ((cpu65_ea & 0xFF00) >> 8);
-        serialized[1] = ((cpu65_ea & 0xFF  ) >> 0);
-        if (!helper->save(fd, serialized, sizeof(cpu65_ea))) {
+        serialized[0] = ((run_args.cpu65_ea & 0xFF00) >> 8);
+        serialized[1] = ((run_args.cpu65_ea & 0xFF  ) >> 0);
+        if (!helper->save(fd, serialized, sizeof(run_args.cpu65_ea))) {
             break;
         }
-        LOG("SAVE cpu65_ea = %04x", cpu65_ea);
 
-        if (!helper->save(fd, &cpu65_a, sizeof(cpu65_a))) {
+        if (!helper->save(fd, &run_args.cpu65_a, sizeof(run_args.cpu65_a))) {
             break;
         }
-        LOG("SAVE cpu65_a = %02x", cpu65_a);
-        if (!helper->save(fd, &cpu65_f, sizeof(cpu65_f))) {
+        if (!helper->save(fd, &run_args.cpu65_f, sizeof(run_args.cpu65_f))) {
             break;
         }
-        LOG("SAVE cpu65_f = %02x", cpu65_f);
-        if (!helper->save(fd, &cpu65_x, sizeof(cpu65_x))) {
+        if (!helper->save(fd, &run_args.cpu65_x, sizeof(run_args.cpu65_x))) {
             break;
         }
-        LOG("SAVE cpu65_x = %02x", cpu65_x);
-        if (!helper->save(fd, &cpu65_y, sizeof(cpu65_y))) {
+        if (!helper->save(fd, &run_args.cpu65_y, sizeof(run_args.cpu65_y))) {
             break;
         }
-        LOG("SAVE cpu65_y = %02x", cpu65_y);
-        if (!helper->save(fd, &cpu65_sp, sizeof(cpu65_sp))) {
+        if (!helper->save(fd, &run_args.cpu65_sp, sizeof(run_args.cpu65_sp))) {
             break;
         }
-        LOG("SAVE cpu65_sp = %02x", cpu65_sp);
 
         saved = true;
     } while (0);
@@ -713,37 +727,30 @@ bool cpu65_loadState(StateHelper_s *helper) {
         if (!helper->load(fd, serialized, sizeof(uint16_t))) {
             break;
         }
-        cpu65_pc  = (serialized[0] << 8);
-        cpu65_pc |=  serialized[1];
-        LOG("LOAD cpu65_pc = %04x", cpu65_pc);
+        run_args.cpu65_pc  = (serialized[0] << 8);
+        run_args.cpu65_pc |=  serialized[1];
 
         if (!helper->load(fd, serialized, sizeof(uint16_t))) {
             break;
         }
-        cpu65_ea  = (serialized[0] << 8);
-        cpu65_ea |=  serialized[1];
-        LOG("LOAD cpu65_ea = %04x", cpu65_ea);
+        run_args.cpu65_ea  = (serialized[0] << 8);
+        run_args.cpu65_ea |=  serialized[1];
 
-        if (!helper->load(fd, &cpu65_a, sizeof(cpu65_a))) {
+        if (!helper->load(fd, &run_args.cpu65_a, sizeof(run_args.cpu65_a))) {
             break;
         }
-        LOG("LOAD cpu65_a = %02x", cpu65_a);
-        if (!helper->load(fd, &cpu65_f, sizeof(cpu65_f))) {
+        if (!helper->load(fd, &run_args.cpu65_f, sizeof(run_args.cpu65_f))) {
             break;
         }
-        LOG("LOAD cpu65_f = %02x", cpu65_f);
-        if (!helper->load(fd, &cpu65_x, sizeof(cpu65_x))) {
+        if (!helper->load(fd, &run_args.cpu65_x, sizeof(run_args.cpu65_x))) {
             break;
         }
-        LOG("LOAD cpu65_x = %02x", cpu65_x);
-        if (!helper->load(fd, &cpu65_y, sizeof(cpu65_y))) {
+        if (!helper->load(fd, &run_args.cpu65_y, sizeof(run_args.cpu65_y))) {
             break;
         }
-        LOG("LOAD cpu65_y = %02x", cpu65_y);
-        if (!helper->load(fd, &cpu65_sp, sizeof(cpu65_sp))) {
+        if (!helper->load(fd, &run_args.cpu65_sp, sizeof(run_args.cpu65_sp))) {
             break;
         }
-        LOG("LOAD cpu65_sp = %02x", cpu65_sp);
 
         loaded = true;
     } while (0);
@@ -782,7 +789,7 @@ void cpu65_trace_toggle(const char *trace_file) {
 GLUE_C_WRITE(cpu65_trace_prologue)
 {
     nargs = 0;
-    current_pc = cpu65_pc;
+    current_pc = run_args.cpu65_pc;
 }
 
 GLUE_C_WRITE(cpu65_trace_arg)
@@ -816,14 +823,14 @@ GLUE_C_WRITE(cpu65_trace_epilogue)
 
     assert(nargs > 0);
     assert(nargs <= 3);
-    if (nargs != opcodes_65c02_numargs[cpu65_opcode]+1) {
+    if (nargs != opcodes_65c02_numargs[run_args.cpu65_opcode]+1) {
         assert(false && "OOPS, most likely some cpu.S routine is not properly setting the arg value");
     }
 
-    switch (opcodes_65c02[cpu65_opcode].mode) {
+    switch (opcodes_65c02[run_args.cpu65_opcode].mode) {
         case addr_implied:
         case addr_accumulator:
-            fprintf(cpu_trace_fp, "%04X:%02X    ", current_pc, cpu65_opcode);
+            fprintf(cpu_trace_fp, "%04X:%02X    ", current_pc, run_args.cpu65_opcode);
             break;
         case addr_immediate:
         case addr_zeropage:
@@ -833,64 +840,63 @@ GLUE_C_WRITE(cpu65_trace_epilogue)
         case addr_indirect_x:
         case addr_indirect_y:
         case addr_relative:
-            fprintf(cpu_trace_fp, "%04X:%02X%02X  ", current_pc, cpu65_opcode, (uint8_t)arg1);
+            fprintf(cpu_trace_fp, "%04X:%02X%02X  ", current_pc, run_args.cpu65_opcode, (uint8_t)arg1);
             break;
         case addr_absolute:
         case addr_absolute_x:
         case addr_absolute_y:
         case addr_j_indirect:
         case addr_j_indirect_x:
-            fprintf(cpu_trace_fp, "%04X:%02X%02X%02X", current_pc, cpu65_opcode, (uint8_t)arg2, (uint8_t)arg1);
+            fprintf(cpu_trace_fp, "%04X:%02X%02X%02X", current_pc, run_args.cpu65_opcode, (uint8_t)arg2, (uint8_t)arg1);
             break;
         default:
             fprintf(cpu_trace_fp, "invalid opcode mode");
             break;
     }
 
-    fprintf(cpu_trace_fp, " SP:%02X X:%02X Y:%02X A:%02X", cpu65_sp, cpu65_x, cpu65_y, cpu65_a);
+    fprintf(cpu_trace_fp, " SP:%02X X:%02X Y:%02X A:%02X", run_args.cpu65_sp, run_args.cpu65_x, run_args.cpu65_y, run_args.cpu65_a);
 
 #define FLAGS_BUFSZ 9
     char flags_buf[FLAGS_BUFSZ];
     memset(flags_buf, '-', FLAGS_BUFSZ);
-    if (cpu65_f & C_Flag_6502) {
+    if (run_args.cpu65_f & C_Flag_6502) {
         flags_buf[0]='C';
     }
-    if (cpu65_f & X_Flag_6502) {
+    if (run_args.cpu65_f & X_Flag_6502) {
         flags_buf[1]='X';
     }
-    if (cpu65_f & I_Flag_6502) {
+    if (run_args.cpu65_f & I_Flag_6502) {
         flags_buf[2]='I';
     }
-    if (cpu65_f & V_Flag_6502) {
+    if (run_args.cpu65_f & V_Flag_6502) {
         flags_buf[3]='V';
     }
-    if (cpu65_f & B_Flag_6502) {
+    if (run_args.cpu65_f & B_Flag_6502) {
         flags_buf[4]='B';
     }
-    if (cpu65_f & D_Flag_6502) {
+    if (run_args.cpu65_f & D_Flag_6502) {
         flags_buf[5]='D';
     }
-    if (cpu65_f & Z_Flag_6502) {
+    if (run_args.cpu65_f & Z_Flag_6502) {
         flags_buf[6]='Z';
     }
-    if (cpu65_f & N_Flag_6502) {
+    if (run_args.cpu65_f & N_Flag_6502) {
         flags_buf[7]='N';
     }
     flags_buf[8] = '\0';
 
     char fmt[64];
-    if (UNLIKELY(cpu65_opcycles >= 10)) {
+    if (UNLIKELY(run_args.cpu65_opcycles >= 10)) {
         // occurs rarely for interrupt + opcode
         snprintf(fmt, 64, "%s", " %s CY:%u irqChk:%d totCyc:%d EA:%04X");
     } else {
         snprintf(fmt, 64, "%s", " %s CYC:%u irqChk:%d totCyc:%d EA:%04X");
     }
-    extern int32_t irqCheckTimeout;
-    fprintf(cpu_trace_fp, fmt, flags_buf, cpu65_opcycles, (irqCheckTimeout - cpu65_opcycles), (cycles_count_total + cpu65_opcycles), cpu65_ea);
+    fprintf(cpu_trace_fp, fmt, flags_buf, run_args.cpu65_opcycles, (run_args.irq_check_timeout - run_args.cpu65_opcycles), (cycles_count_total + run_args.cpu65_opcycles), run_args.cpu65_ea);
 
-    sprintf(fmt, " %s %s", opcodes_65c02[cpu65_opcode].mnemonic, disasm_templates[opcodes_65c02[cpu65_opcode].mode]);
+    sprintf(fmt, " %s %s", opcodes_65c02[run_args.cpu65_opcode].mnemonic, disasm_templates[opcodes_65c02[run_args.cpu65_opcode].mode]);
 
-    switch (opcodes_65c02[cpu65_opcode].mode) {
+    switch (opcodes_65c02[run_args.cpu65_opcode].mode) {
         case addr_implied:
         case addr_accumulator:
             fprintf(cpu_trace_fp, "%s", fmt);
@@ -928,7 +934,7 @@ GLUE_C_WRITE(cpu65_trace_epilogue)
 GLUE_C_WRITE(cpu65_trace_irq)
 {
     if (cpu_trace_fp) {
-        fprintf(cpu_trace_fp, "IRQ:%02X\n", cpu65__signal);
+        fprintf(cpu_trace_fp, "IRQ:%02X\n", run_args.cpu65__signal);
     }
 }
 

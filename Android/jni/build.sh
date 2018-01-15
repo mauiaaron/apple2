@@ -125,7 +125,7 @@ if test "x$do_build" = "x1" -o "x$do_release" = "x1" ; then
     $CC $CFLAGS -o $apple2_src_path/genfont $apple2_src_path/genfont.c && \
         $apple2_src_path/genfont < $apple2_src_path/font.txt > $apple2_src_path/font.c
 
-    # trampoline generation
+    # bridge trampoline generation
     TARGET_ARCH=x86 $apple2_src_path/genglue.sh $glue_srcs > $apple2_src_path/x86/glue.S
     TARGET_ARCH=arm $apple2_src_path/genglue.sh $glue_srcs > $apple2_src_path/arm/glue.S
 

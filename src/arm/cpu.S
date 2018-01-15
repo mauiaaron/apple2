@@ -18,39 +18,32 @@
 
 
 #define DecodeFlags \
-                SYM(r1, cpu65_flags_decode); \
+                ldr     r1, [reg_args, #CPU65_FLAGS_DECODE]; \
                 ldrb    F_Reg, [r1, r0];
 
 #define EncodeFlags \
-                SYM(r1, cpu65_flags_encode); \
+                ldr     r1, [reg_args, #CPU65_FLAGS_ENCODE]; \
                 ldrb    r0, [r1, F_Reg];
 
 #define CommonSaveCPUState \
                 /* save EA */ \
-                SYM(r0, cpu65_ea); \
-                strh    EffectiveAddr, [r0]; \
+                strh    EffectiveAddr, [reg_args, #CPU65_EA]; \
                 /* save stack pointer */ \
-                SYM(r0, cpu65_sp); \
-                strb    SP_Reg, [r0]; \
+                strb    SP_Reg, [reg_args, #CPU65_SP]; \
                 /* save X */ \
-                SYM(r0, cpu65_x); \
-                strb    X_Reg, [r0]; \
+                strb    X_Reg, [reg_args, #CPU65_X]; \
                 /* save Y */ \
-                SYM(r0, cpu65_y); \
-                strb    Y_Reg, [r0]; \
+                strb    Y_Reg, [reg_args, #CPU65_Y]; \
                 /* save A */ \
-                SYM(r0, cpu65_a); \
-                strb    A_Reg, [r0]; \
+                strb    A_Reg, [reg_args, #CPU65_A]; \
                 /* save flags */ \
                 EncodeFlags \
-                SYM(r1, cpu65_f); \
-                strb    r0, [r1]
+                strb    r0, [reg_args, #CPU65_F]
 
 // Tracing is necessary for some CPU tests and to verify operation against other emulators
 #if CPU_TRACING
 #   define TRACE_PROLOGUE \
-                SYM(r1, cpu65_pc); \
-                strh    PC_Reg, [r1]; \
+                strh    PC_Reg, [reg_args, #CPU65_PC]; \
                 bl      CALL(cpu65_trace_prologue);
 #   define TRACE_ARG \
                 bl      CALL(cpu65_trace_arg);
@@ -74,25 +67,20 @@
 
 
 #define CPUStatsReset \
-                eor     r9, r9, r9; \
-                SYM(r1, cpu65_opcycles); \
-                strb    r9, [r1]; \
-                SYM(r1, cpu65_rw); \
-                strb    r9, [r1];
+                eor     r1, r1, r1; \
+                strb    r1, [reg_args, #CPU65_OPCYCLES]; \
+                strb    r1, [reg_args, #CPU65_RW];
 
 #define CPUStatsSetRead \
-                SYM(r1, cpu65_rw); \
-                ldrb    r9, [r1]; \
-                orr     r9, r9, #1; \
-                strb    r9, [r1];
+                ldrb    r1, [reg_args, #CPU65_RW]; \
+                orr     r1, r1, #1; \
+                strb    r1, [reg_args, #CPU65_RW];
 
 #define CPUStatsSetWrite \
-                SYM(r1, cpu65_rw); \
-                ldrb    r9, [r1]; \
-                orr     r9, r9, #2; \
-                strb    r9, [r1]; \
-                SYM(r1, cpu65_d); \
-                strb    r0, [r1];
+                strb    r0, [reg_args, #CPU65_D]; \
+                ldrb    r1, [reg_args, #CPU65_RW]; \
+                orr     r1, r1, #2; \
+                strb    r1, [reg_args, #CPU65_RW];
 
 // ----------------------------------------------------------------------------
 // CPU (6502) helper macros
@@ -152,9 +140,8 @@
 #define JumpNextInstruction \
                 TRACE_PROLOGUE \
                 GetFromPC_B \
-                SYM(r1, cpu65_opcode); \
-                strb    r0, [r1]; /* r0 should be next opcode */ \
-                SYM(r1, cpu65__opcodes); \
+                strb    r0, [reg_args, #CPU65_OPCODE]; /* r0 should be next opcode */ \
+                ldr     r1, [reg_args, #CPU65__OPCODES]; \
                 ldr     r1, [r1, r0, LSL PTR_SHIFT]; \
                 bx      r1;
 
@@ -175,7 +162,7 @@
 
 #define PutToEA_B \
                 CPUStatsSetWrite \
-                SYM(r1, cpu65_vmem_w); \
+                ldr     r1, [reg_args, #CPU65_VMEM_W]; \
                 ldr     r1, [r1, EffectiveAddr, LSL PTR_SHIFT]; \
                 blx     r1;
 
@@ -197,17 +184,14 @@
                 mov     r0, r0, ASR #24;
 
 #define _IncOpCycles \
-                SYM(mem_cycle_count, cpu65_opcycles); \
-                ldrb    scratch_count, [mem_cycle_count]; \
+                ldrb    scratch_count, [reg_args, #CPU65_OPCYCLES]; \
                 add     scratch_count, scratch_count, #1;
 
 #define IncOpCycles \
                 _IncOpCycles \
-                strb    scratch_count, [mem_cycle_count];
+                strb    scratch_count, [reg_args, #CPU65_OPCYCLES];
 
-#define pc_hi_byte      r9
-#define mem_cycle_count r1
-#define scratch_count   r12
+#define scratch_count   r1
 #define pc_hi_prev      r9
 #define pc_hi_next      r0
 #define BranchXCycles \
@@ -220,7 +204,7 @@
                 mov     pc_hi_next, PC_Reg, LSR #8; \
                 teq     pc_hi_next, pc_hi_prev; \
                 addne   scratch_count, scratch_count, #1; /* +1 branch taken */ \
-                strb    scratch_count, [mem_cycle_count];
+                strb    scratch_count, [reg_args, #CPU65_OPCYCLES];
 
 #define arm_flags r12
 #define lahf \
@@ -287,13 +271,12 @@
 
 #define stack_loc r1
 #ifdef APPLE2_VM
-#define RestoreAltZP \
-                SYM(stack_loc, base_stackzp); \
-                ldr     stack_loc, [stack_loc]; \
+#   define RestoreAltZP \
+                ldr     stack_loc, [reg_args, #BASE_STACKZP]; \
                 add     stack_loc, stack_loc, #0x100; \
                 add     stack_loc, stack_loc, SP_Reg;
 #else
-#define RestoreAltZP
+#   error FIXME TODO ...
 #endif
 
 #define Push(x) \
@@ -1189,8 +1172,7 @@ ENTRY(op_BRK)
                 EncodeFlags
                 Push(r0)
                 orr     F_Reg, F_Reg, #I_Flag
-                SYM(EffectiveAddr, interrupt_vector)
-                ldrh    EffectiveAddr, [EffectiveAddr]
+                ldrh    EffectiveAddr, [reg_args, #INTERRUPT_VECTOR]
                 GetFromEA_W
                 mov     PC_Reg, r0
                 Continue
@@ -2406,59 +2388,53 @@ ENTRY(op_WAI_65c02)
 
 #define cycles_exe r0
 continue:
-                SYM(r1, cpu65__opcycles)
-                SYM(r0, cpu65_opcode)
-                ldrb    r0, [r0]
+                ldr     r1, [reg_args, #CPU65__OPCYCLES]
+                ldrb    r0, [reg_args, #CPU65_OPCODE]
                 ldrb    cycles_exe, [r1, r0]
-                SYM(r1, cpu65_opcycles)
-                ldrb    r9, [r1]
-                add     cycles_exe, cycles_exe, r9
-                strb    cycles_exe, [r1]
+                ldrb    r1, [reg_args, #CPU65_OPCYCLES]
+                add     cycles_exe, cycles_exe, r1
+                strb    cycles_exe, [reg_args, #CPU65_OPCYCLES]
                 TRACE_EPILOGUE
 
-                SYM(r1, gc_cycles_timer_0)
-                ldr     r9, [r1]
-                sub     r9, r9, cycles_exe
-                str     r9, [r1]
+                ldr     r1, [reg_args, #GC_CYCLES_TIMER_0]
+                sub     r1, r1, cycles_exe
+                str     r1, [reg_args, #GC_CYCLES_TIMER_0]
 
-                SYM(r1, gc_cycles_timer_1)
-                ldr     r9, [r1]
-                sub     r9, r9, cycles_exe
-                str     r9, [r1]
+                ldr     r1, [reg_args, #GC_CYCLES_TIMER_1]
+                sub     r1, r1, cycles_exe
+                str     r1, [reg_args, #GC_CYCLES_TIMER_1]
 
-                SYM(r1, cpu65_cycle_count)
-                ldr     r9, [r1]
-                add     r9, r9, cycles_exe
-                str     r9, [r1]
+                ldr     r1, [reg_args, #CPU65_CYCLE_COUNT]
+                add     r1, r1, cycles_exe
+                str     r1, [reg_args, #CPU65_CYCLE_COUNT]
 
 #if CONFORMANT_IRQ_CHECKPOINT
-                SYM(r1, irqCheckTimeout) // AppleWin : CheckInterruptSources()
-                ldr     r9, [r1]
-                subs    r9, r9, cycles_exe
-                str     r9, [r1]
+#   error 2018/01/15 untested ...
+                ldr     r1, [reg_args, #CPU_IRQCHECK] // AppleWin : CheckInterruptSources()
+                subs    r1, r1, cycles_exe
+                str     r1, [reg_args, #CPU_IRQCHECK]
                 bmi     irq_checkpoint
 #endif
 
-continue1:      SYM(r1, cpu65_cycles_to_execute)
-                ldr     r9, [r1]
-                subs    r9, r9, cycles_exe
-                str     r9, [r1]
+continue1:      ldr     r1, [reg_args, #CPU65_CYCLES_TO_EXECUTE]
+                subs    r1, r1, cycles_exe
+                str     r1, [reg_args, #CPU65_CYCLES_TO_EXECUTE]
                 bmi     exit_cpu65_run
                 beq     exit_cpu65_run
 
-continue2:      SYM(r1, cpu65__signal)
-                ldrb    r0, [r1]
+continue2:      ldrb    r0, [reg_args, #CPU65__SIGNAL]
                 orrs    r0, r0, r0
                 bne     exception
                 CPUStatsReset
                 JumpNextInstruction
 
 #if CONFORMANT_IRQ_CHECKPOINT
+#   error 2018/01/15 untested ...
 irq_checkpoint:
                 bl      CALL(cpu_irqCheck);
-                SYM(r1, irqCheckTimeout)
-                eor     r9, r9, r9
-                str     r9, [r1]
+                //eor     r1, r1, r1
+                mov     r1, #IRQ_CHECK_CYCLES
+                str     r1, [reg_args, #CPU_IRQCHECK]
                 b       continue1
 #endif
 
@@ -2468,20 +2444,16 @@ irq_checkpoint:
 
 exception:      tst     r0, #ResetSig
                 beq     ex_irq
-                SYM(r1, joy_button0) // OpenApple
-                ldrb    r0, [r1]
+                ldrb    r0, [reg_args, #JOY_BUTTON0] // OpenApple
                 tst     r0, #0xFF
                 bne     exit_reinit
-                SYM(r1, joy_button1) // ClosedApple
-                ldrb    r0, [r1]
+                ldr     r0, [reg_args, #JOY_BUTTON1] // ClosedApple
                 tst     r0, #0xFF
                 bne     exit_reinit
 
 ex_reset:       eor     r0, r0, r0
-                SYM(r1, cpu65__signal)
-                strb    r0, [r1]
-                SYM(EffectiveAddr, reset_vector)
-                ldrh    EffectiveAddr, [EffectiveAddr]
+                strb    r0, [reg_args, #CPU65__SIGNAL]
+                ldrh    EffectiveAddr, [reg_args, #RESET_VECTOR]
                 GetFromEA_W
                 mov     PC_Reg, r0
                 CPUStatsReset
@@ -2502,15 +2474,13 @@ ex_irq:         tst     F_Reg, #I_Flag                      // Already interrupt
                 Push(r0)
                 orr     F_Reg, F_Reg, #BI_Flags
                 //bic   F_Reg, F_Reg, #D_Flag // AppleWin clears Decimal bit?
-                SYM(EffectiveAddr, interrupt_vector)
-                ldrh    EffectiveAddr, [EffectiveAddr]
+                ldrh    EffectiveAddr, [reg_args, #INTERRUPT_VECTOR]
                 GetFromEA_W
                 mov     PC_Reg, r0
                 CPUStatsReset
-                SYM(r1, cpu65_opcycles)
-                ldrb    r0, [r1]
+                ldrb    r0, [reg_args, #CPU65_OPCYCLES]
                 add     r0, r0, #7                          // IRQ handling will take additional 7 cycles
-                strb    r0, [r1]
+                strb    r0, [reg_args, #CPU65_OPCYCLES]
                 JumpNextInstruction
 
 /* -------------------------------------------------------------------------
@@ -2520,27 +2490,20 @@ ex_irq:         tst     F_Reg, #I_Flag                      // Already interrupt
 ENTRY(cpu65_run)
                 push    {r4, r5, r6, r7, r8, r9, r10, r11, lr}
                 // Restore CPU state when being called from C.
-                SYM(reg_vmem_r, cpu65_vmem_r)
-                SYM(r1, cpu65_ea)
-                ldrh    EffectiveAddr, [r1]
-                SYM(r1, cpu65_pc)
-                ldrh    PC_Reg, [r1]
-                SYM(r1, cpu65_a)
-                ldrb    A_Reg, [r1]
-                SYM(r1, cpu65_f)
-                ldrb    r0, [r1]
+                mov     reg_args, r0
+                ldr     reg_vmem_r, [reg_args, #CPU65_VMEM_R]
+                ldrh    EffectiveAddr, [reg_args, #CPU65_EA]
+                ldrh    PC_Reg, [reg_args, #CPU65_PC]
+                ldrb    A_Reg, [reg_args, #CPU65_A]
+                ldrb    r0, [reg_args, #CPU65_F]
                 DecodeFlags
-                SYM(r1, cpu65_x)
-                ldrb    X_Reg, [r1]
-                SYM(r1, cpu65_y)
-                ldrb    Y_Reg, [r1]
-                SYM(r1, cpu65_sp)
-                ldrb    SP_Reg, [r1]
-                SYM(r1, emul_reinitialize)
-                ldrb    r0, [r1]
+                ldrb    X_Reg, [reg_args, #CPU65_X]
+                ldrb    Y_Reg, [reg_args, #CPU65_Y]
+                ldrb    SP_Reg, [reg_args, #CPU65_SP]
+                ldrb    r0, [reg_args, #EMUL_REINITIALIZE]
                 teq     r0, #0
                 eorne   r0, r0, r0
-                STRBNE  r0, [r1]
+                STRBNE  r0, [reg_args, #EMUL_REINITIALIZE]
                 bne     ex_reset
                 b       continue2
 
@@ -2550,17 +2513,14 @@ ENTRY(cpu65_run)
 
 exit_cpu65_run:
                 // Save CPU state when returning from being called from C
-                SYM(r1, cpu65_pc)
-                strh    PC_Reg, [r1]
+                strh    PC_Reg, [reg_args, #CPU65_PC]
                 CommonSaveCPUState
                 pop     {r4, r5, r6, r7, r8, r9, r10, r11, pc}
 
-exit_reinit:    SYM(r1, cpu65__signal)
-                mov     r0, #0
-                strb    r0, [r1]
-                SYM(r1, emul_reinitialize)
+exit_reinit:    mov     r0, #0
+                strb    r0, [reg_args, #CPU65__SIGNAL]
                 mov     r0, #1
-                strb    r0, [r1]
+                strb    r0, [reg_args, #EMUL_REINITIALIZE]
                 pop     {r4, r5, r6, r7, r8, r9, r10, r11, pc}
 
 /* -------------------------------------------------------------------------
@@ -2572,17 +2532,6 @@ ENTRY(cpu65_direct_write)
                 mov     r0, #42
                 ldr     r0, [r0] // segfault
                 mov     pc, lr
-
-# local data ...
-.global interrupt_vector
-.global reset_vector
-#if NO_UNDERSCORES
-interrupt_vector:       .hword 0xFFFE
-reset_vector:           .hword 0xFFFC
-#else
-_interrupt_vector:      .hword 0xFFFE
-_reset_vector:          .hword 0xFFFC
-#endif
 
 .ltorg
 

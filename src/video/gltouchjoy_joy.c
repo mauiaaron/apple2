@@ -55,8 +55,8 @@ static inline void _reset_axis_state(void) {
 }
 
 static inline void _reset_buttons_state(void) {
-    joy_button0 = 0x0;
-    joy_button1 = 0x0;
+    run_args.joy_button0 = 0x0;
+    run_args.joy_button1 = 0x0;
 }
 
 static void touchjoy_resetState(void) {
@@ -135,8 +135,8 @@ static void *_button_tap_delayed_thread(void *dummyptr) {
                 assert(timedOut);
                 // touch-down-and-hold
                 TOUCH_JOY_GESTURE_LOG(">>> [DELAYEDTAP] long touch ...");
-                joy_button0 = touchPrevEvent->currJoyButtonValue0;
-                joy_button1 = touchPrevEvent->currJoyButtonValue1;
+                run_args.joy_button0 = touchPrevEvent->currJoyButtonValue0;
+                run_args.joy_button1 = touchPrevEvent->currJoyButtonValue1;
                 joys.buttonDrawCallback(touchPrevEvent->currButtonDisplayChar);
                 continue;
             }
@@ -145,16 +145,16 @@ static void *_button_tap_delayed_thread(void *dummyptr) {
             if (touchCurrEvent->event == TOUCH_MOVE) {
                 // dragging ...
                 TOUCH_JOY_GESTURE_LOG(">>> [DELAYEDTAP] move ...");
-                joy_button0 = touchCurrEvent->currJoyButtonValue0;
-                joy_button1 = touchCurrEvent->currJoyButtonValue1;
+                run_args.joy_button0 = touchCurrEvent->currJoyButtonValue0;
+                run_args.joy_button1 = touchCurrEvent->currJoyButtonValue1;
                 joys.buttonDrawCallback(touchCurrEvent->currButtonDisplayChar);
                 FREE(touchPrevEvent);
                 touchPrevEvent = touchCurrEvent;
             } else if (touchCurrEvent->event == TOUCH_UP) {
                 // tap
                 TOUCH_JOY_GESTURE_LOG(">>> [DELAYEDTAP] touch up ...");
-                joy_button0 = touchPrevEvent->currJoyButtonValue0;
-                joy_button1 = touchPrevEvent->currJoyButtonValue1;
+                run_args.joy_button0 = touchPrevEvent->currJoyButtonValue0;
+                run_args.joy_button1 = touchPrevEvent->currJoyButtonValue1;
                 joys.buttonDrawCallback(touchPrevEvent->currButtonDisplayChar);
                 timedOut = 0;
                 break;
