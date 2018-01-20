@@ -122,7 +122,7 @@
     return mButtonElements; 
 }
 
-- (unsigned) numberOfButtons;
+- (NSUInteger) numberOfButtons;
 {
     return [mButtonElements count];
 }

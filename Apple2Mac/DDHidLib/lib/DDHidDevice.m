@@ -155,8 +155,7 @@ return retVal;
                                    withClass: (Class) hidClass
                            skipZeroLocations: (BOOL) skipZeroLocations;
 {
-    
-    (void)((id(*)(id, SEL))objc_msgSend((id)matchDictionary, @selector(retain)));
+    CFRetain(matchDictionary);
     
 	// Now search I/O Registry for matching devices.
 	io_iterator_t hidObjectIterator = MACH_PORT_NULL;
