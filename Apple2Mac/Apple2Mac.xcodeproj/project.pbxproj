@@ -2007,6 +2007,10 @@
 							};
 						};
 					};
+					779DD82C195BD9F900DF89E5 = {
+						DevelopmentTeam = 4S92KXH58V;
+						ProvisioningStyle = Automatic;
+					};
 					935C55271C12BA5F0013166D = {
 						CreatedOnToolsVersion = 7.1.1;
 						DevelopmentTeam = 4S92KXH58V;
@@ -4523,7 +4527,10 @@
 				ALWAYS_SEARCH_USER_PATHS = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_OBJC_ARC = NO;
+				CODE_SIGN_IDENTITY = "Mac Developer";
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = 4S92KXH58V;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Apple2Mac-Prefix.pch";
 				GCC_PREPROCESSOR_DEFINITIONS = (
@@ -4540,6 +4547,7 @@
 				INFOPLIST_FILE = "Apple2MacTests/Apple2MacTestCPU-Info.plist";
 				PRODUCT_BUNDLE_IDENTIFIER = "org.deadc0de.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = Apple2MacTestCPU;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/../src";
 				WRAPPER_EXTENSION = app;
 			};
@@ -4551,7 +4559,10 @@
 				ALWAYS_SEARCH_USER_PATHS = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_OBJC_ARC = NO;
+				CODE_SIGN_IDENTITY = "Mac Developer";
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = 4S92KXH58V;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Apple2Mac-Prefix.pch";
 				GCC_PREPROCESSOR_DEFINITIONS = (
@@ -4569,6 +4580,7 @@
 				INFOPLIST_FILE = "Apple2MacTests/Apple2MacTestCPU-Info.plist";
 				PRODUCT_BUNDLE_IDENTIFIER = "org.deadc0de.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = Apple2MacTestCPU;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/../src";
 				WRAPPER_EXTENSION = app;
 			};
