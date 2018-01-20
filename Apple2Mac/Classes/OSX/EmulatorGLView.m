@@ -229,23 +229,13 @@ static CVReturn displayLinkCallback(CVDisplayLinkRef displayLink, const CVTimeSt
 #   endif
 #endif
     
-    cpu_pause();
-    emulator_start();
-    cpu_resume();
-    
     // Synchronize buffer swaps with vertical refresh rate
     GLint swapInt = 1;
     [[self openGLContext] setValues:&swapInt forParameter:NSOpenGLCPSwapInterval];
-    
-    // Init our renderer.  Use 0 for the defaultFBO which is appropriate for
-    // OSX (but not iOS since iOS apps must create their own FBO)
-#if TARGET_OS_MAC
-    video_init();
-#elif TARGET_OS_IPHONE
-#   error this is OSX specific
-#else
-#   error "unknown/unsupported Apple platform
-#endif
+
+    cpu_pause();
+    emulator_start();
+    cpu_resume();
 }
 
 - (void)reshape

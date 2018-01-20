@@ -11,6 +11,10 @@
 
 #if TARGET_OS_IPHONE
 #   import "AppDelegate.h"
+#elif TARGET_OS_MAC
+#   import <AppKit/NSApplication.h>
+#else
+#   error what new devilry is this?
 #endif
 
 #include "common.h"
@@ -20,8 +24,6 @@ int main(int argc_, char *argv_[])
     int retVal = 1;
     argc = argc_;
     argv = argv_;
-    
-    cpu_pause();
     
     @autoreleasepool {
 #if TARGET_OS_IPHONE

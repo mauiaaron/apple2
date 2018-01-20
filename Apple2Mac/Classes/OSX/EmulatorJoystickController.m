@@ -179,11 +179,11 @@
 #endif
     
     // sample buttons only if apple keys aren't pressed. keys get set to 0xff, and js buttons are set to 0x80.
-    if ((buttonNumber == 0x01) && !(joy_button0 & 0x7f)) {
-        joy_button0 = 0x80;
+    if ((buttonNumber == 0x01) && !(run_args.joy_button0 & 0x7f)) {
+        run_args.joy_button0 = 0x80;
     }
-    if ((buttonNumber == 0x02) && !(joy_button1 & 0x7f)) {
-        joy_button1 = 0x80;
+    if ((buttonNumber == 0x02) && !(run_args.joy_button1 & 0x7f)) {
+        run_args.joy_button1 = 0x80;
     }
 }
 
@@ -196,11 +196,11 @@
 #endif
 
     // sample buttons only if apple keys aren't pressed. keys get set to 0xff, and js buttons are set to 0x80.
-    if ((buttonNumber == 0x01) && !(joy_button0 & 0x7f)) {
-        joy_button0 = 0x0;
+    if ((buttonNumber == 0x01) && !(run_args.joy_button0 & 0x7f)) {
+        run_args.joy_button0 = 0x0;
     }
-    if ((buttonNumber == 0x02) && !(joy_button1 & 0x7f)) {
-        joy_button1 = 0x0;
+    if ((buttonNumber == 0x02) && !(run_args.joy_button1 & 0x7f)) {
+        run_args.joy_button1 = 0x0;
     }
 }
 
