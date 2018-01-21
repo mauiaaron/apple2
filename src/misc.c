@@ -418,7 +418,7 @@ void emulator_start(void) {
     c_keys_set_key(kF8); // show credits before emulation start
 #endif
 
-#if !TARGET_OS_PHONE && !defined(ANDROID)
+#if !(TARGET_OS_MAC || TARGET_OS_PHONE) && !defined(ANDROID)
     video_init();
 #endif
 
