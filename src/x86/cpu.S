@@ -923,13 +923,7 @@ ENTRY(op_UNK) /* make undefined opcodes fault */
 ENTRY(op_BRK)
                 incw    PC_Reg
                 movw    PC_Reg, %ax
-#if __PIC__
-                xchgb   %al, %ah
-                Push(%al)
-                shrw    $8, %ax
-#else
                 Push(%ah)
-#endif
                 Push(%al)
                 orb     $(B_Flag|X_Flag), F_Reg
                 xorw    %ax, %ax
@@ -1297,13 +1291,7 @@ ENTRY(op_JSR) // 0x20
                 GetAbs
                 movw    PC_Reg, %ax
                 decw    %ax
-#if __PIC__
-                xchgb   %al, %ah
-                Push(%al)
-                shrw    $8, %ax
-#else
                 Push(%ah)
-#endif
                 Push(%al)
                 movw    EffectiveAddr, PC_Reg
                 Continue
@@ -1543,12 +1531,7 @@ ENTRY(op_PHX)
    ---------------------------------- */
 
 ENTRY(op_PHY)
-#if __PIC__
-                movb    Y_Reg, %al
-                Push(%al)
-#else
                 Push(Y_Reg)
-#endif
                 Continue
 
 /* ----------------------------------
@@ -1588,12 +1571,7 @@ ENTRY(op_PLX)
    ---------------------------------- */
 
 ENTRY(op_PLY)
-#if __PIC__
-                Pop(%al)
-                movb    %al, Y_Reg
-#else
                 Pop(Y_Reg)
-#endif
                 orb     Y_Reg, Y_Reg
                 FlagNZ
                 Continue
@@ -1663,21 +1641,10 @@ ENTRY(op_ROR_abs_x) // 0x7e
 
 ENTRY(op_RTI) // 0x40
                 Pop(%al)
-#if __PIC__
-                MOVB_IND(CPU65_FLAGS_DECODE,_XAX,%al)
-                movb    %al, F_Reg
-#else
                 MOVB_IND(CPU65_FLAGS_DECODE,_XAX,F_Reg)
-#endif
                 orb     $(B_Flag|X_Flag), F_Reg
                 Pop(%al)
-#if __PIC__
-                shlw    $8, %ax
-                Pop(%al)
-                xchgb   %al, %ah
-#else
                 Pop(%ah)
-#endif
                 movw    %ax, PC_Reg
                 Continue
 
@@ -1687,13 +1654,7 @@ ENTRY(op_RTI) // 0x40
 
 ENTRY(op_RTS) // 0x60
                 Pop(%al)
-#if __PIC__
-                shlw    $8, %ax
-                Pop(%al)
-                xchgb   %al, %ah
-#else
                 Pop(%ah)
-#endif
                 incw    %ax
                 movw    %ax, PC_Reg
                 Continue
@@ -2202,13 +2163,7 @@ ex_irq:         testb   $I_Flag, F_Reg                      // Already interrupt
                 JumpNextInstruction                         // Yes (ignored) ...
 1:              TRACE_IRQ                                   // No (handle IRQ) ...
                 movw    PC_Reg, %ax
-#if __PIC__
-                xchgb   %al, %ah
-                Push(%al)
-                shrw    $8, %ax
-#else
                 Push(%ah)
-#endif
                 Push(%al)
                 orb     $X_Flag, F_Reg
                 xorw    %ax, %ax
@@ -2230,15 +2185,15 @@ ex_irq:         testb   $I_Flag, F_Reg                      // Already interrupt
    ------------------------------------------------------------------------- */
 
 ENTRY(cpu65_run)
-                pushLQ  _XBP
-                pushLQ  _XDI
-                pushLQ  _XSI
-                pushLQ  _XBX
 #if __LP64__
                 movLQ   %rdi, reg_args
 #else
                 movLQ   4(%esp), reg_args
 #endif
+                pushLQ  _XBP
+                pushLQ  _XDI
+                pushLQ  _XSI
+                pushLQ  _XBX
 
                 // Restore CPU state when being called from C.
                 movzwLQ CPU65_EA(reg_args), EffectiveAddr_X
