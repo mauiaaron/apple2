@@ -30,7 +30,7 @@ void AY8910_InitAll(int nClock, unsigned long nSampleRate);
 void AY8910_InitClock(int nClock, unsigned long nSampleRate);
 uint8_t* AY8910_GetRegsPtr(unsigned int uChip);
 
-void AY8910UpdateSetCycles();
+void AY8910UpdateSetCycles(void);
 
 #if 1 // APPLE2IX
 bool _ay8910_saveState(StateHelper_s *helper, unsigned int chip);

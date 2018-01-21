@@ -1243,6 +1243,7 @@ static void MB_Update()
             {
                 unsigned long modTwo = (dwDSLockedBufferSize0 % 2);
                 assert(modTwo == 0);
+                (void)modTwo;
             }
             memcpy(pDSLockedBuffer0, &g_nMixBuffer[bufIdx/sizeof(short)], dwDSLockedBufferSize0);
             MockingboardVoice->Unlock(MockingboardVoice, dwDSLockedBufferSize0);

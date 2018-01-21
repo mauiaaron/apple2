@@ -173,7 +173,7 @@ void sound_ay_init( CAY8910 *_this )
 	_this->ay_env_internal_tick = _this->ay_env_tick = _this->ay_env_period = 0;
 	_this->ay_tone_subcycles = _this->ay_env_subcycles = 0;
 	for( f = 0; f < 3; f++ )
-		_this->ay_tone_tick[f] = _this->ay_tone_high[f] = 0, _this->ay_tone_period[f] = 1;
+        _this->ay_tone_tick[f] = _this->ay_tone_high[f] = 0; _this->ay_tone_period[f] = 1;
 
 	_this->ay_change_count = 0;
 }

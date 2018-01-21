@@ -95,6 +95,7 @@ static GLTouchJoyVariant kpadJoy = { 0 };
 static inline void _callback_sourceUnlock(volatile int *source) {
     int val = __sync_add_and_fetch(source, (int)(CALLBACK_LOCK_VALUE));
     assert(val >= 0 && "inconsistent lock state for callback detected");
+    (void)val;
 }
 
 // attempt to lock the critical section where we unschedule the function pointer callback
@@ -482,7 +483,6 @@ static void touchkpad_buttonUp(int dx, int dy) {
 static void touchkpad_prefsChanged(const char *domain) {
     assert(video_isRenderThread());
 
-    bool bVal = false;
     float fVal = 0.f;
     long lVal = 0;
 
@@ -577,20 +577,20 @@ static void _init_gltouchjoy_kpad(void) {
 
     kpad.currButtonDisplayChar = ' ';
 
-    kpadJoy.variant = &touchkpad_variant,
-    kpadJoy.resetState = &touchkpad_resetState,
-    kpadJoy.setup = &touchkpad_setup,
-    kpadJoy.shutdown = &touchkpad_shutdown,
+    kpadJoy.variant = &touchkpad_variant;
+    kpadJoy.resetState = &touchkpad_resetState;
+    kpadJoy.setup = &touchkpad_setup;
+    kpadJoy.shutdown = &touchkpad_shutdown;
 
     kpadJoy.prefsChanged = &touchkpad_prefsChanged;
 
-    kpadJoy.buttonDown = &touchkpad_buttonDown,
-    kpadJoy.buttonMove = &touchkpad_buttonMove,
-    kpadJoy.buttonUp = &touchkpad_buttonUp,
+    kpadJoy.buttonDown = &touchkpad_buttonDown;
+    kpadJoy.buttonMove = &touchkpad_buttonMove;
+    kpadJoy.buttonUp = &touchkpad_buttonUp;
 
-    kpadJoy.axisDown = &touchkpad_axisDown,
-    kpadJoy.axisMove = &touchkpad_axisMove,
-    kpadJoy.axisUp = &touchkpad_axisUp,
+    kpadJoy.axisDown = &touchkpad_axisDown;
+    kpadJoy.axisMove = &touchkpad_axisMove;
+    kpadJoy.axisUp = &touchkpad_axisUp;
 
     kpadJoy.rosetteChars = &touchkpad_rosetteChars;
 

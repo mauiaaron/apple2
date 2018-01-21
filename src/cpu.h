@@ -33,7 +33,7 @@
 extern cpu65_run_args_s run_args;
 
 /* Set up the processor for a new run. Sets up opcode table. */
-extern void cpu65_init();
+extern void cpu65_init(void);
 
 /* Interrupt the processor */
 extern void cpu65_interrupt(int reason);

@@ -346,20 +346,20 @@ static uint8_t *touchjoy_rosetteChars(void) {
 static void _init_gltouchjoy_joy(void) {
     LOG("Registering OpenGL software touch joystick (joystick variant)");
 
-    happyHappyJoyJoy.variant = &touchjoy_variant,
-    happyHappyJoyJoy.resetState = &touchjoy_resetState,
-    happyHappyJoyJoy.setup = &touchjoy_setup,
-    happyHappyJoyJoy.shutdown = &touchjoy_shutdown,
+    happyHappyJoyJoy.variant = &touchjoy_variant;
+    happyHappyJoyJoy.resetState = &touchjoy_resetState;
+    happyHappyJoyJoy.setup = &touchjoy_setup;
+    happyHappyJoyJoy.shutdown = &touchjoy_shutdown;
 
     happyHappyJoyJoy.prefsChanged = &touchjoy_prefsChanged;
 
-    happyHappyJoyJoy.buttonDown = &touchjoy_buttonDown,
-    happyHappyJoyJoy.buttonMove = &touchjoy_buttonMove,
-    happyHappyJoyJoy.buttonUp = &touchjoy_buttonUp,
+    happyHappyJoyJoy.buttonDown = &touchjoy_buttonDown;
+    happyHappyJoyJoy.buttonMove = &touchjoy_buttonMove;
+    happyHappyJoyJoy.buttonUp = &touchjoy_buttonUp;
 
-    happyHappyJoyJoy.axisDown = &touchjoy_axisDown,
-    happyHappyJoyJoy.axisMove = &touchjoy_axisMove,
-    happyHappyJoyJoy.axisUp = &touchjoy_axisUp,
+    happyHappyJoyJoy.axisDown = &touchjoy_axisDown;
+    happyHappyJoyJoy.axisMove = &touchjoy_axisMove;
+    happyHappyJoyJoy.axisUp = &touchjoy_axisUp;
 
     happyHappyJoyJoy.rosetteChars = &touchjoy_rosetteChars;
 

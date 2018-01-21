@@ -64,7 +64,13 @@ static ssize_t _read_data(int fd_own, uint8_t *buf, const off_t expected_bytesco
     int maxtries = 10;
     do {
         ssize_t bytesread = 0;
-        TEMP_FAILURE_RETRY(bytesread = read(fd_own, buf+bytescount, expected_bytescount-bytescount));
+        off_t len0 = expected_bytescount-bytescount;
+        unsigned int len = (unsigned int)len0;
+        if (UNLIKELY(len0 > UINT_MAX || len0 < 0)) {
+            assert(false);
+        }
+
+        TEMP_FAILURE_RETRY(bytesread = read(fd_own, buf+bytescount, len));
         if (bytesread <= 0) {
             if (--maxtries == 0) {
                 LOG("OOPS, giving up on read() ...");
@@ -402,7 +408,7 @@ const char *zlib_deflate_buffer(const uint8_t *src, const unsigned int src_bytes
         }
 
         do {
-            ssize_t len0 = expected_bytescount-bytescount;
+            off_t len0 = expected_bytescount-bytescount;
             unsigned int len = (unsigned int)len0;
             if (UNLIKELY(len0 > UINT_MAX || len0 < 0)) {
                 assert(false);

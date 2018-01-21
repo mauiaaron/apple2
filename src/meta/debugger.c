@@ -98,7 +98,7 @@ uint8_t current_opcode;
 int op_breakpoints[256];                /* opcode breakpoints */
 
 /* in debug.l */
-extern int yylex();
+extern int yylex(void);
 extern void init_lex(char *buf, int size);
 
 /* -------------------------------------------------------------------------

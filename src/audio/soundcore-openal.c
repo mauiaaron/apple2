@@ -72,6 +72,7 @@ static AudioBackend_s openal_audio_backend = { { 0 } };
 static void _playq_removeNode(ALVoice *voice, PlayNode_s *playNode) {
     long err = voice->playq->Remove(voice->playq, playNode);
     assert(err == 0);
+    (void)err;
     voice->_queued_total_bytes -= playNode->numBytes;
     assert(voice->_queued_total_bytes >= 0);
 }
@@ -481,6 +482,7 @@ static long openal_createSoundBuffer(const AudioContext_s *audio_context, INOUT 
 
         ALCcontext *ctx = (ALCcontext*)(audio_context->_internal);
         assert(ctx != NULL);
+        (void)ctx;
 
         if ((voice = _openal_createVoice(NUM_CHANNELS)) == NULL) {
             LOG("OOPS, Cannot create new voice");
@@ -530,6 +532,8 @@ static long openal_systemShutdown(INOUT AudioContext_s **audio_context) {
 
     ALCcontext *ctx = (ALCcontext*) (*audio_context)->_internal;
     assert(ctx != NULL);
+    (void)ctx;
+
     (*audio_context)->_internal = NULL;
     FREE(*audio_context);
 

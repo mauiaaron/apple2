@@ -95,23 +95,23 @@ extern bool       g_bMBTimerIrqActive;
 extern uint32_t	g_uTimer1IrqCount;	// DEBUG
 #endif
 
-void	MB_Initialize();
-void	MB_Reinitialize();
-void	MB_Destroy();
+void	MB_Initialize(void);
+void	MB_Reinitialize(void);
+void	MB_Destroy(void);
 void    MB_SetEnabled(bool enabled);
 bool    MB_ISEnabled(void);
-void    MB_Reset();
+void    MB_Reset(void);
 void    MB_InitializeIO(char *pCxRomPeripheral, unsigned int uSlot4, unsigned int uSlot5);
-void    MB_Mute();
-void    MB_Demute();
-void    MB_StartOfCpuExecute();
-void    MB_EndOfVideoFrame();
+void    MB_Mute(void);
+void    MB_Demute(void);
+void    MB_StartOfCpuExecute(void);
+void    MB_EndOfVideoFrame(void);
 void    MB_UpdateCycles(void);
-SS_CARDTYPE MB_GetSoundcardType();
+SS_CARDTYPE MB_GetSoundcardType(void);
 void    MB_SetSoundcardType(SS_CARDTYPE NewSoundcardType);
-double  MB_GetFramePeriod();
-bool    MB_IsActive();
-unsigned long   MB_GetVolume();
+double  MB_GetFramePeriod(void);
+bool    MB_IsActive(void);
+unsigned long   MB_GetVolume(void);
 void    MB_SetVolumeZeroToTen(unsigned long goesToTen);
 void    MB_SetVolume(unsigned long dwVolume, unsigned long dwVolumeMax);
 #if 1 // APPLE2IX

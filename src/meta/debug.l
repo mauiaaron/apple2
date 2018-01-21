@@ -36,10 +36,10 @@ extern int breakpoints[MAX_BRKPTS];     /* memory breakpoints */
 extern int watchpoints[MAX_BRKPTS];     /* memory watchpoints */
 
 // internal debugger commands
-extern void clear_debugger_screen();
+extern void clear_debugger_screen(void);
 extern void bload(FILE*, char*, int, int);
-extern void show_misc_info();
-extern uint8_t get_current_opcode();
+extern void show_misc_info(void);
+extern uint8_t get_current_opcode(void);
 extern void dump_mem(int, int, int, int, int);
 extern void search_mem(char*, int, int);
 extern void set_mem(int, char*);
@@ -47,18 +47,18 @@ extern void set_lc_mem(int, int, char*);
 extern void disasm(int, int, int, int);
 extern void clear_halt(int*, int);
 extern bool set_halt(int*, int);
-extern void show_breakpts();
-extern void show_regs();
-extern void display_help();
-extern void show_lc_info();
-extern void show_disk_info();
+extern void show_breakpts(void);
+extern void show_regs(void);
+extern void display_help(void);
+extern void show_lc_info(void);
+extern void show_disk_info(void);
 extern void set_halt_opcode(uint8_t opcode);
-extern void set_halt_65c02();
-extern void clear_halt_65c02();
+extern void set_halt_65c02(void);
+extern void clear_halt_65c02(void);
 extern void clear_halt_opcode(uint8_t opcode);
-extern void show_opcode_breakpts();
+extern void show_opcode_breakpts(void);
 extern int debugger_go(stepping_struct_t s);
-extern void fb_sha1();
+extern void fb_sha1(void);
 
 /*
   d{is} {lc1|lc2} {/bank/}{addr} {+}{len}

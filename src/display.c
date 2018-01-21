@@ -139,7 +139,7 @@ static void _initialize_hires_values(void) {
                     video__hires_odd[e] = COLOR_LIGHT_WHITE;
                     if (b > 0)
                     {
-                        video__hires_even[e-1] = COLOR_LIGHT_WHITE,
+                        video__hires_even[e-1] = COLOR_LIGHT_WHITE;
                         video__hires_odd [e-1] = COLOR_LIGHT_WHITE;
                     }
                 } else {
@@ -163,8 +163,8 @@ static void _initialize_hires_values(void) {
                 }
                 last_not_black = 1;
             } else {
-                video__hires_even[e] = COLOR_BLACK,
-                video__hires_odd [e] = COLOR_BLACK,
+                video__hires_even[e] = COLOR_BLACK;
+                video__hires_odd [e] = COLOR_BLACK;
                 last_not_black = 0;
             }
         }
@@ -554,37 +554,37 @@ static void _initialize_interface_fonts(void) {
 
 static inline void _plot_char40(uint8_t **d, uint8_t **s) {
     *((uint32_t *)(*d)) = *((uint32_t *)(*s));
-    *d += 4, *s += 4;
+    *d += 4; *s += 4;
     *((uint32_t *)(*d)) = *((uint32_t *)(*s));
-    *d += 4, *s += 4;
+    *d += 4; *s += 4;
     *((uint32_t *)(*d)) = *((uint32_t *)(*s));
-    *d += 4, *s += 4;
+    *d += 4; *s += 4;
     *((uint16_t *)(*d)) = *((uint16_t *)(*s));
-    *d += SCANSTEP, *s -= 12;
+    *d += SCANSTEP; *s -= 12;
     *((uint32_t *)(*d)) = *((uint32_t *)(*s));
-    *d += 4, *s += 4;
+    *d += 4; *s += 4;
     *((uint32_t *)(*d)) = *((uint32_t *)(*s));
-    *d += 4, *s += 4;
+    *d += 4; *s += 4;
     *((uint32_t *)(*d)) = *((uint32_t *)(*s));
-    *d += 4, *s += 4;
+    *d += 4; *s += 4;
     *((uint16_t *)(*d)) = *((uint16_t *)(*s));
-    *d += SCANSTEP, *s += 4;
+    *d += SCANSTEP; *s += 4;
 }
 
 static inline void _plot_char80(uint8_t **d, uint8_t **s, const unsigned int fb_width) {
     // FIXME : this is implicitly scaling at FONT_GLYPH_SCALE_Y ... make it explicit
     *((uint32_t *)(*d)) = *((uint32_t *)(*s));
-    *d += 4, *s += 4;
+    *d += 4; *s += 4;
     *((uint16_t *)(*d)) = *((uint16_t *)(*s));
-    *d += 2, *s += 2;
+    *d += 2; *s += 2;
     *((uint8_t *)(*d)) = *((uint8_t *)(*s));
-    *d += fb_width-6, *s -= 6;
+    *d += fb_width-6; *s -= 6;
     *((uint32_t *)(*d)) = *((uint32_t *)(*s));
-    *d += 4, *s += 4;
+    *d += 4; *s += 4;
     *((uint16_t *)(*d)) = *((uint16_t *)(*s));
-    *d += 2, *s += 2;
+    *d += 2; *s += 2;
     *((uint8_t *)(*d)) = *((uint8_t *)(*s));
-    *d += fb_width-6, *s += 2;
+    *d += fb_width-6; *s += 2;
 }
 
 static inline void _plot_lores40(uint8_t **d, const uint32_t val) {

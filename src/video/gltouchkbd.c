@@ -557,7 +557,7 @@ static void gltouchkbd_shutdown(void) {
 }
 
 static void gltouchkbd_setup(void) {
-    LOG("gltouchkbd_setup ... %u", sizeof(kbd));
+    LOG("gltouchkbd_setup ... %lu", (unsigned long)sizeof(kbd));
 
     gltouchkbd_shutdown();
 
@@ -928,7 +928,6 @@ static void gltouchkbd_applyPrefs(void) {
         kbd.selectedRow = -1;
 
         if (kbd.model) {
-            GLModelHUDElement *hudKeyboard = (GLModelHUDElement *)kbd.model->custom;
             glhud_setupDefault(kbd.model);
         }
 

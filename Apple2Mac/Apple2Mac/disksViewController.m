@@ -77,6 +77,7 @@
     int fd = -1;
     TEMP_FAILURE_RETRY(fd = open(path, ro ? O_RDONLY : O_RDWR));
     const char *errMsg = disk6_insert(fd, drive, path, ro);
+    (void)errMsg;
     if (fd >= 0) {
         TEMP_FAILURE_RETRY(close(fd));
     }
