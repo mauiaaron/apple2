@@ -24,7 +24,11 @@ int main(int argc_, char *argv_[])
     int retVal = 1;
     argc = argc_;
     argv = argv_;
-    
+
+#if !TESTING
+    cpu_pause();
+#endif
+
     @autoreleasepool {
 #if TARGET_OS_IPHONE
         retVal = UIApplicationMain(argc, argv, nil, NSStringFromClass([AppDelegate class]));

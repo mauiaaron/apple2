@@ -295,8 +295,8 @@
     if (![self.joystickCalibrationView isHidden])
     {
         [self.joystickCalibrationView setNeedsDisplay:YES];
-        [self.button0Pressed setHidden:!(joy_button0)];
-        [self.button1Pressed setHidden:!(joy_button1)];
+        [self.button0Pressed setHidden:!(run_args.joy_button0)];
+        [self.button1Pressed setHidden:!(run_args.joy_button1)];
     }
 }
 
@@ -324,8 +324,8 @@
         leftAltEngaged = NO;
         rightAltEngaged = NO;
     }
-    [self.button0Pressed setHidden:!(joy_button0)];
-    [self.button1Pressed setHidden:!(joy_button1)];
+    [self.button0Pressed setHidden:!(run_args.joy_button0)];
+    [self.button1Pressed setHidden:!(run_args.joy_button1)];
 }
 
 - (void)_handleKeyEvent:(NSEvent *)event pressed:(BOOL)pressed
