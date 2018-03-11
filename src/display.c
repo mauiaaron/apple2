@@ -946,6 +946,17 @@ void display_plotMessage(uint8_t *fb, const interface_colorscheme_t cs, const ch
 // Double-HIRES (HIRES80) graphics
 
 static inline void __plot_hires80_pixels(uint8_t idx, uint8_t *fb_ptr) {
+    if (color_mode == COLOR_NONE) {
+        uint32_t b;
+        b =   (idx & 0x1) ? COLOR_LIGHT_WHITE : COLOR_BLACK;
+        b |= ((idx & 0x2) ? COLOR_LIGHT_WHITE : COLOR_BLACK) << 8;
+        b |= ((idx & 0x4) ? COLOR_LIGHT_WHITE : COLOR_BLACK) << 16;
+        b |= ((idx & 0x8) ? COLOR_LIGHT_WHITE : COLOR_BLACK) << 24;
+        *((uint32_t *)fb_ptr) = b;
+        *((uint32_t *)(fb_ptr+SCANWIDTH)) = b;
+        return;
+    }
+
     uint8_t b1 = video__dhires1[idx];
     uint8_t b2 = video__dhires2[idx];
     uint32_t b = (b2<<24) | (b1<<8);
