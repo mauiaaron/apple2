@@ -632,6 +632,7 @@ static inline void __plot_character40(const unsigned int font_off, uint8_t *fb_p
 }
 
 static void _plot_character40(uint8_t col, uint8_t row, int page, int bank, uint8_t *fb_ptr) {
+    assert(bank == 0); // FIXME TODO ...
     uint16_t base = page ? 0x0800 : 0x0400;
     uint16_t off = video__line_offset[row] + col;
     uint16_t ea = base+off;
@@ -655,6 +656,7 @@ static inline void __plot_character80(const unsigned int font_off, uint8_t *fb_p
 }
 
 static void _plot_character80(uint8_t col, uint8_t row, int page, int bank, uint8_t *fb_ptr) {
+    assert(bank == 0); // FIXME TODO ...
     uint16_t base = page ? 0x0800 : 0x0400;
     uint16_t off = video__line_offset[row] + col;
     uint16_t ea = base+off;
@@ -674,9 +676,23 @@ static void _plot_character80(uint8_t col, uint8_t row, int page, int bank, uint
     }
 }
 
-static inline void __plot_block40(const uint8_t val, uint8_t *fb_ptr) {
+static inline void __plot_block40(const uint8_t val, uint8_t col, uint8_t *fb_ptr) {
+
     uint8_t color = (val & 0x0F) << 4;
-    uint32_t val32 = (color << 24) | (color << 16) | (color << 8) | color;
+
+    uint32_t val32;
+    if (color_mode == COLOR_NONE) {
+        if (color != 0x0 && color != 0xf) {
+            uint8_t rot2 = ((col % 2) << 1); // 2 phases at double rotation
+            color = (color << rot2) | ((color & 0xC0) >> rot2);
+        }
+        val32 =  ((color & 0x10) ? COLOR_LIGHT_WHITE : COLOR_BLACK) << 0;
+        val32 |= ((color & 0x20) ? COLOR_LIGHT_WHITE : COLOR_BLACK) << 8;
+        val32 |= ((color & 0x40) ? COLOR_LIGHT_WHITE : COLOR_BLACK) << 16;
+        val32 |= ((color & 0x80) ? COLOR_LIGHT_WHITE : COLOR_BLACK) << 24;
+    } else {
+        val32 = (color << 24) | (color << 16) | (color << 8) | color;
+    }
 
     _plot_lores40(/*dst*/&fb_ptr, val32);
     fb_ptr += SCANSTEP;
@@ -688,7 +704,19 @@ static inline void __plot_block40(const uint8_t val, uint8_t *fb_ptr) {
 
     fb_ptr += SCANSTEP;
     color = val & 0xF0;
-    val32 = (color << 24) | (color << 16) | (color << 8) | color;
+
+    if (color_mode == COLOR_NONE) {
+        if (color != 0x0 && color != 0xf) {
+            uint8_t rot2 = ((col % 2) << 1); // 2 phases at double rotation
+            color = (color << rot2) | ((color & 0xC0) >> rot2);
+        }
+        val32 =  ((color & 0x10) ? COLOR_LIGHT_WHITE : COLOR_BLACK) << 0;
+        val32 |= ((color & 0x20) ? COLOR_LIGHT_WHITE : COLOR_BLACK) << 8;
+        val32 |= ((color & 0x40) ? COLOR_LIGHT_WHITE : COLOR_BLACK) << 16;
+        val32 |= ((color & 0x80) ? COLOR_LIGHT_WHITE : COLOR_BLACK) << 24;
+    } else {
+        val32 = (color << 24) | (color << 16) | (color << 8) | color;
+    }
 
     _plot_lores40(/*dst*/&fb_ptr, val32);
     fb_ptr += SCANSTEP;
@@ -700,11 +728,12 @@ static inline void __plot_block40(const uint8_t val, uint8_t *fb_ptr) {
 }
 
 static void _plot_block40(uint8_t col, uint8_t row, int page, int bank, uint8_t *fb_ptr) {
+    assert(bank == 0); // FIXME TODO ...
     uint16_t base = page ? 0x0800 : 0x0400;
     uint16_t off = video__line_offset[row] + col;
     uint16_t ea = base+off;
     uint8_t b = apple_ii_64k[bank][ea];
-    __plot_block40(b, fb_ptr+video__screen_addresses[off]);
+    __plot_block40(b, col, fb_ptr+video__screen_addresses[off]);
     if (textCallbackFn) {
         textCallbackFn((pixel_delta_t){ .row = row, .col = col, .b = b, .cs = COLOR16 });
     }
@@ -748,6 +777,7 @@ static inline uint8_t __shift_block80(uint8_t b) {
 }
 
 static void _plot_block80(uint8_t col, uint8_t row, int page, int bank, uint8_t *fb_ptr) {
+    assert(bank == 0); // FIXME TODO ...
     uint16_t base = page ? 0x0800 : 0x0400;
     uint16_t off = video__line_offset[row] + col;
     uint16_t ea = base+off;
@@ -1034,6 +1064,7 @@ static inline void __plot_hires80(uint16_t base, uint16_t ea, uint8_t *fb_ptr) {
 }
 
 static void _plot_hires80(uint16_t off, int page, int bank, bool is_even, uint8_t *fb_ptr) {
+    assert(bank == 0); // FIXME TODO ...
     uint16_t base = page ? 0x4000 : 0x2000;
     uint16_t ea = base+off;
     __plot_hires80(base, ea, fb_ptr);
@@ -1084,6 +1115,7 @@ static inline void _plot_hires_pixels(uint8_t *dst, const uint8_t *src) {
 }
 
 static void _plot_hires40(uint16_t off, int page, int bank, bool is_even, uint8_t *fb_ptr) {
+    assert(bank == 0); // FIXME TODO ...
     uint16_t base = page ? 0x4000 : 0x2000;
     uint16_t ea = base+off;
     uint8_t b = apple_ii_64k[bank][ea];
