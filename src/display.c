@@ -130,9 +130,9 @@ static void _initialize_dhires_values(void) {
 }
 
 static void _initialize_hires_values(void) {
-    // precalculate colors for all the 256*8 bit combinations. */
+    // precalculate colors for all the 256*8 bit combinations
     for (unsigned int value = 0x00; value <= 0xFF; value++) {
-        for (unsigned int e = value*8, last_not_black=0, v=value, b=0; b < 7; b++, v >>= 1, e++) {
+        for (unsigned int e = value<<3, last_not_black=0, v=value, b=0; b < 7; b++, v >>= 1, e++) {
             if (v & 1) {
                 if (last_not_black) {
                     video__hires_even[e] = COLOR_LIGHT_WHITE;
@@ -1059,7 +1059,7 @@ static inline void _calculate_interp_color(uint8_t *color_buf, const unsigned in
 
 static inline void _plot_hires_pixels(uint8_t *dst, const uint8_t *src) {
     for (unsigned int i=2; i; i--) {
-        for (unsigned int j=DYNAMIC_SZ-1; j; j--) {
+        for (unsigned int j=0; j<DYNAMIC_SZ-1; j++) {
             uint16_t pix = *src;
             pix = ((pix<<8) | pix);
             *((uint16_t *)dst) = pix;
@@ -1098,7 +1098,6 @@ static void _plot_hires40(uint16_t off, int page, int bank, bool is_even, uint8_
     *((uint16_t *)&color_buf[0]) = *((uint16_t *)(fb_ptr-3));
     *((uint16_t *)&color_buf[DYNAMIC_SZ-2]) = *((uint16_t *)(fb_ptr+15));
 
-    // %eax = +8
     if (color_mode != COLOR_NONE) {
         uint8_t *hires_altbase = NULL;
         if (is_even) {
@@ -1112,10 +1111,6 @@ static void _plot_hires40(uint16_t off, int page, int bank, bool is_even, uint8_
             uint16_t pix16 = *((uint16_t *)(apple2_vmem+ea));
             if ((pix16 & 0x100) && (pix16 & 0x40)) {
                 *((uint16_t *)&color_buf[DYNAMIC_SZ-3]) = (uint16_t)0x3737;// COLOR_LIGHT_WHITE
-            } else {
-                // PB_black0:
-                pix16 >>= 8;
-                color_buf[DYNAMIC_SZ-2] = hires_altbase[pix16<<3];
             }
         }
 
@@ -1124,10 +1119,6 @@ static void _plot_hires40(uint16_t off, int page, int bank, bool is_even, uint8_
             uint16_t pix16 = *((uint16_t *)(apple2_vmem+ea-1));
             if ((pix16 & 0x100) && (pix16 & 0x40)) {
                 *((uint16_t *)&color_buf[1]) = (uint16_t)0x3737;// COLOR_LIGHT_WHITE
-            } else {
-                // PB_black1:
-                pix16 &= 0xFF;
-                color_buf[1] = hires_altbase[(pix16<<3)+6];
             }
         }
 
@@ -1152,7 +1143,7 @@ static void _plot_hires40(uint16_t off, int page, int bank, bool is_even, uint8_
         }
     }
 
-    _plot_hires_pixels(fb_ptr-4, color_buf);
+    _plot_hires_pixels(/*dst:*/fb_ptr-4, /*src:*/color_buf);
 }
 
 static void (*_hirespage_plotter(uint32_t currswitches))(uint16_t, int, int, bool, uint8_t*) {
