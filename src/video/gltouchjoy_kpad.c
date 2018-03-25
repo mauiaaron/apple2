@@ -129,7 +129,7 @@ static inline void _touch_sourceBegin(volatile int *source) {
 }
 
 static void touchkpad_keyboardReadCallback(void) {
-    assert(pthread_self() == cpu_thread_id);
+    ASSERT_CALL_ON_CPU_THREAD();
 
     // HACK FIXME TODO :
     //

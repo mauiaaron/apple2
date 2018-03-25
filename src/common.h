@@ -26,6 +26,18 @@
 #define PUBLIC
 #define READONLY
 
+#define CALL_ON_UI_THREAD
+#define ASSERT_ON_UI_THREAD() \
+    assert(video_isRenderThread())
+#define ASSERT_NOT_ON_UI_THREAD() \
+    assert(!video_isRenderThread())
+
+#define CALL_ON_CPU_THREAD
+#define ASSERT_ON_CPU_THREAD() \
+    assert(timing_isCPUThread())
+#define ASSERT_NOT_ON_CPU_THREAD() \
+    assert(!timing_isCPUThread())
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

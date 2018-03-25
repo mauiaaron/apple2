@@ -140,7 +140,7 @@ static
 #endif
 void reinitialize(void) {
 #if !TESTING
-    assert(pthread_self() == cpu_thread_id);
+    ASSERT_ON_CPU_THREAD();
 #endif
 
     cycles_count_total = 0;
@@ -178,7 +178,7 @@ void timing_toggleCPUSpeed(void) {
 
 static void timing_reinitializeAudio(void) {
     SPINLOCK_ACQUIRE(&_pause_spinLock);
-    assert(pthread_self() != cpu_thread_id);
+    ASSERT_NOT_ON_CPU_THREAD();
 #if !TESTING
     assert(cpu_isPaused());
 #endif
@@ -189,7 +189,7 @@ static void timing_reinitializeAudio(void) {
 }
 
 void cpu_pause(void) {
-    assert(pthread_self() != cpu_thread_id);
+    ASSERT_NOT_ON_CPU_THREAD();
 
     SPINLOCK_ACQUIRE(&_pause_spinLock);
     do {
@@ -209,7 +209,7 @@ void cpu_pause(void) {
 }
 
 void cpu_resume(void) {
-    assert(pthread_self() != cpu_thread_id);
+    ASSERT_NOT_ON_CPU_THREAD();
 
     SPINLOCK_ACQUIRE(&_pause_spinLock);
     do {
@@ -242,7 +242,7 @@ bool timing_shouldAutoAdjustSpeed(void) {
 static void *cpu_thread(void *dummyptr) {
 
 #ifndef NDEBUG // Spamsung Galaxy Y running Gingerbread triggers this, wTf?!
-    assert(pthread_self() == cpu_thread_id);
+    ASSERT_ON_CPU_THREAD();
 #endif
 
     LOG("cpu_thread : initialized...");
@@ -514,6 +514,10 @@ cpu_runloop:
     return NULL;
 }
 
+bool timing_isCPUThread(void) {
+    return pthread_self() == cpu_thread_id;
+}
+
 void timing_startCPU(void) {
     cpu_shutting_down = false;
     int err = TEMP_FAILURE_RETRY(pthread_create(&cpu_thread_id, NULL, (void *)&cpu_thread, (void *)NULL));
@@ -533,7 +537,7 @@ void timing_stopCPU(void) {
 }
 
 unsigned int CpuGetCyclesThisVideoFrame(void) {
-    assert(pthread_self() == cpu_thread_id);
+    ASSERT_ON_CPU_THREAD();
 
     timing_checkpoint_cycles();
     return g_dwCyclesThisFrame + cycles_checkpoint_count;
@@ -541,7 +545,7 @@ unsigned int CpuGetCyclesThisVideoFrame(void) {
 
 // Called when an IO-reg is accessed & accurate global cycle count info is needed
 void timing_checkpoint_cycles(void) {
-    assert(pthread_self() == cpu_thread_id);
+    ASSERT_ON_CPU_THREAD();
 
     const int32_t d = run_args.cpu65_cycle_count - cycles_checkpoint_count;
     assert(d >= 0);

@@ -1848,7 +1848,7 @@ static void MB_DSUninit()
 void MB_Initialize()
 {
 #if 1 // APPLE2IX
-    assert(pthread_self() == cpu_thread_id);
+    ASSERT_ON_CPU_THREAD();
     memset(SSI263Voice, 0x0, sizeof(AudioBuffer_s *) * 64);
 #endif
 	LOG("MB_Initialize: g_bDisableDirectSound=%d, g_bDisableDirectSoundMockingboard=%d\n", g_bDisableDirectSound, g_bDisableDirectSoundMockingboard);
@@ -1901,11 +1901,11 @@ void MB_Initialize()
 #if 1 // APPLE2IX
 // HACK functions for "soft" destroying backend audio resource (but keeping current state)
 void MB_SoftDestroy(void) {
-    assert(pthread_self() == cpu_thread_id);
+    ASSERT_ON_CPU_THREAD();
     MB_DSUninit();
 }
 void MB_SoftInitialize(void) {
-    assert(pthread_self() == cpu_thread_id);
+    ASSERT_ON_CPU_THREAD();
     MB_DSInit();
 }
 #endif
@@ -1928,7 +1928,7 @@ void MB_Reinitialize()
 void MB_Destroy()
 {
 #if 1 // APPLE2IX
-    assert(pthread_self() == cpu_thread_id);
+    ASSERT_ON_CPU_THREAD();
 #endif
 	MB_DSUninit();
 

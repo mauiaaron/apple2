@@ -369,7 +369,7 @@ static unsigned long _submit_samples_buffer(const unsigned long num_channel_samp
 // speaker public API functions
 
 void speaker_destroy(void) {
-    assert(pthread_self() == cpu_thread_id);
+    ASSERT_ON_CPU_THREAD();
     speaker_isAvailable = false;
     audio_destroySoundBuffer(&speakerBuffer);
     FREE(samples_buffer);
@@ -377,7 +377,7 @@ void speaker_destroy(void) {
 }
 
 void speaker_init(void) {
-    assert(pthread_self() == cpu_thread_id);
+    ASSERT_ON_CPU_THREAD();
 
     long err = 0;
     speaker_isAvailable = false;
@@ -443,7 +443,7 @@ void speaker_flush(void) {
         return;
     }
 
-    assert(pthread_self() == cpu_thread_id);
+    ASSERT_ON_CPU_THREAD();
 
     if (is_fullspeed) {
         cycles_quiet_time = cycles_count_total;
@@ -512,7 +512,7 @@ double speaker_cyclesPerSample(void) {
 
 GLUE_C_READ(speaker_toggle)
 {
-    assert(pthread_self() == cpu_thread_id);
+    ASSERT_ON_CPU_THREAD();
 
     timing_checkpoint_cycles();
 

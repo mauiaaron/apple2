@@ -1185,11 +1185,7 @@ static int begin_cpu_stepping() {
    ------------------------------------------------------------------------- */
 bool c_debugger_should_break() {
 
-    if (pthread_self() != cpu_thread_id) {
-        // OOPS ...
-        LOG("should only call this from cpu thread, bailing...");
-        assert(false);
-    }
+    ASSERT_ON_CPU_THREAD();
 
     bool break_stepping = false;
     if (at_haltpt()) {

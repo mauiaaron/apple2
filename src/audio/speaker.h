@@ -16,10 +16,10 @@
 // between speaker and mockingboard
 #define SPKR_DATA_INIT (SHRT_MAX>>3) // 0x0FFF
 
-void speaker_init(void);
-void speaker_destroy(void);
+void speaker_init(void) CALL_ON_CPU_THREAD;
+void speaker_destroy(void) CALL_ON_CPU_THREAD;
 void speaker_reset(void);
-void speaker_flush(void);
+void speaker_flush(void) CALL_ON_CPU_THREAD;
 bool speaker_isActive(void);
 
 /*

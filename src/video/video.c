@@ -28,7 +28,7 @@ static pthread_t render_thread_id = 0;
 void video_init(void) {
     video_initialized = true;
 
-    assert(pthread_self() != cpu_thread_id);
+    ASSERT_NOT_ON_CPU_THREAD();
     LOG("(re)setting render_thread_id : %lu -> %lu", (unsigned long)render_thread_id, (unsigned long)pthread_self());
     render_thread_id = pthread_self();
 
@@ -58,7 +58,7 @@ void video_shutdown(void) {
 }
 
 void video_render(void) {
-    assert(pthread_self() == render_thread_id);
+    ASSERT_ON_UI_THREAD();
     currentBackend->render();
 }
 

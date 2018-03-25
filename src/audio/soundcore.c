@@ -40,7 +40,7 @@ static AudioBackend_s *currentBackend = NULL;
 
 long audio_createSoundBuffer(INOUT AudioBuffer_s **audioBuffer) {
     // CPU thread owns audio lifecycle (see note above)
-    assert(pthread_self() == cpu_thread_id);
+    ASSERT_ON_CPU_THREAD();
 
     if (!audio_isAvailable) {
         *audioBuffer = NULL;
@@ -69,7 +69,7 @@ long audio_createSoundBuffer(INOUT AudioBuffer_s **audioBuffer) {
 
 void audio_destroySoundBuffer(INOUT AudioBuffer_s **audioBuffer) {
     // CPU thread owns audio lifecycle (see note above)
-    assert(pthread_self() == cpu_thread_id);
+    ASSERT_ON_CPU_THREAD();
     if (audioContext) {
         audioContext->DestroySoundBuffer(audioContext, audioBuffer);
     }
@@ -77,7 +77,7 @@ void audio_destroySoundBuffer(INOUT AudioBuffer_s **audioBuffer) {
 
 bool audio_init(void) {
     // CPU thread owns audio lifecycle (see note above)
-    assert(pthread_self() == cpu_thread_id);
+    ASSERT_ON_CPU_THREAD();
     if (audio_isAvailable) {
         return true;
     }
@@ -101,7 +101,7 @@ bool audio_init(void) {
 
 void audio_shutdown(void) {
     // CPU thread owns audio lifecycle (see note above)
-    assert(pthread_self() == cpu_thread_id);
+    ASSERT_ON_CPU_THREAD();
     if (!audio_isAvailable) {
         return;
     }
@@ -115,7 +115,7 @@ void audio_pause(void) {
 #if TARGET_OS_MAC || TARGET_OS_PHONE
 #   warning FIXME TODO : this assert is firing on iOS port ... but the assert is valid ... fix soon 
 #else
-    assert(pthread_self() == cpu_thread_id);
+    ASSERT_ON_CPU_THREAD();
 #endif
     if (!audio_isAvailable) {
         return;
@@ -125,7 +125,7 @@ void audio_pause(void) {
 
 void audio_resume(void) {
     // CPU thread owns audio lifecycle (see note above)
-    assert(pthread_self() == cpu_thread_id);
+    ASSERT_ON_CPU_THREAD();
     if (!audio_isAvailable) {
         return;
     }

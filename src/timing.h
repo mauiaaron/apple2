@@ -69,6 +69,11 @@ struct timespec timespec_diff(struct timespec start, struct timespec end, bool *
 struct timespec timespec_add(struct timespec start, unsigned long nsecs);
 
 /*
+ * True if current thread is the CPU thread.
+ */
+bool timing_isCPUThread(void);
+
+/*
  * start CPU thread
  */
 void timing_startCPU(void);
