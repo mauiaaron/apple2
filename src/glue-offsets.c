@@ -19,12 +19,12 @@ int main (int argc, char **argv) {
 
     printf("/* This file is auto-generated for a specific architecture ABI */\n");
 
-    OUTPUT_CPU_IRQCHECK();
+    OUTPUT_UNUSED0();
 
     OUTPUT_CPU65_TRACE_PROLOGUE();
     OUTPUT_CPU65_TRACE_ARG();
-    OUTPUT_CPU65_TRACE_ARG1();
-    OUTPUT_CPU65_TRACE_ARG2();
+    OUTPUT_UNUSED1();
+    OUTPUT_UNUSED2();
     OUTPUT_CPU65_TRACE_EPILOGUE();
     OUTPUT_CPU65_TRACE_IRQ();
 
@@ -62,7 +62,7 @@ int main (int argc, char **argv) {
 
     OUTPUT_CPU65_CYCLES_TO_EXECUTE();
     OUTPUT_CPU65_CYCLE_COUNT();
-    OUTPUT_IRQ_CHECK_TIMEOUT();
+    OUTPUT_UNUSED3();
 
     OUTPUT_INTERRUPT_VECTOR();
     OUTPUT_RESET_VECTOR();

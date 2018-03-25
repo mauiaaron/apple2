@@ -76,19 +76,21 @@
 // Stack struct assembly bridge (avoiding all PIC nastiness)
 typedef struct cpu65_run_args_s {
 
-    void (*cpu_irqCheck)(uint16_t, uint8_t);
-#define OUTPUT_CPU_IRQCHECK() printf("#define CPU_IRQCHECK %ld\n", offsetof(cpu65_run_args_s, cpu_irqCheck))
+    void (*unused0)(uint16_t, uint8_t);
+#define OUTPUT_UNUSED0() printf("#define UNUSED0 %ld\n", offsetof(cpu65_run_args_s, unused0))
 
     void (*cpu65_trace_prologue)(uint16_t, uint8_t);
 #define OUTPUT_CPU65_TRACE_PROLOGUE() printf("#define CPU65_TRACE_PROLOGUE %ld\n", offsetof(cpu65_run_args_s, cpu65_trace_prologue))
     void (*cpu65_trace_arg)(uint16_t, uint8_t);
 #define OUTPUT_CPU65_TRACE_ARG() printf("#define CPU65_TRACE_ARG %ld\n", offsetof(cpu65_run_args_s, cpu65_trace_arg))
-    void (*cpu65_trace_arg1)(uint16_t, uint8_t);
-#define OUTPUT_CPU65_TRACE_ARG1() printf("#define CPU65_TRACE_ARG1 %ld\n", offsetof(cpu65_run_args_s, cpu65_trace_arg1))
-    void (*cpu65_trace_arg2)(uint16_t, uint8_t);
-#define OUTPUT_CPU65_TRACE_ARG2() printf("#define CPU65_TRACE_ARG2 %ld\n", offsetof(cpu65_run_args_s, cpu65_trace_arg2))
+    void (*unused1)(uint16_t, uint8_t);
+#define OUTPUT_UNUSED1() printf("#define UNUSED1 %ld\n", offsetof(cpu65_run_args_s, unused1))
+    void (*unused2)(uint16_t, uint8_t);
+#define OUTPUT_UNUSED2() printf("#define UNUSED2 %ld\n", offsetof(cpu65_run_args_s, unused2))
+
     void (*cpu65_trace_epilogue)(uint16_t, uint8_t);
 #define OUTPUT_CPU65_TRACE_EPILOGUE() printf("#define CPU65_TRACE_EPILOGUE %ld\n", offsetof(cpu65_run_args_s, cpu65_trace_epilogue))
+
     void (*cpu65_trace_irq)(uint16_t, uint8_t);
 #define OUTPUT_CPU65_TRACE_IRQ() printf("#define CPU65_TRACE_IRQ %ld\n", offsetof(cpu65_run_args_s, cpu65_trace_irq))
 
@@ -153,8 +155,9 @@ typedef struct cpu65_run_args_s {
 #define OUTPUT_CPU65_CYCLES_TO_EXECUTE() printf("#define CPU65_CYCLES_TO_EXECUTE %ld\n", offsetof(cpu65_run_args_s, cpu65_cycles_to_execute))
     int32_t cpu65_cycle_count; // cycles currently excuted by cpu65_run()
 #define OUTPUT_CPU65_CYCLE_COUNT() printf("#define CPU65_CYCLE_COUNT %ld\n", offsetof(cpu65_run_args_s, cpu65_cycle_count))
-    int32_t irq_check_timeout; // cycles to check for raised IRQ
-#define OUTPUT_IRQ_CHECK_TIMEOUT() printf("#define IRQ_CHECK_TIMEOUT %ld\n", offsetof(cpu65_run_args_s, irq_check_timeout))
+
+    int32_t unused3;
+#define OUTPUT_UNUSED3() printf("#define UNUSED3 %ld\n", offsetof(cpu65_run_args_s, unused3))
 
     uint16_t interrupt_vector;
 #define OUTPUT_INTERRUPT_VECTOR() printf("#define INTERRUPT_VECTOR %ld\n", offsetof(cpu65_run_args_s, interrupt_vector))

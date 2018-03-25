@@ -145,7 +145,6 @@ void reinitialize(void) {
 
     cycles_count_total = 0;
     g_dwCyclesThisFrame = 0;
-    run_args.irq_check_timeout = IRQ_CHECK_CYCLES;
 #if TESTING
     extern unsigned long (*testing_getCyclesCount)(void);
     if (testing_getCyclesCount) {

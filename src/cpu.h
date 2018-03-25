@@ -62,8 +62,6 @@ void cpu65_trace_checkpoint(void);
 
 #endif /* !__ASSEMBLER__ */
 
-#define IRQ_CHECK_CYCLES 128
-
 #define ResetSig        0x02
 #define IRQ6522         0x08
 #define IRQSpeech       0x10

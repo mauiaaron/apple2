@@ -610,9 +610,6 @@ static void init_flags_conversion_tables(void) {
 static __attribute__((constructor)) void __init_cpu65(void) {
     // emulator_registerStartupCallback(CTOR_PRIORITY_LATE, &_init_cpu65); -- 2018/01/15 NOTE : too late for testcpu.c
 
-    extern void (*cpu_irqCheck)(uint16_t, uint8_t);
-    run_args.cpu_irqCheck = cpu_irqCheck;
-
     run_args.cpu65_vmem_r = &cpu65_vmem_r[0];
     run_args.cpu65_vmem_w = &cpu65_vmem_w[0];
     run_args.cpu65_flags_encode = &cpu65_flags_encode[0];
@@ -628,10 +625,6 @@ static __attribute__((constructor)) void __init_cpu65(void) {
     run_args.cpu65_trace_prologue = cpu65_trace_prologue;
     extern void (*cpu65_trace_arg)(uint16_t, uint8_t);
     run_args.cpu65_trace_arg = cpu65_trace_arg;
-    extern void (*cpu65_trace_arg1)(uint16_t, uint8_t);
-    run_args.cpu65_trace_arg1 = cpu65_trace_arg1;
-    extern void (*cpu65_trace_arg2)(uint16_t, uint8_t);
-    run_args.cpu65_trace_arg2 = cpu65_trace_arg2;
     extern void (*cpu65_trace_epilogue)(uint16_t, uint8_t);
     run_args.cpu65_trace_epilogue = cpu65_trace_epilogue;
     extern void (*cpu65_trace_irq)(uint16_t, uint8_t);
@@ -798,20 +791,6 @@ GLUE_C_WRITE(cpu65_trace_arg)
     opargs[nargs++] = b;
 }
 
-GLUE_C_WRITE(cpu65_trace_arg1)
-{
-    assert(nargs <= 2);
-    opargs[2] = b;
-    ++nargs;
-}
-
-GLUE_C_WRITE(cpu65_trace_arg2)
-{
-    assert(nargs <= 2);
-    opargs[1] = b;
-    ++nargs;
-}
-
 GLUE_C_WRITE(cpu65_trace_epilogue)
 {
     int8_t arg1 = opargs[1];
@@ -888,11 +867,11 @@ GLUE_C_WRITE(cpu65_trace_epilogue)
     char fmt[64];
     if (UNLIKELY(run_args.cpu65_opcycles >= 10)) {
         // occurs rarely for interrupt + opcode
-        snprintf(fmt, 64, "%s", " %s CY:%u irqChk:%d totCyc:%d EA:%04X");
+        snprintf(fmt, 64, "%s", " %s CY:%u totCyc:%d EA:%04X");
     } else {
-        snprintf(fmt, 64, "%s", " %s CYC:%u irqChk:%d totCyc:%d EA:%04X");
+        snprintf(fmt, 64, "%s", " %s CYC:%u totCyc:%d EA:%04X");
     }
-    fprintf(cpu_trace_fp, fmt, flags_buf, run_args.cpu65_opcycles, (run_args.irq_check_timeout - run_args.cpu65_opcycles), (cycles_count_total + run_args.cpu65_opcycles), run_args.cpu65_ea);
+    fprintf(cpu_trace_fp, fmt, flags_buf, run_args.cpu65_opcycles, (cycles_count_total + run_args.cpu65_opcycles), run_args.cpu65_ea);
 
     sprintf(fmt, " %s %s", opcodes_65c02[run_args.cpu65_opcode].mnemonic, disasm_templates[opcodes_65c02[run_args.cpu65_opcode].mode]);
 

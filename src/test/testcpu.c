@@ -51,7 +51,6 @@ static void testcpu_setup(void *arg) {
     cpu65_uninterrupt(0xff);
     run_args.cpu65_cycle_count = 0;
     run_args.cpu65_cycles_to_execute = 1;
-    run_args.irq_check_timeout = 255;
 
     run_args.cpu65_pc = TEST_LOC;
     run_args.cpu65_a = 0x0;

@@ -35,10 +35,6 @@
                 callLQ  *CPU65_TRACE_PROLOGUE(reg_args);
 #   define TRACE_ARG \
                 callLQ  *CPU65_TRACE_ARG(reg_args);
-#   define TRACE_ARG1 \
-                callLQ  *CPU65_TRACE_ARG1(reg_args);
-#   define TRACE_ARG2 \
-                callLQ  *CPU65_TRACE_ARG2(reg_args);
 #   define TRACE_EPILOGUE \
                 pushLQ _XAX; \
                 CommonSaveCPUState; \
@@ -49,8 +45,6 @@
 #else
 #   define TRACE_PROLOGUE
 #   define TRACE_ARG
-#   define TRACE_ARG1
-#   define TRACE_ARG2
 #   define TRACE_EPILOGUE
 #   define TRACE_IRQ
 #endif
@@ -67,14 +61,14 @@
 
 #define GetFromPC_W \
                 movLQ   PC_Reg_X, EffectiveAddr_X; \
-                incw    EffectiveAddr; \
                 addw    $2, PC_Reg; \
                 CALL_IND(CPU65_VMEM_R,EffectiveAddr_X); \
-                decw    EffectiveAddr; \
-                TRACE_ARG2; \
+                TRACE_ARG; \
                 movb    %al, %ah; \
+                incw    EffectiveAddr; \
                 CALL_IND(CPU65_VMEM_R,EffectiveAddr_X); \
-                TRACE_ARG1;
+                TRACE_ARG; \
+                xchgb   %al, %ah;
 
 #define CPUStatsReset \
                 movb    $0, CPU65_OPCYCLES(reg_args); \
@@ -2108,35 +2102,18 @@ continue:
                 addb    CPU65_OPCYCLES(reg_args), %al
                 movb    %al, CPU65_OPCYCLES(reg_args)
                 TRACE_EPILOGUE
+
                 addl    %eax, CPU65_CYCLE_COUNT(reg_args)
                 subl    %eax, GC_CYCLES_TIMER_0(reg_args)
                 subl    %eax, GC_CYCLES_TIMER_1(reg_args)
-#if CONFORMANT_IRQ_CHECKPOINT
-#   error 2018/01/15 untested ...
-                subl    %eax, IRQ_CHECK_TIMEOUT(reg_args)
-                jl      irq_checkpoint // AppleWin : CheckInterruptSources()
-#endif
 continue1:      subl    %eax, CPU65_CYCLES_TO_EXECUTE(reg_args)
                 jle     exit_cpu65_run
+
 continue2:      xorLQ   _XAX, _XAX
                 orb     CPU65__SIGNAL(reg_args), %al
                 jnz     exception
                 CPUStatsReset
                 JumpNextInstruction
-
-#if CONFORMANT_IRQ_CHECKPOINT
-#   error 2018/01/15 untested ...
-irq_checkpoint:
-#if __PIC__ && __i386__
-                pushl   %ebx
-#endif
-                callLQ  *CPU_IRQCHECK(reg_args)
-#if __PIC__ && __i386__
-                popl    %ebx
-#endif
-                movl    $IRQ_CHECK_CYCLES, IRQ_CHECK_TIMEOUT(reg_args)
-                jmp     continue1
-#endif
 
 /* -------------------------------------------------------------------------
         Exception handlers

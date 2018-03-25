@@ -47,10 +47,6 @@
                 bl      CALL(cpu65_trace_prologue);
 #   define TRACE_ARG \
                 bl      CALL(cpu65_trace_arg);
-#   define TRACE_ARG1 \
-                bl      CALL(cpu65_trace_arg1);
-#   define TRACE_ARG2 \
-                bl      CALL(cpu65_trace_arg2);
 #   define TRACE_EPILOGUE \
                 CommonSaveCPUState; \
                 bl      CALL(cpu65_trace_epilogue);
@@ -59,8 +55,6 @@
 #else
 #   define TRACE_PROLOGUE
 #   define TRACE_ARG
-#   define TRACE_ARG1
-#   define TRACE_ARG2
 #   define TRACE_EPILOGUE
 #   define TRACE_IRQ
 #endif
@@ -128,12 +122,12 @@
                 AddUint16(PC_Reg, #2) \
                 ldr     r1, [reg_vmem_r, EffectiveAddr, LSL PTR_SHIFT]; \
                 blx     r1; \
-                TRACE_ARG1 \
+                TRACE_ARG \
                 mov     lo_byte, r0; \
                 IncUint16(EffectiveAddr) \
                 ldr     r1, [reg_vmem_r, EffectiveAddr, LSL PTR_SHIFT]; \
                 blx     r1; \
-                TRACE_ARG2; \
+                TRACE_ARG; \
                 mov     hi_byte, hi_byte, LSL #8; \
                 orr     r0, hi_byte, lo_byte;
 
@@ -2408,14 +2402,6 @@ continue:
                 add     r1, r1, cycles_exe
                 str     r1, [reg_args, #CPU65_CYCLE_COUNT]
 
-#if CONFORMANT_IRQ_CHECKPOINT
-#   error 2018/01/15 untested ...
-                ldr     r1, [reg_args, #CPU_IRQCHECK] // AppleWin : CheckInterruptSources()
-                subs    r1, r1, cycles_exe
-                str     r1, [reg_args, #CPU_IRQCHECK]
-                bmi     irq_checkpoint
-#endif
-
 continue1:      ldr     r1, [reg_args, #CPU65_CYCLES_TO_EXECUTE]
                 subs    r1, r1, cycles_exe
                 str     r1, [reg_args, #CPU65_CYCLES_TO_EXECUTE]
@@ -2427,16 +2413,6 @@ continue2:      ldrb    r0, [reg_args, #CPU65__SIGNAL]
                 bne     exception
                 CPUStatsReset
                 JumpNextInstruction
-
-#if CONFORMANT_IRQ_CHECKPOINT
-#   error 2018/01/15 untested ...
-irq_checkpoint:
-                bl      CALL(cpu_irqCheck);
-                //eor     r1, r1, r1
-                mov     r1, #IRQ_CHECK_CYCLES
-                str     r1, [reg_args, #CPU_IRQCHECK]
-                b       continue1
-#endif
 
 /* -------------------------------------------------------------------------
         Exception handlers

@@ -1,9 +1,9 @@
 /* This file is auto-generated for a specific architecture ABI */
-#define CPU_IRQCHECK 0
+#define UNUSED0 0
 #define CPU65_TRACE_PROLOGUE 8
 #define CPU65_TRACE_ARG 16
-#define CPU65_TRACE_ARG1 24
-#define CPU65_TRACE_ARG2 32
+#define UNUSED1 24
+#define UNUSED2 32
 #define CPU65_TRACE_EPILOGUE 40
 #define CPU65_TRACE_IRQ 48
 #define DEBUG_ILLEGAL_BCD 56
@@ -33,7 +33,7 @@
 #define GC_CYCLES_TIMER_1 240
 #define CPU65_CYCLES_TO_EXECUTE 244
 #define CPU65_CYCLE_COUNT 248
-#define IRQ_CHECK_TIMEOUT 252
+#define UNUSED3 252
 #define INTERRUPT_VECTOR 256
 #define RESET_VECTOR 258
 #define CPU65_PC 260
