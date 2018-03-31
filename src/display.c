@@ -110,14 +110,10 @@ void video__write_2e_text0(uint16_t, uint8_t);
 void video__write_2e_text0_mixed(uint16_t, uint8_t);
 void video__write_2e_text1(uint16_t, uint8_t);
 void video__write_2e_text1_mixed(uint16_t, uint8_t);
-void video__write_2e_odd0(uint16_t, uint8_t);
-void video__write_2e_even0(uint16_t, uint8_t);
-void video__write_2e_odd0_mixed(uint16_t, uint8_t);
-void video__write_2e_even0_mixed(uint16_t, uint8_t);
-void video__write_2e_odd1(uint16_t, uint8_t);
-void video__write_2e_even1(uint16_t, uint8_t);
-void video__write_2e_odd1_mixed(uint16_t, uint8_t);
-void video__write_2e_even1_mixed(uint16_t, uint8_t);
+void video__write_2e_hgr0(uint16_t, uint8_t);
+void video__write_2e_hgr0_mixed(uint16_t, uint8_t);
+void video__write_2e_hgr1(uint16_t, uint8_t);
+void video__write_2e_hgr1_mixed(uint16_t, uint8_t);
 
 // ----------------------------------------------------------------------------
 // Initialization routines
@@ -354,21 +350,11 @@ static void _initialize_tables_video(void) {
             for (unsigned int i = 0; i < 8; i++) {
                 idx = video__line_offset[ y ] + (0x400*i) + x;
                 if (y < 20) {
-                    if (x & 1) {
-                        cpu65_vmem_w[idx+0x2000] = video__write_2e_odd0;
-                        cpu65_vmem_w[idx+0x4000] = video__write_2e_odd1;
-                    } else {
-                        cpu65_vmem_w[idx+0x2000] = video__write_2e_even0;
-                        cpu65_vmem_w[idx+0x4000] = video__write_2e_even1;
-                    }
+                    cpu65_vmem_w[idx+0x2000] = video__write_2e_hgr0;
+                    cpu65_vmem_w[idx+0x4000] = video__write_2e_hgr1;
                 } else {
-                    if (x & 1) {
-                        cpu65_vmem_w[idx+0x2000] = video__write_2e_odd0_mixed;
-                        cpu65_vmem_w[idx+0x4000] = video__write_2e_odd1_mixed;
-                    } else {
-                        cpu65_vmem_w[idx+0x2000] = video__write_2e_even0_mixed;
-                        cpu65_vmem_w[idx+0x4000] = video__write_2e_even1_mixed;
-                    }
+                    cpu65_vmem_w[idx+0x2000] = video__write_2e_hgr0_mixed;
+                    cpu65_vmem_w[idx+0x4000] = video__write_2e_hgr1_mixed;
                 }
             }
         }
@@ -1193,7 +1179,7 @@ static void (*_hirespage_plotter(uint32_t currswitches))(uint16_t, int, int, boo
     return ((currswitches & SS_80COL) && (currswitches & SS_DHIRES)) ? _plot_hires80 : _plot_hires40;
 }
 
-GLUE_C_WRITE(video__write_2e_even0)
+GLUE_C_WRITE(video__write_2e_hgr0)
 {
     run_args.base_hgrwrt[ea] = b;
     drawpage_mode_t mode = _currentMainMode(run_args.softswitches);
@@ -1205,31 +1191,7 @@ GLUE_C_WRITE(video__write_2e_even0)
     }
 }
 
-GLUE_C_WRITE(video__write_2e_even0_mixed)
-{
-    run_args.base_hgrwrt[ea] = b;
-    drawpage_mode_t mode = _currentMixedMode(run_args.softswitches);
-    if (mode == DRAWPAGE_TEXT) {
-        return;
-    }
-    if (!(run_args.softswitches & SS_PAGE2)) {
-        video_setDirty(A2_DIRTY_FLAG);
-    }
-}
-
-GLUE_C_WRITE(video__write_2e_odd0)
-{
-    run_args.base_hgrwrt[ea] = b;
-    drawpage_mode_t mode = _currentMainMode(run_args.softswitches);
-    if (mode == DRAWPAGE_TEXT) {
-        return;
-    }
-    if (!(run_args.softswitches & SS_PAGE2)) {
-        video_setDirty(A2_DIRTY_FLAG);
-    }
-}
-
-GLUE_C_WRITE(video__write_2e_odd0_mixed)
+GLUE_C_WRITE(video__write_2e_hgr0_mixed)
 {
     run_args.base_hgrwrt[ea] = b;
     drawpage_mode_t mode = _currentMixedMode(run_args.softswitches);
@@ -1241,7 +1203,7 @@ GLUE_C_WRITE(video__write_2e_odd0_mixed)
     }
 }
 
-GLUE_C_WRITE(video__write_2e_even1)
+GLUE_C_WRITE(video__write_2e_hgr1)
 {
     run_args.base_ramwrt[ea] = b;
     drawpage_mode_t mode = _currentMainMode(run_args.softswitches);
@@ -1253,31 +1215,7 @@ GLUE_C_WRITE(video__write_2e_even1)
     }
 }
 
-GLUE_C_WRITE(video__write_2e_even1_mixed)
-{
-    run_args.base_ramwrt[ea] = b;
-    drawpage_mode_t mode = _currentMixedMode(run_args.softswitches);
-    if (mode == DRAWPAGE_TEXT) {
-        return;
-    }
-    if (run_args.softswitches & SS_PAGE2) {
-        video_setDirty(A2_DIRTY_FLAG);
-    }
-}
-
-GLUE_C_WRITE(video__write_2e_odd1)
-{
-    run_args.base_ramwrt[ea] = b;
-    drawpage_mode_t mode = _currentMainMode(run_args.softswitches);
-    if (mode == DRAWPAGE_TEXT) {
-        return;
-    }
-    if (run_args.softswitches & SS_PAGE2) {
-        video_setDirty(A2_DIRTY_FLAG);
-    }
-}
-
-GLUE_C_WRITE(video__write_2e_odd1_mixed)
+GLUE_C_WRITE(video__write_2e_hgr1_mixed)
 {
     run_args.base_ramwrt[ea] = b;
     drawpage_mode_t mode = _currentMixedMode(run_args.softswitches);
