@@ -78,7 +78,7 @@ void log_outputString(const char * const str);
 #   undef assert
 #   define assert(e) \
     do { \
-        if ((e)) { \
+        if (LIKELY(e)) { \
             /* ... */ \
         } else { \
             LOG( "!!! ASSERT !!! : " #e ); \
