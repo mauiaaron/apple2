@@ -1377,7 +1377,6 @@ unsigned long video_clearDirty(unsigned long flags) {
 // References to Jim Sather's books are given as eg:
 // UTAIIe:5-7,P3 (Understanding the Apple IIe, chapter 5, page 7, Paragraph 3)
 
-extern unsigned int CpuGetCyclesThisVideoFrame(void);
 uint16_t video_scanner_get_address(bool *vblBarOut) {
     const bool SW_HIRES   = (run_args.softswitches & SS_HIRES);
     const bool SW_TEXT    = (run_args.softswitches & SS_TEXT);
@@ -1386,7 +1385,7 @@ uint16_t video_scanner_get_address(bool *vblBarOut) {
     const bool SW_MIXED   = (run_args.softswitches & SS_MIXED);
 
     // get video scanner position
-    unsigned int nCycles = CpuGetCyclesThisVideoFrame();
+    unsigned int nCycles = timing_currentVideoFrameCycles();
 
     // machine state switches
     int nHires   = (SW_HIRES && !SW_TEXT) ? 1 : 0;

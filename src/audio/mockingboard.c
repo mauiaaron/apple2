@@ -2368,7 +2368,7 @@ void MB_UpdateCycles(ULONG uExecutedCycles)
 	if(g_SoundcardType == CT_Empty)
 		return;
 
-	timing_checkpoint_cycles();
+	timing_checkpointCycles();
 	unsigned long uCycles = cycles_count_total - g_uLastCumulativeCycles;
 	g_uLastCumulativeCycles = cycles_count_total;
 #if MB_TRACING
@@ -2385,6 +2385,9 @@ void MB_UpdateCycles(ULONG uExecutedCycles)
 	_ASSERT(uCycles < 0x10000);
 #endif
 	uint16_t nClocks = (uint16_t) uCycles;
+        if (nClocks == 0) {
+            return;
+        }
 
 	for(int i=0; i<NUM_SY6522; i++)
 	{

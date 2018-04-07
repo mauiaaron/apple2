@@ -445,6 +445,8 @@ void speaker_flush(void) {
 
     ASSERT_ON_CPU_THREAD();
 
+    timing_checkpointCycles();
+
     if (is_fullspeed) {
         cycles_quiet_time = cycles_count_total;
         speaker_going_silent = false;
@@ -514,7 +516,7 @@ GLUE_C_READ(speaker_toggle)
 {
     ASSERT_ON_CPU_THREAD();
 
-    timing_checkpoint_cycles();
+    timing_checkpointCycles();
 
 #if SPEAKER_TRACING
     // output cycle count delta when toggled

@@ -33,7 +33,6 @@
 #define EXECUTION_PERIOD_NSECS 1000000UL // NANOSECONDS_PER_SECOND / EXECUTION_CHURN_RATE
 
 // timing values cribbed from AppleWin ... reference: Sather's _Understanding the Apple IIe_
-// TODO: revisit this if/when attempting to actually sync up VBL/VSYNC to actual device vsync
 
 // 14318181.81...
 #define _M14     (157500000.0 / 11.0)
@@ -42,6 +41,19 @@
 // 65 cycles per 912 14M clocks = 1020484.45 ...
 #define CLK_6502     ((_M14     * 65.0) / 912.0)
 #define CLK_6502_INT ((unsigned int)CLK_6502)
+
+// HBL & VBL constants
+// UtAIIe:3-13 "There are exactly 17030 (65 x 262) 6502 cycles in every television scan of an American Apple"
+#define CYCLES_HBL      25
+#define CYCLES_VIS_BEGIN CYCLES_HBL
+#define CYCLES_VIS      40
+#define CYCLES_SCANLINE (CYCLES_HBL + CYCLES_VIS)       // 65
+#define SCANLINES_VBL   70
+#define SCANLINES_MIX   (20*8)                          // 160
+#define SCANLINES_VIS   (64*3)                          // 192
+#define SCANLINES_VBL_BEGIN SCANLINES_VIS
+#define SCANLINES_FRAME (SCANLINES_VBL + SCANLINES_VIS) // 262
+#define CYCLES_FRAME    (CYCLES_SCANLINE * SCANLINES_FRAME) // 17030
 
 #define CPU_SCALE_SLOWEST 0.25
 #define CPU_SCALE_FASTEST_PIVOT 4.0
@@ -118,12 +130,21 @@ void cpu_resume(void);
  */
 bool cpu_isPaused(void);
 
+// ----------------------------------------------------------------------------
+// Video frame and IRQ fine-grained timing.
+
 /*
- * checkpoints current cycle count and updates total (for timing-dependent I/O)
+ * Get current cycles count within this video frame
  */
-void timing_checkpoint_cycles(void);
+unsigned int timing_currentVideoFrameCycles() CALL_ON_CPU_THREAD;
+
+/*
+ * Checkpoints current cycle count and updates total (for timing-dependent I/O)
+ */
+void timing_checkpointCycles(void) CALL_ON_CPU_THREAD;
 
 // ----------------------------------------------------------------------------
+// save/restore state
 
 bool timing_saveState(StateHelper_s *helper);
 

@@ -9,28 +9,6 @@
  *
  */
 
-/*
- * 65c02 CPU timing support. Source inspired/derived from AppleWin.
- *
- * Simplified timing loop for each execution period:
- *
- * ..{...+....[....|..................|.........]....^....|....^....^....}......
- *  ti  MBB       CHK                CHK            MBE  CHX  SPK  MBX  tj   ZZZ
- *
- *      - ti  : timing sample begin (lock out interface thread)
- *      - tj  : timing sample end   (unlock interface thread)
- *      -  [  : cpu65_run()
- *      -  ]  : cpu65_run() finished
- *      - CHK : incoming timing_checkpoint_cycles() call from IO (bumps cycles_count_total)
- *      - CHX : update remainder of timing_checkpoint_cycles() for execution period
- *      - MBB : Mockingboard begin
- *      - MBE : Mockingboard end/flush (output)
- *      - MBX : Mockingboard end video frame (output)
- *      - SPK : Speaker output
- *      - ZZZ : housekeeping+sleep (or not)
- *
- */
-
 #include "common.h"
 
 #define DEBUG_TIMING (!defined(NDEBUG) && 0) // enable to print timing stats
@@ -42,18 +20,12 @@
 
 #define DISK_MOTOR_QUIET_NSECS 2000000
 
-// VBL constants?
-#define uCyclesPerLine 65 // 25 cycles of HBL & 40 cycles of HBL'
-#define uVisibleLinesPerFrame (64*3) // 192
-#define uLinesPerFrame (262) // 64 in each third of the screen & 70 in VBL
-#define dwClksPerFrame (uCyclesPerLine * uLinesPerFrame) // 17030
-
 // cycle counting
 double cycles_persec_target = CLK_6502;
 unsigned long cycles_count_total = 0;           // Running at spec ~1MHz, this will approach overflow in ~4000secs (for 32bit architectures)
 int cycles_speaker_feedback = 0;
 static int32_t cycles_checkpoint_count = 0;
-static unsigned int g_dwCyclesThisFrame = 0;
+static unsigned int cycles_this_frame = 0;
 
 // scaling and speed adjustments
 #if !MOBILE_DEVICE
@@ -144,7 +116,7 @@ void reinitialize(void) {
 #endif
 
     cycles_count_total = 0;
-    g_dwCyclesThisFrame = 0;
+    cycles_this_frame = 0;
 #if TESTING
     extern unsigned long (*testing_getCyclesCount)(void);
     if (testing_getCyclesCount) {
@@ -352,11 +324,11 @@ cpu_runloop:
 #if DEBUG_TIMING
                 dbg_cycles_executed += run_args.cpu65_cycle_count;
 #endif
-                g_dwCyclesThisFrame += run_args.cpu65_cycle_count;
+                cycles_this_frame += run_args.cpu65_cycle_count;
 
                 if (is_debugging) {
                     debugging_cycles -= run_args.cpu65_cycle_count;
-                    timing_checkpoint_cycles();
+                    timing_checkpointCycles();
 
                     if (c_debugger_should_break() || (debugging_cycles <= 0)) {
                         int err = 0;
@@ -380,12 +352,13 @@ cpu_runloop:
 
             MB_UpdateCycles();
 
-            timing_checkpoint_cycles();
+            timing_checkpointCycles();
 
             speaker_flush(); // play audio
 
-            if (g_dwCyclesThisFrame >= dwClksPerFrame) {
-                g_dwCyclesThisFrame -= dwClksPerFrame;
+            // video frame counter overflow ...
+            if (cycles_this_frame >= CYCLES_FRAME) {
+                cycles_this_frame -= CYCLES_FRAME;
                 MB_EndOfVideoFrame();
             }
 
@@ -536,15 +509,14 @@ void timing_stopCPU(void) {
     }
 }
 
-unsigned int CpuGetCyclesThisVideoFrame(void) {
+unsigned int timing_currentVideoFrameCycles(void) {
     ASSERT_ON_CPU_THREAD();
-
-    timing_checkpoint_cycles();
-    return g_dwCyclesThisFrame + cycles_checkpoint_count;
+    timing_checkpointCycles();
+    return cycles_this_frame + cycles_checkpoint_count;
 }
 
-// Called when an IO-reg is accessed & accurate global cycle count info is needed
-void timing_checkpoint_cycles(void) {
+// Called when accurate global cycle count info is needed
+void timing_checkpointCycles(void) {
     ASSERT_ON_CPU_THREAD();
 
     const int32_t d = run_args.cpu65_cycle_count - cycles_checkpoint_count;
