@@ -88,6 +88,15 @@ void log_outputString(const char * const str);
     } while (0)
 #endif
 
+#if defined(NDEBUG)
+#   if defined(__ANDROID__)
+// HACK NOTE : keep assertions in Android release code to get better introspection into potential crashes
+#   else
+#       undef assert
+#       define assert(e)
+#   endif
+#endif
+
 #define LOG(...) \
     if (LIKELY(do_logging)) { \
         GLenum _glerr = safeGLGetError(); \
