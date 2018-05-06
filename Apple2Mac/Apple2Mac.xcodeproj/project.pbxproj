@@ -962,6 +962,9 @@
 		4A8F5D121F6A1FE300AE37B5 /* video.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = video.c; sourceTree = "<group>"; };
 		4A8F5D3B1F6A271700AE37B5 /* log.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = log.c; sourceTree = "<group>"; };
 		4AA2D7FE1D2038380054A5FF /* testprefs.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = testprefs.c; sourceTree = "<group>"; };
+		4ABA2AE5201D0A5A0031DB98 /* vm.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = vm.h; sourceTree = "<group>"; };
+		4ABA2AEA201D0A650031DB98 /* display.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = display.h; sourceTree = "<group>"; };
+		4ABA2AEB201D0C2D0031DB98 /* font.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = font.txt; sourceTree = "<group>"; };
 		4ABDA9CD1D792E8C0086A35B /* Apple2MacTestTrace.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Apple2MacTestTrace.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		4ABDA9D01D792F480086A35B /* Apple2MacTestTrace-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "Apple2MacTestTrace-Info.plist"; sourceTree = "<group>"; };
 		4ACD73191D205D6000123DE6 /* disks */ = {isa = PBXFileReference; lastKnownFileType = folder; name = disks; path = "../../apple2-images-pub/disks"; sourceTree = "<group>"; };
@@ -976,8 +979,31 @@
 		4AD4FEC31A52464F00F958EC /* Apple2MacTestDisk.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Apple2MacTestDisk.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		4AD4FEC41A52464F00F958EC /* Apple2MacTestDisk-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "Apple2MacTestDisk-Info.plist"; path = "Apple2MacTests/Apple2MacTestDisk-Info.plist"; sourceTree = SOURCE_ROOT; };
 		4AD4FEC91A52467D00F958EC /* testdisk.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = testdisk.c; sourceTree = "<group>"; };
+		4ADB475B209E300D00CD2985 /* log.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = log.h; sourceTree = "<group>"; };
+		4ADB475C209E302800CD2985 /* trace.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = trace.h; sourceTree = "<group>"; };
+		4ADB475D209E9A2600CD2985 /* glue-offsets.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = "glue-offsets.c"; sourceTree = "<group>"; };
+		4ADB475F209E9A6800CD2985 /* genrom.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = genrom.c; sourceTree = "<group>"; };
+		4ADB4760209E9A8900CD2985 /* genfont.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = genfont.c; sourceTree = "<group>"; };
+		4ADB4761209E9A9600CD2985 /* json_parse_private.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = json_parse_private.h; sourceTree = "<group>"; };
+		4ADB4762209E9ABF00CD2985 /* breakpad.C */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = breakpad.C; sourceTree = "<group>"; };
+		4ADB4763209E9B1F00CD2985 /* rom.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = rom.c; sourceTree = "<group>"; };
 		4ADC522719E8CA4500186B36 /* Apple2MacTestVM.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Apple2MacTestVM.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		4ADC522819E8CA4500186B36 /* Apple2MacTestVM-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "Apple2MacTestVM-Info.plist"; path = "Apple2MacTests/Apple2MacTestVM-Info.plist"; sourceTree = SOURCE_ROOT; };
+		4AEDCEE8209E9BF70090B44F /* glue-offsets.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "glue-offsets.h"; path = "arm/glue-offsets.h"; sourceTree = "<group>"; };
+		4AEDCEED209E9C0E0090B44F /* glue-offsets32.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "glue-offsets32.h"; path = "arm/glue-offsets32.h"; sourceTree = "<group>"; };
+		4AEDCEEE209E9C520090B44F /* soundcore-opensles.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = "soundcore-opensles.c"; sourceTree = "<group>"; };
+		4AEDCEEF209E9C930090B44F /* lintrace.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = lintrace.c; sourceTree = "<group>"; };
+		4AEDCEF0209E9CCA0090B44F /* shatest.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = shatest.c; sourceTree = "<group>"; };
+		4AEDCEF1209E9CF10090B44F /* sha1-license.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "sha1-license.txt"; sourceTree = "<group>"; };
+		4AEDCEF3209E9D280090B44F /* xvideo.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = xvideo.c; sourceTree = "<group>"; };
+		4AEDCEF4209E9D3F0090B44F /* ncvideo.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = ncvideo.c; sourceTree = "<group>"; };
+		4AEDCEF5209E9D3F0090B44F /* glinput.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = glinput.h; sourceTree = "<group>"; };
+		4AEDCEF6209E9D3F0090B44F /* glutinput.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = glutinput.c; sourceTree = "<group>"; };
+		4AEDCEF7209E9DD60090B44F /* glue-offsets.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "glue-offsets.h"; sourceTree = "<group>"; };
+		4AEDCEF8209E9DD60090B44F /* glue-offsets32.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "glue-offsets32.h"; sourceTree = "<group>"; };
+		4AEDCEF9209E9DD60090B44F /* glue-offsets64.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "glue-offsets64.h"; sourceTree = "<group>"; };
+		4AEDCEFA209E9E420090B44F /* LICENSE */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = LICENSE; path = ../external/jsmn/LICENSE; sourceTree = "<group>"; };
+		4AEDCEFC209E9E770090B44F /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; name = README.md; path = ../external/jsmn/README.md; sourceTree = "<group>"; };
 		4AFC17091AAE9C3200B215FA /* sha1.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = sha1.c; sourceTree = "<group>"; };
 		4E1733DC1C2C5E5D00CDF9DF /* AppleViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AppleViewController.h; sourceTree = "<group>"; };
 		4E1733DD1C2C5E5D00CDF9DF /* AppleViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AppleViewController.m; sourceTree = "<group>"; };
@@ -1424,6 +1450,15 @@
 		773B3D4519568A570085CE5F /* src */ = {
 			isa = PBXGroup;
 			children = (
+				4ADB4762209E9ABF00CD2985 /* breakpad.C */,
+				4ADB4763209E9B1F00CD2985 /* rom.c */,
+				4ADB4761209E9A9600CD2985 /* json_parse_private.h */,
+				4ADB475F209E9A6800CD2985 /* genrom.c */,
+				4ADB4760209E9A8900CD2985 /* genfont.c */,
+				4ADB475D209E9A2600CD2985 /* glue-offsets.c */,
+				4ABA2AEB201D0C2D0031DB98 /* font.txt */,
+				4ABA2AEA201D0A650031DB98 /* display.h */,
+				4ABA2AE5201D0A5A0031DB98 /* vm.h */,
 				935C55781C136F550013166D /* arm */,
 				779F564619EAF66E00A6F107 /* audio */,
 				773B3D5C19568A570085CE5F /* common.h */,
@@ -1467,6 +1502,9 @@
 		773B3D7019568A570085CE5F /* meta */ = {
 			isa = PBXGroup;
 			children = (
+				4AEDCEEF209E9C930090B44F /* lintrace.c */,
+				4ADB475C209E302800CD2985 /* trace.h */,
+				4ADB475B209E300D00CD2985 /* log.h */,
 				4A8F5D3B1F6A271700AE37B5 /* log.c */,
 				4A8F5D081F6A1FC900AE37B5 /* darwin-shim.c */,
 				4A8F5D091F6A1FC900AE37B5 /* memmngt.h */,
@@ -1483,6 +1521,8 @@
 		773B3D7919568A570085CE5F /* test */ = {
 			isa = PBXGroup;
 			children = (
+				4AEDCEF1209E9CF10090B44F /* sha1-license.txt */,
+				4AEDCEF0209E9CCA0090B44F /* shatest.c */,
 				773B3D7A19568A570085CE5F /* greatest.h */,
 				935C55771C136F260013166D /* sha1.h */,
 				4AFC17091AAE9C3200B215FA /* sha1.c */,
@@ -1502,6 +1542,10 @@
 		773B3D8A19568A570085CE5F /* video */ = {
 			isa = PBXGroup;
 			children = (
+				4AEDCEF5209E9D3F0090B44F /* glinput.h */,
+				4AEDCEF6209E9D3F0090B44F /* glutinput.c */,
+				4AEDCEF4209E9D3F0090B44F /* ncvideo.c */,
+				4AEDCEF3209E9D280090B44F /* xvideo.c */,
 				4A8F5D121F6A1FE300AE37B5 /* video.c */,
 				935C55801C1370160013166D /* gltouch */,
 				779F562819E4FE9E00A6F107 /* Basic.fsh */,
@@ -1522,6 +1566,9 @@
 		773B3D8E19568A570085CE5F /* x86 */ = {
 			isa = PBXGroup;
 			children = (
+				4AEDCEF7209E9DD60090B44F /* glue-offsets.h */,
+				4AEDCEF8209E9DD60090B44F /* glue-offsets32.h */,
+				4AEDCEF9209E9DD60090B44F /* glue-offsets64.h */,
 				773B3D8F19568A570085CE5F /* cpu-regs.h */,
 				773B3D9019568A570085CE5F /* cpu.S */,
 				773B3D9119568A570085CE5F /* darwin-glue.S */,
@@ -1533,6 +1580,7 @@
 		779F564619EAF66E00A6F107 /* audio */ = {
 			isa = PBXGroup;
 			children = (
+				4AEDCEEE209E9C520090B44F /* soundcore-opensles.c */,
 				779F564819EAF66E00A6F107 /* alhelpers.h */,
 				779F564719EAF66E00A6F107 /* alhelpers.c */,
 				779F564A19EAF66E00A6F107 /* AY8910.h */,
@@ -1639,6 +1687,8 @@
 		935C55781C136F550013166D /* arm */ = {
 			isa = PBXGroup;
 			children = (
+				4AEDCEE8209E9BF70090B44F /* glue-offsets.h */,
+				4AEDCEED209E9C0E0090B44F /* glue-offsets32.h */,
 				935C55A01C1384400013166D /* cpu.S */,
 				935C557C1C136FBD0013166D /* glue-prologue.h */,
 				935C557A1C136F7E0013166D /* cpu-regs.h */,
@@ -1670,6 +1720,8 @@
 		935C55A61C13890D0013166D /* jsmn */ = {
 			isa = PBXGroup;
 			children = (
+				4AEDCEFC209E9E770090B44F /* README.md */,
+				4AEDCEFA209E9E420090B44F /* LICENSE */,
 				935C55A71C1389370013166D /* jsmn.c */,
 				935C55A81C1389370013166D /* jsmn.h */,
 			);
