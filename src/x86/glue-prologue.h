@@ -81,6 +81,13 @@ ENTRY(func)             movb    off(reg_args), %al; \
                         popLQ   _XAX;
 #endif
 
+#if __APPLE__
+// Xcode/lldb gets confused if _XBP is hosed
+#   define _XORLQ_XBP   xorLQ _XBP, _XBP;
+#else
+#   define _XORLQ_XBP
+#endif
+
 #define GLUE_C_WRITE(func) \
 ENTRY(func)             pushLQ  _XAX; \
                         pushLQ  XY_Reg_X; \
@@ -88,6 +95,7 @@ ENTRY(func)             pushLQ  _XAX; \
                         pushLQ  reg_args; \
                         pushLQ  PC_Reg_X; \
                         andLQ   $0xff,_XAX; \
+                        _XORLQ_XBP \
                         _PUSH_ARGS \
                         callLQ  CALL(c_##func); \
                         _POP_ARGS \
@@ -104,6 +112,7 @@ ENTRY(func)             pushLQ  XY_Reg_X; \
                         pushLQ  reg_args; \
                         pushLQ  PC_Reg_X; \
                         pushLQ  _XAX; /* HACK: works around mysterious issue with generated mov(_XAX), _XAX ... */ \
+                        _XORLQ_XBP \
                         pushLQ  EffectiveAddr_X; /* ea is arg0 (and preserved) */ \
                         callLQ  CALL(c_##func); \
                         popLQ   EffectiveAddr_X; /* restore ea */ \
