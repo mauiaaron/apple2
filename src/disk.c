@@ -30,7 +30,7 @@ static FILE *test_write_fp = NULL;
 
 extern uint8_t slot6_rom[256];
 
-drive_t disk6;
+drive_t disk6 = { { 0 } };
 
 static uint8_t disk_a[NIB_SIZE] = { 0 };
 static uint8_t disk_a_raw[NIB_SIZE] = { 0 };
@@ -779,6 +779,7 @@ void disk6_init(void) {
     disk6.motor_off = 1;
     disk6.drive = 0;
     disk6.ddrw = 0;
+    disk6.disk_byte = 0;
 }
 
 const char *disk6_eject(int drive) {
