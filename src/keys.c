@@ -141,6 +141,11 @@ static int scode_map[MAP_SIZE] =
   /*x*/45, /*y*/21, /*z*/44, /*{*/26, /*|*/43, /*}*/27, /*~*/41, SCODE_DEL };   /* 120-127 */
 
 uint8_t keys_apple2ASCII(uint8_t c, OUTPARM font_mode_t *mode) {
+    font_mode_t ignored_mode;
+    if (mode == NULL) {
+        mode = &ignored_mode;
+    }
+
     if (c < 0x20) {
         *mode = FONT_MODE_INVERSE;
         return c + 0x40;                // Apple //e (0x00-0x1F) -> ASCII (0x40-0x5F)
