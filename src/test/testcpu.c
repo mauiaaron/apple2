@@ -7411,6 +7411,7 @@ GREATEST_SUITE(test_suite_cpu) {
 
     GREATEST_SET_SETUP_CB(testcpu_setup, NULL);
     GREATEST_SET_TEARDOWN_CB(testcpu_teardown, NULL);
+    GREATEST_SET_BREAKPOINT_CB(test_breakpoint, NULL);
 
     srandom(time(NULL));
 

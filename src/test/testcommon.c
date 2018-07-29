@@ -31,17 +31,10 @@ void test_type_input_deterministically(const char *input) {
 }
 
 void test_breakpoint(void *arg) {
-    fprintf(GREATEST_STDOUT, "DISPLAY NOTE: busy-spinning in test_breakpoint(), needs gdb/lldb intervention to continue...\n");
-    volatile bool debug_continue = false;
-    while (!debug_continue) {
-        struct timespec ts = { .tv_sec=0, .tv_nsec=33333333 };
-        nanosleep(&ts, NULL);
-    }
+    fprintf(GREATEST_STDOUT, "OOPS set a breakpoint in test_breakpoint() to diagnose test failure...\n");
 }
 
 void test_common_init(void) {
-    GREATEST_SET_BREAKPOINT_CB(test_breakpoint, NULL);
-
 #if __ANDROID__
     // tags help us wade through log soup
 #else
@@ -66,8 +59,7 @@ void test_common_init(void) {
 
     c_debugger_set_watchpoint(WATCHPOINT_ADDR);
 
-    fprintf(stderr, "NOTE : RUNNING WITH DISPLAY\n");
-    fprintf(stderr, "Will spinloop on failed tests for debugger intervention\n");
+    fprintf(stderr, "Break in test_breakpoint() to catch and diagnose test failures...\n");
     c_debugger_set_timeout(0);
 }
 
