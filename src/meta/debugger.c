@@ -60,6 +60,8 @@ int arg1, arg2, arg3;                   /* command arguments */
 int breakpoints[MAX_BRKPTS];            /* memory breakpoints */
 int watchpoints[MAX_BRKPTS];            /* memory watchpoints */
 
+static bool(*shouldBreakCallback)(void) = NULL;
+
 #ifdef INTERFACE_CLASSIC
 /* debugger globals */
 //1.  5.  10.  15.  20.  25.  30.  35.  40.  45.  50.  55.  60.  65.  70.  75.  80.",
@@ -1190,6 +1192,8 @@ bool c_debugger_should_break() {
     bool break_stepping = false;
     if (at_haltpt()) {
         stepping_struct.should_break = true;
+    } else if (shouldBreakCallback && shouldBreakCallback()) {
+        stepping_struct.should_break = true;
     } else {
         uint8_t op = get_last_opcode();
 
@@ -1534,6 +1538,10 @@ void c_debugger_set_timeout(const unsigned int secs) {
 
 bool c_debugger_set_watchpoint(const uint16_t addr) {
     return set_halt(watchpoints, addr);
+}
+
+void debugger_setBreakCallback(bool(*cb)(void)) {
+    shouldBreakCallback = cb;
 }
 
 void c_debugger_clear_watchpoints(void) {

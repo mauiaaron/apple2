@@ -84,6 +84,7 @@ void c_interface_debugging(uint8_t *stagingFB);
 #endif
 
 void debugger_setInputText(const char *text, const bool deterministically);
+void debugger_setBreakCallback(bool(*cb)(void));
 void c_debugger_go(void);
 bool c_debugger_should_break(void);
 void c_debugger_set_timeout(const unsigned int secs);
