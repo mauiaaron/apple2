@@ -1552,89 +1552,88 @@ bool vm_loadState(StateHelper_s *helper) {
     return loaded;
 }
 
-void debug_print_softwitches(void) {
-    // useful from GDB ...
+void vm_printSoftwitches(FILE *fp, bool output_mem, bool output_pseudo) {
 
-    fprintf(stderr, "STANDARD: ");
+    fprintf(fp, "[");
     if (run_args.softswitches & SS_TEXT) {
-        fprintf(stderr, "SS_TEXT ");
+        fprintf(fp, " TEXT");
     }
     if (run_args.softswitches & SS_MIXED) {
-        fprintf(stderr, "SS_MIXED ");
+        fprintf(fp, " MIXED");
     }
     if (run_args.softswitches & SS_HIRES) {
-        fprintf(stderr, "SS_HIRES ");
+        fprintf(fp, " HIRES");
     }
     if (run_args.softswitches & SS_PAGE2) {
-        fprintf(stderr, "SS_PAGE2 ");
-    }
-    if (run_args.softswitches & SS_BANK2) {
-        fprintf(stderr, "SS_BANK2 ");
-    }
-    if (run_args.softswitches & SS_LCRAM) {
-        fprintf(stderr, "SS_LCRAM ");
+        fprintf(fp, " PAGE2");
     }
     if (run_args.softswitches & SS_80STORE) {
-        fprintf(stderr, "SS_80STORE ");
+        fprintf(fp, " 80STORE");
     }
     if (run_args.softswitches & SS_80COL) {
-        fprintf(stderr, "SS_80COL ");
-    }
-    if (run_args.softswitches & SS_RAMRD) {
-        fprintf(stderr, "SS_RAMRD ");
-    }
-    if (run_args.softswitches & SS_RAMWRT) {
-        fprintf(stderr, "SS_RAMWRT ");
-    }
-    if (run_args.softswitches & SS_ALTZP) {
-        fprintf(stderr, "SS_ALTZP ");
+        fprintf(fp, " 80COL");
     }
     if (run_args.softswitches & SS_DHIRES) {
-        fprintf(stderr, "SS_DHIRES ");
-    }
-    if (run_args.softswitches & SS_IOUDIS) {
-        fprintf(stderr, "SS_IOUDIS ");
-    }
-    if (run_args.softswitches & SS_CXROM) {
-        fprintf(stderr, "SS_CXROM ");
-    }
-    if (run_args.softswitches & SS_C3ROM) {
-        fprintf(stderr, "SS_C3ROM ");
+        fprintf(fp, " DHIRES");
     }
     if (run_args.softswitches & SS_ALTCHAR) {
-        fprintf(stderr, "SS_ALTCHAR ");
-    }
-    fprintf(stderr, "\n");
-
-    // pseudo #1
-    fprintf(stderr, "PSEUDO 1: ");
-    if (run_args.softswitches & SS_LCSEC) {
-        fprintf(stderr, "SS_LCSEC ");
-    }
-    if (run_args.softswitches & SS_LCWRT) {
-        fprintf(stderr, "SS_LCWRT ");
-    }
-    fprintf(stderr, "\n");
-
-    // pseudo #2
-    fprintf(stderr, "PSEUDO 2: ");
-    if (run_args.softswitches & SS_SCREEN) {
-        fprintf(stderr, "SS_SCREEN ");
-    }
-    if (run_args.softswitches & SS_TEXTRD) {
-        fprintf(stderr, "SS_TEXTRD ");
-    }
-    if (run_args.softswitches & SS_TEXTWRT) {
-        fprintf(stderr, "SS_TEXTWRT ");
-    }
-    if (run_args.softswitches & SS_HGRRD) {
-        fprintf(stderr, "SS_HGRRD ");
-    }
-    if (run_args.softswitches & SS_HGRWRT) {
-        fprintf(stderr, "SS_HGRWRT ");
+        fprintf(fp, " ALTCHAR");
     }
 
-    fprintf(stderr, "\n");
+    if (output_mem) {
+        if (run_args.softswitches & SS_BANK2) {
+            fprintf(fp, " BANK2");
+        }
+        if (run_args.softswitches & SS_LCRAM) {
+            fprintf(fp, " LCRAM");
+        }
+        if (run_args.softswitches & SS_RAMRD) {
+            fprintf(fp, " RAMRD");
+        }
+        if (run_args.softswitches & SS_RAMWRT) {
+            fprintf(fp, " RAMWRT");
+        }
+        if (run_args.softswitches & SS_ALTZP) {
+            fprintf(fp, " ALTZP");
+        }
+        if (run_args.softswitches & SS_IOUDIS) {
+            fprintf(fp, " IOUDIS");
+        }
+        if (run_args.softswitches & SS_CXROM) {
+            fprintf(fp, " CXROM");
+        }
+        if (run_args.softswitches & SS_C3ROM) {
+            fprintf(fp, " C3ROM");
+        }
+    }
+
+    if (output_pseudo) {
+        // pseudo #1
+        if (run_args.softswitches & SS_LCSEC) {
+            fprintf(fp, " SS_LCSEC");
+        }
+        if (run_args.softswitches & SS_LCWRT) {
+            fprintf(fp, " SS_LCWRT");
+        }
+
+        // pseudo #2
+        if (run_args.softswitches & SS_SCREEN) {
+            fprintf(fp, " SS_SCREEN");
+        }
+        if (run_args.softswitches & SS_TEXTRD) {
+            fprintf(fp, " SS_TEXTRD");
+        }
+        if (run_args.softswitches & SS_TEXTWRT) {
+            fprintf(fp, " SS_TEXTWRT");
+        }
+        if (run_args.softswitches & SS_HGRRD) {
+            fprintf(fp, " SS_HGRRD");
+        }
+        if (run_args.softswitches & SS_HGRWRT) {
+            fprintf(fp, " SS_HGRWRT");
+        }
+    }
+    fprintf(fp, " ]");
 }
 
 #if VM_TRACING

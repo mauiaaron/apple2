@@ -137,6 +137,7 @@ void vm_trace_toggle(const char *vm_file);
 bool vm_trace_is_ignored(uint16_t ea);
 #endif
 
+void vm_printSoftwitches(FILE *fp, bool output_mem, bool output_pseudo);
 #endif // !defined(__ASSEMBLER__)
 
 // softswitch flag bits
