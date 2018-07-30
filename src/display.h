@@ -12,6 +12,8 @@
 #ifndef _DISPLAY_H_
 #define _DISPLAY_H_
 
+#include "common.h"
+
 /*
  * Color structure
  */
@@ -20,6 +22,17 @@ typedef struct A2Color_s {
     uint8_t green;
     uint8_t blue;
 } A2Color_s;
+
+/*
+ * Scanline data
+ */
+typedef struct scan_data_t {
+    uint8_t *scanline;      // CYCLES_VIS<<1 == 80
+    uint32_t softswitches;
+    unsigned int scanrow;   // 0 >= x < 192
+    unsigned int scancol;   // 0 >  x <= 80
+    unsigned int scanend;   // 0 >= x < 80
+} scan_data_t;
 
 #define IDX_BLACK     0x00
 #define IDX_MAGENTA   0x10
@@ -75,21 +88,6 @@ typedef enum drawpage_mode_t {
 } drawpage_mode_t;
 
 /*
- * Pixel deltas
- */
-typedef struct pixel_delta_t {
-    uint8_t row; // row
-    uint8_t col; // col
-    uint8_t b;   // byte
-    uint8_t cs;  // colorscheme (interface updates only)
-} pixel_delta_t;
-
-/*
- * Text/hires callback
- */
-typedef void (*display_update_fn)(pixel_delta_t);
-
-/*
  * Setup the display. This may be called multiple times in a run, and is
  * used when graphics parameters may have changed.
  *
@@ -126,58 +124,61 @@ void display_flashText(void);
 
 // ----------------------------------------------------------------------------
 
+#if INTERFACE_CLASSIC
 /*
- * Plot character into staging framebuffer.
- *
- *  - Framebuffer may be NULL or should be exactly SCANWIDTH*SCANHEIGHT*sizeof(uint8_t) size
+ * Plot character into interface framebuffer.
  *  - Pixels in the framebuffer are 8bit indexed color into the colormap array
- *  - Triggers text update callback
  *  - This should only be called from video backends/interface
  */
-void display_plotChar(uint8_t *fb, const uint8_t col, const uint8_t row, const interface_colorscheme_t cs, const uint8_t c);
+void display_plotChar(const uint8_t col, const uint8_t row, const interface_colorscheme_t cs, const uint8_t c);
 
 /*
- * Plot NULL_terminated string into staging framebuffer.
+ * Plot NULL_terminated string into interface framebuffer.
  *  - See display_plotChar() ...
- *
  */
-void display_plotLine(uint8_t *fb, const uint8_t col, const uint8_t row, const interface_colorscheme_t cs, const char *message);
+void display_plotLine(const uint8_t col, const uint8_t row, const interface_colorscheme_t cs, const char *message);
+#endif
 
 /*
- * Plot multi-line message into staging framebuffer.
+ * Plot multi-line message into given framebuffer (not the interface framebuffer).
  *  - See display_plotChar() ...
  */
 void display_plotMessage(uint8_t *fb, const interface_colorscheme_t cs, const char *message, const uint8_t message_cols, const uint8_t message_rows);
 
 // ----------------------------------------------------------------------------
+// video generation
 
 /*
- * Current dominant screen mode, TEXT or MIXED/HIRES
- */
-drawpage_mode_t display_currentDrawpageMode(uint32_t currswitches);
-
-/*
- * Set TEXT/HIRES update callback(s).
- */
-void display_setUpdateCallback(drawpage_mode_t mode, display_update_fn updateFn);
-
-/*
- * Flushes currently set Apple //e video memory into staging framebuffer.
- *
- *  - Framebuffer should be exactly SCANWIDTH*SCANHEIGHT*sizeof(uint8_t) size
+ * Called by video backend to get the current complete staging framebuffer.
+ *  - Framebuffer is exactly SCANWIDTH*SCANHEIGHT*sizeof(uint8_t) size
  *  - Pixels in the framebuffer are 8bit indexed color into the colormap array
- *  - This should only be called from video backends or testsuite
  */
-void display_renderStagingFramebuffer(uint8_t *stagingFB);
+uint8_t *display_getCurrentFramebuffer(void) CALL_ON_UI_THREAD;
+
+/*
+ * Handler for toggling text flashing
+ */
+void display_flashText(void) CALL_ON_CPU_THREAD;
+
+/*
+ * Handler for video scanner scanline completion
+ */
+void display_flushScanline(scan_data_t *scandata) CALL_ON_CPU_THREAD;
+
+/*
+ * Handler called when entire frame is complete
+ */
+void display_frameComplete(void) CALL_ON_CPU_THREAD;
+
+#if TESTING
+/*
+ * Wait for frame complete and return staging framebuffer.
+ */
+uint8_t *display_waitForNextCompleteFramebuffer(void);
+#endif
 
 // ----------------------------------------------------------------------------
 
-/*
- * VBL routines
- */
-uint16_t video_scanner_get_address(bool *vblBarOut);
-uint8_t floating_bus(void);
-uint8_t floating_bus_hibit(const bool hibit);
 
 #define TEXT_ROWS 24
 #define BEGIN_MIX 20

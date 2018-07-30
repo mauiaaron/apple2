@@ -38,7 +38,6 @@ VIDEO_SRC = \
 	src/video/glhudmodel.c \
 	src/video/glalert.c \
 	src/video/ncvideo.c \
-	src/video/video.c \
 	src/video/xvideo.c \
 	src/video_util/matrixUtil.c \
 	src/video_util/modelUtil.c \
@@ -76,6 +75,7 @@ apple2ix_SOURCES = \
 	src/rom.c \
 	src/test/sha1.c \
 	src/timing.c \
+	src/video/video.c \
 	src/vm.c \
 	src/zlib-helpers.c
 
@@ -133,7 +133,7 @@ EXTRA_testdisk_SOURCES = $(ASM_SRC_x86) $(VIDEO_SRC) $(AUDIO_SRC)
 #######################################
 
 testdisplay_SOURCES = src/test/testdisplay.c $(A2_TEST_SOURCES)
-testdisplay_CFLAGS = $(A2_TEST_CFLAGS) -DTEST_DISPLAY=1
+testdisplay_CFLAGS = $(A2_TEST_CFLAGS) -DTEST_DISPLAY=1 -DVIDEO_TRACING=1
 testdisplay_CCASFLAGS = $(testdisplay_CFLAGS)
 testdisplay_LDFLAGS = $(apple2ix_LDFLAGS)
 testdisplay_LDADD = @testdisplay_ASM_O@ @testdisplay_VIDEO_O@ @testdisplay_AUDIO_O@ @X_LIBS@
@@ -153,7 +153,7 @@ EXTRA_testprefs_SOURCES = $(ASM_SRC_x86) $(VIDEO_SRC) $(AUDIO_SRC)
 #######################################
 
 testtrace_SOURCES = src/test/testtrace.c $(A2_TEST_SOURCES)
-testtrace_CFLAGS = $(A2_TEST_CFLAGS) -DTEST_TRACE=1 -DCPU_TRACING=1 -DDISK_TRACING=1 -DVM_TRACING=1 -DSPEAKER_TRACING=1 -DMB_TRACING=1
+testtrace_CFLAGS = $(A2_TEST_CFLAGS) -DTEST_TRACE=1 -DCPU_TRACING=1 -DDISK_TRACING=1 -DVM_TRACING=1 -DSPEAKER_TRACING=1 -DMB_TRACING=1 -DVIDEO_TRACING=1
 testtrace_CCASFLAGS = $(testtrace_CFLAGS)
 testtrace_LDFLAGS = $(apple2ix_LDFLAGS)
 testtrace_LDADD = @testtrace_ASM_O@ @testtrace_VIDEO_O@ @testtrace_AUDIO_O@ @X_LIBS@

@@ -60,7 +60,7 @@ void video_shutdown(void);
 /*
  * Begin a render pass (only for non-emulator-managed main video).  This should only be called on the render thread.
  */
-void video_render(void);
+void video_render(void) CALL_ON_UI_THREAD;
 
 /*
  * Set the render thread ID.  Use with caution.
@@ -72,11 +72,6 @@ void _video_setRenderThread(pthread_t id);
  */
 bool video_isRenderThread(void);
 
-/*
- * Clear the current display.
- */
-void video_clear(void);
-
 #define A2_DIRTY_FLAG 0x1 // Apple //e video is dirty
 #define FB_DIRTY_FLAG 0x2 // Internal framebuffer is dirty
 
@@ -86,9 +81,9 @@ void video_clear(void);
 bool video_isDirty(unsigned long flags);
 
 /*
- * Atomically set dirty bit(s), return previous bit(s) value
+ * Called primary from VM routines to flag when graphics mode or video memory data changes
  */
-unsigned long video_setDirty(unsigned long flags);
+void video_setDirty(unsigned long flags);
 
 /*
  * Atomically clear dirty bit(s), return previous bit(s) value
@@ -110,6 +105,73 @@ bool video_loadState(StateHelper_s *helper);
  */
 video_animation_s *video_getAnimationDriver(void);
 
+// ----------------------------------------------------------------------------
+// Video scanner
+
+static inline drawpage_mode_t video_currentMainMode(uint32_t currswitches) {
+    if (currswitches & SS_TEXT) {
+        return DRAWPAGE_TEXT;
+    } else  {
+        if (currswitches & SS_HIRES) {
+            return DRAWPAGE_HIRES;
+        } else {
+            return DRAWPAGE_TEXT; // (LORES)
+        }
+    }
+}
+
+static inline drawpage_mode_t video_currentMixedMode(uint32_t currswitches) {
+    if (currswitches & (SS_TEXT|SS_MIXED)) {
+        return DRAWPAGE_TEXT;
+    } else {
+        if (currswitches & SS_HIRES) {
+            return DRAWPAGE_HIRES;
+        } else {
+            return DRAWPAGE_TEXT; // (LORES)
+        }
+    }
+}
+
+static inline int video_currentPage(uint32_t currswitches) {
+    // UTAIIe : 5-25
+    if (currswitches & SS_80STORE) {
+        return 0;
+    }
+
+    return !!(currswitches & SS_PAGE2);
+}
+
+/*
+ * Update text flashing state
+ */
+void video_flashText(void);
+
+/*
+ * Reset video scanner
+ */
+void video_scannerReset(void);
+
+/*
+ * Update video scanner position and generate video output
+ */
+void video_scannerUpdate(void) CALL_ON_CPU_THREAD;
+
+/*
+ * Get current video scanner address
+ */
+uint16_t video_scannerAddress(OUTPARM bool *ptrIsVBL);
+
+/*
+ * Return current video scanner data
+ */
+uint8_t floating_bus(void);
+
+#if VIDEO_TRACING
+void video_scannerTraceBegin(const char *trace_file, unsigned long frameCount);
+void video_scannerTraceEnd(void);
+void video_scannerTraceCheckpoint(void);
+bool video_scannerTraceShouldStop(void);
+#endif
 
 // ----------------------------------------------------------------------------
 // Video Backend API
@@ -120,6 +182,17 @@ typedef struct video_backend_s {
     void (*main_loop)(void);
     void (*render)(void);
     void (*shutdown)(void);
+
+#if INTERFACE_CLASSIC
+    // interface plotting callbacks
+    void (*plotChar)(const uint8_t col, const uint8_t row, const interface_colorscheme_t cs, const uint8_t c);
+    void (*plotLine)(const uint8_t col, const uint8_t row, const interface_colorscheme_t cs, const char *message);
+#endif
+
+    void (*flashText)(void);
+    void (*flushScanline)(scan_data_t *scandata) CALL_ON_CPU_THREAD;
+    void (*frameComplete)(void) CALL_ON_CPU_THREAD;
+
     video_animation_s *anim;
 } video_backend_s;
 

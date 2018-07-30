@@ -621,13 +621,13 @@ static __attribute__((constructor)) void __init_cpu65(void) {
     run_args.reset_vector = 0xFFFC;
 
 #if CPU_TRACING
-    extern void (*cpu65_trace_prologue)(uint16_t, uint8_t);
+    extern void cpu65_trace_prologue(uint16_t, uint8_t);
     run_args.cpu65_trace_prologue = cpu65_trace_prologue;
-    extern void (*cpu65_trace_arg)(uint16_t, uint8_t);
+    extern void cpu65_trace_arg(uint16_t, uint8_t);
     run_args.cpu65_trace_arg = cpu65_trace_arg;
-    extern void (*cpu65_trace_epilogue)(uint16_t, uint8_t);
+    extern void cpu65_trace_epilogue(uint16_t, uint8_t);
     run_args.cpu65_trace_epilogue = cpu65_trace_epilogue;
-    extern void (*cpu65_trace_irq)(uint16_t, uint8_t);
+    extern void cpu65_trace_irq(uint16_t, uint8_t);
     run_args.cpu65_trace_irq = cpu65_trace_irq;
 #endif
 
@@ -826,7 +826,7 @@ GLUE_C_WRITE(cpu65_trace_epilogue)
         case addr_absolute_y:
         case addr_j_indirect:
         case addr_j_indirect_x:
-            fprintf(cpu_trace_fp, "%04X:%02X%02X%02X", current_pc, run_args.cpu65_opcode, (uint8_t)arg2, (uint8_t)arg1);
+            fprintf(cpu_trace_fp, "%04X:%02X%02X%02X", current_pc, run_args.cpu65_opcode, (uint8_t)arg1, (uint8_t)arg2);
             break;
         default:
             fprintf(cpu_trace_fp, "invalid opcode mode");
@@ -867,11 +867,21 @@ GLUE_C_WRITE(cpu65_trace_epilogue)
     char fmt[64];
     if (UNLIKELY(run_args.cpu65_opcycles >= 10)) {
         // occurs rarely for interrupt + opcode
-        snprintf(fmt, 64, "%s", " %s CY:%u totCyc:%d EA:%04X");
+        snprintf(fmt, 64, "%s", " %s CY:%u");
     } else {
-        snprintf(fmt, 64, "%s", " %s CYC:%u totCyc:%d EA:%04X");
+        snprintf(fmt, 64, "%s", " %s CYC:%u");
     }
-    fprintf(cpu_trace_fp, fmt, flags_buf, run_args.cpu65_opcycles, (cycles_count_total + run_args.cpu65_opcycles), run_args.cpu65_ea);
+    fprintf(cpu_trace_fp, fmt, flags_buf, run_args.cpu65_opcycles);
+
+    uint16_t vidAddr = video_scannerAddress(NULL);
+    uint8_t vidData = apple_ii_64k[0][vidAddr];
+    fprintf(cpu_trace_fp, " VID:%04X:%02X", vidAddr, vidData);
+
+#if CPU_TRACING_SHOW_EA
+    fprintf(cpu_trace_fp, " EA:%04X", run_args.cpu65_ea);
+#endif
+
+    fprintf(cpu_trace_fp, " CY+%lu", (cycles_count_total + run_args.cpu65_opcycles));
 
     sprintf(fmt, " %s %s", opcodes_65c02[run_args.cpu65_opcode].mnemonic, disasm_templates[opcodes_65c02[run_args.cpu65_opcode].mode]);
 
@@ -894,7 +904,7 @@ GLUE_C_WRITE(cpu65_trace_epilogue)
         case addr_absolute_y:
         case addr_j_indirect:
         case addr_j_indirect_x:
-            fprintf(cpu_trace_fp, fmt, (uint8_t)arg1, (uint8_t)arg2);
+            fprintf(cpu_trace_fp, fmt, (uint8_t)arg2, (uint8_t)arg1);
             break;
         case addr_relative:
             if (arg1 < 0) {

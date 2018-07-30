@@ -63,7 +63,6 @@ void c_interface_exit(int ch);
 void c_interface_translate_screen(char screen[24][INTERFACE_SCREEN_X+1]);
 void c_interface_select_diskette(int);
 bool interface_isShowing(void);
-void interface_setStagingFramebuffer(uint8_t *stagingFB);
 #endif
 
 // Plot message into pixel buffer

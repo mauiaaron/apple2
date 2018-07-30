@@ -36,6 +36,7 @@ TEST test_boot_disk() {
     test_setup_boot_disk("testvm1.dsk.gz", 1);
 
     BOOT_TO_DOS();
+    ASSERT_SHA(BOOT_SCREEN);
 
     PASS();
 }
@@ -2823,9 +2824,9 @@ TEST test_check_ioudis(bool flag_ioudis) {
     ASM_INIT();
 
     if (flag_ioudis) {
-        ASSERT((run_args.softswitches & SS_IOUDIS));
+        ASM_IOUDIS_ON();
     } else {
-        ASM_IOUDIS_OFF();
+        ASSERT(!(run_args.softswitches & SS_IOUDIS));
     }
 
     ASM_CHECK_IOUDIS();
@@ -2855,9 +2856,9 @@ TEST test_dhires_on(bool flag_ioudis/* FIXME TODO : possibly testing a existing 
 
     ASM_INIT();
     if (flag_ioudis) {
-        ASSERT((run_args.softswitches & SS_IOUDIS));
+        ASM_IOUDIS_ON();
     } else {
-        ASM_IOUDIS_OFF();
+        ASSERT(!(run_args.softswitches & SS_IOUDIS));
     }
     ASM_DHIRES_OFF();
     ASM_TRIGGER_WATCHPT();
@@ -2896,9 +2897,9 @@ TEST test_dhires_off(bool flag_ioudis/* FIXME TODO : possibly testing a existing
 
     ASM_INIT();
     if (flag_ioudis) {
-        ASSERT((run_args.softswitches & SS_IOUDIS));
+        ASM_IOUDIS_ON();
     } else {
-        ASM_IOUDIS_OFF();
+        ASSERT(!(run_args.softswitches & SS_IOUDIS));
     }
     ASM_DHIRES_ON();
     ASM_TRIGGER_WATCHPT();
@@ -2938,9 +2939,9 @@ TEST test_check_dhires(bool flag_dhires, bool flag_ioudis/* FIXME TODO : possibl
     ASM_INIT();
 
     if (flag_ioudis) {
-        ASSERT((run_args.softswitches & SS_IOUDIS));
+        ASM_IOUDIS_ON();
     } else {
-        ASM_IOUDIS_OFF();
+        ASSERT(!(run_args.softswitches & SS_IOUDIS));
     }
 
     if (flag_dhires) {

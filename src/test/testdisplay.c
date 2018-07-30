@@ -39,6 +39,182 @@ TEST test_boot_disk() {
     PASS();
 }
 
+#if VIDEO_TRACING
+
+#   define EXPECTED_BOOT_VIDEO_TRACE_FILE_SIZE 1484244660
+#   define EXPECTED_BOOT_VIDEO_TRACE_FILE_SHA "26b9e21914d4047e6b190fb4f6fcb6854a4eaa25"
+// NOTE that CONFORMANT_TRACKS codepaths will change the output of this tracing (just like cpu tracing)
+//  - Data in screen holes (e.g., 0478-047F is used by Disk ][
+//  - Longer boot time with CONFORMANT_TRACKS will add more frames of output
+#   if CONFORMANT_TRACKS
+TEST test_boot_video_trace(void) {
+    test_setup_boot_disk("testdisplay1.dsk.gz", 1);
+
+    srandom(0);
+    const char *homedir = HOMEDIR;
+    char *traceFile = NULL;
+    ASPRINTF(&traceFile, "%s/a2_boot_video_trace.txt", homedir);
+    ASSERT(traceFile);
+    unlink(traceFile);
+    video_scannerTraceBegin(traceFile, 0);
+
+    BOOT_TO_DOS();
+
+    video_scannerTraceEnd();
+    do {
+        uint8_t md[SHA_DIGEST_LENGTH];
+        char mdstr0[(SHA_DIGEST_LENGTH*2)+1];
+
+        FILE *fp = fopen(traceFile, "r");
+
+        fseek(fp, 0, SEEK_END);
+        long expectedSize = ftell(fp);
+        ASSERT(expectedSize == EXPECTED_BOOT_VIDEO_TRACE_FILE_SIZE);
+        fseek(fp, 0, SEEK_SET);
+
+        unsigned char *buf = MALLOC(EXPECTED_BOOT_VIDEO_TRACE_FILE_SIZE);
+        if (fread(buf, 1, EXPECTED_BOOT_VIDEO_TRACE_FILE_SIZE, fp) != EXPECTED_BOOT_VIDEO_TRACE_FILE_SIZE) {
+            ASSERT(false);
+        }
+        fclose(fp); fp = NULL;
+        SHA1(buf, EXPECTED_BOOT_VIDEO_TRACE_FILE_SIZE, md);
+        FREE(buf);
+
+        sha1_to_str(md, mdstr0);
+        ASSERT(strcasecmp(mdstr0, EXPECTED_BOOT_VIDEO_TRACE_FILE_SHA) == 0);
+    } while(0);
+
+    unlink(traceFile);
+    FREE(traceFile);
+
+    PASS();
+}
+#   endif
+#   undef EXPECTED_BOOT_VIDEO_TRACE_FILE_SIZE
+#   undef EXPECTED_BOOT_VIDEO_TRACE_FILE_SHA
+
+#   define EXPECTED_TRACE_40COL_FILE_SIZ 698230
+#   define EXPECTED_TRACE_40COL_FILE_SHA "03dd130fa58c068d2434cf7fa244f64ec058290b"
+TEST test_video_trace_40col(void) {
+    test_setup_boot_disk("testdisplay1.dsk.gz", 1);
+
+    BOOT_TO_DOS();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
+    test_type_input("CATALOG\rPOKE7987,255:REM TRIGGER DEBUGGER\r");
+    c_debugger_go();
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+    apple_ii_64k[0][WATCHPOINT_ADDR] = 0x0;
+
+    const char *homedir = HOMEDIR;
+    char *traceFile = NULL;
+    ASPRINTF(&traceFile, "%s/a2_video_trace_40col.txt", homedir);
+    ASSERT(traceFile);
+
+    unlink(traceFile);
+
+    video_scannerTraceBegin(traceFile, 1);
+
+    debugger_setBreakCallback(&video_scannerTraceShouldStop);
+    c_debugger_go();
+    debugger_setBreakCallback(NULL);
+
+    video_scannerTraceEnd();
+
+    do {
+        uint8_t md[SHA_DIGEST_LENGTH];
+        char mdstr0[(SHA_DIGEST_LENGTH*2)+1];
+
+        FILE *fp = fopen(traceFile, "r");
+        ASSERT(fp);
+
+        fseek(fp, 0, SEEK_END);
+        long expectedSize = ftell(fp);
+        ASSERT(expectedSize == EXPECTED_TRACE_40COL_FILE_SIZ);
+        fseek(fp, 0, SEEK_SET);
+
+        unsigned char *buf = MALLOC(EXPECTED_TRACE_40COL_FILE_SIZ);
+        if (fread(buf, 1, EXPECTED_TRACE_40COL_FILE_SIZ, fp) != EXPECTED_TRACE_40COL_FILE_SIZ) {
+            ASSERT(false);
+        }
+        fclose(fp); fp = NULL;
+        SHA1(buf, EXPECTED_TRACE_40COL_FILE_SIZ, md);
+        FREE(buf);
+
+        sha1_to_str(md, mdstr0);
+        ASSERT(strcasecmp(mdstr0, EXPECTED_TRACE_40COL_FILE_SHA) == 0);
+    } while(0);
+
+    unlink(traceFile);
+    FREE(traceFile);
+
+    PASS();
+}
+#   undef EXPECTED_TRACE_40COL_FILE_SIZ
+#   undef EXPECTED_TRACE_40COL_FILE_SHA
+
+#   define EXPECTED_TRACE_LILTEXWIN_FILE_SIZ 613920
+#   define EXPECTED_TRACE_LILTEXWIN_FILE_SHA "97cf740a3697d8046b0756c7c2baedc893d46237"
+TEST test_video_trace_liltexwin(void) {
+    test_setup_boot_disk("testdisplay2.dsk.gz", 1); // boots directly into LILTEXWIN
+
+    BOOT_TO_DOS();
+
+    c_debugger_set_timeout(5);
+    c_debugger_clear_watchpoints();
+    c_debugger_go();
+    c_debugger_set_timeout(0);
+
+    const char *homedir = HOMEDIR;
+    char *traceFile = NULL;
+    ASPRINTF(&traceFile, "%s/a2_video_trace_liltexwin.txt", homedir);
+    ASSERT(traceFile);
+
+    unlink(traceFile);
+
+    video_scannerTraceBegin(traceFile, 1);
+
+    debugger_setBreakCallback(&video_scannerTraceShouldStop);
+    c_debugger_go();
+    debugger_setBreakCallback(NULL);
+    c_debugger_set_watchpoint(WATCHPOINT_ADDR);
+
+    video_scannerTraceEnd();
+
+    do {
+        uint8_t md[SHA_DIGEST_LENGTH];
+        char mdstr0[(SHA_DIGEST_LENGTH*2)+1];
+
+        FILE *fp = fopen(traceFile, "r");
+        ASSERT(fp);
+
+        fseek(fp, 0, SEEK_END);
+        long expectedSize = ftell(fp);
+        ASSERT(expectedSize == EXPECTED_TRACE_LILTEXWIN_FILE_SIZ);
+        fseek(fp, 0, SEEK_SET);
+
+        unsigned char *buf = MALLOC(EXPECTED_TRACE_LILTEXWIN_FILE_SIZ);
+        if (fread(buf, 1, EXPECTED_TRACE_LILTEXWIN_FILE_SIZ, fp) != EXPECTED_TRACE_LILTEXWIN_FILE_SIZ) {
+            ASSERT(false);
+        }
+        fclose(fp); fp = NULL;
+        SHA1(buf, EXPECTED_TRACE_LILTEXWIN_FILE_SIZ, md);
+        FREE(buf);
+
+        sha1_to_str(md, mdstr0);
+        ASSERT(strcasecmp(mdstr0, EXPECTED_TRACE_LILTEXWIN_FILE_SHA) == 0);
+    } while(0);
+
+    unlink(traceFile);
+    FREE(traceFile);
+
+    PASS();
+}
+#   undef EXPECTED_TRACE_LILTEXWIN_FILE_SIZ
+#   undef EXPECTED_TRACE_LILTEXWIN_FILE_SHA
+
+#endif
+
 // ----------------------------------------------------------------------------
 // TEXT
 
@@ -111,7 +287,11 @@ TEST test_lores_with_80col() {
     c_debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+#if !CONFORMANT_TRACKS
     ASSERT_SHA("7B642FF04DE03142A2CE1062C28A4D92E492EDDC");
+#endif
+
+    WAIT_FOR_FB_SHA("09C732B37F9E482C8CBE38DA97C99EE640EB8913");
 
     PASS();
 }
@@ -125,7 +305,10 @@ TEST test_lores_with_40col() {
     c_debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
-    ASSERT_SHA("D7DC78F5718B4CF8716614E79ADABCAB919FCE5D");
+    ASSERT_SHA_OLD("D7DC78F5718B4CF8716614E79ADABCAB919FCE5D");
+
+    WAIT_FOR_FB_SHA("36287232F7FD4574AA5E05F1C6CACB598C9C2903");
+    ASSERT_SHA     ("36287232F7FD4574AA5E05F1C6CACB598C9C2903"); // stable through next frame
 
     PASS();
 }
@@ -139,7 +322,11 @@ TEST test_lores_40colmix_normal() {
     c_debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+#if !CONFORMANT_TRACKS
     ASSERT_SHA("9097A6AE967E4501B40C7CD7EEE115B8C478B345");
+#endif
+
+    WAIT_FOR_FB_SHA("B460804F69A416D78462818493933BA2FFEB70C8");
 
     PASS();
 }
@@ -153,7 +340,10 @@ TEST test_lores_40colmix_inverse() {
     c_debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
-    ASSERT_SHA("5256E8B96CB04F48324B587ECCCF8A435077B5DE");
+    ASSERT_SHA_OLD("5256E8B96CB04F48324B587ECCCF8A435077B5DE");
+
+    WAIT_FOR_FB_SHA("C2ADD78885B65F7D2FA84F999B06CB32D25EF8A0");
+    ASSERT_SHA     ("C2ADD78885B65F7D2FA84F999B06CB32D25EF8A0"); // stable through next frame
 
     PASS();
 }
@@ -167,7 +357,10 @@ TEST test_lores_80colmix_normal() {
     c_debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
-    ASSERT_SHA("9D5D5382B0A18A71DC135CAD51BEA2665ADB5FB2");
+    ASSERT_SHA_OLD("9D5D5382B0A18A71DC135CAD51BEA2665ADB5FB2");
+
+    WAIT_FOR_FB_SHA("610E61D466AAE88CF694B3E1029D3D4C28D1D820");
+    ASSERT_SHA     ("610E61D466AAE88CF694B3E1029D3D4C28D1D820"); // stable through next frame
 
     PASS();
 }
@@ -181,7 +374,10 @@ TEST test_lores_80colmix_inverse() {
     c_debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
-    ASSERT_SHA("7936E87BE1F920AACD43268DB288746528E89959");
+    ASSERT_SHA_OLD("7936E87BE1F920AACD43268DB288746528E89959");
+
+    WAIT_FOR_FB_SHA("CBAEE8961F20079BF45CD197878F1111A6E89E26");
+    ASSERT_SHA     ("CBAEE8961F20079BF45CD197878F1111A6E89E26"); // stable through next frame
 
     PASS();
 }
@@ -228,6 +424,11 @@ TEST test_hires_with_40col_page2() {
     c_debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+
+    // FIXME TODO ... pump CPU until frame complete a few times ... should check All The SHAs here ...
+    display_waitForNextCompleteFramebuffer();
+    display_waitForNextCompleteFramebuffer();
+
     ASSERT_SHA(MOIRE_SHA);
 
     PASS();
@@ -267,7 +468,7 @@ TEST test_hires_80colmix_normal() {
     c_debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
-    ASSERT_SHA("032BD68899749265EB2934A76A35D7068642824B");
+    ASSERT_SHA("032BD68899749265EB2934A76A35D7068642824B"); // flappy ...
 
     PASS();
 }
@@ -280,7 +481,11 @@ TEST test_hires_80colmix_inverse() {
     c_debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+#if !CONFORMANT_TRACKS
     ASSERT_SHA("FAFBB65013DA3D5173487C3F434C36A7C04DE92E");
+#endif
+
+    WAIT_FOR_FB_SHA("30C0329061781FD1BFE214940F9D5EDFA5FA5F08");
 
     PASS();
 }
@@ -306,13 +511,13 @@ TEST test_80col_hires() {
     c_debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
-    ASSERT_SHA("126363F103F3A24BB2EB2AEC5B4972F46F7CA24B");
+    ASSERT_SHA("B48F940B1566607E2557A50B98C6C87FFF0C05B2");
 
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x00;
     c_debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
-    ASSERT_SHA("91F63831B6D1145446F0DBACE8EBD284B5690D81");
+    ASSERT_SHA("3BDFD6B009C090789D968AA7F928579EA31CBE3D");
 
     PASS();
 }
@@ -324,12 +529,18 @@ GREATEST_SUITE(test_suite_display) {
     pthread_mutex_lock(&interface_mutex);
 
     test_thread_running = true;
-    
+
     GREATEST_SET_SETUP_CB(testdisplay_setup, NULL);
     GREATEST_SET_TEARDOWN_CB(testdisplay_teardown, NULL);
     GREATEST_SET_BREAKPOINT_CB(test_breakpoint, NULL);
 
     // TESTS --------------------------
+
+#if VIDEO_TRACING && CONFORMANT_TRACKS
+    RUN_TESTp(test_boot_video_trace);
+    RUN_TESTp(test_video_trace_40col);
+    RUN_TESTp(test_video_trace_liltexwin);
+#endif
 
     RUN_TESTp(test_boot_disk);
 

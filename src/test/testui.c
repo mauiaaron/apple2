@@ -69,7 +69,7 @@ static int _assert_blank_boot(void) {
     ASSERT(disk6.disk[0].skew_table == skew_table_6_do);
 
     // VM ...
-    ASSERT(run_args.softswitches  == 0x000140d1);
+    ASSERT(run_args.softswitches  == 0x000100d1);
     ASSERT_SHA_BIN("97AADDDF5D20B793C4558A8928227F0B52565A98", apple_ii_64k[0], /*len:*/sizeof(apple_ii_64k));
     ASSERT_SHA_BIN("2C82E33E964936187CA1DABF71AE6148916BD131", language_card[0], /*len:*/sizeof(language_card));
     ASSERT_SHA_BIN("36F1699537024EC6017A22641FF0EC277AFFD49D", language_banks[0], /*len:*/sizeof(language_banks));
@@ -147,6 +147,8 @@ TEST test_save_state_1() {
     bool ret = emulator_saveState(fd);
     ASSERT(ret);
 
+    ASSERT_SHA(BOOT_SCREEN);
+
     TEMP_FAILURE_RETRY(close(fd));
 
     FREE(savData);
@@ -185,10 +187,10 @@ TEST test_load_state_1() {
     ret = emulator_loadState(fdState, fdA, fdB);
     ASSERT(ret);
 
+    _assert_blank_boot();
+
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
     ASSERT_SHA(BOOT_SCREEN);
-
-    _assert_blank_boot();
 
     TEMP_FAILURE_RETRY(close(fdState));
     TEMP_FAILURE_RETRY(close(fdA));
@@ -250,9 +252,6 @@ TEST test_load_A2VM_good1() {
     ret = emulator_loadState(fdState, fdA, fdB);
     ASSERT(ret);
 
-    // ASSERT framebuffer matches expected
-    ASSERT_SHA("9C654FEF2A672E16D89ED2FB80C593CD2005A026");
-
     // Disk6 ... AVOID ASSERT()ing for non-portable things
     ASSERT(disk6.motor_off == 1);
     ASSERT(disk6.drive == 0);
@@ -303,6 +302,9 @@ TEST test_load_A2VM_good1() {
     ASSERT(run_args.cpu65_x       == 0x09);
     ASSERT(run_args.cpu65_y       == 0x01);
     ASSERT(run_args.cpu65_sp      == 0xEA);
+
+    // ASSERT framebuffer matches expected
+    ASSERT_SHA("9C654FEF2A672E16D89ED2FB80C593CD2005A026");
 
     TEMP_FAILURE_RETRY(close(fdState));
     TEMP_FAILURE_RETRY(close(fdA));
@@ -363,9 +365,6 @@ TEST test_load_A2V2_good1() {
 
     ret = emulator_loadState(fdState, fdA, fdB);
     ASSERT(ret);
-
-    // ASSERT framebuffer matches expected
-    ASSERT_SHA("B1CB1C5811B9C629BB077F857CC41DFA8A283E96");
 
     // Disk6 ... AVOID ASSERT()ing for non-portable things
     ASSERT(disk6.motor_off == 1);
@@ -430,6 +429,9 @@ TEST test_load_A2V2_good1() {
     size_t mbSiz = sizeof(mbData);
     mb_testAssertA2V2(mbData, mbSiz);
 
+    // ASSERT framebuffer matches expected
+    ASSERT_SHA("B1CB1C5811B9C629BB077F857CC41DFA8A283E96");
+
     TEMP_FAILURE_RETRY(close(fdState));
     TEMP_FAILURE_RETRY(close(fdA));
     TEMP_FAILURE_RETRY(close(fdB));
@@ -489,9 +491,6 @@ TEST test_load_A2V2_good2() {
 
     ret = emulator_loadState(fdState, fdA, fdB);
     ASSERT(ret);
-
-    // ASSERT framebuffer matches expected
-    ASSERT_SHA("7A60972EF2E95956249454402A42C12E7C8FBF7A");
 
     // Disk6 ... AVOID ASSERT()ing for non-portable things
     ASSERT(disk6.motor_off == 1);
@@ -556,6 +555,9 @@ TEST test_load_A2V2_good2() {
     size_t mbSiz = sizeof(mbData);
     mb_testAssertA2V2(mbData, mbSiz);
 
+    // ASSERT framebuffer matches expected
+    ASSERT_SHA("7A60972EF2E95956249454402A42C12E7C8FBF7A");
+
     TEMP_FAILURE_RETRY(close(fdState));
     TEMP_FAILURE_RETRY(close(fdA));
     TEMP_FAILURE_RETRY(close(fdB));
@@ -616,9 +618,6 @@ TEST test_load_A2V2_good3() {
     ret = emulator_loadState(fdState, fdA, fdB);
     ASSERT(ret);
 
-    // ASSERT framebuffer matches expected
-    ASSERT_SHA("D92EECDF3C7446097F3E884412D7911DDD968287");
-
     // Disk6 ... AVOID ASSERT()ing for non-portable things ... in particular this a2state file contains Droid content://
     // paths that will not be valid (even on the original device), so the disk6_insert() call will have failed.
     // emulator_stateRestore() will have logged the fault but continued optimistically
@@ -677,6 +676,9 @@ TEST test_load_A2V2_good3() {
 #include "test/a2v2-good3-mb.h"
     size_t mbSiz = sizeof(mbData);
     mb_testAssertA2V2(mbData, mbSiz);
+
+    // ASSERT framebuffer matches expected
+    ASSERT_SHA("D92EECDF3C7446097F3E884412D7911DDD968287");
 
     TEMP_FAILURE_RETRY(close(fdState));
     TEMP_FAILURE_RETRY(close(fdA));

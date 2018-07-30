@@ -128,17 +128,11 @@ void interface_plotMessage(uint8_t *fb, const interface_colorscheme_t cs, char *
 
 #if INTERFACE_CLASSIC
 
-static uint8_t *stagingFB = NULL;
-
 static bool isShowing = false;
 
 static char disk_path[PATH_MAX] = { 0 };
 
-void interface_setStagingFramebuffer(uint8_t *fb) {
-    stagingFB = fb;
-}
-
-static void _interface_plotMessageCentered(uint8_t *fb, int fb_cols, int fb_rows, interface_colorscheme_t cs, char *message, const int message_cols, const int message_rows) {
+static void _interface_plotMessageCentered(int fb_cols, int fb_rows, interface_colorscheme_t cs, char *message, const int message_cols, const int message_rows) {
     _translate_screen_x_y(message, message_cols, message_rows);
     int col = (fb_cols - message_cols) >> 1;
     int row = (fb_rows - message_rows) >> 1;
@@ -146,7 +140,7 @@ static void _interface_plotMessageCentered(uint8_t *fb, int fb_cols, int fb_rows
     assert(fb_pix_width == SCANWIDTH);
     int row_max = row + message_rows;
     for (int idx=0; row<row_max; row++, idx+=message_cols+1) {
-        display_plotLine(fb, col, row, cs, &message[idx]);
+        video_getCurrentBackend()->plotLine(col, row, cs, &message[idx]);
     }
 }
 
@@ -183,8 +177,7 @@ static void pad_string(char *s, const char c, const int len) {
 }
 
 void c_interface_print( int x, int y, const interface_colorscheme_t cs, const char *s ) {
-    display_plotLine(stagingFB, /*col:*/x, /*row:*/y, cs, s);
-    video_setDirty(FB_DIRTY_FLAG);
+    video_getCurrentBackend()->plotLine(/*col:*/x, /*row:*/y, cs, s);
 }
 
 /* -------------------------------------------------------------------------
@@ -205,8 +198,7 @@ void c_interface_translate_screen( char screen[24][INTERFACE_SCREEN_X+1] ) {
 }
 
 void c_interface_print_submenu_centered( char *submenu, const int message_cols, const int message_rows ) {
-    _interface_plotMessageCentered(stagingFB, INTERFACE_SCREEN_X, TEXT_ROWS, RED_ON_BLACK, submenu, message_cols, message_rows);
-    video_setDirty(FB_DIRTY_FLAG);
+    _interface_plotMessageCentered(INTERFACE_SCREEN_X, TEXT_ROWS, RED_ON_BLACK, submenu, message_cols, message_rows);
 }
 
 /* ------------------------------------------------------------------------- */
@@ -290,7 +282,7 @@ void c_interface_exit(int ch)
     }
     else
     {
-        video_setDirty(A2_DIRTY_FLAG);
+        video_setDirty(FB_DIRTY_FLAG);
     }
 }
 
@@ -867,26 +859,26 @@ void c_interface_parameters()
                     {
                         if (temp[ j ] == '\0')
                         {
-                            display_plotChar(stagingFB, /*col:*/INTERFACE_PATH_MIN + j, /*row:*/5+i, GREEN_ON_BLACK, ' ' );
+                            video_getCurrentBackend()->plotChar(/*col:*/INTERFACE_PATH_MIN + j, /*row:*/5+i, GREEN_ON_BLACK, ' ' );
                             j++;
                             break;
                         }
                         else
                         {
-                            display_plotChar(stagingFB, /*col:*/INTERFACE_PATH_MIN + j, /*row:*/5+i, /*cs:*/GREEN_ON_BLACK, temp[j]);
+                            video_getCurrentBackend()->plotChar(/*col:*/INTERFACE_PATH_MIN + j, /*row:*/5+i, /*cs:*/GREEN_ON_BLACK, temp[j]);
                         }
                     }
                     else
                     {
                         if (temp[ j ] == '\0')
                         {
-                            display_plotChar(stagingFB, /*col:*/INTERFACE_PATH_MIN + j, /*row:*/5+i, (option == OPT_PATH ? GREEN_ON_BLUE : GREEN_ON_BLACK), ' ' );
+                            video_getCurrentBackend()->plotChar(/*col:*/INTERFACE_PATH_MIN + j, /*row:*/5+i, (option == OPT_PATH ? GREEN_ON_BLUE : GREEN_ON_BLACK), ' ' );
                             j++;
                             break;
                         }
                         else
                         {
-                            display_plotChar(stagingFB, /*col:*/INTERFACE_PATH_MIN + j, /*row:*/5+i, (option == OPT_PATH ? GREEN_ON_BLUE : GREEN_ON_BLACK), temp[j]);
+                            video_getCurrentBackend()->plotChar(/*col:*/INTERFACE_PATH_MIN + j, /*row:*/5+i, (option == OPT_PATH ? GREEN_ON_BLUE : GREEN_ON_BLACK), temp[j]);
                         }
 
                     }
@@ -894,7 +886,7 @@ void c_interface_parameters()
 
                 for (; j < INTERFACE_PATH_MAX; j++)
                 {
-                    display_plotChar(stagingFB, /*col:*/INTERFACE_PATH_MIN + j, /*row:*/5+i, GREEN_ON_BLACK, ' ');
+                    video_getCurrentBackend()->plotChar(/*col:*/INTERFACE_PATH_MIN + j, /*row:*/5+i, GREEN_ON_BLACK, ' ');
                 }
             }
         }
@@ -1538,7 +1530,7 @@ static void *interface_thread(void *data)
 
     case kF7:
         isShowing = true;
-        c_interface_debugging(stagingFB);
+        c_interface_debugging();
         break;
 
     case kF8:

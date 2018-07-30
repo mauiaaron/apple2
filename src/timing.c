@@ -23,9 +23,9 @@
 // cycle counting
 double cycles_persec_target = CLK_6502;
 unsigned long cycles_count_total = 0;           // Running at spec ~1MHz, this will approach overflow in ~4000secs (for 32bit architectures)
+unsigned int cycles_video_frame = 0;
 int cycles_speaker_feedback = 0;
 static int32_t cycles_checkpoint_count = 0;
-static unsigned int cycles_this_frame = 0;
 
 // scaling and speed adjustments
 #if !MOBILE_DEVICE
@@ -116,7 +116,11 @@ void reinitialize(void) {
 #endif
 
     cycles_count_total = 0;
-    cycles_this_frame = 0;
+    cycles_video_frame = 0;
+#if !TEST_CPU
+    video_scannerReset();
+#endif
+
 #if TESTING
     extern unsigned long (*testing_getCyclesCount)(void);
     if (testing_getCyclesCount) {
@@ -125,8 +129,6 @@ void reinitialize(void) {
 #endif
 
     vm_initialize();
-
-    video_setDirty(A2_DIRTY_FLAG);
 
     cpu65_init();
 
@@ -324,7 +326,6 @@ cpu_runloop:
 #if DEBUG_TIMING
                 dbg_cycles_executed += run_args.cpu65_cycle_count;
 #endif
-                cycles_this_frame += run_args.cpu65_cycle_count;
 
                 if (is_debugging) {
                     debugging_cycles -= run_args.cpu65_cycle_count;
@@ -351,15 +352,12 @@ cpu_runloop:
             } while (is_debugging);
 
             MB_UpdateCycles();
-
-            timing_checkpointCycles();
+            // TODO : modularize MB and other peripheral card cycles/interrupts ...
 
             speaker_flush(); // play audio
 
-            // video frame counter overflow ...
-            if (cycles_this_frame >= CYCLES_FRAME) {
-                cycles_this_frame -= CYCLES_FRAME;
-                MB_EndOfVideoFrame();
+            if (cycles_video_frame >= CYCLES_FRAME) {
+                video_scannerUpdate();
             }
 
             clock_gettime(CLOCK_MONOTONIC, &tj);
@@ -412,11 +410,6 @@ cpu_runloop:
                     TRACE_CPU_END();
                 }
 
-                dbg_ticks += EXECUTION_PERIOD_NSECS;
-                if ((dbg_ticks % (NANOSECONDS_PER_SECOND>>1)) == 0)
-                {
-                    display_flashText(); // TODO FIXME : proper FLASH timing ...
-                }
 #if DEBUG_TIMING
                 // collect timing statistics
                 if (speaker_neg_feedback > cycles_speaker_feedback)
@@ -509,18 +502,13 @@ void timing_stopCPU(void) {
     }
 }
 
-unsigned int timing_currentVideoFrameCycles(void) {
-    ASSERT_ON_CPU_THREAD();
-    timing_checkpointCycles();
-    return cycles_this_frame + cycles_checkpoint_count;
-}
-
 // Called when accurate global cycle count info is needed
 void timing_checkpointCycles(void) {
     ASSERT_ON_CPU_THREAD();
 
     const int32_t d = run_args.cpu65_cycle_count - cycles_checkpoint_count;
     assert(d >= 0);
+    cycles_video_frame += d;
 #if !TESTING
     cycles_count_total += d;
 #else

@@ -315,22 +315,10 @@ static void glvideo_render(void) {
     glUniformMatrix4fv(uniformMVPIdx, 1, GL_FALSE, mvpIdentity);
 #endif
 
-    static uint8_t fb[SCANWIDTH*SCANHEIGHT*sizeof(uint8_t)];
-#if INTERFACE_CLASSIC
-    interface_setStagingFramebuffer(fb);
-#endif
-    unsigned long wasDirty = 0UL;
-    if (!cpu_isPaused()) {
-        // check if a2 video memory is dirty
-        wasDirty = video_clearDirty(A2_DIRTY_FLAG);
-        if (wasDirty) {
-            display_renderStagingFramebuffer(fb);
-        }
-    }
-
-    wasDirty = video_clearDirty(FB_DIRTY_FLAG);
+    unsigned long wasDirty = video_clearDirty(FB_DIRTY_FLAG);
     char *pixels = (char *)crtModel->texPixels;
     if (wasDirty) {
+        uint8_t *fb = display_getCurrentFramebuffer();
         SCOPE_TRACE_VIDEO("pixel convert");
         // Update texture from indexed-color Apple //e internal framebuffer
         unsigned int count = SCANWIDTH * SCANHEIGHT;

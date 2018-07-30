@@ -44,16 +44,16 @@
 
 // HBL & VBL constants
 // UtAIIe:3-13 "There are exactly 17030 (65 x 262) 6502 cycles in every television scan of an American Apple"
-#define CYCLES_HBL      25
-#define CYCLES_VIS_BEGIN CYCLES_HBL
-#define CYCLES_VIS      40
-#define CYCLES_SCANLINE (CYCLES_HBL + CYCLES_VIS)       // 65
-#define SCANLINES_VBL   70
-#define SCANLINES_MIX   (20*8)                          // 160
-#define SCANLINES_VIS   (64*3)                          // 192
+#define CYCLES_HBL          25
+#define CYCLES_VIS_BEGIN    CYCLES_HBL
+#define CYCLES_VIS          40
+#define CYCLES_SCANLINE     (CYCLES_HBL + CYCLES_VIS)           // 65
+#define SCANLINES_VBL       70
+#define SCANLINES_MIX       (20*8)                              // 160
+#define SCANLINES_VIS       (64*3)                              // 192
 #define SCANLINES_VBL_BEGIN SCANLINES_VIS
-#define SCANLINES_FRAME (SCANLINES_VBL + SCANLINES_VIS) // 262
-#define CYCLES_FRAME    (CYCLES_SCANLINE * SCANLINES_FRAME) // 17030
+#define SCANLINES_FRAME     (SCANLINES_VBL + SCANLINES_VIS)     // 262
+#define CYCLES_FRAME        (CYCLES_SCANLINE * SCANLINES_FRAME) // 17030
 
 #define CPU_SCALE_SLOWEST 0.25
 #define CPU_SCALE_FASTEST_PIVOT 4.0
@@ -64,6 +64,7 @@
 #endif
 
 extern unsigned long cycles_count_total;    // cumulative cycles count from machine reset
+extern unsigned int cycles_video_frame;     // unprocessed video frame cycles count
 extern double cycles_persec_target;         // CLK_6502 * current CPU scale
 extern int cycles_speaker_feedback;         // current -/+ speaker requested feedback
 
@@ -132,11 +133,6 @@ bool cpu_isPaused(void);
 
 // ----------------------------------------------------------------------------
 // Video frame and IRQ fine-grained timing.
-
-/*
- * Get current cycles count within this video frame
- */
-unsigned int timing_currentVideoFrameCycles() CALL_ON_CPU_THREAD;
 
 /*
  * Checkpoints current cycle count and updates total (for timing-dependent I/O)

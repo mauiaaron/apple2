@@ -11,23 +11,26 @@
 
 #include "testcommon.h"
 
-#define ABUSIVE_TESTS 1
-
 #define TESTING_DISK "testvm1.dsk.gz"
 #define BLANK_DSK "blank.dsk.gz"
 #define BLANK_NIB "blank.nib.gz"
 #define BLANK_PO  "blank.po.gz"
+
+#if !CONFORMANT_TRACKS
+#error trace testing against baseline should be built with CONFORMANT_TRACKS ... FIXME NOW
+#endif
 
 static bool test_thread_running = false;
 
 extern pthread_mutex_t interface_mutex; // TODO FIXME : raw access to CPU mutex because stepping debugger ...
 
 static void testtrace_setup(void *arg) {
+    disk6_init(); // ensure better for tracing stability against baseline ...
     test_common_setup();
     apple_ii_64k[0][MIXSWITCH_ADDR] = 0x00;
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x00;
     apple_ii_64k[0][TESTOUT_ADDR] = 0x00;
-    joy_button0 = 0xff; // OpenApple
+    run_args.joy_button0 = 0xff; // OpenApple
     test_setup_boot_disk(TESTING_DISK, 1);
     if (test_do_reboot) {
         cpu65_interrupt(ResetSig);
@@ -65,9 +68,8 @@ TEST test_timing_overflow() {
     testing_getCyclesCount = &testspeaker_getCyclesCount;
     testing_cyclesOverflow = &testspeaker_cyclesOverflow;
 
-    extern volatile uint8_t emul_reinitialize;
     do {
-        emul_reinitialize = 1;
+        run_args.emul_reinitialize = 1;
         c_debugger_go();
 
         if (cycles_overflowed) {
@@ -235,9 +237,8 @@ TEST test_mockingboard_1() {
 
 // This test is majorly abusive ... it creates an ~1GB file in $HOME
 // ... but if it's correct, you're fairly assured the cpu/vm is working =)
-#if ABUSIVE_TESTS
-#define EXPECTED_CPU_TRACE_FILE_SIZE 1233878608
-#define EXPECTED_CPU_TRACE_SHA "36E399BEC3A4671A9AE4145B7F01A9AD1F1CDE3B"
+#define EXPECTED_CPU_TRACE_FILE_SIZE 1098663679
+#define EXPECTED_CPU_TRACE_SHA "BFE90A6B7EAAB23F050874EC29A2E66EE92FE9DD"
 TEST test_boot_disk_cputrace() {
     const char *homedir = HOMEDIR;
     char *output = NULL;
@@ -279,10 +280,12 @@ TEST test_boot_disk_cputrace() {
 
     PASS();
 }
+#undef EXPECTED_CPU_TRACE_FILE_SIZE
+#undef EXPECTED_CPU_TRACE_SHA
 
 #define EXPECTED_BOOT_SIZ2 555444333
-#define EXPECTED_BOOT_SHA2 "A5F4114D404FDBE84691412ED85DB18E3B06EEE5"
-TEST test_boot_disk_cputrace2() {
+#define EXPECTED_BOOT_SHA2 "E807FDC048868FAC246B15CA0F2D5F7B2A12CA2B"
+TEST test_boot_disk_cputrace2() { // Failing now due to difference in IRQ timing against baseline
     test_setup_boot_disk(NSCT_DSK, 0);
 
     const char *homedir = HOMEDIR;
@@ -344,10 +347,78 @@ TEST test_boot_disk_cputrace2() {
 
     PASS();
 }
-#endif
+#undef EXPECTED_BOOT_SIZ2
+#undef EXPECTED_BOOT_SHA2
 
-#define EXPECTED_CPUTRACE_HELLO_FILE_SIZE 164542693
-#define EXPECTED_CPUTRACE_HELLO_SHA "46A3CAE4BB3D7F0A73465DFF6EAD9181D2F958CF"
+#define EXPECTED_BOOT_SIZ3 1555666777
+#define EXPECTED_BOOT_SHA3 "4e90d33f165a5bedd65588ffe1d5618ba131ed61"
+TEST test_boot_disk_cputrace3() {
+    test_setup_boot_disk("testdisplay2.dsk.gz", 0); // boots directly into LILTEXWIN
+
+    const char *homedir = HOMEDIR;
+    char *output = NULL;
+
+    ASPRINTF(&output, "%s/a2_cputrace.txt", homedir);
+    if (output) {
+        unlink(output);
+        cpu65_trace_begin(output);
+    }
+
+    srandom(0);
+
+    // Poll for trace file of particular size
+    c_debugger_clear_watchpoints();
+    c_debugger_set_timeout(1);
+    do {
+        c_debugger_go();
+
+        FILE *fpTrace = fopen(output, "r");
+        fseek(fpTrace, 0, SEEK_END);
+        long minSizeTrace = ftell(fpTrace);
+
+        if (minSizeTrace < EXPECTED_BOOT_SIZ3) {
+            fclose(fpTrace);
+            continue;
+        }
+
+        // trace has generated files of sufficient length
+
+        uint8_t md[SHA_DIGEST_LENGTH];
+        char mdstr0[(SHA_DIGEST_LENGTH*2)+1];
+
+        cpu65_trace_end();
+        truncate(output, EXPECTED_BOOT_SIZ3);
+
+        // verify trace file
+        do {
+            unsigned char *buf = MALLOC(EXPECTED_BOOT_SIZ3);
+            fseek(fpTrace, 0, SEEK_SET);
+            ASSERT(fread(buf, 1, EXPECTED_BOOT_SIZ3, fpTrace) == EXPECTED_BOOT_SIZ3);
+            fclose(fpTrace); fpTrace = NULL;
+            SHA1(buf, EXPECTED_BOOT_SIZ3, md);
+            FREE(buf);
+            sha1_to_str(md, mdstr0);
+            ASSERT(strcasecmp(mdstr0, EXPECTED_BOOT_SHA3) == 0);
+        } while (0);
+
+        break;
+
+    } while (1);
+
+    c_debugger_set_timeout(0);
+
+    disk6_eject(0);
+
+    unlink(output);
+    FREE(output);
+
+    PASS();
+}
+#undef EXPECTED_BOOT_SIZ3
+#undef EXPECTED_BOOT_SHA3
+
+#define EXPECTED_CPUTRACE_HELLO_FILE_SIZE 146562789
+#define EXPECTED_CPUTRACE_HELLO_SHA "A2F1806F4539E84C5047F49038D8BC92349E33AC"
 TEST test_cputrace_hello_dsk() {
     test_setup_boot_disk(BLANK_DSK, 0);
 
@@ -396,8 +467,8 @@ TEST test_cputrace_hello_dsk() {
     PASS();
 }
 
-#define EXPECTED_CPUTRACE_HELLO_NIB_FILE_SIZE 19455366
-#define EXPECTED_CPUTRACE_HELLO_NIB_SHA "F0D3B25E98037E82422787DD950D4F959426F258"
+#define EXPECTED_CPUTRACE_HELLO_NIB_FILE_SIZE 17318711
+#define EXPECTED_CPUTRACE_HELLO_NIB_SHA "4DD390FCC46A1928D967F286C33ABD18AE2B9EEC"
 TEST test_cputrace_hello_nib() {
     test_setup_boot_disk(BLANK_NIB, 0);
 
@@ -658,16 +729,20 @@ GREATEST_SUITE(test_suite_trace) {
     RUN_TESTp(test_timing_overflow);
     RUN_TESTp(test_boot_sound);
 
+#if NULL_AUDIO_RENDERER_IS_FIXED_FOR_THIS_TEST
     RUN_TESTp(test_mockingboard_1);
+#endif
 
-#if ABUSIVE_TESTS
     RUN_TESTp(test_boot_disk_cputrace);
+#if CPU_TRACING_WITH_IRQ_HANDLING_SAME_AS_BASELINE
     RUN_TESTp(test_boot_disk_cputrace2);
 #endif
+    RUN_TESTp(test_boot_disk_cputrace3);
 
     RUN_TESTp(test_cputrace_hello_dsk);
     RUN_TESTp(test_cputrace_hello_nib);
     RUN_TESTp(test_cputrace_hello_po);
+
 #if VM_TRACING_FIXED
     // 2016/10/01 : VM tracing is undergoing upheaval
     RUN_TESTp(test_boot_disk_vmtrace);

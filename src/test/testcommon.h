@@ -43,18 +43,67 @@ char **test_copy_disk_paths(const char *fileName);
 int test_setup_boot_disk(const char *fileName, int readonly);
 void sha1_to_str(const uint8_t * const md, char *buf);
 
-static inline int ASSERT_SHA(const char *SHA_STR) {
+static inline bool _matchFramebufferSHA(const char *SHA_STR, bool is_old) {
     uint8_t md[SHA_DIGEST_LENGTH];
 
-    uint8_t *fb = CALLOC(1, SCANWIDTH*SCANHEIGHT);
-    display_renderStagingFramebuffer(fb);
-    SHA1(fb, SCANWIDTH*SCANHEIGHT, md);
-    FREE(fb);
+    bool matches = false;
+    for (unsigned int i=0; i<2; i++) { // HACK: pump for at least 2 video frames to accommodate testing loading state
+        uint8_t *fb = NULL;
+        if (is_old) {
+            extern uint8_t *display_renderStagingFramebuffer(void);
+            fb = display_renderStagingFramebuffer();
+        } else {
+            fb = display_waitForNextCompleteFramebuffer();
+        }
+        SHA1(fb, SCANWIDTH*SCANHEIGHT, md);
 
-    sha1_to_str(md, mdstr);
-    ASSERT(strcasecmp(mdstr, SHA_STR) == 0);
-    return 0;
+        sha1_to_str(md, mdstr);
+        matches = strcasecmp(mdstr, SHA_STR) == 0;
+        if (matches) {
+            break;
+        }
+    }
+
+    return matches;
 }
+
+static inline int _assertFramebufferSHA(const char *SHA_STR, bool is_old) {
+    bool matches = _matchFramebufferSHA(SHA_STR, is_old);
+    ASSERT(matches && "check global mdstr if failed...");
+    PASS();
+}
+
+#define ASSERT_SHA(SHA_STR) \
+do { \
+    int ret = _assertFramebufferSHA(SHA_STR, /*is_old:*/false); \
+    if (ret != 0) { \
+        return ret; \
+    } \
+} while (0);
+
+#define ASSERT_SHA_OLD(SHA_STR) \
+do { \
+    int ret = _assertFramebufferSHA(SHA_STR, /*is_old:*/true); \
+    if (ret != 0) { \
+        return ret; \
+    } \
+} while (0);
+
+#define WAIT_FOR_FB_SHA(SHA_STR) \
+do { \
+    unsigned int matchAttempts = 0; \
+    const unsigned int maxMatchAttempts = 10; \
+    do { \
+        bool matches = _matchFramebufferSHA(SHA_STR, /*is_old:*/false); \
+        if (matches) { \
+            break; \
+        } \
+    } while (matchAttempts++ < maxMatchAttempts); \
+    if (matchAttempts >= maxMatchAttempts) { \
+        fprintf(GREATEST_STDOUT, "DID NOT FIND SHA %s...\n", SHA_STR); \
+        ASSERT(0); \
+    } \
+} while (0);
 
 static inline int ASSERT_SHA_MEM(const char *SHA_STR, uint16_t ea, uint16_t len) {
     uint8_t md[SHA_DIGEST_LENGTH];
@@ -78,7 +127,6 @@ static inline int BOOT_TO_DOS(void) {
         ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
         c_debugger_go();
         ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
-        ASSERT_SHA(BOOT_SCREEN);
         apple_ii_64k[0][WATCHPOINT_ADDR] = 0x00;
     }
     return 0;

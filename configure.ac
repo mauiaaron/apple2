@@ -148,14 +148,14 @@ AC_PATH_XTRA
 
 video_output="VIDEO RENDERERS:"
 video_output_disabled="VIDEO RENDERERS (DISABLED):"
-VIDEO_O="src/video/video.o"
-testcpu_VIDEO_O="src/video/video.o"
-testdisk_VIDEO_O="src/video/video.o"
-testdisplay_VIDEO_O="src/video/video.o"
-testprefs_VIDEO_O="src/video/video.o"
-testtrace_VIDEO_O="src/video/video.o"
-testui_VIDEO_O="src/video/video.o"
-testvm_VIDEO_O="src/video/video.o"
+VIDEO_O=""
+testcpu_VIDEO_O=""
+testdisk_VIDEO_O=""
+testdisplay_VIDEO_O=""
+testprefs_VIDEO_O=""
+testtrace_VIDEO_O=""
+testui_VIDEO_O=""
+testvm_VIDEO_O=""
 
 AC_ARG_ENABLE([opengl], AS_HELP_STRING([--enable-opengl], [Enable OpenGL graphics output (autodetected)]))
 AS_IF([test "x$enable_opengl" != "xno"], [

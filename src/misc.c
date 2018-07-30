@@ -218,7 +218,7 @@ bool emulator_loadState(int fd, int fdA, int fdB) {
     assert(cpu_isPaused() && "should be paused to load state");
 #endif
 
-    video_setDirty(A2_DIRTY_FLAG);
+    //video_setDirty(A2_DIRTY_FLAG); -- A2_DIRTY_FLAG is now reserved exclusively for CPU thread (VM) operations
 
     do {
         int version = _load_magick(fd);

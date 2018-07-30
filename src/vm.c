@@ -40,10 +40,8 @@ GLUE_BANK_READ(read_ram_lc, BASE_E000_RD);
 GLUE_BANK_MAYBEWRITE(write_ram_lc, BASE_E000_WRT);
 
 GLUE_BANK_READ(iie_read_ram_text_page0, BASE_TEXTRD);
-GLUE_BANK_WRITE(iie_write_screen_hole_text_page0, BASE_TEXTWRT);
 
 GLUE_BANK_READ(iie_read_ram_hires_page0, BASE_HGRRD);
-GLUE_BANK_WRITE(iie_write_screen_hole_hires_page0, BASE_HGRWRT);
 
 GLUE_BANK_READ(iie_read_ram_zpage_and_stack, BASE_STACKZP);
 GLUE_BANK_WRITE(iie_write_ram_zpage_and_stack, BASE_STACKZP);
@@ -132,6 +130,7 @@ GLUE_C_READ(iie_page2_off)
         return floating_bus();
     }
 
+    video_setDirty(A2_DIRTY_FLAG);
     run_args.softswitches &= ~(SS_PAGE2|SS_SCREEN);
 
     if (run_args.softswitches & SS_80STORE) {
@@ -145,8 +144,6 @@ GLUE_C_READ(iie_page2_off)
         }
     }
 
-    video_setDirty(A2_DIRTY_FLAG);
-
     return floating_bus();
 }
 
@@ -156,6 +153,7 @@ GLUE_C_READ(iie_page2_on)
         return floating_bus();
     }
 
+    video_setDirty(A2_DIRTY_FLAG);
     run_args.softswitches |= SS_PAGE2;
 
     if (run_args.softswitches & SS_80STORE) {
@@ -171,8 +169,6 @@ GLUE_C_READ(iie_page2_on)
         run_args.softswitches |= SS_SCREEN;
     }
 
-    video_setDirty(A2_DIRTY_FLAG);
-
     return floating_bus();
 }
 
@@ -184,8 +180,8 @@ GLUE_C_READ(iie_check_page2)
 GLUE_C_READ(read_switch_graphics)
 {
     if (run_args.softswitches & SS_TEXT) {
-        run_args.softswitches &= ~SS_TEXT;
         video_setDirty(A2_DIRTY_FLAG);
+        run_args.softswitches &= ~SS_TEXT;
     }
     return floating_bus();
 }
@@ -193,8 +189,8 @@ GLUE_C_READ(read_switch_graphics)
 GLUE_C_READ(read_switch_text)
 {
     if (!(run_args.softswitches & SS_TEXT)) {
-        run_args.softswitches |= SS_TEXT;
         video_setDirty(A2_DIRTY_FLAG);
+        run_args.softswitches |= SS_TEXT;
     }
     return floating_bus();
 }
@@ -207,8 +203,8 @@ GLUE_C_READ(iie_check_text)
 GLUE_C_READ(read_switch_no_mixed)
 {
     if (run_args.softswitches & SS_MIXED) {
-        run_args.softswitches &= ~SS_MIXED;
         video_setDirty(A2_DIRTY_FLAG);
+        run_args.softswitches &= ~SS_MIXED;
     }
     return floating_bus();
 }
@@ -216,8 +212,8 @@ GLUE_C_READ(read_switch_no_mixed)
 GLUE_C_READ(read_switch_mixed)
 {
     if (!(run_args.softswitches & SS_MIXED)) {
-        run_args.softswitches |= SS_MIXED;
         video_setDirty(A2_DIRTY_FLAG);
+        run_args.softswitches |= SS_MIXED;
     }
     return floating_bus();
 }
@@ -241,6 +237,7 @@ GLUE_C_READ(iie_hires_off)
         return floating_bus();
     }
 
+    video_setDirty(A2_DIRTY_FLAG);
     run_args.softswitches &= ~(SS_HIRES|SS_HGRRD|SS_HGRWRT);
     run_args.base_hgrrd  = apple_ii_64k[0];
     run_args.base_hgrwrt = apple_ii_64k[0];
@@ -255,8 +252,6 @@ GLUE_C_READ(iie_hires_off)
         run_args.softswitches |= SS_HGRWRT;
     }
 
-    video_setDirty(A2_DIRTY_FLAG);
-
     return floating_bus();
 }
 
@@ -266,6 +261,7 @@ GLUE_C_READ(iie_hires_on)
         return floating_bus();
     }
 
+    video_setDirty(A2_DIRTY_FLAG);
     run_args.softswitches |= SS_HIRES;
 
     if (run_args.softswitches & SS_80STORE) {
@@ -280,8 +276,6 @@ GLUE_C_READ(iie_hires_on)
         }
     }
 
-    video_setDirty(A2_DIRTY_FLAG);
-
     return floating_bus();
 }
 
@@ -290,15 +284,137 @@ GLUE_C_READ(iie_check_hires)
     return (run_args.softswitches & SS_HIRES) ? 0x80 : 0x00;
 }
 
+GLUE_C_WRITE(video__write_2e_text0)
+{
+    do {
+        drawpage_mode_t mode = video_currentMainMode(run_args.softswitches);
+        if (mode == DRAWPAGE_HIRES) {
+            break;
+        }
+        if (!(run_args.softswitches & SS_PAGE2)) {
+            video_setDirty(A2_DIRTY_FLAG);
+        }
+    } while (0);
+    run_args.base_textwrt[ea] = b;
+}
+
+GLUE_C_WRITE(video__write_2e_text0_mixed)
+{
+    do {
+        drawpage_mode_t mode = video_currentMixedMode(run_args.softswitches);
+        if (mode == DRAWPAGE_HIRES) {
+            break;
+        }
+        if (!(run_args.softswitches & SS_PAGE2)) {
+            video_setDirty(A2_DIRTY_FLAG);
+        }
+    } while (0);
+    run_args.base_textwrt[ea] = b;
+}
+
+GLUE_C_WRITE(video__write_2e_text1)
+{
+    do {
+        drawpage_mode_t mode = video_currentMainMode(run_args.softswitches);
+        if (mode == DRAWPAGE_HIRES) {
+            break;
+        }
+        if ((run_args.softswitches & SS_PAGE2) && !(run_args.softswitches & SS_80STORE)) {
+            video_setDirty(A2_DIRTY_FLAG);
+        }
+    } while (0);
+    run_args.base_ramwrt[ea] = b;
+}
+
+GLUE_C_WRITE(video__write_2e_text1_mixed)
+{
+    do {
+        drawpage_mode_t mode = video_currentMixedMode(run_args.softswitches);
+        if (mode == DRAWPAGE_HIRES) {
+            break;
+        }
+        if ((run_args.softswitches & SS_PAGE2) && !(run_args.softswitches & SS_80STORE)) {
+            video_setDirty(A2_DIRTY_FLAG);
+        }
+    } while (0);
+    run_args.base_ramwrt[ea] = b;
+}
+
+GLUE_C_WRITE(video__write_2e_hgr0)
+{
+    do {
+        drawpage_mode_t mode = video_currentMainMode(run_args.softswitches);
+        if (mode == DRAWPAGE_TEXT) {
+            break;
+        }
+        if (!(run_args.softswitches & SS_PAGE2)) {
+            video_setDirty(A2_DIRTY_FLAG);
+        }
+    } while (0);
+    run_args.base_hgrwrt[ea] = b;
+}
+
+GLUE_C_WRITE(video__write_2e_hgr0_mixed)
+{
+    do {
+        drawpage_mode_t mode = video_currentMixedMode(run_args.softswitches);
+        if (mode == DRAWPAGE_TEXT) {
+            break;
+        }
+        if (!(run_args.softswitches & SS_PAGE2)) {
+            video_setDirty(A2_DIRTY_FLAG);
+        }
+    } while (0);
+    run_args.base_hgrwrt[ea] = b;
+}
+
+GLUE_C_WRITE(video__write_2e_hgr1)
+{
+    do {
+        drawpage_mode_t mode = video_currentMainMode(run_args.softswitches);
+        if (mode == DRAWPAGE_TEXT) {
+            break;
+        }
+        if ((run_args.softswitches & SS_PAGE2) && !(run_args.softswitches & SS_80STORE)) {
+            video_setDirty(A2_DIRTY_FLAG);
+        }
+    } while (0);
+    run_args.base_ramwrt[ea] = b;
+}
+
+GLUE_C_WRITE(video__write_2e_hgr1_mixed)
+{
+    do {
+        drawpage_mode_t mode = video_currentMixedMode(run_args.softswitches);
+        if (mode == DRAWPAGE_TEXT) {
+            break;
+        }
+        if ((run_args.softswitches & SS_PAGE2) && !(run_args.softswitches & SS_80STORE)) {
+            video_setDirty(A2_DIRTY_FLAG);
+        }
+    } while (0);
+    run_args.base_ramwrt[ea] = b;
+}
+
 // ----------------------------------------------------------------------------
 // GC softswitches : Game Controller (joystick/paddles)
 #define JOY_STEP_USEC (3300.0 / 256.0)
 #define CYCLES_PER_USEC (CLK_6502 / 1000000)
 #define JOY_STEP_CYCLES (JOY_STEP_USEC / CYCLES_PER_USEC)
 
-GLUE_INLINE_READ(read_button0, JOY_BUTTON0);
+GLUE_C_READ(read_button0)
+{
+    uint8_t b0 = floating_bus() & (~0x80);
+    uint8_t b = run_args.joy_button0 & 0x80;
+    return b0 | b;
+}
 
-GLUE_INLINE_READ(read_button1, JOY_BUTTON1);
+GLUE_C_READ(read_button1)
+{
+    uint8_t b0 = floating_bus() & (~0x80);
+    uint8_t b = run_args.joy_button1 & 0x80;
+    return b0 | b;
+}
 
 GLUE_C_READ(read_button2)
 {
@@ -528,6 +644,7 @@ GLUE_C_READ(iie_80store_off)
         return floating_bus();
     }
 
+    video_setDirty(A2_DIRTY_FLAG);
     run_args.softswitches &= ~(SS_80STORE|SS_TEXTRD|SS_TEXTWRT|SS_HGRRD|SS_HGRWRT);
 
     run_args.base_textrd  = apple_ii_64k[0];
@@ -551,8 +668,6 @@ GLUE_C_READ(iie_80store_off)
         run_args.softswitches |= SS_SCREEN;
     }
 
-    video_setDirty(A2_DIRTY_FLAG);
-
     return floating_bus();
 }
 
@@ -562,6 +677,7 @@ GLUE_C_READ(iie_80store_on)
         return floating_bus();
     }
 
+    video_setDirty(A2_DIRTY_FLAG);
     run_args.softswitches |= SS_80STORE;
 
     if (run_args.softswitches & SS_PAGE2) {
@@ -585,7 +701,6 @@ GLUE_C_READ(iie_80store_on)
     }
 
     run_args.softswitches &= ~SS_SCREEN;
-    video_setDirty(A2_DIRTY_FLAG);
 
     return floating_bus();
 }
@@ -601,6 +716,7 @@ GLUE_C_READ(iie_ramrd_main)
         return floating_bus();
     }
 
+    video_setDirty(A2_DIRTY_FLAG);
     run_args.softswitches &= ~SS_RAMRD;
     run_args.base_ramrd = apple_ii_64k[0];
 
@@ -615,8 +731,6 @@ GLUE_C_READ(iie_ramrd_main)
         run_args.base_hgrrd  = apple_ii_64k[0];
     }
 
-    video_setDirty(A2_DIRTY_FLAG);
-
     return floating_bus();
 }
 
@@ -626,6 +740,7 @@ GLUE_C_READ(iie_ramrd_aux)
         return floating_bus();
     }
 
+    video_setDirty(A2_DIRTY_FLAG);
     run_args.softswitches |= SS_RAMRD;
     run_args.base_ramrd = apple_ii_64k[1];
 
@@ -639,8 +754,6 @@ GLUE_C_READ(iie_ramrd_aux)
         run_args.base_textrd = apple_ii_64k[1];
         run_args.base_hgrrd  = apple_ii_64k[1];
     }
-
-    video_setDirty(A2_DIRTY_FLAG);
 
     return floating_bus();
 }
@@ -750,8 +863,8 @@ GLUE_C_READ(iie_80col_off)
         return floating_bus();
     }
 
-    run_args.softswitches &= ~SS_80COL;
     video_setDirty(A2_DIRTY_FLAG);
+    run_args.softswitches &= ~SS_80COL;
 
     return floating_bus();
 }
@@ -762,8 +875,8 @@ GLUE_C_READ(iie_80col_on)
         return floating_bus();
     }
 
-    run_args.softswitches |= SS_80COL;
     video_setDirty(A2_DIRTY_FLAG);
+    run_args.softswitches |= SS_80COL;
 
     return floating_bus();
 }
@@ -776,9 +889,9 @@ GLUE_C_READ(iie_check_80col)
 GLUE_C_READ(iie_altchar_off)
 {
     if (run_args.softswitches & SS_ALTCHAR) {
+        video_setDirty(A2_DIRTY_FLAG);
         run_args.softswitches &= ~SS_ALTCHAR;
         display_loadFont(/*start:*/0x40, /*qty:*/0x40, /*data:*/ucase_glyphs, FONT_MODE_FLASH);
-        video_setDirty(A2_DIRTY_FLAG);
     }
     return floating_bus();
 }
@@ -786,10 +899,10 @@ GLUE_C_READ(iie_altchar_off)
 GLUE_C_READ(iie_altchar_on)
 {
     if (!(run_args.softswitches & SS_ALTCHAR)) {
+        video_setDirty(A2_DIRTY_FLAG);
         run_args.softswitches |= SS_ALTCHAR;
         display_loadFont(/*start:*/0x40, /*qty:*/0x20, /*data:*/mousetext_glyphs, FONT_MODE_MOUSETEXT);
         display_loadFont(/*start:*/0x60, /*qty:*/0x20, /*data:*/lcase_glyphs, FONT_MODE_INVERSE);
-        video_setDirty(A2_DIRTY_FLAG);
     }
     return floating_bus();
 }
@@ -820,8 +933,8 @@ GLUE_C_READ(iie_check_ioudis)
 GLUE_C_READ(iie_dhires_on)
 {
     if (!(run_args.softswitches & SS_DHIRES)) {
-        run_args.softswitches |= SS_DHIRES;
         video_setDirty(A2_DIRTY_FLAG);
+        run_args.softswitches |= SS_DHIRES;
     }
     return floating_bus();
 }
@@ -829,8 +942,8 @@ GLUE_C_READ(iie_dhires_on)
 GLUE_C_READ(iie_dhires_off)
 {
     if (run_args.softswitches & SS_DHIRES) {
-        run_args.softswitches &= ~SS_DHIRES;
         video_setDirty(A2_DIRTY_FLAG);
+        run_args.softswitches &= ~SS_DHIRES;
     }
     return floating_bus();
 }
@@ -843,10 +956,10 @@ GLUE_C_READ(iie_check_dhires)
 
 GLUE_C_READ(iie_check_vbl)
 {
-    bool vbl_bar = false;
-    video_scanner_get_address(&vbl_bar);
+    bool isVBL = false;
+    video_scannerAddress(&isVBL);
     uint8_t key = apple_ii_64k[0][0xC000];
-    return (key & ~0x80) | (vbl_bar ? 0x80 : 0x00);
+    return (key & ~0x80) | (isVBL ? 0x00 : 0x80);
 }
 
 GLUE_C_READ(iie_c3rom_peripheral)
@@ -903,7 +1016,9 @@ GLUE_C_READ(iie_read_slot_expansion)
     // ... Also Need moar tests ...
     if (ea == 0xCFFF) {
         // disable expansion ROM
+        return floating_bus();
     }
+
     return apple_ii_64k[1][ea];
 }
 
@@ -1020,12 +1135,12 @@ static void _initialize_tables(void) {
     // write-functions in place only at the `screen holes', hence the name.
     for (unsigned int i = 0x400; i < 0x800; i++) {
         cpu65_vmem_r[i] = iie_read_ram_text_page0;
-        cpu65_vmem_w[i] = iie_write_screen_hole_text_page0;
+        cpu65_vmem_w[i] = video__write_2e_text0;
     }
 
     for (unsigned int i = 0x2000; i < 0x4000; i++) {
         cpu65_vmem_r[i] = iie_read_ram_hires_page0;
-        cpu65_vmem_w[i] = iie_write_screen_hole_hires_page0;
+        cpu65_vmem_w[i] = video__write_2e_hgr0;
     }
 
     // softswich rom
@@ -1205,7 +1320,7 @@ void vm_initialize(void) {
     _initialize_iie_switches();
     c_joystick_reset();
 
-    run_args.softswitches = SS_TEXT | SS_IOUDIS | SS_C3ROM | SS_LCWRT | SS_LCSEC;
+    run_args.softswitches = SS_TEXT | SS_BANK2;
 }
 
 void vm_reinitializeAudio(void) {

@@ -252,6 +252,15 @@ static void _init_glnode_manager(void) {
     glnode_backend.shutdown  = &glnode_shutdownNodes;
     glnode_backend.anim      = &glnode_animations;
 
+#if INTERFACE_CLASSIC
+    glnode_backend.plotChar  = &display_plotChar;
+    glnode_backend.plotLine  = &display_plotLine;
+#endif
+
+    glnode_backend.flashText = &display_flashText;
+    glnode_backend.flushScanline = &display_flushScanline;
+    glnode_backend.frameComplete = &display_frameComplete;
+
 #if INTERFACE_TOUCH
     interface_onTouchEvent = &glnode_onTouchEvent;
 #endif

@@ -3914,6 +3914,7 @@
 					"MB_TRACING=1",
 					"SPEAKER_TRACING=1",
 					"VM_TRACING=1",
+					"VIDEO_TRACING=1",
 					"VIDEO_OPENGL=1",
 				);
 				HEADER_SEARCH_PATHS = (
@@ -3949,6 +3950,7 @@
 					"MB_TRACING=1",
 					"SPEAKER_TRACING=1",
 					"VM_TRACING=1",
+					"VIDEO_TRACING=1",
 					"VIDEO_OPENGL=1",
 					"NDEBUG=1",
 				);
@@ -4681,7 +4683,9 @@
 					"KEYPAD_JOYSTICK=1",
 					"TESTING=1",
 					"TEST_DISPLAY=1",
+					"VIDEO_TRACING=1",
 					"VIDEO_OPENGL=1",
+					"CONFORMANT_TRACKS=1",
 				);
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
@@ -4710,7 +4714,9 @@
 					"KEYPAD_JOYSTICK=1",
 					"TESTING=1",
 					"TEST_DISPLAY=1",
+					"VIDEO_TRACING=1",
 					"VIDEO_OPENGL=1",
+					"CONFORMANT_TRACKS=1",
 					"NDEBUG=1",
 				);
 				HEADER_SEARCH_PATHS = (
