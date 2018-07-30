@@ -45,27 +45,6 @@ static uint8_t fbInterface[FB_SIZ] = { 0 };
 static uint8_t fbStaging[FB_SIZ] = { 0 };
 #define FB_BASE (&fbStaging[0])
 
-#if 0
-// FIXME TODO REMOVE THESE ...
-// Video constants -- sourced from AppleWin
-static const bool bVideoScannerNTSC = true;
-static const int kHBurstClock   =    53; // clock when Color Burst starts
-static const int kHBurstClocks  =     4; // clocks per Color Burst duration
-static const int kHClock0State  =  0x18; // H[543210] = 011000
-static const int kHClocks       =    65; // clocks per horizontal scan (including HBL)
-static const int kHPEClock      =    40; // clock when HPE (horizontal preset enable) goes low
-static const int kHPresetClock  =    41; // clock when H state presets
-static const int kHSyncClock    =    49; // clock when HSync starts
-static const int kHSyncClocks   =     4; // clocks per HSync duration
-static const int kNTSCScanLines =   262; // total scan lines including VBL (NTSC)
-static const int kNTSCVSyncLine =   224; // line when VSync starts (NTSC)
-static const int kPALScanLines  =   312; // total scan lines including VBL (PAL)
-static const int kPALVSyncLine  =   264; // line when VSync starts (PAL)
-static const int kVLine0State   = 0x100; // V[543210CBA] = 100000000
-static const int kVPresetLine   =   256; // line when V state presets
-static const int kVSyncLines    =     4; // lines per VSync duration
-#endif
-
 static uint8_t video__odd_colors[2] = { COLOR_LIGHT_PURPLE, COLOR_LIGHT_BLUE };
 static uint8_t video__even_colors[2] = { COLOR_LIGHT_GREEN, COLOR_LIGHT_RED };
 
@@ -602,32 +581,6 @@ static inline void _plot_lores80(uint8_t **d, const uint32_t val) {
     *((uint8_t *)(*d))  = (uint8_t)val;
 }
 
-#if 0
-static inline void __plot_character40(const unsigned int font_off, uint8_t *fb_ptr) {
-    uint8_t *font_ptr = video__wider_font+font_off;
-    _plot_char40(/*dst*/&fb_ptr, /*src*/&font_ptr);
-    _plot_char40(/*dst*/&fb_ptr, /*src*/&font_ptr);
-    _plot_char40(/*dst*/&fb_ptr, /*src*/&font_ptr);
-    _plot_char40(/*dst*/&fb_ptr, /*src*/&font_ptr);
-    _plot_char40(/*dst*/&fb_ptr, /*src*/&font_ptr);
-    _plot_char40(/*dst*/&fb_ptr, /*src*/&font_ptr);
-    _plot_char40(/*dst*/&fb_ptr, /*src*/&font_ptr);
-    _plot_char40(/*dst*/&fb_ptr, /*src*/&font_ptr);
-}
-
-static void _plot_character40(uint8_t col, uint8_t row, int page, int bank, uint8_t *fb_ptr) {
-    assert(bank == 0); // FIXME TODO ...
-    uint16_t base = page ? 0x0800 : 0x0400;
-    uint16_t off = video__line_offset[row] + col;
-    uint16_t ea = base+off;
-    uint8_t b = apple_ii_64k[bank][ea];
-    __plot_character40(b<<7/* *128 */, fb_ptr+video__screen_addresses[off]);
-    if (textCallbackFn) {
-        textCallbackFn((pixel_delta_t){ .row = row, .col = col, .b = b, .cs = INVALID_COLORSCHEME });
-    }
-}
-#endif
-
 static void _plot_char40_scanline(scan_data_t *scandata) {
     uint8_t *scanline = scandata->scanline;
     unsigned int scanrow = scandata->scanrow;
@@ -650,41 +603,6 @@ static void _plot_char40_scanline(scan_data_t *scandata) {
         _plot_char40(/*dst:*/&fb_ptr, /*src:*/&font_ptr);
     }
 }
-
-#if 0
-static inline void __plot_character80(const unsigned int font_off, uint8_t *fb_ptr) {
-    uint8_t *font_ptr = video__font+font_off;
-    _plot_char80(/*dst*/&fb_ptr, /*src*/&font_ptr, SCANWIDTH);
-    _plot_char80(/*dst*/&fb_ptr, /*src*/&font_ptr, SCANWIDTH);
-    _plot_char80(/*dst*/&fb_ptr, /*src*/&font_ptr, SCANWIDTH);
-    _plot_char80(/*dst*/&fb_ptr, /*src*/&font_ptr, SCANWIDTH);
-    _plot_char80(/*dst*/&fb_ptr, /*src*/&font_ptr, SCANWIDTH);
-    _plot_char80(/*dst*/&fb_ptr, /*src*/&font_ptr, SCANWIDTH);
-    _plot_char80(/*dst*/&fb_ptr, /*src*/&font_ptr, SCANWIDTH);
-    _plot_char80(/*dst*/&fb_ptr, /*src*/&font_ptr, SCANWIDTH);
-}
-
-static void _plot_character80(uint8_t col, uint8_t row, int page, int bank, uint8_t *fb_ptr) {
-    assert(bank == 0); // FIXME TODO ...
-    uint16_t base = page ? 0x0800 : 0x0400;
-    uint16_t off = video__line_offset[row] + col;
-    uint16_t ea = base+off;
-    {
-        uint8_t b = apple_ii_64k[1][ea];
-        __plot_character80(b<<6/* *64 */, fb_ptr+video__screen_addresses[off]);
-        if (textCallbackFn) {
-            textCallbackFn((pixel_delta_t){ .row = row, .col = (col<<1), .b = b, .cs = INVALID_COLORSCHEME });
-        }
-    }
-    {
-        uint8_t b = apple_ii_64k[0][ea];
-        __plot_character80(b<<6/* *64 */, fb_ptr+video__screen_addresses[off]+7);
-        if (textCallbackFn) {
-            textCallbackFn((pixel_delta_t){ .row = row, .col = (col<<1)+1, .b = b, .cs = INVALID_COLORSCHEME });
-        }
-    }
-}
-#endif
 
 static void _plot_char80_scanline(scan_data_t *scandata) {
     uint8_t *scanline = scandata->scanline;
@@ -709,71 +627,6 @@ static void _plot_char80_scanline(scan_data_t *scandata) {
         }
     }
 }
-
-#if 0
-static inline void __plot_block40(const uint8_t val, uint8_t col, uint8_t *fb_ptr) {
-
-    uint8_t color = (val & 0x0F) << 4;
-
-    uint32_t val32;
-    if (color_mode == COLOR_NONE) {
-        if (color != 0x0 && color != 0xf) {
-            uint8_t rot2 = ((col % 2) << 1); // 2 phases at double rotation
-            color = (color << rot2) | ((color & 0xC0) >> rot2);
-        }
-        val32 =  ((color & 0x10) ? COLOR_LIGHT_WHITE : COLOR_BLACK) << 0;
-        val32 |= ((color & 0x20) ? COLOR_LIGHT_WHITE : COLOR_BLACK) << 8;
-        val32 |= ((color & 0x40) ? COLOR_LIGHT_WHITE : COLOR_BLACK) << 16;
-        val32 |= ((color & 0x80) ? COLOR_LIGHT_WHITE : COLOR_BLACK) << 24;
-    } else {
-        val32 = (color << 24) | (color << 16) | (color << 8) | color;
-    }
-
-    _plot_lores40(/*dst*/&fb_ptr, val32);
-    fb_ptr += SCANSTEP;
-    _plot_lores40(/*dst*/&fb_ptr, val32);
-    fb_ptr += SCANSTEP;
-    _plot_lores40(/*dst*/&fb_ptr, val32);
-    fb_ptr += SCANSTEP;
-    _plot_lores40(/*dst*/&fb_ptr, val32);
-
-    fb_ptr += SCANSTEP;
-    color = val & 0xF0;
-
-    if (color_mode == COLOR_NONE) {
-        if (color != 0x0 && color != 0xf) {
-            uint8_t rot2 = ((col % 2) << 1); // 2 phases at double rotation
-            color = (color << rot2) | ((color & 0xC0) >> rot2);
-        }
-        val32 =  ((color & 0x10) ? COLOR_LIGHT_WHITE : COLOR_BLACK) << 0;
-        val32 |= ((color & 0x20) ? COLOR_LIGHT_WHITE : COLOR_BLACK) << 8;
-        val32 |= ((color & 0x40) ? COLOR_LIGHT_WHITE : COLOR_BLACK) << 16;
-        val32 |= ((color & 0x80) ? COLOR_LIGHT_WHITE : COLOR_BLACK) << 24;
-    } else {
-        val32 = (color << 24) | (color << 16) | (color << 8) | color;
-    }
-
-    _plot_lores40(/*dst*/&fb_ptr, val32);
-    fb_ptr += SCANSTEP;
-    _plot_lores40(/*dst*/&fb_ptr, val32);
-    fb_ptr += SCANSTEP;
-    _plot_lores40(/*dst*/&fb_ptr, val32);
-    fb_ptr += SCANSTEP;
-    _plot_lores40(/*dst*/&fb_ptr, val32);
-}
-
-static void _plot_block40(uint8_t col, uint8_t row, int page, int bank, uint8_t *fb_ptr) {
-    assert(bank == 0); // FIXME TODO ...
-    uint16_t base = page ? 0x0800 : 0x0400;
-    uint16_t off = video__line_offset[row] + col;
-    uint16_t ea = base+off;
-    uint8_t b = apple_ii_64k[bank][ea];
-    __plot_block40(b, col, fb_ptr+video__screen_addresses[off]);
-    if (textCallbackFn) {
-        textCallbackFn((pixel_delta_t){ .row = row, .col = col, .b = b, .cs = COLOR16 });
-    }
-}
-#endif
 
 static void _plot_lores40_scanline(scan_data_t *scandata) {
     uint8_t *scanline = scandata->scanline;
@@ -814,33 +667,6 @@ static void _plot_lores40_scanline(scan_data_t *scandata) {
     }
 }
 
-#if 0
-static inline void __plot_block80(const uint8_t val, uint8_t *fb_ptr) {
-    uint8_t color = (val & 0x0F) << 4;
-    uint32_t val32 = (color << 24) | (color << 16) | (color << 8) | color;
-
-    _plot_lores80(/*dst*/&fb_ptr, val32);
-    fb_ptr += SCANDSTEP;
-    _plot_lores80(/*dst*/&fb_ptr, val32);
-    fb_ptr += SCANDSTEP;
-    _plot_lores80(/*dst*/&fb_ptr, val32);
-    fb_ptr += SCANDSTEP;
-    _plot_lores80(/*dst*/&fb_ptr, val32);
-
-    fb_ptr += SCANDSTEP;
-    color = val & 0xF0;
-    val32 = (color << 24) | (color << 16) | (color << 8) | color;
-
-    _plot_lores80(/*dst*/&fb_ptr, val32);
-    fb_ptr += SCANDSTEP;
-    _plot_lores80(/*dst*/&fb_ptr, val32);
-    fb_ptr += SCANDSTEP;
-    _plot_lores80(/*dst*/&fb_ptr, val32);
-    fb_ptr += SCANDSTEP;
-    _plot_lores80(/*dst*/&fb_ptr, val32);
-}
-#endif
-
 // HACK FIXME TODO ... is this correct?  MONOCOLOR output appears wrong...
 static inline uint8_t __shift_block80(uint8_t b) {
     // plot even half-block from auxmem, rotate nybbles to match color (according to UTAIIe: 8-29)
@@ -853,38 +679,6 @@ static inline uint8_t __shift_block80(uint8_t b) {
     b = b0 | b1;
     return b;
 }
-
-#if 0
-static void _plot_block80(uint8_t col, uint8_t row, int page, int bank, uint8_t *fb_ptr) {
-    assert(bank == 0); // FIXME TODO ...
-    uint16_t base = page ? 0x0800 : 0x0400;
-    uint16_t off = video__line_offset[row] + col;
-    uint16_t ea = base+off;
-
-#warning FIXME TODO INVESTIGATE : ... does RAMRD/80STORE/PAGE2 affect load order here?
-
-    // plot even half-block from auxmem, rotate nybbles to match color (according to UTAIIe)
-    {
-        uint8_t b = apple_ii_64k[1][ea];
-        b = __shift_block80(b);
-        uint8_t *fb = fb_ptr+video__screen_addresses[off];
-        __plot_block80(b, fb);
-        if (textCallbackFn) {
-            textCallbackFn((pixel_delta_t){ .row = row, .col = (col<<1), .b = b, .cs = COLOR16 });
-        }
-    }
-
-    // plot odd half-block from main mem
-    {
-        uint8_t b = apple_ii_64k[0][ea];
-        uint8_t *fb = fb_ptr+video__screen_addresses[off] + 7;
-        __plot_block80(b, fb);
-        if (textCallbackFn) {
-            textCallbackFn((pixel_delta_t){ .row = row, .col = (col<<1)+1, .b = b, .cs = COLOR16 });
-        }
-    }
-}
-#endif
 
 static void _plot_lores80_scanline(scan_data_t *scandata) {
     uint8_t *scanline = scandata->scanline;
@@ -1033,84 +827,6 @@ static inline void __plot_hires80_pixels(uint8_t idx, uint8_t *fb_ptr) {
     }
 }
 
-#if 0
-static inline void __plot_hires80(uint16_t base, uint16_t ea, uint8_t *fb_ptr) {
-    ea &= ~0x1;
-
-    uint16_t memoff = ea - base;
-    fb_ptr = fb_ptr+video__screen_addresses[memoff];
-    uint8_t col = video__columns[memoff];
-
-    uint8_t b0 = 0x0;
-    uint8_t b1 = 0x0;
-    uint32_t b = 0x0;
-
-    if (col) {
-        b0 = apple_ii_64k[0][ea-1];
-        b1 = apple_ii_64k[1][ea];
-
-        b0 &= ~0x80;
-        b0 = (b1<<4)|(b0>>3);
-
-        __plot_hires80_pixels(b0, fb_ptr-4);
-    }
-
-    b1 = apple_ii_64k[1][ea+2];
-    b = (b1<<28);
-
-    b0 = apple_ii_64k[0][ea+1];
-    b0 &= ~0x80;
-    b |= (b0<<21);
-
-    b1 = apple_ii_64k[1][ea+1];
-    b1 &= ~0x80;
-    b |= (b1<<14);
-
-    b0 = apple_ii_64k[0][ea];
-    b0 &= ~0x80;
-    b |= (b0<<7);
-
-    b1 = apple_ii_64k[1][ea];
-    b1 &= ~0x80;
-    b |= b1;
-
-    // 00000001 11111122 22222333 3333xxxx
-
-    __plot_hires80_pixels(b, fb_ptr);
-
-    b >>= 4;
-    fb_ptr += 4;
-    __plot_hires80_pixels(b, fb_ptr);
-
-    b >>= 4;
-    fb_ptr += 4;
-    __plot_hires80_pixels(b, fb_ptr);
-
-    b >>= 4;
-    fb_ptr += 4;
-    __plot_hires80_pixels(b, fb_ptr);
-
-    b >>= 4;
-    fb_ptr += 4;
-    __plot_hires80_pixels(b, fb_ptr);
-
-    b >>= 4;
-    fb_ptr += 4;
-    __plot_hires80_pixels(b, fb_ptr);
-
-    b >>= 4;
-    fb_ptr += 4;
-    __plot_hires80_pixels(b, fb_ptr);
-}
-
-static void _plot_hires80(uint16_t off, int page, int bank, bool is_even, uint8_t *fb_ptr) {
-    assert(bank == 0); // FIXME TODO ...
-    uint16_t base = page ? 0x4000 : 0x2000;
-    uint16_t ea = base+off;
-    __plot_hires80(base, ea, fb_ptr);
-}
-#endif
-
 static void _plot_hires80_scanline(scan_data_t *scandata) {
     uint8_t *scanline = scandata->scanline;
     unsigned int scanrow = scandata->scanrow;
@@ -1230,83 +946,6 @@ static inline void _plot_hires_pixels(uint8_t *dst, const uint8_t *src) {
     }
 }
 
-#if 0
-static void _plot_hires40(uint16_t off, int page, int bank, bool is_even, uint8_t *fb_ptr) {
-    assert(bank == 0); // FIXME TODO ...
-    uint16_t base = page ? 0x4000 : 0x2000;
-    uint16_t ea = base+off;
-    uint8_t b = apple_ii_64k[bank][ea];
-
-    fb_ptr = fb_ptr+video__screen_addresses[off];
-
-    uint8_t _buf[DYNAMIC_SZ] = { 0 };
-    uint8_t *color_buf = (uint8_t *)_buf; // <--- work around for -Wstrict-aliasing
-    uint8_t *apple2_vmem = (uint8_t *)apple_ii_64k[bank];
-
-    uint8_t *hires_ptr = NULL;
-    if (is_even) {
-        hires_ptr = (uint8_t *)&video__hires_even[b<<3];
-    } else {
-        hires_ptr = (uint8_t *)&video__hires_odd[b<<3];
-    }
-    *((uint32_t *)&color_buf[2]) = *((uint32_t *)(hires_ptr+0));
-    *((uint16_t *)&color_buf[6]) = *((uint16_t *)(hires_ptr+4));
-    *((uint8_t  *)&color_buf[8]) = *((uint8_t  *)(hires_ptr+6));
-    hires_ptr = NULL;
-
-    // copy adjacent pixel bytes
-    *((uint16_t *)&color_buf[0]) = *((uint16_t *)(fb_ptr-3));
-    *((uint16_t *)&color_buf[DYNAMIC_SZ-2]) = *((uint16_t *)(fb_ptr+15));
-
-    if (color_mode != COLOR_NONE) {
-        uint8_t *hires_altbase = NULL;
-        if (is_even) {
-            hires_altbase = (uint8_t *)&video__hires_odd[0];
-        } else {
-            hires_altbase = (uint8_t *)&video__hires_even[0];
-        }
-
-        // if right-side color is not black, re-calculate edge values
-        if (color_buf[DYNAMIC_SZ-2] & 0xff) {
-            uint16_t pix16 = *((uint16_t *)(apple2_vmem+ea));
-            if ((pix16 & 0x100) && (pix16 & 0x40)) {
-                *((uint16_t *)&color_buf[DYNAMIC_SZ-3]) = (uint16_t)0x3737;// COLOR_LIGHT_WHITE
-            }
-        }
-
-        // if left-side color is not black, re-calculate edge values
-        if (color_buf[1] & 0xff) {
-            uint16_t pix16 = *((uint16_t *)(apple2_vmem+ea-1));
-            if ((pix16 & 0x100) && (pix16 & 0x40)) {
-                *((uint16_t *)&color_buf[1]) = (uint16_t)0x3737;// COLOR_LIGHT_WHITE
-            }
-        }
-
-        if (color_mode == COLOR_INTERP) {
-            uint8_t *interp_base = NULL;
-            uint8_t *interp_altbase = NULL;
-            if (is_even) {
-                interp_base = (uint8_t *)&video__even_colors[0];
-                interp_altbase = (uint8_t *)&video__odd_colors[0];
-            } else {
-                interp_base = (uint8_t *)&video__odd_colors[0];
-                interp_altbase = (uint8_t *)&video__even_colors[0];
-            }
-
-            // calculate interpolated/bleed colors
-            // NOTE that this doesn't check under/overflow of ea (for example at 0x2000, 0x4000, 0x3FFF, 0x5FFF)
-            // ... but don't think this really matters much here =P
-            _calculate_interp_color(color_buf, 1, interp_altbase, ea-1);
-            _calculate_interp_color(color_buf, 2, interp_base, ea);
-            _calculate_interp_color(color_buf, 8, interp_base, ea);
-            _calculate_interp_color(color_buf, 9, interp_altbase, ea+1);
-        }
-    }
-
-    _plot_hires_pixels(/*dst:*/fb_ptr-4, /*src:*/color_buf);
-}
-#endif
-
 static void _plot_hires40_scanline(scan_data_t *scandata) {
 
     // FIXME TODO ... this can be further streamlined to keep track of previous data
@@ -1404,87 +1043,6 @@ static void _plot_hires40_scanline(scan_data_t *scandata) {
         ////fb_ptr += 7;
     }
 }
-
-#if 0
-GLUE_C_WRITE(video__write_2e_hgr0)
-{
-    run_args.base_hgrwrt[ea] = b;
-    drawpage_mode_t mode = _currentMainMode(run_args.softswitches);
-    if (mode == DRAWPAGE_TEXT) {
-        return;
-    }
-    if (!(run_args.softswitches & SS_PAGE2)) {
-        video_setDirty(A2_DIRTY_FLAG);
-    }
-}
-
-GLUE_C_WRITE(video__write_2e_hgr0_mixed)
-{
-    run_args.base_hgrwrt[ea] = b;
-    drawpage_mode_t mode = _currentMixedMode(run_args.softswitches);
-    if (mode == DRAWPAGE_TEXT) {
-        return;
-    }
-    if (!(run_args.softswitches & SS_PAGE2)) {
-        video_setDirty(A2_DIRTY_FLAG);
-    }
-}
-
-GLUE_C_WRITE(video__write_2e_hgr1)
-{
-    run_args.base_ramwrt[ea] = b;
-    drawpage_mode_t mode = _currentMainMode(run_args.softswitches);
-    if (mode == DRAWPAGE_TEXT) {
-        return;
-    }
-    if (run_args.softswitches & SS_PAGE2) {
-        video_setDirty(A2_DIRTY_FLAG);
-    }
-}
-
-GLUE_C_WRITE(video__write_2e_hgr1_mixed)
-{
-    run_args.base_ramwrt[ea] = b;
-    drawpage_mode_t mode = _currentMixedMode(run_args.softswitches);
-    if (mode == DRAWPAGE_TEXT) {
-        return;
-    }
-    if (run_args.softswitches & SS_PAGE2) {
-        video_setDirty(A2_DIRTY_FLAG);
-    }
-}
-
-// ----------------------------------------------------------------------------
-
-static inline void _currentPageAndBank(uint32_t currswitches, drawpage_mode_t mode, OUTPARM int *page, OUTPARM int *bank) {
-    // UTAIIe : 5-25
-    if (currswitches & SS_80STORE) {
-        *page = 0;
-        //*bank = !!(currswitches & SS_PAGE2);
-        *bank = 0;
-        if (mode != DRAWPAGE_TEXT) {
-            assert(currswitches & SS_HIRES);
-        }
-        return;
-    }
-
-    *page = !!(currswitches & SS_PAGE2);
-    //*bank = !!(currswitches & SS_RAMRD);
-    *bank = 0;
-}
-
-void display_setUpdateCallback(drawpage_mode_t mode, display_update_fn updateFn) {
-    if (mode == DRAWPAGE_TEXT) {
-        textCallbackFn = updateFn;
-    } else if (mode == DRAWPAGE_HIRES) {
-        hiresCallbackFn = updateFn;
-    } else if (mode == DRAWPAGE_MODE_CHANGE) {
-        modeCallbackFn = updateFn;
-    } else {
-        assert(false);
-    }
-}
-#endif
 
 static void (*_hirespage_plotter(uint32_t currswitches))(scan_data_t*) {
     return ((currswitches & SS_80COL) && (currswitches & SS_DHIRES)) ? _plot_hires80_scanline : _plot_hires40_scanline;
@@ -1621,154 +1179,6 @@ void display_flashText(void) {
 
     video_setDirty(FB_DIRTY_FLAG);
 }
-
-#if 0
-bool video_isDirty(unsigned long flags) {
-    return (_vid_dirty & flags);
-}
-
-unsigned long video_setDirty(unsigned long flags) {
-    if (modeCallbackFn) {
-        modeCallbackFn((pixel_delta_t){ 0 });
-    }
-    return __sync_fetch_and_or(&_vid_dirty, flags);
-}
-
-unsigned long video_clearDirty(unsigned long flags) {
-    return __sync_fetch_and_and(&_vid_dirty, ~flags);
-}
-
-// ----------------------------------------------------------------------------
-// VBL/timing routines
-
-// References to Jim Sather's books are given as eg:
-// UTAIIe:5-7,P3 (Understanding the Apple IIe, chapter 5, page 7, Paragraph 3)
-
-uint16_t video_scanner_get_address(bool *vblBarOut) {
-    const bool SW_HIRES   = (run_args.softswitches & SS_HIRES);
-    const bool SW_TEXT    = (run_args.softswitches & SS_TEXT);
-    const bool SW_PAGE2   = (run_args.softswitches & SS_PAGE2);
-    const bool SW_80STORE = (run_args.softswitches & SS_80STORE);
-    const bool SW_MIXED   = (run_args.softswitches & SS_MIXED);
-
-    // get video scanner position
-    unsigned int nCycles = timing_currentVideoFrameCycles();
-
-    // machine state switches
-    int nHires   = (SW_HIRES && !SW_TEXT) ? 1 : 0;
-    int nPage2   = SW_PAGE2 ? 1 : 0;
-    int n80Store = SW_80STORE ? 1 : 0;
-
-    // calculate video parameters according to display standard
-    int nScanLines  = bVideoScannerNTSC ? kNTSCScanLines : kPALScanLines;
-    int nVSyncLine  = bVideoScannerNTSC ? kNTSCVSyncLine : kPALVSyncLine;
-    int nScanCycles = nScanLines * kHClocks;
-
-    // calculate horizontal scanning state
-    int nHClock = (nCycles + kHPEClock) % kHClocks; // which horizontal scanning clock
-    int nHState = kHClock0State + nHClock; // H state bits
-    if (nHClock >= kHPresetClock) // check for horizontal preset
-    {
-        nHState -= 1; // correct for state preset (two 0 states)
-    }
-    int h_0 = (nHState >> 0) & 1; // get horizontal state bits
-    int h_1 = (nHState >> 1) & 1;
-    int h_2 = (nHState >> 2) & 1;
-    int h_3 = (nHState >> 3) & 1;
-    int h_4 = (nHState >> 4) & 1;
-    int h_5 = (nHState >> 5) & 1;
-
-    // calculate vertical scanning state
-    int nVLine  = nCycles / kHClocks; // which vertical scanning line
-    int nVState = kVLine0State + nVLine; // V state bits
-    if ((nVLine >= kVPresetLine)) // check for previous vertical state preset
-    {
-        nVState -= nScanLines; // compensate for preset
-    }
-    int v_A = (nVState >> 0) & 1; // get vertical state bits
-    int v_B = (nVState >> 1) & 1;
-    int v_C = (nVState >> 2) & 1;
-    int v_0 = (nVState >> 3) & 1;
-    int v_1 = (nVState >> 4) & 1;
-    int v_2 = (nVState >> 5) & 1;
-    int v_3 = (nVState >> 6) & 1;
-    int v_4 = (nVState >> 7) & 1;
-    int v_5 = (nVState >> 8) & 1;
-
-    // calculate scanning memory address
-    if (nHires && SW_MIXED && v_4 && v_2) // HIRES TIME signal (UTAIIe:5-7,P3)
-    {
-        nHires = 0; // address is in text memory for mixed hires
-    }
-
-    int nAddend0 = 0x0D; // 1            1            0            1
-    int nAddend1 =              (h_5 << 2) | (h_4 << 1) | (h_3 << 0);
-    int nAddend2 = (v_4 << 3) | (v_3 << 2) | (v_4 << 1) | (v_3 << 0);
-    int nSum     = (nAddend0 + nAddend1 + nAddend2) & 0x0F; // SUM (UTAIIe:5-9)
-
-    unsigned int nAddress = 0; // build address from video scanner equations (UTAIIe:5-8,T5.1)
-    nAddress |= h_0  << 0; // a0
-    nAddress |= h_1  << 1; // a1
-    nAddress |= h_2  << 2; // a2
-    nAddress |= nSum << 3; // a3 - a6
-    nAddress |= v_0  << 7; // a7
-    nAddress |= v_1  << 8; // a8
-    nAddress |= v_2  << 9; // a9
-
-    int p2a = !(nPage2 && !n80Store);
-    int p2b = nPage2 && !n80Store;
-
-    if (nHires) // hires?
-    {
-        // Y: insert hires-only address bits
-        nAddress |= v_A << 10; // a10
-        nAddress |= v_B << 11; // a11
-        nAddress |= v_C << 12; // a12
-        nAddress |= p2a << 13; // a13
-        nAddress |= p2b << 14; // a14
-    }
-    else
-    {
-        // N: insert text-only address bits
-        nAddress |= p2a << 10; // a10
-        nAddress |= p2b << 11; // a11
-
-        // Apple ][ (not //e) and HBL?
-        if (false/*IS_APPLE2*/ && // Apple II only (UTAIIe:I-4,#5)
-            !h_5 && (!h_4 || !h_3)) // HBL (UTAIIe:8-10,F8.5)
-        {
-            nAddress |= 1 << 12; // Y: a12 (add $1000 to address!)
-        }
-    }
-
-    // update VBL' state
-    if (vblBarOut != NULL)
-    {
-        *vblBarOut = !v_4 || !v_3; // VBL' = (v_4 & v_3)' (UTAIIe:5-10,#3)
-    }
-
-    return (uint16_t)nAddress;
-}
-
-uint8_t floating_bus(void) {
-#if TESTING
-    // HACK FIXME TODO : where is the non-determinism sneaking in here?
-    return 0;
-#endif
-    uint16_t scanner_addr = video_scanner_get_address(NULL);
-    return apple_ii_64k[0][scanner_addr];
-}
-
-uint8_t floating_bus_hibit(const bool hibit) {
-#if TESTING
-    // HACK FIXME TODO : where is the non-determinism sneaking in here?
-    return 0;
-#endif
-    uint16_t scanner_addr = video_scanner_get_address(NULL);
-    uint8_t b = apple_ii_64k[0][scanner_addr];
-    return (b & ~0x80) | (hibit ? 0x80 : 0);
-}
-#endif
 
 uint8_t *display_getCurrentFramebuffer(void) {
 #if INTERFACE_CLASSIC
