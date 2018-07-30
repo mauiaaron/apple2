@@ -51,16 +51,14 @@ Other Maintained Ports
 Semi-Ordered TODO
 -----------------
 
-* Double-LORES graphics (used in Dagen Brock's Flappy Bird clone) are ugly/incorrect ... fix 'em
-* Double-HIRES graphics are also ugly/icorrect ... fix 'em
-* Improve VBL timing and vSync matching to the device/system refresh rate
+* Improve graphics by emulating NTSC artifacts
 * CPU module ports: aarch64, Clang IR (bitcode)
-* iOS/iDevice ports.  (in progress)
+* macOS/iOS ports.  (Apple does not allow publishing emulators in App Store, so we don't give these ports precedence)
 * Net/Open/Free-BSD port
-* OpenGL shaders/tricks for style (emulating of various NTSC screen artifacts)
-* Emulation features ... (3.5" disk, AppleHD, Phasor, printer, ethernet, ...)
+* OpenGL shaders/tricks for style (possibly emulating of various NTSC screen artifacts)
+* Emulation features ... (mouse, printer, 3.5" disk, AppleHD, Phasor, ethernet?, ...)
 * Debugger rewrite with tests ... improved debugger routines (CLI/curses debugger? GDB/LLDB module?)
-* Port to web ... emscripten/asmjs/web assembly
+* Port to web assembly
 
 ![DOS 3.3](https://raw.github.com/mauiaaron/apple2/master/docs/DOS33.png "DOS 3.3 Applesoft BASIC and //e monitor")
 
