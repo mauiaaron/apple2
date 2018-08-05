@@ -651,10 +651,8 @@ static void _plot_lores40_scanline(scan_data_t *scandata) {
 
         uint32_t val32;
         if (color_mode == COLOR_NONE) {
-            if (val != 0x0 && val != 0xf) {
-                uint8_t rot2 = ((col % 2) << 1); // 2 phases at double rotation
-                val = (val << rot2) | ((val & 0xC0) >> rot2);
-            }
+            uint8_t rot2 = ((col % 2) << 1); // 2 phases at double rotation
+            val = (val << rot2) | ((val & 0xC0) >> rot2);
             val32 =  ((val & 0x10) ? COLOR_LIGHT_WHITE : COLOR_BLACK) << 0;
             val32 |= ((val & 0x20) ? COLOR_LIGHT_WHITE : COLOR_BLACK) << 8;
             val32 |= ((val & 0x40) ? COLOR_LIGHT_WHITE : COLOR_BLACK) << 16;
