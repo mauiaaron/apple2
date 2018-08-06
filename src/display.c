@@ -567,18 +567,12 @@ static inline void _plot_lores40(uint8_t **d, const uint32_t val) {
     *((uint16_t *)(*d)) = (uint16_t)(val & 0xffff);
 }
 
-static inline void _plot_lores80(uint8_t **d, const uint32_t val) {
-    *((uint32_t *)(*d)) = val;
-    *d += 4;
-    *((uint16_t *)(*d)) = (uint16_t)val;
-    *d += 2;
-    *((uint8_t *)(*d))  = (uint8_t)val;
-    *d += SCANDSTEP;
-    *((uint32_t *)(*d)) = val;
-    *d += 4;
-    *((uint16_t *)(*d)) = (uint16_t)val;
-    *d += 2;
-    *((uint8_t *)(*d))  = (uint8_t)val;
+static inline void _plot_lores80(uint8_t *d, const uint32_t lo, const uint32_t hi) {
+    *((uint32_t *)(d)) = lo;
+    *((uint32_t *)(d + SCANWIDTH)) = lo;
+    d += 4;
+    *((uint32_t *)(d)) = hi;
+    *((uint32_t *)(d + SCANWIDTH)) = hi;
 }
 
 static void _plot_char40_scanline(scan_data_t *scandata) {
@@ -665,7 +659,6 @@ static void _plot_lores40_scanline(scan_data_t *scandata) {
     }
 }
 
-// HACK FIXME TODO ... is this correct?  MONOCOLOR output appears wrong...
 static inline uint8_t __shift_block80(uint8_t b) {
     // plot even half-block from auxmem, rotate nybbles to match color (according to UTAIIe: 8-29)
     uint8_t b0 = (b & 0x0F);
@@ -697,24 +690,66 @@ static void _plot_lores80_scanline(scan_data_t *scandata) {
         {
             uint8_t *fb_ptr = FB_BASE + video__screen_addresses[fb_off] + ((block_off<<1) * SCANWIDTH);
 
-            uint8_t b = scanline[(col<<1)+0]; // AUX
+            unsigned int idx = (col<<1)+0; // AUX
+            uint8_t b = scanline[idx];
             b = __shift_block80(b);
             uint8_t val = (b & lores_mask) << lores_shift;
-            // TODO FIXME : implement monocolor ...
-            uint32_t val32 = (val << 24) | (val << 16) | (val << 8) | val;
+            uint32_t val32_lo = 0x0;
+            uint32_t val32_hi = 0x0;
 
-            _plot_lores80(/*dst:*/&fb_ptr, val32);
+            if (color_mode == COLOR_NONE && val != 0x0) {
+                val = (val >> 4) | val;
+                {
+                    uint16_t val16 = val | (val << 8);
+                    val16 = val16 >> (4 - (idx&0x3));
+                    val = (uint8_t)val16;
+                }
+
+                val32_lo |= ((val & 0x01) ? COLOR_LIGHT_WHITE : COLOR_BLACK) << 0;
+                val32_lo |= ((val & 0x02) ? COLOR_LIGHT_WHITE : COLOR_BLACK) << 8;
+                val32_lo |= ((val & 0x04) ? COLOR_LIGHT_WHITE : COLOR_BLACK) << 16;
+                val32_lo |= ((val & 0x08) ? COLOR_LIGHT_WHITE : COLOR_BLACK) << 24;
+                val32_hi |= ((uint64_t)((val & 0x10) ? COLOR_LIGHT_WHITE : COLOR_BLACK)) << 0;
+                val32_hi |= ((uint64_t)((val & 0x20) ? COLOR_LIGHT_WHITE : COLOR_BLACK)) << 8;
+                val32_hi |= ((uint64_t)((val & 0x40) ? COLOR_LIGHT_WHITE : COLOR_BLACK)) << 16;
+            } else {
+                val32_hi = (val << 16) | (val << 8) | val;
+                val32_lo = (val << 24) | val32_hi;
+            }
+
+            _plot_lores80(/*dst:*/fb_ptr, val32_lo, val32_hi);
         }
 
         {
             uint8_t *fb_ptr = FB_BASE + video__screen_addresses[fb_off] + 7 + ((block_off<<1) * SCANWIDTH);
 
-            uint8_t b = scanline[(col<<1)+1]; // MBD
+            unsigned int idx = (col<<1)+1; // MBD
+            uint8_t b = scanline[idx];
             uint8_t val = (b & lores_mask) << lores_shift;
-            // TODO FIXME : implement monocolor ...
-            uint32_t val32 = (val << 24) | (val << 16) | (val << 8) | val;
+            uint32_t val32_lo = 0x0;
+            uint32_t val32_hi = 0x0;
 
-            _plot_lores80(/*dst:*/&fb_ptr, val32);
+            if (color_mode == COLOR_NONE && val != 0x0) {
+                val = (val >> 4) | val;
+                {
+                    uint16_t val16 = val | (val << 8);
+                    val16 = val16 >> (4 - (idx&0x3));
+                    val = (uint8_t)val16;
+                }
+
+                val32_lo |= ((val & 0x01) ? COLOR_LIGHT_WHITE : COLOR_BLACK) << 0;
+                val32_lo |= ((val & 0x02) ? COLOR_LIGHT_WHITE : COLOR_BLACK) << 8;
+                val32_lo |= ((val & 0x04) ? COLOR_LIGHT_WHITE : COLOR_BLACK) << 16;
+                val32_lo |= ((val & 0x08) ? COLOR_LIGHT_WHITE : COLOR_BLACK) << 24;
+                val32_hi |= ((uint64_t)((val & 0x10) ? COLOR_LIGHT_WHITE : COLOR_BLACK)) << 0;
+                val32_hi |= ((uint64_t)((val & 0x20) ? COLOR_LIGHT_WHITE : COLOR_BLACK)) << 8;
+                val32_hi |= ((uint64_t)((val & 0x40) ? COLOR_LIGHT_WHITE : COLOR_BLACK)) << 16;
+            } else {
+                val32_hi = (val << 16) | (val << 8) | val;
+                val32_lo = (val << 24) | val32_hi;
+            }
+
+            _plot_lores80(/*dst:*/fb_ptr, val32_lo, val32_hi);
         }
     }
 }
