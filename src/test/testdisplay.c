@@ -16,6 +16,7 @@ static bool test_thread_running = false;
 extern pthread_mutex_t interface_mutex; // TODO FIXME : raw access to CPU mutex because stepping debugger ...
 
 static void testdisplay_setup(void *arg) {
+    test_setup_boot_disk("testdisplay1.dsk.gz", 1);
     test_common_setup();
     apple_ii_64k[0][MIXSWITCH_ADDR] = 0x00;
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x00;
@@ -31,14 +32,6 @@ static void testdisplay_teardown(void *arg) {
 // ----------------------------------------------------------------------------
 // Various Display Tests ...
 
-TEST test_boot_disk() {
-    test_setup_boot_disk("testdisplay1.dsk.gz", 1);
-
-    BOOT_TO_DOS();
-
-    PASS();
-}
-
 #if VIDEO_TRACING
 
 #   define EXPECTED_BOOT_VIDEO_TRACE_FILE_SIZE 1484244660
@@ -48,7 +41,6 @@ TEST test_boot_disk() {
 //  - Longer boot time with CONFORMANT_TRACKS will add more frames of output
 #   if CONFORMANT_TRACKS
 TEST test_boot_video_trace(void) {
-    test_setup_boot_disk("testdisplay1.dsk.gz", 1);
 
     srandom(0);
     const char *homedir = HOMEDIR;
@@ -96,7 +88,6 @@ TEST test_boot_video_trace(void) {
 #   define EXPECTED_TRACE_40COL_FILE_SIZ 698230
 #   define EXPECTED_TRACE_40COL_FILE_SHA "03dd130fa58c068d2434cf7fa244f64ec058290b"
 TEST test_video_trace_40col(void) {
-    test_setup_boot_disk("testdisplay1.dsk.gz", 1);
 
     BOOT_TO_DOS();
 
@@ -498,7 +489,7 @@ TEST test_80col_lores() {
     c_debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
-    ASSERT_SHA("02257E25170D8E28F607C033B9D623F55641C7BA");
+    ASSERT_SHA("5BFF6721FB90B3A6AF88D9021A013C007C4AF23A");
 
     PASS();
 }
@@ -541,8 +532,6 @@ GREATEST_SUITE(test_suite_display) {
     RUN_TESTp(test_video_trace_40col);
     RUN_TESTp(test_video_trace_liltexwin);
 #endif
-
-    RUN_TESTp(test_boot_disk);
 
     // text modes
     RUN_TESTp(test_40col_normal);

@@ -672,9 +672,9 @@ static inline uint8_t __shift_block80(uint8_t b) {
     uint8_t b1 = (b & 0xF0) >> 4;
     uint8_t rot0 = ((b0 & 0x8) >> 3);
     uint8_t rot1 = ((b1 & 0x8) >> 3);
-    b0 = (((b0<<5) | (rot0<<4)) >> 4);
-    b1 =  ((b1<<5) | (rot1<<4));
-    b = b0 | b1;
+    b0 = ((b0<<5) | (rot0<<4));
+    b1 = ((b1<<5) | (rot1<<4));
+    b = (b0>>4) | b1;
     return b;
 }
 
