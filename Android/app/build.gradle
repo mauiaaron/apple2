@@ -1,8 +1,7 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 24
-    buildToolsVersion '26.0.2'
+    compileSdkVersion 26
     signingConfigs {
         release {
             storeFile file("release2.keystore")
@@ -28,8 +27,8 @@ android {
 
     defaultConfig {
         applicationId "org.deadc0de.apple2ix.basic"
-        minSdkVersion 10
-        targetSdkVersion 24
+        minSdkVersion 14
+        targetSdkVersion 26
         versionCode 22
         versionName "1.2.2"
         ndk {
@@ -40,5 +39,5 @@ android {
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
-    compile 'com.android.support:appcompat-v7:24.2.1'
+    compile 'com.android.support:appcompat-v7:26.1.0'
 }
