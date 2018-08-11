@@ -34,7 +34,7 @@
         [defaults setDouble:CPU_SCALE_SLOWEST forKey:kApple2AltSpeed];
         [defaults setBool:NO forKey:kApple2CPUSpeedIsMax];
         [defaults setBool:NO forKey:kApple2AltSpeedIsMax];
-        [defaults setInteger:COLOR_INTERP forKey:kApple2ColorConfig];
+        [defaults setInteger:COLOR_MODE_INTERP forKey:kApple2ColorConfig];
        // [defaults setInteger:JOY_KPAD forKey:kApple2JoystickConfig];
         [defaults setBool:YES forKey:kApple2JoystickAutoRecenter];
         [defaults removeObjectForKey:kApple2PrefStartupDiskA];
@@ -72,9 +72,9 @@
     }
 
     NSInteger mode = [defaults integerForKey:kApple2ColorConfig];
-    if (! ((mode >= COLOR_NONE) && (mode < NUM_COLOROPTS)) )
+    if (! ((mode >= COLOR_MODE_BW) && (mode < NUM_COLOROPTS)) )
     {
-        mode = COLOR_NONE;
+        mode = COLOR_MODE_BW;
     }
     //[self.videoModePicker d:mode];
     //color_mode = (color_mode_t)mode;

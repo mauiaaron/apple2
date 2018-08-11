@@ -27,7 +27,7 @@ static uint8_t video__wider_font[0x8000] = { 0 };
 static uint8_t video__font[0x4000] = { 0 };
 static uint8_t video__int_font[5][0x4000] = { { 0 } }; // interface font
 
-static color_mode_t color_mode = COLOR_NONE;
+static color_mode_t color_mode = COLOR_MODE_COLOR;
 
 // Precalculated framebuffer offsets given VM addr
 static unsigned int video__screen_addresses[8192] = { INT_MIN };
@@ -142,7 +142,7 @@ static void _initialize_hires_values(void) {
         }
     }
 
-    if (color_mode == COLOR_NONE) {
+    if (color_mode == COLOR_MODE_BW) {
         for (unsigned int value = 0x00; value <= 0xFF; value++) {
             for (unsigned int b = 0, e = value * 8; b < 7; b++, e++) {
                 if (video__hires_even[e] != COLOR_BLACK) {
@@ -153,7 +153,7 @@ static void _initialize_hires_values(void) {
                 }
             }
         }
-    } else if (color_mode == COLOR_INTERP) {
+    } else if (color_mode == COLOR_MODE_INTERP) {
         for (unsigned int value = 0x00; value <= 0xFF; value++) {
             for (unsigned int b=1, e=value*8 + 1; b <= 5; b += 2, e += 2) {
                 if (video__hires_even[e] == COLOR_BLACK) {
@@ -427,13 +427,13 @@ static void _initialize_color() {
 }
 
 static void display_prefsChanged(const char *domain) {
-    long val = COLOR_INTERP;
+    long val = COLOR_MODE_INTERP;
     prefs_parseLongValue(domain, PREF_COLOR_MODE, &val, /*base:*/10);
     if (val < 0) {
-        val = COLOR_INTERP;
+        val = COLOR_MODE_INTERP;
     }
     if (val >= NUM_COLOROPTS) {
-        val = COLOR_INTERP;
+        val = COLOR_MODE_INTERP;
     }
     color_mode = (color_mode_t)val;
     display_reset();
@@ -644,7 +644,7 @@ static void _plot_lores40_scanline(scan_data_t *scandata) {
         uint8_t val = (b & lores_mask) << lores_shift;
 
         uint32_t val32;
-        if (color_mode == COLOR_NONE) {
+        if (color_mode == COLOR_MODE_BW) {
             uint8_t rot2 = ((col % 2) << 1); // 2 phases at double rotation
             val = (val << rot2) | ((val & 0xC0) >> rot2);
             val32 =  ((val & 0x10) ? COLOR_LIGHT_WHITE : COLOR_BLACK) << 0;
@@ -697,7 +697,7 @@ static void _plot_lores80_scanline(scan_data_t *scandata) {
             uint32_t val32_lo = 0x0;
             uint32_t val32_hi = 0x0;
 
-            if (color_mode == COLOR_NONE && val != 0x0) {
+            if (color_mode == COLOR_MODE_BW && val != 0x0) {
                 val = (val >> 4) | val;
                 {
                     uint16_t val16 = val | (val << 8);
@@ -729,7 +729,7 @@ static void _plot_lores80_scanline(scan_data_t *scandata) {
             uint32_t val32_lo = 0x0;
             uint32_t val32_hi = 0x0;
 
-            if (color_mode == COLOR_NONE && val != 0x0) {
+            if (color_mode == COLOR_MODE_BW && val != 0x0) {
                 val = (val >> 4) | val;
                 {
                     uint16_t val16 = val | (val << 8);
@@ -840,7 +840,7 @@ void display_plotMessage(uint8_t *fb, const interface_colorscheme_t cs, const ch
 static inline void __plot_hires80_pixels(uint8_t idx, uint8_t *fb_ptr) {
     uint8_t bCurr = idx;
 
-    if (color_mode == COLOR_NONE) {
+    if (color_mode == COLOR_MODE_BW) {
         uint32_t b32;
         b32 =   (bCurr & 0x1) ? COLOR_LIGHT_WHITE : COLOR_BLACK;
         b32 |= ((bCurr & 0x2) ? COLOR_LIGHT_WHITE : COLOR_BLACK) << 8;
@@ -1018,7 +1018,7 @@ static void _plot_hires40_scanline(scan_data_t *scandata) {
         *((uint16_t *)&color_buf[0]) = *((uint16_t *)(fb_ptr-3));
         *((uint16_t *)&color_buf[DYNAMIC_SZ-2]) = *((uint16_t *)(fb_ptr+15));
 
-        if (color_mode != COLOR_NONE) {
+        if (color_mode != COLOR_MODE_BW) {
             uint8_t *hires_altbase = NULL;
             if (is_even) {
                 hires_altbase = (uint8_t *)&video__hires_odd[0];
@@ -1046,7 +1046,7 @@ static void _plot_hires40_scanline(scan_data_t *scandata) {
                 }
             }
 
-            if (color_mode == COLOR_INTERP) {
+            if (color_mode == COLOR_MODE_BW) {
                 uint8_t *interp_base = NULL;
                 uint8_t *interp_altbase = NULL;
                 if (is_even) {

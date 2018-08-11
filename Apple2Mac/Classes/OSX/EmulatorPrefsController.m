@@ -68,7 +68,7 @@
         [defaults setDouble:CPU_SCALE_SLOWEST forKey:kApple2AltSpeed];
         [defaults setBool:NO forKey:kApple2CPUSpeedIsMax];
         [defaults setBool:NO forKey:kApple2AltSpeedIsMax];
-        [defaults setInteger:COLOR_INTERP forKey:kApple2ColorConfig];
+        [defaults setInteger:COLOR_MODE_INTERP forKey:kApple2ColorConfig];
         [defaults setInteger:JOY_KPAD forKey:kApple2JoystickConfig];
         [defaults setBool:YES forKey:kApple2JoystickAutoRecenter];
         [defaults removeObjectForKey:kApple2PrefStartupDiskA];
@@ -110,9 +110,9 @@
     [self.soundCardChoice selectCellAtRow:1 column:0];
     
     NSInteger mode = [defaults integerForKey:kApple2ColorConfig];
-    if (! ((mode >= COLOR_NONE) && (mode < NUM_COLOROPTS)) )
+    if (! ((mode >= COLOR_MODE_BW) && (mode < NUM_COLOROPTS)) )
     {
-        mode = COLOR_NONE;
+        mode = COLOR_MODE_BW;
     }
     [self.colorChoice selectItemAtIndex:mode];
     prefs_setLongValue(PREF_DOMAIN_VIDEO, PREF_COLOR_MODE, (color_mode_t)mode);
@@ -166,7 +166,7 @@
     [defaults setBool:([self.altMaxChoice state] == NSOnState) forKey:kApple2AltSpeedIsMax];
     
     long lVal = 0;
-    color_mode_t mode = prefs_parseLongValue(PREF_DOMAIN_VIDEO, PREF_COLOR_MODE, &lVal, /*base:*/10) ? (color_mode_t)lVal : COLOR_INTERP;
+    color_mode_t mode = prefs_parseLongValue(PREF_DOMAIN_VIDEO, PREF_COLOR_MODE, &lVal, /*base:*/10) ? (color_mode_t)lVal : COLOR_MODE_INTERP;
     [defaults setInteger:mode forKey:kApple2ColorConfig];
     [defaults setInteger:joy_mode forKey:kApple2JoystickConfig];
     
@@ -223,9 +223,9 @@
 - (IBAction)colorChoiceChanged:(id)sender
 {
     NSInteger mode = [self.colorChoice indexOfSelectedItem];
-    if (! ((mode >= COLOR_NONE) && (mode < NUM_COLOROPTS)) )
+    if (! ((mode >= COLOR_MODE_BW) && (mode < NUM_COLOROPTS)) )
     {
-        mode = COLOR_NONE;
+        mode = COLOR_MODE_BW;
     }
     prefs_setLongValue(PREF_DOMAIN_VIDEO, PREF_COLOR_MODE, mode);
     prefs_sync(PREF_DOMAIN_VIDEO);

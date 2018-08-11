@@ -800,8 +800,8 @@ void c_interface_parameters()
                 break;
 
             case OPT_COLOR:
-                sprintf(temp, "%s", (color_mode == COLOR) ? "Color       " :
-                        (color_mode == COLOR_INTERP) ? "Interpolated" : "Black/White ");
+                sprintf(temp, "%s", (color_mode == COLOR_MODE_COLOR) ? "Color       " :
+                        (color_mode == COLOR_MODE_INTERP) ? "Interpolated" : "Black/White ");
                 break;
 
             case OPT_JOYSTICK:

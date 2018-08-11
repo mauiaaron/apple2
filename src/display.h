@@ -60,9 +60,9 @@ extern A2Color_s colormap[];
  * Color options
  */
 typedef enum color_mode_t {
-    COLOR_NONE = 0,
-    COLOR,
-    COLOR_INTERP,
+    COLOR_MODE_BW = 0,
+    COLOR_MODE_COLOR,
+    COLOR_MODE_INTERP,
     NUM_COLOROPTS
 } color_mode_t;
 

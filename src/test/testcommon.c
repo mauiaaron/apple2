@@ -51,7 +51,7 @@ void test_common_init(void) {
     LEAK(envvar);
 
     prefs_load();
-    prefs_setLongValue(PREF_DOMAIN_VIDEO, PREF_COLOR_MODE, COLOR);
+    prefs_setLongValue(PREF_DOMAIN_VIDEO, PREF_COLOR_MODE, COLOR_MODE_COLOR);
     prefs_setBoolValue(PREF_DOMAIN_KEYBOARD, PREF_KEYBOARD_CAPS, true);
     prefs_setFloatValue(PREF_DOMAIN_VM, PREF_CPU_SCALE, (CPU_SCALE_FASTEST * 100.));
     prefs_setFloatValue(PREF_DOMAIN_VM, PREF_CPU_SCALE_ALT, (CPU_SCALE_FASTEST * 100.));
