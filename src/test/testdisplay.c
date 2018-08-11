@@ -12,6 +12,7 @@
 #include "testcommon.h"
 
 static bool test_thread_running = false;
+static color_mode_t test_color_mode = COLOR_MODE_COLOR;
 
 extern pthread_mutex_t interface_mutex; // TODO FIXME : raw access to CPU mutex because stepping debugger ...
 
@@ -24,9 +25,13 @@ static void testdisplay_setup(void *arg) {
     if (test_do_reboot) {
         cpu65_interrupt(ResetSig);
     }
+    prefs_setLongValue(PREF_DOMAIN_VIDEO, PREF_COLOR_MODE, test_color_mode);
+    prefs_sync(PREF_DOMAIN_VIDEO);
 }
 
 static void testdisplay_teardown(void *arg) {
+    test_color_mode = COLOR_MODE_COLOR;
+    test_do_reboot = true;
 }
 
 // ----------------------------------------------------------------------------
@@ -42,7 +47,6 @@ static void testdisplay_teardown(void *arg) {
 #   if CONFORMANT_TRACKS
 TEST test_boot_video_trace(void) {
 
-    srandom(0);
     const char *homedir = HOMEDIR;
     char *traceFile = NULL;
     ASPRINTF(&traceFile, "%s/a2_boot_video_trace.txt", homedir);
@@ -86,13 +90,13 @@ TEST test_boot_video_trace(void) {
 #   undef EXPECTED_BOOT_VIDEO_TRACE_FILE_SHA
 
 #   define EXPECTED_TRACE_40COL_FILE_SIZ 698230
-#   define EXPECTED_TRACE_40COL_FILE_SHA "03dd130fa58c068d2434cf7fa244f64ec058290b"
+#   define EXPECTED_TRACE_40COL_FILE_SHA "2B8C050F84776A78F73A7AE803A474820E11B3C1"
 TEST test_video_trace_40col(void) {
 
     BOOT_TO_DOS();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
-    test_type_input("CATALOG\rPOKE7987,255:REM TRIGGER DEBUGGER\r");
+    test_type_input("CATALOG\r\rPOKE7987,255:REM TRIGGER DEBUGGER\r");
     c_debugger_go();
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x0;
@@ -264,10 +268,6 @@ TEST test_80col_inverse() {
 // ----------------------------------------------------------------------------
 // LORES
 //
-// 2014/04/05 NOTE : Tests may be successful but graphics display appears to be somewhat b0rken
-//
-// NOTE : These tests assume standard color mode (not b/w or interpolated)
-//
 
 TEST test_lores_with_80col() {
     BOOT_TO_DOS();
@@ -278,11 +278,15 @@ TEST test_lores_with_80col() {
     c_debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
-#if !CONFORMANT_TRACKS
-    ASSERT_SHA("7B642FF04DE03142A2CE1062C28A4D92E492EDDC");
-#endif
 
-    WAIT_FOR_FB_SHA("09C732B37F9E482C8CBE38DA97C99EE640EB8913");
+    if (test_color_mode == COLOR_MODE_BW) {
+        WAIT_FOR_FB_SHA("DED166782E9C529B6D7DB2EEBFF5877AD49C4C1F");
+    } else {
+#if !CONFORMANT_TRACKS
+        ASSERT_SHA("7B642FF04DE03142A2CE1062C28A4D92E492EDDC");
+#endif
+        WAIT_FOR_FB_SHA("09C732B37F9E482C8CBE38DA97C99EE640EB8913");
+    }
 
     PASS();
 }
@@ -296,10 +300,33 @@ TEST test_lores_with_40col() {
     c_debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
-    ASSERT_SHA_OLD("D7DC78F5718B4CF8716614E79ADABCAB919FCE5D");
 
-    WAIT_FOR_FB_SHA("36287232F7FD4574AA5E05F1C6CACB598C9C2903");
-    ASSERT_SHA     ("36287232F7FD4574AA5E05F1C6CACB598C9C2903"); // stable through next frame
+    if (test_color_mode == COLOR_MODE_BW) {
+        WAIT_FOR_FB_SHA("270B44B639E062B1DC7C2EB2E561051130F5F790");
+    } else {
+        ASSERT_SHA_OLD("D7DC78F5718B4CF8716614E79ADABCAB919FCE5D");
+        WAIT_FOR_FB_SHA("36287232F7FD4574AA5E05F1C6CACB598C9C2903");
+        ASSERT_SHA     ("36287232F7FD4574AA5E05F1C6CACB598C9C2903"); // stable through next frame
+    }
+
+    PASS();
+}
+
+TEST test_lores_with_40col_2() {
+    BOOT_TO_DOS();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
+
+    test_type_input("RUNTESTLORES_2\r");
+    c_debugger_go();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+
+    if (test_color_mode == COLOR_MODE_BW) {
+        WAIT_FOR_FB_SHA("A3D5F5DF7A2DF15DDDF7E82F83B756827CD142D3");
+    } else {
+        WAIT_FOR_FB_SHA("D7CC29D2030230258FAFF3772C8F9AD2B318D190");
+    }
 
     PASS();
 }
@@ -313,11 +340,15 @@ TEST test_lores_40colmix_normal() {
     c_debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
-#if !CONFORMANT_TRACKS
-    ASSERT_SHA("9097A6AE967E4501B40C7CD7EEE115B8C478B345");
-#endif
 
-    WAIT_FOR_FB_SHA("B460804F69A416D78462818493933BA2FFEB70C8");
+    if (test_color_mode == COLOR_MODE_BW) {
+        WAIT_FOR_FB_SHA("373799861AFCA845826C27571D2FFF7F1CB69BD6");
+    } else {
+#if !CONFORMANT_TRACKS
+        ASSERT_SHA("9097A6AE967E4501B40C7CD7EEE115B8C478B345");
+#endif
+        WAIT_FOR_FB_SHA("B460804F69A416D78462818493933BA2FFEB70C8");
+    }
 
     PASS();
 }
@@ -331,10 +362,14 @@ TEST test_lores_40colmix_inverse() {
     c_debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
-    ASSERT_SHA_OLD("5256E8B96CB04F48324B587ECCCF8A435077B5DE");
 
-    WAIT_FOR_FB_SHA("C2ADD78885B65F7D2FA84F999B06CB32D25EF8A0");
-    ASSERT_SHA     ("C2ADD78885B65F7D2FA84F999B06CB32D25EF8A0"); // stable through next frame
+    if (test_color_mode == COLOR_MODE_BW) {
+        WAIT_FOR_FB_SHA("F9F4757BB751AD47D975D45DC75B3C93C9F2C6C8");
+    } else {
+        ASSERT_SHA_OLD("5256E8B96CB04F48324B587ECCCF8A435077B5DE");
+        WAIT_FOR_FB_SHA("C2ADD78885B65F7D2FA84F999B06CB32D25EF8A0");
+        ASSERT_SHA     ("C2ADD78885B65F7D2FA84F999B06CB32D25EF8A0"); // stable through next frame
+    }
 
     PASS();
 }
@@ -348,10 +383,14 @@ TEST test_lores_80colmix_normal() {
     c_debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
-    ASSERT_SHA_OLD("9D5D5382B0A18A71DC135CAD51BEA2665ADB5FB2");
 
-    WAIT_FOR_FB_SHA("610E61D466AAE88CF694B3E1029D3D4C28D1D820");
-    ASSERT_SHA     ("610E61D466AAE88CF694B3E1029D3D4C28D1D820"); // stable through next frame
+    if (test_color_mode == COLOR_MODE_BW) {
+        WAIT_FOR_FB_SHA("DD2A3A05EA38652A86D144FFB5BD98CB24A82FF6");
+    } else {
+        ASSERT_SHA_OLD("9D5D5382B0A18A71DC135CAD51BEA2665ADB5FB2");
+        WAIT_FOR_FB_SHA("610E61D466AAE88CF694B3E1029D3D4C28D1D820");
+        ASSERT_SHA     ("610E61D466AAE88CF694B3E1029D3D4C28D1D820"); // stable through next frame
+    }
 
     PASS();
 }
@@ -365,10 +404,14 @@ TEST test_lores_80colmix_inverse() {
     c_debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
-    ASSERT_SHA_OLD("7936E87BE1F920AACD43268DB288746528E89959");
 
-    WAIT_FOR_FB_SHA("CBAEE8961F20079BF45CD197878F1111A6E89E26");
-    ASSERT_SHA     ("CBAEE8961F20079BF45CD197878F1111A6E89E26"); // stable through next frame
+    if (test_color_mode == COLOR_MODE_BW) {
+        WAIT_FOR_FB_SHA("0D51D6A375820FE36E4D95127F0E7A8F71495F4A");
+    } else {
+        ASSERT_SHA_OLD("7936E87BE1F920AACD43268DB288746528E89959");
+        WAIT_FOR_FB_SHA("CBAEE8961F20079BF45CD197878F1111A6E89E26");
+        ASSERT_SHA     ("CBAEE8961F20079BF45CD197878F1111A6E89E26"); // stable through next frame
+    }
 
     PASS();
 }
@@ -376,9 +419,9 @@ TEST test_lores_80colmix_inverse() {
 // ----------------------------------------------------------------------------
 // HIRES
 //
-// NOTE : These tests assume standard color mode (not b/w or interpolated)
-//
+
 #define MOIRE_SHA "1A5DD96B7E3538C2C3625A37653E013E3998F825"
+#define MOIRE_SHA_BW "DCB2BADC290A9E0A1DF0DEC45D3A653A40AF8B6B"
 
 TEST test_hires_with_80col() {
     BOOT_TO_DOS();
@@ -389,7 +432,12 @@ TEST test_hires_with_80col() {
     c_debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
-    ASSERT_SHA(MOIRE_SHA);
+
+    if (test_color_mode == COLOR_MODE_BW) {
+        ASSERT_SHA(MOIRE_SHA_BW);
+    } else {
+        ASSERT_SHA(MOIRE_SHA);
+    }
 
     PASS();
 }
@@ -402,7 +450,12 @@ TEST test_hires_with_40col() {
     c_debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
-    ASSERT_SHA(MOIRE_SHA);
+
+    if (test_color_mode == COLOR_MODE_BW) {
+        ASSERT_SHA(MOIRE_SHA_BW);
+    } else {
+        ASSERT_SHA(MOIRE_SHA);
+    }
 
     PASS();
 }
@@ -416,11 +469,11 @@ TEST test_hires_with_40col_page2() {
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
 
-    // FIXME TODO ... pump CPU until frame complete a few times ... should check All The SHAs here ...
-    display_waitForNextCompleteFramebuffer();
-    display_waitForNextCompleteFramebuffer();
-
-    ASSERT_SHA(MOIRE_SHA);
+    if (test_color_mode == COLOR_MODE_BW) {
+        WAIT_FOR_FB_SHA(MOIRE_SHA_BW);
+    } else {
+        WAIT_FOR_FB_SHA(MOIRE_SHA);
+    }
 
     PASS();
 }
@@ -433,7 +486,12 @@ TEST test_hires_40colmix_normal() {
     c_debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
-    ASSERT_SHA("37F41F74EB23F8812498F732E6DA34A0EBC4D68A");
+
+    if (test_color_mode == COLOR_MODE_BW) {
+        ASSERT_SHA("9611721C0F70C5F1FE0172534EC15B977CB099D4");
+    } else {
+        ASSERT_SHA("37F41F74EB23F8812498F732E6DA34A0EBC4D68A");
+    }
 
     PASS();
 }
@@ -446,7 +504,12 @@ TEST test_hires_40colmix_inverse() {
     c_debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
-    ASSERT_SHA("253D1823F5DAC0300B46B3D49C04CD59CC70076F");
+
+    if (test_color_mode == COLOR_MODE_BW) {
+        ASSERT_SHA("5CFA5789735AD09FAB8CC7B6EE44CE22CF64A70D");
+    } else {
+        ASSERT_SHA("253D1823F5DAC0300B46B3D49C04CD59CC70076F");
+    }
 
     PASS();
 }
@@ -459,7 +522,12 @@ TEST test_hires_80colmix_normal() {
     c_debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
-    WAIT_FOR_FB_SHA("8D02F9A7CFC7A7E6D836B01862389F55E877E4E6");
+
+    if (test_color_mode == COLOR_MODE_BW) {
+        WAIT_FOR_FB_SHA("4069102016E4E6AA860A32C6BAC5E4A6C6A45B72");
+    } else {
+        WAIT_FOR_FB_SHA("8D02F9A7CFC7A7E6D836B01862389F55E877E4E6");
+    }
 
     PASS();
 }
@@ -472,14 +540,22 @@ TEST test_hires_80colmix_inverse() {
     c_debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
-#if !CONFORMANT_TRACKS
-    ASSERT_SHA("FAFBB65013DA3D5173487C3F434C36A7C04DE92E");
-#endif
 
-    WAIT_FOR_FB_SHA("30C0329061781FD1BFE214940F9D5EDFA5FA5F08");
+    if (test_color_mode == COLOR_MODE_BW) {
+        WAIT_FOR_FB_SHA("C3C19FB3258E7A58F81BC3DC51C2AEDFFC836285");
+    } else {
+#if !CONFORMANT_TRACKS
+        ASSERT_SHA("FAFBB65013DA3D5173487C3F434C36A7C04DE92E");
+#endif
+        WAIT_FOR_FB_SHA("30C0329061781FD1BFE214940F9D5EDFA5FA5F08");
+    }
 
     PASS();
 }
+
+// ----------------------------------------------------------------------------
+// 80LORES & 80HIRES
+//
 
 TEST test_80col_lores() {
     BOOT_TO_DOS();
@@ -489,7 +565,30 @@ TEST test_80col_lores() {
     c_debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
-    ASSERT_SHA("5BFF6721FB90B3A6AF88D9021A013C007C4AF23A");
+
+    if (test_color_mode == COLOR_MODE_BW) {
+        ASSERT_SHA("D8238DC3ACC1A0E191CEC06F505A159993C2EBFA");
+    } else {
+        ASSERT_SHA("5BFF6721FB90B3A6AF88D9021A013C007C4AF23A");
+    }
+
+    PASS();
+}
+
+TEST test_80col_lores_2() {
+    BOOT_TO_DOS();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
+    test_type_input("RUN TESTLORES80_2\r");
+    c_debugger_go();
+
+    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
+
+    if (test_color_mode == COLOR_MODE_BW) {
+        ASSERT_SHA("5B99DE77F81AD8718FCFB735215A37F7B5ED5DE7");
+    } else {
+        ASSERT_SHA("98BB7C04854594D9E709302EF29905D2A89F1D34");
+    }
 
     PASS();
 }
@@ -502,13 +601,12 @@ TEST test_80col_hires() {
     c_debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
-    ASSERT_SHA("B48F940B1566607E2557A50B98C6C87FFF0C05B2");
 
-    apple_ii_64k[0][WATCHPOINT_ADDR] = 0x00;
-    c_debugger_go();
-
-    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
-    ASSERT_SHA("3BDFD6B009C090789D968AA7F928579EA31CBE3D");
+    if (test_color_mode == COLOR_MODE_BW) {
+        ASSERT_SHA("647F3A377513486121C7609E3F53E97DC6FC456D");
+    } else {
+        ASSERT_SHA("919EBCBABEA57E932F84E9864B2C35F57F8909B4");
+    }
 
     PASS();
 }
@@ -520,6 +618,18 @@ GREATEST_SUITE(test_suite_display) {
     pthread_mutex_lock(&interface_mutex);
 
     test_thread_running = true;
+
+    typedef struct parms_t {
+        color_mode_t mode;
+        bool doReboot;
+    } parms_t;
+    static parms_t parmsArray[] = {
+        { COLOR_MODE_COLOR, true },
+        { COLOR_MODE_COLOR, false },
+        { COLOR_MODE_BW, true },
+        { COLOR_MODE_BW, false },
+    };
+    unsigned int count = sizeof(parmsArray)/sizeof(parmsArray[0]);
 
     GREATEST_SET_SETUP_CB(testdisplay_setup, NULL);
     GREATEST_SET_TEARDOWN_CB(testdisplay_teardown, NULL);
@@ -534,11 +644,6 @@ GREATEST_SUITE(test_suite_display) {
 #endif
 
     // text modes
-    RUN_TESTp(test_40col_normal);
-    test_do_reboot = false;
-    RUN_TESTp(test_40col_normal);
-    test_do_reboot = true;
-
     RUN_TESTp(test_40col_normal);
     test_do_reboot = false;
     RUN_TESTp(test_40col_normal);
@@ -561,76 +666,104 @@ GREATEST_SUITE(test_suite_display) {
 
     // lores
 
-    RUN_TEST(test_lores_with_80col);
-    test_do_reboot = false;
-    RUN_TEST(test_lores_with_80col);
-    test_do_reboot = true;
+    for (unsigned int i=0; i<count; i++) {
+        test_do_reboot = parmsArray[i].doReboot;
+        test_color_mode = parmsArray[i].mode;
+        RUN_TEST(test_lores_with_80col);
+    }
 
-    RUN_TEST(test_lores_with_40col);
-    test_do_reboot = false;
-    RUN_TEST(test_lores_with_40col);
-    test_do_reboot = true;
+    for (unsigned int i=0; i<count; i++) {
+        test_do_reboot = parmsArray[i].doReboot;
+        test_color_mode = parmsArray[i].mode;
+        RUN_TEST(test_lores_with_40col);
+    }
 
-    RUN_TEST(test_lores_40colmix_normal);
-    test_do_reboot = false;
-    RUN_TEST(test_lores_40colmix_normal);
-    test_do_reboot = true;
+    for (unsigned int i=0; i<count; i++) {
+        test_do_reboot = parmsArray[i].doReboot;
+        test_color_mode = parmsArray[i].mode;
+        RUN_TEST(test_lores_with_40col_2);
+    }
 
-    RUN_TEST(test_lores_40colmix_inverse);
-    test_do_reboot = false;
-    RUN_TEST(test_lores_40colmix_inverse);
-    test_do_reboot = true;
+    for (unsigned int i=0; i<count; i++) {
+        test_do_reboot = parmsArray[i].doReboot;
+        test_color_mode = parmsArray[i].mode;
+        RUN_TEST(test_lores_40colmix_normal);
+    }
 
-    RUN_TEST(test_lores_80colmix_normal);
-    test_do_reboot = false;
-    RUN_TEST(test_lores_80colmix_normal);
-    test_do_reboot = true;
+    for (unsigned int i=0; i<count; i++) {
+        test_do_reboot = parmsArray[i].doReboot;
+        test_color_mode = parmsArray[i].mode;
+        RUN_TEST(test_lores_40colmix_inverse);
+    }
 
-    RUN_TEST(test_lores_80colmix_inverse);
-    test_do_reboot = false;
-    RUN_TEST(test_lores_80colmix_inverse);
-    test_do_reboot = true;
+    for (unsigned int i=0; i<count; i++) {
+        test_do_reboot = parmsArray[i].doReboot;
+        test_color_mode = parmsArray[i].mode;
+        RUN_TEST(test_lores_80colmix_normal);
+    }
+
+    for (unsigned int i=0; i<count; i++) {
+        test_do_reboot = parmsArray[i].doReboot;
+        test_color_mode = parmsArray[i].mode;
+        RUN_TEST(test_lores_80colmix_inverse);
+    }
 
     // hires
 
-    RUN_TESTp(test_hires_with_80col);
-    test_do_reboot = false;
-    RUN_TESTp(test_hires_with_80col);
-    test_do_reboot = true;
+    for (unsigned int i=0; i<count; i++) {
+        test_do_reboot = parmsArray[i].doReboot;
+        test_color_mode = parmsArray[i].mode;
+        RUN_TEST(test_hires_with_80col);
+    }
 
-    RUN_TEST(test_hires_with_40col);
-    test_do_reboot = false;
-    RUN_TEST(test_hires_with_40col);
-    test_do_reboot = true;
+    for (unsigned int i=0; i<count; i++) {
+        test_do_reboot = parmsArray[i].doReboot;
+        test_color_mode = parmsArray[i].mode;
+        RUN_TEST(test_hires_with_40col);
+    }
 
-    RUN_TEST(test_hires_with_40col_page2);
-    test_do_reboot = false;
-    RUN_TEST(test_hires_with_40col_page2);
-    test_do_reboot = true;
+    for (unsigned int i=0; i<count; i++) {
+        test_do_reboot = parmsArray[i].doReboot;
+        test_color_mode = parmsArray[i].mode;
+        RUN_TEST(test_hires_with_40col_page2);
+    }
 
-    RUN_TEST(test_hires_40colmix_normal);
-    test_do_reboot = false;
-    RUN_TEST(test_hires_40colmix_normal);
-    test_do_reboot = true;
+    for (unsigned int i=0; i<count; i++) {
+        test_do_reboot = parmsArray[i].doReboot;
+        test_color_mode = parmsArray[i].mode;
+        RUN_TEST(test_hires_40colmix_normal);
+    }
 
-    RUN_TEST(test_hires_40colmix_inverse);
-    test_do_reboot = false;
-    RUN_TEST(test_hires_40colmix_inverse);
-    test_do_reboot = true;
+    for (unsigned int i=0; i<count; i++) {
+        test_do_reboot = parmsArray[i].doReboot;
+        test_color_mode = parmsArray[i].mode;
+        RUN_TEST(test_hires_40colmix_inverse);
+    }
 
-    RUN_TESTp(test_hires_80colmix_normal);
-    test_do_reboot = false;
-    RUN_TESTp(test_hires_80colmix_normal);
-    test_do_reboot = true;
+    for (unsigned int i=0; i<count; i++) {
+        test_do_reboot = parmsArray[i].doReboot;
+        test_color_mode = parmsArray[i].mode;
+        RUN_TEST(test_hires_80colmix_normal);
+    }
 
-    RUN_TESTp(test_hires_80colmix_inverse);
-    test_do_reboot = false;
-    RUN_TESTp(test_hires_80colmix_inverse);
-    test_do_reboot = true;
+    for (unsigned int i=0; i<count; i++) {
+        test_do_reboot = parmsArray[i].doReboot;
+        test_color_mode = parmsArray[i].mode;
+        RUN_TEST(test_hires_80colmix_inverse);
+    }
 
     // double-lo/hi
 
     RUN_TEST(test_80col_lores);
+    test_color_mode = COLOR_MODE_BW;
+    RUN_TEST(test_80col_lores);
+
+    RUN_TEST(test_80col_lores_2);
+    test_color_mode = COLOR_MODE_BW;
+    RUN_TEST(test_80col_lores_2);
+
+    RUN_TEST(test_80col_hires);
+    test_color_mode = COLOR_MODE_BW;
     RUN_TEST(test_80col_hires);
 
     // ...
@@ -660,8 +793,6 @@ static void *test_thread(void *dummyptr) {
 void test_display(int _argc, char **_argv) {
     test_argc = _argc;
     test_argv = _argv;
-
-    srandom(time(NULL));
 
     test_common_init();
 

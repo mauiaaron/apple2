@@ -46,23 +46,17 @@ void sha1_to_str(const uint8_t * const md, char *buf);
 static inline bool _matchFramebufferSHA(const char *SHA_STR, bool is_old) {
     uint8_t md[SHA_DIGEST_LENGTH];
 
-    bool matches = false;
-    for (unsigned int i=0; i<2; i++) { // HACK: pump for at least 2 video frames to accommodate testing loading state
-        uint8_t *fb = NULL;
-        if (is_old) {
-            extern uint8_t *display_renderStagingFramebuffer(void);
-            fb = display_renderStagingFramebuffer();
-        } else {
-            fb = display_waitForNextCompleteFramebuffer();
-        }
-        SHA1(fb, SCANWIDTH*SCANHEIGHT, md);
-
-        sha1_to_str(md, mdstr);
-        matches = strcasecmp(mdstr, SHA_STR) == 0;
-        if (matches) {
-            break;
-        }
+    uint8_t *fb = NULL;
+    if (is_old) {
+        extern uint8_t *display_renderStagingFramebuffer(void);
+        fb = display_renderStagingFramebuffer();
+    } else {
+        fb = display_waitForNextCompleteFramebuffer();
     }
+    SHA1(fb, SCANWIDTH*SCANHEIGHT, md);
+
+    sha1_to_str(md, mdstr);
+    bool matches = strcasecmp(mdstr, SHA_STR) == 0;
 
     return matches;
 }
