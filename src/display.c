@@ -1046,7 +1046,7 @@ static void _plot_hires40_scanline(scan_data_t *scandata) {
                 }
             }
 
-            if (color_mode == COLOR_MODE_BW) {
+            if (color_mode == COLOR_MODE_INTERP) {
                 uint8_t *interp_base = NULL;
                 uint8_t *interp_altbase = NULL;
                 if (is_even) {
