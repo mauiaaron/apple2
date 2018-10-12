@@ -717,7 +717,7 @@ GLUE_C_READ(disk6_ioRead)
 GLUE_C_WRITE(disk6_ioWrite)
 {
     uint8_t sw = ea & 0xf;
-    if (sw < 0x7) {   // C0E0 - C0E7
+    if (sw <= 0x7) {  // C0E0 - C0E7
         _disk6_phaseChange(ea);
     } else {
         switch (sw) {
