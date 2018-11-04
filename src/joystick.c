@@ -20,7 +20,7 @@
 extern void copy_and_pad_string(char *dest, const char* src, const char c, const int len, const char cap);
 #endif
 
-joystick_mode_t joy_mode = JOY_PCJOY;
+joystick_mode_t joy_mode = JOY_MODE_DEFAULT;
 
 /* parameters for generic and keyboard-simulated joysticks */
 uint16_t joy_x = HALF_JOY_RANGE;
@@ -37,8 +37,15 @@ void (*joydriver_resetJoystick)(void) = NULL;
 static void joystick_prefsChanged(const char *domain) {
     assert(strcmp(domain, PREF_DOMAIN_JOYSTICK) == 0);
 
-#ifdef KEYPAD_JOYSTICK
     long lVal = 0;
+
+    if (prefs_parseLongValue(domain, PREF_JOYSTICK_MODE, &lVal, /*base:*/10)) {
+        joy_mode = getJoyMode(lVal);
+    }
+
+    prefs_parseBoolValue(domain, PREF_JOYSTICK_CLIP_TO_RADIUS, &joy_clip_to_radius);
+
+#ifdef KEYPAD_JOYSTICK
     prefs_parseLongValue(domain, PREF_JOYSTICK_KPAD_STEP, &lVal, /*base:*/10);
     joy_step = (short)lVal;
     if (joy_step < 1) {

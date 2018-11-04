@@ -24,6 +24,14 @@ typedef enum joystick_mode_t {
     NUM_JOYOPTS
 } joystick_mode_t;
 
+#define JOY_MODE_DEFAULT JOY_PCJOY
+static inline joystick_mode_t getJoyMode(long lVal) {
+    if (lVal < 0 || lVal >= NUM_JOYOPTS) {
+        lVal = JOY_MODE_DEFAULT;
+    }
+    return (joystick_mode_t)lVal;
+}
+
 extern joystick_mode_t joy_mode;
 
 extern uint16_t joy_x;

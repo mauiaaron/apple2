@@ -45,6 +45,7 @@
 #define PREF_JOYSTICK_KPAD_AUTO_RECENTER "kpAutoRecenter"
 #define PREF_JOYSTICK_KPAD_STEP "kpStep"
 #define PREF_JOYSTICK_MODE "joystickMode"
+#define PREF_JOYSTICK_CLIP_TO_RADIUS "clipToRadius"
 // joystick (touchscreen)
 #define PREF_AXIS_ON_LEFT "axisIsOnLeft"
 #define PREF_AXIS_SENSITIVITY "axisSensitivity"
