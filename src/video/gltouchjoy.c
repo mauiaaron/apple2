@@ -296,7 +296,7 @@ static void _setup_axis_hud(GLModel *parent) {
         hudElement->tplHeight = AXIS_TEMPLATE_ROWS;
         memcpy(hudElement->tpl, axisTemplate, size);
 
-        hudElement->pixels = CALLOC(AXIS_FB_WIDTH * AXIS_FB_HEIGHT, 1);
+        hudElement->pixels = CALLOC(AXIS_FB_WIDTH * AXIS_FB_HEIGHT * PIXEL_STRIDE, 1);
         hudElement->pixWidth = AXIS_FB_WIDTH;
         hudElement->pixHeight = AXIS_FB_HEIGHT;
     }
@@ -347,7 +347,7 @@ static void _setup_button_hud(GLModel *parent) {
         hudElement->tplHeight = BUTTON_TEMPLATE_ROWS;
         memcpy(hudElement->tpl, buttonTemplate, size);
 
-        hudElement->pixels = CALLOC(BUTTON_FB_WIDTH * BUTTON_FB_HEIGHT, 1);
+        hudElement->pixels = CALLOC(BUTTON_FB_WIDTH * BUTTON_FB_HEIGHT * PIXEL_STRIDE, 1);
         hudElement->pixWidth = BUTTON_FB_WIDTH;
         hudElement->pixHeight = BUTTON_FB_HEIGHT;
     }

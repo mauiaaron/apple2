@@ -92,11 +92,8 @@ static void _alertToModel(char *message, unsigned int messageCols, unsigned int 
         hudElement->tpl = message;
         hudElement->pixWidth = fbWidth;
         hudElement->pixHeight = fbHeight;
-        hudElement->pixels = MALLOC(fbWidth * fbHeight);
-        if (!hudElement->pixels) {
-            LOG("OOPS cannot create animation message intermediate framebuffer!");
-            break;
-        }
+        hudElement->pixels = MALLOC(fbWidth * fbHeight * PIXEL_STRIDE);
+        assert(hudElement->pixels);
         glhud_setupDefault(messageModel);
 
         if (1) {

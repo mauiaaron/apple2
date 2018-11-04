@@ -208,7 +208,7 @@ public class Apple2Preferences {
                     switch (key) {
 
                         case "HIRES_COLOR": // long
-                            menuEnum = Apple2VideoSettingsMenu.SETTINGS.COLOR_CONFIGURE;
+                            menuEnum = Apple2VideoSettingsMenu.SETTINGS.COLOR_MODE_CONFIGURE;
                             break;
                         case "LANDSCAPE_MODE": // bool
                             menuEnum = Apple2VideoSettingsMenu.SETTINGS.LANDSCAPE_MODE;

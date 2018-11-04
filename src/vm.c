@@ -1130,9 +1130,6 @@ static void _initialize_tables(void) {
     }
 
     // initialize first text & hires page, which are specially bank switched
-    //
-    // display_reset() below substitutes it's own hooks for all visible write locations affect the display, leaving our
-    // write-functions in place only at the `screen holes', hence the name.
     for (unsigned int i = 0x400; i < 0x800; i++) {
         cpu65_vmem_r[i] = iie_read_ram_text_page0;
         cpu65_vmem_w[i] = video__write_2e_text0;
@@ -1141,6 +1138,34 @@ static void _initialize_tables(void) {
     for (unsigned int i = 0x2000; i < 0x4000; i++) {
         cpu65_vmem_r[i] = iie_read_ram_hires_page0;
         cpu65_vmem_w[i] = video__write_2e_hgr0;
+    }
+
+    // initialize text/lores & hires graphics routines
+    for (unsigned int y = 0; y < TEXT_ROWS; y++) {
+        uint16_t row = display_getVideoLineOffset(y);
+        for (unsigned int x = 0; x < TEXT_COLS; x++) {
+            unsigned int idx = row + x;
+            // text/lores pages
+            if (y < 20) {
+                cpu65_vmem_w[idx+0x400] = video__write_2e_text0;
+                cpu65_vmem_w[idx+0x800] = video__write_2e_text1;
+            } else {
+                cpu65_vmem_w[idx+0x400] = video__write_2e_text0_mixed;
+                cpu65_vmem_w[idx+0x800] = video__write_2e_text1_mixed;
+            }
+
+            // hires/dhires pages
+            for (unsigned int i = 0; i < 8; i++) {
+                idx = row + (0x400*i) + x;
+                if (y < 20) {
+                    cpu65_vmem_w[idx+0x2000] = video__write_2e_hgr0;
+                    cpu65_vmem_w[idx+0x4000] = video__write_2e_hgr1;
+                } else {
+                    cpu65_vmem_w[idx+0x2000] = video__write_2e_hgr0_mixed;
+                    cpu65_vmem_w[idx+0x4000] = video__write_2e_hgr1_mixed;
+                }
+            }
+        }
     }
 
     // softswich rom
@@ -1296,8 +1321,6 @@ static void _initialize_tables(void) {
     for (unsigned int i = 0xC800; i < 0xD000; i++) {
         cpu65_vmem_r[i] = iie_read_slot_expansion;
     }
-
-    display_reset();
 
     // Peripheral card slot initializations ...
 

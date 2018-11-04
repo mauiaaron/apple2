@@ -162,8 +162,8 @@
     <string name="touch_menu_enable_summary">Aktiviere Softmenü Knöpfe in den oberen Ecken des Bildschirms</string>
     <string name="video_configure">Video-Konfiguration…</string>
     <string name="video_configure_summary">Farbeinstellungen</string>
-    <string name="color_configure">Configure color</string>
-    <string name="color_configure_summary">Color mode</string>
+    <string name="color_configure">Display mode</string>
+    <string name="color_configure_summary">Video display emulation mode</string>
     <string name="joystick_azimuth_visible">Show joystick/keypad heading</string>
     <string name="joystick_azimuth_visible_summary">Shows current axis direction and magnitude</string>
     <string name="mode_landscape">Landscape</string>
@@ -188,5 +188,13 @@
     <string name="color_green_on_black">Green on black</string>
     <string name="color_blue_on_black">Blue on black</string>
     <string name="color_white_on_black">White on black</string>
+    <string name="color_monitor">Color Monitor</string>
+    <string name="color_tv_mono">Monochrome TV</string>
+    <string name="color_tv">Color TV</string>
+    <string name="show_half_scanlines">Show half scanlines</string>
+    <string name="mono_configure">Monocolor mode</string>
+    <string name="mono_configure_summary">Configure monochrome color</string>
+    <string name="color_green">Green screen</string>
+    <string name="color_mono">Monochrome</string>
 
 </resources>

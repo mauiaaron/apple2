@@ -21,6 +21,7 @@ APPLE2_VIDEO_SRC = \
     $(APPLE2_SRC_PATH)/video/gltouchkbd.c \
     $(APPLE2_SRC_PATH)/video/gltouchmenu.c \
     $(APPLE2_SRC_PATH)/video/glvideo.c \
+    $(APPLE2_SRC_PATH)/video/ntsc.c \
     $(APPLE2_SRC_PATH)/video/video.c \
     $(APPLE2_SRC_PATH)/video_util/matrixUtil.c \
     $(APPLE2_SRC_PATH)/video_util/modelUtil.c \

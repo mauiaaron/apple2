@@ -134,9 +134,8 @@ void *glhud_createDefault(void) {
 void *glhud_createCustom(unsigned int sizeofModel) {
     assert(sizeof(GLModelHUDElement) <= sizeofModel);
     GLModelHUDElement *hudElement = (GLModelHUDElement *)CALLOC(sizeofModel, 1);
-    if (hudElement) {
-        hudElement->glyphMultiplier = 1;
-    }
+    assert(hudElement);
+    hudElement->glyphMultiplier = 1;
     return hudElement;
 }
 
@@ -150,7 +149,7 @@ void glhud_setupDefault(GLModel *parent) {
     char *submenu = (char *)(hudElement->tpl);
     const unsigned int cols = hudElement->tplWidth;
     const unsigned int rows = hudElement->tplHeight;
-    uint8_t *fb = hudElement->pixels;
+    PIXEL_TYPE *fb = hudElement->pixels;
 
     // render template into indexed fb
     interface_plotMessage(fb, hudElement->colorScheme, submenu, cols, rows);
@@ -173,14 +172,11 @@ void glhud_setupDefault(GLModel *parent) {
 #endif
         for (unsigned int i=0; i<fb_h; i++, texIdx+=texSubRowStride) {
             for (unsigned int j=0; j<fb_w; j++, srcIdx++, texIdx+=dstPointStride) {
-                uint8_t value = *(fb + srcIdx);
-                PIXEL_TYPE rgba = (((PIXEL_TYPE)(colormap[value].red)   << SHIFT_R) |
-                                   ((PIXEL_TYPE)(colormap[value].green) << SHIFT_G) |
-                                   ((PIXEL_TYPE)(colormap[value].blue)  << SHIFT_B));
+                PIXEL_TYPE rgba = fb[srcIdx] & RGB_MASK;
                 if (rgba == 0 && hudElement->blackIsTransparent) {
                     // black remains transparent
                 } else {
-                    rgba |=        ((PIXEL_TYPE)MAX_SATURATION          << SHIFT_A);
+                    rgba |= ((PIXEL_TYPE)MAX_SATURATION << SHIFT_A);
                 }
 
                 // scale glyph data 1x, 2x, ...
@@ -208,10 +204,7 @@ void glhud_setupDefault(GLModel *parent) {
 #endif
         for (unsigned int i=0; i<fb_h; i++, texIdx+=texSubRowStride) {
             for (unsigned int j=0; j<fb_w; j++, srcIdx++, texIdx+=dstPointStride) {
-                uint8_t value = *(fb + srcIdx);
-                PIXEL_TYPE rgb = (((PIXEL_TYPE)(colormap[value].red)   << SHIFT_R) |
-                                  ((PIXEL_TYPE)(colormap[value].green) << SHIFT_G) |
-                                  ((PIXEL_TYPE)(colormap[value].blue)  << SHIFT_B));
+                PIXEL_TYPE rgb = fb[srcIdx] & RGB_MASK;
 
                 unsigned int dstIdx = texIdx;
 

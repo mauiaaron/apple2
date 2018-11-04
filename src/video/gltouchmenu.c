@@ -390,7 +390,7 @@ static void *_create_touchmenu_hud(GLModel *parent) {
 
     const unsigned int size = sizeof(topMenuTemplate);
     hudMenu->tpl = CALLOC(size, 1);
-    hudMenu->pixels = CALLOC(MENU_FB_WIDTH * MENU_FB_HEIGHT, 1);
+    hudMenu->pixels = CALLOC(MENU_FB_WIDTH * MENU_FB_HEIGHT * PIXEL_STRIDE, 1);
 
     _present_menu(parent);
 

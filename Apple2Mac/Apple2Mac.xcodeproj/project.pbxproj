@@ -129,6 +129,20 @@
 		4A4B676D1DB47682005028A6 /* Apple2iOSTestUI-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 4A4B676B1DB47682005028A6 /* Apple2iOSTestUI-Info.plist */; };
 		4A4B676E1DB488B9005028A6 /* testui.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A8A405C1D85CF1B00B460B0 /* testui.c */; };
 		4A4B676F1DB488BE005028A6 /* testtrace.c in Sources */ = {isa = PBXBuildFile; fileRef = 935C55751C136F0D0013166D /* testtrace.c */; };
+		4A589F782157E72B0026A73A /* ntsc.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A589F722157E72B0026A73A /* ntsc.c */; };
+		4A589F792157E72B0026A73A /* ntsc.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A589F722157E72B0026A73A /* ntsc.c */; };
+		4A589F7A2157E72B0026A73A /* ntsc.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A589F722157E72B0026A73A /* ntsc.c */; };
+		4A589F7B2157E72B0026A73A /* ntsc.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A589F722157E72B0026A73A /* ntsc.c */; };
+		4A589F7C2157E72B0026A73A /* ntsc.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A589F722157E72B0026A73A /* ntsc.c */; };
+		4A589F7D2157E72B0026A73A /* ntsc.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A589F722157E72B0026A73A /* ntsc.c */; };
+		4A589F7E2157E72B0026A73A /* ntsc.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A589F722157E72B0026A73A /* ntsc.c */; };
+		4A589F7F2157E72B0026A73A /* ntsc.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A589F722157E72B0026A73A /* ntsc.c */; };
+		4A589F802157E72B0026A73A /* ntsc.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A589F722157E72B0026A73A /* ntsc.c */; };
+		4A589F812157E72B0026A73A /* ntsc.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A589F722157E72B0026A73A /* ntsc.c */; };
+		4A589F822157E72B0026A73A /* ntsc.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A589F722157E72B0026A73A /* ntsc.c */; };
+		4A589F832157E72B0026A73A /* ntsc.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A589F722157E72B0026A73A /* ntsc.c */; };
+		4A589F842157E72B0026A73A /* ntsc.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A589F722157E72B0026A73A /* ntsc.c */; };
+		4A589F85215831560026A73A /* ntsc.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A589F722157E72B0026A73A /* ntsc.c */; };
 		4A609CB31D725D4C0066AF38 /* external-disks in Resources */ = {isa = PBXBuildFile; fileRef = 4A609CB21D725D4C0066AF38 /* external-disks */; };
 		4A6746721D848B51006520C2 /* external-disks in Resources */ = {isa = PBXBuildFile; fileRef = 4A609CB21D725D4C0066AF38 /* external-disks */; };
 		4A69C1921A33DB90001579EF /* DDHidLib.framework in Copy Files (1 item) */ = {isa = PBXBuildFile; fileRef = 77C2796F1A1047AF000FE33F /* DDHidLib.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -943,11 +957,13 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		4A0DEA9B216135BD000A2615 /* ntsc.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ntsc.h; sourceTree = "<group>"; };
 		4A2636F819FDEDB700DBFB00 /* Apple2Mac.help */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Apple2Mac.help; sourceTree = "<group>"; };
 		4A4B671E1DB4723F005028A6 /* Apple2iOSTestTrace.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Apple2iOSTestTrace.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		4A4B67681DB47560005028A6 /* Apple2iOSTestUI.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Apple2iOSTestUI.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		4A4B676A1DB47682005028A6 /* Apple2iOSTestTrace-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "Apple2iOSTestTrace-Info.plist"; sourceTree = "<group>"; };
 		4A4B676B1DB47682005028A6 /* Apple2iOSTestUI-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "Apple2iOSTestUI-Info.plist"; sourceTree = "<group>"; };
+		4A589F722157E72B0026A73A /* ntsc.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ntsc.c; sourceTree = "<group>"; };
 		4A609CB21D725D4C0066AF38 /* external-disks */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "external-disks"; path = "../external-disks"; sourceTree = "<group>"; };
 		4A7EDC911AE092680072E98A /* glhudmodel.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = glhudmodel.c; sourceTree = "<group>"; };
 		4A7EDC921AE092680072E98A /* glnode.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = glnode.c; sourceTree = "<group>"; };
@@ -1542,6 +1558,8 @@
 		773B3D8A19568A570085CE5F /* video */ = {
 			isa = PBXGroup;
 			children = (
+				4A0DEA9B216135BD000A2615 /* ntsc.h */,
+				4A589F722157E72B0026A73A /* ntsc.c */,
 				4AEDCEF5209E9D3F0090B44F /* glinput.h */,
 				4AEDCEF6209E9D3F0090B44F /* glutinput.c */,
 				4AEDCEF4209E9D3F0090B44F /* ncvideo.c */,
@@ -2777,6 +2795,7 @@
 				4A4B66E01DB4723F005028A6 /* A2IXPopupChoreographer.m in Sources */,
 				4A4B676F1DB488BE005028A6 /* testtrace.c in Sources */,
 				4A4B66E11DB4723F005028A6 /* gltouchjoy_kpad.c in Sources */,
+				4A589F822157E72B0026A73A /* ntsc.c in Sources */,
 				4A4B66E21DB4723F005028A6 /* gltouchjoy.c in Sources */,
 				4A4B66E31DB4723F005028A6 /* soundcore.c in Sources */,
 				4A4B66E41DB4723F005028A6 /* soundcore-openal.c in Sources */,
@@ -2836,6 +2855,7 @@
 				4A4B672A1DB47560005028A6 /* A2IXPopupChoreographer.m in Sources */,
 				4A4B672B1DB47560005028A6 /* gltouchjoy_kpad.c in Sources */,
 				4A4B672C1DB47560005028A6 /* gltouchjoy.c in Sources */,
+				4A589F832157E72B0026A73A /* ntsc.c in Sources */,
 				4A4B672D1DB47560005028A6 /* soundcore.c in Sources */,
 				4A4B672E1DB47560005028A6 /* soundcore-openal.c in Sources */,
 				4A4B672F1DB47560005028A6 /* opcodes.c in Sources */,
@@ -2892,6 +2912,7 @@
 				4A8A401D1D85CEEE00B460B0 /* prefs.c in Sources */,
 				4A8A401E1D85CEEE00B460B0 /* display.c in Sources */,
 				4A8F5D181F6A1FEC00AE37B5 /* video.c in Sources */,
+				4A589F7C2157E72B0026A73A /* ntsc.c in Sources */,
 				4A8A401F1D85CEEE00B460B0 /* EmulatorGLView.m in Sources */,
 				4A8A40201D85CEEE00B460B0 /* disk.c in Sources */,
 				4A8A40211D85CEEE00B460B0 /* sha1.c in Sources */,
@@ -2943,6 +2964,7 @@
 				4ABDA9941D792E8C0086A35B /* prefs.c in Sources */,
 				4ABDA9951D792E8C0086A35B /* display.c in Sources */,
 				4A8F5D171F6A1FEB00AE37B5 /* video.c in Sources */,
+				4A589F7B2157E72B0026A73A /* ntsc.c in Sources */,
 				4ABDA9961D792E8C0086A35B /* EmulatorGLView.m in Sources */,
 				4ABDA9971D792E8C0086A35B /* disk.c in Sources */,
 				4ABDA9981D792E8C0086A35B /* sha1.c in Sources */,
@@ -2997,6 +3019,7 @@
 				4ACD73271D20A83E00123DE6 /* A2IXPopupChoreographer.m in Sources */,
 				4ACD73281D20A83E00123DE6 /* gltouchjoy_kpad.c in Sources */,
 				4ACD73291D20A83E00123DE6 /* gltouchjoy.c in Sources */,
+				4A589F7F2157E72B0026A73A /* ntsc.c in Sources */,
 				4ACD732A1D20A83E00123DE6 /* soundcore.c in Sources */,
 				4ACD732B1D20A83E00123DE6 /* soundcore-openal.c in Sources */,
 				4ACD732C1D20A83E00123DE6 /* opcodes.c in Sources */,
@@ -3056,6 +3079,7 @@
 				4ACD73751D20AB6A00123DE6 /* gltouchjoy_joy.c in Sources */,
 				4ACD73761D20AB6A00123DE6 /* A2IXPopupChoreographer.m in Sources */,
 				4ACD73771D20AB6A00123DE6 /* gltouchjoy_kpad.c in Sources */,
+				4A589F842157E72B0026A73A /* ntsc.c in Sources */,
 				4ACD73781D20AB6A00123DE6 /* gltouchjoy.c in Sources */,
 				4ACD73791D20AB6A00123DE6 /* soundcore.c in Sources */,
 				4ACD737A1D20AB6A00123DE6 /* soundcore-openal.c in Sources */,
@@ -3115,6 +3139,7 @@
 				4ACD73C71D20B11D00123DE6 /* A2IXPopupChoreographer.m in Sources */,
 				4ACD73C81D20B11D00123DE6 /* gltouchjoy_kpad.c in Sources */,
 				4ACD73C91D20B11D00123DE6 /* gltouchjoy.c in Sources */,
+				4A589F802157E72B0026A73A /* ntsc.c in Sources */,
 				4ACD73CA1D20B11D00123DE6 /* soundcore.c in Sources */,
 				4ACD73CB1D20B11D00123DE6 /* soundcore-openal.c in Sources */,
 				4ACD73CC1D20B11D00123DE6 /* opcodes.c in Sources */,
@@ -3174,6 +3199,7 @@
 				4ACD742D1D26210600123DE6 /* A2IXPopupChoreographer.m in Sources */,
 				4ACD742E1D26210600123DE6 /* gltouchjoy_kpad.c in Sources */,
 				4ACD742F1D26210600123DE6 /* gltouchjoy.c in Sources */,
+				4A589F812157E72B0026A73A /* ntsc.c in Sources */,
 				4ACD74301D26210600123DE6 /* soundcore.c in Sources */,
 				4ACD74311D26210600123DE6 /* soundcore-openal.c in Sources */,
 				4ACD74321D26210600123DE6 /* opcodes.c in Sources */,
@@ -3230,6 +3256,7 @@
 				4AD4FE951A52464F00F958EC /* prefs.c in Sources */,
 				4AD4FE961A52464F00F958EC /* display.c in Sources */,
 				4A8F5D151F6A1FEA00AE37B5 /* video.c in Sources */,
+				4A589F792157E72B0026A73A /* ntsc.c in Sources */,
 				4AA2D7E51D202A5B0054A5FF /* EmulatorGLView.m in Sources */,
 				4AD4FE971A52464F00F958EC /* disk.c in Sources */,
 				4AFC170C1AAE9C3200B215FA /* sha1.c in Sources */,
@@ -3281,6 +3308,7 @@
 				4ADC51FF19E8CA4500186B36 /* prefs.c in Sources */,
 				4ADC520019E8CA4500186B36 /* display.c in Sources */,
 				4A8F5D191F6A1FED00AE37B5 /* video.c in Sources */,
+				4A589F7D2157E72B0026A73A /* ntsc.c in Sources */,
 				4AA2D7E61D202A5C0054A5FF /* EmulatorGLView.m in Sources */,
 				4ADC520119E8CA4500186B36 /* disk.c in Sources */,
 				4AFC170E1AAE9C3200B215FA /* sha1.c in Sources */,
@@ -3351,6 +3379,7 @@
 				773B3DAD19568A570085CE5F /* debugger.c in Sources */,
 				77E1C0B319D72700004344E0 /* vectorUtil.c in Sources */,
 				4A7EDC9E1AE092B80072E98A /* interface.c in Sources */,
+				4A589F85215831560026A73A /* ntsc.c in Sources */,
 				773B3DAB19568A570085CE5F /* keys.c in Sources */,
 				773B3DBC19568A570085CE5F /* timing.c in Sources */,
 				773BC91A19F31E7B00996893 /* prefs.c in Sources */,
@@ -3399,6 +3428,7 @@
 				779DD830195BD9F900DF89E5 /* prefs.c in Sources */,
 				779DD831195BD9F900DF89E5 /* display.c in Sources */,
 				4A8F5D141F6A1FE900AE37B5 /* video.c in Sources */,
+				4A589F782157E72B0026A73A /* ntsc.c in Sources */,
 				4AA2D7EC1D202BFA0054A5FF /* EmulatorGLView.m in Sources */,
 				779DD832195BD9F900DF89E5 /* disk.c in Sources */,
 				4AFC170B1AAE9C3200B215FA /* sha1.c in Sources */,
@@ -3450,6 +3480,7 @@
 				779F566519EB0B9100A6F107 /* prefs.c in Sources */,
 				779F566619EB0B9100A6F107 /* display.c in Sources */,
 				4A8F5D161F6A1FEB00AE37B5 /* video.c in Sources */,
+				4A589F7A2157E72B0026A73A /* ntsc.c in Sources */,
 				4AA2D7E71D202A5D0054A5FF /* EmulatorGLView.m in Sources */,
 				779F566719EB0B9100A6F107 /* disk.c in Sources */,
 				4AFC170D1AAE9C3200B215FA /* sha1.c in Sources */,
@@ -3510,6 +3541,7 @@
 				935C55631C136E070013166D /* prefs.c in Sources */,
 				935C55731C136E6F0013166D /* json_parse.c in Sources */,
 				935C55641C136E070013166D /* rom-shim.c in Sources */,
+				4A589F7E2157E72B0026A73A /* ntsc.c in Sources */,
 				935C55651C136E070013166D /* timing.c in Sources */,
 				4A8F5D271F6A202100AE37B5 /* memmngt.c in Sources */,
 				935C55661C136E070013166D /* glalert.c in Sources */,

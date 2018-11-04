@@ -279,7 +279,7 @@ TEST test_lores_with_80col() {
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
 
-    if (test_color_mode == COLOR_MODE_BW) {
+    if (test_color_mode == COLOR_MODE_MONO) {
         WAIT_FOR_FB_SHA("DED166782E9C529B6D7DB2EEBFF5877AD49C4C1F");
     } else {
 #if !CONFORMANT_TRACKS
@@ -301,7 +301,7 @@ TEST test_lores_with_40col() {
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
 
-    if (test_color_mode == COLOR_MODE_BW) {
+    if (test_color_mode == COLOR_MODE_MONO) {
         WAIT_FOR_FB_SHA("270B44B639E062B1DC7C2EB2E561051130F5F790");
     } else {
         ASSERT_SHA_OLD("D7DC78F5718B4CF8716614E79ADABCAB919FCE5D");
@@ -322,7 +322,7 @@ TEST test_lores_with_40col_2() {
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
 
-    if (test_color_mode == COLOR_MODE_BW) {
+    if (test_color_mode == COLOR_MODE_MONO) {
         WAIT_FOR_FB_SHA("A3D5F5DF7A2DF15DDDF7E82F83B756827CD142D3");
     } else {
         WAIT_FOR_FB_SHA("D7CC29D2030230258FAFF3772C8F9AD2B318D190");
@@ -341,7 +341,7 @@ TEST test_lores_40colmix_normal() {
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
 
-    if (test_color_mode == COLOR_MODE_BW) {
+    if (test_color_mode == COLOR_MODE_MONO) {
         WAIT_FOR_FB_SHA("373799861AFCA845826C27571D2FFF7F1CB69BD6");
     } else {
 #if !CONFORMANT_TRACKS
@@ -363,7 +363,7 @@ TEST test_lores_40colmix_inverse() {
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
 
-    if (test_color_mode == COLOR_MODE_BW) {
+    if (test_color_mode == COLOR_MODE_MONO) {
         WAIT_FOR_FB_SHA("F9F4757BB751AD47D975D45DC75B3C93C9F2C6C8");
     } else {
         ASSERT_SHA_OLD("5256E8B96CB04F48324B587ECCCF8A435077B5DE");
@@ -384,7 +384,7 @@ TEST test_lores_80colmix_normal() {
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
 
-    if (test_color_mode == COLOR_MODE_BW) {
+    if (test_color_mode == COLOR_MODE_MONO) {
         WAIT_FOR_FB_SHA("DD2A3A05EA38652A86D144FFB5BD98CB24A82FF6");
     } else {
         ASSERT_SHA_OLD("9D5D5382B0A18A71DC135CAD51BEA2665ADB5FB2");
@@ -405,7 +405,7 @@ TEST test_lores_80colmix_inverse() {
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
 
-    if (test_color_mode == COLOR_MODE_BW) {
+    if (test_color_mode == COLOR_MODE_MONO) {
         WAIT_FOR_FB_SHA("0D51D6A375820FE36E4D95127F0E7A8F71495F4A");
     } else {
         ASSERT_SHA_OLD("7936E87BE1F920AACD43268DB288746528E89959");
@@ -433,7 +433,7 @@ TEST test_hires_with_80col() {
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
 
-    if (test_color_mode == COLOR_MODE_BW) {
+    if (test_color_mode == COLOR_MODE_MONO) {
         ASSERT_SHA(MOIRE_SHA_BW);
     } else {
         ASSERT_SHA(MOIRE_SHA);
@@ -451,7 +451,7 @@ TEST test_hires_with_40col() {
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
 
-    if (test_color_mode == COLOR_MODE_BW) {
+    if (test_color_mode == COLOR_MODE_MONO) {
         ASSERT_SHA(MOIRE_SHA_BW);
     } else {
         ASSERT_SHA(MOIRE_SHA);
@@ -469,7 +469,7 @@ TEST test_hires_with_40col_page2() {
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
 
-    if (test_color_mode == COLOR_MODE_BW) {
+    if (test_color_mode == COLOR_MODE_MONO) {
         WAIT_FOR_FB_SHA(MOIRE_SHA_BW);
     } else {
         WAIT_FOR_FB_SHA(MOIRE_SHA);
@@ -487,7 +487,7 @@ TEST test_hires_40colmix_normal() {
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
 
-    if (test_color_mode == COLOR_MODE_BW) {
+    if (test_color_mode == COLOR_MODE_MONO) {
         ASSERT_SHA("9611721C0F70C5F1FE0172534EC15B977CB099D4");
     } else {
         ASSERT_SHA("37F41F74EB23F8812498F732E6DA34A0EBC4D68A");
@@ -505,7 +505,7 @@ TEST test_hires_40colmix_inverse() {
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
 
-    if (test_color_mode == COLOR_MODE_BW) {
+    if (test_color_mode == COLOR_MODE_MONO) {
         ASSERT_SHA("5CFA5789735AD09FAB8CC7B6EE44CE22CF64A70D");
     } else {
         ASSERT_SHA("253D1823F5DAC0300B46B3D49C04CD59CC70076F");
@@ -523,7 +523,7 @@ TEST test_hires_80colmix_normal() {
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
 
-    if (test_color_mode == COLOR_MODE_BW) {
+    if (test_color_mode == COLOR_MODE_MONO) {
         WAIT_FOR_FB_SHA("4069102016E4E6AA860A32C6BAC5E4A6C6A45B72");
     } else {
         WAIT_FOR_FB_SHA("8D02F9A7CFC7A7E6D836B01862389F55E877E4E6");
@@ -541,7 +541,7 @@ TEST test_hires_80colmix_inverse() {
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
 
-    if (test_color_mode == COLOR_MODE_BW) {
+    if (test_color_mode == COLOR_MODE_MONO) {
         WAIT_FOR_FB_SHA("C3C19FB3258E7A58F81BC3DC51C2AEDFFC836285");
     } else {
 #if !CONFORMANT_TRACKS
@@ -566,7 +566,7 @@ TEST test_80col_lores() {
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
 
-    if (test_color_mode == COLOR_MODE_BW) {
+    if (test_color_mode == COLOR_MODE_MONO) {
         ASSERT_SHA("D8238DC3ACC1A0E191CEC06F505A159993C2EBFA");
     } else {
         ASSERT_SHA("5BFF6721FB90B3A6AF88D9021A013C007C4AF23A");
@@ -584,7 +584,7 @@ TEST test_80col_lores_2() {
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
 
-    if (test_color_mode == COLOR_MODE_BW) {
+    if (test_color_mode == COLOR_MODE_MONO) {
         ASSERT_SHA("5B99DE77F81AD8718FCFB735215A37F7B5ED5DE7");
     } else {
         ASSERT_SHA("98BB7C04854594D9E709302EF29905D2A89F1D34");
@@ -602,7 +602,7 @@ TEST test_80col_hires() {
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
 
-    if (test_color_mode == COLOR_MODE_BW) {
+    if (test_color_mode == COLOR_MODE_MONO) {
         ASSERT_SHA("647F3A377513486121C7609E3F53E97DC6FC456D");
     } else {
         ASSERT_SHA("919EBCBABEA57E932F84E9864B2C35F57F8909B4");
@@ -626,8 +626,8 @@ GREATEST_SUITE(test_suite_display) {
     static parms_t parmsArray[] = {
         { COLOR_MODE_COLOR, true },
         { COLOR_MODE_COLOR, false },
-        { COLOR_MODE_BW, true },
-        { COLOR_MODE_BW, false },
+        { COLOR_MODE_MONO, true },
+        { COLOR_MODE_MONO, false },
     };
     unsigned int count = sizeof(parmsArray)/sizeof(parmsArray[0]);
 
@@ -755,15 +755,15 @@ GREATEST_SUITE(test_suite_display) {
     // double-lo/hi
 
     RUN_TEST(test_80col_lores);
-    test_color_mode = COLOR_MODE_BW;
+    test_color_mode = COLOR_MODE_MONO;
     RUN_TEST(test_80col_lores);
 
     RUN_TEST(test_80col_lores_2);
-    test_color_mode = COLOR_MODE_BW;
+    test_color_mode = COLOR_MODE_MONO;
     RUN_TEST(test_80col_lores_2);
 
     RUN_TEST(test_80col_hires);
-    test_color_mode = COLOR_MODE_BW;
+    test_color_mode = COLOR_MODE_MONO;
     RUN_TEST(test_80col_hires);
 
     // ...

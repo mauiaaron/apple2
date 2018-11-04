@@ -15,18 +15,6 @@
 #import "EmulatorWindowController.h"
 #import "common.h"
 
-#define kApple2SavedPrefs @"kApple2SavedPrefs"
-#define kApple2CPUSpeed @"kApple2CPUSpeed"
-#define kApple2CPUSpeedIsMax @"kApple2CPUSpeedIsMax"
-#define kApple2AltSpeed @"kApple2AltSpeed"
-#define kApple2AltSpeedIsMax @"kApple2AltSpeedIsMax"
-#define kApple2SoundcardConfig @"kApple2SoundcardConfig"
-#define kApple2ColorConfig @"kApple2ColorConfig"
-#define kApple2JoystickConfig @"kApple2JoystickConfig"
-#define kApple2JoystickAutoRecenter @"kApple2JoystickAutoRecenter"
-#define kApple2JoystickClipToRadius @"kApple2JoystickClipToRadius"
-#define kApple2JoystickStep @"kApple2JoystickStep"
-
 @interface EmulatorPrefsController ()
 
 @property (assign) IBOutlet NSSlider *cpuSlider;
@@ -39,6 +27,8 @@
 @property (assign) IBOutlet NSMatrix *soundCardChoice;
 
 @property (assign) IBOutlet NSPopUpButton *colorChoice;
+@property (assign) IBOutlet NSPopUpButton *monochromeColorChoice;
+@property (assign) IBOutlet NSButton *scanlinesChoice;
 
 @property (assign) IBOutlet NSPopUpButton *joystickChoice;
 @property (assign) IBOutlet NSButton *joystickRecenter;
@@ -53,34 +43,44 @@
 @property (assign) IBOutlet NSTextField *button1Pressed;
 @property (assign) IBOutlet EmulatorJoystickCalibrationView *joystickCalibrationView;
 
+- (void)loadPrefsForDomain:(const char *)domain;
+
 @end
+
+static EmulatorPrefsController *prefsInstance = nil;
+
+static void prefsChangeCallback(const char *domain)
+{
+    (void)domain;
+    assert(prefsInstance);
+    [prefsInstance loadPrefsForDomain:domain];
+}
 
 @implementation EmulatorPrefsController
 
 - (void)awakeFromNib
 {
-    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-    BOOL firstTime = ![defaults boolForKey:kApple2SavedPrefs];
-    if (firstTime)
-    {
-        [defaults setBool:YES forKey:kApple2SavedPrefs];
-        [defaults setDouble:1.0 forKey:kApple2CPUSpeed];
-        [defaults setDouble:CPU_SCALE_SLOWEST forKey:kApple2AltSpeed];
-        [defaults setBool:NO forKey:kApple2CPUSpeedIsMax];
-        [defaults setBool:NO forKey:kApple2AltSpeedIsMax];
-        [defaults setInteger:COLOR_MODE_INTERP forKey:kApple2ColorConfig];
-        [defaults setInteger:JOY_KPAD forKey:kApple2JoystickConfig];
-        [defaults setBool:YES forKey:kApple2JoystickAutoRecenter];
-        [defaults removeObjectForKey:kApple2PrefStartupDiskA];
-        [defaults removeObjectForKey:kApple2PrefStartupDiskB];
-    }
-    
-    cpu_scale_factor = [defaults doubleForKey:kApple2CPUSpeed];
+    assert(!prefsInstance);
+    prefsInstance = self;
+
+    prefs_registerListener(PREF_DOMAIN_AUDIO, prefsChangeCallback);
+    prefs_registerListener(PREF_DOMAIN_INTERFACE, prefsChangeCallback);
+    prefs_registerListener(PREF_DOMAIN_JOYSTICK, prefsChangeCallback);
+    prefs_registerListener(PREF_DOMAIN_KEYBOARD, prefsChangeCallback);
+    //prefs_registerListener(PREF_DOMAIN_TOUCHSCREEN, prefsChangeCallback);
+    prefs_registerListener(PREF_DOMAIN_VIDEO, prefsChangeCallback);
+    prefs_registerListener(PREF_DOMAIN_VM, prefsChangeCallback);
+
+    [self _setupJoystickUI];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(drawJoystickCalibration:) name:(NSString *)kDrawTimerNotification object:nil];
+}
+
+- (void)loadPrefsForDomain:(const char *)domain
+{
     [self.cpuSlider setDoubleValue:cpu_scale_factor];
     [self.cpuSliderLabel setStringValue:[NSString stringWithFormat:@"%.0f%%", cpu_scale_factor*100]];
-    if ([defaults boolForKey:kApple2CPUSpeedIsMax])
+    if (cpu_scale_factor == CPU_SCALE_FASTEST)
     {
-        cpu_scale_factor = CPU_SCALE_FASTEST;
         [self.cpuMaxChoice setState:NSOnState];
         [self.cpuSlider setEnabled:NO];
     }
@@ -90,12 +90,10 @@
         [self.cpuSlider setEnabled:YES];
     }
     
-    cpu_altscale_factor = [defaults doubleForKey:kApple2AltSpeed];
     [self.altSlider setDoubleValue:cpu_altscale_factor];
     [self.altSliderLabel setStringValue:[NSString stringWithFormat:@"%.0f%%", cpu_altscale_factor*100]];
-    if ([defaults boolForKey:kApple2AltSpeedIsMax])
+    if (cpu_altscale_factor == CPU_SCALE_FASTEST)
     {
-        cpu_altscale_factor = CPU_SCALE_FASTEST;
         [self.altMaxChoice setState:NSOnState];
         [self.altSlider setEnabled:NO];
     }
@@ -108,46 +106,21 @@
 #warning TODO : actually implement sound card choices
     [self.soundCardChoice deselectAllCells];
     [self.soundCardChoice selectCellAtRow:1 column:0];
-    
-    NSInteger mode = [defaults integerForKey:kApple2ColorConfig];
-    if (! ((mode >= COLOR_MODE_BW) && (mode < NUM_COLOROPTS)) )
-    {
-        mode = COLOR_MODE_BW;
-    }
-    [self.colorChoice selectItemAtIndex:mode];
-    prefs_setLongValue(PREF_DOMAIN_VIDEO, PREF_COLOR_MODE, (color_mode_t)mode);
-    prefs_sync(PREF_DOMAIN_VIDEO);
 
-    mode = [defaults integerForKey:kApple2JoystickConfig];
-    if (! ((mode >= JOY_PCJOY) && (mode < NUM_JOYOPTS)) )
-    {
-        mode = JOY_PCJOY;
-    }
-    joy_mode = (joystick_mode_t)mode;
-    [self.joystickChoice selectItemAtIndex:mode];
+    long lVal = 0;
+    NSInteger mode = prefs_parseLongValue(domain, PREF_COLOR_MODE, &lVal, /*base:*/10) ? getColorMode(lVal) : COLOR_MODE_DEFAULT;
+    [self.colorChoice selectItemAtIndex:mode];
+
+    [self.joystickChoice selectItemAtIndex:(NSInteger)joy_mode];
     
 #ifdef KEYPAD_JOYSTICK
-    bool autoRecenter = [defaults integerForKey:kApple2JoystickAutoRecenter];
-    [self.joystickRecenter setState:autoRecenter ? NSOnState : NSOffState];
-    prefs_setBoolValue(PREF_DOMAIN_JOYSTICK, PREF_JOYSTICK_KPAD_AUTO_RECENTER, autoRecenter);
-    
-    long joyStep = [defaults integerForKey:kApple2JoystickStep];
-    if (!joyStep)
-    {
-        joyStep = 1;
-    }
-    [self.joystickStepLabel setIntegerValue:joyStep];
-    [self.joystickStepper setIntegerValue:joyStep];
-    prefs_setLongValue(PREF_DOMAIN_JOYSTICK, PREF_JOYSTICK_KPAD_STEP, joyStep);
-    
-    prefs_sync(PREF_DOMAIN_JOYSTICK);
+    [self.joystickRecenter setState:joy_auto_recenter ? NSOnState : NSOffState];
+
+    [self.joystickStepLabel setIntegerValue:joy_step];
+    [self.joystickStepper setIntegerValue:joy_step];
 #endif
     
-    joy_clip_to_radius = [defaults boolForKey:kApple2JoystickClipToRadius];
     [self.joystickClipToRadius setState:joy_clip_to_radius ? NSOnState : NSOffState];
-    
-    [self _setupJoystickUI];
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(drawJoystickCalibration:) name:(NSString *)kDrawTimerNotification object:nil];
 }
 
 - (void)dealloc
@@ -156,49 +129,23 @@
     [super dealloc];
 }
 
-- (void)_savePrefs
-{
-    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-    [defaults setBool:YES forKey:kApple2SavedPrefs];
-    [defaults setDouble:cpu_scale_factor forKey:kApple2CPUSpeed];
-    [defaults setDouble:cpu_altscale_factor forKey:kApple2AltSpeed];
-    [defaults setBool:([self.cpuMaxChoice state] == NSOnState) forKey:kApple2CPUSpeedIsMax];
-    [defaults setBool:([self.altMaxChoice state] == NSOnState) forKey:kApple2AltSpeedIsMax];
-    
-    long lVal = 0;
-    color_mode_t mode = prefs_parseLongValue(PREF_DOMAIN_VIDEO, PREF_COLOR_MODE, &lVal, /*base:*/10) ? (color_mode_t)lVal : COLOR_MODE_INTERP;
-    [defaults setInteger:mode forKey:kApple2ColorConfig];
-    [defaults setInteger:joy_mode forKey:kApple2JoystickConfig];
-    
-    long joyStep = prefs_parseLongValue(PREF_DOMAIN_JOYSTICK, PREF_JOYSTICK_KPAD_STEP, &lVal, /*base:*/10) ? lVal : 1;
-    [defaults setInteger:joyStep forKey:kApple2JoystickStep];
-    
-    bool bVal = false;
-    bool autoRecenter = prefs_parseBoolValue(PREF_DOMAIN_JOYSTICK, PREF_JOYSTICK_KPAD_AUTO_RECENTER, &bVal) ? bVal : true;
-    [defaults setBool:autoRecenter forKey:kApple2JoystickAutoRecenter];
-    [defaults setBool:joy_clip_to_radius forKey:kApple2JoystickClipToRadius];
-    
-    prefs_sync(PREF_DOMAIN_JOYSTICK);
-}
-
 - (IBAction)sliderDidMove:(id)sender
 {
     NSSlider *slider = (NSSlider *)sender;
     double value = [slider doubleValue];
     if (slider == self.cpuSlider)
     {
-        cpu_scale_factor = value;
+        prefs_setFloatValue(PREF_DOMAIN_VM, PREF_CPU_SCALE, value);
         [self.cpuSliderLabel setStringValue:[NSString stringWithFormat:@"%.0f%%", value*100]];
     }
     else
     {
-        cpu_altscale_factor = value;
+        prefs_setFloatValue(PREF_DOMAIN_VM, PREF_CPU_SCALE_ALT, value);
         [self.altSliderLabel setStringValue:[NSString stringWithFormat:@"%.0f%%", value*100]];
     }
     
-    timing_initialize();
-    
-    [self _savePrefs];
+    prefs_sync(PREF_DOMAIN_VM);
+    prefs_save();
 }
 
 - (IBAction)peggedChoiceChanged:(id)sender
@@ -207,32 +154,43 @@
     if (maxButton == self.cpuMaxChoice)
     {
         [self.cpuSlider setEnabled:([maxButton state] != NSOnState)];
-        cpu_scale_factor = ([maxButton state] == NSOnState) ? CPU_SCALE_FASTEST : [self.cpuSlider doubleValue];
+        double value = ([maxButton state] == NSOnState) ? CPU_SCALE_FASTEST : [self.cpuSlider doubleValue];
+        prefs_setFloatValue(PREF_DOMAIN_VM, PREF_CPU_SCALE, value);
     }
     else
     {
         [self.altSlider setEnabled:([maxButton state] != NSOnState)];
-        cpu_altscale_factor = ([maxButton state] == NSOnState) ? CPU_SCALE_FASTEST : [self.altSlider doubleValue];
+        double value = ([maxButton state] == NSOnState) ? CPU_SCALE_FASTEST : [self.altSlider doubleValue];
+        prefs_setFloatValue(PREF_DOMAIN_VM, PREF_CPU_SCALE_ALT, value);
     }
-    
-    timing_initialize();
 
-    [self _savePrefs];
+    prefs_sync(PREF_DOMAIN_VM);
+    prefs_save();
 }
 
 - (IBAction)colorChoiceChanged:(id)sender
 {
     NSInteger mode = [self.colorChoice indexOfSelectedItem];
-    if (! ((mode >= COLOR_MODE_BW) && (mode < NUM_COLOROPTS)) )
-    {
-        mode = COLOR_MODE_BW;
-    }
+    mode = getColorMode(mode);
     prefs_setLongValue(PREF_DOMAIN_VIDEO, PREF_COLOR_MODE, mode);
     prefs_sync(PREF_DOMAIN_VIDEO);
-    [self _savePrefs];
-    
-#warning HACK TODO FIXME need to refactor video resetting procedure
-    display_reset();
+    prefs_save();
+}
+
+- (IBAction)monochromeColorChoiceChanged:(id)sender {
+    NSInteger mode = [self.monochromeColorChoice indexOfSelectedItem];
+    mode = getMonoMode(mode);
+    prefs_setLongValue(PREF_DOMAIN_VIDEO, PREF_MONO_MODE, mode);
+    prefs_sync(PREF_DOMAIN_VIDEO);
+    prefs_save();
+}
+
+- (IBAction)scanlinesChoiceChanged:(id)sender
+{
+    NSControlStateValue state = [self.scanlinesChoice state];
+    prefs_setBoolValue(PREF_DOMAIN_VIDEO, PREF_SHOW_HALF_SCANLINES, state == NSControlStateValueOn);
+    prefs_sync(PREF_DOMAIN_VIDEO);
+    prefs_save();
 }
 
 - (IBAction)soundCardChoiceChanged:(id)sender
@@ -257,34 +215,35 @@
 - (IBAction)joystickChoiceChanged:(id)sender
 {
     NSInteger mode = [self.joystickChoice indexOfSelectedItem];
-    if (! ((mode >= JOY_PCJOY) && (mode < NUM_JOYOPTS)) )
-    {
-        mode = JOY_PCJOY;
-    }
-    joy_mode = (joystick_mode_t)mode;
-    [self _setupJoystickUI];
-    [self _savePrefs];
+    mode = getJoyMode(mode);
+    prefs_setLongValue(PREF_DOMAIN_JOYSTICK, PREF_JOYSTICK_MODE, mode);
+    prefs_sync(PREF_DOMAIN_JOYSTICK);
+    prefs_save();
 }
 
 - (IBAction)autoRecenterChoiceChanged:(id)sender
 {
     bool autoRecenter = ([self.joystickRecenter state] == NSOnState);
     prefs_setBoolValue(PREF_DOMAIN_JOYSTICK, PREF_JOYSTICK_KPAD_AUTO_RECENTER, autoRecenter);
-    [self _savePrefs];
+    prefs_sync(PREF_DOMAIN_JOYSTICK);
+    prefs_save();
 }
 
 - (IBAction)clipToRadiusChoiceChanged:(id)sender
 {
-    joy_clip_to_radius = ([self.joystickClipToRadius state] == NSOnState);
-    [self _savePrefs];
+    bool clipToRadius = ([self.joystickClipToRadius state] == NSOnState);
+    prefs_setBoolValue(PREF_DOMAIN_JOYSTICK, PREF_JOYSTICK_CLIP_TO_RADIUS, clipToRadius);
+    prefs_sync(PREF_DOMAIN_JOYSTICK);
+    prefs_save();
 }
 
 - (IBAction)stepValueChanged:(id)sender
 {
     long joyStep = [self.joystickStepper intValue];
     [self.joystickStepLabel setIntegerValue:joyStep];
-    prefs_setLongValue(PREF_DOMAIN_JOYSTICK, PREF_JOYSTICK_KPAD_AUTO_RECENTER, joyStep);
-    [self _savePrefs];
+    prefs_setLongValue(PREF_DOMAIN_JOYSTICK, PREF_JOYSTICK_KPAD_STEP, joyStep);
+    prefs_sync(PREF_DOMAIN_JOYSTICK);
+    prefs_save();
 }
 
 #pragma mark -

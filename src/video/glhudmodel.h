@@ -23,7 +23,7 @@
         unsigned int tplWidth;      /* template width */ \
         unsigned int tplHeight;     /* template height */ \
         \
-        uint8_t *pixels;            /* raw indexed data */ \
+        PIXEL_TYPE *pixels;         /* raw indexed data */ \
         unsigned int pixWidth;      /* FB width -- this is the same as GLModel.texWidth if glyphMultiplier is 1 */ \
         unsigned int pixHeight;     /* FB height -- this is the same as GLModel.texHeight if glyphMultiplier is 1 */ \
         unsigned int glyphMultiplier; \

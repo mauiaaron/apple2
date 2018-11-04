@@ -1,8 +1,9 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="10117" systemVersion="15G1004" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="14113" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
         <deployment version="1060" identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="10117"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="14113"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="NSApplication">
@@ -373,9 +374,10 @@ CA
                     </menu>
                 </menuItem>
             </items>
+            <point key="canvasLocation" x="-608" y="-1487"/>
         </menu>
         <window title="Apple2Mac" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" animationBehavior="default" id="371" userLabel="Window - Apple2Mac" customClass="EmulatorWindow">
-            <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES" unifiedTitleAndToolbar="YES"/>
+            <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
             <rect key="contentRect" x="200" y="200" width="568" height="384"/>
             <rect key="screenRect" x="0.0" y="0.0" width="1920" height="1178"/>
@@ -428,7 +430,7 @@ CA
                     <toolbarItem reference="85b-WO-tks"/>
                 </defaultToolbarItems>
             </toolbar>
-            <point key="canvasLocation" x="-308" y="-1288"/>
+            <point key="canvasLocation" x="-82" y="-1306"/>
         </window>
         <customObject id="494" userLabel="EmulatorGLView" customClass="EmulatorGLView"/>
         <customObject id="M8b-ga-iOS" customClass="EmulatorWindowController" colorLabel="IBBuiltInLabel-Blue">
@@ -472,6 +474,9 @@ CA
                         <buttonCell key="cell" type="push" title="Choose..." bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="nVq-kA-8RS">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                             <font key="font" metaFont="system"/>
+                            <string key="keyEquivalent" base64-UTF8="YES">
+DQ
+</string>
                         </buttonCell>
                         <connections>
                             <action selector="chooseDriveA:" target="FHO-g2-V3A" id="aXp-cp-feH"/>
@@ -613,19 +618,13 @@ CA
                             <action selector="startupDiskBChoiceChanged:" target="FHO-g2-V3A" id="tQS-5l-DDf"/>
                         </connections>
                     </button>
-                    <box verticalHuggingPriority="750" title="Box" boxType="separator" titlePosition="noTitle" id="7ZU-H6-jQn">
+                    <box verticalHuggingPriority="750" boxType="separator" id="7ZU-H6-jQn">
                         <rect key="frame" x="12" y="59" width="498" height="5"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <color key="borderColor" white="0.0" alpha="0.41999999999999998" colorSpace="calibratedWhite"/>
-                        <color key="fillColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
-                        <font key="titleFont" metaFont="system"/>
                     </box>
-                    <box horizontalHuggingPriority="750" title="Box" boxType="separator" titlePosition="noTitle" id="864-Ov-2tE">
+                    <box horizontalHuggingPriority="750" boxType="separator" id="864-Ov-2tE">
                         <rect key="frame" x="259" y="70" width="5" height="217"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <color key="borderColor" white="0.0" alpha="0.41999999999999998" colorSpace="calibratedWhite"/>
-                        <color key="fillColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
-                        <font key="titleFont" metaFont="system"/>
                     </box>
                     <button verticalHuggingPriority="750" id="tLd-IJ-Kjl">
                         <rect key="frame" x="338" y="13" width="85" height="32"/>
@@ -633,9 +632,6 @@ CA
                         <buttonCell key="cell" type="push" title="OK" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="mSV-MT-MmA">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                             <font key="font" metaFont="system"/>
-                            <string key="keyEquivalent" base64-UTF8="YES">
-DQ
-</string>
                         </buttonCell>
                         <connections>
                             <action selector="disksOK:" target="FHO-g2-V3A" id="8qD-fL-VNb"/>
@@ -643,7 +639,7 @@ DQ
                     </button>
                 </subviews>
             </view>
-            <point key="canvasLocation" x="-139" y="-901"/>
+            <point key="canvasLocation" x="-530" y="-867"/>
         </window>
         <customObject id="FHO-g2-V3A" customClass="EmulatorDiskController">
             <connections>
@@ -656,6 +652,7 @@ DQ
                 <outlet property="diskInA" destination="cb9-Pc-Ggd" id="chv-2S-Y2R"/>
                 <outlet property="diskInB" destination="5oU-oN-vUH" id="8fb-s5-EKa"/>
                 <outlet property="disksWindow" destination="RAk-at-ZT4" id="4wu-vw-EhL"/>
+                <outlet property="okButton" destination="tLd-IJ-Kjl" id="dvn-gG-jzv"/>
                 <outlet property="startupLoadDiskA" destination="Ur3-rW-YJG" id="re3-gT-qj3"/>
                 <outlet property="startupLoadDiskB" destination="Ceo-uO-cRu" id="V0B-0f-YZu"/>
             </connections>
@@ -736,12 +733,9 @@ DQ
                                                 <action selector="peggedChoiceChanged:" target="mUW-Rh-bL1" id="K2H-Vc-15h"/>
                                             </connections>
                                         </button>
-                                        <box verticalHuggingPriority="750" title="Box" boxType="separator" titlePosition="noTitle" id="9U0-v9-wTm">
+                                        <box verticalHuggingPriority="750" boxType="separator" id="9U0-v9-wTm">
                                             <rect key="frame" x="17" y="183" width="508" height="5"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                            <color key="borderColor" white="0.0" alpha="0.41999999999999998" colorSpace="calibratedWhite"/>
-                                            <color key="fillColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
-                                            <font key="titleFont" metaFont="system"/>
                                         </box>
                                         <slider verticalHuggingPriority="750" id="y10-Rm-oDB">
                                             <rect key="frame" x="15" y="115" width="404" height="27"/>
@@ -780,7 +774,7 @@ DQ
                                             </buttonCell>
                                             <cells>
                                                 <column>
-                                                    <buttonCell type="radio" title="No soundcard" imagePosition="left" alignment="left" enabled="NO" tag="1" inset="2" id="QsT-B1-n2t">
+                                                    <buttonCell type="radio" title="No soundcard" imagePosition="left" alignment="left" enabled="NO" state="on" tag="1" inset="2" id="QsT-B1-n2t">
                                                         <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                                         <font key="font" metaFont="system"/>
                                                     </buttonCell>
@@ -809,18 +803,27 @@ DQ
                                         <popUpButton verticalHuggingPriority="750" id="1sF-py-jCs">
                                             <rect key="frame" x="115" y="271" width="158" height="26"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                            <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" id="eVj-ax-48A">
+                                            <popUpButtonCell key="cell" type="push" title="Monochrome" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" selectedItem="PX0-X3-MxY" id="eVj-ax-48A">
                                                 <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
                                                 <font key="font" metaFont="menu"/>
                                                 <menu key="menu" id="gbp-xU-CmX">
                                                     <items>
-                                                        <menuItem title="Black/white" id="PX0-X3-MxY">
+                                                        <menuItem title="Monochrome" state="on" id="PX0-X3-MxY">
                                                             <modifierMask key="keyEquivalentModifierMask"/>
                                                         </menuItem>
                                                         <menuItem title="Color" id="TRN-Jh-rFc">
                                                             <modifierMask key="keyEquivalentModifierMask"/>
                                                         </menuItem>
                                                         <menuItem title="Interpolated" id="RgR-Oe-oo5">
+                                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                                        </menuItem>
+                                                        <menuItem title="Color Monitor" id="60c-9H-Yr8">
+                                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                                        </menuItem>
+                                                        <menuItem title="Monochrome TV" id="lQA-Eh-TKs">
+                                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                                        </menuItem>
+                                                        <menuItem title="Color TV" id="b41-R4-5E3">
                                                             <modifierMask key="keyEquivalentModifierMask"/>
                                                         </menuItem>
                                                     </items>
@@ -830,22 +833,8 @@ DQ
                                                 <action selector="colorChoiceChanged:" target="mUW-Rh-bL1" id="M58-28-Lmr"/>
                                             </connections>
                                         </popUpButton>
-                                        <slider verticalHuggingPriority="750" id="9FG-IJ-hYc">
-                                            <rect key="frame" x="115" y="229" width="404" height="27"/>
-                                            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                            <sliderCell key="cell" enabled="NO" state="on" alignment="left" maxValue="100" doubleValue="50" tickMarkPosition="below" numberOfTickMarks="5" sliderType="linear" id="Cma-o2-8gh"/>
-                                        </slider>
-                                        <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" id="RsU-77-Dkx">
-                                            <rect key="frame" x="15" y="241" width="96" height="17"/>
-                                            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                            <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Graphic Effects :" id="foK-d1-Lrb">
-                                                <font key="font" metaFont="system"/>
-                                                <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
-                                                <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
-                                            </textFieldCell>
-                                        </textField>
-                                        <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" id="dak-eg-hHn">
-                                            <rect key="frame" x="15" y="277" width="96" height="17"/>
+                                        <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" misplaced="YES" id="dak-eg-hHn">
+                                            <rect key="frame" x="15" y="276" width="96" height="17"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Color :" id="eHo-1T-edz">
                                                 <font key="font" metaFont="system"/>
@@ -853,6 +842,47 @@ DQ
                                                 <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                             </textFieldCell>
                                         </textField>
+                                        <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" misplaced="YES" id="rDh-8p-gf0">
+                                            <rect key="frame" x="15" y="245" width="96" height="17"/>
+                                            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                            <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Monochrome :" id="6zV-cm-vLN">
+                                                <font key="font" metaFont="system"/>
+                                                <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                                                <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                            </textFieldCell>
+                                        </textField>
+                                        <popUpButton verticalHuggingPriority="750" misplaced="YES" id="9bP-5g-S3a">
+                                            <rect key="frame" x="115" y="240" width="158" height="26"/>
+                                            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                            <popUpButtonCell key="cell" type="push" title="Black/white" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" selectedItem="7Nj-L6-N5K" id="UkC-75-g1J">
+                                                <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
+                                                <font key="font" metaFont="menu"/>
+                                                <menu key="menu" id="8h0-lQ-adO">
+                                                    <items>
+                                                        <menuItem title="Black/white" state="on" id="7Nj-L6-N5K">
+                                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                                        </menuItem>
+                                                        <menuItem title="Green Screen" id="8Mv-8d-hgV">
+                                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                                        </menuItem>
+                                                    </items>
+                                                </menu>
+                                            </popUpButtonCell>
+                                            <connections>
+                                                <action selector="monochromeColorChoiceChanged:" target="mUW-Rh-bL1" id="FIq-tn-pNv"/>
+                                            </connections>
+                                        </popUpButton>
+                                        <button verticalHuggingPriority="750" misplaced="YES" id="0Av-wg-y41">
+                                            <rect key="frame" x="115" y="219" width="142" height="18"/>
+                                            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                            <buttonCell key="cell" type="check" title="Show half scanlines" bezelStyle="regularSquare" imagePosition="left" inset="2" id="q9I-GX-oEP">
+                                                <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                                                <font key="font" metaFont="system"/>
+                                            </buttonCell>
+                                            <connections>
+                                                <action selector="scanlinesChoiceChanged:" target="mUW-Rh-bL1" id="7Uf-Tg-ALt"/>
+                                            </connections>
+                                        </button>
                                     </subviews>
                                 </view>
                             </tabViewItem>
@@ -861,12 +891,9 @@ DQ
                                     <rect key="frame" x="10" y="33" width="534" height="298"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
-                                        <box horizontalHuggingPriority="750" title="Box" boxType="separator" titlePosition="noTitle" id="Fkg-X3-0XG">
+                                        <box horizontalHuggingPriority="750" boxType="separator" id="Fkg-X3-0XG">
                                             <rect key="frame" x="265" y="9" width="5" height="286"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                            <color key="borderColor" white="0.0" alpha="0.41999999999999998" colorSpace="calibratedWhite"/>
-                                            <color key="fillColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
-                                            <font key="titleFont" metaFont="system"/>
                                         </box>
                                         <customView id="OWJ-x7-P0q" customClass="EmulatorJoystickCalibrationView">
                                             <rect key="frame" x="276" y="39" width="256" height="256"/>
@@ -1004,7 +1031,7 @@ DQ
                     </tabView>
                 </subviews>
             </view>
-            <point key="canvasLocation" x="-286" y="-1308"/>
+            <point key="canvasLocation" x="-576" y="-1238"/>
         </window>
         <customObject id="mUW-Rh-bL1" customClass="EmulatorPrefsController">
             <connections>
@@ -1026,18 +1053,20 @@ DQ
                 <outlet property="joystickStepLabel" destination="ea3-X4-r6a" id="JKX-kB-tcM"/>
                 <outlet property="joystickStepper" destination="BrH-bm-tx3" id="PmM-yE-XNH"/>
                 <outlet property="joystickStepperLabel" destination="e2h-SS-aex" id="I6X-YN-AmA"/>
+                <outlet property="monochromeColorChoice" destination="9bP-5g-S3a" id="dzI-JR-diH"/>
+                <outlet property="scanlinesChoice" destination="0Av-wg-y41" id="U1V-Re-wVs"/>
                 <outlet property="soundCardChoice" destination="3d5-Z5-xDN" id="uHI-Ip-s2E"/>
                 <outlet property="window" destination="Mzv-VG-jce" id="86q-Ys-9Mt"/>
             </connections>
         </customObject>
     </objects>
     <resources>
-        <image name="CPU" width="32" height="32"/>
-        <image name="Disks" width="32" height="32"/>
-        <image name="Fullscreen" width="32" height="32"/>
+        <image name="CPU" width="64" height="64"/>
+        <image name="Disks" width="64" height="64"/>
+        <image name="Fullscreen" width="64" height="64"/>
         <image name="NSUser" width="32" height="32"/>
-        <image name="Prefs" width="32" height="32"/>
+        <image name="Prefs" width="64" height="64"/>
         <image name="Reboot" width="32" height="32"/>
-        <image name="Stop" width="32" height="32"/>
+        <image name="Stop" width="64" height="64"/>
     </resources>
 </document>

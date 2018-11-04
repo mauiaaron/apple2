@@ -16,41 +16,9 @@
 #ifndef A2_INTERFACE_H
 #define A2_INTERFACE_H
 
+#include "display.h"
+
 #define INTERFACE_SCREEN_X 80
-
-typedef enum interface_colorscheme_t {
-    GREEN_ON_BLACK = 0,
-    GREEN_ON_BLUE,
-    RED_ON_BLACK,
-    BLUE_ON_BLACK,
-    WHITE_ON_BLACK,
-
-    // WARNING : changing here requires updating display.c ncvideo.c
-
-    BLACK_ON_RED,
-
-    // 16 COLORS -- ncvideo.c
-    BLACK_ON_BLACK,
-    BLACK_ON_MAGENTA,
-    BLACK_ON_DARKBLUE,
-    BLACK_ON_PURPLE,
-    BLACK_ON_DARKGREEN,
-    BLACK_ON_DARKGREY,
-    BLACK_ON_MEDBLUE,
-    BLACK_ON_LIGHTBLUE,
-    BLACK_ON_BROWN,
-    BLACK_ON_ORANGE,
-    BLACK_ON_LIGHTGREY,
-    BLACK_ON_PINK,
-    BLACK_ON_GREEN,
-    BLACK_ON_YELLOW,
-    BLACK_ON_AQUA,
-    BLACK_ON_WHITE,
-
-    NUM_INTERFACE_COLORSCHEMES,
-    COLOR16 = 0x80,
-    INVALID_COLORSCHEME = 0xFF,
-} interface_colorscheme_t;
 
 #if INTERFACE_CLASSIC
 void c_interface_begin(int current_key);
@@ -66,7 +34,7 @@ bool interface_isShowing(void);
 #endif
 
 // Plot message into pixel buffer
-void interface_plotMessage(uint8_t *fb, const interface_colorscheme_t cs, char *message, const uint8_t message_cols, const uint8_t message_rows);
+void interface_plotMessage(PIXEL_TYPE *fb, const interface_colorscheme_t cs, char *message, const uint8_t message_cols, const uint8_t message_rows);
 
 #if INTERFACE_TOUCH
 typedef enum interface_device_t {

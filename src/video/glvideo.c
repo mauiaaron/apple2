@@ -316,21 +316,10 @@ static void glvideo_render(void) {
 #endif
 
     unsigned long wasDirty = video_clearDirty(FB_DIRTY_FLAG);
-    char *pixels = (char *)crtModel->texPixels;
+    GLvoid *pixels = crtModel->texPixels;
     if (wasDirty) {
-        uint8_t *fb = display_getCurrentFramebuffer();
-        SCOPE_TRACE_VIDEO("pixel convert");
-        // Update texture from indexed-color Apple //e internal framebuffer
-        unsigned int count = SCANWIDTH * SCANHEIGHT;
-        for (unsigned int i=0, j=0; i<count; i++, j+=sizeof(PIXEL_TYPE)) {
-            uint8_t index = *(fb + i);
-            *( (PIXEL_TYPE*)(pixels + j) ) = (PIXEL_TYPE)(
-                                                      ((PIXEL_TYPE)(colormap[index].red)   << SHIFT_R) |
-                                                      ((PIXEL_TYPE)(colormap[index].green) << SHIFT_G) |
-                                                      ((PIXEL_TYPE)(colormap[index].blue)  << SHIFT_B) |
-                                                      ((PIXEL_TYPE)MAX_SATURATION          << SHIFT_A)
-                                                      );
-        }
+        void *fb = display_getCurrentFramebuffer();
+        memcpy(/*dest:*/crtModel->texPixels, /*src:*/fb, (SCANWIDTH*SCANHEIGHT*sizeof(PIXEL_TYPE)));
     }
 
     glActiveTexture(TEXTURE_ACTIVE_FRAMEBUFFER);
@@ -339,7 +328,7 @@ static void glvideo_render(void) {
     if (wasDirty) {
         SCOPE_TRACE_VIDEO("glvideo texImage2D");
         _HACKAROUND_GLTEXIMAGE2D_PRE(TEXTURE_ACTIVE_FRAMEBUFFER, crtModel->textureName);
-        glTexImage2D(GL_TEXTURE_2D, /*level*/0, TEX_FORMAT_INTERNAL, SCANWIDTH, SCANHEIGHT, /*border*/0, TEX_FORMAT, TEX_TYPE, (GLvoid *)&pixels[0]);
+        glTexImage2D(GL_TEXTURE_2D, /*level*/0, TEX_FORMAT_INTERNAL, SCANWIDTH, SCANHEIGHT, /*border*/0, TEX_FORMAT, TEX_TYPE, pixels);
     }
 
     // Bind our vertex array object

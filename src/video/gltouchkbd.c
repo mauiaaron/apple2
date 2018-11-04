@@ -511,7 +511,7 @@ static void *_create_touchkbd_hud(GLModel *parent) {
 
     const unsigned int size = sizeof(kbdTemplateUCase/* assuming all the same dimensions */);
     hudKeyboard->tpl = MALLOC(size);
-    hudKeyboard->pixels = MALLOC(KBD_FB_WIDTH * KBD_FB_HEIGHT);
+    hudKeyboard->pixels = MALLOC(KBD_FB_WIDTH * KBD_FB_HEIGHT * PIXEL_STRIDE);
 
     uint8_t *template = NULL;
     long lVal = 0;

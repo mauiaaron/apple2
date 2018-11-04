@@ -25,8 +25,8 @@
     <string name="audio_latency">Audio latency</string>
     <string name="audio_latency_summary">Audio latency in secs</string>
     <string name="cancel">Cancel</string>
-    <string name="color_configure">Configure color</string>
-    <string name="color_configure_summary">Color mode</string>
+    <string name="color_configure">Display mode</string>
+    <string name="color_configure_summary">Video display emulation mode</string>
     <string name="color_bw">Black/white</string>
     <string name="color_color">Color</string>
     <string name="color_interpolated">Interpolated color</string>
@@ -188,5 +188,13 @@
     <string name="color_green_on_black">Green on black</string>
     <string name="color_blue_on_black">Blue on black</string>
     <string name="color_white_on_black">White on black</string>
+    <string name="color_monitor">Color Monitor</string>
+    <string name="color_tv_mono">Monochrome TV</string>
+    <string name="color_tv">Color TV</string>
+    <string name="show_half_scanlines">Show half scanlines</string>
+    <string name="mono_configure">Monocolor mode</string>
+    <string name="mono_configure_summary">Configure monochrome color</string>
+    <string name="color_green">Green screen</string>
+    <string name="color_mono">Monochrome</string>
 
 </resources>

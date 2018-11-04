@@ -118,7 +118,7 @@ static void _translate_screen_x_y(char *screen, const int xlen, const int ylen) 
     }
 }
 
-void interface_plotMessage(uint8_t *fb, const interface_colorscheme_t cs, char *message, const uint8_t message_cols, const uint8_t message_rows) {
+void interface_plotMessage(PIXEL_TYPE *fb, const interface_colorscheme_t cs, char *message, const uint8_t message_cols, const uint8_t message_rows) {
     _translate_screen_x_y(message, message_cols, message_rows);
     display_plotMessage(fb, cs, message, message_cols, message_rows);
 }
@@ -1083,7 +1083,6 @@ void c_interface_parameters()
         else if ((ch == kESC) || c_keys_is_interface_key(ch))
         {
             timing_initialize();
-            display_reset();
             vm_reinitializeAudio();
             c_joystick_reset();
 #if !TESTING
