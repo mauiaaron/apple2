@@ -84,10 +84,16 @@
 
 // video
 #define PREF_COLOR_MODE "colorMode"
+#define PREF_MONO_MODE "monoMode"
+#define PREF_SHOW_HALF_SCANLINES "showHalfScanlines"
 
 // vm
 #define PREF_CPU_SCALE "cpuScale"
 #define PREF_CPU_SCALE_ALT "cpuScaleAlt"
+#define PREF_DISK_PATH_A "driveAInsertedDisk"
+#define PREF_DISK_PATH_A_RO "driveAInsertedDiskRO"
+#define PREF_DISK_PATH_B "driveBInsertedDisk"
+#define PREF_DISK_PATH_B_RO "driveBInsertedDiskRO"
 
 typedef void (*prefs_change_callback_f)(const char * _NONNULL domain);
 
