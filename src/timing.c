@@ -11,7 +11,7 @@
 
 #include "common.h"
 
-#define DEBUG_TIMING (!defined(NDEBUG) && 0) // enable to print timing stats
+#define DEBUG_TIMING 0 // enable to print timing stats
 #if DEBUG_TIMING
 #   define TIMING_LOG(...) LOG(__VA_ARGS__)
 #else
@@ -28,9 +28,7 @@ int cycles_speaker_feedback = 0;
 static int32_t cycles_checkpoint_count = 0;
 
 // scaling and speed adjustments
-#if !MOBILE_DEVICE
 static bool auto_adjust_speed = true;
-#endif
 static bool is_paused = false;
 static unsigned long _pause_spinLock = 0;
 
@@ -206,12 +204,10 @@ bool cpu_isPaused(void) {
     return is_paused;
 }
 
-#if !MOBILE_DEVICE
 bool timing_shouldAutoAdjustSpeed(void) {
     double speed = alt_speed_enabled ? cpu_altscale_factor : cpu_scale_factor;
     return auto_adjust_speed && (speed <= CPU_SCALE_FASTEST_PIVOT);
 }
-#endif
 
 static void *cpu_thread(void *dummyptr) {
 
@@ -222,9 +218,7 @@ static void *cpu_thread(void *dummyptr) {
     LOG("cpu_thread : initialized...");
 
     struct timespec deltat = { 0 };
-#if !MOBILE_DEVICE
     struct timespec disk_motor_time = { 0 };
-#endif
     struct timespec t0 = { 0 }; // the target timer
     struct timespec ti = { 0 }; // actual before time sample
     struct timespec tj = { 0 }; // actual after time sample
@@ -364,10 +358,13 @@ cpu_runloop:
             pthread_mutex_unlock(&interface_mutex);
             // -UNLOCK--------------------------------------------------------------------------------------- SAMPLE tj
 
-#if !MOBILE_DEVICE
             if (timing_shouldAutoAdjustSpeed()) {
                 disk_motor_time = timespec_diff(disk6.motor_time, tj, &negative);
-                assert(!negative);
+                if (UNLIKELY(negative)) {
+                    // 2016/05/05 : crash report from the wild on Android if we assert(!negative)
+                    LOG("WHOA... time went backwards #1! Did you just cross a timezone?");
+                    disk_motor_time.tv_sec = 1;
+                }
                 if (!is_fullspeed &&
                         !speaker_isActive() &&
                         !video_isDirty(A2_DIRTY_FLAG) && (!disk6.motor_off && (disk_motor_time.tv_sec || disk_motor_time.tv_nsec > DISK_MOTOR_QUIET_NSECS)) )
@@ -376,13 +373,12 @@ cpu_runloop:
                     _timing_initialize(CPU_SCALE_FASTEST);
                 }
             }
-#endif
 
             if (!is_fullspeed) {
                 deltat = timespec_diff(ti, tj, &negative);
-                if (negative) {
+                if (UNLIKELY(negative)) {
                     // 2016/05/05 : crash report from the wild on Android if we assert(!negative)
-                    LOG("WHOA... time went backwards! Did you just cross a timezone?");
+                    LOG("WHOA... time went backwards #2! Did you just cross a timezone?");
                     deltat.tv_sec = 1;
                 }
                 long sleepfor = 0;
@@ -434,7 +430,6 @@ cpu_runloop:
                 }
             }
 
-#if !MOBILE_DEVICE
             if (timing_shouldAutoAdjustSpeed()) {
                 if (is_fullspeed && (
                             speaker_isActive() ||
@@ -447,7 +442,6 @@ cpu_runloop:
                     }
                 }
             }
-#endif
 
             if (UNLIKELY(run_args.emul_reinitialize)) {
                 break;
@@ -608,7 +602,7 @@ bool timing_loadState(StateHelper_s *helper) {
 
 // ----------------------------------------------------------------------------
 
-static void vm_prefsChanged(const char *domain) {
+static void timing_prefsChanged(const char *domain) {
     (void)domain;
 
     float fVal = 1.0;
@@ -645,10 +639,13 @@ static void vm_prefsChanged(const char *domain) {
         MB_SetEnabled(enabled);
         timing_reinitializeAudio();
     }
+
+    auto_adjust_speed = prefs_parseBoolValue(PREF_DOMAIN_INTERFACE, PREF_DISK_FAST_LOADING, &bVal) ? bVal : true;
 }
 
-static __attribute__((constructor)) void _init_vm(void) {
-    prefs_registerListener(PREF_DOMAIN_VM, &vm_prefsChanged);
-    prefs_registerListener(PREF_DOMAIN_AUDIO, &vm_prefsChanged);
+static __attribute__((constructor)) void _init_timing(void) {
+    prefs_registerListener(PREF_DOMAIN_VM, &timing_prefsChanged);
+    prefs_registerListener(PREF_DOMAIN_AUDIO, &timing_prefsChanged);
+    prefs_registerListener(PREF_DOMAIN_INTERFACE, &timing_prefsChanged);
 }
 

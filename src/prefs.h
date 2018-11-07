@@ -39,6 +39,7 @@
 #define PREF_DEVICE_LANDSCAPE "landscapeEnabled"
 #define PREF_DISK_PATH "diskPath"
 #define PREF_DISK_ANIMATIONS_ENABLED "diskAnimationsEnabled"
+#define PREF_DISK_FAST_LOADING "diskFastLoading"
 #define PREF_SOFTHUD_COLOR "hudColorMode"
 
 // joystick

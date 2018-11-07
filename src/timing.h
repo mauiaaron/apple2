@@ -101,12 +101,10 @@ void timing_stopCPU(void);
  */
 void timing_toggleCPUSpeed(void);
 
-#if !MOBILE_DEVICE
 /*
  * check whether automatic adjusting of CPU speed is configured.
  */
 bool timing_shouldAutoAdjustSpeed(void);
-#endif
 
 /*
  * initialize timing

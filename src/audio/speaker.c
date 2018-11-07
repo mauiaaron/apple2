@@ -535,11 +535,9 @@ GLUE_C_READ(speaker_toggle)
     speaker_accessed_since_last_flush = true;
     speaker_recently_active = true;
 
-#if !defined(MOBILE_DEVICE)
     if (timing_shouldAutoAdjustSpeed()) {
         is_fullspeed = false;
     }
-#endif
 
     if (speaker_isAvailable) {
         _speaker_update(/*toggled:true*/);

@@ -248,6 +248,41 @@ public class Apple2SettingsMenu extends Apple2AbstractMenu {
                 return convertView;
             }
         },
+        FAST_DISK_OPERATIONS {
+            @Override
+            public final String getTitle(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.disk_fast_operation);
+            }
+
+            @Override
+            public final String getSummary(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.disk_fast_operation_summary);
+            }
+
+            @Override
+            public String getPrefKey() {
+                return "diskFastLoading";
+            }
+
+            @Override
+            public Object getPrefDefault() {
+                return false;
+            }
+
+            @Override
+            public View getView(final Apple2Activity activity, View convertView) {
+                final IMenuEnum self = this;
+                convertView = _basicView(activity, this, convertView);
+                CheckBox cb = _addCheckbox(activity, this, convertView, (boolean) Apple2Preferences.getJSONPref(this));
+                cb.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                    @Override
+                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                        Apple2Preferences.setJSONPref(self, isChecked);
+                    }
+                });
+                return convertView;
+            }
+        },
         ABOUT {
             @Override
             public final String getTitle(Apple2Activity activity) {

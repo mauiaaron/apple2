@@ -196,5 +196,7 @@
     <string name="mono_configure_summary">Configure monochrome color</string>
     <string name="color_green">Green screen</string>
     <string name="color_mono">Monochrome</string>
+    <string name="disk_fast_operation">Disk fast loading (EXPERIMENTAL)</string>
+    <string name="disk_fast_operation_summary">Quickly load disk images (may negatively affect device battery life)</string>
 
 </resources>
