@@ -815,8 +815,7 @@ uint16_t display_getVideoLineOffset(uint8_t txtRow) {
     return video_line_offset[txtRow];
 }
 
-#if TESTING
-uint8_t *display_renderStagingFramebuffer(void) {
+PIXEL_TYPE *display_renderStagingFramebuffer(void) {
 
     const uint32_t mainswitches = run_args.softswitches;
 
@@ -851,8 +850,8 @@ uint8_t *display_renderStagingFramebuffer(void) {
         assert((mainswitches & SS_HIRES) && "HIRES should be set");
         uint16_t base = page ? 0x4000 : 0x2000;
         for (unsigned int row=0; row < TEXT_ROWS-4; row++) {
-            for (unsigned int col=0; col < TEXT_COLS; col++) {
-                for (unsigned int i = 0; i < 8; i++) {
+            for (unsigned int i = 0; i < 8; i++) {
+                for (unsigned int col=0; col < TEXT_COLS; col++) {
                     uint16_t off = video_line_offset[row] + (0x400*i) + col;
                     uint16_t ea = base+off;
                     scanline[(col<<1)+0] = apple_ii_64k[1][ea]; // AUX
@@ -901,8 +900,8 @@ uint8_t *display_renderStagingFramebuffer(void) {
         assert((mixedswitches & SS_HIRES) && "HIRES should be set");
         uint16_t base = page ? 0x4000 : 0x2000;
         for (unsigned int row=TEXT_ROWS-4; row < TEXT_ROWS; row++) {
-            for (unsigned int col=0; col < TEXT_COLS; col++) {
-                for (unsigned int i = 0; i < 8; i++) {
+            for (unsigned int i = 0; i < 8; i++) {
+                for (unsigned int col=0; col < TEXT_COLS; col++) {
                     uint16_t off = video_line_offset[row] + (0x400*i) + col;
                     uint16_t ea = base+off;
                     scanline[(col<<1)+0] = apple_ii_64k[1][ea]; // AUX
@@ -920,9 +919,10 @@ uint8_t *display_renderStagingFramebuffer(void) {
     }
 
     video_setDirty(FB_DIRTY_FLAG);
-    return display_getCurrentFramebuffer();
+    return fbFull;
 }
 
+#if TESTING
 // HACK FIXME TODO ... should consolidate this into debugger ...
 extern pthread_mutex_t interface_mutex;
 extern pthread_cond_t cpu_thread_cond;
@@ -1051,6 +1051,8 @@ static void _init_interface(void) {
 
     scanline_color[0] = _color_full_scanline;
     scanline_color[1] = _color_half_scanline;
+
+    flash_getter = _glyph_normal;
 
     prefs_registerListener(PREF_DOMAIN_VIDEO, &display_prefsChanged);
 }
