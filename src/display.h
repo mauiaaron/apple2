@@ -156,9 +156,8 @@ typedef enum font_mode_t {
  * Graphics mode
  */
 typedef enum drawpage_mode_t {
-    DRAWPAGE_TEXT = 1,
+    DRAWPAGE_TEXT = 0,
     DRAWPAGE_HIRES,
-    DRAWPAGE_MODE_CHANGE,
     NUM_DRAWPAGE_MODES,
 } drawpage_mode_t;
 

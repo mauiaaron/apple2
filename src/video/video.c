@@ -87,6 +87,8 @@ static uint16_t vert_offset_hgr[SCANLINES_FRAME] = {
     0x0B80,0x0F80,0x1380,0x1780,0x1B80,0x1F80,              // 256,257,258,259,260,261
 };
 
+static uint16_t *vert_offset[NUM_DRAWPAGE_MODES] = { &vert_offset_txt[0], &vert_offset_hgr[0] };
+
 // scanline horizontal offsets (UtAIIe 5-12, 5-15+)
 static uint8_t scan_offset[5][CYCLES_SCANLINE] =
 {
@@ -212,13 +214,9 @@ unsigned long video_clearDirty(unsigned long flags) {
 // video scanner & generator routines
 
 static inline uint16_t _getScannerAddress(drawpage_mode_t mode, int page, unsigned int vCount, unsigned int hCount) {
-    uint16_t a = 0;
-    if (mode == DRAWPAGE_TEXT) {
-        a = (page ? 0x800 : 0x400) + vert_offset_txt[vCount>>3] + scan_offset[vCount>>6][hCount];
-    } else {
-        a = (page ? 0x4000 : 0x2000) + vert_offset_hgr[vCount] + scan_offset[vCount>>6][hCount];
-    }
-    return a;
+    uint16_t baseOff = (0x1 << 10) << (mode * 3) << page; // 0x400 or 0x2000 + page
+    unsigned int vCount3 = vCount >> ((1 - (mode & 0x1)) * 3); // TEXT:vCount>>3 GRAPHICS:vCount
+    return baseOff + vert_offset[mode][vCount3] + scan_offset[vCount>>6][hCount];
 }
 
 static drawpage_mode_t _currentMode(unsigned int vCount) {
