@@ -24,6 +24,7 @@ static video_backend_s *currentBackend = NULL;
 static pthread_t render_thread_id = 0;
 
 static unsigned int cyclesFrameLast = 0;
+static unsigned int cyclesDirty = CYCLES_FRAME;
 static unsigned long dirty = 0UL;
 static bool reset_scanner = false;
 
@@ -198,11 +199,40 @@ bool video_isDirty(unsigned long flags) {
     return !!(dirty & flags);
 }
 
+static void _setScannerDirty() {
+    if (cyclesDirty == 0) {
+        cyclesFrameLast = cycles_video_frame;
+    }
+
+    unsigned int hCount = cyclesFrameLast % CYCLES_SCANLINE;
+    unsigned int colCount = (CYCLES_SCANLINE - hCount) % CYCLES_SCANLINE;
+    if (cyclesDirty == 0) {
+        cyclesFrameLast -= hCount;
+        assert(cyclesFrameLast < (CYCLES_FRAME<<1)); // should be no underflow
+        assert(cyclesFrameLast % CYCLES_SCANLINE == 0);
+        colCount = CYCLES_SCANLINE;
+
+        // previously we were not dirty:
+        //  - next call to video_scannerUpdate() will load scanline[] buffer
+        //  - next+1 call to video_scannerUpdate() will begin with new cyclesDirty count
+    }
+
+    cyclesDirty = CYCLES_FRAME + colCount;
+    assert((cyclesDirty >= CYCLES_FRAME) && (cyclesDirty <= CYCLES_FRAME + CYCLES_SCANLINE));
+    assert((cyclesFrameLast + cyclesDirty) % CYCLES_SCANLINE == 0);
+}
+
 void video_setDirty(unsigned long flags) {
     __sync_fetch_and_or(&dirty, flags);
     if (flags & A2_DIRTY_FLAG) {
         ASSERT_ON_CPU_THREAD();
+
+        // NOTE without knowing any specific information about the nature of the video update, the scanner needs to render 1.X full frames to make sure we've correct rendered the change ...
+        timing_checkpointCycles();
+        _setScannerDirty();
+
         video_scannerUpdate();
+        assert(cyclesFrameLast == cycles_video_frame);
     }
 }
 
@@ -236,6 +266,28 @@ static void _flushScanline(uint8_t *scanline, unsigned int scanrow, unsigned int
     currentBackend->flushScanline(&scandata);
 }
 
+static void _endOfVideoFrame() {
+    assert(cyclesFrameLast == cycles_video_frame);
+    cyclesFrameLast -= CYCLES_FRAME;
+    cycles_video_frame -= CYCLES_FRAME;
+
+    static uint8_t textFlashCounter = 0;
+    textFlashCounter = (textFlashCounter+1) & 0xf;
+    if (!textFlashCounter) {
+        video_flashText();
+        if (!(run_args.softswitches & SS_80COL) && (run_args.softswitches & (SS_TEXT|SS_MIXED))) {
+            _setScannerDirty();
+        }
+    }
+
+    // TODO FIXME : modularize these (and moar) handlers for video frame completion
+    MB_EndOfVideoFrame();
+
+    //  UtAIIe 3-17 :
+    //  - keyboard auto-repeat ...
+    //  - power-up reset timing ...
+}
+
 void video_scannerReset(void) {
     ASSERT_ON_CPU_THREAD();
     reset_scanner = true;
@@ -244,42 +296,50 @@ void video_scannerReset(void) {
 // Call to advance the video scanner and generator when the following events occur:
 //  1: Just prior writing to active video memory
 //  2: Just prior toggling a video softswitch
-//  3: Upon video frame completion (CYCLES_FRAME : 17030) -- FIXME TODO can we optimize this away if no change?
+//  3: After cpu65_run()
 void video_scannerUpdate(void) {
 
     static uint8_t scanline[CYCLES_VIS<<1] = { 0 }; // 80 columns of data ...
     static unsigned int scancol = 0;
     static unsigned int scanidx = 0;
-    static unsigned int hCount = 0;
-    static unsigned int vCount = 0;
 
     ASSERT_ON_CPU_THREAD();
 
-    if (reset_scanner) {
+    if (UNLIKELY(reset_scanner)) {
         reset_scanner = false;
         cyclesFrameLast = 0;
+        cyclesDirty = CYCLES_FRAME;
         scancol = 0;
         scanidx = 0;
-        hCount = 0;
-        vCount = 0;
     }
 
-    timing_checkpointCycles();
+    timing_checkpointCycles(); // keep this here ... even if speaker or mockingboard previously checked ...
+    if (cyclesDirty == 0) {
+        cyclesFrameLast = cycles_video_frame;
+        if (cycles_video_frame >= CYCLES_FRAME) {
+            _endOfVideoFrame();
+        }
+        return;
+    }
+    unsigned int hCount = cyclesFrameLast % CYCLES_SCANLINE;
+    unsigned int vCount = (cyclesFrameLast / CYCLES_SCANLINE) % SCANLINES_FRAME;
+    /*if (scancol + scanidx) {
+        assert(hCount - CYCLES_VIS_BEGIN == (scancol + scanidx));
+    }*/
+
     assert(cycles_video_frame >= cyclesFrameLast);
     unsigned int cyclesCount = cycles_video_frame - cyclesFrameLast;
     cyclesFrameLast = cycles_video_frame;
 
-    if (UNLIKELY(cyclesCount == 0)) {
-        return;
-    }
-
-    int page = video_currentPage(run_args.softswitches);
+    unsigned int page = video_currentPage(run_args.softswitches);
 
     uint8_t aux = 0x0;
     uint8_t mbd = 0x0;
     uint16_t addr = 0x0;
+
     drawpage_mode_t mode = _currentMode(vCount);
-    for (unsigned int i=0; i<cyclesCount; i++) {
+    cyclesCount = (cyclesCount <= cyclesDirty) ? cyclesCount : cyclesDirty;
+    for (unsigned int i=0; i<cyclesCount; i++, --cyclesDirty) {
         const bool isVisible = ((hCount >= CYCLES_VIS_BEGIN) && (vCount < SCANLINES_VBL_BEGIN));
 
 #if VIDEO_TRACING
@@ -297,8 +357,10 @@ void video_scannerUpdate(void) {
 #if VIDEO_TRACING
             type = "VIS";
 #endif
-            scanline[(scancol<<1)+(scanidx<<1)+0] = aux;
-            scanline[(scancol<<1)+(scanidx<<1)+1] = mbd;
+            unsigned int idx = (scancol<<1)+(scanidx<<1);
+            assert(idx < ((CYCLES_VIS<<1) - 1));
+            scanline[idx+0] = aux;
+            scanline[idx+1] = mbd;
             ++scanidx;
         }
 
@@ -326,6 +388,10 @@ void video_scannerUpdate(void) {
 #endif
 
         ++hCount;
+        /*if (scancol + scanidx) {
+            assert(hCount - CYCLES_VIS_BEGIN == (scancol + scanidx));
+        }*/
+
         if (hCount == CYCLES_SCANLINE) {
 
             if (vCount < SCANLINES_VBL_BEGIN) {
@@ -337,37 +403,20 @@ void video_scannerUpdate(void) {
 
             // begin new scanline ...
             hCount = 0;
+            scancol = 0;
+            scanidx = 0;
             ++vCount;
 
             if (vCount == SCANLINES_FRAME) {
                 // begin new frame ...
                 assert(cyclesFrameLast >= CYCLES_FRAME);
-                cyclesFrameLast -= CYCLES_FRAME;
-                cycles_video_frame -= CYCLES_FRAME;
                 vCount = 0;
-                video_clearDirty(A2_DIRTY_FLAG);
-
-                static uint8_t textFlashCounter = 0;
-                textFlashCounter = (textFlashCounter+1) & 0xf;
-                if (!textFlashCounter) {
-                    video_flashText();
-                }
-
-                // TODO FIXME : modularize these (and moar) handlers for video frame completion
-                MB_EndOfVideoFrame();
-
-                //  UtAIIe 3-17 :
-                //  - keyboard auto-repeat ...
-                //  - power-up reset timing ...
-
+                _endOfVideoFrame();
                 currentBackend->frameComplete();
 #if VIDEO_TRACING
                 ++frameCount;
 #endif
             }
-
-            scancol = 0;
-            scanidx = 0;
 
             mode = _currentMode(vCount);
         }
@@ -376,11 +425,19 @@ void video_scannerUpdate(void) {
     if ((scanidx > 0) && (vCount < SCANLINES_VBL_BEGIN)) {
         // incomplete scanline flush ...
         unsigned int scanend = scancol+scanidx;
+        assert(scanend < CYCLES_VIS);
         _flushScanline(scanline, /*scanrow:*/vCount, scancol, scanend);
-
         scancol = scanend;
         scanidx = 0;
     }
+    if (cyclesDirty == 0) {
+        scancol = 0;
+        scanidx = 0;
+        video_clearDirty(A2_DIRTY_FLAG);
+        currentBackend->frameComplete();
+    }
+
+    assert(cyclesDirty < (CYCLES_FRAME<<1)); // should be no underflow
 }
 
 uint16_t video_scannerAddress(bool *ptrIsVBL) {
@@ -403,7 +460,7 @@ uint16_t video_scannerAddress(bool *ptrIsVBL) {
         }
     }
 
-    int page = video_currentPage(run_args.softswitches);
+    unsigned int page = video_currentPage(run_args.softswitches);
     drawpage_mode_t mode = (vCount < SCANLINES_VIS) ? video_currentMainMode(run_args.softswitches) : video_currentMixedMode(run_args.softswitches);
     uint16_t addr = _getScannerAddress(mode, page, vCount, hCount);
     return addr;

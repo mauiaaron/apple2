@@ -350,9 +350,7 @@ cpu_runloop:
 
             speaker_flush(); // play audio
 
-            if (cycles_video_frame >= CYCLES_FRAME) {
-                video_scannerUpdate();
-            }
+            video_scannerUpdate();
 
             clock_gettime(CLOCK_MONOTONIC, &tj);
             pthread_mutex_unlock(&interface_mutex);

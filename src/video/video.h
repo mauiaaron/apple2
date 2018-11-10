@@ -132,7 +132,7 @@ static inline drawpage_mode_t video_currentMixedMode(uint32_t currswitches) {
     }
 }
 
-static inline int video_currentPage(uint32_t currswitches) {
+static inline unsigned int video_currentPage(uint32_t currswitches) {
     // UTAIIe : 5-25
     if (currswitches & SS_80STORE) {
         return 0;

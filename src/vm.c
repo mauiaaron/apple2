@@ -292,7 +292,10 @@ GLUE_C_WRITE(video__write_2e_text0)
             break;
         }
         if (!(run_args.softswitches & SS_PAGE2)) {
-            video_setDirty(A2_DIRTY_FLAG);
+            uint8_t b0 = run_args.base_textwrt[ea];
+            if (b0 != b) {
+                video_setDirty(A2_DIRTY_FLAG);
+            }
         }
     } while (0);
     run_args.base_textwrt[ea] = b;
@@ -306,7 +309,10 @@ GLUE_C_WRITE(video__write_2e_text0_mixed)
             break;
         }
         if (!(run_args.softswitches & SS_PAGE2)) {
-            video_setDirty(A2_DIRTY_FLAG);
+            uint8_t b0 = run_args.base_textwrt[ea];
+            if (b0 != b) {
+                video_setDirty(A2_DIRTY_FLAG);
+            }
         }
     } while (0);
     run_args.base_textwrt[ea] = b;
@@ -320,7 +326,10 @@ GLUE_C_WRITE(video__write_2e_text1)
             break;
         }
         if ((run_args.softswitches & SS_PAGE2) && !(run_args.softswitches & SS_80STORE)) {
-            video_setDirty(A2_DIRTY_FLAG);
+            uint8_t b0 = run_args.base_ramwrt[ea];
+            if (b0 != b) {
+                video_setDirty(A2_DIRTY_FLAG);
+            }
         }
     } while (0);
     run_args.base_ramwrt[ea] = b;
@@ -334,7 +343,10 @@ GLUE_C_WRITE(video__write_2e_text1_mixed)
             break;
         }
         if ((run_args.softswitches & SS_PAGE2) && !(run_args.softswitches & SS_80STORE)) {
-            video_setDirty(A2_DIRTY_FLAG);
+            uint8_t b0 = run_args.base_ramwrt[ea];
+            if (b0 != b) {
+                video_setDirty(A2_DIRTY_FLAG);
+            }
         }
     } while (0);
     run_args.base_ramwrt[ea] = b;
@@ -348,7 +360,10 @@ GLUE_C_WRITE(video__write_2e_hgr0)
             break;
         }
         if (!(run_args.softswitches & SS_PAGE2)) {
-            video_setDirty(A2_DIRTY_FLAG);
+            uint8_t b0 = run_args.base_hgrwrt[ea];
+            if (b0 != b) {
+                video_setDirty(A2_DIRTY_FLAG);
+            }
         }
     } while (0);
     run_args.base_hgrwrt[ea] = b;
@@ -362,7 +377,10 @@ GLUE_C_WRITE(video__write_2e_hgr0_mixed)
             break;
         }
         if (!(run_args.softswitches & SS_PAGE2)) {
-            video_setDirty(A2_DIRTY_FLAG);
+            uint8_t b0 = run_args.base_hgrwrt[ea];
+            if (b0 != b) {
+                video_setDirty(A2_DIRTY_FLAG);
+            }
         }
     } while (0);
     run_args.base_hgrwrt[ea] = b;
@@ -376,7 +394,10 @@ GLUE_C_WRITE(video__write_2e_hgr1)
             break;
         }
         if ((run_args.softswitches & SS_PAGE2) && !(run_args.softswitches & SS_80STORE)) {
-            video_setDirty(A2_DIRTY_FLAG);
+            uint8_t b0 = run_args.base_ramwrt[ea];
+            if (b0 != b) {
+                video_setDirty(A2_DIRTY_FLAG);
+            }
         }
     } while (0);
     run_args.base_ramwrt[ea] = b;
@@ -390,7 +411,10 @@ GLUE_C_WRITE(video__write_2e_hgr1_mixed)
             break;
         }
         if ((run_args.softswitches & SS_PAGE2) && !(run_args.softswitches & SS_80STORE)) {
-            video_setDirty(A2_DIRTY_FLAG);
+            uint8_t b0 = run_args.base_ramwrt[ea];
+            if (b0 != b) {
+                video_setDirty(A2_DIRTY_FLAG);
+            }
         }
     } while (0);
     run_args.base_ramwrt[ea] = b;
@@ -1812,4 +1836,3 @@ bool vm_trace_is_ignored(uint16_t ea) {
 }
 
 #endif
-

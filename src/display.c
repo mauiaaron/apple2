@@ -822,7 +822,7 @@ PIXEL_TYPE *display_renderStagingFramebuffer(void) {
     // render main portion of screen ...
 
     drawpage_mode_t mainDrawPageMode = video_currentMainMode(mainswitches);
-    int page = video_currentPage(mainswitches);
+    unsigned int page = video_currentPage(mainswitches);
 
     static uint8_t scanline[CYCLES_VIS<<1] = { 0 }; // 80 columns of data ...
 
