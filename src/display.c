@@ -386,7 +386,7 @@ void display_loadFont(const uint8_t first, const uint8_t quantity, const uint8_t
 // common plotting and filtering routines
 
 static PIXEL_TYPE _color_half_scanline(PIXEL_TYPE color0) {
-    PIXEL_TYPE color1 = ((color0 & 0xFCFCFCFC) >> 2) | (0xFF << SHIFT_A);
+    PIXEL_TYPE color1 = ((color0 & 0xFEFEFEFE) >> 1) | (0xFF << SHIFT_A);
     return color1;
 }
 

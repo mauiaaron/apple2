@@ -59,6 +59,16 @@ static PIXEL_TYPE colorPixelsTV     [NTSC_NUM_PHASES][NTSC_NUM_SEQUENCES];
 // TV pixel updates
 
 static PIXEL_TYPE halfScanlineTV(PIXEL_TYPE color0, PIXEL_TYPE color2) {
+#if APPLE2IX
+    (void)color2;
+    PIXEL_TYPE color1 = ((color0 & 0xFEFEFEFE) >> 1) | (0xFF << SHIFT_A);
+    return color1;
+#else
+    // HACK NOTE : original code for sampling color2 from 2 scanlines below requires at least 2.X full CYCLES_FRAME iterations
+    //      - first pass does not pick up potentially changed color2
+    //      - second pass will pick up correct color2
+    //      - this leads to "interesting" artifacts for moving sprites
+#error FIXME TODO ...
     PIXEL_TYPE color1;
 
     int r = (color0 >> SHIFT_R) & 0xFF;
@@ -71,11 +81,18 @@ static PIXEL_TYPE halfScanlineTV(PIXEL_TYPE color0, PIXEL_TYPE color2) {
     color1 = (r<<SHIFT_R) | (g<<SHIFT_G) | (b<<SHIFT_B) | (0xFF<<SHIFT_A);
 
     return color1;
+#endif
 }
 
 static PIXEL_TYPE doubleScanlineTV(PIXEL_TYPE color0, PIXEL_TYPE color2) {
+#if APPLE2IX
+    (void)color2;
+    return color0;
+#else
+#error FIXME TODO ...
     PIXEL_TYPE color1 = ((color0 & 0xFEFEFEFE) >> 1) + ((color2 & 0xFEFEFEFE) >> 1); // 50% Blend
     return color1 | (0xFF<<SHIFT_A);
+#endif
 }
 
 static void updateFBCommon(color_mode_t mode, uint16_t signal, PIXEL_TYPE *fb_ptr, PIXEL_TYPE *color_table) {
@@ -111,7 +128,7 @@ static void updateFBColorTV(color_mode_t mode, uint16_t signal, PIXEL_TYPE *fb_p
 
 static PIXEL_TYPE halfScanlineMonitor(PIXEL_TYPE color0, PIXEL_TYPE color2) {
     (void)color2;
-    PIXEL_TYPE color1 = ((color0 & 0xFCFCFCFC) >> 2) | (0xFF << SHIFT_A);
+    PIXEL_TYPE color1 = ((color0 & 0xFEFEFEFE) >> 1) | (0xFF << SHIFT_A);
     return color1;
 }
 
