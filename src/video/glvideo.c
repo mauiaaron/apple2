@@ -13,6 +13,8 @@
 
 #include <regex.h>
 
+#define FB_PIXELS_PASS_THRU 1
+
 static int viewportX = 0;
 static int viewportY = 0;
 static int viewportWidth = SCANWIDTH*1.5;
@@ -155,6 +157,11 @@ static void glvideo_init(void) {
     // ----------------------------
     // Create Cathode Ray Tube (CRT) model ... which currently is just a simple texture quad model ...
 
+#if FB_PIXELS_PASS_THRU
+    if (crtModel) {
+        crtModel->texPixels = NULL;
+    }
+#endif
     mdlDestroyModel(&crtModel);
     glActiveTexture(TEXTURE_ACTIVE_FRAMEBUFFER);
 #warning HACK FIXME TODO ^^^^^^^ is glActiveTexture() call needed here?
@@ -169,6 +176,10 @@ static void glvideo_init(void) {
             .tex_h = SCANHEIGHT,
             .texcoordUsageHint = GL_DYNAMIC_DRAW, // but texture (Apple //e framebuffer) does
         }, (GLCustom){ 0 });
+#if FB_PIXELS_PASS_THRU
+    FREE(crtModel->texPixels);
+    crtModel->texPixels = display_getCurrentFramebuffer();
+#endif
 
     // ----------------------------
     // Load/setup shaders
@@ -259,6 +270,11 @@ static void glvideo_shutdown(void) {
 
     // Cleanup all OpenGL objects
 
+#if FB_PIXELS_PASS_THRU
+    if (crtModel) {
+        crtModel->texPixels = NULL;
+    }
+#endif
     mdlDestroyModel(&crtModel);
 
     // detach and delete the main shaders
@@ -315,12 +331,7 @@ static void glvideo_render(void) {
     glUniformMatrix4fv(uniformMVPIdx, 1, GL_FALSE, mvpIdentity);
 #endif
 
-    unsigned long wasDirty = video_clearDirty(FB_DIRTY_FLAG);
-    GLvoid *pixels = crtModel->texPixels;
-    if (wasDirty) {
-        void *fb = display_getCurrentFramebuffer();
-        memcpy(/*dest:*/crtModel->texPixels, /*src:*/fb, (SCANWIDTH*SCANHEIGHT*sizeof(PIXEL_TYPE)));
-    }
+    unsigned long wasDirty = (video_clearDirty(FB_DIRTY_FLAG) & FB_DIRTY_FLAG);
 
     glActiveTexture(TEXTURE_ACTIVE_FRAMEBUFFER);
     glBindTexture(GL_TEXTURE_2D, crtModel->textureName);
@@ -328,7 +339,11 @@ static void glvideo_render(void) {
     if (wasDirty) {
         SCOPE_TRACE_VIDEO("glvideo texImage2D");
         _HACKAROUND_GLTEXIMAGE2D_PRE(TEXTURE_ACTIVE_FRAMEBUFFER, crtModel->textureName);
-        glTexImage2D(GL_TEXTURE_2D, /*level*/0, TEX_FORMAT_INTERNAL, SCANWIDTH, SCANHEIGHT, /*border*/0, TEX_FORMAT, TEX_TYPE, pixels);
+#if !FB_PIXELS_PASS_THRU
+        void *fb = display_getCurrentFramebuffer();
+        memcpy(/*dest:*/crtModel->texPixels, /*src:*/fb, (SCANWIDTH*SCANHEIGHT*sizeof(PIXEL_TYPE)));
+#endif
+        glTexImage2D(GL_TEXTURE_2D, /*level*/0, TEX_FORMAT_INTERNAL, SCANWIDTH, SCANHEIGHT, /*border*/0, TEX_FORMAT, TEX_TYPE, crtModel->texPixels);
     }
 
     // Bind our vertex array object
