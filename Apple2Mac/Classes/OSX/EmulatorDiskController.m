@@ -299,7 +299,7 @@ static void prefsChangeCallback(const char *domain)
     {
         extension0 = extension1;
     }
-    return extension0;
+    return [extension0 lowercaseString];
 }
 
 + (void)chooseDiskForWindow:(NSWindow *)window completionHandler:(DiskCompletionHandler)handler
