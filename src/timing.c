@@ -41,6 +41,7 @@ bool alt_speed_enabled = false;
 static bool emul_reinitialize_audio = false;
 static bool emul_pause_audio = false;
 static bool emul_resume_audio = false;
+static bool emul_video_dirty = false;
 static bool cpu_shutting_down = false;
 pthread_t cpu_thread_id = 0;
 pthread_mutex_t interface_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -157,6 +158,7 @@ static void timing_reinitializeAudio(void) {
     emul_reinitialize_audio = true;
     emul_pause_audio = false;
     emul_resume_audio = false;
+    emul_video_dirty = false;
     SPINLOCK_RELINQUISH(&_pause_spinLock);
 }
 
@@ -192,10 +194,11 @@ void cpu_resume(void) {
         // CPU thread will be unblocked to acquire interface_mutex
         if (!emul_reinitialize_audio) {
             emul_resume_audio = true;
+            emul_video_dirty = true;
         }
         LOG("RESUMING CPU...");
-        pthread_mutex_unlock(&interface_mutex);
         is_paused = false;
+        pthread_mutex_unlock(&interface_mutex);
     } while (0);
     SPINLOCK_RELINQUISH(&_pause_spinLock);
 }
@@ -279,6 +282,10 @@ cpu_runloop:
             if (UNLIKELY(emul_resume_audio)) {
                 emul_resume_audio = false;
                 audio_resume();
+            }
+            if (UNLIKELY(emul_video_dirty)) {
+                emul_video_dirty = false;
+                video_setDirty(A2_DIRTY_FLAG);
             }
             clock_gettime(CLOCK_MONOTONIC, &ti);
 
