@@ -1156,12 +1156,10 @@ static void _initialize_tables(void) {
     // initialize first text & hires page, which are specially bank switched
     for (unsigned int i = 0x400; i < 0x800; i++) {
         cpu65_vmem_r[i] = iie_read_ram_text_page0;
-        cpu65_vmem_w[i] = video__write_2e_text0;
     }
 
     for (unsigned int i = 0x2000; i < 0x4000; i++) {
         cpu65_vmem_r[i] = iie_read_ram_hires_page0;
-        cpu65_vmem_w[i] = video__write_2e_hgr0;
     }
 
     // initialize text/lores & hires graphics routines
