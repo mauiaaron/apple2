@@ -1090,12 +1090,38 @@ static void _initialize_apple_ii_memory(void) {
     }
 
     // Stripe words of main memory on machine reset ...
-    // NOTE: cracked version of J---- will lock up without this
+    // NOTE: cracked version of Joust will lock up without this
     for (unsigned int i = 0; i < 0xC000;) {
         apple_ii_64k[0][i++] = 0xFF;
         apple_ii_64k[0][i++] = 0xFF;
         i += 2;
     }
+
+#if !CPU_TRACING && !VIDEO_TRACING
+    // certain memory locations randomized at cold-boot ...
+    for (uint16_t addr = 0x0000; addr < 0xC000; addr += 0x200)
+    {
+        uint16_t word;
+
+        word = random();
+        apple_ii_64k[0][addr + 0x28] = (word >> 0) & 0xFF;
+        apple_ii_64k[0][addr + 0x29] = (word >> 8) & 0xFF;
+
+        word = random();
+        apple_ii_64k[0][addr + 0x68] = (word >> 0) & 0xFF;
+        apple_ii_64k[0][addr + 0x69] = (word >> 8) & 0xFF;
+    }
+
+    // memory initialization workarounds ...
+    {
+        // https://github.com/AppleWin/AppleWin/issues/206
+        // work around cold-booting bug in "Pooyan" which expects RNDL and RNDH to be non-zero
+        // "Dung Beetles, Ms. PacMan, Pooyan, Star Cruiser, Star Thief, Invas. Force.dsk"
+        uint16_t word = (uint16_t)random();
+        apple_ii_64k[0][0x4E] = 0x20 | ((word >> 0) & 0xFF);
+        apple_ii_64k[0][0x4F] = 0x20 | ((word >> 8) & 0xFF);
+    }
+#endif
 
     for (unsigned int i = 0; i < 8192; i++) {
         language_card[0][i] = language_card[1][i] = 0;

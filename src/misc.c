@@ -41,6 +41,7 @@ CrashHandler_s *crashHandler = NULL;
 static void _init_common(void) {
     data_dir = STRDUP(CONFIG_DATADIR PATH_SEPARATOR PACKAGE_NAME);
     log_init();
+    srandom((unsigned int)time(NULL));
     LOG("Initializing common...");
 }
 
