@@ -16,7 +16,7 @@
 
 void ntsc_plotBits(color_mode_t mode, uint16_t bits, PIXEL_TYPE *fb_ptr);
 
-void ntsc_flushScanline(void);
+void ntsc_flushScanline(color_mode_t mode, PIXEL_TYPE *fb_ptr);
 
 #endif /* A2_NTSC_H */
 

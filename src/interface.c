@@ -136,7 +136,7 @@ static void _interface_plotMessageCentered(int fb_cols, int fb_rows, interface_c
     _translate_screen_x_y(message, message_cols, message_rows);
     int col = (fb_cols - message_cols) >> 1;
     int row = (fb_rows - message_rows) >> 1;
-    int fb_pix_width = (fb_cols*FONT80_WIDTH_PIXELS)+INTERPOLATED_PIXEL_ADJUSTMENT;
+    int fb_pix_width = (fb_cols*FONT80_WIDTH_PIXELS)+_FB_WIDTH_EXTRA;
     assert(fb_pix_width == SCANWIDTH);
     int row_max = row + message_rows;
     for (int idx=0; row<row_max; row++, idx+=message_cols+1) {

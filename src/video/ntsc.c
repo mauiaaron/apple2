@@ -111,8 +111,7 @@ static void updateFBCommon(color_mode_t mode, uint16_t signal, PIXEL_TYPE *fb_pt
     *fb_ptr0 = color0;
     *fb_ptr1 = color1;
 
-    ++ntsc_color_phase;
-    ntsc_color_phase &= 3;
+    ntsc_color_phase = (ntsc_color_phase + 1) & 0x03;
 }
 
 static void updateFBMonoTV(color_mode_t mode, uint16_t signal, PIXEL_TYPE *fb_ptr) {
@@ -172,7 +171,13 @@ void ntsc_plotBits(color_mode_t mode, uint16_t bits14, PIXEL_TYPE *fb_ptr) {
     pixelPlotter[mode](mode, bits14 & 1, fb_ptr);               ++fb_ptr;
 }
 
-void ntsc_flushScanline(void) {
+void ntsc_flushScanline(color_mode_t mode, PIXEL_TYPE *fb_ptr) {
+
+    pixelPlotter[mode](mode, 0, fb_ptr); ++fb_ptr;
+    pixelPlotter[mode](mode, 0, fb_ptr); ++fb_ptr;
+    pixelPlotter[mode](mode, 0, fb_ptr); ++fb_ptr;
+    pixelPlotter[mode](mode, 0, fb_ptr); ++fb_ptr;
+
     ntsc_color_phase = 0;
     ntsc_signal_bits = 0;
 }
@@ -431,12 +436,18 @@ static void _init_ntsc(void) {
     initChromaPhaseTables(COLOR_MODE_DEFAULT, MONO_MODE_DEFAULT);
 
     pixelPlotter[COLOR_MODE_MONO]             = updateFBMonoMonitor;
+    pixelPlotter[COLOR_MODE_COLOR]            = updateFBMonoMonitor;
+    pixelPlotter[COLOR_MODE_INTERP]           = updateFBMonoMonitor;
     pixelPlotter[COLOR_MODE_COLOR_MONITOR]    = updateFBColorMonitor;
     pixelPlotter[COLOR_MODE_MONO_TV]          = updateFBMonoTV;
     pixelPlotter[COLOR_MODE_COLOR_TV]         = updateFBColorTV;
 
     getHalfColor[COLOR_MODE_MONO][0]          = doubleScanlineMonitor;
     getHalfColor[COLOR_MODE_MONO][1]          = halfScanlineMonitor;
+    getHalfColor[COLOR_MODE_COLOR][0]         = doubleScanlineMonitor;
+    getHalfColor[COLOR_MODE_COLOR][1]         = halfScanlineMonitor;
+    getHalfColor[COLOR_MODE_INTERP][0]        = doubleScanlineMonitor;
+    getHalfColor[COLOR_MODE_INTERP][1]        = halfScanlineMonitor;
     getHalfColor[COLOR_MODE_COLOR_MONITOR][0] = doubleScanlineMonitor;
     getHalfColor[COLOR_MODE_COLOR_MONITOR][1] = halfScanlineMonitor;
     getHalfColor[COLOR_MODE_MONO_TV][0]       = doubleScanlineTV;

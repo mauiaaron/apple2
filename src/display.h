@@ -258,12 +258,10 @@ uint8_t *display_waitForNextCompleteFramebuffer(void);
 #define _SCANWIDTH (TEXT_COLS * FONT_WIDTH_PIXELS)  // 560
 #define SCANHEIGHT (TEXT_ROWS * FONT_HEIGHT_PIXELS) // 384
 
-// Extra bytes on each side of internal framebuffers for color interpolation hack
-#define _FB_OFF 4
-#define _INTERPOLATED_PIXEL_ADJUSTMENT_PRE _FB_OFF
-#define _INTERPOLATED_PIXEL_ADJUSTMENT_POST _FB_OFF
-#define INTERPOLATED_PIXEL_ADJUSTMENT (_INTERPOLATED_PIXEL_ADJUSTMENT_PRE+_INTERPOLATED_PIXEL_ADJUSTMENT_POST)
-#define SCANWIDTH (_SCANWIDTH+INTERPOLATED_PIXEL_ADJUSTMENT) // 568
+// Extra bytes on each side of internal framebuffer to allow overdraw for NTSC modes
+#define _FB_OFF                 4
+#define _FB_WIDTH_EXTRA         (_FB_OFF<<1)
+#define SCANWIDTH               (_SCANWIDTH+_FB_WIDTH_EXTRA) // 568
 
 #define FONT_GLYPH_X (7+/*unused*/1)            // generated font.c uses a single byte (8bits) per font glyph line
 #define FONT_GLYPH_Y (FONT_HEIGHT_PIXELS>>1)    // ... 8 bytes total for whole glyph

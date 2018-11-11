@@ -28,7 +28,7 @@ typedef struct A2Color_s {
 
 typedef uint8_t (*glyph_getter_fn)(uint8_t idx, unsigned int row_off);
 typedef void (*plot_fn)(color_mode_t mode, uint16_t bits14, unsigned int col, uint32_t *colors16, unsigned int fb_off);
-typedef void (*flush_fn)(void);
+typedef void (*flush_fn)(color_mode_t mode, unsigned int fb_off);
 typedef PIXEL_TYPE (*scanline_color_fn)(PIXEL_TYPE color);
 
 static A2Color_s colormap[256] = { { 0 } };
@@ -401,7 +401,7 @@ static void _plot_oldschool(color_mode_t mode, uint16_t bits14, unsigned int col
     uint16_t mask = ~(0xFF << shift); // 0xFF or 0x3FF
     unsigned int off = ((shift & 0x8) >> 1) + (shift & 0x2); // 4 or 6
 
-    PIXEL_TYPE *fb_ptr = (&fbFull[0]) + _FB_OFF + fb_off - off;
+    PIXEL_TYPE *fb_ptr = (&fbFull[0]) + fb_off - off;
 
     extern unsigned int ntsc_signal_bits; // HACK ...
 
@@ -449,16 +449,18 @@ static void _plot_oldschool(color_mode_t mode, uint16_t bits14, unsigned int col
 static void _plot_direct(color_mode_t mode, uint16_t bits14, unsigned int col, uint32_t *colors16, unsigned int fb_off) {
     (void)col;
     (void)colors16;
-    PIXEL_TYPE *fb_ptr = (&fbFull[0]) + _FB_OFF + fb_off;
+    PIXEL_TYPE *fb_ptr = (&fbFull[0]) + fb_off;
     ntsc_plotBits(mode, bits14, fb_ptr);
 }
 
-static void _flush_nop(void) {
-    // no-op ...
+static void _flush_nop(color_mode_t mode, unsigned int fb_off) {
+    (void)mode;
+    (void)fb_off;
 }
 
-static void _flush_scanline(void) {
-    ntsc_flushScanline();
+static void _flush_scanline(color_mode_t mode, unsigned int fb_off) {
+    PIXEL_TYPE *fb_ptr = (&fbFull[0]) + fb_off + _SCANWIDTH;
+    ntsc_flushScanline(mode, fb_ptr);
     scan_last_bit = 0x0;
 }
 
@@ -518,7 +520,7 @@ static void _plot_char40_scanline(scan_data_t *scandata) {
     }
 
     int filter_idx = (scanend >> 3);
-    flush[filter_idx][COLOR_MODE_MONO](); // filter triggers on scanline completion
+    flush[filter_idx][COLOR_MODE_MONO](COLOR_MODE_MONO, screen_addresses[fb_base] + fb_row); // flush triggers on scanline completion
 }
 
 static void _plot_char80_scanline(scan_data_t *scandata) {
@@ -551,7 +553,7 @@ static void _plot_char80_scanline(scan_data_t *scandata) {
     }
 
     int filter_idx = (scanend >> 3);
-    flush[filter_idx][COLOR_MODE_MONO](); // filter triggers on scanline completion
+    flush[filter_idx][COLOR_MODE_MONO](COLOR_MODE_MONO, screen_addresses[fb_base] + fb_row); // flush triggers on scanline completion
 }
 
 static void _plot_lores40_scanline(scan_data_t *scandata) {
@@ -583,7 +585,7 @@ static void _plot_lores40_scanline(scan_data_t *scandata) {
     }
 
     int filter_idx = (scanend >> 3);
-    flush[filter_idx][color_mode](); // filter triggers on scanline completion
+    flush[filter_idx][color_mode](color_mode, screen_addresses[fb_base] + fb_row); // flush triggers on scanline completion
 }
 
 static inline uint8_t __shift_block80(uint8_t b) {
@@ -650,7 +652,7 @@ static void _plot_lores80_scanline(scan_data_t *scandata) {
     }
 
     int filter_idx = (scanend >> 3);
-    flush[filter_idx][color_mode](); // filter triggers on scanline completion
+    flush[filter_idx][color_mode](color_mode, screen_addresses[fb_base] + fb_row); // flush triggers on scanline completion
 }
 
 static void (*_textpage_plotter(uint32_t currswitches, uint32_t txtflags))(scan_data_t*) {
@@ -764,7 +766,7 @@ static void _plot_hires80_scanline(scan_data_t *scandata) {
     }
 
     int filter_idx = (scanend >> 3);
-    flush[filter_idx][color_mode](); // filter triggers on scanline completion
+    flush[filter_idx][color_mode](color_mode, screen_addresses[fb_base]); // flush triggers on scanline completion
 }
 
 // ----------------------------------------------------------------------------
@@ -801,7 +803,7 @@ static void _plot_hires40_scanline(scan_data_t *scandata) {
     }
 
     int filter_idx = (scanend >> 3);
-    flush[filter_idx][color_mode](); // filter triggers on scanline completion
+    flush[filter_idx][color_mode](color_mode, screen_addresses[fb_base]); // flush triggers on scanline completion
 }
 
 static void (*_hirespage_plotter(uint32_t currswitches))(scan_data_t*) {
