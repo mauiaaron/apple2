@@ -3878,10 +3878,11 @@
 				GCC_PREFIX_HEADER = "Apple2Mac-Prefix.pch";
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"APPLE2IX=1",
-					"KEYPAD_JOYSTICK=1",
-					"TEST_UI=1",
-					"TESTING=1",
+					"CONFORMANT_TRACKS=1",
 					"VIDEO_OPENGL=1",
+					"KEYPAD_JOYSTICK=1",
+					"TESTING=1",
+					"TEST_UI=1",
 				);
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
@@ -3907,10 +3908,11 @@
 				GCC_PREFIX_HEADER = "Apple2Mac-Prefix.pch";
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"APPLE2IX=1",
-					"KEYPAD_JOYSTICK=1",
-					"TEST_UI=1",
-					"TESTING=1",
+					"CONFORMANT_TRACKS=1",
 					"VIDEO_OPENGL=1",
+					"KEYPAD_JOYSTICK=1",
+					"TESTING=1",
+					"TEST_UI=1",
 					"NDEBUG=1",
 				);
 				HEADER_SEARCH_PATHS = (
@@ -3937,17 +3939,17 @@
 				GCC_PREFIX_HEADER = "Apple2Mac-Prefix.pch";
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"APPLE2IX=1",
-					"KEYPAD_JOYSTICK=1",
-					"TEST_TRACE=1",
-					"TESTING=1",
 					"CONFORMANT_TRACKS=1",
+					"VIDEO_OPENGL=1",
+					"KEYPAD_JOYSTICK=1",
+					"TESTING=1",
+					"TEST_TRACE=1",
 					"CPU_TRACING=1",
 					"DISK_TRACING=1",
 					"MB_TRACING=1",
 					"SPEAKER_TRACING=1",
 					"VM_TRACING=1",
 					"VIDEO_TRACING=1",
-					"VIDEO_OPENGL=1",
 				);
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
@@ -3973,17 +3975,17 @@
 				GCC_PREFIX_HEADER = "Apple2Mac-Prefix.pch";
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"APPLE2IX=1",
-					"KEYPAD_JOYSTICK=1",
-					"TEST_TRACE=1",
-					"TESTING=1",
 					"CONFORMANT_TRACKS=1",
+					"VIDEO_OPENGL=1",
+					"KEYPAD_JOYSTICK=1",
+					"TESTING=1",
+					"TEST_TRACE=1",
 					"CPU_TRACING=1",
 					"DISK_TRACING=1",
 					"MB_TRACING=1",
 					"SPEAKER_TRACING=1",
 					"VM_TRACING=1",
 					"VIDEO_TRACING=1",
-					"VIDEO_OPENGL=1",
 					"NDEBUG=1",
 				);
 				HEADER_SEARCH_PATHS = (
@@ -4326,11 +4328,12 @@
 				GCC_PREFIX_HEADER = "Apple2Mac-Prefix.pch";
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"APPLE2IX=1",
-					"KEYPAD_JOYSTICK=1",
-					"TEST_DISK=1",
-					"TESTING=1",
-					"DISK_TRACING=1",
+					"CONFORMANT_TRACKS=1",
 					"VIDEO_OPENGL=1",
+					"KEYPAD_JOYSTICK=1",
+					"TESTING=1",
+					"TEST_DISK=1",
+					"DISK_TRACING=1",
 				);
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
@@ -4356,11 +4359,12 @@
 				GCC_PREFIX_HEADER = "Apple2Mac-Prefix.pch";
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"APPLE2IX=1",
-					"KEYPAD_JOYSTICK=1",
-					"TEST_DISK=1",
-					"TESTING=1",
-					"DISK_TRACING=1",
+					"CONFORMANT_TRACKS=1",
 					"VIDEO_OPENGL=1",
+					"KEYPAD_JOYSTICK=1",
+					"TESTING=1",
+					"TEST_DISK=1",
+					"DISK_TRACING=1",
 					"NDEBUG=1",
 				);
 				HEADER_SEARCH_PATHS = (
@@ -4387,10 +4391,11 @@
 				GCC_PREFIX_HEADER = "Apple2Mac-Prefix.pch";
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"APPLE2IX=1",
-					"KEYPAD_JOYSTICK=1",
-					"TEST_VM=1",
-					"TESTING=1",
+					"CONFORMANT_TRACKS=1",
 					"VIDEO_OPENGL=1",
+					"KEYPAD_JOYSTICK=1",
+					"TESTING=1",
+					"TEST_VM=1",
 				);
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
@@ -4416,10 +4421,11 @@
 				GCC_PREFIX_HEADER = "Apple2Mac-Prefix.pch";
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"APPLE2IX=1",
-					"KEYPAD_JOYSTICK=1",
-					"TEST_VM=1",
-					"TESTING=1",
+					"CONFORMANT_TRACKS=1",
 					"VIDEO_OPENGL=1",
+					"KEYPAD_JOYSTICK=1",
+					"TESTING=1",
+					"TEST_VM=1",
 					"NDEBUG=1",
 				);
 				HEADER_SEARCH_PATHS = (
@@ -4586,8 +4592,9 @@
 				GCC_PREFIX_HEADER = "Apple2Mac-Prefix.pch";
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"APPLE2IX=1",
-					"KEYPAD_JOYSTICK=1",
+					"CONFORMANT_TRACKS=1",
 					"VIDEO_OPENGL=1",
+					"KEYPAD_JOYSTICK=1",
 				);
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
@@ -4615,8 +4622,9 @@
 				GCC_PREFIX_HEADER = "Apple2Mac-Prefix.pch";
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"APPLE2IX=1",
-					"KEYPAD_JOYSTICK=1",
+					"CONFORMANT_TRACKS=1",
 					"VIDEO_OPENGL=1",
+					"KEYPAD_JOYSTICK=1",
 					"NDEBUG=1",
 				);
 				HEADER_SEARCH_PATHS = (
@@ -4648,10 +4656,11 @@
 				GCC_PREFIX_HEADER = "Apple2Mac-Prefix.pch";
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"APPLE2IX=1",
-					"KEYPAD_JOYSTICK=1",
-					"TEST_CPU=1",
-					"TESTING=1",
+					"CONFORMANT_TRACKS=1",
 					"VIDEO_OPENGL=1",
+					"KEYPAD_JOYSTICK=1",
+					"TESTING=1",
+					"TEST_CPU=1",
 				);
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
@@ -4681,10 +4690,11 @@
 				GCC_PREFIX_HEADER = "Apple2Mac-Prefix.pch";
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"APPLE2IX=1",
-					"KEYPAD_JOYSTICK=1",
-					"TEST_CPU=1",
-					"TESTING=1",
+					"CONFORMANT_TRACKS=1",
 					"VIDEO_OPENGL=1",
+					"KEYPAD_JOYSTICK=1",
+					"TESTING=1",
+					"TEST_CPU=1",
 					"NDEBUG=1",
 				);
 				HEADER_SEARCH_PATHS = (
@@ -4712,12 +4722,12 @@
 				GCC_PREFIX_HEADER = "Apple2Mac-Prefix.pch";
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"APPLE2IX=1",
+					"CONFORMANT_TRACKS=1",
+					"VIDEO_OPENGL=1",
 					"KEYPAD_JOYSTICK=1",
 					"TESTING=1",
 					"TEST_DISPLAY=1",
 					"VIDEO_TRACING=1",
-					"VIDEO_OPENGL=1",
-					"CONFORMANT_TRACKS=1",
 				);
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
@@ -4743,12 +4753,12 @@
 				GCC_PREFIX_HEADER = "Apple2Mac-Prefix.pch";
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"APPLE2IX=1",
+					"CONFORMANT_TRACKS=1",
+					"VIDEO_OPENGL=1",
 					"KEYPAD_JOYSTICK=1",
 					"TESTING=1",
 					"TEST_DISPLAY=1",
 					"VIDEO_TRACING=1",
-					"VIDEO_OPENGL=1",
-					"CONFORMANT_TRACKS=1",
 					"NDEBUG=1",
 				);
 				HEADER_SEARCH_PATHS = (
