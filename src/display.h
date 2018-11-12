@@ -240,7 +240,7 @@ void display_frameComplete(void) CALL_ON_CPU_THREAD;
 /*
  * Wait for frame complete and return staging framebuffer.
  */
-uint8_t *display_waitForNextCompleteFramebuffer(void);
+PIXEL_TYPE *display_waitForNextCompleteFramebuffer(void);
 #endif
 
 // ----------------------------------------------------------------------------

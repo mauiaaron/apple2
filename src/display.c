@@ -817,6 +817,8 @@ uint16_t display_getVideoLineOffset(uint8_t txtRow) {
     return video_line_offset[txtRow];
 }
 
+#if 0
+// FIXME TODO ... eliminate this completely since video scanner now in force ...
 PIXEL_TYPE *display_renderStagingFramebuffer(void) {
 
     const uint32_t mainswitches = run_args.softswitches;
@@ -923,13 +925,14 @@ PIXEL_TYPE *display_renderStagingFramebuffer(void) {
     video_setDirty(FB_DIRTY_FLAG);
     return fbFull;
 }
+#endif
 
 #if TESTING
 // HACK FIXME TODO ... should consolidate this into debugger ...
 extern pthread_mutex_t interface_mutex;
 extern pthread_cond_t cpu_thread_cond;
 extern pthread_cond_t dbg_thread_cond;
-uint8_t *display_waitForNextCompleteFramebuffer(void) {
+PIXEL_TYPE *display_waitForNextCompleteFramebuffer(void) {
     int err = 0;
     if ((err = pthread_cond_signal(&cpu_thread_cond))) {
         LOG("pthread_cond_signal : %d", err);

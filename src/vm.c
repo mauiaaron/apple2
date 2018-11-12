@@ -1097,7 +1097,7 @@ static void _initialize_apple_ii_memory(void) {
         i += 2;
     }
 
-#if !CPU_TRACING && !VIDEO_TRACING
+#if !TESTING && !CPU_TRACING && !VIDEO_TRACING
     // certain memory locations randomized at cold-boot ...
     for (uint16_t addr = 0x0000; addr < 0xC000; addr += 0x200)
     {

@@ -29,7 +29,7 @@
 #define TESTOUT_ADDR 0x1f43     // PEEK(8003) -- NOTE : value is hardcoded in various places
 
 #define BLANK_SCREEN "6C8ABA272F220F00BE0E76A8659A1E30C2D3CDBE"
-#define BOOT_SCREEN  "F8D6C781E0BB7B3DDBECD69B25E429D845506594"
+#define BOOT_SCREEN  "6992DC41631290540E7175F06873BA559E938BF7"
 
 extern char mdstr[(SHA_DIGEST_LENGTH*2)+1];
 
@@ -43,52 +43,40 @@ char **test_copy_disk_paths(const char *fileName);
 int test_setup_boot_disk(const char *fileName, int readonly);
 void sha1_to_str(const uint8_t * const md, char *buf);
 
-static inline bool _matchFramebufferSHA(const char *SHA_STR, bool is_old) {
+static inline bool _matchFramebufferSHA(const char *SHA_STR, bool do_assert) {
     uint8_t md[SHA_DIGEST_LENGTH];
 
-    uint8_t *fb = NULL;
-    if (is_old) {
-        extern uint8_t *display_renderStagingFramebuffer(void);
-        fb = display_renderStagingFramebuffer();
-    } else {
-        fb = display_waitForNextCompleteFramebuffer();
-    }
-    SHA1(fb, SCANWIDTH*SCANHEIGHT, md);
+    PIXEL_TYPE *fb = NULL;
+    extern void timing_setVideoDirty(void);
+    timing_setVideoDirty();
+    fb = display_waitForNextCompleteFramebuffer();
+    SHA1(fb, SCANWIDTH*SCANHEIGHT*PIXEL_STRIDE, md);
 
     sha1_to_str(md, mdstr);
     bool matches = strcasecmp(mdstr, SHA_STR) == 0;
 
-    return matches;
-}
-
-static inline int _assertFramebufferSHA(const char *SHA_STR, bool is_old) {
-    bool matches = _matchFramebufferSHA(SHA_STR, is_old);
-    ASSERT(matches && "check global mdstr if failed...");
-    PASS();
+    if (do_assert) {
+        ASSERT(matches && "check global mdstr if failed...");
+        PASS();
+    } else {
+        return matches;
+    }
 }
 
 #define ASSERT_SHA(SHA_STR) \
 do { \
-    int ret = _assertFramebufferSHA(SHA_STR, /*is_old:*/false); \
+    int ret = _matchFramebufferSHA(SHA_STR, /*do_assert:*/true); \
     if (ret != 0) { \
         return ret; \
     } \
-} while (0);
-
-#define ASSERT_SHA_OLD(SHA_STR) \
-do { \
-    int ret = _assertFramebufferSHA(SHA_STR, /*is_old:*/true); \
-    if (ret != 0) { \
-        return ret; \
-    } \
-} while (0);
+} while (0)
 
 #define WAIT_FOR_FB_SHA(SHA_STR) \
 do { \
     unsigned int matchAttempts = 0; \
     const unsigned int maxMatchAttempts = 10; \
     do { \
-        bool matches = _matchFramebufferSHA(SHA_STR, /*is_old:*/false); \
+        bool matches = _matchFramebufferSHA(SHA_STR, /*do_assert:*/false); \
         if (matches) { \
             break; \
         } \
@@ -97,7 +85,7 @@ do { \
         fprintf(GREATEST_STDOUT, "DID NOT FIND SHA %s...\n", SHA_STR); \
         ASSERT(0); \
     } \
-} while (0);
+} while (0)
 
 static inline int ASSERT_SHA_MEM(const char *SHA_STR, uint16_t ea, uint16_t len) {
     uint8_t md[SHA_DIGEST_LENGTH];
@@ -108,7 +96,7 @@ static inline int ASSERT_SHA_MEM(const char *SHA_STR, uint16_t ea, uint16_t len)
     return 0;
 }
 
-static inline int ASSERT_SHA_BIN(const char *SHA_STR, const uint8_t * const buf, unsigned long len) {
+static inline int ASSERT_SHA_BIN(const char *SHA_STR, const uint8_t * const buf, unsigned int len) {
     uint8_t md[SHA_DIGEST_LENGTH];
     SHA1(buf, len, md);
     sha1_to_str(md, mdstr);

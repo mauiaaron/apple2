@@ -207,6 +207,12 @@ bool cpu_isPaused(void) {
     return is_paused;
 }
 
+#if TESTING
+void timing_setVideoDirty(void) {
+    emul_video_dirty = true;
+}
+#endif
+
 bool timing_shouldAutoAdjustSpeed(void) {
     double speed = alt_speed_enabled ? cpu_altscale_factor : cpu_scale_factor;
     return auto_adjust_speed && (speed <= CPU_SCALE_FASTEST_PIVOT);

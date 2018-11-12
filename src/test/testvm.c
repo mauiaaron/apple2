@@ -24,6 +24,7 @@ static void testvm_setup(void *arg) {
     if (test_do_reboot) {
         cpu65_interrupt(ResetSig);
     }
+    test_setup_boot_disk("testvm1.dsk.gz", 1);
 }
 
 static void testvm_teardown(void *arg) {
@@ -31,15 +32,6 @@ static void testvm_teardown(void *arg) {
 
 // ----------------------------------------------------------------------------
 // VM TESTS ...
-
-TEST test_boot_disk() {
-    test_setup_boot_disk("testvm1.dsk.gz", 1);
-
-    BOOT_TO_DOS();
-    ASSERT_SHA(BOOT_SCREEN);
-
-    PASS();
-}
 
 TEST test_read_keyboard() {
     BOOT_TO_DOS();
@@ -3234,8 +3226,6 @@ GREATEST_SUITE(test_suite_vm) {
     GREATEST_SET_BREAKPOINT_CB(test_breakpoint, NULL);
 
     // TESTS --------------------------
-
-    RUN_TESTp(test_boot_disk);
 
 #if defined(ANDROID)
 #warning FIXME TODO ... why are these test broken on Android?!
