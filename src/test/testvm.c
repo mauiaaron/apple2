@@ -107,58 +107,6 @@ TEST test_read_random() {
     PASS();
 }
 
-#if 0
-#error this is an unstable test due to VBL refactoring ...
-TEST test_read_random2() {
-#ifdef __APPLE__
-#warning "ignoring random test on Darwin..."
-#else
-
-    srandom(0); // force a known sequence
-    BOOT_TO_DOS();
-
-    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
-    ASSERT(apple_ii_64k[0][TESTOUT_ADDR]    == 0x00);
-
-    test_type_input("RUN TESTRND2\r");
-    c_debugger_go();
-
-    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
-    ASSERT(apple_ii_64k[0][TESTOUT_ADDR] == 103);
-
-    apple_ii_64k[0][WATCHPOINT_ADDR] = 0x0;
-    test_common_setup();
-    test_type_input("RUN\r");
-    c_debugger_go();
-    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
-    ASSERT(apple_ii_64k[0][TESTOUT_ADDR] == 198);
-
-    apple_ii_64k[0][WATCHPOINT_ADDR] = 0x0;
-    test_common_setup();
-    test_type_input("RUN\r");
-    c_debugger_go();
-    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
-    ASSERT(apple_ii_64k[0][TESTOUT_ADDR] == 105);
-
-    apple_ii_64k[0][WATCHPOINT_ADDR] = 0x0;
-    test_common_setup();
-    test_type_input("RUN\r");
-    c_debugger_go();
-    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
-    ASSERT(apple_ii_64k[0][TESTOUT_ADDR] == 115);
-
-    apple_ii_64k[0][WATCHPOINT_ADDR] = 0x0;
-    test_common_setup();
-    test_type_input("RUN\r");
-    c_debugger_go();
-    ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
-    ASSERT(apple_ii_64k[0][TESTOUT_ADDR] == 81);
-#endif
-
-    PASS();
-}
-#endif
-
 // ----------------------------------------------------------------------------
 // Softswitch tests
 
@@ -3227,20 +3175,10 @@ GREATEST_SUITE(test_suite_vm) {
 
     // TESTS --------------------------
 
-#if defined(ANDROID)
-#warning FIXME TODO ... why are these test broken on Android?!
-#else
     RUN_TESTp(test_read_keyboard);
-
     RUN_TESTp(test_clear_keyboard);
 
     RUN_TESTp(test_read_random);
-#if 0
-#error this is an unstable test due to VBL refactoring ...
-    RUN_TESTp(test_read_random2);
-#endif
-
-#endif
 
     RUN_TESTp(test_PAGE2_on,  /*80STORE*/0, /*HIRES*/0);
     RUN_TESTp(test_PAGE2_on,  /*80STORE*/0, /*HIRES*/1);

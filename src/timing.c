@@ -491,6 +491,7 @@ bool timing_isCPUThread(void) {
 
 void timing_startCPU(void) {
     cpu_shutting_down = false;
+    assert(cpu_thread_id == 0);
     int err = TEMP_FAILURE_RETRY(pthread_create(&cpu_thread_id, NULL, (void *)&cpu_thread, (void *)NULL));
     if (err) {
         LOG("pthread_create failed!");

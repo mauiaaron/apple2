@@ -7413,8 +7413,6 @@ GREATEST_SUITE(test_suite_cpu) {
     GREATEST_SET_TEARDOWN_CB(testcpu_teardown, NULL);
     GREATEST_SET_BREAKPOINT_CB(test_breakpoint, NULL);
 
-    srandom(time(NULL));
-
     test_common_init();
     assert(cpu_thread_id == 0 && "This test is not designed to run with alternate CPU thread");
     extern void reinitialize(void);

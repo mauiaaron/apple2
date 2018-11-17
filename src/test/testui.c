@@ -147,7 +147,7 @@ TEST test_save_state_1() {
     bool ret = emulator_saveState(fd);
     ASSERT(ret);
 
-    ASSERT_SHA(BOOT_SCREEN);
+    WAIT_FOR_FB_SHA(BOOT_SCREEN);
 
     TEMP_FAILURE_RETRY(close(fd));
 
@@ -190,7 +190,7 @@ TEST test_load_state_1() {
     _assert_blank_boot();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
-    ASSERT_SHA(BOOT_SCREEN);
+    WAIT_FOR_FB_SHA(BOOT_SCREEN);
 
     TEMP_FAILURE_RETRY(close(fdState));
     TEMP_FAILURE_RETRY(close(fdA));
@@ -304,7 +304,7 @@ TEST test_load_A2VM_good1() {
     ASSERT(run_args.cpu65_sp      == 0xEA);
 
     // ASSERT framebuffer matches expected
-    ASSERT_SHA("9C654FEF2A672E16D89ED2FB80C593CD2005A026");
+    WAIT_FOR_FB_SHA("8BF579CC23A8A6D5E13F5BA3CEEE9DA7714F72B6");
 
     TEMP_FAILURE_RETRY(close(fdState));
     TEMP_FAILURE_RETRY(close(fdA));
@@ -430,7 +430,7 @@ TEST test_load_A2V2_good1() {
     mb_testAssertA2V2(mbData, mbSiz);
 
     // ASSERT framebuffer matches expected
-    ASSERT_SHA("B1CB1C5811B9C629BB077F857CC41DFA8A283E96");
+    WAIT_FOR_FB_SHA("3FB6BF44F5A7A6742550B33B627FFC5F06BAEC94");
 
     TEMP_FAILURE_RETRY(close(fdState));
     TEMP_FAILURE_RETRY(close(fdA));
@@ -556,7 +556,7 @@ TEST test_load_A2V2_good2() {
     mb_testAssertA2V2(mbData, mbSiz);
 
     // ASSERT framebuffer matches expected
-    ASSERT_SHA("7A60972EF2E95956249454402A42C12E7C8FBF7A");
+    WAIT_FOR_FB_SHA("FD20698466B30B5BE9DA298731B6B5AC2C94C56D");
 
     TEMP_FAILURE_RETRY(close(fdState));
     TEMP_FAILURE_RETRY(close(fdA));
@@ -678,7 +678,7 @@ TEST test_load_A2V2_good3() {
     mb_testAssertA2V2(mbData, mbSiz);
 
     // ASSERT framebuffer matches expected
-    ASSERT_SHA("D92EECDF3C7446097F3E884412D7911DDD968287");
+    WAIT_FOR_FB_SHA("70BFB1572C377578EAAB31AC09C4C383366628BD");
 
     TEMP_FAILURE_RETRY(close(fdState));
     TEMP_FAILURE_RETRY(close(fdA));
@@ -748,8 +748,6 @@ static void *test_thread(void *dummyptr) {
 void test_ui(int _argc, char **_argv) {
     test_argc = _argc;
     test_argv = _argv;
-
-    srandom(time(NULL));
 
     test_common_init();
 

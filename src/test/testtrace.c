@@ -248,7 +248,6 @@ TEST test_boot_disk_cputrace() {
         cpu65_trace_begin(output);
     }
 
-    srandom(0);
     BOOT_TO_DOS();
 
     cpu65_trace_end();
@@ -296,8 +295,6 @@ TEST test_boot_disk_cputrace2() { // Failing now due to difference in IRQ timing
         unlink(output);
         cpu65_trace_begin(output);
     }
-
-    srandom(0);
 
     // Poll for trace file of particular size
     c_debugger_clear_watchpoints();
@@ -363,8 +360,6 @@ TEST test_boot_disk_cputrace3() {
         unlink(output);
         cpu65_trace_begin(output);
     }
-
-    srandom(0);
 
     // Poll for trace file of particular size
     c_debugger_clear_watchpoints();
@@ -432,7 +427,6 @@ TEST test_cputrace_hello_dsk() {
         cpu65_trace_begin(output);
     }
 
-    srandom(0);
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x00;
     test_type_input_deterministically("RUN HELLO\r");
     c_debugger_go();
@@ -482,7 +476,6 @@ TEST test_cputrace_hello_nib() {
         cpu65_trace_begin(output);
     }
 
-    srandom(0);
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x00;
     test_type_input_deterministically("RUN HELLO\r");
     c_debugger_go();
@@ -532,7 +525,6 @@ TEST test_cputrace_hello_po() {
         cpu65_trace_begin(output);
     }
 
-    srandom(0);
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x00;
     test_type_input_deterministically("RUN HELLO\r");
     c_debugger_go();
@@ -581,7 +573,6 @@ TEST test_boot_disk_vmtrace() {
         vm_trace_begin(disk);
     }
 
-    srandom(0);
     BOOT_TO_DOS();
 
     vm_trace_end();
@@ -629,7 +620,6 @@ TEST test_boot_disk_vmtrace_nib() {
         vm_trace_begin(disk);
     }
 
-    srandom(0);
     BOOT_TO_DOS();
 
     vm_trace_end();
@@ -677,7 +667,6 @@ TEST test_boot_disk_vmtrace_po() {
         vm_trace_begin(disk);
     }
 
-    srandom(0);
     BOOT_TO_DOS();
 
     vm_trace_end();
