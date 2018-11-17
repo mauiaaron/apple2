@@ -14,7 +14,7 @@
 
 static bool test_thread_running = false;
 
-extern pthread_mutex_t interface_mutex; // TODO FIXME : raw access to CPU mutex because stepping debugger ...
+//extern pthread_mutex_t interface_mutex; // TODO FIXME : raw access to CPU mutex because stepping debugger ...
 
 static void testprefs_setup(void *unused) {
 }
@@ -1984,7 +1984,7 @@ TEST test_prefs_load_and_save() {
 // Test Suite
 
 GREATEST_SUITE(test_suite_prefs) {
-    pthread_mutex_lock(&interface_mutex);
+    //pthread_mutex_lock(&interface_mutex);
 
     test_thread_running = true;
     
@@ -2041,7 +2041,7 @@ GREATEST_SUITE(test_suite_prefs) {
     RUN_TESTp(test_prefs_load_and_save);
 
     // --------------------------------
-    pthread_mutex_unlock(&interface_mutex);
+    //pthread_mutex_unlock(&interface_mutex);
 }
 
 SUITE(test_suite_prefs);

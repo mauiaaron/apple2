@@ -50,7 +50,7 @@ static inline bool _matchFramebufferSHA(const char *SHA_STR, bool do_assert) {
     extern void timing_setVideoDirty(void);
     timing_setVideoDirty();
     fb = display_waitForNextCompleteFramebuffer();
-    SHA1(fb, SCANWIDTH*SCANHEIGHT*PIXEL_STRIDE, md);
+    SHA1((const uint8_t *)fb, SCANWIDTH*SCANHEIGHT*PIXEL_STRIDE, md);
 
     sha1_to_str(md, mdstr);
     bool matches = strcasecmp(mdstr, SHA_STR) == 0;

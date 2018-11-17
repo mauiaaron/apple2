@@ -1391,7 +1391,7 @@ static int _test_disk_image_with_gzip_header(int readonly) {
     do {
         uint8_t md[SHA_DIGEST_LENGTH];
 
-        SHA1(display_waitForNextCompleteFramebuffer(), SCANWIDTH*SCANHEIGHT*PIXEL_STRIDE, md);
+        SHA1((uint8_t *)display_waitForNextCompleteFramebuffer(), SCANWIDTH*SCANHEIGHT*PIXEL_STRIDE, md);
 
         sha1_to_str(md, mdstr);
         bool matches_sha1 = (strcasecmp(mdstr, GZBAD_NIB_LOAD_SHA1) == 0);
@@ -1496,7 +1496,7 @@ TEST test_reinsert_edgecase() {
     c_debugger_go();
     uint8_t md[SHA_DIGEST_LENGTH];
 
-    SHA1(display_waitForNextCompleteFramebuffer(), SCANWIDTH*SCANHEIGHT*PIXEL_STRIDE, md);
+    SHA1((uint8_t *)display_waitForNextCompleteFramebuffer(), SCANWIDTH*SCANHEIGHT*PIXEL_STRIDE, md);
 
     sha1_to_str(md, mdstr);
     ASSERT(strcmp(mdstr, DROL_CRACK_SCREEN_SHA) != 0);
