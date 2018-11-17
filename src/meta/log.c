@@ -74,7 +74,7 @@ static void _log_rotate(bool performRotation) {
 
     logSiz = lseek(logFd, 0L, SEEK_END);
 
-    log_outputString("-------------------------------------------------------------------------------");
+    //log_outputString("-------------------------------------------------------------------------------"); -- do not write to logfile here unless lock is recursive
 
     FREE(logPath);
 }
