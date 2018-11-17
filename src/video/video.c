@@ -157,7 +157,8 @@ void video_init(void) {
 
     ASSERT_NOT_ON_CPU_THREAD();
     LOG("(re)setting render_thread_id : %lu -> %lu", (unsigned long)render_thread_id, (unsigned long)pthread_self());
-    render_thread_id = pthread_self();
+
+    _video_setRenderThread(pthread_self());
 
     currentBackend->init((void*)0);
 }

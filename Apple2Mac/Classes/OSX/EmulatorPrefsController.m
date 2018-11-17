@@ -77,10 +77,13 @@ static void prefsChangeCallback(const char *domain)
 
 - (void)loadPrefsForDomain:(const char *)domain
 {
-    [self.cpuSlider setDoubleValue:cpu_scale_factor];
-    [self.cpuSliderLabel setStringValue:[NSString stringWithFormat:@"%.0f%%", cpu_scale_factor*100]];
-    if (cpu_scale_factor == CPU_SCALE_FASTEST)
+    float fVal, fValDisplay;
+    fVal = prefs_parseFloatValue(PREF_DOMAIN_VM, PREF_CPU_SCALE, &fVal) ? fVal/100 : 1.0;
+    fValDisplay = fVal;
+    if (fVal >= CPU_SCALE_FASTEST)
     {
+        fVal = CPU_SCALE_FASTEST;
+        fValDisplay = CPU_SCALE_FASTEST_PIVOT;
         [self.cpuMaxChoice setState:NSOnState];
         [self.cpuSlider setEnabled:NO];
     }
@@ -89,11 +92,15 @@ static void prefsChangeCallback(const char *domain)
         [self.cpuMaxChoice setState:NSOffState];
         [self.cpuSlider setEnabled:YES];
     }
-    
-    [self.altSlider setDoubleValue:cpu_altscale_factor];
-    [self.altSliderLabel setStringValue:[NSString stringWithFormat:@"%.0f%%", cpu_altscale_factor*100]];
-    if (cpu_altscale_factor == CPU_SCALE_FASTEST)
+    [self.cpuSlider setFloatValue:fVal];
+    [self.cpuSliderLabel setStringValue:[NSString stringWithFormat:@"%.0f%%", fValDisplay*100]];
+
+    fVal = prefs_parseFloatValue(PREF_DOMAIN_VM, PREF_CPU_SCALE_ALT, &fVal) ? fVal/100 : 1.0;
+    fValDisplay = fVal;
+    if (fVal >= CPU_SCALE_FASTEST)
     {
+        fVal = CPU_SCALE_FASTEST;
+        fValDisplay = CPU_SCALE_FASTEST_PIVOT;
         [self.altMaxChoice setState:NSOnState];
         [self.altSlider setEnabled:NO];
     }
@@ -102,7 +109,9 @@ static void prefsChangeCallback(const char *domain)
         [self.altMaxChoice setState:NSOffState];
         [self.altSlider setEnabled:YES];
     }
-    
+    [self.altSlider setFloatValue:fVal];
+    [self.altSliderLabel setStringValue:[NSString stringWithFormat:@"%.0f%%", fValDisplay*100]];
+
 #warning TODO : actually implement sound card choices
     [self.soundCardChoice deselectAllCells];
     [self.soundCardChoice selectCellAtRow:1 column:0];
@@ -133,17 +142,7 @@ static void prefsChangeCallback(const char *domain)
 {
     NSSlider *slider = (NSSlider *)sender;
     double value = [slider doubleValue];
-    if (slider == self.cpuSlider)
-    {
-        prefs_setFloatValue(PREF_DOMAIN_VM, PREF_CPU_SCALE, value);
-        [self.cpuSliderLabel setStringValue:[NSString stringWithFormat:@"%.0f%%", value*100]];
-    }
-    else
-    {
-        prefs_setFloatValue(PREF_DOMAIN_VM, PREF_CPU_SCALE_ALT, value);
-        [self.altSliderLabel setStringValue:[NSString stringWithFormat:@"%.0f%%", value*100]];
-    }
-    
+    prefs_setFloatValue(PREF_DOMAIN_VM, (slider == self.cpuSlider) ? PREF_CPU_SCALE : PREF_CPU_SCALE_ALT, value*100);
     prefs_sync(PREF_DOMAIN_VM);
     prefs_save();
 }
@@ -153,15 +152,13 @@ static void prefsChangeCallback(const char *domain)
     NSButton *maxButton = (NSButton *)sender;
     if (maxButton == self.cpuMaxChoice)
     {
-        [self.cpuSlider setEnabled:([maxButton state] != NSOnState)];
         double value = ([maxButton state] == NSOnState) ? CPU_SCALE_FASTEST : [self.cpuSlider doubleValue];
-        prefs_setFloatValue(PREF_DOMAIN_VM, PREF_CPU_SCALE, value);
+        prefs_setFloatValue(PREF_DOMAIN_VM, PREF_CPU_SCALE, value*100);
     }
     else
     {
-        [self.altSlider setEnabled:([maxButton state] != NSOnState)];
         double value = ([maxButton state] == NSOnState) ? CPU_SCALE_FASTEST : [self.altSlider doubleValue];
-        prefs_setFloatValue(PREF_DOMAIN_VM, PREF_CPU_SCALE_ALT, value);
+        prefs_setFloatValue(PREF_DOMAIN_VM, PREF_CPU_SCALE_ALT, value*100);
     }
 
     prefs_sync(PREF_DOMAIN_VM);
