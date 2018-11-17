@@ -337,32 +337,22 @@ static int keysym_to_scancode(void) {
 static void post_image() {
 
     // now check/clear if we should redraw
-    unsigned long wasDirty = video_clearDirty(FB_DIRTY_FLAG);
+    unsigned long wasDirty = (video_clearDirty(FB_DIRTY_FLAG) & FB_DIRTY_FLAG);
     if (wasDirty) {
-        uint8_t *fb = display_getCurrentFramebuffer();
+        PIXEL_TYPE *fb = display_getCurrentFramebuffer();
 
-        uint8_t index;
-        unsigned int count = SCANWIDTH * SCANHEIGHT;
-        for (unsigned int i=0, j=0; i<count; i++, j+=4)
-        {
-            index = *(fb + i);
-            *( (uint32_t*)(image->data + j) ) = (uint32_t)(
-                    ((uint32_t)(colormap[index].red)   << red_shift)   |
-                    ((uint32_t)(colormap[index].green) << green_shift) |
-                    ((uint32_t)(colormap[index].blue)  << blue_shift)  |
-                    ((uint32_t)0xff /* alpha */ << alpha_shift)
-                    );
-            if (scale > 1)
+        if (scale <= 1) {
+            memcpy(/*dst:*/image->data, /*src:*/fb, SCANWIDTH*SCANHEIGHT*bitmap_pad);
+        } else {
+            unsigned int count = SCANWIDTH * SCANHEIGHT;
+            for (unsigned int i=0, j=0; i<count; i++, j+=4)
             {
+                PIXEL_TYPE pixel = *(fb + i);
+                *( (uint32_t*)(image->data + j) ) = pixel;
                 j+=4;
 
                 // duplicate pixel
-                *( (uint32_t*)(image->data + j) ) = (uint32_t)(
-                        ((uint32_t)(colormap[index].red)   << red_shift)   |
-                        ((uint32_t)(colormap[index].green) << green_shift) |
-                        ((uint32_t)(colormap[index].blue)  << blue_shift)  |
-                        ((uint32_t)0xff /* alpha */ << alpha_shift)
-                        );
+                *( (uint32_t*)(image->data + j) ) = pixel;
 
                 if (((i+1) % SCANWIDTH) == 0)
                 {

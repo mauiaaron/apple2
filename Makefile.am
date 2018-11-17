@@ -76,6 +76,7 @@ apple2ix_SOURCES = \
 	src/test/sha1.c \
 	src/timing.c \
 	src/video/video.c \
+	src/video/ntsc.c \
 	src/vm.c \
 	src/zlib-helpers.c
 

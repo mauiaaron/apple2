@@ -44,7 +44,7 @@ typedef PIXEL_TYPE (*fb_scanline_fn)(PIXEL_TYPE color0, PIXEL_TYPE color2);
 
 static uint8_t half_scanlines = false;
 static fb_plotter_fn pixelPlotter[NUM_COLOROPTS] = { NULL };
-static fb_scanline_fn getHalfColor[NUM_COLOROPTS][2] = { NULL };
+static fb_scanline_fn getHalfColor[NUM_COLOROPTS][2] = { { NULL } };
 
 static unsigned int ntsc_color_phase = 0;
 unsigned int ntsc_signal_bits = 0;

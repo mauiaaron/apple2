@@ -1093,8 +1093,8 @@ void fb_sha1() {
     uint8_t md[SHA_DIGEST_LENGTH];
     char buf[(SHA_DIGEST_LENGTH*2)+1];
 
-    uint8_t *fb = display_getCurrentFramebuffer();
-    SHA1(fb, SCANWIDTH*SCANHEIGHT, md);
+    PIXEL_TYPE *fb = display_getCurrentFramebuffer();
+    SHA1((const unsigned char *)fb, SCANWIDTH*SCANHEIGHT*PIXEL_STRIDE, md);
 
     int i=0;
     for (int j=0; j<SHA_DIGEST_LENGTH; j++, i+=2) {
