@@ -371,7 +371,7 @@ void emulator_registerStartupCallback(long order, startup_callback_f ctor) {
     pthread_mutex_lock(&mutex);
 
     module_ctor_node_s *node = MALLOC(sizeof(module_ctor_node_s));
-    assert(node);
+    assert((uintptr_t)node);
     node->next = NULL;
     node->order = order;
     node->ctor = ctor;

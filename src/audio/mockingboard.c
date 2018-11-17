@@ -2250,7 +2250,7 @@ static void RegisterIoHandler(unsigned int uSlot, iorfunction IOReadC0, iowfunct
     unsigned int base_addr = 0xC080 + (uSlot<<4); // uSlot == 4 => 0xC0C0 , uSlot == 5 => 0xC0D0
     if (IOReadC0)
     {
-        assert(IOWriteC0);
+        assert((uintptr_t)IOWriteC0);
         for (unsigned int i = 0; i < 16; i++)
         {
             cpu65_vmem_r[base_addr+i] = IOReadC0;

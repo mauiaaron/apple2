@@ -144,7 +144,7 @@ float audio_getLatency(void) {
 
 void audio_registerBackend(AudioBackend_s *backend, long order) {
     backend_node_s *node = MALLOC(sizeof(backend_node_s));
-    assert(node);
+    assert((uintptr_t)node);
     node->next = NULL;
     node->order = order;
     node->backend = backend;

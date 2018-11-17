@@ -134,7 +134,7 @@ void *glhud_createDefault(void) {
 void *glhud_createCustom(unsigned int sizeofModel) {
     assert(sizeof(GLModelHUDElement) <= sizeofModel);
     GLModelHUDElement *hudElement = (GLModelHUDElement *)CALLOC(sizeofModel, 1);
-    assert(hudElement);
+    assert((uintptr_t)hudElement);
     hudElement->glyphMultiplier = 1;
     return hudElement;
 }

@@ -41,7 +41,7 @@ void glnode_registerNode(glnode_render_order_t order, GLNode node) {
     pthread_mutex_lock(&mutex);
 
     glnode_array_node_s *arrayNode = MALLOC(sizeof(glnode_array_node_s));
-    assert(arrayNode);
+    assert((uintptr_t)arrayNode);
     arrayNode->next = NULL;
     arrayNode->last = NULL;
     arrayNode->order = order;

@@ -78,11 +78,11 @@ void log_outputString(const char * const str);
 #   undef assert
 #   define assert(e) \
     do { \
-        if (LIKELY(e)) { \
-            /* ... */ \
+        if (LIKELY((e))) { \
+            /* ... ALL GOOD ... */ \
         } else { \
-            LOG( "!!! ASSERT !!! : " #e ); \
-            sleep(1); \
+            /*LOG( "!!! ASSERT !!! : " #e); */ \
+            /*sleep(1); */ \
             __assert2(_MYFILE_, __LINE__, __func__, #e); \
         } \
     } while (0)

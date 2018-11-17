@@ -52,7 +52,7 @@ static inline void _set_alpha(unsigned int dstIdx) {
 }
 
 static void _alertToModel(char *message, unsigned int messageCols, unsigned int messageRows) {
-    assert(message);
+    assert((uintptr_t)message);
 
     isEnabled = false;
 
@@ -93,7 +93,7 @@ static void _alertToModel(char *message, unsigned int messageCols, unsigned int 
         hudElement->pixWidth = fbWidth;
         hudElement->pixHeight = fbHeight;
         hudElement->pixels = MALLOC(fbWidth * fbHeight * PIXEL_STRIDE);
-        assert(hudElement->pixels);
+        assert((uintptr_t)(hudElement->pixels));
         glhud_setupDefault(messageModel);
 
         if (1) {

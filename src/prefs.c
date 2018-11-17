@@ -62,7 +62,7 @@ void prefs_load(void) {
         ASPRINTF(&filePath, "%s/.apple2.json", HOMEDIR);
     }
 
-    assert(filePath);
+    assert((uintptr_t)filePath);
     _prefs_load(filePath);
 
     FREE(filePath);
@@ -264,7 +264,7 @@ bool prefs_setStringValue(const char *domain, const char * _NONNULL key, const c
         if (errCount <= 0) {
             errCount = json_createFromString("{}", &jsonRef);
             assert(errCount > 0);
-            assert(jsonRef);
+            assert((uintptr_t)jsonRef);
         }
 
         ret = json_mapSetStringValue(jsonRef, key, val);
@@ -294,7 +294,7 @@ bool prefs_setLongValue(const char * _NONNULL domain, const char * _NONNULL key,
         if (errCount <= 0) {
             errCount = json_createFromString("{}", &jsonRef);
             assert(errCount > 0);
-            assert(jsonRef);
+            assert((uintptr_t)jsonRef);
         }
 
         ret = json_mapSetLongValue(jsonRef, key, val);
@@ -324,7 +324,7 @@ bool prefs_setBoolValue(const char * _NONNULL domain, const char * _NONNULL key,
         if (errCount <= 0) {
             errCount = json_createFromString("{}", &jsonRef);
             assert(errCount > 0);
-            assert(jsonRef);
+            assert((uintptr_t)jsonRef);
         }
 
         ret = json_mapSetBoolValue(jsonRef, key, val);
@@ -354,7 +354,7 @@ bool prefs_setFloatValue(const char * _NONNULL domain, const char * _NONNULL key
         if (errCount <= 0) {
             errCount = json_createFromString("{}", &jsonRef);
             assert(errCount > 0);
-            assert(jsonRef);
+            assert((uintptr_t)jsonRef);
         }
 
         ret = json_mapSetFloatValue(jsonRef, key, val);

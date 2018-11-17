@@ -55,8 +55,8 @@ static void _log_rotate(bool performRotation) {
 
             ASPRINTF(&logPath0, LOG_PATH_TEMPLATE, data_dir, PATH_SEPARATOR, (i-1));
             ASPRINTF(&logPath1, LOG_PATH_TEMPLATE, data_dir, PATH_SEPARATOR, i);
-            assert(logPath0);
-            assert(logPath1);
+            assert((uintptr_t)logPath0);
+            assert((uintptr_t)logPath1);
 
             int ret = -1;
             TEMP_FAILURE_RETRY(ret = rename(logPath0, logPath1));
@@ -68,7 +68,7 @@ static void _log_rotate(bool performRotation) {
 
     char *logPath = NULL;
     ASPRINTF(&logPath, LOG_PATH_TEMPLATE, data_dir, PATH_SEPARATOR, 0);
-    assert(logPath);
+    assert((uintptr_t)logPath);
 
     TEMP_FAILURE_RETRY(logFd = open(logPath, O_WRONLY|O_CREAT|xflag, S_IRUSR|S_IWUSR));
 

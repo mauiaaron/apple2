@@ -556,7 +556,7 @@ void video_registerBackend(video_backend_s *backend, long order) {
     assert(!video_initialized); // backends cannot be registered after we've picked one to use
 
     backend_node_s *node = MALLOC(sizeof(backend_node_s));
-    assert(node);
+    assert((uintptr_t)node);
     node->next = NULL;
     node->order = order;
     node->backend = backend;
