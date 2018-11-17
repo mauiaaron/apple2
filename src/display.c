@@ -424,9 +424,6 @@ static void _plot_oldschool(color_mode_t mode, uint16_t bits14, unsigned int col
     static unsigned int last_col_shift[6] = { 0, 0, 0, 0, 0, 1 };
     unsigned int count = 3 + (((shift >> 1) & 0x1) << last_col_shift[(col + 1) >> 3]);
     assert(count == 3 || count == 4 || count == 5);
-    if (count == 5) {
-        assert(true);
-    }
     for (unsigned int i=0; i<count; i++) {
         uint16_t idx = (scanbits32 >> (4 * i)) & 0xFFF;
 
@@ -446,7 +443,7 @@ static void _plot_oldschool(color_mode_t mode, uint16_t bits14, unsigned int col
     ntsc_signal_bits = ((bits14 >> shift) & mask);
 }
 
-static void _plot_direct(color_mode_t mode, uint16_t bits14, unsigned int col, uint32_t *colors16, unsigned int fb_off) {
+static void _plot_ntsc(color_mode_t mode, uint16_t bits14, unsigned int col, uint32_t *colors16, unsigned int fb_off) {
     (void)col;
     (void)colors16;
     PIXEL_TYPE *fb_ptr = (&fbFull[0]) + fb_off;
@@ -1028,12 +1025,12 @@ static void _init_interface(void) {
     LOG("Initializing display subsystem");
     _initialize_display();
 
-    plot[COLOR_MODE_MONO]          = _plot_direct;
+    plot[COLOR_MODE_MONO]          = _plot_ntsc;
     plot[COLOR_MODE_COLOR]         = _plot_oldschool;
     plot[COLOR_MODE_INTERP]        = _plot_oldschool;
-    plot[COLOR_MODE_COLOR_MONITOR] = _plot_direct;
-    plot[COLOR_MODE_MONO_TV]       = _plot_direct;
-    plot[COLOR_MODE_COLOR_TV]      = _plot_direct;
+    plot[COLOR_MODE_COLOR_MONITOR] = _plot_ntsc;
+    plot[COLOR_MODE_MONO_TV]       = _plot_ntsc;
+    plot[COLOR_MODE_COLOR_TV]      = _plot_ntsc;
 
     // scanline filtering
     for (unsigned int i=0; i<5; i++) {
