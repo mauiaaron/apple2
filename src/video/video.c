@@ -201,6 +201,10 @@ bool video_isDirty(unsigned long flags) {
 }
 
 static void _setScannerDirty() {
+    // TODO FIXME, Likely we can be even smarter here:
+    //  - We don't really need to re-render VBL lines
+    //  - If we knew what the vCount of the update is, we could reduce the scanner usage
+
     // mark scanner dirty for next frame plus a text row ...
     unsigned int xCount;
     {
@@ -225,7 +229,7 @@ void video_setDirty(unsigned long flags) {
         timing_checkpointCycles();
 
         if (cyclesDirty == 0) {
-            unsigned int hCount = cyclesFrameLast % CYCLES_SCANLINE;
+            unsigned int hCount = cycles_video_frame % CYCLES_SCANLINE;
             cyclesFrameLast = cycles_video_frame - hCount;
         }
 
@@ -323,6 +327,8 @@ void video_scannerUpdate(void) {
         if (cycles_video_frame >= CYCLES_FRAME) {
             _endOfFrame();
         }
+
+        assert(cycles_video_frame < CYCLES_FRAME);
         return;
     }
     unsigned int hCount = cyclesFrameLast % CYCLES_SCANLINE;
@@ -397,7 +403,7 @@ void video_scannerUpdate(void) {
             if (vCount < SCANLINES_VBL_BEGIN) {
                 // complete scanline flush ...
                 unsigned int scanend = scancol+scanidx;
-                assert(scanend <= CYCLES_VIS); // HACK FIXME TODO ... this should be '==' ... occasionally glitches with NSCT.dsk ... methinks FLASH interference?
+                assert(scanend == CYCLES_VIS);
                 _flushScanline(scanline, /*scanrow:*/vCount, scancol, scanend);
             }
 
@@ -412,7 +418,7 @@ void video_scannerUpdate(void) {
                 assert(cyclesFrameLast % CYCLES_FRAME == 0);
                 vCount = 0;
                 _endOfFrame();
-                currentBackend->frameComplete();
+                currentBackend->frameComplete(); // Need to draw this, especially if cyclesDirty never finishes ...
 #if VIDEO_TRACING
                 ++frameCount;
 #endif
@@ -431,8 +437,9 @@ void video_scannerUpdate(void) {
         scanidx = 0;
     }
     if (cyclesDirty == 0) {
-        scancol = 0;
-        scanidx = 0;
+        assert(scancol == 0);
+        assert(scanidx == 0);
+        cyclesFrameLast = cycles_video_frame;
         video_clearDirty(A2_DIRTY_FLAG);
         currentBackend->frameComplete();
     }
