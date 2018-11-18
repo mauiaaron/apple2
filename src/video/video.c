@@ -201,25 +201,18 @@ bool video_isDirty(unsigned long flags) {
 }
 
 static void _setScannerDirty() {
-    if (cyclesDirty == 0) {
-        cyclesFrameLast = cycles_video_frame;
+    // mark scanner dirty for next frame plus a text row ...
+    unsigned int xCount;
+    {
+        unsigned int hCount = cyclesFrameLast % CYCLES_SCANLINE;
+        unsigned int vCount = (cyclesFrameLast / CYCLES_SCANLINE) % SCANLINES_FRAME;
+        unsigned int lineCount = 0x7 - (vCount & 0x7); // redo +x scanlines to encompass TEXT mode update
+        unsigned int colCount = (CYCLES_SCANLINE - hCount);
+        xCount = ((lineCount * CYCLES_SCANLINE) + colCount) % (0x8 * CYCLES_SCANLINE);
     }
 
-    unsigned int hCount = cyclesFrameLast % CYCLES_SCANLINE;
-    unsigned int colCount = (CYCLES_SCANLINE - hCount) % CYCLES_SCANLINE;
-    if (cyclesDirty == 0) {
-        cyclesFrameLast -= hCount;
-        ////assert(cyclesFrameLast < (CYCLES_FRAME<<1)); -- do not enable ... this will trigger on manual CPU speed adjustment
-        assert(cyclesFrameLast % CYCLES_SCANLINE == 0);
-        colCount = CYCLES_SCANLINE;
-
-        // previously we were not dirty:
-        //  - next call to video_scannerUpdate() will load scanline[] buffer
-        //  - next+1 call to video_scannerUpdate() will begin with new cyclesDirty count
-    }
-
-    cyclesDirty = CYCLES_FRAME + colCount;
-    assert((cyclesDirty >= CYCLES_FRAME) && (cyclesDirty <= CYCLES_FRAME + CYCLES_SCANLINE));
+    cyclesDirty = CYCLES_FRAME + xCount;
+    assert((cyclesDirty >= CYCLES_FRAME) && (cyclesDirty <= CYCLES_FRAME + (CYCLES_SCANLINE*8)));
     assert((cyclesFrameLast + cyclesDirty) % CYCLES_SCANLINE == 0);
 }
 
@@ -230,10 +223,17 @@ void video_setDirty(unsigned long flags) {
 
         // NOTE without knowing any specific information about the nature of the video update, the scanner needs to render 1.X full frames to make sure we've correct rendered the change ...
         timing_checkpointCycles();
-        _setScannerDirty();
 
+        if (cyclesDirty == 0) {
+            unsigned int hCount = cyclesFrameLast % CYCLES_SCANLINE;
+            cyclesFrameLast = cycles_video_frame - hCount;
+        }
+
+        cyclesDirty = ((typeof(cyclesDirty))-1);
         video_scannerUpdate();
         assert(cyclesFrameLast == cycles_video_frame);
+
+        _setScannerDirty();
     }
 }
 
@@ -267,8 +267,9 @@ static void _flushScanline(uint8_t *scanline, unsigned int scanrow, unsigned int
     currentBackend->flushScanline(&scandata);
 }
 
-static void _endOfVideoFrame() {
-    assert(cyclesFrameLast == cycles_video_frame);
+static void _endOfFrame() {
+    assert(cyclesFrameLast >= CYCLES_FRAME);
+    assert(cycles_video_frame >= CYCLES_FRAME);
     cyclesFrameLast -= CYCLES_FRAME;
     cycles_video_frame -= CYCLES_FRAME;
 
@@ -277,6 +278,7 @@ static void _endOfVideoFrame() {
     if (!textFlashCounter) {
         video_flashText();
         if (!(run_args.softswitches & SS_80COL) && (run_args.softswitches & (SS_TEXT|SS_MIXED))) {
+            cyclesFrameLast = 0;
             _setScannerDirty();
         }
     }
@@ -291,6 +293,9 @@ static void _endOfVideoFrame() {
 
 void video_scannerReset(void) {
     ASSERT_ON_CPU_THREAD();
+    assert(cycles_video_frame == 0);
+    cyclesFrameLast = 0;
+    cyclesDirty = CYCLES_FRAME;
     reset_scanner = true;
 }
 
@@ -308,8 +313,6 @@ void video_scannerUpdate(void) {
 
     if (UNLIKELY(reset_scanner)) {
         reset_scanner = false;
-        cyclesFrameLast = 0;
-        cyclesDirty = CYCLES_FRAME;
         scancol = 0;
         scanidx = 0;
     }
@@ -318,19 +321,15 @@ void video_scannerUpdate(void) {
     if (cyclesDirty == 0) {
         cyclesFrameLast = cycles_video_frame;
         if (cycles_video_frame >= CYCLES_FRAME) {
-            _endOfVideoFrame();
+            _endOfFrame();
         }
         return;
     }
     unsigned int hCount = cyclesFrameLast % CYCLES_SCANLINE;
     unsigned int vCount = (cyclesFrameLast / CYCLES_SCANLINE) % SCANLINES_FRAME;
-    /*if (scancol + scanidx) {
-        assert(hCount - CYCLES_VIS_BEGIN == (scancol + scanidx));
-    }*/
 
     assert(cycles_video_frame >= cyclesFrameLast);
     unsigned int cyclesCount = cycles_video_frame - cyclesFrameLast;
-    cyclesFrameLast = cycles_video_frame;
 
     unsigned int page = video_currentPage(run_args.softswitches);
 
@@ -340,7 +339,8 @@ void video_scannerUpdate(void) {
 
     drawpage_mode_t mode = _currentMode(vCount);
     cyclesCount = (cyclesCount <= cyclesDirty) ? cyclesCount : cyclesDirty;
-    for (unsigned int i=0; i<cyclesCount; i++, --cyclesDirty) {
+    for (unsigned int i=0; i<cyclesCount; i++) {
+        assert(cyclesDirty > 0); // subtract below will not underflow ...
         const bool isVisible = ((hCount >= CYCLES_VIS_BEGIN) && (vCount < SCANLINES_VBL_BEGIN));
 
 #if VIDEO_TRACING
@@ -389,9 +389,8 @@ void video_scannerUpdate(void) {
 #endif
 
         ++hCount;
-        /*if (scancol + scanidx) {
-            assert(hCount - CYCLES_VIS_BEGIN == (scancol + scanidx));
-        }*/
+        ++cyclesFrameLast;
+        --cyclesDirty;
 
         if (hCount == CYCLES_SCANLINE) {
 
@@ -410,9 +409,9 @@ void video_scannerUpdate(void) {
 
             if (vCount == SCANLINES_FRAME) {
                 // begin new frame ...
-                assert(cyclesFrameLast >= CYCLES_FRAME);
+                assert(cyclesFrameLast % CYCLES_FRAME == 0);
                 vCount = 0;
-                _endOfVideoFrame();
+                _endOfFrame();
                 currentBackend->frameComplete();
 #if VIDEO_TRACING
                 ++frameCount;
@@ -437,8 +436,6 @@ void video_scannerUpdate(void) {
         video_clearDirty(A2_DIRTY_FLAG);
         currentBackend->frameComplete();
     }
-
-    assert(cyclesDirty < (CYCLES_FRAME<<1)); // should be no underflow
 }
 
 uint16_t video_scannerAddress(bool *ptrIsVBL) {
