@@ -203,7 +203,7 @@ bool video_isDirty(unsigned long flags) {
 static void _setScannerDirty() {
     // TODO FIXME, Likely we can be even smarter here:
     //  - We don't really need to re-render VBL lines
-    //  - If we knew what the vCount of the update is, we could reduce the scanner usage
+    //  - If we knew what the address/vCount of the video update is, we could reduce the scanner usage further
 
     // mark scanner dirty for next frame plus a text row ...
     unsigned int xCount;
@@ -274,8 +274,8 @@ static void _flushScanline(uint8_t *scanline, unsigned int scanrow, unsigned int
 static void _endOfFrame() {
     assert(cyclesFrameLast >= CYCLES_FRAME);
     assert(cycles_video_frame >= CYCLES_FRAME);
-    cyclesFrameLast -= CYCLES_FRAME;
-    cycles_video_frame -= CYCLES_FRAME;
+    cyclesFrameLast %= CYCLES_FRAME;
+    cycles_video_frame %= CYCLES_FRAME;
 
     static uint8_t textFlashCounter = 0;
     textFlashCounter = (textFlashCounter+1) & 0xf;
@@ -284,6 +284,7 @@ static void _endOfFrame() {
         if (!(run_args.softswitches & SS_80COL) && (run_args.softswitches & (SS_TEXT|SS_MIXED))) {
             cyclesFrameLast = 0;
             _setScannerDirty();
+            assert(cyclesDirty == CYCLES_FRAME);
         }
     }
 
@@ -327,23 +328,22 @@ void video_scannerUpdate(void) {
         if (cycles_video_frame >= CYCLES_FRAME) {
             _endOfFrame();
         }
-
         assert(cycles_video_frame < CYCLES_FRAME);
         return;
     }
+
     unsigned int hCount = cyclesFrameLast % CYCLES_SCANLINE;
     unsigned int vCount = (cyclesFrameLast / CYCLES_SCANLINE) % SCANLINES_FRAME;
 
-    assert(cycles_video_frame >= cyclesFrameLast);
-    unsigned int cyclesCount = cycles_video_frame - cyclesFrameLast;
-
     unsigned int page = video_currentPage(run_args.softswitches);
+    drawpage_mode_t mode = _currentMode(vCount);
 
     uint8_t aux = 0x0;
     uint8_t mbd = 0x0;
     uint16_t addr = 0x0;
 
-    drawpage_mode_t mode = _currentMode(vCount);
+    assert(cycles_video_frame >= cyclesFrameLast);
+    unsigned int cyclesCount = cycles_video_frame - cyclesFrameLast;
     cyclesCount = (cyclesCount <= cyclesDirty) ? cyclesCount : cyclesDirty;
     for (unsigned int i=0; i<cyclesCount; i++) {
         assert(cyclesDirty > 0); // subtract below will not underflow ...
