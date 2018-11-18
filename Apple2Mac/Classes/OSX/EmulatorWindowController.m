@@ -345,6 +345,9 @@
         case NSInsertFunctionKey:
             scode = SCODE_INS;
             break;
+        case NSDeleteCharacter:
+            scode = SCODE_L;
+            break;
         case NSDeleteFunctionKey:
             scode = SCODE_DEL;
             break;

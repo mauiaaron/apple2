@@ -37,6 +37,8 @@ const NSString *kDrawTimerNotification = @"kDrawTimerNotification";
 @property (nonatomic, retain) NSTimer *timer;
 #endif
 
+@property (nonatomic) BOOL prepared;
+
 - (void)initGL;
 
 @end
@@ -166,6 +168,8 @@ static CVReturn displayLinkCallback(CVDisplayLinkRef displayLink, const CVTimeSt
     
     // Register to be notified when the window closes so we can stop the displaylink
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(windowWillClose:) name:NSWindowWillCloseNotification object:[self window]];
+
+    self.prepared = true;
 }
 
 - (void)windowWillClose:(NSNotification*)notification
@@ -316,6 +320,11 @@ static CVReturn displayLinkCallback(CVDisplayLinkRef displayLink, const CVTimeSt
     // Called during resize operations
     // Avoid flickering during resize by drawing
     [[self openGLContext] makeCurrentContext];
+    if (UNLIKELY(!self.prepared)) {
+        NSAlert *alert = [NSAlert alertWithError:[NSError errorWithDomain:@"NSOpenGLView is now deprecated and has a bug ... please restart this app.  FIXME TODO : likely we're being forced to move to Metal because Ninjaz and Rockstarz said so :P" code:-1 userInfo:nil]];
+        [alert beginSheetModalForWindow:[self window] completionHandler:nil];
+        return;
+    }
     [self drawView];
 }
 
