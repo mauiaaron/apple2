@@ -231,7 +231,7 @@ public class Apple2VideoSettingsMenu extends Apple2AbstractMenu {
 
             @Override
             public final String getSummary(Apple2Activity activity) {
-                return "";
+                return activity.getResources().getString(R.string.show_half_scanlines_summary);
             }
 
             @Override

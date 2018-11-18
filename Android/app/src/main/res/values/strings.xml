@@ -25,7 +25,7 @@
     <string name="audio_latency">Audio latency</string>
     <string name="audio_latency_summary">Audio latency in secs</string>
     <string name="cancel">Cancel</string>
-    <string name="color_configure">Display mode</string>
+    <string name="color_configure">Video display mode</string>
     <string name="color_configure_summary">Video display emulation mode</string>
     <string name="color_bw">Black/white</string>
     <string name="color_color">Color</string>
@@ -180,7 +180,7 @@
     <string name="touch_menu_enable">Enable touch menus</string>
     <string name="touch_menu_enable_summary">Enables soft menu buttons in top screen corners</string>
     <string name="video_configure">Configure video…</string>
-    <string name="video_configure_summary">Color landscape/portrait, color, etc</string>
+    <string name="video_configure_summary">Landscape/portrait, video modes, colors, etc</string>
     <string name="touch_device_color">Configure touch device color</string>
     <string name="touch_device_color_summary">Configure color of HUD elements</string>
     <string name="touch_device_color_configure">Configure HUD color…</string>
@@ -198,5 +198,6 @@
     <string name="color_mono">Monochrome</string>
     <string name="disk_fast_operation">Disk fast loading (EXPERIMENTAL)</string>
     <string name="disk_fast_operation_summary">Quickly load disk images (may negatively affect device battery life)</string>
+    <string name="show_half_scanlines_summary">Renders pixel vertical divisions</string>
 
 </resources>

@@ -160,7 +160,7 @@
     <string name="touch_menu_enable_summary">Los botones del menú en la parte superior de la pantalla</string>
     <string name="video_configure">Configurar el video…</string>
     <string name="video_configure_summary">Ajustes de color</string>
-    <string name="color_configure">Display mode</string>
+    <string name="color_configure">Video display mode</string>
     <string name="color_configure_summary">Video display emulation mode</string>
     <string name="joystick_azimuth_visible">Show joystick/keypad heading</string>
     <string name="joystick_azimuth_visible_summary">Shows current axis direction and magnitude</string>
@@ -198,5 +198,6 @@
     <string name="color_mono">Monochrome</string>
     <string name="disk_fast_operation">Disk fast loading (EXPERIMENTAL)</string>
     <string name="disk_fast_operation_summary">Quickly load disk images (may negatively affect device battery life)</string>
+    <string name="show_half_scanlines_summary">Renders pixel vertical divisions</string>
 
 </resources>
