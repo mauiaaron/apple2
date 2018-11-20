@@ -50,7 +50,6 @@
 typedef struct diskette_t {
     char *file_name;
     int fd;
-    int fd2;
     uint8_t *raw_image_data;
     unsigned int whole_len;
     uint8_t *nib_image_data;

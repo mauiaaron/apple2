@@ -46,7 +46,7 @@ void test_common_init(void) {
 
     char *envvar = NULL;
     ASPRINTF(&envvar, "APPLE2IX_JSON=%s/.apple2.test.json", HOMEDIR);
-    assert(envvar);
+    assert((uintptr_t)envvar);
     putenv(envvar);
     LEAK(envvar);
 
@@ -178,7 +178,7 @@ char **_copy_paths_main(const char *fileName) {
     };
 
     char **paths = CALLOC(1, sizeof(fmts));
-    assert(paths);
+    assert((uintptr_t)paths);
 
     do {
         const char *fmt = NULL;
