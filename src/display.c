@@ -47,7 +47,7 @@ static uint8_t interface_font[5][0x4000] = { { 0 } }; // interface font
 static color_mode_t color_mode = COLOR_MODE_DEFAULT;
 static mono_mode_t mono_mode = MONO_MODE_DEFAULT;
 static scanline_color_fn scanline_color[2] = { NULL };
-static uint8_t half_scanlines = false;
+static uint8_t half_scanlines = 1;
 
 // video line offsets
 uint16_t video_line_offset[TEXT_ROWS + /*VBL:*/ 8 + /*extra:*/1] = {
@@ -1016,7 +1016,7 @@ static void display_prefsChanged(const char *domain) {
     mono_mode = prefs_parseLongValue(domain, PREF_MONO_MODE, &lVal, /*base:*/10) ? getMonoMode(lVal) : MONO_MODE_DEFAULT;
 
     bool bVal = false;
-    half_scanlines = prefs_parseBoolValue(domain, PREF_SHOW_HALF_SCANLINES, &bVal) ? (bVal ? 1 : 0) : 0;
+    half_scanlines = prefs_parseBoolValue(domain, PREF_SHOW_HALF_SCANLINES, &bVal) ? (bVal ? 1 : 0) : 1;
 
     _initialize_display();
 }

@@ -42,7 +42,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 typedef void (*fb_plotter_fn)(color_mode_t, uint16_t, PIXEL_TYPE *);
 typedef PIXEL_TYPE (*fb_scanline_fn)(PIXEL_TYPE color0, PIXEL_TYPE color2);
 
-static uint8_t half_scanlines = false;
+static uint8_t half_scanlines = 1;
 static fb_plotter_fn pixelPlotter[NUM_COLOROPTS] = { NULL };
 static fb_scanline_fn getHalfColor[NUM_COLOROPTS][2] = { { NULL } };
 
@@ -426,7 +426,7 @@ static void ntsc_prefsChanged(const char *domain) {
     mono_mode_t mono_mode = prefs_parseLongValue(domain, PREF_MONO_MODE, &lVal, /*base:*/10) ? getMonoMode(lVal) : MONO_MODE_DEFAULT;
 
     bool bVal = false;
-    half_scanlines = prefs_parseBoolValue(domain, PREF_SHOW_HALF_SCANLINES, &bVal) ? (bVal ? 1 : 0) : 0;
+    half_scanlines = prefs_parseBoolValue(domain, PREF_SHOW_HALF_SCANLINES, &bVal) ? (bVal ? 1 : 0) : 1;
 
     initChromaPhaseTables(color_mode, mono_mode);
 }
