@@ -18,7 +18,7 @@
 #   define TIMING_LOG(...)
 #endif
 
-#define DISK_MOTOR_QUIET_NSECS 2000000
+#define DISK_MOTOR_QUIET_NSECS (NANOSECONDS_PER_SECOND>2)
 
 // cycle counting
 double cycles_persec_target = CLK_6502;
@@ -369,16 +369,14 @@ cpu_runloop:
             pthread_mutex_unlock(&interface_mutex);
             // -UNLOCK--------------------------------------------------------------------------------------- SAMPLE tj
 
-            if (timing_shouldAutoAdjustSpeed()) {
+            if (timing_shouldAutoAdjustSpeed() && !is_fullspeed) {
                 disk_motor_time = timespec_diff(disk6.motor_time, tj, &negative);
                 if (UNLIKELY(negative)) {
-                    // 2016/05/05 : crash report from the wild on Android if we assert(!negative)
                     LOG("WHOA... time went backwards #1! Did you just cross a timezone?");
                     disk_motor_time.tv_sec = 1;
                 }
-                if (!is_fullspeed &&
-                        !speaker_isActive() &&
-                        !video_isDirty(A2_DIRTY_FLAG) && (!disk6.motor_off && (disk_motor_time.tv_sec || disk_motor_time.tv_nsec > DISK_MOTOR_QUIET_NSECS)) )
+                if (!speaker_isActive() && !video_isDirty(A2_DIRTY_FLAG) && (disk6.disk[disk6.drive].file_name != NULL) &&
+                    !disk6.motor_off && (disk_motor_time.tv_sec || disk_motor_time.tv_nsec > DISK_MOTOR_QUIET_NSECS) )
                 {
                     TIMING_LOG("auto switching to full speed");
                     _timing_initialize(CPU_SCALE_FASTEST);
@@ -388,7 +386,6 @@ cpu_runloop:
             if (!is_fullspeed) {
                 deltat = timespec_diff(ti, tj, &negative);
                 if (UNLIKELY(negative)) {
-                    // 2016/05/05 : crash report from the wild on Android if we assert(!negative)
                     LOG("WHOA... time went backwards #2! Did you just cross a timezone?");
                     deltat.tv_sec = 1;
                 }
@@ -441,10 +438,14 @@ cpu_runloop:
                 }
             }
 
-            if (timing_shouldAutoAdjustSpeed()) {
-                if (is_fullspeed && (
-                            speaker_isActive() ||
-                            video_isDirty(A2_DIRTY_FLAG) || (disk6.motor_off && (disk_motor_time.tv_sec || disk_motor_time.tv_nsec > DISK_MOTOR_QUIET_NSECS))) )
+            if (timing_shouldAutoAdjustSpeed() && is_fullspeed) {
+                disk_motor_time = timespec_diff(disk6.motor_time, tj, &negative);
+                if (UNLIKELY(negative)) {
+                    LOG("WHOA... time went backwards #3! Did you just cross a timezone?");
+                    disk_motor_time.tv_sec = 1;
+                }
+                if (speaker_isActive() || video_isDirty(A2_DIRTY_FLAG) ||
+                    (disk6.motor_off && (disk_motor_time.tv_sec || disk_motor_time.tv_nsec > DISK_MOTOR_QUIET_NSECS)) )
                 {
                     double speed = alt_speed_enabled ? cpu_altscale_factor : cpu_scale_factor;
                     if (speed <= CPU_SCALE_FASTEST_PIVOT) {
