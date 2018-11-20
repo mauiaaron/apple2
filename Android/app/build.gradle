@@ -30,7 +30,7 @@ android {
         minSdkVersion 14
         targetSdkVersion 27
         versionCode 22
-        versionName "1.2.2"
+        versionName "2.0.0"
         ndk {
             moduleName "apple2ix"
         }
