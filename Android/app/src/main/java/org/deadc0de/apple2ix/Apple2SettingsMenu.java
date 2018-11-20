@@ -283,6 +283,22 @@ public class Apple2SettingsMenu extends Apple2AbstractMenu {
                 return convertView;
             }
         },
+        RELEASE_NOTES {
+            @Override
+            public final String getTitle(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.release_notes);
+            }
+
+            @Override
+            public final String getSummary(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.release_notes_summary);
+            }
+
+            @Override
+            public void handleSelection(Apple2Activity activity, final Apple2AbstractMenu settingsMenu, boolean isChecked) {
+                activity.showReleaseNotes();
+            }
+        },
         ABOUT {
             @Override
             public final String getTitle(Apple2Activity activity) {

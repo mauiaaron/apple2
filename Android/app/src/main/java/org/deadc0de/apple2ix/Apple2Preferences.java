@@ -48,6 +48,7 @@ public class Apple2Preferences {
     public final static String PREF_DEVICE_HEIGHT = "deviceHeight";
     public final static String PREF_DEVICE_WIDTH = "deviceWidth";
     public final static String PREF_EMULATOR_VERSION = "emulatorVersion";
+    public final static String PREF_RELEASE_NOTES = "shownReleaseNotes";
 
     // JSON preferences
     private static JSONObject sSettings = null;
@@ -174,6 +175,13 @@ public class Apple2Preferences {
 
         Log.v(TAG, "Triggering migration to Apple2ix version : " + BuildConfig.VERSION_NAME);
         setJSONPref(PREF_DOMAIN_INTERFACE, PREF_EMULATOR_VERSION, BuildConfig.VERSION_CODE);
+        setJSONPref(PREF_DOMAIN_INTERFACE, PREF_RELEASE_NOTES, false);
+
+        if (versionCode < 22) {
+            // force upgrade to defaults here ...
+            setJSONPref(Apple2VideoSettingsMenu.SETTINGS.SHOW_HALF_SCANLINES, Apple2VideoSettingsMenu.SETTINGS.SHOW_HALF_SCANLINES.getPrefDefault());
+            setJSONPref(Apple2VideoSettingsMenu.SETTINGS.COLOR_MODE_CONFIGURE, Apple2VideoSettingsMenu.SETTINGS.COLOR_MODE_CONFIGURE.getPrefDefault());
+        }
 
         Apple2Utils.migrateToExternalStorage(activity);
         if (BuildConfig.VERSION_CODE >= 17) {

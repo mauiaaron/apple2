@@ -130,7 +130,7 @@
     <string name="mockingboard_disabled_title">Mockingboard désactivé</string>
     <string name="mockingboard_disabled_mesg">Le Mockingboard ne peut être activé</string>
     <string name="mockingboard_enable">Activer le Mockingboard</string>
-    <string name="mockingboard_enable_summary">Révision C dans Slot 4/5 (redémarrage possible)</string>
+    <string name="mockingboard_enable_summary">Révision C dans Slot 4/5 (redémarrage possible) (may consume extra battery)</string>
     <string name="mockingboard_volume">Volume du Mockingboard</string>
     <string name="mockingboard_volume_summary">Placer le volume du Mockingboard</string>
     <string name="no">Non</string>
@@ -199,5 +199,7 @@
     <string name="disk_fast_operation">Disk fast loading (EXPERIMENTAL)</string>
     <string name="disk_fast_operation_summary">Quickly load disk images (may negatively affect device battery life)</string>
     <string name="show_half_scanlines_summary">Renders pixel vertical divisions</string>
+    <string name="release_notes">Release notes</string>
+    <string name="release_notes_summary">View notes for this release</string>
 
 </resources>

@@ -14,9 +14,12 @@ package org.deadc0de.apple2ix;
 import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.pm.PackageManager;
+import android.content.res.AssetManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.StrictMode;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -25,6 +28,11 @@ import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.Toast;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.InterruptedIOException;
+import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -152,16 +160,14 @@ public class Apple2Activity extends Activity implements Apple2DiskChooserActivit
         boolean extperm = true;
         if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             // On Marshmallow+ specifically ask for permission to read/write storage
-            String readPermission = Manifest.permission.READ_EXTERNAL_STORAGE;
-            String writePermission = Manifest.permission.WRITE_EXTERNAL_STORAGE;
-            int hasReadPermission = checkSelfPermission(readPermission);
-            int hasWritePermission = checkSelfPermission(writePermission);
+            int hasReadPermission = checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE);
+            int hasWritePermission = checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE);
             ArrayList<String> permissions = new ArrayList<String>();
             if (hasReadPermission != PackageManager.PERMISSION_GRANTED) {
-                permissions.add(readPermission);
+                permissions.add(Manifest.permission.READ_EXTERNAL_STORAGE);
             }
             if (hasWritePermission != PackageManager.PERMISSION_GRANTED) {
-                permissions.add(writePermission);
+                permissions.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
             }
             if (!permissions.isEmpty()) {
                 extperm = false;
@@ -179,9 +185,20 @@ public class Apple2Activity extends Activity implements Apple2DiskChooserActivit
                     Apple2Utils.exposeAPKAssets(Apple2Activity.this);
                     if (externalStoragePermission) {
                         Apple2Utils.exposeAPKAssetsToExternal(Apple2Activity.this);
+                        Log.d(TAG, "Finished first time copying #1...");
+
+                        if (!(boolean)Apple2Preferences.getJSONPref(Apple2Preferences.PREF_DOMAIN_INTERFACE, Apple2Preferences.PREF_RELEASE_NOTES, false)) {
+                            Runnable myRunnable = new Runnable() {
+                                @Override
+                                public void run() {
+                                    showReleaseNotes();
+                                }
+                            };
+                            new Handler(Apple2Activity.this.getMainLooper()).post(myRunnable);
+                        }
                     }
+
                     mSplashScreen.setDismissable(true);
-                    Log.d(TAG, "Finished first time copying...");
                 }
             }).start();
         }
@@ -215,9 +232,14 @@ public class Apple2Activity extends Activity implements Apple2DiskChooserActivit
                 // perform migration(s) and assets exposure now
                 Apple2Utils.migrateToExternalStorage(Apple2Activity.this);
                 Apple2Utils.exposeAPKAssetsToExternal(Apple2Activity.this);
+                Log.d(TAG, "Finished first time copying #2...");
             } // else ... we keep nagging on app startup ...
         } else {
             super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        }
+
+        if (!(boolean)Apple2Preferences.getJSONPref(Apple2Preferences.PREF_DOMAIN_INTERFACE, Apple2Preferences.PREF_RELEASE_NOTES, false)) {
+            showReleaseNotes();
         }
     }
 
@@ -361,6 +383,59 @@ public class Apple2Activity extends Activity implements Apple2DiskChooserActivit
                 mMainMenu.show();
             }
         }
+    }
+
+    public void showReleaseNotes() {
+
+        Apple2Preferences.setJSONPref(Apple2Preferences.PREF_DOMAIN_INTERFACE, Apple2Preferences.PREF_RELEASE_NOTES, true);
+        Apple2Preferences.save(this);
+
+        String releaseNotes = "";
+        final int maxAttempts = 5;
+        int attempts = 0;
+        do {
+            InputStream is = null;
+            try {
+                AssetManager assetManager = getAssets();
+                is = assetManager.open("release_notes.txt");
+
+                final int bufferSize = 4096;
+                final char[] buffer = new char[bufferSize];
+                final StringBuilder out = new StringBuilder();
+                Reader in = new InputStreamReader(is, "UTF-8");
+                while (true) {
+                    int siz = in.read(buffer, 0, buffer.length);
+                    if (siz < 0) {
+                        break;
+                    }
+                    out.append(buffer, 0, siz);
+                }
+                releaseNotes = out.toString();
+                break;
+            } catch (InterruptedIOException e) {
+                /* EINTR, EAGAIN */
+            } catch (IOException e) {
+                Log.e(TAG, "OOPS could not load release_notes.txt!", e);
+            } finally {
+                if (is != null) {
+                    try {
+                        is.close();
+                    } catch (IOException e) {
+                        // NOOP
+                    }
+                }
+            }
+            ++attempts;
+        } while (attempts < maxAttempts);
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(Apple2Activity.this).setIcon(R.drawable.ic_launcher).setCancelable(false).setTitle(R.string.release_notes).setMessage(releaseNotes).setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+            }
+        });
+        AlertDialog dialog = builder.create();
+        registerAndShowDialog(dialog);
     }
 
     public Apple2MainMenu getMainMenu() {
