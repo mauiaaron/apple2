@@ -31,6 +31,9 @@
 
 #define SPKR_SILENT_STEP 1
 
+// TODO FIXME : still need to investigate better way to fix audio glitches when fast-loading (auto-adjusting speed) ...
+#define HACKISHLY_REDUCE_AUDIO_GLITCHES_FOR_FAST_LOADING 1
+
 static unsigned long bufferTotalSize = 0;
 static unsigned long bufferSizeIdealMin = 0;
 static unsigned long bufferSizeIdealMax = 0;
@@ -203,9 +206,13 @@ static void _speaker_update(/*bool toggled*/) {
             if (NUM_CHANNELS == 2) {
                 samples_buffer[samples_buffer_idx++] = speaker_data;
             }
-#if !defined(ANDROID)
+#if HACKISHLY_REDUCE_AUDIO_GLITCHES_FOR_FAST_LOADING
             if (speaker_going_silent && speaker_data) {
-                speaker_data -= SPKR_SILENT_STEP;
+                if (speaker_data < 0) {
+                    speaker_data += SPKR_SILENT_STEP;
+                } else {
+                    speaker_data -= SPKR_SILENT_STEP;
+                }
             }
 #endif
             --num_samples;
@@ -465,7 +472,7 @@ void speaker_flush(void) {
                 // After 0.2sec of //e cycles time set inactive flag (allows auto-switch to full speed for fast disk access)
                 speaker_recently_active = false;
             } else if ((speaker_data != 0) && (cycles_count_total - cycles_quiet_time > cycles_diff)) {
-#if defined(ANDROID)
+#if !HACKISHLY_REDUCE_AUDIO_GLITCHES_FOR_FAST_LOADING
                 // OpenSLES seems to be able to pause output without the nasty pops that I hear with OpenAL on Linux
                 // desktop.  So this speaker_going_silent hack is not needed.  There is also a noticeable glitch in
                 // OpenSLES when this codepath is enabled.
@@ -545,9 +552,10 @@ GLUE_C_READ(speaker_toggle)
 
     if (!is_fullspeed) {
         if (speaker_data == speaker_amplitude) {
-#ifdef ANDROID
+#if defined(ANDROID)
             speaker_data = -speaker_amplitude;
 #else
+#   error FIXME TODO : investigate whether this is still needed
             speaker_data = 0;
 #endif
         } else {
