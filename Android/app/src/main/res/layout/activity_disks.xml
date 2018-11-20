@@ -98,7 +98,7 @@
             android:ellipsize="marquee"
             android:fadingEdge="horizontal"
             android:singleLine="true"
-            android:text="@+string/file_chooser"
+            android:text="@string/file_chooser"
             android:textAppearance="?android:attr/textAppearanceLarge" />
 
         <!-- spacer that works with API 10 ... -->
@@ -145,7 +145,7 @@
                 android:ellipsize="marquee"
                 android:fadingEdge="horizontal"
                 android:singleLine="true"
-                android:text="@+string/diskA"
+                android:text="@string/diskA"
                 android:textAppearance="?android:attr/textAppearanceLarge" />
 
             <TextView
@@ -192,7 +192,7 @@
                 android:ellipsize="marquee"
                 android:fadingEdge="horizontal"
                 android:singleLine="true"
-                android:text="@+string/diskB"
+                android:text="@string/diskB"
                 android:textAppearance="?android:attr/textAppearanceLarge" />
 
             <TextView

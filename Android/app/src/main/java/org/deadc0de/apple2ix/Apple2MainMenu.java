@@ -267,7 +267,7 @@ public class Apple2MainMenu {
         final RadioButton noAppleSelected = (RadioButton) resetConfirmationView.findViewById(R.id.radioButton_noApple);
         noAppleSelected.setChecked(false);
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(mActivity).setIcon(R.drawable.ic_launcher).setCancelable(true).setTitle(R.string.quit_reboot).setMessage(R.string.quit_reboot_choice).setPositiveButton(R.string.reset, new DialogInterface.OnClickListener() {
+        AlertDialog rebootQuitDialog = new AlertDialog.Builder(mActivity).setIcon(R.drawable.ic_launcher).setCancelable(true).setTitle(R.string.quit_reboot).setMessage(R.string.quit_reboot_choice).setView(resetConfirmationView).setPositiveButton(R.string.reset, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 if (!selectionAlreadyHandled.compareAndSet(false, true)) {
@@ -292,10 +292,7 @@ public class Apple2MainMenu {
                 }
                 mActivity.quitEmulator();
             }
-        }).setNegativeButton(R.string.cancel, null);
-
-        builder.setView(resetConfirmationView);
-        AlertDialog rebootQuitDialog = builder.create();
+        }).setNegativeButton(R.string.cancel, null).create();
 
         mActivity.registerAndShowDialog(rebootQuitDialog);
     }

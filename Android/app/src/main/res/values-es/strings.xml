@@ -141,7 +141,7 @@
     <string name="preferences_reset_warning">Usted perderá su configuración</string>
     <string name="quit">Salir</string>
     <string name="quit_reboot">Reiniciar o salir el emulador…</string>
-    <string name="quit_reboot_choice">¿Reiniciar o salir?</string>
+    <string name="quit_reboot_choice">¿Reiniciar o salir?&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#13;&#10;…</string>
     <string name="reboot">Reiniciar</string>
     <string name="restore">Restauración rápida</string>
     <string name="save">Guardar rápido</string>

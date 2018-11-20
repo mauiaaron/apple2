@@ -141,7 +141,7 @@
     <string name="preferences_reset_warning">Vous perdrez toutes vos options de configuration</string>
     <string name="quit">Quitter</string>
     <string name="quit_reboot">Rebooter ou quitter l\'émulateur…</string>
-    <string name="quit_reboot_choice">Rebooter ou quitter?</string>
+    <string name="quit_reboot_choice">Rebooter ou quitter?&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#13;&#10;…</string>
     <string name="reboot">Rebooter</string>
     <string name="restore">Restauration rapide</string>
     <string name="save">Sauvegarde rapide</string>

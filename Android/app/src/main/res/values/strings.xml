@@ -156,7 +156,7 @@
     <string name="preferences_reset_warning">You will lose your settings</string>
     <string name="quit">Quit</string>
     <string name="quit_reboot">Reset or quit emulator…</string>
-    <string name="quit_reboot_choice">Reset/reboot or quit?</string>
+    <string name="quit_reboot_choice">Reset, reboot or quit?&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#13;&#10;…</string>
     <string name="reboot">Reboot</string>
     <string name="reset">Reset</string>
     <string name="reset_preferences">Reset settings</string>

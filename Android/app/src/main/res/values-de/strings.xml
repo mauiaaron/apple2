@@ -143,7 +143,7 @@
     <string name="preferences_reset_warning">Sie werden alle Ihre Einstellungen verlieren</string>
     <string name="quit">Beenden</string>
     <string name="quit_reboot">Neustart oder beenden des Emulators…</string>
-    <string name="quit_reboot_choice">Neustart oder beenden?</string>
+    <string name="quit_reboot_choice">Neustart oder beenden?&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#13;&#10;…</string>
     <string name="reboot">Neustart</string>
     <string name="restore">Schnelle Wiederherstellung</string>
     <string name="save">Schnelle Speicherung</string>
