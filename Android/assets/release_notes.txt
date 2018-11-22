@@ -6,13 +6,13 @@ CHANGES:
 
 - Implemented a more conformant video scanner. This improves emulation fidelity for programs that implement custom video modes (e.g., custom split screen between text & graphics).
 
-- New NTSC video display modes including "Color monitor", "Monochrome TV", and "Color TV" modes. Also support "Green screen" monochrome video. Thanks to the AppleWin project and Bill Simms for these modes.
+- New NTSC video display modes including "Color monitor", "Monochrome TV", and "Color TV" modes. Thanks to the AppleWin project and Bill Simms for these modes. Also support "Green screen" monochrome video.
 
 - New preference to enable/disable half-scanline video effects.
 
 - EXPERIMENTAL: New preference to enable/disable fast disk image loading. This may cause audio glitches or other instability. Use at your own risk!
 
-MORE INFO:
+GENERAL INFO:
 
-- https://deadc0de.org/apple2ix/android
+- More information about how to use Apple2ix for Android : https://deadc0de.org/apple2ix/android
 
