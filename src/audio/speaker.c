@@ -552,12 +552,7 @@ GLUE_C_READ(speaker_toggle)
 
     if (!is_fullspeed) {
         if (speaker_data == speaker_amplitude) {
-#if defined(ANDROID)
             speaker_data = -speaker_amplitude;
-#else
-#   error FIXME TODO : investigate whether this is still needed
-            speaker_data = 0;
-#endif
         } else {
             speaker_data = speaker_amplitude;
         }
