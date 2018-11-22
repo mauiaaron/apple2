@@ -83,7 +83,7 @@ static void prefsChangeCallback(const char *domain)
 
         bool bVal = false;
         BOOL readOnlyA = prefs_parseBoolValue(PREF_DOMAIN_VM, PREF_DISK_PATH_A_RO, &bVal) ? bVal : true;
-        if (startupDiskA)
+        if (startupDiskA && [startupDiskA length])
         {
             const char *path = [startupDiskA UTF8String];
             int fdA = -1;
@@ -110,7 +110,7 @@ static void prefsChangeCallback(const char *domain)
 
         bool bVal = false;
         BOOL readOnlyB = prefs_parseBoolValue(PREF_DOMAIN_VM, PREF_DISK_PATH_B_RO, &bVal) ? bVal : true;
-        if (startupDiskB)
+        if (startupDiskB && [startupDiskB length])
         {
             const char *path = [startupDiskB UTF8String];
             int fdB = -1;
@@ -156,7 +156,7 @@ static void prefsChangeCallback(const char *domain)
         prefs_setBoolValue(PREF_DOMAIN_VM, PREF_DISK_PATH_B_RO, true);
     }
 
-    prefs_sync(PREF_DOMAIN_VM);
+    //prefs_sync(PREF_DOMAIN_VM); -- do not sync here since that will trigger reload of startup disks
     prefs_save();
 }
 
@@ -230,8 +230,6 @@ static void prefsChangeCallback(const char *domain)
         if (isStartupDiskA)
         {
             [self.startupLoadDiskA setState:NSOnState];
-            //[self.diskAProtection setState:(readOnly ? NSOnState : NSOffState) atRow:0 column:0];
-            //[self.diskAProtection setState:(!readOnly ? NSOnState : NSOffState) atRow:0 column:1];
         }
     }
     else
@@ -250,8 +248,6 @@ static void prefsChangeCallback(const char *domain)
         if (isStartupDiskB)
         {
             [self.startupLoadDiskB setState:NSOnState];
-            //[self.diskBProtection setState:(readOnly ? NSOnState : NSOffState) atRow:0 column:0];
-            //[self.diskBProtection setState:(!readOnly ? NSOnState : NSOffState) atRow:0 column:1];
         }
     }
     

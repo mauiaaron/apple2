@@ -367,6 +367,7 @@ static CVReturn displayLinkCallback(CVDisplayLinkRef displayLink, const CVTimeSt
 - (NSApplicationTerminateReply)applicationShouldTerminate:(NSApplication *)application
 {
     cpu_pause();
+    prefs_save();
     disk6_eject(0);
     disk6_eject(1);
     return NSTerminateNow;
