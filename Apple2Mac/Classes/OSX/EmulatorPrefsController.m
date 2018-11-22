@@ -51,7 +51,6 @@ static EmulatorPrefsController *prefsInstance = nil;
 
 static void prefsChangeCallback(const char *domain)
 {
-    (void)domain;
     assert(prefsInstance);
     [prefsInstance loadPrefsForDomain:domain];
 }
@@ -77,6 +76,7 @@ static void prefsChangeCallback(const char *domain)
 
 - (void)loadPrefsForDomain:(const char *)domain
 {
+    domain = NULL; (void)domain;
     float fVal, fValDisplay;
     fVal = prefs_parseFloatValue(PREF_DOMAIN_VM, PREF_CPU_SCALE, &fVal) ? fVal/100 : 1.0;
     fValDisplay = fVal;
@@ -117,8 +117,15 @@ static void prefsChangeCallback(const char *domain)
     [self.soundCardChoice selectCellAtRow:1 column:0];
 
     long lVal = 0;
-    NSInteger mode = prefs_parseLongValue(domain, PREF_COLOR_MODE, &lVal, /*base:*/10) ? getColorMode(lVal) : COLOR_MODE_DEFAULT;
+    NSInteger mode;
+    mode = prefs_parseLongValue(PREF_DOMAIN_VIDEO, PREF_COLOR_MODE, &lVal, /*base:*/10) ? getColorMode(lVal) : COLOR_MODE_DEFAULT;
     [self.colorChoice selectItemAtIndex:mode];
+
+    mode = prefs_parseLongValue(PREF_DOMAIN_VIDEO, PREF_MONO_MODE, &lVal, /*base:*/10) ? getMonoMode(lVal) : MONO_MODE_DEFAULT;
+    [self.monochromeColorChoice selectItemAtIndex:mode];
+
+    bool bVal = prefs_parseBoolValue(PREF_DOMAIN_VIDEO, PREF_SHOW_HALF_SCANLINES, &bVal) ? bVal : true;
+    [self.scanlinesChoice setState:bVal ? NSOnState : NSOffState];
 
     [self.joystickChoice selectItemAtIndex:(NSInteger)joy_mode];
     
