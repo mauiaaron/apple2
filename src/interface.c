@@ -1488,6 +1488,7 @@ typedef struct interface_key_s {
 
 static void *interface_thread(void *data)
 {
+    SCOPE_TRACE_INTERFACE("interface_thread ...");
     interface_thread_id = pthread_self();
 
     cpu_pause();

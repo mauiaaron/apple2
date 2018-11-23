@@ -38,7 +38,7 @@ APPLE2_AUDIO_SRC = \
 APPLE2_META_SRC = \
     $(APPLE2_SRC_PATH)/meta/debug.c \
     $(APPLE2_SRC_PATH)/meta/debugger.c \
-    $(APPLE2_SRC_PATH)/meta/lintrace.c \
+    $(APPLE2_SRC_PATH)/meta/systrace.c \
     $(APPLE2_SRC_PATH)/meta/log.c \
     $(APPLE2_SRC_PATH)/meta/memmngt.c \
     $(APPLE2_SRC_PATH)/meta/opcodes.c \

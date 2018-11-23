@@ -224,6 +224,7 @@ void video_setDirty(unsigned long flags) {
     __sync_fetch_and_or(&dirty, flags);
     if (flags & A2_DIRTY_FLAG) {
         ASSERT_ON_CPU_THREAD();
+        SCOPE_TRACE_CPU("video_setDirty ...");
 
         // NOTE without knowing any specific information about the nature of the video update, the scanner needs to render 1.X full frames to make sure we've correct rendered the change ...
         timing_checkpointCycles();
@@ -272,6 +273,7 @@ static void _flushScanline(uint8_t *scanline, unsigned int scanrow, unsigned int
 }
 
 static void _endOfFrame() {
+    SCOPE_TRACE_CPU("_endOfFrame ...");
     assert(cyclesFrameLast >= CYCLES_FRAME);
     assert(cycles_video_frame >= CYCLES_FRAME);
     cyclesFrameLast %= CYCLES_FRAME;
@@ -345,6 +347,9 @@ void video_scannerUpdate(void) {
     assert(cycles_video_frame >= cyclesFrameLast);
     unsigned int cyclesCount = cycles_video_frame - cyclesFrameLast;
     cyclesCount = (cyclesCount <= cyclesDirty) ? cyclesCount : cyclesDirty;
+
+    SCOPE_TRACE_CPU("video_scannerUpdate : %u", cyclesCount);
+
     for (unsigned int i=0; i<cyclesCount; i++) {
         assert(cyclesDirty > 0); // subtract below will not underflow ...
         const bool isVisible = ((hCount >= CYCLES_VIS_BEGIN) && (vCount < SCANLINES_VBL_BEGIN));

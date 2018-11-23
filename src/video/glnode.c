@@ -216,7 +216,7 @@ static void glnode_renderNodes(void) {
 
 #if INTERFACE_TOUCH
 static int64_t glnode_onTouchEvent(interface_touch_event_t action, int pointer_count, int pointer_idx, float *x_coords, float *y_coords) {
-    SCOPE_TRACE_TOUCH("glnode onTouchEvent");
+    SCOPE_TRACE_INTERFACE("glnode onTouchEvent");
     glnode_array_node_s *p = tail;
     int64_t flags = 0x0;
     while (p) {

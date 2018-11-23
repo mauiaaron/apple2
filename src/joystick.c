@@ -273,6 +273,7 @@ void c_calibrate_joystick()
 // race, but hopefully much less likely to trigger).
 static void *_joystick_resetDelayed(void *ctx) {
     (void)ctx;
+    SCOPE_TRACE_INTERFACE("_joystick_resetDelayed");
 
     // delay
     sleep(1);

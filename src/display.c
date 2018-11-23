@@ -994,6 +994,8 @@ void display_flushScanline(scan_data_t *scandata) {
 void display_frameComplete(void) {
     ASSERT_ON_CPU_THREAD();
 
+    SCOPE_TRACE_CPU("frameComplete");
+
     video_setDirty(FB_DIRTY_FLAG);
 
 #if TESTING

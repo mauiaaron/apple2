@@ -956,6 +956,7 @@ static void MB_Update()
     {
         return;
     }
+    SCOPE_TRACE_AUDIO("MB_Update ...");
 #   if MB_TRACING
     if (mb_trace_fp) {
         fprintf(mb_trace_fp, "%s", "\tMB_Update()\n");
@@ -1285,6 +1286,7 @@ static DWORD WINAPI SSI263Thread(LPVOID lpParameter)
 #else
 static void* SSI263Thread(void *lpParameter)
 {
+    TRACE_AUDIO_MARK("SSI263Thread ...");
         const unsigned long nsecWait = NANOSECONDS_PER_SECOND / audio_getCurrentBackend()->systemSettings.sampleRateHz;
         const struct timespec wait = { .tv_sec=0, .tv_nsec=nsecWait };
 
@@ -2367,6 +2369,8 @@ void MB_UpdateCycles(ULONG uExecutedCycles)
 {
 	if(g_SoundcardType == CT_Empty)
 		return;
+
+    SCOPE_TRACE_AUDIO("MB_UpdateCycles");
 
 	timing_checkpointCycles();
 	unsigned long uCycles = cycles_count_total - g_uLastCumulativeCycles;

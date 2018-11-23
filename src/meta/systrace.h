@@ -10,100 +10,102 @@
  */
 
 // Function tracing and profiling
+// TODO FIXME : migrate toolchain to https://github.com/catapult-project/catapult.git
 
-#ifndef _META_TRACE_H_
-#define _META_TRACE_H_
+#ifndef _META_SYSTRACE_H_
+#define _META_SYSTRACE_H_
 
-#define TRACE_CPU 0
-#define TRACE_DISK 0
-#define TRACE_AUDIO 0
-#define TRACE_VIDEO 0
-#define TRACE_TOUCH 0
+// Do not enable for official builds!
+#define ENABLE_SYSTRACING 0
+#define SYSTRACE_CPU 0
+#define SYSTRACE_DISK 0
+#define SYSTRACE_AUDIO 0
+#define SYSTRACE_VIDEO 0
+#define SYSTRACE_INTERFACE 0
 
-#if !defined(__linux__)
-// TODO FIXME ... implement systrace ...
-#else
+// WARNING: using a custom tracefile may significantly eat up disk space
+#define USE_CUSTOM_TRACE_FILE 1 // If set, will use custom file in $HOME rather than Linux kernel facility
 
 extern void _trace_cleanup(void *token);
 extern void _trace_begin(const char *fmt, ...);
 extern void _trace_begin_count(uint32_t count, const char *fmt, ...);
 extern void _trace_end(void);
 
+#if ENABLE_SYSTRACING
+
 #define _SCOPE_TRACE(ctr, fmt, ...) \
     void *__scope_token##ctr##__ __attribute__((cleanup(_trace_cleanup), unused)) = ({ _trace_begin(fmt, ##__VA_ARGS__); (void *)NULL; })
 
-#if !defined(NDEBUG)
-#   define SCOPE_TRACE(fmt, ...) _SCOPE_TRACE(_COUNTER_, fmt, ##__VA_ARGS__)
-
-#   if TRACE_CPU
-#       define SCOPE_TRACE_CPU(fmt, ...) SCOPE_TRACE(fmt, ##__VA_ARGS__)
+#   if SYSTRACE_CPU
+#       define SCOPE_TRACE_CPU(fmt, ...) _SCOPE_TRACE(__COUNTER__, fmt, ##__VA_ARGS__)
 #       define TRACE_CPU_BEGIN(fmt, ...) _trace_begin(fmt, ##__VA_ARGS__)
 #       define TRACE_CPU_END() _trace_end()
+#       define TRACE_CPU_MARK(fmt, ...) do { _trace_begin(fmt, ##__VA_ARGS__); _trace_end(); } while (0)
 #   endif
 
-#   if TRACE_DISK
-#       define SCOPE_TRACE_DISK(fmt, ...) SCOPE_TRACE(fmt, ##__VA_ARGS__)
+#   if SYSTRACE_DISK
+#       define SCOPE_TRACE_DISK(fmt, ...) _SCOPE_TRACE(__COUNTER__, fmt, ##__VA_ARGS__)
 #       define TRACE_DISK_BEGIN(fmt, ...) _trace_begin(fmt, ##__VA_ARGS__)
 #       define TRACE_DISK_END() _trace_end()
+#       define TRACE_DISK_MARK(fmt, ...) do { _trace_begin(fmt, ##__VA_ARGS__); _trace_end(); } while (0)
 #   endif
 
-#   if TRACE_AUDIO
-#       define SCOPE_TRACE_AUDIO(fmt, ...) SCOPE_TRACE(fmt, ##__VA_ARGS__)
+#   if SYSTRACE_AUDIO
+#       define SCOPE_TRACE_AUDIO(fmt, ...) _SCOPE_TRACE(__COUNTER__, fmt, ##__VA_ARGS__)
 #       define TRACE_AUDIO_BEGIN(fmt, ...) _trace_begin(fmt, ##__VA_ARGS__)
 #       define TRACE_AUDIO_END() _trace_end()
+#       define TRACE_AUDIO_MARK(fmt, ...) do { _trace_begin(fmt, ##__VA_ARGS__); _trace_end(); } while (0)
 #   endif
 
-#   if TRACE_VIDEO
-#       define SCOPE_TRACE_VIDEO(fmt, ...) SCOPE_TRACE(fmt, ##__VA_ARGS__)
+#   if SYSTRACE_VIDEO
+#       define SCOPE_TRACE_VIDEO(fmt, ...) _SCOPE_TRACE(__COUNTER__, fmt, ##__VA_ARGS__)
 #       define TRACE_VIDEO_BEGIN(fmt, ...) _trace_begin(fmt, ##__VA_ARGS__)
 #       define TRACE_VIDEO_END() _trace_end()
+#       define TRACE_VIDEO_MARK(fmt, ...) do { _trace_begin(fmt, ##__VA_ARGS__); _trace_end(); } while (0)
 #   endif
 
-#   if TRACE_TOUCH
-#       define SCOPE_TRACE_TOUCH(fmt, ...) SCOPE_TRACE(fmt, ##__VA_ARGS__)
-#       define TRACE_TOUCH_BEGIN(fmt, ...) _trace_begin(fmt, ##__VA_ARGS__)
-#       define TRACE_TOUCH_END() _trace_end()
+#   if SYSTRACE_INTERFACE
+#       define SCOPE_TRACE_INTERFACE(fmt, ...) _SCOPE_TRACE(__COUNTER__, fmt, ##__VA_ARGS__)
+#       define TRACE_INTERFACE_BEGIN(fmt, ...) _trace_begin(fmt, ##__VA_ARGS__)
+#       define TRACE_INTERFACE_END() _trace_end()
+#       define TRACE_INTERFACE_MARK(fmt, ...) do { _trace_begin(fmt, ##__VA_ARGS__); _trace_end(); } while (0)
 #   endif
 
 #endif
 
-#endif // __linux__
-
-#if !defined(SCOPE_TRACE)
-#   define SCOPE_TRACE(fmt, ...)
-#endif
-
-#if !TRACE_CPU
+#if !SYSTRACE_CPU
 #   define SCOPE_TRACE_CPU(fmt, ...)
 #   define TRACE_CPU_BEGIN(fmt, ...)
 #   define TRACE_CPU_END()
+#   define TRACE_CPU_MARK(fmt, ...)
 #endif
 
-#if !TRACE_DISK
+#if !SYSTRACE_DISK
 #   define SCOPE_TRACE_DISK(fmt, ...)
 #   define TRACE_DISK_BEGIN(fmt, ...)
 #   define TRACE_DISK_END()
+#   define TRACE_DISK_MARK(fmt, ...)
 #endif
 
-#if !TRACE_AUDIO
+#if !SYSTRACE_AUDIO
 #   define SCOPE_TRACE_AUDIO(fmt, ...)
 #   define TRACE_AUDIO_BEGIN(fmt, ...)
 #   define TRACE_AUDIO_END()
+#   define TRACE_AUDIO_MARK(fmt, ...)
 #endif
 
-#if !TRACE_VIDEO
+#if !SYSTRACE_VIDEO
 #   define SCOPE_TRACE_VIDEO(fmt, ...)
 #   define TRACE_VIDEO_BEGIN(fmt, ...)
 #   define TRACE_VIDEO_END()
+#   define TRACE_VIDEO_MARK(fmt, ...)
 #endif
 
-#if !TRACE_TOUCH
-#   define SCOPE_TRACE_TOUCH(fmt, ...)
-#   define TRACE_TOUCH_BEGIN(fmt, ...)
-#   define TRACE_TOUCH_END()
+#if !SYSTRACE_INTERFACE
+#   define SCOPE_TRACE_INTERFACE(fmt, ...)
+#   define TRACE_INTERFACE_BEGIN(fmt, ...)
+#   define TRACE_INTERFACE_END()
+#   define TRACE_INTERFACE_MARK(fmt, ...)
 #endif
-
-#else
 
 #endif // whole file
-

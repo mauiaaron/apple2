@@ -66,7 +66,7 @@ apple2ix_SOURCES = \
 	src/meta/darwin-shim.c \
 	src/meta/debug.l \
 	src/meta/debugger.c \
-	src/meta/lintrace.c \
+	src/meta/systrace.c \
 	src/meta/log.c \
 	src/meta/memmngt.c \
 	src/meta/opcodes.c \

@@ -79,7 +79,7 @@
 #include "prefs.h"
 #include "zlib-helpers.h"
 
-#include "meta/trace.h"
+#include "meta/systrace.h"
 
 #if __APPLE__
 #   include "meta/darwin-shim.h"

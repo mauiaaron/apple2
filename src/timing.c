@@ -278,7 +278,8 @@ cpu_runloop:
         clock_gettime(CLOCK_MONOTONIC, &t0);
 
         do {
-            SCOPE_TRACE_CPU("CPU mainloop");
+            ////SCOPE_TRACE_CPU("CPU mainloop");
+
             // -LOCK----------------------------------------------------------------------------------------- SAMPLE ti
             if (UNLIKELY(emul_pause_audio)) {
                 emul_pause_audio = false;
@@ -363,7 +364,9 @@ cpu_runloop:
 
             speaker_flush(); // play audio
 
+            TRACE_CPU_BEGIN("advance scanner");
             video_scannerUpdate();
+            TRACE_CPU_END();
 
             clock_gettime(CLOCK_MONOTONIC, &tj);
             pthread_mutex_unlock(&interface_mutex);
@@ -409,9 +412,9 @@ cpu_runloop:
                 {
                     deltat.tv_sec = 0;
                     deltat.tv_nsec = sleepfor;
-                    TRACE_CPU_BEGIN("sleep");
+                    ////TRACE_CPU_BEGIN("sleep");
                     nanosleep(&deltat, NULL);
-                    TRACE_CPU_END();
+                    ////TRACE_CPU_END();
                 }
 
 #if DEBUG_TIMING

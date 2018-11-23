@@ -82,6 +82,7 @@ static struct timespec *_tap_wait(void) {
 }
 
 static void *_button_tap_delayed_thread(void *dummyptr) {
+    TRACE_INTERFACE_MARK("_button_tap_delayed_thread ...");
     LOG(">>> [DELAYEDTAP] thread start ...");
 
     pthread_mutex_lock(&joys.tapDelayMutex);
