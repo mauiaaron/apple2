@@ -91,6 +91,7 @@ GLenum safeGLGetError(void) {
 #endif
 
 void log_init(void) {
+    assert(data_dir);
     _log_rotate(/*performRotation:*/false);
 }
 

@@ -37,9 +37,23 @@ int argc = 0;
 const char *locale = NULL;
 CrashHandler_s *crashHandler = NULL;
 
-#if defined(CONFIG_DATADIR)
 static void _init_common(void) {
+
+#if defined(CONFIG_DATADIR)
+    assert(!data_dir);
     data_dir = STRDUP(CONFIG_DATADIR PATH_SEPARATOR PACKAGE_NAME);
+#elif MOBILE_DEVICE
+    // data_dir handled elsewhere ...
+#else
+    assert(!data_dir);
+    char buf[PAGE_SIZE];
+    snprintf(buf, PAGE_SIZE, "%s/.apple2", HOMEDIR);
+    data_dir = STRDUP(buf);
+#endif
+    assert(data_dir);
+
+    mkdir(data_dir, (S_IRWXU|S_IRWXG));
+
     log_init();
     srandom((unsigned int)time(NULL));
     LOG("Initializing common...");
@@ -49,6 +63,7 @@ static __attribute__((constructor)) void __init_common(void) {
     emulator_registerStartupCallback(CTOR_PRIORITY_FIRST, &_init_common);
 }
 
+#if defined(CONFIG_DATADIR)
 static void _cli_help(void) {
     fprintf(stderr, "\n");
     fprintf(stderr, "Usage: %s [-A <audio>] [-V <video>]\n", argv[0]);

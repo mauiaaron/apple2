@@ -119,9 +119,12 @@
     NSString *disks[] = { @"disks", @"external-disks", NULL};
     
     NSString **str = &disks[0];
+    assert(data_dir == NULL);
     while (*str) {
         NSString *apple2ixDirString = [documentsDir stringByAppendingPathComponent:apple2ix];
-        data_dir = strdup([apple2ixDirString UTF8String]);
+        if (data_dir == NULL) {
+            data_dir = STRDUP([apple2ixDirString UTF8String]);
+        }
         
         NSString *documentsPath = [apple2ixDirString stringByAppendingPathComponent:*str];
         NSString *resourcesPath = [[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent:*str];
