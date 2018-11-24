@@ -73,6 +73,7 @@ static PIXEL_TYPE *general_colors[NUM_COLOROPTS] = { 0 };
 #define FB_SIZ (SCANWIDTH*SCANHEIGHT)
 
 static PIXEL_TYPE fbFull[FB_SIZ + (SCANWIDTH<<1)] = { 0 }; // HACK NOTE: extra scanlines used for sampling
+static PIXEL_TYPE fbDone[FB_SIZ] = { 0 };
 
 // ----------------------------------------------------------------------------
 // Initialization routines
@@ -956,7 +957,7 @@ void display_flashText(void) {
 }
 
 PIXEL_TYPE *display_getCurrentFramebuffer(void) {
-    return fbFull;
+    return fbDone;
 }
 
 void display_flushScanline(scan_data_t *scandata) {
@@ -996,6 +997,7 @@ void display_frameComplete(void) {
 
     SCOPE_TRACE_CPU("frameComplete");
 
+    memcpy(/*dst:*/fbDone, /*src:*/fbFull, sizeof(fbDone));
     video_setDirty(FB_DIRTY_FLAG);
 
 #if TESTING

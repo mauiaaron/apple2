@@ -13,6 +13,7 @@
 
 #include <regex.h>
 
+// HACK NOTE : display.c "fbDone" buffer is the crtModel->texPixels to avoid a memcpy
 #define FB_PIXELS_PASS_THRU 1
 
 static int viewportX = 0;
@@ -331,11 +332,25 @@ static void glvideo_render(void) {
     glUniformMatrix4fv(uniformMVPIdx, 1, GL_FALSE, mvpIdentity);
 #endif
 
-    unsigned long wasDirty = (video_clearDirty(FB_DIRTY_FLAG) & FB_DIRTY_FLAG);
-
     glActiveTexture(TEXTURE_ACTIVE_FRAMEBUFFER);
     glBindTexture(GL_TEXTURE_2D, crtModel->textureName);
     glUniform1i(texSamplerLoc, TEXTURE_ID_FRAMEBUFFER);
+
+    unsigned long wasDirty = (video_clearDirty(FB_DIRTY_FLAG) & FB_DIRTY_FLAG);
+    if (!wasDirty) {
+        // Framebuffer is not dirty, so stall here to wait for cpu thread to (potentially) complete the video frame ...
+        // This seems to improve "stuttering" of Dagen Brock's Flappy Bird
+        SCOPE_TRACE_VIDEO("sleep");
+
+        struct timespec deltat = {
+            .tv_sec = 0,
+            .tv_nsec = NANOSECONDS_PER_SECOND / 240,
+        };
+        nanosleep(&deltat, NULL); // approx 4.714ms
+
+        wasDirty = (video_clearDirty(FB_DIRTY_FLAG) & FB_DIRTY_FLAG);
+    }
+
     if (wasDirty) {
         SCOPE_TRACE_VIDEO("glvideo texImage2D");
         _HACKAROUND_GLTEXIMAGE2D_PRE(TEXTURE_ACTIVE_FRAMEBUFFER, crtModel->textureName);
