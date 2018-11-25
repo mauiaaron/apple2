@@ -94,7 +94,7 @@ public class Apple2DisksMenu implements Apple2MenuView {
 
             @Override
             public Object getPrefDefault() {
-                return true;
+                return false;
             }
         },
         CURRENT_DISK_PATH_A {
@@ -116,7 +116,7 @@ public class Apple2DisksMenu implements Apple2MenuView {
 
             @Override
             public Object getPrefDefault() {
-                return true;
+                return false;
             }
         },
         CURRENT_DISK_PATH_B {
@@ -138,7 +138,7 @@ public class Apple2DisksMenu implements Apple2MenuView {
 
             @Override
             public Object getPrefDefault() {
-                return true;
+                return false;
             }
         },
         USE_NEWSCHOOL_DISK_SELECTION {
