@@ -50,7 +50,7 @@ static void _init_common(void) {
     snprintf(buf, PAGE_SIZE, "%s/.apple2", HOMEDIR);
     data_dir = STRDUP(buf);
 #endif
-    assert(data_dir);
+    assert((uintptr_t)data_dir);
 
     mkdir(data_dir, (S_IRWXU|S_IRWXG));
 
