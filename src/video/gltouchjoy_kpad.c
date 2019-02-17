@@ -82,7 +82,7 @@ static struct {
 
 } kpad = { 0 };
 
-static GLTouchJoyVariant kpadJoy = { 0 };
+static GLTouchJoyVariant kpadVariant = { 0 };
 
 // ----------------------------------------------------------------------------
 // repeat key callback scheduling and unscheduling
@@ -577,24 +577,24 @@ static void _init_gltouchjoy_kpad(void) {
 
     kpad.currButtonDisplayChar = ' ';
 
-    kpadJoy.variant = &touchkpad_variant;
-    kpadJoy.resetState = &touchkpad_resetState;
-    kpadJoy.setup = &touchkpad_setup;
-    kpadJoy.shutdown = &touchkpad_shutdown;
+    kpadVariant.variant = &touchkpad_variant;
+    kpadVariant.resetState = &touchkpad_resetState;
+    kpadVariant.setup = &touchkpad_setup;
+    kpadVariant.shutdown = &touchkpad_shutdown;
 
-    kpadJoy.prefsChanged = &touchkpad_prefsChanged;
+    kpadVariant.prefsChanged = &touchkpad_prefsChanged;
 
-    kpadJoy.buttonDown = &touchkpad_buttonDown;
-    kpadJoy.buttonMove = &touchkpad_buttonMove;
-    kpadJoy.buttonUp = &touchkpad_buttonUp;
+    kpadVariant.buttonDown = &touchkpad_buttonDown;
+    kpadVariant.buttonMove = &touchkpad_buttonMove;
+    kpadVariant.buttonUp = &touchkpad_buttonUp;
 
-    kpadJoy.axisDown = &touchkpad_axisDown;
-    kpadJoy.axisMove = &touchkpad_axisMove;
-    kpadJoy.axisUp = &touchkpad_axisUp;
+    kpadVariant.axisDown = &touchkpad_axisDown;
+    kpadVariant.axisMove = &touchkpad_axisMove;
+    kpadVariant.axisUp = &touchkpad_axisUp;
 
-    kpadJoy.rosetteChars = &touchkpad_rosetteChars;
+    kpadVariant.rosetteChars = &touchkpad_rosetteChars;
 
-    gltouchjoy_registerVariant(TOUCH_DEVICE_JOYSTICK_KEYPAD, &kpadJoy);
+    gltouchjoy_registerVariant(TOUCH_DEVICE_JOYSTICK_KEYPAD, &kpadVariant);
 }
 
 static __attribute__((constructor)) void __init_gltouchjoy_kpad(void) {

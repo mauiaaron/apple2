@@ -28,7 +28,7 @@ typedef struct touch_event_s {
 
 static touch_event_s *touchEventQ = NULL;
 
-static GLTouchJoyVariant happyHappyJoyJoy = { 0 };
+static GLTouchJoyVariant joyVariant = { 0 };
 
 static struct {
     void (*buttonDrawCallback)(char newChar);
@@ -347,27 +347,27 @@ static uint8_t *touchjoy_rosetteChars(void) {
 static void _init_gltouchjoy_joy(void) {
     LOG("Registering OpenGL software touch joystick (joystick variant)");
 
-    happyHappyJoyJoy.variant = &touchjoy_variant;
-    happyHappyJoyJoy.resetState = &touchjoy_resetState;
-    happyHappyJoyJoy.setup = &touchjoy_setup;
-    happyHappyJoyJoy.shutdown = &touchjoy_shutdown;
+    joyVariant.variant = &touchjoy_variant;
+    joyVariant.resetState = &touchjoy_resetState;
+    joyVariant.setup = &touchjoy_setup;
+    joyVariant.shutdown = &touchjoy_shutdown;
 
-    happyHappyJoyJoy.prefsChanged = &touchjoy_prefsChanged;
+    joyVariant.prefsChanged = &touchjoy_prefsChanged;
 
-    happyHappyJoyJoy.buttonDown = &touchjoy_buttonDown;
-    happyHappyJoyJoy.buttonMove = &touchjoy_buttonMove;
-    happyHappyJoyJoy.buttonUp = &touchjoy_buttonUp;
+    joyVariant.buttonDown = &touchjoy_buttonDown;
+    joyVariant.buttonMove = &touchjoy_buttonMove;
+    joyVariant.buttonUp = &touchjoy_buttonUp;
 
-    happyHappyJoyJoy.axisDown = &touchjoy_axisDown;
-    happyHappyJoyJoy.axisMove = &touchjoy_axisMove;
-    happyHappyJoyJoy.axisUp = &touchjoy_axisUp;
+    joyVariant.axisDown = &touchjoy_axisDown;
+    joyVariant.axisMove = &touchjoy_axisMove;
+    joyVariant.axisUp = &touchjoy_axisUp;
 
-    happyHappyJoyJoy.rosetteChars = &touchjoy_rosetteChars;
+    joyVariant.rosetteChars = &touchjoy_rosetteChars;
 
     joys.tapDelayMutex = (pthread_mutex_t)PTHREAD_MUTEX_INITIALIZER;
     joys.tapDelayCond = (pthread_cond_t)PTHREAD_COND_INITIALIZER;
 
-    gltouchjoy_registerVariant(TOUCH_DEVICE_JOYSTICK, &happyHappyJoyJoy);
+    gltouchjoy_registerVariant(TOUCH_DEVICE_JOYSTICK, &joyVariant);
 }
 
 static __attribute__((constructor)) void __init_gltouchjoy_joy(void) {
