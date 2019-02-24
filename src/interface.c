@@ -1565,7 +1565,8 @@ void c_interface_begin(int current_key)
     pthread_mutex_lock(&classic_interface_lock);
     interface_thread_id=1; // interface thread starting ...
     interface_key.current_key = current_key;
-    pthread_create(&interface_thread_id, NULL, (void *)&interface_thread, &interface_key);
+    int err = TEMP_FAILURE_RETRY(pthread_create(&interface_thread_id, NULL, (void *)&interface_thread, &interface_key));
+    assert(!err);
     pthread_detach(interface_thread_id);
 }
 

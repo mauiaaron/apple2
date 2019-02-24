@@ -194,7 +194,8 @@ static void *_button_tap_delayed_thread(void *dummyptr) {
 static void touchjoy_setup(void (*buttonDrawCallback)(char newChar)) {
     joys.buttonDrawCallback = buttonDrawCallback;
     if (joys.tapDelayThreadId == 0) {
-        pthread_create(&joys.tapDelayThreadId, NULL, (void *)&_button_tap_delayed_thread, (void *)NULL);
+        int err = TEMP_FAILURE_RETRY(pthread_create(&joys.tapDelayThreadId, NULL, (void *)&_button_tap_delayed_thread, (void *)NULL));
+        assert(!err);
     }
 }
 

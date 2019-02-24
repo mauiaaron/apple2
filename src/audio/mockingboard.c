@@ -1712,11 +1712,8 @@ static bool MB_DSInit()
 
 #if 1 // APPLE2IX
         {
-            int err = 0;
-            if ((err = pthread_create(&g_hThread, NULL, SSI263Thread, NULL)))
-            {
-                LOG("SSI263Thread");
-            }
+            int err = TEMP_FAILURE_RETRY(pthread_create(&g_hThread, NULL, SSI263Thread, NULL));
+            assert(!err);
 
             // assuming time critical ...
 #   if defined(__APPLE__) || defined(ANDROID)

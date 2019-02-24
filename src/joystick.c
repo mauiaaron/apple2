@@ -296,7 +296,8 @@ void c_joystick_reset(void)
     run_args.joy_button1 = 0x0;
 #else
     pthread_t pid;
-    pthread_create(&pid, NULL, (void *)&_joystick_resetDelayed, (void *)NULL);
+    int err = TEMP_FAILURE_RETRY(pthread_create(&pid, NULL, (void *)&_joystick_resetDelayed, (void *)NULL));
+    assert(!err);
     pthread_detach(pid);
 #endif
 

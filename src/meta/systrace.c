@@ -174,10 +174,7 @@ static void _trace_init(void) {
 
     assert(systrace_thread_id == 0);
     int err = TEMP_FAILURE_RETRY(pthread_create(&systrace_thread_id, NULL, (void *)&systrace_thread, (void *)NULL));
-    if (err) {
-        LOG("pthread_create for systrace writer failed!");
-        assert(false);
-    }
+    assert(!err);
 
     while (!systrace_thread_initialized) {
         usleep(FILE_WRITER_USLEEP);
