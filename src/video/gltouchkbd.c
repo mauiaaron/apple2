@@ -133,6 +133,7 @@ static struct {
     int ctrlRow;
 
     bool ctrlPressed;
+    bool duoTouch;
 
     unsigned int glyphMultiplier;
     float portraitHeightScale;
@@ -364,7 +365,6 @@ static inline int64_t _tap_key_at_point(float x, float y) {
             break;
 
         case ICONTEXT_NONACTIONABLE:
-            scancode = 0;
             handled = false;
             break;
 
@@ -455,15 +455,17 @@ static inline int64_t _tap_key_at_point(float x, float y) {
         assert(key < 0x80);
         scancode = c_keys_ascii_to_scancode(key);
         if (kbd.ctrlPressed) {
-            c_keys_handle_input(scancode, /*pressed*/true, /*ASCII:*/false);
+            c_keys_handle_input(scancode, /*pressed*/true,  /*ASCII:*/false);
             c_keys_handle_input(scancode, /*pressed*/false, /*ASCII:*/false);
         } else {
             c_keys_handle_input(key, /*pressed:*/true,  /*ASCII:*/true);
+            c_keys_handle_input(key, /*pressed:*/false, /*ASCII:*/true);
         }
         if (key == ' ' && isCalibrating) {
             key = ICONTEXT_SPACE_VISUAL;
         }
     } else if (isCTRL) {
+        assert(scancode == SCODE_L_CTRL);
         c_keys_handle_input(scancode, /*pressed:*/kbd.ctrlPressed,  /*ASCII:*/false);
     } else if (scancode) {
         // perform a press of other keys (ESC, Arrows, etc)
@@ -480,9 +482,6 @@ static inline int64_t _tap_key_at_point(float x, float y) {
     if (handled) {
         flags |= TOUCH_FLAGS_HANDLED;
     }
-
-    key = key & 0xff;
-    scancode = scancode & 0xff;
 
     flags |= ( (int64_t)((key << 8) | scancode) << TOUCH_FLAGS_ASCII_AND_SCANCODE_SHIFT);
     return flags;
@@ -670,13 +669,27 @@ static void gltouchkbd_reshape(int w, int h, bool landscape) {
 
 static int64_t gltouchkbd_onTouchEvent(interface_touch_event_t action, int pointer_count, int pointer_idx, float *x_coords, float *y_coords) {
 
-    if (!isAvailable) {
+    if (UNLIKELY(pointer_idx < 0)) {
+        TOUCH_KBD_LOG("!!!KBD : IGNORING TRACKING INDEX %d", pointer_idx);
+        return 0x0LL;
+    }
+
+    static int trackingIndex0 = TRACKING_NONE;
+    static int trackingIndex1 = TRACKING_NONE;
+
+    if (UNLIKELY(!isAvailable)) {
+        trackingIndex0 = TRACKING_NONE;
+        trackingIndex1 = TRACKING_NONE;
         return 0x0LL;
     }
     if (UNLIKELY(kbd.prefsChanged)) {
-        return 0x0;
+        trackingIndex0 = TRACKING_NONE;
+        trackingIndex1 = TRACKING_NONE;
+        return 0x0LL;
     }
     if (!ownsScreen) {
+        trackingIndex0 = TRACKING_NONE;
+        trackingIndex1 = TRACKING_NONE;
         return 0x0LL;
     }
 
@@ -687,41 +700,72 @@ static int64_t gltouchkbd_onTouchEvent(interface_touch_event_t action, int point
 
     clock_gettime(CLOCK_MONOTONIC, &kbd.timingBegin);
 
-    static int trackingIndex = TRACKING_NONE;
-
     switch (action) {
         case TOUCH_DOWN:
         case TOUCH_POINTER_DOWN:
             if (/*isOnKeyboardModel:*/true) {// TODO FIXME : nonactionable areas could defer to joystick ...
-                trackingIndex = pointer_idx;
-                flags |= TOUCH_FLAGS_HANDLED;
-            }
-            break;
 
-        case TOUCH_MOVE:
-            flags |= ((pointer_idx == trackingIndex) ? TOUCH_FLAGS_HANDLED : 0);
-            break;
-
-        case TOUCH_UP:
-        case TOUCH_POINTER_UP:
-            {
-                if (trackingIndex == pointer_idx) {
-                    int64_t handledAndData = _tap_key_at_point(x, y);
-                    flags |= ((handledAndData & TOUCH_FLAGS_HANDLED) ? (TOUCH_FLAGS_HANDLED|TOUCH_FLAGS_KEY_TAP) : 0x0LL);
-                    flags |= (handledAndData & TOUCH_FLAGS_REQUEST_SYSTEM_KBD);
-                    flags |= (handledAndData & TOUCH_FLAGS_ASCII_AND_SCANCODE_MASK);
-                    trackingIndex = TRACKING_NONE;
+                if (trackingIndex0 == TRACKING_NONE) {
+                    trackingIndex0 = pointer_idx;
+                    flags |= TOUCH_FLAGS_HANDLED;
+                    TOUCH_KBD_LOG("---KBD TOUCH DOWN 0");
+                } else if (kbd.duoTouch && trackingIndex1 == TRACKING_NONE) {
+                    trackingIndex1 = pointer_idx;
+                    flags |= TOUCH_FLAGS_HANDLED;
+                    TOUCH_KBD_LOG("---KBD TOUCH DOWN 1");
+                } else {
+                    TOUCH_KBD_LOG("!!!KBD : IGNORING OTHER TOUCH DOWN %d", pointer_idx);
                 }
             }
             break;
 
+        case TOUCH_MOVE:
+            if (pointer_idx == trackingIndex0) {
+                flags |= TOUCH_FLAGS_HANDLED;
+            } else if (kbd.duoTouch && pointer_idx == trackingIndex1) {
+                flags |= TOUCH_FLAGS_HANDLED;
+            } else {
+                // ...
+            }
+            break;
+
+        case TOUCH_UP:
+        case TOUCH_POINTER_UP:
+            // tap is performed on touch up ...
+            if (trackingIndex0 == pointer_idx || (kbd.duoTouch && trackingIndex1 == pointer_idx)) {
+                int64_t handledAndData = _tap_key_at_point(x, y);
+                flags |= ((handledAndData & TOUCH_FLAGS_HANDLED) ? (TOUCH_FLAGS_HANDLED|TOUCH_FLAGS_KEY_TAP) : 0x0LL);
+                flags |= (handledAndData & TOUCH_FLAGS_REQUEST_SYSTEM_KBD);
+                flags |= (handledAndData & TOUCH_FLAGS_ASCII_AND_SCANCODE_MASK);
+
+                if (trackingIndex0 == pointer_idx) {
+                    TOUCH_KBD_LOG("---KBD TOUCH UP 0");
+                    if (trackingIndex1 != TRACKING_NONE) {
+                        // TODO FIXME ... verify this is needed for iOS ... it is apparently needed for Android, ugh
+                        TOUCH_KBD_LOG("---KBD MIGRATING TRACKING 1 -> 0");
+                        trackingIndex1 = TRACKING_NONE;
+                    } else {
+                        trackingIndex0 = TRACKING_NONE;
+                    }
+                } else {
+                    TOUCH_KBD_LOG("---KBD TOUCH UP 1");
+                    trackingIndex1 = TRACKING_NONE;
+                }
+            } else {
+                TOUCH_KBD_LOG("!!!KBD : IGNORING OTHER TOUCH UP %d", pointer_idx);
+                // ...
+            }
+            break;
+
         case TOUCH_CANCEL:
-            trackingIndex = TRACKING_NONE;
+            trackingIndex0 = TRACKING_NONE;
+            trackingIndex1 = TRACKING_NONE;
             LOG("---KBD TOUCH CANCEL");
             return 0x0LL;
 
         default:
-            trackingIndex = TRACKING_NONE;
+            trackingIndex0 = TRACKING_NONE;
+            trackingIndex1 = TRACKING_NONE;
             LOG("!!!KBD UNKNOWN TOUCH EVENT : %d", action);
             return 0x0LL;
     }
@@ -913,6 +957,8 @@ static void gltouchkbd_applyPrefs(void) {
                               = prefs_parseLongValue (PREF_DOMAIN_TOUCHSCREEN, PREF_SCREEN_OWNER, &lVal, /*base:*/10)  ? (interface_device_t)lVal : TOUCH_DEVICE_KEYBOARD;
     ownsScreen = (screenOwner == TOUCH_DEVICE_KEYBOARD || screenOwner == TOUCH_DEVICE_NONE);
 
+    kbd.duoTouch = prefs_parseBoolValue(PREF_DOMAIN_KEYBOARD, PREF_KEYBOARD_DUO_TOUCH, &bVal) ? bVal : false;
+
     if (ownsScreen) {
         minAlpha = minAlphaWhenOwnsScreen;
         if (allowLowercase) {
@@ -931,7 +977,7 @@ static void gltouchkbd_applyPrefs(void) {
             glhud_setupDefault(kbd.model);
         }
 
-        // reset CTRL state upon leaving this touch device
+        // reset CTRL pressed state upon leaving this touch device
         kbd.ctrlPressed = false;
         c_keys_handle_input(SCODE_L_CTRL, /*pressed:*/false, /*ASCII:*/false);
     }

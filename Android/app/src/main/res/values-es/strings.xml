@@ -201,5 +201,7 @@
     <string name="show_half_scanlines_summary">Renders pixel vertical divisions</string>
     <string name="release_notes">Release notes</string>
     <string name="release_notes_summary">View notes for this release</string>
+    <string name="keyboard_duotouch_enabled">Enable dual-touch</string>
+    <string name="keyboard_duotouch_enabled_summary">Support two-thumb input</string>
 
 </resources>

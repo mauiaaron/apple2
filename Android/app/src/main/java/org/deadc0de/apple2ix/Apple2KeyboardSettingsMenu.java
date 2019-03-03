@@ -351,6 +351,41 @@ public class Apple2KeyboardSettingsMenu extends Apple2AbstractMenu {
                 return convertView;
             }
         },
+        KEYBOARD_ENABLE_DUO_TOUCH {
+            @Override
+            public final String getTitle(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.keyboard_duotouch_enabled);
+            }
+
+            @Override
+            public final String getSummary(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.keyboard_duotouch_enabled_summary);
+            }
+
+            @Override
+            public String getPrefKey() {
+                return "duoTouchEnabled";
+            }
+
+            @Override
+            public Object getPrefDefault() {
+                return false;
+            }
+
+            @Override
+            public View getView(final Apple2Activity activity, View convertView) {
+                convertView = _basicView(activity, this, convertView);
+                CheckBox cb = _addCheckbox(activity, this, convertView, (boolean) Apple2Preferences.getJSONPref(this));
+                final IMenuEnum self = this;
+                cb.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                    @Override
+                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                        Apple2Preferences.setJSONPref(self, isChecked);
+                    }
+                });
+                return convertView;
+            }
+        },
         KEYBOARD_ENABLE_LOWERCASE {
             @Override
             public final String getTitle(Apple2Activity activity) {
