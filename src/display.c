@@ -698,16 +698,6 @@ static void _display_plotChar(PIXEL_TYPE *fboff, const unsigned int fbPixWidth, 
     _plot_char80(&fboff, &src, fbPixWidth);
 }
 
-#if INTERFACE_CLASSIC
-void display_plotChar(const uint8_t col, const uint8_t row, const interface_colorscheme_t cs, const uint8_t c) {
-    assert(col < 80);
-    assert(row < 24);
-    unsigned int off = row * SCANWIDTH * FONT_HEIGHT_PIXELS + col * FONT80_WIDTH_PIXELS + _FB_OFF;
-    _display_plotChar(fbFull+off, SCANWIDTH, cs, c);
-    video_setDirty(FB_DIRTY_FLAG);
-}
-#endif
-
 static void _display_plotLine(PIXEL_TYPE *fb, const unsigned int fbPixWidth, const unsigned int xAdjust, const uint8_t col, const uint8_t row, const interface_colorscheme_t cs, const char *line) {
     for (uint8_t x=col; *line; x++, line++) {
         char c = *line;
@@ -717,6 +707,14 @@ static void _display_plotLine(PIXEL_TYPE *fb, const unsigned int fbPixWidth, con
 }
 
 #if INTERFACE_CLASSIC
+void display_plotChar(const uint8_t col, const uint8_t row, const interface_colorscheme_t cs, const uint8_t c) {
+    assert(col < 80);
+    assert(row < 24);
+    unsigned int off = row * SCANWIDTH * FONT_HEIGHT_PIXELS + col * FONT80_WIDTH_PIXELS + _FB_OFF;
+    _display_plotChar(fbFull+off, SCANWIDTH, cs, c);
+    video_setDirty(FB_DIRTY_FLAG);
+}
+
 void display_plotLine(const uint8_t col, const uint8_t row, const interface_colorscheme_t cs, const char *message) {
     _display_plotLine(fbFull, /*fbPixWidth:*/SCANWIDTH, /*xAdjust:*/_FB_OFF, col, row, cs, message);
     video_setDirty(FB_DIRTY_FLAG);
@@ -957,6 +955,11 @@ void display_flashText(void) {
 }
 
 PIXEL_TYPE *display_getCurrentFramebuffer(void) {
+#if INTERFACE_CLASSIC
+    if (interface_isShowing()) {
+        memcpy(/*dst:*/fbDone, /*src:*/fbFull, sizeof(fbDone));
+    }
+#endif
     return fbDone;
 }
 

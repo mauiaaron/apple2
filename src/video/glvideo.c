@@ -354,8 +354,8 @@ static void glvideo_render(void) {
     if (wasDirty) {
         SCOPE_TRACE_VIDEO("glvideo texImage2D");
         _HACKAROUND_GLTEXIMAGE2D_PRE(TEXTURE_ACTIVE_FRAMEBUFFER, crtModel->textureName);
+        void *fb = display_getCurrentFramebuffer(); // NOTE: has an INTERFACE_CLASSIC side-effect ...
 #if !FB_PIXELS_PASS_THRU
-        void *fb = display_getCurrentFramebuffer();
         memcpy(/*dest:*/crtModel->texPixels, /*src:*/fb, (SCANWIDTH*SCANHEIGHT*sizeof(PIXEL_TYPE)));
 #endif
         glTexImage2D(GL_TEXTURE_2D, /*level*/0, TEX_FORMAT_INTERNAL, SCANWIDTH, SCANHEIGHT, /*border*/0, TEX_FORMAT, TEX_TYPE, crtModel->texPixels);
