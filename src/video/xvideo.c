@@ -406,19 +406,19 @@ void video_driver_sync(void) {
     post_image();
 
     if (!XPending(display)) {
-        c_keys_handle_input(/*scancode:*/-1, /*pressed:*/0, 0);
+        keys_handleInput(/*scancode:*/-1, /*is_pressed:*/false, /*is_ascii:*/false);
     } else {
         do {
             XNextEvent(display, &xevent);
 
             int scancode = -1;
-            int pressed = 0;
+            bool is_pressed = false;
             if (xevent.type == KeyPress || xevent.type == KeyRelease) {
                 scancode = keysym_to_scancode();
-                pressed = (xevent.type == KeyPress);
+                is_pressed = (xevent.type == KeyPress);
             }
 
-            c_keys_handle_input(scancode, pressed, 0);
+            keys_handleInput(scancode, is_pressed, /*is_ascii:*/false);
         } while (XPending(display));
     }
 }

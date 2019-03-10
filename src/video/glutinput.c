@@ -22,7 +22,7 @@ static inline void _capslock_hackaround(void) {
     // NOTE : Unfortunately it appears that we cannot get a raw key down/up notification for CAPSlock, so hack that here
     // ALSO : Emulator initially sets CAPS state based on a user preference, but sync to system state if user changes it
     int modifiers = glutGetModifiers();
-    if (!c_keys_is_shifted()) {
+    if (!keys_isShifted()) {
         if (modifiers & GLUT_ACTIVE_SHIFT) {
             use_system_caps_lock = true;
             caps_lock = true;
@@ -131,7 +131,7 @@ static int _glutkey_to_scancode(int key) {
             break;
 
         default:
-            key = c_keys_ascii_to_scancode(key);
+            key = keys_ascii2Scancode(key);
             break;
     }
 
@@ -142,13 +142,13 @@ static int _glutkey_to_scancode(int key) {
 void gldriver_on_key_down(unsigned char key, int x, int y) {
     _capslock_hackaround();
     //LOG("onKeyDown %02x(%d)'%c'", key, key, key);
-    c_keys_handle_input(key, 1, 1);
+    keys_handleInput(key, /*is_pressed:*/true, /*is_ascii:*/true);
 }
 
 void gldriver_on_key_up(unsigned char key, int x, int y) {
     _capslock_hackaround();
     //LOG("onKeyUp %02x(%d)'%c'", key, key, key);
-    c_keys_handle_input(key, 0, 1);
+    keys_handleKnput(key, /*is_pressed:*/false, /*is_ascii:*/true);
 }
 
 void gldriver_on_key_special_down(int key, int x, int y) {
@@ -158,14 +158,14 @@ void gldriver_on_key_special_down(int key, int x, int y) {
         glutFullScreenToggle();
     }
     //LOG("onKeySpecialDown %08x(%d) -> %02X(%d)", key, key, scancode, scancode);
-    c_keys_handle_input(scancode, 1, 0);
+    keys_handleInput(scancode, /*is_pressed:*/true, /*is_ascii:*/false);
 }
 
 void gldriver_on_key_special_up(int key, int x, int y) {
     _capslock_hackaround();
     int scancode = _glutkey_to_scancode(key);
     //LOG("onKeySpecialDown %08x(%d) -> %02X(%d)", key, key, scancode, scancode);
-    c_keys_handle_input(scancode, 0, 0);
+    keys_handleInput(scancode, /*is_pressed:*/false, /*is_ascii:*/false);
 }
 
 #define JOYSTICK_POLL_INTERVAL_MILLIS (ceilf(1000.f/60))

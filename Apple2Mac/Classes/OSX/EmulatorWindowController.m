@@ -252,27 +252,27 @@
         }
 
         case SHIFT_LT:
-            c_keys_handle_input(SCODE_L_SHIFT, ([event modifierFlags] & NSShiftKeyMask), 0);
+            keys_handleInput(SCODE_L_SHIFT, /*is_pressed:*/([event modifierFlags] & NSShiftKeyMask), /*is_ascii:*/false);
             break;
 
         case SHIFT_RT:
-            c_keys_handle_input(SCODE_R_SHIFT, ([event modifierFlags] & NSShiftKeyMask), 0);
+            keys_handleInput(SCODE_R_SHIFT, /*is_pressed:*/([event modifierFlags] & NSShiftKeyMask), /*is_ascii:*/false);
             break;
 
         case CTRL_LT:
-            c_keys_handle_input(SCODE_L_CTRL, ([event modifierFlags] & NSControlKeyMask), 0);
+            keys_handleInput(SCODE_L_CTRL, /*is_pressed:*/([event modifierFlags] & NSControlKeyMask), /*is_ascii:*/false);
             break;
 
         case CTRL_RT:
-            c_keys_handle_input(SCODE_R_CTRL, ([event modifierFlags] & NSControlKeyMask), 0);
+            keys_handleInput(SCODE_R_CTRL, /*is_pressed:*/([event modifierFlags] & NSControlKeyMask), /*is_ascii:*/false);
             break;
 
         case ALT_LT:
-            c_keys_handle_input(SCODE_L_ALT, ([event modifierFlags] & NSAlternateKeyMask), 0);
+            keys_handleInput(SCODE_L_ALT, /*is_pressed:*/([event modifierFlags] & NSAlternateKeyMask), /*is_ascii:*/false);
             break;
 
         case ALT_RT:
-            c_keys_handle_input(SCODE_R_ALT, ([event modifierFlags] & NSAlternateKeyMask), 0);
+            keys_handleInput(SCODE_R_ALT, /*is_pressed:*/([event modifierFlags] & NSAlternateKeyMask), /*is_ascii:*/false);
             break;
 
         default:
@@ -378,7 +378,7 @@
         default:
             if ([event modifierFlags] & NSControlKeyMask)
             {
-                scode = c_keys_ascii_to_scancode(scode);
+                scode = keys_ascii2Scancode(scode);
                 cooked = 0;
             }
             else
@@ -388,7 +388,7 @@
             break;
     }
     
-    c_keys_handle_input(scode, pressed, cooked);
+    keys_handleInput(scode, pressed, cooked);
 }
 
 - (void)keyUp:(NSEvent *)event

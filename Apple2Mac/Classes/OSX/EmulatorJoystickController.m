@@ -114,7 +114,7 @@
 #ifdef KEYPAD_JOYSTICK
     if (joy_mode == JOY_KPAD)
     {
-        c_keys_handle_input(-1, 0, 0);
+        keys_handleInput(/*scancode:*/-1, /*is_pressed:*/false, /*is_ascii:*/false);
     }
 #endif
 }

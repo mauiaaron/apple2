@@ -272,11 +272,11 @@ static void prefsChangeCallback(const char *domain)
     {
         case ALT_LT:
             leftAltEngaged = !leftAltEngaged;
-            c_keys_handle_input(SCODE_L_ALT, /*pressed:*/leftAltEngaged, /*cooked:*/0);
+            keys_handleInput(SCODE_L_ALT, /*is_pressed:*/leftAltEngaged, /*is_ascii:*/false);
             break;
         case ALT_RT:
             rightAltEngaged = !rightAltEngaged;
-            c_keys_handle_input(SCODE_R_ALT, /*pressed:*/rightAltEngaged, /*cooked:*/0);
+            keys_handleInput(SCODE_R_ALT, /*is_pressed:*/rightAltEngaged, /*is_ascii:*/false);
             break;
         default:
             break;
@@ -298,16 +298,16 @@ static void prefsChangeCallback(const char *domain)
     switch (scode)
     {
         case NSUpArrowFunctionKey:
-            c_keys_handle_input(SCODE_U, pressed, /*cooked:*/0);
+            keys_handleInput(SCODE_U, pressed, /*is_ascii:*/false);
             break;
         case NSDownArrowFunctionKey:
-            c_keys_handle_input(SCODE_D, pressed, /*cooked:*/0);
+            keys_handleInput(SCODE_D, pressed, /*is_ascii:*/false);
             break;
         case NSLeftArrowFunctionKey:
-            c_keys_handle_input(SCODE_L, pressed, /*cooked:*/0);
+            keys_handleInput(SCODE_L, pressed, /*is_ascii:*/false);
             break;
         case NSRightArrowFunctionKey:
-            c_keys_handle_input(SCODE_R, pressed, /*cooked:*/0);
+            keys_handleInput(SCODE_R, pressed, /*is_ascii:*/false);
             break;
         default:
             break;

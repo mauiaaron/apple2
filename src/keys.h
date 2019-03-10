@@ -138,15 +138,16 @@
 extern bool caps_lock;
 extern bool use_system_caps_lock;
 
+#ifdef INTERFACE_CLASSIC
 int c_mygetch(int block);
 int c_rawkey(void);
-#ifdef INTERFACE_CLASSIC
 void c_keys_set_key(int key);
 bool c_keys_is_interface_key(int key);
 #endif
-int c_keys_is_shifted(void);
-int c_keys_ascii_to_scancode(int ch);
-void c_keys_handle_input(int scancode, int pressed, int is_cooked);
+
+bool keys_isShifted(void);
+int keys_ascii2Scancode(uint8_t ch);
+void keys_handleInput(int scan_or_key, bool is_pressed, bool is_ascii);
 
 uint8_t keys_apple2ASCII(uint8_t c, OUTPARM font_mode_t *mode);
 

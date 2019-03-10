@@ -453,24 +453,24 @@ static inline int64_t _tap_key_at_point(float x, float y) {
     assert(scancode < 0x80);
     if (isASCII) {
         assert(key < 0x80);
-        scancode = c_keys_ascii_to_scancode(key);
+        scancode = keys_ascii2Scancode(key);
         if (kbd.ctrlPressed) {
-            c_keys_handle_input(scancode, /*pressed*/true,  /*ASCII:*/false);
-            c_keys_handle_input(scancode, /*pressed*/false, /*ASCII:*/false);
+            keys_handleInput(scancode, /*is_pressed*/true,  /*is_ascii:*/false);
+            keys_handleInput(scancode, /*is_pressed*/false, /*is_ascii:*/false);
         } else {
-            c_keys_handle_input(key, /*pressed:*/true,  /*ASCII:*/true);
-            c_keys_handle_input(key, /*pressed:*/false, /*ASCII:*/true);
+            keys_handleInput(key, /*is_pressed:*/true,  /*is_ascii:*/true);
+            keys_handleInput(key, /*is_pressed:*/false, /*is_ascii:*/true);
         }
         if (key == ' ' && isCalibrating) {
             key = ICONTEXT_SPACE_VISUAL;
         }
     } else if (isCTRL) {
         assert(scancode == SCODE_L_CTRL);
-        c_keys_handle_input(scancode, /*pressed:*/kbd.ctrlPressed,  /*ASCII:*/false);
+        keys_handleInput(scancode, /*is_pressed:*/kbd.ctrlPressed, /*is_ascii:*/false);
     } else if (scancode) {
         // perform a press of other keys (ESC, Arrows, etc)
-        c_keys_handle_input(scancode, /*pressed:*/true,  /*ASCII:*/false);
-        c_keys_handle_input(scancode, /*pressed:*/false, /*ASCII:*/false);
+        keys_handleInput(scancode, /*is_pressed:*/true,  /*is_ascii:*/false);
+        keys_handleInput(scancode, /*is_pressed:*/false, /*is_ascii:*/false);
     }
 
     // draw current selected key (if any)
@@ -979,7 +979,7 @@ static void gltouchkbd_applyPrefs(void) {
 
         // reset CTRL pressed state upon leaving this touch device
         kbd.ctrlPressed = false;
-        c_keys_handle_input(SCODE_L_CTRL, /*pressed:*/false, /*ASCII:*/false);
+        keys_handleInput(SCODE_L_CTRL, /*is_pressed:*/false, /*is_ascii:*/false);
     }
 
     char *kbdPath = NULL;

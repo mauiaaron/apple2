@@ -318,10 +318,10 @@ static void _nc_convertAppleGlyphs(INOUT chtype *c, OUTPARM char **s, uint8_t *c
     }
 }
 
-static int _nc_keyToEmulator(int ncKey, int *isCooked) {
+static int _nc_keyToEmulator(int ncKey, bool *is_ascii) {
     int a2key = ncKey;
 
-    bool isASCII = false;
+    *is_ascii = false;
     switch (ncKey) {
 
         case KEY_F(1):
@@ -388,14 +388,13 @@ static int _nc_keyToEmulator(int ncKey, int *isCooked) {
         case ASCII_TAB:
         default:
             if (a2key >= 0 && a2key < 256) {
-                isASCII = true;
+                is_ascii = true;
             } else {
                 a2key = -1;
             }
             break;
     }
 
-    *isCooked = isASCII;
     return a2key;
 }
 
@@ -548,18 +547,13 @@ static void ncvideo_main_loop(void) {
 
         // handle keyboard input
         int c = getch();
-        int is_ascii = 0;
         if (c == ERR) {
-            c_keys_handle_input(-1, /*pressed:*/0, /*is_ascii:*/0);
+            keys_handleInput(/*scancode:*/-1, /*is_pressed:*/false, /*is_ascii:*/false);
         } else {
+            bool is_ascii = false;
             c = _nc_keyToEmulator(c, &is_ascii);
-
-            if (is_ascii) {
-                c_keys_handle_input(c, /*pressed:*/1, /*is_ascii:*/1);
-            } else {
-                c_keys_handle_input(c, /*pressed:*/1, /*is_ascii:*/0);
-                c_keys_handle_input(c, /*pressed:*/0, /*is_ascii:*/0);
-            }
+            keys_handleInput(/*scancode:*/c, /*is_pressed:*/true,  is_ascii);
+            keys_handleInput(/*scancode:*/c, /*is_pressed:*/false, is_ascii);
         }
 
         // FIXME TODO ... does not account for execution time drift

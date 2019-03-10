@@ -142,7 +142,7 @@ static void touchkpad_keyboardReadCallback(void) {
 #warning FIXME TODO : implement proper keyboard repeat callback timing
 
     if (kpad.lastScancode >= 0) {
-        c_keys_handle_input(kpad.lastScancode, /*pressed:*/false, /*ASCII:*/false);
+        keys_handleInput(kpad.lastScancode, /*is_pressed:*/false, /*is_ascii:*/false);
         kpad.lastScancode = -1;
     }
 
@@ -156,7 +156,7 @@ static void touchkpad_keyboardReadCallback(void) {
             struct timespec deltat = timespec_diff(kpad.timingBegins[kpad.fireIdx], now, NULL);
             if (deltat.tv_sec || deltat.tv_nsec > kpad.repeatThresholdNanos) {
                 TOUCH_JOY_LOG("ACTIVE(%d,%d) REPEAT #%d/%lu/%lu: %d", kpad.axisLock, kpad.buttonLock, kpad.fireIdx, deltat.tv_sec, deltat.tv_nsec, scancode);
-                c_keys_handle_input(scancode, /*pressed:*/true, /*ASCII:*/false);
+                keys_handleInput(scancode, /*is_pressed:*/true, /*is_ascii:*/false);
                 kpad.lastScancode = scancode;
                 fired = kpad.fireIdx;
             }
@@ -225,13 +225,13 @@ static void touchkpad_resetState(void) {
 
     for (unsigned int i=0; i<ROSETTE_COLS; i++) {
         for (unsigned int j=0; j<ROSETTE_ROWS; j++) {
-            c_keys_handle_input(kpad.rosetteScancodes[i], /*pressed:*/false, /*ASCII:*/false);
+            keys_handleInput(kpad.rosetteScancodes[i], /*is_pressed:*/false, /*is_ascii:*/false);
         }
     }
 
-    c_keys_handle_input(kpad.touchDownScancode, /*pressed:*/false, /*ASCII:*/false);
-    c_keys_handle_input(kpad.northScancode,     /*pressed:*/false, /*ASCII:*/false);
-    c_keys_handle_input(kpad.southScancode,     /*pressed:*/false, /*ASCII:*/false);
+    keys_handleInput(kpad.touchDownScancode, /*pressed:*/false, /*is_ascii:*/false);
+    keys_handleInput(kpad.northScancode,     /*pressed:*/false, /*is_ascii:*/false);
+    keys_handleInput(kpad.southScancode,     /*pressed:*/false, /*is_ascii:*/false);
 }
 
 static void touchkpad_setup(void (*buttonDrawCallback)(char newChar)) {
@@ -489,7 +489,7 @@ static void touchkpad_prefsChanged(const char *domain) {
     kpad.repeatThresholdNanos = prefs_parseFloatValue(domain, PREF_KPAD_REPEAT_THRESH,    &fVal)              ? fVal*NANOSECONDS_PER_SECOND : NANOSECONDS_PER_SECOND;
 
     kpad.touchDownChar        = prefs_parseLongValue (domain, PREF_KPAD_TOUCHDOWN_CHAR,   &lVal, /*base:*/10) ? lVal : ICONTEXT_SPACE_VISUAL;
-    kpad.touchDownScancode    = prefs_parseLongValue (domain, PREF_KPAD_TOUCHDOWN_SCAN,   &lVal, /*base:*/10) ? lVal : c_keys_ascii_to_scancode(' ');
+    kpad.touchDownScancode    = prefs_parseLongValue (domain, PREF_KPAD_TOUCHDOWN_SCAN,   &lVal, /*base:*/10) ? lVal : keys_ascii2Scancode(' ');
 
     kpad.southChar            = prefs_parseLongValue (domain, PREF_KPAD_SWIPE_SOUTH_CHAR, &lVal, /*base:*/10) ? lVal : ICONTEXT_NONACTIONABLE;
     kpad.southScancode        = prefs_parseLongValue (domain, PREF_KPAD_SWIPE_SOUTH_SCAN, &lVal, /*base:*/10) ? lVal : -1;
@@ -506,9 +506,9 @@ static void touchkpad_prefsChanged(const char *domain) {
             ICONTEXT_NONACTIONABLE, 'M', ICONTEXT_NONACTIONABLE,
         };
         const int rosetteScans[ROSETTE_ROWS*ROSETTE_COLS] = {
-            -1, c_keys_ascii_to_scancode('I'), -1,
-            c_keys_ascii_to_scancode('J'), -1, c_keys_ascii_to_scancode('K'),
-            -1, c_keys_ascii_to_scancode('M'), -1,
+            -1, keys_ascii2Scancode('I'), -1,
+            keys_ascii2Scancode('J'), -1, keys_ascii2Scancode('K'),
+            -1, keys_ascii2Scancode('M'), -1,
         };
         for (unsigned long i=0; i<rosetteCount; i++) {
             kpad.rosetteChars[i] = rosetteChars[i];

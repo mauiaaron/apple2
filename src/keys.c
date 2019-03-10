@@ -15,8 +15,16 @@
 
 #include "common.h"
 
+#define DEBUG_KEYS 0
+#if DEBUG_KEYS
+#   define KEY_LOG(...) LOG(__VA_ARGS__)
+#else
+#   define KEY_LOG(...)
+#endif
+
 static int next_key = -1;
 static int last_scancode = -1;
+
 bool caps_lock = true; // default enabled because so much breaks otherwise
 bool use_system_caps_lock = false;
 
@@ -183,26 +191,24 @@ uint8_t keys_apple2ASCII(uint8_t c, OUTPARM font_mode_t *mode) {
     }
 }
 
-int c_keys_ascii_to_scancode(int c)
-{
+int keys_ascii2Scancode(uint8_t c) {
     return scode_map[c&0x7f];
 }
 
-int c_keys_is_shifted()
-{
+bool keys_isShifted(void) {
     return key_pressed[SCODE_L_SHIFT] || key_pressed[SCODE_R_SHIFT];
 }
 
-/* -------------------------------------------------------------------------
-    Handle input : keys and joystick.
-   ------------------------------------------------------------------------- */
-void c_keys_handle_input(int scancode, int pressed, int is_cooked)
-{
-    int *keymap = NULL;
+// ----------------------------------------------------------------------------
+// Handle input, both for keys and joystick.
+//
+// NOTE: `scancode` can be either a scancode or an ASCII key.
+void keys_handleInput(int scancode, bool is_pressed, bool is_ascii) {
+    KEY_LOG("keys ... scancode:%d is_pressed:%d is_ascii:%d", scancode, is_pressed, is_ascii);
 
-    if (is_cooked) {
+    if (is_ascii) {
         last_scancode = -1;
-        if (!pressed) {
+        if (!is_pressed) {
             return;
         }
         if (! (key_pressed[ SCODE_L_CTRL ] || key_pressed[ SCODE_R_CTRL ]) ) {
@@ -215,57 +221,45 @@ void c_keys_handle_input(int scancode, int pressed, int is_cooked)
         assert(scancode < 0x80);
         last_scancode = scancode;
 
+        int *keymap = NULL;
         if ((key_pressed[ SCODE_L_SHIFT ] || key_pressed[ SCODE_R_SHIFT ]) &&
-            (key_pressed[ SCODE_L_CTRL ] || key_pressed[ SCODE_R_CTRL ]))
+                (key_pressed[ SCODE_L_CTRL ] || key_pressed[ SCODE_R_CTRL ]))
         {
             keymap = apple_iie_keymap_shift_ctrl;
-        }
-        else if (key_pressed[ SCODE_L_CTRL ] || key_pressed[ SCODE_R_CTRL ])
-        {
+        } else if (key_pressed[ SCODE_L_CTRL ] || key_pressed[ SCODE_R_CTRL ]) {
             keymap = apple_iie_keymap_ctrl;
-        }
-        else if (key_pressed[ SCODE_L_SHIFT ] || key_pressed[ SCODE_R_SHIFT ])
-        {
+        } else if (key_pressed[ SCODE_L_SHIFT ] || key_pressed[ SCODE_R_SHIFT ]) {
             keymap = apple_iie_keymap_shifted;
-        }
-        else if (caps_lock)
-        {
+        } else if (caps_lock) {
             keymap = apple_iie_keymap_caps;
-        }
-        else
-        {
+        } else {
             keymap = apple_iie_keymap_plain;
         }
 
-        if (pressed)
-        {
+        if (is_pressed) {
             key_pressed[ scancode ] = 1;
-            switch (keymap[ scancode ])
-            {
-            case JB0:
-                run_args.joy_button0 = 0xff; /* open apple */
-                break;
-            case JB1:
-                run_args.joy_button1 = 0xff; /* closed apple */
-                break;
-            default:
-                next_key = keymap[scancode];
-                break;
+            switch (keymap[ scancode ]) {
+                case JB0:
+                    run_args.joy_button0 = 0xff; /* open apple */
+                    break;
+                case JB1:
+                    run_args.joy_button1 = 0xff; /* closed apple */
+                    break;
+                default:
+                    next_key = keymap[ scancode ];
+                    break;
             }
-        }
-        else
-        {
+        } else {
             key_pressed[ scancode ] = 0;
-            switch (keymap[ scancode ])
-            {
-            case JB0:
-                run_args.joy_button0 = 0x00;
-                break;
-            case JB1:
-                run_args.joy_button1 = 0x00;
-                break;
-            default:
-                break;
+            switch (keymap[ scancode ]) {
+                case JB0:
+                    run_args.joy_button0 = 0x00;
+                    break;
+                case JB1:
+                    run_args.joy_button1 = 0x00;
+                    break;
+                default:
+                    break;
             }
         }
     }
@@ -282,16 +276,14 @@ void c_keys_handle_input(int scancode, int pressed, int is_cooked)
             int current_key = next_key;
             next_key = -1;
 
-            if (current_key < 128)
-            {
+            if (current_key < 0x80) {
                 apple_ii_64k[0][0xC000] = current_key | 0x80;
                 apple_ii_64k[1][0xC000] = current_key | 0x80;
                 break;
             }
 
 #ifdef INTERFACE_CLASSIC
-            if (current_key == kF9)
-            {
+            if (current_key == kF9) {
                 cpu_pause();
                 timing_toggleCPUSpeed();
                 cpu_resume();
@@ -367,18 +359,15 @@ void c_keys_handle_input(int scancode, int pressed, int is_cooked)
             }
 #endif
 
-            if (current_key == kEND)
-            {
-                if (key_pressed[ SCODE_L_CTRL ] || key_pressed[ SCODE_R_CTRL ])
-                {
+            if (current_key == kEND) {
+                if (key_pressed[ SCODE_L_CTRL ] || key_pressed[ SCODE_R_CTRL ]) {
                     cpu65_interrupt(ResetSig);
                 }
                 break;
             }
 
 #ifdef INTERFACE_CLASSIC
-            if ( c_keys_is_interface_key(current_key) || (current_key == kPAUSE) )
-            {
+            if ( c_keys_is_interface_key(current_key) || (current_key == kPAUSE) ) {
                 c_interface_begin(current_key);
             }
 #endif
@@ -388,8 +377,7 @@ void c_keys_handle_input(int scancode, int pressed, int is_cooked)
 
 #ifdef KEYPAD_JOYSTICK
     // Keypad emulated joystick relies on "raw" keyboard input
-    if (joy_mode == JOY_KPAD)
-    {
+    if (joy_mode == JOY_KPAD) {
         bool joy_x_axis_unpressed = !( key_pressed[SCODE_KPAD_L]  || key_pressed[SCODE_KPAD_R] ||
                                       key_pressed[SCODE_KPAD_UL] || key_pressed[SCODE_KPAD_DL] || key_pressed[SCODE_KPAD_UR] || key_pressed[SCODE_KPAD_DR] ||
                                       // and allow regular PC arrow keys to manipulate joystick...
@@ -398,8 +386,7 @@ void c_keys_handle_input(int scancode, int pressed, int is_cooked)
                                      key_pressed[SCODE_KPAD_UL] || key_pressed[SCODE_KPAD_DL] || key_pressed[SCODE_KPAD_UR] || key_pressed[SCODE_KPAD_DR] ||
                                      key_pressed[SCODE_U] || key_pressed[SCODE_D]);
 
-        if (key_pressed[ SCODE_KPAD_C ])
-        {
+        if (key_pressed[ SCODE_KPAD_C ]) {
             joy_x = HALF_JOY_RANGE;
             joy_y = HALF_JOY_RANGE;
         }
@@ -427,50 +414,34 @@ void c_keys_handle_input(int scancode, int pressed, int is_cooked)
             }
         }
 
-        if (key_pressed[ SCODE_KPAD_UL ] || key_pressed[ SCODE_KPAD_U ] || key_pressed[ SCODE_KPAD_UR ] ||/* regular arrow up */key_pressed[ SCODE_U ])
-        {
-            if (joy_y > joy_step)
-            {
+        if (key_pressed[ SCODE_KPAD_UL ] || key_pressed[ SCODE_KPAD_U ] || key_pressed[ SCODE_KPAD_UR ] ||/* regular arrow up */key_pressed[ SCODE_U ]) {
+            if (joy_y > joy_step) {
                 joy_y -= joy_step;
-            }
-            else
-            {
+            } else {
                 joy_y = 0;
             }
         }
 
-        if (key_pressed[ SCODE_KPAD_DL ] || key_pressed[ SCODE_KPAD_D ] || key_pressed[ SCODE_KPAD_DR ] ||/* regular arrow dn */key_pressed[ SCODE_D ])
-        {
-            if (joy_y < JOY_RANGE - joy_step)
-            {
+        if (key_pressed[ SCODE_KPAD_DL ] || key_pressed[ SCODE_KPAD_D ] || key_pressed[ SCODE_KPAD_DR ] ||/* regular arrow dn */key_pressed[ SCODE_D ]) {
+            if (joy_y < JOY_RANGE - joy_step) {
                 joy_y += joy_step;
-            }
-            else
-            {
+            } else {
                 joy_y = JOY_RANGE-1;
             }
         }
 
-        if (key_pressed[ SCODE_KPAD_UL ] || key_pressed[ SCODE_KPAD_L ] || key_pressed[ SCODE_KPAD_DL ] ||/* regular arrow l */key_pressed[ SCODE_L ])
-        {
-            if (joy_x > joy_step)
-            {
+        if (key_pressed[ SCODE_KPAD_UL ] || key_pressed[ SCODE_KPAD_L ] || key_pressed[ SCODE_KPAD_DL ] ||/* regular arrow l */key_pressed[ SCODE_L ]) {
+            if (joy_x > joy_step) {
                 joy_x -= joy_step;
-            }
-            else
-            {
+            } else {
                 joy_x = 0;
             }
         }
 
-        if (key_pressed[ SCODE_KPAD_UR ] || key_pressed[ SCODE_KPAD_R ] || key_pressed[ SCODE_KPAD_DR ] ||/* regular arrow r */key_pressed[ SCODE_R ])
-        {
-            if (joy_x < JOY_RANGE - joy_step)
-            {
+        if (key_pressed[ SCODE_KPAD_UR ] || key_pressed[ SCODE_KPAD_R ] || key_pressed[ SCODE_KPAD_DR ] ||/* regular arrow r */key_pressed[ SCODE_R ]) {
+            if (joy_x < JOY_RANGE - joy_step) {
                 joy_x += joy_step;
-            }
-            else
-            {
+            } else {
                 joy_x = JOY_RANGE-1;
             }
         }
@@ -478,12 +449,12 @@ void c_keys_handle_input(int scancode, int pressed, int is_cooked)
 #endif
 }
 
+#ifdef INTERFACE_CLASSIC
 int c_rawkey()
 {
     return last_scancode;
 }
 
-#ifdef INTERFACE_CLASSIC
 int c_mygetch(int block)
 {
     int retval;

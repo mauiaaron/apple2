@@ -243,16 +243,20 @@ void android_keycode_to_emulator(int keyCode, int metaState, bool pressed) {
         }
     } while (0);
 
+    if (key < 0) {
+        return;
+    }
+
     //LOG("keyCode:%08x -> key:%02x ('%c') metaState:%08x", keyCode, key, key, metaState);
 
     if (isASCII && _is_ctrl(metaState)) {
-        key = c_keys_ascii_to_scancode(key);
-        c_keys_handle_input(key, true, false);
+        key = keys_ascii2Scancode(key);
+        keys_handleInput(key, /*is_pressed:*/true, /*is_ascii:*/false);
         isASCII = false;
         pressed = false;
     }
 
     assert(key < 0x80);
-    c_keys_handle_input(key, pressed, isASCII);
+    keys_handleInput(key, pressed, isASCII);
 }
 
