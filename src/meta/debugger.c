@@ -12,6 +12,7 @@
  */
 
 #include "common.h"
+#include "meta/debug_private.h"
 
 #include <test/sha1.h>
 
@@ -30,12 +31,10 @@
 #define SW_DHIRES 0xC05E
 #define SW_IOUDIS 0xC07E
 
-const struct opcode_struct *opcodes;
-
 static char input_str[1024] = { 0 }; // ASCII values
 static bool input_deterministically = false; // slows down testing ...
 
-static stepping_struct_t stepping_struct = { 0 };
+static stepping_struct_s stepping_struct = { 0 };
 static unsigned int stepping_timeout = 0;
 
 volatile bool is_debugging = false;
@@ -1265,7 +1264,7 @@ bool c_debugger_should_break() {
 /* -------------------------------------------------------------------------
     debugger_go () - step into or step over commands
    ------------------------------------------------------------------------- */
-int debugger_go(stepping_struct_t s) {
+int debugger_go(stepping_struct_s s) {
     memcpy(&stepping_struct, &s, sizeof(s));
 
     int ch = begin_cpu_stepping();
@@ -1418,8 +1417,6 @@ void c_interface_debugging(void) {
     int ch;
     int command_pos = PROMPT_X;
 
-    opcodes = opcodes_65c02;
-
     /* initialize the buffers */
     for (i=0; i<BUF_Y; i++)
     {
@@ -1512,7 +1509,7 @@ void c_debugger_go(void) {
     bool deterministically = input_deterministically;
     input_deterministically = false;
 
-    stepping_struct_t s = (stepping_struct_t){
+    stepping_struct_s s = (stepping_struct_s){
         .step_deterministically = deterministically,
         .step_text = buf,
         .step_type = GOING,
