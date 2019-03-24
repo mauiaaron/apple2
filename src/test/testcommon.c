@@ -59,10 +59,10 @@ void test_common_init(void) {
     prefs_setFloatValue(PREF_DOMAIN_VM, PREF_CPU_SCALE_ALT, (CPU_SCALE_FASTEST * 100.));
     prefs_save();
 
-    c_debugger_set_watchpoint(WATCHPOINT_ADDR);
+    debugger_setWatchpoint(WATCHPOINT_ADDR);
 
     fprintf(stderr, "Break in test_breakpoint() to catch and diagnose test failures...\n");
-    c_debugger_set_timeout(0);
+    debugger_setTimeout(0);
 }
 
 #if (TARGET_OS_MAC || TARGET_OS_PHONE)

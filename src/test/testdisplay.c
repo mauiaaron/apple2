@@ -95,7 +95,7 @@ TEST test_video_trace_40col(void) {
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
     test_type_input("CATALOG\r\rPOKE7987,255:REM TRIGGER DEBUGGER\r");
-    c_debugger_go();
+    debugger_go();
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x0;
 
@@ -109,7 +109,7 @@ TEST test_video_trace_40col(void) {
     video_scannerTraceBegin(traceFile, 1);
 
     debugger_setBreakCallback(&video_scannerTraceShouldStop);
-    c_debugger_go();
+    debugger_go();
     debugger_setBreakCallback(NULL);
 
     video_scannerTraceEnd();
@@ -153,10 +153,10 @@ TEST test_video_trace_liltexwin(void) {
 
     BOOT_TO_DOS();
 
-    c_debugger_set_timeout(5);
-    c_debugger_clear_watchpoints();
-    c_debugger_go();
-    c_debugger_set_timeout(0);
+    debugger_setTimeout(5);
+    debugger_clearWatchpoints();
+    debugger_go();
+    debugger_setTimeout(0);
 
     const char *homedir = HOMEDIR;
     char *traceFile = NULL;
@@ -168,9 +168,9 @@ TEST test_video_trace_liltexwin(void) {
     video_scannerTraceBegin(traceFile, 1);
 
     debugger_setBreakCallback(&video_scannerTraceShouldStop);
-    c_debugger_go();
+    debugger_go();
     debugger_setBreakCallback(NULL);
-    c_debugger_set_watchpoint(WATCHPOINT_ADDR);
+    debugger_setWatchpoint(WATCHPOINT_ADDR);
 
     video_scannerTraceEnd();
 
@@ -216,7 +216,7 @@ TEST test_40col_normal() {
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
     test_type_input("RUN TESTNORMALTEXT\r");
-    c_debugger_go();
+    debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
     WAIT_FOR_FB_SHA("D676FAFEF4FE5B31832EF875285B7E3A87E47689");
@@ -229,7 +229,7 @@ TEST test_80col_normal() {
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
     test_type_input("PR#3\rRUN TESTNORMALTEXT\r");
-    c_debugger_go();
+    debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
     WAIT_FOR_FB_SHA("BB63B7206CD8741270791872CCD5B77C08169850");
@@ -242,7 +242,7 @@ TEST test_40col_inverse() {
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
     test_type_input("RUN TESTINVERSETEXT\r");
-    c_debugger_go();
+    debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
     WAIT_FOR_FB_SHA("137B1F840ACC1BD23F9636153AAD93CD0FB60E97");
@@ -255,7 +255,7 @@ TEST test_80col_inverse() {
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
     test_type_input("PR#3\rRUN TESTINVERSETEXT\r");
-    c_debugger_go();
+    debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
     WAIT_FOR_FB_SHA("CDAB6BCA6DA883049AF1431EF408F8994615B24A");
@@ -273,7 +273,7 @@ TEST test_lores_with_80col() {
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
 
     test_type_input("TEXT\rPR#3\rRUN TESTLORES\r");
-    c_debugger_go();
+    debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
 
@@ -288,7 +288,7 @@ TEST test_lores_with_40col() {
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
 
     test_type_input("TEXT\rHOME\rLOAD TESTLORES\rLIST\rLIST\rRUN\r");
-    c_debugger_go();
+    debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
 
@@ -303,7 +303,7 @@ TEST test_lores_with_40col_2() {
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
 
     test_type_input("RUNTESTLORES_2\r");
-    c_debugger_go();
+    debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
 
@@ -318,7 +318,7 @@ TEST test_lores_40colmix_normal() {
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
 
     test_type_input("TEXT\rHOME\rLOAD TESTLORES\rLIST\rLIST\rPOKE 7986,127\rRUN\r");
-    c_debugger_go();
+    debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
 
@@ -333,7 +333,7 @@ TEST test_lores_40colmix_inverse() {
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
 
     test_type_input("TEXT\rINVERSE\rHOME\rLOAD TESTLORES\rLIST\rLIST\rPOKE 7986,127\rRUN\r");
-    c_debugger_go();
+    debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
 
@@ -348,7 +348,7 @@ TEST test_lores_80colmix_normal() {
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
 
     test_type_input("TEXT\rPR#3\rLOAD TESTLORES\rLIST\rLIST\rPOKE 7986,127\rRUN\r");
-    c_debugger_go();
+    debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
 
@@ -363,7 +363,7 @@ TEST test_lores_80colmix_inverse() {
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
 
     test_type_input("TEXT\rINVERSE\rPR#3\rLOAD TESTLORES\rLIST\rLIST\rPOKE 7986,127\rRUN\r");
-    c_debugger_go();
+    debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
 
@@ -384,7 +384,7 @@ TEST test_hires_with_80col() {
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
 
     test_type_input("PR#3\rRUN TESTHIRES_2\r");
-    c_debugger_go();
+    debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
 
@@ -398,7 +398,7 @@ TEST test_hires_with_40col() {
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
     test_type_input("RUN TESTHIRES_2\r");
-    c_debugger_go();
+    debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
 
@@ -412,7 +412,7 @@ TEST test_hires_with_40col_page2() {
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
     test_type_input("RUN TESTHIRES_PG2\r");
-    c_debugger_go();
+    debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
 
@@ -426,7 +426,7 @@ TEST test_hires_40colmix_normal() {
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
     test_type_input("POKE 7986,127\rRUN TESTHIRES\r");
-    c_debugger_go();
+    debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
 
@@ -440,7 +440,7 @@ TEST test_hires_40colmix_inverse() {
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
     test_type_input("INVERSE\rPOKE 7986,127\rRUN TESTHIRES\r");
-    c_debugger_go();
+    debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
 
@@ -454,7 +454,7 @@ TEST test_hires_80colmix_normal() {
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
     test_type_input("PR#3\rLOAD TESTHIRES\rLIST\rLIST\rPOKE 7986,127\rRUN\r");
-    c_debugger_go();
+    debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
 
@@ -468,7 +468,7 @@ TEST test_hires_80colmix_inverse() {
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
     test_type_input("INVERSE\rPR#3\rLOAD TESTHIRES\rLIST\rLIST\rPOKE 7986,127\rRUN\r");
-    c_debugger_go();
+    debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
 
@@ -486,7 +486,7 @@ TEST test_80col_lores() {
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
     test_type_input("RUN TESTLORES80\r");
-    c_debugger_go();
+    debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
 
@@ -500,7 +500,7 @@ TEST test_80col_lores_2() {
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
     test_type_input("RUN TESTLORES80_2\r");
-    c_debugger_go();
+    debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
 
@@ -514,7 +514,7 @@ TEST test_80col_hires() {
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
     test_type_input("RUN TESTHIRES80_2\r");
-    c_debugger_go();
+    debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
 

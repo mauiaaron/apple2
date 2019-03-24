@@ -35,7 +35,7 @@ static void testtrace_setup(void *arg) {
     if (test_do_reboot) {
         cpu65_interrupt(ResetSig);
     }
-    c_debugger_set_watchpoint(WATCHPOINT_ADDR);
+    debugger_setWatchpoint(WATCHPOINT_ADDR);
 }
 
 static void testtrace_teardown(void *arg) {
@@ -59,7 +59,7 @@ static void testspeaker_cyclesOverflow(void) {
 
 TEST test_timing_overflow() {
     test_setup_boot_disk(BLANK_DSK, /*readonly:*/1);
-    c_debugger_set_timeout(1);
+    debugger_setTimeout(1);
 
     ASSERT(!cycles_overflowed);
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
@@ -70,7 +70,7 @@ TEST test_timing_overflow() {
 
     do {
         run_args.emul_reinitialize = 1;
-        c_debugger_go();
+        debugger_go();
 
         if (cycles_overflowed) {
             break;
@@ -81,9 +81,9 @@ TEST test_timing_overflow() {
 
     ASSERT(cycles_overflowed);
 
-    c_debugger_set_timeout(0);
+    debugger_setTimeout(0);
 
-    c_debugger_go();
+    debugger_go();
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
 
     // appears emulator handled cycle count overflow gracefully ...
@@ -166,10 +166,10 @@ TEST test_mockingboard_1() {
 
     // Poll for trace file of particular size
     mb_traceBegin(mbTraceFile); // ".samp" file is automatically created ...
-    c_debugger_clear_watchpoints();
-    c_debugger_set_timeout(1);
+    debugger_clearWatchpoints();
+    debugger_setTimeout(1);
     do {
-        c_debugger_go();
+        debugger_go();
 
         FILE *fpTrace = fopen(mbTraceFile, "r");
         fseek(fpTrace, 0, SEEK_END);
@@ -220,7 +220,7 @@ TEST test_mockingboard_1() {
 
         break;
     } while (1);
-    c_debugger_set_timeout(0);
+    debugger_setTimeout(0);
 
     unlink(mbTraceFile);
     FREE(mbTraceFile);
@@ -297,10 +297,10 @@ TEST test_boot_disk_cputrace2() { // Failing now due to difference in IRQ timing
     }
 
     // Poll for trace file of particular size
-    c_debugger_clear_watchpoints();
-    c_debugger_set_timeout(1);
+    debugger_clearWatchpoints();
+    debugger_setTimeout(1);
     do {
-        c_debugger_go();
+        debugger_go();
 
         FILE *fpTrace = fopen(output, "r");
         fseek(fpTrace, 0, SEEK_END);
@@ -335,7 +335,7 @@ TEST test_boot_disk_cputrace2() { // Failing now due to difference in IRQ timing
 
     } while (1);
 
-    c_debugger_set_timeout(0);
+    debugger_setTimeout(0);
 
     disk6_eject(0);
 
@@ -362,10 +362,10 @@ TEST test_boot_disk_cputrace3() {
     }
 
     // Poll for trace file of particular size
-    c_debugger_clear_watchpoints();
-    c_debugger_set_timeout(1);
+    debugger_clearWatchpoints();
+    debugger_setTimeout(1);
     do {
-        c_debugger_go();
+        debugger_go();
 
         FILE *fpTrace = fopen(output, "r");
         fseek(fpTrace, 0, SEEK_END);
@@ -400,7 +400,7 @@ TEST test_boot_disk_cputrace3() {
 
     } while (1);
 
-    c_debugger_set_timeout(0);
+    debugger_setTimeout(0);
 
     disk6_eject(0);
 
@@ -429,7 +429,7 @@ TEST test_cputrace_hello_dsk() {
 
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x00;
     test_type_input_deterministically("RUN HELLO\r");
-    c_debugger_go();
+    debugger_go();
 
     cpu65_trace_end();
     disk6_eject(0);
@@ -478,7 +478,7 @@ TEST test_cputrace_hello_nib() {
 
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x00;
     test_type_input_deterministically("RUN HELLO\r");
-    c_debugger_go();
+    debugger_go();
 
     cpu65_trace_end();
     disk6_eject(0);
@@ -527,7 +527,7 @@ TEST test_cputrace_hello_po() {
 
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x00;
     test_type_input_deterministically("RUN HELLO\r");
-    c_debugger_go();
+    debugger_go();
 
     cpu65_trace_end();
     disk6_eject(0);

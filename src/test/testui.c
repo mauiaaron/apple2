@@ -159,10 +159,10 @@ TEST test_load_state_1() {
 
     // ensure stable test
     disk6_eject(0);
-    c_debugger_set_timeout(1);
-    c_debugger_clear_watchpoints();
-    c_debugger_go();
-    c_debugger_set_timeout(0);
+    debugger_setTimeout(1);
+    debugger_clearWatchpoints();
+    debugger_go();
+    debugger_setTimeout(0);
 
     char *savData = NULL;
     ASPRINTF(&savData, "%s/emulator-test.a2state", HOMEDIR);
@@ -206,10 +206,10 @@ TEST test_load_A2VM_good1() {
 
     // ensure stable test
     disk6_eject(0);
-    c_debugger_set_timeout(1);
-    c_debugger_clear_watchpoints();
-    c_debugger_go();
-    c_debugger_set_timeout(0);
+    debugger_setTimeout(1);
+    debugger_clearWatchpoints();
+    debugger_go();
+    debugger_setTimeout(0);
 
     // write saved state to disk
 
@@ -320,10 +320,10 @@ TEST test_load_A2V2_good1() {
 
     // ensure stable test
     disk6_eject(0);
-    c_debugger_set_timeout(1);
-    c_debugger_clear_watchpoints();
-    c_debugger_go();
-    c_debugger_set_timeout(0);
+    debugger_setTimeout(1);
+    debugger_clearWatchpoints();
+    debugger_go();
+    debugger_setTimeout(0);
 
     // write saved state to disk
 
@@ -446,10 +446,10 @@ TEST test_load_A2V2_good2() {
 
     // ensure stable test
     disk6_eject(0);
-    c_debugger_set_timeout(1);
-    c_debugger_clear_watchpoints();
-    c_debugger_go();
-    c_debugger_set_timeout(0);
+    debugger_setTimeout(1);
+    debugger_clearWatchpoints();
+    debugger_go();
+    debugger_setTimeout(0);
 
     // write saved state to disk
 
@@ -572,10 +572,10 @@ TEST test_load_A2V2_good3() {
 
     // ensure stable test
     disk6_eject(0);
-    c_debugger_set_timeout(1);
-    c_debugger_clear_watchpoints();
-    c_debugger_go();
-    c_debugger_set_timeout(0);
+    debugger_setTimeout(1);
+    debugger_clearWatchpoints();
+    debugger_go();
+    debugger_setTimeout(0);
 
     // write saved state to disk
 

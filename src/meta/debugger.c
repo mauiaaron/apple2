@@ -59,7 +59,9 @@ int arg1, arg2, arg3;                   /* command arguments */
 int breakpoints[MAX_BRKPTS];            /* memory breakpoints */
 int watchpoints[MAX_BRKPTS];            /* memory watchpoints */
 
+#if TESTING
 static bool(*shouldBreakCallback)(void) = NULL;
+#endif
 
 #ifdef INTERFACE_CLASSIC
 /* debugger globals */
@@ -1179,18 +1181,17 @@ static int begin_cpu_stepping() {
     return ch;
 }
 
-/* -------------------------------------------------------------------------
-    c_debugger_should_break()
-   ------------------------------------------------------------------------- */
-bool c_debugger_should_break() {
+bool debugger_shouldBreak(void) {
 
     ASSERT_ON_CPU_THREAD();
 
     bool break_stepping = false;
     if (at_haltpt()) {
         stepping_struct.should_break = true;
+#if TESTING
     } else if (shouldBreakCallback && shouldBreakCallback()) {
         stepping_struct.should_break = true;
+#endif
     } else {
         uint8_t op = get_last_opcode();
 
@@ -1492,15 +1493,16 @@ void c_interface_debugging(void) {
 }
 #endif
 
-/* -------------------------------------------------------------------------
-    debugger testing-driven API
-   ------------------------------------------------------------------------- */
+#if TESTING
+// ----------------------------------------------------------------------------
+// debugger testing-driven API
+
 void debugger_setInputText(const char *text, const bool deterministically) {
     strcat(input_str, text);
     input_deterministically = deterministically;
 }
 
-void c_debugger_go(void) {
+void debugger_go(void) {
     void *buf = NULL;
     if (strlen(input_str)) {
         buf = STRDUP(input_str);
@@ -1527,11 +1529,11 @@ void c_debugger_go(void) {
     num_buffer_lines = 0;
 }
 
-void c_debugger_set_timeout(const unsigned int secs) {
+void debugger_setTimeout(const unsigned int secs) {
     stepping_timeout = secs;
 }
 
-bool c_debugger_set_watchpoint(const uint16_t addr) {
+bool debugger_setWatchpoint(const uint16_t addr) {
     return set_halt(watchpoints, addr);
 }
 
@@ -1539,7 +1541,8 @@ void debugger_setBreakCallback(bool(*cb)(void)) {
     shouldBreakCallback = cb;
 }
 
-void c_debugger_clear_watchpoints(void) {
+void debugger_clearWatchpoints(void) {
     clear_halt(watchpoints, 0);
 }
+#endif
 

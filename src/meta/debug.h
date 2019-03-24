@@ -14,8 +14,8 @@
  */
 
 
-#ifndef A2_DEBUG_H
-#define A2_DEBUG_H
+#ifndef _A2_DEBUG_H_
+#define _A2_DEBUG_H_
 
 #include "common.h"
 
@@ -52,12 +52,15 @@ extern const char* const disasm_templates[NUM_ADDRESSING_MODES];
 void c_interface_debugging(void);
 #endif
 
+bool debugger_shouldBreak(void) CALL_ON_CPU_THREAD;
+
+#if TESTING
 void debugger_setInputText(const char *text, const bool deterministically);
 void debugger_setBreakCallback(bool(*cb)(void));
-void c_debugger_go(void);
-bool c_debugger_should_break(void);
-void c_debugger_set_timeout(const unsigned int secs);
-bool c_debugger_set_watchpoint(const uint16_t addr);
-void c_debugger_clear_watchpoints(void);
-
+void debugger_go(void);
+void debugger_setTimeout(const unsigned int secs);
+bool debugger_setWatchpoint(const uint16_t addr);
+void debugger_clearWatchpoints(void);
 #endif
+
+#endif // _A2_DEBUG_H_

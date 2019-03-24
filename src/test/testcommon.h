@@ -107,7 +107,7 @@ static inline int ASSERT_SHA_BIN(const char *SHA_STR, const uint8_t * const buf,
 static inline int BOOT_TO_DOS(void) {
     if (test_do_reboot) {
         ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
-        c_debugger_go();
+        debugger_go();
         ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
         apple_ii_64k[0][WATCHPOINT_ADDR] = 0x00;
     }

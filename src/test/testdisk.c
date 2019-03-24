@@ -232,7 +232,7 @@ TEST test_read_null_bytes() {
     ASM_DONE();
     ASM_GO();
 
-    c_debugger_go();
+    debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
     ASSERT(apple_ii_64k[0][TESTOUT_ADDR]    == 0xFF);
@@ -253,13 +253,13 @@ TEST test_savehello_dsk() {
     test_type_input("SAVE HELLO\r");
     test_type_input("POKE7987,255:REM TRIGGER DEBUGGER\r");
 
-    c_debugger_go();
+    debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
     WAIT_FOR_FB_SHA(SAVE_SHA1);
 
     REBOOT_TO_DOS();
-    c_debugger_go();
+    debugger_go();
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
     WAIT_FOR_FB_SHA(BOOT_SCREEN);
 
@@ -279,13 +279,13 @@ TEST test_savehello_nib() {
     test_type_input("SAVE HELLO\r");
     test_type_input("POKE7987,255:REM TRIGGER DEBUGGER\r");
 
-    c_debugger_go();
+    debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
     WAIT_FOR_FB_SHA(SAVE_SHA1);
 
     REBOOT_TO_DOS();
-    c_debugger_go();
+    debugger_go();
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
     WAIT_FOR_FB_SHA(BOOT_SCREEN);
 
@@ -305,13 +305,13 @@ TEST test_savehello_po() {
     test_type_input("SAVE HELLO\r");
     test_type_input("POKE7987,255:REM TRIGGER DEBUGGER\r");
 
-    c_debugger_go();
+    debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
     WAIT_FOR_FB_SHA(SAVE_SHA1);
 
     REBOOT_TO_DOS();
-    c_debugger_go();
+    debugger_go();
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
     WAIT_FOR_FB_SHA(BOOT_SCREEN);
 
@@ -347,7 +347,7 @@ TEST test_disk_bytes_savehello_dsk() {
     test_type_input("SAVE HELLO\r");
     test_type_input("POKE7987,255:REM TRIGGER DEBUGGER\r");
 
-    c_debugger_go();
+    debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
     WAIT_FOR_FB_SHA(SAVE_SHA1);
@@ -381,7 +381,7 @@ TEST test_disk_bytes_savehello_dsk() {
     FREE(disk);
 
     REBOOT_TO_DOS();
-    c_debugger_go();
+    debugger_go();
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
     WAIT_FOR_FB_SHA(BOOT_SCREEN);
 
@@ -440,7 +440,7 @@ TEST test_disk_bytes_savehello_nib() {
     test_type_input("SAVE HELLO\r");
     test_type_input("POKE7987,255:REM TRIGGER DEBUGGER\r");
 
-    c_debugger_go();
+    debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
     WAIT_FOR_FB_SHA(SAVE_SHA1);
@@ -474,7 +474,7 @@ TEST test_disk_bytes_savehello_nib() {
     FREE(disk);
 
     REBOOT_TO_DOS();
-    c_debugger_go();
+    debugger_go();
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
     WAIT_FOR_FB_SHA(BOOT_SCREEN);
 
@@ -533,7 +533,7 @@ TEST test_disk_bytes_savehello_po() {
     test_type_input("SAVE HELLO\r");
     test_type_input("POKE7987,255:REM TRIGGER DEBUGGER\r");
 
-    c_debugger_go();
+    debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
     WAIT_FOR_FB_SHA(SAVE_SHA1);
@@ -567,7 +567,7 @@ TEST test_disk_bytes_savehello_po() {
     FREE(disk);
 
     REBOOT_TO_DOS();
-    c_debugger_go();
+    debugger_go();
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
     WAIT_FOR_FB_SHA(BOOT_SCREEN);
 
@@ -645,7 +645,7 @@ TEST test_outofspace_dsk() {
     EAT_UP_DISK_SPACE();
     test_type_input("POKE7987,255:REM TRIGGER DEBUGGER\r");
 
-    c_debugger_go();
+    debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
     WAIT_FOR_FB_SHA(NOSPACE_SHA1);
@@ -679,7 +679,7 @@ TEST test_outofspace_dsk() {
     FREE(disk);
 
     REBOOT_TO_DOS();
-    c_debugger_go();
+    debugger_go();
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
     WAIT_FOR_FB_SHA(BOOT_SCREEN);
 
@@ -728,13 +728,13 @@ TEST test_outofspace_nib() {
     EAT_UP_DISK_SPACE();
     test_type_input("POKE7987,255:REM TRIGGER DEBUGGER\r");
 
-    c_debugger_go();
+    debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
     WAIT_FOR_FB_SHA(NOSPACE_SHA1);
 
     REBOOT_TO_DOS();
-    c_debugger_go();
+    debugger_go();
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
     WAIT_FOR_FB_SHA(BOOT_SCREEN);
 
@@ -783,13 +783,13 @@ TEST test_outofspace_po() {
     EAT_UP_DISK_SPACE();
     test_type_input("POKE7987,255:REM TRIGGER DEBUGGER\r");
 
-    c_debugger_go();
+    debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
     WAIT_FOR_FB_SHA(NOSPACE_SHA1);
 
     REBOOT_TO_DOS();
-    c_debugger_go();
+    debugger_go();
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
     WAIT_FOR_FB_SHA(BOOT_SCREEN);
 
@@ -857,7 +857,7 @@ TEST test_bload_trace_dsk() {
     test_type_input("2000<7000.BFFFM\r");
     test_type_input("BLOADJUNK0,A$2000\r");
     test_type_input("1F33:FF\r");
-    c_debugger_go();
+    debugger_go();
     ASSERT_SHA_MEM(JUNK_MEM_SHA1, 0x2000, 0x4000);
 
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x0;
@@ -865,7 +865,7 @@ TEST test_bload_trace_dsk() {
     test_type_input("2000<7000.BFFFM\r");
     test_type_input("BLOADJUNK1,A$2000\r");
     test_type_input("1F33:FF\r");
-    c_debugger_go();
+    debugger_go();
     ASSERT_SHA_MEM(JUNK_MEM_SHA1, 0x2000, 0x4000);
 
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x0;
@@ -873,7 +873,7 @@ TEST test_bload_trace_dsk() {
     test_type_input("2000<7000.BFFFM\r");
     test_type_input("BLOADJUNK2,A$2000\r");
     test_type_input("1F33:FF\r");
-    c_debugger_go();
+    debugger_go();
     ASSERT_SHA_MEM(JUNK_MEM_SHA1, 0x2000, 0x4000);
 
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x0;
@@ -881,7 +881,7 @@ TEST test_bload_trace_dsk() {
     test_type_input("2000<7000.BFFFM\r");
     test_type_input("BLOADJUNK3,A$2000\r");
     test_type_input("1F33:FF\r");
-    c_debugger_go();
+    debugger_go();
     ASSERT_SHA_MEM(JUNK_MEM_SHA1, 0x2000, 0x4000);
 
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x0;
@@ -889,7 +889,7 @@ TEST test_bload_trace_dsk() {
     test_type_input("2000<7000.BFFFM\r");
     test_type_input("BLOADJUNK4,A$2000\r");
     test_type_input("1F33:FF\r");
-    c_debugger_go();
+    debugger_go();
     ASSERT_SHA_MEM(JUNK_MEM_SHA1, 0x2000, 0x4000);
 
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x0;
@@ -897,7 +897,7 @@ TEST test_bload_trace_dsk() {
     test_type_input("2000<7000.BFFFM\r");
     test_type_input("BLOADJUNK5,A$2000\r");
     test_type_input("1F33:FF\r");
-    c_debugger_go();
+    debugger_go();
     ASSERT_SHA_MEM(JUNK_MEM_SHA1, 0x2000, 0x4000);
 
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x0;
@@ -905,7 +905,7 @@ TEST test_bload_trace_dsk() {
     test_type_input("2000<7000.BFFFM\r");
     test_type_input("BLOADJUNK6,A$2000\r");
     test_type_input("1F33:FF\r");
-    c_debugger_go();
+    debugger_go();
     ASSERT_SHA_MEM(JUNK_MEM_SHA1, 0x2000, 0x4000);
 
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x0;
@@ -913,7 +913,7 @@ TEST test_bload_trace_dsk() {
     test_type_input("2000<7000.BFFFM\r");
     test_type_input("BLOADJUNK7,A$2000\r");
     test_type_input("1F33:FF\r");
-    c_debugger_go();
+    debugger_go();
     ASSERT_SHA_MEM(JUNK_MEM_END_SHA1, 0x2000, 0x4000);
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
@@ -974,7 +974,7 @@ TEST test_bload_trace_nib() {
     test_type_input("2000<7000.BFFFM\r");
     test_type_input("BLOADJUNK0,A$2000\r");
     test_type_input("1F33:FF\r");
-    c_debugger_go();
+    debugger_go();
     ASSERT_SHA_MEM(JUNK_MEM_SHA1, 0x2000, 0x4000);
 
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x0;
@@ -982,7 +982,7 @@ TEST test_bload_trace_nib() {
     test_type_input("2000<7000.BFFFM\r");
     test_type_input("BLOADJUNK1,A$2000\r");
     test_type_input("1F33:FF\r");
-    c_debugger_go();
+    debugger_go();
     ASSERT_SHA_MEM(JUNK_MEM_SHA1, 0x2000, 0x4000);
 
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x0;
@@ -990,7 +990,7 @@ TEST test_bload_trace_nib() {
     test_type_input("2000<7000.BFFFM\r");
     test_type_input("BLOADJUNK2,A$2000\r");
     test_type_input("1F33:FF\r");
-    c_debugger_go();
+    debugger_go();
     ASSERT_SHA_MEM(JUNK_MEM_SHA1, 0x2000, 0x4000);
 
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x0;
@@ -998,7 +998,7 @@ TEST test_bload_trace_nib() {
     test_type_input("2000<7000.BFFFM\r");
     test_type_input("BLOADJUNK3,A$2000\r");
     test_type_input("1F33:FF\r");
-    c_debugger_go();
+    debugger_go();
     ASSERT_SHA_MEM(JUNK_MEM_SHA1, 0x2000, 0x4000);
 
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x0;
@@ -1006,7 +1006,7 @@ TEST test_bload_trace_nib() {
     test_type_input("2000<7000.BFFFM\r");
     test_type_input("BLOADJUNK4,A$2000\r");
     test_type_input("1F33:FF\r");
-    c_debugger_go();
+    debugger_go();
     ASSERT_SHA_MEM(JUNK_MEM_SHA1, 0x2000, 0x4000);
 
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x0;
@@ -1014,7 +1014,7 @@ TEST test_bload_trace_nib() {
     test_type_input("2000<7000.BFFFM\r");
     test_type_input("BLOADJUNK5,A$2000\r");
     test_type_input("1F33:FF\r");
-    c_debugger_go();
+    debugger_go();
     ASSERT_SHA_MEM(JUNK_MEM_SHA1, 0x2000, 0x4000);
 
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x0;
@@ -1022,7 +1022,7 @@ TEST test_bload_trace_nib() {
     test_type_input("2000<7000.BFFFM\r");
     test_type_input("BLOADJUNK6,A$2000\r");
     test_type_input("1F33:FF\r");
-    c_debugger_go();
+    debugger_go();
     ASSERT_SHA_MEM(JUNK_MEM_SHA1, 0x2000, 0x4000);
 
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x0;
@@ -1030,7 +1030,7 @@ TEST test_bload_trace_nib() {
     test_type_input("2000<7000.BFFFM\r");
     test_type_input("BLOADJUNK7,A$2000\r");
     test_type_input("1F33:FF\r");
-    c_debugger_go();
+    debugger_go();
     ASSERT_SHA_MEM(JUNK_MEM_END_SHA1, 0x2000, 0x4000);
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
@@ -1091,7 +1091,7 @@ TEST test_bload_trace_po() {
     test_type_input("2000<7000.BFFFM\r");
     test_type_input("BLOADJUNK0,A$2000\r");
     test_type_input("1F33:FF\r");
-    c_debugger_go();
+    debugger_go();
     ASSERT_SHA_MEM(JUNK_MEM_SHA1, 0x2000, 0x4000);
 
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x0;
@@ -1099,7 +1099,7 @@ TEST test_bload_trace_po() {
     test_type_input("2000<7000.BFFFM\r");
     test_type_input("BLOADJUNK1,A$2000\r");
     test_type_input("1F33:FF\r");
-    c_debugger_go();
+    debugger_go();
     ASSERT_SHA_MEM(JUNK_MEM_SHA1, 0x2000, 0x4000);
 
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x0;
@@ -1107,7 +1107,7 @@ TEST test_bload_trace_po() {
     test_type_input("2000<7000.BFFFM\r");
     test_type_input("BLOADJUNK2,A$2000\r");
     test_type_input("1F33:FF\r");
-    c_debugger_go();
+    debugger_go();
     ASSERT_SHA_MEM(JUNK_MEM_SHA1, 0x2000, 0x4000);
 
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x0;
@@ -1115,7 +1115,7 @@ TEST test_bload_trace_po() {
     test_type_input("2000<7000.BFFFM\r");
     test_type_input("BLOADJUNK3,A$2000\r");
     test_type_input("1F33:FF\r");
-    c_debugger_go();
+    debugger_go();
     ASSERT_SHA_MEM(JUNK_MEM_SHA1, 0x2000, 0x4000);
 
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x0;
@@ -1123,7 +1123,7 @@ TEST test_bload_trace_po() {
     test_type_input("2000<7000.BFFFM\r");
     test_type_input("BLOADJUNK4,A$2000\r");
     test_type_input("1F33:FF\r");
-    c_debugger_go();
+    debugger_go();
     ASSERT_SHA_MEM(JUNK_MEM_SHA1, 0x2000, 0x4000);
 
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x0;
@@ -1131,7 +1131,7 @@ TEST test_bload_trace_po() {
     test_type_input("2000<7000.BFFFM\r");
     test_type_input("BLOADJUNK5,A$2000\r");
     test_type_input("1F33:FF\r");
-    c_debugger_go();
+    debugger_go();
     ASSERT_SHA_MEM(JUNK_MEM_SHA1, 0x2000, 0x4000);
 
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x0;
@@ -1139,7 +1139,7 @@ TEST test_bload_trace_po() {
     test_type_input("2000<7000.BFFFM\r");
     test_type_input("BLOADJUNK6,A$2000\r");
     test_type_input("1F33:FF\r");
-    c_debugger_go();
+    debugger_go();
     ASSERT_SHA_MEM(JUNK_MEM_SHA1, 0x2000, 0x4000);
 
     apple_ii_64k[0][WATCHPOINT_ADDR] = 0x0;
@@ -1147,7 +1147,7 @@ TEST test_bload_trace_po() {
     test_type_input("2000<7000.BFFFM\r");
     test_type_input("BLOADJUNK7,A$2000\r");
     test_type_input("1F33:FF\r");
-    c_debugger_go();
+    debugger_go();
     ASSERT_SHA_MEM(JUNK_MEM_END_SHA1, 0x2000, 0x4000);
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
@@ -1196,13 +1196,13 @@ TEST test_inithello_dsk() {
     test_type_input("INIT HELLO\r");
     test_type_input("POKE7987,255:REM TRIGGER DEBUGGER\r");
 
-    c_debugger_go();
+    debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
     WAIT_FOR_FB_SHA(INIT_SHA1);
 
     REBOOT_TO_DOS();
-    c_debugger_go();
+    debugger_go();
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
     WAIT_FOR_FB_SHA(BOOT_SCREEN);
 
@@ -1221,13 +1221,13 @@ TEST test_inithello_nib() {
     test_type_input("INIT HELLO\r");
     test_type_input("POKE7987,255:REM TRIGGER DEBUGGER\r");
 
-    c_debugger_go();
+    debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
     WAIT_FOR_FB_SHA(INIT_SHA1);
 
     REBOOT_TO_DOS();
-    c_debugger_go();
+    debugger_go();
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
     WAIT_FOR_FB_SHA(BOOT_SCREEN);
 
@@ -1246,13 +1246,13 @@ TEST test_inithello_po() {
     test_type_input("INIT HELLO\r");
     test_type_input("POKE7987,255:REM TRIGGER DEBUGGER\r");
 
-    c_debugger_go();
+    debugger_go();
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
     WAIT_FOR_FB_SHA(INIT_SHA1);
 
     REBOOT_TO_DOS();
-    c_debugger_go();
+    debugger_go();
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
     WAIT_FOR_FB_SHA(BOOT_SCREEN);
 
@@ -1374,14 +1374,14 @@ static int _test_disk_image_with_gzip_header(int readonly) {
     test_setup_boot_disk(GZBAD_NIB, readonly);
 
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] != TEST_FINISHED);
-    c_debugger_go();
+    debugger_go();
     ASSERT(apple_ii_64k[0][WATCHPOINT_ADDR] == TEST_FINISHED);
 
     test_type_input("CLEAR\r");
 
-    c_debugger_set_timeout(10);
-    c_debugger_go();
-    c_debugger_set_timeout(0);
+    debugger_setTimeout(10);
+    debugger_go();
+    debugger_setTimeout(0);
 
     do {
         uint8_t md[SHA_DIGEST_LENGTH];
@@ -1477,8 +1477,8 @@ TEST test_reinsert_edgecase() {
     // TODO FIXME : we need both a timeout and a step-until-framebuffer-is-a-particular-SHA routine ...
 
     // First verify we hit the crackscreen
-    c_debugger_set_timeout(10);
-    c_debugger_go();
+    debugger_setTimeout(10);
+    debugger_go();
     WAIT_FOR_FB_SHA(DROL_CRACK_SCREEN_SHA);
 
     // re-insert
@@ -1487,8 +1487,8 @@ TEST test_reinsert_edgecase() {
 
     // press key to continue and verify we are at a non-blank screen in a short amount of time
     test_type_input(" ");
-    c_debugger_clear_watchpoints();
-    c_debugger_go();
+    debugger_clearWatchpoints();
+    debugger_go();
     uint8_t md[SHA_DIGEST_LENGTH];
 
     SHA1((uint8_t *)display_waitForNextCompleteFramebuffer(), SCANWIDTH*SCANHEIGHT*PIXEL_STRIDE, md);
@@ -1497,7 +1497,7 @@ TEST test_reinsert_edgecase() {
     ASSERT(strcmp(mdstr, DROL_CRACK_SCREEN_SHA) != 0);
     ASSERT(strcmp(mdstr, BLANK_SCREEN) != 0);
 
-    c_debugger_set_timeout(0);
+    debugger_setTimeout(0);
     disk6_eject(0);
 
     PASS();
@@ -1534,7 +1534,7 @@ GREATEST_SUITE(test_suite_disk) {
     RUN_TESTp(test_disk_bytes_savehello_nib);
     RUN_TESTp(test_disk_bytes_savehello_po);
 
-    c_debugger_set_timeout(0);
+    debugger_setTimeout(0);
 
     // test order from here is important ...
     //  * load the disks with a buncha junk files

@@ -339,7 +339,7 @@ cpu_runloop:
                     debugging_cycles -= run_args.cpu65_cycle_count;
                     timing_checkpointCycles();
 
-                    if (c_debugger_should_break() || (debugging_cycles <= 0)) {
+                    if (debugger_shouldBreak() || (debugging_cycles <= 0)) {
                         int err = 0;
                         if ((err = pthread_cond_signal(&dbg_thread_cond))) {
                             LOG("pthread_cond_signal : %d", err);
