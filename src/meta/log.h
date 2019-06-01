@@ -71,8 +71,7 @@ void log_outputString(const char * const str);
         } \
     } while (0)
 
-
-#ifdef ANDROID
+#if defined(__ANDROID__)
 // Apparently some non-conformant Android devices (ahem, Spamsung, ahem) do not actually let me see what the assert
 // actually was before aborting/segfaulting ...
 #   undef assert
@@ -95,9 +94,13 @@ void log_outputString(const char * const str);
 #       undef assert
 #       define assert(e)
 #   endif
-#endif
 
-#define LOG(...) \
+#   define LOG(...)
+#   define GL_MAYBELOG(...)
+
+#else
+
+#   define LOG(...) \
     if (LIKELY(do_logging)) { \
         GLenum _glerr = safeGLGetError(); \
         _LOG(__VA_ARGS__); \
@@ -107,9 +110,19 @@ void log_outputString(const char * const str);
     } //
 
 // GL_MAYBELOG() only logs if an OpenGL error occurred
-#define GL_MAYBELOG(...) \
+#   define GL_MAYBELOG(...) \
     if (LIKELY(do_logging)) { \
         GLenum _glerr = 0; \
+        while ( (_glerr = safeGLGetError()) ) { \
+            _LOG(__VA_ARGS__); \
+        } \
+    } //
+#endif
+
+#define RELEASE_LOG(...) \
+    if (LIKELY(do_logging)) { \
+        GLenum _glerr = safeGLGetError(); \
+        _LOG(__VA_ARGS__); \
         while ( (_glerr = safeGLGetError()) ) { \
             _LOG(__VA_ARGS__); \
         } \
