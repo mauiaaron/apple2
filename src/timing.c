@@ -30,7 +30,7 @@ static int32_t cycles_checkpoint_count = 0;
 // scaling and speed adjustments
 static bool auto_adjust_speed = true;
 static bool is_paused = false;
-static unsigned long _pause_spinLock = 0;
+static unsigned long _pause_spinLock = SPINLOCK_INIT;
 
 double cpu_scale_factor = 1.0;
 double cpu_altscale_factor = 1.0;
@@ -150,8 +150,9 @@ void timing_toggleCPUSpeed(void) {
 }
 
 static void timing_reinitializeAudio(void) {
-    SPINLOCK_ACQUIRE(&_pause_spinLock);
     ASSERT_NOT_ON_CPU_THREAD();
+
+    SPIN_LOCK_FULL(&_pause_spinLock);
 #if !TESTING
     assert(cpu_isPaused());
 #endif
@@ -159,13 +160,13 @@ static void timing_reinitializeAudio(void) {
     emul_pause_audio = false;
     emul_resume_audio = false;
     emul_video_dirty = false;
-    SPINLOCK_RELINQUISH(&_pause_spinLock);
+    SPIN_UNLOCK_FULL(&_pause_spinLock);
 }
 
 void cpu_pause(void) {
     ASSERT_NOT_ON_CPU_THREAD();
 
-    SPINLOCK_ACQUIRE(&_pause_spinLock);
+    SPIN_LOCK_FULL(&_pause_spinLock);
     do {
         if (is_paused) {
             break;
@@ -179,13 +180,13 @@ void cpu_pause(void) {
         pthread_mutex_lock(&interface_mutex);
         is_paused = true;
     } while (0);
-    SPINLOCK_RELINQUISH(&_pause_spinLock);
+    SPIN_UNLOCK_FULL(&_pause_spinLock);
 }
 
 void cpu_resume(void) {
     ASSERT_NOT_ON_CPU_THREAD();
 
-    SPINLOCK_ACQUIRE(&_pause_spinLock);
+    SPIN_LOCK_FULL(&_pause_spinLock);
     do {
         if (!is_paused) {
             break;
@@ -200,7 +201,7 @@ void cpu_resume(void) {
         is_paused = false;
         pthread_mutex_unlock(&interface_mutex);
     } while (0);
-    SPINLOCK_RELINQUISH(&_pause_spinLock);
+    SPIN_UNLOCK_FULL(&_pause_spinLock);
 }
 
 bool cpu_isPaused(void) {

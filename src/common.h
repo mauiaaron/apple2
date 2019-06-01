@@ -26,13 +26,13 @@
 #define PUBLIC
 #define READONLY
 
-#define CALL_ON_UI_THREAD
+#define CALL_ON_UI_THREAD   // function should only be called on UI thread
 #define ASSERT_ON_UI_THREAD() \
     assert(video_isRenderThread())
 #define ASSERT_NOT_ON_UI_THREAD() \
     assert(!video_isRenderThread())
 
-#define CALL_ON_CPU_THREAD
+#define CALL_ON_CPU_THREAD  // function should only be called on CPU thread
 #define ASSERT_ON_CPU_THREAD() \
     assert(timing_isCPUThread())
 #define ASSERT_NOT_ON_CPU_THREAD() \
@@ -117,20 +117,26 @@
 #define MAX(a,b) (((a) >= (b)) ? (a) : (b))
 #endif
 
-#define SPINLOCK_INIT 0
-#define SPINLOCK_ACQUIRED -1
-#define SPINLOCK_ACQUIRE(x) \
+#define SPINLOCK_INIT 0L
+
+/*
+   https://gcc.gnu.org/onlinedocs/gcc/_005f_005fsync-Builtins.html
+
+   "In most cases, these built-in functions are considered a full barrier. That is, no memory operand is moved across
+   the operation, either forward or backward. Further, instructions are issued as necessary to prevent the processor
+   from speculating loads across the operation and from queuing stores after the operation."
+ */
+#define SPIN_LOCK_FULL(x) \
     do { \
-        long val = __sync_sub_and_fetch((x), 1); \
-        if (val == SPINLOCK_ACQUIRED) { \
+        long prev = __sync_fetch_and_or((x), 1L); \
+        if (prev == SPINLOCK_INIT) { \
             break; \
         } \
-        __sync_add_and_fetch((x), 1); \
-    } while (1);
+        usleep(1); \
+    } while (1)
 
-#define SPINLOCK_RELINQUISH(x) \
-    __sync_add_and_fetch((x), 1);
-
+#define SPIN_UNLOCK_FULL(x) \
+    __sync_fetch_and_and((x), SPINLOCK_INIT)
 
 // cribbed from AOSP and modified with usleep() and to also ignore EAGAIN (should this be a different errno than EINTR)
 #define TEMP_FAILURE_RETRY_FOPEN(exp) ({ \
