@@ -15,13 +15,6 @@
 
 #include "common.h"
 
-#define DEBUG_KEYS 0
-#if DEBUG_KEYS
-#   define KEY_LOG(...) LOG(__VA_ARGS__)
-#else
-#   define KEY_LOG(...)
-#endif
-
 static int next_key = -1;
 static int last_scancode = -1;
 
@@ -195,6 +188,23 @@ int keys_ascii2Scancode(uint8_t c) {
     return scode_map[c&0x7f];
 }
 
+int keys_scancode2ASCII(int scancode, bool is_shifted, bool is_ctrl) {
+    if (scancode < 0) {
+        return -1;
+    }
+    int *keymap = NULL;
+    if (is_shifted && is_ctrl) {
+        keymap = apple_iie_keymap_shift_ctrl;
+    } else if (is_ctrl) {
+        keymap = apple_iie_keymap_ctrl;
+    } else if (is_shifted) {
+        keymap = apple_iie_keymap_shifted;
+    } else {
+        keymap = apple_iie_keymap_plain;
+    }
+    return keymap[scancode & 0x7f];
+}
+
 bool keys_isShifted(void) {
     return key_pressed[SCODE_L_SHIFT] || key_pressed[SCODE_R_SHIFT];
 }
@@ -204,7 +214,7 @@ bool keys_isShifted(void) {
 //
 // NOTE: `scancode` can be either a scancode or an ASCII key.
 void keys_handleInput(int scancode, bool is_pressed, bool is_ascii) {
-    KEY_LOG("keys ... scancode:%d is_pressed:%d is_ascii:%d", scancode, is_pressed, is_ascii);
+    SCOPE_TRACE_INTERFACE("keys_handleInput: scancode:%d is_pressed:%d is_ascii:%d", scancode, is_pressed, is_ascii);
 
     if (is_ascii) {
         last_scancode = -1;
