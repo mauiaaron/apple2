@@ -2341,8 +2341,11 @@ void MB_StartOfCpuExecute()
 }
 
 // Called by ContinueExecution() at the end of every video frame
-void MB_EndOfVideoFrame()
+static void MB_EndOfVideoFrame(uint8_t unused)
 {
+#if 1 // APPLE2IX
+    (void)unused;
+#endif
 	if(g_SoundcardType == CT_Empty)
 		return;
 #if MB_TRACING
@@ -2614,10 +2617,6 @@ static void mb_prefsChanged(const char *domain) {
         goesToTen = 10;
     }
     MB_SetVolumeZeroToTen(goesToTen);
-}
-
-static __attribute__((constructor)) void _init_mockingboard(void) {
-    prefs_registerListener(PREF_DOMAIN_AUDIO, &mb_prefsChanged);
 }
 
 static bool _sy6522_saveState(StateHelper_s *helper, SY6522 *sy6522) {
@@ -3396,3 +3395,13 @@ void mb_traceEnd(void) {
     }
 }
 #endif
+
+static void _init_mockingboard(void) {
+    prefs_registerListener(PREF_DOMAIN_AUDIO, &mb_prefsChanged);
+    static video_frame_callback_fn frameCallback = &MB_EndOfVideoFrame;
+    video_registerFrameCallback(&frameCallback);
+}
+
+static __attribute__((constructor)) void __init_mockingboard(void) {
+    emulator_registerStartupCallback(CTOR_PRIORITY_EARLY, &_init_mockingboard);
+}

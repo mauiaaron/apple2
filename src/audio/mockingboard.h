@@ -105,7 +105,6 @@ void    MB_InitializeIO(char *pCxRomPeripheral, unsigned int uSlot4, unsigned in
 void    MB_Mute(void);
 void    MB_Demute(void);
 void    MB_StartOfCpuExecute(void);
-void    MB_EndOfVideoFrame(void);
 void    MB_UpdateCycles(void);
 SS_CARDTYPE MB_GetSoundcardType(void);
 void    MB_SetSoundcardType(SS_CARDTYPE NewSoundcardType);

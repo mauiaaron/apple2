@@ -166,6 +166,14 @@ uint16_t video_scannerAddress(OUTPARM bool *ptrIsVBL);
  */
 uint8_t floating_bus(void);
 
+/*
+ * Video frame completion callbacks
+ */
+
+typedef void (*video_frame_callback_fn)(uint8_t textFlashCounter) CALL_ON_CPU_THREAD;
+
+void video_registerFrameCallback(video_frame_callback_fn *cbPtr);
+
 #if VIDEO_TRACING
 void video_scannerTraceBegin(const char *trace_file, unsigned long frameCount);
 void video_scannerTraceEnd(void);

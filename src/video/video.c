@@ -11,6 +11,11 @@
 
 #include "common.h"
 
+typedef struct eof_node_s {
+    struct eof_node_s *next;
+    video_frame_callback_fn *cbPtr;
+} eof_node_s;
+
 typedef struct backend_node_s {
     struct backend_node_s *next;
     long order;
@@ -19,9 +24,11 @@ typedef struct backend_node_s {
 
 static bool video_initialized = false;
 static bool null_backend_running = true;
-static backend_node_s *head = NULL;
+static backend_node_s *backends = NULL;
 static video_backend_s *currentBackend = NULL;
 static pthread_t render_thread_id = 0;
+
+static eof_node_s *eofs = NULL;
 
 static unsigned int cyclesFrameLast = 0;
 static unsigned int cyclesDirty = CYCLES_FRAME;
@@ -279,9 +286,10 @@ static void _endOfFrame() {
     cyclesFrameLast %= CYCLES_FRAME;
     cycles_video_frame %= CYCLES_FRAME;
 
-    static uint8_t textFlashCounter = 0;
+    // FLASH counter and keyboard auto-strobe mod-16 counter ...
+    static uint8_t textFlashCounter = 0x0;
     textFlashCounter = (textFlashCounter+1) & 0xf;
-    if (!textFlashCounter) {
+    if (textFlashCounter == 0x0) {
         video_flashText();
         if (!(run_args.softswitches & SS_80COL) && (run_args.softswitches & (SS_TEXT|SS_MIXED))) {
             cyclesFrameLast = 0;
@@ -290,11 +298,17 @@ static void _endOfFrame() {
         }
     }
 
-    // TODO FIXME : modularize these (and moar) handlers for video frame completion
-    MB_EndOfVideoFrame();
+    // run frame completion callbacks ...
+    eof_node_s *p = eofs;
+    while (p) {
+        video_frame_callback_fn cb = *(p->cbPtr);
+        if (cb) {
+            cb(textFlashCounter);
+        }
+        p = p->next;
+    }
 
-    //  UtAIIe 3-17 :
-    //  - keyboard auto-repeat ...
+    //  Also MAYBE TODO UtAIIe 3-17 :
     //  - power-up reset timing ...
 }
 
@@ -559,6 +573,31 @@ bool video_loadState(StateHelper_s *helper) {
 }
 
 // ----------------------------------------------------------------------------
+// Video frame completion callback registration
+
+void video_registerFrameCallback(video_frame_callback_fn *cbPtr) {
+    assert(!video_initialized); // backends cannot be registered after we've picked one to use
+
+    eof_node_s *node = MALLOC(sizeof(eof_node_s));
+    assert((uintptr_t)node);
+    node->next = NULL;
+    node->cbPtr = cbPtr;
+
+    eof_node_s *p0 = NULL;
+    eof_node_s *p = eofs;
+    while (p) {
+        p0 = p;
+        p = p->next;
+    }
+    if (p0) {
+        p0->next = node;
+    } else {
+        eofs = node;
+    }
+    node->next = p;
+}
+
+// ----------------------------------------------------------------------------
 // Video backend registration and selection
 
 void video_registerBackend(video_backend_s *backend, long order) {
@@ -571,7 +610,7 @@ void video_registerBackend(video_backend_s *backend, long order) {
     node->backend = backend;
 
     backend_node_s *p0 = NULL;
-    backend_node_s *p = head;
+    backend_node_s *p = backends;
     while (p && (order > p->order)) {
         p0 = p;
         p = p->next;
@@ -579,15 +618,15 @@ void video_registerBackend(video_backend_s *backend, long order) {
     if (p0) {
         p0->next = node;
     } else {
-        head = node;
+        backends = node;
     }
     node->next = p;
 
-    currentBackend = head->backend;
+    currentBackend = backends->backend;
 }
 
 void video_printBackends(FILE *out) {
-    backend_node_s *p = head;
+    backend_node_s *p = backends;
     int count = 0;
     while (p) {
         const char *name = p->backend->name();
@@ -605,7 +644,7 @@ void video_chooseBackend(const char *name) {
         name = _null_backend_name();
     }
 
-    backend_node_s *p = head;
+    backend_node_s *p = backends;
     while (p) {
         const char *bname = p->backend->name();
         if (strcasecmp(name, bname) == 0) {
