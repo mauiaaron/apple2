@@ -97,9 +97,9 @@ static void *systrace_thread(void *ignored) {
     LOG("Starting systrace writer thread ...");
 
     writeBuf0 = CALLOC(1, TRACE_BUF_SIZ);
-    assert(writeBuf0);
+    assert((uintptr_t)writeBuf0);
     writeBuf1 = CALLOC(1, TRACE_BUF_SIZ);
-    assert(writeBuf1);
+    assert((uintptr_t)writeBuf1);
 
     bool swapped = __sync_bool_compare_and_swap(&writeHead, /*oldval:*/NULL, /*newval:*/writeBuf0);
     assert(swapped);

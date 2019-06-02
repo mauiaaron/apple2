@@ -110,9 +110,9 @@ int _a2_asprintf(char **strp, const char *fmt, ...) {
 
     if (ret > 0) {
         assert(*strp0);
-        assert(strp);
+        assert((uintptr_t)strp);
         *strp = _a2_malloc(ret+1);
-        assert(*strp);
+        assert((uintptr_t)*strp);
         memcpy(*strp, strp0, ret);
         *((*strp)+ret) = '\0';
         free(strp0);
