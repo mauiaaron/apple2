@@ -105,13 +105,9 @@ void log_outputString(const char * const str);
 #       undef assert
 #       define assert(e)
 #   endif
+#endif
 
-#   define LOG(...)
-#   define GL_MAYBELOG(...)
-
-#else
-
-#   define LOG(...) \
+#define LOG(...) \
     if (LIKELY(do_logging)) { \
         GLenum _glerr = safeGLGetError(); \
         _LOG(__VA_ARGS__); \
@@ -128,7 +124,6 @@ void log_outputString(const char * const str);
             _LOG(__VA_ARGS__); \
         } \
     } //
-#endif
 
 #define RELEASE_LOG(...) \
     if (LIKELY(do_logging)) { \

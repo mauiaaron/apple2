@@ -100,7 +100,7 @@ void log_outputString(const char * const str) {
         return;
     }
 
-    if (LIKELY(!do_logging)) {
+    if (UNLIKELY(!do_logging)) {
         return;
     }
 
