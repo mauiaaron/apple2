@@ -148,7 +148,7 @@ if test "x$do_build" = "x1" -o "x$do_release" = "x1" ; then
     # Symbolicate and move symbols file into location to be deployed on device
 
     SYMFILE=libapple2ix.so.sym
-    ARCHES_TO_SYMBOLICATE='armeabi armeabi-v7a x86'
+    ARCHES_TO_SYMBOLICATE='armeabi-v7a x86 x86_64'
 
     for arch in $ARCHES_TO_SYMBOLICATE ; do
         SYMDIR=../assets/symbols/$arch/libapple2ix.so
