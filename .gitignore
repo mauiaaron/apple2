@@ -79,6 +79,7 @@ Android/local.properties
 Android/.idea/workspace.xml
 Android/.idea/libraries
 Android/.idea/dictionaries
+Android/.idea/caches
 Android/build
 Android/jni/obj
 Android/obj
