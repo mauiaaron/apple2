@@ -152,10 +152,5 @@ void keys_handleInput(int scan_or_key, bool is_pressed, bool is_ascii);
 int keys_scancode2ASCII(int scancode, bool is_shifted, bool is_ctrl);
 uint8_t keys_apple2ASCII(uint8_t c, OUTPARM font_mode_t *mode);
 
-#if INTERFACE_TOUCH
-// keyboard read callback
-extern void (*keydriver_keyboardReadCallback)(void);
-#endif
-
 #endif
 

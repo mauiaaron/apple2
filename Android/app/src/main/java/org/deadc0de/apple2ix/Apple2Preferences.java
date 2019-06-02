@@ -158,12 +158,42 @@ public class Apple2Preferences {
         return (float) ((long) obj);
     }
 
+    private static int _convertToInt(Object obj) {
+        if (obj == null) {
+            return 0;
+        }
+        try {
+            return (int) obj;
+        } catch (ClassCastException e) {
+            Log.d(TAG, "could not cast object as int");
+        }
+        try {
+            return (int) ((long) obj);
+        } catch (ClassCastException e) {
+            Log.d(TAG, "could not cast object as long");
+        }
+        try {
+            return (int) ((float) obj);
+        } catch (ClassCastException e) {
+            Log.d(TAG, "could not cast object as float");
+        }
+        return (int) ((double) obj);
+    }
+
     public static float getFloatJSONPref(Apple2AbstractMenu.IMenuEnum menu) {
         return _convertToFloat(getJSONPref(menu));
     }
 
     public static float getFloatJSONPref(String domain, String key, Object defaultVal) {
         return _convertToFloat(getJSONPref(domain, key, defaultVal));
+    }
+
+    public static int getIntJSONPref(Apple2AbstractMenu.IMenuEnum menu) {
+        return _convertToInt(getJSONPref(menu));
+    }
+
+    public static int getIntJSONPref(String domain, String key, Object defaultVal) {
+        return _convertToInt(getJSONPref(domain, key, defaultVal));
     }
 
     public static boolean migrate(Apple2Activity activity) {
@@ -184,6 +214,57 @@ public class Apple2Preferences {
         }
 
         Apple2Utils.migrateToExternalStorage(activity);
+
+        if (versionCode < 24) {
+            // migrate tap delay from seconds to frames ...
+            float secs = getFloatJSONPref(PREF_DOMAIN_JOYSTICK, "jsTapDelaySecs", 9999f);
+            if (secs != 9999f) {
+                // UtAIIe 3-13 : "The duration of the television scan is 262 horizontal scans.  This is [16.688 milliseconds]"
+                // recalculate this to a frames value between 0-30 inclusive ...
+                int framesDelay = Math.round(secs / 0.016688f);
+                if (framesDelay < 0) {
+                    framesDelay = 0;
+                } else if (framesDelay > 30) {
+                    framesDelay = 30;
+                }
+                setJSONPref(Apple2JoystickSettingsMenu.JoystickAdvanced.SETTINGS.JOYSTICK_TAPDELAY, framesDelay);
+            }
+
+            // migrate individual keypad button actions to new button rosette actions ...
+            {
+                ArrayList<String> chars = new ArrayList<String>();
+                ArrayList<String> scans = new ArrayList<String>();
+
+                int northChar = getIntJSONPref(PREF_DOMAIN_JOYSTICK, "kpSwipeNorthChar", Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION);
+                int northScan = getIntJSONPref(PREF_DOMAIN_JOYSTICK, "kpSwipeNorthScancode",-1 );
+                Apple2KeypadSettingsMenu.KeypadPreset.addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+                Apple2KeypadSettingsMenu.KeypadPreset.addRosetteKey(chars, scans, northChar, northScan);
+                Apple2KeypadSettingsMenu.KeypadPreset.addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+
+                int downChar = getIntJSONPref(PREF_DOMAIN_JOYSTICK, "kpTouchDownChar", Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION);
+                int downScan = getIntJSONPref(PREF_DOMAIN_JOYSTICK, "kpTouchDownScancode", -1);
+                Apple2KeypadSettingsMenu.KeypadPreset.addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+                Apple2KeypadSettingsMenu.KeypadPreset.addRosetteKey(chars, scans, downChar, downScan);
+                Apple2KeypadSettingsMenu.KeypadPreset.addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+
+                int southChar = getIntJSONPref(PREF_DOMAIN_JOYSTICK, "kpSwipeSouthChar", Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION);
+                int southScan = getIntJSONPref(PREF_DOMAIN_JOYSTICK, "kpSwipeSouthScancode", -1);
+                Apple2KeypadSettingsMenu.KeypadPreset.addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+                Apple2KeypadSettingsMenu.KeypadPreset.addRosetteKey(chars, scans, southChar, southScan);
+                Apple2KeypadSettingsMenu.KeypadPreset.addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+
+                Apple2KeypadSettingsMenu.KeypadPreset.saveButtRosettes(chars, scans);
+            }
+
+            JSONObject map = _prefDomain(PREF_DOMAIN_JOYSTICK);
+            map.remove("jsTapDelaySecs");
+            map.remove("kpSwipeNorthChar");
+            map.remove("kpSwipeNorthScancode");
+            map.remove("kpSwipeSouthChar");
+            map.remove("kpSwipeSouthScancode");
+            map.remove("kpTouchDownChar");
+            map.remove("kpTouchDownScancode");
+        }
 
         save(activity);
         return firstTime;

@@ -37,6 +37,17 @@ void log_outputString(const char * const str);
 
 #define _MYFILE_ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
 
+#define _SIMPLE_LOG(...) \
+    do { \
+        char *buf = NULL; \
+        int ignored = asprintf(&buf, __VA_ARGS__); \
+        (void)ignored; \
+        \
+        log_outputString(buf); \
+        \
+        free(buf); \
+    } while (0)
+
 #define _LOG(...) \
     do { \
         int _err = errno; \

@@ -56,7 +56,6 @@
     <string name="joystick_button_button_none">Keine</string>
     <string name="joystick_button_tap_button">Drücke den Feuerknopf</string>
     <string name="joystick_button_tap_button_summary">Ausgewählter Feuerknopf</string>
-    <string name="joystick_button_tapdelay_summary">Joystickknopf-Zeitverzögerung in Sek.</string>
     <string name="joystick_button_swipe_up_button">Aufwärts wischen zum feuern</string>
     <string name="joystick_button_swipe_up_button_summary">Feuerknopf zum feuern beim aufwärts wischen</string>
     <string name="joystick_button_swipe_down_button">Abwärts wischen zum feuern</string>
@@ -97,8 +96,6 @@
     <string name="keyboard_visibility_inactive">Sichtbarkeit wenn deaktiviert</string>
     <string name="keyboard_visibility_inactive_summary">Sichtbarkeit des Keyboard und Touch Menüs wenn deaktiviert</string>
     <string name="keypad">Keypad Joystick</string>
-    <string name="keypad_calibrate">@string/joystick_calibrate</string>
-    <string name="keypad_calibrate_summary">@string/joystick_calibrate</string>
     <string name="keypad_choose">Auswahl der Keypad Tasten…</string>
     <string name="keypad_choose_summary">Auswahl der Achsen und Knopf Tasten</string>
     <string name="keypad_choose_title">Achse &amp; Knöpfe</string>
@@ -117,14 +114,13 @@
     <string name="keypad_key_button_tap">antippen</string>
     <string name="keypad_key_button_swipeup">Nach oben wischen</string>
     <string name="keypad_key_button_swipedown">Nach unten wischen</string>
-    <string name="keypad_preset_crazy_seafox">Seafox Tasten ;-)…</string>
+    <string name="keypad_preset_seafox">Seafox Tasten…</string>
     <string name="keypad_preset_custom">Auswahl einer Anpassung…</string>
-    <string name="keypad_preset_arrows_space">&#8593;,&#8592;,&#8594;,&#8595;, tippe auf die Leerstaste</string>
-    <string name="keypad_preset_az_left_right_space">A,Z,&#8592;,&#8594;, tippe auf die Leertaste</string>
-    <string name="keypad_preset_ijkm_space">I,J,K,M, tippe auf die Leertaste</string>
-    <string name="keypad_preset_left_right_space">&#8592;,&#8594;, tippe auf die Leertaste</string>
-    <string name="keypad_preset_wadx_space">W,A,D,X, tippe auf die Leertaste</string>
-    <string name="keypad_repeat_summary">Tastenwiederholungsschwellwert in Sek.</string>
+    <string name="keypad_preset_arrows_space">(↑ ← → ↓), tippe auf die Leerstaste</string>
+    <string name="keypad_preset_az_left_right_space">(A Z ← →), tippe auf die Leerstaste</string>
+    <string name="keypad_preset_ijkm_space">(I J K M), tippe auf die Leertaste</string>
+    <string name="keypad_preset_left_right_space">(← →), tippe auf die Leertaste</string>
+    <string name="keypad_preset_wadx_space">(W A D X), tippe auf die Leertaste</string>
     <string name="menu_disks">Lade Disk-Image…</string>
     <string name="menu_disks_summary">Einlegen eines Disk ][ Image</string>
     <string name="menu_settings">Emulator Einstellungen…</string>
@@ -203,5 +199,15 @@
     <string name="release_notes_summary">View notes for this release</string>
     <string name="keyboard_duotouch_enabled">Enable dual-touch</string>
     <string name="keyboard_duotouch_enabled_summary">Support two-thumb input</string>
+    <string name="keypad_preset_qaz_left_right_space">(A Z ← →), Leertaste, Q</string>
+    <string name="keypad_tapdelay_summary">Keypad touch down delay in secs</string>
+    <string name="keypad_autorepeat_fast_summary">Allows immediate auto-repeat (avoids original 534-801 millis delay)</string>
+    <string name="keypad_autorepeat_fast">Keypad Immediate Autorepeat</string>
+    <string name="string_frames">Frames</string>
+    <string name="string_millis">Millis</string>
+    <string name="joystick_button_tapdelay_summary">Joystick touch down delay in video frames</string>
+    <string name="keypad_preset_robotron">Robotron Tasten…</string>
+    <string name="keypad_preset_loderunner">Lode Runner Tasten…</string>
+    <string name="keypad_preset_loderunner_toast">Start game with Ctrl-K to activate keyboard</string>
 
 </resources>

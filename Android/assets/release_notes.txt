@@ -1,16 +1,9 @@
-Apple2ix (a2ix) 2.0.0-Android Release Notes
-
-TL;DR : new video mode settings!
+Apple2ix (a2ix) 2.0.1-Beta
 
 CHANGES:
 
-- Implemented a more conformant video scanner. This improves emulation fidelity for programs that implement custom video modes (e.g., custom split screen between text & graphics).
-
-- New NTSC video display modes including "Color monitor", "Monochrome TV", and "Color TV" modes. Thanks to the AppleWin project and Bill Simms for these modes. Also support "Green screen" monochrome video.
-
-- New preference to enable/disable half-scanline video effects.
-
-- EXPERIMENTAL: New preference to enable/disable fast disk image loading. This may cause audio glitches or other instability. Use at your own risk!
+- Improved two-thumb touch keyboard support.
+- Improved response of touch keypad joystick.
 
 GENERAL INFO:
 

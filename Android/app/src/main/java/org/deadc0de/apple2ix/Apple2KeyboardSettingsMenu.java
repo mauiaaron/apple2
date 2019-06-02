@@ -46,7 +46,9 @@ public class Apple2KeyboardSettingsMenu extends Apple2AbstractMenu {
     public final static int ICONTEXT_NONACTION = ICONTEXT_KBD_BEGIN + 0x0C;
 
     public final static int SCANCODE_A = 30;
+    public final static int SCANCODE_C = 46;
     public final static int SCANCODE_D = 32;
+    public final static int SCANCODE_E = 18;
     public final static int SCANCODE_F = 33;
     public final static int SCANCODE_H = 35;
     public final static int SCANCODE_I = 23;
@@ -56,17 +58,23 @@ public class Apple2KeyboardSettingsMenu extends Apple2AbstractMenu {
     public final static int SCANCODE_M = 50;
     public final static int SCANCODE_N = 49;
     public final static int SCANCODE_O = 24;
+    public final static int SCANCODE_P = 25;
+    public final static int SCANCODE_Q = 16;
+    public final static int SCANCODE_S = 31;
     public final static int SCANCODE_U = 22;
     public final static int SCANCODE_W = 17;
     public final static int SCANCODE_X = 45;
     public final static int SCANCODE_Y = 21;
     public final static int SCANCODE_Z = 44;
     public final static int SCANCODE_SPACE = 57;
+    public final static int SCANCODE_SEMICOLON = 39;
     public final static int SCANCODE_UP = 103;
     public final static int SCANCODE_LEFT = 105;
     public final static int SCANCODE_RIGHT = 106;
     public final static int SCANCODE_DOWN = 108;
     public final static int SCANCODE_COMMA = 51;
+    public final static int SCANCODE_PERIOD = 52;
+    public final static int SCANCODE_SLASH = 53;
 
     public Apple2KeyboardSettingsMenu(Apple2Activity activity) {
         super(activity);

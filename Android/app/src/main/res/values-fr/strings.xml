@@ -56,7 +56,6 @@
     <string name="joystick_button_button_none">Rien</string>
     <string name="joystick_button_tap_button">Sélectionner l\'action</string>
     <string name="joystick_button_tap_button_summary">Bouton à activer lors d\'une pression vers le bas</string>
-    <string name="joystick_button_tapdelay_summary">Délai de pression du bouton Joystick en secondes</string>
     <string name="joystick_button_swipe_up_button">Lancement du swipe up</string>
     <string name="joystick_button_swipe_up_button_summary">Bouton à lancer sur swipe up</string>
     <string name="joystick_button_swipe_down_button">Lancement du swipe down</string>
@@ -95,8 +94,6 @@
     <string name="keyboard_visibility_inactive">Visibilité quand inactif</string>
     <string name="keyboard_visibility_inactive_summary">Clavier et menu tactile visible quand inactif</string>
     <string name="keypad">Keypad Joystick</string>
-    <string name="keypad_calibrate">@string/joystick_calibrate</string>
-    <string name="keypad_calibrate_summary">@string/joystick_calibrate</string>
     <string name="keypad_choose">Sélection des touches du keypad…</string>
     <string name="keypad_choose_summary">Sélection des touches pour les axes et boutons</string>
     <string name="keypad_choose_title">Axis &amp; boutons</string>
@@ -115,14 +112,13 @@
     <string name="keypad_key_button_tap">Presser</string>
     <string name="keypad_key_button_swipeup">Slider vers le haut</string>
     <string name="keypad_key_button_swipedown">Slider vers le bas</string>
-    <string name="keypad_preset_crazy_seafox">Touches Seafox ;-)…</string>
+    <string name="keypad_preset_seafox">Touches Seafox…</string>
     <string name="keypad_preset_custom">Choisir customisation…</string>
-    <string name="keypad_preset_arrows_space">&#8593;,&#8592;,&#8594;,&#8595;, pressez barre d\'espace</string>
-    <string name="keypad_preset_az_left_right_space">A,Z,&#8592;,&#8594;, pressez barre d\'espace</string>
-    <string name="keypad_preset_ijkm_space">I,J,K,M, pressez barre d\'espace</string>
-    <string name="keypad_preset_left_right_space">&#8592;,&#8594;, pressez barre d\'espace</string>
-    <string name="keypad_preset_wadx_space">W,A,D,X, pressez barre d\'espace</string>
-    <string name="keypad_repeat_summary">Répétition des touches en secs</string>
+    <string name="keypad_preset_arrows_space">(↑ ← → ↓), pressez barre d\'espace</string>
+    <string name="keypad_preset_az_left_right_space">(A Z ← →), pressez barre d\'espace</string>
+    <string name="keypad_preset_ijkm_space">(I J K M), pressez barre d\'espace</string>
+    <string name="keypad_preset_left_right_space">(← →), pressez barre d\'espace</string>
+    <string name="keypad_preset_wadx_space">(W A D X), pressez barre d\'espace</string>
     <string name="menu_disks">Chargement de l\'image disque…</string>
     <string name="menu_disks_summary">Insérer un fichier image (disque) ][</string>
     <string name="menu_settings">Paramètres de l\'émulateur…</string>
@@ -203,5 +199,15 @@
     <string name="release_notes_summary">View notes for this release</string>
     <string name="keyboard_duotouch_enabled">Enable dual-touch</string>
     <string name="keyboard_duotouch_enabled_summary">Support two-thumb input</string>
+    <string name="keypad_preset_qaz_left_right_space">(A Z ← →) barre d\'espace, Q</string>
+    <string name="keypad_tapdelay_summary">Keypad touch down delay in secs</string>
+    <string name="keypad_autorepeat_fast_summary">Allows immediate auto-repeat (avoids original 534-801 millis delay)</string>
+    <string name="keypad_autorepeat_fast">Keypad Immediate Autorepeat</string>
+    <string name="string_frames">Frames</string>
+    <string name="string_millis">Millis</string>
+    <string name="joystick_button_tapdelay_summary">Joystick touch down delay in video frames</string>
+    <string name="keypad_preset_robotron">Touches Robotron…</string>
+    <string name="keypad_preset_loderunner">Touches Lode Runner…</string>
+    <string name="keypad_preset_loderunner_toast">Start game with Ctrl-K to activate keyboard</string>
 
 </resources>

@@ -31,19 +31,32 @@
 
 #define AXIS_OBJ_W        0.15
 #define AXIS_OBJ_H        0.2
-#define AXIS_OBJ_HALF_W   (AXIS_OBJ_W/2.f)
-#define AXIS_OBJ_HALF_H   (AXIS_OBJ_H/2.f)
 
 #define BUTTON_OBJ_W        0.075
 #define BUTTON_OBJ_H        0.1
-#define BUTTON_OBJ_HALF_W   (BUTTON_OBJ_W/2.f)
-#define BUTTON_OBJ_HALF_H   (BUTTON_OBJ_H/2.f)
 
 #define BUTTON_SWITCH_THRESHOLD_DEFAULT 22
 
 GLTouchJoyGlobals joyglobals = { 0 };
-GLTouchJoyAxes axes = { 0 };
-GLTouchJoyButtons buttons = { 0 };
+
+typedef struct variant_params_s {
+    GLModel *model; // origin model/texture
+    GLModel *azimuthModel; // azimuth model
+    void (*setupButtonModel)(char);
+
+    int centerX;
+    int centerY;
+    int trackingIndex;
+    GLfloat obj_w;
+    GLfloat obj_h;
+    struct timespec timingBegin;
+
+    uint8_t activeChar;
+    bool modelDirty;
+} variant_params_s;
+
+static variant_params_s axes = { 0 };
+static variant_params_s butt = { 0 };
 
 static struct {
     GLTouchJoyVariant *joys;
@@ -63,12 +76,10 @@ static struct {
     int axisYMax;
 
     // Button box
-    int buttonX;
-    int buttonXMax;
-    int buttonY;
-    int buttonYMax;
-
-    // TODO FIXME : support 2-players!
+    int buttX;
+    int buttXMax;
+    int buttY;
+    int buttYMax;
 } touchport = { 0 };
 
 #define AZIMUTH_CLASS(CLS, ...) \
@@ -195,12 +206,12 @@ static void *_azimuth_create_model(GLModel *parent) {
     return azimuthJoystick;
 }
 
-static void _azimuth_render(void) {
-    if (!axes.azimuthModel) {
+static void _azimuth_render(GLModel *azimuthModel) {
+    if (!azimuthModel) {
         return;
     }
 
-    GLModelJoystickAzimuth *azimuthJoystick = (GLModelJoystickAzimuth *)axes.azimuthModel->custom;
+    GLModelJoystickAzimuth *azimuthJoystick = (GLModelJoystickAzimuth *)azimuthModel->custom;
 
     // use azimuth (SolidColor) program
     glUseProgram(azimuthJoystick->program);
@@ -235,32 +246,32 @@ static void _azimuth_render(void) {
     }
 
     // NOTE : assuming we should just upload new postion data every time ...
-    glBindBuffer(GL_ARRAY_BUFFER, axes.azimuthModel->posBufferName);
-    glBufferData(GL_ARRAY_BUFFER, axes.azimuthModel->positionArraySize, axes.azimuthModel->positions, GL_DYNAMIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, azimuthModel->posBufferName);
+    glBufferData(GL_ARRAY_BUFFER, azimuthModel->positionArraySize, azimuthModel->positions, GL_DYNAMIC_DRAW);
 
     // Bind our vertex array object
 #if USE_VAO
-    glBindVertexArray(axes.azimuthModel->vaoName);
+    glBindVertexArray(azimuthModel->vaoName);
 #else
-    glBindBuffer(GL_ARRAY_BUFFER, axes.azimuthModel->posBufferName);
+    glBindBuffer(GL_ARRAY_BUFFER, azimuthModel->posBufferName);
 
-    GLsizei posTypeSize = getGLTypeSize(axes.azimuthModel->positionType);
+    GLsizei posTypeSize = getGLTypeSize(azimuthModel->positionType);
 
     // Set up parmeters for position attribute in the VAO including, size, type, stride, and offset in the currenly
     // bound VAO This also attaches the position VBO to the VAO
     glVertexAttribPointer(POS_ATTRIB_IDX, // What attibute index will this array feed in the vertex shader (see buildProgram)
-                          axes.azimuthModel->positionSize, // How many elements are there per position?
-                          axes.azimuthModel->positionType, // What is the type of this data?
+                          azimuthModel->positionSize, // How many elements are there per position?
+                          azimuthModel->positionType, // What is the type of this data?
                           GL_FALSE, // Do we want to normalize this data (0-1 range for fixed-pont types)
-                          axes.azimuthModel->positionSize*posTypeSize, // What is the stride (i.e. bytes between positions)?
+                          azimuthModel->positionSize*posTypeSize, // What is the stride (i.e. bytes between positions)?
                           0); // What is the offset in the VBO to the position data?
     glEnableVertexAttribArray(POS_ATTRIB_IDX);
 
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, axes.azimuthModel->elementBufferName);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, azimuthModel->elementBufferName);
 #endif
 
     // draw it
-    glDrawElements(axes.azimuthModel->primType, axes.azimuthModel->numElements, axes.azimuthModel->elementType, 0);
+    glDrawElements(azimuthModel->primType, azimuthModel->numElements, azimuthModel->elementType, 0);
 
     // back to main framebuffer/quad program
     glUseProgram(mainShaderProgram);
@@ -303,10 +314,15 @@ static void _setup_axis_hud(GLModel *parent) {
 
     const unsigned int row = (AXIS_TEMPLATE_COLS+1);
 
-    uint8_t *rosetteChars = variant.curr->rosetteChars();
-    for (unsigned int i=0; i<ROSETTE_ROWS; i++) {
-        for (unsigned int j=0; j<ROSETTE_COLS; j++) {
-            ((hudElement->tpl)+(row*i))[j] = rosetteChars[(i*ROSETTE_ROWS)+j];
+    uint8_t *rosetteChars = (parent == axes.model)
+        ? variant.curr->axisRosetteChars()
+        : variant.curr->buttRosetteChars();
+
+    if (rosetteChars) {
+        for (unsigned int i=0; i<ROSETTE_ROWS; i++) {
+            for (unsigned int j=0; j<ROSETTE_COLS; j++) {
+                ((hudElement->tpl)+(row*i))[j] = rosetteChars[(i*ROSETTE_ROWS)+j];
+            }
         }
     }
 
@@ -353,7 +369,7 @@ static void _setup_button_hud(GLModel *parent) {
     }
 
     const unsigned int row = (BUTTON_TEMPLATE_COLS+1);
-    ((hudElement->tpl)+(row*0))[0] = buttons.activeChar;
+    ((hudElement->tpl)+(row*0))[0] = butt.activeChar;
 
     glhud_setupDefault(parent);
 }
@@ -368,10 +384,14 @@ static void *_create_button_hud(GLModel *parent) {
     return hudElement;
 }
 
+static inline void _setup_button_object_nop(char newChar) {
+    (void)newChar;
+}
+
 static inline void _setup_button_object_with_char(char newChar) {
-    if (buttons.activeChar != newChar) {
-        buttons.activeChar = newChar;
-        _setup_button_hud(buttons.model);
+    if (butt.activeChar != newChar) {
+        butt.activeChar = newChar;
+        _setup_button_hud(butt.model);
     }
 }
 
@@ -380,23 +400,13 @@ static inline void _setup_button_object_with_char(char newChar) {
 static inline void resetState() {
     LOG("...");
     axes.trackingIndex = TRACKING_NONE;
-    buttons.trackingIndex = TRACKING_NONE;
+    butt.trackingIndex = TRACKING_NONE;
     variant.joys->resetState();
     variant.kpad->resetState();
 }
 
-static void gltouchjoy_setup(void) {
-    LOG("...");
-
-    gltouchjoy_shutdown();
-
-    if (joyglobals.prefsChanged) {
-        gltouchjoy_applyPrefs();
-    }
-
-    // axis origin object
-
-    axes.model = mdlCreateQuad((GLModelParams_s){
+static void _setup_axis_models(variant_params_s *params) {
+    params->model = mdlCreateQuad((GLModelParams_s){
             .skew_x = -1.05,
             .skew_y = -1.0,
             .z = MODEL_DEPTH,
@@ -410,20 +420,23 @@ static void gltouchjoy_setup(void) {
             .create = &_create_axis_hud,
             .destroy = &glhud_destroyDefault,
         });
-    if (!axes.model) {
+    if (!params->model) {
         LOG("gltouchjoy not initializing axis");
         return;
     }
-    if (!axes.model->custom) {
+    if (!params->model->custom) {
         LOG("gltouchjoy axes initialization problem");
         return;
     }
+    _setup_axis_hud(params->model);// HACK : twice to ensure correct template ...
+    params->obj_w = AXIS_OBJ_W;
+    params->obj_h = AXIS_OBJ_H;
 
     // axis azimuth object
 
     bool azimuthError = true;
     do {
-        axes.azimuthModel = mdlCreateQuad((GLModelParams_s){
+        params->azimuthModel = mdlCreateQuad((GLModelParams_s){
                 .skew_x = -1.05,
                 .skew_y = -1.0,
                 .z = MODEL_DEPTH,
@@ -437,70 +450,87 @@ static void gltouchjoy_setup(void) {
                 .create = &_azimuth_create_model,
                 .destroy = &_azimuth_destroy_model,
             });
-        if (!axes.azimuthModel) {
+        if (!params->azimuthModel) {
             LOG("gltouchjoy azimuth model initialization problem");
             break;
         }
-        if (!axes.azimuthModel->custom) {
+        if (!params->azimuthModel->custom) {
             LOG("gltouchjoy azimuth custom model initialization problem");
             break;
         }
-
         azimuthError = false;
     } while (0);
 
     if (azimuthError) {
-        mdlDestroyModel(&axes.azimuthModel);
+        mdlDestroyModel(&params->azimuthModel);
     }
+}
+
+static void gltouchjoy_setup(void) {
+    LOG("...");
+
+    gltouchjoy_shutdown();
+
+    if (joyglobals.prefsChanged) {
+        gltouchjoy_applyPrefs();
+    }
+
+    // axis origin object
+    _setup_axis_models(&axes);
 
     // button object
     long lVal = 0;
     if (variant.curr->variant() == TOUCH_DEVICE_JOYSTICK_KEYPAD) {
-        buttons.activeChar = prefs_parseLongValue(PREF_DOMAIN_JOYSTICK, PREF_KPAD_TOUCHDOWN_CHAR, &lVal, /*base:*/10) ? lVal : ICONTEXT_SPACE_VISUAL;
+        _setup_axis_models(&butt);
+        butt.setupButtonModel = &_setup_button_object_nop;
     } else {
+        butt.setupButtonModel = &_setup_button_object_with_char;
         if (!prefs_parseLongValue(PREF_DOMAIN_JOYSTICK, PREF_JOY_TOUCHDOWN_CHAR, &lVal, /*base:*/10)) {
-            buttons.activeChar = MOUSETEXT_OPENAPPLE;
+            butt.activeChar = MOUSETEXT_OPENAPPLE;
         } else {
             if (lVal == TOUCH_BUTTON2) {
-                buttons.activeChar = MOUSETEXT_CLOSEDAPPLE;
+                butt.activeChar = MOUSETEXT_CLOSEDAPPLE;
             } else if (lVal == TOUCH_BOTH) {
-                buttons.activeChar = '+';
+                butt.activeChar = '+';
             } else {
-                buttons.activeChar = MOUSETEXT_OPENAPPLE;
+                butt.activeChar = MOUSETEXT_OPENAPPLE;
             }
         }
+
+        butt.azimuthModel = NULL;
+        butt.model = mdlCreateQuad((GLModelParams_s){
+                .skew_x = 1.05-BUTTON_OBJ_W,
+                .skew_y = -1.0,
+                .z = MODEL_DEPTH,
+                .obj_w = BUTTON_OBJ_W,
+                .obj_h = BUTTON_OBJ_H,
+                .positionUsageHint = GL_DYNAMIC_DRAW, // positions can change
+                .tex_w = BUTTON_FB_WIDTH,
+                .tex_h = BUTTON_FB_HEIGHT,
+                .texcoordUsageHint = GL_DYNAMIC_DRAW, // so can texture
+            }, (GLCustom){
+                .create = &_create_button_hud,
+                .destroy = &glhud_destroyDefault,
+            });
+        if (!butt.model) {
+            LOG("gltouchjoy not initializing buttons");
+            return;
+        }
+        if (!butt.model->custom) {
+            LOG("gltouchjoy buttons initialization problem");
+            return;
+        }
+        butt.obj_w = BUTTON_OBJ_W;
+        butt.obj_h = BUTTON_OBJ_H;
     }
 
-    buttons.model = mdlCreateQuad((GLModelParams_s){
-            .skew_x = 1.05-BUTTON_OBJ_W,
-            .skew_y = -1.0,
-            .z = MODEL_DEPTH,
-            .obj_w = BUTTON_OBJ_W,
-            .obj_h = BUTTON_OBJ_H,
-            .positionUsageHint = GL_DYNAMIC_DRAW, // positions can change
-            .tex_w = BUTTON_FB_WIDTH,
-            .tex_h = BUTTON_FB_HEIGHT,
-            .texcoordUsageHint = GL_DYNAMIC_DRAW, // so can texture
-        }, (GLCustom){
-            .create = &_create_button_hud,
-            .destroy = &glhud_destroyDefault,
-        });
-    if (!buttons.model) {
-        LOG("gltouchjoy not initializing buttons");
-        return;
-    }
-    if (!buttons.model->custom) {
-        LOG("gltouchjoy buttons initialization problem");
-        return;
-    }
-
-    variant.joys->setup(&_setup_button_object_with_char);
-    variant.kpad->setup(&_setup_button_object_with_char);
+    variant.joys->setup();
+    variant.kpad->setup();
 
     struct timespec now;
     clock_gettime(CLOCK_MONOTONIC, &now);
     axes.timingBegin = now;
-    buttons.timingBegin = now;
+    butt.timingBegin = now;
 
     joyglobals.isAvailable = true;
 
@@ -524,7 +554,41 @@ static void gltouchjoy_shutdown(void) {
 
     mdlDestroyModel(&axes.model);
     mdlDestroyModel(&axes.azimuthModel);
-    mdlDestroyModel(&buttons.model);
+    mdlDestroyModel(&butt.model);
+    mdlDestroyModel(&butt.azimuthModel);
+}
+
+static void _render_glmodels(variant_params_s *params, int textureActive, int textureId) {
+    float alpha = 1.f;
+    if (params->trackingIndex == TRACKING_NONE) {
+        alpha = glhud_getTimedVisibility(params->timingBegin, joyglobals.minAlpha, 1.0);
+        if (alpha < joyglobals.minAlpha) {
+            alpha = joyglobals.minAlpha;
+        }
+    }
+    if (alpha > 0.0) {
+        GLModel *model = params->model;
+        glUniform1f(alphaValue, alpha);
+
+        glActiveTexture(textureActive);
+        glBindTexture(GL_TEXTURE_2D, model->textureName);
+        if (model->texDirty) {
+            model->texDirty = false;
+            _HACKAROUND_GLTEXIMAGE2D_PRE(textureActive, model->textureName);
+            glTexImage2D(GL_TEXTURE_2D, /*level*/0, TEX_FORMAT_INTERNAL, model->texWidth, model->texHeight, /*border*/0, TEX_FORMAT, TEX_TYPE, model->texPixels);
+        }
+        if (params->modelDirty) {
+            params->modelDirty = false;
+            glBindBuffer(GL_ARRAY_BUFFER, model->posBufferName);
+            glBufferData(GL_ARRAY_BUFFER, model->positionArraySize, model->positions, GL_DYNAMIC_DRAW);
+        }
+        glUniform1i(texSamplerLoc, textureId);
+        glhud_renderDefault(model);
+    }
+
+    if (joyglobals.showAzimuth && params->trackingIndex != TRACKING_NONE) {
+        _azimuth_render(params->azimuthModel);
+    }
 }
 
 static void gltouchjoy_render(void) {
@@ -544,63 +608,12 @@ static void gltouchjoy_render(void) {
     glViewport(0, 0, touchport.width, touchport.height); // NOTE : show these HUD elements beyond the A2 framebuffer dimensions
 
     // draw axis
-    float alpha = 1.f;
-    if (axes.trackingIndex == TRACKING_NONE) {
-        alpha = glhud_getTimedVisibility(axes.timingBegin, joyglobals.minAlpha, 1.0);
-        if (alpha < joyglobals.minAlpha) {
-            alpha = joyglobals.minAlpha;
-        }
-    }
-    if (alpha > 0.0) {
-        glUniform1f(alphaValue, alpha);
-
-        glActiveTexture(TEXTURE_ACTIVE_TOUCHJOY_AXIS);
-        glBindTexture(GL_TEXTURE_2D, axes.model->textureName);
-        if (axes.model->texDirty) {
-            axes.model->texDirty = false;
-            _HACKAROUND_GLTEXIMAGE2D_PRE(TEXTURE_ACTIVE_TOUCHJOY_AXIS, axes.model->textureName);
-            glTexImage2D(GL_TEXTURE_2D, /*level*/0, TEX_FORMAT_INTERNAL, axes.model->texWidth, axes.model->texHeight, /*border*/0, TEX_FORMAT, TEX_TYPE, axes.model->texPixels);
-        }
-        if (axes.modelDirty) {
-            axes.modelDirty = false;
-            glBindBuffer(GL_ARRAY_BUFFER, axes.model->posBufferName);
-            glBufferData(GL_ARRAY_BUFFER, axes.model->positionArraySize, axes.model->positions, GL_DYNAMIC_DRAW);
-        }
-        glUniform1i(texSamplerLoc, TEXTURE_ID_TOUCHJOY_AXIS);
-        glhud_renderDefault(axes.model);
-    }
-
-    if (joyglobals.showAzimuth && axes.trackingIndex != TRACKING_NONE) {
-        _azimuth_render();
-    }
+    _render_glmodels(&axes, TEXTURE_ACTIVE_TOUCHJOY_AXIS, TEXTURE_ID_TOUCHJOY_AXIS);
 
     // draw button(s)
-
-    alpha = 1.f;
-    if (buttons.trackingIndex == TRACKING_NONE) {
-        alpha = glhud_getTimedVisibility(buttons.timingBegin, joyglobals.minAlpha, 1.0);
-        if (alpha < joyglobals.minAlpha) {
-            alpha = joyglobals.minAlpha;
-        }
-    }
-    if (alpha > 0.0) {
-        glUniform1f(alphaValue, alpha);
-
-        glActiveTexture(TEXTURE_ACTIVE_TOUCHJOY_BUTTON);
-        glBindTexture(GL_TEXTURE_2D, buttons.model->textureName);
-        if (buttons.model->texDirty) {
-            buttons.model->texDirty = false;
-            _HACKAROUND_GLTEXIMAGE2D_PRE(TEXTURE_ACTIVE_TOUCHJOY_BUTTON, buttons.model->textureName);
-            glTexImage2D(GL_TEXTURE_2D, /*level*/0, TEX_FORMAT_INTERNAL, buttons.model->texWidth, buttons.model->texHeight, /*border*/0, TEX_FORMAT, TEX_TYPE, buttons.model->texPixels);
-        }
-        if (buttons.modelDirty) {
-            buttons.modelDirty = false;
-            glBindBuffer(GL_ARRAY_BUFFER, buttons.model->posBufferName);
-            glBufferData(GL_ARRAY_BUFFER, buttons.model->positionArraySize, buttons.model->positions, GL_DYNAMIC_DRAW);
-        }
-        glUniform1i(texSamplerLoc, TEXTURE_ID_TOUCHJOY_BUTTON);
-        glhud_renderDefault(buttons.model);
-    }
+    char active = variant.curr->buttActiveChar();
+    butt.setupButtonModel(active);
+    _render_glmodels(&butt, TEXTURE_ACTIVE_TOUCHJOY_BUTTON, TEXTURE_ID_TOUCHJOY_BUTTON);
 }
 
 static void gltouchjoy_reshape(int w, int h, bool landscape) {
@@ -613,17 +626,17 @@ static void gltouchjoy_reshape(int w, int h, bool landscape) {
 
     touchport.axisY = 0;
     touchport.axisYMax = h;
-    touchport.buttonY = 0;
-    touchport.buttonYMax = h;
+    touchport.buttY = 0;
+    touchport.buttYMax = h;
 
     if (joyglobals.axisIsOnLeft) {
         touchport.axisX = 0;
         touchport.axisXMax = (w * joyglobals.screenDivider);
-        touchport.buttonX = (w * joyglobals.screenDivider);
-        touchport.buttonXMax = w;
+        touchport.buttX = (w * joyglobals.screenDivider);
+        touchport.buttXMax = w;
     } else {
-        touchport.buttonX = 0;
-        touchport.buttonXMax = (w * joyglobals.screenDivider);
+        touchport.buttX = 0;
+        touchport.buttXMax = (w * joyglobals.screenDivider);
         touchport.axisX = (w * joyglobals.screenDivider);
         touchport.axisXMax = w;
     }
@@ -669,90 +682,50 @@ static inline void _reset_model_position(GLModel *model, float touchX, float tou
     }
 }
 
-static inline void _axis_touch_down(interface_touch_event_t action, int x, int y) {
-    axes.centerX = x;
-    axes.centerY = y;
-
-    _reset_model_position(axes.model, x, y, AXIS_OBJ_HALF_W, AXIS_OBJ_HALF_H, axes.azimuthModel);
-    axes.modelDirty = true;
-
-    TOUCH_JOY_LOG("---TOUCH %sDOWN (axis index %d) center:(%d,%d) -> joy(0x%02X,0x%02X)", (action == TOUCH_DOWN ? "" : "POINTER "), axes.trackingIndex, axes.centerX, axes.centerY, joy_x, joy_y);
-    variant.curr->axisDown();
+static void _touch_down(variant_params_s *params, int pointer_idx, int x, int y, void(*downFn)(void)) {
+    params->trackingIndex = pointer_idx;
+    params->centerX = x;
+    params->centerY = y;
+    _reset_model_position(params->model, x, y, (params->obj_w/2.f), (params->obj_h/2.f), params->azimuthModel);
+    params->modelDirty = true;
+    downFn();
 }
 
-static inline void _button_touch_down(interface_touch_event_t action, int x, int y) {
-    buttons.centerX = x;
-    buttons.centerY = y;
+static void _touch_move(variant_params_s *params, float *x_coords, float *y_coords, void (*moveFn)(int, int)) {
+    int x = (int)x_coords[params->trackingIndex];
+    int y = (int)y_coords[params->trackingIndex];
 
-    _reset_model_position(buttons.model, x, y, BUTTON_OBJ_HALF_W, BUTTON_OBJ_HALF_H, NULL);
-    buttons.modelDirty = true;
-
-    TOUCH_JOY_LOG("---TOUCH %sDOWN (buttons index %d) center:(%d,%d) -> buttons(0x%02X,0x%02X)", (action == TOUCH_DOWN ? "" : "POINTER "), buttons.trackingIndex, buttons.centerX, buttons.centerY, joy_button0, joy_button1);
-    variant.curr->buttonDown();
-}
-
-static inline void _axis_move(int x, int y) {
-
-    if (joyglobals.showAzimuth && axes.azimuthModel) {
+    if (joyglobals.showAzimuth && params->azimuthModel) {
         float centerX = 0.f;
         float centerY = 0.f;
         glhud_screenToModel(x, y, touchport.width, touchport.height, &centerX, &centerY);
-        GLfloat *quadAzimuth = (GLfloat *)axes.azimuthModel->positions;
+        GLfloat *quadAzimuth = (GLfloat *)params->azimuthModel->positions;
         quadAzimuth[4 +0] = centerX;
         quadAzimuth[4 +1] = centerY;
     };
 
-    x -= axes.centerX;
-    y -= axes.centerY;
-    TOUCH_JOY_LOG("---TOUCH MOVE ...tracking axis:%d (%d,%d) -> joy(0x%02X,0x%02X)", axes.trackingIndex, x, y, joy_x, joy_y);
-    variant.curr->axisMove(x, y);
+    x -= params->centerX;
+    y -= params->centerY;
+    moveFn(x, y);
 }
 
-static inline void _button_move(int x, int y) {
-    x -= buttons.centerX;
-    y -= buttons.centerY;
-    TOUCH_JOY_LOG("+++TOUCH MOVE ...tracking button:%d (%d,%d) -> buttons(0x%02X,0x%02X)", buttons.trackingIndex, x, y, joy_button0, joy_button1);
-    variant.curr->buttonMove(x, y);
-}
+static void _touch_up(variant_params_s *params, float *x_coords, float *y_coords, variant_params_s *altParams, void(*upFn)(int, int), const char *altTag) {
 
-static inline void _axis_touch_up(interface_touch_event_t action, int x, int y) {
-#if DEBUG_TOUCH_JOY
-    bool resetIndex = false;
-    if (buttons.trackingIndex > axes.trackingIndex) {
-        // TODO FIXME : is resetting the pointer index just an Android-ism?
-        resetIndex = true;
-    }
-    TOUCH_JOY_LOG("---TOUCH %sUP (axis went up)%s", (action == TOUCH_UP ? "" : "POINTER "), (resetIndex ? " (reset buttons index!)" : ""));
-#endif
-    x -= axes.centerX;
-    y -= axes.centerY;
-    if (buttons.trackingIndex > axes.trackingIndex) {
-        TOUCH_JOY_LOG("!!! : DECREMENTING buttons.trackingIndex");
-        --buttons.trackingIndex;
-    }
-    variant.curr->axisUp(x, y);
-    axes.trackingIndex = TRACKING_NONE;
-}
+    struct timespec now;
+    clock_gettime(CLOCK_MONOTONIC, &now);
+    params->timingBegin = now;
 
-static inline void _button_touch_up(interface_touch_event_t action, int x, int y) {
-#if DEBUG_TOUCH_JOY
-    bool resetIndex = false;
-    if (axes.trackingIndex > buttons.trackingIndex) {
-        // TODO FIXME : is resetting the pointer index just an Android-ism?
-        resetIndex = true;
-    }
-    TOUCH_JOY_LOG("---TOUCH %sUP (buttons went up)%s", (action == TOUCH_UP ? "" : "POINTER "), (resetIndex ? " (reset axis index!)" : ""));
-#endif
-    x -= buttons.centerX;
-    y -= buttons.centerY;
-    if (axes.trackingIndex > buttons.trackingIndex) {
-        TOUCH_JOY_LOG("!!! : DECREMENTING axes.trackingIndex");
-        --axes.trackingIndex;
-    }
-    variant.curr->buttonUp(x, y);
-    buttons.trackingIndex = TRACKING_NONE;
-}
+    int x = (int)x_coords[params->trackingIndex] - params->centerX;
+    int y = (int)y_coords[params->trackingIndex] - params->centerY;
 
+    if (altParams->trackingIndex > params->trackingIndex) {
+        TOUCH_JOY_LOG("\t!!! : DECREMENTING %s.trackingIndex", altTag);
+        --altParams->trackingIndex;
+    }
+
+    upFn(x, y);
+    params->trackingIndex = TRACKING_NONE;
+}
 
 static int64_t gltouchjoy_onTouchEvent(interface_touch_event_t action, int pointer_count, int pointer_idx, float *x_coords, float *y_coords) {
     if (!joyglobals.isAvailable) {
@@ -765,9 +738,6 @@ static int64_t gltouchjoy_onTouchEvent(interface_touch_event_t action, int point
         return 0x0LL;
     }
 
-    bool axisConsumed = false;
-    bool buttonConsumed = false;
-
     switch (action) {
         case TOUCH_DOWN:
         case TOUCH_POINTER_DOWN:
@@ -776,28 +746,24 @@ static int64_t gltouchjoy_onTouchEvent(interface_touch_event_t action, int point
                 int x = (int)x_coords[pointer_idx];
                 int y = (int)y_coords[pointer_idx];
                 if (_is_point_on_axis_side(x, y)) {
-                    if (pointer_idx == buttons.trackingIndex) {
-                        TOUCH_JOY_LOG("!!! : INCREMENTING buttons.trackingIndex");
-                        ++buttons.trackingIndex;
+                    if (pointer_idx == butt.trackingIndex) {
+                        TOUCH_JOY_LOG("\t!!! : INCREMENTING buttons.trackingIndex");
+                        ++butt.trackingIndex;
                     }
                     if (axes.trackingIndex != TRACKING_NONE) {
-                        TOUCH_JOY_LOG("!!! : IGNORING OTHER AXIS TOUCH DOWN %d", pointer_idx);
+                        TOUCH_JOY_LOG("\t!!! : IGNORING OTHER AXIS TOUCH DOWN %d", pointer_idx);
                     } else {
-                        axisConsumed = true;
-                        axes.trackingIndex = pointer_idx;
-                        _axis_touch_down(action, x, y);
+                        _touch_down(&axes, pointer_idx, x, y, variant.curr->axisDown);
                     }
                 } else {
                     if (pointer_idx == axes.trackingIndex) {
-                        TOUCH_JOY_LOG("!!! : INCREMENTING axes.trackingIndex");
+                        TOUCH_JOY_LOG("\t!!! : INCREMENTING axes.trackingIndex");
                         ++axes.trackingIndex;
                     }
-                    if (buttons.trackingIndex != TRACKING_NONE) {
-                        TOUCH_JOY_LOG("!!! : IGNORING OTHER BUTTON TOUCH DOWN %d", pointer_idx);
+                    if (butt.trackingIndex != TRACKING_NONE) {
+                        TOUCH_JOY_LOG("\t!!! : IGNORING OTHER BUTTON TOUCH DOWN %d", pointer_idx);
                     } else {
-                        buttonConsumed = true;
-                        buttons.trackingIndex = pointer_idx;
-                        _button_touch_down(action, x, y);
+                        _touch_down(&butt, pointer_idx, x, y, variant.curr->buttonDown);
                     }
                 }
             }
@@ -806,42 +772,26 @@ static int64_t gltouchjoy_onTouchEvent(interface_touch_event_t action, int point
         case TOUCH_MOVE:
             TOUCH_JOY_LOG("------MOVE:");
             if (axes.trackingIndex >= 0) {
-                axisConsumed = true;
-                int x = (int)x_coords[axes.trackingIndex];
-                int y = (int)y_coords[axes.trackingIndex];
-                _axis_move(x, y);
+                _touch_move(&axes, x_coords, y_coords, variant.curr->axisMove);
             }
-            if (buttons.trackingIndex >= 0) {
-                buttonConsumed = true;
-                int x = (int)x_coords[buttons.trackingIndex];
-                int y = (int)y_coords[buttons.trackingIndex];
-                _button_move(x, y);
+            if (butt.trackingIndex >= 0) {
+                _touch_move(&butt, x_coords, y_coords, variant.curr->buttonMove);
             }
             break;
 
         case TOUCH_UP:
         case TOUCH_POINTER_UP:
-            {
-                TOUCH_JOY_LOG("------UP:");
-                struct timespec now;
-                clock_gettime(CLOCK_MONOTONIC, &now);
-                if (pointer_idx == axes.trackingIndex) {
-                    axes.timingBegin = now;
-                    int x = (int)x_coords[axes.trackingIndex];
-                    int y = (int)y_coords[axes.trackingIndex];
-                    _axis_touch_up(action, x, y);
-                } else if (pointer_idx == buttons.trackingIndex) {
-                    buttons.timingBegin = now;
-                    int x = (int)x_coords[buttons.trackingIndex];
-                    int y = (int)y_coords[buttons.trackingIndex];
-                    _button_touch_up(action, x, y);
+            TOUCH_JOY_LOG("------UP:");
+            if (pointer_idx == axes.trackingIndex) {
+                _touch_up(&axes, x_coords, y_coords, /*alt:*/&butt, variant.curr->axisUp, "buttons");
+            } else if (pointer_idx == butt.trackingIndex) {
+                _touch_up(&butt, x_coords, y_coords, /*alt:*/&axes, variant.curr->buttonUp, "axis");
+            } else {
+                if (pointer_count == 1) {
+                    TOUCH_JOY_LOG("\t!!! : RESETTING TOUCH JOYSTICK STATE MACHINE");
+                    resetState();
                 } else {
-                    if (pointer_count == 1) {
-                        TOUCH_JOY_LOG("!!! : RESETTING TOUCH JOYSTICK STATE MACHINE");
-                        resetState();
-                    } else {
-                        TOUCH_JOY_LOG("!!! : IGNORING OTHER TOUCH UP %d", pointer_idx);
-                    }
+                    TOUCH_JOY_LOG("\t!!! : IGNORING OTHER TOUCH UP %d", pointer_idx);
                 }
             }
             break;
@@ -866,20 +816,23 @@ static void _animation_showTouchJoystick(void) {
         return;
     }
 
-    int x = touchport.axisX + ((touchport.axisXMax - touchport.axisX)/2);
-    int y = touchport.axisY + ((touchport.axisYMax - touchport.axisY)/2);
-    _reset_model_position(axes.model, x, y, AXIS_OBJ_HALF_W, AXIS_OBJ_HALF_H, NULL);
+    int x;
+    int y;
+
+    x = touchport.axisX + ((touchport.axisXMax - touchport.axisX)/2);
+    y = touchport.axisY + ((touchport.axisYMax - touchport.axisY)/2);
+    _reset_model_position(axes.model, x, y, (axes.obj_w/2.f), (axes.obj_h/2.f), NULL);
     axes.modelDirty = true;
 
-    x = touchport.buttonX + ((touchport.buttonXMax - touchport.buttonX)/2);
-    y = touchport.buttonY + ((touchport.buttonYMax - touchport.buttonY)/2);
-    _reset_model_position(buttons.model, x, y, BUTTON_OBJ_HALF_W, BUTTON_OBJ_HALF_H, NULL);
-    buttons.modelDirty = true;
+    x = touchport.buttX + ((touchport.buttXMax - touchport.buttX)/2);
+    y = touchport.buttY + ((touchport.buttYMax - touchport.buttY)/2);
+    _reset_model_position(butt.model, x, y, (butt.obj_w/2.f), (butt.obj_h/2.f), NULL);
+    butt.modelDirty = true;
 
     struct timespec now;
     clock_gettime(CLOCK_MONOTONIC, &now);
     axes.timingBegin = now;
-    buttons.timingBegin = now;
+    butt.timingBegin = now;
 }
 
 static void _animation_hideTouchJoystick(void) {
@@ -887,7 +840,7 @@ static void _animation_hideTouchJoystick(void) {
         return;
     }
     axes.timingBegin = (struct timespec){ 0 };
-    buttons.timingBegin = (struct timespec){ 0 };
+    butt.timingBegin = (struct timespec){ 0 };
 }
 
 static void gltouchjoy_applyPrefs(void) {
@@ -911,12 +864,19 @@ static void gltouchjoy_applyPrefs(void) {
         joyglobals.minAlpha = 0.0;
     }
 
+    joyglobals.tapDelayFrames  = prefs_parseLongValue (PREF_DOMAIN_JOYSTICK, PREF_JOY_TAP_DELAY, &lVal, 10)    ? lVal : BUTTON_TAP_DELAY_FRAMES_DEFAULT;
+    if (joyglobals.tapDelayFrames < 0) {
+        joyglobals.tapDelayFrames = 0;
+    } else if (joyglobals.tapDelayFrames > BUTTON_TAP_DELAY_FRAMES_MAX) {
+        joyglobals.tapDelayFrames = BUTTON_TAP_DELAY_FRAMES_MAX;
+    }
+
     joyglobals.showControls    = prefs_parseBoolValue (PREF_DOMAIN_JOYSTICK, PREF_SHOW_CONTROLS,    &bVal)     ? bVal : true;
     joyglobals.showAzimuth     = true;//prefs_parseBoolValue (PREF_DOMAIN_JOYSTICK, PREF_SHOW_AZIMUTH,     &bVal)     ? bVal : true;
     joyglobals.switchThreshold = prefs_parseLongValue (PREF_DOMAIN_JOYSTICK, PREF_SWITCH_THRESHOLD, &lVal, 10) ? lVal : BUTTON_SWITCH_THRESHOLD_DEFAULT;
     joyglobals.screenDivider   = prefs_parseFloatValue(PREF_DOMAIN_JOYSTICK, PREF_SCREEN_DIVISION,  &fVal)     ? fVal : 0.5f;
     joyglobals.axisIsOnLeft    = prefs_parseBoolValue (PREF_DOMAIN_JOYSTICK, PREF_AXIS_ON_LEFT,     &bVal)     ? bVal : true;
-    axes.multiplier            = prefs_parseFloatValue(PREF_DOMAIN_JOYSTICK, PREF_AXIS_SENSITIVITY, &fVal)     ? fVal : 1.f;
+    joyglobals.axisMultiplier  = prefs_parseFloatValue(PREF_DOMAIN_JOYSTICK, PREF_AXIS_SENSITIVITY, &fVal)     ? fVal : 1.f;
 
     joyglobals.isCalibrating   = prefs_parseBoolValue (PREF_DOMAIN_TOUCHSCREEN, PREF_CALIBRATING,   &bVal)     ? bVal : false;
 
@@ -942,11 +902,12 @@ static void _init_gltouchjoy(void) {
     axes.centerX = 240;
     axes.centerY = 160;
     axes.trackingIndex = TRACKING_NONE;
+    axes.activeChar = ' ';
 
-    buttons.centerX = 240;
-    buttons.centerY = 160;
-    buttons.trackingIndex = TRACKING_NONE;
-    buttons.activeChar = MOUSETEXT_OPENAPPLE;
+    butt.centerX = 240;
+    butt.centerY = 160;
+    butt.trackingIndex = TRACKING_NONE;
+    butt.activeChar = ' ';
 
     joyglobals.prefsChanged = true; // force reload preferences/defaults
 

@@ -36,8 +36,7 @@ public class Apple2JoystickSettingsMenu extends Apple2AbstractMenu {
     public final static int JOYSTICK_AXIS_SENSITIVITY_INC_NUMCHOICES = (int) ((JOYSTICK_AXIS_SENSITIVITY_MAX - JOYSTICK_AXIS_SENSITIVITY_DEFAULT) / JOYSTICK_AXIS_SENSITIVITY_INC_STEP); // 12
     public final static int JOYSTICK_AXIS_SENSITIVITY_NUM_CHOICES = JOYSTICK_AXIS_SENSITIVITY_DEC_NUMCHOICES + JOYSTICK_AXIS_SENSITIVITY_INC_NUMCHOICES; // 15 + 12
 
-    public final static int TAPDELAY_NUM_CHOICES = Apple2Preferences.DECENT_AMOUNT_OF_CHOICES;
-    public final static float TAPDELAY_SCALE = 0.5f;
+    public final static int TAPDELAY_NUM_CHOICES = (30 + 1); // 0-30 (30Frames == ~0.5sec)
 
 
     public Apple2JoystickSettingsMenu(Apple2Activity activity) {
@@ -227,85 +226,6 @@ public class Apple2JoystickSettingsMenu extends Apple2AbstractMenu {
                 });
             }
         },
-        JOYSTICK_CALIBRATE {
-            @Override
-            public final String getTitle(Apple2Activity activity) {
-                return activity.getResources().getString(R.string.joystick_calibrate);
-            }
-
-            @Override
-            public final String getSummary(Apple2Activity activity) {
-                return activity.getResources().getString(R.string.joystick_calibrate_summary);
-            }
-
-            @Override
-            public void handleSelection(Apple2Activity activity, Apple2AbstractMenu settingsMenu, boolean isChecked) {
-                ArrayList<Apple2MenuView> viewStack = new ArrayList<Apple2MenuView>();
-                {
-                    int idx = 0;
-                    while (true) {
-                        Apple2MenuView apple2MenuView = activity.peekApple2View(idx);
-                        if (apple2MenuView == null) {
-                            break;
-                        }
-                        viewStack.add(apple2MenuView);
-                        ++idx;
-                    }
-                }
-
-                Apple2JoystickCalibration calibration = new Apple2JoystickCalibration(activity, viewStack, Apple2SettingsMenu.TouchDeviceVariant.JOYSTICK);
-
-                // show this new view...
-                calibration.show();
-
-                // ...with nothing else underneath 'cept the emulator OpenGL layer
-                for (Apple2MenuView apple2MenuView : viewStack) {
-                    activity.popApple2View(apple2MenuView);
-                }
-            }
-        },
-        JOYSTICK_TAPDELAY {
-            @Override
-            public final String getTitle(Apple2Activity activity) {
-                return "";
-            }
-
-            @Override
-            public final String getSummary(Apple2Activity activity) {
-                return activity.getResources().getString(R.string.joystick_button_tapdelay_summary);
-            }
-
-            @Override
-            public String getPrefKey() {
-                return "jsTapDelaySecs";
-            }
-
-            @Override
-            public Object getPrefDefault() {
-                return ((float) 8 / TAPDELAY_NUM_CHOICES * TAPDELAY_SCALE); // -> 0.2f
-            }
-
-            @Override
-            public View getView(final Apple2Activity activity, View convertView) {
-                final IMenuEnum self = this;
-                return _sliderView(activity, this, TAPDELAY_NUM_CHOICES, new IPreferenceSlider() {
-                    @Override
-                    public void saveInt(int progress) {
-                        Apple2Preferences.setJSONPref(self, ((float) progress / TAPDELAY_NUM_CHOICES * TAPDELAY_SCALE));
-                    }
-
-                    @Override
-                    public int intValue() {
-                        return (int) (Apple2Preferences.getFloatJSONPref(self) / TAPDELAY_SCALE * TAPDELAY_NUM_CHOICES);
-                    }
-
-                    @Override
-                    public void showValue(int progress, final TextView seekBarValue) {
-                        seekBarValue.setText("" + (((float) progress / TAPDELAY_NUM_CHOICES) * TAPDELAY_SCALE));
-                    }
-                });
-            }
-        },
         JOYSTICK_ADVANCED {
             @Override
             public final String getTitle(Apple2Activity activity) {
@@ -319,7 +239,7 @@ public class Apple2JoystickSettingsMenu extends Apple2AbstractMenu {
 
             @Override
             public void handleSelection(Apple2Activity activity, Apple2AbstractMenu settingsMenu, boolean isChecked) {
-                new Apple2JoystickSettingsMenu.JoystickAdvanced(activity).show();
+                new Apple2JoystickSettingsMenu.JoystickAdvanced(activity, Apple2SettingsMenu.TouchDeviceVariant.JOYSTICK).show();
             }
         };
 
@@ -363,8 +283,16 @@ public class Apple2JoystickSettingsMenu extends Apple2AbstractMenu {
 
         private final static String TAG = "JoystickAdvanced";
 
-        public JoystickAdvanced(Apple2Activity activity) {
+        private Apple2SettingsMenu.TouchDeviceVariant mVariant;
+
+        public JoystickAdvanced(Apple2Activity activity, Apple2SettingsMenu.TouchDeviceVariant variant) {
             super(activity);
+
+            if (!(variant == Apple2SettingsMenu.TouchDeviceVariant.JOYSTICK || variant == Apple2SettingsMenu.TouchDeviceVariant.JOYSTICK_KEYPAD)) {
+                throw new RuntimeException("You're doing it wrong");
+            }
+
+            mVariant = variant;
         }
 
         @Override
@@ -387,10 +315,58 @@ public class Apple2JoystickSettingsMenu extends Apple2AbstractMenu {
             if (position < 0 || position >= SETTINGS.size) {
                 throw new ArrayIndexOutOfBoundsException();
             }
-            return position == SETTINGS.JOYSTICK_AXIS_ON_LEFT.ordinal();
+            return position <= SETTINGS.JOYSTICK_AXIS_ON_LEFT.ordinal();
         }
 
         protected enum SETTINGS implements Apple2AbstractMenu.IMenuEnum {
+            JOYSTICK_CALIBRATE {
+                @Override
+                public final String getTitle(Apple2Activity activity) {
+                    return activity.getResources().getString(R.string.joystick_calibrate);
+                }
+
+                @Override
+                public final String getSummary(Apple2Activity activity) {
+                    return activity.getResources().getString(R.string.joystick_calibrate_summary);
+                }
+
+                @Override
+                public String getPrefKey() {
+                    return null;
+                }
+
+                @Override
+                public Object getPrefDefault() {
+                    return null;
+                }
+
+                @Override
+                public void handleSelection(Apple2Activity activity, Apple2AbstractMenu settingsMenu, boolean isChecked) {
+                    ArrayList<Apple2MenuView> viewStack = new ArrayList<Apple2MenuView>();
+                    {
+                        int idx = 0;
+                        while (true) {
+                            Apple2MenuView apple2MenuView = activity.peekApple2View(idx);
+                            if (apple2MenuView == null) {
+                                break;
+                            }
+                            viewStack.add(apple2MenuView);
+                            ++idx;
+                        }
+                    }
+
+                    JoystickAdvanced advancedMenu = (JoystickAdvanced)settingsMenu;
+                    Apple2JoystickCalibration calibration = new Apple2JoystickCalibration(activity, viewStack, advancedMenu.mVariant);
+
+                    // show this new view...
+                    calibration.show();
+
+                    // ...with nothing else underneath 'cept the emulator OpenGL layer
+                    for (Apple2MenuView apple2MenuView : viewStack) {
+                        activity.popApple2View(apple2MenuView);
+                    }
+                }
+            },
             JOYSTICK_VISIBILITY {
                 @Override
                 public final String getTitle(Apple2Activity activity) {
@@ -459,6 +435,52 @@ public class Apple2JoystickSettingsMenu extends Apple2AbstractMenu {
                         }
                     });
                     return convertView;
+                }
+            },
+            JOYSTICK_TAPDELAY {
+                @Override
+                public final String getTitle(Apple2Activity activity) {
+                    return "";
+                }
+
+                @Override
+                public final String getSummary(Apple2Activity activity) {
+                    return activity.getResources().getString(R.string.joystick_button_tapdelay_summary);
+                }
+
+                @Override
+                public String getPrefKey() {
+                    return "jsTapDelayFrames";
+                }
+
+                @Override
+                public Object getPrefDefault() {
+                    return 12; // 12 * 16.688millis == ~0.2secs
+                }
+
+                @Override
+                public View getView(final Apple2Activity activity, View convertView) {
+                    final IMenuEnum self = this;
+                    return _sliderView(activity, this, TAPDELAY_NUM_CHOICES, new IPreferenceSlider() {
+                        @Override
+                        public void saveInt(int progress) {
+                            Apple2Preferences.setJSONPref(self, progress);
+                        }
+
+                        @Override
+                        public int intValue() {
+                            return Apple2Preferences.getIntJSONPref(self);
+                        }
+
+                        @Override
+                        public void showValue(int progress, final TextView seekBarValue) {
+                            float millis = progress * 16.688f;
+                            String framesStr = activity.getResources().getString(R.string.string_frames);
+                            String millisStr = activity.getResources().getString(R.string.string_millis);
+                            String textSummary = "" + progress + " " + framesStr + " (" + millis + " " + millisStr + ")";
+                            seekBarValue.setText(textSummary);
+                        }
+                    });
                 }
             },
             JOYSTICK_AXIS_SENSITIVITY {

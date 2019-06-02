@@ -35,7 +35,7 @@ public class Apple2KeypadChooser implements Apple2MenuView {
     private ArrayList<Apple2MenuView> mViewStack = null;
     private TextView mCurrentChoicePrompt = null;
 
-    private STATE_MACHINE mChooserState = STATE_MACHINE.CHOOSE_NORTHWEST;
+    private STATE_MACHINE mChooserState = STATE_MACHINE.CHOOSE_AXIS_NORTHWEST;
 
     private boolean mTouchMenuEnabled = false;
     private int mSavedTouchDevice = Apple2SettingsMenu.TouchDeviceVariant.NONE.ordinal();
@@ -68,24 +68,6 @@ public class Apple2KeypadChooser implements Apple2MenuView {
         Apple2Preferences.sync(mActivity, Apple2Preferences.PREF_DOMAIN_TOUCHSCREEN);
 
         mCurrentChoicePrompt.setText(getNextChoiceString() + asciiStr);
-        switch (mChooserState) {
-            case CHOOSE_TAP:
-                Apple2View.nativeOnTouch(MotionEvent.ACTION_DOWN, 1, 0, new float[]{400.f}, new float[]{400.f});
-                Apple2View.nativeOnTouch(MotionEvent.ACTION_UP, 1, 0, new float[]{400.f}, new float[]{400.f});
-                break;
-            case CHOOSE_SWIPEDOWN:
-                Apple2View.nativeOnTouch(MotionEvent.ACTION_DOWN, 1, 0, new float[]{400.f}, new float[]{400.f});
-                Apple2View.nativeOnTouch(MotionEvent.ACTION_MOVE, 1, 0, new float[]{400.f}, new float[]{600.f});
-                Apple2View.nativeOnTouch(MotionEvent.ACTION_UP, 1, 0, new float[]{400.f}, new float[]{600.f});
-                break;
-            case CHOOSE_SWIPEUP:
-                Apple2View.nativeOnTouch(MotionEvent.ACTION_DOWN, 1, 0, new float[]{400.f}, new float[]{400.f});
-                Apple2View.nativeOnTouch(MotionEvent.ACTION_MOVE, 1, 0, new float[]{400.f}, new float[]{200.f});
-                Apple2View.nativeOnTouch(MotionEvent.ACTION_UP, 1, 0, new float[]{400.f}, new float[]{200.f});
-                break;
-            default:
-                break;
-        }
 
         calibrationContinue();
     }
@@ -220,98 +202,134 @@ public class Apple2KeypadChooser implements Apple2MenuView {
     }
 
     private enum STATE_MACHINE {
-        CHOOSE_NORTHWEST {
+        CHOOSE_AXIS_NORTHWEST {
             @Override
             public String getKeyName(Apple2Activity activity) {
                 return activity.getResources().getString(R.string.keypad_key_axis_ul);
             }
         },
-        CHOOSE_NORTH {
+        CHOOSE_AXIS_NORTH {
             @Override
             public String getKeyName(Apple2Activity activity) {
                 return activity.getResources().getString(R.string.keypad_key_axis_up);
             }
         },
-        CHOOSE_NORTHEAST {
+        CHOOSE_AXIS_NORTHEAST {
             @Override
             public String getKeyName(Apple2Activity activity) {
                 return activity.getResources().getString(R.string.keypad_key_axis_ur);
             }
         },
-        CHOOSE_WEST {
+        CHOOSE_AXIS_WEST {
             @Override
             public String getKeyName(Apple2Activity activity) {
                 return activity.getResources().getString(R.string.keypad_key_axis_l);
             }
         },
-        CHOOSE_CENTER {
+        CHOOSE_AXIS_CENTER {
             @Override
             public String getKeyName(Apple2Activity activity) {
                 return activity.getResources().getString(R.string.keypad_key_axis_c);
             }
         },
-        CHOOSE_EAST {
+        CHOOSE_AXIS_EAST {
             @Override
             public String getKeyName(Apple2Activity activity) {
                 return activity.getResources().getString(R.string.keypad_key_axis_r);
             }
         },
-        CHOOSE_SOUTHWEST {
+        CHOOSE_AXIS_SOUTHWEST {
             @Override
             public String getKeyName(Apple2Activity activity) {
                 return activity.getResources().getString(R.string.keypad_key_axis_dl);
             }
         },
-        CHOOSE_SOUTH {
+        CHOOSE_AXIS_SOUTH {
             @Override
             public String getKeyName(Apple2Activity activity) {
                 return activity.getResources().getString(R.string.keypad_key_axis_dn);
             }
         },
-        CHOOSE_SOUTHEAST {
+        CHOOSE_AXIS_SOUTHEAST {
             @Override
             public String getKeyName(Apple2Activity activity) {
                 return activity.getResources().getString(R.string.keypad_key_axis_dr);
             }
         },
-        CHOOSE_TAP {
+        CHOOSE_BUTT_NORTHWEST {
             @Override
             public String getKeyName(Apple2Activity activity) {
-                return activity.getResources().getString(R.string.keypad_key_button_tap);
+                return activity.getResources().getString(R.string.keypad_key_axis_ul);
             }
         },
-        CHOOSE_SWIPEUP {
+        CHOOSE_BUTT_NORTH {
             @Override
             public String getKeyName(Apple2Activity activity) {
-                return activity.getResources().getString(R.string.keypad_key_button_swipeup);
+                return activity.getResources().getString(R.string.keypad_key_axis_up);
             }
         },
-        CHOOSE_SWIPEDOWN {
+        CHOOSE_BUTT_NORTHEAST {
             @Override
             public String getKeyName(Apple2Activity activity) {
-                return activity.getResources().getString(R.string.keypad_key_button_swipedown);
+                return activity.getResources().getString(R.string.keypad_key_axis_ur);
+            }
+        },
+        CHOOSE_BUTT_WEST {
+            @Override
+            public String getKeyName(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.keypad_key_axis_l);
+            }
+        },
+        CHOOSE_BUTT_CENTER {
+            @Override
+            public String getKeyName(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.keypad_key_axis_c);
+            }
+        },
+        CHOOSE_BUTT_EAST {
+            @Override
+            public String getKeyName(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.keypad_key_axis_r);
+            }
+        },
+        CHOOSE_BUTT_SOUTHWEST {
+            @Override
+            public String getKeyName(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.keypad_key_axis_dl);
+            }
+        },
+        CHOOSE_BUTT_SOUTH {
+            @Override
+            public String getKeyName(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.keypad_key_axis_dn);
+            }
+        },
+        CHOOSE_BUTT_SOUTHEAST {
+            @Override
+            public String getKeyName(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.keypad_key_axis_dr);
             }
         };
 
         public static final int size = STATE_MACHINE.values().length;
 
-        private static ArrayList<String> chars = null;
-        private static ArrayList<String> scans = null;
+        private static ArrayList<String> axisChars = new ArrayList<String>();
+        private static ArrayList<String> axisScans = new ArrayList<String>();
+        private static ArrayList<String> buttChars = new ArrayList<String>();
+        private static ArrayList<String> buttScans = new ArrayList<String>();
 
         public void setKey(Apple2Activity activity, int ascii, int scancode) {
             int ord = ordinal();
-            if (ord < CHOOSE_TAP.ordinal()) {
-                chars.set(ord, "" + ascii);
-                scans.set(ord, "" + scancode);
-                Apple2KeypadSettingsMenu.KeypadPreset.saveRosettes(chars, scans);
-            } else if (ord == CHOOSE_TAP.ordinal()) {
-                Apple2KeypadSettingsMenu.KeypadPreset.saveTouchDownKey(ascii, scancode);
-            } else if (ord == CHOOSE_SWIPEUP.ordinal()) {
-                Apple2KeypadSettingsMenu.KeypadPreset.saveSwipeNorthKey(ascii, scancode);
-            } else if (ord == CHOOSE_SWIPEDOWN.ordinal()) {
-                Apple2KeypadSettingsMenu.KeypadPreset.saveSwipeSouthKey(ascii, scancode);
+            int buttbegin = CHOOSE_BUTT_NORTHWEST.ordinal();
+            if (ord < buttbegin) {
+                axisChars.set(ord, "" + ascii);
+                axisScans.set(ord, "" + scancode);
+                Apple2KeypadSettingsMenu.KeypadPreset.saveAxisRosettes(axisChars, axisScans);
             } else {
-                throw new RuntimeException();
+                ord -= buttbegin;
+                buttChars.set(ord, "" + ascii);
+                buttScans.set(ord, "" + scancode);
+                Apple2KeypadSettingsMenu.KeypadPreset.saveButtRosettes(buttChars, buttScans);
             }
             Apple2Preferences.sync(activity, Apple2Preferences.PREF_DOMAIN_JOYSTICK);
         }
@@ -319,12 +337,19 @@ public class Apple2KeypadChooser implements Apple2MenuView {
         public abstract String getKeyName(Apple2Activity activity);
 
         public void start() {
+            setupCharsAndScans(axisChars, axisScans, Apple2KeypadSettingsMenu.PREF_KPAD_AXIS_ROSETTE_CHAR_ARRAY, Apple2KeypadSettingsMenu.PREF_KPAD_AXIS_ROSETTE_SCAN_ARRAY);
 
-            JSONArray jsonChars = (JSONArray) Apple2Preferences.getJSONPref(Apple2Preferences.PREF_DOMAIN_JOYSTICK, Apple2KeypadSettingsMenu.PREF_KPAD_ROSETTE_CHAR_ARRAY, null);
-            JSONArray jsonScans = (JSONArray) Apple2Preferences.getJSONPref(Apple2Preferences.PREF_DOMAIN_JOYSTICK, Apple2KeypadSettingsMenu.PREF_KPAD_ROSETTE_SCAN_ARRAY, null);
+            setupCharsAndScans(buttChars, buttScans, Apple2KeypadSettingsMenu.PREF_KPAD_BUTT_ROSETTE_CHAR_ARRAY, Apple2KeypadSettingsMenu.PREF_KPAD_BUTT_ROSETTE_SCAN_ARRAY);
+        }
+
+        private void setupCharsAndScans(final ArrayList<String> chars, final ArrayList<String> scans, final String charArrayPref, final String scanArrayPref) {
+            chars.clear();
+            scans.clear();
+
+            JSONArray jsonChars = (JSONArray) Apple2Preferences.getJSONPref(Apple2Preferences.PREF_DOMAIN_JOYSTICK, charArrayPref, null);
+            JSONArray jsonScans = (JSONArray) Apple2Preferences.getJSONPref(Apple2Preferences.PREF_DOMAIN_JOYSTICK, scanArrayPref, null);
 
             if (jsonChars == null || jsonScans == null) {
-                Log.v(TAG, "Creating new keypad joystick JSON...");
                 jsonChars = new JSONArray();
                 jsonScans = new JSONArray();
                 for (int i = 0; i < Apple2KeypadSettingsMenu.ROSETTE_SIZE; i++) {
@@ -341,14 +366,19 @@ public class Apple2KeypadChooser implements Apple2MenuView {
                 throw new RuntimeException("jsonScans not expected length");
             }
 
-            chars = new ArrayList<String>();
-            scans = new ArrayList<String>();
             try {
                 for (int i = 0; i < len; i++) {
                     Apple2KeypadSettingsMenu.KeypadPreset.addRosetteKey(chars, scans, jsonChars.getInt(i), jsonScans.getInt(i));
                 }
             } catch (JSONException e) {
                 e.printStackTrace();
+            }
+
+            if (chars.size() != Apple2KeypadSettingsMenu.ROSETTE_SIZE) {
+                throw new RuntimeException("rosette chars is not correct size");
+            }
+            if (scans.size() != Apple2KeypadSettingsMenu.ROSETTE_SIZE) {
+                throw new RuntimeException("rosette chars is not correct size");
             }
         }
 

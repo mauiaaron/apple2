@@ -60,7 +60,7 @@
     <string name="joystick_button_button_none">None</string>
     <string name="joystick_button_tap_button">Tap fire</string>
     <string name="joystick_button_tap_button_summary">Button to fire on tap down</string>
-    <string name="joystick_button_tapdelay_summary">Joystick button tap delay in secs</string>
+    <string name="joystick_button_tapdelay_summary">Joystick touch down delay in video frames</string>
     <string name="joystick_button_swipe_up_button">Swipe up fire</string>
     <string name="joystick_button_swipe_up_button_summary">Button to fire on swipe up</string>
     <string name="joystick_button_swipe_down_button">Swipe down fire</string>
@@ -68,7 +68,7 @@
     <string name="joystick_button_threshold_summary">Joystick/keypad button switch threshold in pts (max: &#8531; screen height)</string>
     <string name="joystick_calibrate">Calibrate…</string>
     <string name="joystick_calibrate_summary">Configure and test current settings</string>
-    <string name="joystick_configure">Configure joystick…</string>
+    <string name="joystick_configure">Configure touch joystick…</string>
     <string name="joystick_configure_summary">Axis touch, buttons, etc</string>
     <string name="joystick_axisleft">Joystick/keypad axis on left</string>
     <string name="joystick_axisleft_summary">Joystick/keypad axis on left (buttons on right)</string>
@@ -92,7 +92,7 @@
     <string name="keyboard_choose_alt_summary">Choose alternative customized layout</string>
     <string name="keyboard_click_enabled">Enable key click</string>
     <string name="keyboard_click_enabled_summary">Enables key click sound if available</string>
-    <string name="keyboard_configure">Configure keyboard…</string>
+    <string name="keyboard_configure">Configure touch keyboard…</string>
     <string name="keyboard_configure_summary">Transparency, lowercase, custom keys</string>
     <string name="keyboard_glyph_scale">Keyboard glyphs scaled 2x</string>
     <string name="keyboard_glyph_scale_summary">(Makes keyboard appear less pixelated on large screens)</string>
@@ -103,13 +103,11 @@
     <string name="keyboard_visibility_inactive">Visibility when inactive</string>
     <string name="keyboard_visibility_inactive_summary">Keyboard and touch menu visibility when inactive</string>
     <string name="keypad">Keypad Joystick</string>
-    <string name="keypad_calibrate">@string/joystick_calibrate</string>
-    <string name="keypad_calibrate_summary">@string/joystick_calibrate</string>
     <string name="keypad_choose">Choose keypad keys…</string>
     <string name="keypad_choose_summary">Choose axis and button keys</string>
     <string name="keypad_choose_title">Axis &amp; buttons</string>
     <string name="keypad_choose_current">Choose XXX Key: </string>
-    <string name="keypad_configure">Configure keypad joystick…</string>
+    <string name="keypad_configure">Configure touch keypad joystick…</string>
     <string name="keypad_configure_summary">@string/joystick_configure_summary</string>
     <string name="keypad_key_axis_c">Center</string>
     <string name="keypad_key_axis_dn">Down</string>
@@ -123,14 +121,14 @@
     <string name="keypad_key_button_tap">Tap</string>
     <string name="keypad_key_button_swipeup">Swipe Up</string>
     <string name="keypad_key_button_swipedown">Swipe Down</string>
-    <string name="keypad_preset_crazy_seafox">Seafox keys ;-)…</string>
+    <string name="keypad_preset_seafox">Seafox keys…</string>
     <string name="keypad_preset_custom">Choose custom…</string>
-    <string name="keypad_preset_arrows_space">&#8593;,&#8592;,&#8594;,&#8595;, tap spacebar</string>
-    <string name="keypad_preset_az_left_right_space">A,Z,&#8592;,&#8594;, tap spacebar</string>
-    <string name="keypad_preset_ijkm_space">I,J,K,M, tap spacebar</string>
-    <string name="keypad_preset_left_right_space">&#8592;,&#8594;, tap spacebar</string>
-    <string name="keypad_preset_wadx_space">W,A,D,X, tap spacebar</string>
-    <string name="keypad_repeat_summary">Key repeat threshold in secs</string>
+    <string name="keypad_preset_arrows_space">(↑ ← → ↓), tap spacebar</string>
+    <string name="keypad_preset_az_left_right_space">(A Z ← →), tap spacebar</string>
+    <string name="keypad_preset_ijkm_space">(I J K M), tap spacebar</string>
+    <string name="keypad_preset_left_right_space">(← →), tap spacebar</string>
+    <string name="keypad_preset_wadx_space">(W A D X), tap spacebar</string>
+    <string name="keypad_tapdelay_summary">Keypad touch down delay in secs</string>
     <string name="menu_disks">Load image or state file…</string>
     <string name="menu_disks_summary">Insert Disk ][ image or state file</string>
     <string name="menu_settings">Emulator settings…</string>
@@ -203,5 +201,13 @@
     <string name="release_notes_summary">View notes for this release</string>
     <string name="keyboard_duotouch_enabled">Enable dual-touch</string>
     <string name="keyboard_duotouch_enabled_summary">Support two-thumb input</string>
+    <string name="keypad_preset_qaz_left_right_space">(A Z ← →), tap spacebar, Q up</string>
+    <string name="keypad_autorepeat_fast">Keypad Immediate Autorepeat</string>
+    <string name="keypad_autorepeat_fast_summary">Allows immediate auto-repeat (avoids original 534-801 millis delay)</string>
+    <string name="string_frames">Frames</string>
+    <string name="string_millis">Millis</string>
+    <string name="keypad_preset_robotron">Robotron keys…</string>
+    <string name="keypad_preset_loderunner">Lode Runner keys…</string>
+    <string name="keypad_preset_loderunner_toast">Start game with Ctrl-K to activate keyboard</string>
 
 </resources>

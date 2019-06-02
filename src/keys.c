@@ -515,7 +515,3 @@ static __attribute__((constructor)) void __init_keys(void) {
     prefs_registerListener(PREF_DOMAIN_KEYBOARD, &keys_prefsChanged);
 }
 
-#if INTERFACE_TOUCH
-void (*keydriver_keyboardReadCallback)(void) = NULL;
-#endif
-
