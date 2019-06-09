@@ -1,9 +1,15 @@
-Apple2ix (a2ix) 2.0.1-Beta
+Apple2ix (a2ix) 2.0.1-Beta for Android
 
-CHANGES:
+TOUCH KEYBOARD:
 
-- Improved two-thumb touch keyboard support.
-- Improved response of touch keypad joystick.
+- New preference for dual-thumb touch keyboard handling
+- More alt keyboard presets for old-school RPGs
+
+TOUCH KEYPAD JOYSTICK:
+
+- Improved emulation fidelity and auto-repeat response
+- Full left and right side rosette configurations
+- More key pre-sets for popular games (L0de Runner, R0b0tr0n 2084, ...)
 
 GENERAL INFO:
 
