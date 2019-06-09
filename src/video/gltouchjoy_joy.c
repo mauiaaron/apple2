@@ -34,8 +34,6 @@ static struct {
     uint8_t currJoyButtonValue1;
     uint8_t currButtonDisplayChar;
     uint8_t lastButtonDisplayChar;
-
-    bool justTapConfigured;
 } joys = { 0 };
 
 // ----------------------------------------------------------------------------
@@ -163,6 +161,7 @@ static void touchjoy_frameCallback(uint8_t textFlashCounter) {
             break;
         }
 
+        // NOTE: this should unset the button state on TOUCH_UP ...
         _fire_current_buttons();
 
         if (joys.currEventType == TOUCH_UP) {
@@ -187,7 +186,7 @@ static void touchjoy_buttonDown(void) {
     _reset_button_state();
     _signal_tap_delay_event(TOUCH_DOWN, joys.touchDownChar);
 
-    if (joyglobals.tapDelayFrames == 0 || joys.justTapConfigured) {
+    if (joyglobals.tapDelayFrames == 0) {
         // unambiguous intent : no tap delay or only the tap button is configured
         _fire_current_buttons();
     }
@@ -276,12 +275,6 @@ static void touchjoy_prefsChanged(const char *domain) {
     joys.southChar = prefs_parseLongValue(domain, PREF_JOY_SWIPE_SOUTH_CHAR, &lVal, /*base:*/10) ? lVal : TOUCH_BUTTON2;
     joys.westChar  = prefs_parseLongValue(domain, PREF_JOY_SWIPE_WEST_CHAR , &lVal, /*base:*/10) ? lVal : TOUCH_NONE;
     joys.eastChar  = prefs_parseLongValue(domain, PREF_JOY_SWIPE_EAST_CHAR , &lVal, /*base:*/10) ? lVal : TOUCH_NONE;
-
-    joys.justTapConfigured = (joys.touchDownChar != TOUCH_NONE) &&
-                             (joys.northChar     == TOUCH_NONE) &&
-                             (joys.southChar     == TOUCH_NONE) &&
-                             (joys.westChar      == TOUCH_NONE) &&
-                             (joys.eastChar      == TOUCH_NONE);
 }
 
 static uint8_t *touchjoy_axisRosetteChars(void) {
