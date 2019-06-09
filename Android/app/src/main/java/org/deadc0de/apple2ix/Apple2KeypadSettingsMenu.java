@@ -20,15 +20,14 @@ import java.util.ArrayList;
 
 import org.deadc0de.apple2ix.basic.R;
 import org.json.JSONArray;
+import org.json.JSONObject;
 
 public class Apple2KeypadSettingsMenu extends Apple2AbstractMenu {
 
     private final static String TAG = "Apple2KeypadSettingsMenu";
 
-    public final static String PREF_KPAD_AXIS_ROSETTE_CHAR_ARRAY = "kpAxisRosetteChars";
-    public final static String PREF_KPAD_AXIS_ROSETTE_SCAN_ARRAY = "kpAxisRosetteScancodes";
-    public final static String PREF_KPAD_BUTT_ROSETTE_CHAR_ARRAY = "kpButtRosetteChars";
-    public final static String PREF_KPAD_BUTT_ROSETTE_SCAN_ARRAY = "kpButtRosetteScancodes";
+    public final static String PREF_KPAD_AXIS_ROSETTE = "kpAxisRosette";
+    public final static String PREF_KPAD_BUTT_ROSETTE = "kpButtRosette";
 
     public final static int ROSETTE_SIZE = 9;
 
@@ -59,6 +58,22 @@ public class Apple2KeypadSettingsMenu extends Apple2AbstractMenu {
         return true;
     }
 
+    public static class KeyTuple {
+        public long ch;
+        public long scan;
+        public boolean isShifted;
+
+        public KeyTuple(long ch, long scan) {
+            this(ch, scan, false);
+        }
+
+        public KeyTuple(long ch, long scan, boolean isShifted) {
+            this.ch = ch;
+            this.scan = scan;
+            this.isShifted = isShifted;
+        }
+    }
+
     public enum KeypadPreset {
         ARROWS_SPACE {
             @Override
@@ -69,37 +84,35 @@ public class Apple2KeypadSettingsMenu extends Apple2AbstractMenu {
             @Override
             public void apply(Apple2Activity activity) {
                 {
-                    ArrayList<String> chars = new ArrayList<String>();
-                    ArrayList<String> scans = new ArrayList<String>();
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.MOUSETEXT_UP, Apple2KeyboardSettingsMenu.SCANCODE_UP);
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+                    ArrayList<KeyTuple> axisRosette = new ArrayList<KeyTuple>();
+                    axisRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1));
+                    axisRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.MOUSETEXT_UP, Apple2KeyboardSettingsMenu.SCANCODE_UP));
+                    axisRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1));
 
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.MOUSETEXT_LEFT, Apple2KeyboardSettingsMenu.SCANCODE_LEFT);
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.MOUSETEXT_RIGHT, Apple2KeyboardSettingsMenu.SCANCODE_RIGHT);
+                    axisRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.MOUSETEXT_LEFT, Apple2KeyboardSettingsMenu.SCANCODE_LEFT));
+                    axisRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1));
+                    axisRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.MOUSETEXT_RIGHT, Apple2KeyboardSettingsMenu.SCANCODE_RIGHT));
 
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.MOUSETEXT_DOWN, Apple2KeyboardSettingsMenu.SCANCODE_DOWN);
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
-                    saveAxisRosettes(chars, scans);
+                    axisRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1));
+                    axisRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.MOUSETEXT_DOWN, Apple2KeyboardSettingsMenu.SCANCODE_DOWN));
+                    axisRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1));
+                    saveAxisRosette(axisRosette);
                 }
 
                 {
-                    ArrayList<String> chars = new ArrayList<String>();
-                    ArrayList<String> scans = new ArrayList<String>();
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE);
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE);
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE);
+                    ArrayList<KeyTuple> buttRosette = new ArrayList<KeyTuple>();
+                    buttRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE));
+                    buttRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE));
+                    buttRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE));
 
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE);
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_VISUAL_SPACE, Apple2KeyboardSettingsMenu.SCANCODE_SPACE);
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE);
+                    buttRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE));
+                    buttRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_VISUAL_SPACE, Apple2KeyboardSettingsMenu.SCANCODE_SPACE));
+                    buttRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE));
 
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE);
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE);
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE);
-                    saveButtRosettes(chars, scans);
+                    buttRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE));
+                    buttRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE));
+                    buttRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE));
+                    saveButtRosette(buttRosette);
                 }
             }
         },
@@ -112,37 +125,36 @@ public class Apple2KeypadSettingsMenu extends Apple2AbstractMenu {
             @Override
             public void apply(Apple2Activity activity) {
                 {
-                    ArrayList<String> chars = new ArrayList<String>();
-                    ArrayList<String> scans = new ArrayList<String>();
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
-                    addRosetteKey(chars, scans, 'A', Apple2KeyboardSettingsMenu.SCANCODE_A);
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+                    ArrayList<KeyTuple> axisRosette = new ArrayList<KeyTuple>();
 
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.MOUSETEXT_LEFT, Apple2KeyboardSettingsMenu.SCANCODE_LEFT);
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.MOUSETEXT_RIGHT, Apple2KeyboardSettingsMenu.SCANCODE_RIGHT);
+                    axisRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1));
+                    axisRosette.add(new KeyTuple('A', Apple2KeyboardSettingsMenu.SCANCODE_A));
+                    axisRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1));
 
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
-                    addRosetteKey(chars, scans, 'Z', Apple2KeyboardSettingsMenu.SCANCODE_Z);
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
-                    saveAxisRosettes(chars, scans);
+                    axisRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.MOUSETEXT_LEFT, Apple2KeyboardSettingsMenu.SCANCODE_LEFT));
+                    axisRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1));
+                    axisRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.MOUSETEXT_RIGHT, Apple2KeyboardSettingsMenu.SCANCODE_RIGHT));
+
+                    axisRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1));
+                    axisRosette.add(new KeyTuple('Z', Apple2KeyboardSettingsMenu.SCANCODE_Z));
+                    axisRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1));
+                    saveAxisRosette(axisRosette);
                 }
 
                 {
-                    ArrayList<String> chars = new ArrayList<String>();
-                    ArrayList<String> scans = new ArrayList<String>();
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE);
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE);
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE);
+                    ArrayList<KeyTuple> buttRosette = new ArrayList<KeyTuple>();
+                    buttRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE));
+                    buttRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE));
+                    buttRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE));
 
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE);
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_VISUAL_SPACE, Apple2KeyboardSettingsMenu.SCANCODE_SPACE);
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE);
+                    buttRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE));
+                    buttRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_VISUAL_SPACE, Apple2KeyboardSettingsMenu.SCANCODE_SPACE));
+                    buttRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE));
 
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE);
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE);
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE);
-                    saveButtRosettes(chars, scans);
+                    buttRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE));
+                    buttRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE));
+                    buttRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE));
+                    saveButtRosette(buttRosette);
                 }
             }
         },
@@ -155,37 +167,35 @@ public class Apple2KeypadSettingsMenu extends Apple2AbstractMenu {
             @Override
             public void apply(Apple2Activity activity) {
                 {
-                    ArrayList<String> chars = new ArrayList<String>();
-                    ArrayList<String> scans = new ArrayList<String>();
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_LEFT);
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_RIGHT);
+                    ArrayList<KeyTuple> axisRosette = new ArrayList<KeyTuple>();
+                    axisRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_LEFT));
+                    axisRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1));
+                    axisRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_RIGHT));
 
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.MOUSETEXT_LEFT, Apple2KeyboardSettingsMenu.SCANCODE_LEFT);
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.MOUSETEXT_RIGHT, Apple2KeyboardSettingsMenu.SCANCODE_RIGHT);
+                    axisRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.MOUSETEXT_LEFT, Apple2KeyboardSettingsMenu.SCANCODE_LEFT));
+                    axisRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1));
+                    axisRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.MOUSETEXT_RIGHT, Apple2KeyboardSettingsMenu.SCANCODE_RIGHT));
 
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_LEFT);
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_RIGHT);
-                    saveAxisRosettes(chars, scans);
+                    axisRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_LEFT));
+                    axisRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1));
+                    axisRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_RIGHT));
+                    saveAxisRosette(axisRosette);
                 }
 
                 {
-                    ArrayList<String> chars = new ArrayList<String>();
-                    ArrayList<String> scans = new ArrayList<String>();
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE);
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE);
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE);
+                    ArrayList<KeyTuple> buttRosette = new ArrayList<KeyTuple>();
+                    buttRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE));
+                    buttRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE));
+                    buttRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE));
 
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE);
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_VISUAL_SPACE, Apple2KeyboardSettingsMenu.SCANCODE_SPACE);
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE);
+                    buttRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE));
+                    buttRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_VISUAL_SPACE, Apple2KeyboardSettingsMenu.SCANCODE_SPACE));
+                    buttRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE));
 
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE);
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE);
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE);
-                    saveButtRosettes(chars, scans);
+                    buttRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE));
+                    buttRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE));
+                    buttRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE));
+                    saveButtRosette(buttRosette);
                 }
             }
         },
@@ -198,36 +208,35 @@ public class Apple2KeypadSettingsMenu extends Apple2AbstractMenu {
             @Override
             public void apply(Apple2Activity activity) {
                 {
-                    ArrayList<String> chars = new ArrayList<String>();
-                    ArrayList<String> scans = new ArrayList<String>();
+                    ArrayList<KeyTuple> axisRosette = new ArrayList<KeyTuple>();
+                    axisRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1));
+                    axisRosette.add(new KeyTuple('A', Apple2KeyboardSettingsMenu.SCANCODE_A));
+                    axisRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1));
 
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
-                    addRosetteKey(chars, scans, 'A', Apple2KeyboardSettingsMenu.SCANCODE_A);
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.MOUSETEXT_LEFT, Apple2KeyboardSettingsMenu.SCANCODE_LEFT);
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.MOUSETEXT_RIGHT, Apple2KeyboardSettingsMenu.SCANCODE_RIGHT);
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
-                    addRosetteKey(chars, scans, 'Z', Apple2KeyboardSettingsMenu.SCANCODE_Z);
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
-                    saveAxisRosettes(chars, scans);
+                    axisRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.MOUSETEXT_LEFT, Apple2KeyboardSettingsMenu.SCANCODE_LEFT));
+                    axisRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1));
+                    axisRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.MOUSETEXT_RIGHT, Apple2KeyboardSettingsMenu.SCANCODE_RIGHT));
+
+                    axisRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1));
+                    axisRosette.add(new KeyTuple('Z', Apple2KeyboardSettingsMenu.SCANCODE_Z));
+                    axisRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1));
+                    saveAxisRosette(axisRosette);
                 }
 
                 {
-                    ArrayList<String> chars = new ArrayList<String>();
-                    ArrayList<String> scans = new ArrayList<String>();
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_Q);
-                    addRosetteKey(chars, scans, 'Q', Apple2KeyboardSettingsMenu.SCANCODE_Q);
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_Q);
+                    ArrayList<KeyTuple> buttRosette = new ArrayList<KeyTuple>();
+                    buttRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_Q));
+                    buttRosette.add(new KeyTuple('Q', Apple2KeyboardSettingsMenu.SCANCODE_Q));
+                    buttRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_Q));
 
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE);
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_VISUAL_SPACE, Apple2KeyboardSettingsMenu.SCANCODE_SPACE);
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE);
+                    buttRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE));
+                    buttRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_VISUAL_SPACE, Apple2KeyboardSettingsMenu.SCANCODE_SPACE));
+                    buttRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE));
 
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE);
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE);
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE);
-                    saveButtRosettes(chars, scans);
+                    buttRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE));
+                    buttRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE));
+                    buttRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE));
+                    saveButtRosette(buttRosette);
                 }
             }
         },
@@ -240,37 +249,35 @@ public class Apple2KeypadSettingsMenu extends Apple2AbstractMenu {
             @Override
             public void apply(Apple2Activity activity) {
                 {
-                    ArrayList<String> chars = new ArrayList<String>();
-                    ArrayList<String> scans = new ArrayList<String>();
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
-                    addRosetteKey(chars, scans, 'I', Apple2KeyboardSettingsMenu.SCANCODE_I);
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+                    ArrayList<KeyTuple> axisRosette = new ArrayList<KeyTuple>();
+                    axisRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1));
+                    axisRosette.add(new KeyTuple('I', Apple2KeyboardSettingsMenu.SCANCODE_I));
+                    axisRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1));
 
-                    addRosetteKey(chars, scans, 'J', Apple2KeyboardSettingsMenu.SCANCODE_J);
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
-                    addRosetteKey(chars, scans, 'K', Apple2KeyboardSettingsMenu.SCANCODE_K);
+                    axisRosette.add(new KeyTuple('J', Apple2KeyboardSettingsMenu.SCANCODE_J));
+                    axisRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1));
+                    axisRosette.add(new KeyTuple('K', Apple2KeyboardSettingsMenu.SCANCODE_K));
 
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
-                    addRosetteKey(chars, scans, 'M', Apple2KeyboardSettingsMenu.SCANCODE_M);
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
-                    saveAxisRosettes(chars, scans);
+                    axisRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1));
+                    axisRosette.add(new KeyTuple('M', Apple2KeyboardSettingsMenu.SCANCODE_M));
+                    axisRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1));
+                    saveAxisRosette(axisRosette);
                 }
 
                 {
-                    ArrayList<String> chars = new ArrayList<String>();
-                    ArrayList<String> scans = new ArrayList<String>();
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE);
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE);
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE);
+                    ArrayList<KeyTuple> buttRosette = new ArrayList<KeyTuple>();
+                    buttRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE));
+                    buttRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE));
+                    buttRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE));
 
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE);
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_VISUAL_SPACE, Apple2KeyboardSettingsMenu.SCANCODE_SPACE);
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE);
+                    buttRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE));
+                    buttRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_VISUAL_SPACE, Apple2KeyboardSettingsMenu.SCANCODE_SPACE));
+                    buttRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE));
 
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE);
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE);
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE);
-                    saveButtRosettes(chars, scans);
+                    buttRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE));
+                    buttRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE));
+                    buttRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE));
+                    saveButtRosette(buttRosette);
                 }
             }
         },
@@ -283,37 +290,35 @@ public class Apple2KeypadSettingsMenu extends Apple2AbstractMenu {
             @Override
             public void apply(Apple2Activity activity) {
                 {
-                    ArrayList<String> chars = new ArrayList<String>();
-                    ArrayList<String> scans = new ArrayList<String>();
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
-                    addRosetteKey(chars, scans, 'W', Apple2KeyboardSettingsMenu.SCANCODE_W);
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+                    ArrayList<KeyTuple> axisRosette = new ArrayList<KeyTuple>();
+                    axisRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1));
+                    axisRosette.add(new KeyTuple('W', Apple2KeyboardSettingsMenu.SCANCODE_W));
+                    axisRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1));
 
-                    addRosetteKey(chars, scans, 'A', Apple2KeyboardSettingsMenu.SCANCODE_A);
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
-                    addRosetteKey(chars, scans, 'D', Apple2KeyboardSettingsMenu.SCANCODE_D);
+                    axisRosette.add(new KeyTuple('A', Apple2KeyboardSettingsMenu.SCANCODE_A));
+                    axisRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1));
+                    axisRosette.add(new KeyTuple('D', Apple2KeyboardSettingsMenu.SCANCODE_D));
 
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
-                    addRosetteKey(chars, scans, 'X', Apple2KeyboardSettingsMenu.SCANCODE_X);
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
-                    saveAxisRosettes(chars, scans);
+                    axisRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1));
+                    axisRosette.add(new KeyTuple('X', Apple2KeyboardSettingsMenu.SCANCODE_X));
+                    axisRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1));
+                    saveAxisRosette(axisRosette);
                 }
 
                 {
-                    ArrayList<String> chars = new ArrayList<String>();
-                    ArrayList<String> scans = new ArrayList<String>();
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE);
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE);
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE);
+                    ArrayList<KeyTuple> buttRosette = new ArrayList<KeyTuple>();
+                    buttRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE));
+                    buttRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE));
+                    buttRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE));
 
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE);
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_VISUAL_SPACE, Apple2KeyboardSettingsMenu.SCANCODE_SPACE);
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE);
+                    buttRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE));
+                    buttRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_VISUAL_SPACE, Apple2KeyboardSettingsMenu.SCANCODE_SPACE));
+                    buttRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE));
 
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE);
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE);
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE);
-                    saveButtRosettes(chars, scans);
+                    buttRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE));
+                    buttRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE));
+                    buttRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_SPACE));
+                    saveButtRosette(buttRosette);
                 }
             }
         },
@@ -331,37 +336,35 @@ public class Apple2KeypadSettingsMenu extends Apple2AbstractMenu {
             @Override
             public void apply(Apple2Activity activity) {
                 {
-                    ArrayList<String> chars = new ArrayList<String>();
-                    ArrayList<String> scans = new ArrayList<String>();
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
-                    addRosetteKey(chars, scans, 'I', Apple2KeyboardSettingsMenu.SCANCODE_I);
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+                    ArrayList<KeyTuple> axisRosette = new ArrayList<KeyTuple>();
+                    axisRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1));
+                    axisRosette.add(new KeyTuple('I', Apple2KeyboardSettingsMenu.SCANCODE_I));
+                    axisRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1));
 
-                    addRosetteKey(chars, scans, 'J', Apple2KeyboardSettingsMenu.SCANCODE_J);
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_VISUAL_SPACE, Apple2KeyboardSettingsMenu.SCANCODE_SPACE);
-                    addRosetteKey(chars, scans, 'L', Apple2KeyboardSettingsMenu.SCANCODE_L);
+                    axisRosette.add(new KeyTuple('J', Apple2KeyboardSettingsMenu.SCANCODE_J));
+                    axisRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_VISUAL_SPACE, Apple2KeyboardSettingsMenu.SCANCODE_SPACE));
+                    axisRosette.add(new KeyTuple('L', Apple2KeyboardSettingsMenu.SCANCODE_L));
 
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
-                    addRosetteKey(chars, scans, 'K', Apple2KeyboardSettingsMenu.SCANCODE_K);
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
-                    saveAxisRosettes(chars, scans);
+                    axisRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1));
+                    axisRosette.add(new KeyTuple('K', Apple2KeyboardSettingsMenu.SCANCODE_K));
+                    axisRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1));
+                    saveAxisRosette(axisRosette);
                 }
 
                 {
-                    ArrayList<String> chars = new ArrayList<String>();
-                    ArrayList<String> scans = new ArrayList<String>();
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_U);
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_O);
+                    ArrayList<KeyTuple> buttRosette = new ArrayList<KeyTuple>();
+                    buttRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_U));
+                    buttRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1));
+                    buttRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_O));
 
-                    addRosetteKey(chars, scans, 'U', Apple2KeyboardSettingsMenu.SCANCODE_U);
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
-                    addRosetteKey(chars, scans, 'O', Apple2KeyboardSettingsMenu.SCANCODE_O);
+                    buttRosette.add(new KeyTuple('U', Apple2KeyboardSettingsMenu.SCANCODE_U));
+                    buttRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1));
+                    buttRosette.add(new KeyTuple('O', Apple2KeyboardSettingsMenu.SCANCODE_O));
 
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_U);
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_O);
-                    saveButtRosettes(chars, scans);
+                    buttRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_U));
+                    buttRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1));
+                    buttRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_O));
+                    saveButtRosette(buttRosette);
                 }
             }
         },
@@ -374,37 +377,35 @@ public class Apple2KeypadSettingsMenu extends Apple2AbstractMenu {
             @Override
             public void apply(Apple2Activity activity) {
                 {
-                    ArrayList<String> chars = new ArrayList<String>();
-                    ArrayList<String> scans = new ArrayList<String>();
-                    addRosetteKey(chars, scans, 'Q', Apple2KeyboardSettingsMenu.SCANCODE_Q);
-                    addRosetteKey(chars, scans, 'W', Apple2KeyboardSettingsMenu.SCANCODE_W);
-                    addRosetteKey(chars, scans, 'E', Apple2KeyboardSettingsMenu.SCANCODE_E);
+                    ArrayList<KeyTuple> axisRosette = new ArrayList<KeyTuple>();
+                    axisRosette.add(new KeyTuple('Q', Apple2KeyboardSettingsMenu.SCANCODE_Q));
+                    axisRosette.add(new KeyTuple('W', Apple2KeyboardSettingsMenu.SCANCODE_W));
+                    axisRosette.add(new KeyTuple('E', Apple2KeyboardSettingsMenu.SCANCODE_E));
 
-                    addRosetteKey(chars, scans, 'A', Apple2KeyboardSettingsMenu.SCANCODE_A);
-                    addRosetteKey(chars, scans, 'S', Apple2KeyboardSettingsMenu.SCANCODE_S);
-                    addRosetteKey(chars, scans, 'D', Apple2KeyboardSettingsMenu.SCANCODE_D);
+                    axisRosette.add(new KeyTuple('A', Apple2KeyboardSettingsMenu.SCANCODE_A));
+                    axisRosette.add(new KeyTuple('S', Apple2KeyboardSettingsMenu.SCANCODE_S));
+                    axisRosette.add(new KeyTuple('D', Apple2KeyboardSettingsMenu.SCANCODE_D));
 
-                    addRosetteKey(chars, scans, 'Z', Apple2KeyboardSettingsMenu.SCANCODE_Z);
-                    addRosetteKey(chars, scans, 'X', Apple2KeyboardSettingsMenu.SCANCODE_X);
-                    addRosetteKey(chars, scans, 'C', Apple2KeyboardSettingsMenu.SCANCODE_C);
-                    saveAxisRosettes(chars, scans);
+                    axisRosette.add(new KeyTuple('Z', Apple2KeyboardSettingsMenu.SCANCODE_Z));
+                    axisRosette.add(new KeyTuple('X', Apple2KeyboardSettingsMenu.SCANCODE_X));
+                    axisRosette.add(new KeyTuple('C', Apple2KeyboardSettingsMenu.SCANCODE_C));
+                    saveAxisRosette(axisRosette);
                 }
 
                 {
-                    ArrayList<String> chars = new ArrayList<String>();
-                    ArrayList<String> scans = new ArrayList<String>();
-                    addRosetteKey(chars, scans, 'I', Apple2KeyboardSettingsMenu.SCANCODE_I);
-                    addRosetteKey(chars, scans, 'O', Apple2KeyboardSettingsMenu.SCANCODE_O);
-                    addRosetteKey(chars, scans, 'P', Apple2KeyboardSettingsMenu.SCANCODE_P);
+                    ArrayList<KeyTuple> buttRosette = new ArrayList<KeyTuple>();
+                    buttRosette.add(new KeyTuple('I', Apple2KeyboardSettingsMenu.SCANCODE_I));
+                    buttRosette.add(new KeyTuple('O', Apple2KeyboardSettingsMenu.SCANCODE_O));
+                    buttRosette.add(new KeyTuple('P', Apple2KeyboardSettingsMenu.SCANCODE_P));
 
-                    addRosetteKey(chars, scans, 'K', Apple2KeyboardSettingsMenu.SCANCODE_K);
-                    addRosetteKey(chars, scans, 'L', Apple2KeyboardSettingsMenu.SCANCODE_L);
-                    addRosetteKey(chars, scans, ';', Apple2KeyboardSettingsMenu.SCANCODE_SEMICOLON);
+                    buttRosette.add(new KeyTuple('K', Apple2KeyboardSettingsMenu.SCANCODE_K));
+                    buttRosette.add(new KeyTuple('L', Apple2KeyboardSettingsMenu.SCANCODE_L));
+                    buttRosette.add(new KeyTuple(';', Apple2KeyboardSettingsMenu.SCANCODE_SEMICOLON));
 
-                    addRosetteKey(chars, scans, ',', Apple2KeyboardSettingsMenu.SCANCODE_COMMA);
-                    addRosetteKey(chars, scans, '.', Apple2KeyboardSettingsMenu.SCANCODE_PERIOD);
-                    addRosetteKey(chars, scans, '/', Apple2KeyboardSettingsMenu.SCANCODE_SLASH);
-                    saveButtRosettes(chars, scans);
+                    buttRosette.add(new KeyTuple(',', Apple2KeyboardSettingsMenu.SCANCODE_COMMA));
+                    buttRosette.add(new KeyTuple('.', Apple2KeyboardSettingsMenu.SCANCODE_PERIOD));
+                    buttRosette.add(new KeyTuple('/', Apple2KeyboardSettingsMenu.SCANCODE_SLASH));
+                    saveButtRosette(buttRosette);
                 }
             }
         },
@@ -417,66 +418,67 @@ public class Apple2KeypadSettingsMenu extends Apple2AbstractMenu {
             @Override
             public void apply(Apple2Activity activity) {
                 {
-                    ArrayList<String> chars = new ArrayList<String>();
-                    ArrayList<String> scans = new ArrayList<String>();
-                    addRosetteKey(chars, scans, 'Y', Apple2KeyboardSettingsMenu.SCANCODE_Y);
-                    addRosetteKey(chars, scans, 'U', Apple2KeyboardSettingsMenu.SCANCODE_U);
-                    addRosetteKey(chars, scans, 'I', Apple2KeyboardSettingsMenu.SCANCODE_I);
+                    ArrayList<KeyTuple> axisRosette = new ArrayList<KeyTuple>();
+                    axisRosette.add(new KeyTuple('Y', Apple2KeyboardSettingsMenu.SCANCODE_Y));
+                    axisRosette.add(new KeyTuple('U', Apple2KeyboardSettingsMenu.SCANCODE_U));
+                    axisRosette.add(new KeyTuple('I', Apple2KeyboardSettingsMenu.SCANCODE_I));
 
-                    addRosetteKey(chars, scans, 'H', Apple2KeyboardSettingsMenu.SCANCODE_H);
-                    addRosetteKey(chars, scans, 'J', Apple2KeyboardSettingsMenu.SCANCODE_J);
-                    addRosetteKey(chars, scans, 'K', Apple2KeyboardSettingsMenu.SCANCODE_K);
+                    axisRosette.add(new KeyTuple('H', Apple2KeyboardSettingsMenu.SCANCODE_H));
+                    axisRosette.add(new KeyTuple('J', Apple2KeyboardSettingsMenu.SCANCODE_J));
+                    axisRosette.add(new KeyTuple('K', Apple2KeyboardSettingsMenu.SCANCODE_K));
 
-                    addRosetteKey(chars, scans, 'N', Apple2KeyboardSettingsMenu.SCANCODE_N);
-                    addRosetteKey(chars, scans, 'M', Apple2KeyboardSettingsMenu.SCANCODE_M);
-                    addRosetteKey(chars, scans, ',', Apple2KeyboardSettingsMenu.SCANCODE_COMMA);
-                    saveAxisRosettes(chars, scans);
+                    axisRosette.add(new KeyTuple('N', Apple2KeyboardSettingsMenu.SCANCODE_N));
+                    axisRosette.add(new KeyTuple('M', Apple2KeyboardSettingsMenu.SCANCODE_M));
+                    axisRosette.add(new KeyTuple(',', Apple2KeyboardSettingsMenu.SCANCODE_COMMA));
+                    saveAxisRosette(axisRosette);
                 }
 
                 {
-                    ArrayList<String> chars = new ArrayList<String>();
-                    ArrayList<String> scans = new ArrayList<String>();
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_D);
-                    addRosetteKey(chars, scans, 'D', Apple2KeyboardSettingsMenu.SCANCODE_D);
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_F);
+                    ArrayList<KeyTuple> buttRosette = new ArrayList<KeyTuple>();
+                    buttRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_D));
+                    buttRosette.add(new KeyTuple('D', Apple2KeyboardSettingsMenu.SCANCODE_D));
+                    buttRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, Apple2KeyboardSettingsMenu.SCANCODE_F));
 
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_VISUAL_SPACE, Apple2KeyboardSettingsMenu.SCANCODE_SPACE);
-                    addRosetteKey(chars, scans, 'F', Apple2KeyboardSettingsMenu.SCANCODE_F);
+                    buttRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1));
+                    buttRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_VISUAL_SPACE, Apple2KeyboardSettingsMenu.SCANCODE_SPACE));
+                    buttRosette.add(new KeyTuple('F', Apple2KeyboardSettingsMenu.SCANCODE_F));
 
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
-                    addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
-                    saveButtRosettes(chars, scans);
+                    buttRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1));
+                    buttRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1));
+                    buttRosette.add(new KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1));
+                    saveButtRosette(buttRosette);
                 }
             }
         };
 
-        public static void addRosetteKey(ArrayList<String> chars, ArrayList<String> scans, int aChar, int aScan) {
-            chars.add("" + aChar);
-            scans.add("" + aScan);
+        public static void saveAxisRosette(ArrayList<KeyTuple> axisRosette) {
+            if (axisRosette.size() != 9) {
+                throw new RuntimeException("axis rosette is not correct size");
+            }
+            Apple2Preferences.setJSONPref(Apple2Preferences.PREF_DOMAIN_JOYSTICK, PREF_KPAD_AXIS_ROSETTE, toJSONArray(axisRosette));
         }
 
-        public static void saveAxisRosettes(ArrayList<String> chars, ArrayList<String> scans) {
-            if (chars.size() != 9) {
-                throw new RuntimeException("rosette chars is not correct size");
+        public static void saveButtRosette(ArrayList<KeyTuple> buttRosette) {
+            if (buttRosette.size() != 9) {
+                throw new RuntimeException("butt rosette is not correct size");
             }
-            if (scans.size() != 9) {
-                throw new RuntimeException("rosette scans is not correct size");
-            }
-            Apple2Preferences.setJSONPref(Apple2Preferences.PREF_DOMAIN_JOYSTICK, PREF_KPAD_AXIS_ROSETTE_CHAR_ARRAY, new JSONArray(chars));
-            Apple2Preferences.setJSONPref(Apple2Preferences.PREF_DOMAIN_JOYSTICK, PREF_KPAD_AXIS_ROSETTE_SCAN_ARRAY, new JSONArray(scans));
+            Apple2Preferences.setJSONPref(Apple2Preferences.PREF_DOMAIN_JOYSTICK, PREF_KPAD_BUTT_ROSETTE, toJSONArray(buttRosette));
         }
 
-        public static void saveButtRosettes(ArrayList<String> chars, ArrayList<String> scans) {
-            if (chars.size() != 9) {
-                throw new RuntimeException("rosette chars is not correct size");
+        private static JSONArray toJSONArray(ArrayList<KeyTuple> rosette) {
+            JSONArray jsonArray = new JSONArray();
+            try {
+                for (KeyTuple tuple : rosette) {
+                    JSONObject obj = new JSONObject();
+                    obj.put("ch", tuple.ch);
+                    obj.put("scan", tuple.scan);
+                    obj.put("isShifted", tuple.isShifted);
+                    jsonArray.put(obj);
+                }
+            } catch (Exception e) {
+                throw new RuntimeException(e);
             }
-            if (scans.size() != 9) {
-                throw new RuntimeException("rosette scans is not correct size");
-            }
-            Apple2Preferences.setJSONPref(Apple2Preferences.PREF_DOMAIN_JOYSTICK, PREF_KPAD_BUTT_ROSETTE_CHAR_ARRAY, new JSONArray(chars));
-            Apple2Preferences.setJSONPref(Apple2Preferences.PREF_DOMAIN_JOYSTICK, PREF_KPAD_BUTT_ROSETTE_SCAN_ARRAY, new JSONArray(scans));
+            return jsonArray;
         }
 
         public abstract String getTitle(Apple2Activity activity);

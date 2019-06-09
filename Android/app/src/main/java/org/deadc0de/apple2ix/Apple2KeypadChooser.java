@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import org.deadc0de.apple2ix.basic.R;
 import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 
 public class Apple2KeypadChooser implements Apple2MenuView {
 
@@ -50,6 +51,36 @@ public class Apple2KeypadChooser implements Apple2MenuView {
         return true;
     }
 
+    public static boolean isShiftedKey(char ascii) {
+        switch (ascii) {
+            case '~':
+            case '!':
+            case '@':
+            case '#':
+            case '$':
+            case '%':
+            case '^':
+            case '&':
+            case '*':
+            case '(':
+            case ')':
+            case '_':
+            case '+':
+            case '{':
+            case '}':
+            case '|':
+            case ':':
+            case '"':
+            case '<':
+            case '>':
+            case '?':
+                return true;
+
+            default:
+                return false;
+        }
+    }
+
     public void onKeyTapCalibrationEvent(char ascii, int scancode) {
         if (ascii == Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION) {
             scancode = -1;
@@ -63,7 +94,8 @@ public class Apple2KeypadChooser implements Apple2MenuView {
         if (ascii == ' ') {
             ascii = Apple2KeyboardSettingsMenu.ICONTEXT_VISUAL_SPACE;
         }
-        mChooserState.setKey(mActivity, ascii, scancode);
+        Apple2KeypadSettingsMenu.KeyTuple tuple = new Apple2KeypadSettingsMenu.KeyTuple((long) ascii, (long) scancode, isShiftedKey(ascii));
+        mChooserState.setKey(mActivity, tuple);
         Apple2Preferences.setJSONPref(Apple2SettingsMenu.SETTINGS.CURRENT_INPUT, Apple2SettingsMenu.TouchDeviceVariant.JOYSTICK_KEYPAD.ordinal());
         Apple2Preferences.sync(mActivity, Apple2Preferences.PREF_DOMAIN_TOUCHSCREEN);
 
@@ -313,23 +345,19 @@ public class Apple2KeypadChooser implements Apple2MenuView {
 
         public static final int size = STATE_MACHINE.values().length;
 
-        private static ArrayList<String> axisChars = new ArrayList<String>();
-        private static ArrayList<String> axisScans = new ArrayList<String>();
-        private static ArrayList<String> buttChars = new ArrayList<String>();
-        private static ArrayList<String> buttScans = new ArrayList<String>();
+        private static ArrayList<Apple2KeypadSettingsMenu.KeyTuple> axisRosette = new ArrayList<Apple2KeypadSettingsMenu.KeyTuple>();
+        private static ArrayList<Apple2KeypadSettingsMenu.KeyTuple> buttRosette = new ArrayList<Apple2KeypadSettingsMenu.KeyTuple>();
 
-        public void setKey(Apple2Activity activity, int ascii, int scancode) {
+        public void setKey(Apple2Activity activity, Apple2KeypadSettingsMenu.KeyTuple tuple) {
             int ord = ordinal();
             int buttbegin = CHOOSE_BUTT_NORTHWEST.ordinal();
             if (ord < buttbegin) {
-                axisChars.set(ord, "" + ascii);
-                axisScans.set(ord, "" + scancode);
-                Apple2KeypadSettingsMenu.KeypadPreset.saveAxisRosettes(axisChars, axisScans);
+                axisRosette.set(ord, tuple);
+                Apple2KeypadSettingsMenu.KeypadPreset.saveAxisRosette(axisRosette);
             } else {
                 ord -= buttbegin;
-                buttChars.set(ord, "" + ascii);
-                buttScans.set(ord, "" + scancode);
-                Apple2KeypadSettingsMenu.KeypadPreset.saveButtRosettes(buttChars, buttScans);
+                buttRosette.set(ord, tuple);
+                Apple2KeypadSettingsMenu.KeypadPreset.saveButtRosette(buttRosette);
             }
             Apple2Preferences.sync(activity, Apple2Preferences.PREF_DOMAIN_JOYSTICK);
         }
@@ -337,47 +365,44 @@ public class Apple2KeypadChooser implements Apple2MenuView {
         public abstract String getKeyName(Apple2Activity activity);
 
         public void start() {
-            setupCharsAndScans(axisChars, axisScans, Apple2KeypadSettingsMenu.PREF_KPAD_AXIS_ROSETTE_CHAR_ARRAY, Apple2KeypadSettingsMenu.PREF_KPAD_AXIS_ROSETTE_SCAN_ARRAY);
+            setupCharsAndScans(axisRosette, Apple2KeypadSettingsMenu.PREF_KPAD_AXIS_ROSETTE);
 
-            setupCharsAndScans(buttChars, buttScans, Apple2KeypadSettingsMenu.PREF_KPAD_BUTT_ROSETTE_CHAR_ARRAY, Apple2KeypadSettingsMenu.PREF_KPAD_BUTT_ROSETTE_SCAN_ARRAY);
+            setupCharsAndScans(buttRosette, Apple2KeypadSettingsMenu.PREF_KPAD_BUTT_ROSETTE);
         }
 
-        private void setupCharsAndScans(final ArrayList<String> chars, final ArrayList<String> scans, final String charArrayPref, final String scanArrayPref) {
-            chars.clear();
-            scans.clear();
-
-            JSONArray jsonChars = (JSONArray) Apple2Preferences.getJSONPref(Apple2Preferences.PREF_DOMAIN_JOYSTICK, charArrayPref, null);
-            JSONArray jsonScans = (JSONArray) Apple2Preferences.getJSONPref(Apple2Preferences.PREF_DOMAIN_JOYSTICK, scanArrayPref, null);
-
-            if (jsonChars == null || jsonScans == null) {
-                jsonChars = new JSONArray();
-                jsonScans = new JSONArray();
-                for (int i = 0; i < Apple2KeypadSettingsMenu.ROSETTE_SIZE; i++) {
-                    jsonChars.put(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION);
-                    jsonScans.put(-1);
-                }
-            }
-
-            int len = jsonChars.length();
-            if (len != Apple2KeypadSettingsMenu.ROSETTE_SIZE) {
-                throw new RuntimeException("jsonChars not expected length");
-            }
-            if (len != jsonScans.length()) {
-                throw new RuntimeException("jsonScans not expected length");
-            }
+        private void setupCharsAndScans(final ArrayList<Apple2KeypadSettingsMenu.KeyTuple> rosette, final String pref) {
+            rosette.clear();
 
             try {
+                JSONArray jsonArray = (JSONArray) Apple2Preferences.getJSONPref(Apple2Preferences.PREF_DOMAIN_JOYSTICK, pref, null);
+
+                if (jsonArray == null) {
+                    jsonArray = new JSONArray();
+                    for (int i = 0; i < Apple2KeypadSettingsMenu.ROSETTE_SIZE; i++) {
+                        JSONObject map = new JSONObject();
+                        map.put("ch", (long) Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION);
+                        map.put("scan", -1L);
+                        map.put("isShifted", false);
+                    }
+                }
+
+                int len = jsonArray.length();
+                if (len != Apple2KeypadSettingsMenu.ROSETTE_SIZE) {
+                    throw new RuntimeException("rosette not expected length");
+                }
+
                 for (int i = 0; i < len; i++) {
-                    Apple2KeypadSettingsMenu.KeypadPreset.addRosetteKey(chars, scans, jsonChars.getInt(i), jsonScans.getInt(i));
+                    JSONObject obj = jsonArray.getJSONObject(i);
+                    long ch = obj.getLong("ch");
+                    long scan = obj.getLong("scan");
+                    boolean isShifted = obj.getBoolean("isShifted");
+                    rosette.add(new Apple2KeypadSettingsMenu.KeyTuple(ch, scan, isShifted));
                 }
             } catch (JSONException e) {
                 e.printStackTrace();
             }
 
-            if (chars.size() != Apple2KeypadSettingsMenu.ROSETTE_SIZE) {
-                throw new RuntimeException("rosette chars is not correct size");
-            }
-            if (scans.size() != Apple2KeypadSettingsMenu.ROSETTE_SIZE) {
+            if (rosette.size() != Apple2KeypadSettingsMenu.ROSETTE_SIZE) {
                 throw new RuntimeException("rosette chars is not correct size");
             }
         }

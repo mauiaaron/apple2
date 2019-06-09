@@ -51,12 +51,14 @@ typedef struct subvariant_s {
     unsigned long frameCount;
     interface_touch_event_t currEventType;
     unsigned int keyPressCount;
-    int scancodes[MAX_REPEATING];
+    long scancodes[MAX_REPEATING];
+    bool isShifted[MAX_REPEATING];
     uint8_t strobeShifter;
 
     // semi-static configured rosette
     long rosetteScans[ROSETTE_ROWS * ROSETTE_COLS];
     uint8_t rosetteChars[ROSETTE_ROWS * ROSETTE_COLS];
+    bool rosetteShift[ROSETTE_ROWS * ROSETTE_COLS];
 } subvariant_s;
 
 static struct {
@@ -83,6 +85,8 @@ static inline void _reset_subvariant_state(subvariant_s *subvariant) {
     subvariant->autoPressIdx = REPEAT_IDX_A;
     subvariant->scancodes[REPEAT_IDX_A] = -1;
     subvariant->scancodes[REPEAT_IDX_B] = -1;
+    subvariant->isShifted[REPEAT_IDX_A] = false;
+    subvariant->isShifted[REPEAT_IDX_B] = false;
     subvariant->currEventType = TOUCH_UP;
 }
 
@@ -92,6 +96,7 @@ static inline void _advance_press_index(keypad_press_t *idx) {
 
 static inline void _press_key(subvariant_s *subvariant, keypad_press_t pressIdx) {
     int scancode = subvariant->scancodes[pressIdx];
+    bool isShifted = subvariant->isShifted[pressIdx];
 
 #if DEBUG_TOUCH_JOY
     {
@@ -102,8 +107,16 @@ static inline void _press_key(subvariant_s *subvariant, keypad_press_t pressIdx)
     }
 #endif
 
+    if (isShifted) {
+        keys_handleInput(SCODE_L_SHIFT, /*is_pressed:*/true, /*is_ascii:*/false);
+    }
+
     keys_handleInput(scancode, /*is_pressed:*/true, /*is_ascii:*/false);
     keys_handleInput(scancode, /*is_pressed:*/false, /*is_ascii:*/false);
+
+    if (isShifted) {
+        keys_handleInput(SCODE_L_SHIFT, /*is_pressed:*/false, /*is_ascii:*/false);
+    }
 
     _advance_press_index(&subvariant->autoPressIdx);
 
@@ -232,6 +245,8 @@ static void _subvariant_touchDown(subvariant_s *subvariant) {
 
     subvariant->scancodes[REPEAT_IDX_A] = subvariant->rosetteScans[ROSETTE_CENTER];
     subvariant->scancodes[REPEAT_IDX_B] = -1;
+    subvariant->isShifted[REPEAT_IDX_A] = subvariant->rosetteShift[ROSETTE_CENTER];
+    subvariant->isShifted[REPEAT_IDX_B] = false;
 
     if (joyglobals.tapDelayFrames == 0) {
         // unambiguous intent : no tap delay
@@ -258,6 +273,8 @@ static void _subvariant_touchMove(subvariant_s *subvariant, int dx, int dy, bool
                 subvariant->currentOctant = ORIGIN;
                 subvariant->scancodes[REPEAT_IDX_A] = subvariant->rosetteScans[ROSETTE_CENTER];
                 subvariant->scancodes[REPEAT_IDX_B] = -1;
+                subvariant->isShifted[REPEAT_IDX_A] = subvariant->rosetteShift[ROSETTE_CENTER];
+                subvariant->isShifted[REPEAT_IDX_B] = -1;
             }
             break;
         }
@@ -290,15 +307,21 @@ static void _subvariant_touchMove(subvariant_s *subvariant, int dx, int dy, bool
 
         long scanA = -1;
         long scanB = -1;
+        bool shifA = false;
+        bool shifB = false;
+
         switch (subvariant->currentOctant) {
             case OCTANT_NORTHWEST:
                 if (subvariant->rosetteScans[ROSETTE_NORTHWEST] >= 0) {
                     TOUCH_JOY_LOG("\t\tXY : NORTHWEST, (%ld)", subvariant->rosetteScans[ROSETTE_WEST]);
                     scanA = subvariant->rosetteScans[ROSETTE_NORTHWEST];
+                    shifA = subvariant->rosetteShift[ROSETTE_NORTHWEST];
                 } else {
                     TOUCH_JOY_LOG("\t\tXY : WEST (%ld) & NORTH (%ld)", subvariant->rosetteScans[ROSETTE_WEST], subvariant->rosetteScans[ROSETTE_NORTH]);
                     scanA = subvariant->rosetteScans[ROSETTE_WEST];
+                    shifA = subvariant->rosetteShift[ROSETTE_WEST];
                     scanB = subvariant->rosetteScans[ROSETTE_NORTH];
+                    shifB = subvariant->rosetteShift[ROSETTE_NORTH];
                 }
                 break;
 
@@ -306,12 +329,15 @@ static void _subvariant_touchMove(subvariant_s *subvariant, int dx, int dy, bool
                 if (subvariant->rosetteScans[ROSETTE_NORTH] >= 0) {
                     TOUCH_JOY_LOG("\t\tY : NORTH (%ld)", subvariant->rosetteScans[ROSETTE_NORTH]);
                     scanA = subvariant->rosetteScans[ROSETTE_NORTH];
+                    shifA = subvariant->rosetteShift[ROSETTE_NORTH];
                 } else if (radians < RADIANS_NORTH) {
                     TOUCH_JOY_LOG("\t\tXY : NORTHWEST (%ld)", subvariant->rosetteScans[ROSETTE_NORTHWEST]);
                     scanA = subvariant->rosetteScans[ROSETTE_NORTHWEST];
+                    shifA = subvariant->rosetteShift[ROSETTE_NORTHWEST];
                 } else {
                     TOUCH_JOY_LOG("\t\tXY : NORTHEAST (%ld)", subvariant->rosetteScans[ROSETTE_NORTHEAST]);
                     scanA = subvariant->rosetteScans[ROSETTE_NORTHEAST];
+                    shifA = subvariant->rosetteShift[ROSETTE_NORTHEAST];
                 }
                 break;
 
@@ -319,10 +345,13 @@ static void _subvariant_touchMove(subvariant_s *subvariant, int dx, int dy, bool
                 if (subvariant->rosetteScans[ROSETTE_NORTHEAST] >= 0) {
                     TOUCH_JOY_LOG("\t\tXY : NORTHEAST (%ld)", subvariant->rosetteScans[ROSETTE_NORTHEAST]);
                     scanA = subvariant->rosetteScans[ROSETTE_NORTHEAST];
+                    shifA = subvariant->rosetteShift[ROSETTE_NORTHEAST];
                 } else {
                     TOUCH_JOY_LOG("\t\tXY : EAST (%ld) & NORTH (%ld)", subvariant->rosetteScans[ROSETTE_EAST], subvariant->rosetteScans[ROSETTE_NORTH]);
                     scanA = subvariant->rosetteScans[ROSETTE_EAST];
+                    shifA = subvariant->rosetteShift[ROSETTE_EAST];
                     scanB = subvariant->rosetteScans[ROSETTE_NORTH];
+                    shifB = subvariant->rosetteShift[ROSETTE_NORTH];
                 }
                 break;
 
@@ -330,12 +359,15 @@ static void _subvariant_touchMove(subvariant_s *subvariant, int dx, int dy, bool
                 if (subvariant->rosetteScans[ROSETTE_WEST] >= 0) {
                     TOUCH_JOY_LOG("\t\tY : WEST (%ld)", subvariant->rosetteScans[ROSETTE_WEST]);
                     scanA = subvariant->rosetteScans[ROSETTE_WEST];
+                    shifA = subvariant->rosetteShift[ROSETTE_WEST];
                 } else if (radians > RADIANS_WEST_NEG && radians < 0) {
                     TOUCH_JOY_LOG("\t\tXY : NORTHWEST (%ld)", subvariant->rosetteScans[ROSETTE_NORTHWEST]);
                     scanA = subvariant->rosetteScans[ROSETTE_NORTHWEST];
+                    shifA = subvariant->rosetteShift[ROSETTE_NORTHWEST];
                 } else {
                     TOUCH_JOY_LOG("\t\tXY : SOUTHWEST (%ld)", subvariant->rosetteScans[ROSETTE_SOUTHWEST]);
                     scanA = subvariant->rosetteScans[ROSETTE_SOUTHWEST];
+                    shifA = subvariant->rosetteShift[ROSETTE_SOUTHWEST];
                 }
                 break;
 
@@ -343,12 +375,15 @@ static void _subvariant_touchMove(subvariant_s *subvariant, int dx, int dy, bool
                 if (subvariant->rosetteScans[ROSETTE_EAST] >= 0) {
                     TOUCH_JOY_LOG("\t\tY : EAST (%ld)", subvariant->rosetteScans[ROSETTE_EAST]);
                     scanA = subvariant->rosetteScans[ROSETTE_EAST];
+                    shifA = subvariant->rosetteShift[ROSETTE_EAST];
                 } else if (radians < RADIANS_EAST) {
                     TOUCH_JOY_LOG("\t\tXY : NORTHEAST (%ld)", subvariant->rosetteScans[ROSETTE_NORTHEAST]);
                     scanA = subvariant->rosetteScans[ROSETTE_NORTHEAST];
+                    shifA = subvariant->rosetteShift[ROSETTE_NORTHEAST];
                 } else {
                     TOUCH_JOY_LOG("\t\tXY : SOUTHEAST (%ld)", subvariant->rosetteScans[ROSETTE_SOUTHEAST]);
                     scanA = subvariant->rosetteScans[ROSETTE_SOUTHEAST];
+                    shifA = subvariant->rosetteShift[ROSETTE_SOUTHEAST];
                 }
                 break;
 
@@ -356,10 +391,13 @@ static void _subvariant_touchMove(subvariant_s *subvariant, int dx, int dy, bool
                 if (subvariant->rosetteScans[ROSETTE_SOUTHWEST] >= 0) {
                     TOUCH_JOY_LOG("\t\tXY : SOUTHWEST (%ld)", subvariant->rosetteScans[ROSETTE_SOUTHWEST]);
                     scanA = subvariant->rosetteScans[ROSETTE_SOUTHWEST];
+                    shifA = subvariant->rosetteShift[ROSETTE_SOUTHWEST];
                 } else {
                     TOUCH_JOY_LOG("\t\tXY : WEST (%ld) & SOUTH (%ld)", subvariant->rosetteScans[ROSETTE_WEST], subvariant->rosetteScans[ROSETTE_SOUTH]);
                     scanA = subvariant->rosetteScans[ROSETTE_WEST];
+                    shifA = subvariant->rosetteShift[ROSETTE_WEST];
                     scanB = subvariant->rosetteScans[ROSETTE_SOUTH];
+                    shifB = subvariant->rosetteShift[ROSETTE_SOUTH];
                 }
                 break;
 
@@ -367,12 +405,15 @@ static void _subvariant_touchMove(subvariant_s *subvariant, int dx, int dy, bool
                 if (subvariant->rosetteScans[ROSETTE_SOUTH] >= 0) {
                     TOUCH_JOY_LOG("\t\tY : SOUTH (%ld)", subvariant->rosetteScans[ROSETTE_SOUTH]);
                     scanA = subvariant->rosetteScans[ROSETTE_SOUTH];
+                    shifA = subvariant->rosetteShift[ROSETTE_SOUTH];
                 } else if (radians > RADIANS_SOUTH) {
                     TOUCH_JOY_LOG("\t\tXY : SOUTHWEST (%ld)", subvariant->rosetteScans[ROSETTE_SOUTHWEST]);
                     scanA = subvariant->rosetteScans[ROSETTE_SOUTHWEST];
+                    shifA = subvariant->rosetteShift[ROSETTE_SOUTHWEST];
                 } else {
                     TOUCH_JOY_LOG("\t\tXY : SOUTHEAST (%ld)", subvariant->rosetteScans[ROSETTE_SOUTHEAST]);
                     scanA = subvariant->rosetteScans[ROSETTE_SOUTHEAST];
+                    shifA = subvariant->rosetteShift[ROSETTE_SOUTHEAST];
                 }
                 break;
 
@@ -380,10 +421,13 @@ static void _subvariant_touchMove(subvariant_s *subvariant, int dx, int dy, bool
                 if (subvariant->rosetteScans[ROSETTE_SOUTHEAST] >= 0) {
                     TOUCH_JOY_LOG("\t\tXY : SOUTHEAST (%ld)", subvariant->rosetteScans[ROSETTE_SOUTHEAST]);
                     scanA = subvariant->rosetteScans[ROSETTE_SOUTHEAST];
+                    shifA = subvariant->rosetteShift[ROSETTE_SOUTHEAST];
                 } else {
                     TOUCH_JOY_LOG("\t\tXY : EAST (%ld) & SOUTH (%ld)", subvariant->rosetteScans[ROSETTE_EAST], subvariant->rosetteScans[ROSETTE_SOUTH]);
                     scanA = subvariant->rosetteScans[ROSETTE_EAST];
+                    shifA = subvariant->rosetteShift[ROSETTE_EAST];
                     scanB = subvariant->rosetteScans[ROSETTE_SOUTH];
+                    shifB = subvariant->rosetteShift[ROSETTE_SOUTH];
                 }
                 break;
 
@@ -398,6 +442,8 @@ static void _subvariant_touchMove(subvariant_s *subvariant, int dx, int dy, bool
         }
         subvariant->scancodes[REPEAT_IDX_A] = scanA;
         subvariant->scancodes[REPEAT_IDX_B] = scanB;
+        subvariant->isShifted[REPEAT_IDX_A] = shifA;
+        subvariant->isShifted[REPEAT_IDX_B] = shifB;
     } while (0);
 
     if (subvariant->currentOctant != lastOctant) {
@@ -518,14 +564,15 @@ static void touchkpad_buttonUp(int dx, int dy) {
 // ----------------------------------------------------------------------------
 // prefs handling
 
-static void _subvariant_prefsChanged(subvariant_s *subvariant, const char *domain, const char *prefCharsKey, const char *prefScansKey) {
+static void _subvariant_prefsChanged(subvariant_s *subvariant, const char *domain, const char *prefKey) {
     long lVal = 0;
+    bool bVal = false;
 
-    // ASCII : "kp{Axis,Butt}RosetteChars" : [ 121, 127, 130,  100, 101, 121,  132, 120, 99 ]
+    // ASCII : "kp{Axis,Butt}Rosette" : [ { "scan" : 16, "isShifted" : false, "ch" : 81 }, ... ]
     JSON_ref array = NULL;
     do {
-        if (!prefs_copyJSONValue(domain, prefCharsKey, &array)) {
-            LOG("could not parse touch keypad rosette");
+        if (!prefs_copyJSONValue(domain, prefKey, &array)) {
+            LOG("could not parse touch keypad rosette for domain %s", domain);
             break;
         }
         long count = 0;
@@ -538,29 +585,28 @@ static void _subvariant_prefsChanged(subvariant_s *subvariant, const char *domai
             break;
         }
         for (unsigned long i=0; i<ROSETTE_COUNT; i++) {
-            subvariant->rosetteChars[i] = json_arrayParseLongValueAtIndex(array, i, &lVal, /*base:*/10) ? (uint8_t)lVal : ' ';
-        }
-    } while (0);
+            JSON_ref map = NULL;
 
-    json_destroy(&array);
+            if (json_arrayCopyJSONAtIndex(array, i, &map) <= 0) {
+                LOG("could not parse touch keypad rosette data at index %lu!", i);
+                break;
+            }
 
-    // long : "kp{Axis,Butt}RosetteScans" : [ -1, 100, -1,  99, -1, 96,  -1, 101, -1 ]
-    do {
-        if (!prefs_copyJSONValue(domain, prefScansKey, &array)) {
-            LOG("could not parse touch keypad rosette");
-            break;
-        }
-        long count = 0;
-        if (!json_arrayCount(array, &count)) {
-            LOG("rosette is not an array!");
-            break;
-        }
-        if (count != ROSETTE_COUNT) {
-            LOG("rosette count unexpected : %lu!", count);
-            break;
-        }
-        for (unsigned long i=0; i<ROSETTE_COUNT; i++) {
-            subvariant->rosetteScans[i] = json_arrayParseLongValueAtIndex(array, i, &lVal, /*base:*/10) ? lVal : -1;
+            assert(map != NULL);
+            if (!json_isMap(map)) {
+                LOG("touch keypad rosette at index %lu is not a map!", i);
+                break;
+            }
+
+            subvariant->rosetteShift[i] = json_mapParseBoolValue(map, "isShifted", &bVal) ? bVal : false;
+
+            subvariant->rosetteChars[i] = json_mapParseLongValue(map, "ch", &lVal, /*base:*/10) ? (uint8_t)lVal : ' ';
+            subvariant->rosetteScans[i] = json_mapParseLongValue(map, "scan", &lVal, /*base:*/10) ? lVal : -1;
+            if (subvariant->rosetteScans[i] > 0x7f) {
+                subvariant->rosetteScans[i] = -1;
+            }
+
+            json_destroy(&map);
         }
     } while (0);
 
@@ -576,7 +622,8 @@ static void touchkpad_prefsChanged(const char *domain) {
     kpad.autostrobeDelay = !(prefs_parseBoolValue(domain, PREF_KPAD_FAST_AUTOREPEAT, &bVal) ? bVal : true);
 
     do {
-        const int rosetteChars[ROSETTE_ROWS*ROSETTE_COLS] = {
+        const bool rosetteShift[ROSETTE_ROWS*ROSETTE_COLS] = { false };
+        const uint8_t rosetteChars[ROSETTE_ROWS*ROSETTE_COLS] = {
             ICONTEXT_NONACTIONABLE,           'I',          ICONTEXT_NONACTIONABLE,
             'J',                    ICONTEXT_NONACTIONABLE,          'K',
             ICONTEXT_NONACTIONABLE,           'M',          ICONTEXT_NONACTIONABLE,
@@ -587,30 +634,33 @@ static void touchkpad_prefsChanged(const char *domain) {
                      -1,             keys_ascii2Scancode('M'),          -1,
         };
         for (unsigned long i=0; i<ROSETTE_COUNT; i++) {
+            kpad.axis.rosetteShift[i] = rosetteShift[i];
             kpad.axis.rosetteChars[i] = rosetteChars[i];
             kpad.axis.rosetteScans[i] = rosetteScans[i];
         }
 
-        _subvariant_prefsChanged(&kpad.axis, domain, PREF_KPAD_AXIS_ROSETTE_CHAR_ARRAY, PREF_KPAD_AXIS_ROSETTE_SCAN_ARRAY);
+        _subvariant_prefsChanged(&kpad.axis, domain, PREF_KPAD_AXIS_ROSETTE);
     } while (0);
 
     do {
-        const int rosetteChars[ROSETTE_ROWS*ROSETTE_COLS] = {
+        const bool rosetteShift[ROSETTE_ROWS*ROSETTE_COLS] = { false };
+        const uint8_t rosetteChars[ROSETTE_ROWS*ROSETTE_COLS] = {
             ICONTEXT_NONACTIONABLE, ICONTEXT_NONACTIONABLE, ICONTEXT_NONACTIONABLE,
             ICONTEXT_NONACTIONABLE, ICONTEXT_SPACE_VISUAL , ICONTEXT_NONACTIONABLE,
             ICONTEXT_NONACTIONABLE, ICONTEXT_NONACTIONABLE, ICONTEXT_NONACTIONABLE,
         };
         const int rosetteScans[ROSETTE_ROWS*ROSETTE_COLS] = {
-            -1,             -1          , -1,
-            -1, keys_ascii2Scancode(' '), -1,
-            -1,             -1          , -1,
+            keys_ascii2Scancode(' '), keys_ascii2Scancode(' '), keys_ascii2Scancode(' '),
+            keys_ascii2Scancode(' '), keys_ascii2Scancode(' '), keys_ascii2Scancode(' '),
+            keys_ascii2Scancode(' '), keys_ascii2Scancode(' '), keys_ascii2Scancode(' '),
         };
         for (unsigned long i=0; i<ROSETTE_COUNT; i++) {
+            kpad.butt.rosetteShift[i] = rosetteShift[i];
             kpad.butt.rosetteChars[i] = rosetteChars[i];
             kpad.butt.rosetteScans[i] = rosetteScans[i];
         }
 
-        _subvariant_prefsChanged(&kpad.butt, domain, PREF_KPAD_BUTT_ROSETTE_CHAR_ARRAY, PREF_KPAD_BUTT_ROSETTE_SCAN_ARRAY);
+        _subvariant_prefsChanged(&kpad.butt, domain, PREF_KPAD_BUTT_ROSETTE);
     } while (0);
 }
 
@@ -657,7 +707,9 @@ static void _init_gltouchjoy_kpad(void) {
 
     for (unsigned int i=0; i<MAX_REPEATING; i++) {
         kpad.axis.scancodes[i] = -1;
+        kpad.axis.isShifted[i] = false;
         kpad.butt.scancodes[i] = -1;
+        kpad.butt.isShifted[i] = false;
     }
 
     kpadVariant.variant = &touchkpad_variant;

@@ -34,7 +34,7 @@ int json_createFromFD(int fd, INOUT JSON_ref *jsonRef);
 // map functions
 
 // returns true if JSON_ref is map collection
-bool json_isMap(const JSON_ref array);
+bool json_isMap(const JSON_ref map);
 
 // get JSON_ref value for key in map JSON, returns error or tokenCount and allocated JSON_ref
 int json_mapCopyJSON(const JSON_ref map, const char *key, INOUT JSON_ref *val);

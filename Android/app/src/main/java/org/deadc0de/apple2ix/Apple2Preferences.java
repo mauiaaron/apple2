@@ -230,34 +230,87 @@ public class Apple2Preferences {
                 setJSONPref(Apple2JoystickSettingsMenu.JoystickAdvanced.SETTINGS.JOYSTICK_TAPDELAY, framesDelay);
             }
 
+            // migrate axis rosette arrays to new format ...
+            try {
+                ArrayList<Apple2KeypadSettingsMenu.KeyTuple> axisRosette = new ArrayList<Apple2KeypadSettingsMenu.KeyTuple>();
+                axisRosette.add(new Apple2KeypadSettingsMenu.KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1));
+                axisRosette.add(new Apple2KeypadSettingsMenu.KeyTuple('I', Apple2KeyboardSettingsMenu.SCANCODE_I));
+                axisRosette.add(new Apple2KeypadSettingsMenu.KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1));
+
+                axisRosette.add(new Apple2KeypadSettingsMenu.KeyTuple('J', Apple2KeyboardSettingsMenu.SCANCODE_J));
+                axisRosette.add(new Apple2KeypadSettingsMenu.KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1));
+                axisRosette.add(new Apple2KeypadSettingsMenu.KeyTuple('K', Apple2KeyboardSettingsMenu.SCANCODE_K));
+
+                axisRosette.add(new Apple2KeypadSettingsMenu.KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1));
+                axisRosette.add(new Apple2KeypadSettingsMenu.KeyTuple('M', Apple2KeyboardSettingsMenu.SCANCODE_M));
+                axisRosette.add(new Apple2KeypadSettingsMenu.KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1));
+
+                JSONArray jsonArray;
+
+                jsonArray = (JSONArray) getJSONPref(PREF_DOMAIN_JOYSTICK, "kpAxisRosetteChars", null);
+                if (jsonArray == null || jsonArray.length() != Apple2KeypadSettingsMenu.ROSETTE_SIZE) {
+                    Log.e(TAG, "Oops, kpAxisRosetteChars is not expected length");
+                } else {
+                    for (int i = 0; i < Apple2KeypadSettingsMenu.ROSETTE_SIZE; i++) {
+                        Apple2KeypadSettingsMenu.KeyTuple tuple = axisRosette.get(i);
+                        tuple.ch = jsonArray.getLong(i);
+                    }
+                }
+
+                jsonArray = (JSONArray) getJSONPref(PREF_DOMAIN_JOYSTICK, "kpAxisRosetteScancodes", null);
+                if (jsonArray == null || jsonArray.length() != Apple2KeypadSettingsMenu.ROSETTE_SIZE) {
+                    Log.e(TAG, "Oops, kpAxisRosetteScancodes is not expected length");
+                } else {
+                    for (int i = 0; i < Apple2KeypadSettingsMenu.ROSETTE_SIZE; i++) {
+                        Apple2KeypadSettingsMenu.KeyTuple tuple = axisRosette.get(i);
+                        tuple.scan = jsonArray.getLong(i);
+                    }
+                }
+
+                Apple2KeypadSettingsMenu.KeypadPreset.saveAxisRosette(axisRosette);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
             // migrate individual keypad button actions to new button rosette actions ...
             {
-                ArrayList<String> chars = new ArrayList<String>();
-                ArrayList<String> scans = new ArrayList<String>();
+                ArrayList<Apple2KeypadSettingsMenu.KeyTuple> buttRosette = new ArrayList<Apple2KeypadSettingsMenu.KeyTuple>();
 
                 int northChar = getIntJSONPref(PREF_DOMAIN_JOYSTICK, "kpSwipeNorthChar", Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION);
-                int northScan = getIntJSONPref(PREF_DOMAIN_JOYSTICK, "kpSwipeNorthScancode",-1 );
-                Apple2KeypadSettingsMenu.KeypadPreset.addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
-                Apple2KeypadSettingsMenu.KeypadPreset.addRosetteKey(chars, scans, northChar, northScan);
-                Apple2KeypadSettingsMenu.KeypadPreset.addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
+                int northScan = getIntJSONPref(PREF_DOMAIN_JOYSTICK, "kpSwipeNorthScancode", -1);
 
                 int downChar = getIntJSONPref(PREF_DOMAIN_JOYSTICK, "kpTouchDownChar", Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION);
                 int downScan = getIntJSONPref(PREF_DOMAIN_JOYSTICK, "kpTouchDownScancode", -1);
-                Apple2KeypadSettingsMenu.KeypadPreset.addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
-                Apple2KeypadSettingsMenu.KeypadPreset.addRosetteKey(chars, scans, downChar, downScan);
-                Apple2KeypadSettingsMenu.KeypadPreset.addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
 
                 int southChar = getIntJSONPref(PREF_DOMAIN_JOYSTICK, "kpSwipeSouthChar", Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION);
                 int southScan = getIntJSONPref(PREF_DOMAIN_JOYSTICK, "kpSwipeSouthScancode", -1);
-                Apple2KeypadSettingsMenu.KeypadPreset.addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
-                Apple2KeypadSettingsMenu.KeypadPreset.addRosetteKey(chars, scans, southChar, southScan);
-                Apple2KeypadSettingsMenu.KeypadPreset.addRosetteKey(chars, scans, Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1);
 
-                Apple2KeypadSettingsMenu.KeypadPreset.saveButtRosettes(chars, scans);
+                if (northScan < 0 && downScan < 0 && southScan < 0) {
+                    downChar = Apple2KeyboardSettingsMenu.ICONTEXT_VISUAL_SPACE;
+                    downScan = Apple2KeyboardSettingsMenu.SCANCODE_SPACE;
+                }
+
+                buttRosette.add(new Apple2KeypadSettingsMenu.KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1));
+                buttRosette.add(new Apple2KeypadSettingsMenu.KeyTuple(northChar, northScan));
+                buttRosette.add(new Apple2KeypadSettingsMenu.KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1));
+
+                buttRosette.add(new Apple2KeypadSettingsMenu.KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1));
+                buttRosette.add(new Apple2KeypadSettingsMenu.KeyTuple(downChar, downScan));
+                buttRosette.add(new Apple2KeypadSettingsMenu.KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1));
+
+                buttRosette.add(new Apple2KeypadSettingsMenu.KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1));
+                buttRosette.add(new Apple2KeypadSettingsMenu.KeyTuple(southChar, southScan));
+                buttRosette.add(new Apple2KeypadSettingsMenu.KeyTuple(Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION, -1));
+
+                Apple2KeypadSettingsMenu.KeypadPreset.saveButtRosette(buttRosette);
             }
 
             JSONObject map = _prefDomain(PREF_DOMAIN_JOYSTICK);
             map.remove("jsTapDelaySecs");
+            map.remove("kpAxisRosetteChars");
+            map.remove("kpAxisRosetteScancodes");
+            map.remove("kpButtRosetteChars");
+            map.remove("kpButtRosetteScancodes");
             map.remove("kpSwipeNorthChar");
             map.remove("kpSwipeNorthScancode");
             map.remove("kpSwipeSouthChar");
