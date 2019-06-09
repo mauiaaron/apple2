@@ -424,8 +424,8 @@ public class Apple2VideoSettingsMenu extends Apple2AbstractMenu {
                 return false;
             } else {
                 int orientation = activity.getRequestedOrientation();
-                activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-                return orientation != ActivityInfo.SCREEN_ORIENTATION_PORTRAIT;
+                activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT);
+                return orientation != ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT;
             }
         }
 
