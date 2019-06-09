@@ -209,5 +209,9 @@
     <string name="keypad_preset_robotron">Robotron keys…</string>
     <string name="keypad_preset_loderunner">Lode Runner keys…</string>
     <string name="keypad_preset_loderunner_toast">Start game with Ctrl-K to activate keyboard</string>
+    <string name="joystick_button_swipe_left_button">Swipe left fire</string>
+    <string name="joystick_button_swipe_right_button">Swipe right fire</string>
+    <string name="joystick_button_swipe_right_button_summary">Button to fire on swipe right</string>
+    <string name="joystick_button_swipe_left_button_summary">Button to fire on swipe left</string>
 
 </resources>

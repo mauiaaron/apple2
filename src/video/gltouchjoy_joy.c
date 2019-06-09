@@ -27,13 +27,14 @@ static struct {
     touchjoy_button_type_t touchDownChar;
     touchjoy_button_type_t northChar;
     touchjoy_button_type_t southChar;
+    touchjoy_button_type_t westChar;
+    touchjoy_button_type_t eastChar;
 
     uint8_t currJoyButtonValue0;
     uint8_t currJoyButtonValue1;
     uint8_t currButtonDisplayChar;
     uint8_t lastButtonDisplayChar;
 
-    bool buttonThresholdExceeded;
     bool justTapConfigured;
 } joys = { 0 };
 
@@ -46,6 +47,7 @@ static interface_device_t touchjoy_variant(void) {
 static inline void _reset_button_state(void) {
     run_args.joy_button0 = 0;
     run_args.joy_button1 = 0;
+    joys.currButtonDisplayChar = ' ';
 }
 
 static inline void _reset_axis_state(void) {
@@ -180,7 +182,6 @@ static void touchjoy_buttonDown(void) {
     SPIN_LOCK_FULL(&joys.spinlock);
     TOUCH_JOY_LOG("\t\tjoy buttonDown acquire");
 
-    joys.buttonThresholdExceeded = false;
     joys.tapDelayFrameCount = 0UL;
 
     _reset_button_state();
@@ -203,26 +204,27 @@ static void _touchjoy_buttonMove(int dx, int dy) {
     bool shouldFire = false;
     touchjoy_button_type_t theButtonChar = joys.touchDownChar;
 
-    int delta = abs(dy);
-    if (!joys.buttonThresholdExceeded) {
-        if (delta >= joyglobals.switchThreshold) {
-            // unambiguous intent : user swiped beyond threshold
-            joys.buttonThresholdExceeded = true;
-            shouldFire = true;
-            theButtonChar = (dy < 0) ? joys.northChar : joys.southChar;
+    int c = (int)sqrtf(dx * dx + dy * dy);
+    if (c >= joyglobals.switchThreshold) {
+        // unambiguous intent : user swiped beyond threshold
+        shouldFire = true;
+
+        touchjoy_button_type_t yChar = (dy < 0) ? joys.northChar : joys.southChar;
+        touchjoy_button_type_t xChar = (dx < 0) ? joys.westChar  : joys.eastChar;
+
+        if (abs(dx) <= abs(dy)) {
+            // prefer y axis ...
+            theButtonChar = (yChar != TOUCH_NONE) ? yChar : xChar;
+        } else {
+            // prefer x axis ...
+            theButtonChar = (xChar != TOUCH_NONE) ? xChar : yChar;
         }
     } else {
-
-        if (delta < joyglobals.switchThreshold) {
-            // 2019/04/20 NOTE: originally we did not re-zero back to touchDownChar ... this allowed a progression between
-            // southChar/northChar (or vice-versa)
-            //
-            // touchDownChar should be fired on a tap or long-press (once we swipe beyond the threshold, we should only switch
-            // between northChar and southChar)
-
-            //shouldFire = true;
-            joys.buttonThresholdExceeded = false;
-        }
+        // 2019/04/20 NOTE: originally we did not re-zero back to touchDownChar ... this allowed a progression between
+        // southChar/northChar (or vice-versa)
+        //
+        // touchDownChar should be fired on a tap or long-press (once we swipe beyond the threshold, we should only switch
+        // between northChar and southChar)
     }
 
     if (shouldFire) {
@@ -272,10 +274,14 @@ static void touchjoy_prefsChanged(const char *domain) {
     joys.touchDownChar = prefs_parseLongValue(domain, PREF_JOY_TOUCHDOWN_CHAR, &lVal, /*base:*/10) ? lVal : TOUCH_BUTTON1;
     joys.northChar = prefs_parseLongValue(domain, PREF_JOY_SWIPE_NORTH_CHAR, &lVal, /*base:*/10) ? lVal : TOUCH_BOTH;
     joys.southChar = prefs_parseLongValue(domain, PREF_JOY_SWIPE_SOUTH_CHAR, &lVal, /*base:*/10) ? lVal : TOUCH_BUTTON2;
+    joys.westChar  = prefs_parseLongValue(domain, PREF_JOY_SWIPE_WEST_CHAR , &lVal, /*base:*/10) ? lVal : TOUCH_NONE;
+    joys.eastChar  = prefs_parseLongValue(domain, PREF_JOY_SWIPE_EAST_CHAR , &lVal, /*base:*/10) ? lVal : TOUCH_NONE;
 
     joys.justTapConfigured = (joys.touchDownChar != TOUCH_NONE) &&
                              (joys.northChar     == TOUCH_NONE) &&
-                             (joys.southChar     == TOUCH_NONE);
+                             (joys.southChar     == TOUCH_NONE) &&
+                             (joys.westChar      == TOUCH_NONE) &&
+                             (joys.eastChar      == TOUCH_NONE);
 }
 
 static uint8_t *touchjoy_axisRosetteChars(void) {

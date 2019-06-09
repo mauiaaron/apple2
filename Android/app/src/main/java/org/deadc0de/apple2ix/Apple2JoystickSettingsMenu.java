@@ -226,6 +226,104 @@ public class Apple2JoystickSettingsMenu extends Apple2AbstractMenu {
                 });
             }
         },
+        JOYSTICK_SWIPELEFT_BUTTON {
+            @Override
+            public final String getTitle(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.joystick_button_swipe_left_button);
+            }
+
+            @Override
+            public final String getSummary(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.joystick_button_swipe_left_button_summary);
+            }
+
+            @Override
+            public String getPrefKey() {
+                return "jsSwipeWestChar";
+            }
+
+            @Override
+            public Object getPrefDefault() {
+                return TouchJoystickButtons.NONE.ordinal();
+            }
+
+            @Override
+            public View getView(final Apple2Activity activity, View convertView) {
+                convertView = _basicView(activity, this, convertView);
+                _addPopupIcon(activity, this, convertView);
+                return convertView;
+            }
+
+            @Override
+            public void handleSelection(final Apple2Activity activity, final Apple2AbstractMenu settingsMenu, boolean isChecked) {
+                final IMenuEnum self = this;
+                _alertDialogHandleSelection(activity, R.string.joystick_button_swipe_left_button, new String[]{
+                        activity.getResources().getString(R.string.joystick_button_button_none),
+                        activity.getResources().getString(R.string.joystick_button_button1),
+                        activity.getResources().getString(R.string.joystick_button_button2),
+                        activity.getResources().getString(R.string.joystick_button_button_both),
+                }, new IPreferenceLoadSave() {
+                    @Override
+                    public int intValue() {
+                        return (int) Apple2Preferences.getJSONPref(self);
+                    }
+
+                    @Override
+                    public void saveInt(int value) {
+                        Apple2Preferences.setJSONPref(self, TouchJoystickButtons.values()[value].ordinal());
+                    }
+                });
+            }
+        },
+        JOYSTICK_SWIPERIGHT_BUTTON {
+            @Override
+            public final String getTitle(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.joystick_button_swipe_right_button);
+            }
+
+            @Override
+            public final String getSummary(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.joystick_button_swipe_right_button_summary);
+            }
+
+            @Override
+            public String getPrefKey() {
+                return "jsSwipeEastChar";
+            }
+
+            @Override
+            public Object getPrefDefault() {
+                return TouchJoystickButtons.NONE.ordinal();
+            }
+
+            @Override
+            public View getView(final Apple2Activity activity, View convertView) {
+                convertView = _basicView(activity, this, convertView);
+                _addPopupIcon(activity, this, convertView);
+                return convertView;
+            }
+
+            @Override
+            public void handleSelection(final Apple2Activity activity, final Apple2AbstractMenu settingsMenu, boolean isChecked) {
+                final IMenuEnum self = this;
+                _alertDialogHandleSelection(activity, R.string.joystick_button_swipe_right_button, new String[]{
+                        activity.getResources().getString(R.string.joystick_button_button_none),
+                        activity.getResources().getString(R.string.joystick_button_button1),
+                        activity.getResources().getString(R.string.joystick_button_button2),
+                        activity.getResources().getString(R.string.joystick_button_button_both),
+                }, new IPreferenceLoadSave() {
+                    @Override
+                    public int intValue() {
+                        return (int) Apple2Preferences.getJSONPref(self);
+                    }
+
+                    @Override
+                    public void saveInt(int value) {
+                        Apple2Preferences.setJSONPref(self, TouchJoystickButtons.values()[value].ordinal());
+                    }
+                });
+            }
+        },
         JOYSTICK_ADVANCED {
             @Override
             public final String getTitle(Apple2Activity activity) {

@@ -9,7 +9,11 @@ TOUCH KEYPAD JOYSTICK:
 
 - Improved emulation fidelity and auto-repeat response
 - Full left and right side rosette configurations
-- More key pre-sets for popular games (L0de Runner, R0b0tr0n 2084, ...)
+- More presets for popular games (L0de Runner, R0b0tr0n 2084, ...)
+
+TOUCH JOYSTICK:
+
+- Can now configure a button to fire on left/right swipe (instead of just touch down, swipe up/down)
 
 GENERAL INFO:
 
