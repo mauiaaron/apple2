@@ -615,3 +615,20 @@ void Java_org_deadc0de_apple2ix_Apple2Preferences_nativePrefsSync(JNIEnv *env, j
     }
 }
 
+jlong Java_org_deadc0de_apple2ix_Apple2JoystickCalibration_nativePollJoystick(JNIEnv *env, jclass cls) {
+    jlong cxy = 0;
+
+    uint8_t c = apple_ii_64k[0][0xC000];
+    if (c | 0x80) {
+        c = keys_apple2ASCII(c, NULL);
+    } else {
+        c = ' ';
+    }
+
+    cxy |= (c << 16);
+    cxy |= ((joy_x & 0xFF) << 8);
+    cxy |= ((joy_y & 0xFF) << 0);
+
+    return cxy;
+}
+
