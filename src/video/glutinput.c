@@ -148,7 +148,7 @@ void gldriver_on_key_down(unsigned char key, int x, int y) {
 void gldriver_on_key_up(unsigned char key, int x, int y) {
     _capslock_hackaround();
     //LOG("onKeyUp %02x(%d)'%c'", key, key, key);
-    keys_handleKnput(key, /*is_pressed:*/false, /*is_ascii:*/true);
+    keys_handleInput(key, /*is_pressed:*/false, /*is_ascii:*/true);
 }
 
 void gldriver_on_key_special_down(int key, int x, int y) {
