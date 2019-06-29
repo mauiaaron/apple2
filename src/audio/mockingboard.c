@@ -1253,7 +1253,11 @@ static void MB_Update()
             assert(requestedBufSize <= originalRequestedBufSize);
             ++counter;
         } while (bufIdx < originalRequestedBufSize && counter < 2);
-        assert(bufIdx == originalRequestedBufSize);
+
+        if (UNLIKELY(bufIdx != originalRequestedBufSize)) {
+            // platform audio system getting bogged down?
+            LOG("WHOA, mockingboard dropping samples %lu != %lu", bufIdx, originalRequestedBufSize);
+        }
 #   endif
 #endif
 
