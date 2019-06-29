@@ -495,8 +495,7 @@ static void ncvideo_main_loop(void) {
     initscr();
     _nc_initColors();
 
-    LOG("ncurses video main loop beginning, silencing STDERR logging ...");
-    do_std_logging = false;
+    LOG("ncurses video main loop beginning ...");
 
     noecho();               // Do not echo output ...
     raw();                  // Line buffering disabled ...

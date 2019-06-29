@@ -276,7 +276,6 @@ PlayQueue_s *playq_createPlayQueue(const unsigned int *nodeIdPtr, unsigned long 
 
 #define SELF_TEST 0
 #if SELF_TEST
-bool do_logging = true;
 
 static void _test_creation(void) {
     LOG("begin test");

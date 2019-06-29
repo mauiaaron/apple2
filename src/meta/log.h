@@ -23,12 +23,6 @@ extern GLenum safeGLGetError(void);
 #   define safeGLGetError() 0
 #endif
 
-// global logging kill switch
-extern bool do_logging;
-
-// log to the standard log facility (e.g., stderr)
-extern bool do_std_logging;
-
 // initialize logging facility
 void log_init(void);
 
@@ -98,22 +92,22 @@ void log_outputString(const char * const str);
 #endif
 
 #define LOG(...) \
-    if (LIKELY(do_logging)) { \
+    do { \
         GLenum _glerr = safeGLGetError(); \
         _LOG(__VA_ARGS__); \
         while ( (_glerr = safeGLGetError()) ) { \
             _LOG(__VA_ARGS__); \
         } \
-    } //
+    } while(0) //
 
 // GL_MAYBELOG() only logs if an OpenGL error occurred
 #   define GL_MAYBELOG(...) \
-    if (LIKELY(do_logging)) { \
+    do { \
         GLenum _glerr = 0; \
         while ( (_glerr = safeGLGetError()) ) { \
             _LOG(__VA_ARGS__); \
         } \
-    } //
+    } while(0) //
 
 #define QUIT_FUNCTION(x) exit(x)
 

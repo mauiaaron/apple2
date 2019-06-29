@@ -11,6 +11,8 @@
 
 #include "common.h"
 
+#define DO_STDERR_LOGGING 0
+
 // log.c :
 //  - simple and not-particularly-performant logging functions
 //  - do not call in a tight loop!
@@ -20,9 +22,6 @@
 #endif
 
 #define LOG_PATH_TEMPLATE "%s%sapple2ix_log.%u.txt"
-
-bool do_logging = true;
-bool do_std_logging = true;
 
 static int logFd = -1;
 static off_t logSiz = 0;
@@ -100,17 +99,15 @@ void log_outputString(const char * const str) {
         return;
     }
 
-    if (UNLIKELY(!do_logging)) {
-        return;
-    }
-
-    if (do_std_logging) {
+#if DO_STDERR_LOGGING
+    {
 #if defined(__ANDROID__) && !defined(NDEBUG)
         __android_log_print(ANDROID_LOG_ERROR, "apple2ix", "%s", str);
 #else
         fprintf(stderr, "%s\n", str);
 #endif
     }
+#endif
 
     if (UNLIKELY(logFd < 0)) {
         return;
