@@ -19,7 +19,7 @@
 
 #include "common.h"
 
-extern volatile bool is_debugging;
+extern bool is_debugging;
 
 typedef enum {
     addr_implied = 0,

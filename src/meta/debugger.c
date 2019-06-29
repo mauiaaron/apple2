@@ -37,7 +37,7 @@ static bool input_deterministically = false; // slows down testing ...
 static stepping_struct_s stepping_struct = { 0 };
 static unsigned int stepping_timeout = 0;
 
-volatile bool is_debugging = false;
+bool is_debugging = false;
 
 extern pthread_mutex_t interface_mutex;
 extern pthread_cond_t cpu_thread_cond;

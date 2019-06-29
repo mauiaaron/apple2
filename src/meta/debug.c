@@ -3563,7 +3563,7 @@ void init_lex (char *str, int size) {
 #define WONT_EXECUTE 0
     static volatile void *hack_warnings = &hack_warnings;
     if (hack_warnings == WONT_EXECUTE) {
-        // flex defines these, but we don't use 'em ...
+        // this section is just here to kill warnings about unused input() and yyunput()
         char hack[2];
         yyunput('\0', hack);
         input();

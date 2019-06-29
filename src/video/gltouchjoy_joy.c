@@ -19,7 +19,7 @@ static GLTouchJoyVariant joyVariant = { 0 };
 
 static struct {
     video_frame_callback_fn frameCallback;
-    volatile unsigned long spinlock;
+    unsigned long spinlock;
     unsigned long tapDelayFrameCount;
 
     interface_touch_event_t currEventType;

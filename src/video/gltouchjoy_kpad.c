@@ -64,7 +64,7 @@ typedef struct subvariant_s {
 static struct {
     video_frame_callback_fn frameCallback;
 
-    volatile unsigned long spinlock;
+    unsigned long spinlock;
 
     subvariant_s axis;
     subvariant_s butt;

@@ -1429,7 +1429,7 @@ TEST test_BPL(int8_t off, bool flag, uint16_t addrs) {
     PASS();
 }
 
-TEST test_BRA(volatile int8_t off, volatile bool flag, volatile uint16_t addrs) {
+TEST test_BRA(int8_t off, bool flag, uint16_t addrs) {
     uint8_t flags = 0x0;
 
     run_args.cpu65_pc = addrs;
