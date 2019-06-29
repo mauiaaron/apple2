@@ -318,12 +318,12 @@ cpu_runloop:
             }
 
             MB_StartOfCpuExecute();
-            if (is_debugging) {
+            if (UNLIKELY(is_debugging)) {
                 debugging_cycles = run_args.cpu65_cycles_to_execute;
             }
 
             do {
-                if (is_debugging) {
+                if (UNLIKELY(is_debugging)) {
                     run_args.cpu65_cycles_to_execute = 1;
                 }
 
@@ -336,7 +336,7 @@ cpu_runloop:
                 dbg_cycles_executed += run_args.cpu65_cycle_count;
 #endif
 
-                if (is_debugging) {
+                if (UNLIKELY(is_debugging)) {
                     debugging_cycles -= run_args.cpu65_cycle_count;
                     timing_checkpointCycles();
 
@@ -358,7 +358,7 @@ cpu_runloop:
                         goto cpu_runloop;
                     }
                 }
-            } while (is_debugging);
+            } while (UNLIKELY(is_debugging));
 
             MB_UpdateCycles();
             // TODO : modularize MB and other peripheral card cycles/interrupts ...
