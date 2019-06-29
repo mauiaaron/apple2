@@ -50,15 +50,8 @@ void log_outputString(const char * const str);
 
 #define _LOG(...) \
     do { \
-        int _err = errno; \
-        errno = 0; \
-        \
-        char *syserr_str = NULL; \
         char *glerr_str = NULL; \
         int ignored; \
-        if (_err) { \
-            ignored = asprintf(&syserr_str, " (syserr:%s)", strerror(_err)); \
-        } \
         if (_glerr) { \
             ignored = asprintf(&glerr_str, " (glerr:%04X)", _glerr); \
         } \
@@ -67,16 +60,13 @@ void log_outputString(const char * const str);
         ignored = asprintf(&buf0, __VA_ARGS__); \
         \
         char *buf = NULL; \
-        ignored = asprintf(&buf, "%s:%d (%s) -%s%s %s", _MYFILE_, __LINE__, __func__, (syserr_str ? : ""), (glerr_str ? : ""), buf0); \
+        ignored = asprintf(&buf, "%s:%d (%s) -%s %s", _MYFILE_, __LINE__, __func__, (glerr_str ? : ""), buf0); \
         (void)ignored; \
         \
         log_outputString(buf); \
         \
         free(buf0); \
         free(buf); \
-        if (syserr_str) { \
-            free(syserr_str); \
-        } \
         if (glerr_str) { \
             free(glerr_str); \
         } \
@@ -120,15 +110,6 @@ void log_outputString(const char * const str);
 #   define GL_MAYBELOG(...) \
     if (LIKELY(do_logging)) { \
         GLenum _glerr = 0; \
-        while ( (_glerr = safeGLGetError()) ) { \
-            _LOG(__VA_ARGS__); \
-        } \
-    } //
-
-#define RELEASE_LOG(...) \
-    if (LIKELY(do_logging)) { \
-        GLenum _glerr = safeGLGetError(); \
-        _LOG(__VA_ARGS__); \
         while ( (_glerr = safeGLGetError()) ) { \
             _LOG(__VA_ARGS__); \
         } \
