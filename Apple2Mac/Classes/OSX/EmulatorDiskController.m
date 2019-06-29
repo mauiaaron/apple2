@@ -88,6 +88,9 @@ static void prefsChangeCallback(const char *domain)
             const char *path = [startupDiskA UTF8String];
             int fdA = -1;
             TEMP_FAILURE_RETRY(fdA = open(path, readOnlyA ? O_RDONLY : O_RDWR));
+            if (fdA == -1) {
+                LOG("OOPS, open failed for path %s (%s)", path, strerror(errno));
+            }
             const char *err = disk6_insert(fdA, 0, path, readOnlyA);
             if (fdA >= 0) {
                 TEMP_FAILURE_RETRY(close(fdA));
@@ -115,6 +118,9 @@ static void prefsChangeCallback(const char *domain)
             const char *path = [startupDiskB UTF8String];
             int fdB = -1;
             TEMP_FAILURE_RETRY(fdB = open(path, readOnlyB ? O_RDONLY : O_RDWR));
+            if (fdB == -1) {
+                LOG("OOPS, open failed for path %s (%s)", path, strerror(errno));
+            }
             const char *err = disk6_insert(fdB, 1, path, readOnlyB);
             if (fdB >= 0) {
                 TEMP_FAILURE_RETRY(close(fdB));
@@ -190,8 +196,12 @@ static void prefsChangeCallback(const char *domain)
     disk6_eject(drive);
     
     int fd = -1;
-    TEMP_FAILURE_RETRY(fd = open([path UTF8String], readOnly ? O_RDONLY : O_RDWR));
-    const char *errMsg = disk6_insert(fd, drive, [path UTF8String], readOnly);
+    const char *cPath = [path UTF8String];
+    TEMP_FAILURE_RETRY(fd = open(cPath, readOnly ? O_RDONLY : O_RDWR));
+    if (fd == -1) {
+        LOG("OOPS, open failed for path %s (%s)", cPath, strerror(errno));
+    }
+    const char *errMsg = disk6_insert(fd, drive, cPath, readOnly);
     if (fd >= 0) {
         TEMP_FAILURE_RETRY(close(fd));
     }

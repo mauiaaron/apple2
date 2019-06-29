@@ -819,32 +819,32 @@ const char *disk6_eject(int drive) {
 
                     TEMP_FAILURE_RETRY(ret = msync(disk6.disk[drive].raw_image_data, disk6.disk[drive].whole_len, MS_SYNC));
                     if (ret) {
-                        LOG("Error syncing file %s", disk6.disk[drive].file_name);
+                        LOG("Error syncing file %s (%s)", disk6.disk[drive].file_name, strerror(errno));
                     }
                 }
             }
 
             TEMP_FAILURE_RETRY(ret = munmap(disk6.disk[drive].raw_image_data, disk6.disk[drive].whole_len));
             if (ret) {
-                LOG("Error munmap()ping file %s", disk6.disk[drive].file_name);
+                LOG("Error munmap()ping file %s (%s)", disk6.disk[drive].file_name, strerror(errno));
             }
         }
 
         if (compressed_size > 0) {
             TEMP_FAILURE_RETRY(ret = ftruncate(disk6.disk[drive].fd, compressed_size));
             if (ret == -1) {
-                LOG("OOPS, cannot truncate file descriptor!");
+                LOG("OOPS, cannot truncate file descriptor! (%s)", strerror(errno));
             }
         }
 
         TEMP_FAILURE_RETRY(ret = fsync(disk6.disk[drive].fd));
         if (ret) {
-            LOG("Error fsync()ing file %s", disk6.disk[drive].file_name);
+            LOG("Error fsync()ing file %s (%s)", disk6.disk[drive].file_name, strerror(errno));
         }
 
         TEMP_FAILURE_RETRY(ret = close(disk6.disk[drive].fd));
         if (ret) {
-            LOG("Error close()ing file %s", disk6.disk[drive].file_name);
+            LOG("Error close()ing file %s (%s)", disk6.disk[drive].file_name, strerror(errno));
         }
     }
 
@@ -913,7 +913,7 @@ const char *disk6_insert(int fd, int drive, const char * const file_name, int re
             // disk images inserted read/write are mmap'd/inflated in place ...
             TEMP_FAILURE_RETRY(fd = dup(fd));
             if (fd == -1) {
-                LOG("OOPS, could not dup() file descriptor %d", fd);
+                LOG("OOPS, could not dup() file descriptor %d (%s)", fd, strerror(errno));
                 err = ERR_CANNOT_DUP;
                 break;
             }
@@ -928,7 +928,7 @@ const char *disk6_insert(int fd, int drive, const char * const file_name, int re
 
             TEMP_FAILURE_RETRY( (long)(disk6.disk[drive].raw_image_data = mmap(NULL, disk6.disk[drive].whole_len, (readonly ? PROT_READ : PROT_READ|PROT_WRITE), MAP_SHARED|MAP_FILE, disk6.disk[drive].fd, /*offset:*/0)) );
             if (disk6.disk[drive].raw_image_data == MAP_FAILED) {
-                LOG("OOPS, could not mmap file %s", disk6.disk[drive].file_name);
+                LOG("OOPS, could not mmap file %s (%s)", disk6.disk[drive].file_name, strerror(errno));
                 err = ERR_MMAP_FAILED;
                 break;
             }
@@ -1007,7 +1007,7 @@ void disk6_flush(int drive) {
     int ret = -1;
     TEMP_FAILURE_RETRY(ret = msync(disk6.disk[drive].raw_image_data, disk6.disk[drive].whole_len, MS_SYNC));
     if (ret) {
-        LOG("Error syncing file %s", disk6.disk[drive].file_name);
+        LOG("Error syncing file %s (%s)", disk6.disk[drive].file_name, strerror(errno));
     }
 }
 

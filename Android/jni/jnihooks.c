@@ -388,12 +388,12 @@ jstring Java_org_deadc0de_apple2ix_Apple2DisksMenu_nativeChooseDisk(JNIEnv *env,
     if (!json_mapParseLongValue(jsonData, "fd", &fd, 10)) {
         TEMP_FAILURE_RETRY(fd = open(path, readOnly ? O_RDONLY : O_RDWR));
         if (fd == -1) {
-            LOG("OOPS could not open disk path : %s", path);
+            LOG("OOPS could not open disk path : %s (%s)", path, strerror(errno));
         }
     } else {
-        fd = dup(fd);
+        TEMP_FAILURE_RETRY(fd = dup(fd));
         if (fd == -1) {
-            LOG("OOPS could not dup file descriptor!");
+            LOG("OOPS could not dup file descriptor! (%s)", strerror(errno));
         }
     }
 
@@ -463,12 +463,12 @@ static int _openFdFromJson(OUTPARM int *fdOut, JSON_ref jsonData, const char * c
                 TEMP_FAILURE_RETRY(fd = open(path, flags, mode));
             }
             if (fd == -1) {
-                LOG("OOPS could not open state file path %s", path);
+                LOG("OOPS could not open state file path %s (%s)", path, strerror(errno));
             }
         } else {
-            fd = dup(fd);
+            TEMP_FAILURE_RETRY(fd = dup(fd));
             if (fd == -1) {
-                LOG("OOPS could not dup file descriptor!");
+                LOG("OOPS could not dup file descriptor! (%s)", strerror(errno));
             }
         }
     } while (0);

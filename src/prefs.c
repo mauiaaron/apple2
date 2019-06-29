@@ -108,11 +108,6 @@ bool prefs_save(void) {
 
         assert(((JSON_s *)jsonPrefs)->jsonString && "string should be valid");
 
-#define PREFS_ERRPRINT() \
-        LOG( \
-                "Cannot open the .apple2.json preferences file for writing.\n" \
-                "Make sure it has R/W permission in your home directory.")
-
 #define ERROR_SUBMENU_H 8
 #define ERROR_SUBMENU_W 40
 #if defined(INTERFACE_CLASSIC) && !TESTING
@@ -131,7 +126,8 @@ bool prefs_save(void) {
 
         TEMP_FAILURE_RETRY(fd = open(prefsFile, O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR));
         if (fd == -1) {
-            PREFS_ERRPRINT();
+            LOG("Cannot open the .apple2.json preferences file for writing.\n"
+                "Make sure it has R/W permission in your home directory. (%s)", strerror(errno));
 #if defined(INTERFACE_CLASSIC) && !TESTING
             c_interface_print_submenu_centered(submenu[0], ERROR_SUBMENU_W, ERROR_SUBMENU_H);
             while ((ch = c_mygetch(1)) == -1) {

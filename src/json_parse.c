@@ -47,6 +47,9 @@ static bool _json_write(const char *jsonString, size_t buflen, int fd) {
         ssize_t outlen = 0;
         TEMP_FAILURE_RETRY(outlen = write(fd, jsonString+idx, chunk));
         if (outlen <= 0) {
+            if (outlen < 0) {
+                LOG("OOPS write failed : %s", strerror(errno));
+            }
             break;
         }
         idx += outlen;

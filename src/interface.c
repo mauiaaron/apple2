@@ -552,6 +552,9 @@ void c_interface_select_diskette( int drive )
                     {
                         int fd = -1;
                         TEMP_FAILURE_RETRY(fd = open(temp, O_RDWR));
+                        if (fd == -1) {
+                            LOG("OOPS, could not open disk path %s (%s)", temp, strerror(errno));
+                        }
                         const char *err_str = disk6_insert(fd, drive, temp, /*readonly:*/0);
                         if (fd > 0) {
                             TEMP_FAILURE_RETRY(close(fd));
@@ -627,6 +630,9 @@ void c_interface_select_diskette( int drive )
 
                 int fd = -1;
                 TEMP_FAILURE_RETRY(fd = open(temp, O_RDWR));
+                if (fd == -1) {
+                    LOG("OOPS, could not open disk path %s (%s)", temp, strerror(errno));
+                }
                 const char *err_str = disk6_insert(fd, drive, temp, /*readonly:*/(toupper(ch) != 'W'));
                 if (fd > 0) {
                     TEMP_FAILURE_RETRY(close(fd));

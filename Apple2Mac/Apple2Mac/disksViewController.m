@@ -76,6 +76,9 @@
     const char *path = [[self.path stringByAppendingPathComponent:[self._disks objectAtIndex:row]] UTF8String];
     int fd = -1;
     TEMP_FAILURE_RETRY(fd = open(path, ro ? O_RDONLY : O_RDWR));
+    if (fd == -1) {
+        LOG("OOPS, open failed for path %s (%s)", path, strerror(errno));
+    }
     const char *errMsg = disk6_insert(fd, drive, path, ro);
     (void)errMsg;
     if (fd >= 0) {

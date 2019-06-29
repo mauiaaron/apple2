@@ -109,7 +109,7 @@ static bool _save_state(int fd, const uint8_t * outbuf, ssize_t outmax) {
     ssize_t outlen = 0;
     do {
         if (TEMP_FAILURE_RETRY(outlen = write(fd, outbuf, outmax)) == -1) {
-            LOG("OOPS, error writing emulator save-state file");
+            LOG("OOPS, error writing emulator save-state file (%s)", strerror(errno));
             break;
         }
         outbuf += outlen;
@@ -126,13 +126,13 @@ static bool _load_state(int fd, uint8_t * inbuf, ssize_t inmax) {
 
     struct stat stat_buf;
     if (UNLIKELY(fstat(fd, &stat_buf) < 0)) {
-        LOG("OOPS, could not stat FD");
+        LOG("OOPS, could not stat FD (%s)", strerror(errno));
         return false;
     }
     off_t fileSiz = stat_buf.st_size;
     off_t filePos = lseek(fd, 0, SEEK_CUR);
     if (UNLIKELY(filePos < 0)) {
-        LOG("OOPS, could not lseek FD");
+        LOG("OOPS, could not lseek FD (%s)", strerror(errno));
         return false;
     }
 
@@ -143,7 +143,7 @@ static bool _load_state(int fd, uint8_t * inbuf, ssize_t inmax) {
 
     do {
         if (TEMP_FAILURE_RETRY(inlen = read(fd, inbuf, inmax)) == -1) {
-            LOG("error reading emulator save-state file");
+            LOG("error reading emulator save-state file (%s)", strerror(errno));
             break;
         }
         if (inlen == 0) {
@@ -283,12 +283,12 @@ bool emulator_loadState(int fd, int fdA, int fdB) {
 
         struct stat stat_buf;
         if (fstat(fd, &stat_buf) < 0) {
-            LOG("OOPS, could not stat FD");
+            LOG("OOPS, could not stat FD (%s)", strerror(errno));
         }
         off_t fileSiz = stat_buf.st_size;
         off_t filePos = lseek(fd, 0, SEEK_CUR);
         if (filePos < 0) {
-            LOG("OOPS, could not lseek FD");
+            LOG("OOPS, could not lseek FD (%s)", strerror(errno));
         }
 
         if (UNLIKELY(filePos != fileSiz)) {
@@ -334,7 +334,7 @@ bool emulator_stateExtractDiskPaths(int fd, JSON_ref json) {
         // Ensure that we leave the file descriptor ready for a call to emulator_loadState()
         off_t ret = lseek(fd, 0, SEEK_SET);
         if (ret != 0) {
-            LOG("OOPS : state file lseek() failed!");
+            LOG("OOPS : state file lseek() failed! (%s)", strerror(errno));
         }
     }
 

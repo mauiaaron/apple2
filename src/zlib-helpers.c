@@ -73,10 +73,10 @@ static ssize_t _read_data(int fd_own, uint8_t *buf, const off_t expected_bytesco
         TEMP_FAILURE_RETRY(bytesread = read(fd_own, buf+bytescount, len));
         if (bytesread <= 0) {
             if (--maxtries == 0) {
-                LOG("OOPS, giving up on read() ...");
+                LOG("OOPS, giving up on read() ... (%s)", strerror(errno));
                 break;
             }
-            LOG("OOPS, read() ...");
+            LOG("OOPS, read() ... (%s)", strerror(errno));
             usleep(100);
             continue;
         }
@@ -103,10 +103,10 @@ static ssize_t _write_data(int fd_own, uint8_t *buf, const unsigned int expected
 
         if (byteswritten <= 0) {
             if (--maxtries == 0) {
-                LOG("OOPS, giving up on write() ...");
+                LOG("OOPS, giving up on write() ... (%s)", strerror(errno));
                 break;
             }
-            LOG("OOPS, write ...");
+            LOG("OOPS, write ... (%s)", strerror(errno));
             usleep(100);
             continue;
         }
@@ -136,7 +136,7 @@ static a2gzip_t _check_gzip_magick(int fd_own, const unsigned int expected_bytes
 
         bytescount = lseek(fd_own, 0L, SEEK_END);
         if (bytescount == -1) {
-            LOG("OOPS, cannot seek to end of file descriptor!");
+            LOG("OOPS, cannot seek to end of file descriptor! (%s)", strerror(errno));
             break;
         }
 
@@ -189,7 +189,7 @@ const char *zlib_inflate_to_buffer(int fd, const unsigned int expected_bytescoun
         }
 
         if (lseek(fd_own, 0L, SEEK_SET) == -1) {
-            LOG("OOPS, cannot seek to start of file descriptor!");
+            LOG("OOPS, cannot seek to start of file descriptor! (%s)", strerror(errno));
             break;
         }
 
@@ -213,7 +213,7 @@ const char *zlib_inflate_to_buffer(int fd, const unsigned int expected_bytescoun
             LOG("OOPS, did not gzread() expected_bytescount of %u ... apparently read %zd ... checking file length heuristic ...", expected_bytescount, bytescount);
 
             if (lseek(fd_own, 0L, SEEK_SET) == -1) {
-                LOG("OOPS, cannot seek to start of file descriptor!");
+                LOG("OOPS, cannot seek to start of file descriptor! (%s)", strerror(errno));
                 break;
             }
 
@@ -295,7 +295,7 @@ const char *zlib_inflate_inplace(int fd, const unsigned int expected_bytescount,
         }
 
         if (lseek(fd_own, 0L, SEEK_SET) == -1) {
-            LOG("OOPS, cannot seek to start of file descriptor!");
+            LOG("OOPS, cannot seek to start of file descriptor! (%s)", strerror(errno));
             break;
         }
 
@@ -312,7 +312,7 @@ const char *zlib_inflate_inplace(int fd, const unsigned int expected_bytescount,
 
             bytescount = lseek(fd_own, 0L, SEEK_END);
             if (bytescount == -1) {
-                LOG("OOPS, cannot seek to end of file descriptor!");
+                LOG("OOPS, cannot seek to end of file descriptor! (%s)", strerror(errno));
                 break;
             }
 
@@ -332,7 +332,7 @@ const char *zlib_inflate_inplace(int fd, const unsigned int expected_bytescount,
         // inplace write file
 
         if (lseek(fd_own, 0L, SEEK_SET) == -1) {
-            LOG("OOPS, cannot seek to start of file descriptor!");
+            LOG("OOPS, cannot seek to start of file descriptor! (%s)", strerror(errno));
             break;
         }
 
@@ -441,12 +441,16 @@ const char *zlib_deflate_buffer(const uint8_t *src, const unsigned int src_bytes
 
         {
             off_t compressed_size = lseek(fd_own, 0L, SEEK_CUR);
-            assert(compressed_size > 0 && compressed_size < expected_bytescount);
+            if (compressed_size == -1) {
+                LOG("OOPS, cannot seek to current position! (%s)", strerror(errno));
+                break;
+            }
+            assert(/*compressed_size > 0 && */compressed_size < expected_bytescount);
             expected_bytescount = compressed_size;
         }
 
         if (lseek(fd_own, 0L, SEEK_SET) == -1) {
-            LOG("OOPS, cannot seek to start of file descriptor!");
+            LOG("OOPS, cannot seek to start of file descriptor! (%s)", strerror(errno));
             break;
         }
 
