@@ -1,8 +1,9 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="9531" systemVersion="15C50" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="14490.70" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
         <deployment version="1080" identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="9531"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="14490.70"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="NSApplication">
@@ -379,7 +380,7 @@ CA
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
             <rect key="contentRect" x="200" y="200" width="568" height="384"/>
             <rect key="screenRect" x="0.0" y="0.0" width="1920" height="1178"/>
-            <view key="contentView" id="372" customClass="EmulatorGLView">
+            <view key="contentView" id="372">
                 <rect key="frame" x="0.0" y="0.0" width="568" height="384"/>
                 <autoresizingMask key="autoresizingMask"/>
             </view>
@@ -452,7 +453,7 @@ CA
                 <outlet property="window" destination="371" id="z3B-S9-PsV"/>
             </connections>
         </customObject>
-        <window title="Insert Disks" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" oneShot="NO" releasedWhenClosed="NO" showsToolbarButton="NO" visibleAtLaunch="NO" animationBehavior="default" id="RAk-at-ZT4" userLabel="Window - Insert Disks">
+        <window title="Insert Disks" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" visibleAtLaunch="NO" animationBehavior="default" id="RAk-at-ZT4" userLabel="Window - Insert Disks">
             <windowStyleMask key="styleMask" titled="YES" closable="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
             <rect key="contentRect" x="109" y="132" width="522" height="302"/>
@@ -626,19 +627,13 @@ CA
                             <action selector="startupDiskBChoiceChanged:" target="FHO-g2-V3A" id="tQS-5l-DDf"/>
                         </connections>
                     </button>
-                    <box verticalHuggingPriority="750" title="Box" boxType="separator" titlePosition="noTitle" id="7ZU-H6-jQn">
+                    <box verticalHuggingPriority="750" boxType="separator" id="7ZU-H6-jQn">
                         <rect key="frame" x="12" y="59" width="498" height="5"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <color key="borderColor" white="0.0" alpha="0.41999999999999998" colorSpace="calibratedWhite"/>
-                        <color key="fillColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
-                        <font key="titleFont" metaFont="system"/>
                     </box>
-                    <box horizontalHuggingPriority="750" title="Box" boxType="separator" titlePosition="noTitle" id="864-Ov-2tE">
+                    <box horizontalHuggingPriority="750" boxType="separator" id="864-Ov-2tE">
                         <rect key="frame" x="259" y="70" width="5" height="217"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <color key="borderColor" white="0.0" alpha="0.41999999999999998" colorSpace="calibratedWhite"/>
-                        <color key="fillColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
-                        <font key="titleFont" metaFont="system"/>
                     </box>
                     <button verticalHuggingPriority="750" id="tLd-IJ-Kjl">
                         <rect key="frame" x="338" y="13" width="85" height="32"/>
@@ -673,7 +668,7 @@ DQ
                 <outlet property="startupLoadDiskB" destination="Ceo-uO-cRu" id="V0B-0f-YZu"/>
             </connections>
         </customObject>
-        <window title="Apple2Mac Preferences" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" oneShot="NO" releasedWhenClosed="NO" showsToolbarButton="NO" visibleAtLaunch="NO" animationBehavior="default" id="Mzv-VG-jce" userLabel="Window - Prefs" customClass="EmulatorWindow">
+        <window title="Apple2Mac Preferences" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" visibleAtLaunch="NO" animationBehavior="default" id="Mzv-VG-jce" userLabel="Window - Prefs" customClass="EmulatorWindow">
             <windowStyleMask key="styleMask" titled="YES" closable="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
             <rect key="contentRect" x="109" y="132" width="580" height="360"/>
@@ -749,12 +744,9 @@ DQ
                                                 <action selector="peggedChoiceChanged:" target="mUW-Rh-bL1" id="K2H-Vc-15h"/>
                                             </connections>
                                         </button>
-                                        <box verticalHuggingPriority="750" title="Box" boxType="separator" titlePosition="noTitle" id="9U0-v9-wTm">
+                                        <box verticalHuggingPriority="750" boxType="separator" id="9U0-v9-wTm">
                                             <rect key="frame" x="17" y="183" width="508" height="5"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                            <color key="borderColor" white="0.0" alpha="0.41999999999999998" colorSpace="calibratedWhite"/>
-                                            <color key="fillColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
-                                            <font key="titleFont" metaFont="system"/>
                                         </box>
                                         <slider verticalHuggingPriority="750" id="y10-Rm-oDB">
                                             <rect key="frame" x="15" y="115" width="404" height="27"/>
@@ -874,12 +866,9 @@ DQ
                                     <rect key="frame" x="10" y="33" width="534" height="298"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
-                                        <box horizontalHuggingPriority="750" title="Box" boxType="separator" titlePosition="noTitle" id="Fkg-X3-0XG">
+                                        <box horizontalHuggingPriority="750" boxType="separator" id="Fkg-X3-0XG">
                                             <rect key="frame" x="265" y="9" width="5" height="286"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                            <color key="borderColor" white="0.0" alpha="0.41999999999999998" colorSpace="calibratedWhite"/>
-                                            <color key="fillColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
-                                            <font key="titleFont" metaFont="system"/>
                                         </box>
                                         <customView id="OWJ-x7-P0q" customClass="EmulatorJoystickCalibrationView">
                                             <rect key="frame" x="276" y="39" width="256" height="256"/>

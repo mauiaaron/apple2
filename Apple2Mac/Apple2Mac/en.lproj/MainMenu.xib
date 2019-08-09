@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="14113" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="14490.70" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
         <deployment version="1060" identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="14113"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="14490.70"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
@@ -381,7 +381,7 @@ CA
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
             <rect key="contentRect" x="200" y="200" width="568" height="384"/>
             <rect key="screenRect" x="0.0" y="0.0" width="1920" height="1178"/>
-            <view key="contentView" id="372" customClass="EmulatorGLView">
+            <view key="contentView" id="372">
                 <rect key="frame" x="0.0" y="0.0" width="568" height="384"/>
                 <autoresizingMask key="autoresizingMask"/>
             </view>
@@ -441,7 +441,7 @@ CA
                 <outlet property="window" destination="371" id="z3B-S9-PsV"/>
             </connections>
         </customObject>
-        <window title="Insert Disks" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" oneShot="NO" releasedWhenClosed="NO" showsToolbarButton="NO" visibleAtLaunch="NO" animationBehavior="default" id="RAk-at-ZT4" userLabel="Window - Insert Disks">
+        <window title="Insert Disks" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" visibleAtLaunch="NO" animationBehavior="default" id="RAk-at-ZT4" userLabel="Window - Insert Disks">
             <windowStyleMask key="styleMask" titled="YES" closable="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
             <rect key="contentRect" x="109" y="132" width="522" height="302"/>
@@ -657,7 +657,7 @@ DQ
                 <outlet property="startupLoadDiskB" destination="Ceo-uO-cRu" id="V0B-0f-YZu"/>
             </connections>
         </customObject>
-        <window title="Apple2Mac Preferences" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" oneShot="NO" releasedWhenClosed="NO" showsToolbarButton="NO" visibleAtLaunch="NO" animationBehavior="default" id="Mzv-VG-jce" userLabel="Window - Prefs" customClass="EmulatorWindow">
+        <window title="Apple2Mac Preferences" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" visibleAtLaunch="NO" animationBehavior="default" id="Mzv-VG-jce" userLabel="Window - Prefs" customClass="EmulatorWindow">
             <windowStyleMask key="styleMask" titled="YES" closable="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
             <rect key="contentRect" x="109" y="132" width="580" height="360"/>
@@ -833,7 +833,7 @@ DQ
                                                 <action selector="colorChoiceChanged:" target="mUW-Rh-bL1" id="M58-28-Lmr"/>
                                             </connections>
                                         </popUpButton>
-                                        <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" misplaced="YES" id="dak-eg-hHn">
+                                        <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" id="dak-eg-hHn">
                                             <rect key="frame" x="15" y="276" width="96" height="17"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Color :" id="eHo-1T-edz">
@@ -842,7 +842,7 @@ DQ
                                                 <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                             </textFieldCell>
                                         </textField>
-                                        <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" misplaced="YES" id="rDh-8p-gf0">
+                                        <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" id="rDh-8p-gf0">
                                             <rect key="frame" x="15" y="245" width="96" height="17"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Monochrome :" id="6zV-cm-vLN">
@@ -851,7 +851,7 @@ DQ
                                                 <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                             </textFieldCell>
                                         </textField>
-                                        <popUpButton verticalHuggingPriority="750" misplaced="YES" id="9bP-5g-S3a">
+                                        <popUpButton verticalHuggingPriority="750" id="9bP-5g-S3a">
                                             <rect key="frame" x="115" y="240" width="158" height="26"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <popUpButtonCell key="cell" type="push" title="Black/white" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" selectedItem="7Nj-L6-N5K" id="UkC-75-g1J">
@@ -872,7 +872,7 @@ DQ
                                                 <action selector="monochromeColorChoiceChanged:" target="mUW-Rh-bL1" id="FIq-tn-pNv"/>
                                             </connections>
                                         </popUpButton>
-                                        <button verticalHuggingPriority="750" misplaced="YES" id="0Av-wg-y41">
+                                        <button verticalHuggingPriority="750" id="0Av-wg-y41">
                                             <rect key="frame" x="115" y="219" width="142" height="18"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <buttonCell key="cell" type="check" title="Show half scanlines" bezelStyle="regularSquare" imagePosition="left" inset="2" id="q9I-GX-oEP">
@@ -1061,12 +1061,12 @@ DQ
         </customObject>
     </objects>
     <resources>
-        <image name="CPU" width="64" height="64"/>
-        <image name="Disks" width="64" height="64"/>
-        <image name="Fullscreen" width="64" height="64"/>
+        <image name="CPU" width="32" height="32"/>
+        <image name="Disks" width="32" height="32"/>
+        <image name="Fullscreen" width="32" height="32"/>
         <image name="NSUser" width="32" height="32"/>
-        <image name="Prefs" width="64" height="64"/>
+        <image name="Prefs" width="32" height="32"/>
         <image name="Reboot" width="32" height="32"/>
-        <image name="Stop" width="64" height="64"/>
+        <image name="Stop" width="32" height="32"/>
     </resources>
 </document>
