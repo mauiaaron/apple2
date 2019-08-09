@@ -72,9 +72,9 @@
     }
 
     NSInteger mode = [defaults integerForKey:kApple2ColorConfig];
-    if (! ((mode >= COLOR_MODE_BW) && (mode < NUM_COLOROPTS)) )
+    if (! ((mode >= COLOR_MODE_MONO) && (mode < NUM_COLOROPTS)) )
     {
-        mode = COLOR_MODE_BW;
+        mode = COLOR_MODE_DEFAULT;
     }
     //[self.videoModePicker d:mode];
     //color_mode = (color_mode_t)mode;
