@@ -752,6 +752,8 @@ bool cpu65_loadState(StateHelper_s *helper) {
 }
 
 #if CPU_TRACING
+extern const struct opcode_struct_s opcodes_65c02[256];
+extern const uint8_t opcodes_65c02_numargs[256];
 
 /* -------------------------------------------------------------------------
     CPU Tracing routines

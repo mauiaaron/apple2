@@ -294,6 +294,7 @@ const struct opcode_struct_s opcodes_65c02[256] = {
 
 const struct opcode_struct_s *opcodes = opcodes_65c02;
 
+#if CPU_TRACING
 const uint8_t opcodes_65c02_numargs[256] = {
     0, 1, 0, 0, 1, 1, 1, 0,   0, 1, 0, 0, 2, 2, 2, 0, // 0x00-0x0F
     1, 1, 1, 0, 1, 1, 1, 0,   0, 2, 0, 0, 2, 2, 2, 0, // 0x10-0x1F
@@ -312,6 +313,7 @@ const uint8_t opcodes_65c02_numargs[256] = {
     1, 1, 0, 0, 1, 1, 1, 0,   0, 1, 0, 0, 2, 2, 2, 0, // 0xE0-0xEF
     1, 1, 1, 0, 0, 1, 1, 0,   0, 2, 0, 0, 0, 2, 2, 0, // 0xF0-0xFF
 };
+#endif
 
 #if 0
 const struct opcode_struct_s opcodes_6502[256] = {
