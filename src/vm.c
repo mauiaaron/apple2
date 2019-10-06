@@ -1062,10 +1062,12 @@ static void _initialize_iie_switches(void) {
     run_args.base_hgrrd = apple_ii_64k[0];
     run_args.base_hgrwrt= apple_ii_64k[0];
 
-    run_args.base_c3rom = apple_ii_64k[1]; // c3rom internal
-    run_args.base_c4rom = apple_ii_64k[1]; // c4rom internal
-    run_args.base_c5rom = apple_ii_64k[1]; // c5rom internal
+    run_args.base_c3rom = (void *)iie_read_peripheral_card; // c3rom internal
+    run_args.base_c4rom = (void *)iie_read_peripheral_card; // c4rom internal
+    run_args.base_c5rom = (void *)iie_read_peripheral_card; // c5rom internal
     run_args.base_cxrom = (void *)iie_read_peripheral_card; // cxrom peripheral
+
+    run_args.softswitches = SS_TEXT | SS_BANK2;
 }
 
 static void _initialize_font(void) {
@@ -1383,8 +1385,6 @@ void vm_initialize(void) {
     disk6_init();
     _initialize_iie_switches();
     c_joystick_reset();
-
-    run_args.softswitches = SS_TEXT | SS_BANK2;
 }
 
 void vm_reinitializeAudio(void) {
