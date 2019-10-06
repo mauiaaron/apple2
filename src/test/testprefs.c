@@ -1795,7 +1795,7 @@ TEST test_prefs_loadString_1() {
     FREE(val);
 
     JSON_ref jsonVal = NULL;
-    ok = prefs_copyJSONValue(PREF_DOMAIN_JOYSTICK, PREF_KPAD_ROSETTE_CHAR_ARRAY, &jsonVal);
+    ok = prefs_copyJSONValue(PREF_DOMAIN_JOYSTICK, "kpAxisRosetteChars", &jsonVal);
     ASSERT(ok);
     ASSERT(json_isArray(jsonVal));
     ok = json_arrayCount(jsonVal, &lVal);
