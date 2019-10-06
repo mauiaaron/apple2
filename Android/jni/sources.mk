@@ -63,7 +63,7 @@ APPLE2_MAIN_SRC = \
     $(APPLE2_SRC_PATH)/zlib-helpers.c \
     $(APPLE2_SRC_PATH)/../externals/jsmn/jsmn.c
 
-APPLE2_OPTIM_CFLAGS := -Os
+APPLE2_OPTIM_CFLAGS := -O2 # match the same optimization level as BUILD_MODE=release for ndk-build
 APPLE2_BASE_CFLAGS := -DAPPLE2IX=1 -DINTERFACE_TOUCH=1 -DMOBILE_DEVICE=1 -DVIDEO_OPENGL=1 -std=gnu11 -fPIC $(APPLE2_OPTIM_CFLAGS) -I$(APPLE2_SRC_PATH)
 APPLE2_BASE_LDLIBS := -Wl,-z,text -Wl,-z,noexecstack -llog -landroid -lGLESv2 -lz -lOpenSLES -latomic
 

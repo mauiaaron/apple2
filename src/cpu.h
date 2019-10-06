@@ -87,7 +87,7 @@ void cpu65_trace_checkpoint(void);
 #   define D_Flag          0x20            /* 6502 Decimal mode       */
 #   define Z_Flag          0x40            /* 6502 Zero               */
 #   define N_Flag          0x80            /* 6502 Negative           */
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(__aarch64__)
 // VCZN positions match positions of shifted status register
 #   define V_Flag          0x1
 #   define C_Flag          0x2
@@ -101,10 +101,7 @@ void cpu65_trace_checkpoint(void);
 #   define I_Flag          0x20
 #   define B_Flag          0x40
 #   define D_Flag          0x80
-#   define BX_Flags        0x50
 #   define BI_Flags        0x60
-#elif defined(__aarch64__)
-#   error soon ...
 #else
 #   error unknown machine architecture
 #endif

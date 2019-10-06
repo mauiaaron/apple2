@@ -186,7 +186,7 @@ typedef struct cpu65_run_args_s {
 #define OUTPUT_CPU65_RW() printf("#define CPU65_RW %ld\n", offsetof(cpu65_run_args_s, cpu65_rw))
     uint8_t  cpu65_opcode;   // Last opcode
 #define OUTPUT_CPU65_OPCODE() printf("#define CPU65_OPCODE %ld\n", offsetof(cpu65_run_args_s, cpu65_opcode))
-    uint8_t  cpu65_opcycles; // Last opcode extra cycles
+    uint8_t  cpu65_opcycles; // Last opcode cycles
 #define OUTPUT_CPU65_OPCYCLES() printf("#define CPU65_OPCYCLES %ld\n", offsetof(cpu65_run_args_s, cpu65_opcycles))
 
     uint8_t cpu65__signal;
