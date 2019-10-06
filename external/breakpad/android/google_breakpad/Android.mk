@@ -96,7 +96,7 @@ LOCAL_SRC_FILES := \
 
 # Embedded stackwalker sources (to be able to process crashes in-situ on Android device)
 ifeq ($(EMBEDDED_STACKWALKER),1)
-LOCAL_CPPFLAGS += -DEMBEDDED_STACKWALKER=1 -frtti
+LOCAL_CPPFLAGS += -DAPPLE2IX -DEMBEDDED_STACKWALKER=1 -frtti
 LOCAL_SRC_FILES += \
     src/processor/basic_code_modules.cc \
     src/processor/basic_source_line_resolver.cc \

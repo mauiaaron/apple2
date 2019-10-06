@@ -46,7 +46,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif  // __cplusplus
+#if !APPLE2IX
 typedef struct user_fxsr_struct user_fpxregs_struct;
+#endif // !APPLE2IX
 #ifdef __cplusplus
 }  // extern "C"
 #endif  // __cplusplus
@@ -56,6 +58,7 @@ typedef struct user_fxsr_struct user_fpxregs_struct;
 #ifdef __cplusplus
 extern "C" {
 #endif  // __cplusplus
+#if !APPLE2IX
 struct user_regs_struct {
  __u64 regs[31];
  __u64 sp;
@@ -67,6 +70,7 @@ struct user_fpsimd_struct {
  __u32 fpsr;
  __u32 fpcr;
 };
+#endif // !APPLE2IX
 #ifdef __cplusplus
 }  // extern "C"
 #endif  // __cplusplus

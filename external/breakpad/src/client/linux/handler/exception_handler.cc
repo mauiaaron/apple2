@@ -106,7 +106,12 @@
 #endif
 
 // A wrapper for the tgkill syscall: send a signal to a specific thread.
+#if APPLE2IX
+#define tgkill _tgkill
+static int _tgkill(pid_t tgid, pid_t tid, int sig) {
+#else
 static int tgkill(pid_t tgid, pid_t tid, int sig) {
+#endif
   return syscall(__NR_tgkill, tgid, tid, sig);
   return 0;
 }
