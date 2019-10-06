@@ -58,7 +58,7 @@ extern void set_halt_65c02(void);
 extern void clear_halt_65c02(void);
 extern void clear_halt_opcode(uint8_t opcode);
 extern void show_opcode_breakpts(void);
-extern int debugger_go(stepping_struct_s s);
+extern int _debugger_go(stepping_struct_s s);
 extern void fb_sha1(void);
 
 /*
@@ -483,7 +483,7 @@ ADDRS	[0-9a-fA-F]+
         s.step_type = NEXTING;
     }
 
-    debugger_go(s);
+    _debugger_go(s);
     return STEP;
 }
 
@@ -503,7 +503,7 @@ ADDRS	[0-9a-fA-F]+
         s.step_type = NEXTING;
     }
 
-    debugger_go(s);
+    _debugger_go(s);
     return STEP;
 }
 
@@ -514,7 +514,7 @@ ADDRS	[0-9a-fA-F]+
         .step_frame = 1
     };
 
-    debugger_go(s);
+    _debugger_go(s);
     return FINISH;
 }
 
@@ -557,7 +557,7 @@ ADDRS	[0-9a-fA-F]+
         .step_pc = run_args.cpu65_pc + delta
     };
 
-    debugger_go(s);
+    _debugger_go(s);
     return UNTIL;
 }
 
@@ -572,7 +572,7 @@ ADDRS	[0-9a-fA-F]+
         .step_type = GOING
     };
 
-    debugger_go(s);
+    _debugger_go(s);
     return GO;
 }
 
@@ -581,7 +581,7 @@ ADDRS	[0-9a-fA-F]+
         .step_type = GOING
     };
 
-    debugger_go(s);
+    _debugger_go(s);
     return GO;
 }
 
@@ -806,7 +806,7 @@ ADDRS	[0-9a-fA-F]+
         .step_text = buf
     };
 
-    debugger_go(s);
+    _debugger_go(s);
 
     return TYPE;
 }
@@ -836,7 +836,7 @@ ADDRS	[0-9a-fA-F]+
             .step_text = buf
         };
 
-        ch = debugger_go(s);
+        ch = _debugger_go(s);
         if (ch != -1) {
             break;
         }
@@ -847,7 +847,7 @@ ADDRS	[0-9a-fA-F]+
         stepping_struct_s s = {
             .step_type = GOING,
         };
-        debugger_go(s);
+        _debugger_go(s);
     }
 
     return LOAD;

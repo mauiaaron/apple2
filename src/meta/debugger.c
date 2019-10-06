@@ -1263,9 +1263,9 @@ bool debugger_shouldBreak(void) {
 }
 
 /* -------------------------------------------------------------------------
-    debugger_go () - step into or step over commands
+    _debugger_go () - step into or step over commands
    ------------------------------------------------------------------------- */
-int debugger_go(stepping_struct_s s) {
+int _debugger_go(stepping_struct_s s) {
     memcpy(&stepping_struct, &s, sizeof(s));
 
     int ch = begin_cpu_stepping();
@@ -1521,7 +1521,7 @@ void debugger_go(void) {
     num_buffer_lines = 0;
     is_debugging = true;
 
-    debugger_go(s);
+    _debugger_go(s);
 
     FREE(buf);
 
