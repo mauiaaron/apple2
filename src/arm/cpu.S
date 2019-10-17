@@ -554,26 +554,6 @@
                 _DoASL(wr0) \
                 PutToEA_B
 
-#define _DoBIT \
-                GetFromEA_B \
-                mov     wr1, A_Reg; \
-                and     wr1, wr1, wr0;
-
-#define DoBIT \
-                _DoBIT \
-                bic     F_Reg, F_Reg, #NZ_Flags; \
-                bic     F_Reg, F_Reg, #V_Flag; \
-                tst     wr1, #0xFF; \
-                bnz     1f; \
-                orr     F_Reg, F_Reg, #Z_Flag; \
-1:              tst     wr0, #0x40; \
-                bz      2f; \
-                orr     F_Reg, F_Reg, #V_Flag; \
-2:              tst     wr0, #0x80; \
-                bz      3f; \
-                orr     F_Reg, F_Reg, #N_Flag; \
-3:
-
 #define DoCMP \
                 GetFromEA_B \
                 /* TODO FIXME : maybe actually use cmp or cmn instruction? */ \
@@ -1133,27 +1113,41 @@ ENTRY(op_BEQ) // 0xF0
        BIt Test
    ---------------------------------- */
 
+#define _DoBIT \
+                GetFromEA_B \
+                and     wr1, A_Reg, wr0;
+
+DoBIT:
+                _DoBIT
+                bic     F_Reg, F_Reg, #NZ_Flags
+                bic     F_Reg, F_Reg, #V_Flag
+                ands    wr1, wr1, #0xFF
+                FlagZ
+                and     wr1, wr0, #0x40
+                lsr     wr1, wr1, #6 /* V_Flag is bit 1 */
+                orr     F_Reg, F_Reg, wr1
+                and     wr1, wr0, #0x80
+                lsr     wr1, wr1, #4 /* N_Flag is bit 4 */
+                orr     F_Reg, F_Reg, wr1
+                Continue
+
 ENTRY(op_BIT_zpage) // 0x24
                 GetZPage
-                DoBIT
-                Continue
+                b       DoBIT
 
 ENTRY(op_BIT_abs) // 0x2c
                 GetAbs
-                DoBIT
-                Continue
+                b       DoBIT
 
 // 65c02 : 0x34
 ENTRY(op_BIT_zpage_x)
                 GetZPage_X
-                DoBIT
-                Continue
+                b       DoBIT
 
 // 65c02 : 0x3C
 ENTRY(op_BIT_abs_x)
                 GetAbs_X
-                DoBIT
-                Continue
+                b       DoBIT
 
                 /* BIT immediate is anomalous in that it does not affect the
                  * N and V flags, unlike in other addressing modes.
@@ -1162,12 +1156,9 @@ ENTRY(op_BIT_abs_x)
 ENTRY(op_BIT_imm)
                 GetImm
                 _DoBIT
-                tst     wr1, #0xFF
-                bnz     1f
-                orr     F_Reg, F_Reg, #Z_Flag
-                b       2f
-1:              bic     F_Reg, F_Reg, #Z_Flag
-2:              Continue
+                ands    wr1, wr1, #0xFF
+                FlagZ
+                Continue
 
 .ltorg
 
