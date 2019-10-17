@@ -567,8 +567,8 @@ uint8_t cpu65__opcycles[256] = {
 
 // NOTE: currently this is a conversion table between i386 flags <-> 6502 P register
 static void init_flags_conversion_tables(void) {
-    for (unsigned i = 0; i < 256; i++) {
-        unsigned char val = 0;
+    for (unsigned int i = 0; i < 256; i++) {
+        uint8_t val = 0;
 
         if (i & C_Flag) {
             val |= C_Flag_6502;
@@ -603,7 +603,7 @@ static void init_flags_conversion_tables(void) {
         }
 
         cpu65_flags_encode[ i ] = val;
-        cpu65_flags_decode[ val ] = i;
+        cpu65_flags_decode[ val ] = (uint8_t)i;
     }
 }
 

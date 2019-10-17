@@ -22,12 +22,16 @@
 
 // ARM register mappings
 
-#define bz                 beq
-#define bnz                bne
+#define bz                  beq
+#define bnz                 bne
 
-#define ROR_BIT          0x80000000
+#define ROR_BIT             0x80000000
+#define ROR_SHIFT           30
 
 #ifdef __aarch64__
+
+// NOTE: currently cpu.S contains unified ARM code that sacrifices using some 64bit scratch registers in favor of common codepath.
+// We could further optimize the 64 bit port in the future if we separate it out ...
 
 #   define DOT_ARM
 #   define ALIGN            .align 2;
@@ -42,8 +46,11 @@
 #   define wr0             w0              /* scratch/"important byte"   */
 #   define xr1             x1              /* scratch                    */
 #   define wr1             w1              /* scratch                    */
+#   define wr9             w2              /* scratch                    */
 
-#   define wr9             w2
+#   define xr12            x5              /* overloaded both scratch    */
+#   define wr12            w5              /* and also ...               */
+#   define arm_flags       x5              /* arm_flags (Flag_() macros) */
 
 // NOTE: ARMv8 Procedure Call Standard indicates that x19-x28 are callee saved ... so we can call back into C without needing to
 // first save these ...
@@ -61,8 +68,6 @@
 #   define reg_args        x26             /* cpu65_run() args register  */
 #   define reg_vmem_r      x27             /* cpu65_vmem_r table address */
 
-#   define xr12            x28             /* scratch                    */
-#   define wr12            w28             /* scratch                    */
 // x29      : frame pointer (callee-saved)
 // x30      : return address
 // xzr/wzr  : zero register
@@ -83,9 +88,6 @@
 #   define xr1             r1              /* scratch                    */
 #   define wr1             r1              /* scratch                    */
 #   define wr9             r9              /* scratch                    */
-// r12 is "ARM Intra-Procedure-call scratch register" ... used as a scratch register
-#   define xr12            r12             /* scratch                    */
-#   define wr12            r12             /* scratch                    */
 
 // NOTE: these need to be preserved in subroutine (C) invocations ... */
 #   define EffectiveAddr   r2              /* 16bit Effective address    */
@@ -105,6 +107,10 @@
 // r9 is "ARM platform register" ... used as a scratch register
 #   define reg_args        r10             /* cpu65_run() args register  */
 #   define reg_vmem_r      r11             /* cpu65_vmem_r table address */
+// r12 is "ARM Intra-Procedure-call scratch register" ... used as a scratch register
+#   define xr12            r12             /* overloaded both scratch    */
+#   define wr12            r12             /* and also ...               */
+#   define arm_flags       r12             /* arm_flags (Flag_() macros) */
 // r13 ARM SP
 // r14 ARM LR (return addr)
 // r15 ARM PC

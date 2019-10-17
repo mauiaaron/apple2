@@ -1039,10 +1039,9 @@ GLUE_C_READ(iie_read_slot_expansion)
     return apple_ii_64k[1][ea];
 }
 
-GLUE_C_READ(debug_illegal_bcd)
+GLUE_C_WRITE(debug_illegal_bcd)
 {
     LOG("Illegal/undefined BCD operation encountered, debug break on c_debug_illegal_bcd to debug...");
-    return 0;
 }
 
 // ----------------------------------------------------------------------------

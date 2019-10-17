@@ -89,6 +89,7 @@ void cpu65_trace_checkpoint(void);
 #   define N_Flag          0x80            /* 6502 Negative           */
 #elif defined(__arm__) || defined(__aarch64__)
 // VCZN positions match positions of shifted status register
+// ALSO NOTE : changing these WILL AFFECT custom shifting in arm/cpu.S ...
 #   define V_Flag          0x1
 #   define C_Flag          0x2
 #   define Z_Flag          0x4

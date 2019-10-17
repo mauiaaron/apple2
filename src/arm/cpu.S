@@ -18,9 +18,13 @@
 
 
 #if __aarch64__
-#   define arm_flags xr12
 #   define APSR NZCV
 #   define APSR_nzcvq NZCV
+
+#   define Zero(x) \
+                mov     x, wzr;
+#   define ZeroX(x) \
+                mov     x, xzr;
 
 #   define Enter \
                 stp     x29, x30, [sp, -16]!; \
@@ -38,15 +42,19 @@
                 ldp     x21, x22, [sp], 16; \
                 ldp     x19, x20, [sp], 16; \
                 ldp     x29, x30, [sp], 16; \
-                ret
+                ret;
 #else
-#   define arm_flags wr12
+
+#   define Zero(x) \
+                eor     x, x, x;
+#   define ZeroX(x) \
+                eor     x, x, x;
 
 #   define Enter \
-                push    {r4, r5, r6, r7, r8, r9, r10, r11, lr}
+                push    {r4, r5, r6, r7, r8, r9, r10, r11, lr};
 
 #   define Exit \
-                pop     {r4, r5, r6, r7, r8, r9, r10, r11, pc}
+                pop     {r4, r5, r6, r7, r8, r9, r10, r11, pc};
 #endif
 
 #define DecodeFlags \
@@ -70,7 +78,7 @@
                 strb    A_Reg, [reg_args, #CPU65_A]; \
                 /* save flags */ \
                 EncodeFlags \
-                strb    wr0, [reg_args, #CPU65_F]
+                strb    wr0, [reg_args, #CPU65_F];
 
 // Tracing is necessary for some CPU tests and to verify operation against other emulators
 #if CPU_TRACING
@@ -93,19 +101,8 @@
 
 
 #define CPUStatsReset \
-                eor     wr1, wr1, wr1; \
+                Zero(wr1) \
                 strb    wr1, [reg_args, #CPU65_OPCYCLES]; \
-                strb    wr1, [reg_args, #CPU65_RW];
-
-#define CPUStatsSetRead \
-                ldrb    wr1, [reg_args, #CPU65_RW]; \
-                orr     wr1, wr1, #1; \
-                strb    wr1, [reg_args, #CPU65_RW];
-
-#define CPUStatsSetWrite \
-                strb    wr0, [reg_args, #CPU65_D]; \
-                ldrb    wr1, [reg_args, #CPU65_RW]; \
-                orr     wr1, wr1, #2; \
                 strb    wr1, [reg_args, #CPU65_RW];
 
 // ----------------------------------------------------------------------------
@@ -133,7 +130,6 @@
 #define GetFromPC_B \
                 mov     EffectiveAddr, PC_Reg; \
                 IncUint16(PC_Reg) \
-                orr     wr0, wr0, #0x10000; /* clear ARM processor flags */ \
                 ldr     xr1, [reg_vmem_r, xEffectiveAddr, LSL PTR_SHIFT]; \
                 BLX     xr1; \
                 TRACE_ARG
@@ -166,12 +162,16 @@
                 strb    wr0, [reg_args, #CPU65_OPCODE]; /* wr0 should be next opcode */ \
                 ldr     xr1, [reg_args, #CPU65__OPCODES]; \
                 ldr     xr1, [xr1, xr0, LSL PTR_SHIFT]; \
-                eor     xr0, xr0, xr0; \
+                ZeroX(xr0) \
                 msr     APSR_nzcvq, xr0; \
                 BX      xr1;
 
 #define GetFromEA_B \
-                CPUStatsSetRead \
+                /* Record CPU read: */ \
+                ldrb    wr1, [reg_args, #CPU65_RW]; \
+                orr     wr1, wr1, #1; \
+                strb    wr1, [reg_args, #CPU65_RW]; \
+                \
                 ldr     xr1, [reg_vmem_r, xEffectiveAddr, LSL PTR_SHIFT]; \
                 BLX     xr1;
 
@@ -190,7 +190,12 @@
                 lsr     PC_Reg, PC_Reg, #16;
 
 #define PutToEA_B \
-                CPUStatsSetWrite \
+                /* Record CPU write: */ \
+                strb    wr0, [reg_args, #CPU65_D]; \
+                ldrb    wr1, [reg_args, #CPU65_RW]; \
+                orr     wr1, wr1, #2; \
+                strb    wr1, [reg_args, #CPU65_RW]; \
+                \
                 ldr     xr1, [reg_args, #CPU65_VMEM_W]; \
                 ldr     xr1, [xr1, xEffectiveAddr, LSL PTR_SHIFT]; \
                 BLX     xr1;
@@ -259,6 +264,13 @@
                 lahf; \
                 and     arm_flags, arm_flags, #Z_Flag; \
                 bic     F_Reg, F_Reg, #Z_Flag; \
+                orr     xF_Reg, xF_Reg, arm_flags;
+
+#define FlagZasV \
+                lahf; \
+                and     arm_flags, arm_flags, #Z_Flag; \
+                bic     F_Reg, F_Reg, #V_Flag; \
+                lsr     arm_flags, arm_flags, #2; \
                 orr     xF_Reg, xF_Reg, arm_flags;
 
 #define FlagN \
@@ -469,45 +481,6 @@
                 _GetIndZPage_Y \
                 mov     EffectiveAddr, wr0;
 
-// ----------------------------------------------------------------------------
-// 65c02 instruction macros
-
-#define sign_a wr1
-#define sign_0 wr9
-#define DoADC_b \
-                GetFromEA_B \
-                /* save operand sign bits */ \
-                lsr     sign_a, A_Reg, #7; \
-                lsr     sign_0, wr0, #7; \
-                /* perform ADC with incoming carry */\
-                tst     F_Reg, #C_Flag; \
-                bz      1f; \
-                add     A_Reg, A_Reg, #1; \
-1:              add     A_Reg, A_Reg, wr0; \
-                /* clear and set flags */ \
-                bic     F_Reg, F_Reg, #NVZC_Flags; \
-                tst     A_Reg, #0x100; \
-                bz      2f; \
-                orr     F_Reg, F_Reg, #C_Flag; \
-2:              bic     A_Reg, A_Reg, #0x100; \
-                \
-                tst     A_Reg, #0x80; \
-                bz      3f; \
-                orr     F_Reg, F_Reg, #N_Flag; \
-                \
-3:              eor     sign_0, sign_a, sign_0; \
-                cmp     sign_0, #0; \
-                bnz     4f; \
-                lsr     sign_0, A_Reg, #7; \
-                cmp     sign_a, sign_0; \
-                bz      4f; \
-                orr     F_Reg, F_Reg, #V_Flag; \
-                \
-4:              tst     A_Reg, #0xFF; \
-                bne     5f; \
-                orr     F_Reg, F_Reg, #Z_Flag; \
-5:
-
 #ifndef NDEBUG
 #   define DebugBCDCheck \
                 tst     A_Reg, #0x80; \
@@ -535,13 +508,204 @@
 #   define DebugBCDCheck
 #endif
 
-#define DoAND \
-                GetFromEA_B \
-                lsl     wr0, wr0, #24; \
-                lsl     A_Reg, A_Reg, #24; \
-                ands    A_Reg, A_Reg, wr0; \
-                FlagNZ \
-                lsr     A_Reg, A_Reg, #24;
+/* ----------------------------------------------------------------------
+       6502 routines and instructions
+   ---------------------------------------------------------------------- */
+
+/* ----------------------------------
+       ADC instructions
+       ADd memory to accumulator with Carry
+   ---------------------------------- */
+
+#define carry wr9
+#define lo_nyb wr12
+
+// Add with carry Decimal mode
+ENTRY(op_ADC_dec)
+                AddOpCycles(#1)
+                GetFromEA_B
+                DebugBCDCheck
+                // isolate lo nybbles
+                mov     lo_nyb, A_Reg
+                mov     wr9, wr0
+                and     lo_nyb, lo_nyb, #0x0F
+                and     wr9, wr9, #0x0F
+                // lo nybble addition with carry
+                and     wr1, F_Reg, #C_Flag
+                lsr     wr1, wr1, #1
+                add     wr9, wr9, wr1
+                add     lo_nyb, lo_nyb, wr9
+                // prep 65c02 flags
+                bic     F_Reg, F_Reg, #NVZC_Flags
+                // lo nybble DAA (Decimal Adjustment after Addition), saving carry (+0, +1, +2)
+                cmp     lo_nyb, #0x09
+                bls     1f
+                add     lo_nyb, lo_nyb, #6
+1:              lsr     carry, lo_nyb, #4
+                and     lo_nyb, lo_nyb, #0x0F
+                // isolate hi nybbles
+                lsr     A_Reg, A_Reg, #4
+                lsr     wr0, wr0, #4
+                // hi nybble addition with carry
+                add     wr0, wr0, carry
+                add     wr0, A_Reg, wr0
+                // hi nybble DAA
+                cmp     wr0, #0x09
+                bls     2f
+                add     wr0, wr0, #6
+                orr     F_Reg, F_Reg, #C_Flag
+                // merge nybbles
+2:              lsl     wr0, wr0, #4
+                orr     A_Reg, wr0, lo_nyb
+                // NZ flags
+                and     wr1, A_Reg, #0x80
+                lsr     wr1, wr1, #4 /* N_Flag is bit 4 */
+                orr     F_Reg, F_Reg, wr1
+                ands    wr1, A_Reg, #0xFF
+                FlagZ
+                Continue
+
+#define sign_a wr12
+#define sign_0 wr9
+#define sign_res wr1
+DoADC_b:        tst     F_Reg, #D_Flag /* Decimal mode? */
+                bne     CALL(op_ADC_dec) /* Yes, jump to decimal version */
+                GetFromEA_B
+                /* save operand sign bits */
+                lsr     sign_a, A_Reg, #7
+                lsr     sign_0, wr0, #7
+                /* add the incoming carry */
+                and     wr1, F_Reg, #C_Flag
+                lsr     wr1, wr1, #1
+                add     A_Reg, A_Reg, wr1
+                /* perform main add */
+                add     A_Reg, A_Reg, wr0
+                /* clear and set flags */
+                bic     F_Reg, F_Reg, #NVZC_Flags
+                and     wr1, A_Reg, #0x100
+                bic     A_Reg, A_Reg, #0x100
+                lsr     wr1, wr1, #7 /* C_Flag */
+                orr     F_Reg, F_Reg, wr1
+                and     wr1, A_Reg, #0x80
+                lsr     wr1, wr1, #4 /* N_Flag */
+                orr     F_Reg, F_Reg, wr1
+                /* check and set oVerflow (V_Flag) */
+                eor     sign_0, sign_a, sign_0 /* 1: no V, 0: V if signRes != signA */
+                mvn     sign_0, sign_0
+                and     sign_0, sign_0, #1 /* 0: no V, 1: mask */
+                lsr     sign_res, A_Reg, #7
+                eor     sign_a, sign_a, sign_res
+                and     sign_a, sign_a, sign_0
+                orr     F_Reg, F_Reg, sign_a /* V_Flag */
+                /* finally set Z -- this is here to avoid collision with overloaded xr12 */
+                ands    wr1, A_Reg, #0xFF
+                FlagZ
+                Continue
+
+ENTRY(op_ADC_imm) // 0x69
+                GetImm
+                b       DoADC_b
+
+ENTRY(op_ADC_zpage) // 0x65
+                GetZPage
+                b       DoADC_b
+
+ENTRY(op_ADC_zpage_x) // 0x75
+                GetZPage_X
+                b       DoADC_b
+
+// UNIMPLEMENTED : W65C02S datasheet
+ENTRY(op_ADC_zpage_y)
+                b CALL(op_NOP)
+
+ENTRY(op_ADC_abs) // 0x6d
+                GetAbs
+                b       DoADC_b
+
+ENTRY(op_ADC_abs_x) // 0x7d
+                GetAbs_X
+                b       DoADC_b
+
+ENTRY(op_ADC_abs_y) // 0x79
+                GetAbs_Y
+                b       DoADC_b
+
+ENTRY(op_ADC_ind_x) // 0x61
+                GetIndZPage_X
+                b       DoADC_b
+
+ENTRY(op_ADC_ind_y) // 0x71
+                GetIndZPage_Y
+                b       DoADC_b
+
+// 65c02 : 0x72
+ENTRY(op_ADC_ind_zpage)
+                GetIndZPage
+                b       DoADC_b
+
+.ltorg
+
+/* ----------------------------------
+       AND instructions
+       logical AND memory with accumulator
+   ---------------------------------- */
+
+DoAND:
+                GetFromEA_B
+                lsl     wr0, wr0, #24
+                lsl     A_Reg, A_Reg, #24
+                ands    A_Reg, A_Reg, wr0
+                FlagNZ
+                lsr     A_Reg, A_Reg, #24
+                Continue
+
+ENTRY(op_AND_imm) // 0x29
+                GetImm
+                b       DoAND
+
+ENTRY(op_AND_zpage) // 0x25
+                GetZPage
+                b       DoAND
+
+ENTRY(op_AND_zpage_x) // 0x35
+                GetZPage_X
+                b       DoAND
+
+// UNIMPLEMENTED : W65C02S datasheet
+ENTRY(op_AND_zpage_y)
+                b   CALL(op_NOP)
+
+ENTRY(op_AND_abs) // 0x2d
+                GetAbs
+                b       DoAND
+
+ENTRY(op_AND_abs_x) // 0x3d
+                GetAbs_X
+                b       DoAND
+
+ENTRY(op_AND_abs_y) // 0x39
+                GetAbs_Y
+                b       DoAND
+
+ENTRY(op_AND_ind_x) // 0x21
+                GetIndZPage_X
+                b       DoAND
+
+ENTRY(op_AND_ind_y) // 0x31
+                GetIndZPage_Y
+                b       DoAND
+
+// 65c02 : 0x32
+ENTRY(op_AND_ind_zpage)
+                GetIndZPage
+                b       DoAND
+
+.ltorg
+
+/* ----------------------------------
+       ASL instructions
+       Arithmetic Shift one bit Left, memory or accumulator
+   ---------------------------------- */
 
 #define _DoASL(x) \
                 lsl     x, x, #24; \
@@ -553,432 +717,6 @@
                 GetFromEA_B \
                 _DoASL(wr0) \
                 PutToEA_B
-
-#define DoCMP \
-                GetFromEA_B \
-                /* TODO FIXME : maybe actually use cmp or cmn instruction? */ \
-                lsl     wr0, wr0, #24; \
-                lsl     wr1, A_Reg, #24; \
-                subs    wr1, wr1, wr0; \
-                /*cmc;*/ \
-                FlagNZC
-
-#define DoCPX \
-                GetFromEA_B \
-                lsl     wr0, wr0, #24; \
-                lsl     wr1, X_Reg, #24; \
-                subs    wr1, wr1, wr0; \
-                /*cmc;*/ \
-                FlagNZC
-
-#define DoCPY \
-                GetFromEA_B \
-                lsl     wr0, wr0, #24; \
-                lsl     wr1, Y_Reg, #24; \
-                subs    wr1, wr1, wr0; \
-                /*cmc;*/ \
-                FlagNZC
-
-#define _DoDEC(x) \
-                mov     wr1, #1; \
-                lsl     wr1, wr1, #24; \
-                lsl     x, x, #24; \
-                subs    x, x, wr1; \
-                FlagNZ \
-                lsr     x, x, #24;
-
-#define DoDEC \
-                GetFromEA_B \
-                _DoDEC(wr0) \
-                PutToEA_B
-
-#define DoEOR \
-                GetFromEA_B \
-                lsl     wr0, wr0, #24; \
-                lsl     A_Reg, A_Reg, #24; \
-                eor     A_Reg, A_Reg, wr0; \
-                cmp     A_Reg, #0; \
-                FlagNZ \
-                lsr     A_Reg, A_Reg, #24;
-
-#define _DoINC(x) \
-                mov     wr1, #1; \
-                lsl    wr1, wr1, #24; \
-                lsl     x, x, #24; \
-                adds    x, x, wr1; \
-                FlagNZ \
-                lsr     x, x, #24;
-
-#define DoINC \
-                GetFromEA_B \
-                _DoINC(wr0) \
-                PutToEA_B
-
-#define DoLDA \
-                GetFromEA_B \
-                mov     A_Reg, wr0; \
-                lsl     wr0, wr0, #24; \
-                orr     wr0, wr0, wr0; \
-                cmp     wr0, #0; \
-                FlagNZ
-
-#define DoLDX \
-                GetFromEA_B \
-                mov     X_Reg, wr0; \
-                lsl     wr0, wr0, #24; \
-                orr     wr0, wr0, wr0; \
-                cmp     wr0, #0; \
-                FlagNZ
-
-#define DoLDY \
-                GetFromEA_B \
-                mov     Y_Reg, wr0; \
-                lsl     wr0, wr0, #24; \
-                orr     wr0, wr0, wr0; \
-                cmp     wr0, #0; \
-                FlagNZ
-
-#if __aarch64__
-#   define _DoLSR(x) \
-                and     wr1, x, #1; \
-                lsl     wr1, wr1, #1; /* C_Flag */ \
-                lsr     x, x, #1; \
-                cmp     x, #0; \
-                FlagNZ; \
-                bic     F_Reg, F_Reg, #C_Flag; \
-                orr     F_Reg, F_Reg, wr1;
-#else
-#   define _DoLSR(x) \
-                lsrs    x, x, #1; \
-                FlagNZC;
-#endif
-
-#define DoLSR \
-                GetFromEA_B \
-                _DoLSR(wr0) \
-                PutToEA_B
-
-#define DoORA \
-                GetFromEA_B \
-                lsl     wr0, wr0, #24; \
-                lsl     A_Reg, A_Reg, #24; \
-                orr     A_Reg, A_Reg, wr0; \
-                cmp     A_Reg, #0; \
-                FlagNZ \
-                lsr     A_Reg, A_Reg, #24;
-
-#define _DoPLx(x) \
-                Pop(x); \
-                lsl     wr0, x, #24; \
-                orr     wr0, wr0, wr0; \
-                cmp     wr0, #0; \
-                FlagNZ
-
-#if __aarch64__
-#   define _FlagROL(x) \
-                /* HACK FIXME: Is there a easier way way to flag C here? */ \
-                and     xr1, x, #0x8000; /* out carry -> */ \
-                lsr     wr1, wr1, #14; /* C_FLAG */ \
-                bic     F_Reg, F_Reg, #C_Flag; \
-                orr     F_Reg, F_Reg, wr1; \
-                /* Now calc N & Z */ \
-                lsl     x, x, #49; \
-                cmp     x, #0; \
-                FlagNZ \
-                lsr     x, x, #56;
-#else
-#   define _FlagROL(x) \
-                lsls    x, x, #17; \
-                FlagNZC \
-                lsr     x, x, #24;
-#endif
-
-#define _DoROL(x) \
-                lsl     x, x, #8; \
-                lsl     F_Reg, F_Reg, #6; /* C_FLAG (in carry) -> 0x80 */ \
-                and     wr1, F_Reg, #0x80; \
-                orr     x, x, xr1; \
-                lsr     F_Reg, F_Reg, #6; /* undo */ \
-                _FlagROL(x)
-
-#define DoROL \
-                GetFromEA_B \
-                _DoROL(xr0) \
-                PutToEA_B
-
-#define _DoROR(x) \
-                tst     F_Reg, #C_Flag; \
-                bz      1f; \
-                orr     x, x, #0x100; \
-1:              ror     x, x, #1; \
-                bic     F_Reg, F_Reg, #NZC_Flags; \
-                tst     x, #ROR_BIT; \
-                bz      2f; \
-                bic     x, x, #ROR_BIT; \
-                orr     F_Reg, F_Reg, #C_Flag; \
-2:              tst     x, #0xFF; \
-                bnz     3f; \
-                orr     F_Reg, F_Reg, #Z_Flag; \
-3:              tst     x, #0x80; \
-                bz      4f; \
-                orr     F_Reg, F_Reg, #N_Flag; \
-4:
-
-#define DoROR \
-                GetFromEA_B \
-                _DoROR(wr0) \
-                PutToEA_B
-
-#define DoSBC_b \
-                GetFromEA_B \
-                /* save operand sign bits */ \
-                lsr     sign_a, A_Reg, #7; \
-                lsr     sign_0, wr0, #7; \
-                /* perform SBC with incoming borrow */\
-                sub     A_Reg, A_Reg, wr0; \
-                tst     F_Reg, #C_Flag; \
-                bnz     5f; \
-                sub     A_Reg, A_Reg, #1; \
-                /* clear and set flags */ \
-5:              bic     F_Reg, F_Reg, #NVZC_Flags; \
-                tst     A_Reg, #0x80000000; \
-                bnz     6f; \
-                orr     F_Reg, F_Reg, #C_Flag; \
-6:              lsl     A_Reg, A_Reg, #24; \
-                lsr     A_Reg, A_Reg, #24; \
-                \
-                tst     A_Reg, #0x80; \
-                bz      7f; \
-                orr     F_Reg, F_Reg, #N_Flag; \
-                \
-7:              eor     sign_0, sign_a, sign_0; \
-                cmp     sign_0, #0; \
-                beq     8f; \
-                lsr     sign_0, A_Reg, #7; \
-                cmp     sign_a, sign_0; \
-                bz      8f; \
-                orr     F_Reg, F_Reg, #V_Flag; \
-                \
-8:              tst     A_Reg, #0xFF; \
-                bnz     9f; \
-                orr     F_Reg, F_Reg, #Z_Flag; \
-9:
-
-#define DoSTA \
-                mov     wr0, A_Reg; \
-                PutToEA_B
-
-#define DoSTX \
-                mov     wr0, X_Reg; \
-                PutToEA_B
-
-#define DoSTY \
-                mov     wr0, Y_Reg; \
-                PutToEA_B
-
-#define DoSTZ \
-                mov     wr0, #0; \
-                PutToEA_B
-
-#define DoTRB \
-                GetFromEA_B \
-                tst     wr0, A_Reg; \
-                FlagZ \
-                mvn     wr1, A_Reg; \
-                and     wr0, wr0, wr1; \
-                PutToEA_B
-
-#define DoTSB \
-                GetFromEA_B \
-                tst     wr0, A_Reg; \
-                FlagZ \
-                orr     wr0, A_Reg, wr0; \
-                PutToEA_B
-
-/* ----------------------------------------------------------------------
-       6502 routines and instructions
-   ---------------------------------------------------------------------- */
-
-/* ----------------------------------
-       ADC instructions
-       ADd memory to accumulator with Carry
-   ---------------------------------- */
-
-#define carry wr9
-#define lo_nyb wr1
-
-// Decimal mode
-ENTRY(op_ADC_dec)
-                AddOpCycles(#1)
-                GetFromEA_B
-                DebugBCDCheck
-                // isolate lo nybbles
-                mov     lo_nyb, A_Reg
-                mov     wr9, wr0
-                and     lo_nyb, lo_nyb, #0x0F
-                and     wr9, wr9, #0x0F
-                // lo nybble addition with carry
-                tst     F_Reg, #C_Flag
-                bz      1f
-                add     wr9, wr9, #1
-1:              add     lo_nyb, lo_nyb, wr9
-                // prep 65c02 flags
-                bic     F_Reg, F_Reg, #NVZC_Flags
-                // lo nybble DAA (Decimal Adjustment after Addition), saving carry (+0, +1, +2)
-                cmp     lo_nyb, #0x09
-                bls     2f
-                add     lo_nyb, lo_nyb, #6
-2:              lsr     carry, lo_nyb, #4
-                and     lo_nyb, lo_nyb, #0x0F
-                // isolate hi nybbles
-                lsr     A_Reg, A_Reg, #4
-                lsr     wr0, wr0, #4
-                // hi nybble addition with carry
-                add     wr0, wr0, carry
-                add     wr0, A_Reg, wr0
-                // hi nybble DAA
-                cmp     wr0, #0x09
-                bls     3f
-                add     wr0, wr0, #6
-                orr     F_Reg, F_Reg, #C_Flag
-                // merge nybbles
-3:              lsl     wr0, wr0, #4
-                orr     A_Reg, wr0, lo_nyb
-                // NZ flags
-                tst     A_Reg, #0x80
-                bz      4f
-                orr     F_Reg, F_Reg, #N_Flag
-4:              tst     A_Reg, #0xFF
-                bnz     5f
-                orr     F_Reg, F_Reg, #Z_Flag
-5:              Continue
-
-#define maybe_DoADC_d \
-                tst     F_Reg, #D_Flag;  /* Decimal mode? */ \
-                bne     CALL(op_ADC_dec) /* Yes, jump to decimal version */
-
-ENTRY(op_ADC_imm) // 0x69
-                GetImm
-          maybe_DoADC_d
-                DoADC_b
-                Continue
-
-ENTRY(op_ADC_zpage) // 0x65
-                GetZPage
-          maybe_DoADC_d
-                DoADC_b
-                Continue
-
-ENTRY(op_ADC_zpage_x) // 0x75
-                GetZPage_X
-          maybe_DoADC_d
-                DoADC_b
-                Continue
-
-// UNIMPLEMENTED : W65C02S datasheet
-ENTRY(op_ADC_zpage_y)
-                b CALL(op_NOP)
-
-ENTRY(op_ADC_abs) // 0x6d
-                GetAbs
-          maybe_DoADC_d
-                DoADC_b
-                Continue
-
-ENTRY(op_ADC_abs_x) // 0x7d
-                GetAbs_X
-          maybe_DoADC_d
-                DoADC_b
-                Continue
-
-ENTRY(op_ADC_abs_y) // 0x79
-                GetAbs_Y
-          maybe_DoADC_d
-                DoADC_b
-                Continue
-
-ENTRY(op_ADC_ind_x) // 0x61
-                GetIndZPage_X
-          maybe_DoADC_d
-                DoADC_b
-                Continue
-
-ENTRY(op_ADC_ind_y) // 0x71
-                GetIndZPage_Y
-          maybe_DoADC_d
-                DoADC_b
-                Continue
-
-// 65c02 : 0x72
-ENTRY(op_ADC_ind_zpage)
-                GetIndZPage
-          maybe_DoADC_d
-                DoADC_b
-                Continue
-
-.ltorg
-
-/* ----------------------------------
-       AND instructions
-       logical AND memory with accumulator
-   ---------------------------------- */
-
-ENTRY(op_AND_imm) // 0x29
-                GetImm
-                DoAND
-                Continue
-
-ENTRY(op_AND_zpage) // 0x25
-                GetZPage
-                DoAND
-                Continue
-
-ENTRY(op_AND_zpage_x) // 0x35
-                GetZPage_X
-                DoAND
-                Continue
-
-// UNIMPLEMENTED : W65C02S datasheet
-ENTRY(op_AND_zpage_y)
-                b   CALL(op_NOP)
-
-ENTRY(op_AND_abs) // 0x2d
-                GetAbs
-                DoAND
-                Continue
-
-ENTRY(op_AND_abs_x) // 0x3d
-                GetAbs_X
-                DoAND
-                Continue
-
-ENTRY(op_AND_abs_y) // 0x39
-                GetAbs_Y
-                DoAND
-                Continue
-
-ENTRY(op_AND_ind_x) // 0x21
-                GetIndZPage_X
-                DoAND
-                Continue
-
-ENTRY(op_AND_ind_y) // 0x31
-                GetIndZPage_Y
-                DoAND
-                Continue
-
-// 65c02 : 0x32
-ENTRY(op_AND_ind_zpage)
-                GetIndZPage
-                DoAND
-                Continue
-
-.ltorg
-
-/* ----------------------------------
-       ASL instructions
-       Arithmetic Shift one bit Left, memory or accumulator
-   ---------------------------------- */
 
 ENTRY(op_ASL_acc) // 0x0a
                 _DoASL(A_Reg)
@@ -1300,20 +1038,24 @@ ENTRY(op_CLV) // 0xB8
        CoMPare memory and accumulator
    ---------------------------------- */
 
+DoCMP:          GetFromEA_B
+                lsl     wr0, wr0, #24
+                lsl     wr1, A_Reg, #24
+                subs    wr1, wr1, wr0
+                FlagNZC
+                Continue
+
 ENTRY(op_CMP_imm) // 0xc9
                 GetImm
-                DoCMP
-                Continue
+                b       DoCMP
 
 ENTRY(op_CMP_zpage) // 0xc5
                 GetZPage
-                DoCMP
-                Continue
+                b       DoCMP
 
 ENTRY(op_CMP_zpage_x) // 0xd5
                 GetZPage_X
-                DoCMP
-                Continue
+                b       DoCMP
 
 // UNIMPLEMENTED : W65C02S datasheet
 ENTRY(op_CMP_zpage_y)
@@ -1321,34 +1063,28 @@ ENTRY(op_CMP_zpage_y)
 
 ENTRY(op_CMP_abs) // 0xcd
                 GetAbs
-                DoCMP
-                Continue
+                b       DoCMP
 
 ENTRY(op_CMP_abs_x) // 0xdd
                 GetAbs_X
-                DoCMP
-                Continue
+                b       DoCMP
 
 ENTRY(op_CMP_abs_y) // 0xd9
                 GetAbs_Y
-                DoCMP
-                Continue
+                b       DoCMP
 
 ENTRY(op_CMP_ind_x) // 0xc1
                 GetIndZPage_X
-                DoCMP
-                Continue
+                b       DoCMP
 
 ENTRY(op_CMP_ind_y) // 0xd1
                 GetIndZPage_Y
-                DoCMP
-                Continue
+                b       DoCMP
 
 // 65c02 : 0xD2
 ENTRY(op_CMP_ind_zpage)
                 GetIndZPage
-                DoCMP
-                Continue
+                b       DoCMP
 
 .ltorg
 
@@ -1357,46 +1093,68 @@ ENTRY(op_CMP_ind_zpage)
        ComPare memory and X register
    ---------------------------------- */
 
+DoCPX:          GetFromEA_B
+                lsl     wr0, wr0, #24
+                lsl     wr1, X_Reg, #24
+                subs    wr1, wr1, wr0
+                FlagNZC
+                Continue
+
 ENTRY(op_CPX_imm) // 0xe0
                 GetImm
-                DoCPX
-                Continue
+                b       DoCPX
 
 ENTRY(op_CPX_zpage) // 0xe4
                 GetZPage
-                DoCPX
-                Continue
+                b       DoCPX
 
 ENTRY(op_CPX_abs) // 0xec
                 GetAbs
-                DoCPX
-                Continue
+                b       DoCPX
 
 /* ----------------------------------
        CPY instructions
        ComPare memory and Y register
    ---------------------------------- */
 
+DoCPY:
+                GetFromEA_B
+                lsl     wr0, wr0, #24
+                lsl     wr1, Y_Reg, #24
+                subs    wr1, wr1, wr0
+                FlagNZC
+                Continue
+
 ENTRY(op_CPY_imm) // 0xc0
                 GetImm
-                DoCPY
-                Continue
+                b       DoCPY
 
 ENTRY(op_CPY_zpage) // 0xc4
                 GetZPage
-                DoCPY
-                Continue
+                b       DoCPY
 
 ENTRY(op_CPY_abs) // 0xcc
                 GetAbs
-                DoCPY
-                Continue
+                b       DoCPY
 
 .ltorg
 
 /* ----------------------------------
        DEA: DEcrement Accumulator
    ---------------------------------- */
+
+#define _DoDEC(x) \
+                mov     wr1, #1; \
+                lsl     wr1, wr1, #24; \
+                lsl     x, x, #24; \
+                subs    x, x, wr1; \
+                FlagNZ \
+                lsr     x, x, #24;
+
+#define DoDEC \
+                GetFromEA_B \
+                _DoDEC(wr0) \
+                PutToEA_B
 
 ENTRY(op_DEC_acc)
 ENTRY(op_DEA) // 0x3A
@@ -1451,20 +1209,26 @@ ENTRY(op_DEY) // 0x88
        Exclusive OR memory with accumulator
    ---------------------------------- */
 
+DoEOR:          GetFromEA_B
+                lsl     wr0, wr0, #24
+                lsl     A_Reg, A_Reg, #24
+                eor     A_Reg, A_Reg, wr0
+                cmp     A_Reg, #0
+                FlagNZ
+                lsr     A_Reg, A_Reg, #24
+                Continue
+
 ENTRY(op_EOR_imm) // 0x49
                 GetImm
-                DoEOR
-                Continue
+                b       DoEOR
 
 ENTRY(op_EOR_zpage) // 0x45
                 GetZPage
-                DoEOR
-                Continue
+                b       DoEOR
 
 ENTRY(op_EOR_zpage_x) // 0x55
                 GetZPage_X
-                DoEOR
-                Continue
+                b       DoEOR
 
 // UNIMPLEMENTED : W65C02S datasheet
 ENTRY(op_EOR_zpage_y)
@@ -1472,40 +1236,47 @@ ENTRY(op_EOR_zpage_y)
 
 ENTRY(op_EOR_abs) // 0x4d
                 GetAbs
-                DoEOR
-                Continue
+                b       DoEOR
 
 ENTRY(op_EOR_abs_x) // 0x5d
                 GetAbs_X
-                DoEOR
-                Continue
+                b       DoEOR
 
 ENTRY(op_EOR_abs_y) // 0x59
                 GetAbs_Y
-                DoEOR
-                Continue
+                b       DoEOR
 
 ENTRY(op_EOR_ind_x) // 0x41
                 GetIndZPage_X
-                DoEOR
-                Continue
+                b       DoEOR
 
 ENTRY(op_EOR_ind_y) // 0x51
                 GetIndZPage_Y
-                DoEOR
-                Continue
+                b       DoEOR
 
 // 65c02 : 0x52
 ENTRY(op_EOR_ind_zpage)
                 GetIndZPage
-                DoEOR
-                Continue
+                b       DoEOR
 
 .ltorg
 
 /* ----------------------------------
        INA : INcrement Accumulator
    ---------------------------------- */
+
+#define _DoINC(x) \
+                mov     wr1, #1; \
+                lsl    wr1, wr1, #24; \
+                lsl     x, x, #24; \
+                adds    x, x, wr1; \
+                FlagNZ \
+                lsr     x, x, #24;
+
+#define DoINC \
+                GetFromEA_B \
+                _DoINC(wr0) \
+                PutToEA_B
 
 ENTRY(op_INC_acc)
 ENTRY(op_INA) // 0x1A
@@ -1578,10 +1349,9 @@ ENTRY(op_JMP_ind) // 0x6c
 jmp_special: // see JMP indirect note in _Understanding the Apple IIe_ 4-25
                 mov     PC_Reg, wr0
                 subs    PC_Reg, PC_Reg, #0xFF
-                bpl     1f
                 lsl     PC_Reg, PC_Reg, #16
                 lsr     PC_Reg, PC_Reg, #16
-1:              GetFromMem_B(PC_Reg)
+                GetFromMem_B(PC_Reg)
                 lsl     wr9, wr0, #8
                 add     PC_Reg, PC_Reg, #0xFF
                 bic     PC_Reg, PC_Reg, #0x10000
@@ -1627,20 +1397,25 @@ ENTRY(op_JSR) // 0x20
        LoaD Accumulator with memory
    ---------------------------------- */
 
+DoLDA:          GetFromEA_B
+                mov     A_Reg, wr0
+                lsl     wr0, wr0, #24
+                orr     wr0, wr0, wr0
+                cmp     wr0, #0
+                FlagNZ
+                Continue
+
 ENTRY(op_LDA_imm) // 0xa9
                 GetImm
-                DoLDA
-                Continue
+                b       DoLDA
 
 ENTRY(op_LDA_zpage) // 0xa5
                 GetZPage
-                DoLDA
-                Continue
+                b       DoLDA
 
 ENTRY(op_LDA_zpage_x) // 0xb5
                 GetZPage_X
-                DoLDA
-                Continue
+                b       DoLDA
 
 // UNIMPLEMENTED : W65C02S datasheet
 ENTRY(op_LDA_zpage_y)
@@ -1648,34 +1423,28 @@ ENTRY(op_LDA_zpage_y)
 
 ENTRY(op_LDA_abs) // 0xad
                 GetAbs
-                DoLDA
-                Continue
+                b       DoLDA
 
 ENTRY(op_LDA_abs_x) // 0xbd
                 GetAbs_X
-                DoLDA
-                Continue
+                b       DoLDA
 
 ENTRY(op_LDA_abs_y) // 0xb9
                 GetAbs_Y
-                DoLDA
-                Continue
+                b       DoLDA
 
 ENTRY(op_LDA_ind_x) // 0xa1
                 GetIndZPage_X
-                DoLDA
-                Continue
+                b       DoLDA
 
 ENTRY(op_LDA_ind_y) // 0xb1
                 GetIndZPage_Y
-                DoLDA
-                Continue
+                b       DoLDA
 
 // 65c02 : 0xB2
 ENTRY(op_LDA_ind_zpage)
                 GetIndZPage
-                DoLDA
-                Continue
+                b       DoLDA
 
 .ltorg
 
@@ -1683,66 +1452,92 @@ ENTRY(op_LDA_ind_zpage)
        LDX instructions
    ---------------------------------- */
 
+DoLDX:          GetFromEA_B
+                mov     X_Reg, wr0
+                lsl     wr0, wr0, #24
+                orr     wr0, wr0, wr0
+                cmp     wr0, #0
+                FlagNZ
+                Continue
+
 ENTRY(op_LDX_imm) // 0xa2
                 GetImm
-                DoLDX
-                Continue
+                b       DoLDX
 
 ENTRY(op_LDX_zpage) // 0xa6
                 GetZPage
-                DoLDX
-                Continue
+                b       DoLDX
 
-// HACK : is this used? need to study coverage ...
 ENTRY(op_LDX_zpage_y) // 0xb6
                 GetZPage_Y
-                DoLDX
-                Continue
+                b       DoLDX
 
 ENTRY(op_LDX_abs) // 0xae
                 GetAbs
-                DoLDX
-                Continue
+                b       DoLDX
 
 ENTRY(op_LDX_abs_y) // 0xbe
                 GetAbs_Y
-                DoLDX
-                Continue
+                b       DoLDX
 
 /* ----------------------------------
        LDY instructions
    ---------------------------------- */
 
+DoLDY:          GetFromEA_B
+                mov     Y_Reg, wr0
+                lsl     wr0, wr0, #24
+                orr     wr0, wr0, wr0
+                cmp     wr0, #0
+                FlagNZ
+                Continue
+
 ENTRY(op_LDY_imm) // 0xa0
                 GetImm
-                DoLDY
-                Continue
+                b       DoLDY
 
 ENTRY(op_LDY_zpage) // 0xa4
                 GetZPage
-                DoLDY
-                Continue
+                b       DoLDY
 
 ENTRY(op_LDY_zpage_x) // 0xb4
                 GetZPage_X
-                DoLDY
-                Continue
+                b       DoLDY
 
 ENTRY(op_LDY_abs) // 0xac
                 GetAbs
-                DoLDY
-                Continue
+                b       DoLDY
 
 ENTRY(op_LDY_abs_x) // 0xbc
                 GetAbs_X
-                DoLDY
-                Continue
+                b       DoLDY
 
 .ltorg
 
 /* ----------------------------------
        LSR instructions
    ---------------------------------- */
+
+#if __aarch64__
+// ARM64 does not have lsrs ...
+#   define _DoLSR(x) \
+                and     wr1, x, #1; \
+                lsl     wr1, wr1, #1; /* C_Flag */ \
+                bic     F_Reg, F_Reg, #C_Flag; \
+                orr     F_Reg, F_Reg, wr1; \
+                lsr     x, x, #1; \
+                cmp     x, #0; \
+                FlagNZ
+#else
+#   define _DoLSR(x) \
+                lsrs    x, x, #1; \
+                FlagNZC
+#endif
+
+#define DoLSR \
+                GetFromEA_B \
+                _DoLSR(wr0) \
+                PutToEA_B
 
 ENTRY(op_LSR_acc) // 0x4a
                 _DoLSR(A_Reg)
@@ -1781,20 +1576,26 @@ ENTRY(op_NOP) // 0xea
        ORA instructions
    ---------------------------------- */
 
+DoORA:          GetFromEA_B
+                lsl     wr0, wr0, #24
+                lsl     A_Reg, A_Reg, #24
+                orr     A_Reg, A_Reg, wr0
+                cmp     A_Reg, #0
+                FlagNZ
+                lsr     A_Reg, A_Reg, #24
+                Continue
+
 ENTRY(op_ORA_imm) // 0x09
                 GetImm
-                DoORA
-                Continue
+                b       DoORA
 
 ENTRY(op_ORA_zpage) // 0x05
                 GetZPage
-                DoORA
-                Continue
+                b       DoORA
 
 ENTRY(op_ORA_zpage_x) // 0x15
                 GetZPage_X
-                DoORA
-                Continue
+                b       DoORA
 
 // UNIMPLEMENTED : W65C02S datasheet
 ENTRY(op_ORA_zpage_y)
@@ -1802,34 +1603,28 @@ ENTRY(op_ORA_zpage_y)
 
 ENTRY(op_ORA_abs) // 0x0d
                 GetAbs
-                DoORA
-                Continue
+                b       DoORA
 
 ENTRY(op_ORA_abs_x) // 0x1d
                 GetAbs_X
-                DoORA
-                Continue
+                b       DoORA
 
 ENTRY(op_ORA_abs_y) // 0x19
                 GetAbs_Y
-                DoORA
-                Continue
+                b       DoORA
 
 ENTRY(op_ORA_ind_x) // 0x01
                 GetIndZPage_X
-                DoORA
-                Continue
+                b       DoORA
 
 ENTRY(op_ORA_ind_y) // 0x11
                 GetIndZPage_Y
-                DoORA
-                Continue
+                b       DoORA
 
 // 65c02 : 0x12
 ENTRY(op_ORA_ind_zpage)
                 GetIndZPage
-                DoORA
-                Continue
+                b       DoORA
 
 .ltorg
 
@@ -1872,9 +1667,16 @@ ENTRY(op_PHY)
        PLA instruction
    ---------------------------------- */
 
+#define _DoPLx(x) \
+                Pop(x); \
+                lsl     wr0, x, #24; \
+                orr     wr0, wr0, wr0; \
+                cmp     wr0, #0; \
+                FlagNZ \
+                Continue
+
 ENTRY(op_PLA) // 0x68
                 _DoPLx(A_Reg)
-                Continue
 
 /* ----------------------------------
        PLP instruction
@@ -1894,7 +1696,6 @@ ENTRY(op_PLP) // 0x28
 
 ENTRY(op_PLX)
                 _DoPLx(X_Reg)
-                Continue
 
 /* ----------------------------------
        PLY instruction
@@ -1903,13 +1704,44 @@ ENTRY(op_PLX)
 
 ENTRY(op_PLY)
                 _DoPLx(Y_Reg)
-                Continue
 
 .ltorg
 
 /* ----------------------------------
        ROL instructions
    ---------------------------------- */
+
+#if __aarch64__
+// ARM64 does not have lsls ...
+#   define _FlagROL(x) \
+                and     xr1, x, #0x8000; /* out carry -> */ \
+                lsr     wr1, wr1, #14; /* C_FLAG */ \
+                bic     F_Reg, F_Reg, #C_Flag; \
+                orr     F_Reg, F_Reg, wr1; \
+                /* Now calc N & Z */ \
+                lsl     x, x, #49; \
+                cmp     x, #0; \
+                FlagNZ \
+                lsr     x, x, #56;
+#else
+#   define _FlagROL(x) \
+                lsls    x, x, #17; \
+                FlagNZC \
+                lsr     x, x, #24;
+#endif
+
+#define _DoROL(x) \
+                lsl     x, x, #8; \
+                lsl     F_Reg, F_Reg, #6; /* C_FLAG (in carry) -> 0x80 */ \
+                and     wr1, F_Reg, #0x80; \
+                orr     x, x, xr1; \
+                lsr     F_Reg, F_Reg, #6; /* undo */ \
+                _FlagROL(x)
+
+#define DoROL \
+                GetFromEA_B \
+                _DoROL(xr0) \
+                PutToEA_B
 
 ENTRY(op_ROL_acc) // 0x2a
                 _DoROL(xA_Reg)
@@ -1938,6 +1770,32 @@ ENTRY(op_ROL_abs_x) // 0x3e
 /* ----------------------------------
        ROR instructions
    ---------------------------------- */
+
+#define _DoROR(x) \
+                and     wr1, F_Reg, #C_Flag; \
+                lsl     wr1, wr1, #7; /* carry in */ \
+                orr     x, x, wr1; \
+                \
+                ror     x, x, #1; \
+                bic     F_Reg, F_Reg, #NZC_Flags; \
+                \
+                and     wr1, x, #ROR_BIT; \
+                bic     x, x, #ROR_BIT; \
+                lsr     wr1, wr1, #ROR_SHIFT; \
+                orr     F_Reg, F_Reg, wr1; /* C_Flag */ \
+                \
+                ands    wr1, x, #0xFF; \
+                FlagZ \
+                \
+                and     wr1, x, #0x80; \
+                lsr     wr1, wr1, #4; /* N_Flag */ \
+                orr     F_Reg, F_Reg, wr1;
+
+#define DoROR \
+                GetFromEA_B \
+                _DoROR(wr0) \
+                PutToEA_B
+
 ENTRY(op_ROR_acc) // 0x6a
                 _DoROR(A_Reg)
                 Continue
@@ -1997,7 +1855,10 @@ ENTRY(op_RTS) // 0x60
        SBC instructions
        SuBtract memory from accumulator with Borrow
    ---------------------------------- */
+
 #define borrow carry
+
+// Subtract with carry (borrow) Decimal mode
 ENTRY(op_SBC_dec)
                 AddOpCycles(#1)
                 GetFromEA_B
@@ -2010,22 +1871,24 @@ ENTRY(op_SBC_dec)
                 // lo nybble subtraction with borrow
                 sub     lo_nyb, lo_nyb, wr9
                 and     lo_nyb, lo_nyb, #0xFF
-                tst     F_Reg, #C_Flag
-                bnz     1f
-                sub     lo_nyb, lo_nyb, #1
+                and     wr1, F_Reg, #C_Flag
+                lsr     wr1, wr1, #1
+                mvn     wr1, wr1
+                and     wr1, wr1, #1
+                sub     lo_nyb, lo_nyb, wr1
                 and     lo_nyb, lo_nyb, #0xFF
                 // prep 65c02 flags
-1:              bic     F_Reg, F_Reg, #NVZC_Flags
+                bic     F_Reg, F_Reg, #NVZC_Flags
                 orr     F_Reg, F_Reg, #C_Flag
                 // lo nybble DAS (Decimal Adjustment after Subtraction), saving borrow
-                eor     borrow, borrow, borrow
+                Zero(borrow)
                 cmp     lo_nyb, #0x09
-                bls     2f
+                bls     1f
                 mov     borrow, #1
                 sub     lo_nyb, lo_nyb, #6
                 and     lo_nyb, lo_nyb, #0x0F
                 // isolate hi nybbles
-2:              lsr     A_Reg, A_Reg, #4
+1:              lsr     A_Reg, A_Reg, #4
                 lsr     wr0, wr0, #4
                 // hi nybble subtraction with borrow
                 sub     wr0, A_Reg, wr0
@@ -2034,43 +1897,67 @@ ENTRY(op_SBC_dec)
                 and     wr0, wr0, #0xFF
                 // hi nybble DAS
                 cmp     wr0, #0x09
-                bls     3f
+                bls     2f
                 sub     wr0, wr0, #6
                 bic     F_Reg, F_Reg, #C_Flag
                 and     wr0, wr0, #0x0F
                 // merge nybbles
-3:              lsl     wr0, wr0, #4
+2:              lsl     wr0, wr0, #4
                 orr     A_Reg, wr0, lo_nyb
                 // NZ flags
-                tst     A_Reg, #0x80
-                bz      4f
-                orr     F_Reg, F_Reg, #N_Flag
-4:              tst     A_Reg, #0xFF
-                bnz     5f
-                orr     F_Reg, F_Reg, #Z_Flag
-5:              Continue
+                and     wr1, A_Reg, #0x80
+                lsr     wr1, wr1, #4 /* N_Flag is bit 4 */
+                orr     F_Reg, F_Reg, wr1
+                ands    wr1, A_Reg, #0xFF
+                FlagZ
+                Continue
 
-#define maybe_DoSBC_d \
-                tst     F_Reg, #D_Flag;  /* Decimal mode? */ \
+DoSBC_b:        tst     F_Reg, #D_Flag /* Decimal mode? */
                 bne     CALL(op_SBC_dec) /* Yes, jump to decimal version */
+                GetFromEA_B
+                /* save operand sign bits */
+                lsr     sign_a, A_Reg, #7
+                lsr     sign_0, wr0, #7
+                /* perform SBC with incoming borrow */
+                sub     A_Reg, A_Reg, wr0
+                and     wr1, F_Reg, #C_Flag
+                lsr     wr1, wr1, #1
+                mvn     wr1, wr1
+                and     wr1, wr1, #1
+                sub     A_Reg, A_Reg, wr1
+                /* clear and set flags */
+                bic     F_Reg, F_Reg, #NVZC_Flags
+                and     wr1, A_Reg, #0x80000000
+                and     A_Reg, A_Reg, #0xFF
+                lsr     wr1, wr1, #30
+                mvn     wr1, wr1
+                and     wr1, wr1, #2
+                orr     F_Reg, F_Reg, wr1 /* C_Flag */
+                and     wr1, A_Reg, #0x80
+                lsr     wr1, wr1, #4
+                orr     F_Reg, F_Reg, wr1 /* N_Flag */
+                /* check and set oVerflow (V_Flag) */
+                eor     sign_0, sign_a, sign_0 /* 0: no V, 1: V if signRes != signA */
+                lsr     sign_res, A_Reg, #7
+                eor     sign_a, sign_a, sign_res
+                and     sign_a, sign_a, sign_0
+                orr     F_Reg, F_Reg, sign_a /* V_Flag */
+                /* finally set Z -- this is here to avoid collision with overloaded xr12 */
+                ands    wr1, A_Reg, #0xFF
+                FlagZ
+                Continue
 
 ENTRY(op_SBC_imm) // 0xe9
                 GetImm
-          maybe_DoSBC_d
-                DoSBC_b
-                Continue
+                b       DoSBC_b
 
 ENTRY(op_SBC_zpage) // 0xe5
                 GetZPage
-          maybe_DoSBC_d
-                DoSBC_b
-                Continue
+                b       DoSBC_b
 
 ENTRY(op_SBC_zpage_x) // 0xf5
                 GetZPage_X
-          maybe_DoSBC_d
-                DoSBC_b
-                Continue
+                b       DoSBC_b
 
 // UNIMPLEMENTED : W65C02S datasheet
 ENTRY(op_SBC_zpage_y)
@@ -2078,40 +1965,28 @@ ENTRY(op_SBC_zpage_y)
 
 ENTRY(op_SBC_abs) // 0xed
                 GetAbs
-          maybe_DoSBC_d
-                DoSBC_b
-                Continue
+                b       DoSBC_b
 
 ENTRY(op_SBC_abs_x) // 0xfd
                 GetAbs_X
-          maybe_DoSBC_d
-                DoSBC_b
-                Continue
+                b       DoSBC_b
 
 ENTRY(op_SBC_abs_y) // 0xf9
                 GetAbs_Y
-          maybe_DoSBC_d
-                DoSBC_b
-                Continue
+                b       DoSBC_b
 
 ENTRY(op_SBC_ind_x) // 0xe1
                 GetIndZPage_X
-          maybe_DoSBC_d
-                DoSBC_b
-                Continue
+                b       DoSBC_b
 
 ENTRY(op_SBC_ind_y) // 0xf1
                 GetIndZPage_Y
-          maybe_DoSBC_d
-                DoSBC_b
-                Continue
+                b       DoSBC_b
 
 // 65c02 : 0xF2
 ENTRY(op_SBC_ind_zpage)
                 GetIndZPage
-          maybe_DoSBC_d
-                DoSBC_b
-                Continue
+                b       DoSBC_b
 
 .ltorg
 
@@ -2174,15 +2049,17 @@ ENTRY(op_SMB7_65c02)
        STA instructions
    ---------------------------------- */
 
+DoSTA:          mov     wr0, A_Reg
+                PutToEA_B
+                Continue
+
 ENTRY(op_STA_zpage) // 0x85
                 GetZPage
-                DoSTA
-                Continue
+                b       DoSTA
 
 ENTRY(op_STA_zpage_x) // 0x95
                 GetZPage_X
-                DoSTA
-                Continue
+                b       DoSTA
 
 // UNIMPLEMENTED : W65C02S datasheet
 ENTRY(op_STA_zpage_y)
@@ -2190,34 +2067,28 @@ ENTRY(op_STA_zpage_y)
 
 ENTRY(op_STA_abs) // 0x8d
                 GetAbs
-                DoSTA
-                Continue
+                b       DoSTA
 
 ENTRY(op_STA_abs_x) // 0x9d
                 GetAbs_X_STx
-                DoSTA
-                Continue
+                b       DoSTA
 
 ENTRY(op_STA_abs_y) // 0x99
                 GetAbs_Y_STA
-                DoSTA
-                Continue
+                b       DoSTA
 
 ENTRY(op_STA_ind_x) // 0x81
                 GetIndZPage_X
-                DoSTA
-                Continue
+                b       DoSTA
 
 ENTRY(op_STA_ind_y) // 0x91
                 GetIndZPage_Y_STA
-                DoSTA
-                Continue
+                b       DoSTA
 
 // 65c02 : 0x92
 ENTRY(op_STA_ind_zpage)
                 GetIndZPage
-                DoSTA
-                Continue
+                b       DoSTA
 
 .ltorg
 
@@ -2264,69 +2135,71 @@ ENTRY(op_RMB7_65c02)
        STX instructions
    ---------------------------------- */
 
+DoSTX:          mov     wr0, X_Reg
+                PutToEA_B
+                Continue
+
 ENTRY(op_STX_zpage) // 0x86
                 GetZPage
-                DoSTX
-                Continue
+                b       DoSTX
 
 // HACK : is this used? need to study coverage ...
 ENTRY(op_STX_zpage_y) // 0x96
                 GetZPage_Y
-                DoSTX
-                Continue
+                b       DoSTX
 
 ENTRY(op_STX_abs) // 0x8e
                 GetAbs
-                DoSTX
-                Continue
+                b       DoSTX
 
 /* ----------------------------------
        STY instructions
    ---------------------------------- */
 
+DoSTY:          mov     wr0, Y_Reg
+                PutToEA_B
+                Continue
+
 ENTRY(op_STY_zpage) // 0x84
                 GetZPage
-                DoSTY
-                Continue
+                b       DoSTY
 
 ENTRY(op_STY_zpage_x) // 0x94
                 GetZPage_X
-                DoSTY
-                Continue
+                b       DoSTY
 
 ENTRY(op_STY_abs) // 0x8c
                 GetAbs
-                DoSTY
-                Continue
+                b       DoSTY
 
 /* ----------------------------------
        STZ instructions
        65c02 only
    ---------------------------------- */
 
+DoSTZ:          mov     wr0, #0
+                PutToEA_B
+                Continue
+
 // 65c02 : 0x64
 ENTRY(op_STZ_zpage)
                 GetZPage
-                DoSTZ
-                Continue
+                b       DoSTZ
 
 // 65c02 : 0x74
 ENTRY(op_STZ_zpage_x)
                 GetZPage_X
-                DoSTZ
-                Continue
+                b       DoSTZ
 
 // 65c02 : 0x9C
 ENTRY(op_STZ_abs)
                 GetAbs
-                DoSTZ
-                Continue
+                b       DoSTZ
 
 // 65c02 : 0x9E
 ENTRY(op_STZ_abs_x)
                 GetAbs_X_STx
-                DoSTZ
-                Continue
+                b       DoSTZ
 
 .ltorg
 
@@ -2359,34 +2232,45 @@ ENTRY(op_TAY) // 0xa8
        65c02 only
    ---------------------------------- */
 
+DoTRB:          GetFromEA_B
+                tst     wr0, A_Reg
+                FlagZ
+                mvn     wr1, A_Reg
+                and     wr0, wr0, wr1
+                PutToEA_B
+                Continue
+
 // 65c02 : 0x1C
 ENTRY(op_TRB_abs)
                 GetAbs
-                DoTRB
-                Continue
+                b       DoTRB
 
 // 65c02 : 0x14
 ENTRY(op_TRB_zpage)
                 GetZPage
-                DoTRB
-                Continue
+                b       DoTRB
 
 /* ----------------------------------
        TSB instructions
        65c02 only
    ---------------------------------- */
 
+DoTSB:          GetFromEA_B
+                tst     wr0, A_Reg
+                FlagZ
+                orr     wr0, A_Reg, wr0
+                PutToEA_B
+                Continue
+
 // 65c02 : 0x0C
 ENTRY(op_TSB_abs)
                 GetAbs
-                DoTSB
-                Continue
+                b       DoTSB
 
 // 65c02 : 0x04
 ENTRY(op_TSB_zpage)
                 GetZPage
-                DoTSB
-                Continue
+                b       DoTSB
 
 /* ----------------------------------
        TSX instruction
@@ -2503,7 +2387,7 @@ exception:      tst     wr0, #ResetSig
                 tst     wr0, #0xFF
                 bne     exit_reinit
 
-ex_reset:       eor     wr0, wr0, wr0
+ex_reset:       Zero(wr0)
                 strb    wr0, [reg_args, #CPU65__SIGNAL]
                 ldrh    EffectiveAddr, [reg_args, #RESET_VECTOR]
                 GetFromEA_W
@@ -2555,7 +2439,7 @@ ENTRY(cpu65_run)
                 ldrb    wr0, [reg_args, #EMUL_REINITIALIZE]
                 cmp     wr0, #0
                 bz      continue2
-                eor     wr0, wr0, wr0
+                Zero(wr0)
                 strb    wr0, [reg_args, #EMUL_REINITIALIZE]
                 b       ex_reset
 
