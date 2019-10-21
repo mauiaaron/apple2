@@ -669,9 +669,6 @@ public class Apple2JoystickSettingsMenu extends Apple2AbstractMenu {
                     return _sliderView(activity, this, JOYSTICK_BUTTON_THRESHOLD_NUM_CHOICES, new IPreferenceSlider() {
                         @Override
                         public void saveInt(int progress) {
-                            if (progress == 0) {
-                                progress = 1;
-                            }
                             progress *= getJoystickButtonSwitchThresholdScale(activity);
                             Apple2Preferences.setJSONPref(self, progress);
                         }

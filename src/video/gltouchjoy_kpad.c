@@ -275,6 +275,8 @@ static void _subvariant_touchMove(subvariant_s *subvariant, int dx, int dy, bool
                 subvariant->scancodes[REPEAT_IDX_B] = -1;
                 subvariant->isShifted[REPEAT_IDX_A] = subvariant->rosetteShift[ROSETTE_CENTER];
                 subvariant->isShifted[REPEAT_IDX_B] = -1;
+            } else {
+                // ambiguous, possibly jitter, or user is beginning to swipe to octant ...
             }
             break;
         }
