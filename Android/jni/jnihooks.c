@@ -123,8 +123,9 @@ static void discover_cpu_family(void) {
 
     AndroidCpuFamily family = android_getCpuFamily();
     uint64_t features = android_getCpuFeatures();
-    if (family == ANDROID_CPU_FAMILY_X86) {
-        android_x86 = true;
+    if (family == ANDROID_CPU_FAMILY_X86 || family == ANDROID_CPU_FAMILY_X86_64) {
+        android_x86 = (family == ANDROID_CPU_FAMILY_X86);
+        android_x86_64 = (family == ANDROID_CPU_FAMILY_X86_64);
         if (features & ANDROID_CPU_X86_FEATURE_SSSE3) {
             LOG("nANDROID_CPU_X86_FEATURE_SSSE3");
             android_x86SSSE3Enabled = true;
@@ -155,9 +156,7 @@ static void discover_cpu_family(void) {
             LOG("ANDROID_CPU_ARM_FEATURE_LDREX_STREX");
         }
     } else if (family == ANDROID_CPU_FAMILY_ARM64) {
-#warning FIXME TODO ...
-        //android_arm64Arch = true;
-        android_armArchV7A = true;
+        android_arm64Arch = true;
     }
 }
 
