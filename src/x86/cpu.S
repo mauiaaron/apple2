@@ -56,17 +56,17 @@
 #define GetFromPC_B \
                 movLQ   PC_Reg_X, EffectiveAddr_X; \
                 incw    PC_Reg; \
-                CALL_IND(CPU65_VMEM_R,EffectiveAddr_X); \
+                VMEM_RW_ACCESS(CPU65_VMEM_R); \
                 TRACE_ARG;
 
 #define GetFromPC_W \
                 movLQ   PC_Reg_X, EffectiveAddr_X; \
                 addw    $2, PC_Reg; \
-                CALL_IND(CPU65_VMEM_R,EffectiveAddr_X); \
+                VMEM_RW_ACCESS(CPU65_VMEM_R); \
                 TRACE_ARG; \
                 movb    %al, %ah; \
                 incw    EffectiveAddr; \
-                CALL_IND(CPU65_VMEM_R,EffectiveAddr_X); \
+                VMEM_RW_ACCESS(CPU65_VMEM_R); \
                 TRACE_ARG; \
                 xchgb   %al, %ah;
 
@@ -82,23 +82,23 @@
 
 #define GetFromEA_B \
                 orb     $1, CPU65_RW(reg_args); \
-                CALL_IND(CPU65_VMEM_R,EffectiveAddr_X);
+                VMEM_RW_ACCESS(CPU65_VMEM_R);
 
 #define GetFromEA_W \
                 incw    EffectiveAddr; \
-                CALL_IND(CPU65_VMEM_R,EffectiveAddr_X); \
+                VMEM_RW_ACCESS(CPU65_VMEM_R); \
                 decw    EffectiveAddr; \
                 movb    %al, %ah; \
-                CALL_IND(CPU65_VMEM_R,EffectiveAddr_X);
+                VMEM_RW_ACCESS(CPU65_VMEM_R);
 
 #define PutToEA_B \
                 orb     $2, CPU65_RW(reg_args); \
                 movb    %al, CPU65_D(reg_args); \
-                CALL_IND(CPU65_VMEM_W,EffectiveAddr_X);
+                VMEM_RW_ACCESS(CPU65_VMEM_W);
 
 #define GetFromMem_B(x) \
                 movLQ   x, EffectiveAddr_X; \
-                CALL_IND(CPU65_VMEM_R,EffectiveAddr_X);
+                VMEM_RW_ACCESS(CPU65_VMEM_R);
 
 #define GetFromMem_W(x) \
                 movLQ   x, EffectiveAddr_X; \
@@ -191,7 +191,7 @@
 #if CPU_TRACING
 #define GetImm \
                 _GetImm \
-                CALL_IND(CPU65_VMEM_R,EffectiveAddr_X); \
+                VMEM_RW_ACCESS(CPU65_VMEM_R); \
                 TRACE_ARG;
 #else
 #define GetImm \
@@ -2216,11 +2216,6 @@ exit_reinit:    movb    $0, CPU65__SIGNAL(reg_args)
    ------------------------------------------------------------------------- */
 
 ENTRY(cpu65_direct_write)
-                pushLQ  EffectiveAddr_X
-                movLQ   8(_XSP),EffectiveAddr_X
-                movLQ   12(_XSP),_XAX
-                movLQ   CPU65_VMEM_W(reg_args), _XBP;
-                callLQ  *(_XBP,EffectiveAddr_X,SZ_PTR)
-                popLQ   EffectiveAddr_X
+#warning FIXME TODO correctly implement cpu65_direct_write ...
                 ret
 

@@ -47,8 +47,8 @@ extern bool cpu65_loadState(StateHelper_s *helper);
 
 extern void cpu65_direct_write(int ea,int data);
 
-extern void *cpu65_vmem_r[65536];
-extern void *cpu65_vmem_w[65536];
+extern void *cpu65_vmem_r[sizeof(void*) * 256];
+extern void *cpu65_vmem_w[sizeof(void*) * 256];
 
 extern uint8_t cpu65_flags_encode[256];
 extern uint8_t cpu65_flags_decode[256];

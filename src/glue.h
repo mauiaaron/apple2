@@ -30,6 +30,8 @@
 
 #define GLUE_EXTERN_C_READ(func) extern uint8_t func(uint16_t)
 
+#define GLUE_NOP(func) extern void func(void);
+
 #if VM_TRACING
 
 #define GLUE_C_WRITE(func) \

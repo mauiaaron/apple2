@@ -69,6 +69,9 @@ ENTRY(func)             addLQ   pointer(reg_args), EffectiveAddr_X; \
 ENTRY(func)             movb    off(reg_args), %al; \
                         ret;
 
+#define GLUE_NOP(func) \
+ENTRY(func)             ret;
+
 
 #ifdef __LP64__
 #   define _PUSH_ARGS   pushLQ  EffectiveAddr_X; /* preserve */ \

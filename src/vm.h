@@ -125,8 +125,6 @@ extern uint8_t language_banks[2][8192];
 
 void vm_initialize(void);
 
-void vm_reinitializeAudio(void);
-
 extern bool vm_saveState(StateHelper_s *helper);
 extern bool vm_loadState(StateHelper_s *helper);
 
@@ -141,25 +139,57 @@ void vm_printSoftwitches(FILE *fp, bool output_mem, bool output_pseudo);
 #endif // !defined(__ASSEMBLER__)
 
 // softswitch flag bits
+// SHIFT macros are for generating 0x80 or 0x00 bytes
 
 #define         SS_TEXT         0x00000001
+#define         SS_TEXT_SHIFT   <<7
+
 #define         SS_MIXED        0x00000002
+#define         SS_MIXED_SHIFT  <<6
+
 #define         SS_HIRES        0x00000004
+#define         SS_HIRES_SHIFT  <<5
+
 #define         SS_PAGE2        0x00000008
+#define         SS_PAGE2_SHIFT  <<4
+
 #define         SS_BANK2        0x00000010
+#define         SS_BANK2_SHIFT  <<3
+
 #define         SS_LCRAM        0x00000020
+#define         SS_LCRAM_SHIFT  <<2
+
 #define         SS_LCSEC        0x00000040 // Pseudo-softswitch : enabled if 2+ reads have occurred
 #define         SS_LCWRT        0x00000080 // Pseudo-softswitch : LC write enable
+
 #define         SS_80STORE      0x00000100
+#define         SS_80STORE_SHFT >>1
+
 #define         SS_80COL        0x00000200
+#define         SS_80COL_SHIFT  >>2
+
 #define         SS_RAMRD        0x00000400
+#define         SS_RAMRD_SHIFT  >>3
+
 #define         SS_RAMWRT       0x00000800
+#define         SS_RAMWRT_SHIFT >>4
+
 #define         SS_ALTZP        0x00001000
+#define         SS_ALTZP_SHIFT  >>5
+
 #define         SS_DHIRES       0x00002000
+#define         SS_DHIRES_SHIFT >>6
+
 #define         SS_IOUDIS       0x00004000
+#define         SS_IOUDIS_SHIFT >>7
+
 #define         SS_CXROM        0x00008000
+#define         SS_CXROM_SHIFT  >>8
+
 #define         SS_C3ROM        0x00010000
+
 #define         SS_ALTCHAR      0x00020000
+#define         SS_ALTCHAR_SHFT >>10
 
 // Pseudo soft switches.  These are actually functions of other SSes, but are tiresome to calculate as needed.
 #define         SS_SCREEN       0x00040000 /* PAGE2 && !80STORE */

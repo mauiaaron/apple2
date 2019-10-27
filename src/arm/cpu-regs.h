@@ -46,6 +46,7 @@
 #   define wr0             w0              /* scratch/"important byte"   */
 #   define xr1             x1              /* scratch                    */
 #   define wr1             w1              /* scratch                    */
+#   define xr9             x2              /* scratch                    */
 #   define wr9             w2              /* scratch                    */
 
 #   define xr12            x5              /* overloaded both scratch    */
@@ -87,6 +88,7 @@
 #   define wr0             r0              /* scratch/"important byte"   */
 #   define xr1             r1              /* scratch                    */
 #   define wr1             r1              /* scratch                    */
+#   define xr9             r9              /* scratch                    */
 #   define wr9             r9              /* scratch                    */
 
 // NOTE: these need to be preserved in subroutine (C) invocations ... */

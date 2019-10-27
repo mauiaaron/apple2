@@ -111,6 +111,9 @@ ENTRY(func)             ldrb    wr0, [reg_args, x ## off]; \
                         _GLUE_RET
 #define GLUE_INLINE_READ(func,off) _GLUE_INLINE_READ(func,#,off)
 
+#define GLUE_NOP(func) \
+ENTRY(func)             _GLUE_RET
+
 
 #define GLUE_C_WRITE(func) \
 ENTRY(func)             _GLUE_REG_SAVE0; \

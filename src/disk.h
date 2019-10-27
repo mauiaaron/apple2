@@ -87,9 +87,14 @@ extern const char *disk6_eject(int drive);
 // flush all I/O
 extern void disk6_flush(int drive);
 
+// save/restore state handling
 extern bool disk6_saveState(StateHelper_s *helper);
 extern bool disk6_loadState(StateHelper_s *helper);
 extern bool disk6_stateExtractDiskPaths(StateHelper_s *helper, JSON_ref json);
+
+// CPU thread I/O
+extern uint8_t disk6_ioRead(uint16_t ea) CALL_ON_CPU_THREAD;
+extern void disk6_ioWrite(uint16_t ea, uint8_t b) CALL_ON_CPU_THREAD;
 
 #if DISK_TRACING
 void disk6_traceToggle(const char *read_file, const char *write_file);

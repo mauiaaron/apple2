@@ -21,6 +21,7 @@ void speaker_destroy(void) CALL_ON_CPU_THREAD;
 void speaker_reset(void);
 void speaker_flush(void) CALL_ON_CPU_THREAD;
 bool speaker_isActive(void);
+uint8_t speaker_toggle(void) CALL_ON_CPU_THREAD;
 
 /*
  * returns the machine cycles per sample

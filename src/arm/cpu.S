@@ -129,8 +129,9 @@
 
 #define GetFromPC_B \
                 mov     EffectiveAddr, PC_Reg; \
+                lsr     wr1, EffectiveAddr, #8; \
                 IncUint16(PC_Reg) \
-                ldr     xr1, [reg_vmem_r, xEffectiveAddr, LSL PTR_SHIFT]; \
+                ldr     xr1, [reg_vmem_r, xr1, LSL PTR_SHIFT]; \
                 BLX     xr1; \
                 TRACE_ARG
 
@@ -140,14 +141,16 @@
 
 #define GetFromPC_W \
                 mov     EffectiveAddr, PC_Reg; \
+                lsr     wr1, EffectiveAddr, #8; \
                 AddUint16(PC_Reg, #2) \
                 lsl     PC_Reg, PC_Reg, #16; \
-                ldr     xr1, [reg_vmem_r, xEffectiveAddr, LSL PTR_SHIFT]; \
+                ldr     xr1, [reg_vmem_r, xr1, LSL PTR_SHIFT]; \
                 BLX     xr1; \
                 TRACE_ARG \
                 orr     word_reg, word_reg, wr0; \
                 IncUint16(EffectiveAddr) \
-                ldr     xr1, [reg_vmem_r, xEffectiveAddr, LSL PTR_SHIFT]; \
+                lsr     wr1, EffectiveAddr, #8; \
+                ldr     xr1, [reg_vmem_r, xr1, LSL PTR_SHIFT]; \
                 BLX     xr1; \
                 TRACE_ARG; \
                 lsl     wr0, wr0, #8; /* hi byte */ \
@@ -168,20 +171,23 @@
 
 #define GetFromEA_B \
                 /* Record CPU read: */ \
-                ldrb    wr1, [reg_args, #CPU65_RW]; \
-                orr     wr1, wr1, #1; \
-                strb    wr1, [reg_args, #CPU65_RW]; \
+                lsr     wr1, EffectiveAddr, #8; \
+                ldrb    wr9, [reg_args, #CPU65_RW]; \
+                orr     wr9, wr9, #1; \
+                strb    wr9, [reg_args, #CPU65_RW]; \
                 \
-                ldr     xr1, [reg_vmem_r, xEffectiveAddr, LSL PTR_SHIFT]; \
+                ldr     xr1, [reg_vmem_r, xr1, LSL PTR_SHIFT]; \
                 BLX     xr1;
 
 #define GetFromEA_W \
+                lsr     wr1, EffectiveAddr, #8; \
                 lsl     PC_Reg, PC_Reg, #16; \
-                ldr     xr1, [reg_vmem_r, xEffectiveAddr, LSL PTR_SHIFT]; \
+                ldr     xr1, [reg_vmem_r, xr1, LSL PTR_SHIFT]; \
                 BLX     xr1; \
                 orr     word_reg, word_reg, wr0; \
                 IncUint16(EffectiveAddr) \
-                ldr     xr1, [reg_vmem_r, xEffectiveAddr, LSL PTR_SHIFT]; \
+                lsr     wr1, EffectiveAddr, #8; \
+                ldr     xr1, [reg_vmem_r, xr1, LSL PTR_SHIFT]; \
                 BLX     xr1; \
                 lsl     wr0, wr0, #8; /* hi byte */ \
                 orr     wr0, word_reg, wr0; \
@@ -191,18 +197,19 @@
 
 #define PutToEA_B \
                 /* Record CPU write: */ \
+                lsr     wr1, EffectiveAddr, #8; \
                 strb    wr0, [reg_args, #CPU65_D]; \
-                ldrb    wr1, [reg_args, #CPU65_RW]; \
-                orr     wr1, wr1, #2; \
-                strb    wr1, [reg_args, #CPU65_RW]; \
-                \
-                ldr     xr1, [reg_args, #CPU65_VMEM_W]; \
-                ldr     xr1, [xr1, xEffectiveAddr, LSL PTR_SHIFT]; \
+                ldrb    wr9, [reg_args, #CPU65_RW]; \
+                orr     wr9, wr9, #2; \
+                strb    wr9, [reg_args, #CPU65_RW]; \
+                ldr     xr9, [reg_args, #CPU65_VMEM_W]; \
+                ldr     xr1, [xr9, xr1, LSL PTR_SHIFT]; \
                 BLX     xr1;
 
 #define GetFromMem_B(x) \
                 mov     EffectiveAddr, x; \
-                ldr     xr1, [reg_vmem_r, xEffectiveAddr, LSL PTR_SHIFT]; \
+                lsr     wr1, EffectiveAddr, #8; \
+                ldr     xr1, [reg_vmem_r, xr1, LSL PTR_SHIFT]; \
                 BLX     xr1;
 
 #define GetFromMem_W(x) \
@@ -337,7 +344,8 @@
 #if CPU_TRACING
 #define GetImm \
                 _GetImm \
-                ldr     xr1, [reg_vmem_r, xEffectiveAddr, LSL PTR_SHIFT]; \
+                lsr     wr1, EffectiveAddr, #8; \
+                ldr     xr1, [reg_vmem_r, xr1, LSL PTR_SHIFT]; \
                 BLX     xr1; \
                 TRACE_ARG
 #else

@@ -519,8 +519,7 @@ double speaker_cyclesPerSample(void) {
 // --------------------------------------------------------------------------------------------------------------------
 // VM system entry point
 
-GLUE_C_READ(speaker_toggle)
-{
+uint8_t speaker_toggle(void) {
     ASSERT_ON_CPU_THREAD();
 
     timing_checkpointCycles();

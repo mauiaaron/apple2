@@ -679,8 +679,7 @@ static void _disk_modeSelect(uint16_t ea) {
     disk6.ddrw = (ea & 0x1);
 }
 
-GLUE_C_READ(disk6_ioRead)
-{
+uint8_t disk6_ioRead(uint16_t ea) {
     uint8_t sw = ea & 0xf;
     if (sw <= 0x7) {  // C0E0 - C0E7
         _disk6_phaseChange(ea);
@@ -714,8 +713,7 @@ GLUE_C_READ(disk6_ioRead)
     return (ea & 1) ? floating_bus() : disk6.disk_byte;
 }
 
-GLUE_C_WRITE(disk6_ioWrite)
-{
+void disk6_ioWrite(uint16_t ea, uint8_t b) {
     uint8_t sw = ea & 0xf;
     if (sw <= 0x7) {  // C0E0 - C0E7
         _disk6_phaseChange(ea);
@@ -760,14 +758,6 @@ void disk6_init(void) {
 
     // load Disk II ROM
     memcpy(apple_ii_64k[0] + 0xC600, slot6_rom, 0x100);
-
-    // disk softswitches
-    // 0xC0Xi : X = slot 0x6 + 0x8 == 0xE
-
-    for (unsigned int i = 0xC0E0; i < 0xC0F0; i++) {
-        cpu65_vmem_r[i] = disk6_ioRead;
-        cpu65_vmem_w[i] = disk6_ioWrite;
-    }
 
     stepper_phases = 0;
 

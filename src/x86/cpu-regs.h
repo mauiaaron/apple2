@@ -34,7 +34,8 @@
 #define X86_AF_Bit 0x4                  /* x86 adj (nybble carry)  */
 
 #if __LP64__
-#   define SZ_PTR           8
+#   define SIZ_PTR          8
+#   define SIZ_PTR_SHIFT    3
 #   define ROR_BIT          63
 // x86_64 registers
 #   define _XBP             %rbp        /* x86_64 base ptr/ scratch*/
@@ -71,7 +72,8 @@
 #   define testLQ           testq
 #   define xorLQ            xorq
 #else
-#   define SZ_PTR           4
+#   define SIZ_PTR          4
+#   define SIZ_PTR_SHIFT    2
 #   define ROR_BIT          31
 // x86 registers
 #   define _XBP             %ebp        /* x86 base ptr / scratch  */
@@ -122,13 +124,16 @@
                             movLQ   BASE(reg_args), _XBP; \
                             movb    (_XBP,OFF,1), REG;
 
-#define CALL_IND(BASE,OFF) \
-                            movLQ   BASE(reg_args), _XBP; \
-                            callLQ  *(_XBP,OFF,SZ_PTR);
+#define VMEM_RW_ACCESS(BASE) \
+                            movLQ   EffectiveAddr_X, _XBP; \
+                            shrLQ   $8, _XBP; \
+                            shlLQ   $SIZ_PTR_SHIFT, _XBP; \
+                            addLQ   BASE(reg_args), _XBP; \
+                            callLQ  *(_XBP);
 
 #define JUMP_IND(BASE,OFF) \
                             movLQ   BASE(reg_args), _XBP; \
-                            jmp     *(_XBP,OFF,SZ_PTR);
+                            jmp     *(_XBP,OFF,SIZ_PTR);
 
 #endif // whole file
 

@@ -2256,8 +2256,8 @@ static void RegisterIoHandler(unsigned int uSlot, iorfunction IOReadC0, iowfunct
         assert((uintptr_t)IOWriteC0);
         for (unsigned int i = 0; i < 16; i++)
         {
-            cpu65_vmem_r[base_addr+i] = IOReadC0;
-            cpu65_vmem_w[base_addr+i] = IOWriteC0;
+            cpu65_vmem_r[(base_addr+i)>>8] = IOReadC0;
+            cpu65_vmem_w[(base_addr+i)>>8] = IOWriteC0;
         }
     }
 
@@ -2265,8 +2265,8 @@ static void RegisterIoHandler(unsigned int uSlot, iorfunction IOReadC0, iowfunct
     base_addr = 0xC000 + (uSlot<<8); // uSlot == 4 => 0xC400 , uSlot == 5 => 0xC500
     for (unsigned int i = 0; i < 0x100; i++)
     {
-        //cpu65_vmem_r[base_addr+i] = IOReadCx; -- CANNOT DO THIS HERE -- DEPENDS ON cxrom softswitch
-        cpu65_vmem_w[base_addr+i] = IOWriteCx;
+        //cpu65_vmem_r[(base_addr+i)>>8] = IOReadCx; -- CANNOT DO THIS HERE -- DEPENDS ON cxrom softswitch
+        cpu65_vmem_w[(base_addr+i)>>8] = IOWriteCx;
     }
 }
 #endif

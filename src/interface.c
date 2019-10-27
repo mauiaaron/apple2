@@ -1089,7 +1089,6 @@ void c_interface_parameters()
         else if ((ch == kESC) || c_keys_is_interface_key(ch))
         {
             timing_initialize();
-            vm_reinitializeAudio();
             c_joystick_reset();
 #if !TESTING
             prefs_save();
