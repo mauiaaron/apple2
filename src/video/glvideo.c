@@ -254,6 +254,7 @@ static void glvideo_init(void) {
     // Check for errors to make sure all of our setup went ok
     GL_MAYBELOG("finished initialization");
 
+    DIAGNOSTIC_SUPPRESS_PUSH("-Waddress", "-Waddress")
 #if __APPLE__
     if (1) {
 #else
@@ -264,6 +265,7 @@ static void glvideo_init(void) {
             ERRQUIT("framebuffer status: %04X", status);
         }
     }
+    DIAGNOSTIC_SUPPRESS_POP()
 }
 
 static void glvideo_shutdown(void) {
@@ -358,6 +360,7 @@ static void glvideo_render(void) {
 #if !FB_PIXELS_PASS_THRU
         memcpy(/*dest:*/crtModel->texPixels, /*src:*/fb, (SCANWIDTH*SCANHEIGHT*sizeof(PIXEL_TYPE)));
 #endif
+        (void)fb;
         glTexImage2D(GL_TEXTURE_2D, /*level*/0, TEX_FORMAT_INTERNAL, SCANWIDTH, SCANHEIGHT, /*border*/0, TEX_FORMAT, TEX_TYPE, crtModel->texPixels);
     }
 

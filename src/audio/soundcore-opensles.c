@@ -63,7 +63,7 @@ typedef struct EngineContext_s {
 
 } EngineContext_s;
 
-static AudioBackend_s opensles_audio_backend = { 0 };
+static AudioBackend_s opensles_audio_backend = { { 0 } };
 
 // ----------------------------------------------------------------------------
 // AudioBuffer_s internal processing routines
@@ -230,6 +230,8 @@ static long SLGetPosition(AudioBuffer_s *_this, OUTPARM unsigned long *bytes_que
 
         assert(workingBytes <= voice->bufferSize);
         *bytes_queued = workingBytes;
+
+        (void)queuedBytes;
     } while (0);
 
     return err;
@@ -729,6 +731,7 @@ static long opensles_systemPause(AudioContext_s *audio_context) {
     EngineContext_s *ctx = (EngineContext_s *)(audio_context->_internal);
     SLresult result = (*(ctx->bqPlayerPlay))->SetPlayState(ctx->bqPlayerPlay, SL_PLAYSTATE_PAUSED);
 
+    (void)result;
     return 0;
 }
 
@@ -751,7 +754,7 @@ static long opensles_systemResume(AudioContext_s *audio_context) {
 
         if (state == SL_PLAYSTATE_PAUSED) {
             // Balanced resume OK here
-            SLresult result = (*(ctx->bqPlayerPlay))->SetPlayState(ctx->bqPlayerPlay, SL_PLAYSTATE_PLAYING);
+            result = (*(ctx->bqPlayerPlay))->SetPlayState(ctx->bqPlayerPlay, SL_PLAYSTATE_PLAYING);
         } else if (state == SL_PLAYSTATE_STOPPED) {
             // Do not resume for stopped state, let this get forced from CPU/speaker thread otherwise we starve. (The
             // stopped state happens if user dynamically changed buffer parameters in menu settings which triggered an

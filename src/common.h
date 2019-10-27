@@ -173,5 +173,26 @@
         _rc; })
 #endif
 
+#define _STRINGIFY(x) #x
+
+// diagnostic suppression
+#if defined(__clang__)
+    // NOTE: check for Clang first, since it also defines __GNUC__
+#   define DIAGNOSTIC_SUPPRESS_PUSH(clang_diag, gcc_diag) \
+        _Pragma("clang diagnostic push") \
+        _Pragma(_STRINGIFY(clang diagnostic ignored clang_diag))
+#   define DIAGNOSTIC_SUPPRESS_POP() \
+        _Pragma("clang diagnostic pop")
+#elif defined(__GNUC__)
+#   define DIAGNOSTIC_SUPPRESS_PUSH(clang_diag, gcc_diag) \
+        _Pragma("GCC diagnostic push") \
+        _Pragma(_STRINGIFY(GCC diagnostic ignored gcc_diag))
+
+#   define DIAGNOSTIC_SUPPRESS_POP() \
+        _Pragma("GCC diagnostic pop")
+#else
+#   error "unknown possibly unsupported compiler!"
+#endif
 
 #endif // whole file
+

@@ -442,7 +442,7 @@ void Java_org_deadc0de_apple2ix_Apple2DisksMenu_nativeEjectDisk(JNIEnv *env, jcl
     disk6_eject(driveA ? 0 : 1);
 }
 
-static int _openFdFromJson(OUTPARM int *fdOut, JSON_ref jsonData, const char * const fdKey, const char * const pathKey, int flags, int mode) {
+static void _openFdFromJson(OUTPARM int *fdOut, JSON_ref jsonData, const char * const fdKey, const char * const pathKey, int flags, int mode) {
 
     long fd = -1;
     char *path = NULL;

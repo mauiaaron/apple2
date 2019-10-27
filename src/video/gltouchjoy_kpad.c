@@ -618,7 +618,6 @@ static void _subvariant_prefsChanged(subvariant_s *subvariant, const char *domai
 static void touchkpad_prefsChanged(const char *domain) {
     assert(video_isRenderThread());
 
-    long lVal = 0;
     bool bVal = false;
 
     kpad.autostrobeDelay = !(prefs_parseBoolValue(domain, PREF_KPAD_FAST_AUTOREPEAT, &bVal) ? bVal : true);

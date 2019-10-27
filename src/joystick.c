@@ -269,6 +269,7 @@ void c_calibrate_joystick()
 }
 #endif // INTERFACE_CLASSIC
 
+#if !TESTING
 // HACK : avoid resetting joystick button values too quickly. This should allow for ClosedApple-Reset. (This is still a
 // race, but hopefully much less likely to trigger).
 static void *_joystick_resetDelayed(void *ctx) {
@@ -283,6 +284,7 @@ static void *_joystick_resetDelayed(void *ctx) {
 
     return NULL;
 }
+#endif
 
 void c_joystick_reset(void)
 {

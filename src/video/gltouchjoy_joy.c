@@ -251,7 +251,6 @@ static void touchjoy_buttonUp(int dx, int dy) {
     SPIN_LOCK_FULL(&joys.spinlock);
     TOUCH_JOY_LOG("\t\tjoy buttonUp acquire");
 
-    bool ignored = false;
     _touchjoy_buttonMove(dx, dy);
 
     _fire_current_buttons();

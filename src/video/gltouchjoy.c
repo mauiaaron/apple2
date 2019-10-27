@@ -642,10 +642,6 @@ static void gltouchjoy_reshape(int w, int h, bool landscape) {
     }
 }
 
-static void gltouchjoy_resetJoystick(void) {
-    // no-op
-}
-
 static inline bool _is_point_on_axis_side(int x, int y) {
     return (x >= touchport.axisX && x <= touchport.axisXMax && y >= touchport.axisY && y <= touchport.axisYMax);
 }
