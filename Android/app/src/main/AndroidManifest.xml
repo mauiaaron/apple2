@@ -21,7 +21,7 @@
             android:name="org.deadc0de.apple2ix.Apple2Activity"
             android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation"
             android:screenOrientation="sensorLandscape"
-            android:theme="@android:style/Theme.NoTitleBar.Fullscreen"
+            android:theme="@style/Theme.AppCompat.NoActionBar.FullScreen"
             android:launchMode="singleTask"
             android:windowSoftInputMode="stateHidden|adjustNothing" >
             <intent-filter>

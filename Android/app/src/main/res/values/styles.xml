@@ -1,8 +1,10 @@
 <resources>
 
-    <!-- Base application theme. -->
-    <!-- <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar"> ... this freaks-out CLI builds -->
-        <!-- Customize your theme here. -->
-    <!-- </style> -->
+    <style name="Theme.AppCompat.NoActionBar.FullScreen" parent="@style/Theme.AppCompat.NoActionBar">
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowActionBar">false</item>
+        <item name="android:windowFullscreen">true</item>
+        <item name="android:windowContentOverlay">@null</item>
+    </style>
 
 </resources>
