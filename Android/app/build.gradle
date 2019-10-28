@@ -1,7 +1,7 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 27
+    compileSdkVersion 29
     signingConfigs {
         release {
             storeFile file("release2.keystore")
@@ -28,9 +28,9 @@ android {
     defaultConfig {
         applicationId "org.deadc0de.apple2ix.basic"
         minSdkVersion 14
-        targetSdkVersion 27
+        targetSdkVersion 29
         versionCode 24
-        versionName "2.0.1"
+        versionName "2.1.0-RC1"
         ndk {
             moduleName "apple2ix"
         }
@@ -39,5 +39,5 @@ android {
 
 dependencies {
     api fileTree(dir: 'libs', include: ['*.jar'])
-    api 'com.android.support:appcompat-v7:27.1.1'
+    api 'androidx.appcompat:appcompat:1.0.0'
 }
