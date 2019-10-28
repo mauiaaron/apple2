@@ -11,7 +11,6 @@
 
 package org.deadc0de.apple2ix;
 
-import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
@@ -21,11 +20,12 @@ import android.os.Bundle;
 import android.os.ParcelFileDescriptor;
 import android.provider.DocumentsContract;
 import android.support.annotation.Nullable;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class Apple2DiskChooserActivity extends Activity {
+public class Apple2DiskChooserActivity extends AppCompatActivity {
 
     public static final AtomicBoolean sDiskChooserIsChoosing = new AtomicBoolean(false);
     public static Callback sDisksCallback;

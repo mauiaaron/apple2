@@ -11,13 +11,14 @@
 
 package org.deadc0de.apple2ix;
 
-import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.ParcelFileDescriptor;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -33,7 +34,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import org.deadc0de.apple2ix.basic.R;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
@@ -186,7 +186,7 @@ public class Apple2MainMenu {
         });
 
         if (Build.VERSION.SDK_INT > Build.VERSION_CODES.GINGERBREAD_MR1) {
-            mMainMenuPopup = new PopupWindow(mainPopupContainer, android.app.ActionBar.LayoutParams.WRAP_CONTENT, android.app.ActionBar.LayoutParams.WRAP_CONTENT, true);
+            mMainMenuPopup = new PopupWindow(mainPopupContainer, ActionBar.LayoutParams.WRAP_CONTENT, ActionBar.LayoutParams.WRAP_CONTENT, true);
         } else {
             // 2015/03/11 ... there may well be a less hackish way to support Gingerbread, but eh ... diminishing returns
             final int TOTAL_MARGINS = 16;

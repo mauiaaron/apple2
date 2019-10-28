@@ -12,8 +12,6 @@
 package org.deadc0de.apple2ix;
 
 import android.Manifest;
-import android.app.Activity;
-import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
@@ -21,12 +19,17 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.StrictMode;
+import android.support.v7.app.AlertDialog;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.Toast;
+
+import org.deadc0de.apple2ix.basic.BuildConfig;
+import org.deadc0de.apple2ix.basic.R;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -37,10 +40,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.deadc0de.apple2ix.basic.BuildConfig;
-import org.deadc0de.apple2ix.basic.R;
-
-public class Apple2Activity extends Activity implements Apple2DiskChooserActivity.Callback {
+public class Apple2Activity extends AppCompatActivity implements Apple2DiskChooserActivity.Callback {
 
     private final static String TAG = "Apple2Activity";
 

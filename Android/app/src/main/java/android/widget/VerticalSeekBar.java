@@ -10,11 +10,11 @@ package android.widget;
 
 import android.content.Context;
 import android.graphics.Canvas;
+import android.support.v7.widget.AppCompatSeekBar;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.MotionEvent;
 
-public class VerticalSeekBar extends SeekBar {
+public class VerticalSeekBar extends AppCompatSeekBar {
 
     public VerticalSeekBar(Context context) {
         super(context);

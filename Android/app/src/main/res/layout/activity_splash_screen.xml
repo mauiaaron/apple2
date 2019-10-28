@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/splashScreen"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
@@ -16,14 +17,14 @@
         android:layout_height="fill_parent"
         android:adjustViewBounds="true"
         android:scaleType="centerCrop"
-        android:src="@drawable/apple_iie"
+        app:srcCompat="@drawable/apple_iie"
         android:id="@+id/splashView" />
 
     <ImageView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/imageView"
-        android:src="@drawable/ic_launcher"
+        app:srcCompat="@drawable/ic_launcher"
         android:layout_alignTop="@+id/startButton"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
