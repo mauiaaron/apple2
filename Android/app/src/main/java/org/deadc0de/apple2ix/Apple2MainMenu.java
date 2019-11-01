@@ -267,7 +267,7 @@ public class Apple2MainMenu {
         final RadioButton noAppleSelected = (RadioButton) resetConfirmationView.findViewById(R.id.radioButton_noApple);
         noAppleSelected.setChecked(false);
 
-        AlertDialog rebootQuitDialog = new AlertDialog.Builder(mActivity).setIcon(R.drawable.ic_launcher).setCancelable(true).setTitle(R.string.quit_reboot).setMessage(R.string.quit_reboot_choice).setView(resetConfirmationView).setPositiveButton(R.string.reset, new DialogInterface.OnClickListener() {
+        AlertDialog rebootQuitDialog = new AlertDialog.Builder(mActivity).setIcon(R.drawable.ic_launcher).setCancelable(true).setTitle(R.string.quit_reboot).setMessage(R.string.quit_reboot_choice).setView(resetConfirmationView).setNeutralButton(R.string.reset, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 if (!selectionAlreadyHandled.compareAndSet(false, true)) {
@@ -283,7 +283,7 @@ public class Apple2MainMenu {
                 mActivity.rebootEmulation(resetState);
                 Apple2MainMenu.this.dismiss();
             }
-        }).setNeutralButton(R.string.quit, new DialogInterface.OnClickListener() {
+        }).setPositiveButton(R.string.quit, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 if (!selectionAlreadyHandled.compareAndSet(false, true)) {
@@ -292,7 +292,7 @@ public class Apple2MainMenu {
                 }
                 mActivity.quitEmulator();
             }
-        }).setNegativeButton(R.string.cancel, null).create();
+        }).create();
 
         mActivity.registerAndShowDialog(rebootQuitDialog);
     }
@@ -435,7 +435,7 @@ public class Apple2MainMenu {
 
         final AtomicBoolean selectionAlreadyHandled = new AtomicBoolean(false);
 
-        AlertDialog saveRestoreDialog = new AlertDialog.Builder(mActivity).setIcon(R.drawable.ic_launcher).setCancelable(true).setTitle(R.string.saverestore).setMessage(R.string.saverestore_choice).setPositiveButton(R.string.save, new DialogInterface.OnClickListener() {
+        AlertDialog saveRestoreDialog = new AlertDialog.Builder(mActivity).setIcon(R.drawable.ic_launcher).setCancelable(true).setTitle(R.string.saverestore).setMessage(R.string.saverestore_choice).setNeutralButton(R.string.save, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 if (!selectionAlreadyHandled.compareAndSet(false, true)) {
@@ -447,7 +447,7 @@ public class Apple2MainMenu {
                 mActivity.saveState(jsonString);
                 Apple2MainMenu.this.dismiss();
             }
-        }).setNeutralButton(R.string.restore, new DialogInterface.OnClickListener() {
+        }).setPositiveButton(R.string.restore, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
 
@@ -463,7 +463,7 @@ public class Apple2MainMenu {
                 }
                 Apple2MainMenu.this.dismiss();
             }
-        }).setNegativeButton(R.string.cancel, null).create();
+        }).create();
 
         mActivity.registerAndShowDialog(saveRestoreDialog);
     }
