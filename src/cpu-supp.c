@@ -29,8 +29,8 @@ static pthread_mutex_t irq_mutex = PTHREAD_MUTEX_INITIALIZER;
 uint8_t cpu65_flags_encode[256] = { 0 };
 uint8_t cpu65_flags_decode[256] = { 0 };
 
-void *cpu65_vmem_r[sizeof(void*) * 256] = { 0 };
-void *cpu65_vmem_w[sizeof(void*) * 256] = { 0 };
+void *cpu65_vmem_r[256] = { 0 };
+void *cpu65_vmem_w[256] = { 0 };
 
 #if CPU_TRACING
 static int8_t opargs[3] = { 0 };
