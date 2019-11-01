@@ -37,7 +37,9 @@
 
         </activity>
 
-        <activity android:name="org.deadc0de.apple2ix.Apple2DiskChooserActivity" />
+        <activity android:name="org.deadc0de.apple2ix.Apple2DiskChooserActivity"
+            android:theme="@style/Theme.AppCompat"
+            />
 
         <provider
             android:authorities="${applicationId}.provider"
