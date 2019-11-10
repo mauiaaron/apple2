@@ -92,6 +92,7 @@ public class Apple2DiskChooserActivity extends AppCompatActivity {
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         outState.putBoolean("ran", true);
+        super.onSaveInstanceState(outState);
     }
 
     @Override
