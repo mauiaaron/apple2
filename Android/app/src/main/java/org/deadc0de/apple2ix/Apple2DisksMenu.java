@@ -564,6 +564,10 @@ public class Apple2DisksMenu implements Apple2MenuView {
                     break;
                 }
 
+                if (diskPath.startsWith(Apple2DisksMenu.EXTERNAL_CHOOSER_SENTINEL)) {
+                    diskPath = diskPath.substring(Apple2DisksMenu.EXTERNAL_CHOOSER_SENTINEL.length());
+                }
+
                 Uri uri = Uri.parse(diskPath);
                 if (uri == null) {
                     break;
@@ -575,7 +579,7 @@ public class Apple2DisksMenu implements Apple2MenuView {
                     break;
                 }
 
-                imageName = diskPath.substring(idx + 1);
+                imageName = Apple2DiskChooserActivity.getFileNameFromUri(mActivity, uri);
             } while (false);
 
             LinearLayout layout = (LinearLayout) mDisksView.findViewById((i == 0) ? R.id.a2_newschool_driveA_layout : R.id.a2_newschool_driveB_layout);
