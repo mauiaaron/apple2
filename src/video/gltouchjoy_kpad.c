@@ -267,7 +267,7 @@ static void _subvariant_touchMove(subvariant_s *subvariant, int dx, int dy, bool
     keypad_octant_t lastOctant = subvariant->currentOctant;
     do {
         int c = (int)sqrtf(dx * dx + dy * dy);
-        if (c < joyglobals.switchThreshold) {
+        if (!c || c < joyglobals.switchThreshold) {
             if (lastOctant != ORIGIN) {
                 // unambiguous intent : user swiped beyond origin, then re-zeroed
                 subvariant->currentOctant = ORIGIN;

@@ -204,7 +204,13 @@ static void _touchjoy_buttonMove(int dx, int dy) {
     touchjoy_button_type_t theButtonChar = joys.touchDownChar;
 
     int c = (int)sqrtf(dx * dx + dy * dy);
-    if (c >= joyglobals.switchThreshold) {
+    if (!c || c < joyglobals.switchThreshold) {
+        // 2019/04/20 NOTE: originally we did not re-zero back to touchDownChar ... this allowed a progression between
+        // southChar/northChar (or vice-versa)
+        //
+        // touchDownChar should be fired on a tap or long-press (once we swipe beyond the threshold, we should only switch
+        // between northChar and southChar)
+    } else {
         // unambiguous intent : user swiped beyond threshold
         shouldFire = true;
 
@@ -218,12 +224,6 @@ static void _touchjoy_buttonMove(int dx, int dy) {
             // prefer x axis ...
             theButtonChar = (xChar != TOUCH_NONE) ? xChar : yChar;
         }
-    } else {
-        // 2019/04/20 NOTE: originally we did not re-zero back to touchDownChar ... this allowed a progression between
-        // southChar/northChar (or vice-versa)
-        //
-        // touchDownChar should be fired on a tap or long-press (once we swipe beyond the threshold, we should only switch
-        // between northChar and southChar)
     }
 
     if (shouldFire) {
