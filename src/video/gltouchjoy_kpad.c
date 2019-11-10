@@ -123,11 +123,6 @@ static inline void _press_key(subvariant_s *subvariant, keypad_press_t pressIdx)
     ++(subvariant->keyPressCount);
 }
 
-// No-op callback
-static void touchkpad_nopCallback(uint8_t textFlashCounter) {
-    (void)textFlashCounter;
-}
-
 // End-of-video-frame callback (handling tap delay and auto-strobe)
 static void touchkpad_frameCallback(uint8_t textFlashCounter) {
 
@@ -224,7 +219,7 @@ static void touchkpad_frameCallback(uint8_t textFlashCounter) {
     if ((kpad.axis.currEventType == TOUCH_UP) && (kpad.butt.currEventType == TOUCH_UP)) {
         // all touch up occurred -- unlatch the callback
         TOUCH_JOY_LOG("\t\t+++kpad callback done");
-        kpad.frameCallback = touchkpad_nopCallback;
+        kpad.frameCallback = NULL;
         kpad.axis.scancodes[REPEAT_IDX_A] = -1;
         kpad.axis.scancodes[REPEAT_IDX_B] = -1;
         kpad.butt.scancodes[REPEAT_IDX_A] = -1;
