@@ -213,5 +213,7 @@
     <string name="joystick_button_swipe_right_button">Swipe right fire</string>
     <string name="joystick_button_swipe_right_button_summary">Button to fire on swipe right</string>
     <string name="joystick_button_swipe_left_button_summary">Button to fire on swipe left</string>
+    <string name="key_del">[DEL]</string>
+    <string name="key_tab">[TAB]</string>
 
 </resources>

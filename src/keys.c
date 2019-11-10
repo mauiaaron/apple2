@@ -17,6 +17,7 @@
 
 static int next_key = -1;
 static int last_scancode = -1;
+static int last_ascii    = -1;
 
 bool caps_lock = true; // default enabled because so much breaks otherwise
 bool use_system_caps_lock = false;
@@ -217,7 +218,6 @@ void keys_handleInput(int scancode, bool is_pressed, bool is_ascii) {
     SCOPE_TRACE_INTERFACE("keys_handleInput: scancode:%d is_pressed:%d is_ascii:%d", scancode, is_pressed, is_ascii);
 
     if (is_ascii) {
-        last_scancode = -1;
         if (!is_pressed) {
             return;
         }
@@ -226,6 +226,7 @@ void keys_handleInput(int scancode, bool is_pressed, bool is_ascii) {
                 scancode -= 32;
             }
         }
+        last_scancode = keys_ascii2Scancode(scancode);
         next_key = scancode;
     } else if (scancode >= 0) {
         assert(scancode < 0x80);
@@ -283,6 +284,7 @@ void keys_handleInput(int scancode, bool is_pressed, bool is_ascii) {
        )
     {
         do {
+            last_ascii = next_key;
             int current_key = next_key;
             next_key = -1;
 
@@ -457,6 +459,26 @@ void keys_handleInput(int scancode, bool is_pressed, bool is_ascii) {
         }
     }
 #endif
+}
+
+long keys_consumeLastKey(void) {
+
+    apple_ii_64k[0][0xC000] = 0x00;
+    apple_ii_64k[1][0xC000] = 0x00;
+
+    int scancode = last_scancode;
+    int ascii = last_ascii;
+
+    if (scancode < 0 || ascii < 0) {
+        scancode = 0;
+        ascii = 0;
+    }
+
+    assert(scancode < 256);
+    assert(ascii < 256);
+
+    long scankey = (((uint8_t)ascii) << 8) | (((uint8_t)scancode) << 0);
+    return scankey;
 }
 
 #ifdef INTERFACE_CLASSIC

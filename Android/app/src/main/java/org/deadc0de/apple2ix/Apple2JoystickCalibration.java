@@ -91,10 +91,16 @@ public class Apple2JoystickCalibration implements Apple2MenuView {
                         if (variant == Apple2SettingsMenu.TouchDeviceVariant.JOYSTICK) {
                             final int x = ((int) (cxy & 0xFF00) >> 8) - 128;
                             final int y = ((int) (cxy & 0x00FF) >> 0) - 128;
-                            t = "X:" + x + "  Y:" + y;
+                            t = "X: " + x + "  Y: " + y;
                         } else {
-                            char c = (char) ((cxy & 0xFF0000) >> 16);
-                            t = "Key:" + c;
+                            char ascii = (char) ((cxy & 0xFF000000) >> 24);
+                            int scancode = (char) ((cxy & 0x00FF0000) >> 16);
+
+                            if (ascii == Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION || scancode == 0) {
+                                // ...
+                            } else {
+                                t = "Key: " + Apple2KeypadChooser.asciiRepresentation(mActivity, ascii);
+                            }
                         }
 
                         final String axisText = t;

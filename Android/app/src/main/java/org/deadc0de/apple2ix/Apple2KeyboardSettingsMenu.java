@@ -29,6 +29,15 @@ public class Apple2KeyboardSettingsMenu extends Apple2AbstractMenu {
     private final static String TAG = "KeyboardSettingsMenu";
 
     // These settings must match native side
+    public final static int kLT = 8;
+    public final static int kTAB = 9;
+    public final static int kDN = 10;
+    public final static int kUP = 11;
+    public final static int kRET = 13;
+    public final static int kRT = 21;
+    public final static int kESC = 27;
+    public final static int kDEL = 127;
+
     public final static int MOUSETEXT_BEGIN = 0x80;
     public final static int MOUSETEXT_CLOSEDAPPLE = MOUSETEXT_BEGIN/*+0x00*/;
     public final static int MOUSETEXT_OPENAPPLE = MOUSETEXT_BEGIN + 0x01;

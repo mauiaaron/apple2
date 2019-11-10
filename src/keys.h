@@ -148,6 +148,7 @@ bool c_keys_is_interface_key(int key);
 bool keys_isShifted(void);
 int keys_ascii2Scancode(uint8_t ch);
 void keys_handleInput(int scan_or_key, bool is_pressed, bool is_ascii);
+long keys_consumeLastKey(void);
 
 int keys_scancode2ASCII(int scancode, bool is_shifted, bool is_ctrl);
 uint8_t keys_apple2ASCII(uint8_t c, OUTPARM font_mode_t *mode);

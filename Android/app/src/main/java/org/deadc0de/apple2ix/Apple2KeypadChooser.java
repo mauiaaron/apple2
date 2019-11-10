@@ -15,7 +15,6 @@ import android.content.Context;
 import android.os.Handler;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -89,7 +88,7 @@ public class Apple2KeypadChooser implements Apple2MenuView {
             return;
         }
 
-        String asciiStr = asciiRepresentation(ascii);
+        String asciiStr = asciiRepresentation(mActivity, ascii);
         Log.d(TAG, "ascii:'" + asciiStr + "' scancode:" + scancode);
         if (ascii == ' ') {
             ascii = Apple2KeyboardSettingsMenu.ICONTEXT_VISUAL_SPACE;
@@ -198,31 +197,41 @@ public class Apple2KeypadChooser implements Apple2MenuView {
         Apple2Preferences.sync(mActivity, Apple2Preferences.PREF_DOMAIN_TOUCHSCREEN);
     }
 
-    private String asciiRepresentation(char ascii) {
+    public static String asciiRepresentation(Apple2Activity activity, char ascii) {
         switch (ascii) {
             case Apple2KeyboardSettingsMenu.MOUSETEXT_OPENAPPLE:
-                return mActivity.getResources().getString(R.string.key_open_apple);
+                return activity.getResources().getString(R.string.key_open_apple);
             case Apple2KeyboardSettingsMenu.MOUSETEXT_CLOSEDAPPLE:
-                return mActivity.getResources().getString(R.string.key_closed_apple);
+                return activity.getResources().getString(R.string.key_closed_apple);
+            case Apple2KeyboardSettingsMenu.kUP:
             case Apple2KeyboardSettingsMenu.MOUSETEXT_UP:
-                return mActivity.getResources().getString(R.string.key_up);
+                return activity.getResources().getString(R.string.key_up);
+            case Apple2KeyboardSettingsMenu.kLT:
             case Apple2KeyboardSettingsMenu.MOUSETEXT_LEFT:
-                return mActivity.getResources().getString(R.string.key_left);
+                return activity.getResources().getString(R.string.key_left);
+            case Apple2KeyboardSettingsMenu.kRT:
             case Apple2KeyboardSettingsMenu.MOUSETEXT_RIGHT:
-                return mActivity.getResources().getString(R.string.key_right);
+                return activity.getResources().getString(R.string.key_right);
+            case Apple2KeyboardSettingsMenu.kDN:
             case Apple2KeyboardSettingsMenu.MOUSETEXT_DOWN:
-                return mActivity.getResources().getString(R.string.key_down);
+                return activity.getResources().getString(R.string.key_down);
             case Apple2KeyboardSettingsMenu.ICONTEXT_CTRL:
-                return mActivity.getResources().getString(R.string.key_ctrl);
+                return activity.getResources().getString(R.string.key_ctrl);
+            case Apple2KeyboardSettingsMenu.kESC:
             case Apple2KeyboardSettingsMenu.ICONTEXT_ESC:
-                return mActivity.getResources().getString(R.string.key_esc);
+                return activity.getResources().getString(R.string.key_esc);
+            case Apple2KeyboardSettingsMenu.kRET:
             case Apple2KeyboardSettingsMenu.ICONTEXT_RETURN:
-                return mActivity.getResources().getString(R.string.key_ret);
+                return activity.getResources().getString(R.string.key_ret);
             case Apple2KeyboardSettingsMenu.ICONTEXT_NONACTION:
-                return mActivity.getResources().getString(R.string.key_none);
+                return activity.getResources().getString(R.string.key_none);
             case ' ':
             case Apple2KeyboardSettingsMenu.ICONTEXT_VISUAL_SPACE:
-                return mActivity.getResources().getString(R.string.key_space);
+                return activity.getResources().getString(R.string.key_space);
+            case Apple2KeyboardSettingsMenu.kDEL:
+                return activity.getResources().getString(R.string.key_del);
+            case Apple2KeyboardSettingsMenu.kTAB:
+                return activity.getResources().getString(R.string.key_tab);
             default:
                 return "" + ascii;
         }
