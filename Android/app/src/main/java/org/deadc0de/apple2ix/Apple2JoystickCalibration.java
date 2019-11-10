@@ -38,7 +38,33 @@ public class Apple2JoystickCalibration implements Apple2MenuView {
     private int mSavedTouchDevice = Apple2SettingsMenu.TouchDeviceVariant.NONE.ordinal();
     private Thread joystickPollerThread = null;
 
-    public Apple2JoystickCalibration(Apple2Activity activity, ArrayList<Apple2MenuView> viewStack, Apple2SettingsMenu.TouchDeviceVariant variant) {
+    public static void startCalibration(Apple2Activity activity, Apple2SettingsMenu.TouchDeviceVariant variant) {
+
+        ArrayList<Apple2MenuView> viewStack = new ArrayList<Apple2MenuView>();
+        {
+            int idx = 0;
+            while (true) {
+                Apple2MenuView apple2MenuView = activity.peekApple2View(idx);
+                if (apple2MenuView == null) {
+                    break;
+                }
+                viewStack.add(apple2MenuView);
+                ++idx;
+            }
+        }
+
+        Apple2JoystickCalibration calibration = new Apple2JoystickCalibration(activity, viewStack, variant);
+
+        // show this new view...
+        calibration.show();
+
+        // ...with nothing else underneath 'cept the emulator OpenGL layer
+        for (Apple2MenuView apple2MenuView : viewStack) {
+            activity.popApple2View(apple2MenuView);
+        }
+    }
+
+    private Apple2JoystickCalibration(Apple2Activity activity, ArrayList<Apple2MenuView> viewStack, Apple2SettingsMenu.TouchDeviceVariant variant) {
         mActivity = activity;
         mViewStack = viewStack;
         if (!(variant == Apple2SettingsMenu.TouchDeviceVariant.JOYSTICK || variant == Apple2SettingsMenu.TouchDeviceVariant.JOYSTICK_KEYPAD)) {

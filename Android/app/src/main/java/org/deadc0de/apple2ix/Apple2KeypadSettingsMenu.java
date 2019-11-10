@@ -31,8 +31,16 @@ public class Apple2KeypadSettingsMenu extends Apple2AbstractMenu {
 
     public final static int ROSETTE_SIZE = 9;
 
-    public Apple2KeypadSettingsMenu(Apple2Activity activity) {
+    private Apple2SettingsMenu.TouchDeviceVariant mVariant;
+
+    public Apple2KeypadSettingsMenu(Apple2Activity activity, Apple2SettingsMenu.TouchDeviceVariant variant) {
         super(activity);
+
+        if (!(variant == Apple2SettingsMenu.TouchDeviceVariant.JOYSTICK || variant == Apple2SettingsMenu.TouchDeviceVariant.JOYSTICK_KEYPAD)) {
+            throw new RuntimeException("You're doing it wrong");
+        }
+
+        mVariant = variant;
     }
 
     @Override
@@ -502,6 +510,33 @@ public class Apple2KeypadSettingsMenu extends Apple2AbstractMenu {
     }
 
     enum SETTINGS implements Apple2AbstractMenu.IMenuEnum {
+        JOYSTICK_CALIBRATE {
+            @Override
+            public final String getTitle(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.joystick_calibrate);
+            }
+
+            @Override
+            public final String getSummary(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.joystick_calibrate_summary);
+            }
+
+            @Override
+            public String getPrefKey() {
+                return null;
+            }
+
+            @Override
+            public Object getPrefDefault() {
+                return null;
+            }
+
+            @Override
+            public void handleSelection(Apple2Activity activity, Apple2AbstractMenu settingsMenu, boolean isChecked) {
+                Apple2KeypadSettingsMenu thisMenu = (Apple2KeypadSettingsMenu)settingsMenu;
+                Apple2JoystickCalibration.startCalibration(activity, thisMenu.mVariant);
+            }
+        },
         KEYPAD_CHOOSE_KEYS {
             @Override
             public final String getTitle(Apple2Activity activity) {
@@ -609,7 +644,7 @@ public class Apple2KeypadSettingsMenu extends Apple2AbstractMenu {
 
             @Override
             public void handleSelection(Apple2Activity activity, Apple2AbstractMenu settingsMenu, boolean isChecked) {
-                new Apple2JoystickSettingsMenu.JoystickAdvanced(activity, Apple2SettingsMenu.TouchDeviceVariant.JOYSTICK_KEYPAD).show();
+                new Apple2JoystickSettingsMenu.JoystickAdvanced(activity).show();
             }
         };
 

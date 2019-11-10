@@ -38,9 +38,16 @@ public class Apple2JoystickSettingsMenu extends Apple2AbstractMenu {
 
     public final static int TAPDELAY_NUM_CHOICES = (30 + 1); // 0-30 (30Frames == ~0.5sec)
 
+    private Apple2SettingsMenu.TouchDeviceVariant mVariant;
 
-    public Apple2JoystickSettingsMenu(Apple2Activity activity) {
+    public Apple2JoystickSettingsMenu(Apple2Activity activity, Apple2SettingsMenu.TouchDeviceVariant variant) {
         super(activity);
+
+        if (!(variant == Apple2SettingsMenu.TouchDeviceVariant.JOYSTICK || variant == Apple2SettingsMenu.TouchDeviceVariant.JOYSTICK_KEYPAD)) {
+            throw new RuntimeException("You're doing it wrong");
+        }
+
+        mVariant = variant;
     }
 
     @Override
@@ -79,6 +86,33 @@ public class Apple2JoystickSettingsMenu extends Apple2AbstractMenu {
     }
 
     protected enum SETTINGS implements Apple2AbstractMenu.IMenuEnum {
+        JOYSTICK_CALIBRATE {
+            @Override
+            public final String getTitle(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.joystick_calibrate);
+            }
+
+            @Override
+            public final String getSummary(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.joystick_calibrate_summary);
+            }
+
+            @Override
+            public String getPrefKey() {
+                return null;
+            }
+
+            @Override
+            public Object getPrefDefault() {
+                return null;
+            }
+
+            @Override
+            public void handleSelection(Apple2Activity activity, Apple2AbstractMenu settingsMenu, boolean isChecked) {
+                Apple2JoystickSettingsMenu thisMenu = (Apple2JoystickSettingsMenu)settingsMenu;
+                Apple2JoystickCalibration.startCalibration(activity, thisMenu.mVariant);
+            }
+        },
         JOYSTICK_TAP_BUTTON {
             @Override
             public final String getTitle(Apple2Activity activity) {
@@ -324,6 +358,67 @@ public class Apple2JoystickSettingsMenu extends Apple2AbstractMenu {
                 });
             }
         },
+        JOYSTICK_AXIS_SENSITIVITY {
+            @Override
+            public final String getTitle(Apple2Activity activity) {
+                return "";
+            }
+
+            @Override
+            public final String getSummary(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.joystick_axis_sensitivity_summary);
+            }
+
+            @Override
+            public String getPrefKey() {
+                return "axisSensitivity";
+            }
+
+            @Override
+            public Object getPrefDefault() {
+                return 1.f;
+            }
+
+            @Override
+            public View getView(final Apple2Activity activity, View convertView) {
+                final IMenuEnum self = this;
+                return _sliderView(activity, this, JOYSTICK_AXIS_SENSITIVITY_NUM_CHOICES, new IPreferenceSlider() {
+                    @Override
+                    public void saveInt(int progress) {
+                        final int pivot = JOYSTICK_AXIS_SENSITIVITY_DEC_NUMCHOICES;
+                        float sensitivity = 1.f;
+                        if (progress < pivot) {
+                            int decAmount = (pivot - progress);
+                            sensitivity -= (JOYSTICK_AXIS_SENSITIVITY_DEC_STEP * decAmount);
+                        } else if (progress > pivot) {
+                            int incAmount = (progress - pivot);
+                            sensitivity += (JOYSTICK_AXIS_SENSITIVITY_INC_STEP * incAmount);
+                        }
+                        Apple2Preferences.setJSONPref(self, sensitivity);
+                    }
+
+                    @Override
+                    public int intValue() {
+                        float sensitivity = Apple2Preferences.getFloatJSONPref(self);
+                        int pivot = JOYSTICK_AXIS_SENSITIVITY_DEC_NUMCHOICES;
+                        if (sensitivity < 1.f) {
+                            pivot = Math.round((sensitivity - JOYSTICK_AXIS_SENSITIVITY_MIN) / JOYSTICK_AXIS_SENSITIVITY_DEC_STEP);
+                        } else if (sensitivity > 1.f) {
+                            sensitivity -= 1.f;
+                            pivot += Math.round(sensitivity / JOYSTICK_AXIS_SENSITIVITY_INC_STEP);
+                        }
+                        return pivot;
+                    }
+
+                    @Override
+                    public void showValue(int progress, final TextView seekBarValue) {
+                        saveInt(progress);
+                        int percent = (int) (Apple2Preferences.getFloatJSONPref(self) * 100.f);
+                        seekBarValue.setText("" + percent + "%");
+                    }
+                });
+            }
+        },
         JOYSTICK_ADVANCED {
             @Override
             public final String getTitle(Apple2Activity activity) {
@@ -337,7 +432,7 @@ public class Apple2JoystickSettingsMenu extends Apple2AbstractMenu {
 
             @Override
             public void handleSelection(Apple2Activity activity, Apple2AbstractMenu settingsMenu, boolean isChecked) {
-                new Apple2JoystickSettingsMenu.JoystickAdvanced(activity, Apple2SettingsMenu.TouchDeviceVariant.JOYSTICK).show();
+                new Apple2JoystickSettingsMenu.JoystickAdvanced(activity).show();
             }
         };
 
@@ -381,16 +476,8 @@ public class Apple2JoystickSettingsMenu extends Apple2AbstractMenu {
 
         private final static String TAG = "JoystickAdvanced";
 
-        private Apple2SettingsMenu.TouchDeviceVariant mVariant;
-
-        public JoystickAdvanced(Apple2Activity activity, Apple2SettingsMenu.TouchDeviceVariant variant) {
+        public JoystickAdvanced(Apple2Activity activity) {
             super(activity);
-
-            if (!(variant == Apple2SettingsMenu.TouchDeviceVariant.JOYSTICK || variant == Apple2SettingsMenu.TouchDeviceVariant.JOYSTICK_KEYPAD)) {
-                throw new RuntimeException("You're doing it wrong");
-            }
-
-            mVariant = variant;
         }
 
         @Override
@@ -417,54 +504,6 @@ public class Apple2JoystickSettingsMenu extends Apple2AbstractMenu {
         }
 
         protected enum SETTINGS implements Apple2AbstractMenu.IMenuEnum {
-            JOYSTICK_CALIBRATE {
-                @Override
-                public final String getTitle(Apple2Activity activity) {
-                    return activity.getResources().getString(R.string.joystick_calibrate);
-                }
-
-                @Override
-                public final String getSummary(Apple2Activity activity) {
-                    return activity.getResources().getString(R.string.joystick_calibrate_summary);
-                }
-
-                @Override
-                public String getPrefKey() {
-                    return null;
-                }
-
-                @Override
-                public Object getPrefDefault() {
-                    return null;
-                }
-
-                @Override
-                public void handleSelection(Apple2Activity activity, Apple2AbstractMenu settingsMenu, boolean isChecked) {
-                    ArrayList<Apple2MenuView> viewStack = new ArrayList<Apple2MenuView>();
-                    {
-                        int idx = 0;
-                        while (true) {
-                            Apple2MenuView apple2MenuView = activity.peekApple2View(idx);
-                            if (apple2MenuView == null) {
-                                break;
-                            }
-                            viewStack.add(apple2MenuView);
-                            ++idx;
-                        }
-                    }
-
-                    JoystickAdvanced advancedMenu = (JoystickAdvanced)settingsMenu;
-                    Apple2JoystickCalibration calibration = new Apple2JoystickCalibration(activity, viewStack, advancedMenu.mVariant);
-
-                    // show this new view...
-                    calibration.show();
-
-                    // ...with nothing else underneath 'cept the emulator OpenGL layer
-                    for (Apple2MenuView apple2MenuView : viewStack) {
-                        activity.popApple2View(apple2MenuView);
-                    }
-                }
-            },
             JOYSTICK_VISIBILITY {
                 @Override
                 public final String getTitle(Apple2Activity activity) {
@@ -572,72 +611,11 @@ public class Apple2JoystickSettingsMenu extends Apple2AbstractMenu {
 
                         @Override
                         public void showValue(int progress, final TextView seekBarValue) {
-                            float millis = progress * 16.688f;
+                            String millis = String.format(java.util.Locale.ROOT, "%.3f", progress * 16.688f);
                             String framesStr = activity.getResources().getString(R.string.string_frames);
                             String millisStr = activity.getResources().getString(R.string.string_millis);
                             String textSummary = "" + progress + " " + framesStr + " (" + millis + " " + millisStr + ")";
                             seekBarValue.setText(textSummary);
-                        }
-                    });
-                }
-            },
-            JOYSTICK_AXIS_SENSITIVITY {
-                @Override
-                public final String getTitle(Apple2Activity activity) {
-                    return "";
-                }
-
-                @Override
-                public final String getSummary(Apple2Activity activity) {
-                    return activity.getResources().getString(R.string.joystick_axis_sensitivity_summary);
-                }
-
-                @Override
-                public String getPrefKey() {
-                    return "axisSensitivity";
-                }
-
-                @Override
-                public Object getPrefDefault() {
-                    return 1.f;
-                }
-
-                @Override
-                public View getView(final Apple2Activity activity, View convertView) {
-                    final IMenuEnum self = this;
-                    return _sliderView(activity, this, JOYSTICK_AXIS_SENSITIVITY_NUM_CHOICES, new IPreferenceSlider() {
-                        @Override
-                        public void saveInt(int progress) {
-                            final int pivot = JOYSTICK_AXIS_SENSITIVITY_DEC_NUMCHOICES;
-                            float sensitivity = 1.f;
-                            if (progress < pivot) {
-                                int decAmount = (pivot - progress);
-                                sensitivity -= (JOYSTICK_AXIS_SENSITIVITY_DEC_STEP * decAmount);
-                            } else if (progress > pivot) {
-                                int incAmount = (progress - pivot);
-                                sensitivity += (JOYSTICK_AXIS_SENSITIVITY_INC_STEP * incAmount);
-                            }
-                            Apple2Preferences.setJSONPref(self, sensitivity);
-                        }
-
-                        @Override
-                        public int intValue() {
-                            float sensitivity = Apple2Preferences.getFloatJSONPref(self);
-                            int pivot = JOYSTICK_AXIS_SENSITIVITY_DEC_NUMCHOICES;
-                            if (sensitivity < 1.f) {
-                                pivot = Math.round((sensitivity - JOYSTICK_AXIS_SENSITIVITY_MIN) / JOYSTICK_AXIS_SENSITIVITY_DEC_STEP);
-                            } else if (sensitivity > 1.f) {
-                                sensitivity -= 1.f;
-                                pivot += Math.round(sensitivity / JOYSTICK_AXIS_SENSITIVITY_INC_STEP);
-                            }
-                            return pivot;
-                        }
-
-                        @Override
-                        public void showValue(int progress, final TextView seekBarValue) {
-                            saveInt(progress);
-                            int percent = (int) (Apple2Preferences.getFloatJSONPref(self) * 100.f);
-                            seekBarValue.setText("" + percent + "%");
                         }
                     });
                 }
