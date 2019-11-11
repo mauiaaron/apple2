@@ -1501,7 +1501,7 @@ void vm_initialize(void) {
     _initialize_tables();
     disk6_init();
     _initialize_iie_switches();
-    c_joystick_reset();
+    joystick_reset();
 }
 
 bool vm_saveState(StateHelper_s *helper) {

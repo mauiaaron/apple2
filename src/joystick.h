@@ -43,7 +43,7 @@ extern bool joy_auto_recenter;
 extern short joy_step;
 #endif
 
-void c_joystick_reset(void);
+void joystick_reset(void);
 
 #ifdef INTERFACE_CLASSIC
 void c_calibrate_joystick(void);

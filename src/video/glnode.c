@@ -134,7 +134,7 @@ static void _glnode_initGLUTPost(void) {
     glutSpecialUpFunc(gldriver_on_key_special_up);
     //glutMouseFunc(gldriver_mouse);
     //glutMotionFunc(gldriver_mouse_drag);
-    c_joystick_reset();
+    joystick_reset();
 }
 #endif
 

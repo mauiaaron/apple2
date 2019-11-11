@@ -1089,7 +1089,7 @@ void c_interface_parameters()
         else if ((ch == kESC) || c_keys_is_interface_key(ch))
         {
             timing_initialize();
-            c_joystick_reset();
+            joystick_reset();
 #if !TESTING
             prefs_save();
 #endif
@@ -1183,7 +1183,7 @@ void c_interface_parameters()
             /* calibrate joystick */
             if ((ch == 13) && (option == OPT_CALIBRATE))
             {
-                c_joystick_reset();
+                joystick_reset();
                 c_calibrate_joystick();
                 c_interface_print_screen( screen );
             }
@@ -1246,7 +1246,7 @@ void c_interface_parameters()
                     ch = toupper(ch);
                     if (ch == 'Y')
                     {
-                        c_joystick_reset();
+                        joystick_reset();
                         cpu65_reboot();
                         c_interface_exit(ch);
                         break;

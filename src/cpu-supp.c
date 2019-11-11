@@ -662,7 +662,7 @@ void cpu65_uninterrupt(int reason) {
 }
 
 void cpu65_reboot(void) {
-    run_args.joy_button0 = 0xff; // OpenApple -- should be balanced by c_joystick_reset() triggers on CPU thread
+    run_args.joy_button0 = 0xff; // OpenApple -- should be balanced by joystick_reset() triggers on CPU thread
     cpu65_interrupt(ResetSig);
 }
 

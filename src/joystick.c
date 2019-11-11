@@ -32,6 +32,11 @@ short joy_step = 1;
 bool joy_auto_recenter = false;
 #endif
 
+static struct {
+    video_frame_callback_fn frameCallback;
+    uint8_t frameCount;
+} joystickReset = { 0 };
+
 void (*joydriver_resetJoystick)(void) = NULL;
 
 static void joystick_prefsChanged(const char *domain) {
@@ -59,8 +64,13 @@ static void joystick_prefsChanged(const char *domain) {
 #endif
 }
 
-static __attribute__((constructor)) void _init_joystick(void) {
+static void _init_joystick(void) {
     prefs_registerListener(PREF_DOMAIN_JOYSTICK, &joystick_prefsChanged);
+    video_registerFrameCallback(&joystickReset.frameCallback);
+}
+
+static __attribute__((constructor)) void __init_joystick(void) {
+    emulator_registerStartupCallback(CTOR_PRIORITY_LATE, &_init_joystick);
 }
 
 #ifdef INTERFACE_CLASSIC
@@ -270,24 +280,24 @@ void c_calibrate_joystick()
 #endif // INTERFACE_CLASSIC
 
 #if !TESTING
-// HACK : avoid resetting joystick button values too quickly. This should allow for ClosedApple-Reset. (This is still a
-// race, but hopefully much less likely to trigger).
-static void *_joystick_resetDelayed(void *ctx) {
-    (void)ctx;
-    SCOPE_TRACE_INTERFACE("_joystick_resetDelayed");
+// NOTE : reset joystick buttons after a number of frames, which should allow for Open/Closed-Apple reset sequence.
+void _joystick_frameCallback(uint8_t textFlashCounter) {
+    (void)textFlashCounter;
 
-    // delay
-    sleep(1);
+    // When activated, this is called every video frame -- ~16.688 millis
 
-    run_args.joy_button0 = 0x0;
-    run_args.joy_button1 = 0x0;
+    ASSERT_ON_CPU_THREAD();
 
-    return NULL;
+    --joystickReset.frameCount;
+    if (joystickReset.frameCount == 0) {
+        run_args.joy_button0 = 0x0;
+        run_args.joy_button1 = 0x0;
+        joystickReset.frameCallback = NULL; // unlatch
+    }
 }
 #endif
 
-void c_joystick_reset(void)
-{
+void joystick_reset(void) {
     if (joydriver_resetJoystick) {
         joydriver_resetJoystick();
     }
@@ -297,10 +307,8 @@ void c_joystick_reset(void)
     run_args.joy_button0 = 0x0;
     run_args.joy_button1 = 0x0;
 #else
-    pthread_t pid;
-    int err = TEMP_FAILURE_RETRY(pthread_create(&pid, NULL, (void *)&_joystick_resetDelayed, (void *)NULL));
-    assert(!err);
-    pthread_detach(pid);
+    joystickReset.frameCount = 2; // >= 1 full frame of processing insures that reset is handled
+    joystickReset.frameCallback = &_joystick_frameCallback;
 #endif
 
     joy_x = HALF_JOY_RANGE;
