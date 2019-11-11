@@ -1,21 +1,25 @@
-Apple2ix (a2ix) 2.0.1-Beta for Android
+Apple2ix (a2ix) 2.1.0-RC1 for Android
+
+GENERAL:
+
+- Provide full 64bit native builds for ARMv8 and x64 platforms (this is a forced changed due to a new hard G00G requirement)
+- Migrated menu system to newer-ish Dark Holo theme (again, because G00G is forcing my hand)
 
 TOUCH KEYBOARD:
 
 - New preference for dual-thumb touch keyboard handling
-- More alt keyboard presets for old-school RPGs
+- More alternate keyboard presets for old-school RPGs
+- Tapping Open/Closed-Apple keys now generate joystick button events
 
-TOUCH KEYPAD JOYSTICK:
+TOUCH JOYSTICKS:
 
-- Improved emulation fidelity and auto-repeat response
-- Full left and right side rosette configurations
-- More presets for popular games (L0de Runner, R0b0tr0n 2084, ...)
+- Keypad Joystick: Improved emulation fidelity for the keyboard auto-repeat circuitry, tied to the video refresh.
+- Keypad Joystick: Full left and right side rosette key configurations
+- Keypad Joystick: More presets for popular games (L0de Runner, R0b0tr0n 2084, ...)
+- Joystick: Can now configure a button to fire on left/right swipe (instead of just touch down, swipe up/down)
+- Button/key switch threshold now configurable down to zero minimum
+- Prefrence toggles shuffled around a bit for clarity
 
-TOUCH JOYSTICK:
-
-- Can now configure a button to fire on left/right swipe (instead of just touch down, swipe up/down)
-
-GENERAL INFO:
+M0AR INFO:
 
 - More information about how to use Apple2ix for Android : https://deadc0de.org/apple2ix/android
-
