@@ -425,7 +425,7 @@ public class Apple2SettingsMenu extends Apple2AbstractMenu {
                                     activity.runOnUiThread(new Runnable() {
                                         @Override
                                         public void run() {
-                                            Log.d(TAG, "About to NPE : " + str[0].length());
+                                            Apple2Activity.logMessage(Apple2Activity.LogType.DEBUG, TAG, "About to NPE : " + str[0].length());
                                         }
                                     });
                                 }

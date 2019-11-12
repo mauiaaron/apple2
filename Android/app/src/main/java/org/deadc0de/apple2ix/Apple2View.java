@@ -136,7 +136,7 @@ class Apple2View extends GLSurfaceView implements InputManagerCompat.InputDevice
         private static int EGL_CONTEXT_CLIENT_VERSION = 0x3098;
 
         public EGLContext createContext(EGL10 egl, EGLDisplay display, EGLConfig eglConfig) {
-            Log.w(TAG, "creating OpenGL ES 2.0 context");
+            Apple2Activity.logMessage(Apple2Activity.LogType.WARN, TAG, "creating OpenGL ES 2.0 context");
             checkEglError("Before eglCreateContext", egl);
             int[] attrib_list = {EGL_CONTEXT_CLIENT_VERSION, 2, EGL10.EGL_NONE};
             EGLContext context = egl.eglCreateContext(display, eglConfig, EGL10.EGL_NO_CONTEXT, attrib_list);
@@ -152,7 +152,7 @@ class Apple2View extends GLSurfaceView implements InputManagerCompat.InputDevice
     private static void checkEglError(String prompt, EGL10 egl) {
         int error;
         while ((error = egl.eglGetError()) != EGL10.EGL_SUCCESS) {
-            Log.e(TAG, String.format("%s: EGL error: 0x%x", prompt, error));
+            Apple2Activity.logMessage(Apple2Activity.LogType.ERROR, TAG, String.format("%s: EGL error: 0x%x", prompt, error));
         }
     }
 
@@ -204,9 +204,9 @@ class Apple2View extends GLSurfaceView implements InputManagerCompat.InputDevice
             // Now return the "best" one
             EGLConfig best = chooseConfig(egl, display, configs);
             if (best == null) {
-                Log.e(TAG, "OOPS! Did not pick an EGLConfig.  What device are you using?!  Android will now crash this app...");
+                Apple2Activity.logMessage(Apple2Activity.LogType.ERROR, TAG, "OOPS! Did not pick an EGLConfig.  What device are you using?!  Android will now crash this app...");
             } else {
-                Log.w(TAG, "Using EGL CONFIG : ");
+                Apple2Activity.logMessage(Apple2Activity.LogType.WARN, TAG, "Using EGL CONFIG : ");
                 printConfig(egl, display, best);
             }
             return best;
@@ -245,9 +245,9 @@ class Apple2View extends GLSurfaceView implements InputManagerCompat.InputDevice
 
         private void printConfigs(EGL10 egl, EGLDisplay display, EGLConfig[] configs) {
             int numConfigs = configs.length;
-            Log.w(TAG, String.format("%d configurations", numConfigs));
+            Apple2Activity.logMessage(Apple2Activity.LogType.WARN, TAG, String.format("%d configurations", numConfigs));
             for (int i = 0; i < numConfigs; i++) {
-                Log.w(TAG, String.format("Configuration %d:\n", i));
+                Apple2Activity.logMessage(Apple2Activity.LogType.WARN, TAG, String.format("Configuration %d:\n", i));
                 printConfig(egl, display, configs[i]);
             }
         }
@@ -328,9 +328,9 @@ class Apple2View extends GLSurfaceView implements InputManagerCompat.InputDevice
                 int attribute = attributes[i];
                 String name = names[i];
                 if (egl.eglGetConfigAttrib(display, config, attribute, value)) {
-                    Log.w(TAG, String.format("  %s: %d\n", name, value[0]));
+                    Apple2Activity.logMessage(Apple2Activity.LogType.WARN, TAG, String.format("  %s: %d\n", name, value[0]));
                 } else {
-                    // Log.w(TAG, String.format("  %s: failed\n", name));
+                    // Apple2Activity.logMessage(Apple2Activity.LogType.WARN, TAG, String.format("  %s: failed\n", name));
                     while (egl.eglGetError() != EGL10.EGL_SUCCESS) ;
                 }
             }

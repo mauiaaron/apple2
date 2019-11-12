@@ -30,6 +30,7 @@ import android.widget.Toast;
 
 import org.deadc0de.apple2ix.basic.BuildConfig;
 import org.deadc0de.apple2ix.basic.R;
+import org.json.JSONObject;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -96,6 +97,8 @@ public class Apple2Activity extends AppCompatActivity implements Apple2DiskChoos
 
     private static native void nativeReboot(int resetState);
 
+    private static native void nativeLogMessage(String jsonStr);
+
     public final static boolean isNativeBarfed() {
         return sNativeBarfed;
     }
@@ -118,7 +121,7 @@ public class Apple2Activity extends AppCompatActivity implements Apple2DiskChoos
         }
         super.onCreate(savedInstanceState);
 
-        Log.e(TAG, "onCreate()");
+        logMessage(LogType.ERROR, TAG, "onCreate()");
 
         // placeholder view on initial launch
         if (mView == null) {
@@ -127,14 +130,14 @@ public class Apple2Activity extends AppCompatActivity implements Apple2DiskChoos
 
         Apple2CrashHandler.getInstance().initializeAndSetCustomExceptionHandler(this);
         if (sNativeBarfed) {
-            Log.e(TAG, "NATIVE BARFED...", sNativeBarfedThrowable);
+            logMessage(LogType.ERROR, TAG, "NATIVE BARFED : " + sNativeBarfedThrowable.getMessage());
             return;
         }
 
         int sampleRate = DevicePropertyCalculator.getRecommendedSampleRate(this);
         int monoBufferSize = DevicePropertyCalculator.getRecommendedBufferSize(this, /*isStereo:*/false);
         int stereoBufferSize = DevicePropertyCalculator.getRecommendedBufferSize(this, /*isStereo:*/true);
-        Log.d(TAG, "Device sampleRate:" + sampleRate + " mono bufferSize:" + monoBufferSize + " stereo bufferSize:" + stereoBufferSize);
+        logMessage(LogType.DEBUG, TAG, "Device sampleRate:" + sampleRate + " mono bufferSize:" + monoBufferSize + " stereo bufferSize:" + stereoBufferSize);
 
         String dataDir = Apple2Utils.getDataDir(this);
         nativeOnCreate(dataDir, sampleRate, monoBufferSize, stereoBufferSize);
@@ -185,7 +188,7 @@ public class Apple2Activity extends AppCompatActivity implements Apple2DiskChoos
                     Apple2Utils.exposeAPKAssets(Apple2Activity.this);
                     if (externalStoragePermission) {
                         Apple2Utils.exposeAPKAssetsToExternal(Apple2Activity.this);
-                        Log.d(TAG, "Finished first time copying #1...");
+                        logMessage(LogType.DEBUG, TAG, "Finished first time copying #1...");
 
                         if (!(boolean)Apple2Preferences.getJSONPref(Apple2Preferences.PREF_DOMAIN_INTERFACE, Apple2Preferences.PREF_RELEASE_NOTES, false)) {
                             Runnable myRunnable = new Runnable() {
@@ -232,7 +235,7 @@ public class Apple2Activity extends AppCompatActivity implements Apple2DiskChoos
                 // perform migration(s) and assets exposure now
                 Apple2Utils.migrateToExternalStorage(Apple2Activity.this);
                 Apple2Utils.exposeAPKAssetsToExternal(Apple2Activity.this);
-                Log.d(TAG, "Finished first time copying #2...");
+                logMessage(LogType.DEBUG, TAG, "Finished first time copying #2...");
             } // else ... we keep nagging on app startup ...
         } else {
             super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -253,7 +256,7 @@ public class Apple2Activity extends AppCompatActivity implements Apple2DiskChoos
                 break;
             }
 
-            Log.d(TAG, "onResume()");
+            logMessage(LogType.DEBUG, TAG, "onResume()");
             showSplashScreen(/*dismissable:*/true);
             if (!mSwitchingToPortrait.get()) {
                 Apple2CrashHandler.getInstance().checkForCrashes(this); // NOTE : needs to be called again to clean-up
@@ -320,10 +323,10 @@ public class Apple2Activity extends AppCompatActivity implements Apple2DiskChoos
         if (isEmulationPaused()) {
             Apple2Preferences.save(this);
         } else {
-            Log.d(TAG, "Letting native save preferences...");
+            logMessage(LogType.DEBUG, TAG, "Letting native save preferences...");
         }
 
-        Log.d(TAG, "onPause()");
+        logMessage(LogType.DEBUG, TAG, "onPause()");
         if (mView != null) {
             mView.onPause();
         }
@@ -415,7 +418,7 @@ public class Apple2Activity extends AppCompatActivity implements Apple2DiskChoos
             } catch (InterruptedIOException e) {
                 /* EINTR, EAGAIN */
             } catch (IOException e) {
-                Log.e(TAG, "OOPS could not load release_notes.txt!", e);
+                logMessage(LogType.ERROR, TAG, "OOPS could not load release_notes.txt : " + e.getMessage());
             } finally {
                 if (is != null) {
                     try {
@@ -619,5 +622,31 @@ public class Apple2Activity extends AppCompatActivity implements Apple2DiskChoos
                 System.exit(0);
             }
         }.run();
+    }
+
+    public enum LogType {
+        // Constants match
+        VERBOSE(2),
+        DEBUG(3),
+        INFO(4),
+        WARN(5),
+        ERROR(6);
+        private int type;
+
+        LogType(int type) {
+            this.type = type;
+        }
+    }
+
+    public static void logMessage(LogType type, String tag, String mesg) {
+        JSONObject map = new JSONObject();
+        try {
+            map.put("type", type.type);
+            map.put("tag", tag);
+            map.put("mesg", mesg);
+            nativeLogMessage(map.toString());
+        } catch (Exception e) {
+            Log.e(TAG, "OOPS: " + e.getMessage());
+        }
     }
 }

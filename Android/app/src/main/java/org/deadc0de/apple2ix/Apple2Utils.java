@@ -61,7 +61,7 @@ public class Apple2Utils {
             } catch (InterruptedIOException ie) {
                 /* EINTR, EAGAIN ... */
             } catch (IOException e) {
-                Log.d(TAG, "Error reading file at path : " + file.toString());
+                Apple2Activity.logMessage(Apple2Activity.LogType.DEBUG, TAG, "Error reading file at path : " + file.toString());
             }
 
             try {
@@ -89,7 +89,7 @@ public class Apple2Utils {
             } catch (InterruptedIOException ie) {
                 /* EINTR, EAGAIN ... */
             } catch (IOException e) {
-                Log.e(TAG, "Exception attempting to write data : " + e);
+                Apple2Activity.logMessage(Apple2Activity.LogType.ERROR, TAG, "Exception attempting to write data : " + e);
             }
 
             try {
@@ -182,7 +182,7 @@ public class Apple2Utils {
             if (!externalDir.exists()) {
                 boolean made = externalDir.mkdirs();
                 if (!made) {
-                    Log.d(TAG, "WARNING: could not make directory : " + sExternalFilesDir);
+                    Apple2Activity.logMessage(Apple2Activity.LogType.DEBUG, TAG, "WARNING: could not make directory : " + sExternalFilesDir);
                     break;
                 }
             }
@@ -218,7 +218,7 @@ public class Apple2Utils {
             PackageInfo pi = pm.getPackageInfo(activity.getPackageName(), 0);
             sDataDir = pi.applicationInfo.dataDir;
         } catch (PackageManager.NameNotFoundException e) {
-            Log.e(TAG, "" + e);
+            Apple2Activity.logMessage(Apple2Activity.LogType.ERROR, TAG, "" + e);
             if (sDataDir == null) {
                 sDataDir = "/data/local/tmp";
             }
@@ -285,7 +285,7 @@ public class Apple2Utils {
         recursivelyDelete(new File(new File(sDataDir, "disks").getAbsolutePath(), "logo"));
         recursivelyDelete(new File(new File(sDataDir, "disks").getAbsolutePath(), "miscgame"));
 
-        Log.d(TAG, "First time copying stuff-n-things out of APK for ease-of-NDK access...");
+        Apple2Activity.logMessage(Apple2Activity.LogType.DEBUG, TAG, "First time copying stuff-n-things out of APK for ease-of-NDK access...");
 
         getExternalStorageDirectory(activity);
         recursivelyCopyAPKAssets(activity, /*from APK directory:*/"disks",     /*to location:*/new File(sDataDir, "disks").getAbsolutePath(), true);
@@ -321,7 +321,7 @@ public class Apple2Utils {
             }
         }
         if (!file.delete()) {
-            Log.d(TAG, "Failed to delete file: " + file);
+            Apple2Activity.logMessage(Apple2Activity.LogType.DEBUG, TAG, "Failed to delete file: " + file);
         }
     }
 
@@ -338,7 +338,7 @@ public class Apple2Utils {
             } catch (InterruptedIOException e) {
                 /* EINTR, EAGAIN ... */
             } catch (IOException e) {
-                Log.d(TAG, "OOPS exception attempting to list APK files at : " + srcFileOrDir + " : " + e);
+                Apple2Activity.logMessage(Apple2Activity.LogType.DEBUG, TAG, "OOPS exception attempting to list APK files at : " + srcFileOrDir + " : " + e);
             }
 
             try {
@@ -350,7 +350,7 @@ public class Apple2Utils {
         } while (attempts < maxAttempts);
 
         if (files == null) {
-            Log.d(TAG, "OOPS, could not list APK assets at : " + srcFileOrDir);
+            Apple2Activity.logMessage(Apple2Activity.LogType.DEBUG, TAG, "OOPS, could not list APK assets at : " + srcFileOrDir);
             return;
         }
 
@@ -359,7 +359,7 @@ public class Apple2Utils {
             File dstPath = new File(dstFileOrDir);
             if (!dstPath.mkdirs()) {
                 if (!dstPath.exists()) {
-                    Log.d(TAG, "OOPS, could not mkdirs on " + dstPath);
+                    Apple2Activity.logMessage(Apple2Activity.LogType.DEBUG, TAG, "OOPS, could not mkdirs on " + dstPath);
                     return;
                 }
             }
@@ -387,7 +387,7 @@ public class Apple2Utils {
             } catch (InterruptedIOException e) {
                 /* EINTR, EAGAIN */
             } catch (IOException e) {
-                Log.e(TAG, "Failed to copy asset file: " + srcFileOrDir, e);
+                Apple2Activity.logMessage(Apple2Activity.LogType.ERROR, TAG, "Failed to copy asset file: " + srcFileOrDir + " : " + e.getMessage());
             } finally {
                 if (is != null) {
                     try {
@@ -462,7 +462,7 @@ public class Apple2Utils {
                 }
             }
         } catch (Exception e) {
-            Log.e(TAG, "OOPS : {e}");
+            Apple2Activity.logMessage(Apple2Activity.LogType.ERROR, TAG, "OOPS : {e}");
         }
     }
 
@@ -478,7 +478,7 @@ public class Apple2Utils {
             } catch (InterruptedIOException e) {
                 // EINTR, EAGAIN ...
             } catch (IOException e) {
-                Log.d(TAG, "OOPS exception attempting to copy emulator state file : " + e);
+                Apple2Activity.logMessage(Apple2Activity.LogType.DEBUG, TAG, "OOPS exception attempting to copy emulator state file : " + e);
             }
 
             try {

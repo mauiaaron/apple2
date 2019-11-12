@@ -216,7 +216,7 @@ public class Apple2KeyboardSettingsMenu extends Apple2AbstractMenu {
                     File keyboardDir = new File(Apple2Utils.getDataDir(activity) + File.separator + "keyboards");
                     files = keyboardDir.listFiles(kbdJsonFilter);
                     if (files == null) {
-                        Log.e(TAG, "OOPS, could not read keyboard data directory");
+                        Apple2Activity.logMessage(Apple2Activity.LogType.ERROR, TAG, "OOPS, could not read keyboard data directory");
                         return;
                     }
                 }

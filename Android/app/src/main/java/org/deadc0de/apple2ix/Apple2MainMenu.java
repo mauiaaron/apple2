@@ -179,7 +179,7 @@ public class Apple2MainMenu {
         mainMenuView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Log.d(TAG, "position:" + position + " tapped...");
+                Apple2Activity.logMessage(Apple2Activity.LogType.DEBUG, TAG, "position:" + position + " tapped...");
                 SETTINGS setting = SETTINGS.values()[position];
                 setting.handleSelection(Apple2MainMenu.this);
             }
@@ -337,12 +337,12 @@ public class Apple2MainMenu {
             try {
                 diskArgs.pfd.close(); // at this point diskArgs.pfd !null
             } catch (IOException ioe) {
-                Log.e(TAG, "Error attempting to close PFD : " + ioe);
+                Apple2Activity.logMessage(Apple2Activity.LogType.ERROR, TAG, "Error attempting to close PFD : " + ioe);
             }
             diskArgs.pfd = null;
 
         } catch (Exception e) {
-            Log.e(TAG, "OOPS: " + e);
+            Apple2Activity.logMessage(Apple2Activity.LogType.ERROR, TAG, "OOPS: " + e);
         }
 
         return restored;
@@ -386,7 +386,7 @@ public class Apple2MainMenu {
 
                     pfds[i] = Apple2DiskChooserActivity.openFileDescriptorFromUri(activity, uri);
                     if (pfds[i] == null) {
-                        Log.e(TAG, "Did not find URI for drive #" + i + " specified in " + SAVE_FILE + " file : " + diskPath);
+                        Apple2Activity.logMessage(Apple2Activity.LogType.ERROR, TAG, "Did not find URI for drive #" + i + " specified in " + SAVE_FILE + " file : " + diskPath);
                     } else {
                         int fd = pfds[i].getFd();
                         map.put(fdKeys[i], fd);
@@ -394,7 +394,7 @@ public class Apple2MainMenu {
                 } else {
                     boolean exists = new File(diskPath).exists();
                     if (!exists) {
-                        Log.e(TAG, "Did not find path for drive #" + i + " specified in " + SAVE_FILE + " file : " + diskPath);
+                        Apple2Activity.logMessage(Apple2Activity.LogType.ERROR, TAG, "Did not find path for drive #" + i + " specified in " + SAVE_FILE + " file : " + diskPath);
                     }
                 }
             }
@@ -407,7 +407,7 @@ public class Apple2MainMenu {
                         pfds[i].close();
                     }
                 } catch (IOException ioe) {
-                    Log.e(TAG, "Error attempting to close PFD #" + i + " : " + ioe);
+                    Apple2Activity.logMessage(Apple2Activity.LogType.ERROR, TAG, "Error attempting to close PFD #" + i + " : " + ioe);
                 }
             }
             map = new JSONObject(jsonString);

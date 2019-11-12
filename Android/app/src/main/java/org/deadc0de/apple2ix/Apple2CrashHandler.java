@@ -221,24 +221,24 @@ public class Apple2CrashHandler {
 
             // here we assume that the crash data was previously sent via email ... if not then we lost it =P
 
-            Log.d(TAG, "Cleaning up crash data ...");
+            Apple2Activity.logMessage(Apple2Activity.LogType.DEBUG, TAG, "Cleaning up crash data ...");
             int idx = 0;
             File[] nativeCrashes = _nativeCrashFiles(activity);
             for (File crash : nativeCrashes) {
 
                 if (!crash.delete()) {
-                    Log.d(TAG, "Could not unlink crash : " + crash);
+                    Apple2Activity.logMessage(Apple2Activity.LogType.DEBUG, TAG, "Could not unlink crash : " + crash);
                 }
 
                 File processed = new File(_dumpPath2ProcessedPath(crash.getAbsolutePath()));
                 if (!processed.delete()) {
-                    Log.d(TAG, "Could not unlink processed : " + processed);
+                    Apple2Activity.logMessage(Apple2Activity.LogType.DEBUG, TAG, "Could not unlink processed : " + processed);
                 }
             }
 
             File javaCrashFile = _javaCrashFile(activity);
             if (!javaCrashFile.delete()) {
-                Log.d(TAG, "Could not unlink java crash : " + javaCrashFile);
+                Apple2Activity.logMessage(Apple2Activity.LogType.DEBUG, TAG, "Could not unlink java crash : " + javaCrashFile);
             }
 
             // remove previous log file
@@ -339,7 +339,7 @@ public class Apple2CrashHandler {
                         for (File crash : nativeCrashes) {
 
                             String crashPath = crash.getAbsolutePath();
-                            Log.d(TAG, "Processing crash : " + crashPath);
+                            Apple2Activity.logMessage(Apple2Activity.LogType.DEBUG, TAG, "Processing crash : " + crashPath);
 
                             String processedPath = _dumpPath2ProcessedPath(crashPath);
                             try {
@@ -350,7 +350,7 @@ public class Apple2CrashHandler {
 
                             StringBuilder crashData = new StringBuilder();
                             if (!Apple2Utils.readEntireFile(new File(processedPath), crashData)) {
-                                Log.e(TAG, "Error processing crash : " + crashPath);
+                                Apple2Activity.logMessage(Apple2Activity.LogType.ERROR, TAG, "Error processing crash : " + crashPath);
                             }
                             allCrashData.append(">>>>>>> NATIVE CRASH [").append(crashPath).append("]\n");
                             allCrashData.append(crashData);
@@ -410,9 +410,9 @@ public class Apple2CrashHandler {
                         StringBuilder javaCrashData = new StringBuilder();
                         File javaCrashFile = _javaCrashFile(activity);
                         if (javaCrashFile.exists()) {
-                            Log.d(TAG, "Reading java crashes file");
+                            Apple2Activity.logMessage(Apple2Activity.LogType.DEBUG, TAG, "Reading java crashes file");
                             if (!Apple2Utils.readEntireFile(javaCrashFile, javaCrashData)) {
-                                Log.e(TAG, "Error processing java crash : " + javaCrashFileName);
+                                Apple2Activity.logMessage(Apple2Activity.LogType.ERROR, TAG, "Error processing java crash : " + javaCrashFileName);
                             }
                         }
 
@@ -437,7 +437,7 @@ public class Apple2CrashHandler {
                             try {
                                 obj = new JSONObject(jsonData.toString());
                             } catch (JSONException e) {
-                                Log.e(TAG, "Error reading preferences : " + e);
+                                Apple2Activity.logMessage(Apple2Activity.LogType.ERROR, TAG, "Error reading preferences : " + e);
                             }
                             if (obj != null) {
                                 summary.append("PREFS:\n");
@@ -511,7 +511,7 @@ public class Apple2CrashHandler {
             } catch (InterruptedIOException ie) {
                 /* EINTR, EAGAIN ... */
             } catch (IOException e) {
-                Log.e(TAG, "Exception attempting to write data : " + e);
+                Apple2Activity.logMessage(Apple2Activity.LogType.ERROR, TAG, "Exception attempting to write data : " + e);
             }
 
             try {
@@ -564,7 +564,7 @@ public class Apple2CrashHandler {
         } else {
             allCrashFile = new File(Apple2Utils.getDataDir(activity), "apple2ix_crash.txt");
         }
-        Log.d(TAG, "Writing all crashes to temp file : " + allCrashFile.getAbsolutePath());
+        Apple2Activity.logMessage(Apple2Activity.LogType.DEBUG, TAG, "Writing all crashes to temp file : " + allCrashFile.getAbsolutePath());
         return allCrashFile;
     }
 
@@ -588,14 +588,14 @@ public class Apple2CrashHandler {
         File allCrashFile = _getCrashFile(activity);
         Apple2Utils.writeFile(allCrashData, allCrashFile);
         if (!allCrashFile.setReadable(true, /*ownerOnly:*/false)) {
-            Log.d(TAG, "Oops, could not set file data readable!");
+            Apple2Activity.logMessage(Apple2Activity.LogType.DEBUG, TAG, "Oops, could not set file data readable!");
         }
 
         emailIntent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(allCrashFile));
 
-        Log.d(TAG, "STARTING CHOOSER FOR EMAIL ...");
+        Apple2Activity.logMessage(Apple2Activity.LogType.DEBUG, TAG, "STARTING CHOOSER FOR EMAIL ...");
         activity.startActivity(Intent.createChooser(emailIntent, "Send email"));
-        Log.d(TAG, "AFTER START ACTIVITY ...");
+        Apple2Activity.logMessage(Apple2Activity.LogType.DEBUG, TAG, "AFTER START ACTIVITY ...");
     }
 
 

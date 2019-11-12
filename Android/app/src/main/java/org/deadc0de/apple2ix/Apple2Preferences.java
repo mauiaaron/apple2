@@ -103,7 +103,7 @@ public class Apple2Preferences {
             key = menu.getPrefKey();
             val = map.get(key);
         } catch (JSONException e) {
-            Log.d(TAG, "Did not find value for domain:" + menu.getPrefDefault() + " key:" + key);
+            Apple2Activity.logMessage(Apple2Activity.LogType.DEBUG, TAG, "Did not find value for domain:" + menu.getPrefDefault() + " key:" + key);
         }
         if (val == null && key != null) {
             val = menu.getPrefDefault();
@@ -123,7 +123,7 @@ public class Apple2Preferences {
             map = _prefDomain(domain);
             val = map.get(key);
         } catch (JSONException e) {
-            Log.d(TAG, "Did not find value for domain:" + domain + " key:" + key);
+            Apple2Activity.logMessage(Apple2Activity.LogType.DEBUG, TAG, "Did not find value for domain:" + domain + " key:" + key);
         }
         if (val == null) {
             val = defaultVal;
@@ -143,17 +143,17 @@ public class Apple2Preferences {
         try {
             return (float) obj;
         } catch (ClassCastException e) {
-            Log.d(TAG, "could not cast object as float");
+            Apple2Activity.logMessage(Apple2Activity.LogType.DEBUG, TAG, "could not cast object as float");
         }
         try {
             return (float) ((double) obj);
         } catch (ClassCastException e) {
-            Log.d(TAG, "could not cast object as double");
+            Apple2Activity.logMessage(Apple2Activity.LogType.DEBUG, TAG, "could not cast object as double");
         }
         try {
             return (float) ((int) obj);
         } catch (ClassCastException e) {
-            Log.d(TAG, "could not cast object as int");
+            Apple2Activity.logMessage(Apple2Activity.LogType.DEBUG, TAG, "could not cast object as int");
         }
         return (float) ((long) obj);
     }
@@ -165,17 +165,17 @@ public class Apple2Preferences {
         try {
             return (int) obj;
         } catch (ClassCastException e) {
-            Log.d(TAG, "could not cast object as int");
+            Apple2Activity.logMessage(Apple2Activity.LogType.DEBUG, TAG, "could not cast object as int");
         }
         try {
             return (int) ((long) obj);
         } catch (ClassCastException e) {
-            Log.d(TAG, "could not cast object as long");
+            Apple2Activity.logMessage(Apple2Activity.LogType.DEBUG, TAG, "could not cast object as long");
         }
         try {
             return (int) ((float) obj);
         } catch (ClassCastException e) {
-            Log.d(TAG, "could not cast object as float");
+            Apple2Activity.logMessage(Apple2Activity.LogType.DEBUG, TAG, "could not cast object as float");
         }
         return (int) ((double) obj);
     }
@@ -249,7 +249,7 @@ public class Apple2Preferences {
 
                 jsonArray = (JSONArray) getJSONPref(PREF_DOMAIN_JOYSTICK, "kpAxisRosetteChars", null);
                 if (jsonArray == null || jsonArray.length() != Apple2KeypadSettingsMenu.ROSETTE_SIZE) {
-                    Log.e(TAG, "Oops, kpAxisRosetteChars is not expected length");
+                    Apple2Activity.logMessage(Apple2Activity.LogType.ERROR, TAG, "Oops, kpAxisRosetteChars is not expected length");
                 } else {
                     for (int i = 0; i < Apple2KeypadSettingsMenu.ROSETTE_SIZE; i++) {
                         Apple2KeypadSettingsMenu.KeyTuple tuple = axisRosette.get(i);
@@ -259,7 +259,7 @@ public class Apple2Preferences {
 
                 jsonArray = (JSONArray) getJSONPref(PREF_DOMAIN_JOYSTICK, "kpAxisRosetteScancodes", null);
                 if (jsonArray == null || jsonArray.length() != Apple2KeypadSettingsMenu.ROSETTE_SIZE) {
-                    Log.e(TAG, "Oops, kpAxisRosetteScancodes is not expected length");
+                    Apple2Activity.logMessage(Apple2Activity.LogType.ERROR, TAG, "Oops, kpAxisRosetteScancodes is not expected length");
                 } else {
                     for (int i = 0; i < Apple2KeypadSettingsMenu.ROSETTE_SIZE; i++) {
                         Apple2KeypadSettingsMenu.KeyTuple tuple = axisRosette.get(i);
@@ -333,7 +333,7 @@ public class Apple2Preferences {
 
         StringBuilder jsonString = new StringBuilder();
         if (!Apple2Utils.readEntireFile(prefsFile, jsonString)) {
-            Log.d(TAG, "Oops, could not read JSON file : " + prefsFile);
+            Apple2Activity.logMessage(Apple2Activity.LogType.DEBUG, TAG, "Oops, could not read JSON file : " + prefsFile);
         }
 
         try {
@@ -359,7 +359,7 @@ public class Apple2Preferences {
         try {
             jsonString = sSettings.toString(2);
         } catch (JSONException e) {
-            Log.w(TAG, "Error attempting to pretty-print JSON : " + e);
+            Apple2Activity.logMessage(Apple2Activity.LogType.WARN, TAG, "Error attempting to pretty-print JSON : " + e);
             ex = e;
             jsonString = sSettings.toString();
         }

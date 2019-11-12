@@ -627,3 +627,37 @@ jlong Java_org_deadc0de_apple2ix_Apple2JoystickCalibration_nativePollJoystick(JN
     return cxy;
 }
 
+void Java_org_deadc0de_apple2ix_Apple2Activity_nativeLogMessage(JNIEnv *env, jclass cls, jstring jJsonString) {
+#if TESTING
+    return NULL;
+#endif
+
+    const char *jsonString = (*env)->GetStringUTFChars(env, jJsonString, NULL);
+
+    JSON_ref jsonData = NULL;
+    bool ret = json_createFromString(jsonString, &jsonData);
+    assert(ret > 0);
+
+    (*env)->ReleaseStringUTFChars(env, jJsonString, jsonString); jsonString = NULL;
+
+    long type = LOG_TYPE_INFO;
+    json_mapParseLongValue(jsonData, "type", &type, 10);
+
+    char *tag = NULL;
+    json_mapCopyStringValue(jsonData, "tag", &tag);
+
+    char *mesg = NULL;
+    json_mapCopyStringValue(jsonData, "mesg", &mesg);
+
+    log_taggedOutputString((log_type_t)type, tag, mesg);
+
+    if (tag) {
+        FREE(tag);
+    }
+    if (mesg) {
+        FREE(mesg);
+    }
+
+    json_destroy(&jsonData);
+}
+

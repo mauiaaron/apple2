@@ -108,7 +108,7 @@ public class Apple2JoystickCalibration implements Apple2MenuView {
         joystickPollerThread = new Thread() {
             @Override
             public void run() {
-                Log.i(TAG, "Starting joystick poll thread...");
+                Apple2Activity.logMessage(Apple2Activity.LogType.INFO, TAG, "Starting joystick poll thread...");
                 try {
                     while (true) {
                         long cxy = nativePollJoystick();
@@ -139,7 +139,7 @@ public class Apple2JoystickCalibration implements Apple2MenuView {
                         Thread.sleep(100);
                     }
                 } catch (Exception e) {
-                    Log.i(TAG, "Stopping joystick poll thread...");
+                    Apple2Activity.logMessage(Apple2Activity.LogType.INFO, TAG, "Stopping joystick poll thread...");
                 }
             }
         };

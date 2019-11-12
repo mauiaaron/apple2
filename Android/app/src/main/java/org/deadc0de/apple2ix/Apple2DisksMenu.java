@@ -369,7 +369,7 @@ public class Apple2DisksMenu implements Apple2MenuView {
                 try {
                     diskArgs.pfd.close();
                 } catch (IOException ioe) {
-                    Log.e(TAG, "Error attempting to close PFD : " + ioe);
+                    Apple2Activity.logMessage(Apple2Activity.LogType.ERROR, TAG, "Error attempting to close PFD : " + ioe);
                 }
             }
             diskArgs.pfd = null;
@@ -381,7 +381,7 @@ public class Apple2DisksMenu implements Apple2MenuView {
             }
 
         } catch (Throwable t) {
-            Log.d(TAG, "OOPS: " + t);
+            Apple2Activity.logMessage(Apple2Activity.LogType.DEBUG, TAG, "OOPS: " + t);
         }
     }
 
@@ -739,7 +739,7 @@ public class Apple2DisksMenu implements Apple2MenuView {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, final int position, long id) {
                 if (isDirectory[position]) {
-                    Log.d(TAG, "Descending to path : " + filePaths[position]);
+                    Apple2Activity.logMessage(Apple2Activity.LogType.DEBUG, TAG, "Descending to path : " + filePaths[position]);
                     if (parentIsRootPath && !new File(filePaths[position]).isAbsolute()) {
                         pushPathStack(parentDisksDir + File.separator + filePaths[position]);
                     } else {

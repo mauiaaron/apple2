@@ -55,7 +55,7 @@ public class Apple2DiskChooserActivity extends AppCompatActivity {
             resolver.takePersistableUriPermission(uri, (Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION));
             pfd = resolver.openFileDescriptor(uri, "rw");
         } catch (Throwable t) {
-            Log.e(TAG, "OOPS, could not get appropriate access to URI ( " + uri + " ) : " + t);
+            Apple2Activity.logMessage(Apple2Activity.LogType.ERROR, TAG, "OOPS, could not get appropriate access to URI ( " + uri + " ) : " + t);
         }
 
         return pfd;
@@ -83,7 +83,7 @@ public class Apple2DiskChooserActivity extends AppCompatActivity {
             fileName = returnCursor.getString(nameIndex);
 
         } catch (Throwable t) {
-            Log.e(TAG, "OOPS, could not get filename from URI ( " + uri + " ) : " + t);
+            Apple2Activity.logMessage(Apple2Activity.LogType.ERROR, TAG, "OOPS, could not get filename from URI ( " + uri + " ) : " + t);
         }
 
         return fileName;
@@ -118,7 +118,7 @@ public class Apple2DiskChooserActivity extends AppCompatActivity {
 
         boolean ran = b.getBoolean("ran");
         if (ran) {
-            Log.e(TAG, "OOPS, already ran...");
+            Apple2Activity.logMessage(Apple2Activity.LogType.ERROR, TAG, "OOPS, already ran...");
             finish();
             return;
         }
@@ -139,7 +139,7 @@ public class Apple2DiskChooserActivity extends AppCompatActivity {
                 startActivityForResult(pickIntent, EDIT_REQUEST_CODE);
             }
         } catch (Throwable t) {
-            Log.e(TAG, "OOPS : " + t);
+            Apple2Activity.logMessage(Apple2Activity.LogType.ERROR, TAG, "OOPS : " + t);
             setResult(RESULT_CANCELED);
             finish();
         }

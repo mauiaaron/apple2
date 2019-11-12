@@ -89,7 +89,7 @@ public class Apple2KeypadChooser implements Apple2MenuView {
         }
 
         String asciiStr = asciiRepresentation(mActivity, ascii);
-        Log.d(TAG, "ascii:'" + asciiStr + "' scancode:" + scancode);
+        Apple2Activity.logMessage(Apple2Activity.LogType.DEBUG, TAG, "ascii:'" + asciiStr + "' scancode:" + scancode);
         if (ascii == ' ') {
             ascii = Apple2KeyboardSettingsMenu.ICONTEXT_VISUAL_SPACE;
         }

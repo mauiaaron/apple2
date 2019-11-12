@@ -16,6 +16,15 @@
 extern "C" {
 #endif
 
+// NOTE: These match Android settings
+typedef enum log_type_t {
+    LOG_TYPE_VERBOSE = 2,
+    LOG_TYPE_DEBUG,
+    LOG_TYPE_INFO,
+    LOG_TYPE_WARN,
+    LOG_TYPE_ERROR,
+} log_type_t;
+
 #if VIDEO_OPENGL
 extern GLenum safeGLGetError(void);
 #else
@@ -28,6 +37,9 @@ void log_init(void);
 
 // print a string to the log file.  Terminating '\n' is added.
 void log_outputString(const char * const str);
+
+// print a tag + string to the log file.  Terminating '\n' is added.
+void log_taggedOutputString(log_type_t type, const char * const tag, const char * const str);
 
 #define _MYFILE_ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
 
