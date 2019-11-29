@@ -22,6 +22,8 @@ import android.widget.ProgressBar;
 import org.deadc0de.apple2ix.basic.BuildConfig;
 import org.deadc0de.apple2ix.basic.R;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -35,6 +37,8 @@ import java.io.InputStream;
 import java.io.InterruptedIOException;
 import java.io.OutputStream;
 import java.util.zip.GZIPOutputStream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 public class Apple2Utils {
 
@@ -102,6 +106,93 @@ public class Apple2Utils {
 
         return attempts < maxAttempts;
     }
+
+    public static File zipFiles(File[] files, File zipFile) {
+
+        zipFile.delete();
+        ZipOutputStream out = null;
+
+        do {
+            try {
+                zipFile.createNewFile();
+            } catch (IOException ioe) {
+                Apple2Activity.logMessage(Apple2Activity.LogType.ERROR, TAG, "Could not create zipfile " + zipFile.getAbsolutePath() + " : " + ioe.getMessage());
+                break;
+            }
+
+            final int BUF_SIZ = 4096;
+            BufferedInputStream origin = null;
+
+            try {
+                out = new ZipOutputStream(new BufferedOutputStream(new FileOutputStream(zipFile)));
+            } catch (IOException ioe) {
+                Apple2Activity.logMessage(Apple2Activity.LogType.ERROR, TAG, "Could not create zip outputStream : " + ioe.getMessage());
+                break;
+            }
+
+            byte data[] = new byte[BUF_SIZ];
+
+            for (File file : files) {
+                FileInputStream fi = null;
+
+                try {
+                    fi = new FileInputStream(file);
+                } catch (IOException ioe) {
+                    Apple2Activity.logMessage(Apple2Activity.LogType.ERROR, TAG, "Could not create file input stream : " + ioe.getMessage());
+                    continue;
+                }
+
+                origin = new BufferedInputStream(fi, BUF_SIZ);
+
+                ZipEntry entry = new ZipEntry(file.getName());
+                try {
+                    out.putNextEntry(entry);
+                } catch (IOException ioe) {
+                    Apple2Activity.logMessage(Apple2Activity.LogType.ERROR, TAG, "Could not put next zip entry : " + ioe.getMessage());
+                    continue;
+                }
+
+                final int maxAttempts = 5;
+                int attempts = 0;
+                do {
+                    int count;
+                    try {
+                        while ((count = origin.read(data, 0, BUF_SIZ)) != -1) {
+                            out.write(data, 0, count);
+                        }
+                        break;
+                    } catch (InterruptedIOException ie) {
+                        /* EINTR, EAGAIN ... */
+                    } catch (IOException ioe) {
+                        Apple2Activity.logMessage(Apple2Activity.LogType.ERROR, TAG, "Could read/write zip data : " + ioe.getMessage());
+                        break;
+                    }
+                    ++attempts;
+                } while (attempts < maxAttempts);
+
+                try {
+                    origin.close();
+                } catch (IOException ioe) {
+                    // ...
+                }
+            }
+        } while (false);
+
+        if (out != null) {
+            try {
+                out.close();
+            } catch (IOException ioe) {
+                // ...
+            }
+        }
+
+        if (zipFile.exists()) {
+            return zipFile;
+        }
+
+        return null;
+    }
+
 
     public static void migrateToExternalStorage(Apple2Activity activity) {
 

@@ -19,14 +19,11 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
 import androidx.appcompat.app.AlertDialog;
-import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
 
 import org.deadc0de.apple2ix.basic.BuildConfig;
 import org.deadc0de.apple2ix.basic.R;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -34,9 +31,12 @@ import java.io.FileWriter;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InterruptedIOException;
+import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Apple2CrashHandler {
+
+    public final static String ALL_CRASH_FILE = "apple2ix_crash.zip";
 
     public final static String javaCrashFileName = "jcrash.txt";
 
@@ -241,8 +241,8 @@ public class Apple2CrashHandler {
                 Apple2Activity.logMessage(Apple2Activity.LogType.DEBUG, TAG, "Could not unlink java crash : " + javaCrashFile);
             }
 
-            // remove previous log file
-            File allCrashFile = _getCrashFile(activity);
+            // remove previous crash files
+            File allCrashFile = _getCrashFile(activity, ALL_CRASH_FILE);
             Apple2Utils.writeFile(new StringBuilder(), allCrashFile);
             allCrashFile.delete();
             return;
@@ -280,7 +280,6 @@ public class Apple2CrashHandler {
                         final int stereoBufferSize = DevicePropertyCalculator.getRecommendedBufferSize(activity, /*isStereo:*/true);
 
                         StringBuilder summary = new StringBuilder();
-                        StringBuilder allCrashData = new StringBuilder();
 
                         // prepend information about this device
                         summary.append("BRAND: ").append(Build.BRAND).append("\n");
@@ -302,8 +301,6 @@ public class Apple2CrashHandler {
                             // ...
                         }
 
-                        allCrashData.append(summary);
-
                         File[] nativeCrashes = _nativeCrashFiles(activity);
                         if (nativeCrashes == null) {
                             nativeCrashes = new File[0];
@@ -320,7 +317,7 @@ public class Apple2CrashHandler {
                             }
                         });
 
-                        if (len > 0) {
+                        if (nativeCrashes.length > 0) {
                             Apple2Utils.exposeSymbols(activity);
                         }
 
@@ -333,94 +330,40 @@ public class Apple2CrashHandler {
                             }
                         });
 
-                        boolean summarizedHeader = false;
-
                         // iteratively process native crashes
-                        for (File crash : nativeCrashes) {
+                        ArrayList<File> allCrashFiles = new ArrayList<File>();
+                        if (nativeCrashes.length > 0) {
+                            for (File crash : nativeCrashes) {
 
-                            String crashPath = crash.getAbsolutePath();
-                            Apple2Activity.logMessage(Apple2Activity.LogType.DEBUG, TAG, "Processing crash : " + crashPath);
+                                String crashPath = crash.getAbsolutePath();
+                                Apple2Activity.logMessage(Apple2Activity.LogType.DEBUG, TAG, "Processing crash : " + crashPath);
 
-                            String processedPath = _dumpPath2ProcessedPath(crashPath);
-                            try {
-                                nativeProcessCrash(crashPath, processedPath); // Run Breakpad minidump_stackwalk
-                            } catch (UnsatisfiedLinkError ule) {
-                                /* could happen on early lifecycle crashes */
-                            }
+                                String processedPath = _dumpPath2ProcessedPath(crashPath);
+                                try {
+                                    nativeProcessCrash(crashPath, processedPath); // Run Breakpad minidump_stackwalk
+                                } catch (UnsatisfiedLinkError ule) {
+                                    /* could happen on early lifecycle crashes */
+                                }
 
-                            StringBuilder crashData = new StringBuilder();
-                            if (!Apple2Utils.readEntireFile(new File(processedPath), crashData)) {
-                                Apple2Activity.logMessage(Apple2Activity.LogType.ERROR, TAG, "Error processing crash : " + crashPath);
-                            }
-                            allCrashData.append(">>>>>>> NATIVE CRASH [").append(crashPath).append("]\n");
-                            allCrashData.append(crashData);
-                            summary.append("NATIVE CRASH:\n");
+                                allCrashFiles.add(new File(processedPath));
 
-                            // append succinct information about crashing thread
-                            String[] lines = crashData.toString().split("[\\n\\r][\\n\\r]*");
-                            for (int i = 0, j = 0; i < lines.length; i++) {
-
-                                // 2 lines of minidump summary
-                                if (i < 2) {
-                                    if (!summarizedHeader) {
-                                        summary.append(lines[i]);
-                                        summary.append("\n");
+                                activity.runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        if (bar != null) {
+                                            bar.setProgress(bar.getProgress() + 1);
+                                        }
                                     }
-                                    continue;
-                                }
-
-                                // 1 line of crashing thread and reason
-                                if (i == 2) {
-                                    summarizedHeader = true;
-                                    summary.append(lines[i]);
-                                    summary.append("\n");
-                                    continue;
-                                }
-
-                                // whole lotta modules
-                                if (lines[i].startsWith("Module")) {
-                                    continue;
-                                }
-
-                                // one apparently empty line
-                                if (lines[i].matches("^[ \\t]*$")) {
-                                    continue;
-                                }
-
-                                // append crashing thread backtrace
-
-                                summary.append(lines[i]);
-                                summary.append("\n");
-                                final int maxSummaryBacktrace = 8;
-                                if (j++ >= maxSummaryBacktrace) {
-                                    break;
-                                }
+                                });
                             }
-
-                            activity.runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    if (bar != null) {
-                                        bar.setProgress(bar.getProgress() + 1);
-                                    }
-                                }
-                            });
+                            summary.append("" + nativeCrashes.length + " native crashes\n");
                         }
 
-                        StringBuilder javaCrashData = new StringBuilder();
                         File javaCrashFile = _javaCrashFile(activity);
                         if (javaCrashFile.exists()) {
-                            Apple2Activity.logMessage(Apple2Activity.LogType.DEBUG, TAG, "Reading java crashes file");
-                            if (!Apple2Utils.readEntireFile(javaCrashFile, javaCrashData)) {
-                                Apple2Activity.logMessage(Apple2Activity.LogType.ERROR, TAG, "Error processing java crash : " + javaCrashFileName);
-                            }
+                            summary.append("Java Crash File\n");
+                            allCrashFiles.add(javaCrashFile);
                         }
-
-                        allCrashData.append(">>>>>>> JAVA CRASH DATA\n");
-                        allCrashData.append(javaCrashData);
-
-                        summary.append("JAVA CRASH:\n");
-                        summary.append(javaCrashData);
 
                         activity.runOnUiThread(new Runnable() {
                             @Override
@@ -431,23 +374,12 @@ public class Apple2CrashHandler {
                             }
                         });
 
-                        StringBuilder jsonData = new StringBuilder();
-                        if (Apple2Utils.readEntireFile(new File(homeDir, Apple2Preferences.PREFS_FILE), jsonData)) {
-                            JSONObject obj = null;
-                            try {
-                                obj = new JSONObject(jsonData.toString());
-                            } catch (JSONException e) {
-                                Apple2Activity.logMessage(Apple2Activity.LogType.ERROR, TAG, "Error reading preferences : " + e);
-                            }
-                            if (obj != null) {
-                                summary.append("PREFS:\n");
-                                summary.append(obj.toString());
-                                allCrashData.append(">>>>>>> PREFS\n");
-                                allCrashData.append(obj.toString());
-                            }
+                        allCrashFiles.add(new File(homeDir, Apple2Preferences.PREFS_FILE));
+
+                        if (nativeCrashes.length > 0) {
+                            Apple2Utils.unexposeSymbols(activity);
                         }
 
-                        Apple2Utils.unexposeSymbols(activity);
                         activity.runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
@@ -460,8 +392,18 @@ public class Apple2CrashHandler {
                             }
                         });
 
+                        // Add all the log files ...
+                        {
+                            File[] nativeLogs = _nativeLogs(activity);
+                            for (File logFile : nativeLogs) {
+                                allCrashFiles.add(logFile);
+                            }
+                        }
+
+                        File[] allCrashesAry = new File[allCrashFiles.size()];
+                        File nativeCrashesZip = Apple2Utils.zipFiles(allCrashFiles.toArray(allCrashesAry), _getCrashFile(activity, ALL_CRASH_FILE));
                         // send report with all the data
-                        _sendEmailToDeveloperWithCrashData(activity, summary, allCrashData);
+                        _sendEmailToDeveloperWithCrashData(activity, summary, nativeCrashesZip);
                     }
                 }).start();
             }
@@ -527,6 +469,21 @@ public class Apple2CrashHandler {
         return new File(homeDir, javaCrashFileName);
     }
 
+    private File[] _nativeLogs(Apple2Activity activity) {
+        FilenameFilter logFilter = new FilenameFilter() {
+            public boolean accept(File dir, String name) {
+                File file = new File(dir, name);
+                if (file.isDirectory()) {
+                    return false;
+                }
+
+                return name.startsWith("apple2ix_log");
+            }
+        };
+
+        return new File(homeDir).listFiles(logFilter);
+    }
+
     private File[] _nativeCrashFiles(Apple2Activity activity) {
         FilenameFilter dmpFilter = new FilenameFilter() {
             public boolean accept(File dir, String name) {
@@ -556,19 +513,18 @@ public class Apple2CrashHandler {
         return crashPath.substring(0, crashPath.length() - 4) + ".txt";
     }
 
-    private File _getCrashFile(Apple2Activity activity) {
-        File allCrashFile;
+    private File _getCrashFile(Apple2Activity activity, String fileName) {
+        File file;
         String storageState = Environment.getExternalStorageState();
         if (storageState.equals(Environment.MEDIA_MOUNTED)) {
-            allCrashFile = new File(Environment.getExternalStorageDirectory(), "apple2ix_crash.txt");
+            file = new File(Environment.getExternalStorageDirectory(), fileName);
         } else {
-            allCrashFile = new File(Apple2Utils.getDataDir(activity), "apple2ix_crash.txt");
+            file = new File(Apple2Utils.getDataDir(activity), fileName);
         }
-        Apple2Activity.logMessage(Apple2Activity.LogType.DEBUG, TAG, "Writing all crashes to temp file : " + allCrashFile.getAbsolutePath());
-        return allCrashFile;
+        return file;
     }
 
-    private void _sendEmailToDeveloperWithCrashData(Apple2Activity activity, StringBuilder summary, StringBuilder allCrashData) {
+    private void _sendEmailToDeveloperWithCrashData(Apple2Activity activity, StringBuilder summary, File nativeCrashesZip) {
         mAlreadySentReport.set(true);
 
         // <sigh> ... the disaster that is early Android ... there does not appear to be a reliable way to start an
@@ -585,13 +541,11 @@ public class Apple2CrashHandler {
         String summaryData = summary.substring(0, len);
         emailIntent.putExtra(Intent.EXTRA_TEXT, "The app crashed, please help!\n\n" + summaryData);
 
-        File allCrashFile = _getCrashFile(activity);
-        Apple2Utils.writeFile(allCrashData, allCrashFile);
-        if (!allCrashFile.setReadable(true, /*ownerOnly:*/false)) {
-            Apple2Activity.logMessage(Apple2Activity.LogType.DEBUG, TAG, "Oops, could not set file data readable!");
+        if (!nativeCrashesZip.setReadable(true, /*ownerOnly:*/false)) {
+            Apple2Activity.logMessage(Apple2Activity.LogType.DEBUG, TAG, "Oops, could not set crash file data readable!");
         }
 
-        emailIntent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(allCrashFile));
+        emailIntent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(nativeCrashesZip));
 
         Apple2Activity.logMessage(Apple2Activity.LogType.DEBUG, TAG, "STARTING CHOOSER FOR EMAIL ...");
         activity.startActivity(Intent.createChooser(emailIntent, "Send email"));
