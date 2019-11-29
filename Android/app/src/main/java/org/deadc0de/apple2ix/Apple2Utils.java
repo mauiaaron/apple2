@@ -14,6 +14,7 @@ package org.deadc0de.apple2ix;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
+import android.os.AsyncTask;
 import android.os.Environment;
 import android.util.Log;
 import android.view.View;
@@ -318,7 +319,7 @@ public class Apple2Utils {
         return sDataDir;
     }
 
-    public static void exposeAPKAssetsToExternal(Apple2Activity activity) {
+    public static void exposeAPKAssetsToExternal(final Apple2Activity activity) {
         getExternalStorageDirectory(activity);
         if (sExternalFilesDir == null) {
             return;
@@ -331,29 +332,34 @@ public class Apple2Utils {
                 try {
                     bar.setVisibility(View.VISIBLE);
                     bar.setIndeterminate(true);
+
+                    AsyncTask.execute(new Runnable() {
+                        @Override
+                        public void run() {
+                            Log.v(TAG, "Overwriting system files in /sdcard/apple2ix/ (external storage) ...");
+                            recursivelyCopyAPKAssets(activity, /*from APK directory:*/"keyboards", /*to location:*/sExternalFilesDir.getAbsolutePath(), false);
+
+                            activity.runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    try {
+                                        bar.setVisibility(View.INVISIBLE);
+                                        bar.setIndeterminate(false);
+                                    } catch (NullPointerException npe) {
+                                        Log.v(TAG, "Avoid NPE in exposeAPKAssetsToExternal #2");
+                                    }
+                                }
+                            });
+                        }
+                    });
                 } catch (NullPointerException npe) {
                     Log.v(TAG, "Avoid NPE in exposeAPKAssetsToExternal #1");
                 }
             }
         });
-
-        Log.v(TAG, "Overwriting system files in /sdcard/apple2ix/ (external storage) ...");
-        recursivelyCopyAPKAssets(activity, /*from APK directory:*/"keyboards", /*to location:*/sExternalFilesDir.getAbsolutePath(), false);
-
-        activity.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    bar.setVisibility(View.INVISIBLE);
-                    bar.setIndeterminate(false);
-                } catch (NullPointerException npe) {
-                    Log.v(TAG, "Avoid NPE in exposeAPKAssetsToExternal #2");
-                }
-            }
-        });
     }
 
-    public static void exposeAPKAssets(Apple2Activity activity) {
+    public static void exposeAPKAssets(final Apple2Activity activity) {
         final ProgressBar bar = (ProgressBar) activity.findViewById(R.id.crash_progressBar);
         activity.runOnUiThread(new Runnable() {
             @Override
@@ -361,39 +367,45 @@ public class Apple2Utils {
                 try {
                     bar.setVisibility(View.VISIBLE);
                     bar.setIndeterminate(true);
+
+                    AsyncTask.execute(new Runnable() {
+                        @Override
+                        public void run() {
+                            getDataDir(activity);
+
+                            // FIXME TODO : Heavy-handed migration to 1.1.3 ...
+                            recursivelyDelete(new File(new File(sDataDir, "disks").getAbsolutePath(), "blanks"));
+                            recursivelyDelete(new File(new File(sDataDir, "disks").getAbsolutePath(), "demo"));
+                            recursivelyDelete(new File(new File(sDataDir, "disks").getAbsolutePath(), "eamon"));
+                            recursivelyDelete(new File(new File(sDataDir, "disks").getAbsolutePath(), "logo"));
+                            recursivelyDelete(new File(new File(sDataDir, "disks").getAbsolutePath(), "miscgame"));
+
+                            Apple2Activity.logMessage(Apple2Activity.LogType.DEBUG, TAG, "First time copying stuff-n-things out of APK for ease-of-NDK access...");
+
+                            getExternalStorageDirectory(activity);
+                            recursivelyCopyAPKAssets(activity, /*from APK directory:*/"disks",     /*to location:*/new File(sDataDir, "disks").getAbsolutePath(), true);
+                            recursivelyCopyAPKAssets(activity, /*from APK directory:*/"keyboards", /*to location:*/new File(sDataDir, "keyboards").getAbsolutePath(), false);
+                            recursivelyCopyAPKAssets(activity, /*from APK directory:*/"shaders",   /*to location:*/new File(sDataDir, "shaders").getAbsolutePath(), false);
+
+                            activity.runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    try {
+                                        bar.setVisibility(View.INVISIBLE);
+                                        bar.setIndeterminate(false);
+                                    } catch (NullPointerException npe) {
+                                        Log.v(TAG, "Avoid NPE in exposeAPKAssets #1");
+                                    }
+                                }
+                            });
+                        }
+                    });
                 } catch (NullPointerException npe) {
                     Log.v(TAG, "Avoid NPE in exposeAPKAssets #1");
                 }
             }
         });
 
-        getDataDir(activity);
-
-        // FIXME TODO : Heavy-handed migration to 1.1.3 ...
-        recursivelyDelete(new File(new File(sDataDir, "disks").getAbsolutePath(), "blanks"));
-        recursivelyDelete(new File(new File(sDataDir, "disks").getAbsolutePath(), "demo"));
-        recursivelyDelete(new File(new File(sDataDir, "disks").getAbsolutePath(), "eamon"));
-        recursivelyDelete(new File(new File(sDataDir, "disks").getAbsolutePath(), "logo"));
-        recursivelyDelete(new File(new File(sDataDir, "disks").getAbsolutePath(), "miscgame"));
-
-        Apple2Activity.logMessage(Apple2Activity.LogType.DEBUG, TAG, "First time copying stuff-n-things out of APK for ease-of-NDK access...");
-
-        getExternalStorageDirectory(activity);
-        recursivelyCopyAPKAssets(activity, /*from APK directory:*/"disks",     /*to location:*/new File(sDataDir, "disks").getAbsolutePath(), true);
-        recursivelyCopyAPKAssets(activity, /*from APK directory:*/"keyboards", /*to location:*/new File(sDataDir, "keyboards").getAbsolutePath(), false);
-        recursivelyCopyAPKAssets(activity, /*from APK directory:*/"shaders",   /*to location:*/new File(sDataDir, "shaders").getAbsolutePath(), false);
-
-        activity.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    bar.setVisibility(View.INVISIBLE);
-                    bar.setIndeterminate(false);
-                } catch (NullPointerException npe) {
-                    Log.v(TAG, "Avoid NPE in exposeAPKAssets #1");
-                }
-            }
-        });
     }
 
     public static void exposeSymbols(Apple2Activity activity) {
