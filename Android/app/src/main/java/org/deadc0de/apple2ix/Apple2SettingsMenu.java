@@ -360,6 +360,22 @@ public class Apple2SettingsMenu extends Apple2AbstractMenu {
                 activity.registerAndShowDialog(dialog);
             }
         },
+        EMAIL_LOGS {
+            @Override
+            public final String getTitle(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.preferences_email_logs);
+            }
+
+            @Override
+            public final String getSummary(Apple2Activity activity) {
+                return activity.getResources().getString(R.string.preferences_email_logs_summary);
+            }
+
+            @Override
+            public void handleSelection(final Apple2Activity activity, final Apple2AbstractMenu settingsMenu, boolean isChecked) {
+                Apple2CrashHandler.emailCrashesAndLogs(activity);
+            }
+        },
         CRASH {
             @Override
             public final String getTitle(Apple2Activity activity) {

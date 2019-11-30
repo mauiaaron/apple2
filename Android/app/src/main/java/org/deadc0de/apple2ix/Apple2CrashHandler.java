@@ -36,7 +36,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Apple2CrashHandler {
 
-    public final static String ALL_CRASH_FILE = "apple2ix_crash.zip";
+    public final static String ALL_CRASH_FILE = "apple2ix_data.zip";
 
     public final static String javaCrashFileName = "jcrash.txt";
 
@@ -211,6 +211,7 @@ public class Apple2CrashHandler {
 
         Apple2Preferences.load(activity);
         if (!(boolean) Apple2Preferences.getJSONPref(Apple2SettingsMenu.SETTINGS.CRASH)) {
+            _cleanCrashData(activity);
             return;
         }
 
@@ -218,33 +219,9 @@ public class Apple2CrashHandler {
 
         boolean previouslySentReport = mAlreadySentReport.get();
         if (previouslySentReport) {
-
+            mAlreadySentReport.set(false);
             // here we assume that the crash data was previously sent via email ... if not then we lost it =P
-
-            Apple2Activity.logMessage(Apple2Activity.LogType.DEBUG, TAG, "Cleaning up crash data ...");
-            int idx = 0;
-            File[] nativeCrashes = _nativeCrashFiles(activity);
-            for (File crash : nativeCrashes) {
-
-                if (!crash.delete()) {
-                    Apple2Activity.logMessage(Apple2Activity.LogType.DEBUG, TAG, "Could not unlink crash : " + crash);
-                }
-
-                File processed = new File(_dumpPath2ProcessedPath(crash.getAbsolutePath()));
-                if (!processed.delete()) {
-                    Apple2Activity.logMessage(Apple2Activity.LogType.DEBUG, TAG, "Could not unlink processed : " + processed);
-                }
-            }
-
-            File javaCrashFile = _javaCrashFile(activity);
-            if (!javaCrashFile.delete()) {
-                Apple2Activity.logMessage(Apple2Activity.LogType.DEBUG, TAG, "Could not unlink java crash : " + javaCrashFile);
-            }
-
-            // remove previous crash files
-            File allCrashFile = _getCrashFile(activity, ALL_CRASH_FILE);
-            Apple2Utils.writeFile(new StringBuilder(), allCrashFile);
-            allCrashFile.delete();
+            _cleanCrashData(activity);
             return;
         }
 
@@ -257,113 +234,101 @@ public class Apple2CrashHandler {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 dialog.dismiss();
+                emailCrashesAndLogs(activity);
+            }
+        }).create();
+        activity.registerAndShowDialog(crashDialog);
+    }
 
-                final Apple2SplashScreen splashScreen = activity.getSplashScreen();
-                if (splashScreen != null) {
-                    splashScreen.setDismissable(false);
-                }
-                final ProgressBar bar = (ProgressBar) activity.findViewById(R.id.crash_progressBar);
+    public static void emailCrashesAndLogs(final Apple2Activity activity) {
+        final Apple2SplashScreen splashScreen = activity.getSplashScreen();
+        if (splashScreen != null) {
+            splashScreen.setDismissable(false);
+        }
+        final ProgressBar bar = (ProgressBar) activity.findViewById(R.id.crash_progressBar);
+        try {
+            bar.setVisibility(View.VISIBLE);
+        } catch (NullPointerException npe) {
+            /* email logs doesn't show the splash screen */
+        }
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+
+                android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_BACKGROUND);
+
+                final int sampleRate = DevicePropertyCalculator.getRecommendedSampleRate(activity);
+                final int monoBufferSize = DevicePropertyCalculator.getRecommendedBufferSize(activity, /*isStereo:*/false);
+                final int stereoBufferSize = DevicePropertyCalculator.getRecommendedBufferSize(activity, /*isStereo:*/true);
+
+                StringBuilder summary = new StringBuilder();
+
+                // prepend information about this device
+                summary.append("BRAND: ").append(Build.BRAND).append("\n");
+                summary.append("MODEL: ").append(Build.MODEL).append("\n");
+                summary.append("MANUFACTURER: ").append(Build.MANUFACTURER).append("\n");
+                summary.append("DEVICE: ").append(Build.DEVICE).append("\n");
+                summary.append("SDK: ").append(Build.VERSION.SDK_INT).append("\n");
+                summary.append("SAMPLE RATE: ").append(sampleRate).append("\n");
+                summary.append("MONO BUFSIZE: ").append(monoBufferSize).append("\n");
+                summary.append("STEREO BUFSIZE: ").append(stereoBufferSize).append("\n");
+                summary.append("GPU VENDOR: ").append(Apple2Preferences.getJSONPref(SETTINGS.GL_VENDOR)).append("\n");
+                summary.append("GPU RENDERER: ").append(Apple2Preferences.getJSONPref(SETTINGS.GL_RENDERER)).append("\n");
+                summary.append("GPU VERSION: ").append(Apple2Preferences.getJSONPref(SETTINGS.GL_VERSION)).append("\n");
+
                 try {
-                    bar.setVisibility(View.VISIBLE);
-                } catch (NullPointerException npe) {
-                    /* could happen on early lifecycle crashes */
+                    PackageInfo pInfo = activity.getPackageManager().getPackageInfo(activity.getPackageName(), 0);
+                    summary.append("APP VERSION: ").append(pInfo.versionName).append("\n");
+                } catch (PackageManager.NameNotFoundException e) {
+                    // ...
                 }
 
-                new Thread(new Runnable() {
+                File[] nativeCrashes = _nativeCrashFiles(activity);
+                if (nativeCrashes == null) {
+                    nativeCrashes = new File[0];
+                }
+
+                final int len = nativeCrashes.length + 1/* maybe Java crash */ + 1/* exposeSymbols */;
+
+                activity.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
+                        if (bar != null) {
+                            bar.setMax(len);
+                        }
+                    }
+                });
 
-                        android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_BACKGROUND);
+                if (nativeCrashes.length > 0) {
+                    Apple2Utils.exposeSymbols(activity);
+                }
 
-                        final int sampleRate = DevicePropertyCalculator.getRecommendedSampleRate(activity);
-                        final int monoBufferSize = DevicePropertyCalculator.getRecommendedBufferSize(activity, /*isStereo:*/false);
-                        final int stereoBufferSize = DevicePropertyCalculator.getRecommendedBufferSize(activity, /*isStereo:*/true);
+                activity.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (bar != null) {
+                            bar.setProgress(1);
+                        }
+                    }
+                });
 
-                        StringBuilder summary = new StringBuilder();
+                // iteratively process native crashes
+                ArrayList<File> allCrashFiles = new ArrayList<File>();
+                if (nativeCrashes.length > 0) {
+                    for (File crash : nativeCrashes) {
 
-                        // prepend information about this device
-                        summary.append("BRAND: ").append(Build.BRAND).append("\n");
-                        summary.append("MODEL: ").append(Build.MODEL).append("\n");
-                        summary.append("MANUFACTURER: ").append(Build.MANUFACTURER).append("\n");
-                        summary.append("DEVICE: ").append(Build.DEVICE).append("\n");
-                        summary.append("SDK: ").append(Build.VERSION.SDK_INT).append("\n");
-                        summary.append("SAMPLE RATE: ").append(sampleRate).append("\n");
-                        summary.append("MONO BUFSIZE: ").append(monoBufferSize).append("\n");
-                        summary.append("STEREO BUFSIZE: ").append(stereoBufferSize).append("\n");
-                        summary.append("GPU VENDOR: ").append(Apple2Preferences.getJSONPref(SETTINGS.GL_VENDOR)).append("\n");
-                        summary.append("GPU RENDERER: ").append(Apple2Preferences.getJSONPref(SETTINGS.GL_RENDERER)).append("\n");
-                        summary.append("GPU VERSION: ").append(Apple2Preferences.getJSONPref(SETTINGS.GL_VERSION)).append("\n");
+                        String crashPath = crash.getAbsolutePath();
+                        Apple2Activity.logMessage(Apple2Activity.LogType.DEBUG, TAG, "Processing crash : " + crashPath);
 
+                        String processedPath = _dumpPath2ProcessedPath(crashPath);
                         try {
-                            PackageInfo pInfo = activity.getPackageManager().getPackageInfo(activity.getPackageName(), 0);
-                            summary.append("APP VERSION: ").append(pInfo.versionName).append("\n");
-                        } catch (PackageManager.NameNotFoundException e) {
-                            // ...
+                            nativeProcessCrash(crashPath, processedPath); // Run Breakpad minidump_stackwalk
+                        } catch (UnsatisfiedLinkError ule) {
+                            /* could happen on early lifecycle crashes */
                         }
 
-                        File[] nativeCrashes = _nativeCrashFiles(activity);
-                        if (nativeCrashes == null) {
-                            nativeCrashes = new File[0];
-                        }
-
-                        final int len = nativeCrashes.length + 1/* maybe Java crash */ + 1/* exposeSymbols */;
-
-                        activity.runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                if (bar != null) {
-                                    bar.setMax(len);
-                                }
-                            }
-                        });
-
-                        if (nativeCrashes.length > 0) {
-                            Apple2Utils.exposeSymbols(activity);
-                        }
-
-                        activity.runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                if (bar != null) {
-                                    bar.setProgress(1);
-                                }
-                            }
-                        });
-
-                        // iteratively process native crashes
-                        ArrayList<File> allCrashFiles = new ArrayList<File>();
-                        if (nativeCrashes.length > 0) {
-                            for (File crash : nativeCrashes) {
-
-                                String crashPath = crash.getAbsolutePath();
-                                Apple2Activity.logMessage(Apple2Activity.LogType.DEBUG, TAG, "Processing crash : " + crashPath);
-
-                                String processedPath = _dumpPath2ProcessedPath(crashPath);
-                                try {
-                                    nativeProcessCrash(crashPath, processedPath); // Run Breakpad minidump_stackwalk
-                                } catch (UnsatisfiedLinkError ule) {
-                                    /* could happen on early lifecycle crashes */
-                                }
-
-                                allCrashFiles.add(new File(processedPath));
-
-                                activity.runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        if (bar != null) {
-                                            bar.setProgress(bar.getProgress() + 1);
-                                        }
-                                    }
-                                });
-                            }
-                            summary.append("" + nativeCrashes.length + " native crashes\n");
-                        }
-
-                        File javaCrashFile = _javaCrashFile(activity);
-                        if (javaCrashFile.exists()) {
-                            summary.append("Java Crash File\n");
-                            allCrashFiles.add(javaCrashFile);
-                        }
+                        allCrashFiles.add(new File(processedPath));
 
                         activity.runOnUiThread(new Runnable() {
                             @Override
@@ -373,42 +338,57 @@ public class Apple2CrashHandler {
                                 }
                             }
                         });
-
-                        allCrashFiles.add(new File(homeDir, Apple2Preferences.PREFS_FILE));
-
-                        if (nativeCrashes.length > 0) {
-                            Apple2Utils.unexposeSymbols(activity);
-                        }
-
-                        activity.runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                try {
-                                    bar.setVisibility(View.INVISIBLE);
-                                    splashScreen.setDismissable(true);
-                                } catch (NullPointerException npe) {
-                                    /* could happen on early lifecycle crashes */
-                                }
-                            }
-                        });
-
-                        // Add all the log files ...
-                        {
-                            File[] nativeLogs = _nativeLogs(activity);
-                            for (File logFile : nativeLogs) {
-                                allCrashFiles.add(logFile);
-                            }
-                        }
-
-                        File[] allCrashesAry = new File[allCrashFiles.size()];
-                        File nativeCrashesZip = Apple2Utils.zipFiles(allCrashFiles.toArray(allCrashesAry), _getCrashFile(activity, ALL_CRASH_FILE));
-                        // send report with all the data
-                        _sendEmailToDeveloperWithCrashData(activity, summary, nativeCrashesZip);
                     }
-                }).start();
+                    summary.append("" + nativeCrashes.length + " Native dumps\n");
+                }
+
+                File javaCrashFile = _javaCrashFile(activity);
+                if (javaCrashFile.exists()) {
+                    summary.append("Java crash log\n");
+                    allCrashFiles.add(javaCrashFile);
+                }
+
+                activity.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (bar != null) {
+                            bar.setProgress(bar.getProgress() + 1);
+                        }
+                    }
+                });
+
+                allCrashFiles.add(new File(homeDir, Apple2Preferences.PREFS_FILE));
+
+                if (nativeCrashes.length > 0) {
+                    Apple2Utils.unexposeSymbols(activity);
+                }
+
+                activity.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            bar.setVisibility(View.INVISIBLE);
+                            splashScreen.setDismissable(true);
+                        } catch (NullPointerException npe) {
+                            /* email logs doesn't show the splash screen */
+                        }
+                    }
+                });
+
+                // Add all the log files ...
+                {
+                    File[] nativeLogs = _nativeLogs(activity);
+                    for (File logFile : nativeLogs) {
+                        allCrashFiles.add(logFile);
+                    }
+                }
+
+                File[] allCrashesAry = new File[allCrashFiles.size()];
+                File nativeCrashesZip = Apple2Utils.zipFiles(allCrashFiles.toArray(allCrashesAry), _getCrashFile(activity, ALL_CRASH_FILE));
+                // send report with all the data
+                _sendEmailToDeveloperWithCrashData(activity, summary, nativeCrashesZip);
             }
-        }).create();
-        activity.registerAndShowDialog(crashDialog);
+        }).start();
     }
 
     public void performCrash(int crashType) {
@@ -465,11 +445,11 @@ public class Apple2CrashHandler {
         } while (attempts < maxAttempts);
     }
 
-    private File _javaCrashFile(Apple2Activity activity) {
+    private static File _javaCrashFile(Apple2Activity activity) {
         return new File(homeDir, javaCrashFileName);
     }
 
-    private File[] _nativeLogs(Apple2Activity activity) {
+    private static File[] _nativeLogs(Apple2Activity activity) {
         FilenameFilter logFilter = new FilenameFilter() {
             public boolean accept(File dir, String name) {
                 File file = new File(dir, name);
@@ -484,7 +464,7 @@ public class Apple2CrashHandler {
         return new File(homeDir).listFiles(logFilter);
     }
 
-    private File[] _nativeCrashFiles(Apple2Activity activity) {
+    private static File[] _nativeCrashFiles(Apple2Activity activity) {
         FilenameFilter dmpFilter = new FilenameFilter() {
             public boolean accept(File dir, String name) {
                 File file = new File(dir, name);
@@ -509,11 +489,11 @@ public class Apple2CrashHandler {
         return new File(homeDir).listFiles(dmpFilter);
     }
 
-    private String _dumpPath2ProcessedPath(String crashPath) {
+    private static String _dumpPath2ProcessedPath(String crashPath) {
         return crashPath.substring(0, crashPath.length() - 4) + ".txt";
     }
 
-    private File _getCrashFile(Apple2Activity activity, String fileName) {
+    private static File _getCrashFile(Apple2Activity activity, String fileName) {
         File file;
         String storageState = Environment.getExternalStorageState();
         if (storageState.equals(Environment.MEDIA_MOUNTED)) {
@@ -524,7 +504,7 @@ public class Apple2CrashHandler {
         return file;
     }
 
-    private void _sendEmailToDeveloperWithCrashData(Apple2Activity activity, StringBuilder summary, File nativeCrashesZip) {
+    private static void _sendEmailToDeveloperWithCrashData(Apple2Activity activity, StringBuilder summary, File nativeCrashesZip) {
         mAlreadySentReport.set(true);
 
         // <sigh> ... the disaster that is early Android ... there does not appear to be a reliable way to start an
@@ -533,13 +513,13 @@ public class Apple2CrashHandler {
         // much text data in the EXTRA_TEXT ... </sigh>
 
         Intent emailIntent = new Intent(Intent.ACTION_SENDTO, Uri.fromParts("mailto", "apple2ix_crash@deadcode.org"/*non-zero variant is correct endpoint at the moment*/, null));
-        emailIntent.putExtra(Intent.EXTRA_SUBJECT, "Crasher");
+        emailIntent.putExtra(Intent.EXTRA_SUBJECT, "A2IX Report");
 
         final int maxCharsEmail = 4096;
         int len = summary.length();
         len = len < maxCharsEmail ? len : maxCharsEmail;
         String summaryData = summary.substring(0, len);
-        emailIntent.putExtra(Intent.EXTRA_TEXT, "The app crashed, please help!\n\n" + summaryData);
+        emailIntent.putExtra(Intent.EXTRA_TEXT, "A2IX app logs and crash data\n\n" + summaryData);
 
         if (!nativeCrashesZip.setReadable(true, /*ownerOnly:*/false)) {
             Apple2Activity.logMessage(Apple2Activity.LogType.DEBUG, TAG, "Oops, could not set crash file data readable!");
@@ -552,14 +532,41 @@ public class Apple2CrashHandler {
         Apple2Activity.logMessage(Apple2Activity.LogType.DEBUG, TAG, "AFTER START ACTIVITY ...");
     }
 
+    private static void _cleanCrashData(Apple2Activity activity) {
+
+        Apple2Activity.logMessage(Apple2Activity.LogType.DEBUG, TAG, "Cleaning up crash data ...");
+        int idx = 0;
+        File[] nativeCrashes = _nativeCrashFiles(activity);
+        for (File crash : nativeCrashes) {
+
+            if (!crash.delete()) {
+                Apple2Activity.logMessage(Apple2Activity.LogType.DEBUG, TAG, "Could not unlink crash : " + crash);
+            }
+
+            File processed = new File(_dumpPath2ProcessedPath(crash.getAbsolutePath()));
+            if (!processed.delete()) {
+                Apple2Activity.logMessage(Apple2Activity.LogType.DEBUG, TAG, "Could not unlink processed : " + processed);
+            }
+        }
+
+        File javaCrashFile = _javaCrashFile(activity);
+        if (!javaCrashFile.delete()) {
+            Apple2Activity.logMessage(Apple2Activity.LogType.DEBUG, TAG, "Could not unlink java crash : " + javaCrashFile);
+        }
+
+        // remove previous crash files
+        File allCrashFile = _getCrashFile(activity, ALL_CRASH_FILE);
+        Apple2Utils.writeFile(new StringBuilder(), allCrashFile);
+        allCrashFile.delete();
+    }
 
     private final static String TAG = "Apple2CrashHandler";
     private final static Apple2CrashHandler sCrashHandler = new Apple2CrashHandler();
 
-    private String homeDir;
+    private static String homeDir;
     private Thread.UncaughtExceptionHandler mDefaultExceptionHandler;
     private AtomicBoolean mAlreadyRanCrashCheck = new AtomicBoolean(false);
-    private AtomicBoolean mAlreadySentReport = new AtomicBoolean(false);
+    private static AtomicBoolean mAlreadySentReport = new AtomicBoolean(false);
 
     private static native void nativePerformCrash(int crashType); // testing
 

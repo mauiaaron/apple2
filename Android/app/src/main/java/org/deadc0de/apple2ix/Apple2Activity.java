@@ -326,7 +326,7 @@ public class Apple2Activity extends AppCompatActivity implements Apple2DiskChoos
             logMessage(LogType.DEBUG, TAG, "Letting native save preferences...");
         }
 
-        logMessage(LogType.DEBUG, TAG, "onPause()");
+        logMessage(LogType.INFO, TAG, "onPause() ...");
         if (mView != null) {
             mView.onPause();
         }
@@ -609,6 +609,7 @@ public class Apple2Activity extends AppCompatActivity implements Apple2DiskChoos
     }
 
     public void quitEmulator() {
+        logMessage(LogType.INFO, TAG, "Quitting...");
         nativeOnQuit();
         finish();
         new Runnable() {

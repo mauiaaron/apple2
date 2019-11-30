@@ -215,5 +215,7 @@
     <string name="joystick_button_swipe_left_button_summary">Button to fire on swipe left</string>
     <string name="key_del">[DEL]</string>
     <string name="key_tab">[TAB]</string>
+    <string name="preferences_email_logs">Email logs</string>
+    <string name="preferences_email_logs_summary">Email logs to developer…</string>
 
 </resources>
