@@ -1,9 +1,13 @@
-Apple2ix (a2ix) 2.1.0-RC1 for Android
+Apple2ix (A2IX) 2.1.0-RC2 for Android
 
-GENERAL:
+The major change here is that I now provide full 64bit native builds for arm64-v8a and x86_64 devices.  (This is a new G00G requirement for publishing on the Play Store).  It frankly isn't something that I would have wanted to foist upon you, dear user!  But they are forcing my hand, so ... c'est la vie!
 
-- Provide full 64bit native builds for ARMv8 and x64 platforms (this is a forced change due to a new hard G00G requirement for publishing)
-- Migrated menu system to newer-ish Dark Holo theme (again, because G00G is forcing my hand)
+Anecdotally, I have heard about certain devices that claim to be arm64-v8a, but which DO NOT run 64bit code efficiently.  These devices would have been better off continuing to run the armeabi-v7a build of A2IX.  But there's nothing I can do about this, since the Play Store serves the specific build it thinks best.  So if you are one of the unlucky owners of such a device and A2IX seems horrendously sluggish, (and if you're an adventurous power-user), you could side-load the armeabi-v7a semi-official release from the GitHub project page ;)
+
+MENU INTERFACE:
+
+- Migrated menu system to newer-ish Dark Holo theme
+- Moved some preferences around a bit for clarity
 
 TOUCH KEYBOARD:
 
@@ -13,13 +17,14 @@ TOUCH KEYBOARD:
 
 TOUCH JOYSTICKS:
 
-- Keypad Joystick: Improved emulation fidelity for the keyboard auto-repeat circuitry, tied to the emulated video refresh.
-- Keypad Joystick: Full left and right side rosette key configurations
+- Keypad Joystick: Improved emulation fidelity for the keyboard auto-repeat circuitry, tied to the emulated video refresh. (In plain English: improved twitch-response ;)
+- Keypad Joystick: Full left and right side rosette key configurations (18 total configurable keys)
 - Keypad Joystick: More presets for popular games (L0de Runner, R0b0tr0n 2084, ...)
-- Joystick: Can now configure a button to fire on left/right swipe (instead of just touch down, swipe up/down)
-- Keypad/Joystick: Button/key switch threshold now configurable down to zero minimum
-- Moved some preferences around a bit for clarity
+- Keypad+Joystick: Improved calibration mode showing axis/key values
+- Keypad+Joystick: Button/key switch threshold now configurable down to zero minimum (improves twitch-reponse)
+- Joystick: Can now configure button to fire on left/right swipe (instead of just tap and swipe up/down)
 
 M0AR INFO:
 
-- More information about how to use Apple2ix for Android including how to get disks! : https://deadc0de.org/apple2ix/android
+- Apple2ix for Android home page : https://deadc0de.org/apple2ix/android
+- Play Store beta-build opt-in URL: https://play.google.com/apps/testing/org.deadc0de.apple2ix.basic

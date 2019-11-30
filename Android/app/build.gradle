@@ -29,8 +29,8 @@ android {
         applicationId "org.deadc0de.apple2ix.basic"
         minSdkVersion 14
         targetSdkVersion 29
-        versionCode 24
-        versionName "2.1.0-RC1"
+        versionCode 25
+        versionName "2.1.0-RC2"
         ndk {
             moduleName "apple2ix"
         }
