@@ -136,13 +136,17 @@ void Java_org_deadc0de_apple2ix_Apple2CrashHandler_nativeProcessCrash(JNIEnv *en
             break;
         }
 
-        if (android_armArchV7A) {
+        if (android_arm64Arch) {
+            ASPRINTF(&symbolsPath, "%s/symbols/arm64-v8a", data_dir);
+        } else if (android_armArchV7A || android_armArch) {
             ASPRINTF(&symbolsPath, "%s/symbols/armeabi-v7a", data_dir);
+        } else if (android_x86_64) {
+            ASPRINTF(&symbolsPath, "%s/symbols/x86_64", data_dir);
         } else if (android_x86) {
             ASPRINTF(&symbolsPath, "%s/symbols/x86", data_dir);
-        } else /*if (android_armArch)*/ {
-            ASPRINTF(&symbolsPath, "%s/symbols/armeabi", data_dir);
-        } /*else { moar archs ... } */
+        } else {
+            LOG("unknown symbols architecture!");
+        }
 
         bool success = crashHandler->processCrash(crashPath, symbolsPath, outputFILE);
         if (!success) {
