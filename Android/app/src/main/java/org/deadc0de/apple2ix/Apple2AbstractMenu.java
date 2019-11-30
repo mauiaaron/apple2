@@ -15,6 +15,8 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.drawable.Drawable;
 import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.widget.AppCompatCheckBox;
+
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -219,7 +221,7 @@ public abstract class Apple2AbstractMenu implements Apple2MenuView {
     }
 
     protected static CheckBox _addCheckbox(Apple2Activity activity, IMenuEnum setting, View convertView, boolean isChecked) {
-        CheckBox checkBox = new CheckBox(activity);
+        AppCompatCheckBox checkBox = new AppCompatCheckBox(activity);
         checkBox.setChecked(isChecked);
         LinearLayout layout = (LinearLayout) convertView.findViewById(R.id.a2preference_widget_frame);
         layout.addView(checkBox);
