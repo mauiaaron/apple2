@@ -298,23 +298,34 @@ cpu_runloop:
             clock_gettime(CLOCK_MONOTONIC, &ti);
 
             deltat = timespec_diff(t0, ti, &negative);
-            if (deltat.tv_sec) {
+            if (UNLIKELY(deltat.tv_sec)) {
                 if (!is_fullspeed) {
                     TIMING_LOG("NOTE : serious divergence from target time ...");
                 }
                 t0 = ti;
-                deltat = timespec_diff(t0, ti, &negative);
+                deltat = (struct timespec){ 0 };
             }
             t0 = timespec_add(t0, EXECUTION_PERIOD_NSECS); // expected interval
             drift_adj_nsecs = negative ? ~deltat.tv_nsec : deltat.tv_nsec;
 
-            // set up increment & decrement counters
-            run_args.cpu65_cycles_to_execute = (cycles_persec_target / 1000); // cycles_persec_target * EXECUTION_PERIOD_NSECS / NANOSECONDS_PER_SECOND
-            if (!is_fullspeed) {
-                run_args.cpu65_cycles_to_execute += cycles_speaker_feedback;
-            }
-            if (run_args.cpu65_cycles_to_execute < 0) {
-                run_args.cpu65_cycles_to_execute = 0;
+            // Determine the count of 65c02 cycles to execute
+            {
+                static int speaker_wedged_count = 0;
+
+                run_args.cpu65_cycles_to_execute = (cycles_persec_target / 1000); // cycles_persec_target * EXECUTION_PERIOD_NSECS / NANOSECONDS_PER_SECOND
+                if (!is_fullspeed) {
+                    // Speaker backend (real-time soundcard) actually drives us!
+                    run_args.cpu65_cycles_to_execute += cycles_speaker_feedback;
+                }
+                if (UNLIKELY(run_args.cpu65_cycles_to_execute <= 0)) {
+                    run_args.cpu65_cycles_to_execute = 0;
+                    if (++speaker_wedged_count >= SOUNDCORE_ERROR_MAX<<1) {
+                        speaker_wedged_count = 0;
+                        emul_reinitialize_audio = true;
+                    }
+                } else {
+                    speaker_wedged_count = 0;
+                }
             }
 
             MB_StartOfCpuExecute();
