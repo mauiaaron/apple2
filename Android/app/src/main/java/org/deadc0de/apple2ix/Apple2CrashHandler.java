@@ -15,7 +15,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
 import androidx.appcompat.app.AlertDialog;
@@ -205,32 +204,29 @@ public class Apple2CrashHandler {
     }
 
     public void checkForCrashes(final Apple2Activity activity) {
+
+        File oldCrashFile = _getCrashLogFile(activity);
+        if (oldCrashFile.exists()) {
+            oldCrashFile.delete();
+        }
+
         if (!areCrashesPresent(activity)) {
             return;
         }
 
         Apple2Preferences.load(activity);
         if (!(boolean) Apple2Preferences.getJSONPref(Apple2SettingsMenu.SETTINGS.CRASH)) {
-            _cleanCrashData(activity);
+            cleanCrashData(activity);
             return;
         }
 
         boolean previouslyRanCrashCheck = mAlreadyRanCrashCheck.getAndSet(true);
-
-        boolean previouslySentReport = mAlreadySentReport.get();
-        if (previouslySentReport) {
-            mAlreadySentReport.set(false);
-            // here we assume that the crash data was previously sent via email ... if not then we lost it =P
-            _cleanCrashData(activity);
-            return;
-        }
-
         if (previouslyRanCrashCheck) {
             // don't keep asking on return from backgrounding
             return;
         }
 
-        final AlertDialog crashDialog = new AlertDialog.Builder(activity).setIcon(R.drawable.ic_launcher).setCancelable(true).setTitle(R.string.crasher_send).setMessage(R.string.crasher_send_message).setNegativeButton(R.string.no, null).setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+        final AlertDialog crashDialog = new AlertDialog.Builder(activity).setIcon(R.drawable.ic_launcher).setCancelable(true).setTitle(R.string.crasher_send).setMessage(R.string.crasher_send_message).setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 dialog.dismiss();
@@ -240,7 +236,7 @@ public class Apple2CrashHandler {
         activity.registerAndShowDialog(crashDialog);
     }
 
-    public static void emailCrashesAndLogs(final Apple2Activity activity) {
+    public void emailCrashesAndLogs(final Apple2Activity activity) {
         final Apple2SplashScreen splashScreen = activity.getSplashScreen();
         if (splashScreen != null) {
             splashScreen.setDismissable(false);
@@ -384,11 +380,39 @@ public class Apple2CrashHandler {
                 }
 
                 File[] allCrashesAry = new File[allCrashFiles.size()];
-                File nativeCrashesZip = Apple2Utils.zipFiles(allCrashFiles.toArray(allCrashesAry), _getCrashFile(activity, ALL_CRASH_FILE));
+                File nativeCrashesZip = Apple2Utils.zipFiles(allCrashFiles.toArray(allCrashesAry), _getCrashLogFile(activity));
                 // send report with all the data
                 _sendEmailToDeveloperWithCrashData(activity, summary, nativeCrashesZip);
             }
         }).start();
+    }
+
+    public void cleanCrashData(Apple2Activity activity) {
+
+        Apple2Activity.logMessage(Apple2Activity.LogType.DEBUG, TAG, "Cleaning up crash data ...");
+        File[] nativeCrashes = _nativeCrashFiles(activity);
+        for (File crash : nativeCrashes) {
+
+            if (!crash.delete()) {
+                Apple2Activity.logMessage(Apple2Activity.LogType.DEBUG, TAG, "Could not unlink crash : " + crash);
+            }
+
+            File processed = new File(_dumpPath2ProcessedPath(crash.getAbsolutePath()));
+            if (!processed.delete()) {
+                Apple2Activity.logMessage(Apple2Activity.LogType.DEBUG, TAG, "Could not unlink processed : " + processed);
+            }
+        }
+
+        File javaCrashFile = _javaCrashFile(activity);
+        if (!javaCrashFile.delete()) {
+            Apple2Activity.logMessage(Apple2Activity.LogType.DEBUG, TAG, "Could not unlink java crash : " + javaCrashFile);
+        }
+
+        /* HACK NOTE -- don't delete the crash log file here ... possibly the email sender program still needs the link!
+        File allCrashFile = _getCrashLogFile(activity);
+        Apple2Utils.writeFile(new StringBuilder(), allCrashFile);
+        allCrashFile.delete();
+        */
     }
 
     public void performCrash(int crashType) {
@@ -445,11 +469,11 @@ public class Apple2CrashHandler {
         } while (attempts < maxAttempts);
     }
 
-    private static File _javaCrashFile(Apple2Activity activity) {
+    private File _javaCrashFile(Apple2Activity activity) {
         return new File(homeDir, javaCrashFileName);
     }
 
-    private static File[] _nativeLogs(Apple2Activity activity) {
+    private File[] _nativeLogs(Apple2Activity activity) {
         FilenameFilter logFilter = new FilenameFilter() {
             public boolean accept(File dir, String name) {
                 File file = new File(dir, name);
@@ -464,7 +488,7 @@ public class Apple2CrashHandler {
         return new File(homeDir).listFiles(logFilter);
     }
 
-    private static File[] _nativeCrashFiles(Apple2Activity activity) {
+    private File[] _nativeCrashFiles(Apple2Activity activity) {
         FilenameFilter dmpFilter = new FilenameFilter() {
             public boolean accept(File dir, String name) {
                 File file = new File(dir, name);
@@ -489,31 +513,34 @@ public class Apple2CrashHandler {
         return new File(homeDir).listFiles(dmpFilter);
     }
 
-    private static String _dumpPath2ProcessedPath(String crashPath) {
+    private String _dumpPath2ProcessedPath(String crashPath) {
         return crashPath.substring(0, crashPath.length() - 4) + ".txt";
     }
 
-    private static File _getCrashFile(Apple2Activity activity, String fileName) {
+    private File _getCrashLogFile(Apple2Activity activity) {
         File file;
         String storageState = Environment.getExternalStorageState();
         if (storageState.equals(Environment.MEDIA_MOUNTED)) {
-            file = new File(Environment.getExternalStorageDirectory(), fileName);
+            file = new File(Environment.getExternalStorageDirectory(), ALL_CRASH_FILE);
         } else {
-            file = new File(Apple2Utils.getDataDir(activity), fileName);
+            file = new File(Apple2Utils.getDataDir(activity), ALL_CRASH_FILE);
         }
         return file;
     }
 
-    private static void _sendEmailToDeveloperWithCrashData(Apple2Activity activity, StringBuilder summary, File nativeCrashesZip) {
-        mAlreadySentReport.set(true);
+    private void _sendEmailToDeveloperWithCrashData(Apple2Activity activity, StringBuilder summary, File nativeCrashesZip) {
+        final boolean alreadyChoosing = Apple2EmailerActivity.sEmailerIsEmailing.getAndSet(true);
+        if (alreadyChoosing) {
+            return;
+        }
 
         // <sigh> ... the disaster that is early Android ... there does not appear to be a reliable way to start an
         // email Intent to send both text and an attachment, but we make a valiant (if futile) effort to do so here.
         // And the reason to send an attachment is that you trigger an android.os.TransactionTooLargeException with too
         // much text data in the EXTRA_TEXT ... </sigh>
 
-        Intent emailIntent = new Intent(Intent.ACTION_SENDTO, Uri.fromParts("mailto", "apple2ix_crash@deadcode.org"/*non-zero variant is correct endpoint at the moment*/, null));
-        emailIntent.putExtra(Intent.EXTRA_SUBJECT, "A2IX Report");
+        Intent emailIntent = new Intent(activity, Apple2EmailerActivity.class);
+        emailIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK/* | Intent.FLAG_ACTIVITY_CLEAR_TOP */);
 
         final int maxCharsEmail = 4096;
         int len = summary.length();
@@ -525,51 +552,22 @@ public class Apple2CrashHandler {
             Apple2Activity.logMessage(Apple2Activity.LogType.DEBUG, TAG, "Oops, could not set crash file data readable!");
         }
 
-        emailIntent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(nativeCrashesZip));
+        emailIntent.putExtra(Apple2EmailerActivity.EXTRA_STREAM_PATH, nativeCrashesZip.getAbsolutePath());
 
-        Apple2Activity.logMessage(Apple2Activity.LogType.DEBUG, TAG, "STARTING CHOOSER FOR EMAIL ...");
-        activity.startActivity(Intent.createChooser(emailIntent, "Send email"));
-        Apple2Activity.logMessage(Apple2Activity.LogType.DEBUG, TAG, "AFTER START ACTIVITY ...");
-    }
+        Apple2Activity.logMessage(Apple2Activity.LogType.DEBUG, TAG, "STARTING EMAILER ACTIVITY ...");
+        Apple2EmailerActivity.sEmailerCallback = activity;
 
-    private static void _cleanCrashData(Apple2Activity activity) {
-
-        Apple2Activity.logMessage(Apple2Activity.LogType.DEBUG, TAG, "Cleaning up crash data ...");
-        int idx = 0;
-        File[] nativeCrashes = _nativeCrashFiles(activity);
-        for (File crash : nativeCrashes) {
-
-            if (!crash.delete()) {
-                Apple2Activity.logMessage(Apple2Activity.LogType.DEBUG, TAG, "Could not unlink crash : " + crash);
-            }
-
-            File processed = new File(_dumpPath2ProcessedPath(crash.getAbsolutePath()));
-            if (!processed.delete()) {
-                Apple2Activity.logMessage(Apple2Activity.LogType.DEBUG, TAG, "Could not unlink processed : " + processed);
-            }
-        }
-
-        File javaCrashFile = _javaCrashFile(activity);
-        if (!javaCrashFile.delete()) {
-            Apple2Activity.logMessage(Apple2Activity.LogType.DEBUG, TAG, "Could not unlink java crash : " + javaCrashFile);
-        }
-
-        // remove previous crash files
-        File allCrashFile = _getCrashFile(activity, ALL_CRASH_FILE);
-        Apple2Utils.writeFile(new StringBuilder(), allCrashFile);
-        allCrashFile.delete();
+        activity.startActivityForResult(emailIntent, Apple2EmailerActivity.SEND_REQUEST_CODE);
     }
 
     private final static String TAG = "Apple2CrashHandler";
     private final static Apple2CrashHandler sCrashHandler = new Apple2CrashHandler();
 
-    private static String homeDir;
+    private String homeDir;
     private Thread.UncaughtExceptionHandler mDefaultExceptionHandler;
     private AtomicBoolean mAlreadyRanCrashCheck = new AtomicBoolean(false);
-    private static AtomicBoolean mAlreadySentReport = new AtomicBoolean(false);
 
     private static native void nativePerformCrash(int crashType); // testing
 
     private static native void nativeProcessCrash(String crashFilePath, String crashProcessedPath);
-
 }

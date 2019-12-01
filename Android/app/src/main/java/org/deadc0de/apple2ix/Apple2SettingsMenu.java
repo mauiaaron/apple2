@@ -373,7 +373,7 @@ public class Apple2SettingsMenu extends Apple2AbstractMenu {
 
             @Override
             public void handleSelection(final Apple2Activity activity, final Apple2AbstractMenu settingsMenu, boolean isChecked) {
-                Apple2CrashHandler.emailCrashesAndLogs(activity);
+                Apple2CrashHandler.getInstance().emailCrashesAndLogs(activity);
             }
         },
         CRASH {

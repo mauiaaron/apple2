@@ -41,7 +41,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class Apple2Activity extends AppCompatActivity implements Apple2DiskChooserActivity.Callback {
+public class Apple2Activity extends AppCompatActivity implements Apple2DiskChooserActivity.Callback, Apple2EmailerActivity.Callback
+{
 
     private final static String TAG = "Apple2Activity";
 
@@ -156,9 +157,8 @@ public class Apple2Activity extends AppCompatActivity implements Apple2DiskChoos
 
         // Is there a way to persist the user orientation setting such that we launch in the previously set orientation and avoid getting multiple onCreate() onResume()?! ... Android lifecycle edge cases are so damn kludgishly annoying ...
         mSwitchingToPortrait.set(switchingToPortrait);
-        if (!switchingToPortrait) {
-            Apple2CrashHandler.getInstance().checkForCrashes(this);
-        }
+
+        Apple2CrashHandler.getInstance().checkForCrashes(this);
 
         boolean extperm = true;
         if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -211,6 +211,11 @@ public class Apple2Activity extends AppCompatActivity implements Apple2DiskChoos
     }
 
     @Override
+    public void onEmailerFinished() {
+        Apple2CrashHandler.getInstance().cleanCrashData(this);
+    }
+
+    @Override
     public void onDisksChosen(DiskArgs args) {
         final String name = args.name;
         if (Apple2DisksMenu.hasDiskExtension(name) || Apple2DisksMenu.hasStateExtension(name)) {
@@ -258,9 +263,6 @@ public class Apple2Activity extends AppCompatActivity implements Apple2DiskChoos
 
             logMessage(LogType.DEBUG, TAG, "onResume()");
             showSplashScreen(/*dismissable:*/true);
-            if (!mSwitchingToPortrait.get()) {
-                Apple2CrashHandler.getInstance().checkForCrashes(this); // NOTE : needs to be called again to clean-up
-            }
 
             if (mDisksMenu == null) {
                 break;

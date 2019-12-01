@@ -43,6 +43,11 @@
             android:theme="@style/Theme.AppCompat"
             />
 
+        <activity android:name="org.deadc0de.apple2ix.Apple2EmailerActivity"
+            android:theme="@style/Theme.AppCompat"
+            android:screenOrientation="portrait"
+            />
+
         <provider
             android:authorities="${applicationId}.provider"
             android:name="androidx.core.content.FileProvider"
