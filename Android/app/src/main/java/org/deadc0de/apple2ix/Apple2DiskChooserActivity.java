@@ -24,7 +24,6 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.provider.OpenableColumns;
-import android.util.Log;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -117,13 +116,14 @@ public class Apple2DiskChooserActivity extends AppCompatActivity {
         }
 
         boolean ran = b.getBoolean("ran");
+        /* -- Android onCreate() can be called multiple times, for example, on an orientation change ... this codepath was aborting the disk selection process when an orientation event occurred...
         if (ran) {
             Apple2Activity.logMessage(Apple2Activity.LogType.ERROR, TAG, "OOPS, already ran...");
             finish();
             return;
         }
+        */
 
-        ////Intent pickIntent = new Intent(Intent.ACTION_GET_CONTENT);
         Intent pickIntent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
 
         try {
