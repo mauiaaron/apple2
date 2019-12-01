@@ -419,8 +419,11 @@ public class Apple2Utils {
     // TODO FIXME : WARNING : this is super dangerous if there are symlinks !!!
     private static void recursivelyDelete(File file) {
         if (file.isDirectory()) {
-            for (File f : file.listFiles()) {
-                recursivelyDelete(f);
+            File[] files = file.listFiles();
+            if (files != null) {
+                for (File f : files) {
+                    recursivelyDelete(f);
+                }
             }
         }
         if (!file.delete()) {
