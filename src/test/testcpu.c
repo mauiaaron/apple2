@@ -1799,7 +1799,10 @@ TEST test_IRQ(void) {
     testcpu_set_opcode1(0xea/*NOP*/); // Implementation NOTE: not executed. IRQ is handled and one BIT instruction at C3FA location is executed
 
     cpu65_interrupt(IRQGeneric);
+
+    // These must match what iie_c3rom_peripheral():
     run_args.softswitches |= SS_C3ROM;
+    run_args.base_c3rom = apple_ii_64k[1];
 
     ASSERT(apple_ii_64k[0][0x1ff] != 0x1f);
     ASSERT(apple_ii_64k[0][0x1fe] != TEST_LOC_LO+1);
@@ -1829,7 +1832,12 @@ TEST test_IRQ(void) {
     ASSERT(run_args.cpu65_opcycles == 11); // 4 cycles BIT instruction + 7 cycles for IRQ handling
     ASSERT(run_args.cpu65_cycle_count == 11);
 
+    // These must match iie_c3rom_internal():
     run_args.softswitches &= ~SS_C3ROM;
+    extern void *iie_read_peripheral_card;
+    run_args.base_c3rom = (void *)iie_read_peripheral_card;
+    ASSERT(!(run_args.softswitches & SS_CXROM));
+
     cpu65_uninterrupt(IRQGeneric);
 
     PASS();
