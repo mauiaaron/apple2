@@ -1366,6 +1366,9 @@ TEST test_data_stability_po() {
     PASS();
 }
 
+#if MOBILE_DEVICE
+// This NIB image becomes actually gzipped and these tests blow up
+#else
 #define GZBAD_NIB "testgzheader.nib"
 #define GZBAD_NIB_LOAD_SHA1 "E25F3524F852EFD043E2A036DA36779F1F68A8A2"
 #define GZBAD_NIB_LOAD_SHA2 "A82BBF38F79FBFA072C1061661E316CA8AF3B950"
@@ -1406,6 +1409,7 @@ TEST test_disk_image_with_gzip_header_ro() {
 TEST test_disk_image_with_gzip_header_rw() {
     return _test_disk_image_with_gzip_header(/*readonly:*/0);
 }
+#endif
 
 #define GZINVALID_DSK "CorruptedGzipped.dsk.gz"
 static int _test_disk_invalid_gzipped(int readonly) {
@@ -1557,8 +1561,10 @@ GREATEST_SUITE(test_suite_disk) {
     RUN_TESTp(test_data_stability_nib);
     RUN_TESTp(test_data_stability_po);
 
+#if !MOBILE_DEVICE
     RUN_TESTp(test_disk_image_with_gzip_header_ro);
     RUN_TESTp(test_disk_image_with_gzip_header_rw);
+#endif
 
     RUN_TESTp(test_disk_invalid_gzipped_ro);
     RUN_TESTp(test_disk_invalid_gzipped_rw);
